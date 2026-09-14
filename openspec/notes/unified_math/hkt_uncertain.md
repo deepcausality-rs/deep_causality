@@ -5,9 +5,14 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 # Lifting `uncertain` and `rand` into the unified math stack
 
-**Scope.** `deep_causality_uncertain` and `deep_causality_rand`, read on `main` at `0809f3724` on
-2026-09-13. Two questions: can each crate take precision as a parameter the way the rest of the
+**Scope.** `deep_causality_uncertain` and `deep_causality_rand`, read on `main` at `7c63468d1` on
+2026-09-14. Two questions: can each crate take precision as a parameter the way the rest of the
 stack does, and can each join the HKT composition surface. Breaking the public API is allowed.
+
+**`rand` is done.** `blanket-scalar-sampling` landed at `191281cae`, and the sampling layer now
+names zero concrete scalars. §1.2, the `rand` rows of §2, stage 1 of §4 and the commands in §6
+describe what is in the tree. The `uncertain` half of the note is untouched by it and still states
+a plan.
 
 **Not in scope.** New distributions. Performance beyond the arithmetic shown. The physics, CFD,
 quantum and discovery consumers, except as migration cost.
@@ -25,10 +30,11 @@ updates it.
 
 ## 0. Verdict
 
-- **Precision as a parameter: feasible for both, moderate effort, and the risk is lower than a
-  first read suggests.** `rand` is three quarters there already, with `f32`, `f64` and `Float106`
-  behind one `RealRng` bound and the duplication confined to six per-type files. `uncertain` is
-  not: its whole engine runs through a closed three-variant enum that exists, by its own
+- **Precision as a parameter: done in `rand`, feasible in `uncertain` at moderate effort.** `rand`
+  names no concrete scalar anywhere: one blanket sampler per algebraic tower, and `BFloat16` — a
+  type the crate mentions in no implementation — draws from a range on the strength of the algebra
+  alone. `uncertain` is the opposite: its whole engine runs through a closed three-variant enum
+  that exists, by its own
   docstring, so that a global static cache can stay non-generic. That assumption predates unified
   math and no longer holds anywhere else in the stack; every other crate is generic in its scalar
   and holds no scalar in a static. The crate has already half-abandoned it at its own boundary,
@@ -135,40 +141,69 @@ generic in `R`; core pins `f64` and `bool`. Methods called: `normal`, `uniform`,
 
 ### 1.2 `deep_causality_rand`
 
-2,293 lines, 157 tests. Depends on `num` and `algebra`; not on `haft`.
+1,387 lines of source, 112 tests. Depends on `num` and `algebra`; not on `haft`.
 
-**The traits.** `RngCore` (three methods, object-safe), `Rng: RngCore` (only default methods;
-the sole impl is `impl<T: Rng> Rng for &mut T`, `traits/rng.rs:9`), `Distribution<T>` with
-`sample`, `sample_iter` and `map`, `SampleUniform` / `UniformSampler`, `SampleRange<T>`, `Fill`,
-and `RealRng: RealField + Sized` with a blanket over `T: RealField + SampleUniform + RandFloat`
-where `StandardNormal: Distribution<T>` (`traits/real_rng.rs`). `RealRng` is the bound the rest
-of the stack should ask for, and it already covers `f32`, `f64` and `Float106`.
+**What the crate holds.** Entropy, and the draws that are facts about bits rather than about a
+density: a machine word (`StandardWord`), a Boolean (`StandardBool`), a value uniform over a range
+(`Uniform`), the generators (`Xoshiro256`, a thread handle, an OS-entropy source) and a Sobol
+sequence. No mean, no variance, no moment. The shaped distributions — normal, exponential, Cauchy,
+Weibull, log-normal, Poisson, categorical, the unit-interval draws and their inverse-CDF transforms
+— are in `deep_causality_stats` beside the densities that define them, and `stats` re-exports the
+generator traits so a caller needs one dependency to spell a bound.
 
-**Where the duplication is.** Six per-type extension files: `dist_float_32.rs`,
-`dist_float_64.rs`, `dist_float_106.rs`, `uniform_f32.rs`, `uniform_f64.rs`, `uniform_f106.rs`,
-plus three integer uniform files. `Float106` draws two words and joins them (`dist_float_106.rs:25`)
-and takes its normal from the inverse CDF (`:55`) where `f64` uses the ziggurat.
+**The traits.** `RngCore` (three methods), `Rng: RngCore` (default methods only; the sole impl is
+`impl<T: Rng> Rng for &mut T`), `Distribution<T>` with `sample`, `sample_iter` and `map`,
+`SampleUniform<Kind>` / `UniformSampler`, `SampleRange<T, Kind>`, `Fill`, `SampleBorrow`, and two
+blanket capability traits: `RandScalar: RealField + FromPrimitive`, which carries the unit draw,
+and `RandUnsigned: NaturalNumber + Num + FromPrimitive + Debug`. `RandScalar` is the bound the rest
+of the stack asks for.
 
-**Where `f64` is hardcoded.** `Rng::random_bool(p: f64)` (`rng.rs:41`), `SampleRange` implemented
-for `Range<f32>` and `Range<f64>` only (`sample_range.rs`), `SobolSequence::coordinate -> f64`
-and `point(&mut [f64])` at 32-bit fixed-point resolution (`sobol.rs:27, 76-95`), `Bernoulli::new(p: f64)`
-with 64-bit fixed-point storage (`bernoulli/mod.rs:36-93`), and the ziggurat `StandardNormal`
-in `f64` (`standard_normal.rs`).
+**Zero concrete scalars.** No implementation in `src/` names `f32`, `f64`, `Float106`, `BFloat16`
+or any unsigned type. Two blanket implementations cover both towers:
 
-**`BFloat16`.** Zero files mention it.
+```rust
+impl<T: RealField + FromPrimitive> SampleUniform<FloatKind> for T { type Sampler = UniformFloat<T>; }
+impl<T: RandUnsigned> SampleUniform<UnsignedKind> for T { type Sampler = UniformUnsigned<T>; }
+```
 
-**The functor.** `Map<D, F, T, S>` (`types/map/mod.rs:9`) is a struct of a distribution and a
+`FloatKind` and `UnsignedKind` are type parameters and nothing else; neither is ever constructed.
+They exist because one trait cannot carry two blanket impls over disjoint towers — coherence cannot
+prove a real field will never also be a natural number — and parameterising makes the two impls
+distinct items. `Rng::random_range<T, K, R>` keeps one signature, because `K` is inferred from the
+range and no call site names it.
+
+**Per-type facts are derived, not declared.** The unit draw accumulates 53-bit generator words and
+stops when the next word would land entirely below the scalar's own `epsilon`, so `f32`, `f64` and
+`BFloat16` take one word and `Float106` takes two with no table saying so.
+
+**Where `f64` still appears.** Nine non-comment lines, every one of them a conversion pivot
+(`from_f64`, `to_f64`, an `as f64` scaling) or a panic message; none is an implementation target.
+Two fixed widths remain, both properties of a representation rather than of a scalar and both
+documented at the item that has them: `SobolSequence::coordinate<T>` returns at the caller's scalar
+but resolves `2^-32`, fixed by its direction-number table (`sobol.rs`); and `Bernoulli::new<T>` in
+`stats` quantises `p` to `2^-64`, which is what makes `p = 0` and `p = 1` exact.
+
+**`BFloat16`.** Drawn, and asserted. `tests/types/dist/uniform/parity_probe_tests.rs` runs one
+generic function at `f32`, `f64`, `Float106` and `BFloat16`, requiring every draw inside
+`[10, 20)` and zero draws on the bound. The bound needed work to hold: a narrow significand rounds
+the affine map `u * scale + low` up onto `high` — 14 draws in 2 000 at `BFloat16`, none at `f32`
+and wider — so `UniformFloat` carries an `exclusive_high` and rejects a result that reaches it.
+
+**The functor.** `Map<D, F, T, S>` (`types/map/mod.rs`) is a struct of a distribution and a
 closure, monomorphised, and `Distribution<S>` for it is four lines. It is a functor written by
 hand and a good one. It cannot be an `HKT` witness because a witness binds one type parameter
 and `Map` has four, and because `Distribution` is a trait rather than a type constructor.
 
-**Global state.** A thread-local `Xoshiro256` behind `rng()` (`lib.rs:53-54, 91`), which is the
-same shape as the standard library's.
+**Global state.** A thread-local `Xoshiro256` behind `rng()` (`lib.rs`), the same shape as the
+standard library's.
 
-**Consumers.** `topology` (gauge fields, heavily), `algorithms` (BRCD, DAG sampling),
-`physics` (Lund), `tensor`, `discovery`, `data_structures`, `ultragraph`, three example crates.
-They use `Rng`, `Xoshiro256`, `Distribution::sample` and the named distributions. None uses
-`Map` in a way a generic cleanup would break.
+**Consumers.** Runtime: `stats`, `uncertain`, `algorithms` (BRCD, DAG sampling) and `physics`
+(Lund, feature-gated). Dev-only: `data_structures`, `discovery`, `tensor`, `ultragraph`. Three
+example crates. They use `Rng`, `Xoshiro256`, `Uniform`, `SobolSequence` and `Distribution::sample`;
+the named distributions now come from `stats`. `topology` does not depend on this crate directly;
+it reaches the generator traits through the `stats` re-export. No call site broke in the retrofit,
+and the bounds got shorter: two sites in `topology` and one example ask for `RandScalar` and
+nothing more. No consumer uses `Map`.
 
 ---
 
@@ -178,20 +213,19 @@ They use `Rng`, `Xoshiro256`, `Distribution::sample` and the named distributions
 |---|---|---|---|---|
 | B1 | The closed `SampledValue` enum, held in place by a global static cache | uncertain | legacy decision | a node tree generic in `R`; the cache goes (B5) |
 | B2 | `haft`'s `Functor`, `Pure`, `Applicative`, `Monad` signatures cannot feed a lazy graph | uncertain, haft | structural | a strict `Particles<T>` carrier takes the witness; the lazy graph stays Arrow-shaped; `MaybeParallel` trims the bounds but `'static` and `Clone` remain |
-| B3 | Struct bound `T: ProbabilisticType` | uncertain | mechanical | drop to impls; the trait dissolves into `R: RealRng` and `bool` |
-
-**`RealRng` no longer exists** — `retrofit-sampling-layer`, 2026-09-14. It was a capability bound
-with no consumer outside its own test file, so it was removed rather than carried forward, and the
-rows above that name it should be read as naming `RealField + FromPrimitive + RandWidth` instead:
-the scalar's capabilities, stated where the draw happens.
-
+| B3 | Struct bound `T: ProbabilisticType` | uncertain | mechanical | drop to impls; the trait dissolves into `R: RandScalar` and `bool` |
 | B4 | `f64` thresholds, function nodes and probabilities | uncertain | mechanical | everything in `R`; `f64` only at the display boundary |
 | B5 | Five globals, one of them a leaking, root-only cache with an untested production branch | uncertain, rand | decision taken | remove the cache; index-addressed draws from (seed, index, leaf id); a `SampleSession` value; zero globals owned by `uncertain` |
-| B6 | QMC needs static structure, and Sobol resolves 32 bits | uncertain, rand | inherent | a structure descriptor; state the 32-bit cap as a limit `Float106` cannot lift |
-| B7 | ~~Six per-type files in `rand`~~ | rand | **done, superseded** | the per-type files are gone, but by a crate boundary rather than a generic impl — see B7 below |
-| B8 | ~~No `BFloat16` in `rand`~~ | stats | **closed** | the unit draw is one generic body over `RandWidth`; `BFloat16` is a row, and the rejection it needs was measured rather than assumed |
+| B6 | QMC needs static structure, and Sobol resolves 32 bits | uncertain, rand | inherent | a structure descriptor; the 32-bit cap is a limit `Float106` cannot lift, and `SobolSequence::coordinate` now states it |
+| B7 | ~~Six per-type files in `rand`~~ | rand | **done** | two blanket impls, one per tower, kept apart by a kind type parameter; zero concrete scalars named |
+| B8 | ~~No `BFloat16` in `rand`~~ | rand, stats | **done** | nothing to add for it: the blanket impls cover it, its word count comes from `epsilon`, and a probe test draws at it |
 | B9 | `MaybeUncertain` as a parallel type | uncertain | design | `Uncertain<Option<R>>` and `Particles<Option<T>>` |
 | B10 | Core pins `f64` and `bool` at 79 sites; CFD is generic but inherits the `ProbabilisticType` bound | consumers | migration | keep the aliases; CFD compiles at `f32` the day B1 lands |
+
+**The bound the rows above ask for is `RandScalar`**: `RealField + FromPrimitive`,
+blanket-implemented in `deep_causality_rand` and re-exported by `deep_causality_stats`. Neither
+`RealRng` nor the `RandWidth` width table exists; a scalar joins the sampling layer by satisfying
+the algebra and by nothing else.
 
 ### B1. The closed precision dispatcher
 
@@ -215,9 +249,9 @@ enum has no reason left.
 
 **Resolution.** Make the tree generic: `ConstTree<Node<R>>` with
 `enum Sample<R> { Real(R), Bool(bool) }` and one `Distribution(DistributionEnum<R>)` arm in place
-of three. The distributions come from `rand` through `R: RealRng`, which already serves `f32`,
-`f64` and `Float106` and would serve `BFloat16` after B8. `Uncertain<f32>` then exists on the day
-the tree compiles, with no new files.
+of three. The distributions come from `stats` and the range draw from `rand`, both over
+`R: RandScalar`, which serves every real field — `f32`, `Float106` and `BFloat16` included — today.
+`Uncertain<f32>` then exists on the day the tree compiles, with no new files.
 
 The cache does not move; it goes, and B5 says why and what replaces it. A `SampleSession<R>`
 the caller owns holds the seed, the sample counter and, for QMC, the Sobol sequence. `sample()`
@@ -300,7 +334,7 @@ particles stream. `sequence` and `bind` on `Particles` are what make the per-par
 `Uncertain<T: ProbabilisticType>` must become `Uncertain<T>`, with the bounds on impl blocks. The
 `Constraint` slot that would have carried the bound no longer exists on `HKT` (`hkt_gaps.md` §7),
 and `Dual` made the same move. `ProbabilisticType` then has no job: real values ask for
-`R: RealRng`, booleans are `bool`, and the `Into`/`From` conversions through `SampledValue` go
+`R: RandScalar`, booleans are `bool`, and the `Into`/`From` conversions through `SampledValue` go
 with the enum.
 
 ### B4. The `f64` leaks
@@ -308,9 +342,11 @@ with the enum.
 All of `uncertain_op_comparison.rs`, the `ComparisonOp` threshold, both `FunctionOp` arms,
 `bernoulli`, `probability_exceeds`, `estimate_probability`, and the two `MaybeUncertain`
 probabilities take `R` or return `R`. A probability is a ratio of two counts, so it is
-`lift_count::<R>(hits) / lift_count::<R>(n)`, and it reaches `println!` through `lower`. The
-Bernoulli parameter is the one place `f64` may stay: `rand` stores it as 64-bit fixed point, so
-no `R` wider than `f64` changes the draw. Offer `bernoulli_from<R: ToPrimitive>` for symmetry.
+`lift_count::<R>(hits) / lift_count::<R>(n)`, and it reaches `println!` through `lower`. `Bernoulli::new` in `stats` already takes the caller's scalar, so
+`bernoulli` takes `R` like everything else. What it does not widen is resolution: the parameter is
+held as 64-bit fixed point, which is what makes `p = 0` and `p = 1` exact, so a `Float106`
+probability keeps 64 of its bits. That is the representation's bound, not the scalar's, and the
+constructor says so.
 
 ### B5. Global state, and the decision to remove the cache
 
@@ -392,57 +428,60 @@ That is not a defect, since QMC's value is in the low-discrepancy layout and not
 per-coordinate resolution, but it means the QMC path gains nothing from `Float106` until the
 direction numbers move to 64 bits. State it in the docstring; do not fix it in this change.
 
-### B7. The six per-type files in `rand`
+### B7. The per-type sampler files in `rand`
 
-`RandFloat` already exists and `RealRng` already blankets over it. Finish the move: one
-`impl<T: RandFloat> Distribution<T> for StandardUniform` where `RandFloat` supplies the
-significand width and the bits-to-float step; `Float106` keeps its two-word constructor as its
-impl of that step. One `impl<T: RandFloat + RealField> SampleRange<T> for Range<T>` replaces the
-`f32` and `f64` copies. `StandardNormal` picks its path by significand width: at or below 53
-bits, the `f64` ziggurat then a narrowing that is exact for `f32` and `BFloat16`; above, the
-inverse CDF in `T`, which is what `Float106` does now.
+**Done**, `191281cae`. The crate names zero concrete scalars. Two independent things had to
+happen, and the first alone was not enough.
 
-Add `impl<R: RngCore + ?Sized> Rng for R {}` in place of `impl<T: Rng> Rng for &mut T`, so a
-`&mut dyn RngCore` is an `Rng`. `Rng` has only default methods, so the blanket is legal, and it
-lets the session hold its generator behind one type.
+**The crate boundary took the shaped distributions out.** A blanket
+`impl<T: RealField> Distribution<T> for StandardUniform` is `error[E0119]` against the `u64`, `u32`
+and `bool` implementations a generator must also provide: coherence cannot prove `u64` will never
+be a real field. Moving normal, exponential, Cauchy, Weibull, log-normal, Poisson, categorical and
+the unit draws to `deep_causality_stats` — which has no reason to sample a machine word — removes
+the overlap rather than working around it. `rand` kept the word draw, the Boolean draw, the
+generators, Sobol and the range sampler; `Uniform<X, K>` stays because `SampleUniform` can only be
+implemented in the crate that owns it.
 
-**Breaks.** None for consumers that call `sample`, `random`, `random_range` and the named
-distributions. The `RandFloat` trait becomes public, which it half is already.
+**The kind parameter took the per-type range samplers out.** The boundary does not reach them,
+because both towers need a range sampler in the same crate. What stood in the way was a circular
+argument in the crate's own comments: the float bindings said they could not be generic because a
+blanket would collide with the integers, and the integer bindings said the same about the floats.
+One trait cannot carry two blanket impls over disjoint towers — but two *parameterised* impls of
+one trait can. `SampleUniform<FloatKind>` and `SampleUniform<UnsignedKind>` are distinct items, so
+each is written once: `UniformFloat<T>` over `RealField + FromPrimitive`, `UniformUnsigned<T>` over
+`RandUnsigned`, and one `SampleRange<T, K> for Range<T>` in place of five. `u8`, `u16` and `u128`
+gained samplers they never had, and the `usize` sampler that drew from `next_u32` and so returned
+only the bottom `2^32` of a wider range cannot recur: one body has nothing to disagree with.
 
-**Superseded** — `retrofit-sampling-layer`, 2026-09-14. The per-type files are gone, but the route
-above would not have got there.
+**The `Rng` blanket proposed above was not done, and should not be.**
+`impl<R: RngCore + ?Sized> Rng for R {}` exists to make a `&mut dyn RngCore` an `Rng`. That is a
+trait object, and AGENTS.md forbids `dyn` in this workspace.
 
-The plan was one generic `impl<T: RandFloat> Distribution<T> for StandardUniform` in `rand`. That
-impl is `error[E0119]` against the `u64`, `u32` and `bool` implementations the same crate must
-provide: coherence cannot prove `u64` will never be a real field, so the blanket overlaps them. No
-amount of tidying inside one crate removes that.
-
-What removed it was the **crate boundary**. The shaped distributions moved to
-`deep_causality_stats`, which has no reason to sample a machine word, so the overlap does not arise
-there. `rand` kept the word draw, the Boolean draw, the generators, Sobol and the range sampler —
-`Uniform<X>` stays because `SampleUniform` can only be implemented where it is defined.
-
-The `Rng` blanket in the second paragraph was **not** done, and should not be: `&mut dyn RngCore`
-is a trait object, and AGENTS.md forbids `dyn` in this workspace.
+**Breaks.** None at a call site. The consumer edits the change made were bound simplifications.
 
 ### B8. `BFloat16`
 
-Draw an `f32` and round once, which is how `BFloat16` arithmetic already computes. For the
-half-open uniform, rounding can carry a sample onto the upper bound; reject and redraw. The value
-is low: a two-digit scalar is not a sampling type anyone asks for, and it exists in `num` for
-accelerator buffers. Do it for completeness after B7 makes it a one-line impl, or leave it and
-say why.
+**Done**, `191281cae`. Neither crate names it, and it draws.
 
-**Closed** — `retrofit-sampling-layer`, 2026-09-14. The unit draw in `deep_causality_stats` is one
-generic body over `RandWidth`, so `BFloat16` needs no implementation of its own, only a row saying
-how many words its significand absorbs.
+It needs no implementation and no table row. The unit draw accumulates 53-bit words and stops when
+the next would land below the scalar's own `epsilon`, so `BFloat16` takes one word because its
+`epsilon` says one is enough, and a scalar added later takes however many it needs on the day it
+arrives.
 
-The half-open edge this row anticipated is real and was measured rather than argued. A draw from
-`[0, 1)` can round onto exactly `1.0` in a narrow significand — at `BFloat16`'s 8 bits, about once
-in `2^9` draws — which leaves the interval every inverse-CDF transform assumes. Rejecting and
-redrawing costs 0.00429 of the draws over 200 000; clamping instead would pile an atom of mass on
-one value, which was measured at 0.00584. Rejection is what shipped, and the note above it says
-why.
+The half-open edge this row anticipated is real, and it bit in two distinct places, both measured
+rather than argued.
+
+- A unit draw can round onto exactly `1.0` at a narrow significand: 6 draws in 2 000 at
+  `BFloat16`'s 8 bits, none at `f32` and wider. That leaves the interval every inverse-CDF
+  transform assumes, so the rejection lives inside `RandScalar::rand_float_gen` where the promise
+  is made, not in each caller.
+- The affine map `u * scale + low` can round up onto `high` even when `u` is strictly below one:
+  14 draws in 2 000 at `BFloat16`. `UniformFloat` therefore carries an `exclusive_high` and rejects
+  a result that reaches it; `new_inclusive` leaves it `None`, because `high` is a legitimate result
+  there.
+
+Both counts are zero now at every scalar the probe test runs. Clamping was the alternative in both
+cases and was rejected on measurement: it piles an atom of probability mass on one value.
 
 ### B9. `MaybeUncertain`
 
@@ -469,8 +508,10 @@ Three layers, each with one job.
 
 ```
 rand        entropy: RngCore, Rng, Distribution<T>, StandardWord, StandardBool, Uniform,
-            Sobol. Generic in R. No haft. No density.
-stats       the distributions and their densities, generic in the scalar over RandWidth.
+            Sobol. Generic in the scalar over RandScalar and RandUnsigned. No haft.
+            No density. In the tree today.
+stats       the distributions and their densities, generic in the scalar over RandScalar.
+            In the tree today.
 uncertain   Uncertain<R>: the lazy graph. Builds distributions, draws every leaf from
             (seed, index, leaf id), drives QMC and adaptive testing, materialises
             particles. Arrow-shaped. No globals.
@@ -523,7 +564,7 @@ Four changes, each shippable alone. Effort is the author's estimate for one engi
 
 | Stage | Change | Breaks | Tests to carry | Effort |
 |---|---|---|---|---|
-| 1 | `rand` generic cleanup: B7, the `Rng` blanket, optional B8 | none at call sites | 157 | 2 to 3 days |
+| 1 | ~~`rand` generic cleanup~~ — **done**, `191281cae`. B7 and B8 by a crate boundary plus two blanket impls over a kind parameter. The `Rng` blanket was dropped: it needs `dyn` | none at call sites; two bounds in `topology` and one example got shorter | 112 in `rand`, the rest moved to `stats` | shipped |
 | 2 | `uncertain` precision as a parameter and the cache removal: B1, B3, B4, B5, B9, the `MaybeParallel` substitution; `Uncertain<f32>` appears and CFD compiles at `f32` | the public enum, the traits, the cache and seed functions, `SamplerKind` | 253, with the 38 cache and seed sites across six files rewritten against a session | 1 to 2 weeks, and the crate should come out smaller |
 | 3 | `Particles<T>` and its witness with law tests, parallel `fmap` through `scoped_map`; `Traversable` for `DenseVector` and `CausalTensor` | none; additive | new law tests, the `haft` law-test shape, one seeded test that materialisation agrees serial and parallel | 1 week |
 | 4 | Consumers: aliases in core, one example, `hkt_gaps.md` updated | none after the aliases | consumer suites | 2 days |
@@ -536,7 +577,9 @@ archived note lands, and it needs nothing from stage 2 except the carrier's scal
 
 ## 5. What is not solved
 
-- QMC resolution stays at 32 bits per coordinate (B6).
+- QMC resolution stays at 32 bits per coordinate (B6). `SobolSequence::coordinate<T>` now returns
+  at the caller's scalar and states the cap at the item, rather than returning `f64` and leaving it
+  implicit.
 - A `Particles` field at simulation size does not fit in memory (B2, the arithmetic). The lazy
   graph is the answer and the note says how to use it.
 - The zero-argument `sample()` the core context nodes call still needs an index and a seed from
@@ -575,10 +618,19 @@ for f in functor/functor_base.rs pure/mod.rs applicative/mod.rs monad/mod.rs tra
   awk '/^pub trait/{p=1} p' deep_causality_unified_math/deep_causality_haft/src/$f | grep -v "^\s*///" | head -12
 done
 
-# rand's per-type files and hard f64
-ls deep_causality_unified_math/deep_causality_rand/src/extensions/{distribution,uniform}
-grep -rn "f64" deep_causality_unified_math/deep_causality_rand/src/traits --include=*.rs
-grep -rln "BFloat16" deep_causality_unified_math/deep_causality_rand | wc -l
+# rand names no concrete scalar: this prints nothing
+grep -rn "for f32\|for f64\|for Float106\|for BFloat16\|for u8\|for u16\|for u32\|for u64\|for u128\|for usize" \
+  deep_causality_unified_math/deep_causality_rand/src --include=*.rs
+
+# the f64 that remain: nine lines, each a conversion pivot or a panic message
+grep -rn "f64" deep_causality_unified_math/deep_causality_rand/src --include=*.rs \
+  | grep -v "^[^:]*:[0-9]*: *//"
+
+# the two blanket impls and the kind parameter that keeps them distinct
+grep -rn "SampleUniform<" deep_causality_unified_math/deep_causality_rand/src --include=*.rs
+
+# a scalar the crate never names, drawn and asserted
+cargo test -p deep_causality_rand --test mod parity_probe
 
 # consumer spellings
 grep -rhoE "(Maybe)?Uncertain<[A-Za-z0-9_]+>|UncertainF64|UncertainBool|MaybeUncertainF64" \
