@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_uncertain::Uncertain;
+use deep_causality_uncertain::{Uncertain, seed_sampler};
 
 // Helper for approximate equality for f64
 fn assert_approx_eq(a: f64, b: f64, epsilon: f64) {
@@ -17,9 +17,18 @@ fn assert_approx_eq(a: f64, b: f64, epsilon: f64) {
 
 use rusty_fork::rusty_fork_test;
 
+/// Every test below that observes a draw installs this seed first.
+///
+/// Without it the draws come from OS entropy, and a test that gates on a sampled decision is a
+/// coin flip with a good bias rather than an assertion. Measured before seeding: five tests in
+/// this crate failed across ~360 runs, and 41 sampled-decision call sites were exposed. The
+/// assertions are unchanged; only the entropy source is.
+const SEED: u64 = 0x5EED_2026;
+
 rusty_fork_test! {
     #[test]
     fn integration_test_sensor_fusion_and_aggregation() {
+        seed_sampler(SEED);
     // Scenario: Two sensors measure a value, each with some noise.
     // We combine their readings by averaging and estimate the combined value's properties.
 
@@ -65,6 +74,7 @@ rusty_fork_test! {
 
 #[test]
 fn integration_test_decision_making_under_uncertainty(){
+    seed_sampler(SEED);
     // Scenario: A system needs to decide if a condition is true, given uncertain inputs.
 
     // Input A: Uniformly distributed value

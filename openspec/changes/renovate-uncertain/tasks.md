@@ -5,9 +5,9 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 ## 1. Baseline
 
-- [ ] 1.1 Record the pre-change baseline in one place: `cargo test -p deep_causality_uncertain` count, `bazel test //...` count, the six `dyn` sites, the 72 `SampledValue` variant arms, the 24 `rusty_fork_test!` invocations, and the src line count. Every later claim of "smaller" or "fewer" is checked against this row, not asserted.
-- [ ] 1.2 Characterise the existing flake: run the suite 50 times, record which tests fail and at what rate. Verify: `uncertain_maybe_f106_tests::test_lift_to_uncertain_success` is among them, and no other flake is hiding behind it.
-- [ ] 1.3 Record a seeded golden vector under the **current** implementation — 32 draws from a two-leaf tree at a fixed seed — so the change's effect on recorded sequences is a measured diff rather than an assumption.
+- [x] 1.1 Record the pre-change baseline in one place: `cargo test -p deep_causality_uncertain` count, `bazel test //...` count, the six `dyn` sites, the 72 `SampledValue` variant arms, the 24 `rusty_fork_test!` invocations, and the src line count. Every later claim of "smaller" or "fewer" is checked against this row, not asserted.
+- [x] 1.2 Characterise the existing flake: run the suite 50 times, record which tests fail and at what rate. Verify: `uncertain_maybe_f106_tests::test_lift_to_uncertain_success` is among them, and no other flake is hiding behind it.
+- [x] 1.3 Record a seeded golden vector under the **current** implementation — 32 draws from a two-leaf tree at a fixed seed — so the change's effect on recorded sequences is a measured diff rather than an assumption.
 
 ## 2. The session and index-addressed draws
 
@@ -21,9 +21,9 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 ## 3. Removing the globals
 
 - [ ] 3.1 Move every draw call site onto the session, then delete `types/cache/` (`GlobalSampleCache`, `with_global_cache`, `SamplerKind`, `SampleCacheKey`) and `seed_sampler` / `clear_sampler_seed` / `SAMPLER_SEED`. **Ask before deleting** — Golden Rule 2.
-- [ ] 3.2 Rewrite the 38 cache-and-seed call sites across the six test files against a session.
+- [ ] 3.2 Rewrite the cache-and-seed call sites against a session: 38 originally, plus the 24 seeds task 3.4 added, across ten test files.
 - [ ] 3.3 Convert the 24 `rusty_fork_test!` invocations to ordinary tests and drop `rusty-fork` from the dev-dependencies. Verify: the suite passes with `--test-threads` at the default and at 1.
-- [ ] 3.4 Fix the flaky presence-gate test by seeding it. The assertion stays exact — no wider tolerance, no larger budget. Verify: 100 consecutive runs agree.
+- [x] 3.4 Fix the flaky presence-gate test by seeding it. The assertion stays exact — no wider tolerance, no larger budget. Verify: 100 consecutive runs agree.
 - [ ] 3.5 Verify no mutable global remains: `src/` contains no `static mut`, no `OnceLock`, no `thread_local!`, and `NEXT_UNCERTAIN_ID` is gone or justified in place.
 - [ ] 3.6 Group close-out: `cargo test -p deep_causality_uncertain`, `make format && make fix`, and a commit message.
 
@@ -47,7 +47,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 ## 6. Consumers
 
-- [ ] 6.1 Drop `+ ProbabilisticType` from the ten `deep_causality_cfd` bounds. Verify: the uncertain march compiles at `f32`, which it could not before — that compile is the test.
+- [ ] 6.1 Drop `+ ProbabilisticType` from the sixteen `deep_causality_cfd` bound occurrences across 8 files (measured; the earlier figure of ten came from a truncated listing). Verify: the uncertain march compiles at `f32`, which it could not before — that compile is the test.
 - [ ] 6.2 Update the two `deep_causality_quantum` files that name the removed bound.
 - [ ] 6.3 Verify the 45 alias call sites in `deep_causality` need no edit, and that the four aliases still resolve.
 - [ ] 6.4 Update the three example crates that construct uncertain values; check `cargo run` for each, since examples are verified by running rather than by unit tests.

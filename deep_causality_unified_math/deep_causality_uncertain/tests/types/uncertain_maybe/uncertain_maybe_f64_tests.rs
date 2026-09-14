@@ -3,8 +3,16 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_uncertain::{MaybeUncertain, Uncertain, UncertainError};
+use deep_causality_uncertain::{MaybeUncertain, Uncertain, UncertainError, seed_sampler};
 use rusty_fork::rusty_fork_test;
+
+/// Every test below that observes a draw installs this seed first.
+///
+/// Without it the draws come from OS entropy, and a test that gates on a sampled decision is a
+/// coin flip with a good bias rather than an assertion. Measured before seeding: five tests in
+/// this crate failed across ~360 runs, and 41 sampled-decision call sites were exposed. The
+/// assertions are unchanged; only the entropy source is.
+const SEED: u64 = 0x5EED_2026;
 
 rusty_fork_test! {
     // T004: Test for from_value, from_uncertain, and always_none constructors
@@ -63,6 +71,7 @@ rusty_fork_test! {
     // T008: Test for lift_to_uncertain
     #[test]
     fn test_lift_to_uncertain_success() {
+        seed_sampler(SEED);
         let u = Uncertain::<f64>::point(42.0);
         let mu = MaybeUncertain::<f64>::from_bernoulli_and_uncertain(0.9, u);
         let result = mu.lift_to_uncertain(0.8, 0.95,0.05,100).unwrap();
@@ -71,6 +80,7 @@ rusty_fork_test! {
 
     #[test]
     fn test_lift_to_uncertain_failure() {
+        seed_sampler(SEED);
         let u = Uncertain::<f64>::point(42.0);
         let mu = MaybeUncertain::<f64>::from_bernoulli_and_uncertain(0.7, u);
         let result = mu.lift_to_uncertain(0.8, 0.95,0.05, 100);

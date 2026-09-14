@@ -2,8 +2,18 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality_uncertain::{SampledValue, SamplerKind, Uncertain, with_global_cache};
+use deep_causality_uncertain::{
+    SampledValue, SamplerKind, Uncertain, seed_sampler, with_global_cache,
+};
 use rusty_fork::rusty_fork_test;
+
+/// Every test below that observes a draw installs this seed first.
+///
+/// Without it the draws come from OS entropy, and a test that gates on a sampled decision is a
+/// coin flip with a good bias rather than an assertion. Measured before seeding: five tests in
+/// this crate failed across ~360 runs, and 41 sampled-decision call sites were exposed. The
+/// assertions are unchanged; only the entropy source is.
+const SEED: u64 = 0x5EED_2026;
 
 rusty_fork_test! {
 //
@@ -18,6 +28,7 @@ fn test_f64_sample_with_index_point() {
 
 #[test]
 fn test_from_sample() {
+    seed_sampler(SEED);
     let u = Uncertain::from_samples(&[1.0, 2.0, 3.0, 4.0, 5.0]);
     let result = u.sample_with_index(0);
     assert!(result.is_ok());
@@ -25,6 +36,7 @@ fn test_from_sample() {
 
 #[test]
 fn test_from_sample_empty() {
+    seed_sampler(SEED);
     // An empty sample is a point at zero — the degenerate answer this crate supplies where
     // `deep_causality_stats::mean` refuses. Asserting the value rather than `is_ok()`, which was
     // true for every possible sentinel and so said nothing about which one is returned.
@@ -35,6 +47,7 @@ fn test_from_sample_empty() {
 
 #[test]
 fn test_from_sample_single_observation_has_zero_spread() {
+    seed_sampler(SEED);
     // One observation has no dispersion to estimate: `std_dev` says so with `InsufficientSamples`
     // and this crate answers zero, because a summary must summarise whatever it is handed.
     //
@@ -51,6 +64,7 @@ fn test_from_sample_single_observation_has_zero_spread() {
 
 #[test]
 fn test_f64_sample_with_index_uses_cache() {
+    seed_sampler(SEED);
     // Use a non-deterministic distribution to verify caching.
     let u = Uncertain::uniform(0.0, 100.0);
 
@@ -96,6 +110,7 @@ fn test_f64_take_zero_samples() {
 
 #[test]
 fn test_estimate_probability_exceeds_normal() {
+    seed_sampler(SEED);
     let u = Uncertain::normal(0.0, 1.0); // Standard normal distribution
     let threshold = 0.0;
     let num_samples = 10000;
@@ -136,6 +151,7 @@ fn test_bool_sample_with_index_point() {
 
 #[test]
 fn test_bool_sample_with_index_uses_cache() {
+    seed_sampler(SEED);
     // Use a non-deterministic distribution to verify caching.
     let u = Uncertain::bernoulli(0.5);
 

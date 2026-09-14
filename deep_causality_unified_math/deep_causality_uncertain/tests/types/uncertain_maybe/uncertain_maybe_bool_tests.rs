@@ -3,7 +3,15 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_uncertain::{MaybeUncertain, Uncertain, UncertainError};
+use deep_causality_uncertain::{MaybeUncertain, Uncertain, UncertainError, seed_sampler};
+
+/// Every test below that observes a draw installs this seed first.
+///
+/// Without it the draws come from OS entropy, and a test that gates on a sampled decision is a
+/// coin flip with a good bias rather than an assertion. Measured before seeding: five tests in
+/// this crate failed across ~360 runs, and 41 sampled-decision call sites were exposed. The
+/// assertions are unchanged; only the entropy source is.
+const SEED: u64 = 0x5EED_2026;
 
 #[test]
 fn test_from_uncertain() {
@@ -59,6 +67,7 @@ fn test_always_none() {
 
 #[test]
 fn test_from_bernoulli_and_uncertain() {
+    seed_sampler(SEED);
     let present_value_dist = Uncertain::<bool>::point(true);
     let maybe_uncertain =
         MaybeUncertain::<bool>::from_bernoulli_and_uncertain(0.8, present_value_dist.clone());
@@ -88,6 +97,7 @@ fn test_from_bernoulli_and_uncertain() {
 
 #[test]
 fn test_sample() -> Result<(), UncertainError> {
+    seed_sampler(SEED);
     // Test case 1: is_present is true, value is true
     let maybe_uncertain_true = MaybeUncertain::<bool>::from_value(true);
     let mut num_true_samples = 0;
@@ -185,6 +195,7 @@ fn test_is_none() {
 
 #[test]
 fn test_lift_to_uncertain() -> Result<(), UncertainError> {
+    seed_sampler(SEED);
     // Test case 1: is_present is true, should lift successfully
     let uncertain_true_value = Uncertain::<bool>::point(true);
     let maybe_uncertain_present = MaybeUncertain::<bool>::from_value(true);

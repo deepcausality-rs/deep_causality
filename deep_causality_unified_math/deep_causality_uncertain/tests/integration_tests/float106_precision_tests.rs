@@ -9,7 +9,15 @@
 //! `MaybeUncertain<Float106>` present/dropout surface works.
 
 use deep_causality_num::Float106;
-use deep_causality_uncertain::{MaybeUncertain, Uncertain};
+use deep_causality_uncertain::{MaybeUncertain, Uncertain, seed_sampler};
+
+/// Every test below that observes a draw installs this seed first.
+///
+/// Without it the draws come from OS entropy, and a test that gates on a sampled decision is a
+/// coin flip with a good bias rather than an assertion. Measured before seeding: five tests in
+/// this crate failed across ~360 runs, and 41 sampled-decision call sites were exposed. The
+/// assertions are unchanged; only the entropy source is.
+const SEED: u64 = 0x5EED_2026;
 
 /// `1/3` at double-double precision: its low limb is nonzero, so it is unrepresentable in
 /// f64 and exercises the precision-carrying path.
@@ -44,6 +52,7 @@ fn float106_arithmetic_preserves_precision() {
 
 #[test]
 fn float106_normal_samples_are_finite_and_double_double() {
+    seed_sampler(SEED);
     let u = Uncertain::<Float106>::normal(Float106::from(0.0), Float106::from(1.0));
     let samples = u.take_samples(500).unwrap();
 
@@ -56,6 +65,7 @@ fn float106_normal_samples_are_finite_and_double_double() {
 
 #[test]
 fn float106_uniform_samples_in_range() {
+    seed_sampler(SEED);
     let low = Float106::from(10.0);
     let high = Float106::from(20.0);
     let u = Uncertain::<Float106>::uniform(low, high);

@@ -3,7 +3,17 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_uncertain::{SampledValue, SamplerKind, Uncertain, with_global_cache};
+use deep_causality_uncertain::{
+    SampledValue, SamplerKind, Uncertain, seed_sampler, with_global_cache,
+};
+
+/// Every test below that observes a draw installs this seed first.
+///
+/// Without it the draws come from OS entropy, and a test that gates on a sampled decision is a
+/// coin flip with a good bias rather than an assertion. Measured before seeding: five tests in
+/// this crate failed across ~360 runs, and 41 sampled-decision call sites were exposed. The
+/// assertions are unchanged; only the entropy source is.
+const SEED: u64 = 0x5EED_2026;
 
 // Helper for approximate equality for f64
 fn assert_approx_eq(a: f64, b: f64, epsilon: f64) {
@@ -34,6 +44,7 @@ fn test_uncertain_f64_point_constructor() {
 
 #[test]
 fn test_uncertain_f64_normal_constructor() {
+    seed_sampler(SEED);
     let mean = 10.0;
     let std_dev = 2.0;
     let uncertain = Uncertain::<f64>::normal(mean, std_dev);
@@ -61,6 +72,7 @@ fn test_uncertain_f64_normal_constructor() {
 
 #[test]
 fn test_uncertain_f64_uniform_constructor() {
+    seed_sampler(SEED);
     let low = 0.0;
     let high = 100.0;
     let uncertain = Uncertain::<f64>::uniform(low, high);
@@ -117,6 +129,7 @@ fn test_uncertain_bool_point_constructor() {
 
 #[test]
 fn test_uncertain_bool_bernoulli_constructor() {
+    seed_sampler(SEED);
     let p = 0.7;
     let uncertain = Uncertain::<bool>::bernoulli(p);
 
@@ -134,6 +147,7 @@ fn test_uncertain_bool_bernoulli_constructor() {
 // Test for Uncertain<bool> methods
 #[test]
 fn test_uncertain_bool_to_bool() {
+    seed_sampler(SEED);
     // Clearly true
     let uncertain_true = Uncertain::<bool>::point(true);
     assert!(uncertain_true.to_bool(0.99, 0.95, 0.05, 1000).unwrap());
@@ -161,6 +175,7 @@ fn test_uncertain_bool_to_bool() {
 
 #[test]
 fn test_uncertain_bool_probability_exceeds() {
+    seed_sampler(SEED);
     // Test with threshold 0.5, confidence 0.9
     let uncertain_true = Uncertain::<bool>::point(true);
     assert!(
@@ -197,6 +212,7 @@ fn test_uncertain_bool_implicit_conditional() {
 
 #[test]
 fn test_uncertain_bool_estimate_probability() {
+    seed_sampler(SEED);
     let uncertain_true = Uncertain::<bool>::point(true);
     assert_approx_eq(uncertain_true.estimate_probability(100).unwrap(), 1.0, 0.01);
 
@@ -262,6 +278,7 @@ fn test_uncertain_conditional_bool_false_condition() {
 
 #[test]
 fn test_uncertain_conditional_f64_uncertain_condition() {
+    seed_sampler(SEED);
     let uncertain_condition = Uncertain::<bool>::bernoulli(0.5); // 50/50 chance
     let if_true_val = Uncertain::<f64>::point(100.0);
     let if_false_val = Uncertain::<f64>::point(200.0);
