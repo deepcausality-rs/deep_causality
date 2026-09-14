@@ -2,6 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+pub mod diagonal;
+
 use crate::{Applicative, Foldable, Functor, HKT};
 
 /// The `Traversable` trait abstracts over data structures that can be "traversed"

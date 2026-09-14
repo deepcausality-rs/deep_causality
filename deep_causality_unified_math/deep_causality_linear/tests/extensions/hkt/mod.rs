@@ -8,3 +8,5 @@ mod laws_tests;
 mod ported_csr_witness_tests;
 #[cfg(test)]
 mod witness_tests;
+#[cfg(test)]
+mod dense_vector_diagonal_tests;

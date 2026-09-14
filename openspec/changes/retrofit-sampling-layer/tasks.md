@@ -398,19 +398,35 @@ cumulative scan is the weighted sibling of the same operation.
 Independent of groups 1–5; it closes a gap that exists today for `ZipTensorWitness` and
 `ZipDenseVectorWitness` regardless of sampling.
 
-- [ ] 6.1 Phase 1. Declare the traversal in `haft` beside `Traversable`, bounded on `Semigroupal`
+- [x] 6.1 Phase 1. Declare the traversal in `haft` beside `Traversable`, bounded on `Semigroupal`
       of the inner witness and taking the seed as a parameter. Implement for
       `CausalTensorWitness` and `DenseVectorWitness`. All bodies `unimplemented!()`.
-- [ ] 6.2 Phase 2. Suite: a 2×2 field of 50 draws per cell returns **50** fields of shape `[2, 2]`,
+- [x] 6.2 Phase 2. Suite: a 2×2 field of 50 draws per cell returns **50** fields of shape `[2, 2]`,
       and field *i* holds draw *i* of every cell — **assert exact values, not the count**; the
       empty structure returns the seed; ragged columns truncate the ensemble to the shortest while
-      every field retains every cell. Run; record in `notes/tdd-group-6.md`.
-- [ ] 6.3 Phase 3. Defect audit: (a) the cartesian applicative in place of the diagonal — must fail
-      on the count, 6 250 000 against 50; (b) pairing draw *i* with draw *i+1* — must fail the
-      exact-value assertion, which is why that assertion is on values and not counts;
-      (c) truncating the field cells instead of the ensemble.
-- [ ] 6.4 Phase 4. Implement. Phase 5: mutation testing on the traversal.
-- [ ] 6.5 Clippy clean. Prepare the group-6 commit message.
+      every field retains every cell. Run; record in `notes/tdd-group-6.md`. Six tests for the
+      tensor witness, four for the vector one; 10 of 10 observed failing at the phase-1 body.
+- [x] 6.3 Phase 3. Defect audit: (a) the cartesian applicative in place of the diagonal;
+      (b) pairing draw *i* with draw *i+1*; (c) truncating the field cells instead of the ensemble.
+
+      **(a) cannot be written.** Substituting the cartesian traversal does not compile —
+      `error[E0277]: the trait bound ZipTensorWitness: Applicative<ZipTensorWitness> is not
+      satisfied` — and the reverse substitution fails for the mirror reason. Each traversal takes
+      exactly the witness whose pairing it means. What is kept is the measurement of what the
+      cartesian one does instead: `3^4` against 3.
+
+      **(b) was run twice, and the first form did not make the point.** `skip(1)` shortens the
+      result, so a count test catches it too. Rotating instead leaves the length exactly right and
+      only the values wrong: the count test **passes** and four value tests fail. That is the
+      evidence for writing the assertion on values.
+- [x] 6.4 Phase 4. Implement. Phase 5: mutation testing on the traversal.
+
+      **Mutation testing reaches nothing here.** All 13 mutants generated for `sequence_zip` were
+      unviable: every one replaces the body with a constructed `M::Type<CausalTensor<A>>`, an
+      opaque generic associated type no expression can build, and the body holds no operator to
+      flip. A run reporting 0 missed is not evidence. The scripted audit in 6.3 is the phase-5
+      evidence, which is why (b′) was worth constructing carefully.
+- [x] 6.5 Clippy clean. Prepare the group-6 commit message.
 
 ## 7. Example and documentation
 

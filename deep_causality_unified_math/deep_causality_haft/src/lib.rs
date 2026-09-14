@@ -148,6 +148,7 @@ pub use crate::morphism::morphism_endo::Endomorphism;
 pub use crate::pure::Pure;
 pub use crate::riemann_map::RiemannMap;
 pub use crate::traversable::Traversable;
+pub use crate::traversable::diagonal::DiagonalTraversable;
 
 // Effect System Traits
 pub use crate::effect_system::effect::{Effect3, Effect4, Effect5};

@@ -8,7 +8,7 @@ use alloc::vec::Vec;
 
 use crate::CausalTensor;
 use crate::traits::tensor::Tensor;
-use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, HKT, Monad, Pure, Traversable};
+use deep_causality_haft::{Applicative, CoMonad, DiagonalTraversable, Foldable, Functor, HKT, Monad, Pure, Semigroupal, Traversable};
 
 // ============================================================================
 // HKT Witness Implementation
@@ -258,5 +258,50 @@ impl Applicative<CausalTensorWitness> for CausalTensorWitness {
             let len = data.len();
             CausalTensor::from_vec(data, &[len])
         }
+    }
+}
+
+impl DiagonalTraversable<CausalTensorWitness> for CausalTensorWitness {
+    /// Zips each cell's run into the accumulator in index order, then restores the shape.
+    ///
+    /// The accumulator carries partial fields as flat tensors while the fold runs, because their
+    /// shape is not the input's until every cell has been appended. One `fmap` at the end gives
+    /// each completed field the structure's shape — the shape is read before `into_vec` consumes
+    /// the tensor, which the borrow checker enforces rather than a convention.
+    ///
+    /// Cost is one `zip_with` per cell, each linear in the ensemble length: `O(cells × draws)`,
+    /// with no clone of the accumulator. That is the difference [`Semigroupal::zip_with`]'s
+    /// `FnMut(A, B) -> C` makes against [`Applicative::apply`]'s repeated invocation — `sequence`
+    /// on this witness clones its accumulator once per step and is quadratic.
+    fn sequence_zip<A, M>(
+        fa: CausalTensor<M::Type<A>>,
+        seed: M::Type<CausalTensor<A>>,
+    ) -> M::Type<CausalTensor<A>>
+    where
+        M: Semigroupal<M> + HKT,
+    {
+        let shape = fa.shape().to_vec();
+        let cells = fa.into_vec();
+
+        // No cells, nothing to zip. Without a `Pure` there is nothing to derive an answer from
+        // either, so the seed is the answer — returned before the reshape below, which would
+        // otherwise impose the empty structure's shape on the caller's fields.
+        if cells.is_empty() {
+            return seed;
+        }
+
+        let mut acc = seed;
+        for cell in cells {
+            acc = M::zip_with(acc, cell, |field, a| {
+                let mut values = field.into_vec();
+                values.push(a);
+                let len = values.len();
+                CausalTensor::from_vec(values, &[len])
+            });
+        }
+
+        M::fmap(acc, move |field| {
+            CausalTensor::from_vec(field.into_vec(), &shape)
+        })
     }
 }

@@ -4,7 +4,7 @@
  */
 
 use crate::types::dense_vector::DenseVector;
-use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, HKT, Monad, Pure, Traversable};
+use deep_causality_haft::{Applicative, CoMonad, DiagonalTraversable, Foldable, Functor, HKT, Monad, Pure, Semigroupal, Traversable};
 
 /// The higher-kinded witness for [`DenseVector`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -168,4 +168,29 @@ fn shifted_view<A: Clone>(fa: &DenseVector<A>, index: usize) -> DenseVector<A> {
         out.push(s[(i + index) % n].clone());
     }
     DenseVector::from_vec(out)
+}
+
+impl DiagonalTraversable<DenseVectorWitness> for DenseVectorWitness {
+    /// Zips each slot's run into the accumulator in index order.
+    ///
+    /// A vector carries no shape beyond its length, so unlike the tensor impl there is nothing to
+    /// restore afterwards and the fold is the whole operation. An empty vector leaves nothing to
+    /// zip and the seed is returned as given — with no [`Pure`] there is nothing else it could be.
+    fn sequence_zip<A, M>(
+        fa: DenseVector<M::Type<A>>,
+        seed: M::Type<DenseVector<A>>,
+    ) -> M::Type<DenseVector<A>>
+    where
+        M: Semigroupal<M> + HKT,
+    {
+        let mut acc = seed;
+        for cell in fa.into_data() {
+            acc = M::zip_with(acc, cell, |slot, a| {
+                let mut values = slot.into_data();
+                values.push(a);
+                DenseVector::from_vec(values)
+            });
+        }
+        acc
+    }
 }
