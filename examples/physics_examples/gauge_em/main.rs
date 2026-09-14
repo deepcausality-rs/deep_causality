@@ -26,7 +26,7 @@
 //! - **Classical EM via gauge field formalism** using deep_causality_physics
 
 use deep_causality_core::{CausalEffectPropagationProcess, CausalFlow, PropagatingEffect};
-use deep_causality_num::{Float, Float106, Zero};
+use deep_causality_num::{Float, Float106, Zero, lift};
 use deep_causality_physics::{EM, GaugeEmOps};
 
 // =============================================================================
@@ -40,7 +40,7 @@ type EmTheory = EM<FloatType>;
 /// Macro to convert f64 literals to FloatType
 macro_rules! flt {
     ($x:expr) => {
-        <FloatType as From<f64>>::from($x)
+        lift::<FloatType>($x)
     };
 }
 

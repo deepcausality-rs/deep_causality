@@ -6,4 +6,6 @@
 #[cfg(test)]
 mod curvature_tensor_law_tests;
 #[cfg(test)]
+mod curvature_tensor_scalar_tests;
+#[cfg(test)]
 mod curvature_tensor_tests;

@@ -294,7 +294,7 @@ fn metropolis_update_panics_on_uniform_geometry() {
     // a Uniform geometry hits the `_ => panic!(..)` arm.
     let lattice = open_cube_3();
     let mut geom = CubicalReggeGeometry::<3, f64>::uniform(1.0);
-    let mut rng = deep_causality_rand::rng();
+    let mut rng = deep_causality_stats::rng();
     let _ = geom.metropolis_update(&lattice, &mut rng, 0.1, 1.0);
 }
 

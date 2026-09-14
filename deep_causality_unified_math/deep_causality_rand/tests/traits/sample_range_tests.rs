@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_rand::SampleRange;
+use deep_causality_rand::{Distribution, SampleRange, Uniform};
 use deep_causality_rand::{Rng, RngCore, RngError};
 
 // Mock Rng for deterministic testing
@@ -31,7 +31,17 @@ fn test_f32_sample_single_in_range() {
     let range = 10.0f32..20.0f32;
     let sample = range.sample_single(&mut rng).unwrap();
     assert!((10.0..20.0).contains(&sample));
-    assert_eq!(sample, 15.0f32);
+
+    // `random_range(a..b)` and `Uniform::new(a, b).sample()` are the same mathematical draw, so
+    // they must return the same value. They did not before this change: the range path went
+    // through a 24-bit multiply kernel and the `Uniform` path through a 23-bit transmute kernel,
+    // and at this mock's word they returned 15.0 and 14.999999 respectively. Both are valid
+    // uniform draws; having two of them behind two names for one operation was the defect.
+    // Asserting the agreement rather than a literal keeps the two paths pinned together, and
+    // cannot silently drift the way a magic constant can.
+    let mut rng2 = MockFloatRng { val: 0.5 };
+    let via_uniform: f32 = Uniform::new(10.0f32, 20.0f32).unwrap().sample(&mut rng2);
+    assert_eq!(sample, via_uniform, "the two range APIs must agree");
 }
 
 #[test]
@@ -64,7 +74,11 @@ fn test_f64_sample_single_in_range() {
     let range = 10.0f64..20.0f64;
     let sample = range.sample_single(&mut rng).unwrap();
     assert!((10.0..20.0).contains(&sample));
-    assert_eq!(sample, 15.0f64);
+
+    // The same agreement as the `f32` case above.
+    let mut rng2 = MockFloatRng { val: 0.5 };
+    let via_uniform: f64 = Uniform::new(10.0f64, 20.0f64).unwrap().sample(&mut rng2);
+    assert_eq!(sample, via_uniform, "the two range APIs must agree");
 }
 
 #[test]

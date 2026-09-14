@@ -5,6 +5,7 @@
 
 use crate::types::gravity_types::GmDataPoint;
 use deep_causality_algebra::RealField;
+use deep_causality_num::{FromPrimitive, lift};
 
 /// Apply MAD (Median Absolute Deviation) filtering to remove outliers.
 ///
@@ -17,7 +18,7 @@ use deep_causality_algebra::RealField;
 /// σ ≈ 1.4826 × MAD
 pub fn apply_mad_filter<T>(data: &[T], outlier_sigma: T) -> Vec<T>
 where
-    T: RealField + From<f64> + Clone,
+    T: RealField + FromPrimitive + Clone,
 {
     if data.is_empty() {
         return Vec::new();
@@ -32,7 +33,7 @@ where
         sorted[sorted.len() / 2]
     } else {
         let mid = sorted.len() / 2;
-        let two = T::from(2.0);
+        let two = lift::<T>(2.0);
         (sorted[mid - 1] + sorted[mid]) / two
     };
 
@@ -46,12 +47,12 @@ where
         sorted_residuals[sorted_residuals.len() / 2]
     } else {
         let mid = sorted_residuals.len() / 2;
-        let two = T::from(2.0);
+        let two = lift::<T>(2.0);
         (sorted_residuals[mid - 1] + sorted_residuals[mid]) / two
     };
 
     // Estimate sigma from MAD (σ ≈ 1.4826 × MAD)
-    let scale_factor = T::from(1.4826);
+    let scale_factor = lift::<T>(1.4826);
     let sigma_est = scale_factor * mad;
 
     if sigma_est > T::zero() {
@@ -67,7 +68,7 @@ where
 /// Apply MAD filter to GmDataPoint based on GM values
 pub fn apply_mad_filter_points<T>(data: &[GmDataPoint<T>], outlier_sigma: T) -> Vec<GmDataPoint<T>>
 where
-    T: RealField + From<f64> + Clone,
+    T: RealField + FromPrimitive + Clone,
 {
     if data.is_empty() {
         return Vec::new();
@@ -78,7 +79,7 @@ where
     sorted_by_gm.sort_by(|a, b| a.gm.partial_cmp(&b.gm).unwrap_or(std::cmp::Ordering::Equal));
 
     let len = sorted_by_gm.len();
-    let two = T::from(2.0);
+    let two = lift::<T>(2.0);
 
     // 2. Calculate Median
     let median = if len % 2 == 1 {
@@ -100,7 +101,7 @@ where
         (sorted_res[mid - 1] + sorted_res[mid]) / two
     };
 
-    let scale_factor = T::from(1.4826);
+    let scale_factor = lift::<T>(1.4826);
     let sigma_est = scale_factor * mad;
 
     if sigma_est > T::zero() {

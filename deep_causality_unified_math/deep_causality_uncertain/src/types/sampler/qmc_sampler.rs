@@ -22,9 +22,10 @@ use crate::{
 };
 use deep_causality_ast::ConstTree;
 use deep_causality_num::Float106;
-use deep_causality_rand::{
-    MAX_SOBOL_DIM, SobolSequence, bernoulli_inverse_cdf, standard_normal_inverse_cdf,
-    standard_normal_inverse_cdf_f106, uniform_inverse_cdf,
+use deep_causality_rand::{MAX_SOBOL_DIM, SobolSequence};
+use deep_causality_stats::{
+    bernoulli_inverse_cdf, standard_normal_inverse_cdf, standard_normal_inverse_cdf_f106,
+    uniform_inverse_cdf,
 };
 use std::collections::{HashMap, HashSet};
 

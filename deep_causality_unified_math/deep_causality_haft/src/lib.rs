@@ -47,6 +47,7 @@ mod alias;
 pub(crate) mod applicative;
 mod arrow;
 pub(crate) mod category;
+pub(crate) mod collectable;
 pub(crate) mod cybernetic_loop;
 pub(crate) mod effect_system;
 pub(crate) mod either;
@@ -127,6 +128,7 @@ pub use crate::hkt::{HKT2Unbound, HKT3Unbound, HKT4Unbound, HKT5Unbound, HKT6Unb
 // Traits
 pub use crate::adjunction::Adjunction;
 pub use crate::applicative::Applicative;
+pub use crate::collectable::Collectable;
 pub use crate::cybernetic_loop::CyberneticLoop;
 pub use crate::foldable::Foldable;
 pub use crate::functor::bifunctor::Bifunctor;
@@ -148,6 +150,7 @@ pub use crate::morphism::morphism_endo::Endomorphism;
 pub use crate::pure::Pure;
 pub use crate::riemann_map::RiemannMap;
 pub use crate::traversable::Traversable;
+pub use crate::traversable::diagonal::DiagonalTraversable;
 
 // Effect System Traits
 pub use crate::effect_system::effect::{Effect3, Effect4, Effect5};

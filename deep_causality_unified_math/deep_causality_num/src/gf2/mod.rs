@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! 𝔽₂, the two-element field, and the tower's first finite field.
+//! 𝔽₂, the two-element finite field.
 //!
 //! # Why a scalar, when the matrices are bit-packed
 //!

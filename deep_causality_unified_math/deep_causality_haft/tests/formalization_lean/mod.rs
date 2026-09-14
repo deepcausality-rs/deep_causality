@@ -71,4 +71,6 @@ mod pure_tests;
 #[cfg(test)]
 mod signatures_tests;
 #[cfg(test)]
+mod traversable_list_tests;
+#[cfg(test)]
 mod traversable_tests;

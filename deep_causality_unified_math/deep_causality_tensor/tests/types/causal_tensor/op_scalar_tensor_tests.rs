@@ -244,3 +244,73 @@ mod test_f64 {
             .for_each(|(a, b)| assert!((a - b).abs() < TOLERANCE));
     }
 }
+
+// --- The software scalars ---
+//
+// `Float106` and `BFloat16` reach the operators through the same concrete impls as `f32` and
+// `f64`, because a blanket `impl<T> Mul<CausalTensor<T>> for T` is forbidden by the orphan rule.
+// Every value below is a small integer, exact in all four types including `BFloat16`'s eight-bit
+// significand, so each result is compared exactly rather than against a tolerance.
+macro_rules! test_scalar_tensor_ops_for_software_scalar {
+    ($ty:ty, $test_name:ident) => {
+        mod $test_name {
+            use super::*;
+            use deep_causality_num::lift;
+
+            fn tensor(values: [f64; 3]) -> CausalTensor<$ty> {
+                CausalTensor::new(values.iter().map(|&v| lift::<$ty>(v)).collect(), vec![3])
+                    .unwrap()
+            }
+
+            fn assert_exact(got: &CausalTensor<$ty>, want: [f64; 3]) {
+                let want: Vec<$ty> = want.iter().map(|&v| lift::<$ty>(v)).collect();
+                assert_eq!(got.as_slice(), want.as_slice());
+            }
+
+            #[test]
+            fn test_add() {
+                let s = lift::<$ty>(10.0);
+                assert_exact(&(s + &tensor([1.0, 2.0, 3.0])), [11.0, 12.0, 13.0]);
+                assert_exact(&(s + tensor([1.0, 2.0, 3.0])), [11.0, 12.0, 13.0]);
+            }
+
+            #[test]
+            fn test_sub() {
+                // Subtraction is not commutative, so this also pins the operand order: the
+                // scalar is the left operand and the tensor's entries are subtracted from it.
+                let s = lift::<$ty>(10.0);
+                assert_exact(&(s - &tensor([1.0, 2.0, 3.0])), [9.0, 8.0, 7.0]);
+                assert_exact(&(s - tensor([1.0, 2.0, 3.0])), [9.0, 8.0, 7.0]);
+            }
+
+            #[test]
+            fn test_mul() {
+                let s = lift::<$ty>(3.0);
+                assert_exact(&(s * &tensor([1.0, 2.0, 3.0])), [3.0, 6.0, 9.0]);
+                assert_exact(&(s * tensor([1.0, 2.0, 3.0])), [3.0, 6.0, 9.0]);
+            }
+
+            #[test]
+            fn test_div() {
+                // Division is not commutative either: the scalar is the numerator.
+                let s = lift::<$ty>(12.0);
+                assert_exact(&(s / &tensor([2.0, 3.0, 4.0])), [6.0, 4.0, 3.0]);
+                assert_exact(&(s / tensor([2.0, 3.0, 4.0])), [6.0, 4.0, 3.0]);
+            }
+
+            #[test]
+            fn test_shape_is_preserved() {
+                // The result carries the operand's shape rather than flattening it.
+                let t =
+                    CausalTensor::new((1..=6).map(|i| lift::<$ty>(i as f64)).collect(), vec![2, 3])
+                        .unwrap();
+                let scaled = lift::<$ty>(2.0) * &t;
+                assert_eq!(scaled.shape(), &[2, 3]);
+                assert_eq!(scaled.as_slice()[5], lift::<$ty>(12.0));
+            }
+        }
+    };
+}
+
+test_scalar_tensor_ops_for_software_scalar!(deep_causality_num::Float106, test_float106);
+test_scalar_tensor_ops_for_software_scalar!(deep_causality_num::BFloat16, test_bfloat16);

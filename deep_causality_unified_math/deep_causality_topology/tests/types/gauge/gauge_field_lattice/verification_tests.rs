@@ -417,7 +417,7 @@ fn test_wilson_action_gauge_invariance() {
     let action_before = field.try_wilson_action().unwrap();
 
     // Apply random gauge transformation (modifies in place)
-    let mut rng = deep_causality_rand::rng();
+    let mut rng = deep_causality_stats::rng();
     field.try_random_gauge_transform(&mut rng).unwrap();
 
     let action_after = field.try_wilson_action().unwrap();
@@ -440,7 +440,7 @@ fn test_plaquette_gauge_invariance() {
     let plaq_before = field.try_average_plaquette().unwrap();
 
     // Apply random gauge transformation (modifies in place)
-    let mut rng = deep_causality_rand::rng();
+    let mut rng = deep_causality_stats::rng();
     field.try_random_gauge_transform(&mut rng).unwrap();
 
     let plaq_after = field.try_average_plaquette().unwrap();
@@ -488,7 +488,7 @@ fn test_2d_u1_vortex_winding() {
 
     // Apply a perturbation to some links via random update
     // This breaks the trivial vacuum and should result in non-zero action
-    let mut rng = deep_causality_rand::rng();
+    let mut rng = deep_causality_stats::rng();
 
     // Perturb a single link by replacing with a random element
     let edge = deep_causality_topology::LatticeCell::edge([0, 0], 0);
@@ -513,7 +513,7 @@ fn test_2d_u1_vortex_winding() {
 fn test_random_vs_identity_action() {
     let lattice = Arc::new(LatticeComplex::new([4, 4], [true, true]));
     let beta = 2.0;
-    let mut rng = deep_causality_rand::rng();
+    let mut rng = deep_causality_stats::rng();
 
     // Identity (cold start)
     let field_identity: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
@@ -571,7 +571,7 @@ fn test_4d_topological_charge_identity() {
 fn test_hot_vs_cold_start_difference() {
     let lattice = Arc::new(LatticeComplex::new([4, 4], [true, true]));
     let beta = 2.0;
-    let mut rng = deep_causality_rand::rng();
+    let mut rng = deep_causality_stats::rng();
 
     // Cold start (identity)
     let field_cold: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
@@ -607,7 +607,7 @@ fn test_metropolis_sweep_runs() {
     let lattice = Arc::new(LatticeComplex::new([4, 4], [true, true]));
     let beta = 2.0;
     let _epsilon = 0.5;
-    let mut rng = deep_causality_rand::rng();
+    let mut rng = deep_causality_stats::rng();
     let mut field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
         LatticeGaugeField::identity(lattice, beta);
 
@@ -628,7 +628,7 @@ fn test_metropolis_modifies_field() {
     let lattice = Arc::new(LatticeComplex::new([4, 4], [true, true]));
     let beta = 1.0; // Lower beta gives more updates
     let epsilon = 1.0; // Larger step size
-    let mut rng = deep_causality_rand::rng();
+    let mut rng = deep_causality_stats::rng();
     let mut field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
         LatticeGaugeField::identity(lattice, beta);
 
@@ -695,7 +695,7 @@ fn test_boltzmann_distribution_diagnostic() {
     let lattice = Arc::new(LatticeComplex::new([4, 4], [true, true]));
     let beta = 2.0;
     let epsilon = 0.5;
-    let mut rng = deep_causality_rand::rng();
+    let mut rng = deep_causality_stats::rng();
 
     // Create identity (cold start)
     let mut field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
@@ -744,7 +744,7 @@ fn test_thermalization_to_bessel_ratio() {
     let lattice = Arc::new(LatticeComplex::new([8, 8], [true, true]));
     let beta = 2.0;
     let epsilon = 0.3;
-    let mut rng = deep_causality_rand::rng();
+    let mut rng = deep_causality_stats::rng();
 
     // Start from random (hot start)
     let mut field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
@@ -844,7 +844,7 @@ fn test_anisotropic_action_weighting() {
 
     let lattice = Arc::new(LatticeComplex::new([4, 4], [true, true]));
     let beta = 2.0;
-    let mut rng = deep_causality_rand::rng();
+    let mut rng = deep_causality_stats::rng();
 
     // Start with identity and apply a perturbation to one link
     let mut field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =

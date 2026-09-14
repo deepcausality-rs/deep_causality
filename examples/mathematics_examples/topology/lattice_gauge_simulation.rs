@@ -20,7 +20,7 @@
 //!    - APE Smearing
 //!    - Wilson Gradient Flow (computing t0 scale)
 
-use deep_causality_num::Lift;
+use deep_causality_num::{Lift, lift, lower};
 use deep_causality_num_complex::Complex;
 use deep_causality_rand::rng;
 use deep_causality_topology::{
@@ -35,13 +35,18 @@ pub type FloatType = f64;
 // Simulation parameters
 const L: usize = 4; // Lattice size L^4 (small for example speed)
 const D: usize = 4; // Spacetime dimension
-const BETA: FloatType = 6.0; // Inverse coupling β = 2N/g² (approx physical QCD)
+
+/// Inverse coupling β = 2N/g² (approx physical QCD). A function rather than a `const`, because a
+/// `const` can only hold a primitive literal and the alias may name a software scalar.
+fn beta() -> FloatType {
+    lift(6.0)
+}
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== DeepCausality Lattice Gauge Simulation ===");
     println!("Lattice: {}x{}x{}x{}", L, L, L, L);
     println!("Group:   SU(3)");
-    println!("Beta:    {:.2}", BETA);
+    println!("Beta:    {:.2}", lower(beta()));
 
     // 1. Setup Lattice
     // ----------------
@@ -56,21 +61,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create random configuration (Hot Start)
     let mut field = LatticeGaugeField::<SU3, D, Complex<FloatType>, FloatType>::try_random(
         lattice.clone(),
-        BETA,
+        beta(),
         &mut rng,
     )?;
 
     let initial_plaq = field.try_average_plaquette()?;
     println!(
         "Initial Plaquette: {:.6} (Expect ~0.0 for hot start)",
-        initial_plaq
+        lower(initial_plaq)
     );
 
     // 2. Thermalization
     // -----------------
     println!("\n[2] Thermalizing (Metropolis)...");
     let thermal_sweeps = 10; // Keep small for example
-    let epsilon = 0.2; // Proposal width
+    let epsilon = lift::<FloatType>(0.2); // Proposal width
 
     for i in 1..=thermal_sweeps {
         let acceptance = field.try_metropolis_sweep(epsilon, &mut rng)?;
@@ -80,8 +85,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 "    Sweep {:2}/{}: Plaq = {:.6}, Acc = {:.1}%",
                 i,
                 thermal_sweeps,
-                plaq,
-                acceptance * 100.0
+                lower(plaq),
+                lower(acceptance) * 100.0
             );
         }
     }
@@ -92,11 +97,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Observable A: Average Plaquette
     let plaq = field.try_average_plaquette()?;
-    println!("    Average Plaquette: {:.6}", plaq);
+    println!("    Average Plaquette: {:.6}", lower(plaq));
 
     // Observable B: 2x2 Wilson Loop (Rectangular)
     // Measures force between static quarks at distance r=2
-    let mut w_2x2_sum = 0.0;
+    let mut w_2x2_sum = lift::<FloatType>(0.0);
     let mut count = 0;
 
     // Sample a few loops from the center of the lattice
@@ -110,7 +115,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
     let w_2x2_avg = w_2x2_sum / (count.lift::<FloatType>() * SU3::matrix_dim().lift::<FloatType>());
-    println!("    2x2 Wilson Loop:   {:.6}", w_2x2_avg);
+    println!("    2x2 Wilson Loop:   {:.6}", lower(w_2x2_avg));
 
     // Observable C: Polyakov Loop
     // Order parameter for confinement
@@ -121,7 +126,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // If T=f64, it's already the value.
     println!(
         "    Polyakov Loop:     {:.6}",
-        poly_loop / SU3::matrix_dim().lift::<FloatType>()
+        lower(poly_loop / SU3::matrix_dim().lift::<FloatType>())
     );
 
     // 4. Advanced: Smearing
@@ -149,17 +154,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // t0 is defined where t^2 * <E(t)> = 0.3
 
     let flow_params = FlowParams::<FloatType> {
-        epsilon: 0.01,
-        t_max: 0.2, // Short flow for example
+        epsilon: lift(0.01),
+        t_max: lift(0.2), // Short flow for example
         method: deep_causality_topology::FlowMethod::RungeKutta3,
     };
 
-    println!("    Flowing field to t_max = {:.2}...", flow_params.t_max);
+    println!(
+        "    Flowing field to t_max = {:.2}...",
+        lower(flow_params.t_max)
+    );
 
     // Note: In a real simulation, we'd flow step-by-step and measure E(t)
     // Here we use the helper to search for t0
     match field.try_find_t0(&flow_params) {
-        Ok(t0) => println!("    Found t0 scale:    {:.4}", t0),
+        Ok(t0) => println!("    Found t0 scale:    {:.4}", lower(t0)),
         Err(_) => {
             println!("    t0 not reached within t_max (expected for small lattice/thermalization)")
         }

@@ -3,9 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_rand::{
-    BernoulliDistributionError, NormalDistributionError, UniformDistributionError,
-};
+use deep_causality_rand::UniformDistributionError;
+use deep_causality_stats::{BernoulliDistributionError, NormalDistributionError};
 use deep_causality_uncertain::UncertainError;
 use rusty_fork::rusty_fork_test;
 use std::error::Error;

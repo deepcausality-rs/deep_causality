@@ -27,7 +27,7 @@
 use super::op_triangulate::{ambient_dim, find_duplicate_points};
 use crate::{PointCloud, Simplex, SimplicialComplex, Skeleton, TopologyError};
 use deep_causality_linear::CsrMatrix;
-use deep_causality_num::{Float, Zero};
+use deep_causality_num::{Float, FromPrimitive, Zero, lift};
 use std::collections::{BTreeSet, HashSet};
 use std::iter::Sum;
 
@@ -54,7 +54,7 @@ enum InCircle {
 /// and cavity re-triangulation fans new triangles in CCW order.
 fn in_circumcircle<T>(a: [T; 2], b: [T; 2], c: [T; 2], d: [T; 2]) -> InCircle
 where
-    T: Float + From<f64> + Copy,
+    T: Float + FromPrimitive + Copy,
 {
     let ax = a[0] - d[0];
     let ay = a[1] - d[1];
@@ -68,7 +68,7 @@ where
     // 3x3 determinant expansion along the first row.
     let det =
         ax * (by * c_sq - cy * b_sq) - ay * (bx * c_sq - cx * b_sq) + a_sq * (bx * cy - cx * by);
-    let tol = T::epsilon() * <T as From<f64>>::from(100.0);
+    let tol = T::epsilon() * lift::<T>(100.0);
     if det > tol {
         InCircle::Inside
     } else if det < -tol {
@@ -87,12 +87,12 @@ where
 /// duplicate-point check at the top of `triangulate_delaunay` enforces this).
 fn all_collinear<T>(coords: &[T], n: usize) -> bool
 where
-    T: Float + From<f64> + Copy,
+    T: Float + FromPrimitive + Copy,
 {
     if n < 3 {
         return false;
     }
-    let tol = T::epsilon() * <T as From<f64>>::from(100.0);
+    let tol = T::epsilon() * lift::<T>(100.0);
     let v1x = coords[2] - coords[0];
     let v1y = coords[3] - coords[1];
     for k in 2..n {
@@ -108,7 +108,7 @@ where
 
 impl<T, D> PointCloud<T, D>
 where
-    T: Float + Sum + From<f64> + Zero + PartialOrd + Copy,
+    T: Float + Sum + FromPrimitive + Zero + PartialOrd + Copy,
 {
     /// Builds a 2D Delaunay triangulation of the point cloud via the Bowyer-
     /// Watson algorithm. The returned `SimplicialComplex<T>` is manifold-
@@ -206,8 +206,8 @@ where
         }
         let dx = max_x - min_x;
         let dy = max_y - min_y;
-        let hundred = <T as From<f64>>::from(100.0);
-        let two_hundred = <T as From<f64>>::from(200.0);
+        let hundred = lift::<T>(100.0);
+        let two_hundred = lift::<T>(200.0);
         let st0 = [min_x - hundred * dx, min_y - hundred * dy];
         let st1 = [max_x + two_hundred * dx, min_y - hundred * dy];
         let st2 = [min_x - hundred * dx, max_y + two_hundred * dy];

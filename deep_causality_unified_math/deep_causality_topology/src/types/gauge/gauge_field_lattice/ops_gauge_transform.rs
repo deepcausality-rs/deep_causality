@@ -117,7 +117,7 @@ impl<
         rng: &mut RngType,
     ) -> Result<(), TopologyError>
     where
-        RngType: deep_causality_rand::Rng,
+        RngType: deep_causality_stats::Rng,
         M: crate::types::gauge::link_variable::random::RandomField + DivisionAlgebra<R> + Field,
         R: RealField,
     {

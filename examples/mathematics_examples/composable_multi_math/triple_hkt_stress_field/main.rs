@@ -25,11 +25,12 @@
 //! Each step is documented inside the closure with a "REPLACE WITH" comment
 //! that names the production-grade alternative.
 
+use deep_causality_algebra::Real;
 use deep_causality_haft::CoMonad;
 use deep_causality_linear::CsrMatrix;
 use deep_causality_metric::Metric;
 use deep_causality_multivector::CausalMultiVector;
-use deep_causality_num::Lift;
+use deep_causality_num::{Lift, lift, lower};
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 use deep_causality_topology::{
     Manifold, ManifoldWitness, Simplex, SimplicialComplex, SimplicialManifold, Skeleton,
@@ -59,14 +60,21 @@ pub type FloatType = f64;
 
 const N_VERTICES: usize = 5;
 
-/// Vertex coordinates.
-const VERTICES: [[FloatType; 3]; 5] = [
+/// Vertex coordinates. The table holds `f64`, the widest form a source file can hold, and
+/// [`vertex`] lifts a row into the working type.
+const VERTEX_COORDS: [[f64; 3]; 5] = [
     [0.0, 0.0, 0.0], // v0  - lower peak
     [1.0, 0.0, 0.0], // v1  \
     [0.0, 1.0, 0.0], // v2   } shared triangle [1,2,3]
     [0.0, 0.0, 1.0], // v3  /
     [1.0, 1.0, 1.0], // v4  - upper peak
 ];
+
+/// One vertex, lifted into the working type.
+fn vertex(i: usize) -> [FloatType; 3] {
+    let [x, y, z] = VERTEX_COORDS[i];
+    [lift(x), lift(y), lift(z)]
+}
 
 /// Sorted-order tetrahedra.
 const TETS: [[usize; 4]; 2] = [[0, 1, 2, 3], [1, 2, 3, 4]];
@@ -106,14 +114,16 @@ fn main() {
         TETS.len()
     );
 
-    let (lambda, mu) = lame(YOUNGS_MODULUS_STEEL, POISSON_STEEL);
+    let (lambda, mu) = lame(youngs_modulus_steel(), poisson_steel());
     println!(
         "Material:    steel  E = {:.2e} Pa, nu = {}",
-        YOUNGS_MODULUS_STEEL, POISSON_STEEL
+        lower(youngs_modulus_steel()),
+        lower(poisson_steel())
     );
     println!(
         "Lame:        lambda = {:.3e} Pa, mu = {:.3e} Pa\n",
-        lambda, mu
+        lower(lambda),
+        lower(mu)
     );
 
     let manifold = build_cube_manifold();
@@ -125,7 +135,7 @@ fn main() {
     let result = ManifoldWitness::extend(&manifold, |w| {
         let i = w.cursor();
         if i >= N_VERTICES {
-            return 0.0;
+            return lift::<FloatType>(0.0);
         }
 
         // STEP 1: strain at this vertex
@@ -153,11 +163,15 @@ fn main() {
     let out = result.data().as_slice();
     println!("Vertex  Position      von Mises (Pa)");
     println!("------- ------------- ---------------");
-    for i in 0..N_VERTICES {
-        let [x, y, z] = VERTICES[i];
+    for (i, &mises) in out.iter().enumerate().take(N_VERTICES) {
+        let [x, y, z] = vertex(i);
         println!(
             "v{:<2}     ({:.0},{:.0},{:.0})       {:.3e}",
-            i, x, y, z, out[i]
+            i,
+            lower(x),
+            lower(y),
+            lower(z),
+            lower(mises)
         );
     }
 
@@ -220,7 +234,7 @@ fn build_d3() -> CsrMatrix<i8> {
     CsrMatrix::from_triplets(TRIANGLES.len(), TETS.len(), &triplets).unwrap()
 }
 
-fn build_cube_manifold() -> SimplicialManifold<f64, FloatType> {
+fn build_cube_manifold() -> SimplicialManifold<FloatType, FloatType> {
     let vertices: Vec<Simplex> = (0..N_VERTICES).map(|i| Simplex::new(vec![i])).collect();
     let edges: Vec<Simplex> = EDGES.iter().map(|e| Simplex::new(e.to_vec())).collect();
     let triangles: Vec<Simplex> = TRIANGLES.iter().map(|t| Simplex::new(t.to_vec())).collect();
@@ -236,7 +250,7 @@ fn build_cube_manifold() -> SimplicialManifold<f64, FloatType> {
     let complex = SimplicialComplex::new(skeletons, boundaries, vec![], vec![]);
 
     let total = N_VERTICES + EDGES.len() + TRIANGLES.len() + TETS.len();
-    let data = CausalTensor::new(vec![0.0f64; total], vec![total]).unwrap();
+    let data = CausalTensor::new(vec![lift::<FloatType>(0.0); total], vec![total]).unwrap();
     Manifold::new(complex, data, 0).expect("manifold construction")
 }
 
@@ -244,13 +258,23 @@ fn build_cube_manifold() -> SimplicialManifold<f64, FloatType> {
 // MATERIAL: isotropic linear-elastic steel
 // ============================================================================
 
-const YOUNGS_MODULUS_STEEL: FloatType = 200.0e9; // Pa
-const POISSON_STEEL: FloatType = 0.30; // dimensionless
+/// Young's modulus, Pa. A function rather than a `const`, because a `const` can only hold a
+/// primitive literal and the alias may name a software scalar.
+fn youngs_modulus_steel() -> FloatType {
+    lift(200.0e9)
+}
+
+/// Poisson ratio, dimensionless.
+fn poisson_steel() -> FloatType {
+    lift(0.30)
+}
 
 /// Lame parameters `lambda, mu` from Young's modulus `E` and Poisson ratio `nu`.
 fn lame(e: FloatType, nu: FloatType) -> (FloatType, FloatType) {
-    let mu = e / (2.0 * (1.0 + nu));
-    let lambda = e * nu / ((1.0 + nu) * (1.0 - 2.0 * nu));
+    let one = lift::<FloatType>(1.0);
+    let two = lift::<FloatType>(2.0);
+    let mu = e / (two * (one + nu));
+    let lambda = e * nu / ((one + nu) * (one - two * nu));
     (lambda, mu)
 }
 
@@ -267,10 +291,18 @@ type Sym3 = [FloatType; 6];
 // The current body is a closed-form analytic field used only to drive the
 // pipeline with non-trivial inputs.
 fn prescribed_strain(vertex_idx: usize) -> Sym3 {
-    let [x, _y, _z] = VERTICES[vertex_idx];
+    let [x, _y, _z] = vertex(vertex_idx);
     // Uniaxial stretch in x with the corresponding Poisson contraction in
     // y and z, plus a shear term to exercise the off-diagonal components.
-    [1.0e-3 * x, -0.3e-3 * x, -0.3e-3 * x, 0.5e-3 * x, 0.0, 0.0]
+    let zero = lift::<FloatType>(0.0);
+    [
+        lift::<FloatType>(1.0e-3) * x,
+        lift::<FloatType>(-0.3e-3) * x,
+        lift::<FloatType>(-0.3e-3) * x,
+        lift::<FloatType>(0.5e-3) * x,
+        zero,
+        zero,
+    ]
 }
 
 // ============================================================================
@@ -285,13 +317,14 @@ fn prescribed_strain(vertex_idx: usize) -> Sym3 {
 fn hooke_isotropic(strain: &Sym3, lambda: FloatType, mu: FloatType) -> Sym3 {
     let trace = strain[0] + strain[1] + strain[2];
     let lt = lambda * trace;
+    let two = lift::<FloatType>(2.0);
     [
-        lt + 2.0 * mu * strain[0],
-        lt + 2.0 * mu * strain[1],
-        lt + 2.0 * mu * strain[2],
-        2.0 * mu * strain[3],
-        2.0 * mu * strain[4],
-        2.0 * mu * strain[5],
+        lt + two * mu * strain[0],
+        lt + two * mu * strain[1],
+        lt + two * mu * strain[2],
+        two * mu * strain[3],
+        two * mu * strain[4],
+        two * mu * strain[5],
     ]
 }
 
@@ -311,21 +344,23 @@ fn vertex_normal(vertex_idx: usize) -> [FloatType; 3] {
     // vertex of the two-tet mesh; serves as a stand-in for the real
     // boundary-normal calculation an engineer plugs in.
     let centroid = mesh_centroid();
-    let [x, y, z] = VERTICES[vertex_idx];
+    let [x, y, z] = vertex(vertex_idx);
     let dx = x - centroid[0];
     let dy = y - centroid[1];
     let dz = z - centroid[2];
-    let r = (dx * dx + dy * dy + dz * dz).sqrt();
-    if r > 0.0 {
+    let zero = lift::<FloatType>(0.0);
+    let r = Real::sqrt(dx * dx + dy * dy + dz * dz);
+    if r > zero {
         [dx / r, dy / r, dz / r]
     } else {
-        [1.0, 0.0, 0.0]
+        [lift::<FloatType>(1.0), zero, zero]
     }
 }
 
 fn mesh_centroid() -> [FloatType; 3] {
-    let mut c = [0.0; 3];
-    for v in VERTICES.iter() {
+    let mut c = [lift::<FloatType>(0.0); 3];
+    for i in 0..N_VERTICES {
+        let v = vertex(i);
         c[0] += v[0];
         c[1] += v[1];
         c[2] += v[2];
@@ -364,17 +399,19 @@ fn cauchy_traction(stress: &Sym3, normal: &[FloatType; 3]) -> [FloatType; 3] {
 // The current body returns a fixed 10-degree rotor in the e1^e2 plane.
 fn material_rotor() -> (CausalMultiVector<FloatType>, CausalMultiVector<FloatType>) {
     let metric = Metric::Euclidean(3);
-    let theta: FloatType = 10.0_f64.to_radians();
-    let c = (theta / 2.0).cos();
-    let s = (theta / 2.0).sin();
+    // The angle is a configuration literal: written as `f64`, the widest form a source file can
+    // hold, and lifted into the working type once.
+    let half_theta = lift::<FloatType>(10.0_f64.to_radians() / 2.0);
+    let c = Real::cos(half_theta);
+    let s = Real::sin(half_theta);
     // Cl(3,0) bit-string basis: indices are bitmasks over (e1, e2, e3).
     //   0 = 1, 1 = e1, 2 = e2, 3 = e1^e2, 4 = e3, 5 = e1^e3, 6 = e2^e3, 7 = e1^e2^e3
-    let mut r = vec![0.0; 8];
+    let mut r = vec![lift::<FloatType>(0.0); 8];
     r[0] = c;
     r[3] = -s; // -sin(theta/2) * e1^e2
     let rotor = CausalMultiVector::new(r, metric).unwrap();
 
-    let mut r_rev = vec![0.0; 8];
+    let mut r_rev = vec![lift::<FloatType>(0.0); 8];
     r_rev[0] = c;
     r_rev[3] = s;
     let rotor_rev = CausalMultiVector::new(r_rev, metric).unwrap();
@@ -390,7 +427,8 @@ fn rotate_into_frame(
 ) -> [FloatType; 3] {
     let metric = Metric::Euclidean(3);
     // Lift the vector as pure grade-1 multivector. Indices 1, 2, 4 are e1, e2, e3.
-    let coeffs = vec![0.0, v[0], v[1], 0.0, v[2], 0.0, 0.0, 0.0];
+    let zero = lift::<FloatType>(0.0);
+    let coeffs = vec![zero, v[0], v[1], zero, v[2], zero, zero, zero];
     let v_mv = CausalMultiVector::new(coeffs, metric).unwrap();
     let rotated = rotor.geometric_product(&v_mv).geometric_product(rotor_rev);
     let d = rotated.data();
@@ -413,7 +451,10 @@ fn von_mises(sigma: &Sym3) -> FloatType {
     let s12 = sigma[3];
     let s13 = sigma[4];
     let s23 = sigma[5];
-    let dev_sq = 0.5 * ((s11 - s22).powi(2) + (s22 - s33).powi(2) + (s33 - s11).powi(2))
-        + 3.0 * (s12 * s12 + s13 * s13 + s23 * s23);
-    dev_sq.sqrt()
+    let d12 = s11 - s22;
+    let d23 = s22 - s33;
+    let d31 = s33 - s11;
+    let dev_sq = lift::<FloatType>(0.5) * (d12 * d12 + d23 * d23 + d31 * d31)
+        + lift::<FloatType>(3.0) * (s12 * s12 + s13 * s13 + s23 * s23);
+    Real::sqrt(dev_sq)
 }

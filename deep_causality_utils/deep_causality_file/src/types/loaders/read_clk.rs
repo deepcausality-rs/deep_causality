@@ -9,6 +9,7 @@ use crate::{ClockData, DataLoadingError, SatId};
 use chrono::NaiveDate;
 use deep_causality_algebra::RealField;
 use deep_causality_haft::IoAction;
+use deep_causality_num::{FromPrimitive, lift};
 use std::fs::File;
 use std::io;
 use std::io::BufRead;
@@ -26,7 +27,7 @@ pub struct ReadClockData<R> {
 
 impl<R> IoAction for ReadClockData<R>
 where
-    R: RealField + From<f64>,
+    R: RealField + FromPrimitive,
 {
     type Output = Vec<ClockData<R>>;
     type Error = DataLoadingError;
@@ -49,7 +50,7 @@ pub fn read_clock_data<R>(path: impl AsRef<Path>, target_sat: &str) -> ReadClock
 /// malformed records (skipped); fails only on the file open/read (surfaced as a [`DataLoadingError`]).
 fn parse_clock_data<R>(path: &Path, target_sat: &str) -> Result<Vec<ClockData<R>>, DataLoadingError>
 where
-    R: RealField + From<f64>,
+    R: RealField + FromPrimitive,
 {
     let file = File::open(path)?;
     let reader = io::BufReader::new(file);
@@ -101,7 +102,7 @@ where
                     Ok(s) => s,
                     Err(_) => continue,
                 };
-                data.push(ClockData::new(time, sat_id, R::from(bias_f64)));
+                data.push(ClockData::new(time, sat_id, lift::<R>(bias_f64)));
             }
         }
     }

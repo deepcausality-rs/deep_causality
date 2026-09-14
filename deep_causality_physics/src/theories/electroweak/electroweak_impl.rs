@@ -8,6 +8,7 @@ use crate::{
 };
 use deep_causality_algebra::RealField;
 use deep_causality_metric::{LorentzianMetric, WestCoastMetric};
+use deep_causality_num::{FromPrimitive, lift};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     BaseTopology, GaugeField, GaugeFieldWitness, SimplicialManifold, U1,
@@ -15,7 +16,7 @@ use deep_causality_topology::{
 
 impl<S> ElectroweakOps<S> for ElectroweakField<S>
 where
-    S: RealField + Clone + From<f64> + Into<f64> + Default,
+    S: RealField + Clone + FromPrimitive + Into<f64> + Default,
 {
     fn new_field(
         base: SimplicialManifold<S, S>,
@@ -83,12 +84,12 @@ where
     }
 
     fn sin2_theta_w(&self) -> S {
-        <S as From<f64>>::from(SIN2_THETA_W)
+        lift::<S>(SIN2_THETA_W)
     }
     fn w_mass(&self) -> S {
-        <S as From<f64>>::from(W_MASS)
+        lift::<S>(W_MASS)
     }
     fn z_mass(&self) -> S {
-        <S as From<f64>>::from(Z_MASS)
+        lift::<S>(Z_MASS)
     }
 }

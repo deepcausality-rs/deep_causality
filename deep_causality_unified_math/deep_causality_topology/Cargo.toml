@@ -30,7 +30,7 @@ exclude = [
 # Enables random number generator from the host OS for secure random numbers.
 # Enabling os-random adds an indirect depdency on getrandom and libc.
 # Disabled by default to use native Rust prng instead.
-os-random = ["deep_causality_rand/os-random"]
+os-random = ["deep_causality_stats/os-random"]
 # Enables parallel execution of the per-cell DEC operator loops (wedge,
 # interior product, de Rham, sharp) by adding a dependency on Rayon.
 # Disabled by default. Under this feature the lattice DEC operators bound
@@ -64,7 +64,7 @@ features = ["default"]
 [dependencies.deep_causality_fft]
 workspace = true
 
-[dependencies.deep_causality_rand]
+[dependencies.deep_causality_stats]
 workspace = true
 
 [dependencies.deep_causality_homology]

@@ -16,6 +16,7 @@ use crate::DataLoadingError;
 use crate::types::trace_types::{SensorChannel, SensorTraceSet};
 use deep_causality_algebra::RealField;
 use deep_causality_haft::IoAction;
+use deep_causality_num::{FromPrimitive, lift};
 use std::fs;
 use std::marker::PhantomData;
 use std::path::{Path, PathBuf};
@@ -40,7 +41,7 @@ pub struct ReadSensorTrace<R> {
 
 impl<R> IoAction for ReadSensorTrace<R>
 where
-    R: RealField + From<f64>,
+    R: RealField + FromPrimitive,
 {
     type Output = SensorTraceSet<R>;
     type Error = DataLoadingError;
@@ -60,7 +61,7 @@ pub fn read_sensor_trace<R>(path: impl AsRef<Path>) -> ReadSensorTrace<R> {
 
 fn parse_trace<R>(path: &Path) -> Result<SensorTraceSet<R>, DataLoadingError>
 where
-    R: RealField + From<f64>,
+    R: RealField + FromPrimitive,
 {
     let content = fs::read_to_string(path)?;
     let shown = path.display().to_string();
@@ -164,7 +165,7 @@ where
                         ),
                     )
                 })?;
-                samples[k].push(Some(R::from(value)));
+                samples[k].push(Some(lift::<R>(value)));
             }
         }
     }

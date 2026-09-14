@@ -6,7 +6,8 @@
 use deep_causality_algorithms::brcd::{
     BicScorer, BossConfig, BrcdError, BrcdErrorEnum, FamilyScorer, best_order_search,
 };
-use deep_causality_rand::{Rng, Xoshiro256};
+use deep_causality_rand::Xoshiro256;
+use deep_causality_stats::RandomExt;
 use deep_causality_tensor::{CausalTensor, CausalTensorStatsExt};
 use std::collections::BTreeSet;
 use std::f64::consts::TAU;

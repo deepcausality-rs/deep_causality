@@ -181,6 +181,21 @@ rust_binary(
 )
 
 rust_binary(
+    name = "ensemble_x_lattice_ising_examples",
+    srcs = glob(["composable_multi_math/ensemble_x_lattice_ising/**/*.rs"]),
+    crate_root = "composable_multi_math/ensemble_x_lattice_ising/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":mathematics_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
+)
+
+rust_binary(
     name = "tensor_x_topology_laplacian_examples",
     srcs = glob(["composable_multi_math/tensor_x_topology_laplacian/**/*.rs"]),
     crate_root = "composable_multi_math/tensor_x_topology_laplacian/main.rs",

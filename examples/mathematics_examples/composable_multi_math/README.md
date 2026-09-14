@@ -18,6 +18,7 @@ machinery involved.
 
 | Example | Composes | Description | Command |
 |---------|----------|-------------|---------|
+| [ensemble_x_lattice_ising](ensemble_x_lattice_ising/README.md) | rand × stats × tensor × haft | 2D Ising model on a periodic lattice; Metropolis sweeps against Onsager's exact `Tc`, an ensemble of replicas as a tensor of tensors, and the susceptibility through the diagonal traversal | `cargo run -p mathematics_examples --example ensemble_x_lattice_ising_examples` |
 | [tensor_x_algebra_rotation_field](tensor_x_algebra_rotation_field/README.md) | tensor × multivector | Rotates a grid of vectors by a single Clifford rotor via `Functor::fmap` on a tensor of multivectors | `cargo run -p mathematics_examples --example tensor_x_algebra_rotation_field_examples` |
 | [tensor_x_topology_laplacian](tensor_x_topology_laplacian/README.md) | tensor × topology | Discrete Laplacian on a 1D simplicial manifold via `ManifoldWitness::extend` (CoMonad) | `cargo run -p mathematics_examples --example tensor_x_topology_laplacian_examples` |
 | [triple_hkt_stress_field](triple_hkt_stress_field/README.md) | tensor × multivector × topology | 3D linear-elastic stress analysis blueprint on a tetrahedral mesh; six-step pipeline (strain, Hooke, normal, Cauchy traction, material rotor, von Mises) in one `extend` call | `cargo run -p mathematics_examples --example triple_hkt_stress_field_examples` |

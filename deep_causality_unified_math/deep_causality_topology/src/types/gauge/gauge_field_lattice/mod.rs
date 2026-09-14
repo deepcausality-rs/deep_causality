@@ -208,7 +208,7 @@ impl<
         rng: &mut RngType,
     ) -> Result<Self, TopologyError>
     where
-        RngType: deep_causality_rand::Rng,
+        RngType: deep_causality_stats::Rng,
         M: RandomField + DivisionAlgebra<R> + Field,
         R: RealField,
     {
@@ -236,7 +236,7 @@ impl<
     /// Panics if link creation fails.
     pub fn random<RngType>(lattice: Arc<LatticeComplex<D, R>>, beta: R, rng: &mut RngType) -> Self
     where
-        RngType: deep_causality_rand::Rng,
+        RngType: deep_causality_stats::Rng,
         M: RandomField + DivisionAlgebra<R> + Field,
         R: RealField,
     {

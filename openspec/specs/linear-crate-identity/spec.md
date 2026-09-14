@@ -55,9 +55,8 @@ that required `std` would remove that capability from everything above it.
 ### Requirement: The crate obeys the workspace lint and language policy
 `deep_causality_linear` SHALL declare `[lints] workspace = true`, contain no `unsafe` code, and use no macros under `src/`.
 
-`unsafe_code = "forbid"` is workspace-wide with three documented exemptions, and this crate is not
-one of them. Bit-packing invites `unsafe` for unchecked indexing; the prototype reaches its measured
-throughput without any.
+`unsafe_code = "forbid"` is workspace-wide and carries no exemptions. Bit-packing invites `unsafe`
+for unchecked indexing; the prototype reaches its measured throughput without any.
 
 #### Scenario: Lints are inherited
 - **WHEN** the crate's manifest is read

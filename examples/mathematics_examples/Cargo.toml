@@ -20,6 +20,7 @@ deep_causality_num_complex = { workspace = true, features = ["default"] }
 deep_causality_num_dual = { workspace = true, features = ["default"] }
 deep_causality_algebra = { workspace = true, features = ["default"] }
 deep_causality_rand = { workspace = true }
+deep_causality_stats = { workspace = true, features = ["default"] }
 deep_causality_linear = { workspace = true, features = ["default"] }
 deep_causality_tensor = { workspace = true, features = ["default"] }
 deep_causality_topology = { workspace = true }
@@ -131,6 +132,10 @@ path = "algebra/algebraic_scanner/main.rs"
 [[example]]
 name = "tensor_x_algebra_rotation_field_examples"
 path = "composable_multi_math/tensor_x_algebra_rotation_field/main.rs"
+
+[[example]]
+name = "ensemble_x_lattice_ising_examples"
+path = "composable_multi_math/ensemble_x_lattice_ising/main.rs"
 
 [[example]]
 name = "tensor_x_topology_laplacian_examples"

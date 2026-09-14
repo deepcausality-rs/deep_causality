@@ -3,14 +3,14 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_rand::{SampleBorrow, SampleUniform};
+use deep_causality_rand::{SampleBorrow, SampleUniform, UnsignedKind};
 
 // Mock SampleUniform type for testing
 #[derive(Debug, PartialEq)]
 struct MockSampleUniform(u32);
 
 // Implement SampleUniform for our mock type
-impl SampleUniform for MockSampleUniform {
+impl SampleUniform<UnsignedKind> for MockSampleUniform {
     type Sampler = MockSampler;
 }
 

@@ -9,13 +9,14 @@ use crate::theories::WeakField;
 use crate::{WeakFieldOps, WeakIsospin};
 use deep_causality_algebra::RealField;
 use deep_causality_metric::{LorentzianMetric, WestCoastMetric};
+use deep_causality_num::{FromPrimitive, lift};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{BaseTopology, GaugeField, GaugeFieldWitness, SimplicialManifold};
 use std::f64::consts::PI;
 
 impl<S> WeakFieldOps<S> for WeakField<S>
 where
-    S: RealField + From<f64> + Into<f64> + Default,
+    S: RealField + FromPrimitive + Into<f64> + Default,
 {
     fn new_field(
         base: SimplicialManifold<S, S>,
@@ -35,16 +36,16 @@ where
     }
 
     fn fermi_constant(&self) -> S {
-        <S as From<f64>>::from(FERMI_CONSTANT)
+        lift::<S>(FERMI_CONSTANT)
     }
     fn w_mass(&self) -> S {
-        <S as From<f64>>::from(W_MASS)
+        lift::<S>(W_MASS)
     }
     fn z_mass(&self) -> S {
-        <S as From<f64>>::from(Z_MASS)
+        lift::<S>(Z_MASS)
     }
     fn sin2_theta_w(&self) -> S {
-        <S as From<f64>>::from(SIN2_THETA_W)
+        lift::<S>(SIN2_THETA_W)
     }
 
     fn charged_current_propagator(momentum_transfer_sq: S) -> Result<S, PhysicsError> {
@@ -57,9 +58,9 @@ where
                 "Non-finite q² in propagator".into(),
             ));
         }
-        let w_mass = <S as From<f64>>::from(W_MASS);
+        let w_mass = lift::<S>(W_MASS);
         let denominator = momentum_transfer_sq - w_mass * w_mass;
-        let eps = <S as From<f64>>::from(1e-10);
+        let eps = lift::<S>(1e-10);
 
         if denominator.abs() < eps {
             return Err(PhysicsError::NumericalInstability(
@@ -82,17 +83,17 @@ where
                 "Non-finite q² in propagator".into(),
             ));
         }
-        let z_mass = <S as From<f64>>::from(Z_MASS);
+        let z_mass = lift::<S>(Z_MASS);
         let denominator = momentum_transfer_sq - z_mass * z_mass;
-        let eps = <S as From<f64>>::from(1e-10);
+        let eps = lift::<S>(1e-10);
 
         if denominator.abs() < eps {
             return Err(PhysicsError::NumericalInstability(
                 "q² ≈ M_Z² (on-shell Z)".into(),
             ));
         }
-        let g_v = <S as From<f64>>::from(fermion.vector_coupling());
-        let g_a = <S as From<f64>>::from(fermion.axial_coupling());
+        let g_v = lift::<S>(fermion.vector_coupling());
+        let g_a = lift::<S>(fermion.axial_coupling());
         let coupling = g_v * g_v + g_a * g_a;
         Ok(coupling / denominator)
     }
@@ -104,74 +105,74 @@ where
                 mass.to_f64().unwrap_or(0.0)
             )));
         }
-        let g_f = <S as From<f64>>::from(FERMI_CONSTANT);
-        let pi = <S as From<f64>>::from(PI);
-        let factor = <S as From<f64>>::from(192.0);
+        let g_f = lift::<S>(FERMI_CONSTANT);
+        let pi = lift::<S>(PI);
+        let factor = lift::<S>(192.0);
         let pi_3 = pi * pi * pi; // powi(3) often just multiply
 
-        let mass_5 = mass.powf(S::from(5.0));
+        let mass_5 = mass.powf(lift::<S>(5.0));
         Ok(g_f * g_f * mass_5 / (factor * pi_3))
     }
 
     fn muon_lifetime() -> S {
-        let m_muon = <S as From<f64>>::from(0.1056583755);
-        let g_f = <S as From<f64>>::from(FERMI_CONSTANT);
-        let pi = <S as From<f64>>::from(PI);
-        let factor = <S as From<f64>>::from(192.0);
+        let m_muon = lift::<S>(0.1056583755);
+        let g_f = lift::<S>(FERMI_CONSTANT);
+        let pi = lift::<S>(PI);
+        let factor = lift::<S>(192.0);
         let pi_3 = pi * pi * pi;
 
-        let m_muon_5 = m_muon.powf(S::from(5.0));
+        let m_muon_5 = m_muon.powf(lift::<S>(5.0));
         let rate = g_f * g_f * m_muon_5 / (factor * pi_3);
-        let hbar = <S as From<f64>>::from(6.582119569e-25);
+        let hbar = lift::<S>(6.582119569e-25);
         hbar / rate
     }
 
     fn w_boson_width() -> S {
-        let g_f = <S as From<f64>>::from(FERMI_CONSTANT);
-        let w_mass = <S as From<f64>>::from(W_MASS);
-        let pi = <S as From<f64>>::from(PI);
-        let factor_val = <S as From<f64>>::from(6.0) * <S as From<f64>>::from(2.0).sqrt() * pi;
-        let factor = g_f * w_mass.powf(S::from(3.0)) / factor_val;
+        let g_f = lift::<S>(FERMI_CONSTANT);
+        let w_mass = lift::<S>(W_MASS);
+        let pi = lift::<S>(PI);
+        let factor_val = lift::<S>(6.0) * lift::<S>(2.0).sqrt() * pi;
+        let factor = g_f * w_mass.powf(lift::<S>(3.0)) / factor_val;
 
-        let channels = <S as From<f64>>::from(3.0 + 2.0 * 3.0);
+        let channels = lift::<S>(3.0 + 2.0 * 3.0);
         factor * channels
     }
 
     fn z_boson_width() -> S {
-        let g_f = <S as From<f64>>::from(FERMI_CONSTANT);
-        let z_mass = <S as From<f64>>::from(Z_MASS);
-        let pi = <S as From<f64>>::from(PI);
-        let factor_val = <S as From<f64>>::from(6.0) * <S as From<f64>>::from(2.0).sqrt() * pi;
-        let factor = g_f * z_mass.powf(S::from(3.0)) / factor_val;
+        let g_f = lift::<S>(FERMI_CONSTANT);
+        let z_mass = lift::<S>(Z_MASS);
+        let pi = lift::<S>(PI);
+        let factor_val = lift::<S>(6.0) * lift::<S>(2.0).sqrt() * pi;
+        let factor = g_f * z_mass.powf(lift::<S>(3.0)) / factor_val;
 
         let mut width = S::zero();
         let nu = WeakIsospin::neutrino();
-        let g_v_nu = <S as From<f64>>::from(nu.vector_coupling());
-        let g_a_nu = <S as From<f64>>::from(nu.axial_coupling());
-        width += <S as From<f64>>::from(3.0) * (g_v_nu * g_v_nu + g_a_nu * g_a_nu);
+        let g_v_nu = lift::<S>(nu.vector_coupling());
+        let g_a_nu = lift::<S>(nu.axial_coupling());
+        width += lift::<S>(3.0) * (g_v_nu * g_v_nu + g_a_nu * g_a_nu);
 
         let lepton = WeakIsospin::lepton_doublet();
-        let g_v_l = <S as From<f64>>::from(lepton.vector_coupling());
-        let g_a_l = <S as From<f64>>::from(lepton.axial_coupling());
-        width += <S as From<f64>>::from(3.0) * (g_v_l * g_v_l + g_a_l * g_a_l);
+        let g_v_l = lift::<S>(lepton.vector_coupling());
+        let g_a_l = lift::<S>(lepton.axial_coupling());
+        width += lift::<S>(3.0) * (g_v_l * g_v_l + g_a_l * g_a_l);
 
         let up = WeakIsospin::up_quark();
-        let g_v_u = <S as From<f64>>::from(up.vector_coupling());
-        let g_a_u = <S as From<f64>>::from(up.axial_coupling());
-        width += <S as From<f64>>::from(6.0) * (g_v_u * g_v_u + g_a_u * g_a_u); // 2*3
+        let g_v_u = lift::<S>(up.vector_coupling());
+        let g_a_u = lift::<S>(up.axial_coupling());
+        width += lift::<S>(6.0) * (g_v_u * g_v_u + g_a_u * g_a_u); // 2*3
 
         let down = WeakIsospin::down_quark();
-        let g_v_d = <S as From<f64>>::from(down.vector_coupling());
-        let g_a_d = <S as From<f64>>::from(down.axial_coupling());
-        width += <S as From<f64>>::from(9.0) * (g_v_d * g_v_d + g_a_d * g_a_d); // 3*3
+        let g_v_d = lift::<S>(down.vector_coupling());
+        let g_a_d = lift::<S>(down.axial_coupling());
+        width += lift::<S>(9.0) * (g_v_d * g_v_d + g_a_d * g_a_d); // 3*3
 
         factor * width
     }
 
     fn weak_field_strength(&self) -> CausalTensor<S> {
         // g = 2 M_W / v
-        let two = <S as From<f64>>::from(2.0);
-        let vev = <S as From<f64>>::from(HIGGS_VEV);
+        let two = lift::<S>(2.0);
+        let vev = lift::<S>(HIGGS_VEV);
         let g = two * self.w_mass() / vev;
         GaugeFieldWitness::compute_field_strength_non_abelian(self, g)
     }

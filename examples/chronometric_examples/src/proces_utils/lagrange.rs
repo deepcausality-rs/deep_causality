@@ -5,7 +5,7 @@
 use crate::{ClockData, OrbitData};
 use chrono::NaiveDateTime;
 use deep_causality_algebra::RealField;
-use deep_causality_num::FromPrimitive;
+use deep_causality_num::{FromPrimitive, lift};
 use deep_causality_physics::{EARTH_ROTATION_RATE, SpaceTimeCoordinate};
 
 /// Maximum time gap (seconds) for centered finite difference in clock drift rate.
@@ -49,7 +49,7 @@ pub fn interpolate_space_time_single_pass<R>(
     orbit_data: &[OrbitData<R>],
 ) -> Vec<SpaceTimeCoordinate<R>>
 where
-    R: RealField + From<f64> + Into<f64> + Clone,
+    R: RealField + FromPrimitive + Into<f64> + Clone,
 {
     // =========================================================================
     // Single pass: Interpolate position/velocity AND compute drift rate inline
@@ -59,14 +59,14 @@ where
     let mut orbit_idx = 0;
 
     // Constants cast to R once
-    let eps = R::from(0.01);
-    let two = R::from(2.0);
-    let omega = R::from(EARTH_ROTATION_RATE);
+    let eps = lift::<R>(0.01);
+    let two = lift::<R>(2.0);
+    let omega = lift::<R>(EARTH_ROTATION_RATE);
     let n_clocks = clock_data.len();
 
     for (i, clock) in clock_data.iter().enumerate() {
         let t_clock_f64 = timestamp_to_seconds(clock.timestamp());
-        let t_clock = R::from(t_clock_f64);
+        let t_clock = lift::<R>(t_clock_f64);
 
         // Compute clock_drift_rate INLINE using ClockData indices (matching legacy!)
         let clock_drift_rate = if i > 0 && i < n_clocks - 1 {
@@ -79,12 +79,12 @@ where
                 // Centered difference: (f(x+h) - f(x-h)) / 2h
                 let bias_prev: f64 = prev.bias_s().into();
                 let bias_next: f64 = next.bias_s().into();
-                R::from((bias_next - bias_prev) / (dt_next + dt_prev))
+                lift::<R>((bias_next - bias_prev) / (dt_next + dt_prev))
             } else {
-                R::from(0.0) // Gap too large
+                lift::<R>(0.0) // Gap too large
             }
         } else {
-            R::from(0.0) // Boundary
+            lift::<R>(0.0) // Boundary
         };
 
         // Find the window of 10 points centered around the clock time
@@ -111,7 +111,7 @@ where
         // Prepare data for interpolation - cast to R immediately
         let times: Vec<R> = window
             .iter()
-            .map(|p| R::from(timestamp_to_seconds(p.timestamp())))
+            .map(|p| lift::<R>(timestamp_to_seconds(p.timestamp())))
             .collect();
         let xs: Vec<R> = window.iter().map(|p| p.x_m()).collect();
         let ys: Vec<R> = window.iter().map(|p| p.y_m()).collect();
@@ -193,7 +193,7 @@ pub fn interpolate_space_time<R>(
     orbit_data: &[OrbitData<R>],
 ) -> Vec<SpaceTimeCoordinate<R>>
 where
-    R: RealField + From<f64> + Into<f64> + Clone + FromPrimitive,
+    R: RealField + FromPrimitive + Into<f64> + Clone + FromPrimitive,
 {
     // =========================================================================
     // PASS 1: Interpolate position/velocity, store raw coordinates
@@ -202,12 +202,12 @@ where
     let mut orbit_idx = 0;
 
     // Constants cast to R once
-    let eps = R::from(0.01);
-    let two = R::from(2.0);
-    let omega = R::from(EARTH_ROTATION_RATE);
+    let eps = lift::<R>(0.01);
+    let two = lift::<R>(2.0);
+    let omega = lift::<R>(EARTH_ROTATION_RATE);
 
     for clock in clock_data.iter() {
-        let t_clock = R::from(timestamp_to_seconds(clock.timestamp()));
+        let t_clock = lift::<R>(timestamp_to_seconds(clock.timestamp()));
 
         // Find the window of 10 points centered around the clock time
         while orbit_idx + 1 < orbit_data.len()
@@ -233,7 +233,7 @@ where
         // Prepare data for interpolation - cast to R immediately
         let times: Vec<R> = window
             .iter()
-            .map(|p| R::from(timestamp_to_seconds(p.timestamp())))
+            .map(|p| lift::<R>(timestamp_to_seconds(p.timestamp())))
             .collect();
         let xs: Vec<R> = window.iter().map(|p| p.x_m()).collect();
         let ys: Vec<R> = window.iter().map(|p| p.y_m()).collect();
@@ -281,7 +281,7 @@ where
             clock_bias_s: clock.bias_s(),
             position: [x, y, z],
             velocity: [vx_ecef, vy_ecef, vz_ecef], // Store ECEF for get_total_bias()
-            clock_drift_rate: R::from(0.0),        // Placeholder
+            clock_drift_rate: lift::<R>(0.0),      // Placeholder
         });
     }
 
@@ -311,7 +311,7 @@ where
         if dt > 0.0 && dt < MAX_GAP_CENTERED_DIFF_S {
             let bias_prev = prev.get_total_bias();
             let bias_next = next.get_total_bias();
-            let dt_r = R::from(dt);
+            let dt_r = lift::<R>(dt);
             let rate = (bias_next - bias_prev) / dt_r;
             results[i].clock_drift_rate = rate;
         }
@@ -324,7 +324,7 @@ where
         if dt0 > 0.0 && dt0 < MAX_GAP_BOUNDARY_DIFF_S {
             let bias0 = results[0].get_total_bias();
             let bias1 = results[1].get_total_bias();
-            let dt0_r = R::from(dt0);
+            let dt0_r = lift::<R>(dt0);
             results[0].clock_drift_rate = (bias1 - bias0) / dt0_r;
         }
 
@@ -333,7 +333,7 @@ where
         if dtn > 0.0 && dtn < MAX_GAP_BOUNDARY_DIFF_S {
             let bias_n1 = results[n - 2].get_total_bias();
             let bias_n = results[n - 1].get_total_bias();
-            let dtn_r = R::from(dtn);
+            let dtn_r = lift::<R>(dtn);
             results[n - 1].clock_drift_rate = (bias_n - bias_n1) / dtn_r;
         }
     }

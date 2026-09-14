@@ -4,7 +4,15 @@
  */
 use crate::{BernoulliParams, NormalDistributionParams, UncertainError, UniformDistributionParams};
 use deep_causality_num::Float106;
-use deep_causality_rand::{Bernoulli, Distribution, Normal, Rng, Uniform}; // Import all necessary traits and structs
+// The shaped distributions are mathematics and come from `stats`, and so do the two traits a
+// caller needs to name in order to draw from one — `stats` re-exports them so a crate reaching for
+// distributions needs no second dependency to spell a bound.
+//
+// `Uniform` is the exception and comes from `rand` directly, because it is range sampling rather
+// than a shaped distribution: it is built on `SampleUniform`, which can only be implemented in the
+// crate that owns it, so it cannot move. Naming the entropy crate for it is truthful.
+use deep_causality_rand::Uniform;
+use deep_causality_stats::{Bernoulli, Distribution, Normal, Rng};
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, Copy, PartialEq)]

@@ -5,6 +5,7 @@
 use crate::{GaugeField, GaugeGroup, TopologyError};
 use deep_causality_algebra::Field;
 use deep_causality_algebra::RealField;
+use deep_causality_num::{FromPrimitive, lift};
 use deep_causality_tensor::CausalTensor;
 use std::marker::PhantomData;
 
@@ -19,7 +20,7 @@ pub struct GaugeFieldWitness<T>(PhantomData<T>);
 
 impl<T> GaugeFieldWitness<T>
 where
-    T: Field + From<f64> + Copy + std::cmp::PartialEq,
+    T: Field + Copy + std::cmp::PartialEq + FromPrimitive,
 {
     /// Merges two gauge fields using a coupling function.
     ///
@@ -327,8 +328,9 @@ where
                         if coupling != T::zero() {
                             for b in 0..lie_dim {
                                 for c in 0..lie_dim {
-                                    let f_abc_f64 = G::structure_constant(a, b, c);
-                                    let f_abc: T = f_abc_f64.into();
+                                    // `GaugeGroup::structure_constant` returns `f64`, so this
+                                    // is a real crossing into the working type.
+                                    let f_abc: T = lift(G::structure_constant(a, b, c));
 
                                     if f_abc != T::zero() {
                                         let a_mu_b = conn_data

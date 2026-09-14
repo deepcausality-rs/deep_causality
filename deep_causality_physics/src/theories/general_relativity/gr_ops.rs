@@ -13,7 +13,7 @@
 
 use crate::{NEWTONIAN_CONSTANT_OF_GRAVITATION, PhysicsError, SPEED_OF_LIGHT};
 use deep_causality_algebra::Field;
-use deep_causality_num::Float;
+use deep_causality_num::{Float, FromPrimitive, lift};
 use deep_causality_tensor::CausalTensor;
 
 /// Represents (Position, Velocity) state vector
@@ -43,7 +43,7 @@ pub type GeodesicState<S> = (Vec<S>, Vec<S>);
 /// Computed via `CurvatureTensorWitness::curvature` (RiemannMap trait).
 pub trait GrOps<S>
 where
-    S: Field + Float + Clone + From<f64> + Into<f64>,
+    S: Field + Float + Clone + FromPrimitive + Into<f64>,
 {
     // -------------------------------------------------------------------------
     // Curvature Invariants
@@ -105,7 +105,7 @@ where
             return Ok(S::infinity()); // Flat spacetime
         }
         // 1.0 / k.powf(0.25)
-        let quart = <S as From<f64>>::from(0.25);
+        let quart = lift::<S>(0.25);
         Ok(S::one() / k.powf(quart))
     }
 
@@ -144,7 +144,7 @@ where
         separation: &[S],
     ) -> Result<Vec<S>, PhysicsError> {
         let geometric = self.geodesic_deviation(velocity, separation)?;
-        let c = <S as From<f64>>::from(SPEED_OF_LIGHT);
+        let c = lift::<S>(SPEED_OF_LIGHT);
         let c2 = c * c;
         Ok(geometric.into_iter().map(|v| v * c2).collect())
     }
@@ -186,7 +186,7 @@ where
     /// Divides geometric result by `c ≈ 2.998 × 10⁸ m/s`.
     fn proper_time_si(&self, path: &[Vec<S>]) -> Result<S, PhysicsError> {
         let geometric = self.proper_time(path)?;
-        let c = <S as From<f64>>::from(SPEED_OF_LIGHT);
+        let c = lift::<S>(SPEED_OF_LIGHT);
         Ok(geometric / c)
     }
 
@@ -217,9 +217,9 @@ where
     /// r_s = 2GM/c²
     /// ```
     fn schwarzschild_radius(mass_kg: S) -> S {
-        let two = <S as From<f64>>::from(2.0);
-        let g = <S as From<f64>>::from(NEWTONIAN_CONSTANT_OF_GRAVITATION);
-        let c = <S as From<f64>>::from(SPEED_OF_LIGHT);
+        let two = lift::<S>(2.0);
+        let g = lift::<S>(NEWTONIAN_CONSTANT_OF_GRAVITATION);
+        let c = lift::<S>(SPEED_OF_LIGHT);
         (two * g * mass_kg) / (c * c)
     }
 

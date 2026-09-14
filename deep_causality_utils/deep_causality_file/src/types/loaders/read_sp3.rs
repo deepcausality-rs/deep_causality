@@ -9,6 +9,7 @@ use crate::{DataLoadingError, OrbitData, SatId};
 use chrono::{NaiveDate, NaiveDateTime};
 use deep_causality_algebra::RealField;
 use deep_causality_haft::IoAction;
+use deep_causality_num::{FromPrimitive, lift};
 use std::fs::File;
 use std::io;
 use std::io::BufRead;
@@ -29,7 +30,7 @@ pub struct ReadOrbitData<R> {
 
 impl<R> IoAction for ReadOrbitData<R>
 where
-    R: RealField + From<f64>,
+    R: RealField + FromPrimitive,
 {
     type Output = Vec<OrbitData<R>>;
     type Error = DataLoadingError;
@@ -51,7 +52,7 @@ pub fn read_orbit_data<R>(path: impl AsRef<Path>, target_sat: &str) -> ReadOrbit
 /// The pure parse: open the SP3 file and extract `target_sat`'s ECEF position series (metres).
 fn parse_orbit_data<R>(path: &Path, target_sat: &str) -> Result<Vec<OrbitData<R>>, DataLoadingError>
 where
-    R: RealField + From<f64>,
+    R: RealField + FromPrimitive,
 {
     let file = File::open(path)?;
     let reader = io::BufReader::new(file);
@@ -139,9 +140,9 @@ where
                     data.push(OrbitData::new(
                         time,
                         sat_id,
-                        R::from(x_f64),
-                        R::from(y_f64),
-                        R::from(z_f64),
+                        lift::<R>(x_f64),
+                        lift::<R>(y_f64),
+                        lift::<R>(z_f64),
                     ));
                 }
             }

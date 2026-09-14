@@ -8,7 +8,7 @@ use crate::error::PhysicsError;
 use deep_causality_algebra::RealField;
 use deep_causality_metric::{LorentzianMetric, WestCoastMetric};
 use deep_causality_multivector::CausalMultiVector;
-use deep_causality_num::FromPrimitive;
+use deep_causality_num::{FromPrimitive, lift};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     BaseTopology, GaugeField, GaugeFieldWitness, Manifold, Simplex, SimplicialComplexBuilder,
@@ -18,7 +18,7 @@ use deep_causality_topology::{
 /// Blanket implementation of GaugeEmOps for GaugeField<U1, S, S> where S: Field + Float + TensorData
 impl<S> GaugeEmOps<S> for GaugeField<U1, S, S>
 where
-    S: RealField + FromPrimitive + From<f64> + Into<f64> + std::default::Default,
+    S: RealField + FromPrimitive + FromPrimitive + Into<f64> + std::default::Default,
 {
     fn from_fields(
         base: SimplicialManifold<S, S>,
@@ -189,7 +189,7 @@ where
         let e_sq = squared_magnitude_3d(&e);
         let b_sq = squared_magnitude_3d(&b);
 
-        let half: S = <S as From<f64>>::from(0.5);
+        let half: S = lift::<S>(0.5);
         Ok(half * (e_sq + b_sq))
     }
 
@@ -201,7 +201,7 @@ where
         let e_sq = squared_magnitude_3d(&e);
         let b_sq = squared_magnitude_3d(&b);
 
-        let half: S = <S as From<f64>>::from(0.5);
+        let half: S = lift::<S>(0.5);
         Ok(half * (e_sq - b_sq))
     }
 
@@ -230,7 +230,7 @@ where
         let b_sq = squared_magnitude_3d(&b);
 
         // F_uv F^uv = 2(B² - E²)
-        let two: S = <S as From<f64>>::from(2.0);
+        let two: S = lift::<S>(2.0);
         Ok(two * (b_sq - e_sq))
     }
 
@@ -239,7 +239,7 @@ where
         let b = self.magnetic_field()?;
 
         let e_dot_b = dot_product_3d(&e, &b);
-        let four: S = <S as From<f64>>::from(4.0);
+        let four: S = lift::<S>(4.0);
         Ok(-four * e_dot_b)
     }
 
@@ -287,7 +287,7 @@ where
 /// Computes the squared magnitude of a 3D vector (indices 2, 3, 4)
 fn squared_magnitude_3d<S>(mv: &CausalMultiVector<S>) -> S
 where
-    S: RealField + Clone + From<f64> + Default,
+    S: RealField + Clone + FromPrimitive + Default,
 {
     let data = mv.data();
     let x = data.get(2).cloned().unwrap_or_else(S::zero);
@@ -300,7 +300,7 @@ where
 /// Computes the magnitude of a 3D vector
 fn magnitude_3d<S>(mv: &CausalMultiVector<S>) -> S
 where
-    S: RealField + Clone + From<f64> + Default,
+    S: RealField + Clone + FromPrimitive + Default,
 {
     squared_magnitude_3d(mv).sqrt()
 }
@@ -313,7 +313,7 @@ where
 /// would invert the dependency.
 fn dot_product_3d<S>(a: &CausalMultiVector<S>, b: &CausalMultiVector<S>) -> S
 where
-    S: RealField + Clone + From<f64> + Default,
+    S: RealField + Clone + FromPrimitive + Default,
 {
     let a_data = a.data();
     let b_data = b.data();
@@ -337,7 +337,7 @@ fn cross_product_3d<S>(
     b: &CausalMultiVector<S>,
 ) -> Result<CausalMultiVector<S>, PhysicsError>
 where
-    S: RealField + Clone + From<f64> + Default,
+    S: RealField + Clone + FromPrimitive + Default,
 {
     let a_data = a.data();
     let b_data = b.data();

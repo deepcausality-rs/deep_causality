@@ -3,46 +3,81 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Distribution, Fill, RngCore, SampleRange, SampleUniform};
-use crate::{Iter, Map, StandardUniform};
+use crate::{Distribution, Fill, RandScalar, RngCore, SampleRange, SampleUniform};
+use crate::{Iter, Map};
 
 impl<T: Rng> Rng for &mut T {}
 
 pub trait Rng: RngCore {
+    /// A raw machine word. Not a real number, so it is a separate operation from the numerical draw,
+    /// which lives in `deep_causality_stats` as `RandomExt::random` — this crate states no
+    /// distribution.
+    ///
+    /// This is what an index draw, a seed draw or a bit-pattern draw wants.
     #[inline]
-    fn random<T>(&mut self) -> T
+    fn random_word<T>(&mut self) -> T
     where
-        StandardUniform: Distribution<T>,
+        crate::StandardWord: Distribution<T>,
     {
-        StandardUniform.sample(self)
+        crate::StandardWord.sample(self)
     }
 
+    /// A Boolean draw: the two-element Boolean algebra, not a real field.
     #[inline]
-    fn random_iter<T>(&mut self) -> Iter<StandardUniform, &mut Self, T>
+    fn random_boolean(&mut self) -> bool {
+        crate::StandardBool.sample(self)
+    }
+
+    /// An iterator of raw machine words, the word-sided sibling of `RandomExt::random_iter`.
+    #[inline]
+    fn random_word_iter<T>(&mut self) -> Iter<crate::StandardWord, &mut Self, T>
     where
         Self: Sized,
-        StandardUniform: Distribution<T>,
+        crate::StandardWord: Distribution<T>,
     {
-        StandardUniform.sample_iter(self)
+        crate::StandardWord.sample_iter(self)
     }
 
     #[track_caller]
-    fn random_range<T, R>(&mut self, range: R) -> T
+    /// A uniform draw from a range, at whatever scalar the range holds.
+    ///
+    /// `K` is the tower marker and is inferred from the range; no call site names it.
+    fn random_range<T, K, R>(&mut self, range: R) -> T
     where
-        T: SampleUniform,
-        R: SampleRange<T>,
+        T: SampleUniform<K>,
+        R: SampleRange<T, K>,
     {
         assert!(!range.is_empty(), "cannot sample empty range");
         range.sample_single(self).unwrap()
     }
 
+    /// A Bernoulli trial at probability `p`, stated in the caller's scalar.
+    ///
+    /// The draw is a unit value compared against `p`. That makes `p = 0` exact — no unit draw is
+    /// below zero, so an impossible event cannot fire. The ratio form this replaced,
+    /// `word / u64::MAX <= p`, read `0 <= 0` on a zero word and fired an event of probability
+    /// zero once in every `2^64` draws.
+    ///
+    /// `p = 1` is special-cased rather than left to the comparison, for the reason
+    /// [`RandScalar::rand_float_gen`] documents: a narrow significand can round a draw from
+    /// `[0, 1)` onto exactly `1.0`, and `1.0 < 1.0` is false. At `f32` that happens about once in
+    /// `2^25` draws, so without the case a certain event would occasionally fail to occur.
+    ///
+    /// Resolution follows the scalar: `p` is honoured to as many bits as the unit draw carries —
+    /// 24 at `f32`, 53 at `f64`, 106 at `Float106`.
     #[inline]
     #[track_caller]
-    fn random_bool(&mut self, p: f64) -> bool {
-        if !(0.0..=1.0).contains(&p) {
-            panic!("p={} is outside range [0.0, 1.0]", p);
+    fn random_bool<T: RandScalar>(&mut self, p: T) -> bool {
+        if !(T::zero()..=T::one()).contains(&p) {
+            panic!(
+                "p={} is outside range [0.0, 1.0]",
+                p.to_f64().unwrap_or(f64::NAN)
+            );
         }
-        self.next_u64() as f64 / (u64::MAX as f64) <= p
+        if p == T::one() {
+            return true;
+        }
+        T::rand_float_gen(self) < p
     }
 
     #[inline]
@@ -74,13 +109,14 @@ pub trait Rng: RngCore {
         dest.fill(self)
     }
 
-    fn map<T, S, F>(&mut self, func: F) -> Map<StandardUniform, F, T, S>
+    /// Map over raw machine words, the word-sided sibling of `RandomExt::map_random`.
+    fn map_word<T, S, F>(&mut self, func: F) -> Map<crate::StandardWord, F, T, S>
     where
-        StandardUniform: Distribution<T>,
+        crate::StandardWord: Distribution<T>,
         F: Fn(T) -> S,
     {
         Map {
-            distr: StandardUniform,
+            distr: crate::StandardWord,
             func,
             phantom: core::marker::PhantomData,
         }

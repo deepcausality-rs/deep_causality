@@ -328,7 +328,7 @@ fn test_link_variable_error_numerical() {
 
 #[test]
 fn test_link_variable_try_random_su2() {
-    let mut rng = deep_causality_rand::rng();
+    let mut rng = deep_causality_stats::rng();
     let link: LinkVariable<SU2, Complex<f64>, f64> =
         LinkVariable::try_random(&mut rng).expect("Should create random SU2 link");
 
@@ -350,7 +350,7 @@ fn test_link_variable_try_random_su2() {
 
 #[test]
 fn test_link_variable_random_u1() {
-    let mut rng = deep_causality_rand::rng();
+    let mut rng = deep_causality_stats::rng();
     let link: LinkVariable<U1, Complex<f64>, f64> =
         LinkVariable::try_random(&mut rng).expect("Should create random U1 link");
 
@@ -523,7 +523,7 @@ fn test_link_variable_try_zero_zero_dim_errors() {
 
 #[test]
 fn test_link_variable_try_random_zero_dim_errors() {
-    let mut rng = deep_causality_rand::rng();
+    let mut rng = deep_causality_stats::rng();
     let r: Result<LinkVariable<ZeroDimGroup, Complex<f64>, f64>, _> =
         LinkVariable::try_random(&mut rng);
     assert!(matches!(

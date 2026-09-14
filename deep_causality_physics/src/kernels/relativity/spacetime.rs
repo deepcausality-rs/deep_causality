@@ -9,7 +9,7 @@ use crate::PhaseAngle;
 use crate::error::PhysicsError;
 use deep_causality_algebra::{Field, RealField};
 use deep_causality_multivector::{CausalMultiVector, Metric, MultiVector};
-use deep_causality_num::Float;
+use deep_causality_num::{Float, FromPrimitive};
 
 // Kernels
 
@@ -246,7 +246,7 @@ pub fn parallel_transport_kernel<T>(
     christoffel: &deep_causality_tensor::CausalTensor<T>,
 ) -> Result<Vec<T>, PhysicsError>
 where
-    T: Field + Float + From<f64> + Copy,
+    T: Field + Float + FromPrimitive + Copy,
 {
     if path.len() < 2 {
         return Err(PhysicsError::DimensionMismatch(
@@ -339,7 +339,7 @@ pub fn proper_time_kernel<T>(
     metric: &deep_causality_tensor::CausalTensor<T>,
 ) -> Result<T, PhysicsError>
 where
-    T: Field + Float + From<f64> + Copy,
+    T: Field + Float + FromPrimitive + Copy,
 {
     if path.len() < 2 {
         return Ok(T::zero()); // No proper time for single point or empty path
