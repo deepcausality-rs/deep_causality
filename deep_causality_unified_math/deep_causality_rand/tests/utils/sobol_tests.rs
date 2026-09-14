@@ -8,6 +8,7 @@
 //! Reference points were produced by `scipy.stats.qmc.Sobol(d, scramble=False, bits=32)`;
 //! the values are exact dyadic rationals, so equality is checked exactly.
 
+use deep_causality_num::Float106;
 use deep_causality_rand::{MAX_SOBOL_DIM, RngCore, RngError, SobolSequence, Xoshiro256};
 
 /// A uniform `[0, 1)` from one machine word.
@@ -33,7 +34,7 @@ fn test_matches_scipy_reference_d4() {
     for (idx, expected) in refs {
         for (d, e) in expected.iter().enumerate() {
             assert_eq!(
-                s.coordinate(*idx, d),
+                s.coordinate::<f64>(*idx, d),
                 *e,
                 "mismatch at index {idx}, dim {d}"
             );
@@ -46,7 +47,7 @@ fn test_coordinates_in_unit_interval() {
     let s = SobolSequence::new(MAX_SOBOL_DIM).unwrap();
     for idx in 0..1024u64 {
         for d in 0..MAX_SOBOL_DIM {
-            let x = s.coordinate(idx, d);
+            let x = s.coordinate::<f64>(idx, d);
             assert!((0.0..1.0).contains(&x), "x={x} out of [0,1) at {idx},{d}");
         }
     }
@@ -55,10 +56,10 @@ fn test_coordinates_in_unit_interval() {
 #[test]
 fn test_deterministic_by_index_regardless_of_order() {
     let s = SobolSequence::new(3).unwrap();
-    let a = s.coordinate(5, 2);
-    let _ = s.coordinate(1, 0);
-    let _ = s.coordinate(99, 1);
-    let b = s.coordinate(5, 2);
+    let a = s.coordinate::<f64>(5, 2);
+    let _ = s.coordinate::<f64>(1, 0);
+    let _ = s.coordinate::<f64>(99, 1);
+    let b = s.coordinate::<f64>(5, 2);
     assert_eq!(a, b);
 }
 
@@ -66,9 +67,9 @@ fn test_deterministic_by_index_regardless_of_order() {
 fn test_point_matches_coordinate() {
     let s = SobolSequence::new(4).unwrap();
     let mut out = [0.0; 4];
-    s.point(7, &mut out);
+    s.point::<f64>(7, &mut out);
     for (d, v) in out.iter().enumerate() {
-        assert_eq!(*v, s.coordinate(7, d));
+        assert_eq!(*v, s.coordinate::<f64>(7, d));
     }
 }
 
@@ -96,7 +97,7 @@ fn test_shift_same_seed_reproducible() {
     let b = SobolSequence::new_shifted(4, 0xC0FFEE).unwrap();
     for idx in 0..64u64 {
         for d in 0..4 {
-            assert_eq!(a.coordinate(idx, d), b.coordinate(idx, d));
+            assert_eq!(a.coordinate::<f64>(idx, d), b.coordinate::<f64>(idx, d));
         }
     }
 }
@@ -106,7 +107,7 @@ fn test_shift_different_seeds_differ() {
     let a = SobolSequence::new_shifted(4, 1).unwrap();
     let b = SobolSequence::new_shifted(4, 2).unwrap();
     // At least one coordinate over a small batch must differ.
-    let differ = (0..32u64).any(|idx| (0..4).any(|d| a.coordinate(idx, d) != b.coordinate(idx, d)));
+    let differ = (0..32u64).any(|idx| (0..4).any(|d| a.coordinate::<f64>(idx, d) != b.coordinate::<f64>(idx, d)));
     assert!(differ, "different seeds produced identical sequences");
 }
 
@@ -115,7 +116,7 @@ fn test_shifted_coordinates_still_in_unit_interval() {
     let s = SobolSequence::new_shifted(MAX_SOBOL_DIM, 777).unwrap();
     for idx in 0..256u64 {
         for d in 0..MAX_SOBOL_DIM {
-            assert!((0.0..1.0).contains(&s.coordinate(idx, d)));
+            assert!((0.0..1.0).contains(&s.coordinate::<f64>(idx, d)));
         }
     }
 }
@@ -143,7 +144,7 @@ fn test_discrepancy_lower_than_pseudo_random() {
     const N: usize = 256;
     let s = SobolSequence::new(2).unwrap();
     let sobol: Vec<(f64, f64)> = (0..N as u64)
-        .map(|i| (s.coordinate(i, 0), s.coordinate(i, 1)))
+        .map(|i| (s.coordinate::<f64>(i, 0), s.coordinate::<f64>(i, 1)))
         .collect();
 
     // Deterministic pseudo-random baseline.
@@ -167,10 +168,55 @@ fn test_exact_stratification_in_quadrants() {
     let s = SobolSequence::new(2).unwrap();
     let mut counts = [0u32; 4];
     for i in 0..N {
-        let x = s.coordinate(i, 0);
-        let y = s.coordinate(i, 1);
+        let x = s.coordinate::<f64>(i, 0);
+        let y = s.coordinate::<f64>(i, 1);
         let q = (if x < 0.5 { 0 } else { 1 }) + (if y < 0.5 { 0 } else { 2 });
         counts[q] += 1;
     }
     assert_eq!(counts, [64, 64, 64, 64]);
+}
+
+// ---------------------------------------------------------------------------------------------
+// The scalar is the caller's; the resolution is the sequence's
+// ---------------------------------------------------------------------------------------------
+
+#[test]
+fn a_wider_scalar_carries_the_same_coordinate() {
+    // The coordinate is a 32-bit integer over `2^32`, which `f64` holds exactly. Asking for it at
+    // `Float106` therefore cannot refine it: the two agree bit for bit, and a test asserting they
+    // agree to some tolerance would be weaker than the truth.
+    //
+    // This is what "fixed width" means here. Precision as a parameter lets a caller choose the
+    // scalar their arithmetic runs in; it does not invent bits the sequence never had.
+    let s = SobolSequence::new_shifted(4, 0xC0FFEE).unwrap();
+    for idx in [0u64, 1, 2, 3, 17, 255, 4096, 65_535, 1_000_000] {
+        for d in 0..4 {
+            let narrow: f64 = s.coordinate(idx, d);
+            let wide: Float106 = s.coordinate(idx, d);
+            assert_eq!(
+                wide,
+                Float106::from(narrow),
+                "point {idx}, dimension {d}: the wide coordinate carries something the narrow one does not"
+            );
+        }
+    }
+}
+
+#[test]
+fn a_narrower_scalar_rounds_the_coordinate_away() {
+    // The other side of the same fact, and the reason the scalar is the caller's choice rather
+    // than the crate's: `f32` keeps 24 significand bits against the sequence's 32, so it cannot
+    // separate points that differ in the low 8 bits.
+    //
+    // Consecutive Sobol indices in dimension 0 differ by a large stride, so a pair that collides
+    // has to be looked for. Points 0 and 1 of dimension 1 differ by `2^-32` after the shift is
+    // removed, which is exactly what `f32` cannot see.
+    let s = SobolSequence::new(1).unwrap();
+    let a: f64 = s.coordinate(1, 0);
+    let b: f64 = a + 2f64.powi(-32);
+    assert_ne!(a, b, "the two differ at f64");
+    assert_eq!(
+        a as f32, b as f32,
+        "two coordinates one ulp of the sequence apart must collide at f32"
+    );
 }

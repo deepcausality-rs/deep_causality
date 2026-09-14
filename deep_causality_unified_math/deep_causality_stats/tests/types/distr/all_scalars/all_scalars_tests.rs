@@ -38,11 +38,10 @@ const TOL: f64 = 0.02;
 /// the scalar the caller is working at. The caller compares the sequences across scalars.
 fn exercise<T>(scalar: &str) -> Vec<u64>
 where
+    // No `StandardUniform: Distribution<T>` clauses. The distributions are implemented for every
+    // scalar carrying these three capabilities, so naming the capabilities is enough — which is
+    // the whole point of the retrofit, and would not compile before it.
     T: RealField + FromPrimitive + ToPrimitive + RandWidth,
-    StandardUniform: Distribution<T>,
-    Open01: Distribution<T>,
-    OpenClosed01: Distribution<T>,
-    StandardNormal: Distribution<T>,
 {
     // --- the three unit draws, which every inverse-CDF distribution below rests on ---
     let u = draws::<T, _>(&StandardUniform, N, SUITE_SEED);

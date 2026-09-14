@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Distribution, Fill, RngCore, SampleRange, SampleUniform};
+use crate::{Distribution, Fill, RandFloat, RngCore, SampleRange, SampleUniform};
 use crate::{Iter, Map};
 
 impl<T: Rng> Rng for &mut T {}
@@ -46,13 +46,33 @@ pub trait Rng: RngCore {
         range.sample_single(self).unwrap()
     }
 
+    /// A Bernoulli trial at probability `p`, stated in the caller's scalar.
+    ///
+    /// The draw is a unit value compared against `p`. That makes `p = 0` exact — no unit draw is
+    /// below zero, so an impossible event cannot fire. The ratio form this replaced,
+    /// `word / u64::MAX <= p`, read `0 <= 0` on a zero word and fired an event of probability
+    /// zero once in every `2^64` draws.
+    ///
+    /// `p = 1` is special-cased rather than left to the comparison, for the reason
+    /// [`RandFloat::rand_float_gen`] documents: a narrow significand can round a draw from
+    /// `[0, 1)` onto exactly `1.0`, and `1.0 < 1.0` is false. At `f32` that happens about once in
+    /// `2^25` draws, so without the case a certain event would occasionally fail to occur.
+    ///
+    /// Resolution follows the scalar: `p` is honoured to as many bits as the unit draw carries —
+    /// 24 at `f32`, 53 at `f64`, 106 at `Float106`.
     #[inline]
     #[track_caller]
-    fn random_bool(&mut self, p: f64) -> bool {
-        if !(0.0..=1.0).contains(&p) {
-            panic!("p={} is outside range [0.0, 1.0]", p);
+    fn random_bool<T: RandFloat>(&mut self, p: T) -> bool {
+        if !(T::zero()..=T::one()).contains(&p) {
+            panic!(
+                "p={} is outside range [0.0, 1.0]",
+                p.to_f64().unwrap_or(f64::NAN)
+            );
         }
-        self.next_u64() as f64 / (u64::MAX as f64) <= p
+        if p == T::one() {
+            return true;
+        }
+        T::rand_float_gen(self) < p
     }
 
     #[inline]

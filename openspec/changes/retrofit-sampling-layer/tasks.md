@@ -322,12 +322,25 @@ cumulative scan is the weighted sibling of the same operation.
 
 ## 5. Consumers, and the `uncertain` migration
 
-- [ ] 5.1 Remove `RealRng`; confirm nothing outside its own test file referenced it.
-- [ ] 5.2 Retype the remaining hardcoded `f64`: `Bernoulli::new`/`p` in `stats`,
+- [x] 5.1 Remove `RealRng`; confirm nothing outside its own test file referenced it. Removed in
+      group 1; the only surviving mention is a comment in `standard_normal_tests.rs` recording
+      that it had no consumer.
+- [x] 5.2 Retype the remaining hardcoded `f64`: `Bernoulli::new`/`p` in `stats`,
       `Rng::random_bool` and `SobolSequence::coordinate`/`point` in `rand`. Document the two
       fixed-width exceptions at the item, with a test that two `Float106` Sobol coordinates within
       the 32-bit resolution compare equal.
-- [ ] 5.3 **The umbrella.** Migrate `uncertain`'s distribution layer to `stats`:
+
+      **`random_bool` carried a defect, found by writing the endpoint test first.** The body was
+      `word / u64::MAX <= p`, which reads `0 <= 0` on a zero word: an event of probability zero
+      fired once in every `2^64` draws. No sampling test reaches that; a zero generator reaches it
+      on the first draw, and did. The unit-draw comparison that replaces it makes `p = 0` exact,
+      and `p = 1` is special-cased because a narrow significand can round a draw from `[0, 1)`
+      onto exactly `1.0` — at `f32` about once in `2^25` draws, which would make a certain event
+      occasionally fail to occur.
+
+      The two fixed-width exceptions are `Bernoulli`'s `2^-64` quantisation, which buys exactness
+      at both endpoints, and Sobol's `2^-32` resolution, which is the direction-number table's.
+- [x] 5.3 **The umbrella.** Migrate `uncertain`'s distribution layer to `stats`:
       `types/distribution/mod.rs` (`Bernoulli`, `Normal`, `Uniform`, `Distribution`),
       `errors/uncertain_error.rs` (the three distribution errors), and the four inverse-CDF
       imports in `types/sampler/qmc_sampler.rs`. What remains of `rand` there is `Xoshiro256`,
@@ -336,37 +349,49 @@ cumulative scan is the weighted sibling of the same operation.
       repaired in **1.7**, because group 1 is what broke them and a group must leave the tree
       green. Nothing further is owed here. Do not enter that crate beyond the import moves in 5.3:
       `SampledValue`, the sample cache and the lazy graph belong to its own renovation.
-- [ ] 5.5 Assert the endpoint: a search of `uncertain`'s sources for `deep_causality_rand` returns
-      only generator, thread-RNG and Sobol references. Its suite passes at or above baseline.
-- [ ] 5.6 Migrate the other distribution consumers' imports: `physics` (6 uses), `discovery` (1).
-      Remove the `Distribution` clause from `Normal<F>`'s struct definition.
-- [ ] 5.7 **Transition `topology` to `stats` only.** Thirteen `rand` references, counted, and each
+- [x] 5.5 Assert the endpoint: a search of `uncertain`'s sources for `deep_causality_rand` returns
+      only generator, thread-RNG, Sobol **and range-sampler** references. Its suite passes at or
+      above baseline — 248, exactly the baseline.
+
+      **Corrected.** The endpoint as written assumed `Uniform<X>` would move to `stats`. It cannot:
+      it is built on `SampleUniform`, which can only be implemented in the crate that owns it, and
+      the spec settles the question — range sampling stays in the entropy crate and the `stats`
+      re-export covers the generator traits and nothing else. So `uncertain` names `rand` for
+      `Uniform` and `UniformDistributionError`, and that is truthful rather than a leftover. What
+      the endpoint does assert, and what holds: **no shaped distribution reaches `uncertain` from
+      `rand` any more.**
+- [x] 5.6 Migrate the other distribution consumers' imports: `physics` (6 uses), `discovery` (1) —
+      done in group 3. `Normal<F>` carried `StandardNormal: Distribution<F>` on its **struct
+      definition** and on its constructor impl; both are gone. A bound on the data says something
+      the type does not need: `Normal` holds two scalars and knows nothing about drawing from them.
+      The sampler states the requirement where the draw happens.
+- [x] 5.7 **Transition `topology` to `stats` only.** Thirteen `rand` references, counted, and each
       has a destination:
-      - [ ] 5.7.a The six `RngType: deep_causality_rand::Rng` bounds in `gauge_field_lattice/`
+      - [x] 5.7.a The six `RngType: deep_causality_rand::Rng` bounds in `gauge_field_lattice/`
             and `link_variable/` become the generator trait re-exported from `stats`.
-      - [ ] 5.7.b `cubical_regge_geometry/metropolis.rs` imports `Normal`, `StandardUniform` and
+      - [x] 5.7.b `cubical_regge_geometry/metropolis.rs` imports `Normal`, `StandardUniform` and
             `StandardNormal` from `stats`, and **both leaked `where` clauses are removed** — the
             tier-7 leak this change exists to repair.
-      - [ ] 5.7.c The edge pick, `(rng.next_u64() as usize) % num_edges` at
+      - [x] 5.7.c The edge pick, `(rng.next_u64() as usize) % num_edges` at
             `metropolis.rs:122`, becomes a `UniformInt` draw from 4H. This is the one operation
             that needed a new distribution, and it is also the one place topology's randomness is
             currently biased.
-      - [ ] 5.7.d `RandomField` in `types/gauge/link_variable/random.rs` drops its hand-rolled
+      - [x] 5.7.d `RandomField` in `types/gauge/link_variable/random.rs` drops its hand-rolled
             `rng.random::<f64>() - 0.5` for a `stats` draw at the caller's scalar. Its docstring
             currently says it "bridges the gap between `deep_causality_rand` and algebraic types";
             that gap is what this change closes. Add a test that the gauge field draws at `f32` and
             `Float106`, a precision it does not have today.
-      - [ ] 5.7.e `LawRng` in `utils_tests/hkt_law_utils.rs` stays unchanged: it is a hand-rolled
+      - [x] 5.7.e `LawRng` in `utils_tests/hkt_law_utils.rs` stays unchanged: it is a hand-rolled
             deterministic generator depending on neither crate, and its determinism is the point.
-      - [ ] 5.7.f Remove `deep_causality_rand` from `topology`'s manifest; add
+      - [x] 5.7.f Remove `deep_causality_rand` from `topology`'s manifest; add
             `deep_causality_stats`. Confirm the crate builds and its suite passes at or above
             baseline.
-- [ ] 5.8 Assert the endpoint by search: `topology`'s sources contain no `deep_causality_rand`
+- [x] 5.8 Assert the endpoint by search: `topology`'s sources contain no `deep_causality_rand`
       reference outside `utils_tests`, and its manifest names none.
-- [ ] 5.9 Confirm the entropy-only consumers need **no** edit: `algorithms`, `tensor`,
+- [x] 5.9 Confirm the entropy-only consumers need **no** edit: `algorithms`, `tensor`,
       `ultragraph`, `data_structures`. Build `quantum` with `--features qpu` for the transitive
       path through `uncertain`.
-- [ ] 5.10 Clippy clean across every touched crate. Prepare the group-5 commit message.
+- [x] 5.10 Clippy clean across every touched crate. Prepare the group-5 commit message.
 
 ## 6. The diagonal traversal in `haft`
 

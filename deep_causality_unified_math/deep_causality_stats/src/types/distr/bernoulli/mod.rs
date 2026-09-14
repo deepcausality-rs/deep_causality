@@ -3,6 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::BernoulliDistributionError;
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 use deep_causality_rand::{Distribution, Rng};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -37,18 +39,29 @@ const ALWAYS_TRUE: u64 = u64::MAX;
 const SCALE: f64 = 2.0 * (1u64 << 63) as f64;
 
 impl Bernoulli {
-    /// Construct a new `Bernoulli` with the given probability of success `p`.
+    /// Construct a new `Bernoulli` with the given probability of success `p`, stated in the
+    /// caller's scalar.
     ///
-    /// # Precision
+    /// For `p = 1.0` the distribution always generates true, and for `p = 0.0` always false; both
+    /// are exact rather than overwhelmingly likely.
     ///
-    /// For `p = 1.0`, the resulting distribution will always generate true.
-    /// For `p = 0.0`, the resulting distribution will always generate false.
+    /// # The probability is quantised to `2^-64`, whatever scalar states it
     ///
-    /// This method is accurate for any input `p` in the range `[0, 1]` which is
-    /// a multiple of 2<sup>-64</sup>. (Note that not all multiples of
-    /// 2<sup>-64</sup> in `[0, 1]` can be represented as a `f64`.)
+    /// This is the exception to precision as a parameter in this crate, and it is deliberate. The
+    /// draw is an integer comparison against `p · 2^64` — see the note above `ALWAYS_TRUE` — which
+    /// makes it exact at both endpoints and free of the rounding a unit-draw comparison would
+    /// carry. What it costs is resolution: `p` is held to a multiple of `2^-64` and no finer, so a
+    /// `Float106` caller stating 106 significand bits of probability keeps 64 of them, and
+    /// [`Bernoulli::p`] returns the quantised value rather than the one they gave.
+    ///
+    /// The bound is the representation's, not the scalar's, so widening the scalar does not move
+    /// it. A caller who needs a probability finer than `2^-64` needs a different construction, not
+    /// a wider float.
     #[inline]
-    pub fn new(p: f64) -> Result<Bernoulli, BernoulliDistributionError> {
+    pub fn new<T: RealField>(p: T) -> Result<Bernoulli, BernoulliDistributionError> {
+        let p = p
+            .to_f64()
+            .ok_or(BernoulliDistributionError::InvalidProbability)?;
         if !(0.0..1.0).contains(&p) {
             if p == 1.0 {
                 return Ok(Bernoulli { p_int: ALWAYS_TRUE });
@@ -84,15 +97,18 @@ impl Bernoulli {
     }
 
     #[inline]
-    /// Returns the probability (`p`) of the distribution.
+    /// Returns the probability (`p`) of the distribution, at the caller's scalar.
     ///
-    /// This value may differ slightly from the input due to loss of precision.
-    pub fn p(&self) -> f64 {
-        if self.p_int == ALWAYS_TRUE {
+    /// This is the quantised probability, a multiple of `2^-64`, which may differ from the value
+    /// passed to [`Bernoulli::new`] — see the note there. The scalar chosen affects how the value
+    /// is carried away from here, never how finely it was held.
+    pub fn p<T: RealField + FromPrimitive>(&self) -> T {
+        let p = if self.p_int == ALWAYS_TRUE {
             1.0
         } else {
             (self.p_int as f64) / SCALE
-        }
+        };
+        T::from_f64(p).expect("a probability in [0, 1] converts to every supported scalar")
     }
 }
 

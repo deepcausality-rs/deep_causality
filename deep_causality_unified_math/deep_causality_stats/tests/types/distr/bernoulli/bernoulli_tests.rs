@@ -2,25 +2,26 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality_rand::{Distribution, rng};
+use deep_causality_num::Float106;
+use deep_causality_rand::{Distribution, Xoshiro256, rng};
 use deep_causality_stats::{Bernoulli, BernoulliDistributionError};
 
 #[test]
 fn test_new() {
     // Valid cases
     let b = Bernoulli::new(0.5).unwrap();
-    assert_eq!(b.p(), 0.5);
+    assert_eq!(b.p::<f64>(), 0.5);
 
     let b = Bernoulli::new(0.0).unwrap();
-    assert_eq!(b.p(), 0.0);
+    assert_eq!(b.p::<f64>(), 0.0);
 
     let b = Bernoulli::new(1.0).unwrap();
-    assert_eq!(b.p(), 1.0);
+    assert_eq!(b.p::<f64>(), 1.0);
 
     // Close to 1.0 but not 1.0
     let p_close_to_1 = 1.0 - 1e-12;
     let b = Bernoulli::new(p_close_to_1).unwrap();
-    assert!((b.p() - p_close_to_1).abs() < 1e-9);
+    assert!((b.p::<f64>() - p_close_to_1).abs() < 1e-9);
 
     // Invalid cases
     assert_eq!(
@@ -38,16 +39,16 @@ fn test_new() {
 fn test_from_ratio() {
     // Valid cases
     let b = Bernoulli::from_ratio(1, 2).unwrap();
-    assert!((b.p() - 0.5).abs() < f64::EPSILON);
+    assert!((b.p::<f64>() - 0.5).abs() < f64::EPSILON);
 
     let b = Bernoulli::from_ratio(0, 1).unwrap();
-    assert_eq!(b.p(), 0.0);
+    assert_eq!(b.p::<f64>(), 0.0);
 
     let b = Bernoulli::from_ratio(1, 1).unwrap();
-    assert_eq!(b.p(), 1.0);
+    assert_eq!(b.p::<f64>(), 1.0);
 
     let b = Bernoulli::from_ratio(2, 3).unwrap();
-    assert!((b.p() - 2.0 / 3.0).abs() < f64::EPSILON);
+    assert!((b.p::<f64>() - 2.0 / 3.0).abs() < f64::EPSILON);
 
     // Invalid cases
     assert_eq!(
@@ -66,7 +67,7 @@ fn test_p_precision() {
     let b = Bernoulli::new(p).unwrap();
     // The precision of f64 is about 15-17 decimal digits.
     // The conversion to u64 and back might lose some precision.
-    assert!((b.p() - p).abs() < 1e-15);
+    assert!((b.p::<f64>() - p).abs() < 1e-15);
 }
 
 #[test]
@@ -100,5 +101,45 @@ fn test_clone_copy_debug_partial_eq() {
     assert_eq!(
         format!("{:?}", b1),
         format!("Bernoulli {{ p_int: {} }}", p_int)
+    );
+}
+
+// ---------------------------------------------------------------------------------------------
+// The probability is stated in the caller's scalar, and quantised regardless
+// ---------------------------------------------------------------------------------------------
+
+#[test]
+fn the_probability_is_stated_at_the_callers_scalar() {
+    // The parameter is a probability, not an `f64`. Every supported scalar states it, and the
+    // endpoints stay exact in each.
+    let at_f32 = Bernoulli::new(0.25f32).unwrap();
+    let at_f64 = Bernoulli::new(0.25f64).unwrap();
+    assert_eq!(
+        at_f32.p::<f64>(),
+        at_f64.p::<f64>(),
+        "0.25 is exact in both scalars, so both must quantise to the same probability"
+    );
+
+    assert!(Bernoulli::new(1.0f32).unwrap().sample(&mut Xoshiro256::from_seed(1)));
+    assert!(!Bernoulli::new(0.0f32).unwrap().sample(&mut Xoshiro256::from_seed(1)));
+}
+
+#[test]
+fn a_wider_scalar_buys_no_finer_probability() {
+    // The fixed-width exception, measured. `Float106` can state a probability far finer than
+    // `2^-64`, and the integer comparison cannot honour it: a probability and that probability
+    // plus `2^-80` are the same distribution here.
+    //
+    // This is not a defect to fix by widening the store. It is the price of an integer comparison
+    // that is exact at both endpoints, and the reason it is written down at the constructor.
+    let p = Float106::from(0.5);
+    let nudged = p + Float106::from(2f64.powi(-80));
+    assert_ne!(p, nudged, "the two probabilities differ at Float106");
+
+    let a = Bernoulli::new(p).unwrap();
+    let b = Bernoulli::new(nudged).unwrap();
+    assert_eq!(
+        a, b,
+        "two probabilities closer than 2^-64 must quantise to the same distribution"
     );
 }

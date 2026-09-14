@@ -9,12 +9,17 @@ use crate::{NormalDistributionError, StandardNormal};
 use deep_causality_rand::{Distribution, Rng};
 use deep_causality_algebra::Real;
 
+/// A normal distribution, parameterised by mean and standard deviation.
+///
+/// # No bounds on the data
+///
+/// The struct carries none. It holds two scalars and knows nothing about drawing from them, so a
+/// bound here would say something the type does not need and make every mention of `Normal<F>`
+/// elsewhere repeat it — including in crates that only pass one along. The constructors need
+/// `Real` to check finiteness and the sampler needs `StandardNormal: Distribution<F>` to draw;
+/// each states its own requirement where it arises.
 #[derive(Clone, Copy, Debug, PartialEq)]
-pub struct Normal<F>
-where
-    F: Real,
-    StandardNormal: Distribution<F>,
-{
+pub struct Normal<F> {
     mean: F,
     std_dev: F,
 }
@@ -22,7 +27,6 @@ where
 impl<F> Normal<F>
 where
     F: Real,
-    StandardNormal: Distribution<F>,
 {
     /// Construct, from mean and standard deviation
     ///
