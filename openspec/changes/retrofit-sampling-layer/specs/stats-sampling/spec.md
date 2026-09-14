@@ -32,7 +32,8 @@ The dependency runs `stats -> rand`, tier 4 to tier 2, so it is downhill and no 
 
 #### Scenario: The distributions are exported from stats
 - **WHEN** `deep_causality_stats`'s public API is read after the move
-- **THEN** `Normal<T>`, `Uniform<T>`, `Bernoulli`, `StandardUniform`, `StandardNormal`, the `Distribution` trait, the inverse-CDF functions and the distribution error types are present
+- **THEN** `Normal<T>`, `Bernoulli`, `StandardUniform`, `StandardNormal`, `Open01`, `OpenClosed01`, the inverse-CDF functions and their error types are present
+- **AND** `Uniform<X>` and the `Distribution` trait are **not** among them: the first is range sampling and the second is the bridge, and both stay in the entropy crate
 
 #### Scenario: The dependency direction is downhill
 - **WHEN** the workspace dependency graph is computed

@@ -20,7 +20,8 @@
 
 use criterion::{BenchmarkId, Criterion, criterion_group, criterion_main};
 use deep_causality_algorithms::brcd::{BrcdConfig, brcd_run};
-use deep_causality_rand::{Distribution, Normal, Xoshiro256};
+use deep_causality_rand::{Distribution, Xoshiro256};
+use deep_causality_stats::Normal;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::MixedGraph;
 use std::hint::black_box;

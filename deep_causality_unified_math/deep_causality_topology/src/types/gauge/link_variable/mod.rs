@@ -190,7 +190,7 @@ impl<G: GaugeGroup, M: Field + Copy + Default + PartialOrd, R: RealField> LinkVa
     ///
     /// # Arguments
     ///
-    /// * `rng` - Random number generator implementing `deep_causality_rand::Rng`
+    /// * `rng` - Random number generator implementing `deep_causality_stats::Rng`
     ///
     /// # Returns
     ///
@@ -205,14 +205,14 @@ impl<G: GaugeGroup, M: Field + Copy + Default + PartialOrd, R: RealField> LinkVa
     ///
     /// ```ignore
     /// use deep_causality_topology::{LinkVariable, SU2};
-    /// use deep_causality_rand::rng;
+    /// use deep_causality_stats::rng;
     ///
     /// let mut rng = rng();
     /// let link: LinkVariable<SU2, f64> = LinkVariable::try_random(&mut rng)?;
     /// ```
     pub fn try_random<RngType>(rng: &mut RngType) -> Result<Self, LinkVariableError>
     where
-        RngType: deep_causality_rand::Rng,
+        RngType: deep_causality_stats::Rng,
         M: RandomField + DivisionAlgebra<R> + Field + ComplexField<R> + std::fmt::Debug,
         R: RealField + FromPrimitive + ToPrimitive,
     {

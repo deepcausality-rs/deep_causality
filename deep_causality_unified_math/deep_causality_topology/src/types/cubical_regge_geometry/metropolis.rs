@@ -49,7 +49,7 @@ use crate::traits::chain_complex::ChainComplex;
 use crate::types::lattice_complex::LatticeComplex;
 use deep_causality_algebra::{Real, RealField};
 use deep_causality_num::{Float, FromPrimitive};
-use deep_causality_rand::{Distribution, Normal, Rng, StandardUniform};
+use deep_causality_stats::{Distribution, Normal, Rng, StandardUniform};
 
 /// Outcome of a single Metropolis-Hastings step.
 #[derive(Debug, Clone, PartialEq)]
@@ -86,7 +86,7 @@ impl<const D: usize, R> CubicalReggeGeometry<D, R, Euclidean>
 where
     R: RealField + FromPrimitive + Float,
     StandardUniform: Distribution<R>,
-    deep_causality_rand::StandardNormal: Distribution<R>,
+    deep_causality_stats::StandardNormal: Distribution<R>,
 {
     /// One single-edge Metropolis-Hastings step on a `PerEdge` geometry.
     ///

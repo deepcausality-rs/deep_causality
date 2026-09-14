@@ -20,7 +20,9 @@ impl SampleRange<f32> for Range<f32> {
                 "Invalid range: low must be less than high".to_string(),
             ));
         }
-        let random_val: f32 = rng.random(); // Generates a random f32 in [0.0, 1.0)
+        // Through the range sampler rather than a numerical draw: sampling uniformly from a
+        // range is arithmetic over the bounds, and owes nothing to the distribution layer.
+        let random_val: f32 = <f32 as crate::types::distr::uniform::RandFloat>::rand_float_gen(rng);
         Ok(self.start + (self.end - self.start) * random_val)
     }
 
@@ -36,7 +38,9 @@ impl SampleRange<f64> for Range<f64> {
                 "Invalid range: low must be less than high".to_string(),
             ));
         }
-        let random_val: f64 = rng.random(); // Generates a random f64 in [0.0, 1.0)
+        // Through the range sampler rather than a numerical draw: sampling uniformly from a
+        // range is arithmetic over the bounds, and owes nothing to the distribution layer.
+        let random_val: f64 = <f64 as crate::types::distr::uniform::RandFloat>::rand_float_gen(rng);
         Ok(self.start + (self.end - self.start) * random_val)
     }
 

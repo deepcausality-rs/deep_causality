@@ -4,3 +4,5 @@
  */
 
 pub mod stats_error;
+pub mod bernoulli_error;
+pub mod normal_error;

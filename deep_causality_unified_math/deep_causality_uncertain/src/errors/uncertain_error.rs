@@ -3,9 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_rand::{
-    BernoulliDistributionError, NormalDistributionError, UniformDistributionError,
-};
+use deep_causality_rand::UniformDistributionError;
+use deep_causality_stats::{BernoulliDistributionError, NormalDistributionError};
 use std::fmt;
 
 /// Custom error type for the `deep_causality_uncertain` crate.

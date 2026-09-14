@@ -6,7 +6,8 @@
 use deep_causality_algorithms::brcd::brcd_config::BrcdConfig;
 use deep_causality_algorithms::brcd::brcd_error::{BrcdError, BrcdErrorEnum};
 use deep_causality_algorithms::brcd::brcd_run;
-use deep_causality_rand::{Distribution, Normal, Xoshiro256};
+use deep_causality_rand::{Distribution, Xoshiro256};
+use deep_causality_stats::Normal;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::MixedGraph;
 

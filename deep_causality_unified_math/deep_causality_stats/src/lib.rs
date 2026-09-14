@@ -60,7 +60,9 @@ extern crate core;
 
 pub mod algorithms;
 pub mod errors;
+pub mod traits;
 pub mod types;
+pub mod utils;
 // Test fixtures, public because Bazel test targets cannot reach the `tests` tree, hidden because
 // they are not API.
 #[doc(hidden)]
@@ -89,3 +91,29 @@ pub use crate::types::penalisation::Penalisation;
 pub use crate::types::ridge_config::RidgeConfig;
 pub use crate::types::ridge_fit::RidgeFit;
 pub use crate::types::zero_policy::ZeroPolicy;
+
+// ---------------------------------------------------------------------------------------------
+// Distributions
+// ---------------------------------------------------------------------------------------------
+//
+// The mathematics of a random quantity, beside the densities that describe it. The machine words
+// these consume come from `deep_causality_rand`; what they mean is a statement about a real field.
+
+pub use crate::errors::bernoulli_error::BernoulliDistributionError;
+pub use crate::errors::normal_error::NormalDistributionError;
+pub use crate::types::distr::bernoulli::Bernoulli;
+pub use crate::types::distr::normal::Normal;
+pub use crate::types::distr::normal::standard_normal::StandardNormal;
+pub use crate::types::distr::unit_interval::standard_uniform::StandardUniform;
+pub use crate::types::range::{Open01, OpenClosed01};
+pub use crate::utils::inverse_cdf::{
+    bernoulli_inverse_cdf, standard_normal_inverse_cdf, standard_normal_inverse_cdf_f106,
+    uniform_inverse_cdf,
+};
+
+// The generator bridge, re-exported **by name** so a crate that wants only distributions needs no
+// second dependency to spell the bound. Named, never a glob: a `pub use` is an alias to the same
+// trait item, so a bound written against either path is satisfied by the same implementations,
+// whereas a second trait of the same shape would be a different item entirely.
+pub use crate::traits::random_ext::RandomExt;
+pub use deep_causality_rand::{Distribution, Rng, RngCore, Xoshiro256, rng};

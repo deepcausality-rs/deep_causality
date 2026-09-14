@@ -4,20 +4,11 @@
  */
 
 use crate::{Distribution, Fill, RngCore, SampleRange, SampleUniform};
-use crate::{Iter, Map, StandardUniform};
+use crate::{Iter, Map};
 
 impl<T: Rng> Rng for &mut T {}
 
 pub trait Rng: RngCore {
-    /// A numerical draw at the caller's scalar. Precision is a parameter.
-    #[inline]
-    fn random<T>(&mut self) -> T
-    where
-        StandardUniform: Distribution<T>,
-    {
-        StandardUniform.sample(self)
-    }
-
     /// A raw machine word. Not a real number, so it is a separate operation from [`Rng::random`].
     ///
     /// This is what an index draw, a seed draw or a bit-pattern draw wants.
@@ -33,15 +24,6 @@ pub trait Rng: RngCore {
     #[inline]
     fn random_boolean(&mut self) -> bool {
         crate::StandardBool.sample(self)
-    }
-
-    #[inline]
-    fn random_iter<T>(&mut self) -> Iter<StandardUniform, &mut Self, T>
-    where
-        Self: Sized,
-        StandardUniform: Distribution<T>,
-    {
-        StandardUniform.sample_iter(self)
     }
 
     /// An iterator of raw machine words, the word-sided sibling of [`Rng::random_iter`].
@@ -100,18 +82,6 @@ pub trait Rng: RngCore {
     #[track_caller]
     fn fill<T: Fill + ?Sized>(&mut self, dest: &mut T) {
         dest.fill(self)
-    }
-
-    fn map<T, S, F>(&mut self, func: F) -> Map<StandardUniform, F, T, S>
-    where
-        StandardUniform: Distribution<T>,
-        F: Fn(T) -> S,
-    {
-        Map {
-            distr: StandardUniform,
-            func,
-            phantom: core::marker::PhantomData,
-        }
     }
 
     /// Map over raw machine words, the word-sided sibling of [`Rng::map`].

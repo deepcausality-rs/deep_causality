@@ -4,7 +4,7 @@
  */
 
 use deep_causality_rand::types::Xoshiro256;
-use deep_causality_rand::{Distribution, Rng, RngCore, StandardUniform, StandardWord};
+use deep_causality_rand::{Distribution, Rng, RngCore, StandardWord};
 
 #[test]
 fn test_xoshiro256_default() {
@@ -215,16 +215,6 @@ fn test_xoshiro256_random_u32() {
 }
 
 #[test]
-fn test_xoshiro256_random_f64() {
-    let mut rng = Xoshiro256::new();
-    let val: f64 = rng.random();
-    assert!(
-        (0.0..1.0).contains(&val),
-        "random() for f64 should produce a value in [0.0, 1.0)"
-    );
-}
-
-#[test]
 fn test_xoshiro256_sample_iter_u32() {
     let mut rng = Xoshiro256::new();
     let mut iter = rng.sample_iter(StandardWord);
@@ -234,35 +224,11 @@ fn test_xoshiro256_sample_iter_u32() {
 }
 
 #[test]
-fn test_xoshiro256_sample_iter_f64() {
-    let mut rng = Xoshiro256::new();
-    let mut iter = rng.sample_iter(StandardUniform);
-    let val1: f64 = iter.next().unwrap();
-    let val2: f64 = iter.next().unwrap();
-    assert_ne!(val1, val2, "sample_iter should produce different values");
-    assert!(
-        (0.0..1.0).contains(&val1),
-        "sample_iter for f64 should produce a value in [0.0, 1.0)"
-    );
-}
-
-#[test]
 fn test_xoshiro256_map_u32_to_u64() {
     let mut rng = Xoshiro256::new();
     let mapped_dist = rng.map_word(|x: u32| x as u64);
     let val: u64 = mapped_dist.sample(&mut rng);
     assert_ne!(val, 0, "Mapped u32 to u64 should produce a non-zero value");
-}
-
-#[test]
-fn test_xoshiro256_map_f64_to_f32() {
-    let mut rng = Xoshiro256::new();
-    let mapped_dist = rng.map(|x: f64| x as f32);
-    let val: f32 = mapped_dist.sample(&mut rng);
-    assert!(
-        (0.0..1.0).contains(&val),
-        "Mapped f64 to f32 should produce a value in [0.0, 1.0)"
-    );
 }
 
 #[test]

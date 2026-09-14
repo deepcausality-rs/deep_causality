@@ -5,7 +5,6 @@
 
 pub mod distribution;
 pub mod fill;
-pub mod real_rng;
 pub mod rng;
 pub mod rng_core;
 pub mod sample_borrow;

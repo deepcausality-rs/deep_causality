@@ -36,7 +36,8 @@ use crate::kernels::nuclear::pdg::{pdg_mass, quark_masses};
 use crate::real_from_f64;
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
-use deep_causality_rand::{Distribution, Normal, Rng};
+use deep_causality_rand::{Distribution, Rng};
+use deep_causality_stats::{Normal, RandomExt};
 
 /// Flavor ID for quarks (1=d, 2=u, 3=s, 4=c, 5=b, 6=t).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -13,3 +13,5 @@ pub mod penalisation;
 pub mod ridge_config;
 pub mod ridge_fit;
 pub mod zero_policy;
+pub mod distr;
+pub mod range;

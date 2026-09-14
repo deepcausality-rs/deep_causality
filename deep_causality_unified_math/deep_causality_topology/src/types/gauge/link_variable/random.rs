@@ -4,13 +4,15 @@
  */
 
 use deep_causality_num_complex::Complex;
-use deep_causality_rand::Rng;
+use deep_causality_stats::{RandomExt, Rng};
 
 /// A trait for generating random field elements uniformly.
 ///
-/// This trait bridges the gap between `deep_causality_rand` and algebraic types,
-/// allowing generic generation of both real (`f64`) and complex (`Complex<f64>`)
-/// scalars with components in the range [-0.5, 0.5].
+/// Generic generation of both real (`f64`) and complex (`Complex<f64>`) scalars with components
+/// in the range `[-0.5, 0.5]`.
+///
+/// The draw comes from `deep_causality_stats`, which owns the distributions; the machine words
+/// behind it are the entropy crate's business and this crate no longer names that crate at all.
 pub trait RandomField {
     /// Generate a random value with components in the range [-0.5, 0.5].
     fn generate_uniform<R: Rng>(rng: &mut R) -> Self;

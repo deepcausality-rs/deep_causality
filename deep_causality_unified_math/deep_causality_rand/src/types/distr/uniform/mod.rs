@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-pub mod standard_uniform;
+pub mod standard_word;
 
 use crate::{
     Distribution, Rng, SampleBorrow, SampleUniform, UniformDistributionError, UniformSampler,
@@ -60,7 +60,7 @@ pub struct UniformFloat<F: RealField> {
 }
 
 // Helper trait to abstract the generation of a random float in [0, 1)
-pub(crate) trait RandFloat: Sized {
+pub trait RandFloat: Sized {
     fn rand_float_gen<R: Rng + ?Sized>(rng: &mut R) -> Self;
 }
 

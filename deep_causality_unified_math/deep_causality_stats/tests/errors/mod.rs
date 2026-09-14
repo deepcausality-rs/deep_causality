@@ -5,3 +5,7 @@
 
 #[cfg(test)]
 mod stats_error_tests;
+#[cfg(test)]
+mod bernoulli_error_tests;
+#[cfg(test)]
+mod normal_error_tests;

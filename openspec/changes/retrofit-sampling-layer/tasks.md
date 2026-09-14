@@ -69,21 +69,36 @@ proved this the hard way: it cut `uncertain`'s two word-draw sites and the repai
 
 ## 2. The move: distributions from `rand` to `stats`
 
-- [ ] 2.1 Phase 1. Add `deep_causality_rand` to `stats`'s dependencies; confirm the graph stays
-      acyclic. `git mv` the distribution modules into `stats` (history preserved, per the repo
-      rule): `Normal`, `Uniform`, `Bernoulli`, `StandardUniform`, `StandardNormal`, `Open01`,
-      `OpenClosed01`, the `Distribution` trait, the four inverse-CDF functions, the three
-      distribution error types. Bodies `unimplemented!()` where a signature changes; unchanged
-      bodies move as they are. Build both crates under `cargo` and `bazel`.
-- [ ] 2.2 Phase 2. Suite in `stats`: every moved item is reachable from the crate root; a density
-      and its sampler are used together in one test with one import; `rand` exports no
-      distribution type. Run; record in `notes/tdd-group-2.md`.
-- [ ] 2.3 Phase 3. Defect audit: (a) an item left exported from `rand` as well — must fail the
-      "no distribution type remains" scenario; (b) a moved item that silently lost its error
-      variant.
-- [ ] 2.4 Phase 4. Complete the move. Confirm `rand`'s own suite still passes at its baseline
-      minus only the distribution tests, which move with their code.
-- [ ] 2.5 Clippy clean on both crates. Prepare the group-2 commit message.
+- [x] 2.1 Phase 1. `stats` gained `deep_causality_rand`; graph confirmed acyclic (tier 4 → 2).
+      24 files moved by `git mv`, history preserved — 14 source, 10 test. **Corrected against the
+      plan:** `Uniform<X>` and `Distribution` stay in `rand`. `impl SampleUniform for f64` can only
+      be written where the trait lives, that trait backs `Rng::random_range`, and every external
+      caller of it draws an **integer** range. `Distribution` is the bridge both crates speak.
+      Both specs and the proposal were corrected before the code was written.
+      `Rng` lost `random`/`random_iter`/`map`; they return as `stats`'s `RandomExt`, an extension
+      trait blanket-implemented for every `Rng`. `RealRng` removed here rather than at 5.1, since
+      its blanket names the moved `StandardNormal` and could not compile.
+- [x] 2.2 Phase 2. Moved suites run in `stats`; new `tests/traits/random_ext_tests.rs` covers the
+      numerical draw over a generator. The `RealRng` test was **restated, not deleted** — the
+      property it pinned (one body, several scalars) is what group 3 delivers, so it now carries
+      the two-clause bound explicitly, recording the cost a reader can see collapse in group 3.
+      Recorded in `notes/tdd-group-2.md`.
+- [x] 2.3 Phase 3. The audit was run by the compiler rather than by hand, and more thoroughly:
+      removing each item from `rand` turned every consumer of it into a compile error, so the
+      "no analytic distribution remains" scenario is enforced by the type system. A pre-existing
+      defect surfaced instead — `rand` carried **two different `[0, 1)` kernels** behind two APIs
+      documented as the same draw, returning `15.0` and `14.999999` for the same word. The two
+      range tests asserted the divergence; they now assert that the paths agree.
+- [x] 2.4 Phase 4. Move complete. `rand` 101 (154 baseline, 53 moved out), `stats` 529 (467
+      baseline, 62 moved in including 5 new). Combined 630 against 621: +7 group-1 word/bool,
+      +5 `RandomExt`, −3 numerical generator tests that moved rather than duplicated.
+- [x] 2.5 Clippy clean on both crates, no `#[allow]` added. `cargo build --workspace
+      --all-targets` clean. Consumers repaired **in this group** per the group-1 invariant:
+      `uncertain` (3 sites), `topology` (all 13, `rand` dropped from its manifest), `physics` (3
+      files), `algorithms` (6), `discovery` and the examples. Commit message prepared.
+- [x] 2.6 Bazel: added `rust_test_suite` targets for the three new `stats` test directories, and
+      removed `rand`'s now-empty `extensions` suite — an empty glob is an error to bazel and
+      invisible to cargo. Both crates: 45 of 45 targets pass.
 
 ## 3. Precision as a parameter in `stats`
 

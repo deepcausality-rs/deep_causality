@@ -4,6 +4,7 @@
  */
 
 use deep_causality_algorithms::brcd::brcd_augment::get_configurations_multi;
+use deep_causality_stats::RandomExt;
 use deep_causality_algorithms::brcd::{BossConfig, BrcdErrorEnum, boss_learn};
 use deep_causality_rand::{Rng, Xoshiro256};
 use deep_causality_tensor::CausalTensor;

@@ -5,5 +5,7 @@
 
 mod algorithms;
 mod errors;
+mod traits;
 mod types;
+mod utils;
 mod utils_tests;

@@ -4,7 +4,10 @@
  */
 use crate::{BernoulliParams, NormalDistributionParams, UncertainError, UniformDistributionParams};
 use deep_causality_num::Float106;
-use deep_causality_rand::{Bernoulli, Distribution, Normal, Rng, Uniform}; // Import all necessary traits and structs
+// The shaped distributions are mathematics and come from `stats`; the `Distribution` bridge, the
+// generator and the range sampler are entropy and come from `rand`.
+use deep_causality_rand::{Distribution, Rng, Uniform};
+use deep_causality_stats::{Bernoulli, Normal};
 use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, Copy, PartialEq)]

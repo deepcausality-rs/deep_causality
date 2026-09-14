@@ -8,7 +8,15 @@
 //! Reference points were produced by `scipy.stats.qmc.Sobol(d, scramble=False, bits=32)`;
 //! the values are exact dyadic rationals, so equality is checked exactly.
 
-use deep_causality_rand::{MAX_SOBOL_DIM, Rng, RngError, SobolSequence, Xoshiro256};
+use deep_causality_rand::{MAX_SOBOL_DIM, RngCore, RngError, SobolSequence, Xoshiro256};
+
+/// A uniform `[0, 1)` from one machine word.
+///
+/// Built here rather than drawn through a distribution: this crate supplies entropy and Sobol
+/// points, and a test of Sobol's discrepancy should not reach past that for its own baseline.
+fn unit_from_word<R: RngCore + ?Sized>(rng: &mut R) -> f64 {
+    (rng.next_u64() >> 11) as f64 / (1u64 << 53) as f64
+}
 
 #[test]
 fn test_matches_scipy_reference_d4() {
@@ -141,7 +149,7 @@ fn test_discrepancy_lower_than_pseudo_random() {
     // Deterministic pseudo-random baseline.
     let mut rng = Xoshiro256::from_seed(12345);
     let random: Vec<(f64, f64)> = (0..N)
-        .map(|_| (rng.random::<f64>(), rng.random::<f64>()))
+        .map(|_| (unit_from_word(&mut rng), unit_from_word(&mut rng)))
         .collect();
 
     let d_sobol = l2_star_discrepancy_2d(&sobol);

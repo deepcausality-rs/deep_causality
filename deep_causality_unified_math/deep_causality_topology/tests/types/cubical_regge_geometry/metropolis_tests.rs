@@ -51,7 +51,7 @@ fn metropolis_step_returns_well_formed_outcome() {
     let lattice = open_cube_3();
     let num_edges = lattice.num_cells(1);
     let mut geom = build_per_edge_3d(num_edges, 1.0);
-    let mut rng = deep_causality_rand::rng();
+    let mut rng = deep_causality_stats::rng();
 
     let outcome = geom.metropolis_update(&lattice, &mut rng, 0.1, 1.0);
     match outcome {
@@ -77,7 +77,7 @@ fn accepted_step_mutates_only_the_target_edge() {
     let before: Vec<f64> = (0..num_edges)
         .map(|i| geom.edge_length_at(i).unwrap())
         .collect();
-    let mut rng = deep_causality_rand::rng();
+    let mut rng = deep_causality_stats::rng();
 
     // Drive enough steps that we're statistically certain to see at least one acceptance.
     let mut saw_accept = false;
@@ -115,7 +115,7 @@ fn rejected_step_leaves_geometry_unchanged() {
     let lattice = open_cube_3();
     let num_edges = lattice.num_cells(1);
     let mut geom = build_per_edge_3d(num_edges, 1.0);
-    let mut rng = deep_causality_rand::rng();
+    let mut rng = deep_causality_stats::rng();
 
     // Try repeatedly with a very large σ so most proposals push length ≤ 0 and
     // get rejected by the NonPositiveLength floor; capture the first rejection
@@ -148,7 +148,7 @@ fn non_positive_proposal_returns_non_positive_length_rejection() {
     let lattice = open_cube_3();
     let num_edges = lattice.num_cells(1);
     let mut geom = build_per_edge_3d(num_edges, 0.5); // start near 0
-    let mut rng = deep_causality_rand::rng();
+    let mut rng = deep_causality_stats::rng();
     let mut saw_nonpos = false;
     for _ in 0..100 {
         let out = geom.metropolis_update(&lattice, &mut rng, 2.0, 1.0);
@@ -175,7 +175,7 @@ fn edge_lengths_stay_positive_across_long_run() {
     let lattice = open_cube_3();
     let num_edges = lattice.num_cells(1);
     let mut geom = build_per_edge_3d(num_edges, 1.0);
-    let mut rng = deep_causality_rand::rng();
+    let mut rng = deep_causality_stats::rng();
 
     let mut accepted = 0usize;
     let mut rejected = 0usize;
@@ -211,7 +211,7 @@ fn delta_action_recorded_on_acceptance_matches_gradient_product() {
     let lattice = open_cube_3();
     let num_edges = lattice.num_cells(1);
     let mut geom = build_per_edge_3d(num_edges, 1.0);
-    let mut rng = deep_causality_rand::rng();
+    let mut rng = deep_causality_stats::rng();
 
     for _ in 0..500 {
         let pre_lengths: Vec<f64> = (0..num_edges)

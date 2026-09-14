@@ -15,7 +15,7 @@ needs a random index reaches it; a crate that needs a Gaussian does not.
 
 ### Requirement: The crate samples machine values and makes no claim about real distributions
 
-`deep_causality_rand` SHALL expose generators, machine words, Booleans, byte fills and low-discrepancy point sets, and SHALL NOT define or implement any real-valued probability distribution.
+`deep_causality_rand` SHALL expose generators, machine words, Booleans, byte fills, low-discrepancy point sets and uniform sampling over a range, and SHALL NOT define any distribution that needs the analytic surface.
 
 The crate holds two unrelated things today. Entropy is genuinely low-level and belongs at tier 2:
 `Xoshiro256`, `next_u64`, OS entropy. Distributions are mathematics over a real field, and they sit
@@ -30,10 +30,25 @@ The conflict is a consequence of one crate sampling both kinds, and it disappear
 `SobolSequence` stays. A Sobol point is a deterministic function of an index and a digital shift
 drawn from `Xoshiro256`: a source of numbers in `[0, 1)`, not a statement about a distribution.
 
-#### Scenario: No distribution type remains
+**The range machinery stays too**, and the boundary is drawn at the analytic surface rather than at
+the word "distribution". A uniform over a range is arithmetic on its bounds; a normal needs `ln`,
+`sqrt` and `cos`. Two measurements make this the only workable line: `impl SampleUniform for f64`
+can only be written in the crate owning `SampleUniform`, and that trait backs `Rng::random_range`,
+whose every external caller draws an **integer** range to pick an index. A graph library reaching a
+statistics crate for an index is what this split exists to prevent.
+
+The `Distribution` trait stays for the same reason: it is the bridge both crates speak.
+`StandardWord` implements it here, and `stats` implements it for its own types — a local type
+against a foreign trait, which the orphan rule permits.
+
+#### Scenario: No analytic distribution remains
 - **WHEN** the crate's exported types are listed after the split
-- **THEN** `Normal`, `Uniform`, `Bernoulli`, `StandardUniform`, `StandardNormal`, `Open01` and `OpenClosed01` are absent
-- **AND** `Xoshiro256`, `SobolSequence` and the generator traits are present
+- **THEN** `Normal`, `Bernoulli`, `StandardUniform`, `StandardNormal`, `Open01` and `OpenClosed01` are absent
+- **AND** `Xoshiro256`, `SobolSequence`, the generator traits, and the range machinery including `Uniform<X>` are present
+
+#### Scenario: Nothing in the crate reaches for a transcendental
+- **WHEN** the crate's sources are searched for `ln`, `exp`, `sqrt`, `sin` or `cos`
+- **THEN** none appears in a sampling path, because every draw it offers is bits or arithmetic on bounds
 
 #### Scenario: A consumer that needs only an index depends on nothing more
 - **WHEN** `ultragraph` or `deep_causality_data_structures` is built

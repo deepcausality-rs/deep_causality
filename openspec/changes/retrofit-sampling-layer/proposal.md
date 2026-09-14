@@ -73,14 +73,25 @@ Usage is internal to this repository. A compatible retrofit would preserve the s
 
 ### The crate boundary
 
-- **BREAKING — distributions move from `rand` to `stats`**: `Normal<T>`, `Uniform<T>`,
-  `Bernoulli`, `StandardUniform`, `StandardNormal`, `Open01`, `OpenClosed01`, the `Distribution`
-  trait, the four inverse-CDF functions, and the three distribution error types. They land beside
-  `gaussian_log_density`, `entropy` and `log_sum_exp`, which are the mathematics they belong with.
-- **`rand` keeps entropy**: `RngCore`, `Rng`, `Xoshiro256`, `OsRandomRng`, `SobolSequence`,
-  `rng()`, `Fill`, and the range machinery. Sobol stays because a Sobol point is a deterministic
-  function of an index and a digital shift drawn from `Xoshiro256` — a source of numbers, not a
-  statement about a distribution.
+- **BREAKING — the shaped distributions move from `rand` to `stats`**: `Normal<T>`, `Bernoulli`,
+  `StandardUniform`, `StandardNormal`, `Open01`, `OpenClosed01`, the four inverse-CDF functions,
+  and the `Normal` and `Bernoulli` error types. They land beside `gaussian_log_density`, `entropy`
+  and `log_sum_exp`, which are the mathematics they belong with.
+- **`rand` keeps entropy and range sampling**: `RngCore`, `Rng`, `Xoshiro256`, `OsRandomRng`,
+  `SobolSequence`, `rng()`, `Fill`, `StandardWord`, `StandardBool`, and the range machinery —
+  `SampleRange`, `SampleUniform`, `UniformSampler`, `Uniform<X>`, `UniformFloat`, `RandFloat`.
+  Sobol stays because a Sobol point is a deterministic function of an index and a digital shift
+  drawn from `Xoshiro256` — a source of numbers, not a statement about a distribution.
+- **`Uniform<X>` and the `Distribution` trait stay in `rand`**, corrected from an earlier draft of
+  this proposal that listed both as moving. Two measurements force it. `impl SampleUniform for f64`
+  can only be written in the crate that owns `SampleUniform`, and that trait backs
+  `Rng::random_range`, whose every external caller — `ultragraph`, `deep_causality_data_structures`,
+  `deep_causality_tensor` — draws an **integer** range to pick an index. And `Distribution` is the
+  bridge both crates speak: `StandardWord` implements it, while `stats` implements it for its own
+  types, which is a local type against a foreign trait and therefore allowed.
+
+  The line is not "anything with a distribution's name" but **does it need the analytic surface**.
+  A uniform over a range is arithmetic on its bounds; a normal needs `ln`, `sqrt` and `cos`.
 - **`stats` gains a dependency on `rand`.** Downhill, tier 4 to tier 2, so no cycle.
 
 ### Precision as a parameter

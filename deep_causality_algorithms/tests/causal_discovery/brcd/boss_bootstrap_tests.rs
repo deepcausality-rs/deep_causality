@@ -6,7 +6,8 @@
 use deep_causality_algorithms::brcd::{
     BootstrapConfig, BrcdConfig, BrcdErrorEnum, brcd_run_bootstrap,
 };
-use deep_causality_rand::{Distribution, Normal, Xoshiro256};
+use deep_causality_rand::{Distribution, Xoshiro256};
+use deep_causality_stats::Normal;
 use deep_causality_tensor::CausalTensor;
 
 /// Linear-Gaussian chain X → Y → Z; `y_intercept` perturbs p(Y | X).

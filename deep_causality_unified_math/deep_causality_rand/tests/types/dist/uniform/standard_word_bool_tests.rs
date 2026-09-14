@@ -9,7 +9,7 @@
 //! Keeping all three under one type is what made a blanket implementation over the algebra tower
 //! `error[E0119]`, so these tests hold the separation in place.
 
-use deep_causality_rand::{Distribution, Rng, StandardBool, StandardWord, Xoshiro256};
+use deep_causality_rand::{Distribution, Rng, RngCore, StandardBool, StandardWord, Xoshiro256};
 
 const SEED: u64 = 0x5EED_1234;
 
@@ -97,4 +97,71 @@ fn a_seeded_generator_is_reproducible() {
         let y: u64 = StandardWord.sample(&mut b);
         assert_eq!(x, y);
     }
+}
+
+// ---------------------------------------------------------------------------------------------
+// Mock-driven cases
+// ---------------------------------------------------------------------------------------------
+//
+// The tests above run against a real generator and check distributional properties. These pin the
+// exact word-to-value rule against a generator whose output is fixed, which is what catches a
+// change of rule rather than a change of quality.
+
+struct MockRng {
+    val_u32: u32,
+    val_u64: u64,
+}
+
+impl RngCore for MockRng {
+    fn next_u32(&mut self) -> u32 {
+        self.val_u32
+    }
+    fn next_u64(&mut self) -> u64 {
+        self.val_u64
+    }
+    fn fill_bytes(&mut self, _dest: &mut [u8]) {
+        unimplemented!()
+    }
+}
+
+impl Rng for MockRng {}
+
+#[test]
+fn test_standard_word_u32() {
+    let mut rng = MockRng {
+        val_u32: 123,
+        val_u64: 0,
+    };
+    let sample: u32 = StandardWord.sample(&mut rng);
+    assert_eq!(sample, 123);
+}
+
+#[test]
+fn test_standard_word_u64() {
+    let mut rng = MockRng {
+        val_u32: 0,
+        val_u64: 456,
+    };
+    let sample: u64 = StandardWord.sample(&mut rng);
+    assert_eq!(sample, 456);
+}
+
+#[test]
+fn test_standard_bool() {
+    // The old parity rule (`next_u64() % 2 == 0`) read one bit's worth of information from a
+    // whole word. `StandardBool` takes a bit directly, so the mock's value is chosen by its top
+    // bit rather than its low one.
+    let mut rng_high = MockRng {
+        val_u32: 0,
+        val_u64: 1 << 63,
+    };
+    let sample_true: bool = StandardBool.sample(&mut rng_high);
+    assert!(sample_true, "a word with the top bit set yields true");
+
+    let mut rng_low = MockRng {
+        val_u32: 0,
+        val_u64: 0,
+    };
+    let sample_false: bool = StandardBool.sample(&mut rng_low);
+    assert!(!sample_false, "a word with the top bit clear yields false");
 }
