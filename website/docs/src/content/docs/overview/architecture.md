@@ -5,7 +5,7 @@ sidebar:
   order: 5
 ---
 
-DeepCausality ships as one Cargo workspace of 45 members: 29 library crates and 16 example packages. This page maps that workspace.
+DeepCausality ships as one Cargo workspace of 46 members: 30 library crates and 16 example packages. This page maps that workspace.
 
 **[Open the interactive architecture map](/architecture.html)**. It pans, zooms, traces any single relationship, and steps through four guided views. Every node on it carries a source reference that was checked against the repository before the page was written. The rest of this page reads the same map in prose.
 
@@ -75,7 +75,7 @@ Three required crates in the whole library surface: `csv`, `parquet`, and `chron
 
 Test and benchmark code adds `criterion` to nine crates, `tempfile` to three, and `rusty-fork` to `deep_causality_uncertain`. The example packages add `candle-core` and `tokio`.
 
-`unsafe_code = "forbid"` is a workspace lint, and all 45 members opt in.
+`unsafe_code = "forbid"` is a workspace lint, all 46 members opt in, and no crate is exempt.
 
 ## Regenerating the map
 
