@@ -17,6 +17,12 @@ BUILD change; a new directory needs one glob line.
 
 Order: 1 → 2 → 3 → 4 → 5 → 7. Group 6 is independent and may run at any point.
 
+**Every group leaves the workspace green.** A breaking change to a shared crate repairs its
+consumers in the same group, not a later one — `bazel test //...` must pass at every group
+boundary, because a commit that breaks the tree is a commit nobody can bisect through. Group 1
+proved this the hard way: it cut `uncertain`'s two word-draw sites and the repair was filed under
+5.4, which left the workspace broken across four groups. The repair moved to 1.7.
+
 ## 1. The entropy crate: what stays
 
 - [x] 1.1 Record the baselines in `notes/baselines.md`. Every later group compares against these.
@@ -51,6 +57,12 @@ Order: 1 → 2 → 3 → 4 → 5 → 7. Group 6 is independent and may run at an
       added to `.cargo/mutants.toml`, since they are not equivalent to the original. Underlying
       finding recorded: the ziggurat has no iteration cap, and group 3's Box-Muller removes the
       loop rather than inheriting it.
+- [x] 1.7 Repair the consumers group 1 breaks, in group 1. `uncertain`'s `next_sample_index`
+      drew a sample *index* through `random::<u64>()` at
+      `types/sampler/sampler_seed.rs:52-53`; an index is a machine word, as that function's own
+      docstring says, so both sites now use `random_word`. Verified: `cargo build --workspace
+      --all-targets` clean, `bazel test //...` green. Moved here from 5.4 — see the ordering note
+      at the head of this file.
 - [x] 1.6 Clippy clean, no `#[allow]` added. `cargo` 161/161, `bazel` 24/24 targets.
       Bazel caught `os_random_rng_tests.rs`, feature-gated behind `os-random`, which `cargo test`
       never compiled — three more word-draw sites, migrated the same way. Commit message prepared.
@@ -266,10 +278,10 @@ cumulative scan is the weighted sibling of the same operation.
       `errors/uncertain_error.rs` (the three distribution errors), and the four inverse-CDF
       imports in `types/sampler/qmc_sampler.rs`. What remains of `rand` there is `Xoshiro256`,
       `rng()`, `SobolSequence` and `MAX_SOBOL_DIM` — entropy only.
-- [ ] 5.4 Fix the two measured word-draw sites,
-      `uncertain/src/types/sampler/sampler_seed.rs:52-53`, `random::<u64>()` → `random_word()`.
-      Do not enter that crate further: `SampledValue`, the sample cache and the lazy graph belong
-      to its own renovation.
+- [x] 5.4 The two word-draw sites at `uncertain/src/types/sampler/sampler_seed.rs:52-53` were
+      repaired in **1.7**, because group 1 is what broke them and a group must leave the tree
+      green. Nothing further is owed here. Do not enter that crate beyond the import moves in 5.3:
+      `SampledValue`, the sample cache and the lazy graph belong to its own renovation.
 - [ ] 5.5 Assert the endpoint: a search of `uncertain`'s sources for `deep_causality_rand` returns
       only generator, thread-RNG and Sobol references. Its suite passes at or above baseline.
 - [ ] 5.6 Migrate the other distribution consumers' imports: `physics` (6 uses), `discovery` (1).

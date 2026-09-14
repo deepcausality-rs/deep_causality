@@ -159,3 +159,43 @@ sits behind the `os-random` feature, so `cargo test` never compiled it and repor
 was broken. Bazel builds every target, found three word-draw sites there, and they were migrated
 the same way as the other four files. Worth recording: a group that checks only `cargo test` can
 believe itself finished with a feature-gated file still failing.
+
+## Phase 7 — the consumer repair, and a task-ordering correction
+
+`make test` failed after group 1 landed. `deep_causality_uncertain` would not compile:
+
+```
+error[E0277]: the trait bound `StandardUniform: Distribution<u64>` is not satisfied
+  --> deep_causality_uncertain/src/types/sampler/sampler_seed.rs:52:35
+```
+
+Two sites, both in `next_sample_index`, drawing a **sample index** through `random::<u64>()`. An
+index is a machine word — that function's own docstring says "Draw a `u64` sample index" — so both
+now use `random_word`. The behaviour is identical; only the name was wrong.
+
+`deep_causality_uncertain`: **248 passed, 0 failed**, exactly the baseline. Nothing changed but the
+spelling.
+
+### The correction
+
+This repair was filed under task 5.4, four groups away. That was wrong, and the failure is the
+evidence: **group 1 left the workspace broken and its commit could not be bisected through.**
+
+A breaking change to a shared crate has to repair its consumers in the same group. The task list
+now carries that as an invariant at its head, the repair moved to 1.7, and 5.4 points back here
+rather than duplicating the work.
+
+The cost of finding this late was small — two lines — but the ordering error was general. Groups 2
+and 3 make larger breaking changes to the same crate, and each will break `physics`, `discovery`,
+`topology` and `uncertain` at their distribution imports. Those repairs belong in those groups, not
+in 5.
+
+### Verification after the repair
+
+```
+cargo build --workspace --all-targets   clean
+bazel test //...                        1374 of 1374 pass
+deep_causality_uncertain                248 (baseline 248)
+deep_causality_topology                1697 (baseline 1697)
+deep_causality_tensor                   646
+```
