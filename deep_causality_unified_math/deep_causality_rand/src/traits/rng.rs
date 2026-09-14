@@ -9,7 +9,9 @@ use crate::{Iter, Map};
 impl<T: Rng> Rng for &mut T {}
 
 pub trait Rng: RngCore {
-    /// A raw machine word. Not a real number, so it is a separate operation from [`Rng::random`].
+    /// A raw machine word. Not a real number, so it is a separate operation from the numerical draw,
+    /// which lives in `deep_causality_stats` as `RandomExt::random` — this crate states no
+    /// distribution.
     ///
     /// This is what an index draw, a seed draw or a bit-pattern draw wants.
     #[inline]
@@ -26,7 +28,7 @@ pub trait Rng: RngCore {
         crate::StandardBool.sample(self)
     }
 
-    /// An iterator of raw machine words, the word-sided sibling of [`Rng::random_iter`].
+    /// An iterator of raw machine words, the word-sided sibling of `RandomExt::random_iter`.
     #[inline]
     fn random_word_iter<T>(&mut self) -> Iter<crate::StandardWord, &mut Self, T>
     where
@@ -104,7 +106,7 @@ pub trait Rng: RngCore {
         dest.fill(self)
     }
 
-    /// Map over raw machine words, the word-sided sibling of [`Rng::map`].
+    /// Map over raw machine words, the word-sided sibling of `RandomExt::map_random`.
     fn map_word<T, S, F>(&mut self, func: F) -> Map<crate::StandardWord, F, T, S>
     where
         crate::StandardWord: Distribution<T>,

@@ -37,6 +37,38 @@
 //!
 //! Each is a short addition whenever a caller appears.
 //!
+//! # Why the distributions live here
+//!
+//! A distribution is mathematics. `Normal`, `Exponential`, `Cauchy` and the rest are defined by
+//! their densities and their moments, and every one of those is a statistic — which is what this
+//! crate is for. Putting them beside the densities is what makes importance sampling, sequential
+//! Monte Carlo and MCMC diagnostics short to write: each needs a sampler and a density in the same
+//! place, and separating them by a crate boundary is what made them long.
+//!
+//! The entropy crate below keeps what is genuinely entropy: generators, the raw machine word, the
+//! Boolean draw, the Sobol sequence and the range sampler. It makes no claim about how a number is
+//! distributed beyond "uniform over the bits", and it does not name a density anywhere. The
+//! dependency runs `stats -> rand`, downhill, so nothing circles back.
+//!
+//! # A lazy sampler is Arrow-shaped, not witness-shaped
+//!
+//! A carrier that *stores* a sampling closure — draw-on-demand rather than draw-now — cannot take
+//! the container traits in `deep_causality_haft`, and the reason is worth recording so it is not
+//! rediscovered as a gap.
+//!
+//! Those traits carry no `'static` bound: zero occurrences across `Functor`, `Pure`, `Applicative`,
+//! `Monad`, `Traversable` and `LaxMonoidal`. That absence is deliberate. A functor receives a
+//! function, applies it and drops it, so the function never outlives the call. `Profunctor`, which
+//! does store its functions, carries `'static` on every parameter.
+//!
+//! A stored closure needs bounds the container traits do not provide, and an implementation cannot
+//! add them — `error[E0276]: impl has stricter requirements than trait`. The container traits are
+//! for data. A lazy sampler is a program, and `haft`'s home for programs is the `Arrow` layer.
+//!
+//! An ensemble of *realised* draws has no such problem: it is a `Vec` with a witness, which
+//! `CausalTensor` already is, and drawing into one is an ordinary generic function needing no
+//! witness of its own.
+//!
 //! # Precision
 //!
 //! Every function is generic over its scalar under the algebra tower's bounds, and no public

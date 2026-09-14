@@ -25,7 +25,7 @@ use deep_causality_num::{FromPrimitive, lift};
 
 /// An array of `f64` literals lifted into the working scalar.
 ///
-/// The elementwise form of [`deep_causality_num::lift`], which crosses one value. It lives here
+/// The elementwise form of `deep_causality_num::lift`, which crosses one value. It lives here
 /// rather than beside it because it returns a `Vec` and `deep_causality_num` is `no_std` over
 /// `core` alone.
 ///

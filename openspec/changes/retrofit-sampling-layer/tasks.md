@@ -430,7 +430,7 @@ Independent of groups 1–5; it closes a gap that exists today for `ZipTensorWit
 
 ## 7. Example and documentation
 
-- [ ] 7.1 New example `examples/mathematics_examples/composable_multi_math/ensemble_x_lattice_ising/`
+- [x] 7.1 New example `examples/mathematics_examples/composable_multi_math/ensemble_x_lattice_ising/`
       (`main.rs` + `README.md`, matching the seven siblings). The 2D Ising model on a periodic
       lattice: `rand` supplies entropy, `stats` the acceptance draw, `tensor` each lattice and the
       ensemble of replicas, `haft` the map and fold.
@@ -440,37 +440,54 @@ Independent of groups 1–5; it closes a gap that exists today for `ZipTensorWit
       lattice over 2 000 sweeps gives `|m|` of 0.986 at `T = 1.5`, 0.732 at `Tc` and 0.119 at
       `T = 3.5`. The ensemble layer too: `<|m|> = 0.9338 ± 0.0292` over 32 replicas at `T = 2.0`.
 
-      - [ ] 7.1.a The ensemble as nested witnessed containers,
+      - [x] 7.1.a The ensemble as nested witnessed containers,
             `CausalTensor<CausalTensor<FloatType>>`; observables by `fmap`, ensemble mean by
             `fold`.
-      - [ ] 7.1.b The susceptibility `chi = beta * N * (<m^2> - <m>^2)` through the **diagonal**
+      - [x] 7.1.b The susceptibility `chi = beta * N * (<m^2> - <m>^2)` through the **diagonal**
             traversal from group 6. The reason is physical: a susceptibility is a fluctuation, so
             it is meaningful only if replica *i*'s observables stay paired. The cartesian traversal
             would combine replica 3's energy with replica 17's magnetisation. Assert against a
             directly computed variance.
-      - [ ] 7.1.c Precision per part: the Metropolis draw and the ensemble mean are noise-bound and
-            run at `f32`; `chi` near `Tc` is cancellation-bound, since `<m^2>` and `<m>^2` nearly
-            coincide there, and needs `f64` or `Float106`. One table, three precisions.
-      - [ ] 7.1.d Register in `examples/mathematics_examples/Cargo.toml` as
+      - [x] 7.1.c Precision per part: the Metropolis draw and the ensemble mean are noise-bound and
+            run at `f32`. One table, three precisions.
+
+            **The rest of this task's premise was wrong, and the table now measures why.** It said
+            `chi` near `Tc` is cancellation-bound and needs a wider scalar. Two measurements say
+            otherwise. First, the cancellation is *mildest* at `Tc`: `chi` is proportional to the
+            variance and a critical point is where the variance diverges, so the fluctuation is
+            largest exactly where the quantity is asked for — `<|m|> = 0.74 +/- 0.15` at `Tc`
+            against `0.99 +/- 0.01` at `T = 1.5`. Second, at a 16x16 lattice no scalar can
+            disagree at all: `|m| = k/N` is dyadic, so the reduction needs `2 log2(N) + log2(R)` =
+            21 bits, inside `f32`'s 24, and all three scalars return **bit-identical** results.
+
+            The table is now a 2x2 — representable or not, fluctuation large or small — over
+            `L = 16` and `L = 32`, the second chosen because the same arithmetic puts the threshold
+            at 25 bits there. Only the cell where both go wrong costs anything: `7.7e-5` against
+            `3e-8`, `4.4e-10` and `1.4e-7`.
+      - [x] 7.1.d Register in `examples/mathematics_examples/Cargo.toml` as
             `[[example]] name = "ensemble_x_lattice_ising_examples"` and in that crate's
             `BUILD.bazel` with the `srcs` glob and `crate_root` its siblings use.
-      - [ ] 7.1.e Add the row to `composable_multi_math/README.md` under "HKT-Only Composition".
-      - [ ] 7.1.f Repo example conventions: one `FloatType` alias in `main.rs`, no local lift
+      - [x] 7.1.e Add the row to `composable_multi_math/README.md` under "HKT-Only Composition".
+      - [x] 7.1.f Repo example conventions: one `FloatType` alias in `main.rs`, no local lift
             helpers, no raw `f64` except at the display boundary through `lower`.
 
       Deferred: the same composition over `LatticeGaugeField` and `try_metropolis_sweep`, which
       `topology` already carries — Wilson loops in a U(1) gauge theory. Ising first because its
       exact answer is unambiguous; the gauge version is a capstone once this is proven.
 
-- [ ] 7.2 Document in `stats`: distributions live here because their mathematics does, and a
+- [x] 7.2 Document in `stats`: distributions live here because their mathematics does, and a
       lazy sampler is Arrow-shaped rather than witness-shaped. Document in `rand`: this crate
       supplies entropy and makes no distributional claim.
-- [ ] 7.3 Update `openspec/notes/unified_math/hkt_gaps.md` §3.4 and `hkt_uncertain.md` B7/B8:
+- [x] 7.3 Update `openspec/notes/unified_math/hkt_gaps.md` §3.4 and `hkt_uncertain.md` B7/B8:
       B7's "six per-type files to collapse" premise is superseded by the crate boundary; B8 is
       closed; `RealRng`'s zero-consumer status is resolved by removal.
-- [ ] 7.4 Update `deep_causality_unified_math/README.md`: the Monte Carlo example loses its
+- [x] 7.4 Update `deep_causality_unified_math/README.md`: the Monte Carlo example loses its
       `where StandardUniform: Distribution<S>` clause; the crate table's `rand` and `stats` rows
       state the new division; the tier diagram is unchanged, since `stats -> rand` is downhill.
+
+      The replacement signature was compiled before being written into the README, and the check
+      was kept as `traits/generic_sampling_tests.rs` — it is the spec scenario "it compiles with no
+      `StandardUniform: Distribution<S>` clause", which had no test until now.
 
 ## 8. Close-out
 
