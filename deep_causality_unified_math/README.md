@@ -10,11 +10,11 @@ Unified math grew from a small idea. Tensors and multivectors needed to compose,
 
 ## The stack
 
-The dependency graph is drawn as its transitive reduction, so
-`tensor -> num` is omitted where `tensor -> linear -> haft -> algebra -> num` already implies it.
-Two dependencies leave the folder, over four edges: `deep_causality_ast`, which `tensor` and
-`uncertain` build on, and `deep_causality_par`, which `fft` and `topology` build on. Both live in
-`deep_causality_utils/`; 
+The dependency graph is drawn as its transitive reduction: fifty-eight direct edges become
+twenty-one, because `tensor -> num` is omitted where `tensor -> stats -> linear -> haft -> algebra
+-> num` already implies it. Reachability is unchanged. Two dependencies leave the folder, over four
+edges: `deep_causality_ast`, which `tensor` and `uncertain` build on, and `deep_causality_par`,
+which `fft` and `topology` build on. Both live in `deep_causality_utils/`.
 
 
 ```
@@ -42,7 +42,7 @@ statistics, then tensors, to topology at tier 7. The longest chain is highlighte
 | `deep_causality_algebra` | 1 | Groups, rings, fields, algebras, and isomorphism markers |
 | `deep_causality_haft` | 2 | Applied category theory: HKT, functor, applicative, monad, foldable, arrow, and a type-encoded effect system |
 | `deep_causality_num_rational` | 2 | Exact rationals over the integers |
-| `deep_causality_rand` | 2 | Entropy: generators, the raw machine word, the Boolean draw, Sobol, and range sampling. States no density |
+| `deep_causality_rand` | 2 | Entropy: generators, the raw machine word, the Boolean draw, the Sobol sequence, and range sampling. It names no density and states no moment |
 | `deep_causality_linear` | 3 | Sparse CSR, dense and bit-packed 𝔽₂ matrices and vectors; eliminations, decompositions, conjugate gradient, etc. |
 | `deep_causality_num_complex` | 3 | Complex, quaternion and octonion number types |
 | `deep_causality_num_dual` | 3 | Dual numbers, forward-mode automatic differentiation |
@@ -51,7 +51,7 @@ statistics, then tensors, to topology at tier 7. The longest chain is highlighte
 | `deep_causality_homology` | 4 | Chain complexes, boundary operators and homology over a chosen coefficient field. No geometry |
 | `deep_causality_stats` | 4 | Statistics over slices — entropy, log-sum-exp, moments, Pearson, covariance, ridge, logistic IRLS, Gaussian log-density, proportions, binning — and the distributions, which are defined by the densities and moments that live here |
 | `deep_causality_tensor` | 5 | N-index tensors, broadcasting, Einstein summation, the tensor-train stack |
-| `deep_causality_uncertain` | 5 | A first-order type for uncertain programming |
+| `deep_causality_uncertain` | 5 | Uncertain values as lazy computation graphs, generic in the scalar. The graph is an `Arrow`; ensembles materialise into a container the caller names |
 | `deep_causality_multivector` | 6 | Multivectors for geometric algebra. |
 | `deep_causality_topology` | 7 | Cell complexes, manifolds, discrete exterior calculus, gauge fields, differential geometry |
 
@@ -61,12 +61,29 @@ witnesses over their number types and so depend on `haft`, which `num_rational` 
 
 `tensor` and `uncertain` sit above `stats` because both take their statistics from it rather than
 carrying their own: `tensor` reads a matrix as observations and variables and hands the reduction
-over, `uncertain` summarises its samples the same way. That lift carries `multivector` and
-`topology` up with them, and puts `stats` on the longest chain.
+over, `uncertain` summarises its samples the same way and draws them from the distributions that
+live there. That lift carries `multivector` and `topology` up with them, and puts `stats` on the
+longest chain.
+
+`stats` depends on `rand`, which is the one edge in the figure that skips a tier downward. A
+distribution is defined by its density and its moments, and both are statistics, so the shaped
+distributions — normal, exponential, Cauchy, Weibull, log-normal, Poisson, categorical, Bernoulli
+and the unit-interval draws — live beside them. `rand` keeps what is genuinely entropy: a source of
+bits, the raw machine word, the Boolean draw, the Sobol sequence and a value uniform over a range.
+Coherence forced the seam rather than taste: a blanket `impl<T: RealField> Distribution<T> for
+StandardUniform` is `error[E0119]` against the `u64`, `u32` and `bool` implementations a generator
+must also provide, because the compiler cannot prove `u64` will never be a real field. The
+direction is downhill, tier 4 to tier 2, so nothing circles back, and `stats` re-exports the
+generator traits by name so a crate that wants to draw from a distribution needs no second
+dependency to spell the bound.
 
 Nothing here has a **required** external dependency. Four crates have an optional one: `num` for
 `libm`, `rand` for `getrandom`, and `fft` and `topology` for `rayon`. All four sit behind feature
 gates that are disabled by default.
+
+The figure and the two tier blocks above are checked by hand. `AGENTS.md` cites
+`scripts/check_tiers.py` as re-deriving the tiers from the manifests; no such script exists on
+`main`.
 
 ## How they compose
 
@@ -124,18 +141,58 @@ The capstone parallel-transports a unit timelike spinor along a discretized Mink
 `Cl(3,1)`. Four crates participate and the final drift against the closed-form `(cosh θ, sinh θ)` is
 about `1.7e-31` at `Float106`.
 
+**Programs compose differently from containers, and `Arrow` is where they do.** The container
+traits carry no `'static` bound, deliberately: a functor receives a function, applies it and drops
+it, so the function never outlives the call. A carrier that *stores* a closure needs bounds those
+traits do not provide, and an implementation cannot add them — `error[E0276]: impl has stricter
+requirements than trait`. `deep_causality_uncertain` is the case that shows the seam. Its lazy
+graph is a program rather than data, so it takes `Arrow` instead of a witness:
+
+```rust
+impl<R: RandScalar> Arrow for Uncertain<R> {
+    type In = SampleIndex;
+    type Out = Result<R, UncertainError>;
+
+    fn run(&self, at: SampleIndex) -> Self::Out {
+        self.sample_at(&SampleSession::seeded(at.seed()), at.index())
+    }
+}
+```
+
+`run` takes `&self`, which is admissible only because evaluating the graph at an address is a pure
+function: a draw is settled by the session seed, the sample index and the leaf's ordinal, and by
+nothing else. Nothing is stored between calls, which is also why `x - x` is exactly zero — a leaf
+reached twice within one graph is one draw. An ensemble goes the other way and is ordinary data:
+`Uncertain::materialize::<W>` takes a witness and hands back `W::Type<R>`, a `DenseVector<R>`, a
+rank-1 `CausalTensor<R>` or a `Vec<R>`, so the draws arrive already carrying every categorical
+structure that witness provides and `uncertain` names neither container crate.
+
+Two ensembles drawn from one session at the *same* indices are correlated by index, so combining
+them is a positional zip — `Semigroupal::zip_with` on `ZipTensorWitness` or `ZipDenseVectorWitness`,
+and `DiagonalTraversable::sequence_zip` to turn a structure of ensembles inside out.
+`Traversable::sequence` is the hazard rather than the tool: it forms the cartesian product, so four
+quantities at fifty draws each give 50⁴ = 6 250 000 combinations instead of fifty correlated
+tuples, and every combination is individually well-formed, which makes the count the only symptom.
+
 | Trait | Implementers outside `haft` |
 |---|---|
 | `HKT`, `Functor`, `Foldable` | `linear`, `tensor`, `multivector`, `topology`, `num_complex`, `num_dual` |
 | `Applicative`, `Pure`, `CoMonad` | `linear`, `tensor`, `multivector`, `topology` |
 | `Monad` | `linear`, `tensor`, `topology` |
-| `Semigroupal`, `MonoidalApplicative` | `num_complex`, `num_dual`, `tensor` |
+| `Semigroupal`, `MonoidalApplicative`, `Convolutional` | `linear`, `tensor`, `num_complex`, `num_dual` |
+| `LaxMonoidal` | `num_complex`, `num_dual` |
+| `Traversable`, `DiagonalTraversable`, `Collectable` | `linear`, `tensor` |
 | `Adjunction` | `topology` |
-| `Arrow` | `calculus`, `tensor` |
-| `Traversable` | `linear`, `tensor` |
-| `NaturalTransformation`, `Category`, `Kleisli`, `Bifunctor`, `Profunctor` | none |
+| `Arrow` | `calculus`, `tensor`, `uncertain` |
+| `NaturalTransformation`, `Category`, `Bifunctor`, `Profunctor` | none |
 
-That table is the work list. `openspec/notes/archive/unified_math/unified_math_gaps.md` carries the full
+`Kleisli` is absent from the last row on purpose. It is not a trait a container implements:
+`Kleisli<M>` is a `Category` for **any** `M: Monad<M>`, so the three container monads above —
+`CausalTensorWitness`, `DenseVectorWitness`, `ManifoldWitness` — already have a Kleisli category
+each, with `pure` as the identity and `bind` as composition. Its laws reduce to the monad laws, and
+both halves are machine-checked in `lean/DeepCausalityFormal/Haft/Kleisli.lean`.
+
+The rest of that table is the work list. `openspec/notes/archive/unified_math/unified_math_gaps.md` carries the full
 analysis: which absences are real gaps and which are correct (a `Ratio<A> -> Ratio<B>` under an
 arbitrary `f` breaks coprimality, so `num_rational` is right to have none), what each costs, and a
 ranking from mechanical to design fork. Two findings there were measured by running code rather than
@@ -208,7 +265,7 @@ rounding the loop accumulates can be measured in the working type and read out a
 index is a count lifted onto the real axis. The program compiles unchanged at all four precisions.
 
 ```rust
-use deep_causality_algebra::{Real, RealField, Scalar};
+use deep_causality_algebra::{Real, Scalar};
 use deep_causality_num::{lift, lift_count, lower, to_count};
 
 /// The working type. Switch it to `f32` or `deep_causality_num::Float106`; nothing below changes.
@@ -447,7 +504,7 @@ than drifting.
 ```rust
 use deep_causality_algebra::{Real, Scalar};
 use deep_causality_num::{Float106, Lift, ToPrimitive, lift, lift_count, lower};
-use deep_causality_stats::{RandWidth, RandomExt, Xoshiro256};
+use deep_causality_stats::{Distribution, RandomExt, StandardUniform, Xoshiro256};
 
 /// The master precision, where the parts meet. It must be no narrower than the widest part.
 type Master = Float106;
@@ -460,7 +517,10 @@ const TERMS: u64 = 1_000_000;
 /// Noise-bound: a Monte Carlo estimate of ∫₀¹ x² dx from stored draws. The statistical error
 /// is about 1/√n and buries rounding at every precision. Returns the estimate and the bytes
 /// the draws occupied.
-fn monte_carlo<S: Scalar + RealField + RandWidth>(samples: u64, seed: u64) -> (S, usize) {
+fn monte_carlo<S: Scalar>(samples: u64, seed: u64) -> (S, usize)
+where
+    StandardUniform: Distribution<S>,
+{
     let mut rng = Xoshiro256::from_seed(seed);
     let draws: Vec<S> = (0..samples).map(|_| rng.random::<S>()).collect();
     let bytes = core::mem::size_of_val(draws.as_slice());
@@ -490,8 +550,12 @@ fn series<S: Scalar>(terms: u64) -> S {
 }
 
 /// The three errors against closed forms, all at one precision. `lower` asks for `ToPrimitive`,
-/// which `Scalar` does not carry.
-fn errors_at<S: Scalar + RealField + RandWidth + ToPrimitive>() -> [f64; 3] {
+/// which `Scalar` does not carry; the uniform draw asks for `StandardUniform: Distribution<S>`,
+/// which is how `deep_causality_stats` states "this scalar can be sampled".
+fn errors_at<S: Scalar + ToPrimitive>() -> [f64; 3]
+where
+    StandardUniform: Distribution<S>,
+{
     let one = lift::<S>(1.0);
     let error = |value: S, exact: S| lower(Real::abs(value - exact));
     [
@@ -574,121 +638,6 @@ The composed value lands at 5.9e-4, which is the noise-bound part's own error, a
 no narrower than the widest contributor, so that the crossings lose nothing. The accuracy of the
 composed value is then set by its parts, each at the precision its physics asked for. That is the
 trade-off made explicit: a precision chosen per part against a requirement.
-
-## Economic impact
-
-An estimate, from stated assumptions, of what the pick in the previous section is worth on a
-simulation that conventionally runs on a supercomputer: a convection-permitting ensemble forecast
-of local weather. Nothing in this section was measured. Every number follows from the assumption
-table by the arithmetic shown, so a reader with a different model can substitute their own.
-
-**The simulation.** A limited-area model on a 1000 km square at 1 km spacing with 100 levels, run
-as a 40-member ensemble, cycled with an ensemble-variational assimilation, and verified against
-conservation budgets. Its parts are bound the way the three computations above were bound.
-
-- The ensemble members are noise-bound. Their spread is the signal, and rounding at `f32` sits
-  far below the perturbations that make them differ. That finding is what let ECMWF move its
-  operational forecast model to single precision in 2021 (Váňa et al., 2017). The members hold
-  the fields, and the fields are where the memory goes.
-- The assimilation is mesh-bound in the sense of the previous section: a minimisation whose
-  gradients cancel and whose conditioning asks for `f64`. It stays at `f64` in both
-  configurations.
-- The conservation budgets are reference-bound: mass, energy and moisture integrals accumulated
-  over a whole forecast, where a drift of 1e-12 per step is the quantity being measured. They go
-  to `Float106`. They are reductions, so they cost almost no memory.
-
-| Assumption | Value |
-|---|---|
-| grid | 1000 × 1000 columns × 100 levels = 10⁸ points |
-| resident 3D fields per member | 48: 12 prognostic at two time levels, 12 tendencies, 12 diagnostics |
-| halo cells and exchange buffers | 15 % on top of field memory |
-| ensemble | 40 members |
-| assimilation working set | 10 model states at `f64` |
-| ensemble statistics | mean and spread of 20 fields at `f64` |
-| reference budgets | 4 budgets × 100 levels per member |
-| `Float106` cost per operation | 2 to 4 × `f64`, so it is spent on reductions and never on fields |
-| instance headroom | 10 % of node memory for the operating system, MPI and I/O |
-| the run | one assimilation cycle and its 40 forecasts: 1 hour at `f64`, of which the members take 80 % and the assimilation and I/O 20 % |
-| `f32` time on the members | 40 % less than `f64`, transferred from ECMWF's measurement on the IFS (Váňa et al., 2017) |
-| budget reductions | per step at `f64`, accumulated across steps at `Float106`; no measurable time |
-| billing | per second of use, so a shorter run bills fewer hours |
-| prices | AWS on-demand Linux list prices, US East (N. Virginia), instances.vantage.sh, 2026-09-03 |
-| GB | 10⁹ bytes; 1 GiB = 1.074 GB |
-
-**The memory.** One member's fields are 48 × 10⁸ × 8 B = 38.4 GB at `f64` and 19.2 GB at
-`f32`; with halos, 44.16 GB and 22.08 GB.
-
-| Component | blanket `f64` | mixed, per part | saving |
-|---|---|---|---|
-| 40 ensemble members, with halos | 1766.4 GB | 883.2 GB at `f32` | 883.2 GB |
-| assimilation working set | 384.0 GB | 384.0 GB at `f64` | 0 |
-| ensemble statistics | 32.0 GB | 32.0 GB at `f64` | 0 |
-| reference budgets, 16 000 accumulators | 0.13 MB | 0.26 MB at `Float106` | −0.13 MB |
-| **total** | **2182.4 GB** | **1299.2 GB** | **883.2 GB, 40 %** |
-
-**The price.** On rented nodes the memory has an hourly price, and it is bought in rungs. A cloud
-user fixes the node count, which fixes the cores and the wall clock, then takes the lowest rung
-whose memory holds that node's share of the state with headroom. The ladders below share the
-384, 768 and 1536 GiB rungs and differ in processor: c7a, m7a and r7a on one 192-vCPU AMD
-processor; c8i, m8i and r8i as 384-vCPU Intel bare metal; c8g, m8g and r8g as Graviton4 bare
-metal, where every one of the 192 vCPUs is a core because the processor has no simultaneous
-multithreading. Each rung costs more for the same cores, and the price per terabyte-hour falls
-as the rung rises: $23.90 on c7a, $13.49 on m7a, $8.86 on r7a, $6.07 on the high-memory x2iedn.
-
-| Instance | vCPU | memory | list price |
-|---|---|---|---|
-| c7a.48xlarge, also c7a.metal-48xl | 192 | 384 GiB | $9.85 |
-| m7a.48xlarge | 192 | 768 GiB | $11.13 |
-| r7a.48xlarge | 192 | 1536 GiB | $14.61 |
-| x2idn.32xlarge | 128 | 2048 GiB | $13.34 |
-| x2iedn.32xlarge | 128 | 4096 GiB | $26.68 |
-| c8i.metal-96xl | 384 | 768 GiB | $17.99 |
-| m8i.metal-96xl | 384 | 1536 GiB | $20.32 |
-| r8i.metal-96xl | 384 | 3072 GiB | $26.67 |
-| c8g.metal-48xl | 192 cores | 384 GiB | $7.66 |
-| m8g.metal-48xl | 192 cores | 768 GiB | $8.62 |
-| r8g.metal-48xl | 192 cores | 1536 GiB | $11.31 |
-
-The blanket `f64` state needs 2401 GB of instance memory with headroom and the mixed state
-1429 GB. The best value for money that holds the `f64` state with 384 cores is two r8g nodes at
-$22.62 an hour; the alternatives are one r8i node at $26.67 with half the cores, or two r7a
-nodes at $29.21 with half the cores. On the same two Graviton nodes the mixed state fits one
-rung lower, on m8g. That pair is the master comparison.
-
-| | fixed `f64` | mixed precision | difference |
-|---|---|---|---|
-| state in memory | 2182 GB | 1299 GB | −883 GB, −40 % |
-| instance memory needed | 2401 GB | 1429 GB | −972 GB |
-| best-value configuration | 2 × r8g.metal-48xl | 2 × m8g.metal-48xl | one rung lower |
-| cores | 384 | 384 | same |
-| memory bought | 3072 GiB, 3299 GB | 1536 GiB, 1649 GB | half |
-| bytes moved per member per step, members at `f32` throughout | 1 | 0.5 | half |
-| bytes moved per run, members 80 % and assimilation 20 % | 1 | 0.8 × 0.5 + 0.2 = 0.6 | −40 % |
-| members that fit on eight 512 GB nodes | 74 | 148 | twice |
-| accuracy of the composed result | set by the noise-bound part | set by the noise-bound part | same |
-| list price per hour | $22.62 | $17.23 | −$5.39, −24 % |
-| wall clock per run, members at 0.6 and assimilation at 1 | 1.00 h | 0.8 × 0.6 + 0.2 = 0.68 h | −32 % |
-| **total cost per run** | **$22.62** | **$11.72** | **−$10.90, −48 %** |
-
-The difference is a rung on the ladder and a third off the clock: the same cores, half the memory
-bought, a quarter off the hourly rate, a run that ends 32 % sooner, and the conservation budgets
-carried at `Float106` for a quarter of a megabyte. The 48 % is the product of two effects with
-different standing. The 24 % on the rate is arithmetic on list prices. The 32 % on the clock is
-the members' 80 % of the run running in 60 % of the time, and that 60 % is ECMWF's figure for
-the IFS on its own machines, carried over here as the best available measurement rather than
-as one made on this model. The assimilation keeps its `f64` and its 20 %.
-The saving is a step function of the ladder, so it is not the same at every node count. It is
-largest where the `f64` state is pushed onto the memory-priced instances, 45 % on a single
-virtual node where no 192-vCPU instance holds the `f64` state at all, and it is zero at a node
-count where both states land on the same rung, where the halved byte traffic is what remains.
-Reserved and spot pricing discount both columns alike and leave the percentages where they are.
-
-The rule is the one the previous section stated, precision per part against a requirement. Here
-the requirement has a price, and the price is in the table.
-
-Váňa, F., Düben, P., Lang, S., Palmer, T., Leutbecher, M., Salmond, D., Carver, G. (2017). Single
-Precision in Weather Forecasting Models: An Evaluation with the IFS. *Monthly Weather Review*,
-145(2), 495–502.
 
 ## Further reading
 
