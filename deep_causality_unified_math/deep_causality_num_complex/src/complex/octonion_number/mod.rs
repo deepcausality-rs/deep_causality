@@ -30,15 +30,36 @@
 //! Despite these differences from more familiar number systems, octonions retain
 //! properties such as distributivity over addition and an inverse for every non-zero octonion.
 //!
-//! The multiplication table, based on the Fano plane, defines how the imaginary units
-//! multiply. A common representation (used here) is:
+//! # The multiplication table
 //!
-//! - `eᵢ * eᵢ = -1` for `i = 1..7`
-//! - `e₁ * e₂ = e₃`, `e₂ * e₁ = -e₃`
-//! - `e₁ * e₃ = -e₂`, `e₃ * e₁ = e₂`
-//! - `e₆ * e₇ = e₁`, `e₇ * e₆ = -e₁`
+//! `Mul` derives the product from the doubling itself: an octonion is read as a pair of
+//! quaternions `(a, b)`, with `a` holding `s, e₁, e₂, e₃` and `b` holding `e₄, e₅, e₆, e₇`, and
 //!
-//! These rules are meticulously applied in the `Mul` implementation for the `Octonion` struct.
+//! ```text
+//! (a, b) (c, d) = (a c - conj(d) b,  d a + b conj(c))
+//! ```
+//!
+//! That is what carries the composition law `|x y| = |x| |y|` up from the quaternions. The table
+//! below is the result, printed for reference rather than used as the definition:
+//!
+//! ```text
+//!       e₁    e₂    e₃    e₄    e₅    e₆    e₇
+//! e₁    -1    e₃   -e₂    e₅   -e₄   -e₇    e₆
+//! e₂   -e₃    -1    e₁    e₆    e₇   -e₄   -e₅
+//! e₃    e₂   -e₁    -1    e₇   -e₆    e₅   -e₄
+//! e₄   -e₅   -e₆   -e₇    -1    e₁    e₂    e₃
+//! e₅    e₄   -e₇    e₆   -e₁    -1   -e₃    e₂
+//! e₆    e₇    e₄   -e₅   -e₂    e₃    -1   -e₁
+//! e₇   -e₆    e₅    e₄   -e₃   -e₂    e₁    -1
+//! ```
+//!
+//! ## Why the signs are forced
+//!
+//! The seven Fano lines each carry an orientation, and only 16 of the 128 assignments give an
+//! octonion algebra. An assignment outside those 16 still squares every unit to `-1`, still
+//! anticommutes and still sends basis pairs to basis units, so the products look right one at a
+//! time while `|x y| = |x| |y|` fails on general operands. Deriving the product from the doubling
+//! removes that whole class of error, and the tests pin the laws rather than the single products.
 //!
 //! # Structure
 //! The `Octonion` struct is a generic representation, parameterized by a floating-point type `F`.

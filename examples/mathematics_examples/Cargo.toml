@@ -83,6 +83,10 @@ name = "haft_constrained_functors_examples"
 path = "1_foundation/haft/constrained_functors.rs"
 
 [[example]]
+name = "haft_free_and_cofree_examples"
+path = "1_foundation/haft/free_and_cofree.rs"
+
+[[example]]
 name = "haft_effect_system_examples"
 path = "1_foundation/haft/effect_system.rs"
 
@@ -146,6 +150,10 @@ path = "1_foundation/fft/fft_plans.rs"
 name = "basic_csr_ops_examples"
 path = "1_foundation/linear/basic_csr_ops.rs"
 
+[[example]]
+name = "dense_matrix_stencil_examples"
+path = "1_foundation/linear/dense_matrix_stencil.rs"
+
 # ============================================================================
 # 1_foundation/multivector — API surface of deep_causality_multivector.
 # ============================================================================
@@ -161,6 +169,10 @@ path = "1_foundation/multivector/basic_multivector.rs"
 [[example]]
 name = "causal_multi_field_basics_examples"
 path = "1_foundation/multivector/causal_multi_field_basics.rs"
+
+[[example]]
+name = "multifield_witness_examples"
+path = "1_foundation/multivector/multifield_witness.rs"
 
 [[example]]
 name = "clifford_mhd_multivector_examples"
@@ -198,6 +210,30 @@ path = "1_foundation/tensor/basic_causal_tensor.rs"
 name = "ein_sum_causal_tensor_examples"
 path = "1_foundation/tensor/ein_sum_causal_tensor.rs"
 
+[[example]]
+name = "tensor_train_compression_examples"
+path = "1_foundation/tensor/tensor_train_compression.rs"
+
+# ============================================================================
+# 1_foundation/num — the Cayley-Dickson ladder in deep_causality_num_complex.
+# ============================================================================
+
+[[example]]
+name = "cayley_dickson_ladder_examples"
+path = "1_foundation/num/cayley_dickson_ladder.rs"
+
+[[example]]
+name = "scalars_and_precision_examples"
+path = "1_foundation/num/scalars_and_precision.rs"
+
+[[example]]
+name = "binary_field_gf2_examples"
+path = "1_foundation/num/binary_field_gf2.rs"
+
+[[example]]
+name = "precision_boundary_examples"
+path = "1_foundation/num/precision_boundary.rs"
+
 # ============================================================================
 # 1_foundation/topology — API surface of deep_causality_topology.
 # ============================================================================
@@ -217,6 +253,22 @@ path = "1_foundation/topology/complex_operators.rs"
 [[example]]
 name = "manifold_analysis_examples"
 path = "1_foundation/topology/manifold_analysis.rs"
+
+[[example]]
+name = "neighbourhoods_three_ways_examples"
+path = "1_foundation/topology/neighbourhoods_three_ways.rs"
+
+[[example]]
+name = "chain_cochain_pairing_examples"
+path = "1_foundation/topology/chain_cochain_pairing.rs"
+
+[[example]]
+name = "fields_on_complexes_examples"
+path = "1_foundation/topology/fields_on_complexes.rs"
+
+[[example]]
+name = "manifold_curvature_examples"
+path = "1_foundation/topology/manifold_curvature.rs"
 
 # ============================================================================
 # 2_composition/nesting — a witness whose element is another crate's type.

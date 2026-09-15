@@ -265,7 +265,7 @@ effect monad.
 | multifield_data_pipeline | isomorphism | `CausalMultiField<T>` <-> `(CausalTensor<T>, Metric, dx, shape)` iso lets external code build/extract/transform a multifield without touching `pub(crate)` internals | `cargo run -p mathematics_examples --example multifield_data_pipeline` |
 
 See [mathematics_examples/README.md](mathematics_examples/README.md) for the full
-table of all 65 registered examples and the precision-abstraction decision tree
+table of all 77 registered examples and the precision-abstraction decision tree
 (`f32` vs `f64` vs `Float106`).
 
 ---

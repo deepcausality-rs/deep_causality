@@ -73,13 +73,15 @@ fn test_octonion_mul() {
     let e5_e4 = o_e5 * o_e4;
     utils_octonion_tests::assert_octonion_approx_eq(e5_e4, -o_e1, 1e-9);
 
-    // e6 * e7 = e1
+    // e6 * e7 = -e1. The Cayley-Dickson doubling orients the Fano line {1, 6, 7} this way.
+    // Only 16 of the 128 orientation assignments give an octonion algebra, and the composition
+    // law in `multiplication_bug_repro_tests` is what pins this one.
     let e6_e7 = o_e6 * o_e7;
-    utils_octonion_tests::assert_octonion_approx_eq(e6_e7, o_e1, 1e-9);
+    utils_octonion_tests::assert_octonion_approx_eq(e6_e7, -o_e1, 1e-9);
 
-    // e7 * e6 = -e1
+    // e7 * e6 = e1
     let e7_e6 = o_e7 * o_e6;
-    utils_octonion_tests::assert_octonion_approx_eq(e7_e6, -o_e1, 1e-9);
+    utils_octonion_tests::assert_octonion_approx_eq(e7_e6, o_e1, 1e-9);
 }
 
 // Test scalar multiplication

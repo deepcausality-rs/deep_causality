@@ -1,7 +1,7 @@
 # Foundation: the vocabulary, one crate at a time
 
 The layer under everything else. Two folders teach the towers that the rest of the workspace
-is built from, and seven show the API surface of a single crate each.
+is built from, and eight show the API surface of a single crate each.
 
 Start here to learn what a bound promises, what a trait buys, or what one crate can do.
 [2_composition](../2_composition/) uses this vocabulary to cross crate boundaries, and
@@ -33,6 +33,7 @@ Each of these uses a single crate and shows what it offers, and what each operat
 | [fft](fft/) | `deep_causality_fft` | plan-based FFT, rFFT, and the Hermitian half-spectrum |
 | [linear](linear/) | `deep_causality_linear` | sparse CSR matrices and their operations |
 | [multivector](multivector/) | `deep_causality_multivector` | geometric algebra: multivectors, fields, the matrix isomorphism |
+| [num](num/) | `deep_causality_num`, `deep_causality_num_complex` | the four scalars and the precision boundary; 𝔽₂; the Cayley-Dickson ladder |
 | [stats](stats/) | `deep_causality_stats` | moments, correlation, and the shaped distributions |
 | [tensor](tensor/) | `deep_causality_tensor` | N-index tensors, broadcasting, Einstein summation |
 | [topology](topology/) | `deep_causality_topology` | graphs, complexes, manifolds, boundary operators |

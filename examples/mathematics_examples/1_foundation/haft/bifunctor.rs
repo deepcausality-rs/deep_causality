@@ -3,7 +3,22 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_haft::{Bifunctor, ResultUnboundWitness};
+//! # `Bifunctor`: two channels, mapped in one step
+//!
+//! Some containers carry two independent type parameters, and both sides often need transforming
+//! at the same boundary. `Bifunctor::bimap` takes one function per side and does it in one step.
+//!
+//! ```text
+//! ResultUnboundWitness   Result<A, B>   the success channel and the error channel
+//! Tuple2Witness          (A, B)         the payload and whatever travels beside it
+//! ```
+//!
+//! Both are `HKT2Unbound` witnesses: the two parameters are unrelated and neither carries a bound,
+//! so `bimap` can send each side anywhere. The setting is an API boundary, where a domain type
+//! becomes a DTO, a domain error becomes an HTTP error, and the timing that rode along with them
+//! becomes a header.
+
+use deep_causality_haft::{Bifunctor, ResultUnboundWitness, Tuple2Witness};
 
 // ============================================================================
 // Domain: API Response Handling
@@ -74,9 +89,37 @@ fn main() {
         ResultUnboundWitness::bimap(error_result, to_dto, to_api_error);
 
     print_failure(&original_error, &api_response_err);
-    let err = api_response_err.unwrap_err();
-    assert_eq!(err.code, 404);
-    assert_eq!(err.message, "User 99 not found");
+    match api_response_err {
+        Err(ref err) => {
+            assert_eq!(err.code, 404);
+            assert_eq!(err.message, "User 99 not found");
+        }
+        Ok(ref dto) => panic!("the error channel carried a payload: {dto:?}"),
+    }
+
+    // ------------------------------------------------------------------------
+    // Scenario 3: the same move on a pair.
+    //
+    // `Tuple2Witness` is the other `HKT2Unbound` witness. A handler returns its payload beside
+    // the time it took, and both sides cross the API boundary at once: the payload becomes a DTO
+    // and the timing becomes the header value it is reported as.
+    // ------------------------------------------------------------------------
+    let handler_output: (DomainUser, u32) = (
+        DomainUser {
+            id: 7,
+            username: "bob".to_string(),
+            email: "bob@example.com".to_string(),
+        },
+        18,
+    );
+    let original_pair = handler_output.clone();
+
+    let to_header = |millis: u32| format!("{millis}ms");
+    let (dto, timing): (UserDto, String) = Tuple2Witness::bimap(handler_output, to_dto, to_header);
+
+    print_pair(&original_pair, &dto, &timing);
+    assert_eq!(dto.display_name, "BOB");
+    assert_eq!(timing, "18ms");
 }
 
 // -----------------------------------------------------------------------------------------
@@ -96,6 +139,13 @@ fn print_success(original: &Result<DomainUser, DomainError>, response: &Result<U
 fn print_failure(original: &Result<DomainUser, DomainError>, response: &Result<UserDto, ApiError>) {
     println!("\nOriginal Error:   {original:?}");
     println!("API Response (Err): {response:#?}");
+}
+
+fn print_pair(original: &(DomainUser, u32), dto: &UserDto, timing: &str) {
+    println!("\n--- The same move on a pair, through Tuple2Witness ---");
+    println!("Handler output:   ({:?}, {} ms)", original.0, original.1);
+    println!("API Response:     {dto:?}");
+    println!("Timing header:    {timing}");
 }
 
 #[derive(Debug, Clone, PartialEq)]

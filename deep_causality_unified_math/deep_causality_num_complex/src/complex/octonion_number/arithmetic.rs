@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{DivisionAlgebra, Octonion, One, RealField, Zero};
+use crate::{DivisionAlgebra, Octonion, One, Quaternion, RealField, Zero};
 use core::iter::{Product, Sum};
 use core::ops::{Add, Div, Mul, Sub};
 use core::ops::{AddAssign, DivAssign, MulAssign, SubAssign};
@@ -254,64 +254,58 @@ impl<F: RealField> SubAssign for Octonion<F> {
 /// let neg_one = Octonion::new(-1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 /// assert_eq!(e1 * e1, neg_one);
 /// ```
+impl<F: RealField> Octonion<F> {
+    /// The octonion read as a pair of quaternions, `(a, b)`.
+    ///
+    /// `a` carries the first four components and `b` the last four, which is the split the
+    /// Cayley-Dickson doubling is written in.
+    #[inline]
+    fn as_quaternion_pair(&self) -> (Quaternion<F>, Quaternion<F>) {
+        (
+            Quaternion::new(self.s, self.e1, self.e2, self.e3),
+            Quaternion::new(self.e4, self.e5, self.e6, self.e7),
+        )
+    }
+
+    /// The octonion assembled from a pair of quaternions, inverse to [`as_quaternion_pair`].
+    #[inline]
+    fn from_quaternion_pair(a: Quaternion<F>, b: Quaternion<F>) -> Self {
+        Self::new(a.w, a.x, a.y, a.z, b.w, b.x, b.y, b.z)
+    }
+}
+
 impl<F: RealField> Mul for Octonion<F> {
     type Output = Self;
+
+    /// The Cayley-Dickson product: the octonions as a doubling of the quaternions.
+    ///
+    /// Writing each octonion as a pair of quaternions `(a, b)`, where `a` holds the first four
+    /// components and `b` the last four, the product is
+    ///
+    /// ```text
+    /// (a, b) (c, d) = (a c - conj(d) b,  d a + b conj(c))
+    /// ```
+    ///
+    /// # Why the product is derived rather than tabulated
+    ///
+    /// The octonions are a composition algebra: `|x y| = |x| |y|` for every pair. That law is
+    /// what makes them one of the four normed division algebras, and it is inherited through the
+    /// doubling from the same law on the quaternions. Deriving the product from the doubling
+    /// carries the law across for free.
+    ///
+    /// A written-out 7x7 table of basis products has 21 independent signs, and it holds only when
+    /// all seven lines of the Fano plane are oriented compatibly. Getting one line's orientation
+    /// wrong leaves a product that is still antisymmetric and still has `e_i^2 = -1`, so the
+    /// arithmetic looks right, while `|x y| = |x| |y|` fails by an amount that depends on the
+    /// operands. That is the defect this form removes by construction.
     fn mul(self, rhs: Self) -> Self::Output {
-        let s_res = self.s * rhs.s
-            - self.e1 * rhs.e1
-            - self.e2 * rhs.e2
-            - self.e3 * rhs.e3
-            - self.e4 * rhs.e4
-            - self.e5 * rhs.e5
-            - self.e6 * rhs.e6
-            - self.e7 * rhs.e7;
+        let (a, b) = self.as_quaternion_pair();
+        let (c, d) = rhs.as_quaternion_pair();
 
-        let e1_res = self.s * rhs.e1 + self.e1 * rhs.s + self.e2 * rhs.e3 - self.e3 * rhs.e2
-            + self.e4 * rhs.e5
-            - self.e5 * rhs.e4
-            + self.e6 * rhs.e7
-            - self.e7 * rhs.e6;
+        let left = a * c - d.conjugate() * b;
+        let right = d * a + b * c.conjugate();
 
-        let e2_res = self.s * rhs.e2 + self.e2 * rhs.s + self.e3 * rhs.e1 - self.e1 * rhs.e3
-            + self.e4 * rhs.e6
-            - self.e6 * rhs.e4
-            + self.e7 * rhs.e5
-            - self.e5 * rhs.e7;
-
-        let e3_res = self.s * rhs.e3 + self.e3 * rhs.s + self.e1 * rhs.e2 - self.e2 * rhs.e1
-            + self.e4 * rhs.e7
-            - self.e7 * rhs.e4
-            + self.e5 * rhs.e6
-            - self.e6 * rhs.e5;
-
-        let e4_res = self.s * rhs.e4 + self.e4 * rhs.s - self.e1 * rhs.e5
-            + self.e5 * rhs.e1
-            + self.e2 * rhs.e6
-            - self.e6 * rhs.e2
-            - self.e3 * rhs.e7
-            + self.e7 * rhs.e3;
-
-        let e5_res = self.s * rhs.e5 + self.e5 * rhs.s + self.e1 * rhs.e4
-            - self.e4 * rhs.e1
-            - self.e2 * rhs.e7
-            + self.e7 * rhs.e2
-            - self.e3 * rhs.e6
-            + self.e6 * rhs.e3;
-
-        let e6_res = self.s * rhs.e6 + self.e6 * rhs.s + self.e1 * rhs.e7 - self.e7 * rhs.e1
-            + self.e2 * rhs.e4
-            - self.e4 * rhs.e2
-            + self.e3 * rhs.e5
-            - self.e5 * rhs.e3;
-
-        let e7_res = self.s * rhs.e7 + self.e7 * rhs.s - self.e1 * rhs.e6 + self.e6 * rhs.e1
-            - self.e2 * rhs.e5
-            + self.e5 * rhs.e2
-            + self.e3 * rhs.e4
-            - self.e4 * rhs.e3;
-        Self::new(
-            s_res, e1_res, e2_res, e3_res, e4_res, e5_res, e6_res, e7_res,
-        )
+        Self::from_quaternion_pair(left, right)
     }
 }
 
