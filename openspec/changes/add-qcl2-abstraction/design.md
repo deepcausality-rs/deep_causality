@@ -305,6 +305,22 @@ D2-5 has been violated. The logical attribution query enumerates the fault-set q
 fail and ranks them by residual; because the low-level model is a circuit, entanglement-mediated
 correlations are represented as such rather than as a classical common cause.
 
+*Amended during implementation (2026-09-15).* `τ` enters as a stochastic matrix over outcome
+strings and is lifted into QC as a morphism on the trivial quantum system with one scalar block per
+non-zero entry, the FStoch embedding; a `Channel` with a dense Choi operator would carry nothing
+the blocks do not. The type alignment carries it as a classical output map beside its quantum
+entries, where classical wires otherwise align by the identity. The `DemModel` answers `Io` and
+`Fault` queries: a fault `X` on mechanism `k` is the distribution with `k`'s flip pattern applied
+once more, which is what a Pauli injected at the mechanism's circuit location does to a classical
+record. The decoder abstraction's signature is `Io` plus one such pair per circuit location the
+caller names; a location the model does not represent receives a phantom mechanism, probability
+zero and no flips, so an omitted correlated error fails at its own location with a residual of the
+order of `√2` while every other square carries the nominal mismatch of the order of the omitted
+probability. Attribution is the numeric fault check of the abstraction, every fault against the
+model's nominal prediction, sorted by residual. The memory experiment's record opens `2^5`
+measurement branches on top of the noise branches, so the numeric semantics now drops branches and
+traced operators that are exactly zero, an exact pruning, and the fixture raises the operator cap.
+
 ### D11. Feature placement
 
 `CircuitModel`, `TypeAlignment`, `QuerySignature`, `Abstraction`, `check_naturality`,

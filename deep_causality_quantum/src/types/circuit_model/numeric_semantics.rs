@@ -330,7 +330,15 @@ where
                         data[o * d_in + i] = col[idx];
                     }
                 }
+                // A traced basis state no amplitude reaches gives the zero operator; dropping it
+                // is exact.
+                if data.iter().all(|a| *a == zero) {
+                    continue;
+                }
                 kraus.push(CausalTensor::from_slice(&data, &[d_out, d_in]));
+            }
+            if kraus.is_empty() {
+                continue;
             }
             qc.push(x, y, kraus)?;
         }
@@ -409,6 +417,12 @@ where
             }
             for col in &mut nb.cols {
                 apply_small(col, register.dims, register.strides, positions, k);
+            }
+            // A branch every input maps to zero contributes nothing: an outcome the state cannot
+            // produce. Dropping it is exact and keeps the family within reach of the caps.
+            let zero = Complex::new(R::zero(), R::zero());
+            if nb.cols.iter().all(|c| c.iter().all(|a| *a == zero)) {
+                continue;
             }
             out.push(nb);
         }

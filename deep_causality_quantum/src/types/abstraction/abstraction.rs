@@ -312,12 +312,24 @@ fn tau_with_classical<R>(
 where
     R: RealField + FromPrimitive + Default + core::fmt::Debug,
 {
+    let quantum = alignment.tau_for_side(high_quantum, side, caps)?;
+    if side == AlignmentSide::Output
+        && let Some(map) = alignment.classical_output()
+    {
+        if map.classical_in() != low_classical || map.classical_out() != high_classical {
+            return Err(QuantumError::CalculationError(format!(
+                "the classical output map is {:?} → {:?}, but the square has low {low_classical:?} and high {high_classical:?}",
+                map.classical_in(),
+                map.classical_out()
+            )));
+        }
+        return quantum.tensor(map, caps);
+    }
     if high_classical != low_classical {
         return Err(QuantumError::CalculationError(format!(
             "classical wires differ across the square: high {high_classical:?} against low {low_classical:?}"
         )));
     }
-    let quantum = alignment.tau_for_side(high_quantum, side, caps)?;
     if high_classical.is_empty() {
         return Ok(quantum);
     }

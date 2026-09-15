@@ -11,6 +11,7 @@ rust_library(
     # Sets the qpu feature. Howver, optional deps have to decalred under all_crate_deps below
     crate_features = [
         "alloc",
+        "dem",
         "qcm",
         "qpu",
         "std",
@@ -32,6 +33,7 @@ rust_doc(
     crate = ":deep_causality_quantum",
     crate_features = [
         "alloc",
+        "dem",
         "qcm",
         "qpu",
         "std",
@@ -45,6 +47,7 @@ rust_doc_test(
     crate = ":deep_causality_quantum",
     crate_features = [
         "alloc",
+        "dem",
         "qcm",
         "qpu",
         "std",
@@ -242,6 +245,7 @@ rust_test_suite(
         "tests/types/pipeline/*_tests.rs",
     ]),
     crate_features = [
+        "dem",
         "qcm",
         "qpu",
     ],
@@ -268,6 +272,7 @@ rust_test_suite(
         "tests/types/decision/*_tests.rs",
     ]),
     crate_features = [
+        "dem",
         "qcm",
     ],
     tags = [
@@ -334,6 +339,7 @@ rust_test_suite(
         "tests/types/qcm/*_tests.rs",
     ]),
     crate_features = [
+        "dem",
         "qcm",
     ],
     tags = [

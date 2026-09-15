@@ -133,16 +133,16 @@ A commit message is prepared at each group boundary; nothing is committed by the
 
 ## 7. The decoder as an abstraction
 
-- [ ] 7.1 Add `DemModel::from_graph` over a frozen `CausaloidGraph` under `qcm`, with detectors,
+- [x] 7.1 Add `DemModel::from_graph` over a frozen `CausaloidGraph` under `qcm`, with detectors,
       observables and latent mechanisms, and `induced_dag()`
-- [ ] 7.2 Add the `dem` feature implying `qcm`, `DemModel::from_stim_text` for `error`, `detector`
+- [x] 7.2 Add the `dem` feature implying `qcm`, `DemModel::from_stim_text` for `error`, `detector`
       and `logical_observable` lines, unknown lines refused by name; enable `dem` in `BUILD.bazel`
-- [ ] 7.3 Add `DecoderAbstraction` with `τ` as a caller-supplied channel or stochastic matrix lifted
+- [x] 7.3 Add `DecoderAbstraction` with `τ` as a caller-supplied channel or stochastic matrix lifted
       through the FStoch embedding; no `Decoder` trait
-- [ ] 7.4 Add the logical attribution query over a `FaultSet`, ranked by residual
-- [ ] 7.5 Build the small memory-experiment fixture with one injected correlated two-qubit error
+- [x] 7.4 Add the logical attribution query over a `FaultSet`, ranked by residual
+- [x] 7.5 Build the small memory-experiment fixture with one injected correlated two-qubit error
       and its two `DemModel`s, with and without the mechanism
-- [ ] 7.6 Verify: the omitted mechanism is exposed at the injected location; the complete model
+- [x] 7.6 Verify: the omitted mechanism is exposed at the injected location; the complete model
       passes; attribution ranks the injected location first; the three-line Stim text parses and the
       `repeat` line is refused
 

@@ -83,6 +83,10 @@ pub type AlignmentSpec<R> = (Vec<WireId>, Vec<WireId>, QcMorphism<R>, QcMorphism
 #[derive(Debug, Clone, PartialEq)]
 pub struct TypeAlignment<R: RealField> {
     entries: Vec<AlignmentEntry<R>>,
+    /// The output-side map on classical wires, when the high-level classical outputs are not the
+    /// low-level ones carried as the identity: a stochastic matrix as a morphism on the trivial
+    /// quantum system.
+    classical_output: Option<QcMorphism<R>>,
 }
 
 impl<R> TypeAlignment<R>
@@ -180,7 +184,34 @@ where
                 section,
             });
         }
-        Ok(Self { entries: out })
+        Ok(Self {
+            entries: out,
+            classical_output: None,
+        })
+    }
+
+    /// The alignment with a classical map on the output side: `map` is a morphism on the trivial
+    /// quantum system from the low-level classical outputs to the high-level ones, the FStoch
+    /// embedding of a stochastic matrix. Without it classical outputs align by the identity.
+    ///
+    /// # Errors
+    ///
+    /// [`QuantumError::DimensionMismatch`] unless the map's quantum dimensions are one.
+    pub fn with_classical_output(mut self, map: QcMorphism<R>) -> Result<Self, QuantumError> {
+        if map.d_in() != 1 || map.d_out() != 1 {
+            return Err(QuantumError::DimensionMismatch(format!(
+                "a classical output map lives on the trivial quantum system, not {} → {}",
+                map.d_in(),
+                map.d_out()
+            )));
+        }
+        self.classical_output = Some(map);
+        Ok(self)
+    }
+
+    /// The classical output map, if any.
+    pub fn classical_output(&self) -> Option<&QcMorphism<R>> {
+        self.classical_output.as_ref()
     }
 
     /// The entries.
@@ -268,7 +299,10 @@ where
                 section: e.section.clone(),
             });
         }
-        Ok(Self { entries })
+        Ok(Self {
+            entries,
+            classical_output: self.classical_output.clone(),
+        })
     }
 
     /// `τ` on a list of high-level quantum wires, as a morphism from the aligned low-level wires
