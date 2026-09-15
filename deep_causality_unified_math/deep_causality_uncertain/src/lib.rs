@@ -35,6 +35,67 @@
 //! (`min`, `max`, `1 − p`). One type cannot hold both, and dropping either breaks `Aggregatable`
 //! downstream. As two blanket instances over two distinct local types they are coherent.
 //!
+//! # Ensembles, and how they compose
+//!
+//! `n` draws of one quantity go into a container the **caller** names:
+//! [`Uncertain::materialize`] takes a witness type parameter and hands back `W::Type<R>` — a
+//! `DenseVector<R>`, a rank-1 `CausalTensor<R>`, a `Vec<R>`. This crate declares no ensemble type
+//! of its own and names neither container crate; the ensemble arrives already carrying every
+//! categorical structure its witness provides.
+//!
+//! **Correlated quantities pair by index.** Two ensembles drawn from one session at the *same*
+//! indices — [`Uncertain::materialize_at`] rather than [`Uncertain::materialize`], which advances —
+//! are correlated: draw `i` of one belongs with draw `i` of the other, because both were drawn at
+//! sample `i`. Combine them with a **positional zip**: `Semigroupal::zip_with` on
+//! `ZipDenseVectorWitness` or `ZipTensorWitness`, and `DiagonalTraversable::sequence_zip` to turn a
+//! structure of ensembles inside out. Neither zip witness has `Pure` — the unit of a positional zip
+//! is the infinite repeat — so `sequence_zip` takes its accumulator as a parameter, which for
+//! sampling is right: the ensemble size is declared rather than inferred.
+//!
+//! **`Traversable::sequence` is the hazard, not the tool.** It forms the *cartesian product* across
+//! quantities, which for sampling is almost never what is meant: four quantities at 50 draws each
+//! give 50⁴ = 6 250 000 combinations rather than 50 correlated tuples. Every combination is
+//! individually well-formed, so the count is the only symptom. Reach for the diagonal.
+//!
+//! ## The memory an ensemble costs, and the scalar that changes it
+//!
+//! An ensemble per cell of a field is bounded by *cells × draws × width*, and that product reaches
+//! the ceiling before any one factor looks large. The **width** is the factor the caller chooses,
+//! and it is the reason the scalar being a parameter is worth something here rather than merely
+//! tidy:
+//!
+//! | cells                  | draws | `f64` (8 B) | `f32` (4 B) | `BFloat16` (2 B) |
+//! |------------------------|-------|-------------|-------------|------------------|
+//! | 256³ = 16 777 216      | 1000  | 134 GB      | 67 GB       | **34 GB**        |
+//! | 512³ = 134 217 728     | 1000  | 1.07 TB     | 537 GB      | **268 GB**       |
+//! | 256³                   | 32    | 4.3 GB      | 2.1 GB      | **1.1 GB**       |
+//!
+//! **`BFloat16` is the interesting column, because it trades range for little loss.** It carries 8
+//! exponent bits with f32's bias — so `MIN_POSITIVE` is 2⁻¹²⁶ in *both*, and its `MAX` of 3.3895e38
+//! is within 0.4% of f32's 3.4028e38, short only because the significand is. What it trades is
+//! precision alone: epsilon 7.8125e-3 against f32's 1.1921e-7. So wherever a quantity's **numerical
+//! range** fits inside f32 — which is the usual case, and is what overflow and underflow actually
+//! test — `BFloat16` stands in for `f32` at half the memory and for `f64` at a quarter the memory.
+//!
+//! For an *ensemble* that trade is better still, because the draws already carry sampling noise
+//! much larger than the rounding error. A `BFloat16` half-ulp is a relative error of 2⁻⁸ = 0.39%; the
+//! Monte-Carlo standard error of an `n`-draw mean is 1/√n of the quantity's own spread — 3.2% at
+//! n = 1000, 1.0% at n = 10 000. The two meet at **n = 65 536**. Below that the ensemble's own
+//! statistical error dominates its storage rounding, so carrying the draws at `BFloat16` costs
+//! nothing in terms of error, but cuts memory usage significantly.
+//!
+//! This is about *storing* draws: reducing them is a separate question,
+//! and a left-to-right sum at `BFloat16` stagnates badly enough to return 32.75
+//! for a mean of 100 — which is why every reduction in `deep_causality_stats` sums as a balanced
+//! tree. And a spread estimated from `BFloat16` draws loses more than a mean does, because a
+//! deviation is a difference of similar quantities; measured, `std_dev` of N(100, 5) recovers about
+//! 5.03 and of N(0, 1) about 1.008, so roughly a percent rather than the mean's exactness.
+//!
+//! **The shape that stays bounded** inverts the loop regardless of scalar: materialise the
+//! uncertain *inputs* — a handful of quantities, not a field of them — traverse them diagonally,
+//! and evaluate the field once per draw, reducing as you go. Memory is then one field plus one
+//! accumulator, independent of the ensemble size.
+//!
 //! # Addressed draws
 //!
 //! A draw is a function of three numbers — the [`SampleSession`]'s seed, the sample index, and the
@@ -43,6 +104,7 @@
 
 mod algos;
 mod errors;
+pub mod extensions;
 mod traits;
 mod types;
 mod utils;

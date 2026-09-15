@@ -12,6 +12,7 @@ use deep_causality_ast::ConstTree;
 use deep_causality_rand::RandScalar;
 
 mod uncertain_default;
+mod uncertain_ensemble;
 mod uncertain_map;
 mod uncertain_op_arithmetic;
 mod uncertain_op_comparison;

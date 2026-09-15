@@ -54,6 +54,12 @@ keeps `deep_causality_uncertain` dependent on `haft` alone, so the crate gains n
 `linear` or `tensor` and its dependency tier does not change. This follows the placement already
 settled for `DiagonalTraversable`.
 
+The requirement is about the dependency graph a **consumer links**, so it binds the normal
+dependencies and not the dev ones. The two container crates are dev-dependencies of
+`deep_causality_uncertain`, and have to be: the claim under test is that one signature serves more
+than one witness, and a test instantiating a single witness cannot see it. A dev-dependency reaches
+the test harness and not the library, so nothing downstream links either crate.
+
 #### Scenario: Every rank-1 witness implements it
 
 - **WHEN** `Collectable` is instantiated at `VecWitness`, at `DenseVectorWitness` and at `CausalTensorWitness`
@@ -67,7 +73,8 @@ settled for `DiagonalTraversable`.
 #### Scenario: The uncertain crate does not depend on the container crates
 
 - **WHEN** `deep_causality_uncertain`'s manifest is read after this change
-- **THEN** it names `deep_causality_haft` and names neither `deep_causality_linear` nor `deep_causality_tensor`
+- **THEN** its `[dependencies]` name `deep_causality_haft` and name neither `deep_causality_linear` nor `deep_causality_tensor`, and no file under `src/` names either
+- **AND** the two container crates appear only under `[dev-dependencies]`, where the two-witness test reaches them and a consumer does not
 
 ### Requirement: Ensembles compose by index, and the composition surface says so
 
