@@ -6,12 +6,12 @@
 use deep_causality_haft::{HKT2Unbound, Profunctor};
 use deep_causality_num::lift;
 
-/// The working scalar. A product's price carries it.
-pub type FloatType = f64;
-
 // ============================================================================
 // Domain: Search Filters
 // ============================================================================
+
+/// The working scalar. A product's price carries it.
+pub type FloatType = f64;
 
 fn main() {
     print_header();

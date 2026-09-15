@@ -26,12 +26,6 @@ use deep_causality_topology::{
 };
 use mathematics_examples::effect_helpers::{Process, ProcessWitness, fail, ok};
 
-/// `f64` is the right precision here: `alpha = 0.25` and integer initial data
-/// produce exactly representable binary fractions at every step. Float106
-/// yields no observable gain. Switch to `Float106` only
-/// if you push the scheme near its CFL boundary over many steps.
-pub type FloatType = f64;
-
 const N_VERTICES: usize = 9;
 const N_STEPS: usize = 6;
 // 2 alpha < 1 keeps the 1D explicit scheme stable.
@@ -39,15 +33,20 @@ fn alpha() -> FloatType {
     lift::<FloatType>(0.25)
 }
 
+/// `f64` is the right precision here: `alpha = 0.25` and integer initial data
+/// produce exactly representable binary fractions at every step. Float106
+/// yields no observable gain. Switch to `Float106` only
+/// if you push the scheme near its CFL boundary over many steps.
+pub type FloatType = f64;
+
 fn main() {
-    println!("=== Diffusion on a Manifold: Comonad (space) x Monad (time) ===");
-    println!("Precision: {}\n", core::any::type_name::<FloatType>());
+    print_header();
 
     // Initial bump centered at index 4.
     let mut initial: Vec<FloatType> = vec![lift::<FloatType>(0.0); N_VERTICES];
     initial[4] = lift::<FloatType>(8.0);
     let manifold = build_manifold(initial);
-    println!("t=0 phi: {:?}", shown(&manifold));
+    print_step(0, &shown(&manifold));
 
     let mut process: Process<SimplicialManifold<FloatType, FloatType>> =
         ProcessWitness::pure(manifold);
@@ -59,27 +58,16 @@ fn main() {
         }
         // Peek at the current value without consuming the chain.
         if let Some(m) = process.value() {
-            println!("t={} phi: {:?}", step, shown(m));
+            print_step(step, &shown(m));
         }
     }
 
-    println!();
-    match process.error() {
-        Some(e) => println!("Diffusion errored: {}", e),
-        None => {
-            let final_m = process.value_cloned().unwrap();
-            let total: FloatType = snapshot(&final_m)
-                .into_iter()
-                .fold(lift::<FloatType>(0.0), |acc, v| acc + v);
-            println!(
-                "Total mass conserved (Neumann boundaries): sum phi = {}",
-                total
-            );
-            println!("Expected initial mass: 8.0");
-        }
-    }
-    println!("\nSpatial step came from `extend`. Temporal step came from `bind`.");
-    println!("Both abstractions act on the same value at different layers.");
+    let total = process.value_cloned().map(|final_m| {
+        snapshot(&final_m)
+            .into_iter()
+            .fold(lift::<FloatType>(0.0), |acc, v| acc + v)
+    });
+    print_outcome(process.error().map(|e| e.to_string()), total);
 }
 
 fn build_manifold(vertex_values: Vec<FloatType>) -> SimplicialManifold<FloatType, FloatType> {
@@ -96,13 +84,15 @@ fn build_manifold(vertex_values: Vec<FloatType>) -> SimplicialManifold<FloatType
         triplets.push((e, e, -1));
         triplets.push((e + 1, e, 1));
     }
-    let d1 = CsrMatrix::from_triplets(N_VERTICES, n_edges, &triplets).unwrap();
+    let d1 = CsrMatrix::from_triplets(N_VERTICES, n_edges, &triplets)
+        .expect("two triplets per edge, all in range");
 
     let complex = SimplicialComplex::new(vec![skeleton_0, skeleton_1], vec![d1], vec![], vec![]);
 
     let mut data = vertex_values;
     data.extend(std::iter::repeat_n(lift::<FloatType>(0.0), n_edges));
-    let tensor = CausalTensor::new(data, vec![N_VERTICES + n_edges]).unwrap();
+    let tensor = CausalTensor::new(data, vec![N_VERTICES + n_edges])
+        .expect("one entry per vertex and per edge");
     Manifold::new(complex, tensor, 0).expect("manifold")
 }
 
@@ -155,4 +145,35 @@ fn snapshot(m: &SimplicialManifold<FloatType, FloatType>) -> Vec<FloatType> {
 /// The display boundary: `f64` appears here and nowhere else.
 fn shown(m: &SimplicialManifold<FloatType, FloatType>) -> Vec<f64> {
     snapshot(m).into_iter().map(lower).collect()
+}
+
+// -----------------------------------------------------------------------------------------
+// Printing
+// -----------------------------------------------------------------------------------------
+
+fn print_header() {
+    println!("=== Diffusion on a Manifold: Comonad (space) x Monad (time) ===");
+    println!("Precision: {}\n", core::any::type_name::<FloatType>());
+}
+
+fn print_step(step: usize, phi: &[f64]) {
+    println!("t={step} phi: {phi:?}");
+}
+
+/// The display boundary: `f64` appears here and nowhere else.
+fn print_outcome(error: Option<String>, total: Option<FloatType>) {
+    println!();
+    match error {
+        Some(e) => println!("Diffusion errored: {e}"),
+        None => {
+            let sum = total.expect("a chain with no error carries a value");
+            println!(
+                "Total mass conserved (Neumann boundaries): sum phi = {}",
+                lower(sum)
+            );
+            println!("Expected initial mass: 8.0");
+        }
+    }
+    println!("\nSpatial step came from `extend`. Temporal step came from `bind`.");
+    println!("Both abstractions act on the same value at different layers.");
 }

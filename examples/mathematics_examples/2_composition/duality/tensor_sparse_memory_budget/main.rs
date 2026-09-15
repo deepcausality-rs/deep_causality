@@ -39,58 +39,57 @@
 //! let a sparse matrix reach a tensor at all.
 
 use deep_causality_linear::CsrMatrix;
+use deep_causality_num::{lift, lower};
 use deep_causality_tensor::{CausalTensor, ToDenseTensor};
 
-type F = f64;
+/// Short alias used by the conversion helpers below.
+type F = FloatType;
+
+/// The working scalar. Every adjacency weight carries it, dense or sparse.
+pub type FloatType = f64;
 
 fn main() {
-    println!("=== Tensor / Sparse Iso Showcase ===\n");
-
     #[rustfmt::skip]
-    let dense_data: Vec<F> = vec![
+    let dense_data: Vec<FloatType> = [
         2.0, 1.0, 0.0, 0.0, 0.0, 0.0,
         1.0, 2.0, 1.0, 0.0, 0.0, 0.0,
         0.0, 1.0, 2.0, 1.0, 0.0, 0.0,
         0.0, 0.0, 1.0, 2.0, 1.0, 0.0,
         0.0, 0.0, 0.0, 1.0, 2.0, 1.0,
         0.0, 0.0, 0.0, 0.0, 1.0, 2.0,
-    ];
-    let dense = CausalTensor::new(dense_data, vec![6, 6]).unwrap();
+    ].iter().map(|&x| lift::<FloatType>(x)).collect();
+    let dense = CausalTensor::new(dense_data, vec![6, 6]).expect("36 entries in a 6x6 shape");
+    print_input(&dense);
 
-    println!("Dense input (6x6):");
-    print_dense(&dense);
-
-    println!("\n--- BEFORE: hand-rolled conversion helpers ---");
+    // The same pipeline twice: hand-rolled conversions, then the iso.
     let (dense_back_before, row_sums_before) = process_manual(dense.clone());
-    println!("  row sums: {:?}", row_sums_before);
-    println!("  output shape: {:?}", dense_back_before.shape());
+    print_path(
+        "\n--- BEFORE: hand-rolled conversion helpers ---",
+        &row_sums_before,
+        dense_back_before.shape(),
+    );
 
-    println!("\n--- AFTER: iso-based conversion ---");
     let (dense_back_after, row_sums_after) = process_isomorphism(dense);
-    println!("  row sums: {:?}", row_sums_after);
-    println!("  output shape: {:?}", dense_back_after.shape());
+    print_path(
+        "\n--- AFTER: iso-based conversion ---",
+        &row_sums_after,
+        dense_back_after.shape(),
+    );
 
-    let drift: F = dense_back_before
+    let drift: FloatType = dense_back_before
         .as_slice()
         .iter()
         .zip(dense_back_after.as_slice().iter())
         .map(|(a, b)| (a - b).abs())
         .sum();
-    println!("\nL1 drift between BEFORE and AFTER outputs: {:e}", drift);
-    assert!(drift < 1e-12, "iso path diverged from manual path");
+    print_drift(drift);
+    assert!(
+        drift < lift::<FloatType>(1e-12),
+        "iso path diverged from manual path"
+    );
     assert_eq!(row_sums_before, row_sums_after);
-    println!("Both paths produce the same result.\n");
 
-    println!("--- LoC accounting ---");
-    println!("BEFORE: process_manual       =  3 lines");
-    println!("        manual_tensor_to_csr = 14 lines (helper below)");
-    println!("        manual_csr_to_tensor = 11 lines (helper below)");
-    println!("        ----------------------------------");
-    println!("        total                = 28 lines");
-    println!();
-    println!("AFTER:  process_isomorphism  =  3 lines");
-    println!("        ----------------------------------");
-    println!("        total                =  3 lines");
+    print_loc_accounting();
 }
 
 // =============================================================================
@@ -98,7 +97,7 @@ fn main() {
 // =============================================================================
 
 fn process_isomorphism(dense: CausalTensor<F>) -> (CausalTensor<F>, Vec<F>) {
-    let sparse: CsrMatrix<F> = CsrMatrix::try_from(dense).unwrap();
+    let sparse: CsrMatrix<F> = CsrMatrix::try_from(dense).expect("a rank-2 tensor is a matrix");
     let row_sums = row_sums(&sparse);
     (sparse.to_dense(), row_sums)
 }
@@ -147,7 +146,7 @@ fn manual_tensor_to_csr(tensor: &CausalTensor<F>) -> CsrMatrix<F> {
             }
         }
     }
-    CsrMatrix::from_triplets(rows, cols, &triplets).unwrap()
+    CsrMatrix::from_triplets(rows, cols, &triplets).expect("triplets built from the shape")
 }
 
 fn manual_csr_to_tensor(sparse: &CsrMatrix<F>) -> CausalTensor<F> {
@@ -161,7 +160,7 @@ fn manual_csr_to_tensor(sparse: &CsrMatrix<F>) -> CausalTensor<F> {
             data[r * cols + col_idx[k]] = vals[k];
         }
     }
-    CausalTensor::new(data, vec![rows, cols]).unwrap()
+    CausalTensor::new(data, vec![rows, cols]).expect("rows*cols entries")
 }
 
 // =============================================================================
@@ -179,4 +178,46 @@ fn print_dense(t: &CausalTensor<F>) {
             .collect();
         println!("  [{}]", row.join(" "));
     }
+}
+
+// -----------------------------------------------------------------------------------------
+// Printing
+// -----------------------------------------------------------------------------------------
+
+fn print_input(dense: &CausalTensor<FloatType>) {
+    println!("=== Tensor / Sparse Iso Showcase ===\n");
+    println!("Dense input (6x6):");
+    print_dense(dense);
+}
+
+fn print_path(title: &str, row_sums: &[FloatType], shape: &[usize]) {
+    println!("{title}");
+    println!("  row sums: {:?}", shown(row_sums));
+    println!("  output shape: {shape:?}");
+}
+
+/// The display boundary: `f64` appears here and nowhere else.
+fn print_drift(drift: FloatType) {
+    println!(
+        "\nL1 drift between BEFORE and AFTER outputs: {:e}",
+        lower(drift)
+    );
+    println!("Both paths produce the same result.\n");
+}
+
+fn print_loc_accounting() {
+    println!("--- LoC accounting ---");
+    println!("BEFORE: process_manual       =  3 lines");
+    println!("        manual_tensor_to_csr = 14 lines (helper below)");
+    println!("        manual_csr_to_tensor = 11 lines (helper below)");
+    println!("        ----------------------------------");
+    println!("        total                = 28 lines");
+    println!();
+    println!("AFTER:  process_isomorphism  =  3 lines");
+    println!("        ----------------------------------");
+    println!("        total                =  3 lines");
+}
+
+fn shown(xs: &[FloatType]) -> Vec<f64> {
+    xs.iter().map(|&x| lower(x)).collect()
 }

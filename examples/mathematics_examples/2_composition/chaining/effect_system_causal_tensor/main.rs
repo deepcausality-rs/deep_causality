@@ -6,10 +6,10 @@
 use deep_causality_haft::utils_tests::{MyCustomEffectType, MyEffect, MyMonadEffect3};
 use deep_causality_haft::{Effect3, HKT3, MonadEffect3};
 use deep_causality_tensor::CausalTensor;
+use std::fmt::Debug;
 
 fn main() {
-    println!("--- Functional Composition with CausalTensor and Effect System ---");
-    println!();
+    print_header();
 
     // 1. Define the specific effect type we'll be working with
     // This effect type will wrap a CausalTensor<i32>
@@ -19,17 +19,14 @@ fn main() {
     >>::Type<T>;
 
     // Initial CausalTensor
-    let initial_tensor = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).unwrap();
-    println!("Initial CausalTensor: {:?}", initial_tensor);
+    let initial_tensor =
+        CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3]).expect("six elements in a 2x3 shape");
+    let shown_tensor = initial_tensor.clone();
 
     // 2. Start with a pure value, lifting the CausalTensor into the effect context
     let initial_effect: MyEffectTensorType<CausalTensor<i32>> =
         MyMonadEffect3::pure(initial_tensor);
-    println!(
-        "Initial effect (pure CausalTensor): {:?}",
-        initial_effect.value
-    );
-    println!();
+    print_initial(&shown_tensor, &initial_effect.value);
 
     // 3. Define a collection of step functions
     // Each function takes an effectful CausalTensor<i32> and returns a new effectful CausalTensor<i32>
@@ -49,7 +46,10 @@ fn main() {
         let len = new_data.len();
         warnings.push("Trace: Executing Step 1 (Filter & Double Evens)".to_string());
         MyCustomEffectType {
-            value: Some(CausalTensor::new(new_data, vec![len]).unwrap()), // Result is 1D after filtering/flattening
+            value: Some(
+                CausalTensor::new(new_data, vec![len])
+                    .expect("len elements in a rank-1 shape of len"),
+            ), // Result is 1D after filtering/flattening
             error: None,
             warnings,
         }
@@ -65,7 +65,10 @@ fn main() {
         ]);
 
         MyCustomEffectType {
-            value: Some(CausalTensor::new(new_data, vec![len]).unwrap()),
+            value: Some(
+                CausalTensor::new(new_data, vec![len])
+                    .expect("len elements in a rank-1 shape of len"),
+            ),
             error: None,
             warnings,
         }
@@ -97,31 +100,69 @@ fn main() {
         let len = new_data.len();
         warnings.push("Trace: Executing Step 3 (Conditional Error & Multiply by 3)".to_string());
         MyCustomEffectType {
-            value: Some(CausalTensor::new(new_data, vec![len]).unwrap()),
+            value: Some(
+                CausalTensor::new(new_data, vec![len])
+                    .expect("len elements in a rank-1 shape of len"),
+            ),
             error: None,
             warnings,
         }
     };
 
     // 4. Chain Operations using Monad::bind
-    println!("Processing steps...");
+    print_processing();
     let final_effect = MyMonadEffect3::bind(initial_effect, step1);
     let final_effect = MyMonadEffect3::bind(final_effect, step2);
     let final_effect = MyMonadEffect3::bind(final_effect, step3);
 
-    println!();
-    println!("--- Final Result ---");
-    println!("Final CausalTensor: {:?}", final_effect.value);
-    println!("Error: {:?}", final_effect.error);
-    println!("Warnings: {:?}", final_effect.warnings);
+    print_result(
+        &final_effect.value,
+        &final_effect.error,
+        &final_effect.warnings,
+    );
 
     assert_eq!(
-        final_effect.value.as_ref().unwrap().as_slice(),
+        final_effect
+            .value
+            .as_ref()
+            .expect("the chain carries a value")
+            .as_slice(),
         &[27, 39, 51]
     );
     assert!(final_effect.error.is_none());
     assert!(!final_effect.warnings.is_empty());
 
+    print_footer();
+}
+
+// -----------------------------------------------------------------------------------------
+// Printing
+// -----------------------------------------------------------------------------------------
+
+fn print_header() {
+    println!("--- Functional Composition with CausalTensor and Effect System ---");
+    println!();
+}
+
+fn print_initial<T: Debug, E: Debug>(tensor: &T, lifted: &E) {
+    println!("Initial CausalTensor: {tensor:?}");
+    println!("Initial effect (pure CausalTensor): {lifted:?}");
+    println!();
+}
+
+fn print_processing() {
+    println!("Processing steps...");
+}
+
+fn print_result<V: Debug, E: Debug, W: Debug>(value: &V, error: &E, warnings: &W) {
+    println!();
+    println!("--- Final Result ---");
+    println!("Final CausalTensor: {value:?}");
+    println!("Error: {error:?}");
+    println!("Warnings: {warnings:?}");
+}
+
+fn print_footer() {
     println!(
         "
 Example finished successfully!"

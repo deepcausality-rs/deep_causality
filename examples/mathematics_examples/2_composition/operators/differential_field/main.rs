@@ -14,7 +14,7 @@ use deep_causality_topology::{Manifold, PointCloud, ReggeGeometry};
 pub type FloatType = f64;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("=== Differential Field Example: Heat Equation ===\n");
+    print_header();
 
     // ------------------------------------------------------------------------
     // ENGINEERING VALUE:
@@ -65,15 +65,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let steps = 50;
 
     let rate = move |f: &Field| -> Field {
-        let metric =
-            ReggeGeometry::new(CausalTensor::new(vec![one; num_edges], vec![num_edges]).unwrap());
+        let metric = ReggeGeometry::new(
+            CausalTensor::new(vec![one; num_edges], vec![num_edges]).expect("one entry per edge"),
+        );
         let manifold = Manifold::with_metric(
             complex.clone(),
-            CausalTensor::new(f.0.clone(), vec![num_simplices]).unwrap(),
+            CausalTensor::new(f.0.clone(), vec![num_simplices]).expect("one entry per simplex"),
             Some(metric),
             0,
         )
-        .unwrap();
+        .expect("the complex and its data agree in length");
         let delta = manifold.laplacian(0);
         let delta = delta.as_slice();
         let mut out = vec![zero; num_simplices];
@@ -84,20 +85,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     let stepper = Euler::new(dt, rate);
 
-    println!("Starting Diffusion...");
+    print_start();
 
     let mut field = Field(initial_data);
     for i in 0..=steps {
         field = stepper.iterate_n(field, 1);
         if i % 10 == 0 {
-            // The display boundary: `f64` appears here and nowhere else.
-            println!(
-                "Step {:2}: [{:.2}, {:.2}, {:.2}]",
-                i,
-                lower(field.0[0]),
-                lower(field.0[1]),
-                lower(field.0[2])
-            );
+            print_step(i, &field.0[0..3]);
         }
     }
 
@@ -105,20 +99,48 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // In a closed system, heat spreads but sum(u_i * Mass_i) should be constant.
     // Or simply, temperature equilibrates.
     let final_v: &[FloatType] = &field.0[0..3];
+    let equilibrated =
+        Real::abs(final_v[0] - final_v[1]) < one && Real::abs(final_v[0] - final_v[2]) < one;
+    print_outcome(final_v, equilibrated);
+
+    Ok(())
+}
+
+// -----------------------------------------------------------------------------------------
+// Printing
+// -----------------------------------------------------------------------------------------
+
+fn print_header() {
+    println!("=== Differential Field Example: Heat Equation ===\n");
+}
+
+fn print_start() {
+    println!("Starting Diffusion...");
+}
+
+/// The display boundary: `f64` appears here and nowhere else.
+fn print_step(step: usize, v: &[FloatType]) {
+    println!(
+        "Step {:2}: [{:.2}, {:.2}, {:.2}]",
+        step,
+        lower(v[0]),
+        lower(v[1]),
+        lower(v[2])
+    );
+}
+
+fn print_outcome(v: &[FloatType], equilibrated: bool) {
     println!(
         "Final:   [{:.2}, {:.2}, {:.2}]",
-        lower(final_v[0]),
-        lower(final_v[1]),
-        lower(final_v[2])
+        lower(v[0]),
+        lower(v[1]),
+        lower(v[2])
     );
-
-    if Real::abs(final_v[0] - final_v[1]) < one && Real::abs(final_v[0] - final_v[2]) < one {
+    if equilibrated {
         println!(">> SUCCESS: Heat diffused to equilibrium.");
     } else {
         println!(">> WARNING: Non-equilibrium state.");
     }
-
-    Ok(())
 }
 
 /// The discrete field (one value per simplex), wrapped so it can be the state of an `Euler`

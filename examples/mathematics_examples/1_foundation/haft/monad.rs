@@ -8,12 +8,12 @@ use deep_causality_haft::{OptionWitness, ResultUnboundWitness, ResultWitness};
 use deep_causality_num::{lift, lift_u64};
 use std::fmt::Debug;
 
-/// The working scalar. The timeout conversion below lands in it.
-pub type FloatType = f64;
-
 // ============================================================================
 // Domain Types: Configuration System
 // ============================================================================
+
+/// The working scalar. The timeout conversion below lands in it.
+pub type FloatType = f64;
 
 fn main() {
     print_header();

@@ -54,15 +54,16 @@ use deep_causality_multivector::{CausalMultiField, MultiFieldCarrier};
 use deep_causality_num::{Lift, lift, lower};
 use deep_causality_tensor::CausalTensor;
 
-/// can be f32, f64, or f106;
-type FloatType = f32;
-
 // =============================================================================
 // Pipeline
 // =============================================================================
 
+/// can be f32, f64, or f106;
+/// The working scalar. Every element of the underlying tensor carries it.
+pub type FloatType = f32;
+
 fn main() {
-    println!("=== Multifield Data-Pipeline Iso Showcase ===\n");
+    print_header();
 
     // Grid parameters: 2x2x2 spatial grid, Cl(2,0) metric (matrix_dim = 4),
     // so the underlying tensor shape is [2, 2, 2, 4, 4] = 128 elements.
@@ -81,88 +82,56 @@ fn main() {
     let probe = CausalMultiField::<FloatType>::zeros(grid_shape, metric, dx);
     let (probe_tensor, _, _, _): MultiFieldCarrier<FloatType> = probe.into();
     let underlying_shape: Vec<usize> = probe_tensor.shape().to_vec();
-    println!("Discovered underlying tensor shape: {:?}", underlying_shape);
-    println!(
-        "(grid {:?} + metric.dim()={} → matrix slot {}×{})",
-        grid_shape, 2, underlying_shape[3], underlying_shape[4]
-    );
+    print_shape(&underlying_shape, grid_shape);
 
     // ---------------------------------------------------------------------
     // Stage 1: LOAD — simulate data arriving from an external source.
     // The pipeline owns the Vec<f32> and the metadata. It does NOT have
     // multivector-internal access.
     // ---------------------------------------------------------------------
-    println!("\n--- Stage 1: LOAD (build CausalMultiField from external tensor) ---");
-
     let element_count: usize = underlying_shape.iter().product();
     // Mock "loaded" data: a ramp from 0.0 to 1.0 across the tensor's flat
     // index space. Stands in for whatever a real loader would return.
     let raw: Vec<FloatType> = (0..element_count)
         .map(|i| i.lift::<FloatType>() / element_count.lift::<FloatType>())
         .collect();
-    let tensor_in = CausalTensor::new(raw, underlying_shape.clone()).unwrap();
-    println!(
-        "  loaded {} elements as CausalTensor (sample: tensor.data()[0..4] = {:?})",
-        element_count,
-        &tensor_in.data()[0..4]
-    );
+    let tensor_in = CausalTensor::new(raw, underlying_shape.clone())
+        .expect("the element count matches the discovered shape");
+    print_load_sample(element_count, &tensor_in.data()[0..4]);
 
     let field = load_multifield(tensor_in, metric, dx, grid_shape);
-    println!(
-        "  assembled CausalMultiField: metric={:?}, dx={:?}, shape={:?}",
-        field.metric(),
-        field.dx(),
-        field.shape()
-    );
+    print_assembled(field.metric(), field.dx(), field.shape());
 
     // ---------------------------------------------------------------------
     // Stage 2: TRANSFORM — apply a generic tensor-level operation through
     // the iso, preserving the multifield's metadata.
     // ---------------------------------------------------------------------
-    println!("\n--- Stage 2: TRANSFORM (apply tensor-level op via iso) ---");
-
     // Element-wise scaling. Any tensor function with this signature plugs
     // straight in — that's the value of the generic helper.
     let scaled = map_underlying_tensor(field, |t| lift::<FloatType>(2.0) * &t);
-    println!(
-        "  scaled the underlying tensor by 2.0; multifield metadata preserved: \
-         metric={:?}, dx={:?}, shape={:?}",
-        scaled.metric(),
-        scaled.dx(),
-        scaled.shape()
-    );
+    print_transform_scaled(scaled.metric(), scaled.dx(), scaled.shape());
 
     // Chain a second transform. Same generic helper.
     let shifted = map_underlying_tensor(scaled, |t| lift::<FloatType>(0.5) + &t);
-    println!(
-        "  added 0.5 element-wise; multifield metadata still preserved: \
-         metric={:?}, dx={:?}, shape={:?}",
-        shifted.metric(),
-        shifted.dx(),
-        shifted.shape()
-    );
+    print_transform_shifted(shifted.metric(), shifted.dx(), shifted.shape());
 
     // ---------------------------------------------------------------------
     // Stage 3: EXPORT — extract the final tensor for a downstream
     // consumer (visualization, archival, serialization, etc).
     // ---------------------------------------------------------------------
-    println!("\n--- Stage 3: EXPORT (extract tensor for downstream pipeline) ---");
-
     let (final_tensor, out_metric, out_dx, out_shape) = export_multifield(shifted);
-    println!(
-        "  extracted CausalTensor: shape={:?}, first 4 values: {:?}",
+    print_export(
         final_tensor.shape(),
-        &final_tensor.data()[0..4]
-    );
-    println!(
-        "  carrier metadata: metric={:?}, dx={:?}, shape={:?}",
-        out_metric, out_dx, out_shape
+        &final_tensor.data()[0..4],
+        out_metric,
+        &out_dx,
+        &out_shape,
     );
 
     // ---------------------------------------------------------------------
     // Sanity checks: data went through the pipeline correctly.
     // ---------------------------------------------------------------------
-    println!("\n--- Sanity checks ---");
+    print_checks_header();
 
     // First element: input was 0.0, scaled by 2.0 → 0.0, plus 0.5 → 0.5.
     let first = final_tensor.data()[0];
@@ -177,11 +146,7 @@ fn main() {
         lower(first),
         lower(expected_first)
     );
-    println!(
-        "  first element OK: {} ≈ {}",
-        lower(first),
-        lower(expected_first)
-    );
+    print_check("first element OK: ", first, expected_first);
 
     // Last element: input was (n-1)/n ≈ 0.992..., scaled by 2.0 ≈ 1.984...,
     // plus 0.5 ≈ 2.484...
@@ -198,21 +163,85 @@ fn main() {
         lower(last),
         lower(expected_last)
     );
-    println!(
-        "  last element OK:  {} ≈ {}",
-        lower(last),
-        lower(expected_last)
-    );
+    print_check("last element OK:  ", last, expected_last);
 
     // Metadata preserved through the pipeline.
     assert_eq!(out_metric, metric, "metric was not preserved");
     assert_eq!(out_dx, dx, "grid spacing was not preserved");
     assert_eq!(out_shape, grid_shape, "grid shape was not preserved");
-    println!("  metadata preserved end-to-end.\n");
+    print_metadata_ok();
 
-    // ---------------------------------------------------------------------
-    // Why this matters
-    // ---------------------------------------------------------------------
+    print_why_it_matters();
+}
+
+// -----------------------------------------------------------------------------------------
+// Printing
+// -----------------------------------------------------------------------------------------
+
+fn print_header() {
+    println!("=== Multifield Data-Pipeline Iso Showcase ===\n");
+}
+
+fn print_shape(underlying: &[usize], grid: [usize; 3]) {
+    println!("Discovered underlying tensor shape: {underlying:?}");
+    println!(
+        "(grid {:?} + metric.dim()={} → matrix slot {}×{})",
+        grid, 2, underlying[3], underlying[4]
+    );
+}
+
+fn print_load_sample(element_count: usize, sample: &[FloatType]) {
+    println!("\n--- Stage 1: LOAD (build CausalMultiField from external tensor) ---");
+    println!(
+        "  loaded {element_count} elements as CausalTensor (sample: tensor.data()[0..4] = {sample:?})"
+    );
+}
+
+fn print_assembled(metric: Metric, dx: &[FloatType; 3], shape: &[usize; 3]) {
+    println!("  assembled CausalMultiField: metric={metric:?}, dx={dx:?}, shape={shape:?}");
+}
+
+fn print_transform_scaled(metric: Metric, dx: &[FloatType; 3], shape: &[usize; 3]) {
+    println!("\n--- Stage 2: TRANSFORM (apply tensor-level op via iso) ---");
+    println!(
+        "  scaled the underlying tensor by 2.0; multifield metadata preserved: \
+         metric={metric:?}, dx={dx:?}, shape={shape:?}"
+    );
+}
+
+fn print_transform_shifted(metric: Metric, dx: &[FloatType; 3], shape: &[usize; 3]) {
+    println!(
+        "  added 0.5 element-wise; multifield metadata still preserved: \
+         metric={metric:?}, dx={dx:?}, shape={shape:?}"
+    );
+}
+
+fn print_export(
+    shape: &[usize],
+    sample: &[FloatType],
+    metric: Metric,
+    dx: &[FloatType; 3],
+    grid: &[usize; 3],
+) {
+    println!("\n--- Stage 3: EXPORT (extract tensor for downstream pipeline) ---");
+    println!("  extracted CausalTensor: shape={shape:?}, first 4 values: {sample:?}");
+    println!("  carrier metadata: metric={metric:?}, dx={dx:?}, shape={grid:?}");
+}
+
+fn print_checks_header() {
+    println!("\n--- Sanity checks ---");
+}
+
+/// The display boundary: `f64` appears here and nowhere else.
+fn print_check(label: &str, actual: FloatType, expected: FloatType) {
+    println!("  {label}{} ≈ {}", lower(actual), lower(expected));
+}
+
+fn print_metadata_ok() {
+    println!("  metadata preserved end-to-end.\n");
+}
+
+fn print_why_it_matters() {
     println!("--- What the iso unlocked ---");
     println!("- `load_multifield(...)`     could not exist outside the multivector crate");
     println!("  without the iso: no public constructor takes (tensor, metric, dx, shape).");

@@ -7,9 +7,6 @@ use deep_causality_haft::{Applicative, Functor, Pure};
 use deep_causality_multivector::{CausalMultiVector, CausalMultiVectorWitness, Metric};
 use deep_causality_num::{lift, lower};
 
-/// The working scalar. Every coefficient of every multivector below carries it.
-pub type FloatType = f64;
-
 // -----------------------------------------------------------------------------------------
 // ENGINEERING VALUE:
 // Modern software engineering relies on composable abstractions. Higher-Kinded Types (HKT)
@@ -29,6 +26,9 @@ pub type FloatType = f64;
 // This enables "Algebraic Programming" where complex physics pipelines are built from
 // small, verifiable, and reusable functional blocks.
 // -----------------------------------------------------------------------------------------
+
+/// The working scalar. Every coefficient of every multivector below carries it.
+pub type FloatType = f64;
 
 fn main() {
     // 1. Functor: mapping over coefficients leaves the geometry alone.

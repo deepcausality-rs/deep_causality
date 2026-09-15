@@ -6,9 +6,6 @@
 use deep_causality_haft::{Foldable, VecWitness};
 use deep_causality_num::{lift, lift_u32, lower};
 
-/// The working scalar. Money is the quantity this example reduces, so it carries the alias.
-pub type FloatType = f64;
-
 // ============================================================================
 // Domain: E-Commerce Order Processing
 //
@@ -17,6 +14,9 @@ pub type FloatType = f64;
 // a concatenation. `fold` takes the seed and the step, and the witness supplies
 // the traversal.
 // ============================================================================
+
+/// The working scalar. Money is the quantity this example reduces, so it carries the alias.
+pub type FloatType = f64;
 
 fn main() {
     print_header();

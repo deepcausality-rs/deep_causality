@@ -13,7 +13,7 @@ use deep_causality_topology::{Graph, GraphWitness};
 pub type FloatType = f64;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("=== HKT Graph Convolution (GNN) Example ===\n");
+    print_header();
 
     // ------------------------------------------------------------------------
     // ENGINEERING VALUE:
@@ -57,8 +57,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     graph.add_edge(3, 0)?;
     graph.add_edge(1, 3)?;
 
-    println!("--- Initial State ---");
-    print_graph_state(&graph);
+    print_stage("--- Initial State ---", &graph);
 
     // 2. Define the Convolution Kernel (The "Local Rule")
     // This function takes a "View" of the graph focused at a specific node.
@@ -92,14 +91,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 3. Apply Convolution (Extend)
     // This applies the kernel to EVERY node automatically.
-    println!("\n--- Step 1: Diffusion (Extend) ---");
     let step1_graph = GraphWitness::extend(&graph, diffusion_kernel);
-    print_graph_state(&step1_graph);
+    print_stage("\n--- Step 1: Diffusion (Extend) ---", &step1_graph);
 
     // 4. Apply Activation / Normalization (Functor)
     // Apply a ReLU-like activation or just scale it.
     // Let's say we want to amplify weak signals: if x < 1.0 { 0.0 } else { x * 1.1 }
-    println!("\n--- Step 2: Activation (Functor) ---");
     let threshold = lift::<FloatType>(0.1);
     let step2_graph = GraphWitness::fmap(step1_graph, move |x| {
         if x < threshold {
@@ -108,14 +105,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             x
         }
     });
-    print_graph_state(&step2_graph);
+    print_stage("\n--- Step 2: Activation (Functor) ---", &step2_graph);
 
     // 5. Another Diffusion Step
-    println!("\n--- Step 3: Diffusion (Extend) ---");
     let step3_graph = GraphWitness::extend(&step2_graph, diffusion_kernel);
-    print_graph_state(&step3_graph);
+    print_stage("\n--- Step 3: Diffusion (Extend) ---", &step3_graph);
 
     Ok(())
+}
+
+// -----------------------------------------------------------------------------------------
+// Printing
+// -----------------------------------------------------------------------------------------
+
+fn print_header() {
+    println!("=== HKT Graph Convolution (GNN) Example ===\n");
+}
+
+fn print_stage(title: &str, g: &Graph<FloatType>) {
+    println!("{title}");
+    print_graph_state(g);
 }
 
 fn print_graph_state(g: &Graph<FloatType>) {

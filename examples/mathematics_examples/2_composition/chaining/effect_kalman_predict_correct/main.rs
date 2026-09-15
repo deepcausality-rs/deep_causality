@@ -24,22 +24,21 @@ use deep_causality_metric::Metric;
 use deep_causality_multivector::CausalMultiVector;
 use deep_causality_num::lift;
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
-use mathematics_examples::effect_helpers::{Process, ProcessWitness, fail, ok, print_log};
+use mathematics_examples::effect_helpers::{Process, ProcessWitness, StepLog, fail, ok, print_log};
 
 /// `f64` is the right precision here: only two rotation steps, not a long
 /// chain. Float106 yields no observable gain.
 pub type FloatType = f64;
 
 fn main() {
-    println!("=== Predict / Correct / Verify Inside the Causal Monad ===");
-    println!("Precision: {}\n", core::any::type_name::<FloatType>());
+    print_header();
 
     let initial = CausalTensor::new(
         vec![lift::<FloatType>(1.0), lift::<FloatType>(0.0)],
         vec![2],
     )
-    .unwrap();
-    println!("Initial state x = {:?}\n", initial.as_slice());
+    .expect("two components in a rank-1 shape of 2");
+    print_initial(initial.as_slice());
 
     // predict -> correct -> verify, threaded through one monadic chain. The
     // value stays a `CausalTensor`, but predict uses a tensor matrix-multiply
@@ -50,16 +49,11 @@ fn main() {
         .bind(|v, _, _| correct(v.into_value().expect("predicted state")))
         .bind(|v, _, _| verify(v.into_value().expect("corrected state")));
 
-    println!("Chained log:");
-    print_log(result.logs());
-
-    match result.error() {
-        Some(e) => println!("\nPipeline errored: {}", e),
-        None => {
-            let final_state = result.value_cloned().unwrap();
-            println!("\nFinal state: {:?}", final_state.as_slice());
-        }
-    }
+    print_chain_log(result.logs());
+    print_outcome(
+        result.error().map(|e| e.to_string()),
+        result.value_cloned().as_ref().map(|t| t.as_slice()),
+    );
 }
 
 fn deg_to_rad(deg: FloatType) -> FloatType {
@@ -69,7 +63,7 @@ fn deg_to_rad(deg: FloatType) -> FloatType {
 fn rotation_matrix_2d(theta: FloatType) -> CausalTensor<FloatType> {
     let c = theta.cos();
     let s = theta.sin();
-    CausalTensor::new(vec![c, -s, s, c], vec![2, 2]).unwrap()
+    CausalTensor::new(vec![c, -s, s, c], vec![2, 2]).expect("four components in a 2x2 shape")
 }
 
 fn predict(state: CausalTensor<FloatType>) -> Process<CausalTensor<FloatType>> {
@@ -113,4 +107,32 @@ fn verify(state: CausalTensor<FloatType>) -> Process<CausalTensor<FloatType>> {
         return fail("verify: NaN detected");
     }
     ok(state, "verify: state is finite")
+}
+
+// -----------------------------------------------------------------------------------------
+// Printing
+// -----------------------------------------------------------------------------------------
+
+fn print_header() {
+    println!("=== Predict / Correct / Verify Inside the Causal Monad ===");
+    println!("Precision: {}\n", core::any::type_name::<FloatType>());
+}
+
+fn print_initial(state: &[FloatType]) {
+    println!("Initial state x = {state:?}\n");
+}
+
+fn print_chain_log(logs: &StepLog) {
+    println!("Chained log:");
+    print_log(logs);
+}
+
+fn print_outcome(error: Option<String>, final_state: Option<&[FloatType]>) {
+    match error {
+        Some(e) => println!("\nPipeline errored: {e}"),
+        None => println!(
+            "\nFinal state: {:?}",
+            final_state.expect("a chain with no error carries a value")
+        ),
+    }
 }

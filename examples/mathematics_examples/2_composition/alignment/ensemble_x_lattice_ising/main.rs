@@ -51,22 +51,10 @@
 
 use deep_causality_algebra::{Real, RealField};
 use deep_causality_haft::{DiagonalTraversable, Foldable, Functor};
-use deep_causality_num::{Float106, FromPrimitive, ToPrimitive, lift, lift_count, lower};
+use deep_causality_num::{Float106, FromPrimitive, ToPrimitive, lift, lift_usize, lower};
 use deep_causality_rand::Xoshiro256;
 use deep_causality_stats::{Distribution, RandScalar, Rng, StandardUniform};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness, ZipTensorWitness};
-
-/// `f32` is the right precision for the simulation itself.
-///
-/// Metropolis is noise-bound: every step is a random accept or reject, and the statistical error
-/// of an ensemble mean over 32 replicas is a few percent. A 24-bit significand is far below that,
-/// so the extra bits of `f64` would buy accuracy the method does not have.
-///
-/// The susceptibility is a different matter, and the table at the end of the run is about exactly
-/// that: `<m^2>` and `<m>^2` nearly coincide near `Tc`, so subtracting them cancels away most of
-/// the significand. The simulation is noise-bound; the observable derived from it is
-/// cancellation-bound, and the two do not want the same precision.
-pub type FloatType = f32;
 
 /// Lattice side for the physics: large enough to show the transition, small enough to be quick.
 const COARSE_L: usize = 16;
@@ -95,13 +83,20 @@ const SEED: u64 = 0x0001_519A_2026;
 /// Onsager's exact critical temperature, `2 / ln(1 + sqrt(2))`.
 const TC: f64 = 2.269_185_314_213_022;
 
+/// `f32` is the right precision for the simulation itself.
+///
+/// Metropolis is noise-bound: every step is a random accept or reject, and the statistical error
+/// of an ensemble mean over 32 replicas is a few percent. A 24-bit significand is far below that,
+/// so the extra bits of `f64` would buy accuracy the method does not have.
+///
+/// The susceptibility is a different matter, and the table at the end of the run is about exactly
+/// that: `<m^2>` and `<m>^2` nearly coincide near `Tc`, so subtracting them cancels away most of
+/// the significand. The simulation is noise-bound; the observable derived from it is
+/// cancellation-bound, and the two do not want the same precision.
+pub type FloatType = f32;
+
 fn main() {
-    println!("=== Ensemble x Lattice: the 2D Ising model ===");
-    println!(
-        "Simulation precision: {}",
-        core::any::type_name::<FloatType>()
-    );
-    println!("Lattice {COARSE_L}x{COARSE_L} = {N} spins, {REPLICAS} replicas, {SWEEPS} sweeps\n");
+    print_header();
 
     report_transition();
     let at_critical = report_ensemble(TC, COARSE_L, "Tc");
@@ -111,6 +106,16 @@ fn main() {
     let fine_critical = report_ensemble(TC, FINE_L, "Tc on a 32x32 lattice");
     let fine_ordered = report_ensemble(1.5, FINE_L, "T = 1.5 on a 32x32 lattice");
     report_precision(&at_critical, &ordered, &fine_critical, &fine_ordered);
+}
+
+/// The run's parameters, printed once before any of the `report_*` sections below.
+fn print_header() {
+    println!("=== Ensemble x Lattice: the 2D Ising model ===");
+    println!(
+        "Simulation precision: {}",
+        core::any::type_name::<FloatType>()
+    );
+    println!("Lattice {COARSE_L}x{COARSE_L} = {N} spins, {REPLICAS} replicas, {SWEEPS} sweeps\n");
 }
 
 // -------------------------------------------------------------------------------------------
@@ -175,7 +180,7 @@ where
     T: RealField + FromPrimitive,
 {
     let total = lattice.as_slice().iter().fold(T::zero(), |acc, s| acc + *s);
-    Real::abs(total) / lift_count::<T>(lattice.len() as u64)
+    Real::abs(total) / lift_usize::<T>(lattice.len())
 }
 
 // -------------------------------------------------------------------------------------------
@@ -223,7 +228,7 @@ fn report_ensemble(t: f64, l: usize, label: &str) -> Vec<f64> {
     let sum = CausalTensorWitness::fold(m_per_replica.clone(), lift::<FloatType>(0.0), |acc, m| {
         acc + m
     });
-    let mean = sum / lift_count::<FloatType>(REPLICAS as u64);
+    let mean = sum / lift_usize::<FloatType>(REPLICAS);
 
     let values: Vec<f64> = m_per_replica.as_slice().iter().map(|m| lower(*m)).collect();
     let spread = {
@@ -255,9 +260,7 @@ fn report_susceptibility(magnetisations: &[f64]) {
         .map(|v| lift::<FloatType>(*v))
         .collect();
     let m_sq: Vec<FloatType> = m.iter().map(|v| *v * *v).collect();
-    let tag: Vec<FloatType> = (0..REPLICAS)
-        .map(|r| lift_count::<FloatType>(r as u64))
-        .collect();
+    let tag: Vec<FloatType> = (0..REPLICAS).map(lift_usize::<FloatType>).collect();
 
     let field: CausalTensor<CausalTensor<FloatType>> = CausalTensor::from_vec(
         vec![
@@ -292,7 +295,7 @@ fn report_susceptibility(magnetisations: &[f64]) {
         );
         assert_eq!(
             row[2],
-            lift_count::<FloatType>(i as u64),
+            lift_usize::<FloatType>(i),
             "field {i} carries another replica's tag"
         );
     }
@@ -302,7 +305,7 @@ fn report_susceptibility(magnetisations: &[f64]) {
     let mean_m = column_mean(&per_replica, 0);
     let mean_m_sq = column_mean(&per_replica, 1);
     let beta = lift::<FloatType>(1.0 / TC);
-    let chi = beta * lift_count::<FloatType>(N as u64) * (mean_m_sq - mean_m * mean_m);
+    let chi = beta * lift_usize::<FloatType>(N) * (mean_m_sq - mean_m * mean_m);
 
     // The same number the direct way: the variance of the magnetisations.
     let mu = magnetisations.iter().sum::<f64>() / magnetisations.len() as f64;
@@ -336,7 +339,7 @@ where
         T::zero(),
         |acc, v| acc + v,
     );
-    sum / lift_count::<T>(REPLICAS as u64)
+    sum / lift_usize::<T>(REPLICAS)
 }
 
 // -------------------------------------------------------------------------------------------
@@ -431,7 +434,7 @@ fn chi_at<T>(magnetisations: &[f64]) -> f64
 where
     T: RealField + FromPrimitive + ToPrimitive,
 {
-    let n = lift_count::<T>(magnetisations.len() as u64);
+    let n = lift_usize::<T>(magnetisations.len());
     let mut sum = T::zero();
     let mut sum_sq = T::zero();
     for v in magnetisations {
@@ -442,5 +445,5 @@ where
     let mean = sum / n;
     let mean_sq = sum_sq / n;
     let beta = lift::<T>(1.0 / TC);
-    lower(beta * lift_count::<T>(N as u64) * (mean_sq - mean * mean))
+    lower(beta * lift_usize::<T>(N) * (mean_sq - mean * mean))
 }

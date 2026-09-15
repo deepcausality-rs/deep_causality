@@ -1,5 +1,7 @@
-// SPDX-License-Identifier: MIT
-// Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
 
 //! # Cubical Heat Diffusion
 //!
@@ -31,10 +33,6 @@ use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{CubicalComplex, Manifold, Moore};
 use std::ops::{Add, Mul};
 
-/// `f64` is the right precision here: the explicit-Euler loop is short and the
-/// neighborhood stencil is local. Higher precision yields no observable gain.
-pub type FloatType = f64;
-
 const N: usize = 16; // grid side (top cubes are (N-1)×(N-1))
 const STEPS: usize = 10;
 
@@ -43,6 +41,10 @@ const STEPS: usize = 10;
 fn alpha() -> FloatType {
     lift(0.15)
 }
+
+/// `f64` is the right precision here: the explicit-Euler loop is short and the
+/// neighborhood stencil is local. Higher precision yields no observable gain.
+pub type FloatType = f64;
 
 fn main() {
     let complex = CubicalComplex::<2, FloatType>::open([N, N]);
@@ -57,8 +59,7 @@ fn main() {
     let manifold: Manifold<CubicalComplex<2, FloatType>, FloatType> =
         Manifold::from_cubical(complex, CausalTensor::from_vec(data, &[cell_count]), 0);
 
-    println!("== Step 0 ==");
-    print_heatmap(manifold.data().as_slice(), top_n);
+    print_step(0, manifold.data().as_slice(), top_n);
 
     // The Moore neighborhood depends only on the complex, not the field, so precompute it once and
     // the rate field becomes a pure `Fn(&Field) -> Field` — the discrete Laplacian (spatial
@@ -85,12 +86,25 @@ fn main() {
     let mut field = Field(manifold.data().as_slice().to_vec());
     for s in 1..=STEPS {
         field = step.run(field);
-        println!("== Step {s} ==");
-        print_heatmap(&field.0, top_n);
+        print_step(s, &field.0, top_n);
     }
 
+    print_footer(top_n);
+}
+
+// -----------------------------------------------------------------------------------------
+// Printing
+// -----------------------------------------------------------------------------------------
+
+fn print_step(step: usize, values: &[FloatType], side: usize) {
+    println!("== Step {step} ==");
+    print_heatmap(values, side);
+}
+
+/// The display boundary: `f64` appears here and nowhere else.
+fn print_footer(side: usize) {
     println!(
-        "\nDone. {STEPS} Euler steps on {top_n}×{top_n} top cubes with α = {}.",
+        "\nDone. {STEPS} Euler steps on {side}×{side} top cubes with α = {}.",
         lower(alpha())
     );
 }

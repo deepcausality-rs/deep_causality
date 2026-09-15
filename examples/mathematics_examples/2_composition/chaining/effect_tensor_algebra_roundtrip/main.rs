@@ -31,8 +31,7 @@ use mathematics_examples::effect_helpers::{Process, ProcessWitness, fail, ok, pr
 pub type FloatType = Float106;
 
 fn main() {
-    println!("=== Tensor <-> Algebra Round-Trip Inside the Causal Monad ===");
-    println!("Precision: {}\n", core::any::type_name::<FloatType>());
+    print_header();
 
     let initial = CausalTensor::new(
         vec![
@@ -42,13 +41,12 @@ fn main() {
         ],
         vec![3],
     )
-    .unwrap();
+    .expect("three components in a rank-1 shape of 3");
     let initial_norm_sq: FloatType = initial
         .as_slice()
         .iter()
         .fold(lift::<FloatType>(0.0), |acc, &v| acc + v * v);
-    println!("Initial vector: {:?}", initial.as_slice());
-    println!("Initial |v|^2 = {}\n", initial_norm_sq);
+    print_initial(initial.as_slice(), initial_norm_sq);
 
     // One straight-line monadic chain. The carried value type changes at every
     // step (Tensor -> MultiVector -> Tensor -> scalar); `bind` threads the
@@ -61,19 +59,11 @@ fn main() {
         .bind(|v, _, _| norm_squared(v.into_value().expect("lowered tensor")));
 
     print_log(result.logs());
-
-    match result.error() {
-        Some(e) => println!("\nChain errored: {}", e),
-        None => {
-            let final_norm_sq = result.value_cloned().unwrap();
-            let drift = (final_norm_sq - initial_norm_sq).abs();
-            println!("\nFinal |v|^2 = {}", final_norm_sq);
-            println!(
-                "Round-trip drift = {} (should be at machine epsilon)",
-                drift
-            );
-        }
-    }
+    print_outcome(
+        result.error().map(|e| e.to_string()),
+        result.value_cloned(),
+        initial_norm_sq,
+    );
 }
 
 fn lift_to_algebra(v: CausalTensor<FloatType>) -> Process<CausalMultiVector<FloatType>> {
@@ -120,4 +110,33 @@ fn norm_squared(v: CausalTensor<FloatType>) -> Process<FloatType> {
         Err(e) => return fail(format!("dot_prod failed: {:?}", e)),
     };
     ok(result, format!("norm^2 via tensor dot_prod = {}", result))
+}
+
+// -----------------------------------------------------------------------------------------
+// Printing
+//
+// The working type prints itself. At `Float106` its own `Display` carries the extra digits
+// this example exists to show, so nothing is lowered to `f64` on the way out.
+// -----------------------------------------------------------------------------------------
+
+fn print_header() {
+    println!("=== Tensor <-> Algebra Round-Trip Inside the Causal Monad ===");
+    println!("Precision: {}\n", core::any::type_name::<FloatType>());
+}
+
+fn print_initial(vector: &[FloatType], norm_sq: FloatType) {
+    println!("Initial vector: {vector:?}");
+    println!("Initial |v|^2 = {norm_sq}\n");
+}
+
+fn print_outcome(error: Option<String>, final_norm_sq: Option<FloatType>, initial: FloatType) {
+    match error {
+        Some(e) => println!("\nChain errored: {e}"),
+        None => {
+            let final_norm_sq = final_norm_sq.expect("a chain with no error carries a value");
+            let drift = (final_norm_sq - initial).abs();
+            println!("\nFinal |v|^2 = {final_norm_sq}");
+            println!("Round-trip drift = {drift} (should be at machine epsilon)");
+        }
+    }
 }

@@ -19,21 +19,20 @@
 
 use deep_causality_haft::CoMonad;
 use deep_causality_linear::CsrMatrix;
-use deep_causality_num::lift;
+use deep_causality_num::{lift, lower};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     Manifold, ManifoldWitness, Simplex, SimplicialComplex, SimplicialManifold, Skeleton,
 };
 
+const N_VERTICES: usize = 7;
+
 /// `f64` is the right precision here: the Laplacian stencil on integer inputs
 /// produces integer outputs, so Float106 yields no observable gain.
 pub type FloatType = f64;
 
-const N_VERTICES: usize = 7;
-
 fn main() {
-    println!("=== Tensor x Topology: Discrete Laplacian on a 1D Manifold ===");
-    println!("Precision: {}\n", core::any::type_name::<FloatType>());
+    print_header();
 
     // A triangular bump on the vertex field.
     let phi: Vec<FloatType> = [0.0, 1.0, 2.0, 4.0, 2.0, 1.0, 0.0]
@@ -41,8 +40,7 @@ fn main() {
         .map(|x| lift::<FloatType>(*x))
         .collect();
     let manifold = build_line_manifold(phi.clone());
-
-    println!("Vertex field phi: {:?}", phi);
+    print_field(&phi);
 
     let two = lift::<FloatType>(2.0);
     let zero = lift::<FloatType>(0.0);
@@ -69,18 +67,7 @@ fn main() {
     });
 
     let result = laplacian.data().as_slice();
-    println!(
-        "Laplacian (Delta phi) at vertices: {:?}",
-        &result[..N_VERTICES]
-    );
-    println!(
-        "Laplacian at edges (unused):       {:?}",
-        &result[N_VERTICES..]
-    );
-
-    println!("\nThe vertex with the highest value (index 3) has the most negative");
-    println!("Laplacian, as expected for a discrete peak. Boundary vertices use");
-    println!("Neumann reflection (phi outside = phi at boundary).");
+    print_laplacian(&result[..N_VERTICES], &result[N_VERTICES..]);
 }
 
 fn build_line_manifold(vertex_values: Vec<FloatType>) -> SimplicialManifold<FloatType, FloatType> {
@@ -102,14 +89,42 @@ fn build_line_manifold(vertex_values: Vec<FloatType>) -> SimplicialManifold<Floa
         triplets.push((e, e, -1));
         triplets.push((e + 1, e, 1));
     }
-    let d1 = CsrMatrix::from_triplets(N_VERTICES, n_edges, &triplets).unwrap();
+    let d1 = CsrMatrix::from_triplets(N_VERTICES, n_edges, &triplets)
+        .expect("two triplets per edge, all in range");
 
     let complex = SimplicialComplex::new(vec![skeleton_0, skeleton_1], vec![d1], vec![], vec![]);
 
     // Data layout: vertex values first, then a zero per edge.
     let mut data_vec = vertex_values;
     data_vec.extend(std::iter::repeat_n(lift::<FloatType>(0.0), n_edges));
-    let data = CausalTensor::new(data_vec, vec![N_VERTICES + n_edges]).unwrap();
+    let data = CausalTensor::new(data_vec, vec![N_VERTICES + n_edges])
+        .expect("one entry per vertex and per edge");
 
     Manifold::new(complex, data, 0).expect("manifold construction")
+}
+
+// -----------------------------------------------------------------------------------------
+// Printing
+// -----------------------------------------------------------------------------------------
+
+fn print_header() {
+    println!("=== Tensor x Topology: Discrete Laplacian on a 1D Manifold ===");
+    println!("Precision: {}\n", core::any::type_name::<FloatType>());
+}
+
+fn print_field(phi: &[FloatType]) {
+    println!("Vertex field phi: {:?}", shown(phi));
+}
+
+fn print_laplacian(vertices: &[FloatType], edges: &[FloatType]) {
+    println!("Laplacian (Delta phi) at vertices: {:?}", shown(vertices));
+    println!("Laplacian at edges (unused):       {:?}", shown(edges));
+    println!("\nThe vertex with the highest value (index 3) has the most negative");
+    println!("Laplacian, as expected for a discrete peak. Boundary vertices use");
+    println!("Neumann reflection (phi outside = phi at boundary).");
+}
+
+/// The display boundary: `f64` appears here and nowhere else.
+fn shown(xs: &[FloatType]) -> Vec<f64> {
+    xs.iter().map(|&x| lower(x)).collect()
 }

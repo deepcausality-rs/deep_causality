@@ -6,9 +6,6 @@
 use deep_causality_haft::{BoxWitness, CoMonad, HKT};
 use deep_causality_num::{lift, lower};
 
-/// The working scalar. Temperature and pressure carry it through every evolution step.
-pub type FloatType = f64;
-
 // ============================================================================
 // Domain Logic: System Evolution
 //
@@ -21,6 +18,9 @@ pub type FloatType = f64;
 //
 // Scenario: a physical system cooling down, each step depending on the current state.
 // ============================================================================
+
+/// The working scalar. Temperature and pressure carry it through every evolution step.
+pub type FloatType = f64;
 
 fn main() {
     // Initial state: hot and high pressure.

@@ -6,9 +6,6 @@
 use deep_causality_haft::{Functor, OptionWitness};
 use deep_causality_num::lift;
 
-/// The working scalar. The order's price carries it.
-pub type FloatType = f64;
-
 // ============================================================================
 // Domain: E-Commerce Order Processing
 //
@@ -18,6 +15,9 @@ pub type FloatType = f64;
 // want to combine several independent results such as parallel API calls. Applicative
 // (`apply`) combines values inside a context (Result/Option) independently of each other.
 // ============================================================================
+
+/// The working scalar. The order's price carries it.
+pub type FloatType = f64;
 
 fn main() {
     print_header();

@@ -7,9 +7,6 @@ use deep_causality_num::lift;
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 use std::fmt::Debug;
 
-/// The working scalar. One `Functor` written against it serves every container below.
-pub type FloatType = f64;
-
 /// One function, any functor. The witness picks the container at the call site.
 fn triple_value<F>(m_a: F::Type<FloatType>) -> F::Type<FloatType>
 where
@@ -17,6 +14,9 @@ where
 {
     F::fmap(m_a, |x| x * lift::<FloatType>(3.0))
 }
+
+/// The working scalar. One `Functor` written against it serves every container below.
+pub type FloatType = f64;
 
 fn main() {
     print_header();

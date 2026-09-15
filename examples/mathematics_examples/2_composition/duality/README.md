@@ -1,51 +1,10 @@
-# Isomorphism Examples
+# Duality
 
-Runnable examples that demonstrate where the three-tier iso surface (from `deep_causality_num::iso{::witness,}` and `deep_causality_haft::iso`) collapses type-conversion boilerplate.
+Two views of one thing, and the bridge between them. An adjunction relates two functors that
+face each other; an `iso` relates two carriers holding the same data in different shapes.
 
-Each example is structured as a **BEFORE / AFTER** comparison where applicable, so the simplification is visible at the point of use. Every example also asserts that the two paths produce byte-identical results, so the iso isn't just shorter — it's provably the same.
-
-## The two examples
-
-### 1. `tensor_sparse_memory_budget`
-
-A heat-flow adjacency matrix arrives as a dense `CausalTensor`. Sparsify it (`CsrMatrix::try_from(tensor)?`), apply a sparse-only operation (row-sum extraction), then materialise the result back to dense via `sparse.to_dense()` for a downstream pipeline that expects dense tensors.
-
-**Iso used**: `CausalTensor<F>` (rank-2) <-> `CsrMatrix<F>` (mixed-tier: forward `TryFrom`, reverse `Iso<CsrMatrix, CausalTensor>` + inherent `to_dense()` alias). Requires the `tensor-iso` feature on `deep_causality_sparse` (enabled by this crate's `Cargo.toml`).
-
-**Why it matters**: this is the canonical worked example for the mixed-tier orphan-rule pattern. Any future analysis pipeline that wants to move large coefficient matrices through sparse intermediates copies this shape.
-
-### 2. `multifield_data_pipeline`
-
-`CausalMultiField<T>` keeps its fields `pub(crate)`, which from outside the multivector crate means: no public constructor takes `(tensor, metric, dx, shape)`, no public accessor returns the owned tensor, no generic "map the underlying tensor" helper can be written. The iso provides exactly one typed bridge that opens the door without breaking encapsulation.
-
-This example builds three external pipeline helpers — `load_multifield`, `map_underlying_tensor`, `export_multifield` — that **cannot exist outside the multivector crate without the iso**. It then runs a realistic three-stage pipeline (load tensor data → apply tensor-level transformations → export the result) using only those helpers and `CausalTensor` arithmetic.
-
-**Iso used**: `CausalMultiField<T>` <-> `MultiFieldCarrier<T>` (the tuple `(CausalTensor<T>, Metric, [T; 3], [usize; 3])`) via the `StandardIso` blanket impl on bidirectional `From`.
-
-**Why it matters**: this is the case where the iso unlocks code that is structurally impossible without it. A new external consumer of `CausalMultiField` no longer requires adding accessors or constructors to the multivector crate. The iso is the entire public API surface for "build / extract / transform underlying" workflows.
-
-## Running
-
-```bash
-cargo run -p mathematics_examples --example tensor_sparse_memory_budget
-cargo run -p mathematics_examples --example multifield_data_pipeline
-```
-
----
-
-## Adding New Examples
-
-1. Create directory: `isomorphism/<your_example>/`
-2. Add `main.rs` with doc comments (`//!` module docs)
-3. Add `README.md` with:
-    - How to run
-    - Engineering value
-    - Key concepts
-    - APIs demonstrated
-    - Adaptation suggestions
-4. Register in `examples/mathematics_examples/Cargo.toml`:
-   ```toml
-   [[example]]
-   name = "your_example"
-   path = "isomorphism/your_example/main.rs"
-   ```
+| Example | What it shows | Command |
+|---|---|---|
+| [stokes_adjunction](stokes_adjunction/) | `d ⊣ ∂`: Stokes' theorem as an `Adjunction` between `DifferentialForm` and `Chain`, and why the two extracting operations return `Result` | `cargo run -p mathematics_examples --example stokes_adjunction_examples` |
+| [tensor_sparse_memory_budget](tensor_sparse_memory_budget/) | The same pipeline twice, hand-rolled conversions against the iso: 28 lines against 3 | `cargo run -p mathematics_examples --example tensor_sparse_memory_budget` |
+| [multifield_data_pipeline](multifield_data_pipeline/) | Load, transform and export a `CausalMultiField` from outside the crate that owns it, with metadata preserved end to end | `cargo run -p mathematics_examples --example multifield_data_pipeline` |
