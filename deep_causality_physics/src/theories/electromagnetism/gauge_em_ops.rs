@@ -183,11 +183,11 @@ where
 
     /// Computes the field strength tensor F_μν from the gauge potential A_μ.
     ///
-    /// # Mathematical Definition (Single Source of Truth via GaugeFieldWitness)
+    /// # Mathematical Definition (Single Source of Truth via GaugeFieldOps)
     /// ```text
     /// F_μν = ∂_μ A_ν - ∂_ν A_μ
     /// ```
-    /// Uses `GaugeFieldWitness::compute_field_strength_abelian()` as the
+    /// Uses `GaugeFieldOps::compute_field_strength_abelian()` as the
     /// canonical implementation for abelian gauge theories.
     ///
     /// # Returns

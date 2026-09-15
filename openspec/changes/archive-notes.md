@@ -126,9 +126,14 @@ The design notes moved too, and archived changes link to them.
 | `openspec/notes/simplicial_hodge_star/` | `openspec/notes/test_audit/topology/simplicial_hodge_star/` |
 | `specs/` | `openspec/` |
 
-The `unified_math/` row now covers the whole directory. It was written when three of its five files
-moved; `unified_math_next.md` and `bf16_tdd_record.md` were added to the live directory afterwards
-and followed them on 2026-09-08, when `unified-math-next` was archived. The directory is empty.
+The `unified_math/` row now covers the whole directory, across two rounds of archiving. It was
+written when three of its five files moved; `unified_math_next.md` and `bf16_tdd_record.md` were
+added to the live directory afterwards and followed them on 2026-09-08, when `unified-math-next`
+was archived. The directory was then re-created for the HKT witness work and held three more notes
+— `hkt_gaps.md`, `hkt_uncertain.md` and `hkt_extenions_gap.md` — which followed on 2026-09-15 once
+that work closed. The row resolves all eight. The directory is gone rather than empty, so an
+archived link to `openspec/notes/unified_math/<file>` lands nowhere and the row is the only way
+to follow it.
 
 `simplicial_hodge_star/` never had a live life of its own: it was written during `unified-math-next`
 task 6.7u and filed under `test_audit/topology/` in the same week, so the archived documents naming

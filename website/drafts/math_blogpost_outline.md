@@ -9,7 +9,7 @@ Sources:
 - **(A)** `deep_causality_unified_math/README.md`
 - **(B)** `website/docs/src/content/docs/concepts/uniform-math.md`
 - **(C)** `examples/mathematics_examples/README.md`
-- **(D)** `examples/mathematics_examples/composable_multi_math/README.md`
+- **(D)** `examples/mathematics_examples/2_composition/README.md`
 - **(E)** Aristotle, *Nicomachean Ethics* I.1, "of medicine, the end is health; of shipbuilding, a ship; of generalship, victory"
 - **(F)** `docs/writing_guides/Aristotelian rules of communication.pdf`: ethos, pathos, logos
 - **(G)** `openspec/notes/archive/unified_math/unified_math_gaps.md` and `HKT-LAW-FINDINGS.md`

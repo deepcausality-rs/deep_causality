@@ -18,7 +18,7 @@ use deep_causality_haft::RiemannMap;
 use deep_causality_metric::{EastCoastMetric, LorentzianMetric};
 use deep_causality_num::{Float, FromPrimitive, lift};
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::GaugeFieldWitness;
+use deep_causality_topology::GaugeFieldOps;
 use deep_causality_topology::{
     CurvatureSymmetry, CurvatureTensor, CurvatureTensorVector, CurvatureTensorWitness, TensorVector,
 };
@@ -160,7 +160,7 @@ where
     fn compute_riemann_from_christoffel(&self) -> CausalTensor<S> {
         // The coupling constant for GR is effectively 1.0
         // (structure constants encode the non-abelian part)
-        GaugeFieldWitness::compute_field_strength_non_abelian(self, S::one())
+        GaugeFieldOps::compute_field_strength_non_abelian(self, S::one())
     }
 
     fn momentum_constraint_field(

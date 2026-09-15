@@ -11,7 +11,7 @@ use deep_causality_multivector::CausalMultiVector;
 use deep_causality_num::{FromPrimitive, lift};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
-    BaseTopology, GaugeField, GaugeFieldWitness, Manifold, Simplex, SimplicialComplexBuilder,
+    BaseTopology, GaugeField, GaugeFieldOps, Manifold, Simplex, SimplicialComplexBuilder,
     SimplicialManifold, U1,
 };
 
@@ -113,7 +113,7 @@ where
         let b_vec = [bx, by, bz];
         // Use the topology method from the GaugeField to construct field strength from E/B vectors
         let field_strength =
-            GaugeFieldWitness::<S>::field_strength_from_eb_vectors(&e_vec, &b_vec, num_points);
+            GaugeFieldOps::<S>::field_strength_from_eb_vectors(&e_vec, &b_vec, num_points);
 
         GaugeField::new(base, metric, connection, field_strength)
             .map_err(|e| PhysicsError::TopologyError(e.to_string()))

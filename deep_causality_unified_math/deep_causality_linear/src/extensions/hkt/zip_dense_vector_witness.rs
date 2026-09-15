@@ -4,7 +4,9 @@
  */
 
 use crate::types::dense_vector::DenseVector;
-use deep_causality_haft::{Convolutional, Functor, HKT, MonoidalApplicative, Semigroupal};
+use deep_causality_haft::{
+    Convolutional, Foldable, Functor, HKT, MonoidalApplicative, Semigroupal,
+};
 
 /// The elementwise higher-kinded view of [`DenseVector`].
 ///
@@ -61,6 +63,32 @@ impl Semigroupal<ZipDenseVectorWitness> for ZipDenseVectorWitness {
                 .map(|(a, b)| f(a, b))
                 .collect(),
         )
+    }
+}
+
+impl Foldable<ZipDenseVectorWitness> for ZipDenseVectorWitness {
+    /// Reduces left to right, identically to
+    /// [`DenseVectorWitness`](crate::DenseVectorWitness).
+    ///
+    /// # Why this is not redundant
+    ///
+    /// The two witnesses project to the same `DenseVector<T>`, so `DenseVectorWitness::fold`
+    /// already accepts whatever `zip_with` returns, with no conversion. This instance is not for
+    /// reaching the elements.
+    ///
+    /// It is for a generic function bounded on **one** witness, `W: Semigroupal<W> + Foldable<W>`,
+    /// which zips and then reduces through the same parameter. Without it such a function cannot
+    /// be instantiated here, and the workaround needs two witness parameters plus a
+    /// `W::Type<T> == F::Type<T>` constraint that Rust cannot express.
+    ///
+    /// `fold` involves no applicative, which is the only thing the two witnesses disagree about,
+    /// so agreeing with `DenseVectorWitness` element for element and in order is a requirement
+    /// rather than a coincidence.
+    fn fold<A, B, Func>(fa: DenseVector<A>, init: B, f: Func) -> B
+    where
+        Func: FnMut(B, A) -> B,
+    {
+        fa.into_data().into_iter().fold(init, f)
     }
 }
 

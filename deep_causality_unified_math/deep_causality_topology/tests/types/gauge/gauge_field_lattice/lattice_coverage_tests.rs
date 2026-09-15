@@ -12,7 +12,7 @@
 use deep_causality_num_complex::Complex;
 use deep_causality_stats::Xoshiro256;
 use deep_causality_topology::{
-    LatticeComplex, LatticeGaugeField, SU2, SmearingParams, TopologyErrorEnum, U1,
+    LatticeComplex, LatticeGaugeField, SU2, SU3, SmearingParams, TopologyErrorEnum, U1,
 };
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -111,4 +111,43 @@ fn test_average_plaquette_empty_lattice_returns_one() {
 
     let avg = field.try_average_plaquette().expect("average plaquette");
     assert!((avg - 1.0).abs() < 1e-12, "expected 1.0, got {avg}");
+}
+
+// ============================================================================
+// Regression: APE smearing has to carry the plaquette toward 1.
+//
+// Smearing averages each link with the staples around it, which damps the
+// short-wavelength noise and raises the average plaquette. The staple has to
+// enter in the orientation of the link it is averaged with: `try_staple`
+// returns the action-convention `V`, which runs from `n+mu` back to `n`, and
+// adding that to `U_mu(n)` drives the link the other way and lowers the
+// plaquette instead.
+// ============================================================================
+
+#[test]
+fn test_ape_smearing_raises_the_average_plaquette() {
+    let lattice = Arc::new(LatticeComplex::new([2, 2, 2, 2], [true; 4]));
+    let mut rng = Xoshiro256::new();
+    let mut field =
+        LatticeGaugeField::<SU3, 4, Complex<f64>, f64>::try_random(lattice, 6.0, &mut rng)
+            .expect("random SU(3) field");
+
+    // Smearing acts on the ordering a configuration already carries, so the field needs some
+    // before the measurement discriminates: a hot start sits near zero and stays there whichever
+    // orientation the staple enters in.
+    for _ in 0..10 {
+        field.try_metropolis_sweep(0.2, &mut rng).expect("sweep");
+    }
+
+    let rough = field.try_average_plaquette().expect("plaquette");
+    let smeared = field
+        .try_smear(&SmearingParams::ape_default())
+        .expect("smeared field")
+        .try_average_plaquette()
+        .expect("smeared plaquette");
+
+    assert!(
+        smeared > rough + 0.2,
+        "one APE step moved the plaquette from {rough} to {smeared}"
+    );
 }

@@ -1,0 +1,152 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
+use deep_causality_haft::{Bifunctor, Functor, Monad};
+use deep_causality_haft::{OptionWitness, ResultUnboundWitness, ResultWitness};
+use deep_causality_num::{lift, lift_u64};
+use std::fmt::Debug;
+
+// ============================================================================
+// Domain Types: Configuration System
+// ============================================================================
+
+/// The working scalar. The timeout conversion below lands in it.
+pub type FloatType = f64;
+
+fn main() {
+    print_header();
+
+    // ------------------------------------------------------------------------
+    // 1. The monadic pipeline: Read File -> Parse JSON -> Validate Fields.
+    //
+    // Each step can fail and each depends on the last. `bind` chains them into one
+    // linear pipeline: if any step fails the error propagates and the rest is skipped,
+    // which is what replaces nested `if let Ok(..)` or a match cascade.
+    // ------------------------------------------------------------------------
+    let result = ResultWitness::bind(read_config_file(), |content| {
+        ResultWitness::bind(parse_config(content), validate_config)
+    });
+    print_pipeline(&result);
+
+    // ------------------------------------------------------------------------
+    // 2. Optional fields. `fmap` modifies the value inside `Option` without unwrapping,
+    // so the unit conversion happens only when the field is actually present.
+    // ------------------------------------------------------------------------
+    let raw_timeout = Some(5000_u64);
+    let timeout_secs = OptionWitness::fmap(raw_timeout, to_seconds);
+    print_optional(&raw_timeout, &timeout_secs);
+    assert_eq!(timeout_secs, Some(lift::<FloatType>(5.0)));
+
+    // ------------------------------------------------------------------------
+    // 3. Error recovery. `bimap` maps the error channel independently of the success
+    // channel, which is how an internal error becomes a UI-facing code.
+    // ------------------------------------------------------------------------
+    let failed_load: Result<ValidatedConfig, ConfigError> =
+        Err(ConfigError::IoError("File not found".to_string()));
+
+    let ui_result = ResultUnboundWitness::bimap(
+        failed_load,
+        |c| c, // identity on success
+        |e| match e {
+            ConfigError::IoError(_) => "ERR_IO",
+            ConfigError::ParseError(_) => "ERR_PARSE",
+            ConfigError::ValidationError(_) => "ERR_VALIDATION",
+        },
+    );
+    print_error_code(&ui_result);
+    assert_eq!(ui_result, Err("ERR_IO"));
+}
+
+/// Mock: simulate reading a file.
+fn read_config_file() -> Result<String, ConfigError> {
+    Ok("host=localhost;port=8080;timeout=5000".to_string())
+}
+
+/// Step 1: String -> RawConfig.
+fn parse_config(content: String) -> Result<RawConfig, ConfigError> {
+    if content.contains("host=") {
+        Ok(RawConfig {
+            host: "localhost".to_string(),
+            port: "8080".to_string(),
+            timeout_ms: Some(5000),
+        })
+    } else {
+        Err(ConfigError::ParseError("Invalid format".to_string()))
+    }
+}
+
+/// Step 2: RawConfig -> ValidatedConfig.
+fn validate_config(raw: RawConfig) -> Result<ValidatedConfig, ConfigError> {
+    let port = raw
+        .port
+        .parse::<u16>()
+        .map_err(|_| ConfigError::ValidationError("Invalid port".to_string()))?;
+
+    if port < 1024 {
+        return Err(ConfigError::ValidationError(
+            "Port must be > 1024".to_string(),
+        ));
+    }
+
+    Ok(ValidatedConfig {
+        host: raw.host,
+        port,
+        timeout_ms: raw.timeout_ms.unwrap_or(3000), // default timeout
+    })
+}
+
+/// Milliseconds to seconds, in the working scalar.
+fn to_seconds(ms: u64) -> FloatType {
+    lift_u64::<FloatType>(ms) / lift::<FloatType>(1000.0)
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct RawConfig {
+    host: String,
+    port: String,
+    timeout_ms: Option<u64>,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+struct ValidatedConfig {
+    host: String,
+    port: u16,
+    timeout_ms: u64,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+#[allow(clippy::enum_variant_names)]
+enum ConfigError {
+    IoError(String),
+    ParseError(String),
+    ValidationError(String),
+}
+
+// -----------------------------------------------------------------------------------------
+// Printing
+// -----------------------------------------------------------------------------------------
+
+fn print_header() {
+    println!("=== DeepCausality HKT: Monad Pattern (Configuration Pipeline) ===\n");
+    println!("--- 1. Monadic Pipeline: Load -> Parse -> Validate ---");
+}
+
+fn print_pipeline(result: &Result<ValidatedConfig, ConfigError>) {
+    match result {
+        Ok(config) => println!("✅ Configuration Loaded: {config:#?}"),
+        Err(e) => println!("❌ Configuration Failed: {e:?}"),
+    }
+}
+
+fn print_optional<R: Debug, S: Debug>(raw: &R, seconds: &S) {
+    println!("\n--- 2. Optional Fields: Safe Transformation ---");
+    println!("Raw Timeout (ms): {raw:?}");
+    println!("Processed Timeout (s): {seconds:?}");
+}
+
+fn print_error_code<T: Debug>(ui_result: &T) {
+    println!("\n--- 3. Error Handling: Normalization ---");
+    println!("UI Result Code: {ui_result:?}");
+}

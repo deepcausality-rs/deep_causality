@@ -11,7 +11,7 @@ use deep_causality_algebra::RealField;
 use deep_causality_metric::{LorentzianMetric, WestCoastMetric};
 use deep_causality_num::{FromPrimitive, lift};
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{BaseTopology, GaugeField, GaugeFieldWitness, SimplicialManifold};
+use deep_causality_topology::{BaseTopology, GaugeField, GaugeFieldOps, SimplicialManifold};
 use std::f64::consts::PI;
 
 impl<S> WeakFieldOps<S> for WeakField<S>
@@ -174,6 +174,6 @@ where
         let two = lift::<S>(2.0);
         let vev = lift::<S>(HIGGS_VEV);
         let g = two * self.w_mass() / vev;
-        GaugeFieldWitness::compute_field_strength_non_abelian(self, g)
+        GaugeFieldOps::compute_field_strength_non_abelian(self, g)
     }
 }

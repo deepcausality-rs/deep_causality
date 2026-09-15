@@ -10,7 +10,7 @@
 //! higher-kinded-type machinery as `Graph` and `Hypergraph`.
 
 use crate::MixedGraph;
-use deep_causality_haft::{CoMonad, Functor, HKT};
+use deep_causality_haft::{CoMonad, Foldable, Functor, HKT};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 
 /// HKT witness for [`MixedGraph`]: `Type<T> = MixedGraph<T>`.
@@ -42,6 +42,20 @@ impl Functor<MixedGraphWitness> for MixedGraphWitness {
             data: new_data,
             cursor: fa.cursor,
         }
+    }
+}
+
+impl Foldable<MixedGraphWitness> for MixedGraphWitness {
+    /// Reduces a mixed graph's per-node payload left to right, delegating to
+    /// [`CausalTensorWitness`](deep_causality_tensor::CausalTensorWitness) exactly as `fmap` does.
+    ///
+    /// The structure around the elements — the vertex count, the incidence, the points, the
+    /// complex — takes no part in a reduction and is dropped with the carrier.
+    fn fold<A, B, Func>(fa: MixedGraph<A>, init: B, f: Func) -> B
+    where
+        Func: FnMut(B, A) -> B,
+    {
+        CausalTensorWitness::fold(fa.data, init, f)
     }
 }
 

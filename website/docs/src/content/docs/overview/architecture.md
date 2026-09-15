@@ -53,13 +53,11 @@ The workspace sorts into nine tiers, strictly acyclic. A crate depends only on c
 | 7 | `algorithms`, `physics` |
 | 8 | `cfd`, `discovery` |
 
-`scripts/check_tiers.py` re-derives this table from `cargo metadata` and diffs it against the copies in `AGENTS.md` and `deep_causality_unified_math/README.md`. It fails in both directions, so a new crate or a new edge surfaces as a failed check rather than as documentation drift.
-
 The map draws the edges that carry architectural meaning and leaves the rest to this table. Off the canvas: `deep_causality` also depends on `algebra`, `ast`, and `uncertain`; `cfd` on `core`, `calculus`, `fft`, `file`, `tensor`, and `topology`; `physics` and `quantum` both on `core`.
 
 ## External dependencies
 
-Seven of the 29 library crates reach crates.io at runtime. The other 22 reach none at all.
+Seven of the 30 library crates reach crates.io at runtime. The other 23 reach none at all.
 
 | Crate | Dependency | Status |
 | --- | --- | --- |

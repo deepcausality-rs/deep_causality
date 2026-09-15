@@ -9,7 +9,7 @@
 //! - Field creation and extraction
 //! - Lorentz invariants
 //! - Energy-momentum quantities
-//! - Field strength computation via GaugeFieldWitness (HKT)
+//! - Field strength computation via GaugeFieldOps (HKT)
 //! - Physical properties (radiation fields, null fields)
 
 use deep_causality_metric::LorentzianMetric;
@@ -334,10 +334,10 @@ fn test_is_null_field() {
 }
 
 // ============================================================================
-// GaugeFieldWitness HKT Integration Tests
+// GaugeFieldOps HKT Integration Tests
 // ============================================================================
 
-/// Tests computed_field_strength() which uses GaugeFieldWitness as single source of truth.
+/// Tests computed_field_strength() which uses GaugeFieldOps as single source of truth.
 #[test]
 fn test_computed_field_strength_shape() {
     let qed = EM::from_components(1.0, 0.0, 0.0, 0.0, 1.0, 0.0).unwrap();

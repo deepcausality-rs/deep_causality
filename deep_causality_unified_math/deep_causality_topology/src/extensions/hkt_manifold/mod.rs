@@ -19,7 +19,7 @@
 use crate::traits::cellular_complex::CellularComplex;
 use crate::traits::chain_complex::ChainComplex;
 use crate::{Manifold, SimplicialComplex};
-use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, HKT, Monad, Pure};
+use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, HKT, Monad, Pure, Traversable};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 use std::marker::PhantomData;
 
@@ -171,6 +171,76 @@ where
             metric: f_a.metric.clone(),
             cursor: 0,
         }
+    }
+}
+
+impl<C> Traversable<ManifoldWitness<C>> for ManifoldWitness<C>
+where
+    SimplicialComplex<C>: ChainComplex + Clone,
+    <SimplicialComplex<C> as CellularComplex>::Metric: Clone,
+    C: Clone + deep_causality_algebra::RealField + deep_causality_num::FromPrimitive,
+{
+    /// Flips `Manifold<C, M<A>>` into `M<Manifold<C, A>>`, folding an accumulator through `M` from
+    /// left to right so the effects run in cell order and the result keeps that order.
+    ///
+    /// A cell in a failing state collapses the whole traversal, and the first such cell in order
+    /// is the one reported.
+    ///
+    /// # The geometry survives, and so does the manifold's invariant
+    ///
+    /// `Manifold::new` requires the data length to equal the number of simplices in the complex
+    /// and the cursor to be in bounds. `sequence` is one-in-one-out, so the length cannot change
+    /// and the complex, the metric and the cursor are carried across rather than rebuilt — which
+    /// is why the result is assembled from the input's own fields.
+    ///
+    /// # Why there is no `DiagonalTraversable` beside this
+    ///
+    /// `DiagonalTraversable::sequence_zip` grows each structure in its accumulator one element at
+    /// a time, starting from a seed the caller supplies. For a manifold that seed would have to
+    /// carry zero data against a non-empty complex, which `Manifold::new` rejects on both its
+    /// length check and its cursor check. The obstacle is this type's invariant, not the trait,
+    /// and it is the same one that keeps `Collectable` off this witness.
+    ///
+    /// # Cost
+    ///
+    /// The accumulator is cloned once per step and holds `k` elements at step `k`, so the fold
+    /// performs `n(n-1)/2` element clones for an `n`-cell manifold. The clone is forced by
+    /// [`Applicative::apply`](deep_causality_haft::Applicative::apply)'s `Func: FnMut` bound
+    /// rather than by this trait's `A: Clone`.
+    fn sequence<A, M>(
+        fa: Manifold<SimplicialComplex<C>, M::Type<A>>,
+    ) -> M::Type<Manifold<SimplicialComplex<C>, A>>
+    where
+        M: deep_causality_haft::Applicative<M> + HKT,
+        A: Clone,
+    {
+        let complex = fa.complex.clone();
+        let metric = fa.metric.clone();
+        let cursor = fa.cursor;
+
+        let mut acc: M::Type<Vec<A>> = M::pure(Vec::new());
+        for m_a in fa.data.into_vec() {
+            acc = M::apply(
+                M::fmap(acc, |v: Vec<A>| {
+                    move |a: A| {
+                        let mut v = v.clone();
+                        v.push(a);
+                        v
+                    }
+                }),
+                m_a,
+            );
+        }
+
+        M::fmap(acc, move |values| {
+            let len = values.len();
+            Manifold {
+                complex: complex.clone(),
+                data: CausalTensor::from_vec(values, &[len]),
+                metric: metric.clone(),
+                cursor,
+            }
+        })
     }
 }
 

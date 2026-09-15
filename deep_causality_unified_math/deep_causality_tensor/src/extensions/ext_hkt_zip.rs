@@ -6,7 +6,9 @@
 use alloc::vec::Vec;
 
 use crate::CausalTensor;
-use deep_causality_haft::{Convolutional, Functor, HKT, MonoidalApplicative, Semigroupal};
+use deep_causality_haft::{
+    Convolutional, Foldable, Functor, HKT, MonoidalApplicative, Semigroupal,
+};
 
 // ============================================================================
 // HKT Witness Implementation
@@ -85,6 +87,38 @@ impl Semigroupal<ZipTensorWitness> for ZipTensorWitness {
             let len = data.len();
             CausalTensor::from_vec(data, &[len])
         }
+    }
+}
+
+impl Foldable<ZipTensorWitness> for ZipTensorWitness {
+    /// Reduces the flat data left to right, identically to
+    /// [`CausalTensorWitness`](crate::CausalTensorWitness).
+    ///
+    /// # Why this is not redundant
+    ///
+    /// The two witnesses project to the same `CausalTensor<T>`, so `CausalTensorWitness::fold`
+    /// already accepts whatever `zip_with` returns, with no conversion. This instance is not for
+    /// reaching the elements.
+    ///
+    /// It is for a generic function bounded on **one** witness, `W: Semigroupal<W> + Foldable<W>`,
+    /// which zips and then reduces through the same parameter. Without it such a function cannot
+    /// be instantiated here, and the workaround needs two witness parameters plus a
+    /// `W::Type<T> == F::Type<T>` constraint that Rust cannot express.
+    ///
+    /// # The shape plays no part
+    ///
+    /// `zip_with` above keeps the shape when both operands agree and reports the flat `[len]` of
+    /// the overlap when they do not. A fold reduces to a scalar over the elements in row-major
+    /// order, so it reads the same data either way and the distinction never reaches it.
+    ///
+    /// `fold` involves no applicative, which is the only thing the two witnesses disagree about,
+    /// so agreeing with `CausalTensorWitness` element for element and in order is a requirement
+    /// rather than a coincidence.
+    fn fold<A, B, Func>(fa: CausalTensor<A>, init: B, f: Func) -> B
+    where
+        Func: FnMut(B, A) -> B,
+    {
+        fa.into_vec().into_iter().fold(init, f)
     }
 }
 

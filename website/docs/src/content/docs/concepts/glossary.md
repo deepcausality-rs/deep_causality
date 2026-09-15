@@ -41,7 +41,7 @@ This page is the single source of truth for terminology. The other concept pages
 
 **Evidence**: A unit of factual data in the monograph's ontology. In code, evidence enters the system as Contextoids of type `Datoid`.
 
-**Higher-Kinded Types (HKT)**: Type-level functions that take types as arguments and return types. The library encodes them via the witness pattern (`HKT3`, `HKT5`) defined in [`deep_causality_haft`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_haft). See [HKT](/concepts/hkt/).
+**Higher-Kinded Types (HKT)**: Type-level functions that take types as arguments and return types. The library encodes them via the witness pattern (`HKT3`, `HKT5`) defined in [`deep_causality_haft`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_unified_math/deep_causality_haft). See [HKT](/concepts/hkt/).
 
 **Propagating Effect**: The stateless carrier alias `PropagatingEffect<T> = CausalEffectPropagationProcess<T, (), (), CausalityError, EffectLog>`. The everyday return type of a Causaloid's function; it implements the [Causal Monad](/concepts/causal-monad/) trait. Its stateful sibling is `PropagatingProcess<T, S, C>`.
 

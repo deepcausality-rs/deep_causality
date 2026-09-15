@@ -112,10 +112,16 @@ impl<
             let mut new_links = HashMap::new();
 
             for (edge, old_link) in current.links.iter() {
-                // Compute staple sum
-                let staple = current.try_staple(edge)?;
+                // The staple sum, daggered into the orientation of the link it is averaged with.
+                //
+                // `try_staple` returns the action-convention staple `V = U_ν(n+μ̂) U_μ†(n+ν̂)
+                // U_ν†(n)`, which runs from `n+μ̂` back to `n` so that `Tr(U_μ(n)·V)` closes the
+                // plaquette. APE smearing adds the staple to the link, which needs the two to
+                // share endpoints, so it wants `C = V† = U_ν(n) U_μ(n+ν̂) U_ν†(n+μ̂)`: the path
+                // from `n` to `n+μ̂` that goes around rather than straight along.
+                let staple = current.try_staple(edge)?.dagger();
 
-                // Weighted combination: (1-α) U + (α/(2(D-1))) V
+                // Weighted combination: (1-α) U + (α/(2(D-1))) C
                 let weighted_old = old_link
                     .try_scale(&one_minus_alpha_m)
                     .map_err(TopologyError::from)?;

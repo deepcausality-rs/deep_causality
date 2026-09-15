@@ -8,3 +8,5 @@ mod hkt_extensions_tests;
 mod hkt_law_tests;
 #[cfg(test)]
 mod hkt_tests;
+#[cfg(test)]
+mod hkt_traversable_tests;

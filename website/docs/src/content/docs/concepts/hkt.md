@@ -9,7 +9,7 @@ A higher-kinded type is a type that takes another type as a parameter and produc
 
 ## The encoding
 
-The crate [`deep_causality_haft`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_haft) defines the trait hierarchy:
+The crate [`deep_causality_haft`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_unified_math/deep_causality_haft) defines the trait hierarchy:
 
 ```rust
 pub trait HKT {

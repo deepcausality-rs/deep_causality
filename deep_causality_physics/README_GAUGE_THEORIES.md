@@ -66,7 +66,7 @@ This architecture provides three major advantages:
 ### A. Code Re-use via Witness Types
 
 Instead of rewriting the "Field Strength" calculation for every theory, we implement it **once** in the topology layer
-using **HKT Witness Types** (`GaugeFieldWitness`).
+using **HKT Witness Types** (`GaugeFieldOps`).
 
 * **Electromagnetism**: Uses `field_strength_from_eb_vectors` (Topology)
 * **Weak Force**: Uses `compute_field_strength_non_abelian` (Topology)

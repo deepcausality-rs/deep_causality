@@ -607,7 +607,6 @@ Coding style:
 
 Safety and security style:
 * No `unsafe`. This is enforced repo-wide via `[workspace.lints.rust] unsafe_code = "forbid"` in the root `Cargo.toml`. All 46 workspace members opt in with `[lints]` and `workspace = true` in their own `Cargo.toml` — new crates MUST include this.
-* There are no exemptions. No manifest in the workspace sets `unsafe_code` locally, and `forbid` cannot be lifted by an inner `allow`, so the policy holds by construction: an `unsafe` block anywhere in a member is a compile error, not a review finding.
-* A crate that genuinely cannot avoid `unsafe` would opt out with a local `[lints.rust] unsafe_code = "allow"` carrying a comment giving the irreducible reason. Do not add one without that justification; prefer a safe redesign (e.g. a structure-preserving map, `AtomicU64` over `static mut`).
+* There are no exemptions. 
 * Avoid macros in all lib code i.e. everything under /src. However, macros for testing are permissible when using sparingly i.e. for bulk testing many types implementing the same trait. 
 * Avoid the introduction of external crates unless it is necessary for testing.

@@ -12,3 +12,5 @@ mod laws_tests;
 mod ported_csr_witness_tests;
 #[cfg(test)]
 mod witness_tests;
+#[cfg(test)]
+mod zip_dense_vector_foldable_tests;

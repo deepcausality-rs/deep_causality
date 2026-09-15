@@ -4,7 +4,7 @@
  */
 
 use crate::Hypergraph;
-use deep_causality_haft::{CoMonad, Functor, HKT};
+use deep_causality_haft::{CoMonad, Foldable, Functor, HKT};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 
 /// # Why the element type carries no bound
@@ -36,6 +36,20 @@ impl Functor<HypergraphWitness> for HypergraphWitness {
             data: new_data,
             cursor: fa.cursor,
         }
+    }
+}
+
+impl Foldable<HypergraphWitness> for HypergraphWitness {
+    /// Reduces a hypergraph's per-node payload left to right, delegating to
+    /// [`CausalTensorWitness`](deep_causality_tensor::CausalTensorWitness) exactly as `fmap` does.
+    ///
+    /// The structure around the elements — the vertex count, the incidence, the points, the
+    /// complex — takes no part in a reduction and is dropped with the carrier.
+    fn fold<A, B, Func>(fa: Hypergraph<A>, init: B, f: Func) -> B
+    where
+        Func: FnMut(B, A) -> B,
+    {
+        CausalTensorWitness::fold(fa.data, init, f)
     }
 }
 

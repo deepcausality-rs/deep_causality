@@ -835,3 +835,169 @@ fn test_trunc_integer_input() {
     let r = Float::trunc(x);
     assert_exact(r, 3.0);
 }
+
+// =============================================================================
+// Fused multiply-add: the single rounding `Float::mul_add` promises
+// =============================================================================
+//
+// `self * a + b` rounds twice. `Mul` returns a canonical double-double, which means the exact
+// product is reduced to 106 bits before `b` is ever seen, and the terms below the last bit are
+// gone. Those terms are what a fused multiply-add is called for: they are negligible only while
+// the leading terms survive, and `b` is the thing that cancels the leading terms.
+//
+// Each test below states an exact answer that the unfused form cannot reach.
+
+/// `(s+1)(s−1) − s²` is `−1` for every `s`, and `lo · lo` is the only term carrying it.
+///
+/// At `s = 2⁵⁴` the double-double holds `s+1` as `(2⁵⁴, 1)` and `s−1` as `(2⁵⁴, −1)`. The high
+/// words give `2¹⁰⁸`, the two cross terms cancel, `b` removes `2¹⁰⁸`, and what remains is
+/// `1 · (−1)`. A product rounded before the subtraction has already dropped it.
+#[test]
+fn test_mul_add_keeps_the_term_a_rounded_product_drops() {
+    let one = Float106::from(1.0);
+
+    for exponent in [54, 55, 60, 80] {
+        let s = Float106::from(2f64.powi(exponent));
+        let det = Float::mul_add(s + one, s - one, -(s * s));
+
+        assert_exact(det, -1.0);
+    }
+}
+
+/// The same identity, stated against the unfused form it is meant to improve on.
+#[test]
+fn test_mul_add_beats_the_unfused_form_under_cancellation() {
+    let one = Float106::from(1.0);
+    let s = Float106::from(2f64.powi(54));
+
+    let unfused = (s + one) * (s - one) + -(s * s);
+    let fused = Float::mul_add(s + one, s - one, -(s * s));
+
+    assert_eq!(unfused.hi(), 0.0, "the rounded product loses the -1");
+    assert_exact(fused, -1.0);
+}
+
+/// A residue far below the terms it travels with still arrives.
+///
+/// `a = 1 + 2⁻⁶⁰` squares to `1 + 2⁻⁵⁹ + 2⁻¹²⁰`. Subtracting `1 + 2⁻⁵⁹` leaves `2⁻¹²⁰`, which is
+/// `2⁻⁶¹` times the cross terms it sits beside. Accumulating the expansion into a single `f64`
+/// rounds it away; accumulating into a double-double keeps it.
+#[test]
+fn test_mul_add_keeps_a_residue_far_below_the_cross_terms() {
+    let a = Float106::from_raw(1.0, 2f64.powi(-60));
+    let b = -Float106::from_raw(1.0, 2f64.powi(-59));
+
+    let fused = Float::mul_add(a, a, b);
+
+    assert_eq!(fused.hi(), 2f64.powi(-120), "the lo * lo term survives");
+    assert_eq!(fused.lo(), 0.0);
+}
+
+/// Nothing changes for the ordinary case the trait's own example states.
+#[test]
+fn test_mul_add_ordinary_values() {
+    assert_exact(
+        Float::mul_add(
+            Float106::from(10.0),
+            Float106::from(4.0),
+            Float106::from(60.0),
+        ),
+        100.0,
+    );
+    assert_exact(
+        Float::mul_add(
+            Float106::from(-1.5),
+            Float106::from(4.0),
+            Float106::from(6.0),
+        ),
+        0.0,
+    );
+    assert_exact(
+        Float::mul_add(
+            Float106::from(2.0),
+            Float106::from(3.0),
+            Float106::from(4.0),
+        ),
+        10.0,
+    );
+}
+
+/// At least as close as the hardware `f64` fused multiply-add, on inputs both types hold.
+#[test]
+fn test_mul_add_matches_the_f64_hardware_fma() {
+    let cases = [
+        (3.0f64, 7.0, 2.0),
+        (0.1, 0.2, -0.02),
+        (1e8 + 1.0, 1e8 - 1.0, -1e16),
+        (-2.5, 4.25, 0.125),
+    ];
+
+    for (x, y, z) in cases {
+        let wide = Float::mul_add(Float106::from(x), Float106::from(y), Float106::from(z));
+        let narrow = x.mul_add(y, z);
+
+        // The wide result is the reference; the hardware answer is it, rounded to f64.
+        assert_eq!(
+            wide.to_f64(),
+            narrow,
+            "f64 FMA disagrees for {x} * {y} + {z}"
+        );
+    }
+}
+
+/// Zeros keep their signs, and the identity cases stay identities.
+#[test]
+fn test_mul_add_zeros() {
+    let zero = Float106::from(0.0);
+    let one = Float106::from(1.0);
+    let three = Float106::from(3.0);
+
+    assert_exact(Float::mul_add(zero, three, one), 1.0);
+    assert_exact(Float::mul_add(three, zero, one), 1.0);
+    assert_exact(Float::mul_add(three, one, zero), 3.0);
+    assert_exact(Float::mul_add(zero, zero, zero), 0.0);
+}
+
+/// The non-finite cases IEEE 754 fixes.
+#[test]
+fn test_mul_add_non_finite() {
+    let inf = <Float106 as Float>::infinity();
+    let neg_inf = <Float106 as Float>::neg_infinity();
+    let nan = <Float106 as Float>::nan();
+    let two = Float106::from(2.0);
+    let one = Float106::from(1.0);
+    let zero = Float106::from(0.0);
+
+    // A non-finite product carries through the addition.
+    assert!(Float::mul_add(inf, two, one).is_infinite());
+    assert!(Float::mul_add(inf, two, one).is_sign_positive());
+    assert!(Float::mul_add(neg_inf, two, one).is_infinite());
+    assert!(Float::mul_add(neg_inf, two, one).is_sign_negative());
+
+    // Opposite infinities meeting is the NaN case.
+    assert!(Float::mul_add(inf, two, neg_inf).is_nan());
+
+    // `inf * 0` is NaN before `b` is consulted.
+    assert!(Float::mul_add(inf, zero, one).is_nan());
+
+    // A NaN in any position propagates.
+    assert!(Float::mul_add(nan, two, one).is_nan());
+    assert!(Float::mul_add(two, nan, one).is_nan());
+    assert!(Float::mul_add(two, two, nan).is_nan());
+
+    // A non-finite addend against a finite product.
+    assert!(Float::mul_add(two, two, inf).is_infinite());
+    assert!(Float::mul_add(two, two, inf).is_sign_positive());
+}
+
+/// A sum that overflows where the product did not answers with the infinity, as `Add` does.
+#[test]
+fn test_mul_add_sum_overflows() {
+    let huge = Float106::from(f64::MAX);
+    let one = Float106::from(1.0);
+
+    let result = Float::mul_add(huge, one, huge);
+
+    assert!(result.is_infinite());
+    assert!(result.is_sign_positive());
+}

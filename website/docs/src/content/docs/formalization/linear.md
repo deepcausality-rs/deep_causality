@@ -5,7 +5,7 @@ sidebar:
   order: 7
 ---
 
-Four laws for the 𝔽₂ layer of [`deep_causality_linear`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_linear). Proved in [`lean/DeepCausalityFormal/Linear/RankNullity.lean`](https://github.com/deepcausality-rs/deep_causality/blob/main/lean/DeepCausalityFormal/Linear/RankNullity.lean) and checked by witness tests in `deep_causality_linear/tests/formalization_lean/rank_nullity_tests.rs`.
+Four laws for the 𝔽₂ layer of [`deep_causality_linear`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_unified_math/deep_causality_linear). Proved in [`lean/DeepCausalityFormal/Linear/RankNullity.lean`](https://github.com/deepcausality-rs/deep_causality/blob/main/lean/DeepCausalityFormal/Linear/RankNullity.lean) and checked by witness tests in `deep_causality_linear/tests/formalization_lean/rank_nullity_tests.rs`.
 
 ## Why this layer, and why 𝔽₂
 
@@ -52,6 +52,6 @@ Three edges, stated rather than glossed.
 
 ## Related reading
 
-- [`LEAN_LINEAR.md`](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality_linear/LEAN_LINEAR.md): the crate-local view of this layer.
+- [`LEAN_LINEAR.md`](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality_unified_math/deep_causality_linear/LEAN_LINEAR.md): the crate-local view of this layer.
 - [Unified Math](/concepts/uniform-math/): where `deep_causality_linear` sits in the math stack.
 - [Topology](/formalization/topology/): the curvature laws proved at the concrete `CurvatureTensor`.
