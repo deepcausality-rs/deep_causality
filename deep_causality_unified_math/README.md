@@ -5,8 +5,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 # Unified Math
 
-
-Unified math grew from a small idea. Tensors and multivectors needed to compose, so they were given a shared higher-kinded interface. That interface turned out to want an algebra tower under it, the tower wanted numeric traits under that, and the composition kept finding new things it could reach: geometric algebra, discrete exterior calculus, chain complexes, spectral methods, uncertainty. 
+Unified math grew from a small idea. Tensors and multivectors needed to compose, so they were given a shared higher-kinded interface. That interface turned out to want an algebra tower under it, the tower wanted numeric traits under that, and the composition kept finding new things it could reach: geometric algebra, discrete exterior calculus, chain complexes, spectral methods, uncertainty.
 
 ## The stack
 
@@ -15,7 +14,6 @@ twenty-one, because `tensor -> num` is omitted where `tensor -> stats -> linear 
 -> num` already implies it. Reachability is unchanged. Two dependencies leave the folder, over four
 edges: `deep_causality_ast`, which `tensor` and `uncertain` build on, and `deep_causality_par`,
 which `fft` and `topology` build on. Both live in `deep_causality_utils/`.
-
 
 ```
 tier 7   topology
@@ -31,7 +29,6 @@ tier 0   num   metric
 ![Dependency graph of the deep_causality mathematics crates: eight tiers, from the roots num and
 metric at tier 0 up through algebra and haft, then linear algebra and the number types, then
 statistics, then tensors, to topology at tier 7. The longest chain is highlighted.](graph.png)
-
 
 ## The math crates
 
@@ -81,10 +78,6 @@ Nothing here has a **required** external dependency. Four crates have an optiona
 `libm`, `rand` for `getrandom`, and `fft` and `topology` for `rayon`. All four sit behind feature
 gates that are disabled by default.
 
-The figure and the two tier blocks above are checked by hand. `AGENTS.md` cites
-`scripts/check_tiers.py` as re-deriving the tiers from the manifests; no such script exists on
-`main`.
-
 ## How they compose
 
 Composition runs through `deep_causality_haft`. A crate that owns a container generic in its element
@@ -92,7 +85,7 @@ declares a *witness* type, binds `type Type<T>` to that container, and implement
 traits against the witness. Two mechanisms then fall out, and both are load-bearing in
 `examples/mathematics_examples/composable_multi_math/`.
 
-**Nesting.** A witness accepts any element type, including one another crate owns. 
+**Nesting.** A witness accepts any element type, including one another crate owns.
 A tensor of multivectors is an ordinary `CausalTensor<CausalMultiVector<T>>`, and
 one `fmap` rotates every cell of a vector field by a single Clifford rotor:
 
@@ -141,12 +134,10 @@ The capstone parallel-transports a unit timelike spinor along a discretized Mink
 `Cl(3,1)`. Four crates participate and the final drift against the closed-form `(cosh θ, sinh θ)` is
 about `1.7e-31` at `Float106`.
 
-**Programs compose differently from containers, and `Arrow` is where they do.** The container
-traits carry no `'static` bound, deliberately: a functor receives a function, applies it and drops
-it, so the function never outlives the call. A carrier that *stores* a closure needs bounds those
-traits do not provide, and an implementation cannot add them — `error[E0276]: impl has stricter
-requirements than trait`. `deep_causality_uncertain` is the case that shows the seam. Its lazy
-graph is a program rather than data, so it takes `Arrow` instead of a witness:
+**A witness carries data; `Arrow` carries a program.** A functor receives a function, applies it
+and drops it, so the container traits describe values that hold elements. `Arrow` describes a value
+that *is* a computation, held now and run later. `deep_causality_uncertain` builds a lazy graph, so
+it takes `Arrow`:
 
 ```rust
 impl<R: RandScalar> Arrow for Uncertain<R> {
@@ -159,20 +150,97 @@ impl<R: RandScalar> Arrow for Uncertain<R> {
 }
 ```
 
-`run` takes `&self`, which is admissible only because evaluating the graph at an address is a pure
-function: a draw is settled by the session seed, the sample index and the leaf's ordinal, and by
-nothing else. Nothing is stored between calls, which is also why `x - x` is exactly zero — a leaf
-reached twice within one graph is one draw. An ensemble goes the other way and is ordinary data:
-`Uncertain::materialize::<W>` takes a witness and hands back `W::Type<R>`, a `DenseVector<R>`, a
-rank-1 `CausalTensor<R>` or a `Vec<R>`, so the draws arrive already carrying every categorical
-structure that witness provides and `uncertain` names neither container crate.
+`run` takes `&self` because a draw is a pure function of three numbers: the session seed, the
+sample index, and the leaf's ordinal. That address settles the value, so two calls at one address
+agree, a session replays in a later process, and `x - x` is exactly zero — a leaf reached twice
+within one graph has one address and therefore one draw.
 
-Two ensembles drawn from one session at the *same* indices are correlated by index, so combining
-them is a positional zip — `Semigroupal::zip_with` on `ZipTensorWitness` or `ZipDenseVectorWitness`,
-and `DiagonalTraversable::sequence_zip` to turn a structure of ensembles inside out.
-`Traversable::sequence` is the hazard rather than the tool: it forms the cartesian product, so four
-quantities at fifty draws each give 50⁴ = 6 250 000 combinations instead of fifty correlated
-tuples, and every combination is individually well-formed, which makes the count the only symptom.
+An ensemble is data, and the caller picks the carrier. `Uncertain::materialize::<W>` takes a witness
+and hands back `W::Type<R>` — a `DenseVector<R>`, a rank-1 `CausalTensor<R>`, a `Vec<R>` — so the
+draws arrive already carrying every categorical structure that witness provides.
+
+Two ensembles drawn from one session at the *same* indices are correlated by index: draw `i` of one
+belongs with draw `i` of the other. Combining them is therefore a positional zip —
+`Semigroupal::zip_with` on `ZipTensorWitness` or `ZipDenseVectorWitness`, which pairs position with
+position. `DiagonalTraversable::sequence_zip` lifts that to a whole structure of ensembles: on
+`CausalTensorWitness` or `DenseVectorWitness` it takes an `F<M<A>>` to an `M<F<A>>` along the same
+diagonal, with a zip witness as the `M` that does the combining, so four quantities at fifty draws
+each give fifty correlated tuples.
+
+Forty witnesses across seven crates, each with the type it projects to and the
+`deep_causality_haft` traits it carries. `scripts/witness_inventory.py` derives this table from the
+`impl` headers in `src/`.
+
+| Crate | Witness | `Type<T>` | Implements |
+|---|---|---|---|
+| `haft` | `BTreeMapWitness` | `BTreeMap<K, V>` | `HKT`, `HKT2`, `Functor`, `Foldable` |
+|  | `BoxWitness` | `Box<T>` | `HKT`, `Functor`, `Pure`, `Applicative`, `Monad`, `CoMonad`, `Foldable`, `CloneFunctor`, `DebugFunctor`, `EqFunctor` |
+|  | `CofreeWitness` | `Cofree<F, T>` | `HKT`, `Functor`, `CoMonad` |
+|  | `FreeWitness` | `Free<F, T>` | `HKT`, `Pure` |
+|  | `HashMapWitness` | `HashMap<K, V>` | `HKT`, `HKT2`, `Functor`, `Foldable` |
+|  | `LinkedListWitness` | `LinkedList<T>` | `HKT`, `Functor`, `Pure`, `Applicative`, `Monad`, `Foldable`, `CloneFunctor`, `DebugFunctor`, `EqFunctor` |
+|  | `OptionWitness` | `Option<T>` | `HKT`, `Functor`, `Pure`, `Applicative`, `Monad`, `Foldable`, `Traversable`, `CloneFunctor`, `DebugFunctor`, `EqFunctor` |
+|  | `ResultUnboundWitness` | `Result<A, B>` | `HKT2Unbound`, `Bifunctor` |
+|  | `ResultWitness` | `Result<T, E>` | `HKT`, `HKT2`, `Functor`, `Pure`, `Applicative`, `Monad`, `Foldable`, `Traversable` |
+|  | `Tuple2Witness` | `(A, B)` | `HKT2Unbound`, `Bifunctor` |
+|  | `Tuple3Witness` | `(A, B, C)` | `HKT3Unbound`, `MonoidalMerge` |
+|  | `VecDequeWitness` | `VecDeque<T>` | `HKT`, `Functor`, `Foldable`, `CloneFunctor`, `DebugFunctor`, `EqFunctor` |
+|  | `VecWitness` | `Vec<T>` | `HKT`, `Functor`, `Pure`, `Applicative`, `Monad`, `Foldable`, `Traversable`, `Collectable`, `CloneFunctor`, `DebugFunctor`, `EqFunctor` |
+| `linear` | `CsrMatrixWitness` | `CsrMatrix<T>` | `HKT`, `Functor`, `Pure`, `Applicative`, `CoMonad`, `Foldable` |
+|  | `DenseMatrixWitness` | `DenseMatrix<T>` | `HKT`, `Functor`, `Pure`, `Applicative`, `CoMonad`, `Foldable` |
+|  | `DenseVectorWitness` | `DenseVector<T>` | `HKT`, `Functor`, `Pure`, `Applicative`, `Monad`, `CoMonad`, `Foldable`, `Traversable`, `DiagonalTraversable`, `Collectable` |
+|  | `ZipDenseVectorWitness` | `DenseVector<T>` | `HKT`, `Functor`, `Foldable`, `Semigroupal`, `MonoidalApplicative`, `Convolutional` |
+| `num_complex` | `ComplexWitness` | `Complex<T>` | `HKT`, `Functor`, `Foldable`, `Semigroupal`, `LaxMonoidal`, `MonoidalApplicative`, `Convolutional` |
+|  | `OctonionWitness` | `Octonion<T>` | `HKT`, `Functor`, `Foldable`, `Semigroupal`, `LaxMonoidal`, `MonoidalApplicative`, `Convolutional` |
+|  | `QuaternionWitness` | `Quaternion<T>` | `HKT`, `Functor`, `Foldable`, `Semigroupal`, `LaxMonoidal`, `MonoidalApplicative`, `Convolutional` |
+| `num_dual` | `DualWitness` | `Dual<T>` | `HKT`, `Functor`, `Foldable`, `Semigroupal`, `LaxMonoidal`, `MonoidalApplicative`, `Convolutional` |
+| `tensor` | `CausalTensorTrainWitness` | `CausalTensorTrain<T>` | `HKT`, `Functor`, `Pure`, `Foldable` |
+|  | `CausalTensorWitness` | `CausalTensor<T>` | `HKT`, `Functor`, `Pure`, `Applicative`, `Monad`, `CoMonad`, `Foldable`, `Traversable`, `DiagonalTraversable`, `Collectable` |
+|  | `ZipTensorWitness` | `CausalTensor<T>` | `HKT`, `Functor`, `Foldable`, `Semigroupal`, `MonoidalApplicative`, `Convolutional` |
+| `multivector` | `CausalMultiFieldWitness` | `CausalMultiField<A, T>` | `HKT`, `Functor`, `Pure`, `CoMonad` |
+|  | `CausalMultiVectorWitness` | `CausalMultiVector<T>` | `HKT`, `Functor`, `Pure`, `Applicative`, `CoMonad`, `Foldable`, `Traversable` |
+| `topology` | `BoundaryWitness` | `Chain<R, G>` | `HKT` |
+|  | `CellComplexWitness` | `CellField<C, T>` | `HKT`, `Functor`, `Foldable` |
+|  | `ChainWitness` | `Chain<R, G>` | `HKT`, `Functor`, `Foldable` |
+|  | `CochainWitness` | `Cochain<R>` | `HKT`, `Functor`, `Foldable` |
+|  | `CurvatureTensorWitness` | — | `RiemannMap` |
+|  | `ExteriorDerivativeWitness` | `DifferentialForm<T>` | `HKT` |
+|  | `GenericManifoldWitness` | `Manifold<K, T>` | `HKT`, `Functor` |
+|  | `GraphWitness` | `Graph<T>` | `HKT`, `Functor`, `CoMonad`, `Foldable` |
+|  | `HypergraphWitness` | `Hypergraph<T>` | `HKT`, `Functor`, `CoMonad`, `Foldable` |
+|  | `LatticeComplexWitness` | `LatticeField<D, R, T>` | `HKT`, `Functor`, `Foldable` |
+|  | `ManifoldWitness` | `Manifold<SimplicialComplex<C>, T>` | `HKT`, `Functor`, `Pure`, `Applicative`, `Monad`, `CoMonad`, `Foldable`, `Traversable` |
+|  | `MixedGraphWitness` | `MixedGraph<T>` | `HKT`, `Functor`, `CoMonad`, `Foldable` |
+|  | `PointCloudWitness` | `PointCloud<C, T>` | `HKT`, `Functor`, `CoMonad`, `Foldable` |
+|  | `TopologyWitness` | `Topology<R, G>` | `HKT`, `Functor`, `CoMonad`, `Foldable` |
+
+Four things are worth reading off it.
+
+**`Monad` belongs to three witnesses.** `DenseVectorWitness`, `CausalTensorWitness` and
+`ManifoldWitness` carry `bind`, so a chain of steps over a vector, a tensor or a manifold composes
+through the witness, and each has a Kleisli category with `pure` as its identity.
+
+**`CoMonad` is the topology idiom.** `GraphWitness`, `MixedGraphWitness`, `HypergraphWitness`,
+`PointCloudWitness` and `TopologyWitness` carry `Functor`, `CoMonad` and `Foldable`. `extend` hands
+a cursor to a closure that reads a neighbourhood and returns one value, which is how a graph
+convolution, a diffusion step or a cellular automaton is written; `fold` then reduces the payload.
+
+**The zip witnesses supply the positional applicative.** `ZipDenseVectorWitness` and
+`ZipTensorWitness` project to `DenseVector<T>` and `CausalTensor<T>`, the same containers their
+plain siblings project to, and their `zip_with` pairs slot with slot. That is the applicative the
+correlated-ensemble paragraph above reaches for.
+
+**Two witnesses are the halves of an adjunction.** `ExteriorDerivativeWitness` projects to
+`DifferentialForm<T>` and `BoundaryWitness` to `Chain<R, G>`, and
+`Adjunction<ExteriorDerivativeWitness, BoundaryWitness<R>, StokesContext<R>>` on `StokesAdjunction`
+relates them: `⟨dω, C⟩ = ⟨ω, ∂C⟩`, Stokes' theorem as `d ⊣ ∂`. Beside them
+`CurvatureTensorWitness` carries `RiemannMap`, whose `curvature(u, v, w)` reads a rank-4 tensor as
+the operator `R(u, v)w`.
+
+The same information with one row per trait, naming the crates whose types carry it. Most rows roll
+up from the table above: take a witness's row and replace the witness with its crate. The rest come
+from types that are not container witnesses — `StokesAdjunction` carries `Adjunction`, and `Arrow`
+is carried by `Diff`, `Euler`, `Rk4`, `CausalTensorTrainOperator`, `Uncertain` and `UncertainBool`.
 
 | Trait | Implementers outside `haft` |
 |---|---|
@@ -183,25 +251,15 @@ tuples, and every combination is individually well-formed, which makes the count
 | `LaxMonoidal` | `num_complex`, `num_dual` |
 | `Traversable` | `linear`, `tensor`, `multivector`, `topology` |
 | `DiagonalTraversable`, `Collectable` | `linear`, `tensor` |
-| `Adjunction` | `topology` |
+| `Adjunction`, `RiemannMap` | `topology` |
 | `Arrow` | `calculus`, `tensor`, `uncertain` |
-| `NaturalTransformation`, `Category`, `Bifunctor`, `Profunctor` | none |
 
-`Kleisli` is absent from the last row on purpose. It is not a trait a container implements:
-`Kleisli<M>` is a `Category` for **any** `M: Monad<M>`, so the three container monads above —
-`CausalTensorWitness`, `DenseVectorWitness`, `ManifoldWitness` — already have a Kleisli category
-each, with `pure` as the identity and `bind` as composition. Its laws reduce to the monad laws, and
-both halves are machine-checked in `lean/DeepCausalityFormal/Haft/Kleisli.lean`.
-
-The rest of that table is the work list. `openspec/notes/archive/unified_math/unified_math_gaps.md` carries the full
-analysis: which absences are real gaps and which are correct (a `Ratio<A> -> Ratio<B>` under an
-arbitrary `f` breaks coprimality, so `num_rational` is right to have none), what each costs, and a
-ranking from mechanical to design fork. Two findings there were measured by running code rather than
-read off the source: `CausalTensorWitness` and `CausalMultiVectorWitness` both violated monad right
-identity. Both are now resolved. `CausalMultiVectorWitness` gave up `Monad`, because no metric choice
-satisfies both identity laws, and `CausalTensorWitness::bind` keeps the input's shape when the map is
-shape preserving, so a `[2, 3]` no longer comes back `[6]`.
-
+`Kleisli` comes free with each of those monads. `Kleisli<M>` is a `Category` for **any**
+`M: Monad<M>`, so `CausalTensorWitness`, `DenseVectorWitness` and `ManifoldWitness` each have one,
+with `pure` as the identity and `bind` as composition. `CausalTensorWitness::bind` keeps the input's
+shape when every step is one-in-one-out, so a `[2, 3]` comes back `[2, 3]`. The Kleisli laws reduce
+to the monad laws, and both halves are machine-checked in
+`lean/DeepCausalityFormal/Haft/Kleisli.lean`.
 
 ## Precision as a parameter
 
@@ -341,8 +399,8 @@ impls, and the compiler will not choose. Name the target there, as in `lift::<Fl
 bind it first under an annotation. Inside a generic function the target is the type parameter,
 `lift::<S>(0.1)`, and any bound that carries `FromPrimitive` is enough; `Scalar` does.
 
-The examples under `examples/` are written this way. Each keeps its alias in `main.rs`, none carries
-a conversion helper of its own, and the three QCL examples under `examples/quantum_examples/`
+The examples under `examples/` are written this way. Each keeps its alias in `main.rs`, converts through
+`deep_causality_num::lift`, and the three QCL examples under `examples/quantum_examples/`
 run at `f32`, `f64` and `Float106`.
 
 ## Precision across composition
