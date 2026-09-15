@@ -93,7 +93,9 @@ where
         ));
     }
     let zero = Complex::new(R::zero(), R::zero());
-    let three = R::from_usize(3).unwrap_or_else(R::one);
+    let three = R::from_usize(3).ok_or_else(|| {
+        QuantumError::CalculationError("failed to represent depolarizing denominator 3".into())
+    })?;
     let stay = Complex::new((R::one() - p).sqrt(), R::zero());
     let flip = Complex::new((p / three).sqrt(), R::zero());
     let i_flip = Complex::new(R::zero(), (p / three).sqrt());
