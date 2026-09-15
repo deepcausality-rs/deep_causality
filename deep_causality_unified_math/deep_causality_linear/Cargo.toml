@@ -45,7 +45,7 @@ workspace = true
 features = ["default"]
 
 [dev-dependencies.deep_causality_num_rational]
-workspace = true
+path = "../deep_causality_num_rational"
 features = ["default"]
 
 [lints]

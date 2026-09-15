@@ -58,7 +58,7 @@ workspace = true
 
 [dev-dependencies]
 criterion = { workspace = true }
-deep_causality_rand = { workspace = true }
+deep_causality_rand = {path = "../deep_causality_rand"}
 
 [[bench]]
 name = "bench_causal_tensor"
