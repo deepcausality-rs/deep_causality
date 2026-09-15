@@ -441,9 +441,10 @@ conditional factor 256 entries, and the dilation screens by Markov and C₃ at o
 chain grouped into a cycle and `build()` refuses it. `H₃`, a common bath driving both qubits, needs
 a bath node with two output wires, since a single wire from the bath through `Q1` to `Q2` adds the
 edge `Q1 → Q2`. Under D3's leg convention that node's leg has dimension `(4 · 4)² = 256`, its
-children's conditional factors `256 · 16 = 4096` dimensions and `2^24` entries, and the Markov
-check's union `2^40`; so `H₃` stays the v1 factorization, a legal QCM by construction, and the
-example says so. The decision, not the factor values, is what the requirement asks to reproduce,
+children's conditional factors on the legs `{bath, child}` `256 · 16 = 4096` dimensions and `2^24`
+entries, at the dilation cap, and the Markov check's union over the three legs
+`256 · 16 · 16 = 65536` dimensions and `2^32` entries; so `H₃` stays the v1 factorization, a legal
+QCM by construction, and the example says so. The decision, not the factor values, is what the requirement asks to reproduce,
 and the plan and the adjudication depend on the probes' predictions alone.
 
 ## Risks / Trade-offs

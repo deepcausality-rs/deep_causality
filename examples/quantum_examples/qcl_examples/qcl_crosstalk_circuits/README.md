@@ -19,6 +19,8 @@ cargo run -p quantum_examples --example qcl_crosstalk_circuits
 Each circuit goes through `.over_circuit`, is screened by Markov and C₃ on its dilation, and the
 dilation's normalised factors become the candidate the plant pipeline forks. `H₃` is not a circuit
 here: a common bath driving two qubits needs a bath node with two output wires, and under the
-dilation's leg convention, `(d_in · d_out)²` per node, that node's leg has dimension 256, its
-children's conditional factors `2^24` entries and the Markov union `2^40`. The v1 factorization is a
-legal QCM by construction and stands in its place, as the spec records.
+dilation's leg convention, a node dimension `d = d_in · d_out` and a leg of dimension `d²`, that
+node has `d = 16` and a leg of 256, each single-wire child a leg of 16, a child's conditional factor
+`4096 × 4096` with `2^24` entries at the cap, and the Markov union over the three legs
+`65536 × 65536` with `2^32` entries. The v1 factorization is a legal QCM by construction and stands
+in its place, as the spec records.

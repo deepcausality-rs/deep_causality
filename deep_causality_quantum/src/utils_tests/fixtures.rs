@@ -39,6 +39,19 @@ pub fn four_two_two() -> HandBuiltComplex {
     HandBuiltComplex::new(vec![2, 4, 1], &[&d1, &d2])
 }
 
+/// A code with three logical qubits and no checks: one vertex and three loop edges on it, so
+/// `∂₁ = 0` over ℤ, `H₁ = 𝔽₂³`, `n = k = 3`, and every logical representative is one edge. It is
+/// the smallest outer code on which a three-qubit gate stays within one block.
+pub fn three_three_one() -> HandBuiltComplex {
+    HandBuiltComplex::new(vec![1, 3], &[&[]])
+}
+
+/// A complex with no logical qubits: two vertices joined by one edge, so `∂₁ = [−1, 1]ᵀ` has full
+/// column rank and `H₁ = 0`. As a code it has `n = 1` and `k = 0`.
+pub fn no_logical_qubits() -> HandBuiltComplex {
+    HandBuiltComplex::new(vec![2, 1], &[&[(0, 0, -1), (1, 0, 1)]])
+}
+
 /// The small memory experiment: three data qubits under independent `X` noise `p`, one correlated
 /// `X ⊗ X` channel of probability `p_c` on the first two, two parity checks through ancillas, and
 /// every qubit measured. Wires `0..3` are data, `3, 4` the ancillas, `5..10` the classical record

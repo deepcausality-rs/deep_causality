@@ -17,8 +17,9 @@
 use deep_causality_num_complex::Complex;
 use deep_causality_quantum::{
     Abstraction, AlignmentSide, Axis, Channel, CheckVerdict, CircuitBox, CircuitModel,
-    FROBENIUS_ON_CHOI, GateOp, NumericCaps, QcMorphism, QuantumErrorEnum, QubitOperator, Query,
-    SemanticsPath, StructureScope, TypeAlignment, WireType,
+    FROBENIUS_ON_CHOI, Fault, GateOp, NumericCaps, PauliKind, QcMorphism, QuantumErrorEnum,
+    QubitOperator, Query, QuerySignature, SemanticsPath, SquareParts, StructureScope,
+    TypeAlignment, WireType, stochastic_morphism,
 };
 use deep_causality_tensor::CausalTensor;
 
@@ -258,16 +259,17 @@ fn test_observe_and_a_failing_swapped_program() {
     )
     .unwrap();
     // With the block alignment, observing low wire 0 alone leaves low wire 1 as a quantum output
-    // that π of the high-level type does not have: the square is ill-typed and says so.
+    // that π of the high-level type does not have: the square is ill-typed and construction says
+    // so.
     let ill = Abstraction::new(
         low(GateOp::X(1)),
         high(),
         alignment(),
         vec![(Query::Observe(vec![0]), Query::Observe(vec![0]))],
     )
-    .unwrap();
+    .unwrap_err();
     assert!(matches!(
-        ill.square(&Query::Observe(vec![0]), &caps).unwrap_err().0,
+        ill.0,
         QuantumErrorEnum::CalculationError(ref m) if m.contains("ill-typed")
     ));
     let a = Abstraction::new(wrong, high(), alignment(), vec![(Query::Io, Query::Io)]).unwrap();
@@ -336,8 +338,10 @@ fn test_scope_is_equivalent_only_when_both_sides_are_classical() {
         both.check_alignment_structure(&[]).unwrap().scope,
         StructureScope::Equivalent
     );
+    let quantum_wire =
+        CircuitModel::<f64>::ungrouped(vec![WireType::qubit()], vec![], vec![], vec![]).unwrap();
     let quantum_low = Abstraction::new(
-        low(GateOp::X(1)),
+        quantum_wire,
         classical(),
         empty(),
         vec![(Query::Io, Query::Io)],
@@ -489,4 +493,144 @@ fn test_a_sided_alignment_squares_an_interchange_query() {
     let r = a.check_naturality(&caps).unwrap();
     assert_eq!(r.report.examined(), 2);
     assert_eq!(r.report.verdict(), CheckVerdict::Accepted);
+}
+
+/// Construction checks that the alignment covers both types of every mapped query: a missing
+/// output entry names the wire, an ill-typed square names its side, and a classical output map
+/// that does not fit the square's classical wires is refused.
+#[test]
+fn test_new_refuses_a_map_whose_types_the_alignment_does_not_cover() {
+    let input_only = TypeAlignment::new_sided(vec![(
+        AlignmentSide::Input,
+        (vec![0], vec![0, 1], trace_b(), prepare_b()),
+    )])
+    .unwrap();
+    let err = Abstraction::new(
+        low(GateOp::X(1)),
+        high(),
+        input_only,
+        vec![(Query::Io, Query::Io)],
+    )
+    .unwrap_err();
+    assert!(
+        matches!(err.0, QuantumErrorEnum::CalculationError(ref m) if m.contains("wire 0") && m.contains("not aligned")),
+        "{err}"
+    );
+    let err = Abstraction::new(
+        low(GateOp::X(1)),
+        high(),
+        alignment(),
+        vec![(Query::Observe(vec![0]), Query::Observe(vec![0]))],
+    )
+    .unwrap_err();
+    assert!(
+        matches!(err.0, QuantumErrorEnum::CalculationError(ref m) if m.contains("ill-typed") && m.contains("Output")),
+        "{err}"
+    );
+    let flip = stochastic_morphism::<f64>(&[vec![0.0, 1.0], vec![1.0, 0.0]], &[2], &[2]).unwrap();
+    let err = Abstraction::new(
+        low(GateOp::X(1)),
+        high(),
+        alignment().with_classical_output(flip).unwrap(),
+        vec![(Query::Io, Query::Io)],
+    )
+    .unwrap_err();
+    assert!(
+        matches!(err.0, QuantumErrorEnum::CalculationError(ref m) if m.contains("classical output map")),
+        "{err}"
+    );
+    // A well-typed map on the same models is admitted.
+    assert!(
+        Abstraction::new(
+            low(GateOp::X(1)),
+            high(),
+            alignment(),
+            vec![(Query::Io, Query::Io)]
+        )
+        .is_ok()
+    );
+}
+
+/// `square_parts` forms the square and its two alignment channels in one pass and agrees with the
+/// three wrappers that each form them on their own.
+#[test]
+fn test_square_parts_agrees_with_its_wrappers() {
+    let caps = NumericCaps::default();
+    let a = Abstraction::new(
+        low(GateOp::X(1)),
+        high(),
+        alignment(),
+        vec![(Query::Io, Query::Io)],
+    )
+    .unwrap();
+    let parts: SquareParts<f64> = a.square_parts(&Query::Io, &Query::Io, &caps).unwrap();
+    let (left, right) = a.square_with(&Query::Io, &Query::Io, &caps).unwrap();
+    assert_eq!(parts.left, left);
+    assert_eq!(parts.right, right);
+    assert_eq!(
+        parts.tau_in,
+        a.tau_in(&Query::Io, &Query::Io, &caps).unwrap()
+    );
+    assert_eq!(
+        parts.tau_out,
+        a.tau_out(&Query::Io, &Query::Io, &caps).unwrap()
+    );
+    // `τ_out` is `Tr_B` here and `τ_in` the same channel: the square runs from the two low wires.
+    assert_eq!((parts.tau_in.d_in(), parts.tau_in.d_out()), (4, 2));
+    assert_eq!((parts.tau_out.d_in(), parts.tau_out.d_out()), (4, 2));
+    assert!(
+        parts
+            .left
+            .frobenius_distance(&parts.right, &caps)
+            .unwrap()
+            .0
+            < 1e-12
+    );
+    let err = a
+        .square_parts(&Query::Open(vec![9]), &Query::Io, &caps)
+        .unwrap_err();
+    assert!(matches!(err.0, QuantumErrorEnum::DimensionMismatch(_)));
+}
+
+/// A declared signature must be mapped in full, and nothing outside it may be mapped: five
+/// queries with four pairs are refused naming the fifth, an extra pair is refused naming it, and
+/// the full map keeps the signature's order.
+#[test]
+fn test_with_signature_requires_a_total_map_on_the_declared_signature() {
+    let identity = QcMorphism::<f64>::identity(2).unwrap();
+    let same = || {
+        TypeAlignment::new(vec![(vec![0], vec![0], identity.clone(), identity.clone())]).unwrap()
+    };
+    let fault = Query::Fault(Fault::new(None, vec![(0, PauliKind::X)]).unwrap());
+    let five = vec![
+        Query::Io,
+        Query::Open(vec![0]),
+        Query::Observe(vec![0]),
+        fault.clone(),
+        Query::Inc(vec![vec![0]]),
+    ];
+    let signature = QuerySignature::new(&high().induced_dag(), five.clone()).unwrap();
+    let four: Vec<(Query, Query)> = five[..4].iter().map(|q| (q.clone(), q.clone())).collect();
+    let err = Abstraction::with_signature(high(), high(), same(), signature.clone(), four.clone())
+        .unwrap_err();
+    assert!(
+        matches!(err.0, QuantumErrorEnum::CalculationError(ref m) if m.contains("Inc([[0]])") && m.contains("no image")),
+        "{err}"
+    );
+    let mut extra: Vec<(Query, Query)> = five.iter().map(|q| (q.clone(), q.clone())).collect();
+    extra.push((Query::Inc(vec![]), Query::Inc(vec![])));
+    let err =
+        Abstraction::with_signature(high(), high(), same(), signature.clone(), extra).unwrap_err();
+    assert!(
+        matches!(err.0, QuantumErrorEnum::CalculationError(ref m) if m.contains("Inc([])") && m.contains("not in the signature")),
+        "{err}"
+    );
+    let full: Vec<(Query, Query)> = five.iter().rev().map(|q| (q.clone(), q.clone())).collect();
+    let a = Abstraction::with_signature(high(), high(), same(), signature, full).unwrap();
+    assert_eq!(a.signature().queries(), &five[..]);
+    assert_eq!(a.query_map().len(), 5);
+    // The map-derived form on the same four pairs is admitted, with the map's order.
+    let a = Abstraction::new(high(), high(), same(), four).unwrap();
+    assert_eq!(a.signature().len(), 4);
+    assert_eq!(a.signature().queries()[3], fault);
 }

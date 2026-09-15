@@ -16,7 +16,9 @@ Pauli error on named wires after a named node of the circuit (or before its firs
 constructors `pauli_weight(locations, after, t, cap)`, `declared(&[Fault])` and
 `from_dem(mechanisms, after)` taking the Pauli supports of a detector error model's mechanisms, and
 `pauli_weight` on `n` locations SHALL count `C(n, t) · 3^t` queries in checked `u64` arithmetic and
-SHALL refuse above the cap before allocating, naming the count and the cap.
+SHALL refuse above the cap before allocating, naming the count and the cap. In the scenarios below
+`pauli_weight(t)` abbreviates `pauli_weight(locations, after, t, cap)` with the locations the
+scenario names, the location after the last noise node, and the default cap `FAULT_SET_CAP`.
 
 A fault is a comb in the paper's sense, a general intervention that is not a Do-query. The count
 is the same exponential D7 of `add-qcl` caps for the design cover; the default weight is one, and
@@ -137,17 +139,20 @@ the `SemanticsPath` that decided it, and on Table 1 that path is `Exact`.
 
 ### Requirement: The Haruna filter's answer is derived and then computed
 
-The Haruna filter SHALL run `check_fault_tolerance` under `pauli_weight(1)` on each Table 1 gate
-over a CSS code, SHALL output the subset that holds, and SHALL label every verdict `Exact`.
+The Haruna filter SHALL run `check_fault_tolerance` under `pauli_weight(1)` on every physical qubit
+for each gate of the `CodeAbstraction`'s signature, which `CodeAbstraction::table_one(k)` fills
+with every Table 1 gate, SHALL output the subset that holds, and SHALL label every verdict `Exact`.
 
 The answer follows from Eq. (3.63) for every CSS code and every representative weight: `Z̄` and `X̄`
 do not spread, and every other Table 1 gate fails a single X-type fault on its support because its
 remainder is a non-trivial logical operator (`i · Z̄(γ)` for `S̄`, phase table `[1/4, 3/4]`;
 `exp(±iπ/4 Z̄(γ))` for `T̄`, table `[1/8, 7/8]`; `Z̄(γ₂)` for `CZ̄` under a fault on `γ₁`, table
-`[0, 0, 1/2, 1/2]`; and the Clifford image through the tableau for `H̄`, a Pauli of weight above
-one). That derivation is
-the provenance of the test's expected values, as the anti-circularity protocol asks; the filter
-computes the verdicts and the test compares them to it.
+`[0, 0, 1/2, 1/2]`). For `H̄` the propagator pushes the fault through the tableau of Eq. (3.32),
+and on the torus fixtures a weight-one fault comes out as a Pauli of weight above one carrying a
+logical operator; the filter computes that image per code rather than assuming it, and this
+specification claims it for the fixtures only. That derivation is the provenance of the test's
+expected values, as the anti-circularity protocol asks; the filter computes the verdicts and the
+test compares them to it.
 
 #### Scenario: The filter agrees with the derivation on both torus fixtures
 

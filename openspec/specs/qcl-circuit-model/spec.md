@@ -30,14 +30,17 @@ as they ship; `CircuitModel` adds the wire types, the noise boxes, the grouping 
 
 - **WHEN** a `CircuitModel` is built from an encoder on qubits `{0, 1}`, a unitary box `U` on
   `{0, 1}`, a unitary box `V` on `{1, 2}` and measurements on `{0, 2}`, with each box its own node
-- **THEN** `induced_dag()` has a vertex per encoder input, per unitary and per measurement output,
-  an edge for each internal wire, `U → V` present because wire `1` leaves `U` and enters `V`, and
-  no edge `U → measurement(2)`
+- **THEN** `induced_dag()` has one vertex per node, five here (the encoder, `U`, `V` and the two
+  measurements), an edge wherever a wire leaves one node's box and enters the next node's box
+  (encoder `→ U` on wires `0` and `1`, `U → V` on wire `1`, `U →` the measurement of `0`, `V →` the
+  measurement of `2`), and no edge `U →` the measurement of `2`
 
 #### Scenario: A malformed wiring is refused at construction
 
-- **WHEN** a box names a wire whose dimension disagrees with the box's declared dimension, or two
-  boxes both write the same wire without a box between them
+- **WHEN** a box names a wire whose dimension disagrees with the box's declared dimension, two
+  boxes both write the same classical outcome wire, or an encoder prepares a quantum wire an
+  earlier box has touched (quantum wires pass from box to box; only their fresh preparation and
+  classical outcome writes are exclusive)
 - **THEN** construction returns `QuantumError::DimensionMismatch` naming the wire and both boxes,
   and no `CircuitModel` value is produced
 
@@ -97,9 +100,15 @@ fault path stays far below the second cap.
 - **WHEN** the numeric semantics is asked to evaluate an 18-qubit program with two output qubits
   under the default cap
 - **THEN** it returns `NaturalityDimensionExceeded { n: 18, k: 2, entries: 2^36, cap: 2^24 }`, the
-  working storage of `2^18` state vectors of `2^18` amplitudes it would allocate, before allocating;
-  the composite Choi of `2^40` entries is refused by the same variant at the point it would be
-  formed
+  working storage of `2^18` state vectors of `2^18` amplitudes it would allocate, before allocating
+
+#### Scenario: A composite Choi operator above the cap is refused where it would be formed
+
+- **WHEN** `choi_blocks` is asked of a morphism from `n` to `k` qubits whose composite Choi
+  operator has `2^(2n + 2k)` entries above the cap
+- **THEN** it returns `NaturalityDimensionExceeded` with that entry count and the cap, before
+  allocating; a `2^40` count for `n = 18`, `k = 2` is never reached from a program evaluation, whose
+  working storage is refused first
 
 #### Scenario: The small torus is formed and its cost reported
 
@@ -170,8 +179,10 @@ error says why rather than failing on a missing field.
 
 #### Scenario: A bare process operator cannot enter an abstraction
 
-- **WHEN** `Abstraction::new` is given a low-level side that is a `ModelSubject` rather than a
-  `CircuitModel`
-- **THEN** it returns `NoCompositionalModel` stating that a process operator without its circuit is
-  the marginal of a compositional model and not one itself, and the v1 `validate` stages on that
-  subject are unchanged
+- **WHEN** a screen over a `ModelSubject`, a bare process operator, asks
+  `Screened::require_compositional()`, the gate every abstraction stage of `validate` passes
+  through
+- **THEN** it returns `NoCompositionalModel` carrying the subject's origin, so a process operator
+  without its circuit does not reach an abstraction, while the v1 `validate` stages on that
+  subject are unchanged; `Abstraction::new` itself takes `QcModel` implementors, which a
+  `ModelSubject` is not

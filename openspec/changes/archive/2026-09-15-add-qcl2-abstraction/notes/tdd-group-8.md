@@ -18,7 +18,7 @@ plant subject, the plan `E1 do(Q1)` and `E2 do(Q2)` at cost 2 against tomography
 | Literal | Source |
 |---|---|
 | leg dimension 16 per single-wire node, conditional factor 256 entries | D3's `(d_in · d_out)²` with `d_in = d_out = 2` |
-| a two-output bath node's leg 256, its children's factors `2^24` entries, the Markov union `2^40` | the same convention with `d_in = d_out = 4`, then `256 · 16` and `256 · 16 · 16` squared |
+| a two-output bath node's leg 256, its single-wire children's factors `2^24` entries, the Markov union `2^32` | the same convention with `d_in = d_out = 4` for the bath, then `(256 · 16)²` and `(256 · 16 · 16)²` |
 | plan cost 2, tomography 200, survivor at 100.1 bits | the v1 example's probes and floor, unchanged |
 
 ## Close-out checks

@@ -43,7 +43,7 @@ expected value be derived, and a derivation can be wrong in ways a run exposes.
 ## Named-defect audit, group 3
 
 Thirteen defects across the dilation's consumers, the alignment, the abstraction, the naturality
-check and the bound; results appended below by `scratchpad/audit_g3.py`.
+check and the bound; results appended below by `scratchpad/audit_g3.py`, a session script that was not retained; the table stands as recorded and `notes/audits/README.md` says so.
 
 | # | Defect | Class | Caught by |
 |---|---|---|---|

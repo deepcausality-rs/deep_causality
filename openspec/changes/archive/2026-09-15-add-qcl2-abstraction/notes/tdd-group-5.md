@@ -37,7 +37,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 ## Named-defect audit
 
 Twelve defects across the fault set, the inserted fault node and both decision paths; applied by
-`scratchpad/audit_g5/audit.py` with the originals kept in the scratchpad, the two fault test
+`notes/audits/audit_g5.py` with the originals kept in the scratchpad, the two fault test
 binaries run under Bazel per defect.
 
 | # | Defect | Class | Result |

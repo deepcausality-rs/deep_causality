@@ -9,6 +9,7 @@
 //! (Proposition 18) and are not stored.
 
 use crate::QuantumError;
+use crate::QuantumErrorEnum;
 use crate::types::abstraction::alignment_structure::{
     AlignmentStructure, StructureScope, check_alignment_structure,
 };
@@ -22,6 +23,22 @@ use core::marker::PhantomData;
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
 use deep_causality_num_complex::Complex;
+
+/// The parts of one naturality square, formed in one pass: the two sides as morphisms from the
+/// low-level input type to the high-level output type, and the two alignment channels they were
+/// formed with.
+#[derive(Debug, Clone, PartialEq)]
+pub struct SquareParts<R: RealField> {
+    /// `τ_out ∘ ⟦π(Q)⟧_L`.
+    pub left: QcMorphism<R>,
+    /// `⟦Q⟧_H ∘ τ_in`.
+    pub right: QcMorphism<R>,
+    /// The input-side `τ`, classical inputs carried as the identity.
+    pub tau_in: QcMorphism<R>,
+    /// The output-side `τ`, classical outputs carried as the identity or through the classical
+    /// output map.
+    pub tau_out: QcMorphism<R>,
+}
 
 /// A downward abstraction from a low-level model `L` to a high-level model `H`.
 #[derive(Debug, Clone)]
@@ -41,40 +58,100 @@ where
     H: QcModel<R>,
 {
     /// An abstraction from its two models, its alignment and its query map, given as pairs
-    /// `(high-level query, low-level query)`. The high-level queries form the signature, which is
-    /// validated against `H`'s DAG; each low-level query is validated against `L`'s.
+    /// `(high-level query, low-level query)`. The high-level queries form the signature, in map
+    /// order, which is validated against `H`'s DAG; each low-level query is validated against
+    /// `L`'s. The alignment must cover both types of every mapped query: `π` of the high-level
+    /// input and output wires must be the low-level query's, and the classical wires must agree
+    /// across each square, through the classical output map where the alignment carries one.
     ///
     /// # Errors
     ///
-    /// [`QuantumError::CalculationError`] if a high-level query is mapped twice; the signature's
-    /// errors on either side.
+    /// [`QuantumError::CalculationError`] if a high-level query is mapped twice, or a square is
+    /// ill-typed or a type not aligned, naming the side and the wires; the signature's errors on
+    /// either side.
     pub fn new(
         low: L,
         high: H,
         alignment: TypeAlignment<R>,
         query_map: Vec<(Query, Query)>,
     ) -> Result<Self, QuantumError> {
-        let high_queries: Vec<Query> = query_map.iter().map(|(h, _)| h.clone()).collect();
-        for (i, q) in high_queries.iter().enumerate() {
-            if high_queries[i + 1..].contains(q) {
-                return Err(QuantumError::CalculationError(format!(
-                    "the high-level query {q:?} is mapped twice"
-                )));
-            }
+        let queries: Vec<Query> = query_map.iter().map(|(h, _)| h.clone()).collect();
+        Self::from_parts(low, high, alignment, queries, query_map)
+    }
+
+    /// An abstraction on a declared signature: every query of the signature must be mapped and
+    /// every mapped query must be in the signature, which keeps its order. Otherwise as
+    /// [`new`](Self::new).
+    ///
+    /// # Errors
+    ///
+    /// [`QuantumError::CalculationError`] naming the unmapped signature query, the mapped query
+    /// outside the signature, or a query the signature lists twice; then as [`new`](Self::new).
+    pub fn with_signature(
+        low: L,
+        high: H,
+        alignment: TypeAlignment<R>,
+        signature: QuerySignature,
+        query_map: Vec<(Query, Query)>,
+    ) -> Result<Self, QuantumError> {
+        let queries = signature.queries();
+        if let Some(q) = queries
+            .iter()
+            .find(|q| !query_map.iter().any(|(h, _)| h == *q))
+        {
+            return Err(QuantumError::CalculationError(format!(
+                "the signature query {q:?} has no image in the query map"
+            )));
         }
-        let signature = QuerySignature::new(&high.induced_dag(), high_queries)?;
-        let low_dag = low.induced_dag();
-        for (_, q) in &query_map {
-            QuerySignature::new(&low_dag, alloc::vec![q.clone()])?;
+        if let Some((h, _)) = query_map.iter().find(|(h, _)| !queries.contains(h)) {
+            return Err(QuantumError::CalculationError(format!(
+                "the mapped query {h:?} is not in the signature"
+            )));
         }
-        Ok(Self {
+        if let Some(q) = queries
+            .iter()
+            .enumerate()
+            .find_map(|(i, q)| queries[i + 1..].contains(q).then_some(q))
+        {
+            return Err(QuantumError::CalculationError(format!(
+                "the query {q:?} appears twice in the signature"
+            )));
+        }
+        Self::from_parts(low, high, alignment, queries.to_vec(), query_map)
+    }
+
+    /// The shared constructor: the signature over `queries`, the duplicate check on the map, and
+    /// the coverage check of every mapped square.
+    fn from_parts(
+        low: L,
+        high: H,
+        alignment: TypeAlignment<R>,
+        queries: Vec<Query>,
+        query_map: Vec<(Query, Query)>,
+    ) -> Result<Self, QuantumError> {
+        if let Some((h, _)) = query_map
+            .iter()
+            .enumerate()
+            .find(|(i, (h, _))| query_map[i + 1..].iter().any(|(h2, _)| h2 == h))
+            .map(|(_, pair)| pair)
+        {
+            return Err(QuantumError::CalculationError(format!(
+                "the high-level query {h:?} is mapped twice"
+            )));
+        }
+        let signature = QuerySignature::new(&high.induced_dag(), queries)?;
+        let me = Self {
             low,
             high,
             alignment,
             signature,
             query_map,
             _r: PhantomData,
-        })
+        };
+        for (h, l) in &me.query_map {
+            me.typed_square(h, l)?;
+        }
+        Ok(me)
     }
 
     /// The low-level model.
@@ -175,6 +252,23 @@ where
         low_q: &Query,
         caps: &NumericCaps,
     ) -> Result<(QcMorphism<R>, QcMorphism<R>), QuantumError> {
+        let parts = self.square_parts(high, low_q, caps)?;
+        Ok((parts.left, parts.right))
+    }
+
+    /// The square of [`square_with`](Self::square_with) together with the two alignment channels
+    /// it was formed with, validated and aligned once. The composition law needs all four for
+    /// every query and takes them from here.
+    ///
+    /// # Errors
+    ///
+    /// As [`square_with`](Self::square_with).
+    pub fn square_parts(
+        &self,
+        high: &Query,
+        low_q: &Query,
+        caps: &NumericCaps,
+    ) -> Result<SquareParts<R>, QuantumError> {
         let typed = self.typed_square(high, low_q)?;
         let tau_in = typed.tau_in(caps)?;
         let tau_out = typed.tau_out(caps)?;
@@ -182,7 +276,12 @@ where
         let high_m = self.high.numeric_query(high, caps)?;
         let left = low_m.then(&tau_out, caps)?;
         let right = tau_in.then(&high_m, caps)?;
-        Ok((left, right))
+        Ok(SquareParts {
+            left,
+            right,
+            tau_in,
+            tau_out,
+        })
     }
 
     /// The input-side `τ` of the square for `high` against `low_q`: the morphism from the
@@ -219,7 +318,8 @@ where
     }
 
     /// Both queries validated, typed and aligned: the alignment extended along the queries'
-    /// renamings and checked to send the high-level input and output types to the low-level ones.
+    /// renamings and checked to send the high-level input and output types to the low-level ones,
+    /// with the classical wires agreeing across each side.
     fn typed_square(&self, high: &Query, low_q: &Query) -> Result<TypedSquare<R>, QuantumError> {
         QuerySignature::new(&self.high.induced_dag(), alloc::vec![high.clone()])?;
         QuerySignature::new(&self.low.induced_dag(), alloc::vec![low_q.clone()])?;
@@ -234,7 +334,14 @@ where
             (AlignmentSide::Input, &th.quantum_in, &tl.quantum_in),
             (AlignmentSide::Output, &th.quantum_out, &tl.quantum_out),
         ] {
-            let expected = alignment.low_for_side(high_wires, side)?;
+            let expected = alignment
+                .low_for_side(high_wires, side)
+                .map_err(|e| match e.0 {
+                    QuantumErrorEnum::CalculationError(m) => QuantumError::CalculationError(
+                        format!("the square for {high:?} on the {side:?} side: {m}"),
+                    ),
+                    other => QuantumError(other),
+                })?;
             if &expected != low_wires {
                 return Err(QuantumError::CalculationError(format!(
                     "the square for {high:?} is ill-typed on the {side:?} side: π of the high-level \
@@ -242,6 +349,18 @@ where
                 )));
             }
         }
+        classical_map_for(
+            &alignment,
+            AlignmentSide::Input,
+            &th.classical_in_counts,
+            &tl.classical_in_counts,
+        )?;
+        classical_map_for(
+            &alignment,
+            AlignmentSide::Output,
+            &th.classical_out_counts,
+            &tl.classical_out_counts,
+        )?;
         Ok(TypedSquare { th, tl, alignment })
     }
 
@@ -299,8 +418,40 @@ where
     }
 }
 
-/// `τ` on a type with classical wires carried as the identity; the classical outcome counts must
-/// agree across the square.
+/// The classical map that applies on one side of a square, after checking its classical wires:
+/// on the output side of an alignment with a classical output map, the map, whose counts must be
+/// the square's; otherwise none, and the counts must agree so the identity carries them.
+fn classical_map_for<'a, R>(
+    alignment: &'a TypeAlignment<R>,
+    side: AlignmentSide,
+    high_classical: &[usize],
+    low_classical: &[usize],
+) -> Result<Option<&'a QcMorphism<R>>, QuantumError>
+where
+    R: RealField + FromPrimitive + Default + core::fmt::Debug,
+{
+    if side == AlignmentSide::Output
+        && let Some(map) = alignment.classical_output()
+    {
+        if map.classical_in() != low_classical || map.classical_out() != high_classical {
+            return Err(QuantumError::CalculationError(format!(
+                "the classical output map is {:?} → {:?}, but the square has low {low_classical:?} and high {high_classical:?}",
+                map.classical_in(),
+                map.classical_out()
+            )));
+        }
+        return Ok(Some(map));
+    }
+    if high_classical != low_classical {
+        return Err(QuantumError::CalculationError(format!(
+            "classical wires differ across the square on the {side:?} side: high {high_classical:?} against low {low_classical:?}"
+        )));
+    }
+    Ok(None)
+}
+
+/// `τ` on a type with classical wires carried as the identity, or through the classical output
+/// map on the output side.
 fn tau_with_classical<R>(
     alignment: &TypeAlignment<R>,
     side: AlignmentSide,
@@ -313,22 +464,8 @@ where
     R: RealField + FromPrimitive + Default + core::fmt::Debug,
 {
     let quantum = alignment.tau_for_side(high_quantum, side, caps)?;
-    if side == AlignmentSide::Output
-        && let Some(map) = alignment.classical_output()
-    {
-        if map.classical_in() != low_classical || map.classical_out() != high_classical {
-            return Err(QuantumError::CalculationError(format!(
-                "the classical output map is {:?} → {:?}, but the square has low {low_classical:?} and high {high_classical:?}",
-                map.classical_in(),
-                map.classical_out()
-            )));
-        }
+    if let Some(map) = classical_map_for(alignment, side, high_classical, low_classical)? {
         return quantum.tensor(map, caps);
-    }
-    if high_classical != low_classical {
-        return Err(QuantumError::CalculationError(format!(
-            "classical wires differ across the square: high {high_classical:?} against low {low_classical:?}"
-        )));
     }
     if high_classical.is_empty() {
         return Ok(quantum);

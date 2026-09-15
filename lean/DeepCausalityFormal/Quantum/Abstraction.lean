@@ -35,7 +35,8 @@ level. `low : ι₁ → o₁`, `mid : ι₂ → o₂` and `high : ι₃ → o₃
 vectorised operators; `τ₁in, τ₁out` align the low and middle levels and `τ₂in, τ₂out` the middle
 and high levels. If `τ₁out * low = mid * τ₁in` and `τ₂out * mid = high * τ₂in`, then the composite
 alignment `τ₂ * τ₁` makes the outer square commute:
-`(τ₂out * τ₁out) * low = high * (τ₂in * τ₁in)`. -/
+`(τ₂out * τ₁out) * low = high * (τ₂in * τ₁in)`.
+    THEOREM_MAP: `quantum.abstraction.compose_exact` -/
 theorem abstraction_compose_exact
     {ι₁ ι₂ ι₃ o₁ o₂ o₃ : Type*}
     [Fintype ι₁] [Fintype ι₂] [Fintype ι₃] [Fintype o₁] [Fintype o₂] [Fintype o₃]
@@ -52,7 +53,8 @@ theorem abstraction_compose_exact
 
 /-- The exact case as the crate's report states it: both link residuals zero, so the composite's
 residual is zero. Stated on the defects `τ_out * low − high * τ_in`, which is how the Rust check
-measures a square, over a ring. -/
+measures a square, over a ring.
+    THEOREM_MAP: `quantum.abstraction.compose_exact.defect` -/
 theorem abstraction_compose_exact_defect
     {R : Type*} [Ring R]
     {ι₁ ι₂ ι₃ o₁ o₂ o₃ : Type*}

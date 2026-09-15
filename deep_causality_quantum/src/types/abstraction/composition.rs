@@ -163,16 +163,19 @@ where
     /// The composite alignment sends each high-level type through `next`'s entry to its middle
     /// wires and through this abstraction's entries covering those wires to the low-level ones,
     /// with `τ` the composite channel and `E` the composite section; a two-sided entry of `next`
-    /// over a sided alignment here splits into an input-side and an output-side entry. The
-    /// composite query map sends a high-level query to the image under this abstraction of its
-    /// image under `next`. Every link residual, both constants and the composite residual are
-    /// computed on the numeric path and recorded in the law.
+    /// over a sided alignment here splits into an input-side and an output-side entry. A classical
+    /// output map on either link is carried into the composite; when both links carry one the
+    /// composite carries their composite, this abstraction's map then `next`'s. The composite
+    /// query map sends a high-level query to the image under this abstraction of its image under
+    /// `next`. Every link residual, both constants and the composite residual are computed on the
+    /// numeric path and recorded in the law.
     ///
     /// # Errors
     ///
     /// [`QuantumError::CalculationError`] when a query of `next`'s map has no image in this
-    /// abstraction's signature, or a middle type of `next`'s alignment is not covered here; the
-    /// alignment's, the semantics' and the eigensolver's errors.
+    /// abstraction's signature, a middle type of `next`'s alignment is not covered here, or the
+    /// two classical output maps do not compose; the alignment's, the semantics' and the
+    /// eigensolver's errors.
     pub fn compose<H>(
         self,
         next: Abstraction<R, M, H>,
@@ -190,12 +193,12 @@ where
                     "the middle-level query {q_m:?} has no image in the first link's signature"
                 ))
             })?;
-            let (l1, r1) = self.square_with(q_m, &q_l, caps)?;
-            let (epsilon_first, _) = l1.frobenius_distance(&r1, caps)?;
-            let (l2, r2) = next.square_with(q_h, q_m, caps)?;
-            let (epsilon_second, _) = l2.frobenius_distance(&r2, caps)?;
-            let pre = self.tau_in(q_m, &q_l, caps)?.frobenius_induced_norm(caps)?;
-            let post = next.tau_out(q_h, q_m, caps)?.frobenius_induced_norm(caps)?;
+            let first = self.square_parts(q_m, &q_l, caps)?;
+            let (epsilon_first, _) = first.left.frobenius_distance(&first.right, caps)?;
+            let second = next.square_parts(q_h, q_m, caps)?;
+            let (epsilon_second, _) = second.left.frobenius_distance(&second.right, caps)?;
+            let pre = first.tau_in.frobenius_induced_norm(caps)?;
+            let post = second.tau_out.frobenius_induced_norm(caps)?;
             map.push((q_h.clone(), q_l));
             partial.push((q_h.clone(), epsilon_first, epsilon_second, pre, post));
         }
@@ -226,7 +229,29 @@ where
                 entries.push((side, (e.high().to_vec(), low, tau, section)));
             }
         }
-        let alignment = TypeAlignment::new_sided(entries)?;
+        let classical_output = match (
+            self.alignment().classical_output(),
+            next.alignment().classical_output(),
+        ) {
+            (None, None) => None,
+            (Some(map), None) | (None, Some(map)) => Some(map.clone()),
+            (Some(first), Some(second)) => {
+                if first.classical_out() != second.classical_in() {
+                    return Err(QuantumError::CalculationError(format!(
+                        "the classical output maps do not compose: the first link's is {:?} → {:?}, the second's {:?} → {:?}",
+                        first.classical_in(),
+                        first.classical_out(),
+                        second.classical_in(),
+                        second.classical_out()
+                    )));
+                }
+                Some(first.then(second, caps)?)
+            }
+        };
+        let mut alignment = TypeAlignment::new_sided(entries)?;
+        if let Some(map) = classical_output {
+            alignment = alignment.with_classical_output(map)?;
+        }
 
         let (low, _, _, _) = self.into_parts();
         let (_, high, _, _) = next.into_parts();

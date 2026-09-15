@@ -10,9 +10,11 @@
 //! dilation turns every node into a normalised factor `ρ_{A|Pa(A)}` on legs of dimension
 //! `(d_in · d_out)²` per node. `H₁` and `H₂` are one wire with two single-qubit boxes in either
 //! order, so each node's leg has dimension 16 and the conditional factor 256; they dilate and
-//! screen at once. `H₃` needs a bath node with two output wires, whose leg has dimension 256 and
-//! whose children's factors have `2^24` entries, above the dilation cap, with a Markov union of
-//! `2^40`: it is kept as the v1 factorization, which is a legal QCM by construction. `H₄` is the
+//! screen at once. `H₃` needs a bath node with two output wires: its node dimension is
+//! `d_in · d_out = 16` and its leg `d² = 256`, each single-wire child has a leg of 16, a child's
+//! conditional factor on the legs `{bath, child}` is `4096 × 4096`, `2^24` entries, at the dilation
+//! cap, and the Markov union over the three legs is `65536 × 65536`, `2^32` entries. It is kept as
+//! the v1 factorization, which is a legal QCM by construction, for that cost and not by choice. `H₄` is the
 //! same one-wire chain with its boxes grouped into a cycle, and `build()` refuses it.
 //!
 //! The plant, the observables and the experiment family are the v1 example's, so the plan and the

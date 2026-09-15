@@ -199,3 +199,17 @@ fn test_the_decoder_enters_as_a_stochastic_matrix_and_nothing_else() {
     assert_eq!(io_only.abstraction().signature().queries(), &[Query::Io]);
     assert!(io_only.check(&memory_experiment_caps()).unwrap().holds());
 }
+
+#[test]
+fn test_outcome_counts_whose_product_overflows_are_refused() {
+    let err = stochastic_morphism::<f64>(&[], &[usize::MAX, 2], &[2]).expect_err("refused");
+    assert!(
+        matches!(err.0, QuantumErrorEnum::DimensionMismatch(ref m) if m.contains("overflow")),
+        "{err}"
+    );
+    let err = stochastic_morphism::<f64>(&[], &[2], &[usize::MAX, 2]).expect_err("refused");
+    assert!(
+        matches!(err.0, QuantumErrorEnum::DimensionMismatch(ref m) if m.contains("overflow")),
+        "{err}"
+    );
+}

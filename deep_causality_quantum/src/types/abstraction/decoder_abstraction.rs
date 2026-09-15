@@ -48,9 +48,9 @@ use deep_causality_tensor::CausalTensor;
 ///
 /// # Errors
 ///
-/// [`QuantumError::DimensionMismatch`] on a shape that does not match the counts;
-/// [`QuantumError::NonCptpChannel`] when a row does not sum to one within the state tolerance or
-/// an entry is negative or non-finite.
+/// [`QuantumError::DimensionMismatch`] when the product of either side's outcome counts
+/// overflows or the shape does not match the counts; [`QuantumError::NonCptpChannel`] when a row
+/// does not sum to one within the state tolerance or an entry is negative or non-finite.
 pub fn stochastic_morphism<R>(
     matrix: &[Vec<f64>],
     low_counts: &[usize],
@@ -59,8 +59,18 @@ pub fn stochastic_morphism<R>(
 where
     R: RealField + FromPrimitive + Default + fmt::Debug,
 {
-    let n_low: usize = low_counts.iter().product();
-    let n_high: usize = high_counts.iter().product();
+    let string_count = |counts: &[usize], side: &str| {
+        counts
+            .iter()
+            .try_fold(1usize, |acc, &c| acc.checked_mul(c))
+            .ok_or_else(|| {
+                QuantumError::DimensionMismatch(format!(
+                    "the {side} outcome counts {counts:?} overflow the string count"
+                ))
+            })
+    };
+    let n_low = string_count(low_counts, "low")?;
+    let n_high = string_count(high_counts, "high")?;
     if matrix.len() != n_low || matrix.iter().any(|row| row.len() != n_high) {
         return Err(QuantumError::DimensionMismatch(format!(
             "the decoder matrix must be {n_low} × {n_high} for outcome counts {low_counts:?} → {high_counts:?}"

@@ -49,7 +49,7 @@ Kraus-level kernel. The two sides come from different algorithms (a `2^m`-entry 
 ## Named-defect audit
 
 Twelve defects, one at a time, each file restored byte for byte after its run
-(`scratchpad/audit_g1.sh`). Every defect was caught by at least one test whose subject is the
+(`scratchpad/audit_g1.sh`, a session script that was not retained; the table stands as recorded and `notes/audits/README.md` says so). Every defect was caught by at least one test whose subject is the
 defective behaviour; the one that was not on the first pass gained its test.
 
 | # | Defect | Class | Caught by |

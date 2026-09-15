@@ -354,8 +354,8 @@ SHALL be sticky as it is for every other stage.
 
 #### Scenario: The precheck runs before the operator check
 
-- **WHEN** `validate(&cfg).check_alignment_structure(&abstraction).check_naturality(&abstraction)`
-  runs and the precheck rejects
+- **WHEN** `validate(&cfg).check_alignment_structure(&abstraction, &partition).check_naturality(&abstraction, &caps)`
+  runs and the precheck rejects the partition
 - **THEN** `check_naturality` does not run, no matrix is formed, and `finalize` carries the
   precheck's structured error out
 
@@ -375,9 +375,11 @@ normalised factors, and the common-cause candidate is kept as the v1 factorizati
 
 The v1 consumer's factors are legal for the commutation check and are not Choi operators of any
 channel, so no dilation reproduces their values; the decision is what is reproduced. The
-common-cause candidate needs a bath node with two output wires; under the dilation's leg convention
-`(d_in · d_out)²` per node that node's leg has dimension 256, its children's conditional factors
-`2^24` entries and the Markov union `2^40`, so it is not dilated (design D18).
+common-cause candidate needs a bath node with two output wires; under the dilation's leg convention,
+a node dimension `d = d_in · d_out` and a leg of dimension `d²`, that node has `d = 16` and a leg
+of dimension 256, each single-wire child has a leg of dimension 16, a child's conditional factor
+on the legs `{bath, child}` is `4096 × 4096`, `2^24` entries, and the Markov union over the three
+legs is `65536 × 65536`, `2^32` entries, so it is not dilated (design D18).
 
 #### Scenario: The screen and the plan are unchanged
 
@@ -395,12 +397,15 @@ before any implementation task of this change runs: `qcl-carriers`, `qcl-code-ch
 `qcl-decision-form`, `qcl-evidence`, `qcl-experiment-design`, `qcl-hypothesis` and `qcl-pipeline`,
 and `openspec validate --specs` SHALL pass on them.
 
-The archive step of `add-qcl` did not merge its deltas, so the seven directories exist and are
-empty. This change writes every requirement against an existing capability as `ADDED` so it
-validates whether or not the restore has run, and the restore is its first task.
+The archive step of `add-qcl` did not merge its deltas, so the seven directories existed empty
+until 2026-09-09, when they were written from the archived deltas as this change's first task with
+the archived requirement counts 7, 11, 7, 7, 7, 9 and 9. This change wrote every requirement
+against an existing capability as `ADDED` and, on archiving on 2026-09-15, added four to
+`qcl-pipeline`, which now carries 13. This requirement records that history; no restore task
+remains, and nothing rewrites the live specifications from the archive.
 
-#### Scenario: The restored specifications validate
+#### Scenario: The live specifications validate
 
-- **WHEN** the seven live `spec.md` files are written from the archived deltas
-- **THEN** each carries the archived requirement count (7, 11, 7, 7, 7, 9 and 9) and
-  `openspec validate --specs` reports no error
+- **WHEN** `openspec validate --specs` runs over the live `qcl-*` specifications
+- **THEN** it reports no error, and the seven restored capabilities carry their archived
+  requirement counts with `qcl-pipeline` grown to 13

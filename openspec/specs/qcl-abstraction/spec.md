@@ -19,7 +19,9 @@ QC morphism `τ_X : π(X) → X` as a `QcMorphism` (a Kraus family, no Choi oper
 morphisms, as they do for a code in the shape of Lorenz & Tull's Example 58, where the low-level
 model is `encoder ; program`, its input type is the logical space aligned by the identity, and its
 output type is the physical space aligned by the ideal decoder. Wires SHALL be disjoint among the
-entries that can apply to one side.
+entries that can apply to one side. `Abstraction::new` SHALL refuse a query map whose high-level
+query types the alignment does not cover, naming the side and the wires, so every mapped query's
+input and output types have their entries at construction.
 
 Lorenz & Tull Definition 14 asks for an epic `τ_X`. In QC the witness of surjectivity is a section:
 every high-level sharp state is `τ_X ∘ s` for the low-level sharp state `s = E_X ∘ (that state)`,
@@ -64,9 +66,13 @@ encoding on the code space. Products of types align as monoidal products of the 
 
 `QuerySignature` SHALL admit `Io` (declared inputs to declared outputs), `Open(S)` (delete the
 mechanisms of `S` and make them inputs), `Inc(S₁, …, Sₙ)` (interchange on pairwise disjoint,
-each parallelisable, subsets of non-input vertices) and `Observe(O)` (measurement of the named
-outputs), and SHALL refuse an `Inc` whose sets are not parallelisable with
-`QuantumError::NotParallelisable` naming the directed path.
+each parallelisable, sets of existing vertices; every vertex of a circuit model carries a
+mechanism, since the model's inputs are wires and not vertices), `Observe(O)` (measurement of the
+named declared quantum outputs) and `Fault` (a Pauli inserted after a node), and SHALL refuse an
+`Inc` whose sets are not parallelisable with `QuantumError::NotParallelisable` naming the directed
+path, a node in two sets, and a node outside the DAG. Checks that need the model rather than its
+DAG, an observed wire that is not a declared output or a fault on a classical wire, are made by the
+model when the query is evaluated and by `Abstraction::new` when the query is mapped.
 
 `Open(S)` is the paper's quantum generalisation of the abstract Do-query (§7.2) and is the
 mechanism-level intervention v1 names `intervene_mechanism`; the wrapper adds a name and changes no
@@ -95,9 +101,10 @@ rather than storing them.
 
 #### Scenario: A query map is total on the declared signature
 
-- **WHEN** an `Abstraction` is built with a signature of five high-level queries and a query map
-  defined on four
-- **THEN** construction returns `QuantumError::CalculationError` naming the unmapped query
+- **WHEN** `Abstraction::with_signature` is given a signature of five high-level queries and a
+  query map defined on four
+- **THEN** construction returns `QuantumError::CalculationError` naming the unmapped query;
+  `Abstraction::new` derives the signature from the map and has no unmapped query by construction
 
 #### Scenario: The concrete intervention is derived, not stored
 
@@ -150,9 +157,14 @@ doc block says so and cites it.
 ### Requirement: The Frobenius proxy carries the two-sided diamond bound
 
 The numeric path's report SHALL state, for a Frobenius residual `r` between the two Choi operators
-of a square, the bounds `r / d_in ≤ ‖E − F‖_⋄ ≤ √(d_in d_out) · r`, the docstring SHALL carry the
+of a square, the bounds `r / d_in ≤ ‖E − F‖_⋄ ≤ √(d_in d_out) · r` for a square with no classical
+wires and, for a square whose morphisms carry classical wires with outcome-count products `n_in`
+and `n_out`, the bounds `r / (d_in √(n_in n_out)) ≤ ‖E − F‖_⋄ ≤ √(d_in d_out n_out) · r`, since
+the morphisms are direct sums over classical values, the diamond distance of a direct sum is the
+largest over input values of the sum over output values of the block distances, and the Frobenius
+residual is the root of the sum of the block residuals squared. The docstring SHALL carry the
 derivation, and one test SHALL compare both ends against a channel pair whose diamond distance has
-a closed form.
+a closed form and one against a direct sum whose blocks differ.
 
 The derivation, for any linear map with the crate's unnormalised Choi operator `J`: every unit
 vector on `X ⊗ X` is `(I ⊗ A)|Ω̃⟩` with `‖A‖_F = 1`, so `‖Φ‖_⋄ ≤ ‖J‖_1`; Cauchy–Schwarz on the

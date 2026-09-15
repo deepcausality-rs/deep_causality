@@ -13,7 +13,10 @@
 //! [`Query::Fault`] on mechanism `k` is the distribution with `k`'s flip pattern applied once more,
 //! which is what a Pauli injected at the mechanism's circuit location does to the classical
 //! record. The model is carried on a frozen `CausaloidGraph` when it comes from one, and the Stim
-//! text format is one constructor behind the `dem` feature. Nothing here decodes.
+//! text format is one constructor behind the `dem` feature. Nothing here decodes. The
+//! construction caps the mechanisms at [`DEM_MAX_MECHANISMS`] and the variables at
+//! [`DEM_MAX_VARIABLES`], so the `2^m` subsets and `2^N` outcomes a query enumerates are bounded
+//! before any query runs, and the query reads the numeric caps before it allocates.
 
 use crate::QuantumError;
 use crate::types::abstraction::fault_set::PauliKind;
@@ -32,6 +35,10 @@ use deep_causality_tensor::CausalTensor;
 
 /// The most mechanisms a model enumerates exactly: `2^20` subsets.
 pub const DEM_MAX_MECHANISMS: usize = 20;
+
+/// The most variables, detectors and observables together, a model carries: `2^20` outcome
+/// strings, which is what [`QcModel::numeric_query`] enumerates.
+pub const DEM_MAX_VARIABLES: usize = 20;
 
 /// One error mechanism: its probability and the variables it flips.
 #[derive(Debug, Clone, PartialEq)]
@@ -68,14 +75,25 @@ impl DemModel {
     ///
     /// # Errors
     ///
-    /// [`QuantumError::DimensionMismatch`] if a mechanism names a variable outside the counts or a
-    /// probability outside `[0, 1]`; [`QuantumError::CalculationError`] above
-    /// [`DEM_MAX_MECHANISMS`].
+    /// [`QuantumError::DimensionMismatch`] if a mechanism names a variable outside the counts, a
+    /// probability lies outside `[0, 1]`, or the variable counts overflow when added;
+    /// [`QuantumError::CalculationError`] above [`DEM_MAX_MECHANISMS`] mechanisms or
+    /// [`DEM_MAX_VARIABLES`] variables.
     pub fn new(
         mechanisms: Vec<Mechanism>,
         num_detectors: usize,
         num_observables: usize,
     ) -> Result<Self, QuantumError> {
+        let num_variables = num_detectors.checked_add(num_observables).ok_or_else(|| {
+            QuantumError::DimensionMismatch(format!(
+                "{num_detectors} detectors and {num_observables} observables overflow the variable count"
+            ))
+        })?;
+        if num_variables > DEM_MAX_VARIABLES {
+            return Err(QuantumError::CalculationError(format!(
+                "{num_variables} variables; the model enumerates at most {DEM_MAX_VARIABLES}"
+            )));
+        }
         if mechanisms.len() > DEM_MAX_MECHANISMS {
             return Err(QuantumError::CalculationError(format!(
                 "{} mechanisms; the model enumerates at most {DEM_MAX_MECHANISMS}",
@@ -227,26 +245,24 @@ impl DemModel {
             let mut detectors = Vec::new();
             let mut observables = Vec::new();
             for target in rest.split_whitespace() {
-                let (kind, index) = target.split_at(1);
-                let index: usize = index.parse().map_err(|_| {
-                    refuse(number, raw, "has a target that is not `D<n>` or `L<n>`")
+                let not_a_target =
+                    || refuse(number, raw, "has a target that is not `D<n>` or `L<n>`");
+                let (is_detector, digits) =
+                    match (target.strip_prefix('D'), target.strip_prefix('L')) {
+                        (Some(digits), _) => (true, digits),
+                        (None, Some(digits)) => (false, digits),
+                        (None, None) => return Err(not_a_target()),
+                    };
+                let index: usize = digits.parse().map_err(|_| not_a_target())?;
+                let count = index.checked_add(1).ok_or_else(|| {
+                    refuse(number, raw, "names an index too large to count one past")
                 })?;
-                match kind {
-                    "D" => {
-                        num_detectors = num_detectors.max(index + 1);
-                        detectors.push(index);
-                    }
-                    "L" => {
-                        num_observables = num_observables.max(index + 1);
-                        observables.push(index);
-                    }
-                    _ => {
-                        return Err(refuse(
-                            number,
-                            raw,
-                            "has a target that is not `D<n>` or `L<n>`",
-                        ));
-                    }
+                if is_detector {
+                    num_detectors = num_detectors.max(count);
+                    detectors.push(index);
+                } else {
+                    num_observables = num_observables.max(count);
+                    observables.push(index);
                 }
             }
             match directive {
@@ -421,12 +437,35 @@ where
         })
     }
 
+    /// Refuses before allocating: [`QuantumError::KrausFamilyExceeded`] when the `2^N` outcome
+    /// strings, one scalar block each, exceed `caps.max_operators`, and
+    /// [`QuantumError::CalculationError`] when the `2^m` mechanism subsets the distribution sums
+    /// over exceed `caps.max_entries`. The subsets are work, not stored entries, and no variant
+    /// names work; the entry cap is the bound a caller sets on the size of what a query forms, so
+    /// it is the one read here.
     fn numeric_query(
         &self,
         query: &Query,
-        _caps: &NumericCaps,
+        caps: &NumericCaps,
     ) -> Result<QcMorphism<R>, QuantumError> {
         let shift = self.shift_of(query)?;
+        // Both shifts fit: `new` caps the variables at `DEM_MAX_VARIABLES` and the mechanisms at
+        // `DEM_MAX_MECHANISMS`.
+        let outcomes = 1u64 << self.num_variables();
+        if outcomes > caps.max_operators {
+            return Err(QuantumError::KrausFamilyExceeded(
+                outcomes,
+                caps.max_operators,
+            ));
+        }
+        let subsets = 1u64 << self.mechanisms.len();
+        if subsets > caps.max_entries {
+            return Err(QuantumError::CalculationError(format!(
+                "the distribution sums over {subsets} subsets of {} mechanisms, above the entry cap of {}",
+                self.mechanisms.len(),
+                caps.max_entries
+            )));
+        }
         let p = self.distribution(shift);
         let mut out = QcMorphism::new(1, 1, Vec::new(), vec![2; self.num_variables()])?;
         for (y, &weight) in p.iter().enumerate() {

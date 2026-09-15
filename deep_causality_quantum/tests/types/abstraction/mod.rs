@@ -5,6 +5,7 @@
 
 mod abstraction_tests;
 mod alignment_structure_tests;
+mod chains_tests;
 mod code_abstraction_tests;
 mod composition_tests;
 #[cfg(feature = "qcm")]

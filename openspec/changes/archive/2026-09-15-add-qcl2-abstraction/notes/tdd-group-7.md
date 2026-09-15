@@ -44,7 +44,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 ## Named-defect audit
 
 Twelve defects across the model, the parser, the decoder lift, the alignment's classical map, the
-attribution and the pruning; applied by `scratchpad/audit_g7/audit.py` with the originals in the
+attribution and the pruning; applied by `notes/audits/audit_g7.py` with the originals in the
 scratchpad, three test binaries run under Bazel per defect.
 
 | # | Defect | Class | Result |

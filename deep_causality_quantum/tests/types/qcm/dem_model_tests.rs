@@ -10,8 +10,8 @@
 
 use deep_causality_quantum::utils_tests::memory_dem;
 use deep_causality_quantum::{
-    DEM_MAX_MECHANISMS, DemModel, DemRoles, Fault, Mechanism, NumericCaps, PauliKind, QcModel,
-    QuantumErrorEnum, Query, flips_of,
+    DEM_MAX_MECHANISMS, DEM_MAX_VARIABLES, DemModel, DemRoles, Fault, Mechanism, NumericCaps,
+    PauliKind, QcModel, QuantumErrorEnum, Query, flips_of,
 };
 
 type S = f64;
@@ -292,4 +292,83 @@ fn test_the_memory_experiment_model_lists_its_mechanisms() {
     // flips cancel, {E0, E1, E01} with weight p² (1 − p) p_c.
     let nominal = 0.95f64.powi(3) * 0.98 + 0.05f64.powi(2) * 0.95 * 0.02;
     assert!((weight(&complete, &Query::Io, [0, 0, 0]) - nominal).abs() < 1e-12);
+}
+
+#[test]
+fn test_variable_counts_are_capped_at_construction() {
+    let overflow = DemModel::new(vec![], usize::MAX, 1).unwrap_err();
+    assert!(
+        matches!(overflow.0, QuantumErrorEnum::DimensionMismatch(ref m) if m.contains("overflow")),
+        "{overflow}"
+    );
+    let too_many = DemModel::new(vec![], DEM_MAX_VARIABLES, 1).unwrap_err();
+    assert!(
+        matches!(too_many.0, QuantumErrorEnum::CalculationError(ref m) if m.contains(&DEM_MAX_VARIABLES.to_string())),
+        "{too_many}"
+    );
+    let at_cap = DemModel::new(vec![], DEM_MAX_VARIABLES - 1, 1).unwrap();
+    assert_eq!(at_cap.num_variables(), DEM_MAX_VARIABLES);
+    // The Stim path counts one past the largest index and goes through the same check.
+    let text = format!("error(0.1) D{}\n", DEM_MAX_VARIABLES);
+    let err = DemModel::from_stim_text(&text).unwrap_err();
+    assert!(
+        matches!(err.0, QuantumErrorEnum::CalculationError(_)),
+        "{err}"
+    );
+}
+
+#[test]
+fn test_stim_targets_with_a_multibyte_prefix_or_an_overflowing_index_are_refused_by_line() {
+    let err = DemModel::from_stim_text("error(0.1) É0\n").unwrap_err();
+    assert!(
+        matches!(err.0, QuantumErrorEnum::CalculationError(ref m) if m.contains("line 1") && m.contains("É0")),
+        "{err}"
+    );
+    let err = DemModel::from_stim_text("error(0.1) D18446744073709551615\n").unwrap_err();
+    assert!(
+        matches!(err.0, QuantumErrorEnum::CalculationError(ref m) if m.contains("line 1")),
+        "{err}"
+    );
+    let err = DemModel::from_stim_text("error(0.1) D\n").unwrap_err();
+    assert!(
+        matches!(err.0, QuantumErrorEnum::CalculationError(ref m) if m.contains("line 1")),
+        "{err}"
+    );
+}
+
+#[test]
+fn test_numeric_query_refuses_before_allocating_above_the_caps() {
+    let model = two_mechanisms();
+    // Three variables open 2^3 = 8 outcome blocks; a cap of 4 operators refuses them.
+    let small_operators = NumericCaps {
+        max_entries: 1 << 24,
+        max_operators: 4,
+    };
+    let err = QcModel::<S>::numeric_query(&model, &Query::Io, &small_operators).unwrap_err();
+    assert!(
+        matches!(
+            err.0,
+            QuantumErrorEnum::KrausFamilyExceeded {
+                operators: 8,
+                cap: 4
+            }
+        ),
+        "{err}"
+    );
+    // Two mechanisms enumerate 2^2 = 4 subsets; a cap of 2 entries refuses them.
+    let small_entries = NumericCaps {
+        max_entries: 2,
+        max_operators: 1 << 12,
+    };
+    let err = QcModel::<S>::numeric_query(&model, &Query::Io, &small_entries).unwrap_err();
+    assert!(
+        matches!(err.0, QuantumErrorEnum::CalculationError(ref m) if m.contains("4 subsets") && m.contains("2")),
+        "{err}"
+    );
+    // At the caps the query answers.
+    let exact = NumericCaps {
+        max_entries: 4,
+        max_operators: 8,
+    };
+    assert!(QcModel::<S>::numeric_query(&model, &Query::Io, &exact).is_ok());
 }

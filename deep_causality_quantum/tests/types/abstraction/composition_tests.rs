@@ -18,11 +18,19 @@
 //! 2.94` and with `post = 1` `4 sin 0.15 + 4√2 sin 0.55 ≈ 3.55`, both below the measured value.
 //!
 //! Corner-case rows covered by the tests below.
+//!
+//! `test_exact_links_compose_exactly_on_the_concatenated_code` is the Rust witness of the Lean
+//! proofs in `lean/DeepCausalityFormal/Quantum/Abstraction.lean`; the traceability CI check
+//! (`.github/workflows/formalization.yml`, job `theorem-map`) requires every proved Lean theorem
+//! to have a matching `// THEOREM_MAP: <id>` tag in a Rust file. See the module docstring in
+//! `tests/formalization_lean/partial_trace_tests.rs`.
+use deep_causality_num_complex::Complex;
 use deep_causality_quantum::utils_tests::four_two_two;
 use deep_causality_quantum::{
     Abstraction, AlignmentSide, Axis, COMPOSITION_NORM, CheckVerdict, CircuitBox, CircuitModel,
-    LogicalGate, NumericCaps, QcMorphism, QuantumErrorEnum, QubitOperator, Query, TypeAlignment,
-    WireType, code_switching, concatenated_code, depolarizing_kraus, distillation_round,
+    GateOp, LogicalGate, NumericCaps, QcMorphism, QuantumErrorEnum, QubitOperator, Query,
+    TypeAlignment, WireType, code_switching, concatenated_code, depolarizing_kraus,
+    distillation_round, stochastic_morphism,
 };
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::LatticeComplex;
@@ -117,7 +125,8 @@ fn test_frobenius_induced_norm_of_known_channels() {
     );
     let phased = QcMorphism::from_kraus(&[p0, ip0]).unwrap();
     assert!((phased.frobenius_induced_norm(&c).unwrap() - 2.0).abs() < 1e-12);
-    // Classical blocks: the norm is the largest block norm, here the scalar 2 with norm 4.
+    // Classical blocks on a diagonal: the natural representation is block-diagonal and the norm
+    // is the largest block norm, here the scalar 2 with norm 4.
     let one = |v: f64| CausalTensor::from_slice(&[C::new(v, 0.0)], &[1, 1]);
     let mut blocks = QcMorphism::<f64>::new(1, 1, vec![2], vec![2]).unwrap();
     blocks.push(vec![0], vec![0], vec![one(1.0)]).unwrap();
@@ -253,6 +262,8 @@ fn test_provenance_records_the_law() {
     assert_eq!(shown.lines().count(), 2);
 }
 
+// THEOREM_MAP: quantum.abstraction.compose_exact
+// THEOREM_MAP: quantum.abstraction.compose_exact.defect
 #[test]
 fn test_exact_links_compose_exactly_on_the_concatenated_code() {
     let complex = four_two_two();
@@ -383,12 +394,22 @@ fn test_composition_errors_name_the_query_and_the_wire() {
     // A second link whose signature has a query the first link does not map.
     let (first, _) = tightness_chain(0.0, 0.3, 1.4);
     let middle = first.high().clone();
-    let high = CircuitModel::ungrouped(vec![WireType::qubit()], vec![ry(0, 1.4)], vec![0], vec![0])
-        .unwrap();
+    let high = CircuitModel::ungrouped(
+        vec![WireType::qubit(); 2],
+        vec![ry(0, 1.4)],
+        vec![0, 1],
+        vec![0, 1],
+    )
+    .unwrap();
+    let id = QcMorphism::<f64>::identity(2).unwrap();
     let second = Abstraction::new(
         middle,
         high,
-        TypeAlignment::new(vec![(vec![0], vec![0, 1], trace_b(), prepare_b())]).unwrap(),
+        TypeAlignment::new(vec![
+            (vec![0], vec![0], id.clone(), id.clone()),
+            (vec![1], vec![1], id.clone(), id),
+        ])
+        .unwrap(),
         vec![
             (Query::Io, Query::Io),
             (Query::Open(vec![0]), Query::Open(vec![0])),
@@ -486,4 +507,105 @@ fn test_a_two_sided_entry_over_a_sided_link_splits() {
         vec![vec![0, 1], vec![0, 1, 2, 3], vec![4, 5], vec![4, 5, 6, 7]]
     );
     assert!(composed.law.holds() && composed.law.measured() < 1e-9);
+}
+
+/// One qubit rotated by `R_y(θ)`, then flipped by `X` when asked; observed, it yields one bit.
+fn rotated(theta: f64, flipped: bool) -> CircuitModel<f64> {
+    let mut boxes = vec![ry(0, theta)];
+    if flipped {
+        boxes.push(CircuitBox::Unitary {
+            wires: vec![0],
+            program: vec![GateOp::X(0)],
+        });
+    }
+    CircuitModel::ungrouped(vec![WireType::qubit()], boxes, vec![0], vec![0]).unwrap()
+}
+
+/// The bit flip as a classical output map on the trivial quantum system.
+fn flip() -> QcMorphism<f64> {
+    stochastic_morphism::<f64>(&[vec![0.0, 1.0], vec![1.0, 0.0]], &[2], &[2]).unwrap()
+}
+
+/// A link between two one-qubit models aligned by the identity, mapping `Observe(0)` to itself,
+/// with a classical output map when given.
+fn observed_link(
+    low: CircuitModel<f64>,
+    high: CircuitModel<f64>,
+    map: Option<QcMorphism<f64>>,
+) -> Link {
+    let id = QcMorphism::<f64>::identity(2).unwrap();
+    let alignment = TypeAlignment::new(vec![(vec![0], vec![0], id.clone(), id)]).unwrap();
+    let alignment = match map {
+        Some(m) => alignment.with_classical_output(m).unwrap(),
+        None => alignment,
+    };
+    Abstraction::new(
+        low,
+        high,
+        alignment,
+        vec![(Query::Observe(vec![0]), Query::Observe(vec![0]))],
+    )
+    .unwrap()
+}
+
+/// A classical output map on either link is carried into the composite alignment, and two maps
+/// compose. The flipped level measures `X R_y(θ)|0⟩`, so a square through the bit flip commutes
+/// exactly and the composite residual is zero only if the composite carries the map.
+#[test]
+fn test_compose_carries_a_classical_output_map_from_either_link() {
+    let c = caps();
+    let keys = |m: &QcMorphism<f64>| m.blocks().keys().cloned().collect::<Vec<_>>();
+    let flipped = vec![(vec![0], vec![1]), (vec![1], vec![0])];
+    let straight = vec![(vec![0], vec![0]), (vec![1], vec![1])];
+
+    // The second link carries the map.
+    let first = observed_link(rotated(0.7, false), rotated(0.7, false), None);
+    let second = observed_link(rotated(0.7, false), rotated(0.7, true), Some(flip()));
+    let composed = first.compose(second, &c).unwrap();
+    let map = composed
+        .abstraction
+        .alignment()
+        .classical_output()
+        .expect("the second link's map is carried");
+    assert_eq!(keys(map), flipped);
+    assert!(
+        composed.law.measured() < 1e-9 && composed.law.holds(),
+        "{}",
+        composed.law
+    );
+
+    // The first link carries the map.
+    let first = observed_link(rotated(0.7, false), rotated(0.7, true), Some(flip()));
+    let second = observed_link(rotated(0.7, true), rotated(0.7, true), None);
+    let composed = first.compose(second, &c).unwrap();
+    let map = composed
+        .abstraction
+        .alignment()
+        .classical_output()
+        .expect("the first link's map is carried");
+    assert_eq!(keys(map), flipped);
+    assert!(
+        composed.law.measured() < 1e-9 && composed.law.holds(),
+        "{}",
+        composed.law
+    );
+
+    // Both carry one: flip then flip is the identity on the bit.
+    let first = observed_link(rotated(0.7, false), rotated(0.7, true), Some(flip()));
+    let second = observed_link(rotated(0.7, true), rotated(0.7, false), Some(flip()));
+    let composed = first.compose(second, &c).unwrap();
+    let map = composed
+        .abstraction
+        .alignment()
+        .classical_output()
+        .expect("the composite of both maps is carried");
+    assert_eq!(keys(map), straight);
+    assert_eq!(
+        (map.classical_in(), map.classical_out()),
+        (&[2][..], &[2][..])
+    );
+    let row = &composed.law.rows[0];
+    assert!(row.epsilon_first < 1e-9 && row.epsilon_second < 1e-9);
+    assert!(row.measured < 1e-9 && row.holds(), "{}", composed.law);
+    assert_eq!(row.query, Query::Observe(vec![0]));
 }

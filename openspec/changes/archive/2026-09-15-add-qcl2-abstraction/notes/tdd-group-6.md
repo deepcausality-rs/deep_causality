@@ -44,7 +44,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 ## Named-defect audit
 
 Twelve defects across the law, the induced norm, the composite alignment and the chains; applied
-by `scratchpad/audit_g6/audit.py` with the originals kept in the scratchpad, the composition and
+by `notes/audits/audit_g6.py` with the originals kept in the scratchpad, the composition and
 alignment test binaries run under Bazel per defect.
 
 | # | Defect | Class | Result |

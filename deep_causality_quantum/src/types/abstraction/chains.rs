@@ -12,9 +12,13 @@
 //! code's `k` logical qubits and each block is encoded by the outer code. The low-level model
 //! carries the inner encoder on the wires that stand for the middle qubits, one outer encoder per
 //! block, and the inner program with every gate replaced by the outer code's emitted program for
-//! it, on the block's wires. A gate on two middle qubits in
-//! different blocks would need a transversal gadget between code blocks this construction does
-//! not carry and is refused. The first link `L → M` aligns each block's logical wires by the
+//! it, on the block's wires: Table 1's gates through [`CodeAbstraction::program`], `CCZ` and
+//! `C^{m−1}Z` through the outer code's `C^{m−1}Z̄` emitter (Haruna, Table 1 row 6). A gate on
+//! middle qubits in different blocks would need a transversal gadget between code blocks this
+//! construction does not carry and is refused. The inner `T̄` on a representative of weight two
+//! or more carries `CS†` (Haruna Eq. 3.56), and Table 1 has no controlled-`S` row, so the outer
+//! code has no `CS̄†` emitter and the concatenation of `T̄` is refused by that name. The first
+//! link `L → M` aligns each block's logical wires by the
 //! identity on the input side and the block through the outer recovery on the output side; the
 //! second link is the inner code's abstraction.
 //!
@@ -39,13 +43,14 @@ use crate::types::abstraction::ideal_recovery::IdealRecovery;
 use crate::types::abstraction::query::Query;
 use crate::types::abstraction::type_alignment::{AlignmentSide, AlignmentSpec, TypeAlignment};
 use crate::types::circuit_model::{CircuitBox, CircuitModel, NumericCaps, QcMorphism, WireType};
+use crate::types::qgates::gates_haruna::logical_multi_cz;
 use crate::types::qgates::operator_linalg::identity_matrix;
 use crate::types::qpu::circuit::GateOp;
 use alloc::format;
 use alloc::vec;
 use alloc::vec::Vec;
 use deep_causality_algebra::RealField;
-use deep_causality_homology::ChainComplex;
+use deep_causality_homology::{ChainComplex, Gf2Chain};
 use deep_causality_num::{FromPrimitive, NaturalNumber};
 use deep_causality_num_complex::Complex;
 use deep_causality_tensor::CausalTensor;
@@ -144,12 +149,15 @@ fn shifted(op: &GateOp, offset: usize) -> GateOp {
 
 /// A program on the middle qubits encoded by the outer code: middle qubit `j` is logical qubit
 /// `j mod k` of block `j / k`, and each gate becomes the outer code's emitted program for it on
-/// the block's wires. `Y` is `X` then `Z` up to a global phase.
+/// the block's wires. `Y` is `X` then `Z` up to a global phase; `CCZ` and `C^{m−1}Z` within a
+/// block are the outer code's `C^{m−1}Z̄` on the block's representatives (Haruna, Table 1 row 6).
 ///
 /// # Errors
 ///
-/// [`QuantumError::CalculationError`] for a two-qubit gate across blocks or a gate kind the outer
-/// code has no emitter for; the emitters' errors.
+/// [`QuantumError::DimensionMismatch`] if the outer code has no logical qubits;
+/// [`QuantumError::CalculationError`] for a gate across blocks, for `CS†`, which needs a `CS̄†`
+/// emitter Table 1 does not have, or for a gate kind the outer code has no emitter for; the
+/// emitters' errors.
 pub fn encode_program<W, R>(
     outer: &CodeAbstraction<W>,
     program: &[GateOp],
@@ -160,7 +168,32 @@ where
 {
     let n = outer.basis().len();
     let k = outer.basis().num_logical_qubits();
+    if k == 0 {
+        return Err(QuantumError::DimensionMismatch(
+            "the outer code has no logical qubits, so a middle qubit has no block to stand in"
+                .into(),
+        ));
+    }
     let place = |q: usize| (q / k, q % k);
+    // The block a gate's qubits share and their logical indices in it.
+    let one_block = |op: &GateOp, qubits: &[usize]| -> Result<(usize, Vec<usize>), QuantumError> {
+        let (&first, rest) = qubits
+            .split_first()
+            .ok_or_else(|| QuantumError::CalculationError(format!("{op:?} names no qubit")))?;
+        let (block, i) = place(first);
+        let mut logical = vec![i];
+        for &q in rest {
+            let (b, j) = place(q);
+            if b != block {
+                return Err(QuantumError::CalculationError(format!(
+                    "{op:?} acts across outer blocks {block} and {b}; a transversal gadget \
+                     between code blocks is not part of this construction"
+                )));
+            }
+            logical.push(j);
+        }
+        Ok((block, logical))
+    };
     let mut out = Vec::new();
     for op in program {
         match op {
@@ -189,30 +222,64 @@ where
                 }
             }
             GateOp::Cz { control, target } => {
-                let (bc, i) = place(*control);
-                let (bt, j) = place(*target);
-                if bc != bt {
-                    return Err(QuantumError::CalculationError(format!(
-                        "{op:?} acts across outer blocks {bc} and {bt}; a transversal gadget \
-                         between code blocks is not part of this construction"
-                    )));
-                }
+                let (block, logical) = one_block(op, &[*control, *target])?;
                 out.extend(
                     outer
-                        .program::<R>(&LogicalGate::Cz(i, j))?
+                        .program::<R>(&LogicalGate::Cz(logical[0], logical[1]))?
                         .iter()
-                        .map(|o| shifted(o, bc * n)),
+                        .map(|o| shifted(o, block * n)),
                 );
+            }
+            GateOp::Ccz { q0, q1, q2 } => {
+                out.extend(encode_multi_cz::<W, _>(
+                    outer,
+                    op,
+                    &[*q0, *q1, *q2],
+                    &one_block,
+                )?);
+            }
+            GateOp::Cmz { qubits } => {
+                out.extend(encode_multi_cz::<W, _>(outer, op, qubits, &one_block)?);
+            }
+            GateOp::Csdg { .. } => {
+                return Err(QuantumError::CalculationError(format!(
+                    "{op:?} needs a logical CS̄† emitter, a controlled-S† on two representatives, \
+                     which the outer code does not have: Haruna's Table 1 has no controlled-S row"
+                )));
             }
             other => {
                 return Err(QuantumError::CalculationError(format!(
-                    "{other:?} has no emitter in the outer code; only X, Y, Z, S, T, H and CZ \
-                     within a block are encoded"
+                    "{other:?} has no emitter in the outer code; X, Y, Z, S, T, H, CZ, CCZ and \
+                     C^(m-1)Z within a block are encoded"
                 )));
             }
         }
     }
     Ok(out)
+}
+
+/// `C^{m−1}Z` on middle qubits within one block as the outer code's `C^{m−1}Z̄` on the block's
+/// representatives, shifted onto the block's wires.
+fn encode_multi_cz<W, F>(
+    outer: &CodeAbstraction<W>,
+    op: &GateOp,
+    qubits: &[usize],
+    one_block: F,
+) -> Result<Vec<GateOp>, QuantumError>
+where
+    W: NaturalNumber,
+    F: Fn(&GateOp, &[usize]) -> Result<(usize, Vec<usize>), QuantumError>,
+{
+    let n = outer.basis().len();
+    let (block, logical) = one_block(op, qubits)?;
+    let chains: Vec<&Gf2Chain<W>> = logical
+        .iter()
+        .map(|&i| &outer.basis().homology()[i])
+        .collect();
+    Ok(logical_multi_cz(&chains)?
+        .iter()
+        .map(|o| shifted(o, block * n))
+        .collect())
 }
 
 /// The logical program of a Table 1 gate on the high level.
@@ -234,8 +301,9 @@ fn logical_of(gate: &LogicalGate) -> Vec<GateOp> {
 ///
 /// # Errors
 ///
-/// [`QuantumError::DimensionMismatch`] if the inner code's qubit count is not a multiple of the
-/// outer code's logical count; [`encode_program`]'s errors; the constructors'.
+/// [`QuantumError::DimensionMismatch`] if the outer code has no logical qubits or the inner
+/// code's qubit count is not a multiple of the outer code's logical count; [`encode_program`]'s
+/// errors; the constructors'.
 pub fn concatenated_code<W, KI, KO, R>(
     inner: &KI,
     outer: &KO,
@@ -253,6 +321,13 @@ where
     let k_in = inner_code.basis().num_logical_qubits();
     let n_out = outer_code.basis().len();
     let k_out = outer_code.basis().num_logical_qubits();
+    if k_out == 0 {
+        return Err(QuantumError::DimensionMismatch(
+            "the outer code has no logical qubits, so the inner code's qubits have no blocks to \
+             fill"
+                .into(),
+        ));
+    }
     if n_in % k_out != 0 {
         return Err(QuantumError::DimensionMismatch(format!(
             "the inner code's {n_in} qubits do not fill blocks of the outer code's {k_out} logical qubits"
@@ -328,6 +403,46 @@ where
         vec![(Query::Io, Query::Io)],
     )?;
     Ok(Chain { first, second })
+}
+
+/// The link `L → M` whose `k` logical inputs and `n` physical outputs align by the identity, over
+/// the `Io` query: the shape code switching and a distillation round share.
+fn identity_link<R>(
+    low: CircuitModel<R>,
+    middle: CircuitModel<R>,
+    k: usize,
+    n: usize,
+) -> Result<Abstraction<R, CircuitModel<R>, CircuitModel<R>>, QuantumError>
+where
+    R: RealField + FromPrimitive + Default + core::fmt::Debug,
+{
+    let physical_identity = QcMorphism::from_kraus(&[identity_matrix::<R>(1 << n)])?;
+    let logical_identity = QcMorphism::from_kraus(&[identity_matrix::<R>(1 << k)])?;
+    Abstraction::new(
+        low,
+        middle,
+        TypeAlignment::new_sided(vec![
+            (
+                AlignmentSide::Input,
+                (
+                    (0..k).collect(),
+                    (0..k).collect(),
+                    logical_identity.clone(),
+                    logical_identity,
+                ),
+            ),
+            (
+                AlignmentSide::Output,
+                (
+                    (0..n).collect(),
+                    (0..n).collect(),
+                    physical_identity.clone(),
+                    physical_identity,
+                ),
+            ),
+        ])?,
+        vec![(Query::Io, Query::Io)],
+    )
 }
 
 /// Code switching from `from` into `into` for one logical gate, with `gadget_noise` a Kraus family
@@ -413,33 +528,7 @@ where
             "code switching into a narrower code ({n_b} qubits from {n_a}) is not part of this construction"
         )));
     };
-    let physical_identity = QcMorphism::from_kraus(&[identity_matrix::<R>(1 << n)])?;
-    let logical_identity = QcMorphism::from_kraus(&[identity_matrix::<R>(1 << k_a)])?;
-    let first = Abstraction::new(
-        low,
-        middle,
-        TypeAlignment::new_sided(vec![
-            (
-                AlignmentSide::Input,
-                (
-                    (0..k_a).collect(),
-                    (0..k_a).collect(),
-                    logical_identity.clone(),
-                    logical_identity,
-                ),
-            ),
-            (
-                AlignmentSide::Output,
-                (
-                    (0..n).collect(),
-                    (0..n).collect(),
-                    physical_identity.clone(),
-                    physical_identity,
-                ),
-            ),
-        ])?,
-        vec![(Query::Io, Query::Io)],
-    )?;
+    let first = identity_link(low, middle, k_a, n)?;
     Ok(Chain { first, second })
 }
 
@@ -489,32 +578,6 @@ where
         (0..k).collect(),
         (0..n).collect(),
     )?;
-    let physical_identity = QcMorphism::from_kraus(&[identity_matrix::<R>(1 << n)])?;
-    let logical_identity = QcMorphism::from_kraus(&[identity_matrix::<R>(1 << k)])?;
-    let first = Abstraction::new(
-        low,
-        middle,
-        TypeAlignment::new_sided(vec![
-            (
-                AlignmentSide::Input,
-                (
-                    (0..k).collect(),
-                    (0..k).collect(),
-                    logical_identity.clone(),
-                    logical_identity,
-                ),
-            ),
-            (
-                AlignmentSide::Output,
-                (
-                    (0..n).collect(),
-                    (0..n).collect(),
-                    physical_identity.clone(),
-                    physical_identity,
-                ),
-            ),
-        ])?,
-        vec![(Query::Io, Query::Io)],
-    )?;
+    let first = identity_link(low, middle, k, n)?;
     Ok(Chain { first, second })
 }
