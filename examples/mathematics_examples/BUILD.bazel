@@ -16,9 +16,9 @@ rust_library(
 )
 
 rust_binary(
-    name = "leibniz_dual_integration_examples",
-    srcs = ["3_applications/leibniz_dual_integration.rs"],
-    crate_root = "3_applications/leibniz_dual_integration.rs",
+    name = "differentiate_under_integral_examples",
+    srcs = glob(["3_applications/differentiate_under_integral/**/*.rs"]),
+    crate_root = "3_applications/differentiate_under_integral/main.rs",
     visibility = ["//visibility:public"],
     deps = [
         # Cargo puts the package's own lib on an example's extern prelude.
@@ -61,9 +61,9 @@ rust_binary(
 )
 
 rust_binary(
-    name = "dixon_multivector_examples",
-    srcs = ["3_applications/dixon_multivector.rs"],
-    crate_root = "3_applications/dixon_multivector.rs",
+    name = "standard_model_symmetry_examples",
+    srcs = glob(["3_applications/standard_model_symmetry/**/*.rs"]),
+    crate_root = "3_applications/standard_model_symmetry/main.rs",
     visibility = ["//visibility:public"],
     deps = [
         # Cargo puts the package's own lib on an example's extern prelude.
@@ -76,9 +76,9 @@ rust_binary(
 )
 
 rust_binary(
-    name = "geometric_tilt_estimator_examples",
-    srcs = ["3_applications/geometric_tilt_estimator.rs"],
-    crate_root = "3_applications/geometric_tilt_estimator.rs",
+    name = "imu_tilt_estimation_examples",
+    srcs = glob(["3_applications/imu_tilt_estimation/**/*.rs"]),
+    crate_root = "3_applications/imu_tilt_estimation/main.rs",
     visibility = ["//visibility:public"],
     deps = [
         # Cargo puts the package's own lib on an example's extern prelude.
@@ -91,9 +91,9 @@ rust_binary(
 )
 
 rust_binary(
-    name = "grmhd_multivector_examples",
-    srcs = ["3_applications/grmhd_integration.rs"],
-    crate_root = "3_applications/grmhd_integration.rs",
+    name = "relativistic_mhd_examples",
+    srcs = glob(["3_applications/relativistic_mhd/**/*.rs"]),
+    crate_root = "3_applications/relativistic_mhd/main.rs",
     visibility = ["//visibility:public"],
     deps = [
         # Cargo puts the package's own lib on an example's extern prelude.
@@ -121,9 +121,9 @@ rust_binary(
 )
 
 rust_binary(
-    name = "maxwell_multivector_examples",
-    srcs = ["3_applications/maxwell_multivector.rs"],
-    crate_root = "3_applications/maxwell_multivector.rs",
+    name = "electromagnetic_field_examples",
+    srcs = glob(["3_applications/electromagnetic_field/**/*.rs"]),
+    crate_root = "3_applications/electromagnetic_field/main.rs",
     visibility = ["//visibility:public"],
     deps = [
         # Cargo puts the package's own lib on an example's extern prelude.
@@ -211,9 +211,9 @@ rust_binary(
 )
 
 rust_binary(
-    name = "triple_hkt_stress_field_examples",
-    srcs = glob(["3_applications/triple_hkt_stress_field/**/*.rs"]),
-    crate_root = "3_applications/triple_hkt_stress_field/main.rs",
+    name = "structural_stress_on_mesh_examples",
+    srcs = glob(["3_applications/structural_stress_on_mesh/**/*.rs"]),
+    crate_root = "3_applications/structural_stress_on_mesh/main.rs",
     visibility = ["//visibility:public"],
     deps = [
         # Cargo puts the package's own lib on an example's extern prelude.
@@ -271,9 +271,9 @@ rust_binary(
 )
 
 rust_binary(
-    name = "capstone_spinor_minkowski_examples",
-    srcs = glob(["3_applications/capstone_spinor_minkowski/**/*.rs"]),
-    crate_root = "3_applications/capstone_spinor_minkowski/main.rs",
+    name = "relativistic_spinor_transport_examples",
+    srcs = glob(["3_applications/relativistic_spinor_transport/**/*.rs"]),
+    crate_root = "3_applications/relativistic_spinor_transport/main.rs",
     visibility = ["//visibility:public"],
     deps = [
         # Cargo puts the package's own lib on an example's extern prelude.
@@ -526,9 +526,9 @@ rust_binary(
 )
 
 rust_binary(
-    name = "lattice_gauge_simulation_examples",
-    srcs = ["3_applications/lattice_gauge_simulation.rs"],
-    crate_root = "3_applications/lattice_gauge_simulation.rs",
+    name = "lattice_gauge_thermalization_examples",
+    srcs = glob(["3_applications/lattice_gauge_thermalization/**/*.rs"]),
+    crate_root = "3_applications/lattice_gauge_thermalization/main.rs",
     visibility = ["//visibility:public"],
     deps = [
         # Cargo puts the package's own lib on an example's extern prelude.

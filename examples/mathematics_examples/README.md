@@ -89,7 +89,7 @@ with the bound that fixes it.
 
 ### Why numerical precision is important
 
-The capstone (`capstone_spinor_minkowski`) parallel-transports a unit timelike spinor
+`relativistic_spinor_transport` parallel-transports a unit timelike spinor
 along a discretized Minkowski worldline through four boost steps, then compares the
 composed result against `(cosh θ, sinh θ)` for the summed rapidity.
 

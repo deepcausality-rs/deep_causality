@@ -9,6 +9,7 @@ use deep_causality_topology::GaugeGroup;
 use deep_causality_topology::LatticeComplex;
 use deep_causality_topology::LatticeGaugeField;
 use deep_causality_topology::LinkVariable;
+use deep_causality_topology::SU3;
 use std::sync::Arc;
 
 // Define a test gauge group (U1 is simplest for testing)
@@ -147,4 +148,65 @@ fn test_generate_small_su_n_update() {
     for _ in 0..100 {
         field.try_metropolis_update(&edge, 0.2, &mut rng).unwrap();
     }
+}
+
+// ---------------------------------------------------------------------------------------------
+// Regression: the proposal has to leave the identity.
+//
+// These run over SU(3) because the proposal is built from a traceless Hermitian generator, and
+// the only traceless Hermitian 1x1 matrix is zero. Over U(1) the proposal is the identity for
+// arithmetic reasons, so the tests above pass whatever the generator does.
+// ---------------------------------------------------------------------------------------------
+
+/// A cold start sits at plaquette exactly 1. One sweep has to move it off that value.
+///
+/// A proposal that lands back on the identity gives `U' = U` and `ΔS = 0` for every link, so the
+/// sweep reports full acceptance and leaves the configuration exactly where it started.
+#[test]
+fn test_metropolis_sweep_moves_a_cold_start_off_the_identity() {
+    let lattice = Arc::new(LatticeComplex::new([2, 2, 2, 2], [true; 4]));
+    let mut field =
+        LatticeGaugeField::<SU3, 4, Complex<f64>, f64>::try_identity(lattice, 6.0).unwrap();
+    let mut rng = Xoshiro256::new();
+
+    let before = field.try_average_plaquette().unwrap();
+    assert!(
+        (before - 1.0).abs() < 1e-12,
+        "a cold start should measure plaquette 1, measured {before}"
+    );
+
+    field.try_metropolis_sweep(0.3, &mut rng).unwrap();
+
+    let after = field.try_average_plaquette().unwrap();
+    assert!(
+        after < 1.0 - 1e-9,
+        "one sweep left the plaquette at {after}, so every proposal returned the identity"
+    );
+}
+
+/// A hot start thermalizes: sweeps carry the average plaquette away from its initial value, and
+/// the acceptance rate sits below 1 because some proposals raise the action.
+#[test]
+fn test_metropolis_sweep_thermalizes_a_hot_start() {
+    let lattice = Arc::new(LatticeComplex::new([2, 2, 2, 2], [true; 4]));
+    let mut rng = Xoshiro256::new();
+    let mut field =
+        LatticeGaugeField::<SU3, 4, Complex<f64>, f64>::try_random(lattice, 6.0, &mut rng).unwrap();
+
+    let before = field.try_average_plaquette().unwrap();
+
+    let mut rates = Vec::new();
+    for _ in 0..5 {
+        rates.push(field.try_metropolis_sweep(0.2, &mut rng).unwrap());
+    }
+
+    let after = field.try_average_plaquette().unwrap();
+    assert!(
+        (after - before).abs() > 1e-3,
+        "five sweeps held the plaquette at {before}, so the field never moved"
+    );
+    assert!(
+        rates.iter().any(|&r| r < 1.0),
+        "every link was accepted in every sweep, which is what a no-op proposal does: {rates:?}"
+    );
 }

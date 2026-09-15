@@ -172,10 +172,20 @@ impl<
 
     /// Generate a small SU(N) element near identity for Metropolis proposals.
     ///
-    /// Creates R ≈ 𝟙 + ε·X where X is a random traceless Hermitian matrix.
-    /// Generate a small SU(N) element near identity for Metropolis proposals.
+    /// Creates `R ≈ 𝟙 + iεX`, the first-order expansion of `exp(iεX)`, where `X` is a random
+    /// traceless Hermitian matrix.
     ///
-    /// Creates R ≈ 𝟙 + ε·X where X is a random traceless Hermitian matrix.
+    /// # Why the generator enters multiplied by `i`
+    ///
+    /// The Lie algebra of SU(N) is the anti-Hermitian traceless matrices, which physics writes as
+    /// `iX` for Hermitian traceless `X`. Multiplying by `i` is what puts the proposal in the group:
+    /// `(𝟙 + iεX)†(𝟙 + iεX) = 𝟙 + ε²X²`, so `R` is unitary to first order and `project_sun` has an
+    /// `O(ε²)` residual to clean up.
+    ///
+    /// A Hermitian `𝟙 + εX` instead lands in the positive-definite Hermitian matrices for small
+    /// `ε`, and the unitary polar factor of such a matrix is exactly `𝟙`. `project_sun` would then
+    /// return the identity for every draw, every proposal would be `U' = U`, every `ΔS` would be
+    /// zero, and the sweep would report 100% acceptance while leaving the field where it started.
     fn generate_small_su_n_update<RngType>(
         &self,
         epsilon: R,
@@ -194,8 +204,8 @@ impl<
         let data = result.as_slice();
         let mut new_data = data.to_vec();
 
-        // Convert epsilon to M for scaling
-        let eps_m = M::from_re_im(epsilon, R::zero());
+        // The scale is `iε`, which is what carries X into the Lie algebra of SU(N).
+        let eps_m = M::from_re_im(R::zero(), epsilon);
 
         // Create a traceless Hermitian matrix X in `new_data` buffer
         let mut x_data = vec![M::zero(); n * n];
@@ -224,7 +234,7 @@ impl<
         // Set last diagonal element to -sum(others) to ensure Tr(X) = 0
         x_data[(n - 1) * n + (n - 1)] = M::zero() - diagonal_sum;
 
-        // 3. Compute U' = I + epsilon * X
+        // 3. Compute U' = I + i·epsilon·X, the first-order expansion of exp(i·epsilon·X).
         for i in 0..(n * n) {
             new_data[i] = new_data[i] + eps_m * x_data[i];
         }

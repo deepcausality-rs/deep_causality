@@ -319,33 +319,33 @@ path = "2_composition/duality/tensor_sparse_memory_budget/main.rs"
 # ============================================================================
 
 [[example]]
-name = "capstone_spinor_minkowski_examples"
-path = "3_applications/capstone_spinor_minkowski/main.rs"
+name = "relativistic_spinor_transport_examples"
+path = "3_applications/relativistic_spinor_transport/main.rs"
 
 [[example]]
-name = "dixon_multivector_examples"
-path = "3_applications/dixon_multivector.rs"
+name = "standard_model_symmetry_examples"
+path = "3_applications/standard_model_symmetry/main.rs"
 
 [[example]]
-name = "geometric_tilt_estimator_examples"
-path = "3_applications/geometric_tilt_estimator.rs"
+name = "imu_tilt_estimation_examples"
+path = "3_applications/imu_tilt_estimation/main.rs"
 
 [[example]]
-name = "grmhd_multivector_examples"
-path = "3_applications/grmhd_integration.rs"
+name = "relativistic_mhd_examples"
+path = "3_applications/relativistic_mhd/main.rs"
 
 [[example]]
-name = "lattice_gauge_simulation_examples"
-path = "3_applications/lattice_gauge_simulation.rs"
+name = "lattice_gauge_thermalization_examples"
+path = "3_applications/lattice_gauge_thermalization/main.rs"
 
 [[example]]
-name = "leibniz_dual_integration_examples"
-path = "3_applications/leibniz_dual_integration.rs"
+name = "differentiate_under_integral_examples"
+path = "3_applications/differentiate_under_integral/main.rs"
 
 [[example]]
-name = "maxwell_multivector_examples"
-path = "3_applications/maxwell_multivector.rs"
+name = "electromagnetic_field_examples"
+path = "3_applications/electromagnetic_field/main.rs"
 
 [[example]]
-name = "triple_hkt_stress_field_examples"
-path = "3_applications/triple_hkt_stress_field/main.rs"
+name = "structural_stress_on_mesh_examples"
+path = "3_applications/structural_stress_on_mesh/main.rs"

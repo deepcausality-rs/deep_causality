@@ -95,7 +95,7 @@ let rotated: CausalTensor<CausalMultiVector<FloatType>> =
 ```
 
 **Closure reach.** The comonadic `extend` hands a cursor to a closure, and the closure may call into
-any crate it likes. `triple_hkt_stress_field` runs a six-step linear-elastic pipeline over a
+any crate it likes. `structural_stress_on_mesh` runs a six-step linear-elastic pipeline over a
 tetrahedral mesh inside a single `ManifoldWitness::extend`, with topology supplying the walk, tensor
 holding the strain, and multivector applying the material rotor.
 
@@ -126,8 +126,8 @@ Run them:
 
 ```bash
 cargo run -p mathematics_examples --example tensor_x_algebra_rotation_field_examples
-cargo run -p mathematics_examples --example triple_hkt_stress_field_examples
-cargo run -p mathematics_examples --example capstone_spinor_minkowski_examples
+cargo run -p mathematics_examples --example structural_stress_on_mesh_examples
+cargo run -p mathematics_examples --example relativistic_spinor_transport_examples
 ```
 
 The capstone parallel-transports a unit timelike spinor along a discretized Minkowski worldline in

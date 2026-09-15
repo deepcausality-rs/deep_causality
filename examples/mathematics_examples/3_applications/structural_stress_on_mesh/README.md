@@ -12,7 +12,7 @@ That sequence shows up in structural engineering (bridges, buildings, machined p
 ## How to Run
 
 ```bash
-cargo run -p mathematics_examples --example triple_hkt_stress_field_examples
+cargo run -p mathematics_examples --example structural_stress_on_mesh_examples
 ```
 
 ## Sample Output
@@ -42,7 +42,7 @@ The 240 MPa peak is exactly what you would expect: the prescribed strain is prop
 
 ---
 
-## Key Pattern: Triple-Crate Composition
+## Key Pattern: Three Crates in One `extend`
 
 The entire stress analysis lives inside a single `ManifoldWitness::extend` call:
 
@@ -78,22 +78,22 @@ strain field  ->  constitutive law  ->  normal  ->  Cauchy traction  ->  materia
 
 | Step | Physics                                       | This Example                                  | Crate          |
 |------|-----------------------------------------------|-----------------------------------------------|----------------|
-| 1    | Strain field from displacement gradient       | Prescribed `eps(x)` (placeholder)             | `tensor`       |
-| 2    | Constitutive law mapping strain to stress     | Isotropic linear elastic Hooke (placeholder)  | `tensor`       |
-| 3    | Outward unit normal at each surface vertex    | Radial from mesh centroid (placeholder)       | -              |
+| 1    | Strain field from displacement gradient       | Prescribed `eps(x)` (blueprint)               | `tensor`       |
+| 2    | Constitutive law mapping strain to stress     | Isotropic linear elastic Hooke (blueprint)    | `tensor`       |
+| 3    | Outward unit normal at each surface vertex    | Radial from mesh centroid (blueprint)         | -              |
 | 4    | Cauchy traction `t = sigma . n`               | Real (tensor contraction via `EinSumOp`)      | `tensor`       |
-| 5    | Rotate traction into material frame `R t R~`  | 10-degree Cl(3,0) rotor (placeholder)         | `multivector`  |
+| 5    | Rotate traction into material frame `R t R~`  | 10-degree Cl(3,0) rotor (blueprint)           | `multivector`  |
 | 6    | Reduce to a single failure-relevant scalar    | Real (von Mises invariant)                    | -              |
 | Mesh | Per-vertex walk over a 3D simplicial complex  | Real (two tets sharing a face)                | `topology`     |
 
 ---
 
-## Simplifications in This Example
+## What Each Aspect Holds Today
 
-This is a **pedagogical blueprint**. The point of the example is to expose the wiring 
-so an engineer can plug in the material-specific physics.
+This is a **blueprint**. It exposes the wiring so an engineer can plug in the
+material-specific physics. Each row names what the example holds and what production puts there.
 
-| Aspect                  | This Example                              | Production Reality                          |
+| Aspect                  | This Example                              | Production                                  |
 |-------------------------|-------------------------------------------|---------------------------------------------|
 | **Mesh**                | 2 tetrahedra sharing a face               | Millions of elements, often hex-dominant    |
 | **Mesh source**         | Hard-coded                                | Gmsh, Cubit, Salome, or CAD-derived         |
@@ -102,8 +102,8 @@ so an engineer can plug in the material-specific physics.
 | **Normal field**        | Radial from centroid                      | Per-face normals, area-weighted at vertices |
 | **Material frame**      | Fixed 10-degree rotor                     | Per-vertex from grain/fiber orientation     |
 | **Failure criterion**   | von Mises only                            | Tresca, Mohr-Coulomb, Tsai-Hill, Hashin     |
-| **Equilibrium**         | None (stress is input)                    | Outer Newton-Raphson loop on residual       |
-| **Boundary conditions** | None                                      | Dirichlet, Neumann, Robin, contact          |
+| **Equilibrium**         | Stress arrives as input                   | Outer Newton-Raphson loop on residual       |
+| **Boundary conditions** | Folded into the prescribed strain field   | Dirichlet, Neumann, Robin, contact          |
 | **Time evolution**      | Single-shot                               | Quasi-static load steps or full dynamics    |
 | **Solver**              | Per-vertex closure                        | Sparse assembled global `K`, direct or PCG  |
 

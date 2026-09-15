@@ -1,4 +1,4 @@
-# Capstone: Spinor Transport in Minkowski Cl(3,1)
+# Relativistic Spinor Transport in Minkowski Cl(3,1)
 
 ## Introduction
 
@@ -6,14 +6,14 @@ This is the relativistic version of "carry a state forward in time and watch it 
 
 Where this matters in practice: GPS satellites need relativistic corrections of about 38 microseconds per day or the position error grows by 10 km within a day. Particle accelerators (LHC, Fermilab) simulate beam dynamics with relativistic transports along every magnet section. Astrodynamics codes for deep-space missions track frame transformations along long worldlines. Quantum-optics simulations propagate qubit states by chained unitary rotors, which is structurally the same operation in a different signature. Anywhere a "thing with orientation or spin" moves through "a path made of segments," this is the inner loop.
 
-The capstone is also where the architecture shows it value. Five mathematical structures (topology, tensor, geometric algebra, monadic effect chain, high-precision scalar) collaborate. The composition is: extract from the manifold, contract a tensor, rotate a multivector, advance one step in the causal monad, repeat. The final spinor differs from the closed-form expected value by roughly `1.7e-31` at `Float106`, which is fifteen orders of magnitude tighter than the same calculation at `f64`.
+The example is also where the architecture shows its value. Five mathematical structures (topology, tensor, geometric algebra, monadic effect chain, high-precision scalar) collaborate. The composition is: extract from the manifold, contract a tensor, rotate a multivector, advance one step in the causal monad, repeat. The final spinor differs from the closed-form expected value by roughly `1.7e-31` at `Float106`, which is fifteen orders of magnitude tighter than the same calculation at `f64`.
 
 A unit timelike spinor is parallel-transported along a discretized worldline in flat Minkowski spacetime. Every core crate participates and the four-step composition is wired through the causal monad.
 
 ## How to Run
 
 ```bash
-cargo run -p mathematics_examples --example capstone_spinor_minkowski_examples
+cargo run -p mathematics_examples --example relativistic_spinor_transport_examples
 ```
 
 ## What It Demonstrates
@@ -32,11 +32,13 @@ Concretely:
 In Cl(3,1) the bivector `e0 ^ e1` squares to `+1`, so it generates hyperbolic (boost) rotations:
 
 ```
-B(theta) = cosh(theta/2) + sinh(theta/2) * e0^e1
-B~(theta) = cosh(theta/2) - sinh(theta/2) * e0^e1
+B(theta)  = cosh(theta/2) - sinh(theta/2) * e0^e1
+B~(theta) = cosh(theta/2) + sinh(theta/2) * e0^e1
 ```
 
-The reverse flips the sign of every grade-2 element. The transport law on a vector is the sandwich `psi' = B psi B~`. For an initial `psi = e0`, after edges with rapidities `theta_1, ..., theta_N`, the result is
+The reverse flips the sign of every grade-2 element. The sign on the bivector puts the sandwich on
+the standard active convention `(t, x) -> (cosh(theta) t + sinh(theta) x, ...)`, which is what the
+code builds and what the composition check below reads back. The transport law on a vector is the sandwich `psi' = B psi B~`. For an initial `psi = e0`, after edges with rapidities `theta_1, ..., theta_N`, the result is
 
 ```
 psi_final = cosh(sum theta_i) * e0 + sinh(sum theta_i) * e1
