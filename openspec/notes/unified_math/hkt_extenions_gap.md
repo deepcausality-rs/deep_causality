@@ -54,7 +54,7 @@ Ranked by value over cost. Rows 1–4 are delegation onto structure that already
 |---|---|---|---|---|---|---|
 | 1 | `GraphWitness`, `MixedGraphWitness`, `HypergraphWitness`, `PointCloudWitness`, `TopologyWitness` (`topology`) | `Foldable` | yes — all five already hold a `CausalTensor<T>` payload; four sibling witnesses in the same crate implement it | `grep -rn "impl.*Foldable<" topology/src/extensions` returns Cell/Chain/Cochain/LatticeComplex/Manifold only — none of the five | Reductions over graph payloads inside the witness vocabulary instead of reaching past it to `.data().as_slice()`. Prerequisite for row 2 | ~5 lines each |
 | 2 | `ManifoldWitness` (`topology`) | `Traversable`, then `DiagonalTraversable` | yes — `Traversable<F>: Functor<F> + Foldable<F>`, both implemented at `hkt_manifold/mod.rs:75` | inventory row: has HKT/Functor/Pure/Applicative/Monad/CoMonad/Foldable, lacks only Traversable; `tensor` and `linear` both have it | `Manifold<C, Result<T,E>>` collapses to `Result<Manifold<C,T>, E>` — one failing vertex invalidates the field, which a DEC pipeline hand-rolls today | mechanical |
-| 3 | `ZipTensorWitness` (`tensor`), `ZipDenseVectorWitness` (`linear`) | `Foldable` | yes — the underlying `CausalTensor`/`DenseVector` fold already; the non-zip siblings implement it | `grep -rn "impl.*Foldable.*Zip" tensor/src linear/src` returns nothing | `zip_with` then `fold` in one vocabulary — the inner loop of a correlated-ensemble statistic. Today the caller converts back to the plain witness first | delegation |
+| 3 | `ZipTensorWitness` (`tensor`); ~~`ZipDenseVectorWitness` (`linear`)~~ | `Foldable` | yes — the underlying container folds already; the non-zip siblings implement it | `grep -rn "impl.*Foldable.*Zip" tensor/src` returns nothing | a generic function bounded on **one** witness, `W: Semigroupal<W> + Foldable<W>`, that zips then reduces. **Not** element access — see the correction below | delegation; `linear` half **closed 2026-09-15** |
 | 4 | ~~`CausalMultiVectorWitness` (`multivector`)~~ | ~~`Traversable`~~ | — | — | — | **closed 2026-09-15**; see below |
 | 5 | `stats` (13 distribution types), `rand` (`Map`, `Uniform`, `StandardWord`, `StandardBool`) | `Arrow` | n/a — needs a new `→ haft` edge in each crate | `grep -rn deep_causality_haft stats/Cargo.toml rand/Cargo.toml` returns nothing today | `Map`/`Iter` become `Compose`/`arr`; sampler pipelines compose with `first`/`split`/`fanout`; inherits the `haft.arrow.*` Lean proofs | **consumer-gated, see below** |
 
@@ -77,15 +77,45 @@ Sorted by the count of new trait implementations each crate would receive.
 | 2 | `topology` | 7 | `Foldable` × 5 + `Traversable` + `DiagonalTraversable` | 14 witnesses, 8 traits | none — all prereqs met |
 | 3 | `rand` | 4 | `Arrow` on `Map`, `Uniform`, `StandardWord`, `StandardBool` | 0 witnesses, 0 HKT traits, no `haft` edge | new `rand → haft` edge; **tier 2 → 3**. Verified: nothing downstream moves, `stats` is already tier 4 via `linear`. **No consumer** |
 | 4= | `tensor` | 1 | `Foldable` on `ZipTensorWitness` | 3 witnesses, 13 traits | none |
-| 4= | `linear` | 1 | `Foldable` on `ZipDenseVectorWitness` | 4 witnesses, 13 traits | none |
+| — | ~~`linear`~~ | ~~1~~ | ~~`Foldable` on `ZipDenseVectorWitness`~~ | **closed 2026-09-15**: 4 witnesses, 14 traits | — |
 | — | ~~`multivector`~~ | ~~1~~ | ~~`Traversable` on `CausalMultiVectorWitness`~~ | **closed 2026-09-15**: 2 witnesses, 7 traits | — |
 
-**27 impls total, of which 1 is done and 26 remain.** Eight of the nine mechanical ones (ranks 2
+**27 impls total, of which 2 are done and 25 remain.** Seven of the nine mechanical ones (ranks 2
 and 4) are outstanding and move no tiers; seventeen (ranks 1 and 3) need a new dependency edge, one
 of them moves a tier, and neither has a caller waiting.
 
-**Order of work:** row 1 → row 2, since row 1 is row 2's prerequisite; then row 3. Row 5 waits for
-a consumer.
+**Order of work:** row 1 → row 2, since row 1 is row 2's prerequisite; then row 3's remaining
+half. Row 5 waits for a consumer.
+
+### Correction: what a `Foldable` on a zip witness is for
+
+The first version of row 3 said the caller "converts back to the plain witness first." **That was
+wrong.** `ZipDenseVectorWitness` and `DenseVectorWitness` project to the same `DenseVector<T>`, so
+`DenseVectorWitness::fold` already accepts whatever `zip_with` returns, with no conversion of any
+kind. The same holds for the tensor pair. Nothing was blocked at a call site, and the row overstated
+the gain.
+
+What the instance actually buys is the **bound**. A generic function written as
+`W: Semigroupal<W> + Foldable<W>`, zipping and then reducing through one parameter, cannot be
+instantiated at a zip witness without it; the workaround needs two witness parameters plus a
+`W::Type<T> == F::Type<T>` constraint Rust cannot express. No such function exists in the workspace
+yet, so this is capability rather than repair — worth the four lines, not worth overselling. The
+test suite pins both halves, including a negative control that compiles without the instance.
+
+### Closed: `Foldable` on `ZipDenseVectorWitness`, 2026-09-15
+
+`Foldable` has no supertraits, so `HKT` was the only requirement and the body delegates to the
+same iterator fold `DenseVectorWitness` uses. `fold` involves no applicative, which is the only
+thing the two witnesses disagree about, so agreeing element for element and in order is a
+requirement rather than a coincidence, and a test pins it across five inputs.
+
+Eight tests in
+`deep_causality_linear/tests/extensions/hkt/zip_dense_vector_foldable_tests.rs`, written before the
+impl: the generic `zip_then_fold::<Zip>` that fails to compile without it, the negative control
+above, left-to-right order via digit accumulation (a reversal yields `4321` instead of `1234`,
+which plain subtraction would not catch), agreement with the plain witness, the empty-vector seed,
+an accumulator of a different type, and the interaction with `zip_with`'s truncation. Two mutations
+confirm they bite: reversing the fold fails 5 of 8, skipping the first element fails 6.
 
 ### Closed: `Traversable` on `CausalMultiVectorWitness`, 2026-09-15
 
