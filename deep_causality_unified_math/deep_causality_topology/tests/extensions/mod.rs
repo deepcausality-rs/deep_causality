@@ -15,6 +15,8 @@ mod hkt_curvature_tests;
 #[cfg(test)]
 mod hkt_field_witness_tests;
 #[cfg(test)]
+mod hkt_foldable_carriers_tests;
+#[cfg(test)]
 mod hkt_generic_manifold_tests;
 #[cfg(test)]
 mod hkt_graph_tests;
@@ -24,6 +26,8 @@ mod hkt_hypergraph_tests;
 mod hkt_manifold_law_tests;
 #[cfg(test)]
 mod hkt_manifold_tests;
+#[cfg(test)]
+mod hkt_manifold_traversable_tests;
 #[cfg(test)]
 mod hkt_mixed_graph_tests;
 #[cfg(test)]

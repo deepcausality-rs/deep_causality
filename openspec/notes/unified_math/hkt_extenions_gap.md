@@ -52,13 +52,29 @@ Ranked by value over cost. Rows 1–4 are delegation onto structure that already
 
 | # | Target | Add | Prereqs met? | Verify with | Unlocks | Cost |
 |---|---|---|---|---|---|---|
-| 1 | `GraphWitness`, `MixedGraphWitness`, `HypergraphWitness`, `PointCloudWitness`, `TopologyWitness` (`topology`) | `Foldable` | yes — all five already hold a `CausalTensor<T>` payload; four sibling witnesses in the same crate implement it | `grep -rn "impl.*Foldable<" topology/src/extensions` returns Cell/Chain/Cochain/LatticeComplex/Manifold only — none of the five | Reductions over graph payloads inside the witness vocabulary instead of reaching past it to `.data().as_slice()`. Prerequisite for row 2 | ~5 lines each |
-| 2 | `ManifoldWitness` (`topology`) | `Traversable`, then `DiagonalTraversable` | yes — `Traversable<F>: Functor<F> + Foldable<F>`, both implemented at `hkt_manifold/mod.rs:75` | inventory row: has HKT/Functor/Pure/Applicative/Monad/CoMonad/Foldable, lacks only Traversable; `tensor` and `linear` both have it | `Manifold<C, Result<T,E>>` collapses to `Result<Manifold<C,T>, E>` — one failing vertex invalidates the field, which a DEC pipeline hand-rolls today | mechanical |
+| 1 | ~~`GraphWitness`, `MixedGraphWitness`, `HypergraphWitness`, `PointCloudWitness`, `TopologyWitness` (`topology`) | `Foldable` | yes — all five already hold a `CausalTensor<T>` payload; four sibling witnesses in the same crate implement it | `grep -rn "impl.*Foldable<" topology/src/extensions` returns Cell/Chain/Cochain/LatticeComplex/Manifold only — none of the five | Reductions over graph payloads inside the witness vocabulary instead of reaching past it to `.data().as_slice()`. Prerequisite for row 2~~ | **closed 2026-09-15** |
+| 2 | ~~`ManifoldWitness` (`topology`)~~ | ~~`Traversable`~~; `DiagonalTraversable` **not feasible** | yes — `Traversable<F>: Functor<F> + Foldable<F>`, both implemented at `hkt_manifold/mod.rs:75` | inventory row: has HKT/Functor/Pure/Applicative/Monad/CoMonad/Foldable, lacks only Traversable; `tensor` and `linear` both have it | `Manifold<C, Result<T,E>>` collapses to `Result<Manifold<C,T>, E>` — one failing vertex invalidates the field, which a DEC pipeline hand-rolls today~~ | **closed 2026-09-15**; diagonal half blocked, see below |
 | 3 | ~~`ZipTensorWitness` (`tensor`), `ZipDenseVectorWitness` (`linear`)~~ | ~~`Foldable`~~ | — | — | — | **closed 2026-09-15**, both halves |
 | 4 | ~~`CausalMultiVectorWitness` (`multivector`)~~ | ~~`Traversable`~~ | — | — | — | **closed 2026-09-15**; see below |
 | 5 | `stats` (13 distribution types), `rand` (`Map`, `Uniform`, `StandardWord`, `StandardBool`) | `Arrow` | n/a — needs a new `→ haft` edge in each crate | `grep -rn deep_causality_haft stats/Cargo.toml rand/Cargo.toml` returns nothing today | `Map`/`Iter` become `Compose`/`arr`; sampler pipelines compose with `first`/`split`/`fanout`; inherits the `haft.arrow.*` Lean proofs | **consumer-gated, see below** |
 
-**Row 5 is not a recommendation.** `hkt_gaps.md` §3.4 reached the same conclusion — the container
+**Row 5 is closed as not feasible, 2026-09-15.** The direct impls cannot be written.
+`Arrow::run(&self, input: Self::In) -> Self::Out` fixes `In` as one associated type at impl time,
+while `Distribution::sample<R: Rng>(&self, rng: &mut R)` needs a fresh mutable borrow of a
+*generic* generator on every call. Writing it gives `error[E0207]` twice on the same line — the
+type parameter `R` and the lifetime `'a` both appear only inside `type In = &'a mut R`, and an
+associated type does not constrain an impl parameter. `uncertain` clears the same wall only because
+its draws are pure functions of an address, so `In = SampleIndex` and there is no generator to
+borrow; `rand`'s generators are stateful and have no address.
+
+A wrapper carrying the lifetime and the generics does work — `Sampler<'a, D, R, T>(&'a D, …)` with
+`R: Rng + 'a`, measured to run twice, advance the generator and compose with `Lift`. It was not
+taken: the four named types still would not implement `Arrow`, `In = &'a mut R` is not `Clone` so
+`fanout` and the rest of the duplicating combinators stay unavailable, and the tier move buys an
+instance no caller wants. Making `rand`'s draws addressed, as `uncertain`'s are, is the change that
+would earn the layer; it is a sampling-model change rather than a trait-surface one.
+
+**The rest of row 5 as originally written.** `hkt_gaps.md` §3.4 reached the same conclusion — the container
 traits are for data, a lazy sampler is a program, and `haft`'s home for programs is `Arrow` — and
 recorded that such a change *"on its own changes no call site in the workspace."* It is the trap
 §6 of that note flags for `NaturalTransformation`: the dependency is **a consumer**, not code. It
@@ -80,11 +96,35 @@ Sorted by the count of new trait implementations each crate would receive.
 | — | ~~`linear`~~ | ~~1~~ | ~~`Foldable` on `ZipDenseVectorWitness`~~ | **closed 2026-09-15**: 4 witnesses, 14 traits | — |
 | — | ~~`multivector`~~ | ~~1~~ | ~~`Traversable` on `CausalMultiVectorWitness`~~ | **closed 2026-09-15**: 2 witnesses, 7 traits | — |
 
-**27 impls total, of which 3 are done and 24 remain.** All seven outstanding mechanical impls are
-now in `topology` (rows 1 and 2) and move no tiers; the other seventeen need a new dependency edge,
-one of them moves a tier, and neither has a caller waiting.
+**27 impls scoped; 9 landed, 1 found not feasible, 17 closed as not worth their cost.** The
+mechanical work is complete. What remains is row 5's `Arrow` layer, closed above as unreachable
+without a sampling-model change, and `DiagonalTraversable` on `ManifoldWitness`, blocked by that
+type's own invariant.
 
-**Order of work:** row 1 → row 2, since row 1 is row 2's prerequisite. Row 5 waits for a consumer.
+### Closed: `Foldable` × 5 and `Traversable` on `ManifoldWitness`, 2026-09-15
+
+The five carriers each hold their elements in a `CausalTensor`, so `fold` delegates to
+`CausalTensorWitness::fold` exactly as `fmap` already delegated to `CausalTensorWitness::fmap`.
+`PointCloudWitness<C>` reads `metadata` rather than `points`, and the two carry different values in
+the test so a fold reaching the wrong tensor is caught — though in the event the type checker
+catches it first, since `points` is `CausalTensor<C>` and the fold's closure is `FnMut(B, A)`.
+
+`Traversable` on `ManifoldWitness` needed only its two supertraits, both already present.
+`sequence` is one-in-one-out, so the data length cannot change and the complex, metric and cursor
+are carried across rather than rebuilt — which is what `Manifold::new`'s length and cursor checks
+require, and what the tests assert by comparing whole manifolds rather than data tensors.
+
+**`DiagonalTraversable` on `ManifoldWitness` is not feasible.** `sequence_zip` grows each structure
+in its accumulator one element at a time from a caller-supplied seed, so for a manifold that seed
+must hold zero data against a non-empty complex. `Manifold::new` rejects it on both the length check
+(`data.len() != expected_size`) and the cursor check (`cursor >= data.len()`), and
+`test_diagonal_seed_cannot_be_constructed` pins that. The obstacle is the manifold's invariant
+rather than the trait, and it is the same one that keeps `Collectable` off this witness.
+
+Fourteen tests across
+`hkt_foldable_carriers_tests.rs` and `hkt_manifold_traversable_tests.rs`. Three mutations: reversing
+the graph fold fails 3, resetting the manifold cursor fails 2, and folding a point cloud's points
+instead of its metadata does not compile at all.
 
 ### Correction: what a `Foldable` on a zip witness is for
 
