@@ -25,8 +25,6 @@ type TransactionEffect<T> = <<MyEffect5 as Effect5>::HktWitness as HKT5<
 >>::Type<T>;
 
 fn main() {
-    println!("=== DeepCausality HKT: Audited Financial Transaction (Effect System) ===\n");
-
     // ------------------------------------------------------------------------
     // Concept: Type-Encoded Effect System
     //
@@ -42,10 +40,7 @@ fn main() {
 
     // Initial State: Account Balance $1000
     let initial_balance: TransactionEffect<i32> = MyMonadEffect5::pure(1000);
-    println!(
-        "Initial Balance: ${}",
-        initial_balance.value.unwrap_or_default()
-    );
+    print_opening(initial_balance.value.unwrap_or_default());
 
     // Define Transaction Steps
     // Each step returns a TransactionEffect that modifies the balance AND emits effects.
@@ -99,7 +94,7 @@ fn main() {
         })
     };
 
-    println!("\n--- 1. Successful Transaction Pipeline ---");
+    print_success_header();
 
     // Pipeline: Debit $200 -> Apply 10% Tax -> Credit $50 Bonus
     let steps: Vec<Box<dyn Fn(i32) -> TransactionEffect<i32>>> =
@@ -110,30 +105,21 @@ fn main() {
     for (i, step) in steps.into_iter().enumerate() {
         // Bind automatically chains the value AND aggregates the effects (logs, costs, etc.)
         current_tx = MyMonadEffect5::bind(current_tx, step);
-        println!(
-            "Step {} complete. Current Balance: ${}",
-            i + 1,
-            current_tx.value.unwrap_or_default()
-        );
+        print_step(i + 1, current_tx.value.unwrap_or_default());
     }
 
-    println!("\n--- Final Transaction Report ---");
-    println!("Final Balance: ${}", current_tx.value.unwrap_or_default());
-    println!(
-        "Status:        {:?}",
-        current_tx.f1.unwrap_or("Success".to_string())
+    print_report(
+        current_tx.value.unwrap_or_default(),
+        &current_tx.f1.clone().unwrap_or("Success".to_string()),
+        &current_tx.f2,
+        current_tx.f3.iter().sum::<u64>(),
+        &current_tx.f4,
     );
-    println!("Audit Log:     {:?}", current_tx.f2);
-    println!(
-        "Total Cost:    {} micro-cents",
-        current_tx.f3.iter().sum::<u64>()
-    );
-    println!("System Trace:  {:?}", current_tx.f4);
 
     assert_eq!(current_tx.value, Some(770)); // (1000 - 200) * 0.9 + 50 = 720 + 50 = 770
     assert_eq!(current_tx.f3.iter().sum::<u64>(), 75); // 50 + 5 + 20
 
-    println!("\n--- 2. Failed Transaction Pipeline ---");
+    print_failure_header();
 
     // Re-initialize for the second run since the previous one was moved
     let initial_balance_2: TransactionEffect<i32> = MyMonadEffect5::pure(1000);
@@ -151,13 +137,47 @@ fn main() {
         fail_tx = MyMonadEffect5::bind(fail_tx, step);
     }
 
-    println!("Final Balance: {:?}", fail_tx.value);
-    println!("Status:        {:?}", fail_tx.f1);
-    println!("Audit Log:     {:?}", fail_tx.f2);
+    print_failure_report(&fail_tx.value, &fail_tx.f1, &fail_tx.f2);
 
     // Verify error is captured, no value survives, and the tax step did not run.
     assert_eq!(fail_tx.value, None);
     assert_eq!(fail_tx.f2, vec!["Failed Debit".to_string()]); // no "Applied Tax" entry
     assert!(fail_tx.f1.is_some());
     assert_eq!(fail_tx.f1.unwrap(), "Insufficient Funds");
+}
+
+// -----------------------------------------------------------------------------------------
+// Printing
+// -----------------------------------------------------------------------------------------
+
+fn print_opening(balance: i32) {
+    println!("=== DeepCausality HKT: Audited Financial Transaction (Effect System) ===\n");
+    println!("Initial Balance: ${balance}");
+}
+
+fn print_success_header() {
+    println!("\n--- 1. Successful Transaction Pipeline ---");
+}
+
+fn print_step(step: usize, balance: i32) {
+    println!("Step {step} complete. Current Balance: ${balance}");
+}
+
+fn print_report(balance: i32, status: &str, audit: &[String], cost: u64, trace: &[String]) {
+    println!("\n--- Final Transaction Report ---");
+    println!("Final Balance: ${balance}");
+    println!("Status:        {status:?}");
+    println!("Audit Log:     {audit:?}");
+    println!("Total Cost:    {cost} micro-cents");
+    println!("System Trace:  {trace:?}");
+}
+
+fn print_failure_header() {
+    println!("\n--- 2. Failed Transaction Pipeline ---");
+}
+
+fn print_failure_report(balance: &Option<i32>, status: &Option<String>, audit: &[String]) {
+    println!("Final Balance: {balance:?}");
+    println!("Status:        {status:?}");
+    println!("Audit Log:     {audit:?}");
 }

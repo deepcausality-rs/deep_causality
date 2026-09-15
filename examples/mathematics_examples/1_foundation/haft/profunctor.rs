@@ -4,13 +4,17 @@
  */
 
 use deep_causality_haft::{HKT2Unbound, Profunctor};
+use deep_causality_num::lift;
+
+/// The working scalar. A product's price carries it.
+pub type FloatType = f64;
 
 // ============================================================================
 // Domain: Search Filters
 // ============================================================================
 
 fn main() {
-    println!("=== DeepCausality HKT: Profunctor Pattern ===\n");
+    print_header();
 
     // ------------------------------------------------------------------------
     // Profunctor: The Adapter Pattern
@@ -23,17 +27,12 @@ fn main() {
     // You provide a function `Product -> String`, and the Profunctor gives you back
     // a `Product Filter`.
     // ------------------------------------------------------------------------
-    println!("--- Search Filter Adapter ---");
-
     // 1. The Core Component: A generic String Filter
     // Checks if a string contains "Pro"
     let string_filter = Function(Box::new(|s: String| s.contains("Pro")));
 
-    // Test the core component
-    println!(
-        "Filter 'Pro': {}",
-        (string_filter.0)("Professional".to_string())
-    ); // true
+    // Test the core component.
+    print_core_filter((string_filter.0)("Professional".to_string()));
 
     // 2. The Requirement: Filter Products by Name
     // We have a Product, but our filter works on Strings.
@@ -42,13 +41,13 @@ fn main() {
             id: 1,
             name: "Pro Laptop".to_string(),
             category: "Electronics".to_string(),
-            price: 1200.0,
+            price: lift(1200.0),
         },
         Product {
             id: 2,
             name: "Basic Mouse".to_string(),
             category: "Electronics".to_string(),
-            price: 20.0,
+            price: lift(20.0),
         },
     ];
 
@@ -70,25 +69,21 @@ fn main() {
     );
 
     // 4. Usage
-    println!("\nFiltering Products:");
+    print_products_header();
     for p in products {
         let is_match = (product_filter.0)(p.clone());
-        println!(
-            "- {}: {}",
-            p.name,
-            if is_match { "MATCH" } else { "NO MATCH" }
-        );
+        print_match(&p.name, is_match);
     }
 
     // ------------------------------------------------------------------------
     // Scenario 2: Price Filter (Adapting f64 -> bool)
     // ------------------------------------------------------------------------
-    println!("\n--- Price Filter Adapter ---");
-
     // Core: Checks if value > 100.0
-    let expensive_filter = Function(Box::new(|price: f64| price > 100.0));
+    let expensive_filter = Function(Box::new(|price: FloatType| {
+        price > lift::<FloatType>(100.0)
+    }));
 
-    // Adapter: Product -> f64
+    // Adapter: Product -> FloatType
     let product_to_price = |p: Product| p.price;
 
     // Create Product -> bool
@@ -98,21 +93,51 @@ fn main() {
         |b| !b, // Let's invert the output! (Covariant map). Now it finds "Not Expensive" (Cheap)
     );
 
-    println!("Finding Cheap Products (< 100.0):");
+    print_price_header();
     let cheap_product = Product {
         id: 3,
         name: "Cheap Cable".to_string(),
         category: "Accessories".to_string(),
-        price: 15.0,
+        price: lift(15.0),
     };
 
     let is_cheap = (expensive_product_filter.0)(cheap_product.clone());
+    print_cheap(&cheap_product.name, is_cheap);
+    assert!(is_cheap);
+}
+
+// -----------------------------------------------------------------------------------------
+// Printing
+// -----------------------------------------------------------------------------------------
+
+fn print_header() {
+    println!("=== DeepCausality HKT: Profunctor Pattern ===\n");
+    println!("--- Search Filter Adapter ---");
+}
+
+fn print_core_filter(matched: bool) {
+    println!("Filter 'Pro': {matched}");
+}
+
+fn print_products_header() {
+    println!("\nFiltering Products:");
+}
+
+fn print_match(name: &str, is_match: bool) {
     println!(
         "- {}: {}",
-        cheap_product.name,
-        if is_cheap { "YES" } else { "NO" }
+        name,
+        if is_match { "MATCH" } else { "NO MATCH" }
     );
-    assert!(is_cheap);
+}
+
+fn print_price_header() {
+    println!("\n--- Price Filter Adapter ---");
+    println!("Finding Cheap Products (< 100.0):");
+}
+
+fn print_cheap(name: &str, is_cheap: bool) {
+    println!("- {}: {}", name, if is_cheap { "YES" } else { "NO" });
 }
 
 #[derive(Debug, Clone)]
@@ -121,7 +146,7 @@ struct Product {
     id: u32,
     name: String,
     category: String,
-    price: f64,
+    price: FloatType,
 }
 
 // ============================================================================

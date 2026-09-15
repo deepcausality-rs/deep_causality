@@ -332,8 +332,8 @@ rust_binary(
 
 rust_binary(
     name = "hkt_csr_ops_examples",
-    srcs = ["2_composition/extension/hkt_csr_ops.rs"],
-    crate_root = "2_composition/extension/hkt_csr_ops.rs",
+    srcs = glob(["2_composition/extension/hkt_csr_ops/**/*.rs"]),
+    crate_root = "2_composition/extension/hkt_csr_ops/main.rs",
     visibility = ["//visibility:public"],
     deps = [
         # Cargo puts the package's own lib on an example's extern prelude.
@@ -377,8 +377,8 @@ rust_binary(
 
 rust_binary(
     name = "effect_system_causal_tensor_examples",
-    srcs = ["2_composition/chaining/effect_system_causal_tensor.rs"],
-    crate_root = "2_composition/chaining/effect_system_causal_tensor.rs",
+    srcs = glob(["2_composition/chaining/effect_system_causal_tensor/**/*.rs"]),
+    crate_root = "2_composition/chaining/effect_system_causal_tensor/main.rs",
     visibility = ["//visibility:public"],
     deps = [
         # Cargo puts the package's own lib on an example's extern prelude.
@@ -407,8 +407,8 @@ rust_binary(
 
 rust_binary(
     name = "einstein_field_causal_tensor_examples",
-    srcs = ["2_composition/chaining/einstein_field_causal_tensor.rs"],
-    crate_root = "2_composition/chaining/einstein_field_causal_tensor.rs",
+    srcs = glob(["2_composition/chaining/einstein_field_causal_tensor/**/*.rs"]),
+    crate_root = "2_composition/chaining/einstein_field_causal_tensor/main.rs",
     visibility = ["//visibility:public"],
     deps = [
         # Cargo puts the package's own lib on an example's extern prelude.
@@ -482,8 +482,8 @@ rust_binary(
 
 rust_binary(
     name = "cubical_heat_diffusion_examples",
-    srcs = ["2_composition/programs/cubical_heat_diffusion.rs"],
-    crate_root = "2_composition/programs/cubical_heat_diffusion.rs",
+    srcs = glob(["2_composition/programs/cubical_heat_diffusion/**/*.rs"]),
+    crate_root = "2_composition/programs/cubical_heat_diffusion/main.rs",
     visibility = ["//visibility:public"],
     deps = [
         # Cargo puts the package's own lib on an example's extern prelude.
@@ -497,8 +497,8 @@ rust_binary(
 
 rust_binary(
     name = "differential_field_examples",
-    srcs = ["2_composition/programs/differential_field.rs"],
-    crate_root = "2_composition/programs/differential_field.rs",
+    srcs = glob(["2_composition/programs/differential_field/**/*.rs"]),
+    crate_root = "2_composition/programs/differential_field/main.rs",
     visibility = ["//visibility:public"],
     deps = [
         # Cargo puts the package's own lib on an example's extern prelude.
@@ -512,8 +512,8 @@ rust_binary(
 
 rust_binary(
     name = "hkt_graph_convolution_examples",
-    srcs = ["2_composition/extension/hkt_graph_convolution.rs"],
-    crate_root = "2_composition/extension/hkt_graph_convolution.rs",
+    srcs = glob(["2_composition/extension/hkt_graph_convolution/**/*.rs"]),
+    crate_root = "2_composition/extension/hkt_graph_convolution/main.rs",
     visibility = ["//visibility:public"],
     deps = [
         # Cargo puts the package's own lib on an example's extern prelude.

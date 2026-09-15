@@ -42,6 +42,22 @@ name = "haft_adjunction_examples"
 path = "1_foundation/haft/adjunction.rs"
 
 [[example]]
+name = "haft_category_examples"
+path = "1_foundation/haft/category.rs"
+
+[[example]]
+name = "haft_natural_transformation_examples"
+path = "1_foundation/haft/natural_transformation.rs"
+
+[[example]]
+name = "haft_collectable_examples"
+path = "1_foundation/haft/collectable.rs"
+
+[[example]]
+name = "haft_constrained_functors_examples"
+path = "1_foundation/haft/constrained_functors.rs"
+
+[[example]]
 name = "haft_applicative_examples"
 path = "1_foundation/haft/applicative.rs"
 
@@ -107,11 +123,11 @@ path = "2_composition/extension/effect_diffusion_on_manifold/main.rs"
 
 [[example]]
 name = "hkt_csr_ops_examples"
-path = "2_composition/extension/hkt_csr_ops.rs"
+path = "2_composition/extension/hkt_csr_ops/main.rs"
 
 [[example]]
 name = "hkt_graph_convolution_examples"
-path = "2_composition/extension/hkt_graph_convolution.rs"
+path = "2_composition/extension/hkt_graph_convolution/main.rs"
 
 [[example]]
 name = "tensor_x_topology_laplacian_examples"
@@ -127,7 +143,7 @@ path = "2_composition/chaining/effect_kalman_predict_correct/main.rs"
 
 [[example]]
 name = "effect_system_causal_tensor_examples"
-path = "2_composition/chaining/effect_system_causal_tensor.rs"
+path = "2_composition/chaining/effect_system_causal_tensor/main.rs"
 
 [[example]]
 name = "effect_tensor_algebra_roundtrip_examples"
@@ -135,11 +151,15 @@ path = "2_composition/chaining/effect_tensor_algebra_roundtrip/main.rs"
 
 [[example]]
 name = "einstein_field_causal_tensor_examples"
-path = "2_composition/chaining/einstein_field_causal_tensor.rs"
+path = "2_composition/chaining/einstein_field_causal_tensor/main.rs"
 
 # ============================================================================
 # 2_composition/alignment — zip_with / sequence_zip; paired by index.
 # ============================================================================
+
+[[example]]
+name = "zip_and_convolve_examples"
+path = "2_composition/alignment/zip_and_convolve/main.rs"
 
 [[example]]
 name = "ensemble_x_lattice_ising_examples"
@@ -151,11 +171,11 @@ path = "2_composition/alignment/ensemble_x_lattice_ising/main.rs"
 
 [[example]]
 name = "cubical_heat_diffusion_examples"
-path = "2_composition/programs/cubical_heat_diffusion.rs"
+path = "2_composition/programs/cubical_heat_diffusion/main.rs"
 
 [[example]]
 name = "differential_field_examples"
-path = "2_composition/programs/differential_field.rs"
+path = "2_composition/programs/differential_field/main.rs"
 
 # ============================================================================
 # 2_composition/duality — Adjunction, iso bridges, witness duality.
@@ -216,6 +236,18 @@ path = "4_reference/multivector/algebraic_scanner/main.rs"
 [[example]]
 name = "basic_multivector_examples"
 path = "4_reference/multivector/basic_multivector.rs"
+
+[[example]]
+name = "causal_multi_field_basics_examples"
+path = "4_reference/multivector/causal_multi_field_basics.rs"
+
+[[example]]
+name = "multi_field_differential_examples"
+path = "4_reference/multivector/multi_field_differential.rs"
+
+[[example]]
+name = "matrix_representation_examples"
+path = "4_reference/multivector/matrix_representation.rs"
 
 [[example]]
 name = "clifford_mhd_multivector_examples"

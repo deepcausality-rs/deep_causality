@@ -6,9 +6,14 @@
 use deep_causality_haft::{
     Bifunctor, HKT2Unbound, MonoidalMerge, Profunctor, ResultUnboundWitness, Tuple3Witness,
 };
+use deep_causality_num::{lift, lift_i32};
+use std::fmt::Debug;
+
+/// The working scalar. Calibrated readings and fused states carry it.
+pub type FloatType = f64;
 
 fn main() {
-    println!("=== DeepCausality HKT: Cybernetic Sensor Fusion ===\n");
+    print_header();
 
     // ------------------------------------------------------------------------
     // Step 1: Dual-Track Processing (Bifunctor)
@@ -22,8 +27,6 @@ fn main() {
     // This ensures that even if a sensor fails, the error is normalized and
     // formatted correctly without breaking the flow or requiring `if/else` spaghetti.
     // ------------------------------------------------------------------------
-    println!("--- 1. Dual-Track Processing: Calibrate Data OR Format Error ---");
-
     let raw_success: Result<RawSensorData, &str> = Ok(RawSensorData {
         id: 1,
         value: 100,
@@ -34,7 +37,7 @@ fn main() {
     // Transformation Logic
     let calibrate = |raw: RawSensorData| CalibratedData {
         id: raw.id,
-        value: raw.value as f64 * 0.98, // Calibration factor
+        value: lift_i32::<FloatType>(raw.value) * lift::<FloatType>(0.98), // Calibration factor
     };
     let format_err = |e: &str| SystemError {
         code: 500,
@@ -47,8 +50,7 @@ fn main() {
     let processed_ok = ResultUnboundWitness::bimap(raw_success, calibrate, format_err);
     let processed_err = ResultUnboundWitness::bimap(raw_failure, calibrate, format_err);
 
-    println!("Processed OK: {:?}", processed_ok);
-    println!("Processed Err: {:?}", processed_err);
+    print_dual_track(&processed_ok, &processed_err);
 
     // ------------------------------------------------------------------------
     // Step 2: The Adapter Pattern (Profunctor)
@@ -65,19 +67,19 @@ fn main() {
     // This keeps your core logic pure and reusable, while the adapter handles the
     // dirty work of data integration.
     // ------------------------------------------------------------------------
-    println!("\n--- 2. Adapter Pattern: Reusing Core Algorithms ---");
-
     // The Core Algorithm: A pure signal amplifier (f64 -> f64).
     // It knows nothing about "Sensors" or "IDs".
-    let amplifier = DataProcessor(Box::new(|signal: f64| signal * 2.0));
+    let amplifier = DataProcessor(Box::new(|signal: FloatType| {
+        signal * lift::<FloatType>(2.0)
+    }));
 
     // The Adapter:
     // 1. Pre-processing (Input Adapter): Extracts f64 from RawSensorData.
     // 2. Post-processing (Output Adapter): Wraps the resulting f64 into CalibratedData.
     let sensor_pipeline = ProcessorWitness::dimap(
         amplifier,
-        |raw: RawSensorData| raw.value as f64, // Input Adapter
-        |amplified: f64| CalibratedData {
+        |raw: RawSensorData| lift_i32::<FloatType>(raw.value), // Input Adapter
+        |amplified: FloatType| CalibratedData {
             // Output Adapter
             id: 0, // Dummy ID for example
             value: amplified,
@@ -92,8 +94,8 @@ fn main() {
 
     // Execute the adapted pipeline
     let output = (sensor_pipeline.0)(input);
-    println!("Pipeline Output: {:?}", output);
-    assert_eq!(output.value, 20.0); // 10.0 * 2.0
+    print_pipeline(&output);
+    assert_eq!(output.value, lift::<FloatType>(20.0)); // 10.0 * 2.0
 
     // ------------------------------------------------------------------------
     // Step 3: Multi-Stream Fusion (MonoidalMerge)
@@ -109,8 +111,6 @@ fn main() {
     // Below, we link Step 2 and Step 3: We take raw data, run it through our
     // Adapter Pipeline (Step 2) to calibrate it, and then Fuse it (Step 3).
     // ------------------------------------------------------------------------
-    println!("\n--- 3. Sensor Fusion: Calibrate & Merge Streams ---");
-
     // Raw Sensor X data stream (needs calibration)
     let raw_x_stream = (
         RawSensorData {
@@ -139,7 +139,7 @@ fn main() {
         calibrate_fn(raw_x_stream.2),
     );
 
-    println!("Calibrated Sensor X: {:?}", calibrated_x_stream);
+    print_calibrated(&calibrated_x_stream);
 
     // Extract values for fusion (f64)
     let sensor_x = (
@@ -148,8 +148,17 @@ fn main() {
         calibrated_x_stream.2.value,
     );
 
-    let sensor_y = (2.0, 2.1, 2.2); // Time series Y (already calibrated)
-    let sensor_z = (3.0, 3.1, 3.2); // Time series Z (already calibrated)
+    // Time series Y and Z, already calibrated.
+    let sensor_y = (
+        lift::<FloatType>(2.0),
+        lift::<FloatType>(2.1),
+        lift::<FloatType>(2.2),
+    );
+    let sensor_z = (
+        lift::<FloatType>(3.0),
+        lift::<FloatType>(3.1),
+        lift::<FloatType>(3.2),
+    );
 
     // 2. FUSION PHASE
     // Merge the independent streams (X, Y, Z) into a single coherent state.
@@ -163,11 +172,39 @@ fn main() {
             x,
             y,
             z,
-            confidence: 0.95, // Calculated confidence score
+            confidence: lift(0.95), // Calculated confidence score
         }
     });
 
-    println!("Fused States: {:#?}", fused_states);
+    print_fused(&fused_states);
+}
+
+// -----------------------------------------------------------------------------------------
+// Printing
+// -----------------------------------------------------------------------------------------
+
+fn print_header() {
+    println!("=== DeepCausality HKT: Cybernetic Sensor Fusion ===\n");
+    println!("--- 1. Dual-Track Processing: Calibrate Data OR Format Error ---");
+}
+
+fn print_dual_track<A: Debug, B: Debug>(ok: &A, err: &B) {
+    println!("Processed OK: {ok:?}");
+    println!("Processed Err: {err:?}");
+    println!("\n--- 2. Adapter Pattern: Reusing Core Algorithms ---");
+}
+
+fn print_pipeline<T: Debug>(output: &T) {
+    println!("Pipeline Output: {output:?}");
+    println!("\n--- 3. Sensor Fusion: Calibrate & Merge Streams ---");
+}
+
+fn print_calibrated<T: Debug>(stream: &T) {
+    println!("Calibrated Sensor X: {stream:?}");
+}
+
+fn print_fused<T: Debug>(fused: &T) {
+    println!("Fused States: {fused:#?}");
 }
 
 // ============================================================================
@@ -184,7 +221,7 @@ struct RawSensorData {
 #[derive(Debug, Clone, PartialEq)]
 struct CalibratedData {
     id: u32,
-    value: f64,
+    value: FloatType,
 }
 
 #[derive(Debug, Clone, PartialEq)]
@@ -195,10 +232,10 @@ struct SystemError {
 
 #[derive(Debug, Clone, PartialEq)]
 struct FusedState {
-    x: f64,
-    y: f64,
-    z: f64,
-    confidence: f64,
+    x: FloatType,
+    y: FloatType,
+    z: FloatType,
+    confidence: FloatType,
 }
 
 // ============================================================================

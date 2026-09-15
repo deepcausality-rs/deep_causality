@@ -20,9 +20,7 @@
 // to lock in the config, producing a standalone value.
 
 fn main() {
-    println!("=== DeepCausality HKT: Adjunction Pattern ===\n");
-    println!("--- Reader/Writer Duality ---");
-    println!("(Demonstration of concept)");
+    print_header();
 
     // Scenario: We have a function that fetches data given a Config and an ID.
     // fetch_data: (Config, i32) -> String
@@ -44,7 +42,21 @@ fn main() {
     };
 
     let result = reader(my_config);
-    println!("Adjunction Result: {}", result);
+    print_result(&result);
+}
+
+// -----------------------------------------------------------------------------------------
+// Printing
+// -----------------------------------------------------------------------------------------
+
+fn print_header() {
+    println!("=== DeepCausality HKT: Adjunction Pattern ===\n");
+    println!("--- Reader/Writer Duality ---");
+    println!("(Demonstration of concept)");
+}
+
+fn print_result(result: &str) {
+    println!("Adjunction Result: {result}");
 }
 
 struct Config {

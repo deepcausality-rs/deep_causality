@@ -5,127 +5,101 @@
 
 //! Traversable Example
 //!
-//! `VecWitness` carries no `Traversable`. The bound it would need admits only three of the
-//! nineteen inner witnesses the crate ships, which is why it was withheld rather than added;
-//! the "constraint system" an earlier version of this note blamed has since been removed
-//! outright. This example uses `OptionWitness` and `ResultWitness`.
+//! `Traversable::sequence` turns a structure inside out: `Vec<Option<T>>` becomes
+//! `Option<Vec<T>>`, and `Vec<Result<T, E>>` becomes `Result<Vec<T>, E>`. The inner type
+//! supplies the `Applicative`, which decides what "all of them" means -- `None` or the first
+//! `Err` collapses the whole traversal.
+//!
+//! That is the atomic-batch operation: give me every record, or tell me which one is missing.
 
-use deep_causality_haft::{Functor, OptionWitness};
+use deep_causality_haft::{OptionWitness, ResultWitness, Traversable, VecWitness};
+use std::fmt::Debug;
 
 fn main() {
-    println!("=== DeepCausality HKT: Batch Aggregation ===\n");
-
-    // ------------------------------------------------------------------------
-    // Concept: Traversable (Flipping Structure)
-    //
-    // ENGINEERING VALUE:
-    // When processing a batch of items, you often end up with a "List of Results"
-    // (Vec<Result<T, E>>).
-    //
-    // However, for an atomic operation, you often want a "Result of a List"
-    // (Result<Vec<T>, E>). i.e., "Give me all the data, or fail if any is missing."
-    //
-    // This example demonstrates manual sequence patterns.
-    // ------------------------------------------------------------------------
-
-    println!("--- 1. Atomic Batch Retrieval (All or Nothing) ---");
-
-    // Scenario: Fetching Users by ID.
-    let fetch_user = |id: u32| -> Option<User> {
-        if id == 404 {
-            None // User not found
-        } else {
-            Some(User {
-                id,
-                name: format!("User_{}", id),
-            })
-        }
-    };
-
-    // Case A: All users exist
-    let batch_ids_ok = vec![1, 2, 3];
-    let results_ok: Vec<Option<User>> = batch_ids_ok.into_iter().map(fetch_user).collect();
-    println!("Raw Results (OK): {:?}", results_ok);
-
-    // Manual sequence: Vec<Option<User>> -> Option<Vec<User>>
-    let atomic_batch_ok: Option<Vec<User>> = sequence_option(results_ok);
-
-    println!("Atomic Batch (OK): {:#?}", atomic_batch_ok);
+    // 1. Atomic batch retrieval: all the users, or none.
+    let results_ok: Vec<Option<User>> = vec![1, 2, 3].into_iter().map(fetch_user).collect();
+    let raw_ok = results_ok.clone();
+    let atomic_batch_ok = VecWitness::sequence::<User, OptionWitness>(results_ok);
+    print_atomic_ok(&raw_ok, &atomic_batch_ok);
     assert!(atomic_batch_ok.is_some());
 
-    // Case B: One user is missing
-    let batch_ids_missing = vec![1, 404, 3];
-    let results_missing: Vec<Option<User>> =
-        batch_ids_missing.into_iter().map(fetch_user).collect();
-    println!("\nRaw Results (Missing): {:?}", results_missing);
-
-    // Manual sequence: One None causes the whole batch to be None
-    let atomic_batch_missing: Option<Vec<User>> = sequence_option(results_missing);
-
-    println!("Atomic Batch (Missing): {:?}", atomic_batch_missing);
+    // One missing user collapses the whole batch to None.
+    let results_missing: Vec<Option<User>> = vec![1, 404, 3].into_iter().map(fetch_user).collect();
+    let raw_missing = results_missing.clone();
+    let atomic_batch_missing = VecWitness::sequence::<User, OptionWitness>(results_missing);
+    print_atomic_missing(&raw_missing, &atomic_batch_missing);
     assert_eq!(atomic_batch_missing, None);
 
-    println!("\n--- 2. Fail-Fast Validation (Result) ---");
+    // 2. Fail-fast validation. The inner applicative is Result, so the first Err wins.
+    let validated_ok: Vec<Result<i32, String>> =
+        vec![100, 200, 50].into_iter().map(validate_tx).collect();
+    let block_ok = VecWitness::sequence::<i32, ResultWitness<String>>(validated_ok);
 
-    // Scenario: Validating a list of transactions.
-    let validate_tx = |amount: i32| -> Result<i32, String> {
-        if amount < 0 {
-            Err(format!("Negative amount: {}", amount))
-        } else {
-            Ok(amount)
-        }
-    };
+    let validated_invalid: Vec<Result<i32, String>> =
+        vec![100, -50, 200].into_iter().map(validate_tx).collect();
+    let block_invalid = VecWitness::sequence::<i32, ResultWitness<String>>(validated_invalid);
 
-    // Case A: All valid
-    let tx_batch_ok = vec![100, 200, 50];
-    let validation_results_ok: Vec<Result<i32, String>> =
-        tx_batch_ok.into_iter().map(validate_tx).collect();
+    print_validation(&block_ok, &block_invalid);
+    assert_eq!(block_ok, Ok(vec![100, 200, 50]));
+    assert_eq!(block_invalid, Err("Negative amount: -50".to_string()));
 
-    let block_ok: Result<Vec<i32>, String> = sequence_result(validation_results_ok);
-
-    println!("Block Validation (OK): {:?}", block_ok);
-    assert!(block_ok.is_ok());
-
-    // Case B: One invalid
-    let tx_batch_invalid = vec![100, -50, 200];
-    let validation_results_invalid: Vec<Result<i32, String>> =
-        tx_batch_invalid.into_iter().map(validate_tx).collect();
-
-    // The first Err aborts the sequence and is returned
-    let block_invalid: Result<Vec<i32>, String> = sequence_result(validation_results_invalid);
-
-    println!("Block Validation (Invalid): {:?}", block_invalid);
-    assert!(block_invalid.is_err());
-
-    println!("\n--- 3. Demonstrating OptionWitness Functor (fmap) ---");
-
-    // Show that the constraint system works with our HKT traits
-    let opt_val: Option<i32> = Some(10);
-    let doubled: Option<i32> = OptionWitness::fmap(opt_val, |x| x * 2);
-    println!("Original: Some(10), Doubled: {:?}", doubled);
-    assert_eq!(doubled, Some(20));
+    // 3. The flip runs the other way too: OptionWitness is Traversable over Result.
+    let nested: Option<Result<i32, String>> = Some(Ok(7));
+    let flipped = OptionWitness::sequence::<i32, ResultWitness<String>>(nested);
+    print_flip(&flipped);
+    assert_eq!(flipped, Ok(Some(7)));
 }
 
-/// Manual sequence for Option: Vec<Option<T>> -> Option<Vec<T>>
-fn sequence_option<T>(opts: Vec<Option<T>>) -> Option<Vec<T>> {
-    let mut result = Vec::with_capacity(opts.len());
-    for opt in opts {
-        result.push(opt?);
+/// Fetches a user, where id 404 stands for "not found".
+fn fetch_user(id: u32) -> Option<User> {
+    if id == 404 {
+        None
+    } else {
+        Some(User {
+            id,
+            name: format!("User_{id}"),
+        })
     }
-    Some(result)
 }
 
-/// Manual sequence for Result: Vec<Result<T, E>> -> Result<Vec<T>, E>
-fn sequence_result<T, E>(results: Vec<Result<T, E>>) -> Result<Vec<T>, E> {
-    let mut collected = Vec::with_capacity(results.len());
-    for result in results {
-        collected.push(result?);
+/// Rejects a negative transaction amount.
+fn validate_tx(amount: i32) -> Result<i32, String> {
+    if amount < 0 {
+        Err(format!("Negative amount: {amount}"))
+    } else {
+        Ok(amount)
     }
-    Ok(collected)
 }
 
 #[derive(Debug, Clone, PartialEq)]
 struct User {
     id: u32,
     name: String,
+}
+
+// -----------------------------------------------------------------------------------------
+// Printing
+// -----------------------------------------------------------------------------------------
+
+fn print_atomic_ok<R: Debug, A: Debug>(raw: &R, atomic: &A) {
+    println!("=== DeepCausality HKT: Traversable (sequence) ===\n");
+    println!("--- 1. Atomic Batch Retrieval (All or Nothing) ---");
+    println!("Vec<Option<User>>: {raw:?}");
+    println!("sequence -> Option<Vec<User>>: {atomic:#?}");
+}
+
+fn print_atomic_missing<R: Debug, A: Debug>(raw: &R, atomic: &A) {
+    println!("\nWith one missing: {raw:?}");
+    println!("sequence -> {atomic:?}");
+}
+
+fn print_validation<T: Debug>(ok: &T, invalid: &T) {
+    println!("\n--- 2. Fail-Fast Validation (Result) ---");
+    println!("All valid:   {ok:?}");
+    println!("One invalid: {invalid:?}");
+}
+
+fn print_flip<T: Debug>(flipped: &T) {
+    println!("\n--- 3. The Same Flip, Other Way Round ---");
+    println!("Some(Ok(7)) sequenced -> {flipped:?}");
 }

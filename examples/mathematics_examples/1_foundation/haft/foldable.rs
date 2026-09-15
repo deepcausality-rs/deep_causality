@@ -4,59 +4,72 @@
  */
 
 use deep_causality_haft::{Foldable, VecWitness};
+use deep_causality_num::{lift, lift_u32, lower};
+
+/// The working scalar. Money is the quantity this example reduces, so it carries the alias.
+pub type FloatType = f64;
 
 // ============================================================================
 // Domain: E-Commerce Order Processing
+//
+// Foldable abstracts the "loop and accumulate" pattern: you have a collection
+// (Vec, List, Tree) and you need one value out of it -- a sum, a max, an average,
+// a concatenation. `fold` takes the seed and the step, and the witness supplies
+// the traversal.
 // ============================================================================
 
 fn main() {
-    println!("=== DeepCausality HKT: Foldable Pattern ===\n");
-
-    // ------------------------------------------------------------------------
-    // Foldable: Aggregation
-    //
-    // ENGINEERING VALUE:
-    // You have a collection of items (Vec, List, Tree) and you need to reduce them
-    // to a single value (Sum, Max, Average, Concatenation).
-    //
-    // Foldable abstracts the "Loop and Accumulate" pattern.
-    // ------------------------------------------------------------------------
-    println!("--- Order Aggregation ---");
+    print_header();
 
     let orders = vec![
         OrderItem {
             id: "A".to_string(),
-            price: 10.0,
+            price: lift(10.0),
             quantity: 2,
         },
         OrderItem {
             id: "B".to_string(),
-            price: 5.0,
+            price: lift(5.0),
             quantity: 10,
         },
         OrderItem {
             id: "C".to_string(),
-            price: 100.0,
+            price: lift(100.0),
             quantity: 1,
         },
     ];
 
-    // Calculate Total Revenue
-    let total_revenue = VecWitness::fold(orders.clone(), 0.0, |acc, item| {
-        acc + (item.price * item.quantity as f64)
+    // Total revenue: the accumulator is the working scalar, seeded through `lift`.
+    let total_revenue = VecWitness::fold(orders.clone(), lift::<FloatType>(0.0), |acc, item| {
+        acc + (item.price * lift_u32::<FloatType>(item.quantity))
     });
-    println!("Total Revenue: ${:.2}", total_revenue);
-    assert_eq!(total_revenue, 170.0);
+    assert_eq!(total_revenue, lift::<FloatType>(170.0));
 
-    // Calculate Total Items
+    // Total items: the same fold over a plain integer accumulator.
     let total_items = VecWitness::fold(orders, 0, |acc, item| acc + item.quantity);
-    println!("Total Items:   {}", total_items);
     assert_eq!(total_items, 13);
+
+    print_totals(total_revenue, total_items);
 }
 
 #[derive(Debug, Clone, PartialEq)]
 struct OrderItem {
     id: String,
-    price: f64,
+    price: FloatType,
     quantity: u32,
+}
+
+// -----------------------------------------------------------------------------------------
+// Printing
+// -----------------------------------------------------------------------------------------
+
+fn print_header() {
+    println!("=== DeepCausality HKT: Foldable Pattern ===\n");
+    println!("--- Order Aggregation ---");
+}
+
+/// The display boundary: `f64` appears here and nowhere else.
+fn print_totals(revenue: FloatType, items: u32) {
+    println!("Total Revenue: ${:.2}", lower(revenue));
+    println!("Total Items:   {items}");
 }

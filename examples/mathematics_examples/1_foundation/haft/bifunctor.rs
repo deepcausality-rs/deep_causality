@@ -10,7 +10,7 @@ use deep_causality_haft::{Bifunctor, ResultUnboundWitness};
 // ============================================================================
 
 fn main() {
-    println!("=== DeepCausality HKT: Bifunctor Pattern ===\n");
+    print_header();
 
     // ------------------------------------------------------------------------
     // Bifunctor: Dual-Track Processing
@@ -25,8 +25,6 @@ fn main() {
     //
     // Bifunctor (`bimap`) allows you to do this in a single, declarative step.
     // ------------------------------------------------------------------------
-    println!("--- API Response Normalization ---");
-
     // Scenario 1: Successful Operation
     let success_result: Result<DomainUser, DomainError> = Ok(DomainUser {
         id: 42,
@@ -34,7 +32,7 @@ fn main() {
         email: "alice@example.com".to_string(),
     });
 
-    println!("Original Success: {:?}", success_result);
+    let original_success = success_result.clone();
 
     // Transformation Logic
     let to_dto = |u: DomainUser| UserDto {
@@ -61,21 +59,38 @@ fn main() {
     let api_response_ok: Result<UserDto, ApiError> =
         ResultUnboundWitness::bimap(success_result, to_dto, to_api_error);
 
-    println!("API Response (OK): {:#?}", api_response_ok);
+    print_success(&original_success, &api_response_ok);
     assert_eq!(api_response_ok.unwrap().display_name, "ALICE");
 
-    // Scenario 2: Failed Operation
+    // Scenario 2: Failed Operation. The same transformation logic is reused.
     let error_result: Result<DomainUser, DomainError> = Err(DomainError::UserNotFound(99));
-    println!("\nOriginal Error:   {:?}", error_result);
-
-    // Re-use the same transformation logic
+    let original_error = error_result.clone();
     let api_response_err: Result<UserDto, ApiError> =
         ResultUnboundWitness::bimap(error_result, to_dto, to_api_error);
 
-    println!("API Response (Err): {:#?}", api_response_err);
+    print_failure(&original_error, &api_response_err);
     let err = api_response_err.unwrap_err();
     assert_eq!(err.code, 404);
     assert_eq!(err.message, "User 99 not found");
+}
+
+// -----------------------------------------------------------------------------------------
+// Printing
+// -----------------------------------------------------------------------------------------
+
+fn print_header() {
+    println!("=== DeepCausality HKT: Bifunctor Pattern ===\n");
+    println!("--- API Response Normalization ---");
+}
+
+fn print_success(original: &Result<DomainUser, DomainError>, response: &Result<UserDto, ApiError>) {
+    println!("Original Success: {original:?}");
+    println!("API Response (OK): {response:#?}");
+}
+
+fn print_failure(original: &Result<DomainUser, DomainError>, response: &Result<UserDto, ApiError>) {
+    println!("\nOriginal Error:   {original:?}");
+    println!("API Response (Err): {response:#?}");
 }
 
 #[derive(Debug, Clone, PartialEq)]

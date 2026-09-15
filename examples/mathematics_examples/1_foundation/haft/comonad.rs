@@ -4,86 +4,67 @@
  */
 
 use deep_causality_haft::{BoxWitness, CoMonad, HKT};
+use deep_causality_num::{lift, lower};
+
+/// The working scalar. Temperature and pressure carry it through every evolution step.
+pub type FloatType = f64;
 
 // ============================================================================
 // Domain Logic: System Evolution
+//
+// Concept: Comonad (the "viewer" pattern)
+//
+// Where a Monad is about sequencing (A -> M<B>), a Comonad is about contextual
+// computation (W<A> -> B). You have a value in a context -- a system snapshot --
+// and you want a new value computed from that *entire* context. `extend` chains
+// those context-aware computations.
+//
+// Scenario: a physical system cooling down, each step depending on the current state.
 // ============================================================================
 
 fn main() {
-    println!("=== DeepCausality HKT: Contextual Computation (Comonad) ===\n");
-
-    // ------------------------------------------------------------------------
-    // Concept: Comonad (The "Viewer" Pattern)
-    //
-    // ENGINEERING VALUE:
-    // While Monads are about "Sequencing" (A -> M<B>), Comonads are about
-    // "Contextual Computation" (W<A> -> B).
-    //
-    // You have a value in a context (e.g., a System Snapshot).
-    // You want to compute a new value based on that *entire* context.
-    // `extend` allows you to chain these context-aware computations.
-    //
-    // Scenario: Simulating a physical system cooling down.
-    // Each step depends on the *current state* of the system.
-    // ------------------------------------------------------------------------
-
-    // Initial State: Hot and High Pressure
+    // Initial state: hot and high pressure.
     let initial_state = Box::new(SystemState {
-        temperature: 100.0,
-        pressure: 50.0,
+        temperature: lift(100.0),
+        pressure: lift(50.0),
         step: 0,
     });
-    println!("T0: Initial State: {:?}", initial_state);
 
-    // 1. EXTRACT: Get the current value out of the context
-    // Useful when you just need to read the sensor.
+    // EXTRACT reads the value out of the context, for when you just need the sensor.
     let current_temp = BoxWitness::extract(&initial_state).temperature;
-    println!("    Current Temp: {:.2}", current_temp);
+    print_initial(&initial_state, current_temp);
 
-    // 2. EXTEND: Evolve the system
-    // We define a "Physics Rule": The system cools down and pressure drops.
-    // This function takes the *entire* previous context (Box<State>) to compute the new State.
+    // EXTEND evolves the system. The rule takes the *entire* previous context.
     let evolve_system = |w: &<BoxWitness as HKT>::Type<SystemState>| {
-        let prev = &**w; // Access the value inside the context
+        let prev = &**w;
         SystemState {
-            temperature: prev.temperature * 0.90, // Cools by 10%
-            pressure: prev.pressure * 0.95,       // Pressure drops by 5%
+            temperature: prev.temperature * lift::<FloatType>(0.90), // cools by 10%
+            pressure: prev.pressure * lift::<FloatType>(0.95),       // pressure drops by 5%
             step: prev.step + 1,
         }
     };
 
-    // Apply the rule to get T1
     let state_t1 = BoxWitness::extend(&initial_state, evolve_system);
-    println!("T1: Evolved State: {:?}", state_t1);
-
-    // Apply the rule again to get T2
-    // Note how we chain the evolution.
     let state_t2 = BoxWitness::extend(&state_t1, evolve_system);
-    println!("T2: Evolved State: {:?}", state_t2);
+    print_evolution(&state_t1, &state_t2);
 
-    // 3. EXTEND: Context-Aware Analysis
-    // We can also use `extend` to compute *derived* metrics that depend on the context.
-    // Example: Calculate an "Alert Level" based on the state.
+    // EXTEND also computes *derived* metrics that depend on the context.
     let analyze_alert = |w: &<BoxWitness as HKT>::Type<SystemState>| {
         let state = &**w;
-        if state.temperature > 85.0 {
+        if state.temperature > lift::<FloatType>(85.0) {
             "CRITICAL"
-        } else if state.temperature > 50.0 {
+        } else if state.temperature > lift::<FloatType>(50.0) {
             "WARNING"
         } else {
             "NORMAL"
         }
     };
 
-    // This transforms Box<SystemState> -> Box<&str> (The Alert Context)
+    // This turns Box<SystemState> into Box<&str>, the alert context.
     let alert_t0 = BoxWitness::extend(&initial_state, analyze_alert);
     let alert_t1 = BoxWitness::extend(&state_t1, analyze_alert);
     let alert_t2 = BoxWitness::extend(&state_t2, analyze_alert);
-
-    println!("\n--- System Alert Log ---");
-    println!("T0 Alert: {:?}", alert_t0);
-    println!("T1 Alert: {:?}", alert_t1);
-    println!("T2 Alert: {:?}", alert_t2);
+    print_alerts(&alert_t0, &alert_t1, &alert_t2);
 
     assert_eq!(*alert_t0, "CRITICAL"); // 100.0
     assert_eq!(*alert_t1, "CRITICAL"); // 90.0
@@ -92,7 +73,30 @@ fn main() {
 
 #[derive(Debug, Clone, PartialEq)]
 struct SystemState {
-    temperature: f64,
-    pressure: f64,
+    temperature: FloatType,
+    pressure: FloatType,
     step: u32,
+}
+
+// -----------------------------------------------------------------------------------------
+// Printing
+// -----------------------------------------------------------------------------------------
+
+fn print_initial(state: &SystemState, current_temp: FloatType) {
+    println!("=== DeepCausality HKT: Contextual Computation (Comonad) ===\n");
+    println!("T0: Initial State: {state:?}");
+    // The display boundary: `f64` appears here and nowhere else.
+    println!("    Current Temp: {:.2}", lower(current_temp));
+}
+
+fn print_evolution(t1: &SystemState, t2: &SystemState) {
+    println!("T1: Evolved State: {t1:?}");
+    println!("T2: Evolved State: {t2:?}");
+}
+
+fn print_alerts(t0: &str, t1: &str, t2: &str) {
+    println!("\n--- System Alert Log ---");
+    println!("T0 Alert: {t0:?}");
+    println!("T1 Alert: {t1:?}");
+    println!("T2 Alert: {t2:?}");
 }

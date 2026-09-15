@@ -20,47 +20,37 @@ use std::marker::PhantomData;
 // This enforces the correct sequence of operations at COMPILE TIME.
 // You cannot "Send Data" before "Connect".
 fn main() {
-    println!("=== DeepCausality HKT: Parametric Monad Pattern ===\n");
+    print_header();
 
-    println!("--- Protocol State Machine ---");
-
-    // Step 1: Connect (Disconnected -> Connected)
-    let connect = || -> Transition<Disconnected, Connected, String> {
-        println!("Action: Connecting...");
-        Transition::new("Connection_ID_123".to_string())
-    };
-
-    // Step 2: Authenticate (Connected -> Authenticated)
-    let authenticate = |conn_id: String| -> Transition<Connected, Authenticated, String> {
-        println!("Action: Authenticating {}...", conn_id);
-        Transition::new("User_Session_99".to_string())
-    };
-
-    // Step 3: Send Data (Authenticated -> Authenticated)
-    let send_data = |session: String| -> Transition<Authenticated, Authenticated, usize> {
-        println!("Action: Sending data via {}...", session);
-        Transition::new(1024) // Bytes sent
-    };
-
-    // EXECUTION
-    // We chain them: Disconnected -> Connected -> Authenticated -> Authenticated
-    // The types align perfectly:
-    // S1=Disc, S2=Conn
-    //          S2=Conn, S3=Auth
-    //                   S3=Auth, S4=Auth
-
+    // The chain runs Disconnected -> Connected -> Authenticated -> Authenticated, and the
+    // types line up at every step: S1=Disc/S2=Conn, then S2=Conn/S3=Auth, then S3=Auth/S4=Auth.
     let t1 = connect();
     let t2 = ibind(t1, authenticate);
     let t3 = ibind(t2, send_data);
 
-    println!("Final Result: {} bytes sent", t3.val);
+    print_result(t3.val);
 
     // COMPILE-TIME SAFETY:
-    // If we tried to call 'send_data' immediately after 'connect',
-    // the types would mismatch:
-    // connect returns Post=Connected
-    // send_data expects Pre=Authenticated
-    // compile error!
+    // Calling `send_data` straight after `connect` does not compile: `connect` returns
+    // Post=Connected and `send_data` expects Pre=Authenticated.
+}
+
+/// Step 1: Disconnected -> Connected.
+fn connect() -> Transition<Disconnected, Connected, String> {
+    print_action_connect();
+    Transition::new("Connection_ID_123".to_string())
+}
+
+/// Step 2: Connected -> Authenticated.
+fn authenticate(conn_id: String) -> Transition<Connected, Authenticated, String> {
+    print_action_authenticate(&conn_id);
+    Transition::new("User_Session_99".to_string())
+}
+
+/// Step 3: Authenticated -> Authenticated, yielding the bytes sent.
+fn send_data(session: String) -> Transition<Authenticated, Authenticated, usize> {
+    print_action_send(&session);
+    Transition::new(1024)
 }
 
 // States
@@ -95,4 +85,29 @@ where
 {
     let next = f(m.val);
     Transition::new(next.val)
+}
+
+// -----------------------------------------------------------------------------------------
+// Printing
+// -----------------------------------------------------------------------------------------
+
+fn print_header() {
+    println!("=== DeepCausality HKT: Parametric Monad Pattern ===\n");
+    println!("--- Protocol State Machine ---");
+}
+
+fn print_action_connect() {
+    println!("Action: Connecting...");
+}
+
+fn print_action_authenticate(conn_id: &str) {
+    println!("Action: Authenticating {conn_id}...");
+}
+
+fn print_action_send(session: &str) {
+    println!("Action: Sending data via {session}...");
+}
+
+fn print_result(bytes: usize) {
+    println!("Final Result: {bytes} bytes sent");
 }
