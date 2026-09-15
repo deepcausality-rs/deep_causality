@@ -56,12 +56,32 @@ impl<T: Real> PairwiseSum<T> {
         self.slots[SLOTS - 1] = Some(carry);
     }
 
-    /// The sum of everything added, smallest partial sum first.
-    pub(crate) fn total(&self) -> T {
+    /// Which slots hold a partial sum, as a bit pattern.
+    ///
+    /// Equal to the number of observations, because a slot holds exactly `2ⁱ` of them and the
+    /// carry is a binary increment. That identity is what makes two callers pushing the same
+    /// sequence associate their additions the same way, so it is observable rather than implied.
+    pub(crate) fn occupancy(&self) -> u128 {
         self.slots
             .iter()
-            .flatten()
-            .fold(T::zero(), |acc, &partial| acc + partial)
+            .enumerate()
+            .filter(|(_, slot)| slot.is_some())
+            .map(|(i, _)| 1u128 << i)
+            .sum()
+    }
+
+    /// The sum of everything added, smallest partial sum first.
+    ///
+    /// Folded from the first occupied slot rather than from zero, so that a sum which is
+    /// genuinely negative zero stays one: `(−0) + (−0)` is `−0`, but `(+0) + (−0)` is `+0`, so a
+    /// seeded fold would turn every negative zero positive on its way out. Zero is returned only
+    /// when nothing was added, which is the one case that has no first slot.
+    pub(crate) fn total(&self) -> T {
+        let mut occupied = self.slots.iter().flatten();
+        match occupied.next() {
+            Some(&first) => occupied.fold(first, |acc, &partial| acc + partial),
+            None => T::zero(),
+        }
     }
 }
 

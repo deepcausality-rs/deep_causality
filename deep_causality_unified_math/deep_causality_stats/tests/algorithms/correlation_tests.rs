@@ -63,9 +63,9 @@
 // separately.
 use deep_causality_algebra::{Real, RealField};
 use deep_causality_num::lift;
-use deep_causality_num::{Float106, FromPrimitive};
+use deep_causality_num::{BFloat16, Float106, FromPrimitive};
 use deep_causality_stats::utils_tests::lift_array;
-use deep_causality_stats::utils_tests::precision::{F32, F64, F106};
+use deep_causality_stats::utils_tests::precision::{BF16, F32, F64, F106};
 use deep_causality_stats::{StatsError, StatsErrorEnum, pearson, pearson_pairwise_complete};
 
 // -------------------------------------------------------------------------------------------
@@ -1257,4 +1257,95 @@ fn test_pearson_carries_the_callers_precision() {
         residual <= lift::<Float106>(F106.native),
         "r² = 81/85 exactly, so r²·85 − 81 should vanish at Float106: {residual:?}"
     );
+}
+
+// -------------------------------------------------------------------------------------------
+// Reach: the centred sums are reductions over every pair, and a narrow scalar is where an
+// arrangement that loses them shows. `r` is bounded and sign-equivariant by construction, so these
+// cases assert properties the quantity cannot violate rather than values a fixture has to get
+// right — which is what makes them meaningful at a scalar carrying two decimal digits.
+// -------------------------------------------------------------------------------------------
+
+/// Row K at the narrowest scalar, on the invariant that bounds the quantity: `|r| ≤ 1`, always.
+///
+/// A correlation above one is not merely inaccurate, it is outside the range of the thing being
+/// estimated, so no tolerance argument can excuse it. Measured before the reductions were summed as
+/// trees: `1.0078` at a hundred pairs and `1.0156` at a thousand, growing with the count exactly as
+/// a stalling total does.
+///
+/// Provenance: `y = 2x + 1` is a positive affine map, so `r = +1` exactly, at every precision and
+/// every count. The design takes `x = 0..n` so the deviations are of order `n/4` — far above the
+/// scalar's own spacing, which a fixture of closely-spaced values would not be.
+#[test]
+fn test_correlation_stays_within_its_range_at_every_scalar() {
+    for n in [8usize, 64, 100, 256, 1000] {
+        let xs: Vec<f64> = (0..n).map(|i| i as f64).collect();
+        let ys: Vec<f64> = xs.iter().map(|x| 2.0 * x + 1.0).collect();
+
+        let bf: Vec<BFloat16> = xs.iter().map(|&v| lift::<BFloat16>(v)).collect();
+        let bf_y: Vec<BFloat16> = ys.iter().map(|&v| lift::<BFloat16>(v)).collect();
+        let (r, count) = pearson(&bf, &bf_y).expect("a correlation over n pairs is defined");
+        assert_eq!(count, n);
+        assert!(
+            r <= lift::<BFloat16>(1.0) && r >= lift::<BFloat16>(-1.0),
+            "r = {:?} lies outside [-1, 1] at BFloat16 over {n} pairs",
+            r.to_f64()
+        );
+        assert_close(r, lift::<BFloat16>(1.0), BF16.reduction, "r of y = 2x + 1");
+
+        let (r32, _) = pearson(
+            &xs.iter().map(|&v| lift::<f32>(v)).collect::<Vec<f32>>(),
+            &ys.iter().map(|&v| lift::<f32>(v)).collect::<Vec<f32>>(),
+        )
+        .expect("a correlation over n pairs is defined");
+        assert!(
+            (-1.0..=1.0).contains(&r32),
+            "r = {r32} lies outside [-1, 1] at f32"
+        );
+        assert_close(r32, 1.0_f32, F32.reduction, "r of y = 2x + 1 at f32");
+    }
+}
+
+/// Row G, the sign. `r` is odd in either argument: negating one sample negates the correlation,
+/// and negating both leaves it alone.
+///
+/// The perfectly anti-correlated case is the one a dropped sign would turn into `+1`, and the
+/// doubly-negated case is the one a sign applied to the wrong sum would turn into `−1`, so the two
+/// together pin the sign rather than merely observing it once.
+#[test]
+fn test_correlation_is_odd_in_each_sample() {
+    let n = 1000;
+    let xs: Vec<BFloat16> = (0..n).map(|i| lift::<BFloat16>(i as f64)).collect();
+    let ys: Vec<BFloat16> = (0..n)
+        .map(|i| lift::<BFloat16>(2.0 * i as f64 + 1.0))
+        .collect();
+    let neg_y: Vec<BFloat16> = ys.iter().map(|&v| -v).collect();
+    let neg_x: Vec<BFloat16> = xs.iter().map(|&v| -v).collect();
+
+    let (r, _) = pearson(&xs, &ys).expect("defined");
+    let (r_neg_y, _) = pearson(&xs, &neg_y).expect("defined");
+    let (r_both, _) = pearson(&neg_x, &neg_y).expect("defined");
+
+    assert_close(r_neg_y, -r, BF16.reduction, "r(x, −y) = −r(x, y)");
+    assert_close(r_both, r, BF16.reduction, "r(−x, −y) = r(x, y)");
+    assert!(
+        r_neg_y >= lift::<BFloat16>(-1.0),
+        "the anti-correlated case must not fall below −1, got {:?}",
+        r_neg_y.to_f64()
+    );
+}
+
+/// A sample correlated with itself is exactly `+1`, and with its own negation exactly `−1`.
+///
+/// Row C: at `r = ±1` the numerator and denominator coincide up to sign, so several wrong formulas
+/// agree here — which is why the graded case above carries the value assertion and this one carries
+/// the exactness. It is the sharpest test of `ratio`'s single-rounding form, which exists so that a
+/// perfect correlation comes back as one rather than as `0.9999999999999998`.
+#[test]
+fn test_a_sample_correlated_with_itself_is_exactly_one() {
+    let xs: Vec<f64> = (0..1000).map(|i| i as f64 * 0.25 - 100.0).collect();
+    let neg: Vec<f64> = xs.iter().map(|v| -v).collect();
+
+    assert_eq!(pearson(&xs, &xs).expect("defined").0, 1.0);
+    assert_eq!(pearson(&xs, &neg).expect("defined").0, -1.0);
 }

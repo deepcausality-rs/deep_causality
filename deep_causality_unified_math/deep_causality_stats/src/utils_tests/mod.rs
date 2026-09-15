@@ -14,6 +14,7 @@
 //! provide: an array of literals, a distribution, the per-precision tolerance table, the shared
 //! assertions and the independent oracles.
 
+pub mod accumulation;
 pub mod assertions;
 pub mod oracles;
 pub mod precision;

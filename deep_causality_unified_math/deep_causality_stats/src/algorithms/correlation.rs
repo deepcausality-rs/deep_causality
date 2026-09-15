@@ -7,6 +7,7 @@
 
 use crate::algorithms::moments::{max_abs_deviation, mean};
 use crate::errors::stats_error::StatsError;
+use crate::types::pairwise_sum::PairwiseSum;
 use alloc::vec::Vec;
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
@@ -78,16 +79,17 @@ where
     let mean_x = mean(x)?;
     let mean_y = mean(y)?;
 
-    let mut sxy = T::zero();
-    let mut sxx = T::zero();
-    let mut syy = T::zero();
+    let mut sxy_acc = PairwiseSum::new();
+    let mut sxx_acc = PairwiseSum::new();
+    let mut syy_acc = PairwiseSum::new();
     for (&xi, &yi) in x.iter().zip(y.iter()) {
         let dx = xi - mean_x;
         let dy = yi - mean_y;
-        sxy += dx * dy;
-        sxx += dx * dx;
-        syy += dy * dy;
+        sxy_acc.push(dx * dy);
+        sxx_acc.push(dx * dx);
+        syy_acc.push(dy * dy);
     }
+    let (sxy, sxx, syy) = (sxy_acc.total(), sxx_acc.total(), syy_acc.total());
 
     let usable = sxx.is_finite() && syy.is_finite() && sxy.is_finite();
     if usable && sxx > T::zero() && syy > T::zero() {
@@ -104,16 +106,17 @@ where
         return Ok((T::zero(), n));
     }
 
-    let mut txy = T::zero();
-    let mut txx = T::zero();
-    let mut tyy = T::zero();
+    let mut txy_acc = PairwiseSum::new();
+    let mut txx_acc = PairwiseSum::new();
+    let mut tyy_acc = PairwiseSum::new();
     for (&xi, &yi) in x.iter().zip(y.iter()) {
         let dx = (xi - mean_x) / scale_x;
         let dy = (yi - mean_y) / scale_y;
-        txy += dx * dy;
-        txx += dx * dx;
-        tyy += dy * dy;
+        txy_acc.push(dx * dy);
+        txx_acc.push(dx * dx);
+        tyy_acc.push(dy * dy);
     }
+    let (txy, txx, tyy) = (txy_acc.total(), txx_acc.total(), tyy_acc.total());
     if txx <= T::zero() || tyy <= T::zero() {
         return Ok((T::zero(), n));
     }
