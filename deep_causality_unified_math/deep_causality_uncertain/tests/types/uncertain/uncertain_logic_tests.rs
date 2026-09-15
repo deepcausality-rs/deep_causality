@@ -3,12 +3,12 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_uncertain::Uncertain;
+use deep_causality_uncertain::UncertainBool;
 
 #[test]
 fn test_uncertain_bool_bitand() {
-    let t = Uncertain::<bool>::point(true);
-    let f = Uncertain::<bool>::point(false);
+    let t = UncertainBool::<f64>::point(true);
+    let f = UncertainBool::<f64>::point(false);
 
     assert!((t.clone() & t.clone()).sample_from_entropy().unwrap());
     assert!(!(t.clone() & f.clone()).sample_from_entropy().unwrap());
@@ -18,8 +18,8 @@ fn test_uncertain_bool_bitand() {
 
 #[test]
 fn test_uncertain_bool_bitor() {
-    let t = Uncertain::<bool>::point(true);
-    let f = Uncertain::<bool>::point(false);
+    let t = UncertainBool::<f64>::point(true);
+    let f = UncertainBool::<f64>::point(false);
 
     assert!((t.clone() | t.clone()).sample_from_entropy().unwrap());
     assert!((t.clone() | f.clone()).sample_from_entropy().unwrap());
@@ -29,8 +29,8 @@ fn test_uncertain_bool_bitor() {
 
 #[test]
 fn test_uncertain_bool_not() {
-    let t = Uncertain::<bool>::point(true);
-    let f = Uncertain::<bool>::point(false);
+    let t = UncertainBool::<f64>::point(true);
+    let f = UncertainBool::<f64>::point(false);
 
     assert!(!(!t).sample_from_entropy().unwrap());
     assert!((!f).sample_from_entropy().unwrap());
@@ -38,8 +38,8 @@ fn test_uncertain_bool_not() {
 
 #[test]
 fn test_uncertain_bool_bitxor() {
-    let t = Uncertain::<bool>::point(true);
-    let f = Uncertain::<bool>::point(false);
+    let t = UncertainBool::<f64>::point(true);
+    let f = UncertainBool::<f64>::point(false);
 
     assert!(!(t.clone() ^ t.clone()).sample_from_entropy().unwrap());
     assert!((t.clone() ^ f.clone()).sample_from_entropy().unwrap());

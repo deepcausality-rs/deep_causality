@@ -3,46 +3,74 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! Core components for the `deep_causality_uncertain` crate.
+//! Uncertain values as lazy computation graphs, with the scalar as a parameter.
+//!
+//! # Precision is a parameter
+//!
+//! Every type here is generic in `R: UncertainScalar` — `RealField + FromPrimitive`, blanket-implemented
+//! in `deep_causality_rand`. A scalar joins by satisfying the algebra and by nothing else, so a
+//! type added to `deep_causality_num` works here with no line changed in this crate. Nothing in
+//! `src` names a concrete scalar outside the alias module and a display boundary.
+//!
+//! `Real` would not do. A probability is a ratio of two counts, and `Real` in
+//! `deep_causality_algebra` is a commutative ring with an order and carries no `Div`; division
+//! arrives with `Field`. `RealField` is the weakest structure that can state a frequency.
+//!
+//! # Two carriers over one graph
+//!
+//! The graph is `ConstTree<Node<R>>`, and one evaluation of a node yields a [`Sample<R>`]: a real
+//! at the graph's scalar, or a truth value. Two carriers read it:
+//!
+//! - [`Uncertain<R>`] — a real quantity. Arithmetic, comparisons, Monte-Carlo statistics.
+//! - [`UncertainBool<R>`] — a truth value. Logical operators, the SPRT gate, probability estimates.
+//!
+//! `Uncertain<bool>` does not exist. A Bernoulli leaf, a comparison and a logical combination all
+//! read a truth value off a tree whose leaves are real, so `bool` is not something the tree can be
+//! parameterised by; and the Boolean carrier keeps `R` because the tree beneath it holds `R`.
+//!
+//! The constraint that settles this is `core.verdict.closure`. [`Verdict`](deep_causality_algebra::Verdict)
+//! is instanced twice over two different algebras — the Boolean class on the Boolean carrier
+//! (`meet = &`, `join = |`, `complement = !`) and the MV class on `[0, 1]` on the real carrier
+//! (`min`, `max`, `1 − p`). One type cannot hold both, and dropping either breaks `Aggregatable`
+//! downstream. As two blanket instances over two distinct local types they are coherent.
+//!
+//! # Addressed draws
+//!
+//! A draw is a function of three numbers — the [`SampleSession`]'s seed, the sample index, and the
+//! leaf's [ordinal](LeafOrdinals) — and of nothing else. Nothing is stored between calls, and two
+//! graphs sharing a leaf agree about that leaf at the same index.
 
 mod algos;
-mod alias;
 mod errors;
-mod extensions;
 mod traits;
 mod types;
 mod utils;
+pub mod utils_tests;
 
 // Algos
 pub use crate::algos::hypothesis::sprt_eval;
-// Alias
-pub use crate::alias::{
-    MaybeUncertainBool, MaybeUncertainF64, MaybeUncertainF106, UncertainBool, UncertainF64,
-    UncertainF106,
-};
 // Errors
 pub use crate::errors::UncertainError;
 // Traits
-pub use crate::traits::probabilistic::{FromSampledValue, IntoSampledValue, ProbabilisticType};
 pub use crate::traits::sampler::Sampler;
-pub use crate::traits::uncertain_real::UncertainReal;
+pub use crate::traits::scalar::UncertainScalar;
 // Types
+pub use crate::types::computation::node::{Node, SampledBindFn, SampledFmapFn};
 pub use crate::types::computation::operator::arithmetic_operator::ArithmeticOperator;
 pub use crate::types::computation::operator::comparison_operator::ComparisonOperator;
 pub use crate::types::computation::operator::logical_operator::LogicalOperator;
-pub use crate::types::computation::uncertain_node_content::{
-    SampledBindFn, SampledFmapFn, UncertainNodeContent,
-};
+pub use crate::types::computation::sample::Sample;
 pub use crate::types::distribution::DistributionEnum;
 pub use crate::types::distribution_parameters::BernoulliParams;
 pub use crate::types::distribution_parameters::NormalDistributionParams;
 pub use crate::types::distribution_parameters::UniformDistributionParams;
 pub use crate::types::leaf_ordinals::LeafOrdinals;
 pub use crate::types::sample_session::SampleSession;
-pub use crate::types::sampled_value::SampledValue;
 pub use crate::types::sampler::qmc_sampler::QmcSampler;
 pub use crate::types::sampler::sequential_sampler::SequentialSampler;
 pub use crate::types::uncertain::Uncertain;
+pub use crate::types::uncertain_bool::UncertainBool;
 pub use crate::types::uncertain_maybe::MaybeUncertain;
 // Utils
+pub(crate) use crate::utils::ratio::ratio;
 pub use crate::utils::seed_mix::draw_seed;

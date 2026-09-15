@@ -4,13 +4,10 @@
  */
 
 use crate::LeafOrdinals;
+use crate::UncertainScalar;
 use crate::types::sampler::leaf_draws::{AddressedDraws, AmbientDraws, LeafDraws};
-use crate::{
-    DistributionEnum, IntoSampledValue, LogicalOperator, ProbabilisticType, SampledValue, Sampler,
-    UncertainError, UncertainNodeContent,
-};
+use crate::{LogicalOperator, Node, Sample, Sampler, UncertainError};
 use deep_causality_ast::ConstTree;
-use deep_causality_num::Float106;
 use std::collections::HashMap;
 
 /// A basic, single-threaded sampler.
@@ -18,7 +15,7 @@ use std::collections::HashMap;
 pub struct SequentialSampler;
 
 // Implementation of the Sampler trait.
-impl<T: ProbabilisticType> Sampler<T> for SequentialSampler {
+impl<R: UncertainScalar> Sampler<R> for SequentialSampler {
     /// Samples a value from the given root computation node.
     ///
     /// This method initiates the sampling process by evaluating the computation graph
@@ -27,21 +24,21 @@ impl<T: ProbabilisticType> Sampler<T> for SequentialSampler {
     ///
     /// # Arguments
     ///
-    /// * `root_node` - An `Arc` to the root `ComputationNode` of the graph to be sampled.
+    /// * `root_node` - The root of the graph to be sampled.
     ///
     /// # Returns
     ///
     /// A `Result` which is:
-    /// - `Ok(SampledValue)` containing the sampled value if the sampling is successful.
+    /// - `Ok(Sample<R>)` containing the sampled value if the sampling is successful.
     /// - `Err(UncertainError)` if an error occurs during sampling (e.g., type mismatch, distribution error).
     fn sample(
         &self,
-        root_node: &ConstTree<UncertainNodeContent>,
+        root_node: &ConstTree<Node<R>>,
         _sample_index: u64,
-    ) -> Result<SampledValue, UncertainError> {
+    ) -> Result<Sample<R>, UncertainError> {
         // `_sample_index` is unused on this path: a stateful generator has no notion of an
         // index. `sample_addressed` is the one that takes the index seriously.
-        let mut context: HashMap<usize, SampledValue> = HashMap::new();
+        let mut context: HashMap<usize, Sample<R>> = HashMap::new();
         // Host entropy, straight through. There is no seed slot to consult any more: a draw that
         // is meant to be reproducible goes through `sample_addressed`, where the seed is the
         // caller's and arrives in the signature.
@@ -68,14 +65,14 @@ impl SequentialSampler {
     ///
     /// `ordinals` must have been built from this graph. A drawing leaf without one is reported
     /// rather than drawn from elsewhere.
-    pub(crate) fn sample_addressed(
+    pub(crate) fn sample_addressed<R: UncertainScalar>(
         &self,
-        root_node: &ConstTree<UncertainNodeContent>,
+        root_node: &ConstTree<Node<R>>,
         ordinals: &LeafOrdinals,
         session_seed: u64,
         index: u64,
-    ) -> Result<SampledValue, UncertainError> {
-        let mut context: HashMap<usize, SampledValue> = HashMap::new();
+    ) -> Result<Sample<R>, UncertainError> {
+        let mut context: HashMap<usize, Sample<R>> = HashMap::new();
         let mut draws = AddressedDraws {
             seed: session_seed,
             index,
@@ -87,34 +84,30 @@ impl SequentialSampler {
 
 #[allow(clippy::only_used_in_recursion)]
 impl SequentialSampler {
-    /// This function is a private helper method for SequentialSampler.
-    /// Recursively evaluates a computation node and its dependencies to produce a `SampledValue`.
+    /// Recursively evaluates a computation node and its dependencies to produce a [`Sample`].
     ///
-    /// This is a private helper method used by the `sample` method. It performs a depth-first
-    /// traversal of the computation graph, evaluating each node based on its type and
-    /// its children's evaluated values. It uses a `context` `HashMap` for memoization
-    /// to store and retrieve already computed node values, preventing redundant calculations.
+    /// Performs a depth-first traversal of the computation graph, evaluating each node from its
+    /// children's evaluated values, with `context` memoizing by node identity so a shared
+    /// sub-graph is evaluated once per sample.
     ///
     /// # Arguments
     ///
-    /// * `node` - A reference to the current `ConstTree<UncertainNodeContent<T>>` to be evaluated.
-    /// * `context` - A mutable reference to a `HashMap` used for memoization. Keys are `usize`
-    ///   from `ConstTree::get_id()`, and values are their `SampledValue`s.
-    /// * `rng` - A mutable reference to a random number generator implementing the `rand::Rng` trait,
-    ///   used for sampling from distributions.
+    /// * `node` - The current node to evaluate.
+    /// * `context` - The per-sample memo, keyed by `ConstTree::get_id()`.
+    /// * `draws` - Where a drawing leaf's entropy comes from.
     ///
     /// # Returns
     ///
     /// A `Result` which is:
-    /// - `Ok(SampledValue)` containing the evaluated value of the node.
-    /// - `Err(UncertainError)` if an error occurs during evaluation (e.g., type mismatch,
-    ///   distribution sampling error).
-    fn evaluate_node(
+    /// - `Ok(Sample<R>)` containing the evaluated value of the node.
+    /// - `Err(UncertainError)` if an operator is handed a sample of the wrong kind, or a leaf
+    ///   cannot be drawn.
+    fn evaluate_node<R: UncertainScalar>(
         &self,
-        node: &ConstTree<UncertainNodeContent>,
-        context: &mut HashMap<usize, SampledValue>,
-        draws: &mut impl LeafDraws,
-    ) -> Result<SampledValue, UncertainError> {
+        node: &ConstTree<Node<R>>,
+        context: &mut HashMap<usize, Sample<R>>,
+        draws: &mut impl LeafDraws<R>,
+    ) -> Result<Sample<R>, UncertainError> {
         let current_node_id = node.get_id();
 
         if let Some(value) = context.get(&current_node_id) {
@@ -122,185 +115,63 @@ impl SequentialSampler {
         }
 
         let result = match node.value() {
-            UncertainNodeContent::Value(v) => (*v).into_sampled_value(),
-            UncertainNodeContent::DistributionF64(dist) => match dist {
-                DistributionEnum::Point(v) => (*v).into_sampled_value(),
-                DistributionEnum::Normal(_) | DistributionEnum::Uniform(_) => {
-                    SampledValue::Float(draws.draw_f64(current_node_id, dist)?)
-                }
-                _ => {
-                    return Err(UncertainError::UnsupportedTypeError(
-                        "Expected f64 distribution".into(),
-                    ));
-                }
-            },
-            UncertainNodeContent::DistributionF106(dist) => match dist {
-                DistributionEnum::Point(v) => (*v).into_sampled_value(),
-                DistributionEnum::Normal(_) | DistributionEnum::Uniform(_) => {
-                    SampledValue::DoubleFloat(draws.draw_f106(current_node_id, dist)?)
-                }
-                _ => {
-                    return Err(UncertainError::UnsupportedTypeError(
-                        "Expected Float106 distribution".into(),
-                    ));
-                }
-            },
-            UncertainNodeContent::DistributionBool(dist) => match dist {
-                DistributionEnum::Point(v) => (*v).into_sampled_value(),
-                DistributionEnum::Bernoulli(_) => {
-                    SampledValue::Bool(draws.draw_bool(current_node_id, dist)?)
-                }
-                _ => {
-                    return Err(UncertainError::UnsupportedTypeError(
-                        "Expected bool distribution".into(),
-                    ));
-                }
-            },
-            UncertainNodeContent::PureOp { value } => (*value).into_sampled_value(),
-            UncertainNodeContent::FmapOp { func, operand } => {
+            Node::Value(v) => *v,
+            Node::Distribution(dist) => draws.draw(current_node_id, dist)?,
+            Node::PureOp { value } => *value,
+            Node::FmapOp { func, operand } => {
                 let operand_val = self.evaluate_node(operand, context, draws)?;
                 func.call(operand_val)
             }
-            UncertainNodeContent::ApplyOp { func, arg } => {
+            Node::ApplyOp { func, arg } => {
                 let arg_val = self.evaluate_node(arg, context, draws)?;
                 func.call(arg_val)
             }
-            UncertainNodeContent::BindOp { func, operand } => {
+            Node::BindOp { func, operand } => {
                 let operand_val = self.evaluate_node(operand, context, draws)?;
                 let new_tree = func.call(operand_val);
                 self.evaluate_node(&new_tree, context, draws)?
             }
-            UncertainNodeContent::ArithmeticOp { op, lhs, rhs } => {
-                let lhs_val = self.evaluate_node(lhs, context, draws)?;
-                let rhs_val = self.evaluate_node(rhs, context, draws)?;
-                match (lhs_val, rhs_val) {
-                    (SampledValue::Float(l), SampledValue::Float(r)) => {
-                        SampledValue::Float(op.apply(l, r))
-                    }
-                    (SampledValue::DoubleFloat(l), SampledValue::DoubleFloat(r)) => {
-                        SampledValue::DoubleFloat(op.apply(l, r))
-                    }
-                    _ => {
-                        return Err(UncertainError::UnsupportedTypeError(
-                            "Arithmetic op requires matching float inputs".into(),
-                        ));
-                    }
-                }
+            Node::ArithmeticOp { op, lhs, rhs } => {
+                let lhs_val = self.evaluate_node(lhs, context, draws)?.real()?;
+                let rhs_val = self.evaluate_node(rhs, context, draws)?.real()?;
+                Sample::Real(op.apply(lhs_val, rhs_val))
             }
-            UncertainNodeContent::ComparisonOp {
+            Node::ComparisonOp {
                 op,
                 threshold,
                 operand,
             } => {
-                let operand_val = self.evaluate_node(operand, context, draws)?;
-                match operand_val {
-                    SampledValue::Float(o) => SampledValue::Bool(op.apply(o, *threshold)),
-                    // The threshold is f64-sourced (a documented boundary); widen it to the
-                    // operand's precision so the *sample* keeps its double-double value.
-                    SampledValue::DoubleFloat(o) => {
-                        SampledValue::Bool(op.apply(o, Float106::from(*threshold)))
-                    }
-                    _ => {
-                        return Err(UncertainError::UnsupportedTypeError(
-                            "Comparison op requires float input".into(),
-                        ));
-                    }
-                }
+                let operand_val = self.evaluate_node(operand, context, draws)?.real()?;
+                Sample::Bool(op.apply(operand_val, *threshold))
             }
-            UncertainNodeContent::LogicalOp { op, operands } => {
+            Node::LogicalOp { op, operands } => {
                 let mut vals = Vec::with_capacity(operands.len());
                 for operand_node in operands {
-                    match self.evaluate_node(operand_node, context, draws)? {
-                        SampledValue::Bool(b) => vals.push(b),
-                        _ => {
-                            return Err(UncertainError::UnsupportedTypeError(
-                                "Logical op requires boolean inputs".into(),
-                            ));
-                        }
-                    }
+                    vals.push(
+                        self.evaluate_node(operand_node, context, draws)?
+                            .boolean()?,
+                    );
                 }
-                let result = match op {
-                    LogicalOperator::Not => {
-                        if vals.len() != 1 {
-                            return Err(UncertainError::UnsupportedTypeError(
-                                "NOT expects exactly 1 operand".into(),
-                            ));
-                        }
-                        !vals[0]
-                    }
-                    LogicalOperator::And
-                    | LogicalOperator::Or
-                    | LogicalOperator::NOR
-                    | LogicalOperator::XOR => {
-                        if vals.len() != 2 {
-                            return Err(UncertainError::UnsupportedTypeError(
-                                "Binary logical op expects exactly 2 operands".into(),
-                            ));
-                        }
-                        match op {
-                            LogicalOperator::And => vals[0] && vals[1],
-                            LogicalOperator::Or => vals[0] || vals[1],
-                            LogicalOperator::NOR => !(vals[0] || vals[1]),
-                            LogicalOperator::XOR => vals[0] ^ vals[1],
-                            LogicalOperator::Not => unreachable!(),
-                        }
-                    }
-                };
-                SampledValue::Bool(result)
+                Sample::Bool(apply_logical(op, &vals)?)
             }
-            UncertainNodeContent::FunctionOpF64 { func, operand } => {
-                let operand_val = self.evaluate_node(operand, context, draws)?;
-                match operand_val {
-                    SampledValue::Float(o) => SampledValue::Float(func(o)),
-                    // User `.map` closures are f64-typed (a documented boundary): apply at
-                    // f64 then re-widen, preserving representation but not sub-f64 precision.
-                    SampledValue::DoubleFloat(o) => {
-                        SampledValue::DoubleFloat(Float106::from(func(o.to_f64())))
-                    }
-                    _ => {
-                        return Err(UncertainError::UnsupportedTypeError(
-                            "Function op requires float input".into(),
-                        ));
-                    }
-                }
+            Node::FunctionOpReal { func, operand } => {
+                let operand_val = self.evaluate_node(operand, context, draws)?.real()?;
+                Sample::Real(func(operand_val))
             }
-            UncertainNodeContent::NegationOp { operand } => {
-                let operand_val = self.evaluate_node(operand, context, draws)?;
-                match operand_val {
-                    SampledValue::Float(o) => SampledValue::Float(-o),
-                    SampledValue::DoubleFloat(o) => SampledValue::DoubleFloat(-o),
-                    _ => {
-                        return Err(UncertainError::UnsupportedTypeError(
-                            "Negation op requires float input".into(),
-                        ));
-                    }
-                }
+            Node::NegationOp { operand } => {
+                let operand_val = self.evaluate_node(operand, context, draws)?.real()?;
+                Sample::Real(-operand_val)
             }
-            UncertainNodeContent::FunctionOpBool { func, operand } => {
-                let operand_val = self.evaluate_node(operand, context, draws)?;
-                match operand_val {
-                    SampledValue::Float(o) => SampledValue::Bool(func(o)),
-                    SampledValue::DoubleFloat(o) => SampledValue::Bool(func(o.to_f64())),
-                    _ => {
-                        return Err(UncertainError::UnsupportedTypeError(
-                            "FunctionOpBool requires float input".into(),
-                        ));
-                    }
-                }
+            Node::FunctionOpBool { func, operand } => {
+                let operand_val = self.evaluate_node(operand, context, draws)?.real()?;
+                Sample::Bool(func(operand_val))
             }
-            UncertainNodeContent::ConditionalOp {
+            Node::ConditionalOp {
                 condition,
                 if_true,
                 if_false,
             } => {
-                let condition_val = match self.evaluate_node(condition, context, draws)? {
-                    SampledValue::Bool(b) => b,
-                    _ => {
-                        return Err(UncertainError::UnsupportedTypeError(
-                            "Conditional condition must be boolean".into(),
-                        ));
-                    }
-                };
+                let condition_val = self.evaluate_node(condition, context, draws)?.boolean()?;
 
                 if condition_val {
                     self.evaluate_node(if_true, context, draws)
@@ -312,5 +183,39 @@ impl SequentialSampler {
 
         context.insert(current_node_id, result);
         Ok(result)
+    }
+}
+
+/// Applies a logical operator to its already-evaluated operands.
+///
+/// Shared by both samplers: the arity check and the truth table are the same whether the operands
+/// came from a stateful stream or a Sobol point, and one copy is what keeps them from drifting.
+pub(crate) fn apply_logical(op: &LogicalOperator, vals: &[bool]) -> Result<bool, UncertainError> {
+    match op {
+        LogicalOperator::Not => {
+            if vals.len() != 1 {
+                return Err(UncertainError::UnsupportedTypeError(
+                    "NOT expects exactly 1 operand".into(),
+                ));
+            }
+            Ok(!vals[0])
+        }
+        LogicalOperator::And
+        | LogicalOperator::Or
+        | LogicalOperator::NOR
+        | LogicalOperator::XOR => {
+            if vals.len() != 2 {
+                return Err(UncertainError::UnsupportedTypeError(
+                    "Binary logical op expects exactly 2 operands".into(),
+                ));
+            }
+            Ok(match op {
+                LogicalOperator::And => vals[0] && vals[1],
+                LogicalOperator::Or => vals[0] || vals[1],
+                LogicalOperator::NOR => !(vals[0] || vals[1]),
+                LogicalOperator::XOR => vals[0] ^ vals[1],
+                LogicalOperator::Not => unreachable!("handled by the arm above"),
+            })
+        }
     }
 }

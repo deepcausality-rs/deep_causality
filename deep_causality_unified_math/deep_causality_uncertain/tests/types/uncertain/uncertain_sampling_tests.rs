@@ -2,6 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use deep_causality_uncertain::UncertainBool;
 use deep_causality_uncertain::{SampleSession, Uncertain};
 
 /// Every test below draws under this seed.
@@ -34,7 +35,7 @@ fn test_from_sample_empty() {
     // An empty sample is a point at zero — the degenerate answer this crate supplies where
     // `deep_causality_stats::mean` refuses. Asserting the value rather than `is_ok()`, which was
     // true for every possible sentinel and so said nothing about which one is returned.
-    let u = Uncertain::from_samples(&[]);
+    let u = Uncertain::<f64>::from_samples(&[]);
     assert_eq!(u.sample_at(&session, 0).unwrap(), 0.0);
     assert_eq!(
         u.sample_at(&session, 7).unwrap(),
@@ -128,7 +129,7 @@ fn test_estimate_probability_exceeds_normal() {
     let u = Uncertain::normal(0.0, 1.0); // Standard normal distribution
     let num_samples = 10000;
 
-    let prob = u
+    let prob: f64 = u
         .estimate_probability_exceeds(&session, 0.0, num_samples)
         .unwrap();
     // For a standard normal distribution, P(X > 0) should be close to 0.5
@@ -150,19 +151,19 @@ fn test_estimate_probability_exceeds_normal() {
 }
 
 //
-// Tests for Uncertain<bool>
+// Tests for UncertainBool<f64>
 //
 
 #[test]
 fn test_bool_sample_at_point() {
     let session = SampleSession::seeded(SEED);
     assert!(
-        Uncertain::<bool>::point(true)
+        UncertainBool::<f64>::point(true)
             .sample_at(&session, 0)
             .unwrap()
     );
     assert!(
-        !Uncertain::<bool>::point(false)
+        !UncertainBool::<f64>::point(false)
             .sample_at(&session, 1)
             .unwrap()
     );
@@ -171,7 +172,7 @@ fn test_bool_sample_at_point() {
 #[test]
 fn test_bool_draw_is_stable_at_an_index() {
     let session = SampleSession::seeded(SEED);
-    let u = Uncertain::bernoulli(0.5);
+    let u = UncertainBool::<f64>::bernoulli(0.5);
 
     let first = u.sample_at(&session, 456).unwrap();
     let second = u.sample_at(&session, 456).unwrap();
@@ -183,7 +184,7 @@ fn test_bool_draw_is_stable_at_an_index() {
 fn test_bool_varies_across_indices() {
     // A fair coin that returned one face at every index would satisfy stability and be useless.
     let session = SampleSession::seeded(SEED);
-    let u = Uncertain::bernoulli(0.5);
+    let u = UncertainBool::<f64>::bernoulli(0.5);
     let drawn: Vec<bool> = (0..64).map(|i| u.sample_at(&session, i).unwrap()).collect();
 
     assert!(drawn.iter().any(|&b| b) && drawn.iter().any(|&b| !b));
@@ -192,7 +193,7 @@ fn test_bool_varies_across_indices() {
 #[test]
 fn test_bool_sample_from_entropy() {
     assert!(
-        Uncertain::<bool>::point(true)
+        UncertainBool::<f64>::point(true)
             .sample_from_entropy()
             .unwrap()
     );
@@ -201,7 +202,7 @@ fn test_bool_sample_from_entropy() {
 #[test]
 fn test_bool_take_samples() {
     let mut session = SampleSession::seeded(SEED);
-    let u = Uncertain::<bool>::point(false);
+    let u = UncertainBool::<f64>::point(false);
     let samples = u.take_samples(&mut session, 20).unwrap();
     assert_eq!(samples.len(), 20);
     assert!(samples.iter().all(|&s| !s));
@@ -210,6 +211,6 @@ fn test_bool_take_samples() {
 #[test]
 fn test_bool_take_zero_samples() {
     let mut session = SampleSession::seeded(SEED);
-    let u = Uncertain::<bool>::point(true);
+    let u = UncertainBool::<f64>::point(true);
     assert!(u.take_samples(&mut session, 0).unwrap().is_empty());
 }

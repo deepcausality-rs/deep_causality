@@ -19,6 +19,7 @@
 //!     `And` / `Or` / `Not` / `XOR` at the correct arity.
 
 use deep_causality_num::Float106;
+use deep_causality_uncertain::UncertainBool;
 use deep_causality_uncertain::{QmcSampler, SampleSession, Uncertain, UncertainError};
 
 const SEED: u64 = 0x5EED_2026;
@@ -64,7 +65,7 @@ fn test_same_index_is_reproducible_distinct_index_differs() {
 
 #[test]
 fn test_reject_branch_divergent_conditional() {
-    let cond = Uncertain::<bool>::bernoulli(0.5);
+    let cond = UncertainBool::<f64>::bernoulli(0.5);
     let if_true = Uncertain::normal(0.0, 1.0);
     let if_false = Uncertain::normal(5.0, 1.0); // different leaf → divergent
     let u = Uncertain::conditional(cond, if_true, if_false);
@@ -76,7 +77,7 @@ fn test_reject_branch_divergent_conditional() {
 #[test]
 fn test_accept_conditional_sharing_leaves() {
     // Both branches reference the same leaf node → identical distribution sets → accepted.
-    let cond = Uncertain::<bool>::bernoulli(0.5);
+    let cond = UncertainBool::<f64>::bernoulli(0.5);
     let shared = Uncertain::normal(0.0, 1.0);
     let u = Uncertain::conditional(cond, shared.clone(), shared);
     assert!(QmcSampler::new(&u, None).is_ok());
@@ -125,11 +126,11 @@ fn test_branch_leaf_collection_walks_nested_conditional_and_bool_logical() {
     // comparison and a logical `&` over a Bernoulli leaf. `collect_stochastic_leaves` recurses
     // through the conditional / comparison / logical / bool-leaf arms while validating the outer
     // conditional's branches. Both outer branches share the identical subtree, so it is accepted.
-    let b = Uncertain::<bool>::bernoulli(0.5);
+    let b = UncertainBool::<f64>::bernoulli(0.5);
     let n = Uncertain::normal(0.0, 1.0);
     let inner_cond = n.clone().greater_than(0.0) & b;
     let inner = Uncertain::conditional(inner_cond, n.clone(), n);
-    let outer_cond = Uncertain::<bool>::bernoulli(0.5);
+    let outer_cond = UncertainBool::<f64>::bernoulli(0.5);
     let u = Uncertain::conditional(outer_cond, inner.clone(), inner);
 
     assert!(QmcSampler::new(&u, None).is_ok());
@@ -138,7 +139,7 @@ fn test_branch_leaf_collection_walks_nested_conditional_and_bool_logical() {
 #[test]
 fn test_f106_branch_leaf_collection() {
     // The `Float106` arm of `collect_stochastic_leaves`, reached by validating an f106 conditional.
-    let cond = Uncertain::<bool>::bernoulli(0.5);
+    let cond = UncertainBool::<Float106>::bernoulli(f106(0.5));
     let shared = Uncertain::<Float106>::normal(f106(0.0), f106(1.0));
     let u = Uncertain::conditional(cond, shared.clone(), shared);
     assert!(QmcSampler::new(&u, None).is_ok());
@@ -151,7 +152,7 @@ fn test_f106_branch_leaf_collection() {
 #[test]
 fn test_expected_value_qmc_matches_mean() {
     let u = Uncertain::normal(5.0, 2.0);
-    let mean = u.expected_value_qmc(512, 0xABCD).unwrap();
+    let mean: f64 = u.expected_value_qmc(512, 0xABCD).unwrap();
     assert!((mean - 5.0).abs() < 0.2, "QMC mean {mean} not near 5.0");
 }
 
@@ -170,8 +171,8 @@ fn test_qmc_converges_faster_than_mc() {
     let u = Uncertain::uniform(0.0, 1.0);
     const N: usize = 4096;
 
-    let mc = u.expected_value(&session, N).unwrap();
-    let qmc = u.expected_value_qmc(N, 42).unwrap();
+    let mc: f64 = u.expected_value(&session, N).unwrap();
+    let qmc: f64 = u.expected_value_qmc(N, 42).unwrap();
 
     let mc_err = (mc - 0.5).abs();
     let qmc_err = (qmc - 0.5).abs();
@@ -184,7 +185,7 @@ fn test_qmc_converges_faster_than_mc() {
 #[test]
 fn test_standard_deviation_qmc_is_nonzero() {
     let u = Uncertain::normal(0.0, 1.0);
-    let sd = u.standard_deviation_qmc(512, 7).unwrap();
+    let sd: f64 = u.standard_deviation_qmc(512, 7).unwrap();
     assert!(
         sd > 0.0,
         "QMC standard deviation should be a positive estimate"
@@ -194,14 +195,14 @@ fn test_standard_deviation_qmc_is_nonzero() {
 
 #[test]
 fn test_estimate_probability_qmc() {
-    let u = Uncertain::<bool>::bernoulli(0.3);
-    let p = u.estimate_probability_qmc(1024, 99).unwrap();
+    let u = UncertainBool::<f64>::bernoulli(0.3);
+    let p: f64 = u.estimate_probability_qmc(1024, 99).unwrap();
     assert!((p - 0.3).abs() < 0.03, "QMC probability {p} not near 0.3");
 }
 
 #[test]
 fn test_qmc_batch_rejects_dynamic_tree() {
-    let cond = Uncertain::<bool>::bernoulli(0.5);
+    let cond = UncertainBool::<f64>::bernoulli(0.5);
     let u = Uncertain::conditional(
         cond,
         Uncertain::normal(0.0, 1.0),
@@ -222,8 +223,8 @@ fn test_qmc_samples_f64_uniform_leaf() {
 
 #[test]
 fn test_qmc_samples_bool_bernoulli_leaf() {
-    let u = Uncertain::<bool>::bernoulli(1.0); // certainly true
-    let sampler = QmcSampler::new(&u, None).unwrap();
+    let u = UncertainBool::<f64>::bernoulli(1.0); // certainly true
+    let sampler = QmcSampler::for_bool(&u, None).unwrap();
     assert!(u.sample_with_index_qmc(0, &sampler).unwrap());
 }
 
@@ -232,16 +233,16 @@ fn test_qmc_samples_f64_negation_and_map_and_function_bool() {
     let base = Uncertain::normal(5.0, 0.0); // a degenerate normal: always its mean
     let neg = -base.clone();
     let neg_sampler = QmcSampler::new(&neg, None).unwrap();
-    let nv = neg.sample_with_index_qmc(0, &neg_sampler).unwrap();
+    let nv: f64 = neg.sample_with_index_qmc(0, &neg_sampler).unwrap();
     assert!((nv + 5.0).abs() < 1e-9, "negation gave {nv}");
 
-    let mapped = base.clone().map(|x| x * 2.0);
+    let mapped = base.clone().map(|x: f64| x * 2.0);
     let mapped_sampler = QmcSampler::new(&mapped, None).unwrap();
-    let mv = mapped.sample_with_index_qmc(0, &mapped_sampler).unwrap();
+    let mv: f64 = mapped.sample_with_index_qmc(0, &mapped_sampler).unwrap();
     assert!((mv - 10.0).abs() < 1e-9, "map gave {mv}");
 
-    let to_bool = base.map_to_bool(|x| x > 0.0);
-    let tb_sampler = QmcSampler::new(&to_bool, None).unwrap();
+    let to_bool = base.map_to_bool(|x: f64| x > 0.0);
+    let tb_sampler = QmcSampler::for_bool(&to_bool, None).unwrap();
     assert!(to_bool.sample_with_index_qmc(0, &tb_sampler).unwrap());
 }
 
@@ -249,17 +250,17 @@ fn test_qmc_samples_f64_negation_and_map_and_function_bool() {
 fn test_qmc_samples_comparison_and_logical_ops() {
     let n = Uncertain::normal(1.0, 0.0); // always 1.0
     let gt = n.greater_than(0.0);
-    let s = QmcSampler::new(&gt, None).unwrap();
+    let s = QmcSampler::for_bool(&gt, None).unwrap();
     assert!(gt.sample_with_index_qmc(0, &s).unwrap());
 
-    let a = Uncertain::<bool>::bernoulli(1.0);
-    let b = Uncertain::<bool>::bernoulli(0.0);
+    let a = UncertainBool::<f64>::bernoulli(1.0);
+    let b = UncertainBool::<f64>::bernoulli(0.0);
     let and = a.clone() & b.clone();
     let or = a.clone() | b.clone();
     let xor = a.clone() ^ b.clone();
     let not = !a;
     for (u, want) in [(and, false), (or, true), (xor, true), (not, false)] {
-        let s = QmcSampler::new(&u, None).unwrap();
+        let s = QmcSampler::for_bool(&u, None).unwrap();
         assert_eq!(u.sample_with_index_qmc(0, &s).unwrap(), want);
     }
 }
@@ -268,7 +269,7 @@ fn test_qmc_samples_comparison_and_logical_ops() {
 fn test_qmc_samples_conditional_both_branches() {
     // Shared leaves so the static-structure guard accepts the conditional; sampling across many
     // indices drives the condition both ways, exercising both branch arms of `evaluate_node`.
-    let cond = Uncertain::<bool>::bernoulli(0.5);
+    let cond = UncertainBool::<f64>::bernoulli(0.5);
     let shared = Uncertain::normal(0.0, 1.0);
     let u = Uncertain::conditional(cond, shared.clone(), shared);
     let sampler = QmcSampler::new(&u, None).unwrap();
@@ -308,7 +309,7 @@ fn test_qmc_memoizes_a_shared_leaf() {
     let n = Uncertain::normal(2.0, 0.0); // degenerate: always 2.0
     let u = n.clone() + n;
     let sampler = QmcSampler::new(&u, None).unwrap();
-    let v = u.sample_with_index_qmc(0, &sampler).unwrap();
+    let v: f64 = u.sample_with_index_qmc(0, &sampler).unwrap();
     assert!(
         (v - 4.0).abs() < 1e-9,
         "shared leaf summed to {v}, expected 4.0"

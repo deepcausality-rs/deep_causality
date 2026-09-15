@@ -92,7 +92,7 @@ fn integration_test_decision_making_under_uncertainty() {
     let input_a_doubled = input_a.map(|x| x * 2.0); // Range 20.0 to 40.0
 
     // Then, compare input_a_doubled with input_b
-    let condition = input_a_doubled.gt_uncertain(&input_b); // This returns Uncertain<bool>
+    let condition = input_a_doubled.gt_uncertain(&input_b); // This returns UncertainBool<f64>
 
     // Decision 1: Use to_bool with high confidence.
     // For this scenario, input_a_doubled (mean 30) is generally greater than input_b (mean 25).

@@ -7,7 +7,6 @@ mod distribution;
 mod distribution_parameters;
 mod leaf_ordinals;
 mod sample_session;
-mod sampled_value;
 mod sampler;
 mod uncertain;
 mod uncertain_maybe;

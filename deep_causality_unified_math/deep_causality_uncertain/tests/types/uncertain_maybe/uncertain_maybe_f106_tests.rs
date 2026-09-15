@@ -44,11 +44,11 @@ fn test_always_none_constructor() {
 fn test_from_bernoulli_and_uncertain_constructor() {
     let mut session = SampleSession::seeded(SEED);
     let u = Uncertain::<Float106>::point(Float106::from(42.0));
-    let mu = MaybeUncertain::<Float106>::from_bernoulli_and_uncertain(1.0, u);
+    let mu = MaybeUncertain::<Float106>::from_bernoulli_and_uncertain(Float106::from(1.0), u);
     assert_eq!(mu.sample(&mut session).unwrap(), Some(Float106::from(42.0)));
 
     let u2 = Uncertain::<Float106>::point(Float106::from(42.0));
-    let mu2 = MaybeUncertain::<Float106>::from_bernoulli_and_uncertain(0.0, u2);
+    let mu2 = MaybeUncertain::<Float106>::from_bernoulli_and_uncertain(Float106::from(0.0), u2);
     assert_eq!(mu2.sample(&mut session).unwrap(), None);
 }
 
@@ -80,9 +80,15 @@ fn test_sample() {
 fn test_lift_to_uncertain_success() {
     let session = SampleSession::seeded(SEED);
     let u = Uncertain::<Float106>::point(Float106::from(42.0));
-    let mu = MaybeUncertain::<Float106>::from_bernoulli_and_uncertain(0.9, u);
+    let mu = MaybeUncertain::<Float106>::from_bernoulli_and_uncertain(Float106::from(0.9), u);
     let result = mu
-        .lift_to_uncertain(&session, 0.8, 0.95, 0.05, 100)
+        .lift_to_uncertain(
+            &session,
+            Float106::from(0.8),
+            Float106::from(0.95),
+            Float106::from(0.05),
+            100,
+        )
         .unwrap();
     assert_eq!(result.sample_at(&session, 0).unwrap(), Float106::from(42.0));
 }
@@ -91,8 +97,14 @@ fn test_lift_to_uncertain_success() {
 fn test_lift_to_uncertain_failure() {
     let session = SampleSession::seeded(SEED);
     let u = Uncertain::<Float106>::point(Float106::from(42.0));
-    let mu = MaybeUncertain::<Float106>::from_bernoulli_and_uncertain(0.7, u);
-    let result = mu.lift_to_uncertain(&session, 0.8, 0.95, 0.05, 100);
+    let mu = MaybeUncertain::<Float106>::from_bernoulli_and_uncertain(Float106::from(0.7), u);
+    let result = mu.lift_to_uncertain(
+        &session,
+        Float106::from(0.8),
+        Float106::from(0.95),
+        Float106::from(0.05),
+        100,
+    );
     assert!(matches!(result, Err(UncertainError::PresenceError(_))));
 }
 
@@ -100,7 +112,13 @@ fn test_lift_to_uncertain_failure() {
 fn test_lift_to_uncertain_always_none() {
     let session = SampleSession::seeded(SEED);
     let mu = MaybeUncertain::<Float106>::always_none();
-    let result = mu.lift_to_uncertain(&session, 0.1, 0.95, 0.05, 100);
+    let result = mu.lift_to_uncertain(
+        &session,
+        Float106::from(0.1),
+        Float106::from(0.95),
+        Float106::from(0.05),
+        100,
+    );
     assert!(matches!(result, Err(UncertainError::PresenceError(_))));
 }
 
@@ -109,7 +127,13 @@ fn test_lift_to_uncertain_always_some() {
     let session = SampleSession::seeded(SEED);
     let mu = MaybeUncertain::<Float106>::from_value(Float106::from(42.0));
     let result = mu
-        .lift_to_uncertain(&session, 0.9, 0.95, 0.05, 100)
+        .lift_to_uncertain(
+            &session,
+            Float106::from(0.9),
+            Float106::from(0.95),
+            Float106::from(0.05),
+            100,
+        )
         .unwrap();
     assert_eq!(result.sample_at(&session, 0).unwrap(), Float106::from(42.0));
 }

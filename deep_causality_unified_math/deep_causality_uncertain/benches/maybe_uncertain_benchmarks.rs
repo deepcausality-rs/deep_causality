@@ -41,12 +41,12 @@ fn bench_sampling_maybe_always_none(c: &mut Criterion) {
     });
 }
 
-fn bench_sampling_maybe_bool(c: &mut Criterion) {
-    let m = MaybeUncertain::<bool>::from_bernoulli_and_uncertain(
-        0.7,
-        Uncertain::<bool>::bernoulli(0.5),
-    );
-    c.bench_function("sampling_maybe_bool", |b| {
+// A Bernoulli presence channel over a drawing value channel: the two-channel draw at one index,
+// which is what the `MaybeUncertain<bool>` case used to measure before the Boolean form was
+// dropped. The presence channel is still Bernoulli; only the value channel's carrier changed.
+fn bench_sampling_maybe_bernoulli_presence(c: &mut Criterion) {
+    let m = MaybeUncertain::<f64>::from_bernoulli_and_uncertain(0.7, Uncertain::normal(0.0, 1.0));
+    c.bench_function("sampling_maybe_bernoulli_presence", |b| {
         b.iter(|| m.sample_from_entropy().unwrap());
     });
 }
@@ -202,7 +202,7 @@ criterion_group!(
     bench_sampling_maybe_from_uncertain,
     bench_sampling_maybe_bernoulli,
     bench_sampling_maybe_always_none,
-    bench_sampling_maybe_bool,
+    bench_sampling_maybe_bernoulli_presence,
     bench_sampling_maybe_arithmetic_chain,
     bench_maybe_uncertain_f64_add_graph_construction,
     bench_maybe_uncertain_f64_mul_graph_construction,

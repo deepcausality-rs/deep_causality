@@ -25,6 +25,12 @@ fn one_third() -> Float106 {
     Float106::from(1.0) / Float106::from(3.0)
 }
 
+/// A probability at the graph's scalar: `lift_to_uncertain`'s parameters are dimensionless and
+/// stated in `R`, so a `Float106` graph states them there too.
+fn f106(x: f64) -> Float106 {
+    Float106::from(x)
+}
+
 #[test]
 fn certain_float106_is_lossless() {
     let session = SampleSession::seeded(SEED);
@@ -104,7 +110,7 @@ fn maybe_uncertain_float106_present_value_and_lift() {
 
     // A certainly-present value lifts to a plain Uncertain<Float106> at full precision.
     let lifted = m
-        .lift_to_uncertain(&session, 0.5, 0.95, 0.05, 1000)
+        .lift_to_uncertain(&session, f106(0.5), f106(0.95), f106(0.05), 1000)
         .unwrap();
     assert_eq!(lifted.sample_at(&session, 0).unwrap(), x);
 }
@@ -119,7 +125,7 @@ fn maybe_uncertain_float106_dropout_does_not_lift() {
         "absent value samples to None"
     );
     assert!(
-        none.lift_to_uncertain(&session, 0.5, 0.95, 0.05, 1000)
+        none.lift_to_uncertain(&session, f106(0.5), f106(0.95), f106(0.05), 1000)
             .is_err(),
         "an absent value fails the presence gate (the dropout signal)"
     );

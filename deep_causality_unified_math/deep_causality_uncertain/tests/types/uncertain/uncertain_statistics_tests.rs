@@ -41,7 +41,7 @@ fn test_expected_value_converges_to_the_closed_form() {
     let session = SampleSession::seeded(SEED);
     let uncertain = Uncertain::uniform(0.0, 10.0);
 
-    let mean = uncertain.expected_value(&session, 20_000).unwrap();
+    let mean: f64 = uncertain.expected_value(&session, 20_000).unwrap();
 
     assert!(
         (mean - 5.0).abs() < 0.1,
@@ -107,7 +107,7 @@ fn test_standard_deviation_converges_to_the_closed_form() {
     let session = SampleSession::seeded(SEED);
     let uncertain = Uncertain::uniform(0.0, 10.0);
 
-    let spread = uncertain.standard_deviation(&session, 20_000).unwrap();
+    let spread: f64 = uncertain.standard_deviation(&session, 20_000).unwrap();
     let expected = 10.0 / 12.0_f64.sqrt();
 
     assert!(
@@ -123,7 +123,7 @@ fn test_standard_deviation_of_a_normal_recovers_its_scale() {
     let session = SampleSession::seeded(SEED);
     let uncertain = Uncertain::normal(0.0, 2.5);
 
-    let spread = uncertain.standard_deviation(&session, 20_000).unwrap();
+    let spread: f64 = uncertain.standard_deviation(&session, 20_000).unwrap();
 
     assert!(
         (spread - 2.5).abs() < 0.1,

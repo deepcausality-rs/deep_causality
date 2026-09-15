@@ -4,7 +4,7 @@
  */
 
 use criterion::{Criterion, criterion_group, criterion_main};
-use deep_causality_uncertain::Uncertain;
+use deep_causality_uncertain::{Uncertain, UncertainBool};
 
 // --- Sampling Performance Benchmarks ---
 
@@ -23,7 +23,7 @@ fn bench_sampling_normal(c: &mut Criterion) {
 }
 
 fn bench_sampling_bernoulli(c: &mut Criterion) {
-    let uncertain = Uncertain::<bool>::bernoulli(0.5);
+    let uncertain = UncertainBool::<f64>::bernoulli(0.5);
     c.bench_function("sampling_bernoulli", |b| {
         b.iter(|| uncertain.sample_from_entropy().unwrap());
     });
@@ -43,7 +43,7 @@ fn bench_sampling_arithmetic_chain(c: &mut Criterion) {
 
 // Benchmark for a conditional operation
 fn bench_sampling_conditional(c: &mut Criterion) {
-    let condition = Uncertain::<bool>::bernoulli(0.5);
+    let condition = UncertainBool::<f64>::bernoulli(0.5);
     let if_true = Uncertain::<f64>::normal(100.0, 10.0);
     let if_false = Uncertain::<f64>::normal(200.0, 20.0);
     let result = Uncertain::conditional(condition, if_true, if_false);

@@ -9,6 +9,7 @@
 //! address ever reaches the generator, which is the one mistake this design is built to avoid and
 //! the one that no single-process run would reveal.
 
+use deep_causality_uncertain::UncertainBool;
 use deep_causality_uncertain::{LeafOrdinals, SampleSession, Uncertain};
 
 const SEED: u64 = 0x5EED_2026;
@@ -196,10 +197,10 @@ fn ordinals_from_a_different_graph_are_refused() {
 
 #[test]
 fn a_boolean_leaf_is_addressed_too() {
-    let graph = Uncertain::<bool>::bernoulli(0.5);
+    let graph = UncertainBool::<f64>::bernoulli(0.5);
     let session = SampleSession::seeded(SEED);
 
-    assert_eq!(LeafOrdinals::new(&graph).len(), 1);
+    assert_eq!(LeafOrdinals::for_bool(&graph).len(), 1);
 
     let first: Vec<bool> = (0..32)
         .map(|i| graph.sample_at(&session, i).unwrap())

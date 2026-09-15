@@ -7,7 +7,7 @@ pub mod distribution;
 pub mod distribution_parameters;
 pub mod leaf_ordinals;
 pub mod sample_session;
-pub mod sampled_value;
 pub mod sampler;
 pub mod uncertain;
+pub mod uncertain_bool;
 pub mod uncertain_maybe;

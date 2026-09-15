@@ -3,12 +3,12 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_uncertain::{MaybeUncertain, MaybeUncertainF64};
+use deep_causality_uncertain::MaybeUncertain;
 
 #[test]
 fn test_add_both_some() {
-    let a = MaybeUncertainF64::from_value(3.0);
-    let b = MaybeUncertainF64::from_value(4.0);
+    let a = MaybeUncertain::<f64>::from_value(3.0);
+    let b = MaybeUncertain::<f64>::from_value(4.0);
     let res = a + b;
     assert_eq!(res.sample_from_entropy().unwrap(), Some(7.0));
 }

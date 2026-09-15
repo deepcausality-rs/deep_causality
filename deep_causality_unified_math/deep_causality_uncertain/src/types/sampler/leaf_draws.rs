@@ -5,8 +5,8 @@
 
 //! Where a leaf's entropy comes from.
 
-use crate::{DistributionEnum, LeafOrdinals, UncertainError, draw_seed};
-use deep_causality_num::Float106;
+use crate::UncertainScalar;
+use crate::{DistributionEnum, LeafOrdinals, Sample, UncertainError, draw_seed};
 use deep_causality_rand::{Rng, Xoshiro256};
 
 /// The source of a leaf's draw, so one traversal body serves both the ambient and the addressed
@@ -16,27 +16,18 @@ use deep_causality_rand::{Rng, Xoshiro256};
 /// evaluating a graph — the memo, the operators, the branch handling — is identical, and
 /// duplicating two hundred lines of `match` to vary one line of it would be the larger mistake.
 /// Static dispatch, so neither path pays for the other and AGENTS.md's ban on `dyn` is respected.
-pub(crate) trait LeafDraws {
-    /// Draws for the real-valued leaf identified by `node_id`.
-    fn draw_f64(
+///
+/// One method, not three. There were `draw_f64`, `draw_f106` and `draw_bool`, which said the
+/// source had to know the leaf's type; it never did — it only had to know where the generator
+/// comes from. The scalar is now the implementation's parameter and the Boolean case is a variant
+/// of what a draw returns, so the trait has one method at any scalar.
+pub(crate) trait LeafDraws<R: UncertainScalar> {
+    /// Draws for the leaf identified by `node_id`.
+    fn draw(
         &mut self,
         node_id: usize,
-        distribution: &DistributionEnum<f64>,
-    ) -> Result<f64, UncertainError>;
-
-    /// Draws for the double-double leaf identified by `node_id`.
-    fn draw_f106(
-        &mut self,
-        node_id: usize,
-        distribution: &DistributionEnum<Float106>,
-    ) -> Result<Float106, UncertainError>;
-
-    /// Draws for the Boolean leaf identified by `node_id`.
-    fn draw_bool(
-        &mut self,
-        node_id: usize,
-        distribution: &DistributionEnum<bool>,
-    ) -> Result<bool, UncertainError>;
+        distribution: &DistributionEnum<R>,
+    ) -> Result<Sample<R>, UncertainError>;
 }
 
 /// The superseded source: one stateful generator for the whole graph.
@@ -44,32 +35,16 @@ pub(crate) trait LeafDraws {
 /// Every leaf draws from the same stream in traversal order, so a leaf's value depends on how many
 /// leaves were visited before it. That is what makes the stream, rather than the leaf, the unit of
 /// reproducibility — and why two graphs sharing a leaf disagree about it.
-pub(crate) struct AmbientDraws<'r, R: Rng + ?Sized> {
-    pub(crate) rng: &'r mut R,
+pub(crate) struct AmbientDraws<'r, G: Rng + ?Sized> {
+    pub(crate) rng: &'r mut G,
 }
 
-impl<R: Rng + ?Sized> LeafDraws for AmbientDraws<'_, R> {
-    fn draw_f64(
+impl<R: UncertainScalar, G: Rng + ?Sized> LeafDraws<R> for AmbientDraws<'_, G> {
+    fn draw(
         &mut self,
         _node_id: usize,
-        distribution: &DistributionEnum<f64>,
-    ) -> Result<f64, UncertainError> {
-        distribution.sample(self.rng)
-    }
-
-    fn draw_f106(
-        &mut self,
-        _node_id: usize,
-        distribution: &DistributionEnum<Float106>,
-    ) -> Result<Float106, UncertainError> {
-        distribution.sample(self.rng)
-    }
-
-    fn draw_bool(
-        &mut self,
-        _node_id: usize,
-        distribution: &DistributionEnum<bool>,
-    ) -> Result<bool, UncertainError> {
+        distribution: &DistributionEnum<R>,
+    ) -> Result<Sample<R>, UncertainError> {
         distribution.sample(self.rng)
     }
 }
@@ -111,28 +86,12 @@ impl AddressedDraws<'_> {
     }
 }
 
-impl LeafDraws for AddressedDraws<'_> {
-    fn draw_f64(
+impl<R: UncertainScalar> LeafDraws<R> for AddressedDraws<'_> {
+    fn draw(
         &mut self,
         node_id: usize,
-        distribution: &DistributionEnum<f64>,
-    ) -> Result<f64, UncertainError> {
-        distribution.sample(&mut self.generator(node_id)?)
-    }
-
-    fn draw_f106(
-        &mut self,
-        node_id: usize,
-        distribution: &DistributionEnum<Float106>,
-    ) -> Result<Float106, UncertainError> {
-        distribution.sample(&mut self.generator(node_id)?)
-    }
-
-    fn draw_bool(
-        &mut self,
-        node_id: usize,
-        distribution: &DistributionEnum<bool>,
-    ) -> Result<bool, UncertainError> {
+        distribution: &DistributionEnum<R>,
+    ) -> Result<Sample<R>, UncertainError> {
         distribution.sample(&mut self.generator(node_id)?)
     }
 }

@@ -5,7 +5,8 @@
 
 //! Which slot of the address each drawing leaf occupies.
 
-use crate::{DistributionEnum, ProbabilisticType, Uncertain, UncertainNodeContent};
+use crate::UncertainScalar;
+use crate::{Node, Uncertain, UncertainBool};
 use deep_causality_ast::ConstTree;
 use std::collections::{HashMap, HashSet};
 
@@ -31,7 +32,14 @@ use std::collections::{HashMap, HashSet};
 /// A point distribution returns its value and consumes no entropy, so it takes no ordinal and the
 /// ordinals stay dense over the leaves that actually draw. This is the rule
 /// [`QmcSampler`](crate::QmcSampler) already applies when it assigns Sobol dimensions; the two
-/// pre-passes agree by construction rather than by coincidence.
+/// pre-passes agree because they ask the same question — `DistributionEnum::draws` — rather than
+/// each matching the variants for themselves.
+///
+/// # No scalar
+///
+/// An ordinal is a position in a traversal, so the type carries no `R` even though the traversal
+/// walks an `R`-carrying tree. One `LeafOrdinals` can therefore be held beside a graph of any
+/// scalar, and the constructors are generic rather than the type.
 ///
 /// # No `PartialEq`
 ///
@@ -46,7 +54,12 @@ pub struct LeafOrdinals {
 
 impl LeafOrdinals {
     /// Assigns an ordinal to every drawing leaf of `uncertain`'s graph.
-    pub fn new<T: ProbabilisticType + Copy>(uncertain: &Uncertain<T>) -> Self {
+    pub fn new<R: UncertainScalar>(uncertain: &Uncertain<R>) -> Self {
+        Self::from_root_node(uncertain.root_node())
+    }
+
+    /// As [`Self::new`], for the Boolean carrier.
+    pub fn for_bool<R: UncertainScalar>(uncertain: &UncertainBool<R>) -> Self {
         Self::from_root_node(uncertain.root_node())
     }
 
@@ -54,7 +67,7 @@ impl LeafOrdinals {
     ///
     /// Crate-internal, matching [`QmcSampler::from_root_node`](crate::QmcSampler); it lets the
     /// traversal be tested against node shapes no public builder produces.
-    pub(crate) fn from_root_node(root: &ConstTree<UncertainNodeContent>) -> Self {
+    pub(crate) fn from_root_node<R: UncertainScalar>(root: &ConstTree<Node<R>>) -> Self {
         let mut by_node = HashMap::new();
         let mut seen = HashSet::new();
         let mut next = 0u64;
@@ -93,8 +106,8 @@ impl LeafOrdinals {
 /// Every branch is visited in a fixed order, and a node reached twice is skipped the second time.
 /// Skipping is what keeps a shared sub-graph linear rather than exponential, and it is safe because
 /// the ordinals of a sub-graph are settled by its first visit.
-fn assign(
-    node: &ConstTree<UncertainNodeContent>,
+fn assign<R: UncertainScalar>(
+    node: &ConstTree<Node<R>>,
     by_node: &mut HashMap<usize, u64>,
     seen: &mut HashSet<usize>,
     next: &mut u64,
@@ -105,52 +118,37 @@ fn assign(
 
     match node.value() {
         // Draws nothing.
-        UncertainNodeContent::Value(_) | UncertainNodeContent::PureOp { .. } => {}
+        Node::Value(_) | Node::PureOp { .. } => {}
 
-        UncertainNodeContent::DistributionF64(distribution) => {
-            assign_leaf(
-                node,
-                !matches!(distribution, DistributionEnum::Point(_)),
-                by_node,
-                next,
-            );
-        }
-        UncertainNodeContent::DistributionF106(distribution) => {
-            assign_leaf(
-                node,
-                !matches!(distribution, DistributionEnum::Point(_)),
-                by_node,
-                next,
-            );
-        }
-        UncertainNodeContent::DistributionBool(distribution) => {
-            assign_leaf(
-                node,
-                !matches!(distribution, DistributionEnum::Point(_)),
-                by_node,
-                next,
-            );
+        Node::Distribution(distribution) => {
+            if distribution.draws() {
+                by_node.entry(node.get_id()).or_insert_with(|| {
+                    let ordinal = *next;
+                    *next += 1;
+                    ordinal
+                });
+            }
         }
 
-        UncertainNodeContent::FmapOp { operand, .. }
-        | UncertainNodeContent::BindOp { operand, .. }
-        | UncertainNodeContent::NegationOp { operand }
-        | UncertainNodeContent::FunctionOpF64 { operand, .. }
-        | UncertainNodeContent::FunctionOpBool { operand, .. }
-        | UncertainNodeContent::ComparisonOp { operand, .. } => {
+        Node::FmapOp { operand, .. }
+        | Node::BindOp { operand, .. }
+        | Node::NegationOp { operand }
+        | Node::FunctionOpReal { operand, .. }
+        | Node::FunctionOpBool { operand, .. }
+        | Node::ComparisonOp { operand, .. } => {
             assign(operand, by_node, seen, next);
         }
-        UncertainNodeContent::ApplyOp { arg, .. } => assign(arg, by_node, seen, next),
-        UncertainNodeContent::ArithmeticOp { lhs, rhs, .. } => {
+        Node::ApplyOp { arg, .. } => assign(arg, by_node, seen, next),
+        Node::ArithmeticOp { lhs, rhs, .. } => {
             assign(lhs, by_node, seen, next);
             assign(rhs, by_node, seen, next);
         }
-        UncertainNodeContent::LogicalOp { operands, .. } => {
+        Node::LogicalOp { operands, .. } => {
             for operand in operands {
                 assign(operand, by_node, seen, next);
             }
         }
-        UncertainNodeContent::ConditionalOp {
+        Node::ConditionalOp {
             condition,
             if_true,
             if_false,
@@ -159,21 +157,5 @@ fn assign(
             assign(if_true, by_node, seen, next);
             assign(if_false, by_node, seen, next);
         }
-    }
-}
-
-/// Gives `node` the next free ordinal when it draws.
-fn assign_leaf(
-    node: &ConstTree<UncertainNodeContent>,
-    draws: bool,
-    by_node: &mut HashMap<usize, u64>,
-    next: &mut u64,
-) {
-    if draws {
-        by_node.entry(node.get_id()).or_insert_with(|| {
-            let ordinal = *next;
-            *next += 1;
-            ordinal
-        });
     }
 }

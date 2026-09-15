@@ -3,9 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::UncertainScalar;
 use crate::{
-    LeafOrdinals, ProbabilisticType, QmcSampler, SampleSession, Sampler, SequentialSampler,
-    Uncertain, UncertainError,
+    LeafOrdinals, QmcSampler, SampleSession, Sampler, SequentialSampler, Uncertain, UncertainError,
 };
 
 // The sampling surface. Every draw is a function of the session's seed, the sample index and the
@@ -21,7 +21,10 @@ use crate::{
 // Where no session is available, the `_from_entropy` forms build one and say so in their name. They
 // are one line each, and the naming is the point: a reader can see which draws in a program are
 // reproducible and which are not.
-impl<T: ProbabilisticType> Uncertain<T> {
+//
+// The body is shared with `UncertainBool<R>` down to the last line except for which kind of sample
+// it reads off the root. See `UncertainBool`'s sampling surface for the mirror.
+impl<R: UncertainScalar> Uncertain<R> {
     /// Draws this value at `index` under `session`.
     ///
     /// Reproducible from the session's seed alone: the same seed and index give the same value in
@@ -35,8 +38,8 @@ impl<T: ProbabilisticType> Uncertain<T> {
     /// One traversal to assign the ordinals, then one to evaluate — the same order as evaluating
     /// alone. A caller drawing many samples from one graph should assign the ordinals once with
     /// [`LeafOrdinals::new`] and call [`Uncertain::sample_at_with`] instead.
-    pub fn sample_at(&self, session: &SampleSession, index: u64) -> Result<T, UncertainError> {
-        let ordinals = LeafOrdinals::from_root_node(&self.root_node);
+    pub fn sample_at(&self, session: &SampleSession, index: u64) -> Result<R, UncertainError> {
+        let ordinals = LeafOrdinals::from_root_node(self.root_node());
         self.sample_at_with(session, index, &ordinals)
     }
 
@@ -49,17 +52,18 @@ impl<T: ProbabilisticType> Uncertain<T> {
         session: &SampleSession,
         index: u64,
         ordinals: &LeafOrdinals,
-    ) -> Result<T, UncertainError> {
+    ) -> Result<R, UncertainError> {
         let sampler = SequentialSampler;
-        let value = sampler.sample_addressed(&self.root_node, ordinals, session.seed(), index)?;
-        T::from_sampled_value(value)
+        sampler
+            .sample_addressed(self.root_node(), ordinals, session.seed(), index)?
+            .real()
     }
 
     /// Draws at the session's next index, advancing it.
     ///
     /// `n` calls on a fresh session cover indices `0..n`, and a session rebuilt from the same seed
     /// replays them exactly.
-    pub fn sample_next(&self, session: &mut SampleSession) -> Result<T, UncertainError> {
+    pub fn sample_next(&self, session: &mut SampleSession) -> Result<R, UncertainError> {
         let index = session.next_index();
         self.sample_at(session, index)
     }
@@ -69,7 +73,7 @@ impl<T: ProbabilisticType> Uncertain<T> {
     /// Builds a session from host entropy and draws its first sample, so successive calls are
     /// independent. Nothing about the value can be reproduced afterwards; where that matters, hold
     /// a [`SampleSession`] and use [`Uncertain::sample_next`].
-    pub fn sample_from_entropy(&self) -> Result<T, UncertainError> {
+    pub fn sample_from_entropy(&self) -> Result<R, UncertainError> {
         self.sample_at(&SampleSession::from_entropy(), 0)
     }
 
@@ -78,8 +82,8 @@ impl<T: ProbabilisticType> Uncertain<T> {
         &self,
         session: &mut SampleSession,
         n: usize,
-    ) -> Result<Vec<T>, UncertainError> {
-        let ordinals = LeafOrdinals::from_root_node(&self.root_node);
+    ) -> Result<Vec<R>, UncertainError> {
+        let ordinals = LeafOrdinals::from_root_node(self.root_node());
         (0..n)
             .map(|_| {
                 let index = session.next_index();
@@ -90,7 +94,7 @@ impl<T: ProbabilisticType> Uncertain<T> {
 
     /// Draws `n` samples with no session of the caller's own. See
     /// [`Uncertain::sample_from_entropy`].
-    pub fn take_samples_from_entropy(&self, n: usize) -> Result<Vec<T>, UncertainError> {
+    pub fn take_samples_from_entropy(&self, n: usize) -> Result<Vec<R>, UncertainError> {
         self.take_samples(&mut SampleSession::from_entropy(), n)
     }
 
@@ -103,8 +107,8 @@ impl<T: ProbabilisticType> Uncertain<T> {
         &self,
         session: &SampleSession,
         n: usize,
-    ) -> Result<Vec<T>, UncertainError> {
-        let ordinals = LeafOrdinals::from_root_node(&self.root_node);
+    ) -> Result<Vec<R>, UncertainError> {
+        let ordinals = LeafOrdinals::from_root_node(self.root_node());
         (0..n)
             .map(|i| self.sample_at_with(session, i as u64, &ordinals))
             .collect()
@@ -119,8 +123,7 @@ impl<T: ProbabilisticType> Uncertain<T> {
         &self,
         sample_index: u64,
         sampler: &QmcSampler,
-    ) -> Result<T, UncertainError> {
-        let value = Sampler::<T>::sample(sampler, &self.root_node, sample_index)?;
-        T::from_sampled_value(value)
+    ) -> Result<R, UncertainError> {
+        Sampler::<R>::sample(sampler, self.root_node(), sample_index)?.real()
     }
 }

@@ -17,9 +17,15 @@ weakest structure that carries a frequency is `RealField`, and the row is correc
 worked around. Dual numbers are not admissible here, and the surface says so.
 
 Two shipped functions pin the scalar and are the pattern this requirement excludes.
-`shots_to_qubit_bernoulli` accumulates `ones as f64 / total as f64` and returns `Uncertain<bool>`;
-`shots_to_observable` takes `F: Fn(usize) -> f64` and returns `Uncertain<f64>`. Both keep their
-signatures, and the scalar-generic estimator is a sibling beside them.
+`shots_to_qubit_bernoulli` accumulates `ones as f64 / total as f64`; `shots_to_observable` takes
+`F: Fn(usize) -> f64` and returns `Uncertain<f64>`. Both keep pinning `f64`, and the scalar-generic
+estimator is a sibling beside them rather than a replacement.
+
+One of the two cannot keep its signature verbatim. `shots_to_qubit_bernoulli` returns
+`Uncertain<bool>`, and that spelling ceases to exist: a Boolean-valued node carries the tree's
+scalar, so the type becomes `UncertainBool<f64>` — the same value at the same pinned scalar under
+the name the carrier split gives it. The change is three lines in one file
+(`deep_causality_quantum/src/types/qpu/bridge.rs`), and nothing in the crate names a removed trait.
 
 The `Uncertain` boundary no longer narrows the scalar. `deep_causality_uncertain` previously
 admitted only the scalars for which it implemented `ProbabilisticType` — `f64` and `Float106`, and

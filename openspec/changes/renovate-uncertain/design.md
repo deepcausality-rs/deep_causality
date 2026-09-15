@@ -180,15 +180,54 @@ One bound does not move and is documented where it lives rather than here: `Bern
 `Float106` caller stating 106 bits of probability keeps 64 of them. That is the representation's
 bound, not the scalar's, and widening the scalar does not move it.
 
-### D7. `MaybeUncertain<R>` keeps its name
+### D7. `MaybeUncertain<R>` keeps its name, and its presence channel is `UncertainBool<R>`
 
 Twelve CFD sites and the alias discipline depend on the name, so it stays a named type rather than
-becoming `Uncertain<Option<R>>` at the surface. Internally the four per-type files (306 lines)
+becoming `Uncertain<Option<R>>` at the surface. Internally the four per-type files (364 lines)
 become one impl block over the generic tree.
 
 Its presence and value channels are sampled today at two separately drawn global indices, which was
 the cache's hardest job. Under the session they are one tree sampled at one index, and there are no
-two channels to reconcile.
+two channels to reconcile. That is also why both channels share one `R`: the presence channel
+becomes `UncertainBool<R>` rather than acquiring a scalar of its own, and one index addresses one
+tree.
+
+**The split is asymmetric.** The carrier split (D5a) makes `Uncertain<bool>` into
+`UncertainBool<R>`, which `MaybeUncertain`'s presence channel absorbs — so `MaybeUncertain<R>` needs
+no second struct to carry it. The open question was the other direction: whether a probabilistically
+present *Boolean* — Kleene three-valued, `None` / `Some(false)` / `Some(true)` — survives as
+`MaybeUncertainBool<R>`. Measured: the `MaybeUncertainBool` alias has zero uses outside its own
+definition and the `lib.rs` re-export, and `MaybeUncertain<bool>` has zero uses outside this crate
+(20 sites in one test file, one bench line, one impl block). It is dropped. Keeping it would add a
+third near-identical carrier struct to the change whose purpose is deleting per-type duplication,
+paid for by no call site.
+
+*Alternative considered:* carrier-generic `MaybeUncertain<C: UncertainCarrier>` with
+`type Scalar`, giving both forms from one struct. Rejected: every downstream spelling changes from
+`MaybeUncertain::<f64>::from_value(..)` to `MaybeUncertain::<Uncertain<f64>>::..` — about 40 sites
+across CFD tests, CFD verification and the examples — to serve a form nothing uses. The scalar
+parameter costs those sites nothing.
+
+### D5a. Two carriers over one graph
+
+Once the tree is `ConstTree<Node<R>>`, a Boolean-valued node has no scalar of its own: a Bernoulli
+leaf, a comparison and a logical combination all read `Sample::Bool` from a tree whose leaves are
+real. So `Uncertain<bool>` cannot survive, and the crate ships two carrier structs over the same
+tree — `Uncertain<R>` at a `Sample::Real` root, `UncertainBool<R>` at a `Sample::Bool` root. The
+Boolean carrier keeps `R` because the tree beneath it holds `R`: a Bernoulli parameter, a comparison
+threshold and the SPRT log-likelihood are all `R` under D6.
+
+The deciding constraint is `core.verdict.closure`, not taste. `Verdict` is instanced twice today
+over two different algebras — Boolean on `Uncertain<bool>`, MV on `[0, 1]` on `Uncertain<f64>` — and
+one carrier cannot hold both. Collapsing to a single `Uncertain<R>` would leave the Boolean instance
+homeless and break `Aggregatable: Verdict` in `deep_causality`. Two blanket instances over two
+distinct local types are coherent, and `Float106` picks up the MV instance it lacks today.
+
+*Alternatives considered and measured against the compiler:* `impl Observable for bool` beside a
+blanket over a foreign `RandScalar` is E0119; naming `bool` in a bound the blanket also covers is
+E0277; a default type parameter does not resolve in expression position at a constructor call —
+E0282, verified for both a struct and a type alias; and a kind-marker on one struct makes the
+carrier-specific methods ambiguous, E0034.
 
 ### D8. The flaky test is fixed by seeding, never by relaxing the assertion
 

@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality_uncertain::UncertainBool;
 use deep_causality_uncertain::{SampleSession, Uncertain};
 
 /// Every test below that observes a draw installs this seed first.
@@ -109,14 +110,14 @@ fn test_uncertain_f64_map_to_bool() {
     assert!(!sample_false);
 }
 
-// Test for Uncertain<bool> constructors
+// Test for UncertainBool<f64> constructors
 #[test]
 fn test_uncertain_bool_point_constructor() {
     let session = SampleSession::seeded(SEED);
-    let uncertain_true = Uncertain::<bool>::point(true);
+    let uncertain_true = UncertainBool::<f64>::point(true);
     assert!(uncertain_true.sample_at(&session, 0).unwrap());
 
-    let uncertain_false = Uncertain::<bool>::point(false);
+    let uncertain_false = UncertainBool::<f64>::point(false);
     assert!(!uncertain_false.sample_at(&session, 0).unwrap());
 }
 
@@ -124,7 +125,7 @@ fn test_uncertain_bool_point_constructor() {
 fn test_uncertain_bool_bernoulli_constructor() {
     let session = SampleSession::seeded(SEED);
     let p = 0.7;
-    let uncertain = Uncertain::<bool>::bernoulli(p);
+    let uncertain = UncertainBool::<f64>::bernoulli(p);
 
     let num_samples = 10000;
     let samples: Vec<bool> = (0..num_samples)
@@ -137,12 +138,12 @@ fn test_uncertain_bool_bernoulli_constructor() {
     assert_approx_eq(actual_p, p, 0.05); // Allow some tolerance
 }
 
-// Test for Uncertain<bool> methods
+// Test for UncertainBool<f64> methods
 #[test]
 fn test_uncertain_bool_to_bool() {
     let session = SampleSession::seeded(SEED);
     // Clearly true
-    let uncertain_true = Uncertain::<bool>::point(true);
+    let uncertain_true = UncertainBool::<f64>::point(true);
     assert!(
         uncertain_true
             .to_bool(&session, 0.99, 0.95, 0.05, 1000)
@@ -150,7 +151,7 @@ fn test_uncertain_bool_to_bool() {
     );
 
     // Clearly false
-    let uncertain_false = Uncertain::<bool>::point(false);
+    let uncertain_false = UncertainBool::<f64>::point(false);
     assert!(
         !uncertain_false
             .to_bool(&session, 0.99, 0.95, 0.05, 1000)
@@ -158,7 +159,7 @@ fn test_uncertain_bool_to_bool() {
     );
 
     // Bernoulli with high probability of true
-    let uncertain_bernoulli_true = Uncertain::<bool>::bernoulli(0.9);
+    let uncertain_bernoulli_true = UncertainBool::<f64>::bernoulli(0.9);
     assert!(
         uncertain_bernoulli_true
             .to_bool(&session, 0.8, 0.95, 0.05, 1000)
@@ -166,7 +167,7 @@ fn test_uncertain_bool_to_bool() {
     );
 
     // Bernoulli with high probability of false
-    let uncertain_bernoulli_false = Uncertain::<bool>::bernoulli(0.1);
+    let uncertain_bernoulli_false = UncertainBool::<f64>::bernoulli(0.1);
     assert!(
         !uncertain_bernoulli_false
             .to_bool(&session, 0.9, 0.95, 0.05, 1000)
@@ -178,14 +179,14 @@ fn test_uncertain_bool_to_bool() {
 fn test_uncertain_bool_probability_exceeds() {
     let session = SampleSession::seeded(SEED);
     // Test with threshold 0.5, confidence 0.9
-    let uncertain_true = Uncertain::<bool>::point(true);
+    let uncertain_true = UncertainBool::<f64>::point(true);
     assert!(
         uncertain_true
             .probability_exceeds(&session, 0.5, 0.9, 0.05, 100)
             .unwrap()
     );
 
-    let uncertain_false = Uncertain::<bool>::point(false);
+    let uncertain_false = UncertainBool::<f64>::point(false);
     assert!(
         !uncertain_false
             .probability_exceeds(&session, 0.5, 0.9, 0.05, 100)
@@ -193,7 +194,7 @@ fn test_uncertain_bool_probability_exceeds() {
     );
 
     // Test with threshold 0.8, confidence 0.9
-    let uncertain_bernoulli_high = Uncertain::<bool>::bernoulli(0.9);
+    let uncertain_bernoulli_high = UncertainBool::<f64>::bernoulli(0.9);
     assert!(
         uncertain_bernoulli_high
             .probability_exceeds(&session, 0.8, 0.9, 0.05, 10000)
@@ -205,24 +206,24 @@ fn test_uncertain_bool_probability_exceeds() {
 fn test_uncertain_bool_implicit_conditional() {
     let session = SampleSession::seeded(SEED);
     // This should behave like to_bool with default confidence and threshold 0.5
-    let uncertain_true = Uncertain::<bool>::point(true);
+    let uncertain_true = UncertainBool::<f64>::point(true);
     assert!(uncertain_true.implicit_conditional(&session).unwrap());
 
-    let uncertain_false = Uncertain::<bool>::point(false);
+    let uncertain_false = UncertainBool::<f64>::point(false);
     assert!(!uncertain_false.implicit_conditional(&session).unwrap());
 }
 
 #[test]
 fn test_uncertain_bool_estimate_probability() {
     let session = SampleSession::seeded(SEED);
-    let uncertain_true = Uncertain::<bool>::point(true);
+    let uncertain_true = UncertainBool::<f64>::point(true);
     assert_approx_eq(
         uncertain_true.estimate_probability(&session, 100).unwrap(),
         1.0,
         0.01,
     );
 
-    let uncertain_false = Uncertain::<bool>::point(false);
+    let uncertain_false = UncertainBool::<f64>::point(false);
     assert_approx_eq(
         uncertain_false.estimate_probability(&session, 100).unwrap(),
         0.0,
@@ -230,7 +231,7 @@ fn test_uncertain_bool_estimate_probability() {
     );
 
     let p = 0.6;
-    let uncertain_bernoulli = Uncertain::<bool>::bernoulli(p);
+    let uncertain_bernoulli = UncertainBool::<f64>::bernoulli(p);
     assert_approx_eq(
         uncertain_bernoulli
             .estimate_probability(&session, 10000)
@@ -252,7 +253,7 @@ fn test_uncertain_bool_estimate_probability() {
 #[test]
 fn test_uncertain_conditional_f64_true_condition() {
     let session = SampleSession::seeded(SEED);
-    let condition = Uncertain::<bool>::point(true);
+    let condition = UncertainBool::<f64>::point(true);
     let if_true = Uncertain::<f64>::point(10.0);
     let if_false = Uncertain::<f64>::point(20.0);
 
@@ -263,7 +264,7 @@ fn test_uncertain_conditional_f64_true_condition() {
 #[test]
 fn test_uncertain_conditional_f64_false_condition() {
     let session = SampleSession::seeded(SEED);
-    let condition = Uncertain::<bool>::point(false);
+    let condition = UncertainBool::<f64>::point(false);
     let if_true = Uncertain::<f64>::point(10.0);
     let if_false = Uncertain::<f64>::point(20.0);
 
@@ -274,29 +275,29 @@ fn test_uncertain_conditional_f64_false_condition() {
 #[test]
 fn test_uncertain_conditional_bool_true_condition() {
     let session = SampleSession::seeded(SEED);
-    let condition = Uncertain::<bool>::point(true);
-    let if_true = Uncertain::<bool>::point(true);
-    let if_false = Uncertain::<bool>::point(false);
+    let condition = UncertainBool::<f64>::point(true);
+    let if_true = UncertainBool::<f64>::point(true);
+    let if_false = UncertainBool::<f64>::point(false);
 
-    let result = Uncertain::conditional(condition, if_true, if_false);
+    let result = UncertainBool::conditional(condition, if_true, if_false);
     assert!(result.sample_at(&session, 0).unwrap());
 }
 
 #[test]
 fn test_uncertain_conditional_bool_false_condition() {
     let session = SampleSession::seeded(SEED);
-    let condition = Uncertain::<bool>::point(false);
-    let if_true = Uncertain::<bool>::point(true);
-    let if_false = Uncertain::<bool>::point(false);
+    let condition = UncertainBool::<f64>::point(false);
+    let if_true = UncertainBool::<f64>::point(true);
+    let if_false = UncertainBool::<f64>::point(false);
 
-    let result = Uncertain::conditional(condition, if_true, if_false);
+    let result = UncertainBool::conditional(condition, if_true, if_false);
     assert!(!result.sample_at(&session, 0).unwrap());
 }
 
 #[test]
 fn test_uncertain_conditional_f64_uncertain_condition() {
     let session = SampleSession::seeded(SEED);
-    let uncertain_condition = Uncertain::<bool>::bernoulli(0.5); // 50/50 chance
+    let uncertain_condition = UncertainBool::<f64>::bernoulli(0.5); // 50/50 chance
     let if_true_val = Uncertain::<f64>::point(100.0);
     let if_false_val = Uncertain::<f64>::point(200.0);
 
@@ -331,7 +332,7 @@ fn test_uncertain_f64_sample() {
 #[test]
 fn test_uncertain_bool_sample() {
     let session = SampleSession::seeded(SEED);
-    let uncertain = Uncertain::<bool>::point(true);
+    let uncertain = UncertainBool::<f64>::point(true);
     let sample = uncertain.sample_at(&session, 0).unwrap();
     assert!(sample);
 }
