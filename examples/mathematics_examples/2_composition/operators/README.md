@@ -5,8 +5,8 @@ that *are* transformations: built now, composed with each other, and run later a
 they are handed.
 
 That separation is the whole point. The integrator and the thing being integrated are two
-values, so swapping `Euler` for `Rk4` raises the time order with no change to the rate field --
-the rate field was never part of the integrator to begin with.
+values, so swapping `Euler` for `Rk4` raises the time order and the rate field stays exactly as
+it was written.
 
 ## Integrating
 
@@ -24,11 +24,11 @@ the rate field was never part of the integrator to begin with.
 
 ## Where the derivative comes from
 
-Two of these take a derivative without differencing anything. `field_gradient_flow` evaluates
-the field over `Dual` and reads the `ε` channel, so `∇f` is exact; `extension/manifold_laplacian_stencil`
-takes a three-point difference, where the step size *is* the accuracy. Same folder tree, two
-kinds of derivative, and the difference shows up in the residual each one prints.
+Two of these take a derivative by evaluating over `Dual` and reading the `ε` channel, which makes
+`∇f` exact. `extension/manifold_laplacian_stencil` takes a three-point difference, where the step
+size *is* the accuracy. Same folder tree, two kinds of derivative, and each one prints the
+residual that follows from its method.
 
-`sampled_integration` is the same trick reaching further: because every estimator is written
-generic over `Scalar`, and `Dual` is a `Scalar`, differentiation passes straight through a
-*sampled* fold. The draws that estimate `I(θ)` estimate `dI/dθ` at the same time.
+`sampled_integration` reaches further: every estimator is generic over `Scalar` and `Dual` is a
+`Scalar`, so differentiation passes straight through a *sampled* fold. The draws that estimate
+`I(θ)` estimate `dI/dθ` at the same time.

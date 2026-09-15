@@ -50,10 +50,6 @@ const I_E2: usize = 0b0100; //     4  -> e2
 const I_E3: usize = 0b1000; //     8  -> e3
 const I_E01: usize = 0b0011; //    3  -> e0^e1  (boost generator, squares to +1)
 
-/// Switch this alias to `f32` for low precision, `f64` for standard precision,
-/// or `Float106` for high precision.
-pub type FloatType = Float106;
-
 // The applied mathematical  structures:
 //
 // * A simplicial complex with explicit boundary operator (vertices, edges, d1).
@@ -69,6 +65,10 @@ pub type FloatType = Float106;
 // * CausalMultiVector::new,
 // * geometric_product,
 // * ProcessWitness::bind.
+/// Switch this alias to `f32` for low precision, `f64` for standard precision,
+/// or `Float106` for high precision.
+pub type FloatType = Float106;
+
 fn main() {
     println!("=== Capstone: Spinor Transport in Minkowski Cl(3,1) ===");
     println!("Precision: {}\n", core::any::type_name::<FloatType>());

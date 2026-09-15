@@ -36,11 +36,6 @@ use deep_causality_topology::{
     Manifold, ManifoldWitness, Simplex, SimplicialComplex, SimplicialManifold, Skeleton,
 };
 
-/// `f64` is the right precision here: stress magnitudes span ~10 orders of
-/// magnitude and engineering accuracy lives at four to six digits. Float106
-/// yields no observable gain unless you have an ill-conditioned solve.
-pub type FloatType = f64;
-
 // ============================================================================
 // MESH: two tetrahedra sharing a face  (smallest non-trivial 3D manifold)
 // ============================================================================
@@ -102,6 +97,11 @@ const TRIANGLES: [[usize; 3]; 7] = [
     [1, 3, 4],
     [2, 3, 4],
 ];
+
+/// `f64` is the right precision here: stress magnitudes span ~10 orders of
+/// magnitude and engineering accuracy lives at four to six digits. Float106
+/// yields no observable gain unless you have an ill-conditioned solve.
+pub type FloatType = f64;
 
 fn main() {
     println!("=== Triple HKT: 3D Stress Analysis Blueprint ===");

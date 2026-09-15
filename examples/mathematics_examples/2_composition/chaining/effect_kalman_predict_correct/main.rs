@@ -66,40 +66,65 @@ fn rotation_matrix_2d(theta: FloatType) -> CausalTensor<FloatType> {
     CausalTensor::new(vec![c, -s, s, c], vec![2, 2]).expect("four components in a 2x2 shape")
 }
 
+/// Predict: `x' = F x`, with `F` a 10-degree rotation standing in for a model step.
+///
+/// The body propagates with `?`; this wrapper turns a returned error into the chain's own
+/// error channel, which is what `bind` short-circuits on.
 fn predict(state: CausalTensor<FloatType>) -> Process<CausalTensor<FloatType>> {
-    // Predict: x' = F x. F is a 10-degree rotation as a stand-in for a model step.
-    let f = rotation_matrix_2d(deg_to_rad(lift::<FloatType>(10.0)));
-    // mat_mul expects shape [m,n] x [n,k]. Reshape state from [2] to [2,1].
-    let x_col = CausalTensor::new(state.as_slice().to_vec(), vec![2, 1]).unwrap();
-    let ast = EinSumOp::mat_mul(f, x_col);
-    let predicted = match CausalTensor::ein_sum(&ast) {
-        Ok(t) => t,
-        Err(e) => return fail(format!("predict mat_mul failed: {:?}", e)),
-    };
-    let flat = CausalTensor::new(predicted.as_slice().to_vec(), vec![2]).unwrap();
-    let msg = format!("predict: rotated by 10 deg -> {:?}", flat.as_slice());
-    ok(flat, msg)
+    match predict_step(state) {
+        Ok((flat, msg)) => ok(flat, msg),
+        Err(e) => fail(e),
+    }
 }
 
+fn predict_step(
+    state: CausalTensor<FloatType>,
+) -> Result<(CausalTensor<FloatType>, String), String> {
+    let f = rotation_matrix_2d(deg_to_rad(lift::<FloatType>(10.0)));
+    // mat_mul expects [m,n] x [n,k], so the state reshapes from [2] to [2,1].
+    let x_col = CausalTensor::new(state.as_slice().to_vec(), vec![2, 1])
+        .map_err(|e| format!("predict: reshaping the state failed: {e:?}"))?;
+    let predicted = CausalTensor::ein_sum(&EinSumOp::mat_mul(f, x_col))
+        .map_err(|e| format!("predict mat_mul failed: {e:?}"))?;
+    let flat = CausalTensor::new(predicted.as_slice().to_vec(), vec![2])
+        .map_err(|e| format!("predict: flattening the result failed: {e:?}"))?;
+    let msg = format!("predict: rotated by 10 deg -> {:?}", flat.as_slice());
+    Ok((flat, msg))
+}
+
+/// Correct: a further -3 degrees, applied as a Clifford rotor rather than a matrix.
 fn correct(state: CausalTensor<FloatType>) -> Process<CausalTensor<FloatType>> {
-    // Correct: rotate by an additional -3 degrees via Clifford rotor.
+    match correct_step(state) {
+        Ok((new_state, msg)) => ok(new_state, msg),
+        Err(e) => fail(e),
+    }
+}
+
+fn correct_step(
+    state: CausalTensor<FloatType>,
+) -> Result<(CausalTensor<FloatType>, String), String> {
     let metric = Metric::Euclidean(2);
     let theta = deg_to_rad(lift::<FloatType>(-3.0));
     let half = theta / lift::<FloatType>(2.0);
-    let c = half.cos();
-    let sn = half.sin();
+    let (c, sn) = (half.cos(), half.sin());
     let zero = lift::<FloatType>(0.0);
-    let rotor = CausalMultiVector::new(vec![c, zero, zero, -sn], metric).unwrap();
-    let rotor_rev = CausalMultiVector::new(vec![c, zero, zero, sn], metric).unwrap();
+
+    let blade = |coeffs: Vec<FloatType>| {
+        CausalMultiVector::new(coeffs, metric)
+            .map_err(|e| format!("correct: building a Cl(2,0) element failed: {e:?}"))
+    };
+    let rotor = blade(vec![c, zero, zero, -sn])?;
+    let rotor_rev = blade(vec![c, zero, zero, sn])?;
 
     let s = state.as_slice();
-    let v = CausalMultiVector::new(vec![zero, s[0], s[1], zero], metric).unwrap();
+    let v = blade(vec![zero, s[0], s[1], zero])?;
     let rotated = rotor.geometric_product(&v).geometric_product(&rotor_rev);
     let d = rotated.data();
 
-    let new_state = CausalTensor::new(vec![d[1], d[2]], vec![2]).unwrap();
+    let new_state = CausalTensor::new(vec![d[1], d[2]], vec![2])
+        .map_err(|e| format!("correct: rebuilding the state failed: {e:?}"))?;
     let msg = format!("correct: -3 deg rotor -> {:?}", new_state.as_slice());
-    ok(new_state, msg)
+    Ok((new_state, msg))
 }
 
 fn verify(state: CausalTensor<FloatType>) -> Process<CausalTensor<FloatType>> {

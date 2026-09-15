@@ -11,7 +11,7 @@ cargo run -p mathematics_examples --example ensemble_x_lattice_ising_examples
 
 | Crate | Role |
 |---|---|
-| `deep_causality_rand` | entropy — a seeded generator, and nothing else |
+| `deep_causality_rand` | entropy — a seeded generator |
 | `deep_causality_stats` | the acceptance draw, `StandardUniform` at the working scalar |
 | `deep_causality_tensor` | each lattice, and the ensemble of lattices |
 | `deep_causality_haft` | `fmap` for observables, `fold` for means, `sequence_zip` for the pairing |
@@ -52,10 +52,10 @@ chi = beta · N · (⟨m²⟩ − ⟨m⟩²)
 It means something only if replica *i*'s `m²` is the square of replica *i*'s `m`. Turning the field
 of observables inside out through `Traversable::sequence` uses the cartesian applicative, which
 pairs replica 3's magnetisation with replica 17's energy — every combination across the replicas,
-and not one of them a replica.
+and each one its own replica.
 
 `DiagonalTraversable::sequence_zip` pairs index with index, which is what a replica *is*. The
-example asserts it rather than describing it: for every field in the result, cell 1 must be the
+example asserts it: for every field in the result, cell 1 must be the
 **exact** square of cell 0, and cell 2 must carry its own index. Under a cartesian traversal the
 first field that mismatches fails the assertion.
 
@@ -85,7 +85,7 @@ the four-cell design that separates the two reasons:
 
 Two corrections fall out of it.
 
-**The cancellation is mildest at `Tc`, not worst.** `chi` is proportional to the variance, and a
+**The cancellation is mildest at `Tc`.** `chi` is proportional to the variance, and a
 critical point is where the variance diverges — that is what makes it critical. The fluctuation is
 largest exactly where the quantity is being asked for. Measured: `⟨|m|⟩ = 0.74 ± 0.15` at `Tc`
 against `0.99 ± 0.01` at `T = 1.5`.
@@ -101,7 +101,7 @@ Only the cell where both go wrong costs anything, and it costs four orders of ma
 the other three. The *best* of the four is the exact reduction with the smallest fluctuation —
 the opposite of what the cancellation argument alone predicts.
 
-The lesson is not "use a wider float for fluctuations". It is that whether you need one is a
+The lesson is that whether a wider float helps is a
 question about your data with an answer you can compute, and reaching for a wider float without
 asking it is guesswork.
 

@@ -60,7 +60,12 @@ fn main() {
         ResultUnboundWitness::bimap(success_result, to_dto, to_api_error);
 
     print_success(&original_success, &api_response_ok);
-    assert_eq!(api_response_ok.unwrap().display_name, "ALICE");
+    assert_eq!(
+        api_response_ok
+            .as_ref()
+            .map(|dto| dto.display_name.as_str()),
+        Ok("ALICE")
+    );
 
     // Scenario 2: Failed Operation. The same transformation logic is reused.
     let error_result: Result<DomainUser, DomainError> = Err(DomainError::UserNotFound(99));

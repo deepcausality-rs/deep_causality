@@ -32,8 +32,8 @@ rust_binary(
 
 rust_binary(
     name = "basic_multivector_examples",
-    srcs = ["4_reference/multivector/basic_multivector.rs"],
-    crate_root = "4_reference/multivector/basic_multivector.rs",
+    srcs = ["1_foundation/multivector/basic_multivector.rs"],
+    crate_root = "1_foundation/multivector/basic_multivector.rs",
     visibility = ["//visibility:public"],
     deps = [
         # Cargo puts the package's own lib on an example's extern prelude.
@@ -47,8 +47,8 @@ rust_binary(
 
 rust_binary(
     name = "clifford_mhd_multivector_examples",
-    srcs = ["4_reference/multivector/clifford_mhd_multivector.rs"],
-    crate_root = "4_reference/multivector/clifford_mhd_multivector.rs",
+    srcs = ["1_foundation/multivector/clifford_mhd_multivector.rs"],
+    crate_root = "1_foundation/multivector/clifford_mhd_multivector.rs",
     visibility = ["//visibility:public"],
     deps = [
         # Cargo puts the package's own lib on an example's extern prelude.
@@ -137,8 +137,8 @@ rust_binary(
 
 rust_binary(
     name = "pga3d_multivector_examples",
-    srcs = ["4_reference/multivector/pga3d_multivector.rs"],
-    crate_root = "4_reference/multivector/pga3d_multivector.rs",
+    srcs = ["1_foundation/multivector/pga3d_multivector.rs"],
+    crate_root = "1_foundation/multivector/pga3d_multivector.rs",
     visibility = ["//visibility:public"],
     deps = [
         # Cargo puts the package's own lib on an example's extern prelude.
@@ -152,8 +152,8 @@ rust_binary(
 
 rust_binary(
     name = "algebraic_scanner_examples",
-    srcs = glob(["4_reference/multivector/algebraic_scanner/**/*.rs"]),
-    crate_root = "4_reference/multivector/algebraic_scanner/main.rs",
+    srcs = glob(["1_foundation/multivector/algebraic_scanner/**/*.rs"]),
+    crate_root = "1_foundation/multivector/algebraic_scanner/main.rs",
     visibility = ["//visibility:public"],
     deps = [
         # Cargo puts the package's own lib on an example's extern prelude.
@@ -196,9 +196,9 @@ rust_binary(
 )
 
 rust_binary(
-    name = "tensor_x_topology_laplacian_examples",
-    srcs = glob(["2_composition/extension/tensor_x_topology_laplacian/**/*.rs"]),
-    crate_root = "2_composition/extension/tensor_x_topology_laplacian/main.rs",
+    name = "manifold_laplacian_stencil_examples",
+    srcs = glob(["2_composition/extension/manifold_laplacian_stencil/**/*.rs"]),
+    crate_root = "2_composition/extension/manifold_laplacian_stencil/main.rs",
     visibility = ["//visibility:public"],
     deps = [
         # Cargo puts the package's own lib on an example's extern prelude.
@@ -241,9 +241,9 @@ rust_binary(
 )
 
 rust_binary(
-    name = "effect_diffusion_on_manifold_examples",
-    srcs = glob(["2_composition/extension/effect_diffusion_on_manifold/**/*.rs"]),
-    crate_root = "2_composition/extension/effect_diffusion_on_manifold/main.rs",
+    name = "diffusion_space_and_time_examples",
+    srcs = glob(["2_composition/extension/diffusion_space_and_time/**/*.rs"]),
+    crate_root = "2_composition/extension/diffusion_space_and_time/main.rs",
     visibility = ["//visibility:public"],
     deps = [
         # Cargo puts the package's own lib on an example's extern prelude.
@@ -317,8 +317,8 @@ rust_binary(
 
 rust_binary(
     name = "basic_csr_ops_examples",
-    srcs = ["4_reference/linear/basic_csr_ops.rs"],
-    crate_root = "4_reference/linear/basic_csr_ops.rs",
+    srcs = ["1_foundation/linear/basic_csr_ops.rs"],
+    crate_root = "1_foundation/linear/basic_csr_ops.rs",
     visibility = ["//visibility:public"],
     deps = [
         # Cargo puts the package's own lib on an example's extern prelude.
@@ -331,9 +331,9 @@ rust_binary(
 )
 
 rust_binary(
-    name = "hkt_csr_ops_examples",
-    srcs = glob(["2_composition/extension/hkt_csr_ops/**/*.rs"]),
-    crate_root = "2_composition/extension/hkt_csr_ops/main.rs",
+    name = "sparse_matrix_contextual_sum_examples",
+    srcs = glob(["2_composition/extension/sparse_matrix_contextual_sum/**/*.rs"]),
+    crate_root = "2_composition/extension/sparse_matrix_contextual_sum/main.rs",
     visibility = ["//visibility:public"],
     deps = [
         # Cargo puts the package's own lib on an example's extern prelude.
@@ -362,8 +362,8 @@ rust_binary(
 
 rust_binary(
     name = "basic_causal_tensor_examples",
-    srcs = ["4_reference/tensor/basic_causal_tensor.rs"],
-    crate_root = "4_reference/tensor/basic_causal_tensor.rs",
+    srcs = ["1_foundation/tensor/basic_causal_tensor.rs"],
+    crate_root = "1_foundation/tensor/basic_causal_tensor.rs",
     visibility = ["//visibility:public"],
     deps = [
         # Cargo puts the package's own lib on an example's extern prelude.
@@ -392,8 +392,8 @@ rust_binary(
 
 rust_binary(
     name = "ein_sum_causal_tensor_examples",
-    srcs = ["4_reference/tensor/ein_sum_causal_tensor.rs"],
-    crate_root = "4_reference/tensor/ein_sum_causal_tensor.rs",
+    srcs = ["1_foundation/tensor/ein_sum_causal_tensor.rs"],
+    crate_root = "1_foundation/tensor/ein_sum_causal_tensor.rs",
     visibility = ["//visibility:public"],
     deps = [
         # Cargo puts the package's own lib on an example's extern prelude.
@@ -437,8 +437,8 @@ rust_binary(
 
 rust_binary(
     name = "basic_graph_examples",
-    srcs = ["4_reference/topology/basic_graph.rs"],
-    crate_root = "4_reference/topology/basic_graph.rs",
+    srcs = ["1_foundation/topology/basic_graph.rs"],
+    crate_root = "1_foundation/topology/basic_graph.rs",
     visibility = ["//visibility:public"],
     deps = [
         # Cargo puts the package's own lib on an example's extern prelude.
@@ -452,8 +452,8 @@ rust_binary(
 
 rust_binary(
     name = "chain_algebra_examples",
-    srcs = ["4_reference/topology/chain_algebra.rs"],
-    crate_root = "4_reference/topology/chain_algebra.rs",
+    srcs = ["1_foundation/topology/chain_algebra.rs"],
+    crate_root = "1_foundation/topology/chain_algebra.rs",
     visibility = ["//visibility:public"],
     deps = [
         # Cargo puts the package's own lib on an example's extern prelude.
@@ -467,8 +467,8 @@ rust_binary(
 
 rust_binary(
     name = "complex_operators_examples",
-    srcs = ["4_reference/topology/complex_operators.rs"],
-    crate_root = "4_reference/topology/complex_operators.rs",
+    srcs = ["1_foundation/topology/complex_operators.rs"],
+    crate_root = "1_foundation/topology/complex_operators.rs",
     visibility = ["//visibility:public"],
     deps = [
         # Cargo puts the package's own lib on an example's extern prelude.
@@ -482,8 +482,8 @@ rust_binary(
 
 rust_binary(
     name = "cubical_heat_diffusion_examples",
-    srcs = glob(["2_composition/programs/cubical_heat_diffusion/**/*.rs"]),
-    crate_root = "2_composition/programs/cubical_heat_diffusion/main.rs",
+    srcs = glob(["2_composition/operators/cubical_heat_diffusion/**/*.rs"]),
+    crate_root = "2_composition/operators/cubical_heat_diffusion/main.rs",
     visibility = ["//visibility:public"],
     deps = [
         # Cargo puts the package's own lib on an example's extern prelude.
@@ -497,8 +497,8 @@ rust_binary(
 
 rust_binary(
     name = "differential_field_examples",
-    srcs = glob(["2_composition/programs/differential_field/**/*.rs"]),
-    crate_root = "2_composition/programs/differential_field/main.rs",
+    srcs = glob(["2_composition/operators/differential_field/**/*.rs"]),
+    crate_root = "2_composition/operators/differential_field/main.rs",
     visibility = ["//visibility:public"],
     deps = [
         # Cargo puts the package's own lib on an example's extern prelude.
@@ -511,9 +511,9 @@ rust_binary(
 )
 
 rust_binary(
-    name = "hkt_graph_convolution_examples",
-    srcs = glob(["2_composition/extension/hkt_graph_convolution/**/*.rs"]),
-    crate_root = "2_composition/extension/hkt_graph_convolution/main.rs",
+    name = "graph_convolution_examples",
+    srcs = glob(["2_composition/extension/graph_convolution/**/*.rs"]),
+    crate_root = "2_composition/extension/graph_convolution/main.rs",
     visibility = ["//visibility:public"],
     deps = [
         # Cargo puts the package's own lib on an example's extern prelude.
@@ -542,8 +542,8 @@ rust_binary(
 
 rust_binary(
     name = "manifold_analysis_examples",
-    srcs = ["4_reference/topology/manifold_analysis.rs"],
-    crate_root = "4_reference/topology/manifold_analysis.rs",
+    srcs = ["1_foundation/topology/manifold_analysis.rs"],
+    crate_root = "1_foundation/topology/manifold_analysis.rs",
     visibility = ["//visibility:public"],
     deps = [
         # Cargo puts the package's own lib on an example's extern prelude.

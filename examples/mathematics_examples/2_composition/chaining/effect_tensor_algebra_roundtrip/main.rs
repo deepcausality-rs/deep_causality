@@ -74,32 +74,49 @@ fn lift_to_algebra(v: CausalTensor<FloatType>) -> Process<CausalMultiVector<Floa
     let zero = lift::<FloatType>(0.0);
     // Cl(3,0) basis order: [1, e1, e2, e3, e12, e13, e23, e123]
     let coeffs = vec![zero, s[0], s[1], s[2], zero, zero, zero, zero];
-    let mv = CausalMultiVector::new(coeffs, Metric::Euclidean(3)).unwrap();
-    let msg = format!("lift: tensor {:?} -> multivector vector", s);
-    ok(mv, msg)
+    match cl3(coeffs, Metric::Euclidean(3)) {
+        Ok(mv) => {
+            let msg = format!("lift: tensor {:?} -> multivector vector", s);
+            ok(mv, msg)
+        }
+        Err(e) => fail(e),
+    }
+}
+
+/// A `Cl(3,0)` element, with the constructor's error carried as a message the chain can hold.
+fn cl3(coeffs: Vec<FloatType>, metric: Metric) -> Result<CausalMultiVector<FloatType>, String> {
+    CausalMultiVector::new(coeffs, metric)
+        .map_err(|e| format!("building a Cl(3,0) element failed: {e:?}"))
 }
 
 fn rotate_in_xy(v: CausalMultiVector<FloatType>) -> Process<CausalMultiVector<FloatType>> {
-    // 90-degree rotation in the e1^e2 plane.
+    match rotate_step(v) {
+        Ok(rotated) => ok(rotated, "rotate: 90 deg in e1^e2 plane"),
+        Err(e) => fail(e),
+    }
+}
+
+/// A 90-degree rotation in the `e1^e2` plane, as a rotor sandwich.
+fn rotate_step(v: CausalMultiVector<FloatType>) -> Result<CausalMultiVector<FloatType>, String> {
     let metric = Metric::Euclidean(3);
-    let theta = FloatType::pi() / lift::<FloatType>(2.0);
-    let half = theta / lift::<FloatType>(2.0);
-    let c = half.cos();
-    let sn = half.sin();
+    let half = FloatType::pi() / lift::<FloatType>(2.0) / lift::<FloatType>(2.0);
+    let (c, sn) = (half.cos(), half.sin());
     let zero = lift::<FloatType>(0.0);
-    let rotor =
-        CausalMultiVector::new(vec![c, zero, zero, zero, -sn, zero, zero, zero], metric).unwrap();
-    let rotor_rev =
-        CausalMultiVector::new(vec![c, zero, zero, zero, sn, zero, zero, zero], metric).unwrap();
-    let rotated = rotor.geometric_product(&v).geometric_product(&rotor_rev);
-    ok(rotated, "rotate: 90 deg in e1^e2 plane")
+
+    let rotor = cl3(vec![c, zero, zero, zero, -sn, zero, zero, zero], metric)?;
+    let rotor_rev = cl3(vec![c, zero, zero, zero, sn, zero, zero, zero], metric)?;
+    Ok(rotor.geometric_product(&v).geometric_product(&rotor_rev))
 }
 
 fn lower_to_tensor(mv: CausalMultiVector<FloatType>) -> Process<CausalTensor<FloatType>> {
     let d = mv.data();
-    let v = CausalTensor::new(vec![d[1], d[2], d[3]], vec![3]).unwrap();
-    let msg = format!("lower: multivector -> tensor {:?}", v.as_slice());
-    ok(v, msg)
+    match CausalTensor::new(vec![d[1], d[2], d[3]], vec![3]) {
+        Ok(v) => {
+            let msg = format!("lower: multivector -> tensor {:?}", v.as_slice());
+            ok(v, msg)
+        }
+        Err(e) => fail(format!("lower: rebuilding the tensor failed: {e:?}")),
+    }
 }
 
 fn norm_squared(v: CausalTensor<FloatType>) -> Process<FloatType> {

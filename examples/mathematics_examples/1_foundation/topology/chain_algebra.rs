@@ -3,12 +3,18 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality_algebra::Real;
 use deep_causality_linear::CsrMatrix;
+use deep_causality_num::lift;
 use deep_causality_topology::{Chain, Simplex, SimplicialComplex, Skeleton};
 use std::sync::Arc;
 
+/// The working scalar. Chain weights carry it; the incidence signs in the boundary
+/// operators are `i8` and stay that way.
+pub type FloatType = f32;
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("=== Chain Algebra Example: ∂∂ = 0 ===\n");
+    print_header();
 
     // ------------------------------------------------------------------------
     // ENGINEERING VALUE:
@@ -101,22 +107,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         vec![], // Hodge star not needed
     ));
 
-    println!(
-        "Created a tetrahedral complex with {} vertices, {} edges, and {} faces.",
+    print_complex(
         complex.skeletons()[0].simplices().len(),
         complex.skeletons()[1].simplices().len(),
-        complex.skeletons()[2].simplices().len()
+        complex.skeletons()[2].simplices().len(),
     );
 
     // 2. Create a 2-chain: c = 1.0 * f0 + 2.0 * f1
     // where f0 is face (0,1,2) and f1 is face (0,1,3)
-    let weights_c = CsrMatrix::from_triplets(1, 4, &[(0, 0, 1.0), (0, 1, 2.0)])?;
+    let weights_c = CsrMatrix::from_triplets(
+        1,
+        4,
+        &[
+            (0, 0, lift::<FloatType>(1.0)),
+            (0, 1, lift::<FloatType>(2.0)),
+        ],
+    )?;
     let chain_c = Chain::new(complex.clone(), 2, weights_c);
-    println!("\nInitial 2-chain (c):\n{}", chain_c);
 
     // 3. Compute the first boundary: b = ∂c
     let chain_b = complex.boundary(&chain_c);
-    println!("First boundary ∂c (a 1-chain of edges):\n{}", chain_b);
+    print_boundaries(&chain_c, &chain_b);
     assert_eq!(chain_b.grade(), 1);
     assert!(
         !chain_b.weights().values().is_empty(),
@@ -124,18 +135,48 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     // 4. Compute the second boundary: z = ∂b = ∂(∂c)
-    let chain_z: Chain<f32, f32> = complex.boundary(&chain_b);
-    println!(
-        "Second boundary ∂(∂c) (a 0-chain of vertices):\n{}",
-        chain_z
-    );
+    let chain_z: Chain<FloatType, FloatType> = complex.boundary(&chain_b);
+    print_second_boundary(&chain_z);
     assert_eq!(chain_z.grade(), 0);
 
-    // 5. Verify that the second boundary is zero
-    let is_zero = chain_z.weights().values().iter().all(|&w| w.abs() < 1e-9);
+    // 5. Every surviving weight must vanish. The tolerance is a multiple of the working
+    //    type's epsilon, so it moves with the alias where a literal would not.
+    let tol = lift::<FloatType>(8.0) * <FloatType as Real>::epsilon();
+    let is_zero = chain_z
+        .weights()
+        .values()
+        .iter()
+        .all(|&w| Real::abs(w) < tol);
     assert!(is_zero, "The boundary of a boundary (∂∂c) must be zero.");
 
-    println!("\nVerification successful: ∂∂c = 0");
+    print_success();
 
     Ok(())
+}
+
+// -----------------------------------------------------------------------------------------
+// Printing
+// -----------------------------------------------------------------------------------------
+
+fn print_header() {
+    println!("=== Chain Algebra Example: ∂∂ = 0 ===\n");
+}
+
+fn print_complex(vertices: usize, edges: usize, faces: usize) {
+    println!(
+        "Created a tetrahedral complex with {vertices} vertices, {edges} edges, and {faces} faces."
+    );
+}
+
+fn print_boundaries(c: &Chain<FloatType, FloatType>, b: &Chain<FloatType, FloatType>) {
+    println!("\nInitial 2-chain (c):\n{c}");
+    println!("First boundary ∂c (a 1-chain of edges):\n{b}");
+}
+
+fn print_second_boundary(z: &Chain<FloatType, FloatType>) {
+    println!("Second boundary ∂(∂c) (a 0-chain of vertices):\n{z}");
+}
+
+fn print_success() {
+    println!("\nVerification successful: ∂∂c = 0");
 }

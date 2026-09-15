@@ -3,7 +3,7 @@
 Examples for `deep_causality_haft`: higher-kinded types in Rust, and the categorical
 structures built on them.
 
-A witness stands in for a type constructor that Rust cannot name directly, so `Functor`,
+A witness stands in for a type constructor, so `Functor`,
 `Monad`, `CoMonad` and the rest are written once and used over `Vec`, `Option`, `Result`, a
 tensor or a multivector. Each example takes one structure, puts it on a domain problem, and
 shows what the structure buys.
@@ -26,12 +26,12 @@ cargo run -p mathematics_examples --example <example_name>
 | File | Description | Command |
 |------|-------------|---------|
 | [functor.rs](functor.rs) | `Functor` for data anonymization: one masking rule applied across `Vec`, `LinkedList`, `VecDeque`, `HashMap`, `BTreeMap`, `Option`, `Result` and `Box` | `cargo run -p mathematics_examples --example haft_functor_examples` |
-| [applicative.rs](applicative.rs) | `Applicative` over e-commerce order processing: independent effects combined without sequencing them | `cargo run -p mathematics_examples --example haft_applicative_examples` |
+| [applicative.rs](applicative.rs) | `Applicative` over e-commerce order processing: independent effects combined in one step | `cargo run -p mathematics_examples --example haft_applicative_examples` |
 | [monad.rs](monad.rs) | `Monad` over a configuration system: dependent steps that may each fail | `cargo run -p mathematics_examples --example haft_monad_examples` |
 | [comonad.rs](comonad.rs) | `CoMonad` for system evolution: `extend` computes each new state from a view focused on the old one | `cargo run -p mathematics_examples --example haft_comonad_examples` |
 | [foldable.rs](foldable.rs) | `Foldable` over e-commerce order processing: one traversal, many summaries | `cargo run -p mathematics_examples --example haft_foldable_examples` |
 | [traversable.rs](traversable.rs) | `Traversable::sequence` turning `Vec<Option<T>>` into `Option<Vec<T>>` and `Vec<Result<T, E>>` into `Result<Vec<T>, E>`: the atomic batch | `cargo run -p mathematics_examples --example haft_traversable_examples` |
-| [collectable.rs](collectable.rs) | `Collectable::collect` building a structure from any sequence, including one generated lazily; the direction `Foldable` does not go | `cargo run -p mathematics_examples --example haft_collectable_examples` |
+| [collectable.rs](collectable.rs) | `Collectable::collect` building a structure from any sequence, including one generated lazily — the inverse of `Foldable` | `cargo run -p mathematics_examples --example haft_collectable_examples` |
 | [bifunctor.rs](bifunctor.rs) | `Bifunctor` over API response handling: mapping success and error channels independently | `cargo run -p mathematics_examples --example haft_bifunctor_examples` |
 | [profunctor.rs](profunctor.rs) | `Profunctor` over search filters: adapting a function's input and output ends separately | `cargo run -p mathematics_examples --example haft_profunctor_examples` |
 | [category.rs](category.rs) | `Category` on `Fun` and on `Kleisli<Option>`: identity and composition, and the Kleisli category every monad comes with | `cargo run -p mathematics_examples --example haft_category_examples` |
@@ -53,10 +53,10 @@ the witnesses the math crates own, which is where `2_composition/` picks it up.
 
 ## Patterns written out by hand
 
-Two examples build the pattern directly rather than through a haft trait, because the shipped
-implementations live elsewhere.
+Two examples build the pattern directly. The shipped implementations live in other crates, and
+each row says where.
 
 | File | Description | Command |
 |------|-------------|---------|
 | [adjunction.rs](adjunction.rs) | The Reader adjunction as global configuration access: the two adjuncts move a value in and out of an ambient context. The shipped `Adjunction` is `StokesAdjunction` in `deep_causality_topology`, shown in `2_composition/duality/` | `cargo run -p mathematics_examples --example haft_adjunction_examples` |
-| [parametric_monad.rs](parametric_monad.rs) | An indexed monad as a type-safe state machine: the state type changes at each bind, so illegal orderings do not compile | `cargo run -p mathematics_examples --example haft_parametric_monad_examples` |
+| [parametric_monad.rs](parametric_monad.rs) | An indexed monad as a type-safe state machine: the state type changes at each bind, so the compiler enforces the legal order | `cargo run -p mathematics_examples --example haft_parametric_monad_examples` |

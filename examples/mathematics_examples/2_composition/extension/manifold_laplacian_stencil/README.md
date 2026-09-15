@@ -18,7 +18,7 @@ cargo run -p mathematics_examples --example manifold_laplacian_stencil_examples
 
 The CoMonad pattern: `extend` walks every focused position of the manifold and the closure has access to the full underlying data. This is exactly the pattern used for stencil operators on a discretized space.
 
-The geometry (a 1D simplicial complex with 7 vertices and 6 edges) provides the context; the scalar field (a `CausalTensor<f64>`) provides the payload. Topology and tensor compose through the witness pattern without either crate knowing about the other.
+The geometry (a 1D simplicial complex with 7 vertices and 6 edges) provides the context; the scalar field (a `CausalTensor<f64>`) provides the payload. Topology and tensor compose through the witness pattern, each crate working in its own terms.
 
 ## Mathematical Content
 
@@ -41,13 +41,13 @@ Specifically, the example omits:
 - **Mass matrix `M`.** The full discrete Laplace-Beltrami operator is `M^-1 L_c`, where `M` is the diagonal matrix of dual-cell areas (or volumes) at each vertex. Omitting `M` is fine for smoothing but wrong for anything quantitative such as solving a Poisson equation or extracting eigenvalues.
 - **Use of the boundary operator `d1`.** The example builds `d1` and then ignores it. The metric-aware way to derive the Laplacian is `L = d1^T * M_edge * d1` (the discrete exterior calculus formula). Hand-rolling the stencil works on a regular line; on irregular complexes it does not.
 - **Boundary condition richness.** Only Neumann reflection is implemented. Dirichlet (fixed value), Robin (mixed), and periodic (wrap-around) boundaries each require a different branch inside the closure. Absorbing boundaries for wave equations need a one-sided derivative.
-- **Higher-order stencils.** The three-point stencil is second-order accurate. Five-point (`-phi(i-2) + 16 phi(i-1) - 30 phi(i) + 16 phi(i+1) - phi(i+2)) / 12` style) is fourth-order. Higher order matters when the field has fine features the coarse stencil cannot resolve.
+- **Higher-order stencils.** The three-point stencil is second-order accurate. Five-point (`-phi(i-2) + 16 phi(i-1) - 30 phi(i) + 16 phi(i+1) - phi(i+2)) / 12` style) is fourth-order. Higher order matters when the field has fine features, which the wider stencil resolves.
 - **Higher-dimensional generalization.** The example is 1D. Two-dimensional rectangular grids need a five-point or nine-point stencil. Three-dimensional cubic grids need seven or twenty-seven. Triangulated surfaces and tetrahedral meshes need the cotangent formula above.
-- **The inverse direction.** Most useful Laplacian computations are inversions, not applications: solving `L x = b` for the Poisson equation (electrostatics, incompressible-flow pressure, surface reconstruction), or solving the generalized eigenproblem `L v = lambda M v` for spectral mesh analysis and graph Laplacian methods. The example only applies `L` forward.
-- **Sparse linear-algebra kernels.** Even when applying `L`, large meshes benefit from a single sparse matrix-vector product instead of a per-vertex closure. The boundary matrix is already stored as `CsrMatrix`; assembling the full Laplacian as a sparse matrix once is faster than running `extend` per step.
+- **The inverse direction.** Most useful Laplacian computations are inversions: solving `L x = b` for the Poisson equation (electrostatics, incompressible-flow pressure, surface reconstruction), or solving the generalized eigenproblem `L v = lambda M v` for spectral mesh analysis and graph Laplacian methods. This example applies `L` forward.
+- **Sparse linear-algebra kernels.** On large meshes a single sparse matrix-vector product carries the whole apply. The boundary matrix is already stored as `CsrMatrix`, so assembling the full Laplacian once and reusing it runs faster per step.
 - **Sign convention awareness.** Physics defines `Delta` as the negative-semi-definite operator that makes peaks negative. Graphics and graph theory often use the opposite sign so `L` is positive semi-definite (eigenvalues `0 = lambda_0 <= lambda_1 <= ...`). The example uses the physics convention; cross-check before plugging the output into a library that expects the other one.
 
-Adding any of these is a local edit inside the `extend` closure plus, where relevant, a richer mesh data structure. The comonadic walk does not change. That is the property the example exposes: the operator definition is one swap-out away, the rest of the pipeline stays the same.
+Adding any of these is a local edit inside the `extend` closure plus, where relevant, a richer mesh data structure. The comonadic walk stays as it is. That is the property the example exposes: the operator definition is one swap-out away, and the rest of the pipeline stays the same.
 This also allows for parametric operator pipelines that can swap in and out operators on demand.
 
 ## Key APIs

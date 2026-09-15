@@ -2,7 +2,7 @@
 
 ## Introduction
 
-This is the relativistic version of "carry a state forward in time and watch it transform along the way." The state is a spinor (a generalization of a 4-vector that physicists use to describe particles with spin). The "time" is a discretized worldline, broken into segments. At each segment the spinor receives a Lorentz boost, which is the special-relativity version of a rotation that mixes time and space coordinates rather than two spatial axes.
+This is the relativistic version of "carry a state forward in time and watch it transform along the way." The state is a spinor (a generalization of a 4-vector that physicists use to describe particles with spin). The "time" is a discretized worldline, broken into segments. At each segment the spinor receives a Lorentz boost, which is the special-relativity version of a rotation, mixing a time coordinate with a space coordinate.
 
 Where this matters in practice: GPS satellites need relativistic corrections of about 38 microseconds per day or the position error grows by 10 km within a day. Particle accelerators (LHC, Fermilab) simulate beam dynamics with relativistic transports along every magnet section. Astrodynamics codes for deep-space missions track frame transformations along long worldlines. Quantum-optics simulations propagate qubit states by chained unitary rotors, which is structurally the same operation in a different signature. Anywhere a "thing with orientation or spin" moves through "a path made of segments," this is the inner loop.
 
@@ -18,7 +18,7 @@ cargo run -p mathematics_examples --example capstone_spinor_minkowski_examples
 
 ## What It Demonstrates
 
-The example exists to show one thing: the same uniform API (`extend`, `bind`, `geometric_product`, `ein_sum`) can describe a problem that crosses topology, tensor algebra, geometric algebra, and effect tracking without any glue code between the crates.
+The example exists to show one thing: the same uniform API (`extend`, `bind`, `geometric_product`, `ein_sum`) describes a problem that crosses topology, tensor algebra, geometric algebra and effect tracking, with each crate meeting the next through the witness.
 
 Concretely:
 
@@ -29,7 +29,7 @@ Concretely:
 
 ## Mathematical Content
 
-In Cl(3,1) the bivector `e0 ^ e1` squares to `+1`, so it generates hyperbolic (boost) rotations rather than circular ones:
+In Cl(3,1) the bivector `e0 ^ e1` squares to `+1`, so it generates hyperbolic (boost) rotations:
 
 ```
 B(theta) = cosh(theta/2) + sinh(theta/2) * e0^e1

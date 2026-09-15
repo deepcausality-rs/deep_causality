@@ -63,7 +63,7 @@ let result = ManifoldWitness::extend(&manifold, |w| {
 Each step is a **standalone function** that can be:
 
 - Tested independently
-- Replaced without touching the others
+- Replaced on its own, leaving the others in place
 - Reused across analyses with different material models
 - Extended with state for plasticity, damage, or other history-dependent behaviour
 
@@ -90,7 +90,7 @@ strain field  ->  constitutive law  ->  normal  ->  Cauchy traction  ->  materia
 
 ## Simplifications in This Example
 
-This is a **pedagogical blueprint**, not a production FEA solver. The point of the example is to expose the wiring 
+This is a **pedagogical blueprint**. The point of the example is to expose the wiring 
 so an engineer can plug in the material-specific physics.
 
 | Aspect                  | This Example                              | Production Reality                          |
@@ -181,7 +181,7 @@ Detect boundary triangles by looking at d3: any triangle with only one non-zero 
 + fn hashin(sigma_local: &Sym3, mode: FailureMode) -> FloatType  // composite damage
 ```
 
-Note: anisotropic criteria need `sigma` in the **material frame**, so they consume `t_local` rather than `traction`. The rotor step (currently dropped with an underscore) becomes load-bearing.
+Note: anisotropic criteria need `sigma` in the **material frame**, so they consume `t_local`. The rotor step becomes load-bearing there.
 
 ### Step 6: Bigger Mesh
 

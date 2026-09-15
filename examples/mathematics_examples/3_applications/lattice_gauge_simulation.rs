@@ -28,10 +28,6 @@ use deep_causality_topology::{
 };
 use std::sync::Arc;
 
-/// Precision for the gauge-field simulation. `f64` is the standard choice for lattice
-/// gauge theory of this size; bump to `Float106` for higher-precision Wilson flow runs.
-pub type FloatType = f64;
-
 // Simulation parameters
 const L: usize = 4; // Lattice size L^4 (small for example speed)
 const D: usize = 4; // Spacetime dimension
@@ -41,6 +37,10 @@ const D: usize = 4; // Spacetime dimension
 fn beta() -> FloatType {
     lift(6.0)
 }
+
+/// Precision for the gauge-field simulation. `f64` is the standard choice for lattice
+/// gauge theory of this size; bump to `Float106` for higher-precision Wilson flow runs.
+pub type FloatType = f64;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== DeepCausality Lattice Gauge Simulation ===");

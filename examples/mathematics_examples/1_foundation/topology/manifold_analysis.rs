@@ -16,8 +16,6 @@ use deep_causality_topology::{
 pub type FloatType = f64;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("=== Manifold Analysis Example ===");
-
     // ------------------------------------------------------------------------
     // ENGINEERING VALUE:
     // Manifolds provide a rigorous geometric framework for understanding the
@@ -60,19 +58,28 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let manifold: Manifold<SimplicialComplex<FloatType>, FloatType> =
         Manifold::new(complex, data, 0)?;
 
-    println!("Manifold Created: {}", manifold);
-    println!("Dimension: {}", manifold.dimension());
-
-    // 5. Calculate Euler Characteristic
-    // Chi = V - E = 2 - 1 = 1
+    // Chi = V - E = 2 - 1 = 1. `check_is_manifold` already ran during construction, so
+    // reaching this point means the structure is a valid manifold; orientation is separate.
     let chi = manifold.euler_characteristic();
-    println!("Euler Characteristic: {}", chi);
+    print_manifold(&manifold, manifold.dimension(), chi, manifold.is_oriented());
     assert_eq!(chi, 1);
 
-    // 6. Check Manifold Properties
-    // Note: `check_is_manifold` is called during construction, so if we are here, it is valid.
-    // We can check orientation.
-    println!("Is Oriented: {}", manifold.is_oriented());
-
     Ok(())
+}
+
+// -----------------------------------------------------------------------------------------
+// Printing
+// -----------------------------------------------------------------------------------------
+
+fn print_manifold(
+    manifold: &Manifold<SimplicialComplex<FloatType>, FloatType>,
+    dimension: usize,
+    chi: isize,
+    oriented: bool,
+) {
+    println!("=== Manifold Analysis Example ===");
+    println!("Manifold Created: {manifold}");
+    println!("Dimension: {dimension}");
+    println!("Euler Characteristic: {chi}");
+    println!("Is Oriented: {oriented}");
 }

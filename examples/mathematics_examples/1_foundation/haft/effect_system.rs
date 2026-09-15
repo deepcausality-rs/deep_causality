@@ -142,8 +142,7 @@ fn main() {
     // Verify error is captured, no value survives, and the tax step did not run.
     assert_eq!(fail_tx.value, None);
     assert_eq!(fail_tx.f2, vec!["Failed Debit".to_string()]); // no "Applied Tax" entry
-    assert!(fail_tx.f1.is_some());
-    assert_eq!(fail_tx.f1.unwrap(), "Insufficient Funds");
+    assert_eq!(fail_tx.f1.as_deref(), Some("Insufficient Funds"));
 }
 
 // -----------------------------------------------------------------------------------------

@@ -83,7 +83,7 @@ gates that are disabled by default.
 Composition runs through `deep_causality_haft`. A crate that owns a container generic in its element
 declares a *witness* type, binds `type Type<T>` to that container, and implements the categorical
 traits against the witness. Two mechanisms then fall out, and both are load-bearing in
-`examples/mathematics_examples/composable_multi_math/`.
+`examples/mathematics_examples/2_composition/`.
 
 **Nesting.** A witness accepts any element type, including one another crate owns.
 A tensor of multivectors is an ordinary `CausalTensor<CausalMultiVector<T>>`, and
@@ -706,6 +706,6 @@ trade-off made explicit: a precision chosen per part against a requirement.
 | `openspec/notes/archive/unified_math/deep_causality_unified_math.md` | The assessment for this consolidation, and what it predicted against what happened |
 | `openspec/notes/archive/unified_math/HKT-LAW-FINDINGS.md` | Why the shaped witnesses stop at `Applicative` |
 | `openspec/changes/archive-notes.md` | Reading an archived change whose paths predate a move |
-| `examples/mathematics_examples/composable_multi_math/README.md` | Seven worked cross-crate compositions |
+| `examples/mathematics_examples/2_composition/README.md` | Cross-crate composition, filed by the mechanism each example uses |
 | `examples/quantum_examples/qcl_examples/` | Three programs that run unchanged at `f32`, `f64` and `Float106` |
 | `lean/THEOREM_MAP.md` | Lean theorems and the Rust witnesses bound to them |

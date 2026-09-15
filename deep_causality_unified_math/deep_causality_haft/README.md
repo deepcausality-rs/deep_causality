@@ -16,7 +16,7 @@ cargo run -p mathematics_examples --example haft_functor_examples        # data 
 cargo run -p mathematics_examples --example haft_effect_system_examples  # audited transactions
 ```
 
-`examples/mathematics_examples/applied_category_theory/README.md` lists all twelve.
+`examples/mathematics_examples/1_foundation/haft/README.md` lists them.
 
 ## What are Higher-Kinded Types?
 
