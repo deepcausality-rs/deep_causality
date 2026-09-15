@@ -25,26 +25,43 @@ In many modern applications, from sensor data processing and machine learning to
 
 ## Key Features
 
-*   **First-Order Uncertainty:** `Uncertain<T>` is a generic type that encapsulates a value along with its inherent uncertainty, modeled as a probability distribution.
-*   **Probabilistic Presence (`MaybeUncertain<T>`):** Introduces `MaybeUncertain<T>`, a specialized type for modeling values whose very presence is uncertain. This is crucial for scenarios with sparse or intermittently available data, allowing explicit reasoning about the probability of a value existing, in addition to its inherent uncertainty if present.
-*   **Rich Distribution Support:** Create uncertain values from various probability distributions, including:
-    *   `Point(T)`: For precise, known values.
-    *   `Normal(mean, std_dev)`: Gaussian distribution for continuous data with noise.
-    *   `Uniform(low, high)`: For values within a defined range.
-    *   `Bernoulli(p)`: For uncertain boolean outcomes.
-*   **Intuitive Operator Overloading:** Perform standard arithmetic (`+`, `-`, `*`, `/`), unary negation (`-`), comparison (`>`, `<`, `==`), and logical (`&`, `|`, `!`, `^`) operations directly on `Uncertain` types. The uncertainty is automatically propagated through these operations.
-*   **Implicit Computation Graph:** Operations on `Uncertain` types implicitly build a computation graph (similar to a Bayesian network), allowing for lazy and efficient evaluation.
-*   **Sampling-Based Evaluation:** The runtime uses intelligent sampling and statistical hypothesis tests (like SPRT) to evaluate computations and conditionals lazily and efficiently, drawing only as many samples as necessary.
-*   **Comprehensive Statistical Analysis:** Extract meaningful insights from uncertain results:
-    *   `expected_value()`: Estimate the mean of an uncertain `f64` value.
-    *   `standard_deviation()`: Estimate the spread of an uncertain `f64` value.
-    *   `estimate_probability()`: Estimate the probability of an uncertain `bool` condition being true.
-*   **Robust Decision Making:** Make informed decisions under uncertainty:
-    *   `to_bool()`: Convert an `Uncertain<bool>` to a concrete boolean with a specified confidence.
-    *   `probability_exceeds()`: Test if the probability of a condition being true exceeds a threshold.
-    *   `implicit_conditional()`: A convenient method for "more likely than not" decisions.
-    *   `conditional()`: Implement `if-then-else` logic where the condition itself is uncertain.
-*   **Global Sample Cache:** An efficient, thread-local caching mechanism memoizes sampled values, preventing redundant computations and improving performance.
+*   **Precision is a parameter.** Every type is generic in its scalar, bounded by `RandScalar`
+    (`RealField + FromPrimitive`, blanket-implemented). `Uncertain<f64>`, `Uncertain<f32>`,
+    `Uncertain<Float106>` and `Uncertain<BFloat16>` all work, and a scalar added to
+    `deep_causality_num` tomorrow works with no line changed here. Nothing in `src/` names a
+    concrete scalar.
+*   **Two carriers over one graph.** `Uncertain<R>` is a real quantity; `UncertainBool<R>` is a
+    truth value. A comparison or a Bernoulli leaf yields the Boolean carrier over the *same*
+    `R`-carrying graph, because the tree beneath a Boolean root holds reals — a threshold, a
+    Bernoulli parameter, an arithmetic operand.
+*   **Probabilistic presence (`MaybeUncertain<R>`):** a real quantity that may be absent. Its
+    presence channel is an `UncertainBool<R>` and its value channel an `Uncertain<R>`, drawn at one
+    sample index so the two always belong to the same draw.
+*   **Rich distribution support:** `point`, `normal(mean, std_dev)`, `uniform(low, high)` on the
+    real carrier, and `bernoulli(p)` on the Boolean one — every parameter in the caller's scalar.
+*   **Intuitive operator overloading:** arithmetic (`+`, `-`, `*`, `/`, unary `-`) on the real
+    carrier, logic (`&`, `|`, `!`, `^`) on the Boolean one, and comparisons (`greater_than`,
+    `less_than`, `equals`, `approx_eq`, `within_range`, and the `*_uncertain` forms) crossing from
+    one to the other.
+*   **Lazy computation graph:** operations build a graph rather than evaluating, so a quantity used
+    twice in one expression is drawn once — `x - x` is exactly zero at every index.
+*   **Reproducible, addressed draws:** a draw is a function of three numbers — a `SampleSession`'s
+    seed, the sample index, and the leaf's ordinal — and of nothing else. Nothing is stored between
+    calls, no global or thread-local is consulted, and two graphs sharing a leaf agree about that
+    leaf at the same index. The same seed replays the same values in a later process.
+*   **Statistical analysis, in the caller's scalar:** `expected_value`, `standard_deviation`,
+    `estimate_probability`, and quasi-Monte-Carlo variants (`expected_value_qmc`,
+    `standard_deviation_qmc`, `estimate_probability_qmc`) over a low-discrepancy Sobol sequence.
+*   **Robust decision making:** `to_bool`, `probability_exceeds` and `implicit_conditional` collapse
+    a distribution to one verdict by sequential hypothesis testing (SPRT), drawing only as many
+    samples as the decision needs; `conditional` implements `if-then-else` on an uncertain
+    condition.
+*   **Ensembles into a carrier you name:** `materialize::<W>` returns `W::Type<R>` — a
+    `DenseVector`, a rank-1 `CausalTensor`, a `Vec` — so the ensemble arrives carrying that
+    container's own structure and this crate declares no ensemble type of its own.
+*   **The graph is an `Arrow`:** `Uncertain<R>: Arrow<In = SampleIndex, Out = Result<R, _>>`, so it
+    composes with downstream computation through `haft`'s combinators, statically and with no trait
+    object anywhere in the crate.
 
 ## Installation
 
@@ -52,192 +69,251 @@ Add `deep_causality_uncertain` to your `Cargo.toml` file:
 
 ```toml
 [dependencies]
-deep_causality_uncertain = "0.1.0" # Or the latest version
+deep_causality_uncertain = "0.5" # Or the latest version
 ```
 
 ## Usage
 
-Here are some basic examples to get started with `deep_causality_uncertain`.
-
-### Creating Uncertain Values
+### Creating uncertain values
 
 ```rust
-use deep_causality_uncertain::Uncertain;
+use deep_causality_uncertain::{Uncertain, UncertainBool};
 
-// A precise, known value
-let precise_value = Uncertain::<f64>::point(10.0);
+// A precise, known value.
+let precise = Uncertain::<f64>::point(10.0);
 
-// A value with normal distribution (e.g., sensor reading with noise)
-let noisy_sensor_reading = Uncertain::<f64>::normal(50.0, 2.5); // mean 50.0, std_dev 2.5
+// A sensor reading with Gaussian noise.
+let reading = Uncertain::<f64>::normal(25.0, 0.5);
 
-// A value uniformly distributed within a range
-let uncertain_range = Uncertain::<f64>::uniform(0.0, 100.0);
+// A value somewhere in a range.
+let jitter = Uncertain::<f64>::uniform(-1.0, 1.0);
 
-// An uncertain boolean (e.g., outcome of a coin flip)
-let coin_flip = Uncertain::<bool>::bernoulli(0.5);
+// An uncertain truth value: a Bernoulli trial.
+let coin = UncertainBool::<f64>::bernoulli(0.7);
 ```
 
-### Arithmetic Operations
-
-Uncertain values can be combined using standard arithmetic operators. The uncertainty is automatically propagated.
+The scalar is a parameter, so the same constructors serve any of them:
 
 ```rust
+use deep_causality_num::{BFloat16, Float106};
 use deep_causality_uncertain::Uncertain;
 
-let a = Uncertain::<f64>::normal(10.0, 1.0);
-let b = Uncertain::<f64>::normal(5.0, 0.5);
-
-// Addition: (10.0 +/- 1.0) + (5.0 +/- 0.5)
-let sum = a + b;
-println!("Expected sum: {:.2}", sum.expected_value(1000).unwrap()); // e.g., 15.00
-
-// Subtraction
-let diff = a - b;
-println!("Expected difference: {:.2}", diff.expected_value(1000).unwrap()); // e.g., 5.00
-
-// Multiplication
-let product = a * b;
-println!("Expected product: {:.2}", product.expected_value(1000).unwrap()); // e.g., 50.00
-
-// Division
-let quotient = a / b;
-println!("Expected quotient: {:.2}", quotient.expected_value(1000).unwrap()); // e.g., 2.00
-
-// Unary Negation
-let neg_a = -a;
-println!("Expected -a: {:.2}", neg_a.expected_value(1000).unwrap()); // e.g., -10.00
+let wide = Uncertain::<Float106>::normal(Float106::from(0.0), Float106::from(1.0));
+let narrow = Uncertain::<BFloat16>::normal(BFloat16::from(0.0), BFloat16::from(1.0));
+let single = Uncertain::<f32>::normal(0.0, 1.0);
 ```
 
-### Mapping and Transformations
+### Sessions: where a draw comes from
 
-Apply custom functions to uncertain values.
+Every draw is addressed by a session's seed and a sample index. Hold a `SampleSession` when you
+want a run to be reproducible; use the `_from_entropy` forms when you do not.
 
 ```rust
-use deep_causality_uncertain::Uncertain;
+use deep_causality_uncertain::{SampleSession, Uncertain};
 
-let temperature_celsius = Uncertain::<f64>::normal(25.0, 1.0);
+let reading = Uncertain::<f64>::normal(25.0, 0.5);
 
-// Map to Fahrenheit: F = C * 1.8 + 32
-let temperature_fahrenheit = temperature_celsius.map(|c| c * 1.8 + 32.0);
-println!("Expected temperature in Fahrenheit: {:.2}", temperature_fahrenheit.expected_value(1000).unwrap());
+// Reproducible: the same seed and index give the same value, in this process or a later one.
+let session = SampleSession::seeded(42);
+let a = reading.sample_at(&session, 0).unwrap();
+let b = reading.sample_at(&session, 0).unwrap();
+assert_eq!(a, b);
 
-// Map to a boolean condition: Is it hot? (> 30 Celsius)
-let is_hot = temperature_celsius.map_to_bool(|c| c > 30.0);
-println!("Probability of being hot: {:.2}%", is_hot.estimate_probability(1000).unwrap() * 100.0);
+// Advancing draws a fresh index each time.
+let mut walking = SampleSession::seeded(42);
+let first = reading.sample_next(&mut walking).unwrap();
+let second = reading.sample_next(&mut walking).unwrap();
+assert_ne!(first, second);
+
+// No session of your own: nothing about the value can be reproduced afterwards, and the name
+// says so.
+let once = reading.sample_from_entropy().unwrap();
+let _ = (a, b, first, second, once);
 ```
 
-### Comparison Operations
-
-Compare uncertain values or an uncertain value against a threshold. These operations return `Uncertain<bool>`.
+### Arithmetic and shared leaves
 
 ```rust
-use deep_causality_uncertain::Uncertain;
+use deep_causality_uncertain::{SampleSession, Uncertain};
 
-let sensor_reading = Uncertain::<f64>::normal(100.0, 5.0);
-let threshold = 105.0;
+let session = SampleSession::seeded(7);
+let x = Uncertain::<f64>::normal(10.0, 2.0);
+let y = Uncertain::<f64>::normal(3.0, 0.5);
 
-// Is sensor reading greater than threshold?
-let is_greater = sensor_reading.greater_than(threshold);
-println!("Probability sensor reading > {}: {:.2}%", threshold, is_greater.estimate_probability(1000).unwrap() * 100.0);
+let total = x.clone() + y.clone();
+let scaled = x.clone() * Uncertain::point(2.0);
 
-let target_value = Uncertain::<f64>::normal(98.0, 3.0);
-// Is sensor reading greater than another uncertain value?
-let sensor_gt_target = sensor_reading.gt_uncertain(&target_value);
-println!("Probability sensor reading > target: {:.2}%", sensor_gt_target.estimate_probability(1000).unwrap() * 100.0);
-
-// Check approximate equality within a tolerance
-let is_approx_100 = sensor_reading.approx_eq(100.0, 1.0); // within +/- 1.0
-println!("Probability sensor reading approx 100: {:.2}%", is_approx_100.estimate_probability(1000).unwrap() * 100.0);
+// A quantity used twice in one expression is one draw, not two.
+let difference = x.clone() - x.clone();
+assert_eq!(difference.sample_at(&session, 0).unwrap(), 0.0);
+let _ = (total, scaled);
 ```
 
-### Conditional Logic
-
-Implement `if-then-else` logic where the condition itself is uncertain.
+### Comparisons cross to the Boolean carrier
 
 ```rust
-use deep_causality_uncertain::Uncertain;
+use deep_causality_uncertain::{SampleSession, Uncertain, UncertainBool};
 
-let traffic_heavy = Uncertain::<bool>::bernoulli(0.7); // 70% chance of heavy traffic
-let time_via_main_road = Uncertain::<f64>::normal(30.0, 5.0); // 30 +/- 5 min
-let time_via_back_road = Uncertain::<f64>::normal(45.0, 2.0); // 45 +/- 2 min
+let session = SampleSession::seeded(7);
+let reading = Uncertain::<f64>::normal(100.0, 5.0);
 
-// If traffic is heavy, take back road, else take main road
-let estimated_travel_time = Uncertain::conditional(
-    traffic_heavy,
-    time_via_back_road,  // if traffic_heavy is true
-    time_via_main_road,  // if traffic_heavy is false
-);
+// Every comparison yields an `UncertainBool<R>` over the same graph.
+let too_high: UncertainBool<f64> = reading.greater_than(105.0);
+let in_band = reading.within_range(95.0, 105.0);
+let near = reading.approx_eq(100.0, 1.0);
 
-println!("Expected travel time: {:.2} minutes", estimated_travel_time.expected_value(1000).unwrap());
+let target = Uncertain::<f64>::normal(98.0, 3.0);
+let exceeds_target = reading.gt_uncertain(&target);
+
+let p: f64 = too_high.estimate_probability(&session, 1000).unwrap();
+println!("P(reading > 105) = {:.1}%", p * 100.0);
+let _ = (in_band, near, exceeds_target);
 ```
 
-### Statistical Properties
+### Mapping
 
-Calculate statistical measures of uncertain values.
+`map` and `map_to_bool` take a plain function pointer, so the graph stores no trait object. A
+captured parameter belongs in the graph rather than in a closure over it.
 
 ```rust
-use deep_causality_uncertain::Uncertain;
+use deep_causality_uncertain::{SampleSession, Uncertain};
 
-let stock_price = Uncertain::<f64>::normal(150.0, 10.0); // Current stock price
+let session = SampleSession::seeded(7);
+let celsius = Uncertain::<f64>::normal(25.0, 2.0);
 
-println!("Expected stock price: {:.2}", stock_price.expected_value(1000).unwrap());
-println!("Standard deviation of stock price: {:.2}", stock_price.standard_deviation(1000).unwrap());
+let fahrenheit = celsius.map(|c| c * 1.8 + 32.0);
+let is_hot = celsius.map_to_bool(|c| c > 30.0);
+
+let mean: f64 = fahrenheit.expected_value(&session, 1000).unwrap();
+let p: f64 = is_hot.estimate_probability(&session, 1000).unwrap();
+println!("{mean:.2} F, P(hot) = {:.1}%", p * 100.0);
 ```
 
-### Decision Making
-
-Convert uncertain boolean conditions into concrete decisions.
+### Conditional logic
 
 ```rust
-use deep_causality_uncertain::Uncertain;
+use deep_causality_uncertain::{SampleSession, Uncertain, UncertainBool};
 
-let system_healthy = Uncertain::<bool>::bernoulli(0.9); // 90% chance system is healthy
+let session = SampleSession::seeded(7);
+let heavy_traffic = UncertainBool::<f64>::bernoulli(0.7);
+let via_main = Uncertain::<f64>::normal(30.0, 5.0);
+let via_back = Uncertain::<f64>::normal(45.0, 2.0);
 
-// Make a decision with 95% confidence
-let decision_healthy = system_healthy.to_bool(0.95).unwrap();
-if decision_healthy {
-    println!("System is healthy (with 95% confidence).");
-} else {
-    println!("System is NOT healthy (with 95% confidence).");
+let travel_time = Uncertain::conditional(heavy_traffic, via_back, via_main);
+let mean: f64 = travel_time.expected_value(&session, 1000).unwrap();
+println!("Expected travel time: {mean:.1} minutes");
+```
+
+### Statistical properties
+
+```rust
+use deep_causality_uncertain::{SampleSession, Uncertain};
+
+let session = SampleSession::seeded(7);
+let price = Uncertain::<f64>::normal(150.0, 10.0);
+
+let mean: f64 = price.expected_value(&session, 1000).unwrap();
+let spread: f64 = price.standard_deviation(&session, 1000).unwrap();
+
+// Quasi-Monte-Carlo: a digitally shifted Sobol sequence, reproducible from its own seed and
+// faster-converging on low-dimension static graphs.
+let qmc_mean: f64 = price.expected_value_qmc(1024, 0xABCD).unwrap();
+
+println!("{mean:.2} +/- {spread:.2}  (QMC mean {qmc_mean:.2})");
+```
+
+### Decision making
+
+The three probabilities are stated in the caller's scalar, and the SPRT draws only as many samples
+as the decision needs.
+
+```rust
+use deep_causality_uncertain::{SampleSession, UncertainBool};
+
+let session = SampleSession::seeded(7);
+let healthy = UncertainBool::<f64>::bernoulli(0.9);
+
+// threshold, confidence, indifference region, sample budget.
+if healthy.to_bool(&session, 0.5, 0.95, 0.05, 1000).unwrap() {
+    println!("System is healthy at 95% confidence.");
 }
 
-// Implicit conditional (equivalent to probability_exceeds(0.5, 0.95, 1000))
-if system_healthy.implicit_conditional().unwrap() {
+// "More likely than not", with those defaults filled in.
+if healthy.implicit_conditional(&session).unwrap() {
     println!("System is more likely than not healthy.");
 }
 ```
 
-### Probabilistic Presence (`MaybeUncertain<T>`)
-
-Model values that might be present or absent with a certain probability.
+### Probabilistic presence (`MaybeUncertain<R>`)
 
 ```rust
-use deep_causality_uncertain::{MaybeUncertain, Uncertain, UncertainError};
+use deep_causality_uncertain::{MaybeUncertain, SampleSession, Uncertain};
 
-// A value that is certainly present, but its value is uncertain
-let certain_but_uncertain = MaybeUncertain::<f64>::from_uncertain(Uncertain::normal(10.0, 2.0));
-println!("Sampled value (certainly present): {:?}", certain_but_uncertain.sample().unwrap());
+let mut session = SampleSession::seeded(7);
 
-// A value that is certainly absent
-let certainly_absent = MaybeUncertain::<f64>::always_none();
-println!("Sampled value (certainly absent): {:?}", certainly_absent.sample().unwrap());
+// Certainly present, uncertain in value.
+let present = MaybeUncertain::<f64>::from_uncertain(Uncertain::normal(10.0, 2.0));
+assert!(present.sample(&mut session).unwrap().is_some());
 
-// A value that is probabilistically present (e.g., 70% chance)
-let probabilistically_present = MaybeUncertain::<f64>::from_bernoulli_and_uncertain(0.7, Uncertain::normal(5.0, 1.0));
-println!("Sampled value (probabilistically present): {:?}", probabilistically_present.sample().unwrap());
+// Certainly absent.
+let absent = MaybeUncertain::<f64>::always_none();
+assert!(absent.sample(&mut session).unwrap().is_none());
 
-// Check probability of presence
-println!("Probability of being present: {:.1}%", probabilistically_present.is_some().estimate_probability(1000).unwrap() * 100.0);
+// Present with probability 0.7.
+let intermittent = MaybeUncertain::<f64>::from_bernoulli_and_uncertain(0.7, Uncertain::normal(5.0, 1.0));
 
-// Arithmetic operations propagate None
-let sum_with_absent = certain_but_uncertain.clone() + certainly_absent.clone();
-println!("Sum with absent value: {:?}", sum_with_absent.sample().unwrap());
+// Absence propagates through arithmetic: one absent operand makes the sum absent.
+let sum = present.clone() + absent.clone();
+assert!(sum.sample(&mut session).unwrap().is_none());
 
-// Lift to Uncertain<T> if evidence of presence is sufficient
-match probabilistically_present.lift_to_uncertain(0.6, 0.95, 0.05, 1000) {
-    Ok(uncertain_value) => println!("Lifted to Uncertain<f64>: Expected value {:.2}", uncertain_value.expected_value(1000).unwrap()),
-    Err(e) => println!("Failed to lift: {}", e),
+// Collapse to a plain `Uncertain<R>` only if the evidence of presence clears the gate.
+let gate = SampleSession::seeded(8);
+match intermittent.lift_to_uncertain(&gate, 0.6, 0.95, 0.05, 1000) {
+    Ok(value) => {
+        let mean: f64 = value.expected_value(&gate, 1000).unwrap();
+        println!("Present; expected value {mean:.2}");
+    }
+    Err(e) => println!("Not enough evidence of presence: {e}"),
 }
+```
+
+### Ensembles
+
+`materialize` draws `n` samples into a container you name. The crate declares no ensemble type and
+depends on neither container crate — the witness decides where the draws land.
+
+```rust,ignore
+use deep_causality_linear::{DenseVector, DenseVectorWitness};
+use deep_causality_uncertain::{SampleSession, Uncertain};
+
+let mut session = SampleSession::seeded(7);
+let quantity = Uncertain::<f64>::normal(10.0, 2.0);
+
+let ensemble: DenseVector<f64> = quantity
+    .materialize::<DenseVectorWitness>(&mut session, 1000)
+    .unwrap();
+```
+
+Two quantities materialised with `materialize_at` from one session are drawn at the **same**
+indices, so draw *i* of one belongs with draw *i* of the other and a positional zip pairs them
+correctly. `materialize` advances the session instead, which does not correlate. See the crate
+documentation for the composition surface, the cartesian-traversal hazard, and the memory
+arithmetic for ensembles at scale.
+
+### The graph as an `Arrow`
+
+Evaluating the graph at an address is a pure function, which is what lets it be an `Arrow` and
+compose statically with downstream computation.
+
+```rust
+use deep_causality_haft::Arrow;
+use deep_causality_uncertain::{SampleIndex, SampleSession, Uncertain};
+
+let session = SampleSession::seeded(7);
+let quantity = Uncertain::<f64>::normal(10.0, 2.0);
+
+let at = SampleIndex::at(&session, 0);
+assert_eq!(quantity.run(at).unwrap(), quantity.run(at).unwrap());
 ```
 
 ## More Examples

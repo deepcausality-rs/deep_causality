@@ -5,7 +5,8 @@
 use crate::*;
 use deep_causality_haft::LogAddEntry;
 
-use deep_causality_uncertain::{Uncertain, UncertainBool, UncertainF64};
+use crate::{UncertainBool, UncertainF64};
+use deep_causality_uncertain::Uncertain;
 use std::sync::{Arc, RwLock};
 
 pub fn get_context() -> BaseContext {
@@ -106,9 +107,9 @@ pub fn get_test_causaloid_uncertain_bool() -> BaseCausaloid<f64, UncertainBool> 
         let threshold: NumericalValue = 0.55;
 
         let output = if obs > threshold {
-            Uncertain::<bool>::point(true)
+            UncertainBool::point(true)
         } else {
-            Uncertain::<bool>::point(false)
+            UncertainBool::point(false)
         };
         PropagatingEffect::pure(output)
     }

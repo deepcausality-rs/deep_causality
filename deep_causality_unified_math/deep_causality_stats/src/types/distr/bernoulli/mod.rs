@@ -57,6 +57,20 @@ impl Bernoulli {
     /// The bound is the representation's, not the scalar's, so widening the scalar does not move
     /// it. A caller who needs a probability finer than `2^-64` needs a different construction, not
     /// a wider float.
+    ///
+    /// # A probability within half an ULP of one is certain, and that bound *is* the scalar's
+    ///
+    /// The quantisation above happens inside this constructor. A separate rounding happens before
+    /// it, when the caller forms `p` at all: a scalar with few significand bits has no value
+    /// between its largest number below one and one itself, so a probability in that gap arrives
+    /// here as exactly `1.0` and takes the certain branch. At `BFloat16` the largest representable
+    /// probability below one is `0.99609375`, and every `p` from about `0.998047` upward is
+    /// already `1.0` by the time this function sees it — so a "99.9% likely" event is a certainty
+    /// at that width. [`Bernoulli::p`] reports the `1.0`, which is what was actually built.
+    ///
+    /// Unlike the `2^-64` floor, this one moves with the scalar and vanishes at a wide one. It has
+    /// no counterpart at zero: the format's subnormals reach far below any probability a caller
+    /// would write, so a small `p` stays small rather than collapsing to impossible.
     #[inline]
     pub fn new<T: RealField>(p: T) -> Result<Bernoulli, BernoulliDistributionError> {
         let p = p

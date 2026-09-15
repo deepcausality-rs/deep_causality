@@ -8,6 +8,7 @@
 use crate::errors::stats_error::StatsError;
 use crate::types::logistic_config::LogisticConfig;
 use crate::types::logistic_fit::LogisticFit;
+use crate::types::pairwise_sum::PairwiseSum;
 use alloc::vec;
 use alloc::vec::Vec;
 use deep_causality_algebra::{RealField, Scalar};
@@ -99,8 +100,11 @@ where
     // likelihood flattens. That is the separable case, and it surfaces here as a vanishing pivot
     // rather than as an arbitrarily large step returned as an estimate.
     for iteration in 1..=config.max_iterations {
-        let mut grad = vec![T::zero(); p];
-        let mut hess = vec![T::zero(); p * p];
+        // Balanced-tree accumulators: the gradient and Hessian entries are sums over every row,
+        // and a running total stalls once it outgrows its addends. See `PairwiseSum`. `eta` below
+        // stays a running total deliberately — it sums the `p` columns of one row, not the rows.
+        let mut grad_acc = vec![PairwiseSum::new(); p];
+        let mut hess_acc = vec![PairwiseSum::new(); p * p];
 
         for (row, &yi) in x.iter().zip(y.iter()) {
             let mut eta = T::zero();
@@ -111,13 +115,16 @@ where
             let w = pi * (one - pi);
             let resid = yi - pi;
             for a in 0..p {
-                grad[a] += row[a] * resid;
+                grad_acc[a].push(row[a] * resid);
                 let ra = row[a];
                 for b in 0..p {
-                    hess[a * p + b] += ra * w * row[b];
+                    hess_acc[a * p + b].push(ra * w * row[b]);
                 }
             }
         }
+
+        let mut grad: Vec<T> = grad_acc.iter().map(|sum| sum.total()).collect();
+        let mut hess: Vec<T> = hess_acc.iter().map(|sum| sum.total()).collect();
         // The penalty reaches every column but the exempted one. Shrinking an intercept toward
         // zero shrinks the fitted odds toward even, so a design that carries a ones-column and
         // wants the base rate preserved names that column in `Penalisation::Excluding`.

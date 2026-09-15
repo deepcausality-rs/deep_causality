@@ -4,28 +4,28 @@
  */
 
 use criterion::{Criterion, criterion_group, criterion_main};
-use deep_causality_uncertain::{SampledValue, SamplerKind, Uncertain, with_global_cache};
+use deep_causality_uncertain::{Uncertain, UncertainBool};
 
 // --- Sampling Performance Benchmarks ---
 
 fn bench_sampling_point(c: &mut Criterion) {
     let uncertain = Uncertain::<f64>::point(10.0);
     c.bench_function("sampling_point", |b| {
-        b.iter(|| uncertain.sample().unwrap());
+        b.iter(|| uncertain.sample_from_entropy().unwrap());
     });
 }
 
 fn bench_sampling_normal(c: &mut Criterion) {
     let uncertain = Uncertain::<f64>::normal(10.0, 2.0);
     c.bench_function("sampling_normal", |b| {
-        b.iter(|| uncertain.sample().unwrap());
+        b.iter(|| uncertain.sample_from_entropy().unwrap());
     });
 }
 
 fn bench_sampling_bernoulli(c: &mut Criterion) {
-    let uncertain = Uncertain::<bool>::bernoulli(0.5);
+    let uncertain = UncertainBool::<f64>::bernoulli(0.5);
     c.bench_function("sampling_bernoulli", |b| {
-        b.iter(|| uncertain.sample().unwrap());
+        b.iter(|| uncertain.sample_from_entropy().unwrap());
     });
 }
 
@@ -37,19 +37,19 @@ fn bench_sampling_arithmetic_chain(c: &mut Criterion) {
     let d = (a + b) * c_val; // (Normal + Normal) * Normal
 
     c.bench_function("sampling_arithmetic_chain", |b| {
-        b.iter(|| d.sample().unwrap());
+        b.iter(|| d.sample_from_entropy().unwrap());
     });
 }
 
 // Benchmark for a conditional operation
 fn bench_sampling_conditional(c: &mut Criterion) {
-    let condition = Uncertain::<bool>::bernoulli(0.5);
+    let condition = UncertainBool::<f64>::bernoulli(0.5);
     let if_true = Uncertain::<f64>::normal(100.0, 10.0);
     let if_false = Uncertain::<f64>::normal(200.0, 20.0);
     let result = Uncertain::conditional(condition, if_true, if_false);
 
     c.bench_function("sampling_conditional", |b| {
-        b.iter(|| result.sample().unwrap());
+        b.iter(|| result.sample_from_entropy().unwrap());
     });
 }
 
@@ -98,7 +98,7 @@ fn bench_uncertain_f64_add_and_sample(c: &mut Criterion) {
             let cloned_a = a.clone();
             let cloned_b = b.clone();
             let sum = cloned_a + cloned_b;
-            sum.sample().unwrap();
+            sum.sample_from_entropy().unwrap();
         });
     });
 }
@@ -119,50 +119,7 @@ fn bench_complex_chain_and_sample(c: &mut Criterion) {
 
     c.bench_function("complex_chain_and_sample", |b| {
         b.iter(|| {
-            final_decision.sample().unwrap();
-        });
-    });
-}
-
-// --- Cache Effect Benchmarks ---
-
-// Benchmark sampling with cache hits
-fn bench_sampling_with_cache_hits(c: &mut Criterion) {
-    let uncertain = Uncertain::<f64>::normal(10.0, 1.0);
-    let _id = uncertain.id();
-    let sample_index_to_hit = 0; // Always hit this index
-
-    // Pre-populate the cache once before the benchmark loop
-    with_global_cache(|cache| {
-        cache.clear(); // Clear once to ensure a clean state
-        cache.insert(
-            (_id, sample_index_to_hit, SamplerKind::Mc),
-            SampledValue::Float(42.0),
-        );
-    });
-
-    c.bench_function("sampling_with_cache_hits", |b| {
-        b.iter(|| {
-            let _ = uncertain.sample_with_index(sample_index_to_hit).unwrap();
-        });
-    });
-}
-
-// Benchmark sampling with cache misses (always recomputing)
-fn bench_sampling_with_cache_misses(c: &mut Criterion) {
-    let uncertain = Uncertain::<f64>::normal(10.0, 1.0);
-    let _id = uncertain.id();
-
-    // Clear the cache once before the benchmark loop
-    with_global_cache(|cache| {
-        cache.clear();
-    });
-
-    c.bench_function("sampling_with_cache_misses", |b| {
-        let mut i = 0; // Use a new, unique index for each iteration
-        b.iter(|| {
-            let _ = uncertain.sample_with_index(i).unwrap();
-            i += 1; // Increment index for next iteration to ensure a miss
+            final_decision.sample_from_entropy().unwrap();
         });
     });
 }
@@ -179,7 +136,5 @@ criterion_group!(
     bench_uncertain_f64_map_graph_construction,
     bench_uncertain_f64_add_and_sample,
     bench_complex_chain_and_sample,
-    bench_sampling_with_cache_hits,
-    bench_sampling_with_cache_misses,
 );
 criterion_main!(benches);

@@ -6,6 +6,7 @@
 //! Ridge-penalised least squares, in a materialised and a streaming form.
 
 use crate::errors::stats_error::StatsError;
+use crate::types::pairwise_sum::PairwiseSum;
 use crate::types::ridge_config::RidgeConfig;
 use crate::types::ridge_fit::RidgeFit;
 use alloc::vec;
@@ -95,8 +96,10 @@ where
     let exempt = config.penalisation.exempt();
 
     let cells = square(p)?;
-    let mut xtx = vec![T::zero(); cells];
-    let mut xty = vec![T::zero(); p];
+    // Balanced-tree accumulators rather than running totals: a normal-equation entry is a sum over
+    // every row, and a running total stalls once it outgrows its addends. See `PairwiseSum`.
+    let mut xtx_acc = vec![PairwiseSum::new(); cells];
+    let mut xty_acc = vec![PairwiseSum::new(); p];
     let mut n = 0usize;
 
     for (row, yi) in rows() {
@@ -111,10 +114,10 @@ where
             ));
         }
         for a in 0..p {
-            xty[a] += row[a] * yi;
+            xty_acc[a].push(row[a] * yi);
             let ra = row[a];
             for b in 0..p {
-                xtx[a * p + b] += ra * row[b];
+                xtx_acc[a * p + b].push(ra * row[b]);
             }
         }
         n += 1;
@@ -123,6 +126,9 @@ where
     if n == 0 {
         return Err(StatsError::EmptyInput("a fit needs at least one row"));
     }
+
+    let mut xtx: Vec<T> = xtx_acc.iter().map(|sum| sum.total()).collect();
+    let xty: Vec<T> = xty_acc.iter().map(|sum| sum.total()).collect();
 
     // A negative penalty is not rejected here. It subtracts from the diagonal rather than adding
     // to it, which is still a solvable system while the diagonal survives; only a penalty that
@@ -159,15 +165,16 @@ where
     }
 
     // Residual variance on `max(n − p, 1)` degrees of freedom. The second pass over the rows.
-    let mut rss = T::zero();
+    let mut rss_acc = PairwiseSum::new();
     for (row, yi) in rows() {
         let mut fitted = T::zero();
         for (a, &r) in row.iter().enumerate() {
             fitted += beta[a] * r;
         }
         let e = yi - fitted;
-        rss += e * e;
+        rss_acc.push(e * e);
     }
+    let rss = rss_acc.total();
     let dof = T::from_usize(if n > p { n - p } else { 1 }).ok_or_else(|| {
         StatsError::ConversionFailed(
             "a degrees-of-freedom count is not representable in the working scalar",
@@ -243,8 +250,9 @@ where
     // Each pass rebuilds its rows from the caller's source. The `Vec` a row arrives in is dropped
     // as soon as it has been accumulated, so the peak is one row, not the design.
     let cells = square(columns)?;
-    let mut xtx = vec![T::zero(); cells];
-    let mut xty = vec![T::zero(); columns];
+    // As in `fit_ridge`: one balanced-tree accumulator per normal-equation entry.
+    let mut xtx_acc = vec![PairwiseSum::new(); cells];
+    let mut xty_acc = vec![PairwiseSum::new(); columns];
     let mut n = 0usize;
 
     for (row, yi) in rows.clone() {
@@ -259,10 +267,10 @@ where
             ));
         }
         for a in 0..columns {
-            xty[a] += row[a] * yi;
+            xty_acc[a].push(row[a] * yi);
             let ra = row[a];
             for b in 0..columns {
-                xtx[a * columns + b] += ra * row[b];
+                xtx_acc[a * columns + b].push(ra * row[b]);
             }
         }
         n += 1;
@@ -270,6 +278,9 @@ where
     if n == 0 {
         return Err(StatsError::EmptyInput("a fit needs at least one row"));
     }
+
+    let mut xtx: Vec<T> = xtx_acc.iter().map(|sum| sum.total()).collect();
+    let xty: Vec<T> = xty_acc.iter().map(|sum| sum.total()).collect();
     for a in 0..columns {
         if exempt != Some(a) {
             xtx[a * columns + a] += config.penalty;
@@ -292,15 +303,16 @@ where
         ));
     }
 
-    let mut rss = T::zero();
+    let mut rss_acc = PairwiseSum::new();
     for (row, yi) in rows {
         let mut fitted = T::zero();
         for (a, &r) in row.iter().enumerate() {
             fitted += beta[a] * r;
         }
         let e = yi - fitted;
-        rss += e * e;
+        rss_acc.push(e * e);
     }
+    let rss = rss_acc.total();
     let dof = T::from_usize(if n > columns { n - columns } else { 1 }).ok_or_else(|| {
         StatsError::ConversionFailed(
             "a degrees-of-freedom count is not representable in the working scalar",

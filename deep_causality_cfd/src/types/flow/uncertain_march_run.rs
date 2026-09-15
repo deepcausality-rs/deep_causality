@@ -23,14 +23,13 @@ use deep_causality_haft::LogSize;
 use deep_causality_physics::PhysicsError;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{LatticeComplex, Manifold};
-use deep_causality_uncertain::ProbabilisticType;
 
 /// The injected uncertain-march pipeline before a geometry is bound.
-pub struct UncertainMarchPipeline<'c, R: CfdScalar + ProbabilisticType> {
+pub struct UncertainMarchPipeline<'c, R: CfdScalar> {
     config: &'c UncertainMarchConfig<R>,
 }
 
-impl<'c, R: CfdScalar + ProbabilisticType> UncertainMarchPipeline<'c, R> {
+impl<'c, R: CfdScalar> UncertainMarchPipeline<'c, R> {
     pub(crate) fn new(config: &'c UncertainMarchConfig<R>) -> Self {
         Self { config }
     }
@@ -49,12 +48,12 @@ impl<'c, R: CfdScalar + ProbabilisticType> UncertainMarchPipeline<'c, R> {
 }
 
 /// A geometry-bound, runnable uncertain-inflow march.
-pub struct UncertainMarchRun<'c, 'm, const D: usize, R: CfdScalar + ProbabilisticType> {
+pub struct UncertainMarchRun<'c, 'm, const D: usize, R: CfdScalar> {
     config: &'c UncertainMarchConfig<R>,
     manifold: &'m Manifold<LatticeComplex<D, R>, R>,
 }
 
-impl<'c, 'm, const D: usize, R: CfdScalar + ProbabilisticType> UncertainMarchRun<'c, 'm, D, R> {
+impl<'c, 'm, const D: usize, R: CfdScalar> UncertainMarchRun<'c, 'm, D, R> {
     /// Run the sensor-fed march, returning the owned report.
     ///
     /// # Errors

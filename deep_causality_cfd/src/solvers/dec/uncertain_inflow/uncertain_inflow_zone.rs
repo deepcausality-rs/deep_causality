@@ -7,7 +7,6 @@
 
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
-use deep_causality_uncertain::ProbabilisticType;
 
 use super::dropout_verbosity::DropoutVerbosity;
 use super::uncertain_boundary_source::UncertainBoundarySource;
@@ -38,7 +37,7 @@ pub struct UncertainInflowZone<R> {
 
 impl<R> UncertainInflowZone<R>
 where
-    R: RealField + FromPrimitive + ProbabilisticType + core::fmt::Debug,
+    R: RealField + FromPrimitive + core::fmt::Debug,
 {
     /// A zone driving the `wall_axis` wall (`max_side` face) with a tangential `flow_axis`
     /// velocity, falling back to `default_inflow` until the sensor first reads present. The value
@@ -54,11 +53,13 @@ where
     }
 
     /// Sets the SPRT presence-gate parameters (delegated to the source).
+    ///
+    /// The three probabilities are stated in the zone's own scalar, as they are on the source.
     pub fn with_presence_gate(
         mut self,
-        threshold: f64,
-        confidence: f64,
-        epsilon: f64,
+        threshold: R,
+        confidence: R,
+        epsilon: R,
         max_samples: usize,
     ) -> Self {
         self.source = self
@@ -75,6 +76,16 @@ where
 
     /// Opt into a variance-reduced **Quasi-Monte-Carlo collapse** of the present sample (delegated;
     /// the SPRT presence gate stays Monte-Carlo). See [`UncertainBoundarySource::with_qmc_collapse`].
+    /// Makes the presence gate reproducible from `base_seed` and the step index.
+    ///
+    /// Forwards to [`UncertainBoundarySource::with_gate_seed`]. Without it the gate's draws come
+    /// from host entropy, which is the right default for a production march and the wrong one for
+    /// a verification run that has to be bit-identical across invocations.
+    pub fn with_gate_seed(mut self, base_seed: u64) -> Self {
+        self.source = self.source.with_gate_seed(base_seed);
+        self
+    }
+
     pub fn with_qmc_collapse(mut self, base_seed: u64) -> Self {
         self.source = self.source.with_qmc_collapse(base_seed);
         self

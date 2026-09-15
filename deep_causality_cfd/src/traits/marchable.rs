@@ -96,7 +96,7 @@ where
 #[cfg(feature = "std")]
 impl<R> MarchDispatch<R> for crate::types::flow_config::UncertainMarchConfig<R>
 where
-    R: CfdScalar + deep_causality_uncertain::ProbabilisticType,
+    R: CfdScalar,
 {
     type Pipeline<'c>
         = crate::types::flow::UncertainMarchPipeline<'c, R>

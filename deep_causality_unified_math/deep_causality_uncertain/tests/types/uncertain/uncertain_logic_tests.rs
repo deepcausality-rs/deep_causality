@@ -3,49 +3,46 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_uncertain::Uncertain;
-use rusty_fork::rusty_fork_test;
+use deep_causality_uncertain::UncertainBool;
 
-rusty_fork_test! {
-    #[test]
-    fn test_uncertain_bool_bitand() {
-        let t = Uncertain::<bool>::point(true);
-        let f = Uncertain::<bool>::point(false);
+#[test]
+fn test_uncertain_bool_bitand() {
+    let t = UncertainBool::<f64>::point(true);
+    let f = UncertainBool::<f64>::point(false);
 
-        assert!((t.clone() & t.clone()).sample().unwrap());
-        assert!(!(t.clone() & f.clone()).sample().unwrap());
-        assert!(!(f.clone() & t.clone()).sample().unwrap());
-        assert!(!(f.clone() & f.clone()).sample().unwrap());
-    }
+    assert!((t.clone() & t.clone()).sample_from_entropy().unwrap());
+    assert!(!(t.clone() & f.clone()).sample_from_entropy().unwrap());
+    assert!(!(f.clone() & t.clone()).sample_from_entropy().unwrap());
+    assert!(!(f.clone() & f.clone()).sample_from_entropy().unwrap());
+}
 
-    #[test]
-    fn test_uncertain_bool_bitor() {
-        let t = Uncertain::<bool>::point(true);
-        let f = Uncertain::<bool>::point(false);
+#[test]
+fn test_uncertain_bool_bitor() {
+    let t = UncertainBool::<f64>::point(true);
+    let f = UncertainBool::<f64>::point(false);
 
-        assert!((t.clone() | t.clone()).sample().unwrap());
-        assert!((t.clone() | f.clone()).sample().unwrap());
-        assert!((f.clone() | t.clone()).sample().unwrap());
-        assert!(!(f.clone() | f.clone()).sample().unwrap());
-    }
+    assert!((t.clone() | t.clone()).sample_from_entropy().unwrap());
+    assert!((t.clone() | f.clone()).sample_from_entropy().unwrap());
+    assert!((f.clone() | t.clone()).sample_from_entropy().unwrap());
+    assert!(!(f.clone() | f.clone()).sample_from_entropy().unwrap());
+}
 
-    #[test]
-    fn test_uncertain_bool_not() {
-        let t = Uncertain::<bool>::point(true);
-        let f = Uncertain::<bool>::point(false);
+#[test]
+fn test_uncertain_bool_not() {
+    let t = UncertainBool::<f64>::point(true);
+    let f = UncertainBool::<f64>::point(false);
 
-        assert!(!(!t).sample().unwrap());
-        assert!((!f).sample().unwrap());
-    }
+    assert!(!(!t).sample_from_entropy().unwrap());
+    assert!((!f).sample_from_entropy().unwrap());
+}
 
-    #[test]
-    fn test_uncertain_bool_bitxor() {
-        let t = Uncertain::<bool>::point(true);
-        let f = Uncertain::<bool>::point(false);
+#[test]
+fn test_uncertain_bool_bitxor() {
+    let t = UncertainBool::<f64>::point(true);
+    let f = UncertainBool::<f64>::point(false);
 
-        assert!(!(t.clone() ^ t.clone()).sample().unwrap());
-        assert!((t.clone() ^ f.clone()).sample().unwrap());
-        assert!((f.clone() ^ t.clone()).sample().unwrap());
-        assert!(!(f.clone() ^ f.clone()).sample().unwrap());
-    }
+    assert!(!(t.clone() ^ t.clone()).sample_from_entropy().unwrap());
+    assert!((t.clone() ^ f.clone()).sample_from_entropy().unwrap());
+    assert!((f.clone() ^ t.clone()).sample_from_entropy().unwrap());
+    assert!(!(f.clone() ^ f.clone()).sample_from_entropy().unwrap());
 }

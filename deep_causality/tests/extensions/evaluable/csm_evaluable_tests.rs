@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::{ActionParameterValue, CsmEvaluable, UncertainParameter};
+use deep_causality::{ActionParameterValue, CsmEvaluable, UncertainBool, UncertainParameter};
 use deep_causality_uncertain::Uncertain;
 
 #[test]
@@ -24,8 +24,8 @@ fn test_bool_evaluable() {
 
 #[test]
 fn test_uncertain_bool_evaluable() {
-    let ub_true = Uncertain::<bool>::point(true);
-    let ub_false = Uncertain::<bool>::point(false);
+    let ub_true = UncertainBool::point(true);
+    let ub_false = UncertainBool::point(false);
 
     // Implicit conditional (None params)
     assert!(ub_true.is_active(None).unwrap());

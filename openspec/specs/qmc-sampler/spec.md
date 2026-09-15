@@ -4,31 +4,45 @@
 `Uncertain<R>`'s batch estimators converge at the Monte-Carlo rate `~1/√N`. For the
 low-dimension presence/collapse gates evaluated at high sample counts, a
 low-discrepancy sequence converges far faster (`~(log N)^d / N`). This capability
-adds `QmcSampler` — an alternative `Sampler<T>` that draws each leaf by inverse-CDF
+adds `QmcSampler` — an alternative `Sampler<R>` that draws each leaf by inverse-CDF
 on a digitally shifted Sobol point — with an enforced soundness boundary (static
-trees only; never SPRT) and an opt-in batch-estimator surface. The default
-`SequentialSampler` and all existing f64 behaviour are unchanged.
+trees only; never SPRT) and an opt-in batch-estimator surface. `SequentialSampler`
+remains the default.
+
+Recorded f64 values are **not** preserved: `uncertain-realfield-generic` re-addresses
+every leaf draw by seed, index and ordinal, so a sequence pinned before that change
+does not reproduce after it. The sampler's own contract — a Sobol point is a function
+of its index and the digital shift — is unchanged, and was already the model the rest
+of the crate moved to.
 
 ## Requirements
 
 ### Requirement: QmcSampler as an alternative Sampler
-`deep_causality_uncertain` SHALL provide a `QmcSampler` implementing `Sampler<T>`
-for every supported `ProbabilisticType`, alongside the existing
-`SequentialSampler`. `QmcSampler` SHALL evaluate an `Uncertain<R>` computation
-graph by drawing each stochastic leaf through the inverse-CDF transforms (never
-through rejection sampling), using one coordinate of a Sobol point per leaf. All
-deterministic node kinds (arithmetic, comparison, logical, fmap/apply, function,
-negation) SHALL be evaluated identically to `SequentialSampler`. `SequentialSampler`
-SHALL remain the default; existing default behavior and seeded MC bit-output SHALL
-be unchanged.
+`deep_causality_uncertain` SHALL provide a `QmcSampler` implementing `Sampler<R>` for every scalar the crate's blanket bound admits, alongside the existing `SequentialSampler`. `QmcSampler` SHALL evaluate an `Uncertain<R>` computation graph by drawing each stochastic leaf through the inverse-CDF transforms (never through rejection sampling), using one coordinate of a Sobol point per leaf. All deterministic node kinds (arithmetic, comparison, logical, function, negation) SHALL be evaluated identically to `SequentialSampler`. `SequentialSampler` SHALL remain the default.
+
+The bound was "every supported `ProbabilisticType`", a trait implemented for three named types.
+That trait is removed and the bound is now the blanket scalar bound, so the QMC sampler serves every
+scalar the crate serves — including ones it does not name.
+
+The fmap and apply node kinds leave the list of deterministic kinds because the arms are removed;
+no builder ever produced them. QMC's guard against data-dependent structure is unchanged.
+
+`SequentialSampler` remains the default. The previous clause "seeded MC bit-output SHALL be
+unchanged" is dropped: leaf draws are re-addressed by seed, index and leaf ordinal, so a seeded
+Monte-Carlo sequence recorded before this change does not reproduce after it. That is stated as
+breaking rather than silently violated.
 
 #### Scenario: QMC reduces error at equal sample count
-- **WHEN** the mean of a low-dimension static `Uncertain<f64>` integrand is estimated with `QmcSampler` and with `SequentialSampler` at the same sample count `N`
+- **WHEN** the mean of a low-dimension static `Uncertain<R>` integrand is estimated with `QmcSampler` and with `SequentialSampler` at the same sample count `N`
 - **THEN** the QMC estimate's error against the analytic value is no larger than the MC estimate's, and converges at a faster rate as `N` grows
 
 #### Scenario: Deterministic node handling matches the MC sampler
 - **WHEN** a tree mixing distributions with arithmetic, comparison, and logical operators is evaluated under QMC
 - **THEN** the deterministic operators produce the same composition of leaf values as `SequentialSampler` would for those same leaf values
+
+#### Scenario: QMC serves a scalar the crate does not name
+- **WHEN** a `QmcSampler` is built over an `Uncertain<R>` at a scalar named nowhere in the crate
+- **THEN** it compiles and draws, with no implementation added for that scalar
 
 ### Requirement: Fixed dimension assignment over static trees
 `QmcSampler` SHALL perform a deterministic pre-pass over the immutable computation
@@ -72,15 +86,6 @@ without a seed SHALL use the raw (unshifted) sequence.
 #### Scenario: Standard deviation is non-degenerate under QMC
 - **WHEN** `standard_deviation_qmc` is computed over a QMC batch of a non-constant integrand
 - **THEN** the result is a positive estimate of sampling error, not zero
-
-### Requirement: Sampler-discriminated sample cache
-The global sample-cache key SHALL be extended to include a sampler discriminant so
-that Monte-Carlo and Quasi-Monte-Carlo samples for the same `(uncertain_id,
-sample_index)` are stored separately and never cross-served within one process.
-
-#### Scenario: MC and QMC samples do not collide
-- **WHEN** the same `Uncertain` is sampled at the same index under both `SequentialSampler` and `QmcSampler` in one process
-- **THEN** each sampler retrieves its own cached value, and neither observes the other's
 
 ### Requirement: Opt-in batch-estimator surface
 QMC SHALL be selectable on the batch estimators `expected_value`,

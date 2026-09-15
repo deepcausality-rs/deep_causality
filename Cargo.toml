@@ -71,7 +71,6 @@ getrandom = { version = "0.4" }
 libm = { version = "0.2" }
 parquet = { version = "59", default-features = false }
 rayon = { version = "1.12" }
-rusty-fork = { version = "0.3" }
 tempfile = { version = "3", default-features = false }
 tokio = { version = "1" }
 

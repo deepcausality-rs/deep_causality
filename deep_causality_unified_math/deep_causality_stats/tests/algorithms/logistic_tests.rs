@@ -1270,3 +1270,122 @@ fn test_fit_logistic_exempt_column_outside_the_design_is_refused() {
         "an exempt column past the design width is a shape error, got {variant:?}"
     );
 }
+
+// ---------------------------------------------------------------------------
+// Reach: the gradient and the Hessian are reductions over every row.
+//
+// Every fixture above is eight rows or fewer, where any arrangement of the sums gives the same
+// answer. `Xᵀ(y − p)` and `XᵀWX` are sums over the whole design, so the arrangement only begins to
+// matter once the design is long — which is where a running total outgrows its addends and stops
+// moving, quietly and without leaving the type.
+// ---------------------------------------------------------------------------
+
+/// A thousand rows whose labels alternate against a slowly rising covariate.
+///
+/// The base rate is exactly one half and the covariate carries a real but modest trend, so the
+/// unpenalised estimate is finite and the fit is not separable. The covariate runs over `−1..1`, a
+/// range every scalar here resolves, while the *count* is what makes the reductions long.
+fn long_alternating_design<T: FromPrimitive + RealField>(n: usize) -> (Vec<Vec<T>>, Vec<T>) {
+    let mut x = Vec::with_capacity(n);
+    let mut y = Vec::with_capacity(n);
+    for i in 0..n {
+        let t = (i as f64 / (n as f64 - 1.0)) * 2.0 - 1.0;
+        // Labels alternate, so the base rate is 1/2 exactly; the trend comes from the covariate
+        // being shifted slightly upward for the ones.
+        let label = (i % 2) as f64;
+        x.push(vec![lift::<T>(1.0), lift::<T>(t + 0.25 * label)]);
+        y.push(lift::<T>(label));
+    }
+    (x, y)
+}
+
+/// The score equation at the fitted coefficients is zero, over a long design.
+///
+/// This is the first-order condition that defines the unpenalised estimate, and its intercept
+/// component says something a summation defect cannot fake: the fitted probabilities average to the
+/// observed base rate. The residual is formed here by a plain sum over the rows — a different
+/// computation from the one under test — so agreement means both arrangements found the same
+/// stationary point.
+///
+/// Row K: run at every scalar wide enough to carry a Newton solve.
+///
+/// # What this case cannot separate
+///
+/// `BFloat16` is not among them, so this does not detect a stalling total: an iteratively
+/// reweighted least-squares solve squares the condition number, which two decimal digits cannot
+/// carry however the sums are arranged. At `f32` and wider a left-to-right fold over a thousand
+/// rows is still accurate and this case passes under both arrangements — verified by injecting the
+/// naive fold and watching it pass. It is regression coverage for the accumulator change; the
+/// detection lives in `pairwise_sum_tests`.
+fn check_long_design_satisfies_the_score_equation<T>(n: usize, fit_cfg: Fit)
+where
+    T: RealField + FromPrimitive + core::fmt::Debug,
+{
+    let (x, y) = long_alternating_design::<T>(n);
+    let fit = expect_fit(
+        fit_logistic(
+            &x,
+            &y,
+            &LogisticConfig::new(T::zero(), 100, lift::<T>(fit_cfg.tolerance)),
+        ),
+        "a long alternating design has a finite unpenalised fit",
+    );
+
+    let g = score_residual(&x, &y, &fit.beta);
+    // The gradient is a sum over `n` rows, so its scale grows with `n`; the condition is that it
+    // vanishes relative to that, not against an absolute constant.
+    //
+    // The slack is the shared `converged` figure: the fit stops when the step falls below its
+    // tolerance, so the gradient it leaves is of order `sqrt(2·H·t)`, and dividing by `n` makes
+    // this a per-row average, which is smaller still.
+    let scale = lift::<T>(n as f64);
+    for (i, component) in g.iter().enumerate() {
+        assert!(
+            close(*component / scale, T::zero(), lift::<T>(fit_cfg.converged)),
+            "score component {i} is {:?} over {n} rows, which is not stationary",
+            component.to_f64()
+        );
+    }
+}
+
+#[test]
+fn test_logistic_over_a_long_design_satisfies_the_score_equation() {
+    for n in [256usize, 1000] {
+        check_long_design_satisfies_the_score_equation::<f32>(n, FIT_F32);
+        check_long_design_satisfies_the_score_equation::<f64>(n, FIT_F64);
+        check_long_design_satisfies_the_score_equation::<Float106>(n, FIT_F106);
+    }
+}
+
+/// Row G over a long design: flipping every label mirrors the fit.
+///
+/// Replacing `y` by `1 − y` negates the log-odds, so both coefficients must negate. A sign lost
+/// inside the gradient's accumulation would leave one of them where it was, and the Hessian — which
+/// is even in the labels — would not notice.
+#[test]
+fn test_flipping_every_label_negates_the_fit_over_a_long_design() {
+    let n = 1000;
+    let (x, y) = long_alternating_design::<f64>(n);
+    let flipped: Vec<f64> = y.iter().map(|v| 1.0 - v).collect();
+    let config = LogisticConfig::new(0.0_f64, 100, FIT_F64.tolerance);
+
+    let fit = expect_fit(
+        fit_logistic(&x, &y, &config),
+        "the fit on the original labels",
+    );
+    let mirrored = expect_fit(
+        fit_logistic(&x, &flipped, &config),
+        "the fit on flipped labels",
+    );
+
+    assert!(
+        l2_norm(&fit.beta) > 1e-6,
+        "the fixture must produce a non-zero fit, or the sign is asserted where it vanishes"
+    );
+    for (a, b) in fit.beta.iter().zip(mirrored.beta.iter()) {
+        assert!(
+            close(*a, -*b, FIT_F64.converged),
+            "flipping the labels must negate the coefficients: {a} against {b}"
+        );
+    }
+}

@@ -3,9 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use alloc::vec::Vec;
-
 use alloc::sync::Arc;
+use alloc::vec::Vec;
 
 mod accessors;
 mod api;

@@ -9,7 +9,15 @@
 //! `MaybeUncertain<Float106>` present/dropout surface works.
 
 use deep_causality_num::Float106;
-use deep_causality_uncertain::{MaybeUncertain, Uncertain};
+use deep_causality_uncertain::{MaybeUncertain, SampleSession, Uncertain};
+
+/// Every test below that observes a draw installs this seed first.
+///
+/// Without it the draws come from OS entropy, and a test that gates on a sampled decision is a
+/// coin flip with a good bias rather than an assertion. Measured before seeding: five tests in
+/// this crate failed across ~360 runs, and 41 sampled-decision call sites were exposed. The
+/// assertions are unchanged; only the entropy source is.
+const SEED: u64 = 0x5EED_2026;
 
 /// `1/3` at double-double precision: its low limb is nonzero, so it is unrepresentable in
 /// f64 and exercises the precision-carrying path.
@@ -17,37 +25,60 @@ fn one_third() -> Float106 {
     Float106::from(1.0) / Float106::from(3.0)
 }
 
+/// A probability at the graph's scalar: `lift_to_uncertain`'s parameters are dimensionless and
+/// stated in `R`, so a `Float106` graph states them there too.
+fn f106(x: f64) -> Float106 {
+    Float106::from(x)
+}
+
 #[test]
 fn certain_float106_is_lossless() {
+    let session = SampleSession::seeded(SEED);
     let x = one_third();
     assert_ne!(x.lo(), 0.0, "test value must exercise the low limb");
 
     let u = Uncertain::<Float106>::point(x);
-    let s = u.sample().unwrap();
+    let s = u.sample_at(&session, 0).unwrap();
 
     assert_eq!(s, x, "certain Float106 sampled losslessly");
-    assert_ne!(s.lo(), 0.0, "low limb preserved through the cache + sampler");
+    assert_ne!(
+        s.lo(),
+        0.0,
+        "low limb preserved through the cache + sampler"
+    );
 }
 
 #[test]
 fn float106_arithmetic_preserves_precision() {
+    let session = SampleSession::seeded(SEED);
     let third = one_third();
     let a = Uncertain::<Float106>::point(third);
     let b = Uncertain::<Float106>::point(third);
 
-    let sum = (a + b).sample().unwrap();
+    let sum = (a + b).sample_at(&session, 0).unwrap();
     let expected = third + third;
 
-    assert_eq!(sum, expected, "Float106 arithmetic composed at full precision");
-    assert_ne!(sum.lo(), 0.0, "the double-double tail survived the arithmetic node");
+    assert_eq!(
+        sum, expected,
+        "Float106 arithmetic composed at full precision"
+    );
+    assert_ne!(
+        sum.lo(),
+        0.0,
+        "the double-double tail survived the arithmetic node"
+    );
 }
 
 #[test]
 fn float106_normal_samples_are_finite_and_double_double() {
+    let mut session = SampleSession::seeded(SEED);
     let u = Uncertain::<Float106>::normal(Float106::from(0.0), Float106::from(1.0));
-    let samples = u.take_samples(500).unwrap();
+    let samples = u.take_samples(&mut session, 500).unwrap();
 
-    assert!(samples.iter().all(|s| s.is_finite()), "all normal draws finite");
+    assert!(
+        samples.iter().all(|s| s.is_finite()),
+        "all normal draws finite"
+    );
     assert!(
         samples.iter().any(|s| s.lo() != 0.0),
         "normal draws carry double-double entropy (low limb populated)"
@@ -56,32 +87,46 @@ fn float106_normal_samples_are_finite_and_double_double() {
 
 #[test]
 fn float106_uniform_samples_in_range() {
+    let mut session = SampleSession::seeded(SEED);
     let low = Float106::from(10.0);
     let high = Float106::from(20.0);
     let u = Uncertain::<Float106>::uniform(low, high);
-    for s in u.take_samples(500).unwrap() {
+    for s in u.take_samples(&mut session, 500).unwrap() {
         assert!(s >= low && s < high, "uniform sample {s:?} out of [10, 20)");
     }
 }
 
 #[test]
 fn maybe_uncertain_float106_present_value_and_lift() {
+    let mut session = SampleSession::seeded(SEED);
     let x = Float106::from(2.0) / Float106::from(7.0);
     let m = MaybeUncertain::<Float106>::from_value(x);
 
-    assert_eq!(m.sample().unwrap(), Some(x), "present value sampled losslessly");
+    assert_eq!(
+        m.sample(&mut session).unwrap(),
+        Some(x),
+        "present value sampled losslessly"
+    );
 
     // A certainly-present value lifts to a plain Uncertain<Float106> at full precision.
-    let lifted = m.lift_to_uncertain(0.5, 0.95, 0.05, 1000).unwrap();
-    assert_eq!(lifted.sample().unwrap(), x);
+    let lifted = m
+        .lift_to_uncertain(&session, f106(0.5), f106(0.95), f106(0.05), 1000)
+        .unwrap();
+    assert_eq!(lifted.sample_at(&session, 0).unwrap(), x);
 }
 
 #[test]
 fn maybe_uncertain_float106_dropout_does_not_lift() {
+    let mut session = SampleSession::seeded(SEED);
     let none = MaybeUncertain::<Float106>::always_none();
-    assert_eq!(none.sample().unwrap(), None, "absent value samples to None");
+    assert_eq!(
+        none.sample(&mut session).unwrap(),
+        None,
+        "absent value samples to None"
+    );
     assert!(
-        none.lift_to_uncertain(0.5, 0.95, 0.05, 1000).is_err(),
+        none.lift_to_uncertain(&session, f106(0.5), f106(0.95), f106(0.05), 1000)
+            .is_err(),
         "an absent value fails the presence gate (the dropout signal)"
     );
 }

@@ -2,105 +2,135 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality_uncertain::{SampledValue, SamplerKind, Uncertain, with_global_cache};
-use rusty_fork::rusty_fork_test;
+use deep_causality_uncertain::UncertainBool;
+use deep_causality_uncertain::{SampleSession, Uncertain};
 
-rusty_fork_test! {
+/// Every test below draws under this seed.
+///
+/// The seed arrives in the signature now rather than through a thread-local slot, so a test says
+/// which stream it is asserting on instead of installing one and hoping nothing else displaced it.
+const SEED: u64 = 0x5EED_2026;
+
 //
 // Tests for Uncertain<f64>
 //
+
 #[test]
-fn test_f64_sample_with_index_point() {
+fn test_f64_sample_at_point() {
+    let session = SampleSession::seeded(SEED);
     let u = Uncertain::<f64>::point(42.0);
-    let result = u.sample_with_index(0);
-    assert_eq!(result.unwrap(), 42.0);
+    assert_eq!(u.sample_at(&session, 0).unwrap(), 42.0);
 }
 
 #[test]
 fn test_from_sample() {
+    let session = SampleSession::seeded(SEED);
     let u = Uncertain::from_samples(&[1.0, 2.0, 3.0, 4.0, 5.0]);
-    let result = u.sample_with_index(0);
-    assert!(result.is_ok());
+    assert!(u.sample_at(&session, 0).is_ok());
 }
 
 #[test]
 fn test_from_sample_empty() {
+    let session = SampleSession::seeded(SEED);
     // An empty sample is a point at zero — the degenerate answer this crate supplies where
     // `deep_causality_stats::mean` refuses. Asserting the value rather than `is_ok()`, which was
     // true for every possible sentinel and so said nothing about which one is returned.
-    let u = Uncertain::from_samples(&[]);
-    assert_eq!(u.sample_with_index(0).unwrap(), 0.0);
-    assert_eq!(u.sample_with_index(7).unwrap(), 0.0, "a point does not vary");
+    let u = Uncertain::<f64>::from_samples(&[]);
+    assert_eq!(u.sample_at(&session, 0).unwrap(), 0.0);
+    assert_eq!(
+        u.sample_at(&session, 7).unwrap(),
+        0.0,
+        "a point does not vary"
+    );
 }
 
 #[test]
 fn test_from_sample_single_observation_has_zero_spread() {
+    let session = SampleSession::seeded(SEED);
     // One observation has no dispersion to estimate: `std_dev` says so with `InsufficientSamples`
     // and this crate answers zero, because a summary must summarise whatever it is handed.
     //
     // Pinned by *variation*, not by `is_ok()`: a normal with zero standard deviation returns its
-    // mean at every index, so a non-zero sentinel would show up as two different draws. Nothing
-    // else in the suite reached this branch — the empty case returns before it, and every other
-    // fixture has two or more samples.
+    // mean at every index, so a non-zero sentinel would show up as two different draws.
     let u = Uncertain::from_samples(&[7.0]);
-    let first = u.sample_with_index(0).unwrap();
-    let later = u.sample_with_index(11).unwrap();
-    assert_eq!(first, 7.0, "the single observation is the mean");
-    assert_eq!(later, 7.0, "zero spread means every draw is the mean");
+    assert_eq!(
+        u.sample_at(&session, 0).unwrap(),
+        7.0,
+        "the single observation is the mean"
+    );
+    assert_eq!(
+        u.sample_at(&session, 11).unwrap(),
+        7.0,
+        "zero spread means every draw is the mean"
+    );
 }
 
 #[test]
-fn test_f64_sample_with_index_uses_cache() {
-    // Use a non-deterministic distribution to verify caching.
+fn test_f64_draw_is_stable_at_an_index() {
+    // This asserted that a second draw came back from the cache. There is no cache; the value is
+    // stable because it is a function of the seed, the index and the leaf's ordinal, which is the
+    // property the cache was storing its way towards.
+    let session = SampleSession::seeded(SEED);
     let u = Uncertain::uniform(0.0, 100.0);
 
-    // First sample should compute the value and store it in the cache.
-    let val1 = u.sample_with_index(123).unwrap();
+    let first = u.sample_at(&session, 123).unwrap();
+    let second = u.sample_at(&session, 123).unwrap();
 
-    // Verify that the value is now in the cache.
-    let key = (u.id(), 123, SamplerKind::Mc);
-    let cached_val = with_global_cache(|cache| cache.get(&key)).unwrap();
-    match cached_val {
-        SampledValue::Float(f) => assert_eq!(f, val1),
-        _ => panic!("Cached value has the wrong type!"),
-    }
-
-    // A second sample at the same index should return the exact same value from the cache.
-    let val2 = u.sample_with_index(123).unwrap();
-    assert_eq!(val1, val2, "Value should be read from cache");
+    assert_eq!(first, second, "one address, one value");
+    assert!((0.0..100.0).contains(&first), "and it lies in the support");
 }
 
 #[test]
-fn test_f64_sample_with_random_index() {
+fn test_f64_draw_differs_by_index() {
+    // The other half of the same property: stability at an index would be worthless if every
+    // index gave the same value.
+    let session = SampleSession::seeded(SEED);
+    let u = Uncertain::uniform(0.0, 100.0);
+
+    assert_ne!(
+        u.sample_at(&session, 123).unwrap(),
+        u.sample_at(&session, 124).unwrap()
+    );
+}
+
+#[test]
+fn test_f64_sample_from_entropy() {
     let u = Uncertain::<f64>::point(7.0);
-    // We can't know the random index used by `sample`, but for a point distribution,
-    // the result should always be the same.
-    let result = u.sample();
-    assert_eq!(result.unwrap(), 7.0);
+    // The seedless path: the index is not the caller's to choose, but a point distribution is the
+    // same at every one.
+    assert_eq!(u.sample_from_entropy().unwrap(), 7.0);
 }
 
 #[test]
 fn test_f64_take_samples() {
+    let mut session = SampleSession::seeded(SEED);
     let u = Uncertain::<f64>::point(88.0);
-    let samples = u.take_samples(10).unwrap();
+    let samples = u.take_samples(&mut session, 10).unwrap();
     assert_eq!(samples.len(), 10);
     assert!(samples.iter().all(|&s| s == 88.0));
+    assert_eq!(
+        session.position(),
+        10,
+        "the session advanced by one per draw"
+    );
 }
 
 #[test]
 fn test_f64_take_zero_samples() {
+    let mut session = SampleSession::seeded(SEED);
     let u = Uncertain::<f64>::point(88.0);
-    let samples = u.take_samples(0).unwrap();
-    assert!(samples.is_empty());
+    assert!(u.take_samples(&mut session, 0).unwrap().is_empty());
+    assert_eq!(session.position(), 0, "no draw, no advance");
 }
 
 #[test]
 fn test_estimate_probability_exceeds_normal() {
+    let session = SampleSession::seeded(SEED);
     let u = Uncertain::normal(0.0, 1.0); // Standard normal distribution
-    let threshold = 0.0;
     let num_samples = 10000;
-    let prob = u
-        .estimate_probability_exceeds(threshold, num_samples)
+
+    let prob: f64 = u
+        .estimate_probability_exceeds(&session, 0.0, num_samples)
         .unwrap();
     // For a standard normal distribution, P(X > 0) should be close to 0.5
     assert!(
@@ -109,9 +139,8 @@ fn test_estimate_probability_exceeds_normal() {
         prob
     );
 
-    let threshold_high = 2.0;
     let prob_high = u
-        .estimate_probability_exceeds(threshold_high, num_samples)
+        .estimate_probability_exceeds(&session, 2.0, num_samples)
         .unwrap();
     // For a standard normal distribution, P(X > 2) should be small (approx 0.0228)
     assert!(
@@ -122,59 +151,66 @@ fn test_estimate_probability_exceeds_normal() {
 }
 
 //
-// Tests for Uncertain<bool>
+// Tests for UncertainBool<f64>
 //
 
 #[test]
-fn test_bool_sample_with_index_point() {
-    let u_true = Uncertain::<bool>::point(true);
-    assert!(u_true.sample_with_index(0).unwrap());
-
-    let u_false = Uncertain::<bool>::point(false);
-    assert!(!u_false.sample_with_index(1).unwrap());
+fn test_bool_sample_at_point() {
+    let session = SampleSession::seeded(SEED);
+    assert!(
+        UncertainBool::<f64>::point(true)
+            .sample_at(&session, 0)
+            .unwrap()
+    );
+    assert!(
+        !UncertainBool::<f64>::point(false)
+            .sample_at(&session, 1)
+            .unwrap()
+    );
 }
 
 #[test]
-fn test_bool_sample_with_index_uses_cache() {
-    // Use a non-deterministic distribution to verify caching.
-    let u = Uncertain::bernoulli(0.5);
+fn test_bool_draw_is_stable_at_an_index() {
+    let session = SampleSession::seeded(SEED);
+    let u = UncertainBool::<f64>::bernoulli(0.5);
 
-    // First sample.
-    let val1 = u.sample_with_index(456).unwrap();
+    let first = u.sample_at(&session, 456).unwrap();
+    let second = u.sample_at(&session, 456).unwrap();
 
-    // Verify cache.
-    let key = (u.id(), 456, SamplerKind::Mc);
-    let cached_val = with_global_cache(|cache| cache.get(&key)).unwrap();
-    match cached_val {
-        SampledValue::Bool(b) => assert_eq!(b, val1),
-        _ => panic!("Cached value has the wrong type!"),
-    }
-
-    // Second sample should be identical due to caching.
-    let val2 = u.sample_with_index(456).unwrap();
-    assert_eq!(val1, val2, "Value should be read from cache");
+    assert_eq!(first, second, "one address, one value");
 }
 
 #[test]
-fn test_bool_sample_with_random_index() {
-    let u = Uncertain::<bool>::point(true);
-    let result = u.sample();
-    assert!(result.unwrap());
+fn test_bool_varies_across_indices() {
+    // A fair coin that returned one face at every index would satisfy stability and be useless.
+    let session = SampleSession::seeded(SEED);
+    let u = UncertainBool::<f64>::bernoulli(0.5);
+    let drawn: Vec<bool> = (0..64).map(|i| u.sample_at(&session, i).unwrap()).collect();
+
+    assert!(drawn.iter().any(|&b| b) && drawn.iter().any(|&b| !b));
+}
+
+#[test]
+fn test_bool_sample_from_entropy() {
+    assert!(
+        UncertainBool::<f64>::point(true)
+            .sample_from_entropy()
+            .unwrap()
+    );
 }
 
 #[test]
 fn test_bool_take_samples() {
-    let u = Uncertain::<bool>::point(false);
-    let samples = u.take_samples(20).unwrap();
+    let mut session = SampleSession::seeded(SEED);
+    let u = UncertainBool::<f64>::point(false);
+    let samples = u.take_samples(&mut session, 20).unwrap();
     assert_eq!(samples.len(), 20);
     assert!(samples.iter().all(|&s| !s));
 }
 
 #[test]
 fn test_bool_take_zero_samples() {
-    let u = Uncertain::<bool>::point(true);
-    let samples = u.take_samples(0).unwrap();
-    assert!(samples.is_empty());
-}
-
+    let mut session = SampleSession::seeded(SEED);
+    let u = UncertainBool::<f64>::point(true);
+    assert!(u.take_samples(&mut session, 0).unwrap().is_empty());
 }

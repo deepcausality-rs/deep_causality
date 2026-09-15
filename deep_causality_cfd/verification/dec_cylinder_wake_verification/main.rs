@@ -39,7 +39,8 @@
 //! ## Reproducibility
 //!
 //! The run is **bit-identical** across invocations: the SPRT presence gate is seeded
-//! (`seed_sampler`), the QMC collapse is deterministic by construction, and the cut-cell registry is
+//! (`UncertainInflowZone::with_gate_seed`), the QMC collapse is deterministic by construction, and
+//! the cut-cell registry is
 //! built with deterministic ordering (all in [`config`]).
 //!
 //! ```text
@@ -51,7 +52,6 @@ mod print_utils;
 
 use config::{DROPOUT_EVERY, STEPS, U_BULK, ft};
 use deep_causality_cfd::{CfdFlow, EvidenceClass};
-use deep_causality_uncertain::seed_sampler;
 
 /// The working precision for the whole computation (geometry, projection CG, DEC march, the uncertain
 /// inflow's working scalar, and the wake-probe analysis). **This is the single alias to change**
@@ -59,9 +59,6 @@ use deep_causality_uncertain::seed_sampler;
 pub type FloatType = f64;
 
 fn main() {
-    // Pin the sensor realization so the wake CSV is reproducible across runs.
-    seed_sampler(config::SAMPLER_SEED);
-
     // Configuration (the "what"): the immersed cut-cell geometry and the uncertain-march container.
     let geom = config::build_geometry();
     let case = config::build_uncertain_config(geom.nu, geom.dt)

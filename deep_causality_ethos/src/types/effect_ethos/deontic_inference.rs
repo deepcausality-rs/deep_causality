@@ -100,7 +100,7 @@ where
                             // An uncertain predicate MUST have parameters.
                             if let Some(params) = teloid.uncertain_parameter() {
                                 uncertain_bool
-                                    .probability_exceeds(
+                                    .probability_exceeds_from_entropy(
                                         params.threshold(),
                                         params.confidence(),
                                         params.epsilon(),

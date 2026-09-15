@@ -1,6 +1,6 @@
 [package]
 name = "deep_causality_uncertain"
-version = "0.5.3"
+version = "0.5.5"
 edition = { workspace = true }
 rust-version = { workspace = true }
 license = { workspace = true }
@@ -52,9 +52,17 @@ features = ["default"]
 workspace = true
 features = ["default"]
 
+[dependencies.deep_causality_haft]
+workspace = true
+features = ["default"]
+
 [dev-dependencies]
-rusty-fork = { workspace = true }
 criterion = { workspace = true }
+
+# The two container crates are **dev**-dependencies
+# here, where they reach the test harness and not the library.
+deep_causality_linear = { workspace = true, features = ["default"] }
+deep_causality_tensor = { workspace = true, features = ["default"] }
 
 [[bench]]
 name = "uncertain_benchmarks"

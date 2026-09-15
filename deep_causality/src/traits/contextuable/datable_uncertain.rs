@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::Identifiable;
-use deep_causality_uncertain::{ProbabilisticType, Uncertain};
+use deep_causality_uncertain::{RandScalar, Uncertain};
 
 /// Represents uncertain data entities in a context graph.
 ///
@@ -15,16 +15,16 @@ use deep_causality_uncertain::{ProbabilisticType, Uncertain};
 /// in how data is modeled. You may wrap sensor input, encoded strings,
 /// discrete values, or even external references.
 ///
-pub trait UncertainDatable<T>: Identifiable
+pub trait UncertainDatable<R>: Identifiable
 where
-    T: ProbabilisticType,
+    R: RandScalar,
 {
     /// Returns the contained data.
     ///
     /// If `Self::Data` is `Copy`, this will typically return a copy. Otherwise, it may
     /// return a clone or a new instance depending on the implementation.
-    fn get_data(&self) -> Uncertain<T>;
+    fn get_data(&self) -> Uncertain<R>;
 
     /// Sets or updates the contained data with a new value.
-    fn set_data(&mut self, value: Uncertain<T>);
+    fn set_data(&mut self, value: Uncertain<R>);
 }

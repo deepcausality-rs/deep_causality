@@ -11,14 +11,14 @@ use deep_causality_uncertain::{MaybeUncertain, Uncertain};
 fn bench_sampling_maybe_from_value(c: &mut Criterion) {
     let m = MaybeUncertain::<f64>::from_value(10.0);
     c.bench_function("sampling_maybe_from_value", |b| {
-        b.iter(|| m.sample().unwrap());
+        b.iter(|| m.sample_from_entropy().unwrap());
     });
 }
 
 fn bench_sampling_maybe_from_uncertain(c: &mut Criterion) {
     let m = MaybeUncertain::<f64>::from_uncertain(Uncertain::<f64>::normal(10.0, 2.0));
     c.bench_function("sampling_maybe_from_uncertain", |b| {
-        b.iter(|| m.sample().unwrap());
+        b.iter(|| m.sample_from_entropy().unwrap());
     });
 }
 
@@ -29,7 +29,7 @@ fn bench_sampling_maybe_bernoulli(c: &mut Criterion) {
         Uncertain::<f64>::normal(10.0, 2.0),
     );
     c.bench_function("sampling_maybe_bernoulli", |b| {
-        b.iter(|| m.sample().unwrap());
+        b.iter(|| m.sample_from_entropy().unwrap());
     });
 }
 
@@ -37,17 +37,17 @@ fn bench_sampling_maybe_bernoulli(c: &mut Criterion) {
 fn bench_sampling_maybe_always_none(c: &mut Criterion) {
     let m = MaybeUncertain::<f64>::always_none();
     c.bench_function("sampling_maybe_always_none", |b| {
-        b.iter(|| m.sample().unwrap());
+        b.iter(|| m.sample_from_entropy().unwrap());
     });
 }
 
-fn bench_sampling_maybe_bool(c: &mut Criterion) {
-    let m = MaybeUncertain::<bool>::from_bernoulli_and_uncertain(
-        0.7,
-        Uncertain::<bool>::bernoulli(0.5),
-    );
-    c.bench_function("sampling_maybe_bool", |b| {
-        b.iter(|| m.sample().unwrap());
+// A Bernoulli presence channel over a drawing value channel: the two-channel draw at one index,
+// which is what the `MaybeUncertain<bool>` case used to measure before the Boolean form was
+// dropped. The presence channel is still Bernoulli; only the value channel's carrier changed.
+fn bench_sampling_maybe_bernoulli_presence(c: &mut Criterion) {
+    let m = MaybeUncertain::<f64>::from_bernoulli_and_uncertain(0.7, Uncertain::normal(0.0, 1.0));
+    c.bench_function("sampling_maybe_bernoulli_presence", |b| {
+        b.iter(|| m.sample_from_entropy().unwrap());
     });
 }
 
@@ -68,7 +68,7 @@ fn bench_sampling_maybe_arithmetic_chain(c: &mut Criterion) {
     let d = (a + b) * c_val;
 
     c.bench_function("sampling_maybe_arithmetic_chain", |b| {
-        b.iter(|| d.sample().unwrap());
+        b.iter(|| d.sample_from_entropy().unwrap());
     });
 }
 
@@ -124,7 +124,7 @@ fn bench_maybe_uncertain_f64_add_and_sample(c: &mut Criterion) {
             let cloned_a = a.clone();
             let cloned_b = b.clone();
             let sum = cloned_a + cloned_b;
-            sum.sample().unwrap();
+            sum.sample_from_entropy().unwrap();
         });
     });
 }
@@ -147,7 +147,7 @@ fn bench_maybe_uncertain_complex_chain_and_sample(c: &mut Criterion) {
 
     c.bench_function("maybe_uncertain_complex_chain_and_sample", |b| {
         b.iter(|| {
-            combined.sample().unwrap();
+            combined.sample_from_entropy().unwrap();
         });
     });
 }
@@ -167,7 +167,7 @@ fn bench_lift_to_uncertain_confidently_present(c: &mut Criterion) {
     );
     c.bench_function("lift_to_uncertain_confidently_present", |bencher| {
         bencher.iter(|| {
-            let _ = m.lift_to_uncertain(0.5, 0.95, 0.05, 1000);
+            let _ = m.lift_to_uncertain_from_entropy(0.5, 0.95, 0.05, 1000);
         });
     });
 }
@@ -179,7 +179,7 @@ fn bench_lift_to_uncertain_close_to_threshold(c: &mut Criterion) {
     );
     c.bench_function("lift_to_uncertain_close_to_threshold", |bencher| {
         bencher.iter(|| {
-            let _ = m.lift_to_uncertain(0.5, 0.95, 0.05, 1000);
+            let _ = m.lift_to_uncertain_from_entropy(0.5, 0.95, 0.05, 1000);
         });
     });
 }
@@ -191,7 +191,7 @@ fn bench_lift_to_uncertain_confidently_absent(c: &mut Criterion) {
     );
     c.bench_function("lift_to_uncertain_confidently_absent", |bencher| {
         bencher.iter(|| {
-            let _ = m.lift_to_uncertain(0.5, 0.95, 0.05, 1000);
+            let _ = m.lift_to_uncertain_from_entropy(0.5, 0.95, 0.05, 1000);
         });
     });
 }
@@ -202,7 +202,7 @@ criterion_group!(
     bench_sampling_maybe_from_uncertain,
     bench_sampling_maybe_bernoulli,
     bench_sampling_maybe_always_none,
-    bench_sampling_maybe_bool,
+    bench_sampling_maybe_bernoulli_presence,
     bench_sampling_maybe_arithmetic_chain,
     bench_maybe_uncertain_f64_add_graph_construction,
     bench_maybe_uncertain_f64_mul_graph_construction,

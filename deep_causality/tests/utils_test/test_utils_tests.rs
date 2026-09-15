@@ -152,11 +152,11 @@ fn test_uncertain_causaloids() {
     let res = c_ub.evaluate(&PropagatingEffect::pure(0.6));
     let ub = res.value_cloned().unwrap();
     // Point uncertain bool has prob 1.0 if true
-    assert!(ub.to_bool(0.5, 0.95, 0.05, 100).unwrap());
+    assert!(ub.to_bool_from_entropy(0.5, 0.95, 0.05, 100).unwrap());
 
     let res = c_ub.evaluate(&PropagatingEffect::pure(0.5));
     let ub = res.value_cloned().unwrap();
-    assert!(!ub.to_bool(0.5, 0.95, 0.05, 100).unwrap());
+    assert!(!ub.to_bool_from_entropy(0.5, 0.95, 0.05, 100).unwrap());
 
     let c_uf = get_test_causaloid_uncertain_float();
     let res = c_uf.evaluate(&PropagatingEffect::pure(0.6));

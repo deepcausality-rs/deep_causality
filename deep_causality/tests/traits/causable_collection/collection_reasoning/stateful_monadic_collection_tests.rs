@@ -72,7 +72,7 @@ fn item_uncertain_float(
     _obs: CausalEffect<u64>,
     state: CounterState,
     ctx: Option<ConfigCtx>,
-) -> PropagatingProcess<deep_causality_uncertain::UncertainF64, CounterState, ConfigCtx> {
+) -> PropagatingProcess<deep_causality::UncertainF64, CounterState, ConfigCtx> {
     PropagatingProcess::new(
         Ok(CausalEffect::value(deep_causality_uncertain::Uncertain::<
             f64,
@@ -136,9 +136,7 @@ fn evaluate_collection_stateful_empty_collection_errors() {
 fn evaluate_collection_stateful_aggregation_error() {
     // Items evaluate successfully but produce UncertainF64 values, which the
     // aggregation helper cannot combine -> the `Err(e)` aggregation arm runs.
-    let items: Vec<
-        Causaloid<u64, deep_causality_uncertain::UncertainF64, CounterState, ConfigCtx>,
-    > = vec![
+    let items: Vec<Causaloid<u64, deep_causality::UncertainF64, CounterState, ConfigCtx>> = vec![
         Causaloid::new_with_context(1, item_uncertain_float, ConfigCtx { threshold: 1 }, "a"),
         Causaloid::new_with_context(2, item_uncertain_float, ConfigCtx { threshold: 1 }, "b"),
     ];

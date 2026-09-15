@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality_num::Float106;
+use deep_causality_num::{BFloat16, Float106, lift};
 use deep_causality_rand::{Distribution, Xoshiro256, rng};
 use deep_causality_stats::{Bernoulli, BernoulliDistributionError};
 
@@ -150,4 +150,42 @@ fn a_wider_scalar_buys_no_finer_probability() {
         a, b,
         "two probabilities closer than 2^-64 must quantise to the same distribution"
     );
+}
+
+/// The scalar's own rounding, which happens before this constructor's quantisation and is a
+/// different bound with a different cause.
+///
+/// `BFloat16` has eight significand bits, so below one its spacing is `2⁻⁸` and its largest
+/// representable probability under one is `1 − 2⁻⁸ = 0.99609375`. Anything from the midpoint
+/// `0.998047` upward rounds onto exactly `1.0` when the caller forms it, so it arrives here as a
+/// certainty and [`Bernoulli::p`] reports one. This is a property of the format, not of the
+/// `2⁻⁶⁴` fixed point: it moves with the scalar, and at `f64` the same literals are ordinary
+/// probabilities.
+///
+/// Recorded so that a caller stating a confidence at a narrow scalar can see where it stops being
+/// a probability.
+#[test]
+fn test_a_probability_within_half_an_ulp_of_one_is_certain_at_a_narrow_scalar() {
+    // Below the gap: still a probability, and the scalar's own value is what is held.
+    let below = lift::<BFloat16>(0.996);
+    assert_eq!(below.to_f64(), 0.99609375, "1 − 2⁻⁸ is representable");
+    assert_eq!(Bernoulli::new(below).unwrap().p::<f64>(), 0.99609375);
+
+    // Inside the gap: the caller's 0.999 is already 1.0 before this constructor sees it.
+    let inside = lift::<BFloat16>(0.999);
+    assert_eq!(inside.to_f64(), 1.0, "0.999 has no BFloat16 below one");
+    assert_eq!(Bernoulli::new(inside).unwrap().p::<f64>(), 1.0);
+
+    // The same literal at f64 is an ordinary probability, which is what makes this the scalar's
+    // bound rather than the representation's.
+    assert_eq!(Bernoulli::new(0.999_f64).unwrap().p::<f64>(), 0.999);
+
+    // No counterpart at zero: the format's subnormals reach far below any probability a caller
+    // would state, so a small p stays strictly positive.
+    let small = lift::<BFloat16>(0.001);
+    assert!(
+        small.to_f64() > 0.0,
+        "a small probability does not collapse"
+    );
+    assert!(Bernoulli::new(small).unwrap().p::<f64>() > 0.0);
 }

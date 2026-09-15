@@ -12,16 +12,21 @@
 //!
 //! # What that changes
 //!
-//! Three fixtures cannot be carried over from the wider suites, and each says something about the
+//! Two fixtures cannot be carried over from the wider suites, and each says something about the
 //! type rather than about the code:
 //!
 //! 1. **Integers are exact only to 256.** The cancellation fixture uses an offset of 100, where
 //!    `f32` uses ten thousand. At `BFloat16`, 10000 and 10001 are the same number.
-//! 2. **A thousand-term reduction has no accuracy left.** Once a running sum reaches one, an
-//!    addend of a thousandth is below `epsilon · sum` and vanishes. This suite runs no such case,
-//!    and `BF16.reduction` is set to 1.0 to say so rather than to a tolerance.
-//! 3. **A step must exceed the spacing.** At magnitude ten the spacing is `7.8e-2`, so a probe
+//! 2. **A step must exceed the spacing.** At magnitude ten the spacing is `7.8e-2`, so a probe
 //!    either side of a value needs a step of that order, not of `1e-3`.
+//!
+//! A third was recorded here and has been withdrawn, because it was a property of an arrangement
+//! and not of the type. It read: a thousand-term reduction has no accuracy left, since once the
+//! running sum reaches one an addend of a thousandth falls below `epsilon · sum` and vanishes — so
+//! this suite ran no such case and `BF16.reduction` was set to 1.0 to say so rather than to a
+//! tolerance. That holds for a sum formed left to right and for no other. The reductions are
+//! formed as balanced trees, and the cases the claim excluded now run: see
+//! [`test_mean_of_a_thousand_term_ramp`] and [`test_std_dev_of_a_thousand_term_ramp`].
 //!
 //! What does not change is the mathematics under test. The mean of a sample is still its sum over
 //! its count, the corrected variance still divides by `n − 1`, and a one-element sample is still
@@ -655,4 +660,142 @@ fn test_variance_where_the_sum_of_squares_overflows_but_the_answer_does_not() {
         got.to_f64()
     );
     assert_close(got, want, BF16.native, "population_variance([-v, v]) is v²");
+}
+
+// -------------------------------------------------------------------------------------------
+// Reductions over a thousand terms.
+//
+// The cases the withdrawn claim in the module header said could not be asserted here. They are
+// the ones that separate a balanced-tree sum from a left-to-right one: a running total passes the
+// point where an addend falls below its last place, and a left-to-right fold then stops moving
+// while staying finite, so there is no infinity and no error to notice.
+// -------------------------------------------------------------------------------------------
+
+/// Provenance: Gauss's closed form. The mean of `1..=n` is `(n + 1)/2`, so at `n = 1000` it is
+/// `1001/2 = 500.5`.
+///
+/// The sum reaches 500 500, where `BFloat16`'s spacing is 4096, so every one of the last few
+/// hundred addends is far below the total's last place. Formed left to right the total stalls and
+/// the mean comes back around 33; formed as a balanced tree every addition is between partial sums
+/// of the same size and the answer survives. `500.5` is not representable at this width — the
+/// nearest value is 500 — which is what the `reduction` row's headroom is for.
+#[test]
+fn test_mean_of_a_thousand_term_ramp() {
+    let xs: Vec<BFloat16> = (1..=1000).map(|i| lift::<BFloat16>(i as f64)).collect();
+    let got = mean(&xs).expect("a thousand observations are defined");
+    // (1000 + 1)/2 = 500.5.
+    assert_close(
+        got,
+        lift::<BFloat16>(500.5),
+        BF16.reduction,
+        "mean(1..=1000) against (n + 1)/2",
+    );
+}
+
+/// Provenance: the closed form for the corrected variance of the first `n` integers.
+///
+/// ```text
+/// Σ(x − x̄)² = n(n² − 1)/12
+/// variance  = n(n² − 1) / (12(n − 1)) = n(n + 1)/12
+/// n = 1000  ->  1000·1001/12 = 83416.666…,  std_dev = √83416.666… = 288.81943609574939…
+/// ```
+///
+/// This one reduces twice — once for the mean, once for the squared deviations — and the squared
+/// deviations reach about 8.3e7, so it is the longer reach of the two.
+#[test]
+fn test_std_dev_of_a_thousand_term_ramp() {
+    let xs: Vec<BFloat16> = (1..=1000).map(|i| lift::<BFloat16>(i as f64)).collect();
+    let got = std_dev(&xs).expect("a thousand observations are enough");
+    // √(1000·1001/12), hand-derived above.
+    assert_close(
+        got,
+        lift::<BFloat16>(288.8194360957494),
+        BF16.reduction,
+        "std_dev(1..=1000) against √(n(n+1)/12)",
+    );
+}
+
+/// The case the withdrawn claim named outright: a thousand addends small enough that each one
+/// falls below the running total's last place before the fold ends.
+///
+/// Provenance: an algebraic invariant — the mean of a constant sample is that constant. The
+/// constant is `1/1024`, which is exact at this width, and the answer is asserted exactly rather
+/// than to a tolerance because every partial sum here is exact too: a thousand copies group as
+/// `512 + 256 + 128 + 64 + 32 + 8`, and the running total over those slots — `40/1024`, `104/1024`,
+/// `232/1024`, `488/1024`, `1000/1024` — needs at most seven significand bits, which the type has.
+///
+/// A left-to-right fold reaches `1.0`, where the spacing is `7.8e-3` against an addend of
+/// `9.8e-4`, and stops.
+#[test]
+fn test_mean_of_a_thousand_addends_below_the_running_total_spacing() {
+    let c = lift::<BFloat16>(1.0 / 1024.0);
+    let xs = vec![c; 1000];
+    assert_exact(
+        mean(&xs).expect("a thousand observations are defined"),
+        c,
+        "mean([1/1024; 1000]) is 1/1024",
+    );
+}
+
+/// The rescaled pass over a thousand terms — the path the direct sum falls back to, and the one
+/// that was losing the answer while the fallback itself looked correct.
+///
+/// Provenance: an algebraic invariant — the mean of a constant sample is that constant, whatever
+/// the sample size. `MAX` three times already pins the fallback's *entry* (see
+/// [`test_mean_of_a_constant_sample_at_the_type_maximum`]); this pins its *reach*. The direct sum
+/// saturates at the second observation, so the whole answer comes from the rescaled pass, which
+/// sums a thousand ones. Formed left to right that sum stalls at 256 — every further one is below
+/// the running total's last place — and the mean comes back as `256/1000 · MAX ≈ 7.68e37`, a
+/// plausible finite number four times too small, with no infinity and no error to notice.
+#[test]
+fn test_mean_of_a_thousand_observations_at_the_type_maximum() {
+    let max = lift::<BFloat16>(BF16.max_finite);
+    let xs = vec![max; 1000];
+    assert_exact(
+        mean(&xs).expect("a thousand observations are defined"),
+        max,
+        "mean([MAX; 1000]) is MAX",
+    );
+}
+
+/// An observation count is not exact at this width past 256, and the effect of that on a
+/// statistic sits below the scalar's own resolution.
+///
+/// `variance` divides by `n − 1`. At `BFloat16` the spacing at a thousand is 8, so 999 is not
+/// representable and arrives as 1000 — Bessel's correction, a factor of `1000/999`, disappears.
+/// `mean` divides by `n`, and ten thousand arrives as 9984.
+///
+/// Neither is a defect to fix, and this case is here to show why rather than to assert it. A
+/// divisor wrong by a relative `d` moves the answer by a relative `d`, and both `d` here are
+/// smaller than `epsilon` — the gap between adjacent values of the type — so the correct answer
+/// and the computed one are the same `BFloat16` in the first place. Widening the scalar removes
+/// both, which is what makes this the format's bound and not the estimator's.
+#[test]
+fn test_a_count_that_is_not_exact_moves_a_statistic_less_than_one_ulp() {
+    let epsilon = BF16.epsilon;
+
+    for &n in &[999_usize, 10_000] {
+        let exact = n as f64;
+        let held = lift::<BFloat16>(exact).to_f64();
+        let divisor_error = ((held - exact) / exact).abs();
+
+        assert!(
+            divisor_error > 0.0,
+            "n = {n} is exact at BFloat16, so it does not demonstrate the case"
+        );
+        assert!(
+            divisor_error < epsilon,
+            "n = {n} is held as {held}, a relative {divisor_error:e}, which is not below the \
+             type's own resolution of {epsilon:e} — the count would then be worth correcting"
+        );
+    }
+
+    // And the companion that makes the comparison meaningful: a count the type holds exactly,
+    // where the divisor contributes no error at all.
+    let exact_count = lift::<BFloat16>(256.0).to_f64();
+    assert_exact(
+        lift::<BFloat16>(exact_count),
+        lift::<BFloat16>(256.0),
+        "256 is exact at BFloat16",
+    );
 }

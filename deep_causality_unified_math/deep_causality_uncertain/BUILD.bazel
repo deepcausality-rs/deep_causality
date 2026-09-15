@@ -33,9 +33,63 @@ rust_doc_test(
 )
 
 rust_test_suite(
+    name = "readme",
+    srcs = glob([
+        "tests/readme/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_uncertain",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "acceptance",
+    srcs = glob([
+        "tests/acceptance/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_uncertain",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
     name = "algos",
     srcs = glob([
         "tests/algos/hypothesis/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_uncertain",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "utils",
+    srcs = glob([
+        "tests/utils/*_tests.rs",
     ]),
     tags = [
         "unit-test",
@@ -72,24 +126,6 @@ rust_test_suite(
     name = "integration_tests",
     srcs = glob([
         "tests/integration_tests/*_tests.rs",
-    ]),
-    tags = [
-        "unit-test",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        # Crate to test
-        ":deep_causality_uncertain",
-    ] + all_crate_deps(
-        normal = True,
-        normal_dev = True,
-    ),
-)
-
-rust_test_suite(
-    name = "types_cache",
-    srcs = glob([
-        "tests/types/cache/*_tests.rs",
     ]),
     tags = [
         "unit-test",
@@ -159,6 +195,42 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "types_leaf_ordinals",
+    srcs = glob([
+        "tests/types/leaf_ordinals/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_uncertain",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "types_sample_session",
+    srcs = glob([
+        "tests/types/sample_session/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_uncertain",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
     name = "types_sampler",
     srcs = glob([
         "tests/types/sampler/*_tests.rs",
@@ -198,42 +270,6 @@ rust_test_suite(
     name = "types_maybe_uncertain",
     srcs = glob([
         "tests/types/uncertain_maybe/*_tests.rs",
-    ]),
-    tags = [
-        "unit-test",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        # Crate to test
-        ":deep_causality_uncertain",
-    ] + all_crate_deps(
-        normal = True,
-        normal_dev = True,
-    ),
-)
-
-rust_test_suite(
-    name = "extensions",
-    srcs = glob([
-        "tests/extensions/*_tests.rs",
-    ]),
-    tags = [
-        "unit-test",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        # Crate to test
-        ":deep_causality_uncertain",
-    ] + all_crate_deps(
-        normal = True,
-        normal_dev = True,
-    ),
-)
-
-rust_test_suite(
-    name = "types_computation_uncertain_node_content",
-    srcs = glob([
-        "tests/types/computation/uncertain_node_content/*_tests.rs",
     ]),
     tags = [
         "unit-test",

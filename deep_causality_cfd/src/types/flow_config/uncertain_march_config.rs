@@ -14,11 +14,11 @@ use crate::solvers::DecNsConfig;
 use crate::solvers::dec::uncertain_inflow::UncertainInflowZone;
 use crate::types::flow_config::Seed;
 use deep_causality_physics::PhysicsError;
-use deep_causality_uncertain::{MaybeUncertain, ProbabilisticType};
+use deep_causality_uncertain::MaybeUncertain;
 
 /// An owned uncertain-inflow march configuration. The dimension is fixed by the geometry at
 /// `.on(&manifold)`, not here.
-pub struct UncertainMarchConfig<R: CfdScalar + ProbabilisticType> {
+pub struct UncertainMarchConfig<R: CfdScalar> {
     pub(crate) name: String,
     pub(crate) solver: DecNsConfig<R>,
     pub(crate) zone: UncertainInflowZone<R>,
@@ -29,7 +29,7 @@ pub struct UncertainMarchConfig<R: CfdScalar + ProbabilisticType> {
 
 /// Fluent builder for an [`UncertainMarchConfig`]. Required: `solver`, `inflow_zone`,
 /// `sensor_stream`, `march_for`. The seed defaults to [`Seed::Rest`].
-pub struct UncertainMarchConfigBuilder<R: CfdScalar + ProbabilisticType> {
+pub struct UncertainMarchConfigBuilder<R: CfdScalar> {
     name: String,
     solver: Option<DecNsConfig<R>>,
     zone: Option<UncertainInflowZone<R>>,
@@ -38,7 +38,7 @@ pub struct UncertainMarchConfigBuilder<R: CfdScalar + ProbabilisticType> {
     seed: Seed,
 }
 
-impl<R: CfdScalar + ProbabilisticType> UncertainMarchConfigBuilder<R> {
+impl<R: CfdScalar> UncertainMarchConfigBuilder<R> {
     pub(crate) fn new(name: impl Into<String>) -> Self {
         Self {
             name: name.into(),

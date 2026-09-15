@@ -9,6 +9,7 @@ use crate::errors::stats_error::StatsError;
 use crate::types::entropy_config::EntropyConfig;
 use crate::types::log_base::LogBase;
 use crate::types::normalisation::Normalisation;
+use crate::types::pairwise_sum::pairwise_sum;
 use crate::types::zero_policy::ZeroPolicy;
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
@@ -76,7 +77,7 @@ where
     match config.normalisation {
         Normalisation::None => Ok((false, T::one(), T::one())),
         Normalisation::BySum { floor } => {
-            let sum = p.iter().fold(T::zero(), |acc, &x| acc + x);
+            let sum = pairwise_sum(p, |x| x);
             // No mass to measure: there is no distribution here, and dividing by a sum this
             // small would manufacture one out of rounding.
             if sum <= floor {
@@ -89,13 +90,20 @@ where
             // weight is strictly positive here: entries are non-negative and an all-zero slice
             // sums to zero, which is finite.
             let largest = p.iter().fold(T::zero(), |m, &x| if x > m { x } else { m });
-            let scaled = p.iter().fold(T::zero(), |acc, &x| acc + x / largest);
+            let scaled = pairwise_sum(p, |x| x / largest);
             Ok((false, largest, scaled))
         }
     }
 }
 
 /// `−Σ pᵢ log pᵢ` over the entries the zero policy keeps.
+///
+/// The sum is a balanced tree, so an accumulator that climbs while its addends do not keeps its
+/// accuracy: a uniform distribution on 1024 outcomes reaches 10 bits from addends of `9.8e-3`, and
+/// at `BFloat16` the answer comes back one ULP high (10.0625 against 10, where the spacing at ten
+/// is 0.0625). That scalar has no row in this module's suite, because these assertions compare
+/// absolutely and one ULP at magnitude ten already exceeds the shared table's tolerance; the
+/// reduction itself is exact to the width.
 ///
 /// Every entry passes through `raw / rescale / scale`; see [`prepare`] for why the divisor arrives
 /// in two parts, and why dividing twice costs the ordinary path nothing.
@@ -110,7 +118,7 @@ where
         LogBase::Nats => T::one(),
     };
 
-    let acc = p.iter().fold(T::zero(), |acc, &raw| {
+    let acc = pairwise_sum(p, |raw| {
         let q = raw / rescale / scale;
         // `lim(p → 0) p·log p = 0`, so an entry at zero contributes nothing whatever the policy
         // says. The test is outside the policy rather than inside `SkipBelow`, because a
@@ -119,14 +127,14 @@ where
         // `NaN` and not the limit. A caller passing a negative threshold is saying "keep
         // everything", not "return me a NaN".
         if q <= T::zero() {
-            return acc;
+            return T::zero();
         }
         let keep = match config.zero_policy {
             // An entry at the cutoff contributes nothing, by the same limit.
             ZeroPolicy::SkipZero => true,
             ZeroPolicy::SkipBelow(threshold) => q > threshold,
         };
-        if keep { acc - q * q.ln() } else { acc }
+        if keep { -(q * q.ln()) } else { T::zero() }
     });
     acc / ln_base
 }

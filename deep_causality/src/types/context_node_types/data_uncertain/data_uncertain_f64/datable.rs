@@ -2,13 +2,12 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Datable, UncertainFloat64Data};
-use deep_causality_uncertain::UncertainF64;
+use crate::Datable;
+use crate::types::context_node_types::data_uncertain::data_uncertain_f64::UncertainData;
+use deep_causality_uncertain::{RandScalar, Uncertain};
 
-/// Implements the `Datable` trait for `UncertainF64`.
-///
-impl Datable for UncertainFloat64Data {
-    type Data = UncertainF64;
+impl<R: RandScalar> Datable for UncertainData<R> {
+    type Data = Uncertain<R>;
 
     fn get_data(&self) -> Self::Data {
         self.data.clone()

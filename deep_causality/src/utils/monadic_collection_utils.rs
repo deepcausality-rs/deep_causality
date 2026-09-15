@@ -3,9 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{AggregateLogic, CausalityError, CausalityErrorEnum};
+use crate::{UncertainBool, UncertainF64};
 use deep_causality_algebra::Verdict;
 use deep_causality_core::CausalEffect;
-use deep_causality_uncertain::{Uncertain, UncertainBool, UncertainF64};
 
 /// Defines how to aggregate a collection of effects of type T.
 ///
@@ -174,14 +174,14 @@ impl Aggregatable for UncertainBool {
             AggregateLogic::Some(k) => {
                 let bools: Result<Vec<bool>, _> = u_bools
                     .iter()
-                    .map(|u| u.to_bool(threshold, 0.95, 0.05, 1000))
+                    .map(|u| u.to_bool_from_entropy(threshold, 0.95, 0.05, 1000))
                     .collect();
                 let true_count = bools
                     .map_err(|e| CausalityError::new(CausalityErrorEnum::Custom(e.to_string())))?
                     .iter()
                     .filter(|&&b| b)
                     .count();
-                Uncertain::<bool>::point(true_count >= *k)
+                UncertainBool::point(true_count >= *k)
             }
         };
         Ok(CausalEffect::value(final_ubool))

@@ -27,7 +27,7 @@ use deep_causality_core::{
     AlternatableValue, CausalEffect, CausalFlow, CausalityError, CausalityErrorEnum, EffectLog,
     PropagatingProcess,
 };
-use deep_causality_uncertain::{MaybeUncertain, ProbabilisticType};
+use deep_causality_uncertain::MaybeUncertain;
 
 use crate::solvers::dec::DecNsScalar;
 use crate::solvers::dec::dec_ns_solver::DecNsSolver;
@@ -92,12 +92,12 @@ impl<'m, const D: usize, R: DecNsScalar> InflowMarchState<'m, D, R> {
 
 /// Immutable march context (design D10): the zone configuration and the per-step sensor stream.
 #[derive(Debug, Clone)]
-pub struct InflowContext<R: ProbabilisticType> {
+pub struct InflowContext<R: DecNsScalar> {
     zone: UncertainInflowZone<R>,
     stream: Vec<MaybeUncertain<R>>,
 }
 
-impl<R: ProbabilisticType + Copy> InflowContext<R> {
+impl<R: DecNsScalar> InflowContext<R> {
     /// A context over a zone and a sensor stream (`stream[i]` feeds march step `i`).
     pub fn new(zone: UncertainInflowZone<R>, stream: Vec<MaybeUncertain<R>>) -> Self {
         Self { zone, stream }
@@ -110,7 +110,7 @@ pub type InflowProcess<'m, const D: usize, R> =
     PropagatingProcess<R, InflowMarchState<'m, D, R>, InflowContext<R>>;
 
 /// Builds a short-circuiting error process that preserves the current state and context.
-fn error_process<'m, const D: usize, R: DecNsScalar + ProbabilisticType>(
+fn error_process<'m, const D: usize, R: DecNsScalar>(
     state: InflowMarchState<'m, D, R>,
     context: Option<InflowContext<R>>,
     message: &str,
@@ -132,7 +132,7 @@ pub fn inflow_march_step<'m, const D: usize, R>(
     context: Option<InflowContext<R>>,
 ) -> InflowProcess<'m, D, R>
 where
-    R: DecNsScalar + ProbabilisticType,
+    R: DecNsScalar,
 {
     let InflowMarchState {
         solver,
@@ -188,7 +188,8 @@ where
     // 1. Presence-gated collapse of the sensor sample to a scalar inflow R, through the
     //    cross-domain uncertain boundary source (which owns the gate, collapse, and fallback).
     let source = zone.source();
-    let (inflow, dropout) = match source.resolve(&context.stream[step], &mut last_good) {
+    let (inflow, dropout) = match source.resolve(&context.stream[step], &mut last_good, step as u64)
+    {
         Ok(resolved) => resolved,
         Err(e) => {
             let state = InflowMarchState {
@@ -301,7 +302,7 @@ pub fn march_inflow<'m, const D: usize, R>(
     steps: usize,
 ) -> Result<InflowProcess<'m, D, R>, PhysicsError>
 where
-    R: DecNsScalar + ProbabilisticType,
+    R: DecNsScalar,
 {
     if zone.flow_axis() >= D {
         return Err(PhysicsError::DimensionMismatch(format!(

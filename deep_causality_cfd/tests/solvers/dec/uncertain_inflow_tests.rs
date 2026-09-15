@@ -331,7 +331,7 @@ fn inflow_step_short_circuits_when_sample_resolution_fails() {
     // A QMC collapse of a branch-divergent conditional sample fails (the tree is not statically
     // structured). The march step must short-circuit on the resolution error, keeping the solver
     // live in the returned state.
-    use deep_causality_uncertain::Uncertain;
+    use deep_causality_uncertain::{Uncertain, UncertainBool};
 
     let m = wall_manifold();
     let state = InflowMarchState::new(base_solver(&m), rest_seed(&m), U_IN);
@@ -340,7 +340,7 @@ fn inflow_step_short_circuits_when_sample_resolution_fails() {
         .with_collapse_samples(8)
         .with_qmc_collapse(0x0BAD_5EED);
 
-    let cond = Uncertain::<bool>::point(true);
+    let cond = UncertainBool::<f64>::point(true);
     let dynamic = Uncertain::<f64>::conditional(
         cond,
         Uncertain::normal(0.2, 0.01),

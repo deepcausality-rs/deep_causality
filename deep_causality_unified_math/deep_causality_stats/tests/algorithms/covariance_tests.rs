@@ -28,11 +28,12 @@
 //! set — and the tests for those are the last two sections.
 
 use deep_causality_algebra::RealField;
-use deep_causality_num::{Float106, FromPrimitive, lift};
+use deep_causality_num::{BFloat16, Float106, FromPrimitive, lift};
 use deep_causality_stats::utils_tests::lift_array;
-use deep_causality_stats::utils_tests::precision::{F32, F64, F106};
+use deep_causality_stats::utils_tests::precision::{BF16, F32, F64, F106};
 use deep_causality_stats::{
-    StatsError, StatsErrorEnum, column_means, conditional_variance, covariance_matrix,
+    StatsError, StatsErrorEnum, column_means, conditional_variance, covariance_matrix, mean,
+    variance,
 };
 
 fn err_of<T>(r: Result<T, StatsError>) -> StatsErrorEnum {
@@ -293,4 +294,153 @@ fn test_target_among_its_own_parents_is_refused() {
     check_target_among_its_own_parents_is_refused::<f32>();
     check_target_among_its_own_parents_is_refused::<f64>();
     check_target_among_its_own_parents_is_refused::<Float106>();
+}
+
+// -------------------------------------------------------------------------------------------
+// Reach: every entry of the matrix, and every column mean, is a reduction over the rows. A narrow
+// scalar over many rows is where an arrangement that loses them shows, and the cases below assert
+// structural facts — symmetry, agreement with the one-dimensional statistics — rather than values,
+// so they hold at any precision that can represent the answer.
+// -------------------------------------------------------------------------------------------
+
+/// Row K. The matrix is symmetric by construction, at every count and scalar.
+///
+/// `cov[i][j]` and `cov[j][i]` are sums of the same products, so an arrangement that loses either
+/// must lose both identically for this to hold. It is the cheapest structural check available and
+/// it costs nothing to run at a thousand rows, where the reductions are long.
+#[test]
+fn test_the_covariance_matrix_is_symmetric_over_many_rows() {
+    let (data, n, p) = wide_fixture::<BFloat16>(1000);
+    let cov = covariance_matrix(&data, n, p).expect("a thousand rows are enough");
+
+    for i in 0..p {
+        for j in 0..p {
+            assert_eq!(
+                cov[i * p + j],
+                cov[j * p + i],
+                "cov[{i}][{j}] and cov[{j}][{i}] must be the same sum"
+            );
+        }
+    }
+}
+
+/// The diagonal is the variance of its own column, and the column means are the means of their own
+/// columns — the same quantities reached by a different route through this crate.
+///
+/// This is the strongest check the file can make without a literal: `variance` and `mean` reduce a
+/// contiguous slice while the matrix reduces a strided one, so the two agree only if both
+/// arrangements are right. A stalling total in either shows as a disagreement, and at `BFloat16`
+/// over a thousand rows the disagreement was 20%.
+#[test]
+fn test_the_diagonal_and_the_means_agree_with_the_one_dimensional_statistics() {
+    let (data, n, p) = wide_fixture::<BFloat16>(1000);
+    let cov = covariance_matrix(&data, n, p).expect("a thousand rows are enough");
+    let means = column_means(&data, n, p).expect("a thousand rows are enough");
+
+    for c in 0..p {
+        let column: Vec<BFloat16> = (0..n).map(|row| data[row * p + c]).collect();
+
+        assert_eq!(
+            means[c],
+            mean(&column).expect("a column has a mean"),
+            "column {c}: column_means must agree with mean over the same column"
+        );
+        assert_eq!(
+            cov[c * p + c],
+            variance(&column).expect("a column has a variance"),
+            "column {c}: the diagonal must agree with variance over the same column"
+        );
+    }
+}
+
+/// Row G. Negating a column negates its covariances with every other column and leaves its own
+/// variance alone.
+///
+/// A sign lost inside the accumulation would show as a covariance that did not move, and a sign
+/// applied twice as a variance that did.
+#[test]
+fn test_negating_a_column_negates_its_covariances_and_not_its_variance() {
+    let (data, n, p) = wide_fixture::<BFloat16>(512);
+    let cov = covariance_matrix(&data, n, p).expect("enough rows");
+
+    let mut flipped = data.clone();
+    for row in 0..n {
+        flipped[row * p] = -flipped[row * p];
+    }
+    let cov_flipped = covariance_matrix(&flipped, n, p).expect("enough rows");
+
+    assert_eq!(
+        cov_flipped[0], cov[0],
+        "a column's own variance is unchanged by negating it"
+    );
+    for j in 1..p {
+        assert_eq!(
+            cov_flipped[j], -cov[j],
+            "cov[0][{j}] must negate when column 0 does"
+        );
+        assert_ne!(
+            cov[j],
+            lift::<BFloat16>(0.0),
+            "the fixture must have a non-zero covariance, or the sign is asserted where it vanishes"
+        );
+    }
+}
+
+/// Three columns over `n` rows, at the working scalar: a ramp, a positive affine image of it, and a
+/// negative affine image.
+///
+/// The ramp runs over `0..n` so the deviations are of order `n/4`, far above the scalar's own
+/// spacing — a fixture of closely-spaced values would measure the format's resolution rather than
+/// the arrangement of the sums.
+fn wide_fixture<T: FromPrimitive>(n: usize) -> (Vec<T>, usize, usize) {
+    let mut data = Vec::with_capacity(n * 3);
+    for i in 0..n {
+        let x = i as f64;
+        data.push(lift::<T>(x));
+        data.push(lift::<T>(2.0 * x + 1.0));
+        data.push(lift::<T>(-x + 7.0));
+    }
+    (data, n, 3)
+}
+
+/// A value, not an agreement: the variance of a ramp, in closed form, at the narrowest scalar.
+///
+/// The structural cases above compare the matrix against `variance` and `mean`. That is worth
+/// having — it pins the strided reduction against the contiguous one — but it cannot detect an
+/// arrangement that loses the sum, because both sides would lose it identically and still agree.
+/// This case pins the number instead.
+///
+/// Provenance: the corrected variance of `0..n−1` is `n(n+1)/12`. At `n = 1000` that is
+/// `1000·1001/12 = 83416.66…`, and `cov(x, 2x + 1) = 2·var(x)` because covariance is bilinear and
+/// the constant contributes nothing. Measured before the reductions were summed as trees: 67072
+/// against 83417, eleven times the spacing at that magnitude.
+#[test]
+fn test_the_variance_of_a_ramp_is_its_closed_form_at_the_narrowest_scalar() {
+    let n = 1000usize;
+    let (data, rows, p) = wide_fixture::<BFloat16>(n);
+    let cov = covariance_matrix(&data, rows, p).expect("a thousand rows are enough");
+
+    // n(n+1)/12 = 1000·1001/12.
+    let expected_var = n as f64 * (n as f64 + 1.0) / 12.0;
+    // `assert_close` here already scales the tolerance by `|expected|`, so the relative figure
+    // goes in directly.
+    assert_close(
+        cov[0],
+        expected_var,
+        BF16.reduction,
+        "var(0..999) against n(n+1)/12",
+    );
+    // Column 1 is 2x + 1, so cov(x, 2x + 1) = 2·var(x); column 2 is −x + 7, so cov is −var(x).
+    assert_close(
+        cov[1],
+        2.0 * expected_var,
+        BF16.reduction,
+        "cov(x, 2x + 1) = 2·var(x)",
+    );
+    assert_close(
+        cov[2],
+        -expected_var,
+        BF16.reduction,
+        "cov(x, −x + 7) = −var(x)",
+    );
 }

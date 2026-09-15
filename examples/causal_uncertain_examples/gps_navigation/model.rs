@@ -30,8 +30,12 @@ pub fn distance_stage(start: Position, destination: Position) -> Uncertain<f64> 
     let distance = distance_sq.map(|x| x.sqrt() * 69.0);
 
     println!("📍 [Stage 1] Distance");
-    let mean = distance.expected_value(SAMPLES).unwrap_or(f64::NAN);
-    let std = distance.standard_deviation(SAMPLES).unwrap_or(f64::NAN);
+    let mean = distance
+        .expected_value_from_entropy(SAMPLES)
+        .unwrap_or(f64::NAN);
+    let std = distance
+        .standard_deviation_from_entropy(SAMPLES)
+        .unwrap_or(f64::NAN);
     println!("   mean: {mean:.3} mi, std: {std:.4} mi");
     println!(
         "   95% CI: {:.3} – {:.3} mi",
@@ -51,12 +55,17 @@ pub fn time_stage(distance: Uncertain<f64>) -> Uncertain<f64> {
     let travel_minutes = travel_hours * Uncertain::<f64>::point(60.0);
 
     println!("\n⏱️  [Stage 2] Travel time");
-    let mean = travel_minutes.expected_value(SAMPLES).unwrap_or(f64::NAN);
+    let mean = travel_minutes
+        .expected_value_from_entropy(SAMPLES)
+        .unwrap_or(f64::NAN);
     let std = travel_minutes
-        .standard_deviation(SAMPLES)
+        .standard_deviation_from_entropy(SAMPLES)
         .unwrap_or(f64::NAN);
     let late = travel_minutes.greater_than(10.0);
-    let p_late = late.estimate_probability(SAMPLES).unwrap_or(f64::NAN) * 100.0;
+    let p_late = late
+        .estimate_probability_from_entropy(SAMPLES)
+        .unwrap_or(f64::NAN)
+        * 100.0;
     println!("   mean: {mean:.1} min, std: {std:.1} min");
     println!("   P(>10 min): {p_late:.1}%");
 
@@ -72,7 +81,7 @@ pub fn route_stage(main_time: Uncertain<f64>) -> Uncertain<f64> {
 
     let main_faster = main_time.lt_uncertain(&alt_time);
     let confidence = main_faster
-        .estimate_probability(SAMPLES)
+        .estimate_probability_from_entropy(SAMPLES)
         .unwrap_or(f64::NAN)
         * 100.0;
 
@@ -80,10 +89,12 @@ pub fn route_stage(main_time: Uncertain<f64>) -> Uncertain<f64> {
     println!("   P(main faster than alt): {confidence:.1}%");
 
     let chosen = Uncertain::conditional(main_faster.clone(), main_time.clone(), alt_time.clone());
-    let chosen_mean = chosen.expected_value(SAMPLES).unwrap_or(f64::NAN);
+    let chosen_mean = chosen
+        .expected_value_from_entropy(SAMPLES)
+        .unwrap_or(f64::NAN);
     println!("   chosen route expected time: {chosen_mean:.1} min");
 
-    match main_faster.implicit_conditional() {
+    match main_faster.implicit_conditional_from_entropy() {
         Ok(true) => println!("   ✅ Recommend: main route"),
         Ok(false) => println!("   ✅ Recommend: alternative route"),
         Err(_) => println!("   ⚠️  Recommendation undecided"),
@@ -99,23 +110,28 @@ pub fn fuel_stage(_carried: Uncertain<f64>) -> Uncertain<f64> {
     let distance = Uncertain::<f64>::point(2.0); // ~2 mi planned trip
     let efficiency = Uncertain::normal(28.0, 4.0); // mpg
     let fuel = distance.clone() / efficiency;
-    let mean_fuel = fuel.expected_value(SAMPLES).unwrap_or(f64::NAN);
+    let mean_fuel = fuel
+        .expected_value_from_entropy(SAMPLES)
+        .unwrap_or(f64::NAN);
     println!("\n⛽ [Stage 4] Fuel");
     println!("   expected: {mean_fuel:.3} gal");
 
     let current_fuel = Uncertain::uniform(0.8, 1.2);
     let enough = current_fuel.gt_uncertain(&fuel);
-    let p_enough = enough.estimate_probability(SAMPLES).unwrap_or(f64::NAN) * 100.0;
+    let p_enough = enough
+        .estimate_probability_from_entropy(SAMPLES)
+        .unwrap_or(f64::NAN)
+        * 100.0;
     println!("   P(have enough fuel): {p_enough:.1}%");
 
     let within_safe = fuel.within_range(0.5, 2.0);
     let p_safe = within_safe
-        .estimate_probability(SAMPLES)
+        .estimate_probability_from_entropy(SAMPLES)
         .unwrap_or(f64::NAN)
         * 100.0;
     println!("   P(needed fuel in safe range 0.5–2.0 gal): {p_safe:.1}%");
 
-    match enough.probability_exceeds(0.8, 0.95, 0.05, SAMPLES) {
+    match enough.probability_exceeds_from_entropy(0.8, 0.95, 0.05, SAMPLES) {
         Ok(true) => println!("   ✅ Likely enough fuel for the trip"),
         Ok(false) => println!("   ⚠️  Consider refueling before the trip"),
         Err(_) => println!("   ⚠️  Fuel-sufficiency check inconclusive"),

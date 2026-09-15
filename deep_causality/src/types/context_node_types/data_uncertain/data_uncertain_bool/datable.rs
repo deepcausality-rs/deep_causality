@@ -2,13 +2,12 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Datable, UncertainBooleanData};
-use deep_causality_uncertain::UncertainBool;
+use crate::Datable;
+use crate::types::context_node_types::data_uncertain::data_uncertain_bool::UncertainBoolData;
+use deep_causality_uncertain::{RandScalar, UncertainBool};
 
-/// Implements the `Datable` trait for `DataUncertainBool`.
-///
-impl Datable for UncertainBooleanData {
-    type Data = UncertainBool;
+impl<R: RandScalar> Datable for UncertainBoolData<R> {
+    type Data = UncertainBool<R>;
 
     fn get_data(&self) -> Self::Data {
         self.data.clone()

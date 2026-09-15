@@ -5,6 +5,7 @@
 
 //! The log-sum-exp reduction, in its slice and two-term forms.
 
+use crate::types::pairwise_sum::pairwise_sum;
 use deep_causality_algebra::Real;
 
 /// `log Σ exp(xᵢ)`, computed through the maximum so the exponentials cannot overflow.
@@ -47,9 +48,7 @@ pub fn log_sum_exp<T: Real>(values: &[T]) -> T {
         return max;
     }
 
-    let sum = values
-        .iter()
-        .fold(T::zero(), |acc, &x| acc + (x - max).exp());
+    let sum = pairwise_sum(values, |x| (x - max).exp());
     max + sum.ln()
 }
 

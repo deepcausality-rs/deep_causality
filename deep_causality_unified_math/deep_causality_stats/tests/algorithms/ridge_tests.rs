@@ -1475,3 +1475,82 @@ fn test_fit_ridge_streaming_refuses_a_column_count_whose_square_has_no_usize() {
     let fit = fit_of(fit_ridge_streaming(rows, &config, 1));
     assert_eq!(fit.beta.len(), 1, "a one-column design has one coefficient");
 }
+
+// ---------------------------------------------------------------------------------------------
+// Reach: the normal equations are reductions over every row.
+//
+// Every case above fits a handful of rows, where any arrangement of the sums gives the same
+// answer. `XᵀX` and `Xᵀy` are sums over the whole design, so the arrangement only matters once the
+// design is long — which is where a running total outgrows its addends and stops moving.
+// ---------------------------------------------------------------------------------------------
+
+/// Row K over a long design: an exact linear relation is recovered at every scalar.
+///
+/// Provenance: an algebraic invariant rather than a closed form in the coefficients. The response
+/// is `y = 3·x₁ + 2·x₂` exactly, with no noise and no penalty, so the least-squares fit is that
+/// relation and the residual sum of squares is zero. A fit that recovers the coefficients has
+/// summed `XᵀX` and `Xᵀy` correctly over all `n` rows; one whose totals stalled returns a
+/// plausible pair of coefficients that do not reproduce the data.
+///
+/// The columns run over `0..n` and `n..0`, so their magnitudes are of order `n` — far above the
+/// scalar's own spacing, which is what makes this a test of the summation rather than of the
+/// format's resolution.
+///
+/// # What this case cannot separate
+///
+/// It does not run at `BFloat16`, and so it does not detect a stalling total. A normal-equation
+/// solve squares the condition number, which two decimal digits cannot carry whatever the sums do,
+/// so there is no fixture at that width whose failure would mean anything. At `f32` and wider a
+/// left-to-right fold over a thousand rows is still accurate, and this case passes under both
+/// arrangements — verified by injecting the naive fold and watching it pass. It is regression
+/// coverage for the accumulator change, and the detection lives in `pairwise_sum_tests`.
+fn check_long_design_recovers_an_exact_relation<T: RealField + FromPrimitive>(n: usize, tol: f64) {
+    let mut x: Vec<Vec<T>> = Vec::with_capacity(n);
+    let mut y: Vec<T> = Vec::with_capacity(n);
+    for i in 0..n {
+        let a = i as f64;
+        let b = (n - i) as f64;
+        x.push(vec![lift::<T>(a), lift::<T>(b)]);
+        y.push(lift::<T>(3.0 * a + 2.0 * b));
+    }
+
+    let fit = fit_of(fit_ridge(&x, &y, &RidgeConfig::new(lift::<T>(0.0))));
+    assert_eq!(fit.beta.len(), 2);
+    assert_close(fit.beta[0], 3.0, tol, "the first coefficient is 3");
+    assert_close(fit.beta[1], 2.0, tol, "the second coefficient is 2");
+}
+
+#[test]
+fn test_fit_ridge_over_a_long_design_recovers_an_exact_relation() {
+    for n in [256usize, 1000] {
+        check_long_design_recovers_an_exact_relation::<f32>(n, F32.solve);
+        check_long_design_recovers_an_exact_relation::<f64>(n, F64.solve);
+        check_long_design_recovers_an_exact_relation::<Float106>(n, F106.solve);
+    }
+}
+
+/// The streaming entry point agrees with the slice one over a long design.
+///
+/// The two accumulate the same normal equations from differently shaped inputs, so this is the
+/// same agreement `MeanAccumulator` has with `mean`: a caller who switches for the memory must not
+/// silently change the answer. Asserted at a thousand rows, where an arrangement that stalls would
+/// make them differ rather than merely round differently.
+#[test]
+fn test_fit_ridge_streaming_agrees_with_the_slice_form_over_a_long_design() {
+    let n = 1000;
+    let mut x: Vec<Vec<f64>> = Vec::with_capacity(n);
+    let mut y: Vec<f64> = Vec::with_capacity(n);
+    for i in 0..n {
+        let a = i as f64;
+        let b = (n - i) as f64;
+        x.push(vec![a, b]);
+        y.push(3.0 * a + 2.0 * b);
+    }
+    let config = RidgeConfig::new(0.5_f64);
+
+    let sliced = fit_of(fit_ridge(&x, &y, &config));
+    let streamed = fit_of(fit_ridge_streaming(stream_rows(&x, &y), &config, 2));
+
+    assert_eq!(sliced.beta, streamed.beta, "the coefficients must agree");
+    assert_eq!(sliced.sigma2, streamed.sigma2, "the variances must agree");
+}

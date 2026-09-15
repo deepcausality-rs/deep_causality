@@ -9,15 +9,26 @@
 //! in this workspace applies Bessel's correction; there is no population `÷n` caller, and this
 //! crate implements only what something calls.
 //!
-//! # An intermediate that leaves the type is a defect, not a limitation
+//! # An intermediate that fails the working scalar is a defect, not a limitation
 //!
 //! Every reduction below is written so that an answer the working scalar can hold is returned as a
-//! number rather than as an infinity. The direct sum is kept as the primary form — it is the most
-//! accurate and the cheapest — and a rescaled second pass runs only where it saturated. That
-//! second pass costs nothing on the ordinary path, and on the extreme one it is the difference
-//! between `mean([3e38, 3e38])` returning `3e38` at `BFloat16` and returning `+∞`.
+//! number rather than as an artefact of how it was formed. An intermediate fails in two ways, and
+//! each has its own answer here.
+//!
+//! It can leave the type. A rescaled second pass runs where the sum saturated: it costs nothing on
+//! the ordinary path, and on the extreme one it is the difference between `mean([3e38, 3e38])`
+//! returning `3e38` at `BFloat16` and returning `+∞`.
+//!
+//! It can also stall inside the type, which is quieter and bites far sooner. A running total grows
+//! while its addends do not, and once the total passes the point where an addend falls below its
+//! last place, every further addend rounds away — no infinity, no error, just a total that stops
+//! moving. Every sum here is therefore formed as a balanced tree by [`pairwise_sum`], including the
+//! rescaled passes, which are just as exposed: a left-to-right `mean([3e38; 1000])` at `BFloat16`
+//! returns 7.68e37 not because the sum overflows but because the *rescaled* sum of a thousand ones
+//! stalls at 256.
 
 use crate::errors::stats_error::StatsError;
+use crate::types::pairwise_sum::pairwise_sum;
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
 
@@ -29,8 +40,8 @@ use deep_causality_num::FromPrimitive;
 /// # The sum's reach is not the mean's
 ///
 /// The mean of a finite sample is a convex combination of it, so it is bounded in magnitude by the
-/// largest observation and is always representable. The left-to-right sum is not: two observations
-/// at `3e38` overflow `BFloat16` while their mean does not. Where the sum saturates, the mean is
+/// largest observation and is always representable. The sum is not: two observations at `3e38`
+/// overflow `BFloat16` while their mean does not. Where the sum saturates, the mean is
 /// re-formed through the largest magnitude in the sample — every scaled observation then lies in
 /// `[−1, 1]`, the scaled sum is bounded by `n`, and multiplying the scaled mean back by the scale
 /// last cannot leave the type because the result is bounded by the scale itself.
@@ -48,7 +59,7 @@ where
         ));
     }
     let n = count::<T>(xs.len())?;
-    let sum = xs.iter().fold(T::zero(), |acc, &x| acc + x);
+    let sum = pairwise_sum(xs, |x| x);
     if sum.is_finite() || xs.iter().any(|x| !x.is_finite()) {
         return Ok(sum / n);
     }
@@ -56,7 +67,7 @@ where
     // The sum left the type although every observation is inside it. Re-form through the largest
     // magnitude. It is strictly positive here: an all-zero sample sums to zero, which is finite.
     let scale = max_abs_deviation(xs, T::zero());
-    let scaled = xs.iter().fold(T::zero(), |acc, &x| acc + x / scale);
+    let scaled = pairwise_sum(xs, |x| x / scale);
     Ok(scaled / n * scale)
 }
 
@@ -85,7 +96,8 @@ where
 
 /// `Σ(xᵢ − centre)² / denominator`, formed so that a representable answer comes back as one.
 ///
-/// The direct sum first, because it is the accurate form. A single `d²` can leave the type while
+/// The unscaled deviations first, because dividing before squaring costs precision where it is not
+/// needed. A single `d²` can leave the type while
 /// the quotient stays well inside it — one deviation of `1e20` among a hundred observations
 /// overflows `BFloat16`'s `3.4e38` when squared, and `Σd²/(n − 1)` is then about `1e38`, which the
 /// type holds — so where the sum saturates the deviations are divided by the largest of them
@@ -96,9 +108,9 @@ fn dispersion<T>(xs: &[T], centre: T, denominator: T) -> T
 where
     T: RealField,
 {
-    let ss = xs.iter().fold(T::zero(), |acc, &x| {
+    let ss = pairwise_sum(xs, |x| {
         let d = x - centre;
-        acc + d * d
+        d * d
     });
     if ss.is_finite() || !centre.is_finite() || xs.iter().any(|x| !x.is_finite()) {
         return ss / denominator;
@@ -110,9 +122,9 @@ where
         // answer than to argue about.
         return ss / denominator;
     }
-    let r = xs.iter().fold(T::zero(), |acc, &x| {
+    let r = pairwise_sum(xs, |x| {
         let d = (x - centre) / scale;
-        acc + d * d
+        d * d
     });
     r / denominator * scale * scale
 }

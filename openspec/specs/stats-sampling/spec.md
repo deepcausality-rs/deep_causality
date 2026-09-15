@@ -11,9 +11,7 @@ Give `deep_causality_stats` the half of statistics it is missing. It models dist
 densities today and cannot draw from them; this capability puts the samplers beside the densities,
 under the scalar bound the crate already uses, and states what each distribution guarantees —
 including the ones whose usual guarantees do not exist.
-
 ## Requirements
-
 ### Requirement: Distributions live beside the densities they belong to
 
 `deep_causality_stats` SHALL own the real-valued distributions and their samplers, and SHALL depend on `deep_causality_rand` for entropy alone.
@@ -70,24 +68,48 @@ never meets the `u64` implementation that made it `error[E0119]` in `rand`.
 
 ### Requirement: One body serves every scalar
 
-Each distribution SHALL be written once, generically over the scalar bound, and neither crate SHALL carry a per-type source file for any float it supports.
+Each distribution SHALL be written once, generically over one blanket-implemented scalar bound, and neither crate SHALL state any per-type fact about a scalar it supports.
 
-`deep_causality_fft` is the reference: one blanket-implemented `FftScalar`, zero per-type files.
-`rand` today carries `dist_float_32.rs`, `dist_float_64.rs`, `dist_float_106.rs` and
-`dist_float_common.rs`, and its standard normal is an `f64` ziggurat that `f32` narrows from and
-`Float106` cannot use — which is why `Float106` needed its own hand-written Box–Muller.
+`deep_causality_fft` is the reference: one blanket-implemented `FftScalar`, zero per-type files,
+and a new scalar joins by satisfying the algebra. The sampling layer now matches it.
 
-The normal SHALL be computed in the caller's scalar through `Real`'s `ln`, `sqrt`, `cos` and `pi`.
-The only per-type fact a numerical draw may consult is how many 53-bit words its significand
-absorbs, held as an associated constant on a capability trait.
+**The width constant is withdrawn.** An earlier version of this requirement permitted one per-type
+fact — how many 53-bit words a significand absorbs, held as an associated constant. It was
+permitted because it looked irreducible; it was not. `Real::epsilon()` is on the bound these
+functions already carry, and every scalar already reports its own precision through it, so the draw
+stops when the next word would land entirely below that resolution:
 
-#### Scenario: The per-type distribution files are gone
-- **WHEN** the source trees of both crates are listed
-- **THEN** no file implements a distribution for one named float type only
+```rust
+let mut scale = word_scale;
+while scale > Self::epsilon() {
+    acc += word(rng) * scale;
+    scale *= word_scale;
+}
+```
 
-#### Scenario: A new scalar joins by algebra
-- **WHEN** a real-field scalar carrying the width constant is used at a sampling call site
-- **THEN** it samples with no new distribution implementation written for it
+Derived rather than declared, this gives one word for `f32`, `f64` and `BFloat16` and two for
+`Float106` — the same counts the table stated. What it removes is a hand-maintained list that had
+to be edited for every new type, written twice: once as `RandWidth` in this crate and once as
+`RandFloat::WORDS` in the entropy crate, two names for one invented fact.
+
+The accumulation itself SHALL exist once in the workspace. This crate SHALL NOT define a sampling
+capability trait of its own; it re-exports the entropy crate's by name.
+
+#### Scenario: No per-type fact is stated anywhere
+- **WHEN** either crate is searched for an implementation or constant declared for one named scalar
+- **THEN** none is found, and the draw width is derived from the scalar's own epsilon
+
+#### Scenario: A new scalar joins by algebra alone
+- **WHEN** a real-field scalar is used at a sampling call site
+- **THEN** it samples with no implementation, constant or list entry written for it
+
+#### Scenario: The wide scalar still receives its full entropy
+- **WHEN** many draws are taken at `Float106`
+- **THEN** they carry bits below the `f64` rounding of themselves, so the second limb received an independent word
+
+#### Scenario: The accumulation is not duplicated across the crate boundary
+- **WHEN** the unit draw is read in both crates
+- **THEN** one body exists and the other delegates to it
 
 #### Scenario: The normal does not narrow
 - **WHEN** a standard-normal value is drawn at `Float106`
@@ -100,29 +122,38 @@ A draw at a scalar whose significand exceeds 53 bits SHALL consume as many gener
 This fails silently without a test. A single 53-bit draw returned as a `Float106` is an `f64`
 wearing a wider type: it satisfies every bounds check and passes every moment test, and it defeats
 the precision claim the alias discipline exists to make. Measured on the prototype: a naive
-single-draw generic carried a non-zero low limb in **0 of 200** draws; consuming the declared
-number of words carried one in **400 of 400**.
+single-draw generic carried a non-zero low limb in **0 of 200** draws; consuming the full number of
+words carried one in **400 of 400**.
+
+How many words that is SHALL be derived from the scalar rather than declared for it. The previous
+version of this requirement had the capability trait carry an associated constant naming the count;
+that constant is withdrawn, and the loop instead stops when the next word would land entirely below
+`Real::epsilon()`. The counts are unchanged — one word for `f32`, `f64` and `BFloat16`, two for
+`Float106` — but nothing has to be edited when a scalar is added.
 
 #### Scenario: A double-double draw differs from its own narrow round trip
 - **WHEN** 200 `Float106` uniform draws are taken from a deterministic generator
 - **THEN** more than half satisfy `Float106::from(f64::from(v)) != v`
 
-#### Scenario: The width is declared per scalar rather than assumed
-- **WHEN** the capability trait is read
-- **THEN** it carries an associated constant naming the number of 53-bit words the scalar absorbs
-- **AND** the default value serves every scalar of 53 bits or fewer
+#### Scenario: The width is derived rather than declared
+- **WHEN** the sampling capability trait is read
+- **THEN** it carries no constant naming a word count, and the accumulation terminates against the scalar's own epsilon
 
 ### Requirement: Every uniform draw lies in the half-open unit interval
 
-A uniform draw SHALL satisfy `0 <= v < 1` for every supported scalar and every generator state, including the states whose rounding would carry the value onto the upper bound.
+A unit draw SHALL be strictly below one at every scalar, and the function promising that interval SHALL be the one that enforces it.
 
-Not theoretical: a narrow significand can round a value drawn from `[0, 1)` onto exactly `1.0`,
-leaving the interval every inverse-CDF transform assumes. Measured on `BFloat16`, whose 8-bit
-significand hit `1.0` within 1 000 draws. The implementation SHALL reject and redraw rather than
-clamping, which puts an atom of probability mass on one value, or pre-scaling, which biases every
-draw to correct a rare one.
+A value drawn from `[0, 1)` can round onto exactly `1.0` in a narrow significand, leaving the
+interval every inverse-CDF transform above it assumes. Measured at `BFloat16`, whose significand is
+8 bits: 6 draws in 2 000. The rejection belongs in the shared accumulation rather than in each
+caller — an earlier arrangement guarded it in this crate's `StandardUniform` while the entropy
+crate's range sampler, calling the same accumulation, did not.
 
-Several of the distributions below take `ln(u)` and therefore need `u > 0` as well. That stricter
+Rejecting costs a redraw at that rate and nothing at `f32` and wider, where the rate is `2^-25` or
+below. Clamping instead would pile an atom of probability mass on one value, and pre-scaling would
+bias every draw to correct a rare one.
+
+Several of the distributions above take `ln(u)` and therefore need `u > 0` as well. That stricter
 interval SHALL be obtained by rejection at the point of use, not by clamping a zero draw to a small
 positive value, which would place mass at that value.
 
@@ -130,13 +161,17 @@ positive value, which would place mass at that value.
 - **WHEN** at least 1 000 uniform draws are taken for each supported scalar
 - **THEN** every value satisfies `0 <= v < 1`
 
-#### Scenario: A rounding-to-one draw is redrawn, not clamped
-- **WHEN** a generator state would round a narrow-significand draw to exactly `1.0`
-- **THEN** the implementation draws again, and no single value below 1 receives the rejected mass
-
 #### Scenario: A log-transform never sees a zero argument
 - **WHEN** a distribution whose inverse CDF takes `ln(u)` is drawn 10 000 times
 - **THEN** no result is infinite or `NaN`
+
+#### Scenario: The unit draw honours its own interval
+- **WHEN** many unit draws are taken at a scalar narrow enough to round onto one
+- **THEN** none equals one
+
+#### Scenario: The guard is not duplicated
+- **WHEN** the unit draw is read
+- **THEN** the rejection appears once, in the function that states the interval
 
 ### Requirement: The statistical contract holds at every precision
 
@@ -378,3 +413,4 @@ the representable limit at the item.
 #### Scenario: A program at a non-f64 alias constructs every distribution without a cast
 - **WHEN** a program whose working type is `f32` or `Float106` constructs each shipped distribution
 - **THEN** each accepts the working type with no cast at the call site
+

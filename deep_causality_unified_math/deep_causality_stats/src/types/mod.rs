@@ -10,6 +10,7 @@ pub mod logistic_config;
 pub mod logistic_fit;
 pub mod mean_accumulator;
 pub mod normalisation;
+pub(crate) mod pairwise_sum;
 pub mod penalisation;
 pub mod range;
 pub mod ridge_config;

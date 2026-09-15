@@ -4,8 +4,8 @@
  */
 use deep_causality_rand::rng;
 use deep_causality_uncertain::{
-    BernoulliParams, DistributionEnum, NormalDistributionParams, UncertainError,
-    UniformDistributionParams,
+    BernoulliParams, DistributionEnum, LeafOrdinals, NormalDistributionParams, Sample, Uncertain,
+    UncertainBool, UncertainError, UniformDistributionParams,
 };
 
 #[test]
@@ -15,7 +15,7 @@ fn test_distribution_enum_debug_clone_copy() {
         DistributionEnum::Normal(NormalDistributionParams::new(0.0, 1.0));
     let uniform: DistributionEnum<f64> =
         DistributionEnum::Uniform(UniformDistributionParams::new(0.0, 1.0));
-    let bernoulli: DistributionEnum<bool> = DistributionEnum::Bernoulli(BernoulliParams::new(0.5));
+    let bernoulli: DistributionEnum<f64> = DistributionEnum::Bernoulli(BernoulliParams::new(0.5));
 
     // Test Debug
     assert_eq!(format!("{:?}", point_f64), "Point(1.0)");
@@ -60,8 +60,7 @@ fn test_distribution_enum_f64_sample_point() {
     let dist = DistributionEnum::Point(42.0);
     let mut rng = rng();
     let sample = dist.sample(&mut rng).unwrap();
-    dbg!(&sample);
-    assert_eq!(sample, 42.0);
+    assert_eq!(sample, Sample::Real(42.0));
 }
 
 #[test]
@@ -69,8 +68,7 @@ fn test_distribution_enum_f64_sample_normal() {
     let dist: DistributionEnum<f64> =
         DistributionEnum::Normal(NormalDistributionParams::new(10.0, 1.0));
     let mut rng = rng();
-    let sample = dist.sample(&mut rng).unwrap();
-    dbg!(&sample);
+    let sample = real(dist.sample(&mut rng).unwrap());
 
     // Check if sample is within a reasonable range (e.g., mean +/- 5*std_dev)
     assert!(sample > 5.0 && sample < 15.0);
@@ -81,31 +79,62 @@ fn test_distribution_enum_f64_sample_uniform() {
     let dist: DistributionEnum<f64> =
         DistributionEnum::Uniform(UniformDistributionParams::new(0.0, 1.0));
     let mut rng = rng();
-    let sample = dist.sample(&mut rng).unwrap();
-    dbg!(&sample);
+    let sample = real(dist.sample(&mut rng).unwrap());
 
     assert!((0.0..=1.0).contains(&sample));
 }
 
+/// A Bernoulli draws a truth value out of a distribution enum carrying a real scalar.
+///
+/// This was an `UnsupportedTypeError`, back when there was a `DistributionEnum<bool>` for the
+/// Boolean case to live in. There is not: `bool` is not a scalar, a Bernoulli is parameterised by
+/// a probability rather than by what it produces, and what it produces is a `Sample::Bool` from a
+/// graph of any scalar. The error had nothing left to report.
 #[test]
-fn test_distribution_enum_bool_sample_point() {
-    let dist = DistributionEnum::Point(true);
+fn test_distribution_enum_bernoulli_draws_a_boolean_at_a_real_scalar() {
     let mut rng = rng();
-    let sample = dist.sample(&mut rng).unwrap();
-    dbg!(&sample);
+    let dist: DistributionEnum<f64> = DistributionEnum::Bernoulli(BernoulliParams::new(0.8));
+    assert!(matches!(dist.sample(&mut rng).unwrap(), Sample::Bool(_)));
 
-    assert!(sample);
+    // The endpoints are exact, which is what holding `p` as fixed point buys.
+    let never: DistributionEnum<f64> = DistributionEnum::Bernoulli(BernoulliParams::new(0.0));
+    let always: DistributionEnum<f64> = DistributionEnum::Bernoulli(BernoulliParams::new(1.0));
+    for _ in 0..64 {
+        assert_eq!(never.sample(&mut rng).unwrap(), Sample::Bool(false));
+        assert_eq!(always.sample(&mut rng).unwrap(), Sample::Bool(true));
+    }
 }
 
-#[allow(clippy::bool_comparison)]
+/// Only `Point` draws nothing, and both pre-passes ask this one question.
 #[test]
-fn test_distribution_enum_bool_sample_bernoulli() {
-    let dist: DistributionEnum<bool> = DistributionEnum::Bernoulli(BernoulliParams::new(0.8));
-    let mut rng = rng();
-    let sample = dist.sample(&mut rng).unwrap();
-    dbg!(&sample);
-    // Due to randomness, we can't assert exact equality, but they should both lean towards true
-    assert!(sample == true || sample == false);
+fn test_only_point_draws_nothing() {
+    let point: DistributionEnum<f64> = DistributionEnum::Point(1.0);
+    let normal: DistributionEnum<f64> =
+        DistributionEnum::Normal(NormalDistributionParams::new(0.0, 1.0));
+    let uniform: DistributionEnum<f64> =
+        DistributionEnum::Uniform(UniformDistributionParams::new(0.0, 1.0));
+    let bernoulli: DistributionEnum<f64> = DistributionEnum::Bernoulli(BernoulliParams::new(0.5));
+
+    // `draws()` is crate-internal; what it decides is observable as the leaf-ordinal count.
+    assert!(LeafOrdinals::new(&Uncertain::<f64>::point(1.0)).is_empty());
+    assert_eq!(
+        LeafOrdinals::new(&Uncertain::<f64>::normal(0.0, 1.0)).len(),
+        1
+    );
+    assert_eq!(
+        LeafOrdinals::new(&Uncertain::<f64>::uniform(0.0, 1.0)).len(),
+        1
+    );
+    assert_eq!(
+        LeafOrdinals::for_bool(&UncertainBool::<f64>::bernoulli(0.5)).len(),
+        1
+    );
+
+    // And the four values above are the ones those graphs were built from.
+    assert!(matches!(point, DistributionEnum::Point(_)));
+    assert!(matches!(normal, DistributionEnum::Normal(_)));
+    assert!(matches!(uniform, DistributionEnum::Uniform(_)));
+    assert!(matches!(bernoulli, DistributionEnum::Bernoulli(_)));
 }
 
 #[test]
@@ -115,7 +144,7 @@ fn test_distribution_enum_display() {
         DistributionEnum::Normal(NormalDistributionParams::new(4.56, 0.1));
     let uniform: DistributionEnum<f64> =
         DistributionEnum::Uniform(UniformDistributionParams::new(7.89, 9.01));
-    let bernoulli: DistributionEnum<bool> = DistributionEnum::Bernoulli(BernoulliParams::new(0.7));
+    let bernoulli: DistributionEnum<f64> = DistributionEnum::Bernoulli(BernoulliParams::new(0.7));
 
     assert_eq!(format!("{}", point_f64), "Distribution: Point { D: 1.23 }");
     assert_eq!(
@@ -132,49 +161,45 @@ fn test_distribution_enum_display() {
     );
 }
 
+/// A construction refusal still reports, and says which parameter it refused.
 #[test]
-fn test_sample_f64_unsupported_type_error() {
+fn test_construction_refusals_are_carried_through() {
     let mut rng = rng();
-    let bernoulli_dist: DistributionEnum<f64> =
-        DistributionEnum::Bernoulli(BernoulliParams { p: 0.5 });
-    let result = bernoulli_dist.sample(&mut rng);
 
-    dbg!(&result);
-
+    // `Normal::new` requires a *finite* standard deviation, not a positive one: a negative sigma
+    // is the same symmetric distribution reflected, so it is accepted and draws normally.
+    let non_finite_sd: DistributionEnum<f64> =
+        DistributionEnum::Normal(NormalDistributionParams::new(0.0, f64::INFINITY));
     assert!(matches!(
-        result,
-        Err(UncertainError::UnsupportedTypeError(_))
+        non_finite_sd.sample(&mut rng),
+        Err(UncertainError::NormalDistributionError(_))
+    ));
+
+    let negative_sd: DistributionEnum<f64> =
+        DistributionEnum::Normal(NormalDistributionParams::new(0.0, -1.0));
+    assert!(matches!(
+        negative_sd.sample(&mut rng).unwrap(),
+        Sample::Real(_)
+    ));
+
+    let empty_range: DistributionEnum<f64> =
+        DistributionEnum::Uniform(UniformDistributionParams::new(1.0, 1.0));
+    assert!(matches!(
+        empty_range.sample(&mut rng),
+        Err(UncertainError::UniformDistributionError(_))
+    ));
+
+    let bad_p: DistributionEnum<f64> = DistributionEnum::Bernoulli(BernoulliParams::new(2.0));
+    assert!(matches!(
+        bad_p.sample(&mut rng),
+        Err(UncertainError::BernoulliDistributionError(_))
     ));
 }
 
-#[test]
-fn test_sample_bool_unsupported_type_error() {
-    let mut rng = rng();
-    // Degenerate Normal/Uniform on a bool enum (params carry the enum's `T`); sampling a
-    // bool distribution still rejects these variants with an UnsupportedTypeError.
-    let normal_dist: DistributionEnum<bool> = DistributionEnum::Normal(NormalDistributionParams {
-        mean: false,
-        std_dev: false,
-    });
-    let result = normal_dist.sample(&mut rng);
-
-    dbg!(&result);
-
-    assert!(matches!(
-        result,
-        Err(UncertainError::UnsupportedTypeError(_))
-    ));
-
-    let uniform_dist: DistributionEnum<bool> =
-        DistributionEnum::Uniform(UniformDistributionParams {
-            low: false,
-            high: false,
-        });
-    let result = uniform_dist.sample(&mut rng);
-    dbg!(&result);
-
-    assert!(matches!(
-        result,
-        Err(UncertainError::UnsupportedTypeError(_))
-    ));
+/// The real half of a sample, for an assertion that wants a number.
+fn real(sample: Sample<f64>) -> f64 {
+    match sample {
+        Sample::Real(v) => v,
+        Sample::Bool(b) => panic!("expected a real sample, found Bool({b})"),
+    }
 }
