@@ -54,7 +54,7 @@ Ranked by value over cost. Rows 1–4 are delegation onto structure that already
 |---|---|---|---|---|---|---|
 | 1 | `GraphWitness`, `MixedGraphWitness`, `HypergraphWitness`, `PointCloudWitness`, `TopologyWitness` (`topology`) | `Foldable` | yes — all five already hold a `CausalTensor<T>` payload; four sibling witnesses in the same crate implement it | `grep -rn "impl.*Foldable<" topology/src/extensions` returns Cell/Chain/Cochain/LatticeComplex/Manifold only — none of the five | Reductions over graph payloads inside the witness vocabulary instead of reaching past it to `.data().as_slice()`. Prerequisite for row 2 | ~5 lines each |
 | 2 | `ManifoldWitness` (`topology`) | `Traversable`, then `DiagonalTraversable` | yes — `Traversable<F>: Functor<F> + Foldable<F>`, both implemented at `hkt_manifold/mod.rs:75` | inventory row: has HKT/Functor/Pure/Applicative/Monad/CoMonad/Foldable, lacks only Traversable; `tensor` and `linear` both have it | `Manifold<C, Result<T,E>>` collapses to `Result<Manifold<C,T>, E>` — one failing vertex invalidates the field, which a DEC pipeline hand-rolls today | mechanical |
-| 3 | `ZipTensorWitness` (`tensor`); ~~`ZipDenseVectorWitness` (`linear`)~~ | `Foldable` | yes — the underlying container folds already; the non-zip siblings implement it | `grep -rn "impl.*Foldable.*Zip" tensor/src` returns nothing | a generic function bounded on **one** witness, `W: Semigroupal<W> + Foldable<W>`, that zips then reduces. **Not** element access — see the correction below | delegation; `linear` half **closed 2026-09-15** |
+| 3 | ~~`ZipTensorWitness` (`tensor`), `ZipDenseVectorWitness` (`linear`)~~ | ~~`Foldable`~~ | — | — | — | **closed 2026-09-15**, both halves |
 | 4 | ~~`CausalMultiVectorWitness` (`multivector`)~~ | ~~`Traversable`~~ | — | — | — | **closed 2026-09-15**; see below |
 | 5 | `stats` (13 distribution types), `rand` (`Map`, `Uniform`, `StandardWord`, `StandardBool`) | `Arrow` | n/a — needs a new `→ haft` edge in each crate | `grep -rn deep_causality_haft stats/Cargo.toml rand/Cargo.toml` returns nothing today | `Map`/`Iter` become `Compose`/`arr`; sampler pipelines compose with `first`/`split`/`fanout`; inherits the `haft.arrow.*` Lean proofs | **consumer-gated, see below** |
 
@@ -76,16 +76,15 @@ Sorted by the count of new trait implementations each crate would receive.
 | 1 | `stats` | 13 | `Arrow` on `Bernoulli`, `Categorical`, `Cauchy`, `Exponential`, `LogNormal`, `Normal`, `StandardNormal`, `Poisson`, `UniformInt`, `StandardUniform`, `Weibull`, `Open01`, `OpenClosed01` | 0 witnesses, 0 HKT traits, no `haft` edge | new `stats → haft` edge; no tier move (already tier 4). **No consumer** |
 | 2 | `topology` | 7 | `Foldable` × 5 + `Traversable` + `DiagonalTraversable` | 14 witnesses, 8 traits | none — all prereqs met |
 | 3 | `rand` | 4 | `Arrow` on `Map`, `Uniform`, `StandardWord`, `StandardBool` | 0 witnesses, 0 HKT traits, no `haft` edge | new `rand → haft` edge; **tier 2 → 3**. Verified: nothing downstream moves, `stats` is already tier 4 via `linear`. **No consumer** |
-| 4= | `tensor` | 1 | `Foldable` on `ZipTensorWitness` | 3 witnesses, 13 traits | none |
+| — | ~~`tensor`~~ | ~~1~~ | ~~`Foldable` on `ZipTensorWitness`~~ | **closed 2026-09-15**: 3 witnesses, 14 traits | — |
 | — | ~~`linear`~~ | ~~1~~ | ~~`Foldable` on `ZipDenseVectorWitness`~~ | **closed 2026-09-15**: 4 witnesses, 14 traits | — |
 | — | ~~`multivector`~~ | ~~1~~ | ~~`Traversable` on `CausalMultiVectorWitness`~~ | **closed 2026-09-15**: 2 witnesses, 7 traits | — |
 
-**27 impls total, of which 2 are done and 25 remain.** Seven of the nine mechanical ones (ranks 2
-and 4) are outstanding and move no tiers; seventeen (ranks 1 and 3) need a new dependency edge, one
-of them moves a tier, and neither has a caller waiting.
+**27 impls total, of which 3 are done and 24 remain.** All seven outstanding mechanical impls are
+now in `topology` (rows 1 and 2) and move no tiers; the other seventeen need a new dependency edge,
+one of them moves a tier, and neither has a caller waiting.
 
-**Order of work:** row 1 → row 2, since row 1 is row 2's prerequisite; then row 3's remaining
-half. Row 5 waits for a consumer.
+**Order of work:** row 1 → row 2, since row 1 is row 2's prerequisite. Row 5 waits for a consumer.
 
 ### Correction: what a `Foldable` on a zip witness is for
 
@@ -102,7 +101,7 @@ instantiated at a zip witness without it; the workaround needs two witness param
 yet, so this is capability rather than repair — worth the four lines, not worth overselling. The
 test suite pins both halves, including a negative control that compiles without the instance.
 
-### Closed: `Foldable` on `ZipDenseVectorWitness`, 2026-09-15
+### Closed: `Foldable` on both zip witnesses, 2026-09-15
 
 `Foldable` has no supertraits, so `HKT` was the only requirement and the body delegates to the
 same iterator fold `DenseVectorWitness` uses. `fold` involves no applicative, which is the only
@@ -116,6 +115,15 @@ above, left-to-right order via digit accumulation (a reversal yields `4321` inst
 which plain subtraction would not catch), agreement with the plain witness, the empty-vector seed,
 an accumulator of a different type, and the interaction with `zip_with`'s truncation. Two mutations
 confirm they bite: reversing the fold fails 5 of 8, skipping the first element fails 6.
+
+`ZipTensorWitness` followed the same day and the same way, with one addition the vector case does
+not have. `zip_with` on tensors keeps the shape when both operands agree and reports the flat
+`[len]` of the overlap when they do not, so a fold written against the shape rather than the flat
+data would pass every rank-1 test. Ten tests in
+`deep_causality_tensor/tests/extensions/ext_hkt_zip_foldable_tests.rs` cover rank 1 through rank 3,
+pin row-major visit order, and assert that a flat `[6]`, a `[2, 3]` and a `[3, 2]` holding the same
+values fold identically. Three mutations: reversing the fold fails 7 of 10, skipping the first
+element fails 8, and folding only the first axis — the shape-sensitive slip — fails 5.
 
 ### Closed: `Traversable` on `CausalMultiVectorWitness`, 2026-09-15
 
