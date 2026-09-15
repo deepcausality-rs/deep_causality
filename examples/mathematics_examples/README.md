@@ -135,19 +135,6 @@ rounding error.
 
 ---
 
-## House rules
-
-Every example here follows four:
-
-1. **Precision is a parameter.** One `FloatType` alias, directly above `main`, threaded
-   through every numerical site.
-2. **Values cross the precision boundary through `deep_causality_num::lift`.** `lift`,
-   `lift_usize`, `lift_count` on the way in; `lower` on the way out.
-3. **Printing lives in helper functions below `main`.** `main` reads as the narrative.
-4. **Fallible calls propagate with `?`** out of a `main` that returns `Result`.
-
----
-
 ## Adding New Examples
 
 1. Decide which folder fits: `1_foundation/<crate>/` for one crate's API surface,
