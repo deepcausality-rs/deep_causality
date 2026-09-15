@@ -1046,6 +1046,47 @@ The failure mode this section warned against, writing the pipeline first and sha
 justify it, did not happen: the pipeline was the seventh group of eight, and every stage it names
 was a function before it was a stage.
 
+### 9.3 QCL-2: abstraction-based reasoning, as it shipped
+
+`openspec/changes/archive/2026-09-15-add-qcl2-abstraction` built Lorenz & Tull's abstractions (arXiv:2602.16612) over
+the crate in eight task groups, each green on the quantum crate's Bazel suite before the next, with
+a TDD record per group under the change's `notes/`. What the road map had assumed and the
+verification corrected is in `qcl2-roadmap-verification.md`; what the implementation corrected in
+the design is in the amendments to D4, D6, D7, D10 and D16 and in D17 and D18.
+
+| Group | What shipped | Where |
+|---|---|---|
+| 0 | the seven live `qcl-*` specifications restored from the archived deltas | `openspec/specs/` |
+| 1 | `CircuitModel` with its boxes, wires, grouping and induced DAG; the exact semantics (`clifford_conjugate`, `GaugeFieldGate`) and the Kraus-level numeric semantics with two caps; the `[[8,2,2]]` and hand-built `[[4,2,2]]` fixtures | `circuit_model/`, `qcode/gauge_field_gate.rs`, `utils_tests/` |
+| 2 | the dilation with the `(d_in · d_out)²` leg convention, `glue`, the circuit subject on the builder, `NoCompositionalModel` | `qcm/dilation.rs`, `pipeline/` |
+| 3 | `TypeAlignment` with sides and sections, `QuerySignature`, `Abstraction`, `check_naturality`, the two-sided Frobenius-to-diamond bound | `abstraction/` |
+| 4 | `check_alignment_structure` with Examples 54 and 55, `CodeAbstraction` in the shape of Example 58 with the generation regression against v1, the two pipeline stages | `abstraction/`, `pipeline/validate.rs` |
+| 5 | `FaultSet`, the propagator in the algebra of the logical `Z̄`s, `check_fault_tolerance`, the Haruna filter | `abstraction/fault_set.rs`, `fault_tolerance.rs` |
+| 6 | `Abstraction::compose` with both constants computed, the three chains, the Lean statement of Proposition 17 | `abstraction/composition.rs`, `chains.rs`, `lean/…/Quantum/Abstraction.lean` |
+| 7 | `DemModel` from a graph or Stim text, `DecoderAbstraction` with `τ` as a stochastic matrix, attribution | `qcm/dem_model.rs`, `abstraction/decoder_abstraction.rs` |
+| 8 | the crosstalk decision over circuit-derived candidates, the four new examples | `examples/quantum_examples/qcl_examples/` |
+
+What each new check rests on, in the form of §9.1:
+
+| Check | Rust witness | Lean | Status |
+|---|---|---|---|
+| `check_naturality` | `Abstraction::square`, `frobenius_distance`; `abstraction_tests`, the `[[8,2,2]]` agreement of both paths | none for a single square | **no proof**; the square is computed, and the exact path is the v1 predicates the generation regression pins |
+| the diamond bound | `DiamondBound::from_frobenius`, `from_frobenius_blocks`; the `2 sin(θ/2)` sweep, the direct-sum counterexamples | none | **no proof**; the derivation is `notes/open-questions-resolved.md` §2 and the tests compare both ends to a closed form |
+| `check_alignment_structure` | `alignment_structure`; Examples 54 and 55 pinned | none | **no proof**; Theorem 51 is stated for classical models and the report says `Equivalent` only then, `Necessary` for a quantum side by Remark 56 |
+| `check_fault_tolerance`, the Haruna filter | `ExactProgram::conjugate`, `GaugeFieldGate::conjugated_by_pauli`; the `T̄` remainder at three weights against the numeric conjugation | none | **no proof**; Haruna Eq. (3.63) read as a conjugation in the algebra of the `Z̄(γᵢ)`, derived in `notes/open-questions-resolved.md` §3 and checked numerically |
+| `Abstraction::compose` | `composition_tests`: exact links on the concatenated code, the tightness chain | `quantum.abstraction.compose_exact`, `.defect` | the exact case **proved** (Proposition 17 as associativity of matrix products); the approximate law **no proof**, elementary by the triangle inequality with both constants computed |
+| `DecoderAbstraction::check`, `attribute` | the memory experiment with its complete and incomplete models | none | **no proof**; the record is a classical stochastic process and the squares are computed |
+
+### 9.4 What QCL-2 left
+
+- **`Observe(Ō)` on a code.** The logical measurement needs a classical coarse-graining in the
+  alignment (D16); deferred to a follow-up change.
+- **A common-cause candidate as a circuit.** Under the dilation's leg convention a two-output node
+  has a leg of dimension 256 and its children's factors `2^24` entries (D18); the crosstalk example
+  keeps `H₃` as the v1 factorization.
+- **The mutation runs.** The named-defect audits ran for every group; the `cargo mutants` runs over
+  the kernels were started and stopped for time, and their tables are not in the notes.
+
 ---
 
 ## 10. Benchmarks

@@ -433,6 +433,19 @@ FromPrimitive`, and reaches `rand` nowhere; every QCL-2 kernel is Kraus-level li
 no sampling, and the consumers run at `f32`, `f64` and `Float106` as planned. No adjustment to
 the plan follows from the advance.
 
+### D18. The crosstalk candidates over circuits, and the one that is not
+
+`H₁` and `H₂` are one wire with two single-qubit boxes in either order, grouped so that node 0 is
+`Q1` and node 1 is `Q2`; the wiring carries the edge, each node's leg has dimension 16, the
+conditional factor 256 entries, and the dilation screens by Markov and C₃ at once. `H₄` is the same
+chain grouped into a cycle and `build()` refuses it. `H₃`, a common bath driving both qubits, needs
+a bath node with two output wires, since a single wire from the bath through `Q1` to `Q2` adds the
+edge `Q1 → Q2`. Under D3's leg convention that node's leg has dimension `(4 · 4)² = 256`, its
+children's conditional factors `256 · 16 = 4096` dimensions and `2^24` entries, and the Markov
+check's union `2^40`; so `H₃` stays the v1 factorization, a legal QCM by construction, and the
+example says so. The decision, not the factor values, is what the requirement asks to reproduce,
+and the plan and the adjudication depend on the probes' predictions alone.
+
 ## Risks / Trade-offs
 
 **[The numeric path reaches almost nothing physical]** → It is the bridge to the exact path, not the

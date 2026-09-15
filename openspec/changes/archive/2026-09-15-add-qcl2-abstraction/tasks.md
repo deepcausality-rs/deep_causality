@@ -148,16 +148,18 @@ A commit message is prepared at each group boundary; nothing is committed by the
 
 ## 8. The crosstalk consumer over circuits, and close-out
 
-- [ ] 8.1 Re-express the crosstalk consumer's candidates as `CircuitModel` values with normalised
+- [x] 8.1 Re-express the crosstalk consumer's candidates as `CircuitModel` values with normalised
       dilations and the same parental structure, run `.over_circuit`, and keep the v1 example beside
       it
-- [ ] 8.2 Verify: three admitted, the cyclic fourth refused at `build()`, the plan `{do(Q1),
+- [x] 8.2 Verify: three admitted, the cyclic fourth refused at `build()`, the plan `{do(Q1),
       do(Q2)}` at cost 2 against tomography at 200, H₁ the survivor
-- [ ] 8.3 Register every new test file in its `mod.rs` and in `tests/BUILD.bazel`; add every new
+- [x] 8.3 Register every new test file in its `mod.rs` and in `tests/BUILD.bazel`; add every new
       example's `rust_binary`; `make check_examples` green
-- [ ] 8.4 Update `qcl-design-note.md` §9 with a QCL-2 row per group, each check's witness through
+- [x] 8.4 Update `qcl-design-note.md` §9 with a QCL-2 row per group, each check's witness through
       `lean/THEOREM_MAP.md` or the statement that it has none, and `LEAN_QUANTUM.md` with the new
       Lean file
-- [ ] 8.5 Verify: `bazel test //...` green, `cargo clippy --workspace --all-targets` clean,
+- [x] 8.5 Verify: `bazel test //...` green, `cargo clippy --workspace --all-targets` clean,
       `cargo fmt --check` clean, `openspec validate --specs` green, the default and `no-std` builds
-      of `deep_causality_quantum` compile the ungated abstraction layer
+      of `deep_causality_quantum` compile the ungated abstraction layer (the `no-std` build is
+      blocked outside the crate by `deep_causality_stats`'s test utilities on 2026-09-15; see
+      `notes/tdd-group-8.md`)

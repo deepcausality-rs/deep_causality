@@ -78,3 +78,7 @@ path = "qcl_examples/qcl_code_switching/main.rs"
 [[example]]
 name = "qcl_distillation_round"
 path = "qcl_examples/qcl_distillation_round/main.rs"
+
+[[example]]
+name = "qcl_crosstalk_circuits"
+path = "qcl_examples/qcl_crosstalk_circuits/main.rs"

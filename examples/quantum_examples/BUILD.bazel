@@ -156,3 +156,15 @@ rust_binary(
         normal_dev = True,
     ),
 )
+
+rust_binary(
+    name = "qcl_crosstalk_circuits",
+    srcs = glob(["qcl_examples/qcl_crosstalk_circuits/**/*.rs"]),
+    crate_root = "qcl_examples/qcl_crosstalk_circuits/main.rs",
+    visibility = ["//visibility:public"],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
+)
