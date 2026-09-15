@@ -273,6 +273,8 @@ Rust witnesses in `deep_causality_quantum/tests/formalization_lean/{partial_trac
 | `quantum.partial_trace_nonpreservation.value` | `[Tr_B X, Tr_B Y] = [[0,4],[−4,0]]` (`= +4i·σy`) | proved | `Quantum/PartialTraceCounterexample.lean :: partial_trace_nonpreservation_value` | `partial_trace_tests.rs :: test_partial_trace_nonpreservation_counterexample` | ✓ |
 | `quantum.choi.apply_add` | `applyChoi J` is additive in the state | proved | `Quantum/Choi.lean :: applyChoi_add` | `choi_tests.rs :: test_apply_choi_is_linear` | ✓ |
 | `quantum.choi.apply_smul` | `applyChoi J (c•A) = c•applyChoi J A` | proved | `Quantum/Choi.lean :: applyChoi_smul` | `choi_tests.rs :: test_apply_choi_is_linear` | ✓ |
+| `quantum.abstraction.compose_exact` | two commuting abstraction squares paste: `(τ₂τ₁)·L = H·(σ₂σ₁)` (Lorenz & Tull Prop. 17, exact case) | proved | `Quantum/Abstraction.lean :: abstraction_compose_exact` | `composition_tests.rs :: test_exact_links_compose_exactly_on_the_concatenated_code` | ✓ |
+| `quantum.abstraction.compose_exact.defect` | zero link defects give a zero composite defect, the form the Rust residual measures | proved | `Quantum/Abstraction.lean :: abstraction_compose_exact_defect` | `composition_tests.rs :: test_exact_links_compose_exactly_on_the_concatenated_code` | ✓ |
 
 The **CJ reconstruction isomorphism** `applyChoi (choiOf E) = E` and the QCM theorems
 (`quantum.no_influence`, `quantum.markov_commutativity`, `quantum.unitary_factorization`,

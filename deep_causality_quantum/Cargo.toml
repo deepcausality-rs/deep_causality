@@ -38,6 +38,9 @@ no-std = ["alloc", "deep_causality_algebra/no-std", "deep_causality_core/no-std"
 # C3-exclusion faithfulness check. Pulls in `deep_causality` for the causal graph,
 # which is std-only, so `qcm` implies `std` and is off on bare-metal builds.
 qcm = ["std", "dep:deep_causality"]
+# The Stim detector-error-model text constructor of `DemModel`. Implies `qcm` because the model
+# is carried on the causal graph; adds no dependency.
+dem = ["qcm"]
 # The emergent QPU seam: QpuSampler / ShotHistogram / the shots→Uncertain
 # bridges / qpu_effect / the in-process SimQpu. Off by default; adds no
 # network or async dependency.
@@ -87,10 +90,9 @@ workspace = true
 workspace = true
 optional = true
 
-# The square torus of `LatticeComplex`: the two-logical-qubit fixture the Clifford check on one
-# qubit is tested against.
-[dev-dependencies.deep_causality_topology]
-workspace = true
+
+[dev-dependencies]
+deep_causality_topology = { path = "../deep_causality_unified_math/deep_causality_topology" }
 
 [lints]
 workspace = true

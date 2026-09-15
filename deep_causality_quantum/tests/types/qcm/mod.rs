@@ -5,6 +5,8 @@
 
 #![cfg(feature = "qcm")]
 #[cfg(test)]
+mod dem_model_tests;
+#[cfg(test)]
 mod dilation_tests;
 #[cfg(test)]
 mod environment_tests;

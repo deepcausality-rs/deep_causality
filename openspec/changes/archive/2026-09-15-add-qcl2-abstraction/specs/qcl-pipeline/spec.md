@@ -52,18 +52,24 @@ SHALL be sticky as it is for every other stage.
 
 The pipeline SHALL admit the same three crosstalk candidates by Markov and C₃, SHALL refuse the
 cyclic fourth at `build()`, SHALL plan `{do(Q1), do(Q2)}` at cost 2 against tomography at 200, and
-SHALL name H₁ the survivor, when each admitted candidate is re-expressed as a `CircuitModel` whose
-dilation yields normalised factors with the same parental structure.
+SHALL name H₁ the survivor, when the two direct-cause candidates and the cyclic one are re-expressed
+as `CircuitModel` values whose wiring carries the parental structure and whose dilations yield
+normalised factors, and the common-cause candidate is kept as the v1 factorization.
 
 The v1 consumer's factors are legal for the commutation check and are not Choi operators of any
-channel, so no dilation reproduces their values; the decision is what is reproduced.
+channel, so no dilation reproduces their values; the decision is what is reproduced. The
+common-cause candidate needs a bath node with two output wires; under the dilation's leg convention
+`(d_in · d_out)²` per node that node's leg has dimension 256, its children's conditional factors
+`2^24` entries and the Markov union `2^40`, so it is not dilated (design D18).
 
 #### Scenario: The screen and the plan are unchanged
 
-- **WHEN** the crosstalk example runs `.over_circuit` for each candidate and the same probes and
-  baseline as the v1 example
-- **THEN** three candidates are admitted, the plan's entries are `do(Q1)` and `do(Q2)` at total
-  cost 2, and the adjudication names `H1 Q1->Q2` the survivor
+- **WHEN** the crosstalk example runs `.over_circuit` for `H₁`, `H₂` and the cyclic `H₄`, takes the
+  two screened dilations' factors as candidates beside the v1 `H₃`, and runs the same probes as the
+  v1 example
+- **THEN** the cycle is refused at `build()` as `CyclicStructureUnsupported`, three candidates are
+  admitted, the plan's entries are `do(Q1)` and `do(Q2)` at total cost 2, and the adjudication names
+  `H1 Q1->Q2` the survivor
 
 ### Requirement: The live `qcl-*` specifications are restored before implementation
 

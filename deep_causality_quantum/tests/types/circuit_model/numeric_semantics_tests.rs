@@ -181,13 +181,22 @@ fn test_encoder_and_measurement_form_a_perfect_classical_channel() {
     assert_eq!(m.classical_out(), &[2]);
     assert_eq!((m.d_in(), m.d_out()), (1, 1));
     let (blocks, _) = m.choi_blocks(&NumericCaps::default()).unwrap();
+    // An outcome the state cannot produce has no block: its operators are exactly zero and the
+    // semantics drops them, so a missing block reads as probability zero.
     for x in 0..2 {
         for y in 0..2 {
-            let p = blocks.get(&(vec![x], vec![y])).unwrap().as_slice()[0].re;
+            let p = blocks
+                .get(&(vec![x], vec![y]))
+                .map_or(0.0, |b| b.as_slice()[0].re);
             let expect = if x == y { 1.0 } else { 0.0 };
             assert!((p - expect).abs() < 1e-12, "P(y={y}|x={x}) = {p}");
         }
     }
+    assert_eq!(
+        m.blocks().len(),
+        2,
+        "the two impossible outcomes carry no block"
+    );
     // With a Hadamard between, every probability is one half.
     let model = CircuitModel::<f64>::ungrouped(
         vec![WireType::qubit(), WireType::bit(), WireType::bit()],
@@ -565,8 +574,11 @@ fn test_operator_cap_counts_the_traced_basis_states() {
         ),
         "{err}"
     );
+    // The cap counts the four operators before they are formed; the measured wire sits in |0⟩
+    // afterwards, so the traced state |1⟩ carries the zero operator, which the assembly drops:
+    // two operators remain, one per outcome.
     assert_eq!(
         measured.numeric_semantics(&four).unwrap().operator_count(),
-        4
+        2
     );
 }

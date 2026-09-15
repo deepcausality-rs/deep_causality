@@ -5,7 +5,11 @@
 
 mod abstraction_tests;
 mod alignment_structure_tests;
+mod chains_tests;
 mod code_abstraction_tests;
+mod composition_tests;
+#[cfg(feature = "qcm")]
+mod decoder_abstraction_tests;
 mod diamond_bound_tests;
 mod fault_set_tests;
 mod fault_tolerance_tests;

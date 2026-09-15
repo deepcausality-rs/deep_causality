@@ -330,3 +330,116 @@ fn test_then_and_tensor_refuse_products_above_the_entry_cap_before_forming_them(
         QuantumErrorEnum::NaturalityDimensionExceeded { entries: 4, .. }
     ));
 }
+
+/// (H) A morphism too wide for its natural representation is refused by the entry cap before any
+/// arithmetic on the dimensions can overflow: `(2^33)^2` entries per side do not fit `u64`, so the
+/// count saturates and the cap refuses it.
+#[test]
+fn test_induced_norm_refuses_an_oversized_morphism_before_the_dimensions_overflow() {
+    let wide = QcMorphism::<f64>::new(1, 1 << 33, vec![], vec![]).unwrap();
+    let err = wide
+        .frobenius_induced_norm(&NumericCaps::default())
+        .unwrap_err();
+    match err.0 {
+        QuantumErrorEnum::NaturalityDimensionExceeded { entries, cap, .. } => {
+            assert_eq!(cap, 1 << 24);
+            assert!(entries > cap, "{entries}");
+        }
+        other => panic!("{other:?}"),
+    }
+}
+
+/// (H) The qubit count of the widest dimension `usize` holds is the bit width, and it is reached
+/// without shifting past the word.
+#[test]
+fn test_qubit_counts_terminate_at_the_top_of_usize() {
+    let widest = QcMorphism::<f64>::new(usize::MAX, 1, vec![], vec![]).unwrap();
+    assert_eq!(widest.input_qubits(), usize::BITS as usize);
+    assert_eq!(widest.output_qubits(), 0);
+    let top = QcMorphism::<f64>::new(1 << 40, 1 << 40, vec![], vec![]).unwrap();
+    assert_eq!((top.input_qubits(), top.output_qubits()), (40, 40));
+    assert_eq!(top.choi_entries(), u64::MAX, "saturated, not wrapped");
+}
+
+/// (H) The identity on a dimension whose square does not fit `usize` is refused, not allocated.
+#[test]
+fn test_identity_refuses_a_dimension_whose_square_overflows() {
+    let err = QcMorphism::<f64>::identity(1 << 33).unwrap_err();
+    assert!(matches!(err.0, QuantumErrorEnum::DimensionMismatch(_)));
+}
+
+/// The induced norm of a morphism with classical wires is the largest singular value of the whole
+/// natural representation over the direct sums, not the largest block norm. A fair coin from the
+/// trivial system, two output blocks with scalar Kraus `√½`, sends `ρ` to `(½ρ, ½ρ)` with
+/// Frobenius norm `√½ ‖ρ‖`, so its norm is `√½` where the block maximum is `½`. The sum of two
+/// classical values into one, two input blocks with scalar Kraus `1`, sends `(a, b)` to `a + b`,
+/// norm `√2` where either per-input stacking gives `1`. A diagonal of scalar blocks `1` and `2`
+/// stays at the block maximum `4`.
+#[test]
+fn test_induced_norm_over_classical_blocks_is_the_norm_of_the_whole_natural_representation() {
+    let caps = NumericCaps::default();
+    let scalar = |v: f64| CausalTensor::from_slice(&[C::new(v, 0.0)], &[1, 1]);
+    let half = 0.5f64.sqrt();
+    let mut coin = QcMorphism::<f64>::new(1, 1, vec![], vec![2]).unwrap();
+    coin.push(vec![], vec![0], vec![scalar(half)]).unwrap();
+    coin.push(vec![], vec![1], vec![scalar(half)]).unwrap();
+    let norm = coin.frobenius_induced_norm(&caps).unwrap();
+    assert!((norm - half).abs() < 1e-12, "fair coin: {norm}");
+
+    let mut sum = QcMorphism::<f64>::new(1, 1, vec![2], vec![]).unwrap();
+    sum.push(vec![0], vec![], vec![scalar(1.0)]).unwrap();
+    sum.push(vec![1], vec![], vec![scalar(1.0)]).unwrap();
+    let norm = sum.frobenius_induced_norm(&caps).unwrap();
+    assert!(
+        (norm - 2f64.sqrt()).abs() < 1e-12,
+        "sum of two values: {norm}"
+    );
+
+    let mut diagonal = QcMorphism::<f64>::new(1, 1, vec![2], vec![2]).unwrap();
+    diagonal.push(vec![0], vec![0], vec![scalar(1.0)]).unwrap();
+    diagonal.push(vec![1], vec![1], vec![scalar(2.0)]).unwrap();
+    let norm = diagonal.frobenius_induced_norm(&caps).unwrap();
+    assert!((norm - 4.0).abs() < 1e-12, "diagonal: {norm}");
+
+    // A computational-basis measurement, one quantum input to two classical blocks with Kraus
+    // `|0⟩⟨0|` and `|1⟩⟨1|`, keeps the diagonal of `ρ` and has norm one; its entry count under the
+    // cap is the stacked `(2 · 4) × 4` representation.
+    let one = C::new(1.0, 0.0);
+    let zero = C::new(0.0, 0.0);
+    let p0 = CausalTensor::from_slice(&[one, zero, zero, zero], &[2, 2]);
+    let p1 = CausalTensor::from_slice(&[zero, zero, zero, one], &[2, 2]);
+    let mut measure = QcMorphism::<f64>::new(2, 1, vec![], vec![2]).unwrap();
+    measure
+        .push(
+            vec![],
+            vec![0],
+            vec![CausalTensor::from_slice(&[one, zero], &[1, 2])],
+        )
+        .unwrap();
+    measure
+        .push(
+            vec![],
+            vec![1],
+            vec![CausalTensor::from_slice(&[zero, one], &[1, 2])],
+        )
+        .unwrap();
+    let norm = measure.frobenius_induced_norm(&caps).unwrap();
+    assert!((norm - 1.0).abs() < 1e-12, "measurement: {norm}");
+    let mut dephase = QcMorphism::<f64>::new(2, 2, vec![], vec![2]).unwrap();
+    dephase.push(vec![], vec![0], vec![p0]).unwrap();
+    dephase.push(vec![], vec![1], vec![p1]).unwrap();
+    let norm = dephase.frobenius_induced_norm(&caps).unwrap();
+    assert!((norm - 1.0).abs() < 1e-12, "dephasing instrument: {norm}");
+    let tight = NumericCaps {
+        max_entries: 31,
+        max_operators: 1 << 12,
+    };
+    assert!(matches!(
+        dephase.frobenius_induced_norm(&tight).unwrap_err().0,
+        QuantumErrorEnum::NaturalityDimensionExceeded {
+            entries: 32,
+            cap: 31,
+            ..
+        }
+    ));
+}

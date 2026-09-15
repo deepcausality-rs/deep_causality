@@ -8,7 +8,7 @@ use crate::types::carriers::Channel;
 use crate::types::decision::Tolerance;
 use crate::types::qgates::channel::{choi_from_kraus, kraus_from_choi};
 use crate::types::qgates::operator_linalg::frobenius_norm;
-use alloc::collections::BTreeMap;
+use alloc::collections::{BTreeMap, BTreeSet};
 use alloc::format;
 use alloc::vec;
 use alloc::vec::Vec;
@@ -148,8 +148,17 @@ where
     }
 
     /// The identity morphism on a `d`-dimensional quantum system.
+    ///
+    /// # Errors
+    ///
+    /// [`QuantumError::DimensionMismatch`] when `d²` does not fit `usize`.
     pub fn identity(d: usize) -> Result<Self, QuantumError> {
-        let mut data = vec![Complex::new(R::zero(), R::zero()); d * d];
+        let entries = d.checked_mul(d).ok_or_else(|| {
+            QuantumError::DimensionMismatch(format!(
+                "the identity on dimension {d} has more entries than usize holds"
+            ))
+        })?;
+        let mut data = vec![Complex::new(R::zero(), R::zero()); entries];
         for i in 0..d {
             data[i * d + i] = Complex::new(R::one(), R::zero());
         }
@@ -442,6 +451,188 @@ where
         Ok(out)
     }
 
+    /// The Frobenius distance of two morphisms' Choi operators without forming them, through
+    /// `‖J(A) − J(B)‖²_F = Σ |Tr A_a† A_a'|² + Σ |Tr B_b† B_b'|² − 2 Σ |Tr A_a† B_b|²`, which is
+    /// exact because `Tr J(A)† J(B) = Σ_{a,b} |Tr A_a† B_b|²`. Blocks are matched by classical
+    /// value; a block one side lacks counts with the other side's norm alone. The cost is
+    /// quadratic in the operator count and linear in `d_in · d_out`, so an alignment on a wide
+    /// register is checked where the Choi operator would not fit the entry cap.
+    ///
+    /// # Errors
+    ///
+    /// [`QuantumError::DimensionMismatch`] on different types.
+    pub fn frobenius_distance_by_gram(&self, other: &Self) -> Result<R, QuantumError> {
+        if self.d_in != other.d_in
+            || self.d_out != other.d_out
+            || self.classical_in != other.classical_in
+            || self.classical_out != other.classical_out
+        {
+            return Err(QuantumError::DimensionMismatch(format!(
+                "cannot compare a {} → {} morphism with a {} → {} one",
+                self.d_in, self.d_out, other.d_in, other.d_out
+            )));
+        }
+        let overlap = |a: &CausalTensor<Complex<R>>, b: &CausalTensor<Complex<R>>| -> R {
+            // |Tr A† B|² as the squared modulus of the entrywise inner product.
+            let inner = a
+                .as_slice()
+                .iter()
+                .zip(b.as_slice())
+                .fold(Complex::new(R::zero(), R::zero()), |acc, (x, y)| {
+                    acc + Complex::new(x.re, -x.im) * *y
+                });
+            inner.re * inner.re + inner.im * inner.im
+        };
+        let gram = |family: &[CausalTensor<Complex<R>>]| -> R {
+            let mut total = R::zero();
+            for a in family {
+                for b in family {
+                    total += overlap(a, b);
+                }
+            }
+            total
+        };
+        let mut squared = R::zero();
+        let keys: BTreeSet<&(ClassicalValues, ClassicalValues)> =
+            self.blocks.keys().chain(other.blocks.keys()).collect();
+        for key in keys {
+            let (a, b) = (self.blocks.get(key), other.blocks.get(key));
+            if let Some(a) = a {
+                squared += gram(a);
+            }
+            if let Some(b) = b {
+                squared += gram(b);
+            }
+            if let (Some(a), Some(b)) = (a, b) {
+                let two = R::one() + R::one();
+                for x in a {
+                    for y in b {
+                        squared -= two * overlap(x, y);
+                    }
+                }
+            }
+        }
+        Ok(if squared > R::zero() {
+            squared.sqrt()
+        } else {
+            R::zero()
+        })
+    }
+
+    /// The Frobenius-induced norm `‖τ‖_{F→F} = sup ‖τ(ρ)‖_F / ‖ρ‖_F` of the morphism as a linear map
+    /// between the direct sums over its classical values, with the Frobenius norm on a direct sum
+    /// the root of the summed squares. It is the largest singular value of the natural
+    /// representation `N`, the block matrix whose block `(y, x)` is `Σ_k K ⊗ conj(K)` over the
+    /// Kraus operators of the block `(x, y)`, a `d_out² × d_in²` matrix acting on the row-major
+    /// vectorisation; a block the morphism lacks is zero. `N` has one block row per classical
+    /// output value and one block column per classical input value that occurs. The norm is the
+    /// square root of the largest eigenvalue of the smaller Gram matrix, `N N†` or `N† N`, through
+    /// the shipped Hermitian eigensolver.
+    ///
+    /// A purely quantum morphism is one block. Blocks that pair each input value with its own
+    /// output values give a block-diagonal `N`, whose norm is the largest block norm. One input
+    /// value feeding several output values stacks their blocks: a fair coin from the trivial system,
+    /// two output blocks with scalar Kraus `√½`, sends `ρ` to `(½ρ, ½ρ)` and has norm `√½`, where
+    /// the block maximum would read `½`. Several input values feeding one output value concatenate
+    /// their blocks side by side: the sum of two classical values, two input blocks with scalar
+    /// Kraus `1`, sends `(a, b)` to `a + b` and has norm `√2`. A unitary has norm one, a partial
+    /// trace over a `d`-dimensional factor `√d`, a state preparation one.
+    ///
+    /// # Errors
+    ///
+    /// [`QuantumError::NaturalityDimensionExceeded`] when `N` would exceed the entry cap, counted
+    /// in saturating arithmetic before allocating; [`QuantumError::DimensionMismatch`] when its
+    /// shape does not fit `usize`; the eigensolver's errors.
+    pub fn frobenius_induced_norm(&self, caps: &NumericCaps) -> Result<R, QuantumError> {
+        let (d_in, d_out) = (self.d_in, self.d_out);
+        let inputs: BTreeMap<&ClassicalValues, usize> = self
+            .blocks
+            .keys()
+            .map(|(x, _)| x)
+            .collect::<BTreeSet<_>>()
+            .into_iter()
+            .enumerate()
+            .map(|(i, x)| (x, i))
+            .collect();
+        let outputs: BTreeMap<&ClassicalValues, usize> = self
+            .blocks
+            .keys()
+            .map(|(_, y)| y)
+            .collect::<BTreeSet<_>>()
+            .into_iter()
+            .enumerate()
+            .map(|(i, y)| (y, i))
+            .collect();
+        // The cap is counted on the dimensions before anything else, one block at least on each
+        // side, so an oversized morphism is refused whether or not it holds a block yet.
+        let block_rows_64 = (d_out as u64).saturating_mul(d_out as u64);
+        let block_cols_64 = (d_in as u64).saturating_mul(d_in as u64);
+        let rows_64 = block_rows_64.saturating_mul(outputs.len().max(1) as u64);
+        let cols_64 = block_cols_64.saturating_mul(inputs.len().max(1) as u64);
+        let entries = rows_64.saturating_mul(cols_64);
+        if entries > caps.max_entries {
+            return Err(QuantumError::NaturalityDimensionExceeded(
+                ceil_log2(d_in),
+                ceil_log2(d_out),
+                entries,
+                caps.max_entries,
+            ));
+        }
+        if inputs.is_empty() || outputs.is_empty() {
+            return Ok(R::zero());
+        }
+        let fit = |n: u64| {
+            usize::try_from(n).map_err(|_| {
+                QuantumError::DimensionMismatch(
+                    "the natural representation of the morphism does not fit usize".into(),
+                )
+            })
+        };
+        let (rows, cols) = (fit(rows_64)?, fit(cols_64)?);
+        let (block_rows, block_cols) = (fit(block_rows_64)?, fit(block_cols_64)?);
+        let zero = Complex::new(R::zero(), R::zero());
+        let mut natural = vec![zero; rows * cols];
+        for ((x, y), kraus) in &self.blocks {
+            let row0 = outputs[y] * block_rows;
+            let col0 = inputs[x] * block_cols;
+            for k in kraus {
+                let conj: Vec<Complex<R>> = k
+                    .as_slice()
+                    .iter()
+                    .map(|c| Complex::new(c.re, -c.im))
+                    .collect();
+                let conj = CausalTensor::from_slice(&conj, &[d_out, d_in]);
+                let term = k
+                    .kronecker(&conj)
+                    .map_err(|e| QuantumError::CalculationError(format!("kronecker: {e:?}")))?;
+                for (r, term_row) in term.as_slice().chunks(block_cols).enumerate() {
+                    let start = (row0 + r) * cols + col0;
+                    for (n, t) in natural[start..start + block_cols].iter_mut().zip(term_row) {
+                        *n += *t;
+                    }
+                }
+            }
+        }
+        let natural = CausalTensor::from_slice(&natural, &[rows, cols]);
+        let adjoint = natural
+            .dagger()
+            .map_err(|e| QuantumError::CalculationError(format!("dagger: {e:?}")))?;
+        let gram = if rows <= cols {
+            natural.matmul(&adjoint)
+        } else {
+            adjoint.matmul(&natural)
+        }
+        .map_err(|e| QuantumError::CalculationError(format!("matmul: {e:?}")))?;
+        let (values, _) = gram
+            .eigen_hermitian()
+            .map_err(|e| QuantumError::CalculationError(format!("eigen: {e:?}")))?;
+        let largest = values
+            .iter()
+            .map(|v| v.re)
+            .fold(R::zero(), |a, b| if b > a { b } else { a });
+        Ok(largest.sqrt())
+    }
+
     /// The Choi operator of every block, formed through `choi_from_kraus`, with the entry count it
     /// took.
     ///
@@ -543,13 +734,14 @@ fn check_storage_cap(
     Ok(())
 }
 
-/// The smallest `n` with `2^n ≥ d`.
+/// The smallest `n` with `2^n ≥ d`, read off the bit width of `d − 1`, so the top of `usize`
+/// gives its bit count and no shift leaves the word.
 pub(crate) fn ceil_log2(d: usize) -> usize {
-    let mut n = 0usize;
-    while (1usize << n) < d {
-        n += 1;
+    if d <= 1 {
+        0
+    } else {
+        (usize::BITS - (d - 1).leading_zeros()) as usize
     }
-    n
 }
 
 /// The index map of a leg permutation: `map[old]` is the position of the basis state `old` over
@@ -560,8 +752,10 @@ pub(crate) fn leg_index_map(
     order: &[usize],
     d: usize,
 ) -> Result<Vec<usize>, QuantumError> {
-    let product: usize = dims.iter().product();
-    if product != d || order.len() != dims.len() {
+    let product = dims
+        .iter()
+        .try_fold(1usize, |acc, &dim| acc.checked_mul(dim));
+    if product != Some(d) || order.len() != dims.len() {
         return Err(QuantumError::DimensionMismatch(format!(
             "leg dimensions {dims:?} and order {order:?} do not describe a {d}-dimensional system"
         )));

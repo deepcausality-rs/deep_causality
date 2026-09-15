@@ -17,8 +17,9 @@ type is.
 
 #### Scenario: A model from a graph
 
-- **WHEN** `DemModel::from_graph` is given a frozen `CausaloidGraph` with two error mechanisms, three
-  detectors and one observable, each mechanism a parent of the detectors it flips
+- **WHEN** `DemModel::from_graph` is given a frozen `CausaloidGraph` and the `DemRoles` naming two
+  mechanism nodes with their probabilities, three detector nodes and one observable node, each
+  mechanism node a parent of the detector nodes it flips
 - **THEN** the model's variables are the detectors and the observable, its latents are the
   mechanisms, and `induced_dag()` has an edge from each mechanism to each detector it names
 
@@ -56,26 +57,40 @@ trait and no decoding algorithm.
 
 - **WHEN** `DecoderAbstraction::new(circuit, dem, tau)` is given `tau` as a classical stochastic
   matrix from syndrome strings to logical outcomes
-- **THEN** it is lifted to a `Channel` through the FStoch embedding, validated CPTP once, and the
-  abstraction is built with no other information about how `tau` was computed
+- **THEN** it is lifted through the FStoch embedding into a QC morphism on the trivial quantum
+  system with one scalar block per non-zero entry, validated stochastic once (every row sums to
+  one, no negative or non-finite entry), carried by the type alignment as its classical output
+  map, and the abstraction is built with no other information about how `tau` was computed
 
 ### Requirement: Naturality of the decoder abstraction is decoder-model validation
 
 `check_naturality` on a `DecoderAbstraction` SHALL ask, for each opening in the low-level signature,
 whether the decoder's classical picture commutes with the physical circuit, and a failing square
-SHALL be reported with the physical query that exposed it as witness.
+SHALL be reported with the physical query that exposed it as witness. The openings are the fault
+queries at the circuit locations the caller names in `DecoderAbstraction::new`, each location
+given as the circuit fault together with the index of the mechanism representing it or `None`;
+the model itself carries no circuit locations. Each is an opening at a wire followed by the
+insertion of a Pauli; on the model side the named mechanism fires once more, and a location given
+as `None` receives a phantom mechanism that never fires and flips nothing, so its square asks
+whether the model may ignore that location.
 
 A failure is a fault the detector error model does not represent: a correlated error, a leakage
 event or a hook error the model's mechanisms omit. The validation is causal, by openings, not
-statistical.
+statistical. An omitted mechanism shifts the whole record, so every square carries the nominal
+mismatch, of the order of the omitted probability; the square at the omitted location compares a
+shifted record with an unshifted prediction, and for a decoder whose reading distinguishes the
+shifted record, as the memory experiment's detector reading does, its residual is of the order of
+`√2` and the report's worst failure names that location. A decoder that maps every record to one
+string sees no shift, and the check reports what that decoder's picture commutes with.
 
 #### Scenario: A correlated two-qubit error absent from the model is exposed
 
 - **WHEN** the low-level circuit of a small memory experiment carries an injected two-qubit
   correlated error channel at a named location and the `DemModel` lists only single-qubit
   mechanisms
-- **THEN** `check_naturality` rejects on the opening at that location, and the witness names the
-  location
+- **THEN** `check_naturality` rejects on the opening at that location with a residual above one,
+  the report's worst failure names the location and marks it as not in the model, and every other
+  square carries only the nominal mismatch, below one tenth
 
 #### Scenario: A model that represents every mechanism passes
 

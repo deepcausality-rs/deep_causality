@@ -35,6 +35,7 @@ first principles in `lean/DeepCausalityFormal/Quantum/`. Every listed theorem cl
 | `partial_trace_preservation_boundary` | boundary support ⇒ commutation preserved (Q-PTP) | `… :: test_partial_trace_preservation_boundary_case` |
 | `partial_trace_nonpreservation` (+ `_value`) | **B1**: `[X,Y]=0` yet `[Tr_B X, Tr_B Y] = [[0,4],[−4,0]] ≠ 0` | `… :: test_partial_trace_nonpreservation_counterexample` |
 | `applyChoi_add` / `applyChoi_smul` | the reconstructed Choi action is linear | `channel_tests :: test_apply_kraus_and_apply_choi_agree` |
+| `abstraction_compose_exact` / `_defect` | two commuting abstraction squares paste along their middle level (Lorenz & Tull, Proposition 17, exact case) | `composition_tests :: test_exact_links_compose_exactly_on_the_concatenated_code` |
 
 ### The headline: `partial_trace_preservation` is false
 
@@ -45,6 +46,17 @@ is positive-linear but not an algebra homomorphism. The refuting witness is prov
 commuting with `M` forces `Z` to commute with `Tr_B(M)`. The crate therefore supports **flat** QCM
 models and treats quantum-subgraph nesting — whose physical meaning is itself unestablished — as an
 open research question, not a promised feature.
+
+### The abstraction layer (QCL-2)
+
+`lean/DeepCausalityFormal/Quantum/Abstraction.lean` states Proposition 17 in the exact case over
+the pair-indexed matrix model: with the two link squares `τ₁out · L = M · τ₁in` and
+`τ₂out · M = H · τ₂in`, the composite `(τ₂out · τ₁out) · L = H · (τ₂in · τ₁in)`, which is associativity
+of matrix multiplication applied twice, and the same in defect form. The approximate law the crate
+records, `ε ≤ ‖τ₂‖_post · ε₁ + ‖τ₁‖_pre · ε₂` in Frobenius norm on Choi operators with both constants
+computed, is the crate's own theorem by the triangle inequality on the same pasting and has no Lean
+statement. The naturality check, the structural precheck, the fault propagator and the decoder
+validation are computed and witnessed by tests; none claims a theorem.
 
 ## Deferred (stated as targets, not yet proved in Lean)
 

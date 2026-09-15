@@ -361,7 +361,7 @@ by hand.
 | V-14 | S3 | §11 | Abstraction layer is `alloc`; `Dilation`, `DemModel` are `qcm`; Stim is `dem` |
 | V-15 | S3 | none | release-plz owns the bump and the changelog |
 
-**Disposition.** Every entry is applied in `openspec/changes/add-qcl2-abstraction/`: V-1 as task 0
+**Disposition.** Every entry is applied in `openspec/changes/archive/2026-09-15-add-qcl2-abstraction/`: V-1 as task 0
 and the `ADDED`-only rule; V-2, V-3, V-4, V-5, V-7 and V-8 as design decisions with their own
 requirements and scenarios; V-6 as the re-stated Phase 1 exit scenario; V-9, V-13, V-14 and V-15 in
 the proposal's impact section; V-10, V-11 and V-12 as text. The road map itself is not edited;

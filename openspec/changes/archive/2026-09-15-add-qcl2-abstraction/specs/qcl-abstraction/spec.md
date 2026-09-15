@@ -292,8 +292,17 @@ the residual it measures.
 #### Scenario: The concatenated code's bound holds
 
 - **WHEN** the hand-built `[[4,2,2]]` complex is concatenated with itself as inner and outer code
-  and `check_naturality` runs on the composite for `Z̄` and `H̄`
-- **THEN** the measured residual is at most the composite bound recorded by `compose`
+  and `check_naturality` runs on the composite for `Z̄` and `X̄`
+- **THEN** the measured residual is at most the composite bound recorded by `compose`, both are
+  zero, and the inner `CZ̄`, whose representative pairs a qubit of each outer block, is refused by
+  name because the construction carries no transversal gadget between code blocks
+
+#### Scenario: The switching gadget's noise is the first link's residual
+
+- **WHEN** two logical qubits are switched from `[[4,2,2]]` into `[[8,2,2]]` through a
+  decode-and-re-encode gadget with a depolarising channel of probability `0.1` on one logical wire
+- **THEN** the first link's residual is positive, the second link's is zero, the composite's
+  measured residual is at most the recorded bound, and the noiseless gadget composes exactly
 
 #### Scenario: The opened square commutes on the small code
 

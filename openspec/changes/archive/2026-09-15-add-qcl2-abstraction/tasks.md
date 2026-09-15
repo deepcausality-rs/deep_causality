@@ -117,47 +117,49 @@ A commit message is prepared at each group boundary; nothing is committed by the
 
 ## 6. Composition and the three chain consumers
 
-- [ ] 6.1 Add `Abstraction::compose`: `π = π₁ ∘ π₂`, `τ = τ₂ ∘ τ₁`, both constants as the
+- [x] 6.1 Add `Abstraction::compose`: `π = π₁ ∘ π₂`, `τ = τ₂ ∘ τ₁`, both constants as the
       Frobenius-induced norms of `τ₂` and `τ₁` from the Gram matrix of each natural representation
       through `eigen_hermitian`, the norm and the bound in the report's provenance
-- [ ] 6.2 Add `lean/DeepCausalityFormal/Quantum/Abstraction.lean` with Proposition 17 in the exact
+- [x] 6.2 Add `lean/DeepCausalityFormal/Quantum/Abstraction.lean` with Proposition 17 in the exact
       case over the pair-indexed matrix model, and bind it in `lean/THEOREM_MAP.md` to the exact
       composition test; register the Bazel `lean_test` target
-- [ ] 6.3 Add the three chain consumers under `examples/quantum_examples/qcl_examples/`:
+- [x] 6.3 Add the three chain consumers under `examples/quantum_examples/qcl_examples/`:
       the concatenated hand-built `[[4,2,2]]`, code switching with the gadget as low-level query, and a distillation
       round labelled as an example; each with a `rust_binary` in `BUILD.bazel`, a `FloatType` alias
       in `main.rs`, and the lifts from `deep_causality_num`
-- [ ] 6.4 Verify: exact links compose to residual zero; the tightness pair exceeds a bound with
+- [x] 6.4 Verify: exact links compose to residual zero; the tightness pair exceeds a bound with
       either constant set to one; each consumer's measured residual is at most its recorded bound;
       the consumers run at `f32`, `f64` and `Float106`
 
 ## 7. The decoder as an abstraction
 
-- [ ] 7.1 Add `DemModel::from_graph` over a frozen `CausaloidGraph` under `qcm`, with detectors,
+- [x] 7.1 Add `DemModel::from_graph` over a frozen `CausaloidGraph` under `qcm`, with detectors,
       observables and latent mechanisms, and `induced_dag()`
-- [ ] 7.2 Add the `dem` feature implying `qcm`, `DemModel::from_stim_text` for `error`, `detector`
+- [x] 7.2 Add the `dem` feature implying `qcm`, `DemModel::from_stim_text` for `error`, `detector`
       and `logical_observable` lines, unknown lines refused by name; enable `dem` in `BUILD.bazel`
-- [ ] 7.3 Add `DecoderAbstraction` with `τ` as a caller-supplied channel or stochastic matrix lifted
+- [x] 7.3 Add `DecoderAbstraction` with `τ` as a caller-supplied channel or stochastic matrix lifted
       through the FStoch embedding; no `Decoder` trait
-- [ ] 7.4 Add the logical attribution query over a `FaultSet`, ranked by residual
-- [ ] 7.5 Build the small memory-experiment fixture with one injected correlated two-qubit error
+- [x] 7.4 Add the logical attribution query over a `FaultSet`, ranked by residual
+- [x] 7.5 Build the small memory-experiment fixture with one injected correlated two-qubit error
       and its two `DemModel`s, with and without the mechanism
-- [ ] 7.6 Verify: the omitted mechanism is exposed at the injected location; the complete model
+- [x] 7.6 Verify: the omitted mechanism is exposed at the injected location; the complete model
       passes; attribution ranks the injected location first; the three-line Stim text parses and the
       `repeat` line is refused
 
 ## 8. The crosstalk consumer over circuits, and close-out
 
-- [ ] 8.1 Re-express the crosstalk consumer's candidates as `CircuitModel` values with normalised
+- [x] 8.1 Re-express the crosstalk consumer's candidates as `CircuitModel` values with normalised
       dilations and the same parental structure, run `.over_circuit`, and keep the v1 example beside
       it
-- [ ] 8.2 Verify: three admitted, the cyclic fourth refused at `build()`, the plan `{do(Q1),
+- [x] 8.2 Verify: three admitted, the cyclic fourth refused at `build()`, the plan `{do(Q1),
       do(Q2)}` at cost 2 against tomography at 200, H₁ the survivor
-- [ ] 8.3 Register every new test file in its `mod.rs` and in `tests/BUILD.bazel`; add every new
+- [x] 8.3 Register every new test file in its `mod.rs` and in `tests/BUILD.bazel`; add every new
       example's `rust_binary`; `make check_examples` green
-- [ ] 8.4 Update `qcl-design-note.md` §9 with a QCL-2 row per group, each check's witness through
+- [x] 8.4 Update `qcl-design-note.md` §9 with a QCL-2 row per group, each check's witness through
       `lean/THEOREM_MAP.md` or the statement that it has none, and `LEAN_QUANTUM.md` with the new
       Lean file
-- [ ] 8.5 Verify: `bazel test //...` green, `cargo clippy --workspace --all-targets` clean,
+- [x] 8.5 Verify: `bazel test //...` green, `cargo clippy --workspace --all-targets` clean,
       `cargo fmt --check` clean, `openspec validate --specs` green, the default and `no-std` builds
-      of `deep_causality_quantum` compile the ungated abstraction layer
+      of `deep_causality_quantum` compile the ungated abstraction layer (the `no-std` build is
+      blocked outside the crate by `deep_causality_stats`'s test utilities on 2026-09-15; see
+      `notes/tdd-group-8.md`)

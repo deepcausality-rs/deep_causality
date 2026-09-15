@@ -66,3 +66,19 @@ path = "qcl_examples/qcl_geometric_qec/main.rs"
 [[example]]
 name = "qcl_crosstalk"
 path = "qcl_examples/qcl_crosstalk/main.rs"
+
+[[example]]
+name = "qcl_concatenated_code"
+path = "qcl_examples/qcl_concatenated_code/main.rs"
+
+[[example]]
+name = "qcl_code_switching"
+path = "qcl_examples/qcl_code_switching/main.rs"
+
+[[example]]
+name = "qcl_distillation_round"
+path = "qcl_examples/qcl_distillation_round/main.rs"
+
+[[example]]
+name = "qcl_crosstalk_circuits"
+path = "qcl_examples/qcl_crosstalk_circuits/main.rs"

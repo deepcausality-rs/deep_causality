@@ -305,6 +305,22 @@ D2-5 has been violated. The logical attribution query enumerates the fault-set q
 fail and ranks them by residual; because the low-level model is a circuit, entanglement-mediated
 correlations are represented as such rather than as a classical common cause.
 
+*Amended during implementation (2026-09-15).* `τ` enters as a stochastic matrix over outcome
+strings and is lifted into QC as a morphism on the trivial quantum system with one scalar block per
+non-zero entry, the FStoch embedding; a `Channel` with a dense Choi operator would carry nothing
+the blocks do not. The type alignment carries it as a classical output map beside its quantum
+entries, where classical wires otherwise align by the identity. The `DemModel` answers `Io` and
+`Fault` queries: a fault `X` on mechanism `k` is the distribution with `k`'s flip pattern applied
+once more, which is what a Pauli injected at the mechanism's circuit location does to a classical
+record. The decoder abstraction's signature is `Io` plus one such pair per circuit location the
+caller names; a location the model does not represent receives a phantom mechanism, probability
+zero and no flips, so an omitted correlated error fails at its own location with a residual of the
+order of `√2` while every other square carries the nominal mismatch of the order of the omitted
+probability. Attribution is the numeric fault check of the abstraction, every fault against the
+model's nominal prediction, sorted by residual. The memory experiment's record opens `2^5`
+measurement branches on top of the noise branches, so the numeric semantics now drops branches and
+traced operators that are exactly zero, an exact pruning, and the fixture raises the operator cap.
+
 ### D11. Feature placement
 
 `CircuitModel`, `TypeAlignment`, `QuerySignature`, `Abstraction`, `check_naturality`,
@@ -373,6 +389,63 @@ square; a computational measurement of the physical support has `2^|γ|` outcome
 measurement has two, so the low-level side needs either an operator-valued observe query or a
 classical coarse-graining `τ` (the parity of the support). Either is a spec extension and goes to a
 follow-up change; the fault-tolerance predicate (D7) does not depend on it.
+
+### D17. The three chains are built in the crate and shown in the examples
+
+The consumers of the composition law live as constructors in `abstraction/chains.rs`, so the tests
+and the three example binaries share one construction each and the examples only print.
+
+*Concatenation.* The inner code's `n` physical qubits form `n / k_out` blocks, each encoded by the
+outer code. The low-level model carries the inner encoder on the wires that stand for the middle
+qubits (middle qubit `j` is logical qubit `j mod k_out` of block `j / k_out`), one outer encoder per
+block, and the inner program with each gate replaced by the outer code's emitted program for it on
+the block's wires; `Y` is `X` then `Z` up to a global phase. A two-qubit gate across blocks would
+need a transversal gadget between code blocks and is refused by name, which is why the inner
+`CZ̄` of `[[4,2,2]]`, whose representative pairs a qubit of each block, is the refusal the tests and
+the example show; `Z̄` and `X̄` compose exactly. The first link aligns each block's logical wires by
+the identity on the input side and the block through the outer recovery on the output side.
+
+*Code switching.* The gadget is decode-A-then-encode-B, with an optional Kraus family on one
+logical wire between the two, and it is the low-level query of the first link, aligned with code
+B's model by the physical identity on the wider register; the second link is code B's abstraction.
+The section check `τ ∘ E = id` of an alignment on eight qubits has a Choi operator of `2^32`
+entries, so `TypeAlignment` now checks it through the Gram identity
+`‖J(A) − J(B)‖²_F = Σ|Tr A_a†A_a'|² + Σ|Tr B_b†B_b'|² − 2Σ|Tr A_a†B_b|²`, quadratic in the operator
+count and linear in `d_in · d_out`, without forming the Choi operator.
+
+*Distillation round.* The low-level model encodes, depolarises every physical qubit with
+probability `p`, and runs the encoded `T̄ H̄` on every logical qubit; the middle model is the same
+without the noise; the high level is `T H`. The first link measures the noise, the second is the
+code, and the composite's residual is the noise the ideal recovery does not remove. The paper
+defers this case (§7.1); the example claims the residual it measures.
+
+*The constants.* `‖τ‖_{F→F}` is computed from the natural representation `N = Σ_k K ⊗ conj(K)`
+(`d_out² × d_in²`) as the square root of the largest eigenvalue of the smaller Gram matrix through
+the shipped Hermitian eigensolver, per classical block, taking the largest. The tightness fixture
+of the tests is a three-wire chain through two partial traces with the traced wires fully
+depolarised at the level below, which is what makes post-composition by a trace attain its constant
+`√2`; pre-composition by a trace always does.
+
+*Unified math advance (2026-09-15).* `deep_causality_stats` and `deep_causality_rand` became
+generic in the scalar. The quantum crate reaches `stats` at two call sites,
+`bernoulli_proportion` and `bernoulli_standard_error`, both already generic in `T: RealField +
+FromPrimitive`, and reaches `rand` nowhere; every QCL-2 kernel is Kraus-level linear algebra with
+no sampling, and the consumers run at `f32`, `f64` and `Float106` as planned. No adjustment to
+the plan follows from the advance.
+
+### D18. The crosstalk candidates over circuits, and the one that is not
+
+`H₁` and `H₂` are one wire with two single-qubit boxes in either order, grouped so that node 0 is
+`Q1` and node 1 is `Q2`; the wiring carries the edge, each node's leg has dimension 16, the
+conditional factor 256 entries, and the dilation screens by Markov and C₃ at once. `H₄` is the same
+chain grouped into a cycle and `build()` refuses it. `H₃`, a common bath driving both qubits, needs
+a bath node with two output wires, since a single wire from the bath through `Q1` to `Q2` adds the
+edge `Q1 → Q2`. Under D3's leg convention that node's leg has dimension `(4 · 4)² = 256`, its
+children's conditional factors on the legs `{bath, child}` `256 · 16 = 4096` dimensions and `2^24`
+entries, at the dilation cap, and the Markov check's union over the three legs
+`256 · 16 · 16 = 65536` dimensions and `2^32` entries; so `H₃` stays the v1 factorization, a legal
+QCM by construction, and the example says so. The decision, not the factor values, is what the requirement asks to reproduce,
+and the plan and the adjudication depend on the probes' predictions alone.
 
 ## Risks / Trade-offs
 
