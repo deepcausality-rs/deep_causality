@@ -9,15 +9,16 @@
 //! as [`mean`] over the same observations in the same order — otherwise a caller that switches to
 //! it for the memory silently changes its answer.
 
-use deep_causality_num::{Float106, lift};
+use deep_causality_num::{BFloat16, Float106, lift};
 use deep_causality_stats::utils_tests::lift_array;
 use deep_causality_stats::{MeanAccumulator, StatsErrorEnum, mean};
 
 /// Bit-for-bit agreement with the slice form, on a sample whose sum rounds.
 ///
 /// `0.1` and `0.2` are not dyadic, so the running sum rounds at almost every step; if the
-/// accumulator folded in a different order the two answers would part. It does not — both fold
-/// left to right — so the assertion is exact equality rather than a tolerance.
+/// accumulator summed in a different arrangement the two answers would part. It does not — both
+/// sum the same balanced tree, because which partial sum lands in which slot is decided by the
+/// count, which both callers share — so the assertion is exact equality rather than a tolerance.
 #[test]
 fn test_accumulator_agrees_with_the_slice_mean_bit_for_bit() {
     for sample in [
@@ -36,6 +37,27 @@ fn test_accumulator_agrees_with_the_slice_mean_bit_for_bit() {
             "streaming and slice means must agree exactly on {sample:?}"
         );
     }
+}
+
+/// Agreement where a differing arrangement would actually show: a thousand observations at
+/// `BFloat16`, whose count is not a power of two.
+///
+/// Two observations agree under any arrangement, and a power-of-two count agrees under both a
+/// midpoint split and a carry tree. 1000 is neither, and at two decimal digits a single differing
+/// association is visible in the result — so this is the case that pins the two callers to one
+/// arrangement rather than merely to one answer.
+#[test]
+fn test_accumulator_agrees_over_a_thousand_observations_at_the_narrowest_scalar() {
+    let sample: Vec<BFloat16> = (1..=1000).map(|i| lift::<BFloat16>(i as f64)).collect();
+    let mut acc = MeanAccumulator::<BFloat16>::new();
+    for &x in &sample {
+        acc.push(x);
+    }
+    assert_eq!(
+        acc.mean().unwrap(),
+        mean(&sample).unwrap(),
+        "streaming and slice means must agree exactly over a thousand observations"
+    );
 }
 
 /// The same agreement at the widest and narrowest shipped scalars.

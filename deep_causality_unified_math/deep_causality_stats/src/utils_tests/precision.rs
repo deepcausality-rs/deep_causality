@@ -56,11 +56,17 @@
 //! from 23 bits to 7. That makes `epsilon` `7.8e-3` — under one percent relative, about two
 //! decimal digits — while `max_finite` and `min_positive` are `f32`'s.
 //!
-//! Two consequences shape what a suite can ask of it. Integers are exact only to 256, so a
-//! cancellation fixture cannot use `f32`'s offset of ten thousand. And a thousand-term reduction
-//! is not merely imprecise but meaningless: once the running sum reaches one, an addend of a
-//! thousandth is below `epsilon · sum` and vanishes entirely, so the row is set to the point of
-//! saying so rather than to a tolerance any implementation could meet.
+//! One consequence shapes what a suite can ask of it: integers are exact only to 256, so a
+//! cancellation fixture cannot use `f32`'s offset of ten thousand.
+//!
+//! A second consequence used to be recorded here and was withdrawn, because it was a property of
+//! an arrangement rather than of the type. The claim was that a thousand-term reduction is not
+//! merely imprecise but meaningless — once the running sum reaches one, an addend of a thousandth
+//! falls below `epsilon · sum` and vanishes — and `reduction` was set to 1.0 to say so rather than
+//! to a tolerance. That is true of a sum formed left to right and of no other. Summed as a
+//! balanced tree, a thousand addends of a thousandth land within `5.5e-4` of their mean and ten
+//! thousand within `4.7e-3`, both inside this type's own `epsilon` of `7.8e-3`. The row is a
+//! tolerance again.
 
 /// What changes between the three precisions.
 ///
@@ -78,7 +84,9 @@ pub struct Prec {
     pub literal: f64,
     /// Relative tolerance for a reduction over roughly a thousand terms.
     ///
-    /// Accumulated rounding grows with the term count, so a long sum cannot hold [`Self::native`].
+    /// Accumulated rounding grows with the term count, so a long sum need not hold
+    /// [`Self::native`]. Under a balanced-tree sum it grows with `log n` rather than `n`, which is
+    /// why the two rows coincide at `BFloat16`.
     pub reduction: f64,
     /// Relative tolerance for a value that came out of a linear solve or an iterative fit.
     ///
@@ -122,8 +130,11 @@ pub struct Prec {
 /// digits allow. `literal` matches it: an `f64` literal is far more accurate than `BFloat16` can
 /// hold, so the `BFloat16` side floors the comparison.
 /// `solve` `2e-1`: squaring the condition number costs about half of two digits, leaving one.
-/// `reduction` `1.0` is not a tolerance to meet but a statement that a thousand-term sum has no
-/// accuracy left at this width — a suite should not run one here rather than assert against it.
+/// `reduction` `5e-2` matches `native`, because a balanced-tree sum at this width delivers what a
+/// handful of operations does: measured, a thousand addends of a thousandth land within `5.5e-4`
+/// of their mean, a thousand-term ramp within `9.99e-4`, and ten thousand within `4.7e-3` — all
+/// inside `epsilon`. This row read `1.0` while the reductions were formed left to right, which is
+/// where a long sum really does lose everything at two digits.
 /// `zero` `1e-1`: an ulp at magnitude ten is `7.8e-2`, so anything tighter sits inside the noise.
 /// `cancel_offset` `64`: the binding constraint is the SUM, not the values. Integers are exact
 /// only to 256, and a three-element fixture sums to about three times the offset, so an offset of
@@ -137,7 +148,7 @@ pub const BF16: Prec = Prec {
     epsilon: 7.812_5e-3,
     native: 5e-2,
     literal: 5e-2,
-    reduction: 1.0,
+    reduction: 5e-2,
     solve: 2e-1,
     zero: 1e-1,
     max_finite: 3.389_531_389_251_535_5e38,

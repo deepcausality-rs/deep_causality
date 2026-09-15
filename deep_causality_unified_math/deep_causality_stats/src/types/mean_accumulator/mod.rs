@@ -4,6 +4,7 @@
  */
 
 use crate::errors::stats_error::StatsError;
+use crate::types::pairwise_sum::PairwiseSum;
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
 
@@ -11,8 +12,10 @@ use deep_causality_num::FromPrimitive;
 ///
 /// [`mean`](crate::mean) needs a slice, which a caller that *generates* its observations does not
 /// have and should not be made to build: a Monte-Carlo estimator over a million draws would hold
-/// eight megabytes to compute one scalar. This holds a running sum and a count instead, so the
-/// memory is constant in the number of observations.
+/// eight megabytes to compute one scalar. This holds a bounded set of partial sums and a count
+/// instead, so the memory is constant in the number of observations — one slot per bit of the
+/// count, which is `1032` bytes at `f64` against the eight megabytes, and does not grow with the
+/// millionth draw any more than with the second.
 ///
 /// It is the same relationship [`fit_ridge_streaming`](crate::fit_ridge_streaming) has to
 /// [`fit_ridge`](crate::fit_ridge): the statistic is identical, the shape of the input is not.
@@ -29,12 +32,14 @@ use deep_causality_num::FromPrimitive;
 ///
 /// # Accumulation order
 ///
-/// The sum is formed left to right, exactly as [`mean`](crate::mean) folds a slice, so the same
-/// observations in the same order give the same answer to the last bit. Feeding a slice through
-/// this type is a way of getting `mean` without the slice, not a different estimator.
+/// The sum is formed as a balanced tree by [`PairwiseSum`], exactly as [`mean`](crate::mean) sums a
+/// slice, so the same observations in the same order give the same answer to the last bit. Feeding
+/// a slice through this type is a way of getting `mean` without the slice, not a different
+/// estimator. That agreement is a property of the arrangement rather than a coincidence: which
+/// partial sum lands in which slot is decided by the count, which both callers share.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct MeanAccumulator<T> {
-    sum: T,
+    sum: PairwiseSum<T>,
     count: usize,
 }
 
@@ -48,14 +53,14 @@ impl<T: RealField + FromPrimitive> MeanAccumulator<T> {
     /// An accumulator over no observations.
     pub fn new() -> Self {
         Self {
-            sum: T::zero(),
+            sum: PairwiseSum::new(),
             count: 0,
         }
     }
 
     /// Adds one observation.
     pub fn push(&mut self, value: T) {
-        self.sum += value;
+        self.sum.push(value);
         self.count += 1;
     }
 
@@ -79,6 +84,6 @@ impl<T: RealField + FromPrimitive> MeanAccumulator<T> {
                 "an observation count is not representable in the working scalar",
             )
         })?;
-        Ok(self.sum / n)
+        Ok(self.sum.total() / n)
     }
 }

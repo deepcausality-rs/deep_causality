@@ -34,7 +34,7 @@
 //!
 //! `as` casts between primitives only, so a program written with `x as FloatType` stops compiling
 //! the day the alias becomes `Float106`. `From<f64>` is not implemented for `f32`, so `From`
-//! cannot serve the three shipped scalars either. [`FromPrimitive`] and [`ToPrimitive`] are
+//! cannot serve the four shipped scalars either. [`FromPrimitive`] and [`ToPrimitive`] are
 //! implemented for all of them, and this module is a thin, named layer over those two traits.
 //!
 //! # What lifting means for precision

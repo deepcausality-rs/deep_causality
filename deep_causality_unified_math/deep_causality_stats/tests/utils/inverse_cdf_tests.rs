@@ -10,8 +10,8 @@
 
 use deep_causality_num::{Float, Float106};
 use deep_causality_stats::{
-    bernoulli_inverse_cdf, standard_normal_inverse_cdf, standard_normal_inverse_cdf_f106,
-    uniform_inverse_cdf,
+    bernoulli_inverse_cdf, standard_normal_inverse_cdf, standard_normal_inverse_cdf_at,
+    standard_normal_inverse_cdf_f106, uniform_inverse_cdf,
 };
 
 fn d(x: f64) -> Float106 {
@@ -147,4 +147,101 @@ fn test_bernoulli_quantile_thresholds_on_p() {
     assert!(!bernoulli_inverse_cdf(0.30, 0.3));
     assert!(!bernoulli_inverse_cdf(0.99, 0.3));
     assert!(bernoulli_inverse_cdf(0.0, 0.3));
+}
+
+// -------------------------------------------------------------------------------------------
+// The scalar-generic entry point.
+//
+// It exists so that code generic in its scalar has a quantile to call; the two per-precision
+// functions above stay, and the property that makes that safe is that the generic one agrees with
+// each of them exactly at its own scalar. Agreement is asserted bit for bit rather than to a
+// tolerance, because anything looser would not distinguish "the same transform" from "a transform
+// that happens to be close".
+// -------------------------------------------------------------------------------------------
+
+/// Coordinates that between them cover what a caller can hand this function: a uniform sweep, the
+/// dyadic lattice a Sobol sequence actually produces, both clamp boundaries and either side of
+/// them, the denormal floor, and the exact endpoints.
+fn generic_probe_coordinates() -> Vec<f64> {
+    let mut us = Vec::new();
+    // A uniform sweep across the open interval.
+    for i in 1..2000 {
+        us.push(i as f64 / 2000.0);
+    }
+    // The dyadic lattice: a Sobol coordinate is k/2^32, so probe that grid at both ends.
+    for k in 1..500u64 {
+        us.push(k as f64 / 4_294_967_296.0);
+        us.push(1.0 - k as f64 / 4_294_967_296.0);
+    }
+    // The clamp boundaries and their neighbours, the denormal floor, and the endpoints.
+    us.extend_from_slice(&[
+        0.0,
+        f64::MIN_POSITIVE,
+        5e-324,
+        1e-300,
+        1e-300 * (1.0 + f64::EPSILON),
+        0.5,
+        1.0 - f64::EPSILON,
+        1.0 - f64::EPSILON / 2.0,
+        1.0,
+    ]);
+    us
+}
+
+/// The generic form reproduces the `f64` form exactly, at every coordinate.
+///
+/// Both compute through the same `Float106` refinement; the generic one then takes the two limbs
+/// into `R`, and at `R = f64` the low limb sits below the high limb's last place, so the sum is
+/// the high limb. That is an argument, and this is the measurement.
+#[test]
+fn test_generic_quantile_reproduces_the_f64_form_bit_for_bit() {
+    for u in generic_probe_coordinates() {
+        let generic: f64 = standard_normal_inverse_cdf_at(u);
+        let direct = standard_normal_inverse_cdf(u);
+        assert_eq!(
+            generic.to_bits(),
+            direct.to_bits(),
+            "generic and f64 quantiles differ at u = {u:e}: {generic} against {direct}"
+        );
+    }
+}
+
+/// The generic form reproduces the `Float106` form exactly, at every coordinate.
+///
+/// This is the half that could plausibly fail: the limbs are taken apart and put back together, so
+/// a double-double whose reassembly is not the identity would show here. It is the identity
+/// because every `Float106` operation ends in a normalising `quick_two_sum`, which leaves
+/// `fl(hi + lo) == hi`.
+#[test]
+fn test_generic_quantile_reproduces_the_f106_form_bit_for_bit() {
+    for u in generic_probe_coordinates() {
+        let generic: Float106 = standard_normal_inverse_cdf_at(u);
+        let direct = standard_normal_inverse_cdf_f106(d(u));
+        assert_eq!(
+            (generic.hi().to_bits(), generic.lo().to_bits()),
+            (direct.hi().to_bits(), direct.lo().to_bits()),
+            "generic and Float106 quantiles differ at u = {u:e}"
+        );
+    }
+}
+
+/// The generic form carries real precision at a scalar neither named function mentions.
+///
+/// `f32` is the check that the function is generic in fact and not only in signature: the result
+/// must be the `f32` nearest the true quantile, which is what rounding the `Float106` value gives,
+/// and it must be antisymmetric about `u = 0.5` as the transform itself is.
+#[test]
+fn test_generic_quantile_at_a_scalar_no_named_function_mentions() {
+    for u in [0.025_f64, 0.1, 0.25, 0.4, 0.6, 0.75, 0.9, 0.975] {
+        let got: f32 = standard_normal_inverse_cdf_at(u);
+        let reference = standard_normal_inverse_cdf(u) as f32;
+        assert_eq!(
+            got.to_bits(),
+            reference.to_bits(),
+            "f32 quantile at u = {u} is {got}, not the rounded {reference}"
+        );
+
+        let mirrored: f32 = standard_normal_inverse_cdf_at(1.0 - u);
+        assert_eq!(got, -mirrored, "Φ⁻¹(u) = −Φ⁻¹(1 − u) at u = {u}");
+    }
 }

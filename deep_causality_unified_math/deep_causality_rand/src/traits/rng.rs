@@ -42,6 +42,22 @@ pub trait Rng: RngCore {
     /// A uniform draw from a range, at whatever scalar the range holds.
     ///
     /// `K` is the tower marker and is inferred from the range; no call site names it.
+    ///
+    /// # Panics
+    ///
+    /// If the range is empty, because there is no value to return and no sentinel that would not
+    /// be a lie. `#[track_caller]` puts the panic at the call site rather than here.
+    ///
+    /// A range written with distinct endpoints can still be empty, and a narrow scalar is where
+    /// that happens: `1000.0..1001.0` at `BFloat16` has both endpoints at 1000, because the
+    /// spacing there is 8. The endpoints are a fact about the scalar, not about this function, so
+    /// widening the range or nudging an endpoint would put mass where the scalar says there is
+    /// none.
+    ///
+    /// [`Uniform::new`](crate::Uniform::new) is the fallible form of the same construction and
+    /// returns `UniformDistributionError::EmptyRange` for these endpoints. The two differ on
+    /// purpose: this one is an infallible convenience over a range the caller wrote, and that one
+    /// is a constructor that can be handed bounds computed at runtime.
     fn random_range<T, K, R>(&mut self, range: R) -> T
     where
         T: SampleUniform<K>,

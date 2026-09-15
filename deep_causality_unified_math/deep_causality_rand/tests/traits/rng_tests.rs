@@ -5,8 +5,8 @@
 
 //! The provided methods on [`Rng`], at their boundaries.
 
-use deep_causality_num::Float106;
-use deep_causality_rand::{Rng, RngCore, Xoshiro256};
+use deep_causality_num::{BFloat16, Float106, lift};
+use deep_causality_rand::{Rng, RngCore, Uniform, UniformDistributionError, Xoshiro256};
 
 /// A generator whose every word is zero — the lower boundary of the word range.
 ///
@@ -121,4 +121,50 @@ fn a_probability_above_one_is_refused() {
 #[should_panic(expected = "outside range")]
 fn a_negative_probability_is_refused() {
     Xoshiro256::from_seed(1).random_bool(-0.1);
+}
+
+/// A range with distinct endpoints can be empty at a narrow scalar, and `random_range` panics on
+/// it while `Uniform::new` returns an error.
+///
+/// `BFloat16`'s spacing at a thousand is 8, so `1000.0` and `1001.0` are the same number there and
+/// the range between them holds nothing. This is a fact about the scalar rather than about either
+/// function, and the two answer it differently on purpose: the infallible convenience refuses by
+/// panicking, and the fallible constructor refuses by returning.
+///
+/// Pinned because a caller whose bounds are close together only meets this at a width where the
+/// endpoints collapse, which is exactly where it is least expected.
+#[test]
+fn test_a_range_the_scalar_collapses_is_empty() {
+    let low = lift::<BFloat16>(1000.0);
+    let high = lift::<BFloat16>(1001.0);
+    assert_eq!(
+        low, high,
+        "the fixture is wrong: these endpoints must collapse at BFloat16"
+    );
+
+    assert!(
+        matches!(
+            Uniform::new(low, high),
+            Err(UniformDistributionError::EmptyRange)
+        ),
+        "Uniform::new must refuse a collapsed range by returning"
+    );
+
+    let panicked = std::panic::catch_unwind(|| {
+        let mut rng = Xoshiro256::from_seed(1);
+        rng.random_range(low..high)
+    });
+    assert!(
+        panicked.is_err(),
+        "random_range must refuse a collapsed range by panicking"
+    );
+
+    // The same endpoints one power of two lower, where the spacing is 4 and the range is not
+    // empty — so the refusal above is about these values and not about the type.
+    let low = lift::<BFloat16>(1000.0);
+    let wide = lift::<BFloat16>(1016.0);
+    assert!(low < wide, "1000 and 1016 are distinct at BFloat16");
+    let mut rng = Xoshiro256::from_seed(1);
+    let drawn: BFloat16 = rng.random_range(low..wide);
+    assert!(drawn >= low && drawn < wide, "the draw lies in the range");
 }

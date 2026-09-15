@@ -71,10 +71,16 @@
 //!
 //! # Precision
 //!
-//! Every function is generic over its scalar under the algebra tower's bounds, and no public
-//! signature names a concrete float. Two of the implementations this crate absorbs compute in
-//! `f64` behind a generic signature, which silently discards the caller's precision; the point of
-//! the bound is that `f32`, `f64` and `Float106` each get their own.
+//! Every function is generic over its scalar under the algebra tower's bounds. Two of the
+//! implementations this crate absorbs compute in `f64` behind a generic signature, which silently
+//! discards the caller's precision; the point of the bound is that every scalar gets its own.
+//!
+//! Three signatures name a concrete float, and each says why at the function. The unit coordinate
+//! of an inverse-CDF transform is `f64` because it is a position on `[0, 1)` rather than a value in
+//! the caller's scalar, and rounding it into a narrow scalar before the transform is destructive at
+//! the endpoints — see [`standard_normal_inverse_cdf_at`]. Beside it,
+//! [`standard_normal_inverse_cdf`] and [`standard_normal_inverse_cdf_f106`] are the same transform
+//! at one precision each, kept so that values recorded against them do not move.
 //!
 //! # Shape
 //!
@@ -146,8 +152,8 @@ pub use crate::types::distr::unit_interval::standard_uniform::StandardUniform;
 pub use crate::types::distr::weibull::Weibull;
 pub use crate::types::range::{Open01, OpenClosed01};
 pub use crate::utils::inverse_cdf::{
-    bernoulli_inverse_cdf, standard_normal_inverse_cdf, standard_normal_inverse_cdf_f106,
-    uniform_inverse_cdf,
+    bernoulli_inverse_cdf, standard_normal_inverse_cdf, standard_normal_inverse_cdf_at,
+    standard_normal_inverse_cdf_f106, uniform_inverse_cdf,
 };
 
 // The generator bridge, re-exported **by name** so a crate that wants only distributions needs no

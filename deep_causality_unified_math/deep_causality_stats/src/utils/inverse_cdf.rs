@@ -15,7 +15,7 @@
 //! `Φ(x) − u = 0`, using the double-double `erfc`/`exp`.
 
 use deep_causality_algebra::RealField;
-use deep_causality_num::{Float, Float106};
+use deep_causality_num::{Float, Float106, FromPrimitive, lift};
 
 /// Smallest `u` admitted by the standard-normal quantile; keeps the result finite at the
 /// open-interval endpoints (`u = 0` would map to `−∞`).
@@ -113,6 +113,43 @@ pub fn standard_normal_inverse_cdf_f106(u: Float106) -> Float106 {
         u
     };
     refine_f106(u_full, Float106::from(acklam(u_c)))
+}
+
+/// Standard-normal quantile `Φ⁻¹(u)` at the caller's scalar.
+///
+/// The entry point for code that is generic in its scalar. The two functions above are the same
+/// transform at one precision each; this one serves every scalar in the algebra tower, including
+/// scalars neither of them names.
+///
+/// # Why the input stays `f64`
+///
+/// `u` is a coordinate on the unit interval, not a value in the caller's scalar. Taking it at `R`
+/// would round it before the transform, and near the endpoints that is destructive rather than
+/// merely imprecise: at `BFloat16` no value lies between `0.998` and `1.0`, so a coordinate in the
+/// top two-thousandth of the interval lands on `1.0` and the clamp sends it to an 8.1-sigma tail
+/// where the true quantile is near 3.1. Measured on the real Sobol lattice, 2 coordinates in 1024
+/// do this. Held at `f64` the coordinate keeps the resolution its source gave it.
+///
+/// # Accuracy
+///
+/// The engine is the `Float106` refinement, so the result is correct to double-double precision
+/// before it reaches `R`, and `R` then takes the two limbs. At `f64` and at `Float106` that
+/// reproduces [`standard_normal_inverse_cdf`] and [`standard_normal_inverse_cdf_f106`] bit for
+/// bit — measured over the Sobol lattice, the clamp boundaries, the denormals and a uniform grid.
+///
+/// Narrower scalars take a second rounding, `Float106` to `R`, which can land one ULP from the
+/// correctly rounded result when the double-double value falls exactly on a tie in `R`. The
+/// density of that is the chance of hitting a tie, about `2⁻²⁸` at `f32` and `2⁻⁴⁴` at
+/// `BFloat16` — a scalar whose own resolution is `7.8e-3`.
+pub fn standard_normal_inverse_cdf_at<R>(u: f64) -> R
+where
+    R: RealField + FromPrimitive,
+{
+    let z = standard_normal_inverse_cdf_f106(Float106::from(u));
+    // Both limbs, because at `Float106` the low one is the value's second half and at every
+    // narrower scalar it rounds away — so one expression is exact at the widest scalar and
+    // correct at the rest, with no branch on which scalar it is.
+    lift::<R>(z.hi()) + lift::<R>(z.lo())
 }
 
 /// Uniform quantile: `low + u·(high − low)`, exact at the value type's precision.
