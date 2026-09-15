@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num-v0.5.1...deep_causality_num-v0.5.2) - 2026-09-15
+
+### Fixed
+
+- *(stats)* sum as a balanced tree, and stop calling the arrangement's limit the type's
+
+### Other
+
+- *(openspec)* Added specs to retrofit the rand crate into the unified math system with precision as a parameter.
+
 ## [0.4.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num-v0.4.0...deep_causality_num-v0.4.1) - 2026-07-14
 
 ### Added

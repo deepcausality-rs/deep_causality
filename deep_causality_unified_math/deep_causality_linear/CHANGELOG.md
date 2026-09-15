@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_linear-v0.1.4...deep_causality_linear-v0.2.0) - 2026-09-15
+
+### Added
+
+- *(haft)* add the Collectable capability and implement it for the rank-1 witnesses
+- *(deep_causality_haft)* add the diagonal traversal for zip witnesses
+- *(deep_causality_topology)* add the CochainWitness HKT witness
+- *(deep_causality_linear)* implement Traversable for DenseVectorWitness
+
+### Fixed
+
+- *(unified_math)* [**breaking**] replace From<f64> bounds with FromPrimitive, add software-scalar tensor ops
+
 ## [0.1.4](https://github.com/marvin-hansen/deep_causality/compare/deep_causality_linear-v0.1.3...deep_causality_linear-v0.1.4) - 2026-09-08
 
 ### Added

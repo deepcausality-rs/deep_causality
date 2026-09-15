@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_ethos-v0.2.12...deep_causality_ethos-v0.3.0) - 2026-09-15
+
+### Other
+
+- *(uncertain)* [**breaking**] migrate the consumers, and take the last lifetime off the scalar
+- *(uncertain)* [**breaking**] replace the global sample cache with a caller-owned session
+
 ## [0.2.12](https://github.com/marvin-hansen/deep_causality/compare/deep_causality_ethos-v0.2.11...deep_causality_ethos-v0.2.12) - 2026-09-08
 
 ### Fixed

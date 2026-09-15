@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_discovery-v0.6.0...deep_causality_discovery-v0.7.0) - 2026-09-15
+
+### Added
+
+- *(haft)* add the Collectable capability and implement it for the rank-1 witnesses
+
+### Other
+
+- *(unified_math)* [**breaking**] move the distributions from rand to stats
+
 ## [0.6.0](https://github.com/marvin-hansen/deep_causality/compare/deep_causality_discovery-v0.5.2...deep_causality_discovery-v0.6.0) - 2026-09-08
 
 ### Added

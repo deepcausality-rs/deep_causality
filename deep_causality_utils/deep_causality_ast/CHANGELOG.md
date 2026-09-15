@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_ast-v0.1.13...deep_causality_ast-v0.2.0) - 2026-09-15
+
+### Added
+
+- *(deep_causality_uncertain)* [**breaking**] complete the renovation — Arrow, ensembles, and a suite that bites
+
+### Other
+
+- *(deep_causality_ast)* Close the gaps a full API-to-test cross-reference found
+- *(deep_causality_ast)* Replace the degenerate tree fixtures the whole suite shared
+
 ## [0.1.13](https://github.com/marvin-hansen/deep_causality/compare/deep_causality_ast-v0.1.12...deep_causality_ast-v0.1.13) - 2026-09-08
 
 ### Fixed
