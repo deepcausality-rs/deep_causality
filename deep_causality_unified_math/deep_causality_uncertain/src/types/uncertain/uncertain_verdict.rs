@@ -23,12 +23,12 @@
 //! `Aggregatable: Verdict` downstream. As two blanket instances over two distinct local types they
 //! are coherent — and every scalar gains the MV instance, where before only `f64` had it.
 
-use crate::UncertainScalar;
 use crate::types::uncertain::uncertain_op_arithmetic::binary;
 use crate::{ArithmeticOperator, Node, Uncertain};
 use deep_causality_algebra::Verdict;
+use deep_causality_rand::RandScalar;
 
-impl<R: UncertainScalar> Verdict for Uncertain<R> {
+impl<R: RandScalar> Verdict for Uncertain<R> {
     #[inline]
     fn bottom() -> Self {
         Uncertain::point(R::zero())

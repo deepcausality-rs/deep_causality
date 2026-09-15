@@ -5,8 +5,8 @@
 
 use crate::CsmEvaluable;
 use crate::{ActionParameterValue, CausalityError, UncertainParameter};
+use crate::{UncertainBool, UncertainF64};
 use deep_causality_core::CausalityErrorEnum;
-use deep_causality_uncertain::{UncertainBool, UncertainF64};
 
 impl CsmEvaluable for bool {
     fn is_active(&self, _params: Option<&UncertainParameter>) -> Result<bool, CausalityError> {

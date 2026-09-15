@@ -5,11 +5,11 @@
 
 //! Mapping a value through a function, and summarising a sample as one.
 
-use crate::UncertainScalar;
 use crate::{Node, SampleSession, Uncertain, UncertainBool, UncertainError};
+use deep_causality_rand::RandScalar;
 use deep_causality_stats::{mean, std_dev};
 
-impl<R: UncertainScalar> Uncertain<R> {
+impl<R: RandScalar> Uncertain<R> {
     /// Summarises a sample as a normal `Uncertain`, by its mean and unbiased `n − 1` variance.
     ///
     /// The statistics come from `deep_causality_stats`; only the degenerate answers are this

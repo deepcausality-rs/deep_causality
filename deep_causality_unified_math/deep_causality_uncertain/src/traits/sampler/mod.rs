@@ -2,12 +2,12 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::UncertainScalar;
 use crate::{Node, Sample, UncertainError};
 use deep_causality_ast::ConstTree;
+use deep_causality_rand::RandScalar;
 
 /// A trait for sampling strategies.
-pub trait Sampler<R: UncertainScalar> {
+pub trait Sampler<R: RandScalar> {
     /// Generates a single sample from the computation graph at the given sample index.
     ///
     /// `sample_index` selects the draw: the `SequentialSampler` ignores it (it draws from a

@@ -5,9 +5,9 @@
 
 //! Which slot of the address each drawing leaf occupies.
 
-use crate::UncertainScalar;
 use crate::{Node, Uncertain, UncertainBool};
 use deep_causality_ast::ConstTree;
+use deep_causality_rand::RandScalar;
 use std::collections::{HashMap, HashSet};
 
 /// The ordinal of every leaf in a tree that draws.
@@ -54,12 +54,12 @@ pub struct LeafOrdinals {
 
 impl LeafOrdinals {
     /// Assigns an ordinal to every drawing leaf of `uncertain`'s graph.
-    pub fn new<R: UncertainScalar>(uncertain: &Uncertain<R>) -> Self {
+    pub fn new<R: RandScalar>(uncertain: &Uncertain<R>) -> Self {
         Self::from_root_node(uncertain.root_node())
     }
 
     /// As [`Self::new`], for the Boolean carrier.
-    pub fn for_bool<R: UncertainScalar>(uncertain: &UncertainBool<R>) -> Self {
+    pub fn for_bool<R: RandScalar>(uncertain: &UncertainBool<R>) -> Self {
         Self::from_root_node(uncertain.root_node())
     }
 
@@ -67,7 +67,7 @@ impl LeafOrdinals {
     ///
     /// Crate-internal, matching [`QmcSampler::from_root_node`](crate::QmcSampler); it lets the
     /// traversal be tested against node shapes no public builder produces.
-    pub(crate) fn from_root_node<R: UncertainScalar>(root: &ConstTree<Node<R>>) -> Self {
+    pub(crate) fn from_root_node<R: RandScalar>(root: &ConstTree<Node<R>>) -> Self {
         let mut by_node = HashMap::new();
         let mut seen = HashSet::new();
         let mut next = 0u64;
@@ -106,7 +106,7 @@ impl LeafOrdinals {
 /// Every branch is visited in a fixed order, and a node reached twice is skipped the second time.
 /// Skipping is what keeps a shared sub-graph linear rather than exponential, and it is safe because
 /// the ordinals of a sub-graph are settled by its first visit.
-fn assign<R: UncertainScalar>(
+fn assign<R: RandScalar>(
     node: &ConstTree<Node<R>>,
     by_node: &mut HashMap<usize, u64>,
     seen: &mut HashSet<usize>,
@@ -118,7 +118,7 @@ fn assign<R: UncertainScalar>(
 
     match node.value() {
         // Draws nothing.
-        Node::Value(_) | Node::PureOp { .. } => {}
+        Node::Value(_) => {}
 
         Node::Distribution(distribution) => {
             if distribution.draws() {
@@ -130,15 +130,12 @@ fn assign<R: UncertainScalar>(
             }
         }
 
-        Node::FmapOp { operand, .. }
-        | Node::BindOp { operand, .. }
-        | Node::NegationOp { operand }
+        Node::NegationOp { operand }
         | Node::FunctionOpReal { operand, .. }
         | Node::FunctionOpBool { operand, .. }
         | Node::ComparisonOp { operand, .. } => {
             assign(operand, by_node, seen, next);
         }
-        Node::ApplyOp { arg, .. } => assign(arg, by_node, seen, next),
         Node::ArithmeticOp { lhs, rhs, .. } => {
             assign(lhs, by_node, seen, next);
             assign(rhs, by_node, seen, next);

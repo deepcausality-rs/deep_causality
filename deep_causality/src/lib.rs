@@ -106,8 +106,12 @@ pub use crate::types::causal_types::causaloid_graph::lambda_edges::{EdgeLambdaFn
 pub use crate::types::causal_types::*;
 // Default context node types.
 pub use crate::types::context_node_types::data::Data;
-pub use crate::types::context_node_types::data_uncertain::data_uncertain_bool::UncertainBooleanData;
-pub use crate::types::context_node_types::data_uncertain::data_uncertain_f64::UncertainFloat64Data;
+pub use crate::types::context_node_types::data_uncertain::data_uncertain_bool::{
+    UncertainBoolData, UncertainBooleanData,
+};
+pub use crate::types::context_node_types::data_uncertain::data_uncertain_f64::{
+    UncertainData, UncertainFloat64Data,
+};
 pub use crate::types::context_node_types::root::Root;
 // Space context node types.
 pub use crate::types::context_node_types::space::ecef_space::EcefSpace;

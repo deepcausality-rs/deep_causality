@@ -4,6 +4,7 @@
  */
 
 use deep_causality::AggregateLogic;
+use deep_causality::UncertainBool;
 use deep_causality::monadic_collection_utils;
 use deep_causality_core::CausalEffect;
 use deep_causality_uncertain::Uncertain;
@@ -96,8 +97,8 @@ fn test_aggregate_f64() {
 
 #[test]
 fn test_aggregate_uncertain_bool() {
-    let ub_true = Uncertain::<bool>::point(true);
-    let ub_false = Uncertain::<bool>::point(false);
+    let ub_true = UncertainBool::point(true);
+    let ub_false = UncertainBool::point(false);
     let ev_true = CausalEffect::value(ub_true);
     let ev_false = CausalEffect::value(ub_false);
 
@@ -172,7 +173,7 @@ fn test_aggregate_f64_non_value_errors() {
 
 #[test]
 fn test_aggregate_uncertain_bool_missing_threshold_errors() {
-    let ub = Uncertain::<bool>::point(true);
+    let ub = UncertainBool::point(true);
     let inputs = vec![CausalEffect::value(ub)];
     // No threshold supplied -> must error.
     let res = monadic_collection_utils::aggregate_effects(&inputs, &AggregateLogic::All, None);
@@ -186,8 +187,7 @@ fn test_aggregate_uncertain_bool_missing_threshold_errors() {
 
 #[test]
 fn test_aggregate_uncertain_bool_non_value_errors() {
-    let inputs: Vec<CausalEffect<deep_causality_uncertain::UncertainBool>> =
-        vec![CausalEffect::none()];
+    let inputs: Vec<CausalEffect<UncertainBool>> = vec![CausalEffect::none()];
     let res = monadic_collection_utils::aggregate_effects(&inputs, &AggregateLogic::All, Some(0.5));
     assert!(res.is_err());
     assert!(

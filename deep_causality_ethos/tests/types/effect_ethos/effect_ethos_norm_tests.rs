@@ -3,7 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::{BaseContext, CausalityError, ProposedAction, Uncertain, UncertainParameter};
+use deep_causality::{
+    BaseContext, CausalityError, ProposedAction, UncertainBool, UncertainParameter,
+};
 use deep_causality_ethos::utils_test::test_utils_effect_ethos;
 use deep_causality_ethos::{DeonticError, TeloidModal};
 
@@ -63,8 +65,7 @@ fn test_add_uncertain_norm_success() {
     let always_uncertain_predicate: fn(
         &BaseContext,
         &ProposedAction,
-    ) -> Result<Uncertain<bool>, CausalityError> =
-        |_context, _action| Ok(Uncertain::<bool>::point(true));
+    ) -> Result<UncertainBool, CausalityError> = |_context, _action| Ok(UncertainBool::point(true));
 
     let ethos = test_utils_effect_ethos::TestEthos::new()
         .add_uncertain_norm(
@@ -89,8 +90,7 @@ fn test_add_uncertain_norm_duplicate_id_fails() {
     let always_uncertain_predicate: fn(
         &BaseContext,
         &ProposedAction,
-    ) -> Result<Uncertain<bool>, CausalityError> =
-        |_context, _action| Ok(Uncertain::<bool>::point(true));
+    ) -> Result<UncertainBool, CausalityError> = |_context, _action| Ok(UncertainBool::point(true));
 
     let result = test_utils_effect_ethos::TestEthos::new()
         .add_uncertain_norm(

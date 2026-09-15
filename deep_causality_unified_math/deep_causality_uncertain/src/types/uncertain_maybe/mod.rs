@@ -7,8 +7,8 @@
 
 mod uncertain_maybe_ops;
 
-use crate::UncertainScalar;
 use crate::{SampleSession, Uncertain, UncertainBool, UncertainError};
+use deep_causality_rand::RandScalar;
 
 /// A real quantity that is probabilistically present or absent. When present, its value is
 /// uncertain.
@@ -36,7 +36,7 @@ pub struct MaybeUncertain<R> {
     value: Uncertain<R>,
 }
 
-impl<R: UncertainScalar> MaybeUncertain<R> {
+impl<R: RandScalar> MaybeUncertain<R> {
     /// Certainly present, but uncertain in value.
     pub fn from_uncertain(value: Uncertain<R>) -> Self {
         Self {
@@ -159,7 +159,7 @@ impl<R: UncertainScalar> MaybeUncertain<R> {
 ///
 /// Written out rather than derived: the derive would bound `R: PartialEq`, but what is compared is
 /// the two carriers, whose own equality is on their graphs and needs the carrier bound instead.
-impl<R: UncertainScalar> PartialEq for MaybeUncertain<R> {
+impl<R: RandScalar> PartialEq for MaybeUncertain<R> {
     fn eq(&self, other: &Self) -> bool {
         self.is_present == other.is_present && self.value == other.value
     }

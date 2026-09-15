@@ -2,14 +2,15 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::UncertainBooleanData;
-use std::fmt::{Display, Formatter};
+use crate::types::context_node_types::data_uncertain::data_uncertain_bool::UncertainBoolData;
+use deep_causality_uncertain::RandScalar;
+use std::fmt::{Debug, Display, Formatter};
 
-impl Display for UncertainBooleanData {
+impl<R: RandScalar + Debug> Display for UncertainBoolData<R> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "UncertainBooleanData: id: {} data: {:?}",
+            "UncertainBoolData: id: {} data: {:?}",
             self.id, self.data
         )
     }

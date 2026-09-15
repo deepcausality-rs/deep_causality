@@ -7,7 +7,6 @@
 
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
-use deep_causality_uncertain::ProbabilisticType;
 
 use super::dropout_verbosity::DropoutVerbosity;
 use super::uncertain_boundary_source::UncertainBoundarySource;
@@ -38,7 +37,7 @@ pub struct UncertainInflowZone<R> {
 
 impl<R> UncertainInflowZone<R>
 where
-    R: RealField + FromPrimitive + ProbabilisticType + core::fmt::Debug,
+    R: RealField + FromPrimitive + core::fmt::Debug,
 {
     /// A zone driving the `wall_axis` wall (`max_side` face) with a tangential `flow_axis`
     /// velocity, falling back to `default_inflow` until the sensor first reads present. The value
@@ -54,11 +53,13 @@ where
     }
 
     /// Sets the SPRT presence-gate parameters (delegated to the source).
+    ///
+    /// The three probabilities are stated in the zone's own scalar, as they are on the source.
     pub fn with_presence_gate(
         mut self,
-        threshold: f64,
-        confidence: f64,
-        epsilon: f64,
+        threshold: R,
+        confidence: R,
+        epsilon: R,
         max_samples: usize,
     ) -> Self {
         self.source = self

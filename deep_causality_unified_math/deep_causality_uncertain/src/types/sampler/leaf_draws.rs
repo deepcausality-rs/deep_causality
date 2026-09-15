@@ -5,8 +5,8 @@
 
 //! Where a leaf's entropy comes from.
 
-use crate::UncertainScalar;
 use crate::{DistributionEnum, LeafOrdinals, Sample, UncertainError, draw_seed};
+use deep_causality_rand::RandScalar;
 use deep_causality_rand::{Rng, Xoshiro256};
 
 /// The source of a leaf's draw, so one traversal body serves both the ambient and the addressed
@@ -21,7 +21,7 @@ use deep_causality_rand::{Rng, Xoshiro256};
 /// source had to know the leaf's type; it never did — it only had to know where the generator
 /// comes from. The scalar is now the implementation's parameter and the Boolean case is a variant
 /// of what a draw returns, so the trait has one method at any scalar.
-pub(crate) trait LeafDraws<R: UncertainScalar> {
+pub(crate) trait LeafDraws<R: RandScalar> {
     /// Draws for the leaf identified by `node_id`.
     fn draw(
         &mut self,
@@ -39,7 +39,7 @@ pub(crate) struct AmbientDraws<'r, G: Rng + ?Sized> {
     pub(crate) rng: &'r mut G,
 }
 
-impl<R: UncertainScalar, G: Rng + ?Sized> LeafDraws<R> for AmbientDraws<'_, G> {
+impl<R: RandScalar, G: Rng + ?Sized> LeafDraws<R> for AmbientDraws<'_, G> {
     fn draw(
         &mut self,
         _node_id: usize,
@@ -86,7 +86,7 @@ impl AddressedDraws<'_> {
     }
 }
 
-impl<R: UncertainScalar> LeafDraws<R> for AddressedDraws<'_> {
+impl<R: RandScalar> LeafDraws<R> for AddressedDraws<'_> {
     fn draw(
         &mut self,
         node_id: usize,

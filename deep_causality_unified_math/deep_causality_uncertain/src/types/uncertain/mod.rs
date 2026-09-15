@@ -8,8 +8,8 @@ use crate::{
     UniformDistributionParams,
 };
 
-use crate::UncertainScalar;
 use deep_causality_ast::ConstTree;
+use deep_causality_rand::RandScalar;
 
 mod uncertain_default;
 mod uncertain_map;
@@ -25,7 +25,7 @@ mod uncertain_verdict;
 /// # The scalar is a parameter
 ///
 /// `R` is the precision every value in the graph is carried at: a point, a distribution parameter,
-/// a comparison threshold, an arithmetic result. It is bounded by `UncertainScalar` — `RealField +
+/// a comparison threshold, an arithmetic result. It is bounded by `RandScalar` — `RealField +
 /// FromPrimitive`, blanket-implemented — so a scalar joins by satisfying the algebra and by
 /// nothing else. Nothing in this crate names a concrete one.
 ///
@@ -39,7 +39,7 @@ pub struct Uncertain<R> {
     root_node: ConstTree<Node<R>>,
 }
 
-impl<R: UncertainScalar> Uncertain<R> {
+impl<R: RandScalar> Uncertain<R> {
     /// Creates a new `Uncertain` value from a computation graph represented by a root node.
     pub(crate) fn from_root_node(root_node: Node<R>) -> Self {
         Self {

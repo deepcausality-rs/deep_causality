@@ -3,9 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::UncertainScalar;
 use crate::utils::ratio::lift_count;
 use crate::{LeafOrdinals, SampleSession, UncertainBool, UncertainError};
+use deep_causality_rand::RandScalar;
 
 /// Implements the Sequential Probability Ratio Test (SPRT) to evaluate a hypothesis
 /// about an uncertain boolean value.
@@ -34,7 +34,7 @@ use crate::{LeafOrdinals, SampleSession, UncertainBool, UncertainError};
 /// - `epsilon`: The indifference region. Samples within `threshold ± epsilon` are inconclusive.
 /// - `max_samples`: The maximum number of samples to draw before making a fallback decision.
 /// - `initial_sample_index`: The session index the first draw is taken at.
-pub fn evaluate_hypothesis<R: UncertainScalar>(
+pub fn evaluate_hypothesis<R: RandScalar>(
     uncertain_bool: &UncertainBool<R>,
     session: &SampleSession,
     threshold: R,
@@ -121,9 +121,9 @@ pub fn evaluate_hypothesis<R: UncertainScalar>(
 
 /// `value` held within `[low, high]`.
 ///
-/// Written out rather than taken from the scalar, because `UncertainScalar` exposes the order but no
+/// Written out rather than taken from the scalar, because `RandScalar` exposes the order but no
 /// `clamp`, and a scalar added tomorrow would have to supply one. Comparison is all this needs.
-fn clamp<R: UncertainScalar>(value: R, low: R, high: R) -> R {
+fn clamp<R: RandScalar>(value: R, low: R, high: R) -> R {
     if value < low {
         low
     } else if value > high {

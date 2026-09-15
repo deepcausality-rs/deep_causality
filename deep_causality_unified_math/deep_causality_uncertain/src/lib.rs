@@ -7,8 +7,9 @@
 //!
 //! # Precision is a parameter
 //!
-//! Every type here is generic in `R: UncertainScalar` — `RealField + FromPrimitive`, blanket-implemented
-//! in `deep_causality_rand`. A scalar joins by satisfying the algebra and by nothing else, so a
+//! Every type here is generic in `R: RandScalar` — `RealField + FromPrimitive`, blanket-implemented
+//! in `deep_causality_rand` and re-exported here, so a crate writing a bound over an uncertain
+//! value needs no second dependency to spell it. A scalar joins by satisfying the algebra and by nothing else, so a
 //! type added to `deep_causality_num` works here with no line changed in this crate. Nothing in
 //! `src` names a concrete scalar outside the alias module and a display boundary.
 //!
@@ -45,7 +46,6 @@ mod errors;
 mod traits;
 mod types;
 mod utils;
-pub mod utils_tests;
 
 // Algos
 pub use crate::algos::hypothesis::sprt_eval;
@@ -53,9 +53,12 @@ pub use crate::algos::hypothesis::sprt_eval;
 pub use crate::errors::UncertainError;
 // Traits
 pub use crate::traits::sampler::Sampler;
-pub use crate::traits::scalar::UncertainScalar;
+// The scalar bound, re-exported so a downstream bound needs one dependency rather than two.
+// It is exactly the algebra: nothing is added to it here, because nothing in the graph asks for
+// more — no node stores a trait object, so no `'static` reaches the scalar.
+pub use deep_causality_rand::RandScalar;
 // Types
-pub use crate::types::computation::node::{Node, SampledBindFn, SampledFmapFn};
+pub use crate::types::computation::node::Node;
 pub use crate::types::computation::operator::arithmetic_operator::ArithmeticOperator;
 pub use crate::types::computation::operator::comparison_operator::ComparisonOperator;
 pub use crate::types::computation::operator::logical_operator::LogicalOperator;

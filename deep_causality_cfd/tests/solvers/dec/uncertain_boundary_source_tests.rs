@@ -14,7 +14,7 @@
 use deep_causality_cfd::{DropoutVerbosity, UncertainBoundarySource};
 use deep_causality_core::EffectLog;
 use deep_causality_haft::LogSize;
-use deep_causality_uncertain::{MaybeUncertain, Uncertain};
+use deep_causality_uncertain::{MaybeUncertain, Uncertain, UncertainBool};
 
 fn fast_source(default_value: f64) -> UncertainBoundarySource<f64> {
     UncertainBoundarySource::new(default_value)
@@ -143,7 +143,7 @@ fn qmc_collapse_of_ineligible_sample_returns_error() {
         .with_qmc_collapse(0x0BAD_5EED);
 
     // Branches draw different distributions: QMC rejects the tree as non-static.
-    let cond = Uncertain::<bool>::point(true);
+    let cond = UncertainBool::<f64>::point(true);
     let dynamic = Uncertain::<f64>::conditional(
         cond,
         Uncertain::normal(1.0, 0.1),

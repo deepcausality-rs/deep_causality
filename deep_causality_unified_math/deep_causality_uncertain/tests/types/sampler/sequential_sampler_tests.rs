@@ -10,7 +10,6 @@ use deep_causality_uncertain::{
     Node, NormalDistributionParams, Sample, Sampler, SequentialSampler, UncertainError,
     UniformDistributionParams,
 };
-use std::sync::Arc;
 
 // Corrected helper functions
 type UncertainNode<R> = ConstTree<Node<R>>;
@@ -82,66 +81,6 @@ fn test_distribution_bool() {
     let node = create_root(Node::Distribution(DistributionEnum::Bernoulli(data)));
     let result = Sampler::<f64>::sample(&sampler, &node, 0).unwrap();
     assert!(matches!(result, Sample::Bool(_)));
-}
-
-#[test]
-fn test_pure_op() {
-    let sampler = SequentialSampler;
-    let node = create_root(Node::PureOp {
-        value: Sample::Real(42.0),
-    });
-    assert_eq!(
-        Sampler::<f64>::sample(&sampler, &node, 0).unwrap(),
-        Sample::Real(42.0)
-    );
-}
-
-#[test]
-fn test_fmap_op() {
-    let sampler = SequentialSampler;
-    let operand = create_node(Node::Value(Sample::Real(10.0f64)));
-    let func = Arc::new(|val: Sample<f64>| match val {
-        Sample::Real(v) => Sample::Real(v * 2.0),
-        _ => panic!("unexpected type"),
-    });
-
-    let node = create_root(Node::FmapOp { func, operand });
-
-    let result = Sampler::<f64>::sample(&sampler, &node, 0).unwrap();
-    assert_eq!(result, Sample::Real(20.0));
-}
-
-#[test]
-fn test_apply_op() {
-    let sampler = SequentialSampler;
-    let arg = create_node(Node::Value(Sample::Real(10.0f64)));
-    let func = Arc::new(|val: Sample<f64>| match val {
-        Sample::Real(v) => Sample::Real(v + 5.0),
-        _ => panic!("unexpected type"),
-    });
-
-    let node = create_root(Node::ApplyOp { func, arg });
-
-    let result = Sampler::<f64>::sample(&sampler, &node, 0).unwrap();
-    assert_eq!(result, Sample::Real(15.0));
-}
-
-#[test]
-fn test_bind_op() {
-    let sampler = SequentialSampler;
-    let operand = create_node(Node::Value(Sample::Real(10.0f64)));
-    let func = Arc::new(|val: Sample<f64>| {
-        let inner_val = match val {
-            Sample::Real(v) => v,
-            _ => panic!("unexpected type"),
-        };
-        create_node(Node::Value(Sample::Real(inner_val * 2.0)))
-    });
-
-    let node = create_root(Node::BindOp { func, operand });
-
-    let result = Sampler::<f64>::sample(&sampler, &node, 0).unwrap();
-    assert_eq!(result, Sample::Real(20.0));
 }
 
 #[test]

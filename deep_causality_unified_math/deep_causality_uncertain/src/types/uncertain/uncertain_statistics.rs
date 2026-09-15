@@ -3,15 +3,15 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::UncertainScalar;
 use crate::{QmcSampler, SampleSession, Uncertain, UncertainError};
+use deep_causality_rand::RandScalar;
 use deep_causality_stats::{MeanAccumulator, StatsError, std_dev};
 
 // Monte-Carlo statistics at the caller's scalar. These reduce many samples into one, so they need
-// arithmetic and a square root — which `UncertainScalar` supplies — and they are on the real carrier
+// arithmetic and a square root — which `RandScalar` supplies — and they are on the real carrier
 // only, because a mean of truth values is not a truth value. The Boolean carrier reduces to a
 // probability instead, which is a different operation and lives on that type.
-impl<R: UncertainScalar> Uncertain<R> {
+impl<R: RandScalar> Uncertain<R> {
     /// Estimates the expected value (mean) by averaging `num_samples` draws under `session`.
     ///
     /// The draws are taken at indices `0..num_samples`, so the estimate is a function of the

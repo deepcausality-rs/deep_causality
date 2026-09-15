@@ -2,9 +2,11 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{Identifiable, UncertainFloat64Data};
+use crate::Identifiable;
+use crate::types::context_node_types::data_uncertain::data_uncertain_f64::UncertainData;
+use deep_causality_uncertain::RandScalar;
 
-impl Identifiable for UncertainFloat64Data {
+impl<R: RandScalar> Identifiable for UncertainData<R> {
     fn id(&self) -> u64 {
         self.id
     }

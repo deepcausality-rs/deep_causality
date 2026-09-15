@@ -3,10 +3,10 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::UncertainScalar;
 use crate::{
     LeafOrdinals, QmcSampler, SampleSession, Sampler, SequentialSampler, Uncertain, UncertainError,
 };
+use deep_causality_rand::RandScalar;
 
 // The sampling surface. Every draw is a function of the session's seed, the sample index and the
 // leaf's ordinal, so nothing is stored between calls and nothing ambient is read.
@@ -24,7 +24,7 @@ use crate::{
 //
 // The body is shared with `UncertainBool<R>` down to the last line except for which kind of sample
 // it reads off the root. See `UncertainBool`'s sampling surface for the mirror.
-impl<R: UncertainScalar> Uncertain<R> {
+impl<R: RandScalar> Uncertain<R> {
     /// Draws this value at `index` under `session`.
     ///
     /// Reproducible from the session's seed alone: the same seed and index give the same value in

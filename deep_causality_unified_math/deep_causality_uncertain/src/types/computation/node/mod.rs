@@ -6,37 +6,10 @@
 //! The computation graph's node, generic in the scalar.
 
 use std::fmt::Debug;
-use std::sync::Arc;
 
 use deep_causality_ast::ConstTree;
 
 use crate::{ArithmeticOperator, ComparisonOperator, DistributionEnum, LogicalOperator, Sample};
-
-pub trait SampledFmapFn<R>: Send + Sync + 'static {
-    fn call(&self, input: Sample<R>) -> Sample<R>;
-}
-
-impl<R, F> SampledFmapFn<R> for F
-where
-    F: Fn(Sample<R>) -> Sample<R> + Send + Sync + 'static,
-{
-    fn call(&self, input: Sample<R>) -> Sample<R> {
-        self(input)
-    }
-}
-
-pub trait SampledBindFn<R>: Send + Sync + 'static {
-    fn call(&self, input: Sample<R>) -> ConstTree<Node<R>>;
-}
-
-impl<R, F> SampledBindFn<R> for F
-where
-    F: Fn(Sample<R>) -> ConstTree<Node<R>> + Send + Sync + 'static,
-{
-    fn call(&self, input: Sample<R>) -> ConstTree<Node<R>> {
-        self(input)
-    }
-}
 
 /// One node of a lazy computation graph over the scalar `R`.
 ///
@@ -51,10 +24,13 @@ where
 /// threshold of type `R` and a Bernoulli's parameter is stated at `R`. That is why the Boolean
 /// carrier keeps the scalar: there is one tree, and it has one scalar.
 ///
-/// # A mapped function is a pointer, not a trait object
+/// # Nothing here is a trait object
 ///
 /// The two `FunctionOp` arms hold `fn(R) -> R` and `fn(R) -> bool`: a plain function pointer, so
-/// the graph stores no `dyn` and no `Arc`, and dispatch through it is static.
+/// the graph stores no `dyn` and no `Arc`, and dispatch through it is static. That matters beyond
+/// tidiness — a trait object's default lifetime reaches the type it is parameterised by, so a
+/// single `Arc<dyn …<R>>` anywhere in this enum would put `R: 'static` on the crate's whole public
+/// surface. There is none, and the scalar bound is therefore exactly the algebra: `RandScalar`.
 ///
 /// Holding the function as a **type parameter**, the way `deep_causality_calculus`'s `Euler` and
 /// `Rk4` hold their rate field, is what a non-recursive arrow can do and this tree cannot: every
@@ -66,28 +42,19 @@ where
 /// graph rather than in a closure over it: `x.map(|v| v * k)` is `x * Uncertain::point(k)`, which
 /// the sampler and the quasi-Monte-Carlo pre-pass can both see into, where a captured `k` is opaque
 /// to them.
+///
+/// # No higher-kinded arms
+///
+/// `PureOp`, `FmapOp`, `ApplyOp` and `BindOp` are gone. No carrier method built one, so no public
+/// API could put a graph into a state carrying them; what they did do was store an
+/// `Arc<dyn …<R>>`, which is where a `'static` on the scalar came from. A stored function belongs
+/// in the Arrow layer, over a composite whose type records what it holds — not in a node of a
+/// homogeneous tree, where it can only be erased.
 #[derive(Clone)]
 pub enum Node<R> {
     // Leaf nodes
     Value(Sample<R>),
     Distribution(DistributionEnum<R>),
-
-    // HKT Operations
-    PureOp {
-        value: Sample<R>,
-    },
-    FmapOp {
-        func: Arc<dyn SampledFmapFn<R>>,
-        operand: ConstTree<Node<R>>,
-    },
-    ApplyOp {
-        func: Arc<dyn SampledFmapFn<R>>,
-        arg: ConstTree<Node<R>>,
-    },
-    BindOp {
-        func: Arc<dyn SampledBindFn<R>>,
-        operand: ConstTree<Node<R>>,
-    },
 
     // Graph operations
     ArithmeticOp {
@@ -127,14 +94,6 @@ impl<R: Debug> Debug for Node<R> {
         match self {
             Node::Value(v) => write!(f, "Value({:?})", v),
             Node::Distribution(d) => write!(f, "Distribution({:?})", d),
-            Node::PureOp { value } => write!(f, "PureOp {{ value: {:?} }}", value),
-            Node::FmapOp { func: _, operand } => {
-                write!(f, "FmapOp {{ func: Fn, operand: {:?} }}", operand)
-            }
-            Node::ApplyOp { func: _, arg } => write!(f, "ApplyOp {{ func: Fn, arg: {:?} }}", arg),
-            Node::BindOp { func: _, operand } => {
-                write!(f, "BindOp {{ func: Fn, operand: {:?} }}", operand)
-            }
             Node::ArithmeticOp { op, lhs, rhs } => write!(
                 f,
                 "ArithmeticOp {{ op: {:?}, lhs: {:?}, rhs: {:?} }}",
@@ -173,17 +132,13 @@ impl<R: Debug> Debug for Node<R> {
 }
 
 impl<R: PartialEq> PartialEq for Node<R> {
-    /// Structural equality. A stored function cannot be compared, so the arms carrying one
+    /// Structural equality. A function pointer is not compared, so the two arms carrying one
     /// compare their operands and the rest of their shape — which is what a reader asking whether
     /// two graphs have the same form is asking.
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (Node::Value(v1), Node::Value(v2)) => v1 == v2,
             (Node::Distribution(d1), Node::Distribution(d2)) => d1 == d2,
-            (Node::PureOp { value: v1 }, Node::PureOp { value: v2 }) => v1 == v2,
-            (Node::FmapOp { operand: o1, .. }, Node::FmapOp { operand: o2, .. }) => o1 == o2,
-            (Node::ApplyOp { arg: a1, .. }, Node::ApplyOp { arg: a2, .. }) => a1 == a2,
-            (Node::BindOp { operand: o1, .. }, Node::BindOp { operand: o2, .. }) => o1 == o2,
             (
                 Node::ArithmeticOp {
                     op: op1,

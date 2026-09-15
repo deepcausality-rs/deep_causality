@@ -12,7 +12,7 @@ use deep_causality_algebra::RealField;
 use deep_causality_core::EffectLog;
 use deep_causality_haft::LogAddEntry;
 use deep_causality_num::FromPrimitive;
-use deep_causality_uncertain::{MaybeUncertain, ProbabilisticType, UncertainError};
+use deep_causality_uncertain::{MaybeUncertain, UncertainError};
 
 use super::dropout_verbosity::DropoutVerbosity;
 
@@ -28,12 +28,17 @@ use super::dropout_verbosity::DropoutVerbosity;
 ///
 /// It depends only on `MaybeUncertain<R>` and the effect log — **not** on any fluid-dynamics type
 /// — so the same source serves any sensor-fed time-varying parameter in any domain. Its bound is
-/// the minimal `RealField + FromPrimitive + ProbabilisticType`, not the solver's `DecNsScalar`.
+/// the minimal `RealField + FromPrimitive`, not the solver's `DecNsScalar`.
 #[derive(Debug, Clone, Copy)]
 pub struct UncertainBoundarySource<R> {
-    threshold: f64,
-    confidence: f64,
-    epsilon: f64,
+    /// The SPRT presence gate's three probabilities, in the caller's scalar.
+    ///
+    /// They were `f64` on a type that is otherwise generic, which meant a `Float106` source stated
+    /// its gate at half its own precision and could not state one at all at a scalar `f64` cannot
+    /// represent. A probability is dimensionless and belongs in the scalar the caller works in.
+    threshold: R,
+    confidence: R,
+    epsilon: R,
     max_samples: usize,
     collapse_samples: usize,
     default_value: R,
@@ -47,16 +52,16 @@ pub struct UncertainBoundarySource<R> {
 
 impl<R> UncertainBoundarySource<R>
 where
-    R: RealField + FromPrimitive + ProbabilisticType + core::fmt::Debug,
+    R: RealField + FromPrimitive + core::fmt::Debug,
 {
     /// A source falling back to `default_value` until the sensor first reads present, with the
     /// default SPRT gate (`threshold 0.5`, `confidence 0.95`, `epsilon 0.05`, `max_samples 1000`),
     /// a `1000`-sample collapse, and [`DropoutVerbosity::EachDropout`].
     pub fn new(default_value: R) -> Self {
         Self {
-            threshold: 0.5,
-            confidence: 0.95,
-            epsilon: 0.05,
+            threshold: lift(0.5),
+            confidence: lift(0.95),
+            epsilon: lift(0.05),
             max_samples: 1000,
             collapse_samples: 1000,
             default_value,
@@ -69,9 +74,9 @@ where
     /// Sets the SPRT presence-gate parameters.
     pub fn with_presence_gate(
         mut self,
-        threshold: f64,
-        confidence: f64,
-        epsilon: f64,
+        threshold: R,
+        confidence: R,
+        epsilon: R,
         max_samples: usize,
     ) -> Self {
         self.threshold = threshold;
@@ -227,4 +232,14 @@ where
             }
         }
     }
+}
+
+/// One of the gate's default probabilities, at the caller's scalar.
+///
+/// The three defaults are small dyadic-ish constants every scalar in the workspace represents to
+/// its own resolution, so the conversion cannot fail for a real scalar; `expect` records that
+/// rather than hiding it behind a silent fallback that would make a wrong gate look like a
+/// deliberate one.
+fn lift<R: FromPrimitive>(value: f64) -> R {
+    R::from_f64(value).expect("a probability between zero and one converts to every real scalar")
 }

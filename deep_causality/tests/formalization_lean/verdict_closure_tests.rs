@@ -130,7 +130,7 @@ fn test_verdict_carriers() {
 
     // The uncertain carriers lift the same algebras pointwise (point masses sample
     // deterministically).
-    use deep_causality_uncertain::{UncertainBool, UncertainF64};
+    use deep_causality::{UncertainBool, UncertainF64};
     let t = UncertainBool::point(true);
     let f = UncertainBool::point(false);
     assert!(!t.meet(f).sample_from_entropy().expect("sample"));

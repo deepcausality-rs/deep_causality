@@ -5,10 +5,10 @@
 
 //! Turning a distribution of truth values into one decision, and into a probability.
 
-use crate::UncertainScalar;
 use crate::{QmcSampler, SampleSession, UncertainBool, UncertainError, ratio, sprt_eval};
+use deep_causality_rand::RandScalar;
 
-impl<R: UncertainScalar> UncertainBool<R> {
+impl<R: RandScalar> UncertainBool<R> {
     /// Collapses the distribution to a single truth value by sequential hypothesis testing.
     ///
     /// Uses the Sequential Probability Ratio Test to decide whether the underlying probability of

@@ -3,9 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::UncertainScalar;
 use crate::types::uncertain::uncertain_op_arithmetic::binary;
 use crate::{ArithmeticOperator, ComparisonOperator, Node, Uncertain, UncertainBool};
+use deep_causality_rand::RandScalar;
 
 // Note: We do not implement the standard `PartialOrd` and `PartialEq` traits because their
 // signatures return `bool`, which is misleading for uncertain values. Instead, we provide methods
@@ -14,7 +14,7 @@ use crate::{ArithmeticOperator, ComparisonOperator, Node, Uncertain, UncertainBo
 // Every threshold is `R`. It has to be: the operand is drawn at `R`, and a threshold at some other
 // precision could only be compared against it by converting one of the two, which is a narrowing
 // the caller did not ask for.
-impl<R: UncertainScalar> Uncertain<R> {
+impl<R: RandScalar> Uncertain<R> {
     /// Whether each draw exceeds `threshold`.
     pub fn greater_than(&self, threshold: R) -> UncertainBool<R> {
         self.compare(ComparisonOperator::GreaterThan, threshold)

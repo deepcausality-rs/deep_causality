@@ -19,7 +19,7 @@ use deep_causality_core::{
     CausalEffectPropagationProcess, CausalityError, EffectLog, PropagatingEffect,
 };
 use deep_causality_haft::LogAddEntry;
-use deep_causality_uncertain::Uncertain;
+use deep_causality_uncertain::{Uncertain, UncertainBool};
 
 /// The requested-parameter summary routed to the STATE channel by
 /// [`qpu_effect`].
@@ -31,7 +31,7 @@ pub struct QpuParams {
     pub shots: u64,
 }
 
-/// A per-qubit `Uncertain<bool>` from the histogram: the Bernoulli distribution
+/// A per-qubit `UncertainBool<f64>` from the histogram: the Bernoulli distribution
 /// whose success probability is the measured frequency of `1` on the
 /// `bit_index`-th measured qubit (LSB-first in measurement order).
 ///
@@ -41,7 +41,7 @@ pub struct QpuParams {
 pub fn shots_to_qubit_bernoulli<H: ShotHistogram>(
     hist: &H,
     bit_index: usize,
-) -> Result<Uncertain<bool>, QuantumError> {
+) -> Result<UncertainBool<f64>, QuantumError> {
     let total = hist.total();
     if total == 0 {
         return Err(QuantumError::NormalizationError(
@@ -62,7 +62,7 @@ pub fn shots_to_qubit_bernoulli<H: ShotHistogram>(
         .map(|(_, count)| count)
         .sum();
     let p = ones as f64 / total as f64;
-    Ok(Uncertain::bernoulli(p))
+    Ok(UncertainBool::bernoulli(p))
 }
 
 /// An observable `Uncertain<f64>` from the histogram: each outcome is mapped to

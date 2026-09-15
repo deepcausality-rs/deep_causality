@@ -4,10 +4,10 @@
  */
 
 use crate::LeafOrdinals;
-use crate::UncertainScalar;
 use crate::types::sampler::leaf_draws::{AddressedDraws, AmbientDraws, LeafDraws};
 use crate::{LogicalOperator, Node, Sample, Sampler, UncertainError};
 use deep_causality_ast::ConstTree;
+use deep_causality_rand::RandScalar;
 use std::collections::HashMap;
 
 /// A basic, single-threaded sampler.
@@ -15,7 +15,7 @@ use std::collections::HashMap;
 pub struct SequentialSampler;
 
 // Implementation of the Sampler trait.
-impl<R: UncertainScalar> Sampler<R> for SequentialSampler {
+impl<R: RandScalar> Sampler<R> for SequentialSampler {
     /// Samples a value from the given root computation node.
     ///
     /// This method initiates the sampling process by evaluating the computation graph
@@ -65,7 +65,7 @@ impl SequentialSampler {
     ///
     /// `ordinals` must have been built from this graph. A drawing leaf without one is reported
     /// rather than drawn from elsewhere.
-    pub(crate) fn sample_addressed<R: UncertainScalar>(
+    pub(crate) fn sample_addressed<R: RandScalar>(
         &self,
         root_node: &ConstTree<Node<R>>,
         ordinals: &LeafOrdinals,
@@ -102,7 +102,7 @@ impl SequentialSampler {
     /// - `Ok(Sample<R>)` containing the evaluated value of the node.
     /// - `Err(UncertainError)` if an operator is handed a sample of the wrong kind, or a leaf
     ///   cannot be drawn.
-    fn evaluate_node<R: UncertainScalar>(
+    fn evaluate_node<R: RandScalar>(
         &self,
         node: &ConstTree<Node<R>>,
         context: &mut HashMap<usize, Sample<R>>,
@@ -117,20 +117,6 @@ impl SequentialSampler {
         let result = match node.value() {
             Node::Value(v) => *v,
             Node::Distribution(dist) => draws.draw(current_node_id, dist)?,
-            Node::PureOp { value } => *value,
-            Node::FmapOp { func, operand } => {
-                let operand_val = self.evaluate_node(operand, context, draws)?;
-                func.call(operand_val)
-            }
-            Node::ApplyOp { func, arg } => {
-                let arg_val = self.evaluate_node(arg, context, draws)?;
-                func.call(arg_val)
-            }
-            Node::BindOp { func, operand } => {
-                let operand_val = self.evaluate_node(operand, context, draws)?;
-                let new_tree = func.call(operand_val);
-                self.evaluate_node(&new_tree, context, draws)?
-            }
             Node::ArithmeticOp { op, lhs, rhs } => {
                 let lhs_val = self.evaluate_node(lhs, context, draws)?.real()?;
                 let rhs_val = self.evaluate_node(rhs, context, draws)?.real()?;

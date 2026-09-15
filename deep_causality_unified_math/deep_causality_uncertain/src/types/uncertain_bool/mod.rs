@@ -3,9 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::UncertainScalar;
 use crate::{BernoulliParams, DistributionEnum, Node, Sample};
 use deep_causality_ast::ConstTree;
+use deep_causality_rand::RandScalar;
 
 mod uncertain_bool_default;
 mod uncertain_bool_hypothesis;
@@ -37,7 +37,7 @@ pub struct UncertainBool<R> {
     root_node: ConstTree<Node<R>>,
 }
 
-impl<R: UncertainScalar> UncertainBool<R> {
+impl<R: RandScalar> UncertainBool<R> {
     /// Creates a new `UncertainBool` from a computation graph root.
     pub(crate) fn from_root_node(root_node: Node<R>) -> Self {
         Self {

@@ -25,18 +25,18 @@
 
 use deep_causality_num::BFloat16;
 use deep_causality_uncertain::{
-    MaybeUncertain, SampleSession, Uncertain, UncertainBool, UncertainScalar,
+    MaybeUncertain, RandScalar, SampleSession, Uncertain, UncertainBool,
 };
 
 use deep_causality_algebra::Verdict;
 
 /// The crate's scalar bound, plus what an assertion needs.
 ///
-/// `UncertainScalar` does not imply `Debug` — `Real` in `deep_causality_algebra` does not, and
+/// `RandScalar` does not imply `Debug` — `Real` in `deep_causality_algebra` does not, and
 /// requiring it of every scalar to serve `assert_eq!` would be the test wagging the library. So the
 /// test states it, once, for itself.
-trait TestScalar: UncertainScalar + core::fmt::Debug {}
-impl<T: UncertainScalar + core::fmt::Debug> TestScalar for T {}
+trait TestScalar: RandScalar + core::fmt::Debug {}
+impl<T: RandScalar + core::fmt::Debug> TestScalar for T {}
 
 /// A literal, at whichever scalar the caller is working in.
 fn at<R: TestScalar>(v: f64) -> R {

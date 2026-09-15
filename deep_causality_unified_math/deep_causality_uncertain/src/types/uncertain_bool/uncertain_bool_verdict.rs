@@ -11,10 +11,10 @@
 //! operation extends the graph, and the laws hold in distribution.
 
 use crate::UncertainBool;
-use crate::UncertainScalar;
 use deep_causality_algebra::Verdict;
+use deep_causality_rand::RandScalar;
 
-impl<R: UncertainScalar> Verdict for UncertainBool<R> {
+impl<R: RandScalar> Verdict for UncertainBool<R> {
     #[inline]
     fn bottom() -> Self {
         Self::point(false)

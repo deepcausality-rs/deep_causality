@@ -13,10 +13,10 @@
 //! precision. They are one impl each now.
 
 use crate::MaybeUncertain;
-use crate::UncertainScalar;
+use deep_causality_rand::RandScalar;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
-impl<R: UncertainScalar> Add for MaybeUncertain<R> {
+impl<R: RandScalar> Add for MaybeUncertain<R> {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
@@ -27,7 +27,7 @@ impl<R: UncertainScalar> Add for MaybeUncertain<R> {
     }
 }
 
-impl<R: UncertainScalar> Sub for MaybeUncertain<R> {
+impl<R: RandScalar> Sub for MaybeUncertain<R> {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
@@ -38,7 +38,7 @@ impl<R: UncertainScalar> Sub for MaybeUncertain<R> {
     }
 }
 
-impl<R: UncertainScalar> Mul for MaybeUncertain<R> {
+impl<R: RandScalar> Mul for MaybeUncertain<R> {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
@@ -49,7 +49,7 @@ impl<R: UncertainScalar> Mul for MaybeUncertain<R> {
     }
 }
 
-impl<R: UncertainScalar> Div for MaybeUncertain<R> {
+impl<R: RandScalar> Div for MaybeUncertain<R> {
     type Output = Self;
 
     fn div(self, rhs: Self) -> Self::Output {
@@ -60,7 +60,7 @@ impl<R: UncertainScalar> Div for MaybeUncertain<R> {
     }
 }
 
-impl<R: UncertainScalar> Neg for MaybeUncertain<R> {
+impl<R: RandScalar> Neg for MaybeUncertain<R> {
     type Output = Self;
 
     fn neg(self) -> Self::Output {

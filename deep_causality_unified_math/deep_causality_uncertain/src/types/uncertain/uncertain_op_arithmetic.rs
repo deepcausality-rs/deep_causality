@@ -3,15 +3,15 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::UncertainScalar;
 use crate::{ArithmeticOperator, Node, Uncertain};
+use deep_causality_rand::RandScalar;
 use std::ops::{Add, Div, Mul, Neg, Sub};
 
 // Arithmetic on the real carrier. The nodes are scalar-agnostic — they only thread `ConstTree`s —
 // and the scalar arrives with the graph, so there is one impl per operator rather than one per
 // precision. The Boolean carrier is a different type and does not get these, which is what the
 // `RealField` bound used to be doing and now the type does.
-impl<R: UncertainScalar> Add for Uncertain<R> {
+impl<R: RandScalar> Add for Uncertain<R> {
     type Output = Self;
 
     fn add(self, rhs: Self) -> Self::Output {
@@ -19,7 +19,7 @@ impl<R: UncertainScalar> Add for Uncertain<R> {
     }
 }
 
-impl<R: UncertainScalar> Sub for Uncertain<R> {
+impl<R: RandScalar> Sub for Uncertain<R> {
     type Output = Self;
 
     fn sub(self, rhs: Self) -> Self::Output {
@@ -27,7 +27,7 @@ impl<R: UncertainScalar> Sub for Uncertain<R> {
     }
 }
 
-impl<R: UncertainScalar> Mul for Uncertain<R> {
+impl<R: RandScalar> Mul for Uncertain<R> {
     type Output = Self;
 
     fn mul(self, rhs: Self) -> Self::Output {
@@ -35,7 +35,7 @@ impl<R: UncertainScalar> Mul for Uncertain<R> {
     }
 }
 
-impl<R: UncertainScalar> Div for Uncertain<R> {
+impl<R: RandScalar> Div for Uncertain<R> {
     type Output = Self;
 
     fn div(self, rhs: Self) -> Self::Output {
@@ -43,7 +43,7 @@ impl<R: UncertainScalar> Div for Uncertain<R> {
     }
 }
 
-impl<R: UncertainScalar> Neg for Uncertain<R> {
+impl<R: RandScalar> Neg for Uncertain<R> {
     type Output = Self;
 
     fn neg(self) -> Self::Output {
@@ -54,7 +54,7 @@ impl<R: UncertainScalar> Neg for Uncertain<R> {
 }
 
 /// One binary arithmetic node.
-pub(crate) fn binary<R: UncertainScalar>(
+pub(crate) fn binary<R: RandScalar>(
     op: ArithmeticOperator,
     lhs: Uncertain<R>,
     rhs: Uncertain<R>,

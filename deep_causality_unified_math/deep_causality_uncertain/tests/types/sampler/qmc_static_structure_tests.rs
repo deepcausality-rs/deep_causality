@@ -4,32 +4,15 @@
  */
 
 //! The QMC pre-pass's guard against data-dependent stochastic structure.
+//!
+//! QMC assigns each drawing leaf a fixed Sobol dimension before any sample is taken, so it can only
+//! admit a graph whose set of drawing leaves is settled before the draw. The `BindOp` arm — which
+//! chose the graph to draw from by a value it had already drawn — was the other way that could
+//! fail; it is gone, and a branch-divergent conditional is the arm that now represents the same
+//! hazard. Unlike `BindOp`, it is reachable from the public constructors, so this needs no
+//! crate-internal reach-through.
 
-use deep_causality_ast::ConstTree;
-use deep_causality_uncertain::utils_tests::raw_graph::qmc_sampler_from_root;
-use deep_causality_uncertain::{
-    DistributionEnum, Node, NormalDistributionParams, QmcSampler, Sample, SampledBindFn, Uncertain,
-    UncertainBool, UncertainError,
-};
-use std::sync::Arc;
-
-/// A `BindOp` chooses the graph to draw from by a value it has already drawn, so which
-/// distributions the sample touches is not known before the sample. QMC assigns a fixed dimension
-/// per drawing leaf ahead of time, so it cannot admit one.
-///
-/// No carrier method builds a `BindOp`, which is why the tree here is assembled by hand.
-#[test]
-fn the_pre_pass_rejects_a_bind_op() {
-    let operand = ConstTree::new(Node::Distribution(DistributionEnum::Normal(
-        NormalDistributionParams::new(0.0f64, 1.0),
-    )));
-    let func: Arc<dyn SampledBindFn<f64>> =
-        Arc::new(|_v: Sample<f64>| ConstTree::new(Node::Value(Sample::Real(0.0))));
-    let root = ConstTree::new(Node::BindOp { func, operand });
-
-    let err = qmc_sampler_from_root(&root, None).expect_err("a BindOp must be refused");
-    assert!(matches!(err, UncertainError::SamplingError(_)));
-}
+use deep_causality_uncertain::{QmcSampler, Uncertain, UncertainBool, UncertainError};
 
 /// A conditional whose branches draw different distributions is refused for the same reason: the
 /// set of dimensions the sample touches would depend on the condition's draw.

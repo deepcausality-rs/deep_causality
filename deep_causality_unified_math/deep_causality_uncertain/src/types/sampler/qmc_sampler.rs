@@ -12,14 +12,14 @@
 //! by **inverse-CDF** on its coordinate — the only transform that preserves the sequence's
 //! low-discrepancy structure.
 //!
-//! QMC is sound only for statically-structured trees, so the pre-pass rejects `BindOp` (the
-//! drawn structure would depend on a sampled value) and any `ConditionalOp` whose branches draw
-//! a different set of distributions.
+//! QMC is sound only for statically-structured trees, so the pre-pass rejects any `ConditionalOp`
+//! whose branches draw a different set of distributions — the set of dimensions a sample touches
+//! would then depend on the condition's own draw.
 
-use crate::UncertainScalar;
 use crate::types::sampler::sequential_sampler::apply_logical;
 use crate::{DistributionEnum, Node, Sample, Sampler, Uncertain, UncertainBool, UncertainError};
 use deep_causality_ast::ConstTree;
+use deep_causality_rand::RandScalar;
 use deep_causality_rand::{MAX_SOBOL_DIM, SobolSequence};
 use deep_causality_stats::{
     bernoulli_inverse_cdf, standard_normal_inverse_cdf_at, uniform_inverse_cdf,
@@ -40,10 +40,10 @@ impl QmcSampler {
     /// seeded digital shift (reproducible randomized QMC); when `None`, it is the raw
     /// (deterministic) sequence.
     ///
-    /// Returns `UncertainError::SamplingError` if the tree is not statically structured
-    /// (`BindOp` or branch-divergent `ConditionalOp`), or needs more than [`MAX_SOBOL_DIM`]
-    /// stochastic dimensions.
-    pub fn new<R: UncertainScalar>(
+    /// Returns `UncertainError::SamplingError` if the tree is not statically structured (a
+    /// branch-divergent `ConditionalOp`), or needs more than [`MAX_SOBOL_DIM`] stochastic
+    /// dimensions.
+    pub fn new<R: RandScalar>(
         uncertain: &Uncertain<R>,
         seed: Option<u64>,
     ) -> Result<Self, UncertainError> {
@@ -55,7 +55,7 @@ impl QmcSampler {
     /// Two entry points rather than one over a shared root, because the root is not part of either
     /// carrier's surface. A Sobol dimension is a property of a drawing leaf and is assigned
     /// identically here — what differs is only which carrier the caller holds.
-    pub fn for_bool<R: UncertainScalar>(
+    pub fn for_bool<R: RandScalar>(
         uncertain: &UncertainBool<R>,
         seed: Option<u64>,
     ) -> Result<Self, UncertainError> {
@@ -63,9 +63,8 @@ impl QmcSampler {
     }
 
     /// Core constructor over a raw computation-graph root. Crate-internal; [`Self::new`] and
-    /// [`Self::for_bool`] are the public entry points. Kept separate so the static-structure guard
-    /// can be tested against node variants (e.g. `BindOp`) that no carrier builder produces.
-    pub(crate) fn from_root_node<R: UncertainScalar>(
+    /// [`Self::for_bool`] are the public entry points.
+    pub(crate) fn from_root_node<R: RandScalar>(
         root: &ConstTree<Node<R>>,
         seed: Option<u64>,
     ) -> Result<Self, UncertainError> {
@@ -111,7 +110,7 @@ impl QmcSampler {
     }
 
     /// Draws one leaf by inverse-CDF on its Sobol coordinate.
-    fn draw_leaf<R: UncertainScalar>(
+    fn draw_leaf<R: RandScalar>(
         &self,
         node_id: usize,
         index: u64,
@@ -146,7 +145,7 @@ impl QmcSampler {
 
     /// Recursively evaluates a node against the Sobol point at `index`, memoizing by node id so a
     /// shared leaf yields one draw per sample (matching `SequentialSampler`'s semantics).
-    fn evaluate_node<R: UncertainScalar>(
+    fn evaluate_node<R: RandScalar>(
         &self,
         node: &ConstTree<Node<R>>,
         index: u64,
@@ -160,21 +159,6 @@ impl QmcSampler {
         let result = match node.value() {
             Node::Value(v) => *v,
             Node::Distribution(dist) => self.draw_leaf(current_node_id, index, dist)?,
-            Node::PureOp { value } => *value,
-            Node::FmapOp { func, operand } => {
-                let operand_val = self.evaluate_node(operand, index, context)?;
-                func.call(operand_val)
-            }
-            Node::ApplyOp { func, arg } => {
-                let arg_val = self.evaluate_node(arg, index, context)?;
-                func.call(arg_val)
-            }
-            Node::BindOp { .. } => {
-                // Unreachable: the pre-pass rejects BindOp. Defensive guard.
-                return Err(UncertainError::SamplingError(
-                    "QMC requires a static stochastic structure: BindOp is not supported".into(),
-                ));
-            }
             Node::ArithmeticOp { op, lhs, rhs } => {
                 let lhs_val = self.evaluate_node(lhs, index, context)?.real()?;
                 let rhs_val = self.evaluate_node(rhs, index, context)?.real()?;
@@ -229,7 +213,7 @@ impl QmcSampler {
     }
 }
 
-impl<R: UncertainScalar> Sampler<R> for QmcSampler {
+impl<R: RandScalar> Sampler<R> for QmcSampler {
     fn sample(
         &self,
         root_node: &ConstTree<Node<R>>,
@@ -241,14 +225,14 @@ impl<R: UncertainScalar> Sampler<R> for QmcSampler {
 }
 
 /// Assigns a Sobol dimension to every non-`Point` distribution leaf, rejecting non-static
-/// structure (`BindOp`, branch-divergent `ConditionalOp`).
-fn assign_dimensions<R: UncertainScalar>(
+/// structure (a branch-divergent `ConditionalOp`).
+fn assign_dimensions<R: RandScalar>(
     node: &ConstTree<Node<R>>,
     dims: &mut HashMap<usize, usize>,
     next_dim: &mut usize,
 ) -> Result<(), UncertainError> {
     match node.value() {
-        Node::Value(_) | Node::PureOp { .. } => Ok(()),
+        Node::Value(_) => Ok(()),
         Node::Distribution(dist) => {
             if dist.draws() {
                 dims.entry(node.get_id()).or_insert_with(|| {
@@ -259,12 +243,10 @@ fn assign_dimensions<R: UncertainScalar>(
             }
             Ok(())
         }
-        Node::FmapOp { operand, .. }
-        | Node::NegationOp { operand }
+        Node::NegationOp { operand }
         | Node::FunctionOpReal { operand, .. }
         | Node::FunctionOpBool { operand, .. }
         | Node::ComparisonOp { operand, .. } => assign_dimensions(operand, dims, next_dim),
-        Node::ApplyOp { arg, .. } => assign_dimensions(arg, dims, next_dim),
         Node::ArithmeticOp { lhs, rhs, .. } => {
             assign_dimensions(lhs, dims, next_dim)?;
             assign_dimensions(rhs, dims, next_dim)
@@ -275,9 +257,6 @@ fn assign_dimensions<R: UncertainScalar>(
             }
             Ok(())
         }
-        Node::BindOp { .. } => Err(UncertainError::SamplingError(
-            "QMC requires a static stochastic structure: BindOp is not supported".into(),
-        )),
         Node::ConditionalOp {
             condition,
             if_true,
@@ -304,24 +283,18 @@ fn assign_dimensions<R: UncertainScalar>(
 }
 
 /// Collects the node ids of every non-`Point` distribution leaf in `node`'s subtree.
-fn collect_stochastic_leaves<R: UncertainScalar>(
-    node: &ConstTree<Node<R>>,
-    set: &mut HashSet<usize>,
-) {
+fn collect_stochastic_leaves<R: RandScalar>(node: &ConstTree<Node<R>>, set: &mut HashSet<usize>) {
     match node.value() {
         Node::Distribution(dist) => {
             if dist.draws() {
                 set.insert(node.get_id());
             }
         }
-        Node::Value(_) | Node::PureOp { .. } => {}
-        Node::FmapOp { operand, .. }
-        | Node::BindOp { operand, .. }
-        | Node::NegationOp { operand }
+        Node::Value(_) => {}
+        Node::NegationOp { operand }
         | Node::FunctionOpReal { operand, .. }
         | Node::FunctionOpBool { operand, .. }
         | Node::ComparisonOp { operand, .. } => collect_stochastic_leaves(operand, set),
-        Node::ApplyOp { arg, .. } => collect_stochastic_leaves(arg, set),
         Node::ArithmeticOp { lhs, rhs, .. } => {
             collect_stochastic_leaves(lhs, set);
             collect_stochastic_leaves(rhs, set);

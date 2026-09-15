@@ -51,6 +51,9 @@ fn test_display() {
     let data = Uncertain::normal(0.0, 1.0);
     let ufd = UncertainFloat64Data::new(id, data.clone());
     let display_str = format!("{}", ufd);
-    assert!(display_str.contains("UncertainFloat64Data: id: 1"));
+    // The struct is `UncertainData<R>` now, and `UncertainFloat64Data` is one alias of it. A
+    // generic `Display` must name the type rather than one instantiation of it — printing
+    // "UncertainFloat64Data" for an `UncertainData<f32>` would be a lie.
+    assert!(display_str.contains("UncertainData: id: 1"));
     assert!(display_str.contains("data:"));
 }

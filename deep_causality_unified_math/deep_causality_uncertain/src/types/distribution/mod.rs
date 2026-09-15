@@ -12,7 +12,7 @@ use crate::{
 // `Uniform` is the exception and comes from `rand` directly, because it is range sampling rather
 // than a shaped distribution: it is built on `SampleUniform`, which can only be implemented in the
 // crate that owns it, so it cannot move. Naming the entropy crate for it is truthful.
-use crate::UncertainScalar;
+use deep_causality_rand::RandScalar;
 use deep_causality_rand::Uniform;
 use deep_causality_stats::{Bernoulli, Distribution, Normal, Rng};
 use std::fmt::{Display, Formatter};
@@ -33,9 +33,9 @@ pub enum DistributionEnum<T> {
 /// value at any scalar. So the Boolean case is a *branch* here rather than an instantiation, and
 /// the return type says which by carrying a [`Sample`].
 ///
-/// A scalar joins by satisfying [`UncertainScalar`] and by nothing else. There is no per-type entry in
+/// A scalar joins by satisfying [`RandScalar`] and by nothing else. There is no per-type entry in
 /// this file to keep in step with a type added elsewhere.
-impl<T: UncertainScalar> DistributionEnum<T> {
+impl<T: RandScalar> DistributionEnum<T> {
     /// Draws one value, at `T` for the shaped distributions and as a Boolean for the Bernoulli.
     ///
     /// # Errors

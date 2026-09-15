@@ -3,9 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::Uncertain;
-use crate::UncertainScalar;
+use deep_causality_rand::RandScalar;
 
-impl<R: UncertainScalar> PartialEq for Uncertain<R> {
+impl<R: RandScalar> PartialEq for Uncertain<R> {
     fn eq(&self, other: &Self) -> bool {
         // ID is generated so two Uncertain instances with the same root node will have
         // different ID's. Thus the comparison on the root node only

@@ -8,16 +8,17 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 ### Requirement: Precision-generic uncertain types
 `Uncertain<R>`, `UncertainBool<R>` and `MaybeUncertain<R>` SHALL be generic over a blanket-implemented scalar bound, and `deep_causality_uncertain/src` SHALL name no concrete scalar type in any implementation, constant or match arm.
 
-The bound is `R: UncertainScalar` — `RandScalar + 'static`, itself blanket-implemented over
-`RealField + FromPrimitive` in `deep_causality_rand`. A scalar joins by satisfying the algebra and
-by nothing else, so a type added to `deep_causality_num` works here with no line changed in this
-crate.
+The bound is `R: RandScalar` — `RealField + FromPrimitive`, blanket-implemented in
+`deep_causality_rand` and re-exported by this crate so a downstream bound needs one dependency
+rather than two. A scalar joins by satisfying the algebra and by nothing else, so a type added to
+`deep_causality_num` works here with no line changed in this crate.
 
-`RandScalar` is the whole of the algebraic requirement and the only part a numeric type can fail.
-The `'static` is the graph's, not the number's: the four unreachable higher-kinded node arms store
-an `Arc<dyn …<R>>`, and a trait object's default lifetime reaches the type it is parameterised by.
-Removing those arms removes the bound. A *mapped* function contributes nothing to it — it is held
-as `fn(R) -> R`, a plain pointer — which is why `Send + Sync` are not in the bound.
+The bound is exactly the algebra and nothing is added to it. That is a property of the graph rather
+than a convention: a trait object's default lifetime reaches the type it is parameterised by, so a
+single `Arc<dyn …<R>>` in the node enum would put `R: 'static` on the whole public surface. There is
+none. A mapped function is `fn(R) -> R`, a plain pointer, and the four higher-kinded arms that did
+store one are removed — no public constructor built them, and a stored function belongs in the Arrow
+layer over a composite whose type records what it holds.
 
 `Real` is not a candidate for the bound and the weaker form is excluded rather than left open. A
 probability is a ratio of two counts, and `Real` in `deep_causality_algebra` is

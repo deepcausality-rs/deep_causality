@@ -80,7 +80,7 @@ impl CfdConfigBuilder {
     /// `UncertainMarchConfig`, run by [`CfdFlow::march`](crate::CfdFlow). The geometry is
     /// lent at run time (`.on(&manifold)`), so the dimension is not pinned here.
     #[cfg(feature = "std")]
-    pub fn uncertain_march<R: CfdScalar + deep_causality_uncertain::ProbabilisticType>(
+    pub fn uncertain_march<R: CfdScalar>(
         name: impl Into<String>,
     ) -> crate::types::flow_config::UncertainMarchConfigBuilder<R> {
         crate::types::flow_config::UncertainMarchConfigBuilder::new(name)
