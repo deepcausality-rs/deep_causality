@@ -29,7 +29,6 @@ exclude = [
 # Disabled by default to use native Rust prng instead.
 os-random = ["deep_causality_rand/os-random"]
 
-
 [dependencies.deep_causality_stats]
 workspace = true
 features = ["std"]
@@ -58,11 +57,8 @@ features = ["default"]
 
 [dev-dependencies]
 criterion = { workspace = true }
-
-# The two container crates are **dev**-dependencies
-# here, where they reach the test harness and not the library.
-deep_causality_linear = { workspace = true, features = ["default"] }
-deep_causality_tensor = { workspace = true, features = ["default"] }
+deep_causality_linear = { path = "../deep_causality_linear", default-features = false, features = ["default"] }
+deep_causality_tensor = { path = "../deep_causality_tensor", default-features = false, features = ["default"] }
 
 [[bench]]
 name = "uncertain_benchmarks"

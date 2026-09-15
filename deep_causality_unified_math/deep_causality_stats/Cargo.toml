@@ -31,8 +31,6 @@ exclude = [
 default = ["std"]
 std = ["alloc", "deep_causality_num/std", "deep_causality_algebra/std", "deep_causality_linear/std", "deep_causality_rand/std"]
 alloc = []
-# Forwarded from `deep_causality_rand`: a crate that reaches here for distributions can ask for
-# OS entropy without naming the entropy crate itself.
 os-random = ["deep_causality_rand/os-random"]
 no-std = ["alloc", "deep_causality_num/no-std", "deep_causality_algebra/no-std", "deep_causality_linear/no-std", "deep_causality_rand/no-std"]
 
@@ -45,8 +43,6 @@ workspace = true
 [dependencies.deep_causality_linear]
 workspace = true
 
-# Entropy. `stats` owns the distributions; `rand` supplies the bits they consume.
-# Downhill: tier 4 to tier 2, so no cycle.
 [dependencies.deep_causality_rand]
 workspace = true
 

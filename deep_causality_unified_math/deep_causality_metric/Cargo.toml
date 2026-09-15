@@ -32,8 +32,5 @@ std = ["alloc"]
 alloc = []
 no-std = ["alloc"]
 
-# This crate has ZERO external dependencies
-# It is a foundational crate
-
 [lints]
 workspace = true
