@@ -43,22 +43,24 @@ Seventeen crates carry the mathematics, arranged so that each depends only on cr
 | 0 | `deep_causality_num` | representation traits: `Integer`, `NaturalNumber`, `Float`, casts, identities, the two software scalars `BFloat16` and `Float106`, and the lifts that make precision a parameter |
 | 0 | `deep_causality_metric` | metric signatures `Cl(p, q, r)`, East/West Coast conventions, signature algebra |
 | 1 | `deep_causality_algebra` | the trait tower from `Magma` to `RealField`, the scalar traits, isomorphism markers |
-| 2 | `deep_causality_haft` | `HKT` through `HKT5`, `Functor`/`Applicative`/`Monad`/`CoMonad`/`Foldable`/`Traversable`, `Arrow`, `Category`, `Free`/`Cofree`, the effect system |
+| 2 | `deep_causality_haft` | `HKT` through `HKT5`, `Functor`/`Applicative`/`Monad`/`CoMonad`/`Foldable`/`Traversable`/`DiagonalTraversable`/`Collectable`, `Arrow`, `Category`, `Kleisli`, `Free`/`Cofree`, the effect system |
 | 2 | `deep_causality_num_rational` | `Rational<T>`, exact ℚ |
-| 2 | `deep_causality_rand` | generators, statistical distributions, Sobol sequences |
+| 2 | `deep_causality_rand` | entropy and nothing else: generators, the raw machine word, the Boolean draw, Sobol sequences, range sampling. It names no density |
 | 3 | `deep_causality_linear` | matrices (sparse, dense, bit-packed 𝔽₂), vectors, eliminations, decompositions, solvers |
 | 3 | `deep_causality_num_complex` | `Complex`, `Quaternion`, `Octonion` |
 | 3 | `deep_causality_num_dual` | `Dual`, forward-mode automatic differentiation |
 | 4 | `deep_causality_calculus` | differentiation, integration, quadrature as Arrow operators |
 | 4 | `deep_causality_fft` | FFT, rFFT, DCT, N-dimensional plans |
 | 4 | `deep_causality_homology` | chain complexes, boundary operators, homology over a chosen coefficient field. No geometry |
-| 4 | `deep_causality_stats` | entropy, log-sum-exp, moments, Pearson, covariance, ridge, logistic IRLS, Gaussian log-density, binning |
+| 4 | `deep_causality_stats` | entropy, log-sum-exp, moments, Pearson, covariance, ridge, logistic IRLS, Gaussian log-density, binning — and the distributions: normal, exponential, Cauchy, Weibull, log-normal, Poisson, categorical, Bernoulli |
 | 5 | `deep_causality_tensor` | N-index tensors, broadcasting, Einstein summation, the tensor-train stack |
-| 5 | `deep_causality_uncertain` | a first-order type for uncertain values |
+| 5 | `deep_causality_uncertain` | uncertain values as lazy computation graphs, generic in the scalar; the graph is an `Arrow` |
 | 6 | `deep_causality_multivector` | Clifford algebras, `CausalMultiVector`, `CausalMultiField` |
 | 7 | `deep_causality_topology` | complexes, manifolds, exterior calculus, lattice gauge fields |
 
-Two placements look surprising and are not. `num_complex` and `num_dual` sit above `num_rational` because they ship higher-kinded witnesses over their number types and so depend on `haft`, which `num_rational` does not; that lifts `calculus` and `fft` with them. And `tensor` and `uncertain` sit above `stats` because both take their statistics from it rather than carrying their own, which is what puts `stats` on the longest chain.
+Three placements look surprising and are not. `num_complex` and `num_dual` sit above `num_rational` because they ship higher-kinded witnesses over their number types and so depend on `haft`, which `num_rational` does not; that lifts `calculus` and `fft` with them. `tensor` and `uncertain` sit above `stats` because both take their statistics from it rather than carrying their own, which is what puts `stats` on the longest chain. And `stats` depends on `rand`, the one edge in the figure that skips a tier downward, because the shaped distributions live beside the densities that define them.
+
+That last edge is a coherence fact rather than a preference. A blanket `impl<T: RealField> Distribution<T> for StandardUniform` is `error[E0119]` against the `u64`, `u32` and `bool` implementations a generator must also provide: the compiler cannot prove `u64` will never be a real field. Separating *what a word is* from *what a number is distributed as* removes the overlap rather than working around it, and the crate boundary is where that separation is cheapest, because `stats` has no reason to sample a machine word. The direction is downhill, tier 4 to tier 2, so nothing circles back, and `stats` re-exports the generator traits by name so a crate that wants to draw from a distribution needs no second dependency to spell the bound.
 
 Four crates that consume this stack stay outside the folder, at the repository root. `deep_causality_quantum` builds density matrices, channels and gates on it; `deep_causality_physics` supplies physics formulas and engineering primitives, and `deep_causality_cfd` builds fluid solvers on those; `deep_causality_algorithms` and `deep_causality_discovery` run the discovery kernels. They are consumers, not members.
 
@@ -287,7 +289,11 @@ Chain complexes and nothing else. A complex is spaces `C_k` joined by boundary m
 
 ### Statistics: `deep_causality_stats`
 
-Descriptive and information statistics over slices: moments, Pearson correlation, covariance, conditional variance, entropy, log-sum-exp, Gaussian log-density, ridge regression, logistic IRLS, proportions, and binning. Its configuration types keep the semantics explicit rather than implied, so entropy names its log base, its normalization and its zero-handling policy, and sample and population variance are separate functions. `tensor` and `uncertain` both hand their reductions here rather than growing their own, which is what lifts this crate onto the longest chain.
+Descriptive and information statistics over slices: moments, Pearson correlation, covariance, conditional variance, entropy, log-sum-exp, Gaussian log-density, ridge regression, logistic IRLS, proportions, and binning. **The distributions live here too** — normal, exponential, Cauchy, Weibull, log-normal, Poisson, categorical, Bernoulli, the unit-interval draws and their inverse-CDF transforms — because a distribution is defined by its density and its moments, and both are statistics. Putting a sampler beside its density is what makes importance sampling, sequential Monte Carlo and MCMC diagnostics short to write.
+
+The crate does not exist to remove duplication; it adds more source than it removes. It exists because shipped implementations of the same statistic disagreed about what they computed. Shannon entropy decided it: three implementations in this workspace differed on three axes at once, and two returned answers in different units for the same input, one in bits and one in nats, a factor of `ln 2` apart. That is a semantic disagreement rather than a rounding difference. So the configuration types keep the semantics explicit rather than implied — entropy names its log base, its normalization and its zero-handling policy, and sample and population variance are separate functions — and every combination named in `EntropyConfig` has a caller today.
+
+`tensor` and `uncertain` both hand their reductions here rather than growing their own, which is what lifts this crate onto the longest chain.
 
 ### Metric signatures: `deep_causality_metric`
 
@@ -309,11 +315,19 @@ The crate exists for one job: to give the DEC-native Navier-Stokes solver a spec
 
 ### Uncertainty: `deep_causality_uncertain`
 
-`Uncertain<T>` carries a value together with the distribution that produced it. Arithmetic and comparison build a lazy computation graph rather than collapsing to a number, and evaluation samples it to a requested confidence. `MaybeUncertain<T>` factors a reading into presence and value, so a sensor that reports eighty percent of the time is a different object from one that reports five percent of the time. The real construction, arithmetic and sampling paths run at `f64` and `Float106` alike, which keeps rounding error separate from the uncertainty being modelled. [Uncertainty](/concepts/uncertainty/) covers the decision API.
+`Uncertain<R>` is a lazy computation graph, generic in its scalar under `RandScalar`. Arithmetic and comparison extend the graph rather than collapsing it to a number, and evaluation samples it to a requested confidence. `MaybeUncertain<R>` factors a reading into presence and value, so a sensor that reports eighty percent of the time is a different object from one that reports five percent of the time.
+
+**The graph is an `Arrow`, not a container.** `haft`'s container traits carry no `'static` bound, deliberately: a functor receives a function, applies it and drops it. A carrier that *stores* a sampling closure needs bounds those traits do not provide, and an implementation cannot add them. So a lazy sampler cannot be a witness, and `haft`'s home for programs is `Arrow`, which `Uncertain<R>` and `UncertainBool<R>` implement with `In = SampleIndex` and `Out = Result<R, UncertainError>`. `Arrow::run` takes `&self`, which is admissible only because a draw is a pure function of three numbers — the session seed, the sample index and the leaf's ordinal — and of nothing else. Nothing is stored between calls, which is also why `x - x` is exactly zero: a leaf reached twice within one graph is one draw.
+
+Ensembles go the other way and are ordinary data. `materialize::<W>` takes a witness and hands back `W::Type<R>` — a `DenseVector<R>`, a rank-1 `CausalTensor<R>`, a `Vec<R>` — so the draws arrive already carrying every categorical structure that witness provides, and the crate declares no ensemble type and names neither container crate. Two ensembles drawn from one session at the *same* indices are correlated by index, so combining them is a positional zip (`Semigroupal::zip_with`, `DiagonalTraversable::sequence_zip`) rather than `Traversable::sequence`, which forms the cartesian product: four quantities at fifty draws each give 50⁴ = 6 250 000 combinations instead of fifty correlated tuples.
+
+Every path runs at `f32`, `f64` and `Float106` alike, which keeps rounding error separate from the uncertainty being modelled. [Uncertainty](/concepts/uncertainty/) covers the decision API.
 
 ### Randomness: `deep_causality_rand`
 
-Generators and statistical distributions bounded on the same tower, so a sampler is generic over its scalar the way the rest of the stack is. Topology uses it for gauge-field thermalization; the discovery algorithms use it for resampling.
+Entropy, and no distributional claim. What this crate supplies is a source of numbers — `Xoshiro256`, an OS-entropy generator, a Sobol sequence — together with the draws that are facts about the bits themselves: a raw machine word, a Boolean, and a value uniform over a range. None of those is a density. Nothing here states a mean, a variance or a moment, and the shaped distributions live in `deep_causality_stats` instead.
+
+The float draws are generic in the scalar under `RandScalar`, with one body and no per-type implementation: the loop stops when the next word would land entirely below the scalar's own resolution, which `Real::epsilon` already reports, so `f32`, `f64` and `BFloat16` take one word and `Float106` takes two, and a scalar added tomorrow takes however many it needs on the day it arrives. Topology uses this crate for gauge-field thermalization; the discovery algorithms use it for resampling.
 
 ## A concrete example: GRMHD
 

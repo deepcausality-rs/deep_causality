@@ -45,5 +45,5 @@ Either algorithm is usable on its own. MRMR is independently useful as a general
 
 - [Causal Discovery Language](/concepts/cdl/): the typestate pipeline that wires both algorithms.
 - [Causaloid](/concepts/causaloid/): the output of the discovery step, the unit the rest of the framework composes over.
-- [Uncertainty](/concepts/uncertainty/): the `Uncertain<T>` type for downstream propagation under noise.
+- [Uncertainty](/concepts/uncertainty/): the `Uncertain<R>` type for downstream propagation under noise.
 - Reference: [`deep_causality_algorithms` crate](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_algorithms).

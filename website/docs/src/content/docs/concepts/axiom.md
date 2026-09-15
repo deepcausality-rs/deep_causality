@@ -169,19 +169,19 @@ Dynamics and control remain fully separate: the model knows nothing of correctio
 
 Classical causal inference rests on statistics, yet it admits uncertainty only at the edges. It estimates a treatment effect and puts a confidence interval around it, while the quantities inside the model stay point estimates: a sensor reads `50.0`, a covariate is one number, a reading is either present or dropped. That breaks in two common cases. When the effect itself is probabilistic, a point estimate discards its shape. And when a value is missing, the missingness usually carries information: the patient who feels worse skips the daily report, and the sensor drops frames under the very vibration it watches. Impute a default for those gaps, and the bias runs the wrong way.
 
-DeepCausality makes uncertainty a [first-class type](/concepts/uncertainty/), after Bornholt and colleagues. `Uncertain<T>` carries a value together with the distribution that produced it; arithmetic and comparison build a computation graph rather than collapsing to a number, and evaluation samples lazily to a requested confidence.
+DeepCausality makes uncertainty a [first-class type](/concepts/uncertainty/), after Bornholt and colleagues. `Uncertain<R>` is a lazy computation graph, generic in its scalar; arithmetic and comparison extend the graph rather than collapsing it to a number, and evaluation samples it to a requested confidence.
 
-`MaybeUncertain<T>` goes one step further, factoring a reading into two questions held apart: a presence probability, carried as an `Uncertain<bool>`, and the distribution the value follows when present. A reading present eighty percent of the time and one present five percent of the time are different objects, and the difference survives: `is_some()` returns the presence distribution itself, not a flag. Given presence, the original distribution remains, ready to sample.
+`MaybeUncertain<R>` goes one step further, factoring a reading into two questions held apart: a presence probability, carried as an `UncertainBool<R>`, and the distribution the value follows when present. A reading present eighty percent of the time and one present five percent of the time are different objects, and the difference survives: `is_some()` returns the presence distribution itself, not a flag. Given presence, the original distribution remains, ready to sample.
 
 ```rust
-use deep_causality_uncertain::{MaybeUncertain, Uncertain};
+use deep_causality_uncertain::{MaybeUncertain, Uncertain, UncertainBool};
 
 // One trial patient's daily pain-reduction reading: reported on ~70% of days,
 // and, when reported, distributed Normal(4.0, 2.5). MaybeUncertain holds both.
 let reading = MaybeUncertain::from_bernoulli_and_uncertain(0.7, Uncertain::normal(4.0, 2.5));
 
 // Presence is itself uncertain: is_some() returns the Bernoulli(0.7), not a flag.
-let present: Uncertain<bool> = reading.is_some();
+let present: UncertainBool<f64> = reading.is_some();
 
 // Commit to a value only when presence clears a confidence bar (here P > 0.5 at
 // 95% confidence). Below it the gate fails and the chain short-circuits, instead
@@ -191,11 +191,11 @@ let score: Uncertain<f64> = reading.lift_to_uncertain(0.5, 0.95, 0.05, 1_000)?;
 
 ```
 classical          → 50.0                       a point
-Uncertain<T>       → Normal(50, 2.5)            a distribution
-MaybeUncertain<T>  → P(present) × distribution  presence and distribution
+Uncertain<R>       → Normal(50, 2.5)            a distribution
+MaybeUncertain<R>  → P(present) × distribution  presence and distribution
 ```
 
-The two channels propagate together. Add two such readings and the values combine as distributions, while the result counts as present only when both are; absence flows through the arithmetic with the right probability. A gate, `lift_to_uncertain`, commits to a plain `Uncertain<T>` only when presence clears a confidence bar. Below it the gate fails, and the chain short-circuits rather than inventing a number, the same way any failed step stops the propagation. The model can therefore distinguish *the value is zero* from *I never observed the value*, and decline to answer when the evidence for presence is too thin.
+The two channels propagate together. Add two such readings and the values combine as distributions, while the result counts as present only when both are; absence flows through the arithmetic with the right probability. A gate, `lift_to_uncertain`, commits to a plain `Uncertain<R>` only when presence clears a confidence bar. Below it the gate fails, and the chain short-circuits rather than inventing a number, the same way any failed step stops the propagation. The model can therefore distinguish *the value is zero* from *I never observed the value*, and decline to answer when the evidence for presence is too thin.
 
 ### 07 — Expressive range: non-Euclidean, relativistic, quantum
 

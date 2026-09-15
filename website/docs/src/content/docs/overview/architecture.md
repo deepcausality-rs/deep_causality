@@ -59,7 +59,7 @@ The map draws the edges that carry architectural meaning and leaves the rest to 
 
 ## External dependencies
 
-Seven of the 29 library crates reach crates.io at runtime. The other 22 reach none at all.
+Seven of the 30 library crates reach crates.io at runtime. The other 23 reach none at all.
 
 | Crate | Dependency | Status |
 | --- | --- | --- |
