@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_stats-v0.1.0...deep_causality_stats-v0.2.0) - 2026-09-15
+
+### Added
+
+- *(deep_causality_stats)* [**breaking**] seven distributions, generic in the scalar
+
+### Fixed
+
+- *(stats)* sum the multi-accumulator reductions as trees too, and give them a suite that bites
+- *(stats)* sum as a balanced tree, and stop calling the arrangement's limit the type's
+- *(unified_math)* [**breaking**] replace From<f64> bounds with FromPrimitive, add software-scalar tensor ops
+
+### Other
+
+- *(unified_math)* [**breaking**] precision as a parameter in the sampling layer, for real
+- *(unified_math)* add the Ising ensemble example and record the split
+- *(unified_math)* [**breaking**] finish the sampling split at the consumers
+- *(unified_math)* [**breaking**] precision as a parameter in the sampling layer
+- *(unified_math)* [**breaking**] move the distributions from rand to stats
+- *(deep_causality_rand)* [**breaking**] split StandardUniform by what it samples
+
 ## [0.1.0](https://github.com/marvin-hansen/deep_causality/releases/tag/deep_causality_stats-v0.1.0) - 2026-09-08
 
 ### Added

@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.5](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_uncertain-v0.5.3...deep_causality_uncertain-v0.5.5) - 2026-09-15
+
+### Added
+
+- *(deep_causality_uncertain)* [**breaking**] complete the renovation — Arrow, ensembles, and a suite that bites
+- *(uncertain)* materialise an ensemble into a carrier the caller names
+- *(uncertain)* address every draw by seed, index and leaf ordinal
+
+### Fixed
+
+- *(stats)* sum as a balanced tree, and stop calling the arrangement's limit the type's
+- *(deep_causality_uncertain)* draw the sample index from the word sampler
+
+### Other
+
+- *(uncertain)* [**breaking**] migrate the consumers, and take the last lifetime off the scalar
+- *(uncertain)* [**breaking**] make the scalar a parameter and split the carrier
+- *(uncertain)* [**breaking**] replace the global sample cache with a caller-owned session
+- *(uncertain)* seed every test that observes a draw
+- *(unified_math)* [**breaking**] finish the sampling split at the consumers
+- *(unified_math)* [**breaking**] move the distributions from rand to stats
+
 ## [0.5.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_uncertain-v0.4.0...deep_causality_uncertain-v0.5.0) - 2026-07-14
 
 ### Added

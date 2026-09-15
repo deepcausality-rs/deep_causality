@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_topology-v0.10.0...deep_causality_topology-v0.11.0) - 2026-09-15
+
+### Added
+
+- *(deep_causality_topology)* add the CochainWitness HKT witness
+
+### Fixed
+
+- *(unified_math)* [**breaking**] replace From<f64> bounds with FromPrimitive, add software-scalar tensor ops
+
+### Other
+
+- *(unified_math)* [**breaking**] precision as a parameter in the sampling layer, for real
+- *(unified_math)* [**breaking**] finish the sampling split at the consumers
+- *(unified_math)* [**breaking**] move the distributions from rand to stats
+
 ## [0.10.0](https://github.com/marvin-hansen/deep_causality/compare/deep_causality_topology-v0.9.1...deep_causality_topology-v0.10.0) - 2026-09-08
 
 ### Added

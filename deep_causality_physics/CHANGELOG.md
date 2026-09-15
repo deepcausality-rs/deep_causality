@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_physics-v0.8.3...deep_causality_physics-v0.9.0) - 2026-09-15
+
+### Fixed
+
+- *(unified_math)* [**breaking**] replace From<f64> bounds with FromPrimitive, add software-scalar tensor ops
+
+### Other
+
+- *(unified_math)* [**breaking**] move the distributions from rand to stats
+
 ## [0.8.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_physics-v0.8.0...deep_causality_physics-v0.8.1) - 2026-08-12
 
 ### Added

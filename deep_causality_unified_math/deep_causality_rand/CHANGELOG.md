@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.5](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_rand-v0.2.4...deep_causality_rand-v0.2.5) - 2026-09-15
+
+### Added
+
+- *(haft)* add the Collectable capability and implement it for the rank-1 witnesses
+
+### Fixed
+
+- *(stats)* sum as a balanced tree, and stop calling the arrangement's limit the type's
+- *(unified_math)* [**breaking**] replace From<f64> bounds with FromPrimitive, add software-scalar tensor ops
+
+### Other
+
+- *(uncertain)* [**breaking**] replace the global sample cache with a caller-owned session
+- *(unified_math)* [**breaking**] precision as a parameter in the sampling layer, for real
+- *(unified_math)* add the Ising ensemble example and record the split
+- *(unified_math)* [**breaking**] finish the sampling split at the consumers
+- *(unified_math)* [**breaking**] precision as a parameter in the sampling layer
+- *(unified_math)* [**breaking**] move the distributions from rand to stats
+- *(deep_causality_rand)* [**breaking**] split StandardUniform by what it samples
+
 ## [0.2.4](https://github.com/marvin-hansen/deep_causality/compare/deep_causality_rand-v0.2.3...deep_causality_rand-v0.2.4) - 2026-09-08
 
 ### Added
