@@ -75,7 +75,7 @@ neither declares an npm repository in `MODULE.bazel` and neither carries a
 
 ## Toolchain constraints
 
-Three pins are deliberate and should not be "fixed" by a routine upgrade.
+Four pins are deliberate and should not be "fixed" by a routine upgrade.
 
 **TypeScript stays on the 6 line.** TypeScript 7.0 dropped the programmatic API
 that `@astrojs/check` uses, so `pnpm check` fails on 7.x
@@ -94,6 +94,11 @@ its `pnpm-workspace.yaml`.
 whatever its `^4.0.2` dependency resolves to. Left free, pnpm keeps two copies
 and the derived themes cross a version boundary, so each project's
 `pnpm-workspace.yaml` forces one.
+
+**`mermaid` stays on the 11 line in `web/`.** `astro-mermaid` peers
+`mermaid: ^10.0.0 || ^11.0.0`, and its latest release, 2.1.0, does not widen
+that range to 12. `web/` therefore holds `mermaid` at `^11.17.2`, the last 11.x.
+Raise it once `astro-mermaid` accepts 12.
 
 Note that pnpm 11 no longer reads the `pnpm` field from `package.json`, so
 `overrides` and `onlyBuiltDependencies` must live in `pnpm-workspace.yaml`. An
