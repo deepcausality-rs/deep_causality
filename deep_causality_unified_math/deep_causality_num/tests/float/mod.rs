@@ -21,3 +21,9 @@ mod float_32_tests;
 #[cfg(test)]
 #[cfg(not(miri))]
 mod float_64_tests;
+
+// The fused multiply-add promise, checked across all four implementations at once.
+// Disabled under Miri for the reason above: the probe turns on exact last-bit behaviour.
+#[cfg(test)]
+#[cfg(not(miri))]
+mod fma_single_rounding_tests;

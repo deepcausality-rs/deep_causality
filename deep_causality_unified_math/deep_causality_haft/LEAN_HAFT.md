@@ -91,7 +91,7 @@ cargo test -p deep_causality_haft --test '*' formalization_lean
    `BTreeMapWitness`, …) are covered by example-based tests only — extending the Lean models
    to them is mechanical scaling work.
 3. **One knowingly non-conforming implementation downstream:**
-   `GaugeFieldWitness::merge` in `deep_causality_topology` ignores the passed combiner and
+   `GaugeFieldOps::merge` in `deep_causality_topology` ignores the passed combiner and
    element-wise averages instead (documented in its source as an ACKNOWLEDGED placeholder —
    the trait lacks the `'static` bounds needed for safe dispatch). It therefore does **not**
    satisfy `merge`-binaturality with respect to the combiner. Resolution options are recorded

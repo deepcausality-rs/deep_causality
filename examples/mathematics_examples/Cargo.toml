@@ -12,6 +12,7 @@ path = "no_lib.rs"
 [dependencies]
 deep_causality_core = { workspace = true, features = ["default"] }
 deep_causality_calculus = { workspace = true, features = ["default"] }
+deep_causality_fft = { workspace = true, features = ["default"] }
 deep_causality_haft = { workspace = true, features = ["default"] }
 deep_causality_metric = { workspace = true, features = ["default"] }
 deep_causality_multivector = { workspace = true, features = ["default"] }
@@ -24,231 +25,379 @@ deep_causality_stats = { workspace = true, features = ["default"] }
 deep_causality_linear = { workspace = true, features = ["default"] }
 deep_causality_tensor = { workspace = true, features = ["default"] }
 deep_causality_topology = { workspace = true }
-# ============================================================================
-# algebra — Clifford algebra examples (deep_causality_multivector).
-# ============================================================================
-
-[[example]]
-name = "basic_multivector_examples"
-path = "algebra/basic_multivector.rs"
-
-[[example]]
-name = "clifford_mhd_multivector_examples"
-path = "algebra/clifford_mhd_multivector.rs"
-
-[[example]]
-name = "dixon_multivector_examples"
-path = "algebra/dixon_multivector.rs"
-
-[[example]]
-name = "geometric_tilt_estimator_examples"
-path = "algebra/geometric_tilt_estimator.rs"
-
-[[example]]
-name = "grmhd_multivector_examples"
-path = "algebra/grmhd_integration.rs"
-
-[[example]]
-name = "hkt_multivector_examples"
-path = "algebra/hkt_multivector.rs"
-
-[[example]]
-name = "maxwell_multivector_examples"
-path = "algebra/maxwell_multivector.rs"
-
-[[example]]
-name = "pga3d_multivector_examples"
-path = "algebra/pga3d_multivector.rs"
 
 # ============================================================================
-# applied_category_theory — higher kinded types (deep_causality_haft).
+# 1_foundation/algebra — the scalar tower: what each bound promises.
 # ============================================================================
 
 [[example]]
-name = "haft_adjunction_examples"
-path = "applied_category_theory/adjunction.rs"
+name = "precision_as_a_parameter_examples"
+path = "1_foundation/algebra/precision_as_a_parameter.rs"
 
 [[example]]
-name = "haft_applicative_examples"
-path = "applied_category_theory/applicative.rs"
+name = "real_and_complex_uniformly_examples"
+path = "1_foundation/algebra/real_and_complex_uniformly.rs"
 
 [[example]]
-name = "haft_bifunctor_examples"
-path = "applied_category_theory/bifunctor.rs"
-
-[[example]]
-name = "haft_comonad_examples"
-path = "applied_category_theory/comonad.rs"
-
-[[example]]
-name = "haft_effect_system_examples"
-path = "applied_category_theory/effect_system.rs"
-
-[[example]]
-name = "haft_foldable_examples"
-path = "applied_category_theory/foldable.rs"
-
-[[example]]
-name = "haft_functor_examples"
-path = "applied_category_theory/functor.rs"
-
-[[example]]
-name = "haft_monad_examples"
-path = "applied_category_theory/monad.rs"
-
-[[example]]
-name = "haft_parametric_monad_examples"
-path = "applied_category_theory/parametric_monad.rs"
-
-[[example]]
-name = "haft_profunctor_examples"
-path = "applied_category_theory/profunctor.rs"
-
-[[example]]
-name = "haft_traversable_examples"
-path = "applied_category_theory/traversable.rs"
-
-[[example]]
-name = "haft_unbound_examples"
-path = "applied_category_theory/unbound_haft.rs"
+name = "verdict_logic_examples"
+path = "1_foundation/algebra/verdict_logic.rs"
 
 # ============================================================================
-# calculus — arrow-calculus operators (deep_causality_calculus).
-# ============================================================================
-
-[[example]]
-name = "leibniz_dual_integration_examples"
-path = "calculus/leibniz_dual_integration.rs"
-
-# ============================================================================
-# composable_multi_math — cross-crate composition examples (HKT, monads, effect
-# propagation across tensor + multivector + topology).
-# ============================================================================
-
-[[example]]
-name = "algebraic_scanner_examples"
-path = "algebra/algebraic_scanner/main.rs"
-
-[[example]]
-name = "tensor_x_algebra_rotation_field_examples"
-path = "composable_multi_math/tensor_x_algebra_rotation_field/main.rs"
-
-[[example]]
-name = "ensemble_x_lattice_ising_examples"
-path = "composable_multi_math/ensemble_x_lattice_ising/main.rs"
-
-[[example]]
-name = "tensor_x_topology_laplacian_examples"
-path = "composable_multi_math/tensor_x_topology_laplacian/main.rs"
-
-[[example]]
-name = "triple_hkt_stress_field_examples"
-path = "composable_multi_math/triple_hkt_stress_field/main.rs"
-
-[[example]]
-name = "effect_kalman_predict_correct_examples"
-path = "composable_multi_math/effect_kalman_predict_correct/main.rs"
-
-[[example]]
-name = "effect_diffusion_on_manifold_examples"
-path = "composable_multi_math/effect_diffusion_on_manifold/main.rs"
-
-[[example]]
-name = "effect_tensor_algebra_roundtrip_examples"
-path = "composable_multi_math/effect_tensor_algebra_roundtrip/main.rs"
-
-[[example]]
-name = "capstone_spinor_minkowski_examples"
-path = "composable_multi_math/capstone_spinor_minkowski/main.rs"
-
-# ============================================================================
-# isomorphism — cross-crate isomorphism.
-# ============================================================================
-
-[[example]]
-name = "tensor_sparse_memory_budget"
-path = "isomorphism/tensor_sparse_memory_budget/main.rs"
-
-[[example]]
-name = "multifield_data_pipeline"
-path = "isomorphism/multifield_data_pipeline/main.rs"
-
-
-# ============================================================================
-# sparse — sparse matrix examples (deep_causality_linear).
-# ============================================================================
-
-[[example]]
-name = "basic_csr_ops_examples"
-path = "sparse/basic_csr_ops.rs"
-
-[[example]]
-name = "hkt_csr_ops_examples"
-path = "sparse/hkt_csr_ops.rs"
-
-# ============================================================================
-# tensor — CausalTensor examples (deep_causality_tensor).
+# 1_foundation/haft — the categorical vocabulary, one trait at a time.
 # ============================================================================
 
 [[example]]
 name = "applicative_causal_tensor_examples"
-path = "tensor/applicative_causal_tensor.rs"
-
-[[example]]
-name = "basic_causal_tensor_examples"
-path = "tensor/basic_causal_tensor.rs"
-
-[[example]]
-name = "effect_system_causal_tensor_examples"
-path = "tensor/effect_system_causal_tensor.rs"
-
-[[example]]
-name = "ein_sum_causal_tensor_examples"
-path = "tensor/ein_sum_causal_tensor.rs"
-
-[[example]]
-name = "einstein_field_causal_tensor_examples"
-path = "tensor/einstein_field_causal_tensor.rs"
+path = "1_foundation/haft/applicative_causal_tensor.rs"
 
 [[example]]
 name = "functor_causal_tensor_examples"
-path = "tensor/functor_causal_tensor.rs"
+path = "1_foundation/haft/functor_causal_tensor.rs"
+
+[[example]]
+name = "haft_adjunction_examples"
+path = "1_foundation/haft/adjunction.rs"
+
+[[example]]
+name = "haft_applicative_examples"
+path = "1_foundation/haft/applicative.rs"
+
+[[example]]
+name = "haft_bifunctor_examples"
+path = "1_foundation/haft/bifunctor.rs"
+
+[[example]]
+name = "haft_category_examples"
+path = "1_foundation/haft/category.rs"
+
+[[example]]
+name = "haft_collectable_examples"
+path = "1_foundation/haft/collectable.rs"
+
+[[example]]
+name = "haft_comonad_examples"
+path = "1_foundation/haft/comonad.rs"
+
+[[example]]
+name = "haft_constrained_functors_examples"
+path = "1_foundation/haft/constrained_functors.rs"
+
+[[example]]
+name = "haft_free_and_cofree_examples"
+path = "1_foundation/haft/free_and_cofree.rs"
+
+[[example]]
+name = "haft_effect_system_examples"
+path = "1_foundation/haft/effect_system.rs"
+
+[[example]]
+name = "haft_foldable_examples"
+path = "1_foundation/haft/foldable.rs"
+
+[[example]]
+name = "haft_functor_examples"
+path = "1_foundation/haft/functor.rs"
+
+[[example]]
+name = "haft_monad_examples"
+path = "1_foundation/haft/monad.rs"
+
+[[example]]
+name = "haft_natural_transformation_examples"
+path = "1_foundation/haft/natural_transformation.rs"
+
+[[example]]
+name = "haft_parametric_monad_examples"
+path = "1_foundation/haft/parametric_monad.rs"
+
+[[example]]
+name = "haft_profunctor_examples"
+path = "1_foundation/haft/profunctor.rs"
+
+[[example]]
+name = "haft_traversable_examples"
+path = "1_foundation/haft/traversable.rs"
+
+[[example]]
+name = "haft_unbound_examples"
+path = "1_foundation/haft/unbound_haft.rs"
+
+[[example]]
+name = "hkt_multivector_examples"
+path = "1_foundation/haft/hkt_multivector.rs"
 
 # ============================================================================
-# topology — topological data structure examples (deep_causality_topology).
+# 1_foundation/calculus — API surface of deep_causality_calculus.
+# ============================================================================
+
+[[example]]
+name = "differentiation_and_integration_examples"
+path = "1_foundation/calculus/differentiation_and_integration.rs"
+
+# ============================================================================
+# 1_foundation/fft — API surface of deep_causality_fft.
+# ============================================================================
+
+[[example]]
+name = "fft_plans_examples"
+path = "1_foundation/fft/fft_plans.rs"
+
+# ============================================================================
+# 1_foundation/linear — API surface of deep_causality_linear.
+# ============================================================================
+
+[[example]]
+name = "basic_csr_ops_examples"
+path = "1_foundation/linear/basic_csr_ops.rs"
+
+[[example]]
+name = "dense_matrix_stencil_examples"
+path = "1_foundation/linear/dense_matrix_stencil.rs"
+
+# ============================================================================
+# 1_foundation/multivector — API surface of deep_causality_multivector.
+# ============================================================================
+
+[[example]]
+name = "algebraic_scanner_examples"
+path = "1_foundation/multivector/algebraic_scanner/main.rs"
+
+[[example]]
+name = "basic_multivector_examples"
+path = "1_foundation/multivector/basic_multivector.rs"
+
+[[example]]
+name = "causal_multi_field_basics_examples"
+path = "1_foundation/multivector/causal_multi_field_basics.rs"
+
+[[example]]
+name = "multifield_witness_examples"
+path = "1_foundation/multivector/multifield_witness.rs"
+
+[[example]]
+name = "clifford_mhd_multivector_examples"
+path = "1_foundation/multivector/clifford_mhd_multivector.rs"
+
+[[example]]
+name = "matrix_representation_examples"
+path = "1_foundation/multivector/matrix_representation.rs"
+
+[[example]]
+name = "multi_field_differential_examples"
+path = "1_foundation/multivector/multi_field_differential.rs"
+
+[[example]]
+name = "pga3d_multivector_examples"
+path = "1_foundation/multivector/pga3d_multivector.rs"
+
+# ============================================================================
+# 1_foundation/stats — API surface of deep_causality_stats.
+# ============================================================================
+
+[[example]]
+name = "descriptive_and_distributions_examples"
+path = "1_foundation/stats/descriptive_and_distributions.rs"
+
+# ============================================================================
+# 1_foundation/tensor — API surface of deep_causality_tensor.
+# ============================================================================
+
+[[example]]
+name = "basic_causal_tensor_examples"
+path = "1_foundation/tensor/basic_causal_tensor.rs"
+
+[[example]]
+name = "ein_sum_causal_tensor_examples"
+path = "1_foundation/tensor/ein_sum_causal_tensor.rs"
+
+[[example]]
+name = "tensor_train_compression_examples"
+path = "1_foundation/tensor/tensor_train_compression.rs"
+
+# ============================================================================
+# 1_foundation/num — the Cayley-Dickson ladder in deep_causality_num_complex.
+# ============================================================================
+
+[[example]]
+name = "cayley_dickson_ladder_examples"
+path = "1_foundation/num/cayley_dickson_ladder.rs"
+
+[[example]]
+name = "scalars_and_precision_examples"
+path = "1_foundation/num/scalars_and_precision.rs"
+
+[[example]]
+name = "binary_field_gf2_examples"
+path = "1_foundation/num/binary_field_gf2.rs"
+
+[[example]]
+name = "precision_boundary_examples"
+path = "1_foundation/num/precision_boundary.rs"
+
+# ============================================================================
+# 1_foundation/topology — API surface of deep_causality_topology.
 # ============================================================================
 
 [[example]]
 name = "basic_graph_examples"
-path = "topology/basic_graph.rs"
+path = "1_foundation/topology/basic_graph.rs"
 
 [[example]]
 name = "chain_algebra_examples"
-path = "topology/chain_algebra.rs"
+path = "1_foundation/topology/chain_algebra.rs"
 
 [[example]]
 name = "complex_operators_examples"
-path = "topology/complex_operators.rs"
-
-[[example]]
-name = "cubical_heat_diffusion_examples"
-path = "topology/cubical_heat_diffusion.rs"
-
-[[example]]
-name = "differential_field_examples"
-path = "topology/differential_field.rs"
-
-[[example]]
-name = "hkt_graph_convolution_examples"
-path = "topology/hkt_graph_convolution.rs"
-
-[[example]]
-name = "lattice_gauge_simulation_examples"
-path = "topology/lattice_gauge_simulation.rs"
+path = "1_foundation/topology/complex_operators.rs"
 
 [[example]]
 name = "manifold_analysis_examples"
-path = "topology/manifold_analysis.rs"
+path = "1_foundation/topology/manifold_analysis.rs"
 
-[lints]
-workspace = true
+[[example]]
+name = "neighbourhoods_three_ways_examples"
+path = "1_foundation/topology/neighbourhoods_three_ways.rs"
+
+[[example]]
+name = "chain_cochain_pairing_examples"
+path = "1_foundation/topology/chain_cochain_pairing.rs"
+
+[[example]]
+name = "fields_on_complexes_examples"
+path = "1_foundation/topology/fields_on_complexes.rs"
+
+[[example]]
+name = "manifold_curvature_examples"
+path = "1_foundation/topology/manifold_curvature.rs"
+
+# ============================================================================
+# 2_composition/nesting — a witness whose element is another crate's type.
+# ============================================================================
+
+[[example]]
+name = "tensor_x_algebra_rotation_field_examples"
+path = "2_composition/nesting/tensor_x_algebra_rotation_field/main.rs"
+
+# ============================================================================
+# 2_composition/extension — comonadic extend; the kernel reaches into other crates.
+# ============================================================================
+
+[[example]]
+name = "diffusion_space_and_time_examples"
+path = "2_composition/extension/diffusion_space_and_time/main.rs"
+
+[[example]]
+name = "graph_convolution_examples"
+path = "2_composition/extension/graph_convolution/main.rs"
+
+[[example]]
+name = "manifold_laplacian_stencil_examples"
+path = "2_composition/extension/manifold_laplacian_stencil/main.rs"
+
+[[example]]
+name = "sparse_matrix_contextual_sum_examples"
+path = "2_composition/extension/sparse_matrix_contextual_sum/main.rs"
+
+# ============================================================================
+# 2_composition/chaining — bind / Kleisli; the value crosses in sequence.
+# ============================================================================
+
+[[example]]
+name = "effect_kalman_predict_correct_examples"
+path = "2_composition/chaining/effect_kalman_predict_correct/main.rs"
+
+[[example]]
+name = "effect_system_causal_tensor_examples"
+path = "2_composition/chaining/effect_system_causal_tensor/main.rs"
+
+[[example]]
+name = "effect_tensor_algebra_roundtrip_examples"
+path = "2_composition/chaining/effect_tensor_algebra_roundtrip/main.rs"
+
+[[example]]
+name = "einstein_field_causal_tensor_examples"
+path = "2_composition/chaining/einstein_field_causal_tensor/main.rs"
+
+# ============================================================================
+# 2_composition/alignment — zip_with / sequence_zip; paired by index.
+# ============================================================================
+
+[[example]]
+name = "ensemble_x_lattice_ising_examples"
+path = "2_composition/alignment/ensemble_x_lattice_ising/main.rs"
+
+[[example]]
+name = "zip_and_convolve_examples"
+path = "2_composition/alignment/zip_and_convolve/main.rs"
+
+# ============================================================================
+# 2_composition/operators — Arrow; the computation is the value.
+# ============================================================================
+
+[[example]]
+name = "cubical_heat_diffusion_examples"
+path = "2_composition/operators/cubical_heat_diffusion/main.rs"
+
+[[example]]
+name = "differential_field_examples"
+path = "2_composition/operators/differential_field/main.rs"
+
+[[example]]
+name = "field_gradient_flow_examples"
+path = "2_composition/operators/field_gradient_flow/main.rs"
+
+[[example]]
+name = "sampled_integration_examples"
+path = "2_composition/operators/sampled_integration/main.rs"
+
+# ============================================================================
+# 2_composition/duality — Adjunction, iso bridges, witness duality.
+# ============================================================================
+
+[[example]]
+name = "multifield_data_pipeline"
+path = "2_composition/duality/multifield_data_pipeline/main.rs"
+
+[[example]]
+name = "stokes_adjunction_examples"
+path = "2_composition/duality/stokes_adjunction/main.rs"
+
+[[example]]
+name = "tensor_sparse_memory_budget"
+path = "2_composition/duality/tensor_sparse_memory_budget/main.rs"
+
+# ============================================================================
+# 3_applications — one use case per example.
+# ============================================================================
+
+[[example]]
+name = "relativistic_spinor_transport_examples"
+path = "3_applications/relativistic_spinor_transport/main.rs"
+
+[[example]]
+name = "standard_model_symmetry_examples"
+path = "3_applications/standard_model_symmetry/main.rs"
+
+[[example]]
+name = "imu_tilt_estimation_examples"
+path = "3_applications/imu_tilt_estimation/main.rs"
+
+[[example]]
+name = "relativistic_mhd_examples"
+path = "3_applications/relativistic_mhd/main.rs"
+
+[[example]]
+name = "lattice_gauge_thermalization_examples"
+path = "3_applications/lattice_gauge_thermalization/main.rs"
+
+[[example]]
+name = "differentiate_under_integral_examples"
+path = "3_applications/differentiate_under_integral/main.rs"
+
+[[example]]
+name = "electromagnetic_field_examples"
+path = "3_applications/electromagnetic_field/main.rs"
+
+[[example]]
+name = "structural_stress_on_mesh_examples"
+path = "3_applications/structural_stress_on_mesh/main.rs"

@@ -4,7 +4,7 @@
  */
 
 use crate::Topology;
-use deep_causality_haft::{CoMonad, Functor, HKT};
+use deep_causality_haft::{CoMonad, Foldable, Functor, HKT};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 use std::marker::PhantomData;
 
@@ -89,5 +89,19 @@ impl<R: Clone> CoMonad<TopologyWitness<R>> for TopologyWitness<R> {
             // non-zero focus.
             cursor: fa.cursor,
         }
+    }
+}
+
+impl<R> Foldable<TopologyWitness<R>> for TopologyWitness<R> {
+    /// Reduces a topology's coefficients left to right, delegating to
+    /// [`CausalTensorWitness`](deep_causality_tensor::CausalTensorWitness) exactly as `fmap` does.
+    ///
+    /// The structure around the elements — the vertex count, the incidence, the points, the
+    /// complex — takes no part in a reduction and is dropped with the carrier.
+    fn fold<A, B, Func>(fa: Topology<R, A>, init: B, f: Func) -> B
+    where
+        Func: FnMut(B, A) -> B,
+    {
+        CausalTensorWitness::fold(fa.data, init, f)
     }
 }

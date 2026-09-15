@@ -2,6 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use crate::float_106::{two_prod, two_sum};
 use crate::{Float, Float106, Zero};
 use core::num::FpCategory;
 
@@ -215,9 +216,68 @@ impl Float for Float106 {
         self.hi.is_sign_negative()
     }
 
+    /// Fused multiply-add: `self * a + b`, with the product carried into the sum whole.
+    ///
+    /// # Why this is not `self * a + b`
+    ///
+    /// [`Mul`](core::ops::Mul) returns a canonical double-double, which means it rounds: it keeps
+    /// the exact leading product `p1 + p2`, folds in the two large cross terms, and drops
+    /// `self.lo * a.lo` as "`O(ulp²)` and negligible". Negligible is the right call for a product
+    /// standing alone, because that term sits below the last bit of the result.
+    ///
+    /// It stops being negligible the moment `b` cancels the leading terms, which is the situation
+    /// a fused multiply-add exists for. Take `s = 2⁵⁴` and evaluate `(s+1)·(s−1) − s²`. The exact
+    /// answer is `−1`, and `lo · lo` is the only term carrying it: the high words give `2¹⁰⁸`, the
+    /// two cross terms cancel, and `s²` removes what is left. Round the product first and the `−1`
+    /// is gone before `b` arrives, so the answer comes back `0`.
+    ///
+    /// # How the terms are kept
+    ///
+    /// The exact product is the expansion `p1 + p2 + c1 + c1e + c2 + c2e + c3`, where `two_prod`
+    /// splits each of the three leading products into a value and its exact error. Those terms,
+    /// `b`'s two words and nothing else are folded into a double-double accumulator, one exact
+    /// `two_sum` at a time, so a small term is never swallowed by a large one on the way in. A
+    /// single f64 accumulator is not enough: where the cross terms fail to cancel they are
+    /// `2⁶¹` times `c3`, and adding it to them rounds it straight back out.
+    ///
+    /// The terms go in with the largest first, so a `b` that cancels the leading product does so
+    /// immediately and leaves the accumulator small enough to resolve what follows.
+    ///
+    /// The cost is roughly three times the unfused form. That is what one rounding costs on a
+    /// software scalar, and it is what `Float::mul_add` promises — the same promise `f32`, `f64`
+    /// and `BFloat16` already keep.
     fn mul_add(self, a: Self, b: Self) -> Self {
-        // FMA: self * a + b with higher precision
-        self * a + b
+        // Guarded on the product, the way `Mul` is: a non-finite operand leaves `two_prod` with a
+        // NaN error term beside a correct high word, and the high words alone give the IEEE
+        // answer. Adding `b.hi` carries the remaining cases — `inf + finite` is that infinity, and
+        // `inf + (-inf)` is the NaN IEEE 754 §7.2 asks for.
+        let hi_prod = self.hi * a.hi;
+        if !hi_prod.is_finite() {
+            return Self::from_raw(hi_prod + b.hi, 0.0);
+        }
+
+        // The product as an expansion. Each `two_prod` is exact, so nothing is lost yet.
+        let (p1, p2) = two_prod(self.hi, a.hi);
+        let (c1, c1e) = two_prod(self.hi, a.lo);
+        let (c2, c2e) = two_prod(self.lo, a.hi);
+        let c3 = self.lo * a.lo;
+
+        // Fold `b` in beside the product's own terms, rather than after the product is rounded.
+        let mut hi = p1;
+        let mut lo = 0.0;
+        for term in [b.hi, c1, c2, p2, b.lo, c3, c1e, c2e] {
+            let (s, e) = two_sum(hi, term);
+            if !s.is_finite() {
+                // The running sum overflows where the product did not. As in `Add`, the high word
+                // carries the IEEE answer and the low word has nothing to pull it back with.
+                return Self::from_raw(s, 0.0);
+            }
+            let (h, l) = two_sum(s, e + lo);
+            hi = h;
+            lo = l;
+        }
+
+        Self::new(hi, lo)
     }
 
     fn recip(self) -> Self {

@@ -33,7 +33,7 @@ A project rarely starts with a finished causal model. It starts with data, and t
 
 **6. The Causal Discovery Language.** CDL is a typestate-builder DSL that hosts two discovery algorithms as compile-time-isolated pipelines, driven by one explicit config. The typestate enforces stage order and algorithm isolation at compile time. SURD, MRMR, and BRCD ship as discovery primitives: SURD reports which variables are uniquely or synergistically causal (and flags redundant ones), while BRCD ranks the root cause of a regime shift across a normal and an anomalous dataset. *See [Causal Discovery Language](/concepts/cdl/).*
 
-**7. Uncertainty as a first-order type.** `Uncertain<T>` wraps a value with the distribution that produced it and uses the Sequential Probability Ratio Test for confidence-bounded decisions. `MaybeUncertain<T>` separates presence from distribution, so missing readings propagate explicitly rather than silently. *See [Uncertainty](/concepts/uncertainty/).*
+**7. Uncertainty as a first-order type.** `Uncertain<R>` is a lazy computation graph, generic in its scalar, that uses the Sequential Probability Ratio Test for confidence-bounded decisions. A draw is a pure function of the session seed, the sample index and the leaf's ordinal, so a session is reproducible and `x - x` is exactly zero. `MaybeUncertain<R>` separates presence from distribution, so missing readings propagate explicitly rather than silently. *See [Uncertainty](/concepts/uncertainty/).*
 
 ## IV. Modeling: the primitives that hold causal structure
 

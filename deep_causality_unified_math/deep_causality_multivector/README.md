@@ -218,7 +218,7 @@ An operation that changes the algebra, such as a tensor product, therefore state
 |:------------------------------|:-----------------------------------------------------|:----------------------------------------------------------------------------------------------------------------------------------------------|
 | `basic_multivector.rs`        | `CausalMultiVector` (`Euclidean(2)`)                 | Demonstrates basic geometric algebra operations (geometric, outer, inner product, inverse) in a 2D Euclidean space.                           |
 | `clifford_mhd_multivector.rs` | `CausalMultiVector` (`Euclidean(3)`, `Minkowski(4)`) | Simulates Lorentz force in plasma fusion using both Euclidean and Minkowski metrics for metric-agnostic calculations.                         |
-| `dixon_multivector.rs`        | `DixonAlgebra` (Cl_C(6))                             | Demonstrates operations within the Dixon Algebra, including basis vector construction, geometric products, and complex scalar multiplication. |
+| `standard_model_symmetry`     | `DixonAlgebra` (Cl_C(6))                             | Demonstrates operations within the Dixon Algebra, including basis vector construction, geometric products, and complex scalar multiplication. |
 | `hkt_multivector.rs`          | `CausalMultiVector` (`Euclidean`)                    | Demonstrates Higher-Kinded Types (HKT) for `CausalMultiVector`, and writes the dimension-changing tensor product directly, since `Monad` has no lawful instance. |
 | `pga3d_multivector.rs`        | `PGA3DMultiVector` (3D PGA)                          | Demonstrates 3D Projective Geometric Algebra (PGA) by creating a point, a translator (motor), and applying transformations.                   |
 

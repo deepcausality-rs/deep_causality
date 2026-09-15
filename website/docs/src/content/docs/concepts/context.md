@@ -101,7 +101,7 @@ The [`Adjustable`](https://github.com/deepcausality-rs/deep_causality/blob/main/
 
 Both methods are const-generic over the grid dimensions (`WIDTH`, `HEIGHT`, `DEPTH`, `TIME`), so the correction data can be 1D for a scalar, 2D for a spatial frame, 3D for a volumetric field, or 4D for a spacetime patch. The trait default does nothing, so a node type that should never be touched at runtime is correct by default.
 
-A companion trait, [`UncertainAdjustable`](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/src/traits/adjustable/mod.rs), covers nodes whose payload is an `Uncertain<T>` rather than a fixed value. It takes a typed `Data` argument instead of an `ArrayGrid` and is the right hook when the correction itself carries uncertainty.
+A companion trait, [`UncertainAdjustable`](https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality/src/traits/adjustable/mod.rs), covers nodes whose payload is an `Uncertain<R>` rather than a fixed value. It takes a typed `Data` argument instead of an `ArrayGrid` and is the right hook when the correction itself carries uncertainty.
 
 The split between *update* and *adjust* is deliberate. Replacement is destructive and asymmetric. Adjustment is incremental and preserves whatever calibration was already in the node. Mixing them at the same call site would obscure intent, so the trait surfaces them as two separate methods and lets the caller pick by name.
 

@@ -36,9 +36,9 @@ pub use crate::extensions::hkt_simplicial_complex::ChainWitness;
 pub use crate::extensions::hkt_topology::TopologyWitness;
 
 // Re-export gauge field HKT extensions
+pub use crate::extensions::hkt_gauge::gauge_field_ops::GaugeFieldOps;
 pub use crate::extensions::hkt_gauge::hkt_curvature::{CurvatureTensorWitness, TensorVector};
-pub use crate::extensions::hkt_gauge::hkt_gauge_witness::GaugeFieldWitness;
-pub use crate::extensions::hkt_gauge::hkt_lattice_gauge::LatticeGaugeFieldWitness;
+pub use crate::extensions::hkt_gauge::lattice_gauge_field_ops::LatticeGaugeFieldOps;
 // Re-export traits
 pub use crate::traits::base_topology::BaseTopology;
 pub use crate::traits::cell::Cell;

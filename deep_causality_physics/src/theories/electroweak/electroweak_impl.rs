@@ -10,9 +10,7 @@ use deep_causality_algebra::RealField;
 use deep_causality_metric::{LorentzianMetric, WestCoastMetric};
 use deep_causality_num::{FromPrimitive, lift};
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{
-    BaseTopology, GaugeField, GaugeFieldWitness, SimplicialManifold, U1,
-};
+use deep_causality_topology::{BaseTopology, GaugeField, GaugeFieldOps, SimplicialManifold, U1};
 
 impl<S> ElectroweakOps<S> for ElectroweakField<S>
 where
@@ -47,7 +45,7 @@ where
         // Use topology gauge_rotation method from the GaugeField
         // Photon: A_μ = W³_μ sin(θ_W) + B_μ cos(θ_W)
         // index_a = 2 (W³), index_b = 3 (B)
-        let (new_conn, new_strength) = GaugeFieldWitness::<S>::gauge_rotation(
+        let (new_conn, new_strength) = GaugeFieldOps::<S>::gauge_rotation(
             self.connection(),
             self.field_strength(),
             2, // W³ index
@@ -70,7 +68,7 @@ where
         // This is equivalent to: A^a cos(θ) + A^b (-sin(θ))
         // So we pass -sin_theta for the second component
         let neg_sin_theta = S::zero() - sin_theta;
-        let (new_conn, new_strength) = GaugeFieldWitness::<S>::gauge_rotation(
+        let (new_conn, new_strength) = GaugeFieldOps::<S>::gauge_rotation(
             self.connection(),
             self.field_strength(),
             2, // W³ index

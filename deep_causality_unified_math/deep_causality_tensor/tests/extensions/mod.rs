@@ -24,3 +24,5 @@ mod causal_tensor_train_ext_hkt_tests;
 mod ext_hkt_collectable_tests;
 #[cfg(test)]
 mod ext_hkt_diagonal_tests;
+#[cfg(test)]
+mod ext_hkt_zip_foldable_tests;

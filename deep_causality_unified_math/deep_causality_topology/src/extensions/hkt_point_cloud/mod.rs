@@ -4,7 +4,7 @@
  */
 
 use crate::PointCloud;
-use deep_causality_haft::{CoMonad, Functor, HKT};
+use deep_causality_haft::{CoMonad, Foldable, Functor, HKT};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 use std::marker::PhantomData;
 
@@ -43,6 +43,20 @@ where
             metadata: new_metadata,
             cursor: fa.cursor,
         }
+    }
+}
+
+impl<C> Foldable<PointCloudWitness<C>> for PointCloudWitness<C> {
+    /// Reduces a point cloud's per-point metadata left to right, delegating to
+    /// [`CausalTensorWitness`](deep_causality_tensor::CausalTensorWitness) exactly as `fmap` does.
+    ///
+    /// The structure around the elements — the vertex count, the incidence, the points, the
+    /// complex — takes no part in a reduction and is dropped with the carrier.
+    fn fold<A, B, Func>(fa: PointCloud<C, A>, init: B, f: Func) -> B
+    where
+        Func: FnMut(B, A) -> B,
+    {
+        CausalTensorWitness::fold(fa.metadata, init, f)
     }
 }
 

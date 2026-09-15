@@ -284,7 +284,7 @@ This crate leverages `deep_causality_haft` to provide functional geometric abstr
 | `differential_field.rs`        | Solving the Heat Equation on a manifold | Simulating physical diffusion processes on complex shapes.         |
 | `hodge_theory.rs`              | Finding harmonic forms to detect holes  | Advanced topological feature detection using the Hodge-Laplacian.  |
 | `cubical_heat_diffusion.rs`    | Heat equation on a `CubicalComplex<2>` via Moore neighborhood + CoMonad-style stencil | Voxel-grid sensor fusion and grid-native physics simulation. |
-| `lattice_gauge_simulation.rs`  | 4D SU(3) lattice gauge field simulation | Wilson-formulation lattice QCD prototyping.                        |
+| `lattice_gauge_thermalization` | 4D SU(3) lattice gauge field simulation | Wilson-formulation lattice QCD prototyping.                        |
 
 To run examples:
 

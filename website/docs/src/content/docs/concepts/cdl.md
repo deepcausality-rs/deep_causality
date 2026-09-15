@@ -89,7 +89,7 @@ pub struct CdlEffect<T> {
 }
 ```
 
-It carries either the next-stage `CDL<...>` typestate or a `CdlError`, plus accumulated warnings. The HKT witness `CdlEffectWitness<CdlError, CdlWarningLog>` implements `Functor`, `Pure`, `Applicative`, and `Monad` from [`deep_causality_haft`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_haft); `CdlBuilder` plugs into the `Effect3` machinery and fixes the error and warning channels.
+It carries either the next-stage `CDL<...>` typestate or a `CdlError`, plus accumulated warnings. The HKT witness `CdlEffectWitness<CdlError, CdlWarningLog>` implements `Functor`, `Pure`, `Applicative`, and `Monad` from [`deep_causality_haft`](https://github.com/deepcausality-rs/deep_causality/tree/main/deep_causality_unified_math/deep_causality_haft); `CdlBuilder` plugs into the `Effect3` machinery and fixes the error and warning channels.
 
 Two layers of safety run at once. The outer `CdlEffect` monad sequences and short-circuits. The inner `CDL<State>` typestate enforces stage order and algorithm isolation: `surd_discover` exists only on the SURD-features state and `brcd_discover` only on the BRCD-loaded state, so crossing the lineages — or running discovery before the data is ready — is a compile error.
 

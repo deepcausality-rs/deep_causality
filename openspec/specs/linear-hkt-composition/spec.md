@@ -90,7 +90,7 @@ maps the stored entries or the whole logical matrix.
 A pipeline SHALL be able to move a value between this crate's containers and `deep_causality_tensor`'s through the HKT surface without a hand-written adapter.
 
 This is what uniform composition means in practice, and the workspace has examples that already do
-it across three crates (`examples/mathematics_examples/composable_multi_math/`). The conversions
+it across three crates (`examples/mathematics_examples/2_composition/`). The conversions
 between representations are specified in `linear-matrix-representations`; this requirement is that
 the HKT surface does not become the place where composition stops.
 
@@ -99,6 +99,6 @@ the HKT surface does not become the place where composition stops.
 - **THEN** the pipeline compiles with no bespoke adapter
 
 #### Scenario: The existing multi-math examples still run
-- **WHEN** the examples under `examples/mathematics_examples/composable_multi_math/` are run after migration
+- **WHEN** the examples under `examples/mathematics_examples/2_composition/` are run after migration
 - **THEN** each produces the output it produced before
 
