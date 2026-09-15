@@ -6,12 +6,12 @@
 // `LatticeGaugeField<G, D, M, R>` requires `R: RealField` at the struct level (because
 // its `lattice: Arc<LatticeComplex<D, R>>` field requires it). The `deep_causality_haft`
 // `HKT`/`Functor`/`Pure`/`Monad`/`Applicative` traits cannot be implemented on
-// `LatticeGaugeFieldWitness` on stable Rust without modifying haft. See the note in
-// `src/extensions/hkt_gauge/hkt_lattice_gauge.rs` for what actually blocks it. Tests for
+// `LatticeGaugeFieldOps` on stable Rust without modifying haft. See the note in
+// `src/extensions/hkt_gauge/lattice_gauge_field_ops.rs` for what actually blocks it. Tests for
 // the dropped trait impls are removed; tests for the inherent `map_field` /
 // `scale_field` / `zip_with` surface remain below.
 use deep_causality_topology::{
-    ChainComplex, GaugeGroup, LatticeComplex, LatticeGaugeField, LatticeGaugeFieldWitness,
+    ChainComplex, GaugeGroup, LatticeComplex, LatticeGaugeField, LatticeGaugeFieldOps,
     TopologyError, TopologyErrorEnum,
 };
 use std::sync::Arc;
@@ -36,12 +36,12 @@ const D: usize = 2;
 
 #[test]
 fn test_witness_new_and_display() {
-    let witness = LatticeGaugeFieldWitness::<TestGroup, D, f64>::new();
+    let witness = LatticeGaugeFieldOps::<TestGroup, D, f64>::new();
     let display_str = format!("{}", witness);
-    assert_eq!(display_str, "LatticeGaugeFieldWitness<TestGroup, 2D>");
+    assert_eq!(display_str, "LatticeGaugeFieldOps<TestGroup, 2D>");
 }
 
-// Tests for `Pure`, `Functor`, `Applicative`, `Monad` on `LatticeGaugeFieldWitness`
+// Tests for `Pure`, `Functor`, `Applicative`, `Monad` on `LatticeGaugeFieldOps`
 // removed in the Option-2C pivot — those impls were dropped (see the module-level
 // comment above). The inherent functional surface (`map_field`, `scale_field`,
 // `zip_with`) is exercised by the tests below.
@@ -55,7 +55,7 @@ fn test_map_field_full() {
 
     // Scale all link matrices by 2.0 and beta by 2.0
     // Note: LinkVariable maps element-wise. Identity * 2.0 = 2*Identity
-    let scaled = LatticeGaugeFieldWitness::map_field(field, |x| x * 2.0);
+    let scaled = LatticeGaugeFieldOps::map_field(field, |x| x * 2.0);
 
     assert_eq!(*scaled.beta(), 1.0);
 
@@ -74,7 +74,7 @@ fn test_scale_field() {
     let lattice = Arc::new(LatticeComplex::new(shape, [true, true]));
     let field = LatticeGaugeField::<TestGroup, D, Complex<f64>, f64>::identity(lattice, 1.0);
 
-    let scaled = LatticeGaugeFieldWitness::scale_field(field, Complex::new(0.5, 0.0));
+    let scaled = LatticeGaugeFieldOps::scale_field(field, Complex::new(0.5, 0.0));
 
     // Beta is NOT scaled by scale_field?
     // Wait, scale_field implementation:
@@ -99,7 +99,7 @@ fn test_zip_with_success() {
     // Add fields: A + B
     // 1.0 + 1.0 = 2.0 (for identity links)
     // beta: 1.0 + 2.0 = 3.0
-    let result = LatticeGaugeFieldWitness::zip_with(&field_a, &field_b, |a, b| *a + *b).unwrap();
+    let result = LatticeGaugeFieldOps::zip_with(&field_a, &field_b, |a, b| *a + *b).unwrap();
 
     assert_eq!(*result.beta(), 1.0);
     let edge = result.links().keys().next().unwrap();
@@ -117,7 +117,7 @@ fn test_zip_with_lattice_mismatch() {
     let field_a = LatticeGaugeField::<TestGroup, D, Complex<f64>, f64>::identity(lattice1, 1.0);
     let field_b = LatticeGaugeField::<TestGroup, D, Complex<f64>, f64>::identity(lattice2, 1.0);
 
-    let err = LatticeGaugeFieldWitness::zip_with(&field_a, &field_b, |a, b| *a + *b);
+    let err = LatticeGaugeFieldOps::zip_with(&field_a, &field_b, |a, b| *a + *b);
     assert!(matches!(
         err,
         Err(TopologyError(TopologyErrorEnum::LatticeGaugeError(_)))
@@ -141,7 +141,7 @@ fn test_zip_with_missing_link() {
         (),
     );
 
-    let err = LatticeGaugeFieldWitness::zip_with(&field_a, &field_b, |a, b| *a + *b);
+    let err = LatticeGaugeFieldOps::zip_with(&field_a, &field_b, |a, b| *a + *b);
     // Expect error because field_a has links but field_b doesn't
     assert!(
         matches!(err, Err(TopologyError(TopologyErrorEnum::LatticeGaugeError(msg))) if msg.contains("Missing link"))
@@ -154,7 +154,7 @@ fn test_identity_field_wrapper() {
     let shape = [2, 2];
     let lattice = Arc::new(LatticeComplex::new(shape, [true, true]));
     let field =
-        LatticeGaugeFieldWitness::<TestGroup, D, f64>::identity_field::<Complex<f64>>(lattice, 1.0)
+        LatticeGaugeFieldOps::<TestGroup, D, f64>::identity_field::<Complex<f64>>(lattice, 1.0)
             .unwrap();
     assert_eq!(field.lattice().num_cells(1), field.links().len());
 }

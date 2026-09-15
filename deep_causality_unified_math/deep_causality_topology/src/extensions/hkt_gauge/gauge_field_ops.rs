@@ -9,16 +9,20 @@ use deep_causality_num::{FromPrimitive, lift};
 use deep_causality_tensor::CausalTensor;
 use std::marker::PhantomData;
 
-/// Witness carrying the gauge-field operations.
+/// Typed gauge-field operations, as a zero-sized namespace.
+///
+/// Carries the field-strength, coupling and gauge-transformation operators as inherent methods,
+/// each naming the bounds it needs. It implements no `deep_causality_haft` trait and is not a
+/// witness; see the module note for why.
 ///
 #[derive(Debug, Clone, Copy, Default)]
-pub struct GaugeFieldWitness<T>(PhantomData<T>);
+pub struct GaugeFieldOps<T>(PhantomData<T>);
 
 // ============================================================================
 //  Operations (Type-Safe)
 // ============================================================================
 
-impl<T> GaugeFieldWitness<T>
+impl<T> GaugeFieldOps<T>
 where
     T: Field + Copy + std::cmp::PartialEq + FromPrimitive,
 {
@@ -473,7 +477,7 @@ where
     /// // Extract photon from electroweak field (Weinberg mixing)
     /// let cos_w = 0.8768; // cos(θ_W)
     /// let sin_w = 0.4808; // sin(θ_W)
-    /// let (photon_conn, photon_fs) = GaugeFieldWitness::gauge_rotation(
+    /// let (photon_conn, photon_fs) = GaugeFieldOps::gauge_rotation(
     ///     ew_conn, ew_fs,
     ///     2, 3,  // W³ and B indices
     ///     cos_w, sin_w

@@ -5,7 +5,7 @@
 
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
-    GaugeField, GaugeFieldWitness, Manifold, SU2, Simplex, SimplicialComplexBuilder,
+    GaugeField, GaugeFieldOps, Manifold, SU2, Simplex, SimplicialComplexBuilder,
     SimplicialManifold, U1,
 };
 
@@ -40,7 +40,7 @@ fn test_gauge_transform() {
 
     // Apply transformation A -> 2*A
     let transformed =
-        GaugeFieldWitness::<f64>::gauge_transform(&field, |x| x * 2.0).expect("Transform failed");
+        GaugeFieldOps::<f64>::gauge_transform(&field, |x| x * 2.0).expect("Transform failed");
 
     // Check transformation applied
     assert_eq!(transformed.connection().as_slice()[0], 2.0);
@@ -65,8 +65,8 @@ fn test_merge_fields() {
         GaugeField::with_default_metric(manifold, conn_b, fs).expect("Failed to create field_b");
 
     // Merge: A_new = A + B
-    let merged = GaugeFieldWitness::<f64>::merge_fields(&field_a, &field_b, |a, b| a + b)
-        .expect("Merge failed");
+    let merged =
+        GaugeFieldOps::<f64>::merge_fields(&field_a, &field_b, |a, b| a + b).expect("Merge failed");
 
     // 1+5 = 6, 2+6 = 8
     assert_eq!(merged.connection().as_slice()[0], 6.0);
@@ -89,7 +89,7 @@ fn test_abelian_field_strength() {
         GaugeField::with_default_metric(manifold, connection, field_strength)
             .expect("Failed to create field");
 
-    let fs_opt = GaugeFieldWitness::compute_field_strength_abelian(&field);
+    let fs_opt = GaugeFieldOps::compute_field_strength_abelian(&field);
     assert!(fs_opt.is_some());
     let fs = fs_opt.unwrap();
     assert_eq!(fs.shape(), &[1, 4, 4, 1]);
@@ -127,7 +127,7 @@ fn test_compute_field_strength_non_abelian() {
         GaugeField::with_default_metric(manifold, connection, fs).expect("Failed to create field");
 
     // Compute with coupling constant g = 1.0
-    let result = GaugeFieldWitness::compute_field_strength_non_abelian(&field, 1.0);
+    let result = GaugeFieldOps::compute_field_strength_non_abelian(&field, 1.0);
 
     // Verify shape
     assert_eq!(result.shape(), &[num_points, dim, dim, lie_dim]);
@@ -140,7 +140,7 @@ fn test_field_strength_from_eb_vectors() {
     let e = [1.0f64, 2.0, 3.0]; // Electric field
     let b = [0.1f64, 0.2, 0.3]; // Magnetic field
 
-    let fs = GaugeFieldWitness::field_strength_from_eb_vectors(&e, &b, 1);
+    let fs = GaugeFieldOps::field_strength_from_eb_vectors(&e, &b, 1);
 
     // Shape [1, 4, 4, 1] for U(1) in 4D
     assert_eq!(fs.shape(), &[1, 4, 4, 1]);
@@ -163,7 +163,7 @@ fn test_field_strength_from_eb_multiple_points() {
     let e = [1.0f64, 0.0, 0.0];
     let b = [0.0f64, 0.0, 1.0];
 
-    let fs = GaugeFieldWitness::field_strength_from_eb_vectors(&e, &b, 3);
+    let fs = GaugeFieldOps::field_strength_from_eb_vectors(&e, &b, 3);
 
     // Shape [3, 4, 4, 1]
     assert_eq!(fs.shape(), &[3, 4, 4, 1]);
@@ -182,7 +182,7 @@ fn test_field_strength_from_eb_multiple_points() {
 fn test_field_strength_from_eb_invalid_e() {
     let e = [1.0f64, 2.0]; // Wrong size
     let b = [0.1f64, 0.2, 0.3];
-    GaugeFieldWitness::field_strength_from_eb_vectors(&e, &b, 1);
+    GaugeFieldOps::field_strength_from_eb_vectors(&e, &b, 1);
 }
 
 #[test]
@@ -190,7 +190,7 @@ fn test_field_strength_from_eb_invalid_e() {
 fn test_field_strength_from_eb_invalid_b() {
     let e = [1.0f64, 2.0, 3.0];
     let b = [0.1f64, 0.2]; // Wrong size
-    GaugeFieldWitness::field_strength_from_eb_vectors(&e, &b, 1);
+    GaugeFieldOps::field_strength_from_eb_vectors(&e, &b, 1);
 }
 
 #[test]
@@ -224,7 +224,7 @@ fn test_gauge_rotation() {
     let cos_w = 0.88;
     let sin_w = 0.48;
 
-    let (rotated_conn, rotated_fs) = GaugeFieldWitness::gauge_rotation(
+    let (rotated_conn, rotated_fs) = GaugeFieldOps::gauge_rotation(
         &connection,
         &field_strength,
         2, // W3 index
@@ -249,7 +249,7 @@ fn test_gauge_rotation_invalid_shapes() {
     let conn = CausalTensor::from_vec(vec![1.0, 2.0], &[2]);
     let fs = CausalTensor::from_vec(vec![1.0], &[1]);
 
-    let (rotated_conn, rotated_fs) = GaugeFieldWitness::gauge_rotation(&conn, &fs, 0, 1, 1.0, 0.0);
+    let (rotated_conn, rotated_fs) = GaugeFieldOps::gauge_rotation(&conn, &fs, 0, 1, 1.0, 0.0);
 
     // Should return empty tensors
     assert_eq!(rotated_conn.shape(), &[0]);
@@ -273,7 +273,7 @@ fn test_compute_field_strength_non_abelian_zero_coupling() {
     let field: GaugeField<SU2, f64, f64> =
         GaugeField::with_default_metric(manifold, connection, fs).expect("create field");
 
-    let result = GaugeFieldWitness::compute_field_strength_non_abelian(&field, 0.0);
+    let result = GaugeFieldOps::compute_field_strength_non_abelian(&field, 0.0);
     assert_eq!(result.shape(), &[num_points, dim, dim, lie_dim]);
 }
 
@@ -288,7 +288,7 @@ fn test_compute_field_strength_abelian_non_abelian_returns_none() {
         GaugeField::with_default_metric(manifold, conn, fs).expect("create field");
 
     // SU2 is non-abelian => returns None
-    let result = GaugeFieldWitness::compute_field_strength_abelian(&field);
+    let result = GaugeFieldOps::compute_field_strength_abelian(&field);
     assert!(result.is_none());
 }
 
@@ -299,7 +299,7 @@ fn test_gauge_rotation_invalid_indices() {
     let fs = CausalTensor::from_vec(vec![1.0; 32], &[1, 4, 4, 2]);
 
     // index_a = 5 is out of bounds for lie_dim = 2
-    let (rotated_conn, rotated_fs) = GaugeFieldWitness::gauge_rotation(&conn, &fs, 5, 0, 1.0, 0.0);
+    let (rotated_conn, rotated_fs) = GaugeFieldOps::gauge_rotation(&conn, &fs, 5, 0, 1.0, 0.0);
 
     // Should return empty tensors
     assert_eq!(rotated_conn.shape(), &[0]);
@@ -324,7 +324,7 @@ fn test_compute_field_strength_abelian_multipoint_uses_forward_difference() {
     let field: GaugeField<U1, f64, f64> =
         GaugeField::with_default_metric(manifold, conn, fs).expect("create field");
 
-    let result = GaugeFieldWitness::compute_field_strength_abelian(&field).unwrap();
+    let result = GaugeFieldOps::compute_field_strength_abelian(&field).unwrap();
     assert_eq!(result.shape(), &[3, 4, 4, 1]);
 }
 
@@ -336,7 +336,7 @@ fn test_compute_field_strength_non_abelian_multipoint_and_nonzero_coupling() {
     let field: GaugeField<SU2, f64, f64> =
         GaugeField::with_default_metric(manifold, conn, fs).expect("create field");
 
-    let result = GaugeFieldWitness::compute_field_strength_non_abelian(&field, 0.5);
+    let result = GaugeFieldOps::compute_field_strength_non_abelian(&field, 0.5);
     assert_eq!(result.shape(), &[3, 4, 4, 3]);
 }
 
@@ -351,7 +351,7 @@ fn test_compute_field_strength_non_abelian_multipoint_and_nonzero_coupling() {
 // counts elements via `shape.iter().product()` (the empty product is 1), so a
 // scalar connection passes and reaches the field-strength kernels with an
 // empty shape.
-// Covers src/extensions/hkt_gauge/hkt_gauge_witness.rs lines 482 and 594.
+// Covers src/extensions/hkt_gauge/gauge_field_ops.rs lines 482 and 594.
 // ============================================================================
 
 #[derive(Clone, Debug)]
@@ -385,8 +385,8 @@ fn test_field_strength_abelian_scalar_connection_uses_single_point_default() {
         GaugeField::with_default_metric(manifold, connection, field_strength)
             .expect("scalar abelian field");
 
-    let fs = GaugeFieldWitness::compute_field_strength_abelian(&field)
-        .expect("abelian group returns Some");
+    let fs =
+        GaugeFieldOps::compute_field_strength_abelian(&field).expect("abelian group returns Some");
     // num_points defaulted to 1, dim = lie = 1 -> a single F component.
     assert_eq!(fs.shape(), &[1, 1, 1, 1]);
     assert!(fs.as_slice().iter().all(|x| x.is_finite()));
@@ -404,7 +404,7 @@ fn test_field_strength_non_abelian_scalar_connection_uses_single_point_default()
         GaugeField::with_default_metric(manifold, connection, field_strength)
             .expect("scalar field");
 
-    let result = GaugeFieldWitness::compute_field_strength_non_abelian(&field, 0.25);
+    let result = GaugeFieldOps::compute_field_strength_non_abelian(&field, 0.25);
     assert_eq!(result.shape(), &[1, 1, 1, 1]);
     assert!(result.as_slice().iter().all(|x| x.is_finite()));
 }

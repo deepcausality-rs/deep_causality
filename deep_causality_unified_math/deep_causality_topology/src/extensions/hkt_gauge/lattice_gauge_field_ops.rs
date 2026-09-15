@@ -3,26 +3,20 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! HKT witness and trait implementations for LatticeGaugeField.
+//! Typed operations on [`LatticeGaugeField`].
 //!
-//! This module provides Functor, Pure, and Monad implementations for LatticeGaugeField,
-//! enabling functional transformations of lattice gauge fields.
+//! [`LatticeGaugeFieldOps`] is a zero-sized namespace carrying the field's functional surface as
+//! inherent methods: `map_field` over every matrix element, `zip_with` to combine two fields on
+//! one lattice, `scale_field`, and `identity_field`.
 //!
-//! # Architectural Note
+//! It implements no `deep_causality_haft` trait and is not a witness. The note below the type
+//! records why, and the short form is that `fmap` would have to rebuild each
+//! `LinkVariable<G, B, R>`, which needs `B: Field + Copy + Default + PartialOrd + Debug`, while
+//! `Functor` gives the body no bound on `B` at all. The inherent methods name the bounds each
+//! operation actually needs, which the compiler enforces and no downstream crate can forge.
 //!
-//! LatticeGaugeField<G, D, T> has constraints: G: GaugeGroup, D: const usize.
-//! The HKT implementation maps over the scalar type T while preserving the
-//! gauge group G and dimension D.
-//!
-//! Due to Rust trait system limitations, the Functor implementation operates
-//! on the beta parameter only. For full field transformations, use the
-//! type-safe `map_field()` method which enforces proper Clone + Default bounds.
-//!
-//! # Physics Interpretation
-//!
-//! - **Functor::fmap**: Transform coupling parameter β
-//! - **Pure::pure**: Lift a value into a minimal field context
-//! - **Monad::bind**: Chain field transformations
+//! Cross-algebra composition is not lost by that: it lives on `Manifold`, which is the crate's
+//! central composition surface. See `extensions/hkt_manifold`.
 
 use crate::{GaugeGroup, LatticeComplex, LatticeGaugeField, LinkVariable, TopologyError};
 use deep_causality_algebra::{ComplexField, DivisionAlgebra, Field, RealField};
@@ -32,11 +26,10 @@ use std::fmt::Debug;
 use std::marker::PhantomData;
 use std::sync::Arc;
 
-/// HKT witness for LatticeGaugeField<G, D, M, R>.
+/// Typed operations on `LatticeGaugeField<G, D, M, R>`, as a zero-sized namespace.
 ///
-/// Enables functional transformations of lattice gauge fields.
-/// The witness is parameterized by the gauge group G, dimension D, and matrix type M.
-/// The HKT operates over the scalar type R (beta parameter).
+/// Parameterised by the gauge group `G`, the dimension `D` and the matrix element type `M`; the
+/// methods act on the matrix elements. This is not an HKT witness — see the module note.
 ///
 /// # Type Parameters
 ///
@@ -44,10 +37,10 @@ use std::sync::Arc;
 /// * `D` - Spacetime dimension
 /// * `M` - Matrix element type (TensorData)
 #[derive(Debug, Clone, Copy, Default)]
-pub struct LatticeGaugeFieldWitness<G: GaugeGroup, const D: usize, M>(PhantomData<(G, M)>);
+pub struct LatticeGaugeFieldOps<G: GaugeGroup, const D: usize, M>(PhantomData<(G, M)>);
 
-impl<G: GaugeGroup, const D: usize, M> LatticeGaugeFieldWitness<G, D, M> {
-    /// Create a new witness.
+impl<G: GaugeGroup, const D: usize, M> LatticeGaugeFieldOps<G, D, M> {
+    /// Create a new operations handle. It carries no data.
     pub fn new() -> Self {
         Self(PhantomData)
     }
@@ -91,7 +84,7 @@ impl<G: GaugeGroup, const D: usize, M> LatticeGaugeFieldWitness<G, D, M> {
 // ============================================================================
 
 impl<G: GaugeGroup, const D: usize, R: RealField + FromPrimitive + ToPrimitive>
-    LatticeGaugeFieldWitness<G, D, R>
+    LatticeGaugeFieldOps<G, D, R>
 {
     /// Transform a lattice gauge field by mapping over all scalars (Matrix elements).
     ///
@@ -291,8 +284,8 @@ where
 // Display
 // ============================================================================
 
-impl<G: GaugeGroup, const D: usize, M> std::fmt::Display for LatticeGaugeFieldWitness<G, D, M> {
+impl<G: GaugeGroup, const D: usize, M> std::fmt::Display for LatticeGaugeFieldOps<G, D, M> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "LatticeGaugeFieldWitness<{}, {}D>", G::name(), D)
+        write!(f, "LatticeGaugeFieldOps<{}, {}D>", G::name(), D)
     }
 }

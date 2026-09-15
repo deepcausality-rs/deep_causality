@@ -68,7 +68,7 @@ use crate::{Functor, HKT, Monad};
 /// allocates nothing: it pairs and combines in a single pass, where `zip` must materialise a
 /// tuple the caller may only take apart again.
 /// The same shape appears twice elsewhere in the workspace: [`MonoidalMerge::merge`] at the
-/// `HKT3Unbound` level, and `LatticeGaugeFieldWitness::zip_with` concretely in
+/// `HKT3Unbound` level, and `LatticeGaugeFieldOps::zip_with` concretely in
 /// `deep_causality_topology`, which returns `Result` because its `φ` is partial.
 ///
 /// # Laws

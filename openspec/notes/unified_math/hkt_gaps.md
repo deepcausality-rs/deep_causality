@@ -47,7 +47,7 @@ Seventeen crates, twenty-five `HKT` impls, all in six crates.
 | `linear` | `CsrMatrixWitness`, `DenseMatrixWitness`, `DenseVectorWitness`, `ZipDenseVectorWitness` | the three containers, one zipped reading |
 | `tensor` | `CausalTensorWitness`, `ZipTensorWitness`, `CausalTensorTrainWitness` | `CausalTensor<T>` twice, `CausalTensorTrain<T>` |
 | `multivector` | `CausalMultiVectorWitness`, `CausalMultiFieldWitness<T>` | `CausalMultiVector<T>`, `CausalMultiField<A, S>` |
-| `topology` | twelve: `GraphWitness`, `MixedGraphWitness`, `HypergraphWitness`, `ManifoldWitness<C>`, `GenericManifoldWitness<K>`, `TopologyWitness<R>`, `ChainWitness<R>`, `CellComplexWitness<C>`, `LatticeComplexWitness<D, R>`, `PointCloudWitness<C>`, `ExteriorDerivativeWitness`, `LatticeGaugeFieldWitness<G, D, M>` | `Graph`, `MixedGraph`, `Hypergraph`, `Manifold<K, T>`, `Topology<R, G>`, `Chain<R, G>`, `CellField<C, T>`, `LatticeField<D, R, T>`, `PointCloud<C, T>`, `DifferentialForm<T>`, `LatticeGaugeField<G, D, T, R>` |
+| `topology` | twelve: `GraphWitness`, `MixedGraphWitness`, `HypergraphWitness`, `ManifoldWitness<C>`, `GenericManifoldWitness<K>`, `TopologyWitness<R>`, `ChainWitness<R>`, `CellComplexWitness<C>`, `LatticeComplexWitness<D, R>`, `PointCloudWitness<C>`, `ExteriorDerivativeWitness`, `LatticeGaugeFieldOps<G, D, M>` | `Graph`, `MixedGraph`, `Hypergraph`, `Manifold<K, T>`, `Topology<R, G>`, `Chain<R, G>`, `CellField<C, T>`, `LatticeField<D, R, T>`, `PointCloud<C, T>`, `DifferentialForm<T>`, `LatticeGaugeField<G, D, T, R>` |
 | `num_complex` | `ComplexWitness`, `QuaternionWitness`, `OctonionWitness` | the three number types |
 | `num_dual` | `DualWitness` | `Dual<T>` |
 

@@ -34,7 +34,7 @@ pub type GeodesicState<S> = (Vec<S>, Vec<S>);
 /// ```text
 /// R^ρ_σμν = ∂_μ Γ^ρ_νσ - ∂_ν Γ^ρ_μσ + Γ^ρ_μλ Γ^λ_νσ - Γ^ρ_νλ Γ^λ_μσ
 /// ```
-/// Computed via `GaugeFieldWitness::compute_field_strength_non_abelian`.
+/// Computed via `GaugeFieldOps::compute_field_strength_non_abelian`.
 ///
 /// ## Geodesic Deviation
 /// ```text
@@ -227,7 +227,7 @@ where
     ///
     /// # Mathematical Definition
     ///
-    /// Uses `GaugeFieldWitness::compute_field_strength_non_abelian` to compute:
+    /// Uses `GaugeFieldOps::compute_field_strength_non_abelian` to compute:
     /// ```text
     /// R^ρ_σμν = ∂_μ Γ^ρ_νσ - ∂_ν Γ^ρ_μσ + Γ^ρ_μλ Γ^λ_νσ - Γ^ρ_νλ Γ^λ_μσ
     /// ```
