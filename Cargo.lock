@@ -789,7 +789,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_rand"
-version = "0.2.5"
+version = "0.2.6"
 dependencies = [
  "deep_causality_algebra",
  "deep_causality_num",
