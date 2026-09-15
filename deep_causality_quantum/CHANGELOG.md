@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_quantum-v0.3.0...deep_causality_quantum-v0.3.1) - 2026-09-15
+
+### Added
+
+- *(deep_causality_quantum)* the crosstalk decision over circuit-derived candidates, and the QCL-2 close-out (group 8)
+- *(deep_causality_quantum)* the decoder as an abstraction over a detector error model (QCL-2 group 7)
+- *(deep_causality_quantum)* abstraction composition, its law with two computed constants, and three chains (QCL-2 group 6)
+
+### Fixed
+
+- *(deep_causality_quantum)* resolve the QCL-2 review findings on composition, norms, DEM caps and the specifications
+
+### Other
+
+- Update deep_causality_quantum/tests/types/abstraction/composition_tests.rs
+- Update deep_causality_quantum/src/types/abstraction/chains.rs
+
 ## [0.3.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_quantum-v0.2.5...deep_causality_quantum-v0.3.0) - 2026-09-15
 
 ### Added

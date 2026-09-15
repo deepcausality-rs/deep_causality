@@ -768,7 +768,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_quantum"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "deep_causality",
  "deep_causality_algebra",
