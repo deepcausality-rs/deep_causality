@@ -181,7 +181,8 @@ tuples, and every combination is individually well-formed, which makes the count
 | `Monad` | `linear`, `tensor`, `topology` |
 | `Semigroupal`, `MonoidalApplicative`, `Convolutional` | `linear`, `tensor`, `num_complex`, `num_dual` |
 | `LaxMonoidal` | `num_complex`, `num_dual` |
-| `Traversable`, `DiagonalTraversable`, `Collectable` | `linear`, `tensor` |
+| `Traversable` | `linear`, `tensor`, `multivector` |
+| `DiagonalTraversable`, `Collectable` | `linear`, `tensor` |
 | `Adjunction` | `topology` |
 | `Arrow` | `calculus`, `tensor`, `uncertain` |
 | `NaturalTransformation`, `Category`, `Bifunctor`, `Profunctor` | none |

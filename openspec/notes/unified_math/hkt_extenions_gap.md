@@ -1,0 +1,125 @@
+<!--
+SPDX-License-Identifier: MIT
+Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
+-->
+
+# Unified math: witnesses that exist, and the traits they could still carry
+
+**Scope.** The seventeen crates under `deep_causality_unified_math/`, read on `main` at
+`cbf3af23b` on 2026-09-15. Every witness type in the folder, which HKT trait each carries, which
+traits a witness could take today, and which crates could gain a categorical layer at all.
+
+**Not in scope.** New mathematics. Performance. The consumers above this stack.
+
+**Method.** Mechanical. Every `pub struct X*Witness` and every `impl Trait for X*Witness` was
+extracted from each crate's `src/`, with comments stripped first and multi-line `impl` headers
+joined — a naive line regex both invents witnesses from doc comments and misses every wrapped
+header, which is how an earlier hand count reached the wrong number twice. §5 reproduces it.
+
+**Relationship to the sibling note.** `hkt_gaps.md` asks which *container types* lack a witness.
+This note asks the complementary question: given the witnesses that exist, which *traits* are
+missing from them. The two overlap in one place, §3 row 5, where `hkt_gaps.md` §3.4 already
+decided the matter and this note defers to it.
+
+---
+
+## 1. Coverage today
+
+**40 witness types across 7 of the 17 crates. Every one implements at least one HKT trait.**
+23 distinct traits appear over them.
+
+| Crate | Tier | Witnesses | Distinct traits |
+|---|---|---|---|
+| `haft` | 2 | 13 | 17 |
+| `topology` | 7 | 14 | 8 |
+| `linear` | 3 | 4 | 13 |
+| `num_complex` | 3 | 3 | 7 |
+| `tensor` | 5 | 3 | 13 |
+| `multivector` | 6 | 2 | 6 |
+| `num_dual` | 3 | 1 | 7 |
+
+Ten crates declare no witness: `num`, `metric`, `algebra`, `num_rational`, `rand`, `calculus`,
+`fft`, `homology`, `stats`, `uncertain`.
+
+Two types carried the `*Witness` suffix while implementing no HKT trait at all —
+`GaugeFieldWitness` and `LatticeGaugeFieldWitness`, both zero-sized namespaces holding inherent
+methods. Renamed to `GaugeFieldOps` and `LatticeGaugeFieldOps` on 2026-09-15; the suffix now means
+something everywhere it appears.
+
+## 2. Actionable gaps
+
+Ranked by value over cost. Rows 1–4 are delegation onto structure that already exists.
+
+| # | Target | Add | Prereqs met? | Verify with | Unlocks | Cost |
+|---|---|---|---|---|---|---|
+| 1 | `GraphWitness`, `MixedGraphWitness`, `HypergraphWitness`, `PointCloudWitness`, `TopologyWitness` (`topology`) | `Foldable` | yes — all five already hold a `CausalTensor<T>` payload; four sibling witnesses in the same crate implement it | `grep -rn "impl.*Foldable<" topology/src/extensions` returns Cell/Chain/Cochain/LatticeComplex/Manifold only — none of the five | Reductions over graph payloads inside the witness vocabulary instead of reaching past it to `.data().as_slice()`. Prerequisite for row 2 | ~5 lines each |
+| 2 | `ManifoldWitness` (`topology`) | `Traversable`, then `DiagonalTraversable` | yes — `Traversable<F>: Functor<F> + Foldable<F>`, both implemented at `hkt_manifold/mod.rs:75` | inventory row: has HKT/Functor/Pure/Applicative/Monad/CoMonad/Foldable, lacks only Traversable; `tensor` and `linear` both have it | `Manifold<C, Result<T,E>>` collapses to `Result<Manifold<C,T>, E>` — one failing vertex invalidates the field, which a DEC pipeline hand-rolls today | mechanical |
+| 3 | `ZipTensorWitness` (`tensor`), `ZipDenseVectorWitness` (`linear`) | `Foldable` | yes — the underlying `CausalTensor`/`DenseVector` fold already; the non-zip siblings implement it | `grep -rn "impl.*Foldable.*Zip" tensor/src linear/src` returns nothing | `zip_with` then `fold` in one vocabulary — the inner loop of a correlated-ensemble statistic. Today the caller converts back to the plain witness first | delegation |
+| 4 | ~~`CausalMultiVectorWitness` (`multivector`)~~ | ~~`Traversable`~~ | — | — | — | **closed 2026-09-15**; see below |
+| 5 | `stats` (13 distribution types), `rand` (`Map`, `Uniform`, `StandardWord`, `StandardBool`) | `Arrow` | n/a — needs a new `→ haft` edge in each crate | `grep -rn deep_causality_haft stats/Cargo.toml rand/Cargo.toml` returns nothing today | `Map`/`Iter` become `Compose`/`arr`; sampler pipelines compose with `first`/`split`/`fanout`; inherits the `haft.arrow.*` Lean proofs | **consumer-gated, see below** |
+
+**Row 5 is not a recommendation.** `hkt_gaps.md` §3.4 reached the same conclusion — the container
+traits are for data, a lazy sampler is a program, and `haft`'s home for programs is `Arrow` — and
+recorded that such a change *"on its own changes no call site in the workspace."* It is the trap
+§6 of that note flags for `NaturalTransformation`: the dependency is **a consumer**, not code. It
+is listed here because the count is large and someone will rediscover it otherwise, not because it
+should be built. A blanket `impl<D: Distribution<T>> Arrow for D` would collapse it to one impl per
+crate, but is unavailable: `Arrow` is foreign to both crates and the self type would be an
+uncovered parameter, so it is one impl per concrete type.
+
+## 3. Crates ranked by HKT traits gained
+
+Sorted by the count of new trait implementations each crate would receive.
+
+| Rank | Crate | New impls | What | Today | Cost |
+|---|---|---|---|---|---|
+| 1 | `stats` | 13 | `Arrow` on `Bernoulli`, `Categorical`, `Cauchy`, `Exponential`, `LogNormal`, `Normal`, `StandardNormal`, `Poisson`, `UniformInt`, `StandardUniform`, `Weibull`, `Open01`, `OpenClosed01` | 0 witnesses, 0 HKT traits, no `haft` edge | new `stats → haft` edge; no tier move (already tier 4). **No consumer** |
+| 2 | `topology` | 7 | `Foldable` × 5 + `Traversable` + `DiagonalTraversable` | 14 witnesses, 8 traits | none — all prereqs met |
+| 3 | `rand` | 4 | `Arrow` on `Map`, `Uniform`, `StandardWord`, `StandardBool` | 0 witnesses, 0 HKT traits, no `haft` edge | new `rand → haft` edge; **tier 2 → 3**. Verified: nothing downstream moves, `stats` is already tier 4 via `linear`. **No consumer** |
+| 4= | `tensor` | 1 | `Foldable` on `ZipTensorWitness` | 3 witnesses, 13 traits | none |
+| 4= | `linear` | 1 | `Foldable` on `ZipDenseVectorWitness` | 4 witnesses, 13 traits | none |
+| — | ~~`multivector`~~ | ~~1~~ | ~~`Traversable` on `CausalMultiVectorWitness`~~ | **closed 2026-09-15**: 2 witnesses, 7 traits | — |
+
+**27 impls total, of which 1 is done and 26 remain.** Eight of the nine mechanical ones (ranks 2
+and 4) are outstanding and move no tiers; seventeen (ranks 1 and 3) need a new dependency edge, one
+of them moves a tier, and neither has a caller waiting.
+
+**Order of work:** row 1 → row 2, since row 1 is row 2's prerequisite; then row 3. Row 5 waits for
+a consumer.
+
+### Closed: `Traversable` on `CausalMultiVectorWitness`, 2026-09-15
+
+Both supertraits were already present, and `sequence` turned out to be the one traversal this
+witness can take without meeting the obstacle that denies it `Monad`. `bind`'s continuation may
+hand back a different `Metric` than the input carries, and since a `CausalMultiVector` holds
+exactly `2^dim` coefficients with `dim` read off that metric, the two identity laws want opposite
+choices. `sequence` is one-in-one-out by construction, so the input's metric is the only
+defensible answer and the coefficient count cannot change — the invariant `CausalMultiVector::new`
+enforces holds without being re-checked.
+
+Eight tests in
+`deep_causality_multivector/tests/extensions/hkt_multivector/hkt_traversable_tests.rs`, run over
+five algebras from `Cl(0)` to `Cl(3,1)`. Two mutations confirm they bite: replacing the carried
+metric with `Euclidean(0)` — the exact shape of the `Monad` failure — fails 4 of them, and
+reversing the fold direction fails 5.
+
+## 4. Reproducing
+
+```bash
+python3 scripts/witness_inventory.py     # from the repository root
+```
+
+It prints the counts in §1 and writes the full witness-by-trait matrix to
+`/tmp/witness_inv.json`. On `cbf3af23b` it reports `declared: 40  with impls: 40  traits: 23`,
+with both mismatch lists empty — every declared witness implements something, and every
+implemented witness is declared.
+
+Two parser requirements, both learned by getting them wrong:
+
+- **Strip comments first.** A doc comment showing `pub struct MyCustomTypeWitness` in an example
+  block is otherwise counted as a witness, and a `//`-comment containing the word `impl` bleeds
+  into the next match.
+- **Join wrapped `impl` headers.** `impl<C> Monad<ManifoldWitness<C>>\n    for ManifoldWitness<C>`
+  is invisible to a line-oriented regex. Matching on the whole file text with `re.S` and splitting
+  the header on the top-level ` for ` recovers `Adjunction`, `Monad` on `ManifoldWitness`, and
+  `Pure`/`Applicative` on four topology witnesses — six rows that a line regex drops silently.

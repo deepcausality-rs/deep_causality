@@ -7,7 +7,7 @@ use alloc::vec;
 use alloc::vec::Vec;
 
 use crate::CausalMultiVector;
-use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, HKT, Pure};
+use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, HKT, Pure, Traversable};
 use deep_causality_metric::Metric;
 
 pub struct CausalMultiVectorWitness;
@@ -83,6 +83,63 @@ impl Foldable<CausalMultiVectorWitness> for CausalMultiVectorWitness {
         Func: FnMut(B, A) -> B,
     {
         fa.data.into_iter().fold(init, f)
+    }
+}
+
+// ----------------------------------------------------------------------------
+// Traversable
+// ----------------------------------------------------------------------------
+impl Traversable<CausalMultiVectorWitness> for CausalMultiVectorWitness {
+    /// Flips `CausalMultiVector<M<A>>` into `M<CausalMultiVector<A>>`, folding an accumulator
+    /// through `M` from left to right so the effects run in blade order and the result keeps that
+    /// order.
+    ///
+    /// An element in a failing state collapses the whole traversal, and the first such element in
+    /// blade order is the one reported.
+    ///
+    /// # The metric survives, and so does the length invariant
+    ///
+    /// A `CausalMultiVector` holds exactly `2^dim` coefficients, with `dim` coming from its
+    /// `Metric`, so the metric is not decoration: it fixes the length. That is what denies this
+    /// witness a [`Monad`](deep_causality_haft::Monad) — `bind`'s continuation may return a
+    /// different metric than the input carries, and the two identity laws then want opposite
+    /// choices.
+    ///
+    /// `sequence` never faces that choice. It is one-in-one-out by construction, so the input's
+    /// metric is the only defensible answer and the coefficient count cannot change. The
+    /// invariant `CausalMultiVector::new` enforces therefore holds without being re-checked, which
+    /// is why the result is built from the struct fields directly, exactly as `fmap` does.
+    ///
+    /// The metric is read before `data` is consumed; the borrow checker enforces that ordering
+    /// rather than leaving it to a convention.
+    ///
+    /// # Cost
+    ///
+    /// The accumulator is cloned once per step and holds `k` elements at step `k`, so the fold
+    /// performs `n(n-1)/2` element clones for an `n`-coefficient multivector. The clone is forced
+    /// by [`Applicative::apply`]'s `Func: FnMut` bound rather than by this trait's `A: Clone`: an
+    /// `FnMut` may be invoked repeatedly, so the closure cannot move its captured accumulator out.
+    /// `n` is `2^dim`, so this is bounded by the algebra rather than by the data.
+    fn sequence<A, M>(fa: CausalMultiVector<M::Type<A>>) -> M::Type<CausalMultiVector<A>>
+    where
+        M: Applicative<M> + HKT,
+        A: Clone,
+    {
+        let metric = fa.metric;
+        let mut acc: M::Type<Vec<A>> = M::pure(Vec::new());
+        for m_a in fa.data {
+            acc = M::apply(
+                M::fmap(acc, |v: Vec<A>| {
+                    move |a: A| {
+                        let mut v = v.clone();
+                        v.push(a);
+                        v
+                    }
+                }),
+                m_a,
+            );
+        }
+        M::fmap(acc, move |data| CausalMultiVector { data, metric })
     }
 }
 
