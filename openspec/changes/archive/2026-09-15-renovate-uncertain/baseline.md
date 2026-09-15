@@ -164,3 +164,72 @@ The property is worth keeping and worth testing, but after this change it must h
 reason — the draw at a leaf is a function of its ordinal, not of a position in a replayed stream.
 A test asserting it therefore still catches a pointer leaking into the seed, which is what task
 2.3 requires, because two separately built trees have different addresses and the same ordinals.
+
+---
+
+## 9.2 Re-measurement, after the change
+
+Same machine, same commands. Every row of §1.1 re-run rather than reasoned about.
+
+| Quantity | Baseline | Expected | **Measured after** | |
+|---|---|---|---|---|
+| `src/` lines | 3 285 | smaller | **3 723** | ✗ larger — see below |
+| ... of which code | not split | — | **2 069** | ✓ the code shrank by 1 216 |
+| ... of which prose | not split | — | **1 355** | the growth is documentation |
+| `src/` files | 54 | smaller | **51** | ✓ |
+| test files | 46 | unchanged or larger | **50** | ✓ |
+| `cargo test -p deep_causality_uncertain` | 247 pass | at or above | **304 pass** | ✓ |
+| `bazel test //...` | 1 394 pass | at or above | **1 395 pass** | ✓ |
+| `dyn` sites in `src/` | 6 | 0 | **0** | ✓ |
+| `'static` on the scalar bound | n/a | — | **none** | the bound is `RandScalar` exactly |
+| `SampledValue` variant arms in `src/` | 72 | 0 | **0** | ✓ the type is gone |
+| `rusty_fork_test!` invocations | 24, in 20 files | 0 | **0** | ✓ dev-dependency gone |
+| cache/seed call sites in `tests/` | 38 | rewritten | **0** | ✓ |
+| `ProbabilisticType` in `deep_causality_cfd/src` | 22, in 8 files | 0 | **0** | ✓ |
+| `ProbabilisticType` anywhere in the workspace | — | 0 | **1** | a doc line in a CFD test, naming what was removed |
+
+### The one row that missed, and why
+
+**`src/` grew by 438 lines, where the baseline expected it to shrink.** Splitting the count settles
+what happened: **code fell from 3 285 to 2 069**, a 37% reduction, and **prose rose to 1 355 lines**.
+The crate is a third smaller in code and carries roughly one line of documentation for every one
+and a half of implementation.
+
+The baseline row was the wrong measurement rather than the prediction being wrong — it counted
+lines without separating the two, so a change that deletes a dispatcher and explains why it is gone
+registers as growth. The corrected row is recorded here rather than quietly restated, because §1.1
+says every later claim of "smaller" is checked against this file.
+
+## 9.3 Defect audit
+
+Each removed guarantee had its defect reintroduced, the suite run, and the tree restored.
+
+| Defect reintroduced | Tests that failed |
+|---|---|
+| The **pointer in the seed** — the generator keyed on the node's `Arc` address instead of its ordinal | 1 — `leaf_ordinals_tests::two_separately_built_identical_graphs_draw_alike`, on two structurally identical graphs disagreeing at index 0 |
+| The **shared-leaf double draw** — the per-call memo removed | 1 — `sequential_sampler_tests::test_memoization` |
+| The **broken diagonal** — one carrier's `materialize_at` drawing at different indices from the other's | 1 — `uncertain_ensemble_tests::a_verdict_ensemble_agrees_with_the_draws_it_judges`, at index 3 |
+| The **unseeded gate** — `SampleSession::seeded` ignoring its seed | **12**, across the acceptance, leaf-ordinal and session suites |
+
+**What the memo audit revealed.** Only the *ambient* path's test caught it, and that is correct
+rather than a gap. On the **addressed** path a node visited twice has the same ordinal, so it draws
+the same value with or without the memo — the acceptance test `arithmetic_shares_one_draw` (`x - x`
+is exactly zero at every index) passed with the memo removed. The session work turned the memo from
+a correctness device into a cost saving, and it is load-bearing only for `AmbientDraws`, where each
+pull advances a stream. The docstring already said this; the audit measured it.
+
+**What the diagonal audit revealed.** A *uniform* shift of both ensembles is not caught, and should
+not be: shifting two ensembles by the same amount preserves the correlation, which is the property
+under test. What is caught is the two carriers disagreeing about which indices they draw at.
+
+## 9.4 Mutation testing
+
+`cargo mutants` over the two places where a wrong constant yields a plausible number rather than a
+crash — the seed-mixing kernel and the ordinal pre-pass.
+
+```
+Found 33 mutants to test
+33 mutants tested in 2m: 33 caught
+```
+
+**Zero survivors**, so there is nothing to settle with a measurement or fix as a gap.

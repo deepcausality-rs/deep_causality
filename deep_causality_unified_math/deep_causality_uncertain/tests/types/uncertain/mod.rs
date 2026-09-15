@@ -8,6 +8,7 @@ mod uncertain_arithmetic_tests;
 mod uncertain_comparison_tests;
 #[cfg(test)]
 mod uncertain_default_tests;
+mod uncertain_edge_cases_tests;
 mod uncertain_ensemble_tests;
 #[cfg(test)]
 mod uncertain_logic_tests;

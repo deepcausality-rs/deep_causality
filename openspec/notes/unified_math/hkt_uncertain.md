@@ -46,6 +46,13 @@ updates it.
   branch the test suite never runs. The one property it provides, that the same index returns the
   same value, is had without storage by deriving every leaf draw from the session seed, the sample
   index and the leaf's identity. B5 records the decision and what it removes.
+> **Stage 2 shipped, and settled two of the items below differently.** The lazy graph did get a
+> witness — not a container one, an **`Arrow`** — and it is well-typed precisely because every draw
+> became a pure function of (seed, index, ordinal). And no `Particles<T>` was written: the ensemble
+> carrier is a *type parameter*, so a materialised ensemble is whatever container the caller names.
+> The paragraph below is left as written, because its diagnosis of the container traits is correct
+> and is why `Arrow` is the right surface rather than `Functor`.
+
 - **An HKT witness on the lazy computation graph: not feasible against `haft` as written.**
   `Functor::fmap` hands the witness an `FnMut(A) -> B` with no `'static`, `Send` or `Sync`
   bound and no bound on `B`, and `Pure::pure` hands it one `T` with no `Clone`. A lazy graph has
@@ -211,16 +218,16 @@ nothing more. No consumer uses `Map`.
 
 | # | Blocker | Crate | Class | Resolution in one line |
 |---|---|---|---|---|
-| B1 | The closed `SampledValue` enum, held in place by a global static cache | uncertain | legacy decision | a node tree generic in `R`; the cache goes (B5) |
-| B2 | `haft`'s `Functor`, `Pure`, `Applicative`, `Monad` signatures cannot feed a lazy graph | uncertain, haft | structural | a strict `Particles<T>` carrier takes the witness; the lazy graph stays Arrow-shaped; `MaybeParallel` trims the bounds but `'static` and `Clone` remain |
-| B3 | Struct bound `T: ProbabilisticType` | uncertain | mechanical | drop to impls; the trait dissolves into `R: RandScalar` and `bool` |
-| B4 | `f64` thresholds, function nodes and probabilities | uncertain | mechanical | everything in `R`; `f64` only at the display boundary |
-| B5 | Five globals, one of them a leaking, root-only cache with an untested production branch | uncertain, rand | decision taken | remove the cache; index-addressed draws from (seed, index, leaf id); a `SampleSession` value; zero globals owned by `uncertain` |
+| B1 | ~~The closed `SampledValue` enum~~ | uncertain | **done** | `ConstTree<Node<R>>` with `Sample<R> { Real, Bool }`; 72 variant arms gone, the enum and its four traits removed |
+| B2 | ~~`haft`'s container signatures cannot feed a lazy graph~~ | uncertain, haft | **closed, differently** | the lazy graph is an `Arrow` (`In = SampleIndex`, `Out = Result<R, _>`), which is well-typed exactly because B5 made evaluation pure. No `Particles<T>` was written — see §4 |
+| B3 | ~~Struct bound `T: ProbabilisticType`~~ | uncertain | **done** | the bound is `R: RandScalar` exactly — no `'static`, no `Send`/`Sync`, because no node stores a trait object |
+| B4 | ~~`f64` thresholds, function nodes and probabilities~~ | uncertain | **done** | everything in `R`. Two `f64` mentions survive in live code, both documented boundaries: `BernoulliParams::p` (the fixed point the draw honours) and `QmcSampler::coordinate` (a Sobol address, not a value) |
+| B5 | ~~Five globals~~ | uncertain, rand | **done** | index-addressed draws from (seed, index, **ordinal** — not leaf id, see the correction below); a `SampleSession` value; zero globals owned by `uncertain` |
 | B6 | QMC needs static structure, and Sobol resolves 32 bits | uncertain, rand | inherent | a structure descriptor; the 32-bit cap is a limit `Float106` cannot lift, and `SobolSequence::coordinate` now states it |
 | B7 | ~~Six per-type files in `rand`~~ | rand | **done** | two blanket impls, one per tower, kept apart by a kind type parameter; zero concrete scalars named |
 | B8 | ~~No `BFloat16` in `rand`~~ | rand, stats | **done** | nothing to add for it: the blanket impls cover it, its word count comes from `epsilon`, and a probe test draws at it |
-| B9 | `MaybeUncertain` as a parallel type | uncertain | design | `Uncertain<Option<R>>` and `Particles<Option<T>>` |
-| B10 | Core pins `f64` and `bool` at 79 sites; CFD is generic but inherits the `ProbabilisticType` bound | consumers | migration | keep the aliases; CFD compiles at `f32` the day B1 lands |
+| B9 | ~~`MaybeUncertain` as a parallel type~~ | uncertain | **closed, differently** | it stays a named type: `MaybeUncertain<R>` over an `UncertainBool<R>` presence channel and an `Uncertain<R>` value channel, drawn at one index. `Uncertain<Option<R>>` was not taken — see the correction under §4 |
+| B10 | ~~Core pins `f64` and `bool`; CFD inherits the `ProbabilisticType` bound~~ | consumers | **done** | CFD compiles at `f32`, with a test that instantiates the boundary source and inflow zone there. The aliases were *not* kept in `uncertain` — they moved to `deep_causality`, which is the crate that picks the scalar |
 
 **The bound the rows above ask for is `RandScalar`**: `RealField + FromPrimitive`,
 blanket-implemented in `deep_causality_rand` and re-exported by `deep_causality_stats`. Neither
@@ -378,9 +385,19 @@ and QMC draws at the same `(id, i)` are never cross-served.
 
 **Decision.** Remove the cache and obtain the property by construction. Every leaf draw is
 derived from three inputs and nothing else: the session seed, the sample index, and the leaf's
-identity, the `Arc` address `ConstTree` already exposes. A leaf's generator for one draw is
-`Xoshiro256::from_seed(mix(seed, index, leaf_id))`, a few nanoseconds of hashing per leaf per
-draw. The QMC path already works this way, since a Sobol point is a function of its index and
+**ordinal**. A leaf's generator for one draw is `Xoshiro256::from_seed(mix(seed, index, ordinal))`,
+a few nanoseconds of hashing per leaf per draw.
+
+> **Correction, made when stage 2 shipped.** This paragraph originally named the leaf's identity as
+> "the `Arc` address `ConstTree` already exposes". That is a heap address: it differs between two
+> runs of the same program and between two structurally identical trees, so a draw derived from it
+> could not be replayed from a recorded seed — which is the whole property the cache was being
+> removed to obtain. The identity is instead an **ordinal**: the position a drawing leaf occupies
+> in one fixed traversal, assigned by a pre-pass (`LeafOrdinals`). Two trees built by the same
+> sequence of constructor calls agree on it however their memory was laid out. The address is still
+> used, but only to recognise a node already seen *within* one traversal, and it never reaches the
+> generator. A test builds two structurally identical graphs separately and asserts they draw alike;
+> reintroducing the pointer makes it fail. The QMC path already works this way, since a Sobol point is a function of its index and
 dimension alone; the Monte Carlo path joins it.
 
 What that gives, in order of weight:
@@ -565,9 +582,9 @@ Four changes, each shippable alone. Effort is the author's estimate for one engi
 | Stage | Change | Breaks | Tests to carry | Effort |
 |---|---|---|---|---|
 | 1 | ~~`rand` generic cleanup~~ — **done**, `191281cae`. B7 and B8 by a crate boundary plus two blanket impls over a kind parameter. The `Rng` blanket was dropped: it needs `dyn` | none at call sites; two bounds in `topology` and one example got shorter | 112 in `rand`, the rest moved to `stats` | shipped |
-| 2 | `uncertain` precision as a parameter and the cache removal: B1, B3, B4, B5, B9, the `MaybeParallel` substitution; `Uncertain<f32>` appears and CFD compiles at `f32` | the public enum, the traits, the cache and seed functions, `SamplerKind` | 253, with the 38 cache and seed sites across six files rewritten against a session | 1 to 2 weeks, and the crate should come out smaller |
-| 3 | `Particles<T>` and its witness with law tests, parallel `fmap` through `scoped_map`; `Traversable` for `DenseVector` and `CausalTensor` | none; additive | new law tests, the `haft` law-test shape, one seeded test that materialisation agrees serial and parallel | 1 week |
-| 4 | Consumers: aliases in core, one example, `hkt_gaps.md` updated | none after the aliases | consumer suites | 2 days |
+| 2 | ~~`uncertain` precision as a parameter and the cache removal~~ — **done**, as change `renovate-uncertain`. B1, B3, B4, B5 and B9 all closed; `Uncertain<f32>` and `Uncertain<BFloat16>` both work and CFD compiles at `f32` | the public enum, the traits, the cache and seed functions, `SamplerKind`, and — not anticipated here — `Uncertain<bool>` itself | 304 in the crate, 1395 across the workspace | shipped |
+| 3 | ~~`Particles<T>` and its witness~~ — **not built.** The carrier is a *type parameter* instead: `materialize::<W>` returns `W::Type<R>`, so the ensemble is a `DenseVector` or a rank-1 `CausalTensor` and this crate declares no container. `Collectable` in `haft` is the one trait that had to be added | none; additive | ensemble tests asserting values rather than counts | shipped |
+| 4 | ~~Consumers~~ — **done**. The aliases went to `deep_causality` rather than staying in `uncertain` | none after the aliases | consumer suites | shipped |
 
 Stage 2 before stage 3, because `Particles<R>` materialised from a graph that is still `f64`
 under the hood would be generic in name only. Stage 3 is where the `Traversable` item M1 from the

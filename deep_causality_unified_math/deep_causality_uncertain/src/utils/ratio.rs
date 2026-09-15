@@ -31,6 +31,19 @@ pub(crate) fn ratio<R: RandScalar>(hits: usize, total: usize) -> Result<R, Uncer
 ///
 /// Separate from [`ratio`] because the SPRT needs its two counts individually — the ratio it forms
 /// is not `hits / n` — and because a count that does not convert is the same defect either way.
+///
+/// # The refusal is unreachable at every shipped scalar, and is kept anyway
+///
+/// No scalar in the workspace can fail this conversion: `BFloat16::from_usize` returns `Some`
+/// unconditionally, and `f32`, `f64` and `Float106` delegate to conversions that accept any
+/// `usize` — rounding a large one rather than refusing it. So the `None` arm is not covered by the
+/// test suite and cannot be without a scalar written to fail it.
+///
+/// It stays because `FromPrimitive::from_usize` returns an `Option` and the honest response to one
+/// is to handle it. The alternative is `unwrap`, which turns a scalar added tomorrow with a
+/// narrower integer range into a panic in the middle of an estimator, or a silent fallback, which
+/// turns it into a plausible wrong probability. Reporting is the only one of the three that stays
+/// truthful for a type that does not exist yet.
 pub(crate) fn lift_count<R: RandScalar>(n: usize) -> Result<R, UncertainError> {
     R::from_usize(n).ok_or_else(|| {
         UncertainError::SamplingError(format!(

@@ -33,6 +33,24 @@ rust_doc_test(
 )
 
 rust_test_suite(
+    name = "readme",
+    srcs = glob([
+        "tests/readme/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_uncertain",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
     name = "acceptance",
     srcs = glob([
         "tests/acceptance/*_tests.rs",

@@ -57,7 +57,7 @@
 //! give 50⁴ = 6 250 000 combinations rather than 50 correlated tuples. Every combination is
 //! individually well-formed, so the count is the only symptom. Reach for the diagonal.
 //!
-//! ## The memory an ensemble costs, and the scalar that changes it
+//! ## The memory an ensemble costs...
 //!
 //! An ensemble per cell of a field is bounded by *cells × draws × width*, and that product reaches
 //! the ceiling before any one factor looks large. The **width** is the factor the caller chooses,
@@ -99,12 +99,17 @@
 //! # Addressed draws
 //!
 //! A draw is a function of three numbers — the [`SampleSession`]'s seed, the sample index, and the
-//! leaf's [ordinal](LeafOrdinals) — and of nothing else. Nothing is stored between calls, and two
-//! graphs sharing a leaf agree about that leaf at the same index.
+//! leaf's [ordinal](LeafOrdinals) — and of nothing else. Nothing is stored between calls.
+//!
+//! Two graphs agree about a shared leaf at a given index exactly when the leaf has the **same
+//! ordinal** in both, because the ordinal is part of the address. A leaf's ordinal is its position
+//! in that graph's traversal: `x` holds ordinal 0 in `x` and in `x + y` and draws the same in each,
+//! while `y` holds ordinal 0 alone and ordinal 1 inside the sum and does not. Within one graph a
+//! leaf reached twice is one draw, which is what makes `x - x` exactly zero.
 
 mod algos;
 mod errors;
-pub mod extensions;
+mod extensions;
 mod traits;
 mod types;
 mod utils;
@@ -130,6 +135,7 @@ pub use crate::types::distribution_parameters::BernoulliParams;
 pub use crate::types::distribution_parameters::NormalDistributionParams;
 pub use crate::types::distribution_parameters::UniformDistributionParams;
 pub use crate::types::leaf_ordinals::LeafOrdinals;
+pub use crate::types::sample_index::SampleIndex;
 pub use crate::types::sample_session::SampleSession;
 pub use crate::types::sampler::qmc_sampler::QmcSampler;
 pub use crate::types::sampler::sequential_sampler::SequentialSampler;

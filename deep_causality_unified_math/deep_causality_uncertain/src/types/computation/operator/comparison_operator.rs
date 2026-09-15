@@ -11,6 +11,10 @@ pub enum ComparisonOperator {
     GreaterThan,
     LessThan,
     EqualTo,
+    /// `a >= b`, which is **not** `!(a < b)` when either side may be `NaN`.
+    GreaterThanOrEqual,
+    /// `a <= b`, which is **not** `!(a > b)` when either side may be `NaN`.
+    LessThanOrEqual,
 }
 
 impl ComparisonOperator {
@@ -21,6 +25,12 @@ impl ComparisonOperator {
         match self {
             ComparisonOperator::GreaterThan => a > b,
             ComparisonOperator::LessThan => a < b,
+            // Stated directly rather than as the negation of the strict form. Under IEEE a `NaN`
+            // operand makes *every* comparison false, so `!(a < b)` is `true` for a `NaN` where
+            // `a >= b` is `false` — De Morgan holds in Boolean logic and not in the presence of a
+            // value that is unordered with respect to everything.
+            ComparisonOperator::GreaterThanOrEqual => a >= b,
+            ComparisonOperator::LessThanOrEqual => a <= b,
             // Use a small epsilon for robust floating-point equality checks.
             ComparisonOperator::EqualTo => {
                 if a.is_nan() || b.is_nan() {
@@ -43,6 +53,8 @@ impl fmt::Display for ComparisonOperator {
             ComparisonOperator::GreaterThan => write!(f, ">"),
             ComparisonOperator::LessThan => write!(f, "<"),
             ComparisonOperator::EqualTo => write!(f, "=="),
+            ComparisonOperator::GreaterThanOrEqual => write!(f, ">="),
+            ComparisonOperator::LessThanOrEqual => write!(f, "<="),
         }
     }
 }

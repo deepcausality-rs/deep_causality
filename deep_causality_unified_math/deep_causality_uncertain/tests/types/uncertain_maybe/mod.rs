@@ -10,4 +10,5 @@ mod uncertain_maybe_f64_tests;
 mod uncertain_maybe_f64_arithmetic_tests;
 
 #[cfg(test)]
+mod uncertain_maybe_edge_cases_tests;
 mod uncertain_maybe_f106_tests;

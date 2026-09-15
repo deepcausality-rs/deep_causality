@@ -24,32 +24,6 @@ use crate::{ArithmeticOperator, ComparisonOperator, DistributionEnum, LogicalOpe
 /// threshold of type `R` and a Bernoulli's parameter is stated at `R`. That is why the Boolean
 /// carrier keeps the scalar: there is one tree, and it has one scalar.
 ///
-/// # Nothing here is a trait object
-///
-/// The two `FunctionOp` arms hold `fn(R) -> R` and `fn(R) -> bool`: a plain function pointer, so
-/// the graph stores no `dyn` and no `Arc`, and dispatch through it is static. That matters beyond
-/// tidiness — a trait object's default lifetime reaches the type it is parameterised by, so a
-/// single `Arc<dyn …<R>>` anywhere in this enum would put `R: 'static` on the crate's whole public
-/// surface. There is none, and the scalar bound is therefore exactly the algebra: `RandScalar`.
-///
-/// Holding the function as a **type parameter**, the way `deep_causality_calculus`'s `Euler` and
-/// `Rk4` hold their rate field, is what a non-recursive arrow can do and this tree cannot: every
-/// node of a `ConstTree<Node<R>>` has one type, so one `F` would have to serve every mapped node in
-/// the graph — `x.map(f).map(g)` would not typecheck, and neither would `a.map(f) + b`. A pointer
-/// is the largest thing a homogeneous node can hold without a trait object.
-///
-/// The cost is that a **capturing** closure cannot be mapped. A captured parameter belongs in the
-/// graph rather than in a closure over it: `x.map(|v| v * k)` is `x * Uncertain::point(k)`, which
-/// the sampler and the quasi-Monte-Carlo pre-pass can both see into, where a captured `k` is opaque
-/// to them.
-///
-/// # No higher-kinded arms
-///
-/// `PureOp`, `FmapOp`, `ApplyOp` and `BindOp` are gone. No carrier method built one, so no public
-/// API could put a graph into a state carrying them; what they did do was store an
-/// `Arc<dyn …<R>>`, which is where a `'static` on the scalar came from. A stored function belongs
-/// in the Arrow layer, over a composite whose type records what it holds — not in a node of a
-/// homogeneous tree, where it can only be erased.
 #[derive(Clone)]
 pub enum Node<R> {
     // Leaf nodes

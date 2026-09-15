@@ -21,7 +21,12 @@ impl<R: RandScalar> UncertainBool<R> {
     /// Draws this value at `index` under `session`.
     ///
     /// Reproducible from the session's seed alone: the same seed and index give the same value in
-    /// a later process, and two graphs sharing a leaf agree about that leaf at the same index.
+    /// a later process.
+    ///
+    /// Two graphs sharing a leaf agree about that leaf at the same index **when the leaf has the
+    /// same ordinal in both** — the address is the seed, the index and the ordinal, and the ordinal
+    /// is the leaf's position in that graph's traversal. `x` keeps ordinal 0 in `x` and in `x + y`
+    /// and so draws alike; `y` has ordinal 0 alone and 1 inside the sum, and does not.
     pub fn sample_at(&self, session: &SampleSession, index: u64) -> Result<bool, UncertainError> {
         let ordinals = LeafOrdinals::from_root_node(self.root_node());
         self.sample_at_with(session, index, &ordinals)

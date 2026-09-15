@@ -46,18 +46,34 @@ impl<R: RandScalar> Uncertain<R> {
     }
 
     /// Whether each draw is within `tolerance` of `target`.
+    ///
+    /// The band `[target − tolerance, target + tolerance]`, so it inherits
+    /// [`Self::within_range`]'s treatment of a `NaN` draw (excluded) and of a negative tolerance
+    /// (an empty band, which admits nothing — not even the target).
     pub fn approx_eq(&self, target: R, tolerance: R) -> UncertainBool<R> {
         self.within_range(target - tolerance, target + tolerance)
     }
 
     /// Whether each draw lies in `[min, max]`.
     ///
-    /// Built from two comparison nodes rather than a stored predicate, so the QMC pre-pass can see
-    /// through it and neither bound has to be captured in a closure. `x >= min` is `!(x < min)` and
-    /// `x <= max` is `!(x > max)`; both comparisons clone the same sub-graph, so the memo gives the
-    /// operand one draw and the two bounds are tested against the same number.
+    /// Built from two comparison nodes rather than a stored predicate, so the quasi-Monte-Carlo
+    /// pre-pass can see through it and neither bound has to be captured in a closure. Both
+    /// comparisons clone the same sub-graph, so the memo gives the operand one draw and the two
+    /// bounds are tested against the same number.
+    ///
+    /// # Not the negation of the strict comparisons
+    ///
+    /// The two nodes are `>=` and `<=` **stated directly**, not `!(<)` and `!(>)`. Under IEEE a
+    /// `NaN` draw makes every comparison false, so the negated form reports `true` for both halves
+    /// and calls a `NaN` in range — which is the single worst answer available, since the caller
+    /// asked precisely in order to exclude the values outside it. De Morgan holds in Boolean logic
+    /// and not over a value unordered with respect to everything.
+    ///
+    /// A reversed range (`min > max`) contains nothing, which follows from the same two nodes with
+    /// no special case.
     pub fn within_range(&self, min: R, max: R) -> UncertainBool<R> {
-        !self.less_than(min) & !self.greater_than(max)
+        self.compare(ComparisonOperator::GreaterThanOrEqual, min)
+            & self.compare(ComparisonOperator::LessThanOrEqual, max)
     }
 
     /// One comparison node against a fixed threshold.
