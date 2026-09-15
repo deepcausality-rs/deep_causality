@@ -22,7 +22,7 @@ quantum and discovery consumers, except as migration cost.
 sites were counted by grep across the workspace. Effort figures are the author's estimates and
 say so.
 
-**Companion.** `openspec/notes/unified_math/hkt_gaps.md` §3.1 and §3.4 name these two crates as
+**Companion.** `openspec/notes/archive/unified_math/hkt_gaps.md` §3.1 and §3.4 name these two crates as
 gaps. §0 and B2 of this note say what that note should now say instead, and stage 4 in §4
 updates it.
 
