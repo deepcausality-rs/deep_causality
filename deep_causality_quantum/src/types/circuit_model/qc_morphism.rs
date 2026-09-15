@@ -8,7 +8,7 @@ use crate::types::carriers::Channel;
 use crate::types::decision::Tolerance;
 use crate::types::qgates::channel::{choi_from_kraus, kraus_from_choi};
 use crate::types::qgates::operator_linalg::frobenius_norm;
-use alloc::collections::BTreeMap;
+use alloc::collections::{BTreeMap, BTreeSet};
 use alloc::format;
 use alloc::vec;
 use alloc::vec::Vec;
@@ -440,6 +440,141 @@ where
             out.push(x.clone(), y.clone(), moved)?;
         }
         Ok(out)
+    }
+
+    /// The Frobenius distance of two morphisms' Choi operators without forming them, through
+    /// `‖J(A) − J(B)‖²_F = Σ |Tr A_a† A_a'|² + Σ |Tr B_b† B_b'|² − 2 Σ |Tr A_a† B_b|²`, which is
+    /// exact because `Tr J(A)† J(B) = Σ_{a,b} |Tr A_a† B_b|²`. Blocks are matched by classical
+    /// value; a block one side lacks counts with the other side's norm alone. The cost is
+    /// quadratic in the operator count and linear in `d_in · d_out`, so an alignment on a wide
+    /// register is checked where the Choi operator would not fit the entry cap.
+    ///
+    /// # Errors
+    ///
+    /// [`QuantumError::DimensionMismatch`] on different types.
+    pub fn frobenius_distance_by_gram(&self, other: &Self) -> Result<R, QuantumError> {
+        if self.d_in != other.d_in
+            || self.d_out != other.d_out
+            || self.classical_in != other.classical_in
+            || self.classical_out != other.classical_out
+        {
+            return Err(QuantumError::DimensionMismatch(format!(
+                "cannot compare a {} → {} morphism with a {} → {} one",
+                self.d_in, self.d_out, other.d_in, other.d_out
+            )));
+        }
+        let overlap = |a: &CausalTensor<Complex<R>>, b: &CausalTensor<Complex<R>>| -> R {
+            // |Tr A† B|² as the squared modulus of the entrywise inner product.
+            let inner = a
+                .as_slice()
+                .iter()
+                .zip(b.as_slice())
+                .fold(Complex::new(R::zero(), R::zero()), |acc, (x, y)| {
+                    acc + Complex::new(x.re, -x.im) * *y
+                });
+            inner.re * inner.re + inner.im * inner.im
+        };
+        let gram = |family: &[CausalTensor<Complex<R>>]| -> R {
+            let mut total = R::zero();
+            for a in family {
+                for b in family {
+                    total += overlap(a, b);
+                }
+            }
+            total
+        };
+        let mut squared = R::zero();
+        let keys: BTreeSet<&(ClassicalValues, ClassicalValues)> =
+            self.blocks.keys().chain(other.blocks.keys()).collect();
+        for key in keys {
+            let (a, b) = (self.blocks.get(key), other.blocks.get(key));
+            if let Some(a) = a {
+                squared += gram(a);
+            }
+            if let Some(b) = b {
+                squared += gram(b);
+            }
+            if let (Some(a), Some(b)) = (a, b) {
+                let two = R::one() + R::one();
+                for x in a {
+                    for y in b {
+                        squared -= two * overlap(x, y);
+                    }
+                }
+            }
+        }
+        Ok(if squared > R::zero() {
+            squared.sqrt()
+        } else {
+            R::zero()
+        })
+    }
+
+    /// The Frobenius-induced norm `‖τ‖_{F→F} = sup ‖τ(ρ)‖_F / ‖ρ‖_F`: the largest singular value of
+    /// the natural representation `N = Σ_k K ⊗ conj(K)`, a `d_out² × d_in²` matrix acting on the
+    /// row-major vectorisation, obtained as the square root of the largest eigenvalue of the
+    /// smaller Gram matrix, `N N†` or `N† N`, through the shipped Hermitian eigensolver. For a
+    /// morphism with classical blocks, a direct sum, it is the largest block norm. A unitary has
+    /// norm one, a partial trace over a `d`-dimensional factor `√d`, a state preparation one.
+    ///
+    /// # Errors
+    ///
+    /// [`QuantumError::NaturalityDimensionExceeded`] when `N` would exceed the entry cap, before
+    /// allocating; the eigensolver's errors.
+    pub fn frobenius_induced_norm(&self, caps: &NumericCaps) -> Result<R, QuantumError> {
+        let (d_in, d_out) = (self.d_in, self.d_out);
+        let rows = d_out * d_out;
+        let cols = d_in * d_in;
+        let entries = (rows as u64).saturating_mul(cols as u64);
+        if entries > caps.max_entries {
+            return Err(QuantumError::NaturalityDimensionExceeded(
+                ceil_log2(d_in),
+                ceil_log2(d_out),
+                entries,
+                caps.max_entries,
+            ));
+        }
+        let zero = Complex::new(R::zero(), R::zero());
+        let mut worst = R::zero();
+        for kraus in self.blocks.values() {
+            let mut natural = vec![zero; rows * cols];
+            for k in kraus {
+                let conj: Vec<Complex<R>> = k
+                    .as_slice()
+                    .iter()
+                    .map(|c| Complex::new(c.re, -c.im))
+                    .collect();
+                let conj = CausalTensor::from_slice(&conj, &[d_out, d_in]);
+                let term = k
+                    .kronecker(&conj)
+                    .map_err(|e| QuantumError::CalculationError(format!("kronecker: {e:?}")))?;
+                for (n, t) in natural.iter_mut().zip(term.as_slice()) {
+                    *n += *t;
+                }
+            }
+            let natural = CausalTensor::from_slice(&natural, &[rows, cols]);
+            let adjoint = natural
+                .dagger()
+                .map_err(|e| QuantumError::CalculationError(format!("dagger: {e:?}")))?;
+            let gram = if rows <= cols {
+                natural.matmul(&adjoint)
+            } else {
+                adjoint.matmul(&natural)
+            }
+            .map_err(|e| QuantumError::CalculationError(format!("matmul: {e:?}")))?;
+            let (values, _) = gram
+                .eigen_hermitian()
+                .map_err(|e| QuantumError::CalculationError(format!("eigen: {e:?}")))?;
+            let largest = values
+                .iter()
+                .map(|v| v.re)
+                .fold(R::zero(), |a, b| if b > a { b } else { a });
+            let norm = largest.sqrt();
+            if norm > worst {
+                worst = norm;
+            }
+        }
+        Ok(worst)
     }
 
     /// The Choi operator of every block, formed through `choi_from_kraus`, with the entry count it

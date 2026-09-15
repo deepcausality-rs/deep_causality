@@ -154,3 +154,4 @@ import DeepCausalityFormal.Topology.RiemannCurvature
 import DeepCausalityFormal.Quantum.PartialTrace
 import DeepCausalityFormal.Quantum.PartialTraceCounterexample
 import DeepCausalityFormal.Quantum.Choi
+import DeepCausalityFormal.Quantum.Abstraction

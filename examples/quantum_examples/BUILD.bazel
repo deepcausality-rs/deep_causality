@@ -120,3 +120,39 @@ rust_binary(
         normal_dev = True,
     ),
 )
+
+rust_binary(
+    name = "qcl_concatenated_code",
+    srcs = glob(["qcl_examples/qcl_concatenated_code/**/*.rs"]),
+    crate_root = "qcl_examples/qcl_concatenated_code/main.rs",
+    visibility = ["//visibility:public"],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
+)
+
+rust_binary(
+    name = "qcl_code_switching",
+    srcs = glob(["qcl_examples/qcl_code_switching/**/*.rs"]),
+    crate_root = "qcl_examples/qcl_code_switching/main.rs",
+    visibility = ["//visibility:public"],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
+)
+
+rust_binary(
+    name = "qcl_distillation_round",
+    srcs = glob(["qcl_examples/qcl_distillation_round/**/*.rs"]),
+    crate_root = "qcl_examples/qcl_distillation_round/main.rs",
+    visibility = ["//visibility:public"],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
+)

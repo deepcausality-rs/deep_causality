@@ -87,10 +87,9 @@ workspace = true
 workspace = true
 optional = true
 
-# The square torus of `LatticeComplex`: the two-logical-qubit fixture the Clifford check on one
-# qubit is tested against.
-[dev-dependencies.deep_causality_topology]
-workspace = true
+
+[dev-dependencies]
+deep_causality_topology = { path = "../deep_causality_unified_math/deep_causality_topology" }
 
 [lints]
 workspace = true

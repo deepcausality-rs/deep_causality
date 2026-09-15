@@ -12,7 +12,7 @@ use crate::QuantumError;
 use crate::types::abstraction::alignment_structure::{
     AlignmentStructure, StructureScope, check_alignment_structure,
 };
-use crate::types::abstraction::qc_model::QcModel;
+use crate::types::abstraction::qc_model::{QcModel, QueryType};
 use crate::types::abstraction::query::{Query, QuerySignature};
 use crate::types::abstraction::type_alignment::{AlignmentSide, TypeAlignment};
 use crate::types::circuit_model::{NumericCaps, QcMorphism};
@@ -97,6 +97,12 @@ where
         &self.signature
     }
 
+    /// The two models, the alignment and the query map, for a consumer that rebuilds an
+    /// abstraction from its parts, as `compose` does.
+    pub fn into_parts(self) -> (L, H, TypeAlignment<R>, Vec<(Query, Query)>) {
+        (self.low, self.high, self.alignment, self.query_map)
+    }
+
     /// The query map, as `(high, low)` pairs.
     pub fn query_map(&self) -> &[(Query, Query)] {
         &self.query_map
@@ -169,6 +175,52 @@ where
         low_q: &Query,
         caps: &NumericCaps,
     ) -> Result<(QcMorphism<R>, QcMorphism<R>), QuantumError> {
+        let typed = self.typed_square(high, low_q)?;
+        let tau_in = typed.tau_in(caps)?;
+        let tau_out = typed.tau_out(caps)?;
+        let low_m = self.low.numeric_query(low_q, caps)?;
+        let high_m = self.high.numeric_query(high, caps)?;
+        let left = low_m.then(&tau_out, caps)?;
+        let right = tau_in.then(&high_m, caps)?;
+        Ok((left, right))
+    }
+
+    /// The input-side `τ` of the square for `high` against `low_q`: the morphism from the
+    /// low-level query's input type to the high-level query's input type, classical inputs
+    /// carried as the identity. This is the constant `‖τ₁‖_pre` of the composition law is taken
+    /// on.
+    ///
+    /// # Errors
+    ///
+    /// As [`square_with`](Self::square_with).
+    pub fn tau_in(
+        &self,
+        high: &Query,
+        low_q: &Query,
+        caps: &NumericCaps,
+    ) -> Result<QcMorphism<R>, QuantumError> {
+        self.typed_square(high, low_q)?.tau_in(caps)
+    }
+
+    /// The output-side `τ` of the square for `high` against `low_q`: the morphism from the
+    /// low-level query's output type to the high-level query's output type. This is the morphism
+    /// the constant `‖τ₂‖_post` of the composition law is taken on.
+    ///
+    /// # Errors
+    ///
+    /// As [`square_with`](Self::square_with).
+    pub fn tau_out(
+        &self,
+        high: &Query,
+        low_q: &Query,
+        caps: &NumericCaps,
+    ) -> Result<QcMorphism<R>, QuantumError> {
+        self.typed_square(high, low_q)?.tau_out(caps)
+    }
+
+    /// Both queries validated, typed and aligned: the alignment extended along the queries'
+    /// renamings and checked to send the high-level input and output types to the low-level ones.
+    fn typed_square(&self, high: &Query, low_q: &Query) -> Result<TypedSquare<R>, QuantumError> {
         QuerySignature::new(&self.high.induced_dag(), alloc::vec![high.clone()])?;
         QuerySignature::new(&self.low.induced_dag(), alloc::vec![low_q.clone()])?;
         let th = self.high.query_type(high)?;
@@ -190,27 +242,7 @@ where
                 )));
             }
         }
-        let tau_in = tau_with_classical(
-            &alignment,
-            AlignmentSide::Input,
-            &th.quantum_in,
-            &th.classical_in_counts,
-            &tl.classical_in_counts,
-            caps,
-        )?;
-        let tau_out = tau_with_classical(
-            &alignment,
-            AlignmentSide::Output,
-            &th.quantum_out,
-            &th.classical_out_counts,
-            &tl.classical_out_counts,
-            caps,
-        )?;
-        let low_m = self.low.numeric_query(low_q, caps)?;
-        let high_m = self.high.numeric_query(high, caps)?;
-        let left = low_m.then(&tau_out, caps)?;
-        let right = tau_in.then(&high_m, caps)?;
-        Ok((left, right))
+        Ok(TypedSquare { th, tl, alignment })
     }
 
     /// The concrete, upward form of an `Open` query (Proposition 18): both sides of the square,
@@ -290,4 +322,38 @@ where
         return Ok(quantum);
     }
     quantum.tensor(&QcMorphism::classical_identity(high_classical)?, caps)
+}
+
+/// A square's two query types and the alignment extended to them.
+struct TypedSquare<R: RealField> {
+    th: QueryType,
+    tl: QueryType,
+    alignment: TypeAlignment<R>,
+}
+
+impl<R> TypedSquare<R>
+where
+    R: RealField + FromPrimitive + Default + core::fmt::Debug,
+{
+    fn tau_in(&self, caps: &NumericCaps) -> Result<QcMorphism<R>, QuantumError> {
+        tau_with_classical(
+            &self.alignment,
+            AlignmentSide::Input,
+            &self.th.quantum_in,
+            &self.th.classical_in_counts,
+            &self.tl.classical_in_counts,
+            caps,
+        )
+    }
+
+    fn tau_out(&self, caps: &NumericCaps) -> Result<QcMorphism<R>, QuantumError> {
+        tau_with_classical(
+            &self.alignment,
+            AlignmentSide::Output,
+            &self.th.quantum_out,
+            &self.th.classical_out_counts,
+            &self.tl.classical_out_counts,
+            caps,
+        )
+    }
 }

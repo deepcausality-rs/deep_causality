@@ -158,7 +158,9 @@ where
             }
             let composite = section.then(&tau, &caps)?;
             let identity = QcMorphism::<R>::identity(tau.d_out())?;
-            let (residual, _) = composite.frobenius_distance(&identity, &caps)?;
+            // Through the Gram identity: an alignment on a wide register, the eight-qubit
+            // physical identity of a switching gadget for one, has a Choi operator above the cap.
+            let residual = composite.frobenius_distance_by_gram(&identity)?;
             let tolerance = Tolerance::<R>::state()
                 .threshold(tau.d_out() * tau.d_out(), R::one())
                 .unwrap_or_else(|| R::epsilon().sqrt());

@@ -117,17 +117,17 @@ A commit message is prepared at each group boundary; nothing is committed by the
 
 ## 6. Composition and the three chain consumers
 
-- [ ] 6.1 Add `Abstraction::compose`: `π = π₁ ∘ π₂`, `τ = τ₂ ∘ τ₁`, both constants as the
+- [x] 6.1 Add `Abstraction::compose`: `π = π₁ ∘ π₂`, `τ = τ₂ ∘ τ₁`, both constants as the
       Frobenius-induced norms of `τ₂` and `τ₁` from the Gram matrix of each natural representation
       through `eigen_hermitian`, the norm and the bound in the report's provenance
-- [ ] 6.2 Add `lean/DeepCausalityFormal/Quantum/Abstraction.lean` with Proposition 17 in the exact
+- [x] 6.2 Add `lean/DeepCausalityFormal/Quantum/Abstraction.lean` with Proposition 17 in the exact
       case over the pair-indexed matrix model, and bind it in `lean/THEOREM_MAP.md` to the exact
       composition test; register the Bazel `lean_test` target
-- [ ] 6.3 Add the three chain consumers under `examples/quantum_examples/qcl_examples/`:
+- [x] 6.3 Add the three chain consumers under `examples/quantum_examples/qcl_examples/`:
       the concatenated hand-built `[[4,2,2]]`, code switching with the gadget as low-level query, and a distillation
       round labelled as an example; each with a `rust_binary` in `BUILD.bazel`, a `FloatType` alias
       in `main.rs`, and the lifts from `deep_causality_num`
-- [ ] 6.4 Verify: exact links compose to residual zero; the tightness pair exceeds a bound with
+- [x] 6.4 Verify: exact links compose to residual zero; the tightness pair exceeds a bound with
       either constant set to one; each consumer's measured residual is at most its recorded bound;
       the consumers run at `f32`, `f64` and `Float106`
 

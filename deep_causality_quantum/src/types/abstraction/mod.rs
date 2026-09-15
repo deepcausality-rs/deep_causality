@@ -10,7 +10,9 @@
 #[allow(clippy::module_inception)]
 pub(crate) mod abstraction;
 pub(crate) mod alignment_structure;
+pub(crate) mod chains;
 pub(crate) mod code_abstraction;
+pub(crate) mod composition;
 pub(crate) mod diamond_bound;
 pub(crate) mod fault_set;
 pub(crate) mod fault_tolerance;
@@ -22,7 +24,9 @@ pub(crate) mod type_alignment;
 
 pub use abstraction::*;
 pub use alignment_structure::*;
+pub use chains::*;
 pub use code_abstraction::*;
+pub use composition::*;
 pub use diamond_bound::*;
 pub use fault_set::*;
 pub use fault_tolerance::*;

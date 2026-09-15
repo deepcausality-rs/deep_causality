@@ -433,30 +433,9 @@ impl<W: NaturalNumber> CodeAbstraction<W> {
     where
         R: RealField + FromPrimitive + Default + core::fmt::Debug,
     {
-        let recovery = IdealRecovery::<R>::from_basis(&self.basis)?;
-        let n = self.basis.len();
-        let k = self.basis.num_logical_qubits();
-        let all_low: Vec<usize> = (0..n).collect();
-        let all_high: Vec<usize> = (0..k).collect();
-        let identity = QcMorphism::from_kraus(&[identity_matrix::<R>(1 << k)])?;
         let mut out = Vec::with_capacity(self.gates.len());
         for gate in &self.gates {
             let program = self.program::<R>(gate)?;
-            let low = CircuitModel::ungrouped(
-                vec![WireType::qubit(); n],
-                vec![
-                    CircuitBox::Kraus {
-                        wires: all_low.clone(),
-                        kraus: recovery.encoder().kraus(),
-                    },
-                    CircuitBox::Unitary {
-                        wires: all_low.clone(),
-                        program,
-                    },
-                ],
-                all_high.clone(),
-                all_low.clone(),
-            )?;
             let logical = match gate {
                 LogicalGate::Z(i) => vec![GateOp::Z(*i)],
                 LogicalGate::X(i) => vec![GateOp::X(*i)],
@@ -468,48 +447,89 @@ impl<W: NaturalNumber> CodeAbstraction<W> {
                     target: *j,
                 }],
             };
-            let high = CircuitModel::ungrouped(
-                vec![WireType::qubit(); k],
-                vec![CircuitBox::Unitary {
-                    wires: all_high.clone(),
-                    program: logical,
-                }],
-                all_high.clone(),
-                all_high.clone(),
-            )?;
-            let alignment = TypeAlignment::new_sided(vec![
-                (
-                    AlignmentSide::Input,
-                    (
-                        all_high.clone(),
-                        all_high.clone(),
-                        identity.clone(),
-                        identity.clone(),
-                    ),
-                ),
-                (
-                    AlignmentSide::Output,
-                    (
-                        all_high.clone(),
-                        all_low.clone(),
-                        recovery.recovery().clone(),
-                        recovery.isometry().clone(),
-                    ),
-                ),
-            ])?;
             out.push((
                 gate.clone(),
-                Abstraction::new(
-                    low,
-                    high,
-                    alignment,
-                    vec![
-                        (Query::Io, Query::Io),
-                        (Query::Open(vec![0]), Query::Open(vec![1])),
-                    ],
-                )?,
+                self.numeric_abstraction_of::<R>(&logical, program, true)?,
             ));
         }
         Ok(out)
+    }
+
+    /// The numeric abstraction of one logical program against one physical program, in the shape
+    /// of Example 58: the low-level model is the encoder followed by `physical` on the `n` code
+    /// qubits with the first `k` wires as inputs, the high-level model is `logical` on `k` qubits,
+    /// the input types align by the identity and the output types through the ideal recovery.
+    /// The query map carries `Io`, and the opening of the logical program against the opening of
+    /// the physical one when `with_open` is set. `physical` need not be an emitted program: the
+    /// chains concatenate emitted programs and encode them further.
+    ///
+    /// # Errors
+    ///
+    /// [`IdealRecovery::from_basis`]'s errors, a logical gate outside `k` qubits, and the
+    /// constructors'.
+    pub fn numeric_abstraction_of<R>(
+        &self,
+        logical: &[GateOp],
+        physical: Vec<GateOp>,
+        with_open: bool,
+    ) -> Result<Abstraction<R, CircuitModel<R>, CircuitModel<R>>, QuantumError>
+    where
+        R: RealField + FromPrimitive + Default + core::fmt::Debug,
+    {
+        let recovery = IdealRecovery::<R>::from_basis(&self.basis)?;
+        let n = self.basis.len();
+        let k = self.basis.num_logical_qubits();
+        let all_low: Vec<usize> = (0..n).collect();
+        let all_high: Vec<usize> = (0..k).collect();
+        let identity = QcMorphism::from_kraus(&[identity_matrix::<R>(1 << k)])?;
+        let low = CircuitModel::ungrouped(
+            vec![WireType::qubit(); n],
+            vec![
+                CircuitBox::Kraus {
+                    wires: all_low.clone(),
+                    kraus: recovery.encoder().kraus(),
+                },
+                CircuitBox::Unitary {
+                    wires: all_low.clone(),
+                    program: physical,
+                },
+            ],
+            all_high.clone(),
+            all_low.clone(),
+        )?;
+        let high = CircuitModel::ungrouped(
+            vec![WireType::qubit(); k],
+            vec![CircuitBox::Unitary {
+                wires: all_high.clone(),
+                program: logical.to_vec(),
+            }],
+            all_high.clone(),
+            all_high.clone(),
+        )?;
+        let alignment = TypeAlignment::new_sided(vec![
+            (
+                AlignmentSide::Input,
+                (
+                    all_high.clone(),
+                    all_high.clone(),
+                    identity.clone(),
+                    identity,
+                ),
+            ),
+            (
+                AlignmentSide::Output,
+                (
+                    all_high,
+                    all_low,
+                    recovery.recovery().clone(),
+                    recovery.isometry().clone(),
+                ),
+            ),
+        ])?;
+        let mut map = vec![(Query::Io, Query::Io)];
+        if with_open {
+            map.push((Query::Open(vec![0]), Query::Open(vec![1])));
+        }
+        Abstraction::new(low, high, alignment, map)
     }
 }
