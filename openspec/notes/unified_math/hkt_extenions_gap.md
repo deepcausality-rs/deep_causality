@@ -56,32 +56,65 @@ Ranked by value over cost. Rows 1–4 are delegation onto structure that already
 | 2 | ~~`ManifoldWitness` (`topology`)~~ | ~~`Traversable`~~; `DiagonalTraversable` **not feasible** | yes — `Traversable<F>: Functor<F> + Foldable<F>`, both implemented at `hkt_manifold/mod.rs:75` | inventory row: has HKT/Functor/Pure/Applicative/Monad/CoMonad/Foldable, lacks only Traversable; `tensor` and `linear` both have it | `Manifold<C, Result<T,E>>` collapses to `Result<Manifold<C,T>, E>` — one failing vertex invalidates the field, which a DEC pipeline hand-rolls today~~ | **closed 2026-09-15**; diagonal half blocked, see below |
 | 3 | ~~`ZipTensorWitness` (`tensor`), `ZipDenseVectorWitness` (`linear`)~~ | ~~`Foldable`~~ | — | — | — | **closed 2026-09-15**, both halves |
 | 4 | ~~`CausalMultiVectorWitness` (`multivector`)~~ | ~~`Traversable`~~ | — | — | — | **closed 2026-09-15**; see below |
-| 5 | `stats` (13 distribution types), `rand` (`Map`, `Uniform`, `StandardWord`, `StandardBool`) | `Arrow` | n/a — needs a new `→ haft` edge in each crate | `grep -rn deep_causality_haft stats/Cargo.toml rand/Cargo.toml` returns nothing today | `Map`/`Iter` become `Compose`/`arr`; sampler pipelines compose with `first`/`split`/`fanout`; inherits the `haft.arrow.*` Lean proofs | **consumer-gated, see below** |
+| 5 | `stats` (13 distribution types), `rand` (`Map`, `Uniform`, `StandardWord`, `StandardBool`) | `Arrow` | n/a — needs a new `→ haft` edge in each crate | `grep -rn deep_causality_haft stats/Cargo.toml rand/Cargo.toml` returns nothing today | sampler pipelines compose with `compose`/`first`/`split`; inherits the `haft.arrow.*` Lean proofs | **declined — reachable, no consumer; see below** |
 
-**Row 5 is closed as not feasible, 2026-09-15.** The direct impls cannot be written.
-`Arrow::run(&self, input: Self::In) -> Self::Out` fixes `In` as one associated type at impl time,
-while `Distribution::sample<R: Rng>(&self, rng: &mut R)` needs a fresh mutable borrow of a
-*generic* generator on every call. Writing it gives `error[E0207]` twice on the same line — the
-type parameter `R` and the lifetime `'a` both appear only inside `type In = &'a mut R`, and an
-associated type does not constrain an impl parameter. `uncertain` clears the same wall only because
-its draws are pure functions of an address, so `In = SampleIndex` and there is no generator to
-borrow; `rand`'s generators are stateful and have no address.
+**Row 5 is declined, 2026-09-15 — for want of a consumer, not for want of a way.** An earlier
+revision of this section called it "not feasible". That was half right and is corrected here,
+because the half that is wrong would have stopped someone who should not be stopped.
 
-A wrapper carrying the lifetime and the generics does work — `Sampler<'a, D, R, T>(&'a D, …)` with
-`R: Rng + 'a`, measured to run twice, advance the generator and compose with `Lift`. It was not
-taken: the four named types still would not implement `Arrow`, `In = &'a mut R` is not `Clone` so
-`fanout` and the rest of the duplicating combinators stay unavailable, and the tier move buys an
-instance no caller wants. Making `rand`'s draws addressed, as `uncertain`'s are, is the change that
-would earn the layer; it is a sampling-model change rather than a trait-surface one.
+**What is genuinely impossible: the direct reading.** `Arrow::run(&self, input: Self::In) ->
+Self::Out` fixes `In` as one associated type at impl time, while
+`Distribution::sample<R: Rng>(&self, rng: &mut R)` needs a fresh mutable borrow of a *generic*
+generator on every call. Writing it gives `error[E0207]` twice on the same line — the type
+parameter `R` and the lifetime `'a` both appear only inside `type In = &'a mut R`, and an
+associated type does not constrain an impl parameter. Measured in both crates, on
+`StandardWord` and on `Normal<f64>`.
 
-**The rest of row 5 as originally written.** `hkt_gaps.md` §3.4 reached the same conclusion — the container
-traits are for data, a lazy sampler is a program, and `haft`'s home for programs is `Arrow` — and
-recorded that such a change *"on its own changes no call site in the workspace."* It is the trap
-§6 of that note flags for `NaturalTransformation`: the dependency is **a consumer**, not code. It
-is listed here because the count is large and someone will rediscover it otherwise, not because it
-should be built. A blanket `impl<D: Distribution<T>> Arrow for D` would collapse it to one impl per
-crate, but is unavailable: `Arrow` is foreign to both crates and the self type would be an
-uncovered parameter, so it is one impl per concrete type.
+A wrapper restores it: `Sampler<'a, D, R, T>(&'a D, …)` with `R: Rng + 'a`, measured to run twice,
+advance the generator and compose with `Lift`. It was not taken — the named types still would not
+implement `Arrow`, and `In = &'a mut R` is not `Clone`, so `fanout` and the rest of the duplicating
+combinators stay out of reach.
+
+**What is possible, and cheaper than this note first claimed: the addressed reading.** Replace the
+borrow with an address — `type In = (u64, u64)` for `(seed, index)` — and the impls compile
+directly on the distribution types, no wrapper. Measured on `Normal<f64>` in `deep_causality_stats`
+with only a `stats -> haft` edge added:
+
+```rust
+fn run(&self, (seed, index): (u64, u64)) -> f64 {
+    let addr = seed ^ index.wrapping_mul(0x9E37_79B9_7F4A_7C15);
+    self.sample(&mut Xoshiro256::from_seed(addr))
+}
+```
+
+Distinct indices give distinct draws, the same address reproduces its draw, and index 1 000 000
+costs what index 1 costs. **It is O(1)**, because `Xoshiro256::from_seed` already applies a full
+SplitMix64 expansion (`types/rand/std_rng.rs:82`), so one combine is all an address needs.
+
+**A correction about `draw_seed`.** This note previously suggested that moving
+`deep_causality_uncertain::draw_seed` down to `rand` was what would unlock the layer. It is not,
+and the probe above is the disproof: the O(1) addressed form needs nothing from `uncertain`.
+`draw_seed` is a better mixer — MurmurHash3's `fmix64`, deliberately a different function from the
+`SplitMix64` that `from_seed` applies, so the two stages are not one function run twice — and it
+takes a third argument, `ordinal`, that `stats` has no use for. Moving it is a quality choice worth
+making *if and when* the two crates' addressing must agree. It enables nothing on its own.
+
+**Why it is still declined.** Not cost: the change is one `stats -> haft` edge with **no tier
+move** (`stats` stays at tier 4 through `linear`), and thirteen impls of four lines. The objection
+is what the impls would commit to. `Arrow` on a sampler redefines what sampling *is* — from
+"advance this generator" to "evaluate at this address" — and the crate would then carry both
+readings permanently, `run((seed, i))` beside `sample(&mut rng)`. `hkt_gaps.md` §3.4 recorded that
+such a change *"on its own changes no call site in the workspace."* That is the trap §6 of that
+note flags for `NaturalTransformation`: the dependency is **a consumer**, not code.
+
+**What would change the answer.** A caller that wants sampler pipelines composing through
+`compose`/`first`/`split`. On the day one appears, this is a small self-contained change rather
+than the three-crate refactor an earlier revision of this note described — and that is the day to
+move `draw_seed` down, so `stats` and `uncertain` address draws the same way.
+
+A blanket `impl<D: Distribution<T>> Arrow for D` is unavailable in either reading: `Arrow` is
+foreign to both crates and the self type would be an uncovered parameter, so it is one impl per
+concrete type.
 
 ## 3. Crates ranked by HKT traits gained
 
@@ -96,10 +129,10 @@ Sorted by the count of new trait implementations each crate would receive.
 | — | ~~`linear`~~ | ~~1~~ | ~~`Foldable` on `ZipDenseVectorWitness`~~ | **closed 2026-09-15**: 4 witnesses, 14 traits | — |
 | — | ~~`multivector`~~ | ~~1~~ | ~~`Traversable` on `CausalMultiVectorWitness`~~ | **closed 2026-09-15**: 2 witnesses, 7 traits | — |
 
-**27 impls scoped; 9 landed, 1 found not feasible, 17 closed as not worth their cost.** The
-mechanical work is complete. What remains is row 5's `Arrow` layer, closed above as unreachable
-without a sampling-model change, and `DiagonalTraversable` on `ManifoldWitness`, blocked by that
-type's own invariant.
+**27 impls scoped; 9 landed, 1 found not feasible, 17 declined.** The mechanical work is complete.
+What remains is row 5's seventeen `Arrow` impls — reachable in the addressed reading, declined for
+want of a consumer — and `DiagonalTraversable` on `ManifoldWitness`, which is the one genuine
+impossibility, blocked by that type's own invariant.
 
 ### Closed: `Foldable` × 5 and `Traversable` on `ManifoldWitness`, 2026-09-15
 
