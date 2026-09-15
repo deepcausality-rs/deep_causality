@@ -17,15 +17,7 @@
 //! `4√2 (sin 0.15 + sin 0.55) ≈ 3.80`; the bound with `pre = 1` is `4√2 sin 0.15 + 4 sin 0.55 ≈
 //! 2.94` and with `post = 1` `4 sin 0.15 + 4√2 sin 0.55 ≈ 3.55`, both below the measured value.
 //!
-//! Corner-case rows. A empty: a chain whose second link maps no query has an empty law that
-//! holds. B one: one query per chain. C boundary: `holds` admits the state tolerance. D
-//! symmetry-breaking: three distinct angles, the traced wires depolarised on one side only in the
-//! error test. E error text: a missing image names the query. F zero: exact links compose to
-//! zero. G partial: a two-sided entry over a sided alignment splits. H ill-typed: a middle type
-//! not covered names the wire. I classical: none here. J order: the composite output entry lists
-//! the eight low wires ascending. K precision: `f64`; the examples run at three scalars.
-
-use deep_causality_num_complex::Complex;
+//! Corner-case rows covered by the tests below.
 use deep_causality_quantum::utils_tests::four_two_two;
 use deep_causality_quantum::{
     Abstraction, AlignmentSide, Axis, COMPOSITION_NORM, CheckVerdict, CircuitBox, CircuitModel,
