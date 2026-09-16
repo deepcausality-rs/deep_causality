@@ -87,26 +87,19 @@ pub struct TopologyReading {
 /// filled, connected sample reads 1. Enclosing a void drops it to 0 or below, which is the reading
 /// a necrotic core produces.
 ///
-/// The alternating sum is a fold over the grades, so a complex carrying tetrahedra and higher
-/// cells contributes them on the same rule.
+/// `BaseTopology::euler_characteristic` supplies it. That trait sits under every topological
+/// structure in the workspace, so a point cloud, a graph and a complex all answer the same
+/// question the same way. It also answers for a complex whose vertex links fail the manifold
+/// conditions, and the Vietoris-Rips complex of a sampled surface is exactly such a complex.
 pub fn read_topology(sample: &Sample) -> Result<TopologyReading, TopologyError> {
     let complex = sample.triangulate(lift::<FloatType>(RIPS_RADIUS))?;
     let at = |grade: usize| complex.num_elements_at_grade(grade).unwrap_or(0);
-
-    let euler_characteristic = (0..=complex.dimension()).fold(0isize, |chi, grade| {
-        let count = at(grade) as isize;
-        if grade % 2 == 0 {
-            chi + count
-        } else {
-            chi - count
-        }
-    });
 
     Ok(TopologyReading {
         vertices: at(0),
         edges: at(1),
         triangles: at(2),
-        euler_characteristic,
+        euler_characteristic: complex.euler_characteristic(),
     })
 }
 

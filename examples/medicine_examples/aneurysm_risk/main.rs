@@ -76,7 +76,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let right = if i + 1 < N_NODES { tau[i + 1] } else { tau[i] };
         Real::abs(right - left) / (lift::<FloatType>(2.0) * node_spacing)
     });
-
     print_profile(&shear, &gradient, N_NODES);
 
     // fold: the lowest shear anywhere on the segment, which is the dome floor. Node 0 sits in the

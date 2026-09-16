@@ -5,14 +5,15 @@
 
 use alloc::format;
 use alloc::string::String;
-use core::fmt::{Debug, Display, Formatter};
+
 use core::error::Error;
+use core::fmt::{Debug, Display, Formatter};
 use deep_causality_core::{CausalityError, CausalityErrorEnum};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct PhysicsError(pub PhysicsErrorEnum);
 
-impl Error for PhysicsError{}
+impl Error for PhysicsError {}
 
 /// Detailed classification of physics-related errors.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
