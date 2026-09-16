@@ -107,11 +107,7 @@ fn test_project_bloch_vector_of_the_six_cardinal_states() {
 
     for (name, alpha, beta, expected) in cardinal {
         let bloch = HopfState::from_spinor(alpha, beta).project();
-        let got = [
-            bloch.data()[E1],
-            bloch.data()[E2],
-            bloch.data()[E3],
-        ];
+        let got = [bloch.data()[E1], bloch.data()[E2], bloch.data()[E3]];
 
         for (axis, (got, want)) in got.iter().zip(expected.iter()).enumerate() {
             assert!(
