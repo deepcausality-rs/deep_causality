@@ -26,6 +26,18 @@ rust_binary(
 )
 
 rust_binary(
+    name = "chronometric_gm_recovery",
+    srcs = glob(["chronometric_gm_recovery/**/*.rs"]),
+    crate_root = "chronometric_gm_recovery/main.rs",
+    visibility = ["//visibility:public"],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
+)
+
+rust_binary(
     name = "event_horizon_probe",
     srcs = glob(["event_horizon_probe/**/*.rs"]),
     crate_root = "event_horizon_probe/main.rs",
@@ -155,4 +167,16 @@ rust_binary(
         # Cargo `[[example]]` targets link dev-dependencies.
         normal_dev = True,
     ),
+)
+
+# The Galileo E14 products that `//deep_causality_utils/deep_causality_file:integration` parses.
+# The files live in this package, under the `chronometric_gm_recovery` example, so the filegroup
+# that carries them into that test's runfiles is declared here.
+filegroup(
+    name = "gnss_e14_fixtures",
+    srcs = [
+        "chronometric_gm_recovery/data/gnss/gbm18770.clk",
+        "chronometric_gm_recovery/data/gnss/gbm18770.sp3",
+    ],
+    visibility = ["//visibility:public"],
 )

@@ -12,8 +12,8 @@ path = "no_lib.rs"
 
 
 [dependencies]
+chrono = { workspace = true }
 deep_causality = { workspace = true }
-deep_causality_stats = { workspace = true, features = ["std"] }
 deep_causality_core = { workspace = true, features = ["default"] }
 deep_causality_calculus = { workspace = true, features = ["default"] }
 deep_causality_physics = { workspace = true, features = ["default", "os-random"] }
@@ -21,12 +21,14 @@ deep_causality_quantum = { workspace = true , features = ["default"]}
 deep_causality_multivector = { workspace = true, features = ["default"] }
 deep_causality_tensor = { workspace = true, features = ["default"] }
 deep_causality_topology = { workspace = true }
+deep_causality_stats = { workspace = true, features = ["default"] }
 deep_causality_num = { workspace = true, features = ["default"] }
 deep_causality_num_complex = { workspace = true, features = ["default"] }
 deep_causality_num_dual = { workspace = true, features = ["default"] }
 deep_causality_algebra = { workspace = true, features = ["default"] }
 deep_causality_linear = { workspace = true, features = ["default"] }
 deep_causality_rand = { workspace = true, features = ["os-random"] }
+deep_causality_file = { workspace = true }
 
 [[example]]
 name = "bernoulli_flow_network"
@@ -35,6 +37,10 @@ path = "bernoulli_flow_network/main.rs"
 [[example]]
 name = "carnot_cycle_engine"
 path = "carnot_cycle_engine/main.rs"
+
+[[example]]
+name = "chronometric_gm_recovery"
+path = "chronometric_gm_recovery/main.rs"
 
 [[example]]
 name = "event_horizon_probe"

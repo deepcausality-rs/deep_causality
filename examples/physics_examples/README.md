@@ -24,6 +24,7 @@ cargo run -p physics_examples --example <example_name>
 | [geometric_tilt_example](geometric_tilt/README.md) | Robotics/IMU | Sensor fusion with Geometric Algebra |
 | [multi_physics_pipeline](multi_physics_pipeline/README.md) | Particle Physics | QFT → Hadronization → Hydro → Detection |
 | [gravitational_wave](gravitational_wave/README.md) | Relativity | Regge Calculus on simplicial mesh |
+| [chronometric_gm_recovery](chronometric_gm_recovery/README.md) | Chronometric Geodesy | Earth's $GM_\oplus$ and mass inverted from Galileo satellite clock time-dilation |
 
 > **See also:** [medicine_examples](../medicine_examples/README.md) for biophysics examples (protein folding, etc.)
 

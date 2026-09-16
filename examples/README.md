@@ -15,7 +15,6 @@ This directory contains examples demonstrating various features and applications
 | [CSM Examples](#csm-examples) | Causal State Machine patterns                                       |
 | [Core Examples](#core-examples) | PropagatingEffect and PropagatingProcess fundamentals               |
 | [Avionics Examples](#avionics-examples) | High-assurance GNC and Safety Critical Systems                      |
-| [Chronometric Examples](#chronometric-examples) | Chronometric geodesy from satellite clock data                      |
 | [Mathematics Examples](#mathematics-examples) | Multi-mathematics composition (HKT, Causal Monad)                   |
 | [Physics Examples](#physics-examples) | Multi-physics simulations with Geometric Algebra                    |
 | [Quantum Examples](#quantum-examples) | Quantum computing, quantum geometry, topological matter, electroweak loops, quantum gravity |
@@ -210,22 +209,6 @@ See [avionics_examples/README.md](avionics_examples/README.md) for detailed docu
 
 > The CFD/MMS verification examples (Taylor–Green MMS, Re-1600 DEC solver, lid-driven cavity, graded-MMS, cylinder) have moved into the `deep_causality_cfd` crate as self-verifying examples under `deep_causality_cfd/verification/`; run them with `cargo run -p deep_causality_cfd --example <name>_verification`.
 
----
-
-## Chronometric Examples
-
-**Location:** `examples/chronometric_examples`
-
-Chronometric geodesy demonstrations using the J2-corrected weak-field 1PN kernel from `deep_causality_physics::chronometric`. Recovers gravitational parameters from satellite clock time-dilation data, with `CausalMonad` bind-chain composition end-to-end.
-
-| Example | Domain | Description | Command |
-|---------|--------|-------------|---------|
-| gm_recovery | Geodesy | Recovers Earth's geocentric gravitational constant ($GM_\oplus$) and derived planetary mass ($M_\oplus = GM_\oplus / G$) from one full GPS week of Galileo broadcast clock and SP3 orbit data (satellite E14). Validates against published JGM-3 / IERS 2010 references at ~0.2 % relative error | `cargo run -p chronometric_examples --example gm_recovery` |
-
-See [chronometric_examples/README.md](chronometric_examples/README.md) for detailed documentation.
-
----
-
 ## Mathematics Examples
 
 **Location:** `examples/mathematics_examples`
@@ -274,7 +257,9 @@ table of all 77 registered examples and the precision-abstraction decision tree
 
 **Location:** `examples/physics_examples`
 
-Multi-physics simulations using Geometric Algebra, Tensor operations, and Topology.
+Multi-physics simulations using Geometric Algebra, Tensor operations, and Topology,
+plus chronometric geodesy that inverts the J2-corrected weak-field 1PN kernel from
+`deep_causality_physics::chronometric`.
 
 | Example | Domain | Command |
 |---------|--------|---------|
@@ -292,6 +277,7 @@ Multi-physics simulations using Geometric Algebra, Tensor operations, and Topolo
 | Gauge GR | General Relativity | `cargo run -p physics_examples --example gauge_gr` |
 | Gauge Weak Force | Weak Force | `cargo run -p physics_examples --example gauge_weak_force` |
 | Gauge Lattice U(1) 2D | Lattice Gauge | `cargo run -p physics_examples --example gauge_lattice_u1_2d` |
+| Chronometric GM Recovery | Chronometric Geodesy | `cargo run -p physics_examples --example chronometric_gm_recovery` |
 
 See [physics_examples/README.md](physics_examples/README.md) for detailed documentation.
 

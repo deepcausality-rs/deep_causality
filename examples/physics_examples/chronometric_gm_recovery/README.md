@@ -27,7 +27,7 @@ compose further with either causal monads or causaloids.
 ## Running It
 
 ```bash
-cargo run -p chronometric_examples --example gm_recovery --release
+cargo run -p physics_examples --example chronometric_gm_recovery --release
 ```
 
 Real Galileo broadcast clock and SP3 orbit data ship with the example: one
@@ -198,7 +198,7 @@ Bjerhammar (1975) and Vermeer (1983) established this kind of inversion as
 the foundation of chronometric geodesy. The kernel implements it directly,
 generic over any precision type that satisfies `RealField + From<f64>`. See
 the [chronometric kernel
-documentation](../../deep_causality_physics/src/chronometric/) for the full
+documentation](../../../deep_causality_physics/src/kernels/chronometric/) for the full
 assumption envelope and the regimes where the method stops working.
 
 ## Scope and Limitations
