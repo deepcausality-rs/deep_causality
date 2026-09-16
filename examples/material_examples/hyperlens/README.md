@@ -1,50 +1,124 @@
-# Hyperbolic Metamaterial Lens (Hyperlens)
+# Hyperbolic Metamaterial Lens
 
-A demonstration of **Super-Resolution Imaging** using DeepCausality's `multivector` and `physics` crates.
+An ordinary lens cannot resolve detail finer than the light it uses. This example shows why, and
+shows one way around it, with the material described by nothing but a metric signature.
 
-## Overview
-
-Traditional lenses are limited by the **Diffraction Limit**: they cannot resolve features smaller than half the wavelength of light ($\lambda/2$). This is because the light waves carrying precise details (high spatial frequencies, $k > k_0$) decay exponentially in vacuum (Evanescent Waves).
-
-A **Hyperlens** uses a metamaterial with a hyperbolic dispersion relation (achieved by anisotropic permittivity $\epsilon$). This changes the "topology" of momentum space from a closed sphere (limiting max $k$) to an open hyperbola (allowing infinite $k$).
-
-## The Physics
-
-### Vacuum (Euclidean Metric)
-The dispersion relation is spherical:
-$$ k_x^2 + k_y^2 + k_z^2 = (\frac{\omega}{c})^2 $$
-If $k_x$ is large (fine detail), $k_z^2$ becomes negative, so $k_z$ is imaginary $\to$ Decay.
-
-### Hyperlens (Indefinite Metric)
-The metamaterial has separate $\epsilon$ components with opposite signs. The underlying metric signature mimics Minkowski space (+ - -) in the spatial domain:
-$$ \frac{k_x^2}{\epsilon_z} + \frac{k_z^2}{\epsilon_x} = (\frac{\omega}{c})^2 $$
-If $\epsilon_z < 0 < \epsilon_x$, the equation becomes hyperbolic. Large $k_x$ values are balanced by large $k_z$ values, keeping the equation valid with **Real** $k_z$. The wave propagates!
-
-## Key Concepts
-
-*   **`Metric::Generic`**: We define a custom metric signature `Generic { p: 1, q: 2, r: 0 }` to represent the material property.
-*   **Sub-Diffraction Imaging**: The simulation shows that for a source separation of 100nm (with 500nm light), the signal decays in vacuum but propagates in the Hyperlens.
-
-## Run Command
+It is a demonstration rather than a solver. The point is that once the essence of the problem is
+written as a causal process over the library's types, precision as a parameter and categorical
+composition come for free: the same source runs at four scalars, and the sweep is a `fmap` and a
+`fold`. [What this example is, and where it stops](#what-this-example-is-and-where-it-stops) says
+what the model holds fixed and how it grows toward a device-grade treatment.
 
 ```bash
 cargo run -p material_examples --example hyperlens_example
 ```
 
-## Expected Output
+## The physics
+
+Fine detail is carried by high spatial frequencies. A periodic object of period `d` carries
+`k_x = 2π/d`, and a wave leaving it has an out-of-plane wavenumber set by the dispersion relation.
+For a TM wave in a uniaxial medium:
 
 ```text
-[1] Defined Vacuum Metric: Euclidean(3)
-[1] Defined Hyperlens Metric: Generic(1, 2, 0)
-
-[3] Simulating Sub-Wavelength Transmission...
-    Light Wavelength: 500 nm
-    Source Separation: 100 nm (Sub-diffraction limit)
-
-    -> Vacuum Verdict: k_z^2 is Negative.
-       Result: EVANESCENT DECAY.
-
-    -> Hyperlens Verdict: k_z^2 is Positive.
-       Result: PROPAGATION.
-       [SUCCESS] Super-Resolution Achieved.
+k_x²/ε_z + k_z²/ε_x = k₀²        so        k_z² = ε_x·(k₀² − k_x²/ε_z)
 ```
+
+A positive `k_z²` propagates. A negative one is evanescent: it decays instead of carrying its
+detail to the far field.
+
+**In vacuum** every principal permittivity is positive, the relation is a sphere, and a large
+`k_x` drives `k_z²` negative. The cutoff is `k_x = k₀`, which is `d = λ`.
+
+**In a Type I hyperbolic metamaterial** `ε_z` is negative while `ε_x = ε_y` stay positive. The
+second term changes sign, the surface opens from a sphere into a hyperboloid, and `k_z²` stays
+positive at every `k_x`. Nothing bounds the detail that propagates.
+
+## The metric is the material
+
+A sign pattern over principal axes is exactly what a metric signature carries, so the two
+materials are two metrics:
+
+| Material | Metric | Signature | ε_x | ε_y | ε_z |
+|---|---|---|---|---|---|
+| vacuum | `Metric::Euclidean(3)` | (+, +, +) | +1 | +1 | +1 |
+| Type I metamaterial | `Metric::Generic { p: 2, q: 1, r: 0 }` | (+, +, −) | +1 | +1 | −1 |
+
+`model::permittivity` reads each sign with `Metric::sign_of_sq`, so the optics never writes a sign
+of its own. Swapping the metric swaps the physics, and that is the whole claim this example makes.
+
+## What the code demonstrates
+
+Two categorical operations sweep a range of object periods:
+
+| Operation | Reads | Produces |
+|---|---|---|
+| `fmap` | one period | its `k_z²`, from the dispersion relation |
+| `fold` | the whole sweep | the finest period that still propagates |
+
+`fmap` applies the relation pointwise; the relation itself never sees the sweep. `fold` pairs each
+period with its own result and reduces to the resolution limit.
+
+## Output
+
+```text
+  period     vacuum k_z^2   outcome       lens k_z^2     outcome
+    1000       +1.184e-4   propagates      +1.974e-4   propagates
+     500        +0.000e0   propagates      +3.158e-4   propagates
+     400       -8.883e-5   evanescent      +4.047e-4   propagates
+      50       -1.563e-2   evanescent      +1.595e-2   propagates
+
+Resolution limit, the finest period that still propagates
+  vacuum                500 nm, which is the wavelength itself
+  Type I metamaterial   50 nm, the finest period probed
+```
+
+Vacuum cuts off at exactly `d = λ = 500 nm`, where `k_z²` reaches zero. The metamaterial propagates
+every period in the sweep, so its limit is set by how fine an object is probed rather than by the
+optics.
+
+## Precision is a parameter
+
+```rust
+pub type FloatType = Float106;
+```
+
+Every constant is declared at that type through `const_scalar_from_int!` and
+`const_scalar_from_float!`, so no conversion runs at any call site. It sits at `Float106` rather
+than `f64` on purpose: a hard-coded `f64` is invisible while the alias *is* `f64`, and a compile
+error the moment the two differ. All four scalars run.
+
+## What the example covers
+
+The goal here is to reformulate the essence of a physical problem as a causal process, and to get
+precision as a parameter and categorical composition for free once it is in that form. The essence
+of a hyperlens is one sign flip in a signature, so the model keeps that and holds everything else
+fixed: both permittivity magnitudes sit at 1, the medium is unbounded and lossless, and the
+illumination is a single frequency. What remains is the mechanism, and the mechanism is the claim.
+
+A production-grade solver adds the parts a device needs: magnitudes that differ per axis and vary
+with frequency, a complex permittivity carrying loss, a finite layer stack with its own reflections,
+and the curved geometry that magnifies the near field out to where a detector sits.
+
+## How to grow the example toward a complete solver
+
+Each step keeps the structure already here.
+
+- **Per-axis and frequency-dependent magnitudes.** `permittivity` already takes an axis, so only
+  its magnitude source changes: a per-axis table, then a Drude or Lorentz model in the frequency.
+  Sweeping period against frequency makes the tensor rank 2, and the `fmap` carries over untouched.
+- **Loss.** A lossy medium has a complex permittivity, and the dispersion relation is the same
+  expression over `Complex<FloatType>`, with the imaginary part of `k_z` giving the decay length.
+  The one change is writing the relation over a scalar bound instead of the alias, which is what
+  lets one definition serve both scalars.
+- **A finite layer stack.** A real hyperlens is alternating layers, and a stack is a product of
+  transfer matrices: `DenseMatrix` for the matrices and a `fold` for the product.
+- **Curved geometry.** A cylindrical hyperlens magnifies as it propagates, which the topology crate
+  carries as a manifold with the sweep as its payload.
+
+## Files
+
+| File | Holds |
+|---|---|
+| `main.rs` | the alias and the two categorical operations |
+| `model.rs` | the optics constants, the metric-to-permittivity reading, the dispersion relation |
+| `utils_print.rs` | the presentation, and the only `lower` calls |

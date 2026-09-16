@@ -1317,8 +1317,11 @@ checksum = "fc04a4c58212d57930a24bf47d3fa87485264a3a054e9c10e042eb373573ad3c"
 name = "material_examples"
 version = "0.1.0"
 dependencies = [
+ "deep_causality_algebra",
  "deep_causality_core",
- "deep_causality_multivector",
+ "deep_causality_haft",
+ "deep_causality_metric",
+ "deep_causality_num",
  "deep_causality_tensor",
  "deep_causality_topology",
 ]
