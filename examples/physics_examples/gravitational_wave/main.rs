@@ -24,10 +24,18 @@
 //! and the run measures exactly that:
 //!
 //! ```text
-//! causal      ring k cannot move before step k: no signal outruns the stencil
+//! complete    every ring outside the pulse is reached within the run
 //! ordered     no ring starts moving before the one inside it
-//! bounded     the amplitude stays finite, as an explicit leapfrog does for C <= 1
+//! causal      ring k cannot move before step k: no signal outruns the stencil
+//! peak        over the run, the peak stays below a small multiple of the initial amplitude
 //! ```
+//!
+//! The first three together are what "an outward front" means; a ring that never moved would
+//! make the ordering and speed claims vacuous, so the run requires every ring to arrive before
+//! it reports them. The last is a threshold on the sampled peak over `STEPS` steps: an explicit
+//! leapfrog at `C <= 1` should stay below it, and a run that does not has gone wrong, but a
+//! finite window cannot prove stability and the report does not say it does. A failed check is
+//! a failed run: `main` returns the error and the process exits with a nonzero status.
 //!
 //! The *leading edge* advances at one ring per step, which is the numerical domain of
 //! dependence of a nearest-neighbour stencil rather than the physical wave speed; the Courant
@@ -42,7 +50,7 @@
 //! - `ReggeGeometry::calculate_ricci_curvature` (deficit angles as the curvature source)
 
 use deep_causality_algebra::Real;
-use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lower};
+use deep_causality_num::{Float106, const_scalar_from_float, const_scalar_from_int, lower};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     BaseTopology, ReggeGeometry, Simplex, SimplicialComplex, SimplicialComplexBuilder,
@@ -65,9 +73,9 @@ const COURANT: FloatType = const_scalar_from_float!(FloatType, 0.5);
 const STEPS: usize = 16;
 /// An edge counts as disturbed once it moves this far from its rest length.
 const ARRIVAL_THRESHOLD: FloatType = const_scalar_from_float!(FloatType, 1e-4);
-/// The pulse may not exceed this multiple of its initial amplitude. A leapfrog at `C <= 1` is
-/// stable, so growth past a small factor means the scheme has gone unstable rather than
-/// propagated. Set above one because focusing at the centre genuinely amplifies briefly.
+/// The sampled peak may not exceed this multiple of the initial amplitude within the run. A
+/// leapfrog at `C <= 1` is stable, so growth past a small factor over `STEPS` steps means the
+/// scheme has gone wrong. Set above one because focusing at the centre amplifies briefly.
 const GROWTH_BOUND: FloatType = const_scalar_from_int!(FloatType, 4);
 
 /// Small whole numbers, declared once at the working type.
@@ -77,10 +85,19 @@ const HALF: FloatType = const_scalar_from_float!(FloatType, 0.5);
 /// Displacements are reported in thousandths.
 const MILLI: FloatType = const_scalar_from_int!(FloatType, 1000);
 
-/// `f64` is the right precision here: the leapfrog's error is its `O(dt^2)` truncation, which is
-/// about `1e-1` at this Courant number and swamps rounding by fourteen orders of magnitude.
-/// `Float106` would refine nothing the discretization has not already coarsened.
-pub type FloatType = f64;
+/// The working scalar. Switch it to `f32`, `f64` or `deep_causality_num::BFloat16`; the mesh,
+/// the deficit angles, the leapfrog and the front analysis all recompute at that precision.
+///
+/// It sits at [`Float106`] by default on purpose. A hard-coded `f64` anywhere in the program is
+/// invisible while the alias *is* `f64`, and shows up here as a compile error the moment the two
+/// types differ. The leapfrog's own error is its `O(dt^2)` truncation, so the extra digits
+/// change no reported figure; they are there to keep the program honest about its precision.
+///
+/// `BFloat16` runs, and fails the propagation checks: eight significand bits resolve a unit
+/// edge to about `8e-3`, and the deficit angles come from Cayley-Menger determinants of such
+/// lengths, so their rounding noise crosses the `1e-4` arrival threshold on every ring at once.
+/// The run reports that and exits with an error, which is the right outcome at that precision.
+pub type FloatType = Float106;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
@@ -94,12 +111,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let front = front_analysis(&mesh, &history);
     print_front(&front);
 
-    Ok(())
+    if front.complete && front.ordered && front.causal && front.peak_within_bound {
+        Ok(())
+    } else {
+        Err("the propagation checks failed; see the report above".into())
+    }
 }
 
 /// The triangulated slice, plus the bookkeeping the wave equation needs.
 struct Mesh {
     complex: SimplicialComplex<FloatType>,
+    /// Vertices are the bones of a 2-complex, so this is also the length of the deficit tensor.
+    num_vertices: usize,
     num_edges: usize,
     /// For each edge, the indices of its two endpoint vertices in the deficit-angle tensor.
     edge_endpoints: Vec<(usize, usize)>,
@@ -142,6 +165,9 @@ impl Mesh {
         }
         let complex = builder.build()?;
 
+        let num_vertices = complex
+            .num_elements_at_grade(0)
+            .ok_or("the complex has no vertices")?;
         let num_edges = complex
             .num_elements_at_grade(1)
             .ok_or("the complex has no edges")?;
@@ -160,6 +186,7 @@ impl Mesh {
 
         Ok(Self {
             complex,
+            num_vertices,
             num_edges,
             edge_endpoints,
             edge_ring,
@@ -216,24 +243,38 @@ fn propagate(mesh: &Mesh) -> Result<Vec<Vec<FloatType>>, Box<dyn std::error::Err
 }
 
 /// The deficit angle at every vertex, for a given set of edge lengths.
+///
+/// The tensor comes back with one entry per bone, and on a 2-complex the bones are the
+/// vertices. That is what lets a vertex id index it in [`source`], so the shape is checked here
+/// once, and a tensor of any other length is an error rather than a deficit read as zero.
 fn curvature(
     mesh: &Mesh,
     lengths: &[FloatType],
 ) -> Result<CausalTensor<FloatType>, Box<dyn std::error::Error>> {
     let tensor = CausalTensor::new(lengths.to_vec(), vec![mesh.num_edges])?;
-    Ok(ReggeGeometry::new(tensor).calculate_ricci_curvature(&mesh.complex)?)
+    let deficits = ReggeGeometry::new(tensor).calculate_ricci_curvature(&mesh.complex)?;
+    if deficits.len() == mesh.num_vertices {
+        Ok(deficits)
+    } else {
+        Err(format!(
+            "the curvature tensor has {} entries for {} vertices",
+            deficits.len(),
+            mesh.num_vertices
+        )
+        .into())
+    }
 }
 
 /// The restoring term on edge `e`: the mean deficit angle at its two endpoints.
 ///
 /// Linearized about flat space the deficit angle is the discrete Laplacian of the perturbation,
-/// so this is the `grad^2 h` of the wave equation and nothing else enters the update.
+/// so this is the `grad^2 h` of the wave equation and nothing else enters the update. The
+/// endpoints are vertex ids and [`curvature`] has checked that the tensor has one entry per
+/// vertex, so both reads are in range.
 fn source(mesh: &Mesh, deficits: &CausalTensor<FloatType>, e: usize) -> FloatType {
     let (a, b) = mesh.edge_endpoints[e];
     let data = deficits.as_slice();
-    let d_a = data.get(a).copied().unwrap_or(ZERO);
-    let d_b = data.get(b).copied().unwrap_or(ZERO);
-    (d_a + d_b) * HALF
+    (data[a] + data[b]) * HALF
 }
 
 /// The largest displacement from rest anywhere in a ring, at one instant.
@@ -246,53 +287,66 @@ fn ring_amplitude(mesh: &Mesh, lengths: &[FloatType], ring: i32) -> FloatType {
 
 /// When the disturbance first reached each ring, and whether it did so causally.
 struct Front {
-    /// `(ring, first step at which the ring moved)`, for rings outside the initial pulse.
-    arrivals: Vec<(i32, usize)>,
-    /// True when no ring moved before the one inside it.
+    /// `(ring, first step at which the ring moved)`, for every ring outside the initial pulse
+    /// and inside the boundary. `None` records a ring the disturbance never reached.
+    arrivals: Vec<(i32, Option<usize>)>,
+    /// True when every ring in `arrivals` was reached within the run. The two claims below are
+    /// about a complete front, so both require this.
+    complete: bool,
+    /// True when the front is complete and no ring moved before the one inside it.
     ordered: bool,
-    /// True when ring `k` did not move before step `k`: nothing outran the stencil.
+    /// True when the front is complete and ring `k` did not move before step `k`: nothing
+    /// outran the stencil.
     causal: bool,
-    /// The largest displacement seen anywhere, at any time.
+    /// The largest displacement seen anywhere, at any time within the run.
     peak_amplitude: FloatType,
-    /// True when that peak stayed finite and did not grow without bound.
-    bounded: bool,
+    /// True when that peak stayed below `GROWTH_BOUND` times the initial amplitude. This is a
+    /// threshold on a finite sample: it catches a scheme that has gone wrong within the run and
+    /// says nothing about what a longer run would do.
+    peak_within_bound: bool,
 }
 
 fn front_analysis(mesh: &Mesh, history: &[Vec<FloatType>]) -> Front {
-    let mut arrivals = Vec::new();
-
     // The outermost ring is boundary, where the deficit angle is not a curvature.
-    for ring in PULSE_RADIUS..RINGS {
-        if let Some(step) = history
-            .iter()
-            .position(|lengths| ring_amplitude(mesh, lengths, ring) > ARRIVAL_THRESHOLD)
-        {
-            arrivals.push((ring, step));
-        }
-    }
+    let arrivals: Vec<(i32, Option<usize>)> = (PULSE_RADIUS..RINGS)
+        .map(|ring| {
+            let step = history
+                .iter()
+                .position(|lengths| ring_amplitude(mesh, lengths, ring) > ARRIVAL_THRESHOLD);
+            (ring, step)
+        })
+        .collect();
 
-    let ordered = arrivals.windows(2).all(|w| w[1].1 >= w[0].1);
+    let reached: Vec<(i32, usize)> = arrivals
+        .iter()
+        .filter_map(|&(ring, step)| step.map(|s| (ring, s)))
+        .collect();
+    let complete = reached.len() == arrivals.len();
+
+    let ordered = complete && reached.windows(2).all(|w| w[1].1 >= w[0].1);
     // Finite propagation speed: a nearest-neighbour stencil cannot carry a signal more than one
     // ring per step, so ring k moving before step k would mean the scheme is not a wave at all.
-    let causal = arrivals
-        .iter()
-        .all(|&(ring, step)| step >= (ring as usize).saturating_sub(PULSE_RADIUS as usize));
+    let causal = complete
+        && reached
+            .iter()
+            .all(|&(ring, step)| step >= (ring as usize).saturating_sub(PULSE_RADIUS as usize));
 
     let peak_amplitude = history
         .iter()
         .flat_map(|lengths| (0..RINGS).map(move |ring| (lengths, ring)))
         .map(|(lengths, ring)| ring_amplitude(mesh, lengths, ring))
         .fold(ZERO, |m, v| if v > m { v } else { m });
-    // An explicit leapfrog at C <= 1 is stable, so the pulse must not grow past a small
-    // multiple of the amplitude it started with.
-    let bounded = peak_amplitude < GROWTH_BOUND * AMPLITUDE;
+    // An explicit leapfrog at C <= 1 is stable, so within the run the pulse must stay below a
+    // small multiple of the amplitude it started with.
+    let peak_within_bound = peak_amplitude < GROWTH_BOUND * AMPLITUDE;
 
     Front {
         arrivals,
+        complete,
         ordered,
         causal,
         peak_amplitude,
-        bounded,
+        peak_within_bound,
     }
 }
 
@@ -349,30 +403,54 @@ fn print_front(front: &Front) {
     println!("\n--- Does anything actually propagate? ---");
     print!("  first motion at ring: ");
     for (ring, step) in &front.arrivals {
-        print!("r{ring}@t{step}  ");
+        match step {
+            Some(step) => print!("r{ring}@t{step}  "),
+            None => print!("r{ring}@never  "),
+        }
     }
     println!();
 
     println!(
+        "  every ring reached     = {}",
+        if front.complete {
+            format!(
+                "yes: rings {}..{} all moved within {STEPS} steps",
+                PULSE_RADIUS,
+                RINGS - 1
+            )
+        } else {
+            "NO: a ring never moved, so the two claims below are not made".to_string()
+        }
+    );
+    println!(
         "  ordered outward front  = {}",
         if front.ordered {
             "yes: no ring moves before the one inside it"
-        } else {
+        } else if front.complete {
             "NO: a ring moved before its neighbour"
+        } else {
+            "not established"
         }
     );
     println!(
         "  finite signal speed    = {}",
         if front.causal {
             "yes: nothing reached ring k before step k"
-        } else {
+        } else if front.complete {
             "NO: a disturbance outran the stencil"
+        } else {
+            "not established"
         }
     );
     println!(
-        "  bounded amplitude      = {} (peak {:.4}, started at {:.2})",
-        if front.bounded { "yes" } else { "NO: unstable" },
+        "  peak within {STEPS} steps   = {} (peak {:.4}, bound {:.2}, started at {:.2})",
+        if front.peak_within_bound {
+            "yes: below the bound"
+        } else {
+            "NO: the sampled peak exceeded the bound"
+        },
         lower(front.peak_amplitude),
+        lower(GROWTH_BOUND * AMPLITUDE),
         lower(AMPLITUDE)
     );
     println!("\n  The leading edge advances one ring per step, which is the stencil's domain of");

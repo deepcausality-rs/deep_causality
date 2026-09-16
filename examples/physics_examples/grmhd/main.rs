@@ -17,47 +17,68 @@
 //! 1. GR solver     CausalTensor        Schwarzschild metric -> Kretschmann scalar, tidal stretch
 //! 2. coupling      a value decision    the tidal acceleration selects the Clifford metric
 //! 3. MHD solver    CausalMultiVector   Lorentz force density F = J ^ B, in that algebra
-//! 4. feedback      CausalTensor        the EM stress-energy T^00 that sources the next cycle
-//! 5. analysis      a comparison        which of the two effects dominates
+//! 4. feedback      CausalTensor        the EM stress-energy T^tt on the Schwarzschild metric
+//! 5. analysis      a comparison        the curvature the plasma sources against the hole's
 //! ```
 //!
-//! The curvature is read off the metric rather than stipulated. In the vacuum exterior the Ricci
-//! scalar is zero, so the invariant that carries the tidal physics is the Kretschmann scalar
-//! `K = 48 M^2 / r^6`, and the run reports both to make that point.
+//! In the vacuum exterior the Ricci scalar is zero, so the invariant that carries the tidal
+//! physics is the Kretschmann scalar `K = 48 M^2 / r^6`, and the run reports both to make that
+//! point. Every quantity is in geometric units, `G = c = 1`, and every comparison is made in
+//! them; the tide is also shown in `m/s^2` for the engineer.
+//!
+//! Stage 4 crosses the seam in the other direction. The observer measures `B` in an orthonormal
+//! frame; the stress-energy kernel works on the coordinate metric `diag(-lapse, 1/lapse, r^2,
+//! r^2)`. The run carries `B` into coordinates, lets the kernel produce `T^tt`, and projects
+//! that back onto the observer, where it must equal `B^2 / 2`. That identity is the run's check,
+//! and a failed check is a failed run: `main` returns the error and the process exits nonzero.
 //!
 //! ## APIs Demonstrated
 //! - `generate_schwarzschild_metric`, `lorentz_force`, `energy_momentum_tensor_em`
-//! - `CausalFlow::next` with a stage per solver
+//! - `CausalFlow::next` with a stage per solver, and `finish` to reach the error channel
 //! - A multivector metric chosen at run time from a computed scalar
 
 mod model;
+mod utils_print;
 
-use deep_causality_core::CausalFlow;
-use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lower};
-use model::{GrmhdState, SimulationConfig};
+use deep_causality_algebra::Real;
+use deep_causality_core::{CausalFlow, CausalityError, CausalityErrorEnum};
+use deep_causality_num::{Float106, const_scalar_from_float, const_scalar_from_int, lift_usize};
+use model::{GrmhdState, SimulationConfig, frame_energy_density};
+use utils_print::{print_config, print_header, print_report, print_verification};
 
 /// Central body: ten solar masses. One solar mass is 1476.6 m in geometric units, so `r_s = 2M`.
 const SOLAR_MASS_GEOMETRIC_M: FloatType = const_scalar_from_float!(FloatType, 1476.6);
-const SOLAR_MASSES: FloatType = const_scalar_from_int!(FloatType, 10);
-/// The plasma orbits at three Schwarzschild radii.
-const RADIUS_IN_RS: FloatType = const_scalar_from_int!(FloatType, 3);
+pub const SOLAR_MASSES: FloatType = const_scalar_from_int!(FloatType, 10);
+/// The plasma orbits at three Schwarzschild radii, in the equatorial plane.
+pub const RADIUS_IN_RS: FloatType = const_scalar_from_int!(FloatType, 3);
 /// Radial extent of the plasma column, in metres.
 const COLUMN_LENGTH_M: FloatType = const_scalar_from_int!(FloatType, 1);
-/// Plasma current density, in the code's natural units.
+/// Plasma current density, in geometric units.
 const CURRENT_DENSITY: FloatType = const_scalar_from_int!(FloatType, 10);
-/// Confining magnetic field.
+/// Confining magnetic field as the static observer measures it, in geometric units.
 const MAGNETIC_FIELD: FloatType = const_scalar_from_int!(FloatType, 2);
-/// Tidal acceleration above which the plasma is treated relativistically, in m/s^2 geometric.
+/// Tidal acceleration above which the plasma is treated relativistically, in `1/m`. Times `c^2`
+/// that is about `9e4 m/s^2` across the column.
 const TIDAL_THRESHOLD: FloatType = const_scalar_from_float!(FloatType, 1e-12);
 /// Two, for `r_s = 2M`.
 const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
 
-/// `f64` is the right precision here: the curvature spans `1e-20` in `1/m^4` against fields of
-/// order one, and every quantity is a closed-form expression rather than an accumulation.
-/// `Float106` changes no reported digit; it would matter if this drove a time integration.
-pub type FloatType = f64;
+/// How many rounding steps of the working type the energy-density check may miss by.
+///
+/// The check runs a 4x4 inverse and three matrix products over a metric whose entries span ten
+/// orders of magnitude, so a handful of rounding steps is what to expect at any precision.
+pub const TOLERANCE_ULPS: usize = 64;
 
-fn main() {
+/// The working scalar. Switch it to `f32`, `f64` or `deep_causality_num::BFloat16`; the metric,
+/// the curvature, the Clifford algebra, the stress-energy and the check all recompute at that
+/// precision.
+///
+/// It sits at [`Float106`] by default on purpose. A hard-coded `f64` anywhere in the program is
+/// invisible while the alias *is* `f64`, and shows up here as a compile error the moment the two
+/// types differ.
+pub type FloatType = Float106;
+
+fn main() -> Result<(), CausalityError> {
     print_header();
 
     let mass_geometric = SOLAR_MASSES * SOLAR_MASS_GEOMETRIC_M;
@@ -72,96 +93,45 @@ fn main() {
     };
     print_config(&config);
 
-    CausalFlow::value(GrmhdState::new(&config))
+    // Five stages, one per solver or decision. `finish` hands back the state or the error the
+    // chain short-circuited with, so a failed stage is the error the process exits with.
+    let state = CausalFlow::value(GrmhdState::new(&config))
         .next(|s| model::calculate_curvature(s).into())
         .next(|s| model::select_metric(s).into())
         .next(|s| model::calculate_lorentz_force(s).into())
         .next(|s| model::calculate_energy_momentum(s).into())
         .next(|s| model::analyze_stability(s).into())
-        .run(print_report, |err| {
-            eprintln!("The simulation failed: {err:?}");
-        });
+        .finish()?;
+    print_report(&state);
+
+    let verification = verify(&state);
+    print_verification(&verification);
+    if verification.holds {
+        Ok(())
+    } else {
+        Err(CausalityError(CausalityErrorEnum::Custom(
+            "the frame energy density departed from B^2/2 at this precision".into(),
+        )))
+    }
 }
 
-// -----------------------------------------------------------------------------------------
-// Printing
-// -----------------------------------------------------------------------------------------
-
-fn print_header() {
-    println!("=== GRMHD: General Relativistic Magnetohydrodynamics ===");
-    println!("Precision: {}", core::any::type_name::<FloatType>());
-    println!("Units: geometric (G = c = 1), so a mass is a length\n");
+/// The identity stage 4 must satisfy: the observer's energy density is `B^2 / 2`.
+pub struct Verification {
+    /// The tolerance the residual is held to, at the working type.
+    pub tolerance: FloatType,
+    /// `|rho_EM - B^2/2| / (B^2/2)`.
+    pub energy_residual: FloatType,
+    pub holds: bool,
 }
 
-/// The display boundary: `f64` appears here and nowhere else.
-fn print_config(c: &SimulationConfig) {
-    println!("Central body and plasma:");
-    println!(
-        "  Schwarzschild radius r_s = {:.4e} m  ({:.0} solar masses)",
-        lower(c.schwarzschild_radius),
-        lower(SOLAR_MASSES)
-    );
-    println!(
-        "  Plasma radius r          = {:.4e} m  ({:.0} r_s)",
-        lower(c.radius),
-        lower(RADIUS_IN_RS)
-    );
-    println!(
-        "  Column length L          = {:.4e} m",
-        lower(c.column_length)
-    );
-    println!(
-        "  Current J, field B       = {:.2}, {:.2}\n",
-        lower(c.current_density),
-        lower(c.magnetic_field)
-    );
-}
+fn verify(s: &GrmhdState) -> Verification {
+    let tolerance = lift_usize::<FloatType>(TOLERANCE_ULPS) * FloatType::epsilon();
+    let closed_form = frame_energy_density(s.config.magnetic_field);
+    let energy_residual = Real::abs(s.em_energy_density - closed_form) / closed_form;
 
-fn print_report(s: GrmhdState) {
-    println!("[1] GR solver: curvature from the Schwarzschild metric");
-    println!(
-        "      M = r_s / 2               = {:.4e} m",
-        lower(s.mass_geometric)
-    );
-    println!(
-        "      Ricci scalar R            = {:.4e}        (vacuum exterior, so zero)",
-        lower(s.ricci_scalar)
-    );
-    println!(
-        "      Kretschmann K = 48M^2/r^6 = {:.4e} 1/m^4  (non-zero where Ricci is not)",
-        lower(s.kretschmann)
-    );
-    println!(
-        "      curvature radius K^-1/4   = {:.4e} m",
-        lower(model::curvature_radius(s.kretschmann))
-    );
-    println!(
-        "      tidal stretch 2ML/r^3     = {:.4e} m/s^2  (across the column)",
-        lower(s.tidal_acceleration)
-    );
-
-    println!("\n[2] Coupling: the computed tide selects the algebra");
-    println!(
-        "      tide {:.2e} vs threshold {:.2e}",
-        lower(s.tidal_acceleration),
-        lower(s.config.tidal_threshold)
-    );
-    println!("      selected metric           = {}", s.metric_label);
-
-    println!("\n[3] MHD solver: Lorentz force in that algebra");
-    println!(
-        "      F = J ^ B on e_1 ^ e_2    = {:.4}",
-        lower(s.lorentz_force)
-    );
-
-    println!("\n[4] Feedback: EM stress-energy");
-    println!(
-        "      T^00                      = {:.4}",
-        lower(s.em_energy_density)
-    );
-
-    println!("\n[5] Analysis");
-    println!("      {}", s.status);
-
-    println!("\nData flow: spacetime geometry -> coupling -> plasma physics -> gravity feedback");
+    Verification {
+        tolerance,
+        energy_residual,
+        holds: energy_residual < tolerance,
+    }
 }

@@ -12,9 +12,10 @@
 
 use crate::FloatType;
 use deep_causality::{CausalityError, CausalityErrorEnum, PropagatingEffect};
+use deep_causality_algebra::Real;
 use deep_causality_calculus::{DifferentiableField, DifferentiateFieldExt, Scalar};
 use deep_causality_multivector::{CausalMultiVector, Metric, MultiVector};
-use deep_causality_num::{const_scalar_from_float, const_scalar_from_int};
+use deep_causality_num::const_scalar_from_int;
 use deep_causality_physics::MaxwellSolver;
 
 /// `Cl(1,3)` holds `2^4` coefficients indexed by bitmask over `(e_t, e_x, e_y, e_z)`.
@@ -31,32 +32,33 @@ const E_ZX: usize = E_Z | E_X;
 /// Zero at the working type, for the blades a multivector leaves empty.
 pub const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
 
-/// The gauge condition is called satisfied below this absolute divergence.
-const GAUGE_TOLERANCE: FloatType = const_scalar_from_float!(FloatType, 1e-9);
-
 /// The spacetime metric every multivector in this example carries.
 pub fn metric() -> Metric {
     Metric::Minkowski(4)
 }
 
-/// Angular frequency of the wave. A whole number, so it is exact at every scalar.
-pub const OMEGA: FloatType = const_scalar_from_int!(FloatType, 1);
-/// The same frequency as an `f64` literal, for the generic field below: `run<S>` works at a
-/// scalar the caller names, which the working type's constant cannot reach.
-const OMEGA_LITERAL: f64 = 1.0;
+/// Where each argument of [`PlaneWavePotential`] sits.
+///
+/// The frequency is an argument, with the event. A struct that stored `omega` at one concrete
+/// type would have to widen it inside `run`, and the wave would then be evaluated at whatever
+/// precision `omega` was written down in, whatever `S` the caller asked for. Passing it in keeps
+/// every number in the model at the caller's precision, and it keeps one `omega` in the program:
+/// the value the phase is computed from is the value the wave is differentiated at.
+pub const AT_T: usize = 0;
+pub const AT_Z: usize = 1;
+pub const AT_OMEGA: usize = 2;
 
 /// The plane-wave vector potential `A_x(t, z) = cos(omega (t - z))`, written once over `Scalar`.
 ///
 /// Evaluated at the working type it is the potential; evaluated at `Dual` it is the potential
 /// and its partial derivative, which is where `E` and `B` come from below. No `-omega sin(phase)`
-/// is ever written by hand. The struct holds no data: `omega` is a configuration literal lifted
-/// per scalar, so nothing here pins a precision.
+/// is ever written by hand. The struct holds no data: the frequency rides in the third slot of
+/// the point, so nothing here pins a precision.
 pub struct PlaneWavePotential;
 
-impl DifferentiableField<2> for PlaneWavePotential {
-    fn run<S: Scalar>(&self, tz: &[S; 2]) -> S {
-        let omega = deep_causality_num::lift::<S>(OMEGA_LITERAL);
-        (omega * (tz[0] - tz[1])).cos()
+impl DifferentiableField<3> for PlaneWavePotential {
+    fn run<S: Scalar>(&self, at: &[S; 3]) -> S {
+        Real::cos(at[AT_OMEGA] * (at[AT_T] - at[AT_Z]))
     }
 }
 
@@ -82,7 +84,6 @@ pub struct MaxwellState {
     pub b_field: FloatType,
     pub divergence: FloatType,
     pub poynting_flux: FloatType,
-    pub gauge_satisfied: bool,
 }
 
 impl MaxwellState {
@@ -94,15 +95,19 @@ impl MaxwellState {
             ..Default::default()
         }
     }
+
+    /// The point the potential is evaluated and differentiated at: the event, then the frequency.
+    fn point(&self) -> [FloatType; 3] {
+        [self.t, self.z, self.omega]
+    }
 }
 
 /// Stage 1: the vector potential `A = (0, A_x, 0, 0)` with `A_x = cos(omega (t - z))`.
 ///
 /// This is where the potential is computed; nothing upstream has evaluated it yet.
 pub fn compute_potential(input: MaxwellState) -> PropagatingEffect<MaxwellState> {
-    let field = PlaneWavePotential;
     let phase = input.omega * (input.t - input.z);
-    let potential_ax = field.run(&[input.t, input.z]);
+    let potential_ax = PlaneWavePotential.run(&input.point());
 
     PropagatingEffect::pure(MaxwellState {
         phase,
@@ -115,11 +120,13 @@ pub fn compute_potential(input: MaxwellState) -> PropagatingEffect<MaxwellState>
 ///
 /// `E` and `B` are the partials of `A_x`, read off the tangent functor:
 /// `E_x = -dA_x/dt` and `B_y = dA_x/dz`. They are then placed in the blades they belong to,
-/// `e_t ^ e_x` and `e_z ^ e_x`, so `F` is a genuine field bivector rather than a pair of
-/// numbers carried alongside one.
+/// `e_t ^ e_x` and `e_z ^ e_x`, so `F` is a genuine field bivector. The gradient also carries
+/// `dA_x/domega`, which the field equations have no use for; it costs one derivative nobody
+/// reads and buys a model with no concrete type written into it.
 pub fn compute_em_field(input: MaxwellState) -> PropagatingEffect<MaxwellState> {
-    let field = PlaneWavePotential;
-    let [da_dt, da_dz] = field.gradient(&[input.t, input.z]);
+    let gradient = PlaneWavePotential.gradient(&input.point());
+    let da_dt = gradient[AT_T];
+    let da_dz = gradient[AT_Z];
 
     let e_field = -da_dt;
     let b_field = da_dz;
@@ -149,17 +156,7 @@ pub fn compute_em_field(input: MaxwellState) -> PropagatingEffect<MaxwellState> 
     })
 }
 
-/// Stage 3: the Lorenz gauge holds when the divergence vanishes.
-pub fn check_lorenz_gauge(input: MaxwellState) -> PropagatingEffect<MaxwellState> {
-    let gauge_satisfied = deep_causality_algebra::Real::abs(input.divergence) < GAUGE_TOLERANCE;
-
-    PropagatingEffect::pure(MaxwellState {
-        gauge_satisfied,
-        ..input
-    })
-}
-
-/// Stage 4: the Poynting vector `S = E x B`, as the outer product of the two field vectors.
+/// Stage 3: the Poynting vector `S = E x B`, as the outer product of the two field vectors.
 ///
 /// `E` points along `x` and `B` along `y`, so the two occupy *different* basis vectors and their
 /// outer product is the `e_x ^ e_y` bivector whose magnitude is `|E||B|`. Placing them on blades
@@ -176,7 +173,7 @@ pub fn compute_poynting_flux(input: MaxwellState) -> PropagatingEffect<MaxwellSt
 
     match MaxwellSolver::calculate_poynting_flux(&e_vec, &b_vec) {
         Ok(s_field) => {
-            let poynting_flux = deep_causality_algebra::Real::sqrt(s_field.squared_magnitude());
+            let poynting_flux = Real::sqrt(s_field.squared_magnitude());
             PropagatingEffect::pure(MaxwellState {
                 poynting_flux,
                 ..input
@@ -188,8 +185,7 @@ pub fn compute_poynting_flux(input: MaxwellState) -> PropagatingEffect<MaxwellSt
 
 /// The field bivector `F = E_x (e_t ^ e_x) + B_y (e_z ^ e_x)`.
 ///
-/// This is the object the whole example is about: one bivector holding both fields, rather than
-/// two vectors kept consistent by hand.
+/// This is the object the whole example is about: one bivector holding both fields.
 pub fn field_bivector(state: &MaxwellState) -> Result<CausalMultiVector<FloatType>, String> {
     blade_vector(&[(E_TX, state.e_field), (E_ZX, state.b_field)])
 }
