@@ -5,7 +5,7 @@ This example demonstrates using Topological Data Analysis (TDA) to classify tiss
 ## How to Run
 
 ```bash
-cargo run -p medicine_examples --example mri_tissue_classification
+cargo run -p medicine_examples --example tissue_classification
 ```
 
 ---

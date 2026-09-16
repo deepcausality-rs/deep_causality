@@ -4,7 +4,7 @@
 
 **Aneurysms** are abnormal bulges in blood vessel walls that can rupture, causing life-threatening internal bleeding (e.g., Subarachnoid Hemorrhage).
 
-A key driver of aneurysm growth and rupture is **Wall Shear Stress (WSS)**—the frictional force exerted by flowing blood against the vessel wall. High WSS can trigger inflammation and wall weakening, while low oscillatory WSS can cause plaque formation.
+A key driver of aneurysm growth and rupture is **wall shear stress**, the tangential drag of flowing blood on the vessel wall. Healthy cerebral arteries run at roughly 1 to 7 Pa. Inside an aneurysm dome the lumen widens, the flow slows, and the shear collapses; sustained shear below about 0.4 Pa leaves the endothelium unable to maintain the wall. That low-shear pathway is what this example models. The second recognised factor is the spatial gradient of the shear, which peaks at the dome neck.
 
 Currently, clinical decisions are often based on simple **geometric size** (e.g., "treat if > 7mm"). However, many small aneurysms rupture, and many large ones remain stable. A physics-based risk assessment is needed.
 
@@ -16,14 +16,21 @@ Currently, clinical decisions are often based on simple **geometric size** (e.g.
 
 ## 3. The DeepCausality Solution
 
-This example demonstrates a **Digital Twin** approach using `deep_causality_physics` and `deep_causality_topology`.
+The vessel centreline is a simplicial manifold whose payload is the lumen radius at each node, and
+three categorical operations carry the whole analysis.
 
-*   **Topology (`Manifold`):** We model the vessel surface as a `Manifold` constructed from specific patient data (mocked here as a cylinder with a bulge).
-*   **Physics (`Fluid Dynamics`):** We approximate WSS using velocity gradients near the manifold surface, simulating the effect of pulsatile blood flow.
-*   **Causality (`PropagatingEffect`):** We treat vessel wall fatigue not as a number, but as a **Causal Process**.
-    *   **State:** Accumulated Fatigue.
-    *   **Effect:** WSS > Critical Threshold causes cumulative damage.
-    *   **Monad:** The `PropagatingEffect` monad manages the accumulation state and handles "Failure Events" (Rupture) cleanly, separating the happy path (stable vessel) from the critical path (rupture).
+| Operation | Reads | Produces |
+|---|---|---|
+| `fmap` | one radius | the wall shear stress there, from the Poiseuille closure `τ = 4μQ / (πR³)` |
+| `extend` | a node and its neighbours | the spatial gradient of the shear, which needs the cursor the comonad supplies |
+| `fold` | the whole payload | the dome minimum and the peak gradient |
+
+Degeneration then accrues over cardiac cycles wherever the shear sits below the threshold, in
+proportion to how far below it sits, and the run reports the epoch at which the index crosses the
+rupture-risk line.
+
+Precision is a parameter: the `FloatType` alias in `main.rs` switches the geometry, the stress
+profile, its gradient and the accumulation to `f32`, `BFloat16` or `Float106`.
 
 ## 4. Gained Value
 
@@ -34,5 +41,5 @@ This example demonstrates a **Digital Twin** approach using `deep_causality_phys
 ## 5. Running the Example
 
 ```bash
-cargo run -p medicine_examples --example hemodynamics
+cargo run -p medicine_examples --example aneurysm_risk
 ```

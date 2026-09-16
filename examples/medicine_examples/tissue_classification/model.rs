@@ -1,0 +1,168 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
+//! Model layer for the tissue classifier: the sample geometries, the Vietoris-Rips complex, and
+//! the two topological readings taken from it.
+//!
+//! A point cloud of voxel centres becomes a simplicial complex by joining every pair of points
+//! closer than a fixed radius. The complex then answers two questions. Its Euler characteristic
+//! says whether the sample encloses a void, and a local density map says where that void sits.
+
+use crate::FloatType;
+use deep_causality_algebra::Real;
+use deep_causality_haft::{CoMonad, Foldable};
+use deep_causality_num::{lift, lift_count};
+use deep_causality_tensor::CausalTensor;
+use deep_causality_topology::{BaseTopology, PointCloud, PointCloudWitness, TopologyError};
+
+/// Voxel centres carry three coordinates each.
+pub const DIMENSIONS: usize = 3;
+
+/// The Vietoris-Rips radius, in the sample's own length units. Two voxels closer than this are
+/// joined by an edge.
+pub const RIPS_RADIUS: f64 = 0.62;
+
+/// The radius the local-density count uses. It matches the Rips radius, so a point's density is
+/// the number of neighbours it is joined to in the complex.
+pub const DENSITY_RADIUS: f64 = RIPS_RADIUS;
+
+/// Voxels per sample.
+pub const SAMPLE_POINTS: usize = 24;
+
+/// A tissue sample: its voxel centres, ready to triangulate.
+pub type Sample = PointCloud<FloatType, FloatType>;
+
+/// Healthy tissue: a solid disc of voxels with a filled centre.
+///
+/// The points sit on concentric rings, which keeps the spacing even enough that the Rips complex
+/// closes every triangle across the middle.
+pub fn solid_tissue() -> Result<Sample, TopologyError> {
+    let mut coords = Vec::with_capacity(SAMPLE_POINTS * DIMENSIONS);
+    let zero = lift::<FloatType>(0.0);
+
+    // A centre point, then two rings around it.
+    coords.extend_from_slice(&[zero, zero, zero]);
+    for (ring, count) in [(0.45, 7usize), (0.9, 16usize)] {
+        for k in 0..count {
+            let angle = turn_fraction(k, count);
+            coords.push(lift::<FloatType>(ring) * Real::cos(angle));
+            coords.push(lift::<FloatType>(ring) * Real::sin(angle));
+            coords.push(zero);
+        }
+    }
+    build_sample(coords)
+}
+
+/// Pathological tissue: a ring of voxels around an empty centre, which is the signature of a
+/// necrotic core. The cells at the rim are alive and the middle has died out.
+pub fn necrotic_tissue() -> Result<Sample, TopologyError> {
+    let mut coords = Vec::with_capacity(SAMPLE_POINTS * DIMENSIONS);
+    let zero = lift::<FloatType>(0.0);
+
+    for k in 0..SAMPLE_POINTS {
+        let angle = turn_fraction(k, SAMPLE_POINTS);
+        coords.push(lift::<FloatType>(1.0) * Real::cos(angle));
+        coords.push(lift::<FloatType>(1.0) * Real::sin(angle));
+        coords.push(zero);
+    }
+    build_sample(coords)
+}
+
+/// What one sample's Vietoris-Rips complex reports: its cell counts by grade, and the Euler
+/// characteristic those counts give.
+#[derive(Debug, Clone, Copy)]
+pub struct TopologyReading {
+    pub vertices: usize,
+    pub edges: usize,
+    pub triangles: usize,
+    pub euler_characteristic: isize,
+}
+
+/// Triangulates the sample and reads its topology.
+///
+/// `χ = V − E + F − …` is a topological invariant: it counts a shape's connected pieces against
+/// the holes in them, and it holds under any deformation that leaves the connectivity alone. A
+/// filled, connected sample reads 1. Enclosing a void drops it to 0 or below, which is the reading
+/// a necrotic core produces.
+///
+/// The alternating sum is a fold over the grades, so a complex carrying tetrahedra and higher
+/// cells contributes them on the same rule.
+pub fn read_topology(sample: &Sample) -> Result<TopologyReading, TopologyError> {
+    let complex = sample.triangulate(lift::<FloatType>(RIPS_RADIUS))?;
+    let at = |grade: usize| complex.num_elements_at_grade(grade).unwrap_or(0);
+
+    let euler_characteristic = (0..=complex.dimension()).fold(0isize, |chi, grade| {
+        let count = at(grade) as isize;
+        if grade % 2 == 0 {
+            chi + count
+        } else {
+            chi - count
+        }
+    });
+
+    Ok(TopologyReading {
+        vertices: at(0),
+        edges: at(1),
+        triangles: at(2),
+        euler_characteristic,
+    })
+}
+
+/// The local density at every voxel: how many other voxels lie within [`DENSITY_RADIUS`].
+///
+/// `extend` focuses the cloud on one voxel at a time and hands the closure that focused view, so
+/// the closure reads its own coordinates and the whole cloud together. The Euler characteristic
+/// says a void exists; this map says which voxels sit next to it.
+pub fn local_density(sample: &Sample) -> Sample {
+    let radius = lift::<FloatType>(DENSITY_RADIUS);
+
+    PointCloudWitness::extend(sample, |view| {
+        let here = view.cursor();
+        let points = view.points().as_slice();
+        let count = (0..view.len())
+            .filter(|&other| other != here && distance(points, here, other) <= radius)
+            .count();
+        lift_count::<FloatType>(count as u64)
+    })
+}
+
+/// The lowest and highest local density in the sample, from one `fold` over the density map.
+///
+/// The spread is what separates the two geometries. A solid mass has an interior and a rim, so its
+/// voxels range from densely surrounded to sparsely surrounded. A ring is rim everywhere, so every
+/// voxel sees the same number of neighbours and the range collapses to a point.
+pub fn density_range(density: Sample) -> (FloatType, FloatType) {
+    let start = density.metadata().as_slice()[0];
+    PointCloudWitness::fold(density, (start, start), |(low, high), count| {
+        (
+            if count < low { count } else { low },
+            if count > high { count } else { high },
+        )
+    })
+}
+
+/// The Euclidean distance between two voxels of a flattened `[n, 3]` coordinate table.
+fn distance(points: &[FloatType], a: usize, b: usize) -> FloatType {
+    let (base_a, base_b) = (a * DIMENSIONS, b * DIMENSIONS);
+    let squared = (0..DIMENSIONS).fold(lift::<FloatType>(0.0), |sum, axis| {
+        let gap = points[base_a + axis] - points[base_b + axis];
+        sum + gap * gap
+    });
+    Real::sqrt(squared)
+}
+
+/// The fraction of a full turn that point `k` of `count` sits at, in radians.
+fn turn_fraction(k: usize, count: usize) -> FloatType {
+    let two_pi = lift::<FloatType>(2.0) * FloatType::pi();
+    two_pi * lift_count::<FloatType>(k as u64) / lift_count::<FloatType>(count as u64)
+}
+
+/// A point cloud from a flattened coordinate table, with unit metadata on every voxel.
+fn build_sample(coords: Vec<FloatType>) -> Result<Sample, TopologyError> {
+    let points = coords.len() / DIMENSIONS;
+    let positions = CausalTensor::new(coords, vec![points, DIMENSIONS])?;
+    let metadata = CausalTensor::new(vec![lift::<FloatType>(1.0); points], vec![points])?;
+    PointCloud::new(positions, metadata, 0)
+}
