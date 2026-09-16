@@ -170,3 +170,37 @@ fn test_a_constant_follows_the_working_type_alias() {
     assert_eq!(AT_F32, 30.0);
     assert_eq!(AT_F106.to_f64(), 30.0);
 }
+
+/// The top of `i128`, where `N as f64` rounds up to `2¹²⁷` and the cast back saturates.
+///
+/// Every `N` from `2¹²⁷ − 2⁷³` to `i128::MAX` has `2¹²⁷` as its nearest `f64`, and `2¹²⁷` is one
+/// past `i128::MAX`, so `hi as i128` returns `i128::MAX` and a residue formed from it is one too
+/// large. The two words must still sum to `N` exactly: for `i128::MAX` that is `hi = 2¹²⁷` and
+/// `lo = −1`. The runtime `lift` is not the reference here, because it takes the same cast; the
+/// reference is the arithmetic.
+#[test]
+fn test_const_scalar_from_int_at_the_top_of_i128_keeps_the_residue_exact() {
+    const TWO_POW_127: f64 = 170_141_183_460_469_231_731_687_303_715_884_105_728.0;
+
+    let top = const_scalar_from_int!(Float106, i128::MAX);
+    assert_eq!(
+        top.hi(),
+        TWO_POW_127,
+        "hi is the nearest f64, which is 2^127"
+    );
+    assert_eq!(top.lo(), -1.0, "lo carries i128::MAX - 2^127, which is -1");
+
+    // One below, and a value whose f64 rounds to 2^127 from further away.
+    let below = const_scalar_from_int!(Float106, i128::MAX - 1);
+    assert_eq!(below.hi(), TWO_POW_127);
+    assert_eq!(below.lo(), -2.0);
+
+    let further = const_scalar_from_int!(Float106, i128::MAX - 1_000_000);
+    assert_eq!(further.hi(), TWO_POW_127);
+    assert_eq!(further.lo(), -1_000_001.0);
+
+    // Below the rounding threshold the head stays under 2^127 and the plain path applies.
+    let plain = const_scalar_from_int!(Float106, 1_i128 << 100);
+    assert_eq!(plain.hi(), 1_267_650_600_228_229_401_496_703_205_376.0);
+    assert_eq!(plain.lo(), 0.0);
+}

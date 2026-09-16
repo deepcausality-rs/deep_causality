@@ -196,14 +196,8 @@ fn test_atan2_zero_over_negative_is_signed_pi() {
 /// disagreement to track down.
 #[test]
 fn test_atan2_at_the_origin_follows_the_signs_of_the_zeros() {
-    assert_pos_zero(
-        Float::atan2(pos_zero(), pos_zero()),
-        "atan2(+0.0, +0.0)",
-    );
-    assert_neg_zero(
-        Float::atan2(neg_zero(), pos_zero()),
-        "atan2(-0.0, +0.0)",
-    );
+    assert_pos_zero(Float::atan2(pos_zero(), pos_zero()), "atan2(+0.0, +0.0)");
+    assert_neg_zero(Float::atan2(neg_zero(), pos_zero()), "atan2(-0.0, +0.0)");
 
     let plus_pi = Float::atan2(pos_zero(), neg_zero());
     assert_eq!(
@@ -218,6 +212,35 @@ fn test_atan2_at_the_origin_follows_the_signs_of_the_zeros() {
         f64::atan2(-0.0, -0.0),
         "atan2(-0.0, -0.0) must be -pi"
     );
+}
+
+/// A NaN in either argument is a NaN out, including over a zero denominator.
+///
+/// Every sign test in `atan2` is false for a NaN, so the zero-denominator branch would read a NaN
+/// numerator as negative and answer `−π/2`. `f64` answers NaN for the same pairs.
+#[test]
+fn test_atan2_with_a_nan_argument_is_nan() {
+    let nan = Float106::nan();
+    let pairs = [
+        (nan, pos_zero()),
+        (nan, neg_zero()),
+        (nan, Float106::from(1.0)),
+        (pos_zero(), nan),
+        (Float106::from(1.0), nan),
+        (nan, nan),
+    ];
+
+    for (y, x) in pairs {
+        let got = Float::atan2(y, x);
+        assert!(
+            got.hi().is_nan(),
+            "atan2({:?}, {:?}) = {:?}, expected NaN as f64 gives {:?}",
+            y.hi(),
+            x.hi(),
+            got.hi(),
+            f64::atan2(y.hi(), x.hi())
+        );
+    }
 }
 
 /// Every result is finite, which is the property a caller summing angles depends on.

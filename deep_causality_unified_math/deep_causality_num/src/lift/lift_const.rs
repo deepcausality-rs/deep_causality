@@ -92,8 +92,15 @@ impl<const N: i128> ConstScalarFromInt<N> for Float106 {
     /// `f64`'s 2⁵³ ceiling: `2⁶⁰ + 1` comes back with `lo = 1.0`.
     const VALUE: Self = {
         let hi = N as f64;
-        // Float-to-integer casts saturate, so a value at the edge of `i128` cannot wrap here.
-        let residue = N.wrapping_sub(hi as i128);
+        // `hi as i128` saturates. The one value where that matters is `hi == 2¹²⁷`, which every
+        // `N` from `2¹²⁷ − 2⁷³` up to `i128::MAX` rounds to: the cast returns `i128::MAX`, one
+        // short of `hi`, and the residue would then be one too large. Subtracting `i128::MAX`
+        // and then `1` reaches `N − 2¹²⁷` without forming `2¹²⁷` in `i128`.
+        let residue = if hi >= 170_141_183_460_469_231_731_687_303_715_884_105_728.0 {
+            N.wrapping_sub(i128::MAX).wrapping_sub(1)
+        } else {
+            N.wrapping_sub(hi as i128)
+        };
         Float106::from_raw(hi, residue as f64)
     };
 }

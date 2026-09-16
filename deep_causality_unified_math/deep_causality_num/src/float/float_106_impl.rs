@@ -605,6 +605,13 @@ impl Float for Float106 {
     }
 
     fn atan2(self, other: Self) -> Self {
+        // A NaN in either argument is a NaN out, as for every other elementary function. The
+        // sign tests below are all false for a NaN, so without this guard a NaN numerator over a
+        // zero denominator would read as negative and come back as −π/2.
+        if self.hi.is_nan() || other.hi.is_nan() {
+            return Self::nan();
+        }
+
         // Both arguments zero. IEEE 754 fixes this case on the signs of the two zeros rather than
         // leaving it undefined, and the primitive floats follow it:
         //
@@ -617,7 +624,11 @@ impl Float for Float106 {
         // which is the hardest kind of disagreement to find.
         if self.is_zero() && other.is_zero() {
             return if is_negative(other) {
-                if is_negative(self) { -Self::PI } else { Self::PI }
+                if is_negative(self) {
+                    -Self::PI
+                } else {
+                    Self::PI
+                }
             } else {
                 // `self` is the zero the caller passed, so its sign rides along.
                 self
