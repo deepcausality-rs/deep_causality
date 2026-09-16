@@ -17,10 +17,10 @@
 //! [`PropagatingEffect::bind`].
 //!
 //! ```bash
-//! cargo run -p chronometric_examples --example gm_recovery
+//! cargo run -p physics_examples --example chronometric_gm_recovery
 //! ```
 
-use chronometric_examples::data_manager::get_gnss_data_input_path;
+use crate::data_manager::get_gnss_data_input_path;
 use deep_causality_core::CausalFlow;
 use deep_causality_num::Float106;
 
@@ -29,8 +29,12 @@ use crate::pipeline::{
     DatasetInputs, stage_aggregate, stage_align, stage_load, stage_pair, stage_solve_gm,
 };
 
+pub mod data_manager;
 pub mod display;
+pub mod paths;
 pub mod pipeline;
+pub mod proces_utils;
+pub(crate) mod types;
 
 /// Galileo satellite for this run. E14 is the IOV satellite with eccentric
 /// orbit, providing the radial range required to invert GM.

@@ -24,7 +24,7 @@
 use deep_causality_algebra::Real;
 use deep_causality_calculus::{DifferentiableField, DifferentiateFieldExt, Euler, Scalar};
 use deep_causality_haft::{Arrow, Functor};
-use deep_causality_num::{lift, lift_usize, lower};
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lift, lift_usize, lower};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 use std::ops::{Add, Mul};
 
@@ -39,13 +39,24 @@ const STEPS: usize = 60;
 /// The working scalar. The field, its gradient and the descent path all carry it.
 pub type FloatType = f64;
 
+/// Small numbers and tolerances, at the working type.
+const TOLERANCE: FloatType = const_scalar_from_float!(FloatType, 1e-3);
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
+const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
+const THREE: FloatType = const_scalar_from_int!(FloatType, 3);
+const FOUR: FloatType = const_scalar_from_int!(FloatType, 4);
+const SIX: FloatType = const_scalar_from_int!(FloatType, 6);
+
 fn main() {
     print_header();
 
     // ---------------------------------------------------------------------
     // 1. The gradient at a point, against its closed form.
     // ---------------------------------------------------------------------
-    let probe = [lift::<FloatType>(4.0), lift::<FloatType>(1.0)];
+    let probe = [FOUR, ONE];
     let grad = Bowl.gradient(&probe);
     let exact = closed_form_gradient(&probe);
     print_point_gradient(&probe, &grad, &exact);
@@ -54,7 +65,7 @@ fn main() {
     // result is exact to the last bit rather than merely close.
     let residual = Real::abs(grad[0] - exact[0]) + Real::abs(grad[1] - exact[1]);
     print_residual(residual);
-    assert_eq!(residual, lift::<FloatType>(0.0));
+    assert_eq!(residual, ZERO);
 
     // ---------------------------------------------------------------------
     // 2. The gradient across a grid, through the tensor's Functor.
@@ -64,7 +75,7 @@ fn main() {
     let points: CausalTensor<[FloatType; 2]> = CausalTensor::from_shape_fn(&[GRID, GRID], |idx| {
         [
             lift_usize::<FloatType>(idx[0]),
-            lift_usize::<FloatType>(idx[1]) - lift::<FloatType>(3.0),
+            lift_usize::<FloatType>(idx[1]) - THREE,
         ]
     });
     let magnitudes = CausalTensorWitness::fmap(points, |p| {
@@ -83,7 +94,7 @@ fn main() {
         Point([-g[0], -g[1]])
     });
 
-    let mut here = Point([lift::<FloatType>(4.0), lift::<FloatType>(1.0)]);
+    let mut here = Point([FOUR, ONE]);
     print_descent_header();
     for step in 0..=STEPS {
         if step % 10 == 0 {
@@ -94,8 +105,8 @@ fn main() {
     print_minimum(&here);
 
     // Both axes are within 1e-3 of the minimum (1, -2) after STEPS steps; see the note there.
-    assert!(Real::abs(here.0[0] - lift::<FloatType>(1.0)) < lift::<FloatType>(1e-3));
-    assert!(Real::abs(here.0[1] + lift::<FloatType>(2.0)) < lift::<FloatType>(1e-3));
+    assert!(Real::abs(here.0[0] - ONE) < TOLERANCE);
+    assert!(Real::abs(here.0[1] + TWO) < TOLERANCE);
 }
 
 /// An anisotropic bowl: `f(x, y) = (x - 1)^2 + 3 (y + 2)^2`.
@@ -119,10 +130,7 @@ impl DifferentiableField<2> for Bowl {
 
 /// `∇f` written out by hand, to check the automatic one against.
 fn closed_form_gradient(p: &[FloatType; 2]) -> [FloatType; 2] {
-    [
-        lift::<FloatType>(2.0) * (p[0] - lift::<FloatType>(1.0)),
-        lift::<FloatType>(6.0) * (p[1] + lift::<FloatType>(2.0)),
-    ]
+    [TWO * (p[0] - ONE), SIX * (p[1] + TWO)]
 }
 
 /// The descent state. `Euler` needs a module-valued state (`Add` plus scalar `Mul`), which a

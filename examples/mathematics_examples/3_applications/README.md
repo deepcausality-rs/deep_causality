@@ -23,7 +23,7 @@ cargo run -p mathematics_examples --example <example_name>
 
 ## The house rules
 
-Every example here follows the same four:
+Every example here follows the same five:
 
 1. **Precision is a parameter.** A `FloatType` alias sits directly above `main`, and every
    quantity in the program carries it. Changing that one line reruns the whole example at
@@ -34,6 +34,11 @@ Every example here follows the same four:
    `f64` appears at the display boundary and nowhere else.
 4. **Errors travel through `?` and return from `main`.** Where a fixed-signature closure leaves
    no error channel, `expect` states the invariant that makes the call total.
+5. **The run states its own precision.** `print_header` echoes
+   `core::any::type_name::<FloatType>()`, so the output says which scalar produced it and an
+   alias switch is visible in a diff of the output. The one example without it,
+   `2_composition/chaining/effect_system_causal_tensor`, runs on `CausalTensor<i32>` and has no
+   `FloatType` to report.
 
 The file order is the same everywhere: imports, constants, the `FloatType` alias, `main`, the
 functions `main` calls, custom structs, then the printing helpers.

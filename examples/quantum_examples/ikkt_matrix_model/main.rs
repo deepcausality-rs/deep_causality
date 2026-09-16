@@ -3,112 +3,115 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! # IKKT Matrix Model (Emergent Gravity)
+//! # The IKKT matrix model: spacetime as a property of matrices
 //!
-//! This example demonstrates the IKKT matrix model, a candidate for non-perturbative
-//! string theory / M-theory, where spacetime emerges from the dynamics of matrices.
+//! The IKKT model is a candidate non-perturbative formulation of type IIB superstring theory. It
+//! has no spacetime in it. What it has is a set of matrices `X_μ` and an action
 //!
-//! ## Goal
-//! Minimize the action: S = -Tr([X_μ, X_ν]^2)
+//! ```text
+//! S = Σ_{μ<ν} ‖[X_μ, X_ν]‖²
+//! ```
 //!
-//! ## Implementation
-//! - State: 4 `CausalMultiVector` matrices (X_0, X_1, X_2, X_3) representing spacetime coordinates.
-//! - Step: Compute commutators C_μν = [X_μ, X_ν] using `commutator_kernel`.
-//! - Action: S = Σ |C_μν|^2
-//! - Optimization: Simple gradient descent to minimize action.
+//! which is zero exactly when every pair of them commutes. Commuting matrices can be
+//! simultaneously diagonalised, and their joint eigenvalues are then a set of points. That set is
+//! the emergent spacetime: it is a property the matrices acquire at the minimum of the action, not
+//! a stage they were placed on.
+//!
+//! # Relaxing along the equation of motion
+//!
+//! Varying the action gives
+//!
+//! ```text
+//! Σ_ν [X_ν, [X_μ, X_ν]] = 0
+//! ```
+//!
+//! so that double commutator is zero exactly at a solution, and moving against it drives the
+//! configuration toward one. Every run prints the action, because a step that raised it would mean
+//! the step length was too long, and that is worth seeing rather than hiding.
+//!
+//! # The norm has to be held fixed
+//!
+//! The action is quartic in the coordinates, so multiplying every matrix by `1 − η` multiplies the
+//! action by `(1 − η)⁴` no matter what the matrices are doing. A run that shrinks everything toward
+//! the origin therefore reports an action falling to zero while demonstrating nothing: the limit is
+//! an empty vacuum, not a commuting configuration, and no spacetime emerges from it.
+//!
+//! Each step here restores the norm the configuration started with, so the only way left for the
+//! action to fall is for the matrices to genuinely commute. The run prints the norm alongside the
+//! action so that the constraint is visible rather than asserted.
+//!
+//! # What the run does
+//!
+//! ```text
+//! fold   pairs (μ, ν) → the action                    over every commutator in the configuration
+//! fold   ν → the double commutator at μ               the equation of motion, one coordinate
+//! fold   coefficients → a norm                        the constraint each step restores
+//! ```
+//!
+//! Each of the three is a reduction over a structure the model already has, so the step itself
+//! stays one call and the loop below carries nothing but the configuration and what to report.
 
-use deep_causality_algebra::DivisionAlgebra;
-use deep_causality_multivector::{HilbertState, Metric};
-use deep_causality_num_complex::Complex;
-use deep_causality_quantum::{Operator, commutator_kernel};
+mod model;
+mod utils_print;
 
-/// Switch this alias to `f32` for low precision, `f64` for standard precision,
-/// or `Float106` for high precision.
-pub type FloatType = f64;
+use deep_causality_num::Float106;
+use deep_causality_quantum::QuantumError;
+use model::{
+    MAX_STEPS, action, configuration_norm, convergence_threshold, equation_of_motion_residual,
+    initial_configuration, largest_commutator, relax, step_size,
+};
+use utils_print::{Step, print_header, print_outcome, print_start, print_trajectory};
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("=== IKKT Matrix Model: Emergent Gravity ===\n");
+/// The working scalar. Switch it to `f32`, `f64` or `deep_causality_num::BFloat16`; the
+/// commutators, the action and the relaxation all recompute at that precision.
+///
+/// It sits at [`Float106`] by default on purpose. A hard-coded `f64` anywhere in the program is
+/// invisible while the alias *is* `f64`, and shows up here as a compile error the moment the two
+/// types differ.
+pub type FloatType = Float106;
 
-    let dim = 2; // Small dimension for demonstration
-    let metric = Metric::Euclidean(dim);
-    let size = 1 << dim; // 2^dim = 4
+fn main() -> Result<(), QuantumError> {
+    print_header();
 
-    // Initialize 4 "spacetime coordinate" matrices as random-ish multivectors
-    // In a real simulation, these would be NxN matrices. Here we use MultiVectors.
-    let mut x_matrices: Vec<Operator<FloatType>> = (0..4)
-        .map(|i| {
-            let data: Vec<Complex<FloatType>> = (0..size)
-                .map(|j| Complex::new((i as f64 + j as f64) * 0.1, 0.0))
-                .collect();
-            HilbertState::<FloatType>::new(data, metric).expect("Failed to create operator")
-        })
-        .collect();
+    let start = initial_configuration()?;
+    print_start(action(&start)?, configuration_norm(&start));
 
-    println!("Initialized 4 Spacetime Coordinate Matrices (X_0, X_1, X_2, X_3)");
-    println!("Dimension: {}, MultiVector size: {}\n", dim, size);
+    // The relaxation. Each pass replaces the configuration and records what the step was worth
+    // reporting; the algebra all lives in `relax`, which folds the commutators behind one call.
+    let mut configuration = start;
+    let mut trajectory: Vec<Step> = Vec::with_capacity(MAX_STEPS);
 
-    // Gradient Descent Loop
-    let iterations = 10;
-    let learning_rate = 0.01;
+    for step in 1..=MAX_STEPS {
+        configuration = relax(&configuration, step_size())?;
 
-    for iter in 0..iterations {
-        // Calculate Action: S = Σ_{μ < ν} |[X_μ, X_ν]|^2
-        let mut action = 0.0;
+        let s = action(&configuration)?;
+        trajectory.push(Step {
+            index: step,
+            action: s,
+            norm: configuration_norm(&configuration),
+            largest_commutator: largest_commutator(&configuration)?,
+        });
 
-        for mu in 0..4 {
-            for nu in (mu + 1)..4 {
-                let commutator = commutator_kernel(&x_matrices[mu], &x_matrices[nu])
-                    .expect("Commutator computation failed");
-                // |C|^2 = Σ |c_i|^2
-                let norm_sq: f64 = commutator
-                    .as_inner()
-                    .data()
-                    .iter()
-                    .map(|c| c.norm_sqr())
-                    .sum();
-                action += norm_sq;
-            }
-        }
-
-        println!("[Iteration {:>2}] Action S = {:.6}", iter, action);
-
-        // Simple "perturbation" gradient descent
-        // In a real simulation, you'd compute dS/dX and update accordingly.
-        // Here, we just shrink the matrices slightly to reduce commutators.
-        for x in x_matrices.iter_mut() {
-            let scaled_data: Vec<Complex<FloatType>> = x
-                .as_inner()
-                .data()
-                .iter()
-                .map(|c| *c * Complex::new(1.0 - learning_rate, 0.0))
-                .collect();
-            *x = HilbertState::<FloatType>::new(scaled_data, metric)?;
-        }
-
-        // Early exit if action is small enough
-        if action < 1e-10 {
-            println!("\n[CONVERGED] Action minimized.");
+        if s < convergence_threshold() {
             break;
         }
     }
 
-    // Final State Analysis
-    println!("\n--- Final State ---");
-    for (i, x) in x_matrices.iter().enumerate() {
-        let norm: f64 = x
-            .as_inner()
-            .data()
-            .iter()
-            .map(|c| c.norm_sqr())
-            .sum::<FloatType>()
-            .sqrt();
-        println!("  ||X_{}|| = {:.6}", i, norm);
-    }
+    print_trajectory(&trajectory);
 
-    // The interpretation: As action -> 0, commutators vanish, matrices become
-    // "commuting" (classical limit), and spacetime "emerges" from their eigenvalues.
-    println!("\n[SUCCESS] IKKT Model Simulation Complete.");
-    println!("Interpretation: Spacetime emerges from matrix dynamics.");
+    // Whether the action fell on every step. The relaxation moves against the equation of motion,
+    // so it should, and a run that says otherwise is reporting a step length rather than physics.
+    let monotone = trajectory
+        .windows(2)
+        .all(|pair| pair[1].action <= pair[0].action);
+
+    print_outcome(
+        trajectory.last(),
+        monotone,
+        configuration_norm(&configuration),
+        equation_of_motion_residual(&configuration)?,
+        convergence_threshold(),
+    );
 
     Ok(())
 }

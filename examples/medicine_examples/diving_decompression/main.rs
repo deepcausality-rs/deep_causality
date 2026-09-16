@@ -3,252 +3,304 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! # SCUBA Diving Decompression Planner
+//! # SCUBA decompression planner
 //!
-//! Simulates nitrogen tissue loading and CNS oxygen toxicity for safe dive profiles.
-//! Implements a simplified Bühlmann ZH-L16C decompression algorithm.
+//! A dive plan answers one question: how does a diver surface while the dissolved nitrogen stays
+//! in solution? The Bühlmann ZH-L16C algorithm answers it by tracking sixteen tissue compartments,
+//! each absorbing and releasing nitrogen at its own rate, and holding the ascent whenever the
+//! fastest-loaded compartment reaches its tolerance.
 //!
-//! ## Two DeepCausality abstractions, side by side
-//! - **Monadic composition** — `simulate_dive` chains the descent → bottom → ascent phases with
-//!   `CausalEffectPropagationProcess::bind`, threading the diver state through the dive.
-//! - **The tangent functor (arrow)** — the Schreiner gas-loading rate `dp/dt` is obtained by
-//!   `SchreinerLoading::derivative`, the differentiable counterpart of the tissue-loading curve.
+//! Four categorical operations carry the program, and all four are in this file:
 //!
-//! Code is organised across three files: `model` (types, constants, physics), `utils_print`
-//! (verbose presentation), and this `main` (the workflow that wires both abstractions together).
+//! ```text
+//! try_step   diver state → the next one     the dive as a chain of phases
+//! zip_with   tension × half-time → tension  sixteen compartments, one loading law
+//! zip_with   tension × M-values  → ceiling  sixteen compartments, one ceiling law
+//! fold       sixteen ceilings → the binding one
+//! ```
+//!
+//! Each compartment carries its own constants, so every compartment computation is a **pairing**:
+//! a tension against the half-time that governs it, or against the M-value coefficients that bound
+//! it. `ZipTensorWitness::zip_with` walks two tensors slot by slot and combines each pair, so the
+//! laws in `model` are written once for one compartment and the witness applies them to all
+//! sixteen. No compartment index appears in either law.
+//!
+//! The dive itself is a sequence: descend, hold, ascend to the safety stop, surface, each phase
+//! taking the diver state and returning the next. `CausalFlow::try_step` sequences them and routes
+//! any failure to the error channel, so the phases below hold physiology and no error plumbing.
+//!
+//! The fifth abstraction is the tangent functor. The gas-loading rate `dp/dt` is what a dive
+//! computer watches, and it comes from evaluating the loading curve over `Dual`: `model` states
+//! the curve once, and the derivative follows from the type.
 
 mod model;
-mod print_utils;
+mod utils_print;
 
-use deep_causality_calculus::DifferentiateExt;
-use deep_causality_core::{CausalEffectPropagationProcess, CausalFlow};
+use deep_causality_core::{CausalFlow, CausalityError};
+use deep_causality_haft::{Foldable, Semigroupal};
+use deep_causality_num::{Float106, const_scalar_from_int};
+use deep_causality_tensor::{CausalTensor, CausalTensorWitness, ZipTensorWitness};
 use model::{
-    ASCENT_RATE, DESCENT_RATE, DiveProfile, DiverState, GF_HIGH, GF_LOW, SchreinerLoading,
-    cns_accumulation, find_ceiling, update_tissues,
+    ASCENT_RATE, ASCENT_STEP_M, DECO_CLEARANCE_M, DESCENT_RATE, DecoStop, DiveProfile, DiverState,
+    GF_HIGH, MAX_STOP_MINUTES, MIN_STOP_MINUTES, SchreinerCurve, T_MINUTES, TWO, ZERO,
+    ascent_floor, ceiling_coefficients, cns_accumulation, dive_table_rows, failed,
+    half_time_tensor, inspired_n2_pp, safety_stop_for, tissue_ceiling, tissue_loading,
 };
-use print_utils::{print_detailed_simulation, print_dive_table};
+use utils_print::{print_dive_table, print_gas_loading_rate, print_header, print_simulation};
 
-/// The working precision for the whole dive simulation. **This is the single alias to change**:
-/// set it to `f32` for lower precision or `f64` for standard precision, or Float106 for high precision;
-/// the entire model (constants, tissue tensions, ceilings, CNS clock) recomputes at that precision.
-pub type FloatType = f64;
+/// The dive this run plans: maximum depth in metres, time held at that depth in minutes.
+///
+/// Fifty minutes at thirty metres is twice the no-decompression limit for that depth, so the
+/// ascent carries a real obligation and the planner has a schedule to produce. The table above it
+/// plans each depth *at* its limit, where the correct answer is no mandatory stop at all.
+const MAX_DEPTH_M: FloatType = const_scalar_from_int!(FloatType, 30);
+const BOTTOM_MINUTES: FloatType = const_scalar_from_int!(FloatType, 50);
 
-// Adjust the max diving depth and bottom time using these constants.
-const MAX_DEPTH: FloatType = 30.0;
-const BOTTOM_TIME: FloatType = 0.0;
+/// Where the gas-loading rate is sampled: compartment index, and the elapsed time in minutes.
+const RATE_SAMPLE_COMPARTMENT: usize = 0;
+const RATE_SAMPLE_MINUTES: FloatType = const_scalar_from_int!(FloatType, 10);
+
+/// The working scalar. Switch it to `f32`, `f64` or `deep_causality_num::BFloat16`; the constants,
+/// the tissue tensions, the ceilings, the CNS clock and the autodiff rate all recompute at that
+/// precision.
+pub type FloatType = Float106;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("╔═══════════════════════════════════════════════════════════════════╗");
-    println!("║           SCUBA Decompression Planner (Bühlmann ZH-L16C)          ║");
-    println!("╚═══════════════════════════════════════════════════════════════════╝\n");
+    print_header();
 
-    println!("Algorithm: Bühlmann ZH-L16C with Gradient Factors");
-    println!("Tissue Compartments: 16 (half-times: 5 - 635 minutes)");
-    println!(
-        "Gradient Factors: GF_low={:.0}%, GF_high={:.0}%",
-        GF_LOW * 100.0,
-        GF_HIGH * 100.0
-    );
-    println!("Descent Rate: {:.0} m/min", DESCENT_RATE);
-    println!("Ascent Rate: {:.0} m/min", ASCENT_RATE);
-    println!();
+    // Every row of the table is its own dive, planned by the same chain of phases below.
+    print_dive_table(&dive_table_rows()?);
 
-    // Print dive table
-    print_dive_table();
-    println!();
+    // ── The causal monad ────────────────────────────────────────────────────────────────────
+    // Four phases, each taking the diver state and returning the next. `try_step` sequences them
+    // and short-circuits to the error channel, so no phase carries error plumbing of its own.
+    let profile = CausalFlow::value(DiverState::at_surface()?)
+        .try_step(|diver| descend(diver, MAX_DEPTH_M))
+        .try_step(|diver| hold_bottom(diver, MAX_DEPTH_M, BOTTOM_MINUTES))
+        .try_step(|diver| ascend(diver, ascent_floor(MAX_DEPTH_M)))
+        .try_step(|diver| surface(diver, MAX_DEPTH_M, BOTTOM_MINUTES))
+        .finish()?;
 
-    // Monadic composition: run the dive as a `bind` chain, then hand the result to the printer.
-    let profile = simulate_dive(MAX_DEPTH, BOTTOM_TIME);
-    print_detailed_simulation(MAX_DEPTH, BOTTOM_TIME, &profile);
-    println!();
+    print_simulation(&profile);
 
-    let p_initial: FloatType = 0.740_467; // (1 − P_H2O)·0.79 at the surface
-    let p_inspired: FloatType = 3.110_467; // (1 + 30/10 − P_H2O)·0.79 at 30 m
-    let half_time: FloatType = 5.0; // compartment 1 half-time (min)
-
-    let loading = SchreinerLoading {
-        p_initial,
-        p_inspired,
-        half_time,
-    };
-
-    let x: FloatType = 10.0;
-    let ln_two: FloatType = 2.0f64.ln();
-
-    // The tangent functor: the Schreiner gas-loading rate dp/dt calculated via `derivative`
-    // over the closed-form p(t) using autodiff.
-    let (p_t, dp_dt) = loading.value_and_derivative(x);
-
-    let k = ln_two / loading.half_time;
-    println!("=== Gas-Loading Rate (autodiff) ===\n");
-    println!(
-        "Compartment 1 (τ½={:.0} min) @ 30 m, t=10 min: p={p_t:.4} bar, \
-         dp/dt={dp_dt:.5} bar/min  [analytic k·(p_insp−p)={:.5}]",
-        loading.half_time,
-        k * (loading.p_inspired - p_t)
-    );
+    // ── The tangent functor ─────────────────────────────────────────────────────────────────
+    // One evaluation over `Dual` returns the tension and the rate at which it is loading. The
+    // analytic rate k·(p_inspired − p) is printed beside it as a check.
+    let mut at = SchreinerCurve::inputs_at(MAX_DEPTH_M, RATE_SAMPLE_COMPARTMENT);
+    at[T_MINUTES] = RATE_SAMPLE_MINUTES;
+    let (tension, rate) = SchreinerCurve.value_and_rate(&at);
+    print_gas_loading_rate(&at, tension, rate);
 
     Ok(())
 }
 
-// =============================================================================
-// Dive Simulation (monadic composition)
-// =============================================================================
+// ============================================================================================
+// The two compartment-wide operations. Both are pairings, and both are one `zip_with`.
+// ============================================================================================
 
-/// Simulates a complete dive profile by chaining the descent, bottom, and ascent phases with
-/// `CausalEffectPropagationProcess::bind`. Each phase reads the carried `DiverState`, advances the
-/// tissue tensions and CNS clock, and returns the next state; the final state is summarised into a
-/// [`DiveProfile`].
-fn simulate_dive(max_depth: FloatType, bottom_time: FloatType) -> DiveProfile {
-    let initial_state = DiverState::default();
+/// Loads all sixteen compartments for `minutes` spent at `depth_m`.
+///
+/// `zip_with` pairs each tension with its own half-time and applies the Schreiner law to the pair.
+/// The law is stated once, for one compartment, in `model::tissue_loading`; the witness carries it
+/// across all sixteen and no compartment index is written anywhere.
+fn load_compartments(
+    tensions: &CausalTensor<FloatType>,
+    depth_m: FloatType,
+    minutes: FloatType,
+) -> Result<CausalTensor<FloatType>, CausalityError> {
+    let p_inspired = inspired_n2_pp(depth_m);
+    let half_times = half_time_tensor().map_err(|e| failed("half-time table", &e))?;
 
-    // Phase 1: Descent
-    let descent_time = max_depth / DESCENT_RATE;
-    let avg_descent_depth = max_depth / 2.0;
+    Ok(ZipTensorWitness::zip_with(
+        tensions.clone(),
+        half_times,
+        |tension, half_time| tissue_loading(tension, p_inspired, minutes, half_time),
+    ))
+}
 
-    // The dive as one CausalFlow pipeline: the diver state seeds the state channel, then each
-    // phase binds the next diver state.
-    let process = CausalFlow::process(initial_state)
-        .bind(|_, state, _| {
-            CausalEffectPropagationProcess::pure(descend(
-                state,
-                max_depth,
-                avg_descent_depth,
-                descent_time,
-            ))
-        })
-        .bind(|prev, _, _| {
-            CausalEffectPropagationProcess::pure(bottom_phase(
-                prev.into_value().unwrap(),
-                max_depth,
-                bottom_time,
-            ))
-        })
-        .bind(|prev, _, _| CausalEffectPropagationProcess::pure(ascend(prev.into_value().unwrap())))
-        .into_process();
+/// The compartment governing the ascent, and the ceiling it imposes in metres.
+///
+/// Two steps and no loop. `zip_with` pairs each tension with the M-value coefficients that bound
+/// it and returns that compartment's ceiling; `fold` reduces the sixteen ceilings to the highest,
+/// which is the shallowest depth the diver may go. The index rides along in the payload so the
+/// reduction can name the compartment it picked.
+fn governing_compartment(
+    tensions: &CausalTensor<FloatType>,
+    gf: FloatType,
+) -> Result<(usize, FloatType), CausalityError> {
+    let coefficients = ceiling_coefficients().map_err(|e| failed("M-value table", &e))?;
 
-    // Extract results
-    let final_state = match process.value() {
-        Some(s) => s.clone(),
-        None => DiverState::default(),
-    };
+    let ceilings =
+        ZipTensorWitness::zip_with(tensions.clone(), coefficients, |tension, (index, a, b)| {
+            (index, tissue_ceiling(tension, a, b, gf))
+        });
 
-    // Parse deco stops from phase string
-    let deco_stops: Vec<(FloatType, FloatType)> = if final_state.phase.contains('|') {
-        let parts: Vec<&str> = final_state.phase.split('|').collect();
-        if parts.len() > 1 && !parts[1].is_empty() {
-            parts[1]
-                .split(',')
-                .filter_map(|s| {
-                    let s = s.trim();
-                    if s.is_empty() {
-                        return None;
-                    }
-                    let parts: Vec<&str> = s.split('@').collect();
-                    if parts.len() == 2 {
-                        let time = parts[0].replace("min", "").parse::<FloatType>().ok()?;
-                        let depth = parts[1].replace("m", "").parse::<FloatType>().ok()?;
-                        Some((depth, time))
-                    } else {
-                        None
-                    }
-                })
-                .collect()
+    Ok(CausalTensorWitness::fold(
+        ceilings,
+        (0usize, ZERO),
+        |binding, candidate| {
+            if candidate.1 > binding.1 {
+                candidate
+            } else {
+                binding
+            }
+        },
+    ))
+}
+
+// ============================================================================================
+// The four phases of the dive
+// ============================================================================================
+
+/// Phase 1. Descent loads the tissues at the average depth passed through on the way down.
+fn descend(diver: DiverState, max_depth_m: FloatType) -> Result<DiverState, CausalityError> {
+    let minutes = max_depth_m / DESCENT_RATE;
+    let average_depth = max_depth_m / TWO;
+
+    let mut next = spend(diver, average_depth, minutes)?;
+    next.depth_m = max_depth_m;
+    Ok(next)
+}
+
+/// Phase 2. The bottom phase holds depth, which is where tissue loading peaks. The ceiling read
+/// here is the one a dive plan quotes.
+fn hold_bottom(
+    diver: DiverState,
+    max_depth_m: FloatType,
+    bottom_minutes: FloatType,
+) -> Result<DiverState, CausalityError> {
+    let mut next = spend(diver, max_depth_m, bottom_minutes)?;
+
+    let (controlling, ceiling) = governing_compartment(&next.tissue_tensions, GF_HIGH)?;
+    next.controlling_at_bottom = controlling;
+    next.ceiling_at_bottom_m = ceiling;
+    Ok(next)
+}
+
+/// Phase 3. The staged ascent, in three-metre steps down to `floor_m`: the safety-stop depth when
+/// the dive carries one, the surface otherwise.
+///
+/// Before each step the governing compartment's ceiling is read. A step that would breach it
+/// becomes a decompression stop at the current depth, and the stop is held, one
+/// [`MIN_STOP_MINUTES`] at a time, until the ceiling has risen past the depth the step lands on.
+/// The stop is recorded once, with the minutes it took.
+fn ascend(diver: DiverState, floor_m: FloatType) -> Result<DiverState, CausalityError> {
+    let mut current = diver;
+    let mut depth = current.depth_m;
+
+    while depth > floor_m {
+        let next_depth = if depth - ASCENT_STEP_M > floor_m {
+            depth - ASCENT_STEP_M
         } else {
-            Vec::new()
+            floor_m
+        };
+
+        // A stop is required while the ceiling sits deeper than where the next step would land.
+        // Above the clearance depth the ascent runs on and the safety stop covers the rest.
+        let mut stop_minutes = ZERO;
+        if depth > DECO_CLEARANCE_M {
+            loop {
+                let (_, ceiling) = governing_compartment(&current.tissue_tensions, GF_HIGH)?;
+                if ceiling <= next_depth {
+                    break;
+                }
+                if stop_minutes >= MAX_STOP_MINUTES {
+                    return Err(failed(
+                        "decompression stop",
+                        &format!(
+                            "the ceiling holds at {ceiling:?} m after {stop_minutes:?} min at \
+                             {depth:?} m, so the ascent to {next_depth:?} m stays closed"
+                        ),
+                    ));
+                }
+                current = spend(current, depth, MIN_STOP_MINUTES)?;
+                stop_minutes += MIN_STOP_MINUTES;
+            }
         }
-    } else {
-        Vec::new()
-    };
+        if stop_minutes > ZERO {
+            current.deco_stops.push(DecoStop {
+                depth_m: depth,
+                minutes: stop_minutes,
+            });
+        }
 
-    // Safety stop for depths >= 15m
-    let safety_stop = if max_depth >= 15.0 {
-        Some((5.0, 3.0))
-    } else {
-        None
-    };
+        current = ascend_segment(current, depth, next_depth)?;
+        depth = next_depth;
+    }
 
-    DiveProfile {
-        cns_percent: final_state.cns_percent,
+    Ok(current)
+}
+
+/// Phase 4. The safety stop when the dive carries one, the last stretch to the surface, and the
+/// finished profile.
+///
+/// The profile carries the tissue state the diver surfaces with, so the phase confirms the ascent
+/// finished at the surface before it reports.
+fn surface(
+    diver: DiverState,
+    max_depth_m: FloatType,
+    bottom_minutes: FloatType,
+) -> Result<DiveProfile, CausalityError> {
+    let safety_stop = safety_stop_for(max_depth_m);
+
+    let held = match safety_stop {
+        Some(stop) => spend(diver.clone(), stop.depth_m, stop.minutes)?,
+        None => diver.clone(),
+    };
+    let from_m = held.depth_m;
+    let surfaced = ascend_segment(held, from_m, ZERO)?;
+
+    if surfaced.depth_m != ZERO {
+        return Err(failed(
+            "surfacing",
+            &format!("the ascent ended at {:?} m", surfaced.depth_m),
+        ));
+    }
+
+    Ok(DiveProfile {
+        max_depth_m,
+        bottom_minutes,
+        total_minutes: surfaced.elapsed_minutes,
+        cns_percent: surfaced.cns_percent,
+        final_tensions: surfaced.tissue_tensions,
+        controlling: diver.controlling_at_bottom,
+        ceiling_m: diver.ceiling_at_bottom_m,
+        deco_stops: diver.deco_stops,
         safety_stop,
-        deco_stops,
-    }
+    })
 }
 
-/// Phase 1: descent to depth. Loads the tissues at the average descent depth.
-fn descend(
-    state: DiverState,
-    max_depth: FloatType,
-    avg_descent_depth: FloatType,
-    descent_time: FloatType,
-) -> DiverState {
-    let new_tensions = update_tissues(&state.tissue_tensions, avg_descent_depth, descent_time);
-    let cns = state.cns_percent + cns_accumulation(avg_descent_depth, descent_time);
+/// One ascent segment from `from_m` up to `to_m` at the ascent rate. The tissues load at the
+/// segment's average depth, and the diver lands at `to_m`.
+fn ascend_segment(
+    diver: DiverState,
+    from_m: FloatType,
+    to_m: FloatType,
+) -> Result<DiverState, CausalityError> {
+    let segment = from_m - to_m;
+    let minutes = segment / ASCENT_RATE;
+    let average_depth = to_m + segment / TWO;
 
-    DiverState {
-        depth: max_depth,
-        elapsed_time: descent_time,
-        tissue_tensions: new_tensions,
-        cns_percent: cns,
-        phase: "At Depth".to_string(),
-    }
+    let mut next = spend(diver, average_depth, minutes)?;
+    next.depth_m = to_m;
+    Ok(next)
 }
 
-/// Phase 2: bottom time at the maximum depth.
-fn bottom_phase(state: DiverState, max_depth: FloatType, bottom_time: FloatType) -> DiverState {
-    let new_tensions = update_tissues(&state.tissue_tensions, max_depth, bottom_time);
-    let cns = state.cns_percent + cns_accumulation(max_depth, bottom_time);
-
-    DiverState {
-        elapsed_time: state.elapsed_time + bottom_time,
-        tissue_tensions: new_tensions,
-        cns_percent: cns,
-        phase: "Bottom Complete".to_string(),
-        ..state
-    }
-}
-
-/// Phase 3: ascent in 3 m increments, inserting decompression stops where the ceiling requires.
-/// The deco stops are encoded into the phase string for extraction by the caller.
-fn ascend(mut state: DiverState) -> DiverState {
-    let mut current_depth = state.depth;
-    let mut deco_stops: Vec<(FloatType, FloatType)> = Vec::new();
-
-    while current_depth > 0.0 {
-        let (_, ceiling) = find_ceiling(&state.tissue_tensions, GF_HIGH);
-
-        // Check if we need a deco stop.
-        if ceiling > current_depth - 3.0 && current_depth > 6.0 {
-            // Stop at current depth rounded to 3m.
-            let stop_depth = (current_depth / 3.0).floor() * 3.0;
-            let stop_time = 2.0; // Minimum 2 min stop
-
-            state.tissue_tensions = update_tissues(&state.tissue_tensions, stop_depth, stop_time);
-            state.cns_percent += cns_accumulation(stop_depth, stop_time);
-            state.elapsed_time += stop_time;
-            deco_stops.push((stop_depth, stop_time));
-        }
-
-        // Ascend 3m.
-        let ascent_segment = current_depth.min(3.0);
-        let ascent_time = ascent_segment / ASCENT_RATE;
-        current_depth -= ascent_segment;
-
-        let avg_depth = current_depth + ascent_segment / 2.0;
-        state.tissue_tensions = update_tissues(&state.tissue_tensions, avg_depth, ascent_time);
-        state.cns_percent += cns_accumulation(avg_depth, ascent_time);
-        state.elapsed_time += ascent_time;
-    }
-
-    state.depth = 0.0;
-
-    // Store deco stops in the phase string for extraction.
-    let deco_str = deco_stops
-        .iter()
-        .map(|(d, t)| format!("{:.0}min@{:.0}m", t, d))
-        .collect::<Vec<_>>()
-        .join(",");
-    state.phase = format!("Surfaced|{}", deco_str);
-
-    state
+/// Spends `minutes` at `depth_m`: loads the sixteen compartments, advances the CNS oxygen clock
+/// and the elapsed time, and leaves the diver at that depth.
+///
+/// Every phase above is this one operation applied at a different depth for a different duration,
+/// so each phase reads as the schedule it describes.
+fn spend(
+    diver: DiverState,
+    depth_m: FloatType,
+    minutes: FloatType,
+) -> Result<DiverState, CausalityError> {
+    Ok(DiverState {
+        depth_m,
+        elapsed_minutes: diver.elapsed_minutes + minutes,
+        tissue_tensions: load_compartments(&diver.tissue_tensions, depth_m, minutes)?,
+        cns_percent: diver.cns_percent + cns_accumulation(depth_m, minutes),
+        ..diver
+    })
 }

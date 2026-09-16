@@ -605,15 +605,43 @@ impl Float for Float106 {
     }
 
     fn atan2(self, other: Self) -> Self {
-        // Handle special cases
-        if other.hi == 0.0 && other.lo == 0.0 {
-            if self.hi > 0.0 || (self.hi == 0.0 && self.lo > 0.0) {
-                return Self::FRAC_PI_2;
-            } else if self.hi < 0.0 || (self.hi == 0.0 && self.lo < 0.0) {
-                return -Self::FRAC_PI_2;
+        // A NaN in either argument is a NaN out, as for every other elementary function. The
+        // sign tests below are all false for a NaN, so without this guard a NaN numerator over a
+        // zero denominator would read as negative and come back as −π/2.
+        if self.hi.is_nan() || other.hi.is_nan() {
+            return Self::nan();
+        }
+
+        // Both arguments zero. IEEE 754 fixes this case on the signs of the two zeros rather than
+        // leaving it undefined, and the primitive floats follow it:
+        //
+        //     atan2(±0, +0) = ±0        atan2(±0, −0) = ±π
+        //
+        // The origin is where a direction stops being defined, so a caller reading an angle off a
+        // vector that happens to vanish reaches this branch as a matter of course — a polar angle
+        // at a pole, or a Berry phase where the gap closes. Returning NaN there propagates through
+        // every later sum and takes the whole result with it, and does so only at this precision,
+        // which is the hardest kind of disagreement to find.
+        if self.is_zero() && other.is_zero() {
+            return if is_negative(other) {
+                if is_negative(self) {
+                    -Self::PI
+                } else {
+                    Self::PI
+                }
             } else {
-                return Self::nan();
-            }
+                // `self` is the zero the caller passed, so its sign rides along.
+                self
+            };
+        }
+
+        // `other` zero and `self` not: the angle is a right angle, signed by `self`.
+        if other.is_zero() {
+            return if self.hi > 0.0 || (self.hi == 0.0 && self.lo > 0.0) {
+                Self::FRAC_PI_2
+            } else {
+                -Self::FRAC_PI_2
+            };
         }
 
         // atan2(±0, y) with y non-zero and not NaN: ±0 for a positive y, ±π for a negative

@@ -3,160 +3,76 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! # Protein Folding Simulation (Generalized Master Equation)
+//! # Protein folding with memory
 //!
-//! Simulates protein folding dynamics using the Generalized Master Equation (GME)
-//! with memory kernels for non-Markovian behavior.
+//! A protein chain folds by passing through partly folded intermediates on its way to the native
+//! shape it works in. Modelling that as a Markov chain says the next conformation depends only on
+//! the current one. Real chains carry memory: a segment that has just formed a contact behaves
+//! differently from one that arrived in the same shape by chance.
 //!
-//! ## Key Concepts
-//! - **Markov Operator**: Transition matrix for instantaneous state changes
-//! - **Memory Kernels**: History-dependent corrections (proteins "remember" past states)
-//! - **Conformational States**: Unfolded → Intermediate → Native folding pathway
+//! The **generalized master equation** carries that memory. Alongside the single-step transition
+//! operator it sums a set of memory kernels against the distributions the chain held at earlier
+//! times, so the past enters the next step directly.
 //!
-//! ## APIs Demonstrated
-//! - `generalized_master_equation()` - Non-Markovian dynamics with memory
-//! - `Probability` - Type-safe probability values in [0,1]
-//! - `CausalTensor` - Transition and memory kernel matrices
+//! Three categorical operations run the distribution bookkeeping:
+//!
+//! ```text
+//! fold      distribution → its total mass    a reduction over the states
+//! fmap      distribution → rescaled entries  one division per state
+//! sequence  Vec<Result>  → Result<Vec>       one fallible distribution
+//! ```
+//!
+//! The memory term adds mass the transition operator alone conserves, so each step is renormalised.
+//! `fold` totals it, `fmap` divides it out, and `sequence` turns the vector of fallible re-wraps
+//! into a single result, so a value leaving `[0, 1]` surfaces as one error for the distribution.
 
-use deep_causality_physics::{Probability, generalized_master_equation};
-use deep_causality_tensor::CausalTensor;
+mod model;
+mod utils_print;
 
-/// Switch this alias to `f32` for low precision, `f64` for standard precision,
-/// or `Float106` for high precision.
-pub type FloatType = f64;
+use deep_causality_num::Float106;
+use model::{
+    MEMORY_DEPTH, advance, markov_operator, memory_kernels, native_fraction, unfolded_state,
+};
+use utils_print::{print_distribution, print_header, print_summary};
+
+/// How many steps of the master equation the run takes.
+const TIME_STEPS: usize = 15;
+
+/// How often the run prints the distribution.
+const REPORT_EVERY: usize = 3;
+
+/// The working scalar. Switch it to `f32`, `f64` or `deep_causality_num::BFloat16`; the transition
+/// operator, the memory kernels and every distribution recompute at that precision.
+///
+/// It sits at [`Float106`] by default on purpose. A hard-coded `f64` anywhere in the program is
+/// invisible while the alias *is* `f64`, and shows up here as a compile error the moment the two
+/// types differ.
+pub type FloatType = Float106;
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("=== Protein Folding: Generalized Master Equation ===\n");
+    print_header(TIME_STEPS);
 
-    // Define 4 conformational states:
-    // 0: Unfolded
-    // 1: Partially Folded (Intermediate 1)
-    // 2: Partially Folded (Intermediate 2)
-    // 3: Fully Folded (Native State)
-    let num_states = 4;
+    let operator = markov_operator()?;
+    let kernels = memory_kernels()?;
 
-    // Initial state: 100% in Unfolded state
-    let mut state: Vec<Probability<FloatType>> = vec![
-        Probability::<FloatType>::new(1.0).unwrap(),
-        Probability::<FloatType>::new(0.0).unwrap(),
-        Probability::<FloatType>::new(0.0).unwrap(),
-        Probability::<FloatType>::new(0.0).unwrap(),
-    ];
+    let mut state = unfolded_state()?;
+    print_distribution(0, &state);
 
-    println!("Initial Conformational Distribution:");
-    print_state(&state);
+    // The chain starts with no past, so the history is seeded with the initial distribution. It
+    // then slides forward one step at a time, always holding the last `MEMORY_DEPTH` entries.
+    let mut history = vec![state.clone(); MEMORY_DEPTH];
 
-    // History: past states (for non-Markovian memory effects)
-    // History length must match memory kernel length
-    let mut history: Vec<Vec<Probability<FloatType>>> =
-        vec![state.clone(), state.clone(), state.clone()];
+    for step in 1..=TIME_STEPS {
+        state = advance(&state, &history, &operator, &kernels)?;
 
-    // Markov Transition Matrix (instantaneous folding)
-    // For matmul T * P where P is [n,1], T should be [n,n]
-    // T[i,j] = probability of transitioning TO state i FROM state j
-    // Result: new_P[i] = sum_j(T[i,j] * P[j])
-    // In row-major order: row i contains weights for output state i
-    #[rustfmt::skip]
-    let markov_data = vec![
-        // Row 0 (TO Unfolded): from U=0.7, from I1=0.1, from I2=0, from N=0
-        0.70, 0.10, 0.00, 0.00,
-        // Row 1 (TO I1): from U=0.3, from I1=0.7, from I2=0.1, from N=0
-        0.30, 0.70, 0.10, 0.00,
-        // Row 2 (TO I2): from U=0, from I1=0.2, from I2=0.4, from N=0
-        0.00, 0.20, 0.40, 0.00,
-        // Row 3 (TO Native): from U=0, from I1=0, from I2=0.5, from N=1.0
-        0.00, 0.00, 0.50, 1.00,
-    ];
-    let markov_operator = CausalTensor::new(markov_data, vec![num_states, num_states])
-        .expect("Failed to create Markov operator");
+        history.remove(0);
+        history.push(state.clone());
 
-    // Memory Kernels: small corrections based on history
-    // These represent memory effects (e.g., protein "remembers" recent conformations)
-    let memory_kernels: Vec<CausalTensor<FloatType>> = (0..3)
-        .map(|lag| {
-            // Decay factor for this lag
-            let decay = (-0.5 * (lag as f64 + 1.0)).exp() * 0.02;
-
-            // Small memory corrections
-            let mut data = vec![0.0; num_states * num_states];
-
-            // Memory favors forward progression
-            data[1] = decay; // Unfolded -> I1
-            data[num_states + 2] = decay; // I1 -> I2
-            data[2 * num_states + 3] = decay; // I2 -> Native
-
-            CausalTensor::new(data, vec![num_states, num_states])
-                .expect("Failed to create memory kernel")
-        })
-        .collect();
-
-    println!("\nSimulating folding dynamics with Markov + Memory...\n");
-
-    // Simulation loop
-    let time_steps = 15;
-    for t in 1..=time_steps {
-        // Apply Generalized Master Equation with Markov operator
-        let effect =
-            generalized_master_equation(&state, &history, Some(&markov_operator), &memory_kernels);
-
-        match effect.value() {
-            Some(new_state) => {
-                // Normalize to ensure probabilities sum to 1
-                let total: f64 = new_state.iter().map(|p| p.value()).sum();
-
-                // Handle edge case: if total is zero or NaN, keep current state
-                if total <= 0.0 || total.is_nan() {
-                    println!("[t={:>2}] Normalization issue, keeping previous state", t);
-                    continue;
-                }
-
-                state = new_state
-                    .iter()
-                    .map(|p| {
-                        let normalized = (p.value() / total).clamp(0.0, 1.0);
-                        Probability::<FloatType>::new(if normalized.is_nan() {
-                            0.0
-                        } else {
-                            normalized
-                        })
-                        .unwrap_or(Probability::<FloatType>::new(0.0).unwrap())
-                    })
-                    .collect();
-
-                // Update history (sliding window)
-                history.remove(0);
-                history.push(state.clone());
-
-                println!("[t={:>2}] Distribution:", t);
-                print_state(&state);
-            }
-            None => {
-                eprintln!("[t={}] GME computation failed: {:?}", t, effect.error());
-            }
+        if step % REPORT_EVERY == 0 {
+            print_distribution(step, &state);
         }
     }
 
-    println!("\n--- Folding Summary ---");
-    let native_prob = state[3].value();
-    println!("Final Native State Probability: {:.4}", native_prob);
-
-    if native_prob > 0.5 {
-        println!("[SUCCESS] Protein has reached the native state!");
-    } else if native_prob > 0.2 {
-        println!("[PROGRESS] Protein is folding...");
-    } else {
-        println!("[SLOW] Folding is still in early stages.");
-    }
-
-    println!("\n[COMPLETE] Protein Folding Simulation Finished.");
-
+    print_summary(native_fraction(&state)?);
     Ok(())
-}
-
-fn print_state(state: &[Probability<FloatType>]) {
-    let labels = ["Unfolded", "Intermed1", "Intermed2", "Native  "];
-    for (i, p) in state.iter().enumerate() {
-        let bar_len = (p.value() * 20.0) as usize;
-        let bar: String = "█".repeat(bar_len);
-        println!("  {}: {:>6.2}% {}", labels[i], p.value() * 100.0, bar);
-    }
 }

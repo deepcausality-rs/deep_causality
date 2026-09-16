@@ -117,7 +117,12 @@ impl<R: RealField> CompositionLaw<R> {
     }
 }
 
-impl<R: RealField + fmt::Debug> fmt::Display for CompositionLaw<R> {
+/// The bound asks for `LowerExp` rather than `Debug` because the residuals this law carries are
+/// small numbers whose exponent is the interesting part, and because a `Debug` rendering of a
+/// composite scalar shows its representation instead of its value: a `Float106` prints as
+/// `DoubleFloat { hi: 0.76, lo: -4.0e-17 }`, which is unreadable in a table and says nothing a
+/// reader of a residual wants to know. Every scalar in the tower implements `LowerExp`.
+impl<R: RealField + fmt::LowerExp> fmt::Display for CompositionLaw<R> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         writeln!(
             f,
@@ -129,7 +134,7 @@ impl<R: RealField + fmt::Debug> fmt::Display for CompositionLaw<R> {
         for r in &self.rows {
             writeln!(
                 f,
-                "  {}: ε₁ = {:?}, ε₂ = {:?}, ‖τ₁‖_pre = {:?}, ‖τ₂‖_post = {:?}, bound = {:?}, measured = {:?}",
+                "  {}: ε₁ = {:.3e}, ε₂ = {:.3e}, ‖τ₁‖_pre = {:.3e}, ‖τ₂‖_post = {:.3e}, bound = {:.3e}, measured = {:.3e}",
                 r.query.kind(),
                 r.epsilon_first,
                 r.epsilon_second,

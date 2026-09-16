@@ -28,7 +28,7 @@
 
 use deep_causality_haft::{Foldable, Functor};
 use deep_causality_linear::CsrMatrix;
-use deep_causality_num::{lift, lower};
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lift, lower};
 use deep_causality_topology::{
     Chain, ChainWitness, Cochain, CochainWitness, Simplex, SimplicialComplex, Skeleton,
 };
@@ -53,12 +53,15 @@ const WIND_ASSIST: [f64; N_SEGMENTS] = [5.0, 2.0, 3.0, 1.0, 6.0];
 const GRADE: usize = 1;
 
 /// How many times over the route is repeated in section 3.
-const REPEATS: f64 = 2.0;
+const REPEATS: FloatType = const_scalar_from_int!(FloatType, 2);
 /// The factor the wind-assist form is scaled by in section 4.
-const FORM_SCALE: f64 = 1.5;
+const FORM_SCALE: FloatType = const_scalar_from_float!(FloatType, 1.5);
 
 /// The working scalar. Heights, weights and every pairing carry it.
 pub type FloatType = f64;
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
@@ -86,14 +89,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let circulation = pair(&wind, &route);
     print_pairing(net_climb, circulation);
 
-    assert_eq!(net_climb, lift::<FloatType>(0.0));
+    assert_eq!(net_climb, ZERO);
 
     // ---------------------------------------------------------------------
     // 3. Functor on the chain: drive the route twice.
     // ---------------------------------------------------------------------
     // `ChainWitness::fmap` reaches the weights and leaves the complex and the grade in place, so
     // the result is still a 1-chain over the same road network.
-    let repeats = lift::<FloatType>(REPEATS);
+    let repeats = REPEATS;
     let twice = ChainWitness::<FloatType>::fmap(route.clone(), move |w| w * repeats);
     let twice_circulation = pair(&wind, &twice);
     print_chain_scaling(twice.grade(), circulation, twice_circulation);
@@ -105,7 +108,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ---------------------------------------------------------------------
     // `CochainWitness::fmap` reaches the values and carries the degree across. The degree is held,
     // never recounted from the value count, which is what keeps a degree-1 form a degree-1 form.
-    let scale = lift::<FloatType>(FORM_SCALE);
+    let scale = FORM_SCALE;
     let stronger = CochainWitness::fmap(wind.clone(), move |v| v * scale);
     let scaled_circulation = pair(&stronger, &route);
     print_cochain_scaling(stronger.degree(), circulation, scaled_circulation);
@@ -117,9 +120,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ---------------------------------------------------------------------
     // A fold drops the structure and keeps the payload, so each side reduces to one number: the
     // net signed traversal count, and the total assist across every segment.
-    let traversals =
-        ChainWitness::<FloatType>::fold(route, lift::<FloatType>(0.0), |acc, w| acc + w);
-    let total_assist = CochainWitness::fold(wind, lift::<FloatType>(0.0), |acc, v| acc + v);
+    let traversals = ChainWitness::<FloatType>::fold(route, ZERO, |acc, w| acc + w);
+    let total_assist = CochainWitness::fold(wind, ZERO, |acc, v| acc + v);
     print_folds(traversals, total_assist);
 
     print_footer();
@@ -133,7 +135,7 @@ fn pair(form: &Cochain<FloatType>, chain: &Chain<FloatType, FloatType>) -> Float
     form.values()
         .iter()
         .enumerate()
-        .fold(lift::<FloatType>(0.0), |acc, (cell, &value)| {
+        .fold(ZERO, |acc, (cell, &value)| {
             acc + value * weights.get_value_at(0, cell)
         })
 }

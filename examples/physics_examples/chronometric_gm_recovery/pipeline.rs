@@ -25,18 +25,18 @@
 //! stage returns a `Result`, `CausalFlow::try_step` unwraps the value and
 //! short-circuits the error channel; no stage touches `CausalEffect`.
 
-use chronometric_examples::{ClockData, OrbitData};
 use core::fmt::Debug;
 use deep_causality_algebra::RealField;
 use deep_causality_core::{CausalityError, CausalityErrorEnum};
+use deep_causality_file::{ClockData, OrbitData};
 use deep_causality_num::{FromPrimitive, lift};
 use deep_causality_physics::{
     CentralBody, EARTH_GM, EARTH_J2, EARTH_MASS_KG, EARTH_RADIUS_EQUATORIAL,
     NEWTONIAN_CONSTANT_OF_GRAVITATION, SpaceTimeCoordinate, solve_gm_analytical,
 };
 
-use chronometric_examples::data_manager::DataManager;
-use chronometric_examples::proces_utils::{apply_mad_filter, interpolate_space_time};
+use crate::data_manager::DataManager;
+use crate::proces_utils::{apply_mad_filter, interpolate_space_time};
 
 /// Minimum radial separation between paired coordinates (meters).
 /// Below this, the denominator $1/r_a - 1/r_b$ is numerically unstable.

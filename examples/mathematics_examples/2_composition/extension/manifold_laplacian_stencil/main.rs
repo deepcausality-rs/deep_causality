@@ -19,7 +19,7 @@
 
 use deep_causality_haft::CoMonad;
 use deep_causality_linear::CsrMatrix;
-use deep_causality_num::{lift, lower};
+use deep_causality_num::{const_scalar_from_int, lift, lower};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     Manifold, ManifoldWitness, Simplex, SimplicialComplex, SimplicialManifold, Skeleton,
@@ -30,6 +30,10 @@ const N_VERTICES: usize = 7;
 /// `f64` is the right precision here: the Laplacian stencil on integer inputs
 /// produces integer outputs, so Float106 yields no observable gain.
 pub type FloatType = f64;
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
 
 fn main() {
     print_header();
@@ -42,8 +46,8 @@ fn main() {
     let manifold = build_line_manifold(phi.clone());
     print_field(&phi);
 
-    let two = lift::<FloatType>(2.0);
-    let zero = lift::<FloatType>(0.0);
+    let two = TWO;
+    let zero = ZERO;
 
     // Comonadic extension: at each cursor position, compute the stencil.
     let laplacian = ManifoldWitness::extend(&manifold, |w| {
@@ -96,7 +100,7 @@ fn build_line_manifold(vertex_values: Vec<FloatType>) -> SimplicialManifold<Floa
 
     // Data layout: vertex values first, then a zero per edge.
     let mut data_vec = vertex_values;
-    data_vec.extend(std::iter::repeat_n(lift::<FloatType>(0.0), n_edges));
+    data_vec.extend(std::iter::repeat_n(ZERO, n_edges));
     let data = CausalTensor::new(data_vec, vec![N_VERTICES + n_edges])
         .expect("one entry per vertex and per edge");
 

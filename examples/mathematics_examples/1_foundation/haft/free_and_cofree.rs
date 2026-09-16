@@ -32,7 +32,7 @@
 //! the hours booked at each task, and the `Free` side is the plan of work as data.
 
 use deep_causality_haft::{CoMonad, Cofree, CofreeWitness, Free, Functor, VecWitness};
-use deep_causality_num::{lift, lower};
+use deep_causality_num::{const_scalar_from_int, lift, lower};
 
 /// The work-breakdown structure: a name, the hours booked directly on the task, and its subtasks.
 const TASKS: [(&str, f64, &[usize]); 7] = [
@@ -47,10 +47,13 @@ const TASKS: [(&str, f64, &[usize]); 7] = [
 const ROOT: usize = 0;
 
 /// The blended rate the cost map in section 2 charges, per hour.
-const HOURLY_RATE: f64 = 95.0;
+const HOURLY_RATE: FloatType = const_scalar_from_int!(FloatType, 95);
 
 /// The working scalar. Hours and costs carry it.
 pub type FloatType = f64;
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
@@ -70,7 +73,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ---------------------------------------------------------------------
     // 2. Functor: relabel every node, tree shape untouched.
     // ---------------------------------------------------------------------
-    let rate = lift::<FloatType>(HOURLY_RATE);
+    let rate = HOURLY_RATE;
     let cost = CofreeWitness::<VecWitness>::fmap(hours.clone(), move |h| h * rate);
     print_tree("cost at the blended rate", &cost, 0);
 
@@ -89,9 +92,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // The root's roll-up is every task's own hours added together.
     let booked = TASKS
         .iter()
-        .fold(lift::<FloatType>(0.0), |acc, &(_, h, _)| {
-            acc + lift::<FloatType>(h)
-        });
+        .fold(ZERO, |acc, &(_, h, _)| acc + lift::<FloatType>(h));
     assert_eq!(project_total, booked);
 
     // ---------------------------------------------------------------------

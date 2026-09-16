@@ -5,7 +5,7 @@
 
 //! # Tensor / Sparse Iso Showcase
 //!
-//! A heat-flow adjacency matrix arrives as a dense `CausalTensor<f64>`. Most
+//! A heat-flow adjacency matrix arrives as a dense `CausalTensor<FloatType>`. Most
 //! entries are zero (the graph is locally connected). The pipeline:
 //!
 //! 1. Sparsify the dense matrix to save memory for the next stage.
@@ -38,8 +38,9 @@
 //! feature on `deep_causality_linear`; that feature is gone, and so is the optional dependency that
 //! let a sparse matrix reach a tensor at all.
 
+use deep_causality_algebra::Real;
 use deep_causality_linear::CsrMatrix;
-use deep_causality_num::{lift, lower};
+use deep_causality_num::{const_scalar_from_float, lift, lower};
 use deep_causality_tensor::{CausalTensor, ToDenseTensor};
 
 /// Short alias used by the conversion helpers below.
@@ -47,6 +48,9 @@ type F = FloatType;
 
 /// The working scalar. Every adjacency weight carries it, dense or sparse.
 pub type FloatType = f64;
+
+/// Small numbers and tolerances, at the working type.
+const TOLERANCE: FloatType = const_scalar_from_float!(FloatType, 1e-12);
 
 fn main() {
     #[rustfmt::skip]
@@ -80,13 +84,10 @@ fn main() {
         .as_slice()
         .iter()
         .zip(dense_back_after.as_slice().iter())
-        .map(|(a, b)| (a - b).abs())
+        .map(|(a, b)| Real::abs(a - b))
         .sum();
     print_drift(drift);
-    assert!(
-        drift < lift::<FloatType>(1e-12),
-        "iso path diverged from manual path"
-    );
+    assert!(drift < TOLERANCE, "iso path diverged from manual path");
     assert_eq!(row_sums_before, row_sums_after);
 
     print_loc_accounting();
@@ -137,11 +138,12 @@ fn manual_tensor_to_csr(tensor: &CausalTensor<F>) -> CsrMatrix<F> {
     let rows = shape[0];
     let cols = shape[1];
     let data = tensor.as_slice();
+    let zero = lift::<F>(0.0);
     let mut triplets: Vec<(usize, usize, F)> = Vec::new();
     for r in 0..rows {
         for c in 0..cols {
             let v = data[r * cols + c];
-            if v != 0.0 {
+            if v != zero {
                 triplets.push((r, c, v));
             }
         }
@@ -154,7 +156,7 @@ fn manual_csr_to_tensor(sparse: &CsrMatrix<F>) -> CausalTensor<F> {
     let row_ptr = sparse.row_indices();
     let col_idx = sparse.col_indices();
     let vals = sparse.values();
-    let mut data = vec![0.0_f64; rows * cols];
+    let mut data = vec![lift::<F>(0.0); rows * cols];
     for r in 0..rows {
         for k in row_ptr[r]..row_ptr[r + 1] {
             data[r * cols + col_idx[k]] = vals[k];
@@ -167,6 +169,7 @@ fn manual_csr_to_tensor(sparse: &CsrMatrix<F>) -> CausalTensor<F> {
 // Pretty-printing helper used by `main`.
 // =============================================================================
 
+/// The display boundary: `f64` appears here and nowhere else.
 fn print_dense(t: &CausalTensor<F>) {
     let shape = t.shape();
     let rows = shape[0];
@@ -174,7 +177,7 @@ fn print_dense(t: &CausalTensor<F>) {
     let data = t.as_slice();
     for r in 0..rows {
         let row: Vec<String> = (0..cols)
-            .map(|c| format!("{:>5.1}", data[r * cols + c]))
+            .map(|c| format!("{:>5.1}", lower(data[r * cols + c])))
             .collect();
         println!("  [{}]", row.join(" "));
     }
@@ -185,7 +188,8 @@ fn print_dense(t: &CausalTensor<F>) {
 // -----------------------------------------------------------------------------------------
 
 fn print_input(dense: &CausalTensor<FloatType>) {
-    println!("=== Tensor / Sparse Iso Showcase ===\n");
+    println!("=== Tensor / Sparse Iso Showcase ===");
+    println!("Precision: {}\n", core::any::type_name::<FloatType>());
     println!("Dense input (6x6):");
     print_dense(dense);
 }

@@ -4,7 +4,7 @@
  */
 
 use deep_causality_haft::{Foldable, VecWitness};
-use deep_causality_num::{lift, lift_u32, lower};
+use deep_causality_num::{const_scalar_from_int, lift, lift_u32, lower};
 
 // ============================================================================
 // Domain: E-Commerce Order Processing
@@ -18,29 +18,37 @@ use deep_causality_num::{lift, lift_u32, lower};
 /// The working scalar. Money is the quantity this example reduces, so it carries the alias.
 pub type FloatType = f64;
 
+/// Small numbers and tolerances, at the working type.
+const FIVE: FloatType = const_scalar_from_int!(FloatType, 5);
+const HUNDRED: FloatType = const_scalar_from_int!(FloatType, 100);
+const TEN: FloatType = const_scalar_from_int!(FloatType, 10);
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+
 fn main() {
     print_header();
 
     let orders = vec![
         OrderItem {
             id: "A".to_string(),
-            price: lift(10.0),
+            price: TEN,
             quantity: 2,
         },
         OrderItem {
             id: "B".to_string(),
-            price: lift(5.0),
+            price: FIVE,
             quantity: 10,
         },
         OrderItem {
             id: "C".to_string(),
-            price: lift(100.0),
+            price: HUNDRED,
             quantity: 1,
         },
     ];
 
     // Total revenue: the accumulator is the working scalar, seeded through `lift`.
-    let total_revenue = VecWitness::fold(orders.clone(), lift::<FloatType>(0.0), |acc, item| {
+    let total_revenue = VecWitness::fold(orders.clone(), ZERO, |acc, item| {
         acc + (item.price * lift_u32::<FloatType>(item.quantity))
     });
     assert_eq!(total_revenue, lift::<FloatType>(170.0));

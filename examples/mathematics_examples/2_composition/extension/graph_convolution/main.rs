@@ -3,115 +3,98 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+//! # Graph x Tensor: a convolution layer via comonadic extension
+//!
+//! A graph neural network layer and a cellular automaton share one shape: the new value at a
+//! node depends on that node and its neighbours. `CoMonad` is that shape. `extract` reads the
+//! focused node, and `extend` applies a neighbourhood-aware kernel at every position at once,
+//! so the layer is written without a loop over nodes.
+//!
+//! Here the kernel is mean pooling, `(self + sum(neighbours)) / (1 + degree)`, which is a
+//! diffusion step. Topology supplies the walk and the adjacency; the tensor holds the node
+//! features; the kernel decides what a neighbourhood means. `fmap` then applies the activation,
+//! because an activation is per-node and needs no neighbourhood at all.
+//!
+//! ## APIs Demonstrated
+//! - `Graph::new`, `Graph::add_edge`, `Graph::neighbors`
+//! - `GraphWitness::extract` and `GraphWitness::extend` (CoMonad)
+//! - `GraphWitness::fmap` (Functor)
+
 use deep_causality_haft::{CoMonad, Functor};
-use deep_causality_num::{Lift, lift, lower};
+use deep_causality_num::{Lift, const_scalar_from_float, const_scalar_from_int, lower};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Graph, GraphWitness};
 
-/// Node-feature precision. `f64` is fine for a 4-node toy graph; the GNN code
-/// flows through any `RealField` implementor.
+/// A ring `0-1-2-3-0` with one cross connection `1-3`.
+const N_NODES: usize = 4;
+const EDGES: [(usize, usize); 5] = [(0, 1), (1, 2), (2, 3), (3, 0), (1, 3)];
+
+/// The signal at node 0 before the first step; every other node starts at zero.
+const SOURCE_VALUE: FloatType = const_scalar_from_int!(FloatType, 10);
+
+/// The activation floor: a node below this is driven to zero.
+const ACTIVATION_THRESHOLD: FloatType = const_scalar_from_float!(FloatType, 0.1);
+
+/// `f64` is the right precision here: four nodes and two diffusion steps, so the pooled
+/// averages stay far from any rounding limit. The kernel itself flows through any `RealField`
+/// implementor.
 pub type FloatType = f64;
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
 
-    // ------------------------------------------------------------------------
-    // ENGINEERING VALUE:
-    // Graph Neural Networks (GNNs) and Cellular Automata rely on "local" operations
-    // applied globally. A node's new state depends on its current state and the
-    // state of its neighbors.
-    //
-    // In Functional Programming, this pattern is captured by the **Comonad**.
-    // - `extract`: Get the value at the current focus (node).
-    // - `extend`: Apply a context-aware function to *every* position in the structure
-    //             to generate a new structure.
-    //
-    // This example demonstrates using `BoundedComonad::extend` to implement a
-    // single layer of a Graph Convolution Network (GCN) or a diffusion step
-    // without writing explicit loops over nodes. The HKT abstraction handles
-    // the iteration and context management (cursor movement).
-    // ------------------------------------------------------------------------
-
-    // 1. Setup the Graph (Social Network / Sensor Grid)
-    // 4 Nodes: 0-1, 1-2, 2-3, 3-0 (Ring) + 1-3 (Cross connection)
-    // 0 -- 1
-    // |    | \
-    // 3 -- 2
-    // 1. Setup the Graph (Social Network / Sensor Grid)
-    // 4 Nodes: 0-1, 1-2, 2-3, 3-0 (Ring) + 1-3 (Cross connection)
-    // 0 -- 1
-    // |    | \
-    // 3 -- 2
-    let num_nodes = 4;
-
-    // Initial Signal (e.g., Heat, Voltage, or Feature Vector)
-    // Node 0 is "Hot" (10.0), others are "Cold" (0.0)
-    let zero = lift::<FloatType>(0.0);
-    let initial_data = CausalTensor::new(vec![lift::<FloatType>(10.0), zero, zero, zero], vec![4])?;
-    let mut graph = Graph::new(num_nodes, initial_data, 0)?;
-
-    // Add edges manually
-    graph.add_edge(0, 1)?;
-    graph.add_edge(1, 2)?;
-    graph.add_edge(2, 3)?;
-    graph.add_edge(3, 0)?;
-    graph.add_edge(1, 3)?;
-
+    let graph = build_graph()?;
     print_stage("--- Initial State ---", &graph);
 
-    // 2. Define the Convolution Kernel (The "Local Rule")
-    // This function takes a "View" of the graph focused at a specific node.
-    // It returns the new value for that node.
-    // Rule: New Value = (Self + Sum(Neighbors)) / (1 + Num_Neighbors)
-    // This is a simple mean-pooling diffusion.
-    let diffusion_kernel = |g: &Graph<FloatType>| {
-        // 1. Get value of focused node (Self)
-        let current_val = GraphWitness::extract(g);
+    // One `extend` applies the kernel at every node. The witness walks the positions; the
+    // kernel says what one position means.
+    let diffused = GraphWitness::extend(&graph, diffusion_kernel);
+    print_stage("\n--- Step 1: Diffusion (Extend) ---", &diffused);
 
-        // 2. Get neighbors of focused node
-        // Note: `g.cursor()` tells us which node is currently in focus.
-        let cursor = g.cursor();
-        // Use a static empty vec for fallback to avoid temporary lifetime issue
-        static EMPTY_VEC: Vec<usize> = Vec::new();
-        let neighbors = g.neighbors(cursor).unwrap_or(&EMPTY_VEC);
+    // The activation is per-node, so it needs `fmap` rather than `extend`.
+    let threshold = ACTIVATION_THRESHOLD;
+    let activated = GraphWitness::fmap(diffused, move |x| if x < threshold { ZERO } else { x });
+    print_stage("\n--- Step 2: Activation (Functor) ---", &activated);
 
-        // 3. Sum neighbor values
-        let mut sum_neighbors = lift::<FloatType>(0.0);
-        let data_slice = g.data().as_slice();
-        for &n_idx in neighbors {
-            if let Some(&val) = data_slice.get(n_idx) {
-                sum_neighbors += val;
-            }
-        }
-
-        // 4. Compute Average
-        let count = lift::<FloatType>(1.0) + neighbors.len().lift::<FloatType>();
-        (current_val + sum_neighbors) / count
-    };
-
-    // 3. Apply Convolution (Extend)
-    // This applies the kernel to EVERY node automatically.
-    let step1_graph = GraphWitness::extend(&graph, diffusion_kernel);
-    print_stage("\n--- Step 1: Diffusion (Extend) ---", &step1_graph);
-
-    // 4. Apply Activation / Normalization (Functor)
-    // Apply a ReLU-like activation or just scale it.
-    // Let's say we want to amplify weak signals: if x < 1.0 { 0.0 } else { x * 1.1 }
-    let threshold = lift::<FloatType>(0.1);
-    let step2_graph = GraphWitness::fmap(step1_graph, move |x| {
-        if x < threshold {
-            lift::<FloatType>(0.0)
-        } else {
-            x
-        }
-    });
-    print_stage("\n--- Step 2: Activation (Functor) ---", &step2_graph);
-
-    // 5. Another Diffusion Step
-    let step3_graph = GraphWitness::extend(&step2_graph, diffusion_kernel);
-    print_stage("\n--- Step 3: Diffusion (Extend) ---", &step3_graph);
+    let diffused_again = GraphWitness::extend(&activated, diffusion_kernel);
+    print_stage("\n--- Step 3: Diffusion (Extend) ---", &diffused_again);
 
     Ok(())
+}
+
+/// The ring plus cross connection, carrying the initial signal on its nodes.
+fn build_graph() -> Result<Graph<FloatType>, Box<dyn std::error::Error>> {
+    let zero = ZERO;
+    let mut features = vec![zero; N_NODES];
+    features[0] = SOURCE_VALUE;
+
+    let initial = CausalTensor::new(features, vec![N_NODES])?;
+    let mut graph = Graph::new(N_NODES, initial, 0)?;
+    for (u, v) in EDGES {
+        graph.add_edge(u, v)?;
+    }
+    Ok(graph)
+}
+
+/// Mean pooling at the focused node: `(self + sum(neighbours)) / (1 + degree)`.
+///
+/// `extract` reads the focused value and `cursor` names the position, which is what lets the
+/// kernel reach the adjacency for that node alone.
+fn diffusion_kernel(g: &Graph<FloatType>) -> FloatType {
+    let current = GraphWitness::extract(g);
+    let neighbors = g.neighbors(g.cursor()).map(Vec::as_slice).unwrap_or(&[]);
+
+    let features = g.data().as_slice();
+    let pooled = neighbors
+        .iter()
+        .filter_map(|&n| features.get(n))
+        .fold(current, |acc, &v| acc + v);
+
+    pooled / (ONE + neighbors.len().lift::<FloatType>())
 }
 
 // -----------------------------------------------------------------------------------------
@@ -119,16 +102,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 // -----------------------------------------------------------------------------------------
 
 fn print_header() {
-    println!("=== HKT Graph Convolution (GNN) Example ===\n");
+    println!("=== Graph x Tensor: a Convolution Layer via Comonadic Extension ===");
+    println!("Precision: {}\n", core::any::type_name::<FloatType>());
 }
 
 fn print_stage(title: &str, g: &Graph<FloatType>) {
     println!("{title}");
-    print_graph_state(g);
+    println!("Node Values: {:?}", shown(g));
 }
 
-fn print_graph_state(g: &Graph<FloatType>) {
-    // The display boundary: `f64` appears here and nowhere else.
-    let data: Vec<f64> = g.data().as_slice().iter().map(|&v| lower(v)).collect();
-    println!("Node Values: {:?}", data);
+/// The display boundary: `f64` appears here and nowhere else.
+fn shown(g: &Graph<FloatType>) -> Vec<f64> {
+    g.data().as_slice().iter().map(|&v| lower(v)).collect()
 }

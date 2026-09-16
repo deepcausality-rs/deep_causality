@@ -4,7 +4,7 @@
  */
 
 use deep_causality_haft::{Functor, OptionWitness};
-use deep_causality_num::lift;
+use deep_causality_num::const_scalar_from_int;
 
 // ============================================================================
 // Domain: E-Commerce Order Processing
@@ -18,6 +18,9 @@ use deep_causality_num::lift;
 
 /// The working scalar. The order's price carries it.
 pub type FloatType = f64;
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const TEN: FloatType = const_scalar_from_int!(FloatType, 10);
 
 fn main() {
     print_header();
@@ -35,7 +38,7 @@ fn main() {
     // Applicative style is pure(constructor).apply(id).apply(qty).
     let valid_id = validate_id("item_123");
     let _valid_qty = validate_qty(5);
-    let price = lift::<FloatType>(10.0);
+    let price = TEN;
 
     // Currying is verbose in Rust, so the raw `apply` mechanism is shown step by step.
     // The constructor takes (String, u32) and yields an OrderItem.

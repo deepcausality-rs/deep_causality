@@ -4,7 +4,9 @@
  */
 
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Manifold, ManifoldTopology, PointCloud, SimplicialManifold};
+use deep_causality_topology::{
+    BaseTopology, Manifold, ManifoldTopology, PointCloud, SimplicialManifold,
+};
 
 // Setup function to create a manifold from a point cloud
 // Helper adapted from differential_tests.rs

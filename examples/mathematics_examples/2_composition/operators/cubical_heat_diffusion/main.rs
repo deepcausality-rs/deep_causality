@@ -28,7 +28,9 @@
 use deep_causality_algebra::Real;
 use deep_causality_calculus::Euler;
 use deep_causality_haft::Arrow;
-use deep_causality_num::{Float, Lift, lift, lower, to_count};
+use deep_causality_num::{
+    Float, Lift, const_scalar_from_float, const_scalar_from_int, lift, lower, to_count,
+};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{CubicalComplex, Manifold, Moore};
 use std::ops::{Add, Mul};
@@ -46,6 +48,13 @@ fn alpha() -> FloatType {
 /// neighborhood stencil is local. Higher precision yields no observable gain.
 pub type FloatType = f64;
 
+/// Small numbers and tolerances, at the working type.
+const TOLERANCE: FloatType = const_scalar_from_float!(FloatType, 1e-12);
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
+
 fn main() {
     let complex = CubicalComplex::<2, FloatType>::open([N, N]);
     let top_n = N - 1; // open: top-cube positions are 0..N-1 per axis
@@ -53,12 +62,13 @@ fn main() {
 
     // Initial condition: 1.0 at the center cell, 0.0 elsewhere.
     let center = (top_n / 2) + (top_n / 2) * top_n;
-    let mut data = vec![lift::<FloatType>(0.0); cell_count];
-    data[center] = lift::<FloatType>(1.0);
+    let mut data = vec![ZERO; cell_count];
+    data[center] = ONE;
 
     let manifold: Manifold<CubicalComplex<2, FloatType>, FloatType> =
         Manifold::from_cubical(complex, CausalTensor::from_vec(data, &[cell_count]), 0);
 
+    print_header();
     print_step(0, manifold.data().as_slice(), top_n);
 
     // The Moore neighborhood depends only on the complex, not the field, so precompute it once and
@@ -96,6 +106,11 @@ fn main() {
 // Printing
 // -----------------------------------------------------------------------------------------
 
+fn print_header() {
+    println!("=== Operators: explicit-Euler heat diffusion on a cubical complex ===");
+    println!("Precision: {}\n", core::any::type_name::<FloatType>());
+}
+
 fn print_step(step: usize, values: &[FloatType], side: usize) {
     println!("== Step {step} ==");
     print_heatmap(values, side);
@@ -130,16 +145,13 @@ impl Mul<FloatType> for Field {
 
 fn print_heatmap(values: &[FloatType], side: usize) {
     // Map values to a small ASCII gradient.
-    let max = Float::max(
-        values.iter().cloned().fold(lift(0.0), Float::max),
-        lift::<FloatType>(1e-12),
-    );
+    let max = Float::max(values.iter().cloned().fold(ZERO, Float::max), TOLERANCE);
     let ramp = [' ', '.', ':', '-', '+', '*', '#', '@'];
     for row in 0..side {
         let mut line = String::with_capacity(side * 2);
         for col in 0..side {
             let v = values[col + row * side];
-            let top = ramp.len().lift::<FloatType>() - lift::<FloatType>(1.0);
+            let top = ramp.len().lift::<FloatType>() - ONE;
             let bucket = to_count(Real::round((v / max) * top)).unwrap_or(0) as usize;
             let bucket = bucket.min(ramp.len() - 1);
             line.push(ramp[bucket]);

@@ -2,9 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{ClockData, OrbitData};
 use chrono::NaiveDateTime;
 use deep_causality_algebra::RealField;
+use deep_causality_file::{ClockData, OrbitData};
 use deep_causality_num::{FromPrimitive, lift};
 use deep_causality_physics::{EARTH_ROTATION_RATE, SpaceTimeCoordinate};
 

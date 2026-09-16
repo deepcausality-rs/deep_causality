@@ -35,7 +35,7 @@
 
 use deep_causality_haft::{Adjunction, Pure};
 use deep_causality_linear::{CsrMatrix, CsrMatrixWitness};
-use deep_causality_num::lift;
+use deep_causality_num::const_scalar_from_int;
 use deep_causality_topology::{
     BoundaryWitness, Chain, DifferentialForm, ExteriorDerivativeWitness, Simplex,
     SimplicialComplex, Skeleton, StokesAdjunction, StokesContext,
@@ -50,6 +50,9 @@ const N_VERTICES: usize = 4;
 /// The working scalar. The complex's incidence weights carry it.
 pub type FloatType = f64;
 
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const TWENTY: FloatType = const_scalar_from_int!(FloatType, 20);
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
 
@@ -61,7 +64,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 1. `unit`: A -> R(L(A)). Total, because it builds.
     // ---------------------------------------------------------------------
     // A bare coefficient becomes a chain of 0-forms: the constant field with that value.
-    let temperature = lift::<FloatType>(20.0);
+    let temperature = TWENTY;
     let embedded: Chain<FloatType, DifferentialForm<FloatType>> = <Stokes as Adjunction<
         ExteriorDerivativeWitness,
         BoundaryWitness<FloatType>,
@@ -142,6 +145,7 @@ fn build_interval_complex() -> SimplicialComplex<FloatType> {
 
 fn print_header() {
     println!("=== Duality: Stokes' theorem as an adjunction (d ⊣ ∂) ===\n");
+    println!("Precision: {}\n", core::any::type_name::<FloatType>());
     println!("  ⟨dω, C⟩ = ⟨ω, ∂C⟩");
     println!("  the derivative of a form over a region, or the form over its boundary\n");
 }

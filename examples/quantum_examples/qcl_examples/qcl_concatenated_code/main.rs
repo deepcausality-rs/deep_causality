@@ -3,103 +3,126 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! A concatenated code as a chain of two abstractions.
+//! QCL-2: the `[[4,2,2]]` code concatenated with itself, as two abstractions composed.
 //!
-//! The hand-built `[[4,2,2]]` code is concatenated with itself: the inner code's four physical
-//! qubits are grouped into two blocks of two, and each block is encoded by the outer code, eight
-//! physical qubits in all. The first link takes the eight-qubit model to the four-qubit one through
-//! the outer recovery on each block; the second link is the inner code's own abstraction onto the
-//! two logical qubits. `Abstraction::compose` pastes the two squares and records the law
-//! `ε ≤ ‖τ₂‖_post · ε₁ + ‖τ₁‖_pre · ε₂` with both constants computed. For `Z̄` and `X̄` both
-//! links are exact and so is the composite, which is Lorenz & Tull's Proposition 17 with the Lean
-//! statement in `lean/DeepCausalityFormal/Quantum/Abstraction.lean`. `CZ̄` of the inner code pairs
-//! a qubit of each block, and a gate across code blocks is refused by name: this construction
-//! carries no transversal gadget between blocks.
+//! The low-level model is eight physical qubits carrying two blocks of the code; the middle model is
+//! the inner code's four qubits; the high level is two logical qubits. The first link is the outer
+//! recovery applied per block and the second is the inner code's abstraction, so the composite is
+//! the concatenated code and `Z̄` and `X̄` compose through it exactly (Proposition 17).
+//!
+//! A gate across code blocks has no transversal gadget in this construction, and the run shows the
+//! refusal by name rather than asserting that one exists.
 //!
 //! This is an example with checks, not a theorem: it claims the residuals it measures and the
 //! bound the law records.
 
 mod constants;
+mod utils_print;
 
 use deep_causality_algebra::RealField;
-use deep_causality_num::{Float106, FromPrimitive, lower};
+use deep_causality_num::{Float106, FromPrimitive};
 use deep_causality_quantum::utils_tests::four_two_two;
-use deep_causality_quantum::{CompositionLaw, LogicalGate, NumericCaps, concatenated_code};
+use deep_causality_quantum::{
+    CompositionLaw, LogicalGate, NumericCaps, QuantumError, concatenated_code,
+};
 
-use crate::constants::EXACT_AT_F64;
+use crate::constants::exactness_threshold;
+use utils_print::{
+    print_exactness, print_gate, print_header, print_outcome, print_refusal, print_row,
+};
 
-/// The working type. Switch it to `f32` or `Float106`; nothing below changes.
-pub type FloatType = f64;
+/// The working scalar. Switch it to `f32`, `f64` or `deep_causality_num::BFloat16`; the code, the
+/// gates and every residual recompute at that precision.
+///
+/// It sits at [`Float106`] by default on purpose. A hard-coded `f64` anywhere in the program is
+/// invisible while the alias *is* `f64`, and shows up here as a compile error the moment the two
+/// types differ.
+pub type FloatType = Float106;
 
 /// The count word the logical basis is computed over.
 pub type NumberType = u64;
 
+/// The gates the run composes through the concatenation.
+const TRANSVERSAL_GATES: [LogicalGate; 2] = [LogicalGate::Z(0), LogicalGate::X(1)];
+
 /// The composite law for one logical gate at one precision.
-fn law_for<S>(gate: &LogicalGate) -> CompositionLaw<S>
+fn law_for<S>(gate: &LogicalGate) -> Result<CompositionLaw<S>, QuantumError>
 where
     S: RealField + FromPrimitive + Default + core::fmt::Debug,
 {
     let complex = four_two_two();
-    concatenated_code::<NumberType, _, _, S>(&complex, &complex, gate)
-        .expect("the [[4,2,2]] code concatenates with itself for a single-qubit gate")
-        .compose(&NumericCaps::default())
-        .expect("both links have Io squares under the default caps")
-        .law
+
+    Ok(
+        concatenated_code::<NumberType, _, _, S>(&complex, &complex, gate)?
+            .compose(&NumericCaps::default())?
+            .law,
+    )
 }
 
-/// One precision's report for one gate: the display boundary is the only place `f64` appears.
-fn report<S>(name: &str, gate: &LogicalGate)
-where
-    S: RealField + FromPrimitive + Default + core::fmt::Debug,
-{
-    let law = law_for::<S>(gate);
-    let row = &law.rows[0];
-    println!(
-        "    {name:>8}: ε₁ = {:.2e}, ε₂ = {:.2e}, ‖τ₁‖_pre = {:.6}, ‖τ₂‖_post = {:.6}, bound = {:.2e}, measured = {:.2e}, {}",
-        lower(row.epsilon_first),
-        lower(row.epsilon_second),
-        lower(row.pre),
-        lower(row.post),
-        lower(row.bound),
-        lower(row.measured),
-        if law.holds() { "holds" } else { "violated" }
-    );
-    assert!(law.holds(), "the composition law holds at every precision");
-}
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    print_header();
 
-fn main() {
-    println!("=== QCL-2 chain: the [[4,2,2]] code concatenated with itself ===\n");
-    println!("[chain] L: 8 physical qubits, M: the inner code's 4 qubits, H: 2 logical qubits");
-    println!(
-        "        first link: outer recovery per block; second link: the inner code's abstraction\n"
-    );
+    let mut every_law_holds = true;
+    let mut every_square_exact = true;
 
-    for gate in [LogicalGate::Z(0), LogicalGate::X(1)] {
-        let law = law_for::<FloatType>(&gate);
-        println!("[{}] at FloatType", gate.name());
-        print!("{law}");
+    for gate in TRANSVERSAL_GATES {
+        let law = law_for::<FloatType>(&gate)?;
         let row = &law.rows[0];
-        assert!(
-            lower(row.measured) < EXACT_AT_F64 && lower(row.bound) < EXACT_AT_F64,
-            "both links are exact for a transversal Pauli, so the composite is"
-        );
-        println!("    exact: two residual-zero links compose to residual zero (Proposition 17)\n");
-        println!("[{}] at the three shipped precisions", gate.name());
-        report::<f32>("f32", &gate);
-        report::<f64>("f64", &gate);
-        report::<Float106>("Float106", &gate);
+
+        every_law_holds &= law.holds();
+
+        // Both links are exact for a transversal Pauli, so the composite is. The threshold is in
+        // machine epsilons at the precision in force, which is what makes the same claim testable
+        // at every scalar.
+        let exact = row.measured < exactness_threshold::<FloatType>()
+            && row.bound < exactness_threshold::<FloatType>();
+        every_square_exact &= exact;
+
+        print_gate(&gate.name(), &law);
+        print_exactness(exact);
+
+        println!("[{}] at the shipped precisions", gate.name());
+        let f32_law = law_for::<f32>(&gate)?;
+        let f64_law = law_for::<f64>(&gate)?;
+        let wide_law = law_for::<Float106>(&gate)?;
+
+        every_law_holds &= f32_law.holds() && f64_law.holds() && wide_law.holds();
+
+        print_row("f32", &f32_law);
+        print_row("f64", &f64_law);
+        print_row("Float106", &wide_law);
         println!();
     }
 
-    println!("[CZ̄(0, 1)] the inner CZ̄ pairs a qubit of each outer block");
+    // A gate pairing a qubit of each outer block. There is no transversal gadget for it here, and
+    // the construction says so rather than returning something that does not hold.
     let complex = four_two_two();
-    match concatenated_code::<NumberType, _, _, FloatType>(
+    let across_blocks = concatenated_code::<NumberType, _, _, FloatType>(
         &complex,
         &complex,
         &LogicalGate::Cz(0, 1),
-    ) {
-        Ok(_) => panic!("a gate across blocks has no transversal gadget here"),
-        Err(e) => println!("    refused: {e}\n"),
+    );
+
+    let refused = match across_blocks {
+        Ok(_) => {
+            print_refusal(None);
+            false
+        }
+        Err(e) => {
+            print_refusal(Some(&format!("{e}")));
+            true
+        }
+    };
+
+    print_outcome(every_law_holds, every_square_exact, refused);
+
+    // The three are the example's claims about itself. A run that prints one of them as NO has
+    // shown the reader what failed; returning the failure is what lets a script see it too.
+    if !(every_law_holds && every_square_exact && refused) {
+        return Err(
+            "a composition law, an exactness check or the cross-block refusal failed".into(),
+        );
     }
-    println!("=== done: an example with checks, not a theorem ===");
+
+    Ok(())
 }

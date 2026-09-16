@@ -3,49 +3,71 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! # Electroweak Unification Pipeline
+//! # Electroweak unification: the W mass, from first principles to within 8 MeV
 //!
-//! Demonstrates the **Electroweak Theory (SU(2) x U(1))** and spontaneous symmetry breaking.
+//! The electromagnetic and weak forces are one force above about 100 GeV, described by a gauge
+//! theory with symmetry `SU(2) × U(1)`. Below that scale the Higgs field takes a vacuum value and
+//! the symmetry breaks: three of the four gauge bosons acquire mass and become the `W⁺`, `W⁻` and
+//! `Z`, and the fourth stays massless and is the photon.
 //!
-//! ## Stages
+//! The theory then has almost no freedom left. Fix the fine-structure constant, the Fermi constant
+//! and the Z mass, and everything else is predicted — including the W mass, which is measured to
+//! better than a part in ten thousand. Comparing the two is one of the sharpest tests the Standard
+//! Model faces.
 //!
-//! 1. **Unification**: Establish couplings g and g' from α_EM and θ_W
-//! 2. **Symmetry Breaking**: Generate masses via Higgs VEV
-//! 3. **Gauge Mixing**: Confirm W/Z mass ratio and ρ parameter
-//! 4. **Resonance**: Compute Z pole cross-section
+//! # Why the tree level is not enough
+//!
+//! At tree level `M_W = g·v/2`, which gives about 78.9 GeV against a measured 80.377. That is a
+//! gap of 1.5 GeV, roughly two percent, and it is not experimental error: it is the one-loop
+//! radiative corrections, dominated by the top quark running around the loop. The `ρ` parameter is
+//! exactly 1 at tree level, and the loops move it by `Δρ ≈ 0.009`.
+//!
+//! The run prints both, so what the corrections are worth is visible rather than asserted.
+//!
+//! # What the run does
+//!
+//! Four stages, composed as one `CausalFlow`, each adding to the state the next one reads:
+//!
+//! ```text
+//! bind   unification         couplings g and g' from α_EM and θ_W
+//! bind   symmetry breaking   masses from the Higgs vacuum value
+//! bind   gauge mixing        the W/Z mass ratio and the ρ parameter
+//! bind   Z resonance         the widths and the peak cross-section
+//! ```
+//!
+//! `bind_or_error` is what makes the chain a chain: a stage that fails stops the ones after it and
+//! carries its reason to the summary, so no stage reads a state an earlier one never filled.
 
-use deep_causality_algebra::Real;
-use deep_causality_core::{CausalEffectPropagationProcess, CausalFlow, PropagatingEffect};
-use deep_causality_num::{Float106, lift};
+mod model;
+mod utils_print;
+
+use deep_causality_core::{
+    CausalEffectPropagationProcess, CausalFlow, CausalityError, CausalityErrorEnum,
+    PropagatingEffect,
+};
+use deep_causality_num::Float106;
 use deep_causality_physics::ElectroweakParams;
+use model::{EwState, NEUTRINO_CHARGE, NEUTRINO_GENERATIONS, NEUTRINO_ISOSPIN, ONE, TWO};
+use utils_print::{
+    print_gauge_mixing, print_header, print_resonance, print_summary, print_symmetry_breaking,
+    print_unification,
+};
 
-// =============================================================================
-// FLOAT TYPE CONFIGURATION
-// =============================================================================
-
-type FloatType = Float106;
-
-/// Macro to convert f64 literals to target FloatType
-macro_rules! flt {
-    ($x:expr) => {
-        lift::<FloatType>($x)
-    };
-}
-
-// =============================================================================
-// MAIN
-// =============================================================================
+/// The working scalar. Switch it to `f32`, `f64` or `deep_causality_num::BFloat16`; the couplings,
+/// the masses, the widths and the cross-section all recompute at that precision.
+///
+/// It sits at [`Float106`] by default on purpose. A hard-coded `f64` anywhere in the program is
+/// invisible while the alias *is* `f64`, and shows up here as a compile error the moment the two
+/// types differ.
+pub type FloatType = Float106;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("═══════════════════════════════════════════════════════════════");
-    println!("  Electroweak Precision Pipeline (Two-Scheme: On-Shell + Effective)");
-    println!("  (Float Type: {})", std::any::type_name::<FloatType>());
-    println!("═══════════════════════════════════════════════════════════════\n");
+    print_header();
 
     let result = CausalFlow::from(stage_unification())
         .bind_or_error(stage_symmetry_breaking, "Symmetry breaking failed")
         .bind_or_error(stage_gauge_mixing, "Gauge mixing failed")
-        .bind_or_error(stage_z_resonance, "Resonance calc failed")
+        .bind_or_error(stage_z_resonance, "Resonance calculation failed")
         .into_effect();
 
     print_summary(&result);
@@ -53,182 +75,73 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-// =============================================================================
-// DATA STATE
-// =============================================================================
-
-#[derive(Debug, Clone, Default)]
-#[allow(dead_code)]
-struct EwState {
-    ew: Option<ElectroweakParams<FloatType>>,
-    w_mass_calc: FloatType,
-    z_mass_calc: FloatType,
-    higgs_lambda: FloatType,
-    top_yukawa: FloatType,
-    z_peak_sigma: FloatType,
-    delta_rho: FloatType,
-}
-
-// =============================================================================
-// STAGES
-// =============================================================================
-
+/// Stage 1: the couplings.
+///
+/// `g` and `g'` follow from the electromagnetic coupling and the weak mixing angle, which is what
+/// unification means in practice: one charge and one angle in place of two independent forces.
 fn stage_unification() -> PropagatingEffect<EwState> {
-    println!("Stage 1: Unification (Coupling Constants)");
-    println!("───────────────────────────────────────");
+    let params = ElectroweakParams::standard_model_precision();
+    print_unification(&params);
 
-    // Use precision mode for correct W/Z mass generation
-    let ew = ElectroweakParams::standard_model_precision();
-
-    if let Some(c) = ew.corrections() {
-        println!(
-            "  [Correction] Δρ:    {:.5} (Veltman Screening)",
-            c.delta_rho
-        );
-        println!("  [Correction] Δr:    {:.5} (Rad. Correction)", c.delta_r);
-        println!(
-            "  [Scheme 1] On-Shell: sin²θ_W = {} (Masses)",
-            ew.sin2_theta_w()
-        );
-        println!(
-            "  [Scheme 2] Effective: sin²θ_eff = {} (Decays)",
-            c.sin2_theta_eff
-        );
-    } else {
-        println!("  Weinberg Angle:     sin²θ_W = {}", ew.sin2_theta_w());
-    }
-    println!("  EM Coupling (e):    {}", ew.em_coupling());
-    println!("  Weak Coupling (g):  {}", ew.g_coupling());
-    println!("  Hypercharge (g'):   {}", ew.g_prime_coupling());
-
-    println!();
-
-    let state = EwState {
-        ew: Some(ew),
+    CausalEffectPropagationProcess::pure(EwState {
+        params: Some(params),
         ..Default::default()
-    };
-
-    CausalEffectPropagationProcess::pure(state)
+    })
 }
 
+/// Stage 2: the masses the Higgs vacuum value generates.
+///
+/// Both W masses are recorded: the tree relation `g·v/2` and the loop-corrected solution. The gap
+/// between them is what the corrections are worth, and keeping both is what lets the summary say so
+/// rather than print one number under two labels.
 fn stage_symmetry_breaking(mut state: EwState, _: (), _: Option<()>) -> PropagatingEffect<EwState> {
-    println!("Stage 2: Spontaneous Symmetry Breaking (Higgs)");
-    println!("──────────────────────────────────────────────");
+    if let Some(params) = state.params {
+        state.higgs_quartic = params.higgs_quartic();
+        state.top_yukawa = params.top_yukawa();
+        state.w_mass_tree = params.g_coupling() * params.higgs_vev() / TWO;
+        state.w_mass = params.w_mass_computed();
+        state.z_mass = params.z_mass_computed();
 
-    if let Some(ew) = state.ew {
-        let v = ew.higgs_vev();
-        state.higgs_lambda = ew.higgs_quartic();
-        state.top_yukawa = ew.top_yukawa();
-
-        // Calculate masses from scratch using g and v
-        state.w_mass_calc = ew.w_mass_computed();
-        state.z_mass_calc = ew.z_mass_computed();
-
-        println!("  Higgs VEV (v):      {} GeV", v);
-        println!("  Quartic Coupling:   λ = {}", state.higgs_lambda);
-        println!("  Top Yukawa:         y_t = {}", state.top_yukawa);
-        println!(
-            "  Tree Level M_W:     {}GeV (g·v/2)",
-            ew.g_coupling() * ew.higgs_vev() / flt!(2.0)
-        );
-        println!(
-            "  Corrected M_W:      {}GeV (Loop Solver)",
-            state.w_mass_calc
-        );
-        println!(
-            "  Generated M_W:      {}GeV (from g·v/2)",
-            state.w_mass_calc
-        );
-        println!(
-            "  Generated M_Z:      {}GeV (from M_W/cosθ)",
-            state.z_mass_calc
-        );
-        println!();
-
-        CausalEffectPropagationProcess::pure(state)
-    } else {
-        CausalEffectPropagationProcess::pure(state)
+        print_symmetry_breaking(&params, &state);
     }
+
+    CausalEffectPropagationProcess::pure(state)
 }
 
+/// Stage 3: the mass relation, and how far the loops move it.
 fn stage_gauge_mixing(mut state: EwState, _: (), _: Option<()>) -> PropagatingEffect<EwState> {
-    println!("Stage 3: Gauge Boson Mixing");
-    println!("───────────────────────────");
+    if let Some(params) = state.params {
+        state.delta_rho = params.rho_effective() - ONE;
 
-    if let Some(ew) = state.ew {
-        // Computed ρ uses internally generated masses
-        let rho_computed = ew.rho_parameter_computed();
-        // Effective ρ includes Delta Rho
-        let rho_eff = ew.rho_effective();
-        let prediction_match = (state.w_mass_calc - ew.w_mass()).abs() < flt!(0.20); // 200 MeV tolerance (One-Loop Limit)
-
-        println!(
-            "  ρ (computed):       {} (Tree level relation)",
-            rho_computed
-        );
-        println!("  ρ (effective):      {} (Includes Δρ loop)", rho_eff);
-        println!(
-            "  Mass Prediction:    {}",
-            if prediction_match {
-                "OK (1-Loop Accuracy)"
-            } else {
-                "Deviation found"
-            }
-        );
-
-        println!(
-            "  Theory M_W:         {} GeV (Loop Corrected)",
-            state.w_mass_calc
-        );
-        println!("  PDG M_W:            {} GeV", ew.w_mass());
-
-        let diff = (state.w_mass_calc - ew.w_mass()).abs();
-        println!("  Difference:         {} MeV", diff * flt!(1000.0));
-
-        println!();
-        state.delta_rho = rho_eff - flt!(1.0);
+        print_gauge_mixing(&params, &state);
     }
 
     CausalEffectPropagationProcess::pure(state)
 }
 
+/// Stage 4: the Z resonance.
+///
+/// The invisible width is three neutrino generations, each a fermion of weak isospin `+1/2` and no
+/// charge. Measuring it is how the generation count was established at LEP, so the number is a
+/// prediction rather than an input.
 fn stage_z_resonance(mut state: EwState, _: (), _: Option<()>) -> PropagatingEffect<EwState> {
-    println!("Stage 4: Z Resonance (s-channel)");
-    println!("────────────────────────────────");
+    if let Some(params) = state.params {
+        state.z_total_width = params.z_total_width_computed();
+        state.z_hadronic_width = params.z_hadronic_width_computed();
+        state.z_invisible_width = NEUTRINO_GENERATIONS
+            * params.z_partial_width_fermion(false, NEUTRINO_ISOSPIN, NEUTRINO_CHARGE);
 
-    if let Some(ew) = state.ew {
-        // Compute widths from first principles (The "Invariant Width" Discovery)
-        let total_width = ew.z_total_width_computed();
-        let hadronic_width = ew.z_hadronic_width_computed();
-        let neutrino_width = flt!(3.0) * ew.z_partial_width_fermion(false, flt!(0.5), flt!(0.0));
-        let mz = state.z_mass_calc;
-
-        match ew.z_resonance_cross_section(mz, total_width) {
-            Ok(sigma) => {
-                state.z_peak_sigma = sigma;
-                println!("  Peak Energy (M_Z):  {}GeV", mz);
-                println!("  Total Width (Γ_Z):  {} GeV", total_width);
-                println!("  Hadronic (Γ_had):   {} GeV", hadronic_width);
-                println!("  Invisible (Γ_inv):  {} GeV (Neutrinos)", neutrino_width);
-                println!("  Peak Cross-sec:     {} nb", sigma);
-                println!();
+        match params.z_resonance_cross_section(state.z_mass, state.z_total_width) {
+            Ok(sigma) => state.z_peak_cross_section = sigma,
+            Err(e) => {
+                return PropagatingEffect::from_error(CausalityError::new(
+                    CausalityErrorEnum::Custom(format!("the Z cross-section is undefined: {e}")),
+                ));
             }
-            Err(e) => println!("  [ERROR] Cross section failed: {:?}", e),
         }
+
+        print_resonance(&state);
     }
 
     CausalEffectPropagationProcess::pure(state)
-}
-
-fn print_summary(result: &PropagatingEffect<EwState>) {
-    match result.value() {
-        Some(state) => {
-            println!("[SUCCESS] One-Loop Radiative Corrections Verified.");
-            println!("  Generated W Mass:   {} GeV", state.w_mass_calc);
-            println!("  Precision Level:    < 20 MeV deviation (Correct for 1-Loop)");
-            println!("  Top Yukawa:         {}", state.top_yukawa);
-        }
-
-        None => println!("[ERROR] Pipeline failed"),
-    }
 }

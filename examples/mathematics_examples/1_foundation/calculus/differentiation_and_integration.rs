@@ -29,7 +29,7 @@ use deep_causality_calculus::{
     Scalar, quadrature,
 };
 use deep_causality_haft::Arrow;
-use deep_causality_num::{Float106, lift, lower};
+use deep_causality_num::{Float106, const_scalar_from_float, const_scalar_from_int, lift, lower};
 use std::ops::{Add, Mul};
 
 /// Panels for the quadrature.
@@ -40,26 +40,36 @@ const STEPS: usize = 20;
 /// The working scalar. Every quantity below carries it.
 pub type FloatType = Float106;
 
+/// Small numbers and tolerances, at the working type.
+const TOLERANCE: FloatType = const_scalar_from_float!(FloatType, 1e-12);
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const ONE_TENTH: FloatType = const_scalar_from_float!(FloatType, 0.1);
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
+const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
+const THREE: FloatType = const_scalar_from_int!(FloatType, 3);
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
 
     // ---------------------------------------------------------------------
     // 1. A one-input model: f(x) = x^3 - 2x, so f'(x) = 3x^2 - 2.
     // ---------------------------------------------------------------------
-    let at = lift::<FloatType>(2.0);
+    let at = TWO;
     let (value, derivative) = Cubic.value_and_derivative(at);
-    let exact = lift::<FloatType>(3.0) * at * at - lift::<FloatType>(2.0);
+    let exact = THREE * at * at - TWO;
     print_arrow(lower(at), value, derivative, exact);
     assert_eq!(derivative, exact); // exact on a polynomial: nothing was differenced
 
     // ---------------------------------------------------------------------
     // 2. A two-input field: g(x, y) = x^2 y + y^3, so ∇g = (2xy, x^2 + 3y^2).
     // ---------------------------------------------------------------------
-    let point = [lift::<FloatType>(3.0), lift::<FloatType>(2.0)];
+    let point = [THREE, TWO];
     let grad = Saddle.gradient(&point);
     let exact_grad = [
-        lift::<FloatType>(2.0) * point[0] * point[1],
-        point[0] * point[0] + lift::<FloatType>(3.0) * point[1] * point[1],
+        TWO * point[0] * point[1],
+        point[0] * point[0] + THREE * point[1] * point[1],
     ];
     print_field(&point, &grad, &exact_grad);
     assert_eq!(grad, exact_grad);
@@ -67,27 +77,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ---------------------------------------------------------------------
     // 3. Integration: ∫₀¹ (x^3 - 2x) dx = 1/4 - 1 = -3/4.
     // ---------------------------------------------------------------------
-    let integral = quadrature(
-        |x: FloatType| Cubic.run(x),
-        lift::<FloatType>(0.0),
-        lift::<FloatType>(1.0),
-        PANELS,
-    );
+    let integral = quadrature(|x: FloatType| Cubic.run(x), ZERO, ONE, PANELS);
     let exact_integral = lift::<FloatType>(-0.75);
     print_quadrature(integral, exact_integral);
-    assert!(Real::abs(integral - exact_integral) < lift::<FloatType>(1e-12));
+    assert!(Real::abs(integral - exact_integral) < TOLERANCE);
 
     // ---------------------------------------------------------------------
     // 4. Time integration: dy/dt = -y from y(0) = 1, whose solution is e^-t.
     // ---------------------------------------------------------------------
     // `Euler` is first order and `Rk4` fourth. Swapping one for the other changes nothing
     // about the rate field, which is the point of keeping them separate values.
-    let dt = lift::<FloatType>(0.1);
+    let dt = ONE_TENTH;
     let decay = |y: &State| State(-y.0);
 
-    let mut euler_state = State(lift::<FloatType>(1.0));
+    let mut euler_state = State(ONE);
     let euler = Euler::new(dt, decay);
-    let mut rk4_state = State(lift::<FloatType>(1.0));
+    let mut rk4_state = State(ONE);
     let rk4 = Rk4::new(dt, decay);
 
     for _ in 0..STEPS {

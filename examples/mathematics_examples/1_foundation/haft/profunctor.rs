@@ -4,7 +4,7 @@
  */
 
 use deep_causality_haft::{HKT2Unbound, Profunctor};
-use deep_causality_num::lift;
+use deep_causality_num::{const_scalar_from_int, lift};
 
 // ============================================================================
 // Domain: Search Filters
@@ -12,6 +12,13 @@ use deep_causality_num::lift;
 
 /// The working scalar. A product's price carries it.
 pub type FloatType = f64;
+
+/// Small numbers and tolerances, at the working type.
+const FIFTEEN: FloatType = const_scalar_from_int!(FloatType, 15);
+const TWENTY: FloatType = const_scalar_from_int!(FloatType, 20);
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const HUNDRED: FloatType = const_scalar_from_int!(FloatType, 100);
 
 fn main() {
     print_header();
@@ -47,7 +54,7 @@ fn main() {
             id: 2,
             name: "Basic Mouse".to_string(),
             category: "Electronics".to_string(),
-            price: lift(20.0),
+            price: TWENTY,
         },
     ];
 
@@ -79,9 +86,7 @@ fn main() {
     // Scenario 2: Price Filter (Adapting f64 -> bool)
     // ------------------------------------------------------------------------
     // Core: Checks if value > 100.0
-    let expensive_filter = Function(Box::new(|price: FloatType| {
-        price > lift::<FloatType>(100.0)
-    }));
+    let expensive_filter = Function(Box::new(|price: FloatType| price > HUNDRED));
 
     // Adapter: Product -> FloatType
     let product_to_price = |p: Product| p.price;
@@ -98,7 +103,7 @@ fn main() {
         id: 3,
         name: "Cheap Cable".to_string(),
         category: "Accessories".to_string(),
-        price: lift(15.0),
+        price: FIFTEEN,
     };
 
     let is_cheap = (expensive_product_filter.0)(cheap_product.clone());

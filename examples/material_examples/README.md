@@ -1,79 +1,63 @@
 # Material Science Examples
 
-This directory contains examples applying **DeepCausality** to Material Science and Metamaterials. These examples demonstrate advanced physics simulations using the framework's topology, multivector algebra, and causal intervention capabilities.
+Two problems from materials and structures, each solved end to end with the unified-math stack.
 
 ## Quick Start
 
-Run any example from the repository root:
+Run either example from the repository root:
 
 ```bash
 cargo run -p material_examples --example <example_name>
 ```
 
----
+| Example | Domain | What it does | Command |
+|---|---|---|---|
+| [hyperlens](hyperlens/) | metamaterials, optics | Describes vacuum and a hyperbolic metamaterial as two metric signatures, then sweeps object periods to find the resolution limit each imposes | `--example hyperlens_example` |
+| [structural_health_monitor](structural_health_monitor/) | structures, safety | Runs a failure cascade across a bonded hull with the graph comonad, and compares it against the same cascade after a recorded intervention | `--example structural_health_monitor_example` |
 
-## Examples Overview
+## Technial properties
 
-| Example | Domain | Description |
-|---------|--------|-------------|
-| [hyperlens](hyperlens/README.md) | Metamaterials | Super-resolution imaging using hyperbolic dispersion |
-| [structural_health_monitor](structural_health_monitor/README.md) | Smart Materials | Decentralized monitoring with autonomous causal interventions |
+1. **Precision is a parameter.** A `FloatType` alias sits directly above `main`, and every quantity
+   carries it. Both default to `Float106` rather than `f64`, because a hard-coded `f64` is
+   invisible while the alias *is* `f64` and a compile error the moment the two differ. Both run at
+   `BFloat16`, `f32`, `f64` and `Float106`.
+2. **Constants are declared at the working type** through `const_scalar_from_int!` and
+   `const_scalar_from_float!`, so the compiler resolves them against the alias and no conversion
+   runs at any call site.
+3. **Printing lives in `utils_print.rs`.** It holds the only `lower` calls, so `f64` appears at the
+   display boundary and nowhere else.
+4. **Errors travel through `?` and return from `main`.**
 
----
+Each example is a folder of three files: `main.rs` holds `main`, the alias and the categorical
+operations; `model.rs` holds the domain model; `utils_print.rs` holds the presentation.
 
-## Common Patterns
+## Which operation each example uses
 
-### 1. `Metric` for Material Properties
-Different materials have different "signatures" that determine how waves propagate:
-*   **Euclidean**: Standard vacuum/dielectric
-*   **Minkowski**: Relativistic spacetime
-*   **Generic(p, q, r)**: Anisotropic/Hyperbolic metamaterials
+| Operation | Reads | Used by | For |
+|---|---|---|---|
+| `fmap` | one element | hyperlens | the dispersion relation, one object period at a time |
+| `fold` | the whole payload | hyperlens | the finest period that still propagates |
+| `extend` | an element and its neighbourhood | structural_health_monitor | one load-redistribution step across the bonded hull |
+| `alternate_value_if` | a value in a flow | structural_health_monitor | the intervention, as Pearl's do-operator |
 
-```rust
-use deep_causality_multivector::Metric;
+The pattern to take away: `fmap` applies a law to one value, `fold` reduces a payload to a number,
+and `extend` is what a quantity asks for when it needs to see a neighbourhood. A reader who learns
+`extend` on a graph can run it on a manifold or a point cloud, which is what the medicine examples
+do.
 
-let vacuum = Metric::Euclidean(3);           // (+++)
-let hyperbolic = Metric::Generic { p: 1, q: 2, r: 0 }; // (+−−)
-```
+## Crates used
 
-### 2. `Manifold<T>` & `Graph<T>` for Topology
-*   **Manifold**: Continuous surfaces with differential structure (hyperlens geometry).
-*   **Graph**: Discrete networks (structural lattices, molecular bonds).
+| Crate | Purpose |
+|---|---|
+| `deep_causality_haft` | the categorical traits: `Functor`, `Foldable`, `CoMonad` |
+| `deep_causality_metric` | metric signatures, which the hyperlens reads as material properties |
+| `deep_causality_topology` | the hull graph and its witness |
+| `deep_causality_tensor` | the payload tensors |
+| `deep_causality_core` | `CausalFlow` and the intervention |
+| `deep_causality_num` | the scalar tower, the lifts, and the const-scalar macros |
+| `deep_causality_algebra` | the `Real` bound |
 
-### 3. `AlternatableValue` for Active Materials
-Smart materials that can **autonomously respond** to stimuli use the `AlternatableValue` trait to formally separate:
-*   **Observation** (what is happening)
-*   **Intervention** (what we force to happen)
-*   **Counterfactual** (what would have happened otherwise)
+## See Also
 
----
-
-## Run Commands
-
-| Example | Command |
-|---------|---------|
-| Hyperlens | `cargo run -p material_examples --example hyperlens_example` |
-| Topological Insulator | `cargo run -p material_examples --example topological_insulator_example` |
-| Structural Health Monitor | `cargo run -p material_examples --example structural_health_monitor_example` |
-
----
-
-## Crates Used
-
-*   **`deep_causality_multivector`**: Geometric Algebra for anisotropic field representations.
-*   **`deep_causality_topology`**: `Graph`, `Manifold`, `SimplicialComplex` for structural modeling.
-*   **`deep_causality_num`**: High-precision Complex number arithmetic for quantum calculations.
-*   **`deep_causality_core`**: `PropagatingEffect`, `AlternatableValue` for monadic state and interventions.
-
----
-
-## Adding New Examples
-
-1.  Create a new directory under `examples/`: `examples/<your_example>/`
-2.  Add `main.rs` and `README.md`
-3.  Register in `Cargo.toml`:
-    ```toml
-    [[example]]
-    name = "your_example"
-    path = "examples/<your_example>/main.rs"
-    ```
+- [medicine_examples](../medicine_examples/README.md) - the same house rules on six biomedical problems
+- [mathematics_examples](../mathematics_examples/README.md) - the vocabulary these build on

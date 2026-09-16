@@ -5,7 +5,7 @@
 
 use deep_causality_haft::{Bifunctor, Functor, Monad};
 use deep_causality_haft::{OptionWitness, ResultUnboundWitness, ResultWitness};
-use deep_causality_num::{lift, lift_u64};
+use deep_causality_num::{const_scalar_from_int, lift_u64};
 use std::fmt::Debug;
 
 // ============================================================================
@@ -14,6 +14,10 @@ use std::fmt::Debug;
 
 /// The working scalar. The timeout conversion below lands in it.
 pub type FloatType = f64;
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const FIVE: FloatType = const_scalar_from_int!(FloatType, 5);
+const THOUSAND: FloatType = const_scalar_from_int!(FloatType, 1000);
 
 fn main() {
     print_header();
@@ -37,7 +41,7 @@ fn main() {
     let raw_timeout = Some(5000_u64);
     let timeout_secs = OptionWitness::fmap(raw_timeout, to_seconds);
     print_optional(&raw_timeout, &timeout_secs);
-    assert_eq!(timeout_secs, Some(lift::<FloatType>(5.0)));
+    assert_eq!(timeout_secs, Some(FIVE));
 
     // ------------------------------------------------------------------------
     // 3. Error recovery. `bimap` maps the error channel independently of the success
@@ -99,7 +103,7 @@ fn validate_config(raw: RawConfig) -> Result<ValidatedConfig, ConfigError> {
 
 /// Milliseconds to seconds, in the working scalar.
 fn to_seconds(ms: u64) -> FloatType {
-    lift_u64::<FloatType>(ms) / lift::<FloatType>(1000.0)
+    lift_u64::<FloatType>(ms) / THOUSAND
 }
 
 #[derive(Debug, Clone, PartialEq)]

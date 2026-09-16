@@ -11,9 +11,9 @@ use std::path::PathBuf;
 /// The shared GNSS data-loading facade (loaders live in `deep_causality_file`).
 pub use deep_causality_file::DataManager;
 
-/// Absolute path to this crate's bundled GNSS data directory (`data/gnss`).
+/// Absolute path to this example's bundled GNSS data directory (`data/gnss`).
 pub fn get_gnss_data_input_path() -> PathBuf {
-    let mut path = crate::paths::manifest_dir();
+    let mut path = crate::paths::example_dir();
     path.push("data/gnss");
     path
 }

@@ -31,5 +31,5 @@ This example uses **Geometric Algebra** and **Causal Optimization** to find the 
 ## 5. Running the Example
 
 ```bash
-cargo run -p medicine_examples --example ttfields
+cargo run -p medicine_examples --example tumor_treatment
 ```

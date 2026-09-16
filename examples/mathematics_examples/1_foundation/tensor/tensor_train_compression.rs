@@ -30,7 +30,7 @@
 
 use deep_causality_algebra::Real;
 use deep_causality_haft::{Foldable, Functor, Pure};
-use deep_causality_num::{lift, lift_count, lower};
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lift_count, lower};
 use deep_causality_tensor::{
     CausalTensor, CausalTensorTrain, CausalTensorTrainWitness, TensorTrain, Truncation,
 };
@@ -40,16 +40,24 @@ const ORDER: usize = 4;
 const AXIS_LEN: usize = 4;
 
 /// The relative tolerance the TT-SVD truncates singular values at.
-const REL_TOL: f64 = 1e-10;
+const REL_TOL: FloatType = const_scalar_from_float!(FloatType, 1e-10);
 
 /// The factor section 4 scales every core entry by.
-const CORE_SCALE: f64 = 2.0;
+const CORE_SCALE: FloatType = const_scalar_from_int!(FloatType, 2);
 
 /// What counts as zero when a reconstruction is checked.
-const TOLERANCE: f64 = 1e-9;
+const TOLERANCE: FloatType = const_scalar_from_float!(FloatType, 1e-9);
 
 /// The working scalar. The table, the cores and every reconstruction carry it.
 pub type FloatType = f64;
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
+const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
+const THREE: FloatType = const_scalar_from_int!(FloatType, 3);
+const FOUR: FloatType = const_scalar_from_int!(FloatType, 4);
+const SEVEN: FloatType = const_scalar_from_int!(FloatType, 7);
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
@@ -60,7 +68,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // The table is the sum of two separable terms, so its TT rank is at most two at every bond.
     let shape = vec![AXIS_LEN; ORDER];
     let dense = CausalTensor::from_shape_fn(&shape, table_entry);
-    let truncation = Truncation::<FloatType>::by_tol(lift::<FloatType>(REL_TOL))?;
+    let truncation = Truncation::<FloatType>::by_tol(REL_TOL)?;
     let train = CausalTensorTrain::from_dense(&dense, &truncation)?;
 
     let dense_entries = dense.as_slice().len();
@@ -81,14 +89,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let error = max_difference(dense.as_slice(), rebuilt.as_slice());
     print_reconstruction(error);
 
-    assert!(error < lift::<FloatType>(TOLERANCE));
+    assert!(error < TOLERANCE);
 
     // ---------------------------------------------------------------------
     // 3. Foldable folds the cores.
     // ---------------------------------------------------------------------
     // The sum over the cores counts `core_entries` numbers; the sum over the table counts
     // `dense_entries` of them. They answer different questions, and the fold answers the first.
-    let zero = lift::<FloatType>(0.0);
+    let zero = ZERO;
     let core_sum = CausalTensorTrainWitness::fold(train.clone(), zero, |acc, v| acc + v);
     let table_sum = dense
         .as_slice()
@@ -101,20 +109,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ---------------------------------------------------------------------
     // Multiplying every core entry by `s` multiplies the tensor by `s^d`, because the tensor is
     // the contraction of `d` cores and each contributes one factor.
-    let scale = lift::<FloatType>(CORE_SCALE);
+    let scale = CORE_SCALE;
     let scaled = CausalTensorTrainWitness::fmap(train.clone(), move |v| v * scale);
     let scaled_dense = scaled.to_dense()?;
 
-    let expected = (0..ORDER).fold(lift::<FloatType>(1.0), |acc, _| acc * scale);
+    let expected = (0..ORDER).fold(ONE, |acc, _| acc * scale);
     let observed = scaled_dense.as_slice()[0] / rebuilt.as_slice()[0];
     print_scaling(scale, ORDER, expected, observed);
 
-    assert!(Real::abs(observed - expected) < lift::<FloatType>(TOLERANCE));
+    assert!(Real::abs(observed - expected) < TOLERANCE);
 
     // ---------------------------------------------------------------------
     // 5. Pure: the smallest train there is.
     // ---------------------------------------------------------------------
-    let single = CausalTensorTrainWitness::pure(lift::<FloatType>(7.0));
+    let single = CausalTensorTrainWitness::pure(SEVEN);
     print_pure(
         single.order(),
         single.bond_dims(),
@@ -131,10 +139,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 fn table_entry(index: &[usize]) -> FloatType {
     let [i, j, k, l] = [index[0], index[1], index[2], index[3]];
     let at = |n: usize| lift_count::<FloatType>(n as u64);
-    let one = lift::<FloatType>(1.0);
-    let two = lift::<FloatType>(2.0);
-    let three = lift::<FloatType>(3.0);
-    let four = lift::<FloatType>(4.0);
+    let one = ONE;
+    let two = TWO;
+    let three = THREE;
+    let four = FOUR;
 
     (one + at(i)) * (two + at(j)) * (one + at(k)) * (three + at(l))
         + (four - at(i)) * (one + at(j)) * (three - at(k)) * (one + at(l))
@@ -147,12 +155,10 @@ fn core_entry_count(train: &CausalTensorTrain<FloatType>) -> usize {
 
 /// The largest absolute difference between two buffers of the same length.
 fn max_difference(a: &[FloatType], b: &[FloatType]) -> FloatType {
-    a.iter()
-        .zip(b.iter())
-        .fold(lift::<FloatType>(0.0), |acc, (&x, &y)| {
-            let gap = Real::abs(x - y);
-            if gap > acc { gap } else { acc }
-        })
+    a.iter().zip(b.iter()).fold(ZERO, |acc, (&x, &y)| {
+        let gap = Real::abs(x - y);
+        if gap > acc { gap } else { acc }
+    })
 }
 
 // -----------------------------------------------------------------------------------------

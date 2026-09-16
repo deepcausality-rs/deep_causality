@@ -49,7 +49,7 @@ the dark — is what keeps reacquisition fast. This example is that mechanism, o
 
 - **Real data:** GFZ MGEX week 1877, day 0 (`gbm18770.sp3` / `.clk`), satellite **E14** (Galileo IOV,
   eccentric orbit → a clean relativistic clock signature), bundled under
-  `examples/chronometric_examples/data/gnss/` and loaded via `deep_causality_file`.
+  `examples/physics_examples/chronometric_gm_recovery/data/gnss/` and loaded via `deep_causality_file`.
 - **Timescale:** the GNSS products are at ~5 min orbit cadence, so the modelled outage is an *extended*
   GNSS gap. The same holdover mechanism scales down to a brief denial (a tunnel, a jamming pocket) and up
   to a long one (a sustained contested-environment outage) — the bundled real data simply sets the cadence

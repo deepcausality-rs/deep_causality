@@ -3,42 +3,76 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! # Topological Insulator: the Chern number two ways
+//! # A topological insulator: the Chern number, two independent ways
 //!
-//! Computes the Chern number of the Qi-Wu-Zhang model in its three phases, bringing the
-//! DeepCausality pillars together:
+//! Some insulators cannot be turned into others without closing their gap. What separates them is
+//! not a local property but an integer, the **Chern number**, obtained by integrating the Berry
+//! curvature over the whole Brillouin zone:
 //!
-//! - **The tangent functor + quadrature.** The Berry curvature `Ω(k)` is built from the exact
-//!   momentum derivatives of the d-vector (autodiff, no finite differences), and the Chern number
-//!   `C = (1/2π)∫∫ Ω` is a *nested* `quadrature` over the Brillouin zone.
-//! - **Precision as a parameter.** `chern_quadrature` is generic over `Scalar`; this example runs
-//!   it at `FloatType` (switchable to `Float106`).
-//! - **The causal monad.** `PropagatingEffect` sequences the analysis and short-circuits if an
-//!   integral leaves the finite range.
+//! ```text
+//! C = (1 / 2π) ∫∫ Ω(kx, ky) dkx dky
+//! ```
 //!
-//! The quadrature result is cross-checked against the prior accumulation: the
-//! Fukui-Hatsugai-Suzuki lattice (Wilson-loop) sum.
-
-use deep_causality_core::{CausalFlow, CausalityError, CausalityErrorEnum, PropagatingEffect};
-use model::QWZModel;
+//! It comes out an integer however the material is deformed, and it changes only when the gap
+//! closes. That is what "topological" means here, and it is why the quantised Hall conductance of
+//! such a material is insensitive to disorder.
+//!
+//! The model is Qi-Wu-Zhang, `H(k) = d(k)·σ` with
+//!
+//! ```text
+//! d(k) = (sin kx,  sin ky,  u + cos kx + cos ky)
+//! ```
+//!
+//! whose phase depends on the single mass parameter `u`.
+//!
+//! # Two routes, sharing nothing but the d-vector
+//!
+//! ```text
+//! quadrature   Ω from exact ∂d/∂k, integrated by nested composite Simpson
+//! Wilson loop  Berry flux Im ln W around each plaquette of a k-grid, summed
+//! ```
+//!
+//! The first differentiates and never forms a spinor. The second forms spinors and never
+//! differentiates. They can only agree by both being right, which is what makes printing them side
+//! by side worth the second calculation.
+//!
+//! # What the run does
+//!
+//! ```text
+//! fmap       phase → its two Chern numbers
+//! sequence   a tensor of fallible phases → one fallible tensor
+//! bind       the analysis as a stage that short-circuits on a non-finite integral
+//! ```
+//!
+//! The derivatives come from the tangent functor, so there are no finite differences anywhere and
+//! no step size to tune. `DComponent` carries no numbers at all: the mass rides in with the
+//! momenta, so every quantity in the model is at the precision the caller asked for rather than
+//! the one the model was written down in.
 
 mod model;
+mod utils_print;
 
-/// The quadrature Chern number runs at this precision (switch to `Float106` for more digits; the
-/// integrand and the fold are generic over `Scalar`).
-pub type FloatType = f64;
+use deep_causality_core::{CausalFlow, CausalityError, CausalityErrorEnum, PropagatingEffect};
+use deep_causality_haft::ResultWitness;
+use deep_causality_haft::{Functor, Traversable};
+use deep_causality_num::Float106;
+use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
+use model::{N_QUADRATURE, N_WILSON, ONE, THREE, ZERO, chern_quadrature, chern_wilson, finite};
+use utils_print::{Phase, print_header, print_report};
 
-const N_QUAD: usize = 100; // composite-Simpson panels per axis (even)
-const N_WILSON: usize = 100; // Brillouin-zone grid for the lattice cross-check
+/// The working scalar. Switch it to `f32`, `f64` or `deep_causality_num::BFloat16`; the d-vector,
+/// its exact derivatives, both integrals and the mass parameter all recompute at that precision.
+///
+/// It sits at [`Float106`] by default on purpose. A hard-coded `f64` anywhere in the program is
+/// invisible while the alias *is* `f64`, and shows up here as a compile error the moment the two
+/// types differ.
+pub type FloatType = Float106;
 
 fn main() {
-    println!("----------------------------------------------------------------");
-    println!("   Topological Insulator Analysis (Berry Curvature)");
-    println!("----------------------------------------------------------------");
-    println!("Chern number two ways: tangent-functor Berry curvature integrated by nested");
-    println!("quadrature, cross-checked against the Fukui-Hatsugai-Suzuki lattice sum.\n");
+    print_header();
 
-    // The analysis runs as a CausalFlow stage; a non-finite integral short-circuits the chain.
+    // The analysis runs as a `CausalFlow` stage, so an integral that leaves the finite range
+    // short-circuits the chain rather than printing a number nobody should read.
     let pipeline = CausalFlow::effect().bind(|_, _, _| analyze()).into_effect();
 
     match pipeline.value_cloned() {
@@ -47,58 +81,78 @@ fn main() {
     }
 }
 
-/// One material phase: its mass parameter, the Chern number from each method, and a label.
-#[derive(Default, Clone, Debug)]
-struct PhaseRow {
-    u: f64,
-    quad: FloatType,
-    wilson: f64,
-    label: &'static str,
+/// The three phases of the model, by mass parameter.
+///
+/// `|u| > 2` is trivial and the two windows either side of zero are topological, with opposite
+/// signs. The labels say what the phase diagram predicts, and the table says what came out.
+fn phases() -> [(FloatType, &'static str); 3] {
+    [
+        (THREE, "trivial (|u| > 2)"),
+        (ONE, "topological (0 < u < 2)"),
+        (-ONE, "topological (-2 < u < 0)"),
+    ]
 }
 
-#[derive(Default, Clone, Debug)]
-struct Report {
-    rows: Vec<PhaseRow>,
-}
+fn analyze() -> PropagatingEffect<Vec<Phase>> {
+    let entries = phases();
 
-fn analyze() -> PropagatingEffect<Report> {
-    let phases = [
-        (3.0_f64, "trivial (|u| > 2)"),
-        (1.0, "topological (0 < u < 2)"),
-        (-1.0, "topological (-2 < u < 0)"),
-    ];
+    let Ok(tensor) = CausalTensor::new(entries.to_vec(), vec![entries.len()]) else {
+        return fail("the phase list could not be formed");
+    };
 
-    let mut rows = Vec::new();
-    for (u, label) in phases {
-        let quad: FloatType = model::chern_quadrature(u, N_QUAD);
-        if !model::finite(quad) {
-            return fail("Berry-curvature integral left the finite range");
+    // fmap: each phase is integrated twice, and either integral may leave the finite range.
+    let attempted = CausalTensorWitness::fmap(tensor, |(u, label)| {
+        let quadrature = chern_quadrature::<FloatType>(u, N_QUADRATURE);
+        if !finite(quadrature) {
+            return Err(format!(
+                "the Berry-curvature integral at u = {label} is not finite"
+            ));
         }
-        let wilson = model::chern_wilson(&QWZModel::new(u), N_WILSON);
-        rows.push(PhaseRow {
+
+        let wilson = chern_wilson::<FloatType>(u, N_WILSON);
+        if !finite(wilson) {
+            return Err(format!("the Wilson-loop sum at u = {label} is not finite"));
+        }
+
+        Ok(Phase {
             u,
-            quad,
+            quadrature,
             wilson,
             label,
-        });
-    }
+        })
+    });
 
-    PropagatingEffect::pure(Report { rows })
+    // sequence: one failure anywhere collapses the whole analysis, so the report either holds
+    // every phase or the chain carries the reason it holds none.
+    match CausalTensorWitness::sequence::<_, ResultWitness<String>>(attempted) {
+        Ok(rows) => PropagatingEffect::pure(rows.into_vec()),
+        Err(reason) => fail(&reason),
+    }
 }
 
-fn print_report(r: &Report) {
-    println!("    u   | C (quadrature) | C (Wilson loop) |  C  | phase");
-    println!("  ------+----------------+-----------------+-----+-----------------------");
-    for row in &r.rows {
-        let c = model::nearest_int(row.quad);
-        println!(
-            "  {:>4.1} |   {:>11.6}  |   {:>12.6}  | {:>+2}  | {}",
-            row.u, row.quad, row.wilson, c, row.label
-        );
-    }
+/// The agreement between the two routes, as the largest gap across the phases.
+pub fn largest_disagreement(rows: &[Phase]) -> FloatType {
+    rows.iter().fold(ZERO, |worst, row| {
+        let gap = magnitude(row.quadrature - row.wilson);
 
-    println!("\n  Phase diagram:  |u| > 2 → C = 0;   0 < u < 2 → C = +1;   −2 < u < 0 → C = −1");
-    println!("  Both methods agree; the quadrature path used exact autodiff derivatives.");
+        if gap > worst { gap } else { worst }
+    })
+}
+
+/// How far the quadrature result sits from the nearest integer, which is what quantisation means
+/// in practice: nothing rounds, and an integer is what the integral returns.
+pub fn largest_departure_from_integer(rows: &[Phase]) -> FloatType {
+    rows.iter().fold(ZERO, |worst, row| {
+        let nearest =
+            model::integer_scalar::<FloatType>(model::nearest_chern_number(row.quadrature));
+        let gap = magnitude(row.quadrature - nearest);
+
+        if gap > worst { gap } else { worst }
+    })
+}
+
+fn magnitude(x: FloatType) -> FloatType {
+    if x < ZERO { -x } else { x }
 }
 
 fn fail<T: Default + Clone + std::fmt::Debug>(msg: &str) -> PropagatingEffect<T> {

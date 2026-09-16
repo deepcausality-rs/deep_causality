@@ -5,13 +5,18 @@
 
 use deep_causality_algebra::Real;
 use deep_causality_linear::CsrMatrix;
-use deep_causality_num::lift;
+use deep_causality_num::const_scalar_from_int;
 use deep_causality_topology::{Chain, Simplex, SimplicialComplex, Skeleton};
 use std::sync::Arc;
 
 /// The working scalar. Chain weights carry it; the incidence signs in the boundary
 /// operators are `i8` and stay that way.
 pub type FloatType = f32;
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
+const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
+const EIGHT: FloatType = const_scalar_from_int!(FloatType, 8);
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
@@ -115,14 +120,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 2. Create a 2-chain: c = 1.0 * f0 + 2.0 * f1
     // where f0 is face (0,1,2) and f1 is face (0,1,3)
-    let weights_c = CsrMatrix::from_triplets(
-        1,
-        4,
-        &[
-            (0, 0, lift::<FloatType>(1.0)),
-            (0, 1, lift::<FloatType>(2.0)),
-        ],
-    )?;
+    let weights_c = CsrMatrix::from_triplets(1, 4, &[(0, 0, ONE), (0, 1, TWO)])?;
     let chain_c = Chain::new(complex.clone(), 2, weights_c);
 
     // 3. Compute the first boundary: b = ∂c
@@ -141,7 +139,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 5. Every surviving weight must vanish. The tolerance is a multiple of the working
     //    type's epsilon, so it moves with the alias where a literal would not.
-    let tol = lift::<FloatType>(8.0) * <FloatType as Real>::epsilon();
+    let tol = EIGHT * <FloatType as Real>::epsilon();
     let is_zero = chain_z
         .weights()
         .values()

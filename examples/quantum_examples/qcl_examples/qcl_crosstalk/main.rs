@@ -30,7 +30,7 @@ mod model;
 
 use deep_causality_algebra::Real;
 use deep_causality_haft::Either;
-use deep_causality_num::{lift, lift_count, to_count};
+use deep_causality_num::{Float106, lift_count, lower, to_count};
 use deep_causality_num_complex::Complex;
 use deep_causality_quantum::{
     Check, CheckItem, CheckReport, CommutatorTolerance, DensityMatrix, MinCostCover, Projection,
@@ -38,15 +38,22 @@ use deep_causality_quantum::{
 };
 use deep_causality_tensor::CausalTensor;
 
-use crate::constants::{AGREEMENT_SIGMAS, FLOOR_BITS, SEED, SHOTS};
+use crate::constants::{
+    AGREEMENT_SIGMAS, CANDIDATE_COUNT, COST_TOMOGRAPHY, EXPECTED_PLAN_COST, FLOOR_BITS, ONE, SEED,
+    SHOTS, ZERO,
+};
 use crate::model::{
     e1_projector, e2_projector, experiments, h1_direct_q1_to_q2, h2_direct_q2_to_q1,
     h3_common_bath, h4_cyclic, plant, systems,
 };
 
-/// The real working type. Switch it to
-/// `f32`, `f64`, or `Float106`  to define the precision level.
-pub type FloatType = f64;
+/// The working scalar. Switch it to `f32`, `f64` or `deep_causality_num::BFloat16`; the factors,
+/// the separations, the plan's costs and every read-out recompute at that precision.
+///
+/// It sits at [`Float106`] by default on purpose. A hard-coded `f64` anywhere in the program is
+/// invisible while the alias *is* `f64`, and shows up here as a compile error the moment the two
+/// types differ.
+pub type FloatType = Float106;
 
 /// The count working type.
 pub type NumberType = u64;
@@ -54,41 +61,48 @@ pub type NumberType = u64;
 /// The complex scalar.
 pub type C = Complex<FloatType>;
 
-fn main() {
-    let floor_bits: FloatType = lift(FLOOR_BITS);
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let floor_bits = FLOOR_BITS;
     println!("=== Crosstalk attribution: direct cause or common cause ===");
-    println!("shots: {SHOTS}   floor: {FLOOR_BITS} bits   seed: {SEED}\n");
+    println!("precision: {}", core::any::type_name::<FloatType>());
+    println!(
+        "shots: {SHOTS}   floor: {} bits   seed: {SEED}\n",
+        lower(FLOOR_BITS)
+    );
 
     // -- build(): the cyclic candidate is refused, by decision --------------------------
     println!("[build] four declared structures");
     let refused = QclBuilder::config::<FloatType, NumberType>()
-        .over_plant(plant(), &[e2_projector(), e1_projector()])
+        .over_plant(plant()?, &[e2_projector()?, e1_projector()?])
         .candidates(&[
-            h1_direct_q1_to_q2(),
-            h2_direct_q2_to_q1(),
-            h3_common_bath(),
-            h4_cyclic(),
+            h1_direct_q1_to_q2()?,
+            h2_direct_q2_to_q1()?,
+            h3_common_bath()?,
+            h4_cyclic()?,
         ])
-        .probes(&experiments())
+        .probes(&experiments()?)
         .seed(SEED)
         .build();
     match refused {
-        Ok(_) => println!("    unexpected: a cyclic candidate must not build"),
+        Ok(_) => return Err("a cyclic candidate built; build() should refuse it".into()),
         Err(e) => match e.0 {
             QuantumErrorEnum::CyclicStructureUnsupported(msg) => {
                 println!("    ✓ refused at build(): {msg}");
             }
-            other => println!("    refused with an unexpected error: {other:?}"),
+            other => return Err(format!("refused for the wrong reason: {other:?}").into()),
         },
     }
 
     let cfg = QclBuilder::config::<FloatType, NumberType>()
-        .over_plant(plant(), &[e2_projector(), e1_projector()])
-        .candidates(&[h1_direct_q1_to_q2(), h2_direct_q2_to_q1(), h3_common_bath()])
-        .probes(&experiments())
+        .over_plant(plant()?, &[e2_projector()?, e1_projector()?])
+        .candidates(&[
+            h1_direct_q1_to_q2()?,
+            h2_direct_q2_to_q1()?,
+            h3_common_bath()?,
+        ])
+        .probes(&experiments()?)
         .seed(SEED)
-        .build()
-        .expect("three acyclic candidates build");
+        .build()?;
 
     // -- validate: Markov, then C₃ on each candidate's own structure -------------------
     println!("\n[validate] three acyclic structures");
@@ -96,8 +110,7 @@ fn main() {
     let screened = QclBuilder::validate(&cfg)
         .check_markov(&CommutatorTolerance::<FloatType>::default())
         .check_decomposable(&sys, &sys)
-        .finalize()
-        .expect("three legal, decomposable QCMs screen");
+        .finalize()?;
     for (name, report) in screened.stages() {
         println!(
             "    {name:<20} {:?}  examined {}",
@@ -108,27 +121,36 @@ fn main() {
     for h in screened.admitted() {
         println!("    admitted: {}", h.name());
     }
-    assert_eq!(screened.admitted().len(), 3);
+    let all_three_admitted = screened.admitted().len() == CANDIDATE_COUNT;
+    println!(
+        "    all {CANDIDATE_COUNT} acyclic candidates admitted: {}",
+        yes_no(all_three_admitted)
+    );
 
     // -- control: the hand-off, the fork, and the plan ---------------------------------
     println!("\n[control] the screen enters control; a structural config could not");
     let report = QclBuilder::control::<FloatType, NumberType, 4, _>(&screened)
         .fork()
         .design(MinCostCover::new(floor_bits))
-        .finalize()
-        .expect("fork and design run on the admitted candidates");
-    let plan = report.plan.as_ref().expect("design ran");
+        .finalize()?;
+    let plan = report
+        .plan
+        .as_ref()
+        .ok_or("design should have produced a plan")?;
     println!(
         "    forked {} worlds, each with its own ledger, none moved into an arm",
         report.worlds.len()
     );
-    println!("\n[design] minimum-cost cover, floor {FLOOR_BITS} bits");
-    for (i, e) in experiments().iter().enumerate() {
+    println!(
+        "\n[design] minimum-cost cover, floor {} bits",
+        lower(FLOOR_BITS)
+    );
+    for (i, e) in experiments()?.iter().enumerate() {
         let chosen = plan.entries().iter().find(|p| p.experiment == i);
         println!(
             "    {:<26} cost {:>5}   {}",
             e.name(),
-            e.cost(),
+            lower(e.cost()),
             chosen.map_or("—".to_string(), |p| format!(
                 "chosen, resolves {:?}",
                 p.resolves
@@ -141,19 +163,32 @@ fn main() {
             .iter()
             .map(|e| e.name.as_str())
             .collect::<Vec<_>>(),
-        plan.total_cost(),
-        lift::<FloatType>(200.0) / plan.total_cost()
+        lower(plan.total_cost()),
+        lower(COST_TOMOGRAPHY / plan.total_cost())
     );
     println!(
         "    tightest pair separates at {:.1} bits against the floor; ledger cost {}",
-        plan.report().worst().expect("three pairs").measured,
+        lower(
+            plan.report()
+                .worst()
+                .ok_or("the plan should separate every pair")?
+                .measured
+        ),
         report.ledger.cost()
     );
-    assert!(plan.is_complete());
-    assert_eq!(plan.total_cost(), lift::<FloatType>(2.0));
+
+    let plan_is_complete = plan.is_complete();
+    let plan_costs_two = plan.total_cost() == EXPECTED_PLAN_COST;
+    println!(
+        "    the plan covers every pair: {}   and costs {}: {}",
+        yes_no(plan_is_complete),
+        lower(EXPECTED_PLAN_COST),
+        yes_no(plan_costs_two)
+    );
 
     // -- the first planned experiment, observed under H₁ ---------------------------------
-    let first = &experiments()[plan.entries()[0].experiment];
+    let probes = experiments()?;
+    let first = &probes[plan.entries()[0].experiment];
     // H₁ is the world the observation is drawn from. Predictions are indexed by hypothesis
     // position, the convention `design` and `Experiment` share, so the position is looked up by
     // name rather than assumed.
@@ -161,14 +196,18 @@ fn main() {
         .worlds
         .iter()
         .position(|w| w.name().starts_with("H1"))
-        .expect("H1 is a candidate");
-    assert_eq!(first.predictions().len(), report.worlds.len());
-    let observed = observe_under(first.predictions()[truth]);
+        .ok_or("H1 should be among the forked worlds")?;
+
+    if first.predictions().len() != report.worlds.len() {
+        return Err("each experiment predicts one read-out per world".into());
+    }
+
+    let observed = observe_under(first.predictions()[truth])?;
     println!(
         "\n[{}] observed {:.3} ± {:.3} over {} shots, drawn from the Born sampler at H1's prediction",
         first.name(),
-        observed.estimate(),
-        observed.standard_error(),
+        lower(observed.estimate()),
+        lower(observed.standard_error()),
         observed.shots()
     );
 
@@ -184,7 +223,7 @@ fn main() {
             println!(
                 "    {:<18} predicts {:.2}   {}",
                 w.name(),
-                predicted,
+                lower(predicted),
                 if verdict.accepted() {
                     "consistent"
                 } else {
@@ -194,7 +233,7 @@ fn main() {
             World::read_out(w.name(), verdict, prediction)
         })
         .collect();
-    let a = adjudicate(&worlds, floor_bits).expect("three read-out worlds fold");
+    let a = adjudicate(&worlds, floor_bits)?;
     println!(
         "\n[adjudicate] {} worlds folded, {} commutation pairs tested: a Boolean fold, §4 rule 2 does not apply",
         a.worlds_folded, a.commutation_pairs_tested
@@ -203,7 +242,8 @@ fn main() {
         Either::Left(s) => {
             println!(
                 "    {} survives, {:.1} bits from its nearest rival. Direct cause, not shared bath.",
-                s.name, s.separation_bits
+                s.name,
+                lower(s.separation_bits)
             );
             println!(
                 "    -> a scheduling or echo fix applies; frequency reallocation is not required."
@@ -211,30 +251,47 @@ fn main() {
         }
         Either::Right(why) => println!("    ambiguous: {why:?}"),
     }
-    assert!(matches!(&a.outcome, Either::Left(s) if s.name.starts_with("H1")));
+
+    // The survivor is the structure the observation was drawn from. Naming it up front and
+    // checking at the end is what separates a demonstration from a coincidence.
+    let named_the_truth = matches!(&a.outcome, Either::Left(s) if s.name.starts_with("H1"));
+    println!(
+        "\n    the adjudication named the structure the observation came from: {}",
+        yes_no(named_the_truth)
+    );
+
+    if !(all_three_admitted && plan_is_complete && plan_costs_two && named_the_truth) {
+        return Err("a check the example makes about its own decision failed".into());
+    }
+
+    Ok(())
+}
+
+/// A check's verdict, as a word.
+fn yes_no(ok: bool) -> &'static str {
+    if ok { "yes" } else { "NO" }
 }
 
 /// `shots` draws from a qubit whose excited population is `p`, through the shipped Born sampler.
-fn observe_under(p: FloatType) -> ShotEstimate<FloatType> {
-    let zero: FloatType = lift(0.0);
-    let one: FloatType = lift(1.0);
+fn observe_under(p: FloatType) -> Result<ShotEstimate<FloatType>, Box<dyn std::error::Error>> {
     let rho = DensityMatrix::new(CausalTensor::from_slice(
         &[
-            Complex::new(one - p, zero),
-            Complex::new(zero, zero),
-            Complex::new(zero, zero),
-            Complex::new(p, zero),
+            Complex::new(ONE - p, ZERO),
+            Complex::new(ZERO, ZERO),
+            Complex::new(ZERO, ZERO),
+            Complex::new(p, ZERO),
         ],
         &[2, 2],
-    ))
-    .expect("a valid state");
+    ))?;
+
     let excited = Projection::<FloatType, 2>::from_ket(&CausalTensor::from_slice(
-        &[Complex::new(zero, zero), Complex::new(one, zero)],
+        &[Complex::new(ZERO, ZERO), Complex::new(ONE, ZERO)],
         &[2],
-    ))
-    .expect("a projector");
-    let hist = sample_projector(&rho, &excited, SHOTS, SEED).expect("shots");
-    ShotEstimate::of_outcome(&hist, 1).expect("a non-empty histogram")
+    ))?;
+
+    let hist = sample_projector(&rho, &excited, SHOTS, SEED)?;
+
+    Ok(ShotEstimate::of_outcome(&hist, 1)?)
 }
 
 /// A world's predicted read-out, carried with the shot noise it would have at the planned shots.
@@ -254,7 +311,7 @@ fn agrees(
     observed: &ShotEstimate<FloatType>,
 ) -> CheckReport<FloatType> {
     let gap = Real::abs(prediction.estimate() - observed.estimate());
-    let allowance = lift::<FloatType>(AGREEMENT_SIGMAS) * observed.standard_error();
+    let allowance = AGREEMENT_SIGMAS * observed.standard_error();
     CheckReport::new(
         vec![Check::new(CheckItem::Whole, gap, allowance)],
         observed.shots() as usize,

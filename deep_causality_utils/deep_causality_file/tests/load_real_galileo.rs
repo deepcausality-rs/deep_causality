@@ -4,7 +4,7 @@
  */
 
 //! Integration test: the IO-monad loaders parse the real Galileo E14 SP3/CLK products bundled with
-//! the chronometric examples.
+//! the chronometric GM-recovery example.
 
 use deep_causality_file::{read_clock_data, read_gnss_single_satellite, read_orbit_data};
 use deep_causality_haft::IoAction;
@@ -16,9 +16,9 @@ use std::path::PathBuf;
 /// rustc sandbox that is gone by the time the test runs; rules_rs rejects the resulting
 /// artifact. Both runners therefore export the location into the test process instead: Bazel as
 /// `TEST_SRCDIR`/`TEST_WORKSPACE` naming the runfiles tree that carries
-/// `//examples/chronometric_examples:gnss_e14_fixtures`, and Cargo as `CARGO_MANIFEST_DIR`.
+/// `//examples/physics_examples:gnss_e14_fixtures`, and Cargo as `CARGO_MANIFEST_DIR`.
 fn data_dir() -> PathBuf {
-    const FIXTURES: &str = "examples/chronometric_examples/data/gnss";
+    const FIXTURES: &str = "examples/physics_examples/chronometric_gm_recovery/data/gnss";
 
     if let (Some(srcdir), Some(workspace)) = (
         std::env::var_os("TEST_SRCDIR"),

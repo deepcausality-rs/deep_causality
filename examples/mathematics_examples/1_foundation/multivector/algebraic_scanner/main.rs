@@ -19,13 +19,18 @@
 
 use deep_causality_algebra::Real;
 use deep_causality_multivector::{CausalMultiVector, Metric};
-use deep_causality_num::{lift, lower};
+use deep_causality_num::{const_scalar_from_int, lower};
 
 /// Highest dimension scanned. The algebra has 2^n coefficients, so this grows fast.
 const MAX_DIM: usize = 9;
 
 /// The working scalar. The pseudoscalar's coefficients carry it.
 pub type FloatType = f64;
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
+const EIGHT: FloatType = const_scalar_from_int!(FloatType, 8);
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
@@ -54,15 +59,15 @@ fn complex_structure(
     metric: Metric,
 ) -> Result<Option<FloatType>, Box<dyn std::error::Error>> {
     let size = 1 << dim;
-    let mut coefficients = vec![lift::<FloatType>(0.0); size];
-    coefficients[size - 1] = lift::<FloatType>(1.0);
+    let mut coefficients = vec![ZERO; size];
+    coefficients[size - 1] = ONE;
 
     let i = CausalMultiVector::new(coefficients, metric)?;
     let scalar_part = i.geometric_product(&i).data()[0];
 
     // The tolerance is a multiple of the working type's epsilon, so it moves with the alias.
-    let tol = lift::<FloatType>(8.0) * <FloatType as Real>::epsilon();
-    Ok((Real::abs(scalar_part + lift::<FloatType>(1.0)) < tol).then_some(scalar_part))
+    let tol = EIGHT * <FloatType as Real>::epsilon();
+    Ok((Real::abs(scalar_part + ONE) < tol).then_some(scalar_part))
 }
 
 // -----------------------------------------------------------------------------------------

@@ -6,11 +6,16 @@
 use deep_causality_haft::{
     Bifunctor, HKT2Unbound, MonoidalMerge, Profunctor, ResultUnboundWitness, Tuple3Witness,
 };
-use deep_causality_num::{lift, lift_i32};
+use deep_causality_num::{const_scalar_from_int, lift, lift_i32};
 use std::fmt::Debug;
 
 /// The working scalar. Calibrated readings and fused states carry it.
 pub type FloatType = f64;
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
+const THREE: FloatType = const_scalar_from_int!(FloatType, 3);
+const TWENTY: FloatType = const_scalar_from_int!(FloatType, 20);
 
 fn main() {
     print_header();
@@ -69,9 +74,7 @@ fn main() {
     // ------------------------------------------------------------------------
     // The Core Algorithm: A pure signal amplifier (f64 -> f64).
     // It knows nothing about "Sensors" or "IDs".
-    let amplifier = DataProcessor(Box::new(|signal: FloatType| {
-        signal * lift::<FloatType>(2.0)
-    }));
+    let amplifier = DataProcessor(Box::new(|signal: FloatType| signal * TWO));
 
     // The Adapter:
     // 1. Pre-processing (Input Adapter): Extracts f64 from RawSensorData.
@@ -95,7 +98,7 @@ fn main() {
     // Execute the adapted pipeline
     let output = (sensor_pipeline.0)(input);
     print_pipeline(&output);
-    assert_eq!(output.value, lift::<FloatType>(20.0)); // 10.0 * 2.0
+    assert_eq!(output.value, TWENTY); // 10.0 * 2.0
 
     // ------------------------------------------------------------------------
     // Step 3: Multi-Stream Fusion (MonoidalMerge)
@@ -149,16 +152,8 @@ fn main() {
     );
 
     // Time series Y and Z, already calibrated.
-    let sensor_y = (
-        lift::<FloatType>(2.0),
-        lift::<FloatType>(2.1),
-        lift::<FloatType>(2.2),
-    );
-    let sensor_z = (
-        lift::<FloatType>(3.0),
-        lift::<FloatType>(3.1),
-        lift::<FloatType>(3.2),
-    );
+    let sensor_y = (TWO, lift::<FloatType>(2.1), lift::<FloatType>(2.2));
+    let sensor_z = (THREE, lift::<FloatType>(3.1), lift::<FloatType>(3.2));
 
     // 2. FUSION PHASE
     // Merge the independent streams (X, Y, Z) into a single coherent state.

@@ -3,103 +3,156 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! # MAXWELL'S UNIFICATION: Causaloid Example
+//! # Maxwell's Unification: E and B as one bivector
 //!
-//! This example demonstrates how to model Maxwell's electromagnetic field unification
-//! using DeepCausality's monadic composition with CausalMultiVector.
+//! Electric and magnetic fields are ordinarily two vectors kept mutually consistent by hand. In
+//! geometric algebra they are two blades of a single field bivector `F`, derived from one vector
+//! potential `A`.
 //!
-//! ## Engineering Value
-//!
-//! In standard engineering, Electric (E) and Magnetic (B) fields are treated as separate vectors,
-//! requiring manual consistency checks. In Geometric Algebra, they are unified into a single
-//! Electromagnetic Field Bivector (F) derived from a Vector Potential (A).
-//!
-//! **Application: 5G/6G Antenna Design (Phased Arrays)**
-//! - Simulate the Interference Pattern of the Vector Potential directly on the mesh
-//! - Calculate A (4 scalars) is 50% faster than calculating E, B (6 scalars)
-//! - Numerically more stable (no divergence cleaning)
-//!
-//! ## Causal Chain
+//! This example takes the plane wave `A_x(t, z) = cos(omega (t - z))` and carries it through:
 //!
 //! ```text
-//! PlaneWaveConfig → Vector Potential (A) → EM Field (F = ∇A) → Gauge Check → Results
+//! A_x            the potential, written once over `Scalar`
+//! E_x = -dA_x/dt the electric blade, read off the tangent functor
+//! B_y =  dA_x/dz the magnetic blade, from the same sweep
+//! F              both blades in one Cl(1,3) bivector
+//! S = E x B      the Poynting flux, as an outer product
 //! ```
+//!
+//! `E` and `B` are never hand-differentiated: the potential is evaluated at `Dual` and the
+//! partials come out of the epsilon channel exactly. The run then checks the identities a
+//! source-free plane wave must satisfy, `d_mu A^mu = 0`, `|E| = |B|` and `|S| = |E||B|`, and
+//! checks the AD result against the closed form. A failed identity is a failed run: `main`
+//! returns the error and the process exits with a nonzero status.
+//!
+//! The frequency rides in as a coordinate of the point the potential is evaluated at, next to
+//! `t` and `z`. That keeps one `omega` in the program: the value the phase is computed from is
+//! the value the wave is differentiated at, at whatever precision the alias below names.
+//!
+//! ## APIs Demonstrated
+//! - `DifferentiateFieldExt::gradient` (forward-mode AD over a scalar-generic field)
+//! - `MaxwellSolver::calculate_potential_divergence` and `calculate_poynting_flux`
+//! - `CausalMultiVector` blade layout in `Cl(1,3)`
+
 mod model;
+mod utils_print;
 
-use deep_causality::PropagatingEffect;
-use deep_causality_core::CausalFlow;
+use deep_causality::{CausalityError, CausalityErrorEnum, PropagatingEffect};
+use deep_causality_algebra::Real;
+use deep_causality_core::{CausalEffect, CausalFlow};
+use deep_causality_num::{Float106, const_scalar_from_float, const_scalar_from_int, lift_usize};
 use model::{MaxwellState, PlaneWaveConfig};
+use utils_print::{print_config, print_fields, print_header, print_verification};
 
-fn main() {
-    println!("--- MAXWELL'S UNIFICATION: Causaloid Example ---");
-    println!("Goal: Model E and B field derivation as a causal chain.\n");
+/// Angular frequency of the wave. A whole number, so it is exact at every scalar.
+const OMEGA: FloatType = const_scalar_from_int!(FloatType, 1);
+/// Observation event `(t, z)`.
+const OBSERVE_T: FloatType = const_scalar_from_int!(FloatType, 1);
+const OBSERVE_Z: FloatType = const_scalar_from_float!(FloatType, 0.5);
 
-    // =========================================================================
-    // Part 1: Define the Wave Configuration
-    // =========================================================================
+/// How many rounding steps of the working type an identity may miss by and still hold.
+///
+/// Every quantity here is a closed-form expression evaluated once, so the residuals sit within a
+/// few units of the working type's epsilon at any precision. Stating the tolerance in those
+/// units is what lets the same check run at `f32`, `f64`, `BFloat16` and `Float106`.
+pub const TOLERANCE_ULPS: usize = 64;
+
+/// The working scalar. Switch it to `f32`, `f64` or `deep_causality_num::BFloat16`; the wave, its
+/// exact derivatives, the bivector and the identity checks all recompute at that precision.
+///
+/// It sits at [`Float106`] by default on purpose. A hard-coded `f64` anywhere in the program is
+/// invisible while the alias *is* `f64`, and shows up here as a compile error the moment the two
+/// types differ.
+pub type FloatType = Float106;
+
+fn main() -> Result<(), CausalityError> {
+    print_header();
+
     let config = PlaneWaveConfig {
-        omega: 1.0,
-        t: 1.0,
-        z: 0.5,
+        omega: OMEGA,
+        t: OBSERVE_T,
+        z: OBSERVE_Z,
     };
-    println!(
-        "Wave Configuration: ω={}, t={}, z={}",
-        config.omega, config.t, config.z
-    );
+    print_config(&config);
 
-    // =========================================================================
-    // Part 2: Build and Evaluate the Causal Chain via Monadic Composition
-    // =========================================================================
-    // Each step in the causal chain is a pure function wrapped in PropagatingEffect
-    //
-    // The chain represents: Config → Potential → EM Field → Gauge Check
-    let initial_state = MaxwellState::from_config(&config);
-    println!("Phase: {:.4}", initial_state.phase);
+    // Potential -> field bivector -> Poynting flux, as one pipeline.
+    let result: PropagatingEffect<MaxwellState> =
+        CausalFlow::value(MaxwellState::from_config(&config))
+            .bind(|s, _, _| forward(s, model::compute_potential))
+            .bind(|s, _, _| forward(s, model::compute_em_field))
+            .bind(|s, _, _| forward(s, model::compute_poynting_flux))
+            .into_effect();
 
-    // Execute the causal chain as one CausalFlow pipeline: Config -> Potential -> EM Field ->
-    // Gauge Check -> Poynting Flux. Each model stage is a pure function bound in turn.
-    let result: PropagatingEffect<MaxwellState> = CausalFlow::value(initial_state)
-        .bind(|s, _, _| model::compute_potential(s.into_value().unwrap_or_default()))
-        .bind(|s, _, _| model::compute_em_field(s.into_value().unwrap_or_default()))
-        .bind(|s, _, _| model::check_lorenz_gauge(s.into_value().unwrap_or_default()))
-        .bind(|s, _, _| model::compute_poynting_flux(s.into_value().unwrap_or_default()))
-        .into_effect();
+    // The error channel reaches `main`: a stage that failed is the error the process exits with.
+    let (outcome, _, _, _) = result.into_parts();
+    let state = outcome?
+        .into_value()
+        .ok_or_else(|| custom("the chain finished without a field state"))?;
 
-    // =========================================================================
-    // Part 3: Extract and Display Results
-    // =========================================================================
-    if result.is_err() {
-        eprintln!("Causal chain failed: {:?}", result.error());
-        return;
-    }
+    let f = model::field_bivector(&state).map_err(custom)?;
+    print_fields(&state, model::field_blades(&f));
 
-    let final_state = result.into_value().unwrap_or_default();
-
-    println!("\n--- Results ---\n");
-    println!("Vector Potential A_x: {:.4}", final_state.potential_ax);
-
-    // Part A: Electric and Magnetic Fields
-    println!("\n>> Extracted Physical Fields:");
-    println!("  E-Field:         {:.4}", final_state.e_field);
-    println!("  B-Field:         {:.4}", final_state.b_field);
-    println!("  Poynting Flux:   {:.4}", final_state.poynting_flux);
-    println!("  Divergence:      {:.4e}", final_state.divergence);
-    if final_state.gauge_satisfied {
-        println!("   >> SUCCESS: Lorenz Gauge Satisfied (Divergence ≈ 0)");
+    let verification = verify(&state);
+    print_verification(&verification);
+    if verification.holds {
+        Ok(())
     } else {
-        println!("   >> WARNING: Gauge Broken!");
+        Err(custom(
+            "an identity of the source-free plane wave failed at this precision",
+        ))
     }
+}
 
-    // Part C: Physics Verification: |E| = |B| for plane wave
-    println!("\n>> Physics Verification:");
-    if (final_state.e_field.abs() - final_state.b_field.abs()).abs() < 1e-9 {
-        println!("   >> VERIFIED: |E| = |B|. Wave propagating at speed c.");
-    } else {
-        println!(
-            "   >> Difference: |E| - |B| = {:.6}",
-            final_state.e_field.abs() - final_state.b_field.abs()
-        );
+/// Hands the stage its state, or short-circuits when the upstream carried none.
+fn forward(
+    value: CausalEffect<MaxwellState>,
+    stage: impl Fn(MaxwellState) -> PropagatingEffect<MaxwellState>,
+) -> PropagatingEffect<MaxwellState> {
+    match value.into_value() {
+        Some(s) => stage(s),
+        None => PropagatingEffect::from_error(custom("the chain carried no state")),
     }
+}
 
-    println!("\n--- Example Complete ---");
+/// The identities a source-free plane wave in vacuum must satisfy, each against its closed form.
+pub struct Verification {
+    /// The tolerance the residuals are held to, at the working type.
+    pub tolerance: FloatType,
+    /// `|d_mu A^mu|`, zero because `A_x` does not depend on `x`.
+    pub gauge_residual: FloatType,
+    /// `|E| - |B|`, zero because `-dA_x/dt` and `dA_x/dz` differ only in sign for `f(t - z)`.
+    pub field_balance: FloatType,
+    /// `|S| - |E||B|`, zero because `E` and `B` are orthogonal.
+    pub flux_residual: FloatType,
+    /// `E_x` against the closed form `omega sin(omega (t - z))`.
+    pub closed_form_residual: FloatType,
+    pub holds: bool,
+}
+
+fn verify(s: &MaxwellState) -> Verification {
+    let tolerance = lift_usize::<FloatType>(TOLERANCE_ULPS) * FloatType::epsilon();
+
+    let gauge_residual = Real::abs(s.divergence);
+    let field_balance = Real::abs(s.e_field) - Real::abs(s.b_field);
+    let flux_residual = s.poynting_flux - Real::abs(s.e_field) * Real::abs(s.b_field);
+
+    // A_x = cos(omega (t - z)), so E_x = -dA_x/dt = omega sin(omega (t - z)).
+    let closed_form = s.omega * Real::sin(s.phase);
+    let closed_form_residual = s.e_field - closed_form;
+
+    Verification {
+        tolerance,
+        gauge_residual,
+        field_balance,
+        flux_residual,
+        closed_form_residual,
+        holds: gauge_residual < tolerance
+            && Real::abs(field_balance) < tolerance
+            && Real::abs(flux_residual) < tolerance
+            && Real::abs(closed_form_residual) < tolerance,
+    }
+}
+
+fn custom(reason: impl Into<String>) -> CausalityError {
+    CausalityError(CausalityErrorEnum::Custom(reason.into()))
 }

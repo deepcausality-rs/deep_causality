@@ -19,7 +19,7 @@ mod model;
 
 use deep_causality_algebra::Real;
 use deep_causality_haft::Either;
-use deep_causality_num::{lift, lift_count, to_count};
+use deep_causality_num::{Float106, lift_count, lower, to_count};
 use deep_causality_num_complex::Complex;
 use deep_causality_quantum::{
     Check, CheckItem, CheckReport, CircuitModel, CommutatorTolerance, DensityMatrix, Hypothesis,
@@ -28,14 +28,17 @@ use deep_causality_quantum::{
 };
 use deep_causality_tensor::CausalTensor;
 
-use crate::constants::{AGREEMENT_SIGMAS, FLOOR_BITS, SEED, SHOTS};
+use crate::constants::{
+    AGREEMENT_SIGMAS, CANDIDATE_COUNT, COST_TOMOGRAPHY, EXPECTED_PLAN_COST, FLOOR_BITS, ONE, SEED,
+    SHOTS, ZERO,
+};
 use crate::model::{
     e1_projector, e2_projector, experiments, h1_circuit, h2_circuit, h3_common_bath,
     h4_cyclic_circuit, plant, systems,
 };
 
 /// The real working type. Switch it to `f32`, `f64`, or `Float106` to define the precision level.
-pub type FloatType = f64;
+pub type FloatType = Float106;
 
 /// The count working type.
 pub type NumberType = u64;
@@ -43,31 +46,35 @@ pub type NumberType = u64;
 /// The complex scalar.
 pub type C = Complex<FloatType>;
 
-fn main() {
-    let floor_bits: FloatType = lift(FLOOR_BITS);
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let floor_bits = FLOOR_BITS;
     println!("=== Crosstalk attribution over circuits: direct cause or common cause ===");
-    println!("shots: {SHOTS}   floor: {FLOOR_BITS} bits   seed: {SEED}\n");
+    println!("precision: {}", core::any::type_name::<FloatType>());
+    println!(
+        "shots: {SHOTS}   floor: {} bits   seed: {SEED}\n",
+        lower(FLOOR_BITS)
+    );
 
     // -- build(): the cyclic circuit is refused, by its wiring ---------------------------
     println!("[build] the cyclic circuit H4 Q1->Q2->B->Q1");
     match QclBuilder::config::<FloatType, NumberType>()
-        .over_circuit(h4_cyclic_circuit())
+        .over_circuit(h4_cyclic_circuit()?)
         .build()
     {
-        Ok(_) => panic!("a cyclic grouping must not build"),
+        Ok(_) => return Err("a cyclic grouping built; build() should refuse it".into()),
         Err(e) => match e.0 {
             QuantumErrorEnum::CyclicStructureUnsupported(msg) => {
                 println!("    ✓ refused at build(): {msg}")
             }
-            other => panic!("refused with an unexpected error: {other:?}"),
+            other => return Err(format!("refused for the wrong reason: {other:?}").into()),
         },
     }
 
     // -- validate: each acyclic circuit's dilation, Markov then C₃ ------------------------
     println!("\n[validate] two circuits, each screened through its dilation");
-    let h1 = screened_candidate("H1 Q1->Q2", h1_circuit());
-    let h2 = screened_candidate("H2 Q2->Q1", h2_circuit());
-    let h3 = h3_common_bath();
+    let h1 = screened_candidate("H1 Q1->Q2", h1_circuit()?)?;
+    let h2 = screened_candidate("H2 Q2->Q1", h2_circuit()?)?;
+    let h3 = h3_common_bath()?;
     println!(
         "    {:<12} kept as the v1 factorization (see model.rs)",
         h3.name()
@@ -75,19 +82,17 @@ fn main() {
 
     // -- the plant pipeline over the circuit-derived candidates ------------------------
     let cfg = QclBuilder::config::<FloatType, NumberType>()
-        .over_plant(plant(), &[e2_projector(), e1_projector()])
+        .over_plant(plant()?, &[e2_projector()?, e1_projector()?])
         .candidates(&[h1, h2, h3])
-        .probes(&experiments())
+        .probes(&experiments()?)
         .seed(SEED)
-        .build()
-        .expect("three acyclic candidates build");
+        .build()?;
     println!("\n[validate] the three candidates on the plant subject");
     let sys = systems();
     let screened = QclBuilder::validate(&cfg)
         .check_markov(&CommutatorTolerance::<FloatType>::default())
         .check_decomposable(&sys, &sys)
-        .finalize()
-        .expect("three legal, decomposable QCMs screen");
+        .finalize()?;
     for (name, report) in screened.stages() {
         println!(
             "    {name:<20} {:?}  examined {}",
@@ -98,23 +103,32 @@ fn main() {
     for h in screened.admitted() {
         println!("    admitted: {}", h.name());
     }
-    assert_eq!(screened.admitted().len(), 3);
+    let all_admitted = screened.admitted().len() == CANDIDATE_COUNT;
+    println!(
+        "    all {CANDIDATE_COUNT} circuit-derived candidates admitted: {}",
+        yes_no(all_admitted)
+    );
 
     // -- control: fork and plan --------------------------------------------------------
     println!("\n[control] the screen enters control");
     let report = QclBuilder::control::<FloatType, NumberType, 4, _>(&screened)
         .fork()
         .design(MinCostCover::new(floor_bits))
-        .finalize()
-        .expect("fork and design run on the admitted candidates");
-    let plan = report.plan.as_ref().expect("design ran");
-    println!("\n[design] minimum-cost cover, floor {FLOOR_BITS} bits");
-    for (i, e) in experiments().iter().enumerate() {
+        .finalize()?;
+    let plan = report
+        .plan
+        .as_ref()
+        .ok_or("design should have produced a plan")?;
+    println!(
+        "\n[design] minimum-cost cover, floor {} bits",
+        lower(FLOOR_BITS)
+    );
+    for (i, e) in experiments()?.iter().enumerate() {
         let chosen = plan.entries().iter().find(|p| p.experiment == i);
         println!(
             "    {:<26} cost {:>5}   {}",
             e.name(),
-            e.cost(),
+            lower(e.cost()),
             chosen.map_or("—".to_string(), |p| format!(
                 "chosen, resolves {:?}",
                 p.resolves
@@ -124,26 +138,37 @@ fn main() {
     let names: Vec<&str> = plan.entries().iter().map(|e| e.name.as_str()).collect();
     println!(
         "    plan: {names:?}  total cost {}   (tomography alone would cost 200, {}× more)",
-        plan.total_cost(),
-        lift::<FloatType>(200.0) / plan.total_cost()
+        lower(plan.total_cost()),
+        lower(COST_TOMOGRAPHY / plan.total_cost())
     );
-    assert!(plan.is_complete());
-    assert_eq!(plan.total_cost(), lift::<FloatType>(2.0));
-    assert!(names.contains(&"E1 do(Q1=|1>) P(e2)") && names.contains(&"E2 do(Q2=|1>) P(e1)"));
+
+    let plan_is_complete = plan.is_complete();
+    let plan_costs_two = plan.total_cost() == EXPECTED_PLAN_COST;
+    let plan_picked_the_interventions =
+        names.contains(&"E1 do(Q1=|1>) P(e2)") && names.contains(&"E2 do(Q2=|1>) P(e1)");
+
+    println!(
+        "    covers every pair: {}   costs {}: {}   picked both interventions: {}",
+        yes_no(plan_is_complete),
+        lower(EXPECTED_PLAN_COST),
+        yes_no(plan_costs_two),
+        yes_no(plan_picked_the_interventions)
+    );
 
     // -- the first planned experiment, observed under H₁, and the adjudication ------------
-    let first = &experiments()[plan.entries()[0].experiment];
+    let probes = experiments()?;
+    let first = &probes[plan.entries()[0].experiment];
     let truth = report
         .worlds
         .iter()
         .position(|w| w.name().starts_with("H1"))
-        .expect("H1 is a candidate");
-    let observed = observe_under(first.predictions()[truth]);
+        .ok_or("H1 should be among the forked worlds")?;
+    let observed = observe_under(first.predictions()[truth])?;
     println!(
         "\n[{}] observed {:.3} ± {:.3} over {} shots, drawn from the Born sampler at H1's prediction",
         first.name(),
-        observed.estimate(),
-        observed.standard_error(),
+        lower(observed.estimate()),
+        lower(observed.standard_error()),
         observed.shots()
     );
     let worlds: Vec<World<FloatType, 4>> = report
@@ -157,7 +182,7 @@ fn main() {
             println!(
                 "    {:<18} predicts {:.2}   {}",
                 w.name(),
-                predicted,
+                lower(predicted),
                 if verdict.accepted() {
                     "consistent"
                 } else {
@@ -167,37 +192,60 @@ fn main() {
             World::read_out(w.name(), verdict, prediction)
         })
         .collect();
-    let a = adjudicate(&worlds, floor_bits).expect("three read-out worlds fold");
+    let a = adjudicate(&worlds, floor_bits)?;
     match &a.outcome {
         Either::Left(s) => println!(
             "\n[adjudicate] {} survives, {:.1} bits from its nearest rival. Direct cause, not shared bath.",
-            s.name, s.separation_bits
+            s.name,
+            lower(s.separation_bits)
         ),
         Either::Right(why) => println!("\n[adjudicate] ambiguous: {why:?}"),
     }
-    assert!(matches!(&a.outcome, Either::Left(s) if s.name.starts_with("H1")));
+    let named_the_truth = matches!(&a.outcome, Either::Left(s) if s.name.starts_with("H1"));
+    println!(
+        "    the adjudication named the structure the observation came from: {}",
+        yes_no(named_the_truth)
+    );
+
     println!("\n=== the v1 decision, reproduced over circuit-derived candidates ===");
+
+    if !(all_admitted
+        && plan_is_complete
+        && plan_costs_two
+        && plan_picked_the_interventions
+        && named_the_truth)
+    {
+        return Err("a check the example makes about its own decision failed".into());
+    }
+
+    Ok(())
+}
+
+/// A check's verdict, as a word.
+fn yes_no(ok: bool) -> &'static str {
+    if ok { "yes" } else { "NO" }
 }
 
 /// One circuit through `.over_circuit`, screened by Markov and C₃ on its dilation, and the
 /// dilation's normalised factors as the named structural candidate.
-fn screened_candidate(name: &str, circuit: CircuitModel<FloatType>) -> Hypothesis<FloatType> {
+fn screened_candidate(
+    name: &str,
+    circuit: CircuitModel<FloatType>,
+) -> Result<Hypothesis<FloatType>, Box<dyn std::error::Error>> {
     let cfg = QclBuilder::config::<FloatType, NumberType>()
         .over_circuit(circuit)
-        .build()
-        .expect("an acyclic circuit builds");
+        .build()?;
     let nodes: Vec<usize> = (0..cfg.subject().model().nodes().len()).collect();
     let screened = QclBuilder::validate(&cfg)
         .check_markov(&CommutatorTolerance::<FloatType>::default())
         .check_decomposable(&nodes, &nodes)
-        .finalize()
-        .expect("the dilation is Markov and C₃-free");
-    assert_eq!(screened.origin(), ScreenOrigin::Circuit);
-    let dilation = cfg
-        .subject()
-        .model()
-        .dilation()
-        .expect("the dilation formed at build()");
+        .finalize()?;
+
+    if screened.origin() != ScreenOrigin::Circuit {
+        return Err("a circuit subject should screen with a circuit origin".into());
+    }
+
+    let dilation = cfg.subject().model().dilation()?;
     let dag = cfg.subject().model().induced_dag();
     println!(
         "    {name:<12} {} nodes, edges {:?}; stages: {}",
@@ -212,15 +260,13 @@ fn screened_candidate(name: &str, circuit: CircuitModel<FloatType>) -> Hypothesi
             .collect::<Vec<_>>()
             .join(", ")
     );
-    dilation
-        .hypothesis(name)
-        .expect("the dilation's factors form a structural hypothesis")
+    Ok(dilation.hypothesis(name)?)
 }
 
 /// `shots` draws from a qubit whose excited population is `p`, through the shipped Born sampler.
-fn observe_under(p: FloatType) -> ShotEstimate<FloatType> {
-    let zero: FloatType = lift(0.0);
-    let one: FloatType = lift(1.0);
+fn observe_under(p: FloatType) -> Result<ShotEstimate<FloatType>, Box<dyn std::error::Error>> {
+    let zero = ZERO;
+    let one = ONE;
     let rho = DensityMatrix::new(CausalTensor::from_slice(
         &[
             Complex::new(one - p, zero),
@@ -229,15 +275,14 @@ fn observe_under(p: FloatType) -> ShotEstimate<FloatType> {
             Complex::new(p, zero),
         ],
         &[2, 2],
-    ))
-    .expect("a valid state");
+    ))?;
     let excited = Projection::<FloatType, 2>::from_ket(&CausalTensor::from_slice(
         &[Complex::new(zero, zero), Complex::new(one, zero)],
         &[2],
-    ))
-    .expect("a projector");
-    let hist = sample_projector(&rho, &excited, SHOTS, SEED).expect("shots");
-    ShotEstimate::of_outcome(&hist, 1).expect("a non-empty histogram")
+    ))?;
+    let hist = sample_projector(&rho, &excited, SHOTS, SEED)?;
+
+    Ok(ShotEstimate::of_outcome(&hist, 1)?)
 }
 
 /// A world's predicted read-out, carried with the shot noise it would have at the planned shots.
@@ -256,7 +301,7 @@ fn agrees(
     observed: &ShotEstimate<FloatType>,
 ) -> CheckReport<FloatType> {
     let gap = Real::abs(prediction.estimate() - observed.estimate());
-    let allowance = lift::<FloatType>(AGREEMENT_SIGMAS) * observed.standard_error();
+    let allowance = AGREEMENT_SIGMAS * observed.standard_error();
     CheckReport::new(
         vec![Check::new(CheckItem::Whole, gap, allowance)],
         observed.shots() as usize,

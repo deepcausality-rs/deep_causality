@@ -4,4 +4,6 @@
  */
 
 #[cfg(test)]
+mod lift_const_tests;
+#[cfg(test)]
 mod lift_tests;

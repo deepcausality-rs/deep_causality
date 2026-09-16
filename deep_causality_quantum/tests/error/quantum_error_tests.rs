@@ -5,6 +5,8 @@
 
 use deep_causality_core::CausalityError;
 use deep_causality_metric::MetricError;
+use deep_causality_multivector::HilbertState;
+use deep_causality_num_complex::Complex;
 use deep_causality_quantum::{QuantumError, QuantumErrorEnum};
 
 #[test]
@@ -146,6 +148,46 @@ fn test_from_metric_error() {
         QuantumErrorEnum::UnsupportedMetric(msg) => assert!(msg.contains("dim 0")),
         other => panic!("expected UnsupportedMetric, got {:?}", other),
     }
+}
+
+/// `?` joins a multivector construction to a quantum kernel.
+///
+/// The kernels take `HilbertState` operands, so a caller builds one, calls a kernel, and builds
+/// another from the result. Without this conversion the two halves report through different error
+/// types and the sequence cannot be written with `?` at all.
+#[test]
+fn test_from_causal_multivector_error() {
+    // `Cl(2)` needs four coefficients, so three is a length mismatch.
+    let source = HilbertState::<f64>::new(
+        vec![Complex::new(1.0, 0.0); 3],
+        deep_causality_multivector::Metric::Euclidean(2),
+    )
+    .unwrap_err();
+    let text = format!("{source}");
+
+    let err: QuantumError = source.into();
+    match &err.0 {
+        QuantumErrorEnum::DimensionMismatch(msg) => assert_eq!(msg, &text),
+        other => panic!("expected DimensionMismatch, got {:?}", other),
+    }
+}
+
+/// The conversion is what makes a build-then-commute sequence expressible with `?`.
+#[test]
+fn test_question_mark_joins_construction_and_kernel() {
+    fn commute_two(len: usize) -> Result<usize, QuantumError> {
+        let metric = deep_causality_multivector::Metric::Euclidean(2);
+        let a = HilbertState::<f64>::new(vec![Complex::new(1.0, 0.0); len], metric)?;
+        let b = HilbertState::<f64>::new(vec![Complex::new(0.0, 1.0); len], metric)?;
+        let c = deep_causality_quantum::commutator_kernel(&a, &b)?;
+        Ok(c.as_inner().data().len())
+    }
+
+    assert_eq!(commute_two(4).unwrap(), 4);
+    assert!(matches!(
+        commute_two(3).unwrap_err().0,
+        QuantumErrorEnum::DimensionMismatch(_)
+    ));
 }
 
 #[test]

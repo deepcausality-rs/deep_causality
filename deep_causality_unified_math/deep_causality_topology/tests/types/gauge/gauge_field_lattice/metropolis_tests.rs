@@ -210,3 +210,75 @@ fn test_metropolis_sweep_thermalizes_a_hot_start() {
         "every link was accepted in every sweep, which is what a no-op proposal does: {rates:?}"
     );
 }
+
+/// A U(1) Metropolis sweep must actually move the field.
+///
+/// `generate_small_su_n_update` builds a traceless Hermitian generator, which is the right Lie
+/// algebra for SU(N) with N >= 2. U(1) is not SU(1): its generator is a phase, so the real Lie
+/// algebra is one-dimensional while the *traceless* Hermitian 1x1 matrices are `{0}`. Imposing
+/// tracelessness at `n = 1` therefore made every proposal the identity, so no update could ever
+/// be rejected and the field never left its starting configuration.
+///
+/// This pins both halves of that failure: the acceptance rate must not be exactly 1, and the
+/// configuration must actually change.
+#[test]
+fn test_u1_metropolis_sweep_moves_the_field() {
+    let lattice = Arc::new(LatticeComplex::new([4, 4], [true, true]));
+    let mut rng = Xoshiro256::from_seed(42);
+    let mut field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice, 2.0);
+
+    let before = field
+        .try_average_plaquette()
+        .expect("an identity field has a well-defined plaquette");
+
+    let mut ever_rejected = false;
+    for _ in 0..20 {
+        let acceptance = field
+            .try_metropolis_sweep(0.6, &mut rng)
+            .expect("a sweep over a populated lattice succeeds");
+        if acceptance < 1.0 {
+            ever_rejected = true;
+        }
+    }
+
+    let after = field
+        .try_average_plaquette()
+        .expect("the swept field has a well-defined plaquette");
+
+    assert!(
+        ever_rejected,
+        "every U(1) proposal was accepted: the generator is identically zero, so the \
+         proposal equals the current link and no update can be rejected"
+    );
+    assert!(
+        (after - before).abs() > 1e-9,
+        "the U(1) field did not move: <P> stayed at {before} after 20 sweeps"
+    );
+}
+
+/// At strong coupling the U(1) field must order: `<P> -> I_1(beta)/I_0(beta)`, which is above
+/// 0.9 for `beta = 10`. A frozen field started hot would sit near zero instead.
+#[test]
+fn test_u1_metropolis_thermalizes_toward_the_exact_solution() {
+    let lattice = Arc::new(LatticeComplex::new([4, 4], [true, true]));
+    let mut rng = Xoshiro256::from_seed(7);
+    let mut field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::random(lattice, 10.0, &mut rng);
+
+    for _ in 0..400 {
+        field
+            .try_metropolis_sweep(0.5, &mut rng)
+            .expect("a sweep over a populated lattice succeeds");
+    }
+
+    let plaquette = field
+        .try_average_plaquette()
+        .expect("the thermalized field has a well-defined plaquette");
+
+    // I_1(10)/I_0(10) = 0.9486. A 4x4 lattice plus Monte Carlo noise leaves ample room.
+    assert!(
+        plaquette > 0.9,
+        "beta = 10 should order the field toward <P> = 0.9486, got {plaquette}"
+    );
+}

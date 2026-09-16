@@ -26,7 +26,7 @@
 
 use deep_causality_haft::{Applicative, Pure};
 use deep_causality_multivector::{CausalMultiVector, CausalMultiVectorError, Metric, MultiVector};
-use deep_causality_num::{lift, lower};
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lift, lower};
 use deep_causality_tensor::{CausalTensor, CausalTensorError, CausalTensorWitness};
 
 /// A Schwarzschild-like metric in normalised units: time dilation, radial stretching, and two
@@ -40,12 +40,12 @@ const METRIC_DIM: usize = 4;
 
 /// The scalar curvature `R` driven by the central mass, and the intensity above which the plasma
 /// runs in the relativistic algebra.
-const SCALAR_CURVATURE: f64 = 0.1;
-const RELATIVISTIC_THRESHOLD: f64 = 0.05;
+const SCALAR_CURVATURE: FloatType = const_scalar_from_float!(FloatType, 0.1);
+const RELATIVISTIC_THRESHOLD: FloatType = const_scalar_from_float!(FloatType, 0.05);
 
 /// Plasma current density flowing toroidally, and the poloidal confinement field.
-const CURRENT_DENSITY: f64 = 10.0;
-const MAGNETIC_FIELD: f64 = 2.0;
+const CURRENT_DENSITY: FloatType = const_scalar_from_int!(FloatType, 10);
+const MAGNETIC_FIELD: FloatType = const_scalar_from_int!(FloatType, 2);
 
 /// Blade indices: each axis owns one bit, and a plane owns the bits of the axes spanning it.
 const E_X: usize = 1 << 1;
@@ -54,6 +54,9 @@ const E_XY: usize = E_X | E_Y;
 
 /// The working scalar. The metric, the curvature and the plasma force all carry it.
 pub type FloatType = f64;
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
@@ -71,7 +74,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Step 2: the coupling. The curvature intensity is a value, and it selects the algebra the
     // next solver works in.
     print_step_two();
-    let (metric_sig, label) = if time_dilation > lift::<FloatType>(RELATIVISTIC_THRESHOLD) {
+    let (metric_sig, label) = if time_dilation > RELATIVISTIC_THRESHOLD {
         (Metric::Minkowski(4), "Relativistic (Minkowski 4D)")
     } else {
         (Metric::Euclidean(3), "Classical (Euclidean 3D)")
@@ -80,13 +83,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Step 3: the MHD solver, running in the metric Step 2 chose.
     print_step_three();
-    let current = lift::<FloatType>(CURRENT_DENSITY);
-    let field = lift::<FloatType>(MAGNETIC_FIELD);
+    let current = CURRENT_DENSITY;
+    let field = MAGNETIC_FIELD;
     let force = lorentz_force(current, field, metric_sig)?;
     print_force(force);
 
     // Step 4: the feedback the next control cycle acts on.
-    print_analysis(force < lift::<FloatType>(0.0));
+    print_analysis(force < ZERO);
     print_footer();
 
     Ok(())
@@ -96,7 +99,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// The metric tensor of a simplified Schwarzschild-like spacetime, diagonal in these units.
 fn spacetime_metric() -> Result<CausalTensor<FloatType>, CausalTensorError> {
-    let mut data = vec![lift::<FloatType>(0.0); METRIC_DIM * METRIC_DIM];
+    let mut data = vec![ZERO; METRIC_DIM * METRIC_DIM];
     for (i, &g) in [G_00, G_11, G_22, G_33].iter().enumerate() {
         data[i * METRIC_DIM + i] = lift::<FloatType>(g);
     }
@@ -108,7 +111,7 @@ fn spacetime_metric() -> Result<CausalTensor<FloatType>, CausalTensorError> {
 /// `Pure` lifts the scaling law into `CausalTensorWitness` and `Applicative` applies it at every
 /// component, so the law is written once and the tensor shape carries it.
 fn einstein_tensor(g_uv: &CausalTensor<FloatType>) -> CausalTensor<FloatType> {
-    let curvature = lift::<FloatType>(SCALAR_CURVATURE);
+    let curvature = SCALAR_CURVATURE;
     let scale = move |x: FloatType| x * curvature;
     CausalTensorWitness::apply(CausalTensorWitness::pure(scale), g_uv.clone())
 }
@@ -136,7 +139,7 @@ fn multivector(
     components: &[(usize, FloatType)],
     metric: Metric,
 ) -> Result<CausalMultiVector<FloatType>, CausalMultiVectorError> {
-    let mut data = vec![lift::<FloatType>(0.0); 1 << metric.dimension()];
+    let mut data = vec![ZERO; 1 << metric.dimension()];
     for &(index, value) in components {
         data[index] = value;
     }
@@ -162,6 +165,7 @@ fn print_header() {
     println!("============================================================");
     println!("   GRMHD: General Relativistic Magnetohydrodynamics");
     println!("============================================================");
+    println!("Precision: {}\n", core::any::type_name::<FloatType>());
 }
 
 fn print_step_one() {

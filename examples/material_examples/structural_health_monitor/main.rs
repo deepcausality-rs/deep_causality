@@ -3,170 +3,115 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+//! # Decentralised structural health monitoring
+//!
+//! A micrometeoroid strikes one plate of a pressurised hull. The struck plate is now carrying more
+//! than it can hold, and when it yields it does not simply fail: it sheds its load onto the plates
+//! it is bonded to, which may then exceed their own limit. That is a **failure cascade**, and
+//! whether it stops depends on the topology of the bonds.
+//!
+//! The plate cannot ask a ground station what to do. The cascade completes in a fraction of a
+//! second and the round trip is seconds, so the decision is local or it is too late.
+//!
+//! # The two abstractions
+//!
+//! **The graph comonad carries the cascade.** The hull is a [`Hull`], a graph whose payload is the
+//! stress on each plate. One redistribution step is a single `extend`: the closure receives the
+//! hull focused on one plate, reads that plate's stress and asks the graph for its bonds, and
+//! returns the plate's next stress. The topology is never copied into a side structure, so the
+//! cascade is computed on the graph that describes the hull.
+//!
+//! **The causal monad carries the intervention.** `alternate_value_if` is Pearl's do-operator: it
+//! substitutes the value the sensor reported with the value the intervention forces, and records
+//! the substitution. Running the same cascade from the observed reading and from the intervened
+//! one is the counterfactual, computed twice rather than asserted once.
+//!
+//! ```text
+//! extend               hull → its next stress state     one redistribution step
+//! alternate_value_if   observed stress → forced stress  do(stress := safe limit)
+//! ```
+
+mod model;
+mod utils_print;
+
 use deep_causality_core::CausalFlow;
-use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::Graph;
+use deep_causality_num::Float106;
+use deep_causality_topology::TopologyError;
+use model::{
+    DEFAULT_MODULUS_GPA, ENHANCED_MODULUS_GPA, Hull, IMPACT_LOAD_MPA, IMPACT_PLATE,
+    NOMINAL_LOAD_MPA, SAFE_LIMIT_MPA, WARNING_THRESHOLD_MPA, breached_plates, build_hull,
+    load_plate, redistribute, yielded_plates,
+};
+use utils_print::{print_cascade_step, print_header, print_hull, print_reading, print_verdict};
 
-// ----------------------------------------------------------------
-// Structural Health Monitoring System
-// ----------------------------------------------------------------
-// A decentralized monitoring system for high-stakes environments (Space/Underwater).
-// Each node represents a hull plate. Edges represent structural bonds.
-// When stress exceeds threshold, the system uses Causal Interventions to
-// autonomously seal/reinforce the affected section.
+/// How many redistribution steps to run before declaring the hull settled. The six-plate hull
+/// cannot cascade longer than it has plates.
+const MAX_STEPS: usize = model::N_PLATES;
 
-// Material constants
-const YIELD_STRENGTH: f64 = 250.0; // MPa (typical steel)
-const CRITICAL_YIELD: f64 = 0.8; // 80% of yield = warning threshold
-const SAFE_STRESS_LIMIT: f64 = 100.0; // Target stress after intervention
-const DEFAULT_MODULUS: f64 = 200.0; // GPa (steel)
-const ENHANCED_MODULUS: f64 = 400.0; // GPa (with active reinforcement)
+/// The working scalar. Switch it to `f32`, `f64` or `deep_causality_num::BFloat16`; the stresses,
+/// the redistribution and the strain all recompute at that precision.
+///
+/// It sits at [`Float106`] by default on purpose. A hard-coded `f64` anywhere in the program is
+/// invisible while the alias *is* `f64`, and shows up here as a compile error the moment the two
+/// types differ.
+pub type FloatType = Float106;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("================================================================");
-    println!("   High-Stakes Structural Health Monitoring System");
-    println!("   (Space Station / Deep-Sea Habitat Simulation)");
-    println!("================================================================\n");
+    print_header();
+    print_hull(&build_hull()?);
 
-    // ----------------------------------------------------------------
-    // 1. Initialize Hull Topology (Graph)
-    // ----------------------------------------------------------------
-    println!("[1] Initializing Hull Topology...");
+    // The sensor reading on the struck plate: nominal service load plus the impact.
+    let observed = NOMINAL_LOAD_MPA + IMPACT_LOAD_MPA;
 
-    let num_plates = 6;
-    // Each node stores stress value as f64
-    let initial_stresses: Vec<f64> = vec![0.0; num_plates];
+    // ── The causal monad ────────────────────────────────────────────────────────────────────
+    // `alternate_value_if` is the do-operator. The reading passes the warning threshold, so the
+    // plate forces its own stress down to the safe limit and the substitution is recorded.
+    let intervened: FloatType = CausalFlow::value(observed)
+        .alternate_value_if(|stress| *stress > WARNING_THRESHOLD_MPA, |_| SAFE_LIMIT_MPA)
+        .finish()?;
 
-    let tensor = CausalTensor::new(initial_stresses, vec![num_plates])?;
-    let mut hull = Graph::new(num_plates, tensor, 0)?;
+    print_reading(observed, intervened);
 
-    // Connect plates in a ring topology (each plate connected to neighbors)
-    // 0 - 1 - 2
-    // |       |
-    // 5 - 4 - 3
-    hull.add_edge(0, 1)?;
-    hull.add_edge(1, 2)?;
-    hull.add_edge(2, 3)?;
-    hull.add_edge(3, 4)?;
-    hull.add_edge(4, 5)?;
-    hull.add_edge(5, 0)?;
-    // Add cross-bracing
-    hull.add_edge(0, 4)?;
-    hull.add_edge(1, 5)?;
+    // ── The graph comonad ───────────────────────────────────────────────────────────────────
+    // The same cascade, run from each reading. That comparison is the counterfactual.
+    let without = settle("Without intervention", observed)?;
+    let with = settle("With intervention", intervened)?;
 
-    println!(
-        "    Created {} plates with {} structural bonds.",
-        num_plates,
-        hull.num_edges()
-    );
-    println!("    Topology: Hexagonal ring with cross-bracing.\n");
-
-    // ----------------------------------------------------------------
-    // 2. Simulate Impact Event
-    // ----------------------------------------------------------------
-    println!("[2] Simulating Micrometeoroid Impact on Plate 2...");
-
-    // Impact introduces sudden stress
-    let impact_stress = YIELD_STRENGTH * 0.9; // 90% of yield - critical!
-
-    println!("    Impact Stress: {:.1} MPa", impact_stress);
-    println!("    Yield Strength: {:.1} MPa", YIELD_STRENGTH);
-    println!(
-        "    Warning Threshold: {:.1} MPa ({}%)\n",
-        YIELD_STRENGTH * CRITICAL_YIELD,
-        (CRITICAL_YIELD * 100.0) as i32
-    );
-
-    // ----------------------------------------------------------------
-    // 3. Decentralized Monitoring & Intervention
-    // ----------------------------------------------------------------
-    println!("[3] Running Decentralized Monitoring Loop...\n");
-
-    // Simulate stress on plate 2
-    let current_stress = impact_stress;
-
-    // Wrap the current reading in a CausalFlow (the DSL over the causal monad).
-    let stress_effect = CausalFlow::value(Some(current_stress));
-
-    println!("    Plate 2 Sensor Reading: {:.1} MPa", current_stress);
-
-    // Check if intervention is needed
-    let warning_threshold = YIELD_STRENGTH * CRITICAL_YIELD;
-    let needs_intervention = current_stress > warning_threshold;
-
-    if needs_intervention {
-        println!("\n    [\x1b[33mWARNING\x1b[0m] Stress exceeds safety threshold!");
-        println!("    [\x1b[33mWARNING\x1b[0m] Central server unreachable (latency: 2.4s).");
-        println!("    [\x1b[32mACTION\x1b[0m]  Initiating LOCAL autonomous intervention...\n");
-
-        // ============================================================
-        // CAUSAL INTERVENTION (Layer 2 - Pearl's Hierarchy)
-        // ============================================================
-        // This creates a counterfactual branch: "What if we override the stress?"
-        // The intervention is recorded in the effect's causal log.
-
-        let healed_effect = stress_effect
-            .alternate_value(Some(SAFE_STRESS_LIMIT))
-            .into_effect();
-
-        println!("    > [BLACKBOX AUDIT]: Autonomous Intervention Recorded.");
-        println!("    > Intervention Type: ACTIVE_DAMPENING");
-        println!("    > Original Stress:  {:.1} MPa", current_stress);
-        println!("    > Intervened Stress: {:.1} MPa", SAFE_STRESS_LIMIT);
-        println!(
-            "    > Modulus Change:   {:.0} GPa -> {:.0} GPa (Smart Material Activated)",
-            DEFAULT_MODULUS, ENHANCED_MODULUS
-        );
-
-        // Log the intervention result
-        match healed_effect.value() {
-            Some(Some(v)) => {
-                println!(
-                    "\n    [\x1b[32mSUCCESS\x1b[0m] Stress reduced to {:.1} MPa.",
-                    v
-                );
-                println!(
-                    "    [\x1b[32mSUCCESS\x1b[0m] Plate 2 STABLE. Catastrophic failure AVERTED."
-                );
-            }
-            _ => {
-                println!("    [ERROR] Intervention failed!");
-            }
-        }
-    } else {
-        println!("    Stress within normal limits. No intervention required.");
-    }
-
-    // ----------------------------------------------------------------
-    // 4. Comparison: What if we had NO intervention?
-    // ----------------------------------------------------------------
-    println!("\n[4] Counterfactual Analysis: No Intervention Scenario...\n");
-
-    // Without intervention, stress propagates to neighbors
-    let propagation_factor = 1.15; // Each neighbor gets 15% more load
-    let neighbor_stress = current_stress * propagation_factor;
-
-    println!("    If Plate 2 had failed (no intervention):");
-    println!("    -> Load redistributes to neighbors (Plates 1, 3)");
-    println!(
-        "    -> Neighbor stress: {:.1} MPa (>{:.1} MPa limit)",
-        neighbor_stress, YIELD_STRENGTH
-    );
-
-    if neighbor_stress > YIELD_STRENGTH {
-        println!("    -> Plates 1 and 3 FAIL!");
-        println!("    -> Cascade continues to Plates 0, 4, 5...");
-        println!("\n    [\x1b[31mCATASTROPHIC FAILURE\x1b[0m] Complete hull breach.");
-        println!("    -> Oxygen depletion in 47 seconds.");
-    }
-
-    println!("\n================================================================");
-    println!("   Simulation Complete");
-    println!("================================================================");
-    println!(
-        "   Counterfactual value substitution (alternate_value) enabled AUTONOMOUS, LOCAL decision-making."
-    );
-    println!("   Latency-critical interventions saved the structure.");
-
+    print_verdict(&without, &with);
     Ok(())
+}
+
+/// Runs the cascade until the hull stops shedding load, and reports the final hull.
+///
+/// Each step is one `extend` over the graph. The loop stops as soon as no plate is over yield,
+/// which is what "settled" means: nothing further will move.
+fn settle(label: &str, struck_plate_stress: FloatType) -> Result<Hull, TopologyError> {
+    let mut hull = load_plate(&build_hull()?, IMPACT_PLATE, struck_plate_stress);
+
+    println!("{label}");
+    print_cascade_step(0, &hull, &yielded_plates(&hull));
+
+    for step in 1..=MAX_STEPS {
+        let yielding = yielded_plates(&hull);
+        if yielding.is_empty() {
+            break;
+        }
+        hull = redistribute(&hull);
+        print_cascade_step(step, &hull, &yielded_plates(&hull));
+    }
+
+    println!(
+        "  settled: {} of {} plates breached\n",
+        breached_plates(&hull).len(),
+        model::N_PLATES
+    );
+    Ok(hull)
+}
+
+/// The two moduli the plate can present, for the strain comparison the printer renders.
+pub fn moduli() -> [(&'static str, FloatType); 2] {
+    [
+        ("as manufactured", DEFAULT_MODULUS_GPA),
+        ("reinforcement engaged", ENHANCED_MODULUS_GPA),
+    ]
 }

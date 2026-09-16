@@ -84,6 +84,7 @@ fn print_properties(metric: &str, dimension: usize, coefficients: usize) {
     println!("=== Dixon Algebra (Cl_C(6)) Example ===");
     println!("This algebra operates on Octonions in particle physics models (e.g. C. Furey).");
     println!("\nAlgebra Properties:");
+    println!("  Precision: {}", core::any::type_name::<FloatType>());
     println!("  Metric: {metric}");
     println!("  Dimension (N): {dimension}");
     println!("  Total Coefficients: {coefficients}");

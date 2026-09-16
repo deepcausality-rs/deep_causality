@@ -129,7 +129,8 @@ fn main() {
 ```
 
 A complete worked example processing one full GPS week of Galileo broadcast clock data
-(satellite E14) is in [`examples/chronometric_examples/gm_recovery`](../examples/chronometric_examples/gm_recovery).
+(satellite E14) is in
+[`examples/physics_examples/chronometric_gm_recovery`](../examples/physics_examples/chronometric_gm_recovery).
 It demonstrates the framework's `CausalMonad` bind chain end-to-end and recovers
 $GM_\oplus$ and Earth's mass to ~0.2% relative error against published JGM-3 / IERS 2010
 references — *the planet weighed by clock time-dilation alone.*

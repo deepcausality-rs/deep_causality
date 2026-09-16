@@ -14,7 +14,7 @@ pub const EARTH_GRAVITY_ACCELERATION: f64 = 9.80665; // m s^-2 (exact)
 // Derived from EARTH_GM / NEWTONIAN_CONSTANT_OF_GRAVITATION so the mass is
 // self-consistent with the G used elsewhere in the crate. Recovering GM from
 // observation and dividing by the same G must round-trip to this constant
-// without a constants-mismatch bias (see chronometric_examples gm_recovery).
+// without a constants-mismatch bias (see the chronometric_gm_recovery example).
 pub const EARTH_MASS_KG: f64 = EARTH_GM / NEWTONIAN_CONSTANT_OF_GRAVITATION;
 pub const EARTH_RADIUS: f64 = 6_371_000.0; // Earth's mean radius in meters.
 pub const EARTH_ROTATION_RATE: f64 = 7.292_115_146_706_979e-5; // IERS 2010 (rad/s)

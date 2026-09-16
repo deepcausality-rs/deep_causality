@@ -4,7 +4,7 @@
  */
 
 use deep_causality_linear::CsrMatrix;
-use deep_causality_num::lift;
+use deep_causality_num::const_scalar_from_int;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     BaseTopology, Manifold, ManifoldTopology, Simplex, SimplicialComplex, Skeleton,
@@ -14,6 +14,9 @@ use deep_causality_topology::{
 /// topological invariants (Euler characteristic, orientation), not numerical ones.
 /// Swap to `Float106` to verify the topology layer rounds-trips through higher precision.
 pub type FloatType = f64;
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ------------------------------------------------------------------------
@@ -54,7 +57,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 4. Create Manifold
     // Data for 3 simplices (2 vertices + 1 edge)
-    let data = CausalTensor::new(vec![lift::<FloatType>(1.0); 3], vec![3])?;
+    let data = CausalTensor::new(vec![ONE; 3], vec![3])?;
     let manifold: Manifold<SimplicialComplex<FloatType>, FloatType> =
         Manifold::new(complex, data, 0)?;
 

@@ -4,7 +4,7 @@
  */
 
 use deep_causality_multivector::{CausalMultiVector, Metric, MultiVector};
-use deep_causality_num::{lift, lower};
+use deep_causality_num::{const_scalar_from_int, lower};
 
 // -----------------------------------------------------------------------------------------
 // ENGINEERING VALUE:
@@ -20,6 +20,11 @@ use deep_causality_num::{lift, lower};
 
 /// The working scalar. Current, field and the force they produce all carry it.
 pub type FloatType = f64;
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
+const TEN: FloatType = const_scalar_from_int!(FloatType, 10);
 
 fn main() {
     print_header();
@@ -58,11 +63,11 @@ fn calculate_confinement_force(metric: Metric, toroidal_axis: usize, poloidal_ax
     print_geometry(toroidal_axis, poloidal_axis);
 
     // 2. Plasma current J: a strong current around the torus, on the order of 10 MA.
-    let j_val = lift::<FloatType>(10.0);
+    let j_val = TEN;
     let j_vec = blade(idx_current, j_val, metric);
 
     // 3. Confining magnetic field B, perpendicular to the current, in Tesla.
-    let b_val = lift::<FloatType>(2.0);
+    let b_val = TWO;
     let b_field = blade(idx_field_plane, b_val, metric);
     print_inputs(j_val, b_val);
 
@@ -79,7 +84,7 @@ fn calculate_confinement_force(metric: Metric, toroidal_axis: usize, poloidal_ax
 
 /// A multivector carrying `value` on a single blade of `metric`'s algebra.
 fn blade(index: usize, value: FloatType, metric: Metric) -> CausalMultiVector<FloatType> {
-    let mut data = vec![lift::<FloatType>(0.0); 1 << metric.dimension()];
+    let mut data = vec![ZERO; 1 << metric.dimension()];
     data[index] = value;
     CausalMultiVector::new(data, metric).expect("2^dim coefficients for this metric")
 }

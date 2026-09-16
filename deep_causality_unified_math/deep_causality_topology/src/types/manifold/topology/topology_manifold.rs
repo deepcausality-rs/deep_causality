@@ -17,10 +17,6 @@ impl<C: deep_causality_algebra::RealField, D> ManifoldTopology
         utils::satisfies_link_condition(&self.complex)
     }
 
-    fn euler_characteristic(&self) -> isize {
-        utils::euler_characteristic(&self.complex)
-    }
-
     fn has_boundary(&self) -> bool {
         utils::has_boundary(&self.complex)
     }

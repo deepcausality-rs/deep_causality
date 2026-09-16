@@ -19,8 +19,9 @@ Run any example from the repository root:
 cargo run -p mathematics_examples --example <example_name>
 ```
 
-Every example follows the three house rules: precision is a parameter (`FloatType`), values
-cross the precision boundary through `deep_causality_num::lift`, and printing lives in helper
-functions below `main`. Each example is a folder with a `main.rs`.
+Every example follows the same house rules: precision is a parameter (`FloatType`), values
+cross the precision boundary through `deep_causality_num::lift`, printing lives in helper
+functions below `main`, and the header echoes the working type so the output says which scalar
+produced it. Each example is a folder with a `main.rs`.
 
 `1_foundation/` teaches the vocabulary these use; `3_applications/` puts whole use cases on top.

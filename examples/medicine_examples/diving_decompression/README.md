@@ -1,65 +1,130 @@
-# Diving Decompression Planner
+# SCUBA Decompression Planner
 
-SCUBA diving decompression sickness prevention using Bühlmann ZH-L16C algorithm with CNS oxygen toxicity tracking.
-
-## Quick Start
+A dive plan answers one question: how does a diver surface while the dissolved nitrogen stays in
+solution? This example answers it with the Bühlmann ZH-L16C algorithm over sixteen tissue
+compartments, and tracks the CNS oxygen clock alongside.
 
 ```bash
 cargo run -p medicine_examples --example diving_decompression
 ```
 
-## Scientific Background
+## What the run prints
 
-### Decompression Sickness (DCS)
+A dive table from 10 m to 50 m, then one dive that deliberately exceeds its limit so the planner
+has a schedule to produce.
 
-Occurs when dissolved nitrogen forms bubbles during rapid ascent. The Bühlmann model simulates 16 tissue compartments
-with different absorption rates (half-times: 5–635 minutes).
+Each table row holds the bottom for that depth's no-decompression limit, capped at twenty minutes
+so every row runs in the same handful of milliseconds. The rows from 10 m to 30 m therefore hold
+the bottom for twenty minutes and print the longer limit beside them; from 35 m down the limit is
+under the cap and the row holds it in full.
 
-### CNS Oxygen Toxicity
+```text
+Controlling compartment at the bottom
+  #4   half-time  18.5 min   ceiling 7.1 m
 
-At depth, oxygen partial pressure (ppO2) increases. NOAA limits track exposure:
-
-- ppO2 > 1.0 bar: CNS% accumulates
-- 80% CNS: Warning threshold
-- 100% CNS: Seizure risk
-
-## APIs Demonstrated
-
-| API                              | Purpose                          |
-|----------------------------------|----------------------------------|
-| `CausalTensor<f64>`              | 16-element tissue tension vector |
-| `CausalEffectPropagationProcess` | Monadic dive phase chaining      |
-| `Pressure`, `Length`             | Type-safe physics quantities     |
-
-## Key Formulas
-
-**Schreiner Equation** (tissue loading):
-
-```
-P_t = P_i + (P_0 - P_i) × e^(-kt)
+Decompression schedule
+  mandatory stop    4 min @ 9 m
+  safety stop       3 min @ 5 m
 ```
 
-**Ascent Ceiling**:
+Fifty minutes at thirty metres is twice the limit for that depth. Compartment 4 governs the
+ascent, which is the physiologically right answer: over a fifty-minute exposure the fast
+compartments have saturated and a mid-speed one becomes binding. The stop at 9 m is held, two
+minutes at a time, until the ceiling has risen past 6 m, where the next step lands. Below the
+clearance depth of 6 m the ascent runs to the safety stop, and from there to the surface.
 
+## The physics
+
+**Tissue loading, the Schreiner equation.** A compartment approaches the inspired pressure
+exponentially, at its own rate.
+
+```text
+p(t) = p_inspired + (p_initial − p_inspired)·e^(−kt)      k = ln2 / half_time
 ```
-P_ceiling = (P_tissue - a) × b
+
+**The ascent ceiling.** Bühlmann's M-value line gives the tension a compartment tolerates at
+ambient pressure `P` as `P/b + a`. A gradient factor admits only `gf` of the gap between the
+ambient pressure and that line:
+
+```text
+tension = P + gf·(P/b + a − P)
 ```
 
-**CNS Accumulation**:
+Solving for `P` gives the shallowest pressure the compartment allows, and ten metres of seawater
+is one bar. Both published coefficients are load-bearing: `a` sets the intercept and `b` sets the
+slope, and changing either moves the ceiling and can change which compartment governs.
 
+**The CNS oxygen clock.** Oxygen partial pressure rises with depth, and the NOAA table gives a
+tolerated exposure per pressure. Below 1.0 bar the clock does not run.
+
+## What the code demonstrates
+
+Four categorical operations carry the program, and all four are in `main.rs`:
+
+| Operation | Pairs or reduces | For |
+|---|---|---|
+| `try_step` | diver state to the next one | the dive as a chain of four phases: descend, hold, ascend to the safety stop, surface |
+| `zip_with` | tension against its own half-time | loading all sixteen compartments |
+| `zip_with` | tension against its M-value coefficients | the ceiling each compartment imposes |
+| `fold` | sixteen ceilings to the binding one | the compartment that governs the ascent |
+
+Each compartment carries its own constants, so every compartment computation is a **pairing**.
+`ZipTensorWitness::zip_with` walks two tensors slot by slot, so the laws in `model.rs` are written
+once for one compartment and the witness applies them to all sixteen. No compartment index appears
+in either law.
+
+A fifth abstraction is the tangent functor. The gas-loading rate `dp/dt` is what a dive computer
+watches, and it comes from one evaluation over `Dual`. The run prints it beside the analytic rate
+`k·(p_inspired − p)` as a check; the two agree to the precision of the working scalar.
+
+## Precision is a parameter
+
+One alias in `main.rs` sets the working scalar for the whole program.
+
+```rust
+pub type FloatType = Float106;
 ```
-CNS% = Σ (time_at_ppO2 / max_time_for_ppO2) × 100
-```
 
-## Output
+Every constant in the model is declared at that type through `const_scalar_from_int!` and
+`const_scalar_from_float!`, so the compiler resolves them against the alias and no conversion runs
+at any call site. Switching the alias re-declares all of them.
 
-Generates dive table for 10m–50m depths showing:
+It sits at `Float106` rather than `f64` on purpose. A hard-coded `f64` anywhere in the program is
+invisible while the alias *is* `f64`, because the two types coincide and everything compiles. At
+`Float106` the same line is a compile error. The default is a canary.
 
-- No Decompression Limit (NDL)
-- ppO2 and CNS%
-- Safety stops and deco stops
+The autodiff agreement is the clearest reading of what changes:
 
-## Adaptation Ideas
+| Scalar | agreement | ceiling | stop at 9 m |
+|---|---|---|---|
+| `BFloat16` | 9.8e-4 | 6.9 m | 2 min |
+| `f32` | 0.0 | 7.1 m | 4 min |
+| `f64` | 2.8e-17 | 7.1 m | 4 min |
+| `Float106` | 1.5e-33 | 7.1 m | 4 min |  <- the default
 
-- Add Nitrox support (adjust F_O2)
-- Multi-dive residual nitrogen tracking
+All four reach the same dive plan: one mandatory stop at 9 m, then the safety stop. `BFloat16`
+carries two significant decimal digits, reads the ceiling at 6.9 m and clears the stop after one
+two-minute hold; the three wider scalars read 7.1 m and hold it for two.
+
+## Files
+
+| File | Holds |
+|---|---|
+| `main.rs` | the alias, the constants `main` uses, the phase chain, and the two witness operations |
+| `model.rs` | the Bühlmann constants, the state types, the physiology, and the differentiable curve |
+| `utils_print.rs` | the presentation, and the only `lower` calls in the example |
+
+## Scope
+
+This is a demonstration of the algorithm, not a dive computer. It uses a single gradient factor
+rather than a GF-low to GF-high gradient across the ascent, its no-decompression limits come from
+a coarse depth table rather than from the compartment model itself, and it plans a single dive
+with no repetitive-dive residual nitrogen. Do not dive it.
+
+## Adaptation
+
+- **Nitrox.** Change `F_N2` and `F_O2`; the gas laws read them directly.
+- **A GF gradient.** Add a `GF_LOW` constant and interpolate toward `GF_HIGH` by depth inside the
+  ascent phase, so the ceiling tightens as the diver comes up.
+- **Limits from the model.** Replace the depth table by searching for the bottom time at which the
+  ceiling first reaches the surface.

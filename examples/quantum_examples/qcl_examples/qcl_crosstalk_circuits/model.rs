@@ -20,9 +20,12 @@
 //! The plant, the observables and the experiment family are the v1 example's, so the plan and the
 //! adjudication are decided by the same predictions.
 
-use crate::constants::{BATH, COUPLING_ANGLE, OWN_ANGLE, Q1, Q2, SHOTS};
+use crate::constants::{
+    BATH, COST_ECHO, COST_INTERVENTION, COST_PASSIVE, COST_TOMOGRAPHY, COUPLING_ANGLE, ONE,
+    OWN_ANGLE, PREDICT_ECHO, PREDICT_HOLD_Q1, PREDICT_HOLD_Q2, PREDICT_PASSIVE, PREDICT_TOMOGRAPHY,
+    Q1, Q2, QUBIT_FACTOR, SHOTS, TWO_LEG_FACTOR, ZERO,
+};
 use crate::{C, FloatType};
-use deep_causality_num::lift;
 use deep_causality_num_complex::Complex;
 use deep_causality_quantum::{
     Axis, CircuitBox, CircuitModel, Experiment, FactorSupports, Hypothesis, Observable,
@@ -30,106 +33,112 @@ use deep_causality_quantum::{
 };
 use deep_causality_tensor::CausalTensor;
 
-fn c(re: f64) -> C {
-    Complex::new(lift(re), lift(0.0))
+/// A real entry of an operator matrix.
+fn real(value: FloatType) -> C {
+    Complex::new(value, ZERO)
 }
 
 /// A diagonal operator of the given dimension, entries in order.
-fn diagonal(entries: &[f64]) -> CausalTensor<C> {
+fn diagonal(entries: &[FloatType]) -> Result<CausalTensor<C>, ModelBuildError> {
     let d = entries.len();
-    let mut data = vec![c(0.0); d * d];
-    for (i, &e) in entries.iter().enumerate() {
-        data[i * d + i] = c(e);
+    let mut data = vec![real(ZERO); d * d];
+
+    for (i, &entry) in entries.iter().enumerate() {
+        data[i * d + i] = real(entry);
     }
-    CausalTensor::new(data, vec![d, d]).expect("a square matrix")
+
+    CausalTensor::new(data, vec![d, d]).map_err(|_| ModelBuildError::Operator)
 }
 
 /// A single-qubit rotation as a one-operator Kraus box on one wire.
-fn rotation(wire: usize, angle: f64) -> CircuitBox<FloatType> {
-    CircuitBox::Kraus {
+fn rotation(wire: usize, angle: FloatType) -> Result<CircuitBox<FloatType>, ModelBuildError> {
+    let operator = QubitOperator::<FloatType>::rotation(Axis::Y, angle)
+        .map_err(|_| ModelBuildError::Rotation)?;
+
+    Ok(CircuitBox::Kraus {
         wires: vec![wire],
-        kraus: vec![
-            QubitOperator::<FloatType>::rotation(Axis::Y, lift(angle))
-                .expect("an angle")
-                .matrix()
-                .clone(),
-        ],
-    }
+        kraus: vec![operator.matrix().clone()],
+    })
 }
 
 /// `H₁` as a circuit: `Q1`'s box first, then `Q2`'s box on the wire it hands on, so the induced
 /// DAG is `Q1 → Q2`. Node 0 is `Q1`, node 1 is `Q2`.
-pub fn h1_circuit() -> CircuitModel<FloatType> {
+pub fn h1_circuit() -> Result<CircuitModel<FloatType>, ModelBuildError> {
     CircuitModel::new(
         vec![WireType::qubit()],
-        vec![rotation(0, COUPLING_ANGLE), rotation(0, OWN_ANGLE)],
+        vec![rotation(0, COUPLING_ANGLE)?, rotation(0, OWN_ANGLE)?],
         vec![vec![0], vec![1]],
         vec![],
         vec![0],
     )
-    .expect("a two-node chain")
+    .map_err(|_| ModelBuildError::Circuit("H1"))
 }
 
 /// `H₂` as a circuit: the same two boxes with `Q2`'s first, grouped so that node 0 is still `Q1`
 /// and node 1 still `Q2`; the induced DAG is `Q2 → Q1`.
-pub fn h2_circuit() -> CircuitModel<FloatType> {
+pub fn h2_circuit() -> Result<CircuitModel<FloatType>, ModelBuildError> {
     CircuitModel::new(
         vec![WireType::qubit()],
-        vec![rotation(0, COUPLING_ANGLE), rotation(0, OWN_ANGLE)],
+        vec![rotation(0, COUPLING_ANGLE)?, rotation(0, OWN_ANGLE)?],
         vec![vec![1], vec![0]],
         vec![],
         vec![0],
     )
-    .expect("a two-node chain")
+    .map_err(|_| ModelBuildError::Circuit("H2"))
 }
 
 /// `H₄` as a circuit: four boxes on one wire grouped as `Q1 → Q2 → B → Q1`, a cycle in the
 /// induced DAG, which `build()` refuses.
-pub fn h4_cyclic_circuit() -> CircuitModel<FloatType> {
+pub fn h4_cyclic_circuit() -> Result<CircuitModel<FloatType>, ModelBuildError> {
     CircuitModel::new(
         vec![WireType::qubit()],
         vec![
-            rotation(0, OWN_ANGLE),
-            rotation(0, COUPLING_ANGLE),
-            rotation(0, OWN_ANGLE),
-            rotation(0, COUPLING_ANGLE),
+            rotation(0, OWN_ANGLE)?,
+            rotation(0, COUPLING_ANGLE)?,
+            rotation(0, OWN_ANGLE)?,
+            rotation(0, COUPLING_ANGLE)?,
         ],
         vec![vec![0, 3], vec![1], vec![2]],
         vec![],
         vec![0],
     )
-    .expect("the grouping is a partition; the cycle is found at build()")
+    // The grouping is a legal partition, so the model itself is well formed. The cycle it induces
+    // is what `build()` refuses, which is the point of the candidate.
+    .map_err(|_| ModelBuildError::Circuit("H4"))
 }
 
 /// A single-qubit factor of the v1 family.
-fn qubit_factor() -> CausalTensor<C> {
-    diagonal(&[0.9, 0.1])
+fn qubit_factor() -> Result<CausalTensor<C>, ModelBuildError> {
+    diagonal(&QUBIT_FACTOR)
 }
 
 /// A factor on a qubit and one parent, of the v1 family.
-fn two_leg_factor() -> CausalTensor<C> {
-    diagonal(&[0.85, 0.05, 0.05, 0.05])
+fn two_leg_factor() -> Result<CausalTensor<C>, ModelBuildError> {
+    diagonal(&TWO_LEG_FACTOR)
 }
 
 /// `H₃` as the v1 factorization: a common bath drives both qubits. The circuit form needs a
 /// two-output bath node whose dilation exceeds the entry cap; see the module documentation.
-pub fn h3_common_bath() -> Hypothesis<FloatType> {
+pub fn h3_common_bath() -> Result<Hypothesis<FloatType>, ModelBuildError> {
     let mut factors = ProcessFactors::new();
     let mut supports = FactorSupports::new();
+
     for (node, pa) in [(BATH, None), (Q1, Some(BATH)), (Q2, Some(BATH))] {
         let mut legs: Vec<usize> = pa.into_iter().collect();
         legs.push(node);
-        factors.insert(
-            node,
-            if pa.is_none() {
-                qubit_factor()
-            } else {
-                two_leg_factor()
-            },
-        );
+
+        let factor = if pa.is_none() {
+            qubit_factor()?
+        } else {
+            two_leg_factor()?
+        };
+
+        factors.insert(node, factor);
         supports.declare(node, &legs);
     }
-    Hypothesis::structural("H3 Q1<-B->Q2", factors, supports).expect("a validated factorization")
+
+    Hypothesis::structural("H3 Q1<-B->Q2", factors, supports)
+        .map_err(|_| ModelBuildError::Factorization("H3"))
 }
 
 /// The systems the v1 decomposability check is stated over.
@@ -138,46 +147,90 @@ pub fn systems() -> Vec<usize> {
 }
 
 /// The two-qubit plant in `|00⟩`.
-pub fn plant() -> QuantumPlant<FloatType> {
-    let ket = CausalTensor::from_slice(&[c(1.0), c(0.0), c(0.0), c(0.0)], &[4]);
-    QuantumPlant::from_ket(&ket).expect("a state")
+pub fn plant() -> Result<QuantumPlant<FloatType>, ModelBuildError> {
+    let ket = CausalTensor::from_slice(&[real(ONE), real(ZERO), real(ZERO), real(ZERO)], &[4]);
+
+    QuantumPlant::from_ket(&ket).map_err(|_| ModelBuildError::Plant)
 }
 
 /// The projector onto "qubit 2 excited", `|01⟩⟨01| + |11⟩⟨11|` in `|q1 q2⟩` order.
-pub fn e2_projector() -> Observable<FloatType, 4> {
-    let p = diagonal(&[0.0, 1.0, 0.0, 1.0]);
-    Observable::new(
+pub fn e2_projector() -> Result<Observable<FloatType, 4>, ModelBuildError> {
+    let p = diagonal(&[ZERO, ONE, ZERO, ONE])?;
+
+    Ok(Observable::new(
         "e2",
-        Projection::<FloatType, 4>::new(p).expect("a projector"),
-    )
+        Projection::<FloatType, 4>::new(p).map_err(|_| ModelBuildError::Projector("e2"))?,
+    ))
 }
 
 /// The projector onto "qubit 1 excited", `|10⟩⟨10| + |11⟩⟨11|`.
-pub fn e1_projector() -> Observable<FloatType, 4> {
-    let p = diagonal(&[0.0, 0.0, 1.0, 1.0]);
-    Observable::new(
+pub fn e1_projector() -> Result<Observable<FloatType, 4>, ModelBuildError> {
+    let p = diagonal(&[ZERO, ZERO, ONE, ONE])?;
+
+    Ok(Observable::new(
         "e1",
-        Projection::<FloatType, 4>::new(p).expect("a projector"),
-    )
+        Projection::<FloatType, 4>::new(p).map_err(|_| ModelBuildError::Projector("e1"))?,
+    ))
 }
 
 /// The experiment family with the predicted read-out under `H₁`, `H₂`, `H₃` in that order, the v1
 /// example's Table §4.
-pub fn experiments() -> Vec<Experiment<FloatType>> {
-    let exp = |name: &str, cost: f64, predictions: [f64; 3]| {
-        Experiment::new(
-            name,
-            lift(cost),
-            SHOTS,
-            predictions.map(lift::<FloatType>).to_vec(),
-        )
-        .expect("a probability triple")
+pub fn experiments() -> Result<Vec<Experiment<FloatType>>, ModelBuildError> {
+    let exp = |name: &'static str, cost: FloatType, predictions: [FloatType; 3]| {
+        Experiment::new(name, cost, SHOTS, predictions.to_vec())
+            .map_err(|_| ModelBuildError::Experiment(name))
     };
-    vec![
-        exp("E0 passive P(e1,e2)", 1.0, [0.04, 0.04, 0.04]),
-        exp("E1 do(Q1=|1>) P(e2)", 1.0, [0.40, 0.10, 0.10]),
-        exp("E2 do(Q2=|1>) P(e1)", 1.0, [0.10, 0.40, 0.10]),
-        exp("E3 echo both P(e1,e2)", 2.0, [0.01, 0.01, 0.04]),
-        exp("E4 process tomography", 200.0, [0.90, 0.50, 0.10]),
-    ]
+
+    Ok(vec![
+        exp("E0 passive P(e1,e2)", COST_PASSIVE, PREDICT_PASSIVE)?,
+        exp("E1 do(Q1=|1>) P(e2)", COST_INTERVENTION, PREDICT_HOLD_Q1)?,
+        exp("E2 do(Q2=|1>) P(e1)", COST_INTERVENTION, PREDICT_HOLD_Q2)?,
+        exp("E3 echo both P(e1,e2)", COST_ECHO, PREDICT_ECHO)?,
+        exp("E4 process tomography", COST_TOMOGRAPHY, PREDICT_TOMOGRAPHY)?,
+    ])
 }
+
+// =============================================================================
+// Errors
+// =============================================================================
+
+/// What can go wrong assembling the problem.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum ModelBuildError {
+    /// An operator could not be formed as a square matrix.
+    Operator,
+    /// A rotation angle was rejected.
+    Rotation,
+    /// A circuit's wiring is not a legal model.
+    Circuit(&'static str),
+    /// A factorization was rejected.
+    Factorization(&'static str),
+    /// The plant state could not be formed.
+    Plant,
+    /// An observable's operator is not a projector.
+    Projector(&'static str),
+    /// An experiment's predictions are not probabilities.
+    Experiment(&'static str),
+}
+
+impl core::fmt::Display for ModelBuildError {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        match self {
+            ModelBuildError::Operator => write!(f, "an operator is not a square matrix"),
+            ModelBuildError::Rotation => write!(f, "a rotation angle was rejected"),
+            ModelBuildError::Circuit(name) => write!(f, "{name}'s wiring is not a legal model"),
+            ModelBuildError::Factorization(name) => {
+                write!(f, "{name} is not a valid factorization")
+            }
+            ModelBuildError::Plant => write!(f, "the plant state could not be formed"),
+            ModelBuildError::Projector(name) => {
+                write!(f, "the observable {name} is not a projector")
+            }
+            ModelBuildError::Experiment(name) => {
+                write!(f, "the experiment {name} does not predict probabilities")
+            }
+        }
+    }
+}
+
+impl core::error::Error for ModelBuildError {}

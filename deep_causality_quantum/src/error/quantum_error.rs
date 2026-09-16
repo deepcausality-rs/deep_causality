@@ -283,6 +283,22 @@ impl From<deep_causality_metric::MetricError> for QuantumError {
     }
 }
 
+/// Carries a multivector construction failure into this crate's error type.
+///
+/// The kernels here take [`deep_causality_multivector::HilbertState`] operands, and building one
+/// is what a caller does immediately before and after calling them. Without this conversion the
+/// two halves of that sequence report through different error types and `?` refuses to join them.
+///
+/// `CausalMultiVectorError` keeps its variants private so that its own shape can evolve, so the
+/// mapping is to one variant with the source error's text preserved in full. That is the same
+/// arrangement as [`From<deep_causality_metric::MetricError>`] above: the bucket is coarse and the
+/// message is not.
+impl From<deep_causality_multivector::CausalMultiVectorError> for QuantumError {
+    fn from(e: deep_causality_multivector::CausalMultiVectorError) -> Self {
+        QuantumError::new(QuantumErrorEnum::DimensionMismatch(format!("{}", e)))
+    }
+}
+
 impl core::error::Error for QuantumError {}
 
 impl Display for QuantumError {

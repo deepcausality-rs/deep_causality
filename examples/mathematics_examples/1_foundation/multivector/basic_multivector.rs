@@ -17,7 +17,7 @@
 //! In `Cl(2, 0)` a multivector has `2^2 = 4` coefficients, indexed `[1, e1, e2, e12]`.
 
 use deep_causality_multivector::{CausalMultiVector, Metric, MultiVector};
-use deep_causality_num::{lift, lower};
+use deep_causality_num::{const_scalar_from_int, lower};
 
 /// Blade indices in Cl(2, 0).
 const SCALAR: usize = 0;
@@ -27,6 +27,11 @@ const E12: usize = 3;
 
 /// The working scalar. Every coefficient carries it.
 pub type FloatType = f64;
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const NEG_ONE: FloatType = const_scalar_from_int!(FloatType, -1);
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let metric = Metric::Euclidean(2);
@@ -41,26 +46,26 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let e2e1 = e2.clone() * e1.clone();
     print_product("e1 * e2 (Geometric Product)", blade(&e1e2, E12));
     print_product("e2 * e1 (Geometric Product)", blade(&e2e1, E12));
-    assert_eq!(blade(&e1e2, E12), Some(lift::<FloatType>(1.0)));
-    assert_eq!(blade(&e2e1, E12), Some(lift::<FloatType>(-1.0)));
+    assert_eq!(blade(&e1e2, E12), Some(ONE));
+    assert_eq!(blade(&e2e1, E12), Some(NEG_ONE));
 
     // A Euclidean basis vector squares to +1, which is what the metric's signature says.
     let e1_sq = e1.clone() * e1.clone();
     print_scalar("e1 * e1", blade(&e1_sq, SCALAR));
-    assert_eq!(blade(&e1_sq, SCALAR), Some(lift::<FloatType>(1.0)));
+    assert_eq!(blade(&e1_sq, SCALAR), Some(ONE));
 
     // Outer and inner are the two halves the geometric product splits into.
     let wedge = e1.outer_product(&e2);
     let dot = e1.inner_product(&e1);
     print_product("e1 ^ e2 (Outer Product)", blade(&wedge, E12));
     print_scalar("e1 . e1 (Inner Product)", blade(&dot, SCALAR));
-    assert_eq!(blade(&wedge, E12), Some(lift::<FloatType>(1.0)));
-    assert_eq!(blade(&dot, SCALAR), Some(lift::<FloatType>(1.0)));
+    assert_eq!(blade(&wedge, E12), Some(ONE));
+    assert_eq!(blade(&dot, SCALAR), Some(ONE));
 
     // (e1e2)^2 = -1, so the inverse of e1e2 is -e1e2, which is e2e1.
     let inverse = e1e2.inverse()?;
     print_product("Inverse of e1e2", blade(&inverse, E12));
-    assert_eq!(blade(&inverse, E12), Some(lift::<FloatType>(-1.0)));
+    assert_eq!(blade(&inverse, E12), Some(NEG_ONE));
 
     print_footer();
     Ok(())
@@ -71,8 +76,8 @@ fn unit_blade(
     index: usize,
     metric: Metric,
 ) -> Result<CausalMultiVector<FloatType>, Box<dyn std::error::Error>> {
-    let mut data = vec![lift::<FloatType>(0.0); 4];
-    data[index] = lift::<FloatType>(1.0);
+    let mut data = vec![ZERO; 4];
+    data[index] = ONE;
     Ok(CausalMultiVector::new(data, metric)?)
 }
 

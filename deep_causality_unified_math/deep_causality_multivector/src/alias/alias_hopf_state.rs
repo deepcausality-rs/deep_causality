@@ -53,6 +53,15 @@ impl<R: RealField> HopfState<R> {
     /// $|\alpha|^2 + |\beta|^2 = 1$.
     ///
     /// This connects Standard QM notation to Geometric Algebra.
+    ///
+    /// The four coefficients are placed so that [`Self::project`] returns the Bloch vector of
+    /// $|\psi\rangle = \alpha|0\rangle + \beta|1\rangle$ in the standard convention,
+    ///
+    /// ```text
+    /// n_x = 2 Re(ᾱβ)     n_y = 2 Im(ᾱβ)     n_z = |α|² − |β|²
+    /// ```
+    ///
+    /// which puts $|{+}\rangle$ on $+x$, $|{+i}\rangle$ on $+y$ and $|0\rangle$ on $+z$.
     pub fn from_spinor(alpha: Complex<R>, beta: Complex<R>) -> Self {
         // Mapping C^2 -> Cl(3) Even Subalgebra (Quaternions)
 
@@ -64,8 +73,8 @@ impl<R: RealField> HopfState<R> {
         // Bivector parts (Imaginary units)
         // Standard Rotor mapping:
         data[3] = alpha.im; // e12 (Generates Z rotation)
-        data[5] = beta.im; // e13 ~ Y
-        data[6] = beta.re; // e23 ~ X
+        data[5] = beta.re; // e13
+        data[6] = beta.im; // e23
 
         let mv = CausalMultiVector::new(data, Metric::Euclidean(3)).unwrap();
         Self(mv.normalize())
@@ -163,8 +172,8 @@ impl<R: RealField> TryFrom<HopfState<R>> for HilbertState<R> {
         let im_alpha = d[3]; // e12
         let alpha = Complex::new(re_alpha, im_alpha);
 
-        let re_beta = d[6]; // e23
-        let im_beta = d[5]; // e13
+        let re_beta = d[5]; // e13
+        let im_beta = d[6]; // e23
         let beta = Complex::new(re_beta, im_beta);
 
         // 3. Construct HilbertState (Spin(10) target)

@@ -26,7 +26,7 @@
 //! - **Classical EM via gauge field formalism** using deep_causality_physics
 
 use deep_causality_core::{CausalEffectPropagationProcess, CausalFlow, PropagatingEffect};
-use deep_causality_num::{Float, Float106, Zero, lift};
+use deep_causality_num::{Float, Float106, Zero, const_scalar_from_float, const_scalar_from_int};
 use deep_causality_physics::{EM, GaugeEmOps};
 
 // =============================================================================
@@ -35,14 +35,16 @@ use deep_causality_physics::{EM, GaugeEmOps};
 
 // Change this to f32 , f64, or Float106 to use different precision
 type FloatType = Float106;
-type EmTheory = EM<FloatType>;
 
-/// Macro to convert f64 literals to FloatType
-macro_rules! flt {
-    ($x:expr) => {
-        lift::<FloatType>($x)
-    };
-}
+/// Small whole numbers and the invariant tolerance, at the working type.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+/// Plane-wave amplitude, in natural units.
+const AMPLITUDE: FloatType = const_scalar_from_int!(FloatType, 1);
+/// A Lorentz invariant counts as vanishing below this magnitude.
+const INVARIANT_TOLERANCE: FloatType = const_scalar_from_float!(FloatType, 1e-10);
+/// Vacuum permittivity, in F/m.
+const EPSILON_0: FloatType = const_scalar_from_float!(FloatType, 8.854e-12);
+type EmTheory = EM<FloatType>;
 
 // =============================================================================
 // MAIN: Pipeline Composition via Causal Monad
@@ -108,7 +110,7 @@ fn stage_create_plane_wave() -> PropagatingEffect<Option<EmTheory>> {
     println!("─────────────────────────────────");
 
     // Create a plane wave with E along x, B along y
-    let amplitude = flt!(1.0); // Natural units
+    let amplitude = AMPLITUDE;
     let polarization = 0; // x-polarization
 
     match EmTheory::plane_wave(amplitude, polarization) {
@@ -191,15 +193,15 @@ fn stage_compute_invariants(
         println!("  F_μν F̃^μν = {}  (dual invariant)", dual_inv);
 
         // Physical interpretation
-        if s_abs(field_inv) < flt!(1e-10) {
+        if s_abs(field_inv) < INVARIANT_TOLERANCE {
             println!("\n  → |E| = |B| (null field / radiation)");
-        } else if field_inv > flt!(0.0) {
+        } else if field_inv > ZERO {
             println!("\n  → Magnetic-dominated field");
         } else {
             println!("\n  → Electric-dominated field");
         }
 
-        if s_abs(dual_inv) < flt!(1e-10) {
+        if s_abs(dual_inv) < INVARIANT_TOLERANCE {
             println!("  → E ⟂ B (CP-conserving)");
         } else {
             println!("  → E·B ≠ 0 (CP-violating configuration)");
@@ -208,7 +210,7 @@ fn stage_compute_invariants(
 
         CausalEffectPropagationProcess::pure((em_opt, field_inv, dual_inv))
     } else {
-        CausalEffectPropagationProcess::pure((None, flt!(0.0), flt!(0.0)))
+        CausalEffectPropagationProcess::pure((None, ZERO, ZERO))
     }
 }
 
@@ -241,7 +243,7 @@ fn stage_energy_analysis(
         println!("  Lagrangian density: L = {} (natural units)", lagrangian);
 
         // Convert to SI for context (assuming E ~ 1 V/m scale)
-        let epsilon_0 = flt!(8.854e-12); // F/m
+        let epsilon_0 = EPSILON_0;
         let energy_val = energy;
         let energy_si = energy_val * epsilon_0; // J/m³
         println!("\n  In SI units (assuming E ~ 1 V/m scale):");
@@ -250,7 +252,7 @@ fn stage_energy_analysis(
 
         CausalEffectPropagationProcess::pure((em_opt, field_inv, dual_inv, energy, lagrangian))
     } else {
-        CausalEffectPropagationProcess::pure((None, field_inv, dual_inv, flt!(0.0), flt!(0.0)))
+        CausalEffectPropagationProcess::pure((None, field_inv, dual_inv, ZERO, ZERO))
     }
 }
 
@@ -314,14 +316,7 @@ fn stage_poynting_radiation(
             em_opt, field_inv, dual_inv, energy, lagrangian, intensity,
         ))
     } else {
-        CausalEffectPropagationProcess::pure((
-            None,
-            field_inv,
-            dual_inv,
-            energy,
-            lagrangian,
-            flt!(0.0),
-        ))
+        CausalEffectPropagationProcess::pure((None, field_inv, dual_inv, energy, lagrangian, ZERO))
     }
 }
 
@@ -372,9 +367,9 @@ fn stage_field_classification(
         "Elliptically Polarized Wave"
     } else if is_null {
         "Null Field (non-radiative)"
-    } else if field_inv > flt!(0.0) {
+    } else if field_inv > ZERO {
         "Magnetic-Dominated Static Field"
-    } else if field_inv < flt!(0.0) {
+    } else if field_inv < ZERO {
         "Electric-Dominated Static Field"
     } else {
         "General EM Superposition"

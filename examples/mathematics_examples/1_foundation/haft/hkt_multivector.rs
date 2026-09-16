@@ -5,7 +5,7 @@
 
 use deep_causality_haft::{Applicative, Functor, Pure};
 use deep_causality_multivector::{CausalMultiVector, CausalMultiVectorWitness, Metric};
-use deep_causality_num::{lift, lower};
+use deep_causality_num::{const_scalar_from_int, lower};
 
 // -----------------------------------------------------------------------------------------
 // ENGINEERING VALUE:
@@ -30,29 +30,38 @@ use deep_causality_num::{lift, lower};
 /// The working scalar. Every coefficient of every multivector below carries it.
 pub type FloatType = f64;
 
+const ELEVEN: FloatType = const_scalar_from_int!(FloatType, 11);
+
+/// Small numbers and tolerances, at the working type.
+const EIGHT: FloatType = const_scalar_from_int!(FloatType, 8);
+const FOUR: FloatType = const_scalar_from_int!(FloatType, 4);
+const FOURTEEN: FloatType = const_scalar_from_int!(FloatType, 14);
+const NEG_ONE: FloatType = const_scalar_from_int!(FloatType, -1);
+const NEG_TWO: FloatType = const_scalar_from_int!(FloatType, -2);
+const SIX: FloatType = const_scalar_from_int!(FloatType, 6);
+const THIRTEEN: FloatType = const_scalar_from_int!(FloatType, 13);
+const THREE: FloatType = const_scalar_from_int!(FloatType, 3);
+const TWELVE: FloatType = const_scalar_from_int!(FloatType, 12);
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
+const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
+const TEN: FloatType = const_scalar_from_int!(FloatType, 10);
+
 fn main() {
     // 1. Functor: mapping over coefficients leaves the geometry alone.
     let m = Metric::Euclidean(2);
-    let v = CausalMultiVector::new(
-        vec![lift::<FloatType>(1.0), lift(2.0), lift(3.0), lift(4.0)],
-        m,
-    )
-    .expect("four coefficients is exactly 2^2");
-    let scaled = CausalMultiVectorWitness::fmap(v.clone(), |x| x * lift::<FloatType>(2.0));
+    let v = CausalMultiVector::new(vec![ONE, TWO, THREE, FOUR], m)
+        .expect("four coefficients is exactly 2^2");
+    let scaled = CausalMultiVectorWitness::fmap(v.clone(), |x| x * TWO);
     print_functor(v.data(), scaled.data());
-    assert_eq!(
-        scaled.data(),
-        &vec![lift::<FloatType>(2.0), lift(4.0), lift(6.0), lift(8.0)]
-    );
+    assert_eq!(scaled.data(), &vec![TWO, FOUR, SIX, EIGHT]);
 
     // 2. Applicative: a scalar multivector holding a function broadcasts across the whole vector.
-    let pure_fn = CausalMultiVectorWitness::pure(|x: FloatType| x + lift::<FloatType>(10.0));
+    let pure_fn = CausalMultiVectorWitness::pure(|x: FloatType| x + TEN);
     let shifted = CausalMultiVectorWitness::apply(pure_fn, v.clone());
     print_applicative(shifted.data());
-    assert_eq!(
-        shifted.data(),
-        &vec![lift::<FloatType>(11.0), lift(12.0), lift(13.0), lift(14.0)]
-    );
+    assert_eq!(shifted.data(), &vec![ELEVEN, TWELVE, THIRTEEN, FOURTEEN]);
 
     // 3. Tensor product: an operation that changes the algebra, so it is written directly.
     //
@@ -63,11 +72,8 @@ fn main() {
     // and neither the input's Cl(1) nor the closure's Cl(1) is the answer: the answer is Cl(2),
     // which neither operand carries. The dimension is a property of the operation, so the operation
     // states it.
-    let v1 = CausalMultiVector::new(
-        vec![lift::<FloatType>(1.0), lift(2.0)],
-        Metric::Euclidean(1),
-    )
-    .expect("two coefficients is exactly 2^1");
+    let v1 = CausalMultiVector::new(vec![ONE, TWO], Metric::Euclidean(1))
+        .expect("two coefficients is exactly 2^1");
     let expanded: Vec<FloatType> = v1.data().iter().flat_map(|&x| [x, -x]).collect();
     let tensor_product = CausalMultiVector::new(expanded, Metric::Euclidean(2))
         .expect("four coefficients is exactly 2^2, the dimension of Cl(2)");
@@ -77,10 +83,7 @@ fn main() {
         tensor_product.data(),
         &tensor_product.metric().to_string(),
     );
-    assert_eq!(
-        tensor_product.data(),
-        &vec![lift::<FloatType>(1.0), lift(-1.0), lift(2.0), lift(-2.0)]
-    );
+    assert_eq!(tensor_product.data(), &vec![ONE, NEG_ONE, TWO, NEG_TWO]);
     assert_eq!(tensor_product.metric().dimension(), 2);
 
     print_footer();

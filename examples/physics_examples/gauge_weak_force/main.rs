@@ -15,7 +15,7 @@
 //! 4. **Analysis**: Lifetime and width calculations
 
 use deep_causality_core::{CausalEffectPropagationProcess, CausalFlow, PropagatingEffect};
-use deep_causality_num::{Float106, lift};
+use deep_causality_num::{Float106, const_scalar_from_float, const_scalar_from_int};
 use deep_causality_physics::{WeakField, WeakFieldOps, WeakIsospin};
 
 // =============================================================================
@@ -26,12 +26,13 @@ use deep_causality_physics::{WeakField, WeakFieldOps, WeakIsospin};
 type FloatType = Float106;
 type WeakTheory = WeakField<FloatType>;
 
-/// Macro to convert f64 literals to FloatType
-macro_rules! flt {
-    ($x:expr) => {
-        lift::<FloatType>($x)
-    };
-}
+/// Momentum transfer for the charged-current exchange, in GeV^2. Far below `M_W^2`, which is
+/// the regime the Fermi four-point coupling was built to describe.
+const CHARGED_CURRENT_Q2: FloatType = const_scalar_from_float!(FloatType, 0.01);
+/// Momentum transfer for the neutral-current exchange, in GeV^2.
+const NEUTRAL_CURRENT_Q2: FloatType = const_scalar_from_int!(FloatType, 100);
+/// Muon mass, in GeV.
+const MUON_MASS_GEV: FloatType = const_scalar_from_float!(FloatType, 0.10566);
 
 // =============================================================================
 // MAIN
@@ -117,7 +118,7 @@ fn stage_charged_current(
     println!("─────────────────────────────────────────────────");
 
     // Simulate W exchange at low energy (q² << M_W²)
-    let q2 = flt!(0.01); // GeV²
+    let q2 = CHARGED_CURRENT_Q2;
     match WeakTheory::charged_current_propagator(q2) {
         Ok(prop) => {
             state.cc_propagator = prop;
@@ -144,7 +145,7 @@ fn stage_neutral_current(
 
     if let Some(nu) = state.neutrino {
         // Scattering at higher energy
-        let q2 = flt!(100.0); // GeV²
+        let q2 = NEUTRAL_CURRENT_Q2;
         match WeakTheory::neutral_current_propagator(q2, &nu) {
             Ok(prop) => {
                 state.nc_propagator = prop;
@@ -174,7 +175,7 @@ fn stage_decay_properties(
     println!("─────────────────────────");
 
     // Muon decay
-    let m_mu = flt!(0.10566); // GeV
+    let m_mu = MUON_MASS_GEV;
     if let Ok(width) = WeakTheory::weak_decay_width(m_mu) {
         state.muon_width = width;
         println!("  Muon decay width: {} GeV", width);

@@ -221,18 +221,28 @@ impl<
             }
         }
 
-        // 2. Fill diagonal elements
-        // For i < n-1, fill with random real values (imaginary part = 0 for Hermitian diagonal)
-        // For i == n-1, set value to make trace = 0
-        for i in 0..(n - 1) {
+        // 2. Fill diagonal elements.
+        //
+        // U(1) is not SU(1). Its generator is a phase, so the Lie algebra is the real line,
+        // whereas the *traceless* Hermitian 1x1 matrices are {0}. Applying the SU(N) traceless
+        // constraint at n = 1 would therefore zero X, make every proposal the identity, and
+        // freeze the field at 100% acceptance. The two cases are kept apart for that reason.
+        if n == 1 {
             let r_val = M::generate_uniform(rng);
-            let val = r_val + ComplexField::conjugate(&r_val);
-            x_data[i * n + i] = val;
-            diagonal_sum = diagonal_sum + val;
-        }
+            x_data[0] = r_val + ComplexField::conjugate(&r_val);
+        } else {
+            // For i < n-1, fill with random real values (imaginary part = 0 for Hermitian
+            // diagonal). For i == n-1, set the value that makes the trace vanish.
+            for i in 0..(n - 1) {
+                let r_val = M::generate_uniform(rng);
+                let val = r_val + ComplexField::conjugate(&r_val);
+                x_data[i * n + i] = val;
+                diagonal_sum = diagonal_sum + val;
+            }
 
-        // Set last diagonal element to -sum(others) to ensure Tr(X) = 0
-        x_data[(n - 1) * n + (n - 1)] = M::zero() - diagonal_sum;
+            // Set last diagonal element to -sum(others) to ensure Tr(X) = 0
+            x_data[(n - 1) * n + (n - 1)] = M::zero() - diagonal_sum;
+        }
 
         // 3. Compute U' = I + i·epsilon·X, the first-order expansion of exp(i·epsilon·X).
         for i in 0..(n * n) {

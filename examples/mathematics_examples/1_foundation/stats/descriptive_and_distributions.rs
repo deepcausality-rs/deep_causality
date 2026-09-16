@@ -24,7 +24,7 @@
 //! Sobol sequence, and a value uniform over a range.
 
 use deep_causality_algebra::Real;
-use deep_causality_num::{lift, lift_usize, lower};
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lift, lift_usize, lower};
 use deep_causality_rand::Xoshiro256;
 use deep_causality_stats::{
     Distribution, Normal, StandardUniform, mean, pearson, std_dev, variance,
@@ -38,6 +38,17 @@ const SEED: u64 = 0xC0FFEE;
 /// The working scalar. Every sample and every moment carries it.
 pub type FloatType = f64;
 
+/// Small numbers and tolerances, at the working type.
+const TOLERANCE: FloatType = const_scalar_from_float!(FloatType, 1e-12);
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const HALF: FloatType = const_scalar_from_float!(FloatType, 0.5);
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
+const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
+const THREE: FloatType = const_scalar_from_int!(FloatType, 3);
+const FOUR: FloatType = const_scalar_from_int!(FloatType, 4);
+const TWELVE: FloatType = const_scalar_from_int!(FloatType, 12);
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
 
@@ -50,7 +61,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let v = variance(&sample)?;
     let sd = std_dev(&sample)?;
     print_moments(m, v, sd);
-    assert!(Real::abs(m - lift::<FloatType>(5.5)) < lift::<FloatType>(1e-12));
+    assert!(Real::abs(m - lift::<FloatType>(5.5)) < TOLERANCE);
 
     // An empty slice is an error, not a panic or a silent NaN.
     print_empty_case(mean(&[] as &[FloatType]).err().map(|e| e.to_string()));
@@ -59,13 +70,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 2. Correlation between two slices.
     // ---------------------------------------------------------------------
     // A perfect line has r = 1; reversing one side gives r = -1.
-    let doubled: Vec<FloatType> = sample.iter().map(|&x| x * lift::<FloatType>(2.0)).collect();
+    let doubled: Vec<FloatType> = sample.iter().map(|&x| x * TWO).collect();
     let reversed: Vec<FloatType> = sample.iter().rev().copied().collect();
     let (r_pos, n_pos) = pearson(&sample, &doubled)?;
     let (r_neg, _) = pearson(&sample, &reversed)?;
     print_correlation(r_pos, n_pos, r_neg);
-    assert!(Real::abs(r_pos - lift::<FloatType>(1.0)) < lift::<FloatType>(1e-12));
-    assert!(Real::abs(r_neg + lift::<FloatType>(1.0)) < lift::<FloatType>(1e-12));
+    assert!(Real::abs(r_pos - ONE) < TOLERANCE);
+    assert!(Real::abs(r_neg + ONE) < TOLERANCE);
 
     // ---------------------------------------------------------------------
     // 3. Sampling a distribution, and recovering its parameters.
@@ -73,21 +84,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // The statistics above and the distributions below are the same crate for a reason: a
     // distribution is defined by the moments the estimators here measure.
     let mut rng = Xoshiro256::from_seed(SEED);
-    let normal = Normal::new(lift::<FloatType>(3.0), lift::<FloatType>(2.0))?;
+    let normal = Normal::new(THREE, TWO)?;
     let draws: Vec<FloatType> = (0..DRAWS).map(|_| normal.sample(&mut rng)).collect();
     let est_mean = mean(&draws)?;
     let est_sd = std_dev(&draws)?;
-    print_normal(
-        lift::<FloatType>(3.0),
-        lift::<FloatType>(2.0),
-        est_mean,
-        est_sd,
-    );
+    print_normal(THREE, TWO, est_mean, est_sd);
 
     // The standard error of the mean is sigma/sqrt(n); three of those is a safe bound that
     // still fails if the sampler is wrong.
-    let se = lift::<FloatType>(2.0) / Real::sqrt(lift_usize::<FloatType>(DRAWS));
-    assert!(Real::abs(est_mean - lift::<FloatType>(3.0)) < lift::<FloatType>(3.0) * se);
+    let se = TWO / Real::sqrt(lift_usize::<FloatType>(DRAWS));
+    assert!(Real::abs(est_mean - THREE) < THREE * se);
 
     // ---------------------------------------------------------------------
     // 4. The uniform on [0, 1), whose mean is 1/2 and variance 1/12.
@@ -98,9 +104,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let u_mean = mean(&uniform)?;
     let u_var = variance(&uniform)?;
     print_uniform(u_mean, u_var);
-    let u_se = lift::<FloatType>(1.0)
-        / (Real::sqrt(lift::<FloatType>(12.0)) * Real::sqrt(lift_usize::<FloatType>(DRAWS)));
-    assert!(Real::abs(u_mean - lift::<FloatType>(0.5)) < lift::<FloatType>(4.0) * u_se);
+    let u_se = ONE / (Real::sqrt(TWELVE) * Real::sqrt(lift_usize::<FloatType>(DRAWS)));
+    assert!(Real::abs(u_mean - HALF) < FOUR * u_se);
 
     print_footer();
     Ok(())

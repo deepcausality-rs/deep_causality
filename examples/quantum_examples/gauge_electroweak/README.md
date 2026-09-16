@@ -1,87 +1,152 @@
-# Electroweak One-Loop Example
+# Electroweak Unification: The W Mass, From First Principles
 
-This example demonstrates **Precision Electroweak Physics** by implementing full **One-Loop Radiative Corrections**.
-It calculates the W boson mass and ρ parameter with high accuracy (~0.02% error) by accounting for quantum loops
-involving the Top Quark and Higgs boson.
-
-## What This Simulation Does
-
-It solves the implicit loop equation linking the Fermi Constant ($G_F$) to the gauge boson masses:
-$$ M_W^2 \left(1 - \frac{M_W^2}{M_Z^2}\right) = \frac{\pi \alpha}{\sqrt{2} G_F (1 - \Delta r)} $$
-
-This accounts for:
-
-1. **Veltman Screening ($\Delta\rho$)**: Top/bottom quark mass splitting.
-2. **QED Running ($\Delta\alpha$)**: Vacuum polarization of the photon.
-
-## Running
+Fix three measured numbers and the Standard Model predicts the W boson mass. The measurement is good
+to better than a part in ten thousand. Comparing the two is one of the sharpest tests the theory
+faces, and this example runs the comparison.
 
 ```bash
-RUSTFLAGS='-C target-cpu=native' cargo run --example gauge_electroweak -p quantum_examples --release
+cargo run -p quantum_examples --example gauge_electroweak
 ```
 
-## The Four Stages Explained
+## The problem
 
-**What it does:** Calculates the Veltman screening correction ($\Delta\rho$) and running couplings.
+Above about 100 GeV the electromagnetic and weak forces are one force, a gauge theory with symmetry
+`SU(2) × U(1)`. Below that scale the Higgs field takes a vacuum value and the symmetry breaks: three
+of the four gauge bosons acquire mass and become the `W⁺`, `W⁻` and `Z`, and the fourth stays
+massless and is the photon.
 
-Virtual particles pop in and out of existence, affecting how forces are felt. The heavy Top Quark
-creates a "screening" effect ($\Delta\rho \approx 0.009$) that modifies the effective strength of the weak force.
-This stage computes these tiny quantum corrections required for precision predictions.
+What makes this testable is how little freedom is left afterwards. Fix `α_EM`, the Fermi constant
+and `M_Z`, and the couplings, the remaining masses, the decay widths and the resonance cross-section
+all follow.
 
+## Why the tree level is not enough
 
----
+At tree level `M_W = g·v/2`. The run prints what that gives:
 
-### Stage 2: Spontaneous Symmetry Breaking (Higgs)
+```text
+  M_W tree level        78.909302 GeV   from g*v/2
+  M_W loop corrected    80.369072 GeV   from the loop solver
+  the corrections move it by 1.459770 GeV
+```
 
-**What it does:** Shows how the W and Z bosons (carriers of the weak force) get their mass.
+A 1.5 GeV gap, roughly two percent, and it is not experimental error. It is the one-loop radiative
+corrections, dominated by the top quark running around the loop. The `ρ` parameter is exactly `1` at
+tree level and the loops move it by `Δρ ≈ 0.0093`.
 
-In the early universe, all force-carrying particles were massless and moved at the speed of light.
-Then the Higgs field "turned on" and gave mass to some particles. This stage calculates exactly how much mass the W
-boson (~80 GeV) and Z boson (~91 GeV) received. The photon (carrier of electromagnetism) stayed massless, which is why
-light still travels at... the speed of light.
+Printing both is the point. A run that showed only the corrected number would leave the reader with
+no way to see what the correction was worth.
 
----
+## The tolerance is the claim
 
-**What it does:** Verifies the mathematical relationships including loop corrections.
+```rust
+pub const W_MASS_TOLERANCE_GEV: FloatType = const_scalar_from_float!(FloatType, 0.020);
+```
 
-At "tree level" (simplified physics), $\rho$ = 1.0. But in the real world, quantum loops shift this
-value.
-The program verifies that the effective $\rho$ matches the prediction ($\approx 1.009$) and that the calculated W mass
-matches the experimental value (80.38 GeV) to within 20 MeV.
+Twenty MeV is what a one-loop calculation is worth: the terms left out are two-loop and enter at
+roughly that size. The summary claims one-loop accuracy and the check tests for exactly that, so
+the two cannot drift apart. A tolerance looser than the accuracy being claimed would pass a
+calculation that had stopped agreeing with the measurement.
 
+## What the code demonstrates
 
----
+Four stages, composed as one `CausalFlow`:
 
-### Stage 4: Z Resonance (Cross-Section)
+| Stage | Adds |
+|---|---|
+| unification | the couplings `g` and `g'` from `α_EM` and `θ_W` |
+| symmetry breaking | the masses the Higgs vacuum value generates, tree and corrected |
+| gauge mixing | the `W`/`Z` mass relation and the `ρ` parameter |
+| Z resonance | the widths and the peak cross-section |
 
-**What it does:** Calculates how likely it is to create a Z boson in a particle collider.
+`bind_or_error` is what makes the chain a chain: a stage that fails stops the ones after it and
+carries its reason to the summary, so no stage reads a state an earlier one never filled.
 
-When you smash electrons and positrons together at exactly the right energy (~91 GeV), you hit a "
-sweet spot" where Z bosons are created in huge numbers. This is like tuning a radio to exactly the right frequency.
-The "cross-section" (~41 nanobarns) tells us how big the target is — larger means more collisions produce Z bosons. This
-was directly measured at CERN's LEP collider and matches our calculation.
+## Output
 
-## Precision Results
+```text
+Stage 3: gauge boson mixing
+  rho tree level     1.000000000   the relation M_W = M_Z cos th_W, exactly
+  rho effective      1.009326850   with the loop correction
+  d_rho = rho - 1    0.009326850   dominated by the top quark in the loop
 
-The simulation matches experimental data from CERN's LEP collider within 1%.
+  M_W computed          80.369072 GeV
+  M_W measured          80.377000 GeV   PDG
+  deviation                 7.928 MeV   tolerance 20 MeV
+  verdict            inside one-loop accuracy
 
-| Metric                               | Prediction     | PDG Value  | Error       | Status      |
-|--------------------------------------|----------------|------------|-------------|-------------|
-| **W Mass ($M_W$)**                   | **80.369 GeV** | 80.377 GeV | **-8 MeV**  | ✅ PRECISION |
-| **Invisible Width ($\Gamma_{inv}$)** | **0.502 GeV**  | 0.5016 GeV | **< 1 MeV** | ✅ PRECISION |
-| **Total Width ($\Gamma_Z$)**         | **2.511 GeV**  | 2.495 GeV  | **+16 MeV** | ✅ 1-LOOP OK |
-| **Peak Cross-sec**                   | **41.41 nb**   | ~41.5 nb   | **~0.2%**   | ✅ PRECISION |
-| **$\Delta r$**                       | **0.03600**    | ~0.036     | N/A         | ✅ STANDARD  |
+Stage 4: the Z resonance
+  peak energy           91.187600 GeV
+  total width            2.511175 GeV   G_Z
+  hadronic width         1.756205 GeV   G_had
+  invisible width        0.502289 GeV   three neutrino generations
+  peak cross-section    41.409896 nb
+```
 
-The Total Width overshoot (0.6% / +16 MeV) is typical for a pure One-Loop calculation without higher-order QCD
-corrections. Resolving this type of error would require a 2-loop vertex corrections which is mathematically complex.
+The invisible width is a prediction, not an input. Measuring it at LEP is how the number of light
+neutrino generations was established to be three.
 
-## Why This Matters
+The two mixing angles in stage 1 differ — `sin²θ_W = 0.2232` on-shell against `sin²θ_eff = 0.2305` —
+because they are defined by different measurements, one by the boson masses and one by the Z decay
+asymmetries. At tree level they are the same number, and the gap between them is a loop effect.
 
-This simulation demonstrates that:
+## Precision is a parameter
 
-1. **Quantum Loops Matter** — We cannot get the right W mass without including the Top Quark loop.
-2. **Theory matches experiment** — We achieve < 20 MeV precision.
+```rust
+pub type FloatType = Float106;
+```
 
-This unification was a major triumph of 20th-century physics and earned Glashow, Weinberg, and Salam the Nobel Prize in
-1979.
+Every constant is declared at that type through `const_scalar_from_int!` and
+`const_scalar_from_float!`, so no conversion runs at any call site. It sits at `Float106` rather
+than `f64` on purpose: a hard-coded `f64` is invisible while the alias *is* `f64`, and a compile
+error the moment the two differ.
+
+All four scalars run, and the verdict line is where the difference shows:
+
+| Scalar | Deviation | Verdict |
+|---|---|---|
+| `f32` | 7.927 MeV | inside one-loop accuracy |
+| `f64` | 7.928 MeV | inside one-loop accuracy |
+| `Float106` | 7.928 MeV | inside one-loop accuracy |
+| `BFloat16` | 500.000 MeV | outside one-loop accuracy |
+
+`BFloat16` carries an eight-bit mantissa, so `80.4 GeV` is resolved to about half a GeV and an
+8 MeV difference between two such numbers is below the last bit. The run says so rather than
+printing a number it cannot support. That is what the tolerance check is for, and it is the reason
+it is stated in the same place as the claim.
+
+## What this example covers
+
+The goal is to reformulate the essence of an electroweak precision test as a causal process over the
+library's types, and to get precision as a parameter and categorical composition for free once it is
+in that form. The essence is that the theory has almost no freedom and the leftover disagreement is
+where new physics would have to live. The model keeps that and holds everything else simple: the
+on-shell scheme with the library's packaged one-loop corrections, three fermion generations with
+their measured masses, and the `Z` treated as a Breit-Wigner resonance at its peak.
+
+A calculation a precision-electroweak group would publish adds what this leaves out: the full
+two-loop corrections to `Δr`, QED and QCD corrections to the widths, initial-state radiation
+smearing the resonance shape, a full fit over many observables rather than one prediction, and the
+correlated experimental uncertainties on the inputs. The CDF 2022 `M_W` measurement sits several
+standard deviations from this prediction and from the other measurements, which is the kind of
+question a real analysis exists to settle.
+
+## How to grow the example toward a precision fit
+
+Each step keeps the structure already here.
+
+- **Report an uncertainty.** Carry the inputs as `deep_causality_uncertain` distributions instead of
+  numbers, and the deviation becomes a pull rather than a difference.
+- **Scan the inputs.** The stages are a `CausalFlow`; running it over a grid of top and Higgs masses
+  turns the single prediction into the `M_W`-vs-`m_t` band that precision plots show.
+- **A second scheme.** The library already carries both mixing angles. Computing the same
+  observables in the `MS-bar` scheme and comparing is a direct check on the scheme dependence.
+- **More observables.** The widths and asymmetries are already available on `ElectroweakParams`;
+  folding them into one figure of merit makes the run a fit instead of a comparison.
+
+## Files
+
+| File | Holds |
+|---|---|
+| `main.rs` | the alias, the four stages, and the flow that composes them |
+| `model.rs` | the constants, the state the stages thread, and the tolerance |
+| `utils_print.rs` | the presentation, and the only `lower` calls |

@@ -3,169 +3,385 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! # Laser Resonator Stability Analysis
+//! # Laser Resonator Stability
 //!
-//! Propagates a Gaussian beam through an optical cavity using ABCD matrices. Each
-//! optical element is a named stage; the round trip composes into one `CausalFlow`
-//! pipeline that threads the complex beam parameter q and fails the flow if the beam
-//! becomes unphysical (Im(q) <= 0).
+//! A Gaussian beam makes one **full** round trip of a linear cavity: two flat mirrors with a
+//! thermal lens between them. Each optical element is a named stage and the six compose into one
+//! `CausalFlow` pipeline that threads the complex beam parameter `q`.
+//!
+//! Whether a resonator is stable is a property of its round-trip matrix, not of the beam at any
+//! one point. For a round trip `[[A, B], [C, D]]` the cavity is stable exactly when
+//!
+//! ```text
+//! m = (A + D) / 2      and      -1 <= m <= 1
+//! ```
+//!
+//! so the run builds that matrix by multiplying the element matrices in traversal order, reports
+//! `m`, and then checks the consequence that makes `m` meaningful: a stable cavity has a
+//! self-reproducing mode, so the `q` that comes back must be the `q` that set out.
+//!
+//! For the cavity below the round trip comes out as exactly `-I`, giving `m = -1`. That is the
+//! *boundary* of the stability range, which is worth seeing: the beam does reproduce itself, but
+//! the cavity has no margin, and any drift in the thermal lens pushes it out.
+//!
+//! ## APIs Demonstrated
+//! - `CausalFlow::value` and `.bind` once per optical element
+//! - `gaussian_q_propagation` and `beam_spot_size`
+//! - `EinSumOp::mat_mul` to accumulate the round-trip matrix
 
-use deep_causality_algebra::DivisionAlgebra;
+use deep_causality_algebra::{DivisionAlgebra, Real};
 use deep_causality_core::{CausalEffect, CausalFlow, PropagatingEffect, PropagatingProcess};
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lower};
 use deep_causality_num_complex::Complex;
 use deep_causality_physics::{
     AbcdMatrix, ComplexBeamParameter, IndexOfRefraction, PhysicsError, Wavelength, beam_spot_size,
     gaussian_q_propagation, lens_maker,
 };
-use deep_causality_tensor::CausalTensor;
+use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 
-/// Switch this alias to `f32` for low precision, `f64` for standard precision,
-/// or `Float106` for high precision.
+/// Small whole numbers, declared once at the working type.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
+const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
+
+/// Cavity geometry, in metres.
+const DRIFT_L1: FloatType = const_scalar_from_float!(FloatType, 0.5);
+const DRIFT_L2: FloatType = const_scalar_from_float!(FloatType, 0.5);
+/// Radius of curvature of the biconvex thermal lens, in metres.
+const LENS_RADIUS: FloatType = const_scalar_from_float!(FloatType, 0.5);
+/// Refractive index of the lens material.
+const LENS_INDEX: FloatType = const_scalar_from_float!(FloatType, 1.5);
+/// Nd:YAG wavelength, 1064 nm.
+const WAVELENGTH_M: FloatType = const_scalar_from_float!(FloatType, 1064e-9);
+/// Input beam waist, 1 mm.
+const WAIST_M: FloatType = const_scalar_from_float!(FloatType, 1e-3);
+/// Metres to millimetres and to nanometres, for the display boundary.
+const MM_PER_M: FloatType = const_scalar_from_int!(FloatType, 1000);
+const NM_PER_M: FloatType = const_scalar_from_int!(FloatType, 1_000_000_000);
+
+/// A cavity counts as stable when `|m| <= 1`; this is the slack allowed on that comparison.
+const STABILITY_MARGIN: FloatType = const_scalar_from_float!(FloatType, 1e-12);
+/// How closely the round trip must reproduce the input `q` to call the mode self-consistent.
+const EIGENMODE_TOLERANCE: FloatType = const_scalar_from_float!(FloatType, 1e-12);
+
+/// `f64` is the right precision here: the round trip is six 2x2 products and one Moebius map, so
+/// the eigenmode residual sits at machine epsilon either way. `Float106` tightens the residual
+/// and leaves every reported spot size unchanged.
 pub type FloatType = f64;
 
-// Cavity configuration.
-const L1: f64 = 0.5; // m, first drift
-const L2: f64 = 0.5; // m, second drift
-const R_LENS: f64 = 0.5; // m, thermal-lens radius of curvature
-
-/// YAG laser wavelength (1064 nm).
-fn laser_wavelength() -> Wavelength<FloatType> {
-    Wavelength::<FloatType>::new(1064e-9).unwrap()
-}
-/// Thermal-lens index of refraction.
-fn n_lens() -> IndexOfRefraction<FloatType> {
-    IndexOfRefraction::new(1.5).unwrap()
-}
-
 fn main() -> Result<(), PhysicsError> {
-    println!("=== Laser Resonator Stability Analysis ===\n");
+    print_header();
 
-    let wavelength = laser_wavelength();
-    println!("Wavelength: {:.1} nm", wavelength.value() * 1e9);
+    let wavelength = Wavelength::<FloatType>::new(WAVELENGTH_M)?;
+    let focal_length = thermal_lens_focal_length()?;
 
-    // Initial Beam: Waist w0 = 1mm at z=0 (Plane wavefront R=inf)
-    // q = z + i zR. At waist z=0 -> q = i zR; zR = pi w0^2 / lambda.
-    let w0 = 1e-3;
-    let z_r = std::f64::consts::PI * w0 * w0 / wavelength.value();
-    let q_initial = ComplexBeamParameter::new(Complex::new(0.0, z_r))?;
+    // At a waist the wavefront is flat, so q = i z_R with z_R = pi w0^2 / lambda.
+    let rayleigh = FloatType::pi() * WAIST_M * WAIST_M / wavelength.value();
+    let q_initial = ComplexBeamParameter::new(Complex::new(ZERO, rayleigh))?;
+    print_input(WAIST_M, rayleigh, focal_length);
 
-    println!("Initial Beam: w0 = {:.2} mm, zR = {:.2} m", w0 * 1e3, z_r);
+    // One full round trip: out through the lens to the far mirror, and back again. Flat mirrors
+    // contribute the identity, so they are the reflections between the two passes.
+    let cavity = round_trip(focal_length)?;
 
-    // Round trip in the cavity as one CausalFlow pipeline: the beam parameter q seeds
-    // the value channel, then each optical element binds the propagated q.
-    let process = CausalFlow::value(q_initial)
-        .bind(stage_drift_l1)
-        .bind(stage_thermal_lens)
-        .bind(stage_drift_l2)
-        .bind(stage_mirror)
+    let process = cavity
+        .iter()
+        .fold(CausalFlow::value(q_initial), |flow, element| {
+            let matrix = element.matrix.clone();
+            flow.bind(move |value, _s, _c| propagate(value, &matrix))
+        })
         .into_process();
 
-    if let Some(final_q) = process.value() {
-        println!("\n=== Final State ===");
-        report_beam(*final_q, wavelength, "Round Trip Half-Way");
-    } else {
-        println!("\n=== Simulation Failed (Unstable) ===");
-    }
+    let q_final = match process.value() {
+        Some(q) => *q,
+        None => {
+            print_failure(process.error().map(|e| format!("{e:?}")));
+            return Ok(());
+        }
+    };
+
+    print_trace(&trace(q_initial, &cavity, wavelength)?);
+    print_stability(&stability(&cavity, q_initial, q_final)?);
 
     Ok(())
 }
 
-/// Step 1: drift through free space L1. ABCD = [1, L; 0, 1].
-fn stage_drift_l1(
+/// Propagates `q` through one element, or short-circuits when the upstream carried no beam.
+fn propagate(
     value: CausalEffect<ComplexBeamParameter<FloatType>>,
-    _state: (),
-    _ctx: Option<()>,
+    matrix: &AbcdMatrix<FloatType>,
 ) -> PropagatingProcess<ComplexBeamParameter<FloatType>, (), ()> {
-    let q = value.into_value().unwrap();
-    let mat_data = vec![1.0, L1, 0.0, 1.0];
-    let mat = AbcdMatrix::new(CausalTensor::new(mat_data, vec![2, 2]).unwrap());
-
-    println!("\n[1] Propagating Drift L1 ({} m)...", L1);
-    let next_q_eff = gaussian_q_propagation(q, &mat);
-    report_beam(
-        next_q_eff.value_cloned().unwrap(),
-        laser_wavelength(),
-        "After Drift L1",
-    );
-
-    PropagatingEffect::pure(next_q_eff.value_cloned().unwrap())
-}
-
-/// Step 2: thermal lens. Focal length from the lens-maker equation; ABCD = [1, 0; -1/f, 1].
-fn stage_thermal_lens(
-    value: CausalEffect<ComplexBeamParameter<FloatType>>,
-    _state: (),
-    _ctx: Option<()>,
-) -> PropagatingProcess<ComplexBeamParameter<FloatType>, (), ()> {
-    let q = value.into_value().unwrap();
-
-    let power_eff = lens_maker(n_lens(), R_LENS, -R_LENS); // Biconvex
-    let power = power_eff.value_cloned().unwrap().value();
-    let f = 1.0 / power;
-
-    println!("\n[2] Transmitting Lens (f = {:.2} m)...", f);
-
-    let mat_data = vec![1.0, 0.0, -1.0 / f, 1.0];
-    let mat = AbcdMatrix::new(CausalTensor::new(mat_data, vec![2, 2]).unwrap());
-
-    let next_q_eff = gaussian_q_propagation(q, &mat);
-    report_beam(
-        next_q_eff.value_cloned().unwrap(),
-        laser_wavelength(),
-        "After Lens",
-    );
-
-    PropagatingEffect::pure(next_q_eff.value_cloned().unwrap())
-}
-
-/// Step 3: drift through free space L2. ABCD = [1, L; 0, 1].
-fn stage_drift_l2(
-    value: CausalEffect<ComplexBeamParameter<FloatType>>,
-    _state: (),
-    _ctx: Option<()>,
-) -> PropagatingProcess<ComplexBeamParameter<FloatType>, (), ()> {
-    let q = value.into_value().unwrap();
-    let mat_data = vec![1.0, L2, 0.0, 1.0];
-    let mat = AbcdMatrix::new(CausalTensor::new(mat_data, vec![2, 2]).unwrap());
-
-    println!("\n[3] Propagating Drift L2 ({} m)...", L2);
-    let next_q_eff = gaussian_q_propagation(q, &mat);
-    report_beam(
-        next_q_eff.value_cloned().unwrap(),
-        laser_wavelength(),
-        "At Mirror",
-    );
-
-    PropagatingEffect::pure(next_q_eff.value_cloned().unwrap())
-}
-
-/// Step 4: reflection off a flat mirror. The beam is confined iff Im(q) > 0; otherwise the
-/// flow enters the error channel as an unstable resonator.
-fn stage_mirror(
-    value: CausalEffect<ComplexBeamParameter<FloatType>>,
-    _state: (),
-    _ctx: Option<()>,
-) -> PropagatingProcess<ComplexBeamParameter<FloatType>, (), ()> {
-    let q = value.into_value().unwrap();
-    if q.value().im > 0.0 {
-        println!("\n[Status] Beam is CONFINED (Im(q) > 0).");
-        PropagatingEffect::pure(q)
-    } else {
-        println!("\n[Status] Beam UNSTABLE (Diffracted away).");
-        PropagatingEffect::from_error(deep_causality_core::CausalityError::new(
-            deep_causality_core::CausalityErrorEnum::Custom("Unstable Resonator".into()),
-        ))
+    let q = match value.into_value() {
+        Some(q) => q,
+        None => return fail("the flow carried no beam parameter"),
+    };
+    match gaussian_q_propagation(q, matrix).value_cloned() {
+        // A physical beam keeps Im(q) > 0. Once that fails the beam has diffracted away and the
+        // flow enters the error channel rather than reporting a spot size for a lost beam.
+        Some(next) if next.value().im > ZERO => PropagatingEffect::pure(next),
+        Some(_) => fail("beam diverged: Im(q) <= 0"),
+        None => fail("q propagation produced no value"),
     }
 }
 
-fn report_beam(q: ComplexBeamParameter<FloatType>, lambda: Wavelength<FloatType>, label: &str) {
-    let w_eff = beam_spot_size(q, lambda);
-    if let Some(w) = w_eff.value() {
-        println!(
-            "    {}: Spot Size w = {:.3} mm, Curvature R = {:.2} m",
-            label,
-            w.value() * 1e3,
-            q.value().norm_sqr() / q.value().re
-        );
+fn fail<T: Default + Clone + core::fmt::Debug>(
+    reason: impl Into<String>,
+) -> PropagatingProcess<T, (), ()> {
+    PropagatingEffect::from_error(deep_causality_core::CausalityError::new(
+        deep_causality_core::CausalityErrorEnum::Custom(reason.into()),
+    ))
+}
+
+/// One optical element of the cavity.
+#[derive(Clone)]
+struct Element {
+    label: &'static str,
+    matrix: AbcdMatrix<FloatType>,
+}
+
+/// The six elements a ray meets on one round trip, in traversal order.
+fn round_trip(focal_length: FloatType) -> Result<Vec<Element>, PhysicsError> {
+    Ok(vec![
+        Element {
+            label: "drift L1",
+            matrix: drift(DRIFT_L1)?,
+        },
+        Element {
+            label: "thermal lens",
+            matrix: thin_lens(focal_length)?,
+        },
+        Element {
+            label: "drift L2",
+            matrix: drift(DRIFT_L2)?,
+        },
+        // The far mirror is flat, so it reflects without focusing: the identity matrix.
+        Element {
+            label: "drift L2 (return)",
+            matrix: drift(DRIFT_L2)?,
+        },
+        Element {
+            label: "thermal lens (return)",
+            matrix: thin_lens(focal_length)?,
+        },
+        Element {
+            label: "drift L1 (return)",
+            matrix: drift(DRIFT_L1)?,
+        },
+    ])
+}
+
+/// Free-space propagation, `[[1, L], [0, 1]]`.
+fn drift(length: FloatType) -> Result<AbcdMatrix<FloatType>, PhysicsError> {
+    matrix(ONE, length, ZERO, ONE)
+}
+
+/// A thin lens, `[[1, 0], [-1/f, 1]]`.
+fn thin_lens(focal_length: FloatType) -> Result<AbcdMatrix<FloatType>, PhysicsError> {
+    matrix(ONE, ZERO, -ONE / focal_length, ONE)
+}
+
+fn matrix(
+    a: FloatType,
+    b: FloatType,
+    c: FloatType,
+    d: FloatType,
+) -> Result<AbcdMatrix<FloatType>, PhysicsError> {
+    CausalTensor::new(vec![a, b, c, d], vec![2, 2])
+        .map(AbcdMatrix::new)
+        .map_err(|e| PhysicsError::DimensionMismatch(format!("2x2 ABCD matrix: {e:?}")))
+}
+
+/// Focal length of the biconvex thermal lens, from the lens-maker equation.
+fn thermal_lens_focal_length() -> Result<FloatType, PhysicsError> {
+    let index = IndexOfRefraction::<FloatType>::new(LENS_INDEX)?;
+    let power = lens_maker(index, LENS_RADIUS, -LENS_RADIUS)
+        .value_cloned()
+        .ok_or_else(|| PhysicsError::NumericalInstability("lens_maker".into()))?;
+    Ok(ONE / power.value())
+}
+
+/// The beam at the exit of each element, for reporting.
+struct Sample {
+    label: &'static str,
+    spot_size: FloatType,
+    curvature: Option<FloatType>,
+}
+
+fn trace(
+    q_initial: ComplexBeamParameter<FloatType>,
+    cavity: &[Element],
+    wavelength: Wavelength<FloatType>,
+) -> Result<Vec<Sample>, PhysicsError> {
+    let mut q = q_initial;
+    let mut samples = Vec::with_capacity(cavity.len() + 1);
+    samples.push(sample("input", q, wavelength)?);
+    for element in cavity {
+        q = gaussian_q_propagation(q, &element.matrix)
+            .value_cloned()
+            .ok_or_else(|| PhysicsError::NumericalInstability("q propagation".into()))?;
+        samples.push(sample(element.label, q, wavelength)?);
+    }
+    Ok(samples)
+}
+
+fn sample(
+    label: &'static str,
+    q: ComplexBeamParameter<FloatType>,
+    wavelength: Wavelength<FloatType>,
+) -> Result<Sample, PhysicsError> {
+    let spot_size = beam_spot_size(q, wavelength)
+        .value()
+        .ok_or_else(|| PhysicsError::NumericalInstability("beam_spot_size".into()))?
+        .value();
+
+    // R = |q|^2 / Re(q). At a waist Re(q) is zero and the wavefront is plane, which has no
+    // finite radius; report that as absent rather than dividing by zero and printing `inf`.
+    let re = q.value().re;
+    let curvature = if Real::abs(re) > EIGENMODE_TOLERANCE {
+        Some(q.value().norm_sqr() / re)
+    } else {
+        None
+    };
+
+    Ok(Sample {
+        label,
+        spot_size,
+        curvature,
+    })
+}
+
+/// What decides whether the cavity is a resonator at all.
+struct Stability {
+    a: FloatType,
+    d: FloatType,
+    m: FloatType,
+    eigenmode_residual: FloatType,
+    stable: bool,
+    marginal: bool,
+    self_reproducing: bool,
+}
+
+fn stability(
+    cavity: &[Element],
+    q_initial: ComplexBeamParameter<FloatType>,
+    q_final: ComplexBeamParameter<FloatType>,
+) -> Result<Stability, PhysicsError> {
+    // ABCD matrices compose against the direction of travel, so the element met first sits
+    // rightmost in the product.
+    let mut round = identity()?;
+    for element in cavity {
+        round = multiply(element.matrix.inner(), &round)?;
+    }
+    let r = round.as_slice();
+    let (a, d) = (r[0], r[3]);
+    let m = (a + d) / TWO;
+    let eigenmode_residual = (q_final.value() - q_initial.value()).norm_sqr();
+
+    Ok(Stability {
+        a,
+        d,
+        m,
+        eigenmode_residual,
+        stable: Real::abs(m) <= ONE + STABILITY_MARGIN,
+        marginal: Real::abs(Real::abs(m) - ONE) <= STABILITY_MARGIN,
+        self_reproducing: eigenmode_residual < EIGENMODE_TOLERANCE,
+    })
+}
+
+fn identity() -> Result<CausalTensor<FloatType>, PhysicsError> {
+    CausalTensor::new(vec![ONE, ZERO, ZERO, ONE], vec![2, 2])
+        .map_err(|e| PhysicsError::DimensionMismatch(format!("2x2 identity: {e:?}")))
+}
+
+fn multiply(
+    lhs: &CausalTensor<FloatType>,
+    rhs: &CausalTensor<FloatType>,
+) -> Result<CausalTensor<FloatType>, PhysicsError> {
+    CausalTensor::ein_sum(&EinSumOp::mat_mul(lhs.clone(), rhs.clone()))
+        .map_err(|e| PhysicsError::DimensionMismatch(format!("ABCD product: {e:?}")))
+}
+
+// -----------------------------------------------------------------------------------------
+// Printing
+// -----------------------------------------------------------------------------------------
+
+fn print_header() {
+    println!("=== Laser Resonator Stability ===");
+    println!("Precision: {}\n", core::any::type_name::<FloatType>());
+}
+
+/// The display boundary: `f64` appears here and nowhere else.
+fn print_input(waist: FloatType, rayleigh: FloatType, focal_length: FloatType) {
+    println!(
+        "Cavity:     flat mirror | {:.1} m | thermal lens | {:.1} m | flat mirror",
+        lower(DRIFT_L1),
+        lower(DRIFT_L2)
+    );
+    println!("Wavelength: {:.1} nm", lower(WAVELENGTH_M * NM_PER_M));
+    println!(
+        "Lens:       f = {:.3} m (biconvex, n = {:.1}, R = {:.1} m)",
+        lower(focal_length),
+        lower(LENS_INDEX),
+        lower(LENS_RADIUS)
+    );
+    println!(
+        "Input beam: w0 = {:.2} mm at a waist, z_R = {:.3} m\n",
+        lower(waist * MM_PER_M),
+        lower(rayleigh)
+    );
+}
+
+fn print_trace(samples: &[Sample]) {
+    println!("--- One full round trip ---");
+    println!("  {:<22} {:>12} {:>14}", "at", "w (mm)", "R (m)");
+    for s in samples {
+        match s.curvature {
+            Some(r) => println!(
+                "  {:<22} {:>12.4} {:>14.4}",
+                s.label,
+                lower(s.spot_size * MM_PER_M),
+                lower(r)
+            ),
+            None => println!(
+                "  {:<22} {:>12.4} {:>14}",
+                s.label,
+                lower(s.spot_size * MM_PER_M),
+                "plane"
+            ),
+        }
+    }
+}
+
+fn print_stability(s: &Stability) {
+    println!("\n--- Stability of the round trip ---");
+    println!(
+        "  round-trip A, D          = {:.6}, {:.6}",
+        lower(s.a),
+        lower(s.d)
+    );
+    println!("  m = (A + D) / 2          = {:.6}", lower(s.m));
+    println!("  stable when -1 <= m <= 1 = {}", s.stable);
+    if s.marginal {
+        println!("  |m| = 1 exactly: the cavity sits on the stability boundary, so it has a");
+        println!("  self-reproducing mode but no margin against lens drift.");
+    }
+    println!(
+        "\n  |q_out - q_in|^2         = {:.2e}   (a stable cavity reproduces its own mode)",
+        lower(s.eigenmode_residual)
+    );
+    println!(
+        "  => {}",
+        if s.self_reproducing {
+            "the round trip returns the beam it started with"
+        } else {
+            "the beam did NOT reproduce"
+        }
+    );
+}
+
+fn print_failure(error: Option<String>) {
+    match error {
+        Some(e) => println!("\nThe beam was lost: {e}"),
+        None => println!("\nThe cavity produced no final beam."),
     }
 }
