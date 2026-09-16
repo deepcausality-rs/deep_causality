@@ -1348,10 +1348,14 @@ dependencies = [
 name = "medicine_examples"
 version = "0.1.0"
 dependencies = [
+ "deep_causality_algebra",
  "deep_causality_calculus",
  "deep_causality_core",
+ "deep_causality_haft",
+ "deep_causality_linear",
  "deep_causality_num",
  "deep_causality_physics",
+ "deep_causality_rand",
  "deep_causality_tensor",
  "deep_causality_topology",
 ]

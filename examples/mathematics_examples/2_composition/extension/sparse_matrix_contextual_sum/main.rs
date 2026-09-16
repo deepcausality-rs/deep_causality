@@ -90,6 +90,7 @@ fn expand_each<const N: usize>(
 
 fn print_functor(original: &CsrMatrix<FloatType>, doubled: &CsrMatrix<FloatType>) {
     println!("=== Higher-Kinded Type (HKT) Operations on CsrMatrix ===");
+    println!("Precision: {}", core::any::type_name::<FloatType>());
     println!("\n--- Functor (fmap) ---");
     println!("Original Matrix:");
     print_matrix(original);

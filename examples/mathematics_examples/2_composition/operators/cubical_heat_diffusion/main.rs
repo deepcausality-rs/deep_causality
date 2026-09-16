@@ -59,6 +59,7 @@ fn main() {
     let manifold: Manifold<CubicalComplex<2, FloatType>, FloatType> =
         Manifold::from_cubical(complex, CausalTensor::from_vec(data, &[cell_count]), 0);
 
+    print_header();
     print_step(0, manifold.data().as_slice(), top_n);
 
     // The Moore neighborhood depends only on the complex, not the field, so precompute it once and
@@ -95,6 +96,11 @@ fn main() {
 // -----------------------------------------------------------------------------------------
 // Printing
 // -----------------------------------------------------------------------------------------
+
+fn print_header() {
+    println!("=== Operators: explicit-Euler heat diffusion on a cubical complex ===");
+    println!("Precision: {}\n", core::any::type_name::<FloatType>());
+}
 
 fn print_step(step: usize, values: &[FloatType], side: usize) {
     println!("== Step {step} ==");

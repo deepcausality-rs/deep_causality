@@ -29,7 +29,7 @@
 mod model;
 mod utils_print;
 
-use model::{ConnectomeError, build_connectome, is_seizing, simulate};
+use model::{build_connectome, is_seizing, simulate};
 use utils_print::{print_baseline, print_header, print_resection_row, print_verdict};
 
 /// Brain regions in the connectome. Region 0 is the seizure focus.
@@ -40,7 +40,7 @@ const N_REGIONS: usize = 10;
 /// parameter all re-run at that precision.
 pub type FloatType = f64;
 
-fn main() -> Result<(), ConnectomeError> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header(N_REGIONS);
 
     // The untreated patient: does this connectome seize?

@@ -65,7 +65,8 @@ fn analytic_sensitivity(theta: FloatType) -> FloatType {
 /// The display boundary: `f64` appears here and nowhere else.
 fn print_header(theta: FloatType) {
     println!("=== Differentiate Under the Integral (the Leibniz bridge) ===\n");
-    println!("I(θ) = ∫₀¹ sin(θ·x) dx   at θ = {}\n", lower(theta));
+    println!("I(θ) = ∫₀¹ sin(θ·x) dx   at θ = {}", lower(theta));
+    println!("Precision: {}\n", core::any::type_name::<FloatType>());
 }
 
 fn print_integral(integral: FloatType, analytic: FloatType) {

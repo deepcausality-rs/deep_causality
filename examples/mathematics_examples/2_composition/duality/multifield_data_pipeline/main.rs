@@ -180,6 +180,7 @@ fn main() {
 
 fn print_header() {
     println!("=== Multifield Data-Pipeline Iso Showcase ===\n");
+    println!("Precision: {}\n", core::any::type_name::<FloatType>());
 }
 
 fn print_shape(underlying: &[usize], grid: [usize; 3]) {

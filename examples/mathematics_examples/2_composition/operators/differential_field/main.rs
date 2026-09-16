@@ -112,6 +112,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 fn print_header() {
     println!("=== Differential Field Example: Heat Equation ===\n");
+    println!("Precision: {}\n", core::any::type_name::<FloatType>());
 }
 
 fn print_start() {

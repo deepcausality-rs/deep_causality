@@ -145,6 +145,7 @@ fn print_header(beta: FloatType) {
     println!("Lattice: {L}x{L}x{L}x{L}");
     println!("Group:   SU(3)");
     println!("Beta:    {:.2}", lower(beta));
+    println!("Precision: {}", core::any::type_name::<FloatType>());
 }
 
 fn print_hot_start() {

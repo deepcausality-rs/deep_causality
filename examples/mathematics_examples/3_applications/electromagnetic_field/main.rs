@@ -143,6 +143,7 @@ fn print_header() {
     println!("--- MAXWELL'S UNIFICATION: The Geometric Gradient ---");
     println!("Goal: Derive E and B fields from a single Vector Potential A.");
     println!("Check: Verify the Lorenz Gauge condition (Divergence = 0).\n");
+    println!("Precision: {}\n", core::any::type_name::<FloatType>());
 }
 
 /// The display boundary: `f64` appears here and nowhere else.

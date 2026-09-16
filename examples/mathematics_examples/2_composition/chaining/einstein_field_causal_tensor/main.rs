@@ -132,6 +132,7 @@ pub(crate) fn print_header() {
     println!("============================================================");
     println!("   Einstein Field Equations with CausalTensor & HKT");
     println!("============================================================");
+    println!("Precision: {}\n", core::any::type_name::<FloatType>());
     println!("This example demonstrates solving the Einstein Field Equations (EFE):");
     println!("  G_uv + Λ * g_uv = κ * T_uv");
     println!();

@@ -148,6 +148,7 @@ fn shown(xs: &[FloatType]) -> Vec<f64> {
 fn print_header() {
     println!("=== Alignment: pairing two structures position by position ===\n");
     println!("a = [1, 2, 3, 4]   b = [10, 20, 30, 40]\n");
+    println!("Precision: {}\n", core::any::type_name::<FloatType>());
 }
 
 fn print_alignment(summed: &[FloatType], paired: &[(FloatType, FloatType)]) {

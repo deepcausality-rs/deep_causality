@@ -142,6 +142,7 @@ fn build_interval_complex() -> SimplicialComplex<FloatType> {
 
 fn print_header() {
     println!("=== Duality: Stokes' theorem as an adjunction (d ⊣ ∂) ===\n");
+    println!("Precision: {}\n", core::any::type_name::<FloatType>());
     println!("  ⟨dω, C⟩ = ⟨ω, ∂C⟩");
     println!("  the derivative of a form over a region, or the form over its boundary\n");
 }

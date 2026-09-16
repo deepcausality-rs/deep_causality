@@ -444,7 +444,8 @@ impl WithZ for CausalMultiVector<FloatType> {
 // ========================================================================================
 
 fn print_header() {
-    println!("--- Geometric Tilt Estimator & Adaptive Gravity Observer ---\n");
+    println!("--- Geometric Tilt Estimator & Adaptive Gravity Observer ---");
+    println!("Precision: {}\n", core::any::type_name::<FloatType>());
     println!(
         "Scenario: {STEPS} samples at {DT} s, rolling about x at {GYRO_RATE} rad/s \
          over steps {TILT_START}..{TILT_END}.\n"

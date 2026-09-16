@@ -29,7 +29,7 @@
 mod model;
 mod utils_print;
 
-use model::{FoldingError, MEMORY_DEPTH, advance, markov_operator, memory_kernels, unfolded_state};
+use model::{MEMORY_DEPTH, advance, markov_operator, memory_kernels, unfolded_state};
 use utils_print::{print_distribution, print_header, print_summary};
 
 /// How many steps of the master equation the run takes.
@@ -43,7 +43,7 @@ const REPORT_EVERY: usize = 3;
 /// distribution recompute at that precision.
 pub type FloatType = f64;
 
-fn main() -> Result<(), FoldingError> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header(TIME_STEPS);
 
     let operator = markov_operator()?;

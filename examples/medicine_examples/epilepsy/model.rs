@@ -16,8 +16,8 @@ use crate::FloatType;
 use deep_causality_algebra::Real;
 use deep_causality_haft::{CoMonad, Foldable};
 use deep_causality_num::{Zero, lift, lift_count};
-use deep_causality_tensor::{CausalTensor, CausalTensorError};
-use deep_causality_topology::{Graph, GraphWitness, TopologyError};
+use deep_causality_tensor::CausalTensor;
+use deep_causality_topology::{Graph, GraphWitness};
 
 // =============================================================================
 // Dynamics
@@ -94,7 +94,7 @@ pub type Connectome = Graph<RegionState>;
 pub fn build_connectome(
     regions: usize,
     resected: Option<usize>,
-) -> Result<Connectome, ConnectomeError> {
+) -> Result<Connectome, Box<dyn std::error::Error>> {
     let spread = lift::<FloatType>(FREQUENCY_SPREAD);
     let base = lift::<FloatType>(BASE_FREQUENCY);
     let half = lift::<FloatType>(0.5);
@@ -226,38 +226,4 @@ pub fn synchronisation(brain: &Connectome) -> FloatType {
 /// Whether a synchronisation reading counts as a seizure.
 pub fn is_seizing(sync: FloatType) -> bool {
     sync > lift::<FloatType>(SEIZURE_THRESHOLD)
-}
-
-// =============================================================================
-// Errors
-// =============================================================================
-
-/// The two ways building a connectome can fail.
-#[derive(Debug)]
-pub enum ConnectomeError {
-    Payload(CausalTensorError),
-    Wiring(TopologyError),
-}
-
-impl core::fmt::Display for ConnectomeError {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        match self {
-            Self::Payload(e) => write!(f, "connectome payload: {e}"),
-            Self::Wiring(e) => write!(f, "connectome wiring: {e}"),
-        }
-    }
-}
-
-impl std::error::Error for ConnectomeError {}
-
-impl From<CausalTensorError> for ConnectomeError {
-    fn from(e: CausalTensorError) -> Self {
-        Self::Payload(e)
-    }
-}
-
-impl From<TopologyError> for ConnectomeError {
-    fn from(e: TopologyError) -> Self {
-        Self::Wiring(e)
-    }
 }

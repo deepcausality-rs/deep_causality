@@ -162,6 +162,7 @@ fn print_header() {
     println!("============================================================");
     println!("   GRMHD: General Relativistic Magnetohydrodynamics");
     println!("============================================================");
+    println!("Precision: {}\n", core::any::type_name::<FloatType>());
 }
 
 fn print_step_one() {
