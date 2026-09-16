@@ -3,173 +3,287 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_algebra::DivisionAlgebra;
+//! Model layer for the Chern insulator: the Qi-Wu-Zhang d-vector as a differentiable field, the
+//! Berry curvature built from its exact derivatives, and the two ways of integrating it.
+//!
+//! Every constant is declared at the working type through `const_scalar_from_int!`, so the
+//! compiler resolves them against the alias in `main`.
+
+use crate::FloatType;
+use deep_causality_algebra::{Real, RealField};
 use deep_causality_calculus::{DifferentiableField, DifferentiateFieldExt, Scalar, quadrature};
-use deep_causality_num::{Lift, lift};
-use deep_causality_num_complex::Complex64;
-use std::f64::consts::PI;
+use deep_causality_num::{const_scalar_from_int, lift_usize};
+use deep_causality_num_complex::Complex;
 
-// ----------------------------------------------------------------
-// Physics Model: Qi-Wu-Zhang (QWZ) Chern Insulator
-// ----------------------------------------------------------------
-// H(k) = sin(kx)*sx + sin(ky)*sy + (u + cos(kx) + cos(ky))*sz
-// This is a 2-band Hamiltonian. The lower band has non-trivial topology depending on 'u'.
-// Topological Phase: |u| < 2 (Chern = +/- 1)
-// Trivial Phase:     |u| > 2 (Chern = 0)
+// =============================================================================
+// The small numbers the model is written with
+// =============================================================================
 
-/// QWZ Model Hamiltonian
-pub struct QWZModel {
-    u: f64, // Mass parameter
-}
+pub const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+pub const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
+pub const THREE: FloatType = const_scalar_from_int!(FloatType, 3);
 
-impl QWZModel {
-    pub fn new(u: f64) -> Self {
-        Self { u }
-    }
+// =============================================================================
+// Resolution
+// =============================================================================
 
-    /// Returns the d-vector for the Hamiltonian H = d . sigma
-    pub(crate) fn d_vector(&self, kx: f64, ky: f64) -> (f64, f64, f64) {
-        let dx = kx.sin();
-        let dy = ky.sin();
-        let dz = self.u + kx.cos() + ky.cos();
-        (dx, dy, dz)
-    }
+/// Composite-Simpson panels per axis. Simpson's rule needs an even count.
+pub const N_QUADRATURE: usize = 100;
 
-    /// Returns the normalized spinor for the LOWER band at momentum k
-    /// Using the standard formula for 2-level systems
-    pub(crate) fn lower_band_spinor(&self, kx: f64, ky: f64) -> (Complex64, Complex64) {
-        let (dx, dy, dz) = self.d_vector(kx, ky);
-        let d = (dx * dx + dy * dy + dz * dz).sqrt();
+/// Brillouin-zone grid for the lattice cross-check.
+pub const N_WILSON: usize = 100;
 
-        if d < 1e-10 {
-            return (Complex64::new(1.0, 0.0), Complex64::new(0.0, 0.0));
-        }
+/// Below this the d-vector is treated as having no direction, which happens only where the gap
+/// closes and the Berry curvature is undefined anyway.
+pub fn degeneracy_floor<S: Scalar>() -> S {
+    let ten_billion = lift_usize::<S>(10_000_000_000);
 
-        // Spherical angles of d-vector
-        let cos_theta = dz / d;
-        let _sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
-        let phi = dy.atan2(dx);
-
-        // Lower band spinor: |-> = [sin(theta/2), -cos(theta/2) * e^(i*phi)]
-        // Using half-angle formulas
-        let half_theta = (cos_theta).acos() / 2.0;
-
-        let up = Complex64::new(half_theta.sin(), 0.0);
-        let down = Complex64::new(-half_theta.cos() * phi.cos(), -half_theta.cos() * phi.sin());
-
-        // Already normalized by construction
-        (up, down)
-    }
-}
-
-/// Compute overlap <u1|u2> between two spinors
-pub fn overlap(s1: (Complex64, Complex64), s2: (Complex64, Complex64)) -> Complex64 {
-    s1.0.conjugate() * s2.0 + s1.1.conjugate() * s2.1
+    S::one() / ten_billion
 }
 
 // =============================================================================
-// Tangent-functor Berry curvature + nested-quadrature Chern number
+// The field
 // =============================================================================
 
-/// One component of the QWZ d-vector `d(k) = (sin kx, sin ky, u + cos kx + cos ky)`, written as a
-/// differentiable field of `(kx, ky)` so the tangent functor supplies `∂d/∂k` with no finite
-/// differences.
-struct DComponent {
-    comp: usize,
-    u: f64,
+/// Where each argument of [`DComponent`] sits.
+///
+/// The mass is an argument rather than a field of the struct, which is the point. A struct that
+/// stored `u` at one concrete type would have to widen it inside `run`, and the model would then
+/// be evaluated at whatever precision `u` was written down in no matter what `S` the caller asked
+/// for. Passing it in leaves every number in the model at the caller's precision.
+pub const KX: usize = 0;
+pub const KY: usize = 1;
+pub const MASS: usize = 2;
+
+/// One component of the Qi-Wu-Zhang d-vector,
+///
+/// ```text
+/// d(k) = (sin kx,  sin ky,  u + cos kx + cos ky)
+/// ```
+///
+/// written as a differentiable field so the tangent functor supplies `∂d/∂k` exactly, with no
+/// finite differences and no step size to choose.
+pub struct DComponent {
+    pub component: usize,
 }
 
-impl DifferentiableField<2> for DComponent {
-    fn run<S: Scalar>(&self, k: &[S; 2]) -> S {
-        let (kx, ky) = (k[0], k[1]);
-        match self.comp {
-            0 => kx.sin(),
-            1 => ky.sin(),
-            _ => lift::<S>(self.u) + kx.cos() + ky.cos(),
+impl DifferentiableField<3> for DComponent {
+    fn run<S: Scalar>(&self, at: &[S; 3]) -> S {
+        match self.component {
+            0 => Real::sin(at[KX]),
+            1 => Real::sin(at[KY]),
+            _ => at[MASS] + Real::cos(at[KX]) + Real::cos(at[KY]),
         }
     }
 }
 
-/// Berry curvature `Ω(kx, ky)` of the lower band of `H = d·σ`, in closed form
-/// `Ω = −(1/2|d|³) · d·(∂_kx d × ∂_ky d)`. The first derivatives come from the tangent functor.
-pub(crate) fn berry_curvature<S: Scalar>(u: f64, kx: S, ky: S) -> S {
-    let comps = [
-        DComponent { comp: 0, u },
-        DComponent { comp: 1, u },
-        DComponent { comp: 2, u },
+/// The three components, as fields.
+pub fn d_components() -> [DComponent; 3] {
+    [
+        DComponent { component: 0 },
+        DComponent { component: 1 },
+        DComponent { component: 2 },
+    ]
+}
+
+/// The d-vector itself, evaluated at the caller's precision.
+pub fn d_vector<S: Scalar>(u: S, kx: S, ky: S) -> [S; 3] {
+    let at = [kx, ky, u];
+    let components = d_components();
+
+    [
+        components[0].run(&at),
+        components[1].run(&at),
+        components[2].run(&at),
+    ]
+}
+
+// =============================================================================
+// Berry curvature
+// =============================================================================
+
+/// The Berry curvature of the lower band of `H = d·σ`, in closed form:
+///
+/// ```text
+/// Ω = −(1 / 2|d|³) · d · (∂_kx d × ∂_ky d)
+/// ```
+///
+/// Both first derivatives come from the tangent functor, so they are exact. The mass rides in the
+/// third slot of the point and is differentiated with respect to as well; only the two momentum
+/// columns of the gradient are read, so the extra slot costs a derivative nobody looks at and buys
+/// a model with no concrete type written into it.
+pub fn berry_curvature<S: Scalar>(u: S, kx: S, ky: S) -> S {
+    let at = [kx, ky, u];
+    let components = d_components();
+
+    let d = [
+        components[0].run(&at),
+        components[1].run(&at),
+        components[2].run(&at),
     ];
-    let k = [kx, ky];
-    let d = [comps[0].run(&k), comps[1].run(&k), comps[2].run(&k)];
-    let g0 = comps[0].gradient(&k);
-    let g1 = comps[1].gradient(&k);
-    let g2 = comps[2].gradient(&k);
-    let dkx = [g0[0], g1[0], g2[0]]; // ∂_kx d
-    let dky = [g0[1], g1[1], g2[1]]; // ∂_ky d
+
+    let g0 = components[0].gradient(&at);
+    let g1 = components[1].gradient(&at);
+    let g2 = components[2].gradient(&at);
+
+    let d_kx = [g0[KX], g1[KX], g2[KX]];
+    let d_ky = [g0[KY], g1[KY], g2[KY]];
+
     let cross = [
-        dkx[1] * dky[2] - dkx[2] * dky[1],
-        dkx[2] * dky[0] - dkx[0] * dky[2],
-        dkx[0] * dky[1] - dkx[1] * dky[0],
+        d_kx[1] * d_ky[2] - d_kx[2] * d_ky[1],
+        d_kx[2] * d_ky[0] - d_kx[0] * d_ky[2],
+        d_kx[0] * d_ky[1] - d_kx[1] * d_ky[0],
     ];
+
     let triple = d[0] * cross[0] + d[1] * cross[1] + d[2] * cross[2];
-    let norm2 = d[0] * d[0] + d[1] * d[1] + d[2] * d[2];
-    let norm3 = norm2 * norm2.sqrt();
-    let half = lift::<S>(0.5);
-    -(half * triple / norm3)
+    let norm_squared = d[0] * d[0] + d[1] * d[1] + d[2] * d[2];
+    let norm_cubed = norm_squared * Real::sqrt(norm_squared);
+
+    let two = S::one() + S::one();
+
+    -(triple / (two * norm_cubed))
 }
 
-/// Chern number `C = (1/2π) ∫∫_BZ Ω dkx dky`, by nested composite-Simpson `quadrature` of the
-/// tangent-functor Berry curvature. Precision-generic: instantiate at `f64` or `Float106`.
-pub(crate) fn chern_quadrature<S: Scalar>(u: f64, n: usize) -> S {
-    let pi = lift::<S>(PI);
-    let neg_pi = lift::<S>(-PI);
-    let two_pi = lift::<S>(2.0 * PI);
+/// The Chern number by nested quadrature,
+///
+/// ```text
+/// C = (1 / 2π) ∫∫ Ω dkx dky
+/// ```
+///
+/// over the Brillouin zone. The inner `quadrature` integrates along `ky` at a fixed `kx` and the
+/// outer one integrates that, so the two-dimensional integral is the one-dimensional operator
+/// applied to itself rather than a second routine written for the purpose.
+pub fn chern_quadrature<S: Scalar>(u: S, panels: usize) -> S {
+    let pi = S::pi();
+    let two = S::one() + S::one();
+
     let integral = quadrature(
-        |kx: S| quadrature(|ky: S| berry_curvature(u, kx, ky), neg_pi, pi, n),
-        neg_pi,
+        |kx: S| quadrature(|ky: S| berry_curvature(u, kx, ky), -pi, pi, panels),
+        -pi,
         pi,
-        n,
+        panels,
     );
-    integral / two_pi
+
+    integral / (two * pi)
 }
 
-/// Chern number by the Fukui–Hatsugai–Suzuki lattice method: the gauge-invariant sum of Berry
-/// fluxes `Im ln(Wilson loop)` over a Brillouin-zone grid. This is the prior accumulation the
-/// quadrature result is checked against; it runs at `f64` (the spinors are `Complex64`).
-pub(crate) fn chern_wilson(model: &QWZModel, n: usize) -> f64 {
-    let dk = 2.0 * PI / (n as f64);
-    let mut total_flux = 0.0;
-    for i in 0..n {
-        for j in 0..n {
-            let kx = -PI + (i as f64) * dk;
-            let ky = -PI + (j as f64) * dk;
-            let psi_00 = model.lower_band_spinor(kx, ky);
-            let psi_10 = model.lower_band_spinor(kx + dk, ky);
-            let psi_11 = model.lower_band_spinor(kx + dk, ky + dk);
-            let psi_01 = model.lower_band_spinor(kx, ky + dk);
-            let wilson = overlap(psi_00, psi_10)
-                * overlap(psi_10, psi_11)
-                * overlap(psi_11, psi_01)
-                * overlap(psi_01, psi_00);
-            total_flux += wilson.im.atan2(wilson.re);
+// =============================================================================
+// The lattice cross-check
+// =============================================================================
+
+/// The normalised spinor of the lower band at one momentum,
+///
+/// ```text
+/// |−⟩ = ( sin(θ/2),  −cos(θ/2) e^{iφ} )
+/// ```
+///
+/// where `θ` and `φ` are the polar angles of the d-vector.
+///
+/// This half of the example asks for `RealField` on top of `Scalar`, because it builds `Complex`
+/// numbers and a complex number needs a field underneath it. `Scalar` alone admits the dual numbers
+/// the tangent functor runs on, and those are not a field. The quadrature route keeps the weaker
+/// bound, which is exactly what lets it be differentiated through.
+pub fn lower_band_spinor<S: Scalar + RealField>(u: S, kx: S, ky: S) -> (Complex<S>, Complex<S>) {
+    let d = d_vector(u, kx, ky);
+    let magnitude = Real::sqrt(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
+
+    if magnitude < degeneracy_floor::<S>() {
+        return (
+            Complex::new(S::one(), S::zero()),
+            Complex::new(S::zero(), S::zero()),
+        );
+    }
+
+    let two = S::one() + S::one();
+    let half_theta = Real::acos(d[2] / magnitude) / two;
+    let phi = Real::atan2(d[1], d[0]);
+
+    let up = Complex::new(Real::sin(half_theta), S::zero());
+    let down = Complex::new(
+        -Real::cos(half_theta) * Real::cos(phi),
+        -Real::cos(half_theta) * Real::sin(phi),
+    );
+
+    (up, down)
+}
+
+/// The overlap `⟨a|b⟩` of two spinors.
+pub fn overlap<S: Scalar + RealField>(
+    a: (Complex<S>, Complex<S>),
+    b: (Complex<S>, Complex<S>),
+) -> Complex<S> {
+    conjugate(a.0) * b.0 + conjugate(a.1) * b.1
+}
+
+fn conjugate<S: Scalar + RealField>(z: Complex<S>) -> Complex<S> {
+    Complex::new(z.re, -z.im)
+}
+
+/// The Chern number by the Fukui–Hatsugai–Suzuki lattice method: the sum of Berry fluxes
+/// `Im ln W` over a Brillouin-zone grid, where `W` is the Wilson loop around one plaquette.
+///
+/// It is the independent check on the quadrature above. The two routes share the d-vector and
+/// nothing else: this one never differentiates, and the other never forms a spinor. Agreement
+/// between them is therefore worth something, which is why the run prints both.
+pub fn chern_wilson<S: Scalar + RealField>(u: S, grid: usize) -> S {
+    let pi = S::pi();
+    let two = S::one() + S::one();
+    let steps = lift_usize::<S>(grid);
+    let dk = two * pi / steps;
+
+    let mut total_flux = S::zero();
+
+    for i in 0..grid {
+        for j in 0..grid {
+            let kx = -pi + lift_usize::<S>(i) * dk;
+            let ky = -pi + lift_usize::<S>(j) * dk;
+
+            let corner_00 = lower_band_spinor(u, kx, ky);
+            let corner_10 = lower_band_spinor(u, kx + dk, ky);
+            let corner_11 = lower_band_spinor(u, kx + dk, ky + dk);
+            let corner_01 = lower_band_spinor(u, kx, ky + dk);
+
+            let wilson = overlap(corner_00, corner_10)
+                * overlap(corner_10, corner_11)
+                * overlap(corner_11, corner_01)
+                * overlap(corner_01, corner_00);
+
+            total_flux += Real::atan2(wilson.im, wilson.re);
         }
     }
-    total_flux / (2.0 * PI)
+
+    total_flux / (two * pi)
 }
 
-/// Finiteness at the working precision, kept generic via the `Scalar` bound.
-pub(crate) fn finite<S: Scalar>(x: S) -> bool {
+// =============================================================================
+// Reading the answer
+// =============================================================================
+
+/// Finiteness at the working precision.
+pub fn finite<S: Scalar>(x: S) -> bool {
     x.is_finite()
 }
 
-/// Nearest integer in the small Chern range `{−3 … 3}`, without needing `Float::round` on the
-/// concrete scalar (so it stays precision-generic).
-pub(crate) fn nearest_int<S: Scalar>(x: S) -> i32 {
-    let half = lift::<S>(0.5);
-    for c in -3..=3 {
-        let cc = c.lift::<S>();
-        if (x - cc).abs() < half {
-            return c;
+/// The nearest integer within the small range a Chern number of this model can take.
+///
+/// Written as a search over the candidates rather than a call to `round`, so it asks nothing of the
+/// scalar beyond subtraction and comparison and stays available at every precision.
+pub fn nearest_chern_number<S: Scalar>(x: S) -> i32 {
+    let two = S::one() + S::one();
+    let half = S::one() / two;
+
+    for candidate in -3i32..=3 {
+        if Real::abs(x - integer_scalar::<S>(candidate)) < half {
+            return candidate;
         }
     }
+
     0
+}
+
+/// A small signed integer at the working precision.
+pub fn integer_scalar<S: Scalar>(n: i32) -> S {
+    let magnitude = lift_usize::<S>(n.unsigned_abs() as usize);
+
+    if n < 0 { -magnitude } else { magnitude }
 }

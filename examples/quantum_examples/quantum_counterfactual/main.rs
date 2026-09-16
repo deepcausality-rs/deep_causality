@@ -3,142 +3,166 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! # Quantum Counterfactual: The Dead Qubit
+//! # A quantum counterfactual: what the decoder was reading
 //!
-//! Demonstrates quantum error correction via history-aware state management.
+//! A qubit on its own cannot be error-checked. Every measurement that would reveal whether it
+//! flipped also reveals `α` and `β`, and destroys the superposition being protected. The way out
+//! is to spread one logical qubit across three physical ones,
 //!
-//! ## Key Concepts
-//! - **Error Detection**: Syndrome measurement identifies bit-flip errors
-//! - **State Rewind**: Pop corrupted states from history to "time travel"
-//! - **Error Correction**: Apply corrective gate after rewind
+//! ```text
+//! α|0⟩ + β|1⟩   →   α|000⟩ + β|111⟩
+//! ```
 //!
-//! The episode is one `CausalFlow` pipeline: the quantum history rides the state channel,
-//! each step is a named stage, and the value channel carries the "error detected" flag.
+//! and then ask only about the *relationship* between them. `⟨Z₀Z₁⟩` answers whether two qubits
+//! disagree, and its value is `+1` or `−1` whatever `α` and `β` are, so it reports an error without
+//! reporting the state. Two such checks name which of the three qubits flipped, and applying `X`
+//! there undoes it exactly.
+//!
+//! That is the whole of the three-qubit repetition code, and it is what this run performs: a real
+//! gate, a real pair of parity measurements, and a correction chosen by a decoder rather than
+//! written down in advance.
+//!
+//! # The counterfactual
+//!
+//! The recovery is caused by the syndrome. Nothing else reaches the decoder, so if the syndrome had
+//! said something else the decoder would have acted on that instead — and the run can be made to
+//! show it.
+//!
+//! [`CausalFlow::alternate_value_if`] is Pearl's do-operator. It substitutes the value the
+//! measurement produced with the value an intervention forces, and records the substitution.
+//! The two pipelines below are the same four steps and differ by that one line:
+//!
+//! ```text
+//! observed        encode → flip → measure →                    recover
+//! counterfactual  encode → flip → measure → do(syndrome := q0) → recover
+//! ```
+//!
+//! Both recoveries run. One restores the state and one destroys it, and the difference is
+//! attributable to the substituted value because everything else about the two runs is identical.
+//!
+//! # What the run does
+//!
+//! ```text
+//! bind                 each stage, threading the register through the state channel
+//! fold                 amplitudes → a parity, and amplitudes → a fidelity
+//! alternate_value_if   the intervention, as the do-operator
+//! ```
 
-use deep_causality_algebra::DivisionAlgebra;
+mod model;
+mod utils_print;
+
 use deep_causality_core::{
-    CausalEffect, CausalEffectPropagationProcess, CausalFlow, PropagatingProcess,
+    CausalEffect, CausalEffectPropagationProcess, CausalFlow, CausalityError, PropagatingProcess,
 };
-use deep_causality_multivector::{HilbertState, Metric};
-use deep_causality_num_complex::Complex;
+use deep_causality_multivector::HilbertState;
+use deep_causality_num::Float106;
+use model::{
+    FLIPPED_QUBIT, Syndrome, amplitudes, bit_flip, encode, fidelity, measure_syndrome, recover,
+};
+use utils_print::{
+    print_encoding, print_error, print_header, print_outcome, print_parities, print_recovery,
+};
 
-/// Switch this alias to `f32` for low precision, `f64` for standard precision,
-/// or `Float106` for high precision.
-pub type FloatType = f64;
+/// The working scalar. Switch it to `f32`, `f64` or `deep_causality_num::BFloat16`; the amplitudes,
+/// the parities and the fidelities all recompute at that precision.
+///
+/// It sits at [`Float106`] by default on purpose. A hard-coded `f64` anywhere in the program is
+/// invisible while the alias *is* `f64`, and shows up here as a compile error the moment the two
+/// types differ.
+pub type FloatType = Float106;
 
-/// Holds the history of quantum states for counterfactual debugging.
-/// Each state represents a snapshot at a different point in time.
-#[derive(Debug, Clone, Default)]
-struct QuantumHistory {
-    states: Vec<HilbertState<FloatType>>,
-}
+/// The register as it travels through the pipeline.
+type Register = HilbertState<FloatType>;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("=== The Dead Qubit: Time-Travel Debugging ===\n");
+    print_header();
 
-    // 1. Initial State: |0> + |1> (Superposition)
-    let metric = Metric::Euclidean(1); // 1 Qubit approx
-    let psi_0 = vec![Complex::new(0.707, 0.0), Complex::new(0.707, 0.0)];
-    let initial_state =
-        HilbertState::<FloatType>::new(psi_0, metric).expect("Failed to create state");
+    // One logical qubit, spread across three.
+    let (alpha, beta) = amplitudes();
+    let protected = encode(alpha, beta)?;
+    print_encoding(&protected);
 
-    let history = QuantumHistory {
-        states: vec![initial_state],
-    };
+    // The error: a real X gate on one register, which the decoder is not told about.
+    let corrupted = bit_flip(&protected, FLIPPED_QUBIT)?;
+    print_error(&protected, &corrupted, FLIPPED_QUBIT);
+    print_parities(&protected, &corrupted);
 
-    // The error-correction episode as one CausalFlow pipeline. The quantum history is the
-    // state channel; each step binds the next "error detected" flag and may rewrite history.
-    let result = CausalFlow::process(history)
-        .bind(stage_apply_gate)
-        .bind(stage_measure_syndrome)
-        .bind(stage_correct)
+    // The observed run: measure the syndrome, and recover from what it says.
+    let observed = CausalFlow::process(corrupted.clone())
+        .bind(stage_measure)
+        .bind(stage_recover)
         .into_process();
 
-    // Verification: access final state from the process struct.
-    let final_state_struct = result.state();
-    let final_quantum_state = final_state_struct.states.last().unwrap();
-    let prob_0 = final_quantum_state.as_inner().data()[0].norm_sqr();
+    // The counterfactual: the same four steps, with the syndrome the decoder reads replaced by the
+    // one an intervention forces. `alternate_value_if` is the do-operator, and it is the only
+    // difference between this pipeline and the one above.
+    let intervened = CausalFlow::process(corrupted.clone())
+        .bind(stage_measure)
+        .alternate_value_if(Syndrome::is_error, |_| Syndrome::NAMES_QUBIT_0)
+        .bind(stage_recover)
+        .into_process();
 
-    println!("\nFinal System State:");
-    println!("  History Length: {}", final_state_struct.states.len());
-    println!("  P(|0>) = {:.4}", prob_0);
+    let observed_state = observed.state();
+    let intervened_state = intervened.state();
 
-    if prob_0 > 0.9 {
-        println!("[SUCCESS] Qubit is alive and corrected.");
-    } else {
-        println!("[FAILURE] Qubit is dead.");
-    }
+    print_recovery(
+        "observed",
+        measure_syndrome(&corrupted),
+        observed_state,
+        fidelity(&protected, observed_state),
+    );
+    print_recovery(
+        "do(syndrome := qubit 0)",
+        Syndrome::NAMES_QUBIT_0,
+        intervened_state,
+        fidelity(&protected, intervened_state),
+    );
+
+    print_outcome(
+        fidelity(&protected, observed_state),
+        fidelity(&protected, intervened_state),
+        fidelity(&protected, &corrupted),
+    );
 
     Ok(())
 }
 
-/// Step 1: apply a gate that drifts the qubit into a bit-flip error state |1>.
-fn stage_apply_gate(
-    _value: CausalEffect<()>,
-    mut hist: QuantumHistory,
+/// Measures both parity checks and puts the syndrome on the value channel.
+///
+/// The register itself rides the state channel untouched, which is the point of measuring parities
+/// rather than amplitudes: the stage learns whether two qubits disagree and learns nothing else.
+fn stage_measure(
+    _previous: CausalEffect<()>,
+    register: Register,
     ctx: Option<()>,
-) -> PropagatingProcess<bool, QuantumHistory, ()> {
-    println!("[t=1] Applying Quantum Gate...");
+) -> PropagatingProcess<Syndrome, Register, ()> {
+    let syndrome = measure_syndrome(&register);
+    let next = CausalEffectPropagationProcess::pure(syndrome);
 
-    // Simulate a drift to an error state |1> (flipped from the desired |0>).
-    let bad_psi = vec![Complex::new(0.01, 0.0), Complex::new(0.99, 0.0)];
-    let bad_state = HilbertState::<FloatType>::new(bad_psi, Metric::Euclidean(1)).unwrap();
-    hist.states.push(bad_state);
-
-    // No error detected yet.
-    let next = CausalEffectPropagationProcess::pure(false);
-    CausalEffectPropagationProcess::with_state(next, hist, ctx)
+    CausalEffectPropagationProcess::with_state(next, register, ctx)
 }
 
-/// Step 2: measure the syndrome. Raise the error flag if P(|1>) is dominant.
-fn stage_measure_syndrome(
-    prev_val_effect: CausalEffect<bool>,
-    hist: QuantumHistory,
+/// Applies whatever correction the syndrome on the value channel calls for.
+///
+/// It reads the syndrome and nothing else, which is what makes the intervention above meaningful:
+/// substituting that value is substituting everything the decoder has to go on.
+fn stage_recover(
+    syndrome: CausalEffect<Syndrome>,
+    register: Register,
     ctx: Option<()>,
-) -> PropagatingProcess<bool, QuantumHistory, ()> {
-    println!("[t=2] Measuring Syndrome...");
-    let prev_val = prev_val_effect.into_value().unwrap_or(false);
+) -> PropagatingProcess<Syndrome, Register, ()> {
+    let syndrome = syndrome.into_value().unwrap_or(Syndrome::CLEAN);
 
-    let current_state = hist.states.last().unwrap();
-    let prob_1 = current_state.as_inner().data()[1].norm_sqr();
-
-    if prob_1 > 0.9 {
-        println!("[ALARM] Bit Flip Error Detected! P(|1>) = {:.4}", prob_1);
-        let next = CausalEffectPropagationProcess::pure(true);
-        return CausalEffectPropagationProcess::with_state(next, hist, ctx);
+    match recover(&register, syndrome) {
+        Ok(corrected) => {
+            let next = CausalEffectPropagationProcess::pure(syndrome);
+            CausalEffectPropagationProcess::with_state(next, corrected, ctx)
+        }
+        Err(e) => {
+            let failed = CausalEffectPropagationProcess::from_error(CausalityError::new(
+                deep_causality_core::CausalityErrorEnum::Custom(format!("{e}")),
+            ));
+            CausalEffectPropagationProcess::with_state(failed, register, ctx)
+        }
     }
-
-    let next = CausalEffectPropagationProcess::pure(prev_val);
-    CausalEffectPropagationProcess::with_state(next, hist, ctx)
-}
-
-/// Step 3: counterfactual correction. On a detected error, rewind history to t=0 and
-/// re-apply the correct |0> state (an X gate in this metaphor).
-fn stage_correct(
-    error_detected_effect: CausalEffect<bool>,
-    mut hist: QuantumHistory,
-    ctx: Option<()>,
-) -> PropagatingProcess<bool, QuantumHistory, ()> {
-    let error_detected = error_detected_effect.into_value().unwrap_or(false);
-
-    if error_detected {
-        println!("[t=3] Initiating Post-Selection / Rewind...");
-
-        // "Rewind" to t=0 (pop the bad state).
-        hist.states.pop();
-        println!("[t=3] History Rewound. State restored to t=0.");
-
-        // Force the qubit back to |0>.
-        let corrected_psi = vec![Complex::new(0.99, 0.0), Complex::new(0.01, 0.0)];
-        let corrected_state =
-            HilbertState::<FloatType>::new(corrected_psi, Metric::Euclidean(1)).unwrap();
-        hist.states.push(corrected_state);
-        println!("[t=4] Applied Correction (X Gate).");
-
-        let next = CausalEffectPropagationProcess::pure(false); // Error cleared
-        return CausalEffectPropagationProcess::with_state(next, hist, ctx);
-    }
-
-    let next = CausalEffectPropagationProcess::pure(error_detected);
-    CausalEffectPropagationProcess::with_state(next, hist, ctx)
 }

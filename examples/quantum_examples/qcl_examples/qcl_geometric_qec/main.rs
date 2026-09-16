@@ -3,121 +3,114 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! The QCL code path on the toric code.
+//! # The QCL code path on the toric code, verified exactly
 //!
-//! `validate` takes a chain complex and runs four exact checks over it:
+//! Kitaev's toric code is a lattice, read as a code. Put a qubit on every edge of a square torus,
+//! take the faces as `Z` checks and the vertices as `X` checks, and the number of logical qubits
+//! you get is `β₁`, the first Betti number — the count of independent loops the surface has. The
+//! code's structure is the surface's topology, and nothing else.
 //!
-//!   * `derive_code`: `n` from the 1-cells, `k` from `β₁` over 𝔽₂, the Z checks from the columns
-//!     of `∂₂` and the X checks from the columns of `δ₀`;
-//!   * `check_ldpc_weights`: both weights of both check matrices against a declared bound;
-//!   * `check_class_invariance`: `Z̄`, `S̄` and `T̄` act on the homology class rather than on the
-//!     representative, decided over the code space (Haruna, arXiv:2511.15224, Eq. 3.20);
-//!   * `check_clifford_action`: `H̄` swaps the logical Paulis, decided by a symplectic tableau.
+//! That is what makes this example exact. `validate` runs four checks over the chain complex:
 //!
-//! Every verdict is an 𝔽₂ or rational computation over supports. Nothing here is simulated: the
-//! in-process simulator caps at 24 qubits and this code has 32, so a state-vector check could not
-//! reach it, and the exact predicates do not need one.
+//! ```text
+//! derive_code              n from the 1-cells, k from β₁ over 𝔽₂,
+//!                          Z checks from the columns of ∂₂, X checks from the columns of δ₀
+//! check_ldpc_weights       both weights of both check matrices, against a declared bound
+//! check_class_invariance   Z̄, S̄ and T̄ act on the homology class, not the representative
+//! check_clifford_action    H̄ swaps the logical Paulis, by a symplectic tableau
+//! ```
+//!
+//! Every verdict is an 𝔽₂ or rational computation over supports. Nothing here is simulated, and
+//! nothing could be: the in-process simulator caps at 24 qubits and this code has 32, so a
+//! state-vector check could not reach it. The exact predicates do not need one.
+//!
+//! # A check that rejects
+//!
+//! The run checks the LDPC weights twice: once against a bound the code meets and once against one
+//! it does not. A validation suite that only ever accepts says nothing about whether it would
+//! notice, so the second bound is there to make the first one worth reading, and the rejection
+//! names the offending generator and its margin.
 
 mod constants;
 mod model;
+mod utils_print;
 
 use deep_causality_homology::ChainComplex;
+use deep_causality_num::Float106;
 use deep_causality_quantum::{CheckVerdict, QclBuilder, check_ldpc_weights, derive_code};
 
 use crate::constants::{LDPC_BOUND, LDPC_BOUND_TOO_TIGHT};
 use crate::model::square_torus;
+use utils_print::{
+    print_complex, print_derived_code, print_header, print_outcome, print_rejection, print_stages,
+    print_structural_checks, print_weights,
+};
 
-/// The real working type; only the lattice complex's coordinates and the report margins carry it,
-/// since every check on the code is exact over 𝔽₂. Switch it to
-/// `f32`, `f64`, or `Float106` to define the precision level.
-pub type FloatType = f64;
+/// The working scalar. Switch it to `f32`, `f64` or `deep_causality_num::BFloat16`.
+///
+/// It carries less here than in most of these examples, and that is the point: every check on the
+/// code is exact over 𝔽₂, so the scalar reaches only the lattice's coordinates and the margins the
+/// reports record. A verdict that moved when the alias moved would mean a predicate had stopped
+/// being exact.
+///
+/// It sits at [`Float106`] by default on purpose. A hard-coded `f64` anywhere in the program is
+/// invisible while the alias *is* `f64`, and shows up here as a compile error the moment the two
+/// types differ.
+pub type FloatType = Float106;
 
 /// The count working type.
 pub type NumberType = u64;
 
-fn main() {
-    println!("=== QCL code path: the [[32, 2]] toric code, verified exactly ===\n");
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    print_header();
 
     let complex = square_torus();
-    println!(
-        "[subject] square torus, {} vertices, {} edges, {} faces",
+    print_complex(
         complex.num_cells(0),
         complex.num_cells(1),
-        complex.num_cells(2)
+        complex.num_cells(2),
     );
 
     let cfg = QclBuilder::config::<FloatType, NumberType>()
         .over_code(complex.clone())
-        .build()
-        .expect("a complex with 1-cells builds");
-    println!(
-        "    no probes, no baseline, no evidence: the code subject offers validate stages only\n"
-    );
+        .build()?;
 
     let screened = QclBuilder::validate(&cfg)
         .derive_code()
         .check_ldpc_weights(LDPC_BOUND)
         .check_class_invariance()
         .check_clifford_action()
-        .finalize()
-        .expect("the toric code passes every exact check");
+        .finalize()?;
 
-    println!("[validate]");
-    for (name, report) in screened.stages() {
-        println!(
-            "    {name:<24} {:?}  examined {}",
-            report.verdict(),
-            report.examined()
-        );
-    }
+    print_stages(&screened);
 
-    // What derive_code read off the complex.
-    let code = derive_code::<u64, _>(&complex).expect("the code derives");
-    println!("\n[derive_code]  [[n = {}, k = {}]]", code.n(), code.k());
-    println!(
-        "    {} Z checks of weight {}, {} X checks of weight {}, no distance claimed",
-        code.z_generators().len(),
-        code.z_generators()[0].weight(),
-        code.x_generators().len(),
-        code.x_generators()[0].weight()
-    );
+    // What `derive_code` read off the complex.
+    let code = derive_code::<NumberType, _>(&complex)?;
+    print_derived_code(&code);
 
-    // Both weights against the bound, and against one too tight for it.
-    let w = check_ldpc_weights::<FloatType, u64>(&code, LDPC_BOUND).expect("weights");
-    println!(
-        "\n[check_ldpc_weights]  bound {LDPC_BOUND}: max column weight {}, max row weight {}, {} items examined, {:?}",
-        w.max_column_weight,
-        w.max_row_weight,
-        w.report.examined(),
-        w.report.verdict()
-    );
-    let tight = check_ldpc_weights::<FloatType, u64>(&code, LDPC_BOUND_TOO_TIGHT).expect("weights");
-    let rejecting = tight
+    // Both weights against a bound the code meets.
+    let met = check_ldpc_weights::<FloatType, NumberType>(&code, LDPC_BOUND)?;
+    print_weights(LDPC_BOUND, &met);
+
+    // And against one it does not, so the run shows the check rejecting as well as accepting.
+    let too_tight = check_ldpc_weights::<FloatType, NumberType>(&code, LDPC_BOUND_TOO_TIGHT)?;
+    let rejection = too_tight
         .report
         .first_rejection()
-        .expect("a bound of 3 rejects");
-    println!(
-        "    bound {LDPC_BOUND_TOO_TIGHT}: rejected at {:?} with margin {:.3} after {} items",
-        tight.offender.expect("named"),
-        rejecting.margin,
-        tight.report.examined()
-    );
+        .ok_or("a bound below the code's weight should have rejected")?;
+    let offender = too_tight
+        .offender
+        .ok_or("a rejection should name the generator it rejected")?;
 
-    println!(
-        "\n[check_class_invariance]  {} (class, gate) pairs over {} boundaries each: Z̄, S̄, T̄ act on the class",
-        screened.stages()[2].1.examined(),
-        code.z_generators().len()
-    );
-    println!(
-        "[check_clifford_action]   {} logical Hadamards swap Z̄(γ) ↔ X̄(γ̃), up to phase and stabilizers",
-        screened.stages()[3].1.examined()
-    );
-    println!(
-        "\nscreen: {:?}. Verified by exact 𝔽₂ predicates; not simulated. SimQpu caps below this code's width.",
-        screened.report().expect("current").verdict()
-    );
-    assert_eq!(
-        screened.report().expect("current").verdict(),
-        CheckVerdict::Accepted
-    );
+    print_rejection(LDPC_BOUND_TOO_TIGHT, offender, rejection.margin, &too_tight);
+
+    print_structural_checks(&screened, code.z_generators().len());
+
+    let verdict = screened
+        .report()
+        .ok_or("the screen should carry a current report")?
+        .verdict();
+
+    print_outcome(verdict, verdict == CheckVerdict::Accepted);
+    Ok(())
 }

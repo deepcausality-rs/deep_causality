@@ -3,171 +3,166 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! # Quantum Geometric Tensor Example
+//! # The quantum geometric tensor, and the transport it forces
 //!
-//! Demonstrates the Quantum Geometric Tensor (QGT) and its physical observables
-//! in the context of twisted bilayer graphene (TBG) and flat-band systems.
+//! A band is usually described by its energies. That leaves out everything about the *states*: how
+//! much the wavefunction itself turns as the momentum moves across the Brillouin zone. The
+//! **quantum geometric tensor** is what carries that,
 //!
-//! The QGT unifies:
-//! - **Quantum Metric** (real part): "distance" between quantum states
-//! - **Berry Curvature** (imaginary part): "magnetic field" in momentum space
+//! ```text
+//! Q_ij = Σ_{m ≠ n}  ⟨n|v_i|m⟩ ⟨m|v_j|n⟩ / (E_n − E_m)²
+//! ```
+//!
+//! and it is one complex number per pair of axes. Its two parts are two different pieces of
+//! physics:
+//!
+//! ```text
+//! g_ij = Re(Q_ij)        the quantum metric      symmetric      how far apart two states are
+//! Ω_ij = −2 Im(Q_ij)     the Berry curvature     antisymmetric  a magnetic field in momentum space
+//! ```
+//!
+//! The symmetry is forced, not imposed: a real symmetric part and an imaginary antisymmetric part
+//! is what a Hermitian tensor decomposes into, so a run that produced a non-zero `Ω_xx` would be
+//! reporting an arithmetic error rather than a discovery.
+//!
+//! # Why it matters in a flat band
+//!
+//! Conventional transport comes from band curvature, which is the inverse effective mass. A flat
+//! band has none, so conventional transport vanishes and the band should be an insulator. Magic
+//! angle twisted bilayer graphene is not an insulator. The missing term is geometric:
+//!
+//! ```text
+//! D = (D_conv + g̃_xx · E_gap) · a²
+//! ```
+//!
+//! With `D_conv = 0` the whole weight comes from the quantum metric, which is the geometric lower
+//! bound on conductivity. This run computes `g̃_xx` from the model and hands it to the transport
+//! kernel, so the two halves are one chain rather than two separate demonstrations.
+//!
+//! # What the run does
+//!
+//! ```text
+//! fmap       axis pair → the QGT component for that pair, which may fail
+//! sequence   a tensor of fallible components → one fallible tensor of components
+//! fmap       Q → its real part, and Q → its imaginary part
+//! fold       the diagonal of g → the trace, the geometric weight transport sees
+//! ```
+//!
+//! `sequence` is what makes the failure honest. `fmap` leaves a tensor whose every cell might have
+//! failed, and turning that inside out into one result is a single call rather than four checks —
+//! and a component that carried no value stops the run instead of quietly vanishing from the
+//! output.
 
-use deep_causality_num_complex::Complex;
+mod model;
+mod utils_print;
+
+use deep_causality_haft::ResultWitness;
+use deep_causality_haft::{Foldable, Functor, Traversable};
+use deep_causality_num::Float106;
 use deep_causality_physics::{
-    Energy, Length, PhysicsError, QuantumEigenvector, QuantumMetric, QuantumVelocity,
-    effective_band_drude_weight, quantum_geometric_tensor,
+    Energy, Length, PhysicsError, QuantumMetric, effective_band_drude_weight,
 };
-use deep_causality_tensor::CausalTensor;
+use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
+use model::{
+    AXIS_PAIRS, AXIS_X, E_FLAT_MEV, E_REMOTE_MEV, FLAT_BAND_CURVATURE, NUM_BANDS, ZERO,
+    curvature_of, energy_gap_mev, lattice_constant_nm, metric_of, qgt_component, reduced_metric,
+    two_band_model,
+};
+use utils_print::{print_bands, print_header, print_symmetry, print_tensor, print_transport};
+
+/// The working scalar. Switch it to `f32`, `f64` or `deep_causality_num::BFloat16`; the tensor,
+/// its decomposition and the transport weight all recompute at that precision.
+///
+/// It sits at [`Float106`] by default on purpose. A hard-coded `f64` anywhere in the program is
+/// invisible while the alias *is* `f64`, and shows up here as a compile error the moment the two
+/// types differ.
+pub type FloatType = Float106;
 
 fn main() -> Result<(), PhysicsError> {
-    println!("=== Quantum Geometric Tensor Analysis ===");
-    println!("Application: Twisted Bilayer Graphene (TBG) Flat Bands\n");
+    print_header();
 
-    // =========================================================================
-    // Setup: A minimal 2-band model (simplified for demonstration)
-    // =========================================================================
-    // In real applications, these would be computed from a tight-binding model
-    // or DFT calculation.
+    let model = two_band_model()?;
+    print_bands(&model);
 
-    let num_bands = 2;
-    let basis_size = 2; // Minimal basis
+    // fmap: each axis pair names one component. The kernel may refuse any of them, so what comes
+    // back is a tensor of results rather than a tensor of numbers.
+    let pairs = CausalTensor::new(AXIS_PAIRS.to_vec(), vec![NUM_BANDS, NUM_BANDS])?;
+    let attempted = CausalTensorWitness::fmap(pairs, |(i, j)| qgt_component(&model, i, j));
 
-    // Energy eigenvalues at a k-point (in meV)
-    // Band 0: flat band near zero, Band 1: remote band
-    let eigenvalues_data = vec![1.0, 10.0]; // meV
-    let eigenvalues = CausalTensor::new(eigenvalues_data, vec![num_bands])?;
+    // sequence: turn the tensor of results inside out. One `?` then covers all four components,
+    // and the [2, 2] shape survives the traversal.
+    let qgt: CausalTensor<_> =
+        CausalTensorWitness::sequence::<_, ResultWitness<PhysicsError>>(attempted)?;
 
-    println!("Band Energies:");
-    println!("  Band 0 (flat): {:.1} meV", eigenvalues.as_slice()[0]);
-    println!("  Band 1 (remote): {:.1} meV\n", eigenvalues.as_slice()[1]);
+    // The decomposition. Two pointwise maps over the same tensor, because the metric and the
+    // curvature are two readings of one object rather than two computations.
+    let metric = CausalTensorWitness::fmap(qgt.clone(), metric_of);
+    let curvature = CausalTensorWitness::fmap(qgt.clone(), curvature_of);
 
-    // Eigenvectors: Orthonormal basis (columns are eigenstates)
-    // Complex values: [real, imag] pairs
-    // |u_0> = (1, 0), |u_1> = (0, 1) (trivial case for demo)
-    let eigenvector_data = vec![
-        Complex::new(1.0, 0.0),
-        Complex::new(0.0, 0.0), // Column 0: |u_0>
-        Complex::new(0.0, 0.0),
-        Complex::new(1.0, 0.0), // Column 1: |u_1>
-    ];
-    let eigenvectors = QuantumEigenvector::new(CausalTensor::new(
-        eigenvector_data,
-        vec![basis_size, num_bands],
-    )?);
+    print_tensor(&qgt, &metric, &curvature);
+    print_symmetry(&metric, &curvature);
 
-    // Velocity matrices: v_x and v_y (momentum derivatives of Hamiltonian)
-    // For TBG, these encode the Dirac cone structure
-    // v_x|u_0> and v_x|u_1> stored as columns
-    let vx_data = vec![
-        Complex::new(0.0, 0.0),
-        Complex::new(0.5, 0.3), // v_x|u_0>
-        Complex::new(0.5, -0.3),
-        Complex::new(0.0, 0.0), // v_x|u_1>
-    ];
-    let velocity_x = QuantumVelocity::new(CausalTensor::new(vx_data, vec![basis_size, num_bands])?);
+    // fold: the trace of the metric, which is the scalar the geometric bound is stated with.
+    let trace = CausalTensorWitness::fold(diagonal(&metric)?, ZERO, |sum, g| sum + g);
 
-    let vy_data = vec![
-        Complex::new(0.0, 0.0),
-        Complex::new(-0.3, 0.5), // v_y|u_0>
-        Complex::new(-0.3, -0.5),
-        Complex::new(0.0, 0.0), // v_y|u_1>
-    ];
-    let velocity_y = QuantumVelocity::new(CausalTensor::new(vy_data, vec![basis_size, num_bands])?);
+    // The chain the tensor exists for. `g_xx` is the number computed above, made dimensionless by
+    // the cell area, and handed to the transport kernel.
+    let g_xx = metric.as_slice()[AXIS_X * NUM_BANDS + AXIS_X];
+    let reduced = reduced_metric(g_xx);
 
-    // =========================================================================
-    // Calculate QGT for the flat band (Band 0)
-    // =========================================================================
-    println!("--- Quantum Geometric Tensor Q_ij for Band 0 ---");
+    let flat = Energy::new(E_FLAT_MEV)?;
+    let remote = Energy::new(E_REMOTE_MEV)?;
+    let cell = Length::new(lattice_constant_nm())?;
 
-    let regularization = 1e-6; // Small epsilon to avoid divergence at degeneracies
-
-    // Q_xx component
-    let qxx_effect = quantum_geometric_tensor(
-        &eigenvalues,
-        &eigenvectors,
-        &velocity_x,
-        &velocity_x,
-        0, // Band 0
-        regularization,
+    // With the geometry, and without it. The difference is the whole point: a flat band has no
+    // conventional weight, so everything below is what the quantum metric contributes.
+    let geometric = effective_band_drude_weight(
+        flat,
+        remote,
+        FLAT_BAND_CURVATURE,
+        QuantumMetric::new(reduced)?,
+        cell,
+    );
+    let conventional = effective_band_drude_weight(
+        flat,
+        remote,
+        FLAT_BAND_CURVATURE,
+        QuantumMetric::new(ZERO)?,
+        cell,
     );
 
-    // Q_xy component (off-diagonal)
-    let qxy_effect = quantum_geometric_tensor(
-        &eigenvalues,
-        &eigenvectors,
-        &velocity_x,
-        &velocity_y,
-        0,
-        regularization,
+    print_transport(
+        trace,
+        g_xx,
+        reduced,
+        energy_gap_mev(),
+        weight(&conventional, "conventional")?,
+        weight(&geometric, "geometric")?,
     );
-
-    if let Some(qxx) = qxx_effect.value() {
-        // Extract quantum metric (real part) and Berry curvature (imaginary part)
-        println!("\nQ_xx = {:.6} + {:.6}i", qxx.re, qxx.im);
-        println!("  → Quantum Metric g_xx = Re(Q_xx) = {:.6}", qxx.re);
-        println!(
-            "  → Berry Curvature Ω_xx = -2·Im(Q_xx) = {:.6}",
-            -2.0 * qxx.im
-        );
-    }
-
-    if let Some(qxy) = qxy_effect.value() {
-        println!("\nQ_xy = {:.6} + {:.6}i", qxy.re, qxy.im);
-        println!("  → Quantum Metric g_xy = Re(Q_xy) = {:.6}", qxy.re);
-        println!(
-            "  → Berry Curvature Ω_xy = -2·Im(Q_xy) = {:.6}",
-            -2.0 * qxy.im
-        );
-    }
-
-    // =========================================================================
-    // Effective Band Drude Weight (Transport in Flat Bands)
-    // =========================================================================
-    println!("\n--- Effective Band Drude Weight ---");
-    println!("Key insight: In flat bands, conventional transport vanishes but");
-    println!("GEOMETRIC transport persists via the quantum metric!\n");
-
-    // Parameters for TBG-like system
-    let energy_flat = Energy::<f64>::new(1e-3)?; // 1 meV (flat band)
-    let energy_remote = Energy::<f64>::new(10e-3)?; // 10 meV (remote band)
-    let band_curvature = 0.0; // Flat band → zero curvature (conventional transport = 0)
-    let quantum_metric = QuantumMetric::new(0.5)?; // Significant geometric contribution
-    let lattice_const = Length::new(0.246e-9)?; // Graphene lattice constant (nm)
-
-    let drude_effect = effective_band_drude_weight(
-        energy_flat,
-        energy_remote,
-        band_curvature,
-        quantum_metric,
-        lattice_const,
-    );
-
-    if let Some(drude_weight) = drude_effect.value() {
-        println!(
-            "Band Drude Weight D = {:.4e} eV·nm²",
-            drude_weight.value() * 1e18
-        );
-        println!("\nPhysical interpretation:");
-        println!("  • D > 0 means coherent transport is possible");
-        println!("  • Even with zero curvature (flat band), the quantum metric");
-        println!("    provides a 'geometric lower bound' on conductivity");
-        println!("  • This explains metallic behavior in magic-angle TBG!");
-    }
-
-    // =========================================================================
-    // Summary of QGT-derived observables
-    // =========================================================================
-    println!("\n=== QGT-Derived Physical Observables ===");
-    println!("┌─────────────────────────────┬────────────────────────────────────┐");
-    println!("│ Observable                   │ QGT Relation                       │");
-    println!("├─────────────────────────────┼────────────────────────────────────┤");
-    println!("│ Quantum Metric g_ij          │ Re(Q_ij) - state distance          │");
-    println!("│ Berry Curvature Ω_ij         │ -2·Im(Q_ij) - anomalous velocity   │");
-    println!("│ Band Drude Weight D          │ D_conv + g·ΔE - geometric transport│");
-    println!("│ Orbital Magnetization        │ ∫ Ω·f(E) dk - magnetic moment      │");
-    println!("└─────────────────────────────┴────────────────────────────────────┘");
-
-    println!("\n=== Simulation Complete ===");
 
     Ok(())
+}
+
+/// The diagonal of a square tensor, as a rank-1 tensor.
+fn diagonal(tensor: &CausalTensor<FloatType>) -> Result<CausalTensor<FloatType>, PhysicsError> {
+    let values: Vec<FloatType> = (0..NUM_BANDS)
+        .map(|axis| tensor.as_slice()[axis * NUM_BANDS + axis])
+        .collect();
+
+    Ok(CausalTensor::new(values, vec![NUM_BANDS])?)
+}
+
+/// The number a transport effect carries, or the reason it carries none.
+fn weight(
+    effect: &deep_causality_core::PropagatingEffect<
+        deep_causality_physics::BandDrudeWeight<FloatType>,
+    >,
+    which: &str,
+) -> Result<FloatType, PhysicsError> {
+    effect
+        .value_cloned()
+        .map(|weight| weight.value())
+        .ok_or_else(|| {
+            PhysicsError::NumericalInstability(format!("{which} Drude weight carried no value"))
+        })
 }
