@@ -3,128 +3,138 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+//! The stages of the Maxwell chain, each a pure `MaxwellState -> PropagatingEffect<MaxwellState>`.
+//!
+//! Blade indices follow the multivector crate's convention: a blade's index **is** the bitmask of
+//! the basis vectors spanning it, so the grade is its population count (see
+//! `CausalMultiVector::grade_projection`). With `Cl(1,3)` over `(e_t, e_x, e_y, e_z)` that gives
+//! the vectors at 1, 2, 4, 8 and the bivectors at the two-bit indices.
+
+use crate::FloatType;
 use deep_causality::{CausalityError, CausalityErrorEnum, PropagatingEffect};
 use deep_causality_calculus::{DifferentiableField, DifferentiateFieldExt, Scalar};
 use deep_causality_multivector::{CausalMultiVector, Metric, MultiVector};
 use deep_causality_num::lift;
 use deep_causality_physics::MaxwellSolver;
 
-/// The plane-wave vector-potential component `A_x(t, z) = cos(ω(t − z))`, written once as a
-/// scalar-generic field. The same definition evaluates at `f64` (the value) and at `Dual` (the
-/// derivative), so the tangent functor produces `∂A_x/∂t` and `∂A_x/∂z` exactly — replacing the
-/// hand-coded `−ω·sin(phase)` / `+ω·sin(phase)`.
-struct PlaneWavePotential {
-    omega: f64,
+/// `Cl(1,3)` holds `2^4` coefficients indexed by bitmask over `(e_t, e_x, e_y, e_z)`.
+const COEFFICIENTS: usize = 16;
+const E_T: usize = 1;
+const E_X: usize = 2;
+const E_Y: usize = 4;
+const E_Z: usize = 8;
+/// The electric blade `e_t ^ e_x`: `E_x` is the `t,x` component of the field bivector.
+const E_TX: usize = E_T | E_X;
+/// The magnetic blade `e_z ^ e_x`: `B_y = F_zx` by `B_i = (1/2) eps_ijk F_jk`.
+const E_ZX: usize = E_Z | E_X;
+
+/// The gauge condition is called satisfied below this absolute divergence.
+const GAUGE_TOLERANCE: f64 = 1e-9;
+
+/// The spacetime metric every multivector in this example carries.
+pub fn metric() -> Metric {
+    Metric::Minkowski(4)
 }
+
+/// Angular frequency of the wave, in the source's `f64` literal form. Every use lifts it into
+/// whatever scalar the caller is working at, so the field carries no concrete float type.
+pub const OMEGA: f64 = 1.0;
+
+/// The plane-wave vector potential `A_x(t, z) = cos(omega (t - z))`, written once over `Scalar`.
+///
+/// Evaluated at the working type it is the potential; evaluated at `Dual` it is the potential
+/// and its partial derivative, which is where `E` and `B` come from below. No `-omega sin(phase)`
+/// is ever written by hand. The struct holds no data: `omega` is a configuration literal lifted
+/// per scalar, so nothing here pins a precision.
+pub struct PlaneWavePotential;
 
 impl DifferentiableField<2> for PlaneWavePotential {
     fn run<S: Scalar>(&self, tz: &[S; 2]) -> S {
-        let omega = lift::<S>(self.omega);
+        let omega = lift::<S>(OMEGA);
         (omega * (tz[0] - tz[1])).cos()
     }
 }
 
-/// Configuration for a plane wave in spacetime
+/// Configuration for a plane wave in spacetime.
 #[derive(Clone, Debug, Default)]
 pub struct PlaneWaveConfig {
-    pub omega: f64,
-    pub t: f64,
-    pub z: f64,
+    pub omega: FloatType,
+    pub t: FloatType,
+    pub z: FloatType,
 }
 
-/// State propagated through the causal chain
+/// State threaded through the causal chain.
 #[derive(Clone, Debug, Default)]
 pub struct MaxwellState {
-    pub omega: f64,
-    pub t: f64,
-    pub z: f64,
-    pub phase: f64,
-    pub potential_ax: f64,
-    pub e_field: f64,
-    pub b_field: f64,
-    pub divergence: f64,
-    pub poynting_flux: f64,
+    pub omega: FloatType,
+    pub t: FloatType,
+    pub z: FloatType,
+    pub phase: FloatType,
+    pub potential_ax: FloatType,
+    /// `E_x = -dA_x/dt`.
+    pub e_field: FloatType,
+    /// `B_y = dA_x/dz`.
+    pub b_field: FloatType,
+    pub divergence: FloatType,
+    pub poynting_flux: FloatType,
     pub gauge_satisfied: bool,
 }
 
 impl MaxwellState {
     pub fn from_config(config: &PlaneWaveConfig) -> Self {
-        let phase = config.omega * (config.t - config.z);
         Self {
             omega: config.omega,
             t: config.t,
             z: config.z,
-            phase,
-            potential_ax: phase.cos(),
             ..Default::default()
         }
     }
 }
 
-/// Causaloid 1: Compute the Vector Potential A
+/// Stage 1: the vector potential `A = (0, A_x, 0, 0)` with `A_x = cos(omega (t - z))`.
 ///
-/// A plane wave moving in Z-direction with linear polarization:
-/// A = (0, A_x, 0, 0) * cos(ω(t - z))
+/// This is where the potential is computed; nothing upstream has evaluated it yet.
 pub fn compute_potential(input: MaxwellState) -> PropagatingEffect<MaxwellState> {
-    let phase = input.phase;
-    let ax = phase.cos();
+    let field = PlaneWavePotential;
+    let phase = input.omega * (input.t - input.z);
+    let potential_ax = field.run(&[input.t, input.z]);
 
     PropagatingEffect::pure(MaxwellState {
-        potential_ax: ax,
+        phase,
+        potential_ax,
         ..input
     })
 }
 
-/// Causaloid 2: Derive the Electromagnetic Field F = ∇A
+/// Stage 2: the field bivector `F` and the gauge scalar.
 ///
-/// Uses Geometric Algebra: F = D * A (geometric product)
-/// - Divergence (scalar) → Lorenz Gauge check
-/// - Bivector components → E and B fields
+/// `E` and `B` are the partials of `A_x`, read off the tangent functor:
+/// `E_x = -dA_x/dt` and `B_y = dA_x/dz`. They are then placed in the blades they belong to,
+/// `e_t ^ e_x` and `e_z ^ e_x`, so `F` is a genuine field bivector rather than a pair of
+/// numbers carried alongside one.
 pub fn compute_em_field(input: MaxwellState) -> PropagatingEffect<MaxwellState> {
-    let metric = Metric::Minkowski(4);
-    let potential_ax = input.potential_ax;
+    let field = PlaneWavePotential;
+    let [da_dt, da_dz] = field.gradient(&[input.t, input.z]);
 
-    // Construct A (the 4-Vector Potential) - Promoted to f64 for Solver
-    let mut a_data: Vec<f64> = vec![0.0; 16];
-    a_data[2] = potential_ax; // e_x component
-    let potential_a = CausalMultiVector::new(a_data, metric).unwrap();
+    let e_field = -da_dt;
+    let b_field = da_dz;
 
-    // ∂A_x/∂t and ∂A_x/∂z by the tangent functor over A_x(t, z) = cos(ω(t − z)).
-    // The field is written once over `Scalar`; `gradient` seeds `Dual` per coordinate and reads
-    // the ε channel — the exact analytic partials, with no hand-coded `±ω·sin(phase)`.
-    let [da_dt, da_dz] = PlaneWavePotential { omega: input.omega }.gradient(&[input.t, input.z]);
-
-    // Construct the Gradient Vector D
-    let mut d_data = vec![0.0; 16];
-    d_data[1] = da_dt; // e_t
-    d_data[4] = da_dz; // e_z
-    let gradient_d = CausalMultiVector::new(d_data, metric).unwrap();
-
-    // Field Calculation via MaxwellSolver
-    // 1. Calculate Divergence (Scalar L)
+    // The Lorenz gauge scalar, d_mu A^mu. The solver contracts a gradient vector with the
+    // potential vector, so the gradient carries the derivative of each component along its own
+    // axis: A has only an x component and A_x does not depend on x, so the contraction is zero.
+    let gradient_d = match blade_vector(&[(E_T, da_dt), (E_Z, da_dz)]) {
+        Ok(v) => v,
+        Err(e) => return fail(e),
+    };
+    let potential_a = match blade_vector(&[(E_X, input.potential_ax)]) {
+        Ok(v) => v,
+        Err(e) => return fail(e),
+    };
     let divergence = match MaxwellSolver::calculate_potential_divergence(&gradient_d, &potential_a)
     {
         Ok(d) => d,
-        Err(e) => {
-            return PropagatingEffect::from_error(CausalityError(CausalityErrorEnum::Custom(
-                format!("Divergence calc failed: {:?}", e),
-            )));
-        }
+        Err(e) => return fail(format!("divergence: {e:?}")),
     };
-
-    // 2. Calculate Field Tensor (Bivector F)
-    let f_result = match MaxwellSolver::calculate_field_tensor(&gradient_d, &potential_a) {
-        Ok(f) => f,
-        Err(e) => {
-            return PropagatingEffect::from_error(CausalityError(CausalityErrorEnum::Custom(
-                format!("Field calc failed: {:?}", e),
-            )));
-        }
-    };
-
-    // Extract components from Field Tensor
-    let e_field = *f_result.get(3).unwrap_or(&0.0); // e_tx bivector
-    let b_field = *f_result.get(6).unwrap_or(&0.0); // e_zx bivector
 
     PropagatingEffect::pure(MaxwellState {
         e_field,
@@ -133,11 +143,11 @@ pub fn compute_em_field(input: MaxwellState) -> PropagatingEffect<MaxwellState> 
         ..input
     })
 }
-/// Causaloid 3: Check Lorenz Gauge Condition
-///
-/// The Lorenz Gauge requires divergence ≈ 0 for gauge invariance.
+
+/// Stage 3: the Lorenz gauge holds when the divergence vanishes.
 pub fn check_lorenz_gauge(input: MaxwellState) -> PropagatingEffect<MaxwellState> {
-    let gauge_satisfied = input.divergence.abs() < 1e-9;
+    let gauge_satisfied =
+        deep_causality_algebra::Real::abs(input.divergence) < lift::<FloatType>(GAUGE_TOLERANCE);
 
     PropagatingEffect::pure(MaxwellState {
         gauge_satisfied,
@@ -145,38 +155,61 @@ pub fn check_lorenz_gauge(input: MaxwellState) -> PropagatingEffect<MaxwellState
     })
 }
 
-/// Causaloid 4: Compute Poynting Vector (Energy Flux)
+/// Stage 4: the Poynting vector `S = E x B`, as the outer product of the two field vectors.
 ///
-/// S = E x B (using physics wrapper)
+/// `E` points along `x` and `B` along `y`, so the two occupy *different* basis vectors and their
+/// outer product is the `e_x ^ e_y` bivector whose magnitude is `|E||B|`. Placing them on blades
+/// that share a basis vector would make the outer product vanish identically.
 pub fn compute_poynting_flux(input: MaxwellState) -> PropagatingEffect<MaxwellState> {
-    let metric = Metric::Minkowski(4);
+    let e_vec = match blade_vector(&[(E_X, input.e_field)]) {
+        Ok(v) => v,
+        Err(e) => return fail(e),
+    };
+    let b_vec = match blade_vector(&[(E_Y, input.b_field)]) {
+        Ok(v) => v,
+        Err(e) => return fail(e),
+    };
 
-    // Reconstruct E and B vectors (simplified for example)
-    // E is tx bivector (index 3), B is zx bivector (index 6) in previous step context
-    // In dense GA, Electric field E is usually vector part of F (relative to an observer).
-    // Here we treat E and B as independent vectors for the Poynting calculation example.
-
-    // E vector along X (Promote to f64 for physics kernel)
-    let mut e_data = vec![0.0; 16];
-    e_data[2] = input.e_field; // x component
-    let e_vec = CausalMultiVector::new(e_data, metric).unwrap();
-
-    // B vector along Y (plane wave orthogonal)
-    let mut b_data = vec![0.0; 16];
-    b_data[3] = input.b_field; // y component
-    let b_vec = CausalMultiVector::new(b_data, metric).unwrap();
-
-    // Calculate poynting_vector using Solver
     match MaxwellSolver::calculate_poynting_flux(&e_vec, &b_vec) {
         Ok(s_field) => {
-            let flux = s_field.squared_magnitude().sqrt();
+            let poynting_flux = deep_causality_algebra::Real::sqrt(s_field.squared_magnitude());
             PropagatingEffect::pure(MaxwellState {
-                poynting_flux: flux,
+                poynting_flux,
                 ..input
             })
         }
-        Err(e) => PropagatingEffect::from_error(CausalityError(CausalityErrorEnum::Custom(
-            format!("Poynting Flux calc failed: {:?}", e),
-        ))),
+        Err(e) => fail(format!("poynting flux: {e:?}")),
     }
+}
+
+/// The field bivector `F = E_x (e_t ^ e_x) + B_y (e_z ^ e_x)`.
+///
+/// This is the object the whole example is about: one bivector holding both fields, rather than
+/// two vectors kept consistent by hand.
+pub fn field_bivector(state: &MaxwellState) -> Result<CausalMultiVector<FloatType>, String> {
+    blade_vector(&[(E_TX, state.e_field), (E_ZX, state.b_field)])
+}
+
+/// The `(e_t ^ e_x, e_z ^ e_x)` blade pair of a field bivector, for reporting.
+pub fn field_blades(f: &CausalMultiVector<FloatType>) -> (FloatType, FloatType) {
+    let zero = lift::<FloatType>(0.0);
+    let d = f.data();
+    (
+        d.get(E_TX).copied().unwrap_or(zero),
+        d.get(E_ZX).copied().unwrap_or(zero),
+    )
+}
+
+/// A multivector with the given coefficients set and every other blade zero.
+fn blade_vector(blades: &[(usize, FloatType)]) -> Result<CausalMultiVector<FloatType>, String> {
+    let mut data = vec![lift::<FloatType>(0.0); COEFFICIENTS];
+    for &(index, value) in blades {
+        data[index] = value;
+    }
+    CausalMultiVector::new(data, metric())
+        .map_err(|e| format!("building a Cl(1,3) element failed: {e:?}"))
+}
+
+fn fail(reason: impl Into<String>) -> PropagatingEffect<MaxwellState> {
+    PropagatingEffect::from_error(CausalityError(CausalityErrorEnum::Custom(reason.into())))
 }

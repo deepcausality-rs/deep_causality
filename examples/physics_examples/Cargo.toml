@@ -63,10 +63,6 @@ name = "gauge_weak_force"
 path = "gauge_weak_force/main.rs"
 
 [[example]]
-name = "geometric_tilt"
-path = "geometric_tilt/main.rs"
-
-[[example]]
 name = "gravitational_wave"
 path = "gravitational_wave/main.rs"
 

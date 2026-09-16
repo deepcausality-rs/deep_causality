@@ -287,15 +287,16 @@ fn stage_geodesic_analysis(mut input: SpaceTimeData, _: (), _: Option<()>) -> Sp
                     d.iter().map(|x| (*x) * (*x)).sum::<FloatType>().sqrt()
                 }
                 Err(_) => {
-                    // Analytic fallback: radial tidal acceleration ~ c² * M/r³
-                    let m = (r_s) / 2.0;
-                    let c = SPEED_OF_LIGHT;
-                    c * c * 2.0 * m / (r * r * r)
+                    // Analytic fallback: radial tidal acceleration ~ c² * 2M/r³
+                    let m = r_s / float_from_f64!(2.0);
+                    let c = float_from_f64!(SPEED_OF_LIGHT);
+                    c * c * float_from_f64!(2.0) * m / (r * r * r)
                 }
             };
 
         // Also show the geometric deviation for reference
-        let deviation_geometric = tidal_acceleration / (SPEED_OF_LIGHT * SPEED_OF_LIGHT);
+        let c = float_from_f64!(SPEED_OF_LIGHT);
+        let deviation_geometric = tidal_acceleration / (c * c);
         println!(
             "  Geodesic deviation:      {} m⁻² (geometric)",
             deviation_geometric

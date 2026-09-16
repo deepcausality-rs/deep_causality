@@ -3,290 +3,276 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! # 2D U(1) Lattice Gauge Theory Verification
+//! # 2D U(1) Lattice Gauge Theory against its exact solution
 //!
-//! Validates the `LatticeGaugeField` implementation by comparing computed
-//! plaquette expectation values against the **exact analytical solution**.
+//! Two-dimensional U(1) lattice gauge theory is one of the few gauge theories that is exactly
+//! solvable, which makes it the right place to test a lattice implementation. The average
+//! plaquette in the infinite-volume limit is
 //!
-//! ## Theory Background
+//! ```text
+//! <P> = I_1(beta) / I_0(beta)
+//! ```
 //!
-//! The 2D U(1) lattice gauge theory is exactly solvable. The average plaquette
-//! satisfies:
+//! with `I_n` the modified Bessel functions of the first kind (Creutz, *Quarks, Gluons and
+//! Lattices*, CUP 1983, ch. 8).
 //!
-//! $$\langle P \rangle = \frac{I_1(\beta)}{I_0(\beta)}$$
+//! The run therefore does the thing that statement is about: it puts a hot random field on the
+//! lattice, thermalizes it with Metropolis sweeps at each `beta`, **measures** the average
+//! plaquette over a run of configurations, and compares that measurement with `I_1/I_0`.
 //!
-//! where $I_n$ are modified Bessel functions of the first kind.
+//! Two supporting checks keep the comparison honest, and neither is mistaken for the main one:
 //!
-//! ## Reference
+//! ```text
+//! structural   an identity field has every plaquette equal to 1, at any beta
+//! reference    two independent Bessel algorithms agree, so I_1/I_0 is itself trustworthy
+//! ```
 //!
-//! M. Creutz, *Quarks, Gluons and Lattices*, Cambridge University Press (1983), Chapter 8
+//! The identity check exercises the plaquette *machinery* only: it holds for every `beta`, so it
+//! says nothing about the thermodynamics. The Bessel cross-check validates the reference curve,
+//! not the lattice. Only the sampled measurement tests both together.
+//!
+//! ## APIs Demonstrated
+//! - `LatticeGaugeField::random`, `try_metropolis_sweep`, `try_average_plaquette`
+//! - `CubicalComplex` with periodic boundaries
 
-use deep_causality_num::{Float, Float106, lift};
+use deep_causality_algebra::Real;
+use deep_causality_num::{lift, lower};
 use deep_causality_num_complex::Complex;
-use deep_causality_topology::{CubicalComplex, LatticeGaugeField, U1};
+use deep_causality_rand::rng;
+use deep_causality_topology::{CubicalComplex, LatticeGaugeField, TopologyError, U1};
 use std::sync::Arc;
 
-// =============================================================================
-// FLOAT TYPE CONFIGURATION
-// =============================================================================
+/// Lattice side; the lattice is `SIDE x SIDE` with periodic boundaries in both directions.
+const SIDE: usize = 8;
+/// Metropolis sweeps discarded before any measurement, so the field forgets its hot start.
+const THERMAL_SWEEPS: usize = 400;
+/// Sweeps measured after thermalization. The statistical error falls as `1 / sqrt(N)`.
+const MEASURE_SWEEPS: usize = 400;
+/// Metropolis proposal width. Tuned so the acceptance rate lands near one half.
+const EPSILON: f64 = 0.55;
+/// Couplings to test, spanning strong (`beta < 1`) to weak (`beta > 5`) coupling.
+const BETA_VALUES: [f64; 6] = [0.5, 1.0, 2.0, 4.0, 6.0, 10.0];
 
-// Change this to f32 or f64 to use different precision
-type FloatType = Float106;
-
-/// Macro to convert f64 literals to FloatType
-macro_rules! flt {
-    ($x:expr) => {
-        lift::<FloatType>($x)
-    };
-}
-
-// =============================================================================
-// REFERENCE VALUES: β values to test (we compute I₁(β)/I₀(β) at runtime)
-// =============================================================================
-
-/// β values to test. Reference values are computed at runtime using DoubleFloat
-/// precision via the Bessel function series expansion.
-const BETA_VALUES: [f64; 10] = [0.5, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 8.0, 10.0, 20.0];
-
-/// Independent reference implementation using Miller's backward recurrence.
-/// This is numerically stable and provides independent verification of the series.
+/// How far a measured plaquette may sit from `I_1/I_0` and still count as agreement.
 ///
-/// Uses the recurrence: I_{n+1}(x)/I_n(x) = x/(2(n+1) + x * I_{n+2}/I_{n+1})
-/// evaluated backwards from a large n where the ratio approaches x/(2n).
-fn bessel_ratio_miller(x: FloatType) -> FloatType {
-    // For the ratio I_1/I_0, we use Miller's backward recurrence
-    // Define r_n = I_{n+1}(x) / I_n(x)
-    // The recurrence relation gives: r_n = x / (2(n+1) + x * r_{n+1})
+/// On an `8x8` lattice with `MEASURE_SWEEPS` configurations the statistical error on `<P>` is a
+/// few times `1e-3`, and the finite lattice adds a small `1/V` correction on top. This bound is
+/// wide enough that a different seed still passes, and tight enough that a broken update or a
+/// wrong Boltzmann weight does not.
+const AGREEMENT_TOLERANCE: f64 = 0.02;
 
-    let n_max = 100;
-    let two = flt!(2.0);
+/// Terms in the Bessel series; well past convergence for the `beta` range above.
+const BESSEL_TERMS: usize = 200;
+/// Starting order for Miller's backward recurrence.
+const MILLER_ORDER: usize = 100;
+/// How closely the two Bessel algorithms must agree for the reference to be trusted.
+const REFERENCE_TOLERANCE: f64 = 1e-12;
 
-    // Start with asymptotic approximation for large n: r_n ≈ x / (2(n+1))
-    let mut r = flt!(0.0); // For large n, r_n → 0
+/// `f64` is the right precision here, and the reason is worth stating: the measurement is a
+/// Monte Carlo average, so its error is the statistical `1 / sqrt(N)` — a few times `1e-3` at
+/// these run lengths. That is thirteen orders of magnitude above `f64` rounding, so extra
+/// precision buys nothing the error bars would notice. `Float106` would only sharpen the
+/// *reference* curve, which already agrees with itself to `1e-12`.
+type FloatType = f64;
 
-    // Backward recurrence: r_n = x / (2(n+1) + x * r_{n+1})
-    for n in (0..=n_max).rev() {
-        let two_n_plus_2 = two * flt!((n + 1) as f64);
-        r = x / (two_n_plus_2 + x * r);
+fn main() -> Result<(), TopologyError> {
+    print_header();
+
+    let lattice = Arc::new(CubicalComplex::new([SIDE, SIDE], [true, true]));
+    print_setup();
+
+    // The plaquette machinery, on its own. An identity field has every plaquette equal to the
+    // identity, so <P> = 1 whatever beta is. That is a structural check and nothing more.
+    print_structural(structural_check(&lattice)?);
+
+    let mut results = Vec::with_capacity(BETA_VALUES.len());
+    for &beta in &BETA_VALUES {
+        results.push(measure(&lattice, beta)?);
     }
+    print_results(&results);
 
-    // r_0 = I_1(x) / I_0(x), which is what we want
-    r
+    let all_agree = results.iter().all(|r| r.agrees);
+    let reference_sound = results.iter().all(|r| r.reference_agrees);
+    print_summary(all_agree, reference_sound);
+
+    Ok(())
 }
 
-// =============================================================================
-// MAIN
-// =============================================================================
-
-fn main() {
-    println!("═══════════════════════════════════════════════════════════════");
-    println!("  2D U(1) Lattice Gauge Field Verification");
-    println!("  (Float Type: {})", std::any::type_name::<FloatType>());
-    println!("═══════════════════════════════════════════════════════════════\n");
-
-    println!("Theory: The 2D U(1) lattice gauge theory is exactly solvable.");
-    println!("        Average plaquette: ⟨P⟩ = I₁(β) / I₀(β)");
-    println!("        Reference: Creutz, Quarks Gluons & Lattices (1983)\n");
-
-    // Create a 2D lattice with periodic boundary conditions
-    let lattice_size = 16;
-    let lattice = Arc::new(CubicalComplex::new(
-        [lattice_size, lattice_size],
-        [true, true],
-    ));
-
-    println!(
-        "Lattice: {}×{} with periodic boundaries",
-        lattice_size, lattice_size
-    );
-    println!();
-
-    // Verification approach:
-    // - Verify identity configuration gives ⟨P⟩ = 1.0
-    // - Compare two independent Bessel function algorithms at DoubleFloat precision
-    println!("Verification: Series expansion vs Continued fraction algorithms\n");
-
-    println!("─────────────────────────────────────────────────────────────────");
-    println!("  β       │ Series I₁/I₀         │ Miller I₁/I₀         │ Error  ");
-    println!("─────────────────────────────────────────────────────────────────");
-
-    let mut all_passed = true;
-    // Tolerance: use appropriate value for the float type
-    // f64: ~15-16 significant digits, so 1e-14 is appropriate
-    // DoubleFloat: ~32 significant digits, so 1e-30 is appropriate
-    let tolerance = 1e-30;
-
-    for beta in BETA_VALUES.iter() {
-        let result = verify_plaquette(lattice.clone(), *beta, tolerance);
-
-        if !result.passed {
-            all_passed = false;
-        }
-
-        // Print full precision using DoubleFloat's Display impl
-        let status = if result.passed { "✓" } else { "✗" };
-        println!(
-            "  {:>5.1}   │ {} │ {} │ {} {}",
-            beta, result.series, result.miller, result.error, status
-        );
-    }
-
-    println!("─────────────────────────────────────────────────────────────────\n");
-
-    print_summary(all_passed, tolerance);
-}
-
-// =============================================================================
-// VERIFICATION LOGIC
-// =============================================================================
-
-/// Result of a single verification test
-struct VerificationResult {
-    series: FloatType,
-    miller: FloatType,
-    error: FloatType,
-    passed: bool,
-}
-
-/// Verify the Bessel function computation at a given β value.
-///
-/// We test two things:
-/// 1. Identity configuration gives ⟨P⟩ = 1.0 (trivial vacuum)
-/// 2. Two independent algorithms (series expansion vs continued fraction)
-///    agree to within DoubleFloat precision
-fn verify_plaquette(
-    lattice: Arc<CubicalComplex<2, FloatType>>,
+/// One coupling: what the lattice measured, and what theory says it should be.
+struct Measurement {
     beta: f64,
-    tolerance: f64,
-) -> VerificationResult {
-    let beta_t = flt!(beta);
-    let tolerance_t = flt!(tolerance);
-
-    // Create identity field (cold start = trivial vacuum)
-    let field: LatticeGaugeField<U1, 2, Complex<FloatType>, FloatType> =
-        LatticeGaugeField::identity(lattice, beta_t);
-
-    // For identity configuration, all plaquettes = I, so ⟨P⟩ = 1.0
-    // This verifies the lattice structure and plaquette calculation are correct.
-    let computed_identity = field.try_average_plaquette().unwrap();
-    let identity_check = (computed_identity - flt!(1.0)).abs() < flt!(1e-30);
-    assert!(
-        identity_check,
-        "Identity field should have ⟨P⟩ = 1.0, got {}",
-        computed_identity
-    );
-
-    // Compare two independent algorithms at DoubleFloat precision
-    let series_result = bessel_ratio(beta_t);
-    let miller_result = bessel_ratio_miller(beta_t);
-
-    let error = (series_result - miller_result).abs();
-    let passed = error < tolerance_t;
-
-    VerificationResult {
-        series: series_result,
-        miller: miller_result,
-        error,
-        passed,
-    }
+    /// The Monte Carlo average of the plaquette over `MEASURE_SWEEPS` configurations.
+    measured: FloatType,
+    /// `I_1(beta) / I_0(beta)` from the series expansion.
+    exact: FloatType,
+    /// The same ratio from Miller's backward recurrence, as a check on the reference itself.
+    exact_miller: FloatType,
+    /// Mean Metropolis acceptance over the measured sweeps.
+    acceptance: f64,
+    deviation: FloatType,
+    agrees: bool,
+    reference_agrees: bool,
 }
 
-// =============================================================================
-// BESSEL FUNCTION COMPUTATION
-// =============================================================================
+/// Thermalizes a hot field at `beta`, then averages the plaquette over a run of configurations.
+fn measure(
+    lattice: &Arc<CubicalComplex<2, FloatType>>,
+    beta: f64,
+) -> Result<Measurement, TopologyError> {
+    let mut generator = rng();
+    let epsilon = lift::<FloatType>(EPSILON);
 
-/// Compute I₁(x) / I₀(x) using high-precision series expansion.
-///
-/// Modified Bessel function of the first kind:
-/// $$I_n(x) = \sum_{k=0}^{\infty} \frac{1}{k! \, (n+k)!} \left(\frac{x}{2}\right)^{n+2k}$$
-fn bessel_ratio(x: FloatType) -> FloatType {
-    let i0 = bessel_i0(x);
-    let i1 = bessel_i1(x);
+    // Hot start: random links, the high-temperature configuration.
+    let mut field: LatticeGaugeField<U1, 2, Complex<FloatType>, FloatType> =
+        LatticeGaugeField::random(lattice.clone(), lift(beta), &mut generator);
+
+    for _ in 0..THERMAL_SWEEPS {
+        field.try_metropolis_sweep(epsilon, &mut generator)?;
+    }
+
+    // Measurement run. Each sweep produces a new configuration; the plaquette is averaged over
+    // all of them, which is what `<P>` means.
+    let mut total = lift::<FloatType>(0.0);
+    let mut accepted = 0.0;
+    for _ in 0..MEASURE_SWEEPS {
+        accepted += field.try_metropolis_sweep(epsilon, &mut generator)?;
+        total += field.try_average_plaquette()?;
+    }
+    let measured = total / lift::<FloatType>(MEASURE_SWEEPS as f64);
+
+    let exact = bessel_ratio_series(lift(beta));
+    let exact_miller = bessel_ratio_miller(lift(beta));
+    let deviation = Real::abs(measured - exact);
+
+    Ok(Measurement {
+        beta,
+        measured,
+        exact,
+        exact_miller,
+        acceptance: accepted / MEASURE_SWEEPS as f64,
+        deviation,
+        agrees: deviation < lift::<FloatType>(AGREEMENT_TOLERANCE),
+        reference_agrees: Real::abs(exact - exact_miller) < lift::<FloatType>(REFERENCE_TOLERANCE),
+    })
+}
+
+/// An identity field has `<P> = 1` at any coupling. Exercises the plaquette sum, not the physics.
+fn structural_check(
+    lattice: &Arc<CubicalComplex<2, FloatType>>,
+) -> Result<FloatType, TopologyError> {
+    let field: LatticeGaugeField<U1, 2, Complex<FloatType>, FloatType> =
+        LatticeGaugeField::identity(lattice.clone(), lift(BETA_VALUES[0]));
+    field.try_average_plaquette()
+}
+
+/// `I_1(x) / I_0(x)` from the defining series `I_n(x) = sum_k (x/2)^(2k+n) / (k! (k+n)!)`.
+fn bessel_ratio_series(x: FloatType) -> FloatType {
+    let half_x = x / lift::<FloatType>(2.0);
+    let mut i0 = lift::<FloatType>(0.0);
+    let mut i1 = lift::<FloatType>(0.0);
+
+    for k in 0..BESSEL_TERMS {
+        let k_f = lift::<FloatType>(k as f64);
+        // (x/2)^(2k) / (k!)^2 and (x/2)^(2k+1) / (k! (k+1)!), built by ratio to stay in range.
+        let power_even = Real::powf(half_x, lift::<FloatType>(2.0) * k_f);
+        let fact_k = log_factorial(k);
+        i0 += power_even / Real::exp(lift::<FloatType>(2.0) * fact_k);
+        i1 += power_even * half_x / Real::exp(fact_k + log_factorial(k + 1));
+    }
+
     i1 / i0
 }
 
-/// Compute I₀(x) using series expansion.
-/// $$I_0(x) = \sum_{k=0}^{\infty} \frac{1}{(k!)^2} \left(\frac{x}{2}\right)^{2k}$$
-fn bessel_i0(x: FloatType) -> FloatType {
-    let half_x = x / flt!(2.0);
-    let half_x_sq = half_x * half_x;
-
-    let mut sum = flt!(1.0);
-    let mut term = flt!(1.0);
-
-    // Use enough terms for 106-bit precision (DoubleFloat)
-    // For |x| ≤ 20, ~60 terms suffice for full precision
-    for k in 1..=80 {
-        let k_f = flt!(k as f64);
-        term = term * half_x_sq / (k_f * k_f);
-        sum += term;
-
-        // Early termination if term is negligible
-        if term.abs() < flt!(1e-35) * sum.abs() {
-            break;
-        }
+/// `ln(n!)`, accumulated so the series terms stay representable at large `k`.
+fn log_factorial(n: usize) -> FloatType {
+    let mut acc = lift::<FloatType>(0.0);
+    for i in 2..=n {
+        acc += Real::ln(lift::<FloatType>(i as f64));
     }
-
-    sum
+    acc
 }
 
-/// Compute I₁(x) using series expansion.
-/// $$I_1(x) = \sum_{k=0}^{\infty} \frac{1}{k! \, (k+1)!} \left(\frac{x}{2}\right)^{2k+1}$$
-fn bessel_i1(x: FloatType) -> FloatType {
-    let half_x = x / flt!(2.0);
-    let half_x_sq = half_x * half_x;
-
-    let mut sum = half_x; // First term: (x/2)^1 / (0! * 1!) = x/2
-    let mut term = half_x;
-
-    for k in 1..=80 {
-        let k_f = flt!(k as f64);
-        let k_plus_1 = flt!((k + 1) as f64);
-        term = term * half_x_sq / (k_f * k_plus_1);
-        sum += term;
-
-        if term.abs() < flt!(1e-35) * sum.abs() {
-            break;
-        }
+/// `I_1(x) / I_0(x)` from Miller's backward recurrence, `r_n = x / (2(n+1) + x r_{n+1})`.
+///
+/// Numerically stable and structurally unlike the series, so agreement between the two is
+/// evidence that the reference curve itself is right.
+fn bessel_ratio_miller(x: FloatType) -> FloatType {
+    let two = lift::<FloatType>(2.0);
+    let mut r = lift::<FloatType>(0.0);
+    for n in (0..=MILLER_ORDER).rev() {
+        r = x / (two * lift::<FloatType>((n + 1) as f64) + x * r);
     }
-
-    sum
+    r
 }
 
-// =============================================================================
-// OUTPUT
-// =============================================================================
+// -----------------------------------------------------------------------------------------
+// Printing
+// -----------------------------------------------------------------------------------------
 
-/// Print final summary
-fn print_summary(all_passed: bool, tolerance: f64) {
-    println!("═══════════════════════════════════════════════════════════════");
-    println!("  Verification Summary");
-    println!("═══════════════════════════════════════════════════════════════\n");
+fn print_header() {
+    println!("=== 2D U(1) Lattice Gauge Theory against its exact solution ===");
+    println!("Precision: {}", core::any::type_name::<FloatType>());
+    println!("Exact solution: <P> = I_1(beta) / I_0(beta)   (Creutz 1983, ch. 8)\n");
+}
 
-    println!("  ┌─────────────────────────────────────────────────────────┐");
-    println!("  │  2D U(1) Lattice Gauge Field Verification               │");
-    println!("  ├─────────────────────────────────────────────────────────┤");
-    println!("  │  Tests performed:                                       │");
-    println!("  │    1. Identity config: ⟨P⟩ = 1.0 (trivial vacuum)       │");
-    println!("  │    2. Bessel formula:  I₁(β)/I₀(β) matches reference    │");
-    println!("  ├─────────────────────────────────────────────────────────┤");
+fn print_setup() {
     println!(
-        "  │  Precision:   {} (Float type)",
-        std::any::type_name::<FloatType>()
+        "Lattice:  {SIDE}x{SIDE}, periodic in both directions ({} links)",
+        2 * SIDE * SIDE
     );
     println!(
-        "  │  Tolerance:   {:.0e}                                     │",
-        tolerance
+        "Sampling: {THERMAL_SWEEPS} thermalization sweeps, {MEASURE_SWEEPS} measured, epsilon = {EPSILON}\n"
     );
-    println!("  ├─────────────────────────────────────────────────────────┤");
+}
 
-    if all_passed {
-        println!("  │  Result:      ✓ ALL TESTS PASSED                        │");
-        println!("  └─────────────────────────────────────────────────────────┘");
-        println!("\n[SUCCESS] LatticeGaugeField verified against exact solution.\n");
-    } else {
-        println!("  │  Result:      ✗ SOME TESTS FAILED                        │");
-        println!("  └─────────────────────────────────────────────────────────┘");
-        println!("\n[FAILURE] Check precision and series convergence.\n");
+/// The display boundary: `f64` appears here and nowhere else.
+fn print_structural(identity_plaquette: FloatType) {
+    println!("--- Structural check (the plaquette machinery, not the physics) ---");
+    println!(
+        "  identity field <P>  = {:.15}   (must be 1 at every beta)\n",
+        lower(identity_plaquette)
+    );
+}
+
+fn print_results(results: &[Measurement]) {
+    println!("--- Measured against exact ---");
+    println!(
+        "  {:>6} {:>12} {:>12} {:>11} {:>8}",
+        "beta", "measured <P>", "I_1/I_0", "deviation", "accept"
+    );
+    for r in results {
+        println!(
+            "  {:>6.1} {:>12.6} {:>12.6} {:>11.2e} {:>7.0}%  {}",
+            r.beta,
+            lower(r.measured),
+            lower(r.exact),
+            lower(r.deviation),
+            r.acceptance * 100.0,
+            if r.agrees { "ok" } else { "DISAGREES" }
+        );
+    }
+
+    println!("\n--- Reference cross-check (series vs Miller recurrence) ---");
+    for r in results {
+        println!(
+            "  beta = {:>4.1}   |series - Miller| = {:.2e}",
+            r.beta,
+            lower(Real::abs(r.exact - r.exact_miller))
+        );
+    }
+}
+
+fn print_summary(all_agree: bool, reference_sound: bool) {
+    println!("\n--- Summary ---");
+    println!(
+        "  sampled plaquette matches I_1/I_0 within {AGREEMENT_TOLERANCE}:  {}",
+        if all_agree { "yes" } else { "NO" }
+    );
+    println!(
+        "  Bessel reference self-consistent within {REFERENCE_TOLERANCE:e}: {}",
+        if reference_sound { "yes" } else { "NO" }
+    );
+    if all_agree && reference_sound {
+        println!("\n  The lattice reproduces the exact solution across strong and weak coupling.");
     }
 }

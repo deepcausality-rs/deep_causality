@@ -17,11 +17,14 @@
 //! - **The causal monad.** `CausalEffectPropagationProcess` carries the probe state and the black
 //!   hole mass through each regime-switching step.
 
+use deep_causality_algebra::Real;
 use deep_causality_calculus::{DifferentiableArrow, DifferentiateExt, Scalar};
 use deep_causality_core::CausalFlow;
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_num::lift;
-use deep_causality_physics::{Length, Mass, NEWTONIAN_CONSTANT_OF_GRAVITATION, PhysicsError};
+use deep_causality_physics::{
+    Length, Mass, NEWTONIAN_CONSTANT_OF_GRAVITATION, PhysicsError, SPEED_OF_LIGHT,
+};
 use deep_causality_physics::{escape_velocity, schwarzschild_radius, time_dilation_angle};
 
 /// Switch this alias to `f32` for low precision, `f64` for standard precision, or `Float106` for
@@ -29,8 +32,12 @@ use deep_causality_physics::{escape_velocity, schwarzschild_radius, time_dilatio
 /// simulation, the autodiff gravitational field included, re-runs at the chosen precision.
 pub type FloatType = f64;
 
-/// Sagittarius A* (about 4 million solar masses), in kilograms.
-const M_KG: FloatType = 4.0e6 * 1.989e30;
+/// Sagittarius A*, about 4 million solar masses.
+const SOLAR_MASSES: f64 = 4.0e6;
+/// One solar mass, in kilograms.
+const SOLAR_MASS_KG: f64 = 1.989e30;
+/// The black hole's mass in kilograms, in the source's `f64` literal form.
+const M_KG: f64 = SOLAR_MASSES * SOLAR_MASS_KG;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Event Horizon Probe Simulation ===\n");
@@ -42,9 +49,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let r_s = rs_effect.value_cloned().unwrap().value();
 
     // Φ(r) = −GM/r; the gravitational acceleration and tidal force are its derivatives.
-    let potential = NewtonianPotential {
-        gm: NEWTONIAN_CONSTANT_OF_GRAVITATION * M_KG,
-    };
+    let potential = NewtonianPotential;
 
     println!("Target: Supermassive Black Hole");
     println!("Mass: {:.2e} kg", black_hole_mass.value());
@@ -72,9 +77,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // The gravitational field, straight from the tangent functor: g = −dΦ/dr, tidal = −d²Φ/dr².
         let r = current_state.distance;
+        // g is the *radial component* of the field, negative because gravity pulls inward.
+        // Its magnitude is GM/r², which is what the escape-velocity cross-check below recovers.
         let g = -potential.derivative(r);
         let tidal = -potential.second_derivative(r);
-        println!("  [AD] gravity  g = −dΦ/dr    = {:.3e} m/s²", g);
+        println!(
+            "  [AD] field    g = −dΦ/dr     = {:.3e} m/s²  (inward, hence negative)",
+            g
+        );
         println!("  [AD] tidal gradient −d²Φ/dr² = {:.3e} 1/s²", tidal);
 
         // Define the physics context based on state
@@ -91,6 +101,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .context(black_hole_mass)
             .try_step_with(
                 |_unit: (), state: &ProbeState, ctx: Option<&Mass<FloatType>>| {
+                    let potential_check = NewtonianPotential;
                     let bh_mass = *ctx.expect("context holds the BH mass");
                     let r = Length::<FloatType>::new(state.distance).unwrap();
 
@@ -100,9 +111,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
                     println!("  Escape Velocity required: {:.2e} m/s", v_esc);
 
-                    // Cross-check: the autodiff gravity equals v_esc²/(2r) (both are GM/r²).
+                    // Cross-check: |g| = GM/r² and v_esc²/(2r) = GM/r² are the same number,
+                    // reached two different ways. The comparison is against |g|, because g
+                    // itself carries the inward sign and v_esc² does not.
                     let g_from_vesc = v_esc * v_esc / (lift::<FloatType>(2.0) * state.distance);
-                    println!("  [check] v_esc²/(2r)         = {:.3e} m/s²", g_from_vesc);
+                    let g_magnitude = Real::abs(-potential_check.derivative(state.distance));
+                    println!("  [check] |g|                  = {:.3e} m/s²", g_magnitude);
+                    println!("  [check] v_esc²/(2r)          = {:.3e} m/s²", g_from_vesc);
+                    println!(
+                        "  [check] difference           = {:.2e}  (two routes to GM/r²)",
+                        Real::abs(g_magnitude - g_from_vesc)
+                    );
 
                     // B. Regime-Specific Logic
                     if state.distance / r_s > lift::<FloatType>(10.0) {
@@ -127,8 +146,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         static_vec[1] = lift(1.0);
                         let t_static = CausalMultiVector::new(static_vec, metric).unwrap();
 
-                        // Falling probe vector (gamma, gamma*v, 0, 0)
-                        let v_rel = lift::<FloatType>(0.9);
+                        // Falling probe vector (gamma, gamma*v, 0, 0), at the probe's *own*
+                        // speed as a fraction of c rather than a fixed stand-in value.
+                        let v_rel = v_esc / lift::<FloatType>(SPEED_OF_LIGHT);
                         let gamma =
                             lift::<FloatType>(1.0) / fsqrt(lift::<FloatType>(1.0) - v_rel * v_rel);
                         let mut probe_vec = vec![lift(0.0); 16];
@@ -192,13 +212,14 @@ fn fcosh<S: Scalar>(x: S) -> S {
 /// The Newtonian gravitational potential `Φ(r) = −GM/r`, written once over the working scalar so
 /// the tangent functor can differentiate it. The first derivative is the gravitational
 /// acceleration, the second is the radial tidal gradient.
-struct NewtonianPotential {
-    gm: f64,
-}
+///
+/// The struct holds no data. `G` and `M` are configuration constants lifted into whatever scalar
+/// the caller works at, so nothing here pins a precision.
+struct NewtonianPotential;
 
 impl DifferentiableArrow for NewtonianPotential {
     fn run<S: Scalar>(&self, r: S) -> S {
-        let gm = lift::<S>(self.gm);
+        let gm = lift::<S>(NEWTONIAN_CONSTANT_OF_GRAVITATION) * lift::<S>(M_KG);
         -(gm / r)
     }
 }

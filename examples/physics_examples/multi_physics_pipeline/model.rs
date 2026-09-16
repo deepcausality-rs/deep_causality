@@ -3,76 +3,58 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+//! Mesh construction for the thermalization stage.
+
+use crate::FloatType;
 use deep_causality_linear::CsrMatrix;
+use deep_causality_num::lift;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     Manifold, ReggeGeometry, Simplex, SimplicialComplex, SimplicialComplexBuilder,
-    SimplicialManifold,
+    SimplicialManifold, TopologyError,
 };
 
-pub(crate) fn make_1d_manifold(data: Vec<f64>) -> SimplicialManifold<f64, f64> {
-    let n = data.len(); // 10
+/// A 1D chain of `data.len()` vertices joined by `data.len() - 1` edges, carrying `data` on the
+/// vertices and zero on the edges.
+///
+/// The codifferential reads the Hodge star out of the complex's cache, so the complex is rebuilt
+/// with identity mass matrices at both grades; the unit-edge Regge metric supplies the metric
+/// instance the Laplacian requires without contributing data of its own.
+pub(crate) fn make_1d_manifold(
+    data: Vec<FloatType>,
+) -> Result<SimplicialManifold<FloatType, FloatType>, TopologyError> {
+    let n = data.len();
     let mut builder = SimplicialComplexBuilder::new(1);
-
-    // Add edges (this adds vertices automatically)
-    // Edges 0..(n-1)
     for i in 0..n - 1 {
-        // Simplex::new sorts vertices.
-        builder
-            .add_simplex(Simplex::new(vec![i, i + 1]))
-            .expect("Failed to add simplex");
+        builder.add_simplex(Simplex::new(vec![i, i + 1]))?;
     }
-    // Need to ensure last vertex is added if not covered?
-    // Edge (n-2, n-1) covers n-1.
-    // Vertices are 0..n. Edges are 0..n-1.
-    // If n=10, vertices 0..9.
-    // Last edge (8, 9). Covers 9. All good.
-    let complex: SimplicialComplex<f64> = builder.build().expect("Failed to build complex");
+    let complex: SimplicialComplex<FloatType> = builder.build()?;
 
-    // Extract computed operators
     let skeletons = complex.skeletons().clone();
     let boundaries = complex.boundary_operators().clone();
     let coboundaries = complex.coboundary_operators().clone();
 
-    // Manual Hodge Star / Mass Matrix Construction
-    // Code in codifferential expects indices aligned with k-simplices, meaning square Mass Matrices.
-    // M0: 10x10 Identity.
-    // M1: 9x9 Identity.
-    let n0 = skeletons[0].simplices().len(); // 10
-    let n1 = skeletons[1].simplices().len(); // 9
+    let num_vertices = skeletons[0].simplices().len();
+    let num_edges = skeletons[1].simplices().len();
 
-    // Mass 0 (10x10)
-    let mut triplets0 = Vec::new();
-    for i in 0..n0 {
-        triplets0.push((i, i, 1.0));
-    }
-    let h0 = CsrMatrix::from_triplets(n0, n0, &triplets0).unwrap();
-
-    // Mass 1 (9x9)
-    let mut triplets1 = Vec::new();
-    for i in 0..n1 {
-        triplets1.push((i, i, 1.0));
-    }
-    let h1 = CsrMatrix::from_triplets(n1, n1, &triplets1).unwrap();
-
-    let hodge = vec![h0, h1];
-
-    // Reconstruct complex with hodge
+    let hodge = vec![identity_matrix(num_vertices)?, identity_matrix(num_edges)?];
     let complex_with_hodge = SimplicialComplex::new(skeletons, boundaries, coboundaries, hodge);
 
-    // Data Tensor needs size = total simplices.
-    // Builder adds simplices.
-    // n0 = 10, n1 = 9. Total = 19.
+    // The data tensor spans every simplex: the vertex values, then a zero for each edge.
     let mut full_data = data;
-    full_data.resize(n0 + n1, 0.0);
-
+    full_data.resize(num_vertices + num_edges, lift::<FloatType>(0.0));
     let len = full_data.len();
-    let tensor = CausalTensor::new(full_data, vec![len]).unwrap();
+    let tensor = CausalTensor::new(full_data, vec![len])?;
 
-    // Attach a unit-edge Regge metric so `codifferential` (and the Laplacian used by
-    // `klein_gordon` / `heat_diffusion`) has a metric. The simplicial impl reads the Hodge ⋆ from
-    // the complex's cache and ignores the metric instance's data.
-    let metric = ReggeGeometry::new(CausalTensor::new(vec![1.0; n1], vec![n1]).unwrap());
+    let edge_lengths = CausalTensor::new(vec![lift::<FloatType>(1.0); num_edges], vec![num_edges])?;
+    let metric = ReggeGeometry::new(edge_lengths);
+
     Manifold::with_metric(complex_with_hodge, tensor, Some(metric), 0)
-        .expect("Failed to create valid manifold")
+}
+
+fn identity_matrix(n: usize) -> Result<CsrMatrix<FloatType>, TopologyError> {
+    let one = lift::<FloatType>(1.0);
+    let triplets: Vec<(usize, usize, FloatType)> = (0..n).map(|i| (i, i, one)).collect();
+    CsrMatrix::from_triplets(n, n, &triplets)
+        .map_err(|e| TopologyError::InvalidInput(format!("identity mass matrix: {e:?}")))
 }

@@ -26,10 +26,12 @@
 //!
 //! This is the power of the Causal Monad: **decoupled physics modules**
 //! that compose seamlessly with automatic error propagation.
+use deep_causality_algebra::Real;
 use deep_causality_core::{
     CausalEffectPropagationProcess, CausalFlow, CausalityError, PropagatingEffect,
 };
 use deep_causality_multivector::{HilbertState, Metric};
+use deep_causality_num::{lift, lift_usize, lower};
 use deep_causality_num_complex::Complex;
 use deep_causality_physics::{
     FourMomentum, Hadron, LundParameters, heat_diffusion, klein_gordon,
@@ -38,6 +40,43 @@ use deep_causality_physics::{
 use deep_causality_quantum::born_probability;
 use deep_causality_tensor::CausalTensor;
 mod model;
+
+/// Scale from the Klein-Gordon field energy to a centre-of-mass energy, and the range it is
+/// held to, in GeV.
+const FIELD_ENERGY_SCALE: f64 = 0.01;
+const MIN_CMS_ENERGY_GEV: f64 = 10.0;
+const MAX_CMS_ENERGY_GEV: f64 = 500.0;
+/// Fraction of the hadron energy that goes into the thermal bath, and the range it is held to.
+const TEMPERATURE_SHARE: f64 = 0.5;
+const MIN_TEMPERATURE_MEV: f64 = 100.0;
+const MAX_TEMPERATURE_MEV: f64 = 500.0;
+/// Cells in the 1D temperature field, and the fractional drop per cell.
+const TEMPERATURE_CELLS: usize = 10;
+const TEMPERATURE_GRADIENT: f64 = 0.02;
+/// Thermal diffusivity, and the cooling applied when the diffusion step yields nothing.
+const DIFFUSIVITY: f64 = 0.1;
+const COOLING_FACTOR: f64 = 0.9;
+/// Initial Klein-Gordon field profile across the cells.
+const PHI_PROFILE: [f64; TEMPERATURE_CELLS] = [1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1];
+/// Scalar mass driving the Klein-Gordon evolution, in GeV.
+const HIGGS_MASS_GEV: f64 = 125.0;
+/// QGP transition temperature, in MeV.
+const CRITICAL_TEMPERATURE_MEV: f64 = 170.0;
+/// The detection amplitude is held inside this range so neither basis state is exactly empty.
+const MIN_AMPLITUDE: f64 = 0.01;
+const MAX_AMPLITUDE: f64 = 0.99;
+
+/// `clamp` at the working scalar. `Ord::clamp` is unavailable for a partially ordered float, so
+/// this spells out the two comparisons rather than pinning the type to a primitive.
+fn clamp(value: FloatType, low: FloatType, high: FloatType) -> FloatType {
+    if value < low {
+        low
+    } else if value > high {
+        high
+    } else {
+        value
+    }
+}
 
 /// Switch this alias to `f32` for low precision, `f64` for standard precision,
 /// or `Float106` for high precision.
@@ -53,10 +92,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  (Modular Stages Composed via Causal Monad)");
     println!("═══════════════════════════════════════════════════════════════\n");
 
-    // Initial conditions
-    let phi_data = vec![1.0, 0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1];
-    let phi_manifold = model::make_1d_manifold(phi_data);
-    let mass = 125.0;
+    // Initial field profile: a linear ramp across the cells, lifted into the working type.
+    let phi_data: Vec<FloatType> = PHI_PROFILE.iter().map(|&v| lift::<FloatType>(v)).collect();
+    let phi_manifold = model::make_1d_manifold(phi_data)?;
+    let mass = lift::<FloatType>(HIGGS_MASS_GEV);
 
     // =========================================================================
     // The Causal Monad Pipeline: Each stage is a decoupled function
@@ -98,20 +137,25 @@ fn stage_field_to_partons(
     println!("───────────────────────────────────");
 
     // Compute field energy
-    let field_energy: f64 = evolved_tensor
+    let field_energy: FloatType = evolved_tensor
         .data()
         .iter()
-        .map(|&v| v.abs().powi(2))
+        .map(|&v| Real::abs(v) * Real::abs(v))
         .sum::<FloatType>()
-        * 0.01;
+        * lift::<FloatType>(FIELD_ENERGY_SCALE);
 
-    let cms_energy = field_energy.clamp(10.0, 500.0);
+    let cms_energy = clamp(
+        field_energy,
+        lift(MIN_CMS_ENERGY_GEV),
+        lift(MAX_CMS_ENERGY_GEV),
+    );
     println!("  Field energy: E_cms = {:.2} GeV\n", cms_energy);
 
     // Create virtual q-q̄ pair (back-to-back in CM frame)
-    let half_e = cms_energy / 2.0;
-    let quark = FourMomentum::<FloatType>::new(half_e, 0.0, 0.0, half_e);
-    let antiquark = FourMomentum::<FloatType>::new(half_e, 0.0, 0.0, -half_e);
+    let half_e = cms_energy / lift::<FloatType>(2.0);
+    let zero = lift::<FloatType>(0.0);
+    let quark = FourMomentum::<FloatType>::new(half_e, zero, zero, half_e);
+    let antiquark = FourMomentum::<FloatType>::new(half_e, zero, zero, -half_e);
 
     println!("Stage 2: QCD String Creation");
     println!("────────────────────────────");
@@ -139,7 +183,7 @@ fn stage_lund_fragmentation(
     endpoints: Vec<(FourMomentum<FloatType>, FourMomentum<FloatType>)>,
     _: (),
     _: Option<()>,
-) -> PropagatingEffect<(usize, f64)> {
+) -> PropagatingEffect<(usize, FloatType)> {
     println!("\nStage 3: Lund String Fragmentation");
     println!("───────────────────────────────────");
 
@@ -158,10 +202,10 @@ fn stage_lund_fragmentation(
             );
             print_hadron_sample(&valid);
 
-            let total_e: f64 = valid.iter().map(|h| h.energy()).sum();
+            let total_e: FloatType = valid.iter().map(|h| h.energy()).sum();
             CausalEffectPropagationProcess::pure((valid.len(), total_e))
         }
-        Err(_) => CausalEffectPropagationProcess::pure((0, 0.0)),
+        Err(_) => CausalEffectPropagationProcess::pure((0, lift::<FloatType>(0.0))),
     }
 }
 
@@ -180,21 +224,35 @@ fn stage_lund_fragmentation(
 /// - Replace with hydrodynamic evolution
 /// - Add viscosity corrections
 fn stage_thermalization(
-    (hadron_count, total_energy): (usize, f64),
+    (hadron_count, total_energy): (usize, FloatType),
     _: (),
     _: Option<()>,
-) -> PropagatingEffect<(usize, f64)> {
+) -> PropagatingEffect<(usize, FloatType)> {
     println!("\nStage 4: Thermalization");
     println!("───────────────────────");
 
     // Scale to MeV (typical QGP temperature ~ 150-400 MeV)
-    let temp_scale = (total_energy * 0.5).clamp(100.0, 500.0);
-    let initial_temp: Vec<FloatType> = (0..10)
-        .map(|i| temp_scale * (1.0 - i as f64 * 0.02))
+    let temp_scale = clamp(
+        total_energy * lift::<FloatType>(TEMPERATURE_SHARE),
+        lift(MIN_TEMPERATURE_MEV),
+        lift(MAX_TEMPERATURE_MEV),
+    );
+    let one = lift::<FloatType>(1.0);
+    let initial_temp: Vec<FloatType> = (0..TEMPERATURE_CELLS)
+        .map(|i| {
+            temp_scale
+                * (one - lift_usize::<FloatType>(i) * lift::<FloatType>(TEMPERATURE_GRADIENT))
+        })
         .collect();
-    let temp_manifold = model::make_1d_manifold(initial_temp.clone());
+    let temp_manifold = match model::make_1d_manifold(initial_temp.clone()) {
+        Ok(m) => m,
+        Err(e) => {
+            println!("  [ERROR] mesh construction failed: {e:?}");
+            return CausalEffectPropagationProcess::pure((hadron_count, temp_scale));
+        }
+    };
 
-    let diffusivity = 0.1;
+    let diffusivity = lift::<FloatType>(DIFFUSIVITY);
     let heat_result = heat_diffusion(&temp_manifold, diffusivity);
 
     // Use diffused result if valid, otherwise use initial average
@@ -202,15 +260,16 @@ fn stage_thermalization(
         Some(final_temp) => {
             // Ten cells, so neither mean can refuse; dispatched rather than divided by a
             // literal, which silently decouples from the cell count if the grid changes.
-            let avg = deep_causality_stats::mean(final_temp.data().as_slice()).unwrap_or(0.0);
-            if avg.abs() > 1.0 {
-                avg.abs()
+            let zero = lift::<FloatType>(0.0);
+            let avg = deep_causality_stats::mean(final_temp.data().as_slice()).unwrap_or(zero);
+            if Real::abs(avg) > one {
+                Real::abs(avg)
             } else {
                 // Fallback: use initial temperature average
-                deep_causality_stats::mean(&initial_temp).unwrap_or(0.0)
+                deep_causality_stats::mean(&initial_temp).unwrap_or(zero)
             }
         }
-        _ => temp_scale * 0.9, // Slight cooling
+        _ => temp_scale * lift::<FloatType>(COOLING_FACTOR),
     };
 
     println!("  Initial temp: {:.1} MeV", temp_scale);
@@ -234,42 +293,59 @@ fn stage_thermalization(
 /// - Add multiple detector channels
 /// - Implement more complex observables
 fn stage_quantum_detection(
-    (hadron_count, avg_temp): (usize, f64),
+    (hadron_count, avg_temp): (usize, FloatType),
     _: (),
     _: Option<()>,
-) -> PropagatingEffect<(usize, f64, f64)> {
+) -> PropagatingEffect<(usize, FloatType, FloatType)> {
     println!("\nStage 5: Quantum Detection");
     println!("──────────────────────────");
 
     // Detection probability scales with temperature
     // At T_c ~ 170 MeV (QGP transition), detection is 50%
     // Higher temp → higher detection probability
-    let t_critical = 170.0; // MeV
-    let psi_val = (avg_temp / (avg_temp + t_critical)).clamp(0.01, 0.99);
-    let psi = Complex::new(psi_val.sqrt(), 0.0);
-    let psi_orth = Complex::new((1.0 - psi_val).sqrt(), 0.0);
+    let t_critical = lift::<FloatType>(CRITICAL_TEMPERATURE_MEV);
+    let zero = lift::<FloatType>(0.0);
+    let one = lift::<FloatType>(1.0);
+    let psi_val = clamp(
+        avg_temp / (avg_temp + t_critical),
+        lift(MIN_AMPLITUDE),
+        lift(MAX_AMPLITUDE),
+    );
+    let psi = Complex::new(Real::sqrt(psi_val), zero);
+    let psi_orth = Complex::new(Real::sqrt(one - psi_val), zero);
 
     let metric = Metric::Euclidean(1);
-    let state = HilbertState::<FloatType>::new(vec![psi, psi_orth], metric).unwrap();
-    let basis = HilbertState::<FloatType>::new(
-        vec![Complex::new(1.0, 0.0), Complex::new(0.0, 0.0)],
+    let state = match HilbertState::<FloatType>::new(vec![psi, psi_orth], metric) {
+        Ok(s) => s,
+        Err(e) => {
+            println!("  [ERROR] state construction failed: {e:?}");
+            return CausalEffectPropagationProcess::pure((hadron_count, avg_temp, zero));
+        }
+    };
+    let basis = match HilbertState::<FloatType>::new(
+        vec![Complex::new(one, zero), Complex::new(zero, zero)],
         metric,
-    )
-    .unwrap();
+    ) {
+        Ok(b) => b,
+        Err(e) => {
+            println!("  [ERROR] basis construction failed: {e:?}");
+            return CausalEffectPropagationProcess::pure((hadron_count, avg_temp, zero));
+        }
+    };
 
     let detection = born_probability(&state, &basis);
     let prob = match detection.value() {
         Some(p) => *p,
-        _ => 0.0,
+        _ => zero,
     };
 
-    println!("  Critical temp: T_c = {} MeV", t_critical);
+    println!("  Critical temp: T_c = {CRITICAL_TEMPERATURE_MEV} MeV");
     println!(
         "  |ψ⟩ = {:.3}|QGP⟩ + {:.3}|hadron⟩",
-        psi.re(),
-        psi_orth.re()
+        lower(psi.re()),
+        lower(psi_orth.re())
     );
-    println!("  P(QGP detection) = {:.4}", prob);
+    println!("  P(QGP detection) = {:.4}", lower(prob));
 
     CausalEffectPropagationProcess::pure((hadron_count, avg_temp, prob))
 }
@@ -303,11 +379,11 @@ fn print_summary_header() {
 }
 
 /// Prints the final pipeline summary on success.
-fn print_summary_ok((hadron_count, avg_temp, prob): (usize, f64, f64)) {
+fn print_summary_ok((hadron_count, avg_temp, prob): (usize, FloatType, FloatType)) {
     print_summary_header();
     println!("  Hadron multiplicity:    {} particles", hadron_count);
-    println!("  Thermal equilibrium:    {:.2} MeV", avg_temp);
-    println!("  Detection probability:  {:.4}", prob);
+    println!("  Thermal equilibrium:    {:.2} MeV", lower(avg_temp));
+    println!("  Detection probability:  {:.4}", lower(prob));
     println!("\n[SUCCESS] Modular Pipeline Completed.\n");
 }
 
