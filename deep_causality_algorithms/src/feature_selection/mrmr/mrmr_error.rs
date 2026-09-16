@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use std::error::Error;
 use std::fmt;
 
 /// Errors that can occur during mRMR feature selection.
@@ -42,3 +43,5 @@ impl fmt::Display for MrmrError {
         }
     }
 }
+
+impl Error for MrmrError {}

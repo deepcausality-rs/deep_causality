@@ -75,3 +75,25 @@ fn test_feature_score_error_display() {
         "Feature score error: Division by zero"
     );
 }
+
+#[test]
+fn test_error_boxes_as_std_error() {
+    // A caller propagating an mRMR failure out of `main` boxes it behind `std::error::Error`.
+    // That requires the trait impl, so this test fails to compile without it.
+    fn propagate() -> Result<(), Box<dyn std::error::Error>> {
+        Err(MrmrError::NotEnoughFeatures)?;
+        Ok(())
+    }
+
+    let boxed = propagate().expect_err("the call returns the error it was given");
+    assert_eq!(boxed.to_string(), "Not enough features to select from.");
+}
+
+#[test]
+fn test_error_reports_no_source() {
+    // Every variant carries its own message and wraps no underlying cause, so the source chain
+    // ends at the error itself.
+    let error = MrmrError::SampleTooSmall(3);
+    let as_std: &dyn std::error::Error = &error;
+    assert!(as_std.source().is_none());
+}
