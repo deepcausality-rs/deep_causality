@@ -40,17 +40,6 @@ pub trait ManifoldTopology: SimplicialTopology {
     /// such that $\sigma \cap v = \emptyset$ and $\sigma * v \in K$, where $\sigma * v$ is the join.
     fn satisfies_link_condition(&self) -> bool;
 
-    /// Computes the Euler characteristic of the structure.
-    ///
-    /// The Euler characteristic is a topological invariant, often denoted $\chi$.
-    /// It can be used to classify manifolds and is related to properties like genus.
-    ///
-    /// # Mathematical Definition
-    /// For a finite CW complex, the Euler characteristic is the alternating sum
-    /// of the number of cells of each dimension: $\chi = \sum_{i=0}^n (-1)^i c_i$,
-    /// where $c_i$ is the number of $i$-cells (simplices in this context).
-    fn euler_characteristic(&self) -> isize;
-
     /// Checks if the manifold has a boundary.
     ///
     /// A manifold can be with or without boundary. Manifolds with boundary have

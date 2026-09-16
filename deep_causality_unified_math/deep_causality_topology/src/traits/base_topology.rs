@@ -71,4 +71,41 @@ pub trait BaseTopology {
     /// For a cellular complex $K$, $N_k = |\{ \sigma \in K \mid \dim(\sigma) = k \}|$
     /// represents the number of $k$-dimensional cells (elements) in the complex.
     fn num_elements_at_grade(&self, grade: usize) -> Option<usize>;
+
+    /// Returns the Euler characteristic $\chi = \sum_{k} (-1)^k N_k$.
+    ///
+    /// # Why it belongs to this trait
+    ///
+    /// The Euler characteristic is defined for any finite cell complex, and computing it needs
+    /// exactly the two queries above: the grades a structure carries, and how many cells sit at
+    /// each. Every implementor of this trait answers both, so every implementor has an Euler
+    /// characteristic. A point cloud reads its point count, a graph reads $V - E$, and a
+    /// simplicial complex reads the full alternating sum.
+    ///
+    /// It is an invariant of the structure's homotopy type rather than of its geometry, so it
+    /// survives any deformation leaving the connectivity alone. That is what makes it usable as a
+    /// classifier: a shape stretched, bent or rotated reports the same number.
+    ///
+    /// # What it does not require
+    ///
+    /// Being a manifold is no part of the definition. A complex with a non-manifold vertex link,
+    /// such as the Vietoris-Rips complex of a sampled point cloud, still has an Euler
+    /// characteristic, and this is where that complex asks for it.
+    ///
+    /// # Counting
+    ///
+    /// A grade the structure does not carry contributes nothing, which is what
+    /// [`num_elements_at_grade`](Self::num_elements_at_grade) returning `None` means here. The sum
+    /// is signed because the alternating sign makes it so: a circle reads 0 and a complex with more
+    /// odd cells than even ones reads below zero.
+    fn euler_characteristic(&self) -> isize {
+        (0..=self.dimension()).fold(0isize, |chi, grade| {
+            let count = self.num_elements_at_grade(grade).unwrap_or(0) as isize;
+            if grade % 2 == 0 {
+                chi + count
+            } else {
+                chi - count
+            }
+        })
+    }
 }

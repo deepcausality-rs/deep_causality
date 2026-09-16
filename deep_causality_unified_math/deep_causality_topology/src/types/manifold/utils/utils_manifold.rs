@@ -88,23 +88,6 @@ pub(crate) fn satisfies_link_condition<T: deep_causality_algebra::RealField>(
     true
 }
 
-/// Computes the Euler characteristic of the simplicial complex.
-#[allow(dead_code)]
-pub(crate) fn euler_characteristic<T: deep_causality_algebra::RealField>(
-    complex: &SimplicialComplex<T>,
-) -> isize {
-    let mut chi: isize = 0;
-    for skeleton in &complex.skeletons {
-        let count = skeleton.simplices.len() as isize;
-        if skeleton.dim % 2 == 0 {
-            chi += count;
-        } else {
-            chi -= count;
-        }
-    }
-    chi
-}
-
 /// Checks if the simplicial complex has a boundary.
 #[allow(dead_code)]
 pub(crate) fn has_boundary<T: deep_causality_algebra::RealField>(

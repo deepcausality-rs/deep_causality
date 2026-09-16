@@ -33,8 +33,9 @@
 //!
 //! *   **[`ManifoldTopology`]**: Extends `SimplicialTopology` for structures that aim to be
 //!     manifolds. It includes methods for validating manifold-specific geometric and
-//!     topological criteria, such as `is_oriented`, `satisfies_link_condition`,
-//!     `euler_characteristic`, and `has_boundary`.
+//!     topological criteria, such as `is_oriented`, `satisfies_link_condition`, and
+//!     `has_boundary`. The Euler characteristic sits on [`BaseTopology`], because it is defined
+//!     for any finite cell complex and needs no manifold certificate.
 //!
 //! This modular trait design promotes code reusability, clear separation of concerns,
 //! and facilitates the implementation of generic algorithms that can operate on

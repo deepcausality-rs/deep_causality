@@ -12,7 +12,8 @@
 use deep_causality_linear::CsrMatrix;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
-    Manifold, ManifoldTopology, Simplex, SimplicialComplex, Skeleton, TopologyErrorEnum,
+    BaseTopology, Manifold, ManifoldTopology, Simplex, SimplicialComplex, Skeleton,
+    TopologyErrorEnum,
 };
 
 fn vertices(n: usize) -> Skeleton {
