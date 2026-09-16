@@ -13,7 +13,7 @@
 use crate::FloatType;
 use deep_causality_algebra::Real;
 use deep_causality_haft::{CoMonad, Foldable};
-use deep_causality_num::{lift, lift_count};
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lift_count};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{BaseTopology, PointCloud, PointCloudWitness, TopologyError};
 
@@ -22,11 +22,19 @@ pub const DIMENSIONS: usize = 3;
 
 /// The Vietoris-Rips radius, in the sample's own length units. Two voxels closer than this are
 /// joined by an edge.
-pub const RIPS_RADIUS: f64 = 0.62;
+pub const RIPS_RADIUS: FloatType = const_scalar_from_float!(FloatType, 0.62);
 
 /// The radius the local-density count uses. It matches the Rips radius, so a point's density is
 /// the number of neighbours it is joined to in the complex.
-pub const DENSITY_RADIUS: f64 = RIPS_RADIUS;
+pub const DENSITY_RADIUS: FloatType = RIPS_RADIUS;
+
+/// The small numbers the geometry is written with.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
+const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
+/// The two concentric rings of the solid sample: radius, then how many voxels sit on it.
+const INNER_RING: (FloatType, usize) = (const_scalar_from_float!(FloatType, 0.45), 7);
+const OUTER_RING: (FloatType, usize) = (const_scalar_from_float!(FloatType, 0.9), 16);
 
 /// Voxels per sample.
 pub const SAMPLE_POINTS: usize = 24;
@@ -40,16 +48,15 @@ pub type Sample = PointCloud<FloatType, FloatType>;
 /// closes every triangle across the middle.
 pub fn solid_tissue() -> Result<Sample, TopologyError> {
     let mut coords = Vec::with_capacity(SAMPLE_POINTS * DIMENSIONS);
-    let zero = lift::<FloatType>(0.0);
 
     // A centre point, then two rings around it.
-    coords.extend_from_slice(&[zero, zero, zero]);
-    for (ring, count) in [(0.45, 7usize), (0.9, 16usize)] {
+    coords.extend_from_slice(&[ZERO, ZERO, ZERO]);
+    for (radius, count) in [INNER_RING, OUTER_RING] {
         for k in 0..count {
             let angle = turn_fraction(k, count);
-            coords.push(lift::<FloatType>(ring) * Real::cos(angle));
-            coords.push(lift::<FloatType>(ring) * Real::sin(angle));
-            coords.push(zero);
+            coords.push(radius * Real::cos(angle));
+            coords.push(radius * Real::sin(angle));
+            coords.push(ZERO);
         }
     }
     build_sample(coords)
@@ -59,13 +66,12 @@ pub fn solid_tissue() -> Result<Sample, TopologyError> {
 /// necrotic core. The cells at the rim are alive and the middle has died out.
 pub fn necrotic_tissue() -> Result<Sample, TopologyError> {
     let mut coords = Vec::with_capacity(SAMPLE_POINTS * DIMENSIONS);
-    let zero = lift::<FloatType>(0.0);
 
     for k in 0..SAMPLE_POINTS {
         let angle = turn_fraction(k, SAMPLE_POINTS);
-        coords.push(lift::<FloatType>(1.0) * Real::cos(angle));
-        coords.push(lift::<FloatType>(1.0) * Real::sin(angle));
-        coords.push(zero);
+        coords.push(ONE * Real::cos(angle));
+        coords.push(ONE * Real::sin(angle));
+        coords.push(ZERO);
     }
     build_sample(coords)
 }
@@ -92,7 +98,7 @@ pub struct TopologyReading {
 /// question the same way. It also answers for a complex whose vertex links fail the manifold
 /// conditions, and the Vietoris-Rips complex of a sampled surface is exactly such a complex.
 pub fn read_topology(sample: &Sample) -> Result<TopologyReading, TopologyError> {
-    let complex = sample.triangulate(lift::<FloatType>(RIPS_RADIUS))?;
+    let complex = sample.triangulate(RIPS_RADIUS)?;
     let at = |grade: usize| complex.num_elements_at_grade(grade).unwrap_or(0);
 
     Ok(TopologyReading {
@@ -109,13 +115,11 @@ pub fn read_topology(sample: &Sample) -> Result<TopologyReading, TopologyError> 
 /// the closure reads its own coordinates and the whole cloud together. The Euler characteristic
 /// says a void exists; this map says which voxels sit next to it.
 pub fn local_density(sample: &Sample) -> Sample {
-    let radius = lift::<FloatType>(DENSITY_RADIUS);
-
     PointCloudWitness::extend(sample, |view| {
         let here = view.cursor();
         let points = view.points().as_slice();
         let count = (0..view.len())
-            .filter(|&other| other != here && distance(points, here, other) <= radius)
+            .filter(|&other| other != here && distance(points, here, other) <= DENSITY_RADIUS)
             .count();
         lift_count::<FloatType>(count as u64)
     })
@@ -139,7 +143,7 @@ pub fn density_range(density: Sample) -> (FloatType, FloatType) {
 /// The Euclidean distance between two voxels of a flattened `[n, 3]` coordinate table.
 fn distance(points: &[FloatType], a: usize, b: usize) -> FloatType {
     let (base_a, base_b) = (a * DIMENSIONS, b * DIMENSIONS);
-    let squared = (0..DIMENSIONS).fold(lift::<FloatType>(0.0), |sum, axis| {
+    let squared = (0..DIMENSIONS).fold(ZERO, |sum, axis| {
         let gap = points[base_a + axis] - points[base_b + axis];
         sum + gap * gap
     });
@@ -148,7 +152,7 @@ fn distance(points: &[FloatType], a: usize, b: usize) -> FloatType {
 
 /// The fraction of a full turn that point `k` of `count` sits at, in radians.
 fn turn_fraction(k: usize, count: usize) -> FloatType {
-    let two_pi = lift::<FloatType>(2.0) * FloatType::pi();
+    let two_pi = TWO * FloatType::pi();
     two_pi * lift_count::<FloatType>(k as u64) / lift_count::<FloatType>(count as u64)
 }
 
@@ -156,6 +160,6 @@ fn turn_fraction(k: usize, count: usize) -> FloatType {
 fn build_sample(coords: Vec<FloatType>) -> Result<Sample, TopologyError> {
     let points = coords.len() / DIMENSIONS;
     let positions = CausalTensor::new(coords, vec![points, DIMENSIONS])?;
-    let metadata = CausalTensor::new(vec![lift::<FloatType>(1.0); points], vec![points])?;
+    let metadata = CausalTensor::new(vec![ONE; points], vec![points])?;
     PointCloud::new(positions, metadata, 0)
 }

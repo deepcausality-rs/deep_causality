@@ -12,22 +12,29 @@
 use crate::FloatType;
 use deep_causality_algebra::Real;
 use deep_causality_linear::CsrMatrix;
-use deep_causality_num::{lift, lift_count};
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lift_count};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, Simplex, SimplicialComplex, SimplicialManifold, Skeleton};
+
+/// The small whole numbers the model is written with.
+pub const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+pub const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
+pub const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
+pub const FOUR: FloatType = const_scalar_from_int!(FloatType, 4);
+pub const HALF: FloatType = const_scalar_from_float!(FloatType, 0.5);
 
 // =============================================================================
 // Vessel geometry
 // =============================================================================
 
 /// Segment length, in metres. Forty millimetres of a cerebral artery.
-pub const SEGMENT_LENGTH_M: f64 = 0.040;
+pub const SEGMENT_LENGTH_M: FloatType = const_scalar_from_float!(FloatType, 0.040);
 
 /// The healthy lumen radius, in metres. Two millimetres.
-pub const HEALTHY_RADIUS_M: f64 = 0.002;
+pub const HEALTHY_RADIUS_M: FloatType = const_scalar_from_float!(FloatType, 0.002);
 
 /// The aneurysm dome radius at its widest, in metres. Five millimetres.
-pub const DOME_RADIUS_M: f64 = 0.005;
+pub const DOME_RADIUS_M: FloatType = const_scalar_from_float!(FloatType, 0.005);
 
 /// Where the dome sits on the centreline, as node indices. The bulge spans `[NECK_IN, NECK_OUT]`
 /// and peaks halfway between them.
@@ -39,22 +46,22 @@ pub const NECK_OUT: usize = 26;
 // =============================================================================
 
 /// Dynamic viscosity of whole blood, in Pa·s.
-pub const BLOOD_VISCOSITY: f64 = 0.0035;
+pub const BLOOD_VISCOSITY: FloatType = const_scalar_from_float!(FloatType, 0.0035);
 
 /// Volumetric flow rate through the segment, in m³/s. Three millilitres per second, in the range
 /// a middle cerebral artery carries.
-pub const FLOW_RATE_M3S: f64 = 3.0e-6;
+pub const FLOW_RATE_M3S: FloatType = const_scalar_from_float!(FloatType, 3.0e-6);
 
 // =============================================================================
 // Degeneration model
 // =============================================================================
 
 /// The wall shear stress below which the endothelium stops maintaining the wall, in Pa.
-pub const LOW_SHEAR_THRESHOLD_PA: f64 = 0.4;
+pub const LOW_SHEAR_THRESHOLD_PA: FloatType = const_scalar_from_float!(FloatType, 0.4);
 
 /// Degeneration accrued per cardiac cycle at a total loss of shear, dimensionless. This constant
 /// sets the pace of the run; a clinical model would calibrate it against longitudinal imaging.
-pub const DEGENERATION_PER_CYCLE: f64 = 1.0e-7;
+pub const DEGENERATION_PER_CYCLE: FloatType = const_scalar_from_float!(FloatType, 1.0e-7);
 
 /// Cardiac cycles per reported epoch. A million cycles is about nine days at 72 beats a minute.
 pub const CYCLES_PER_EPOCH: u64 = 1_000_000;
@@ -63,7 +70,7 @@ pub const CYCLES_PER_EPOCH: u64 = 1_000_000;
 pub const EPOCHS: usize = 12;
 
 /// The degeneration index at which the wall is flagged as rupture-prone, dimensionless.
-pub const RUPTURE_THRESHOLD: f64 = 0.75;
+pub const RUPTURE_THRESHOLD: FloatType = const_scalar_from_float!(FloatType, 0.75);
 
 // =============================================================================
 // Haemodynamics
@@ -75,29 +82,22 @@ pub const RUPTURE_THRESHOLD: f64 = 0.75;
 /// the wall shear is the viscosity times that profile's slope at the wall. Widening the lumen
 /// therefore drops the shear as the cube of the radius, which is why the dome starves.
 pub fn wall_shear_stress(radius_m: FloatType) -> FloatType {
-    let four = lift::<FloatType>(4.0);
-    let mu = lift::<FloatType>(BLOOD_VISCOSITY);
-    let q = lift::<FloatType>(FLOW_RATE_M3S);
-    four * mu * q / (FloatType::pi() * radius_m * radius_m * radius_m)
+    FOUR * BLOOD_VISCOSITY * FLOW_RATE_M3S / (FloatType::pi() * radius_m * radius_m * radius_m)
 }
 
 /// The lumen radius at a centreline node, in metres. A raised cosine carries the wall smoothly
 /// from the healthy calibre out to the dome and back, so the gradient stencil reads a continuous
 /// slope across the neck.
 pub fn radius_at(node: usize) -> FloatType {
-    let healthy = lift::<FloatType>(HEALTHY_RADIUS_M);
     if node <= NECK_IN || node >= NECK_OUT {
-        return healthy;
+        return HEALTHY_RADIUS_M;
     }
     let span = lift_count::<FloatType>((NECK_OUT - NECK_IN) as u64);
     let offset = lift_count::<FloatType>((node - NECK_IN) as u64);
-    let bulge = lift::<FloatType>(DOME_RADIUS_M) - healthy;
-    let half = lift::<FloatType>(0.5);
-    let one = lift::<FloatType>(1.0);
-    let two = lift::<FloatType>(2.0);
+    let bulge = DOME_RADIUS_M - HEALTHY_RADIUS_M;
 
     // A raised cosine over the neck-to-neck span: zero at both necks, one at the apex.
-    healthy + bulge * half * (one - Real::cos(two * FloatType::pi() * offset / span))
+    HEALTHY_RADIUS_M + bulge * HALF * (ONE - Real::cos(TWO * FloatType::pi() * offset / span))
 }
 
 /// The degeneration index after each epoch.
@@ -105,17 +105,13 @@ pub fn radius_at(node: usize) -> FloatType {
 /// Below the threshold the wall degrades at a rate set by how far the shear has fallen. At or
 /// above it the endothelium holds its maintenance programme and the index stays put.
 pub fn degeneration_history(dome_shear: FloatType) -> Vec<FloatType> {
-    let threshold = lift::<FloatType>(LOW_SHEAR_THRESHOLD_PA);
-    let zero = lift::<FloatType>(0.0);
-    let deficit = if dome_shear < threshold {
-        (threshold - dome_shear) / threshold
+    let deficit = if dome_shear < LOW_SHEAR_THRESHOLD_PA {
+        (LOW_SHEAR_THRESHOLD_PA - dome_shear) / LOW_SHEAR_THRESHOLD_PA
     } else {
-        zero
+        ZERO
     };
 
-    let per_epoch = lift::<FloatType>(DEGENERATION_PER_CYCLE)
-        * lift_count::<FloatType>(CYCLES_PER_EPOCH)
-        * deficit;
+    let per_epoch = DEGENERATION_PER_CYCLE * lift_count::<FloatType>(CYCLES_PER_EPOCH) * deficit;
 
     (1..=EPOCHS)
         .map(|epoch| per_epoch * lift_count::<FloatType>(epoch as u64))
@@ -152,10 +148,7 @@ pub fn build_vessel_manifold(
     );
 
     let mut data: Vec<FloatType> = (0..nodes).map(radius_at).collect();
-    data.extend(std::iter::repeat_n(
-        lift::<FloatType>(HEALTHY_RADIUS_M),
-        nodes - 1,
-    ));
+    data.extend(std::iter::repeat_n(HEALTHY_RADIUS_M, nodes - 1));
 
     let payload = CausalTensor::new(data, vec![2 * nodes - 1])?;
     Ok(Manifold::new(complex, payload, 0)?)

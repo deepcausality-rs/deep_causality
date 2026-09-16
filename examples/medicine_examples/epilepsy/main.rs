@@ -29,16 +29,20 @@
 mod model;
 mod utils_print;
 
+use deep_causality_num::Float106;
 use model::{build_connectome, is_seizing, simulate};
 use utils_print::{print_baseline, print_header, print_resection_row, print_verdict};
 
 /// Brain regions in the connectome. Region 0 is the seizure focus.
 const N_REGIONS: usize = 10;
 
-/// The working scalar. Switch it to `f32`, `deep_causality_num::BFloat16` or
-/// `deep_causality_num::Float106`; the phases, the coupling, the integration and the order
-/// parameter all re-run at that precision.
-pub type FloatType = f64;
+/// The working scalar. Switch it to `f32`, `f64` or `deep_causality_num::BFloat16`; the phases,
+/// the coupling, the integration and the order parameter all re-run at that precision.
+///
+/// It sits at [`Float106`] by default on purpose. A hard-coded `f64` anywhere in the program is
+/// invisible while the alias *is* `f64`, and shows up here as a compile error the moment the two
+/// types differ.
+pub type FloatType = Float106;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header(N_REGIONS);

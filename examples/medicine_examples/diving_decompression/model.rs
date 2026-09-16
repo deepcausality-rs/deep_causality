@@ -8,21 +8,37 @@
 //!
 //! Sixteen tissue compartments absorb and release nitrogen at sixteen different rates, so every
 //! compartment computation pairs a tension with the constant that belongs to it. That pairing is
-//! what [`ZipTensorWitness::zip_with`] does: it walks two tensors slot by slot and combines each
+//! what `ZipTensorWitness::zip_with` does: it walks two tensors slot by slot and combines each
 //! pair. The loading law is therefore written once, and the witness carries it across all sixteen.
 //!
-//! Every quantity is typed [`FloatType`], so switching the alias in `main` re-runs the whole model
-//! at another precision.
+//! # Where the constants live
+//!
+//! Every table below is declared **at the working type**, through `const_scalar_from_int!` for a
+//! whole number and `const_scalar_from_float!` for a decimal. The compiler resolves them against
+//! the alias in `main`, so switching that alias re-declares every one of them and no lift runs at
+//! any call site.
+//!
+//! Every constant in this file is declared at the working type, and no `lift` runs anywhere in it.
+//! The one scalar-generic body, [`SchreinerCurve::run`], reaches for nothing outside its arguments:
+//! it names the Schreiner equation and builds `ln 2` from `S::one()`, so it holds no literal to
+//! declare in the first place.
 
-use crate::FloatType;
+use crate::{FloatType, ascend, descend, hold_bottom, surface};
 use deep_causality_algebra::Real;
-use deep_causality_calculus::{DifferentiableArrow, Scalar};
+use deep_causality_calculus::{DifferentiableField, DifferentiateFieldExt, Scalar};
 use deep_causality_core::{CausalFlow, CausalityError, CausalityErrorEnum};
-use deep_causality_haft::{Foldable, Semigroupal};
-use deep_causality_num::lift;
-use deep_causality_tensor::{
-    CausalTensor, CausalTensorError, CausalTensorWitness, ZipTensorWitness,
-};
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int};
+use deep_causality_tensor::{CausalTensor, CausalTensorError};
+
+// =============================================================================
+// The small whole numbers the physiology is written with
+// =============================================================================
+
+pub const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+pub const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
+pub const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
+pub const TEN: FloatType = const_scalar_from_int!(FloatType, 10);
+const HUNDRED: FloatType = const_scalar_from_int!(FloatType, 100);
 
 // =============================================================================
 // Bühlmann ZH-L16C parameters
@@ -33,62 +49,178 @@ pub const COMPARTMENTS: usize = 16;
 
 /// Compartment half-times for nitrogen, in minutes. The fast compartments drive a short dive; the
 /// slow ones control a long one.
-pub const HALF_TIMES: [f64; COMPARTMENTS] = [
-    5.0, 8.0, 12.5, 18.5, 27.0, 38.3, 54.3, 77.0, 109.0, 146.0, 187.0, 239.0, 305.0, 390.0, 498.0,
-    635.0,
+pub const HALF_TIMES: [FloatType; COMPARTMENTS] = [
+    const_scalar_from_int!(FloatType, 5),
+    const_scalar_from_int!(FloatType, 8),
+    const_scalar_from_float!(FloatType, 12.5),
+    const_scalar_from_float!(FloatType, 18.5),
+    const_scalar_from_int!(FloatType, 27),
+    const_scalar_from_float!(FloatType, 38.3),
+    const_scalar_from_float!(FloatType, 54.3),
+    const_scalar_from_int!(FloatType, 77),
+    const_scalar_from_int!(FloatType, 109),
+    const_scalar_from_int!(FloatType, 146),
+    const_scalar_from_int!(FloatType, 187),
+    const_scalar_from_int!(FloatType, 239),
+    const_scalar_from_int!(FloatType, 305),
+    const_scalar_from_int!(FloatType, 390),
+    const_scalar_from_int!(FloatType, 498),
+    const_scalar_from_int!(FloatType, 635),
 ];
 
 /// M-value `a` coefficients, in bar.
-const A_COEFFICIENTS: [f64; COMPARTMENTS] = [
-    1.1696, 1.0000, 0.8618, 0.7562, 0.6200, 0.5043, 0.4410, 0.4000, 0.3750, 0.3500, 0.3295, 0.3065,
-    0.2835, 0.2610, 0.2480, 0.2327,
+const A_COEFFICIENTS: [FloatType; COMPARTMENTS] = [
+    const_scalar_from_float!(FloatType, 1.1696),
+    const_scalar_from_int!(FloatType, 1),
+    const_scalar_from_float!(FloatType, 0.8618),
+    const_scalar_from_float!(FloatType, 0.7562),
+    const_scalar_from_float!(FloatType, 0.6200),
+    const_scalar_from_float!(FloatType, 0.5043),
+    const_scalar_from_float!(FloatType, 0.4410),
+    const_scalar_from_float!(FloatType, 0.4000),
+    const_scalar_from_float!(FloatType, 0.3750),
+    const_scalar_from_float!(FloatType, 0.3500),
+    const_scalar_from_float!(FloatType, 0.3295),
+    const_scalar_from_float!(FloatType, 0.3065),
+    const_scalar_from_float!(FloatType, 0.2835),
+    const_scalar_from_float!(FloatType, 0.2610),
+    const_scalar_from_float!(FloatType, 0.2480),
+    const_scalar_from_float!(FloatType, 0.2327),
 ];
 
 /// M-value `b` coefficients, dimensionless.
-const B_COEFFICIENTS: [f64; COMPARTMENTS] = [
-    0.5578, 0.6514, 0.7222, 0.7825, 0.8126, 0.8434, 0.8693, 0.8910, 0.9092, 0.9222, 0.9319, 0.9403,
-    0.9477, 0.9544, 0.9602, 0.9653,
+const B_COEFFICIENTS: [FloatType; COMPARTMENTS] = [
+    const_scalar_from_float!(FloatType, 0.5578),
+    const_scalar_from_float!(FloatType, 0.6514),
+    const_scalar_from_float!(FloatType, 0.7222),
+    const_scalar_from_float!(FloatType, 0.7825),
+    const_scalar_from_float!(FloatType, 0.8126),
+    const_scalar_from_float!(FloatType, 0.8434),
+    const_scalar_from_float!(FloatType, 0.8693),
+    const_scalar_from_float!(FloatType, 0.8910),
+    const_scalar_from_float!(FloatType, 0.9092),
+    const_scalar_from_float!(FloatType, 0.9222),
+    const_scalar_from_float!(FloatType, 0.9319),
+    const_scalar_from_float!(FloatType, 0.9403),
+    const_scalar_from_float!(FloatType, 0.9477),
+    const_scalar_from_float!(FloatType, 0.9544),
+    const_scalar_from_float!(FloatType, 0.9602),
+    const_scalar_from_float!(FloatType, 0.9653),
 ];
 
 /// Nitrogen partial pressure at the surface, in bar.
-const SURFACE_N2_PP: f64 = 0.79;
-/// Nitrogen fraction in air.
-const F_N2: f64 = 0.79;
-/// Oxygen fraction in air.
-const F_O2: f64 = 0.21;
-/// Water-vapour pressure in the lung at 37 °C, in bar.
-const P_WATER_VAPOUR: f64 = 0.0627;
+const SURFACE_N2_PP: FloatType = const_scalar_from_float!(FloatType, 0.79);
 
-/// Gradient factors for conservative recreational diving.
-pub const GF_LOW: f64 = 0.30;
-pub const GF_HIGH: f64 = 0.85;
+/// Nitrogen and oxygen fractions in air, and the lung's water-vapour pressure in bar at 37 °C.
+const F_N2: FloatType = const_scalar_from_float!(FloatType, 0.79);
+const F_O2: FloatType = const_scalar_from_float!(FloatType, 0.21);
+const P_WATER_VAPOUR: FloatType = const_scalar_from_float!(FloatType, 0.0627);
+
+/// The gradient factor the ceiling is computed against, for conservative recreational diving.
+///
+/// A full planner interpolates from a lower factor at depth to this one at the surface. This one
+/// holds a single factor for the whole ascent, which is the simplification the README records.
+pub const GF_HIGH: FloatType = const_scalar_from_float!(FloatType, 0.85);
 
 /// Descent and ascent rates, in metres per minute. The ascent rate is the PADI standard.
-pub const DESCENT_RATE: f64 = 18.0;
-pub const ASCENT_RATE: f64 = 9.0;
+pub const DESCENT_RATE: FloatType = const_scalar_from_int!(FloatType, 18);
+pub const ASCENT_RATE: FloatType = const_scalar_from_int!(FloatType, 9);
 
 /// NOAA CNS oxygen-toxicity limits as `(ppO2 in bar, maximum exposure in minutes)`.
-const CNS_LIMITS: [(f64, f64); 7] = [
-    (1.60, 45.0),
-    (1.50, 120.0),
-    (1.40, 150.0),
-    (1.30, 180.0),
-    (1.20, 210.0),
-    (1.10, 240.0),
-    (1.00, 300.0),
+const CNS_LIMITS: [(FloatType, FloatType); 7] = [
+    (
+        const_scalar_from_float!(FloatType, 1.60),
+        const_scalar_from_int!(FloatType, 45),
+    ),
+    (
+        const_scalar_from_float!(FloatType, 1.50),
+        const_scalar_from_int!(FloatType, 120),
+    ),
+    (
+        const_scalar_from_float!(FloatType, 1.40),
+        const_scalar_from_int!(FloatType, 150),
+    ),
+    (
+        const_scalar_from_float!(FloatType, 1.30),
+        const_scalar_from_int!(FloatType, 180),
+    ),
+    (
+        const_scalar_from_float!(FloatType, 1.20),
+        const_scalar_from_int!(FloatType, 210),
+    ),
+    (
+        const_scalar_from_float!(FloatType, 1.10),
+        const_scalar_from_int!(FloatType, 240),
+    ),
+    (
+        const_scalar_from_int!(FloatType, 1),
+        const_scalar_from_int!(FloatType, 300),
+    ),
 ];
 
+/// A conservative no-decompression limit per depth band, as `(depth in metres, limit in minutes)`.
+const NDL_TABLE: [(FloatType, FloatType); 7] = [
+    (
+        const_scalar_from_int!(FloatType, 12),
+        const_scalar_from_int!(FloatType, 200),
+    ),
+    (
+        const_scalar_from_int!(FloatType, 18),
+        const_scalar_from_int!(FloatType, 80),
+    ),
+    (
+        const_scalar_from_int!(FloatType, 24),
+        const_scalar_from_int!(FloatType, 45),
+    ),
+    (
+        const_scalar_from_int!(FloatType, 30),
+        const_scalar_from_int!(FloatType, 25),
+    ),
+    (
+        const_scalar_from_int!(FloatType, 36),
+        const_scalar_from_int!(FloatType, 15),
+    ),
+    (
+        const_scalar_from_int!(FloatType, 42),
+        const_scalar_from_int!(FloatType, 10),
+    ),
+    (
+        const_scalar_from_int!(FloatType, 48),
+        const_scalar_from_int!(FloatType, 8),
+    ),
+];
+
+/// The limit past the deepest band in [`NDL_TABLE`], in minutes.
+const NDL_BEYOND_TABLE: FloatType = const_scalar_from_int!(FloatType, 6);
+
 /// Ascent proceeds in steps of this many metres.
-pub const ASCENT_STEP_M: f64 = 3.0;
+pub const ASCENT_STEP_M: FloatType = const_scalar_from_int!(FloatType, 3);
 /// Above this depth the ascent runs to the surface, and the safety stop covers the last stretch.
-pub const DECO_CLEARANCE_M: f64 = 6.0;
+pub const DECO_CLEARANCE_M: FloatType = const_scalar_from_int!(FloatType, 6);
 /// A decompression stop lasts at least this long, in minutes.
-pub const MIN_STOP_MINUTES: f64 = 2.0;
+pub const MIN_STOP_MINUTES: FloatType = const_scalar_from_int!(FloatType, 2);
 /// Dives to at least this depth carry a safety stop.
-pub const SAFETY_STOP_DEPTH_THRESHOLD_M: f64 = 15.0;
+pub const SAFETY_STOP_DEPTH_THRESHOLD_M: FloatType = const_scalar_from_int!(FloatType, 15);
 /// The safety stop itself: depth in metres, duration in minutes.
-pub const SAFETY_STOP_M: f64 = 5.0;
-pub const SAFETY_STOP_MINUTES: f64 = 3.0;
+pub const SAFETY_STOP_M: FloatType = const_scalar_from_int!(FloatType, 5);
+pub const SAFETY_STOP_MINUTES: FloatType = const_scalar_from_int!(FloatType, 3);
+
+/// The depths the printed table covers, in metres.
+pub const TABLE_DEPTHS_M: [FloatType; 9] = [
+    const_scalar_from_int!(FloatType, 10),
+    const_scalar_from_int!(FloatType, 15),
+    const_scalar_from_int!(FloatType, 20),
+    const_scalar_from_int!(FloatType, 25),
+    const_scalar_from_int!(FloatType, 30),
+    const_scalar_from_int!(FloatType, 35),
+    const_scalar_from_int!(FloatType, 40),
+    const_scalar_from_int!(FloatType, 45),
+    const_scalar_from_int!(FloatType, 50),
+];
+
+/// The bottom time the table uses for each depth: the no-decompression limit, held to this cap so
+/// every row runs in the same handful of milliseconds.
+pub const TABLE_BOTTOM_CAP_MINUTES: FloatType = const_scalar_from_int!(FloatType, 20);
 
 // =============================================================================
 // Types
@@ -122,39 +254,17 @@ pub struct DiverState {
 impl DiverState {
     /// A diver at the surface, fully off-gassed and equilibrated with air.
     pub fn at_surface() -> Result<Self, CausalTensorError> {
-        let zero = lift::<FloatType>(0.0);
         Ok(Self {
-            depth_m: zero,
-            elapsed_minutes: zero,
+            depth_m: ZERO,
+            elapsed_minutes: ZERO,
             tissue_tensions: CausalTensor::new(
-                vec![lift::<FloatType>(SURFACE_N2_PP); COMPARTMENTS],
+                vec![SURFACE_N2_PP; COMPARTMENTS],
                 vec![COMPARTMENTS],
             )?,
-            cns_percent: zero,
+            cns_percent: ZERO,
             deco_stops: Vec::new(),
             controlling_at_bottom: 0,
-            ceiling_at_bottom_m: zero,
-        })
-    }
-
-    /// Spends `minutes` at `depth_m`: loads the sixteen compartments, advances the CNS oxygen
-    /// clock and the elapsed time, and leaves the diver at that depth.
-    ///
-    /// Every phase of the dive is this one operation applied at a different depth for a different
-    /// duration, so the three phases below read as the schedule they describe.
-    pub fn advance(
-        &self,
-        depth_m: FloatType,
-        minutes: FloatType,
-    ) -> Result<Self, CausalTensorError> {
-        Ok(Self {
-            depth_m,
-            elapsed_minutes: self.elapsed_minutes + minutes,
-            tissue_tensions: update_tissues(&self.tissue_tensions, depth_m, minutes)?,
-            cns_percent: self.cns_percent + cns_accumulation(depth_m, minutes),
-            deco_stops: self.deco_stops.clone(),
-            controlling_at_bottom: self.controlling_at_bottom,
-            ceiling_at_bottom_m: self.ceiling_at_bottom_m,
+            ceiling_at_bottom_m: ZERO,
         })
     }
 }
@@ -185,34 +295,23 @@ pub struct DiveTableRow {
     pub profile: DiveProfile,
 }
 
-/// The depths the printed table covers, in metres.
-pub const TABLE_DEPTHS_M: [f64; 9] = [10.0, 15.0, 20.0, 25.0, 30.0, 35.0, 40.0, 45.0, 50.0];
-
-/// The bottom time the table uses for each depth: the no-decompression limit, held to this cap so
-/// every row runs in the same handful of milliseconds.
-pub const TABLE_BOTTOM_CAP_MINUTES: f64 = 20.0;
-
 // =============================================================================
 // Gas physics
 // =============================================================================
 
-/// Ambient pressure at depth, in bar.
-///
-/// The three gas laws here are written over the `Scalar` bound, because two callers need them at
-/// two different scalars: the simulation evaluates them at [`FloatType`], and the differentiable
-/// loading curve evaluates them at `f64` to fix its configuration. One definition serves both.
-pub fn ambient_pressure<S: Scalar>(depth_m: S) -> S {
-    lift::<S>(1.0) + depth_m / lift::<S>(10.0)
+/// Ambient pressure at depth, in bar. Ten metres of seawater is one bar.
+pub fn ambient_pressure(depth_m: FloatType) -> FloatType {
+    ONE + depth_m / TEN
 }
 
-/// Inspired nitrogen partial pressure at depth, in bar.
-pub fn inspired_n2_pp<S: Scalar>(depth_m: S) -> S {
-    (ambient_pressure(depth_m) - lift::<S>(P_WATER_VAPOUR)) * lift::<S>(F_N2)
+/// Inspired nitrogen partial pressure at depth, in bar, breathing air.
+pub fn inspired_n2_pp(depth_m: FloatType) -> FloatType {
+    (ambient_pressure(depth_m) - P_WATER_VAPOUR) * F_N2
 }
 
-/// Oxygen partial pressure at depth, in bar.
-pub fn oxygen_pp<S: Scalar>(depth_m: S) -> S {
-    ambient_pressure(depth_m) * lift::<S>(F_O2)
+/// Oxygen partial pressure at depth, in bar, breathing air.
+pub fn oxygen_pp(depth_m: FloatType) -> FloatType {
+    ambient_pressure(depth_m) * F_O2
 }
 
 /// The Schreiner equation: a compartment's tension after `minutes` at a given inspired pressure.
@@ -224,85 +323,40 @@ pub fn tissue_loading(
     minutes: FloatType,
     half_time: FloatType,
 ) -> FloatType {
-    let k = Real::ln(lift::<FloatType>(2.0)) / half_time;
+    let k = Real::ln(TWO) / half_time;
     p_inspired + (p_initial - p_inspired) * Real::exp(-(k * minutes))
 }
 
 /// The ascent ceiling a single compartment imposes, in metres: the shallowest depth it tolerates.
+///
+/// Bühlmann's M-value line gives the tension a compartment tolerates at ambient pressure `P` as
+/// `P/b + a`. A gradient factor admits only `gf` of the gap between the ambient pressure and that
+/// line, so the tolerated tension at `P` is
+///
+/// ```text
+/// tension = P + gf·(P/b + a − P)
+/// ```
+///
+/// Solving for `P` gives the shallowest ambient pressure this compartment allows, and ten metres
+/// of seawater is one bar. A compartment already below its line yields a ceiling at the surface,
+/// which the clamp reports as zero.
 pub fn tissue_ceiling(tension: FloatType, a: FloatType, b: FloatType, gf: FloatType) -> FloatType {
-    let m_value = tension / b + a;
-    let allowed_gradient = gf * (m_value - tension / b);
-    let ceiling_pressure = tension - allowed_gradient;
-    let metres = (ceiling_pressure - lift::<FloatType>(1.0)) * lift::<FloatType>(10.0);
-    let zero = lift::<FloatType>(0.0);
-    if metres > zero { metres } else { zero }
-}
-
-/// Loads all sixteen compartments for `minutes` spent at `depth_m`.
-///
-/// `zip_with` pairs each tension with its own half-time and applies the loading law to the pair,
-/// which is the whole of the update.
-pub fn update_tissues(
-    tensions: &CausalTensor<FloatType>,
-    depth_m: FloatType,
-    minutes: FloatType,
-) -> Result<CausalTensor<FloatType>, CausalTensorError> {
-    let p_inspired = inspired_n2_pp(depth_m);
-    let half_times = constant_tensor(&HALF_TIMES)?;
-
-    Ok(ZipTensorWitness::zip_with(
-        tensions.clone(),
-        half_times,
-        |p_initial, half_time| tissue_loading(p_initial, p_inspired, minutes, half_time),
-    ))
-}
-
-/// The controlling compartment and the ceiling it imposes, in metres.
-///
-/// Two categorical steps carry this. `zip_with` turns a tension and its M-value coefficients into
-/// that compartment's ceiling, and `fold` reduces the sixteen ceilings to the highest one. The
-/// index rides along in the payload so the reduction can name the compartment it picked.
-pub fn find_ceiling(
-    tensions: &CausalTensor<FloatType>,
-    gf: FloatType,
-) -> Result<(usize, FloatType), CausalTensorError> {
-    let coefficients = coefficient_tensor()?;
-
-    let ceilings = ZipTensorWitness::zip_with(tensions.clone(), coefficients, |tension, ab| {
-        let (index, a, b) = ab;
-        (index, tissue_ceiling(tension, a, b, gf))
-    });
-
-    Ok(CausalTensorWitness::fold(
-        ceilings,
-        (0usize, lift::<FloatType>(0.0)),
-        |best, candidate| {
-            if candidate.1 > best.1 {
-                candidate
-            } else {
-                best
-            }
-        },
-    ))
+    let slope = ONE - gf + gf / b;
+    let ceiling_pressure = (tension - gf * a) / slope;
+    let metres = (ceiling_pressure - ONE) * TEN;
+    if metres > ZERO { metres } else { ZERO }
 }
 
 /// The maximum exposure at a given oxygen partial pressure, in minutes. The NOAA table starts at
 /// 1.0 bar; `None` reports a pressure under that floor, where exposure runs unlimited.
 pub fn max_cns_minutes(pp_o2: FloatType) -> Option<FloatType> {
-    let one = lift::<FloatType>(1.0);
-    if pp_o2 < one {
+    if pp_o2 < ONE {
         return None;
     }
 
     for window in CNS_LIMITS.windows(2) {
-        let (pp_high, time_high) = (
-            lift::<FloatType>(window[0].0),
-            lift::<FloatType>(window[0].1),
-        );
-        let (pp_low, time_low) = (
-            lift::<FloatType>(window[1].0),
-            lift::<FloatType>(window[1].1),
-        );
+        let (pp_high, time_high) = window[0];
+        let (pp_low, time_low) = window[1];
         if pp_o2 >= pp_low && pp_o2 <= pp_high {
             let ratio = (pp_o2 - pp_low) / (pp_high - pp_low);
             return Some(time_low + ratio * (time_high - time_low));
@@ -310,83 +364,93 @@ pub fn max_cns_minutes(pp_o2: FloatType) -> Option<FloatType> {
     }
 
     // Above the top of the table the tolerated time keeps shrinking in inverse proportion.
-    let top_pp = lift::<FloatType>(CNS_LIMITS[0].0);
-    let top_time = lift::<FloatType>(CNS_LIMITS[0].1);
+    let (top_pp, top_time) = CNS_LIMITS[0];
     if pp_o2 > top_pp {
         return Some(top_time * top_pp / pp_o2);
     }
-    Some(lift::<FloatType>(CNS_LIMITS[CNS_LIMITS.len() - 1].1))
+    Some(CNS_LIMITS[CNS_LIMITS.len() - 1].1)
 }
 
 /// The CNS oxygen clock accrued by spending `minutes` at `depth_m`, in percent.
 pub fn cns_accumulation(depth_m: FloatType, minutes: FloatType) -> FloatType {
     match max_cns_minutes(oxygen_pp(depth_m)) {
-        Some(limit) => minutes / limit * lift::<FloatType>(100.0),
-        None => lift::<FloatType>(0.0),
+        Some(limit) => minutes / limit * HUNDRED,
+        None => ZERO,
     }
 }
 
 /// A conservative no-decompression limit for a depth, in minutes.
 pub fn estimate_ndl(depth_m: FloatType) -> FloatType {
-    let table = [
-        (12.0, 200.0),
-        (18.0, 80.0),
-        (24.0, 45.0),
-        (30.0, 25.0),
-        (36.0, 15.0),
-        (42.0, 10.0),
-        (48.0, 8.0),
-    ];
-    for (max_depth, ndl) in table {
-        if depth_m <= lift::<FloatType>(max_depth) {
-            return lift::<FloatType>(ndl);
+    for (band_depth, ndl) in NDL_TABLE {
+        if depth_m <= band_depth {
+            return ndl;
         }
     }
-    lift::<FloatType>(6.0)
+    NDL_BEYOND_TABLE
 }
 
 // =============================================================================
 // The differentiable gas-loading curve
 // =============================================================================
 
-/// The Schreiner curve as a scalar-generic arrow, so the tangent functor differentiates it.
+/// The Schreiner gas-loading curve as a scalar-generic field of the four numbers it names.
 ///
-/// `run` is written once over the `Scalar` bound. Evaluated at [`FloatType`] it returns the
-/// tension; evaluated at `Dual` it returns the tension together with the loading rate `dp/dt`,
-/// which is the quantity a dive computer watches. The rate equals the analytic
-/// `k·(p_inspired − p(t))`, and `main` prints both side by side.
-pub struct SchreinerLoading {
-    /// The curve's parameters, held as `f64`, the widest form a source file carries. `run` lifts
-    /// them into whatever scalar it is asked for, so nothing narrows on the way to `Dual`.
-    pub p_initial: f64,
-    pub p_inspired: f64,
-    pub half_time: f64,
+/// # The type holds nothing, and the body names no primitive
+///
+/// `run` is universally quantified in its scalar: the caller picks `S`, and the tangent functor
+/// picks `Dual<S>` behind the caller's back. Anything the body reaches for outside its arguments
+/// would have to be materialised at an `S` the type cannot name, which is what drags a stored
+/// parameter down to a primitive.
+///
+/// Taking every quantity as an argument removes the problem entirely. The body below is the
+/// Schreiner equation and `ln 2`, which it builds from `S::one()`. No literal, no lift, no
+/// primitive. `main` supplies [`FloatType`] values and the tangent functor supplies
+/// `Dual<FloatType>` values, from one definition.
+pub struct SchreinerCurve;
+
+/// The curve's four inputs, by position.
+pub const T_MINUTES: usize = 0;
+pub const P_INITIAL: usize = 1;
+pub const P_INSPIRED: usize = 2;
+pub const HALF_TIME: usize = 3;
+
+impl DifferentiableField<4> for SchreinerCurve {
+    fn run<S: Scalar>(&self, at: &[S; 4]) -> S {
+        let minutes = at[T_MINUTES];
+        let p_initial = at[P_INITIAL];
+        let p_inspired = at[P_INSPIRED];
+        let half_time = at[HALF_TIME];
+
+        let two = S::one() + S::one();
+        let k = Real::ln(two) / half_time;
+
+        p_inspired + (p_initial - p_inspired) * Real::exp(-(k * minutes))
+    }
 }
 
-impl SchreinerLoading {
-    /// The loading curve for one compartment breathing air at `depth_m`, starting from a diver
-    /// equilibrated at the surface.
-    pub fn at_depth(depth_m: f64, compartment: usize) -> Self {
-        Self {
-            p_initial: inspired_n2_pp::<f64>(0.0),
-            p_inspired: inspired_n2_pp::<f64>(depth_m),
-            half_time: HALF_TIMES[compartment],
-        }
+impl SchreinerCurve {
+    /// The four inputs for one compartment breathing air at `depth_m`, at the working type.
+    pub fn inputs_at(depth_m: FloatType, compartment: usize) -> [FloatType; 4] {
+        [
+            ZERO,
+            inspired_n2_pp(ZERO),
+            inspired_n2_pp(depth_m),
+            half_time_of(compartment),
+        ]
     }
 
-    /// The rate constant `k = ln2 / half_time`, at the scalar the caller asks for.
-    pub fn rate_constant<S: Scalar>(&self) -> S {
-        lift::<S>(2.0_f64.ln()) / lift::<S>(self.half_time)
+    /// The tension and its loading rate `dp/dt`, from one pass over `Dual`.
+    ///
+    /// The direction seeds time alone, so what comes back is the partial derivative in time with
+    /// the two pressures and the half-time held fixed. That is the reading a dive computer shows.
+    pub fn value_and_rate(&self, at: &[FloatType; 4]) -> (FloatType, FloatType) {
+        let along_time = [ONE, ZERO, ZERO, ZERO];
+        (self.run(at), self.directional_derivative(at, &along_time))
     }
-}
 
-impl DifferentiableArrow for SchreinerLoading {
-    fn run<S: Scalar>(&self, t: S) -> S {
-        let k = self.rate_constant::<S>();
-        let p_initial = lift::<S>(self.p_initial);
-        let p_inspired = lift::<S>(self.p_inspired);
-
-        p_inspired + (p_initial - p_inspired) * (-(k * t)).exp()
+    /// The rate constant `k = ln2 / half_time` at the working type, for the analytic check.
+    pub fn rate_constant(&self, half_time: FloatType) -> FloatType {
+        Real::ln(TWO) / half_time
     }
 }
 
@@ -394,193 +458,68 @@ impl DifferentiableArrow for SchreinerLoading {
 // Helpers
 // =============================================================================
 
-/// A rank-1 tensor holding a table of `f64` constants lifted into the working scalar.
-fn constant_tensor(
-    values: &[f64; COMPARTMENTS],
-) -> Result<CausalTensor<FloatType>, CausalTensorError> {
-    let data: Vec<FloatType> = values.iter().map(|&v| lift::<FloatType>(v)).collect();
-    CausalTensor::new(data, vec![COMPARTMENTS])
+/// The sixteen half-times as a rank-1 tensor: the right-hand side of the loading zip.
+pub fn half_time_tensor() -> Result<CausalTensor<FloatType>, CausalTensorError> {
+    CausalTensor::new(HALF_TIMES.to_vec(), vec![COMPARTMENTS])
 }
 
-/// A rank-1 tensor of `(compartment index, a, b)`, the payload `find_ceiling` zips against.
-fn coefficient_tensor() -> Result<CausalTensor<(usize, FloatType, FloatType)>, CausalTensorError> {
+/// The sixteen `(compartment index, a, b)` triples: the right-hand side of the ceiling zip.
+///
+/// The index rides along in the payload because the reduction that follows the zip has to name
+/// the compartment it picked, and a fold sees values rather than positions. The coefficients are
+/// already at the working type, so nothing is converted here.
+pub fn ceiling_coefficients()
+-> Result<CausalTensor<(usize, FloatType, FloatType)>, CausalTensorError> {
     let data: Vec<(usize, FloatType, FloatType)> = (0..COMPARTMENTS)
-        .map(|i| {
-            (
-                i,
-                lift::<FloatType>(A_COEFFICIENTS[i]),
-                lift::<FloatType>(B_COEFFICIENTS[i]),
-            )
-        })
+        .map(|i| (i, A_COEFFICIENTS[i], B_COEFFICIENTS[i]))
         .collect();
     CausalTensor::new(data, vec![COMPARTMENTS])
 }
 
-/// A compartment half-time as the working scalar, for display.
+/// A compartment's half-time, in minutes.
 pub fn half_time_of(compartment: usize) -> FloatType {
-    lift::<FloatType>(HALF_TIMES[compartment])
+    HALF_TIMES[compartment]
 }
 
 /// The saturation of a compartment against the inspired pressure at depth, in percent.
 pub fn saturation_percent(tension: FloatType, depth_m: FloatType) -> FloatType {
-    tension / inspired_n2_pp(depth_m) * lift::<FloatType>(100.0)
+    tension / inspired_n2_pp(depth_m) * HUNDRED
 }
 
-// =============================================================================
-// The dive as a chain of phases
-// =============================================================================
-
-/// Plans one dive as a chain of phases.
-///
-/// Each phase takes the diver state and returns the next one, and `try_step` sequences them. Every
-/// phase loads sixteen compartments through a fallible tensor construction, so a failure anywhere
-/// leaves the chain in the error channel and `finish` reports it.
-pub fn plan_dive(
-    max_depth_m: FloatType,
-    bottom_minutes: FloatType,
-) -> Result<DiveProfile, CausalityError> {
-    let surface = DiverState::at_surface().map_err(|e| failed("surface state", &e))?;
-
-    CausalFlow::value(surface)
-        .try_step(move |state| descend(state, max_depth_m))
-        .try_step(move |state| hold_bottom(state, max_depth_m, bottom_minutes))
-        .try_step(ascend)
-        .try_step(move |state| summarise(state, max_depth_m, bottom_minutes))
-        .finish()
-}
-
-/// Phase 1. Descent loads the tissues at the average depth passed through on the way down.
-fn descend(state: DiverState, max_depth_m: FloatType) -> Result<DiverState, CausalityError> {
-    let descent_minutes = max_depth_m / lift::<FloatType>(DESCENT_RATE);
-    let average_depth = max_depth_m / lift::<FloatType>(2.0);
-
-    let mut next = state
-        .advance(average_depth, descent_minutes)
-        .map_err(|e| failed("descent", &e))?;
-    next.depth_m = max_depth_m;
-    Ok(next)
-}
-
-/// Phase 2. The bottom phase holds depth, which is where tissue loading peaks. The ceiling read
-/// here is the one the dive plan quotes.
-fn hold_bottom(
-    state: DiverState,
-    max_depth_m: FloatType,
-    bottom_minutes: FloatType,
-) -> Result<DiverState, CausalityError> {
-    let mut next = state
-        .advance(max_depth_m, bottom_minutes)
-        .map_err(|e| failed("bottom phase", &e))?;
-
-    let (controlling, ceiling) = find_ceiling(&next.tissue_tensions, lift::<FloatType>(GF_HIGH))
-        .map_err(|e| failed("bottom ceiling", &e))?;
-    next.controlling_at_bottom = controlling;
-    next.ceiling_at_bottom_m = ceiling;
-    Ok(next)
-}
-
-/// Phase 3. Ascent proceeds in three-metre steps. Before each step the controlling compartment's
-/// ceiling is read, and a step that would breach it becomes a decompression stop at the current
-/// depth. A dive shallower than the safety-stop threshold surfaces directly.
-fn ascend(state: DiverState) -> Result<DiverState, CausalityError> {
-    let zero = lift::<FloatType>(0.0);
-    let step = lift::<FloatType>(ASCENT_STEP_M);
-    let clearance = lift::<FloatType>(DECO_CLEARANCE_M);
-    let gf_high = lift::<FloatType>(GF_HIGH);
-
-    let mut current = state;
-    let mut depth = current.depth_m;
-
-    while depth > zero {
-        let (_, ceiling) = find_ceiling(&current.tissue_tensions, gf_high)
-            .map_err(|e| failed("ascent ceiling", &e))?;
-
-        let next_depth = if depth > step { depth - step } else { zero };
-
-        // A stop is required when the ceiling sits deeper than where the next step would land.
-        if ceiling > next_depth && depth > clearance {
-            let stop = DecoStop {
-                depth_m: depth,
-                minutes: lift::<FloatType>(MIN_STOP_MINUTES),
-            };
-            current = current
-                .advance(stop.depth_m, stop.minutes)
-                .map_err(|e| failed("deco stop", &e))?;
-            current.deco_stops.push(stop);
-        }
-
-        let segment = depth - next_depth;
-        let segment_minutes = segment / lift::<FloatType>(ASCENT_RATE);
-        let average_depth = next_depth + segment / lift::<FloatType>(2.0);
-
-        current = current
-            .advance(average_depth, segment_minutes)
-            .map_err(|e| failed("ascent segment", &e))?;
-        depth = next_depth;
-    }
-
-    current.depth_m = zero;
-    Ok(current)
-}
-
-/// Phase 4. The safety stop, then the finished profile.
-fn summarise(
-    state: DiverState,
-    max_depth_m: FloatType,
-    bottom_minutes: FloatType,
-) -> Result<DiveProfile, CausalityError> {
-    let safety_stop = if max_depth_m >= lift::<FloatType>(SAFETY_STOP_DEPTH_THRESHOLD_M) {
-        Some(DecoStop {
-            depth_m: lift::<FloatType>(SAFETY_STOP_M),
-            minutes: lift::<FloatType>(SAFETY_STOP_MINUTES),
-        })
-    } else {
-        None
-    };
-
-    let final_state = match safety_stop {
-        Some(stop) => state
-            .advance(stop.depth_m, stop.minutes)
-            .map_err(|e| failed("safety stop", &e))?,
-        None => state.clone(),
-    };
-
-    Ok(DiveProfile {
-        max_depth_m,
-        bottom_minutes,
-        total_minutes: final_state.elapsed_minutes,
-        cns_percent: final_state.cns_percent,
-        final_tensions: final_state.tissue_tensions,
-        controlling: state.controlling_at_bottom,
-        ceiling_m: state.ceiling_at_bottom_m,
-        deco_stops: state.deco_stops,
-        safety_stop,
-    })
-}
-
-/// Names the phase that failed and carries the underlying reason into the error channel.
-fn failed(phase: &str, cause: &dyn core::fmt::Debug) -> CausalityError {
-    CausalityError::new(CausalityErrorEnum::Custom(format!("{phase}: {cause:?}")))
-}
-
-/// One planned dive per depth in [`TABLE_DEPTHS_M`], for the printed table.
+/// One planned dive per depth in the table, each through the same chain of phases.
 ///
 /// Bottom time is the no-decompression limit for that depth, held to a cap so every row runs in
 /// the same handful of milliseconds.
 pub fn dive_table_rows() -> Result<Vec<DiveTableRow>, CausalityError> {
-    let cap = lift::<FloatType>(TABLE_BOTTOM_CAP_MINUTES);
-
     TABLE_DEPTHS_M
         .iter()
-        .map(|&depth| {
-            let depth_m = lift::<FloatType>(depth);
+        .map(|&depth_m| {
             let ndl_minutes = estimate_ndl(depth_m);
-            let bottom = if ndl_minutes < cap { ndl_minutes } else { cap };
-            plan_dive(depth_m, bottom).map(|profile| DiveTableRow {
-                depth_m,
-                ndl_minutes,
-                profile,
-            })
+            let bottom = if ndl_minutes < TABLE_BOTTOM_CAP_MINUTES {
+                ndl_minutes
+            } else {
+                TABLE_BOTTOM_CAP_MINUTES
+            };
+
+            let surface_state =
+                DiverState::at_surface().map_err(|e| failed("surface state", &e))?;
+
+            CausalFlow::value(surface_state)
+                .try_step(move |diver| descend(diver, depth_m))
+                .try_step(move |diver| hold_bottom(diver, depth_m, bottom))
+                .try_step(ascend)
+                .try_step(move |diver| surface(diver, depth_m, bottom))
+                .finish()
+                .map(|profile| DiveTableRow {
+                    depth_m,
+                    ndl_minutes,
+                    profile,
+                })
         })
         .collect()
+}
+
+/// Names the step that failed and carries the underlying reason into the error channel.
+pub fn failed(step: &str, cause: &dyn core::fmt::Debug) -> CausalityError {
+    CausalityError::new(CausalityErrorEnum::Custom(format!("{step}: {cause:?}")))
 }

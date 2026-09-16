@@ -30,14 +30,18 @@
 mod model;
 mod utils_print;
 
+use deep_causality_num::Float106;
 use deep_causality_topology::TopologyError;
 use model::{Sample, density_range, local_density, necrotic_tissue, read_topology, solid_tissue};
 use utils_print::{print_header, print_sample, print_verdict};
 
-/// The working scalar. Switch it to `f32`, `deep_causality_num::BFloat16` or
-/// `deep_causality_num::Float106`; the coordinates, the distances and the density map all recompute
-/// at that precision.
-pub type FloatType = f64;
+/// The working scalar. Switch it to `f32`, `f64` or `deep_causality_num::BFloat16`; the
+/// coordinates, the distances and the density map all recompute at that precision.
+///
+/// It sits at [`Float106`] by default on purpose. A hard-coded `f64` anywhere in the program is
+/// invisible while the alias *is* `f64`, and shows up here as a compile error the moment the two
+/// types differ.
+pub type FloatType = Float106;
 
 fn main() -> Result<(), TopologyError> {
     print_header();

@@ -15,7 +15,7 @@
 use crate::FloatType;
 use deep_causality_algebra::Real;
 use deep_causality_haft::{CoMonad, Foldable};
-use deep_causality_num::{Zero, lift, lift_count};
+use deep_causality_num::{Zero, const_scalar_from_float, const_scalar_from_int, lift_count};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Graph, GraphWitness};
 
@@ -23,24 +23,31 @@ use deep_causality_topology::{Graph, GraphWitness};
 // Dynamics
 // =============================================================================
 
+/// The small numbers the dynamics are written with.
+pub const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
+const HALF: FloatType = const_scalar_from_float!(FloatType, 0.5);
+/// The phase each region starts at, as a multiple of its index, in radians.
+const PHASE_FAN: FloatType = const_scalar_from_float!(FloatType, 0.7);
+
 /// Coupling strength `K` of the Kuramoto model, in rad/s. The per-neighbour coupling is `K/N`, so
 /// a region's pull on the network grows with how many regions it touches. At this value the hub
 /// drives the network into synchrony, and each other region on its own leaves it scattered.
-pub const COUPLING_STRENGTH: f64 = 6.0;
+pub const COUPLING_STRENGTH: FloatType = const_scalar_from_int!(FloatType, 6);
 
 /// The natural frequency the regions are centred on, in rad/s, and the total spread across them.
 /// A narrow spread is what lets a strong hub capture the network.
-pub const BASE_FREQUENCY: f64 = 10.0;
-pub const FREQUENCY_SPREAD: f64 = 1.0;
+pub const BASE_FREQUENCY: FloatType = const_scalar_from_int!(FloatType, 10);
+pub const FREQUENCY_SPREAD: FloatType = const_scalar_from_int!(FloatType, 1);
 
 /// Integration step in seconds, and how many steps a simulation runs. Thirty seconds of model
 /// time is long enough for the network to settle into its steady state.
-pub const TIME_STEP_S: f64 = 0.01;
+pub const TIME_STEP_S: FloatType = const_scalar_from_float!(FloatType, 0.01);
 pub const SIMULATION_STEPS: usize = 3000;
 
 /// Synchronisation above this level counts as a seizure. The order parameter runs from 0 for
 /// scattered phases to 1 for a network locked in step.
-pub const SEIZURE_THRESHOLD: f64 = 0.80;
+pub const SEIZURE_THRESHOLD: FloatType = const_scalar_from_float!(FloatType, 0.80);
 
 /// One brain region: an oscillator with a phase and the frequency it runs at when left alone.
 #[derive(Debug, Clone, Copy, PartialEq, Default)]
@@ -64,16 +71,14 @@ impl core::ops::Add for RegionState {
 
 impl Zero for RegionState {
     fn zero() -> Self {
-        let zero = lift::<FloatType>(0.0);
         Self {
-            phase: zero,
-            natural_frequency: zero,
+            phase: ZERO,
+            natural_frequency: ZERO,
         }
     }
 
     fn is_zero(&self) -> bool {
-        let zero = lift::<FloatType>(0.0);
-        self.phase == zero && self.natural_frequency == zero
+        self.phase == ZERO && self.natural_frequency == ZERO
     }
 }
 
@@ -95,9 +100,6 @@ pub fn build_connectome(
     regions: usize,
     resected: Option<usize>,
 ) -> Result<Connectome, Box<dyn std::error::Error>> {
-    let spread = lift::<FloatType>(FREQUENCY_SPREAD);
-    let base = lift::<FloatType>(BASE_FREQUENCY);
-    let half = lift::<FloatType>(0.5);
     let span = lift_count::<FloatType>(regions as u64 - 1);
 
     // A deterministic phase fan and a linear frequency ramp, so every run starts identically.
@@ -105,8 +107,8 @@ pub fn build_connectome(
         .map(|i| {
             let index = lift_count::<FloatType>(i as u64);
             RegionState {
-                phase: index * lift::<FloatType>(0.7) % (lift::<FloatType>(2.0) * FloatType::pi()),
-                natural_frequency: base + spread * (index / span - half),
+                phase: index * PHASE_FAN % (TWO * FloatType::pi()),
+                natural_frequency: BASE_FREQUENCY + FREQUENCY_SPREAD * (index / span - HALF),
             }
         })
         .collect();
@@ -140,9 +142,7 @@ pub fn build_connectome(
 /// cursor, the payload and the adjacency in one focused view, so the coupling sum reads the
 /// neighbours straight off the graph.
 pub fn kuramoto_step(brain: &Connectome, regions: usize) -> Connectome {
-    let dt = lift::<FloatType>(TIME_STEP_S);
-    let gain = lift::<FloatType>(COUPLING_STRENGTH) / lift_count::<FloatType>(regions as u64);
-    let zero = lift::<FloatType>(0.0);
+    let gain = COUPLING_STRENGTH / lift_count::<FloatType>(regions as u64);
 
     GraphWitness::extend(brain, |view| {
         let i = view.cursor();
@@ -150,14 +150,16 @@ pub fn kuramoto_step(brain: &Connectome, regions: usize) -> Connectome {
         let here = states[i];
 
         let coupling = match view.neighbors(i) {
-            Ok(neighbours) => neighbours.iter().fold(zero, |sum, &j| {
+            Ok(neighbours) => neighbours.iter().fold(ZERO, |sum, &j| {
                 sum + Real::sin(states[j].phase - here.phase)
             }),
-            Err(_) => zero,
+            Err(_) => ZERO,
         };
 
         RegionState {
-            phase: wrap_phase(here.phase + dt * (here.natural_frequency + gain * coupling)),
+            phase: wrap_phase(
+                here.phase + TIME_STEP_S * (here.natural_frequency + gain * coupling),
+            ),
             natural_frequency: here.natural_frequency,
         }
     })
@@ -170,13 +172,12 @@ pub fn kuramoto_step(brain: &Connectome, regions: usize) -> Connectome {
 /// thousand steps an unwrapped phase reaches several hundred radians, and two decimal digits of
 /// significand resolve increments only near the leading digit there.
 fn wrap_phase(phase: FloatType) -> FloatType {
-    let turn = lift::<FloatType>(2.0) * FloatType::pi();
+    let turn = TWO * FloatType::pi();
     let mut wrapped = phase;
     while wrapped >= turn {
         wrapped -= turn;
     }
-    let zero = lift::<FloatType>(0.0);
-    while wrapped < zero {
+    while wrapped < ZERO {
         wrapped += turn;
     }
     wrapped
@@ -198,8 +199,6 @@ pub fn simulate(brain: &Connectome, regions: usize) -> FloatType {
 /// region keeps oscillating on its own, and leaving it out of the average is what makes the
 /// measure describe the network that remains.
 pub fn synchronisation(brain: &Connectome) -> FloatType {
-    let zero = lift::<FloatType>(0.0);
-
     let phasors = GraphWitness::extend(brain, |view| {
         let i = view.cursor();
         let phase = view.data().as_slice()[i].phase;
@@ -212,18 +211,18 @@ pub fn synchronisation(brain: &Connectome) -> FloatType {
     });
 
     let (sum_cos, sum_sin, counted) =
-        GraphWitness::fold(phasors, (zero, zero, 0u64), |acc, phasor| match phasor {
+        GraphWitness::fold(phasors, (ZERO, ZERO, 0u64), |acc, phasor| match phasor {
             Some((c, s)) => (acc.0 + c, acc.1 + s, acc.2 + 1),
             None => acc,
         });
 
     if counted == 0 {
-        return zero;
+        return ZERO;
     }
     Real::sqrt(sum_cos * sum_cos + sum_sin * sum_sin) / lift_count::<FloatType>(counted)
 }
 
 /// Whether a synchronisation reading counts as a seizure.
 pub fn is_seizing(sync: FloatType) -> bool {
-    sync > lift::<FloatType>(SEIZURE_THRESHOLD)
+    sync > SEIZURE_THRESHOLD
 }

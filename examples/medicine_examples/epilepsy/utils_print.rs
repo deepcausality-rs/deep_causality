@@ -22,20 +22,28 @@ pub fn print_header(regions: usize) {
         core::any::type_name::<FloatType>()
     );
     println!("Brain regions:       {regions}  (region 0 is the hub, wired to every other)");
-    println!("Coupling K:          {COUPLING_STRENGTH:.1} rad/s");
-    println!("Natural frequency:   {BASE_FREQUENCY:.1} rad/s, spread {FREQUENCY_SPREAD:.1}");
+    println!("Coupling K:          {:.1} rad/s", lower(COUPLING_STRENGTH));
     println!(
-        "Simulated time:      {:.0} s  ({SIMULATION_STEPS} steps of {TIME_STEP_S} s)",
-        SIMULATION_STEPS as f64 * TIME_STEP_S
+        "Natural frequency:   {:.1} rad/s, spread {:.1}",
+        lower(BASE_FREQUENCY),
+        lower(FREQUENCY_SPREAD)
     );
-    println!("Seizure threshold:   synchronisation above {SEIZURE_THRESHOLD:.2}\n");
+    println!(
+        "Simulated time:      {:.0} s  ({SIMULATION_STEPS} steps of {} s)",
+        SIMULATION_STEPS as f64 * lower(TIME_STEP_S),
+        lower(TIME_STEP_S)
+    );
+    println!(
+        "Seizure threshold:   synchronisation above {:.2}\n",
+        lower(SEIZURE_THRESHOLD)
+    );
 }
 
 pub fn print_baseline(sync: FloatType) {
     let value = lower(sync);
     println!("Baseline, before surgery");
     println!("  synchronisation    {value:.4}");
-    if value > SEIZURE_THRESHOLD {
+    if value > lower(SEIZURE_THRESHOLD) {
         println!("  status             SEIZURE, the network is locked in step\n");
         println!("Virtual resection: disconnect one region, then re-simulate.");
         println!("  region   synchronisation   outcome");
@@ -59,8 +67,9 @@ pub fn print_verdict(curative: &[(usize, FloatType)]) {
         [] => println!("No single resection stops the seizure in this connectome."),
         [(region, sync)] => {
             println!(
-                "Resecting region {region} drops synchronisation to {:.4}, well under the {SEIZURE_THRESHOLD:.2} threshold.",
-                lower(*sync)
+                "Resecting region {region} drops synchronisation to {:.4}, well under the {:.2} threshold.",
+                lower(*sync),
+                lower(SEIZURE_THRESHOLD)
             );
             println!(
                 "It is the one curative target here, and it is the hub: the region wired to every other."

@@ -11,12 +11,12 @@
 
 use crate::FloatType;
 use crate::model::{
-    ASCENT_RATE, COMPARTMENTS, DESCENT_RATE, DiveProfile, DiveTableRow, GF_HIGH, GF_LOW,
-    HALF_TIMES, SchreinerLoading, ambient_pressure, half_time_of, inspired_n2_pp, oxygen_pp,
-    saturation_percent,
+    ASCENT_RATE, COMPARTMENTS, DESCENT_RATE, DiveProfile, DiveTableRow, GF_HIGH, HALF_TIME,
+    HALF_TIMES, P_INSPIRED, SchreinerCurve, TEN, ZERO, ambient_pressure, half_time_of,
+    inspired_n2_pp, oxygen_pp, saturation_percent,
 };
 use deep_causality_algebra::Real;
-use deep_causality_num::{lift, lower};
+use deep_causality_num::lower;
 
 /// The CNS oxygen clock reading above which a dive plan carries a warning, in percent.
 const CNS_CAUTION_PERCENT: f64 = 50.0;
@@ -30,16 +30,17 @@ pub fn print_header() {
     );
     println!(
         "Tissue compartments:  {COMPARTMENTS}  (half-times {:.0} to {:.0} min)",
-        HALF_TIMES[0],
-        HALF_TIMES[COMPARTMENTS - 1]
+        lower(HALF_TIMES[0]),
+        lower(HALF_TIMES[COMPARTMENTS - 1])
     );
+    // A full planner interpolates from GF_low at depth to GF_high at the surface. This one holds
+    // GF_high for the whole ascent, so that is the number the ceiling is computed against.
     println!(
-        "Gradient factors:     GF_low {:.0}%, GF_high {:.0}%",
-        GF_LOW * 100.0,
-        GF_HIGH * 100.0
+        "Gradient factor:      {:.0}% held for the whole ascent",
+        lower(GF_HIGH) * 100.0
     );
-    println!("Descent rate:         {DESCENT_RATE:.0} m/min");
-    println!("Ascent rate:          {ASCENT_RATE:.0} m/min\n");
+    println!("Descent rate:         {:.0} m/min", lower(DESCENT_RATE));
+    println!("Ascent rate:          {:.0} m/min\n", lower(ASCENT_RATE));
 }
 
 /// The dive table: one planned dive per depth.
@@ -48,9 +49,11 @@ pub fn print_dive_table(rows: &[DiveTableRow]) {
     println!("  depth   ppO2    NDL    ascent   CNS    safety stop   deco stops");
     println!("   (m)    (bar)  (min)   (min)     (%)");
 
+    let ascent_rate = lower(ASCENT_RATE);
+
     for row in rows {
         let depth = lower(row.depth_m);
-        let ascent_minutes = depth / ASCENT_RATE;
+        let ascent_minutes = depth / ascent_rate;
 
         let safety = match row.profile.safety_stop {
             Some(stop) => format!(
@@ -91,6 +94,8 @@ pub fn print_dive_table(rows: &[DiveTableRow]) {
 /// The headline dive, rendered from the profile the chain produced.
 pub fn print_simulation(profile: &DiveProfile) {
     let max_depth = lower(profile.max_depth_m);
+    let descent_rate = lower(DESCENT_RATE);
+    let ascent_rate = lower(ASCENT_RATE);
     println!(
         "Planned dive: {:.0} m for {:.0} min",
         max_depth,
@@ -99,9 +104,9 @@ pub fn print_simulation(profile: &DiveProfile) {
 
     println!("\n  Phases");
     println!(
-        "    descent   0 m  ->  {:>3.0} m   {:>5.1} min at {DESCENT_RATE:.0} m/min",
+        "    descent   0 m  ->  {:>3.0} m   {:>5.1} min at {descent_rate:.0} m/min",
         max_depth,
-        max_depth / DESCENT_RATE
+        max_depth / descent_rate
     );
     println!(
         "    bottom    {:>3.0} m           {:>5.1} min, inspired ppN2 {:.2} bar",
@@ -110,9 +115,9 @@ pub fn print_simulation(profile: &DiveProfile) {
         lower(inspired_n2_pp(profile.max_depth_m))
     );
     println!(
-        "    ascent    {:>3.0} m  ->   0 m   {:>5.1} min at {ASCENT_RATE:.0} m/min",
+        "    ascent    {:>3.0} m  ->   0 m   {:>5.1} min at {ascent_rate:.0} m/min",
         max_depth,
-        max_depth / ASCENT_RATE
+        max_depth / ascent_rate
     );
 
     println!("\n  Controlling compartment at the bottom");
@@ -212,12 +217,10 @@ fn print_bubble_risk(profile: &DiveProfile) {
     println!("\n  Bubble expansion on ascent");
     println!("    band          pressure        expansion");
 
-    let ten = lift::<FloatType>(10.0);
-    let zero = lift::<FloatType>(0.0);
     let mut upper = profile.max_depth_m;
 
-    while upper > zero {
-        let lower_edge = if upper > ten { upper - ten } else { zero };
+    while upper > ZERO {
+        let lower_edge = if upper > TEN { upper - TEN } else { ZERO };
         let p_deep = ambient_pressure(upper);
         let p_shallow = ambient_pressure(lower_edge);
         println!(
@@ -233,12 +236,12 @@ fn print_bubble_risk(profile: &DiveProfile) {
 }
 
 /// The gas-loading rate from the tangent functor, beside the analytic rate it reproduces.
-pub fn print_gas_loading_rate(loading: &SchreinerLoading, tension: FloatType, rate: FloatType) {
-    let k = loading.rate_constant::<FloatType>();
-    let analytic = k * (lift::<FloatType>(loading.p_inspired) - tension);
+pub fn print_gas_loading_rate(at: &[FloatType; 4], tension: FloatType, rate: FloatType) {
+    let k = SchreinerCurve.rate_constant(at[HALF_TIME]);
+    let analytic = k * (at[P_INSPIRED] - tension);
 
     println!("Gas-loading rate from one evaluation over Dual");
-    println!("  compartment half-time  {:>8.1} min", loading.half_time);
+    println!("  compartment half-time  {:>8.1} min", lower(at[HALF_TIME]));
     println!("  tension p(t)           {:>8.4} bar", lower(tension));
     println!("  rate dp/dt             {:>8.5} bar/min", lower(rate));
     println!("  analytic k(p_insp - p) {:>8.5} bar/min", lower(analytic));

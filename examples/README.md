@@ -268,7 +268,6 @@ plus chronometric geodesy that inverts the J2-corrected weak-field 1PN kernel fr
 | Laser Resonator Stability | Optics | `cargo run -p physics_examples --example laser_resonator_stability` |
 | Maxwell's Unification | Electromagnetism | `cargo run -p physics_examples --example maxwell_example` |
 | GRMHD | Relativity | `cargo run -p physics_examples --example grmhd_example` |
-| Geometric Tilt | Robotics/IMU | `cargo run -p physics_examples --example geometric_tilt` |
 | Algebraic Scanner | Abstract Algebra | `cargo run -p physics_examples --example algebraic_scanner` |
 | Multi-Physics Pipeline | Particle Physics | `cargo run -p physics_examples --example multi_physics_pipeline` |
 | Gravitational Wave | Relativity | `cargo run -p physics_examples --example gravitational_wave` |

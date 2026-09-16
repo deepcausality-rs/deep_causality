@@ -21,7 +21,7 @@ pub fn print_header() {
         "Precision:            {}",
         core::any::type_name::<FloatType>()
     );
-    println!("Vietoris-Rips radius: {RIPS_RADIUS}");
+    println!("Vietoris-Rips radius: {}", lower(RIPS_RADIUS));
     println!("Voxel coordinates:    {DIMENSIONS}\n");
 }
 

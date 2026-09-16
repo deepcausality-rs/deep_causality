@@ -36,9 +36,9 @@ mod utils_print;
 
 use deep_causality_algebra::Real;
 use deep_causality_haft::{CoMonad, Foldable, Functor};
-use deep_causality_num::{lift, lift_count};
+use deep_causality_num::{Float106, lift_count};
 use deep_causality_topology::ManifoldWitness;
-use model::{build_vessel_manifold, degeneration_history, wall_shear_stress};
+use model::{TWO, ZERO, build_vessel_manifold, degeneration_history, wall_shear_stress};
 use utils_print::{
     print_geometry, print_header, print_history, print_profile, print_risk_factors, print_verdict,
 };
@@ -46,10 +46,13 @@ use utils_print::{
 /// Centreline nodes along the segment.
 const N_NODES: usize = 41;
 
-/// The working scalar. Switch it to `f32`, `deep_causality_num::BFloat16` or
-/// `deep_causality_num::Float106`; the geometry, the stress profile, its gradient and the
-/// degeneration accumulation all re-run at that precision.
-pub type FloatType = f64;
+/// The working scalar. Switch it to `f32`, `f64` or `deep_causality_num::BFloat16`; the geometry,
+/// the stress profile, its gradient and the degeneration accumulation all re-run at that precision.
+///
+/// It sits at [`Float106`] by default on purpose. A hard-coded `f64` anywhere in the program is
+/// invisible while the alias *is* `f64`, and shows up here as a compile error the moment the two
+/// types differ.
+pub type FloatType = Float106;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
@@ -64,17 +67,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // extend: the spatial gradient |dτ/dx| reads the nodes on either side, and the cursor the
     // comonad hands the closure is what reaches them.
-    let node_spacing =
-        lift::<FloatType>(model::SEGMENT_LENGTH_M) / lift_count::<FloatType>(N_NODES as u64 - 1);
+    let node_spacing = model::SEGMENT_LENGTH_M / lift_count::<FloatType>(N_NODES as u64 - 1);
     let gradient = ManifoldWitness::extend(&shear, |view| {
         let i = view.cursor();
         let tau = view.data().as_slice();
         if i >= N_NODES {
-            return lift::<FloatType>(0.0);
+            return ZERO;
         }
         let left = if i > 0 { tau[i - 1] } else { tau[i] };
         let right = if i + 1 < N_NODES { tau[i + 1] } else { tau[i] };
-        Real::abs(right - left) / (lift::<FloatType>(2.0) * node_spacing)
+        Real::abs(right - left) / (TWO * node_spacing)
     });
     print_profile(&shear, &gradient, N_NODES);
 
@@ -91,9 +93,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
 
     // The peak gradient sits at the neck, where the profile drops into the dome.
-    let peak_gradient = ManifoldWitness::fold(gradient, lift::<FloatType>(0.0), |highest, g| {
-        if g > highest { g } else { highest }
-    });
+    let peak_gradient =
+        ManifoldWitness::fold(
+            gradient,
+            ZERO,
+            |highest, g| {
+                if g > highest { g } else { highest }
+            },
+        );
 
     print_risk_factors(dome_shear, peak_gradient);
 

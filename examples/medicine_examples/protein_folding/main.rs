@@ -29,6 +29,7 @@
 mod model;
 mod utils_print;
 
+use deep_causality_num::Float106;
 use model::{MEMORY_DEPTH, advance, markov_operator, memory_kernels, unfolded_state};
 use utils_print::{print_distribution, print_header, print_summary};
 
@@ -38,10 +39,13 @@ const TIME_STEPS: usize = 15;
 /// How often the run prints the distribution.
 const REPORT_EVERY: usize = 3;
 
-/// The working scalar. Switch it to `f32`, `deep_causality_num::BFloat16` or
-/// `deep_causality_num::Float106`; the transition operator, the memory kernels and every
-/// distribution recompute at that precision.
-pub type FloatType = f64;
+/// The working scalar. Switch it to `f32`, `f64` or `deep_causality_num::BFloat16`; the transition
+/// operator, the memory kernels and every distribution recompute at that precision.
+///
+/// It sits at [`Float106`] by default on purpose. A hard-coded `f64` anywhere in the program is
+/// invisible while the alias *is* `f64`, and shows up here as a compile error the moment the two
+/// types differ.
+pub type FloatType = Float106;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header(TIME_STEPS);

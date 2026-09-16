@@ -13,12 +13,16 @@
 use crate::FloatType;
 use deep_causality_algebra::Real;
 use deep_causality_haft::{Foldable, Functor, ResultWitness, Traversable, VecWitness};
-use deep_causality_num::{lift, lift_count};
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lift_count};
 use deep_causality_physics::{PhysicsError, Probability, generalized_master_equation};
 use deep_causality_tensor::{CausalTensor, CausalTensorError};
 
 /// The conformational states, from unfolded to native.
 pub const STATE_LABELS: [&str; 4] = ["unfolded", "intermediate 1", "intermediate 2", "native"];
+
+/// The small numbers the model is written with.
+pub const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+pub const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
 
 /// Conformational states the chain moves between.
 pub const N_STATES: usize = STATE_LABELS.len();
@@ -30,27 +34,38 @@ pub const MEMORY_DEPTH: usize = 3;
 /// The single-step transition matrix, column-major by source state: entry `[i, j]` is the
 /// probability of arriving in state `i` from state `j`. Each column sums to one, and the native
 /// state is absorbing, so folding is a one-way trip once the chain reaches it.
-#[rustfmt::skip]
-const MARKOV_TRANSITIONS: [f64; N_STATES * N_STATES] = [
-    // from:  unfolded  inter-1  inter-2  native
-    /* to unfolded */ 0.70,  0.10,  0.00,  0.00,
-    /* to inter-1  */ 0.30,  0.70,  0.10,  0.00,
-    /* to inter-2  */ 0.00,  0.20,  0.40,  0.00,
-    /* to native   */ 0.00,  0.00,  0.50,  1.00,
+const MARKOV_TRANSITIONS: [FloatType; N_STATES * N_STATES] = [
+    // from:           unfolded  inter-1   inter-2   native
+    /* to unfolded */
+    const_scalar_from_float!(FloatType, 0.70),
+    const_scalar_from_float!(FloatType, 0.10),
+    const_scalar_from_int!(FloatType, 0),
+    const_scalar_from_int!(FloatType, 0),
+    /* to inter-1  */
+    const_scalar_from_float!(FloatType, 0.30),
+    const_scalar_from_float!(FloatType, 0.70),
+    const_scalar_from_float!(FloatType, 0.10),
+    const_scalar_from_int!(FloatType, 0),
+    /* to inter-2  */
+    const_scalar_from_int!(FloatType, 0),
+    const_scalar_from_float!(FloatType, 0.20),
+    const_scalar_from_float!(FloatType, 0.40),
+    const_scalar_from_int!(FloatType, 0),
+    /* to native   */
+    const_scalar_from_int!(FloatType, 0),
+    const_scalar_from_int!(FloatType, 0),
+    const_scalar_from_float!(FloatType, 0.50),
+    const_scalar_from_int!(FloatType, 1),
 ];
 
 /// How strongly the memory term nudges the chain forward, and how fast that nudge decays with
 /// how far back the remembered distribution sits.
-const MEMORY_STRENGTH: f64 = 0.02;
-const MEMORY_DECAY: f64 = 0.5;
+const MEMORY_STRENGTH: FloatType = const_scalar_from_float!(FloatType, 0.02);
+const MEMORY_DECAY: FloatType = const_scalar_from_float!(FloatType, 0.5);
 
 /// The Markov transition operator as a `[N_STATES, N_STATES]` tensor.
 pub fn markov_operator() -> Result<CausalTensor<FloatType>, CausalTensorError> {
-    let data: Vec<FloatType> = MARKOV_TRANSITIONS
-        .iter()
-        .map(|&p| lift::<FloatType>(p))
-        .collect();
-    CausalTensor::new(data, vec![N_STATES, N_STATES])
+    CausalTensor::new(MARKOV_TRANSITIONS.to_vec(), vec![N_STATES, N_STATES])
 }
 
 /// One memory kernel per remembered lag.
@@ -63,10 +78,9 @@ pub fn memory_kernels() -> Result<Vec<CausalTensor<FloatType>>, CausalTensorErro
     (0..MEMORY_DEPTH)
         .map(|lag| {
             let age = lift_count::<FloatType>(lag as u64 + 1);
-            let weight = Real::exp(-lift::<FloatType>(MEMORY_DECAY) * age)
-                * lift::<FloatType>(MEMORY_STRENGTH);
+            let weight = Real::exp(-MEMORY_DECAY * age) * MEMORY_STRENGTH;
 
-            let mut data = vec![lift::<FloatType>(0.0); N_STATES * N_STATES];
+            let mut data = vec![ZERO; N_STATES * N_STATES];
             for step in 0..N_STATES - 1 {
                 // Row `step + 1`, column `step`: arriving in the next state along the pathway.
                 data[(step + 1) * N_STATES + step] = weight;
@@ -78,10 +92,8 @@ pub fn memory_kernels() -> Result<Vec<CausalTensor<FloatType>>, CausalTensorErro
 
 /// The initial distribution: the chain starts fully unfolded.
 pub fn unfolded_state() -> Result<Vec<Probability<FloatType>>, PhysicsError> {
-    let one = lift::<FloatType>(1.0);
-    let zero = lift::<FloatType>(0.0);
     (0..N_STATES)
-        .map(|i| Probability::new(if i == 0 { one } else { zero }))
+        .map(|i| Probability::new(if i == 0 { ONE } else { ZERO }))
         .collect()
 }
 
@@ -113,10 +125,8 @@ pub fn advance(
 pub fn normalise(
     state: Vec<Probability<FloatType>>,
 ) -> Result<Vec<Probability<FloatType>>, PhysicsError> {
-    let zero = lift::<FloatType>(0.0);
-
-    let total = VecWitness::fold(state.clone(), zero, |sum, p| sum + p.value());
-    if total <= zero {
+    let total = VecWitness::fold(state.clone(), ZERO, |sum, p| sum + p.value());
+    if total <= ZERO {
         return Err(PhysicsError::NormalizationError(format!(
             "total probability mass reached {:?}, which leaves nothing to rescale",
             total

@@ -17,6 +17,10 @@ use deep_causality_num::{Lift, lift};
 use deep_causality_rand::{Rng, Xoshiro256};
 
 /// Tumour radius, in centimetres.
+///
+/// This and [`INVASION_BIAS`] stay `f64` because they bound a `random_range` draw, which takes a
+/// primitive range. They are imaging inputs rather than model scalars: the tumour arrives as `f64`
+/// and only the computation path is scalar-generic.
 pub const TUMOR_RADIUS_CM: f64 = 2.0;
 
 /// The seed for the voxel sampler, so every run reports the same tumour.

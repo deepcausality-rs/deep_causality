@@ -10,6 +10,7 @@
 
 use crate::FloatType;
 use crate::model::{MEMORY_DEPTH, N_STATES, STATE_LABELS, native_fraction};
+use deep_causality_num::const_scalar_from_float;
 use deep_causality_num::lower;
 use deep_causality_physics::Probability;
 
@@ -17,9 +18,9 @@ use deep_causality_physics::Probability;
 const BAR_WIDTH: f64 = 24.0;
 
 /// The native-state probability above which the chain counts as folded.
-const FOLDED_THRESHOLD: f64 = 0.5;
+const FOLDED_THRESHOLD: FloatType = const_scalar_from_float!(FloatType, 0.5);
 /// The native-state probability above which the chain counts as underway.
-const UNDERWAY_THRESHOLD: f64 = 0.2;
+const UNDERWAY_THRESHOLD: FloatType = const_scalar_from_float!(FloatType, 0.2);
 
 pub fn print_header(steps: usize) {
     println!("=== Protein folding: the generalized master equation ===\n");
@@ -48,8 +49,8 @@ pub fn print_distribution(step: usize, state: &[Probability<FloatType>]) {
 }
 
 pub fn print_summary(state: &[Probability<FloatType>]) {
-    let native = lower(native_fraction(state));
-    println!("Native-state probability: {:.4}", native);
+    let native = native_fraction(state);
+    println!("Native-state probability: {:.4}", lower(native));
 
     let verdict = if native > FOLDED_THRESHOLD {
         "the chain has reached its native state"

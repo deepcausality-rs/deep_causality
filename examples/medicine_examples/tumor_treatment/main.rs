@@ -27,7 +27,7 @@ mod model;
 mod utils_print;
 
 use deep_causality_core::CausalFlow;
-use deep_causality_num::lift;
+use deep_causality_num::{Float106, const_scalar_from_float};
 use model::{Efficacy, ascend, build_tumor, failed};
 use utils_print::{print_header, print_outcome, print_trace, print_tumor};
 
@@ -36,17 +36,20 @@ const VOXELS: usize = 100;
 
 /// Where the ascent starts, in radians: near the equator, with the field roughly perpendicular to
 /// the tumour's invasion axis. That is the orientation a clinician would improve on.
-const START_THETA: f64 = 1.4;
-const START_PHI: f64 = 0.8;
+const START_THETA: FloatType = const_scalar_from_float!(FloatType, 1.4);
+const START_PHI: FloatType = const_scalar_from_float!(FloatType, 0.8);
 
 /// Step size and step count for the ascent.
-const LEARNING_RATE: f64 = 0.6;
+const LEARNING_RATE: FloatType = const_scalar_from_float!(FloatType, 0.6);
 const ASCENT_STEPS: usize = 12;
 
-/// The working scalar. Switch it to `f32`, `deep_causality_num::BFloat16` or
-/// `deep_causality_num::Float106`; the objective, its autodiff gradient and the whole ascent
-/// re-run at that precision.
-pub type FloatType = f64;
+/// The working scalar. Switch it to `f32`, `f64` or `deep_causality_num::BFloat16`; the objective,
+/// its autodiff gradient and the whole ascent re-run at that precision.
+///
+/// It sits at [`Float106`] by default on purpose. A hard-coded `f64` anywhere in the program is
+/// invisible while the alias *is* `f64`, and shows up here as a compile error the moment the two
+/// types differ.
+pub type FloatType = Float106;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
@@ -57,14 +60,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let efficacy = Efficacy {
         cell_axes: tumor.cell_axes,
     };
-    let start = [lift::<FloatType>(START_THETA), lift::<FloatType>(START_PHI)];
-    let learning_rate = lift::<FloatType>(LEARNING_RATE);
+    let start = [START_THETA, START_PHI];
 
     // The ascent as a flow: the starting orientation enters the chain, and a non-finite gradient
     // short-circuits to the error channel.
     let outcome = CausalFlow::value(start)
         .try_step(move |orientation| {
-            ascend(&efficacy, orientation, learning_rate, ASCENT_STEPS)
+            ascend(&efficacy, orientation, LEARNING_RATE, ASCENT_STEPS)
                 .into_value()
                 .ok_or_else(|| failed("the ascent returned no orientation"))
         })
