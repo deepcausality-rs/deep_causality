@@ -28,13 +28,13 @@
 use deep_causality_algebra::Real;
 use deep_causality_calculus::quadrature;
 use deep_causality_haft::{Collectable, Foldable, VecWitness};
-use deep_causality_num::{lift, lift_usize, lower};
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lift_usize, lower};
 use deep_causality_num_dual::Dual;
 use deep_causality_rand::{SobolSequence, Xoshiro256};
 use deep_causality_stats::{Distribution, StandardUniform};
 
 /// The parameter the integral is differentiated with respect to.
-const THETA: f64 = 1.3;
+const THETA: FloatType = const_scalar_from_float!(FloatType, 1.3);
 /// Draws per sampled estimator, and panels for the quadrature.
 const N: usize = 4096;
 /// Fixed so the run reproduces.
@@ -43,24 +43,26 @@ const SEED: u64 = 0x5EED_1234;
 /// The working scalar. Every estimate below carries it.
 pub type FloatType = f64;
 
+/// Small numbers and tolerances, at the working type.
+const TOLERANCE: FloatType = const_scalar_from_float!(FloatType, 1e-9);
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
+const THREE: FloatType = const_scalar_from_int!(FloatType, 3);
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let theta = lift::<FloatType>(THETA);
+    let theta = THETA;
     print_header(theta);
 
     // Closed forms, to measure every estimator against.
-    let exact_i = (Real::exp(theta) - lift::<FloatType>(1.0)) / theta;
-    let exact_di =
-        (theta * Real::exp(theta) - Real::exp(theta) + lift::<FloatType>(1.0)) / (theta * theta);
+    let exact_i = (Real::exp(theta) - ONE) / theta;
+    let exact_di = (theta * Real::exp(theta) - Real::exp(theta) + ONE) / (theta * theta);
 
     // ---------------------------------------------------------------------
     // 1. Simpson's rule: a deterministic fold over a fixed grid.
     // ---------------------------------------------------------------------
-    let by_quadrature = quadrature(
-        |x: FloatType| Real::exp(theta * x),
-        lift::<FloatType>(0.0),
-        lift::<FloatType>(1.0),
-        N,
-    );
+    let by_quadrature = quadrature(|x: FloatType| Real::exp(theta * x), ZERO, ONE, N);
 
     // ---------------------------------------------------------------------
     // 2. Monte Carlo: the mean of the integrand at uniform draws.
@@ -94,8 +96,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let quad_dual = quadrature(
         |x: Dual<FloatType>| (dual_theta * x).exp(),
-        Dual::constant(lift::<FloatType>(0.0)),
-        Dual::constant(lift::<FloatType>(1.0)),
+        Dual::constant(ZERO),
+        Dual::constant(ONE),
         N,
     );
     let mc_dual = mean_dual(&draws, dual_theta);
@@ -110,14 +112,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // One sweep carried both answers in every case: the value channel still holds the integral.
     print_both_channels(quad_dual.value(), quad_dual.derivative());
-    assert!(Real::abs(quad_dual.value() - exact_i) < lift::<FloatType>(1e-9));
-    assert!(Real::abs(quad_dual.derivative() - exact_di) < lift::<FloatType>(1e-9));
+    assert!(Real::abs(quad_dual.value() - exact_i) < TOLERANCE);
+    assert!(Real::abs(quad_dual.derivative() - exact_di) < TOLERANCE);
 
     // The sampled estimators are unbiased, not exact. Monte Carlo error falls as 1/sqrt(n),
     // so at N = 4096 one standard error is about 1/64 = 1.6% of the integrand's spread. The
     // bound below is roughly three of those: loose enough that a different seed still passes,
     // tight enough that a broken estimator does not.
-    let mc_tolerance = lift::<FloatType>(3.0) / Real::sqrt(lift_usize::<FloatType>(N));
+    let mc_tolerance = THREE / Real::sqrt(lift_usize::<FloatType>(N));
     assert!(Real::abs(by_monte_carlo - exact_i) / exact_i < mc_tolerance);
     assert!(Real::abs(mc_dual.derivative() - exact_di) / exact_di < mc_tolerance);
 
@@ -127,13 +129,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// The sample mean of `f` over `xs`, through `Foldable`.
 fn mean(xs: &[FloatType], f: impl Fn(FloatType) -> FloatType) -> FloatType {
-    let total = VecWitness::fold(xs.to_vec(), lift::<FloatType>(0.0), |acc, x| acc + f(x));
+    let total = VecWitness::fold(xs.to_vec(), ZERO, |acc, x| acc + f(x));
     total / lift_usize::<FloatType>(xs.len())
 }
 
 /// The same mean, evaluated over `Dual` so the ε channel accumulates alongside the value.
 fn mean_dual(xs: &[FloatType], theta: Dual<FloatType>) -> Dual<FloatType> {
-    let zero = Dual::constant(lift::<FloatType>(0.0));
+    let zero = Dual::constant(ZERO);
     let total = VecWitness::fold(xs.to_vec(), zero, |acc, x| {
         acc + (theta * Dual::constant(x)).exp()
     });

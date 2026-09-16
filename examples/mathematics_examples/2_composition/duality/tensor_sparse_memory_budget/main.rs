@@ -40,7 +40,7 @@
 
 use deep_causality_algebra::Real;
 use deep_causality_linear::CsrMatrix;
-use deep_causality_num::{lift, lower};
+use deep_causality_num::{const_scalar_from_float, lift, lower};
 use deep_causality_tensor::{CausalTensor, ToDenseTensor};
 
 /// Short alias used by the conversion helpers below.
@@ -48,6 +48,9 @@ type F = FloatType;
 
 /// The working scalar. Every adjacency weight carries it, dense or sparse.
 pub type FloatType = f64;
+
+/// Small numbers and tolerances, at the working type.
+const TOLERANCE: FloatType = const_scalar_from_float!(FloatType, 1e-12);
 
 fn main() {
     #[rustfmt::skip]
@@ -84,10 +87,7 @@ fn main() {
         .map(|(a, b)| Real::abs(a - b))
         .sum();
     print_drift(drift);
-    assert!(
-        drift < lift::<FloatType>(1e-12),
-        "iso path diverged from manual path"
-    );
+    assert!(drift < TOLERANCE, "iso path diverged from manual path");
     assert_eq!(row_sums_before, row_sums_after);
 
     print_loc_accounting();

@@ -12,20 +12,29 @@
 
 use deep_causality_algebra::Real;
 use deep_causality_haft::{Applicative, CoMonad, Functor, Monad, Pure};
-use deep_causality_num::{lift, lower};
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lift, lower};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_tensor::CausalTensorWitness;
 
 /// The working scalar. Every tensor component below carries it.
 pub type FloatType = f64;
 
+const NEG_HALF: FloatType = const_scalar_from_float!(FloatType, -0.5);
+
+/// Small numbers and tolerances, at the working type.
+const TOLERANCE: FloatType = const_scalar_from_float!(FloatType, 1e-5);
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
+const EIGHT: FloatType = const_scalar_from_int!(FloatType, 8);
+
 fn main() {
     print_header();
 
     // Normalized units, G = c = 1, so kappa = 8 pi.
-    let kappa = lift::<FloatType>(8.0) * FloatType::pi();
+    let kappa = EIGHT * FloatType::pi();
     // Cosmological constant: a small positive value, for accelerating expansion.
-    let lambda = lift::<FloatType>(1e-5);
+    let lambda = TOLERANCE;
     print_constants(kappa, lambda);
 
     // 1. The metric tensor g_uv: a Minkowski signature (- + + +), slightly perturbed so the
@@ -59,9 +68,8 @@ fn main() {
     print_einstein_intro();
 
     // `fmap` transforms the value inside the context.
-    let neg_half_r = <CausalTensorWitness as Functor<CausalTensorWitness>>::fmap(r_scalar, |r| {
-        lift::<FloatType>(-0.5) * r
-    });
+    let neg_half_r =
+        <CausalTensorWitness as Functor<CausalTensorWitness>>::fmap(r_scalar, |r| NEG_HALF * r);
     let scalar_val = neg_half_r.data()[0];
 
     // `apply` broadcasts a lifted function across the data tensor.
@@ -105,7 +113,7 @@ fn main() {
     //    energy splits every high component in two, so the tensor grows.
     print_monad_intro();
     let threshold = lift::<FloatType>(0.001);
-    let half = lift::<FloatType>(2.0);
+    let half = TWO;
     let quantized_energy =
         <CausalTensorWitness as Monad<CausalTensorWitness>>::bind(t_uv.clone(), move |val| {
             if val > threshold {

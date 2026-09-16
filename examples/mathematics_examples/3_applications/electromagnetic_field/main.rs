@@ -28,15 +28,19 @@
 //! the observable field `F` follows from them by one product, so gauge invariance and phase
 //! consistency are properties of the representation and hold at every sample point.
 
+use deep_causality_algebra::Real;
 use deep_causality_calculus::{DifferentiableField, DifferentiateFieldExt, Scalar};
 use deep_causality_multivector::{CausalMultiVector, CausalMultiVectorError, Metric};
-use deep_causality_num::{Lift, lift, lower};
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lower};
 
 /// The angular frequency of the plane wave.
-const OMEGA: f64 = 1.0;
+/// Angular frequency of the wave. It stays an `f64` literal because the scalar-generic field
+/// below evaluates at a scalar the caller names, which a constant of the working type cannot
+/// reach; every use lifts it into that scalar.
+const OMEGA_LITERAL: f64 = 1.0;
 /// The spacetime point the field is sampled at, `(t, z)`. `x` and `y` stay at the origin.
-const SAMPLE_T: f64 = 1.0;
-const SAMPLE_Z: f64 = 0.5;
+const SAMPLE_T: FloatType = const_scalar_from_int!(FloatType, 1);
+const SAMPLE_Z: FloatType = const_scalar_from_float!(FloatType, 0.5);
 
 /// `Cl(1,3)` holds `2^4` coefficients.
 const COEFFICIENTS: usize = 16;
@@ -49,10 +53,13 @@ const E_TX: usize = E_T | E_X;
 const E_ZX: usize = E_Z | E_X;
 
 /// The tolerance a gauge residual and a field-strength difference are read as zero within.
-const TOLERANCE: f64 = 1e-9;
+const TOLERANCE: FloatType = const_scalar_from_float!(FloatType, 1e-9);
 
 /// The working scalar. The potential, its partials and every blade of `F` carry it.
 pub type FloatType = f64;
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
 
 fn main() -> Result<(), CausalMultiVectorError> {
     print_header();
@@ -60,12 +67,11 @@ fn main() -> Result<(), CausalMultiVectorError> {
     // Spacetime with the Minkowski signature: time +, space − − −.
     let metric = Metric::Minkowski(4);
 
-    let omega = lift::<FloatType>(OMEGA);
-    let t = lift::<FloatType>(SAMPLE_T);
-    let z = lift::<FloatType>(SAMPLE_Z);
+    let t = SAMPLE_T;
+    let z = SAMPLE_Z;
 
     // The 4-vector potential of a linearly polarised wave, purely spatial along x in this gauge.
-    let wave = PlaneWavePotential { omega };
+    let wave = PlaneWavePotential;
     let a_x = wave.run(&[t, z]);
     let potential_a = multivector(&[(E_X, a_x)], metric)?;
     print_potential(a_x);
@@ -82,7 +88,7 @@ fn main() -> Result<(), CausalMultiVectorError> {
     // The grade-0 part is ∇·A. This gauge sets A_x as a function of t and z alone, so the
     // divergence reduces to ∂_x A_x and reads zero.
     let divergence = blade(&field_f, SCALAR)?;
-    print_gauge(divergence, divergence.abs() < lift::<FloatType>(TOLERANCE));
+    print_gauge(divergence, Real::abs(divergence) < TOLERANCE);
 
     // The bivector parts are the observable fields: a time-space blade for E, a space-space
     // blade for B.
@@ -92,7 +98,7 @@ fn main() -> Result<(), CausalMultiVectorError> {
 
     // A plane wave in natural units carries equal field strengths, which is the statement that
     // it propagates at c.
-    let equal_strength = (e_field.abs() - b_field.abs()).abs() < lift::<FloatType>(TOLERANCE);
+    let equal_strength = Real::abs(Real::abs(e_field) - Real::abs(b_field)) < TOLERANCE;
     print_footer(equal_strength);
 
     Ok(())
@@ -103,7 +109,7 @@ fn multivector(
     components: &[(usize, FloatType)],
     metric: Metric,
 ) -> Result<CausalMultiVector<FloatType>, CausalMultiVectorError> {
-    let mut data = vec![lift::<FloatType>(0.0); COEFFICIENTS];
+    let mut data = vec![ZERO; COEFFICIENTS];
     for &(index, value) in components {
         data[index] = value;
     }
@@ -124,13 +130,14 @@ fn blade(
 /// The plane-wave potential component `A_x(t, z) = cos(ω(t − z))`, written once as a
 /// scalar-generic field. The same definition serves the value at `FloatType` and the partials at
 /// `Dual<FloatType>`, which is what `gradient` calls it with.
-struct PlaneWavePotential {
-    omega: FloatType,
-}
+///
+/// The struct holds no data. `run` works at a scalar the *caller* names, which a constant of the
+/// working type cannot reach, so the frequency stays an `f64` literal and is lifted per scalar.
+struct PlaneWavePotential;
 
 impl DifferentiableField<2> for PlaneWavePotential {
     fn run<S: Scalar>(&self, tz: &[S; 2]) -> S {
-        let omega = self.omega.lift::<S>();
+        let omega = deep_causality_num::lift::<S>(OMEGA_LITERAL);
         (omega * (tz[0] - tz[1])).cos()
     }
 }

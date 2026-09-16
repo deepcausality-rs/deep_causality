@@ -22,7 +22,7 @@ use deep_causality_algebra::Real;
 use deep_causality_haft::Pure;
 use deep_causality_metric::Metric;
 use deep_causality_multivector::CausalMultiVector;
-use deep_causality_num::{Float106, lift};
+use deep_causality_num::{Float106, const_scalar_from_int};
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 use mathematics_examples::effect_helpers::{Process, ProcessWitness, fail, ok, print_log};
 
@@ -30,22 +30,18 @@ use mathematics_examples::effect_helpers::{Process, ProcessWitness, fail, ok, pr
 /// or `Float106` for high precision.
 pub type FloatType = Float106;
 
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
+const THREE: FloatType = const_scalar_from_int!(FloatType, 3);
+const FOUR: FloatType = const_scalar_from_int!(FloatType, 4);
+
 fn main() {
     print_header();
 
-    let initial = CausalTensor::new(
-        vec![
-            lift::<FloatType>(3.0),
-            lift::<FloatType>(4.0),
-            lift::<FloatType>(0.0),
-        ],
-        vec![3],
-    )
-    .expect("three components in a rank-1 shape of 3");
-    let initial_norm_sq: FloatType = initial
-        .as_slice()
-        .iter()
-        .fold(lift::<FloatType>(0.0), |acc, &v| acc + v * v);
+    let initial = CausalTensor::new(vec![THREE, FOUR, ZERO], vec![3])
+        .expect("three components in a rank-1 shape of 3");
+    let initial_norm_sq: FloatType = initial.as_slice().iter().fold(ZERO, |acc, &v| acc + v * v);
     print_initial(initial.as_slice(), initial_norm_sq);
 
     // One straight-line monadic chain. The carried value type changes at every
@@ -71,7 +67,7 @@ fn lift_to_algebra(v: CausalTensor<FloatType>) -> Process<CausalMultiVector<Floa
     if s.len() != 3 {
         return fail(format!("lift: expected length 3 vector, got {}", s.len()));
     }
-    let zero = lift::<FloatType>(0.0);
+    let zero = ZERO;
     // Cl(3,0) basis order: [1, e1, e2, e3, e12, e13, e23, e123]
     let coeffs = vec![zero, s[0], s[1], s[2], zero, zero, zero, zero];
     match cl3(coeffs, Metric::Euclidean(3)) {
@@ -99,9 +95,9 @@ fn rotate_in_xy(v: CausalMultiVector<FloatType>) -> Process<CausalMultiVector<Fl
 /// A 90-degree rotation in the `e1^e2` plane, as a rotor sandwich.
 fn rotate_step(v: CausalMultiVector<FloatType>) -> Result<CausalMultiVector<FloatType>, String> {
     let metric = Metric::Euclidean(3);
-    let half = FloatType::pi() / lift::<FloatType>(2.0) / lift::<FloatType>(2.0);
+    let half = FloatType::pi() / TWO / TWO;
     let (c, sn) = (half.cos(), half.sin());
-    let zero = lift::<FloatType>(0.0);
+    let zero = ZERO;
 
     let rotor = cl3(vec![c, zero, zero, zero, -sn, zero, zero, zero], metric)?;
     let rotor_rev = cl3(vec![c, zero, zero, zero, sn, zero, zero, zero], metric)?;

@@ -36,7 +36,7 @@
 use deep_causality_algebra::Real;
 use deep_causality_haft::{Functor, RiemannMap};
 use deep_causality_metric::Metric;
-use deep_causality_num::{lift, lift_count, lower};
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lift, lift_count, lower};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     CurvatureSymmetry, CurvatureTensor, CurvatureTensorWitness, GenericManifoldWitness,
@@ -45,23 +45,27 @@ use deep_causality_topology::{
 
 /// The 3-sphere the example works on: three dimensions, radius `a`.
 const DIM: usize = 3;
-const SPHERE_RADIUS: f64 = 2.0;
+const SPHERE_RADIUS: FloatType = const_scalar_from_int!(FloatType, 2);
 
 /// The region is discretized as a cubical lattice of this shape.
 const LATTICE_SHAPE: [usize; DIM] = [2, 2, 2];
 
 /// A test mass this far apart, in metres, feels the tidal acceleration section 4 reports.
-const SEPARATION: f64 = 1000.0;
+const SEPARATION: FloatType = const_scalar_from_int!(FloatType, 1000);
 
 /// What counts as zero when a floating-point identity is checked.
-const TOLERANCE: f64 = 1e-12;
+const TOLERANCE: FloatType = const_scalar_from_float!(FloatType, 1e-12);
 
 /// The working scalar. The curvature components, the vectors and the field all carry it.
 pub type FloatType = f64;
 
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let radius = lift::<FloatType>(SPHERE_RADIUS);
-    let sectional = lift::<FloatType>(1.0) / (radius * radius);
+    let radius = SPHERE_RADIUS;
+    let sectional = ONE / (radius * radius);
     print_header(radius, sectional);
 
     // ---------------------------------------------------------------------
@@ -86,21 +90,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // The closed form and the tensor contraction agree component by component.
     for (got, want) in carried.as_slice().iter().zip(closed_form.iter()) {
-        assert!(Real::abs(*got - *want) < lift::<FloatType>(TOLERANCE));
+        assert!(Real::abs(*got - *want) < TOLERANCE);
     }
     // Reversing the loop reverses the result: R is antisymmetric in the two slots spanning it.
     for (forward, back) in carried.as_slice().iter().zip(reversed.as_slice().iter()) {
-        assert!(Real::abs(*forward + *back) < lift::<FloatType>(TOLERANCE));
+        assert!(Real::abs(*forward + *back) < TOLERANCE);
     }
 
     // A flat space returns the vector unchanged, so the curvature operator gives zero.
     let in_flat = CurvatureTensorWitness::<FloatType>::curvature(&flat, &e0, &e0, &e1);
-    assert!(
-        in_flat
-            .as_slice()
-            .iter()
-            .all(|x| *x == lift::<FloatType>(0.0))
-    );
+    assert!(in_flat.as_slice().iter().all(|x| *x == ZERO));
 
     // ---------------------------------------------------------------------
     // 3. The invariants the tensor contracts to.
@@ -110,7 +109,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let bianchi = riemann.check_bianchi_identity();
     print_invariants(ricci, expected, bianchi);
 
-    assert!(Real::abs(ricci - expected) < lift::<FloatType>(TOLERANCE));
+    assert!(Real::abs(ricci - expected) < TOLERANCE);
 
     // ---------------------------------------------------------------------
     // 4. GenericManifoldWitness: the field over a cubical lattice.
@@ -128,7 +127,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Geodesic deviation: two test masses separated by `d` in a space of sectional curvature K
     // drift apart at `K·d`, which is the tidal acceleration the curvature produces.
-    let separation = lift::<FloatType>(SEPARATION);
+    let separation = SEPARATION;
     let tidal = GenericManifoldWitness::<LatticeComplex<DIM, FloatType>>::fmap(field, move |r| {
         r / lift_count::<FloatType>((DIM * (DIM - 1)) as u64) * separation
     });
@@ -138,7 +137,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Every cell holds K·d, because the curvature is constant across the region.
     let expected_tidal = sectional * separation;
     for &value in tidal.data().as_slice() {
-        assert!(Real::abs(value - expected_tidal) < lift::<FloatType>(TOLERANCE));
+        assert!(Real::abs(value - expected_tidal) < TOLERANCE);
     }
 
     print_footer();
@@ -179,7 +178,7 @@ fn closed_form_curvature(
 fn dot(a: &[FloatType], b: &[FloatType]) -> FloatType {
     a.iter()
         .zip(b.iter())
-        .fold(lift::<FloatType>(0.0), |acc, (&x, &y)| acc + x * y)
+        .fold(ZERO, |acc, (&x, &y)| acc + x * y)
 }
 
 // -----------------------------------------------------------------------------------------

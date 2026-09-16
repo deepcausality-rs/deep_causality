@@ -19,10 +19,14 @@
 //! trait to put a run of draws into whichever container the caller names.
 
 use deep_causality_haft::{Collectable, Foldable, VecWitness};
-use deep_causality_num::{lift, lift_usize, lower};
+use deep_causality_num::{const_scalar_from_int, lift, lift_usize, lower};
 
 /// The working scalar for the numeric section below.
 pub type FloatType = f64;
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
 
 fn main() {
     // ---------------------------------------------------------------------
@@ -51,8 +55,8 @@ fn main() {
     // ---------------------------------------------------------------------
     // A lazily generated run of samples lands in the container and is reduced in one pass.
     let samples: Vec<FloatType> =
-        VecWitness::collect((1..=5).map(|i| lift_usize::<FloatType>(i) / lift::<FloatType>(2.0)));
-    let total = VecWitness::fold(samples.clone(), lift::<FloatType>(0.0), |acc, x| acc + x);
+        VecWitness::collect((1..=5).map(|i| lift_usize::<FloatType>(i) / TWO));
+    let total = VecWitness::fold(samples.clone(), ZERO, |acc, x| acc + x);
     print_numeric(&samples, total);
     assert_eq!(total, lift::<FloatType>(7.5)); // 0.5 + 1.0 + 1.5 + 2.0 + 2.5
 }

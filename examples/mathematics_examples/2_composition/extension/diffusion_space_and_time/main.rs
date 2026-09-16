@@ -19,7 +19,7 @@
 use deep_causality_algebra::Real;
 use deep_causality_haft::{CoMonad, Pure};
 use deep_causality_linear::CsrMatrix;
-use deep_causality_num::{lift, lower};
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lower};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     Manifold, ManifoldWitness, Simplex, SimplicialComplex, SimplicialManifold, Skeleton,
@@ -30,7 +30,7 @@ const N_VERTICES: usize = 9;
 const N_STEPS: usize = 6;
 // 2 alpha < 1 keeps the 1D explicit scheme stable.
 fn alpha() -> FloatType {
-    lift::<FloatType>(0.25)
+    QUARTER
 }
 
 /// `f64` is the right precision here: `alpha = 0.25` and integer initial data
@@ -39,12 +39,18 @@ fn alpha() -> FloatType {
 /// if you push the scheme near its CFL boundary over many steps.
 pub type FloatType = f64;
 
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const QUARTER: FloatType = const_scalar_from_float!(FloatType, 0.25);
+const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
+const EIGHT: FloatType = const_scalar_from_int!(FloatType, 8);
+
 fn main() {
     print_header();
 
     // Initial bump centered at index 4.
-    let mut initial: Vec<FloatType> = vec![lift::<FloatType>(0.0); N_VERTICES];
-    initial[4] = lift::<FloatType>(8.0);
+    let mut initial: Vec<FloatType> = vec![ZERO; N_VERTICES];
+    initial[4] = EIGHT;
     let manifold = build_manifold(initial);
     print_step(0, &shown(&manifold));
 
@@ -62,11 +68,9 @@ fn main() {
         }
     }
 
-    let total = process.value_cloned().map(|final_m| {
-        snapshot(&final_m)
-            .into_iter()
-            .fold(lift::<FloatType>(0.0), |acc, v| acc + v)
-    });
+    let total = process
+        .value_cloned()
+        .map(|final_m| snapshot(&final_m).into_iter().fold(ZERO, |acc, v| acc + v));
     print_outcome(process.error().map(|e| e.to_string()), total);
 }
 
@@ -90,7 +94,7 @@ fn build_manifold(vertex_values: Vec<FloatType>) -> SimplicialManifold<FloatType
     let complex = SimplicialComplex::new(vec![skeleton_0, skeleton_1], vec![d1], vec![], vec![]);
 
     let mut data = vertex_values;
-    data.extend(std::iter::repeat_n(lift::<FloatType>(0.0), n_edges));
+    data.extend(std::iter::repeat_n(ZERO, n_edges));
     let tensor = CausalTensor::new(data, vec![N_VERTICES + n_edges])
         .expect("one entry per vertex and per edge");
     Manifold::new(complex, tensor, 0).expect("manifold")
@@ -101,8 +105,8 @@ fn build_manifold(vertex_values: Vec<FloatType>) -> SimplicialManifold<FloatType
 fn diffuse_one_step(
     m: SimplicialManifold<FloatType, FloatType>,
 ) -> Process<SimplicialManifold<FloatType, FloatType>> {
-    let two = lift::<FloatType>(2.0);
-    let zero = lift::<FloatType>(0.0);
+    let two = TWO;
+    let zero = ZERO;
     let a = alpha();
 
     let updated = ManifoldWitness::extend(&m, |w| {
@@ -127,14 +131,10 @@ fn diffuse_one_step(
         return fail("non-finite value detected in diffusion step");
     }
 
-    let max_abs = updated
-        .data()
-        .as_slice()
-        .iter()
-        .fold(lift::<FloatType>(0.0), |acc, &v| {
-            let av = Real::abs(v);
-            if av > acc { av } else { acc }
-        });
+    let max_abs = updated.data().as_slice().iter().fold(ZERO, |acc, &v| {
+        let av = Real::abs(v);
+        if av > acc { av } else { acc }
+    });
     ok(updated, format!("step ok: max |phi| = {}", lower(max_abs)))
 }
 

@@ -12,19 +12,23 @@
 //! `add_edge` is undirected: adding `(u, v)` adds `(v, u)` too, and re-adding an edge that is
 //! already present returns `false` rather than duplicating it.
 
-use deep_causality_num::lift;
+use deep_causality_num::const_scalar_from_int;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Graph, GraphTopology};
 
 /// The working scalar. Node payload carries it.
 pub type FloatType = f64;
 
+/// Small numbers and tolerances, at the working type.
+const THIRTY: FloatType = const_scalar_from_int!(FloatType, 30);
+const TWENTY: FloatType = const_scalar_from_int!(FloatType, 20);
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const TEN: FloatType = const_scalar_from_int!(FloatType, 10);
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // A three-node graph whose payload is one value per node.
-    let data = CausalTensor::new(
-        vec![lift::<FloatType>(10.0), lift(20.0), lift(30.0)],
-        vec![3],
-    )?;
+    let data = CausalTensor::new(vec![TEN, TWENTY, THIRTY], vec![3])?;
     let mut graph = Graph::new(3, data, 0)?;
     print_created(&graph);
 

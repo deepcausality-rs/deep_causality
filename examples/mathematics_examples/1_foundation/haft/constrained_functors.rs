@@ -26,13 +26,16 @@ use deep_causality_haft::{
     CloneFunctor, DebugFunctor, EqFunctor, HKT, LinkedListWitness, OptionWitness, VecDequeWitness,
     VecWitness,
 };
-use deep_causality_num::lift;
+use deep_causality_num::{const_scalar_from_float, lift};
 use std::collections::{LinkedList, VecDeque};
 use std::fmt;
 
 /// The working scalar. One of the payloads below carries it, to show the capability
 /// traits are indifferent to which type the container holds.
 pub type FloatType = f64;
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const THREE_HALVES: FloatType = const_scalar_from_float!(FloatType, 1.5);
 
 fn main() {
     // ---------------------------------------------------------------------
@@ -53,7 +56,7 @@ fn main() {
     // ---------------------------------------------------------------------
     let opt = Some("sensor".to_string());
     let list = LinkedList::from([10, 20]);
-    let deque = VecDeque::from([lift::<FloatType>(1.5), lift(2.5)]);
+    let deque = VecDeque::from([THREE_HALVES, lift(2.5)]);
 
     print_other_witnesses(
         &duplicate::<OptionWitness, String>(&opt),

@@ -10,11 +10,14 @@
 //! mismatch returns rather than panics on.
 
 use deep_causality_linear::CsrMatrix;
-use deep_causality_num::{lift, lower};
+use deep_causality_num::{const_scalar_from_int, lift, lower};
 use std::fmt::Display;
 
 /// The working scalar. Every stored entry carries it.
 pub type FloatType = f64;
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
@@ -26,7 +29,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_matrix_a(&a, a.get_value_at(0, 0), a.get_value_at(0, 1));
 
     // 2. Scalar multiplication scales the stored entries and leaves the pattern alone.
-    let scalar = lift::<FloatType>(2.0);
+    let scalar = TWO;
     let b = a.scalar_mult(scalar);
     print_scalar_mult(scalar, &b);
 

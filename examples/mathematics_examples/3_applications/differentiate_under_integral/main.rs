@@ -15,26 +15,30 @@
 
 use deep_causality_algebra::Real;
 use deep_causality_calculus::quadrature;
-use deep_causality_num::{lift, lower};
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lower};
 use deep_causality_num_dual::Dual;
 
 /// The parameter the integral is differentiated with respect to.
-const THETA: f64 = 1.3;
+const THETA: FloatType = const_scalar_from_float!(FloatType, 1.3);
 /// Panels for the Simpson sweep.
 const PANELS: usize = 128;
 
 /// The working scalar. The integral, its sensitivity and both closed forms carry it.
 pub type FloatType = f64;
 
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
+
 fn main() {
-    let theta = lift::<FloatType>(THETA);
+    let theta = THETA;
 
     // Seed θ as the differentiation variable, then run a single quadrature sweep over `Dual`.
     let seeded = Dual::variable(theta);
     let sweep = quadrature(
         |x: Dual<FloatType>| (seeded * x).sin(),
-        Dual::constant(lift::<FloatType>(0.0)),
-        Dual::constant(lift::<FloatType>(1.0)),
+        Dual::constant(ZERO),
+        Dual::constant(ONE),
         PANELS,
     );
 
@@ -50,12 +54,12 @@ fn main() {
 
 /// `I(θ) = (1 − cos θ) / θ`.
 fn analytic_integral(theta: FloatType) -> FloatType {
-    (lift::<FloatType>(1.0) - Real::cos(theta)) / theta
+    (ONE - Real::cos(theta)) / theta
 }
 
 /// `dI/dθ = [θ·sin θ − (1 − cos θ)] / θ²`.
 fn analytic_sensitivity(theta: FloatType) -> FloatType {
-    (theta * Real::sin(theta) - (lift::<FloatType>(1.0) - Real::cos(theta))) / (theta * theta)
+    (theta * Real::sin(theta) - (ONE - Real::cos(theta))) / (theta * theta)
 }
 
 // -----------------------------------------------------------------------------------------

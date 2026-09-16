@@ -6,7 +6,7 @@
 use deep_causality_multivector::{
     CausalMultiField, CausalMultiVector, Metric, matrix_dim, num_blades,
 };
-use deep_causality_num::{lift, lift_usize, lower};
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lift_usize, lower};
 
 // -----------------------------------------------------------------------------------------
 // `CausalMultiField` is one multivector per grid cell: a geometric-algebra field.
@@ -31,10 +31,18 @@ const N: usize = 3;
 /// The working scalar. Every coefficient in the field carries this type.
 pub type FloatType = f64;
 
+/// Small numbers and tolerances, at the working type.
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const HALF: FloatType = const_scalar_from_float!(FloatType, 0.5);
+const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let metric = Metric::Euclidean(N);
     let shape = [2, 2, 1];
-    let dx = [lift::<FloatType>(0.5); 3];
+    let dx = [HALF; 3];
 
     // Construction, and the storage that construction commits to.
     let ones = CausalMultiField::<FloatType>::ones(shape, metric, dx);
@@ -42,15 +50,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // A field built from individual multivectors: cell k holds k*e1 + e2.
     let cells: Vec<_> = (0..4)
-        .map(|k| multivector(&[(E1, lift_usize(k)), (E2, lift(1.0))], metric))
+        .map(|k| multivector(&[(E1, lift_usize(k)), (E2, ONE)], metric))
         .collect::<Result<_, _>>()?;
     let field = CausalMultiField::from_coefficients(&cells, shape, dx);
     let f = field.to_coefficients();
     print_cells(&f);
 
     // The blade indices used above, checked rather than assumed.
-    let e1 = multivector(&[(E1, lift(1.0))], metric)?;
-    let e2 = multivector(&[(E2, lift(1.0))], metric)?;
+    let e1 = multivector(&[(E1, ONE)], metric)?;
+    let e2 = multivector(&[(E2, ONE)], metric)?;
     print_blade_check(&(e1 * e2));
 
     // <F>_k keeps the blades of grade k and zeroes the rest.
@@ -73,7 +81,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     print_algebra(
-        &field.scale(lift::<FloatType>(2.0)).to_coefficients(),
+        &field.scale(TWO).to_coefficients(),
         &field.reversion().to_coefficients(),
         &f,
         field.squared_magnitude(),
@@ -88,7 +96,7 @@ fn multivector(
     terms: &[(usize, FloatType)],
     metric: Metric,
 ) -> Result<CausalMultiVector<FloatType>, Box<dyn std::error::Error>> {
-    let mut coeffs = vec![lift::<FloatType>(0.0); num_blades(N)];
+    let mut coeffs = vec![ZERO; num_blades(N)];
     for &(index, value) in terms {
         coeffs[index] = value;
     }

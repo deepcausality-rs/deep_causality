@@ -38,7 +38,7 @@ use deep_causality_haft::{CoMonad, Pure};
 use deep_causality_linear::CsrMatrix;
 use deep_causality_metric::Metric;
 use deep_causality_multivector::CausalMultiVector;
-use deep_causality_num::{Float106, lift, lower};
+use deep_causality_num::{Float106, const_scalar_from_float, const_scalar_from_int, lift, lower};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     Manifold, ManifoldWitness, Simplex, SimplicialComplex, SimplicialManifold, Skeleton,
@@ -64,24 +64,27 @@ const I_E3: usize = 0b1000; //     e3
 const I_E01: usize = I_E0 | I_E1; // e0∧e1, the boost generator, squares to +1
 
 /// How far the timelike norm may move from 1 before a step is reported as unstable.
-const NORM_TOLERANCE: f64 = 1e-9;
+const NORM_TOLERANCE: FloatType = const_scalar_from_float!(FloatType, 1e-9);
 
 /// The working scalar. Switch the alias to `f32` for low precision, `f64` for standard, or
 /// `Float106` for the double-double carried here.
 pub type FloatType = Float106;
 
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
+const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let rapidities: Vec<FloatType> = RAPIDITIES.iter().map(|x| lift::<FloatType>(*x)).collect();
-    let theta_total = rapidities
-        .iter()
-        .fold(lift::<FloatType>(0.0), |acc, v| acc + *v);
+    let theta_total = rapidities.iter().fold(ZERO, |acc, v| acc + *v);
 
     print_header();
     print_path(&rapidities, theta_total);
 
     // The initial spinor: the timelike unit vector ψ = e₀.
-    let mut psi_data = vec![lift::<FloatType>(0.0); COEFFICIENTS];
-    psi_data[I_E0] = lift::<FloatType>(1.0);
+    let mut psi_data = vec![ZERO; COEFFICIENTS];
+    psi_data[I_E0] = ONE;
     let psi = CausalMultiVector::new(psi_data, Metric::Minkowski(DIMENSION))?;
 
     let manifold = build_path_manifold(&rapidities)?;
@@ -129,7 +132,7 @@ fn build_path_manifold(
         vec![],
     );
 
-    let mut data = vec![lift::<FloatType>(0.0); N_VERTICES];
+    let mut data = vec![ZERO; N_VERTICES];
     data.extend_from_slice(rapidities);
     let tensor = CausalTensor::new(data, vec![N_VERTICES + N_EDGES])?;
 
@@ -158,15 +161,15 @@ fn boost_rotor(
 ) -> Result<(CausalMultiVector<FloatType>, CausalMultiVector<FloatType>), Box<dyn std::error::Error>>
 {
     let metric = Metric::Minkowski(DIMENSION);
-    let half = theta / lift::<FloatType>(2.0);
+    let half = theta / TWO;
     let c = half.cosh();
     let s = half.sinh();
 
-    let mut b = vec![lift::<FloatType>(0.0); COEFFICIENTS];
+    let mut b = vec![ZERO; COEFFICIENTS];
     b[I_SCALAR] = c;
     b[I_E01] = -s;
 
-    let mut b_rev = vec![lift::<FloatType>(0.0); COEFFICIENTS];
+    let mut b_rev = vec![ZERO; COEFFICIENTS];
     b_rev[I_SCALAR] = c;
     b_rev[I_E01] = s;
 
@@ -199,8 +202,8 @@ fn transport_across_edge(
     if !norm_sq.is_finite() {
         return fail(format!("edge {e}: the norm left the finite range"));
     }
-    let drift = (norm_sq - lift::<FloatType>(1.0)).abs();
-    if drift > lift::<FloatType>(NORM_TOLERANCE) {
+    let drift = (norm_sq - ONE).abs();
+    if drift > NORM_TOLERANCE {
         return fail(format!(
             "edge {e}: norm drift {} exceeds the tolerance",
             lower(drift)

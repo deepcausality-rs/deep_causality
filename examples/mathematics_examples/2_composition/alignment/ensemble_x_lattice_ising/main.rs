@@ -51,7 +51,9 @@
 
 use deep_causality_algebra::{Real, RealField};
 use deep_causality_haft::{DiagonalTraversable, Foldable, Functor};
-use deep_causality_num::{Float106, FromPrimitive, ToPrimitive, lift, lift_usize, lower};
+use deep_causality_num::{
+    Float106, FromPrimitive, ToPrimitive, const_scalar_from_int, lift, lift_usize, lower,
+};
 use deep_causality_rand::Xoshiro256;
 use deep_causality_stats::{Distribution, RandScalar, Rng, StandardUniform};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness, ZipTensorWitness};
@@ -94,6 +96,9 @@ const TC: f64 = 2.269_185_314_213_022;
 /// the significand. The simulation is noise-bound; the observable derived from it is
 /// cancellation-bound, and the two do not want the same precision.
 pub type FloatType = f32;
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
 
 fn main() {
     print_header();
@@ -225,9 +230,7 @@ fn report_ensemble(t: f64, l: usize, label: &str) -> Vec<f64> {
     let m_per_replica = CausalTensorWitness::fmap(ensemble, |lattice| magnetisation(&lattice));
 
     // Foldable: the ensemble mean.
-    let sum = CausalTensorWitness::fold(m_per_replica.clone(), lift::<FloatType>(0.0), |acc, m| {
-        acc + m
-    });
+    let sum = CausalTensorWitness::fold(m_per_replica.clone(), ZERO, |acc, m| acc + m);
     let mean = sum / lift_usize::<FloatType>(REPLICAS);
 
     let values: Vec<f64> = m_per_replica.as_slice().iter().map(|m| lower(*m)).collect();

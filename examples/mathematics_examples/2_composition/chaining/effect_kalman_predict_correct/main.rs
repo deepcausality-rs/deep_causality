@@ -22,7 +22,7 @@ use deep_causality_algebra::Real;
 use deep_causality_haft::Pure;
 use deep_causality_metric::Metric;
 use deep_causality_multivector::CausalMultiVector;
-use deep_causality_num::lift;
+use deep_causality_num::const_scalar_from_int;
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 use mathematics_examples::effect_helpers::{Process, ProcessWitness, StepLog, fail, ok, print_log};
 
@@ -30,14 +30,19 @@ use mathematics_examples::effect_helpers::{Process, ProcessWitness, StepLog, fai
 /// chain. Float106 yields no observable gain.
 pub type FloatType = f64;
 
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const NEG_THREE: FloatType = const_scalar_from_int!(FloatType, -3);
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
+const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
+const TEN: FloatType = const_scalar_from_int!(FloatType, 10);
+const ONE_EIGHTY: FloatType = const_scalar_from_int!(FloatType, 180);
+
 fn main() {
     print_header();
 
-    let initial = CausalTensor::new(
-        vec![lift::<FloatType>(1.0), lift::<FloatType>(0.0)],
-        vec![2],
-    )
-    .expect("two components in a rank-1 shape of 2");
+    let initial =
+        CausalTensor::new(vec![ONE, ZERO], vec![2]).expect("two components in a rank-1 shape of 2");
     print_initial(initial.as_slice());
 
     // predict -> correct -> verify, threaded through one monadic chain. The
@@ -57,7 +62,7 @@ fn main() {
 }
 
 fn deg_to_rad(deg: FloatType) -> FloatType {
-    deg * FloatType::pi() / lift::<FloatType>(180.0)
+    deg * FloatType::pi() / ONE_EIGHTY
 }
 
 fn rotation_matrix_2d(theta: FloatType) -> CausalTensor<FloatType> {
@@ -80,7 +85,7 @@ fn predict(state: CausalTensor<FloatType>) -> Process<CausalTensor<FloatType>> {
 fn predict_step(
     state: CausalTensor<FloatType>,
 ) -> Result<(CausalTensor<FloatType>, String), String> {
-    let f = rotation_matrix_2d(deg_to_rad(lift::<FloatType>(10.0)));
+    let f = rotation_matrix_2d(deg_to_rad(TEN));
     // mat_mul expects [m,n] x [n,k], so the state reshapes from [2] to [2,1].
     let x_col = CausalTensor::new(state.as_slice().to_vec(), vec![2, 1])
         .map_err(|e| format!("predict: reshaping the state failed: {e:?}"))?;
@@ -104,10 +109,10 @@ fn correct_step(
     state: CausalTensor<FloatType>,
 ) -> Result<(CausalTensor<FloatType>, String), String> {
     let metric = Metric::Euclidean(2);
-    let theta = deg_to_rad(lift::<FloatType>(-3.0));
-    let half = theta / lift::<FloatType>(2.0);
+    let theta = deg_to_rad(NEG_THREE);
+    let half = theta / TWO;
     let (c, sn) = (half.cos(), half.sin());
-    let zero = lift::<FloatType>(0.0);
+    let zero = ZERO;
 
     let blade = |coeffs: Vec<FloatType>| {
         CausalMultiVector::new(coeffs, metric)

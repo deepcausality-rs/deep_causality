@@ -4,7 +4,7 @@
  */
 
 use deep_causality_multivector::{CausalMultiVector, Metric, matrix_dim, num_blades};
-use deep_causality_num::{lift, lower};
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lower};
 use deep_causality_tensor::{CausalTensor, Tensor};
 
 // -----------------------------------------------------------------------------------------
@@ -32,11 +32,20 @@ const N: usize = 3;
 /// The working scalar. Blade coefficients and matrix entries carry this type.
 pub type FloatType = f64;
 
+/// Small numbers and tolerances, at the working type.
+const HALF: FloatType = const_scalar_from_float!(FloatType, 0.5);
+const NEG_ONE: FloatType = const_scalar_from_int!(FloatType, -1);
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
+const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let metric = Metric::Euclidean(N);
 
-    let e1 = multivector(&[(E1, lift(1.0))], metric)?;
-    let e2 = multivector(&[(E2, lift(1.0))], metric)?;
+    let e1 = multivector(&[(E1, ONE)], metric)?;
+    let e2 = multivector(&[(E2, ONE)], metric)?;
 
     // A multivector as a matrix, and the generator it coincides with.
     print_single(&e1.to_matrix(), &e1.get_gamma_matrix(E1));
@@ -50,10 +59,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     // from_matrix recovers coefficients by trace projection, a_i = Tr(M * G_i^dagger) / D.
-    let mixed = multivector(
-        &[(SCALAR, lift(2.0)), (E1, lift(-1.0)), (E12, lift(0.5))],
-        metric,
-    )?;
+    let mixed = multivector(&[(SCALAR, TWO), (E1, NEG_ONE), (E12, HALF)], metric)?;
     let recovered = CausalMultiVector::from_matrix(mixed.to_matrix(), metric);
     print_round_trip(&mixed, &recovered);
 
@@ -74,7 +80,7 @@ fn multivector(
     terms: &[(usize, FloatType)],
     metric: Metric,
 ) -> Result<CausalMultiVector<FloatType>, Box<dyn std::error::Error>> {
-    let mut coeffs = vec![lift::<FloatType>(0.0); num_blades(N)];
+    let mut coeffs = vec![ZERO; num_blades(N)];
     for &(index, value) in terms {
         coeffs[index] = value;
     }

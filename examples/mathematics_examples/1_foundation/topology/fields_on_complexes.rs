@@ -29,7 +29,7 @@
 use deep_causality_algebra::Real;
 use deep_causality_haft::{CoMonad, Foldable, Functor};
 use deep_causality_linear::CsrMatrix;
-use deep_causality_num::{lift, lift_count, lower};
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lift_count, lower};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     CellComplexWitness, CellField, HoneycombLattice, LatticeComplex, LatticeComplexWitness,
@@ -50,23 +50,26 @@ const PLOT_EDGES: [[usize; 2]; 6] = [[0, 1], [0, 2], [1, 2], [1, 3], [2, 3], [3,
 const SITE_GRADE: usize = 0;
 
 /// The irradiance ramp across the roof, in W/m²: the shaded edge, and the span to the sunlit one.
-const IRRADIANCE_BASE: f64 = 620.0;
-const IRRADIANCE_SPAN: f64 = 310.0;
+const IRRADIANCE_BASE: FloatType = const_scalar_from_int!(FloatType, 620);
+const IRRADIANCE_SPAN: FloatType = const_scalar_from_int!(FloatType, 310);
 
 /// One site on the triangulated plot sits under a flue, which cuts its reading to this fraction.
 const SHADED_SITE: usize = 2;
-const SHADE_FACTOR: f64 = 0.45;
+const SHADE_FACTOR: FloatType = const_scalar_from_float!(FloatType, 0.45);
 
 /// Calibration: module area in m², peak-equivalent hours in a day, and watts per kilowatt.
-const MODULE_AREA: f64 = 1.7;
-const PEAK_HOURS: f64 = 4.6;
-const WATTS_PER_KW: f64 = 1000.0;
+const MODULE_AREA: FloatType = const_scalar_from_float!(FloatType, 1.7);
+const PEAK_HOURS: FloatType = const_scalar_from_float!(FloatType, 4.6);
+const WATTS_PER_KW: FloatType = const_scalar_from_int!(FloatType, 1000);
 
 /// A reading this far below its neighbourhood mean is reported as shaded.
-const SHADE_THRESHOLD: f64 = 0.8;
+const SHADE_THRESHOLD: FloatType = const_scalar_from_float!(FloatType, 0.8);
 
 /// The working scalar. Readings, calibrated yields and every total carry it.
 pub type FloatType = f64;
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
@@ -125,7 +128,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ---------------------------------------------------------------------
     // 3. Foldable: one aggregation on three carriers.
     // ---------------------------------------------------------------------
-    let zero = lift::<FloatType>(0.0);
+    let zero = ZERO;
     let add = |acc: FloatType, v: FloatType| acc + v;
 
     let hex_total = CellComplexWitness::fold(hex_yield, zero, add);
@@ -150,7 +153,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let mine = TopologyWitness::<FloatType>::extract(w);
 
         match neighbours.len() {
-            0 => lift::<FloatType>(0.0),
+            0 => ZERO,
             n => {
                 let sum = neighbours.iter().fold(zero, |acc, &i| acc + readings[i]);
                 let mean = sum / lift_count::<FloatType>(n as u64);
@@ -163,7 +166,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_shading(plot_field.data().as_slice(), ratios);
 
     // The site under the flue is the one the neighbourhood test picks out.
-    let threshold = lift::<FloatType>(SHADE_THRESHOLD);
+    let threshold = SHADE_THRESHOLD;
     let shaded: Vec<usize> = (0..PLOT_SITES).filter(|&i| ratios[i] < threshold).collect();
     assert_eq!(shaded, vec![SHADED_SITE]);
 
@@ -173,8 +176,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// The irradiance ramp across the roof, sampled at `count` evenly spaced sites.
 fn ramp(count: usize) -> Vec<FloatType> {
-    let base = lift::<FloatType>(IRRADIANCE_BASE);
-    let span = lift::<FloatType>(IRRADIANCE_SPAN);
+    let base = IRRADIANCE_BASE;
+    let span = IRRADIANCE_SPAN;
     let last = lift_count::<FloatType>((count.max(2) - 1) as u64);
 
     (0..count)
@@ -185,16 +188,16 @@ fn ramp(count: usize) -> Vec<FloatType> {
 /// The same ramp with one site under a flue.
 fn shaded_ramp(count: usize) -> Vec<FloatType> {
     let mut values = ramp(count);
-    values[SHADED_SITE] *= lift::<FloatType>(SHADE_FACTOR);
+    values[SHADED_SITE] *= SHADE_FACTOR;
 
     values
 }
 
 /// W/m² to kWh per module per day, the law all three carriers are mapped with.
 fn calibration() -> impl Fn(FloatType) -> FloatType + Copy {
-    let area = lift::<FloatType>(MODULE_AREA);
-    let hours = lift::<FloatType>(PEAK_HOURS);
-    let per_kw = lift::<FloatType>(WATTS_PER_KW);
+    let area = MODULE_AREA;
+    let hours = PEAK_HOURS;
+    let per_kw = WATTS_PER_KW;
 
     move |irradiance| irradiance * area * hours / per_kw
 }

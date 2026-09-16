@@ -30,12 +30,21 @@
 //! right answer and an infinity.
 
 use deep_causality_algebra::{ConjugateScalar, Normed, NormedScalar};
-use deep_causality_num::{lift, lower};
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lift, lower};
 use deep_causality_num_complex::Complex;
 use deep_causality_num_dual::Dual;
 
 /// The working scalar. Both the reals below and the components of the complex carry it.
 pub type FloatType = f64;
+
+/// Small numbers and tolerances, at the working type.
+const TOLERANCE_1: FloatType = const_scalar_from_float!(FloatType, 1e-200);
+const TOLERANCE_2: FloatType = const_scalar_from_float!(FloatType, 1e308);
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const THREE: FloatType = const_scalar_from_int!(FloatType, 3);
+const FOUR: FloatType = const_scalar_from_int!(FloatType, 4);
 
 fn main() {
     print_header();
@@ -47,8 +56,8 @@ fn main() {
     // the return type is; the body does not branch on either.
     let reals: Vec<FloatType> = [3.0, 4.0].iter().map(|&x| lift(x)).collect();
     let complexes: Vec<Complex<FloatType>> = vec![
-        Complex::new(lift::<FloatType>(3.0), lift(4.0)),
-        Complex::new(lift::<FloatType>(0.0), lift(0.0)),
+        Complex::new(THREE, lift(4.0)),
+        Complex::new(ZERO, lift(0.0)),
     ];
 
     print_norms(norm(&reals), norm(&complexes));
@@ -60,7 +69,7 @@ fn main() {
     // 2. The associated type is what removes the second parameter.
     // ---------------------------------------------------------------------
     let r: FloatType = lift(-2.5);
-    let z = Complex::new(lift::<FloatType>(3.0), lift::<FloatType>(4.0));
+    let z = Complex::new(THREE, FOUR);
     // `Normed` and `ConjugateScalar` both offer `modulus`, so the trait is named at the
     // call site. For a real or a complex the two agree; only `Dual` separates them.
     print_associated(
@@ -75,7 +84,7 @@ fn main() {
     // Conjugation is the identity on reals, flips the sign of `im` on complex, and leaves a
     // dual alone -- so one inner-product kernel covers all three. A dual's modulus stays a
     // dual, which is exactly why `ConjugateScalar` does not require `Normed`.
-    let d = Dual::variable(lift::<FloatType>(3.0));
+    let d = Dual::variable(THREE);
     print_conjugates(
         ConjugateScalar::conjugate(&r),
         ConjugateScalar::conjugate(&z),
@@ -89,8 +98,8 @@ fn main() {
     // `|z|` for a component near the top of the range is representable; `re²` is not. The
     // naive form reaches infinity and the square root stays there. The same happens at the
     // bottom: the square underflows to zero and the modulus comes back zero.
-    let huge = Complex::new(lift::<FloatType>(1e308), lift::<FloatType>(0.0));
-    let tiny = Complex::new(lift::<FloatType>(1e-200), lift::<FloatType>(0.0));
+    let huge = Complex::new(TOLERANCE_2, ZERO);
+    let tiny = Complex::new(TOLERANCE_1, ZERO);
 
     print_overflow(
         naive_modulus(&huge),

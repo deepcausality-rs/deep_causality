@@ -4,7 +4,7 @@
  */
 
 use deep_causality_haft::{BoxWitness, CoMonad, HKT};
-use deep_causality_num::{lift, lower};
+use deep_causality_num::{const_scalar_from_int, lift, lower};
 
 // ============================================================================
 // Domain Logic: System Evolution
@@ -22,11 +22,17 @@ use deep_causality_num::{lift, lower};
 /// The working scalar. Temperature and pressure carry it through every evolution step.
 pub type FloatType = f64;
 
+/// Small numbers and tolerances, at the working type.
+const HUNDRED: FloatType = const_scalar_from_int!(FloatType, 100);
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const FIFTY: FloatType = const_scalar_from_int!(FloatType, 50);
+
 fn main() {
     // Initial state: hot and high pressure.
     let initial_state = Box::new(SystemState {
-        temperature: lift(100.0),
-        pressure: lift(50.0),
+        temperature: HUNDRED,
+        pressure: FIFTY,
         step: 0,
     });
 
@@ -53,7 +59,7 @@ fn main() {
         let state = &**w;
         if state.temperature > lift::<FloatType>(85.0) {
             "CRITICAL"
-        } else if state.temperature > lift::<FloatType>(50.0) {
+        } else if state.temperature > FIFTY {
             "WARNING"
         } else {
             "NORMAL"

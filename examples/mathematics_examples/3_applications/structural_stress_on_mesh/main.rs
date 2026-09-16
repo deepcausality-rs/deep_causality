@@ -32,7 +32,7 @@ use deep_causality_haft::CoMonad;
 use deep_causality_linear::CsrMatrix;
 use deep_causality_metric::Metric;
 use deep_causality_multivector::CausalMultiVector;
-use deep_causality_num::{Lift, lift, lower};
+use deep_causality_num::{Lift, const_scalar_from_float, const_scalar_from_int, lift, lower};
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 use deep_causality_topology::{
     Manifold, ManifoldWitness, Simplex, SimplicialComplex, SimplicialManifold, Skeleton,
@@ -92,15 +92,15 @@ const TRIANGLES: [[usize; 3]; 7] = [
 // ============================================================================
 
 /// Young's modulus of steel, in Pa.
-const YOUNGS_MODULUS: f64 = 200.0e9;
+const YOUNGS_MODULUS: FloatType = const_scalar_from_float!(FloatType, 200.0e9);
 /// Poisson ratio of steel, dimensionless.
-const POISSON_RATIO: f64 = 0.30;
+const POISSON_RATIO: FloatType = const_scalar_from_float!(FloatType, 0.30);
 
 /// The prescribed strain field: a uniaxial stretch along x with the Poisson contraction it
 /// implies in y and z, plus a shear term that puts the off-diagonal components to work.
-const STRAIN_AXIAL: f64 = 1.0e-3;
-const STRAIN_LATERAL: f64 = -0.3e-3;
-const STRAIN_SHEAR: f64 = 0.5e-3;
+const STRAIN_AXIAL: FloatType = const_scalar_from_float!(FloatType, 1.0e-3);
+const STRAIN_LATERAL: FloatType = const_scalar_from_float!(FloatType, -0.3e-3);
+const STRAIN_SHEAR: FloatType = const_scalar_from_float!(FloatType, 0.5e-3);
 
 /// The material frame sits at this angle, in degrees, in the `e₁∧e₂` plane.
 const MATERIAL_ANGLE_DEG: f64 = 10.0;
@@ -118,19 +118,18 @@ const E12: usize = E1 | E2;
 /// ill-conditioned solve is where `Float106` starts to pay.
 pub type FloatType = f64;
 
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const HALF: FloatType = const_scalar_from_float!(FloatType, 0.5);
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
+const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
+const THREE: FloatType = const_scalar_from_int!(FloatType, 3);
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
 
-    let (lambda, mu) = lame(
-        lift::<FloatType>(YOUNGS_MODULUS),
-        lift::<FloatType>(POISSON_RATIO),
-    );
-    print_material(
-        lift::<FloatType>(YOUNGS_MODULUS),
-        lift::<FloatType>(POISSON_RATIO),
-        lambda,
-        mu,
-    );
+    let (lambda, mu) = lame(YOUNGS_MODULUS, POISSON_RATIO);
+    print_material(YOUNGS_MODULUS, POISSON_RATIO, lambda, mu);
 
     let manifold = build_mesh_manifold()?;
     let (rotor, rotor_rev) = material_rotor()?;
@@ -141,7 +140,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let result = ManifoldWitness::extend(&manifold, |w| {
         let i = w.cursor();
         if i >= N_VERTICES {
-            return lift::<FloatType>(0.0);
+            return ZERO;
         }
 
         // STEP 1: strain at this vertex.
@@ -260,15 +259,15 @@ fn build_mesh_manifold()
     let complex = SimplicialComplex::new(skeletons, boundaries, vec![], vec![]);
 
     let total = N_VERTICES + EDGES.len() + TRIANGLES.len() + TETS.len();
-    let data = CausalTensor::new(vec![lift::<FloatType>(0.0); total], vec![total])?;
+    let data = CausalTensor::new(vec![ZERO; total], vec![total])?;
 
     Ok(Manifold::new(complex, data, 0)?)
 }
 
 /// Lame parameters `lambda, mu` from Young's modulus `E` and Poisson ratio `nu`.
 fn lame(e: FloatType, nu: FloatType) -> (FloatType, FloatType) {
-    let one = lift::<FloatType>(1.0);
-    let two = lift::<FloatType>(2.0);
+    let one = ONE;
+    let two = TWO;
     let mu = e / (two * (one + nu));
     let lambda = e * nu / ((one + nu) * (one - two * nu));
 
@@ -285,13 +284,13 @@ fn lame(e: FloatType, nu: FloatType) -> (FloatType, FloatType) {
 // from vertex to vertex.
 fn prescribed_strain(vertex_idx: usize) -> Sym3 {
     let [x, _y, _z] = vertex(vertex_idx);
-    let zero = lift::<FloatType>(0.0);
+    let zero = ZERO;
 
     [
-        lift::<FloatType>(STRAIN_AXIAL) * x,
-        lift::<FloatType>(STRAIN_LATERAL) * x,
-        lift::<FloatType>(STRAIN_LATERAL) * x,
-        lift::<FloatType>(STRAIN_SHEAR) * x,
+        STRAIN_AXIAL * x,
+        STRAIN_LATERAL * x,
+        STRAIN_LATERAL * x,
+        STRAIN_SHEAR * x,
         zero,
         zero,
     ]
@@ -309,7 +308,7 @@ fn prescribed_strain(vertex_idx: usize) -> Sym3 {
 fn hooke_isotropic(strain: &Sym3, lambda: FloatType, mu: FloatType) -> Sym3 {
     let trace = strain[0] + strain[1] + strain[2];
     let lt = lambda * trace;
-    let two = lift::<FloatType>(2.0);
+    let two = TWO;
 
     [
         lt + two * mu * strain[0],
@@ -336,18 +335,18 @@ fn vertex_normal(vertex_idx: usize) -> [FloatType; 3] {
     let dx = x - centroid[0];
     let dy = y - centroid[1];
     let dz = z - centroid[2];
-    let zero = lift::<FloatType>(0.0);
+    let zero = ZERO;
     let r = Real::sqrt(dx * dx + dy * dy + dz * dz);
 
     if r > zero {
         [dx / r, dy / r, dz / r]
     } else {
-        [lift::<FloatType>(1.0), zero, zero]
+        [ONE, zero, zero]
     }
 }
 
 fn mesh_centroid() -> [FloatType; 3] {
-    let mut c = [lift::<FloatType>(0.0); 3];
+    let mut c = [ZERO; 3];
     for i in 0..N_VERTICES {
         let v = vertex(i);
         c[0] += v[0];
@@ -402,12 +401,12 @@ fn material_rotor()
     let c = Real::cos(half_theta);
     let s = Real::sin(half_theta);
 
-    let mut r = vec![lift::<FloatType>(0.0); COEFFICIENTS];
+    let mut r = vec![ZERO; COEFFICIENTS];
     r[SCALAR] = c;
     r[E12] = -s;
 
     // Reversion flips the sign of the grade-2 part.
-    let mut r_rev = vec![lift::<FloatType>(0.0); COEFFICIENTS];
+    let mut r_rev = vec![ZERO; COEFFICIENTS];
     r_rev[SCALAR] = c;
     r_rev[E12] = s;
 
@@ -427,7 +426,7 @@ fn rotate_into_frame(
     rotor_rev: &CausalMultiVector<FloatType>,
 ) -> [FloatType; 3] {
     let metric = Metric::Euclidean(3);
-    let mut coeffs = vec![lift::<FloatType>(0.0); COEFFICIENTS];
+    let mut coeffs = vec![ZERO; COEFFICIENTS];
     coeffs[E1] = v[0];
     coeffs[E2] = v[1];
     coeffs[E3] = v[2];
@@ -454,8 +453,8 @@ fn von_mises(sigma: &Sym3) -> FloatType {
     let d12 = s11 - s22;
     let d23 = s22 - s33;
     let d31 = s33 - s11;
-    let dev_sq = lift::<FloatType>(0.5) * (d12 * d12 + d23 * d23 + d31 * d31)
-        + lift::<FloatType>(3.0) * (s12 * s12 + s13 * s13 + s23 * s23);
+    let dev_sq =
+        HALF * (d12 * d12 + d23 * d23 + d31 * d31) + THREE * (s12 * s12 + s13 * s13 + s23 * s23);
 
     Real::sqrt(dev_sq)
 }

@@ -34,7 +34,7 @@ use deep_causality_haft::{CoMonad, Functor, Pure};
 use deep_causality_multivector::{
     CausalMultiField, CausalMultiFieldWitness, CausalMultiVector, Metric, matrix_dim,
 };
-use deep_causality_num::{lift, lift_usize, lower};
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lift_usize, lower};
 
 /// `Cl(3, 0)`: three positive basis vectors.
 const N: usize = 3;
@@ -45,27 +45,32 @@ const E2: usize = 2;
 /// A `2 x 2 x 1` grid at this spacing.
 const SHAPE: [usize; 3] = [2, 2, 1];
 const CELLS: usize = SHAPE[0] * SHAPE[1] * SHAPE[2];
-const SPACING: f64 = 0.5;
+const SPACING: FloatType = const_scalar_from_float!(FloatType, 0.5);
 
 /// The gain section 2 applies to every coefficient.
-const GAIN: f64 = 3.0;
+const GAIN: FloatType = const_scalar_from_int!(FloatType, 3);
 
 /// What counts as zero when a linearity check is made.
-const TOLERANCE: f64 = 1e-12;
+const TOLERANCE: FloatType = const_scalar_from_float!(FloatType, 1e-12);
 
 /// The working scalar. Every coefficient in the field carries it.
 pub type FloatType = f64;
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
+const FIVE: FloatType = const_scalar_from_int!(FloatType, 5);
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
 
     let metric = Metric::Euclidean(N);
-    let dx = [lift::<FloatType>(SPACING); 3];
+    let dx = [SPACING; 3];
 
     // Cell k holds k·e1 + e2, so the field varies across the grid and the gradient has something
     // to find.
     let cells: Vec<CausalMultiVector<FloatType>> = (0..CELLS)
-        .map(|k| multivector(&[(E1, lift_usize(k)), (E2, lift::<FloatType>(1.0))], metric))
+        .map(|k| multivector(&[(E1, lift_usize(k)), (E2, ONE)], metric))
         .collect::<Result<_, _>>()?;
     let field = CausalMultiField::from_coefficients(&cells, SHAPE, dx);
 
@@ -81,7 +86,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ---------------------------------------------------------------------
     // 2. Functor: map the coefficients, keep the field.
     // ---------------------------------------------------------------------
-    let gain = lift::<FloatType>(GAIN);
+    let gain = GAIN;
     let amplified = CausalMultiFieldWitness::<FloatType>::fmap(field.clone(), move |v| v * gain);
     print_functor(
         field.data().shape(),
@@ -122,12 +127,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     print_commuting(gap);
 
-    assert!(gap < lift::<FloatType>(TOLERANCE));
+    assert!(gap < TOLERANCE);
 
     // ---------------------------------------------------------------------
     // 5. Pure: the smallest field holding one value.
     // ---------------------------------------------------------------------
-    let single = CausalMultiFieldWitness::<FloatType>::pure(lift::<FloatType>(5.0));
+    let single = CausalMultiFieldWitness::<FloatType>::pure(FIVE);
     print_pure(single.data().shape(), single.data().as_slice().len());
 
     print_footer();
@@ -139,7 +144,7 @@ fn multivector(
     blades: &[(usize, FloatType)],
     metric: Metric,
 ) -> Result<CausalMultiVector<FloatType>, Box<dyn std::error::Error>> {
-    let mut data = vec![lift::<FloatType>(0.0); 1 << N];
+    let mut data = vec![ZERO; 1 << N];
     for &(index, value) in blades {
         data[index] = value;
     }
@@ -149,12 +154,10 @@ fn multivector(
 
 /// The largest absolute difference between two buffers.
 fn max_difference(a: &[FloatType], b: &[FloatType]) -> FloatType {
-    a.iter()
-        .zip(b.iter())
-        .fold(lift::<FloatType>(0.0), |acc, (&x, &y)| {
-            let gap = Real::abs(x - y);
-            if gap > acc { gap } else { acc }
-        })
+    a.iter().zip(b.iter()).fold(ZERO, |acc, (&x, &y)| {
+        let gap = Real::abs(x - y);
+        if gap > acc { gap } else { acc }
+    })
 }
 
 // -----------------------------------------------------------------------------------------

@@ -5,13 +5,19 @@
 use core::ops::{Add, Mul};
 use deep_causality_algebra::Real;
 use deep_causality_calculus::{EndoArrow, Euler};
-use deep_causality_num::{lift, lower};
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lift, lower};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, PointCloud, ReggeGeometry};
 
 /// `f64` is the right precision for this diffusion demo: short stepping, small triangle. Switch
 /// to `f32` or `Float106`; the Laplacian, the Regge metric and the Euler step all follow.
 pub type FloatType = f64;
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const HALF: FloatType = const_scalar_from_float!(FloatType, 0.5);
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
+const HUNDRED: FloatType = const_scalar_from_int!(FloatType, 100);
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
@@ -32,15 +38,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ------------------------------------------------------------------------
 
     // 1. Setup (Triangle)
-    let zero = lift::<FloatType>(0.0);
-    let one = lift::<FloatType>(1.0);
+    let zero = ZERO;
+    let one = ONE;
     let points = CausalTensor::new(
         vec![
             zero,
             zero, // v0
             one,
             zero, // v1
-            lift::<FloatType>(0.5),
+            HALF,
             lift::<FloatType>(0.866), // v2 (Equilateral)
         ],
         vec![3, 2],
@@ -51,7 +57,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 2. Initial State (Hot Vertex 0)
     let num_simplices = complex.total_simplices();
     let mut initial_data = vec![zero; num_simplices];
-    initial_data[0] = lift::<FloatType>(100.0); // Heat at v0
+    initial_data[0] = HUNDRED; // Heat at v0
 
     let num_edges = complex.skeletons()[1].simplices().len();
     let n_verts = complex.skeletons()[0].simplices().len();

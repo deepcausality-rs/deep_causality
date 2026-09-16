@@ -21,7 +21,7 @@
 
 use deep_causality_algebra::Real;
 use deep_causality_fft::{FftPlan, RfftPlan};
-use deep_causality_num::{lift, lift_usize, lower};
+use deep_causality_num::{const_scalar_from_int, lift, lift_usize, lower};
 use deep_causality_num_complex::Complex;
 
 /// Signal length for the round trip and the single-bin check: a power of two, so the
@@ -35,6 +35,11 @@ const FREQ: usize = 3;
 /// The working scalar. The plans, the signal and the spectrum all carry it.
 pub type FloatType = f64;
 
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
+const SIXTY_FOUR: FloatType = const_scalar_from_int!(FloatType, 64);
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
 
@@ -44,7 +49,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let plan = FftPlan::<FloatType>::new(N)?;
     let original = ramp(N);
     let mut data = original.clone();
-    let mut scratch = vec![Complex::new(lift::<FloatType>(0.0), lift(0.0)); plan.scratch_len()];
+    let mut scratch = vec![Complex::new(ZERO, lift(0.0)); plan.scratch_len()];
 
     plan.execute(&mut data, &mut scratch)?;
     plan.execute_inverse(&mut data, &mut scratch)?;
@@ -52,7 +57,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let drift = max_deviation(&original, &data);
     print_round_trip(plan.len(), plan.scratch_len(), drift);
     // The tolerance moves with the alias, so this reads the same at f32 or Float106.
-    assert!(drift < lift::<FloatType>(64.0) * <FloatType as Real>::epsilon());
+    assert!(drift < SIXTY_FOUR * <FloatType as Real>::epsilon());
 
     // ---------------------------------------------------------------------
     // 2. A pure sinusoid puts all its energy in one bin.
@@ -63,8 +68,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_spectrum(&spectrum);
     // A real cosine splits its energy evenly between bins f and N - f, so each holds N/2.
     let peak = magnitude(&spectrum[FREQ]);
-    let expected = lift_usize::<FloatType>(N) / lift::<FloatType>(2.0);
-    let tol = lift::<FloatType>(64.0) * <FloatType as Real>::epsilon();
+    let expected = lift_usize::<FloatType>(N) / TWO;
+    let tol = SIXTY_FOUR * <FloatType as Real>::epsilon();
     assert!(Real::abs(peak - expected) < tol);
 
     // ---------------------------------------------------------------------
@@ -74,15 +79,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // N/2 + 1 bins loses nothing. `RfftPlan` works in that layout directly.
     let rplan = RfftPlan::<FloatType>::new(N)?;
     let real_signal: Vec<FloatType> = cosine(N, FREQ).iter().map(|c| c.re).collect();
-    let mut half = vec![Complex::new(lift::<FloatType>(0.0), lift(0.0)); rplan.spectrum_len()];
-    let mut rscratch = vec![Complex::new(lift::<FloatType>(0.0), lift(0.0)); rplan.scratch_len()];
+    let mut half = vec![Complex::new(ZERO, lift(0.0)); rplan.spectrum_len()];
+    let mut rscratch = vec![Complex::new(ZERO, lift(0.0)); rplan.scratch_len()];
     rplan.execute(&real_signal, &mut half, &mut rscratch)?;
 
-    let mut recovered = vec![lift::<FloatType>(0.0); N];
+    let mut recovered = vec![ZERO; N];
     rplan.execute_inverse(&half, &mut recovered, &mut rscratch)?;
     let rdrift = max_real_deviation(&real_signal, &recovered);
     print_rfft(N, rplan.spectrum_len(), magnitude(&half[FREQ]), rdrift);
-    assert!(rdrift < lift::<FloatType>(64.0) * <FloatType as Real>::epsilon());
+    assert!(rdrift < SIXTY_FOUR * <FloatType as Real>::epsilon());
 
     // ---------------------------------------------------------------------
     // 4. A prime length is not a special case.
@@ -90,14 +95,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let prime_plan = FftPlan::<FloatType>::new(N_PRIME)?;
     let prime_original = ramp(N_PRIME);
     let mut prime_data = prime_original.clone();
-    let mut prime_scratch =
-        vec![Complex::new(lift::<FloatType>(0.0), lift(0.0)); prime_plan.scratch_len()];
+    let mut prime_scratch = vec![Complex::new(ZERO, lift(0.0)); prime_plan.scratch_len()];
     prime_plan.execute(&mut prime_data, &mut prime_scratch)?;
     prime_plan.execute_inverse(&mut prime_data, &mut prime_scratch)?;
 
     let prime_drift = max_deviation(&prime_original, &prime_data);
     print_prime(N_PRIME, prime_plan.scratch_len(), prime_drift);
-    assert!(prime_drift < lift::<FloatType>(64.0) * <FloatType as Real>::epsilon());
+    assert!(prime_drift < SIXTY_FOUR * <FloatType as Real>::epsilon());
 
     print_footer();
     Ok(())
@@ -106,19 +110,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// `0, 1, 2, ...` as complex samples with zero imaginary part.
 fn ramp(n: usize) -> Vec<Complex<FloatType>> {
     (0..n)
-        .map(|i| Complex::new(lift_usize::<FloatType>(i), lift::<FloatType>(0.0)))
+        .map(|i| Complex::new(lift_usize::<FloatType>(i), ZERO))
         .collect()
 }
 
 /// `cos(2 pi f i / n)` as complex samples.
 fn cosine(n: usize, f: usize) -> Vec<Complex<FloatType>> {
-    let two_pi_f_over_n = lift::<FloatType>(2.0) * FloatType::pi() * lift_usize::<FloatType>(f)
-        / lift_usize::<FloatType>(n);
+    let two_pi_f_over_n =
+        TWO * FloatType::pi() * lift_usize::<FloatType>(f) / lift_usize::<FloatType>(n);
     (0..n)
         .map(|i| {
             Complex::new(
                 Real::cos(two_pi_f_over_n * lift_usize::<FloatType>(i)),
-                lift::<FloatType>(0.0),
+                ZERO,
             )
         })
         .collect()
@@ -133,7 +137,7 @@ fn max_deviation(a: &[Complex<FloatType>], b: &[Complex<FloatType>]) -> FloatTyp
     a.iter()
         .zip(b)
         .map(|(x, y)| Real::abs(x.re - y.re) + Real::abs(x.im - y.im))
-        .fold(lift::<FloatType>(0.0), |m, d| if d > m { d } else { m })
+        .fold(ZERO, |m, d| if d > m { d } else { m })
 }
 
 /// The same, for real signals.
@@ -141,7 +145,7 @@ fn max_real_deviation(a: &[FloatType], b: &[FloatType]) -> FloatType {
     a.iter()
         .zip(b)
         .map(|(x, y)| Real::abs(x - y))
-        .fold(lift::<FloatType>(0.0), |m, d| if d > m { d } else { m })
+        .fold(ZERO, |m, d| if d > m { d } else { m })
 }
 
 // -----------------------------------------------------------------------------------------

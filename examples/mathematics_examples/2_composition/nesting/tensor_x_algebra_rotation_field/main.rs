@@ -20,7 +20,7 @@ use deep_causality_algebra::Real;
 use deep_causality_haft::Functor;
 use deep_causality_metric::Metric;
 use deep_causality_multivector::CausalMultiVector;
-use deep_causality_num::{lift, lower};
+use deep_causality_num::{const_scalar_from_int, lower};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 
 /// Cells per axis of the field.
@@ -31,11 +31,16 @@ const L: usize = 3;
 /// gain.
 pub type FloatType = f64;
 
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
+const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
 
     let metric = Metric::Euclidean(2);
-    let theta = FloatType::pi() / lift::<FloatType>(2.0);
+    let theta = FloatType::pi() / TWO;
     let (rotor, rotor_rev) = build_rotor_pair(theta, metric);
 
     // An L x L grid; every cell holds the unit vector e1.
@@ -65,10 +70,10 @@ fn build_rotor_pair(
     theta: FloatType,
     metric: Metric,
 ) -> (CausalMultiVector<FloatType>, CausalMultiVector<FloatType>) {
-    let half = theta / lift::<FloatType>(2.0);
+    let half = theta / TWO;
     let c = half.cos();
     let s = half.sin();
-    let zero = lift::<FloatType>(0.0);
+    let zero = ZERO;
     // Cl(2,0) coefficient order: [1, e1, e2, e12]
     let r = CausalMultiVector::new(vec![c, zero, zero, -s], metric)
         .expect("four coefficients is exactly 2^2");
@@ -78,8 +83,8 @@ fn build_rotor_pair(
 }
 
 fn unit_x(metric: Metric) -> CausalMultiVector<FloatType> {
-    let zero = lift::<FloatType>(0.0);
-    let one = lift::<FloatType>(1.0);
+    let zero = ZERO;
+    let one = ONE;
     CausalMultiVector::new(vec![zero, one, zero, zero], metric)
         .expect("four coefficients is exactly 2^2")
 }

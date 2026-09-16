@@ -16,12 +16,16 @@
 //! a wider float.
 
 use deep_causality_linear::CsrMatrix;
-use deep_causality_num::lift;
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lift};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{PointCloud, SimplicialComplex};
 
 /// The working scalar. Point coordinates and the connection radius carry it.
 pub type FloatType = f64;
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const THREE_HALVES: FloatType = const_scalar_from_float!(FloatType, 1.5);
 
 /// Simplices listed per skeleton.
 const SAMPLES: usize = 5;
@@ -38,12 +42,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     .map(|&v| lift(v))
     .collect();
     let points = CausalTensor::new(coords, vec![4, 2])?;
-    let payload = CausalTensor::new(vec![lift::<FloatType>(0.0); 4], vec![4])?;
+    let payload = CausalTensor::new(vec![ZERO; 4], vec![4])?;
     let point_cloud = PointCloud::new(points, payload, 0)?;
 
     // A radius of 1.5 reaches the sides (length 1) and the diagonals (sqrt(2) = 1.414), so
     // every pair connects and the square fills in.
-    let complex = point_cloud.triangulate(lift::<FloatType>(1.5))?;
+    let complex = point_cloud.triangulate(THREE_HALVES)?;
 
     print_skeletons(&complex);
     print_operators("Boundary operators", "∂", complex.boundary_operators());

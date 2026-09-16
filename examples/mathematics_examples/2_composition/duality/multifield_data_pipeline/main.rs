@@ -51,7 +51,7 @@
 use deep_causality_algebra::Real;
 use deep_causality_metric::Metric;
 use deep_causality_multivector::{CausalMultiField, MultiFieldCarrier};
-use deep_causality_num::{Lift, lift, lower};
+use deep_causality_num::{Lift, const_scalar_from_float, const_scalar_from_int, lift, lower};
 use deep_causality_tensor::CausalTensor;
 
 // =============================================================================
@@ -62,6 +62,14 @@ use deep_causality_tensor::CausalTensor;
 /// The working scalar. Every element of the underlying tensor carries it.
 pub type FloatType = f32;
 
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const ONE_TENTH: FloatType = const_scalar_from_float!(FloatType, 0.1);
+const HALF: FloatType = const_scalar_from_float!(FloatType, 0.5);
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
+const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
+const EIGHT: FloatType = const_scalar_from_int!(FloatType, 8);
+
 fn main() {
     print_header();
 
@@ -69,7 +77,7 @@ fn main() {
     // so the underlying tensor shape is [2, 2, 2, 4, 4] = 128 elements.
     let grid_shape: [usize; 3] = [2, 2, 2];
     let metric = Metric::from_signature(2, 0, 0);
-    let d = lift::<FloatType>(0.1);
+    let d = ONE_TENTH;
     let dx: [FloatType; 3] = [d, d, d];
 
     // We can't pre-compute `matrix_dim` from outside the crate (the helper
@@ -108,11 +116,11 @@ fn main() {
     // ---------------------------------------------------------------------
     // Element-wise scaling. Any tensor function with this signature plugs
     // straight in — that's the value of the generic helper.
-    let scaled = map_underlying_tensor(field, |t| lift::<FloatType>(2.0) * &t);
+    let scaled = map_underlying_tensor(field, |t| TWO * &t);
     print_transform_scaled(scaled.metric(), scaled.dx(), scaled.shape());
 
     // Chain a second transform. Same generic helper.
-    let shifted = map_underlying_tensor(scaled, |t| lift::<FloatType>(0.5) + &t);
+    let shifted = map_underlying_tensor(scaled, |t| HALF + &t);
     print_transform_shifted(shifted.metric(), shifted.dx(), shifted.shape());
 
     // ---------------------------------------------------------------------
@@ -135,11 +143,10 @@ fn main() {
 
     // First element: input was 0.0, scaled by 2.0 → 0.0, plus 0.5 → 0.5.
     let first = final_tensor.data()[0];
-    let expected_first: FloatType =
-        lift::<FloatType>(0.0) * lift::<FloatType>(2.0) + lift::<FloatType>(0.5);
+    let expected_first: FloatType = ZERO * TWO + HALF;
     // The tolerance is a multiple of the working type's epsilon, so it moves with the alias. A
     // literal threshold is correct at one precision and arbitrary at the other three.
-    let tol: FloatType = lift::<FloatType>(8.0) * <FloatType as Real>::epsilon();
+    let tol: FloatType = EIGHT * <FloatType as Real>::epsilon();
     assert!(
         Real::abs(first - expected_first) < tol,
         "first element drifted: {} vs {}",
@@ -152,8 +159,7 @@ fn main() {
     // plus 0.5 ≈ 2.484...
     let last = final_tensor.data()[element_count - 1];
     let n = element_count.lift::<FloatType>();
-    let expected_last: FloatType =
-        ((n - lift::<FloatType>(1.0)) / n) * lift::<FloatType>(2.0) + lift::<FloatType>(0.5);
+    let expected_last: FloatType = ((n - ONE) / n) * TWO + HALF;
     // Wider than the first check: this value went through a division as well as the scale
     // and the shift.
     let tol_last: FloatType = lift::<FloatType>(96.0) * <FloatType as Real>::epsilon();

@@ -12,7 +12,7 @@
 //! Every fallible call propagates with `?` rather than unwrapping, so a shape mistake
 //! surfaces as a returned error instead of a panic.
 
-use deep_causality_num::lift;
+use deep_causality_num::{const_scalar_from_int, lift};
 use deep_causality_tensor::{CausalTensor, CausalTensorMathExt, Tensor};
 
 /// The working scalar, for the sections that do floating-point arithmetic.
@@ -20,6 +20,15 @@ use deep_causality_tensor::{CausalTensor, CausalTensorMathExt, Tensor};
 /// Several sections below use integer tensors on purpose: reductions, sorting, broadcasting
 /// and stacking are shape operations, and integers make the result easy to read off.
 pub type FloatType = f64;
+
+const ELEVEN: FloatType = const_scalar_from_int!(FloatType, 11);
+const TWELVE: FloatType = const_scalar_from_int!(FloatType, 12);
+const THIRTEEN: FloatType = const_scalar_from_int!(FloatType, 13);
+const FOURTEEN: FloatType = const_scalar_from_int!(FloatType, 14);
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
+const TEN: FloatType = const_scalar_from_int!(FloatType, 10);
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 1. A tensor is flat data plus a shape.
@@ -49,16 +58,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     assert_eq!(raveled.shape(), &[6]);
 
     // 4. Scalar arithmetic is element-wise.
-    let ft = CausalTensor::new(
-        vec![lift::<FloatType>(1.0), lift(2.0), lift(3.0), lift(4.0)],
-        vec![2, 2],
-    )?;
-    let added: CausalTensor<FloatType> = &ft + lift::<FloatType>(10.0);
+    let ft = CausalTensor::new(vec![ONE, lift(2.0), lift(3.0), lift(4.0)], vec![2, 2])?;
+    let added: CausalTensor<FloatType> = &ft + TEN;
     print_scalar_arithmetic(&ft, &added);
-    assert_eq!(
-        added.as_slice(),
-        &[lift::<FloatType>(11.0), lift(12.0), lift(13.0), lift(14.0)]
-    );
+    assert_eq!(added.as_slice(), &[ELEVEN, TWELVE, THIRTEEN, FOURTEEN]);
 
     // 5. Reductions collapse the named axes; an empty axis list reduces everything.
     let grid = CausalTensor::new(vec![1, 2, 3, 4, 5, 6], vec![2, 3])?;
@@ -91,7 +94,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 8. Element-wise logarithms, for floating-point data.
     let logs = CausalTensor::new(
         vec![
-            lift::<FloatType>(1.0),
+            ONE,
             lift(std::f64::consts::E),
             lift(10.0),
             lift(100.0),

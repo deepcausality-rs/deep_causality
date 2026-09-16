@@ -25,7 +25,7 @@
 use core::ops::Div;
 use deep_causality_algebra::{Real, RealField};
 use deep_causality_num::FromPrimitive;
-use deep_causality_num::{BFloat16, Float106, lift, lift_usize, lower};
+use deep_causality_num::{BFloat16, Float106, const_scalar_from_int, lift, lift_usize, lower};
 use deep_causality_num_dual::Dual;
 
 /// Terms of the series, chosen so `f32` runs out of significand before the series runs out
@@ -35,6 +35,9 @@ const TERMS: usize = 25;
 /// The working scalar of the *display* path only. Each computation below picks its own, which
 /// is the entire point of the example.
 pub type FloatType = f64;
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
 
 fn main() {
     print_header();
@@ -64,7 +67,7 @@ fn main() {
     requires_real::<Dual<f64>>();
     // requires_real_field::<Dual<f64>>();  // rejected: Dual is not a Field
 
-    let seeded = Dual::variable(lift::<FloatType>(1.0));
+    let seeded = Dual::variable(ONE);
     let evaluated = exp_series_analytic(seeded);
     print_dual(evaluated.re, evaluated.du);
 

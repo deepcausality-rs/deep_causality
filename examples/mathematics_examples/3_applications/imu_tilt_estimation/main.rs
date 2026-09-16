@@ -45,7 +45,7 @@ use deep_causality_core::{CausalFlow, CausalityError, CausalityErrorEnum, Propag
 use deep_causality_multivector::{
     CausalMultiVector, CausalMultiVectorError, Metric, MultiVector, MultiVectorL2Norm,
 };
-use deep_causality_num::{lift, lift_count, lower};
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lift_count, lower};
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 
 // ======================================================================================
@@ -59,33 +59,33 @@ use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 /// one step, which is `9.81 · 1.0 · 0.01 ≈ 0.098` m/s² here, so `Q ≈ (g·ω·dt)² ≈ 0.01`. Holding
 /// `Q` at zero drives the covariance to zero within a few steps and freezes the estimate at the
 /// first value it converged to, which is what leaves a tilt estimator tracking a stale horizon.
-const Q_DIAG: f64 = 0.01;
+const Q_DIAG: FloatType = const_scalar_from_float!(FloatType, 0.01);
 
 /// Base measurement noise `R`: the accelerometer noise variance. Smaller values put the weight on
 /// the sensor and larger values put it on the model. Take it from the datasheet or from a bench
 /// measurement: `0.01` for a high-quality IMU, up to `1.0` for a consumer part.
-const R_BASE: f64 = 0.1;
+const R_BASE: FloatType = const_scalar_from_float!(FloatType, 0.1);
 
 /// Motion detection threshold in m/s². A reading whose magnitude departs from `G_REF` by more than
 /// this carries linear acceleration, and the measurement update stands down for that step.
 /// `0.5` is sensitive, `2.0` is permissive, and `f64::MAX` leaves every step to the sensor.
-const MOTION_THRESHOLD: f64 = 2.0;
+const MOTION_THRESHOLD: FloatType = const_scalar_from_int!(FloatType, 2);
 
 /// Adaptive `R`: the effective noise is `R_BASE · (1 + GYRO_SCALE · |gyro|)`, which lowers the
 /// trust placed in the accelerometer while the body is turning quickly. `0.5` adapts mildly, `5.0`
 /// aggressively, and `0.0` holds `R` at `R_BASE`.
-const GYRO_SCALE: f64 = 2.0;
+const GYRO_SCALE: FloatType = const_scalar_from_int!(FloatType, 2);
 
 /// Standard gravity in m/s², adjustable for altitude.
-const G_REF: f64 = 9.81;
+const G_REF: FloatType = const_scalar_from_float!(FloatType, 9.81);
 
 /// How far the orientation moves toward gravity alignment at each step. Smaller values converge
 /// smoothly, larger ones converge quickly: `0.01` is smooth, `0.2` is aggressive.
-const TILT_CORRECTION_ALPHA: f64 = 0.1;
+const TILT_CORRECTION_ALPHA: FloatType = const_scalar_from_float!(FloatType, 0.1);
 
 /// The initial covariance is `INITIAL_VARIANCE · I`, wide enough that the first observations move
 /// the estimate freely.
-const INITIAL_VARIANCE: f64 = 100.0;
+const INITIAL_VARIANCE: FloatType = const_scalar_from_int!(FloatType, 100);
 
 // ======================================================================================
 // Scenario
@@ -94,13 +94,13 @@ const INITIAL_VARIANCE: f64 = 100.0;
 /// The simulated run: `STEPS` samples at `DT` seconds, stationary except for a roll about the
 /// x axis at `GYRO_RATE` rad/s over the step range `[TILT_START, TILT_END)`.
 const STEPS: usize = 50;
-const DT: f64 = 0.01;
-const GYRO_RATE: f64 = 1.0;
+const DT: FloatType = const_scalar_from_float!(FloatType, 0.01);
+const GYRO_RATE: FloatType = const_scalar_from_int!(FloatType, 1);
 const TILT_START: usize = 11;
 const TILT_END: usize = 30;
 
 /// The bound the recovered attitude is held to, one degree in radians.
-const ATTITUDE_TOLERANCE: f64 = 0.0175;
+const ATTITUDE_TOLERANCE: FloatType = const_scalar_from_float!(FloatType, 0.0175);
 
 /// The state vector holds three components, and `Cl(3,0)` holds `2^3` coefficients.
 const DIMENSION: usize = 3;
@@ -117,6 +117,13 @@ const E23: usize = E2 | E3;
 /// The working scalar. Sensor readings, the rotor, gravity and the covariance all carry it.
 pub type FloatType = f64;
 
+const NEG_HALF: FloatType = const_scalar_from_float!(FloatType, -0.5);
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
+const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
 
@@ -125,9 +132,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // The starting state: an identity rotor, gravity pointing down the body z axis, and a wide
     // covariance.
     let initial_state = TiltState {
-        orientation: Some(CausalMultiVector::scalar(lift::<FloatType>(1.0), metric)),
-        gravity_body: Some(vector(&[lift::<FloatType>(0.0); DIMENSION], metric)?.with_z(G_REF)?),
-        covariance: Some(diagonal(lift::<FloatType>(INITIAL_VARIANCE))?),
+        orientation: Some(CausalMultiVector::scalar(ONE, metric)),
+        gravity_body: Some(vector(&[ZERO; DIMENSION], metric)?.with_z(G_REF)?),
+        covariance: Some(diagonal(INITIAL_VARIANCE)?),
     };
 
     // Fold the sensor stream into one causal chain. Each `bind` threads the state forward, and a
@@ -163,7 +170,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // A rotor through angle φ carries cos(φ/2) in its scalar part, so the recovered roll reads
     // straight back out of the estimate.
     let scalar = blade(&orientation, SCALAR);
-    let recovered = lift::<FloatType>(2.0) * Real::acos(scalar);
+    let recovered = TWO * Real::acos(scalar);
 
     let applied = applied_roll();
     print_gravity(
@@ -175,7 +182,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // One degree is the bound an attitude estimate of this kind is held to. What is left inside it
     // is the first-order rotor step and the lag the filter carries through the turn.
-    assert!(Real::abs(recovered - applied) < lift::<FloatType>(ATTITUDE_TOLERANCE));
+    assert!(Real::abs(recovered - applied) < ATTITUDE_TOLERANCE);
 
     Ok(())
 }
@@ -217,8 +224,8 @@ fn predict_orientation(
     metric: Metric,
 ) -> Result<CausalMultiVector<FloatType>, Box<dyn std::error::Error>> {
     let omega = gyro_bivector(&reading.gyro, metric)?;
-    let half_step = omega * (lift::<FloatType>(-0.5) * reading.dt);
-    let one = CausalMultiVector::scalar(lift::<FloatType>(1.0), metric);
+    let half_step = omega * (NEG_HALF * reading.dt);
+    let one = CausalMultiVector::scalar(ONE, metric);
 
     Ok((orientation.clone() * (one + half_step)).normalize_l2())
 }
@@ -239,19 +246,18 @@ fn observe_gravity(
     )?;
 
     // Process noise, carried whichever branch this step takes.
-    let q = diagonal(lift::<FloatType>(Q_DIAG))?;
+    let q = diagonal(Q_DIAG)?;
 
     // A reading whose magnitude departs from gravity carries linear acceleration, so the step
     // propagates the covariance and leaves the estimate where it is.
-    let departure = Real::abs(magnitude(&reading.accel) - lift::<FloatType>(G_REF));
-    if departure > lift::<FloatType>(MOTION_THRESHOLD) {
+    let departure = Real::abs(magnitude(&reading.accel) - G_REF);
+    if departure > MOTION_THRESHOLD {
         return Ok((x_pred, covariance + &q));
     }
 
     // Measurement noise rises with the gyro magnitude, which lowers the weight on the
     // accelerometer through a fast rotation.
-    let r_effective = lift::<FloatType>(R_BASE)
-        * (lift::<FloatType>(1.0) + lift::<FloatType>(GYRO_SCALE) * magnitude(&reading.gyro));
+    let r_effective = R_BASE * (ONE + GYRO_SCALE * magnitude(&reading.gyro));
     let r = diagonal(r_effective)?;
 
     // Innovation y = z − H·x, innovation covariance S = H·P·Hᵀ + R, gain K = P·S⁻¹.
@@ -264,7 +270,7 @@ fn observe_gravity(
     let correction = CausalTensor::ein_sum(&EinSumOp::mat_mul(k.clone(), y))?;
     let x_updated = &x_pred + &correction;
 
-    let i_minus_k = &diagonal(lift::<FloatType>(1.0))? - &k;
+    let i_minus_k = &diagonal(ONE)? - &k;
     let p_updated = CausalTensor::ein_sum(&EinSumOp::mat_mul(i_minus_k, covariance.clone()))?;
 
     Ok((x_updated, &p_updated + &q))
@@ -281,18 +287,18 @@ fn correct_tilt(
     metric: Metric,
 ) -> Result<CausalMultiVector<FloatType>, Box<dyn std::error::Error>> {
     // The reference direction in the world frame, NED, so down is −z for the measured reaction.
-    let reference = vector(&[lift::<FloatType>(0.0); DIMENSION], metric)?.with_z(-G_REF)?;
+    let reference = vector(&[ZERO; DIMENSION], metric)?.with_z(-G_REF)?;
 
     let world = predicted
         .geometric_product(&gravity.normalize())
         .geometric_product(&predicted.reversion())
         .grade_projection(1);
 
-    let one = CausalMultiVector::scalar(lift::<FloatType>(1.0), metric);
+    let one = CausalMultiVector::scalar(ONE, metric);
     let alignment = (one.clone() + reference.normalize().geometric_product(&world)).normalize();
 
-    let alpha = lift::<FloatType>(TILT_CORRECTION_ALPHA);
-    let blended = (one * (lift::<FloatType>(1.0) - alpha) + alignment * alpha).normalize();
+    let alpha = TILT_CORRECTION_ALPHA;
+    let blended = (one * (ONE - alpha) + alignment * alpha).normalize();
 
     Ok(blended.geometric_product(predicted).normalize())
 }
@@ -303,23 +309,19 @@ fn correct_tilt(
 /// with the body: at roll `φ` it reads `[0, −g·sin φ, −g·cos φ]`. Giving both sensors the same
 /// story is what lets the recovered attitude be checked against the roll that produced it.
 fn simulate_stream() -> Vec<SensorData> {
-    let dt = lift::<FloatType>(DT);
-    let rate = lift::<FloatType>(GYRO_RATE);
-    let g = lift::<FloatType>(G_REF);
-    let mut roll = lift::<FloatType>(0.0);
+    let dt = DT;
+    let rate = GYRO_RATE;
+    let g = G_REF;
+    let mut roll = ZERO;
 
     (0..STEPS)
         .map(|i| {
-            let mut gyro = vec![lift::<FloatType>(0.0); DIMENSION];
+            let mut gyro = vec![ZERO; DIMENSION];
             if (TILT_START..TILT_END).contains(&i) {
                 gyro[0] = rate;
                 roll += rate * dt;
             }
-            let accel = vec![
-                lift::<FloatType>(0.0),
-                -g * Real::sin(roll),
-                -g * Real::cos(roll),
-            ];
+            let accel = vec![ZERO, -g * Real::sin(roll), -g * Real::cos(roll)];
 
             SensorData { accel, gyro, dt }
         })
@@ -328,9 +330,7 @@ fn simulate_stream() -> Vec<SensorData> {
 
 /// The roll the stream applies over the whole run, which the estimate is checked against.
 fn applied_roll() -> FloatType {
-    lift::<FloatType>(GYRO_RATE)
-        * lift::<FloatType>(DT)
-        * lift_count::<FloatType>((TILT_END - TILT_START) as u64)
+    GYRO_RATE * DT * lift_count::<FloatType>((TILT_END - TILT_START) as u64)
 }
 
 // ========================================================================================
@@ -375,7 +375,7 @@ fn vector(
     if components.len() != DIMENSION {
         return Err(format!("a vector carries {DIMENSION} components").into());
     }
-    let mut data = vec![lift::<FloatType>(0.0); COEFFICIENTS];
+    let mut data = vec![ZERO; COEFFICIENTS];
     data[E1] = components[0];
     data[E2] = components[1];
     data[E3] = components[2];
@@ -392,7 +392,7 @@ fn gyro_bivector(
     if gyro.len() != DIMENSION {
         return Err(format!("a gyro reading carries {DIMENSION} components").into());
     }
-    let mut data = vec![lift::<FloatType>(0.0); COEFFICIENTS];
+    let mut data = vec![ZERO; COEFFICIENTS];
     data[E23] = gyro[0];
     data[E13] = -gyro[1]; // e₃₁ = −e₁₃
     data[E12] = gyro[2];
@@ -402,7 +402,7 @@ fn gyro_bivector(
 
 /// A `[3, 3]` matrix carrying one value on its diagonal.
 fn diagonal(value: FloatType) -> Result<CausalTensor<FloatType>, Box<dyn std::error::Error>> {
-    let mut data = vec![lift::<FloatType>(0.0); DIMENSION * DIMENSION];
+    let mut data = vec![ZERO; DIMENSION * DIMENSION];
     for i in 0..DIMENSION {
         data[i * DIMENSION + i] = value;
     }
@@ -413,28 +413,24 @@ fn diagonal(value: FloatType) -> Result<CausalTensor<FloatType>, Box<dyn std::er
 /// One coefficient of a multivector, read by blade index. Every index used here is inside
 /// `Cl(3,0)`, and an index beyond it reads as zero.
 fn blade(mv: &CausalMultiVector<FloatType>, index: usize) -> FloatType {
-    mv.get(index).copied().unwrap_or(lift::<FloatType>(0.0))
+    mv.get(index).copied().unwrap_or(ZERO)
 }
 
 /// The Euclidean magnitude of a sensor reading.
 fn magnitude(components: &[FloatType]) -> FloatType {
-    Real::sqrt(
-        components
-            .iter()
-            .fold(lift::<FloatType>(0.0), |acc, &c| acc + c * c),
-    )
+    Real::sqrt(components.iter().fold(ZERO, |acc, &c| acc + c * c))
 }
 
 /// Sets the z component of a grade-1 multivector, which the two reference vectors need.
 trait WithZ: Sized {
-    fn with_z(self, z: f64) -> Result<Self, CausalMultiVectorError>;
+    fn with_z(self, z: FloatType) -> Result<Self, CausalMultiVectorError>;
 }
 
 impl WithZ for CausalMultiVector<FloatType> {
-    fn with_z(self, z: f64) -> Result<Self, CausalMultiVectorError> {
+    fn with_z(self, z: FloatType) -> Result<Self, CausalMultiVectorError> {
         let metric = self.metric();
         let mut data = self.data().to_vec();
-        data[E3] = lift::<FloatType>(z);
+        data[E3] = z;
         CausalMultiVector::new(data, metric)
     }
 }

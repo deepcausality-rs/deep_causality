@@ -27,13 +27,22 @@ use deep_causality_haft::{
     Applicative, Convolutional, HKT, LaxMonoidal, MonoidalApplicative, Pure, Semigroupal,
 };
 use deep_causality_linear::{DenseVector, ZipDenseVectorWitness};
-use deep_causality_num::{lift, lower};
+use deep_causality_num::{const_scalar_from_int, lift, lower};
 use deep_causality_num_complex::{Complex, ComplexWitness};
 use deep_causality_num_dual::{Dual, DualWitness};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness, ZipTensorWitness};
 
 /// The working scalar. Every measurement below carries it.
 pub type FloatType = f64;
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
+const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
+const THREE: FloatType = const_scalar_from_int!(FloatType, 3);
+const FOUR: FloatType = const_scalar_from_int!(FloatType, 4);
+const FIVE: FloatType = const_scalar_from_int!(FloatType, 5);
+const HUNDRED: FloatType = const_scalar_from_int!(FloatType, 100);
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
@@ -52,7 +61,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_alignment(summed.as_slice(), paired.as_slice());
 
     // The plain witness broadcasts: one function reaches every slot.
-    let scale: fn(FloatType) -> FloatType = |x| x * lift::<FloatType>(100.0);
+    let scale: fn(FloatType) -> FloatType = |x| x * HUNDRED;
     let broadcast = CausalTensorWitness::apply(CausalTensorWitness::pure(scale), a.clone());
     print_broadcast(broadcast.as_slice());
 
@@ -63,10 +72,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // function with its own argument exactly once, so the payload needs no `Clone`.
     let ops: CausalTensor<fn(FloatType) -> FloatType> = CausalTensor::new(
         vec![
-            (|x| x + lift::<FloatType>(1.0)) as fn(FloatType) -> FloatType,
-            |x| x * lift::<FloatType>(2.0),
-            |x| x - lift::<FloatType>(1.0),
-            |x| x / lift::<FloatType>(2.0),
+            (|x| x + ONE) as fn(FloatType) -> FloatType,
+            |x| x * TWO,
+            |x| x - ONE,
+            |x| x / TWO,
         ],
         vec![4],
     )?;
@@ -95,8 +104,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ---------------------------------------------------------------------
     // 4. The same vocabulary over a dense vector.
     // ---------------------------------------------------------------------
-    let u = DenseVector::from_vec(vec![lift::<FloatType>(1.0), lift(2.0), lift(3.0)]);
-    let v = DenseVector::from_vec(vec![lift::<FloatType>(4.0), lift(5.0), lift(6.0)]);
+    let u = DenseVector::from_vec(vec![ONE, lift(2.0), lift(3.0)]);
+    let v = DenseVector::from_vec(vec![FOUR, lift(5.0), lift(6.0)]);
     let dot_terms = ZipDenseVectorWitness::zip_with(u, v, |x, y| x * y);
     print_dense(dot_terms.as_slice());
 
@@ -105,14 +114,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ---------------------------------------------------------------------
     // A number type with a fixed number of components carries the same family. `unit` is the
     // structure holding `()`, which is what makes the monoid a monoid rather than a semigroup.
-    let z1 = Complex::new(lift::<FloatType>(3.0), lift::<FloatType>(4.0));
-    let z2 = Complex::new(lift::<FloatType>(1.0), lift::<FloatType>(2.0));
+    let z1 = Complex::new(THREE, FOUR);
+    let z2 = Complex::new(ONE, TWO);
     let z_sum = ComplexWitness::zip_with(z1, z2, |x, y| x + y);
     let complex_unit = <ComplexWitness as LaxMonoidal<ComplexWitness>>::unit();
 
     // A dual number carries a value and its derivative; zipping pairs both components.
-    let d1 = Dual::new(lift::<FloatType>(2.0), lift::<FloatType>(1.0));
-    let d2 = Dual::new(lift::<FloatType>(5.0), lift::<FloatType>(0.0));
+    let d1 = Dual::new(TWO, ONE);
+    let d2 = Dual::new(FIVE, ZERO);
     let d_sum = DualWitness::zip_with(d1, d2, |x, y| x + y);
     let dual_unit = <DualWitness as LaxMonoidal<DualWitness>>::unit();
 

@@ -29,7 +29,7 @@
 use deep_causality_algebra::Real;
 use deep_causality_haft::{CoMonad, Foldable, Functor};
 use deep_causality_linear::CsrMatrix;
-use deep_causality_num::{lift, lift_count, lower};
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lift, lift_count, lower};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     Hypergraph, HypergraphWitness, MixedGraph, MixedGraphWitness, PointCloud, PointCloudWitness,
@@ -58,16 +58,21 @@ const WIND_ARCS: [(usize, usize); 4] = [(0, 1), (1, 2), (3, 4), (4, 5)];
 const COURTYARD_LINKS: [(usize, usize); 1] = [(2, 3)];
 
 /// Two sensors within this distance, in metres, are spatial neighbours.
-const NEIGHBOUR_RADIUS: f64 = 40.0;
+const NEIGHBOUR_RADIUS: FloatType = const_scalar_from_int!(FloatType, 40);
 
 /// How much weight the neighbourhood mean carries against a sensor's own reading.
-const SMOOTHING_ALPHA: f64 = 0.5;
+const SMOOTHING_ALPHA: FloatType = const_scalar_from_float!(FloatType, 0.5);
 
 /// The reading that maps to an index of 100, in µg/m³.
-const INDEX_REFERENCE: f64 = 50.0;
+const INDEX_REFERENCE: FloatType = const_scalar_from_int!(FloatType, 50);
 
 /// The working scalar. Readings, positions and every smoothed value carry it.
 pub type FloatType = f64;
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
+const HUNDRED: FloatType = const_scalar_from_int!(FloatType, 100);
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let readings: Vec<FloatType> = READINGS.iter().map(|&r| lift::<FloatType>(r)).collect();
@@ -112,26 +117,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ---------------------------------------------------------------------
     // `fmap` carries each reading to an index against the reference concentration, and `fold`
     // reduces the carrier to the network mean. Neither call names a neighbourhood.
-    let reference = lift::<FloatType>(INDEX_REFERENCE);
-    let to_index = move |v: FloatType| v * lift::<FloatType>(100.0) / reference;
+    let reference = INDEX_REFERENCE;
+    let to_index = move |v: FloatType| v * HUNDRED / reference;
 
     let indexed = HypergraphWitness::fmap(by_building.clone(), to_index);
     print_index(indexed.data().as_slice());
 
     print_means(
-        network_mean(HypergraphWitness::fold(
-            by_building,
-            lift::<FloatType>(0.0),
-            |acc, v| acc + v,
-        )),
-        network_mean(MixedGraphWitness::fold(
-            by_wind,
-            lift::<FloatType>(0.0),
-            |acc, v| acc + v,
-        )),
+        network_mean(HypergraphWitness::fold(by_building, ZERO, |acc, v| acc + v)),
+        network_mean(MixedGraphWitness::fold(by_wind, ZERO, |acc, v| acc + v)),
         network_mean(PointCloudWitness::<FloatType>::fold(
             by_distance,
-            lift::<FloatType>(0.0),
+            ZERO,
             |acc, v| acc + v,
         )),
     );
@@ -146,13 +143,11 @@ fn smoothed(reading: FloatType, neighbours: &[FloatType]) -> FloatType {
     match neighbours.len() {
         0 => reading,
         n => {
-            let sum = neighbours
-                .iter()
-                .fold(lift::<FloatType>(0.0), |acc, &v| acc + v);
+            let sum = neighbours.iter().fold(ZERO, |acc, &v| acc + v);
             let mean = sum / lift_count::<FloatType>(n as u64);
-            let alpha = lift::<FloatType>(SMOOTHING_ALPHA);
+            let alpha = SMOOTHING_ALPHA;
 
-            (lift::<FloatType>(1.0) - alpha) * reading + alpha * mean
+            (ONE - alpha) * reading + alpha * mean
         }
     }
 }
@@ -255,7 +250,7 @@ fn build_point_cloud(
 /// Every sensor inside the radius.
 fn point_cloud_neighbours(cloud: &PointCloud<FloatType, FloatType>, point: usize) -> Vec<usize> {
     let coords = cloud.points().as_slice();
-    let radius = lift::<FloatType>(NEIGHBOUR_RADIUS);
+    let radius = NEIGHBOUR_RADIUS;
     let at = |i: usize, d: usize| coords[i * SPATIAL_DIM + d];
 
     (0..cloud.len())
@@ -263,7 +258,7 @@ fn point_cloud_neighbours(cloud: &PointCloud<FloatType, FloatType>, point: usize
             if other == point {
                 return false;
             }
-            let squared = (0..SPATIAL_DIM).fold(lift::<FloatType>(0.0), |acc, d| {
+            let squared = (0..SPATIAL_DIM).fold(ZERO, |acc, d| {
                 let delta = at(point, d) - at(other, d);
                 acc + delta * delta
             });

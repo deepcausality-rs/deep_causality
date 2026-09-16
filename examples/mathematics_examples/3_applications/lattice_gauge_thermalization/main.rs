@@ -24,7 +24,7 @@
 //! Each run draws a fresh random start, so the numbers move from run to run and the physics
 //! holds: the plaquette climbs from near zero toward one as the sweeps proceed.
 
-use deep_causality_num::{Lift, lift, lower};
+use deep_causality_num::{Lift, const_scalar_from_float, const_scalar_from_int, lower};
 use deep_causality_num_complex::Complex;
 use deep_causality_rand::rng;
 use deep_causality_topology::{
@@ -37,11 +37,11 @@ const L: usize = 4;
 const D: usize = 4;
 
 /// Inverse coupling `β = 2N/g²`, at approximately the physical QCD value.
-const BETA: f64 = 6.0;
+const BETA: FloatType = const_scalar_from_int!(FloatType, 6);
 
 /// Metropolis thermalization: how many sweeps, how wide the proposal, how often to report.
 const THERMAL_SWEEPS: usize = 10;
-const PROPOSAL_WIDTH: f64 = 0.2;
+const PROPOSAL_WIDTH: FloatType = const_scalar_from_float!(FloatType, 0.2);
 const REPORT_EVERY: usize = 2;
 
 /// The 2×2 Wilson loop measures the force between static quarks at separation 2.
@@ -51,15 +51,18 @@ const LOOP_EXTENT: usize = 2;
 const TIME_DIM: usize = 0;
 
 /// Wilson gradient flow: step size and the flow time the search for `t₀` runs to.
-const FLOW_EPSILON: f64 = 0.01;
-const FLOW_T_MAX: f64 = 0.2;
+const FLOW_EPSILON: FloatType = const_scalar_from_float!(FloatType, 0.01);
+const FLOW_T_MAX: FloatType = const_scalar_from_float!(FloatType, 0.2);
 
 /// The working scalar. `f64` suits lattice gauge theory at this size; `Float106` carries a
 /// higher-precision Wilson flow run through the same code.
 pub type FloatType = f64;
 
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let beta = lift::<FloatType>(BETA);
+    let beta = BETA;
     print_header(beta);
 
     // 1. A periodic lattice in every direction, carrying a random SU(3) link on every edge.
@@ -76,7 +79,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 2. Metropolis sweeps. The acceptance rate tracks how well the proposal width is tuned.
     print_thermalizing();
-    let epsilon = lift::<FloatType>(PROPOSAL_WIDTH);
+    let epsilon = PROPOSAL_WIDTH;
     for sweep in 1..=THERMAL_SWEEPS {
         let acceptance = field.try_metropolis_sweep(epsilon, &mut rng)?;
         let plaquette = field.try_average_plaquette()?;
@@ -105,8 +108,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // 5. Wilson gradient flow smooths the field continuously. The reference scale t₀ is the flow
     //    time where t²·⟨E(t)⟩ reaches 0.3, and it sets the lattice spacing.
     let flow_params = FlowParams::<FloatType> {
-        epsilon: lift(FLOW_EPSILON),
-        t_max: lift(FLOW_T_MAX),
+        epsilon: FLOW_EPSILON,
+        t_max: FLOW_T_MAX,
         method: FlowMethod::RungeKutta3,
     };
     print_flowing(flow_params.t_max);
@@ -122,7 +125,7 @@ fn wilson_loop_average(
     field: &LatticeGaugeField<SU3, D, Complex<FloatType>, FloatType>,
 ) -> Result<FloatType, Box<dyn std::error::Error>> {
     let centre = [L / 2; D];
-    let mut sum = lift::<FloatType>(0.0);
+    let mut sum = ZERO;
     let mut planes = 0usize;
 
     for mu in 0..D {

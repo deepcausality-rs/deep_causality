@@ -30,7 +30,7 @@
 use deep_causality_algebra::Real;
 use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, Pure};
 use deep_causality_linear::{DenseMatrix, DenseMatrixWitness, MatrixView};
-use deep_causality_num::{lift, lift_count, lower};
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lift, lift_count, lower};
 
 /// The die is a `ROWS x COLS` grid of temperature sensors, in °C.
 const ROWS: usize = 4;
@@ -46,13 +46,19 @@ const TEMPERATURES: [f64; ROWS * COLS] = [
 const STENCIL_CELLS: u64 = 9;
 
 /// Kelvin is the same scale with this offset, which is the unit change in section 2.
-const KELVIN_OFFSET: f64 = 273.15;
+const KELVIN_OFFSET: FloatType = const_scalar_from_float!(FloatType, 273.15);
 
 /// What counts as zero when a conservation law is checked.
-const TOLERANCE: f64 = 1e-9;
+const TOLERANCE: FloatType = const_scalar_from_float!(FloatType, 1e-9);
 
 /// The working scalar. Every temperature carries it.
 pub type FloatType = f64;
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const FIVE: FloatType = const_scalar_from_int!(FloatType, 5);
+const NINE: FloatType = const_scalar_from_int!(FloatType, 9);
+const THIRTY_TWO: FloatType = const_scalar_from_int!(FloatType, 32);
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
@@ -77,7 +83,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ---------------------------------------------------------------------
     // 2. Functor: relabel every entry, shape untouched.
     // ---------------------------------------------------------------------
-    let offset = lift::<FloatType>(KELVIN_OFFSET);
+    let offset = KELVIN_OFFSET;
     let kelvin = DenseMatrixWitness::fmap(field.clone(), move |c| c + offset);
     print_grid("the same field, in K", kelvin.as_slice());
 
@@ -93,9 +99,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let sum = [0, 1, rows - 1]
             .iter()
             .flat_map(|&i| [0, 1, cols - 1].map(move |j| (i, j)))
-            .fold(lift::<FloatType>(0.0), |acc, (i, j)| {
-                acc + data[i * cols + j]
-            });
+            .fold(ZERO, |acc, (i, j)| acc + data[i * cols + j]);
 
         sum / lift_count::<FloatType>(STENCIL_CELLS)
     });
@@ -106,14 +110,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ---------------------------------------------------------------------
     // Across the whole grid every cell is read by exactly nine neighbourhoods, so a filter that
     // divides by nine moves heat around and adds none.
-    let zero = lift::<FloatType>(0.0);
+    let zero = ZERO;
     let before = DenseMatrixWitness::fold(field.clone(), zero, |acc, v| acc + v);
     let after = DenseMatrixWitness::fold(smoothed.clone(), zero, |acc, v| acc + v);
     let peak_before = peak(field.as_slice());
     let peak_after = peak(smoothed.as_slice());
     print_conservation(before, after, peak_before, peak_after);
 
-    assert!(Real::abs(after - before) < lift::<FloatType>(TOLERANCE));
+    assert!(Real::abs(after - before) < TOLERANCE);
     assert!(peak_after < peak_before);
 
     // ---------------------------------------------------------------------
@@ -121,9 +125,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ---------------------------------------------------------------------
     // `pure` builds the smallest container holding one value, and `apply` broadcasts a `1 x 1`
     // side across the other, so one function reaches every entry.
-    let to_fahrenheit = DenseMatrixWitness::pure(|c: FloatType| {
-        c * lift::<FloatType>(9.0) / lift::<FloatType>(5.0) + lift::<FloatType>(32.0)
-    });
+    let to_fahrenheit = DenseMatrixWitness::pure(|c: FloatType| c * NINE / FIVE + THIRTY_TWO);
     let fahrenheit = DenseMatrixWitness::apply(to_fahrenheit, smoothed);
     print_broadcast(fahrenheit.rows(), fahrenheit.cols(), fahrenheit.as_slice());
 

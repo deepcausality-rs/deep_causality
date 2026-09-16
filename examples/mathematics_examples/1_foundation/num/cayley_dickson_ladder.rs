@@ -33,7 +33,7 @@
 
 use deep_causality_algebra::Real;
 use deep_causality_haft::{Foldable, Functor, HKT, LaxMonoidal, MonoidalApplicative, Semigroupal};
-use deep_causality_num::{lift, lower};
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lift, lower};
 use deep_causality_num_complex::{
     Complex, ComplexWitness, Octonion, OctonionWitness, Quaternion, QuaternionWitness,
 };
@@ -44,13 +44,17 @@ const Q: [f64; 4] = [1.0, 2.0, -2.0, 1.0];
 const O: [f64; 8] = [1.0, 1.0, -1.0, 2.0, 0.0, 1.0, 1.0, -1.0];
 
 /// The factor the scaling law in section 3 multiplies by.
-const SCALE: f64 = 2.5;
+const SCALE: FloatType = const_scalar_from_float!(FloatType, 2.5);
 
 /// What counts as zero when a floating-point identity is checked.
-const TOLERANCE: f64 = 1e-12;
+const TOLERANCE: FloatType = const_scalar_from_float!(FloatType, 1e-12);
 
 /// The working scalar. Every component on every rung carries it.
 pub type FloatType = f64;
+
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const FIVE: FloatType = const_scalar_from_int!(FloatType, 5);
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
@@ -81,14 +85,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     print_norms(norms.0, norms.1, norms.2);
 
-    assert_eq!(norms.0, lift::<FloatType>(5.0));
+    assert_eq!(norms.0, FIVE);
 
     // ---------------------------------------------------------------------
     // 3. Functor and Semigroupal: one law, three carriers.
     // ---------------------------------------------------------------------
     // `fmap` scales every slot; `zip_with` pairs slot with slot. Neither names a rung, and
     // `unit` is the empty structure the zip has as its identity.
-    let scale = lift::<FloatType>(SCALE);
+    let scale = SCALE;
     let scaled = ComplexWitness::fmap(z, move |v| v * scale);
     let doubled = QuaternionWitness::zip_with(q, q, |a, b| a + b);
     let picked = OctonionWitness::apply(slot_functions(), o);
@@ -104,7 +108,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Scaling every slot scales the norm by the same factor.
     let scaled_norm = euclidean_norm::<ComplexWitness>(scaled);
-    assert!(Real::abs(scaled_norm - norms.0 * scale) < lift::<FloatType>(TOLERANCE));
+    assert!(Real::abs(scaled_norm - norms.0 * scale) < TOLERANCE);
 
     // ---------------------------------------------------------------------
     // 4. What every rung keeps: the norm is multiplicative.
@@ -121,7 +125,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
     print_multiplicative(multiplicative.0, multiplicative.1, multiplicative.2);
 
-    let tolerance = lift::<FloatType>(TOLERANCE);
+    let tolerance = TOLERANCE;
     assert!(multiplicative.0 < tolerance);
     assert!(multiplicative.1 < tolerance);
     assert!(multiplicative.2 < tolerance);
@@ -166,9 +170,7 @@ fn euclidean_norm<W>(carrier: W::Type<FloatType>) -> FloatType
 where
     W: HKT + Foldable<W>,
 {
-    Real::sqrt(W::fold(carrier, lift::<FloatType>(0.0), |acc, v| {
-        acc + v * v
-    }))
+    Real::sqrt(W::fold(carrier, ZERO, |acc, v| acc + v * v))
 }
 
 /// How many slots a carrier holds, counted by the fold that visits them.

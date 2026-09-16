@@ -4,7 +4,7 @@
  */
 
 use deep_causality_multivector::{Axis, CausalMultiField, CausalMultiVector, Metric, num_blades};
-use deep_causality_num::{lift, lift_usize, lower};
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lift_usize, lower};
 
 // -----------------------------------------------------------------------------------------
 // The geometric derivative on a `CausalMultiField`.
@@ -38,9 +38,13 @@ const L: usize = 5;
 /// The working scalar. Grid spacing and every coefficient carry this type.
 pub type FloatType = f64;
 
+/// Small numbers, declared once at the working type rather than lifted at each use.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const HALF: FloatType = const_scalar_from_float!(FloatType, 0.5);
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let metric = Metric::Euclidean(N);
-    let h = lift::<FloatType>(0.5);
+    let h = HALF;
     let dx = [h; 3];
 
     // ---------------------------------------------------------------------
@@ -102,7 +106,7 @@ fn multivector(
     terms: &[(usize, FloatType)],
     metric: Metric,
 ) -> Result<CausalMultiVector<FloatType>, Box<dyn std::error::Error>> {
-    let mut coeffs = vec![lift::<FloatType>(0.0); num_blades(N)];
+    let mut coeffs = vec![ZERO; num_blades(N)];
     for &(index, value) in terms {
         coeffs[index] = value;
     }
