@@ -108,9 +108,6 @@ const B_COEFFICIENTS: [FloatType; COMPARTMENTS] = [
     const_scalar_from_float!(FloatType, 0.9653),
 ];
 
-/// Nitrogen partial pressure at the surface, in bar.
-const SURFACE_N2_PP: FloatType = const_scalar_from_float!(FloatType, 0.79);
-
 /// Nitrogen and oxygen fractions in air, and the lung's water-vapour pressure in bar at 37 °C.
 const F_N2: FloatType = const_scalar_from_float!(FloatType, 0.79);
 const F_O2: FloatType = const_scalar_from_float!(FloatType, 0.21);
@@ -197,8 +194,12 @@ const NDL_BEYOND_TABLE: FloatType = const_scalar_from_int!(FloatType, 6);
 pub const ASCENT_STEP_M: FloatType = const_scalar_from_int!(FloatType, 3);
 /// Above this depth the ascent runs to the surface, and the safety stop covers the last stretch.
 pub const DECO_CLEARANCE_M: FloatType = const_scalar_from_int!(FloatType, 6);
-/// A decompression stop lasts at least this long, in minutes.
+/// A decompression stop lasts at least this long, in minutes, and is extended in units of it
+/// while the ceiling stays below the next step.
 pub const MIN_STOP_MINUTES: FloatType = const_scalar_from_int!(FloatType, 2);
+/// The longest a single stop may run, in minutes. A ceiling still closed after this long marks a
+/// profile the planner reports as a failure.
+pub const MAX_STOP_MINUTES: FloatType = const_scalar_from_int!(FloatType, 60);
 /// Dives to at least this depth carry a safety stop.
 pub const SAFETY_STOP_DEPTH_THRESHOLD_M: FloatType = const_scalar_from_int!(FloatType, 15);
 /// The safety stop itself: depth in metres, duration in minutes.
@@ -253,12 +254,16 @@ pub struct DiverState {
 
 impl DiverState {
     /// A diver at the surface, fully off-gassed and equilibrated with air.
+    ///
+    /// Equilibrium is the fixed point of the loading law, so every compartment starts at the
+    /// inspired nitrogen pressure at the surface, water vapour deducted, which is the pressure
+    /// the Schreiner loading approaches there.
     pub fn at_surface() -> Result<Self, CausalTensorError> {
         Ok(Self {
             depth_m: ZERO,
             elapsed_minutes: ZERO,
             tissue_tensions: CausalTensor::new(
-                vec![SURFACE_N2_PP; COMPARTMENTS],
+                vec![inspired_n2_pp(ZERO); COMPARTMENTS],
                 vec![COMPARTMENTS],
             )?,
             cns_percent: ZERO,
@@ -379,6 +384,21 @@ pub fn cns_accumulation(depth_m: FloatType, minutes: FloatType) -> FloatType {
     }
 }
 
+/// The safety stop a dive to `max_depth_m` carries. Dives shallower than
+/// [`SAFETY_STOP_DEPTH_THRESHOLD_M`] carry none.
+pub fn safety_stop_for(max_depth_m: FloatType) -> Option<DecoStop> {
+    (max_depth_m >= SAFETY_STOP_DEPTH_THRESHOLD_M).then_some(DecoStop {
+        depth_m: SAFETY_STOP_M,
+        minutes: SAFETY_STOP_MINUTES,
+    })
+}
+
+/// The depth the staged ascent ends at: the safety-stop depth when the dive carries a safety
+/// stop, the surface otherwise. The surfacing phase covers the rest.
+pub fn ascent_floor(max_depth_m: FloatType) -> FloatType {
+    safety_stop_for(max_depth_m).map_or(ZERO, |stop| stop.depth_m)
+}
+
 /// A conservative no-decompression limit for a depth, in minutes.
 pub fn estimate_ndl(depth_m: FloatType) -> FloatType {
     for (band_depth, ndl) in NDL_TABLE {
@@ -481,15 +501,18 @@ pub fn half_time_of(compartment: usize) -> FloatType {
     HALF_TIMES[compartment]
 }
 
-/// The saturation of a compartment against the inspired pressure at depth, in percent.
+/// A compartment's tension against the inspired nitrogen pressure at `depth_m`, in percent. Read
+/// at the surface it is the supersaturation the ascent left behind: above one hundred percent the
+/// compartment still holds more nitrogen than the air it breathes.
 pub fn saturation_percent(tension: FloatType, depth_m: FloatType) -> FloatType {
     tension / inspired_n2_pp(depth_m) * HUNDRED
 }
 
 /// One planned dive per depth in the table, each through the same chain of phases.
 ///
-/// Bottom time is the no-decompression limit for that depth, held to a cap so every row runs in
-/// the same handful of milliseconds.
+/// Bottom time is the no-decompression limit for that depth, held to [`TABLE_BOTTOM_CAP_MINUTES`]
+/// so every row runs in the same handful of milliseconds. The shallow rows therefore hold the
+/// bottom for less than the limit the table prints beside them.
 pub fn dive_table_rows() -> Result<Vec<DiveTableRow>, CausalityError> {
     TABLE_DEPTHS_M
         .iter()
@@ -507,7 +530,7 @@ pub fn dive_table_rows() -> Result<Vec<DiveTableRow>, CausalityError> {
             CausalFlow::value(surface_state)
                 .try_step(move |diver| descend(diver, depth_m))
                 .try_step(move |diver| hold_bottom(diver, depth_m, bottom))
-                .try_step(ascend)
+                .try_step(move |diver| ascend(diver, ascent_floor(depth_m)))
                 .try_step(move |diver| surface(diver, depth_m, bottom))
                 .finish()
                 .map(|profile| DiveTableRow {

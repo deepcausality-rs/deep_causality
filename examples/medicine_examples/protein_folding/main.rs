@@ -30,7 +30,9 @@ mod model;
 mod utils_print;
 
 use deep_causality_num::Float106;
-use model::{MEMORY_DEPTH, advance, markov_operator, memory_kernels, unfolded_state};
+use model::{
+    MEMORY_DEPTH, advance, markov_operator, memory_kernels, native_fraction, unfolded_state,
+};
 use utils_print::{print_distribution, print_header, print_summary};
 
 /// How many steps of the master equation the run takes.
@@ -71,6 +73,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    print_summary(&state);
+    print_summary(native_fraction(&state)?);
     Ok(())
 }

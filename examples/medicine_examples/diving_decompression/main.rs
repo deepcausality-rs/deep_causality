@@ -25,9 +25,9 @@
 //! laws in `model` are written once for one compartment and the witness applies them to all
 //! sixteen. No compartment index appears in either law.
 //!
-//! The dive itself is a sequence: descend, hold, ascend, surface, each phase taking the diver
-//! state and returning the next. `CausalFlow::try_step` sequences them and routes any failure to
-//! the error channel, so the phases below hold physiology and no error plumbing.
+//! The dive itself is a sequence: descend, hold, ascend to the safety stop, surface, each phase
+//! taking the diver state and returning the next. `CausalFlow::try_step` sequences them and routes
+//! any failure to the error channel, so the phases below hold physiology and no error plumbing.
 //!
 //! The fifth abstraction is the tangent functor. The gas-loading rate `dp/dt` is what a dive
 //! computer watches, and it comes from evaluating the loading curve over `Dual`: `model` states
@@ -42,9 +42,9 @@ use deep_causality_num::{Float106, const_scalar_from_int};
 use deep_causality_tensor::{CausalTensor, CausalTensorWitness, ZipTensorWitness};
 use model::{
     ASCENT_RATE, ASCENT_STEP_M, DECO_CLEARANCE_M, DESCENT_RATE, DecoStop, DiveProfile, DiverState,
-    GF_HIGH, MIN_STOP_MINUTES, SAFETY_STOP_DEPTH_THRESHOLD_M, SAFETY_STOP_M, SAFETY_STOP_MINUTES,
-    SchreinerCurve, T_MINUTES, TWO, ZERO, ceiling_coefficients, cns_accumulation, dive_table_rows,
-    failed, half_time_tensor, inspired_n2_pp, tissue_ceiling, tissue_loading,
+    GF_HIGH, MAX_STOP_MINUTES, MIN_STOP_MINUTES, SchreinerCurve, T_MINUTES, TWO, ZERO,
+    ascent_floor, ceiling_coefficients, cns_accumulation, dive_table_rows, failed,
+    half_time_tensor, inspired_n2_pp, safety_stop_for, tissue_ceiling, tissue_loading,
 };
 use utils_print::{print_dive_table, print_gas_loading_rate, print_header, print_simulation};
 
@@ -77,7 +77,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let profile = CausalFlow::value(DiverState::at_surface()?)
         .try_step(|diver| descend(diver, MAX_DEPTH_M))
         .try_step(|diver| hold_bottom(diver, MAX_DEPTH_M, BOTTOM_MINUTES))
-        .try_step(ascend)
+        .try_step(|diver| ascend(diver, ascent_floor(MAX_DEPTH_M)))
         .try_step(|diver| surface(diver, MAX_DEPTH_M, BOTTOM_MINUTES))
         .finish()?;
 
@@ -177,62 +177,85 @@ fn hold_bottom(
     Ok(next)
 }
 
-/// Phase 3. Ascent proceeds in three-metre steps. Before each step the governing compartment's
-/// ceiling is read, and a step that would breach it becomes a decompression stop at the current
-/// depth.
-fn ascend(diver: DiverState) -> Result<DiverState, CausalityError> {
+/// Phase 3. The staged ascent, in three-metre steps down to `floor_m`: the safety-stop depth when
+/// the dive carries one, the surface otherwise.
+///
+/// Before each step the governing compartment's ceiling is read. A step that would breach it
+/// becomes a decompression stop at the current depth, and the stop is held, one
+/// [`MIN_STOP_MINUTES`] at a time, until the ceiling has risen past the depth the step lands on.
+/// The stop is recorded once, with the minutes it took.
+fn ascend(diver: DiverState, floor_m: FloatType) -> Result<DiverState, CausalityError> {
     let mut current = diver;
     let mut depth = current.depth_m;
 
-    while depth > ZERO {
-        let (_, ceiling) = governing_compartment(&current.tissue_tensions, GF_HIGH)?;
-        let next_depth = if depth > ASCENT_STEP_M {
+    while depth > floor_m {
+        let next_depth = if depth - ASCENT_STEP_M > floor_m {
             depth - ASCENT_STEP_M
         } else {
-            ZERO
+            floor_m
         };
 
-        // A stop is required when the ceiling sits deeper than where the next step would land.
-        if ceiling > next_depth && depth > DECO_CLEARANCE_M {
-            let stop = DecoStop {
+        // A stop is required while the ceiling sits deeper than where the next step would land.
+        // Above the clearance depth the ascent runs on and the safety stop covers the rest.
+        let mut stop_minutes = ZERO;
+        if depth > DECO_CLEARANCE_M {
+            loop {
+                let (_, ceiling) = governing_compartment(&current.tissue_tensions, GF_HIGH)?;
+                if ceiling <= next_depth {
+                    break;
+                }
+                if stop_minutes >= MAX_STOP_MINUTES {
+                    return Err(failed(
+                        "decompression stop",
+                        &format!(
+                            "the ceiling holds at {ceiling:?} m after {stop_minutes:?} min at \
+                             {depth:?} m, so the ascent to {next_depth:?} m stays closed"
+                        ),
+                    ));
+                }
+                current = spend(current, depth, MIN_STOP_MINUTES)?;
+                stop_minutes += MIN_STOP_MINUTES;
+            }
+        }
+        if stop_minutes > ZERO {
+            current.deco_stops.push(DecoStop {
                 depth_m: depth,
-                minutes: MIN_STOP_MINUTES,
-            };
-            current = spend(current, stop.depth_m, stop.minutes)?;
-            current.deco_stops.push(stop);
+                minutes: stop_minutes,
+            });
         }
 
-        let segment = depth - next_depth;
-        let segment_minutes = segment / ASCENT_RATE;
-        let average_depth = next_depth + segment / TWO;
-
-        current = spend(current, average_depth, segment_minutes)?;
+        current = ascend_segment(current, depth, next_depth)?;
         depth = next_depth;
     }
 
-    current.depth_m = ZERO;
     Ok(current)
 }
 
-/// Phase 4. The safety stop, then the finished profile.
+/// Phase 4. The safety stop when the dive carries one, the last stretch to the surface, and the
+/// finished profile.
+///
+/// The profile carries the tissue state the diver surfaces with, so the phase confirms the ascent
+/// finished at the surface before it reports.
 fn surface(
     diver: DiverState,
     max_depth_m: FloatType,
     bottom_minutes: FloatType,
 ) -> Result<DiveProfile, CausalityError> {
-    let safety_stop = if max_depth_m >= SAFETY_STOP_DEPTH_THRESHOLD_M {
-        Some(DecoStop {
-            depth_m: SAFETY_STOP_M,
-            minutes: SAFETY_STOP_MINUTES,
-        })
-    } else {
-        None
-    };
+    let safety_stop = safety_stop_for(max_depth_m);
 
-    let surfaced = match safety_stop {
+    let held = match safety_stop {
         Some(stop) => spend(diver.clone(), stop.depth_m, stop.minutes)?,
         None => diver.clone(),
     };
+    let from_m = held.depth_m;
+    let surfaced = ascend_segment(held, from_m, ZERO)?;
+
+    if surfaced.depth_m != ZERO {
+        return Err(failed(
+            "surfacing",
+            &format!("the ascent ended at {:?} m", surfaced.depth_m),
+        ));
+    }
 
     Ok(DiveProfile {
         max_depth_m,
@@ -245,6 +268,22 @@ fn surface(
         deco_stops: diver.deco_stops,
         safety_stop,
     })
+}
+
+/// One ascent segment from `from_m` up to `to_m` at the ascent rate. The tissues load at the
+/// segment's average depth, and the diver lands at `to_m`.
+fn ascend_segment(
+    diver: DiverState,
+    from_m: FloatType,
+    to_m: FloatType,
+) -> Result<DiverState, CausalityError> {
+    let segment = from_m - to_m;
+    let minutes = segment / ASCENT_RATE;
+    let average_depth = to_m + segment / TWO;
+
+    let mut next = spend(diver, average_depth, minutes)?;
+    next.depth_m = to_m;
+    Ok(next)
 }
 
 /// Spends `minutes` at `depth_m`: loads the sixteen compartments, advances the CNS oxygen clock

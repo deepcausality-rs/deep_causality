@@ -30,11 +30,15 @@ pub fn print_sample(label: &str, reading: &TopologyReading, spread: (FloatType, 
         vertices,
         edges,
         triangles,
+        tetrahedra,
         euler_characteristic: chi,
     } = *reading;
     println!("{label}");
-    println!("  complex             {vertices} vertices, {edges} edges, {triangles} triangles");
-    println!("  Euler characteristic  {vertices} - {edges} + {triangles} = {chi}");
+    println!(
+        "  complex             {vertices} vertices, {edges} edges, {triangles} triangles, \
+         {tetrahedra} tetrahedra"
+    );
+    println!("  Euler characteristic  {vertices} - {edges} + {triangles} - {tetrahedra} = {chi}");
     let (low, high) = spread;
     println!(
         "  neighbour count     {:.0} to {:.0}   ({})",

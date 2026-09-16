@@ -78,20 +78,25 @@ pub fn necrotic_tissue() -> Result<Sample, TopologyError> {
 
 /// What one sample's Vietoris-Rips complex reports: its cell counts by grade, and the Euler
 /// characteristic those counts give.
+///
+/// The complex is built in three ambient dimensions, so its cells run up to tetrahedra and the
+/// four counts here are the whole alternating sum.
 #[derive(Debug, Clone, Copy)]
 pub struct TopologyReading {
     pub vertices: usize,
     pub edges: usize,
     pub triangles: usize,
+    pub tetrahedra: usize,
     pub euler_characteristic: isize,
 }
 
 /// Triangulates the sample and reads its topology.
 ///
-/// `χ = V − E + F − …` is a topological invariant: it counts a shape's connected pieces against
+/// `χ = V − E + F − T` is a topological invariant: it counts a shape's connected pieces against
 /// the holes in them, and it holds under any deformation that leaves the connectivity alone. A
 /// filled, connected sample reads 1. Enclosing a void drops it to 0 or below, which is the reading
-/// a necrotic core produces.
+/// a necrotic core produces. Four voxels within the radius of one another close a tetrahedron, and
+/// the sum counts those too; a filled disc sampled densely enough carries a few.
 ///
 /// `BaseTopology::euler_characteristic` supplies it. That trait sits under every topological
 /// structure in the workspace, so a point cloud, a graph and a complex all answer the same
@@ -105,6 +110,7 @@ pub fn read_topology(sample: &Sample) -> Result<TopologyReading, TopologyError> 
         vertices: at(0),
         edges: at(1),
         triangles: at(2),
+        tetrahedra: at(3),
         euler_characteristic: complex.euler_characteristic(),
     })
 }

@@ -48,7 +48,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header(N_REGIONS);
 
     // The untreated patient: does this connectome seize?
-    let baseline = simulate(&build_connectome(N_REGIONS, None)?, N_REGIONS);
+    let baseline = simulate(&build_connectome(N_REGIONS, None)?);
     print_baseline(baseline);
 
     if !is_seizing(baseline) {
@@ -59,7 +59,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Virtual resection: disconnect one region, re-simulate, and see whether the seizure survives.
     let mut curative = Vec::new();
     for region in 0..N_REGIONS {
-        let post_op = simulate(&build_connectome(N_REGIONS, Some(region))?, N_REGIONS);
+        let post_op = simulate(&build_connectome(N_REGIONS, Some(region))?);
         let seizing = is_seizing(post_op);
         print_resection_row(region, post_op, seizing);
         if !seizing {

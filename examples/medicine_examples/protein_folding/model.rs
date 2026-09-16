@@ -137,7 +137,15 @@ pub fn normalise(
     VecWitness::sequence::<Probability<FloatType>, ResultWitness<PhysicsError>>(rescaled)
 }
 
-/// The probability the chain has reached its native state.
-pub fn native_fraction(state: &[Probability<FloatType>]) -> FloatType {
-    state[N_STATES - 1].value()
+/// The probability the chain has reached its native state, which is the last entry of a
+/// distribution over the [`N_STATES`] conformations. A distribution of any other length is
+/// reported as a dimension mismatch.
+pub fn native_fraction(state: &[Probability<FloatType>]) -> Result<FloatType, PhysicsError> {
+    match state.get(N_STATES - 1) {
+        Some(native) if state.len() == N_STATES => Ok(native.value()),
+        _ => Err(PhysicsError::DimensionMismatch(format!(
+            "a distribution over {N_STATES} states was expected, {} entries given",
+            state.len()
+        ))),
+    }
 }

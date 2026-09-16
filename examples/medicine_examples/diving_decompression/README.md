@@ -10,21 +10,28 @@ cargo run -p medicine_examples --example diving_decompression
 
 ## What the run prints
 
-A dive table from 10 m to 50 m, each depth planned at its no-decompression limit, then one dive
-that deliberately exceeds its limit so the planner has a schedule to produce.
+A dive table from 10 m to 50 m, then one dive that deliberately exceeds its limit so the planner
+has a schedule to produce.
+
+Each table row holds the bottom for that depth's no-decompression limit, capped at twenty minutes
+so every row runs in the same handful of milliseconds. The rows from 10 m to 30 m therefore hold
+the bottom for twenty minutes and print the longer limit beside them; from 35 m down the limit is
+under the cap and the row holds it in full.
 
 ```text
 Controlling compartment at the bottom
-  #4   half-time  18.5 min   ceiling 7.2 m
+  #4   half-time  18.5 min   ceiling 7.1 m
 
 Decompression schedule
-  mandatory stop    2 min @ 9 m
+  mandatory stop    4 min @ 9 m
   safety stop       3 min @ 5 m
 ```
 
 Fifty minutes at thirty metres is twice the limit for that depth. Compartment 4 governs the
 ascent, which is the physiologically right answer: over a fifty-minute exposure the fast
-compartments have saturated and a mid-speed one becomes binding.
+compartments have saturated and a mid-speed one becomes binding. The stop at 9 m is held, two
+minutes at a time, until the ceiling has risen past 6 m, where the next step lands. Below the
+clearance depth of 6 m the ascent runs to the safety stop, and from there to the surface.
 
 ## The physics
 
@@ -56,7 +63,7 @@ Four categorical operations carry the program, and all four are in `main.rs`:
 
 | Operation | Pairs or reduces | For |
 |---|---|---|
-| `try_step` | diver state to the next one | the dive as a chain of four phases |
+| `try_step` | diver state to the next one | the dive as a chain of four phases: descend, hold, ascend to the safety stop, surface |
 | `zip_with` | tension against its own half-time | loading all sixteen compartments |
 | `zip_with` | tension against its M-value coefficients | the ceiling each compartment imposes |
 | `fold` | sixteen ceilings to the binding one | the compartment that governs the ascent |
@@ -88,14 +95,16 @@ invisible while the alias *is* `f64`, because the two types coincide and everyth
 
 The autodiff agreement is the clearest reading of what changes:
 
-| Scalar | agreement | ceiling |
-|---|---|---|
-| `BFloat16` | 9.8e-4 | 7.1 m |
-| `f32` | 0.0 | 7.2 m |
-| `f64` | 2.8e-17 | 7.2 m |
-| `Float106` | 1.5e-33 | 7.2 m |  <- the default
+| Scalar | agreement | ceiling | stop at 9 m |
+|---|---|---|---|
+| `BFloat16` | 9.8e-4 | 6.9 m | 2 min |
+| `f32` | 0.0 | 7.1 m | 4 min |
+| `f64` | 2.8e-17 | 7.1 m | 4 min |
+| `Float106` | 1.5e-33 | 7.1 m | 4 min |  <- the default
 
-All four reach the same dive plan and the same single mandatory stop. Only the precision moves.
+All four reach the same dive plan: one mandatory stop at 9 m, then the safety stop. `BFloat16`
+carries two significant decimal digits, reads the ceiling at 6.9 m and clears the stop after one
+two-minute hold; the three wider scalars read 7.1 m and hold it for two.
 
 ## Files
 

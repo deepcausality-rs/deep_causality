@@ -9,7 +9,7 @@
 //! file alone.
 
 use crate::FloatType;
-use crate::model::{MEMORY_DEPTH, N_STATES, STATE_LABELS, native_fraction};
+use crate::model::{MEMORY_DEPTH, N_STATES, STATE_LABELS};
 use deep_causality_num::const_scalar_from_float;
 use deep_causality_num::lower;
 use deep_causality_physics::Probability;
@@ -48,8 +48,8 @@ pub fn print_distribution(step: usize, state: &[Probability<FloatType>]) {
     println!();
 }
 
-pub fn print_summary(state: &[Probability<FloatType>]) {
-    let native = native_fraction(state);
+/// The verdict on the native-state probability the run ended with.
+pub fn print_summary(native: FloatType) {
     println!("Native-state probability: {:.4}", lower(native));
 
     let verdict = if native > FOLDED_THRESHOLD {

@@ -62,11 +62,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
     let start = [START_THETA, START_PHI];
 
-    // The ascent as a flow: the starting orientation enters the chain, and a non-finite gradient
-    // short-circuits to the error channel.
+    // The ascent as a flow: the starting orientation enters the chain, and a value that leaves the
+    // finite range short-circuits to the error channel. The ascent's own error is what the flow
+    // carries out, so the run names the value that failed.
     let outcome = CausalFlow::value(start)
         .try_step(move |orientation| {
-            ascend(&efficacy, orientation, LEARNING_RATE, ASCENT_STEPS)
+            let (outcome, _, _, _) =
+                ascend(&efficacy, orientation, LEARNING_RATE, ASCENT_STEPS).into_parts();
+            outcome?
                 .into_value()
                 .ok_or_else(|| failed("the ascent returned no orientation"))
         })

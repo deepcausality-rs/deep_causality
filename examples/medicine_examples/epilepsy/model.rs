@@ -17,7 +17,7 @@ use deep_causality_algebra::Real;
 use deep_causality_haft::{CoMonad, Foldable};
 use deep_causality_num::{Zero, const_scalar_from_float, const_scalar_from_int, lift_count};
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Graph, GraphWitness};
+use deep_causality_topology::{Graph, GraphWitness, TopologyError};
 
 // =============================================================================
 // Dynamics
@@ -90,17 +90,29 @@ pub type Connectome = Graph<RegionState>;
 // Construction
 // =============================================================================
 
+/// The fewest regions a connectome holds: a hub and one region for it to drive.
+pub const MIN_REGIONS: usize = 2;
+
 /// Builds the connectome, leaving `resected` disconnected when one is named.
 ///
 /// Region 0 is the seizure focus: it connects to every other region, which is the hub topology
 /// that drives pathological synchrony. The remaining regions form a local chain. A resection
 /// removes a region's connections, so the region stays in the graph with its own dynamics and
 /// stops influencing the network.
+///
+/// The frequency ramp spans the regions from first to last, so the connectome holds at least
+/// [`MIN_REGIONS`] of them; fewer is reported as an error.
 pub fn build_connectome(
     regions: usize,
     resected: Option<usize>,
 ) -> Result<Connectome, Box<dyn std::error::Error>> {
-    let span = lift_count::<FloatType>(regions as u64 - 1);
+    if regions < MIN_REGIONS {
+        return Err(TopologyError::GraphError(format!(
+            "a connectome holds at least {MIN_REGIONS} regions, {regions} given"
+        ))
+        .into());
+    }
+    let span = lift_count::<FloatType>((regions - 1) as u64);
 
     // A deterministic phase fan and a linear frequency ramp, so every run starts identically.
     let states: Vec<RegionState> = (0..regions)
@@ -140,9 +152,10 @@ pub fn build_connectome(
 ///
 /// `dθᵢ/dt = ωᵢ + (K/N)·Σⱼ sin(θⱼ − θᵢ)` summed over region `i`'s neighbours. `extend` supplies the
 /// cursor, the payload and the adjacency in one focused view, so the coupling sum reads the
-/// neighbours straight off the graph.
-pub fn kuramoto_step(brain: &Connectome, regions: usize) -> Connectome {
-    let gain = COUPLING_STRENGTH / lift_count::<FloatType>(regions as u64);
+/// neighbours straight off the graph. `N` is the graph's own vertex count, so the normalisation
+/// follows the connectome it is applied to.
+pub fn kuramoto_step(brain: &Connectome) -> Connectome {
+    let gain = COUPLING_STRENGTH / lift_count::<FloatType>(brain.num_vertices() as u64);
 
     GraphWitness::extend(brain, |view| {
         let i = view.cursor();
@@ -184,10 +197,10 @@ fn wrap_phase(phase: FloatType) -> FloatType {
 }
 
 /// Runs the connectome forward and returns its synchronisation.
-pub fn simulate(brain: &Connectome, regions: usize) -> FloatType {
+pub fn simulate(brain: &Connectome) -> FloatType {
     let mut state = brain.clone();
     for _ in 0..SIMULATION_STEPS {
-        state = kuramoto_step(&state, regions);
+        state = kuramoto_step(&state);
     }
     synchronisation(&state)
 }

@@ -14,7 +14,9 @@ use deep_causality_algebra::Real;
 use deep_causality_linear::CsrMatrix;
 use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lift_count};
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{Manifold, Simplex, SimplicialComplex, SimplicialManifold, Skeleton};
+use deep_causality_topology::{
+    Manifold, Simplex, SimplicialComplex, SimplicialManifold, Skeleton, TopologyError,
+};
 
 /// The small whole numbers the model is written with.
 pub const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
@@ -118,15 +120,26 @@ pub fn degeneration_history(dome_shear: FloatType) -> Vec<FloatType> {
         .collect()
 }
 
+/// The fewest centreline nodes a segment holds: two vertices, joined by one edge.
+pub const MIN_NODES: usize = 2;
+
 /// The vessel centreline as a line manifold: `nodes` vertices joined by `nodes - 1` edges,
 /// carrying the lumen radius on the vertices.
 ///
 /// The edge slots pad the payload out to the manifold's cell count, and each holds the healthy
 /// radius. That keeps every slot a valid geometry, so a pointwise `fmap` over the payload stays
 /// total. The analysis reads the first `nodes` entries, which are the vertices.
+///
+/// A segment holds at least [`MIN_NODES`] nodes; fewer is reported as an error.
 pub fn build_vessel_manifold(
     nodes: usize,
 ) -> Result<SimplicialManifold<FloatType, FloatType>, Box<dyn std::error::Error>> {
+    if nodes < MIN_NODES {
+        return Err(TopologyError::ManifoldError(format!(
+            "a centreline holds at least {MIN_NODES} nodes, {nodes} given"
+        ))
+        .into());
+    }
     let vertices = (0..nodes).map(|i| Simplex::new(vec![i])).collect();
     let edges = (0..nodes - 1)
         .map(|i| Simplex::new(vec![i, i + 1]))

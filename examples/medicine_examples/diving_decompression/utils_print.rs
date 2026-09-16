@@ -162,10 +162,12 @@ fn print_decompression(profile: &DiveProfile) {
     }
 }
 
+/// The tensions the diver surfaces with, each against the surface inspired pressure, which is the
+/// pressure they are now off-gassing toward.
 fn print_tissues(profile: &DiveProfile) {
     let tensions = profile.final_tensions.as_slice();
     println!("\n  Tissue tensions at the surface");
-    println!("    compartment   half-time    tension   saturation");
+    println!("    compartment   half-time    tension   vs surface ppN2");
 
     // The fastest compartment, the one controlling the ascent, and the slowest. The controlling
     // compartment is often one of the other two, so the list is deduplicated before printing.
@@ -184,10 +186,7 @@ fn print_tissues(profile: &DiveProfile) {
             compartment + 1,
             lower(half_time_of(compartment)),
             lower(tensions[compartment]),
-            lower(saturation_percent(
-                tensions[compartment],
-                profile.max_depth_m
-            )),
+            lower(saturation_percent(tensions[compartment], ZERO)),
             marker
         );
     }

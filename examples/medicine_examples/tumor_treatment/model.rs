@@ -118,14 +118,26 @@ pub fn build_tumor(voxels: usize) -> TumorVolume {
 /// Gradient ascent on the efficacy field.
 ///
 /// Each step reads the exact gradient `∇⟨|E·a|⟩` from the tangent functor and moves the
-/// orientation along it. A gradient that leaves the finite range ends the run through the monad's
-/// error channel, which is what `PropagatingEffect` carries.
+/// orientation along it. The run ends through the monad's error channel, which is what
+/// `PropagatingEffect` carries, when the learning rate or the starting orientation is outside the
+/// finite range, or when a gradient, an updated orientation or a score leaves it.
 pub fn ascend(
     efficacy: &Efficacy,
     start: [FloatType; 2],
     learning_rate: FloatType,
     steps: usize,
 ) -> PropagatingEffect<Report> {
+    if !is_finite(learning_rate) {
+        return PropagatingEffect::from_error(failed(
+            "the learning rate is outside the finite range",
+        ));
+    }
+    if !is_finite(start[0]) || !is_finite(start[1]) {
+        return PropagatingEffect::from_error(failed(
+            "the starting orientation is outside the finite range",
+        ));
+    }
+
     let initial_score = efficacy.run(&start);
     let mut orientation = start;
     let mut score = initial_score;
@@ -139,7 +151,17 @@ pub fn ascend(
 
         orientation[0] += learning_rate * gradient[0];
         orientation[1] += learning_rate * gradient[1];
+        if !is_finite(orientation[0]) || !is_finite(orientation[1]) {
+            return PropagatingEffect::from_error(failed(
+                "the orientation update left the finite range",
+            ));
+        }
         score = efficacy.run(&orientation);
+        if !is_finite(score) {
+            return PropagatingEffect::from_error(failed(
+                "the efficacy score left the finite range",
+            ));
+        }
 
         trace.push(AscentStep {
             step,
