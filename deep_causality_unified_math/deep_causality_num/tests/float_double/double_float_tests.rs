@@ -582,11 +582,19 @@ fn test_atan_neg_one_special() {
     assert!((r.hi() - (-core::f64::consts::FRAC_PI_4)).abs() < 1e-14);
 }
 
+/// `atan2(+0, +0)` is `+0`, which is what `f64` returns for the same pair.
+///
+/// This test previously asserted a NaN, pinning an implementation that stood alone: `f32`, `f64`
+/// and `BFloat16` all reach the platform's `atan2` and answer `0.0` here, so the same source
+/// computed a finite angle at three precisions and a NaN at the fourth. IEEE 754 specifies the
+/// case rather than leaving it open, so the disagreement was this implementation's to resolve.
 #[test]
-fn test_atan2_zero_zero_nan() {
+fn test_atan2_zero_zero_is_zero() {
     let z = Float106::from(0.0);
     let r = Float::atan2(z, z);
-    assert!(r.is_nan());
+
+    assert!(!r.is_nan(), "atan2(0, 0) must be finite");
+    assert_eq!(r.hi(), f64::atan2(0.0, 0.0));
 }
 
 #[test]

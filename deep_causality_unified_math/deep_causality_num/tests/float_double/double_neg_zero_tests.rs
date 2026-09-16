@@ -180,6 +180,65 @@ fn test_atan2_zero_over_negative_is_signed_pi() {
     assert_eq!(plus_pi.hi(), f64::atan2(0.0, -1.0));
 }
 
+/// `atan2` at the origin, where both arguments are zero.
+///
+/// IEEE 754 fixes this case on the signs of the two zeros rather than leaving it undefined, and
+/// every expectation below is the value `f64` returns for the same pair:
+///
+/// ```text
+/// atan2(±0, +0) = ±0        atan2(±0, −0) = ±π
+/// ```
+///
+/// The origin is where a direction stops being defined, so a caller reading an angle off a vector
+/// that happens to vanish lands here as a matter of course — a polar angle at a pole, or a Berry
+/// phase where the gap closes. A NaN there propagates through every later sum and takes the whole
+/// result with it, and it does so at this precision only, which is the hardest kind of
+/// disagreement to track down.
+#[test]
+fn test_atan2_at_the_origin_follows_the_signs_of_the_zeros() {
+    assert_pos_zero(
+        Float::atan2(pos_zero(), pos_zero()),
+        "atan2(+0.0, +0.0)",
+    );
+    assert_neg_zero(
+        Float::atan2(neg_zero(), pos_zero()),
+        "atan2(-0.0, +0.0)",
+    );
+
+    let plus_pi = Float::atan2(pos_zero(), neg_zero());
+    assert_eq!(
+        plus_pi.hi(),
+        f64::atan2(0.0, -0.0),
+        "atan2(+0.0, -0.0) must be +pi"
+    );
+
+    let minus_pi = Float::atan2(neg_zero(), neg_zero());
+    assert_eq!(
+        minus_pi.hi(),
+        f64::atan2(-0.0, -0.0),
+        "atan2(-0.0, -0.0) must be -pi"
+    );
+}
+
+/// Every result is finite, which is the property a caller summing angles depends on.
+#[test]
+fn test_atan2_never_returns_nan_for_finite_arguments() {
+    let zeros = [pos_zero(), neg_zero()];
+    let ones = [Float106::from(1.0), Float106::from(-1.0)];
+
+    for y in zeros.iter().chain(ones.iter()) {
+        for x in zeros.iter().chain(ones.iter()) {
+            let got = Float::atan2(*y, *x);
+            assert!(
+                !got.hi().is_nan(),
+                "atan2({:?}, {:?}) returned NaN",
+                y.hi(),
+                x.hi()
+            );
+        }
+    }
+}
+
 #[test]
 fn test_sinh_neg_zero() {
     assert_neg_zero(Float::sinh(neg_zero()), "sinh(-0.0)");
