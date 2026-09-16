@@ -120,6 +120,10 @@ fn commuting_model_screens() -> Result<(), Box<dyn std::error::Error>> {
         if decomposable_is_vacuous { "yes" } else { "NO" }
     );
 
+    if !(same_pairs && decomposable_is_vacuous) {
+        return Err("the pipeline and the shipped freeze disagreed".into());
+    }
+
     Ok(())
 }
 
@@ -142,7 +146,7 @@ fn non_commuting_model_fails_validate() -> Result<(), Box<dyn std::error::Error>
         .check_decomposable()
         .finalize();
     match outcome {
-        Ok(_) => println!("    unexpected: a non-commuting model must not screen"),
+        Ok(_) => return Err("a non-commuting model screened; validate should reject it".into()),
         Err(e) => match e.0 {
             QuantumErrorEnum::CommutatorNonZero { node_j, node_k, .. } => {
                 println!(
@@ -153,7 +157,7 @@ fn non_commuting_model_fails_validate() -> Result<(), Box<dyn std::error::Error>
                     cfg.subject().graph().is_frozen()
                 );
             }
-            other => println!("    failed with an unexpected error: {other:?}"),
+            other => return Err(format!("validate failed for the wrong reason: {other:?}").into()),
         },
     }
 
@@ -174,7 +178,7 @@ fn dynamic_graph_rolls_back() -> Result<(), Box<dyn std::error::Error>> {
         Some((&[SOURCE_NODE], &[TARGET_NODE])),
     );
     match outcome {
-        Ok(_) => println!("    unexpected: a non-commuting model must not freeze"),
+        Ok(_) => return Err("a non-commuting model froze; the freeze should abort".into()),
         Err(e) => match e.0 {
             QuantumErrorEnum::CommutatorNonZero { node_j, node_k, .. } => {
                 println!(
@@ -182,7 +186,9 @@ fn dynamic_graph_rolls_back() -> Result<(), Box<dyn std::error::Error>> {
                 );
                 println!("    is_frozen() = {} (rolled back)", graph.is_frozen());
             }
-            other => println!("    aborted with an unexpected error: {other:?}"),
+            other => {
+                return Err(format!("the freeze aborted for the wrong reason: {other:?}").into());
+            }
         },
     }
 

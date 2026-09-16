@@ -94,15 +94,20 @@ pub fn energy_gap_mev() -> FloatType {
     E_REMOTE_MEV - E_FLAT_MEV
 }
 
-/// How much of the gap is added to the denominator to keep a degeneracy from dividing by zero.
+/// How much is added to the denominator to keep a degeneracy from dividing by zero.
 ///
 /// It is a millionth of the squared gap, so it regularises without contributing: a regulator large
-/// enough to change the answer is a term in the model rather than a guard against one.
+/// enough to change the answer is a term in the model rather than a guard against one. A closed
+/// gap would make that scaled amount zero as well, so a floor of one millionth of a meV² stands
+/// under it, which is the one case where the guard has to be a number of its own.
 pub fn regularization() -> FloatType {
     const A_MILLIONTH: FloatType = const_scalar_from_int!(FloatType, 1_000_000);
     let gap = energy_gap_mev();
 
-    gap * gap / A_MILLIONTH
+    let scaled = gap * gap / A_MILLIONTH;
+    let floor = ONE / A_MILLIONTH;
+
+    if scaled > floor { scaled } else { floor }
 }
 
 // =============================================================================

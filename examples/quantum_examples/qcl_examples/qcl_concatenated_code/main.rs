@@ -59,7 +59,7 @@ where
     )
 }
 
-fn main() -> Result<(), QuantumError> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
 
     let mut every_law_holds = true;
@@ -115,5 +115,14 @@ fn main() -> Result<(), QuantumError> {
     };
 
     print_outcome(every_law_holds, every_square_exact, refused);
+
+    // The three are the example's claims about itself. A run that prints one of them as NO has
+    // shown the reader what failed; returning the failure is what lets a script see it too.
+    if !(every_law_holds && every_square_exact && refused) {
+        return Err(
+            "a composition law, an exactness check or the cross-block refusal failed".into(),
+        );
+    }
+
     Ok(())
 }

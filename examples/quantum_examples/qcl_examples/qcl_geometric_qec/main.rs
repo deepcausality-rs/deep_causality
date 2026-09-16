@@ -112,5 +112,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .verdict();
 
     print_outcome(verdict, verdict == CheckVerdict::Accepted);
+
+    if verdict != CheckVerdict::Accepted {
+        return Err(
+            format!("the screen returned {verdict:?}; every exact check should accept").into(),
+        );
+    }
+
     Ok(())
 }

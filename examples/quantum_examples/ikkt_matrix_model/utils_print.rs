@@ -66,7 +66,13 @@ pub fn print_trajectory(trajectory: &[Step]) {
 }
 
 /// What the relaxation came to.
-pub fn print_outcome(last: Option<&Step>, monotone: bool, spread: FloatType, threshold: FloatType) {
+pub fn print_outcome(
+    last: Option<&Step>,
+    monotone: bool,
+    norm: FloatType,
+    residual: FloatType,
+    threshold: FloatType,
+) {
     let Some(last) = last else {
         println!("The run took no steps, so there is nothing to report.");
         return;
@@ -79,22 +85,29 @@ pub fn print_outcome(last: Option<&Step>, monotone: bool, spread: FloatType, thr
         "  largest [X_mu, X_nu]    {:>14.9}",
         lower(last.largest_commutator)
     );
-    println!("  configuration norm      {:>14.9}", lower(spread));
+    println!("  configuration norm      {:>14.9}", lower(norm));
+    println!("  EOM residual            {:>14.3e}", lower(residual));
     println!(
         "  action fell every step  {:>14}",
         if monotone { "yes" } else { "no" }
     );
     println!();
 
+    // Three outcomes, told apart by two numbers. The action says whether the matrices commute; the
+    // residual says whether the configuration solves the equation of motion at all.
     if last.action < threshold {
         println!("  The matrices commute to the tolerance asked for, and they did it at the norm");
         println!("  they started with. Commuting matrices are simultaneously diagonalisable, so");
         println!("  the configuration now has a joint spectrum, and that set of points is the");
         println!("  spacetime the model is said to emerge into.");
+    } else if residual < threshold {
+        println!("  The double commutator vanishes while the single one does not: the matrices");
+        println!("  solve the equation of motion without commuting. That is a fuzzy-sphere");
+        println!("  solution, and it describes a non-commutative geometry.");
     } else {
-        println!("  The action stopped falling before reaching the tolerance, which is what a");
-        println!("  fuzzy-sphere solution looks like: the double commutator cancels while the");
-        println!("  single one does not, so the matrices solve the equation of motion without");
-        println!("  commuting. Those configurations describe a non-commutative geometry.");
+        println!("  The run reached its step limit with the action above the tolerance and the");
+        println!("  equation of motion unsatisfied. The descent had not finished; at this");
+        println!("  precision and step length it needs more steps or a line search before it");
+        println!("  can say what it converges to.");
     }
 }

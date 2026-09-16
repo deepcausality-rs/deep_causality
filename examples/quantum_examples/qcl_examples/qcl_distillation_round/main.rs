@@ -49,7 +49,7 @@ where
         .law)
 }
 
-fn main() -> Result<(), QuantumError> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
 
     let sweep = noise_sweep::<FloatType>();
@@ -78,5 +78,10 @@ fn main() -> Result<(), QuantumError> {
     print_row("Float106", &wide_law);
 
     print_outcome(every_law_holds);
+
+    if !every_law_holds {
+        return Err("a composition law was violated".into());
+    }
+
     Ok(())
 }

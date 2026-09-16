@@ -84,12 +84,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .seed(SEED)
         .build();
     match refused {
-        Ok(_) => println!("    unexpected: a cyclic candidate must not build"),
+        Ok(_) => return Err("a cyclic candidate built; build() should refuse it".into()),
         Err(e) => match e.0 {
             QuantumErrorEnum::CyclicStructureUnsupported(msg) => {
                 println!("    ✓ refused at build(): {msg}");
             }
-            other => println!("    refused with an unexpected error: {other:?}"),
+            other => return Err(format!("refused for the wrong reason: {other:?}").into()),
         },
     }
 
@@ -259,6 +259,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         "\n    the adjudication named the structure the observation came from: {}",
         yes_no(named_the_truth)
     );
+
+    if !(all_three_admitted && plan_is_complete && plan_costs_two && named_the_truth) {
+        return Err("a check the example makes about its own decision failed".into());
+    }
 
     Ok(())
 }

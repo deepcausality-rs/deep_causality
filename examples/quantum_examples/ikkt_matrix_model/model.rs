@@ -168,12 +168,49 @@ pub fn equation_of_motion(
         let inner = commutator_kernel(&configuration[mu], x_nu)?;
         let outer = commutator_kernel(x_nu, &inner)?;
 
-        for (slot, term) in total.iter_mut().zip(outer.as_inner().data()) {
+        // The accumulation pairs coefficients by position, so a term of the wrong length would be
+        // silently cut to fit. Every operator here is built on `algebra_metric()` and has
+        // `MATRIX_SIZE` coefficients; a mismatch is reported as the dimension error it is.
+        let terms = outer.as_inner().data();
+        if terms.len() != MATRIX_SIZE {
+            return Err(QuantumError::DimensionMismatch(format!(
+                "the double commutator at ({mu}, {nu}) has {} coefficients; the algebra has {MATRIX_SIZE}",
+                terms.len()
+            )));
+        }
+
+        for (slot, term) in total.iter_mut().zip(terms) {
             *slot += *term;
         }
     }
 
     Ok(total)
+}
+
+/// How far the configuration is from solving the equation of motion: the largest coefficient
+/// norm of the double commutator over the coordinates.
+///
+/// Zero at every solution, commuting or fuzzy-sphere. Read together with the action it separates
+/// the two: a commuting solution has both at zero, and a fuzzy sphere has this at zero while the
+/// action stays above it.
+pub fn equation_of_motion_residual(
+    configuration: &[Operator<FloatType>],
+) -> Result<FloatType, QuantumError> {
+    let mut largest = ZERO;
+
+    for mu in 0..configuration.len() {
+        let gradient = equation_of_motion(configuration, mu)?;
+        let norm = Real::sqrt(
+            gradient
+                .iter()
+                .fold(ZERO, |sum, c| sum + c.re * c.re + c.im * c.im),
+        );
+        if norm > largest {
+            largest = norm;
+        }
+    }
+
+    Ok(largest)
 }
 
 /// One relaxation step: move every coordinate against the equation of motion, then restore the
@@ -204,9 +241,14 @@ pub fn relax(
         moved.push(HilbertState::new(data, algebra_metric())?);
     }
 
+    // A configuration of zero norm has no direction to restore, and returning it would hand the
+    // caller an origin that every later action reads as a spurious minimum.
     let after = configuration_norm(&moved);
     if after <= ZERO {
-        return Ok(moved);
+        return Err(QuantumError::NormalizationError(
+            "the relaxation step collapsed the configuration to zero norm; the step is too long"
+                .to_string(),
+        ));
     }
 
     rescale(&moved, before / after)

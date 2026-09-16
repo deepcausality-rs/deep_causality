@@ -19,6 +19,7 @@ use deep_causality_num_complex::Complex;
 // =============================================================================
 
 pub const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+pub const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
 const THREE: FloatType = const_scalar_from_int!(FloatType, 3);
 const FOUR: FloatType = const_scalar_from_int!(FloatType, 4);
 const FIVE: FloatType = const_scalar_from_int!(FloatType, 5);
@@ -83,7 +84,13 @@ pub fn bit_flip(
         return Err(CodeError::NoSuchQubit(qubit));
     }
 
+    // `HilbertState` admits registers of any width; the permutation below indexes all eight
+    // amplitudes of three qubits and nothing else, so a register of another size is refused here.
     let source = state.as_inner().data();
+    if source.len() != N_AMPLITUDES {
+        return Err(CodeError::WrongRegisterSize(source.len()));
+    }
+
     let mask = 1usize << qubit;
 
     let data: Vec<Complex<FloatType>> = (0..N_AMPLITUDES).map(|i| source[i ^ mask]).collect();
@@ -218,6 +225,22 @@ pub fn fidelity(a: &HilbertState<FloatType>, b: &HilbertState<FloatType>) -> Flo
     overlap.re * overlap.re + overlap.im * overlap.im
 }
 
+/// The magnitude of a signed quantity.
+pub fn magnitude(x: FloatType) -> FloatType {
+    if x < ZERO { -x } else { x }
+}
+
+/// How far a fidelity may sit from its exact value and still count as it.
+///
+/// The gates are permutations and the fidelities are `1` and `0` in exact arithmetic, so what is
+/// left is the rounding in `|α|² + |β|²` at the precision in force. Sixty-four machine epsilons
+/// covers that at every scalar and is far below anything a wrong correction produces.
+pub fn exactness_tolerance() -> FloatType {
+    const EPSILONS: FloatType = const_scalar_from_int!(FloatType, 64);
+
+    EPSILONS * <FloatType as deep_causality_algebra::Real>::epsilon()
+}
+
 /// The total probability in a state, which stays at one through every operation here.
 pub fn norm_squared(state: &HilbertState<FloatType>) -> FloatType {
     state
@@ -236,6 +259,8 @@ pub fn norm_squared(state: &HilbertState<FloatType>) -> FloatType {
 pub enum CodeError {
     /// A register index outside the code block.
     NoSuchQubit(usize),
+    /// A register whose amplitude count is not that of three qubits.
+    WrongRegisterSize(usize),
     /// The register could not be built from the amplitudes given.
     Construction,
 }
@@ -245,6 +270,12 @@ impl core::fmt::Display for CodeError {
         match self {
             CodeError::NoSuchQubit(q) => {
                 write!(f, "qubit {q} is outside a {N_QUBITS}-qubit code block")
+            }
+            CodeError::WrongRegisterSize(n) => {
+                write!(
+                    f,
+                    "a register of {n} amplitudes; the code block has {N_AMPLITUDES}"
+                )
             }
             CodeError::Construction => write!(f, "the register could not be built"),
         }

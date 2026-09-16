@@ -57,7 +57,8 @@ use deep_causality_core::{
 use deep_causality_multivector::HilbertState;
 use deep_causality_num::Float106;
 use model::{
-    FLIPPED_QUBIT, Syndrome, amplitudes, bit_flip, encode, fidelity, measure_syndrome, recover,
+    FLIPPED_QUBIT, ONE, Syndrome, amplitudes, bit_flip, encode, exactness_tolerance, fidelity,
+    magnitude, measure_syndrome, recover,
 };
 use utils_print::{
     print_encoding, print_error, print_header, print_outcome, print_parities, print_recovery,
@@ -118,11 +119,29 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         fidelity(&protected, intervened_state),
     );
 
+    let observed_fidelity = fidelity(&protected, observed_state);
+    let intervened_fidelity = fidelity(&protected, intervened_state);
+
     print_outcome(
-        fidelity(&protected, observed_state),
-        fidelity(&protected, intervened_state),
+        observed_fidelity,
+        intervened_fidelity,
         fidelity(&protected, &corrupted),
     );
+
+    // The two claims the example makes: the observed syndrome restores the state, and the forced
+    // one destroys it. Both hold at every scalar, so a miss is a defect and the run says so.
+    let tolerance = exactness_tolerance();
+    let restored = magnitude(observed_fidelity - ONE) < tolerance;
+    let destroyed = intervened_fidelity < tolerance;
+
+    if !(restored && destroyed) {
+        return Err(format!(
+            "the recovery claims failed: observed fidelity {}, intervened fidelity {}",
+            deep_causality_num::lower(observed_fidelity),
+            deep_causality_num::lower(intervened_fidelity)
+        )
+        .into());
+    }
 
     Ok(())
 }

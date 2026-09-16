@@ -61,12 +61,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .over_circuit(h4_cyclic_circuit()?)
         .build()
     {
-        Ok(_) => println!("    UNEXPECTED: a cyclic grouping must not build"),
+        Ok(_) => return Err("a cyclic grouping built; build() should refuse it".into()),
         Err(e) => match e.0 {
             QuantumErrorEnum::CyclicStructureUnsupported(msg) => {
                 println!("    ✓ refused at build(): {msg}")
             }
-            other => panic!("refused with an unexpected error: {other:?}"),
+            other => return Err(format!("refused for the wrong reason: {other:?}").into()),
         },
     }
 
@@ -208,6 +208,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     println!("\n=== the v1 decision, reproduced over circuit-derived candidates ===");
+
+    if !(all_admitted
+        && plan_is_complete
+        && plan_costs_two
+        && plan_picked_the_interventions
+        && named_the_truth)
+    {
+        return Err("a check the example makes about its own decision failed".into());
+    }
+
     Ok(())
 }
 

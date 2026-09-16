@@ -87,20 +87,26 @@ pub fn print_verdict(shadow: [FloatType; 3], state_moved: FloatType, shadow_move
 }
 
 /// The semi-axis a Bloch vector points along, when it points along one.
+///
+/// The label goes to the dominant signed component, and only when that component carries the
+/// bulk of a unit vector. The cutoff sits far above any scalar's rounding: a cardinal state lands
+/// within an ulp of `±1` at every precision, and an off-axis state has no component near it.
 fn semi_axis(x: FloatType, y: FloatType, z: FloatType) -> &'static str {
-    let (x, y, z) = (lower(x), lower(y), lower(z));
+    const DOMINANT: f64 = 0.9;
+
     let named = [
-        ("+x", x),
-        ("-x", -x),
-        ("+y", y),
-        ("-y", -y),
-        ("+z", z),
-        ("-z", -z),
+        ("+x", lower(x)),
+        ("-x", -lower(x)),
+        ("+y", lower(y)),
+        ("-y", -lower(y)),
+        ("+z", lower(z)),
+        ("-z", -lower(z)),
     ];
 
     named
         .iter()
-        .find(|(_, component)| (component - 1.0).abs() < 1.0e-9)
+        .max_by(|a, b| a.1.total_cmp(&b.1))
+        .filter(|(_, component)| *component > DOMINANT)
         .map(|(axis, _)| *axis)
         .unwrap_or("between axes")
 }

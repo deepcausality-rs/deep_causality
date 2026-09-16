@@ -54,12 +54,11 @@
 mod model;
 mod utils_print;
 
-use deep_causality_algebra::Real;
 use deep_causality_num::Float106;
 use deep_causality_quantum::QuantumError;
 use model::{
-    MAX_STEPS, action, configuration_norm, convergence_threshold, initial_configuration,
-    largest_commutator, relax, step_size,
+    MAX_STEPS, action, configuration_norm, convergence_threshold, equation_of_motion_residual,
+    initial_configuration, largest_commutator, relax, step_size,
 };
 use utils_print::{Step, print_header, print_outcome, print_start, print_trajectory};
 
@@ -106,17 +105,11 @@ fn main() -> Result<(), QuantumError> {
         .windows(2)
         .all(|pair| pair[1].action <= pair[0].action);
 
-    let eigenvalue_spread = Real::sqrt(
-        configuration
-            .iter()
-            .map(model::squared_norm)
-            .fold(model::ZERO, |a, b| a + b),
-    );
-
     print_outcome(
         trajectory.last(),
         monotone,
-        eigenvalue_spread,
+        configuration_norm(&configuration),
+        equation_of_motion_residual(&configuration)?,
         convergence_threshold(),
     );
 

@@ -56,8 +56,3 @@ pub fn print_abort(node_j: usize, node_k: usize, detail: &str, is_frozen: bool) 
     println!("    The error names the pair. A check that reported only that something failed");
     println!("    would leave a real model of any size with nowhere to start looking.");
 }
-
-/// Something the run did not expect, which is worth saying loudly rather than passing over.
-pub fn print_unexpected(what: &str) {
-    println!("    UNEXPECTED: {what}");
-}

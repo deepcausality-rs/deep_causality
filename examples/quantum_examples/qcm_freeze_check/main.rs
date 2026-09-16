@@ -45,10 +45,8 @@ mod utils_print;
 use deep_causality::CausableGraph;
 use deep_causality_num::Float106;
 use deep_causality_quantum::{CommutatorTolerance, QuantumErrorEnum, freeze_quantum};
-use model::{
-    TopologyBuildError, diagonal, factors_on_shared_leg, sigma_x, sigma_z, two_node_graph,
-};
-use utils_print::{print_abort, print_frozen, print_header, print_scenario, print_unexpected};
+use model::{diagonal, factors_on_shared_leg, sigma_x, sigma_z, two_node_graph};
+use utils_print::{print_abort, print_frozen, print_header, print_scenario};
 
 /// The working scalar. Switch it to `f32`, `f64` or `deep_causality_num::BFloat16`; the operators,
 /// the commutator norms and the tolerance all recompute at that precision.
@@ -58,7 +56,7 @@ use utils_print::{print_abort, print_frozen, print_header, print_scenario, print
 /// types differ.
 pub type FloatType = Float106;
 
-fn main() -> Result<(), TopologyBuildError> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
 
     commuting_model_freezes()?;
@@ -69,7 +67,7 @@ fn main() -> Result<(), TopologyBuildError> {
 }
 
 /// Two commuting factors on the shared leg, so the model freezes.
-fn commuting_model_freezes() -> Result<(), TopologyBuildError> {
+fn commuting_model_freezes() -> Result<(), Box<dyn std::error::Error>> {
     print_scenario(1, "sigma_z and diag(3, -1) on leg 0", "they commute");
 
     let mut graph = two_node_graph()?;
@@ -78,14 +76,14 @@ fn commuting_model_freezes() -> Result<(), TopologyBuildError> {
 
     match freeze_quantum(&mut graph, &[], &factors, &supports, &tolerance, None) {
         Ok(report) => print_frozen(&report, graph.is_frozen()),
-        Err(e) => print_unexpected(&format!("the freeze failed: {e}")),
+        Err(e) => return Err(format!("a commuting model failed to freeze: {e}").into()),
     }
 
     Ok(())
 }
 
 /// Two anticommuting factors on the shared leg, so the freeze aborts and the graph rolls back.
-fn non_commuting_model_aborts() -> Result<(), TopologyBuildError> {
+fn non_commuting_model_aborts() -> Result<(), Box<dyn std::error::Error>> {
     print_scenario(2, "sigma_x and sigma_z on leg 0", "they anticommute");
 
     let mut graph = two_node_graph()?;
@@ -93,14 +91,16 @@ fn non_commuting_model_aborts() -> Result<(), TopologyBuildError> {
     let tolerance = CommutatorTolerance::<FloatType>::default();
 
     match freeze_quantum(&mut graph, &[], &factors, &supports, &tolerance, None) {
-        Ok(_) => print_unexpected("a non-commuting model should not freeze"),
+        Ok(_) => return Err("a non-commuting model froze; the freeze should abort".into()),
         Err(e) => match e.0 {
             QuantumErrorEnum::CommutatorNonZero {
                 node_j,
                 node_k,
                 detail,
             } => print_abort(node_j, node_k, &detail, graph.is_frozen()),
-            other => print_unexpected(&format!("an unexpected error: {other:?}")),
+            other => {
+                return Err(format!("the freeze aborted for the wrong reason: {other:?}").into());
+            }
         },
     }
 

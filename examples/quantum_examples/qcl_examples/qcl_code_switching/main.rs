@@ -67,7 +67,7 @@ where
     )
 }
 
-fn main() -> Result<(), QuantumError> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
 
     // The noiseless switch: the gadget is the identity on the logical space, so it costs nothing.
@@ -94,5 +94,10 @@ fn main() -> Result<(), QuantumError> {
         clean.holds() && noisy.holds() && f32_law.holds() && f64_law.holds() && wide_law.holds();
 
     print_outcome(every_law_holds, clean_is_exact);
+
+    if !(every_law_holds && clean_is_exact && second_link_exact) {
+        return Err("a composition law or an exactness check failed".into());
+    }
+
     Ok(())
 }
