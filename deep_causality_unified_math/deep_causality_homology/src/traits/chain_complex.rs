@@ -67,6 +67,41 @@ pub trait ChainComplex {
     /// The coboundary matrix `δₖ`, the transpose of `∂ₖ₊₁`.
     fn coboundary_matrix(&self, k: usize) -> Cow<'_, CsrMatrix<i8>>;
 
+    /// The Euler characteristic `χ = Σₖ (−1)ᵏ nₖ`, the alternating sum of the cell counts.
+    ///
+    /// # Why it belongs to the trait and needs no field
+    ///
+    /// Every other invariant here reads a boundary matrix and runs an elimination, so it has a
+    /// field to be computed over. This one reads [`num_cells`](Self::num_cells) and
+    /// [`max_dim`](Self::max_dim) and stops. A chain complex therefore always has an Euler
+    /// characteristic, whatever its boundary operators look like and whichever field a caller
+    /// later picks for its homology.
+    ///
+    /// # The Euler–Poincaré theorem, and why the agreement is worth something
+    ///
+    /// `Σₖ (−1)ᵏ nₖ = Σₖ (−1)ᵏ βₖ` over **any** field. The left side never touches a rank; the
+    /// right side is nothing but ranks. So the two sides agreeing is evidence about the rank
+    /// routine rather than arithmetic rearranged, which is how this crate's conformance harness
+    /// uses it.
+    ///
+    /// The theorem also says something a reader of [`betti_number_over`](Self::betti_number_over)
+    /// should know: Betti numbers move with the coefficient field, and their alternating sum does
+    /// not. Real projective space has `β₁ = 0` over ℚ and `β₁ = 1` over 𝔽₂, and `χ = 1` either
+    /// way, because the field-dependent terms cancel in pairs.
+    ///
+    /// # Counting
+    ///
+    /// A cell count is a `usize` bounded by the memory holding the complex, so the widening to
+    /// `i64` is exact on every target this workspace builds for. The sum is signed because the
+    /// alternating sign makes it so: a circle has `χ = 0` and an interval has `χ = 1`, while a
+    /// complex with more odd cells than even ones lands below zero.
+    fn euler_characteristic(&self) -> i64 {
+        (0..=self.max_dim()).fold(0i64, |chi, k| {
+            let cells = self.num_cells(k) as i64;
+            if k % 2 == 0 { chi + cells } else { chi - cells }
+        })
+    }
+
     /// The `k`-th Betti number over `field`: `β_k = dim H_k`, `H_k = ker ∂ₖ / im ∂ₖ₊₁`.
     ///
     /// # The field is an argument, and there is no other way to set it

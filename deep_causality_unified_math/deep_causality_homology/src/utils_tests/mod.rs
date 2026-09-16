@@ -94,20 +94,6 @@ impl SimplicialFixture {
             .binary_search_by(|s| s.as_slice().cmp(face))
             .unwrap_or_else(|_| panic!("{}: face {face:?} is missing from grade {k}", self.name))
     }
-
-    /// The Euler characteristic from cell counts, `Σ(−1)ᵏ nₖ`.
-    ///
-    /// Computed from the cell counts alone, so it never passes through the rank routine. That is
-    /// what makes comparing it with the alternating sum of Betti numbers two computations agreeing
-    /// rather than one rearranged.
-    pub fn euler_from_cells(&self) -> i64 {
-        (0..=self.max_dim())
-            .map(|k| {
-                let n = self.num_cells(k) as i64;
-                if k % 2 == 0 { n } else { -n }
-            })
-            .sum()
-    }
 }
 
 impl ChainComplex for SimplicialFixture {

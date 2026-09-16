@@ -110,7 +110,7 @@ fn test_the_default_field_is_the_rationals() {
 #[test]
 fn test_the_euler_characteristic_agrees_from_cells_and_from_betti_numbers() {
     for (cx, _, _) in reference_spaces() {
-        let from_cells = cx.euler_from_cells();
+        let from_cells = cx.euler_characteristic();
         let from_betti: i64 = (0..=cx.max_dim())
             .map(|k| {
                 let b = cx.betti_number_over(k, HomologyField::Rational).unwrap() as i64;
@@ -359,4 +359,115 @@ fn test_the_top_grade_subtracts_the_boundary_rank_once() {
             "β_MAX over {field:?}: (3 − 1) − 0, not (3 − 1) − 1"
         );
     }
+}
+
+/// `χ` against the published value for each reference space.
+///
+/// The values are Hatcher's, the same source `reference_spaces` cites per space. This pins the
+/// alternating sum itself: an implementation that dropped the sign, summed the wrong grades, or
+/// stopped one grade short fails on the spaces whose χ is non-zero.
+#[test]
+fn test_the_euler_characteristic_matches_published_values() {
+    // A closed orientable surface of genus g has χ = 2 − 2g, so the sphere reads 2 and the torus 0.
+    // The Klein bottle and ℝP² are non-orientable: χ = 2 − k for k cross-caps, giving 0 and 1.
+    // The cylinder and the Möbius band deformation-retract onto a circle, so both read 0.
+    let published: &[(&str, i64)] = &[
+        ("point", 1),
+        ("interval", 1),
+        ("circle", 0),
+        ("sphere_2", 2),
+        ("torus_2", 0),
+        ("cylinder", 0),
+        ("mobius_band", 0),
+        ("real_projective_plane", 1),
+        ("klein_bottle", 0),
+        ("torus_3", 0),
+    ];
+
+    let mut checked = 0;
+    for (cx, _, _) in reference_spaces() {
+        let expected = published
+            .iter()
+            .find(|(name, _)| *name == cx.name())
+            .map(|(_, chi)| *chi)
+            .unwrap_or_else(|| panic!("{}: no published Euler characteristic on file", cx.name()));
+
+        assert_eq!(
+            cx.euler_characteristic(),
+            expected,
+            "{}: χ from cell counts is {}, published value is {expected}",
+            cx.name(),
+            cx.euler_characteristic()
+        );
+        checked += 1;
+    }
+
+    // A suite that silently stopped enumerating spaces would pass every assertion above.
+    assert!(
+        checked >= 9,
+        "expected at least the nine Miri-safe reference spaces, checked {checked}"
+    );
+}
+
+/// `χ` is the same whichever coefficient field the homology is taken over.
+///
+/// Betti numbers move with the field: ℝP² has `β₁ = 0` over ℚ and `β₁ = 1` over 𝔽₂. Their
+/// alternating sum does not move, because the field-dependent terms cancel in pairs. Both sides are
+/// therefore compared against the cell-count sum, which reaches no rank routine at all.
+#[test]
+fn test_the_euler_characteristic_agrees_over_both_coefficient_fields() {
+    for (cx, _, _) in reference_spaces() {
+        let from_cells = cx.euler_characteristic();
+
+        for field in [HomologyField::Rational, HomologyField::Gf2] {
+            let from_betti: i64 = (0..=cx.max_dim())
+                .map(|k| {
+                    let b = cx.betti_number_over(k, field).unwrap() as i64;
+                    if k % 2 == 0 { b } else { -b }
+                })
+                .sum();
+
+            assert_eq!(
+                from_cells,
+                from_betti,
+                "{}: χ from cells is {from_cells}, from Betti numbers over {field:?} it is {from_betti}",
+                cx.name()
+            );
+        }
+    }
+}
+
+/// A complex carrying only vertices has `χ` equal to its vertex count.
+///
+/// The degenerate end of the alternating sum: with `max_dim() == 0` the fold runs one grade and
+/// adds it, so a complex of `n` disjoint points reads `n`. This is the arm a fold written as
+/// `0..max_dim()` rather than `0..=max_dim()` would get wrong.
+#[test]
+fn test_the_euler_characteristic_of_isolated_points_is_their_count() {
+    let points = SimplicialFixture::new("three_points", &[&[0], &[1], &[2]]);
+
+    assert_eq!(points.num_cells(0), 3);
+    assert_eq!(points.max_dim(), 0);
+    assert_eq!(points.euler_characteristic(), 3);
+}
+
+/// A complex with more odd cells than even ones has a negative `χ`.
+///
+/// Four vertices carrying five edges: the triangle `0-1-2` and a second cycle `0-1-3` sharing the
+/// edge `0-1`. Two independent cycles make this a wedge of two circles, so `χ = 4 − 5 = −1`. An
+/// implementation that added every grade instead of alternating returns 9 here.
+#[test]
+fn test_the_euler_characteristic_goes_negative_when_odd_cells_dominate() {
+    let wedge = SimplicialFixture::new(
+        "wedge_of_two_circles",
+        &[&[0, 1], &[1, 2], &[0, 2], &[0, 3], &[1, 3]],
+    );
+
+    let v = wedge.num_cells(0) as i64;
+    let e = wedge.num_cells(1) as i64;
+    assert_eq!(wedge.euler_characteristic(), v - e);
+    assert!(
+        wedge.euler_characteristic() < 0,
+        "χ = {v} − {e} should be negative",
+    );
 }
