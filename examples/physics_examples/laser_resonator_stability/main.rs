@@ -31,7 +31,7 @@
 
 use deep_causality_algebra::{DivisionAlgebra, Real};
 use deep_causality_core::{CausalEffect, CausalFlow, PropagatingEffect, PropagatingProcess};
-use deep_causality_num::{lift, lower};
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lower};
 use deep_causality_num_complex::Complex;
 use deep_causality_physics::{
     AbcdMatrix, ComplexBeamParameter, IndexOfRefraction, PhysicsError, Wavelength, beam_spot_size,
@@ -39,22 +39,30 @@ use deep_causality_physics::{
 };
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 
+/// Small whole numbers, declared once at the working type.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
+const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
+
 /// Cavity geometry, in metres.
-const DRIFT_L1: f64 = 0.5;
-const DRIFT_L2: f64 = 0.5;
+const DRIFT_L1: FloatType = const_scalar_from_float!(FloatType, 0.5);
+const DRIFT_L2: FloatType = const_scalar_from_float!(FloatType, 0.5);
 /// Radius of curvature of the biconvex thermal lens, in metres.
-const LENS_RADIUS: f64 = 0.5;
+const LENS_RADIUS: FloatType = const_scalar_from_float!(FloatType, 0.5);
 /// Refractive index of the lens material.
-const LENS_INDEX: f64 = 1.5;
+const LENS_INDEX: FloatType = const_scalar_from_float!(FloatType, 1.5);
 /// Nd:YAG wavelength, 1064 nm.
-const WAVELENGTH_M: f64 = 1064e-9;
+const WAVELENGTH_M: FloatType = const_scalar_from_float!(FloatType, 1064e-9);
 /// Input beam waist, 1 mm.
-const WAIST_M: f64 = 1e-3;
+const WAIST_M: FloatType = const_scalar_from_float!(FloatType, 1e-3);
+/// Metres to millimetres and to nanometres, for the display boundary.
+const MM_PER_M: FloatType = const_scalar_from_int!(FloatType, 1000);
+const NM_PER_M: FloatType = const_scalar_from_int!(FloatType, 1_000_000_000);
 
 /// A cavity counts as stable when `|m| <= 1`; this is the slack allowed on that comparison.
-const STABILITY_MARGIN: f64 = 1e-12;
+const STABILITY_MARGIN: FloatType = const_scalar_from_float!(FloatType, 1e-12);
 /// How closely the round trip must reproduce the input `q` to call the mode self-consistent.
-const EIGENMODE_TOLERANCE: f64 = 1e-12;
+const EIGENMODE_TOLERANCE: FloatType = const_scalar_from_float!(FloatType, 1e-12);
 
 /// `f64` is the right precision here: the round trip is six 2x2 products and one Moebius map, so
 /// the eigenmode residual sits at machine epsilon either way. `Float106` tightens the residual
@@ -64,14 +72,13 @@ pub type FloatType = f64;
 fn main() -> Result<(), PhysicsError> {
     print_header();
 
-    let wavelength = Wavelength::<FloatType>::new(lift(WAVELENGTH_M))?;
+    let wavelength = Wavelength::<FloatType>::new(WAVELENGTH_M)?;
     let focal_length = thermal_lens_focal_length()?;
 
     // At a waist the wavefront is flat, so q = i z_R with z_R = pi w0^2 / lambda.
-    let waist = lift::<FloatType>(WAIST_M);
-    let rayleigh = FloatType::pi() * waist * waist / wavelength.value();
-    let q_initial = ComplexBeamParameter::new(Complex::new(lift::<FloatType>(0.0), rayleigh))?;
-    print_input(waist, rayleigh, focal_length);
+    let rayleigh = FloatType::pi() * WAIST_M * WAIST_M / wavelength.value();
+    let q_initial = ComplexBeamParameter::new(Complex::new(ZERO, rayleigh))?;
+    print_input(WAIST_M, rayleigh, focal_length);
 
     // One full round trip: out through the lens to the far mirror, and back again. Flat mirrors
     // contribute the identity, so they are the reflections between the two passes.
@@ -111,7 +118,7 @@ fn propagate(
     match gaussian_q_propagation(q, matrix).value_cloned() {
         // A physical beam keeps Im(q) > 0. Once that fails the beam has diffracted away and the
         // flow enters the error channel rather than reporting a spot size for a lost beam.
-        Some(next) if next.value().im > lift::<FloatType>(0.0) => PropagatingEffect::pure(next),
+        Some(next) if next.value().im > ZERO => PropagatingEffect::pure(next),
         Some(_) => fail("beam diverged: Im(q) <= 0"),
         None => fail("q propagation produced no value"),
     }
@@ -137,7 +144,7 @@ fn round_trip(focal_length: FloatType) -> Result<Vec<Element>, PhysicsError> {
     Ok(vec![
         Element {
             label: "drift L1",
-            matrix: drift(lift(DRIFT_L1))?,
+            matrix: drift(DRIFT_L1)?,
         },
         Element {
             label: "thermal lens",
@@ -145,12 +152,12 @@ fn round_trip(focal_length: FloatType) -> Result<Vec<Element>, PhysicsError> {
         },
         Element {
             label: "drift L2",
-            matrix: drift(lift(DRIFT_L2))?,
+            matrix: drift(DRIFT_L2)?,
         },
         // The far mirror is flat, so it reflects without focusing: the identity matrix.
         Element {
             label: "drift L2 (return)",
-            matrix: drift(lift(DRIFT_L2))?,
+            matrix: drift(DRIFT_L2)?,
         },
         Element {
             label: "thermal lens (return)",
@@ -158,29 +165,19 @@ fn round_trip(focal_length: FloatType) -> Result<Vec<Element>, PhysicsError> {
         },
         Element {
             label: "drift L1 (return)",
-            matrix: drift(lift(DRIFT_L1))?,
+            matrix: drift(DRIFT_L1)?,
         },
     ])
 }
 
 /// Free-space propagation, `[[1, L], [0, 1]]`.
 fn drift(length: FloatType) -> Result<AbcdMatrix<FloatType>, PhysicsError> {
-    matrix(
-        lift(1.0),
-        length,
-        lift::<FloatType>(0.0),
-        lift::<FloatType>(1.0),
-    )
+    matrix(ONE, length, ZERO, ONE)
 }
 
 /// A thin lens, `[[1, 0], [-1/f, 1]]`.
 fn thin_lens(focal_length: FloatType) -> Result<AbcdMatrix<FloatType>, PhysicsError> {
-    matrix(
-        lift(1.0),
-        lift::<FloatType>(0.0),
-        -lift::<FloatType>(1.0) / focal_length,
-        lift::<FloatType>(1.0),
-    )
+    matrix(ONE, ZERO, -ONE / focal_length, ONE)
 }
 
 fn matrix(
@@ -196,12 +193,11 @@ fn matrix(
 
 /// Focal length of the biconvex thermal lens, from the lens-maker equation.
 fn thermal_lens_focal_length() -> Result<FloatType, PhysicsError> {
-    let index = IndexOfRefraction::<FloatType>::new(lift(LENS_INDEX))?;
-    let radius = lift::<FloatType>(LENS_RADIUS);
-    let power = lens_maker(index, radius, -radius)
+    let index = IndexOfRefraction::<FloatType>::new(LENS_INDEX)?;
+    let power = lens_maker(index, LENS_RADIUS, -LENS_RADIUS)
         .value_cloned()
         .ok_or_else(|| PhysicsError::NumericalInstability("lens_maker".into()))?;
-    Ok(lift::<FloatType>(1.0) / power.value())
+    Ok(ONE / power.value())
 }
 
 /// The beam at the exit of each element, for reporting.
@@ -241,7 +237,7 @@ fn sample(
     // R = |q|^2 / Re(q). At a waist Re(q) is zero and the wavefront is plane, which has no
     // finite radius; report that as absent rather than dividing by zero and printing `inf`.
     let re = q.value().re;
-    let curvature = if Real::abs(re) > lift::<FloatType>(EIGENMODE_TOLERANCE) {
+    let curvature = if Real::abs(re) > EIGENMODE_TOLERANCE {
         Some(q.value().norm_sqr() / re)
     } else {
         None
@@ -278,10 +274,7 @@ fn stability(
     }
     let r = round.as_slice();
     let (a, d) = (r[0], r[3]);
-    let m = (a + d) / lift::<FloatType>(2.0);
-
-    let one = lift::<FloatType>(1.0);
-    let margin = lift::<FloatType>(STABILITY_MARGIN);
+    let m = (a + d) / TWO;
     let eigenmode_residual = (q_final.value() - q_initial.value()).norm_sqr();
 
     Ok(Stability {
@@ -289,15 +282,14 @@ fn stability(
         d,
         m,
         eigenmode_residual,
-        stable: Real::abs(m) <= one + margin,
-        marginal: Real::abs(Real::abs(m) - one) <= margin,
-        self_reproducing: eigenmode_residual < lift::<FloatType>(EIGENMODE_TOLERANCE),
+        stable: Real::abs(m) <= ONE + STABILITY_MARGIN,
+        marginal: Real::abs(Real::abs(m) - ONE) <= STABILITY_MARGIN,
+        self_reproducing: eigenmode_residual < EIGENMODE_TOLERANCE,
     })
 }
 
 fn identity() -> Result<CausalTensor<FloatType>, PhysicsError> {
-    let (one, zero) = (lift::<FloatType>(1.0), lift::<FloatType>(0.0));
-    CausalTensor::new(vec![one, zero, zero, one], vec![2, 2])
+    CausalTensor::new(vec![ONE, ZERO, ZERO, ONE], vec![2, 2])
         .map_err(|e| PhysicsError::DimensionMismatch(format!("2x2 identity: {e:?}")))
 }
 
@@ -320,18 +312,21 @@ fn print_header() {
 
 /// The display boundary: `f64` appears here and nowhere else.
 fn print_input(waist: FloatType, rayleigh: FloatType, focal_length: FloatType) {
-    println!("Cavity:     flat mirror | {DRIFT_L1} m | thermal lens | {DRIFT_L2} m | flat mirror");
     println!(
-        "Wavelength: {:.1} nm",
-        lower(lift::<FloatType>(WAVELENGTH_M)) * 1e9
+        "Cavity:     flat mirror | {:.1} m | thermal lens | {:.1} m | flat mirror",
+        lower(DRIFT_L1),
+        lower(DRIFT_L2)
     );
+    println!("Wavelength: {:.1} nm", lower(WAVELENGTH_M * NM_PER_M));
     println!(
-        "Lens:       f = {:.3} m (biconvex, n = {LENS_INDEX}, R = {LENS_RADIUS} m)",
-        lower(focal_length)
+        "Lens:       f = {:.3} m (biconvex, n = {:.1}, R = {:.1} m)",
+        lower(focal_length),
+        lower(LENS_INDEX),
+        lower(LENS_RADIUS)
     );
     println!(
         "Input beam: w0 = {:.2} mm at a waist, z_R = {:.3} m\n",
-        lower(waist) * 1e3,
+        lower(waist * MM_PER_M),
         lower(rayleigh)
     );
 }
@@ -344,13 +339,13 @@ fn print_trace(samples: &[Sample]) {
             Some(r) => println!(
                 "  {:<22} {:>12.4} {:>14.4}",
                 s.label,
-                lower(s.spot_size) * 1e3,
+                lower(s.spot_size * MM_PER_M),
                 lower(r)
             ),
             None => println!(
                 "  {:<22} {:>12.4} {:>14}",
                 s.label,
-                lower(s.spot_size) * 1e3,
+                lower(s.spot_size * MM_PER_M),
                 "plane"
             ),
         }

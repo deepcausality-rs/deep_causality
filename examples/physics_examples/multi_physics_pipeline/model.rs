@@ -7,7 +7,7 @@
 
 use crate::FloatType;
 use deep_causality_linear::CsrMatrix;
-use deep_causality_num::lift;
+use deep_causality_num::const_scalar_from_int;
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     Manifold, ReggeGeometry, Simplex, SimplicialComplex, SimplicialComplexBuilder,
@@ -20,6 +20,10 @@ use deep_causality_topology::{
 /// The codifferential reads the Hodge star out of the complex's cache, so the complex is rebuilt
 /// with identity mass matrices at both grades; the unit-edge Regge metric supplies the metric
 /// instance the Laplacian requires without contributing data of its own.
+/// Small whole numbers, at the working type.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
+
 pub(crate) fn make_1d_manifold(
     data: Vec<FloatType>,
 ) -> Result<SimplicialManifold<FloatType, FloatType>, TopologyError> {
@@ -42,19 +46,18 @@ pub(crate) fn make_1d_manifold(
 
     // The data tensor spans every simplex: the vertex values, then a zero for each edge.
     let mut full_data = data;
-    full_data.resize(num_vertices + num_edges, lift::<FloatType>(0.0));
+    full_data.resize(num_vertices + num_edges, ZERO);
     let len = full_data.len();
     let tensor = CausalTensor::new(full_data, vec![len])?;
 
-    let edge_lengths = CausalTensor::new(vec![lift::<FloatType>(1.0); num_edges], vec![num_edges])?;
+    let edge_lengths = CausalTensor::new(vec![ONE; num_edges], vec![num_edges])?;
     let metric = ReggeGeometry::new(edge_lengths);
 
     Manifold::with_metric(complex_with_hodge, tensor, Some(metric), 0)
 }
 
 fn identity_matrix(n: usize) -> Result<CsrMatrix<FloatType>, TopologyError> {
-    let one = lift::<FloatType>(1.0);
-    let triplets: Vec<(usize, usize, FloatType)> = (0..n).map(|i| (i, i, one)).collect();
+    let triplets: Vec<(usize, usize, FloatType)> = (0..n).map(|i| (i, i, ONE)).collect();
     CsrMatrix::from_triplets(n, n, &triplets)
         .map_err(|e| TopologyError::InvalidInput(format!("identity mass matrix: {e:?}")))
 }

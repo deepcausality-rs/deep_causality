@@ -27,28 +27,38 @@
 
 use deep_causality_algebra::Real;
 use deep_causality_core::{CausalEffect, CausalFlow, PropagatingEffect, PropagatingProcess};
-use deep_causality_num::{lift, lower};
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lower};
 use deep_causality_physics::{
     AmountOfSubstance, MOLAR_GAS_CONSTANT, PhysicsError, Pressure, Temperature, Volume,
     carnot_efficiency, ideal_gas_law,
 };
 
+/// Small whole numbers, declared once at the working type.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
+
 /// Volume expansion ratio of the isothermal stroke, `V_b / V_a`.
-const EXPANSION_RATIO: f64 = 2.0;
+const EXPANSION_RATIO: FloatType = const_scalar_from_int!(FloatType, 2);
 /// Hot reservoir temperature (K).
-const TEMP_HOT: f64 = 500.0;
+const TEMP_HOT: FloatType = const_scalar_from_int!(FloatType, 500);
 /// Cold reservoir temperature (K).
-const TEMP_COLD: f64 = 300.0;
+const TEMP_COLD: FloatType = const_scalar_from_int!(FloatType, 300);
 /// Working gas, in moles.
-const MOLES: f64 = 1.0;
+const MOLES: FloatType = const_scalar_from_int!(FloatType, 1);
 /// Starting volume at point A (m^3).
-const VOLUME_A: f64 = 0.01;
+const VOLUME_A: FloatType = const_scalar_from_float!(FloatType, 0.01);
 /// Adiabatic index of a monatomic ideal gas, `gamma = Cp/Cv = 5/3`.
-const GAMMA: f64 = 5.0 / 3.0;
+///
+/// Declared as the fraction it is: `5/3` has no exact decimal literal, so dividing two exact
+/// whole numbers at the working type keeps it as accurate as that type allows.
+const GAMMA_NUMERATOR: FloatType = const_scalar_from_int!(FloatType, 5);
+const GAMMA_DENOMINATOR: FloatType = const_scalar_from_int!(FloatType, 3);
 /// Heat capacity at constant volume for a monatomic gas, `Cv = (3/2) n R`.
-const CV_FACTOR: f64 = 1.5;
+const CV_FACTOR: FloatType = const_scalar_from_float!(FloatType, 1.5);
 /// The relative error the two closure checks must come in under.
-const CLOSURE_TOLERANCE: f64 = 1e-12;
+const CLOSURE_TOLERANCE: FloatType = const_scalar_from_float!(FloatType, 1e-12);
+/// The molar gas constant, at the working type.
+const GAS_CONSTANT: FloatType = const_scalar_from_float!(FloatType, MOLAR_GAS_CONSTANT);
 
 /// `f64` is the right precision here: the cycle is four closed-form strokes, not an iterated
 /// solve, so the closure residual sits at a handful of machine epsilons either way. `Float106`
@@ -59,16 +69,16 @@ fn main() -> Result<(), PhysicsError> {
     print_header();
 
     // Point A is derived from the gas law, not asserted: P_a = n R T_h / V_a.
-    let v_a = Volume::<FloatType>::new(lift(VOLUME_A))?;
-    let p_a = Pressure::<FloatType>::new(gas_pressure(lift(VOLUME_A), temp_hot().value()))?;
+    let v_a = Volume::<FloatType>::new(VOLUME_A)?;
+    let p_a = Pressure::<FloatType>::new(gas_pressure(VOLUME_A, temp_hot().value()))?;
 
     let initial = EngineState {
         p: p_a,
         v: v_a,
         t: temp_hot(),
-        entropy: lift(0.0),
-        work: lift(0.0),
-        heat_absorbed: lift(0.0),
+        entropy: ZERO,
+        work: ZERO,
+        heat_absorbed: ZERO,
         phase: "Start (Point A)".to_string(),
     };
     let trace = vec![initial.clone()];
@@ -121,9 +131,8 @@ fn stroke_isothermal_expansion(
     _ctx: Option<()>,
 ) -> PropagatingProcess<Vec<EngineState>, (), ()> {
     extend(value, |prev| {
-        let ratio = lift::<FloatType>(EXPANSION_RATIO);
-        let v_b = prev.v.value() * ratio;
-        let work = moles() * gas_constant() * temp_hot().value() * Real::ln(ratio);
+        let v_b = prev.v.value() * EXPANSION_RATIO;
+        let work = MOLES * GAS_CONSTANT * temp_hot().value() * Real::ln(EXPANSION_RATIO);
 
         Ok(EngineState {
             p: Pressure::new(gas_pressure(v_b, temp_hot().value()))?,
@@ -170,13 +179,9 @@ fn stroke_isothermal_compression(
     _ctx: Option<()>,
 ) -> PropagatingProcess<Vec<EngineState>, (), ()> {
     extend(value, |prev| {
-        let ratio = lift::<FloatType>(EXPANSION_RATIO);
-        let v_d = prev.v.value() / ratio;
+        let v_d = prev.v.value() / EXPANSION_RATIO;
         // Work is negative here: the surroundings do work on the gas and heat is rejected.
-        let work = moles()
-            * gas_constant()
-            * temp_cold().value()
-            * Real::ln(lift::<FloatType>(1.0) / ratio);
+        let work = MOLES * GAS_CONSTANT * temp_cold().value() * Real::ln(ONE / EXPANSION_RATIO);
 
         Ok(EngineState {
             p: Pressure::new(gas_pressure(v_d, temp_cold().value()))?,
@@ -247,33 +252,28 @@ fn fail<T: Default + Clone + core::fmt::Debug>(
     ))
 }
 
-// --- The cycle's own parameters, lifted into the working type ---
+// --- The cycle's own laws, over constants already at the working type ---
 
-fn moles() -> FloatType {
-    lift(MOLES)
-}
-fn gas_constant() -> FloatType {
-    lift(MOLAR_GAS_CONSTANT)
-}
 fn heat_capacity_v() -> FloatType {
-    lift::<FloatType>(CV_FACTOR) * moles() * gas_constant()
+    CV_FACTOR * MOLES * GAS_CONSTANT
 }
 fn temp_hot() -> Temperature<FloatType> {
-    Temperature::new_unchecked(lift(TEMP_HOT))
+    Temperature::new_unchecked(TEMP_HOT)
 }
 fn temp_cold() -> Temperature<FloatType> {
-    Temperature::new_unchecked(lift(TEMP_COLD))
+    Temperature::new_unchecked(TEMP_COLD)
 }
 
 /// `P = n R T / V`, the ideal gas law solved for pressure.
 fn gas_pressure(volume: FloatType, temp: FloatType) -> FloatType {
-    moles() * gas_constant() * temp / volume
+    MOLES * GAS_CONSTANT * temp / volume
 }
 
 /// The volume an adiabat carries `(v, from)` to at temperature `to`, from
 /// `T V^(gamma-1) = const`, so `V' = V (T/T')^(1/(gamma-1))`.
 fn adiabatic_volume(volume: FloatType, from: FloatType, to: FloatType) -> FloatType {
-    let exponent = lift::<FloatType>(1.0) / (lift::<FloatType>(GAMMA) - lift::<FloatType>(1.0));
+    let gamma = GAMMA_NUMERATOR / GAMMA_DENOMINATOR;
+    let exponent = ONE / (gamma - ONE);
     volume * Real::powf(from / to, exponent)
 }
 
@@ -295,21 +295,20 @@ fn closure_report(
     // `ideal_gas_law` recovers the gas constant, P V / (n T). The closing stroke derived its
     // end state from the adiabat alone and never used R, so recovering R back out of that
     // state is an independent check on it.
-    let moles = AmountOfSubstance::<FloatType>::new(moles())?;
+    let moles = AmountOfSubstance::<FloatType>::new(MOLES)?;
     let r_effect = ideal_gas_law(final_state.p, final_state.v, moles, final_state.t);
     let recovered_r = match r_effect.value_cloned() {
         Some(r) => r.value(),
         None => return Err(PhysicsError::NumericalInstability("ideal_gas_law".into())),
     };
 
-    let tolerance = lift::<FloatType>(CLOSURE_TOLERANCE);
     Ok(ClosureReport {
         volume_error,
         recovered_r,
         entropy: final_state.entropy,
-        closed: volume_error < tolerance
-            && Real::abs(recovered_r - gas_constant()) / gas_constant() < tolerance
-            && Real::abs(final_state.entropy) < tolerance,
+        closed: volume_error < CLOSURE_TOLERANCE
+            && Real::abs(recovered_r - GAS_CONSTANT) / GAS_CONSTANT < CLOSURE_TOLERANCE
+            && Real::abs(final_state.entropy) < CLOSURE_TOLERANCE,
     })
 }
 
@@ -333,7 +332,10 @@ fn print_header() {
     println!("=== Carnot Heat Engine ===");
     println!("Precision: {}", core::any::type_name::<FloatType>());
     println!(
-        "Reservoirs: T_hot = {TEMP_HOT} K, T_cold = {TEMP_COLD} K, expansion ratio {EXPANSION_RATIO}\n"
+        "Reservoirs: T_hot = {:.0} K, T_cold = {:.0} K, expansion ratio {:.0}\n",
+        lower(TEMP_HOT),
+        lower(TEMP_COLD),
+        lower(EXPANSION_RATIO)
     );
 }
 

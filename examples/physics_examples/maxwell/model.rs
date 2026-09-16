@@ -14,7 +14,7 @@ use crate::FloatType;
 use deep_causality::{CausalityError, CausalityErrorEnum, PropagatingEffect};
 use deep_causality_calculus::{DifferentiableField, DifferentiateFieldExt, Scalar};
 use deep_causality_multivector::{CausalMultiVector, Metric, MultiVector};
-use deep_causality_num::lift;
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int};
 use deep_causality_physics::MaxwellSolver;
 
 /// `Cl(1,3)` holds `2^4` coefficients indexed by bitmask over `(e_t, e_x, e_y, e_z)`.
@@ -28,17 +28,22 @@ const E_TX: usize = E_T | E_X;
 /// The magnetic blade `e_z ^ e_x`: `B_y = F_zx` by `B_i = (1/2) eps_ijk F_jk`.
 const E_ZX: usize = E_Z | E_X;
 
+/// Zero at the working type, for the blades a multivector leaves empty.
+pub const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+
 /// The gauge condition is called satisfied below this absolute divergence.
-const GAUGE_TOLERANCE: f64 = 1e-9;
+const GAUGE_TOLERANCE: FloatType = const_scalar_from_float!(FloatType, 1e-9);
 
 /// The spacetime metric every multivector in this example carries.
 pub fn metric() -> Metric {
     Metric::Minkowski(4)
 }
 
-/// Angular frequency of the wave, in the source's `f64` literal form. Every use lifts it into
-/// whatever scalar the caller is working at, so the field carries no concrete float type.
-pub const OMEGA: f64 = 1.0;
+/// Angular frequency of the wave. A whole number, so it is exact at every scalar.
+pub const OMEGA: FloatType = const_scalar_from_int!(FloatType, 1);
+/// The same frequency as an `f64` literal, for the generic field below: `run<S>` works at a
+/// scalar the caller names, which the working type's constant cannot reach.
+const OMEGA_LITERAL: f64 = 1.0;
 
 /// The plane-wave vector potential `A_x(t, z) = cos(omega (t - z))`, written once over `Scalar`.
 ///
@@ -50,7 +55,7 @@ pub struct PlaneWavePotential;
 
 impl DifferentiableField<2> for PlaneWavePotential {
     fn run<S: Scalar>(&self, tz: &[S; 2]) -> S {
-        let omega = lift::<S>(OMEGA);
+        let omega = deep_causality_num::lift::<S>(OMEGA_LITERAL);
         (omega * (tz[0] - tz[1])).cos()
     }
 }
@@ -146,8 +151,7 @@ pub fn compute_em_field(input: MaxwellState) -> PropagatingEffect<MaxwellState> 
 
 /// Stage 3: the Lorenz gauge holds when the divergence vanishes.
 pub fn check_lorenz_gauge(input: MaxwellState) -> PropagatingEffect<MaxwellState> {
-    let gauge_satisfied =
-        deep_causality_algebra::Real::abs(input.divergence) < lift::<FloatType>(GAUGE_TOLERANCE);
+    let gauge_satisfied = deep_causality_algebra::Real::abs(input.divergence) < GAUGE_TOLERANCE;
 
     PropagatingEffect::pure(MaxwellState {
         gauge_satisfied,
@@ -192,17 +196,16 @@ pub fn field_bivector(state: &MaxwellState) -> Result<CausalMultiVector<FloatTyp
 
 /// The `(e_t ^ e_x, e_z ^ e_x)` blade pair of a field bivector, for reporting.
 pub fn field_blades(f: &CausalMultiVector<FloatType>) -> (FloatType, FloatType) {
-    let zero = lift::<FloatType>(0.0);
     let d = f.data();
     (
-        d.get(E_TX).copied().unwrap_or(zero),
-        d.get(E_ZX).copied().unwrap_or(zero),
+        d.get(E_TX).copied().unwrap_or(ZERO),
+        d.get(E_ZX).copied().unwrap_or(ZERO),
     )
 }
 
 /// A multivector with the given coefficients set and every other blade zero.
 fn blade_vector(blades: &[(usize, FloatType)]) -> Result<CausalMultiVector<FloatType>, String> {
-    let mut data = vec![lift::<FloatType>(0.0); COEFFICIENTS];
+    let mut data = vec![ZERO; COEFFICIENTS];
     for &(index, value) in blades {
         data[index] = value;
     }

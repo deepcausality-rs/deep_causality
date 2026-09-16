@@ -36,7 +36,7 @@
 //! - `CubicalComplex` with periodic boundaries
 
 use deep_causality_algebra::Real;
-use deep_causality_num::{lift, lower};
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lift, lift_usize, lower};
 use deep_causality_num_complex::Complex;
 use deep_causality_rand::rng;
 use deep_causality_topology::{CubicalComplex, LatticeGaugeField, TopologyError, U1};
@@ -49,7 +49,7 @@ const THERMAL_SWEEPS: usize = 400;
 /// Sweeps measured after thermalization. The statistical error falls as `1 / sqrt(N)`.
 const MEASURE_SWEEPS: usize = 400;
 /// Metropolis proposal width. Tuned so the acceptance rate lands near one half.
-const EPSILON: f64 = 0.55;
+const EPSILON: FloatType = const_scalar_from_float!(FloatType, 0.55);
 /// Couplings to test, spanning strong (`beta < 1`) to weak (`beta > 5`) coupling.
 const BETA_VALUES: [f64; 6] = [0.5, 1.0, 2.0, 4.0, 6.0, 10.0];
 
@@ -59,14 +59,20 @@ const BETA_VALUES: [f64; 6] = [0.5, 1.0, 2.0, 4.0, 6.0, 10.0];
 /// few times `1e-3`, and the finite lattice adds a small `1/V` correction on top. This bound is
 /// wide enough that a different seed still passes, and tight enough that a broken update or a
 /// wrong Boltzmann weight does not.
-const AGREEMENT_TOLERANCE: f64 = 0.02;
+const AGREEMENT_TOLERANCE: FloatType = const_scalar_from_float!(FloatType, 0.02);
 
 /// Terms in the Bessel series; well past convergence for the `beta` range above.
 const BESSEL_TERMS: usize = 200;
 /// Starting order for Miller's backward recurrence.
 const MILLER_ORDER: usize = 100;
 /// How closely the two Bessel algorithms must agree for the reference to be trusted.
-const REFERENCE_TOLERANCE: f64 = 1e-12;
+const REFERENCE_TOLERANCE: FloatType = const_scalar_from_float!(FloatType, 1e-12);
+
+/// Small whole numbers, declared once at the working type.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
+/// Sweeps in the measurement run, at the working type, for the average.
+const MEASURED: FloatType = const_scalar_from_int!(FloatType, MEASURE_SWEEPS as i128);
 
 /// `f64` is the right precision here, and the reason is worth stating: the measurement is a
 /// Monte Carlo average, so its error is the statistical `1 / sqrt(N)` — a few times `1e-3` at
@@ -120,25 +126,24 @@ fn measure(
     beta: f64,
 ) -> Result<Measurement, TopologyError> {
     let mut generator = rng();
-    let epsilon = lift::<FloatType>(EPSILON);
 
     // Hot start: random links, the high-temperature configuration.
     let mut field: LatticeGaugeField<U1, 2, Complex<FloatType>, FloatType> =
         LatticeGaugeField::random(lattice.clone(), lift(beta), &mut generator);
 
     for _ in 0..THERMAL_SWEEPS {
-        field.try_metropolis_sweep(epsilon, &mut generator)?;
+        field.try_metropolis_sweep(EPSILON, &mut generator)?;
     }
 
     // Measurement run. Each sweep produces a new configuration; the plaquette is averaged over
     // all of them, which is what `<P>` means.
-    let mut total = lift::<FloatType>(0.0);
+    let mut total = ZERO;
     let mut accepted = 0.0;
     for _ in 0..MEASURE_SWEEPS {
-        accepted += field.try_metropolis_sweep(epsilon, &mut generator)?;
+        accepted += field.try_metropolis_sweep(EPSILON, &mut generator)?;
         total += field.try_average_plaquette()?;
     }
-    let measured = total / lift::<FloatType>(MEASURE_SWEEPS as f64);
+    let measured = total / MEASURED;
 
     let exact = bessel_ratio_series(lift(beta));
     let exact_miller = bessel_ratio_miller(lift(beta));
@@ -151,8 +156,8 @@ fn measure(
         exact_miller,
         acceptance: accepted / MEASURE_SWEEPS as f64,
         deviation,
-        agrees: deviation < lift::<FloatType>(AGREEMENT_TOLERANCE),
-        reference_agrees: Real::abs(exact - exact_miller) < lift::<FloatType>(REFERENCE_TOLERANCE),
+        agrees: deviation < AGREEMENT_TOLERANCE,
+        reference_agrees: Real::abs(exact - exact_miller) < REFERENCE_TOLERANCE,
     })
 }
 
@@ -167,16 +172,16 @@ fn structural_check(
 
 /// `I_1(x) / I_0(x)` from the defining series `I_n(x) = sum_k (x/2)^(2k+n) / (k! (k+n)!)`.
 fn bessel_ratio_series(x: FloatType) -> FloatType {
-    let half_x = x / lift::<FloatType>(2.0);
-    let mut i0 = lift::<FloatType>(0.0);
-    let mut i1 = lift::<FloatType>(0.0);
+    let half_x = x / TWO;
+    let mut i0 = ZERO;
+    let mut i1 = ZERO;
 
     for k in 0..BESSEL_TERMS {
-        let k_f = lift::<FloatType>(k as f64);
+        let k_f = lift_usize::<FloatType>(k);
         // (x/2)^(2k) / (k!)^2 and (x/2)^(2k+1) / (k! (k+1)!), built by ratio to stay in range.
-        let power_even = Real::powf(half_x, lift::<FloatType>(2.0) * k_f);
+        let power_even = Real::powf(half_x, TWO * k_f);
         let fact_k = log_factorial(k);
-        i0 += power_even / Real::exp(lift::<FloatType>(2.0) * fact_k);
+        i0 += power_even / Real::exp(TWO * fact_k);
         i1 += power_even * half_x / Real::exp(fact_k + log_factorial(k + 1));
     }
 
@@ -185,9 +190,9 @@ fn bessel_ratio_series(x: FloatType) -> FloatType {
 
 /// `ln(n!)`, accumulated so the series terms stay representable at large `k`.
 fn log_factorial(n: usize) -> FloatType {
-    let mut acc = lift::<FloatType>(0.0);
+    let mut acc = ZERO;
     for i in 2..=n {
-        acc += Real::ln(lift::<FloatType>(i as f64));
+        acc += Real::ln(lift_usize::<FloatType>(i));
     }
     acc
 }
@@ -197,10 +202,9 @@ fn log_factorial(n: usize) -> FloatType {
 /// Numerically stable and structurally unlike the series, so agreement between the two is
 /// evidence that the reference curve itself is right.
 fn bessel_ratio_miller(x: FloatType) -> FloatType {
-    let two = lift::<FloatType>(2.0);
-    let mut r = lift::<FloatType>(0.0);
+    let mut r = ZERO;
     for n in (0..=MILLER_ORDER).rev() {
-        r = x / (two * lift::<FloatType>((n + 1) as f64) + x * r);
+        r = x / (TWO * lift_usize::<FloatType>(n + 1) + x * r);
     }
     r
 }
@@ -221,7 +225,8 @@ fn print_setup() {
         2 * SIDE * SIDE
     );
     println!(
-        "Sampling: {THERMAL_SWEEPS} thermalization sweeps, {MEASURE_SWEEPS} measured, epsilon = {EPSILON}\n"
+        "Sampling: {THERMAL_SWEEPS} thermalization sweeps, {MEASURE_SWEEPS} measured, epsilon = {:.2}\n",
+        lower(EPSILON)
     );
 }
 
@@ -265,11 +270,13 @@ fn print_results(results: &[Measurement]) {
 fn print_summary(all_agree: bool, reference_sound: bool) {
     println!("\n--- Summary ---");
     println!(
-        "  sampled plaquette matches I_1/I_0 within {AGREEMENT_TOLERANCE}:  {}",
+        "  sampled plaquette matches I_1/I_0 within {:.2}:  {}",
+        lower(AGREEMENT_TOLERANCE),
         if all_agree { "yes" } else { "NO" }
     );
     println!(
-        "  Bessel reference self-consistent within {REFERENCE_TOLERANCE:e}: {}",
+        "  Bessel reference self-consistent within {:e}: {}",
+        lower(REFERENCE_TOLERANCE),
         if reference_sound { "yes" } else { "NO" }
     );
     if all_agree && reference_sound {

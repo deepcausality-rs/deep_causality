@@ -33,22 +33,24 @@
 mod model;
 
 use deep_causality_core::CausalFlow;
-use deep_causality_num::{lift, lower};
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lower};
 use model::{GrmhdState, SimulationConfig};
 
 /// Central body: ten solar masses. One solar mass is 1476.6 m in geometric units, so `r_s = 2M`.
-const SOLAR_MASS_GEOMETRIC_M: f64 = 1476.6;
-const SOLAR_MASSES: f64 = 10.0;
+const SOLAR_MASS_GEOMETRIC_M: FloatType = const_scalar_from_float!(FloatType, 1476.6);
+const SOLAR_MASSES: FloatType = const_scalar_from_int!(FloatType, 10);
 /// The plasma orbits at three Schwarzschild radii.
-const RADIUS_IN_RS: f64 = 3.0;
+const RADIUS_IN_RS: FloatType = const_scalar_from_int!(FloatType, 3);
 /// Radial extent of the plasma column, in metres.
-const COLUMN_LENGTH_M: f64 = 1.0;
-/// Plasma current density and confining field, in the code's natural units.
-const CURRENT_DENSITY: f64 = 10.0;
+const COLUMN_LENGTH_M: FloatType = const_scalar_from_int!(FloatType, 1);
+/// Plasma current density, in the code's natural units.
+const CURRENT_DENSITY: FloatType = const_scalar_from_int!(FloatType, 10);
 /// Confining magnetic field.
-const MAGNETIC_FIELD: f64 = 2.0;
+const MAGNETIC_FIELD: FloatType = const_scalar_from_int!(FloatType, 2);
 /// Tidal acceleration above which the plasma is treated relativistically, in m/s^2 geometric.
-const TIDAL_THRESHOLD: f64 = 1e-12;
+const TIDAL_THRESHOLD: FloatType = const_scalar_from_float!(FloatType, 1e-12);
+/// Two, for `r_s = 2M`.
+const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
 
 /// `f64` is the right precision here: the curvature spans `1e-20` in `1/m^4` against fields of
 /// order one, and every quantity is a closed-form expression rather than an accumulation.
@@ -58,16 +60,15 @@ pub type FloatType = f64;
 fn main() {
     print_header();
 
-    let mass_geometric =
-        lift::<FloatType>(SOLAR_MASSES) * lift::<FloatType>(SOLAR_MASS_GEOMETRIC_M);
-    let schwarzschild_radius = lift::<FloatType>(2.0) * mass_geometric;
+    let mass_geometric = SOLAR_MASSES * SOLAR_MASS_GEOMETRIC_M;
+    let schwarzschild_radius = TWO * mass_geometric;
     let config = SimulationConfig {
         schwarzschild_radius,
-        radius: lift::<FloatType>(RADIUS_IN_RS) * schwarzschild_radius,
-        column_length: lift(COLUMN_LENGTH_M),
-        current_density: lift(CURRENT_DENSITY),
-        magnetic_field: lift(MAGNETIC_FIELD),
-        tidal_threshold: lift(TIDAL_THRESHOLD),
+        radius: RADIUS_IN_RS * schwarzschild_radius,
+        column_length: COLUMN_LENGTH_M,
+        current_density: CURRENT_DENSITY,
+        magnetic_field: MAGNETIC_FIELD,
+        tidal_threshold: TIDAL_THRESHOLD,
     };
     print_config(&config);
 
@@ -96,12 +97,14 @@ fn print_header() {
 fn print_config(c: &SimulationConfig) {
     println!("Central body and plasma:");
     println!(
-        "  Schwarzschild radius r_s = {:.4e} m  ({SOLAR_MASSES} solar masses)",
-        lower(c.schwarzschild_radius)
+        "  Schwarzschild radius r_s = {:.4e} m  ({:.0} solar masses)",
+        lower(c.schwarzschild_radius),
+        lower(SOLAR_MASSES)
     );
     println!(
-        "  Plasma radius r          = {:.4e} m  ({RADIUS_IN_RS} r_s)",
-        lower(c.radius)
+        "  Plasma radius r          = {:.4e} m  ({:.0} r_s)",
+        lower(c.radius),
+        lower(RADIUS_IN_RS)
     );
     println!(
         "  Column length L          = {:.4e} m",

@@ -42,7 +42,7 @@
 //! - `ReggeGeometry::calculate_ricci_curvature` (deficit angles as the curvature source)
 
 use deep_causality_algebra::Real;
-use deep_causality_num::{lift, lower};
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lower};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     BaseTopology, ReggeGeometry, Simplex, SimplicialComplex, SimplicialComplexBuilder,
@@ -53,22 +53,29 @@ use std::collections::HashMap;
 /// parameter that decides whether propagation is visible at all.
 const RINGS: i32 = 6;
 /// Rest length of every edge on the flat background.
-const REST_LENGTH: f64 = 1.0;
+const REST_LENGTH: FloatType = const_scalar_from_int!(FloatType, 1);
 /// Amplitude of the initial pulse, as a fraction of the rest length.
-const AMPLITUDE: f64 = 0.06;
+const AMPLITUDE: FloatType = const_scalar_from_float!(FloatType, 0.06);
 /// Rings covered by the initial pulse. Kept small so the source is localized.
 const PULSE_RADIUS: i32 = 1;
 /// Courant number `C = c dt / dx`. The explicit leapfrog is stable for `C <= 1`; this is the
 /// speed, in rings per step, at which the front should be seen to travel.
-const COURANT: f64 = 0.5;
+const COURANT: FloatType = const_scalar_from_float!(FloatType, 0.5);
 /// Time steps to run. Enough for the front to cross the mesh at `COURANT` rings per step.
 const STEPS: usize = 16;
 /// An edge counts as disturbed once it moves this far from its rest length.
-const ARRIVAL_THRESHOLD: f64 = 1e-4;
+const ARRIVAL_THRESHOLD: FloatType = const_scalar_from_float!(FloatType, 1e-4);
 /// The pulse may not exceed this multiple of its initial amplitude. A leapfrog at `C <= 1` is
 /// stable, so growth past a small factor means the scheme has gone unstable rather than
 /// propagated. Set above one because focusing at the centre genuinely amplifies briefly.
-const GROWTH_BOUND: f64 = 4.0;
+const GROWTH_BOUND: FloatType = const_scalar_from_int!(FloatType, 4);
+
+/// Small whole numbers, declared once at the working type.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
+const HALF: FloatType = const_scalar_from_float!(FloatType, 0.5);
+/// Displacements are reported in thousandths.
+const MILLI: FloatType = const_scalar_from_int!(FloatType, 1000);
 
 /// `f64` is the right precision here: the leapfrog's error is its `O(dt^2)` truncation, which is
 /// about `1e-1` at this Courant number and swamps rounding by fourteen orders of magnitude.
@@ -173,17 +180,15 @@ fn sorted3(a: usize, b: usize, c: usize) -> Vec<usize> {
 
 /// Runs the leapfrog and returns the edge lengths at every step.
 fn propagate(mesh: &Mesh) -> Result<Vec<Vec<FloatType>>, Box<dyn std::error::Error>> {
-    let rest = lift::<FloatType>(REST_LENGTH);
-    let courant_sq = lift::<FloatType>(COURANT) * lift::<FloatType>(COURANT);
-    let half = lift::<FloatType>(0.5);
+    let courant_sq = COURANT * COURANT;
 
     // t = 0: a localized bulge at the centre, everything else flat.
     let mut previous: Vec<FloatType> = (0..mesh.num_edges)
         .map(|e| {
             if mesh.edge_ring[e] < PULSE_RADIUS {
-                rest + lift::<FloatType>(AMPLITUDE)
+                REST_LENGTH + AMPLITUDE
             } else {
-                rest
+                REST_LENGTH
             }
         })
         .collect();
@@ -193,18 +198,14 @@ fn propagate(mesh: &Mesh) -> Result<Vec<Vec<FloatType>>, Box<dyn std::error::Err
     // disturbance a consequence of the initial data rather than of a driving term.
     let deficits = curvature(mesh, &previous)?;
     let mut current: Vec<FloatType> = (0..mesh.num_edges)
-        .map(|e| previous[e] - half * courant_sq * source(mesh, &deficits, e))
+        .map(|e| previous[e] - HALF * courant_sq * source(mesh, &deficits, e))
         .collect();
 
     let mut history = vec![previous.clone(), current.clone()];
     for _ in 2..STEPS {
         let deficits = curvature(mesh, &current)?;
         let next: Vec<FloatType> = (0..mesh.num_edges)
-            .map(|e| {
-                lift::<FloatType>(2.0) * current[e]
-                    - previous[e]
-                    - courant_sq * source(mesh, &deficits, e)
-            })
+            .map(|e| TWO * current[e] - previous[e] - courant_sq * source(mesh, &deficits, e))
             .collect();
         previous = current;
         current = next;
@@ -228,21 +229,19 @@ fn curvature(
 /// Linearized about flat space the deficit angle is the discrete Laplacian of the perturbation,
 /// so this is the `grad^2 h` of the wave equation and nothing else enters the update.
 fn source(mesh: &Mesh, deficits: &CausalTensor<FloatType>, e: usize) -> FloatType {
-    let zero = lift::<FloatType>(0.0);
     let (a, b) = mesh.edge_endpoints[e];
     let data = deficits.as_slice();
-    let d_a = data.get(a).copied().unwrap_or(zero);
-    let d_b = data.get(b).copied().unwrap_or(zero);
-    (d_a + d_b) * lift::<FloatType>(0.5)
+    let d_a = data.get(a).copied().unwrap_or(ZERO);
+    let d_b = data.get(b).copied().unwrap_or(ZERO);
+    (d_a + d_b) * HALF
 }
 
 /// The largest displacement from rest anywhere in a ring, at one instant.
 fn ring_amplitude(mesh: &Mesh, lengths: &[FloatType], ring: i32) -> FloatType {
-    let rest = lift::<FloatType>(REST_LENGTH);
     (0..mesh.num_edges)
         .filter(|&e| mesh.edge_ring[e] == ring)
-        .map(|e| Real::abs(lengths[e] - rest))
-        .fold(lift::<FloatType>(0.0), |m, v| if v > m { v } else { m })
+        .map(|e| Real::abs(lengths[e] - REST_LENGTH))
+        .fold(ZERO, |m, v| if v > m { v } else { m })
 }
 
 /// When the disturbance first reached each ring, and whether it did so causally.
@@ -260,14 +259,13 @@ struct Front {
 }
 
 fn front_analysis(mesh: &Mesh, history: &[Vec<FloatType>]) -> Front {
-    let threshold = lift::<FloatType>(ARRIVAL_THRESHOLD);
     let mut arrivals = Vec::new();
 
     // The outermost ring is boundary, where the deficit angle is not a curvature.
     for ring in PULSE_RADIUS..RINGS {
         if let Some(step) = history
             .iter()
-            .position(|lengths| ring_amplitude(mesh, lengths, ring) > threshold)
+            .position(|lengths| ring_amplitude(mesh, lengths, ring) > ARRIVAL_THRESHOLD)
         {
             arrivals.push((ring, step));
         }
@@ -284,10 +282,10 @@ fn front_analysis(mesh: &Mesh, history: &[Vec<FloatType>]) -> Front {
         .iter()
         .flat_map(|lengths| (0..RINGS).map(move |ring| (lengths, ring)))
         .map(|(lengths, ring)| ring_amplitude(mesh, lengths, ring))
-        .fold(lift::<FloatType>(0.0), |m, v| if v > m { v } else { m });
+        .fold(ZERO, |m, v| if v > m { v } else { m });
     // An explicit leapfrog at C <= 1 is stable, so the pulse must not grow past a small
     // multiple of the amplitude it started with.
-    let bounded = peak_amplitude < lift::<FloatType>(GROWTH_BOUND) * lift::<FloatType>(AMPLITUDE);
+    let bounded = peak_amplitude < GROWTH_BOUND * AMPLITUDE;
 
     Front {
         arrivals,
@@ -317,7 +315,8 @@ fn print_mesh(mesh: &Mesh) {
         mesh.complex.num_elements_at_grade(2).unwrap_or(0)
     );
     println!(
-        "  initial pulse: {AMPLITUDE} on rings 0..{}, flat elsewhere\n",
+        "  initial pulse: {:.2} on rings 0..{}, flat elsewhere\n",
+        lower(AMPLITUDE),
         PULSE_RADIUS - 1
     );
 }
@@ -334,8 +333,8 @@ fn print_history(mesh: &Mesh, history: &[Vec<FloatType>]) {
     for (step, lengths) in history.iter().enumerate() {
         print!("  {step:>4}");
         for ring in 0..=RINGS {
-            let amp = lower(ring_amplitude(mesh, lengths, ring)) * 1e3;
-            if amp > ARRIVAL_THRESHOLD * 1e3 {
+            let amp = lower(ring_amplitude(mesh, lengths, ring) * MILLI);
+            if amp > lower(ARRIVAL_THRESHOLD * MILLI) {
                 print!(" {amp:>7.2}");
             } else {
                 print!(" {:>7}", ".");
@@ -371,10 +370,14 @@ fn print_front(front: &Front) {
         }
     );
     println!(
-        "  bounded amplitude      = {} (peak {:.4}, started at {AMPLITUDE})",
+        "  bounded amplitude      = {} (peak {:.4}, started at {:.2})",
         if front.bounded { "yes" } else { "NO: unstable" },
-        lower(front.peak_amplitude)
+        lower(front.peak_amplitude),
+        lower(AMPLITUDE)
     );
     println!("\n  The leading edge advances one ring per step, which is the stencil's domain of");
-    println!("  dependence; the Courant number {COURANT} governs how fast the peak follows it.");
+    println!(
+        "  dependence; the Courant number {:.2} governs how fast the peak follows it.",
+        lower(COURANT)
+    );
 }

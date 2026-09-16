@@ -16,7 +16,7 @@ use deep_causality::{CausalityError, CausalityErrorEnum, PropagatingEffect};
 use deep_causality_algebra::Real;
 use deep_causality_multivector::{CausalMultiVector, Metric};
 
-use deep_causality_num::lift;
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int};
 use deep_causality_physics::{
     energy_momentum_tensor_em, generate_schwarzschild_metric, lorentz_force,
 };
@@ -29,6 +29,15 @@ const E_1: usize = 1 << 1;
 const E_2: usize = 1 << 2;
 /// `J ^ B` lands on the blade spanning both.
 const E_12: usize = E_1 | E_2;
+
+/// Small whole numbers and the Kretschmann coefficient, at the working type.
+pub const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
+const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
+/// `K = 48 M^2 / r^6` for Schwarzschild.
+const KRETSCHMANN_COEFFICIENT: FloatType = const_scalar_from_int!(FloatType, 48);
+/// The exponent in the curvature radius `K^(-1/4)`.
+const QUARTER: FloatType = const_scalar_from_float!(FloatType, 0.25);
 
 /// Configuration for the GRMHD run.
 #[derive(Clone, Debug, Default)]
@@ -90,24 +99,22 @@ impl GrmhdState {
 pub fn calculate_curvature(state: GrmhdState) -> PropagatingEffect<GrmhdState> {
     let r = state.config.radius;
     let r_s = state.config.schwarzschild_radius;
-    let two = lift::<FloatType>(2.0);
 
     if r <= r_s {
         return fail("the plasma radius is inside the horizon");
     }
 
-    let mass_geometric = r_s / two;
+    let mass_geometric = r_s / TWO;
     let r6 = r * r * r * r * r * r;
-    let kretschmann = lift::<FloatType>(48.0) * mass_geometric * mass_geometric / r6;
+    let kretschmann = KRETSCHMANN_COEFFICIENT * mass_geometric * mass_geometric / r6;
     // Vacuum exterior: the Einstein equations give R_uv = 0, hence R = 0.
-    let ricci_scalar = lift::<FloatType>(0.0);
+    let ricci_scalar = ZERO;
     // Radial tidal acceleration over a proper length L, to leading order: a = 2 M L / r^3.
-    let tidal_acceleration = two * mass_geometric * state.config.column_length / (r * r * r);
+    let tidal_acceleration = TWO * mass_geometric * state.config.column_length / (r * r * r);
 
     // The Schwarzschild metric at this radius, in the (-,+,+,+) signature.
-    let one = lift::<FloatType>(1.0);
-    let lapse = one - r_s / r;
-    let metric_tensor = match generate_schwarzschild_metric(-lapse, one / lapse, one, one) {
+    let lapse = ONE - r_s / r;
+    let metric_tensor = match generate_schwarzschild_metric(-lapse, ONE / lapse, ONE, ONE) {
         Ok(g) => g,
         Err(e) => return fail(format!("schwarzschild metric: {e:?}")),
     };
@@ -165,12 +172,7 @@ pub fn calculate_lorentz_force(state: GrmhdState) -> PropagatingEffect<GrmhdStat
         Some(f) => f,
         None => return fail("lorentz force produced no value"),
     };
-    let lorentz_force = f_field
-        .0
-        .data()
-        .get(E_12)
-        .copied()
-        .unwrap_or_else(|| lift::<FloatType>(0.0));
+    let lorentz_force = f_field.0.data().get(E_12).copied().unwrap_or(ZERO);
 
     PropagatingEffect::pure(GrmhdState {
         lorentz_force,
@@ -189,7 +191,7 @@ pub fn calculate_energy_momentum(state: GrmhdState) -> PropagatingEffect<GrmhdSt
     };
 
     let b = state.config.magnetic_field;
-    let mut f_data = vec![lift::<FloatType>(0.0); DIM * DIM];
+    let mut f_data = vec![ZERO; DIM * DIM];
     f_data[DIM + 2] = b; // F^12
     f_data[2 * DIM + 1] = -b; // F^21
     let f_tensor = match CausalTensor::new(f_data, vec![DIM, DIM]) {
@@ -201,11 +203,7 @@ pub fn calculate_energy_momentum(state: GrmhdState) -> PropagatingEffect<GrmhdSt
         Some(t) => t,
         None => return fail("energy momentum tensor produced no value"),
     };
-    let em_energy_density = t_tensor
-        .as_slice()
-        .first()
-        .copied()
-        .unwrap_or_else(|| lift::<FloatType>(0.0));
+    let em_energy_density = t_tensor.as_slice().first().copied().unwrap_or(ZERO);
 
     PropagatingEffect::pure(GrmhdState {
         em_energy_density,
@@ -215,8 +213,7 @@ pub fn calculate_energy_momentum(state: GrmhdState) -> PropagatingEffect<GrmhdSt
 
 /// Stage 5: what the confinement looks like once both halves have run.
 pub fn analyze_stability(state: GrmhdState) -> PropagatingEffect<GrmhdState> {
-    let zero = lift::<FloatType>(0.0);
-    let status = if state.lorentz_force < zero {
+    let status = if state.lorentz_force < ZERO {
         "Reversed confinement - containment field needs adjustment"
     } else if state.em_energy_density > state.kretschmann {
         "Magnetically dominated - the field, not the tide, sets the scale"
@@ -234,7 +231,7 @@ fn blade(
     value: FloatType,
     metric: Metric,
 ) -> Result<CausalMultiVector<FloatType>, String> {
-    let mut data = vec![lift::<FloatType>(0.0); blades];
+    let mut data = vec![ZERO; blades];
     match data.get_mut(index) {
         Some(slot) => *slot = value,
         None => {
@@ -249,8 +246,7 @@ fn blade(
 
 /// The curvature radius `K^(-1/4)`, the length over which spacetime bends appreciably.
 pub fn curvature_radius(kretschmann: FloatType) -> FloatType {
-    let quarter = lift::<FloatType>(0.25);
-    lift::<FloatType>(1.0) / Real::powf(kretschmann, quarter)
+    ONE / Real::powf(kretschmann, QUARTER)
 }
 
 fn fail(reason: impl Into<String>) -> PropagatingEffect<GrmhdState> {

@@ -33,15 +33,15 @@ mod model;
 use deep_causality::PropagatingEffect;
 use deep_causality_algebra::Real;
 use deep_causality_core::CausalFlow;
-use deep_causality_num::{lift, lower};
+use deep_causality_num::{const_scalar_from_float, lower};
 use model::{MaxwellState, PlaneWaveConfig};
 
-/// Observation event `(t, z)`, in the source's `f64` literal form.
-const OBSERVE_T: f64 = 1.0;
-const OBSERVE_Z: f64 = 0.5;
+/// Observation event `(t, z)`.
+const OBSERVE_T: FloatType = deep_causality_num::const_scalar_from_int!(FloatType, 1);
+const OBSERVE_Z: FloatType = const_scalar_from_float!(FloatType, 0.5);
 
 /// How close the identities must hold to count as verified.
-const IDENTITY_TOLERANCE: f64 = 1e-12;
+const IDENTITY_TOLERANCE: FloatType = const_scalar_from_float!(FloatType, 1e-12);
 
 /// `f64` is the right precision here: the wave is evaluated at one event from closed-form
 /// partials, so the identities below close at machine epsilon at any precision. `Float106`
@@ -52,9 +52,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
 
     let config = PlaneWaveConfig {
-        omega: lift(model::OMEGA),
-        t: lift(OBSERVE_T),
-        z: lift(OBSERVE_Z),
+        omega: model::OMEGA,
+        t: OBSERVE_T,
+        z: OBSERVE_Z,
     };
     print_config(&config);
 
@@ -115,14 +115,13 @@ fn verify(s: &MaxwellState) -> Verification {
     let closed_form = s.omega * Real::sin(s.phase);
     let closed_form_residual = s.e_field - closed_form;
 
-    let tol = lift::<FloatType>(IDENTITY_TOLERANCE);
     Verification {
         field_balance,
         flux_residual,
         closed_form_residual,
-        holds: Real::abs(field_balance) < tol
-            && Real::abs(flux_residual) < tol
-            && Real::abs(closed_form_residual) < tol,
+        holds: Real::abs(field_balance) < IDENTITY_TOLERANCE
+            && Real::abs(flux_residual) < IDENTITY_TOLERANCE
+            && Real::abs(closed_form_residual) < IDENTITY_TOLERANCE,
     }
 }
 

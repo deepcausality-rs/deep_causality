@@ -14,7 +14,7 @@
 //! type alias. All numeric literals are converted using the `flt!` macro.
 //!
 use deep_causality_core::{CausalEffectPropagationProcess, CausalFlow, PropagatingEffect};
-use deep_causality_num::{Float, Float106, lift};
+use deep_causality_num::{Float, Float106, const_scalar_from_float, const_scalar_from_int};
 use deep_causality_num_dual::Dual;
 use deep_causality_physics::{AdmOps, GrOps, LorentzianMetric};
 use deep_causality_physics::{AdmState, EastCoastMetric, GR, SPEED_OF_LIGHT};
@@ -27,15 +27,25 @@ use std::error::Error;
 
 // Change this to f32 , f64, or Float106 to use different precision
 type FloatType = Float106;
-type GRTheory = GR<FloatType>;
 
-/// Macro to convert f64 literals to FloatType
-/// This enables writing `flt!(1.0)` instead of `lift::<FloatType>(1.0)`
-macro_rules! float_from_f64 {
-    ($x:expr) => {
-        lift::<FloatType>($x)
-    };
-}
+/// Small whole numbers and fractions, declared once at the working type.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
+const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
+const QUARTER: FloatType = const_scalar_from_float!(FloatType, 0.25);
+/// The central body: ten solar masses, and one solar mass in kilograms.
+const SOLAR_MASSES: FloatType = const_scalar_from_int!(FloatType, 10);
+const SOLAR_MASS_KG: FloatType = const_scalar_from_float!(FloatType, 1.989e30);
+/// Observation radius, in Schwarzschild radii.
+const OBSERVATION_RADII: FloatType = const_scalar_from_int!(FloatType, 3);
+/// `K = 48 M^2 / r^6` for Schwarzschild.
+const KRETSCHMANN_COEFFICIENT: FloatType = const_scalar_from_int!(FloatType, 48);
+/// The photon sphere sits at `1.5 r_s` and the ISCO at `3 r_s`.
+const PHOTON_SPHERE_RADII: FloatType = const_scalar_from_float!(FloatType, 1.5);
+const ISCO_RADII: FloatType = const_scalar_from_int!(FloatType, 3);
+/// The speed of light, at the working type.
+const LIGHT_SPEED: FloatType = const_scalar_from_float!(FloatType, SPEED_OF_LIGHT);
+type GRTheory = GR<FloatType>;
 
 // =============================================================================
 // MAIN: Pipeline Composition via Causal Monad
@@ -128,12 +138,12 @@ fn initial_stage_create_schwarzschild() -> SpaceTimeEffect {
     println!("────────────────────────────────────────");
 
     // Black hole parameters
-    let mass_solar: FloatType = float_from_f64!(10.0); // 10 solar masses
-    let mass_kg: FloatType = mass_solar * float_from_f64!(1.989e30); // kg
+    let mass_solar: FloatType = SOLAR_MASSES;
+    let mass_kg: FloatType = mass_solar * SOLAR_MASS_KG;
     let r_s: FloatType = GR::schwarzschild_radius(mass_kg); // kg → geometric units
 
     // Observation point (outside horizon)
-    let r = float_from_f64!(3.0) * r_s; // At 3 Schwarzschild radii
+    let r = OBSERVATION_RADII * r_s;
 
     println!("  Mass:                {} M☉", mass_solar);
     println!("  Schwarzschild radius: {} m", r_s);
@@ -152,7 +162,7 @@ fn initial_stage_create_schwarzschild() -> SpaceTimeEffect {
 
     // Construct Schwarzschild metric tensor at radius r
     // g_μν = diag(-(1-r_s/r), (1-r_s/r)^{-1}, r², r²sin²θ)
-    let one = float_from_f64!(1.0);
+    let one = ONE;
     let f = one - r_s / r; // Metric function (the lapse) f(r) = 1 − r_s/r
 
     // The lapse f(r) = 1 − r_s/r; its radial derivative f'(r) = r_s/r² is the gravitational
@@ -175,10 +185,10 @@ fn initial_stage_create_schwarzschild() -> SpaceTimeEffect {
     println!();
 
     // Connection 1-form valued in the so(3,1) Lie algebra: shape [points=1, spacetime=4, lie=6].
-    let connection = CausalTensor::from_vec(vec![float_from_f64!(0.0); 4 * 6], &[1, 4, 6]);
+    let connection = CausalTensor::from_vec(vec![ZERO; 4 * 6], &[1, 4, 6]);
 
     // Precompute curvature in Lie-algebra form [points, 4, 4, 6]
-    let mut fs_data: Vec<FloatType> = vec![float_from_f64!(0.0); 4 * 4 * 6];
+    let mut fs_data: Vec<FloatType> = vec![ZERO; 4 * 4 * 6];
     let riemann_scale = r_s / (r * r * r);
     fs_data[0] = riemann_scale;
     let field_strength = CausalTensor::from_vec(fs_data, &[1, 4, 4, 6]);
@@ -221,10 +231,10 @@ fn stage_curvature_invariants(mut input: SpaceTimeData, _: (), _: Option<()>) ->
         // For Schwarzschild spacetime, use the exact analytic expressions:
         // Kretschmann scalar: K = R_μνρσ R^μνρσ = 48 M²/r⁶ = 12 r_s²/r⁶
         // Ricci scalar: R = 0 (vacuum solution)
-        let m = r_s / float_from_f64!(2.0); // M = r_s/2 in geometric units
+        let m = r_s / TWO;
         let r6 = r * r * r * r * r * r;
-        let kretschmann = float_from_f64!(48.0) * m * m / r6;
-        let ricci_scalar: FloatType = float_from_f64!(0.0); // Vacuum solution: R = 0
+        let kretschmann = KRETSCHMANN_COEFFICIENT * m * m / r6;
+        let ricci_scalar: FloatType = ZERO; // Vacuum solution: R = 0
 
         println!("  Kretschmann scalar: K = {} (analytic)", (kretschmann));
         println!("  Ricci scalar:       R = {} (vacuum)", (ricci_scalar));
@@ -238,7 +248,7 @@ fn stage_curvature_invariants(mut input: SpaceTimeData, _: (), _: Option<()>) ->
         }
 
         // Curvature radius from Kretschmann scalar
-        let curvature_radius = float_from_f64!(1.0) / kretschmann.powf(float_from_f64!(0.25));
+        let curvature_radius = ONE / kretschmann.powf(QUARTER);
         println!(
             "  → Curvature radius: {} m (via K^{{-1/4}})",
             (curvature_radius)
@@ -271,8 +281,8 @@ fn stage_geodesic_analysis(mut input: SpaceTimeData, _: (), _: Option<()>) -> Sp
         let r = input.r;
         let r_s = input.r_s;
         // Static observer 4-velocity: u^μ = (1/√f, 0, 0, 0)
-        let one = float_from_f64!(1.0);
-        let zero = float_from_f64!(0.0);
+        let one = ONE;
+        let zero = ZERO;
         let f = one - r_s / r;
         let u = CausalTensor::from_vec(vec![one / f.sqrt(), zero, zero, zero], &[4]);
 
@@ -288,14 +298,14 @@ fn stage_geodesic_analysis(mut input: SpaceTimeData, _: (), _: Option<()>) -> Sp
                 }
                 Err(_) => {
                     // Analytic fallback: radial tidal acceleration ~ c² * 2M/r³
-                    let m = r_s / float_from_f64!(2.0);
-                    let c = float_from_f64!(SPEED_OF_LIGHT);
-                    c * c * float_from_f64!(2.0) * m / (r * r * r)
+                    let m = r_s / TWO;
+                    let c = LIGHT_SPEED;
+                    c * c * TWO * m / (r * r * r)
                 }
             };
 
         // Also show the geometric deviation for reference
-        let c = float_from_f64!(SPEED_OF_LIGHT);
+        let c = LIGHT_SPEED;
         let deviation_geometric = tidal_acceleration / (c * c);
         println!(
             "  Geodesic deviation:      {} m⁻² (geometric)",
@@ -346,8 +356,8 @@ fn stage_adm_formalism(mut input: SpaceTimeData, _: (), _: Option<()>) -> SpaceT
 
     let r = input.r;
     let r_s = input.r_s;
-    let one = float_from_f64!(1.0);
-    let zero = float_from_f64!(0.0);
+    let one = ONE;
+    let zero = ZERO;
     let f = one - r_s / r;
 
     // Spatial 3-metric
@@ -364,12 +374,12 @@ fn stage_adm_formalism(mut input: SpaceTimeData, _: (), _: Option<()>) -> SpaceT
     let beta = CausalTensor::zeros(&[3]);
 
     // ADM state with zero spatial Ricci scalar (vacuum)
-    let adm_state = AdmState::new(gamma, k, alpha.clone(), beta, float_from_f64!(0.0));
+    let adm_state = AdmState::new(gamma, k, alpha.clone(), beta, ZERO);
 
     // Compute Hamiltonian constraint
     let h_constraint = match adm_state.hamiltonian_constraint(None) {
         Ok(h) => h.as_slice().first().copied().unwrap_or(zero),
-        Err(_) => float_from_f64!(0.0),
+        Err(_) => ZERO,
     };
 
     println!("  Lapse function α:        {}", (alpha.as_slice()[0]));
@@ -384,7 +394,7 @@ fn stage_adm_formalism(mut input: SpaceTimeData, _: (), _: Option<()>) -> SpaceT
     // Compute mean curvature
     let mean_curv = match adm_state.mean_curvature() {
         Ok(k) => k.as_slice().first().copied().unwrap_or(zero),
-        Err(_) => float_from_f64!(0.0),
+        Err(_) => ZERO,
     };
     println!("  Mean curvature K:        {}", mean_curv);
     println!();
@@ -415,18 +425,15 @@ fn stage_event_horizon_detection(
     let r = input.r;
     let r_s = input.r_s;
     let inside_horizon = r < r_s;
-    let in_photon_sphere = r < float_from_f64!(1.5) * r_s;
-    let in_isco = r < float_from_f64!(3.0) * r_s;
+    let in_photon_sphere = r < PHOTON_SPHERE_RADII * r_s;
+    let in_isco = r < ISCO_RADII * r_s;
 
     println!("  Event horizon (r = r_s):     {} m", (r_s));
     println!(
         "  Photon sphere (r = 1.5 r_s): {} m",
-        (float_from_f64!(1.5) * r_s)
+        (PHOTON_SPHERE_RADII * r_s)
     );
-    println!(
-        "  ISCO (r = 3 r_s):            {} m",
-        (float_from_f64!(3.0) * r_s)
-    );
+    println!("  ISCO (r = 3 r_s):            {} m", (ISCO_RADII * r_s));
     println!();
     println!("  Current radius:              {:.6e} m", (r));
     println!("  Inside event horizon:        {}", inside_horizon);
@@ -442,11 +449,11 @@ fn stage_event_horizon_detection(
     }
 
     // Time dilation factor
-    let one = float_from_f64!(1.0);
+    let one = ONE;
     let time_dilation: FloatType = if r > r_s {
         (one - r_s / r).sqrt()
     } else {
-        float_from_f64!(0.0)
+        ZERO
     };
     println!("  Time dilation factor:        {}", (time_dilation));
     println!();
@@ -455,7 +462,7 @@ fn stage_event_horizon_detection(
     let _ = input.gr;
 
     let state = GRState {
-        mass: r_s / float_from_f64!(2.0),
+        mass: r_s / TWO,
         schwarzschild_radius: r_s,
         observation_radius: r,
         kretschmann: input.kretschmann,

@@ -27,29 +27,35 @@
 
 use deep_causality_algebra::Real;
 use deep_causality_core::{CausalEffect, CausalFlow, PropagatingEffect, PropagatingProcess};
-use deep_causality_num::{lift, lower};
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lower};
 use deep_causality_physics::{
     Density, EARTH_GRAVITY_ACCELERATION, Length, PhysicsError, Pressure, Speed, bernoulli_pressure,
 };
 
+/// Small whole numbers, declared once at the working type.
+const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
+
 /// Volumetric flow rate held constant across the network, in m^3/s.
-const FLOW_RATE: f64 = 0.1;
+const FLOW_RATE: FloatType = const_scalar_from_float!(FloatType, 0.1);
 /// Density of water, in kg/m^3.
-const WATER_DENSITY: f64 = 1000.0;
-/// Reservoir conditions: gauge pressure in Pa, elevation in m.
-const RESERVOIR_PRESSURE: f64 = 200_000.0;
+const WATER_DENSITY: FloatType = const_scalar_from_int!(FloatType, 1000);
+/// Reservoir gauge pressure, in Pa.
+const RESERVOIR_PRESSURE: FloatType = const_scalar_from_int!(FloatType, 200_000);
 /// Reservoir elevation, in m.
-const RESERVOIR_HEIGHT: f64 = 10.0;
-/// Pipe diameters, in m: the main run, the Venturi throat, and the outlet.
-const MAIN_DIAMETER: f64 = 0.2;
+const RESERVOIR_HEIGHT: FloatType = const_scalar_from_int!(FloatType, 10);
+/// Main-run pipe diameter, in m.
+const MAIN_DIAMETER: FloatType = const_scalar_from_float!(FloatType, 0.2);
 /// Venturi throat diameter, in m.
-const THROAT_DIAMETER: f64 = 0.1;
+const THROAT_DIAMETER: FloatType = const_scalar_from_float!(FloatType, 0.1);
 /// Outlet elevation, in m.
-const OUTLET_HEIGHT: f64 = 0.0;
+const OUTLET_HEIGHT: FloatType = const_scalar_from_int!(FloatType, 0);
+/// Gravitational acceleration, at the working type.
+const GRAVITY: FloatType = const_scalar_from_float!(FloatType, EARTH_GRAVITY_ACCELERATION);
 
 /// Relative slack on the head-conservation check. Bernoulli is exact for this idealized flow,
 /// so the residual is pure rounding and this only has to clear machine epsilon.
-const HEAD_TOLERANCE: f64 = 1e-12;
+const HEAD_TOLERANCE: FloatType = const_scalar_from_float!(FloatType, 1e-12);
 
 /// `f64` is the right precision here: four closed-form segment transitions, so the head residual
 /// is a handful of machine epsilons either way. `Float106` tightens the residual and leaves
@@ -60,9 +66,9 @@ fn main() -> Result<(), PhysicsError> {
     print_header();
 
     let reservoir = FluidState {
-        pressure: Pressure::new(lift(RESERVOIR_PRESSURE))?,
-        velocity: Speed::new(lift(0.0))?,
-        height: Length::new(lift(RESERVOIR_HEIGHT))?,
+        pressure: Pressure::new(RESERVOIR_PRESSURE)?,
+        velocity: Speed::new(ZERO)?,
+        height: Length::new(RESERVOIR_HEIGHT)?,
         label: "Reservoir",
     };
     let trace = vec![reservoir];
@@ -95,7 +101,7 @@ fn segment_main_pipe(
     _ctx: Option<()>,
 ) -> PropagatingProcess<Vec<FluidState>, (), ()> {
     extend(value, |prev| {
-        flow_segment(prev, lift(MAIN_DIAMETER), prev.height, "Main Pipe")
+        flow_segment(prev, MAIN_DIAMETER, prev.height, "Main Pipe")
     })
 }
 
@@ -107,7 +113,7 @@ fn segment_venturi(
     _ctx: Option<()>,
 ) -> PropagatingProcess<Vec<FluidState>, (), ()> {
     extend(value, |prev| {
-        flow_segment(prev, lift(THROAT_DIAMETER), prev.height, "Venturi Throat")
+        flow_segment(prev, THROAT_DIAMETER, prev.height, "Venturi Throat")
     })
 }
 
@@ -119,8 +125,8 @@ fn segment_vertical_drop(
     _ctx: Option<()>,
 ) -> PropagatingProcess<Vec<FluidState>, (), ()> {
     extend(value, |prev| {
-        let outlet = Length::new(lift(OUTLET_HEIGHT))?;
-        flow_segment(prev, lift(MAIN_DIAMETER), outlet, "Ground Outlet")
+        let outlet = Length::new(OUTLET_HEIGHT)?;
+        flow_segment(prev, MAIN_DIAMETER, outlet, "Ground Outlet")
     })
 }
 
@@ -132,9 +138,9 @@ fn flow_segment(
     label: &'static str,
 ) -> Result<FluidState, PhysicsError> {
     // Continuity: A v = Q, with A the circular cross-section.
-    let radius = diameter / lift::<FloatType>(2.0);
+    let radius = diameter / TWO;
     let area = FloatType::pi() * radius * radius;
-    let velocity = Speed::new(lift::<FloatType>(FLOW_RATE) / area)?;
+    let velocity = Speed::new(FLOW_RATE / area)?;
 
     let pressure = bernoulli_pressure(
         &prev.pressure,
@@ -189,7 +195,7 @@ fn fail<T: Default + Clone + core::fmt::Debug>(
 }
 
 fn water_density() -> Result<Density<FloatType>, PhysicsError> {
-    Density::new(lift(WATER_DENSITY))
+    Density::new(WATER_DENSITY)
 }
 
 /// The fluid at one point in the network.
@@ -204,10 +210,10 @@ struct FluidState {
 impl FluidState {
     /// Total head `P + rho v^2 / 2 + rho g h`, the quantity Bernoulli conserves.
     fn total_head(&self) -> FloatType {
-        let rho = lift::<FloatType>(WATER_DENSITY);
-        let g = lift::<FloatType>(EARTH_GRAVITY_ACCELERATION);
         let v = self.velocity.value();
-        self.pressure.value() + rho * v * v / lift::<FloatType>(2.0) + rho * g * self.height.value()
+        self.pressure.value()
+            + WATER_DENSITY * v * v / TWO
+            + WATER_DENSITY * GRAVITY * self.height.value()
     }
 }
 
@@ -219,20 +225,17 @@ struct HeadCheck {
 }
 
 fn head_check(trace: &[FluidState]) -> HeadCheck {
-    let reference = trace
-        .first()
-        .map(FluidState::total_head)
-        .unwrap_or_else(|| lift::<FloatType>(0.0));
+    let reference = trace.first().map(FluidState::total_head).unwrap_or(ZERO);
 
     let worst_deviation = trace
         .iter()
         .map(|s| Real::abs(s.total_head() - reference) / reference)
-        .fold(lift::<FloatType>(0.0), |m, v| if v > m { v } else { m });
+        .fold(ZERO, |m, v| if v > m { v } else { m });
 
     HeadCheck {
         reference,
         worst_deviation,
-        conserved: worst_deviation < lift::<FloatType>(HEAD_TOLERANCE),
+        conserved: worst_deviation < HEAD_TOLERANCE,
     }
 }
 
@@ -243,7 +246,11 @@ fn head_check(trace: &[FluidState]) -> HeadCheck {
 fn print_header() {
     println!("=== Bernoulli Flow Network ===");
     println!("Precision: {}", core::any::type_name::<FloatType>());
-    println!("Fluid: water at {WATER_DENSITY} kg/m^3, Q = {FLOW_RATE} m^3/s\n");
+    println!(
+        "Fluid: water at {:.0} kg/m^3, Q = {:.2} m^3/s\n",
+        lower(WATER_DENSITY),
+        lower(FLOW_RATE)
+    );
 }
 
 fn print_trace(trace: &[FluidState]) {
