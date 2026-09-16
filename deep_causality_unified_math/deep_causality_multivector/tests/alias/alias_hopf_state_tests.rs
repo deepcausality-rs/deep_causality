@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality_multivector::{HilbertState, HopfState, Metric};
+use deep_causality_multivector::{HilbertState, HopfState, Metric, MultiVector};
 use deep_causality_num_complex::Complex;
 use std::f64::consts::PI;
 
@@ -47,23 +47,137 @@ fn test_from_spinor() {
 
     let hopf = HopfState::from_spinor(alpha, beta);
 
-    // Expected data based on the mapping in `from_spinor`:
-    // data[0] = alpha.re = s
-    // data[3] = alpha.im = 0.0
-    // data[5] = beta.im = 0.0
-    // data[6] = beta.re = s
-    // All other components should be 0.0.
-    // The resulting MV is (s + s*e23), which should be normalized.
-    // A = s + s e_23 -> A A_ = s^2 + s^2 = 2s^2
-    // Normalization = A / sqrt(2s^2) = A / (s*sqrt(2))
-    // So, scalar and e23 components should be (s / (s*sqrt(2))) = 1/sqrt(2)
-    let expected_s_norm = 1.0 / (2.0f64).sqrt();
-
-    assert!((hopf.as_inner().data()[0] - expected_s_norm).abs() < F64_EPSILON);
-    assert!((hopf.as_inner().data()[6] - expected_s_norm).abs() < F64_EPSILON);
-    assert!((hopf.as_inner().data()[3] - 0.0).abs() < F64_EPSILON); // alpha.im
-    assert!((hopf.as_inner().data()[5] - 0.0).abs() < F64_EPSILON); // beta.im
+    // A rotor built from a normalized spinor is already a unit rotor, so `from_spinor` returns it
+    // with its magnitude untouched.
+    assert!((hopf.as_inner().squared_magnitude() - 1.0).abs() < F64_EPSILON);
     assert_eq!(hopf.as_inner().metric(), Metric::Euclidean(3));
+}
+
+/// The projection carries the Bloch vector of the spinor it was built from.
+///
+/// For `|psi> = alpha|0> + beta|1>` the Bloch vector is
+///
+/// ```text
+/// n_x = 2 Re(conj(alpha) beta)   n_y = 2 Im(conj(alpha) beta)   n_z = |alpha|^2 - |beta|^2
+/// ```
+///
+/// so the six cardinal states land on the six semi-axes. This is the property that fixes where
+/// `beta.re` and `beta.im` belong among the bivector coefficients: exchanging the two leaves every
+/// state normalized and every round trip intact, and silently transposes the x and y axes of every
+/// projection.
+#[test]
+fn test_project_bloch_vector_of_the_six_cardinal_states() {
+    // e1 is index 1, e2 is index 2, e3 is index 4.
+    const E1: usize = 1;
+    const E2: usize = 2;
+    const E3: usize = 4;
+
+    let s = 1.0 / (2.0f64).sqrt();
+    let zero = Complex::new(0.0, 0.0);
+
+    // (name, alpha, beta, expected Bloch vector)
+    let cardinal = [
+        ("|0>", Complex::new(1.0, 0.0), zero, [0.0, 0.0, 1.0]),
+        ("|1>", zero, Complex::new(1.0, 0.0), [0.0, 0.0, -1.0]),
+        (
+            "|+>",
+            Complex::new(s, 0.0),
+            Complex::new(s, 0.0),
+            [1.0, 0.0, 0.0],
+        ),
+        (
+            "|->",
+            Complex::new(s, 0.0),
+            Complex::new(-s, 0.0),
+            [-1.0, 0.0, 0.0],
+        ),
+        (
+            "|+i>",
+            Complex::new(s, 0.0),
+            Complex::new(0.0, s),
+            [0.0, 1.0, 0.0],
+        ),
+        (
+            "|-i>",
+            Complex::new(s, 0.0),
+            Complex::new(0.0, -s),
+            [0.0, -1.0, 0.0],
+        ),
+    ];
+
+    for (name, alpha, beta, expected) in cardinal {
+        let bloch = HopfState::from_spinor(alpha, beta).project();
+        let got = [
+            bloch.data()[E1],
+            bloch.data()[E2],
+            bloch.data()[E3],
+        ];
+
+        for (axis, (got, want)) in got.iter().zip(expected.iter()).enumerate() {
+            assert!(
+                (got - want).abs() < F64_EPSILON,
+                "{name}: axis {axis} projected to {got}, expected {want}"
+            );
+        }
+    }
+}
+
+/// Every state on the Bloch sphere, not only the cardinal six.
+#[test]
+fn test_project_bloch_vector_off_axis() {
+    const E1: usize = 1;
+    const E2: usize = 2;
+    const E3: usize = 4;
+
+    // |psi> = cos(theta/2)|0> + e^{i phi} sin(theta/2)|1> sits at (theta, phi) in spherical
+    // coordinates, so its Bloch vector is the point itself.
+    let theta: f64 = 0.7;
+    let phi: f64 = 1.3;
+
+    let alpha = Complex::new((theta / 2.0).cos(), 0.0);
+    let beta = Complex::new(
+        phi.cos() * (theta / 2.0).sin(),
+        phi.sin() * (theta / 2.0).sin(),
+    );
+
+    let bloch = HopfState::from_spinor(alpha, beta).project();
+
+    let expected = [
+        theta.sin() * phi.cos(),
+        theta.sin() * phi.sin(),
+        theta.cos(),
+    ];
+    let got = [bloch.data()[E1], bloch.data()[E2], bloch.data()[E3]];
+
+    for (axis, (got, want)) in got.iter().zip(expected.iter()).enumerate() {
+        assert!(
+            (got - want).abs() < F64_EPSILON,
+            "axis {axis} projected to {got}, expected {want}"
+        );
+    }
+}
+
+/// A fiber shift moves the state along `S^1` and leaves the projection where it was. That is the
+/// defining property of the fibration, and the global phase of quantum mechanics.
+#[test]
+fn test_fiber_shift_moves_the_state_and_fixes_the_projection() {
+    let s = 1.0 / (2.0f64).sqrt();
+    let state = HopfState::from_spinor(Complex::new(s, 0.0), Complex::new(s, 0.0));
+    let before = state.project();
+
+    for turns in 1..8 {
+        let shifted = state.fiber_shift(PI / 4.0 * f64::from(turns));
+        let after = shifted.project();
+
+        assert!(
+            (before.clone() - after).squared_magnitude() < F64_EPSILON,
+            "projection moved after a fiber shift of {turns} eighth-turns"
+        );
+        assert!(
+            (state.as_inner() - shifted.as_inner()).squared_magnitude() > F64_EPSILON,
+            "state stood still under a fiber shift of {turns} eighth-turns"
+        );
+    }
 }
 
 #[test]
@@ -151,16 +265,12 @@ fn test_try_from_hilbert_state_success() {
 
     let hopf_state = HopfState::try_from(&hilbert_state).unwrap();
 
-    // Expected data based on from_spinor:
-    // Scalar (data[0]) = alpha.re = s
-    // e12 (data[3]) = alpha.im = 0
-    // e13 (data[5]) = beta.im = 0
-    // e23 (data[6]) = beta.re = s
-    let expected_s_norm = 1.0 / (2.0f64).sqrt();
-    assert!((hopf_state.as_inner().data()[0] - expected_s_norm).abs() < F64_EPSILON);
-    assert!((hopf_state.as_inner().data()[6] - expected_s_norm).abs() < F64_EPSILON);
-    assert!((hopf_state.as_inner().data()[3] - 0.0).abs() < F64_EPSILON);
-    assert!((hopf_state.as_inner().data()[5] - 0.0).abs() < F64_EPSILON);
+    // The conversion reads the first two amplitudes as the spinor, so the rotor it returns is the
+    // one `from_spinor` builds, and it projects onto the same Bloch vector: |+> sits on +x.
+    let bloch = hopf_state.project();
+    assert!((bloch.data()[1] - 1.0).abs() < F64_EPSILON); // e1
+    assert!((bloch.data()[2] - 0.0).abs() < F64_EPSILON); // e2
+    assert!((bloch.data()[4] - 0.0).abs() < F64_EPSILON); // e3
 }
 
 #[test]
@@ -171,25 +281,30 @@ fn test_new_hilbert_state_error_dimension_mismatch() {
     assert!(res.is_err());
 }
 
+/// The two conversions invert each other: a spinor that goes out to the rotor and back arrives
+/// unchanged. This holds for either placement of `beta.re` and `beta.im`, which is why it is
+/// checked alongside the projection rather than instead of it.
 #[test]
-fn test_try_from_hopf_state_to_hilbert_state() {
-    // Create a HopfState corresponding to a known Spinor
-    // R = 1/sqrt(2) + 1/sqrt(2) e23
+fn test_hilbert_hopf_round_trip() {
     let s = 1.0 / (2.0f64).sqrt();
-    let data = vec![s, 0.0, 0.0, 0.0, 0.0, 0.0, s, 0.0];
-    let hopf_state = HopfState::new(data).unwrap();
+    let spinors = [
+        (Complex::new(1.0, 0.0), Complex::new(0.0, 0.0)),
+        (Complex::new(s, 0.0), Complex::new(s, 0.0)),
+        (Complex::new(s, 0.0), Complex::new(0.0, s)),
+        (Complex::new(0.6, 0.0), Complex::new(0.48, 0.64)),
+    ];
 
-    let hilbert_state = HilbertState::try_from(hopf_state).unwrap();
+    for (alpha, beta) in spinors {
+        let hopf = HopfState::from_spinor(alpha, beta);
+        let hilbert = HilbertState::try_from(hopf).unwrap();
+        let back = hilbert.as_inner().data();
 
-    // Expected HilbertState: alpha = Complex(s, 0), beta = Complex(s, 0)
-    let expected_s = Complex::new(1.0 / (2.0f64).sqrt(), 0.0);
-
-    let hilbert_data = hilbert_state.as_inner().data();
-    assert!((hilbert_data[0].re - expected_s.re).abs() < F64_EPSILON); // alpha re
-    assert!((hilbert_data[0].im - expected_s.im).abs() < F64_EPSILON); // alpha im
-    assert!((hilbert_data[1].re - expected_s.re).abs() < F64_EPSILON); // beta re
-    assert!((hilbert_data[1].im - expected_s.im).abs() < F64_EPSILON); // beta im
-    assert_eq!(hilbert_state.as_inner().metric(), Metric::NonEuclidean(10));
+        assert!((back[0].re - alpha.re).abs() < F64_EPSILON);
+        assert!((back[0].im - alpha.im).abs() < F64_EPSILON);
+        assert!((back[1].re - beta.re).abs() < F64_EPSILON);
+        assert!((back[1].im - beta.im).abs() < F64_EPSILON);
+        assert_eq!(hilbert.as_inner().metric(), Metric::NonEuclidean(10));
+    }
 }
 
 #[test]
