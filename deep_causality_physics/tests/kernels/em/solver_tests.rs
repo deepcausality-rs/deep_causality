@@ -191,14 +191,17 @@ fn test_current_density_success() {
 
     let j = MaxwellSolver::calculate_current_density::<f64>(&d, &f).unwrap();
 
-    // J = grade-1 part of `d.inner_product(F)`, with d = e1 and F = e12. The magnitude is 1 and
-    // the answer lies entirely on the e2 blade at index 4.
+    // J is the grade-1 part of `d.inner_product(F)`, the left contraction, with d = e1 and
+    // F = e12:
     //
-    // The sign is -1, which is the *right* contraction `(e1 ^ e2) |_ e1`. The left contraction
-    // `e1 _| (e1 ^ e2) = (e1 . e1) e2 - (e1 . e2) e1` gives +e2, so the handedness of
-    // `CausalMultiVector::inner_product` is what fixes it. This test pins the behaviour the
-    // kernel has rather than the one an isolated derivation would predict; the assertion used to
-    // accept either sign, which pinned neither.
+    //     e1 _| (e1 ^ e2) = (e1 . e1) e2 - (e1 . e2) e1 = (e1 . e1) e2
+    //
+    // `Metric::Minkowski` is west coast, (+ - - -): e0 squares to +1 and every spatial basis
+    // vector squares to -1. So e1 . e1 = -1 and the answer is -e2, on blade index 4.
+    //
+    // The assertion used to accept either sign, with a comment reasoning from the east-coast
+    // signature (where e1 . e1 = +1 and the answer would be +e2). Under the signature this crate
+    // actually uses, -1 is the only correct value.
     let d_out: &[f64] = j.data();
     assert!((d_out[4] + 1.0).abs() < 1e-9, "e2 component = {}", d_out[4]);
     for (i, v) in d_out.iter().enumerate() {

@@ -8,22 +8,16 @@ use deep_causality_physics::PhysicsErrorEnum;
 #[test]
 fn test_concentration_new_valid() {
     let t = deep_causality_tensor::CausalTensor::new(vec![0.1, 0.2, 0.3], vec![3]).unwrap();
-    let c = deep_causality_physics::Concentration::new(t.clone());
-    assert!(c.is_ok());
-    assert_eq!(c.unwrap().inner().shape(), t.shape());
+    let c = deep_causality_physics::Concentration::new(t.clone()).unwrap();
+    // Shape alone would pass for a constructor that dropped or zeroed the data.
+    assert_eq!(c.inner().shape(), t.shape());
+    assert_eq!(c.inner().as_slice(), t.as_slice());
 }
 
 #[test]
 fn test_concentration_new_negative_rejected() {
     let t = deep_causality_tensor::CausalTensor::new(vec![0.1, -0.5, 0.3], vec![3]).unwrap();
     let c = deep_causality_physics::Concentration::new(t);
-    assert!(
-        matches!(
-            c.as_ref().unwrap_err().0,
-            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
-        ),
-        "expected a PhysicalInvariantBroken refusal"
-    );
     match c.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(_) => {}
         other => panic!("expected PhysicalInvariantBroken, got {other:?}"),
@@ -36,4 +30,7 @@ fn test_concentration_new_unchecked() {
     let t = deep_causality_tensor::CausalTensor::new(vec![-1.0, 0.0, 2.0], vec![3]).unwrap();
     let c = deep_causality_physics::Concentration::new_unchecked(t.clone());
     assert_eq!(c.inner().shape(), t.shape());
+    // The negative entry must survive verbatim; that is what "unchecked" means here.
+    assert_eq!(c.inner().as_slice(), t.as_slice());
+    assert_eq!(c.inner().as_slice()[0], -1.0);
 }

@@ -7,8 +7,13 @@ use deep_causality_physics::{PhysicsErrorEnum, Volume};
 
 #[test]
 fn test_volume_new_valid() {
-    let volume = Volume::<f64>::new(1000.0);
-    assert!(volume.is_ok());
+    let volume = Volume::<f64>::new(1000.0).unwrap();
+    // `is_ok()` alone admitted any carried value, including a constant.
+    assert!(
+        (volume.value() - (1000.0)).abs() < 1e-10,
+        "constructed value = {}",
+        volume.value()
+    );
 }
 
 #[test]

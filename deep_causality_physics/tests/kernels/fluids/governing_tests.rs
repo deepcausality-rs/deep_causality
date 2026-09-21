@@ -151,13 +151,6 @@ fn test_pressure_gradient_force_errors_on_zero_density() {
     let rho = Density::<f64>::new(0.0).unwrap();
     let grad_p = [1.0, 0.0, 0.0];
     let r = pressure_gradient_force_kernel(&rho, &grad_p);
-    assert!(
-        matches!(
-            r.as_ref().unwrap_err().0,
-            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
-        ),
-        "expected a PhysicalInvariantBroken refusal"
-    );
     match &r.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => assert!(msg.contains("density")),
         _ => panic!("Expected PhysicalInvariantBroken"),

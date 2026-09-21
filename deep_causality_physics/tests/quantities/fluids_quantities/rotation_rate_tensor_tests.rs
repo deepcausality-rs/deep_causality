@@ -20,13 +20,6 @@ fn test_rotation_rate_tensor_new_valid_antisymmetric() {
 fn test_rotation_rate_tensor_rejects_nonzero_diagonal() {
     let omega = [[1.0, 1.0, 2.0], [-1.0, 0.0, 3.0], [-2.0, -3.0, 0.0]];
     let r = RotationRateTensor::<f64>::new(omega);
-    assert!(
-        matches!(
-            r.as_ref().unwrap_err().0,
-            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
-        ),
-        "expected a PhysicalInvariantBroken refusal"
-    );
     match &r.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => {
             assert!(msg.contains("diagonal") || msg.contains("antisymmetric"))
@@ -40,13 +33,6 @@ fn test_rotation_rate_tensor_rejects_non_antisymmetric_off_diagonal() {
     // Ω_01 = 1.0 but Ω_10 = 1.0 (should be -1.0)
     let omega = [[0.0, 1.0, 2.0], [1.0, 0.0, 3.0], [-2.0, -3.0, 0.0]];
     let r = RotationRateTensor::<f64>::new(omega);
-    assert!(
-        matches!(
-            r.as_ref().unwrap_err().0,
-            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
-        ),
-        "expected a PhysicalInvariantBroken refusal"
-    );
     match &r.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => assert!(msg.contains("antisymmetric")),
         _ => panic!("Expected PhysicalInvariantBroken"),
@@ -101,7 +87,18 @@ fn test_rotation_rate_tensor_traits() {
     let c = a.clone();
     assert_eq!(a, b);
     assert_eq!(a, c);
-    let _ = format!("{:?}", a);
+    // `assert_eq!(x, x.clone())` is reflexive and holds for a `PartialEq` that always
+    // returns true. The inequality discriminates, and comparing the two `Debug`
+    // renderings makes `Debug` observable rather than discarded.
+    let other =
+        RotationRateTensor::<f64>::new([[0.0, 9.0, 0.0], [-9.0, 0.0, 0.0], [0.0, 0.0, 0.0]])
+            .unwrap();
+    assert_ne!(a, other, "distinct values must not compare equal");
+    assert_ne!(
+        format!("{a:?}"),
+        format!("{other:?}"),
+        "Debug must distinguish distinct values"
+    );
 }
 
 // =============================================================================

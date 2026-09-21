@@ -309,13 +309,6 @@ fn test_error_zero_radius_on_first_coord() {
         &body,
     );
     let result = solve_gm_analytical_kernel(&coord_a, &coord_b, &body);
-    assert!(
-        matches!(
-            result.as_ref().unwrap_err().0,
-            PhysicsErrorEnum::TopologyError { .. }
-        ),
-        "expected a TopologyError refusal"
-    );
     match result.unwrap_err().0 {
         PhysicsErrorEnum::TopologyError(msg) => {
             assert!(msg.contains("Non-positive radial distance"));
@@ -346,13 +339,6 @@ fn test_error_negative_radius_on_first_coord() {
         &body,
     );
     let result = solve_gm_analytical_kernel(&coord_a, &coord_b, &body);
-    assert!(
-        matches!(
-            result.as_ref().unwrap_err().0,
-            PhysicsErrorEnum::TopologyError { .. }
-        ),
-        "expected a TopologyError refusal"
-    );
     match result.unwrap_err().0 {
         PhysicsErrorEnum::TopologyError(msg) => {
             assert!(msg.contains("Non-positive radial distance"));
@@ -383,13 +369,6 @@ fn test_error_zero_radius_on_second_coord() {
         clock_drift_rate: 0.0,
     };
     let result = solve_gm_analytical_kernel(&coord_a, &coord_b, &body);
-    assert!(
-        matches!(
-            result.as_ref().unwrap_err().0,
-            PhysicsErrorEnum::TopologyError { .. }
-        ),
-        "expected a TopologyError refusal"
-    );
     match result.unwrap_err().0 {
         PhysicsErrorEnum::TopologyError(msg) => {
             assert!(msg.contains("Non-positive radial distance"));
@@ -425,13 +404,6 @@ fn test_error_insufficient_radial_separation() {
     );
 
     let result = solve_gm_analytical_kernel(&coord_a, &coord_b, &body);
-    assert!(
-        matches!(
-            result.as_ref().unwrap_err().0,
-            PhysicsErrorEnum::TopologyError { .. }
-        ),
-        "expected a TopologyError refusal"
-    );
     match result.unwrap_err().0 {
         PhysicsErrorEnum::TopologyError(msg) => {
             assert!(msg.contains("Insufficient"));

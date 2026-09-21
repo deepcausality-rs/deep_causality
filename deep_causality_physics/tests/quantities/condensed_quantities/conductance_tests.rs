@@ -11,13 +11,6 @@ fn test_conductance() {
     assert_eq!(c.value(), 0.1);
 
     let err = Conductance::<f64>::new(-0.1);
-    assert!(
-        matches!(
-            err.as_ref().unwrap_err().0,
-            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
-        ),
-        "expected a PhysicalInvariantBroken refusal"
-    );
     match err.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(_) => {}
         _ => panic!("Expected PhysicalInvariantBroken"),

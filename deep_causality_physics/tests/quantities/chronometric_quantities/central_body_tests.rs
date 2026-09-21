@@ -3,7 +3,6 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-const TOLERANCE: f64 = 1e-12;
 use deep_causality_physics::{CentralBody, EARTH_GM, EARTH_J2, EARTH_RADIUS_EQUATORIAL};
 
 // =============================================================================
@@ -13,9 +12,9 @@ use deep_causality_physics::{CentralBody, EARTH_GM, EARTH_J2, EARTH_RADIUS_EQUAT
 #[test]
 fn test_central_body_new_basic() {
     let body = CentralBody::<f64>::new(1.0e14, 6.0e6, 1.0e-3);
-    assert!((body.gm - 1.0e14).abs() < TOLERANCE);
-    assert!((body.equatorial_radius_m - 6.0e6).abs() < TOLERANCE);
-    assert!((body.j2 - 1.0e-3).abs() < TOLERANCE);
+    assert_eq!(body.gm, 1.0e14);
+    assert_eq!(body.equatorial_radius_m, 6.0e6);
+    assert_eq!(body.j2, 1.0e-3);
 }
 
 #[test]
@@ -30,9 +29,9 @@ fn test_central_body_new_zero_j2() {
 fn test_central_body_new_mars_like() {
     // Mars: GM ≈ 4.28e13, R_eq ≈ 3.396e6, J2 ≈ 1.96e-3
     let mars = CentralBody::<f64>::new(4.28e13, 3.396e6, 1.96e-3);
-    assert!((mars.gm - 4.28e13).abs() < TOLERANCE);
-    assert!((mars.equatorial_radius_m - 3.396e6).abs() < TOLERANCE);
-    assert!((mars.j2 - 1.96e-3).abs() < TOLERANCE);
+    assert_eq!(mars.gm, 4.28e13);
+    assert_eq!(mars.equatorial_radius_m, 3.396e6);
+    assert_eq!(mars.j2, 1.96e-3);
 }
 
 // =============================================================================

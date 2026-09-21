@@ -20,13 +20,6 @@ fn test_cauchy_stress_new_valid_symmetric() {
 fn test_cauchy_stress_rejects_asymmetric() {
     let sigma = [[100.0, 5.0, 3.0], [99.0, 200.0, 7.0], [3.0, 7.0, 300.0]];
     let r = CauchyStress::<f64>::new(sigma);
-    assert!(
-        matches!(
-            r.as_ref().unwrap_err().0,
-            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
-        ),
-        "expected a PhysicalInvariantBroken refusal"
-    );
     match &r.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => assert!(msg.contains("symmetric")),
         _ => panic!("Expected PhysicalInvariantBroken"),
@@ -74,7 +67,17 @@ fn test_cauchy_stress_traits() {
     let c = a.clone();
     assert_eq!(a, b);
     assert_eq!(a, c);
-    let _ = format!("{:?}", a);
+    // `assert_eq!(x, x.clone())` is reflexive and holds for a `PartialEq` that always
+    // returns true. The inequality discriminates, and comparing the two `Debug`
+    // renderings makes `Debug` observable rather than discarded.
+    let other =
+        CauchyStress::<f64>::new([[9.0, 0.0, 0.0], [0.0, 9.0, 0.0], [0.0, 0.0, 9.0]]).unwrap();
+    assert_ne!(a, other, "distinct values must not compare equal");
+    assert_ne!(
+        format!("{a:?}"),
+        format!("{other:?}"),
+        "Debug must distinguish distinct values"
+    );
 }
 
 // =============================================================================

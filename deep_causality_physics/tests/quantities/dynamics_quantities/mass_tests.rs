@@ -22,13 +22,6 @@ fn test_mass_new_zero() {
 #[test]
 fn test_mass_new_negative_error() {
     let mass = Mass::<f64>::new(-1.0);
-    assert!(
-        matches!(
-            mass.as_ref().unwrap_err().0,
-            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
-        ),
-        "expected a PhysicalInvariantBroken refusal"
-    );
     match &mass.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => {
             assert!(msg.contains("negative"));
@@ -40,13 +33,6 @@ fn test_mass_new_negative_error() {
 #[test]
 fn test_mass_new_nan_error() {
     let mass = Mass::<f64>::new(f64::NAN);
-    assert!(
-        matches!(
-            mass.as_ref().unwrap_err().0,
-            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
-        ),
-        "expected a PhysicalInvariantBroken refusal"
-    );
     match &mass.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => assert!(msg.contains("finite")),
         _ => panic!("Expected PhysicalInvariantBroken error"),
@@ -56,13 +42,6 @@ fn test_mass_new_nan_error() {
 #[test]
 fn test_mass_new_infinity_error() {
     let mass = Mass::<f64>::new(f64::INFINITY);
-    assert!(
-        matches!(
-            mass.as_ref().unwrap_err().0,
-            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
-        ),
-        "expected a PhysicalInvariantBroken refusal"
-    );
     match &mass.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => assert!(msg.contains("finite")),
         _ => panic!("Expected PhysicalInvariantBroken error"),

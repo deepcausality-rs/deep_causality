@@ -55,10 +55,15 @@ fn test_rapidity_and_pseudorapidity() {
     assert_eq!(p_rest.rapidity(), 0.0);
     assert!(p_rest.pseudorapidity().abs() < 1e-10); // Check magnitude near zero
 
-    // Beam direction particle
-    // E=10, pz=8
+    // A particle along the beam axis: E = 10, pz = 8.
+    //   y = (1/2) ln((E + pz)/(E - pz)) = (1/2) ln(18/2) = (1/2) ln 9 = ln 3
+    // Asserting only `> 0.0` admitted any positive value, including one from a wrong formula.
     let p_boost = FourMomentum::<f64>::new(10.0, 0.0, 0.0, 8.0);
-    // Rapidity should be positive
+    assert!(
+        (p_boost.rapidity() - 3.0_f64.ln()).abs() < 1e-10,
+        "rapidity = {}, expected ln 3",
+        p_boost.rapidity()
+    );
     assert!(p_boost.rapidity() > 0.0);
 }
 
@@ -74,13 +79,11 @@ fn test_boost_z() {
     let p = FourMomentum::<f64>::at_rest(1.0); // m=1, E=1, p=0
     let beta = 0.6; // gamma = 1/0.8 = 1.25
 
+    // `boost_z(beta)` transforms into a frame moving at +beta along z, so a particle at rest in
+    // the old frame moves at -beta in the new one:
+    //   E'  = gamma (E - beta pz) = 1.25 (1 - 0)     = 1.25
+    //   pz' = gamma (pz - beta E) = 1.25 (0 - 0.6)   = -0.75
     let p_boosted = p.boost_z(beta);
-    // E' = gamma(E - beta*pz) = 1.25 * (1 - 0) = 1.25
-    // pz' = gamma(pz - beta*E) = 1.25 * (0 - 0.6*1) = -0.75
-    // NOTE: boost_z(beta) boosts to a frame moving with +z velocity beta?
-    // Formula check:
-    // If we boost TO a frame moving at +v, the particle appears to move at -v.
-    // pz_new = gamma(pz - vE) = 1.25(0 - 0.6) = -0.75. Correct.
 
     assert!((p_boosted.e() - 1.25).abs() < 1e-10);
     assert!((p_boosted.pz() - -0.75).abs() < 1e-10);

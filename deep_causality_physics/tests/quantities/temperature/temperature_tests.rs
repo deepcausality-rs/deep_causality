@@ -14,8 +14,13 @@ fn test_temperature_new_valid() {
 
 #[test]
 fn test_temperature_new_zero_kelvin() {
-    let t = Temperature::<f64>::new(0.0);
-    assert!(t.is_ok());
+    let t = Temperature::<f64>::new(0.0).unwrap();
+    // `is_ok()` alone admitted any carried value, including a constant.
+    assert!(
+        (t.value() - (0.0)).abs() < 1e-10,
+        "constructed value = {}",
+        t.value()
+    );
 }
 
 #[test]

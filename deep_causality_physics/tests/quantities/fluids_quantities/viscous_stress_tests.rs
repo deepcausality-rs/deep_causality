@@ -28,13 +28,6 @@ fn test_viscous_stress_new_asymmetric_error() {
     // fluids/mod.rs:592-596 — τ_ij != τ_ji must be rejected.
     let m = [[1.0, 2.0, 3.0], [9.0, 4.0, 5.0], [3.0, 5.0, 6.0]];
     let s = ViscousStress::<f64>::new(m);
-    assert!(
-        matches!(
-            s.as_ref().unwrap_err().0,
-            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
-        ),
-        "expected a PhysicalInvariantBroken refusal"
-    );
     match s.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => assert!(msg.contains("symmetric")),
         other => panic!("expected PhysicalInvariantBroken, got {other:?}"),

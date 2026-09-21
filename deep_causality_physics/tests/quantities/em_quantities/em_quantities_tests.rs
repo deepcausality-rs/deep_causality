@@ -58,8 +58,13 @@ fn test_magnetic_flux_new_valid() {
 #[test]
 fn test_magnetic_flux_negative() {
     // Flux can be negative (direction dependent)
-    let flux = MagneticFlux::<f64>::new(-1.0);
-    assert!(flux.is_ok());
+    let flux = MagneticFlux::<f64>::new(-1.0).unwrap();
+    // `is_ok()` alone admitted any carried value, including a constant.
+    assert!(
+        (flux.value() - (-1.0)).abs() < 1e-10,
+        "constructed value = {}",
+        flux.value()
+    );
 }
 
 #[test]

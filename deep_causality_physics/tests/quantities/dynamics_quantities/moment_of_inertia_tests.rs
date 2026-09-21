@@ -15,13 +15,6 @@ fn test_moment_of_inertia_new_valid() {
 #[test]
 fn test_moment_of_inertia_new_negative_error() {
     let moi = MomentOfInertia::<f64>::new(-1.0);
-    assert!(
-        matches!(
-            moi.as_ref().unwrap_err().0,
-            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
-        ),
-        "expected a PhysicalInvariantBroken refusal"
-    );
     match &moi.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => assert!(msg.contains("negative")),
         _ => panic!("Expected PhysicalInvariantBroken error"),

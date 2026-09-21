@@ -7,8 +7,12 @@ use deep_causality_physics::{Activity, PhysicsErrorEnum};
 
 #[test]
 fn test_activity_new_valid() {
-    let activity = Activity::<f64>::new(3.7e10); // 1 Curie in Becquerels
-    assert!(activity.is_ok());
+    let activity = Activity::<f64>::new(3.7e10).unwrap(); // 1 Curie in Becquerels
+    assert!(
+        (activity.value() - 3.7e10).abs() < 1.0,
+        "one curie is 3.7e10 Bq, got {}",
+        activity.value()
+    );
 }
 
 #[test]

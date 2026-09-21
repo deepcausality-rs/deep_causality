@@ -182,13 +182,6 @@ fn test_power_law_known_value() {
 #[test]
 fn test_power_law_errors_on_negative_shear_rate() {
     let r = power_law_apparent_viscosity_kernel::<f64>(1.0, 0.5, -0.1);
-    assert!(
-        matches!(
-            r.as_ref().unwrap_err().0,
-            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
-        ),
-        "expected a PhysicalInvariantBroken refusal"
-    );
     match &r.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => assert!(msg.contains("shear_rate")),
         _ => panic!("Expected PhysicalInvariantBroken"),

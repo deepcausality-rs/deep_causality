@@ -18,20 +18,18 @@ fn test_wall_shear_stress_new_valid() {
 
 #[test]
 fn test_wall_shear_stress_new_zero() {
-    let tw = WallShearStress::<f64>::new(0.0);
-    assert!(tw.is_ok());
+    let tw = WallShearStress::<f64>::new(0.0).unwrap();
+    // `is_ok()` alone admitted any carried value, including a constant.
+    assert!(
+        (tw.value() - (0.0)).abs() < 1e-10,
+        "constructed value = {}",
+        tw.value()
+    );
 }
 
 #[test]
 fn test_wall_shear_stress_new_negative_error() {
     let tw = WallShearStress::<f64>::new(-0.1);
-    assert!(
-        matches!(
-            tw.as_ref().unwrap_err().0,
-            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
-        ),
-        "expected a PhysicalInvariantBroken refusal"
-    );
     match &tw.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => {
             assert!(msg.contains("Negative") || msg.contains("WallShearStress"));
@@ -43,13 +41,6 @@ fn test_wall_shear_stress_new_negative_error() {
 #[test]
 fn test_wall_shear_stress_new_nan_error() {
     let tw = WallShearStress::<f64>::new(f64::NAN);
-    assert!(
-        matches!(
-            tw.as_ref().unwrap_err().0,
-            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
-        ),
-        "expected a PhysicalInvariantBroken refusal"
-    );
     match &tw.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => assert!(msg.contains("finite")),
         _ => panic!("Expected finite-check error"),
@@ -104,5 +95,14 @@ fn test_wall_shear_stress_traits() {
     assert_eq!(a, b);
     assert_eq!(a, c);
     assert!(a < WallShearStress::<f64>::new(0.2).unwrap());
-    let _ = format!("{:?}", a);
+    // `assert_eq!(x, x.clone())` is reflexive and holds for a `PartialEq` that always
+    // returns true. The inequality discriminates, and comparing the two `Debug`
+    // renderings makes `Debug` observable rather than discarded.
+    let other = WallShearStress::<f64>::new(0.9).unwrap();
+    assert_ne!(a, other, "distinct values must not compare equal");
+    assert_ne!(
+        format!("{a:?}"),
+        format!("{other:?}"),
+        "Debug must distinguish distinct values"
+    );
 }

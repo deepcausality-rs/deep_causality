@@ -9,15 +9,25 @@ use deep_causality_physics::{PhysicsErrorEnum, Torque};
 
 #[test]
 fn test_torque_new_positive() {
-    let torque = Torque::<f64>::new(25.0);
-    assert!(torque.is_ok());
+    let torque = Torque::<f64>::new(25.0).unwrap();
+    // `is_ok()` alone admitted any carried value, including a constant.
+    assert!(
+        (torque.value() - (25.0)).abs() < 1e-10,
+        "constructed value = {}",
+        torque.value()
+    );
 }
 
 #[test]
 fn test_torque_new_negative() {
     // Negative torque = clockwise rotation
-    let torque = Torque::<f64>::new(-25.0);
-    assert!(torque.is_ok());
+    let torque = Torque::<f64>::new(-25.0).unwrap();
+    // `is_ok()` alone admitted any carried value, including a constant.
+    assert!(
+        (torque.value() - (-25.0)).abs() < 1e-10,
+        "constructed value = {}",
+        torque.value()
+    );
 }
 
 #[test]

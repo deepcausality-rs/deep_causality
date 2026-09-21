@@ -18,20 +18,18 @@ fn test_pressure_new_valid() {
 
 #[test]
 fn test_pressure_new_zero() {
-    let pressure = Pressure::<f64>::new(0.0);
-    assert!(pressure.is_ok());
+    let pressure = Pressure::<f64>::new(0.0).unwrap();
+    // `is_ok()` alone admitted any carried value, including a constant.
+    assert!(
+        (pressure.value() - (0.0)).abs() < 1e-10,
+        "constructed value = {}",
+        pressure.value()
+    );
 }
 
 #[test]
 fn test_pressure_new_negative_error() {
     let pressure = Pressure::<f64>::new(-1.0);
-    assert!(
-        matches!(
-            pressure.as_ref().unwrap_err().0,
-            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
-        ),
-        "expected a PhysicalInvariantBroken refusal"
-    );
     match &pressure.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => {
             assert!(msg.contains("Pressure") || msg.contains("Negative"));
@@ -70,13 +68,6 @@ fn test_pressure_default() {
 #[test]
 fn test_pressure_new_nan_error() {
     let p = Pressure::<f64>::new(f64::NAN);
-    assert!(
-        matches!(
-            p.as_ref().unwrap_err().0,
-            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
-        ),
-        "expected a PhysicalInvariantBroken refusal"
-    );
     match &p.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => assert!(msg.contains("finite")),
         _ => panic!("Expected finite-check error"),
@@ -114,5 +105,14 @@ fn test_pressure_traits() {
     assert_eq!(p1, p2);
     assert_eq!(p1, p3);
     assert!(p1 < Pressure::<f64>::new(2.0).unwrap());
-    let _ = format!("{:?}", p1); // Debug
+    // `assert_eq!(x, x.clone())` is reflexive and holds for a `PartialEq` that always
+    // returns true. The inequality discriminates, and comparing the two `Debug`
+    // renderings makes `Debug` observable rather than discarded.
+    let other = Pressure::<f64>::new(3.0).unwrap();
+    assert_ne!(p1, other, "distinct values must not compare equal");
+    assert_ne!(
+        format!("{p1:?}"),
+        format!("{other:?}"),
+        "Debug must distinguish distinct values"
+    );
 }

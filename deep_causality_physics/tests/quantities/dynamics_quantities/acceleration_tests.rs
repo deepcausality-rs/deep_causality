@@ -9,8 +9,13 @@ use deep_causality_physics::{Acceleration, PhysicsErrorEnum};
 
 #[test]
 fn test_acceleration_new_positive() {
-    let acc = Acceleration::<f64>::new(9.81);
-    assert!(acc.is_ok());
+    let acc = Acceleration::<f64>::new(9.81).unwrap();
+    // `is_ok()` alone admitted any carried value, including a constant.
+    assert!(
+        (acc.value() - (9.81)).abs() < 1e-10,
+        "constructed value = {}",
+        acc.value()
+    );
 }
 
 #[test]

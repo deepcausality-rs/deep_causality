@@ -11,8 +11,12 @@ use deep_causality_physics::{PhysicsErrorEnum, Viscosity};
 
 #[test]
 fn test_viscosity_new_valid() {
-    let visc = Viscosity::<f64>::new(0.001); // water at 20°C
-    assert!(visc.is_ok());
+    let visc = Viscosity::<f64>::new(0.001).unwrap(); // water at 20°C
+    assert!(
+        (visc.value() - 0.001).abs() < 1e-12,
+        "mu = {}",
+        visc.value()
+    );
 }
 
 #[test]
@@ -86,5 +90,14 @@ fn test_viscosity_traits() {
     let b = a;
     assert_eq!(a, b);
     assert!(a < Viscosity::<f64>::new(1.0).unwrap());
-    let _ = format!("{:?}", a);
+    // `assert_eq!(x, x.clone())` is reflexive and holds for a `PartialEq` that always
+    // returns true. The inequality discriminates, and comparing the two `Debug`
+    // renderings makes `Debug` observable rather than discarded.
+    let other = Viscosity::<f64>::new(1.5).unwrap();
+    assert_ne!(a, other, "distinct values must not compare equal");
+    assert_ne!(
+        format!("{a:?}"),
+        format!("{other:?}"),
+        "Debug must distinguish distinct values"
+    );
 }

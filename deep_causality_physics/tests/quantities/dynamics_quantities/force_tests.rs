@@ -9,14 +9,24 @@ use deep_causality_physics::{Force, PhysicsErrorEnum};
 
 #[test]
 fn test_force_new_positive() {
-    let force = Force::<f64>::new(100.0);
-    assert!(force.is_ok());
+    let force = Force::<f64>::new(100.0).unwrap();
+    // `is_ok()` alone admitted any carried value, including a constant.
+    assert!(
+        (force.value() - (100.0)).abs() < 1e-10,
+        "constructed value = {}",
+        force.value()
+    );
 }
 
 #[test]
 fn test_force_new_negative() {
-    let force = Force::<f64>::new(-50.0);
-    assert!(force.is_ok());
+    let force = Force::<f64>::new(-50.0).unwrap();
+    // `is_ok()` alone admitted any carried value, including a constant.
+    assert!(
+        (force.value() - (-50.0)).abs() < 1e-10,
+        "constructed value = {}",
+        force.value()
+    );
 }
 
 #[test]

@@ -78,13 +78,6 @@ fn test_hookes_law_kernel_dimension_mismatch_stiffness() {
     let strain = Strain::<f64>::new(CausalTensor::new(vec![1.0; 9], vec![3, 3]).unwrap());
 
     let result = hookes_law_kernel(&stiffness, &strain);
-    assert!(
-        matches!(
-            result.as_ref().unwrap_err().0,
-            PhysicsErrorEnum::DimensionMismatch { .. }
-        ),
-        "expected a DimensionMismatch refusal"
-    );
 
     match &result.unwrap_err().0 {
         PhysicsErrorEnum::DimensionMismatch(msg) => {
@@ -150,13 +143,6 @@ fn test_von_mises_stress_kernel_dimension_error() {
     let stress = StressTensor::<f64>::new(CausalTensor::new(vec![1.0; 4], vec![2, 2]).unwrap());
 
     let result = von_mises_stress_kernel(&stress);
-    assert!(
-        matches!(
-            result.as_ref().unwrap_err().0,
-            PhysicsErrorEnum::DimensionMismatch { .. }
-        ),
-        "expected a DimensionMismatch refusal"
-    );
 
     match &result.unwrap_err().0 {
         PhysicsErrorEnum::DimensionMismatch(msg) => {

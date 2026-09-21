@@ -617,13 +617,6 @@ fn test_time_dilation_angle_non_scalar_grade_error() {
     let t2 = CausalMultiVector::<f64>::new(d2, Metric::Minkowski(4)).unwrap();
 
     let result = time_dilation_angle_kernel(&t1, &t2);
-    assert!(
-        matches!(
-            result.as_ref().unwrap_err().0,
-            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
-        ),
-        "expected a PhysicalInvariantBroken refusal"
-    );
     match result.unwrap_err().0 {
         deep_causality_physics::PhysicsErrorEnum::PhysicalInvariantBroken(msg) => {
             assert!(msg.contains("scalar grade"), "unexpected message: {}", msg);

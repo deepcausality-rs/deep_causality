@@ -7,8 +7,12 @@ use deep_causality_physics::{HalfLife, PhysicsErrorEnum};
 
 #[test]
 fn test_half_life_new_valid() {
-    let hl = HalfLife::<f64>::new(5730.0); // C-14
-    assert!(hl.is_ok());
+    let hl = HalfLife::<f64>::new(5730.0).unwrap(); // C-14
+    assert!(
+        (hl.value() - 5730.0).abs() < 1e-10,
+        "t_half = {}",
+        hl.value()
+    );
 }
 
 #[test]

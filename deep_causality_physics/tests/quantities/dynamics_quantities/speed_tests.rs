@@ -14,8 +14,13 @@ fn test_speed_new_valid() {
 
 #[test]
 fn test_speed_new_zero() {
-    let speed = Speed::<f64>::new(0.0);
-    assert!(speed.is_ok());
+    let speed = Speed::<f64>::new(0.0).unwrap();
+    // `is_ok()` alone admitted any carried value, including a constant.
+    assert!(
+        (speed.value() - (0.0)).abs() < 1e-10,
+        "constructed value = {}",
+        speed.value()
+    );
 }
 
 #[test]

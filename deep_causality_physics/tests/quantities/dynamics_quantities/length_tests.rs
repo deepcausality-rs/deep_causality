@@ -7,8 +7,13 @@ use deep_causality_physics::{Length, PhysicsErrorEnum};
 
 #[test]
 fn test_length_new_valid() {
-    let length = Length::<f64>::new(1.5e11);
-    assert!(length.is_ok());
+    let length = Length::<f64>::new(1.5e11).unwrap();
+    // `is_ok()` alone admitted any carried value, including a constant.
+    assert!(
+        (length.value() - (1.5e11)).abs() < 1e-10,
+        "constructed value = {}",
+        length.value()
+    );
 }
 
 #[test]

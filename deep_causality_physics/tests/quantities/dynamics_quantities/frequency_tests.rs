@@ -7,8 +7,8 @@ use deep_causality_physics::{Frequency, PhysicsErrorEnum};
 
 #[test]
 fn test_frequency_new_valid() {
-    let freq = Frequency::<f64>::new(440.0); // A4 note
-    assert!(freq.is_ok());
+    let freq = Frequency::<f64>::new(440.0).unwrap(); // A4 note
+    assert!((freq.value() - 440.0).abs() < 1e-10, "f = {}", freq.value());
 }
 
 #[test]
