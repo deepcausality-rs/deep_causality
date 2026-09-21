@@ -78,10 +78,10 @@ pub use crate::conventions::LorentzianMetric;
 pub use crate::conventions::{EastCoastMetric, WestCoastMetric};
 
 // Type aliases
-pub use crate::conventions::{ParticleMetric, PhysicsMetric, RelativityMetric};
+pub use crate::conventions::{ParticleMetric, RelativityMetric};
 
 // Constants
-pub use crate::conventions::{MINKOWSKI_4D, PARTICLE_MINKOWSKI_4D, RELATIVITY_MINKOWSKI_4D};
+pub use crate::conventions::{PARTICLE_MINKOWSKI_4D, RELATIVITY_MINKOWSKI_4D};
 
 // Conversion operations
 pub use crate::ops::{detect_convention, east_to_west, is_lorentzian, west_to_east};

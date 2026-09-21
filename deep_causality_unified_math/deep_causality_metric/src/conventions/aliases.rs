@@ -8,6 +8,12 @@
 //! These aliases provide semantic meaning when working with different physics domains:
 //! - **General Relativity** uses East Coast (-+++) convention
 //! - **Particle Physics** uses West Coast (+---) convention
+//!
+//! Every name here says which convention it means. There is deliberately no unqualified default:
+//! a name like `MINKOWSKI_4D` reads as "the Minkowski metric" while silently being one of the two,
+//! so a caller who wanted the other gets no signal at the point of use. Both conventions are
+//! correct in their own literature, and the crate exists to make the choice visible rather than to
+//! settle it.
 
 use crate::conventions::{EastCoastMetric, WestCoastMetric};
 
@@ -28,12 +34,3 @@ pub type ParticleMetric = WestCoastMetric;
 
 /// Standard 4D Minkowski spacetime for Particle Physics.
 pub const PARTICLE_MINKOWSKI_4D: ParticleMetric = WestCoastMetric::MINKOWSKI_4D;
-
-/// Default physics metric (configurable): East Coast.
-///
-/// This crate defaults to the East Coast (GR) convention.
-/// Use `ParticleMetric` explicitly when working with particle physics.
-pub type PhysicsMetric = RelativityMetric;
-
-/// Default 4D Minkowski spacetime (East Coast convention).
-pub const MINKOWSKI_4D: PhysicsMetric = RELATIVITY_MINKOWSKI_4D;
