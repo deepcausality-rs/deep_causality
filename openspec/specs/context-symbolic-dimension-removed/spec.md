@@ -4,13 +4,12 @@
 Records the withdrawal of the symbolic dimension from the context hypergraph. `Context`,
 `Contextoid` and `ContextoidType` carry six type parameters, and the symbol node types, the
 `Symbolic` trait and the `Symboid` arm do not exist.
-
 ## Requirements
-
 ### Requirement: The context hypergraph carries no symbolic dimension
 
-`Context`, `Contextoid` and `ContextoidType` SHALL each declare six type parameters
-(`D, S, T, ST, VS, VT`), with no `SYM` parameter and no `Symboid` arm.
+The context types SHALL declare no `SYM` parameter and no `Symboid` arm. Their remaining parameters
+are fixed by `context-associated-value-types` and `context-frame` rather than by this requirement,
+which governs only the absence of the symbolic dimension.
 
 The symbol node types `BaseSymbol` and `SymbolKind`, the `Symbolic` trait, the
 `ContextoidType::Symboid` variant, the `ContextKind::Symboid` arm, the `symboid()` accessor and the
@@ -21,10 +20,10 @@ tests, the workspace contained no `ContextoidType::Symboid` construction at all,
 existed only to be threaded through signatures and filled in by type aliases. `Contextuable`,
 `ContextuableGraph` and `ExtendableContextuableGraph` drop it with them.
 
-#### Scenario: The context type takes six parameters
+#### Scenario: No symbolic parameter is declared
 
 - **WHEN** a `Context`, `Contextoid` or `ContextoidType` is instantiated by hand
-- **THEN** it takes `D, S, T, ST, VS, VT`, and supplying a seventh argument fails to compile
+- **THEN** it accepts no symbolic type argument, and supplying one fails to compile
 
 #### Scenario: The symbol surface is gone
 
@@ -56,3 +55,4 @@ referenced the `Symbolic` trait or the `SYM` parameter.
 
 - **WHEN** a `CausalSetSpacetime` or `ConformalSpacetime` node is used as a context's `ST`
 - **THEN** it behaves as before
+

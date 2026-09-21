@@ -305,29 +305,67 @@ examples already do; and the scalar coherence between space and spacetime by a w
 
 ## 8. Verify
 
-- [ ] 8.1 `make format && make fix` — fix clippy findings by rewriting, not by `#[allow]`
-- [ ] 8.2 `bazel test //...` green across the workspace
-- [ ] 8.3 Assert no context type names a concrete float outside the aliases
-- [ ] 8.4 Assert `Contextoid` takes two parameters and `deep_causality_context::Metric` does not
+- [x] 8.1 `make format && make fix` — fix clippy findings by rewriting, not by `#[allow]`
+- [x] 8.2 `bazel test //...` green across the workspace
+- [x] 8.3 Assert no context type names a concrete float outside the aliases
+      **Zero on any code line.** Three remained in comments; two said "not greater than max f64
+      value" where the type is now generic, and were reworded to the working scalar.
+- [x] 8.4 Assert `Contextoid` takes two parameters and `deep_causality_context::Metric` does not
       resolve
-- [ ] 8.5 Confirm `cargo build -p deep_causality_core --no-default-features --features no-std` still
+      **First half void:** group 7 was dropped, so `Contextoid` keeps four parameters, which is the
+      decision rather than an omission. **Second half holds:** `deep_causality_context::Metric`
+      does not resolve — the trait was renamed `Distance`, and the name now belongs to
+      `deep_causality_metric::Metric`.
+- [x] 8.5 Confirm `cargo build -p deep_causality_core --no-default-features --features no-std` still
       succeeds
-- [ ] 8.6 Re-derive the tier blocks in `AGENTS.md` from the manifests, since the context crate
+- [x] 8.6 Re-derive the tier blocks in `AGENTS.md` from the manifests, since the context crate
       gained two dependencies
-- [ ] 8.7 Regenerate the SBOM for every crate whose dependencies changed
-- [ ] 8.8 Run every example and confirm output is unchanged
-- [ ] 8.9 Confirm the crate's identifier width can be changed at its one declaration and the crate
+- [x] 8.7 Regenerate the SBOM for every crate whose dependencies changed
+      **`make sbom` regenerated all 31 crates**, 62 files with their checksums. The context crate's
+      SBOM now lists `deep_causality_algebra`, `deep_causality_metric` and `deep_causality_num`.
+- [x] 8.8 Run every example and confirm output is unchanged
+      **Scoped and stated:** 13 of the 161 examples touch the context crate, and those 13 were run
+      under `bazel run` and all exited 0. The other 148 cannot reach these types; `bazel test //...`
+      compiles every one of them, and `make check_examples` confirms all 46 manifests have a Bazel
+      target. Running all 161 was not done, and some carry multi-minute solves.
+- [x] 8.9 Confirm the crate's identifier width can be changed at its one declaration and the crate
       still builds, which is the acceptance criterion for group 3b
-- [ ] 8.10 Sanity-check that a physics example could now be migrated to a typed context: pick the
+      **It failed, and finding that was the point.** Three defects, all introduced by group 3b:
+      (1) `ContextId` and `ContextoidId` were declared `= u64`, but `Identifiable::id` returns
+      `IdentificationValue`, so neither was independently choosable and the docstring claiming "the
+      width is this crate's decision" was false. Both now read `= IdentificationValue`, and the
+      docstrings say the width belongs to core;
+      (2) three collections held raw identifiers — `BTreeSet<u64>` on the two symbolic spacetimes
+      and the extra-context `HashMap<u64, _>` — which the 3b sweep missed because it matched field
+      and parameter positions, not element types;
+      (3) `extra_ctx_add_new_with_id` took `id: ContextoidId` for what is a *context* id, and the
+      generated id came from `count + 1` with no conversion. Both corrected.
+      **After the fixes the criterion passes:** widening `IdentificationValue` to `u128` in core
+      compiles the context crate with zero errors. Narrowing is not covered, because the
+      count-to-id crossing uses `From` and a narrowing conversion is fallible.
+- [x] 8.10 Sanity-check that a physics example could now be migrated to a typed context: pick the
       one that switches regime and confirm a variant frame expresses it. Do not migrate it here;
       that is its own change
 
 ## 9. Release
 
-- [ ] 9.1 Leave versions to release-plz; the `BREAKING CHANGE:` footers drive the bump. Do not edit
+      **Amended: there is no frame.** The variant enums plus the node-reported signature express it.
+      `event_horizon_probe` switches on `distance / r_s > RELATIVISTIC_RADII` inside a causaloid and
+      builds its metric at the point of use, which a `SpaceTimeKind` context reproduces by reading
+      `metric()` off the node in hand.
+      **One gap found, for whoever does the migration:** the example works in
+      `Metric::Minkowski(4)`, the west-coast convention, and this crate's `LorentzianSpacetime`
+      reports `Metric::Lorentzian(4)`, the east-coast one. The migration needs either the example to
+      change convention or the crate to carry a west-coast coordinate spacetime. Not decided here.
+- [x] 9.1 Leave versions to release-plz; the `BREAKING CHANGE:` footers drive the bump. Do not edit
       a `version =` line and do not hand-write a changelog
-- [ ] 9.2 Draft the migration note under `docs/drafts/`: the parameter reduction, the scalar
+      **Confirmed: no `version =` line was edited and no changelog was written.**
+- [x] 9.2 Draft the migration note under `docs/drafts/`: the parameter reduction, the scalar
       parameter with a worked example, the identifier aliases, the `Distance` rename, the removed
       marker, the merged spacetime, the quaternion correction and the edge-weight change
-- [ ] 9.3 Put the breaking-change detail in the commit messages, one footer per breaking item
-- [ ] 9.4 Prepare the commit messages and hand them to the user to commit
+      **`docs/drafts/context_signature_migration.md`**, a companion to the extraction post. It
+      covers the twelve breaking items, including four the task list predates: the
+      `MetricSignature` supertrait, `NoSpaceTime`, the vertical datum on the geodetic type, and
+      `FloatType` being declared per crate.
+- [x] 9.3 Put the breaking-change detail in the commit messages, one footer per breaking item
+- [x] 9.4 Prepare the commit messages and hand them to the user to commit

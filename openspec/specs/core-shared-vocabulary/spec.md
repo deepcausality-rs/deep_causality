@@ -4,9 +4,7 @@
 Defines `deep_causality_core` as the single home for the vocabulary the context and causal layers
 share: the `Identifiable` trait, beside the `IdentificationValue` it returns, and the primitive type
 aliases, each declared exactly once.
-
 ## Requirements
-
 ### Requirement: `Identifiable` lives in `deep_causality_core`
 
 `deep_causality_core` SHALL define and export the `Identifiable` trait, whose single method `id`
@@ -41,36 +39,37 @@ would force `deep_causality` to depend on it for a trait unrelated to context.
 `deep_causality_core` SHALL be the sole declaration site for the primitive type aliases shared
 across the workspace, and `deep_causality` SHALL NOT redeclare any of them.
 
-`deep_causality/src/alias/alias_primitives.rs` declares ten aliases byte-identically to
-`deep_causality_core/src/alias/mod.rs`. The eight that have users — `IdentificationValue`,
-`ContextId`, `ContextoidId`, `CausaloidId`, `DescriptionValue`, `NumericalValue`, `NumberType` and
-`FloatType` — SHALL keep their names at `deep_causality`'s root by re-export from core, so no call
-site changes.
+Core declares an alias only for vocabulary core itself uses. `ContextId` and `ContextoidId` name
+concepts core does not own and never referenced, so they move to `deep_causality_context`, which
+owns `Context` and `Contextoid`. That leaves six aliases here — `IdentificationValue`,
+`CausaloidId`, `DescriptionValue`, `NumericalValue`, `NumberType` and `FloatType` — all of which
+keep their names at `deep_causality`'s root by re-export, so no call site changes.
 
-`TeloidTag` and `TeloidID` SHALL be removed from `deep_causality` rather than re-exported. Neither
-has a user in `deep_causality` or in `deep_causality_core`, because `deep_causality_ethos` declares
-and uses its own pair.
+`TeloidTag` and `TeloidID` remain declared in core with no user, and are the same defect: naming a
+concept `deep_causality_ethos` owns. They are not moved here only because nothing in this change
+touches that crate's vocabulary.
 
 #### Scenario: The duplicate declarations are gone
 
-- **WHEN** the workspace is searched for declarations of the eight live aliases
+- **WHEN** the workspace is searched for declarations of the six live aliases
 - **THEN** each is declared in `deep_causality_core` and nowhere else, and
   `deep_causality/src/alias/alias_primitives.rs` no longer exists
 
-#### Scenario: No call site was touched
+#### Scenario: No call site changed for the six that stayed
 
 - **WHEN** the deduplication is applied
 - **THEN** every existing use of `FloatType`, `NumericalValue`, `IdentificationValue`,
-  `DescriptionValue`, `NumberType`, `CausaloidId`, `ContextId` and `ContextoidId` still resolves,
-  including through `use deep_causality::*`, with no import rewritten
+  `DescriptionValue`, `NumberType` and `CausaloidId` still resolves, including through
+  `use deep_causality::*`, with no import rewritten
 
 #### Scenario: The dead Teloid aliases leave the surface
 
 - **WHEN** a crate writes `use deep_causality::TeloidID;`
 - **THEN** compilation fails, and `deep_causality_ethos::TeloidID` is the name that resolves
 
-#### Scenario: The context crate takes its aliases from core
+#### Scenario: The context identifiers are no longer core's
 
-- **WHEN** the imports of `deep_causality_context` are read
-- **THEN** `FloatType`, `ContextId`, `ContextoidId` and `NumericalValue` come from
-  `deep_causality_core`, and the crate declares no alias of its own for them
+- **WHEN** a crate writes `use deep_causality_core::ContextId;` or
+  `use deep_causality::ContextoidId;`
+- **THEN** compilation fails, and `deep_causality_context` is where both resolve
+
