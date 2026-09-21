@@ -11,6 +11,7 @@ path = "no_lib.rs"
 
 [dependencies]
 deep_causality = { workspace = true }
+deep_causality_context = { workspace = true }
 deep_causality_ethos = { workspace = true }
 
 [[example]]

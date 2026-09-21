@@ -6,7 +6,7 @@
 //! # DBN via the Causal Monad
 //!
 //! Umbrella World as a Dynamic Bayesian Network, implemented on
-//! `PropagatingProcess<f64, WeatherState, WeatherContext>` with all three
+//! `PropagatingProcess<FloatType, WeatherState, BaseContext>` with all three
 //! channels exercised:
 //!
 //! * **State channel** (`WeatherState`): the Markov state. Carries
@@ -32,9 +32,18 @@
 //! Sampling is deterministic (`p > 0.5` decides whether it rains) so the
 //! example is reproducible without an RNG.
 
+use deep_causality_context::{
+    BaseContext, Context, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+};
 use deep_causality_core::{
     AlternatableContext, CausalEffect, PropagatingEffect, PropagatingProcess,
 };
+
+/// Node indices of the two `Data` contextoids a climate regime carries.
+const P_RAIN_GIVEN_RAIN: usize = 0;
+const P_RAIN_GIVEN_DRY: usize = 1;
+
+type FloatType = f64;
 
 fn main() {
     println!("\n=== DBN via the Causal Monad: Umbrella World with a Regime Change ===\n");
@@ -80,9 +89,9 @@ fn run_regime_change() {
 
 /// Iterate the daily bind step `n` times.
 fn simulate_n_days(
-    mut process: PropagatingProcess<f64, WeatherState, WeatherContext>,
+    mut process: PropagatingProcess<FloatType, WeatherState, BaseContext>,
     n: u32,
-) -> PropagatingProcess<f64, WeatherState, WeatherContext> {
+) -> PropagatingProcess<FloatType, WeatherState, BaseContext> {
     for _ in 0..n {
         process = process.bind(step_day);
     }
@@ -98,14 +107,31 @@ fn print_summary(label: &str, state: &WeatherState) {
 
 // --- Model: world state, climate context, and the daily bind step ---
 
-/// Conditional probability table for the current climate regime.
-#[derive(Clone, Debug, PartialEq)]
-struct WeatherContext {
-    label: &'static str,
-    /// P(rain today | rained yesterday).
-    p_rain_given_rain: f64,
-    /// P(rain today | dry yesterday).
-    p_rain_given_dry: f64,
+/// Build a climate regime: its conditional probability table as two `Data` contextoids in one
+/// typed [`BaseContext`]. The regime's name is the context's own name, so the label the summary
+/// prints is read back off the context rather than carried beside it.
+fn climate(label: &str, p_rain_given_rain: FloatType, p_rain_given_dry: FloatType) -> BaseContext {
+    let mut context = Context::with_capacity(1, label, 2);
+    for (id, value) in [(1, p_rain_given_rain), (2, p_rain_given_dry)] {
+        context
+            .add_node(Contextoid::new(
+                id,
+                ContextoidType::Datoid(Data::new(id, value)),
+            ))
+            .expect("climate contextoid is accepted");
+    }
+    context
+}
+
+/// Read one `Data` contextoid's payload out of a climate regime.
+fn read(context: &BaseContext, index: usize) -> FloatType {
+    context
+        .get_node(index)
+        .expect("contextoid is present")
+        .vertex_type()
+        .dataoid()
+        .expect("contextoid is a Datoid")
+        .get_data()
 }
 
 /// Evolving Markov state: yesterday's rain outcome, plus running counters.
@@ -117,32 +143,24 @@ struct WeatherState {
     umbrellas_carried: u32,
 }
 
-fn baseline_climate() -> WeatherContext {
-    WeatherContext {
-        label: "baseline",
-        p_rain_given_rain: 0.40,
-        p_rain_given_dry: 0.20,
-    }
+fn baseline_climate() -> BaseContext {
+    climate("baseline", 0.40, 0.20)
 }
 
-fn monsoon_climate() -> WeatherContext {
-    WeatherContext {
-        label: "monsoon",
-        p_rain_given_rain: 0.95,
-        p_rain_given_dry: 0.60,
-    }
+fn monsoon_climate() -> BaseContext {
+    climate("monsoon", 0.95, 0.60)
 }
 
 /// Build the seed carrier. Initial Markov state: yesterday it rained.
-fn start_in(climate: WeatherContext) -> PropagatingProcess<f64, WeatherState, WeatherContext> {
-    let seed = PropagatingEffect::pure(0.0_f64);
+fn start_in(regime: BaseContext) -> PropagatingProcess<FloatType, WeatherState, BaseContext> {
+    let seed = PropagatingEffect::pure(0.0 as FloatType);
     let initial = WeatherState {
         day: 0,
         rained_yesterday: true,
         rainy_days: 0,
         umbrellas_carried: 0,
     };
-    PropagatingProcess::with_state(seed, initial, Some(climate))
+    PropagatingProcess::with_state(seed, initial, Some(regime))
 }
 
 /// One bind = one day. Reads the climate from the Context, the previous
@@ -150,16 +168,16 @@ fn start_in(climate: WeatherContext) -> PropagatingProcess<f64, WeatherState, We
 /// the deterministic rain outcome, and the umbrella decision; updates
 /// the State and emits the probability as the next value.
 fn step_day(
-    _value: CausalEffect<f64>,
+    _value: CausalEffect<FloatType>,
     state: WeatherState,
-    context: Option<WeatherContext>,
-) -> PropagatingProcess<f64, WeatherState, WeatherContext> {
-    let ctx = context.expect("WeatherContext must be set");
+    context: Option<BaseContext>,
+) -> PropagatingProcess<FloatType, WeatherState, BaseContext> {
+    let ctx = context.expect("the climate regime must be set");
 
     let p_rain = if state.rained_yesterday {
-        ctx.p_rain_given_rain
+        read(&ctx, P_RAIN_GIVEN_RAIN)
     } else {
-        ctx.p_rain_given_dry
+        read(&ctx, P_RAIN_GIVEN_DRY)
     };
 
     // Deterministic rain rule: rains iff p > 0.5. Reproducible across runs.
@@ -175,7 +193,11 @@ fn step_day(
 
     println!(
         "  day {:>2} [{}] p(rain)={:.2} rains={} umbrella={}",
-        next_state.day, ctx.label, p_rain, rains_today, take_umbrella
+        next_state.day,
+        ctx.name(),
+        p_rain,
+        rains_today,
+        take_umbrella
     );
 
     let next = PropagatingEffect::pure(p_rain);

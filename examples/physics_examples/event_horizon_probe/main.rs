@@ -167,17 +167,29 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         // Falling probe vector (gamma, gamma*v, 0, 0), at the probe's *own*
                         // speed as a fraction of c rather than a fixed stand-in value.
                         let v_rel = v_esc / LIGHT_SPEED;
-                        let gamma = ONE / fsqrt(ONE - v_rel * v_rel);
-                        let mut probe_vec = vec![ZERO; 16];
-                        probe_vec[1] = gamma;
-                        probe_vec[2] = gamma * v_rel;
-                        let t_probe = CausalMultiVector::new(probe_vec, metric).unwrap();
 
-                        let dilation_effect = time_dilation_angle(&t_static, &t_probe);
-                        let rapidity = dilation_effect.value_cloned().unwrap().value();
+                        // A static observer exists only outside the horizon, so the rapidity
+                        // against one is defined only while the escape speed stays below c. At or
+                        // within the horizon `1 - v_rel^2` turns negative and the boost stops
+                        // being a rotation, so report that rather than a square root of a
+                        // negative number.
+                        if v_rel >= ONE {
+                            println!(
+                                "  [GR] No static observer at or within the horizon: rapidity undefined"
+                            );
+                        } else {
+                            let gamma = ONE / fsqrt(ONE - v_rel * v_rel);
+                            let mut probe_vec = vec![ZERO; 16];
+                            probe_vec[1] = gamma;
+                            probe_vec[2] = gamma * v_rel;
+                            let t_probe = CausalMultiVector::new(probe_vec, metric).unwrap();
 
-                        println!("  [GR] Relativistic Rapidity: {:.4}", rapidity);
-                        println!("  [GR] Time Dilation Factor: {:.2}", fcosh(rapidity));
+                            let dilation_effect = time_dilation_angle(&t_static, &t_probe);
+                            let rapidity = dilation_effect.value_cloned().unwrap().value();
+
+                            println!("  [GR] Relativistic Rapidity: {:.4}", rapidity);
+                            println!("  [GR] Time Dilation Factor: {:.2}", fcosh(rapidity));
+                        }
 
                         // Check Horizon crossing
                         if state.distance <= r_s * HORIZON_RADII {

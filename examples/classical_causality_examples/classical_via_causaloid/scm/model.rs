@@ -3,10 +3,10 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use deep_causality::{
-    BaseContext, CausableGraph, CausalityError, CausalityErrorEnum, Causaloid, CausaloidGraph,
-    ContextoidType, ContextuableGraph, Datable, Identifiable, IdentificationValue,
-    PropagatingEffect, PropagatingProcess, Verdict,
+    CausableGraph, CausalityError, CausalityErrorEnum, Causaloid, CausaloidGraph, Identifiable,
+    IdentificationValue, PropagatingEffect, PropagatingProcess, Verdict,
 };
+use deep_causality_context::{BaseContext, ContextoidType, ContextuableGraph, Datable};
 use deep_causality_core::CausalEffect;
 use std::sync::{Arc, RwLock};
 

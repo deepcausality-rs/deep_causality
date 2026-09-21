@@ -3,24 +3,27 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use deep_causality::{
-    BaseContext, CausalAction, CausalEffect, CausalityError, CausalityErrorEnum, Causaloid,
-    Context, Contextoid, ContextoidType, ContextuableGraph, IdentificationValue, NumericalValue,
-    PropagatingProcess, Root,
+    CausalAction, CausalEffect, CausalityError, CausalityErrorEnum, Causaloid, IdentificationValue,
+    NumericalValue, PropagatingProcess,
+};
+use deep_causality_context::{
+    BaseContext, Context, Contextoid, ContextoidType, ContextuableGraph, Root,
 };
 use deep_causality_ethos::{EffectEthos, TeloidModal};
+
 use std::sync::{Arc, RwLock};
+
+/// The scalar this example works in.
+pub type FloatType = f64;
 
 // Type aliases for manageable generics
 pub type CsmCausaloid = Causaloid<f64, bool, (), Arc<RwLock<BaseContext>>>;
 
 pub type CsmEthos = EffectEthos<
-    deep_causality::Data<NumericalValue>,
-    deep_causality::EuclideanSpace,
-    deep_causality::EuclideanTime,
-    deep_causality::EuclideanSpacetime,
-    deep_causality::BaseSymbol,
-    deep_causality::FloatType,
-    deep_causality::FloatType,
+    deep_causality_context::Data<NumericalValue>,
+    deep_causality_context::EuclideanSpace<FloatType>,
+    deep_causality_context::EuclideanTime<FloatType>,
+    deep_causality_context::EuclideanSpacetime<FloatType>,
 >;
 
 pub(crate) fn get_effect_ethos() -> CsmEthos {

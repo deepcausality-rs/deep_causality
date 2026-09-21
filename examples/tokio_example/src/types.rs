@@ -2,7 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality::{BaseContext, Model, NumericalValue};
+use deep_causality::{Model, NumericalValue};
+use deep_causality_context::BaseContext;
 
 // Model<I, O, C> where:
 // - I: Input type (NumericalValue)

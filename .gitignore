@@ -38,7 +38,7 @@ coverage
 */.DS_Store
 
 # tmp files
-ctx/next
+ctx/
 
 # Astro site (website/web)
 website/cfd/node_modules

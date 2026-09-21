@@ -34,8 +34,8 @@ The graph must be frozen and verified for acyclicity before evaluation; calling 
 * **Deterministic and uncertain norms:** `add_deterministic_norm` takes a `fn` predicate. `add_uncertain_norm` takes an `UncertainActivationPredicate` and an `UncertainParameter`, lifting probabilistic activation into the deontic layer.
 * **Explicit conflict resolution:** specificity, priority, and recency are first-class fields on every `Teloid`. Resolution is deterministic and reproducible.
 * **Auditable verdicts:** every `Verdict` carries a `justification: Vec<TeloidID>` so a decision can be traced back to the norms that produced it. The `DeonticExplainable` trait exposes this trail.
-* **Context-aware predicates:** norms read the full DeepCausality `Context<D, S, T, ST, SYM, VS, VT>`, so deontic rules can depend on space, time, symbolic state, and data in one expression.
-* **Static dispatch:** no `dyn` in the public API; the engine is generic over the same seven type parameters as the rest of the DeepCausality core.
+* **Context-aware predicates:** norms read the full DeepCausality `Context<D, S, T, ST>`, so deontic rules can depend on data, space, time, and spacetime in one expression.
+* **Static dispatch:** no `dyn` in the public API; the engine is generic over the same four type parameters as the context layer.
 
 ## Public API
 
@@ -43,7 +43,7 @@ The graph must be frozen and verified for acyclicity before evaluation; calling 
 
 * Types: `EffectEthos`, `Teloid`, `TeloidStore`, `TeloidGraph`, `TagIndex`, `TeloidModal`, `TeloidRelation`, `Verdict`.
 * Traits: `DeonticInferable`, `DeonticExplainable`, `TeloidStorable`, `Teloidable`.
-* Aliases: `BaseTeloidStore`, `TeloidID` (`u64`), `TeloidTag`.
+* Aliases: `BaseTeloidStore`, `FloatType` (`f64`), `TeloidID` (`u64`), `TeloidTag` (`&'static str`).
 * Errors: `DeonticError`.
 
 ## Usage
@@ -52,23 +52,31 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-deep_causality_ethos = "0.2"
-deep_causality = "0.13"
+deep_causality_ethos = "0.3"
+deep_causality = "0.17"
+deep_causality_context = "0.1"
 ```
 
 ### Building an EffectEthos
 
 ```rust
 use deep_causality_ethos::{EffectEthos, TeloidModal, DeonticInferable};
-use deep_causality::{ActionParameterValue, Context, ProposedAction};
+use deep_causality::{ActionParameterValue, ProposedAction};
+use deep_causality_context::{Context, Datable, SpaceTemporal, Spatial, Temporal};
 use std::collections::HashMap;
 
 // Define a deterministic predicate over Context and ProposedAction.
 // "A drone must not take off when battery is below 20%."
-fn battery_below_minimum<D, S, T, ST, SYM, VS, VT>(
-    _ctx: &Context<D, S, T, ST, SYM, VS, VT>,
+fn battery_below_minimum<D, S, T, ST>(
+    _ctx: &Context<D, S, T, ST>,
     action: &ProposedAction,
-) -> bool {
+) -> bool
+where
+    D: Datable + Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone,
+{
     match action.parameters().get("battery_pct") {
         Some(ActionParameterValue::Number(pct)) => *pct < 20.0,
         _ => false,
@@ -80,7 +88,7 @@ let mut ethos = EffectEthos::new()
     .add_deterministic_norm(
         1,                            // TeloidID
         "takeoff",                    // action identifier
-        &["flight_safety".to_string()], // tags
+        &["flight_safety"],           // tags
         battery_below_minimum,        // predicate
         TeloidModal::Impermissible,   // modality
         0,                            // timestamp
@@ -98,10 +106,10 @@ ethos.verify_graph().expect("graph must be acyclic");
 let mut params = HashMap::new();
 params.insert("battery_pct".to_string(), ActionParameterValue::Number(12.5));
 let action = ProposedAction::new(1, "takeoff".to_string(), params);
-let context = /* a deep_causality::Context */;
+let context = /* a deep_causality_context::Context */;
 
 let verdict = ethos
-    .evaluate_action(&action, &context, &["flight_safety".to_string()])
+    .evaluate_action(&action, &context, &["flight_safety"])
     .expect("evaluation failed");
 
 match verdict.outcome() {
@@ -130,7 +138,8 @@ A full worked example, including the `Context` setup and a CSM integration, live
 
 ## Relation to other DeepCausality crates
 
-* `deep_causality` supplies `Context`, `ProposedAction`, `Uncertain`, and the seven generic parameters used here.
+* `deep_causality` supplies `ProposedAction`, `ActionParameterValue`, and `Uncertain`.
+* `deep_causality_context` supplies `Context` and the four generic parameters used here.
 * `ultragraph` backs the `TeloidGraph`; freeze and acyclicity checks come from it.
 
 ## References

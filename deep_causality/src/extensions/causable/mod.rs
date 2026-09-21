@@ -10,9 +10,10 @@ use std::hash::Hash;
 
 use crate::IdentificationValue;
 use crate::{
-    Causable, CausableCollectionAccessor, Identifiable, MonadicCausable, MonadicCausableCollection,
+    Causable, CausableCollectionAccessor, MonadicCausable, MonadicCausableCollection,
     StatefulMonadicCausable, StatefulMonadicCausableCollection,
 };
+use deep_causality_core::Identifiable;
 
 //
 // [T]

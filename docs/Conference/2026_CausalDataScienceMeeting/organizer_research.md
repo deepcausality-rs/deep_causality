@@ -161,7 +161,7 @@ model, or an agent proposed them).
   move on. The audience is econometrics and business analytics.
 - Physics. The plasma-blackout example is the deepest demonstration of regime change in the
   repository and the wrong opener for this room. One sentence, if any.
-- Scrith. The meeting is about DeepCausality and its use; the joint project stays on the LF deck.
+- Partner work. The meeting is about DeepCausality and its use; joint projects stay on the LF deck.
 - Claims about the United Airlines deployment beyond what the LF deck states: real-time anomaly
   detection at about one million operations per second, built on the hypergraph, the core engine,
   and dynamic context.

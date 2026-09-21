@@ -10,7 +10,7 @@ mod types;
 pub mod utils_test;
 
 // Alias
-pub use crate::alias::{BaseTeloidStore, TeloidID, TeloidTag};
+pub use crate::alias::{BaseTeloidStore, FloatType, TeloidID, TeloidTag};
 
 // Errors
 pub use errors::deontic_error::DeonticError;

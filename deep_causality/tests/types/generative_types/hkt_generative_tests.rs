@@ -4,9 +4,9 @@
  */
 
 use deep_causality::{
-    BaseContext, BaseContextoid, Causaloid, Context, Model, ModelValidationError, OpStatus,
-    Operation, PropagatingEffect,
+    Causaloid, Model, ModelValidationError, OpStatus, Operation, PropagatingEffect,
 };
+use deep_causality_context::{BaseContext, BaseContextoid, Context};
 
 use deep_causality_ast::ConstTree;
 use std::sync::{Arc, RwLock};

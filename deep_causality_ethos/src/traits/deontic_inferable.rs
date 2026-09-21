@@ -4,21 +4,17 @@
  */
 
 use crate::{DeonticError, TeloidTag, Verdict};
-use deep_causality::{
-    Context, Datable, ProposedAction, SpaceTemporal, Spatial, Symbolic, Temporal,
-};
+use deep_causality::ProposedAction;
+use deep_causality_context::{Context, Datable, SpaceTemporal, Spatial, Temporal};
 
 /// Defines the public API for a deontic reasoning engine.
 #[allow(clippy::type_complexity)]
-pub trait DeonticInferable<D, S, T, ST, SYM, VS, VT>
+pub trait DeonticInferable<D, S, T, ST>
 where
     D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
-    VS: Clone,
-    VT: Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone,
 {
     /// Evaluates a proposed action against the set of norms within a given context.
     ///
@@ -34,7 +30,7 @@ where
     fn evaluate_action(
         &self,
         action: &ProposedAction,
-        context: &Context<D, S, T, ST, SYM, VS, VT>,
+        context: &Context<D, S, T, ST>,
         tags: &[TeloidTag],
     ) -> Result<Verdict, DeonticError>;
 }

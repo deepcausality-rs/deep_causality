@@ -19,7 +19,7 @@ land.
 | Issue | [#754](https://github.com/deepcausality-rs/deep_causality/issues/754) |
 | From | rules_rust 0.73.0, pinned to `marvin-hansen/rules_rust@47a9fd9` by `git_override` |
 | To | `rules_rs` 0.0.107 (BCR), which pins `hermeticbuild/rules_rust@9ec1223` itself |
-| Reference port | `../scrith`, built on rules_rs from the start |
+| Reference port | A sibling repository, built on rules_rs from the start |
 | Scale | 76 first-party BUILD files, 45 crates, 496 Rust targets, 94 MB vendored sources |
 | Bazel | 9.2.0, unchanged |
 
@@ -56,8 +56,8 @@ rust_library = _rust_library
 
 What rules_rs replaces is the dependency-resolution and toolchain layer. `rust_doc`,
 `rust_doc_test` and `rust_test_suite` keep coming from `@rules_rust//rust:defs.bzl`, exactly as
-scrith loads them today. Rule attributes do not change, so the existing stanzas survive the
-migration nearly untouched.
+the reference port loads them today. Rule attributes do not change, so the existing stanzas
+survive the migration nearly untouched.
 
 **The rules_rust fork pin can be dropped.** rules_rs provisions its own rules_rust through an
 `http_archive` in `rs/rules_rust.bzl`, pinned to `hermeticbuild/rules_rust@9ec1223`, and exposes a
@@ -72,11 +72,11 @@ BUILD.bazel and its tests/BUILD.bazel, so no merge produces a duplicate. Only on
 the build files names a `tests:` label, `Bazel.md:48`.
 
 **The existing rust_test_suite pattern can stay.** Every crate has a `tests/mod.rs` with a mirrored
-module tree, which is the layout that forced scrith into a single `rust_test` per crate. It does
-not force the same here: no `*_tests.rs` file in this repo references a sibling module, `super::`
-or `crate::`, so each one still compiles as its own crate root. The 223 `rust_test_suite` targets
-keep working. Switching to scrith's single-target pattern would be a separate decision about test
-granularity, not something this migration requires.
+module tree, which is the layout that forced the reference port into a single `rust_test` per
+crate. It does not force the same here: no `*_tests.rs` file in this repo references a sibling
+module, `super::` or `crate::`, so each one still compiles as its own crate root. The 223
+`rust_test_suite` targets keep working. Switching to that port's single-target pattern would be a
+separate decision about test granularity, not something this migration requires.
 
 **The external dependency surface is larger than the vendored set suggests.** `thirdparty/BUILD.bazel`
 declares eight packages and only seven are referenced by a first-party target; `libm` is vendored
@@ -87,8 +87,9 @@ than either count: `criterion` as a dev-dependency of nine crates,
 those features. `crate.from_cargo` resolves the whole workspace manifest, so the first fetch pulls
 a substantially bigger closure than the current 94 MB tree.
 
-**scrith is a target-state reference, not a migration path.** Its Bazel setup was greenfield
-(`98b7e3f`, "Minimal bazel config with rules_rs"). There is no migration diff to copy, only an end
+**The reference port is a target-state reference, not a migration path.** Its Bazel setup was
+greenfield (`98b7e3f`, "Minimal bazel config with rules_rs"). There is no migration diff to copy,
+only an end
 state to match.
 
 **Two version pins are already inconsistent.** Root Cargo.toml sets `rust-version = "1.97.1"` while
@@ -152,7 +153,7 @@ This stage is atomic. The moment `crate.from_cargo` provides `@crates`, every
    `extra_target_triples` has no equivalent on `toolchains.toolchain`; the triple list lives on
    `crate.from_cargo` instead.
 3. Leave the hermetic LLVM block alone. Keep `toolchain.exec(os = "linux")` and
-   `register_toolchains("@llvm_toolchains//:all")` as they are. Switching to scrith's
+   `register_toolchains("@llvm_toolchains//:all")` as they are. Switching to the reference port's
    `register_toolchains("@llvm//toolchain:all")` also registers darwin cc toolchains, which then
    demand the `osx.from_archive` macOS SDK. That is a separate change with its own download cost
    and belongs in its own commit.
@@ -166,7 +167,7 @@ This stage is atomic. The moment `crate.from_cargo` provides `@crates`, every
 
    `rusty-fork` is the one to check by hand: the vendored alias is `rusty-fork` while the crate
    target is `rusty_fork`.
-5. Update the `load()` lines to the rules_rs re-exports, matching scrith:
+5. Update the `load()` lines to the rules_rs re-exports, matching the reference port:
 
    ```python
    load("@crates//:defs.bzl", "aliases", "all_crate_deps", "lint_config")

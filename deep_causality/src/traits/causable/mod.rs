@@ -5,7 +5,8 @@
 pub(crate) mod sealed;
 pub mod stateful;
 
-use crate::{Identifiable, PropagatingEffect};
+use crate::PropagatingEffect;
+use deep_causality_core::Identifiable;
 
 /// The Causable trait defines the core behavior for all causal elements.
 ///

@@ -9,8 +9,7 @@ mod lorentzian_metric;
 mod west_coast;
 
 pub use aliases::{
-    MINKOWSKI_4D, PARTICLE_MINKOWSKI_4D, ParticleMetric, PhysicsMetric, RELATIVITY_MINKOWSKI_4D,
-    RelativityMetric,
+    PARTICLE_MINKOWSKI_4D, ParticleMetric, RELATIVITY_MINKOWSKI_4D, RelativityMetric,
 };
 pub use east_coast::EastCoastMetric;
 pub use lorentzian_metric::LorentzianMetric;

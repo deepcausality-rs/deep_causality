@@ -38,6 +38,9 @@ exclude = [
 [dependencies.deep_causality]
 workspace = true
 
+[dependencies.deep_causality_context]
+workspace = true
+
 [dependencies.ultragraph]
 workspace = true
 

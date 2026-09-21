@@ -29,12 +29,13 @@
 //! 4. **Error Propagation**: Errors short-circuit execution and are captured in the effect
 
 use crate::{
-    AuditableGraphGenerator, Causaloid, Context, Contextoid, GraphGeneratableEffect,
-    GraphGeneratableEffectSystem, Identifiable, ModelValidationError, ModificationLog,
-    ModificationLogEntry, OpStatus, OpTree, Operation,
+    AuditableGraphGenerator, Causaloid, GraphGeneratableEffect, GraphGeneratableEffectSystem,
+    ModelValidationError, ModificationLog, ModificationLogEntry, OpStatus, OpTree, Operation,
 };
+use deep_causality_context::{Context, Contextoid};
+use deep_causality_core::Identifiable;
 
-use crate::{ContextuableGraph, Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
+use deep_causality_context::{ContextuableGraph, Datable, SpaceTemporal, Spatial, Temporal};
 use deep_causality_haft::{Effect3, Monad, Pure};
 use std::collections::HashMap;
 use std::fmt::Debug;
@@ -146,26 +147,18 @@ impl Interpreter {
     /// - Complete audit log of all operations
     #[allow(clippy::type_complexity)]
     #[allow(clippy::type_complexity)]
-    pub fn execute<I, O, D, S, T, ST, SYM, VS, VT>(
+    pub fn execute<I, O, D, S, T, ST>(
         &self,
-        tree: &OpTree<
-            I,
-            O,
-            Context<D, S, T, ST, SYM, VS, VT>,
-            Contextoid<D, S, T, ST, SYM, VS, VT>,
-        >,
-        initial_state: CausalSystemState<I, O, Context<D, S, T, ST, SYM, VS, VT>>,
-    ) -> AuditableGraphGenerator<CausalSystemState<I, O, Context<D, S, T, ST, SYM, VS, VT>>>
+        tree: &OpTree<I, O, Context<D, S, T, ST>, Contextoid<D, S, T, ST>>,
+        initial_state: CausalSystemState<I, O, Context<D, S, T, ST>>,
+    ) -> AuditableGraphGenerator<CausalSystemState<I, O, Context<D, S, T, ST>>>
     where
         I: Default + Clone,
         O: Default + Debug + Clone,
-        D: Datable + Copy + Clone + PartialEq + std::fmt::Debug,
-        S: Spatial<VS> + Clone + std::fmt::Debug,
-        T: Temporal<VT> + Clone + std::fmt::Debug,
-        ST: SpaceTemporal<VS, VT> + Clone + std::fmt::Debug,
-        SYM: Symbolic + Clone + std::fmt::Debug,
-        VS: Clone + std::fmt::Debug,
-        VT: Clone + std::fmt::Debug,
+        D: Datable + Clone + PartialEq + std::fmt::Debug,
+        S: Spatial + Clone + std::fmt::Debug,
+        T: Temporal + Clone + std::fmt::Debug,
+        ST: SpaceTemporal + Clone + std::fmt::Debug,
     {
         self.walk(tree, initial_state)
     }
@@ -176,26 +169,18 @@ impl Interpreter {
     /// applying each operation and composing the results monadically.
     #[allow(clippy::only_used_in_recursion)]
     #[allow(clippy::type_complexity)]
-    fn walk<I, O, D, S, T, ST, SYM, VS, VT>(
+    fn walk<I, O, D, S, T, ST>(
         &self,
-        op_node: &OpTree<
-            I,
-            O,
-            Context<D, S, T, ST, SYM, VS, VT>,
-            Contextoid<D, S, T, ST, SYM, VS, VT>,
-        >,
-        state: CausalSystemState<I, O, Context<D, S, T, ST, SYM, VS, VT>>,
-    ) -> AuditableGraphGenerator<CausalSystemState<I, O, Context<D, S, T, ST, SYM, VS, VT>>>
+        op_node: &OpTree<I, O, Context<D, S, T, ST>, Contextoid<D, S, T, ST>>,
+        state: CausalSystemState<I, O, Context<D, S, T, ST>>,
+    ) -> AuditableGraphGenerator<CausalSystemState<I, O, Context<D, S, T, ST>>>
     where
         I: Default + Clone,
         O: Default + Debug + Clone,
-        D: Datable + Copy + Clone + PartialEq + std::fmt::Debug,
-        S: Spatial<VS> + Clone + std::fmt::Debug,
-        T: Temporal<VT> + Clone + std::fmt::Debug,
-        ST: SpaceTemporal<VS, VT> + Clone + std::fmt::Debug,
-        SYM: Symbolic + Clone + std::fmt::Debug,
-        VS: Clone + std::fmt::Debug,
-        VT: Clone + std::fmt::Debug,
+        D: Datable + Clone + PartialEq + std::fmt::Debug,
+        S: Spatial + Clone + std::fmt::Debug,
+        T: Temporal + Clone + std::fmt::Debug,
+        ST: SpaceTemporal + Clone + std::fmt::Debug,
     {
         type Witness = <GraphGeneratableEffectSystem as Effect3>::HktWitness;
 

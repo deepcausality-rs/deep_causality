@@ -5,6 +5,7 @@
 
 use deep_causality::utils_test::test_utils_graph;
 use deep_causality::*;
+use deep_causality_context::BaseContext;
 use std::sync::Arc;
 use std::sync::RwLock;
 

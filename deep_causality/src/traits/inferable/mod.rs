@@ -7,7 +7,8 @@ use std::cmp::Ordering;
 use std::fmt::Debug;
 
 use crate::utils::math_utils::abs_num;
-use crate::{DescriptionValue, Identifiable, NumericalValue};
+use crate::{DescriptionValue, NumericalValue};
+use deep_causality_core::Identifiable;
 
 /// Trait for inferable types with causal reasoning properties.
 ///

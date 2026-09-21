@@ -6,15 +6,14 @@ use crate::*;
 use deep_causality_haft::LogAddEntry;
 
 use crate::{UncertainBool, UncertainF64};
+use deep_causality_context::{BaseContext, Identifiable};
+// The context builders live with the context crate. Re-exported so the sibling test-util modules
+// and the test tree keep reaching them through `test_utils::`, as they did before the split.
+pub use deep_causality_context::utils_test::test_utils::{
+    get_base_context, get_context, get_test_context,
+};
 use deep_causality_uncertain::Uncertain;
 use std::sync::{Arc, RwLock};
-
-pub fn get_context() -> BaseContext {
-    let id = 1;
-    let name = "base context";
-    let capacity = 10; // adjust as needed
-    Context::with_capacity(id, name, capacity)
-}
 
 pub fn get_test_assumption_vec() -> Vec<Assumption> {
     let a1 = get_test_assumption();
@@ -228,31 +227,6 @@ pub fn get_test_error_causaloid() -> BaseCausaloid<bool, bool> {
 // BaseContext is a type alias for a basic context that can be used for testing
 // It matches the type signature of the base causaloid also uses in these tests.
 // See src/types/alias_types/csm_types for definition.
-pub fn get_base_context() -> BaseContext {
-    let id = 1;
-    let name = "base context";
-    let mut context = Context::with_capacity(id, name, 10);
-    assert_eq!(context.size(), 0);
-
-    let root = Root::new(id);
-    let contextoid = Contextoid::new(id, ContextoidType::Root(root));
-    let idx = context.add_node(contextoid).expect("Failed to add node");
-    assert_eq!(idx, 0);
-    assert_eq!(context.size(), 1);
-
-    context
-}
-
-pub fn get_test_context() -> BaseContext {
-    let mut context = Context::with_capacity(1, "Test-Context", 10);
-
-    let id = 1;
-    let root = Root::new(id);
-    let contextoid = Contextoid::new(id, ContextoidType::Root(root));
-    context.add_node(contextoid).expect("Failed to add node");
-
-    context
-}
 
 pub fn get_test_inferable(id: IdentificationValue, inverse: bool) -> Inference {
     let question = "".to_string() as DescriptionValue;

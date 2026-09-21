@@ -2,11 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::types::context_node_types::symbol::symbol_kind::SymbolKind;
-use crate::{
-    Causaloid, CausaloidGraph, Context, Contextoid, Data, FloatType, Model, NumberType, SpaceKind,
-    SpaceTimeKind, TimeKind,
-};
+use crate::{Causaloid, CausaloidGraph, Model};
+use deep_causality_context::UniformContext;
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
@@ -36,10 +33,7 @@ use std::sync::{Arc, RwLock};
 /// - **`SpaceTimeKind`**: Combines the spatial and temporal contexts into a
 ///   unified spacetime representation using an abstract `SpaceTimeKind` enum,
 ///   allowing for various spacetime geometries (e.g., `EuclideanSpacetime`,
-///   `LorentzianSpacetime`, `MinkowskiSpacetime`) in a uniform manner.
-/// - **`SymbolKind`**: Provides a basic symbolic representation for elements
-///   within the model using an abstract `SymbolKind` enum, useful for labeling,
-///   identification, or abstract reasoning across different symbolic types.
+///   `LorentzianSpacetime`) in a uniform manner.
 /// - **`FloatType` (x2)**: Two `FloatType` parameters, typically used for
 ///   internal calculations, scalar values, metrics, or other generic numerical
 ///   requirements within the `Model` structure, such as probabilities, weights,
@@ -80,10 +74,7 @@ pub type UniformModel = Model<bool, bool, UniformContext>;
 /// - **`SpaceTimeKind`**: Combines the spatial and temporal contexts into a
 ///   unified spacetime representation using an abstract `SpaceTimeKind` enum,
 ///   allowing for various spacetime geometries (e.g., `EuclideanSpacetime`,
-///   `LorentzianSpacetime`, `MinkowskiSpacetime`) in a uniform manner.
-/// - **`SymbolKind`**: Provides a basic symbolic representation for the causaloid
-///   using an abstract `SymbolKind` enum, useful for labeling, identification,
-///   or abstract reasoning across different symbolic types.
+///   `LorentzianSpacetime`) in a uniform manner.
 /// - **`FloatType` (x2)**: Two `FloatType` parameters, typically used for
 ///   internal calculations, scalar values, or other generic numerical
 ///   requirements within the `Causaloid` structure, such as probabilities,
@@ -119,8 +110,6 @@ pub type UniformCausaloid = Causaloid<bool, bool, (), Arc<RwLock<UniformContext>
 /// - **`SpaceTimeKind`**: Combines the spatial and temporal contexts into a
 ///   unified spacetime representation using an abstract `SpaceTimeKind` enum,
 ///   allowing for various spacetime geometries.
-/// - **`SymbolKind`**: Provides a symbolic representation for the causaloids
-///   using an abstract `SymbolKind` enum, useful for labeling and identification.
 /// - **`FloatType` (x2)**: Two `FloatType` parameters, typically used for internal
 ///   calculations, such as probabilities, weights, or magnitudes.
 ///
@@ -156,10 +145,7 @@ pub type UniformCausaloidVec = Vec<Causaloid<bool, bool, (), Arc<RwLock<UniformC
 /// - **`SpaceTimeKind`**: Combines the spatial and temporal contexts into a
 ///   unified spacetime representation using an abstract `SpaceTimeKind` enum,
 ///   allowing for various spacetime geometries (e.g., `EuclideanSpacetime`,
-///   `LorentzianSpacetime`, `MinkowskiSpacetime`) in a uniform manner.
-/// - **`SymbolKind`**: Provides a basic symbolic representation for the causaloids
-///   using an abstract `SymbolKind` enum, useful for labeling, identification,
-///   or abstract reasoning across different symbolic types.
+///   `LorentzianSpacetime`) in a uniform manner.
 /// - **`FloatType` (x2)**: Two `FloatType` parameters, typically used for
 ///   internal calculations, scalar values, or other generic numerical
 ///   requirements within the `Causaloid` structure, such as probabilities,
@@ -198,10 +184,7 @@ pub type UniformCausalMap = HashMap<usize, Causaloid<bool, bool, (), Arc<RwLock<
 /// - **`SpaceTimeKind`**: Combines the spatial and temporal contexts into a
 ///   unified spacetime representation using an abstract `SpaceTimeKind` enum,
 ///   allowing for various spacetime geometries (e.g., `EuclideanSpacetime`,
-///   `LorentzianSpacetime`, `MinkowskiSpacetime`) in a uniform manner.
-/// - **`SymbolKind`**: Provides a basic symbolic representation for the causaloids
-///   using an abstract `SymbolKind` enum, useful for labeling, identification,
-///   or abstract reasoning across different symbolic types.
+///   `LorentzianSpacetime`) in a uniform manner.
 /// - **`FloatType` (x2)**: Two `FloatType` parameters, typically used for
 ///   internal calculations, scalar values, or other generic numerical
 ///   requirements within the `Causaloid` structure, such as probabilities,
@@ -214,98 +197,3 @@ pub type UniformCausalMap = HashMap<usize, Causaloid<bool, bool, (), Arc<RwLock<
 /// component is not fixed but rather belongs to a set of predefined "kinds".
 pub type UniformCausalGraph =
     CausaloidGraph<Causaloid<bool, bool, (), Arc<RwLock<UniformContext>>>>;
-
-/// A type alias for a default, general-purpose `Context` configuration that uses
-/// abstract "kind" enums for its spatial, temporal, and symbolic contexts.
-///
-/// This `UniformContext` alias represents a `Context` instance configured with a
-/// standard set of generic parameters, making it suitable for common causal
-/// modeling scenarios where the specific underlying concrete types for space,
-/// time, and symbols can vary but are represented by their respective "kind" enums.
-///
-/// It provides a convenient and readable shorthand for defining a `Context`
-/// that encapsulates:
-///
-/// - **`Data<NumberType>`**: Used for its data component. `NumberType` is a
-///   generic numeric type, typically an alias for a floating-point or integer,
-///   allowing for flexible data representation within the context.
-/// - **`SpaceKind`**: Defines the spatial context using an abstract `SpaceKind`
-///   enum. This allows the context to operate with various spatial representations
-///   (e.g., `EuclideanSpace`, `EcefSpace`, `NedSpace`, `GeoSpace`) without
-///   changing the `Context`'s type signature, providing uniformity across different
-///   spatial contexts.
-/// - **`TimeKind`**: Specifies the temporal context using an abstract `TimeKind`
-///   enum. This enables the context to handle different temporal representations
-///   (e.g., `EuclideanTime`, `DiscreteTime`, `EntropicTime`, `LorentzianTime`)
-///   flexibly, offering a uniform temporal interface.
-/// - **`SpaceTimeKind`**: Combines the spatial and temporal contexts into a
-///   unified spacetime representation using an abstract `SpaceTimeKind` enum,
-///   allowing for various spacetime geometries (e.g., `EuclideanSpacetime`,
-///   `LorentzianSpacetime`, `MinkowskiSpacetime`) in a uniform manner.
-/// - **`SymbolKind`**: Provides a basic symbolic representation for elements
-///   within the context using an abstract `SymbolKind` enum, useful for labeling,
-///   identification, or abstract reasoning across different symbolic types.
-/// - **`FloatType` (x2)**: Two `FloatType` parameters, typically used for
-///   internal calculations, scalar values, metrics, or other generic numerical
-///   requirements within the `Context` structure, such as probabilities, weights,
-///   or magnitudes. `FloatType` is generally an alias for a standard floating-point type.
-///
-/// This `UniformContext` is designed to be a sensible default for many applications
-/// requiring a flexible yet consistent context structure that can adapt to different
-/// underlying spatial, temporal, and symbolic representations through their
-/// respective `Kind` enums. It promotes code reusability and simplifies type
-/// declarations when the exact concrete type of a context component is not
-/// fixed but rather belongs to a set of predefined "kinds".
-pub type UniformContext =
-    Context<Data<NumberType>, SpaceKind, TimeKind, SpaceTimeKind, SymbolKind, FloatType, FloatType>;
-
-/// A type alias for a default, general-purpose `Contextoid` configuration that uses
-/// abstract "kind" enums for its spatial, temporal, and symbolic contexts.
-///
-/// This `UniformContextoid` alias represents a `Contextoid` instance configured with a
-/// standard set of generic parameters, making it suitable for common causal
-/// modeling scenarios where the specific underlying concrete types for space,
-/// time, and symbols can vary but are represented by their respective "kind" enums.
-///
-/// It provides a convenient and readable shorthand for defining a `Contextoid`
-/// that encapsulates:
-///
-/// - **`Data<NumberType>`**: Used for its data component. `NumberType` is a
-///   generic numeric type, typically an alias for a floating-point or integer,
-///   allowing for flexible data representation within the contextoid.
-/// - **`SpaceKind`**: Defines the spatial context using an abstract `SpaceKind`
-///   enum. This allows the contextoid to operate with various spatial representations
-///   (e.g., `EuclideanSpace`, `EcefSpace`, `NedSpace`, `GeoSpace`) without
-///   changing the `Contextoid`'s type signature, providing uniformity across different
-///   spatial contexts.
-/// - **`TimeKind`**: Specifies the temporal context using an abstract `TimeKind`
-///   enum. This enables the contextoid to handle different temporal representations
-///   (e.g., `EuclideanTime`, `DiscreteTime`, `EntropicTime`, `LorentzianTime`)
-///   flexibly, offering a uniform temporal interface.
-/// - **`SpaceTimeKind`**: Combines the spatial and temporal contexts into a
-///   unified spacetime representation using an abstract `SpaceTimeKind` enum,
-///   allowing for various spacetime geometries (e.g., `EuclideanSpacetime`,
-///   `LorentzianSpacetime`, `MinkowskiSpacetime`) in a uniform manner.
-/// - **`SymbolKind`**: Provides a basic symbolic representation for elements
-///   within the contextoid using an abstract `SymbolKind` enum, useful for labeling,
-///   identification, or abstract reasoning across different symbolic types.
-/// - **`FloatType` (x2)**: Two `FloatType` parameters, typically used for
-///   internal calculations, scalar values, metrics, or other generic numerical
-///   requirements within the `Contextoid` structure, such as probabilities, weights,
-///   or magnitudes. `FloatType` is generally an alias for a standard floating-point type.
-///
-/// This `UniformContextoid` is designed to be a sensible default for many applications
-/// requiring a flexible yet consistent contextoid structure that can adapt to different
-/// underlying spatial, temporal, and symbolic representations through their
-/// respective `Kind` enums. It promotes code reusability and simplifies type
-/// declarations when the exact concrete type of a context component is not
-/// fixed but rather belongs to a set of predefined "kinds".
-pub type UniformContextoid = Contextoid<
-    Data<NumberType>,
-    SpaceKind,
-    TimeKind,
-    SpaceTimeKind,
-    SymbolKind,
-    FloatType,
-    FloatType,
->;

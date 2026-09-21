@@ -3,9 +3,11 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::TeloidStore;
-use deep_causality::{
-    BaseSymbol, Data, EuclideanSpace, EuclideanSpacetime, EuclideanTime, FloatType, NumericalValue,
-};
+use deep_causality::NumericalValue;
+use deep_causality_context::{Data, EuclideanSpace, EuclideanSpacetime, EuclideanTime};
+
+/// The floating-point type this crate's ready-made aliases are built at.
+pub type FloatType = f64;
 
 pub type TeloidTag = &'static str;
 pub type TeloidID = u64;
@@ -33,13 +35,9 @@ pub type TeloidID = u64;
 /// - **`EuclideanSpacetime`**: Combines the Euclidean spatial and temporal
 ///   contexts into a unified spacetime representation, where both space and
 ///   time are treated with Euclidean properties.
-/// - **`BaseSymbol`**: Provides a basic symbolic representation for teloids
-///   within the store, useful for labeling, identification, or abstract
-///   reasoning.
-/// - **`FloatType` (x2)**: Two `FloatType` parameters, which are typically
-///   used for internal calculations, scalar values, metrics, or other generic
-///   numerical requirements within the `TeloidStore` structure, such as probabilities,
-///   weights, or magnitudes.
+/// - **`FloatType`**: The scalar the three geometric node types are built at. The same
+///   `FloatType` parameterises `EuclideanSpace`, `EuclideanTime`, and `EuclideanSpacetime`,
+///   so every coordinate a norm reads out of this store is measured in one scalar type.
 ///
 /// This `BaseTeloidStore` is designed to be a sensible default for many applications,
 /// offering a consistent and easily recognizable structure for managing and
@@ -47,10 +45,7 @@ pub type TeloidID = u64;
 /// simulation scenarios.
 pub type BaseTeloidStore = TeloidStore<
     Data<NumericalValue>,
-    EuclideanSpace,
-    EuclideanTime,
-    EuclideanSpacetime,
-    BaseSymbol,
-    FloatType,
-    FloatType,
+    EuclideanSpace<FloatType>,
+    EuclideanTime<FloatType>,
+    EuclideanSpacetime<FloatType>,
 >;

@@ -3,7 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::{BaseContext, Causable, CausalState, Identifiable, PropagatingEffect};
+use deep_causality::{Causable, CausalState, Identifiable, PropagatingEffect};
+use deep_causality_context::BaseContext;
 
 use deep_causality::utils_test::test_utils;
 use std::sync::Arc;

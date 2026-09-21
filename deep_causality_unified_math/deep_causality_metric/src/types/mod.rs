@@ -4,5 +4,7 @@
  */
 
 mod metric;
+mod metric_family;
 
 pub use metric::Metric;
+pub use metric_family::MetricFamily;

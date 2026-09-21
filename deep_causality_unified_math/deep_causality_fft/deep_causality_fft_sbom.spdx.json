@@ -1,20 +1,20 @@
 {
   "SPDXID": "SPDXRef-DOCUMENT",
   "creationInfo": {
-    "created": "2026-09-01T17:42:53Z",
+    "created": "2026-09-21T11:51:47Z",
     "creators": [
       "Tool: cargo-sbom-v0.10.0"
     ]
   },
   "dataLicense": "CC0-1.0",
-  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_fft-55ad3963-e7b7-41bb-968a-53c2a17fe8c0",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_fft-b1200162-a4f7-4335-ae05-677c614cf80f",
   "files": [
     {
       "SPDXID": "SPDXRef-File-deep_causality_fft",
       "checksums": [
         {
           "algorithm": "SHA1",
-          "checksumValue": "80ba6a9477c66460f24455c3696311d5587f6421"
+          "checksumValue": "3687c53530ccc941f0fc03fad57ba4a4f79b3f18"
         }
       ],
       "fileName": "./Cargo.lock",
@@ -27,22 +27,14 @@
   "name": "deep_causality_fft",
   "packages": [
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--num-0.4.5",
+      "SPDXID": "SPDXRef-Package-deep--causality--num-0.5.2",
       "description": "Number utils for for deep_causality crate.",
       "downloadLocation": "NONE",
+      "homepage": "https://deepcausality.com/",
       "licenseConcluded": "MIT",
       "licenseDeclared": "MIT",
       "name": "deep_causality_num",
-      "versionInfo": "0.4.5"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--par-0.1.3",
-      "description": "Shared parallelism primitives (MaybeParallel marker, scoped fork-join) for the deep_causality crates.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_par",
-      "versionInfo": "0.1.3"
+      "versionInfo": "0.5.2"
     },
     {
       "SPDXID": "SPDXRef-Package-libm-0.2.16",
@@ -61,20 +53,34 @@
       "versionInfo": "0.2.16"
     },
     {
-      "SPDXID": "SPDXRef-Package-either-1.17.0",
-      "description": "The enum `Either` with variants `Left` and `Right` is a general purpose sum type with two cases.\n",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/either@1.17.0",
-          "referenceType": "purl"
-        }
-      ],
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "either",
-      "versionInfo": "1.17.0"
+      "SPDXID": "SPDXRef-Package-deep--causality--num--complex-0.1.10",
+      "description": "Complex, quaternion, and octonion number types for deep_causality.",
+      "downloadLocation": "NONE",
+      "homepage": "https://deepcausality.com/",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_num_complex",
+      "versionInfo": "0.1.10"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--algebra-0.4.4",
+      "description": "Abstract algebra traits (groups, rings, fields, algebras) and isomorphism markers for deep_causality.",
+      "downloadLocation": "NONE",
+      "homepage": "https://deepcausality.com/",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_algebra",
+      "versionInfo": "0.4.4"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--fft-0.1.5",
+      "description": "Fast Fourier transform (FFT, rFFT, N-dimensional) for the deep_causality crate.",
+      "downloadLocation": "NONE",
+      "homepage": "https://deepcausality.com/",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_fft",
+      "versionInfo": "0.1.5"
     },
     {
       "SPDXID": "SPDXRef-Package-rayon-core-1.13.0",
@@ -93,13 +99,66 @@
       "versionInfo": "1.13.0"
     },
     {
-      "SPDXID": "SPDXRef-Package-crossbeam-deque-0.8.7",
+      "SPDXID": "SPDXRef-Package-deep--causality--haft-0.6.0",
+      "description": "HKT traits for for the deep_causality crate.",
+      "downloadLocation": "NONE",
+      "homepage": "https://deepcausality.com/",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_haft",
+      "versionInfo": "0.6.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-crossbeam-epoch-0.9.21",
+      "description": "Epoch-based garbage collection",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/crossbeam-epoch@0.9.21",
+          "referenceType": "purl"
+        }
+      ],
+      "homepage": "https://github.com/crossbeam-rs/crossbeam/tree/master/crossbeam-epoch",
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "crossbeam-epoch",
+      "versionInfo": "0.9.21"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-either-1.18.0",
+      "description": "The enum `Either` with variants `Left` and `Right` is a general purpose sum type with two cases.\n",
+      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
+      "externalRefs": [
+        {
+          "referenceCategory": "PACKAGE-MANAGER",
+          "referenceLocator": "pkg:cargo/either@1.18.0",
+          "referenceType": "purl"
+        }
+      ],
+      "licenseConcluded": "MIT OR Apache-2.0",
+      "licenseDeclared": "MIT OR Apache-2.0",
+      "name": "either",
+      "versionInfo": "1.18.0"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--par-0.1.5",
+      "description": "Shared parallelism primitives (MaybeParallel marker, scoped fork-join) for the deep_causality crates.",
+      "downloadLocation": "NONE",
+      "homepage": "https://deepcausality.com/",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_par",
+      "versionInfo": "0.1.5"
+    },
+    {
+      "SPDXID": "SPDXRef-Package-crossbeam-deque-0.8.8",
       "description": "Concurrent work-stealing deque",
       "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
       "externalRefs": [
         {
           "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/crossbeam-deque@0.8.7",
+          "referenceLocator": "pkg:cargo/crossbeam-deque@0.8.8",
           "referenceType": "purl"
         }
       ],
@@ -107,25 +166,16 @@
       "licenseConcluded": "MIT OR Apache-2.0",
       "licenseDeclared": "MIT OR Apache-2.0",
       "name": "crossbeam-deque",
-      "versionInfo": "0.8.7"
+      "versionInfo": "0.8.8"
     },
     {
-      "SPDXID": "SPDXRef-Package-deep--causality--haft-0.5.1",
-      "description": "HKT traits for for the deep_causality crate.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_haft",
-      "versionInfo": "0.5.1"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-crossbeam-utils-0.8.22",
+      "SPDXID": "SPDXRef-Package-crossbeam-utils-0.8.23",
       "description": "Utilities for concurrent programming",
       "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
       "externalRefs": [
         {
           "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/crossbeam-utils@0.8.22",
+          "referenceLocator": "pkg:cargo/crossbeam-utils@0.8.23",
           "referenceType": "purl"
         }
       ],
@@ -133,25 +183,7 @@
       "licenseConcluded": "MIT OR Apache-2.0",
       "licenseDeclared": "MIT OR Apache-2.0",
       "name": "crossbeam-utils",
-      "versionInfo": "0.8.22"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--algebra-0.4.3",
-      "description": "Abstract algebra traits (groups, rings, fields, algebras) and isomorphism markers for deep_causality.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_algebra",
-      "versionInfo": "0.4.3"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--fft-0.1.4",
-      "description": "Fast Fourier transform (FFT, rFFT, N-dimensional) for the deep_causality crate.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_fft",
-      "versionInfo": "0.1.4"
+      "versionInfo": "0.8.23"
     },
     {
       "SPDXID": "SPDXRef-Package-rayon-1.12.0",
@@ -168,64 +200,88 @@
       "licenseDeclared": "MIT OR Apache-2.0",
       "name": "rayon",
       "versionInfo": "1.12.0"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-crossbeam-epoch-0.9.20",
-      "description": "Epoch-based garbage collection",
-      "downloadLocation": "registry+https://github.com/rust-lang/crates.io-index",
-      "externalRefs": [
-        {
-          "referenceCategory": "PACKAGE-MANAGER",
-          "referenceLocator": "pkg:cargo/crossbeam-epoch@0.9.20",
-          "referenceType": "purl"
-        }
-      ],
-      "homepage": "https://github.com/crossbeam-rs/crossbeam/tree/master/crossbeam-epoch",
-      "licenseConcluded": "MIT OR Apache-2.0",
-      "licenseDeclared": "MIT OR Apache-2.0",
-      "name": "crossbeam-epoch",
-      "versionInfo": "0.9.20"
-    },
-    {
-      "SPDXID": "SPDXRef-Package-deep--causality--num--complex-0.1.8",
-      "description": "Complex, quaternion, and octonion number types for deep_causality.",
-      "downloadLocation": "NONE",
-      "licenseConcluded": "MIT",
-      "licenseDeclared": "MIT",
-      "name": "deep_causality_num_complex",
-      "versionInfo": "0.1.8"
     }
   ],
   "relationships": [
     {
-      "relatedSpdxElement": "SPDXRef-Package-libm-0.2.16",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.4.5"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-crossbeam-utils-0.8.22",
+      "relatedSpdxElement": "SPDXRef-Package-crossbeam-deque-0.8.8",
       "relationshipType": "DEPENDS_ON",
       "spdxElementId": "SPDXRef-Package-rayon-core-1.13.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.4.5",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.5.2",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--algebra-0.4.3"
+      "spdxElementId": "SPDXRef-Package-deep--causality--num--complex-0.1.10"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.4.5",
+      "relatedSpdxElement": "SPDXRef-Package-either-1.18.0",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--fft-0.1.4"
+      "spdxElementId": "SPDXRef-Package-rayon-1.12.0"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-crossbeam-epoch-0.9.20",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.6.0",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-crossbeam-deque-0.8.7"
+      "spdxElementId": "SPDXRef-Package-deep--causality--num--complex-0.1.10"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-crossbeam-utils-0.8.22",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.5.2",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-crossbeam-epoch-0.9.20"
+      "spdxElementId": "SPDXRef-Package-deep--causality--algebra-0.4.4"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-crossbeam-utils-0.8.23",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-rayon-core-1.13.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.4.4",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--fft-0.1.5"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-crossbeam-utils-0.8.23",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-crossbeam-epoch-0.9.21"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num--complex-0.1.10",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--fft-0.1.5"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--par-0.1.5",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--fft-0.1.5"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.4.4",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--num--complex-0.1.10"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-libm-0.2.16",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--num-0.5.2"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.4.4",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-deep--causality--haft-0.6.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-rayon-core-1.13.0",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-rayon-1.12.0"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-crossbeam-utils-0.8.23",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-crossbeam-deque-0.8.8"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-Package-crossbeam-epoch-0.9.21",
+      "relationshipType": "DEPENDS_ON",
+      "spdxElementId": "SPDXRef-Package-crossbeam-deque-0.8.8"
     },
     {
       "relatedSpdxElement": "SPDXRef-File-deep_causality_fft",
@@ -235,67 +291,17 @@
     {
       "relatedSpdxElement": "SPDXRef-Package-rayon-1.12.0",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--fft-0.1.4"
+      "spdxElementId": "SPDXRef-Package-deep--causality--fft-0.1.5"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.4.5",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--num--complex-0.1.8"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.4.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--num--complex-0.1.8"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-rayon-core-1.13.0",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-rayon-1.12.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-crossbeam-deque-0.8.7",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-rayon-core-1.13.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-either-1.17.0",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-rayon-1.12.0"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-crossbeam-utils-0.8.22",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-crossbeam-deque-0.8.7"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.4.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--fft-0.1.4"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--haft-0.5.1",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--num--complex-0.1.8"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--algebra-0.4.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--haft-0.5.1"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--par-0.1.3",
-      "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--fft-0.1.4"
-    },
-    {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--fft-0.1.4",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--fft-0.1.5",
       "relationshipType": "GENERATED_FROM",
       "spdxElementId": "SPDXRef-File-deep_causality_fft"
     },
     {
-      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num--complex-0.1.8",
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--num-0.5.2",
       "relationshipType": "DEPENDS_ON",
-      "spdxElementId": "SPDXRef-Package-deep--causality--fft-0.1.4"
+      "spdxElementId": "SPDXRef-Package-deep--causality--fft-0.1.5"
     }
   ],
   "spdxVersion": "SPDX-2.3"

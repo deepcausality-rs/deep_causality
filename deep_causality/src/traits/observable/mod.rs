@@ -5,7 +5,8 @@
 
 use std::fmt::Debug;
 
-use crate::{Identifiable, NumericalValue};
+use crate::NumericalValue;
+use deep_causality_core::Identifiable;
 
 /// Observable trait for objects that can be observed.
 ///

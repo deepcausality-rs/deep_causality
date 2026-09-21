@@ -1,0 +1,123 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
+use std::fmt::{Display, Formatter};
+use std::hash::Hash;
+use std::marker::PhantomData;
+
+use crate::*;
+
+/// Enum of monoidal context node types (each a composable unit of structure).
+/// Each variant name ends in `-oid` to emphasize its monoid role as a single identity-bearing unit.
+#[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
+pub enum ContextKind {
+    Datoid,
+    Tempoid,
+    Root,
+    Spaceoid,
+    SpaceTempoid,
+}
+
+#[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
+pub enum ContextoidType<D, S, T, ST>
+where
+    D: Datable + Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone,
+{
+    Datoid(D),
+    Tempoid(T),
+    Root(Root),
+    Spaceoid(S),
+    SpaceTempoid(ST),
+    #[doc(hidden)]
+    _Marker(PhantomData<()>),
+}
+
+impl<D, S, T, ST> ContextoidType<D, S, T, ST>
+where
+    D: Datable + Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone,
+{
+    pub fn kind(&self) -> ContextKind {
+        match self {
+            ContextoidType::Datoid(_) => ContextKind::Datoid,
+            ContextoidType::Tempoid(_) => ContextKind::Tempoid,
+            ContextoidType::Root(_) => ContextKind::Root,
+            ContextoidType::Spaceoid(_) => ContextKind::Spaceoid,
+            ContextoidType::SpaceTempoid(_) => ContextKind::SpaceTempoid,
+            _ => unreachable!(), // phantom variant
+        }
+    }
+}
+
+impl<D, S, T, ST> ContextoidType<D, S, T, ST>
+where
+    D: Datable + Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone,
+{
+    pub fn root(&self) -> Option<&Root> {
+        if let ContextoidType::Root(b) = self {
+            Some(b)
+        } else {
+            None
+        }
+    }
+
+    pub fn dataoid(&self) -> Option<&D> {
+        if let ContextoidType::Datoid(b) = self {
+            Some(b)
+        } else {
+            None
+        }
+    }
+    pub fn tempoid(&self) -> Option<&T> {
+        if let ContextoidType::Tempoid(b) = self {
+            Some(b)
+        } else {
+            None
+        }
+    }
+    pub fn spaceoid(&self) -> Option<&S> {
+        if let ContextoidType::Spaceoid(b) = self {
+            Some(b)
+        } else {
+            None
+        }
+    }
+    pub fn space_tempoid(&self) -> Option<&ST> {
+        if let ContextoidType::SpaceTempoid(b) = self {
+            Some(b)
+        } else {
+            None
+        }
+    }
+}
+
+impl<D, S, T, ST> Display for ContextoidType<D, S, T, ST>
+where
+    D: Display + Datable + Clone,
+    S: Display + Spatial + Clone,
+    T: Display + Temporal + Clone,
+    ST: Display + SpaceTemporal + Clone,
+{
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ContextoidType::Datoid(b) => write!(f, "Datoid: {b}"),
+            ContextoidType::Tempoid(b) => write!(f, "Tempoid: {b}"),
+            ContextoidType::Root(b) => write!(f, "Root: {b}"),
+            ContextoidType::Spaceoid(b) => write!(f, "Spaceoid: {b}"),
+            ContextoidType::SpaceTempoid(b) => write!(f, "SpaceTempoid: {b}"),
+            ContextoidType::_Marker(_) => {
+                unreachable!("_Marker variant should never be accessed directly")
+            }
+        }
+    }
+}

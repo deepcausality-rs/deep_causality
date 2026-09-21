@@ -4,9 +4,9 @@
  */
 
 use deep_causality::{
-    BaseContext, BaseContextoid, CausalSystemState, Causaloid, ContextoidType, Data, Interpreter,
-    ModelValidationError, OpTree, Operation,
+    CausalSystemState, Causaloid, Interpreter, ModelValidationError, OpTree, Operation,
 };
+use deep_causality_context::{BaseContext, BaseContextoid, ContextoidType, Data};
 use std::sync::{Arc, RwLock};
 
 // Type aliases

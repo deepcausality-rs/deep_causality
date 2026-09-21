@@ -3,9 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::{
-    BaseContext, BaseContextoid, Causaloid, ContextoidType, Data, Identifiable, OpTree, Operation,
-};
+use deep_causality::{Causaloid, Identifiable, OpTree, Operation};
+use deep_causality_context::{BaseContext, BaseContextoid, ContextoidType, Data};
 use std::sync::{Arc, RwLock};
 
 // Type aliases for testing to reduce verbosity

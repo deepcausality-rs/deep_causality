@@ -52,15 +52,12 @@ pub use deep_causality_metric::{
     // Convention trait and wrappers
     EastCoastMetric,
     LorentzianMetric,
-    MINKOWSKI_4D,
     Metric,
-    // Constants
     MetricError,
     // Domain-specific aliases
     PARTICLE_MINKOWSKI_4D,
     // Core types
     ParticleMetric,
-    PhysicsMetric,
     RELATIVITY_MINKOWSKI_4D,
     RelativityMetric,
     WestCoastMetric,

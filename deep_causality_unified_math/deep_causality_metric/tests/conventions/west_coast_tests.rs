@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_metric::{LorentzianMetric, Metric, WestCoastMetric};
+use deep_causality_metric::{LorentzianMetric, Metric, MetricError, WestCoastMetric};
 
 // =============================================================================
 // Construction tests
@@ -165,4 +165,59 @@ fn test_west_coast_hash() {
     set.insert(WestCoastMetric::MINKOWSKI_4D);
     set.insert(WestCoastMetric::MINKOWSKI_3D);
     assert_eq!(set.len(), 2);
+}
+
+// =============================================================================
+// Space-dimension refusal
+// =============================================================================
+
+#[test]
+fn test_west_coast_new_rejects_space_dimension_with_the_wrong_sign() {
+    // Time is +1, so the construction clears the first check and is refused only by the loop over
+    // the space dimensions. Euclidean(4) is (++++): e0 is right and e1..e3 are not.
+    let err = WestCoastMetric::new(Metric::Euclidean(4))
+        .expect_err("(++++) is not West Coast in its space dimensions");
+
+    assert_eq!(
+        err,
+        MetricError::sign_convention_mismatch(
+            "West Coast convention requires space dimensions to have sign -1"
+        ),
+        "the refusal must name the space dimensions, not the time dimension"
+    );
+}
+
+#[test]
+fn test_west_coast_new_rejects_a_single_wrong_space_dimension() {
+    // Only the last generator is wrong, so a loop that stops early accepts this metric.
+    let metric = Metric::Custom {
+        dim: 4,
+        neg_mask: 0b0110, // e0 = +1 (correct), e1, e2 = -1 (correct), e3 = +1 (wrong)
+        zero_mask: 0,
+    };
+    assert_eq!(metric.sign_of_sq(0), 1);
+    assert_eq!(metric.sign_of_sq(1), -1);
+    assert_eq!(metric.sign_of_sq(2), -1);
+    assert_eq!(metric.sign_of_sq(3), 1);
+
+    let err = WestCoastMetric::new(metric).expect_err("e3 = +1 is not West Coast");
+    assert_eq!(
+        err,
+        MetricError::sign_convention_mismatch(
+            "West Coast convention requires space dimensions to have sign -1"
+        )
+    );
+}
+
+#[test]
+fn test_west_coast_new_accepts_a_degenerate_space_dimension() {
+    // The loop admits 0 beside -1, so a null space generator is not a convention violation.
+    let metric = Metric::Custom {
+        dim: 4,
+        neg_mask: 0b0110,  // e1, e2 = -1
+        zero_mask: 0b1000, // e3 = 0
+    };
+    let west = WestCoastMetric::new(metric).expect("a null space generator is admitted");
+    assert_eq!(west.dimension(), 4);
+    assert_eq!(west.signature(), (1, 2, 1));
 }

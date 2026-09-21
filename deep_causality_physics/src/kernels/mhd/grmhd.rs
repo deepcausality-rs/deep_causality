@@ -26,7 +26,7 @@ use deep_causality_topology::SimplicialManifold;
 /// # Sign Convention
 ///
 /// Uses the `LorentzianMetric` trait to ensure consistent sign conventions.
-/// Default is East Coast (-+++) via `PhysicsMetric`.
+/// Default is East Coast (-+++) via `RelativityMetric`.
 ///
 /// # Arguments
 /// * `em_manifold` - Manifold with electromagnetic 2-form F data on 2-simplices

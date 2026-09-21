@@ -1,0 +1,340 @@
+load("@crates//:defs.bzl", "aliases", "all_crate_deps", "lint_config")
+load("@rules_rs//rs:rust_library.bzl", "rust_library")
+load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_test_suite")
+
+rust_library(
+    name = "deep_causality_context",
+    srcs = glob([
+        "src/**",
+    ]),
+    aliases = aliases(),
+    crate_root = "src/lib.rs",
+    lint_config = lint_config(),
+    tags = [
+        "context",
+        "data_structures",
+    ],
+    visibility = ["//visibility:public"],
+    deps = all_crate_deps(normal = True),
+)
+
+rust_doc(
+    name = "doc",
+    crate = ":deep_causality_context",
+    tags = ["doc"],
+    visibility = ["//visibility:public"],
+)
+
+rust_doc_test(
+    name = "doc_test",
+    crate = ":deep_causality_context",
+    tags = ["doc-test"],
+    visibility = ["//visibility:public"],
+)
+
+###############################################################################
+# TESTS
+###############################################################################
+rust_test_suite(
+    name = "ctx_types_no_space_time_tests",
+    srcs = glob([
+        "tests/types/context_node_types/no_space_time/*_tests.rs",
+    ]),
+    tags = [
+        "context_types_tests",
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_context",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "ctx_types_data_tests",
+    srcs = glob([
+        "tests/types/context_node_types/data/*_tests.rs",
+    ]),
+    tags = [
+        "context_types_tests",
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_context",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "ctx_types_data_uncertain_tests",
+    srcs = glob([
+        "tests/types/context_node_types/data_uncertain/*_tests.rs",
+    ]),
+    tags = [
+        "context_types_tests",
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_context",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "ctx_types_root_tests",
+    srcs = glob([
+        "tests/types/context_node_types/root/*_tests.rs",
+    ]),
+    tags = [
+        "context_types_tests",
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_context",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "ctx_space_types_tests",
+    srcs = glob([
+        "tests/types/context_node_types/space/**/*_tests.rs",
+    ]),
+    tags = [
+        "context_types_tests",
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_context",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "ctx_space_time_types_tests",
+    srcs = glob([
+        "tests/types/context_node_types/space_time/**/*_tests.rs",
+    ]),
+    tags = [
+        "context_types_tests",
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_context",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "ctx_symbolic_spacetime_types_tests",
+    srcs = glob([
+        "tests/types/context_node_types/symbol_spacetime/**/*_tests.rs",
+    ]),
+    tags = [
+        "context_types_tests",
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_context",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "ctx_time_types_tests",
+    srcs = glob([
+        "tests/types/context_node_types/time/**/*_tests.rs",
+    ]),
+    tags = [
+        "context_types_tests",
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_context",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "ctx_graph_types_tests",
+    srcs = glob([
+        "tests/types/context_types/context_graph/*_tests.rs",
+    ]),
+    tags = [
+        "context_types_tests",
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_context",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "ctx_types_contextoid_tests",
+    srcs = glob([
+        "tests/types/context_types/contextoid/*_tests.rs",
+    ]),
+    tags = [
+        "context_types_tests",
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_context",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "ctx_types_relation_kind_tests",
+    srcs = glob([
+        "tests/types/context_types/relation_kind/*_tests.rs",
+    ]),
+    tags = [
+        "context_types_tests",
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_context",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "ctx_types_time_scale_tests",
+    srcs = glob([
+        "tests/types/context_types/time_scale/*_tests.rs",
+    ]),
+    tags = [
+        "context_types_tests",
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_context",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "ctx_types_vertical_datum_tests",
+    srcs = glob([
+        "tests/types/context_types/vertical_datum/*_tests.rs",
+    ]),
+    tags = [
+        "context_types_tests",
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_context",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "error_types_tests",
+    srcs = glob([
+        "tests/errors/*_tests.rs",
+    ]),
+    tags = [
+        "error_tests",
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_context",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "traits_adjustable",
+    srcs = glob([
+        "tests/traits/adjustable/*_tests.rs",
+    ]),
+    tags = [
+        "trait_tests",
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_context",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "utils_test_tests",
+    srcs = glob([
+        "tests/utils_test/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+        "utils_tests",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_context",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)

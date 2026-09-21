@@ -11,9 +11,9 @@
 //! acyclicity gate to the same statements.
 
 use deep_causality::utils_test::test_utils;
-use deep_causality::{
-    BaseContext, CausableGraph, CausalEffect, CausaloidGraph, Context, Contextoid, ContextoidType,
-    ContextuableGraph, PropagatingEffect, RelationKind, Root,
+use deep_causality::{CausableGraph, CausalEffect, CausaloidGraph, PropagatingEffect};
+use deep_causality_context::{
+    BaseContext, Context, Contextoid, ContextoidType, ContextuableGraph, RelationKind, Root,
 };
 
 /// THEOREM_MAP: core.context_graph.threading_bind

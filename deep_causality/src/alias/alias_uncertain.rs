@@ -2,7 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{CausalityError, Context, FloatType, ProposedAction};
+use crate::{CausalityError, FloatType, ProposedAction};
+use deep_causality_context::Context;
 
 /// The framework's uncertain carriers, at the scalar the framework works in.
 ///
@@ -22,8 +23,5 @@ pub type UncertainF64 = deep_causality_uncertain::Uncertain<FloatType>;
 
 // Type alias for the uncertain activation predicate function pointer.
 #[allow(clippy::type_complexity)]
-pub type UncertainActivationPredicate<D, S, T, ST, SYM, VS, VT> =
-    fn(
-        &Context<D, S, T, ST, SYM, VS, VT>,
-        &ProposedAction,
-    ) -> Result<UncertainBool, CausalityError>;
+pub type UncertainActivationPredicate<D, S, T, ST> =
+    fn(&Context<D, S, T, ST>, &ProposedAction) -> Result<UncertainBool, CausalityError>;

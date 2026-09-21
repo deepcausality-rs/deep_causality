@@ -56,8 +56,9 @@
 //! 4. **Auditability**: When executed by the `Interpreter`, operations produce
 //!    detailed logs via the HKT effect system.
 
-use crate::{Causaloid, CausaloidId, ContextId, ContextoidId};
+use crate::{Causaloid, CausaloidId};
 use deep_causality_ast::ConstTree;
+use deep_causality_context::{ContextId, ContextoidId};
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 

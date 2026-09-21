@@ -2,11 +2,11 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+/// The floating-point type this crate works in.
+pub type FloatType = f64;
 
-use crate::{
-    BaseSymbol, Causaloid, CausaloidGraph, Context, Contextoid, Data, EuclideanSpace,
-    EuclideanSpacetime, EuclideanTime, FloatType, Model, NumericalValue,
-};
+use crate::{Causaloid, CausaloidGraph, Model};
+use deep_causality_context::BaseContext;
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 
@@ -29,8 +29,6 @@ use std::sync::{Arc, RwLock};
 /// - **`EuclideanSpacetime`**: Combines the Euclidean spatial and temporal
 ///   contexts into a unified spacetime representation, where both space and
 ///   time are treated with Euclidean properties.
-/// - **`BaseSymbol`**: Provides a basic symbolic representation for elements
-///   within the model, useful for labeling, identification, or abstract reasoning.
 /// - **`FloatType` (x2)**: Two `FloatType` parameters, typically used for
 ///   internal calculations, scalar values, metrics, or other generic numerical
 ///   requirements within the `Model` structure, such as probabilities, weights,
@@ -64,8 +62,6 @@ pub type BaseModel = Model<bool, bool, BaseContext>;
 /// - **`EuclideanSpacetime`**: Combines the Euclidean spatial and temporal contexts
 ///   into a unified spacetime representation, where both space and time are treated
 ///   with Euclidean properties.
-/// - **`BaseSymbol`**: Provides a basic symbolic representation for the causaloid,
-///   useful for labeling, identification, or abstract reasoning.
 /// - **`FloatType` (x2)**: Two `FloatType` parameters, typically used for internal
 ///   calculations, scalar values, or other generic numeric requirements within
 ///   the `Causaloid` structure, such as probabilities, weights, or magnitudes.
@@ -99,8 +95,6 @@ pub type BaseCausaloid<I, O> = Causaloid<I, O, (), Arc<RwLock<BaseContext>>>;
 /// - **`EuclideanSpacetime`**: Combines the Euclidean spatial and temporal contexts
 ///   into a unified spacetime representation, where both space and time are treated
 ///   with Euclidean properties.
-/// - **`BaseSymbol`**: Provides a basic symbolic representation for the causaloids,
-///   useful for labeling, identification, or abstract reasoning.
 /// - **`FloatType` (x2)**: Two `FloatType` parameters, typically used for internal
 ///   calculations, scalar values, or other generic numeric requirements within
 ///   the `Causaloid` structure, such as probabilities, weights, or magnitudes.
@@ -131,7 +125,6 @@ pub type BaseCausaloidVec<I, O> = Vec<Causaloid<I, O, (), Arc<RwLock<BaseContext
 ///   representation of time.
 /// - **`EuclideanSpacetime`**: Combines the Euclidean spatial and temporal contexts
 ///   into a unified spacetime representation.
-/// - **`BaseSymbol`**: Provides a basic symbolic representation for the causaloids.
 /// - **`FloatType` (x2)**: Two `FloatType` parameters, typically used for internal
 ///   calculations, scalar values, or other generic numeric requirements within
 ///   the `Causaloid` structure.
@@ -159,7 +152,6 @@ pub type BenchmarkCausalMap = HashMap<usize, BaseCausaloid<f64, bool>>;
 ///   representation of time.
 /// - **`EuclideanSpacetime`**: Combines the Euclidean spatial and temporal
 ///   contexts into a unified spacetime representation.
-/// - **`BaseSymbol`**: Provides a basic symbolic representation for the causaloids.
 /// - **`FloatType` (x2)**: Two `FloatType` parameters, typically used for internal
 ///   calculations, scalar values, or other generic numeric requirements within
 ///   the `Causaloid` structure.
@@ -168,83 +160,3 @@ pub type BenchmarkCausalMap = HashMap<usize, BaseCausaloid<f64, bool>>;
 /// standard Euclidean and numerical context is sufficient, offering a consistent
 /// and easily recognizable graph structure for common causal modeling scenarios.
 pub type BaseCausalGraph = CausaloidGraph<Causaloid<bool, bool, (), Arc<RwLock<BaseContext>>>>;
-
-/// A type alias for a default, general-purpose `Context` configuration.
-///
-/// This `BaseContext` alias represents a `Context` instance specifically configured
-/// with a standard set of generic parameters, making it suitable for common
-/// causal modeling scenarios that operate within a Euclidean and numerical framework.
-///
-/// It provides a convenient and readable shorthand for defining a `Context`
-/// that encapsulates:
-///
-/// - **`Data<NumericalValue>`**: For handling general numerical data. `NumberType`
-///   is typically an alias for a floating-point or integer type, allowing for
-///   flexible data representation within the context.
-/// - **`EuclideanSpace`**: Defines the spatial context using a standard
-///   Euclidean coordinate system. This implies that spatial relationships
-///   within this context adhere to Euclidean geometry.
-/// - **`EuclideanTime`**: Specifies the temporal context, utilizing a
-///   Euclidean representation of time. This typically refers to a continuous,
-///   linear progression of time.
-/// - **`EuclideanSpacetime`**: Combines the Euclidean spatial and temporal
-///   contexts into a unified spacetime representation, where both space and
-///   time are treated with Euclidean properties.
-/// - **`BaseSymbol`**: Provides a basic symbolic representation for elements
-///   within the context, useful for labeling, identification, or abstract
-///   reasoning.
-/// - **`FloatType` (x2)**: Two `FloatType` parameters, which are typically
-///   used for internal calculations, scalar values, metrics, or other generic
-///   numerical requirements within the `Context` structure, such as probabilities,
-///   weights, or magnitudes.
-///
-/// This `BaseContext` is designed to be a sensible default for many applications,
-/// offering a consistent and easily recognizable context structure for
-/// general-purpose causal reasoning and data representation.
-pub type BaseContext = Context<
-    Data<NumericalValue>,
-    EuclideanSpace,
-    EuclideanTime,
-    EuclideanSpacetime,
-    BaseSymbol,
-    FloatType,
-    FloatType,
->;
-
-/// A type alias for a default, general-purpose `Contextoid` configuration.
-///
-/// This `BaseContextoid` alias represents a `Contextoid` instance—a single,
-/// identity-bearing unit of context—configured with a standard set of generic
-/// parameters. It is designed for common causal modeling scenarios that operate
-/// within a Euclidean and numerical framework.
-///
-/// It provides a convenient and readable shorthand for defining a `Contextoid`
-/// that encapsulates one of the following contextual roles:
-///
-/// - **`Data<NumericalValue>`**: For handling general numerical data (a `Datoid`). `NumberType`
-///   is typically an alias for a floating-point or integer type.
-/// - **`EuclideanSpace`**: Defines a spatial context using a standard
-///   Euclidean coordinate system (a `Spaceoid`).
-/// - **`EuclideanTime`**: Specifies a temporal context, utilizing a
-///   Euclidean representation of time (a `Tempoid`).
-/// - **`EuclideanSpacetime`**: Combines the Euclidean spatial and temporal
-///   contexts into a unified spacetime representation (a `SpaceTempoid`).
-/// - **`BaseSymbol`**: Provides a basic symbolic representation for elements
-///   within the context (a `Symboid`).
-///
-/// The two `FloatType` parameters correspond to the generic `VS` and `VT` types
-/// required by the underlying `Contextoid` structure, representing the value types
-/// for spatial and temporal coordinates, respectively.
-///
-/// This `BaseContextoid` is the standard choice for creating individual context nodes
-/// that are compatible with other "base" types like `BaseContext` and `BaseCausalGraph`,
-/// ensuring a consistent and easily understandable modeling environment.
-pub type BaseContextoid = Contextoid<
-    Data<NumericalValue>,
-    EuclideanSpace,
-    EuclideanTime,
-    EuclideanSpacetime,
-    BaseSymbol,
-    FloatType,
-    FloatType,
->;
