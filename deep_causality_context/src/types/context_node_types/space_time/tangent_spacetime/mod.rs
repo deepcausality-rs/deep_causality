@@ -11,6 +11,7 @@ mod coordinate;
 mod display;
 mod getters;
 mod identifiable;
+mod metric_signature;
 mod metric_tensor;
 mod space_temporal;
 mod space_temporal_interval;

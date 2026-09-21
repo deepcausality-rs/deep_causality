@@ -10,6 +10,7 @@ mod display;
 mod getters;
 mod identifiable;
 mod metric;
+mod metric_signature;
 mod space_temporal;
 mod spatial;
 mod temporal;

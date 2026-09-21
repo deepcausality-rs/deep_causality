@@ -3,5 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-mod metric_family_tests;
-mod metric_tests;
+use crate::{NoSpaceTime, Spatial};
+use deep_causality_algebra::RealField;
+
+impl<R: RealField> Spatial for NoSpaceTime<R> {}

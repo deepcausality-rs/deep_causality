@@ -5,3 +5,4 @@
 
 mod adjustable_tests;
 mod euclidean_spacetime_tests;
+mod metric_signature_tests;

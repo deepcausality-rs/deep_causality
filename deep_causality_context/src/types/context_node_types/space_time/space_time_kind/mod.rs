@@ -6,8 +6,8 @@
 use crate::ContextoidId;
 use crate::errors::IndexError;
 use crate::{
-    Coordinate, EuclideanSpacetime, LorentzianSpacetime, SpaceTemporal, Spatial, TangentSpacetime,
-    Temporal, TimeScale,
+    Coordinate, EuclideanSpacetime, LorentzianSpacetime, MetricSignature, SpaceTemporal, Spatial,
+    TangentSpacetime, Temporal, TimeScale,
 };
 use deep_causality_algebra::RealField;
 use deep_causality_core::Identifiable;
@@ -99,6 +99,18 @@ impl<R: RealField> Identifiable for SpaceTimeKind<R> {
             SpaceTimeKind::Euclidean(euclidean) => euclidean.id(),
             SpaceTimeKind::Lorentzian(lorentzian) => lorentzian.id(),
             SpaceTimeKind::Tangent(tangent) => tangent.id(),
+        }
+    }
+}
+
+/// Forwards to the variant in hand. This is the whole point of asking the node: a context on
+/// this enum holds nodes in more than one signature, and each answers for itself.
+impl<R: RealField> MetricSignature for SpaceTimeKind<R> {
+    fn metric(&self) -> deep_causality_metric::Metric {
+        match self {
+            SpaceTimeKind::Euclidean(euclidean) => euclidean.metric(),
+            SpaceTimeKind::Lorentzian(lorentzian) => lorentzian.metric(),
+            SpaceTimeKind::Tangent(tangent) => tangent.metric(),
         }
     }
 }

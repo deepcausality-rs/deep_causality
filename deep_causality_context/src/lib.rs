@@ -53,6 +53,7 @@ pub use crate::traits::contextuable::coordinate::Coordinate;
 pub use crate::traits::contextuable::datable::Datable;
 pub use crate::traits::contextuable::datable_uncertain::UncertainDatable;
 pub use crate::traits::contextuable::distance::Distance;
+pub use crate::traits::contextuable::metric_signature::MetricSignature;
 pub use crate::traits::contextuable::metric_tensor::MetricTensor4D;
 pub use crate::traits::contextuable::space_temporal::SpaceTemporal;
 pub use crate::traits::contextuable::space_temporal::SpaceTemporalInterval;
@@ -75,9 +76,12 @@ pub use crate::traits::scalar::scalar_value::ScalarValue;
 // Types
 //
 // Default context node types.
+pub use crate::traits::context_frame::ContextFrame;
+pub use crate::types::context_frames::{BaseFrame, ClockFrame, UniformFrame};
 pub use crate::types::context_node_types::data::Data;
 pub use crate::types::context_node_types::data_uncertain::uncertain_bool_data::UncertainBoolData;
 pub use crate::types::context_node_types::data_uncertain::uncertain_data::UncertainData;
+pub use crate::types::context_node_types::no_space_time::NoSpaceTime;
 pub use crate::types::context_node_types::root::Root;
 // Space context node types.
 pub use crate::types::context_node_types::space::ecef_space::EcefSpace;

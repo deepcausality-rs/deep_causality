@@ -4,6 +4,7 @@
  */
 
 use crate::traits::contextuable::coordinate::Coordinate;
+use crate::traits::contextuable::metric_signature::MetricSignature;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
 use deep_causality_algebra::RealField;
@@ -24,7 +25,7 @@ use deep_causality_num::{FromPrimitive, lift};
 /// # Note
 /// The actual meaning of `t()` depends on the context—e.g., wall clock time,
 /// simulation ticks, or a relativistic coordinate frame.
-pub trait SpaceTemporal: Identifiable + Spatial + Temporal {
+pub trait SpaceTemporal: Identifiable + Spatial + Temporal + MetricSignature {
     /// Returns the value associated with the temporal (4th) dimension.
     fn t(&self) -> &Self::TimeUnit;
 }

@@ -2,6 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+/// The floating-point type this crate works in.
+pub type FloatType = f64;
 
 use crate::{Causaloid, CausaloidGraph, Model};
 use deep_causality_context::BaseContext;

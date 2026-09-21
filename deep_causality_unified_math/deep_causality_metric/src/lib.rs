@@ -20,6 +20,7 @@
 //! ## Core Types
 //!
 //! - [`Metric`]: The core enum representing Clifford algebra signatures
+//! - [`MetricFamily`]: The analytic form a metric tensor takes, with its parameters
 //! - [`MetricError`]: Error type for metric operations
 //! - [`LorentzianMetric`]: Trait for convention-specific wrappers
 //! - [`EastCoastMetric`]: Wrapper for (-+++) convention (GR)
@@ -68,7 +69,7 @@ mod types;
 pub use crate::errors::MetricError;
 
 // Types
-pub use crate::types::Metric;
+pub use crate::types::{Metric, MetricFamily};
 
 // Conventions trait
 pub use crate::conventions::LorentzianMetric;

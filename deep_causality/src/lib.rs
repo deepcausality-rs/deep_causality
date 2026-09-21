@@ -29,11 +29,9 @@ pub use deep_causality_core::{
     CausalEffect, CausalEffectPropagationProcess, CausalFlow, CausalMonad, CausalityError,
     CausalityErrorEnum, EffectLog, Identifiable, PropagatingEffect, PropagatingProcess,
 };
-// The shared primitive aliases. Core is their single declaration site; `TeloidTag` and `TeloidID`
-// are deliberately not re-exported, because nothing here uses them and `deep_causality_ethos`
-// declares its own pair.
+
 pub use deep_causality_core::{
-    CausaloidId, DescriptionValue, FloatType, IdentificationValue, NumberType, NumericalValue,
+    CausaloidId, DescriptionValue, IdentificationValue, NumberType, NumericalValue,
 };
 
 pub use deep_causality_haft::{LogAddEntry, LogAppend, LogEffect, LogSize};

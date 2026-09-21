@@ -185,22 +185,78 @@ group 4 is the downstream fan-out that follows from it.
 
 ## 6. The frame
 
-- [ ] 6.1 Add `NoSpaceTime`, a zero-sized type implementing the spatial and spacetime traits
+- [x] 6.1 Add `NoSpaceTime`, a zero-sized type implementing the spatial and spacetime traits
       trivially, with its own tests
-- [ ] 6.2 Add `ContextFrame` with `Space`, `Time` and `SpaceTime` associated types
-- [ ] 6.3 Add `SIGNATURE` as an associated constant of type `deep_causality_metric::Metric`
-- [ ] 6.4 Add `MetricFamily` as an enum in `deep_causality_metric`, naming the analytic forms with
+      **`NoSpaceTime<R>` carries its scalar in `PhantomData`**, so it stays zero-sized at every
+      scalar while still satisfying the frame's `Coord = Self::Scalar` bound. It can do that
+      because its coordinate system has zero dimensions, so `coordinate()` always errors and no
+      value of type `R` is ever produced. Its `TimeUnit` is `()`, not `R`: what it stands in for
+      is a spacetime *position*, and such a context still keeps a real clock in the frame's `Time`
+      member
+- [x] 6.2 Add `ContextFrame` with `Space`, `Time` and `SpaceTime` associated types
+      **Plus a fourth, `Scalar: RealField`.** `Space` and `SpaceTime` are bound to it, so a frame
+      cannot report a position in one scalar and an interval in another. `Time` is deliberately
+      left free, because a tick is a count rather than a precision and a frame pairing a
+      real-valued space with an integer clock is legitimate. Binding a supertrait's associated
+      type through the subtrait (`Spatial<Coord = Self::Scalar>`) was verified to compile before
+      the design was committed to
+- [x] 6.3 Add `SIGNATURE` as an associated constant of type `deep_causality_metric::Metric`
+      **Reversed by the user during apply, and the reasoning is worth keeping.** A constant on the
+      frame is a claim, and a variant frame's contents can contradict it: `SpaceTimeKind` holds the
+      Newtonian `EuclideanSpacetime` at (+,+,+,+) beside the relativistic types at (−,+,+,+).
+      Two attempts to spell the escape — `Option<Metric>` and a `MetricKind { Fixed, Deferred }`
+      enum — were both rejected, correctly: they model *presence* when the real axis is
+      *provenance*. A variant context is not a context with no signature; it is one whose
+      signatures come from its nodes.
+      **What landed instead:** a `MetricSignature` trait with `fn metric(&self) -> Metric`, made a
+      supertrait of `SpaceTemporal` so every spacetime type must answer, implemented on
+      `EuclideanSpacetime` (Euclidean(4)), `LorentzianSpacetime` and `TangentSpacetime`
+      (Lorentzian(4)), `NoSpaceTime` (Euclidean(0)), and forwarded by `SpaceTimeKind`. The frame
+      declares no signature at all; `metric_family` stays, because a node can say it is Lorentzian
+      but not that it is Schwarzschild at a given mass.
+      **This matches the rest of the stack.** `deep_causality_physics` reads a metric off a
+      `CausalMultiVector` and compares it against the caller's expectation at ten sites across its
+      em, relativity and dynamics kernels — its error text already says "Context expects". The
+      node-reported signature is that same shape one layer up.
+      **A correction I made along the way:** I argued the crate's own `MINKOWSKI_4D` constants
+      having no consumers showed a compile-time metric had no place here. That was a miscalibrated
+      negative control — the sample is examples that are variable-metric by nature, so their
+      silence says nothing. The user caught it.
+- [x] 6.4 Add `MetricFamily` as an enum in `deep_causality_metric`, naming the analytic forms with
       their parameters, and `metric_family` returning `None` where the metric has no closed form.
       An enum keeps that crate closed and checkable and matches what the physics crate computes
-- [ ] 6.5 Provide frames for the shipped configurations: one over the variant `Kind` enums as the
+      **Four variants, derived from the closed forms in `deep_causality_physics`:** `Flat`,
+      `Schwarzschild { mass }`, `Kerr { mass, spin }` and `Flrw { scale_factor, curvature_k }`.
+      Each carries the parameters that fix the form across the manifold and none of the
+      coordinates it is evaluated at — `schwarzschild_metric_at(mass, r)` takes both, and only the
+      mass belongs here. `Flat` covers the Minkowski and Euclidean cases together, because the
+      signature already separates them. `MetricFamily<R>` is unbounded in `R`, which keeps the
+      metric crate a dependency-free leaf
+- [x] 6.5 Provide frames for the shipped configurations: one over the variant `Kind` enums as the
       ordinary case, one fixed-type frame as the specialisation, and one with no spatial part that
       names `NoSpaceTime`. Document which to reach for when the world is not known at compile time
-- [ ] 6.5b Add a test holding two spacetime contextoids of different concrete variants in one
+      **`UniformFrame`, `BaseFrame` and `ClockFrame`**, with the selection table on the
+      `context_frames` module.
+      **Member and signature are independent choices, corrected during apply.** An earlier note
+      here called it a defect that `SpaceTimeKind` admits both `LorentzianSpacetime` (−,+,+,+) and
+      `EuclideanSpacetime` (+,+,+,+) while `UniformFrame` declares one constant. It is not: the
+      member says which coordinate types a context may hold, the signature says which manifold the
+      model claims, and the frame is where the two are fixed together. A probe moving between the
+      coordinate and tangent spacetimes stays Lorentzian throughout, which is the variance the
+      enum is for. A Newtonian or particle-physics model declares its own frame over the same enum
+      with `Metric::Euclidean` or `Metric::Minkowski` and keeps the variance; only a fixed frame
+      gives it up. Two tests pin this — the regime-change test uses two variants inside the
+      signature class, and a second asserts `EastCoastFrame` and `WestCoastFrame` name the same
+      member type and differ only in their constant
+- [x] 6.5b Add a test holding two spacetime contextoids of different concrete variants in one
       context on a variant frame, which is what a regime-changing model needs
-- [ ] 6.6 Add a test asserting a frame's signature is readable without constructing a context, and
+- [x] 6.6 Add a test asserting a frame's signature is readable without constructing a context, and
       one asserting two frames with different conventions are distinguishable through the metric
       crate's existing convention checks
-- [ ] 6.7 `cargo test -p deep_causality_context` green
+- [x] 6.7 `cargo test -p deep_causality_context` green
+      414 tests and 22 doctests. `bazel test //...` 1408. The two new test directories each needed
+      their own `rust_test_suite` in `BUILD.bazel`, because the context crate globs per directory
+      rather than per tree — without them Bazel compiled neither file
 
 ## 7. Four parameters to two
 

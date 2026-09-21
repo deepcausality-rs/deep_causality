@@ -10,6 +10,7 @@ pub mod coordinate;
 pub mod datable;
 pub mod datable_uncertain;
 pub mod distance;
+pub mod metric_signature;
 pub mod metric_tensor;
 pub mod space_temporal;
 pub mod spatial;

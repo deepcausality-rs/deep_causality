@@ -120,6 +120,7 @@
 //! ```
 pub mod data;
 pub mod data_uncertain;
+pub mod no_space_time;
 pub mod root;
 pub mod space;
 pub mod space_time;

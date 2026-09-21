@@ -75,32 +75,56 @@ and a clock, and nothing spatial at all.
 - **WHEN** such a frame is read
 - **THEN** the absence of a spatial part is visible in the frame's own declaration
 
-### Requirement: A frame carries the manifold signature as a constant
+### Requirement: A spacetime node reports its own metric signature
 
-`ContextFrame` SHALL declare the manifold's metric signature as an associated constant, taken from
-`deep_causality_metric`, and SHALL expose the analytic metric family where one exists.
+Every spacetime type SHALL report the metric signature it is in, and the frame SHALL NOT declare
+one.
 
-A signature is constant across a manifold by continuity, so it is a constant and is checkable at
-compile time. A metric family is a choice of analytic form with parameters, so it is a function and
-returns nothing when the metric is numerically evolved and has no closed form.
+Every spacetime node is in some signature: the Newtonian coordinate spacetime is in (+,+,+,+) and
+the relativistic ones are in (−,+,+,+). The question is never whether a signature exists, only who
+says what it is. A context whose spacetime varies holds nodes in more than one, so no constant on
+the context can answer for all of them, and a constant that some contents contradict is a claim
+nothing enforces.
+
+Asking the node matches what the rest of the stack already does. `deep_causality_physics` reads a
+metric off a `CausalMultiVector` and compares it against what the caller expects, at ten sites
+across its electromagnetism, relativity and dynamics kernels. This is that shape one layer up.
+
+A signature does not vary with position, by continuity, so a node derives it from what it is rather
+than from what it currently holds: a numerically evolved spacetime keeps its signature while every
+component of its tensor changes.
 
 The frame SHALL NOT carry a metric tensor. A tensor is a field varying with position, which
 `deep_causality_physics` already computes for the analytic forms.
 
-#### Scenario: The signature is available without constructing a context
+#### Scenario: Two signatures in one context
 
-- **WHEN** a frame's signature is read
-- **THEN** it resolves at compile time, because it is a constant of the frame rather than a value
-  on an instance
+- **WHEN** a context on a variant frame holds a Newtonian spacetime node and a relativistic one
+- **THEN** each reports its own signature, and the two differ
+
+#### Scenario: The signature outlives the tensor
+
+- **WHEN** every component of a numerically evolved spacetime's metric tensor is replaced
+- **THEN** the signature it reports is unchanged
+
+#### Scenario: A node signature feeds the existing convention checks
+
+- **WHEN** a node's signature is passed to the metric crate's convention checks
+- **THEN** they answer without anything new in between, because a node supplies the same `Metric`
+  those checks already take
+
+### Requirement: A frame exposes the analytic metric family where one exists
+
+`ContextFrame` SHALL expose the analytic metric family where one exists, as a function returning
+nothing when the metric is numerically evolved and has no closed form.
+
+A family stays on the frame where a signature does not, because a family is not derivable from a
+node type. A node can report that it is Lorentzian; it cannot report that it is Schwarzschild at a
+given central mass. That is a choice about the model, which is what a frame is for. It is a
+function rather than a constant because those parameters differ between one model and the next.
 
 #### Scenario: A numerically evolved metric has no family
 
 - **WHEN** the metric family is requested for a frame whose metric has no closed form
 - **THEN** the answer is that none exists, and the per-point tensor is carried by the coordinate
   type that needs it
-
-#### Scenario: Mixing conventions is caught at the frame
-
-- **WHEN** two frames with different sign conventions are compared through the metric crate's
-  existing convention checks
-- **THEN** the mismatch is detectable from the frames alone, without evaluating a computation
