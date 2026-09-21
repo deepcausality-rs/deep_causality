@@ -326,10 +326,13 @@ fn front_analysis(mesh: &Mesh, history: &[Vec<FloatType>]) -> Front {
     let ordered = complete && reached.windows(2).all(|w| w[1].1 >= w[0].1);
     // Finite propagation speed: a nearest-neighbour stencil cannot carry a signal more than one
     // ring per step, so ring k moving before step k would mean the scheme is not a wave at all.
+    // The initial pulse fills rings 0..PULSE_RADIUS, so its outermost ring is PULSE_RADIUS - 1,
+    // and ring k sits that many rings from the source.
+    let source_ring = (PULSE_RADIUS as usize).saturating_sub(1);
     let causal = complete
         && reached
             .iter()
-            .all(|&(ring, step)| step >= (ring as usize).saturating_sub(PULSE_RADIUS as usize));
+            .all(|&(ring, step)| step >= (ring as usize).saturating_sub(source_ring));
 
     let peak_amplitude = history
         .iter()
