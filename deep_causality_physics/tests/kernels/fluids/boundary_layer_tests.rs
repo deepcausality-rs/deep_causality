@@ -108,6 +108,9 @@ fn test_y_plus_known_value() {
     let yp = y_plus_kernel(&y, &u_tau, &nu).unwrap();
     let expected = 1.0e-4 * 0.5 / 1.5e-5;
     assert!((yp - expected).abs() < TOL);
+    // The line above retypes the kernel's formula. The independent value, stated in the comment,
+    // is what makes this non-circular: 5e-5 / 1.5e-5 = 10/3.
+    assert!((yp - 10.0 / 3.0).abs() < 1e-12, "y+ = {yp}, expected 10/3");
 }
 
 #[test]

@@ -106,9 +106,13 @@ fn test_wrapper_moire_magic_angle() {
     let vf = Speed::new(1e6).unwrap(); // Fermi velocity
     let k = Momentum::default();
 
+    // A cutoff of 2 exceeds what the kernel supports, so the wrapper must forward the refusal.
+    // `is_ok() || is_err()` is true for every result and asserted nothing.
     let effect = bistritzer_macdonald::<f64>(theta, w, vf, k, 2);
-    // Test that wrapper handles result (success or error) without panic
-    let _ = effect.is_ok() || effect.is_err();
+    assert!(
+        effect.is_err(),
+        "an unsupported shell cutoff must be refused by the wrapper"
+    );
 }
 
 // ============================================================================

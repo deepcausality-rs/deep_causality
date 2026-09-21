@@ -256,7 +256,20 @@ fn test_wrapper_logs_field_present() {
         &body,
     );
 
+    // A successful effect carries a value and no error, and its log channel is present and
+    // separate from that value. Formatting the logs and discarding the string, as this test used
+    // to, asserted nothing at all.
     let effect = solve_gm_analytical(&coord_a, &coord_b, &body);
-    // Just confirm the effect is well-formed (no panics, fields accessible).
-    let _ = format!("{:?}", effect.logs());
+    assert!(effect.error().is_none(), "the call succeeds");
+    assert!(
+        effect.value().is_some(),
+        "a successful effect carries a value"
+    );
+
+    // `EffectLog` compares by message sequence, so an untouched channel equals a fresh one.
+    assert_eq!(
+        *effect.logs(),
+        deep_causality_core::EffectLog::new(),
+        "this kernel emits no log entries, so the channel must stay empty"
+    );
 }

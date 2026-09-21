@@ -92,6 +92,14 @@ where
             riemann.num_dim()
         )));
     }
+    // The contraction below indexes with a fixed stride of `dim`, so every extent must be `dim`.
+    // Rank alone does not establish that: a [2, 2, 2, 2] tensor is rank-4 and 240 elements short.
+    if riemann.shape().iter().any(|&d| d != dim) {
+        return Err(PhysicsError::DimensionMismatch(format!(
+            "Riemann tensor must be [4, 4, 4, 4], got {:?}",
+            riemann.shape()
+        )));
+    }
     if u.len() != dim || n.len() != dim {
         return Err(PhysicsError::DimensionMismatch(format!(
             "Vectors must have length 4, got u={}, n={}",

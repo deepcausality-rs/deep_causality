@@ -144,6 +144,14 @@ fn test_schwarzschild_radius_sun_known_value() {
         (r_s.value() - expected).abs() < 1e-10,
         "Schwarzschild radius formula mismatch"
     );
+    // The line above retypes the kernel's formula from the crate's own constants, so it cannot
+    // detect a misreading of the definition. The value this test is named for is the published
+    // one: the Sun's Schwarzschild radius is 2.95 km.
+    assert!(
+        (r_s.value() - 2953.0).abs() < 5.0,
+        "the Sun's Schwarzschild radius is about 2953 m, got {}",
+        r_s.value()
+    );
 }
 
 #[test]

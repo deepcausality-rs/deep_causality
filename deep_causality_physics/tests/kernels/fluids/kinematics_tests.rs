@@ -54,15 +54,34 @@ fn test_strain_rate_equals_input_for_pure_strain() {
 }
 
 #[test]
-fn test_strain_rate_galilean_invariant() {
-    // The strain rate depends only on ∇u, not on u itself. Two velocity
-    // fields differing by a constant produce the same gradient — exercised
-    // structurally by the kernel signature taking only `grad_u`.
-    let g =
-        VelocityGradient::<f64>::new([[1.0, 0.0, 0.0], [0.0, 2.0, 0.0], [0.0, 0.0, 3.0]]).unwrap();
-    let s1 = strain_rate_tensor_kernel(&g).unwrap();
-    let s2 = strain_rate_tensor_kernel(&g).unwrap();
-    assert_eq!(s1.value(), s2.value());
+fn test_strain_rate_is_unchanged_by_an_antisymmetric_shift() {
+    // S is the symmetric part of the velocity gradient, so adding any antisymmetric matrix to
+    // ∇u — a rigid rotation superposed on the flow — must leave it untouched. Calling the kernel
+    // twice with the same argument, as this test used to, cannot fail for any implementation.
+    let base = [[1.0, 0.5, -2.0], [3.0, 2.0, 0.25], [-1.5, 4.0, 3.0]];
+    let skew = [[0.0, 1.25, -0.75], [-1.25, 0.0, 2.5], [0.75, -2.5, 0.0]];
+
+    let mut shifted = base;
+    for i in 0..3 {
+        for j in 0..3 {
+            shifted[i][j] += skew[i][j];
+        }
+    }
+
+    let s_base = strain_rate_tensor_kernel(&VelocityGradient::<f64>::new(base).unwrap()).unwrap();
+    let s_shifted =
+        strain_rate_tensor_kernel(&VelocityGradient::<f64>::new(shifted).unwrap()).unwrap();
+
+    for i in 0..3 {
+        for j in 0..3 {
+            assert!(
+                (s_base.value()[i][j] - s_shifted.value()[i][j]).abs() < TOL_F64,
+                "[{i}][{j}]: {} moved to {}",
+                s_base.value()[i][j],
+                s_shifted.value()[i][j]
+            );
+        }
+    }
 }
 
 #[test]

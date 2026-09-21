@@ -244,6 +244,96 @@ fn test_parallel_transport_flat_space() {
     assert!((final_vector[1] - 0.0f64).abs() < 1e-10);
 }
 
+// The transport tests above all set Gamma = 0, where `dv = -Gamma dx v` vanishes identically and
+// transport is the identity for any implementation. The three below give it a real connection.
+
+#[test]
+fn test_parallel_transport_against_hand_computed_schwarzschild_components() {
+    // The connection comes from `schwarzschild_christoffel_at`, whose components are checked
+    // against their closed forms in theories/general_relativity/metrics_tests.rs. At M = 1,
+    // r = 10: f = 0.8, f' = 0.02, so Gamma^t_{rt} = f'/(2f) = 0.0125 and
+    // Gamma^r_{rr} = -f'/(2f) = -0.0125.
+    //
+    // A single radial step dx = (0, h, 0, 0) contracts against exactly one of them at a time,
+    // so the expected answer is one product rather than a sum:
+    //   v = (1,0,0,0):  dv^t = -Gamma^t_{rt} h v^t = -0.0125 h
+    //   v = (0,1,0,0):  dv^r = -Gamma^r_{rr} h v^r = +0.0125 h
+    use deep_causality_physics::theories::general_relativity::schwarzschild_christoffel_at;
+
+    let christoffel = schwarzschild_christoffel_at(1.0_f64, 10.0).expect("a valid connection");
+    let h = 1.0e-3_f64;
+    let path = vec![vec![0.0, 10.0, 0.0, 0.0], vec![0.0, 10.0 + h, 0.0, 0.0]];
+
+    let timelike = parallel_transport_kernel(&[1.0, 0.0, 0.0, 0.0], &path, &christoffel).unwrap();
+    assert!(
+        (timelike[0] - (1.0 - 0.0125 * h)).abs() < 1e-15,
+        "v^t = {}, expected {}",
+        timelike[0],
+        1.0 - 0.0125 * h
+    );
+    for (mu, component) in timelike.iter().enumerate().skip(1) {
+        assert!(component.abs() < 1e-15, "v^{mu} = {component}");
+    }
+
+    let radial = parallel_transport_kernel(&[0.0, 1.0, 0.0, 0.0], &path, &christoffel).unwrap();
+    assert!(
+        (radial[1] - (1.0 + 0.0125 * h)).abs() < 1e-15,
+        "v^r = {}, expected {}",
+        radial[1],
+        1.0 + 0.0125 * h
+    );
+    assert!(radial[0].abs() < 1e-15, "v^t = {}", radial[0]);
+}
+
+#[test]
+fn test_parallel_transport_pins_the_lower_index_order() {
+    // A real Christoffel symbol is symmetric in its lower indices, so a Schwarzschild fixture
+    // cannot tell `Gamma^mu_{nu rho}` from `Gamma^mu_{rho nu}`. The kernel accepts any rank-3
+    // tensor, so an asymmetric one settles it.
+    //
+    // Gamma^0_{1 0} = 1 and nothing else. With dx = (0, 1) and v = (1, 0):
+    //   dv^0 = -Gamma^0_{1 0} dx^1 v^0 = -1   =>  v_new = (0, 0)
+    // Reading the lower indices the other way round picks up Gamma^0_{0 1} = 0 and leaves
+    // v_new = (1, 0).
+    let mut gamma = vec![0.0f64; 8]; // [2, 2, 2]; index mu*4 + nu*2 + rho
+    gamma[2] = 1.0; // mu = 0, nu = 1, rho = 0 -> 0*4 + 1*2 + 0
+    let christoffel = CausalTensor::new(gamma, vec![2, 2, 2]).unwrap();
+    let path = vec![vec![0.0, 0.0], vec![0.0, 1.0]];
+
+    let v = parallel_transport_kernel(&[1.0, 0.0], &path, &christoffel).unwrap();
+    assert!((v[0] - 0.0).abs() < 1e-15, "v^0 = {}", v[0]);
+    assert!((v[1] - 0.0).abs() < 1e-15, "v^1 = {}", v[1]);
+}
+
+#[test]
+fn test_parallel_transport_is_linear_in_the_initial_vector() {
+    // `dv = -Gamma dx v` is linear in v, so transporting k*v must give k times the transport of
+    // v. Holds for any connection and needs no oracle.
+    use deep_causality_physics::theories::general_relativity::schwarzschild_christoffel_at;
+
+    let christoffel = schwarzschild_christoffel_at(1.0_f64, 10.0).expect("a valid connection");
+    let path = vec![
+        vec![0.0, 10.0, 0.0, 0.0],
+        vec![0.1, 10.5, 0.0, 0.0],
+        vec![0.2, 11.0, 0.3, 0.0],
+    ];
+    let v0 = [1.0_f64, 0.5, -0.25, 2.0];
+
+    let base = parallel_transport_kernel(&v0, &path, &christoffel).unwrap();
+    for k in [0.5_f64, 2.0, -3.0] {
+        let scaled_v0: Vec<f64> = v0.iter().map(|x| x * k).collect();
+        let scaled = parallel_transport_kernel(&scaled_v0, &path, &christoffel).unwrap();
+        for mu in 0..4 {
+            assert!(
+                (scaled[mu] - k * base[mu]).abs() < 1e-12,
+                "k = {k}, component {mu}: {} vs {}",
+                scaled[mu],
+                k * base[mu]
+            );
+        }
+    }
+}
+
 #[test]
 fn test_parallel_transport_short_path_error() {
     // Path with only 1 point should error

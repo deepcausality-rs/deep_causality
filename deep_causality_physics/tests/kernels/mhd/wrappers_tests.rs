@@ -174,11 +174,14 @@ fn create_test_manifold() -> SimplicialManifold<f64, f64> {
 fn test_ideal_induction_wrapper() {
     let man = create_test_manifold();
 
+    // `create_test_manifold` is a 2D triangle, and `ideal_induction_kernel` is 3D-only, so the
+    // wrapper must forward the kernel's refusal. `is_ok() || is_err()` is true for every value of
+    // every type and asserted nothing.
     let result = ideal_induction(&man, &man);
-    // The wrapper should handle the result from the kernel
-    // It may succeed or fail depending on manifold capabilities
-    // We just test that the wrapper works without panicking
-    let _ = result.is_ok() || result.is_err();
+    assert!(
+        result.is_err(),
+        "a 2D complex must be refused by the ideal-induction wrapper"
+    );
 }
 
 #[test]
@@ -186,9 +189,11 @@ fn test_resistive_diffusion_wrapper() {
     let man = create_test_manifold();
     let eta = Diffusivity::<f64>::new(0.1).unwrap();
 
+    // The manifold carries an all-zero field, so the Laplacian and therefore the diffusion term
+    // are zero; the wrapper must still deliver that value rather than an error.
+    // `is_ok() || is_err()` is a tautology of the excluded middle and asserted nothing.
     let result = resistive_diffusion(&man, eta);
-    // The wrapper should propagate the result
-    assert!(result.is_ok() || result.is_err());
+    assert!(result.is_ok(), "a valid manifold must produce a value");
 }
 
 // ============================================================================
@@ -303,9 +308,13 @@ fn test_energy_momentum_tensor_em_wrapper_dimension_error() {
     let em = CausalTensor::new(vec![0.0; 9], vec![3, 3]).unwrap();
     let metric = CausalTensor::new(vec![0.0; 16], vec![4, 4]).unwrap();
 
+    // The test is named for a dimension error, so it must observe one. The previous body was
+    // `let _ = result.is_ok() || result.is_err();`, which is true for every possible result.
     let result = energy_momentum_tensor_em(&em, &metric);
-    // The computation should still work or fail gracefully
-    let _ = result.is_ok() || result.is_err();
+    assert!(
+        result.is_err(),
+        "a 3x3 EM tensor against a 4x4 metric must be refused"
+    );
 }
 
 // ============================================================================

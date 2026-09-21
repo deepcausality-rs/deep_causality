@@ -78,9 +78,16 @@ fn test_ginzburg_landau_superconducting_state() {
     let res = ginzburg_landau_free_energy_kernel::<f64>(psi, alpha, beta, &grad_complex, None);
     assert!(res.is_ok());
 
-    // |psi|^2 = 1 + 0.25 = 1.25
+    // |psi|^2 = 1 + 0.25 = 1.25, |psi|^4 = 1.5625
     // F = -1 * 1.25 + (1/2) * 1.5625 = -1.25 + 0.78125 = -0.46875
+    // The comment derived the exact value and the assertion then only checked the sign, which any
+    // negative answer satisfies.
     let energy = res.unwrap();
+    assert!(
+        (energy.value() - (-0.46875)).abs() < 1e-12,
+        "F = {}, expected -0.46875",
+        energy.value()
+    );
     assert!(energy.value() < 0.0); // Negative energy in superconducting state
 }
 

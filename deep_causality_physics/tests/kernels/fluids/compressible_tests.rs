@@ -296,11 +296,28 @@ fn test_isentropic_ratio_guards() {
 }
 
 #[test]
-fn test_isentropic_ratio_purity() {
-    // Pure free functions: identical inputs give bit-identical outputs.
-    let a = isentropic_pressure_ratio_kernel(1.37_f64, 1.4).unwrap();
-    let b = isentropic_pressure_ratio_kernel(1.37_f64, 1.4).unwrap();
-    assert_eq!(a.to_bits(), b.to_bits());
+fn test_isentropic_pressure_ratio_rises_monotonically_with_mach() {
+    // p0/p = (1 + (gamma-1)/2 M^2)^(gamma/(gamma-1)) is 1 at rest and strictly increasing in M,
+    // because the base grows with M^2 and the exponent is positive for gamma > 1. Calling the
+    // function twice with identical arguments, as this test used to, cannot fail for any
+    // deterministic implementation.
+    let at_rest = isentropic_pressure_ratio_kernel(0.0_f64, 1.4).unwrap();
+    assert!((at_rest - 1.0).abs() < TOL, "p0/p must be 1 at M = 0");
+
+    let machs = [0.0_f64, 0.3, 0.9, 1.0, 1.37, 2.5, 4.0];
+    for pair in machs.windows(2) {
+        let lo = isentropic_pressure_ratio_kernel(pair[0], 1.4).unwrap();
+        let hi = isentropic_pressure_ratio_kernel(pair[1], 1.4).unwrap();
+        assert!(
+            hi > lo,
+            "p0/p must increase with M: {} at M = {} against {} at M = {}",
+            hi,
+            pair[1],
+            lo,
+            pair[0]
+        );
+        assert!(lo >= 1.0 - TOL, "p0/p must never fall below 1");
+    }
 }
 
 // =============================================================================
@@ -357,8 +374,17 @@ fn test_area_mach_ratio_guards() {
 }
 
 #[test]
-fn test_area_mach_ratio_purity() {
-    let a = area_mach_ratio_kernel(2.5_f64, 1.4).unwrap();
-    let b = area_mach_ratio_kernel(2.5_f64, 1.4).unwrap();
-    assert_eq!(a.to_bits(), b.to_bits());
+fn test_area_mach_ratio_has_its_minimum_at_the_throat() {
+    // A/A* >= 1 everywhere with equality only at M = 1. That is a property of the function;
+    // calling it twice with identical arguments is a property of Rust.
+    for m in [0.2_f64, 0.5, 0.9, 1.0, 1.5, 2.5, 4.0] {
+        let ratio = area_mach_ratio_kernel(m, 1.4).unwrap();
+        assert!(ratio >= 1.0 - 1e-12, "A/A* = {ratio} at M = {m} is below 1");
+        if (m - 1.0).abs() > 1e-9 {
+            assert!(
+                ratio > 1.0 + 1e-9,
+                "A/A* must exceed 1 away from the throat"
+            );
+        }
+    }
 }

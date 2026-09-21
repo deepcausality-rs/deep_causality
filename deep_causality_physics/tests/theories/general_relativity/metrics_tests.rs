@@ -77,10 +77,39 @@ fn test_kerr_black_hole() {
         );
     }
 
-    // Case 2: Extreme Kerr (a=M)
-    // At horizon r = M + sqrt(M^2 - a^2) = M
-    // Here we test outside horizon
-    let _kerr_rot = kerr_metric_at(mass, mass * 0.9, r, theta).unwrap();
+    // Case 2: a rotating black hole. Frame dragging is the whole difference between Kerr and
+    // Schwarzschild, and it lives in the off-diagonal g_{t phi} term: zero when a = 0, non-zero
+    // otherwise. Discarding this result, as the test used to, left the spin parameter unobserved.
+    let spin = mass * 0.9;
+    let kerr_rot = kerr_metric_at(mass, spin, r, theta).unwrap();
+    let rot = kerr_rot.as_slice();
+
+    let g_t_phi: f64 = rot[3]; // row 0, column 3
+    let g_phi_t: f64 = rot[12]; // row 3, column 0
+    assert!(
+        g_t_phi.abs() > 1e-12,
+        "a rotating Kerr metric must have a non-zero g_(t phi); got {g_t_phi}"
+    );
+    assert!(
+        (g_t_phi - g_phi_t).abs() < 1e-12,
+        "the metric must stay symmetric: g_(t phi) = {g_t_phi}, g_(phi t) = {g_phi_t}"
+    );
+
+    // And the non-rotating case must not have it, so the term tracks the spin rather than being
+    // present for every input.
+    let g_t_phi_static: f64 = k_data[3];
+    assert!(
+        g_t_phi_static.abs() < 1e-12,
+        "a = 0 must switch frame dragging off; got {g_t_phi_static}"
+    );
+
+    // Frame dragging grows with the spin.
+    let slower = kerr_metric_at(mass, spin * 0.5, r, theta).unwrap();
+    let g_t_phi_slower: f64 = slower.as_slice()[3];
+    assert!(
+        g_t_phi_slower.abs() < g_t_phi.abs(),
+        "halving the spin must reduce frame dragging: {g_t_phi_slower} against {g_t_phi}"
+    );
 }
 
 #[test]

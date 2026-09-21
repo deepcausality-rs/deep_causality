@@ -51,7 +51,15 @@ fn test_doppler_effect_kernel_approaching() {
     assert!(result.is_ok());
 
     let f_obs = result.unwrap();
-    // f_obs = 1000 * (340 + 10) / (340 - 10) = 1000 * 350/330 ≈ 1060.6 Hz
+    // f_obs = 1000 * (340 + 10) / (340 - 10) = 1000 * 350/330 = 1060.606... Hz. The ratio is
+    // written from the physical speeds, not from the kernel's expression.
+    // The comment already carried the answer; asserting only `> 1000.0` admitted any value above
+    // the source frequency, including one from a wrong formula.
+    assert!(
+        (f_obs.value() - 1_000.0 * 350.0 / 330.0).abs() < 1e-9,
+        "f_obs = {} Hz, expected 1060.606 Hz",
+        f_obs.value()
+    );
     assert!(f_obs.value() > 1000.0, "Observed frequency should increase");
 }
 

@@ -119,12 +119,47 @@ fn test_torque_kernel_valid() {
     )
     .unwrap();
 
-    let result = torque_kernel(&radius, &force);
-    assert!(result.is_ok());
+    let torque: PhysicalVector<f64> = torque_kernel(&radius, &force).unwrap();
 
-    let torque: PhysicalVector<f64> = result.unwrap();
-    // The result is a bivector (torque plane)
-    assert!(!torque.inner().data().is_empty());
+    // tau = r ^ F = e1 ^ e2 = e12. Blades are bitmask-indexed, so e12 sits at 3.
+    // `!data().is_empty()` cannot see this: a Cl(3) multivector always has eight components.
+    let d: &[f64] = torque.inner().data();
+    assert!((d[3] - 1.0).abs() < 1e-12, "e12 component = {}", d[3]);
+    for (i, v) in d.iter().enumerate() {
+        if i != 3 {
+            assert!(v.abs() < 1e-12, "blade {i} should vanish, got {v}");
+        }
+    }
+}
+
+#[test]
+fn test_torque_is_antisymmetric_in_radius_and_force() {
+    // r ^ F = -(F ^ r), and r ^ r = 0. Both identities hold for any input and pin the outer
+    // product against the geometric product, whose scalar part would not vanish.
+    let r = CausalMultiVector::new(
+        vec![0.0, 1.0, 2.0, 0.0, 3.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+    let f = CausalMultiVector::new(
+        vec![0.0, -0.5, 1.5, 0.0, 0.25, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+
+    let forward: PhysicalVector<f64> = torque_kernel(&r, &f).unwrap();
+    let reversed: PhysicalVector<f64> = torque_kernel(&f, &r).unwrap();
+    let a: &[f64] = forward.inner().data();
+    let b: &[f64] = reversed.inner().data();
+    for (i, (x, y)) in a.iter().zip(b).enumerate() {
+        assert!((x + y).abs() < 1e-12, "blade {i}: {x} and {y}");
+    }
+
+    let self_wedge: PhysicalVector<f64> = torque_kernel(&r, &r).unwrap();
+    let z: &[f64] = self_wedge.inner().data();
+    for (i, v) in z.iter().enumerate() {
+        assert!(v.abs() < 1e-12, "r ^ r blade {i} = {v}");
+    }
 }
 
 #[test]
@@ -164,11 +199,40 @@ fn test_angular_momentum_kernel_valid() {
     )
     .unwrap();
 
-    let result = angular_momentum_kernel(&radius, &momentum);
-    assert!(result.is_ok());
+    let l: PhysicalVector<f64> = angular_momentum_kernel(&radius, &momentum).unwrap();
 
-    let l: PhysicalVector<f64> = result.unwrap();
-    assert!(!l.inner().data().is_empty());
+    // L = r ^ p = e1 ^ (5 e2) = 5 e12, so the e12 blade at index 3 carries 5 and the rest vanish.
+    let d: &[f64] = l.inner().data();
+    assert!((d[3] - 5.0).abs() < 1e-12, "e12 component = {}", d[3]);
+    for (i, v) in d.iter().enumerate() {
+        if i != 3 {
+            assert!(v.abs() < 1e-12, "blade {i} should vanish, got {v}");
+        }
+    }
+}
+
+#[test]
+fn test_angular_momentum_is_linear_in_the_momentum() {
+    // L(r, k p) = k L(r, p) for any k, and needs no oracle.
+    let r = CausalMultiVector::new(
+        vec![0.0, 1.0, 2.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+    let p_base = [0.0, 0.5, -1.5, 0.0, 2.0, 0.0, 0.0, 0.0];
+    let momentum = CausalMultiVector::new(p_base.to_vec(), Metric::Euclidean(3)).unwrap();
+    let base: PhysicalVector<f64> = angular_momentum_kernel(&r, &momentum).unwrap();
+
+    for k in [0.5_f64, 2.0, -3.0] {
+        let scaled_p: Vec<f64> = p_base.iter().map(|x| x * k).collect();
+        let scaled_m = CausalMultiVector::new(scaled_p, Metric::Euclidean(3)).unwrap();
+        let scaled: PhysicalVector<f64> = angular_momentum_kernel(&r, &scaled_m).unwrap();
+        let a: &[f64] = base.inner().data();
+        let b: &[f64] = scaled.inner().data();
+        for (i, (x, y)) in a.iter().zip(b).enumerate() {
+            assert!((y - k * x).abs() < 1e-12, "k = {k}, blade {i}");
+        }
+    }
 }
 
 // =============================================================================

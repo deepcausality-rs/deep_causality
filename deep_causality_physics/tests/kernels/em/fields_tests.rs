@@ -44,26 +44,62 @@ fn create_simple_manifold() -> SimplicialManifold<f64, f64> {
 
 #[test]
 fn test_poynting_vector_kernel_valid() {
-    // S = E x B
-    // E = [0, 1, 0, 0] (x)
-    // B = [0, 0, 1, 0] (y)
-    // S should be x^y bivector
+    // `poynting_vector_kernel` delegates to `euclidean_cross_product_3d`, which reads the spatial
+    // components from slots 2, 3 and 4 and writes the result back to the same three slots. The
+    // previous fixture put E at slot 1 and B at slot 2, so the kernel saw ax = ay = az = 0 and
+    // returned the zero vector; `!data().is_empty()` could not see that.
+    //
+    // E = x, B = y, so S = E x B = z, which lands in slot 4.
     let e = CausalMultiVector::<f64>::new(
-        vec![0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        Metric::Euclidean(3),
-    )
-    .unwrap();
-    let b = CausalMultiVector::<f64>::new(
         vec![0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         Metric::Euclidean(3),
     )
     .unwrap();
+    let b = CausalMultiVector::<f64>::new(
+        vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
 
-    let result = poynting_vector_kernel(&e, &b);
-    assert!(result.is_ok());
+    let s = poynting_vector_kernel(&e, &b).unwrap();
 
-    let s = result.unwrap();
-    assert!(!s.data().is_empty());
+    let d: &[f64] = s.data();
+    assert!((d[4] - 1.0).abs() < 1e-12, "e3 component = {}", d[4]);
+    for (i, v) in d.iter().enumerate() {
+        if i != 4 {
+            assert!(v.abs() < 1e-12, "blade {i} should vanish, got {v}");
+        }
+    }
+}
+
+#[test]
+fn test_poynting_vector_is_antisymmetric_and_vanishes_on_parallel_fields() {
+    // E x B = -(B x E), and E x E = 0. Both hold for any field and pin the cross product.
+    // Spatial components live in slots 2, 3 and 4.
+    let e = CausalMultiVector::<f64>::new(
+        vec![0.0, 0.0, 1.0, 2.0, 3.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+    let b = CausalMultiVector::<f64>::new(
+        vec![0.0, 0.0, -0.5, 1.5, 0.25, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+
+    let forward = poynting_vector_kernel(&e, &b).unwrap();
+    let reversed = poynting_vector_kernel(&b, &e).unwrap();
+    let x: &[f64] = forward.data();
+    let y: &[f64] = reversed.data();
+    for (i, (f, r)) in x.iter().zip(y).enumerate() {
+        assert!((f + r).abs() < 1e-12, "blade {i}: {f} and {r}");
+    }
+
+    let parallel = poynting_vector_kernel(&e, &e).unwrap();
+    let z: &[f64] = parallel.data();
+    for (i, v) in z.iter().enumerate() {
+        assert!(v.abs() < 1e-12, "E x E blade {i} = {v}");
+    }
 }
 
 #[test]
