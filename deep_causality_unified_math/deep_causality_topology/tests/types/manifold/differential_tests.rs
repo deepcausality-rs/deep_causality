@@ -110,30 +110,34 @@ fn test_laplacian_scalar_field_geometric() {
 
     assert_eq!(laplacian.shape(), &[3]);
 
-    // 1.  **Geometry:**
-    //     *   Triangle Base: 1.0, Height: 1.0. **Area = 0.5**.
-    //     *   Edge $v_0 \to v_1$: Length $1.0$.
-    //     *   Edge $v_0 \to v_2$: Length $\sqrt{0.5^2 + 1^2} \approx 1.118$.
-    // 2.  **Mass Matrices (Weights):**
-    //     *   **Vertex Mass ($M_0$):** Lumped area. $0.5 / 3 \approx 0.1666$.
-    //     *   **Edge Mass ($M_1$):** Edge Lengths. $1.0$ and $1.118$.
-    // 3.  **Flux at $v_0$:**
-    //     *   Flow from $v_1$: $(10 - 20) \times 1.0 = -10$.
-    //     *   Flow from $v_2$: $(10 - 30) \times 1.118 = -22.36$.
-    //     *   Total Flux: $-32.36$.
-    // 4.  **Laplacian at $v_0$ (Flux density):**
-    //     *   $\Delta = \frac{\text{Flux}}{\text{Mass}} = \frac{-32.36}{0.1666} \approx \mathbf{-194.16}$.
+    // This test read `M_1` as the edge *length* and pinned three digits of the consequence. An
+    // edge length is not a mass. The two endpoint grades the Hodge star already computed
+    // correctly are lumped Whitney masses, and the grades between them are the same quantity;
+    // the length has the wrong scaling as well, `h^k` where the mass goes as `h^(n-2k)`, which
+    // in two dimensions means `M_1` must be scale-invariant and a length is not. This was the
+    // only test in the workspace sensitive to those values, so it was also the only thing
+    // holding the defect in place.
     //
+    // 1.  Geometry: v0 = (0,0), v1 = (1,0), v2 = (0.5,1). Area = 0.5.
+    //     Barycentric gradients: grad(l0) = (-1,-0.5), grad(l1) = (1,-0.5), grad(l2) = (0,1).
+    // 2.  Masses:
+    //     M_0 = |T| / 3 = 1/6                      (lumped vertex mass, unchanged)
+    //     M_1[e_ij] = (2|T| / ((n+1)(n+2)))
+    //                 * (|grad l_i|^2 + |grad l_j|^2 - grad l_i . grad l_j),   n = 2
+    //       e01 = 13/48 = 0.2708333...
+    //       e02 = 11/48 = 0.2291666...
+    //       e12 = 11/48 = 0.2291666...
+    // 3.  Flux at v0 = M_1[e01](10-20) + M_1[e02](10-30) = -2.708333 - 4.583333 = -7.291666...
+    // 4.  Laplacian at v0 = flux / M_0 = -7.291666... * 6 = -43.75.
+    //
+    // The three values are exact rationals: -175/4, 5/2, 165/4. Cross-checked against an
+    // independent numpy evaluation of the same Whitney formula.
     let mut result = laplacian.as_slice().to_vec();
     result.sort_by(|a: &f64, b: &f64| a.partial_cmp(b).unwrap());
 
-    // Geometric values calculated via DEC (Mass Lumping):
-    // v0: -194.16 (Source)
-    // v1: -7.08   (Sink/Source)
-    // v2: 201.24  (Sink)
-    let expected = [-194.16407865, -7.08203932, 201.24611797];
+    let expected = [-43.75, 2.5, 41.25];
 
     for (a, b) in result.iter().zip(expected.iter()) {
-        assert!((a - b).abs() < 1e-4, "Mismatch: Got {}, Expected {}", a, b);
+        assert!((a - b).abs() < 1e-9, "Mismatch: Got {}, Expected {}", a, b);
     }
 }
