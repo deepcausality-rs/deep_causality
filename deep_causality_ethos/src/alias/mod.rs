@@ -35,10 +35,9 @@ pub type TeloidID = u64;
 /// - **`EuclideanSpacetime`**: Combines the Euclidean spatial and temporal
 ///   contexts into a unified spacetime representation, where both space and
 ///   time are treated with Euclidean properties.
-/// - **`FloatType` (x2)**: Two `FloatType` parameters, which are typically
-///   used for internal calculations, scalar values, metrics, or other generic
-///   numerical requirements within the `TeloidStore` structure, such as probabilities,
-///   weights, or magnitudes.
+/// - **`FloatType`**: The scalar the three geometric node types are built at. The same
+///   `FloatType` parameterises `EuclideanSpace`, `EuclideanTime`, and `EuclideanSpacetime`,
+///   so every coordinate a norm reads out of this store is measured in one scalar type.
 ///
 /// This `BaseTeloidStore` is designed to be a sensible default for many applications,
 /// offering a consistent and easily recognizable structure for managing and
