@@ -82,7 +82,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     // 3. Causal Chain: Fall and Evaluate
-    let steps = 5;
+    // Halving from 100 r_s, the probe passes 1.1 r_s on the eighth state, which is where the
+    // horizon branch and the undefined-rapidity guard both fire. Fewer steps stop short of
+    // the crossing this example is named for.
+    let steps = 8;
     let mut current_state = initial_state;
 
     for t in 0..steps {

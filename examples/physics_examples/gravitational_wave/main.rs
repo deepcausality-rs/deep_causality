@@ -26,7 +26,8 @@
 //! ```text
 //! complete    every ring outside the pulse is reached within the run
 //! ordered     no ring starts moving before the one inside it
-//! causal      ring k cannot move before step k: no signal outruns the stencil
+//! causal      ring k cannot move before step k - (PULSE_RADIUS - 1), measuring from the
+//!             pulse's outermost ring: no signal outruns the stencil
 //! peak        over the run, the peak stays below a small multiple of the initial amplitude
 //! ```
 //!
@@ -295,8 +296,9 @@ struct Front {
     complete: bool,
     /// True when the front is complete and no ring moved before the one inside it.
     ordered: bool,
-    /// True when the front is complete and ring `k` did not move before step `k`: nothing
-    /// outran the stencil.
+    /// True when the front is complete and ring `k` did not move before step
+    /// `k - (PULSE_RADIUS - 1)`, counting from the pulse's outermost ring: nothing outran the
+    /// stencil.
     causal: bool,
     /// The largest displacement seen anywhere, at any time within the run.
     peak_amplitude: FloatType,
@@ -438,7 +440,7 @@ fn print_front(front: &Front) {
     println!(
         "  finite signal speed    = {}",
         if front.causal {
-            "yes: nothing reached ring k before step k"
+            "yes: nothing outran one ring per step from the pulse edge"
         } else if front.complete {
             "NO: a disturbance outran the stencil"
         } else {
