@@ -127,7 +127,7 @@ where
     /// - `ContextIndexError` if a context with the provided `id` already exists.
     fn extra_ctx_add_new_with_id(
         &mut self,
-        id: ContextoidId,
+        id: ContextId,
         capacity: usize,
         default: bool,
     ) -> Result<(), ContextIndexError>;

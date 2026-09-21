@@ -49,7 +49,7 @@ pub struct CausalSetSpacetime {
     pub label: Option<String>,
 
     /// List of causally preceding event IDs (must be acyclic)
-    pub predecessors: std::collections::BTreeSet<u64>,
+    pub predecessors: std::collections::BTreeSet<ContextoidId>,
 }
 
 impl CausalSetSpacetime {

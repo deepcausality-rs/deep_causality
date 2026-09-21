@@ -4,7 +4,6 @@
  */
 
 use crate::ContextId;
-use crate::ContextoidId;
 use ultragraph::*;
 
 use crate::{
@@ -22,7 +21,7 @@ where
 {
     fn extra_ctx_add_new(&mut self, capacity: usize, default: bool) -> ContextId {
         // This now acts as a wrapper, generating a new ID and calling the specific implementation.
-        let new_id = self.number_of_extra_contexts + 1;
+        let new_id = ContextId::from(self.number_of_extra_contexts) + 1;
         self.extra_ctx_add_new_with_id(new_id, capacity, default)
             .expect("Failed to add new extra context with generated ID");
         new_id
@@ -30,7 +29,7 @@ where
 
     fn extra_ctx_add_new_with_id(
         &mut self,
-        id: ContextoidId,
+        id: ContextId,
         capacity: usize,
         default: bool,
     ) -> Result<(), ContextIndexError> {

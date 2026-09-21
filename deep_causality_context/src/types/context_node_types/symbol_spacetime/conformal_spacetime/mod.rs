@@ -46,7 +46,7 @@ pub struct ConformalSpacetime {
     pub label: Option<String>,
 
     /// Causally reachable nodes (light cone structure only)
-    pub causal_links: std::collections::BTreeSet<u64>,
+    pub causal_links: std::collections::BTreeSet<ContextoidId>,
 }
 
 impl ConformalSpacetime {

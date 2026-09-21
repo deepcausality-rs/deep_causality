@@ -8,22 +8,25 @@
 //! `Base*` fixes concrete Euclidean space, time and spacetime; `Uniform*` uses the `Kind` enums so
 //! one type signature serves every space, time and spacetime variant.
 
-use deep_causality_core::{NumberType, NumericalValue};
+use deep_causality_core::{IdentificationValue, NumberType, NumericalValue};
 
 /// The floating-point type this crate's ready-made aliases are built at.
 pub type FloatType = f64;
 
 /// The identifier of a `Context`.
 ///
-/// The width is this crate's decision: it bounds how many contexts one program distinguishes,
-/// and widening or narrowing it is a change to this crate rather than to the core vocabulary.
-pub type ContextId = u64;
+/// Named here so a signature says which kind of identifier it takes, but the width is not this
+/// crate's to choose: [`Identifiable::id`](deep_causality_core::Identifiable::id) returns
+/// [`IdentificationValue`], and every context type implements it, so the two must agree. Widening
+/// an identifier is a change to `deep_causality_core`, and this alias is written in terms of that
+/// one so the coupling is visible rather than discovered.
+pub type ContextId = IdentificationValue;
 
 /// The identifier of a `Contextoid` within a `Context`.
 ///
-/// The width is this crate's decision: it bounds how many contextoids one context holds, which
-/// is the larger of the two counts and the one that moves first on an embedded target.
-pub type ContextoidId = u64;
+/// Named for the role, with the width taken from [`IdentificationValue`] for the same reason as
+/// [`ContextId`]: a contextoid's `id()` is its `Identifiable` impl, so it cannot differ.
+pub type ContextoidId = IdentificationValue;
 
 use crate::{
     Context, Contextoid, Data, EuclideanSpace, EuclideanSpacetime, EuclideanTime, SpaceKind,

@@ -19,7 +19,7 @@ mod indexable_time;
 
 type ExtraContext<D, S, T, ST> = UltraGraphWeighted<Contextoid<D, S, T, ST>, RelationKind>;
 
-type ExtraContextMap<D, S, T, ST> = HashMap<u64, ExtraContext<D, S, T, ST>>;
+type ExtraContextMap<D, S, T, ST> = HashMap<ContextId, ExtraContext<D, S, T, ST>>;
 
 #[allow(clippy::type_complexity)]
 pub struct Context<D, S, T, ST>

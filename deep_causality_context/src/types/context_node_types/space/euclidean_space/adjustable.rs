@@ -25,7 +25,7 @@ impl<R: RealField + Default> Adjustable<R> for EuclideanSpace<R> {
         let new_y = array_grid.get(p2);
         let new_z = array_grid.get(p3);
 
-        // Check if the adjusted data are safe to update i.e. not greater than max f64 value
+        // Check if the adjusted data are safe to update i.e. finite in the working scalar
         if !new_x.is_finite() {
             return Err(UpdateError(
                 "Update failed, new X value is not finite".into(),
@@ -71,7 +71,7 @@ impl<R: RealField + Default> Adjustable<R> for EuclideanSpace<R> {
         let adjusted_y = self.y + new_y;
         let adjusted_z = self.z + new_z;
 
-        // Check if the adjusted data are safe to update i.e. not greater than max f64 value
+        // Check if the adjusted data are safe to update i.e. finite in the working scalar
         if !adjusted_x.is_finite() {
             return Err(AdjustmentError(
                 "Adjustment failed, new X value is not finite".into(),
