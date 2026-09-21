@@ -1,29 +1,30 @@
 ## 1. Scaffold the crate
 
-- [ ] 1.1 Create `deep_causality_context/` with `Cargo.toml`: version 0.1.0, workspace-inherited
+- [x] 1.1 Create `deep_causality_context/` with `Cargo.toml`: version 0.1.0, workspace-inherited
       edition/rust-version/license/repository/homepage, `[lints] workspace = true`, the standard
       `exclude` list, and dependencies on `deep_causality_core`, `deep_causality_data_structures`,
       `deep_causality_uncertain` and `ultragraph`
-- [ ] 1.2 Add `deep_causality_context` to `members` in the root `Cargo.toml` and add
+- [x] 1.2 Add `deep_causality_context` to `members` in the root `Cargo.toml` and add
       `deep_causality_context = { path = "deep_causality_context", version = "0.1" }` to
       `[workspace.dependencies]` (two-digit precision, per repo convention)
-- [ ] 1.3 Add `BUILD.bazel` and `tests/BUILD.bazel` modelled on
-      `deep_causality_unified_math/deep_causality_homology/BUILD.bazel` (`rust_library`, `rust_doc`,
-      `rust_doc_test`, `rust_test_suite`)
-- [ ] 1.4 Add `README.md`; do **not** create `CHANGELOG.md` by hand — release-plz generates it
-- [ ] 1.5 Create an empty `src/lib.rs` with the SPDX header and confirm
+- [x] 1.3 Add `BUILD.bazel` modelled on `deep_causality/BUILD.bazel` (`rust_library`, `rust_doc`,
+      `rust_doc_test`, plus a `rust_test_suite` per test folder). Corrected during apply: the source
+      crate keeps its test suites in its own `BUILD.bazel` and has no separate `tests/BUILD.bazel`,
+      so the homology layout the task first named does not apply here
+- [x] 1.4 Add `README.md`; do **not** create `CHANGELOG.md` by hand — release-plz generates it
+- [x] 1.5 Create an empty `src/lib.rs` with the SPDX header and confirm
       `cargo build -p deep_causality_context` succeeds
-- [ ] 1.6 Verify `source scripts/crates.sh` now lists the crate in `DC_CRATES` and `DC_CRATE_DIRS`
+- [x] 1.6 Verify `source scripts/crates.sh` now lists the crate in `DC_CRATES` and `DC_CRATE_DIRS`
 
 ## 2. Move the files (rename-only commit)
 
-- [ ] 2.1 `git mv deep_causality/src/types/context_types` and `context_node_types` into
+- [x] 2.1 `git mv deep_causality/src/types/context_types` and `context_node_types` into
       `deep_causality_context/src/types/`
-- [ ] 2.2 `git mv` `traits/{contextuable,contextuable_graph,adjustable,indexable,scalar}` into
+- [x] 2.2 `git mv` `traits/{contextuable,contextuable_graph,adjustable,indexable,scalar}` into
       `deep_causality_context/src/traits/`
-- [ ] 2.3 `git mv` `errors/{context_index_error,index_error,adjustment_error,update_error}.rs` into
+- [x] 2.3 `git mv` `errors/{context_index_error,index_error,adjustment_error,update_error}.rs` into
       `deep_causality_context/src/errors/`
-- [ ] 2.4 `git mv` the 62 context test files into `deep_causality_context/tests/`, mirroring the src
+- [x] 2.4 `git mv` the 62 context test files into `deep_causality_context/tests/`, mirroring the src
       layout, including `formalization_lean/context_graph_tests.rs`
 - [ ] 2.5 Commit the renames with no content edits, and confirm `git log --follow` resolves history
       for a sample file from each group. The tree does not build at this commit — that is expected
