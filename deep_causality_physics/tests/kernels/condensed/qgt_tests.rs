@@ -98,19 +98,80 @@ fn test_quasi_qgt_kernel_identical_to_qgt() {
     assert!((qgt.im - quasi.im).abs() < 1e-12);
 }
 
-#[test]
-fn test_qgt_band_1() {
-    // Test QGT for band 1 instead of band 0
-    let energies = CausalTensor::new(vec![0.0, 2.0], vec![2]).unwrap();
+/// The massive Dirac fixture at k = 0: `H = m sigma_z` with `m = 1`, velocities
+/// `vx = sigma_x` and `vy = sigma_y`, eigenvectors `|0> = [0, 1]` and `|1> = [1, 0]`.
+///
+/// Shared with `test_qgt_massive_dirac_k0`, which derives the band-0 answer by hand.
+fn massive_dirac_k0() -> (
+    CausalTensor<f64>,
+    QuantumEigenvector<f64>,
+    QuantumVelocity<f64>,
+    QuantumVelocity<f64>,
+) {
+    let m = 1.0;
+    let energies = CausalTensor::new(vec![-m, m], vec![2]).unwrap();
     let u = QuantumEigenvector::new(
-        CausalTensor::new(vec![Complex::new(1.0, 0.0); 4], vec![2, 2]).unwrap(),
+        CausalTensor::new(
+            vec![
+                Complex::new(0.0, 0.0),
+                Complex::new(1.0, 0.0),
+                Complex::new(1.0, 0.0),
+                Complex::new(0.0, 0.0),
+            ],
+            vec![2, 2],
+        )
+        .unwrap(),
     );
-    let v = QuantumVelocity::new(
-        CausalTensor::new(vec![Complex::new(0.5, 0.0); 4], vec![2, 2]).unwrap(),
+    let vx = QuantumVelocity::new(
+        CausalTensor::new(
+            vec![
+                Complex::new(1.0, 0.0),
+                Complex::new(0.0, 0.0),
+                Complex::new(0.0, 0.0),
+                Complex::new(1.0, 0.0),
+            ],
+            vec![2, 2],
+        )
+        .unwrap(),
     );
+    let vy = QuantumVelocity::new(
+        CausalTensor::new(
+            vec![
+                Complex::new(0.0, -1.0),
+                Complex::new(0.0, 0.0),
+                Complex::new(0.0, 0.0),
+                Complex::new(0.0, 1.0),
+            ],
+            vec![2, 2],
+        )
+        .unwrap(),
+    );
+    (energies, u, vx, vy)
+}
 
-    let res = quantum_geometric_tensor_kernel::<f64>(&energies, &u, &v, &v, 1, 1e-12);
-    assert!(res.is_ok());
+#[test]
+fn test_qgt_band_1_is_the_conjugate_of_band_0() {
+    // The band index is what this test is named for, so the two bands have to be distinguishable
+    // and their values checked. The previous fixture used an all-ones eigenvector matrix, where
+    // the bands are identical, and asserted only `is_ok()`.
+    //
+    // For a two-level system the Berry curvature of the two bands is equal and opposite, so the
+    // imaginary part of Q_xy flips sign:
+    //   band 0: <0|vx|1><1|vy|0> / (E_0 - E_1)^2 = (1)(-i)/4 = -0.25i
+    //   band 1: <1|vx|0><0|vy|1> / (E_1 - E_0)^2 = (1)(+i)/4 = +0.25i
+    let (energies, u, vx, vy) = massive_dirac_k0();
+
+    let band0 = quantum_geometric_tensor_kernel::<f64>(&energies, &u, &vx, &vy, 0, 1e-12).unwrap();
+    let band1 = quantum_geometric_tensor_kernel::<f64>(&energies, &u, &vx, &vy, 1, 1e-12).unwrap();
+
+    assert!((band1.re - 0.0).abs() < 1e-10, "Re Q_1 = {}", band1.re);
+    assert!((band1.im - 0.25).abs() < 1e-10, "Im Q_1 = {}", band1.im);
+    assert!(
+        (band0.im + band1.im).abs() < 1e-10,
+        "the two bands must carry equal and opposite curvature: {} and {}",
+        band0.im,
+        band1.im
+    );
 }
 
 #[test]
@@ -232,18 +293,28 @@ fn test_effective_band_drude_weight_error_nan_curvature() {
 }
 
 #[test]
-fn test_effective_band_drude_weight_error_negative_lattice() {
+fn test_effective_band_drude_weight_rejects_a_non_positive_lattice_constant() {
+    // `Length::new` admits zero and rejects negatives, so the kernel owns the zero case and the
+    // type owns the negative one. The test is named for both because both must be refused; it
+    // used to be named for a negative value and pass zero.
     let energy_n = Energy::new(1.0).unwrap();
     let energy_0 = Energy::new(0.0).unwrap();
     let curvature = 0.5;
     let metric = QuantumMetric::new(1.0).unwrap();
-    // Length::new validates positive, so we need to use a workaround
-    // Actually Length::new only validates >= 0, so 0 should fail in the kernel
-    let lattice = Length::new(0.0).unwrap(); // Zero should fail
 
-    let res =
-        effective_band_drude_weight_kernel::<f64>(energy_n, energy_0, curvature, metric, lattice);
-    assert!(res.is_err());
+    let zero = effective_band_drude_weight_kernel::<f64>(
+        energy_n,
+        energy_0,
+        curvature,
+        metric,
+        Length::new(0.0).unwrap(),
+    );
+    assert!(zero.is_err(), "a zero lattice constant must be refused");
+
+    assert!(
+        Length::<f64>::new(-1.0).is_err(),
+        "a negative lattice constant must be refused at construction"
+    );
 }
 
 #[test]

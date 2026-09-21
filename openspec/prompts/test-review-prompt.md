@@ -74,7 +74,7 @@ Flag any of these. Each is a defect.
 
 | Signature | Why it is broken |
 |---|---|
-| `assert!(x.is_ok())` and nothing else | passes for any returned value, including a constant |
+| `assert!(x.is_ok())` and nothing else | passes for any returned value, including a constant (see repair 5 for wrappers: delegation fixes the wrapper, not the kernel) |
 | `let _ = x.is_ok() \|\| x.is_err();` | a tautology of the excluded middle |
 | `assert!(x.is_ok() \|\| x.is_err())` | same, as an assertion that cannot fail |
 | `let _ = f(...);` on a semantic result | the answer is computed and discarded |
@@ -183,14 +183,30 @@ Priority order. Do not churn; a test that already discriminates is done, leave i
 4. **Bare `is_err()`.** Pin the variant and, where the message carries information, a substring of
    it: `match err.0 { PhysicsErrorEnum::X(msg) => assert!(msg.contains("...")), e => panic!(...) }`.
    A refusal for the wrong reason must fail.
-5. **The number is in the comment.** Keep the formula assertion and add the independent number as a
+5. **A wrapper that asserts only `is_ok()`.** Repair it with a delegation assertion —
+   `assert_eq!(effect.value_cloned().unwrap(), kernel(args).unwrap())` — which catches a wrapper
+   that drops its kernel's answer and returns a constant.
+
+   **That pins the wrapper and nothing else.** Both sides of the comparison call the same kernel,
+   so any defect in the kernel appears on both sides and cancels. A delegation assertion cannot
+   kill a single kernel mutant, and adding one to every wrapper in a family leaves the kernels
+   exactly as unpinned as before. Measured: adding delegation assertions across
+   `deep_causality_physics` left all four `proca_equation_kernel` survivors alive, including a
+   flipped sign on the Proca current.
+
+   So repair the pair: the delegation assertion for the wrapper, and a separate test that pins the
+   kernel's own value. Where the closed form is awkward, a metamorphic relation usually is not —
+   `J = delta(F) + m^2 A` is affine in `m^2`, so `J(m) = J(0) + m^2 A` pins both the square and
+   the sign of the sum without reimplementing the hard term.
+
+6. **The number is in the comment.** Keep the formula assertion and add the independent number as a
    second assertion. Both, so the second breaks the circularity.
-6. **Single point where a range is meaningful.** Convert to a table spanning the physical range,
+7. **Single point where a range is meaningful.** Convert to a table spanning the physical range,
    log-spaced where the quantity is scale-free, including the extremes the kernel claims to support.
-7. **Corner cases the physics has**: zero, one, the boundary of validity and one ulp either side of
+8. **Corner cases the physics has**: zero, one, the boundary of validity and one ulp either side of
    it, smallest and largest representable, and every documented discontinuity. Prefer `M = 1 ± ε`
    over `M = 0.5` against `M = 25`.
-8. **Tolerances.** Replace a magic absolute tolerance with a relative one, or with a stated number of
+9. **Tolerances.** Replace a magic absolute tolerance with a relative one, or with a stated number of
    ulp, so the test survives a change of `FloatType`. Say in a comment what the tolerance measures.
 
 While repairing:
@@ -219,6 +235,13 @@ In order:
    A survivor is a decision nothing pins. Either add the test that kills it, or, if the mutation
    provably cannot change behaviour, add it to `.cargo/mutants.toml` with the measurement that
    settles it and confirm the entry matched using the `comm` check that file documents.
+
+   A survivor in a kernel needs a test against **that kernel**. Tests that go through its wrapper
+   cannot kill it, because the wrapper and the kernel carry the defect together.
+
+   Before calling a survivor equivalent, try to reach it. A guard like `a.len() < needed` looks
+   unreachable until you look for the fixture where the two are equal; in this crate that was a
+   two-point line against a triangle, and the mutant was a real gap rather than an equivalence.
 4. `make format && make fix` once the crate is done.
 
 ---

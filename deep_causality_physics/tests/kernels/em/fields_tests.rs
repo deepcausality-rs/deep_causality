@@ -662,7 +662,16 @@ fn test_lagrangian_density_kernel_nan_b_error() {
         Metric::Euclidean(3),
     )
     .unwrap();
-    assert!(lagrangian_density_kernel(&e, &b).is_err());
+    // The input guard runs before the squared magnitudes, so a NaN in B alone must be reported as
+    // a non-finite *input*. Asserting only `is_err()` admitted the later squared-magnitude guard,
+    // which also fires on a NaN and made a guard testing only E indistinguishable from one
+    // testing both.
+    let err = lagrangian_density_kernel(&e, &b).unwrap_err();
+    let message = format!("{err}");
+    assert!(
+        message.contains("Non-finite input"),
+        "a NaN in B alone must trip the input guard; got {message}"
+    );
 }
 
 // =============================================================================
@@ -737,4 +746,156 @@ fn test_lagrangian_density_kernel_dimension_mismatch() {
 
     let result = lagrangian_density_kernel(&e, &b);
     assert!(result.is_err());
+}
+
+// =============================================================================
+// Value tests for the Proca current and the finiteness guards
+//
+// A wrapper delegation assertion compares the wrapper against its kernel, so both sides carry any
+// defect the kernel has and it can never pin the kernel itself. These do.
+// =============================================================================
+
+#[test]
+fn test_proca_current_is_affine_in_the_mass_squared() {
+    // J = delta(F) + m^2 A. With the potential's 1-form equal to 1 in every slot, that is
+    //
+    //     J(m)[i] = J(0)[i] + m^2
+    //
+    // component by component, which pins both the square on the mass and the sign of the sum
+    // without reimplementing the codifferential.
+    let field = create_simple_manifold();
+    let potential = create_simple_manifold(); // data is 1.0 at every simplex
+
+    let base = proca_equation_kernel(&field, &potential, 0.0).unwrap();
+    for m in [0.5_f64, 1.5, 3.0] {
+        let j = proca_equation_kernel(&field, &potential, m).unwrap();
+        let b: &[f64] = base.as_slice();
+        let v: &[f64] = j.as_slice();
+        assert_eq!(v.len(), b.len());
+        for (i, (got, zero)) in v.iter().zip(b).enumerate() {
+            let want = zero + m * m;
+            assert!(
+                (got - want).abs() < 1e-12,
+                "m = {m}, component {i}: J = {got}, expected J(0) + m^2 = {want}"
+            );
+        }
+    }
+}
+
+#[test]
+fn test_proca_current_grows_quadratically_not_linearly_with_the_mass() {
+    // Doubling the mass must quadruple the mass-dependent part. A mass term built as m + m
+    // instead of m * m doubles it instead, and matches the correct answer at m = 2 only.
+    let field = create_simple_manifold();
+    let potential = create_simple_manifold();
+
+    let j0 = proca_equation_kernel(&field, &potential, 0.0).unwrap();
+    let j1 = proca_equation_kernel(&field, &potential, 1.5).unwrap();
+    let j2 = proca_equation_kernel(&field, &potential, 3.0).unwrap();
+
+    let a: &[f64] = j0.as_slice();
+    let b: &[f64] = j1.as_slice();
+    let c: &[f64] = j2.as_slice();
+    for i in 0..a.len() {
+        let single = b[i] - a[i];
+        let doubled = c[i] - a[i];
+        assert!(
+            (doubled - 4.0 * single).abs() < 1e-12,
+            "component {i}: doubling the mass gave {doubled}, expected 4 x {single}"
+        );
+    }
+}
+
+#[test]
+fn test_energy_density_reports_the_squared_magnitude_guard_for_a_single_overflowing_field() {
+    // Both existing overflow tests give E and B the same huge value, so a guard needing only one
+    // of them is indistinguishable from a guard needing both. Overflowing one at a time separates
+    // them, and the message says which guard fired.
+    let huge = f64::MAX;
+    let modest = CausalMultiVector::<f64>::new(
+        vec![0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+    let overflowing = CausalMultiVector::<f64>::new(
+        vec![0.0, 0.0, huge, 0.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+
+    for (e, b, which) in [(&overflowing, &modest, "E"), (&modest, &overflowing, "B")] {
+        let err = energy_density_kernel(e, b).unwrap_err();
+        let message = format!("{err}");
+        assert!(
+            message.contains("Non-finite squared magnitude"),
+            "{which} alone overflows, so the squared-magnitude guard must fire; got {message}"
+        );
+    }
+}
+
+#[test]
+fn test_lagrangian_density_reports_the_squared_magnitude_guard_for_a_single_overflowing_field() {
+    let huge = f64::MAX;
+    let modest = CausalMultiVector::<f64>::new(
+        vec![0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+    let overflowing = CausalMultiVector::<f64>::new(
+        vec![0.0, 0.0, huge, 0.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+
+    for (e, b, which) in [(&overflowing, &modest, "E"), (&modest, &overflowing, "B")] {
+        let err = lagrangian_density_kernel(e, b).unwrap_err();
+        let message = format!("{err}");
+        assert!(
+            message.contains("Non-finite squared magnitude"),
+            "{which} alone overflows, so the squared-magnitude guard must fire; got {message}"
+        );
+    }
+}
+
+/// A two-point line: 2 vertices and 1 edge, so `total_simplices() == 3`.
+fn two_point_line_manifold() -> SimplicialManifold<f64, f64> {
+    let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0], vec![2, 2]).unwrap();
+    let point_cloud =
+        PointCloud::new(points, CausalTensor::new(vec![0.0; 2], vec![2]).unwrap(), 0).unwrap();
+    let complex = point_cloud.triangulate(1.5).unwrap();
+    let num_simplices = complex.total_simplices();
+    let num_edges = complex.skeletons()[1].simplices().len();
+    let metric =
+        ReggeGeometry::new(CausalTensor::new(vec![1.0; num_edges], vec![num_edges]).unwrap());
+    Manifold::with_metric(
+        complex,
+        CausalTensor::new(vec![2.0; num_simplices], vec![num_simplices]).unwrap(),
+        Some(metric),
+        0,
+    )
+    .unwrap()
+}
+
+#[test]
+fn test_proca_accepts_a_potential_exactly_as_long_as_the_one_form_domain() {
+    // The length guard is `a_full.len() < needed_len`, so the boundary is equality: a potential
+    // whose data is exactly as long as the field's 1-form domain must be accepted. Every other
+    // fixture in this file is strictly longer or strictly shorter, which leaves `<` and `<=`
+    // indistinguishable.
+    //
+    // A triangle has 3 edges, and a two-point line has 3 simplices in total.
+    let field = create_simple_manifold();
+    let potential = two_point_line_manifold();
+
+    let needed_len = field.complex().skeletons()[1].simplices().len();
+    let available = potential.data().as_slice().len();
+    assert_eq!(
+        available, needed_len,
+        "precondition: the potential must be exactly as long as the 1-form domain"
+    );
+
+    assert!(
+        proca_equation_kernel(&field, &potential, 0.5).is_ok(),
+        "a potential of exactly the required length is long enough and must be accepted"
+    );
 }

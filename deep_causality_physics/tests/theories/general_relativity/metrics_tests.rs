@@ -230,10 +230,9 @@ fn test_kerr_metric_horizon_singularity() {
 
 #[test]
 fn test_kerr_metric_ring_singularity() {
-    // Ring singularity: Σ = r² + a²cos²θ → 0
-    // This happens at r=0, θ=π/2 with a≠0
+    // The ring singularity is where Σ = r² + a² cos²θ vanishes. At r = 0 and θ = π/2 the
+    // cosine is zero, so Σ = 0 + a² · 0 = 0 for any spin.
     let result = kerr_metric_at(1.0, 0.5, 0.0, PI / 2.0);
-    // Actually at r=0, Σ=0 + a²×0 = 0 for θ=π/2
     assert!(
         result.is_err(),
         "Ring singularity (Σ=0) should return error"

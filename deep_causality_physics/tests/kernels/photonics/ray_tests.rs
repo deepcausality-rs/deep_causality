@@ -66,11 +66,8 @@ fn test_snells_law_tir() {
 #[test]
 fn test_lens_maker() {
     let n = IndexOfRefraction::<f64>::new(1.5).unwrap();
-    // Biconvex: R1 > 0, R2 < 0.
-    // Spec kernel takes r1: Length, r2: Length? No, I updated kernel to take f64 for signed radii.
-    // Wait, let's check what I implemented.
-    // I implemented: fn lens_maker_kernel(n: IndexOfRefraction, r1_signed: f64, r2_signed: f64)
-
+    // A biconvex lens has R1 > 0 and R2 < 0. The kernel takes the two radii as signed `f64`
+    // rather than `Length`, because a surface radius carries a sign and `Length` does not.
     let r1 = 0.5;
     let r2 = -0.5;
 

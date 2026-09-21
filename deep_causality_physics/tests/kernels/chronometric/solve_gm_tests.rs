@@ -7,13 +7,19 @@
 //!
 //! Strategy: forward-model two `SpaceTimeCoordinate` samples whose `clock_drift_rate`
 //! values are constructed from a chosen target `GM`, then verify the kernel inverts
-//! them back to that target. This is a round-trip identity test — the only way an
-//! analytical inversion can be verified without external truth data.
+//! them back to that target.
+//!
+//! A round trip against a forward model written in this file would only assert that the two
+//! expressions agree, so `test_the_forward_model_agrees_with_the_shipped_drift_rate_kernel` ties
+//! that model to `relativistic_clock_drift_rate_kernel`, which `forward_clock_tests.rs` validates
+//! against the published GPS relativistic split (Ashby 2003). The J2 term has no comparable
+//! published value to hand, and `test_j2_sensitivity_changes_result` pins it by showing that
+//! inverting with the wrong J2 biases the recovered GM.
 
 use deep_causality_num_dual::Dual;
 use deep_causality_physics::{
     CentralBody, EARTH_GM, PhysicsErrorEnum, SPEED_OF_LIGHT, SpaceTimeCoordinate,
-    solve_gm_analytical_kernel,
+    relativistic_clock_drift_rate_kernel, solve_gm_analytical_kernel,
 };
 
 /// Inverse-relative tolerance for the round-trip GM recovery.
@@ -30,12 +36,9 @@ const RELATIVE_TOLERANCE: f64 = 1e-8;
 /// $\dot\tau = 1 + \Phi(r,\theta)/c^2 - v^2/(2c^2)$
 /// for a given target `gm`, J2-corrected effective potential.
 fn forward_drift_rate(target_gm: f64, r: f64, v: f64, z: f64, body: &CentralBody<f64>) -> f64 {
-    let inv_r_eff = inv_r_effective(r, z, body);
-    let phi = -target_gm * inv_r_eff_to_potential_factor(inv_r_eff, r);
-    // Φ for the J2-corrected geopotential: Φ = -GM × (1/r_eff_geometric)
-    // where 1/r_eff_geometric = 1/r - J2·R_eq² P2(cos θ)/r³
-    let _ = phi; // kept for clarity; the actual formula below
-    let phi = -target_gm * inv_r_eff;
+    // Φ for the J2-corrected geopotential: Φ = -GM × (1/r_eff),
+    // where 1/r_eff = 1/r - J2·R_eq²·P₂(cos θ)/r³.
+    let phi = -target_gm * inv_r_effective(r, z, body);
     let c_sq = SPEED_OF_LIGHT * SPEED_OF_LIGHT;
     phi / c_sq - 0.5 * v * v / c_sq
 }
@@ -47,11 +50,6 @@ fn inv_r_effective(r: f64, z: f64, body: &CentralBody<f64>) -> f64 {
     let r_cubed = r * r * r;
     let req_sq = body.equatorial_radius_m * body.equatorial_radius_m;
     1.0 / r - body.j2 * req_sq * legendre_p2 / r_cubed
-}
-
-#[inline]
-fn inv_r_eff_to_potential_factor(inv_r_eff: f64, _r: f64) -> f64 {
-    inv_r_eff
 }
 
 /// Build a SpaceTimeCoordinate with a forward-modeled clock_drift_rate
@@ -86,6 +84,37 @@ fn assert_relative(actual: f64, expected: f64, tol: f64) {
         actual,
         expected
     );
+}
+
+// =============================================================================
+// The forward model, tied to externally validated truth
+// =============================================================================
+
+#[test]
+fn test_the_forward_model_agrees_with_the_shipped_drift_rate_kernel() {
+    // `forward_drift_rate` is what every round trip below builds its input from, so on its own
+    // the round trip asserts only that one expression inverts another written in the same file.
+    //
+    // At J2 = 0 the model reduces to Φ/c² − v²/(2c²) with Φ = −GM/r, which is exactly
+    // `relativistic_clock_drift_rate_kernel`. That kernel is checked against Ashby 2003's GPS
+    // split (+45.7, −7.2, +38.5 µs/day) in `forward_clock_tests.rs`, so agreeing with it puts
+    // the spherical half of the oracle on published ground.
+    let body = CentralBody::<f64>::new(EARTH_GM, 6.378e6, 0.0); // J2 = 0
+    for (r, v) in [
+        (6.378e6_f64, 0.0_f64),
+        (2.6561e7, 3.874e3),
+        (2.93e7, 3650.0),
+        (4.2164e7, 3.075e3),
+    ] {
+        let ours = forward_drift_rate(EARTH_GM, r, v, 0.0, &body);
+        let shipped = relativistic_clock_drift_rate_kernel(r, v, EARTH_GM)
+            .expect("a positive radius and GM are well formed");
+        assert!(
+            (ours - shipped).abs() <= 1e-15 * shipped.abs().max(1e-18),
+            "r = {r:e}, v = {v:e}: the test's forward model gives {ours:e}, \
+             the shipped kernel gives {shipped:e}"
+        );
+    }
 }
 
 // =============================================================================

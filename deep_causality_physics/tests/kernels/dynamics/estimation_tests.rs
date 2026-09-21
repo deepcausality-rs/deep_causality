@@ -96,129 +96,107 @@ fn test_kalman_filter_innovation_covariance_shape_mismatch() {
     }
 }
 
-#[test]
-fn test_kalman_filter_state_update_shape_mismatch() {
-    // Attempt to trigger Line 102: x_pred.shape() != ky.shape()
-    // We try to trigger a mismatch by passing inputs that are compatible for matmul but produce unexpected output shape.
-    // Given the tensor library's strictness, this is hard to trigger without hitting earlier error.
-    // However, we construct a case that fails validation either at Line 51 or Line 102, covering the logic path.
-
-    // x_pred [1] (Rank 1)
-    // H [1, 1], z [1, 1]
-    // This triggers "measurement [1,1] != hx [1]" at Line 51 first.
-    // This effectively tests that shape mismatches are caught.
-
-    let x_pred = CausalTensor::new(vec![10.0], vec![1]).unwrap();
-    let p_pred = CausalTensor::new(vec![1.0], vec![1, 1]).unwrap();
-    let measurement = CausalTensor::new(vec![12.0], vec![1, 1]).unwrap();
-    let h = CausalTensor::new(vec![1.0], vec![1, 1]).unwrap();
-    let r = CausalTensor::new(vec![1.0], vec![1, 1]).unwrap();
-    let q = CausalTensor::new(vec![0.0], vec![1, 1]).unwrap();
-
-    let result = kalman_filter_linear_kernel::<f64>(&x_pred, &p_pred, &measurement, &h, &r, &q);
-
-    assert!(result.is_err());
-    let err = result.unwrap_err();
-    match err.0 {
-        deep_causality_physics::PhysicsErrorEnum::DimensionMismatch(_) => {
-            // Expected
-        }
-        deep_causality_physics::PhysicsErrorEnum::Singularity(_) => {
-            // Also acceptable if earlier tensor op fails due to rank mismatch
-        }
-        _ => panic!("Expected DimensionMismatch or Singularity, got {:?}", err),
-    }
-}
+// `test_kalman_filter_state_update_shape_mismatch` and
+// `test_kalman_filter_identity_shape_mismatch` were removed here. Both were named for a late
+// shape guard, both conceded in their own comments that the guard cannot be reached, and both
+// then asserted a bare `is_err()` satisfied by an unrelated earlier failure.
+// `estimation_coverage_tests.rs` proves those two guards unreachable and covers the reachable
+// path, so the pair added no discrimination.
 
 #[test]
-fn test_kalman_filter_identity_shape_mismatch() {
-    // Attempt to trigger Line 121: identity.shape() != kh.shape()
-    // We pass a non-square P matrix [1, 2].
-    // H [1, 1]. x [1, 2]. z [1, 2]. R [1, 1].
-    //
-    // H(1,1) * x(1,2) -> Error? No, compatible. Result [1,2].
-    // z [1,2]. y [1,2]. OK.
-    // H(1,1) * P(1,2) -> Result [1,2].
-    // S = HPH' + R.
-    // [1,2] * H'(1,1)? No H' is [1,1] (transpose of 1,1).
-    // [1,2] * [1,1]? Error. Cols 2 != Rows 1.
-    //
-    // So non-square P fails at HPH'.
-    //
-    // Let's try P [2, 1]. H [1, 2].
-    // H(1,2) * P(2,1) -> [1,1].
-    // H' is [2,1].
-    // S = (1,1) * (2,1)? Error.
-    //
-    // It seems extremely difficult to reach Line 121 with standard tensor ops because P must be compatible with H,
-    // and K calculation constrains shapes further.
-    //
-    // However, we will add this test case to verify that *some* shape error is returned,
-    // demonstrating that the function is robust against non-square inputs.
-
-    let x_pred = CausalTensor::new(vec![10.0, 20.0], vec![2, 1]).unwrap();
-    let p_pred = CausalTensor::new(vec![1.0, 0.0], vec![2, 1]).unwrap(); // Non-square P
-    let measurement = CausalTensor::new(vec![12.0], vec![1, 1]).unwrap();
-    let h = CausalTensor::new(vec![1.0, 1.0], vec![1, 2]).unwrap();
-    let r = CausalTensor::new(vec![1.0], vec![1, 1]).unwrap();
-    let q = CausalTensor::new(vec![0.0], vec![1, 1]).unwrap();
-
-    let result = kalman_filter_linear_kernel::<f64>(&x_pred, &p_pred, &measurement, &h, &r, &q);
-
-    assert!(result.is_err());
-}
-
-#[test]
-fn test_generalized_master_equation_kernel() {
+fn test_master_equation_zero_state_and_empty_history_stays_zero() {
     use deep_causality_physics::Probability;
     use deep_causality_physics::generalized_master_equation_kernel;
 
-    // Test Case 1: Zero State, Empty History
     let state = vec![Probability::<f64>::new(0.0).unwrap()];
     let history: Vec<Vec<Probability<f64>>> = vec![];
     let mk: Vec<CausalTensor<f64>> = vec![];
-    let res = generalized_master_equation_kernel(&state, &history, None, &mk);
-    assert!(res.is_ok());
-    let val = res.unwrap();
-    assert_eq!(val.len(), 1);
-    assert_eq!(val[0].value(), 0.0);
 
-    // Test Case 2: Markov Limit (T * P)
-    // P = [0.5], T = [0.8] -> Result 0.4
+    let out = generalized_master_equation_kernel(&state, &history, None, &mk).unwrap();
+    assert_eq!(out.len(), 1);
+    assert_eq!(out[0].value(), 0.0);
+}
+
+#[test]
+fn test_master_equation_markov_limit_is_the_transition_matrix_applied_once() {
+    use deep_causality_physics::Probability;
+    use deep_causality_physics::generalized_master_equation_kernel;
+
+    // P = 0.5, T = 0.8, no memory: result is T P = 0.4.
     let state = vec![Probability::<f64>::new(0.5).unwrap()];
+    let history: Vec<Vec<Probability<f64>>> = vec![];
+    let mk: Vec<CausalTensor<f64>> = vec![];
     let t = CausalTensor::new(vec![0.8], vec![1, 1]).unwrap();
-    let res = generalized_master_equation_kernel(&state, &history, Some(&t), &mk);
-    assert!(res.is_ok());
-    assert!((res.unwrap()[0].value() - 0.4).abs() < 1e-10);
 
-    // Test Case 3: Memory Only
-    // Hist = [0.5], K = [0.1] -> Result 0.05
-    let state_zero = vec![Probability::<f64>::new(0.0).unwrap()];
+    let out = generalized_master_equation_kernel(&state, &history, Some(&t), &mk).unwrap();
+    assert!(
+        (out[0].value() - 0.4).abs() < 1e-10,
+        "got {}",
+        out[0].value()
+    );
+}
+
+#[test]
+fn test_master_equation_memory_kernel_alone_contributes_its_convolution() {
+    use deep_causality_physics::Probability;
+    use deep_causality_physics::generalized_master_equation_kernel;
+
+    // History = 0.5, K = 0.1, no transition matrix: result is K * hist = 0.05.
+    let state = vec![Probability::<f64>::new(0.0).unwrap()];
     let history = vec![vec![Probability::<f64>::new(0.5).unwrap()]];
-    let k = CausalTensor::new(vec![0.1], vec![1, 1]).unwrap();
-    let mk = vec![k];
-    let res = generalized_master_equation_kernel(&state_zero, &history, None, &mk);
-    assert!(res.is_ok());
-    assert!((res.unwrap()[0].value() - 0.05).abs() < 1e-10);
+    let mk = vec![CausalTensor::new(vec![0.1], vec![1, 1]).unwrap()];
 
-    // Test Case 4: Combined
-    // P=0.5, T=0.8 -> 0.4
-    // Hist=0.5, K=0.1 -> 0.05
-    // Sum = 0.45
-    let res = generalized_master_equation_kernel(&state, &history, Some(&t), &mk);
-    assert!(res.is_ok());
-    assert!((res.unwrap()[0].value() - 0.45).abs() < 1e-10);
+    let out = generalized_master_equation_kernel(&state, &history, None, &mk).unwrap();
+    assert!(
+        (out[0].value() - 0.05).abs() < 1e-10,
+        "got {}",
+        out[0].value()
+    );
+}
 
-    // Test Case 5: Validation Error (Hist != Kernel length)
-    let history_empty: Vec<Vec<Probability<f64>>> = vec![];
-    let res = generalized_master_equation_kernel(&state, &history_empty, None, &mk);
-    assert!(res.is_err());
+#[test]
+fn test_master_equation_sums_the_markov_and_memory_contributions() {
+    use deep_causality_physics::Probability;
+    use deep_causality_physics::generalized_master_equation_kernel;
 
-    // Test Case 6: Validation Error (History dimension mismatch)
-    let history_wrong = vec![vec![
+    // 0.4 from the Markov term and 0.05 from the memory term add to 0.45. Splitting the three
+    // cases apart means a failure in the Markov term no longer hides the memory term.
+    let state = vec![Probability::<f64>::new(0.5).unwrap()];
+    let history = vec![vec![Probability::<f64>::new(0.5).unwrap()]];
+    let mk = vec![CausalTensor::new(vec![0.1], vec![1, 1]).unwrap()];
+    let t = CausalTensor::new(vec![0.8], vec![1, 1]).unwrap();
+
+    let out = generalized_master_equation_kernel(&state, &history, Some(&t), &mk).unwrap();
+    assert!(
+        (out[0].value() - 0.45).abs() < 1e-10,
+        "got {}",
+        out[0].value()
+    );
+}
+
+#[test]
+fn test_master_equation_rejects_a_history_shorter_than_the_memory_kernel() {
+    use deep_causality_physics::Probability;
+    use deep_causality_physics::generalized_master_equation_kernel;
+
+    let state = vec![Probability::<f64>::new(0.5).unwrap()];
+    let history: Vec<Vec<Probability<f64>>> = vec![];
+    let mk = vec![CausalTensor::new(vec![0.1], vec![1, 1]).unwrap()];
+
+    assert!(generalized_master_equation_kernel(&state, &history, None, &mk).is_err());
+}
+
+#[test]
+fn test_master_equation_rejects_a_history_entry_of_the_wrong_dimension() {
+    use deep_causality_physics::Probability;
+    use deep_causality_physics::generalized_master_equation_kernel;
+
+    let state = vec![Probability::<f64>::new(0.5).unwrap()];
+    let history = vec![vec![
         Probability::<f64>::new(0.5).unwrap(),
         Probability::<f64>::new(0.5).unwrap(),
     ]];
-    let res = generalized_master_equation_kernel(&state, &history_wrong, None, &mk);
-    assert!(res.is_err());
+    let mk = vec![CausalTensor::new(vec![0.1], vec![1, 1]).unwrap()];
+
+    assert!(generalized_master_equation_kernel(&state, &history, None, &mk).is_err());
 }

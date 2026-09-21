@@ -112,11 +112,8 @@ fn test_time_dilation_angle_causality_violation() {
     // resulting in negative dot product for timelike vectors in (+---) metric.
     // Or if they are spacelike separated in a way that violates assumptions.
 
-    // Future pointing:  [0.0, 1.0, 0.0, ...] (assuming index 1 is Time per other tests logic or Scalar + Time?)
-    // Wait, the previous parallel test used index 1=1.0 and index 1=2.0.
-    // Let's create two opposing vectors.
-
-    // t1: [..., 1.0, ...]
+    // Two timelike vectors pointing into opposite light cones: slot 1 carries +1 in one and -1
+    // in the other, so their Minkowski product is negative and gamma falls below 1.
     let mut data1 = vec![0.0; 16];
     data1[1] = 1.0;
     let t1 = CausalMultiVector::new(data1, Metric::Minkowski(4)).unwrap();

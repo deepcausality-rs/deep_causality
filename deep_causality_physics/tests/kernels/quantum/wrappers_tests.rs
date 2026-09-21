@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::klein_gordon;
+use deep_causality_physics::{klein_gordon, klein_gordon_kernel};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, PointCloud, ReggeGeometry, SimplicialManifold};
 
@@ -41,9 +41,16 @@ fn create_simple_manifold() -> SimplicialManifold<f64, f64> {
 fn test_klein_gordon_wrapper_success() {
     let manifold = create_simple_manifold();
     // Use mass = 0.0 for simple free field case or any value
+    // Delegation, not merely success: `assert!(effect.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
     let effect = klein_gordon(&manifold, 0.5);
-    // Success if manifold data shape matches what kernel expects (it does for simple manifold)
-    assert!(effect.is_ok());
+    let carried = effect.value_cloned().unwrap();
+    let direct = klein_gordon_kernel(&manifold, 0.5).unwrap();
+    assert_eq!(
+        carried.as_slice(),
+        direct.as_slice(),
+        "klein_gordon must carry the value its kernel produced"
+    );
 }
 
 #[test]

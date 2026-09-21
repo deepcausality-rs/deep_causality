@@ -7,7 +7,8 @@ use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_physics::{
     Frequency, Mass, MomentOfInertia, angular_momentum, angular_momentum_kernel,
     generalized_master_equation_kernel, kalman_filter_linear, kalman_filter_linear_kernel,
-    kinetic_energy, rotational_kinetic_energy, torque, torque_kernel,
+    kinetic_energy, kinetic_energy_kernel, rotational_kinetic_energy,
+    rotational_kinetic_energy_kernel, torque, torque_kernel,
 };
 use deep_causality_tensor::CausalTensor;
 
@@ -24,11 +25,19 @@ fn test_kinetic_energy_wrapper_success() {
     )
     .unwrap();
 
+    // Delegation, not merely success. `torque` and `angular_momentum` in this file already had
+    // this assertion; the two energy wrappers did not.
     let effect = kinetic_energy(&mass, &velocity);
-    assert!(effect.is_ok());
+    assert_eq!(
+        effect.value_cloned().unwrap().value(),
+        kinetic_energy_kernel(mass, &velocity).unwrap(),
+        "kinetic_energy must carry the value its kernel produced"
+    );
 
+    // m = 2, v = (3, 4): |v|^2 = 25 and KE = 0.5 * 2 * 25 = 25.
     let energy = effect.value_cloned().unwrap();
-    assert!(energy.value() > 0.0);
+    let ke: f64 = energy.value();
+    assert!((ke - 25.0).abs() < 1e-12, "KE = {ke}");
 }
 
 // =============================================================================
@@ -40,11 +49,18 @@ fn test_rotational_kinetic_energy_wrapper_success() {
     let inertia = MomentOfInertia::new(4.0).unwrap();
     let omega = Frequency::new(3.0).unwrap();
 
+    // Delegation, not merely success.
     let effect = rotational_kinetic_energy(&inertia, &omega);
-    assert!(effect.is_ok());
+    assert_eq!(
+        effect.value_cloned().unwrap().value(),
+        rotational_kinetic_energy_kernel(inertia, omega).unwrap(),
+        "rotational_kinetic_energy must carry the value its kernel produced"
+    );
 
+    // I = 4, omega = 3: E = 0.5 * 4 * 9 = 18.
     let energy = effect.value_cloned().unwrap();
-    assert!(energy.value() > 0.0);
+    let e: f64 = energy.value();
+    assert!((e - 18.0).abs() < 1e-12, "E = {e}");
 }
 
 // =============================================================================
