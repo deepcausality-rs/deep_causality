@@ -16,9 +16,9 @@ mod temporal;
 
 /// The absence of a spatial extent, as a type.
 ///
-/// A [`ContextFrame`](crate::ContextFrame) names a spatial and a spacetime member, and Rust has no
-/// associated-type defaults on stable, so neither can be left out. A frame whose context holds no
-/// spatial node names this instead of inventing a type its graph never holds.
+/// A `Context` names a spatial and a spacetime type whether or not its graph holds either, so a
+/// context with a clock and no position still has two slots to fill. This fills them without
+/// inventing a type the graph never holds, and says so in the context's own signature.
 ///
 /// Measured usage makes this the ordinary case rather than an escape hatch. Across the workspace
 /// the contextoid variants are used Root 45, Datoid 47, Tempoid 15, Spaceoid 5, SpaceTempoid 5, so

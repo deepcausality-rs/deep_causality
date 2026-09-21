@@ -4,7 +4,6 @@
  */
 
 pub mod adjustable;
-pub mod context_frame;
 pub mod contextuable;
 pub mod contextuable_graph;
 pub mod indexable;

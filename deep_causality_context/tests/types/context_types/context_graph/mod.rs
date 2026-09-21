@@ -23,4 +23,6 @@ mod graph_node_type_tests;
 #[cfg(test)]
 mod graph_root_tests;
 #[cfg(test)]
+mod mixed_spacetime_tests;
+#[cfg(test)]
 mod scalar_parameter_tests;

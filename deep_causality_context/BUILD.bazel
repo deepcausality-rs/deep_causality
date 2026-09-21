@@ -36,25 +36,6 @@ rust_doc_test(
 # TESTS
 ###############################################################################
 rust_test_suite(
-    name = "ctx_context_frames_tests",
-    srcs = glob([
-        "tests/types/context_frames/*_tests.rs",
-    ]),
-    tags = [
-        "context_types_tests",
-        "unit-test",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        # Crate to test
-        ":deep_causality_context",
-    ] + all_crate_deps(
-        normal = True,
-        normal_dev = True,
-    ),
-)
-
-rust_test_suite(
     name = "ctx_types_no_space_time_tests",
     srcs = glob([
         "tests/types/context_node_types/no_space_time/*_tests.rs",

@@ -76,8 +76,6 @@ pub use crate::traits::scalar::scalar_value::ScalarValue;
 // Types
 //
 // Default context node types.
-pub use crate::traits::context_frame::ContextFrame;
-pub use crate::types::context_frames::{BaseFrame, ClockFrame, UniformFrame};
 pub use crate::types::context_node_types::data::Data;
 pub use crate::types::context_node_types::data_uncertain::uncertain_bool_data::UncertainBoolData;
 pub use crate::types::context_node_types::data_uncertain::uncertain_data::UncertainData;

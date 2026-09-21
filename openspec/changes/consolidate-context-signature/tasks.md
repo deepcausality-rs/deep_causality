@@ -193,6 +193,10 @@ group 4 is the downstream fan-out that follows from it.
       value of type `R` is ever produced. Its `TimeUnit` is `()`, not `R`: what it stands in for
       is a spacetime *position*, and such a context still keeps a real clock in the frame's `Time`
       member
+      **Kept, and it outlived the frame that motivated it.** A four-parameter `Context` names a
+      spatial and a spacetime type whether or not its graph holds either, so a clock-only context
+      still has two slots to fill, and a zero-sized type fills them without naming something the
+      graph never holds.
 - [x] 6.2 Add `ContextFrame` with `Space`, `Time` and `SpaceTime` associated types
       **Plus a fourth, `Scalar: RealField`.** `Space` and `SpaceTime` are bound to it, so a frame
       cannot report a position in one scalar and an interval in another. `Time` is deliberately
@@ -200,6 +204,11 @@ group 4 is the downstream fan-out that follows from it.
       real-valued space with an integer clock is legitimate. Binding a supertrait's associated
       type through the subtrait (`Spatial<Coord = Self::Scalar>`) was verified to compile before
       the design was committed to
+      **REVERSED by the user after review.** The trait landed, then came out again with group 7.
+      It bundled three parallel node-payload slots and carried a scalar, a signature and a family.
+      The signature moved to the nodes, the family is a function call the physics crate already
+      makes with loose parameters, and the bundling is what a type alias does. Nothing consumed it:
+      outside its own module it appeared in a re-export and a docstring.
 - [x] 6.3 Add `SIGNATURE` as an associated constant of type `deep_causality_metric::Metric`
       **Reversed by the user during apply, and the reasoning is worth keeping.** A constant on the
       frame is a claim, and a variant frame's contents can contradict it: `SpaceTimeKind` holds the
@@ -248,25 +257,51 @@ group 4 is the downstream fan-out that follows from it.
       gives it up. Two tests pin this — the regime-change test uses two variants inside the
       signature class, and a second asserts `EastCoastFrame` and `WestCoastFrame` name the same
       member type and differ only in their constant
+      **REVERSED with 6.2.** `UniformFrame`, `BaseFrame` and `ClockFrame` landed and came out
+      again. The distinction they encoded — variant members against fixed ones — is the one the
+      `BaseContext` and `UniformContext` aliases already draw.
 - [x] 6.5b Add a test holding two spacetime contextoids of different concrete variants in one
       context on a variant frame, which is what a regime-changing model needs
+      **Kept, and moved.** It lives in `tests/.../context_graph/mixed_spacetime_tests.rs` with the
+      type parameters spelled out, alongside a second test holding a Newtonian node beside a
+      relativistic one so the two report different signatures, and a clock-only context that names
+      `NoSpaceTime` in both empty slots.
 - [x] 6.6 Add a test asserting a frame's signature is readable without constructing a context, and
       one asserting two frames with different conventions are distinguishable through the metric
       crate's existing convention checks
+      **Half reversed.** There is no frame signature to read. The convention half survives as
+      per-type tests: each spacetime type pins its own signature, and one asserts a node's
+      signature feeds `detect_convention` and `is_lorentzian` with nothing new in between.
 - [x] 6.7 `cargo test -p deep_causality_context` green
       414 tests and 22 doctests. `bazel test //...` 1408. The two new test directories each needed
       their own `rust_test_suite` in `BUILD.bazel`, because the context crate globs per directory
       rather than per tree — without them Bazel compiled neither file
 
-## 7. Four parameters to two
+## 7. Four parameters to two — REMOVED
 
-- [ ] 7.1 Put the frame on both `Contextoid` and `Context`: `Contextoid` holds its variant payloads
-      so it must name their types, and it takes them from the frame's associated types
-- [ ] 7.2 Reduce `Contextoid` and `ContextoidType` to the data type and the frame
-- [ ] 7.3 Reduce `Context` and the three graph traits
-- [ ] 7.4 Rewrite the ready-made aliases against frames
-- [ ] 7.5 Fix `deep_causality`, `deep_causality_ethos` and the examples again
-- [ ] 7.6 `bazel test //...` green
+**Dropped by the user after review, with the frame it depended on.** The group would have replaced
+`Context<D, S, T, ST>` with `Context<D, F>`.
+
+It does not pay for itself. Measured across the workspace: 218 call sites already reach the context
+through the ready-made aliases and would not have changed either way, 16 sites spell four arguments,
+and 24 generic declarations in `deep_causality` and `deep_causality_ethos` would have collapsed from
+four bounds to one. That is the whole benefit, and it is ergonomic rather than a capability.
+
+The design's stated justification was false. It said that naming the three separately "lets a
+context pair a space with a spacetime that cannot contain it". There is no containment:
+`ContextoidType` makes them parallel arms — `Spaceoid(S)` beside `SpaceTempoid(ST)` — and a frame
+would not have validated the triple either, since any three types can be written into an impl. A
+frame makes the choice once; it does not make a wrong choice impossible.
+
+**The user's reason for keeping the parameters explicit:** a library that handles four generic
+parameters should show them, because an opaque bundle can encode incorrect assumptions and hides
+them from the reader and the maintainer.
+
+Everything the frame carried is expressible without it: bundling by a type alias, which
+`BaseContext` and `UniformContext` already do in one line each; the signature by the node, which
+landed in group 6; the family by calling the physics function with its parameters, which the
+examples already do; and the scalar coherence between space and spacetime by a where clause on
+`Context` itself, if it is wanted.
 
 ## 8. Verify
 
