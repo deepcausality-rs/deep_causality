@@ -5,18 +5,14 @@
 
 //! Lazy lumped-mass Hodge ⋆ population for `SimplicialComplex<T>`.
 //!
-//! The construction was previously inlined inside `PointCloud::triangulate`,
-//! eagerly computed for every triangulated complex regardless of whether the
-//! caller consumed the Hodge ⋆ surface. That conflated topological (TDA /
-//! clique-complex / Euler-characteristic) consumers with geometric (DEC / Hodge
-//! ⋆ / Laplacian) consumers and forced TDA callers to satisfy geometric
-//! preconditions they never used.
+//! The build is a single `pub(crate)` function the lazy accessor invokes on first read, so a
+//! triangulated complex pays for the Hodge ⋆ surface only when a caller consumes it.
 //!
-//! This module exposes the build as a single `pub(crate)` function that the
-//! lazy accessor invokes on first read. The top-volume degeneracy rejection
-//! lives here, not in `triangulate`. TDA-only consumers never reach this code
-//! path; DEC consumers see the unified `"top-dimensional simplex below
-//! tolerance"` error at the point of access.
+//! That separates the two kinds of consumer. Topological ones — TDA, clique complexes, Euler
+//! characteristics — never reach this path and need satisfy no geometric precondition. Geometric
+//! ones — DEC, Hodge ⋆, the Laplacian — see the `"top-dimensional simplex below tolerance"` error
+//! at the point of access, since the degeneracy rejection lives here rather than in
+//! `PointCloud::triangulate`.
 
 use crate::{Simplex, Skeleton, TopologyError};
 use deep_causality_algebra::RealField;
@@ -79,10 +75,9 @@ where
     }
 
     // The Gram matrix is square by construction, so the only error `determinant` can raise
-    // cannot arise. Unlike the fixed-diagonal elimination this replaces, it pivots by search and
-    // scales its degeneracy floor by the matrix's own magnitude, so a uniformly small simplex is
-    // no longer read as degenerate merely for being small. The caller's absolute top-volume
-    // threshold still rejects one.
+    // cannot arise. It pivots by search and scales its degeneracy floor by the matrix's own
+    // magnitude, so a uniformly small simplex is not read as degenerate merely for being small;
+    // the caller's absolute top-volume threshold is what rejects one.
     let gram = DenseMatrix::from_vec(matrix_data, n_vecs, n_vecs)
         .expect("Gram matrix is square by construction");
     let det = determinant(&gram).expect("Gram matrix is square by construction");
@@ -318,18 +313,13 @@ where
                     "intermediate-grade simplex has non-positive primal volume; upstream duplicate-point check and top-volume rejection should have caught this"
                 );
 
-                // The lumped Whitney mass, summed over the star of the simplex.
+                // The lumped Whitney mass, summed over the star of the simplex. This is the
+                // same quantity the endpoint grades carry: `∫λ_i` over the vertex star at
+                // `k = 0`, `1/|T|` at `k = n`.
                 //
-                // This branch returned `primal_vol` — the simplex's own volume. That is not a
-                // mass: the two endpoint grades this function already gets right are lumped
-                // Whitney masses (`∫λ_i` over the vertex star at `k = 0`, `1/|T|` at `k = n`),
-                // and the grades between them must be the same quantity. The volume has the
-                // wrong scaling, `h^k` where the mass goes as `h^(n-2k)`; on a tetrahedron that
-                // is `h²` against `h⁻¹` for faces, wrong by `h³`.
-                //
-                // The exponents coincide at `k = 1` in three dimensions (`1 = 3 − 2`), so a
-                // refinement study alone never sees the edge case; only the constant is wrong
-                // there. The tests pin closed-form values for that reason.
+                // It scales as `h^(n-2k)`. At `k = 1` in three dimensions that exponent is 1,
+                // which a primal volume also has, so a refinement study cannot separate the two
+                // at that grade and the tests pin closed forms instead.
                 let mut mass = T::zero();
                 for (cell_idx, cell) in skeletons[max_dim].simplices.iter().enumerate() {
                     let sigma = &skeletons[k_dim].simplices[i];

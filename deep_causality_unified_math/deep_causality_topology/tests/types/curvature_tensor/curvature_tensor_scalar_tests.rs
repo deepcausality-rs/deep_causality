@@ -5,11 +5,10 @@
 
 //! `CurvatureTensor` at every shipped real field.
 //!
-//! The other curvature tests are written at `f64` only. That is the coverage shape that let the
-//! element bound read `From<f64> + Into<f64>` unnoticed: `f32` is the one shipped scalar with no
-//! `From<f64>` impl, so it was excluded from this whole surface and no test said so. These cases
-//! run the same tensor at `f32`, `f64` and `Float106`, so a bound that admits only some of them
-//! fails to compile here.
+//! The other curvature tests are written at `f64` only, which cannot see an element bound that
+//! excludes a scalar: `f32` is the one shipped scalar with no `From<f64>` impl, so a bound reading
+//! `From<f64> + Into<f64>` would drop it silently. These cases run the same tensor at `f32`, `f64`
+//! and `Float106`, so a bound admitting only some of them fails to compile here.
 //!
 //! The tensor is deliberately not flat. A flat tensor makes every quantity below zero, and a zero
 //! is satisfied by a wrong constant as readily as by a right one.

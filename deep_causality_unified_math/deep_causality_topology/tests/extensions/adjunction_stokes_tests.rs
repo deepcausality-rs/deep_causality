@@ -109,7 +109,7 @@ fn test_exterior_derivative_beyond_coboundary() {
 
     let dform = StokesAdjunction::exterior_derivative(&ctx, &form);
 
-    // "Should return zero form" was asserted only as a degree. Assert the zero as well.
+    // Both the degree and the zero: a degree alone admits any coefficients.
     assert_eq!(dform.degree(), 4);
     assert!(
         dform.coefficients().as_slice().iter().all(|&x| x == 0.0),
@@ -470,8 +470,8 @@ fn test_boundary_partial_chain_misses_some_columns() {
     assert_eq!(bd.grade(), 0);
     // A single weighted edge contributes to its two endpoint vertices only:
     //   2*(v1 - v0) = -2*v0 + 2*v1, so exactly columns 0 and 1 are touched.
-    // The comment this test carried said as much, while the assertion allowed any non-zero
-    // output including one that touched all three columns.
+    // The columns are asserted, not just that the output is non-zero, which an output touching
+    // all three columns would also satisfy.
     assert_eq!(bd.weights().col_indices(), &vec![0usize, 1]);
     assert_eq!(bd.weights().values(), &vec![-2.0f64, 2.0]);
 }
@@ -520,8 +520,7 @@ fn test_boundary_of_a_chain_weighted_on_a_single_named_edge() {
     let bd = StokesAdjunction::boundary(&ctx, &chain);
     assert_eq!(bd.grade(), 0);
     // Column 2 is edge e12, which the boundary operator does name: d(5*e12) = -5*v1 + 5*v2.
-    // The empty result this test used to assert, and the reasoning above it, describe a
-    // lookup that misses when it should hit.
+    // An empty result here would mean a lookup that misses when it should hit.
     assert_eq!(bd.weights().col_indices(), &vec![1usize, 2]);
     assert_eq!(bd.weights().values(), &vec![-5.0f64, 5.0]);
 }

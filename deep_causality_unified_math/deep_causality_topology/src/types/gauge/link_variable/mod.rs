@@ -13,7 +13,6 @@ use crate::types::gauge::link_variable::random::RandomField;
 use crate::{GaugeGroup, LinkVariableError};
 use deep_causality_algebra::{ComplexField, DivisionAlgebra, Field, RealField};
 use deep_causality_num::{FromPrimitive, ToPrimitive};
-use deep_causality_tensor::CausalTensor;
 use std::marker::PhantomData;
 
 mod display;
@@ -43,7 +42,10 @@ pub(crate) mod random;
 pub struct LinkVariable<G: GaugeGroup, M, R> {
     /// Matrix elements of the group element.
     /// Shape: [N, N] for SU(N) where N = matrix dimension.
-    data: CausalTensor<M>,
+    /// Row-major `N x N` matrix elements, `N = G::matrix_dim()`.
+    ///
+    /// The gauge group fixes the extent, so the shape is not carried alongside the elements.
+    data: Vec<M>,
     _gauge: PhantomData<G>,
     _scalar: PhantomData<R>,
 }
@@ -75,13 +77,11 @@ impl<G: GaugeGroup, M: Field + Copy + Default + PartialOrd, R: RealField> LinkVa
             data[i * n + i] = M::one();
         }
 
-        CausalTensor::new(data, vec![n, n])
-            .map(|tensor| Self {
-                data: tensor,
-                _gauge: PhantomData,
-                _scalar: PhantomData,
-            })
-            .map_err(|e| LinkVariableError::TensorCreation(format!("{:?}", e)))
+        Ok(Self {
+            data,
+            _gauge: PhantomData,
+            _scalar: PhantomData,
+        })
     }
 
     /// Create the identity link (unit element of G).
@@ -114,13 +114,15 @@ impl<G: GaugeGroup, M: Field + Copy + Default + PartialOrd, R: RealField> LinkVa
     ///
     /// Returns `LinkVariableError::ShapeMismatch` if tensor shape doesn't match
     /// expected [N, N] for the gauge group.
-    pub fn try_from_matrix(data: CausalTensor<M>) -> Result<Self, LinkVariableError> {
+    pub fn try_from_matrix(data: Vec<M>) -> Result<Self, LinkVariableError> {
         let n = G::matrix_dim();
         let expected = vec![n, n];
-        let got = data.shape().to_vec();
 
-        if got != expected {
-            return Err(LinkVariableError::ShapeMismatch { expected, got });
+        if data.len() != n * n {
+            return Err(LinkVariableError::ShapeMismatch {
+                expected,
+                got: vec![data.len()],
+            });
         }
 
         Ok(Self {
@@ -134,8 +136,8 @@ impl<G: GaugeGroup, M: Field + Copy + Default + PartialOrd, R: RealField> LinkVa
     ///
     /// # Safety
     ///
-    /// Caller must ensure the tensor has correct shape [N, N].
-    pub fn from_matrix_unchecked(data: CausalTensor<M>) -> Self {
+    /// Caller must ensure `data.len() == N * N`.
+    pub fn from_matrix_unchecked(data: Vec<M>) -> Self {
         Self {
             data,
             _gauge: PhantomData,
@@ -158,13 +160,11 @@ impl<G: GaugeGroup, M: Field + Copy + Default + PartialOrd, R: RealField> LinkVa
         }
 
         let data = vec![M::zero(); n * n];
-        CausalTensor::new(data, vec![n, n])
-            .map(|tensor| Self {
-                data: tensor,
-                _gauge: PhantomData,
-                _scalar: PhantomData,
-            })
-            .map_err(|e| LinkVariableError::TensorCreation(format!("{:?}", e)))
+        Ok(Self {
+            data,
+            _gauge: PhantomData,
+            _scalar: PhantomData,
+        })
     }
 
     /// Create a random link variable for Monte Carlo initialization.
@@ -228,8 +228,7 @@ impl<G: GaugeGroup, M: Field + Copy + Default + PartialOrd, R: RealField> LinkVa
             data.push(val);
         }
 
-        let tensor = CausalTensor::new(data, vec![n, n])
-            .map_err(|e| LinkVariableError::TensorCreation(format!("{:?}", e)))?;
+        let tensor = data;
 
         let random_matrix = Self {
             data: tensor,
@@ -341,13 +340,11 @@ impl<G: GaugeGroup, M: Field + Copy + Default + PartialOrd, R: RealField> LinkVa
             }
         }
 
-        CausalTensor::new(data, vec![n, n])
-            .map(|tensor| Self {
-                data: tensor,
-                _gauge: PhantomData,
-                _scalar: PhantomData,
-            })
-            .map_err(|e| LinkVariableError::TensorCreation(e.to_string()))
+        Ok(Self {
+            data,
+            _gauge: PhantomData,
+            _scalar: PhantomData,
+        })
     }
 
     /// Create a link variable from a U(1) phase angle (convenience method).

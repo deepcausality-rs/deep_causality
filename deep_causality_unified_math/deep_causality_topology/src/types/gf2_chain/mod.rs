@@ -12,16 +12,15 @@
 //!
 //! # This is a breaking change
 //!
-//! The re-export keeps the path `deep_causality_topology::Gf2Chain` resolving. It does not keep the
-//! signatures. `from_support`, `from_row`, `add`, `intersect` and `inner` return
-//! `Result<_, HomologyError>` where they returned `Result<_, TopologyError>`, and the mismatch a
-//! binary operation raises is now `HomologyError::ChainGroupMismatch` rather than
-//! `TopologyError::DimensionMismatch`. That guard also widened: it compares length as well as
-//! degree, so two same-degree chains of unequal length are rejected here instead of one layer down.
-//! This crate re-exports neither `HomologyError` nor `HomologyErrorEnum`, and `TopologyError` has
-//! no `From<HomologyError>`, so a caller that propagated the old error with `?` has to depend on
-//! `deep_causality_homology`. Released as 0.8.0 for that reason.
+//! The re-export keeps the path `deep_causality_topology::Gf2Chain` resolving.
 //!
-//! `from_column` is new and additive.
+//! `from_support`, `from_row`, `from_column`, `add`, `intersect` and `inner` return
+//! `Result<_, HomologyError>`, and a binary operation on mismatched operands raises
+//! `HomologyError::ChainGroupMismatch`. That guard compares length as well as degree, so two
+//! same-degree chains of unequal length are rejected here rather than one layer down.
+//!
+//! This crate re-exports neither `HomologyError` nor `HomologyErrorEnum`, and `TopologyError` has
+//! no `From<HomologyError>`, so a caller propagating the error with `?` depends on
+//! `deep_causality_homology`.
 
 pub use deep_causality_homology::Gf2Chain;

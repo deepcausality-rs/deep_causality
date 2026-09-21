@@ -6,7 +6,6 @@
 use crate::{GaugeGroup, LinkVariable, LinkVariableError};
 use deep_causality_algebra::{ComplexField, Field, RealField};
 use deep_causality_num::FromPrimitive;
-use deep_causality_tensor::CausalTensor;
 use std::fmt::Debug;
 use std::marker::PhantomData;
 
@@ -45,13 +44,11 @@ impl<
             }
         }
 
-        CausalTensor::new(result, vec![n, n])
-            .map(|tensor| Self {
-                data: tensor,
-                _gauge: PhantomData,
-                _scalar: PhantomData,
-            })
-            .map_err(|e| LinkVariableError::TensorCreation(format!("{:?}", e)))
+        Ok(Self {
+            data: result,
+            _gauge: PhantomData,
+            _scalar: PhantomData,
+        })
     }
 
     /// Hermitian conjugate U† (convenience method).
@@ -78,8 +75,7 @@ impl<
 
         // Safe because we're creating the correct shape
         Self {
-            data: CausalTensor::new(result, vec![n, n])
-                .unwrap_or_else(|_| panic!("Dagger failed for valid {}x{} matrix", n, n)),
+            data: result,
             _gauge: PhantomData,
             _scalar: PhantomData,
         }
@@ -122,13 +118,11 @@ impl<
             }
         }
 
-        CausalTensor::new(result, vec![n, n])
-            .map(|tensor| Self {
-                data: tensor,
-                _gauge: PhantomData,
-                _scalar: PhantomData,
-            })
-            .map_err(|e| LinkVariableError::TensorCreation(format!("{:?}", e)))
+        Ok(Self {
+            data: result,
+            _gauge: PhantomData,
+            _scalar: PhantomData,
+        })
     }
 
     /// Group multiplication: self * other (convenience method).
@@ -153,8 +147,7 @@ impl<
         }
 
         Self {
-            data: CausalTensor::new(result, vec![n, n])
-                .unwrap_or_else(|_| panic!("Matrix multiply failed for {}x{}", n, n)),
+            data: result,
             _gauge: PhantomData,
             _scalar: PhantomData,
         }
@@ -179,13 +172,11 @@ impl<
             result[i] = a[i] + b[i];
         }
 
-        CausalTensor::new(result, vec![n, n])
-            .map(|tensor| Self {
-                data: tensor,
-                _gauge: PhantomData,
-                _scalar: PhantomData,
-            })
-            .map_err(|e| LinkVariableError::TensorCreation(format!("{:?}", e)))
+        Ok(Self {
+            data: result,
+            _gauge: PhantomData,
+            _scalar: PhantomData,
+        })
     }
 
     /// Matrix addition: self + other (convenience method).
@@ -203,8 +194,7 @@ impl<
         }
 
         Self {
-            data: CausalTensor::new(result, vec![n, n])
-                .unwrap_or_else(|_| panic!("Matrix add failed")),
+            data: result,
             _gauge: PhantomData,
             _scalar: PhantomData,
         }
@@ -228,13 +218,11 @@ impl<
             result[i] = *alpha * a[i];
         }
 
-        CausalTensor::new(result, vec![n, n])
-            .map(|tensor| Self {
-                data: tensor,
-                _gauge: PhantomData,
-                _scalar: PhantomData,
-            })
-            .map_err(|e| LinkVariableError::TensorCreation(format!("{:?}", e)))
+        Ok(Self {
+            data: result,
+            _gauge: PhantomData,
+            _scalar: PhantomData,
+        })
     }
 
     /// Scalar multiplication: α * self (convenience method).
@@ -251,8 +239,7 @@ impl<
         }
 
         Self {
-            data: CausalTensor::new(result, vec![n, n])
-                .unwrap_or_else(|_| panic!("Matrix scale failed")),
+            data: result,
             _gauge: PhantomData,
             _scalar: PhantomData,
         }

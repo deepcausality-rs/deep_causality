@@ -25,11 +25,7 @@ where
     ///
     /// The body is [`crate::cup_product`], which is generic over
     /// [`CellularComplex`](crate::CellularComplex) and covers the cubical case
-    /// and the `n`-fold form as well. This method used to carry a second,
-    /// simplicial-only Alexander-Whitney implementation, extracting the front
-    /// and back faces by hand; the two were measured to agree bit-for-bit
-    /// before it was retired, and `tests/types/cup_product/implementation_agreement_tests.rs`
-    /// is the artefact of that measurement.
+    /// and the `n`-fold form as well.
     ///
     /// What this method adds over the free function is the pair of things a
     /// free function taking one complex cannot express: it checks that both
@@ -45,16 +41,11 @@ where
     /// [`TopologyErrorEnum::GenericError`] when the two operands are held
     /// against different complexes.
     ///
-    /// Two error paths changed when this began delegating, and both are
-    /// tightenings a caller should know about:
+    /// [`TopologyErrorEnum::InvalidGradeOperation`] when the grade sum exceeds
+    /// the complex's maximum dimension.
     ///
-    /// * A grade sum past the complex's maximum dimension now returns
-    ///   [`TopologyErrorEnum::InvalidGradeOperation`]. It used to return `Ok`
-    ///   with a zero-filled cochain, which reported a cochain in a degree the
-    ///   complex does not have as a successful computation.
-    /// * A cochain whose length does not match its skeleton now returns
-    ///   [`TopologyErrorEnum::DimensionMismatch`]. It used to panic through
-    ///   `.expect("Data/Skeleton mismatch")`.
+    /// [`TopologyErrorEnum::DimensionMismatch`] when a cochain's length does
+    /// not match its skeleton.
     pub fn cup_product(&self, other: &Topology<R, G>) -> Result<Topology<R, G>, TopologyError> {
         // The one precondition the free function cannot state, since it takes a
         // single complex and these two carry their own.

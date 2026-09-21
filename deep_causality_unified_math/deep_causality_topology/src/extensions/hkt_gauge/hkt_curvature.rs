@@ -8,14 +8,13 @@
 //! # Why this is not an arity-4 HKT witness
 //!
 //! The Riemann curvature operator is a multilinear map `R: V ⊗ V ⊗ V → V` over **one** vector
-//! space. `CurvatureTensor` previously carried four phantom type parameters so it could be viewed
-//! through `HKT4Unbound`, and `RiemannMap::curvature` was generic in all four bounded only by
-//! no element bound at all. The implementation then reinterpreted its
-//! arguments as `TensorVector<T>` through raw pointers, which made a safe function undefined
-//! behaviour for inputs its own signature accepted.
+//! space, so an arity-4 witness would be generic in four parameters that must all be the same.
+//! Carrying them separately leaves the implementation no bound to do arithmetic under, and the
+//! only way to proceed is to reinterpret the arguments — a safe function made undefined behaviour
+//! for inputs its own signature accepts.
 //!
-//! The vector space is now an associated type on the witness. The implementation receives the type
-//! it needs, no cast is required, and a caller passing anything else is a compile error. See
+//! The vector space is an associated type on the witness instead. The implementation receives the
+//! type it needs, no cast is required, and a caller passing anything else is a compile error. See
 //! `openspec/notes/archive/hkt_gat/hkt_gat_topology_rewrite.md`.
 //!
 //! # The calls this now rejects

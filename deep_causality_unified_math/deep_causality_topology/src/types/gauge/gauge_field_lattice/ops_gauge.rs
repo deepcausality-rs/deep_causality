@@ -11,7 +11,7 @@ use crate::{GaugeGroup, LatticeGaugeField, LinkVariable};
 use deep_causality_algebra::{ComplexField, DivisionAlgebra, Field, RealField};
 use deep_causality_num::{FromPrimitive, ToPrimitive};
 
-use std::collections::HashMap;
+use super::utils::{alloc_slots, link_index};
 use std::fmt::Debug;
 
 // ============================================================================
@@ -48,10 +48,9 @@ impl<
         M: Field + DivisionAlgebra<R>,
         R: RealField,
     {
-        let shape = self.lattice.shape();
-        let new_links: HashMap<_, _> = self
-            .links
-            .iter()
+        let shape = *self.lattice.shape();
+        let new_links: Vec<Option<LinkVariable<G, M, R>>> = self
+            .iter_links()
             .map(|(cell, u)| {
                 let site = *cell.position();
 
@@ -74,9 +73,14 @@ impl<
                 // Panic on failure (infallible in theory if shapes match)
                 let new_u = new_u.expect("Gauge transform multiplication failed");
 
-                (cell.clone(), new_u)
+                (cell, new_u)
             })
-            .collect();
+            .fold(alloc_slots(&shape), |mut slots, (cell, u)| {
+                if let Some(i) = link_index(&shape, &cell) {
+                    slots[i] = Some(u);
+                }
+                slots
+            });
 
         self.links = new_links;
     }

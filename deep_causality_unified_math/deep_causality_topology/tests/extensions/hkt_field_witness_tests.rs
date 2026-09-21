@@ -5,10 +5,9 @@
 
 //! `CellComplexWitness` and `LatticeComplexWitness`.
 //!
-//! Both witnesses used to implement `HKT` and stop, and the types their `Type<T>` named were not
-//! exported, so a caller could name `<CellComplexWitness<C> as HKT>::Type<T>` and receive a type it
-//! could not construct or use. They now carry `Functor` and `Foldable`, and both field types are
-//! public. These tests cover the operations and the laws they have to satisfy.
+//! Both witnesses carry `Functor` and `Foldable`, and both field types are public, so a caller
+//! naming `<CellComplexWitness<C> as HKT>::Type<T>` receives a type it can construct and use.
+//! These tests cover the operations and the laws they have to satisfy.
 //!
 //! The absent instances are covered too, in the sense that matters: `fmap` is asserted to preserve
 //! the complex, which is the property that a fabricating `Pure` would destroy.

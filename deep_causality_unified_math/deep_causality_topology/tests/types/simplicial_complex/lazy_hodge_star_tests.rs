@@ -53,10 +53,6 @@ fn test_lumped_mass_vertex_dual_volume_is_the_incident_edge_length_halved() {
 // =============================================================================
 // Intermediate-grade masses
 //
-// These grades returned the simplex's own volume, which is not a mass. Nothing in the workspace
-// pinned them: perturbing every intermediate value by grade-dependent factors moved exactly one
-// test out of 4497, and that test asserted the wrong value was right.
-//
 // The expectations below are closed forms of the lumped Whitney mass,
 //     M[sigma] = sum over cells T of   integral over T of  W_sigma . W_sigma  dV,
 // evaluated by hand on reference simplices and cross-checked against an independent numpy
@@ -131,8 +127,8 @@ fn reference_tetrahedron(h: f64) -> SimplicialComplex<f64> {
 fn test_edge_mass_on_the_reference_triangle_is_the_whitney_mass() {
     // With grad(l0) = (-1,-1), grad(l1) = (1,0), grad(l2) = (0,1) and |T| = 1/2,
     //     M[e_ij] = (2|T| / 12) (|grad l_i|^2 + |grad l_j|^2 - grad l_i . grad l_j)
-    // giving 1/3, 1/3 and 1/6 for e01, e02 and e12. The code returned the edge lengths
-    // 1, 1 and sqrt(2).
+    // giving 1/3, 1/3 and 1/6 for e01, e02 and e12. The edge lengths, 1, 1 and sqrt(2), are a
+    // different quantity and the message below names them so a failure is easy to read.
     let complex = reference_triangle(1.0);
     let ops = complex.hodge_star_operators().unwrap();
     let got = diagonal(&ops[1]);

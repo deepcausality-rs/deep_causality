@@ -107,7 +107,7 @@ fn test_try_flow_euler() {
 
     let flowed = field.try_flow(&params).expect("Euler flow should succeed");
     // Result should be a valid LatticeGaugeField with same shape
-    assert_eq!(flowed.links().len(), field.links().len());
+    assert_eq!(flowed.num_links(), field.num_links());
 }
 
 #[test]
@@ -125,7 +125,7 @@ fn test_try_flow_rk3() {
     };
 
     let flowed = field.try_flow(&params).expect("RK3 flow should succeed");
-    assert_eq!(flowed.links().len(), field.links().len());
+    assert_eq!(flowed.num_links(), field.num_links());
 }
 
 #[test]

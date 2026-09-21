@@ -153,8 +153,7 @@ fn test_lattice_gauge_field_links() {
     let lattice = create_test_lattice();
     let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
         LatticeGaugeField::identity(lattice, 6.0);
-    let links = field.links();
-    assert!(!links.is_empty());
+    assert_eq!(field.num_links(), field.lattice().cells(1).count());
 }
 
 #[test]

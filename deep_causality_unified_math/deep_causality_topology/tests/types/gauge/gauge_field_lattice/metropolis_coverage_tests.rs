@@ -12,7 +12,6 @@
 
 use deep_causality_num_complex::Complex;
 use deep_causality_stats::Xoshiro256;
-use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     CellularComplex, LatticeComplex, LatticeGaugeField, LinkVariable, U1,
 };
@@ -31,11 +30,13 @@ fn test_metropolis_update_rejects_non_finite_action() {
     let lattice = Arc::new(LatticeComplex::new([2, 2], [true, true]));
 
     // 1x1 U(1) link holding an infinite matrix entry (bypasses validation via the
-    // unchecked matrix constructor; shape [1, 1] still matches U(1)::matrix_dim()).
-    let inf_tensor =
-        CausalTensor::new(vec![Complex::new(f64::INFINITY, 0.0)], vec![1, 1]).expect("1x1 tensor");
-    let make_inf_link =
-        || LinkVariable::<U1, Complex<f64>, f64>::from_matrix_unchecked(inf_tensor.clone());
+    // unchecked matrix constructor; one element still matches U(1)::matrix_dim()).
+    let make_inf_link = || {
+        LinkVariable::<U1, Complex<f64>, f64>::from_matrix_unchecked(vec![Complex::new(
+            f64::INFINITY,
+            0.0,
+        )])
+    };
 
     let mut links: HashMap<_, LinkVariable<U1, Complex<f64>, f64>> = HashMap::new();
     let edges: Vec<_> = lattice.cells(1).collect();

@@ -40,6 +40,7 @@ use crate::{LatticeCell, LatticeComplex, LinkVariable, TopologyError};
 use deep_causality_algebra::{ComplexField, DivisionAlgebra, Field, RealField};
 use deep_causality_num::{FromPrimitive, ToPrimitive};
 // use deep_causality_tensor::TensorData; // Removed
+use self::utils::{alloc_slots, link_index, slots_from_map};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::sync::Arc;
@@ -75,9 +76,12 @@ pub struct LatticeGaugeField<G: GaugeGroup, const D: usize, M, R: RealField, S =
     /// The underlying lattice structure.
     lattice: Arc<LatticeComplex<D, R>>,
 
-    /// Link variables indexed by LatticeCell (1-cells only).
-    /// Key: edge cell, Value: group element
-    links: HashMap<LatticeCell<D>, LinkVariable<G, M, R>>,
+    /// Link variables indexed by `site_offset * D + mu`, one slot per site per direction.
+    ///
+    /// A lattice is regular, so an edge's address is computed rather than looked up, and
+    /// iteration follows the lattice's own order. A slot is `None` where no link was supplied
+    /// for that edge.
+    links: Vec<Option<LinkVariable<G, M, R>>>,
 
     /// Coupling parameter β = 2N/g².
     beta: R,
@@ -111,12 +115,15 @@ impl<
         M: Field,
         R: RealField,
     {
-        let mut links = HashMap::new();
+        let shape = *lattice.shape();
+        let mut links = alloc_slots(&shape);
 
         // Iterate over all 1-cells (edges)
         for cell in lattice.cells(1) {
             let link = LinkVariable::try_identity().map_err(TopologyError::from)?;
-            links.insert(cell, link);
+            if let Some(i) = link_index(&shape, &cell) {
+                links[i] = Some(link);
+            }
         }
 
         Ok(Self {
@@ -171,6 +178,9 @@ impl<
             )));
         }
 
+        let shape = *lattice.shape();
+        let links = slots_from_map(&shape, links);
+
         Ok(Self {
             lattice,
             links,
@@ -212,11 +222,14 @@ impl<
         M: RandomField + DivisionAlgebra<R> + Field,
         R: RealField,
     {
-        let mut links = HashMap::new();
+        let shape = *lattice.shape();
+        let mut links = alloc_slots(&shape);
 
         for cell in lattice.cells(1) {
             let link = LinkVariable::try_random(rng).map_err(TopologyError::from)?;
-            links.insert(cell, link);
+            if let Some(i) = link_index(&shape, &cell) {
+                links[i] = Some(link);
+            }
         }
 
         Ok(Self {
@@ -267,6 +280,9 @@ impl<G: GaugeGroup, const D: usize, M, R: RealField, S> LatticeGaugeField<G, D, 
         beta: R,
         source: S,
     ) -> Self {
+        let shape = *lattice.shape();
+        let links = slots_from_map(&shape, links);
+
         Self {
             lattice,
             links,

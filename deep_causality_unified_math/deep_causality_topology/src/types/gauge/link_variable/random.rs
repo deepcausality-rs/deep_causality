@@ -12,8 +12,8 @@ use deep_causality_stats::{Distribution, RandScalar, Rng, StandardUniform};
 ///
 /// Generic generation of both real and complex scalars with components in the range `[-0.5, 0.5]`.
 ///
-/// The draw comes from `deep_causality_stats`, which owns the distributions; the machine words
-/// behind it are the entropy crate's business and this crate no longer names that crate at all.
+/// The draw comes from `deep_causality_stats`, which owns the distributions. The machine words
+/// behind it are the entropy crate's business, and this crate names neither.
 pub trait RandomField {
     /// Generate a random value with components in the range [-0.5, 0.5].
     fn generate_uniform<R: Rng>(rng: &mut R) -> Self;

@@ -41,9 +41,7 @@ pub enum CurvatureSymmetry {
 /// Type alias for generic curvature tensor
 /// Retained spelling for the curvature tensor over `TensorVector<T>`.
 ///
-/// `CurvatureTensor` used to carry four phantom type parameters so it could be viewed through an
-/// arity-4 HKT witness. They held no data and were always instantiated identically, so they are
-/// gone; this alias keeps the name callers already use.
+/// An alias rather than a distinct type: `CurvatureTensor` is generic over one parameter.
 pub type CurvatureTensorVector<T> = CurvatureTensor<T>;
 
 /// A rank-4 curvature tensor for RiemannMap operations.

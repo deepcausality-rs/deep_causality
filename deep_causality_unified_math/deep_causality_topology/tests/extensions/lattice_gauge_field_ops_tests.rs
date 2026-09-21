@@ -60,8 +60,8 @@ fn test_map_field_full() {
     assert_eq!(*scaled.beta(), 1.0);
 
     // Verify a link
-    let edge = scaled.links().keys().next().unwrap();
-    let link = scaled.link(edge).unwrap();
+    let edge = scaled.link_cells().remove(0);
+    let link = scaled.link(&edge).unwrap();
     // Element (0,0) of 2*Identity should be 2.0
     // But map_field reconstructs tensor, so let's check values
     let val = link.as_slice()[0]; // Re(0,0)
@@ -83,8 +83,8 @@ fn test_scale_field() {
     // So beta becomes 0.5.
     assert_eq!(*scaled.beta(), 1.0);
 
-    let edge = scaled.links().keys().next().unwrap();
-    let val = scaled.link(edge).unwrap().as_slice()[0];
+    let edge = scaled.link_cells().remove(0);
+    let val = scaled.link(&edge).unwrap().as_slice()[0];
     assert!((val - Complex::new(0.5, 0.0)).norm() < 1e-10);
 }
 
@@ -102,8 +102,8 @@ fn test_zip_with_success() {
     let result = LatticeGaugeFieldOps::zip_with(&field_a, &field_b, |a, b| *a + *b).unwrap();
 
     assert_eq!(*result.beta(), 1.0);
-    let edge = result.links().keys().next().unwrap();
-    let val = result.link(edge).unwrap().as_slice()[0];
+    let edge = result.link_cells().remove(0);
+    let val = result.link(&edge).unwrap().as_slice()[0];
     assert!((val - Complex::new(2.0, 0.0)).norm() < 1e-10);
 }
 
@@ -156,5 +156,5 @@ fn test_identity_field_wrapper() {
     let field =
         LatticeGaugeFieldOps::<TestGroup, D, f64>::identity_field::<Complex<f64>>(lattice, 1.0)
             .unwrap();
-    assert_eq!(field.lattice().num_cells(1), field.links().len());
+    assert_eq!(field.lattice().num_cells(1), field.num_links());
 }

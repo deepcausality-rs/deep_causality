@@ -12,7 +12,7 @@ use crate::{GaugeGroup, LatticeGaugeField, TopologyError};
 use deep_causality_algebra::{ComplexField, DivisionAlgebra, Field, RealField};
 use deep_causality_num::{FromPrimitive, ToPrimitive};
 // use deep_causality_tensor::TensorData; // Removed
-use std::collections::HashMap;
+use super::utils::{alloc_slots, link_index};
 use std::fmt::Debug;
 // ============================================================================
 // Smearing Algorithms
@@ -109,9 +109,10 @@ impl<
         let staple_weight_m = M::from_re_im(staple_weight, R::zero());
 
         for _step in 0..params.n_steps {
-            let mut new_links = HashMap::new();
+            let shape = *current.lattice.shape();
+            let mut new_links = alloc_slots(&shape);
 
-            for (edge, old_link) in current.links.iter() {
+            for (edge, old_link) in current.iter_links() {
                 // The staple sum, daggered into the orientation of the link it is averaged with.
                 //
                 // `try_staple` returns the action-convention staple `V = U_ν(n+μ̂) U_μ†(n+ν̂)
@@ -119,7 +120,7 @@ impl<
                 // plaquette. APE smearing adds the staple to the link, which needs the two to
                 // share endpoints, so it wants `C = V† = U_ν(n) U_μ(n+ν̂) U_ν†(n+μ̂)`: the path
                 // from `n` to `n+μ̂` that goes around rather than straight along.
-                let staple = current.try_staple(edge)?.dagger();
+                let staple = current.try_staple(&edge)?.dagger();
 
                 // Weighted combination: (1-α) U + (α/(2(D-1))) C
                 let weighted_old = old_link
@@ -135,7 +136,9 @@ impl<
                 // Project to SU(N)
                 let projected = combined.project_sun().map_err(TopologyError::from)?;
 
-                new_links.insert(edge.clone(), projected);
+                if let Some(i) = link_index(&shape, &edge) {
+                    new_links[i] = Some(projected);
+                }
             }
 
             current.links = new_links;

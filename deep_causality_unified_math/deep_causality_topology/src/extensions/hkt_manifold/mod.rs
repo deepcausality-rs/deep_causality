@@ -128,7 +128,7 @@ where
         // The focus indexes `m_a.data`, and `f` decides how many elements each input contributes,
         // so the result may be shorter than the input. `Manifold::new` rejects a cursor at or past
         // `data.len()`, and `extract`/`extend` read at the cursor, so the index is clamped to keep
-        // that invariant rather than handing on an index the data no longer has.
+        // that invariant rather than handing on an index the result does not contain.
         let cursor = m_a.cursor.min(new_len.saturating_sub(1));
         Manifold {
             complex: m_a.complex.clone(),

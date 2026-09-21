@@ -118,8 +118,8 @@ impl<
 
     /// Perform a full Metropolis sweep over all links.
     ///
-    /// Updates each link once in a sequential sweep. The order is determined
-    /// by the lattice cell iteration order.
+    /// Updates each link once in a sequential sweep, in lattice order. The order is fixed, so
+    /// a run is reproducible from its seed.
     ///
     /// # Physics
     ///
@@ -152,7 +152,14 @@ impl<
         M: RandomField + DivisionAlgebra<R> + Field + ComplexField<R>,
         R: RealField,
     {
-        let edges: Vec<_> = self.links.keys().cloned().collect();
+        // Each update below draws from `rng`, so the sweep order decides how the stream is
+        // consumed and therefore whether a run is reproducible from its seed. `link_cells`
+        // walks the flat link table, which fixes that order to the lattice's own.
+        //
+        // A fixed order leaves the chain's stationary distribution alone: each single-link
+        // update satisfies detailed balance on its own, and composing them in any fixed order
+        // preserves the target measure.
+        let edges = self.link_cells();
         let total = edges.len();
 
         if total == 0 {
@@ -249,11 +256,9 @@ impl<
             new_data[i] = new_data[i] + eps_m * x_data[i];
         }
 
-        // Create perturbed matrix and project to SU(N)
-        let tensor = deep_causality_tensor::CausalTensor::new(new_data, vec![n, n])
-            .map_err(|e| TopologyError::LatticeGaugeError(format!("{:?}", e)))?;
-
-        let perturbed = LinkVariable::from_matrix_unchecked(tensor);
+        // Create perturbed matrix and project to SU(N). `new_data` is already the row-major
+        // `n x n` buffer a link holds, so it is handed over directly.
+        let perturbed = LinkVariable::from_matrix_unchecked(new_data);
         perturbed.project_sun().map_err(TopologyError::from)
     }
 }

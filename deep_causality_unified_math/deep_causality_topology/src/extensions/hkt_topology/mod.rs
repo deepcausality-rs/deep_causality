@@ -19,9 +19,9 @@ use std::marker::PhantomData;
 /// # `fmap` preserves the complex
 ///
 /// The complex is indexed by the precision parameter, which mapping the coefficients does not
-/// touch, so it is carried across and its Hodge ⋆ operators survive. This used to be false: a
-/// single parameter served both roles, `fmap` had to rebuild the complex with
-/// `..Default::default()`, and the functor identity law failed for any complex carrying geometry.
+/// touch, so it is carried across and its Hodge ⋆ operators survive. This is what keeps the
+/// functor identity law holding for a complex carrying geometry: a single parameter serving both
+/// roles would force `fmap` to rebuild the complex and drop those operators.
 pub struct TopologyWitness<R>(PhantomData<R>);
 
 impl<R> HKT for TopologyWitness<R> {

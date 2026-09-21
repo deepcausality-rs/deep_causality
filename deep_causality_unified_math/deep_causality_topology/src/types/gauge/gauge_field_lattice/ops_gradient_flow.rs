@@ -13,7 +13,7 @@ use crate::{GaugeGroup, LatticeGaugeField, TopologyError};
 use deep_causality_algebra::{ComplexField, DivisionAlgebra, Field, RealField};
 use deep_causality_num::{FromPrimitive, ToPrimitive, lift};
 // use deep_causality_tensor::TensorData; // Removed
-use std::collections::HashMap;
+use super::utils::{alloc_slots, link_index};
 use std::fmt::Debug;
 // ============================================================================
 // Gradient Flow (Section 13)
@@ -125,15 +125,16 @@ impl<
         M: Field + DivisionAlgebra<R> + ComplexField<R>,
         R: RealField,
     {
-        let mut new_links = HashMap::new();
+        let shape = *self.lattice.shape();
+        let mut new_links = alloc_slots(&shape);
         let n = G::matrix_dim();
         let n_t = R::from_f64(n as f64).ok_or_else(|| {
             TopologyError::LatticeGaugeError("Failed to convert matrix dimension to T".to_string())
         })?;
 
-        for (edge, u) in self.links.iter() {
+        for (edge, u) in self.iter_links() {
             // Compute staple and force
-            let staple = self.try_staple(edge)?;
+            let staple = self.try_staple(&edge)?;
             let staple_dag = staple.dagger();
             let u_v_dag = u.mul(&staple_dag);
 
@@ -154,7 +155,9 @@ impl<
             let new_u = u.try_add(&update).map_err(TopologyError::from)?;
             let projected = new_u.project_sun().map_err(TopologyError::from)?;
 
-            new_links.insert(edge.clone(), projected);
+            if let Some(i) = link_index(&shape, &edge) {
+                new_links[i] = Some(projected);
+            }
         }
 
         Ok(Self {
@@ -174,10 +177,13 @@ impl<
     /// Note: This generally breaks unitarity (U † U = I), so the result
     /// is no longer in SU(N). This is an intermediate operation for RK3.
     fn try_scale(&self, factor: &M) -> Result<Self, TopologyError> {
-        let mut new_links = HashMap::new();
-        for (cell, link) in self.links.iter() {
+        let shape = *self.lattice.shape();
+        let mut new_links = alloc_slots(&shape);
+        for (cell, link) in self.iter_links() {
             let new_link = link.try_scale(factor).map_err(TopologyError::from)?;
-            new_links.insert(cell.clone(), new_link);
+            if let Some(i) = link_index(&shape, &cell) {
+                new_links[i] = Some(new_link);
+            }
         }
         Ok(Self {
             lattice: self.lattice.clone(),
@@ -195,11 +201,14 @@ impl<
     ///
     /// Note: This generally breaks unitarity. Intermediate RK3 operation.
     fn try_add(&self, other: &Self) -> Result<Self, TopologyError> {
-        let mut new_links = HashMap::new();
-        for (cell, link) in self.links.iter() {
-            if let Some(other_link) = other.links.get(cell) {
+        let shape = *self.lattice.shape();
+        let mut new_links = alloc_slots(&shape);
+        for (cell, link) in self.iter_links() {
+            if let Some(other_link) = other.link(&cell) {
                 let new_link = link.try_add(other_link).map_err(TopologyError::from)?;
-                new_links.insert(cell.clone(), new_link);
+                if let Some(i) = link_index(&shape, &cell) {
+                    new_links[i] = Some(new_link);
+                }
             } else {
                 return Err(TopologyError::LatticeGaugeError(format!(
                     "Missing link at {:?} during add",
@@ -293,10 +302,13 @@ impl<
         M: Field + DivisionAlgebra<R> + ComplexField<R>,
         R: RealField,
     {
-        let mut new_links = HashMap::new();
-        for (cell, link) in self.links.iter() {
+        let shape = *self.lattice.shape();
+        let mut new_links = alloc_slots(&shape);
+        for (cell, link) in self.iter_links() {
             let projected = link.project_sun().map_err(TopologyError::from)?;
-            new_links.insert(cell.clone(), projected);
+            if let Some(i) = link_index(&shape, &cell) {
+                new_links[i] = Some(projected);
+            }
         }
         Ok(Self {
             lattice: self.lattice.clone(),

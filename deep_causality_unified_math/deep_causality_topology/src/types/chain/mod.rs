@@ -22,10 +22,10 @@ mod display;
 /// `C_k(K; −)`, acting in the coefficient slot with `K` held fixed, and the Hodge ⋆ on `K` is
 /// determined by the metric rather than by `G`.
 ///
-/// They used to be one parameter. `fmap` maps the coefficients, and with a single `T` that forced it
-/// to change the complex's precision as well, which it could not do meaningfully: it rebuilt the
-/// complex with `..Default::default()` and dropped the Hodge ⋆ operators, so `fmap(id, c)` was not
-/// `c`. Separating them lets `fmap` clone the complex, and the functor identity law holds.
+/// Keeping them separate is what lets `fmap` act in the coefficient slot alone: it clones the
+/// complex, so the functor identity law `fmap(id, c) == c` holds. A single parameter would force
+/// `fmap` to change the complex's precision too, which it cannot do without rebuilding the complex
+/// and dropping its Hodge ⋆ operators.
 ///
 /// Use [`UniformChain`] where both are the same type, which is the common case.
 #[derive(Debug, Clone, PartialEq)]

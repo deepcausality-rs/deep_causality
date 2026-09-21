@@ -3,8 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use super::utils::{link_cell, link_index};
 use crate::{GaugeGroup, LatticeCell, LatticeComplex, LatticeGaugeField, LinkVariable};
-use std::collections::HashMap;
 use std::sync::Arc;
 
 impl<G: GaugeGroup, const D: usize, M, R: deep_causality_algebra::RealField, S>
@@ -63,7 +63,7 @@ impl<G: GaugeGroup, const D: usize, M, R: deep_causality_algebra::RealField, S>
         self,
     ) -> (
         Arc<LatticeComplex<D, R>>,
-        HashMap<LatticeCell<D>, LinkVariable<G, M, R>>,
+        Vec<Option<LinkVariable<G, M, R>>>,
         R,
     ) {
         (self.lattice, self.links, self.beta)
@@ -74,9 +74,12 @@ impl<G: GaugeGroup, const D: usize, M, R: deep_causality_algebra::RealField, S>
     /// # Returns
     ///
     /// Total number of stored links.
+    ///
+    /// Counts occupied slots: the table has one slot per site per direction, and a field built
+    /// from a partial edge map leaves the rest empty.
     #[inline]
     pub fn num_links(&self) -> usize {
-        self.links.len()
+        self.links.iter().filter(|s| s.is_some()).count()
     }
 
     /// Get link variable for an edge.
@@ -90,7 +93,8 @@ impl<G: GaugeGroup, const D: usize, M, R: deep_causality_algebra::RealField, S>
     /// Option containing reference to the link variable if present.
     #[inline]
     pub fn link(&self, edge: &LatticeCell<D>) -> Option<&LinkVariable<G, M, R>> {
-        self.links.get(edge)
+        let i = link_index(self.lattice.shape(), edge)?;
+        self.links.get(i)?.as_ref()
     }
 
     /// Mutable access to a link (for Monte Carlo updates).
@@ -104,17 +108,35 @@ impl<G: GaugeGroup, const D: usize, M, R: deep_causality_algebra::RealField, S>
     /// Option containing mutable reference to the link variable.
     #[inline]
     pub fn link_mut(&mut self, edge: &LatticeCell<D>) -> Option<&mut LinkVariable<G, M, R>> {
-        self.links.get_mut(edge)
+        let i = link_index(self.lattice.shape(), edge)?;
+        self.links.get_mut(i)?.as_mut()
     }
 
-    /// Get all links as a reference to the internal HashMap.
-    ///
-    /// # Returns
-    ///
-    /// Reference to the links map.
+    /// Every link the field carries, paired with the edge it sits on, in lattice order.
     #[inline]
-    pub fn links(&self) -> &HashMap<LatticeCell<D>, LinkVariable<G, M, R>> {
-        &self.links
+    pub fn iter_links(&self) -> impl Iterator<Item = (LatticeCell<D>, &LinkVariable<G, M, R>)> {
+        let shape = *self.lattice.shape();
+        self.links
+            .iter()
+            .enumerate()
+            .filter_map(move |(i, slot)| slot.as_ref().map(|l| (link_cell(&shape, i), l)))
+    }
+
+    /// The edges carrying a link, in lattice order.
+    #[inline]
+    pub fn link_cells(&self) -> Vec<LatticeCell<D>> {
+        let shape = *self.lattice.shape();
+        self.links
+            .iter()
+            .enumerate()
+            .filter_map(|(i, slot)| slot.as_ref().map(|_| link_cell(&shape, i)))
+            .collect()
+    }
+
+    /// Whether the field carries no links at all.
+    #[inline]
+    pub fn has_no_links(&self) -> bool {
+        self.links.iter().all(|s| s.is_none())
     }
 
     /// Set a specific link variable.
@@ -125,6 +147,8 @@ impl<G: GaugeGroup, const D: usize, M, R: deep_causality_algebra::RealField, S>
     /// * `link` - The new link variable
     #[inline]
     pub fn set_link(&mut self, edge: LatticeCell<D>, link: LinkVariable<G, M, R>) {
-        self.links.insert(edge, link);
+        if let Some(i) = link_index(self.lattice.shape(), &edge) {
+            self.links[i] = Some(link);
+        }
     }
 }

@@ -118,10 +118,9 @@ where
             "Metropolis update requires at least one edge"
         );
 
-        // A uniform index, drawn rather than folded. `w % n` is the form this replaces: it is
-        // unbiased only when `n` divides a power of two, and at a lattice edge count it is off by
-        // `n / 2^64` — too small to measure and still the wrong operation to write by hand at
-        // every call site.
+        // A uniform index, drawn rather than folded. Folding with `w % n` is unbiased only when
+        // `n` divides a power of two; at a lattice edge count the bias is `n / 2^64`, too small to
+        // measure and still the wrong operation to write by hand at every call site.
         let edge_id: usize = UniformInt::new(num_edges as u64)
             .expect("num_edges > 0 is asserted above")
             .sample(rng);

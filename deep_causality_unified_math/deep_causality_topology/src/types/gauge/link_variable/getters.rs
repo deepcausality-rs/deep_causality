@@ -4,26 +4,25 @@
  */
 
 use crate::{GaugeGroup, LinkVariable};
-use deep_causality_tensor::CausalTensor;
 
 impl<G: GaugeGroup, M: Clone, R> LinkVariable<G, M, R> {
-    /// Matrix data as tensor reference.
+    /// Matrix elements.
     ///
     /// # Returns
     ///
-    /// Reference to underlying CausalTensor.
+    /// The row-major `N x N` elements.
     #[inline]
-    pub fn matrix(&self) -> &CausalTensor<M> {
+    pub fn matrix(&self) -> &[M] {
         &self.data
     }
 
-    /// Matrix data as mutable tensor reference.
+    /// Matrix elements, mutably.
     ///
     /// # Returns
     ///
-    /// Mutable reference to underlying CausalTensor.
+    /// The row-major `N x N` elements, mutably.
     #[inline]
-    pub fn matrix_mut(&mut self) -> &mut CausalTensor<M> {
+    pub fn matrix_mut(&mut self) -> &mut [M] {
         &mut self.data
     }
 

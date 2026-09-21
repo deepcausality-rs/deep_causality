@@ -130,12 +130,11 @@ where
     ///    the substring `"duplicate point"` and references both offending
     ///    indices. Callers must deduplicate input geometry upstream.
     ///
-    /// The previous H1 rejection for **degenerate top simplices** (zero-volume
-    /// k-cliques) was moved to
-    /// [`SimplicialComplex::hodge_star_operators`] in H4. Consumers that
-    /// require a non-degenerate Hodge ⋆ surface should call that accessor and
-    /// handle its `Result`; consumers that only need V/E/F-style topological
-    /// counts never trigger the rejection.
+    /// **Degenerate top simplices** (zero-volume k-cliques) are rejected by
+    /// [`SimplicialComplex::hodge_star_operators`], not here. Consumers that
+    /// require a non-degenerate Hodge ⋆ surface call that accessor and handle
+    /// its `Result`; consumers that need only V/E/F-style topological counts
+    /// never trigger the rejection.
     ///
     /// All numerical tolerance comparisons scale with `T::epsilon()`. No hard-
     /// coded `f64` literal appears in the rejection logic.
@@ -192,13 +191,12 @@ where
         // 3. Build Higher Skeletons (Clique Expansion) capped at ambient dim.
         //
         // The cap at `k > dim` reflects that simplices of dimension exceeding
-        // the ambient embedding dimension are geometrically degenerate. With
-        // lazy Hodge ⋆ population (H4), this cap no longer prevents Hodge ⋆
-        // collapse at construction time — the lazy accessor enforces that
-        // contract at the right place. The cap is retained because clique
-        // expansion beyond `dim` produces simplices that contribute nothing
-        // meaningful to either TDA or DEC pipelines on a Vietoris-Rips
-        // complex.
+        // the ambient embedding dimension are geometrically degenerate. Clique
+        // expansion beyond `dim` produces simplices that contribute nothing to
+        // either TDA or DEC pipelines on a Vietoris-Rips complex.
+        //
+        // The cap is not what guards the Hodge ⋆ against degeneracy; the lazy
+        // accessor enforces that contract at the point of access.
         let mut k = 2;
         loop {
             if k > dim {

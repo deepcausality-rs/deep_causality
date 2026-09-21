@@ -6,8 +6,8 @@
 //! CPU implementation of geometry operations for Manifold.
 //!
 //! Computes purely from the data-precision `D`: edge lengths in the metric are typed
-//! `ReggeGeometry<D>` and volumes/determinants return `D`. The coordinate type `C` is
-//! treated as an opaque identifier and is no longer bounded numerically here.
+//! `ReggeGeometry<D>` and volumes/determinants return `D`. The coordinate type `C` is treated as
+//! an opaque identifier and carries no numeric bound here.
 
 use deep_causality_algebra::RealField;
 use deep_causality_linear::{DenseMatrix, determinant};

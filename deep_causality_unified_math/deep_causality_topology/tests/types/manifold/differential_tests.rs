@@ -110,13 +110,9 @@ fn test_laplacian_scalar_field_geometric() {
 
     assert_eq!(laplacian.shape(), &[3]);
 
-    // This test read `M_1` as the edge *length* and pinned three digits of the consequence. An
-    // edge length is not a mass. The two endpoint grades the Hodge star already computed
-    // correctly are lumped Whitney masses, and the grades between them are the same quantity;
-    // the length has the wrong scaling as well, `h^k` where the mass goes as `h^(n-2k)`, which
-    // in two dimensions means `M_1` must be scale-invariant and a length is not. This was the
-    // only test in the workspace sensitive to those values, so it was also the only thing
-    // holding the defect in place.
+    // `M_1` is the lumped Whitney edge mass, the same quantity the endpoint grades carry. It is
+    // not the edge length: the mass scales as `h^(n-2k)`, so in two dimensions it is
+    // scale-invariant, which a length is not.
     //
     // 1.  Geometry: v0 = (0,0), v1 = (1,0), v2 = (0.5,1). Area = 0.5.
     //     Barycentric gradients: grad(l0) = (-1,-0.5), grad(l1) = (1,-0.5), grad(l2) = (0,1).

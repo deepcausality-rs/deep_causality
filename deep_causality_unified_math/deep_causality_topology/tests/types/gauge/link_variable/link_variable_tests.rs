@@ -8,7 +8,6 @@
 //! Covers constructors, matrix operations, and SU(N) projection.
 
 use deep_causality_num_complex::Complex;
-use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{LinkVariable, LinkVariableError, SU2, U1};
 
 // ============================================================================
@@ -46,26 +45,23 @@ fn test_link_variable_identity_convenience() {
 
 #[test]
 fn test_link_variable_try_from_matrix_valid() {
-    let tensor = CausalTensor::new(vec![Complex::new(1.0, 0.0)], vec![1, 1]).unwrap();
     let link: Result<LinkVariable<U1, Complex<f64>, f64>, _> =
-        LinkVariable::try_from_matrix(tensor);
+        LinkVariable::try_from_matrix(vec![Complex::new(1.0, 0.0)]);
     assert!(link.is_ok());
+    assert_eq!(link.unwrap().as_slice(), [Complex::new(1.0, 0.0)]);
 }
 
 #[test]
 fn test_link_variable_try_from_matrix_wrong_shape() {
-    let tensor = CausalTensor::new(
-        vec![Complex::new(1.0, 0.0), Complex::new(2.0, 0.0)],
-        vec![2, 1],
-    )
-    .unwrap();
+    // U(1) is 1x1, so two elements cannot be a link. The element count is the whole of the
+    // shape now that a link stores its elements directly, so `got` reports the length.
     let link: Result<LinkVariable<U1, Complex<f64>, f64>, _> =
-        LinkVariable::try_from_matrix(tensor);
+        LinkVariable::try_from_matrix(vec![Complex::new(1.0, 0.0), Complex::new(2.0, 0.0)]);
     assert!(link.is_err());
     match link.unwrap_err() {
         LinkVariableError::ShapeMismatch { expected, got } => {
             assert_eq!(expected, vec![1, 1]);
-            assert_eq!(got, vec![2, 1]);
+            assert_eq!(got, vec![2]);
         }
         _ => panic!("Expected ShapeMismatch error"),
     }
@@ -73,17 +69,12 @@ fn test_link_variable_try_from_matrix_wrong_shape() {
 
 #[test]
 fn test_link_variable_from_matrix_unchecked() {
-    let tensor = CausalTensor::new(
-        vec![
-            Complex::new(2.0, 0.0),
-            Complex::new(0.0, 0.0),
-            Complex::new(0.0, 0.0),
-            Complex::new(2.0, 0.0),
-        ],
-        vec![2, 2],
-    )
-    .unwrap();
-    let link: LinkVariable<SU2, Complex<f64>, f64> = LinkVariable::from_matrix_unchecked(tensor);
+    let link: LinkVariable<SU2, Complex<f64>, f64> = LinkVariable::from_matrix_unchecked(vec![
+        Complex::new(2.0, 0.0),
+        Complex::new(0.0, 0.0),
+        Complex::new(0.0, 0.0),
+        Complex::new(2.0, 0.0),
+    ]);
     assert_eq!(link.as_slice()[0], Complex::new(2.0, 0.0));
 }
 
@@ -103,8 +94,11 @@ fn test_link_variable_try_zero() {
 #[test]
 fn test_link_variable_matrix() {
     let link: LinkVariable<U1, Complex<f64>, f64> = LinkVariable::identity();
+    // `matrix()` hands back the row-major elements. A U(1) link is 1x1, so that is one entry,
+    // and the identity puts a one in it.
     let matrix = link.matrix();
-    assert_eq!(matrix.shape(), &[1, 1]);
+    assert_eq!(matrix.len(), 1);
+    assert_eq!(matrix[0], Complex::new(1.0, 0.0));
 }
 
 #[test]
@@ -555,8 +549,7 @@ fn test_link_variable_dagger_non_trivial() {
         Complex::new(4.0, 0.0),
         Complex::new(5.0, -1.0),
     ];
-    let tensor = CausalTensor::new(data, vec![2, 2]).unwrap();
-    let link: LinkVariable<SU2, Complex<f64>, f64> = LinkVariable::from_matrix_unchecked(tensor);
+    let link: LinkVariable<SU2, Complex<f64>, f64> = LinkVariable::from_matrix_unchecked(data);
     let d = link.try_dagger().unwrap();
     let s = d.as_slice();
     // d[0,0] = conj(link[0,0]) = 1 - 2i

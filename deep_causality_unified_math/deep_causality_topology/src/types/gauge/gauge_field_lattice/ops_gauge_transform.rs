@@ -75,7 +75,7 @@ impl<
 
         // Clone shape upfront to avoid borrow conflict
         let shape: [usize; D] = *self.lattice.shape();
-        let edges: Vec<_> = self.links.keys().cloned().collect();
+        let edges = self.link_cells();
 
         // Cache Ω(x) so each site uses a single gauge element during this transform
         let mut omega_cache: HashMap<[usize; D], LinkVariable<G, M, R>> = HashMap::new();
