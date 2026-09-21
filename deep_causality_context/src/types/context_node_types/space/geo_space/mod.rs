@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::ContextoidId;
+use crate::{ContextoidId, VerticalDatum};
 mod adjustable;
 mod coordinate;
 mod display;
@@ -12,11 +12,13 @@ mod identifiable;
 mod metric;
 mod spatial;
 
-/// A non-Euclidean spatial context based on geodetic coordinates (WGS84).
+/// A non-Euclidean spatial context based on geodetic coordinates.
 ///
-/// `GeoSpace` represents a geographic location on Earth using the [WGS84](https://en.wikipedia.org/wiki/World_Geodetic_System) standard.
-/// It stores **latitude**, **longitude**, and **altitude**, and is commonly used in systems that need to model real-world positions,
-/// such as navigation, mapping, remote sensing, and sensor fusion applications.
+/// `GeoSpace` represents a geographic location on Earth by **latitude**, **longitude**, **altitude**
+/// and the [`VerticalDatum`] that altitude is measured against. Horizontal position follows the
+/// [WGS84](https://en.wikipedia.org/wiki/World_Geodetic_System) standard. It is commonly used in
+/// systems that model real-world positions, such as navigation, mapping, remote sensing, and
+/// sensor fusion applications.
 ///
 /// Unlike Euclidean coordinates, geodetic coordinates model the Earth's surface as a **curved ellipsoid** rather than a flat plane.
 /// This makes `GeoSpace` a simple yet powerful non-Euclidean spatial representation that integrates naturally with GPS and global datasets.
@@ -25,7 +27,8 @@ mod spatial;
 /// - `id`: A unique numeric identifier for the location (e.g., sensor ID, region ID)
 /// - `lat`: Latitude in degrees (positive north, negative south)
 /// - `lon`: Longitude in degrees (positive east, negative west)
-/// - `alt`: Altitude in meters above the WGS84 ellipsoid (not above sea level)
+/// - `alt`: Altitude in meters, measured against `datum`
+/// - `datum`: The reference `alt` is measured against
 ///
 /// # Trait Implementations
 /// This type implements:
@@ -44,8 +47,8 @@ mod spatial;
 /// ```
 /// use deep_causality_context::*;
 ///
-/// let g1 = GeoSpace::new(1, 52.520008, 13.404954, 34.0); // Berlin, Germany
-/// let g2 = GeoSpace::new(2, 48.856613, 2.352222, 35.0);   // Paris, France
+/// let g1 = GeoSpace::new(1, 52.520008, 13.404954, 34.0, VerticalDatum::WGS84); // Berlin, Germany
+/// let g2 = GeoSpace::new(2, 48.856613, 2.352222, 35.0, VerticalDatum::WGS84);   // Paris, France
 ///
 /// println!("{}", g1);
 ///
@@ -55,7 +58,7 @@ mod spatial;
 ///
 /// # Output
 /// ```text
-/// GeoSpace(id="1", lat=52.520008, lon=13.404954, alt=34m)
+/// GeoSpace(id=1, lat=52.5200, lon=13.4050, alt=34.0000, datum=WGS84)
 /// Distance (approx): 878.84 km
 /// ```
 #[derive(Debug, Clone, PartialEq)]
@@ -66,12 +69,20 @@ pub struct GeoSpace {
     lat: f64,
     /// Longitude in decimal degrees (positive east, negative west)
     lon: f64,
-    /// Altitude in meters above the WGS84 ellipsoid
+    /// Altitude in meters, measured against `datum`
     alt: f64,
+    /// The reference `alt` is measured against
+    datum: VerticalDatum,
 }
 
 impl GeoSpace {
-    pub fn new(id: ContextoidId, lat: f64, lon: f64, alt: f64) -> Self {
-        Self { id, lat, lon, alt }
+    pub fn new(id: ContextoidId, lat: f64, lon: f64, alt: f64, datum: VerticalDatum) -> Self {
+        Self {
+            id,
+            lat,
+            lon,
+            alt,
+            datum,
+        }
     }
 }

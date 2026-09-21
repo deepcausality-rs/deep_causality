@@ -8,7 +8,6 @@ mod datable;
 mod display;
 mod identifiable;
 
-use deep_causality_core::FloatType;
 use deep_causality_uncertain::{RandScalar, UncertainBool};
 
 /// A context node holding an uncertain truth value.
@@ -27,6 +26,3 @@ impl<R: RandScalar> UncertainBoolData<R> {
         Self { id, data }
     }
 }
-
-/// The Boolean uncertain node at the framework's scalar. The name the call sites already spell.
-pub type UncertainBooleanData = UncertainBoolData<FloatType>;

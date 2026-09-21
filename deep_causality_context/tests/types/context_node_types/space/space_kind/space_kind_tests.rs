@@ -7,13 +7,13 @@ use deep_causality_context::*;
 
 #[test]
 fn test_identifiable_trait() {
-    let sk = SpaceKind::Geo(GeoSpace::new(42, 10.0, 20.0, 30.0));
+    let sk = SpaceKind::Geo(GeoSpace::new(42, 10.0, 20.0, 30.0, VerticalDatum::WGS84));
     assert_eq!(sk.id(), 42);
 }
 
 #[test]
 fn test_coordinate_trait_geo() {
-    let sk = SpaceKind::Geo(GeoSpace::new(1, 52.5, 13.4, 34.0));
+    let sk = SpaceKind::Geo(GeoSpace::new(1, 52.5, 13.4, 34.0, VerticalDatum::WGS84));
     assert_eq!(sk.dimension(), 3);
     assert_eq!(*sk.coordinate(0).unwrap(), 52.5);
     assert_eq!(*sk.coordinate(1).unwrap(), 13.4);
@@ -63,7 +63,7 @@ fn test_display_trait() {
 
 #[test]
 fn test_all_variants_id_and_display() {
-    let geo = SpaceKind::Geo(GeoSpace::new(1, 10.0, 20.0, 30.0));
+    let geo = SpaceKind::Geo(GeoSpace::new(1, 10.0, 20.0, 30.0, VerticalDatum::WGS84));
     let ecef = SpaceKind::Ecef(EcefSpace::new(2, 1.0, 2.0, 3.0));
     let eucl = SpaceKind::Euclidean(EuclideanSpace::new(3, 4.0, 5.0, 6.0));
     let ned = SpaceKind::Ned(NedSpace::new(4, 7.0, 8.0, 9.0));

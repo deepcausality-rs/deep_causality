@@ -130,22 +130,33 @@ group 4 is the downstream fan-out that follows from it.
       and 3 under the matching test directory. Consumers updated: the `SpaceKind` arm and its
       `Coordinate`/`Identifiable`/`Display` match arms, four module declarations, the root export,
       two tests, and the two doc lines naming the type as a supported space
-- [ ] 5.5 Add the vertical datum to the geodetic spatial type as a field, and remove the claim from
+- [x] 5.5 Add the vertical datum to the geodetic spatial type as a field, and remove the claim from
       the altitude field's doc comment that fixed one reference for the whole type. If it is an
       enum, start from the five ISO 19111-aligned members `WGS84`, `EGM96`, `EGM2008`, `ISA` and
       `Terrain`, each classified by the height or datum type it belongs under. `ISA` and `Terrain`
       are the two that catch people out: a pressure altitude is not a height at all, and a terrain
       height depends on which model produced it
-- [ ] 5.6 Add a test asserting two geodetic positions with equal altitudes against different datums
+      **Landed as `VerticalDatum`** in `types/context_types/vertical_datum/`, beside `TimeScale`,
+      which is the existing home for a vocabulary enum the node types reference. `WGS84` carries
+      the `Default`. `GeoSpace::new` takes the datum as a fifth argument and `Display` prints it,
+      because an altitude printed without its reference names no point
+- [x] 5.6 Add a test asserting two geodetic positions with equal altitudes against different datums
       are distinguishable
-- [ ] 5.7 Document in the crate which spatial types pair with a spacetime and which require a
+- [x] 5.7 Document in the crate which spatial types pair with a spacetime and which require a
       conversion first, so the gap is recorded rather than discovered. Note that the geodetic type
       also carries a datum the Cartesian types do not, so a conversion out of it loses it
-- [ ] 5.8 Leave every `TimeScale` variant spelled exactly as it is, including the inconsistent
+      **Written as the module doc on `types/context_node_types/space/`.** All three spacetimes
+      store Cartesian `x, y, z`, so `EuclideanSpace` pairs directly, `EcefSpace` pairs numerically
+      but loses the earth-fixed frame, and `NedSpace` and `GeoSpace` each need something neither
+      type stores — a local origin in one case, a geodetic conversion and a datum decision in the
+      other
+- [x] 5.8 Leave every `TimeScale` variant spelled exactly as it is, including the inconsistent
       `Nanoseconds` and `Microseconds` beside `Millisecond` and `Second`. The names are a contract a
       projection matches on, so tidying one is a data migration elsewhere rather than a rename here.
       If they should be tidied, that is its own decision and not a silent one
-- [ ] 5.9 `bazel test //...` green
+      **Verified: `time_scale/` has an empty diff against the branch point.** `Nanoseconds`,
+      `Microseconds`, `Millisecond` and `Second` are spelled exactly as before
+- [x] 5.9 `bazel test //...` green
 
 ## 6. The frame
 

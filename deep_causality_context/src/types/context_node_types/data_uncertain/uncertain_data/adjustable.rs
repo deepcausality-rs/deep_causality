@@ -4,7 +4,7 @@
  */
 use crate::AdjustmentError;
 use crate::UncertainAdjustable;
-use crate::types::context_node_types::data_uncertain::data_uncertain_f64::UncertainData;
+use crate::types::context_node_types::data_uncertain::uncertain_data::UncertainData;
 use deep_causality_uncertain::RandScalar;
 use deep_causality_uncertain::Uncertain;
 

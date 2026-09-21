@@ -8,7 +8,7 @@ use deep_causality_data_structures::{ArrayGrid, ArrayType, PointIndex};
 
 #[test]
 fn test_adjustable_geo_space_display_and_id() {
-    let geo = GeoSpace::new(1, 52.52, 13.40, 34.0);
+    let geo = GeoSpace::new(1, 52.52, 13.40, 34.0, VerticalDatum::WGS84);
     let id = geo.id();
     assert_eq!(id, 1);
     assert!(format!("{geo}").contains("GeoSpace(id=1"));
@@ -19,7 +19,7 @@ fn test_adjustable_geo_space_display_and_id() {
 
 #[test]
 fn test_geo_space_update_success() {
-    let mut geo = GeoSpace::new(1, 0.0, 0.0, 0.0);
+    let mut geo = GeoSpace::new(1, 0.0, 0.0, 0.0, VerticalDatum::WGS84);
     let grid: ArrayGrid<f64, 3, 3, 3, 1> = ArrayGrid::new(ArrayType::Array3D);
 
     grid.set(PointIndex::new3d(0, 0, 0), 52.52); // lat
@@ -35,7 +35,7 @@ fn test_geo_space_update_success() {
 
 #[test]
 fn test_geo_space_update_allows_zero_values() {
-    let mut geo = GeoSpace::new(1, 99.0, 99.0, 99.0);
+    let mut geo = GeoSpace::new(1, 99.0, 99.0, 99.0, VerticalDatum::WGS84);
     let grid: ArrayGrid<f64, 3, 3, 3, 1> = ArrayGrid::new(ArrayType::Array3D);
 
     grid.set(PointIndex::new3d(0, 0, 0), 0.0); // lat
@@ -51,7 +51,7 @@ fn test_geo_space_update_allows_zero_values() {
 
 #[test]
 fn test_geo_space_update_lat_fails_on_nan() {
-    let mut geo = GeoSpace::new(1, f64::MAX, f64::MAX, f64::MAX);
+    let mut geo = GeoSpace::new(1, f64::MAX, f64::MAX, f64::MAX, VerticalDatum::WGS84);
     let grid: ArrayGrid<f64, 3, 3, 3, 1> = ArrayGrid::new(ArrayType::Array3D);
 
     grid.set(PointIndex::new3d(0, 0, 0), f64::NAN); // lat adjustment
@@ -64,7 +64,7 @@ fn test_geo_space_update_lat_fails_on_nan() {
 
 #[test]
 fn test_geo_space_update_lon_fails_on_nan() {
-    let mut geo = GeoSpace::new(1, f64::MAX, f64::MAX, f64::MAX);
+    let mut geo = GeoSpace::new(1, f64::MAX, f64::MAX, f64::MAX, VerticalDatum::WGS84);
     let grid: ArrayGrid<f64, 3, 3, 3, 1> = ArrayGrid::new(ArrayType::Array3D);
 
     grid.set(PointIndex::new3d(0, 0, 0), 0.0); // lat adjustment
@@ -77,7 +77,7 @@ fn test_geo_space_update_lon_fails_on_nan() {
 
 #[test]
 fn test_geo_space_update_alt_fails_on_nan() {
-    let mut geo = GeoSpace::new(1, f64::MAX, f64::MAX, f64::MAX);
+    let mut geo = GeoSpace::new(1, f64::MAX, f64::MAX, f64::MAX, VerticalDatum::WGS84);
     let grid: ArrayGrid<f64, 3, 3, 3, 1> = ArrayGrid::new(ArrayType::Array3D);
 
     grid.set(PointIndex::new3d(0, 0, 0), 0.0); // lat adjustment
@@ -90,7 +90,7 @@ fn test_geo_space_update_alt_fails_on_nan() {
 
 #[test]
 fn test_geo_space_adjust_success() {
-    let mut geo = GeoSpace::new(1, 50.0, 10.0, 100.0);
+    let mut geo = GeoSpace::new(1, 50.0, 10.0, 100.0, VerticalDatum::WGS84);
     let grid: ArrayGrid<f64, 3, 3, 3, 1> = ArrayGrid::new(ArrayType::Array3D);
 
     grid.set(PointIndex::new3d(0, 0, 0), 1.0); // lat delta
@@ -106,7 +106,7 @@ fn test_geo_space_adjust_success() {
 
 #[test]
 fn test_geo_space_adjust_lat_fails_on_nan() {
-    let mut geo = GeoSpace::new(1, f64::MAX, f64::MAX, f64::MAX);
+    let mut geo = GeoSpace::new(1, f64::MAX, f64::MAX, f64::MAX, VerticalDatum::WGS84);
     let grid: ArrayGrid<f64, 3, 3, 3, 1> = ArrayGrid::new(ArrayType::Array3D);
 
     grid.set(PointIndex::new3d(0, 0, 0), f64::NAN); // lat adjustment
@@ -119,7 +119,7 @@ fn test_geo_space_adjust_lat_fails_on_nan() {
 
 #[test]
 fn test_geo_space_adjust_lat_fails_on_inf() {
-    let mut geo = GeoSpace::new(1, f64::MAX, f64::MAX, f64::MAX);
+    let mut geo = GeoSpace::new(1, f64::MAX, f64::MAX, f64::MAX, VerticalDatum::WGS84);
     let grid: ArrayGrid<f64, 3, 3, 3, 1> = ArrayGrid::new(ArrayType::Array3D);
 
     grid.set(PointIndex::new3d(0, 0, 0), f64::INFINITY); // lat adjustment
@@ -132,7 +132,7 @@ fn test_geo_space_adjust_lat_fails_on_inf() {
 
 #[test]
 fn test_geo_space_adjust_lon_fails_on_nan() {
-    let mut geo = GeoSpace::new(1, f64::MAX, f64::MAX, f64::MAX);
+    let mut geo = GeoSpace::new(1, f64::MAX, f64::MAX, f64::MAX, VerticalDatum::WGS84);
     let grid: ArrayGrid<f64, 3, 3, 3, 1> = ArrayGrid::new(ArrayType::Array3D);
 
     grid.set(PointIndex::new3d(0, 0, 0), 0.0); // lat adjustment
@@ -145,7 +145,7 @@ fn test_geo_space_adjust_lon_fails_on_nan() {
 
 #[test]
 fn test_geo_space_adjust_lon_fails_on_inf() {
-    let mut geo = GeoSpace::new(1, f64::MAX, f64::MAX, f64::MAX);
+    let mut geo = GeoSpace::new(1, f64::MAX, f64::MAX, f64::MAX, VerticalDatum::WGS84);
     let grid: ArrayGrid<f64, 3, 3, 3, 1> = ArrayGrid::new(ArrayType::Array3D);
 
     grid.set(PointIndex::new3d(0, 0, 0), 0.0); // lat adjustment
@@ -158,7 +158,7 @@ fn test_geo_space_adjust_lon_fails_on_inf() {
 
 #[test]
 fn test_geo_space_adjust_alt_fails_on_nan() {
-    let mut geo = GeoSpace::new(1, f64::MAX, f64::MAX, f64::MAX);
+    let mut geo = GeoSpace::new(1, f64::MAX, f64::MAX, f64::MAX, VerticalDatum::WGS84);
     let grid: ArrayGrid<f64, 3, 3, 3, 1> = ArrayGrid::new(ArrayType::Array3D);
 
     grid.set(PointIndex::new3d(0, 0, 0), 0.0); // lat adjustment
@@ -171,7 +171,7 @@ fn test_geo_space_adjust_alt_fails_on_nan() {
 
 #[test]
 fn test_geo_space_adjust_alt_fails_on_inf() {
-    let mut geo = GeoSpace::new(1, f64::MAX, f64::MAX, f64::MAX);
+    let mut geo = GeoSpace::new(1, f64::MAX, f64::MAX, f64::MAX, VerticalDatum::WGS84);
     let grid: ArrayGrid<f64, 3, 3, 3, 1> = ArrayGrid::new(ArrayType::Array3D);
 
     grid.set(PointIndex::new3d(0, 0, 0), 0.0); // lat adjustment

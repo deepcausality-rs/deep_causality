@@ -4,7 +4,7 @@
  */
 use crate::AdjustmentError;
 use crate::UncertainAdjustable;
-use crate::types::context_node_types::data_uncertain::data_uncertain_bool::UncertainBoolData;
+use crate::types::context_node_types::data_uncertain::uncertain_bool_data::UncertainBoolData;
 use deep_causality_uncertain::{RandScalar, UncertainBool};
 
 impl<R: RandScalar> UncertainAdjustable for UncertainBoolData<R> {

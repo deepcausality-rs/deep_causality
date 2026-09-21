@@ -76,12 +76,8 @@ pub use crate::traits::scalar::scalar_value::ScalarValue;
 //
 // Default context node types.
 pub use crate::types::context_node_types::data::Data;
-pub use crate::types::context_node_types::data_uncertain::data_uncertain_bool::{
-    UncertainBoolData, UncertainBooleanData,
-};
-pub use crate::types::context_node_types::data_uncertain::data_uncertain_f64::{
-    UncertainData, UncertainFloat64Data,
-};
+pub use crate::types::context_node_types::data_uncertain::uncertain_bool_data::UncertainBoolData;
+pub use crate::types::context_node_types::data_uncertain::uncertain_data::UncertainData;
 pub use crate::types::context_node_types::root::Root;
 // Space context node types.
 pub use crate::types::context_node_types::space::ecef_space::EcefSpace;
@@ -112,6 +108,7 @@ pub use crate::types::context_types::contextoid::*;
 // Other context types
 pub use crate::types::context_types::relation_kind::*;
 pub use crate::types::context_types::time_scale::TimeScale;
+pub use crate::types::context_types::vertical_datum::VerticalDatum;
 
 // Re-exported so an implementor of a context trait does not need a second import for the identity
 // trait every context node carries.

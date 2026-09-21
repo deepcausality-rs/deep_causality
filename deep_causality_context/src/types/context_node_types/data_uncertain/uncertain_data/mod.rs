@@ -3,7 +3,6 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::ContextoidId;
-use deep_causality_core::FloatType;
 use deep_causality_uncertain::{RandScalar, Uncertain};
 
 mod adjustable;
@@ -30,10 +29,3 @@ impl<R: RandScalar> UncertainData<R> {
         Self { id, data }
     }
 }
-
-/// The real uncertain node at the framework's scalar.
-///
-/// The name is the one the call sites already spell; what changed underneath is that the struct
-/// gained a scalar parameter, so the same node type now serves `f32`, `BFloat16` or anything else
-/// satisfying the algebra.
-pub type UncertainFloat64Data = UncertainData<FloatType>;
