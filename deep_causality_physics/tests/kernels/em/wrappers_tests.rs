@@ -100,7 +100,14 @@ fn test_lorentz_force_wrapper_error() {
     let b = CausalMultiVector::new(vec![1.0; 4], Metric::Euclidean(2)).unwrap(); // Mismatch
 
     let effect = lorentz_force(&j, &b);
-    assert!(effect.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Dimension Mismatch"),
+        "expected a Dimension Mismatch refusal, got {err}"
+    );
 }
 
 // =============================================================================
@@ -138,7 +145,14 @@ fn test_poynting_vector_wrapper_error() {
     let b = CausalMultiVector::new(vec![1.0; 4], Metric::Euclidean(2)).unwrap(); // Mismatch
 
     let effect = poynting_vector(&e, &b);
-    assert!(effect.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Dimension Mismatch"),
+        "expected a Dimension Mismatch refusal, got {err}"
+    );
 }
 
 // =============================================================================
@@ -183,7 +197,14 @@ fn test_magnetic_helicity_density_wrapper_error() {
     let b = CausalMultiVector::new(vec![1.0; 4], Metric::Euclidean(2)).unwrap(); // Mismatch
 
     let effect = magnetic_helicity_density(&a, &b);
-    assert!(effect.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Dimension Mismatch"),
+        "expected a Dimension Mismatch refusal, got {err}"
+    );
 }
 
 // =============================================================================
@@ -248,7 +269,14 @@ fn test_maxwell_gradient_wrapper_error() {
     // must take the Err arm (wrappers.rs:39) and yield an error effect.
     let manifold = create_1d_manifold();
     let effect = maxwell_gradient(&manifold);
-    assert!(effect.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Dimension Mismatch"),
+        "expected a Dimension Mismatch refusal, got {err}"
+    );
 }
 
 #[test]
@@ -258,7 +286,14 @@ fn test_proca_equation_wrapper_error() {
     let field = create_simple_manifold();
     let potential = create_simple_manifold();
     let effect = proca_equation(&field, &potential, f64::NAN);
-    assert!(effect.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Numerical Instability"),
+        "expected a Numerical Instability refusal, got {err}"
+    );
 }
 
 #[test]
@@ -270,6 +305,18 @@ fn test_proca_equation_wrapper_error_propagation() {
     let potential = create_simple_manifold();
 
     let effect = proca_equation(&field, &potential, f64::NAN);
+    // The refusal must name its cause: a wrapper forwards the kernel's `PhysicsError`
+    // text through a `CausalityError`, and asserting it keeps the *reason* pinned.
+    assert!(
+        effect
+            .error()
+            .expect("the call must fail")
+            .to_string()
+            .contains("Numerical Instability: Non-finite mass in Proca"),
+        "unexpected refusal: {:?}",
+        effect.error()
+    );
+
     assert!(
         effect.is_err(),
         "a non-finite mass must propagate out of the wrapper as an error"

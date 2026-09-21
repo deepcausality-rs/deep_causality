@@ -64,8 +64,11 @@ fn test_field_calculation_non_finite_input() {
     // If input is infinite, geometric product will be infinite/NaN
     let result = MaxwellSolver::calculate_field_tensor::<f64>(&d, &a);
     assert!(
-        result.is_err(),
-        "Should detect non-finite result via validate_finiteness"
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
     );
 }
 
@@ -132,7 +135,15 @@ fn test_potential_divergence_non_finite_scalar_result() {
 fn test_potential_divergence_metric_mismatch() {
     let d = CausalMultiVector::new(vec![0.0; 16], Metric::Minkowski(4)).unwrap();
     let a = CausalMultiVector::new(vec![0.0; 8], Metric::Euclidean(3)).unwrap();
-    assert!(MaxwellSolver::calculate_potential_divergence::<f64>(&d, &a).is_err());
+    assert!(
+        matches!(
+            MaxwellSolver::calculate_potential_divergence::<f64>(&d, &a)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -180,23 +191,36 @@ fn test_current_density_success() {
 
     let j = MaxwellSolver::calculate_current_density::<f64>(&d, &f).unwrap();
 
-    // Check J is e2 (index 4)
-    let val = j.data()[4];
-    assert!(
-        (val - 1.0).abs() < 1e-9 || (val + 1.0).abs() < 1e-9,
-        "Result: {:?}",
-        j.data()
-    );
-    // Note: sign depends on metric signature/contraction order.
-    // e1 . (e1 e2) = (e1 . e1) e2 - (e1 . e2) e1 = (1) e2 - 0 = e2. (Minkowski e1 squared is +1?)
-    // If (- + + +), e0^2=-1, e1^2=1. Correct.
+    // J = grade-1 part of `d.inner_product(F)`, with d = e1 and F = e12. The magnitude is 1 and
+    // the answer lies entirely on the e2 blade at index 4.
+    //
+    // The sign is -1, which is the *right* contraction `(e1 ^ e2) |_ e1`. The left contraction
+    // `e1 _| (e1 ^ e2) = (e1 . e1) e2 - (e1 . e2) e1` gives +e2, so the handedness of
+    // `CausalMultiVector::inner_product` is what fixes it. This test pins the behaviour the
+    // kernel has rather than the one an isolated derivation would predict; the assertion used to
+    // accept either sign, which pinned neither.
+    let d_out: &[f64] = j.data();
+    assert!((d_out[4] + 1.0).abs() < 1e-9, "e2 component = {}", d_out[4]);
+    for (i, v) in d_out.iter().enumerate() {
+        if i != 4 {
+            assert!(v.abs() < 1e-9, "blade {i} should vanish, got {v}");
+        }
+    }
 }
 
 #[test]
 fn test_current_density_mismatch() {
     let d = CausalMultiVector::new(vec![0.0; 16], Metric::Minkowski(4)).unwrap();
     let f = CausalMultiVector::new(vec![0.0; 8], Metric::Euclidean(3)).unwrap();
-    assert!(MaxwellSolver::calculate_current_density::<f64>(&d, &f).is_err());
+    assert!(
+        matches!(
+            MaxwellSolver::calculate_current_density::<f64>(&d, &f)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 // ============================================================================
@@ -230,5 +254,13 @@ fn test_poynting_flux_success() {
 fn test_poynting_flux_mismatch() {
     let e = CausalMultiVector::new(vec![0.0; 16], Metric::Minkowski(4)).unwrap();
     let b = CausalMultiVector::new(vec![0.0; 8], Metric::Euclidean(3)).unwrap();
-    assert!(MaxwellSolver::calculate_poynting_flux::<f64>(&e, &b).is_err());
+    assert!(
+        matches!(
+            MaxwellSolver::calculate_poynting_flux::<f64>(&e, &b)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }

@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::ElectronDensity;
+use deep_causality_physics::{ElectronDensity, PhysicsErrorEnum};
 
 #[test]
 fn test_electron_density_valid() {
@@ -15,13 +15,31 @@ fn test_electron_density_valid() {
 
 #[test]
 fn test_electron_density_rejects_negative() {
-    assert!(ElectronDensity::<f64>::new(-1.0).is_err());
+    assert!(
+        matches!(
+            ElectronDensity::<f64>::new(-1.0).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
 fn test_electron_density_rejects_nonfinite() {
-    assert!(ElectronDensity::<f64>::new(f64::NAN).is_err());
-    assert!(ElectronDensity::<f64>::new(f64::INFINITY).is_err());
+    assert!(
+        matches!(
+            ElectronDensity::<f64>::new(f64::NAN).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            ElectronDensity::<f64>::new(f64::INFINITY).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

@@ -73,5 +73,12 @@ fn test_doppler_effect_approaching_wrapper_sonic_error() {
     let vs = Speed::<f64>::new(340.0).unwrap(); // Mach 1
 
     let effect = doppler_effect_approaching(&f_src, &v, &vo, &vs);
-    assert!(effect.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Metric Singularity"),
+        "expected a Metric Singularity refusal, got {err}"
+    );
 }

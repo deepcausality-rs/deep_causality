@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::Area;
+use deep_causality_physics::{Area, PhysicsErrorEnum};
 
 #[test]
 fn test_area_new_valid() {
@@ -15,19 +15,37 @@ fn test_area_new_valid() {
 #[test]
 fn test_area_new_negative_error() {
     let area = Area::<f64>::new(-10.0);
-    assert!(area.is_err());
+    assert!(
+        matches!(
+            area.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
 fn test_area_new_nan_error() {
     let area = Area::<f64>::new(f64::NAN);
-    assert!(area.is_err());
+    assert!(
+        matches!(
+            area.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
 fn test_area_new_infinity_error() {
     let area = Area::<f64>::new(f64::INFINITY);
-    assert!(area.is_err());
+    assert!(
+        matches!(
+            area.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

@@ -28,7 +28,13 @@ fn test_reynolds_stress_new_non_finite_error() {
     // fluids/mod.rs:633-636 — non-finite components rejected.
     let m = [[f64::NAN, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
     let r = ReynoldsStress::<f64>::new(m);
-    assert!(r.is_err());
+    assert!(
+        matches!(
+            r.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
     match r.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => assert!(msg.contains("finite")),
         other => panic!("expected PhysicalInvariantBroken, got {other:?}"),
@@ -40,7 +46,13 @@ fn test_reynolds_stress_new_asymmetric_error() {
     // fluids/mod.rs:638-641 — R_ij != R_ji must be rejected.
     let m = [[1.0, 0.5, 0.0], [9.0, 2.0, 0.0], [0.0, 0.0, 1.5]];
     let r = ReynoldsStress::<f64>::new(m);
-    assert!(r.is_err());
+    assert!(
+        matches!(
+            r.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
     match r.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => assert!(msg.contains("symmetric")),
         other => panic!("expected PhysicalInvariantBroken, got {other:?}"),

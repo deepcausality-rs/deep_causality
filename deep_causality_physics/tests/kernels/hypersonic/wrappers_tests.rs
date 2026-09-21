@@ -6,10 +6,14 @@
 use deep_causality_physics::{
     ElectronTemperature, EquilibriumConstant, IonizationFraction, NO_IONIZATION_ENERGY_EV,
     THETA_VIB_N2, Temperature, VibrationalTemperature, arrhenius_rate, arrhenius_rate_kernel,
-    dissociation_equilibrium_fraction, electron_density, electron_density_kernel,
-    electron_impact_ionization_n_rate, electron_impact_ionization_o_rate,
-    finite_rate_ionization_fixed_point, n2_dissociation_equilibrium,
-    no_dissociative_recombination_rate, o2_dissociation_equilibrium, park2t_ionization_surrogate,
+    dissociation_equilibrium_fraction, dissociation_equilibrium_fraction_kernel, electron_density,
+    electron_density_kernel, electron_impact_ionization_n_rate,
+    electron_impact_ionization_n_rate_kernel, electron_impact_ionization_o_rate,
+    electron_impact_ionization_o_rate_kernel, finite_rate_ionization_fixed_point,
+    finite_rate_ionization_fixed_point_kernel, n2_dissociation_equilibrium,
+    n2_dissociation_equilibrium_kernel, no_dissociative_recombination_rate,
+    no_dissociative_recombination_rate_kernel, o2_dissociation_equilibrium,
+    o2_dissociation_equilibrium_kernel, park2t_ionization_surrogate,
     park2t_ionization_surrogate_kernel, rankine_hugoniot_temperature,
     rankine_hugoniot_temperature_kernel, recovery_temperature, recovery_temperature_kernel,
     saha_ionization_fraction, saha_ionization_fraction_kernel, vibrational_relaxation,
@@ -35,7 +39,14 @@ fn test_vibrational_relaxation_wrapper() {
     }
     // Error arm: zero pressure.
     let err = vibrational_relaxation(t_ve, t_tr, 0.0, 14.0, THETA_VIB_N2, 1.0);
-    assert!(!err.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = err.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Singularity"),
+        "expected a Singularity refusal, got {err}"
+    );
 }
 
 #[test]
@@ -55,7 +66,14 @@ fn test_arrhenius_rate_wrapper() {
         panic!("expected Value");
     }
     let err = arrhenius_rate(Temperature::<f64>::new(0.0).unwrap(), 1.0, 0.0, 100.0);
-    assert!(!err.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = err.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Singularity"),
+        "expected a Singularity refusal, got {err}"
+    );
 }
 
 #[test]
@@ -70,7 +88,14 @@ fn test_saha_wrapper() {
         "saha_ionization_fraction must carry the value its kernel produced"
     );
     let err = saha_ionization_fraction(t, 0.0, NO_IONIZATION_ENERGY_EV, 2.0);
-    assert!(!err.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = err.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Singularity"),
+        "expected a Singularity refusal, got {err}"
+    );
 }
 
 #[test]
@@ -90,7 +115,14 @@ fn test_surrogate_wrapper() {
         panic!("expected Value");
     }
     let err = park2t_ionization_surrogate(t, 0.0);
-    assert!(!err.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = err.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Singularity"),
+        "expected a Singularity refusal, got {err}"
+    );
 }
 
 #[test]
@@ -105,7 +137,14 @@ fn test_electron_density_wrapper() {
         "electron_density must carry the value its kernel produced"
     );
     let err = electron_density(alpha, -1.0);
-    assert!(!err.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = err.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 #[test]
@@ -125,7 +164,14 @@ fn test_rankine_hugoniot_wrapper() {
         panic!("expected Value");
     }
     let err = rankine_hugoniot_temperature(t_inf, 0.5, 1.4);
-    assert!(!err.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = err.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 #[test]
@@ -140,24 +186,80 @@ fn test_recovery_temperature_wrapper() {
         "recovery_temperature must carry the value its kernel produced"
     );
     let err = recovery_temperature(Temperature::<f64>::new(300.0).unwrap(), 2000.0, 1004.0);
-    assert!(!err.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = err.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Zero Kelvin Violation"),
+        "expected a Zero Kelvin Violation refusal, got {err}"
+    );
 }
 
 #[test]
 fn test_finite_rate_network_wrappers() {
     let te = ElectronTemperature::<f64>::new(6_000.0).unwrap();
-    assert!(no_dissociative_recombination_rate(te).is_ok());
-    assert!(electron_impact_ionization_n_rate(te).is_ok());
-    assert!(electron_impact_ionization_o_rate(te).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = no_dissociative_recombination_rate(te);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        no_dissociative_recombination_rate_kernel(te).unwrap(),
+        "no_dissociative_recombination_rate must carry the value its kernel produced"
+    );
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = electron_impact_ionization_n_rate(te);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        electron_impact_ionization_n_rate_kernel(te).unwrap(),
+        "electron_impact_ionization_n_rate must carry the value its kernel produced"
+    );
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = electron_impact_ionization_o_rate(te);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        electron_impact_ionization_o_rate_kernel(te).unwrap(),
+        "electron_impact_ionization_o_rate must carry the value its kernel produced"
+    );
 
     let t = Temperature::<f64>::new(6_000.0).unwrap();
-    assert!(n2_dissociation_equilibrium(t).is_ok());
-    assert!(o2_dissociation_equilibrium(t).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = n2_dissociation_equilibrium(t);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        n2_dissociation_equilibrium_kernel(t).unwrap(),
+        "n2_dissociation_equilibrium must carry the value its kernel produced"
+    );
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = o2_dissociation_equilibrium(t);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        o2_dissociation_equilibrium_kernel(t).unwrap(),
+        "o2_dissociation_equilibrium must carry the value its kernel produced"
+    );
 
     let k = EquilibriumConstant::<f64>::new(1.0e-8).unwrap();
-    assert!(dissociation_equilibrium_fraction(k, 1.0e-6).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = dissociation_equilibrium_fraction(k, 1.0e-6);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        dissociation_equilibrium_fraction_kernel(k, 1.0e-6).unwrap(),
+        "dissociation_equilibrium_fraction must carry the value its kernel produced"
+    );
     assert!(!dissociation_equilibrium_fraction(k, 0.0).is_ok());
 
-    assert!(finite_rate_ionization_fixed_point(1.0e-10_f64, 0.0, 1.0e12).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = finite_rate_ionization_fixed_point(1.0e-10_f64, 0.0, 1.0e12);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        finite_rate_ionization_fixed_point_kernel(1.0e-10_f64, 0.0, 1.0e12).unwrap(),
+        "finite_rate_ionization_fixed_point must carry the value its kernel produced"
+    );
     assert!(!finite_rate_ionization_fixed_point(1.0e-10_f64, 0.0, 0.0).is_ok());
 }

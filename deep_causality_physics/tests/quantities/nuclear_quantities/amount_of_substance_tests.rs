@@ -15,7 +15,13 @@ fn test_amount_of_substance_new_valid() {
 #[test]
 fn test_amount_of_substance_new_negative_error() {
     let amount = AmountOfSubstance::<f64>::new(-1.0);
-    assert!(amount.is_err());
+    assert!(
+        matches!(
+            amount.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
     match &amount.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => {
             assert!(msg.contains("AmountOfSubstance") || msg.contains("Negative"));

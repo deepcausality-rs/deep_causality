@@ -5,7 +5,7 @@
 
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_physics::{
-    Frequency, Mass, MomentOfInertia, PhysicalVector, angular_momentum_kernel,
+    Frequency, Mass, MomentOfInertia, PhysicalVector, PhysicsErrorEnum, angular_momentum_kernel,
     kinetic_energy_kernel, rotational_kinetic_energy_kernel, torque_kernel,
 };
 
@@ -277,7 +277,13 @@ fn test_kinetic_energy_kernel_non_finite_velocity() {
     .unwrap();
 
     let result = kinetic_energy_kernel(mass, &velocity);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
     match result.unwrap_err().0 {
         deep_causality_physics::PhysicsErrorEnum::NumericalInstability(_) => {}
         e => panic!("Expected NumericalInstability, got {e:?}"),
@@ -306,7 +312,13 @@ fn test_kinetic_energy_kernel_negative_squared_speed() {
     );
 
     let result = kinetic_energy_kernel(mass, &velocity);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
     match result.unwrap_err().0 {
         deep_causality_physics::PhysicsErrorEnum::PhysicalInvariantBroken(_) => {}
         e => panic!("Expected PhysicalInvariantBroken, got {e:?}"),

@@ -49,7 +49,13 @@ fn test_stiffness_new_valid() {
 #[test]
 fn test_stiffness_new_negative_error() {
     let stiff = Stiffness::<f64>::new(-1.0);
-    assert!(stiff.is_err());
+    assert!(
+        matches!(
+            stiff.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
     match &stiff.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => {
             assert!(msg.contains("Stiffness") || msg.contains("Negative"));
@@ -62,7 +68,13 @@ fn test_stiffness_new_negative_error() {
 fn test_stiffness_new_nan_error() {
     // materials/mod.rs:58-61 — explicit finiteness guard (NaN < 0 is false).
     let stiff = Stiffness::<f64>::new(f64::NAN);
-    assert!(stiff.is_err());
+    assert!(
+        matches!(
+            stiff.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
     match &stiff.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => {
             assert!(msg.contains("finite"));
@@ -74,7 +86,13 @@ fn test_stiffness_new_nan_error() {
 #[test]
 fn test_stiffness_new_infinity_error() {
     let stiff = Stiffness::<f64>::new(f64::INFINITY);
-    assert!(stiff.is_err());
+    assert!(
+        matches!(
+            stiff.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
     match &stiff.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => {
             assert!(msg.contains("finite"));

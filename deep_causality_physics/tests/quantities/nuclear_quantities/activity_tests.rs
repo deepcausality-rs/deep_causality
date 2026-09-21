@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::Activity;
+use deep_causality_physics::{Activity, PhysicsErrorEnum};
 
 #[test]
 fn test_activity_new_valid() {
@@ -14,7 +14,13 @@ fn test_activity_new_valid() {
 #[test]
 fn test_activity_new_negative_error() {
     let activity = Activity::<f64>::new(-1.0);
-    assert!(activity.is_err());
+    assert!(
+        matches!(
+            activity.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

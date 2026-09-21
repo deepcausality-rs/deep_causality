@@ -17,15 +17,49 @@ fn test_velocity3_new_valid() {
 
 #[test]
 fn test_velocity3_new_rejects_nan() {
-    assert!(Velocity3::<f64>::new([f64::NAN, 0.0, 0.0]).is_err());
-    assert!(Velocity3::<f64>::new([0.0, f64::NAN, 0.0]).is_err());
-    assert!(Velocity3::<f64>::new([0.0, 0.0, f64::NAN]).is_err());
+    assert!(
+        matches!(
+            Velocity3::<f64>::new([f64::NAN, 0.0, 0.0]).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            Velocity3::<f64>::new([0.0, f64::NAN, 0.0]).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            Velocity3::<f64>::new([0.0, 0.0, f64::NAN]).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
 fn test_velocity3_new_rejects_infinity() {
-    assert!(Velocity3::<f64>::new([f64::INFINITY, 0.0, 0.0]).is_err());
-    assert!(Velocity3::<f64>::new([0.0, f64::NEG_INFINITY, 0.0]).is_err());
+    assert!(
+        matches!(
+            Velocity3::<f64>::new([f64::INFINITY, 0.0, 0.0])
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            Velocity3::<f64>::new([0.0, f64::NEG_INFINITY, 0.0])
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

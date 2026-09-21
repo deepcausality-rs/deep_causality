@@ -5,8 +5,8 @@
 
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_physics::{
-    lorenz_gauge_kernel, magnetic_helicity_density_kernel, maxwell_gradient_kernel,
-    poynting_vector_kernel, proca_equation_kernel,
+    PhysicsErrorEnum, lorenz_gauge_kernel, magnetic_helicity_density_kernel,
+    maxwell_gradient_kernel, poynting_vector_kernel, proca_equation_kernel,
 };
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, PointCloud, ReggeGeometry, SimplicialManifold};
@@ -112,7 +112,13 @@ fn test_poynting_vector_kernel_dimension_error() {
     let b = CausalMultiVector::<f64>::new(vec![0.0, 0.0, 1.0, 0.0], Metric::Euclidean(2)).unwrap();
 
     let result = poynting_vector_kernel(&e, &b);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -129,7 +135,13 @@ fn test_poynting_vector_kernel_nan_error() {
     .unwrap();
 
     let result = poynting_vector_kernel(&e, &b);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
@@ -164,7 +176,13 @@ fn test_magnetic_helicity_density_error() {
     let b = CausalMultiVector::<f64>::new(vec![0.0, 1.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap();
 
     let result = magnetic_helicity_density_kernel(&a, &b);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 // Helper: a purely 1-dimensional complex (vertices + edges only, no faces).
@@ -233,7 +251,13 @@ fn test_maxwell_gradient_kernel_empty_2form_error() {
     // DimensionMismatch guard at fields.rs:34-38.
     let manifold = create_1d_manifold();
     let result = maxwell_gradient_kernel(&manifold);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -273,7 +297,13 @@ fn test_proca_equation_kernel_nan_mass() {
     let mass = f64::NAN;
 
     let result = proca_equation_kernel(&field_manifold, &potential_manifold, mass);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
@@ -283,7 +313,13 @@ fn test_proca_equation_kernel_inf_mass() {
     let mass = f64::INFINITY;
 
     let result = proca_equation_kernel(&field_manifold, &potential_manifold, mass);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 // Helper: build a 2D triangle manifold whose data slab is supplied verbatim,
@@ -327,7 +363,13 @@ fn test_proca_equation_kernel_delta_f_non_finite() {
     let potential = create_simple_manifold();
 
     let result = proca_equation_kernel(&field, &potential, 0.5);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
@@ -353,8 +395,11 @@ fn test_proca_equation_kernel_potential_too_short() {
 
     let result = proca_equation_kernel(&field, &potential, 0.5);
     assert!(
-        result.is_err(),
-        "expected dimension mismatch; field edges should exceed potential data length"
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
     );
 }
 
@@ -372,7 +417,13 @@ fn test_proca_equation_kernel_a_1form_non_finite() {
     let potential = manifold_with_data(pot_data);
 
     let result = proca_equation_kernel(&field, &potential, 0.5);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
@@ -388,7 +439,13 @@ fn test_proca_equation_kernel_m2_a_overflow() {
 
     // mass = 10 -> m^2 = 100 (finite); MAX * 100 overflows to +inf.
     let result = proca_equation_kernel(&field, &potential, 10.0);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
@@ -410,7 +467,13 @@ fn test_proca_equation_kernel_j_sum_overflow() {
     let potential = manifold_with_data(pot_data);
 
     let result = proca_equation_kernel(&field, &potential, 1.0);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 // NOTE on two defensively-unreachable Proca branches:
@@ -451,7 +514,13 @@ fn test_energy_density_kernel_sum_overflow_result_rejected() {
         Metric::Euclidean(3),
     )
     .unwrap();
-    assert!(energy_density_kernel(&e, &b).is_err());
+    assert!(
+        matches!(
+            energy_density_kernel(&e, &b).unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 // NOTE on fields.rs:317-319 (lagrangian non-finite *result* guard): the result
@@ -517,7 +586,13 @@ fn test_energy_density_kernel_dimension_mismatch() {
     let b = CausalMultiVector::<f64>::new(vec![0.0, 0.0, 1.0, 0.0], Metric::Euclidean(2)).unwrap();
 
     let result = energy_density_kernel(&e, &b);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -534,7 +609,13 @@ fn test_energy_density_kernel_nan_error() {
     .unwrap();
 
     let result = energy_density_kernel(&e, &b);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 // =============================================================================
@@ -632,7 +713,13 @@ fn test_poynting_vector_kernel_nan_b_error() {
         Metric::Euclidean(3),
     )
     .unwrap();
-    assert!(poynting_vector_kernel(&e, &b).is_err());
+    assert!(
+        matches!(
+            poynting_vector_kernel(&e, &b).unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
@@ -647,7 +734,13 @@ fn test_energy_density_kernel_nan_b_error() {
         Metric::Euclidean(3),
     )
     .unwrap();
-    assert!(energy_density_kernel(&e, &b).is_err());
+    assert!(
+        matches!(
+            energy_density_kernel(&e, &b).unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
@@ -693,7 +786,13 @@ fn test_poynting_vector_kernel_overflow_result_is_rejected() {
         Metric::Euclidean(3),
     )
     .unwrap();
-    assert!(poynting_vector_kernel(&e, &b).is_err());
+    assert!(
+        matches!(
+            poynting_vector_kernel(&e, &b).unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
@@ -702,7 +801,13 @@ fn test_proca_equation_kernel_m_squared_overflow_is_rejected() {
     let field_manifold = create_simple_manifold();
     let potential_manifold = create_simple_manifold();
     let result = proca_equation_kernel(&field_manifold, &potential_manifold, f64::MAX);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
@@ -717,7 +822,13 @@ fn test_energy_density_kernel_overflow_squared_magnitude_is_rejected() {
         Metric::Euclidean(3),
     )
     .unwrap();
-    assert!(energy_density_kernel(&e, &b).is_err());
+    assert!(
+        matches!(
+            energy_density_kernel(&e, &b).unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
@@ -732,7 +843,13 @@ fn test_lagrangian_density_kernel_overflow_squared_magnitude_is_rejected() {
         Metric::Euclidean(3),
     )
     .unwrap();
-    assert!(lagrangian_density_kernel(&e, &b).is_err());
+    assert!(
+        matches!(
+            lagrangian_density_kernel(&e, &b).unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
@@ -745,7 +862,13 @@ fn test_lagrangian_density_kernel_dimension_mismatch() {
     let b = CausalMultiVector::<f64>::new(vec![0.0, 0.0, 1.0, 0.0], Metric::Euclidean(2)).unwrap();
 
     let result = lagrangian_density_kernel(&e, &b);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 // =============================================================================

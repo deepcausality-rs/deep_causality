@@ -10,47 +10,12 @@
 //! (kernel result becomes `gm`) and the error branch
 //! (kernel error becomes a `PropagatingEffect::from_error` variant).
 
+use deep_causality_physics::utils_tests::chronometric_build_coord as build_coord;
 use deep_causality_physics::{
-    CentralBody, EARTH_GM, EARTH_RADIUS_EQUATORIAL, SPEED_OF_LIGHT, SpaceTimeCoordinate,
-    solve_gm_analytical,
+    CentralBody, EARTH_GM, EARTH_RADIUS_EQUATORIAL, SpaceTimeCoordinate, solve_gm_analytical,
 };
 
 const RELATIVE_TOLERANCE: f64 = 1e-8;
-
-// =============================================================================
-// Helpers (mirror solve_gm_tests so each test file is self-contained)
-// =============================================================================
-
-fn forward_drift_rate(target_gm: f64, r: f64, v: f64, z: f64, body: &CentralBody<f64>) -> f64 {
-    let cos_theta = z / r;
-    let legendre_p2 = 0.5 * (3.0 * cos_theta * cos_theta - 1.0);
-    let r_cubed = r * r * r;
-    let req_sq = body.equatorial_radius_m * body.equatorial_radius_m;
-    let inv_r_eff = 1.0 / r - body.j2 * req_sq * legendre_p2 / r_cubed;
-    let phi = -target_gm * inv_r_eff;
-    let c_sq = SPEED_OF_LIGHT * SPEED_OF_LIGHT;
-    phi / c_sq - 0.5 * v * v / c_sq
-}
-
-fn build_coord(
-    target_gm: f64,
-    r: f64,
-    v: f64,
-    position: [f64; 3],
-    velocity: [f64; 3],
-    body: &CentralBody<f64>,
-) -> SpaceTimeCoordinate<f64> {
-    SpaceTimeCoordinate::<f64> {
-        timestamp: 0,
-        sat_id: 0,
-        r_m: r,
-        v_ms: v,
-        clock_bias_s: 0.0,
-        position,
-        velocity,
-        clock_drift_rate: forward_drift_rate(target_gm, r, v, position[2], body),
-    }
-}
 
 // =============================================================================
 // Success path
@@ -153,8 +118,18 @@ fn test_wrapper_error_on_zero_radius() {
         &body,
     );
 
+    // The refusal must name its cause. `solve_gm_tests.rs` pins the kernel's variant
+    // (TopologyError); the wrapper forwards its text through a `CausalityError`.
     let effect = solve_gm_analytical(&coord_a, &coord_b, &body);
-    assert!(effect.is_err(), "expected error, got effect={:?}", effect);
+    assert!(
+        effect
+            .error()
+            .expect("a zero radius must be refused")
+            .to_string()
+            .contains("Non-positive radial distance"),
+        "unexpected refusal: {:?}",
+        effect.error()
+    );
     // Value and error are one channel: an errored effect provably carries no value.
     assert!(effect.value().is_none(), "errored effect carries no value");
 }
@@ -182,7 +157,14 @@ fn test_wrapper_error_on_negative_radius() {
     );
 
     let effect = solve_gm_analytical(&coord_a, &coord_b, &body);
-    assert!(effect.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Topology Error"),
+        "expected a Topology Error refusal, got {err}"
+    );
 }
 
 #[test]
@@ -197,8 +179,18 @@ fn test_wrapper_error_on_insufficient_separation() {
         [0.0, 3650.0, 0.0],
         &body,
     );
+    // Identical coordinates leave no radial separation to invert, and the refusal must say so
+    // rather than merely being a refusal.
     let effect = solve_gm_analytical(&coord, &coord, &body);
-    assert!(effect.is_err(), "expected error, got effect={:?}", effect);
+    assert!(
+        effect
+            .error()
+            .expect("identical coordinates must be refused")
+            .to_string()
+            .contains("Insufficient"),
+        "unexpected refusal: {:?}",
+        effect.error()
+    );
 }
 
 // =============================================================================

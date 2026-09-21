@@ -4,7 +4,7 @@
  */
 
 use deep_causality_num_complex::Complex;
-use deep_causality_physics::ComplexBeamParameter;
+use deep_causality_physics::{ComplexBeamParameter, PhysicsErrorEnum};
 
 #[test]
 fn test_complex_beam_parameter() {
@@ -13,7 +13,13 @@ fn test_complex_beam_parameter() {
 
     // Im(q) must be positive
     let err = ComplexBeamParameter::<f64>::new(Complex::new(1.0, -1.0));
-    assert!(err.is_err());
+    assert!(
+        matches!(
+            err.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

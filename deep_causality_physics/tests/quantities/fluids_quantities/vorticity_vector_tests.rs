@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::VorticityVector;
+use deep_causality_physics::{PhysicsErrorEnum, VorticityVector};
 
 // =============================================================================
 // VorticityVector — finiteness only
@@ -17,8 +17,24 @@ fn test_vorticity_vector_new_valid() {
 
 #[test]
 fn test_vorticity_vector_rejects_non_finite() {
-    assert!(VorticityVector::<f64>::new([f64::NAN, 0.0, 0.0]).is_err());
-    assert!(VorticityVector::<f64>::new([f64::INFINITY, 0.0, 0.0]).is_err());
+    assert!(
+        matches!(
+            VorticityVector::<f64>::new([f64::NAN, 0.0, 0.0])
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            VorticityVector::<f64>::new([f64::INFINITY, 0.0, 0.0])
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

@@ -11,7 +11,7 @@
 //! dissertation itself reports ~13% radial-extent error.
 
 use deep_causality_physics::{
-    Area, FlowBranch, Length, Pressure, Temperature, choked_mass_flow_kernel,
+    Area, FlowBranch, Length, PhysicsErrorEnum, Pressure, Temperature, choked_mass_flow_kernel,
     cordell_braun_plume_boundary_kernel, inverse_area_mach_kernel, prandtl_meyer_kernel,
     srp_jet_edge_mach_kernel, srp_post_bow_shock_total_pressure_kernel,
     srp_terminal_shock_mach_kernel,
@@ -41,7 +41,13 @@ fn test_prandtl_meyer_known_values() {
     assert!(prandtl_meyer_kernel(1.0_f64, GAMMA).unwrap().abs() < 1e-12);
     let nu2 = prandtl_meyer_kernel(2.0_f64, GAMMA).unwrap();
     assert!((nu2 - 0.4604).abs() < 1e-3, "nu(2) = {nu2}");
-    assert!(prandtl_meyer_kernel(0.9_f64, GAMMA).is_err());
+    assert!(
+        matches!(
+            prandtl_meyer_kernel(0.9_f64, GAMMA).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -96,13 +102,23 @@ fn test_terminal_shock_rejects_low_thrust() {
         srp_post_bow_shock_total_pressure_kernel(Pressure::new(P_INF).unwrap(), M_INF, GAMMA)
             .unwrap();
     assert!(
-        srp_terminal_shock_mach_kernel(Pressure::new(pt_1.value() * 0.5).unwrap(), pt_1, GAMMA)
-            .is_err()
+        matches!(
+            srp_terminal_shock_mach_kernel(Pressure::new(pt_1.value() * 0.5).unwrap(), pt_1, GAMMA)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
     );
     // gamma <= 1 is rejected like every sibling kernel (no NaN pass-through).
     assert!(
-        srp_terminal_shock_mach_kernel(Pressure::new(pt_jet_for(14988.2)).unwrap(), pt_1, 1.0)
-            .is_err()
+        matches!(
+            srp_terminal_shock_mach_kernel(Pressure::new(pt_jet_for(14988.2)).unwrap(), pt_1, 1.0)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
     );
 }
 
@@ -174,12 +190,30 @@ fn test_plume_rejects_outside_validity_envelope() {
         )
     };
     // Freestream Mach outside [2, 4].
-    assert!(call(5.0, GAMMA, 6060.2).is_err());
+    assert!(
+        matches!(
+            call(5.0, GAMMA, 6060.2).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
     // Jet gamma outside [1.2, 1.4].
-    assert!(call(M_INF, 1.5, 6060.2).is_err());
+    assert!(
+        matches!(
+            call(M_INF, 1.5, 6060.2).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
     // Jet-penetration regime: exit pressure ratio below the blunt-flow
     // transition (very low thrust).
-    assert!(call(M_INF, GAMMA, 50.0).is_err());
+    assert!(
+        matches!(
+            call(M_INF, GAMMA, 50.0).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -208,21 +242,75 @@ fn test_plume_rejects_bad_nozzle_and_chamber_inputs() {
     let ok = call(m_exit, HALF_ANGLE, D_THROAT, R_EXIT, L_CONE, T_T_JET, R_GAS);
     assert!(ok.is_ok(), "the nominal case must pass");
     // Subsonic nozzle exit.
-    assert!(call(0.5, HALF_ANGLE, D_THROAT, R_EXIT, L_CONE, T_T_JET, R_GAS).is_err());
+    assert!(
+        matches!(
+            call(0.5, HALF_ANGLE, D_THROAT, R_EXIT, L_CONE, T_T_JET, R_GAS)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
     // Negative nozzle half-angle.
-    assert!(call(m_exit, -0.1, D_THROAT, R_EXIT, L_CONE, T_T_JET, R_GAS).is_err());
+    assert!(
+        matches!(
+            call(m_exit, -0.1, D_THROAT, R_EXIT, L_CONE, T_T_JET, R_GAS)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
     // Non-positive nozzle geometry.
-    assert!(call(m_exit, HALF_ANGLE, 0.0, R_EXIT, L_CONE, T_T_JET, R_GAS).is_err());
-    assert!(call(m_exit, HALF_ANGLE, D_THROAT, 0.0, L_CONE, T_T_JET, R_GAS).is_err());
+    assert!(
+        matches!(
+            call(m_exit, HALF_ANGLE, 0.0, R_EXIT, L_CONE, T_T_JET, R_GAS)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
+    );
+    assert!(
+        matches!(
+            call(m_exit, HALF_ANGLE, D_THROAT, 0.0, L_CONE, T_T_JET, R_GAS)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
+    );
     // Non-positive chamber temperature / gas constant.
-    assert!(call(m_exit, HALF_ANGLE, D_THROAT, R_EXIT, L_CONE, 0.0, R_GAS).is_err());
-    assert!(call(m_exit, HALF_ANGLE, D_THROAT, R_EXIT, L_CONE, T_T_JET, 0.0).is_err());
+    assert!(
+        matches!(
+            call(m_exit, HALF_ANGLE, D_THROAT, R_EXIT, L_CONE, 0.0, R_GAS)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
+    );
+    assert!(
+        matches!(
+            call(m_exit, HALF_ANGLE, D_THROAT, R_EXIT, L_CONE, T_T_JET, 0.0)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
+    );
 }
 
 #[test]
 fn test_plume_sub_kernels_reject_bad_inputs() {
     // Prandtl-Meyer requires gamma > 1.
-    assert!(prandtl_meyer_kernel(2.0_f64, 1.0).is_err());
+    assert!(
+        matches!(
+            prandtl_meyer_kernel(2.0_f64, 1.0).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 
     // Choked mass flow: nominal succeeds; gamma <= 1 and non-positive throat /
     // chamber / gas-constant are rejected.
@@ -237,43 +325,90 @@ fn test_plume_sub_kernels_reject_bad_inputs() {
         .is_ok()
     );
     assert!(
-        choked_mass_flow_kernel(
-            Area::new(1.0e-4_f64).unwrap(),
-            Pressure::new(2.0e6).unwrap(),
-            Temperature::new(3000.0).unwrap(),
-            1.0,
-            R_GAS
-        )
-        .is_err()
+        matches!(
+            choked_mass_flow_kernel(
+                Area::new(1.0e-4_f64).unwrap(),
+                Pressure::new(2.0e6).unwrap(),
+                Temperature::new(3000.0).unwrap(),
+                1.0,
+                R_GAS
+            )
+            .unwrap_err()
+            .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
     );
     assert!(
-        choked_mass_flow_kernel(
-            Area::new(0.0_f64).unwrap(),
-            Pressure::new(2.0e6).unwrap(),
-            Temperature::new(3000.0).unwrap(),
-            GAMMA,
-            R_GAS
-        )
-        .is_err()
+        matches!(
+            choked_mass_flow_kernel(
+                Area::new(0.0_f64).unwrap(),
+                Pressure::new(2.0e6).unwrap(),
+                Temperature::new(3000.0).unwrap(),
+                GAMMA,
+                R_GAS
+            )
+            .unwrap_err()
+            .0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
     );
 
     // Terminal-shock Mach: zero jet stagnation pressure is a singularity.
     let pt_1 =
         srp_post_bow_shock_total_pressure_kernel(Pressure::new(P_INF).unwrap(), M_INF, GAMMA)
             .unwrap();
-    assert!(srp_terminal_shock_mach_kernel(Pressure::new(0.0_f64).unwrap(), pt_1, GAMMA).is_err());
+    assert!(
+        matches!(
+            srp_terminal_shock_mach_kernel(Pressure::new(0.0_f64).unwrap(), pt_1, GAMMA)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
+    );
     // Post-bow-shock pressure requires a supersonic freestream.
     assert!(
-        srp_post_bow_shock_total_pressure_kernel(Pressure::new(P_INF).unwrap(), 0.5, GAMMA)
-            .is_err()
+        matches!(
+            srp_post_bow_shock_total_pressure_kernel(Pressure::new(P_INF).unwrap(), 0.5, GAMMA)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
     );
 
     // Jet-edge Mach: gamma <= 1, non-positive exit pressure, and a backpressure
     // too high to expand the jet supersonically are all rejected.
     let p_exit = Pressure::new(pt_jet_for(6060.2) / 33.6).unwrap();
-    assert!(srp_jet_edge_mach_kernel(4.0_f64, p_exit, pt_1, 1.0).is_err());
-    assert!(srp_jet_edge_mach_kernel(4.0_f64, Pressure::new(0.0).unwrap(), pt_1, GAMMA).is_err());
+    assert!(
+        matches!(
+            srp_jet_edge_mach_kernel(4.0_f64, p_exit, pt_1, 1.0)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            srp_jet_edge_mach_kernel(4.0_f64, Pressure::new(0.0).unwrap(), pt_1, GAMMA)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
+    );
     // Backpressure >= a tiny exit pressure: the jet cannot expand supersonically.
     let tiny_exit = Pressure::new(1.0_f64).unwrap();
-    assert!(srp_jet_edge_mach_kernel(1.0_f64, tiny_exit, pt_1, GAMMA).is_err());
+    assert!(
+        matches!(
+            srp_jet_edge_mach_kernel(1.0_f64, tiny_exit, pt_1, GAMMA)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }

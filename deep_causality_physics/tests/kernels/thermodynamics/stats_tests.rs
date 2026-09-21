@@ -4,8 +4,8 @@
  */
 
 use deep_causality_physics::{
-    AmountOfSubstance, Energy, Pressure, Temperature, Volume, boltzmann_factor_kernel,
-    carnot_efficiency_kernel, heat_capacity_kernel, ideal_gas_law_kernel,
+    AmountOfSubstance, Energy, PhysicsErrorEnum, Pressure, Temperature, Volume,
+    boltzmann_factor_kernel, carnot_efficiency_kernel, heat_capacity_kernel, ideal_gas_law_kernel,
     partition_function_kernel, shannon_entropy_bits_kernel,
 };
 use deep_causality_tensor::CausalTensor;
@@ -39,7 +39,13 @@ fn test_ideal_gas_law_kernel_zero_moles_error() {
     let t = Temperature::<f64>::new(300.0).unwrap();
 
     let result = ideal_gas_law_kernel(p, v, n, t);
-    assert!(result.is_err(), "Zero moles should error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
+    );
 }
 
 // =============================================================================
@@ -66,7 +72,13 @@ fn test_carnot_efficiency_kernel_cold_ge_hot_error() {
     let tc = Temperature::<f64>::new(300.0).unwrap();
 
     let result = carnot_efficiency_kernel(th, tc);
-    assert!(result.is_err(), "Tc >= Th should error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 // =============================================================================
@@ -160,7 +172,13 @@ fn test_heat_capacity_kernel_zero_dt_error() {
     let dt = Temperature::<f64>::new(0.0).unwrap();
 
     let result = heat_capacity_kernel(de, dt);
-    assert!(result.is_err(), "Zero dT should error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 // =============================================================================
@@ -185,7 +203,13 @@ fn test_partition_function_kernel_error() {
     let t = Temperature::<f64>::new(0.0).unwrap(); // T=0 error
 
     let result = partition_function_kernel(&energies, t);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::ZeroKelvinViolation
+        ),
+        "expected a ZeroKelvinViolation refusal"
+    );
 }
 
 // =============================================================================
@@ -198,7 +222,13 @@ fn test_boltzmann_factor_kernel_error() {
     let t = Temperature::<f64>::new(0.0).unwrap(); // T=0 error
 
     let result = boltzmann_factor_kernel(e, t);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::ZeroKelvinViolation
+        ),
+        "expected a ZeroKelvinViolation refusal"
+    );
 }
 
 // =============================================================================
@@ -210,12 +240,24 @@ fn test_shannon_entropy_bits_kernel_error() {
     // Negative probability
     let probs = CausalTensor::new(vec![0.5, -0.1], vec![2]).unwrap();
     let result = shannon_entropy_bits_kernel(&probs);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NormalizationError { .. }
+        ),
+        "expected a NormalizationError refusal"
+    );
 
     // Empty tensor
     let empty_probs: CausalTensor<f64> = CausalTensor::new(vec![], vec![0]).unwrap();
     let result_empty = shannon_entropy_bits_kernel(&empty_probs);
-    assert!(result_empty.is_err());
+    assert!(
+        matches!(
+            result_empty.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 // =============================================================================
@@ -267,5 +309,11 @@ fn test_heat_diffusion_kernel_negative_diffusivity_error() {
     let manifold = create_temp_manifold();
     let diffusivity = -0.5; // Invalid
     let result = heat_diffusion_kernel(&manifold, diffusivity);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }

@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::IonizationFraction;
+use deep_causality_physics::{IonizationFraction, PhysicsErrorEnum};
 
 #[test]
 fn test_ionization_fraction_valid() {
@@ -14,14 +14,38 @@ fn test_ionization_fraction_valid() {
 
 #[test]
 fn test_ionization_fraction_rejects_out_of_range() {
-    assert!(IonizationFraction::<f64>::new(-0.01).is_err());
-    assert!(IonizationFraction::<f64>::new(1.01).is_err());
+    assert!(
+        matches!(
+            IonizationFraction::<f64>::new(-0.01).unwrap_err().0,
+            PhysicsErrorEnum::NormalizationError { .. }
+        ),
+        "expected a NormalizationError refusal"
+    );
+    assert!(
+        matches!(
+            IonizationFraction::<f64>::new(1.01).unwrap_err().0,
+            PhysicsErrorEnum::NormalizationError { .. }
+        ),
+        "expected a NormalizationError refusal"
+    );
 }
 
 #[test]
 fn test_ionization_fraction_rejects_nonfinite() {
-    assert!(IonizationFraction::<f64>::new(f64::NAN).is_err());
-    assert!(IonizationFraction::<f64>::new(f64::INFINITY).is_err());
+    assert!(
+        matches!(
+            IonizationFraction::<f64>::new(f64::NAN).unwrap_err().0,
+            PhysicsErrorEnum::NormalizationError { .. }
+        ),
+        "expected a NormalizationError refusal"
+    );
+    assert!(
+        matches!(
+            IonizationFraction::<f64>::new(f64::INFINITY).unwrap_err().0,
+            PhysicsErrorEnum::NormalizationError { .. }
+        ),
+        "expected a NormalizationError refusal"
+    );
 }
 
 #[test]

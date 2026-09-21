@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::klein_gordon_kernel;
+use deep_causality_physics::{PhysicsErrorEnum, klein_gordon_kernel};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, PointCloud, ReggeGeometry, SimplicialManifold};
 
@@ -59,7 +59,13 @@ fn test_klein_gordon_kernel_nan_mass() {
     let manifold = create_simple_manifold();
     let mass = f64::NAN;
     let result = klein_gordon_kernel(&manifold, mass);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
@@ -67,7 +73,13 @@ fn test_klein_gordon_kernel_inf_mass() {
     let manifold = create_simple_manifold();
     let mass = f64::INFINITY;
     let result = klein_gordon_kernel(&manifold, mass);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 // Builds a triangular manifold whose stored field data is supplied by the
@@ -99,7 +111,13 @@ fn test_klein_gordon_kernel_nonfinite_laplacian() {
     // guard.
     let manifold = create_manifold_with_data(vec![f64::NAN; 7]);
     let result = klein_gordon_kernel(&manifold, 1.0);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
@@ -112,7 +130,13 @@ fn test_klein_gordon_kernel_m2_psi_overflow() {
     // 1e120 * 1e200 = 1e320 = +inf (> f64::MAX ~ 1.8e308) trips the guard.
     let manifold = create_manifold_with_data(vec![1e200; 7]);
     let result = klein_gordon_kernel(&manifold, 1e60);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 // NOTE on three defensively-unreachable Klein-Gordon guards
@@ -134,3 +158,60 @@ fn test_klein_gordon_kernel_m2_psi_overflow() {
 //     configuration makes both summands simultaneously near MAX, so the
 //     result-overflow guard is unreachable. An offline scan over magnitudes
 //     1e150..1e308 confirmed only the laplacian and m2_psi guards ever fire.
+
+#[test]
+fn test_klein_gordon_is_affine_in_the_mass_squared() {
+    // KG = laplacian(psi) + m^2 psi. The Laplacian does not depend on the mass, so
+    //
+    //     KG(m)[i] = KG(0)[i] + m^2 psi[i]
+    //
+    // vertex by vertex. That pins the square on the mass and the sign of the sum without
+    // reimplementing the Hodge Laplacian, which is what left this kernel on `is_ok()` alone.
+    //
+    // A triangle has three vertices, and the kernel reads the first three slab entries as psi.
+    let psi = [1.0_f64, 2.0, 3.0];
+    let mut data = vec![0.5f64; 7];
+    data[..3].copy_from_slice(&psi);
+    let manifold = create_manifold_with_data(data);
+
+    let base = klein_gordon_kernel(&manifold, 0.0).unwrap();
+    for m in [0.5_f64, 1.5, 3.0] {
+        let kg = klein_gordon_kernel(&manifold, m).unwrap();
+        let b: &[f64] = base.as_slice();
+        let v: &[f64] = kg.as_slice();
+        for i in 0..psi.len() {
+            let want = b[i] + m * m * psi[i];
+            assert!(
+                (v[i] - want).abs() < 1e-12,
+                "m = {m}, vertex {i}: KG = {}, expected KG(0) + m^2 psi = {want}",
+                v[i]
+            );
+        }
+    }
+}
+
+#[test]
+fn test_klein_gordon_mass_term_is_quadratic_not_linear() {
+    // Doubling the mass must quadruple the mass-dependent part; a term built as m + m only
+    // doubles it.
+    let psi = [1.0_f64, 2.0, 3.0];
+    let mut data = vec![0.5f64; 7];
+    data[..3].copy_from_slice(&psi);
+    let manifold = create_manifold_with_data(data);
+
+    let k0 = klein_gordon_kernel(&manifold, 0.0).unwrap();
+    let k1 = klein_gordon_kernel(&manifold, 1.5).unwrap();
+    let k2 = klein_gordon_kernel(&manifold, 3.0).unwrap();
+
+    let a: &[f64] = k0.as_slice();
+    let b: &[f64] = k1.as_slice();
+    let c: &[f64] = k2.as_slice();
+    for i in 0..psi.len() {
+        let single = b[i] - a[i];
+        let doubled = c[i] - a[i];
+        assert!(
+            (doubled - 4.0 * single).abs() < 1e-12,
+            "vertex {i}: doubling the mass gave {doubled}, expected 4 x {single}"
+        );
+    }
+}

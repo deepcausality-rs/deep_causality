@@ -14,7 +14,7 @@
 
 use deep_causality_metric::LorentzianMetric;
 use deep_causality_multivector::{CausalMultiVector, MultiVector};
-use deep_causality_physics::{EM, GaugeEmOps};
+use deep_causality_physics::{EM, GaugeEmOps, PhysicsErrorEnum};
 
 // ============================================================================
 // Field Creation Tests
@@ -594,21 +594,36 @@ fn test_momentum_density_equals_poynting_scaled() {
 #[test]
 fn test_plane_wave_nan_amplitude_error() {
     let result = EM::plane_wave(f64::NAN, 0);
-    assert!(result.is_err(), "NaN amplitude should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
 fn test_plane_wave_infinity_amplitude_error() {
     let result = EM::plane_wave(f64::INFINITY, 0);
-    assert!(result.is_err(), "Infinite amplitude should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
 fn test_plane_wave_neg_infinity_amplitude_error() {
     let result = EM::plane_wave(f64::NEG_INFINITY, 0);
     assert!(
-        result.is_err(),
-        "Negative infinite amplitude should return error"
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
     );
 }
 
@@ -616,10 +631,22 @@ fn test_plane_wave_neg_infinity_amplitude_error() {
 fn test_plane_wave_invalid_polarization_error() {
     // Polarization must be 0 or 1
     let result = EM::plane_wave(1.0, 2);
-    assert!(result.is_err(), "Polarization 2 should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 
     let result = EM::plane_wave(1.0, 100);
-    assert!(result.is_err(), "Polarization 100 should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -714,8 +741,11 @@ fn test_from_fields_metric_mismatch_error() {
 
     let result = EM::from_fields(base, e_field, b_field);
     assert!(
-        result.is_err(),
-        "from_fields with mismatched metrics should return error"
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
     );
 }
 

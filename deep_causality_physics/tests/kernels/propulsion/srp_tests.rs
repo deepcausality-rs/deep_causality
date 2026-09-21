@@ -4,8 +4,8 @@
  */
 
 use deep_causality_physics::{
-    Area, Density, Force, JARVINEN_ADAMS_CA0_M2, JARVINEN_ADAMS_TRANSITION_CT_M2, Pressure, Speed,
-    jarvinen_adams_baseline_axial_coefficient_kernel, momentum_flux_ratio_kernel,
+    Area, Density, Force, JARVINEN_ADAMS_CA0_M2, JARVINEN_ADAMS_TRANSITION_CT_M2, PhysicsErrorEnum,
+    Pressure, Speed, jarvinen_adams_baseline_axial_coefficient_kernel, momentum_flux_ratio_kernel,
     srp_flow_regime_margin_kernel, srp_preserved_drag_fraction_kernel,
     srp_thrust_coefficient_kernel, srp_total_axial_force_coefficient_kernel,
 };
@@ -25,29 +25,44 @@ fn test_thrust_coefficient_definition() {
 #[test]
 fn test_thrust_coefficient_rejects_degenerate() {
     assert!(
-        srp_thrust_coefficient_kernel(
-            Force::new(1000.0_f64).unwrap(),
-            Pressure::new(0.0).unwrap(),
-            Area::new(0.5).unwrap()
-        )
-        .is_err()
+        matches!(
+            srp_thrust_coefficient_kernel(
+                Force::new(1000.0_f64).unwrap(),
+                Pressure::new(0.0).unwrap(),
+                Area::new(0.5).unwrap()
+            )
+            .unwrap_err()
+            .0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
     );
     assert!(
-        srp_thrust_coefficient_kernel(
-            Force::new(-1.0_f64).unwrap(),
-            Pressure::new(500.0).unwrap(),
-            Area::new(0.5).unwrap()
-        )
-        .is_err()
+        matches!(
+            srp_thrust_coefficient_kernel(
+                Force::new(-1.0_f64).unwrap(),
+                Pressure::new(500.0).unwrap(),
+                Area::new(0.5).unwrap()
+            )
+            .unwrap_err()
+            .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
     );
     // Zero reference area is a singularity.
     assert!(
-        srp_thrust_coefficient_kernel(
-            Force::new(1000.0_f64).unwrap(),
-            Pressure::new(500.0).unwrap(),
-            Area::new(0.0).unwrap()
-        )
-        .is_err()
+        matches!(
+            srp_thrust_coefficient_kernel(
+                Force::new(1000.0_f64).unwrap(),
+                Pressure::new(500.0).unwrap(),
+                Area::new(0.0).unwrap()
+            )
+            .unwrap_err()
+            .0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
     );
 }
 
@@ -60,7 +75,13 @@ fn test_preserved_drag_interpolates_between_knots_and_rejects_nan() {
     assert!(mid < 0.22 && mid > 0.17, "interpolated fraction {mid}");
     // A non-finite C_T reaches the interpolator's finiteness guard (it passes
     // the c_t < 0 check because NaN comparisons are false).
-    assert!(srp_preserved_drag_fraction_kernel(f64::NAN).is_err());
+    assert!(
+        matches!(
+            srp_preserved_drag_fraction_kernel(f64::NAN).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -80,13 +101,18 @@ fn test_momentum_flux_ratio_definition() {
 #[test]
 fn test_momentum_flux_ratio_rejects_zero_freestream() {
     assert!(
-        momentum_flux_ratio_kernel(
-            Density::new(2.0_f64).unwrap(),
-            Speed::new(100.0).unwrap(),
-            Density::new(0.0).unwrap(),
-            Speed::new(200.0).unwrap()
-        )
-        .is_err()
+        matches!(
+            momentum_flux_ratio_kernel(
+                Density::new(2.0_f64).unwrap(),
+                Speed::new(100.0).unwrap(),
+                Density::new(0.0).unwrap(),
+                Speed::new(200.0).unwrap()
+            )
+            .unwrap_err()
+            .0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
     );
 }
 
@@ -129,8 +155,20 @@ fn test_preserved_drag_collapse_structure() {
 
 #[test]
 fn test_preserved_drag_rejects_out_of_domain() {
-    assert!(srp_preserved_drag_fraction_kernel(-0.1_f64).is_err());
-    assert!(srp_preserved_drag_fraction_kernel(9.0_f64).is_err()); // domain ends at 8.8
+    assert!(
+        matches!(
+            srp_preserved_drag_fraction_kernel(-0.1_f64).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            srp_preserved_drag_fraction_kernel(9.0_f64).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    ); // domain ends at 8.8
 }
 
 #[test]
@@ -151,8 +189,24 @@ fn test_baseline_axial_coefficient_digitized_points() {
 
 #[test]
 fn test_baseline_axial_coefficient_rejects_out_of_envelope() {
-    assert!(jarvinen_adams_baseline_axial_coefficient_kernel(0.4_f64).is_err());
-    assert!(jarvinen_adams_baseline_axial_coefficient_kernel(2.5_f64).is_err());
+    assert!(
+        matches!(
+            jarvinen_adams_baseline_axial_coefficient_kernel(0.4_f64)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            jarvinen_adams_baseline_axial_coefficient_kernel(2.5_f64)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -193,6 +247,18 @@ fn test_flow_regime_margin_sign() {
 
 #[test]
 fn test_flow_regime_margin_rejects_bad_inputs() {
-    assert!(srp_flow_regime_margin_kernel(-1.0_f64, 1.0).is_err());
-    assert!(srp_flow_regime_margin_kernel(2.0_f64, 0.0).is_err());
+    assert!(
+        matches!(
+            srp_flow_regime_margin_kernel(-1.0_f64, 1.0).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            srp_flow_regime_margin_kernel(2.0_f64, 0.0).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }

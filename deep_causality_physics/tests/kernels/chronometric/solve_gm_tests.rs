@@ -17,8 +17,11 @@
 //! inverting with the wrong J2 biases the recovered GM.
 
 use deep_causality_num_dual::Dual;
+use deep_causality_physics::utils_tests::{
+    chronometric_build_coord as build_coord, chronometric_forward_drift_rate as forward_drift_rate,
+};
 use deep_causality_physics::{
-    CentralBody, EARTH_GM, PhysicsErrorEnum, SPEED_OF_LIGHT, SpaceTimeCoordinate,
+    CentralBody, EARTH_GM, PhysicsErrorEnum, SpaceTimeCoordinate,
     relativistic_clock_drift_rate_kernel, solve_gm_analytical_kernel,
 };
 
@@ -27,52 +30,6 @@ use deep_causality_physics::{
 /// from the differences of nearly-equal numbers in the redshift / kinetic
 /// terms; a tolerance of 1e-8 leaves ample headroom for environmental noise.
 const RELATIVE_TOLERANCE: f64 = 1e-8;
-
-// =============================================================================
-// Forward-model helper
-// =============================================================================
-
-/// Compute the clock drift rate that solves the 1PN clock equation
-/// $\dot\tau = 1 + \Phi(r,\theta)/c^2 - v^2/(2c^2)$
-/// for a given target `gm`, J2-corrected effective potential.
-fn forward_drift_rate(target_gm: f64, r: f64, v: f64, z: f64, body: &CentralBody<f64>) -> f64 {
-    // Φ for the J2-corrected geopotential: Φ = -GM × (1/r_eff),
-    // where 1/r_eff = 1/r - J2·R_eq²·P₂(cos θ)/r³.
-    let phi = -target_gm * inv_r_effective(r, z, body);
-    let c_sq = SPEED_OF_LIGHT * SPEED_OF_LIGHT;
-    phi / c_sq - 0.5 * v * v / c_sq
-}
-
-/// 1/r_eff = 1/r − J2 · R_eq² · P₂(cos θ) / r³ where P₂ = (3cos²θ − 1)/2.
-fn inv_r_effective(r: f64, z: f64, body: &CentralBody<f64>) -> f64 {
-    let cos_theta = z / r;
-    let legendre_p2 = 0.5 * (3.0 * cos_theta * cos_theta - 1.0);
-    let r_cubed = r * r * r;
-    let req_sq = body.equatorial_radius_m * body.equatorial_radius_m;
-    1.0 / r - body.j2 * req_sq * legendre_p2 / r_cubed
-}
-
-/// Build a SpaceTimeCoordinate with a forward-modeled clock_drift_rate
-/// consistent with the supplied target_gm and body parameters.
-fn build_coord(
-    target_gm: f64,
-    r: f64,
-    v: f64,
-    position: [f64; 3],
-    velocity: [f64; 3],
-    body: &CentralBody<f64>,
-) -> SpaceTimeCoordinate<f64> {
-    SpaceTimeCoordinate::<f64> {
-        timestamp: 0,
-        sat_id: 0,
-        r_m: r,
-        v_ms: v,
-        clock_bias_s: 0.0,
-        position,
-        velocity,
-        clock_drift_rate: forward_drift_rate(target_gm, r, v, position[2], body),
-    }
-}
 
 fn assert_relative(actual: f64, expected: f64, tol: f64) {
     let rel_err = (actual - expected).abs() / expected.abs();
@@ -352,7 +309,13 @@ fn test_error_zero_radius_on_first_coord() {
         &body,
     );
     let result = solve_gm_analytical_kernel(&coord_a, &coord_b, &body);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::TopologyError { .. }
+        ),
+        "expected a TopologyError refusal"
+    );
     match result.unwrap_err().0 {
         PhysicsErrorEnum::TopologyError(msg) => {
             assert!(msg.contains("Non-positive radial distance"));
@@ -383,7 +346,13 @@ fn test_error_negative_radius_on_first_coord() {
         &body,
     );
     let result = solve_gm_analytical_kernel(&coord_a, &coord_b, &body);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::TopologyError { .. }
+        ),
+        "expected a TopologyError refusal"
+    );
     match result.unwrap_err().0 {
         PhysicsErrorEnum::TopologyError(msg) => {
             assert!(msg.contains("Non-positive radial distance"));
@@ -414,7 +383,13 @@ fn test_error_zero_radius_on_second_coord() {
         clock_drift_rate: 0.0,
     };
     let result = solve_gm_analytical_kernel(&coord_a, &coord_b, &body);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::TopologyError { .. }
+        ),
+        "expected a TopologyError refusal"
+    );
     match result.unwrap_err().0 {
         PhysicsErrorEnum::TopologyError(msg) => {
             assert!(msg.contains("Non-positive radial distance"));
@@ -450,7 +425,13 @@ fn test_error_insufficient_radial_separation() {
     );
 
     let result = solve_gm_analytical_kernel(&coord_a, &coord_b, &body);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::TopologyError { .. }
+        ),
+        "expected a TopologyError refusal"
+    );
     match result.unwrap_err().0 {
         PhysicsErrorEnum::TopologyError(msg) => {
             assert!(msg.contains("Insufficient"));

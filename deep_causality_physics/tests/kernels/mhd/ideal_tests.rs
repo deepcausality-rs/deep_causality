@@ -6,7 +6,8 @@
 use deep_causality_linear::CsrMatrix;
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_physics::{
-    Density, PhysicalField, alfven_speed_kernel, ideal_induction_kernel, magnetic_pressure_kernel,
+    Density, PhysicalField, PhysicsErrorEnum, alfven_speed_kernel, ideal_induction_kernel,
+    magnetic_pressure_kernel,
 };
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
@@ -47,12 +48,34 @@ fn test_alfven_speed_errors() {
     let rho_valid = Density::<f64>::new(1.0).unwrap();
 
     // Permeability error
-    assert!(alfven_speed_kernel(&b_field, &rho_valid, 0.0).is_err());
-    assert!(alfven_speed_kernel(&b_field, &rho_valid, -1.0).is_err());
+    assert!(
+        matches!(
+            alfven_speed_kernel(&b_field, &rho_valid, 0.0)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            alfven_speed_kernel(&b_field, &rho_valid, -1.0)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 
     // Density error (zero)
     let rho_zero = Density::<f64>::new_unchecked(0.0);
-    assert!(alfven_speed_kernel(&b_field, &rho_zero, 1.0).is_err());
+    assert!(
+        matches!(
+            alfven_speed_kernel(&b_field, &rho_zero, 1.0).unwrap_err().0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
+    );
 }
 
 #[test]
@@ -63,7 +86,13 @@ fn test_alfven_speed_negative_density_error() {
     let b_vec = CausalMultiVector::new(vec![0.0, 1.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap();
     let b_field = PhysicalField::<f64>::new(b_vec);
     let rho_neg = Density::<f64>::new_unchecked(-1.0);
-    assert!(alfven_speed_kernel(&b_field, &rho_neg, 1.0).is_err());
+    assert!(
+        matches!(
+            alfven_speed_kernel(&b_field, &rho_neg, 1.0).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -82,7 +111,13 @@ fn test_magnetic_pressure() {
 fn test_magnetic_pressure_error() {
     let b_vec = CausalMultiVector::new(vec![0.0, 2.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap();
     let b_field = PhysicalField::<f64>::new(b_vec);
-    assert!(magnetic_pressure_kernel(&b_field, 0.0).is_err());
+    assert!(
+        matches!(
+            magnetic_pressure_kernel(&b_field, 0.0).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -137,7 +172,13 @@ fn test_ideal_induction_dimension_error() {
     .unwrap();
 
     let res = ideal_induction_kernel(&m, &m);
-    assert!(res.is_err());
+    assert!(
+        matches!(
+            res.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 // =============================================================================

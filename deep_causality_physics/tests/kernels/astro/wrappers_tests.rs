@@ -42,9 +42,13 @@ fn test_orbital_velocity_wrapper_error() {
     let radius = Length::<f64>::new(0.0).unwrap();
 
     let effect = orbital_velocity(&mass, &radius);
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
     assert!(
-        effect.is_err(),
-        "Expected error PropagatingEffect for zero radius"
+        err.to_string().contains("Metric Singularity"),
+        "expected a Metric Singularity refusal, got {err}"
     );
 }
 
@@ -76,7 +80,14 @@ fn test_escape_velocity_wrapper_error() {
     let radius = Length::<f64>::new(0.0).unwrap();
 
     let effect = escape_velocity(&mass, &radius);
-    assert!(effect.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Metric Singularity"),
+        "expected a Metric Singularity refusal, got {err}"
+    );
 }
 
 // =============================================================================
@@ -125,6 +136,18 @@ fn test_schwarzschild_radius_wrapper_error_negative_mass() {
     let mass = Mass::<f64>::new_unchecked(-1.989e30);
 
     let effect = schwarzschild_radius(&mass);
+    // The refusal must name its cause: a wrapper forwards the kernel's `PhysicsError`
+    // text through a `CausalityError`, and asserting it keeps the *reason* pinned.
+    assert!(
+        effect
+            .error()
+            .expect("the call must fail")
+            .to_string()
+            .contains("Physical Invariant Broken: Length cannot be negative"),
+        "unexpected refusal: {:?}",
+        effect.error()
+    );
+
     assert!(
         effect.is_err(),
         "negative mass must produce a negative radius rejected by Length::new"

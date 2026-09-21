@@ -3,7 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::{RotationRateTensor, StrainRateTensor, VelocityGradient};
+use deep_causality_physics::{
+    PhysicsErrorEnum, RotationRateTensor, StrainRateTensor, VelocityGradient,
+};
 
 // =============================================================================
 // VelocityGradient — Jacobian convention pinned at construction
@@ -20,7 +22,13 @@ fn test_velocity_gradient_new_valid() {
 fn test_velocity_gradient_rejects_non_finite() {
     let mut m = [[0.0; 3]; 3];
     m[1][2] = f64::NAN;
-    assert!(VelocityGradient::<f64>::new(m).is_err());
+    assert!(
+        matches!(
+            VelocityGradient::<f64>::new(m).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

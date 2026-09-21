@@ -5,8 +5,9 @@
 
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_physics::{
-    chronometric_volume, chronometric_volume_kernel, einstein_tensor, geodesic_deviation,
-    spacetime_interval, time_dilation_angle,
+    chronometric_volume, chronometric_volume_kernel, einstein_tensor, einstein_tensor_kernel,
+    geodesic_deviation, geodesic_deviation_kernel, spacetime_interval, spacetime_interval_kernel,
+    time_dilation_angle, time_dilation_angle_kernel,
 };
 use deep_causality_tensor::CausalTensor;
 
@@ -16,8 +17,16 @@ fn test_einstein_tensor_wrapper_success() {
     let metric = CausalTensor::new(vec![1.0, 0.0, 0.0, 1.0], vec![2, 2]).unwrap();
     let scalar_r = 2.0;
 
+    // Delegation, not merely success: `assert!(effect.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
     let effect = einstein_tensor(&ricci, scalar_r, &metric);
-    assert!(effect.is_ok());
+    let carried = effect.value_cloned().unwrap();
+    let direct = einstein_tensor_kernel(&ricci, scalar_r, &metric).unwrap();
+    assert_eq!(
+        carried.as_slice(),
+        direct.as_slice(),
+        "einstein_tensor must carry the value its kernel produced"
+    );
 }
 
 #[test]
@@ -28,8 +37,13 @@ fn test_geodesic_deviation_wrapper_success() {
     let velocity: [f64; 4] = [1.0, 0.0, 0.0, 0.0];
     let separation: [f64; 4] = [0.0, 1.0, 0.0, 0.0];
 
+    // Delegation, not merely success.
     let effect = geodesic_deviation(&riemann, &velocity, &separation);
-    assert!(effect.is_ok());
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        geodesic_deviation_kernel(&riemann, &velocity, &separation).unwrap(),
+        "geodesic_deviation must carry the value its kernel produced"
+    );
 }
 
 #[test]
@@ -40,7 +54,14 @@ fn test_geodesic_deviation_wrapper_error() {
     let separation: [f64; 4] = [0.0, 1.0, 0.0, 0.0];
 
     let effect = geodesic_deviation(&riemann, &velocity, &separation);
-    assert!(effect.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Dimension Mismatch"),
+        "expected a Dimension Mismatch refusal, got {err}"
+    );
 }
 
 #[test]
@@ -54,8 +75,13 @@ fn test_spacetime_interval_wrapper_success() {
     .unwrap();
     let metric = Metric::Minkowski(4);
 
+    // Delegation, not merely success.
     let effect = spacetime_interval(&mv, &metric);
-    assert!(effect.is_ok());
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        spacetime_interval_kernel(&mv, &metric).unwrap(),
+        "spacetime_interval must carry the value its kernel produced"
+    );
 }
 
 #[test]
@@ -68,7 +94,14 @@ fn test_spacetime_interval_wrapper_metric_mismatch_error() {
     let metric = Metric::Minkowski(4);
 
     let effect = spacetime_interval(&mv, &metric);
-    assert!(effect.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Metric Singularity"),
+        "expected a Metric Singularity refusal, got {err}"
+    );
 }
 
 #[test]
@@ -88,8 +121,13 @@ fn test_time_dilation_angle_wrapper_success() {
     )
     .unwrap();
 
+    // Delegation, not merely success.
     let effect = time_dilation_angle(&t1, &t2);
-    assert!(effect.is_ok());
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        time_dilation_angle_kernel(&t1, &t2).unwrap(),
+        "time_dilation_angle must carry the value its kernel produced"
+    );
 }
 
 #[test]
@@ -100,6 +138,18 @@ fn test_einstein_tensor_wrapper_error() {
     let metric = CausalTensor::new(vec![1.0; 9], vec![3, 3]).unwrap();
 
     let effect = einstein_tensor(&ricci, 2.0, &metric);
+    // The refusal must name its cause: a wrapper forwards the kernel's `PhysicsError`
+    // text through a `CausalityError`, and asserting it keeps the *reason* pinned.
+    assert!(
+        effect
+            .error()
+            .expect("the call must fail")
+            .to_string()
+            .contains("Ricci and metric shapes must match"),
+        "unexpected refusal: {:?}",
+        effect.error()
+    );
+
     assert!(
         effect.is_err(),
         "Shape mismatch must propagate as error effect"
@@ -114,9 +164,13 @@ fn test_time_dilation_angle_wrapper_error() {
     let t2 = CausalMultiVector::new(vec![0.0; 8], Metric::Euclidean(3)).unwrap();
 
     let effect = time_dilation_angle(&t1, &t2);
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
     assert!(
-        effect.is_err(),
-        "Metric mismatch must propagate as error effect"
+        err.to_string().contains("Metric Singularity"),
+        "expected a Metric Singularity refusal, got {err}"
     );
 }
 
@@ -129,9 +183,13 @@ fn test_chronometric_volume_wrapper_error() {
     let c = CausalMultiVector::new(vec![0.0; 8], Metric::Euclidean(3)).unwrap();
 
     let effect = chronometric_volume(&a, &b, &c);
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
     assert!(
-        effect.is_err(),
-        "Metric mismatch must propagate as error effect"
+        err.to_string().contains("Metric Singularity"),
+        "expected a Metric Singularity refusal, got {err}"
     );
 }
 

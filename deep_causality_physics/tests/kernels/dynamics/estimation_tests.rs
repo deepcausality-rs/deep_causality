@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::kalman_filter_linear_kernel;
+use deep_causality_physics::{PhysicsErrorEnum, kalman_filter_linear_kernel};
 use deep_causality_tensor::CausalTensor;
 
 #[test]
@@ -65,7 +65,13 @@ fn test_kalman_filter_singular_error() {
     let result = kalman_filter_linear_kernel::<f64>(&x_pred, &p_pred, &measurement, &h, &r, &q);
 
     // Attempting to invert singular matrix S should return error
-    assert!(result.is_err(), "Should return error for singular S matrix");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
+    );
 }
 
 #[test]
@@ -86,7 +92,13 @@ fn test_kalman_filter_innovation_covariance_shape_mismatch() {
 
     let result = kalman_filter_linear_kernel::<f64>(&x_pred, &p_pred, &measurement, &h, &r, &q);
 
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
     let err = result.unwrap_err();
     match err.0 {
         deep_causality_physics::PhysicsErrorEnum::DimensionMismatch(msg) => {
@@ -183,7 +195,15 @@ fn test_master_equation_rejects_a_history_shorter_than_the_memory_kernel() {
     let history: Vec<Vec<Probability<f64>>> = vec![];
     let mk = vec![CausalTensor::new(vec![0.1], vec![1, 1]).unwrap()];
 
-    assert!(generalized_master_equation_kernel(&state, &history, None, &mk).is_err());
+    assert!(
+        matches!(
+            generalized_master_equation_kernel(&state, &history, None, &mk)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -198,5 +218,13 @@ fn test_master_equation_rejects_a_history_entry_of_the_wrong_dimension() {
     ]];
     let mk = vec![CausalTensor::new(vec![0.1], vec![1, 1]).unwrap()];
 
-    assert!(generalized_master_equation_kernel(&state, &history, None, &mk).is_err());
+    assert!(
+        matches!(
+            generalized_master_equation_kernel(&state, &history, None, &mk)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }

@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::ReactionRate;
+use deep_causality_physics::{PhysicsErrorEnum, ReactionRate};
 
 #[test]
 fn test_reaction_rate_valid() {
@@ -14,13 +14,31 @@ fn test_reaction_rate_valid() {
 
 #[test]
 fn test_reaction_rate_rejects_negative() {
-    assert!(ReactionRate::<f64>::new(-1.0).is_err());
+    assert!(
+        matches!(
+            ReactionRate::<f64>::new(-1.0).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
 fn test_reaction_rate_rejects_nonfinite() {
-    assert!(ReactionRate::<f64>::new(f64::NAN).is_err());
-    assert!(ReactionRate::<f64>::new(f64::INFINITY).is_err());
+    assert!(
+        matches!(
+            ReactionRate::<f64>::new(f64::NAN).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            ReactionRate::<f64>::new(f64::INFINITY).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

@@ -17,7 +17,13 @@ fn test_concentration_new_valid() {
 fn test_concentration_new_negative_rejected() {
     let t = deep_causality_tensor::CausalTensor::new(vec![0.1, -0.5, 0.3], vec![3]).unwrap();
     let c = deep_causality_physics::Concentration::new(t);
-    assert!(c.is_err());
+    assert!(
+        matches!(
+            c.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
     match c.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(_) => {}
         other => panic!("expected PhysicalInvariantBroken, got {other:?}"),

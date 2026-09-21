@@ -4,11 +4,11 @@
  */
 
 use deep_causality_physics::{
-    Pressure, SpecificEnthalpy, Temperature, Velocity3, VelocityGradient, ViscousStress,
-    area_mach_ratio_kernel, entropy_production_rate_kernel, isentropic_density_ratio_kernel,
-    isentropic_pressure_ratio_kernel, isentropic_temperature_ratio_kernel,
-    specific_enthalpy_kernel, speed_of_sound_ideal_gas_kernel, total_enthalpy_kernel,
-    total_pressure_isentropic_kernel, total_temperature_isentropic_kernel,
+    PhysicsErrorEnum, Pressure, SpecificEnthalpy, Temperature, Velocity3, VelocityGradient,
+    ViscousStress, area_mach_ratio_kernel, entropy_production_rate_kernel,
+    isentropic_density_ratio_kernel, isentropic_pressure_ratio_kernel,
+    isentropic_temperature_ratio_kernel, specific_enthalpy_kernel, speed_of_sound_ideal_gas_kernel,
+    total_enthalpy_kernel, total_pressure_isentropic_kernel, total_temperature_isentropic_kernel,
 };
 
 const TOL: f64 = 1e-6;
@@ -32,13 +32,29 @@ fn test_speed_of_sound_air_at_room_temperature() {
 #[test]
 fn test_speed_of_sound_errors_on_zero_temperature() {
     let t = Temperature::<f64>::new(0.0).unwrap();
-    assert!(speed_of_sound_ideal_gas_kernel(1.4, 287.0, &t).is_err());
+    assert!(
+        matches!(
+            speed_of_sound_ideal_gas_kernel(1.4, 287.0, &t)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
 fn test_speed_of_sound_errors_on_negative_gamma() {
     let t = Temperature::<f64>::new(293.15).unwrap();
-    assert!(speed_of_sound_ideal_gas_kernel(-1.0, 287.0, &t).is_err());
+    assert!(
+        matches!(
+            speed_of_sound_ideal_gas_kernel(-1.0, 287.0, &t)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 // =============================================================================
@@ -104,8 +120,24 @@ fn test_total_temperature_at_mach_one_for_air() {
 #[test]
 fn test_total_temperature_errors_on_gamma_le_1() {
     let t = Temperature::<f64>::new(300.0).unwrap();
-    assert!(total_temperature_isentropic_kernel(&t, 1.0, 1.0_f64).is_err());
-    assert!(total_temperature_isentropic_kernel(&t, 1.0, 0.5_f64).is_err());
+    assert!(
+        matches!(
+            total_temperature_isentropic_kernel(&t, 1.0, 1.0_f64)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            total_temperature_isentropic_kernel(&t, 1.0, 0.5_f64)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 // =============================================================================
@@ -132,7 +164,15 @@ fn test_total_pressure_at_mach_one_for_air() {
 #[test]
 fn test_total_pressure_errors_on_gamma_le_1() {
     let p = Pressure::<f64>::new(101_325.0).unwrap();
-    assert!(total_pressure_isentropic_kernel(&p, 1.0, 1.0_f64).is_err());
+    assert!(
+        matches!(
+            total_pressure_isentropic_kernel(&p, 1.0, 1.0_f64)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 // =============================================================================
@@ -185,7 +225,13 @@ fn test_entropy_production_errors_on_zero_temperature() {
     let grad_u = VelocityGradient::<f64>::default();
     let t = Temperature::<f64>::new(0.0).unwrap();
     let r = entropy_production_rate_kernel(&t, &tau, &grad_u, 1.0_f64, &[0.0; 3]);
-    assert!(r.is_err());
+    assert!(
+        matches!(
+            r.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -196,7 +242,13 @@ fn test_entropy_production_errors_on_negative_thermal_conductivity() {
     let grad_u = VelocityGradient::<f64>::default();
     let t = Temperature::<f64>::new(300.0).unwrap();
     let r = entropy_production_rate_kernel(&t, &tau, &grad_u, -1.0_f64, &[1.0, 0.0, 0.0]);
-    assert!(r.is_err());
+    assert!(
+        matches!(
+            r.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -285,14 +337,78 @@ fn test_isentropic_ratio_identity_p_equals_rho_times_t() {
 #[test]
 fn test_isentropic_ratio_guards() {
     // NaN and negative Mach; γ ≤ 1 and NaN γ — all rejected on every kernel.
-    assert!(isentropic_pressure_ratio_kernel(f64::NAN, 1.4).is_err());
-    assert!(isentropic_pressure_ratio_kernel(-0.5_f64, 1.4).is_err());
-    assert!(isentropic_pressure_ratio_kernel(1.0_f64, 1.0).is_err());
-    assert!(isentropic_pressure_ratio_kernel(1.0_f64, f64::NAN).is_err());
-    assert!(isentropic_temperature_ratio_kernel(f64::NAN, 1.4).is_err());
-    assert!(isentropic_temperature_ratio_kernel(1.0_f64, 0.9).is_err());
-    assert!(isentropic_density_ratio_kernel(f64::INFINITY, 1.4).is_err());
-    assert!(isentropic_density_ratio_kernel(1.0_f64, f64::INFINITY).is_err());
+    assert!(
+        matches!(
+            isentropic_pressure_ratio_kernel(f64::NAN, 1.4)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            isentropic_pressure_ratio_kernel(-0.5_f64, 1.4)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            isentropic_pressure_ratio_kernel(1.0_f64, 1.0)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            isentropic_pressure_ratio_kernel(1.0_f64, f64::NAN)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            isentropic_temperature_ratio_kernel(f64::NAN, 1.4)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            isentropic_temperature_ratio_kernel(1.0_f64, 0.9)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            isentropic_density_ratio_kernel(f64::INFINITY, 1.4)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            isentropic_density_ratio_kernel(1.0_f64, f64::INFINITY)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -366,11 +482,41 @@ fn test_area_mach_ratio_monotone_on_each_branch() {
 #[test]
 fn test_area_mach_ratio_guards() {
     // M = 0 diverges (division by M); NaN/negative M and γ ≤ 1 are rejected.
-    assert!(area_mach_ratio_kernel(0.0_f64, 1.4).is_err());
-    assert!(area_mach_ratio_kernel(-1.0_f64, 1.4).is_err());
-    assert!(area_mach_ratio_kernel(f64::NAN, 1.4).is_err());
-    assert!(area_mach_ratio_kernel(2.0_f64, 1.0).is_err());
-    assert!(area_mach_ratio_kernel(2.0_f64, f64::NAN).is_err());
+    assert!(
+        matches!(
+            area_mach_ratio_kernel(0.0_f64, 1.4).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            area_mach_ratio_kernel(-1.0_f64, 1.4).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            area_mach_ratio_kernel(f64::NAN, 1.4).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            area_mach_ratio_kernel(2.0_f64, 1.0).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            area_mach_ratio_kernel(2.0_f64, f64::NAN).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

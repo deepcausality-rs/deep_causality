@@ -14,7 +14,7 @@
 //! - Cross-section calculations
 
 use deep_causality_physics::theories::{ElectroweakField, ElectroweakOps, ElectroweakParams};
-use deep_causality_physics::{ALPHA_EM, EM_COUPLING, HIGGS_MASS, TOP_MASS};
+use deep_causality_physics::{ALPHA_EM, EM_COUPLING, HIGGS_MASS, PhysicsErrorEnum, TOP_MASS};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{BaseTopology, Manifold, Simplex, SimplicialComplexBuilder};
 
@@ -337,7 +337,13 @@ fn test_neutrino_electron_cross_section_invalid() {
     let params: ElectroweakParams<f64> = ElectroweakParams::standard_model();
 
     let result = params.neutrino_electron_cross_section(-1.0);
-    assert!(result.is_err(), "Negative energy should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -387,25 +393,49 @@ fn test_electroweak_field_west_coast() {
 #[test]
 fn test_with_mixing_angle_zero_error() {
     let result = ElectroweakParams::<f64>::with_mixing_angle(0.0);
-    assert!(result.is_err(), "sin²θ_W = 0 should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
 fn test_with_mixing_angle_negative_error() {
     let result = ElectroweakParams::<f64>::with_mixing_angle(-0.1);
-    assert!(result.is_err(), "sin²θ_W < 0 should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
 fn test_with_mixing_angle_one_error() {
     let result = ElectroweakParams::<f64>::with_mixing_angle(1.0);
-    assert!(result.is_err(), "sin²θ_W = 1 should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
 fn test_with_mixing_angle_greater_than_one_error() {
     let result = ElectroweakParams::<f64>::with_mixing_angle(1.5);
-    assert!(result.is_err(), "sin²θ_W > 1 should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -475,14 +505,26 @@ fn test_corrections_accessor() {
 fn test_z_resonance_cross_section_negative_energy_error() {
     let params: ElectroweakParams<f64> = ElectroweakParams::standard_model();
     let result = params.z_resonance_cross_section(-10.0, 2.5);
-    assert!(result.is_err(), "Negative energy should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
 fn test_z_resonance_cross_section_zero_energy_error() {
     let params: ElectroweakParams<f64> = ElectroweakParams::standard_model();
     let result = params.z_resonance_cross_section(0.0, 2.5);
-    assert!(result.is_err(), "Zero energy should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -693,7 +735,13 @@ fn test_neutrino_electron_cross_section_zero_energy_error() {
     let params: ElectroweakParams<f64> = ElectroweakParams::standard_model();
 
     let result = params.neutrino_electron_cross_section(0.0);
-    assert!(result.is_err(), "Zero energy should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]

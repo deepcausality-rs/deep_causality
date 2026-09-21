@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::IndexOfRefraction;
+use deep_causality_physics::{IndexOfRefraction, PhysicsErrorEnum};
 
 #[test]
 fn test_index_of_refraction_new_valid() {
@@ -46,7 +46,13 @@ fn test_index_of_refraction_metamaterial_negative() {
 fn test_index_of_refraction_zero_error() {
     // Zero index is invalid (causes division errors)
     let n = IndexOfRefraction::<f64>::new(0.0);
-    assert!(n.is_err(), "Zero index should error");
+    assert!(
+        matches!(
+            n.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

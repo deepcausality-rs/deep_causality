@@ -33,7 +33,13 @@ fn test_specific_enthalpy_new_negative_allowed() {
 #[test]
 fn test_specific_enthalpy_new_nan_error() {
     let h = SpecificEnthalpy::<f64>::new(f64::NAN);
-    assert!(h.is_err());
+    assert!(
+        matches!(
+            h.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
     match &h.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => assert!(msg.contains("finite")),
         _ => panic!("Expected finite-check error"),
@@ -42,8 +48,22 @@ fn test_specific_enthalpy_new_nan_error() {
 
 #[test]
 fn test_specific_enthalpy_new_infinity_error() {
-    assert!(SpecificEnthalpy::<f64>::new(f64::INFINITY).is_err());
-    assert!(SpecificEnthalpy::<f64>::new(f64::NEG_INFINITY).is_err());
+    assert!(
+        matches!(
+            SpecificEnthalpy::<f64>::new(f64::INFINITY).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            SpecificEnthalpy::<f64>::new(f64::NEG_INFINITY)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

@@ -20,7 +20,13 @@ fn test_cauchy_stress_new_valid_symmetric() {
 fn test_cauchy_stress_rejects_asymmetric() {
     let sigma = [[100.0, 5.0, 3.0], [99.0, 200.0, 7.0], [3.0, 7.0, 300.0]];
     let r = CauchyStress::<f64>::new(sigma);
-    assert!(r.is_err());
+    assert!(
+        matches!(
+            r.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
     match &r.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => assert!(msg.contains("symmetric")),
         _ => panic!("Expected PhysicalInvariantBroken"),
@@ -30,7 +36,13 @@ fn test_cauchy_stress_rejects_asymmetric() {
 #[test]
 fn test_cauchy_stress_rejects_non_finite() {
     let sigma = [[0.0, 0.0, 0.0], [0.0, f64::NAN, 0.0], [0.0, 0.0, 0.0]];
-    assert!(CauchyStress::<f64>::new(sigma).is_err());
+    assert!(
+        matches!(
+            CauchyStress::<f64>::new(sigma).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

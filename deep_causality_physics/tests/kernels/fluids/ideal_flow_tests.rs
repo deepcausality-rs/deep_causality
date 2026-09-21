@@ -4,9 +4,9 @@
  */
 
 use deep_causality_physics::{
-    Density, Length, Pressure, Speed, Velocity3, bernoulli_total_head_kernel, circulation_kernel,
-    dynamic_pressure_kernel, kutta_joukowski_lift_kernel, stream_function_2d_kernel,
-    velocity_potential_2d_kernel,
+    Density, Length, PhysicsErrorEnum, Pressure, Speed, Velocity3, bernoulli_total_head_kernel,
+    circulation_kernel, dynamic_pressure_kernel, kutta_joukowski_lift_kernel,
+    stream_function_2d_kernel, velocity_potential_2d_kernel,
 };
 
 const TOL: f64 = 1e-10;
@@ -67,7 +67,13 @@ fn test_bernoulli_head_errors_on_zero_density() {
     let rho = Density::<f64>::new(0.0).unwrap();
     let u = Speed::<f64>::new(1.0).unwrap();
     let h = Length::<f64>::new(0.0).unwrap();
-    assert!(bernoulli_total_head_kernel(&p, &rho, &u, &h).is_err());
+    assert!(
+        matches!(
+            bernoulli_total_head_kernel(&p, &rho, &u, &h).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -148,7 +154,13 @@ fn test_circulation_pure_rotation_picks_up_vorticity() {
 fn test_circulation_errors_on_length_mismatch() {
     let velocities = vec![Velocity3::<f64>::new([1.0, 0.0, 0.0]).unwrap(); 3];
     let tangents: Vec<[f64; 3]> = vec![[1.0, 0.0, 0.0]; 2];
-    assert!(circulation_kernel(&velocities, &tangents).is_err());
+    assert!(
+        matches!(
+            circulation_kernel(&velocities, &tangents).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

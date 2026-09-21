@@ -6,9 +6,10 @@
 use deep_causality_num_complex::Complex;
 use deep_causality_physics::{
     AbcdMatrix, ComplexBeamParameter, IndexOfRefraction, JonesVector, Length, RayAngle, RayHeight,
-    StokesVector, Wavelength, beam_spot_size, degree_of_polarization, gaussian_q_propagation,
-    grating_equation, jones_rotation, lens_maker, ray_transfer, single_slit_irradiance, snells_law,
-    stokes_from_jones,
+    StokesVector, Wavelength, beam_spot_size, beam_spot_size_kernel, degree_of_polarization,
+    gaussian_q_propagation, grating_equation, jones_rotation, lens_maker, lens_maker_kernel,
+    ray_transfer, ray_transfer_kernel, single_slit_irradiance, single_slit_irradiance_kernel,
+    snells_law, snells_law_kernel, stokes_from_jones, stokes_from_jones_kernel,
 };
 use deep_causality_tensor::CausalTensor;
 
@@ -18,12 +19,29 @@ use deep_causality_tensor::CausalTensor;
 
 #[test]
 fn test_wrapper_ray_transfer() {
-    let m = AbcdMatrix::<f64>::new(CausalTensor::identity(&[2, 2]).unwrap());
-    let h = RayHeight::<f64>::default();
-    let a = RayAngle::<f64>::default();
+    // The identity matrix on a default (zero) ray leaves every implementation's answer at zero,
+    // so it discriminates nothing. A thin lens of focal length f has ABCD = [[1, 0], [-1/f, 1]],
+    // which leaves the height alone and bends the angle by -h/f: with h = 2 and f = 4,
+    // (h, a) = (2, 0.1) goes to (2, 0.1 - 0.5) = (2, -0.4).
+    let f = 4.0_f64;
+    let m = AbcdMatrix::<f64>::new(
+        CausalTensor::new(vec![1.0, 0.0, -1.0 / f, 1.0], vec![2, 2]).unwrap(),
+    );
+    let h = RayHeight::<f64>::new(2.0).unwrap();
+    let a = RayAngle::<f64>::new(0.1).unwrap();
 
     let result = ray_transfer(&m, h, a);
-    assert!(result.is_ok());
+    let (h_out, a_out) = result.value_cloned().unwrap();
+    assert!(
+        (h_out.value() - 2.0).abs() < 1e-12,
+        "height = {}",
+        h_out.value()
+    );
+    assert!(
+        (a_out.value() + 0.4).abs() < 1e-12,
+        "angle = {}",
+        a_out.value()
+    );
 }
 
 #[test]
@@ -33,7 +51,14 @@ fn test_wrapper_ray_transfer_error() {
     let a = RayAngle::<f64>::default();
 
     let result = ray_transfer(&m, h, a);
-    assert!(result.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = result.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Dimension Mismatch"),
+        "expected a Dimension Mismatch refusal, got {err}"
+    );
 }
 
 #[test]
@@ -79,7 +104,14 @@ fn test_wrapper_snells_law_tir() {
 
     let result = snells_law(n1, n2, theta1);
     // Should error for TIR
-    assert!(result.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = result.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 #[test]
@@ -101,7 +133,14 @@ fn test_wrapper_lens_maker() {
 fn test_wrapper_lens_maker_error() {
     let n = IndexOfRefraction::<f64>::new(1.5).unwrap();
     let result = lens_maker(n, 0.0, 0.1);
-    assert!(result.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = result.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Singularity"),
+        "expected a Singularity refusal, got {err}"
+    );
 }
 
 // ============================================================================
@@ -138,7 +177,14 @@ fn test_wrapper_stokes_from_jones_error() {
     let j =
         JonesVector::<f64>::new(CausalTensor::new(vec![Complex::new(1.0, 0.0)], vec![1]).unwrap());
     let result = stokes_from_jones(&j);
-    assert!(result.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = result.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Dimension Mismatch"),
+        "expected a Dimension Mismatch refusal, got {err}"
+    );
 }
 
 #[test]
@@ -169,7 +215,14 @@ fn test_wrapper_jones_rotation_error() {
     let m = CausalTensor::new(vec![Complex::new(1.0, 0.0)], vec![1]).unwrap();
     let a = RayAngle::<f64>::default();
     let result = jones_rotation(&m, a);
-    assert!(result.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = result.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Dimension Mismatch"),
+        "expected a Dimension Mismatch refusal, got {err}"
+    );
 }
 
 #[test]
@@ -210,7 +263,14 @@ fn test_wrapper_degree_of_polarization_error() {
         StokesVector::<f64>::new(CausalTensor::new(vec![-1.0, 0.0, 0.0, 0.0], vec![4]).unwrap())
             .unwrap();
     let result = degree_of_polarization(&s);
-    assert!(result.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = result.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 // ============================================================================
@@ -240,7 +300,14 @@ fn test_wrapper_gaussian_q_propagation_error() {
     let q = ComplexBeamParameter::<f64>::new(Complex::new(0.0, 1.0)).unwrap();
     let m = AbcdMatrix::<f64>::new(CausalTensor::new(vec![1.0], vec![1]).unwrap());
     let result = gaussian_q_propagation(q, &m);
-    assert!(result.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = result.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Dimension Mismatch"),
+        "expected a Dimension Mismatch refusal, got {err}"
+    );
 }
 
 #[test]
@@ -262,7 +329,14 @@ fn test_wrapper_beam_spot_size_error() {
     let q = ComplexBeamParameter::<f64>::new_unchecked(Complex::new(1.0, 0.0));
     let w = Wavelength::<f64>::new(1e-6).unwrap();
     let result = beam_spot_size(q, w);
-    assert!(result.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = result.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 // ============================================================================
@@ -309,7 +383,14 @@ fn test_wrapper_single_slit_irradiance_error() {
     let a = RayAngle::<f64>::default();
     let w = Wavelength::<f64>::new(1e-6).unwrap();
     let result = single_slit_irradiance(i0, l, a, w);
-    assert!(result.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = result.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 #[test]
@@ -355,7 +436,14 @@ fn test_wrapper_grating_equation_error_evanescent() {
 
     let result = grating_equation(pitch, order, incidence, wavelength);
     // sin(θ) = 5 * 800e-9 / 1e-6 = 4.0 > 1, should error
-    assert!(result.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = result.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 // ============================================================================
@@ -368,28 +456,70 @@ fn test_wrappers_combined() {
     let m = AbcdMatrix::<f64>::new(CausalTensor::identity(&[2, 2]).unwrap());
     let h = RayHeight::<f64>::default();
     let a = RayAngle::<f64>::default();
-    assert!(ray_transfer(&m, h, a).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = ray_transfer(&m, h, a);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        ray_transfer_kernel(&m, h, a).unwrap(),
+        "ray_transfer must carry the value its kernel produced"
+    );
 
     // Snells
     let n1 = IndexOfRefraction::<f64>::new(1.0).unwrap();
     let n2 = IndexOfRefraction::<f64>::new(1.5).unwrap();
-    assert!(snells_law(n1, n2, a).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = snells_law(n1, n2, a);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        snells_law_kernel(n1, n2, a).unwrap(),
+        "snells_law must carry the value its kernel produced"
+    );
 
     // Lens
-    assert!(lens_maker(n2, 1.0, -1.0).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = lens_maker(n2, 1.0, -1.0);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        lens_maker_kernel(n2, 1.0, -1.0).unwrap(),
+        "lens_maker must carry the value its kernel produced"
+    );
 
     // Jones
     let j = JonesVector::<f64>::new(
         CausalTensor::new(vec![Complex::new(1.0, 0.0); 2], vec![2]).unwrap(),
     );
-    assert!(stokes_from_jones(&j).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = stokes_from_jones(&j);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        stokes_from_jones_kernel(&j).unwrap(),
+        "stokes_from_jones must carry the value its kernel produced"
+    );
 
     // Beam
     let q = ComplexBeamParameter::<f64>::new(Complex::new(0.0, 1.0)).unwrap();
     let w = Wavelength::<f64>::new(1e-6).unwrap();
-    assert!(beam_spot_size(q, w).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = beam_spot_size(q, w);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        beam_spot_size_kernel(q, w).unwrap(),
+        "beam_spot_size must carry the value its kernel produced"
+    );
 
     // Diffraction
     let l = Length::new(1.0).unwrap();
-    assert!(single_slit_irradiance(1.0, l, a, w).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = single_slit_irradiance(1.0, l, a, w);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        single_slit_irradiance_kernel(1.0, l, a, w).unwrap(),
+        "single_slit_irradiance must carry the value its kernel produced"
+    );
 }

@@ -5,7 +5,7 @@
 
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_physics::{
-    Displacement, Energy, Momentum, Ratio, Speed, Stiffness, TwistAngle,
+    Displacement, Energy, Momentum, PhysicsErrorEnum, Ratio, Speed, Stiffness, TwistAngle,
     bistritzer_macdonald_kernel, foppl_von_karman_strain_kernel,
     foppl_von_karman_strain_simple_kernel,
 };
@@ -33,7 +33,13 @@ fn test_bistritzer_macdonald_cutoff_error() {
     let k = Momentum::default();
 
     let res = bistritzer_macdonald_kernel(theta, w, vf, k, 2);
-    assert!(res.is_err());
+    assert!(
+        matches!(
+            res.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::CalculationError { .. }
+        ),
+        "expected a CalculationError refusal"
+    );
 }
 
 #[test]
@@ -55,6 +61,19 @@ fn test_foppl_von_karman_strain_simple() {
     let data = sigma.data();
     assert!((data[0] - 200.0).abs() < 1e-10);
     assert!((data[3] - 200.0).abs() < 1e-10);
+}
+
+/// The triangular manifold with caller-supplied vertex data, so the strain is not identically
+/// zero. `create_flat_manifold` fills every simplex with `0.0`, where `du` and `dw` both vanish
+/// and any implementation of the strain returns zero.
+fn manifold_with_data(data: Vec<f64>) -> SimplicialManifold<f64, f64> {
+    let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0, 0.5, 0.866], vec![3, 2]).unwrap();
+    let point_cloud =
+        PointCloud::new(points, CausalTensor::new(vec![0.0; 3], vec![3]).unwrap(), 0).unwrap();
+    let complex = point_cloud.triangulate(1.1).unwrap();
+    let num = complex.total_simplices();
+    assert_eq!(data.len(), num, "data must match the simplex count");
+    Manifold::new(complex, CausalTensor::new(data, vec![num]).unwrap(), 0).unwrap()
 }
 
 // Helper for manifold tests
@@ -84,7 +103,13 @@ fn test_foppl_von_karman_strain_simple_rank_error() {
     let nu = Ratio::new(0.5).unwrap();
 
     let res = foppl_von_karman_strain_simple_kernel(&disp_u, e, nu);
-    assert!(res.is_err());
+    assert!(
+        matches!(
+            res.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 // Build a manifold from a point cloud with a configurable number of vertices,
@@ -116,23 +141,81 @@ fn test_foppl_von_karman_strain_full_shape_mismatch() {
     let nu = Ratio::new(0.3).unwrap();
 
     let res = foppl_von_karman_strain_kernel(&u_man, &w_man, e, nu);
-    assert!(res.is_err());
+    assert!(
+        matches!(
+            res.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
-fn test_foppl_von_karman_strain_full() {
+fn test_foppl_von_karman_strain_full_vanishes_on_a_flat_manifold() {
+    // The flat limit: with zero displacement both `du` and `dw` vanish, so the strain is zero for
+    // any implementation. It pins nothing on its own and sits beside the two tests below.
     let u_man = create_flat_manifold();
     let w_man = create_flat_manifold();
     let e = Stiffness::<f64>::new(100.0).unwrap();
     let nu = Ratio::new(0.3).unwrap();
 
-    let res = foppl_von_karman_strain_kernel(&u_man, &w_man, e, nu);
-
-    // Expect success even if result is zero (flat manifold, zero data)
-    assert!(res.is_ok());
-    let sigma = res.unwrap();
-    // Should be zero tensor
+    let sigma = foppl_von_karman_strain_kernel(&u_man, &w_man, e, nu).unwrap();
     for val in sigma.data() {
         assert!((val - 0.0).abs() < 1e-10);
     }
+}
+
+#[test]
+fn test_foppl_von_karman_strain_full_is_non_zero_for_a_displaced_manifold() {
+    let u_man = manifold_with_data(vec![1.0, -2.0, 3.0, 0.0, 0.0, 0.0, 0.0]);
+    let w_man = create_flat_manifold();
+    let e = Stiffness::<f64>::new(100.0).unwrap();
+    let nu = Ratio::new(0.3).unwrap();
+
+    let sigma = foppl_von_karman_strain_kernel(&u_man, &w_man, e, nu).unwrap();
+    assert!(
+        sigma.data().iter().any(|v: &f64| v.abs() > 1e-9),
+        "an in-plane displacement must produce a non-zero stress"
+    );
+}
+
+#[test]
+fn test_foppl_von_karman_out_of_plane_term_is_quadratic_in_the_deflection() {
+    // eps = du + (1/2)(dw)^2, so the out-of-plane contribution is quadratic in w while the
+    // in-plane one is linear in u. Holding u fixed and doubling w must quadruple the difference
+    // from the w = 0 case:
+    //
+    //     sigma(u, 2w) - sigma(u, 0) = 4 [sigma(u, w) - sigma(u, 0)]
+    //
+    // A strain that dropped the square, or took `dw` linearly, only doubles it.
+    let e = Stiffness::<f64>::new(100.0).unwrap();
+    let nu = Ratio::new(0.3).unwrap();
+    let u_man = manifold_with_data(vec![0.5, -1.0, 1.5, 0.0, 0.0, 0.0, 0.0]);
+    let w = vec![1.0, -2.0, 3.0, 0.0, 0.0, 0.0, 0.0];
+    let w2: Vec<f64> = w.iter().map(|v| v * 2.0).collect();
+
+    let flat = foppl_von_karman_strain_kernel(&u_man, &create_flat_manifold(), e, nu).unwrap();
+    let single = foppl_von_karman_strain_kernel(&u_man, &manifold_with_data(w), e, nu).unwrap();
+    let doubled = foppl_von_karman_strain_kernel(&u_man, &manifold_with_data(w2), e, nu).unwrap();
+
+    let base: &[f64] = flat.data();
+    let one: &[f64] = single.data();
+    let two: &[f64] = doubled.data();
+
+    let mut saw_a_contribution = false;
+    for i in 0..base.len() {
+        let from_w = one[i] - base[i];
+        let from_2w = two[i] - base[i];
+        if from_w.abs() > 1e-9 {
+            saw_a_contribution = true;
+        }
+        assert!(
+            (from_2w - 4.0 * from_w).abs() < 1e-9,
+            "component {i}: doubling w gave {from_2w}, expected 4 x {from_w}"
+        );
+    }
+    assert!(
+        saw_a_contribution,
+        "the out-of-plane term must actually contribute, or the relation above is vacuous"
+    );
 }

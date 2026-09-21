@@ -4,10 +4,11 @@
  */
 
 use deep_causality_physics::{
-    KinematicViscosity, ReynoldsStress, StrainRateTensor, Velocity3, VelocityGradient,
-    dissipation_rate_kernel, eddy_viscosity_boussinesq_kernel, integral_length_scale_kernel,
-    kolmogorov_length_kernel, kolmogorov_time_kernel, kolmogorov_velocity_kernel,
-    reynolds_stress_kernel, taylor_microscale_kernel, turbulent_kinetic_energy_kernel,
+    KinematicViscosity, PhysicsErrorEnum, ReynoldsStress, StrainRateTensor, Velocity3,
+    VelocityGradient, dissipation_rate_kernel, eddy_viscosity_boussinesq_kernel,
+    integral_length_scale_kernel, kolmogorov_length_kernel, kolmogorov_time_kernel,
+    kolmogorov_velocity_kernel, reynolds_stress_kernel, taylor_microscale_kernel,
+    turbulent_kinetic_energy_kernel,
 };
 
 const TOL: f64 = 1e-10;
@@ -104,28 +105,70 @@ fn test_kolmogorov_identity_eta_over_u_eta_tau_eta() {
 #[test]
 fn test_kolmogorov_length_errors_on_zero_epsilon() {
     let nu = KinematicViscosity::<f64>::new(1.0e-5).unwrap();
-    assert!(kolmogorov_length_kernel(&nu, 0.0).is_err());
-    assert!(kolmogorov_length_kernel(&nu, -1.0).is_err());
+    assert!(
+        matches!(
+            kolmogorov_length_kernel(&nu, 0.0).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            kolmogorov_length_kernel(&nu, -1.0).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
 fn test_kolmogorov_time_errors_on_zero_epsilon() {
     let nu = KinematicViscosity::<f64>::new(1.0e-5).unwrap();
-    assert!(kolmogorov_time_kernel(&nu, 0.0).is_err());
+    assert!(
+        matches!(
+            kolmogorov_time_kernel(&nu, 0.0).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
 fn test_kolmogorov_velocity_errors_on_zero_epsilon() {
     let nu = KinematicViscosity::<f64>::new(1.0e-5).unwrap();
-    assert!(kolmogorov_velocity_kernel(&nu, 0.0).is_err());
+    assert!(
+        matches!(
+            kolmogorov_velocity_kernel(&nu, 0.0).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
 fn test_kolmogorov_errors_on_zero_nu() {
     let nu = KinematicViscosity::<f64>::new(0.0).unwrap();
-    assert!(kolmogorov_length_kernel(&nu, 1.0_f64).is_err());
-    assert!(kolmogorov_time_kernel(&nu, 1.0_f64).is_err());
-    assert!(kolmogorov_velocity_kernel(&nu, 1.0_f64).is_err());
+    assert!(
+        matches!(
+            kolmogorov_length_kernel(&nu, 1.0_f64).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            kolmogorov_time_kernel(&nu, 1.0_f64).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            kolmogorov_velocity_kernel(&nu, 1.0_f64).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 // =============================================================================
@@ -147,13 +190,27 @@ fn test_taylor_identity_lambda_sq_eps_eq_15_nu_k() {
 #[test]
 fn test_taylor_errors_on_negative_k() {
     let nu = KinematicViscosity::<f64>::new(1.0e-5).unwrap();
-    assert!(taylor_microscale_kernel(-1.0_f64, 1.0e-2, &nu).is_err());
+    assert!(
+        matches!(
+            taylor_microscale_kernel(-1.0_f64, 1.0e-2, &nu)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
 fn test_taylor_errors_on_zero_epsilon() {
     let nu = KinematicViscosity::<f64>::new(1.0e-5).unwrap();
-    assert!(taylor_microscale_kernel(1.0_f64, 0.0, &nu).is_err());
+    assert!(
+        matches!(
+            taylor_microscale_kernel(1.0_f64, 0.0, &nu).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 // =============================================================================
@@ -169,12 +226,24 @@ fn test_integral_length_scale_known_value() {
 
 #[test]
 fn test_integral_length_scale_errors_on_zero_epsilon() {
-    assert!(integral_length_scale_kernel(1.0_f64, 0.0).is_err());
+    assert!(
+        matches!(
+            integral_length_scale_kernel(1.0_f64, 0.0).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
 fn test_integral_length_scale_errors_on_negative_k() {
-    assert!(integral_length_scale_kernel(-1.0_f64, 1.0).is_err());
+    assert!(
+        matches!(
+            integral_length_scale_kernel(-1.0_f64, 1.0).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 // =============================================================================
@@ -235,7 +304,13 @@ fn test_eddy_viscosity_simple_shear() {
 fn test_eddy_viscosity_errors_on_zero_strain() {
     let r = ReynoldsStress::<f64>::default();
     let s = StrainRateTensor::<f64>::default();
-    assert!(eddy_viscosity_boussinesq_kernel(&r, &s, 0.5).is_err());
+    assert!(
+        matches!(
+            eddy_viscosity_boussinesq_kernel(&r, &s, 0.5).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -247,7 +322,13 @@ fn test_eddy_viscosity_errors_on_negative_result() {
         StrainRateTensor::<f64>::new([[0.0, 1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 0.0]]).unwrap();
     // R^dev = R - (2/3)·0 ·I = R. R^dev:S = 2·1·1 + 2·1·1 = 4 (off-diagonals doubled). S:S = 2.
     // ν_t = -4 / (2·2) = -1 → rejected by Viscosity::new.
-    assert!(eddy_viscosity_boussinesq_kernel(&r, &s, 0.0).is_err());
+    assert!(
+        matches!(
+            eddy_viscosity_boussinesq_kernel(&r, &s, 0.0).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 // =============================================================================

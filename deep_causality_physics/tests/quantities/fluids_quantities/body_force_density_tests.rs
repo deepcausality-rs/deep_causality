@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::BodyForceDensity;
+use deep_causality_physics::{BodyForceDensity, PhysicsErrorEnum};
 
 // =============================================================================
 // BodyForceDensity — finiteness only
@@ -17,8 +17,24 @@ fn test_body_force_density_new_valid() {
 
 #[test]
 fn test_body_force_density_rejects_non_finite() {
-    assert!(BodyForceDensity::<f64>::new([f64::NAN, 0.0, 0.0]).is_err());
-    assert!(BodyForceDensity::<f64>::new([0.0, f64::NEG_INFINITY, 0.0]).is_err());
+    assert!(
+        matches!(
+            BodyForceDensity::<f64>::new([f64::NAN, 0.0, 0.0])
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            BodyForceDensity::<f64>::new([0.0, f64::NEG_INFINITY, 0.0])
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

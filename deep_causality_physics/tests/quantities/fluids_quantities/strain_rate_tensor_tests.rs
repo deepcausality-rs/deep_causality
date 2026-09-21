@@ -21,7 +21,13 @@ fn test_strain_rate_tensor_rejects_asymmetric() {
     // S_01 = 2.0 but S_10 = 9.0 — clearly asymmetric
     let s = [[1.0, 2.0, 3.0], [9.0, 4.0, 5.0], [3.0, 5.0, 6.0]];
     let r = StrainRateTensor::<f64>::new(s);
-    assert!(r.is_err());
+    assert!(
+        matches!(
+            r.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
     match &r.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => assert!(msg.contains("symmetric")),
         _ => panic!("Expected PhysicalInvariantBroken"),
@@ -31,7 +37,13 @@ fn test_strain_rate_tensor_rejects_asymmetric() {
 #[test]
 fn test_strain_rate_tensor_rejects_non_finite() {
     let s = [[f64::NAN, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]];
-    assert!(StrainRateTensor::<f64>::new(s).is_err());
+    assert!(
+        matches!(
+            StrainRateTensor::<f64>::new(s).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

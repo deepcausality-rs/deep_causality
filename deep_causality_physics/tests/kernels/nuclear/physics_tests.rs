@@ -4,8 +4,8 @@
  */
 
 use deep_causality_physics::{
-    AmountOfSubstance, HalfLife, Mass, SPEED_OF_LIGHT, Time, binding_energy_kernel,
-    radioactive_decay_kernel,
+    AmountOfSubstance, HalfLife, Mass, PhysicsErrorEnum, SPEED_OF_LIGHT, Time,
+    binding_energy_kernel, radioactive_decay_kernel,
 };
 
 // =============================================================================
@@ -72,8 +72,11 @@ fn test_radioactive_decay_zero_half_life() {
     // This test verifies that HalfLife::<f64>::new(0.0) correctly returns an error
     let half_life_result = HalfLife::<f64>::new(0.0);
     assert!(
-        half_life_result.is_err(),
-        "Zero half-life should be rejected at construction"
+        matches!(
+            half_life_result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
     );
 
     match half_life_result {
@@ -98,8 +101,11 @@ fn test_radioactive_decay_zero_half_life_kernel_singularity() {
 
     let result = radioactive_decay_kernel(&n0, &half_life, &time);
     assert!(
-        result.is_err(),
-        "Zero half-life must yield a Singularity error"
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
     );
 
     match result {

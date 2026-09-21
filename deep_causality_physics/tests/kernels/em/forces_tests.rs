@@ -4,7 +4,7 @@
  */
 
 use deep_causality_multivector::{CausalMultiVector, Metric};
-use deep_causality_physics::lorentz_force_kernel;
+use deep_causality_physics::{PhysicsErrorEnum, lorentz_force_kernel};
 
 // =============================================================================
 // lorentz_force_kernel Tests (F = J × B)
@@ -149,7 +149,13 @@ fn test_lorentz_force_kernel_metric_mismatch_error() {
     .unwrap();
     let b = CausalMultiVector::new(vec![0.0, 1.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap();
 
-    assert!(lorentz_force_kernel(&j, &b).is_err());
+    assert!(
+        matches!(
+            lorentz_force_kernel(&j, &b).unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -168,5 +174,11 @@ fn test_lorentz_force_kernel_overflow_result_is_rejected() {
     )
     .unwrap();
 
-    assert!(lorentz_force_kernel(&j, &b).is_err());
+    assert!(
+        matches!(
+            lorentz_force_kernel(&j, &b).unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }

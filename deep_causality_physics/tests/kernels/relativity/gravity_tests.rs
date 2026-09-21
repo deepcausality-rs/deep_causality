@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::{einstein_tensor_kernel, geodesic_deviation_kernel};
+use deep_causality_physics::{PhysicsErrorEnum, einstein_tensor_kernel, geodesic_deviation_kernel};
 use deep_causality_tensor::CausalTensor;
 
 // =============================================================================
@@ -76,7 +76,13 @@ fn test_einstein_tensor_kernel_shape_mismatch() {
     let ricci = CausalTensor::new(vec![1.0, 0.0, 0.0, 1.0], vec![2, 2]).unwrap();
     let metric = CausalTensor::new(vec![1.0; 9], vec![3, 3]).unwrap();
     let result = einstein_tensor_kernel(&ricci, 2.0, &metric);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -84,7 +90,13 @@ fn test_einstein_tensor_kernel_non_square() {
     let ricci = CausalTensor::new(vec![1.0; 4], vec![1, 4]).unwrap();
     let metric = CausalTensor::new(vec![1.0; 4], vec![1, 4]).unwrap();
     let result = einstein_tensor_kernel(&ricci, 2.0, &metric);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -176,7 +188,13 @@ fn test_geodesic_deviation_kernel_dimension_error() {
     let separation: [f64; 4] = [0.0, 1.0, 0.0, 0.0];
 
     let result = geodesic_deviation_kernel(&riemann, &velocity, &separation);
-    assert!(result.is_err(), "Should error on wrong Riemann rank");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -189,16 +207,26 @@ fn test_geodesic_deviation_kernel_vector_length_error() {
     let bad_u: [f64; 3] = [1.0, 0.0, 0.0];
     let good_n: [f64; 4] = [0.0, 1.0, 0.0, 0.0];
     assert!(
-        geodesic_deviation_kernel(&riemann, &bad_u, &good_n).is_err(),
-        "Velocity of length 3 must error"
+        matches!(
+            geodesic_deviation_kernel(&riemann, &bad_u, &good_n)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
     );
 
     // Separation too long
     let good_u: [f64; 4] = [1.0, 0.0, 0.0, 0.0];
     let bad_n: [f64; 5] = [0.0, 1.0, 0.0, 0.0, 0.0];
     assert!(
-        geodesic_deviation_kernel(&riemann, &good_u, &bad_n).is_err(),
-        "Separation of length 5 must error"
+        matches!(
+            geodesic_deviation_kernel(&riemann, &good_u, &bad_n)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
     );
 }
 
@@ -390,8 +418,11 @@ fn test_geodesic_integrator_rejects_a_non_cubic_connection() {
         let christoffel = CausalTensor::new(vec![0.0f64; len], shape.clone()).unwrap();
         let result = geodesic_integrator_kernel(&position, &velocity, &christoffel, 0.1, 1);
         assert!(
-            result.is_err(),
-            "a connection of shape {shape:?} must be refused for a 2D state"
+            matches!(
+                result.as_ref().unwrap_err().0,
+                PhysicsErrorEnum::DimensionMismatch { .. }
+            ),
+            "expected a DimensionMismatch refusal"
         );
     }
 }
@@ -404,8 +435,11 @@ fn test_geodesic_integrator_reports_divergence_when_only_the_position_overflows(
     let christoffel = CausalTensor::new(vec![0.0f64; 8], vec![2, 2, 2]).unwrap();
     let result = geodesic_integrator_kernel(&[0.0, 0.0], &[1.0e300, 0.0], &christoffel, 1.0e10, 20);
     assert!(
-        result.is_err(),
-        "x = u * t overflows while u stays finite, and that must still be reported"
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
     );
 }
 
@@ -418,7 +452,13 @@ fn test_geodesic_integrator_kernel_dimension_mismatch() {
 
     let result =
         geodesic_integrator_kernel(&initial_position, &initial_velocity, &christoffel, 0.1, 10);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -430,7 +470,13 @@ fn test_geodesic_integrator_kernel_wrong_christoffel_rank() {
 
     let result =
         geodesic_integrator_kernel(&initial_position, &initial_velocity, &christoffel, 0.1, 10);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -442,7 +488,13 @@ fn test_geodesic_integrator_kernel_invalid_step() {
     // Zero step size should error
     let result =
         geodesic_integrator_kernel(&initial_position, &initial_velocity, &christoffel, 0.0, 10);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 
     // NaN step size should error
     let result = geodesic_integrator_kernel(
@@ -452,7 +504,13 @@ fn test_geodesic_integrator_kernel_invalid_step() {
         f64::NAN,
         10,
     );
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
@@ -472,8 +530,11 @@ fn test_geodesic_integrator_kernel_divergence_error() {
     let result =
         geodesic_integrator_kernel(&initial_position, &initial_velocity, &christoffel, 1e10, 20);
     assert!(
-        result.is_err(),
-        "Diverging RK4 integration must yield a NumericalInstability error"
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
     );
 }
 
@@ -487,7 +548,10 @@ fn test_geodesic_deviation_rejects_a_rank4_tensor_whose_extents_are_not_four() {
 
     let result = geodesic_deviation_kernel(&riemann, &u, &n);
     assert!(
-        result.is_err(),
-        "a [2,2,2,2] Riemann tensor must be refused, not indexed as if it were [4,4,4,4]"
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
     );
 }

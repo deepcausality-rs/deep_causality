@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::ElectronTemperature;
+use deep_causality_physics::{ElectronTemperature, PhysicsErrorEnum};
 
 #[test]
 fn test_electron_temperature_valid() {
@@ -14,13 +14,33 @@ fn test_electron_temperature_valid() {
 
 #[test]
 fn test_electron_temperature_rejects_negative() {
-    assert!(ElectronTemperature::<f64>::new(-1.0).is_err());
+    assert!(
+        matches!(
+            ElectronTemperature::<f64>::new(-1.0).unwrap_err().0,
+            PhysicsErrorEnum::ZeroKelvinViolation
+        ),
+        "expected a ZeroKelvinViolation refusal"
+    );
 }
 
 #[test]
 fn test_electron_temperature_rejects_nonfinite() {
-    assert!(ElectronTemperature::<f64>::new(f64::NAN).is_err());
-    assert!(ElectronTemperature::<f64>::new(f64::INFINITY).is_err());
+    assert!(
+        matches!(
+            ElectronTemperature::<f64>::new(f64::NAN).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            ElectronTemperature::<f64>::new(f64::INFINITY)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

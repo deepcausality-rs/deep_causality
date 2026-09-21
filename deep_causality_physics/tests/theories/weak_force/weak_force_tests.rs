@@ -15,7 +15,9 @@
 use deep_causality_physics::theories::{
     WeakField, WeakFieldOps, WeakIsospin, pauli_matrices, su2_generators,
 };
-use deep_causality_physics::{FERMI_CONSTANT, HIGGS_VEV, SIN2_THETA_W, W_MASS, Z_MASS};
+use deep_causality_physics::{
+    FERMI_CONSTANT, HIGGS_VEV, PhysicsErrorEnum, SIN2_THETA_W, W_MASS, Z_MASS,
+};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{BaseTopology, Manifold, Simplex, SimplicialComplexBuilder};
 
@@ -130,13 +132,25 @@ fn test_charged_current_propagator_low_energy() {
 fn test_charged_current_propagator_on_shell_error() {
     // At q² = M_W², propagator diverges (on-shell)
     let result = WeakField::<f64>::charged_current_propagator(W_MASS * W_MASS);
-    assert!(result.is_err(), "On-shell W should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
 fn test_charged_current_propagator_invalid() {
     let result = WeakField::<f64>::charged_current_propagator(f64::NAN);
-    assert!(result.is_err(), "NaN momentum should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
@@ -152,7 +166,13 @@ fn test_neutral_current_propagator_neutrino() {
 fn test_neutral_current_propagator_on_shell_error() {
     let nu = WeakIsospin::neutrino();
     let result = WeakField::<f64>::neutral_current_propagator(Z_MASS * Z_MASS, &nu);
-    assert!(result.is_err(), "On-shell Z should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 // ============================================================================
@@ -169,10 +189,22 @@ fn test_weak_decay_width_positive_mass() {
 #[test]
 fn test_weak_decay_width_invalid_mass() {
     let result = WeakField::<f64>::weak_decay_width(-1.0);
-    assert!(result.is_err(), "Negative mass should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 
     let result = WeakField::<f64>::weak_decay_width(0.0);
-    assert!(result.is_err(), "Zero mass should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -294,7 +326,13 @@ fn test_vector_axial_couplings() {
 fn test_isospin_constraint() {
     // I₃ must satisfy |I₃| ≤ I
     let result = WeakIsospin::new(0.5, 1.0, 0.0);
-    assert!(result.is_err(), "|I₃| > I should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 // ============================================================================
@@ -564,26 +602,50 @@ fn test_weak_field_strength_is_not_linear_in_the_connection() {
 fn test_neutral_current_propagator_nan_error() {
     let nu = WeakIsospin::neutrino();
     let result = WeakField::<f64>::neutral_current_propagator(f64::NAN, &nu);
-    assert!(result.is_err(), "NaN momentum should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
 fn test_neutral_current_propagator_infinity_error() {
     let nu = WeakIsospin::neutrino();
     let result = WeakField::<f64>::neutral_current_propagator(f64::INFINITY, &nu);
-    assert!(result.is_err(), "Infinite momentum should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
 fn test_weak_decay_width_nan_error() {
     let result = WeakField::<f64>::weak_decay_width(f64::NAN);
-    assert!(result.is_err(), "NaN mass should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
 fn test_weak_decay_width_infinity_error() {
     let result = WeakField::<f64>::weak_decay_width(f64::INFINITY);
-    assert!(result.is_err(), "Infinite mass should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]

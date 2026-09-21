@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::Volume;
+use deep_causality_physics::{PhysicsErrorEnum, Volume};
 
 #[test]
 fn test_volume_new_valid() {
@@ -14,19 +14,37 @@ fn test_volume_new_valid() {
 #[test]
 fn test_volume_new_negative_error() {
     let volume = Volume::<f64>::new(-1.0);
-    assert!(volume.is_err());
+    assert!(
+        matches!(
+            volume.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
 fn test_volume_new_nan_error() {
     let volume = Volume::<f64>::new(f64::NAN);
-    assert!(volume.is_err());
+    assert!(
+        matches!(
+            volume.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
 fn test_volume_new_infinity_error() {
     let volume = Volume::<f64>::new(f64::INFINITY);
-    assert!(volume.is_err());
+    assert!(
+        matches!(
+            volume.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

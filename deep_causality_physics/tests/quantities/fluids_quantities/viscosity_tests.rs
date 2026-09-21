@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::Viscosity;
+use deep_causality_physics::{PhysicsErrorEnum, Viscosity};
 
 // =============================================================================
 // Viscosity Tests
@@ -18,7 +18,13 @@ fn test_viscosity_new_valid() {
 #[test]
 fn test_viscosity_new_negative_error() {
     let visc = Viscosity::<f64>::new(-0.5);
-    assert!(visc.is_err());
+    assert!(
+        matches!(
+            visc.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -50,12 +56,24 @@ fn test_viscosity_default() {
 
 #[test]
 fn test_viscosity_new_nan_error() {
-    assert!(Viscosity::<f64>::new(f64::NAN).is_err());
+    assert!(
+        matches!(
+            Viscosity::<f64>::new(f64::NAN).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
 fn test_viscosity_new_infinity_error() {
-    assert!(Viscosity::<f64>::new(f64::INFINITY).is_err());
+    assert!(
+        matches!(
+            Viscosity::<f64>::new(f64::INFINITY).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 // =============================================================================

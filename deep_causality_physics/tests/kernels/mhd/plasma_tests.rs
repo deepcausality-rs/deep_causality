@@ -5,8 +5,8 @@
 
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_physics::{
-    ElectronDensity, Mass, PhysicalField, Speed, Temperature, debye_length_kernel,
-    larmor_radius_kernel, plasma_frequency_kernel,
+    ElectronDensity, Mass, PhysicalField, PhysicsErrorEnum, Speed, Temperature,
+    debye_length_kernel, larmor_radius_kernel, plasma_frequency_kernel,
 };
 
 #[test]
@@ -23,7 +23,13 @@ fn test_plasma_frequency_zero_density_errors() {
     // PlasmaFrequency requires a strictly positive value, so n_e = 0 (no plasma)
     // surfaces as an error; the blackout trigger treats that as link-available.
     let n_e = ElectronDensity::<f64>::new(0.0).unwrap();
-    assert!(plasma_frequency_kernel(n_e).is_err());
+    assert!(
+        matches!(
+            plasma_frequency_kernel(n_e).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -49,18 +55,48 @@ fn test_debye_length() {
 fn test_debye_length_zero_density_error() {
     // density_n <= 0 -> Singularity (plasma.rs:31-33).
     let t = Temperature::new(100.0).unwrap();
-    assert!(debye_length_kernel(t, 0.0, 8.854e-12, 1.602e-19).is_err());
+    assert!(
+        matches!(
+            debye_length_kernel(t, 0.0, 8.854e-12, 1.602e-19)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
+    );
     let t2 = Temperature::new(100.0).unwrap();
-    assert!(debye_length_kernel(t2, -1.0, 8.854e-12, 1.602e-19).is_err());
+    assert!(
+        matches!(
+            debye_length_kernel(t2, -1.0, 8.854e-12, 1.602e-19)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
+    );
 }
 
 #[test]
 fn test_debye_length_non_positive_permittivity_error() {
     // epsilon_0 <= 0 -> PhysicalInvariantBroken (plasma.rs:34-38).
     let t = Temperature::new(100.0).unwrap();
-    assert!(debye_length_kernel(t, 1e18, 0.0, 1.602e-19).is_err());
+    assert!(
+        matches!(
+            debye_length_kernel(t, 1e18, 0.0, 1.602e-19).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
     let t2 = Temperature::new(100.0).unwrap();
-    assert!(debye_length_kernel(t2, 1e18, -1.0, 1.602e-19).is_err());
+    assert!(
+        matches!(
+            debye_length_kernel(t2, 1e18, -1.0, 1.602e-19)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 // NOTE on plasma.rs:41-42 — the `ok_or_else` closure body for

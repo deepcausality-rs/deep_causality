@@ -20,7 +20,13 @@ fn test_rotation_rate_tensor_new_valid_antisymmetric() {
 fn test_rotation_rate_tensor_rejects_nonzero_diagonal() {
     let omega = [[1.0, 1.0, 2.0], [-1.0, 0.0, 3.0], [-2.0, -3.0, 0.0]];
     let r = RotationRateTensor::<f64>::new(omega);
-    assert!(r.is_err());
+    assert!(
+        matches!(
+            r.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
     match &r.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => {
             assert!(msg.contains("diagonal") || msg.contains("antisymmetric"))
@@ -34,7 +40,13 @@ fn test_rotation_rate_tensor_rejects_non_antisymmetric_off_diagonal() {
     // Ω_01 = 1.0 but Ω_10 = 1.0 (should be -1.0)
     let omega = [[0.0, 1.0, 2.0], [1.0, 0.0, 3.0], [-2.0, -3.0, 0.0]];
     let r = RotationRateTensor::<f64>::new(omega);
-    assert!(r.is_err());
+    assert!(
+        matches!(
+            r.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
     match &r.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => assert!(msg.contains("antisymmetric")),
         _ => panic!("Expected PhysicalInvariantBroken"),
@@ -48,7 +60,13 @@ fn test_rotation_rate_tensor_rejects_non_finite() {
         [-f64::INFINITY, 0.0, 0.0],
         [0.0, 0.0, 0.0],
     ];
-    assert!(RotationRateTensor::<f64>::new(omega).is_err());
+    assert!(
+        matches!(
+            RotationRateTensor::<f64>::new(omega).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

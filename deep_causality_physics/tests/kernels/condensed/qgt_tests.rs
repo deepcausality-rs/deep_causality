@@ -5,7 +5,7 @@
 
 use deep_causality_num_complex::Complex;
 use deep_causality_physics::{
-    Energy, Length, QuantumEigenvector, QuantumMetric, QuantumVelocity,
+    Energy, Length, PhysicsErrorEnum, QuantumEigenvector, QuantumMetric, QuantumVelocity,
     effective_band_drude_weight_kernel, quantum_geometric_tensor_kernel, quasi_qgt_kernel,
 };
 use deep_causality_tensor::CausalTensor;
@@ -233,7 +233,13 @@ fn test_qgt_error_eigenvector_not_rank2() {
     );
 
     let res = quantum_geometric_tensor_kernel::<f64>(&energies, &u, &v, &v, 0, 1e-12);
-    assert!(res.is_err());
+    assert!(
+        matches!(
+            res.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -248,7 +254,13 @@ fn test_qgt_error_band_index_out_of_bounds() {
 
     // Band index 5 is out of bounds for 2 bands
     let res = quantum_geometric_tensor_kernel::<f64>(&energies, &u, &v, &v, 5, 1e-12);
-    assert!(res.is_err());
+    assert!(
+        matches!(
+            res.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -263,7 +275,13 @@ fn test_qgt_error_eigenvalues_length_mismatch() {
     );
 
     let res = quantum_geometric_tensor_kernel::<f64>(&energies, &u, &v, &v, 0, 1e-12);
-    assert!(res.is_err());
+    assert!(
+        matches!(
+            res.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -276,7 +294,13 @@ fn test_effective_band_drude_weight_error_non_finite_curvature() {
 
     let res =
         effective_band_drude_weight_kernel::<f64>(energy_n, energy_0, curvature, metric, lattice);
-    assert!(res.is_err());
+    assert!(
+        matches!(
+            res.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
@@ -289,7 +313,13 @@ fn test_effective_band_drude_weight_error_nan_curvature() {
 
     let res =
         effective_band_drude_weight_kernel::<f64>(energy_n, energy_0, curvature, metric, lattice);
-    assert!(res.is_err());
+    assert!(
+        matches!(
+            res.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
@@ -309,11 +339,20 @@ fn test_effective_band_drude_weight_rejects_a_non_positive_lattice_constant() {
         metric,
         Length::new(0.0).unwrap(),
     );
-    assert!(zero.is_err(), "a zero lattice constant must be refused");
+    assert!(
+        matches!(
+            zero.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 
     assert!(
-        Length::<f64>::new(-1.0).is_err(),
-        "a negative lattice constant must be refused at construction"
+        matches!(
+            Length::<f64>::new(-1.0).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
     );
 }
 
@@ -332,7 +371,13 @@ fn test_effective_band_drude_weight_error_non_finite_result() {
 
     let res =
         effective_band_drude_weight_kernel::<f64>(energy_n, energy_0, curvature, metric, lattice);
-    assert!(res.is_err());
+    assert!(
+        matches!(
+            res.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]

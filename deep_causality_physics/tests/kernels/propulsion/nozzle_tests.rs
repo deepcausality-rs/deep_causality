@@ -4,8 +4,8 @@
  */
 
 use deep_causality_physics::{
-    FlowBranch, Pressure, Temperature, area_mach_ratio_kernel, inverse_area_mach_kernel,
-    nozzle_exit_state_kernel,
+    FlowBranch, PhysicsErrorEnum, Pressure, Temperature, area_mach_ratio_kernel,
+    inverse_area_mach_kernel, nozzle_exit_state_kernel,
 };
 
 #[test]
@@ -51,12 +51,44 @@ fn test_inverse_area_mach_sonic_throat() {
 
 #[test]
 fn test_inverse_area_mach_rejects_bad_domain() {
-    assert!(inverse_area_mach_kernel(0.9_f64, 1.4, FlowBranch::Supersonic).is_err());
-    assert!(inverse_area_mach_kernel(2.0_f64, 1.0, FlowBranch::Supersonic).is_err());
-    assert!(inverse_area_mach_kernel(f64::NAN, 1.4, FlowBranch::Subsonic).is_err());
+    assert!(
+        matches!(
+            inverse_area_mach_kernel(0.9_f64, 1.4, FlowBranch::Supersonic)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            inverse_area_mach_kernel(2.0_f64, 1.0, FlowBranch::Supersonic)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            inverse_area_mach_kernel(f64::NAN, 1.4, FlowBranch::Subsonic)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
     // Absurd area ratio beyond the subsonic bracket (A/A* > ~5.8e8): rejected,
     // not silently converged to the bracket floor.
-    assert!(inverse_area_mach_kernel(1.0e10_f64, 1.4, FlowBranch::Subsonic).is_err());
+    assert!(
+        matches!(
+            inverse_area_mach_kernel(1.0e10_f64, 1.4, FlowBranch::Subsonic)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
@@ -87,45 +119,65 @@ fn test_nozzle_exit_state_expansion_ratio_four() {
 #[test]
 fn test_nozzle_exit_state_rejects_bad_chamber() {
     assert!(
-        nozzle_exit_state_kernel(
-            Pressure::new(0.0_f64).unwrap(),
-            Temperature::new(3000.0).unwrap(),
-            4.0,
-            1.4,
-            287.0
-        )
-        .is_err()
+        matches!(
+            nozzle_exit_state_kernel(
+                Pressure::new(0.0_f64).unwrap(),
+                Temperature::new(3000.0).unwrap(),
+                4.0,
+                1.4,
+                287.0
+            )
+            .unwrap_err()
+            .0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
     );
     assert!(
-        nozzle_exit_state_kernel(
-            Pressure::new(2.0e6_f64).unwrap(),
-            Temperature::new(3000.0).unwrap(),
-            4.0,
-            1.4,
-            0.0
-        )
-        .is_err()
+        matches!(
+            nozzle_exit_state_kernel(
+                Pressure::new(2.0e6_f64).unwrap(),
+                Temperature::new(3000.0).unwrap(),
+                4.0,
+                1.4,
+                0.0
+            )
+            .unwrap_err()
+            .0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
     );
     assert!(
-        nozzle_exit_state_kernel(
-            Pressure::new(2.0e6_f64).unwrap(),
-            Temperature::new(3000.0).unwrap(),
-            0.5,
-            1.4,
-            287.0
-        )
-        .is_err()
+        matches!(
+            nozzle_exit_state_kernel(
+                Pressure::new(2.0e6_f64).unwrap(),
+                Temperature::new(3000.0).unwrap(),
+                0.5,
+                1.4,
+                287.0
+            )
+            .unwrap_err()
+            .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
     );
     // Zero chamber temperature is a singularity (0 K passes Temperature::new
     // but the kernel rejects a non-positive stagnation temperature).
     assert!(
-        nozzle_exit_state_kernel(
-            Pressure::new(2.0e6_f64).unwrap(),
-            Temperature::new(0.0).unwrap(),
-            4.0,
-            1.4,
-            287.0
-        )
-        .is_err()
+        matches!(
+            nozzle_exit_state_kernel(
+                Pressure::new(2.0e6_f64).unwrap(),
+                Temperature::new(0.0).unwrap(),
+                4.0,
+                1.4,
+                287.0
+            )
+            .unwrap_err()
+            .0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
     );
 }

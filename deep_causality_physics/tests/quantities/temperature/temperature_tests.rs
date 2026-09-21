@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::Temperature;
+use deep_causality_physics::{PhysicsErrorEnum, Temperature};
 
 #[test]
 fn test_temperature_new_valid() {
@@ -21,7 +21,13 @@ fn test_temperature_new_zero_kelvin() {
 #[test]
 fn test_temperature_new_negative_error() {
     let t = Temperature::<f64>::new(-1.0);
-    assert!(t.is_err(), "Negative Kelvin should error");
+    assert!(
+        matches!(
+            t.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::ZeroKelvinViolation
+        ),
+        "expected a ZeroKelvinViolation refusal"
+    );
 }
 
 #[test]

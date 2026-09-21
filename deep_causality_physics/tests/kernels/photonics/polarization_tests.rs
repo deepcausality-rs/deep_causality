@@ -5,8 +5,8 @@
 
 use deep_causality_num_complex::Complex;
 use deep_causality_physics::{
-    JonesVector, RayAngle, StokesVector, degree_of_polarization_kernel, jones_rotation_kernel,
-    stokes_from_jones_kernel,
+    JonesVector, PhysicsErrorEnum, RayAngle, StokesVector, degree_of_polarization_kernel,
+    jones_rotation_kernel, stokes_from_jones_kernel,
 };
 use deep_causality_tensor::CausalTensor;
 use std::f64::consts::PI;
@@ -104,7 +104,13 @@ fn test_jones_rotation_by_zero_is_the_identity_transform() {
 fn test_jones_rotation_error() {
     let m = CausalTensor::new(vec![Complex::new(1.0, 0.0)], vec![1]).unwrap();
     let angle = RayAngle::<f64>::new(0.0).unwrap();
-    assert!(jones_rotation_kernel(&m, angle).is_err());
+    assert!(
+        matches!(
+            jones_rotation_kernel(&m, angle).unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -129,7 +135,13 @@ fn test_stokes_from_jones() {
 fn test_stokes_from_jones_error() {
     let j =
         JonesVector::<f64>::new(CausalTensor::new(vec![Complex::new(1.0, 0.0)], vec![1]).unwrap());
-    assert!(stokes_from_jones_kernel(&j).is_err());
+    assert!(
+        matches!(
+            stokes_from_jones_kernel(&j).unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -160,7 +172,13 @@ fn test_dop_errors() {
     let s_neg =
         StokesVector::<f64>::new(CausalTensor::new(vec![-1.0, 0.0, 0.0, 0.0], vec![4]).unwrap())
             .unwrap();
-    assert!(degree_of_polarization_kernel(&s_neg).is_err());
+    assert!(
+        matches!(
+            degree_of_polarization_kernel(&s_neg).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 
     // The kernel's DOP > 1 branch is unreachable from this constructor: `StokesVector::new`
     // enforces the same invariant, so any vector it accepts already has DOP <= 1. The shape
@@ -174,7 +192,13 @@ fn test_dop_wrong_length_error() {
     // (polarization.rs:135-138).
     let stokes = StokesVector::<f64>::default();
     let res = degree_of_polarization_kernel(&stokes);
-    assert!(res.is_err());
+    assert!(
+        matches!(
+            res.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -193,11 +217,23 @@ fn test_dop_zero_intensity_returns_zero() {
 fn test_stokes_vector_new_error() {
     // Shape error
     let t_wrong = CausalTensor::new(vec![1.0], vec![1]).unwrap();
-    assert!(StokesVector::<f64>::new(t_wrong).is_err());
+    assert!(
+        matches!(
+            StokesVector::<f64>::new(t_wrong).unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 
     // Invariant error: S0^2 < S1^2 + S2^2 + S3^2
     let t_inv = CausalTensor::new(vec![1.0, 1.0, 1.0, 1.0], vec![4]).unwrap();
-    assert!(StokesVector::<f64>::new(t_inv).is_err());
+    assert!(
+        matches!(
+            StokesVector::<f64>::new(t_inv).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 // NOTE on polarization.rs:163-165 — the "DOP > 1, unphysical Stokes vector"

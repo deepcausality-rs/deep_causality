@@ -7,7 +7,7 @@
 //! and the Gap-3 FS-3 study numbers.
 
 use deep_causality_physics::{
-    EARTH_GM, EARTH_RADIUS_EQUATORIAL, relativistic_clock_drift_rate_kernel,
+    EARTH_GM, EARTH_RADIUS_EQUATORIAL, PhysicsErrorEnum, relativistic_clock_drift_rate_kernel,
     relativistic_clock_offset_kernel,
 };
 
@@ -100,12 +100,68 @@ fn reentry_blackout_carry_is_tens_of_metres() {
 
 #[test]
 fn rejects_bad_inputs() {
-    assert!(relativistic_clock_drift_rate_kernel(0.0, 0.0, EARTH_GM).is_err());
-    assert!(relativistic_clock_drift_rate_kernel(-1.0, 0.0, EARTH_GM).is_err());
-    assert!(relativistic_clock_drift_rate_kernel(7.0e6, -1.0, EARTH_GM).is_err());
-    assert!(relativistic_clock_drift_rate_kernel(7.0e6, 0.0, 0.0).is_err());
-    assert!(relativistic_clock_drift_rate_kernel(7.0e6, 0.0, -1.0).is_err());
+    assert!(
+        matches!(
+            relativistic_clock_drift_rate_kernel(0.0, 0.0, EARTH_GM)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
+    );
+    assert!(
+        matches!(
+            relativistic_clock_drift_rate_kernel(-1.0, 0.0, EARTH_GM)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
+    );
+    assert!(
+        matches!(
+            relativistic_clock_drift_rate_kernel(7.0e6, -1.0, EARTH_GM)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            relativistic_clock_drift_rate_kernel(7.0e6, 0.0, 0.0)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            relativistic_clock_drift_rate_kernel(7.0e6, 0.0, -1.0)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
     // The offset kernel propagates either clock's error.
-    assert!(relativistic_clock_offset_kernel(-1.0, 0.0, 7.0e6, 0.0, EARTH_GM).is_err());
-    assert!(relativistic_clock_offset_kernel(7.0e6, 0.0, 0.0, 0.0, EARTH_GM).is_err());
+    assert!(
+        matches!(
+            relativistic_clock_offset_kernel(-1.0, 0.0, 7.0e6, 0.0, EARTH_GM)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
+    );
+    assert!(
+        matches!(
+            relativistic_clock_offset_kernel(7.0e6, 0.0, 0.0, 0.0, EARTH_GM)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
+    );
 }

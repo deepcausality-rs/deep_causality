@@ -4,8 +4,8 @@
  */
 
 use deep_causality_physics::{
-    AbcdMatrix, IndexOfRefraction, RayAngle, RayHeight, lens_maker_kernel, ray_transfer_kernel,
-    snells_law_kernel,
+    AbcdMatrix, IndexOfRefraction, PhysicsErrorEnum, RayAngle, RayHeight, lens_maker_kernel,
+    ray_transfer_kernel, snells_law_kernel,
 };
 use deep_causality_tensor::CausalTensor;
 
@@ -34,7 +34,13 @@ fn test_ray_transfer_error() {
     let a = RayAngle::<f64>::new(0.1).unwrap();
 
     let res = ray_transfer_kernel(&matrix, h, a);
-    assert!(res.is_err());
+    assert!(
+        matches!(
+            res.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -60,7 +66,13 @@ fn test_snells_law_tir() {
 
     // sin(t2) = 1.5 * sin(1.0) = 1.5 * 0.84 = 1.26 > 1
     let res = snells_law_kernel(n1, n2, theta1);
-    assert!(res.is_err());
+    assert!(
+        matches!(
+            res.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -83,6 +95,18 @@ fn test_lens_maker() {
 fn test_lens_maker_error() {
     let n = IndexOfRefraction::<f64>::new(1.5).unwrap();
     // Zero radius
-    assert!(lens_maker_kernel(n, 0.0, 0.5).is_err());
-    assert!(lens_maker_kernel(n, 0.5, 0.0).is_err());
+    assert!(
+        matches!(
+            lens_maker_kernel(n, 0.0, 0.5).unwrap_err().0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
+    );
+    assert!(
+        matches!(
+            lens_maker_kernel(n, 0.5, 0.0).unwrap_err().0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
+    );
 }

@@ -6,7 +6,9 @@
 //! Tests for gr_lie_mapping.rs - Lie ↔ Geometric tensor conversions
 
 use deep_causality_physics::theories::general_relativity::lie_index_to_pair;
-use deep_causality_physics::{contract_riemann_to_lie, expand_lie_to_riemann, pair_to_lie_index};
+use deep_causality_physics::{
+    PhysicsErrorEnum, contract_riemann_to_lie, expand_lie_to_riemann, pair_to_lie_index,
+};
 use deep_causality_tensor::CausalTensor;
 use std::f64::consts::PI;
 
@@ -160,7 +162,13 @@ fn test_expand_lie_too_small_dimension() {
     let small = CausalTensor::from_vec(vec![1.0; 24], &[4, 6]);
 
     let result = expand_lie_to_riemann(&small);
-    assert!(result.is_err(), "2D tensor should fail expansion");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -170,8 +178,11 @@ fn test_contract_riemann_to_lie_rejects_wrong_shape() {
     let wrong = CausalTensor::from_vec(vec![0.0; 81], &[3, 3, 3, 3]);
     let result = contract_riemann_to_lie(&wrong);
     assert!(
-        result.is_err(),
-        "[3,3,3,3] Riemann must be rejected by contract_riemann_to_lie"
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
     );
 }
 
@@ -190,7 +201,13 @@ fn test_contract_riemann_wrong_shape() {
     // We use the expand function which has the <3D check
     let too_small = CausalTensor::from_vec(vec![1.0; 24], &[4, 6]);
     let expand_result = expand_lie_to_riemann(&too_small);
-    assert!(expand_result.is_err(), "2D should fail");
+    assert!(
+        matches!(
+            expand_result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 // NOTE on three defensively-unreachable lines in `gr_lie_mapping`:

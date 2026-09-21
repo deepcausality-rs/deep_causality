@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::AccelerationVector;
+use deep_causality_physics::{AccelerationVector, PhysicsErrorEnum};
 
 // =============================================================================
 // AccelerationVector — finiteness only
@@ -17,8 +17,24 @@ fn test_acceleration_vector_new_valid() {
 
 #[test]
 fn test_acceleration_vector_rejects_non_finite() {
-    assert!(AccelerationVector::<f64>::new([f64::NAN, 0.0, 0.0]).is_err());
-    assert!(AccelerationVector::<f64>::new([0.0, 0.0, f64::INFINITY]).is_err());
+    assert!(
+        matches!(
+            AccelerationVector::<f64>::new([f64::NAN, 0.0, 0.0])
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            AccelerationVector::<f64>::new([0.0, 0.0, f64::INFINITY])
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

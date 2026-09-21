@@ -25,7 +25,13 @@ fn test_pressure_new_zero() {
 #[test]
 fn test_pressure_new_negative_error() {
     let pressure = Pressure::<f64>::new(-1.0);
-    assert!(pressure.is_err());
+    assert!(
+        matches!(
+            pressure.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
     match &pressure.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => {
             assert!(msg.contains("Pressure") || msg.contains("Negative"));
@@ -64,7 +70,13 @@ fn test_pressure_default() {
 #[test]
 fn test_pressure_new_nan_error() {
     let p = Pressure::<f64>::new(f64::NAN);
-    assert!(p.is_err());
+    assert!(
+        matches!(
+            p.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
     match &p.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => assert!(msg.contains("finite")),
         _ => panic!("Expected finite-check error"),
@@ -73,8 +85,20 @@ fn test_pressure_new_nan_error() {
 
 #[test]
 fn test_pressure_new_infinity_error() {
-    assert!(Pressure::<f64>::new(f64::INFINITY).is_err());
-    assert!(Pressure::<f64>::new(f64::NEG_INFINITY).is_err());
+    assert!(
+        matches!(
+            Pressure::<f64>::new(f64::INFINITY).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            Pressure::<f64>::new(f64::NEG_INFINITY).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 // =============================================================================

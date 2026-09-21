@@ -3,7 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::{Frequency, Length, Speed, doppler_effect_kernel, wave_speed_kernel};
+use deep_causality_physics::{
+    Frequency, Length, PhysicsErrorEnum, Speed, doppler_effect_kernel, wave_speed_kernel,
+};
 
 // =============================================================================
 // wave_speed_kernel Tests
@@ -87,7 +89,13 @@ fn test_doppler_effect_kernel_sonic_singularity() {
     let vs = Speed::<f64>::new(340.0).unwrap(); // Source at Mach 1
 
     let result = doppler_effect_kernel(&f_src, &v, &vo, &vs);
-    assert!(result.is_err(), "Sonic singularity should error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::MetricSingularity { .. }
+        ),
+        "expected a MetricSingularity refusal"
+    );
 }
 
 #[test]
@@ -99,5 +107,11 @@ fn test_doppler_effect_kernel_supersonic_error() {
     let vs = Speed::<f64>::new(400.0).unwrap(); // Supersonic
 
     let result = doppler_effect_kernel(&f_src, &v, &vo, &vs);
-    assert!(result.is_err(), "Supersonic source should error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::MetricSingularity { .. }
+        ),
+        "expected a MetricSingularity refusal"
+    );
 }

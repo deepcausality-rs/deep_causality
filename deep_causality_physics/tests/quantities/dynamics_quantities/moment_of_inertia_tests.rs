@@ -15,7 +15,13 @@ fn test_moment_of_inertia_new_valid() {
 #[test]
 fn test_moment_of_inertia_new_negative_error() {
     let moi = MomentOfInertia::<f64>::new(-1.0);
-    assert!(moi.is_err());
+    assert!(
+        matches!(
+            moi.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
     match &moi.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => assert!(msg.contains("negative")),
         _ => panic!("Expected PhysicalInvariantBroken error"),
@@ -25,13 +31,25 @@ fn test_moment_of_inertia_new_negative_error() {
 #[test]
 fn test_moment_of_inertia_new_nan_error() {
     let moi = MomentOfInertia::<f64>::new(f64::NAN);
-    assert!(moi.is_err());
+    assert!(
+        matches!(
+            moi.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
 fn test_moment_of_inertia_new_infinity_error() {
     let moi = MomentOfInertia::<f64>::new(f64::INFINITY);
-    assert!(moi.is_err());
+    assert!(
+        matches!(
+            moi.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

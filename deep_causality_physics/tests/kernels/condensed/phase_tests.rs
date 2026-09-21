@@ -6,8 +6,8 @@ use deep_causality_haft::Functor;
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_num_complex::Complex;
 use deep_causality_physics::{
-    ChemicalPotentialGradient, Concentration, Mobility, OrderParameter, VectorPotential,
-    cahn_hilliard_flux_kernel, ginzburg_landau_free_energy_kernel,
+    ChemicalPotentialGradient, Concentration, Mobility, OrderParameter, PhysicsErrorEnum,
+    VectorPotential, cahn_hilliard_flux_kernel, ginzburg_landau_free_energy_kernel,
 };
 use deep_causality_tensor::CausalTensor;
 
@@ -129,7 +129,13 @@ fn test_ginzburg_landau_error_metric_mismatch() {
         &grad_complex,
         Some(&vector_potential),
     );
-    assert!(res.is_err());
+    assert!(
+        matches!(
+            res.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -218,7 +224,13 @@ fn test_cahn_hilliard_flux_error_dimension_mismatch() {
     let grad = ChemicalPotentialGradient::new(CausalTensor::new(vec![1.0], vec![1]).unwrap());
 
     let res = cahn_hilliard_flux_kernel::<f64>(&conc, m, &grad);
-    assert!(res.is_err());
+    assert!(
+        matches!(
+            res.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]

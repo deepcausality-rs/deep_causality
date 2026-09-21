@@ -4,7 +4,7 @@
  */
 
 use deep_causality_physics::{
-    Density, KinematicViscosity, Length, Speed, Viscosity, WallShearStress,
+    Density, KinematicViscosity, Length, PhysicsErrorEnum, Speed, Viscosity, WallShearStress,
     friction_velocity_kernel, log_law_velocity_kernel, skin_friction_coefficient_kernel,
     viscous_length_scale_kernel, viscous_sublayer_velocity_kernel,
     wall_shear_stress_newtonian_kernel, y_plus_kernel,
@@ -42,9 +42,33 @@ fn test_wall_shear_stress_zero_for_zero_gradient() {
 #[test]
 fn test_wall_shear_stress_errors_on_non_finite_gradient() {
     let mu = Viscosity::<f64>::new(1.0e-3).unwrap();
-    assert!(wall_shear_stress_newtonian_kernel(&mu, f64::NAN).is_err());
-    assert!(wall_shear_stress_newtonian_kernel(&mu, f64::INFINITY).is_err());
-    assert!(wall_shear_stress_newtonian_kernel(&mu, f64::NEG_INFINITY).is_err());
+    assert!(
+        matches!(
+            wall_shear_stress_newtonian_kernel(&mu, f64::NAN)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            wall_shear_stress_newtonian_kernel(&mu, f64::INFINITY)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            wall_shear_stress_newtonian_kernel(&mu, f64::NEG_INFINITY)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 // =============================================================================
@@ -64,7 +88,13 @@ fn test_friction_velocity_known_value() {
 fn test_friction_velocity_errors_on_zero_density() {
     let tau = WallShearStress::<f64>::new(1.0).unwrap();
     let rho = Density::<f64>::new(0.0).unwrap();
-    assert!(friction_velocity_kernel(&tau, &rho).is_err());
+    assert!(
+        matches!(
+            friction_velocity_kernel(&tau, &rho).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -92,7 +122,13 @@ fn test_viscous_length_scale_known_value() {
 fn test_viscous_length_scale_errors_on_zero_u_tau() {
     let nu = KinematicViscosity::<f64>::new(1.0e-5).unwrap();
     let u_tau = Speed::<f64>::new(0.0).unwrap();
-    assert!(viscous_length_scale_kernel(&nu, &u_tau).is_err());
+    assert!(
+        matches!(
+            viscous_length_scale_kernel(&nu, &u_tau).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 // =============================================================================
@@ -132,7 +168,13 @@ fn test_y_plus_errors_on_zero_viscosity() {
     let y = Length::<f64>::new(1.0).unwrap();
     let u_tau = Speed::<f64>::new(0.5).unwrap();
     let nu = KinematicViscosity::<f64>::new(0.0).unwrap();
-    assert!(y_plus_kernel(&y, &u_tau, &nu).is_err());
+    assert!(
+        matches!(
+            y_plus_kernel(&y, &u_tau, &nu).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 // =============================================================================
@@ -158,13 +200,31 @@ fn test_log_law_known_value_at_y_plus_100() {
 
 #[test]
 fn test_log_law_errors_on_nonpositive_y_plus() {
-    assert!(log_law_velocity_kernel(0.0_f64, 0.41, 5.0).is_err());
-    assert!(log_law_velocity_kernel(-1.0_f64, 0.41, 5.0).is_err());
+    assert!(
+        matches!(
+            log_law_velocity_kernel(0.0_f64, 0.41, 5.0).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            log_law_velocity_kernel(-1.0_f64, 0.41, 5.0).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
 fn test_log_law_errors_on_zero_kappa() {
-    assert!(log_law_velocity_kernel(100.0_f64, 0.0, 5.0).is_err());
+    assert!(
+        matches!(
+            log_law_velocity_kernel(100.0_f64, 0.0, 5.0).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -196,7 +256,15 @@ fn test_skin_friction_errors_on_zero_density() {
     let tau = WallShearStress::<f64>::new(1.0).unwrap();
     let rho = Density::<f64>::new(0.0).unwrap();
     let u_inf = Speed::<f64>::new(1.0).unwrap();
-    assert!(skin_friction_coefficient_kernel(&tau, &rho, &u_inf).is_err());
+    assert!(
+        matches!(
+            skin_friction_coefficient_kernel(&tau, &rho, &u_inf)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -204,7 +272,15 @@ fn test_skin_friction_errors_on_zero_u_inf() {
     let tau = WallShearStress::<f64>::new(1.0).unwrap();
     let rho = Density::<f64>::new(1.0).unwrap();
     let u_inf = Speed::<f64>::new(0.0).unwrap();
-    assert!(skin_friction_coefficient_kernel(&tau, &rho, &u_inf).is_err());
+    assert!(
+        matches!(
+            skin_friction_coefficient_kernel(&tau, &rho, &u_inf)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 // =============================================================================

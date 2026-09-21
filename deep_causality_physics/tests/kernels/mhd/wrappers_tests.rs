@@ -9,7 +9,7 @@ use deep_causality_physics::{
     Density, Diffusivity, Mass, PhysicalField, Speed, Temperature, alfven_speed,
     alfven_speed_kernel, debye_length, energy_momentum_tensor_em, ideal_induction, larmor_radius,
     magnetic_pressure, magnetic_reconnection_rate, magnetic_reconnection_rate_kernel,
-    relativistic_current, resistive_diffusion,
+    relativistic_current, relativistic_current_kernel, resistive_diffusion,
 };
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, PointCloud, ReggeGeometry, SimplicialManifold};
@@ -178,6 +178,18 @@ fn test_ideal_induction_wrapper() {
     // wrapper must forward the kernel's refusal. `is_ok() || is_err()` is true for every value of
     // every type and asserted nothing.
     let result = ideal_induction(&man, &man);
+    // The refusal must name its cause: a wrapper forwards the kernel's `PhysicsError`
+    // text through a `CausalityError`, and asserting it keeps the *reason* pinned.
+    assert!(
+        result
+            .error()
+            .expect("the call must fail")
+            .to_string()
+            .contains("ideal induction needs a 3D complex"),
+        "unexpected refusal: {:?}",
+        result.error()
+    );
+
     assert!(
         result.is_err(),
         "a 2D complex must be refused by the ideal-induction wrapper"
@@ -220,8 +232,15 @@ fn test_relativistic_current_wrapper_success() {
     .unwrap();
 
     let metric = EastCoastMetric::new_nd(4).unwrap();
+    // Delegation, not merely success.
     let result = relativistic_current(&manifold, &metric);
-    assert!(result.is_ok());
+    let carried = result.value_cloned().unwrap();
+    let direct = relativistic_current_kernel(&manifold, &metric).unwrap();
+    assert_eq!(
+        carried.as_slice(),
+        direct.as_slice(),
+        "relativistic_current must carry the value its kernel produced"
+    );
 }
 
 #[test]
@@ -241,7 +260,14 @@ fn test_relativistic_current_wrapper_error() {
 
     let metric = EastCoastMetric::new_nd(4).unwrap();
     let result = relativistic_current(&manifold, &metric);
-    assert!(result.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = result.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Dimension Mismatch"),
+        "expected a Dimension Mismatch refusal, got {err}"
+    );
 }
 
 #[test]
@@ -261,7 +287,14 @@ fn test_ideal_induction_wrapper_error() {
     .unwrap();
 
     let result = ideal_induction(&man, &man);
-    assert!(result.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = result.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Dimension Mismatch"),
+        "expected a Dimension Mismatch refusal, got {err}"
+    );
 }
 
 #[test]
@@ -271,7 +304,14 @@ fn test_resistive_diffusion_wrapper_error() {
     let man = create_test_manifold();
     let eta = Diffusivity::<f64>::new_unchecked(-0.5);
     let result = resistive_diffusion(&man, eta);
-    assert!(result.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = result.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 #[test]
@@ -311,9 +351,13 @@ fn test_energy_momentum_tensor_em_wrapper_dimension_error() {
     // The test is named for a dimension error, so it must observe one. The previous body was
     // `let _ = result.is_ok() || result.is_err();`, which is true for every possible result.
     let result = energy_momentum_tensor_em(&em, &metric);
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = result.error().expect("the call must fail");
     assert!(
-        result.is_err(),
-        "a 3x3 EM tensor against a 4x4 metric must be refused"
+        err.to_string().contains("Singularity"),
+        "expected a Singularity refusal, got {err}"
     );
 }
 
@@ -404,7 +448,14 @@ fn test_alfven_speed_error_zero_density() {
 
     let result = alfven_speed(&b, &rho, 1.0);
     // Wrapper should propagate the error
-    assert!(result.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = result.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Singularity"),
+        "expected a Singularity refusal, got {err}"
+    );
 }
 
 #[test]
@@ -416,7 +467,14 @@ fn test_magnetic_pressure_error_negative_permeability() {
     // Negative permeability should error - but this is in the kernel
     // The wrapper propagates whatever the kernel returns
     let result = magnetic_pressure(&b, -1.0);
-    assert!(result.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = result.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 #[test]
@@ -428,14 +486,28 @@ fn test_reconnection_rate_error_negative_lundquist() {
     let va = alfven_speed(&b, &rho, 1.0).value_cloned().unwrap();
 
     let result = magnetic_reconnection_rate(va, -1.0);
-    assert!(result.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = result.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Singularity"),
+        "expected a Singularity refusal, got {err}"
+    );
 }
 
 #[test]
 fn test_debye_length_error_zero_density() {
     let temp = Temperature::new(1000.0).unwrap();
     let result = debye_length(temp, 0.0, 8.854e-12, 1.602e-19);
-    assert!(result.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = result.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Singularity"),
+        "expected a Singularity refusal, got {err}"
+    );
 }
 
 #[test]
@@ -447,7 +519,14 @@ fn test_larmor_radius_error_zero_field() {
     );
 
     let result = larmor_radius(mass, v, 1.0, &b);
-    assert!(result.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = result.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Singularity"),
+        "expected a Singularity refusal, got {err}"
+    );
 }
 
 #[test]
@@ -459,5 +538,12 @@ fn test_larmor_radius_error_zero_charge() {
     );
 
     let result = larmor_radius(mass, v, 0.0, &b);
-    assert!(result.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = result.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Singularity"),
+        "expected a Singularity refusal, got {err}"
+    );
 }

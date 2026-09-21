@@ -8,11 +8,12 @@
 //! from both sides, frozen limits at low temperature, and purity.
 
 use deep_causality_physics::{
-    ElectronTemperature, EquilibriumConstant, RP1232_NO_DR_EXPONENT, RP1232_NO_DR_PREFACTOR,
-    Temperature, arrhenius_rate_kernel, dissociation_equilibrium_fraction_kernel,
-    electron_impact_ionization_n_rate_kernel, electron_impact_ionization_o_rate_kernel,
-    finite_rate_ionization_fixed_point_kernel, n2_dissociation_equilibrium_kernel,
-    no_dissociative_recombination_rate_kernel, o2_dissociation_equilibrium_kernel,
+    ElectronTemperature, EquilibriumConstant, PhysicsErrorEnum, RP1232_NO_DR_EXPONENT,
+    RP1232_NO_DR_PREFACTOR, Temperature, arrhenius_rate_kernel,
+    dissociation_equilibrium_fraction_kernel, electron_impact_ionization_n_rate_kernel,
+    electron_impact_ionization_o_rate_kernel, finite_rate_ionization_fixed_point_kernel,
+    n2_dissociation_equilibrium_kernel, no_dissociative_recombination_rate_kernel,
+    o2_dissociation_equilibrium_kernel,
 };
 
 // ── Dissociative recombination (Table II, reaction 7 backward) ────────────
@@ -136,7 +137,13 @@ fn dissociation_fraction_rejects_a_nonpositive_pool() {
         EquilibriumConstant::new(1.0_f64).unwrap(),
         0.0_f64,
     );
-    assert!(err.is_err());
+    assert!(
+        matches!(
+            err.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
+    );
 }
 
 // ── The fixed point ────────────────────────────────────────────────────────
@@ -190,8 +197,24 @@ fn fixed_point_without_production_is_zero() {
 
 #[test]
 fn fixed_point_guards_its_domain() {
-    assert!(finite_rate_ionization_fixed_point_kernel(-1.0_f64, 0.0, 1.0).is_err());
-    assert!(finite_rate_ionization_fixed_point_kernel(1.0_f64, 0.0, 0.0).is_err());
+    assert!(
+        matches!(
+            finite_rate_ionization_fixed_point_kernel(-1.0_f64, 0.0, 1.0)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            finite_rate_ionization_fixed_point_kernel(1.0_f64, 0.0, 0.0)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
+    );
 }
 
 // ── Purity (two states, two outputs) ──────────────────────────────────────
@@ -256,7 +279,15 @@ fn the_dissociation_controller_sits_between_its_temperatures() {
         "Park's classic exponent runs hotter: {t_q} vs {geo}"
     );
     // Domain guard.
-    assert!(park_controlling_temperature_kernel(t_tr, t_ve, 1.5).is_err());
+    assert!(
+        matches!(
+            park_controlling_temperature_kernel(t_tr, t_ve, 1.5)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -267,5 +298,13 @@ fn a_nan_controlling_exponent_is_rejected() {
     // NaN fails both sides of an exclusion test (`q < 0 || q > 1`), so the
     // guard must be an inclusion test: a NaN exponent is an error, never an
     // Ok(NaN) controlling temperature.
-    assert!(park_controlling_temperature_kernel(t_tr, t_ve, f64::NAN).is_err());
+    assert!(
+        matches!(
+            park_controlling_temperature_kernel(t_tr, t_ve, f64::NAN)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }

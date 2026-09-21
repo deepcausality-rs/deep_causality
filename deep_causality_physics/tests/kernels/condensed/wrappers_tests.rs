@@ -8,9 +8,12 @@ use deep_causality_num_complex::Complex;
 use deep_causality_physics::{
     ChemicalPotentialGradient, Concentration, Displacement, Energy, Length, Mobility, Momentum,
     OrderParameter, QuantumEigenvector, QuantumMetric, QuantumVelocity, Ratio, Speed, Stiffness,
-    TwistAngle, VectorPotential, bistritzer_macdonald, cahn_hilliard_flux,
-    effective_band_drude_weight, foppl_von_karman_strain, foppl_von_karman_strain_simple,
-    ginzburg_landau_free_energy, quantum_geometric_tensor, quasi_qgt,
+    TwistAngle, VectorPotential, bistritzer_macdonald, bistritzer_macdonald_kernel,
+    cahn_hilliard_flux, effective_band_drude_weight, foppl_von_karman_strain,
+    foppl_von_karman_strain_kernel, foppl_von_karman_strain_simple,
+    foppl_von_karman_strain_simple_kernel, ginzburg_landau_free_energy,
+    ginzburg_landau_free_energy_kernel, quantum_geometric_tensor, quantum_geometric_tensor_kernel,
+    quasi_qgt,
 };
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, PointCloud, SimplicialManifold};
@@ -29,8 +32,14 @@ fn test_wrapper_qgt() {
         CausalTensor::new(vec![Complex::new(0.0, 0.0); 4], vec![2, 2]).unwrap(),
     );
 
+    // Delegation, not merely success: `assert!(effect.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
     let effect = quantum_geometric_tensor::<f64>(&energies, &u, &v, &v, 0, 1e-12);
-    assert!(effect.is_ok());
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        quantum_geometric_tensor_kernel::<f64>(&energies, &u, &v, &v, 0, 1e-12).unwrap(),
+        "quantum_geometric_tensor must carry the value its kernel produced"
+    );
 }
 
 #[test]
@@ -79,7 +88,14 @@ fn test_wrapper_effective_band_drude_weight_error() {
     let lattice = Length::new(1.0).unwrap();
 
     let effect = effective_band_drude_weight::<f64>(energy_n, energy_0, curvature, metric, lattice);
-    assert!(effect.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Numerical Instability"),
+        "expected a Numerical Instability refusal, got {err}"
+    );
 }
 
 // ============================================================================
@@ -93,8 +109,15 @@ fn test_wrapper_moire() {
     let vf = Speed::new(1e5).unwrap();
     let k = Momentum::default();
 
-    let effect = bistritzer_macdonald::<f64>(theta, w, vf, k, 1);
-    assert!(effect.is_ok());
+    // Delegation, not merely success.
+    let effect = bistritzer_macdonald::<f64>(theta, w, vf, k.clone(), 1);
+    let carried = effect.value_cloned().unwrap();
+    let direct = bistritzer_macdonald_kernel::<f64>(theta, w, vf, k, 1).unwrap();
+    assert_eq!(
+        carried.as_slice(),
+        direct.as_slice(),
+        "bistritzer_macdonald must carry the value its kernel produced"
+    );
 }
 
 #[test]
@@ -109,6 +132,18 @@ fn test_wrapper_moire_magic_angle() {
     // A cutoff of 2 exceeds what the kernel supports, so the wrapper must forward the refusal.
     // `is_ok() || is_err()` is true for every result and asserted nothing.
     let effect = bistritzer_macdonald::<f64>(theta, w, vf, k, 2);
+    // The refusal must name its cause: a wrapper forwards the kernel's `PhysicsError`
+    // text through a `CausalityError`, and asserting it keeps the *reason* pinned.
+    assert!(
+        effect
+            .error()
+            .expect("the call must fail")
+            .to_string()
+            .contains("Calculation Error: Only shell_cutoff=1 is currently supported"),
+        "unexpected refusal: {:?}",
+        effect.error()
+    );
+
     assert!(
         effect.is_err(),
         "an unsupported shell cutoff must be refused by the wrapper"
@@ -125,8 +160,15 @@ fn test_wrapper_strain_simple() {
     let e = Stiffness::<f64>::new(100.0).unwrap();
     let nu = Ratio::new(0.3).unwrap();
 
+    // Delegation, not merely success.
     let effect = foppl_von_karman_strain_simple::<f64>(&eps, e, nu);
-    assert!(effect.is_ok());
+    let carried = effect.value_cloned().unwrap();
+    let direct = foppl_von_karman_strain_simple_kernel::<f64>(&eps, e, nu).unwrap();
+    assert_eq!(
+        carried.as_slice(),
+        direct.as_slice(),
+        "foppl_von_karman_strain_simple must carry the value its kernel produced"
+    );
 }
 
 fn create_flat_manifold() -> SimplicialManifold<f64, f64> {
@@ -149,8 +191,15 @@ fn test_wrapper_strain_full() {
     let e = Stiffness::<f64>::new(100.0).unwrap();
     let nu = Ratio::new(0.3).unwrap();
 
+    // Delegation, not merely success.
     let effect = foppl_von_karman_strain::<f64>(&man, &man, e, nu);
-    assert!(effect.is_ok());
+    let carried = effect.value_cloned().unwrap();
+    let direct = foppl_von_karman_strain_kernel::<f64>(&man, &man, e, nu).unwrap();
+    assert_eq!(
+        carried.as_slice(),
+        direct.as_slice(),
+        "foppl_von_karman_strain must carry the value its kernel produced"
+    );
 }
 
 // ============================================================================
@@ -164,8 +213,13 @@ fn test_wrapper_phase() {
     let grad_c =
         deep_causality_multivector::CausalMultiVectorWitness::fmap(grad, |x| Complex::new(x, 0.0));
 
+    // Delegation, not merely success.
     let effect = ginzburg_landau_free_energy::<f64>(psi, -1.0, 1.0, &grad_c, None);
-    assert!(effect.is_ok());
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        ginzburg_landau_free_energy_kernel::<f64>(psi, -1.0, 1.0, &grad_c, None).unwrap(),
+        "ginzburg_landau_free_energy must carry the value its kernel produced"
+    );
 }
 
 #[test]
@@ -192,7 +246,14 @@ fn test_wrapper_cahn_hilliard_flux_error() {
     let grad = ChemicalPotentialGradient::new(CausalTensor::new(vec![1.0], vec![1]).unwrap());
 
     let effect = cahn_hilliard_flux::<f64>(&conc, m, &grad);
-    assert!(effect.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Dimension Mismatch"),
+        "expected a Dimension Mismatch refusal, got {err}"
+    );
 }
 
 // ============================================================================
@@ -211,7 +272,14 @@ fn test_wrapper_qgt_error_propagation() {
     );
 
     let effect = quantum_geometric_tensor::<f64>(&energies, &u, &v, &v, 0, 1e-12);
-    assert!(effect.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Dimension Mismatch"),
+        "expected a Dimension Mismatch refusal, got {err}"
+    );
 }
 
 #[test]
@@ -227,7 +295,14 @@ fn test_wrapper_quasi_qgt_error_propagation() {
     );
 
     let effect = quasi_qgt::<f64>(&energies, &u, &v, &v, 0, 1e-12);
-    assert!(effect.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Dimension Mismatch"),
+        "expected a Dimension Mismatch refusal, got {err}"
+    );
 }
 
 #[test]
@@ -239,7 +314,14 @@ fn test_wrapper_strain_simple_error_propagation() {
     let nu = Ratio::new(0.3).unwrap();
 
     let effect = foppl_von_karman_strain_simple::<f64>(&eps, e, nu);
-    assert!(effect.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Dimension Mismatch"),
+        "expected a Dimension Mismatch refusal, got {err}"
+    );
 }
 
 fn create_line_manifold_w() -> SimplicialManifold<f64, f64> {
@@ -266,7 +348,14 @@ fn test_wrapper_strain_full_error_propagation() {
     let nu = Ratio::new(0.3).unwrap();
 
     let effect = foppl_von_karman_strain::<f64>(&u_man, &w_man, e, nu);
-    assert!(effect.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Dimension Mismatch"),
+        "expected a Dimension Mismatch refusal, got {err}"
+    );
 }
 
 #[test]
@@ -285,5 +374,12 @@ fn test_wrapper_ginzburg_error_propagation() {
 
     let effect =
         ginzburg_landau_free_energy::<f64>(psi, -1.0, 1.0, &grad_c, Some(&vector_potential));
-    assert!(effect.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Dimension Mismatch"),
+        "expected a Dimension Mismatch refusal, got {err}"
+    );
 }

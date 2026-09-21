@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::NumericalAperture;
+use deep_causality_physics::{NumericalAperture, PhysicsErrorEnum};
 
 #[test]
 fn test_numerical_aperture() {
@@ -11,7 +11,13 @@ fn test_numerical_aperture() {
     assert_eq!(na.value(), 0.5);
 
     let err = NumericalAperture::<f64>::new(0.0);
-    assert!(err.is_err());
+    assert!(
+        matches!(
+            err.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

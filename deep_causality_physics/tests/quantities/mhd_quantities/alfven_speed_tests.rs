@@ -3,15 +3,33 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::AlfvenSpeed;
+use deep_causality_physics::{AlfvenSpeed, PhysicsErrorEnum};
 
 #[test]
 fn test_alfven_speed() {
     let v = AlfvenSpeed::<f64>::new(100.0).unwrap();
     assert_eq!(v.value(), 100.0);
-    assert!(AlfvenSpeed::<f64>::new(-1.0).is_err());
-    assert!(AlfvenSpeed::<f64>::new(f64::NAN).is_err());
-    assert!(AlfvenSpeed::<f64>::new(f64::INFINITY).is_err());
+    assert!(
+        matches!(
+            AlfvenSpeed::<f64>::new(-1.0).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            AlfvenSpeed::<f64>::new(f64::NAN).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            AlfvenSpeed::<f64>::new(f64::INFINITY).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -28,6 +46,18 @@ fn test_alfven_speed_default() {
 
 #[test]
 fn test_alfven_speed_new_nan_error() {
-    assert!(AlfvenSpeed::<f64>::new(f64::NAN).is_err());
-    assert!(AlfvenSpeed::<f64>::new(f64::INFINITY).is_err());
+    assert!(
+        matches!(
+            AlfvenSpeed::<f64>::new(f64::NAN).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            AlfvenSpeed::<f64>::new(f64::INFINITY).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }

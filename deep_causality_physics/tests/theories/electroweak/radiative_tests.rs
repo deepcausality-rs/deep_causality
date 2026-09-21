@@ -14,7 +14,9 @@
 use deep_causality_physics::theories::electroweak::{
     calculate_delta_r_weak, calculate_delta_rho, calculate_effective_angle, solve_w_mass,
 };
-use deep_causality_physics::{ALPHA_EM, ALPHA_EM_MZ, FERMI_CONSTANT, TOP_MASS, Z_MASS};
+use deep_causality_physics::{
+    ALPHA_EM, ALPHA_EM_MZ, FERMI_CONSTANT, PhysicsErrorEnum, TOP_MASS, Z_MASS,
+};
 
 // ============================================================================
 // Veltman Screening Correction (Δρ) Tests
@@ -204,8 +206,11 @@ fn test_solve_w_mass_negative_discriminant() {
 
     let result = solve_w_mass(mz, top_mass, alpha_mz, alpha_0, tiny_gf);
     assert!(
-        result.is_err(),
-        "solve_w_mass should fail with tiny G_F causing negative discriminant"
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
     );
 }
 

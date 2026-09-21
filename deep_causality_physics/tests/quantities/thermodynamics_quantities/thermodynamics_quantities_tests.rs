@@ -62,7 +62,13 @@ fn test_efficiency_new_one() {
 #[test]
 fn test_efficiency_new_error_negative() {
     let eff = Efficiency::<f64>::new(-0.1);
-    assert!(eff.is_err());
+    assert!(
+        matches!(
+            eff.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
     let err = eff.unwrap_err();
     assert!(matches!(
         &err.0,
@@ -73,7 +79,13 @@ fn test_efficiency_new_error_negative() {
 #[test]
 fn test_efficiency_new_error_greater_than_one() {
     let eff = Efficiency::<f64>::new(1.1);
-    assert!(eff.is_err());
+    assert!(
+        matches!(
+            eff.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

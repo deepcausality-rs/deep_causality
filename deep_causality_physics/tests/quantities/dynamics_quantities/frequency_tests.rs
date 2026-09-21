@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::Frequency;
+use deep_causality_physics::{Frequency, PhysicsErrorEnum};
 
 #[test]
 fn test_frequency_new_valid() {
@@ -14,19 +14,37 @@ fn test_frequency_new_valid() {
 #[test]
 fn test_frequency_new_negative_error() {
     let freq = Frequency::<f64>::new(-1.0);
-    assert!(freq.is_err());
+    assert!(
+        matches!(
+            freq.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
 fn test_frequency_new_nan_error() {
     let freq = Frequency::<f64>::new(f64::NAN);
-    assert!(freq.is_err());
+    assert!(
+        matches!(
+            freq.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
 fn test_frequency_new_infinity_error() {
     let freq = Frequency::<f64>::new(f64::INFINITY);
-    assert!(freq.is_err());
+    assert!(
+        matches!(
+            freq.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

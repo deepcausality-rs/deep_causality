@@ -117,7 +117,13 @@ fn test_relativistic_current_kernel_low_dim_metric_error() {
 
     let metric_3d = EastCoastMetric::new_nd(3).unwrap();
     let r = relativistic_current_kernel(&manifold, &metric_3d);
-    assert!(r.is_err());
+    assert!(
+        matches!(
+            r.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -136,7 +142,13 @@ fn test_relativistic_current_kernel_low_skeleton_error() {
 
     let metric = EastCoastMetric::minkowski_4d();
     let r = relativistic_current_kernel(&manifold, &metric);
-    assert!(r.is_err(), "1D complex must fail for relativistic current");
+    assert!(
+        matches!(
+            r.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -165,8 +177,11 @@ fn test_relativistic_current_kernel_insufficient_hodge_ops_error() {
     let spacetime = EastCoastMetric::minkowski_4d();
     let r = relativistic_current_kernel(&manifold, &spacetime);
     assert!(
-        r.is_err(),
-        "2D complex must lack the 4 Hodge operators needed for a 4D EM 2-form"
+        matches!(
+            r.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::CalculationError { .. }
+        ),
+        "expected a CalculationError refusal"
     );
 }
 
@@ -226,5 +241,13 @@ fn test_relativistic_current_kernel_missing_coboundary_operators_error() {
 fn test_energy_momentum_tensor_dimension_error() {
     let em = CausalTensor::new(vec![0.0; 4], vec![4]).unwrap();
     let metric = CausalTensor::new(vec![1.0; 4], vec![2, 2]).unwrap();
-    assert!(energy_momentum_tensor_em_kernel(&em, &metric).is_err());
+    assert!(
+        matches!(
+            energy_momentum_tensor_em_kernel(&em, &metric)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }

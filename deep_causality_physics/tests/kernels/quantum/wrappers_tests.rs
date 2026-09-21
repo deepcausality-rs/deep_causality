@@ -58,5 +58,12 @@ fn test_klein_gordon_wrapper_error() {
     let manifold = create_simple_manifold();
     let effect = klein_gordon(&manifold, 1e200); // Massive mass
     // It should return Err because m^2 overflows and we check for finiteness.
-    assert!(effect.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Numerical Instability"),
+        "expected a Numerical Instability refusal, got {err}"
+    );
 }

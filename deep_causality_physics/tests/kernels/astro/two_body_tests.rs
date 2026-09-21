@@ -6,7 +6,7 @@
 //! Exact two-body propagator (`TwoBodyPropagator`) — the constant-generator matrix-exponential Kepler core
 //! validated in the Gap-3 FS-1 study. Tests cover exactness (round-off), conservation, and the rejections.
 
-use deep_causality_physics::{EARTH_GM, TwoBodyPropagator};
+use deep_causality_physics::{EARTH_GM, PhysicsErrorEnum, TwoBodyPropagator};
 
 fn leo() -> TwoBodyPropagator<f64> {
     // A bound, eccentric LEO-ish orbit (the FS-1 reference state).
@@ -111,18 +111,50 @@ fn period_matches_keplers_third_law() {
 
 #[test]
 fn rejects_non_positive_gm() {
-    assert!(TwoBodyPropagator::from_state([7.0e6, 0.0], [0.0, 7.5e3], 0.0).is_err());
-    assert!(TwoBodyPropagator::from_state([7.0e6, 0.0], [0.0, 7.5e3], -1.0).is_err());
+    assert!(
+        matches!(
+            TwoBodyPropagator::from_state([7.0e6, 0.0], [0.0, 7.5e3], 0.0)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            TwoBodyPropagator::from_state([7.0e6, 0.0], [0.0, 7.5e3], -1.0)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
 fn rejects_unbound_orbit() {
     // Escape-speed-plus state: energy ≥ 0 ⇒ not an ellipse.
     let v_esc = (2.0 * EARTH_GM / 7.0e6).sqrt();
-    assert!(TwoBodyPropagator::from_state([7.0e6, 0.0], [0.0, v_esc * 1.2], EARTH_GM).is_err());
+    assert!(
+        matches!(
+            TwoBodyPropagator::from_state([7.0e6, 0.0], [0.0, v_esc * 1.2], EARTH_GM)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
 fn rejects_zero_radius() {
-    assert!(TwoBodyPropagator::from_state([0.0, 0.0], [0.0, 7.5e3], EARTH_GM).is_err());
+    assert!(
+        matches!(
+            TwoBodyPropagator::from_state([0.0, 0.0], [0.0, 7.5e3], EARTH_GM)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
+    );
 }

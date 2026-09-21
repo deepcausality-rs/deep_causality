@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::EnergyDensity;
+use deep_causality_physics::{EnergyDensity, PhysicsErrorEnum};
 
 #[test]
 fn test_energy_density_new_valid() {
@@ -15,7 +15,13 @@ fn test_energy_density_new_valid() {
 #[test]
 fn test_energy_density_new_negative_error() {
     let ed = EnergyDensity::<f64>::new(-50.0);
-    assert!(ed.is_err());
+    assert!(
+        matches!(
+            ed.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

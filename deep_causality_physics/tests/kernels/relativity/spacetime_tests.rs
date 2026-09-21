@@ -5,7 +5,8 @@
 
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_physics::{
-    chronometric_volume_kernel, spacetime_interval_kernel, time_dilation_angle_kernel,
+    PhysicsErrorEnum, chronometric_volume_kernel, spacetime_interval_kernel,
+    time_dilation_angle_kernel,
 };
 
 // =============================================================================
@@ -38,7 +39,13 @@ fn test_spacetime_interval_kernel_metric_mismatch() {
     let metric = Metric::Minkowski(4);
 
     let result = spacetime_interval_kernel(&mv, &metric);
-    assert!(result.is_err(), "Should error on metric mismatch");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::MetricSingularity { .. }
+        ),
+        "expected a MetricSingularity refusal"
+    );
 }
 
 // =============================================================================
@@ -86,7 +93,13 @@ fn test_time_dilation_angle_zero_magnitude_error() {
     .unwrap();
 
     let result = time_dilation_angle_kernel(&t1, &t2);
-    assert!(result.is_err(), "Zero magnitude should error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::CausalityViolation { .. }
+        ),
+        "expected a CausalityViolation refusal"
+    );
 }
 
 #[test]
@@ -94,7 +107,13 @@ fn test_time_dilation_angle_metric_mismatch() {
     let t1 = CausalMultiVector::new(vec![0.0; 16], Metric::Minkowski(4)).unwrap();
     let t2 = CausalMultiVector::new(vec![0.0; 8], Metric::Euclidean(3)).unwrap();
     let result = time_dilation_angle_kernel(&t1, &t2);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::MetricSingularity { .. }
+        ),
+        "expected a MetricSingularity refusal"
+    );
 }
 
 #[test]
@@ -102,7 +121,13 @@ fn test_time_dilation_angle_not_minkowski() {
     let t1 = CausalMultiVector::new(vec![1.0, 0.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap();
     let t2 = CausalMultiVector::new(vec![1.0, 0.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap();
     let result = time_dilation_angle_kernel(&t1, &t2);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::MetricSingularity { .. }
+        ),
+        "expected a MetricSingularity refusal"
+    );
 }
 
 #[test]
@@ -127,7 +152,13 @@ fn test_time_dilation_angle_causality_violation() {
 
     // dot = -1. mag1 = 1. mag2 = 1. gamma = -1.
     // -1 < 1.0 -> Error.
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::CausalityViolation { .. }
+        ),
+        "expected a CausalityViolation refusal"
+    );
     let err = result.unwrap_err();
     match err.0 {
         deep_causality_physics::PhysicsErrorEnum::CausalityViolation(msg) => {
@@ -175,7 +206,13 @@ fn test_chronometric_volume_kernel_metric_mismatch() {
     let b = CausalMultiVector::new(vec![0.0; 16], Metric::Minkowski(4)).unwrap();
     let c = CausalMultiVector::new(vec![0.0; 8], Metric::Euclidean(3)).unwrap();
     let result = chronometric_volume_kernel(&a, &b, &c);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::MetricSingularity { .. }
+        ),
+        "expected a MetricSingularity refusal"
+    );
 }
 
 // =============================================================================
@@ -339,7 +376,13 @@ fn test_parallel_transport_short_path_error() {
     let christoffel = CausalTensor::new(vec![0.0; 8], vec![2, 2, 2]).unwrap();
 
     let result = parallel_transport_kernel(&initial_vector, &path, &christoffel);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -349,7 +392,13 @@ fn test_parallel_transport_dimension_mismatch() {
     let christoffel = CausalTensor::new(vec![0.0; 27], vec![3, 3, 3]).unwrap();
 
     let result = parallel_transport_kernel(&initial_vector, &path, &christoffel);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -359,7 +408,13 @@ fn test_parallel_transport_wrong_christoffel_rank() {
     let christoffel = CausalTensor::new(vec![0.0; 4], vec![2, 2]).unwrap(); // Rank 2
 
     let result = parallel_transport_kernel(&initial_vector, &path, &christoffel);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -458,7 +513,13 @@ fn test_proper_time_wrong_metric_rank() {
     let metric = CausalTensor::new(vec![1.0, 0.0], vec![2]).unwrap(); // Rank 1
 
     let result = proper_time_kernel(&path, &metric);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -467,7 +528,13 @@ fn test_proper_time_non_square_metric_error() {
     // Square check uses shape[1] != shape[0]. Build a [2, 3] rank-2 tensor.
     let metric = CausalTensor::new(vec![1.0, 0.0, 0.0, 0.0, 1.0, 0.0], vec![2, 3]).unwrap();
     let r = proper_time_kernel(&path, &metric);
-    assert!(r.is_err(), "Non-square metric must error");
+    assert!(
+        matches!(
+            r.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -476,7 +543,13 @@ fn test_proper_time_nan_segment_error() {
     let path = vec![vec![0.0, 0.0], vec![f64::NAN, 0.0]];
     let metric = CausalTensor::new(vec![-1.0, 0.0, 0.0, 1.0], vec![2, 2]).unwrap();
     let r = proper_time_kernel(&path, &metric);
-    assert!(r.is_err(), "NaN in path must propagate as instability");
+    assert!(
+        matches!(
+            r.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
@@ -488,7 +561,13 @@ fn test_parallel_transport_nan_christoffel_error() {
     data[0] = f64::NAN;
     let christoffel = CausalTensor::new(data, vec![2, 2, 2]).unwrap();
     let r = parallel_transport_kernel(&initial_vector, &path, &christoffel);
-    assert!(r.is_err());
+    assert!(
+        matches!(
+            r.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
@@ -512,7 +591,13 @@ fn test_proper_time_dimension_mismatch() {
     let metric = CausalTensor::new(vec![1.0, 0.0, 0.0, 1.0], vec![2, 2]).unwrap(); // 2D
 
     let result = proper_time_kernel(&path, &metric);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -533,8 +618,11 @@ fn test_time_dilation_angle_non_scalar_grade_error() {
 
     let result = time_dilation_angle_kernel(&t1, &t2);
     assert!(
-        result.is_err(),
-        "Bivector second argument must produce a non-scalar inner product error"
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
     );
     match result.unwrap_err().0 {
         deep_causality_physics::PhysicsErrorEnum::PhysicalInvariantBroken(msg) => {

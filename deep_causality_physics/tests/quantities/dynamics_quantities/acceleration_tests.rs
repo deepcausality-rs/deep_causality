@@ -5,7 +5,7 @@
 
 // Acceleration allows negative values for direction.
 
-use deep_causality_physics::Acceleration;
+use deep_causality_physics::{Acceleration, PhysicsErrorEnum};
 
 #[test]
 fn test_acceleration_new_positive() {
@@ -24,13 +24,25 @@ fn test_acceleration_new_negative() {
 #[test]
 fn test_acceleration_new_nan_error() {
     let acc = Acceleration::<f64>::new(f64::NAN);
-    assert!(acc.is_err());
+    assert!(
+        matches!(
+            acc.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
 fn test_acceleration_new_infinity_error() {
     let acc = Acceleration::<f64>::new(f64::INFINITY);
-    assert!(acc.is_err());
+    assert!(
+        matches!(
+            acc.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

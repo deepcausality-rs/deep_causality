@@ -7,29 +7,35 @@ use deep_causality_physics::{
     Density, KinematicViscosity, Length, Pressure, ReynoldsStress, SpecificEnthalpy, Speed,
     StrainRateTensor, Temperature, Velocity3, VelocityGradient, Viscosity, ViscousStress,
     VorticityVector, WallShearStress, area_mach_ratio, area_mach_ratio_kernel, bernoulli_pressure,
-    bernoulli_total_head, bond_number, capillary_number, circulation, continuity_rhs,
-    convective_acceleration, delta_criterion, dissipation_rate, dynamic_pressure,
-    dynamic_pressure_kernel, eckert_number, eddy_viscosity_boussinesq,
+    bernoulli_pressure_kernel, bernoulli_total_head, bernoulli_total_head_kernel, bond_number,
+    capillary_number, circulation, circulation_kernel, continuity_rhs, convective_acceleration,
+    delta_criterion, delta_criterion_kernel, dissipation_rate, dissipation_rate_kernel,
+    dynamic_pressure, dynamic_pressure_kernel, eckert_number, eddy_viscosity_boussinesq,
     eddy_viscosity_boussinesq_kernel, enstrophy_density, entropy_production_rate,
-    friction_velocity, froude_number, grashof_number, helicity_density, hydrostatic_pressure,
-    integral_length_scale, isentropic_density_ratio, isentropic_density_ratio_kernel,
+    entropy_production_rate_kernel, friction_velocity, friction_velocity_kernel, froude_number,
+    grashof_number, helicity_density, hydrostatic_pressure, integral_length_scale,
+    integral_length_scale_kernel, isentropic_density_ratio, isentropic_density_ratio_kernel,
     isentropic_pressure_ratio, isentropic_pressure_ratio_kernel, isentropic_temperature_ratio,
     isentropic_temperature_ratio_kernel, kinetic_energy_density, knudsen_number, kolmogorov_length,
-    kolmogorov_time, kolmogorov_velocity, kutta_joukowski_lift, lambda2, lambda2_kernel,
-    lewis_number, log_law_velocity, mach_number, newtonian_viscous_stress,
+    kolmogorov_length_kernel, kolmogorov_time, kolmogorov_time_kernel, kolmogorov_velocity,
+    kolmogorov_velocity_kernel, kutta_joukowski_lift, lambda2, lambda2_kernel, lewis_number,
+    log_law_velocity, log_law_velocity_kernel, mach_number, newtonian_viscous_stress,
     newtonian_viscous_stress_with_bulk, nusselt_number, particle_stokes_number, peclet_number,
-    power_law_apparent_viscosity, prandtl_number, pressure_gradient_force, pressure_work,
-    q_criterion, q_criterion_kernel, rayleigh_number, reynolds_number, reynolds_number_kernel,
-    reynolds_stress, richardson_number, rotation_rate_tensor, scalar_advection_diffusion,
+    power_law_apparent_viscosity, prandtl_number, pressure_gradient_force,
+    pressure_gradient_force_kernel, pressure_work, q_criterion, q_criterion_kernel,
+    rayleigh_number, reynolds_number, reynolds_number_kernel, reynolds_stress,
+    reynolds_stress_kernel, richardson_number, rotation_rate_tensor, scalar_advection_diffusion,
     schmidt_number, skin_friction_coefficient, skin_friction_coefficient_kernel, specific_enthalpy,
-    speed_of_sound_ideal_gas, strain_rate_tensor, stream_function_2d, strouhal_number,
-    swirling_strength, swirling_strength_kernel, taylor_microscale, total_enthalpy,
-    total_pressure_isentropic, total_temperature_isentropic, total_temperature_isentropic_kernel,
-    turbulent_kinetic_energy, turbulent_kinetic_energy_kernel, velocity_gradient_invariants,
-    velocity_potential_2d, velocity_potential_2d_kernel, viscous_diffusion,
-    viscous_dissipation_rate, viscous_length_scale, viscous_sublayer_velocity,
+    specific_enthalpy_kernel, speed_of_sound_ideal_gas, speed_of_sound_ideal_gas_kernel,
+    strain_rate_tensor, stream_function_2d, strouhal_number, swirling_strength,
+    swirling_strength_kernel, taylor_microscale, taylor_microscale_kernel, total_enthalpy,
+    total_enthalpy_kernel, total_pressure_isentropic, total_pressure_isentropic_kernel,
+    total_temperature_isentropic, total_temperature_isentropic_kernel, turbulent_kinetic_energy,
+    turbulent_kinetic_energy_kernel, velocity_gradient_invariants, velocity_potential_2d,
+    velocity_potential_2d_kernel, viscous_diffusion, viscous_dissipation_rate,
+    viscous_length_scale, viscous_length_scale_kernel, viscous_sublayer_velocity,
     viscous_sublayer_velocity_kernel, vorticity_from_gradient, vorticity_transport,
-    wall_shear_stress_newtonian, weber_number, y_plus,
+    wall_shear_stress_newtonian, weber_number, y_plus, y_plus_kernel,
 };
 
 // =============================================================================
@@ -62,8 +68,13 @@ fn test_bernoulli_pressure_wrapper_success() {
     let h2 = Length::new(5.0).unwrap();
     let density = Density::new(1000.0).unwrap();
 
+    // Delegation, not merely success.
     let effect = bernoulli_pressure(&p1, &v1, &h1, &v2, &h2, &density);
-    assert!(effect.is_ok());
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        bernoulli_pressure_kernel(&p1, &v1, &h1, &v2, &h2, &density).unwrap(),
+        "bernoulli_pressure must carry the value its kernel produced"
+    );
 }
 
 // =============================================================================
@@ -158,16 +169,31 @@ fn test_viscous_diffusion_wrapper_success() {
 
 #[test]
 fn test_pressure_gradient_force_wrapper_success() {
+    // Delegation, not merely success. a = -(1/rho) grad p = -(1/1000)(10, 0, 0), so the first
+    // component is -0.01 and the other two vanish.
     let rho = Density::<f64>::new(1000.0).unwrap();
     let effect = pressure_gradient_force(&rho, &[10.0, 0.0, 0.0]);
-    assert!(effect.is_ok());
+    let carried = effect.value_cloned().unwrap();
+    assert_eq!(
+        carried,
+        pressure_gradient_force_kernel(&rho, &[10.0, 0.0, 0.0]).unwrap(),
+        "pressure_gradient_force must carry the value its kernel produced"
+    );
+    assert!((carried.value()[0] + 0.01).abs() < 1e-12);
 }
 
 #[test]
 fn test_pressure_gradient_force_wrapper_error_path() {
     let rho = Density::<f64>::new(0.0).unwrap();
     let effect = pressure_gradient_force(&rho, &[1.0, 0.0, 0.0]);
-    assert!(!effect.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 #[test]
@@ -270,11 +296,26 @@ fn test_power_law_apparent_viscosity_wrapper_success() {
 #[test]
 fn test_power_law_apparent_viscosity_wrapper_error_path() {
     let effect = power_law_apparent_viscosity(1.0_f64, 0.5, -0.1);
-    assert!(!effect.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 // =============================================================================
-// Dimensionless number wrapper smoke tests
+// Dimensionless number wrappers
+//
+// The eighteen wrappers are covered by
+// `test_the_dimensionless_wrappers_carry_the_value_not_merely_an_ok`, which drives every one of
+// them over the oracle tables at the end of this file. The seventeen per-wrapper
+// `test_*_number_wrapper` smoke tests that used to sit here asserted `is_ok()` and nothing else,
+// so they passed for any returned value and implied coverage the consolidated test already
+// provides. `test_reynolds_number_wrapper` is kept as the worked example of the delegation
+// assertion.
 // =============================================================================
 
 #[test]
@@ -299,120 +340,14 @@ fn test_reynolds_number_wrapper_error_path() {
     let l = Length::<f64>::new(1.0).unwrap();
     let nu = KinematicViscosity::<f64>::new(0.0).unwrap();
     let effect = reynolds_number(&u, &l, &nu);
-    assert!(!effect.is_ok());
-}
-
-#[test]
-fn test_mach_number_wrapper() {
-    let u = Speed::<f64>::new(170.0).unwrap();
-    let a = Speed::<f64>::new(340.0).unwrap();
-    assert!(mach_number(&u, &a).is_ok());
-}
-
-#[test]
-fn test_froude_number_wrapper() {
-    let u = Speed::<f64>::new(10.0).unwrap();
-    let l = Length::<f64>::new(2.5).unwrap();
-    assert!(froude_number(&u, 9.8_f64, &l).is_ok());
-}
-
-#[test]
-fn test_weber_number_wrapper() {
-    let rho = Density::<f64>::new(1000.0).unwrap();
-    let u = Speed::<f64>::new(2.0).unwrap();
-    let l = Length::<f64>::new(0.001).unwrap();
-    assert!(weber_number(&rho, &u, &l, 0.072_f64).is_ok());
-}
-
-#[test]
-fn test_prandtl_number_wrapper() {
-    let nu = KinematicViscosity::<f64>::new(1.5e-5).unwrap();
-    assert!(prandtl_number(&nu, 2.1e-5_f64).is_ok());
-}
-
-#[test]
-fn test_peclet_number_wrapper() {
-    let u = Speed::<f64>::new(2.0).unwrap();
-    let l = Length::<f64>::new(0.1).unwrap();
-    assert!(peclet_number(&u, &l, 2.0e-5_f64).is_ok());
-}
-
-#[test]
-fn test_strouhal_number_wrapper() {
-    let u = Speed::<f64>::new(5.0).unwrap();
-    let l = Length::<f64>::new(0.1).unwrap();
-    assert!(strouhal_number(10.0_f64, &l, &u).is_ok());
-}
-
-#[test]
-fn test_knudsen_number_wrapper() {
-    let l = Length::<f64>::new(1.0e-6).unwrap();
-    assert!(knudsen_number(1.0e-7_f64, &l).is_ok());
-}
-
-#[test]
-fn test_richardson_number_wrapper() {
-    let u = Speed::<f64>::new(2.0).unwrap();
-    let l = Length::<f64>::new(1.0).unwrap();
-    assert!(richardson_number(9.8_f64, 3.0e-3, 10.0, &l, &u).is_ok());
-}
-
-#[test]
-fn test_rayleigh_number_wrapper() {
-    let l = Length::<f64>::new(0.1).unwrap();
-    let nu = KinematicViscosity::<f64>::new(1.5e-5).unwrap();
-    assert!(rayleigh_number(9.8_f64, 3.0e-3, 10.0, &l, &nu, 2.1e-5).is_ok());
-}
-
-#[test]
-fn test_grashof_number_wrapper() {
-    let l = Length::<f64>::new(0.1).unwrap();
-    let nu = KinematicViscosity::<f64>::new(1.5e-5).unwrap();
-    assert!(grashof_number(9.8_f64, 3.0e-3, 10.0, &l, &nu).is_ok());
-}
-
-#[test]
-fn test_eckert_number_wrapper() {
-    let u = Speed::<f64>::new(10.0).unwrap();
-    assert!(eckert_number(&u, 1000.0_f64, 5.0).is_ok());
-}
-
-#[test]
-fn test_schmidt_number_wrapper() {
-    let nu = KinematicViscosity::<f64>::new(1.0e-6).unwrap();
-    assert!(schmidt_number(&nu, 2.0e-9_f64).is_ok());
-}
-
-#[test]
-fn test_lewis_number_wrapper() {
-    assert!(lewis_number(2.0e-5_f64, 5.0e-9_f64).is_ok());
-}
-
-#[test]
-fn test_particle_stokes_number_wrapper() {
-    let u = Speed::<f64>::new(10.0).unwrap();
-    let l = Length::<f64>::new(0.01).unwrap();
-    assert!(particle_stokes_number(1.0e-3_f64, &u, &l).is_ok());
-}
-
-#[test]
-fn test_capillary_number_wrapper() {
-    let mu = Viscosity::<f64>::new(0.001).unwrap();
-    let u = Speed::<f64>::new(1.0).unwrap();
-    assert!(capillary_number(&mu, &u, 0.072_f64).is_ok());
-}
-
-#[test]
-fn test_bond_number_wrapper() {
-    let rho = Density::<f64>::new(1000.0).unwrap();
-    let l = Length::<f64>::new(0.01).unwrap();
-    assert!(bond_number(&rho, 9.8_f64, &l, 0.072).is_ok());
-}
-
-#[test]
-fn test_nusselt_number_wrapper() {
-    let l = Length::<f64>::new(0.1).unwrap();
-    assert!(nusselt_number(100.0_f64, &l, 0.5).is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 // =============================================================================
@@ -438,13 +373,27 @@ fn test_dissipation_rate_wrapper() {
     let nu = KinematicViscosity::<f64>::new(0.5).unwrap();
     let g =
         VelocityGradient::<f64>::new([[1.0, 0.0, 0.0], [0.0, 0.0, 0.0], [0.0, 0.0, 0.0]]).unwrap();
-    assert!(dissipation_rate(&nu, &g).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = dissipation_rate(&nu, &g);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        dissipation_rate_kernel(&nu, &g).unwrap(),
+        "dissipation_rate must carry the value its kernel produced"
+    );
 }
 
 #[test]
 fn test_kolmogorov_length_wrapper() {
     let nu = KinematicViscosity::<f64>::new(1.5e-5).unwrap();
-    assert!(kolmogorov_length(&nu, 1.0e-3_f64).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = kolmogorov_length(&nu, 1.0e-3_f64);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        kolmogorov_length_kernel(&nu, 1.0e-3_f64).unwrap(),
+        "kolmogorov_length must carry the value its kernel produced"
+    );
 }
 
 #[test]
@@ -456,7 +405,14 @@ fn test_kolmogorov_length_wrapper_error_path() {
 #[test]
 fn test_kolmogorov_time_wrapper() {
     let nu = KinematicViscosity::<f64>::new(1.5e-5).unwrap();
-    assert!(kolmogorov_time(&nu, 1.0e-3_f64).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = kolmogorov_time(&nu, 1.0e-3_f64);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        kolmogorov_time_kernel(&nu, 1.0e-3_f64).unwrap(),
+        "kolmogorov_time must carry the value its kernel produced"
+    );
 }
 
 #[test]
@@ -469,7 +425,14 @@ fn test_kolmogorov_time_wrapper_error_path() {
 #[test]
 fn test_kolmogorov_velocity_wrapper() {
     let nu = KinematicViscosity::<f64>::new(1.5e-5).unwrap();
-    assert!(kolmogorov_velocity(&nu, 1.0e-3_f64).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = kolmogorov_velocity(&nu, 1.0e-3_f64);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        kolmogorov_velocity_kernel(&nu, 1.0e-3_f64).unwrap(),
+        "kolmogorov_velocity must carry the value its kernel produced"
+    );
 }
 
 #[test]
@@ -481,7 +444,14 @@ fn test_kolmogorov_velocity_wrapper_error_path() {
 #[test]
 fn test_taylor_microscale_wrapper() {
     let nu = KinematicViscosity::<f64>::new(1.5e-5).unwrap();
-    assert!(taylor_microscale(2.0_f64, 1.0e-2, &nu).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = taylor_microscale(2.0_f64, 1.0e-2, &nu);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        taylor_microscale_kernel(2.0_f64, 1.0e-2, &nu).unwrap(),
+        "taylor_microscale must carry the value its kernel produced"
+    );
 }
 
 #[test]
@@ -493,7 +463,14 @@ fn test_taylor_microscale_wrapper_error_path() {
 
 #[test]
 fn test_integral_length_scale_wrapper() {
-    assert!(integral_length_scale(4.0_f64, 8.0).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = integral_length_scale(4.0_f64, 8.0);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        integral_length_scale_kernel(4.0_f64, 8.0).unwrap(),
+        "integral_length_scale must carry the value its kernel produced"
+    );
 }
 
 #[test]
@@ -506,7 +483,14 @@ fn test_integral_length_scale_wrapper_error_path() {
 fn test_reynolds_stress_wrapper() {
     let r_in = StrainRateTensor::<f64>::new([[1.0, 0.5, 0.2], [0.5, 2.0, -0.1], [0.2, -0.1, 0.8]])
         .unwrap();
-    assert!(reynolds_stress(&r_in).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = reynolds_stress(&r_in);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        reynolds_stress_kernel(&r_in),
+        "reynolds_stress must carry the value its kernel produced"
+    );
 }
 
 #[test]
@@ -567,7 +551,14 @@ fn test_q_criterion_wrapper() {
 fn test_delta_criterion_wrapper() {
     let g =
         VelocityGradient::<f64>::new([[0.0, -1.0, 0.0], [1.0, 0.0, 0.0], [0.0, 0.0, 0.0]]).unwrap();
-    assert!(delta_criterion(&g).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = delta_criterion(&g);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        delta_criterion_kernel(&g).unwrap(),
+        "delta_criterion must carry the value its kernel produced"
+    );
 }
 
 #[test]
@@ -609,7 +600,14 @@ fn test_swirling_strength_wrapper() {
 #[test]
 fn test_speed_of_sound_ideal_gas_wrapper() {
     let t = Temperature::<f64>::new(293.15).unwrap();
-    assert!(speed_of_sound_ideal_gas(1.4_f64, 287.05, &t).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = speed_of_sound_ideal_gas(1.4_f64, 287.05, &t);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        speed_of_sound_ideal_gas_kernel(1.4_f64, 287.05, &t).unwrap(),
+        "speed_of_sound_ideal_gas must carry the value its kernel produced"
+    );
 }
 
 #[test]
@@ -621,20 +619,41 @@ fn test_speed_of_sound_ideal_gas_wrapper_error_path() {
 #[test]
 fn test_specific_enthalpy_wrapper() {
     let t = Temperature::<f64>::new(300.0).unwrap();
-    assert!(specific_enthalpy(1005.0_f64, &t).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = specific_enthalpy(1005.0_f64, &t);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        specific_enthalpy_kernel(1005.0_f64, &t),
+        "specific_enthalpy must carry the value its kernel produced"
+    );
 }
 
 #[test]
 fn test_total_enthalpy_wrapper() {
     let h = SpecificEnthalpy::<f64>::new(3.0e5).unwrap();
     let u = Velocity3::<f64>::new([100.0, 0.0, 0.0]).unwrap();
-    assert!(total_enthalpy(&h, &u).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = total_enthalpy(&h, &u);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        total_enthalpy_kernel(&h, &u).unwrap(),
+        "total_enthalpy must carry the value its kernel produced"
+    );
 }
 
 #[test]
 fn test_total_pressure_isentropic_wrapper() {
     let p = Pressure::<f64>::new(101_325.0).unwrap();
-    assert!(total_pressure_isentropic(&p, 0.5_f64, 1.4).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = total_pressure_isentropic(&p, 0.5_f64, 1.4);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        total_pressure_isentropic_kernel(&p, 0.5_f64, 1.4).unwrap(),
+        "total_pressure_isentropic must carry the value its kernel produced"
+    );
 }
 
 #[test]
@@ -657,7 +676,14 @@ fn test_entropy_production_rate_wrapper() {
     let tau = ViscousStress::<f64>::default();
     let grad_u = VelocityGradient::<f64>::default();
     let t = Temperature::<f64>::new(300.0).unwrap();
-    assert!(entropy_production_rate(&t, &tau, &grad_u, 0.025_f64, &[10.0, 0.0, 0.0]).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = entropy_production_rate(&t, &tau, &grad_u, 0.025_f64, &[10.0, 0.0, 0.0]);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        entropy_production_rate_kernel(&t, &tau, &grad_u, 0.025_f64, &[10.0, 0.0, 0.0]).unwrap(),
+        "entropy_production_rate must carry the value its kernel produced"
+    );
 }
 
 #[test]
@@ -685,7 +711,14 @@ fn test_wall_shear_stress_newtonian_wrapper() {
 fn test_friction_velocity_wrapper() {
     let tau = WallShearStress::<f64>::new(0.1).unwrap();
     let rho = Density::<f64>::new(1.0).unwrap();
-    assert!(friction_velocity(&tau, &rho).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = friction_velocity(&tau, &rho);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        friction_velocity_kernel(&tau, &rho).unwrap(),
+        "friction_velocity must carry the value its kernel produced"
+    );
 }
 
 #[test]
@@ -699,7 +732,14 @@ fn test_friction_velocity_wrapper_error_path() {
 fn test_viscous_length_scale_wrapper() {
     let nu = KinematicViscosity::<f64>::new(1.5e-5).unwrap();
     let u_tau = Speed::<f64>::new(0.5).unwrap();
-    assert!(viscous_length_scale(&nu, &u_tau).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = viscous_length_scale(&nu, &u_tau);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        viscous_length_scale_kernel(&nu, &u_tau).unwrap(),
+        "viscous_length_scale must carry the value its kernel produced"
+    );
 }
 
 #[test]
@@ -715,7 +755,14 @@ fn test_y_plus_wrapper() {
     let y = Length::<f64>::new(1.0e-4).unwrap();
     let u_tau = Speed::<f64>::new(0.5).unwrap();
     let nu = KinematicViscosity::<f64>::new(1.5e-5).unwrap();
-    assert!(y_plus(&y, &u_tau, &nu).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = y_plus(&y, &u_tau, &nu);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        y_plus_kernel(&y, &u_tau, &nu).unwrap(),
+        "y_plus must carry the value its kernel produced"
+    );
 }
 
 #[test]
@@ -742,7 +789,14 @@ fn test_viscous_sublayer_velocity_wrapper() {
 
 #[test]
 fn test_log_law_velocity_wrapper() {
-    assert!(log_law_velocity(100.0_f64, 0.41, 5.0).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = log_law_velocity(100.0_f64, 0.41, 5.0);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        log_law_velocity_kernel(100.0_f64, 0.41, 5.0).unwrap(),
+        "log_law_velocity must carry the value its kernel produced"
+    );
 }
 
 #[test]
@@ -800,7 +854,14 @@ fn test_bernoulli_total_head_wrapper() {
     let rho = Density::<f64>::new(1000.0).unwrap();
     let u = Speed::<f64>::new(0.0).unwrap();
     let h = Length::<f64>::new(5.0).unwrap();
-    assert!(bernoulli_total_head(&p, &rho, &u, &h).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = bernoulli_total_head(&p, &rho, &u, &h);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        bernoulli_total_head_kernel(&p, &rho, &u, &h).unwrap(),
+        "bernoulli_total_head must carry the value its kernel produced"
+    );
 }
 
 #[test]
@@ -836,7 +897,14 @@ fn test_velocity_potential_2d_wrapper() {
 fn test_circulation_wrapper() {
     let velocities = vec![Velocity3::<f64>::new([1.0, 0.0, 0.0]).unwrap(); 2];
     let tangents: Vec<[f64; 3]> = vec![[1.0, 0.0, 0.0]; 2];
-    assert!(circulation(&velocities, &tangents).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = circulation(&velocities, &tangents);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        circulation_kernel(&velocities, &tangents).unwrap(),
+        "circulation must carry the value its kernel produced"
+    );
 }
 
 #[test]
@@ -870,7 +938,14 @@ fn test_bernoulli_pressure_wrapper_error_path() {
     let h2 = Length::<f64>::new(0.0).unwrap();
     let rho = Density::<f64>::new(1000.0).unwrap();
     let effect = bernoulli_pressure(&p1, &v1, &h1, &v2, &h2, &rho);
-    assert!(!effect.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 #[test]
@@ -878,7 +953,14 @@ fn test_mach_number_wrapper_error_path() {
     let u = Speed::<f64>::new(100.0).unwrap();
     let c = Speed::<f64>::new(0.0).unwrap();
     let effect = mach_number(&u, &c);
-    assert!(!effect.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 #[test]
@@ -887,7 +969,14 @@ fn test_froude_number_wrapper_error_path() {
     let u = Speed::<f64>::new(1.0).unwrap();
     let length = Length::<f64>::new(1.0).unwrap();
     let effect = froude_number(&u, 0.0_f64, &length);
-    assert!(!effect.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 #[test]
@@ -897,7 +986,14 @@ fn test_weber_number_wrapper_error_path() {
     let u = Speed::<f64>::new(1.0).unwrap();
     let length = Length::<f64>::new(0.01).unwrap();
     let effect = weber_number(&rho, &u, &length, 0.0_f64);
-    assert!(!effect.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 #[test]
@@ -905,7 +1001,14 @@ fn test_prandtl_number_wrapper_error_path() {
     // thermal_diffusivity = 0 ⇒ division by zero.
     let nu = KinematicViscosity::<f64>::new(1.0e-6).unwrap();
     let effect = prandtl_number(&nu, 0.0_f64);
-    assert!(!effect.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 #[test]
@@ -913,7 +1016,14 @@ fn test_peclet_number_wrapper_error_path() {
     let u = Speed::<f64>::new(1.0).unwrap();
     let length = Length::<f64>::new(0.1).unwrap();
     let effect = peclet_number(&u, &length, 0.0_f64);
-    assert!(!effect.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 #[test]
@@ -922,7 +1032,14 @@ fn test_strouhal_number_wrapper_error_path() {
     let length = Length::<f64>::new(0.1).unwrap();
     let u = Speed::<f64>::new(0.0).unwrap();
     let effect = strouhal_number(1.0_f64, &length, &u);
-    assert!(!effect.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 #[test]
@@ -930,7 +1047,14 @@ fn test_knudsen_number_wrapper_error_path() {
     // length = 0 ⇒ division by zero.
     let length = Length::<f64>::new(0.0).unwrap();
     let effect = knudsen_number(1.0e-7_f64, &length);
-    assert!(!effect.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 #[test]
@@ -939,7 +1063,14 @@ fn test_richardson_number_wrapper_error_path() {
     let u = Speed::<f64>::new(0.0).unwrap();
     let length = Length::<f64>::new(1.0).unwrap();
     let effect = richardson_number(9.81_f64, 3.4e-3_f64, 10.0_f64, &length, &u);
-    assert!(!effect.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 #[test]
@@ -948,7 +1079,14 @@ fn test_rayleigh_number_wrapper_error_path() {
     let nu = KinematicViscosity::<f64>::new(1.0e-6).unwrap();
     let length = Length::<f64>::new(0.1).unwrap();
     let effect = rayleigh_number(9.81_f64, 3.4e-3_f64, 10.0_f64, &length, &nu, 0.0_f64);
-    assert!(!effect.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 #[test]
@@ -957,21 +1095,42 @@ fn test_grashof_number_wrapper_error_path() {
     let nu = KinematicViscosity::<f64>::new(0.0).unwrap();
     let length = Length::<f64>::new(0.1).unwrap();
     let effect = grashof_number(9.81_f64, 3.4e-3_f64, 10.0_f64, &length, &nu);
-    assert!(!effect.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 #[test]
 fn test_schmidt_number_wrapper_error_path() {
     let nu = KinematicViscosity::<f64>::new(1.0e-6).unwrap();
     let effect = schmidt_number(&nu, 0.0_f64);
-    assert!(!effect.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 #[test]
 fn test_lewis_number_wrapper_error_path() {
     // mass_diffusivity = 0 ⇒ division by zero.
     let effect = lewis_number(1.0e-7_f64, 0.0_f64);
-    assert!(!effect.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 #[test]
@@ -979,7 +1138,14 @@ fn test_capillary_number_wrapper_error_path() {
     let mu = Viscosity::<f64>::new(1.0e-3).unwrap();
     let u = Speed::<f64>::new(1.0).unwrap();
     let effect = capillary_number(&mu, &u, 0.0_f64);
-    assert!(!effect.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 #[test]
@@ -987,7 +1153,14 @@ fn test_bond_number_wrapper_error_path() {
     let rho = Density::<f64>::new(1000.0).unwrap();
     let length = Length::<f64>::new(0.01).unwrap();
     let effect = bond_number(&rho, 9.81_f64, &length, 0.0_f64);
-    assert!(!effect.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 #[test]
@@ -995,7 +1168,14 @@ fn test_nusselt_number_wrapper_error_path() {
     // thermal_conductivity = 0 ⇒ division by zero.
     let length = Length::<f64>::new(0.1).unwrap();
     let effect = nusselt_number(10.0_f64, &length, 0.0_f64);
-    assert!(!effect.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 #[test]
@@ -1004,7 +1184,14 @@ fn test_particle_stokes_number_wrapper_error_path() {
     let u = Speed::<f64>::new(1.0).unwrap();
     let length = Length::<f64>::new(0.0).unwrap();
     let effect = particle_stokes_number(0.01_f64, &u, &length);
-    assert!(!effect.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 #[test]
@@ -1012,7 +1199,14 @@ fn test_eckert_number_wrapper_error_path() {
     // c_p · ΔT = 0 ⇒ division by zero.
     let u = Speed::<f64>::new(100.0).unwrap();
     let effect = eckert_number(&u, 0.0_f64, 0.0_f64);
-    assert!(!effect.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 #[test]
@@ -1020,7 +1214,14 @@ fn test_total_pressure_isentropic_wrapper_error_path() {
     // γ ≤ 1 errors.
     let p = Pressure::<f64>::new(101325.0).unwrap();
     let effect = total_pressure_isentropic(&p, 1.0_f64, 1.0_f64);
-    assert!(!effect.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 #[test]
@@ -1028,7 +1229,14 @@ fn test_total_temperature_isentropic_wrapper_error_path() {
     // γ ≤ 1 errors.
     let t = Temperature::<f64>::new(300.0).unwrap();
     let effect = total_temperature_isentropic(&t, 1.0_f64, 1.0_f64);
-    assert!(!effect.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 #[test]
@@ -1036,7 +1244,14 @@ fn test_wall_shear_stress_newtonian_wrapper_error_path() {
     // Non-finite gradient ⇒ WallShearStress::new rejects.
     let mu = Viscosity::<f64>::new(1.0e-3).unwrap();
     let effect = wall_shear_stress_newtonian(&mu, f64::NAN);
-    assert!(!effect.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 #[test]
@@ -1045,7 +1260,14 @@ fn test_newtonian_viscous_stress_wrapper_error_path() {
     let mu = Viscosity::<f64>::new(1.0).unwrap();
     let s = StrainRateTensor::<f64>::default();
     let effect = newtonian_viscous_stress(&mu, &s, f64::NAN);
-    assert!(!effect.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 #[test]
@@ -1054,7 +1276,14 @@ fn test_newtonian_viscous_stress_with_bulk_wrapper_error_path() {
     let zeta = Viscosity::<f64>::new(0.5).unwrap();
     let s = StrainRateTensor::<f64>::default();
     let effect = newtonian_viscous_stress_with_bulk(&mu, &zeta, &s, f64::INFINITY);
-    assert!(!effect.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 // =============================================================================
@@ -1078,6 +1307,18 @@ fn test_isentropic_pressure_ratio_wrapper() {
 #[test]
 fn test_isentropic_pressure_ratio_wrapper_error_path() {
     assert!(isentropic_pressure_ratio(f64::NAN, 1.4).is_err());
+
+    // The refusal must name its cause: the wrapper forwards the kernel's
+    // `PhysicsError` text through a `CausalityError`.
+    assert!(
+        isentropic_pressure_ratio(f64::NAN, 1.4)
+            .error()
+            .expect("the call must fail")
+            .to_string()
+            .contains("isentropic_pressure_ratio_kernel: Mach number must be finite and >= 0"),
+        "unexpected refusal: {:?}",
+        isentropic_pressure_ratio(f64::NAN, 1.4).error()
+    );
 }
 
 #[test]
@@ -1097,6 +1338,18 @@ fn test_isentropic_temperature_ratio_wrapper() {
 #[test]
 fn test_isentropic_temperature_ratio_wrapper_error_path() {
     assert!(isentropic_temperature_ratio(2.0_f64, 1.0).is_err());
+
+    // The refusal must name its cause: the wrapper forwards the kernel's
+    // `PhysicsError` text through a `CausalityError`.
+    assert!(
+        isentropic_temperature_ratio(2.0_f64, 1.0)
+            .error()
+            .expect("the call must fail")
+            .to_string()
+            .contains("isentropic_temperature_ratio_kernel"),
+        "unexpected refusal: {:?}",
+        isentropic_temperature_ratio(2.0_f64, 1.0).error()
+    );
 }
 
 #[test]
@@ -1116,6 +1369,18 @@ fn test_isentropic_density_ratio_wrapper() {
 #[test]
 fn test_isentropic_density_ratio_wrapper_error_path() {
     assert!(isentropic_density_ratio(-1.0_f64, 1.4).is_err());
+
+    // The refusal must name its cause: the wrapper forwards the kernel's
+    // `PhysicsError` text through a `CausalityError`.
+    assert!(
+        isentropic_density_ratio(-1.0_f64, 1.4)
+            .error()
+            .expect("the call must fail")
+            .to_string()
+            .contains("isentropic_density_ratio_kernel: Mach number must be finite and >= 0"),
+        "unexpected refusal: {:?}",
+        isentropic_density_ratio(-1.0_f64, 1.4).error()
+    );
 }
 
 #[test]
@@ -1135,6 +1400,18 @@ fn test_area_mach_ratio_wrapper() {
 #[test]
 fn test_area_mach_ratio_wrapper_error_path() {
     assert!(area_mach_ratio(0.0_f64, 1.4).is_err());
+
+    // The refusal must name its cause: the wrapper forwards the kernel's
+    // `PhysicsError` text through a `CausalityError`.
+    assert!(
+        area_mach_ratio(0.0_f64, 1.4)
+            .error()
+            .expect("the call must fail")
+            .to_string()
+            .contains("area_mach_ratio_kernel: Mach number must be finite and > 0"),
+        "unexpected refusal: {:?}",
+        area_mach_ratio(0.0_f64, 1.4).error()
+    );
 }
 
 // =============================================================================

@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::Speed;
+use deep_causality_physics::{PhysicsErrorEnum, Speed};
 
 #[test]
 fn test_speed_new_valid() {
@@ -21,19 +21,37 @@ fn test_speed_new_zero() {
 #[test]
 fn test_speed_new_negative_error() {
     let speed = Speed::<f64>::new(-50.0);
-    assert!(speed.is_err());
+    assert!(
+        matches!(
+            speed.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
 fn test_speed_new_nan_error() {
     let speed = Speed::<f64>::new(f64::NAN);
-    assert!(speed.is_err());
+    assert!(
+        matches!(
+            speed.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
 fn test_speed_new_infinity_error() {
     let speed = Speed::<f64>::new(f64::INFINITY);
-    assert!(speed.is_err());
+    assert!(
+        matches!(
+            speed.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

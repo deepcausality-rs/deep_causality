@@ -5,7 +5,7 @@
 
 // Force allows negative values for direction.
 
-use deep_causality_physics::Force;
+use deep_causality_physics::{Force, PhysicsErrorEnum};
 
 #[test]
 fn test_force_new_positive() {
@@ -22,13 +22,25 @@ fn test_force_new_negative() {
 #[test]
 fn test_force_new_nan_error() {
     let force = Force::<f64>::new(f64::NAN);
-    assert!(force.is_err());
+    assert!(
+        matches!(
+            force.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
 fn test_force_new_infinity_error() {
     let force = Force::<f64>::new(f64::INFINITY);
-    assert!(force.is_err());
+    assert!(
+        matches!(
+            force.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

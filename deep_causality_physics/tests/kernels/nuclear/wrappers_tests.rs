@@ -38,9 +38,13 @@ fn test_radioactive_decay_wrapper_error() {
     let time = Time::new(50.0).unwrap();
 
     let effect = radioactive_decay(&n0, &half_life, &time);
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
     assert!(
-        effect.is_err(),
-        "Zero half-life must propagate as an error effect"
+        err.to_string().contains("Singularity"),
+        "expected a Singularity refusal, got {err}"
     );
 }
 
