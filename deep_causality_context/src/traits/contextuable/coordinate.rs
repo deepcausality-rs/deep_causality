@@ -18,7 +18,7 @@ use crate::IndexError;
 ///
 /// # Example
 /// ```
-/// use deep_causality::{Coordinate, IndexError};
+/// use deep_causality_context::{Coordinate, IndexError};
 ///
 /// struct Vec3D {
 ///     x: f64,

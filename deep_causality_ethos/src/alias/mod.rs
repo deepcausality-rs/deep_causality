@@ -3,9 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::TeloidStore;
-use deep_causality::{
-    BaseSymbol, Data, EuclideanSpace, EuclideanSpacetime, EuclideanTime, FloatType, NumericalValue,
-};
+use deep_causality::{FloatType, NumericalValue};
+use deep_causality_context::{Data, EuclideanSpace, EuclideanSpacetime, EuclideanTime};
 
 pub type TeloidTag = &'static str;
 pub type TeloidID = u64;
@@ -33,9 +32,6 @@ pub type TeloidID = u64;
 /// - **`EuclideanSpacetime`**: Combines the Euclidean spatial and temporal
 ///   contexts into a unified spacetime representation, where both space and
 ///   time are treated with Euclidean properties.
-/// - **`BaseSymbol`**: Provides a basic symbolic representation for teloids
-///   within the store, useful for labeling, identification, or abstract
-///   reasoning.
 /// - **`FloatType` (x2)**: Two `FloatType` parameters, which are typically
 ///   used for internal calculations, scalar values, metrics, or other generic
 ///   numerical requirements within the `TeloidStore` structure, such as probabilities,
@@ -50,7 +46,6 @@ pub type BaseTeloidStore = TeloidStore<
     EuclideanSpace,
     EuclideanTime,
     EuclideanSpacetime,
-    BaseSymbol,
     FloatType,
     FloatType,
 >;

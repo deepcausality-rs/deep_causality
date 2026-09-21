@@ -6,29 +6,27 @@
 use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
-use crate::{Context, CurrentTimeIndex, Datable, PreviousTimeIndex, Symbolic, TimeIndexable};
+use crate::{Context, CurrentTimeIndex, Datable, PreviousTimeIndex, TimeIndexable};
 
 // Adds the default implementation to Context when the trait is imported. Can be overwritten to customize.
-impl<D, S, T, ST, SYM, VS, VT> CurrentTimeIndex for Context<D, S, T, ST, SYM, VS, VT>
+impl<D, S, T, ST, VS, VT> CurrentTimeIndex for Context<D, S, T, ST, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
     ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
 {
 }
 
 // Adds the default implementation to Context when the trait is imported. Can be overwritten to customize.
-impl<D, S, T, ST, SYM, VS, VT> PreviousTimeIndex for Context<D, S, T, ST, SYM, VS, VT>
+impl<D, S, T, ST, VS, VT> PreviousTimeIndex for Context<D, S, T, ST, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
     ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
 {
@@ -36,13 +34,12 @@ where
 
 // Adds the set/get index methods used in CurrentTimeIndex and PreviousTimeIndex.
 #[allow(clippy::type_complexity)]
-impl<D, S, T, ST, SYM, VS, VT> TimeIndexable for Context<D, S, T, ST, SYM, VS, VT>
+impl<D, S, T, ST, VS, VT> TimeIndexable for Context<D, S, T, ST, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
     ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
 {

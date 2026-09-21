@@ -5,5 +5,6 @@
 
 #[cfg(test)]
 mod adjustable_data_tests;
+mod data_sequence_tests;
 #[cfg(test)]
 mod data_tests;

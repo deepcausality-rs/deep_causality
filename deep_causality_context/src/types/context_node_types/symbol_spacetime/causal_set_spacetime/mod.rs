@@ -29,7 +29,7 @@ use std::fmt::Display;
 ///
 /// # Example
 /// ```
-/// use deep_causality::*;
+/// use deep_causality_context::*;
 ///
 /// let mut e1 = CausalSetSpacetime::new(1, Some("A".into()));
 /// let mut e2 = CausalSetSpacetime::new(2, Some("B".into()));

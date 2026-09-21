@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::{Identifiable, LorentzianTime, ScalarProjector, Temporal, TimeScale};
+use deep_causality_context::{Identifiable, LorentzianTime, ScalarProjector, Temporal, TimeScale};
 
 #[test]
 fn test_construction() {
@@ -60,7 +60,7 @@ fn test_copy() {
     assert_eq!(t1, t3);
 }
 
-use deep_causality::*;
+use deep_causality_context::*;
 
 #[test]
 fn test_from_lorentzian_time_to_time_kind() {

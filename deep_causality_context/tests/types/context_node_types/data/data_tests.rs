@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::{Data, Datable, Identifiable};
+use deep_causality_context::{Data, Datable, Identifiable};
 
 #[test]
 fn test_new() {

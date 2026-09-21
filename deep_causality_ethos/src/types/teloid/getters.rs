@@ -3,19 +3,19 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::{Context, ProposedAction, UncertainActivationPredicate, UncertainParameter};
-use deep_causality::{Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
+use deep_causality::{ProposedAction, UncertainActivationPredicate, UncertainParameter};
+use deep_causality_context::Context;
+use deep_causality_context::{Datable, SpaceTemporal, Spatial, Temporal};
 
 use crate::types::teloid::TeloidMetaData;
 use crate::{Teloid, TeloidID, TeloidModal, TeloidTag};
 
-impl<D, S, T, ST, SYM, VS, VT> Teloid<D, S, T, ST, SYM, VS, VT>
+impl<D, S, T, ST, VS, VT> Teloid<D, S, T, ST, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
     ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
 {
@@ -41,12 +41,12 @@ where
     ///
     /// # Returns
     ///
-    /// An `Option` containing a function pointer `fn(&Context<D, S, T, ST, SYM, VS, VT>, &ProposedAction) -> bool`
+    /// An `Option` containing a function pointer `fn(&Context<D, S, T, ST, VS, VT>, &ProposedAction) -> bool`
     /// that represents the activation predicate.
     #[allow(clippy::type_complexity)]
     pub fn activation_predicate(
         &self,
-    ) -> Option<fn(&Context<D, S, T, ST, SYM, VS, VT>, &ProposedAction) -> bool> {
+    ) -> Option<fn(&Context<D, S, T, ST, VS, VT>, &ProposedAction) -> bool> {
         self.activation_predicate
     }
 
@@ -58,7 +58,7 @@ where
     #[allow(clippy::type_complexity)]
     pub fn uncertain_activation_predicate(
         &self,
-    ) -> Option<UncertainActivationPredicate<D, S, T, ST, SYM, VS, VT>> {
+    ) -> Option<UncertainActivationPredicate<D, S, T, ST, VS, VT>> {
         self.uncertain_activation_predicate
     }
 

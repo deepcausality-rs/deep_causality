@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality::*;
+use deep_causality_context::*;
 
 fn minkowski_with_scale(scale: TimeScale) -> MinkowskiSpacetime {
     MinkowskiSpacetime::new(1, 1.0, 2.0, 3.0, 1.0, scale)

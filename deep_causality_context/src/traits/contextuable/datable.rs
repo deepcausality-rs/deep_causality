@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::Identifiable;
+use deep_causality_core::Identifiable;
 
 /// Represents data-bearing entities in a context graph.
 ///

@@ -124,6 +124,5 @@ pub mod data_uncertain;
 pub mod root;
 pub mod space;
 pub mod space_time;
-pub mod symbol;
 pub mod symbol_spacetime;
 pub mod time;

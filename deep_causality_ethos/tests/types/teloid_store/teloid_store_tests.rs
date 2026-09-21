@@ -7,9 +7,9 @@ use deep_causality_ethos::{
     BaseTeloidStore, Teloid, TeloidID, TeloidModal, TeloidStorable, TeloidStore,
 };
 
-use deep_causality::{
-    BaseContext, BaseSymbol, Data, EuclideanSpace, EuclideanSpacetime, EuclideanTime, FloatType,
-    NumericalValue, ProposedAction,
+use deep_causality::{FloatType, NumericalValue, ProposedAction};
+use deep_causality_context::{
+    BaseContext, Data, EuclideanSpace, EuclideanSpacetime, EuclideanTime,
 };
 
 fn always_true_predicate(_context: &BaseContext, _action: &ProposedAction) -> bool {
@@ -24,7 +24,6 @@ fn create_test_teloid(
     EuclideanSpace,
     EuclideanTime,
     EuclideanSpacetime,
-    BaseSymbol,
     FloatType,
     FloatType,
 > {
@@ -48,7 +47,6 @@ fn test_teloid_store_new() {
         EuclideanSpace,
         EuclideanTime,
         EuclideanSpacetime,
-        BaseSymbol,
         FloatType,
         FloatType,
     >::new();
@@ -64,7 +62,6 @@ fn test_teloid_store_with_capacity() {
         EuclideanSpace,
         EuclideanTime,
         EuclideanSpacetime,
-        BaseSymbol,
         FloatType,
         FloatType,
     >::with_capacity(10);

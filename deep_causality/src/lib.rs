@@ -27,7 +27,14 @@ pub mod utils_test;
 // Re-Export Core Types
 pub use deep_causality_core::{
     CausalEffect, CausalEffectPropagationProcess, CausalFlow, CausalMonad, CausalityError,
-    CausalityErrorEnum, EffectLog, PropagatingEffect, PropagatingProcess,
+    CausalityErrorEnum, EffectLog, Identifiable, PropagatingEffect, PropagatingProcess,
+};
+// The shared primitive aliases. Core is their single declaration site; `TeloidTag` and `TeloidID`
+// are deliberately not re-exported, because nothing here uses them and `deep_causality_ethos`
+// declares its own pair.
+pub use deep_causality_core::{
+    CausaloidId, ContextId, ContextoidId, DescriptionValue, FloatType, IdentificationValue,
+    NumberType, NumericalValue,
 };
 
 pub use deep_causality_haft::{LogAddEntry, LogAppend, LogEffect, LogSize};
@@ -43,8 +50,6 @@ pub use crate::errors::*;
 //
 // Traits
 //
-// Adjustable Traits
-pub use crate::traits::adjustable::{Adjustable, UncertainAdjustable};
 // Assumeable Traits
 pub use crate::traits::assumable::Assumable;
 pub use crate::traits::assumable::AssumableReasoning;
@@ -56,42 +61,14 @@ pub use crate::traits::causable_graph::graph::CausableGraph;
 pub use crate::traits::causable_graph::graph_reasoning::MonadicCausableGraphReasoning;
 pub use crate::traits::causable_graph::graph_reasoning::stateful::StatefulMonadicCausableGraphReasoning;
 pub use crate::traits::causable_graph::*;
-pub use crate::traits::contextuable::coordinate::Coordinate;
-pub use crate::traits::contextuable::datable::Datable;
-pub use crate::traits::contextuable::datable_uncertain::UncertainDatable;
-pub use crate::traits::contextuable::metric::Metric;
-pub use crate::traits::contextuable::metric_coordinate::MetricCoordinate;
-pub use crate::traits::contextuable::metric_tensor::MetricTensor4D;
-pub use crate::traits::contextuable::space_temporal::SpaceTemporal;
-pub use crate::traits::contextuable::space_temporal::SpaceTemporalInterval;
-pub use crate::traits::contextuable::spatial::Spatial;
-pub use crate::traits::contextuable::symbolic::Symbolic;
-pub use crate::traits::contextuable::temporal::Temporal;
-// contextuable Traits
-pub use crate::traits::contextuable::Contextuable;
-// Contextuable Graph Traits
-pub use crate::traits::contextuable_graph::ContextuableGraph;
-pub use crate::traits::contextuable_graph::ExtendableContextuableGraph;
 // CSM traits
 pub use crate::traits::csm_evaluable::CsmEvaluable;
-// Identifiable Traits
-pub use crate::traits::identifiable::Identifiable;
-// Indexable Traits
-pub use crate::traits::indexable::data_index_current::CurrentDataIndex;
-pub use crate::traits::indexable::data_index_previous::PreviousDataIndex;
-pub use crate::traits::indexable::data_indexable::DataIndexable;
-pub use crate::traits::indexable::time_index_current::CurrentTimeIndex;
-pub use crate::traits::indexable::time_index_previous::PreviousTimeIndex;
-pub use crate::traits::indexable::time_indexable::TimeIndexable;
 // Inferable Traits
 pub use crate::traits::inferable::Inferable;
 pub use crate::traits::inferable::InferableReasoning;
 // Observable Traits
 pub use crate::traits::observable::Observable;
 pub use crate::traits::observable::ObservableReasoning;
-// Scalar traits
-pub use crate::traits::scalar::scalar_projector::ScalarProjector;
-pub use crate::traits::scalar::scalar_value::ScalarValue;
 // Transferable Trait
 pub use crate::traits::transferable::Transferable;
 //
@@ -104,50 +81,6 @@ pub use crate::types::causal_types::causaloid::Causaloid;
 pub use crate::types::causal_types::causaloid_graph::CausaloidGraph;
 pub use crate::types::causal_types::causaloid_graph::lambda_edges::{EdgeLambdaFn, LambdaEdges};
 pub use crate::types::causal_types::*;
-// Default context node types.
-pub use crate::types::context_node_types::data::Data;
-pub use crate::types::context_node_types::data_uncertain::data_uncertain_bool::{
-    UncertainBoolData, UncertainBooleanData,
-};
-pub use crate::types::context_node_types::data_uncertain::data_uncertain_f64::{
-    UncertainData, UncertainFloat64Data,
-};
-pub use crate::types::context_node_types::root::Root;
-// Space context node types.
-pub use crate::types::context_node_types::space::ecef_space::EcefSpace;
-pub use crate::types::context_node_types::space::euclidean_space::EuclideanSpace;
-pub use crate::types::context_node_types::space::geo_space::GeoSpace;
-pub use crate::types::context_node_types::space::ned_space::NedSpace;
-pub use crate::types::context_node_types::space::quaternion_space::QuaternionSpace;
-pub use crate::types::context_node_types::space::space_kind::SpaceKind;
-// Space time context node types.
-pub use crate::types::context_node_types::space_time::euclidean_spacetime::EuclideanSpacetime;
-pub use crate::types::context_node_types::space_time::lorentzian_spacetime::LorentzianSpacetime;
-pub use crate::types::context_node_types::space_time::minkowski_spacetime::MinkowskiSpacetime;
-pub use crate::types::context_node_types::space_time::space_time_kind::SpaceTimeKind;
-pub use crate::types::context_node_types::space_time::tangent_spacetime::TangentSpacetime;
-// Symbolic context node types.
-pub use crate::types::context_node_types::symbol::base_symbol::BaseSymbol;
-pub use crate::types::context_node_types::symbol::symbol_kind::SymbolKind;
-// pub use crate::types::context_types::node_types::symbol::symbol_kind
-// Symbolic spacetime context node types.
-pub use crate::types::context_node_types::symbol_spacetime::causal_set_spacetime::CausalSetSpacetime;
-pub use crate::types::context_node_types::symbol_spacetime::conformal_spacetime::ConformalSpacetime;
-// Time context node types.
-pub use crate::types::context_node_types::time::discrete_time::DiscreteTime;
-pub use crate::types::context_node_types::time::entropic_time::EntropicTime;
-pub use crate::types::context_node_types::time::euclidean_time::EuclideanTime;
-pub use crate::types::context_node_types::time::lorentzian_time::LorentzianTime;
-pub use crate::types::context_node_types::time::symbolic_time::{SymbolicTime, SymbolicTimeUnit};
-pub use crate::types::context_node_types::time::time_kind::TimeKind;
-// Context types
-pub use crate::types::context_types::context_graph;
-pub use crate::types::context_types::context_graph::Context;
-pub use crate::types::context_types::contextoid::contextoid_type::*;
-pub use crate::types::context_types::contextoid::*;
-// Other context types
-pub use crate::types::context_types::relation_kind::*;
-pub use crate::types::context_types::time_scale::TimeScale;
 // CSM types
 pub use crate::types::csm_types::csm::CSM;
 pub use crate::types::csm_types::csm_action::CausalAction;
@@ -172,9 +105,6 @@ pub use crate::types::model_types::model::Model;
 pub use crate::types::model_types::observation::Observation;
 
 //
-//Symbolic types
-pub use crate::types::symbolic_types::symbolic_representation::SymbolicRepresentation;
-pub use crate::types::symbolic_types::symbolic_result::SymbolicResult;
 //
 
 // Utils

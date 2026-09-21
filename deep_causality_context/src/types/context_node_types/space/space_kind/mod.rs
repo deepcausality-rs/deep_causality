@@ -4,10 +4,8 @@
  */
 
 use crate::errors::IndexError;
-use crate::{
-    Coordinate, EcefSpace, EuclideanSpace, GeoSpace, Identifiable, NedSpace, QuaternionSpace,
-    Spatial,
-};
+use crate::{Coordinate, EcefSpace, EuclideanSpace, GeoSpace, NedSpace, QuaternionSpace, Spatial};
+use deep_causality_core::Identifiable;
 
 /// An enumeration over supported spatial context types.
 ///

@@ -33,7 +33,7 @@ use crate::{TimeKind, TimeScale};
 /// # Examples
 ///
 /// ```rust
-/// use deep_causality::{DiscreteTime, Temporal, TimeScale};
+/// use deep_causality_context::{DiscreteTime, Temporal, TimeScale};
 ///
 /// let t0 = DiscreteTime::new(1, TimeScale::Microseconds, 0);
 /// let t1 = DiscreteTime::new(2, TimeScale::Microseconds, 1);

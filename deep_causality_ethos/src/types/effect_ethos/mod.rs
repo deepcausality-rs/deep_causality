@@ -12,7 +12,7 @@ mod resolve_conflicts;
 mod verify;
 
 use crate::{TagIndex, TeloidGraph, TeloidID, TeloidStore};
-use deep_causality::{Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
+use deep_causality_context::{Datable, SpaceTemporal, Spatial, Temporal};
 use std::collections::HashMap;
 use ultragraph::GraphView;
 
@@ -24,17 +24,16 @@ use ultragraph::GraphView;
 /// <https://github.com/deepcausality-rs/papers/blob/main/effect_propagation_process/epp.pdf>
 ///
 #[derive(Clone, Debug, Default)]
-pub struct EffectEthos<D, S, T, ST, SYM, VS, VT>
+pub struct EffectEthos<D, S, T, ST, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
     ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
 {
-    teloid_store: TeloidStore<D, S, T, ST, SYM, VS, VT>,
+    teloid_store: TeloidStore<D, S, T, ST, VS, VT>,
     tag_index: TagIndex,
     teloid_graph: TeloidGraph,
     id_to_index_map: HashMap<TeloidID, usize>,
@@ -44,13 +43,12 @@ where
 
 // Constructor and management methods
 #[allow(clippy::type_complexity)]
-impl<D, S, T, ST, SYM, VS, VT> EffectEthos<D, S, T, ST, SYM, VS, VT>
+impl<D, S, T, ST, VS, VT> EffectEthos<D, S, T, ST, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
     ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
 {
@@ -67,7 +65,7 @@ where
 
     /// Build an effect ethos
     pub fn from(
-        teloid_store: TeloidStore<D, S, T, ST, SYM, VS, VT>,
+        teloid_store: TeloidStore<D, S, T, ST, VS, VT>,
         tag_index: TagIndex,
         teloid_graph: TeloidGraph,
     ) -> Self {

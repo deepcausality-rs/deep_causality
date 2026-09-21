@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::ContextIndexError;
+use deep_causality_context::ContextIndexError;
 use std::error::Error;
 
 #[test]

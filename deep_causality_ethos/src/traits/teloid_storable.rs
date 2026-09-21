@@ -3,13 +3,12 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{Teloid, TeloidID};
-use deep_causality::{Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
-pub trait TeloidStorable<D, S, T, ST, SYM, VS, VT>
+use deep_causality_context::{Datable, SpaceTemporal, Spatial, Temporal};
+pub trait TeloidStorable<D, S, T, ST, VS, VT>
 where
     D: Clone + Datable,
     S: Clone + Spatial<VS>,
     ST: Clone + SpaceTemporal<VS, VT>,
-    SYM: Clone + Symbolic,
     T: Clone + Temporal<VT>,
     VS: Clone,
     VT: Clone,
@@ -30,8 +29,8 @@ where
     ///
     fn insert(
         &mut self,
-        teloid: Teloid<D, S, T, ST, SYM, VS, VT>,
-    ) -> Option<Teloid<D, S, T, ST, SYM, VS, VT>>;
+        teloid: Teloid<D, S, T, ST, VS, VT>,
+    ) -> Option<Teloid<D, S, T, ST, VS, VT>>;
     /// Retrieves a reference to a `Teloid` from the store.
     ///
     /// # Arguments
@@ -42,7 +41,7 @@ where
     ///
     /// An `Option` containing a reference to the `Teloid` if it exists, otherwise `None`.
     ///
-    fn get(&self, id: &TeloidID) -> Option<&Teloid<D, S, T, ST, SYM, VS, VT>>;
+    fn get(&self, id: &TeloidID) -> Option<&Teloid<D, S, T, ST, VS, VT>>;
     /// Removes a `Teloid` from the store, returning it.
     ///
     /// # Arguments
@@ -53,7 +52,7 @@ where
     ///
     /// An `Option` containing the removed `Teloid` if it existed, otherwise `None`.
     ///
-    fn remove(&mut self, id: &TeloidID) -> Option<Teloid<D, S, T, ST, SYM, VS, VT>>;
+    fn remove(&mut self, id: &TeloidID) -> Option<Teloid<D, S, T, ST, VS, VT>>;
     /// Updates a `Teloid` in the store. This is an alias for `insert`.
     ///
     /// If the store did not have this ID present, `None` is returned.
@@ -70,8 +69,8 @@ where
     ///
     fn update(
         &mut self,
-        teloid: Teloid<D, S, T, ST, SYM, VS, VT>,
-    ) -> Option<Teloid<D, S, T, ST, SYM, VS, VT>>;
+        teloid: Teloid<D, S, T, ST, VS, VT>,
+    ) -> Option<Teloid<D, S, T, ST, VS, VT>>;
     /// Checks if the store contains a `Teloid` with the specified ID.
     ///
     /// # Arguments

@@ -11,8 +11,8 @@
 //! those default bodies we declare two minimal types that implement the traits
 //! without overriding any method, then invoke the inherited defaults.
 
-use deep_causality::utils_test::test_utils_array_grid;
-use deep_causality::{Adjustable, UncertainAdjustable};
+use deep_causality_context::utils_test::test_utils_array_grid;
+use deep_causality_context::{Adjustable, UncertainAdjustable};
 
 /// A trivial type relying entirely on the default `Adjustable<i32>` impl.
 #[derive(Debug, Default, Clone, Copy, PartialEq)]

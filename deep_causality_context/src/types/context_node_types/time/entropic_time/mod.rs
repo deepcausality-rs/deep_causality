@@ -30,7 +30,7 @@ use crate::TimeKind;
 ///
 /// # Examples
 /// ```rust
-/// use deep_causality::{EntropicTime, Temporal, TimeScale};
+/// use deep_causality_context::{EntropicTime, Temporal, TimeScale};
 ///
 /// let t1 = EntropicTime::new(1, 0); // system start
 /// let t2 = EntropicTime::new(2, 1); // one entropy event later

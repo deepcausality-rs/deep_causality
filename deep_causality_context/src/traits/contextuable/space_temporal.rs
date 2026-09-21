@@ -3,9 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::Identifiable;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
+use deep_causality_core::Identifiable;
 
 /// Combines spatial and temporal semantics into a 4D spacetime model.
 ///

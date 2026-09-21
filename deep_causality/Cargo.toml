@@ -52,6 +52,9 @@ workspace = true
 workspace = true
 features = ["default"]
 
+[dependencies.deep_causality_context]
+workspace = true
+
 [dependencies.deep_causality_core]
 workspace = true
 features = ["default"]

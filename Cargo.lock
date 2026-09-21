@@ -77,6 +77,7 @@ dependencies = [
  "deep_causality_algebra",
  "deep_causality_calculus",
  "deep_causality_cfd",
+ "deep_causality_context",
  "deep_causality_core",
  "deep_causality_file",
  "deep_causality_haft",
@@ -311,6 +312,7 @@ name = "classical_causality_examples"
 version = "0.1.0"
 dependencies = [
  "deep_causality",
+ "deep_causality_context",
  "deep_causality_core",
  "deep_causality_rand",
  "deep_causality_stats",
@@ -445,6 +447,7 @@ name = "csm_examples"
 version = "0.1.0"
 dependencies = [
  "deep_causality",
+ "deep_causality_context",
  "deep_causality_ethos",
 ]
 
@@ -520,6 +523,7 @@ dependencies = [
  "criterion",
  "deep_causality_algebra",
  "deep_causality_ast",
+ "deep_causality_context",
  "deep_causality_core",
  "deep_causality_data_structures",
  "deep_causality_haft",
@@ -635,6 +639,7 @@ name = "deep_causality_ethos"
 version = "0.3.0"
 dependencies = [
  "deep_causality",
+ "deep_causality_context",
  "ultragraph",
 ]
 
@@ -2213,6 +2218,7 @@ name = "tokio_example"
 version = "0.1.0"
 dependencies = [
  "deep_causality",
+ "deep_causality_context",
  "tokio",
 ]
 

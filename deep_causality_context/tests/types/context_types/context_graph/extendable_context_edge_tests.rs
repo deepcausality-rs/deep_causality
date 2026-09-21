@@ -2,8 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality::utils_test::test_utils::get_context;
-use deep_causality::*;
+use deep_causality_context::utils_test::test_utils::get_context;
+use deep_causality_context::*;
 
 #[test]
 fn test_extra_ctx_add_edge() {

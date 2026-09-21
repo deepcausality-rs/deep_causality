@@ -3,7 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{CSM, CSMMap, CausalAction, CausalState, CsmEvaluable, StateAction, UpdateError};
+use crate::{CSM, CSMMap, CausalAction, CausalState, CsmEvaluable, StateAction};
+use deep_causality_context::UpdateError;
 use std::fmt::Debug;
 
 impl<I, O, C> CSM<I, O, C>

@@ -4,9 +4,10 @@
  */
 use crate::types::WeatherState;
 use crate::{RAIN_CAUSE_ID, UMBRELLA_CAUSE_ID};
-use deep_causality::{
-    BaseContext, CausableGraph, Causaloid, CausaloidGraph, Contextoid, ContextoidType,
-    ContextuableGraph, CurrentDataIndex, CurrentTimeIndex, Data, PropagatingEffect,
+use deep_causality::{CausableGraph, Causaloid, CausaloidGraph, PropagatingEffect};
+use deep_causality_context::{
+    BaseContext, Contextoid, ContextoidType, ContextuableGraph, CurrentDataIndex, CurrentTimeIndex,
+    Data,
 };
 
 use crate::{RAIN_ID, TIME_ID};

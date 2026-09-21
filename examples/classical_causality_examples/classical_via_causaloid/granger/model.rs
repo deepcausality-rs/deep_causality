@@ -4,9 +4,11 @@
  */
 use crate::{OIL_PRICE_ID, SHIPPING_ACTIVITY_ID, TIME_ID};
 use deep_causality::{
-    BaseContext, CausalEffect, CausalityError, CausalityErrorEnum, Causaloid, Contextoid,
-    ContextoidType, ContextuableGraph, Data, Datable, Identifiable, IdentificationValue,
+    CausalEffect, CausalityError, CausalityErrorEnum, Causaloid, Identifiable, IdentificationValue,
     PropagatingProcess,
+};
+use deep_causality_context::{
+    BaseContext, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
 };
 use std::sync::{Arc, RwLock};
 

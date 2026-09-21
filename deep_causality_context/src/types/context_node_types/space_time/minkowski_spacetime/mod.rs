@@ -52,7 +52,7 @@ mod temporal;
 ///
 /// # Example
 /// ```
-/// use deep_causality::*;
+/// use deep_causality_context::*;
 ///
 /// let e1 = MinkowskiSpacetime::new(1, 1.0, 0.0, 0.0, 0.0, TimeScale::Second);
 /// let e2 = MinkowskiSpacetime::new(2, 3.0, 3.0, 4.0, 1.0, TimeScale::Second);

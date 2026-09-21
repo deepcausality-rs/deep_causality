@@ -29,7 +29,7 @@ use crate::{TimeKind, TimeScale};
 ///
 /// # Example
 /// ```rust
-/// use deep_causality::{Identifiable, LorentzianTime, Temporal, TimeScale};
+/// use deep_causality_context::{Identifiable, LorentzianTime, Temporal, TimeScale};
 ///
 /// let t = LorentzianTime::new(1, TimeScale::Second, std::f64::consts::E);
 ///

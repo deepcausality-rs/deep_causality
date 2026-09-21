@@ -55,7 +55,7 @@ use crate::TimeScale;
 ///
 /// # Example
 /// ```
-/// use deep_causality::*;
+/// use deep_causality_context::*;
 ///
 /// let s1 = LorentzianSpacetime::new(1, 1.0, 0.0, 0.0, 0.0, TimeScale::Second);
 /// let s2 = LorentzianSpacetime::new(2, 2.0, 3.0, 4.0, 0.0, TimeScale::Second);

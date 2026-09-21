@@ -5,8 +5,11 @@
 
 use crate::{AGE_ID, DRUG_ADMINISTERED_ID, INITIAL_BP_ID};
 use deep_causality::{
-    BaseContext, CausalEffect, CausalityError, CausalityErrorEnum, Contextoid, ContextoidType,
-    ContextuableGraph, Data, Datable, Identifiable, NumericalValue, PropagatingProcess,
+    CausalEffect, CausalityError, CausalityErrorEnum, Identifiable, NumericalValue,
+    PropagatingProcess,
+};
+use deep_causality_context::{
+    BaseContext, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
 };
 use std::sync::{Arc, RwLock};
 

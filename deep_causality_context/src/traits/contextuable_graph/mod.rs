@@ -7,7 +7,8 @@ use crate::errors::ContextIndexError;
 use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
-use crate::{Contextoid, ContextoidId, Datable, RelationKind, Symbolic};
+use crate::{Contextoid, Datable, RelationKind};
+use deep_causality_core::ContextoidId;
 
 /// Trait for graph containing context-aware nodes.
 ///
@@ -29,27 +30,26 @@ use crate::{Contextoid, ContextoidId, Datable, RelationKind, Symbolic};
 /// Methods return Result or Option types for error handling.
 ///
 #[allow(clippy::type_complexity)]
-pub trait ContextuableGraph<D, S, T, ST, SYM, VS, VT>
+pub trait ContextuableGraph<D, S, T, ST, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
     ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
 {
     fn add_node(
         &mut self,
-        value: Contextoid<D, S, T, ST, SYM, VS, VT>,
+        value: Contextoid<D, S, T, ST, VS, VT>,
     ) -> Result<usize, ContextIndexError>;
     fn contains_node(&self, index: usize) -> bool;
-    fn get_node(&self, index: usize) -> Option<&Contextoid<D, S, T, ST, SYM, VS, VT>>;
+    fn get_node(&self, index: usize) -> Option<&Contextoid<D, S, T, ST, VS, VT>>;
     fn remove_node(&mut self, node_id: ContextoidId) -> Result<(), ContextIndexError>;
     fn update_node(
         &mut self,
         node_id: ContextoidId,
-        new_node: Contextoid<D, S, T, ST, SYM, VS, VT>,
+        new_node: Contextoid<D, S, T, ST, VS, VT>,
     ) -> Result<(), ContextIndexError>;
     fn add_edge(
         &mut self,
@@ -90,13 +90,12 @@ where
 /// Methods return Result or Option types for error handling.
 ///
 #[allow(clippy::type_complexity)]
-pub trait ExtendableContextuableGraph<D, S, T, ST, SYM, VS, VT>
+pub trait ExtendableContextuableGraph<D, S, T, ST, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
     ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
 {
@@ -194,7 +193,7 @@ where
     /// - `ContextIndexError` if no extra context is currently active.
     fn extra_ctx_add_node(
         &mut self,
-        value: Contextoid<D, S, T, ST, SYM, VS, VT>,
+        value: Contextoid<D, S, T, ST, VS, VT>,
     ) -> Result<usize, ContextIndexError>;
 
     /// Checks if a node with the given index exists in the currently active extra context.
@@ -224,7 +223,7 @@ where
     fn extra_ctx_get_node(
         &self,
         index: usize,
-    ) -> Result<&Contextoid<D, S, T, ST, SYM, VS, VT>, ContextIndexError>;
+    ) -> Result<&Contextoid<D, S, T, ST, VS, VT>, ContextIndexError>;
 
     /// Removes a node by its index from the currently active extra context.
     ///

@@ -8,6 +8,7 @@ use std::collections::HashMap;
 use ultragraph::*;
 
 use crate::*;
+use deep_causality_core::{ContextId, ContextoidId};
 
 mod contextuable_graph;
 mod debug;
@@ -16,28 +17,25 @@ mod identifiable;
 mod indexable_data;
 mod indexable_time;
 
-type ExtraContext<D, S, T, ST, SYM, VS, VT> =
-    UltraGraphWeighted<Contextoid<D, S, T, ST, SYM, VS, VT>, u64>;
+type ExtraContext<D, S, T, ST, VS, VT> = UltraGraphWeighted<Contextoid<D, S, T, ST, VS, VT>, u64>;
 
-type ExtraContextMap<D, S, T, ST, SYM, VS, VT> =
-    HashMap<u64, ExtraContext<D, S, T, ST, SYM, VS, VT>>;
+type ExtraContextMap<D, S, T, ST, VS, VT> = HashMap<u64, ExtraContext<D, S, T, ST, VS, VT>>;
 
 #[allow(clippy::type_complexity)]
-pub struct Context<D, S, T, ST, SYM, VS, VT>
+pub struct Context<D, S, T, ST, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
     ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
 {
     id: ContextId,
     name: String,
-    base_context: UltraGraphWeighted<Contextoid<D, S, T, ST, SYM, VS, VT>, u64>,
+    base_context: UltraGraphWeighted<Contextoid<D, S, T, ST, VS, VT>, u64>,
     id_to_index_map: HashMap<ContextoidId, usize>,
-    extra_contexts: Option<ExtraContextMap<D, S, T, ST, SYM, VS, VT>>,
+    extra_contexts: Option<ExtraContextMap<D, S, T, ST, VS, VT>>,
     number_of_extra_contexts: u64,
     extra_context_id: u64,
     current_data_map: HashMap<usize, usize>,
@@ -46,13 +44,12 @@ where
     previous_index_map: HashMap<usize, usize>,
 }
 
-impl<D, S, T, ST, SYM, VS, VT> Clone for Context<D, S, T, ST, SYM, VS, VT>
+impl<D, S, T, ST, VS, VT> Clone for Context<D, S, T, ST, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
     ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
 {
@@ -73,13 +70,12 @@ where
     }
 }
 
-impl<D, S, T, ST, SYM, VS, VT> Context<D, S, T, ST, SYM, VS, VT>
+impl<D, S, T, ST, VS, VT> Context<D, S, T, ST, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
     ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
 {

@@ -4,6 +4,8 @@
  */
 
 use deep_causality::*;
+use deep_causality_context::BaseContext;
+use deep_causality_context::ContextuableGraph;
 use deep_causality_core::CausalityErrorEnum;
 use std::sync::{Arc, RwLock};
 

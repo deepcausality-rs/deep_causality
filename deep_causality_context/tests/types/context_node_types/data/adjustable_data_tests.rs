@@ -2,8 +2,8 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality::utils_test::test_utils_array_grid;
-use deep_causality::{Adjustable, Data, Datable};
+use deep_causality_context::utils_test::test_utils_array_grid;
+use deep_causality_context::{Adjustable, Data, Datable};
 
 //
 // You have to import Adjustable to use update and adjust.

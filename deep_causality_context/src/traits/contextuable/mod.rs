@@ -3,7 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{ContextoidType, Datable, Identifiable, SpaceTemporal, Spatial, Symbolic, Temporal};
+use crate::{ContextoidType, Datable, SpaceTemporal, Spatial, Temporal};
+use deep_causality_core::Identifiable;
 
 pub mod coordinate;
 pub mod datable;
@@ -13,7 +14,6 @@ pub mod metric_coordinate;
 pub mod metric_tensor;
 pub mod space_temporal;
 pub mod spatial;
-pub mod symbolic;
 pub mod temporal;
 
 /// Represents any entity that participates in a causal context graph.
@@ -40,13 +40,12 @@ pub mod temporal;
 /// This trait is the dispatch point for `ContextoidType`, allowing static or
 /// dynamic graph traversal based on node kind. It intentionally generalizes
 /// over all possible causal node roles.
-pub trait Contextuable<D, S, T, ST, SYM, VS, VT>: Identifiable
+pub trait Contextuable<D, S, T, ST, VS, VT>: Identifiable
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
     ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
 {
@@ -54,5 +53,5 @@ where
     ///
     /// Use this to determine the role of the current node (data, space, time, etc.)
     /// and then downcast or dispatch accordingly.
-    fn vertex_type(&self) -> &ContextoidType<D, S, T, ST, SYM, VS, VT>;
+    fn vertex_type(&self) -> &ContextoidType<D, S, T, ST, VS, VT>;
 }

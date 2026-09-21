@@ -3,7 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{AssumptionError, DescriptionValue, Identifiable, NumericalValue, PropagatingEffect};
+use crate::{AssumptionError, DescriptionValue, NumericalValue, PropagatingEffect};
+use deep_causality_core::Identifiable;
 
 /// The Assumable trait defines the interface for objects that represent
 /// assumptions that can be tested and verified. Assumable types must also

@@ -5,7 +5,7 @@
 
 use std::fmt::{Display, Formatter};
 
-use crate::Identifiable;
+use deep_causality_core::Identifiable;
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct Root {

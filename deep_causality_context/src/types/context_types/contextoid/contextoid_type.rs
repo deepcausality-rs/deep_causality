@@ -18,17 +18,15 @@ pub enum ContextKind {
     Root,
     Spaceoid,
     SpaceTempoid,
-    Symboid,
 }
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
-pub enum ContextoidType<D, S, T, ST, SYM, VS, VT>
+pub enum ContextoidType<D, S, T, ST, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
     ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
 {
@@ -37,18 +35,16 @@ where
     Root(Root),
     Spaceoid(S),
     SpaceTempoid(ST),
-    Symboid(SYM),
     #[doc(hidden)]
     _Marker(PhantomData<(VS, VT)>),
 }
 
-impl<D, S, T, ST, SYM, VS, VT> ContextoidType<D, S, T, ST, SYM, VS, VT>
+impl<D, S, T, ST, VS, VT> ContextoidType<D, S, T, ST, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
     ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
 {
@@ -59,19 +55,17 @@ where
             ContextoidType::Root(_) => ContextKind::Root,
             ContextoidType::Spaceoid(_) => ContextKind::Spaceoid,
             ContextoidType::SpaceTempoid(_) => ContextKind::SpaceTempoid,
-            ContextoidType::Symboid(_) => ContextKind::Symboid,
             _ => unreachable!(), // phantom variant
         }
     }
 }
 
-impl<D, S, T, ST, SYM, VS, VT> ContextoidType<D, S, T, ST, SYM, VS, VT>
+impl<D, S, T, ST, VS, VT> ContextoidType<D, S, T, ST, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
     ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
 {
@@ -111,23 +105,14 @@ where
             None
         }
     }
-
-    pub fn symboid(&self) -> Option<&SYM> {
-        if let ContextoidType::Symboid(b) = self {
-            Some(b)
-        } else {
-            None
-        }
-    }
 }
 
-impl<D, S, T, ST, SYM, VS, VT> Display for ContextoidType<D, S, T, ST, SYM, VS, VT>
+impl<D, S, T, ST, VS, VT> Display for ContextoidType<D, S, T, ST, VS, VT>
 where
     D: Display + Datable + Clone,
     S: Display + Spatial<VS> + Clone,
     T: Display + Temporal<VT> + Clone,
     ST: Display + SpaceTemporal<VS, VT> + Clone,
-    SYM: Display + Symbolic + Clone,
     VS: Display + Clone,
     VT: Display + Clone,
 {
@@ -138,7 +123,6 @@ where
             ContextoidType::Root(b) => write!(f, "Root: {b}"),
             ContextoidType::Spaceoid(b) => write!(f, "Spaceoid: {b}"),
             ContextoidType::SpaceTempoid(b) => write!(f, "SpaceTempoid: {b}"),
-            ContextoidType::Symboid(b) => write!(f, "Symboid: {b}"),
             ContextoidType::_Marker(_) => {
                 unreachable!("_Marker variant should never be accessed directly")
             }

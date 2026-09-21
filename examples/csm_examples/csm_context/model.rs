@@ -5,9 +5,11 @@
 use crate::{CPU_TEMP_ID, FAN_SPEED_ID, POWER_DRAW_ID, SERVER_HIGH_LOAD_STATE_ID};
 use deep_causality::CausalEffect;
 use deep_causality::{
-    BaseContext, CSM, CausalAction, CausalState, CausalityError, CausalityErrorEnum, Causaloid,
-    Contextoid, ContextoidType, ContextuableGraph, Data, Datable, Identifiable,
+    CSM, CausalAction, CausalState, CausalityError, CausalityErrorEnum, Causaloid, Identifiable,
     IdentificationValue, NumericalValue, PropagatingEffect, PropagatingProcess,
+};
+use deep_causality_context::{
+    BaseContext, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
 };
 use std::sync::{Arc, RwLock};
 

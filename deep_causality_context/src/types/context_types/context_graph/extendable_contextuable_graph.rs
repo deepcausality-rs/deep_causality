@@ -7,18 +7,17 @@ use ultragraph::*;
 
 use crate::{
     Context, ContextIndexError, Contextoid, Datable, ExtendableContextuableGraph, RelationKind,
-    SpaceTemporal, Spatial, Symbolic, Temporal,
+    SpaceTemporal, Spatial, Temporal,
 };
 
 #[allow(clippy::type_complexity)]
-impl<D, S, T, ST, SYM, VS, VT> ExtendableContextuableGraph<D, S, T, ST, SYM, VS, VT>
-    for Context<D, S, T, ST, SYM, VS, VT>
+impl<D, S, T, ST, VS, VT> ExtendableContextuableGraph<D, S, T, ST, VS, VT>
+    for Context<D, S, T, ST, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
     ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
 {
@@ -94,7 +93,7 @@ where
 
     fn extra_ctx_add_node(
         &mut self,
-        value: Contextoid<D, S, T, ST, SYM, VS, VT>,
+        value: Contextoid<D, S, T, ST, VS, VT>,
     ) -> Result<usize, ContextIndexError> {
         if let Some(extra_contexts) = self.extra_contexts.as_mut() {
             if let Some(current_ctx) = extra_contexts.get_mut(&self.extra_context_id) {
@@ -134,7 +133,7 @@ where
     fn extra_ctx_get_node(
         &self,
         index: usize,
-    ) -> Result<&Contextoid<D, S, T, ST, SYM, VS, VT>, ContextIndexError> {
+    ) -> Result<&Contextoid<D, S, T, ST, VS, VT>, ContextIndexError> {
         if let Some(extra_contexts) = self.extra_contexts.as_ref() {
             if let Some(current_ctx) = extra_contexts.get(&self.extra_context_id) {
                 current_ctx.get_node(index).ok_or_else(|| {

@@ -11,12 +11,12 @@ use crate::{Data, Datable};
 /// is expected, providing methods to get and set the inner data payload.
 impl<T> Datable for Data<T>
 where
-    T: Default + Copy + Clone + PartialEq,
+    T: Default + Clone + PartialEq,
 {
     type Data = T;
 
     fn get_data(&self) -> Self::Data {
-        self.data
+        self.data.clone()
     }
 
     fn set_data(&mut self, value: Self::Data) {

@@ -26,104 +26,127 @@
       `deep_causality_context/src/errors/`
 - [x] 2.4 `git mv` the 62 context test files into `deep_causality_context/tests/`, mirroring the src
       layout, including `formalization_lean/context_graph_tests.rs`
-- [ ] 2.5 Commit the renames with no content edits, and confirm `git log --follow` resolves history
+- [x] 2.5 Commit the renames with no content edits, and confirm `git log --follow` resolves history
       for a sample file from each group. The tree does not build at this commit — that is expected
 
 ## 3. Move `Identifiable` into core
 
-- [ ] 3.1 Add `deep_causality_core/src/traits/identifiable/mod.rs` declaring
+- [x] 3.1 Add `deep_causality_core/src/traits/identifiable/mod.rs` declaring
       `fn id(&self) -> IdentificationValue`, register the module, and export it from core's `lib.rs`
-- [ ] 3.2 Remove `deep_causality/src/traits/identifiable/` and its `lib.rs` export; point the six
+- [x] 3.2 Remove `deep_causality/src/traits/identifiable/` and its `lib.rs` export; point the six
       causal-side impls (`Causaloid`, `Model`, `Inference`, `Assumption`, `Observation`,
       `ProposedAction`) at `deep_causality_core::Identifiable`
-- [ ] 3.3 Add a core test asserting both a causal-side and a context-side implementor satisfy one
-      `Identifiable`-bounded generic function
-- [ ] 3.4 `cargo test -p deep_causality_core` green
+- [x] 3.3 Add a core test asserting two implementors standing in for the causal and context sides
+      satisfy one `Identifiable`-bounded generic function. Corrected during apply: core cannot see
+      the real `Causaloid` or `Contextoid` (both crates depend on core), so the genuine cross-crate
+      assertion is added in `deep_causality`'s tests under task 5.6, which is the only place both
+      types are visible
+- [x] 3.4 `cargo test -p deep_causality_core` green
 
 ## 4. Make the new crate compile
 
-- [ ] 4.1 Rewrite the moved files' imports: `crate::` paths that resolve inside the new crate stay,
+- [x] 4.1 Rewrite the moved files' imports: `crate::` paths that resolve inside the new crate stay,
       `Identifiable` comes from `deep_causality_core`, and `FloatType`, `ContextId`, `ContextoidId`
       and `NumericalValue` come from `deep_causality_core` — the new crate declares no alias of its
       own for them
-- [ ] 4.2 Add `BaseContext`, `BaseContextoid`, `UniformContext` and `UniformContextoid` to the new
+- [x] 4.2 Add `BaseContext`, `BaseContextoid`, `UniformContext` and `UniformContextoid` to the new
       crate, lifted from `deep_causality/src/alias/alias_base.rs` and `alias_uniform.rs` (only these
       four; the `BaseCausaloid`/`UniformCausaloid` family stays behind)
-- [ ] 4.3 Move `get_context`, `get_base_context` and `get_test_context` into
+- [x] 4.3 Move `get_context`, `get_base_context` and `get_test_context` into
       `deep_causality_context/src/utils_test/`, and add tests for them (they count toward coverage)
-- [ ] 4.4 Write `src/lib.rs`: module declarations plus the full public export list. No prelude
-- [ ] 4.5 Fix the `Causaloid` "See Also" line in `traits/scalar/scalar_projector.rs` so it does not
+- [x] 4.4 Write `src/lib.rs`: module declarations plus the full public export list. No prelude
+- [x] 4.5 Fix the `Causaloid` "See Also" line in `traits/scalar/scalar_projector.rs` so it does not
       name a type from a crate this one cannot see
-- [ ] 4.6 Register every moved test file in its `mod.rs` with `#[cfg(test)]`, declare the folder
+- [x] 4.6 Register every moved test file in its `mod.rs` with `#[cfg(test)]`, declare the folder
       modules in `BUILD.bazel`, and confirm `cargo test -p deep_causality_context` and
       `bazel test //deep_causality_context/...` report the same count as before the move
 
+## 4b. Remove the symbolic (SYM) dimension
+
+Added during apply, on the user's decision: nothing in the workspace ever constructs a
+`ContextoidType::Symboid`. The only non-test references were the enum's own arms, so the parameter
+existed solely to be threaded through signatures and filled in by aliases.
+
+- [x] 4b.1 Remove `context_node_types/symbol/` (`BaseSymbol`, `SymbolKind`),
+      `types/symbolic_types/` (`SymbolicRepresentation`, `SymbolicResult`) and
+      `traits/contextuable/symbolic.rs` (`Symbolic`), with their tests
+- [x] 4b.2 Drop `SYM` from `Context`, `Contextoid`, `ContextoidType`, `Contextuable`,
+      `ContextuableGraph` and `ExtendableContextuableGraph`: seven type parameters become six
+- [x] 4b.3 Remove the `ContextoidType::Symboid` variant, `ContextKind::Symboid`, the `symboid()`
+      accessor and the Display arm
+- [x] 4b.4 Update `BaseContext`, `BaseContextoid`, `UniformContext`, `UniformContextoid`
+- [x] 4b.5 Update `deep_causality_ethos` (`BaseTeloidStore`, `Teloid`, `TeloidStore`, `EffectEthos`)
+      and `examples/csm_examples/csm_effect_ethos` for the six-parameter context
+- [x] 4b.6 `SymbolicTime`, `SymbolicTimeUnit`, `TimeScale::Symbolic` and `symbol_spacetime`
+      (`CausalSetSpacetime`, `ConformalSpacetime`) are unaffected — they are temporal and spacetime
+      nodes that never referenced the `Symbolic` trait
+
 ## 5. Rewrite `deep_causality`
 
-- [ ] 5.1 Add `deep_causality_context` to `deep_causality/Cargo.toml`
-- [ ] 5.2 Remove every moved item from `src/lib.rs` and add **no** re-export of the new crate
+- [x] 5.1 Add `deep_causality_context` to `deep_causality/Cargo.toml`
+- [x] 5.2 Remove every moved item from `src/lib.rs` and add **no** re-export of the new crate
       (`context-explicit-dependency`)
-- [ ] 5.3 Fix the 9 named-import files in `src/`: `Model`, the generative interpreter,
+- [x] 5.3 Fix the 9 named-import files in `src/`: `Model`, the generative interpreter,
       `UncertainActivationPredicate`, `model_validation_error`, the CSM `UpdateError` call sites,
       and the `Base*`/`Uniform*` causal aliases
-- [ ] 5.4 Fix the 12 `use crate::*` files in `src/` by adding explicit
+- [x] 5.4 Fix the 12 `use crate::*` files in `src/` by adding explicit
       `use deep_causality_context::{…}` imports
-- [ ] 5.5 Split `src/utils_test/test_utils.rs`: keep the Causaloid/Model/Inference/Observation
+- [x] 5.5 Split `src/utils_test/test_utils.rs`: keep the Causaloid/Model/Inference/Observation
       builders, import the three context builders from `deep_causality_context`
-- [ ] 5.6 Fix the 33 staying test files (6 named imports, 27 `use deep_causality::*` globs) and the
+- [x] 5.6 Fix the 33 staying test files (6 named imports, 27 `use deep_causality::*` globs) and the
       3 benches
-- [ ] 5.7 `cargo test -p deep_causality` and `cargo bench -p deep_causality --no-run` green
+- [x] 5.7 `cargo test -p deep_causality` and `cargo bench -p deep_causality --no-run` green
 
 ## 6. Deduplicate the primitive aliases onto core
 
-- [ ] 6.1 Confirm all ten declarations in `deep_causality/src/alias/alias_primitives.rs` are still
+- [x] 6.1 Confirm all ten declarations in `deep_causality/src/alias/alias_primitives.rs` are still
       byte-identical to `deep_causality_core/src/alias/mod.rs` before removing anything
-- [ ] 6.2 Delete `alias_primitives.rs`, its `pub(crate) mod` declaration and its glob re-export in
+- [x] 6.2 Delete `alias_primitives.rs`, its `pub(crate) mod` declaration and its glob re-export in
       `deep_causality/src/alias/mod.rs`
-- [ ] 6.3 Re-export the eight live aliases from core in `deep_causality/src/lib.rs`:
+- [x] 6.3 Re-export the eight live aliases from core in `deep_causality/src/lib.rs`:
       `IdentificationValue`, `ContextId`, `ContextoidId`, `CausaloidId`, `DescriptionValue`,
       `NumericalValue`, `NumberType`, `FloatType`
-- [ ] 6.4 Do **not** re-export `TeloidTag` or `TeloidID` — both are dead in `deep_causality` and
+- [x] 6.4 Do **not** re-export `TeloidTag` or `TeloidID` — both are dead in `deep_causality` and
       `deep_causality_ethos` declares its own pair
-- [ ] 6.5 Confirm no call site changed: `cargo test -p deep_causality` green with zero import edits
+- [x] 6.5 Confirm no call site changed: `cargo test -p deep_causality` green with zero import edits
       in the 202 example files naming `FloatType` and the 25 test files naming `NumericalValue`
 
 ## 7. Relax the `Data<T>` payload bound
 
-- [ ] 7.1 Change the `Data<T>` where-clause to `T: Default + Clone + PartialEq` and drop `Copy` from
+- [x] 7.1 Change the `Data<T>` where-clause to `T: Default + Clone + PartialEq` and drop `Copy` from
       its `#[derive(...)]`, in `deep_causality_context/src/types/context_node_types/data/mod.rs`
-- [ ] 7.2 Change `Datable for Data<T>` to the same bound and return `self.data.clone()` from
+- [x] 7.2 Change `Datable for Data<T>` to the same bound and return `self.data.clone()` from
       `get_data`
-- [ ] 7.3 Leave `Adjustable<T> for Data<T>` untouched — it already restates `Copy` alongside
+- [x] 7.3 Leave `Adjustable<T> for Data<T>` untouched — it already restates `Copy` alongside
       `Hash + Eq + PartialOrd + Add + Sub + Mul`, which `ArrayGrid<T, …>` genuinely requires
-- [ ] 7.4 Build the workspace to size the blast radius of `Data<T>` no longer being `Copy`, and
+- [x] 7.4 Build the workspace to size the blast radius of `Data<T>` no longer being `Copy`, and
       replace each former implicit copy with an explicit `clone()`. Do not widen any other bound to
       make an error go away
-- [ ] 7.5 Add a test constructing a `Data<Vec<f64>>`, reading it back through `Datable`, and placing
+- [x] 7.5 Add a test constructing a `Data<Vec<f64>>`, reading it back through `Datable`, and placing
       it in a `Contextoid` inside a `Context`
-- [ ] 7.6 Confirm `BaseContextoid` is not `Copy` before and after, so nothing above `Data` changed
+- [x] 7.6 Confirm `BaseContextoid` is not `Copy` before and after, so nothing above `Data` changed
       shape
-- [ ] 7.7 Confirm the existing `Data<f64>` update/adjust tests still pass unchanged, including the
+- [x] 7.7 Confirm the existing `Data<f64>` update/adjust tests still pass unchanged, including the
       zero-value rejection in `update`
 
 ## 8. Rewrite `deep_causality_ethos`
 
-- [ ] 8.1 Add `deep_causality_context` to `deep_causality_ethos/Cargo.toml`
-- [ ] 8.2 Fix the 27 files importing `Context`, `BaseContext`, `Datable`, `SpaceTemporal`,
+- [x] 8.1 Add `deep_causality_context` to `deep_causality_ethos/Cargo.toml`
+- [x] 8.2 Fix the 27 files importing `Context`, `BaseContext`, `Datable`, `SpaceTemporal`,
       `Spatial`, `Symbolic`, `Temporal`, `BaseSymbol`, `Euclidean*` and `Identifiable`
-- [ ] 8.3 Confirm its own `TeloidTag`/`TeloidID` still resolve from its own `alias` module,
+- [x] 8.3 Confirm its own `TeloidTag`/`TeloidID` still resolve from its own `alias` module,
       unaffected by task 6.4
-- [ ] 8.4 `cargo test -p deep_causality_ethos` green
+- [x] 8.4 `cargo test -p deep_causality_ethos` green
 
 ## 9. Rewrite the example packages
 
-- [ ] 9.1 Add `deep_causality_context` to the manifests of `classical_causality_examples`,
+- [x] 9.1 Add `deep_causality_context` to the manifests of `classical_causality_examples`,
       `csm_examples`, `tokio_example` and `avionics_examples`
-- [ ] 9.2 Fix imports in `csm_examples` (4 files), `tokio_example` (2) and `avionics_examples`
+- [x] 9.2 Fix imports in `csm_examples` (4 files), `tokio_example` (2) and `avionics_examples`
       (2 globs)
-- [ ] 9.3 Fix imports in the causaloid-side `classical_causality_examples` (11 files, 7 of them
+- [x] 9.3 Fix imports in the causaloid-side `classical_causality_examples` (11 files, 7 of them
       `use deep_causality::*` globs)
-- [ ] 9.4 Run every example in the four packages and confirm output is unchanged
+- [x] 9.4 Run every example in the four packages and confirm output is unchanged
 
 ## 10. Migrate the monad examples onto the typed context
 

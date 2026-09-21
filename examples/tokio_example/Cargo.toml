@@ -12,6 +12,7 @@ publish = false
 
 [dependencies]
 deep_causality = { workspace = true }
+deep_causality_context = { workspace = true }
 tokio = { workspace = true, features = ["full"] }
 
 [lints]

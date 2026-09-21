@@ -4,9 +4,9 @@
  */
 
 use crate::EffectEthos;
-use deep_causality::{
-    ActionParameterValue, BaseContext, BaseSymbol, Data, EuclideanSpace, EuclideanSpacetime,
-    EuclideanTime, FloatType, NumericalValue, ProposedAction,
+use deep_causality::{ActionParameterValue, FloatType, NumericalValue, ProposedAction};
+use deep_causality_context::{
+    BaseContext, Data, EuclideanSpace, EuclideanSpacetime, EuclideanTime,
 };
 
 use std::collections::HashMap;
@@ -18,7 +18,6 @@ pub type TestEthos = EffectEthos<
     EuclideanSpace,
     EuclideanTime,
     EuclideanSpacetime,
-    BaseSymbol,
     FloatType,
     FloatType,
 >;

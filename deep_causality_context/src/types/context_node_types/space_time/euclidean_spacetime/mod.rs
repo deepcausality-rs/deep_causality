@@ -47,7 +47,7 @@ use crate::TimeScale;
 ///
 /// # Example
 /// ```
-/// use deep_causality::*;
+/// use deep_causality_context::*;
 ///
 /// let s1 = EuclideanSpacetime::new(1, 0.0, 0.0, 0.0, 1_000_000.00f64, TimeScale::Second);
 /// let s2 = EuclideanSpacetime::new(2, 3.0, 4.0, 0.0, 2_000_000.00f64, TimeScale::Second);

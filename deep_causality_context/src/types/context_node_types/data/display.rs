@@ -7,7 +7,7 @@ use std::fmt::{Debug, Display, Formatter};
 
 impl<T> Display for Data<T>
 where
-    T: Debug + Default + Copy + Clone + PartialEq,
+    T: Debug + Default + Clone + PartialEq,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(f, "Dataoid: id: {} data: {:?}", self.id, self.data)

@@ -5,19 +5,19 @@
 use crate::{DeonticError, EffectEthos, Teloid, TeloidID, TeloidModal, TeloidTag};
 use crate::{TeloidStorable, Teloidable};
 
-use deep_causality::{Context, ProposedAction, UncertainActivationPredicate, UncertainParameter};
-use deep_causality::{Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
+use deep_causality::{ProposedAction, UncertainActivationPredicate, UncertainParameter};
+use deep_causality_context::Context;
+use deep_causality_context::{Datable, SpaceTemporal, Spatial, Temporal};
 
 use ultragraph::GraphMut;
 
 #[allow(clippy::type_complexity)]
-impl<D, S, T, ST, SYM, VS, VT> EffectEthos<D, S, T, ST, SYM, VS, VT>
+impl<D, S, T, ST, VS, VT> EffectEthos<D, S, T, ST, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
     ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
 {
@@ -46,7 +46,7 @@ where
         id: TeloidID,
         action_identifier: &str,
         tags: &[TeloidTag],
-        predicate: fn(&Context<D, S, T, ST, SYM, VS, VT>, &ProposedAction) -> bool,
+        predicate: fn(&Context<D, S, T, ST, VS, VT>, &ProposedAction) -> bool,
         modality: TeloidModal,
         timestamp: u64,
         specificity: u32,
@@ -95,7 +95,7 @@ where
         id: TeloidID,
         action_identifier: &str,
         tags: &[TeloidTag],
-        predicate: UncertainActivationPredicate<D, S, T, ST, SYM, VS, VT>,
+        predicate: UncertainActivationPredicate<D, S, T, ST, VS, VT>,
         predicate_parameter: UncertainParameter,
         modality: TeloidModal,
         timestamp: u64,
@@ -149,7 +149,7 @@ where
     ///
     /// # Returns
     /// An `Option` containing a reference to the `Teloid` if found, or `None` otherwise.
-    pub fn get_norm(&self, id: TeloidID) -> Option<&Teloid<D, S, T, ST, SYM, VS, VT>> {
+    pub fn get_norm(&self, id: TeloidID) -> Option<&Teloid<D, S, T, ST, VS, VT>> {
         self.teloid_store.get(&id)
     }
 

@@ -4,9 +4,9 @@
  */
 use deep_causality::utils_test::test_utils::*;
 use deep_causality::{
-    Assumable, ContextuableGraph, Identifiable, Inferable, MonadicCausable, Observable,
-    PropagatingEffect,
+    Assumable, Identifiable, Inferable, MonadicCausable, Observable, PropagatingEffect,
 };
+use deep_causality_context::ContextuableGraph;
 use deep_causality_haft::LogSize;
 
 #[test]
@@ -199,7 +199,7 @@ fn test_context_causaloid() {
     let _ctx2 = get_context();
     // Hack context id if possible or create new with different ID? context ID is immutable or private?
     // Context::with_capacity(id, ...)
-    let ctx2 = deep_causality::Context::with_capacity(2, "other", 10);
+    let ctx2 = deep_causality_context::Context::with_capacity(2, "other", 10);
     let c2 = get_test_causaloid_deterministic_with_context(ctx2);
 
     // ID 2 -> should invert

@@ -1,7 +1,2 @@
 regime -> slip (GNSS-available), Kn=0.07829109848665225
 nav: aided (position fix folded)
-regime -> slip (GNSS-denied), Kn=0.012690837165407727
-nav: dead reckoning (no usable fix)
-regime -> continuum (GNSS-denied), Kn=0.009938408550331406
-regime -> continuum (GNSS-available), Kn=0.00025862835256282985
-nav: aided (position fix folded)

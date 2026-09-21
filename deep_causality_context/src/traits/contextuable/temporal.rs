@@ -3,7 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Identifiable, TimeScale};
+use crate::TimeScale;
+use deep_causality_core::Identifiable;
 
 /// Represents entities that have intrinsic temporal properties.
 ///

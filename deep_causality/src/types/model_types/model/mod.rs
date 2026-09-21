@@ -6,10 +6,12 @@ mod getters;
 mod identifiable;
 mod transferable;
 
-use crate::traits::contextuable::space_temporal::SpaceTemporal;
-use crate::traits::contextuable::spatial::Spatial;
-use crate::traits::contextuable::temporal::Temporal;
-use crate::{Assumption, Causaloid, Context, Contextoid, Datable, Identifiable, Symbolic};
+use crate::{Assumption, Causaloid};
+use deep_causality_context::SpaceTemporal;
+use deep_causality_context::Spatial;
+use deep_causality_context::Temporal;
+use deep_causality_context::{Context, Contextoid, Datable};
+use deep_causality_core::Identifiable;
 use std::fmt::Debug;
 use std::sync::{Arc, RwLock};
 
@@ -59,15 +61,14 @@ where
 }
 
 #[allow(clippy::type_complexity)]
-impl<I, O, D, S, T, ST, SYM, VS, VT> Model<I, O, Context<D, S, T, ST, SYM, VS, VT>>
+impl<I, O, D, S, T, ST, VS, VT> Model<I, O, Context<D, S, T, ST, VS, VT>>
 where
     I: Default + Clone,
     O: Default + Debug + Clone,
-    D: Datable + Copy + Clone + PartialEq + std::fmt::Debug,
+    D: Datable + Clone + PartialEq + std::fmt::Debug,
     S: Spatial<VS> + Clone + std::fmt::Debug,
     T: Temporal<VT> + Clone + std::fmt::Debug,
     ST: SpaceTemporal<VS, VT> + Clone + std::fmt::Debug,
-    SYM: Symbolic + Clone + std::fmt::Debug,
     VS: Clone + std::fmt::Debug,
     VT: Clone + std::fmt::Debug,
 {
@@ -80,8 +81,8 @@ where
         op_tree: &crate::OpTree<
             I,
             O,
-            Context<D, S, T, ST, SYM, VS, VT>,
-            Contextoid<D, S, T, ST, SYM, VS, VT>,
+            Context<D, S, T, ST, VS, VT>,
+            Contextoid<D, S, T, ST, VS, VT>,
         >,
     ) -> Result<(Self, crate::ModificationLog), crate::ModelValidationError> {
         // 1. Initialize the interpreter state with the current model's components.

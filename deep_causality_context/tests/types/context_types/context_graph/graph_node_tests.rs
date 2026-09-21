@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::{BaseContextoid, Contextoid, ContextoidType, Identifiable, Root};
+use deep_causality_context::{BaseContextoid, Contextoid, ContextoidType, Identifiable, Root};
 
 fn get_test_contextoid() -> BaseContextoid {
     let id = 1;

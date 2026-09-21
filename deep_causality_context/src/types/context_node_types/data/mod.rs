@@ -22,12 +22,14 @@ mod identifiable;
 /// # Type Parameters
 ///
 /// * `T`: The type of the data payload. It must be a simple, copyable, and comparable
-///   type, satisfying the `Default + Copy + Clone + Hash + Eq + PartialEq` bounds.
+///   type, satisfying the `Default + Clone + PartialEq` bounds. `Copy` is NOT required: it is
+///   asked for only by the [`Adjustable`](crate::Adjustable) impl, because `ArrayGrid` is backed
+///   by fixed-size arrays. A `Data<Vec<f64>>` is therefore a valid context node.
 ///
-#[derive(Debug, Default, Copy, Clone, PartialEq)]
+#[derive(Debug, Default, Clone, PartialEq)]
 pub struct Data<T>
 where
-    T: Default + Copy + Clone + PartialEq,
+    T: Default + Clone + PartialEq,
 {
     id: u64,
     data: T,
@@ -35,7 +37,7 @@ where
 
 impl<T> Data<T>
 where
-    T: Default + Copy + Clone + PartialEq,
+    T: Default + Clone + PartialEq,
 {
     pub fn new(id: u64, data: T) -> Self {
         Self { id, data }

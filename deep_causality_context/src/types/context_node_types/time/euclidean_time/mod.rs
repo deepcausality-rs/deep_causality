@@ -37,7 +37,7 @@ use crate::{TimeKind, TimeScale};
 ///
 /// # Example
 /// ```rust
-/// use deep_causality::{EuclideanTime, Identifiable, Temporal, TimeScale};
+/// use deep_causality_context::{EuclideanTime, Identifiable, Temporal, TimeScale};
 ///
 /// let tau = EuclideanTime::new(42, TimeScale::Second, std::f64::consts::PI);
 ///

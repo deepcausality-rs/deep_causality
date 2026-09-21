@@ -9,8 +9,9 @@ mod identifiable;
 mod part_eq;
 
 use crate::{TeloidID, TeloidModal, TeloidTag};
-use deep_causality::{Context, ProposedAction, UncertainActivationPredicate, UncertainParameter};
-use deep_causality::{Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
+use deep_causality::{ProposedAction, UncertainActivationPredicate, UncertainParameter};
+use deep_causality_context::Context;
+use deep_causality_context::{Datable, SpaceTemporal, Spatial, Temporal};
 
 use std::collections::HashMap;
 
@@ -18,13 +19,12 @@ pub type TeloidMetaData = HashMap<String, String>;
 
 #[derive(Debug, Clone)]
 #[allow(clippy::type_complexity)]
-pub struct Teloid<D, S, T, ST, SYM, VS, VT>
+pub struct Teloid<D, S, T, ST, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
     ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
 {
@@ -32,8 +32,8 @@ where
     // DDIC Norm Components
     action_identifier: String,
     // A teloid can have either a deterministic or an uncertain predicate.
-    activation_predicate: Option<fn(&Context<D, S, T, ST, SYM, VS, VT>, &ProposedAction) -> bool>,
-    uncertain_activation_predicate: Option<UncertainActivationPredicate<D, S, T, ST, SYM, VS, VT>>,
+    activation_predicate: Option<fn(&Context<D, S, T, ST, VS, VT>, &ProposedAction) -> bool>,
+    uncertain_activation_predicate: Option<UncertainActivationPredicate<D, S, T, ST, VS, VT>>,
     uncertain_parameter: Option<UncertainParameter>,
     modality: TeloidModal,
 
@@ -47,13 +47,12 @@ where
     metadata: Option<TeloidMetaData>,
 }
 
-impl<D, S, T, ST, SYM, VS, VT> Teloid<D, S, T, ST, SYM, VS, VT>
+impl<D, S, T, ST, VS, VT> Teloid<D, S, T, ST, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
     ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
 {
@@ -64,7 +63,7 @@ where
     pub fn new_deterministic(
         id: TeloidID,
         action_identifier: String,
-        activation_predicate: fn(&Context<D, S, T, ST, SYM, VS, VT>, &ProposedAction) -> bool,
+        activation_predicate: fn(&Context<D, S, T, ST, VS, VT>, &ProposedAction) -> bool,
         modality: TeloidModal,
         timestamp: u64,
         specificity: u32,
@@ -94,7 +93,7 @@ where
     pub fn new_uncertain(
         id: TeloidID,
         action_identifier: String,
-        uncertain_activation_predicate: UncertainActivationPredicate<D, S, T, ST, SYM, VS, VT>,
+        uncertain_activation_predicate: UncertainActivationPredicate<D, S, T, ST, VS, VT>,
         predicate_parameter: UncertainParameter,
         modality: TeloidModal,
         timestamp: u64,

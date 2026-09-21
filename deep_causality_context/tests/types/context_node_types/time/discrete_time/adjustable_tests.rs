@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::{Adjustable, DiscreteTime, Temporal, TimeScale};
+use deep_causality_context::{Adjustable, DiscreteTime, Temporal, TimeScale};
 use deep_causality_data_structures::{ArrayGrid, ArrayType, PointIndex};
 
 #[test]

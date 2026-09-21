@@ -8,6 +8,5 @@ mod data_uncertain;
 mod root;
 mod space;
 mod space_time;
-mod symbol;
 mod symbol_spacetime;
 mod time;

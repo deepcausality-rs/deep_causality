@@ -3,14 +3,17 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::{
-    Datable, Identifiable, UncertainAdjustable, UncertainBool, UncertainBooleanData,
-};
+use deep_causality_context::{Datable, Identifiable, UncertainAdjustable, UncertainBooleanData};
+use deep_causality_core::FloatType;
+use deep_causality_uncertain::UncertainBool;
+
+/// The Boolean carrier at the scalar `UncertainBooleanData` is fixed to.
+type TestUncertainBool = UncertainBool<FloatType>;
 
 #[test]
 fn test_new() {
     let id = 1;
-    let data = UncertainBool::point(true);
+    let data = TestUncertainBool::point(true);
     let ubd = UncertainBooleanData::new(id, data.clone());
     assert_eq!(ubd.id(), id);
     assert!(ubd.get_data().sample_from_entropy().unwrap());
@@ -19,7 +22,7 @@ fn test_new() {
 #[test]
 fn test_id() {
     let id = 42;
-    let data = UncertainBool::point(true);
+    let data = TestUncertainBool::point(true);
     let ubd = UncertainBooleanData::new(id, data);
     assert_eq!(ubd.id(), id);
 }
@@ -27,7 +30,7 @@ fn test_id() {
 #[test]
 fn test_get_data() {
     let id = 1;
-    let data = UncertainBool::point(true);
+    let data = TestUncertainBool::point(true);
     let ubd = UncertainBooleanData::new(id, data.clone());
     assert!(ubd.get_data().sample_from_entropy().unwrap());
 }
@@ -35,11 +38,11 @@ fn test_get_data() {
 #[test]
 fn test_set_data() {
     let id = 1;
-    let initial_data = UncertainBool::point(true);
+    let initial_data = TestUncertainBool::point(true);
     let mut ubd = UncertainBooleanData::new(id, initial_data);
     assert!(ubd.get_data().sample_from_entropy().unwrap());
 
-    let new_data = UncertainBool::point(false);
+    let new_data = TestUncertainBool::point(false);
     ubd.set_data(new_data.clone());
     assert!(!ubd.get_data().sample_from_entropy().unwrap());
 }
@@ -59,11 +62,11 @@ fn test_display() {
 #[test]
 fn test_update() {
     let id = 1;
-    let initial_data = UncertainBool::point(true);
+    let initial_data = TestUncertainBool::point(true);
     let mut ubd = UncertainBooleanData::new(id, initial_data);
     assert!(ubd.get_data().sample_from_entropy().unwrap());
 
-    let update_data = UncertainBool::point(false);
+    let update_data = TestUncertainBool::point(false);
     let res = ubd.update(update_data.clone());
     assert!(res.is_ok());
     assert!(!ubd.get_data().sample_from_entropy().unwrap());
@@ -72,7 +75,7 @@ fn test_update() {
 #[test]
 fn test_adjust() {
     let id = 1;
-    let initial_data = UncertainBool::point(true);
+    let initial_data = TestUncertainBool::point(true);
     let mut ubd = UncertainBooleanData::new(id, initial_data);
     assert!(ubd.get_data().sample_from_entropy().unwrap());
 

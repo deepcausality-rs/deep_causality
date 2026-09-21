@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::*;
+use deep_causality_context::*;
 
 fn get_context() -> BaseContext {
     let id = 1;

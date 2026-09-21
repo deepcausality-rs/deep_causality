@@ -6,15 +6,15 @@
 use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
-use crate::{Contextoid, Datable, Identifiable, Symbolic};
+use crate::{Contextoid, Datable};
+use deep_causality_core::Identifiable;
 
-impl<D, S, T, ST, SYM, VS, VT> Identifiable for Contextoid<D, S, T, ST, SYM, VS, VT>
+impl<D, S, T, ST, VS, VT> Identifiable for Contextoid<D, S, T, ST, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
     ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
 {

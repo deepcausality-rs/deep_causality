@@ -5,9 +5,10 @@
 
 use crate::errors::IndexError;
 use crate::{
-    Coordinate, EuclideanSpacetime, Identifiable, LorentzianSpacetime, MinkowskiSpacetime,
-    SpaceTemporal, Spatial, TangentSpacetime, Temporal, TimeScale,
+    Coordinate, EuclideanSpacetime, LorentzianSpacetime, MinkowskiSpacetime, SpaceTemporal,
+    Spatial, TangentSpacetime, Temporal, TimeScale,
 };
+use deep_causality_core::Identifiable;
 use std::fmt::Formatter;
 
 /// A polymorphic enum over supported spacetime context types.
@@ -29,7 +30,7 @@ use std::fmt::Formatter;
 /// # Examples
 ///
 /// ```rust
-/// use deep_causality::*;
+/// use deep_causality_context::*;
 ///
 /// let euclidean = EuclideanSpacetime::new(1, 0.0, 0.0, 0.0, 1.0, TimeScale::Second);
 /// let spacetime = SpaceTimeKind::Euclidean(euclidean);

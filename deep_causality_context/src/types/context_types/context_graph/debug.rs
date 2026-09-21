@@ -8,16 +8,15 @@ use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
 use crate::traits::contextuable_graph::ContextuableGraph;
-use crate::{Context, Datable, Symbolic};
+use crate::{Context, Datable};
 
 #[allow(clippy::type_complexity)]
-impl<D, S, T, ST, SYM, VS, VT> Context<D, S, T, ST, SYM, VS, VT>
+impl<D, S, T, ST, VS, VT> Context<D, S, T, ST, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
     ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
 {
@@ -33,13 +32,12 @@ where
     }
 }
 
-impl<D, S, T, ST, SYM, VS, VT> Debug for Context<D, S, T, ST, SYM, VS, VT>
+impl<D, S, T, ST, VS, VT> Debug for Context<D, S, T, ST, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
     ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
 {
@@ -48,13 +46,12 @@ where
     }
 }
 
-impl<D, S, T, ST, SYM, VS, VT> Display for Context<D, S, T, ST, SYM, VS, VT>
+impl<D, S, T, ST, VS, VT> Display for Context<D, S, T, ST, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
     ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
 {

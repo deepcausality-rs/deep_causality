@@ -38,7 +38,7 @@ mod temporable;
 /// # Examples
 ///
 /// ```rust
-/// use deep_causality::{SymbolicTime, SymbolicTimeUnit};
+/// use deep_causality_context::{SymbolicTime, SymbolicTimeUnit};
 ///
 /// let t1 = SymbolicTime::new(
 ///     1,
@@ -112,7 +112,7 @@ impl SymbolicTime {
 ///
 /// # Example
 /// ```rust
-/// use deep_causality::SymbolicTimeUnit;
+/// use deep_causality_context::SymbolicTimeUnit;
 ///
 /// let t = SymbolicTimeUnit::Simultaneous(
 ///     vec!["SensorA".into(), "SensorB".into()],

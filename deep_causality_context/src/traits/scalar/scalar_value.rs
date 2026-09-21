@@ -21,7 +21,7 @@
 ///
 /// # Examples
 /// ```rust
-/// use deep_causality::ScalarValue;
+/// use deep_causality_context::ScalarValue;
 ///
 /// fn process_value<T: ScalarValue>(val: T) -> bool {
 ///     val > T::default()

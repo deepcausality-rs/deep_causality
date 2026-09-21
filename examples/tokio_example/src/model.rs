@@ -4,9 +4,11 @@
  */
 use crate::types::BaseModelTokio;
 use deep_causality::{
-    BaseCausaloid, BaseContext, CausalityError, CausalityErrorEnum, Causaloid, Context, Contextoid,
-    ContextoidType, ContextuableGraph, IdentificationValue, Model, NumericalValue,
-    PropagatingEffect, Root,
+    BaseCausaloid, CausalityError, CausalityErrorEnum, Causaloid, IdentificationValue, Model,
+    NumericalValue, PropagatingEffect,
+};
+use deep_causality_context::{
+    BaseContext, Context, Contextoid, ContextoidType, ContextuableGraph, Root,
 };
 use std::sync::{Arc, RwLock};
 

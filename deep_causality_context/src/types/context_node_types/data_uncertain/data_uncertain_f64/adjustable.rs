@@ -2,10 +2,11 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use crate::AdjustmentError;
 use crate::UncertainAdjustable;
 use crate::types::context_node_types::data_uncertain::data_uncertain_f64::UncertainData;
-use crate::{AdjustmentError, Uncertain};
 use deep_causality_uncertain::RandScalar;
+use deep_causality_uncertain::Uncertain;
 
 /// Replacing the whole distribution is what adjusting an uncertain quantity means.
 ///

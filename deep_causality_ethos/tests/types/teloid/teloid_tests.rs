@@ -3,7 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use deep_causality::Identifiable;
-use deep_causality::{ActionParameterValue, BaseContext, ProposedAction};
+use deep_causality::{ActionParameterValue, ProposedAction};
+use deep_causality_context::BaseContext;
 use deep_causality_ethos::{Teloid, TeloidModal};
 use std::collections::HashMap;
 

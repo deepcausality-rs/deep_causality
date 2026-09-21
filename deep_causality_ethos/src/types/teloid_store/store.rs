@@ -3,18 +3,16 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality::{Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
+use deep_causality_context::{Datable, SpaceTemporal, Spatial, Temporal};
 
 use crate::{Teloid, TeloidID, TeloidStorable, TeloidStore};
 
-impl<D, S, T, ST, SYM, VS, VT> TeloidStorable<D, S, T, ST, SYM, VS, VT>
-    for TeloidStore<D, S, T, ST, SYM, VS, VT>
+impl<D, S, T, ST, VS, VT> TeloidStorable<D, S, T, ST, VS, VT> for TeloidStore<D, S, T, ST, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
     ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
 {
@@ -34,8 +32,8 @@ where
     ///
     fn insert(
         &mut self,
-        teloid: Teloid<D, S, T, ST, SYM, VS, VT>,
-    ) -> Option<Teloid<D, S, T, ST, SYM, VS, VT>> {
+        teloid: Teloid<D, S, T, ST, VS, VT>,
+    ) -> Option<Teloid<D, S, T, ST, VS, VT>> {
         self.index.insert(teloid.id(), teloid)
     }
     /// Retrieves a reference to a `Teloid` from the store.
@@ -48,7 +46,7 @@ where
     ///
     /// An `Option` containing a reference to the `Teloid` if it exists, otherwise `None`.
     ///
-    fn get(&self, id: &TeloidID) -> Option<&Teloid<D, S, T, ST, SYM, VS, VT>> {
+    fn get(&self, id: &TeloidID) -> Option<&Teloid<D, S, T, ST, VS, VT>> {
         self.index.get(id)
     }
     /// Removes a `Teloid` from the store, returning it.
@@ -61,7 +59,7 @@ where
     ///
     /// An `Option` containing the removed `Teloid` if it existed, otherwise `None`.
     ///
-    fn remove(&mut self, id: &TeloidID) -> Option<Teloid<D, S, T, ST, SYM, VS, VT>> {
+    fn remove(&mut self, id: &TeloidID) -> Option<Teloid<D, S, T, ST, VS, VT>> {
         self.index.remove(id)
     }
     /// Updates a `Teloid` in the store. This is an alias for `insert`.
@@ -80,8 +78,8 @@ where
     ///
     fn update(
         &mut self,
-        teloid: Teloid<D, S, T, ST, SYM, VS, VT>,
-    ) -> Option<Teloid<D, S, T, ST, SYM, VS, VT>> {
+        teloid: Teloid<D, S, T, ST, VS, VT>,
+    ) -> Option<Teloid<D, S, T, ST, VS, VT>> {
         self.index.insert(teloid.id(), teloid)
     }
     /// Checks if the store contains a `Teloid` with the specified ID.

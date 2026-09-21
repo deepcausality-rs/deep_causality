@@ -4,30 +4,28 @@
  */
 use crate::{
     Context, CurrentDataIndex, DataIndexable, Datable, PreviousDataIndex, SpaceTemporal, Spatial,
-    Symbolic, Temporal,
+    Temporal,
 };
 
 // Adds the default implementation to Context when the trait is imported. Can be overwritten to customize.
-impl<D, S, T, ST, SYM, VS, VT> CurrentDataIndex for Context<D, S, T, ST, SYM, VS, VT>
+impl<D, S, T, ST, VS, VT> CurrentDataIndex for Context<D, S, T, ST, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
     ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
 {
 }
 
 // Adds the default implementation to Context when the trait is imported. Can be overwritten to customize.
-impl<D, S, T, ST, SYM, VS, VT> PreviousDataIndex for Context<D, S, T, ST, SYM, VS, VT>
+impl<D, S, T, ST, VS, VT> PreviousDataIndex for Context<D, S, T, ST, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
     ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
 {
@@ -35,13 +33,12 @@ where
 
 // Adds the set/get index methods used in CurrentDataIndex and PreviousDataIndex.
 #[allow(clippy::type_complexity)]
-impl<D, S, T, ST, SYM, VS, VT> DataIndexable for Context<D, S, T, ST, SYM, VS, VT>
+impl<D, S, T, ST, VS, VT> DataIndexable for Context<D, S, T, ST, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
     ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
 {

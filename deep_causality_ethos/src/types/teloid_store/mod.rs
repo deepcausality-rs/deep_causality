@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{Teloid, TeloidID};
-use deep_causality::{Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
+use deep_causality_context::{Datable, SpaceTemporal, Spatial, Temporal};
 use std::collections::HashMap;
 
 mod store;
@@ -11,26 +11,24 @@ mod store;
 /// A generic, in-memory storage for Teloids, indexed by their unique ID.
 #[derive(Debug, Default, Clone)]
 #[allow(clippy::type_complexity)]
-pub struct TeloidStore<D, S, T, ST, SYM, VS, VT>
+pub struct TeloidStore<D, S, T, ST, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
     ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
 {
-    index: HashMap<TeloidID, Teloid<D, S, T, ST, SYM, VS, VT>>,
+    index: HashMap<TeloidID, Teloid<D, S, T, ST, VS, VT>>,
 }
 
-impl<D, S, T, ST, SYM, VS, VT> TeloidStore<D, S, T, ST, SYM, VS, VT>
+impl<D, S, T, ST, VS, VT> TeloidStore<D, S, T, ST, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
     ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
 {

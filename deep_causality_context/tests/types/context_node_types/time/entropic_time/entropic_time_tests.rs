@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use deep_causality::*;
+use deep_causality_context::*;
 
 #[test]
 fn test_creation() {

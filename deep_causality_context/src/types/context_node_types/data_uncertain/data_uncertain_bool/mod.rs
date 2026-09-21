@@ -7,7 +7,7 @@ mod datable;
 mod display;
 mod identifiable;
 
-use crate::FloatType;
+use deep_causality_core::FloatType;
 use deep_causality_uncertain::{RandScalar, UncertainBool};
 
 /// A context node holding an uncertain truth value.

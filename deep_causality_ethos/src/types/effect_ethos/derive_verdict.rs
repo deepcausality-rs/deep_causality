@@ -4,17 +4,16 @@
  */
 
 use crate::{DeonticError, EffectEthos, Teloid, TeloidID, TeloidModal, Verdict};
-use deep_causality::{Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
+use deep_causality_context::{Datable, SpaceTemporal, Spatial, Temporal};
 
 // Private helper methods for EffectEthos
 #[allow(clippy::type_complexity)]
-impl<D, S, T, ST, SYM, VS, VT> EffectEthos<D, S, T, ST, SYM, VS, VT>
+impl<D, S, T, ST, VS, VT> EffectEthos<D, S, T, ST, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
     ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
 {
@@ -39,7 +38,7 @@ where
     /// * `Err(DeonticError::InconclusiveVerdict)` if no clear verdict can be derived or the input is empty.
     pub(super) fn derive_verdict(
         &self,
-        norms: Vec<Teloid<D, S, T, ST, SYM, VS, VT>>,
+        norms: Vec<Teloid<D, S, T, ST, VS, VT>>,
     ) -> Result<Verdict, DeonticError> {
         if norms.is_empty() {
             return Err(DeonticError::NoRelevantNormsFound);

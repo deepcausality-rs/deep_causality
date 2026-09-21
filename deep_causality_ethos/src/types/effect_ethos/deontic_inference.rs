@@ -9,18 +9,17 @@ use ultragraph::GraphView;
 
 use crate::{DeonticError, EffectEthos, Teloid, TeloidID, TeloidTag, Verdict};
 use crate::{DeonticInferable, TeloidStorable};
-use deep_causality::{Context, ProposedAction};
-use deep_causality::{Datable, SpaceTemporal, Spatial, Symbolic, Temporal};
+use deep_causality::ProposedAction;
+use deep_causality_context::Context;
+use deep_causality_context::{Datable, SpaceTemporal, Spatial, Temporal};
 
 #[allow(clippy::type_complexity)]
-impl<D, S, T, ST, SYM, VS, VT> DeonticInferable<D, S, T, ST, SYM, VS, VT>
-    for EffectEthos<D, S, T, ST, SYM, VS, VT>
+impl<D, S, T, ST, VS, VT> DeonticInferable<D, S, T, ST, VS, VT> for EffectEthos<D, S, T, ST, VS, VT>
 where
     D: Datable + Clone,
     S: Spatial<VS> + Clone,
     T: Temporal<VT> + Clone,
     ST: SpaceTemporal<VS, VT> + Clone,
-    SYM: Symbolic + Clone,
     VS: Clone,
     VT: Clone,
 {
@@ -50,7 +49,7 @@ where
     fn evaluate_action(
         &self,
         action: &ProposedAction,
-        context: &Context<D, S, T, ST, SYM, VS, VT>,
+        context: &Context<D, S, T, ST, VS, VT>,
         tags: &[TeloidTag],
     ) -> Result<Verdict, DeonticError> {
         // Mitigation for Risk A2: Explicitly check if the graph is frozen.
@@ -81,10 +80,10 @@ where
         };
 
         // Mitigation for Risk P1: Create a local cache for this evaluation.
-        let mut teloid_cache: HashMap<TeloidID, &Teloid<D, S, T, ST, SYM, VS, VT>> = HashMap::new();
+        let mut teloid_cache: HashMap<TeloidID, &Teloid<D, S, T, ST, VS, VT>> = HashMap::new();
 
         // Step 2: Activation - Filter candidates by their activation predicate.
-        let active_teloids: Vec<&Teloid<D, S, T, ST, SYM, VS, VT>> = candidate_ids
+        let active_teloids: Vec<&Teloid<D, S, T, ST, VS, VT>> = candidate_ids
             .iter()
             .filter_map(|id| {
                 let teloid = self.teloid_store.get(id)?;

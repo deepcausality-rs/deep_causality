@@ -52,7 +52,7 @@ use crate::{DiscreteTime, EntropicTime, EuclideanTime, LorentzianTime};
 /// # Example
 ///
 /// ```rust
-/// use deep_causality::*;
+/// use deep_causality_context::*;
 ///
 /// let lorentz = TimeKind::Lorentzian(LorentzianTime::new(1, TimeScale::Second, 3.14));
 /// let discrete = TimeKind::Discrete(DiscreteTime::new(2, TimeScale::Second, 42));
