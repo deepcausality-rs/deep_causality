@@ -42,13 +42,31 @@ fn test_default_is_wgs84() {
 }
 
 #[test]
+fn test_the_table_covers_every_member() {
+    // An exhaustive match fails to compile when a member is added, which is what keeps DATUMS
+    // from silently falling behind the enum and quietly shrinking every test below.
+    for (datum, _) in DATUMS {
+        match datum {
+            VerticalDatum::WGS84
+            | VerticalDatum::EGM96
+            | VerticalDatum::EGM2008
+            | VerticalDatum::ISA
+            | VerticalDatum::Terrain => {}
+        }
+    }
+
+    let distinct: HashSet<VerticalDatum> = DATUMS.iter().map(|(d, _)| *d).collect();
+    assert_eq!(
+        distinct.len(),
+        5,
+        "DATUMS lost a member or gained a duplicate"
+    );
+}
+
+#[test]
 fn test_members_compare_and_hash_as_distinct_values() {
     // The datum is stored beside the altitude and compared before two altitudes are combined, so
     // equality has to separate all five.
-    for (datum, _) in DATUMS {
-        assert_eq!(datum, datum);
-    }
-
     let distinct: HashSet<VerticalDatum> = DATUMS.iter().map(|(d, _)| *d).collect();
     assert_eq!(distinct.len(), DATUMS.len());
 

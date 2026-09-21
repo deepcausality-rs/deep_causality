@@ -16,9 +16,9 @@ fn half_circumference() -> FloatType {
 
 #[test]
 fn test_distance_is_finite_at_antipodal_points() {
-    // `a = sin²(Δφ/2) + cosφ₁ cosφ₂ sin²(Δλ/2)` is at most 1 in exact arithmetic, and this pair
-    // rounds it to 1.0000000000000002. Without the clamp, `(1 - a).sqrt()` is NaN and the whole
-    // distance is NaN.
+    // `a = sin²(Δφ/2) + cosφ₁ cosφ₂ sin²(Δλ/2)` is at most 1 in exact arithmetic. This pair lands
+    // on exactly 1.0, so it pins the antipodal distance itself rather than the clamp; the sweep
+    // below is what reaches `a > 1`.
     let a = GeoSpace::new(1, -44.9953, 0.0, 0.0, VerticalDatum::WGS84);
     let b = GeoSpace::new(2, 44.9953, 180.0, 0.0, VerticalDatum::WGS84);
 

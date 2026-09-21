@@ -321,7 +321,7 @@ rust_test_suite(
 )
 
 rust_test_suite(
-    name = "utils_test_tests",
+    name = "utils_tests",
     srcs = glob([
         "tests/utils_test/*_tests.rs",
     ]),
