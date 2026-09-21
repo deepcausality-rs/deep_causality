@@ -4,9 +4,10 @@
  */
 
 use crate::{EuclideanSpacetime, SpaceTemporal};
+use deep_causality_algebra::RealField;
 
-impl SpaceTemporal for EuclideanSpacetime {
-    fn t(&self) -> &f64 {
+impl<R: RealField> SpaceTemporal for EuclideanSpacetime<R> {
+    fn t(&self) -> &R {
         &self.t
     }
 }

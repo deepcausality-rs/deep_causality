@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality_context::FloatType;
 use deep_causality_context::*;
 
 #[test]
@@ -50,5 +51,5 @@ fn test_metric_trait() {
 #[test]
 fn test_spatial_trait_is_implemented() {
     fn assert_spatial_impl<T: Spatial>() {}
-    assert_spatial_impl::<EcefSpace>();
+    assert_spatial_impl::<EcefSpace<FloatType>>();
 }

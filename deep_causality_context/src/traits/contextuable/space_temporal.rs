@@ -3,9 +3,12 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::traits::contextuable::coordinate::Coordinate;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
+use deep_causality_algebra::RealField;
 use deep_causality_core::Identifiable;
+use deep_causality_num::{FromPrimitive, lift};
 
 /// Combines spatial and temporal semantics into a 4D spacetime model.
 ///
@@ -50,14 +53,22 @@ pub trait SpaceTemporal: Identifiable + Spatial + Temporal {
 /// - `position()`: Returns the spatial coordinates `[x, y, z]` in meters
 ///
 /// # Default Method
-/// - `interval_squared(&self, &Self) -> f64`: Computes the squared interval between two events
+/// - `interval_squared(&self, &Self) -> Self::Coord`: Computes the squared interval between two
+///   events
 ///
-pub trait SpaceTemporalInterval {
+/// # The scalar
+/// The interval is measured in the same scalar the type's coordinates are, so this trait reads it
+/// from [`Coordinate::Coord`] rather than declaring one of its own. A second associated type would
+/// let a spacetime report its position in one scalar and its interval in another.
+pub trait SpaceTemporalInterval: Coordinate
+where
+    Self::Coord: RealField + FromPrimitive,
+{
     /// Returns the time coordinate in **seconds**.
-    fn time(&self) -> f64;
+    fn time(&self) -> Self::Coord;
 
     /// Returns the spatial coordinates `[x, y, z]` in **meters**.
-    fn position(&self) -> [f64; 3];
+    fn position(&self) -> [Self::Coord; 3];
 
     /// Computes the squared Minkowski interval between `self` and `other`.
     ///
@@ -69,8 +80,8 @@ pub trait SpaceTemporalInterval {
     /// Negative `s²` indicates time-like separation,
     /// zero indicates light-like (null),
     /// and positive indicates space-like.
-    fn interval_squared(&self, other: &Self) -> f64 {
-        let c = 299_792_458.0; // Speed of light (m/s)
+    fn interval_squared(&self, other: &Self) -> Self::Coord {
+        let c: Self::Coord = lift(299_792_458.0); // Speed of light (m/s)
 
         let dt = self.time() - other.time();
         let [x1, y1, z1] = self.position();
@@ -80,6 +91,7 @@ pub trait SpaceTemporalInterval {
         let dy = y1 - y2;
         let dz = z1 - z2;
 
-        -(c * dt).powi(2) + dx.powi(2) + dy.powi(2) + dz.powi(2)
+        let c_dt = c * dt;
+        -(c_dt * c_dt) + dx * dx + dy * dy + dz * dz
     }
 }

@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality_context::FloatType;
 use deep_causality_context::*;
 
 #[test]
@@ -50,7 +51,7 @@ fn test_scalar_projector_trait() {
 #[test]
 fn test_from_discrete_time_to_time_kind() {
     let time = DiscreteTime::new(42, TimeScale::Second, 123);
-    let kind: TimeKind = time.into();
+    let kind: TimeKind<FloatType> = time.into();
 
     match kind {
         TimeKind::Discrete(t) => {

@@ -5,23 +5,35 @@
 
 use crate::{Distance, GeoSpace};
 
+use deep_causality_algebra::RealField;
+use deep_causality_num::{FromPrimitive, lift};
+
+/// Degrees to radians.
+///
+/// `RealField` carries no `to_radians`, so the conversion is written out. `R::pi()` is the
+/// working type's own constant, which keeps the result as exact as that type allows.
+fn to_radians<R: RealField + FromPrimitive>(degrees: R) -> R {
+    degrees * R::pi() / lift(180.0)
+}
+
 // Distance (with simple haversine approximation)
-impl Distance for GeoSpace {
-    fn distance(&self, other: &Self) -> f64 {
-        let radius = 6_371_000.0; // Earth's mean radius in meters
+impl<R: RealField + FromPrimitive> Distance for GeoSpace<R> {
+    fn distance(&self, other: &Self) -> R {
+        let radius: R = lift(6_371_000.0); // Earth's mean radius in meters
+        let two: R = lift(2.0);
 
-        let dlat = (other.lat - self.lat).to_radians();
-        let dlon = (other.lon - self.lon).to_radians();
+        let dlat = to_radians(other.lat - self.lat);
+        let dlon = to_radians(other.lon - self.lon);
 
-        let a = (dlat / 2.0).sin().powi(2)
-            + self.lat.to_radians().cos()
-                * other.lat.to_radians().cos()
-                * (dlon / 2.0).sin().powi(2);
+        let sin_dlat = (dlat / two).sin();
+        let sin_dlon = (dlon / two).sin();
+        let a = sin_dlat * sin_dlat
+            + to_radians(self.lat).cos() * to_radians(other.lat).cos() * sin_dlon * sin_dlon;
 
-        let c = 2.0 * a.sqrt().atan2((1.0 - a).sqrt());
+        let c = two * a.sqrt().atan2((R::one() - a).sqrt());
         let surface_distance = radius * c;
         let alt_diff = other.alt - self.alt;
 
-        (surface_distance.powi(2) + alt_diff.powi(2)).sqrt()
+        (surface_distance * surface_distance + alt_diff * alt_diff).sqrt()
     }
 }

@@ -11,6 +11,8 @@ mod scalar_projector;
 mod temporable;
 
 use crate::{TimeKind, TimeScale};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 /// A time model based on **Euclidean (imaginary) time**, primarily used in theoretical and computational physics.
 ///
@@ -66,7 +68,10 @@ use crate::{TimeKind, TimeScale};
 /// - `ProperTime` for observer-dependent clock time
 /// - `SymbolicTime` for abstract, label-based event time
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct EuclideanTime {
+pub struct EuclideanTime<R>
+where
+    R: RealField,
+{
     /// Unique numeric identifier for the time instance.
     id: ContextoidId,
 
@@ -74,11 +79,11 @@ pub struct EuclideanTime {
     time_scale: TimeScale,
 
     /// The Euclidean (imaginary) time value, represented as a real number.
-    time_unit: f64,
+    time_unit: R,
 }
 
-impl EuclideanTime {
-    pub fn new(id: ContextoidId, time_scale: TimeScale, time_unit: f64) -> Self {
+impl<R: RealField> EuclideanTime<R> {
+    pub fn new(id: ContextoidId, time_scale: TimeScale, time_unit: R) -> Self {
         Self {
             id,
             time_scale,
@@ -87,8 +92,8 @@ impl EuclideanTime {
     }
 }
 
-impl From<EuclideanTime> for TimeKind {
-    fn from(t: EuclideanTime) -> Self {
+impl<R: RealField + FromPrimitive> From<EuclideanTime<R>> for TimeKind<R> {
+    fn from(t: EuclideanTime<R>) -> Self {
         TimeKind::Euclidean(t)
     }
 }

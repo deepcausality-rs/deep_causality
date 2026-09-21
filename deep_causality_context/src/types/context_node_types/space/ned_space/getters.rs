@@ -4,17 +4,18 @@
  */
 
 use crate::NedSpace;
+use deep_causality_algebra::RealField;
 
-impl NedSpace {
-    pub fn north(&self) -> f64 {
+impl<R: RealField> NedSpace<R> {
+    pub fn north(&self) -> R {
         self.north
     }
 
-    pub fn east(&self) -> f64 {
+    pub fn east(&self) -> R {
         self.east
     }
 
-    pub fn down(&self) -> f64 {
+    pub fn down(&self) -> R {
         self.down
     }
 }

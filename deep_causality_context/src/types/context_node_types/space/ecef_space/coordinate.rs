@@ -4,9 +4,10 @@
  */
 
 use crate::{Coordinate, EcefSpace, IndexError};
+use deep_causality_algebra::RealField;
 
-impl Coordinate for EcefSpace {
-    type Coord = f64;
+impl<R: RealField> Coordinate for EcefSpace<R> {
+    type Coord = R;
     /// Returns the number of dimensions in the coordinate system (always 3).
     fn dimension(&self) -> usize {
         3
@@ -22,7 +23,7 @@ impl Coordinate for EcefSpace {
     /// # Errors
     /// Returns `IndexError` if the index is out of bounds.
     ///
-    fn coordinate(&self, index: usize) -> Result<&f64, IndexError> {
+    fn coordinate(&self, index: usize) -> Result<&R, IndexError> {
         match index {
             0 => Ok(&self.x),
             1 => Ok(&self.y),

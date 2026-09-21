@@ -11,6 +11,7 @@ use deep_causality::{NumericalValue, ProposedAction};
 use deep_causality_context::{
     BaseContext, Data, EuclideanSpace, EuclideanSpacetime, EuclideanTime,
 };
+use deep_causality_ethos::FloatType;
 
 fn always_true_predicate(_context: &BaseContext, _action: &ProposedAction) -> bool {
     true
@@ -19,7 +20,12 @@ fn always_true_predicate(_context: &BaseContext, _action: &ProposedAction) -> bo
 fn create_test_teloid(
     id: TeloidID,
     action_id: &str,
-) -> Teloid<Data<NumericalValue>, EuclideanSpace, EuclideanTime, EuclideanSpacetime> {
+) -> Teloid<
+    Data<NumericalValue>,
+    EuclideanSpace<FloatType>,
+    EuclideanTime<FloatType>,
+    EuclideanSpacetime<FloatType>,
+> {
     Teloid::new_deterministic(
         id,
         action_id.to_string(),
@@ -37,9 +43,9 @@ fn create_test_teloid(
 fn test_teloid_store_new() {
     let store = TeloidStore::<
         Data<NumericalValue>,
-        EuclideanSpace,
-        EuclideanTime,
-        EuclideanSpacetime,
+        EuclideanSpace<FloatType>,
+        EuclideanTime<FloatType>,
+        EuclideanSpacetime<FloatType>,
     >::new();
 
     assert!(store.is_empty());
@@ -50,9 +56,9 @@ fn test_teloid_store_new() {
 fn test_teloid_store_with_capacity() {
     let store = TeloidStore::<
         Data<NumericalValue>,
-        EuclideanSpace,
-        EuclideanTime,
-        EuclideanSpacetime,
+        EuclideanSpace<FloatType>,
+        EuclideanTime<FloatType>,
+        EuclideanSpacetime<FloatType>,
     >::with_capacity(10);
     assert!(store.is_empty());
     assert_eq!(store.len(), 0);

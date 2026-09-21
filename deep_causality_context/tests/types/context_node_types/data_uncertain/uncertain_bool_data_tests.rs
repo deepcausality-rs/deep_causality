@@ -3,8 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality_context::FloatType;
 use deep_causality_context::{Datable, Identifiable, UncertainAdjustable, UncertainBoolData};
-use deep_causality_core::FloatType;
 use deep_causality_uncertain::UncertainBool;
 
 /// The Boolean carrier at the scalar these tests run at.

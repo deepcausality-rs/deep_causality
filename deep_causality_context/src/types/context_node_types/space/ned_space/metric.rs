@@ -4,9 +4,10 @@
  */
 
 use crate::{Distance, NedSpace};
+use deep_causality_algebra::RealField;
 
-impl Distance for NedSpace {
-    fn distance(&self, other: &Self) -> f64 {
+impl<R: RealField> Distance for NedSpace<R> {
+    fn distance(&self, other: &Self) -> R {
         let dn = self.north - other.north;
         let de = self.east - other.east;
         let dd = self.down - other.down;

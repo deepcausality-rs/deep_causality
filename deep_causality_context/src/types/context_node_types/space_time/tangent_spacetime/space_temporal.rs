@@ -4,9 +4,10 @@
  */
 
 use crate::{SpaceTemporal, TangentSpacetime};
+use deep_causality_algebra::RealField;
 
-impl SpaceTemporal for TangentSpacetime {
-    fn t(&self) -> &f64 {
+impl<R: RealField> SpaceTemporal for TangentSpacetime<R> {
+    fn t(&self) -> &R {
         &self.t
     }
 }

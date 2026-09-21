@@ -4,13 +4,14 @@
  */
 
 use crate::{TangentSpacetime, Temporal, TimeScale};
+use deep_causality_algebra::RealField;
 
-impl Temporal for TangentSpacetime {
-    type TimeUnit = f64;
+impl<R: RealField> Temporal for TangentSpacetime<R> {
+    type TimeUnit = R;
     fn time_scale(&self) -> TimeScale {
         TimeScale::Second
     }
-    fn time_unit(&self) -> f64 {
+    fn time_unit(&self) -> R {
         self.t
     }
 }

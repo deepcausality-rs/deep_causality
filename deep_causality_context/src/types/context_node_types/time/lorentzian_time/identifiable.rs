@@ -5,9 +5,10 @@
 
 use crate::ContextoidId;
 use crate::LorentzianTime;
+use deep_causality_algebra::RealField;
 use deep_causality_core::Identifiable;
 
-impl Identifiable for LorentzianTime {
+impl<R: RealField> Identifiable for LorentzianTime<R> {
     fn id(&self) -> ContextoidId {
         self.id
     }

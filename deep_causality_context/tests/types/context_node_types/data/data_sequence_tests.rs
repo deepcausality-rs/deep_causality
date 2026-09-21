@@ -8,6 +8,7 @@
 //! `Copy` is asked for only by the `Adjustable` impl, where `ArrayGrid`'s fixed-size array backing
 //! genuinely needs it. Nothing about being a context node does.
 
+use deep_causality_context::FloatType;
 use deep_causality_context::utils_test::test_utils::get_context;
 use deep_causality_context::{
     Context, Contextoid, ContextoidType, ContextuableGraph, Data, Datable, EuclideanSpace,
@@ -37,8 +38,12 @@ fn test_sequence_payload_is_settable() {
 #[test]
 fn test_sequence_node_lives_in_a_context() {
     // `Context` asks only for `D: Datable + Clone`, so a sequence node is a valid `D`.
-    let mut context: Context<Series, EuclideanSpace, EuclideanTime, EuclideanSpacetime> =
-        Context::with_capacity(1, "series", 4);
+    let mut context: Context<
+        Series,
+        EuclideanSpace<FloatType>,
+        EuclideanTime<FloatType>,
+        EuclideanSpacetime<FloatType>,
+    > = Context::with_capacity(1, "series", 4);
 
     let oil = Series::new(10, vec![50.0, 52.0, 53.5]);
     let idx = context

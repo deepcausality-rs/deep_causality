@@ -15,6 +15,7 @@ mod spatial;
 mod temporal;
 
 use crate::TimeScale;
+use deep_causality_algebra::RealField;
 
 /// A concrete 3D + time context based on classical (Euclidean) geometry.
 ///
@@ -59,21 +60,24 @@ use crate::TimeScale;
 /// assert_eq!(s2.coordinate(0).unwrap(), &3.0);
 /// ```
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct EuclideanSpacetime {
+pub struct EuclideanSpacetime<R>
+where
+    R: RealField,
+{
     /// Unique numeric ID for this context
     id: ContextoidId,
     /// Spatial coordinates in `[x, y, z]` (meters)
-    x: f64,
-    y: f64,
-    z: f64,
+    x: R,
+    y: R,
+    z: R,
     /// Scalar time value (e.g., nanoseconds since epoch)
-    t: f64, // time in SI time unit
+    t: R, // time in SI time unit
     /// Time unit scale (used for interpretation, not math)
     time_scale: TimeScale,
 }
 
-impl EuclideanSpacetime {
-    pub fn new(id: ContextoidId, x: f64, y: f64, z: f64, t: f64, time_scale: TimeScale) -> Self {
+impl<R: RealField> EuclideanSpacetime<R> {
+    pub fn new(id: ContextoidId, x: R, y: R, z: R, t: R, time_scale: TimeScale) -> Self {
         Self {
             id,
             x,

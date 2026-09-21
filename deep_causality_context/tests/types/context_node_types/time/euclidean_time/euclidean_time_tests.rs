@@ -2,6 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use deep_causality_context::FloatType;
 use deep_causality_context::*;
 
 #[test]
@@ -35,7 +36,7 @@ fn test_scalar_projector_trait() {
 #[test]
 fn test_from_euclidean_time_to_time_kind() {
     let time = EuclideanTime::new(1, TimeScale::Second, 3.00);
-    let kind: TimeKind = time.into();
+    let kind: TimeKind<FloatType> = time.into();
 
     match kind {
         TimeKind::Euclidean(t) => {

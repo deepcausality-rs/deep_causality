@@ -4,8 +4,9 @@
  */
 
 use crate::TangentSpacetime;
+use deep_causality_algebra::RealField;
 
-impl std::fmt::Display for TangentSpacetime {
+impl<R: RealField + std::fmt::Display> std::fmt::Display for TangentSpacetime<R> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,

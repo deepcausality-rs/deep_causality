@@ -4,9 +4,11 @@
  */
 
 use crate::{Temporal, TimeKind, TimeScale};
+use deep_causality_algebra::RealField;
+use deep_causality_num::{FromPrimitive, lift_count};
 
-impl Temporal for TimeKind {
-    type TimeUnit = f64;
+impl<R: RealField + FromPrimitive> Temporal for TimeKind<R> {
+    type TimeUnit = R;
     fn time_scale(&self) -> TimeScale {
         match self {
             TimeKind::Discrete(t) => t.time_scale(),
@@ -17,12 +19,12 @@ impl Temporal for TimeKind {
         }
     }
 
-    fn time_unit(&self) -> f64 {
+    fn time_unit(&self) -> R {
         match self {
             TimeKind::Lorentzian(t) => t.time_unit(),
             TimeKind::Euclidean(t) => t.time_unit(),
-            TimeKind::Discrete(t) => t.time_unit() as f64,
-            TimeKind::Entropic(t) => t.time_unit() as f64,
+            TimeKind::Discrete(t) => lift_count(t.time_unit()),
+            TimeKind::Entropic(t) => lift_count(t.time_unit()),
             // TimeKind::Symbolic(t) => t.time_unit() as f64,
         }
     }

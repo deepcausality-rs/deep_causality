@@ -4,5 +4,6 @@
  */
 
 use crate::{GeoSpace, Spatial};
+use deep_causality_algebra::RealField;
 
-impl Spatial for GeoSpace {}
+impl<R: RealField> Spatial for GeoSpace<R> {}

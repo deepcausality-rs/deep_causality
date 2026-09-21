@@ -4,14 +4,17 @@
  */
 
 use crate::{Adjustable, AdjustmentError, TangentSpacetime, UpdateError};
+use deep_causality_algebra::RealField;
 use deep_causality_data_structures::{ArrayGrid, PointIndex};
 
 /// Updates the position of the TangentSpacetime node.
 /// The metric tensor is updated via the 'update_metric_tensor' method.
-impl Adjustable<f64> for TangentSpacetime {
+// `Default` is not implied by `RealField`; `ArrayGrid<T, ..>` requires it to initialise
+// its backing array, so it is bounded here rather than on the struct.
+impl<R: RealField + Default> Adjustable<R> for TangentSpacetime<R> {
     fn update<const W: usize, const H: usize, const D: usize, const C: usize>(
         &mut self,
-        array_grid: &ArrayGrid<f64, W, H, D, C>,
+        array_grid: &ArrayGrid<R, W, H, D, C>,
     ) -> Result<(), UpdateError> {
         // Create a 3D PointIndex for each of the updated x,y,z coordinates
         let p1 = PointIndex::new3d(0, 0, 0);
@@ -62,7 +65,7 @@ impl Adjustable<f64> for TangentSpacetime {
     /// The metric tensor is updated via the 'update_metric_tensor' method.
     fn adjust<const W: usize, const H: usize, const D: usize, const C: usize>(
         &mut self,
-        array_grid: &ArrayGrid<f64, W, H, D, C>,
+        array_grid: &ArrayGrid<R, W, H, D, C>,
     ) -> Result<(), AdjustmentError> {
         // Create a 3D PointIndex for each of the updated x,y,z coordinates
         let p1 = PointIndex::new3d(0, 0, 0);
@@ -82,7 +85,7 @@ impl Adjustable<f64> for TangentSpacetime {
         let adjusted_z = self.z + new_z;
         let adjusted_t = self.t + new_t;
 
-        // Check if the adjusted data are safe to update i.e. not greater than max f64 value
+        // Check if the adjusted data are safe to update i.e. not greater than max R value
         if !adjusted_x.is_finite() {
             return Err(AdjustmentError(
                 "Adjustment failed, adjusted x value is not finite".into(),

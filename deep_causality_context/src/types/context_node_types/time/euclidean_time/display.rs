@@ -4,9 +4,10 @@
  */
 
 use crate::EuclideanTime;
-use std::fmt::Display;
+use deep_causality_algebra::RealField;
+use std::fmt::{Debug, Display};
 
-impl Display for EuclideanTime {
+impl<R: RealField + Display + Debug> Display for EuclideanTime<R> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,

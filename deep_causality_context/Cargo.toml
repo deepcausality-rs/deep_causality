@@ -51,6 +51,10 @@ features = ["default"]
 [dependencies.deep_causality_data_structures]
 workspace = true
 
+[dependencies.deep_causality_num]
+workspace = true
+features = ["default"]
+
 [dependencies.deep_causality_metric]
 workspace = true
 features = ["default"]

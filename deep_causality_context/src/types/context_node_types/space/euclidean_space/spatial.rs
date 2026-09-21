@@ -4,5 +4,6 @@
  */
 
 use crate::{EuclideanSpace, Spatial};
+use deep_causality_algebra::RealField;
 
-impl Spatial for EuclideanSpace {}
+impl<R: RealField> Spatial for EuclideanSpace<R> {}

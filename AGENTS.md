@@ -328,8 +328,9 @@ Tier 5
                                 deep_causality_rand, deep_causality_stats
 
 Tier 6
-  deep_causality_context      → deep_causality_core, deep_causality_data_structures,
-                                deep_causality_uncertain, ultragraph
+  deep_causality_context      → deep_causality_algebra, deep_causality_core,
+                                deep_causality_data_structures, deep_causality_metric,
+                                deep_causality_num, deep_causality_uncertain, ultragraph
   deep_causality_multivector  → deep_causality_algebra, deep_causality_haft, deep_causality_linear,
                                 deep_causality_metric, deep_causality_num,
                                 deep_causality_num_complex, deep_causality_tensor

@@ -21,14 +21,14 @@ fn test_identifiable_trait() {
 
 #[test]
 fn test_temporal_trait() {
-    let t = LorentzianTime::new(5, TimeScale::Nanoseconds, 0.000_001);
+    let t = LorentzianTime::<FloatType>::new(5, TimeScale::Nanoseconds, 0.000_001);
     assert_eq!(t.time_scale(), TimeScale::Nanoseconds);
     assert!((t.time_unit() - 0.000_001).abs() < f64::EPSILON);
 }
 
 #[test]
 fn test_scalar_projector_trait() {
-    let t = LorentzianTime::new(2, TimeScale::Second, 3.00);
+    let t = LorentzianTime::<FloatType>::new(2, TimeScale::Second, 3.00);
     assert!((t.project() - 3.00).abs() < f64::EPSILON);
 }
 
@@ -60,12 +60,13 @@ fn test_copy() {
     assert_eq!(t1, t3);
 }
 
+use deep_causality_context::FloatType;
 use deep_causality_context::*;
 
 #[test]
 fn test_from_lorentzian_time_to_time_kind() {
     let time = LorentzianTime::new(42, TimeScale::Second, 3.00);
-    let kind: TimeKind = time.into();
+    let kind: TimeKind<FloatType> = time.into();
 
     match kind {
         TimeKind::Lorentzian(t) => {

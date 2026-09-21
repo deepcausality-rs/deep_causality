@@ -4,9 +4,10 @@
  */
 
 use crate::EuclideanSpace;
+use deep_causality_algebra::RealField;
 use std::fmt::{Display, Formatter};
 
-impl Display for EuclideanSpace {
+impl<R: RealField + Display> Display for EuclideanSpace<R> {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         write!(
             f,

@@ -4,9 +4,10 @@
  */
 
 use crate::LorentzianSpacetime;
+use deep_causality_algebra::RealField;
 use std::fmt;
 
-impl fmt::Display for LorentzianSpacetime {
+impl<R: RealField + fmt::Display> fmt::Display for LorentzianSpacetime<R> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,

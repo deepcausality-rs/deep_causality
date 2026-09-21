@@ -5,9 +5,10 @@
 
 use crate::ContextoidId;
 use crate::TimeKind;
+use deep_causality_algebra::RealField;
 use deep_causality_core::Identifiable;
 
-impl Identifiable for TimeKind {
+impl<R: RealField> Identifiable for TimeKind<R> {
     fn id(&self) -> ContextoidId {
         match self {
             TimeKind::Euclidean(t) => t.id(),

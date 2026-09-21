@@ -3,9 +3,15 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality_context::FloatType;
 use deep_causality_context::*;
 
-pub type StdCtx = ContextoidType<Data<i32>, EuclideanSpace, EuclideanTime, EuclideanSpacetime>;
+pub type StdCtx = ContextoidType<
+    Data<i32>,
+    EuclideanSpace<FloatType>,
+    EuclideanTime<FloatType>,
+    EuclideanSpacetime<FloatType>,
+>;
 
 #[test]
 fn test_contextoid_kind_and_accessors() {

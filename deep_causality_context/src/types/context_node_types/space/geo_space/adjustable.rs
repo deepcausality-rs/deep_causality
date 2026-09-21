@@ -5,12 +5,15 @@
 
 use crate::errors::{AdjustmentError, UpdateError};
 use crate::{Adjustable, GeoSpace};
+use deep_causality_algebra::RealField;
 use deep_causality_data_structures::{ArrayGrid, PointIndex};
 
-impl Adjustable<f64> for GeoSpace {
+// `Default` is not implied by `RealField`; `ArrayGrid<T, ..>` requires it to initialise
+// its backing array, so it is bounded here rather than on the struct.
+impl<R: RealField + Default> Adjustable<R> for GeoSpace<R> {
     fn update<const W: usize, const H: usize, const D: usize, const C: usize>(
         &mut self,
-        array_grid: &ArrayGrid<f64, W, H, D, C>,
+        array_grid: &ArrayGrid<R, W, H, D, C>,
     ) -> Result<(), UpdateError> {
         // Create a 3D PointIndex for each of the updated x,y,z coordinates
         let p1 = PointIndex::new3d(0, 0, 0);
@@ -26,7 +29,7 @@ impl Adjustable<f64> for GeoSpace {
         let new_lon = array_grid.get(p2);
         let new_alt = array_grid.get(p3);
 
-        // Check if the adjusted data are safe to update i.e. not greater than max f64 value
+        // Check if the adjusted data are safe to update i.e. not greater than max R value
         if !new_lat.is_finite() {
             return Err(UpdateError(
                 "Update failed, new lat value is not finite".into(),
@@ -55,7 +58,7 @@ impl Adjustable<f64> for GeoSpace {
 
     fn adjust<const W: usize, const H: usize, const D: usize, const C: usize>(
         &mut self,
-        array_grid: &ArrayGrid<f64, W, H, D, C>,
+        array_grid: &ArrayGrid<R, W, H, D, C>,
     ) -> Result<(), AdjustmentError> {
         // Create a 3D PointIndex for each of the updated x,y,z coordinates
         let p1 = PointIndex::new3d(0, 0, 0);
@@ -76,7 +79,7 @@ impl Adjustable<f64> for GeoSpace {
         let adjusted_lon = self.lon + new_lon;
         let adjusted_alt = self.alt + new_alt;
 
-        // Check if the adjusted data are safe to update i.e. not greater than max f64 value
+        // Check if the adjusted data are safe to update i.e. not greater than max R value
         if !adjusted_lat.is_finite() {
             return Err(AdjustmentError(
                 "Adjustment failed, new lat value is not finite".into(),

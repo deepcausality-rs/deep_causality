@@ -9,6 +9,7 @@ mod scalar_projector;
 mod temporable;
 
 use crate::{DiscreteTime, EntropicTime, EuclideanTime, LorentzianTime};
+use deep_causality_algebra::RealField;
 
 /// An enumeration of supported time models for unified, heterogeneous temporal reasoning.
 ///
@@ -30,12 +31,12 @@ use crate::{DiscreteTime, EntropicTime, EuclideanTime, LorentzianTime};
 ///
 /// # Variants
 ///
-/// - `Lorentzian(LorentzianTime)`
+/// - `Lorentzian(LorentzianTime<R>)`
 ///   - Real-valued time coordinate used in special/general relativity
 ///   - Distance signature: `(-+++), t ∈ ℝ`
 ///   - Appears in causal structure and physical propagation
 ///
-/// - `Euclidean(EuclideanTime)`
+/// - `Euclidean(EuclideanTime<R>)`
 ///   - Imaginary time (Wick-rotated), used in quantum/statistical physics
 ///   - Distance signature: `(++++)`
 ///   - Common in quantum field theory (QFT), path integrals, and lattice simulations
@@ -55,7 +56,10 @@ use crate::{DiscreteTime, EntropicTime, EuclideanTime, LorentzianTime};
 /// use deep_causality_context::*;
 ///
 /// let lorentz = TimeKind::Lorentzian(LorentzianTime::new(1, TimeScale::Second, 3.14));
-/// let discrete = TimeKind::Discrete(DiscreteTime::new(2, TimeScale::Second, 42));
+///
+/// // The tick-based variants carry no scalar of their own, so the enum's scalar is named here.
+/// let discrete: TimeKind<FloatType> =
+///     TimeKind::Discrete(DiscreteTime::new(2, TimeScale::Second, 42));
 ///
 /// println!("L: {}, ID: {}", lorentz, lorentz.id());
 /// println!("D: {}, ID: {}", discrete, discrete.id());
@@ -76,9 +80,12 @@ use crate::{DiscreteTime, EntropicTime, EuclideanTime, LorentzianTime};
 /// representations of time (e.g., symbolic vs physical), `TimeKind` provides
 /// a principled and type-safe solution.
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub enum TimeKind {
+pub enum TimeKind<R>
+where
+    R: RealField,
+{
     /// Imaginary-time axis for quantum/statistical models via Wick rotation.
-    Euclidean(EuclideanTime),
+    Euclidean(EuclideanTime<R>),
 
     /// Entropic time for emergent causal models via entropy.
     Entropic(EntropicTime),
@@ -87,7 +94,7 @@ pub enum TimeKind {
     Discrete(DiscreteTime),
 
     /// Real-valued coordinate time in Lorentzian (causal, relativistic) geometry.
-    Lorentzian(LorentzianTime),
+    Lorentzian(LorentzianTime<R>),
     // /// Symbolic or qualitative time labels (e.g., "before event A", "T1").
     // Symbolic(SymbolicTime),
 }

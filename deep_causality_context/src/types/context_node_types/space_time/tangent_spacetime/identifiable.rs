@@ -5,9 +5,10 @@
 
 use crate::ContextoidId;
 use crate::TangentSpacetime;
+use deep_causality_algebra::RealField;
 use deep_causality_core::Identifiable;
 
-impl Identifiable for TangentSpacetime {
+impl<R: RealField> Identifiable for TangentSpacetime<R> {
     fn id(&self) -> ContextoidId {
         self.id
     }

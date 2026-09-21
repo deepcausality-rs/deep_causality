@@ -29,11 +29,7 @@
 /// ```
 pub trait ScalarValue: Copy + Clone + PartialOrd + Default {}
 
-// Blanket implementations for primitive scalar types
-impl ScalarValue for f64 {}
-impl ScalarValue for f32 {}
-impl ScalarValue for i64 {}
-impl ScalarValue for i32 {}
-impl ScalarValue for u64 {}
-impl ScalarValue for u32 {}
-impl ScalarValue for usize {}
+// One blanket impl rather than a list of primitives. A list decides for the caller which scalars
+// exist, so a working type outside it — a narrower float on an embedded target, a wider one for a
+// long integration — could not be projected without an entry being added here first.
+impl<T: Copy + PartialOrd + Default> ScalarValue for T {}

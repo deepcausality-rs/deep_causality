@@ -4,14 +4,15 @@
  */
 
 use crate::{EuclideanSpacetime, Temporal, TimeScale};
+use deep_causality_algebra::RealField;
 
-impl Temporal for EuclideanSpacetime {
-    type TimeUnit = f64;
+impl<R: RealField> Temporal for EuclideanSpacetime<R> {
+    type TimeUnit = R;
     fn time_scale(&self) -> TimeScale {
         self.time_scale
     }
 
-    fn time_unit(&self) -> f64 {
+    fn time_unit(&self) -> R {
         self.t
     }
 }

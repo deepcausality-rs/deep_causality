@@ -11,18 +11,19 @@ use deep_causality_context::{
 };
 use deep_causality_ethos::{EffectEthos, TeloidModal};
 
-/// The scalar this example works in. Declared here, per example, so changing the shared alias in
-/// `deep_causality_core` cannot silently reconfigure every example that names one.
 use std::sync::{Arc, RwLock};
+
+/// The scalar this example works in.
+pub type FloatType = f64;
 
 // Type aliases for manageable generics
 pub type CsmCausaloid = Causaloid<f64, bool, (), Arc<RwLock<BaseContext>>>;
 
 pub type CsmEthos = EffectEthos<
     deep_causality_context::Data<NumericalValue>,
-    deep_causality_context::EuclideanSpace,
-    deep_causality_context::EuclideanTime,
-    deep_causality_context::EuclideanSpacetime,
+    deep_causality_context::EuclideanSpace<FloatType>,
+    deep_causality_context::EuclideanTime<FloatType>,
+    deep_causality_context::EuclideanSpacetime<FloatType>,
 >;
 
 pub(crate) fn get_effect_ethos() -> CsmEthos {

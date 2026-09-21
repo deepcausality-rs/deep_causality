@@ -4,17 +4,18 @@
  */
 
 use crate::{GeoSpace, VerticalDatum};
+use deep_causality_algebra::RealField;
 
-impl GeoSpace {
-    pub fn lat(&self) -> f64 {
+impl<R: RealField> GeoSpace<R> {
+    pub fn lat(&self) -> R {
         self.lat
     }
 
-    pub fn alt(&self) -> f64 {
+    pub fn alt(&self) -> R {
         self.alt
     }
 
-    pub fn lon(&self) -> f64 {
+    pub fn lon(&self) -> R {
         self.lon
     }
 

@@ -11,6 +11,8 @@ mod scalar_projector;
 mod temporable;
 
 use crate::{TimeKind, TimeScale};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
 /// A time model representing **Lorentzian (physical) time** in relativistic spacetimes.
 ///
@@ -62,7 +64,10 @@ use crate::{TimeKind, TimeScale};
 /// - `EuclideanTime` for Wick-rotated quantum/statistical domains
 /// - `SymbolicTime` for logic-based systems
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct LorentzianTime {
+pub struct LorentzianTime<R>
+where
+    R: RealField,
+{
     /// Unique numeric identifier for the time instance.
     id: ContextoidId,
 
@@ -70,11 +75,11 @@ pub struct LorentzianTime {
     time_scale: TimeScale,
 
     /// Real-valued coordinate time in seconds or scaled units.
-    time_unit: f64,
+    time_unit: R,
 }
 
-impl LorentzianTime {
-    pub fn new(id: ContextoidId, time_scale: TimeScale, time_unit: f64) -> Self {
+impl<R: RealField> LorentzianTime<R> {
+    pub fn new(id: ContextoidId, time_scale: TimeScale, time_unit: R) -> Self {
         Self {
             id,
             time_scale,
@@ -83,8 +88,8 @@ impl LorentzianTime {
     }
 }
 
-impl From<LorentzianTime> for TimeKind {
-    fn from(t: LorentzianTime) -> Self {
+impl<R: RealField + FromPrimitive> From<LorentzianTime<R>> for TimeKind<R> {
+    fn from(t: LorentzianTime<R>) -> Self {
         TimeKind::Lorentzian(t)
     }
 }

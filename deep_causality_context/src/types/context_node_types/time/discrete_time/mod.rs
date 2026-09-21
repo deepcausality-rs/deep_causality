@@ -11,6 +11,7 @@ mod scalar_projector;
 mod temporable;
 
 use crate::{TimeKind, TimeScale};
+use deep_causality_algebra::RealField;
 
 /// A time model representing **discrete, uniformly spaced ticks** instead of continuous physical time.
 ///
@@ -82,7 +83,7 @@ impl DiscreteTime {
     }
 }
 
-impl From<DiscreteTime> for TimeKind {
+impl<R: RealField> From<DiscreteTime> for TimeKind<R> {
     fn from(t: DiscreteTime) -> Self {
         TimeKind::Discrete(t)
     }

@@ -6,6 +6,7 @@
 use crate::ContextoidId;
 use crate::errors::IndexError;
 use crate::{Coordinate, EcefSpace, EuclideanSpace, GeoSpace, NedSpace, Spatial};
+use deep_causality_algebra::RealField;
 use deep_causality_core::Identifiable;
 
 /// An enumeration over supported spatial context types.
@@ -16,15 +17,18 @@ use deep_causality_core::Identifiable;
 /// - Cartesian Earth-fixed (`EcefSpace`)
 /// - Local tangent frame (`NedSpace`)
 #[derive(Debug, Clone, PartialEq)]
-pub enum SpaceKind {
-    Geo(GeoSpace),
-    Ecef(EcefSpace),
-    Euclidean(EuclideanSpace),
-    Ned(NedSpace),
+pub enum SpaceKind<R>
+where
+    R: RealField,
+{
+    Geo(GeoSpace<R>),
+    Ecef(EcefSpace<R>),
+    Euclidean(EuclideanSpace<R>),
+    Ned(NedSpace<R>),
 }
 
-impl Coordinate for SpaceKind {
-    type Coord = f64;
+impl<R: RealField> Coordinate for SpaceKind<R> {
+    type Coord = R;
     fn dimension(&self) -> usize {
         match self {
             SpaceKind::Geo(s) => s.dimension(),
@@ -34,7 +38,7 @@ impl Coordinate for SpaceKind {
         }
     }
 
-    fn coordinate(&self, index: usize) -> Result<&f64, IndexError> {
+    fn coordinate(&self, index: usize) -> Result<&R, IndexError> {
         match self {
             SpaceKind::Geo(s) => s.coordinate(index),
             SpaceKind::Ecef(s) => s.coordinate(index),
@@ -44,7 +48,7 @@ impl Coordinate for SpaceKind {
     }
 }
 
-impl Identifiable for SpaceKind {
+impl<R: RealField> Identifiable for SpaceKind<R> {
     fn id(&self) -> ContextoidId {
         match self {
             SpaceKind::Geo(s) => s.id(),
@@ -55,9 +59,9 @@ impl Identifiable for SpaceKind {
     }
 }
 
-impl Spatial for SpaceKind {}
+impl<R: RealField> Spatial for SpaceKind<R> {}
 
-impl std::fmt::Display for SpaceKind {
+impl<R: RealField + std::fmt::Display> std::fmt::Display for SpaceKind<R> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             SpaceKind::Geo(s) => write!(f, "{s}"),

@@ -4,6 +4,7 @@
  */
 
 use crate::ContextoidId;
+use deep_causality_algebra::RealField;
 mod adjustable;
 mod coordinate;
 mod display;
@@ -42,15 +43,18 @@ mod spatial;
 /// - `Display` for human-readable output
 ///
 #[derive(Debug, Clone, PartialEq)]
-pub struct EcefSpace {
+pub struct EcefSpace<R>
+where
+    R: RealField,
+{
     id: ContextoidId,
-    x: f64,
-    y: f64,
-    z: f64,
+    x: R,
+    y: R,
+    z: R,
 }
 
-impl EcefSpace {
-    pub fn new(id: ContextoidId, x: f64, y: f64, z: f64) -> Self {
+impl<R: RealField> EcefSpace<R> {
+    pub fn new(id: ContextoidId, x: R, y: R, z: R) -> Self {
         Self { id, x, y, z }
     }
 }

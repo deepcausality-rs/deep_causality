@@ -5,14 +5,15 @@
 
 use crate::errors::IndexError;
 use crate::{Coordinate, GeoSpace};
+use deep_causality_algebra::RealField;
 
-impl Coordinate for GeoSpace {
-    type Coord = f64;
+impl<R: RealField> Coordinate for GeoSpace<R> {
+    type Coord = R;
     fn dimension(&self) -> usize {
         3
     }
 
-    fn coordinate(&self, index: usize) -> Result<&f64, IndexError> {
+    fn coordinate(&self, index: usize) -> Result<&R, IndexError> {
         match index {
             0 => Ok(&self.lat),
             1 => Ok(&self.lon),

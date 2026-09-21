@@ -2,6 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use deep_causality_context::FloatType;
 use deep_causality_context::*;
 
 #[test]
@@ -51,7 +52,7 @@ fn test_display_trait_output() {
 #[test]
 fn test_from_entropic_time_to_time_kind() {
     let time = EntropicTime::new(7, 1);
-    let kind: TimeKind = time.into();
+    let kind: TimeKind<FloatType> = time.into();
 
     match kind {
         TimeKind::Entropic(t) => {

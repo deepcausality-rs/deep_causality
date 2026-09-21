@@ -5,9 +5,10 @@
 
 use crate::ContextoidId;
 use crate::EcefSpace;
+use deep_causality_algebra::RealField;
 use deep_causality_core::Identifiable;
 
-impl Identifiable for EcefSpace {
+impl<R: RealField> Identifiable for EcefSpace<R> {
     fn id(&self) -> ContextoidId {
         self.id
     }

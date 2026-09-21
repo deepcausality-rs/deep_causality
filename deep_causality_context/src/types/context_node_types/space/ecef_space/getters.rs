@@ -4,17 +4,18 @@
  */
 
 use crate::EcefSpace;
+use deep_causality_algebra::RealField;
 
-impl EcefSpace {
-    pub fn x(&self) -> f64 {
+impl<R: RealField> EcefSpace<R> {
+    pub fn x(&self) -> R {
         self.x
     }
 
-    pub fn y(&self) -> f64 {
+    pub fn y(&self) -> R {
         self.y
     }
 
-    pub fn z(&self) -> f64 {
+    pub fn z(&self) -> R {
         self.z
     }
 }

@@ -4,9 +4,10 @@
  */
 
 use crate::{Distance, EcefSpace};
+use deep_causality_algebra::RealField;
 
-impl Distance for EcefSpace {
-    fn distance(&self, other: &Self) -> f64 {
+impl<R: RealField> Distance for EcefSpace<R> {
+    fn distance(&self, other: &Self) -> R {
         let dx = self.x - other.x;
         let dy = self.y - other.y;
         let dz = self.z - other.z;

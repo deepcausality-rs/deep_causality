@@ -4,14 +4,15 @@
  */
 
 use crate::{LorentzianTime, Temporal, TimeScale};
+use deep_causality_algebra::RealField;
 
-impl Temporal for LorentzianTime {
-    type TimeUnit = f64;
+impl<R: RealField> Temporal for LorentzianTime<R> {
+    type TimeUnit = R;
     fn time_scale(&self) -> TimeScale {
         self.time_scale
     }
 
-    fn time_unit(&self) -> f64 {
+    fn time_unit(&self) -> R {
         self.time_unit
     }
 }

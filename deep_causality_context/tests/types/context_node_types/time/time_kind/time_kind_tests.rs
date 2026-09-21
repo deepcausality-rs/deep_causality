@@ -3,21 +3,22 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality_context::FloatType;
 use deep_causality_context::*;
 
-fn setup_euclidean() -> TimeKind {
+fn setup_euclidean() -> TimeKind<FloatType> {
     TimeKind::Euclidean(EuclideanTime::new(1, TimeScale::Second, 1.23))
 }
 
-fn setup_entropic() -> TimeKind {
+fn setup_entropic() -> TimeKind<FloatType> {
     EntropicTime::new(2, 42).into()
 }
 
-fn setup_discrete() -> TimeKind {
+fn setup_discrete() -> TimeKind<FloatType> {
     DiscreteTime::new(3, TimeScale::Second, 7).into()
 }
 
-fn setup_lorentzian() -> TimeKind {
+fn setup_lorentzian() -> TimeKind<FloatType> {
     LorentzianTime::new(4, TimeScale::Second, 99.99).into()
 }
 

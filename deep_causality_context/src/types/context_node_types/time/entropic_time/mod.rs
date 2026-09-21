@@ -11,6 +11,7 @@ mod scalar_projector;
 mod temporable;
 
 use crate::TimeKind;
+use deep_causality_algebra::RealField;
 
 /// A time model based on **entropy-driven progression**, suitable for
 /// emergent systems, self-organization, and irreversible state evolution.
@@ -53,7 +54,7 @@ impl EntropicTime {
     }
 }
 
-impl From<EntropicTime> for TimeKind {
+impl<R: RealField> From<EntropicTime> for TimeKind<R> {
     fn from(t: EntropicTime) -> Self {
         TimeKind::Entropic(t)
     }

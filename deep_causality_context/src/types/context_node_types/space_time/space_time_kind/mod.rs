@@ -9,6 +9,7 @@ use crate::{
     Coordinate, EuclideanSpacetime, LorentzianSpacetime, SpaceTemporal, Spatial, TangentSpacetime,
     Temporal, TimeScale,
 };
+use deep_causality_algebra::RealField;
 use deep_causality_core::Identifiable;
 use std::fmt::Formatter;
 
@@ -61,17 +62,20 @@ use std::fmt::Formatter;
 ///   physical or geometric models simultaneously (e.g., causal simulation engines,
 ///   robotics frameworks, or time-aware decision systems).
 #[derive(Debug, Clone, PartialEq)]
-pub enum SpaceTimeKind {
+pub enum SpaceTimeKind<R>
+where
+    R: RealField,
+{
     /// Classical Newtonian spacetime (ℝ³ + time)
-    Euclidean(EuclideanSpacetime),
+    Euclidean(EuclideanSpacetime<R>),
     /// General relativistic curved spacetime
-    Lorentzian(LorentzianSpacetime),
+    Lorentzian(LorentzianSpacetime<R>),
     /// Tangent space at a point, used for local linearization of curvature
-    Tangent(TangentSpacetime),
+    Tangent(TangentSpacetime<R>),
 }
 
-impl Coordinate for SpaceTimeKind {
-    type Coord = f64;
+impl<R: RealField> Coordinate for SpaceTimeKind<R> {
+    type Coord = R;
     fn dimension(&self) -> usize {
         match self {
             SpaceTimeKind::Euclidean(euclidean) => euclidean.dimension(),
@@ -80,7 +84,7 @@ impl Coordinate for SpaceTimeKind {
         }
     }
 
-    fn coordinate(&self, index: usize) -> Result<&f64, IndexError> {
+    fn coordinate(&self, index: usize) -> Result<&R, IndexError> {
         match self {
             SpaceTimeKind::Euclidean(euclidean) => euclidean.coordinate(index),
             SpaceTimeKind::Lorentzian(lorentzian) => lorentzian.coordinate(index),
@@ -89,7 +93,7 @@ impl Coordinate for SpaceTimeKind {
     }
 }
 
-impl Identifiable for SpaceTimeKind {
+impl<R: RealField> Identifiable for SpaceTimeKind<R> {
     fn id(&self) -> ContextoidId {
         match self {
             SpaceTimeKind::Euclidean(euclidean) => euclidean.id(),
@@ -99,10 +103,10 @@ impl Identifiable for SpaceTimeKind {
     }
 }
 
-impl Spatial for SpaceTimeKind {}
+impl<R: RealField> Spatial for SpaceTimeKind<R> {}
 
-impl Temporal for SpaceTimeKind {
-    type TimeUnit = f64;
+impl<R: RealField> Temporal for SpaceTimeKind<R> {
+    type TimeUnit = R;
     fn time_scale(&self) -> TimeScale {
         match self {
             SpaceTimeKind::Euclidean(euclidean) => euclidean.time_scale(),
@@ -111,7 +115,7 @@ impl Temporal for SpaceTimeKind {
         }
     }
 
-    fn time_unit(&self) -> f64 {
+    fn time_unit(&self) -> R {
         match self {
             SpaceTimeKind::Euclidean(euclidean) => euclidean.time_unit(),
             SpaceTimeKind::Lorentzian(lorentzian) => lorentzian.time_unit(),
@@ -120,8 +124,8 @@ impl Temporal for SpaceTimeKind {
     }
 }
 
-impl SpaceTemporal for SpaceTimeKind {
-    fn t(&self) -> &f64 {
+impl<R: RealField> SpaceTemporal for SpaceTimeKind<R> {
+    fn t(&self) -> &R {
         match self {
             SpaceTimeKind::Euclidean(euclidean) => euclidean.t(),
             SpaceTimeKind::Lorentzian(lorentzian) => lorentzian.t(),
@@ -130,7 +134,7 @@ impl SpaceTemporal for SpaceTimeKind {
     }
 }
 
-impl std::fmt::Display for SpaceTimeKind {
+impl<R: RealField + std::fmt::Display> std::fmt::Display for SpaceTimeKind<R> {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {
             SpaceTimeKind::Euclidean(euclidean) => euclidean.fmt(f),

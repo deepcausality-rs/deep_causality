@@ -4,6 +4,8 @@
  */
 
 use crate::ContextoidId;
+use deep_causality_algebra::RealField;
+use deep_causality_num::{FromPrimitive, lift};
 mod adjustable;
 mod coordinate;
 mod display;
@@ -75,47 +77,42 @@ mod temporal;
 /// - `SpacetimeInterval` — for causal separation calculations
 /// - `MetricTensor4D` — for curvature configuration
 #[derive(Debug, Copy, Clone, PartialEq)]
-pub struct TangentSpacetime {
+pub struct TangentSpacetime<R>
+where
+    R: RealField,
+{
     id: ContextoidId,
 
     // Position
-    x: f64, // meters
-    y: f64,
-    z: f64,
+    x: R, // meters
+    y: R,
+    z: R,
 
     // Time
-    t: f64, // seconds
+    t: R, // seconds
 
     // Velocity / tangent vector
-    dt: f64, // unit or proper time derivative
-    dx: f64, // meters/second
-    dy: f64,
-    dz: f64,
+    dt: R, // unit or proper time derivative
+    dx: R, // meters/second
+    dy: R,
+    dz: R,
 
     // Local metric tensor (mutable)
-    metric: [[f64; 4]; 4],
+    metric: [[R; 4]; 4],
 }
 
-impl TangentSpacetime {
+impl<R: RealField + FromPrimitive> TangentSpacetime<R> {
     /// Create a new tangent bundle point with a default Minkowski metric.
     #[allow(clippy::too_many_arguments)]
-    pub fn new(
-        id: ContextoidId,
-        x: f64,
-        y: f64,
-        z: f64,
-        t: f64,
-        dt: f64,
-        dx: f64,
-        dy: f64,
-        dz: f64,
-    ) -> Self {
-        let c = 299_792_458.0;
+    pub fn new(id: ContextoidId, x: R, y: R, z: R, t: R, dt: R, dx: R, dy: R, dz: R) -> Self {
+        let c: R = lift(299_792_458.0);
+        let zero = R::zero();
+        let one = R::one();
         let metric = [
-            [-c * c, 0.0, 0.0, 0.0],
-            [0.0, 1.0, 0.0, 0.0],
-            [0.0, 0.0, 1.0, 0.0],
-            [0.0, 0.0, 0.0, 1.0],
+            [-(c * c), zero, zero, zero],
+            [zero, one, zero, zero],
+            [zero, zero, one, zero],
+            [zero, zero, zero, one],
         ];
 
         Self {

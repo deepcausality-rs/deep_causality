@@ -5,9 +5,10 @@
 
 use crate::errors::IndexError;
 use crate::{Coordinate, NedSpace};
+use deep_causality_algebra::RealField;
 
-impl Coordinate for NedSpace {
-    type Coord = f64;
+impl<R: RealField> Coordinate for NedSpace<R> {
+    type Coord = R;
     /// Returns the number of dimensions in the coordinate system (always 3).
     fn dimension(&self) -> usize {
         3
@@ -23,7 +24,7 @@ impl Coordinate for NedSpace {
     /// # Errors
     /// Returns `IndexError` if the index is out of bounds.
     ///
-    fn coordinate(&self, index: usize) -> Result<&f64, IndexError> {
+    fn coordinate(&self, index: usize) -> Result<&R, IndexError> {
         match index {
             0 => Ok(&self.north),
             1 => Ok(&self.east),

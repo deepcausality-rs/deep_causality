@@ -4,5 +4,6 @@
  */
 
 use crate::{NedSpace, Spatial};
+use deep_causality_algebra::RealField;
 
-impl Spatial for NedSpace {}
+impl<R: RealField> Spatial for NedSpace<R> {}

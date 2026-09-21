@@ -4,9 +4,10 @@
  */
 
 use crate::NedSpace;
+use deep_causality_algebra::RealField;
 use std::fmt;
 
-impl fmt::Display for NedSpace {
+impl<R: RealField + fmt::Display> fmt::Display for NedSpace<R> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,

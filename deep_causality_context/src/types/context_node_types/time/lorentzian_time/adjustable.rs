@@ -6,11 +6,14 @@
 use deep_causality_data_structures::{ArrayGrid, PointIndex};
 
 use crate::{Adjustable, AdjustmentError, LorentzianTime, UpdateError};
+use deep_causality_algebra::RealField;
 
-impl Adjustable<f64> for LorentzianTime {
+// `Default` is not implied by `RealField`; `ArrayGrid<T, ..>` requires it to initialise
+// its backing array, so it is bounded here rather than on the struct.
+impl<R: RealField + Default> Adjustable<R> for LorentzianTime<R> {
     fn update<const W: usize, const H: usize, const D: usize, const C: usize>(
         &mut self,
-        array_grid: &ArrayGrid<f64, W, H, D, C>,
+        array_grid: &ArrayGrid<R, W, H, D, C>,
     ) -> Result<(), UpdateError> {
         // Create a 1D PointIndex
         let p = PointIndex::new1d(0);
@@ -26,7 +29,7 @@ impl Adjustable<f64> for LorentzianTime {
 
     fn adjust<const W: usize, const H: usize, const D: usize, const C: usize>(
         &mut self,
-        array_grid: &ArrayGrid<f64, W, H, D, C>,
+        array_grid: &ArrayGrid<R, W, H, D, C>,
     ) -> Result<(), AdjustmentError> {
         // Create a 1D PointIndex
         let p = PointIndex::new1d(0);
@@ -48,14 +51,14 @@ impl Adjustable<f64> for LorentzianTime {
         }
 
         // Check for errors i.e. div by zero / overflow and return either an error or OK().
-        if adjusted_time < f64::default() {
+        if adjusted_time < R::default() {
             return Err(AdjustmentError(
                 "Adjustment failed, result is a negative number".into(),
             ));
         }
 
         // Check if the new time is non-zero
-        if adjusted_time == f64::default() {
+        if adjusted_time == R::default() {
             return Err(AdjustmentError(
                 "Adjustment failed, new time is ZERO".into(),
             ));

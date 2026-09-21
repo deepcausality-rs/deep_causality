@@ -5,9 +5,10 @@
 
 use crate::ContextoidId;
 use crate::GeoSpace;
+use deep_causality_algebra::RealField;
 use deep_causality_core::Identifiable;
 
-impl Identifiable for GeoSpace {
+impl<R: RealField> Identifiable for GeoSpace<R> {
     fn id(&self) -> ContextoidId {
         self.id
     }

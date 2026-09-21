@@ -5,12 +5,15 @@
 
 use crate::errors::{AdjustmentError, UpdateError};
 use crate::{Adjustable, EuclideanSpace};
+use deep_causality_algebra::RealField;
 use deep_causality_data_structures::{ArrayGrid, PointIndex};
 
-impl Adjustable<f64> for EuclideanSpace {
+// `Default` is not implied by `RealField`; `ArrayGrid<T, ..>` requires it to initialise its
+// backing array, so it is bounded here rather than on the struct.
+impl<R: RealField + Default> Adjustable<R> for EuclideanSpace<R> {
     fn update<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize, const TIME: usize>(
         &mut self,
-        array_grid: &ArrayGrid<f64, WIDTH, HEIGHT, DEPTH, TIME>,
+        array_grid: &ArrayGrid<R, WIDTH, HEIGHT, DEPTH, TIME>,
     ) -> Result<(), UpdateError> {
         // Create a 3D PointIndex for each of the updated x,y,z coordinates
         let p1 = PointIndex::new3d(0, 0, 0);
@@ -51,7 +54,7 @@ impl Adjustable<f64> for EuclideanSpace {
 
     fn adjust<const WIDTH: usize, const HEIGHT: usize, const DEPTH: usize, const TIME: usize>(
         &mut self,
-        array_grid: &ArrayGrid<f64, WIDTH, HEIGHT, DEPTH, TIME>,
+        array_grid: &ArrayGrid<R, WIDTH, HEIGHT, DEPTH, TIME>,
     ) -> Result<(), AdjustmentError> {
         // Create a 3D PointIndex for each of the updated x,y,z coordinates
         let p1 = PointIndex::new3d(0, 0, 0);

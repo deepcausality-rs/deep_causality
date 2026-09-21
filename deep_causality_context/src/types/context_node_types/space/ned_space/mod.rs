@@ -4,6 +4,7 @@
  */
 
 use crate::ContextoidId;
+use deep_causality_algebra::RealField;
 mod adjustable;
 mod coordinate;
 mod display;
@@ -64,19 +65,22 @@ mod spatial;
 ///   from ENU (East-North-Up) or typical 3D Cartesian conventions.
 /// - This struct assumes **flat-Earth approximation** — for global modeling, use `GeoSpace` or `EcefSpace`.
 #[derive(Debug, Clone, PartialEq)]
-pub struct NedSpace {
+pub struct NedSpace<R>
+where
+    R: RealField,
+{
     /// Unique numeric ID for this local NED context
     id: ContextoidId,
     /// Distance north from the reference point (in meters)
-    north: f64,
+    north: R,
     /// Distance east from the reference point (in meters)
-    east: f64,
+    east: R,
     /// Vertical distance down from the reference point (in meters, positive = downward)
-    down: f64,
+    down: R,
 }
 
-impl NedSpace {
-    pub fn new(id: ContextoidId, north: f64, east: f64, down: f64) -> Self {
+impl<R: RealField> NedSpace<R> {
+    pub fn new(id: ContextoidId, north: R, east: R, down: R) -> Self {
         Self {
             id,
             north,

@@ -5,12 +5,15 @@
 
 use crate::errors::{AdjustmentError, UpdateError};
 use crate::{Adjustable, NedSpace};
+use deep_causality_algebra::RealField;
 use deep_causality_data_structures::{ArrayGrid, PointIndex};
 
-impl Adjustable<f64> for NedSpace {
+// `Default` is not implied by `RealField`; `ArrayGrid<T, ..>` requires it to initialise
+// its backing array, so it is bounded here rather than on the struct.
+impl<R: RealField + Default> Adjustable<R> for NedSpace<R> {
     fn update<const W: usize, const H: usize, const D: usize, const C: usize>(
         &mut self,
-        array_grid: &ArrayGrid<f64, W, H, D, C>,
+        array_grid: &ArrayGrid<R, W, H, D, C>,
     ) -> Result<(), UpdateError> {
         // Create a 3D PointIndex for each of the updated x,y,z coordinates
         let p1 = PointIndex::new3d(0, 0, 0);
@@ -22,7 +25,7 @@ impl Adjustable<f64> for NedSpace {
         let new_east = array_grid.get(p2);
         let new_down = array_grid.get(p3);
 
-        // Check if the adjusted data are safe to update i.e. not greater than max f64 value
+        // Check if the adjusted data are safe to update i.e. not greater than max R value
         if !new_north.is_finite() {
             return Err(UpdateError(
                 "Update failed, new north value is not finite".into(),
@@ -51,7 +54,7 @@ impl Adjustable<f64> for NedSpace {
 
     fn adjust<const W: usize, const H: usize, const D: usize, const C: usize>(
         &mut self,
-        array_grid: &ArrayGrid<f64, W, H, D, C>,
+        array_grid: &ArrayGrid<R, W, H, D, C>,
     ) -> Result<(), AdjustmentError> {
         // Create a 3D PointIndex for each of the updated x,y,z coordinates
         let p1 = PointIndex::new3d(0, 0, 0);
@@ -68,7 +71,7 @@ impl Adjustable<f64> for NedSpace {
         let adjusted_east = self.east + new_east;
         let adjusted_down = self.down + new_down;
 
-        // Check if the adjusted data are safe to update i.e. not greater than max f64 value
+        // Check if the adjusted data are safe to update i.e. not greater than max R value
         if !adjusted_north.is_finite() {
             return Err(AdjustmentError(
                 "Adjustment failed, new north value is not finite".into(),

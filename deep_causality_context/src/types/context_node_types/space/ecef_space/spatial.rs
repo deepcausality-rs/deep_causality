@@ -4,5 +4,6 @@
  */
 
 use crate::{EcefSpace, Spatial};
+use deep_causality_algebra::RealField;
 
-impl Spatial for EcefSpace {}
+impl<R: RealField> Spatial for EcefSpace<R> {}

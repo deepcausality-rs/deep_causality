@@ -4,5 +4,6 @@
  */
 
 use crate::{Spatial, TangentSpacetime};
+use deep_causality_algebra::RealField;
 
-impl Spatial for TangentSpacetime {}
+impl<R: RealField> Spatial for TangentSpacetime<R> {}

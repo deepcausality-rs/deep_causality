@@ -4,9 +4,10 @@
  */
 
 use crate::EcefSpace;
+use deep_causality_algebra::RealField;
 use std::fmt;
 
-impl fmt::Display for EcefSpace {
+impl<R: RealField + fmt::Display> fmt::Display for EcefSpace<R> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,

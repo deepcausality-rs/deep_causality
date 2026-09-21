@@ -10,6 +10,9 @@
 
 use deep_causality_core::{NumberType, NumericalValue};
 
+/// The floating-point type this crate's ready-made aliases are built at.
+pub type FloatType = f64;
+
 /// The identifier of a `Context`.
 ///
 /// The width is this crate's decision: it bounds how many contexts one program distinguishes,
@@ -52,8 +55,12 @@ use crate::{
 /// This `BaseContext` is designed to be a sensible default for many applications,
 /// offering a consistent and easily recognizable context structure for
 /// general-purpose causal reasoning and data representation.
-pub type BaseContext =
-    Context<Data<NumericalValue>, EuclideanSpace, EuclideanTime, EuclideanSpacetime>;
+pub type BaseContext = Context<
+    Data<NumericalValue>,
+    EuclideanSpace<FloatType>,
+    EuclideanTime<FloatType>,
+    EuclideanSpacetime<FloatType>,
+>;
 
 /// A type alias for a default, general-purpose `Contextoid` configuration.
 ///
@@ -78,8 +85,12 @@ pub type BaseContext =
 /// This `BaseContextoid` is the standard choice for creating individual context nodes
 /// that are compatible with other "base" types like `BaseContext` and `BaseCausalGraph`,
 /// ensuring a consistent and easily understandable modeling environment.
-pub type BaseContextoid =
-    Contextoid<Data<NumericalValue>, EuclideanSpace, EuclideanTime, EuclideanSpacetime>;
+pub type BaseContextoid = Contextoid<
+    Data<NumericalValue>,
+    EuclideanSpace<FloatType>,
+    EuclideanTime<FloatType>,
+    EuclideanSpacetime<FloatType>,
+>;
 
 /// A type alias for a default, general-purpose `Context` configuration that uses
 /// abstract "kind" enums for its spatial, temporal, and symbolic contexts.
@@ -115,7 +126,8 @@ pub type BaseContextoid =
 /// respective `Kind` enums. It promotes code reusability and simplifies type
 /// declarations when the exact concrete type of a context component is not
 /// fixed but rather belongs to a set of predefined "kinds".
-pub type UniformContext = Context<Data<NumberType>, SpaceKind, TimeKind, SpaceTimeKind>;
+pub type UniformContext =
+    Context<Data<NumberType>, SpaceKind<FloatType>, TimeKind<FloatType>, SpaceTimeKind<FloatType>>;
 
 /// A type alias for a default, general-purpose `Contextoid` configuration that uses
 /// abstract "kind" enums for its spatial, temporal, and symbolic contexts.
@@ -151,4 +163,9 @@ pub type UniformContext = Context<Data<NumberType>, SpaceKind, TimeKind, SpaceTi
 /// respective `Kind` enums. It promotes code reusability and simplifies type
 /// declarations when the exact concrete type of a context component is not
 /// fixed but rather belongs to a set of predefined "kinds".
-pub type UniformContextoid = Contextoid<Data<NumberType>, SpaceKind, TimeKind, SpaceTimeKind>;
+pub type UniformContextoid = Contextoid<
+    Data<NumberType>,
+    SpaceKind<FloatType>,
+    TimeKind<FloatType>,
+    SpaceTimeKind<FloatType>,
+>;

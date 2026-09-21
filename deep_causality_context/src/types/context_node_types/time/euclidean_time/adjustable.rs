@@ -7,11 +7,14 @@ use deep_causality_data_structures::{ArrayGrid, PointIndex};
 
 use crate::errors::{AdjustmentError, UpdateError};
 use crate::{Adjustable, EuclideanTime};
+use deep_causality_algebra::RealField;
 
-impl Adjustable<f64> for EuclideanTime {
+// `Default` is not implied by `RealField`; `ArrayGrid<T, ..>` requires it to initialise
+// its backing array, so it is bounded here rather than on the struct.
+impl<R: RealField + Default> Adjustable<R> for EuclideanTime<R> {
     fn update<const W: usize, const H: usize, const D: usize, const C: usize>(
         &mut self,
-        array_grid: &ArrayGrid<f64, W, H, D, C>,
+        array_grid: &ArrayGrid<R, W, H, D, C>,
     ) -> Result<(), UpdateError> {
         // Create a 1D PointIndex
         let p = PointIndex::new1d(0);
@@ -27,7 +30,7 @@ impl Adjustable<f64> for EuclideanTime {
 
     fn adjust<const W: usize, const H: usize, const D: usize, const C: usize>(
         &mut self,
-        array_grid: &ArrayGrid<f64, W, H, D, C>,
+        array_grid: &ArrayGrid<R, W, H, D, C>,
     ) -> Result<(), AdjustmentError> {
         // Create a 1D PointIndex
         let p = PointIndex::new1d(0);
@@ -40,7 +43,7 @@ impl Adjustable<f64> for EuclideanTime {
         }
 
         // Check if the new time is non-negative. Unless you want to go back in time...
-        if time_adjustment < f64::default() {
+        if time_adjustment < R::default() {
             return Err(AdjustmentError(
                 "Adjustment failed, new time is NEGATIVE".into(),
             ));
@@ -57,7 +60,7 @@ impl Adjustable<f64> for EuclideanTime {
         }
 
         // Check if the new time is non-zero
-        if adjusted_time == f64::default() {
+        if adjusted_time == R::default() {
             return Err(AdjustmentError(
                 "Adjustment failed, new time is ZERO".into(),
             ));

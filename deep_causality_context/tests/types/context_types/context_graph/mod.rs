@@ -22,3 +22,5 @@ mod graph_node_tests;
 mod graph_node_type_tests;
 #[cfg(test)]
 mod graph_root_tests;
+#[cfg(test)]
+mod scalar_parameter_tests;

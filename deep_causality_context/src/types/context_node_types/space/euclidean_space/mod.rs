@@ -4,6 +4,7 @@
  */
 
 use crate::ContextoidId;
+use deep_causality_algebra::RealField;
 use std::fmt::Debug;
 
 mod adjustable;
@@ -44,15 +45,21 @@ mod spatial;
 /// assert_eq!(space_a.distance(&space_b), 5.0);
 /// ```
 #[derive(Debug, Clone, PartialEq)]
-pub struct EuclideanSpace {
+pub struct EuclideanSpace<R>
+where
+    R: RealField,
+{
     id: ContextoidId,
-    x: f64,
-    y: f64,
-    z: f64,
+    x: R,
+    y: R,
+    z: R,
 }
 
-impl EuclideanSpace {
-    pub fn new(id: ContextoidId, x: f64, y: f64, z: f64) -> Self {
+impl<R> EuclideanSpace<R>
+where
+    R: RealField,
+{
+    pub fn new(id: ContextoidId, x: R, y: R, z: R) -> Self {
         Self { id, x, y, z }
     }
 }

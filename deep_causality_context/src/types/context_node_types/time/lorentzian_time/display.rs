@@ -4,9 +4,10 @@
  */
 
 use crate::LorentzianTime;
-use std::fmt::Display;
+use deep_causality_algebra::RealField;
+use std::fmt::{Debug, Display};
 
-impl Display for LorentzianTime {
+impl<R: RealField + Display + Debug> Display for LorentzianTime<R> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,

@@ -5,9 +5,10 @@
 
 use crate::errors::IndexError;
 use crate::{Coordinate, TangentSpacetime};
+use deep_causality_algebra::RealField;
 
-impl Coordinate for TangentSpacetime {
-    type Coord = f64;
+impl<R: RealField> Coordinate for TangentSpacetime<R> {
+    type Coord = R;
     /// Returns the number of dimensions in the coordinate system (always 4).
     fn dimension(&self) -> usize {
         4
@@ -24,7 +25,7 @@ impl Coordinate for TangentSpacetime {
     /// # Errors
     /// Returns `IndexError` if the index is out of bounds.
     ///
-    fn coordinate(&self, index: usize) -> Result<&f64, IndexError> {
+    fn coordinate(&self, index: usize) -> Result<&R, IndexError> {
         match index {
             0 => Ok(&self.x),
             1 => Ok(&self.y),

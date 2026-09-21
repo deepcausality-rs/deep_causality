@@ -2,6 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use deep_causality_context::FloatType;
 use deep_causality_context::*;
 
 #[test]
@@ -93,7 +94,7 @@ fn test_interval_squared_spacelike_is_positive() {
 // drift under Miri. Test is correct under normal CI.
 #[cfg_attr(miri, ignore)]
 fn test_interval_squared_null_like() {
-    let c = 299_792_458.0;
+    let c: FloatType = 299_792_458.0;
     let a = LorentzianSpacetime::new(1, c, 0.0, 0.0, 1.0, TimeScale::Second);
     let b = LorentzianSpacetime::new(2, 0.0, 0.0, 0.0, 0.0, TimeScale::Second);
 

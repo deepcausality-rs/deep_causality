@@ -2,9 +2,10 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use deep_causality_context::FloatType;
 use deep_causality_context::*;
 
-fn lorentzian_with_scale(scale: TimeScale) -> LorentzianSpacetime {
+fn lorentzian_with_scale(scale: TimeScale) -> LorentzianSpacetime<FloatType> {
     LorentzianSpacetime::new(1, 1.0, 2.0, 3.0, 1.0, scale)
 }
 

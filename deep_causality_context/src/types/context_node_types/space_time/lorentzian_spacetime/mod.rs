@@ -15,6 +15,7 @@ mod spatial;
 mod temporal;
 
 use crate::TimeScale;
+use deep_causality_algebra::RealField;
 
 /// A 4-dimensional spacetime context based on Lorentzian geometry, as used in General Relativity.
 ///
@@ -65,17 +66,20 @@ use crate::TimeScale;
 /// println!("Minkowski interval²: {interval}");
 /// ```
 #[derive(Debug, Clone, PartialEq)]
-pub struct LorentzianSpacetime {
+pub struct LorentzianSpacetime<R>
+where
+    R: RealField,
+{
     id: ContextoidId,
-    x: f64, // space in meters
-    y: f64,
-    z: f64,
-    t: f64,                // time in SI time unit
+    x: R, // space in meters
+    y: R,
+    z: R,
+    t: R,                  // time in SI time unit
     time_scale: TimeScale, // SI time unit
 }
 
-impl LorentzianSpacetime {
-    pub fn new(id: ContextoidId, x: f64, y: f64, z: f64, t: f64, time_scale: TimeScale) -> Self {
+impl<R: RealField> LorentzianSpacetime<R> {
+    pub fn new(id: ContextoidId, x: R, y: R, z: R, t: R, time_scale: TimeScale) -> Self {
         Self {
             id,
             x,

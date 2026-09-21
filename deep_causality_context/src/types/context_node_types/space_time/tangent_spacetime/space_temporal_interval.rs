@@ -4,17 +4,19 @@
  */
 use crate::traits::contextuable::metric_tensor::MetricTensor4D;
 use crate::{SpaceTemporalInterval, TangentSpacetime};
+use deep_causality_algebra::RealField;
+use deep_causality_num::FromPrimitive;
 
-impl SpaceTemporalInterval for TangentSpacetime {
-    fn time(&self) -> f64 {
+impl<R: RealField + FromPrimitive> SpaceTemporalInterval for TangentSpacetime<R> {
+    fn time(&self) -> R {
         // TangentSpacetime does not have a time_scale field, assuming time is always in seconds
         self.t
     }
-    fn position(&self) -> [f64; 3] {
+    fn position(&self) -> [R; 3] {
         [self.x, self.y, self.z]
     }
     // Override `interval_squared()` for curved spacetime
-    fn interval_squared(&self, other: &Self) -> f64 {
+    fn interval_squared(&self, other: &Self) -> R {
         let dt = self.t - other.t;
         let dx = self.x - other.x;
         let dy = self.y - other.y;
@@ -23,7 +25,7 @@ impl SpaceTemporalInterval for TangentSpacetime {
         let v = [dt, dx, dy, dz];
         let g = self.metric_tensor();
 
-        let mut sum = 0.0;
+        let mut sum = R::zero();
         for u in 0..4 {
             for w in 0..4 {
                 sum += g[u][w] * v[u] * v[w];

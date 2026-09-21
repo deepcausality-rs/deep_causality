@@ -4,5 +4,6 @@
  */
 
 use crate::{LorentzianSpacetime, Spatial};
+use deep_causality_algebra::RealField;
 
-impl Spatial for LorentzianSpacetime {}
+impl<R: RealField> Spatial for LorentzianSpacetime<R> {}

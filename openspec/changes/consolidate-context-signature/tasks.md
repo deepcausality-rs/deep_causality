@@ -28,20 +28,45 @@
 
 ## 3. The scalar parameter
 
-- [ ] 3.1 Give each spatial node type a scalar parameter bounded once on the algebra real-field
+- [x] 3.1 Give each spatial node type a scalar parameter bounded once on the algebra real-field
       bound, and set `type Coord` to it
-- [ ] 3.2 Same for the spacetime node types
-- [ ] 3.3 Same for the real-valued temporal types; leave the integer-valued ones on their integer
+      **`RealField` supplies less than the code assumed.** It carries `is_finite`, `sqrt`, `abs`,
+      `atan2`, `sin`, `cos`, `pi()`, `zero()`, `one()`, arithmetic, ordering and `Copy`, but not
+      `Default`, `Debug`, `powi` or `to_radians`. `Adjustable` impls therefore bound
+      `R: RealField + Default`, because `ArrayGrid<T, ..>` needs `Default` to initialise its
+      backing array; `Display` impls that render with `{:?}` bound `+ Debug` rather than switching
+      to `{}`, which would change how whole numbers print; `powi(2)` became a multiplication; and
+      `GeoSpace`'s Haversine writes its own degrees-to-radians from `R::pi()`. Numeric literals in
+      kernels cross onto the real axis through `deep_causality_num::lift`, which is why that crate
+      is now a direct dependency — Tier 0 against this crate's Tier 6, so the tier order holds
+- [x] 3.2 Same for the spacetime node types
+- [x] 3.3 Same for the real-valued temporal types; leave the integer-valued ones on their integer
       representations, which encode a tick rather than a precision
-- [ ] 3.4 Propagate the parameter through the `Kind` enums
-- [ ] 3.5 Remove every `f64` and `f32` from `deep_causality_context/src` outside the ready-made
+      **`DiscreteTime` and `EntropicTime` are untouched**, as are the `time_unit` accessors that
+      return their ticks
+- [x] 3.4 Propagate the parameter through the `Kind` enums
+      **`TimeKind<R>`'s tick-based variants carry no `R`**, so constructing one from `DiscreteTime`
+      or `EntropicTime` alone leaves the scalar unpinned and needs an annotation. Its `time_unit`
+      crosses those ticks onto the real axis with `lift_count` rather than an `as` cast
+- [x] 3.5 Remove every `f64` and `f32` from `deep_causality_context/src` outside the ready-made
       aliases, which deliberately fix a working scalar
-- [ ] 3.6 Keep `BaseContext`, `BaseContextoid`, `UniformContext` and `UniformContextoid` concrete so
+      **Done: zero `f64`/`f32` remain on a code line outside `src/alias/`.** Three traits welded a
+      scalar and were changed with the node types: `SpaceTemporalInterval` and `MetricTensor4D` now
+      read theirs from `Coordinate::Coord` rather than declaring a second associated type that
+      could disagree with the coordinates, and `ScalarValue` became one blanket impl in place of
+      seven named primitives — a list decides for the caller which scalars exist, so `BFloat16`
+      could not have been projected without an entry being added for it
+- [x] 3.6 Keep `BaseContext`, `BaseContextoid`, `UniformContext` and `UniformContextoid` concrete so
       alias-based call sites need no annotation they did not need before
-- [ ] 3.7 Add a test building a context at the smallest shipped real field and another at the
+- [x] 3.7 Add a test building a context at the smallest shipped real field and another at the
       largest, reading coordinates back from both. This is the acceptance criterion for the whole
       group
-- [ ] 3.8 `cargo test -p deep_causality_context` green
+      **`BFloat16` (8-bit significand) and `Float106` (~106-bit)**, in
+      `tests/.../context_graph/scalar_parameter_tests.rs`. Both build a context through one generic
+      helper and read axis 0 back. A third test is the negative control: it stores 0.1 at each
+      scalar, widens both readings to `f64`, and asserts the narrow one carries more error. Without
+      it the first two would pass even if the parameter never reached the node
+- [x] 3.8 `cargo test -p deep_causality_context` green
 
 ## 3b. Identifiers and the edge weight
 

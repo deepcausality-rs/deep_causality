@@ -6,6 +6,9 @@ use crate::TeloidStore;
 use deep_causality::NumericalValue;
 use deep_causality_context::{Data, EuclideanSpace, EuclideanSpacetime, EuclideanTime};
 
+/// The floating-point type this crate's ready-made aliases are built at.
+pub type FloatType = f64;
+
 pub type TeloidTag = &'static str;
 pub type TeloidID = u64;
 
@@ -41,5 +44,9 @@ pub type TeloidID = u64;
 /// offering a consistent and easily recognizable structure for managing and
 /// querying temporal causal data in general-purpose causal reasoning and
 /// simulation scenarios.
-pub type BaseTeloidStore =
-    TeloidStore<Data<NumericalValue>, EuclideanSpace, EuclideanTime, EuclideanSpacetime>;
+pub type BaseTeloidStore = TeloidStore<
+    Data<NumericalValue>,
+    EuclideanSpace<FloatType>,
+    EuclideanTime<FloatType>,
+    EuclideanSpacetime<FloatType>,
+>;

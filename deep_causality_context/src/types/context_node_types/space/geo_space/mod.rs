@@ -4,6 +4,7 @@
  */
 
 use crate::{ContextoidId, VerticalDatum};
+use deep_causality_algebra::RealField;
 mod adjustable;
 mod coordinate;
 mod display;
@@ -62,21 +63,24 @@ mod spatial;
 /// Distance (approx): 878.84 km
 /// ```
 #[derive(Debug, Clone, PartialEq)]
-pub struct GeoSpace {
+pub struct GeoSpace<R>
+where
+    R: RealField,
+{
     /// Unique numeric ID for the spatial context
     id: ContextoidId,
     /// Latitude in decimal degrees (positive north, negative south)
-    lat: f64,
+    lat: R,
     /// Longitude in decimal degrees (positive east, negative west)
-    lon: f64,
+    lon: R,
     /// Altitude in meters, measured against `datum`
-    alt: f64,
+    alt: R,
     /// The reference `alt` is measured against
     datum: VerticalDatum,
 }
 
-impl GeoSpace {
-    pub fn new(id: ContextoidId, lat: f64, lon: f64, alt: f64, datum: VerticalDatum) -> Self {
+impl<R: RealField> GeoSpace<R> {
+    pub fn new(id: ContextoidId, lat: R, lon: R, alt: R, datum: VerticalDatum) -> Self {
         Self {
             id,
             lat,

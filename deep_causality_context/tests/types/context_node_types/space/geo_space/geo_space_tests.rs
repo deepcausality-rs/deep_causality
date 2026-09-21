@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality_context::FloatType;
 use deep_causality_context::*;
 
 #[test]
@@ -46,7 +47,7 @@ fn test_metric_trait() {
     let distance = a.distance(&b);
 
     // Roughly ~333.6 km along the equator for 3° longitude
-    let expected = 333_584.77995765815;
+    let expected: FloatType = 333_584.77995765815;
 
     let delta = 1e-2; // 1 cm tolerance
 
@@ -64,7 +65,7 @@ fn test_metric_trait() {
 #[test]
 fn test_spatial_trait_is_implemented() {
     fn assert_spatial_impl<T: Spatial>() {}
-    assert_spatial_impl::<GeoSpace>();
+    assert_spatial_impl::<GeoSpace<FloatType>>();
 }
 
 #[test]

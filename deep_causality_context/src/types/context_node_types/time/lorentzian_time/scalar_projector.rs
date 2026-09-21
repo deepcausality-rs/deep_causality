@@ -4,9 +4,10 @@
  */
 
 use crate::{LorentzianTime, ScalarProjector, Temporal};
+use deep_causality_algebra::RealField;
 
-impl ScalarProjector for LorentzianTime {
-    type Scalar = f64;
+impl<R: RealField + Default> ScalarProjector for LorentzianTime<R> {
+    type Scalar = R;
 
     fn project(&self) -> Self::Scalar {
         self.time_unit()
