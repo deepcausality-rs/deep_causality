@@ -62,8 +62,8 @@
       bool, so the assertion needed `get_edge(a, b) -> Option<&RelationKind>` added beside it,
       mirroring the existing `contains_node`/`get_node` pair. The test puts two different relations
       on two edges out of one node, so it fails if the weight collapses to a constant.
-      `ExtendableContextuableGraph` has no counterpart accessor and so still cannot recover an
-      extra context's edge relations — left alone as unrequested scope
+      `ExtendableContextuableGraph` gained the matching `extra_ctx_get_edge` on the user's
+      instruction, so an extra context recovers its edge relations too, under the same test shape
 - [x] 3b.8 Re-point `deep_causality`'s four source files and three test files that import the two
       from core, and drop them from its root re-export list — they are context items now, and the
       no-re-export contract already covers those
@@ -101,11 +101,21 @@ group 4 is the downstream fan-out that follows from it.
 
 ## 5. The coordinate families
 
-- [ ] 5.1 Merge the two field-identical Cartesian spacetimes, keeping **`LorentzianSpacetime`** as
+- [x] 5.1 Merge the two field-identical Cartesian spacetimes, keeping **`LorentzianSpacetime`** as
       the surviving name and its constructors. `Lorentzian` names the signature class and
       `Minkowski` names one flat member of it, so the general name survives a merge and the frame's
       constant carries the convention the two names used to carry
-- [ ] 5.2 Delete the `SpaceTimeKind::Minkowski` arm and update every consumer of the removed name
+      **Verified before merging:** the two are field-identical (`id`, `x`, `y`, `z`, `t`,
+      `time_scale`) with identical constructors, and eight of nine trait impls are identical
+      modulo the name. `Display` differs, and `LorentzianSpacetime`'s is the richer of the two
+      since it prints `time_scale`, so it survives unchanged. The 25 tests paired 1:1 except
+      `test_adjust_with_infinity_should_fail`, which was ported to the Lorentzian suite so the
+      merge costs no coverage. `MinkowskiSpacetime` derived `Copy` and `LorentzianSpacetime` does
+      not; no consumer relied on it. The removal is 14 files, 10 under
+      `src/.../space_time/minkowski_spacetime/` and 4 under `tests/.../space_time/minkowski/`.
+      **Deletion permission granted by the user, 2026-09-21.** `deep_causality_physics` has its
+      own `minkowski_metric()` function, which is unrelated and untouched
+- [x] 5.2 Delete the `SpaceTimeKind::Minkowski` arm and update every consumer of the removed name
 - [x] 5.3 Remove `QuaternionSpace` **and** the `SpaceKind::Quaternion` arm, not only the `Spatial`
       impl. A quaternion is a rotation operator acting on a space rather than a space of its own,
       and an orientation belongs beside a position in a pose. Removing the trait alone leaves the

@@ -4,6 +4,5 @@
  */
 mod euclidean;
 mod lorentzian;
-mod minkowski;
 mod space_time_kind;
 mod tangent_spacetime;

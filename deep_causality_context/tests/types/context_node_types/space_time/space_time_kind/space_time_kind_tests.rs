@@ -11,13 +11,11 @@ fn test_space_time_kind_variants_and_traits() {
     // Construct each variant
     let euclidean = EuclideanSpacetime::new(1, 1.0, 2.0, 3.0, 4.0, TimeScale::Second);
     let lorentzian = LorentzianSpacetime::new(2, 1.0, 2.0, 3.0, 4.0, TimeScale::Second);
-    let minkowski = MinkowskiSpacetime::new(3, 1.0, 2.0, 3.0, 4.0, TimeScale::Second);
-    let tangent = TangentSpacetime::new(4, 1.0, 2.0, 3.0, 4.0, 1.0, 0.0, 0.0, 0.0);
+    let tangent = TangentSpacetime::new(3, 1.0, 2.0, 3.0, 4.0, 1.0, 0.0, 0.0, 0.0);
 
     let variants = [
         SpaceTimeKind::Euclidean(euclidean),
         SpaceTimeKind::Lorentzian(lorentzian),
-        SpaceTimeKind::Minkowski(minkowski),
         SpaceTimeKind::Tangent(tangent),
     ];
 
@@ -50,8 +48,8 @@ fn test_space_time_kind_variants_and_traits() {
 
 #[test]
 fn test_space_time_kind_coordinate_out_of_bounds() {
-    let minkowski = MinkowskiSpacetime::new(99, 1.0, 2.0, 3.0, 4.0, TimeScale::Second);
-    let variant = SpaceTimeKind::Minkowski(minkowski);
+    let lorentzian = LorentzianSpacetime::new(99, 1.0, 2.0, 3.0, 4.0, TimeScale::Second);
+    let variant = SpaceTimeKind::Lorentzian(lorentzian);
 
     let result = variant.coordinate(10);
     assert!(result.is_err());

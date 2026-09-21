@@ -92,7 +92,6 @@ pub use crate::types::context_node_types::space::space_kind::SpaceKind;
 // Space time context node types.
 pub use crate::types::context_node_types::space_time::euclidean_spacetime::EuclideanSpacetime;
 pub use crate::types::context_node_types::space_time::lorentzian_spacetime::LorentzianSpacetime;
-pub use crate::types::context_node_types::space_time::minkowski_spacetime::MinkowskiSpacetime;
 pub use crate::types::context_node_types::space_time::space_time_kind::SpaceTimeKind;
 pub use crate::types::context_node_types::space_time::tangent_spacetime::TangentSpacetime;
 // Symbolic spacetime context node types.

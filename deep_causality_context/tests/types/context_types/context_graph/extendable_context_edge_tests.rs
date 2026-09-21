@@ -489,3 +489,45 @@ fn test_extra_ctx_remove_edge_err() {
     let node_count = res.unwrap();
     assert_eq!(node_count, 1);
 }
+
+#[test]
+fn test_extra_ctx_edge_relation_survives_storage() {
+    let mut context = get_context();
+    let ctx_id = context.extra_ctx_add_new(10, true);
+    assert!(context.extra_ctx_check_exists(ctx_id));
+
+    let a = context
+        .extra_ctx_add_node(Contextoid::new(1, ContextoidType::Root(Root::new(1))))
+        .expect("failed to add node a");
+    let b = context
+        .extra_ctx_add_node(Contextoid::new(2, ContextoidType::Root(Root::new(2))))
+        .expect("failed to add node b");
+    let c = context
+        .extra_ctx_add_node(Contextoid::new(3, ContextoidType::Root(Root::new(3))))
+        .expect("failed to add node c");
+
+    // Two edges out of the same node, carrying different relations. Endpoints of the same node
+    // type do not determine the relation, so only storage can tell these two apart.
+    context
+        .extra_ctx_add_edge(a, b, RelationKind::SpaceTemporal)
+        .expect("failed to add edge a -> b");
+    context
+        .extra_ctx_add_edge(a, c, RelationKind::Spatial)
+        .expect("failed to add edge a -> c");
+
+    assert_eq!(
+        context.extra_ctx_get_edge(a, b),
+        Some(&RelationKind::SpaceTemporal)
+    );
+    assert_eq!(
+        context.extra_ctx_get_edge(a, c),
+        Some(&RelationKind::Spatial)
+    );
+    assert_eq!(context.extra_ctx_get_edge(b, c), None);
+}
+
+#[test]
+fn test_extra_ctx_get_edge_without_active_context() {
+    let context = get_context();
+    assert_eq!(context.extra_ctx_get_edge(0, 1), None);
+}

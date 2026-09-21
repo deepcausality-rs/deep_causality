@@ -33,7 +33,7 @@ use std::sync::{Arc, RwLock};
 /// - **`SpaceTimeKind`**: Combines the spatial and temporal contexts into a
 ///   unified spacetime representation using an abstract `SpaceTimeKind` enum,
 ///   allowing for various spacetime geometries (e.g., `EuclideanSpacetime`,
-///   `LorentzianSpacetime`, `MinkowskiSpacetime`) in a uniform manner.
+///   `LorentzianSpacetime`) in a uniform manner.
 /// - **`FloatType` (x2)**: Two `FloatType` parameters, typically used for
 ///   internal calculations, scalar values, metrics, or other generic numerical
 ///   requirements within the `Model` structure, such as probabilities, weights,
@@ -74,7 +74,7 @@ pub type UniformModel = Model<bool, bool, UniformContext>;
 /// - **`SpaceTimeKind`**: Combines the spatial and temporal contexts into a
 ///   unified spacetime representation using an abstract `SpaceTimeKind` enum,
 ///   allowing for various spacetime geometries (e.g., `EuclideanSpacetime`,
-///   `LorentzianSpacetime`, `MinkowskiSpacetime`) in a uniform manner.
+///   `LorentzianSpacetime`) in a uniform manner.
 /// - **`FloatType` (x2)**: Two `FloatType` parameters, typically used for
 ///   internal calculations, scalar values, or other generic numerical
 ///   requirements within the `Causaloid` structure, such as probabilities,
@@ -145,7 +145,7 @@ pub type UniformCausaloidVec = Vec<Causaloid<bool, bool, (), Arc<RwLock<UniformC
 /// - **`SpaceTimeKind`**: Combines the spatial and temporal contexts into a
 ///   unified spacetime representation using an abstract `SpaceTimeKind` enum,
 ///   allowing for various spacetime geometries (e.g., `EuclideanSpacetime`,
-///   `LorentzianSpacetime`, `MinkowskiSpacetime`) in a uniform manner.
+///   `LorentzianSpacetime`) in a uniform manner.
 /// - **`FloatType` (x2)**: Two `FloatType` parameters, typically used for
 ///   internal calculations, scalar values, or other generic numerical
 ///   requirements within the `Causaloid` structure, such as probabilities,
@@ -184,7 +184,7 @@ pub type UniformCausalMap = HashMap<usize, Causaloid<bool, bool, (), Arc<RwLock<
 /// - **`SpaceTimeKind`**: Combines the spatial and temporal contexts into a
 ///   unified spacetime representation using an abstract `SpaceTimeKind` enum,
 ///   allowing for various spacetime geometries (e.g., `EuclideanSpacetime`,
-///   `LorentzianSpacetime`, `MinkowskiSpacetime`) in a uniform manner.
+///   `LorentzianSpacetime`) in a uniform manner.
 /// - **`FloatType` (x2)**: Two `FloatType` parameters, typically used for
 ///   internal calculations, scalar values, or other generic numerical
 ///   requirements within the `Causaloid` structure, such as probabilities,

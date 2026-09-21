@@ -107,7 +107,7 @@ pub type BaseContextoid =
 /// - **`SpaceTimeKind`**: Combines the spatial and temporal contexts into a
 ///   unified spacetime representation using an abstract `SpaceTimeKind` enum,
 ///   allowing for various spacetime geometries (e.g., `EuclideanSpacetime`,
-///   `LorentzianSpacetime`, `MinkowskiSpacetime`) in a uniform manner.
+///   `LorentzianSpacetime`) in a uniform manner.
 ///
 /// This `UniformContext` is designed to be a sensible default for many applications
 /// requiring a flexible yet consistent context structure that can adapt to different
@@ -143,7 +143,7 @@ pub type UniformContext = Context<Data<NumberType>, SpaceKind, TimeKind, SpaceTi
 /// - **`SpaceTimeKind`**: Combines the spatial and temporal contexts into a
 ///   unified spacetime representation using an abstract `SpaceTimeKind` enum,
 ///   allowing for various spacetime geometries (e.g., `EuclideanSpacetime`,
-///   `LorentzianSpacetime`, `MinkowskiSpacetime`) in a uniform manner.
+///   `LorentzianSpacetime`) in a uniform manner.
 ///
 /// This `UniformContextoid` is designed to be a sensible default for many applications
 /// requiring a flexible yet consistent contextoid structure that can adapt to different

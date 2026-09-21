@@ -28,7 +28,7 @@
 //!
 //! | **Domain** | **Time Type** | **Space Type** | **Use This When...** |
 //! |--------------------------------------|------------------|---------------------------------------------|------------------------------------------------------------|
-//! | Relativistic physics, MagNav | `LorentzianTime` | `MinkowskiSpacetime`, `LorentzianSpacetime` | You model causality, velocity, or lightcones |
+//! | Relativistic physics, MagNav | `LorentzianTime` | `LorentzianSpacetime` | You model causality, velocity, or lightcones |
 //! | Quantum/statistical models | `EuclideanTime` | `EuclideanSpacetime` | You run simulations, QFT, or use Wick rotation |
 //! | Symbolic AI, planning, rules | `SymbolicTime` | `SymbolicContext` or `SymbolicSpacetime` | You reason in logical or qualitative steps |
 //! | Embedded / step-based systems | `DiscreteTime` | `EuclideanSpace`, `NedSpace` | Your systems run on ticks or control loops |

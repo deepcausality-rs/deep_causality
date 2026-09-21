@@ -275,6 +275,22 @@ where
     ///   extra context is currently active.
     fn extra_ctx_contains_edge(&self, a: usize, b: usize) -> bool;
 
+    /// Returns the relation carried by the edge from node `a` to node `b` in the currently
+    /// active extra context.
+    ///
+    /// This is the read counterpart of `extra_ctx_add_edge`, and is directed to the context set
+    /// by `extra_ctx_set_current_id`.
+    ///
+    /// # Parameters
+    /// - `a`: The index of the source node.
+    /// - `b`: The index of the target node.
+    ///
+    /// # Returns
+    /// - `Some(&RelationKind)` when a directed edge from `a` to `b` exists in the active context.
+    /// - `None` if the edge does not exist, if either index is invalid, or if no extra context is
+    ///   currently active.
+    fn extra_ctx_get_edge(&self, a: usize, b: usize) -> Option<&RelationKind>;
+
     /// Removes a directed edge between two nodes in the currently active extra context.
     ///
     /// This operation is directed to the context set by `extra_ctx_set_current_id`.

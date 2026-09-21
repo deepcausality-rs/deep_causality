@@ -6,8 +6,8 @@
 use crate::ContextoidId;
 use crate::errors::IndexError;
 use crate::{
-    Coordinate, EuclideanSpacetime, LorentzianSpacetime, MinkowskiSpacetime, SpaceTemporal,
-    Spatial, TangentSpacetime, Temporal, TimeScale,
+    Coordinate, EuclideanSpacetime, LorentzianSpacetime, SpaceTemporal, Spatial, TangentSpacetime,
+    Temporal, TimeScale,
 };
 use deep_causality_core::Identifiable;
 use std::fmt::Formatter;
@@ -25,7 +25,6 @@ use std::fmt::Formatter;
 ///
 /// - [`EuclideanSpacetime`]: Classical Newtonian model with separate space and time.
 /// - [`LorentzianSpacetime`]: Supports pseudo-Riemannian geometry, used in general relativity.
-/// - [`MinkowskiSpacetime`]: Flat spacetime in special relativity, often used in causal graphs.
 /// - [`TangentSpacetime`]: Linear approximation of curved space at a point (i.e., tangent space).
 ///
 /// # Examples
@@ -67,8 +66,6 @@ pub enum SpaceTimeKind {
     Euclidean(EuclideanSpacetime),
     /// General relativistic curved spacetime
     Lorentzian(LorentzianSpacetime),
-    /// Special relativistic flat spacetime (Minkowski space)
-    Minkowski(MinkowskiSpacetime),
     /// Tangent space at a point, used for local linearization of curvature
     Tangent(TangentSpacetime),
 }
@@ -79,7 +76,6 @@ impl Coordinate for SpaceTimeKind {
         match self {
             SpaceTimeKind::Euclidean(euclidean) => euclidean.dimension(),
             SpaceTimeKind::Lorentzian(lorentzian) => lorentzian.dimension(),
-            SpaceTimeKind::Minkowski(minkowski) => minkowski.dimension(),
             SpaceTimeKind::Tangent(tangent) => tangent.dimension(),
         }
     }
@@ -88,7 +84,6 @@ impl Coordinate for SpaceTimeKind {
         match self {
             SpaceTimeKind::Euclidean(euclidean) => euclidean.coordinate(index),
             SpaceTimeKind::Lorentzian(lorentzian) => lorentzian.coordinate(index),
-            SpaceTimeKind::Minkowski(minkowski) => minkowski.coordinate(index),
             SpaceTimeKind::Tangent(tangent) => tangent.coordinate(index),
         }
     }
@@ -99,7 +94,6 @@ impl Identifiable for SpaceTimeKind {
         match self {
             SpaceTimeKind::Euclidean(euclidean) => euclidean.id(),
             SpaceTimeKind::Lorentzian(lorentzian) => lorentzian.id(),
-            SpaceTimeKind::Minkowski(minkowski) => minkowski.id(),
             SpaceTimeKind::Tangent(tangent) => tangent.id(),
         }
     }
@@ -113,7 +107,6 @@ impl Temporal for SpaceTimeKind {
         match self {
             SpaceTimeKind::Euclidean(euclidean) => euclidean.time_scale(),
             SpaceTimeKind::Lorentzian(lorentzian) => lorentzian.time_scale(),
-            SpaceTimeKind::Minkowski(minkowski) => minkowski.time_scale(),
             SpaceTimeKind::Tangent(tangent) => tangent.time_scale(),
         }
     }
@@ -122,7 +115,6 @@ impl Temporal for SpaceTimeKind {
         match self {
             SpaceTimeKind::Euclidean(euclidean) => euclidean.time_unit(),
             SpaceTimeKind::Lorentzian(lorentzian) => lorentzian.time_unit(),
-            SpaceTimeKind::Minkowski(minkowski) => minkowski.time_unit(),
             SpaceTimeKind::Tangent(tangent) => tangent.time_unit(),
         }
     }
@@ -133,7 +125,6 @@ impl SpaceTemporal for SpaceTimeKind {
         match self {
             SpaceTimeKind::Euclidean(euclidean) => euclidean.t(),
             SpaceTimeKind::Lorentzian(lorentzian) => lorentzian.t(),
-            SpaceTimeKind::Minkowski(minkowski) => minkowski.t(),
             SpaceTimeKind::Tangent(tangent) => tangent.t(),
         }
     }
@@ -144,7 +135,6 @@ impl std::fmt::Display for SpaceTimeKind {
         match self {
             SpaceTimeKind::Euclidean(euclidean) => euclidean.fmt(f),
             SpaceTimeKind::Lorentzian(lorentzian) => lorentzian.fmt(f),
-            SpaceTimeKind::Minkowski(minkowski) => minkowski.fmt(f),
             SpaceTimeKind::Tangent(tangent) => tangent.fmt(f),
         }
     }

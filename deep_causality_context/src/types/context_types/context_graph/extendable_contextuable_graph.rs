@@ -216,6 +216,16 @@ where
         }
     }
 
+    fn extra_ctx_get_edge(&self, a: usize, b: usize) -> Option<&RelationKind> {
+        self.extra_contexts
+            .as_ref()?
+            .get(&self.extra_context_id)?
+            .get_edges(a)?
+            .into_iter()
+            .find(|(target, _)| *target == b)
+            .map(|(_, weight)| weight)
+    }
+
     fn extra_ctx_remove_edge(&mut self, a: usize, b: usize) -> Result<(), ContextIndexError> {
         // 1. Test if a valid context is available
         if let Some(extra_contexts) = self.extra_contexts.as_mut() {

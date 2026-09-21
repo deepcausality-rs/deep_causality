@@ -5,6 +5,5 @@
 
 pub mod euclidean_spacetime;
 pub mod lorentzian_spacetime;
-pub mod minkowski_spacetime;
 pub mod space_time_kind;
 pub mod tangent_spacetime;
