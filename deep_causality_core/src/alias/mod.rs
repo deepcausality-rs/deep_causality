@@ -7,8 +7,6 @@
 use alloc::string::String;
 /// The unique identifier for a Cause or Context in the Causality Graph
 pub type IdentificationValue = u64;
-pub type ContextId = u64;
-pub type ContextoidId = u64;
 pub type CausaloidId = u64;
 
 #[cfg(feature = "alloc")]

@@ -3,23 +3,24 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::ContextoidId;
 use std::fmt::{Display, Formatter};
 
 use deep_causality_core::Identifiable;
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct Root {
-    id: u64,
+    id: ContextoidId,
 }
 
 impl Root {
-    pub fn new(id: u64) -> Self {
+    pub fn new(id: ContextoidId) -> Self {
         Self { id }
     }
 }
 
 impl Identifiable for Root {
-    fn id(&self) -> u64 {
+    fn id(&self) -> ContextoidId {
         self.id
     }
 }

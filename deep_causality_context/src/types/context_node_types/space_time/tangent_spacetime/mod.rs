@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::ContextoidId;
 mod adjustable;
 mod coordinate;
 mod display;
@@ -75,7 +76,7 @@ mod temporal;
 /// - `MetricTensor4D` — for curvature configuration
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct TangentSpacetime {
-    id: u64,
+    id: ContextoidId,
 
     // Position
     x: f64, // meters
@@ -99,7 +100,7 @@ impl TangentSpacetime {
     /// Create a new tangent bundle point with a default Minkowski metric.
     #[allow(clippy::too_many_arguments)]
     pub fn new(
-        id: u64,
+        id: ContextoidId,
         x: f64,
         y: f64,
         z: f64,

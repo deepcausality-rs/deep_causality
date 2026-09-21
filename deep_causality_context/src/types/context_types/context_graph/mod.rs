@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use ultragraph::*;
 
 use crate::*;
-use deep_causality_core::{ContextId, ContextoidId};
+use crate::{ContextId, ContextoidId};
 
 mod contextuable_graph;
 mod debug;
@@ -17,7 +17,7 @@ mod identifiable;
 mod indexable_data;
 mod indexable_time;
 
-type ExtraContext<D, S, T, ST> = UltraGraphWeighted<Contextoid<D, S, T, ST>, u64>;
+type ExtraContext<D, S, T, ST> = UltraGraphWeighted<Contextoid<D, S, T, ST>, RelationKind>;
 
 type ExtraContextMap<D, S, T, ST> = HashMap<u64, ExtraContext<D, S, T, ST>>;
 
@@ -31,11 +31,11 @@ where
 {
     id: ContextId,
     name: String,
-    base_context: UltraGraphWeighted<Contextoid<D, S, T, ST>, u64>,
+    base_context: UltraGraphWeighted<Contextoid<D, S, T, ST>, RelationKind>,
     id_to_index_map: HashMap<ContextoidId, usize>,
     extra_contexts: Option<ExtraContextMap<D, S, T, ST>>,
     number_of_extra_contexts: u64,
-    extra_context_id: u64,
+    extra_context_id: ContextId,
     current_data_map: HashMap<usize, usize>,
     previous_data_map: HashMap<usize, usize>,
     current_index_map: HashMap<usize, usize>,

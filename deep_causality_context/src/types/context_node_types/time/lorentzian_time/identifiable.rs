@@ -3,11 +3,12 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::ContextoidId;
 use crate::LorentzianTime;
 use deep_causality_core::Identifiable;
 
 impl Identifiable for LorentzianTime {
-    fn id(&self) -> u64 {
+    fn id(&self) -> ContextoidId {
         self.id
     }
 }

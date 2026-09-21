@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::ContextoidId;
 use std::collections::BTreeSet;
 use std::fmt::Display;
 
@@ -39,7 +40,7 @@ use std::fmt::Display;
 #[derive(Debug, Clone, PartialEq)]
 pub struct ConformalSpacetime {
     /// Unique identifier for this event
-    pub id: u64,
+    pub id: ContextoidId,
 
     /// Optional symbolic label (e.g., "i+", "scri", "horizon")
     pub label: Option<String>,
@@ -49,7 +50,7 @@ pub struct ConformalSpacetime {
 }
 
 impl ConformalSpacetime {
-    pub fn new(id: u64, label: Option<String>) -> Self {
+    pub fn new(id: ContextoidId, label: Option<String>) -> Self {
         Self {
             id,
             label,
@@ -60,12 +61,12 @@ impl ConformalSpacetime {
 
 impl ConformalSpacetime {
     /// Adds a forward causal connection (like drawing a light ray)
-    pub fn link_to(&mut self, other_id: u64) {
+    pub fn link_to(&mut self, other_id: ContextoidId) {
         self.causal_links.insert(other_id);
     }
 
     /// Checks if this node can causally influence the other node
-    pub fn can_affect(&self, other_id: u64) -> bool {
+    pub fn can_affect(&self, other_id: ContextoidId) -> bool {
         self.causal_links.contains(&other_id)
     }
 

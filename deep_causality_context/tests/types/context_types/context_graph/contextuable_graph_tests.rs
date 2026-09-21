@@ -109,3 +109,37 @@ fn test_remove_edge_err_second_index_missing() {
     assert!(res.is_err());
     assert!(format!("{:?}", res.unwrap_err()).contains("index b"));
 }
+
+#[test]
+fn test_edge_relation_survives_storage() {
+    let mut context = get_context();
+
+    let a = context
+        .add_node(Contextoid::new(1, ContextoidType::Root(Root::new(1))))
+        .expect("failed to add node a");
+    let b = context
+        .add_node(Contextoid::new(2, ContextoidType::Root(Root::new(2))))
+        .expect("failed to add node b");
+    let c = context
+        .add_node(Contextoid::new(3, ContextoidType::Root(Root::new(3))))
+        .expect("failed to add node c");
+
+    // Two edges out of the same node, carrying different relations. Endpoints of the same node
+    // type do not determine the relation, so only storage can tell these two apart.
+    context
+        .add_edge(a, b, RelationKind::SpaceTemporal)
+        .expect("failed to add edge a -> b");
+    context
+        .add_edge(a, c, RelationKind::Temporal)
+        .expect("failed to add edge a -> c");
+
+    assert_eq!(context.get_edge(a, b), Some(&RelationKind::SpaceTemporal));
+    assert_eq!(context.get_edge(a, c), Some(&RelationKind::Temporal));
+    assert_eq!(context.get_edge(b, c), None);
+}
+
+#[test]
+fn test_get_edge_returns_none_for_unknown_node() {
+    let context = get_context();
+    assert_eq!(context.get_edge(0, 1), None);
+}

@@ -3,12 +3,13 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::ContextId;
+use crate::ContextoidId;
 use crate::errors::ContextIndexError;
 use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
 use crate::{Contextoid, Datable, RelationKind};
-use deep_causality_core::ContextoidId;
 
 /// Trait for graph containing context-aware nodes.
 ///
@@ -53,6 +54,10 @@ where
         weight: RelationKind,
     ) -> Result<(), ContextIndexError>;
     fn contains_edge(&self, a: usize, b: usize) -> bool;
+    /// Returns the relation the edge from `a` to `b` carries, or `None` when no such edge
+    /// exists. This is the read counterpart of `add_edge`: without it the relation a caller
+    /// supplies is not recoverable from the context.
+    fn get_edge(&self, a: usize, b: usize) -> Option<&RelationKind>;
     fn remove_edge(&mut self, a: usize, b: usize) -> Result<(), ContextIndexError>;
     fn size(&self) -> usize;
     fn is_empty(&self) -> bool;
@@ -103,7 +108,7 @@ where
     ///
     /// # Returns
     /// The unique `u64` ID assigned to the newly created context.
-    fn extra_ctx_add_new(&mut self, capacity: usize, default: bool) -> u64;
+    fn extra_ctx_add_new(&mut self, capacity: usize, default: bool) -> ContextId;
 
     /// Creates a new extra context with a specific, user-provided ID.
     ///
@@ -122,7 +127,7 @@ where
     /// - `ContextIndexError` if a context with the provided `id` already exists.
     fn extra_ctx_add_new_with_id(
         &mut self,
-        id: u64,
+        id: ContextoidId,
         capacity: usize,
         default: bool,
     ) -> Result<(), ContextIndexError>;
@@ -134,7 +139,7 @@ where
     ///
     /// # Returns
     /// `true` if a context with the specified ID exists, `false` otherwise.
-    fn extra_ctx_check_exists(&self, idx: u64) -> bool;
+    fn extra_ctx_check_exists(&self, idx: ContextId) -> bool;
 
     /// Gets the ID of the currently active extra context.
     ///
@@ -143,7 +148,7 @@ where
     ///
     /// # Returns
     /// The `u64` ID of the active context.
-    fn extra_ctx_get_current_id(&self) -> u64;
+    fn extra_ctx_get_current_id(&self) -> ContextId;
 
     /// Sets the active extra context to the one identified by the given ID.
     ///
@@ -158,7 +163,7 @@ where
     ///
     /// # Errors
     /// - `ContextIndexError` if no context with the specified `idx` exists.
-    fn extra_ctx_set_current_id(&mut self, idx: u64) -> Result<(), ContextIndexError>;
+    fn extra_ctx_set_current_id(&mut self, idx: ContextId) -> Result<(), ContextIndexError>;
 
     /// Unsets the currently active extra context.
     ///

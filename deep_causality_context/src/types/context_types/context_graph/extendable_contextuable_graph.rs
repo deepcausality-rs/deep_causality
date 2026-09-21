@@ -3,6 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::ContextId;
+use crate::ContextoidId;
 use ultragraph::*;
 
 use crate::{
@@ -18,7 +20,7 @@ where
     T: Temporal + Clone,
     ST: SpaceTemporal + Clone,
 {
-    fn extra_ctx_add_new(&mut self, capacity: usize, default: bool) -> u64 {
+    fn extra_ctx_add_new(&mut self, capacity: usize, default: bool) -> ContextId {
         // This now acts as a wrapper, generating a new ID and calling the specific implementation.
         let new_id = self.number_of_extra_contexts + 1;
         self.extra_ctx_add_new_with_id(new_id, capacity, default)
@@ -28,7 +30,7 @@ where
 
     fn extra_ctx_add_new_with_id(
         &mut self,
-        id: u64,
+        id: ContextoidId,
         capacity: usize,
         default: bool,
     ) -> Result<(), ContextIndexError> {
@@ -55,7 +57,7 @@ where
         Ok(())
     }
 
-    fn extra_ctx_check_exists(&self, idx: u64) -> bool {
+    fn extra_ctx_check_exists(&self, idx: ContextId) -> bool {
         if let Some(extra_contexts) = &self.extra_contexts {
             extra_contexts.contains_key(&idx)
         } else {
@@ -63,11 +65,11 @@ where
         }
     }
 
-    fn extra_ctx_get_current_id(&self) -> u64 {
+    fn extra_ctx_get_current_id(&self) -> ContextId {
         self.extra_context_id
     }
 
-    fn extra_ctx_set_current_id(&mut self, idx: u64) -> Result<(), ContextIndexError> {
+    fn extra_ctx_set_current_id(&mut self, idx: ContextId) -> Result<(), ContextIndexError> {
         if self.extra_ctx_check_exists(idx) {
             self.extra_context_id = idx;
             Ok(())
@@ -179,9 +181,8 @@ where
     ) -> Result<(), ContextIndexError> {
         if let Some(extra_contexts) = self.extra_contexts.as_mut() {
             if let Some(current_ctx) = extra_contexts.get_mut(&self.extra_context_id) {
-                let weight_value = weight as u64;
                 current_ctx
-                    .add_edge(a, b, weight_value)
+                    .add_edge(a, b, weight)
                     .map_err(|e| ContextIndexError(e.to_string()))
             } else {
                 Err(ContextIndexError(format!(

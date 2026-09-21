@@ -10,7 +10,6 @@ use crate::IndexError;
 /// This trait is agnostic to geometry and is designed to support
 /// both standard (Cartesian) coordinates and abstract representations such as:
 /// - Curved spacetime manifolds
-/// - Quaternionic rotations
 /// - Symbolic embeddings (e.g., logical coordinates)
 ///
 /// The trait provides only **index-based access** and leaves axis naming,

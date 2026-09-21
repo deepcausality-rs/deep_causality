@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::ContextoidId;
 mod adjustable;
 mod display;
 mod identifiable;
@@ -63,7 +64,7 @@ use crate::{TimeKind, TimeScale};
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct LorentzianTime {
     /// Unique numeric identifier for the time instance.
-    id: u64,
+    id: ContextoidId,
 
     /// The scale/granularity of the time unit (e.g., Seconds, Nanoseconds).
     time_scale: TimeScale,
@@ -73,7 +74,7 @@ pub struct LorentzianTime {
 }
 
 impl LorentzianTime {
-    pub fn new(id: u64, time_scale: TimeScale, time_unit: f64) -> Self {
+    pub fn new(id: ContextoidId, time_scale: TimeScale, time_unit: f64) -> Self {
         Self {
             id,
             time_scale,

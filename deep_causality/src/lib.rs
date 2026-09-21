@@ -33,8 +33,7 @@ pub use deep_causality_core::{
 // are deliberately not re-exported, because nothing here uses them and `deep_causality_ethos`
 // declares its own pair.
 pub use deep_causality_core::{
-    CausaloidId, ContextId, ContextoidId, DescriptionValue, FloatType, IdentificationValue,
-    NumberType, NumericalValue,
+    CausaloidId, DescriptionValue, FloatType, IdentificationValue, NumberType, NumericalValue,
 };
 
 pub use deep_causality_haft::{LogAddEntry, LogAppend, LogEffect, LogSize};

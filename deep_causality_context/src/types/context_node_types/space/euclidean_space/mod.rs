@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::ContextoidId;
 use std::fmt::Debug;
 
 mod adjustable;
@@ -44,14 +45,14 @@ mod spatial;
 /// ```
 #[derive(Debug, Clone, PartialEq)]
 pub struct EuclideanSpace {
-    id: u64,
+    id: ContextoidId,
     x: f64,
     y: f64,
     z: f64,
 }
 
 impl EuclideanSpace {
-    pub fn new(id: u64, x: f64, y: f64, z: f64) -> Self {
+    pub fn new(id: ContextoidId, x: f64, y: f64, z: f64) -> Self {
         Self { id, x, y, z }
     }
 }

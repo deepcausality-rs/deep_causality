@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::ContextoidId;
 mod display;
 mod identifiable;
 mod scalar_projector;
@@ -66,12 +67,12 @@ mod temporable;
 /// should override raw comparisons.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct SymbolicTime {
-    id: u64,
+    id: ContextoidId,
     time: SymbolicTimeUnit,
 }
 
 impl SymbolicTime {
-    pub fn new(id: u64, time: SymbolicTimeUnit) -> Self {
+    pub fn new(id: ContextoidId, time: SymbolicTimeUnit) -> Self {
         Self { id, time }
     }
 

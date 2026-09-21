@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::ContextoidId;
 pub mod adjustable;
 mod datable;
 mod display;
@@ -31,7 +32,7 @@ pub struct Data<T>
 where
     T: Default + Clone + PartialEq,
 {
-    id: u64,
+    id: ContextoidId,
     data: T,
 }
 
@@ -39,7 +40,7 @@ impl<T> Data<T>
 where
     T: Default + Clone + PartialEq,
 {
-    pub fn new(id: u64, data: T) -> Self {
+    pub fn new(id: ContextoidId, data: T) -> Self {
         Self { id, data }
     }
 }

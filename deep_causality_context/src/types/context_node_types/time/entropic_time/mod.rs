@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::ContextoidId;
 mod adjustable;
 mod display;
 mod identifiable;
@@ -40,14 +41,14 @@ use crate::TimeKind;
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub struct EntropicTime {
     /// Unique ID for this time instance
-    id: u64,
+    id: ContextoidId,
 
     /// Irreversible "tick" counter driven by entropy or state progression
     entropy_tick: u64,
 }
 
 impl EntropicTime {
-    pub fn new(id: u64, entropy_tick: u64) -> Self {
+    pub fn new(id: ContextoidId, entropy_tick: u64) -> Self {
         Self { id, entropy_tick }
     }
 }

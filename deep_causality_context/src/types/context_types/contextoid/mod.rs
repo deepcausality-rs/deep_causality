@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::ContextoidId;
 use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
@@ -22,7 +23,7 @@ where
     T: Temporal + Clone,
     ST: SpaceTemporal + Clone,
 {
-    id: u64,
+    id: ContextoidId,
     vertex_type: ContextoidType<D, S, T, ST>,
 }
 
@@ -33,7 +34,7 @@ where
     T: Temporal + Clone,
     ST: SpaceTemporal + Clone,
 {
-    pub fn new(id: u64, vertex_type: ContextoidType<D, S, T, ST>) -> Self {
+    pub fn new(id: ContextoidId, vertex_type: ContextoidType<D, S, T, ST>) -> Self {
         Self { id, vertex_type }
     }
 }

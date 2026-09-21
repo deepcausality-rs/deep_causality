@@ -10,6 +10,18 @@
 
 use deep_causality_core::{NumberType, NumericalValue};
 
+/// The identifier of a `Context`.
+///
+/// The width is this crate's decision: it bounds how many contexts one program distinguishes,
+/// and widening or narrowing it is a change to this crate rather than to the core vocabulary.
+pub type ContextId = u64;
+
+/// The identifier of a `Contextoid` within a `Context`.
+///
+/// The width is this crate's decision: it bounds how many contextoids one context holds, which
+/// is the larger of the two counts and the one that moves first on an embedded target.
+pub type ContextoidId = u64;
+
 use crate::{
     Context, Contextoid, Data, EuclideanSpace, EuclideanSpacetime, EuclideanTime, SpaceKind,
     SpaceTimeKind, TimeKind,

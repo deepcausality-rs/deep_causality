@@ -2,6 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use crate::ContextoidId;
 mod adjustable;
 mod datable;
 mod display;
@@ -17,12 +18,12 @@ use deep_causality_uncertain::{RandScalar, UncertainBool};
 /// As with the real node, the parameter costs `Context` nothing.
 #[derive(Debug, Clone)]
 pub struct UncertainBoolData<R: RandScalar> {
-    id: u64,
+    id: ContextoidId,
     data: UncertainBool<R>,
 }
 
 impl<R: RandScalar> UncertainBoolData<R> {
-    pub fn new(id: u64, data: UncertainBool<R>) -> Self {
+    pub fn new(id: ContextoidId, data: UncertainBool<R>) -> Self {
         Self { id, data }
     }
 }

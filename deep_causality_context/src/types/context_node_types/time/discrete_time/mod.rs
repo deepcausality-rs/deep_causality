@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::ContextoidId;
 mod adjustable;
 mod display;
 mod identifiable;
@@ -62,7 +63,7 @@ use crate::{TimeKind, TimeScale};
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct DiscreteTime {
     /// Unique identifier for this discrete time instance.
-    id: u64,
+    id: ContextoidId,
 
     /// Semantic scale of the ticks (e.g., Steps, Cycles, Milliseconds).
     tick_scale: TimeScale,
@@ -72,7 +73,7 @@ pub struct DiscreteTime {
 }
 
 impl DiscreteTime {
-    pub fn new(id: u64, tick_scale: TimeScale, tick_unit: u64) -> Self {
+    pub fn new(id: ContextoidId, tick_scale: TimeScale, tick_unit: u64) -> Self {
         Self {
             id,
             tick_scale,

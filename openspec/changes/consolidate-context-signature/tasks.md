@@ -45,26 +45,35 @@
 
 ## 3b. Identifiers and the edge weight
 
-- [ ] 3b.1 Move `ContextId` and `ContextoidId` out of `deep_causality_core` into
+- [x] 3b.1 Move `ContextId` and `ContextoidId` out of `deep_causality_core` into
       `deep_causality_context`, with a docstring stating that the width is this crate's decision.
       A move, not a copy: core keeps no context identifier alias
-- [ ] 3b.2 Route the 49 `id:` struct fields through them
-- [ ] 3b.3 Route the 57 function signatures through them
-- [ ] 3b.4 Confirm no raw unsigned integer remains in an identifier position in
+- [x] 3b.2 Route the 49 `id:` struct fields through them
+- [x] 3b.3 Route the 57 function signatures through them
+- [x] 3b.4 Confirm no raw unsigned integer remains in an identifier position in
       `deep_causality_context/src`
-- [ ] 3b.5 Add `Default` to `RelationKind` on the `Datial` variant, documented as the graph bound's
+- [x] 3b.5 Add `Default` to `RelationKind` on the `Datial` variant, documented as the graph bound's
       filler rather than a meaningful relation. A data relation is the least specific of the four,
       so its accidental appearance claims least
-- [ ] 3b.6 Change the backing graph's weight to `RelationKind` and delete the `weight as u64` cast
-- [ ] 3b.7 Add a test asserting an edge's relation is recoverable after storage, which it is not
+- [x] 3b.6 Change the backing graph's weight to `RelationKind` and delete the `weight as u64` cast
+- [x] 3b.7 Add a test asserting an edge's relation is recoverable after storage, which it is not
       today
-- [ ] 3b.8 Re-point `deep_causality`'s four source files and three test files that import the two
+      **`ContextuableGraph` had no way to read an edge back**, only `contains_edge` returning a
+      bool, so the assertion needed `get_edge(a, b) -> Option<&RelationKind>` added beside it,
+      mirroring the existing `contains_node`/`get_node` pair. The test puts two different relations
+      on two edges out of one node, so it fails if the weight collapses to a constant.
+      `ExtendableContextuableGraph` has no counterpart accessor and so still cannot recover an
+      extra context's edge relations — left alone as unrequested scope
+- [x] 3b.8 Re-point `deep_causality`'s four source files and three test files that import the two
       from core, and drop them from its root re-export list — they are context items now, and the
       no-re-export contract already covers those
-- [ ] 3b.9 Confirm each of the two has exactly one declaration site in the workspace
-- [ ] 3b.10 Note that `TeloidTag` and `TeloidID` remain the same defect in core, unmoved here
+- [x] 3b.9 Confirm each of the two has exactly one declaration site in the workspace
+- [x] 3b.10 Note that `TeloidTag` and `TeloidID` remain the same defect in core, unmoved here
       because this change does not touch ethos's vocabulary
-- [ ] 3b.11 `bazel test //...` green
+      **Premise corrected during apply: neither is in core.** Both are declared in
+      `deep_causality_ethos/src/alias/mod.rs`, which is the crate that owns them, so there is no
+      parallel defect to leave behind. Nothing to do
+- [x] 3b.11 `bazel test //...` green
 
 ## 4. Six parameters to four
 
@@ -97,16 +106,20 @@ group 4 is the downstream fan-out that follows from it.
       `Minkowski` names one flat member of it, so the general name survives a merge and the frame's
       constant carries the convention the two names used to carry
 - [ ] 5.2 Delete the `SpaceTimeKind::Minkowski` arm and update every consumer of the removed name
-- [ ] 5.3 Remove `QuaternionSpace` **and** the `SpaceKind::Quaternion` arm, not only the `Spatial`
+- [x] 5.3 Remove `QuaternionSpace` **and** the `SpaceKind::Quaternion` arm, not only the `Spatial`
       impl. A quaternion is a rotation operator acting on a space rather than a space of its own,
       and an orientation belongs beside a position in a pose. Removing the trait alone leaves the
       type reachable as a space through the enum, and the frame spec makes `SpaceKind` the ordinary
       frame member — so the defect would survive exactly where most frames meet it
-- [ ] 5.4 The removal deletes 12 files under `types/context_node_types/space/quaternion_space/` and
+- [x] 5.4 The removal deletes 12 files under `types/context_node_types/space/quaternion_space/` and
       its test directory. **Deletion permission granted by the user, 2026-09-21**, so the golden
       rule's ask is already answered for these files and no further prompt is needed. Confirm the
       count against the tree first; verified self-contained, with no consumer in `deep_causality`,
       `deep_causality_ethos` or the examples
+      **Count corrected during apply: 11 files, not 12** — 8 under `src/.../space/quaternion_space/`
+      and 3 under the matching test directory. Consumers updated: the `SpaceKind` arm and its
+      `Coordinate`/`Identifiable`/`Display` match arms, four module declarations, the root export,
+      two tests, and the two doc lines naming the type as a supported space
 - [ ] 5.5 Add the vertical datum to the geodetic spatial type as a field, and remove the claim from
       the altitude field's doc comment that fixed one reference for the whole type. If it is an
       enum, start from the five ISO 19111-aligned members `WGS84`, `EGM96`, `EGM2008`, `ISA` and

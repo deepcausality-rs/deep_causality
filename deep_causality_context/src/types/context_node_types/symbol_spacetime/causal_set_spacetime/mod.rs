@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::ContextoidId;
 use std::collections::BTreeSet;
 use std::fmt::Display;
 
@@ -42,7 +43,7 @@ use std::fmt::Display;
 #[derive(Debug, Clone, PartialEq)]
 pub struct CausalSetSpacetime {
     /// Unique event identifier
-    pub id: u64,
+    pub id: ContextoidId,
 
     /// Optional label or annotation for semantic reasoning
     pub label: Option<String>,
@@ -52,7 +53,7 @@ pub struct CausalSetSpacetime {
 }
 
 impl CausalSetSpacetime {
-    pub fn new(id: u64, label: Option<String>) -> Self {
+    pub fn new(id: ContextoidId, label: Option<String>) -> Self {
         Self {
             id,
             label,
@@ -63,12 +64,12 @@ impl CausalSetSpacetime {
 
 impl CausalSetSpacetime {
     /// Adds a causal link (edge) from another event that precedes this one.
-    pub fn add_predecessor(&mut self, parent_id: u64) {
+    pub fn add_predecessor(&mut self, parent_id: ContextoidId) {
         self.predecessors.insert(parent_id);
     }
 
     /// Checks whether the current event is causally downstream of another.
-    pub fn is_after(&self, other_id: u64) -> bool {
+    pub fn is_after(&self, other_id: ContextoidId) -> bool {
         self.predecessors.contains(&other_id)
     }
 

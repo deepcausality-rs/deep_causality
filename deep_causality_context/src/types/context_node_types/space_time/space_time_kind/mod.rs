@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::ContextoidId;
 use crate::errors::IndexError;
 use crate::{
     Coordinate, EuclideanSpacetime, LorentzianSpacetime, MinkowskiSpacetime, SpaceTemporal,
@@ -94,7 +95,7 @@ impl Coordinate for SpaceTimeKind {
 }
 
 impl Identifiable for SpaceTimeKind {
-    fn id(&self) -> u64 {
+    fn id(&self) -> ContextoidId {
         match self {
             SpaceTimeKind::Euclidean(euclidean) => euclidean.id(),
             SpaceTimeKind::Lorentzian(lorentzian) => lorentzian.id(),

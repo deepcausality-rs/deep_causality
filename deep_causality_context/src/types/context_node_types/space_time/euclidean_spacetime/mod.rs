@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::ContextoidId;
 mod adjustable;
 mod coordinate;
 mod display;
@@ -60,7 +61,7 @@ use crate::TimeScale;
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct EuclideanSpacetime {
     /// Unique numeric ID for this context
-    id: u64,
+    id: ContextoidId,
     /// Spatial coordinates in `[x, y, z]` (meters)
     x: f64,
     y: f64,
@@ -72,7 +73,7 @@ pub struct EuclideanSpacetime {
 }
 
 impl EuclideanSpacetime {
-    pub fn new(id: u64, x: f64, y: f64, z: f64, t: f64, time_scale: TimeScale) -> Self {
+    pub fn new(id: ContextoidId, x: f64, y: f64, z: f64, t: f64, time_scale: TimeScale) -> Self {
         Self {
             id,
             x,

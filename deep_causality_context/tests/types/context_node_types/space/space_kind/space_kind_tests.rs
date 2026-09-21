@@ -4,7 +4,6 @@
  */
 
 use deep_causality_context::*;
-use std::f64::consts::FRAC_1_SQRT_2;
 
 #[test]
 fn test_identifiable_trait() {
@@ -19,14 +18,6 @@ fn test_coordinate_trait_geo() {
     assert_eq!(*sk.coordinate(0).unwrap(), 52.5);
     assert_eq!(*sk.coordinate(1).unwrap(), 13.4);
     assert_eq!(*sk.coordinate(2).unwrap(), 34.0);
-}
-
-#[test]
-fn test_coordinate_trait_quaternion() {
-    let sk = SpaceKind::Quaternion(QuaternionSpace::new(5, 1.0, 0.0, 0.0, 0.0));
-    assert_eq!(sk.dimension(), 4);
-    assert_eq!(*sk.coordinate(0).unwrap(), 1.0);
-    assert_eq!(*sk.coordinate(3).unwrap(), 0.0);
 }
 
 #[test]
@@ -76,25 +67,15 @@ fn test_all_variants_id_and_display() {
     let ecef = SpaceKind::Ecef(EcefSpace::new(2, 1.0, 2.0, 3.0));
     let eucl = SpaceKind::Euclidean(EuclideanSpace::new(3, 4.0, 5.0, 6.0));
     let ned = SpaceKind::Ned(NedSpace::new(4, 7.0, 8.0, 9.0));
-    let quat = SpaceKind::Quaternion(QuaternionSpace::new(
-        5,
-        FRAC_1_SQRT_2,
-        0.0,
-        0.0,
-        FRAC_1_SQRT_2,
-    ));
-
     assert_eq!(geo.id(), 1);
     assert_eq!(ecef.id(), 2);
     assert_eq!(eucl.id(), 3);
     assert_eq!(ned.id(), 4);
-    assert_eq!(quat.id(), 5);
 
     let _ = format!("{geo}");
     let _ = format!("{ecef}");
     let _ = format!("{eucl}");
     let _ = format!("{ned}");
-    let _ = format!("{quat}");
 }
 
 #[test]

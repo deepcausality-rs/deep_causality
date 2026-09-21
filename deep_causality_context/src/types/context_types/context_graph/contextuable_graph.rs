@@ -5,11 +5,12 @@
 
 use ultragraph::*;
 
+use crate::ContextoidId;
 use crate::{
     Context, ContextIndexError, Contextoid, ContextuableGraph, Datable, RelationKind,
     SpaceTemporal, Spatial, Temporal,
 };
-use deep_causality_core::{ContextoidId, Identifiable};
+use deep_causality_core::Identifiable;
 
 #[allow(clippy::type_complexity)]
 impl<D, S, T, ST> ContextuableGraph<D, S, T, ST> for Context<D, S, T, ST>
@@ -101,7 +102,7 @@ where
             return Err(ContextIndexError(format!("index b {b} not found")));
         };
 
-        if self.base_context.add_edge(a, b, weight as u64).is_err() {
+        if self.base_context.add_edge(a, b, weight).is_err() {
             return Err(ContextIndexError(format!(
                 "Failed to add edge for index a {a} and b {b}"
             )));
@@ -115,6 +116,15 @@ where
     /// You may want to call contains_node first to ascertain that the nodes are in the context.
     fn contains_edge(&self, a: usize, b: usize) -> bool {
         self.base_context.contains_edge(a, b)
+    }
+
+    /// Returns the relation the edge from `a` to `b` carries, or `None` when no such edge exists.
+    fn get_edge(&self, a: usize, b: usize) -> Option<&RelationKind> {
+        self.base_context
+            .get_edges(a)?
+            .into_iter()
+            .find(|(target, _)| *target == b)
+            .map(|(_, weight)| weight)
     }
 
     /// Removes an edge between two nodes.

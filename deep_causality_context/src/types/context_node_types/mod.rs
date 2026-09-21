@@ -33,7 +33,6 @@
 //! | Symbolic AI, planning, rules | `SymbolicTime` | `SymbolicContext` or `SymbolicSpacetime` | You reason in logical or qualitative steps |
 //! | Embedded / step-based systems | `DiscreteTime` | `EuclideanSpace`, `NedSpace` | Your systems run on ticks or control loops |
 //! | Real-world navigation (MagNav, GNSS) | `LorentzianTime` | `GeoSpace`, `EcefSpace`, `NedSpace` | You use real sensors, location data, or earth-fixed frames |
-//! | Robotics, attitude control | `LorentzianTime` | `QuaternionSpace` | You track orientation in 3D space |
 //! | Simulation or animation engines | `DiscreteTime` | `EuclideanSpace` | You simulate systems frame-by-frame |
 //! | Emergent/thermodynamic systems | `EntropicTime` | any | You care about time direction or entropy |
 //! | Human-interpretable traces | `SymbolicTime` | any | You want readable timelines or explainability |

@@ -2,6 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use crate::ContextoidId;
 use deep_causality_core::FloatType;
 use deep_causality_uncertain::{RandScalar, Uncertain};
 
@@ -20,12 +21,12 @@ mod identifiable;
 /// plain [`Data<T>`](crate::Data) already is inside [`BaseContext`](crate::BaseContext).
 #[derive(Debug, Clone)]
 pub struct UncertainData<R: RandScalar> {
-    id: u64,
+    id: ContextoidId,
     data: Uncertain<R>,
 }
 
 impl<R: RandScalar> UncertainData<R> {
-    pub fn new(id: u64, data: Uncertain<R>) -> Self {
+    pub fn new(id: ContextoidId, data: Uncertain<R>) -> Self {
         Self { id, data }
     }
 }

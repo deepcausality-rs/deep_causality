@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::ContextoidId;
 mod adjustable;
 mod coordinate;
 mod display;
@@ -42,14 +43,14 @@ mod spatial;
 ///
 #[derive(Debug, Clone, PartialEq)]
 pub struct EcefSpace {
-    id: u64,
+    id: ContextoidId,
     x: f64,
     y: f64,
     z: f64,
 }
 
 impl EcefSpace {
-    pub fn new(id: u64, x: f64, y: f64, z: f64) -> Self {
+    pub fn new(id: ContextoidId, x: f64, y: f64, z: f64) -> Self {
         Self { id, x, y, z }
     }
 }

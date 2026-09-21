@@ -3,8 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::ContextoidId;
 use crate::errors::IndexError;
-use crate::{Coordinate, EcefSpace, EuclideanSpace, GeoSpace, NedSpace, QuaternionSpace, Spatial};
+use crate::{Coordinate, EcefSpace, EuclideanSpace, GeoSpace, NedSpace, Spatial};
 use deep_causality_core::Identifiable;
 
 /// An enumeration over supported spatial context types.
@@ -14,14 +15,12 @@ use deep_causality_core::Identifiable;
 /// - Euclidean (`EuclideanSpace`)
 /// - Cartesian Earth-fixed (`EcefSpace`)
 /// - Local tangent frame (`NedSpace`)
-/// - 3D orientation (`QuaternionSpace`)
 #[derive(Debug, Clone, PartialEq)]
 pub enum SpaceKind {
     Geo(GeoSpace),
     Ecef(EcefSpace),
     Euclidean(EuclideanSpace),
     Ned(NedSpace),
-    Quaternion(QuaternionSpace),
 }
 
 impl Coordinate for SpaceKind {
@@ -32,7 +31,6 @@ impl Coordinate for SpaceKind {
             SpaceKind::Ecef(s) => s.dimension(),
             SpaceKind::Euclidean(s) => s.dimension(),
             SpaceKind::Ned(s) => s.dimension(),
-            SpaceKind::Quaternion(s) => s.dimension(),
         }
     }
 
@@ -42,19 +40,17 @@ impl Coordinate for SpaceKind {
             SpaceKind::Ecef(s) => s.coordinate(index),
             SpaceKind::Euclidean(s) => s.coordinate(index),
             SpaceKind::Ned(s) => s.coordinate(index),
-            SpaceKind::Quaternion(s) => s.coordinate(index),
         }
     }
 }
 
 impl Identifiable for SpaceKind {
-    fn id(&self) -> u64 {
+    fn id(&self) -> ContextoidId {
         match self {
             SpaceKind::Geo(s) => s.id(),
             SpaceKind::Ecef(s) => s.id(),
             SpaceKind::Euclidean(s) => s.id(),
             SpaceKind::Ned(s) => s.id(),
-            SpaceKind::Quaternion(s) => s.id(),
         }
     }
 }
@@ -68,7 +64,6 @@ impl std::fmt::Display for SpaceKind {
             SpaceKind::Ecef(s) => write!(f, "{s}"),
             SpaceKind::Euclidean(s) => write!(f, "{s}"),
             SpaceKind::Ned(s) => write!(f, "{s}"),
-            SpaceKind::Quaternion(s) => write!(f, "{s}"),
         }
     }
 }

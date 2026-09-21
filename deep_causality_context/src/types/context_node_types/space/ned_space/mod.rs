@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::ContextoidId;
 mod adjustable;
 mod coordinate;
 mod display;
@@ -65,7 +66,7 @@ mod spatial;
 #[derive(Debug, Clone, PartialEq)]
 pub struct NedSpace {
     /// Unique numeric ID for this local NED context
-    id: u64,
+    id: ContextoidId,
     /// Distance north from the reference point (in meters)
     north: f64,
     /// Distance east from the reference point (in meters)
@@ -75,7 +76,7 @@ pub struct NedSpace {
 }
 
 impl NedSpace {
-    pub fn new(id: u64, north: f64, east: f64, down: f64) -> Self {
+    pub fn new(id: ContextoidId, north: f64, east: f64, down: f64) -> Self {
         Self {
             id,
             north,

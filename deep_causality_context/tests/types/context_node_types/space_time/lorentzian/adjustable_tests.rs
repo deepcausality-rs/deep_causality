@@ -82,6 +82,22 @@ fn test_update_nan_should_fail() {
 }
 
 #[test]
+fn test_adjust_with_infinity_should_fail() {
+    let mut s = LorentzianSpacetime::new(1, f64::MAX, 0.0, 0.0, 0.0, TimeScale::Second);
+
+    let grid: ArrayGrid<f64, 4, 4, 4, 4> = ArrayGrid::new(ArrayType::Array3D);
+    grid.set(PointIndex::new3d(0, 0, 0), f64::INFINITY);
+    grid.set(PointIndex::new3d(0, 0, 1), 0.0);
+    grid.set(PointIndex::new3d(0, 0, 2), 0.0);
+    grid.set(PointIndex::new3d(0, 0, 3), 0.0);
+
+    let result = s.adjust(&grid);
+    assert!(result.is_err());
+    let err = result.unwrap_err().to_string();
+    assert!(err.contains("not a finite value"));
+}
+
+#[test]
 fn test_adjust_success() {
     let mut s = LorentzianSpacetime::new(1, 1.0, 2.0, 3.0, 4.0, TimeScale::Second);
 

@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::ContextoidId;
 mod adjustable;
 mod display;
 mod identifiable;
@@ -67,7 +68,7 @@ use crate::{TimeKind, TimeScale};
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct EuclideanTime {
     /// Unique numeric identifier for the time instance.
-    id: u64,
+    id: ContextoidId,
 
     /// Resolution or interpretation of the time unit (e.g., Seconds, Milliseconds).
     time_scale: TimeScale,
@@ -77,7 +78,7 @@ pub struct EuclideanTime {
 }
 
 impl EuclideanTime {
-    pub fn new(id: u64, time_scale: TimeScale, time_unit: f64) -> Self {
+    pub fn new(id: ContextoidId, time_scale: TimeScale, time_unit: f64) -> Self {
         Self {
             id,
             time_scale,

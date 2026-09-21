@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::ContextoidId;
 mod adjustable;
 mod coordinate;
 mod display;
@@ -60,7 +61,7 @@ mod spatial;
 #[derive(Debug, Clone, PartialEq)]
 pub struct GeoSpace {
     /// Unique numeric ID for the spatial context
-    id: u64,
+    id: ContextoidId,
     /// Latitude in decimal degrees (positive north, negative south)
     lat: f64,
     /// Longitude in decimal degrees (positive east, negative west)
@@ -70,7 +71,7 @@ pub struct GeoSpace {
 }
 
 impl GeoSpace {
-    pub fn new(id: u64, lat: f64, lon: f64, alt: f64) -> Self {
+    pub fn new(id: ContextoidId, lat: f64, lon: f64, alt: f64) -> Self {
         Self { id, lat, lon, alt }
     }
 }
