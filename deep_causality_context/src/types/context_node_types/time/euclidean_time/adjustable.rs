@@ -43,7 +43,7 @@ impl<R: RealField + Default> Adjustable<R> for EuclideanTime<R> {
         }
 
         // Check if the new time is non-negative. Unless you want to go back in time...
-        if time_adjustment < R::default() {
+        if time_adjustment < R::zero() {
             return Err(AdjustmentError(
                 "Adjustment failed, new time is NEGATIVE".into(),
             ));
@@ -60,7 +60,7 @@ impl<R: RealField + Default> Adjustable<R> for EuclideanTime<R> {
         }
 
         // Check if the new time is non-zero
-        if adjusted_time == R::default() {
+        if adjusted_time == R::zero() {
             return Err(AdjustmentError(
                 "Adjustment failed, new time is ZERO".into(),
             ));

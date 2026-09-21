@@ -16,14 +16,13 @@ mod identifiable;
 /// wraps a data payload of type `T` and pairs it with a `u64` ID, allowing the
 /// data to be uniquely identified and referenced.
 ///
-/// The struct is designed to be lightweight and efficient, deriving `Copy` and `Clone`
-/// to allow for easy duplication. The trait bounds on `T` ensure that the contained
-/// data is also simple and value-like.
+/// The struct derives `Clone`, so a `Data<T>` duplicates whenever its payload does. The trait
+/// bounds on `T` keep the payload constructible, duplicable, and comparable.
 ///
 /// # Type Parameters
 ///
-/// * `T`: The type of the data payload. It must be a simple, copyable, and comparable
-///   type, satisfying the `Default + Clone + PartialEq` bounds. `Copy` is NOT required: it is
+/// * `T`: The type of the data payload. It must be a comparable type satisfying the
+///   `Default + Clone + PartialEq` bounds. `Copy` is NOT required: it is
 ///   asked for only by the [`Adjustable`](crate::Adjustable) impl, because `ArrayGrid` is backed
 ///   by fixed-size arrays. A `Data<Vec<f64>>` is therefore a valid context node.
 ///

@@ -12,7 +12,7 @@ use std::fmt::{Display, Formatter};
 ///
 /// Format:
 /// ```text
-/// GeoSpace(id="S1", lat=52.52, lon=13.405, alt=34.0, datum=WGS84)
+/// GeoSpace(id=1, lat=52.5200, lon=13.4050, alt=34.0000, datum=WGS84)
 /// ```
 impl<R: RealField + Display> Display for GeoSpace<R> {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {

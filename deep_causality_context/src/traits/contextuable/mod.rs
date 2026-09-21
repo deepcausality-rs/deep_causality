@@ -21,7 +21,6 @@ pub mod temporal;
 /// This trait defines the unified interface over any entity that may be:
 /// - A data node
 /// - A spatial or temporal marker
-/// - A symbolic atom
 /// - A spacetime event
 ///
 /// It is designed to **abstract over the underlying causal semantics**
@@ -32,7 +31,6 @@ pub mod temporal;
 /// - `S`: A [`Spatial`] node
 /// - `T`: A [`Temporal`] node
 /// - `ST`: A [`SpaceTemporal`] node (4D entity)
-/// - `SYM`: A [`Symbolic`] node (logical/abstract)
 ///
 /// # Design Note
 /// This trait is the dispatch point for `ContextoidType`, allowing static or

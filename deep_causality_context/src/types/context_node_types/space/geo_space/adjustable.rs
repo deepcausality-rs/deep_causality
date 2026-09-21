@@ -29,7 +29,7 @@ impl<R: RealField + Default> Adjustable<R> for GeoSpace<R> {
         let new_lon = array_grid.get(p2);
         let new_alt = array_grid.get(p3);
 
-        // Check if the adjusted data are safe to update i.e. not greater than max R value
+        // Reject non-finite adjusted coordinates (NaN, ±inf)
         if !new_lat.is_finite() {
             return Err(UpdateError(
                 "Update failed, new lat value is not finite".into(),
@@ -79,7 +79,7 @@ impl<R: RealField + Default> Adjustable<R> for GeoSpace<R> {
         let adjusted_lon = self.lon + new_lon;
         let adjusted_alt = self.alt + new_alt;
 
-        // Check if the adjusted data are safe to update i.e. not greater than max R value
+        // Reject non-finite adjusted coordinates (NaN, ±inf)
         if !adjusted_lat.is_finite() {
             return Err(AdjustmentError(
                 "Adjustment failed, new lat value is not finite".into(),

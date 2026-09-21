@@ -20,9 +20,9 @@ impl<R: RealField + FromPrimitive> SpaceTemporalInterval for LorentzianSpacetime
             TimeScale::Hour => self.t * lift(3_600.0),
             TimeScale::Day => self.t * lift(86_400.0),
             TimeScale::Week => self.t * lift(604_800.0),
-            TimeScale::Month => self.t * lift(2_629_746.0), // Average month (365.25 days / 12)
+            TimeScale::Month => self.t * lift(2_629_746.0), // Average month (365.2425 days / 12)
             TimeScale::Quarter => self.t * lift(7_889_238.0), // 3 months
-            TimeScale::Year => self.t * lift(31_556_952.0), // Average year (365.25 days)
+            TimeScale::Year => self.t * lift(31_556_952.0), // Gregorian year (365.2425 days)
             // For non-physical time scales, return raw value
             TimeScale::NoScale | TimeScale::Steps | TimeScale::Symbolic => self.t,
         }

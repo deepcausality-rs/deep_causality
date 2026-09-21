@@ -15,7 +15,9 @@ use deep_causality_core::Identifiable;
 /// to time-dependent reasoning.
 ///
 /// # Notes
-/// The numeric type `V` must support ordering and arithmetic if used for inference.
+/// `TimeUnit` carries no bounds. Implementations range from `()` for a timeless node, through
+/// integer ticks, to a real-valued coordinate; ordering and arithmetic are available only where
+/// the concrete `TimeUnit` provides them.
 pub trait Temporal: Identifiable {
     /// The type this node's time is measured in.
     type TimeUnit;
@@ -23,6 +25,6 @@ pub trait Temporal: Identifiable {
     /// Returns the unit scale of time (e.g. `TimeScale::Milliseconds`).
     fn time_scale(&self) -> TimeScale;
 
-    /// Returns a reference to the numeric time unit (e.g. 0, 100, 32768).
+    /// Returns the time unit value (e.g. 0, 100, 32768).
     fn time_unit(&self) -> Self::TimeUnit;
 }

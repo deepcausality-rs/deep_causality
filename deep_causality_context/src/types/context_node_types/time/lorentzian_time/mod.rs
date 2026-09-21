@@ -12,7 +12,6 @@ mod temporable;
 
 use crate::{TimeKind, TimeScale};
 use deep_causality_algebra::RealField;
-use deep_causality_num::FromPrimitive;
 
 /// A time model representing **Lorentzian (physical) time** in relativistic spacetimes.
 ///
@@ -88,7 +87,7 @@ impl<R: RealField> LorentzianTime<R> {
     }
 }
 
-impl<R: RealField + FromPrimitive> From<LorentzianTime<R>> for TimeKind<R> {
+impl<R: RealField> From<LorentzianTime<R>> for TimeKind<R> {
     fn from(t: LorentzianTime<R>) -> Self {
         TimeKind::Lorentzian(t)
     }

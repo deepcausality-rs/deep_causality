@@ -3,6 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::Coordinate;
+
 /// Defines a measurable relationship between two entities within the same space.
 ///
 /// This trait abstracts over geometric or abstract "distance" computations.
@@ -14,12 +16,9 @@
 /// makes sense (e.g. Euclidean points, time series, weighted graphs).
 ///
 /// # Notes
-/// - Units must match across implementations of `V`
+/// - Units must match across implementations of `Self::Coord`
 /// - If you're implementing this in a curved or non-Euclidean space,
 ///   you may need to inject a metric tensor
-///
-use crate::Coordinate;
-
 pub trait Distance: Coordinate {
     /// Computes a scalar distance or influence between `self` and `other`.
     fn distance(&self, other: &Self) -> Self::Coord;

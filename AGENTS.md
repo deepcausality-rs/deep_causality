@@ -200,7 +200,7 @@ deep_causality_utils/deep_causality_{ast, file, par}
 ```
 
 Package names are unchanged, so every `use` statement, every `cargo -p <name>` and every crates.io
-entry reads exactly as before. Only paths moved: a Cargo path dependency into one of the sixteen is
+entry reads exactly as before. Only paths moved: a Cargo path dependency into one of the seventeen is
 `../deep_causality_unified_math/deep_causality_x` and into one of the three is
 `../deep_causality_utils/deep_causality_x`; the Bazel labels are
 `//deep_causality_unified_math/deep_causality_x` and `//deep_causality_utils/deep_causality_x`.
@@ -265,7 +265,7 @@ by crates on both sides of the split.
 
 ## Project Dependencies
 
-Scope: the 30 library crates that are workspace members. Example crates (`examples/*`)
+Scope: the 31 library crates that are workspace members. Example crates (`examples/*`)
 and `yanked/*` are excluded. Third-party crates are resolved from the registry by
 rules_rs into `@crates`; there is no vendored source tree.
 `deep_causality_effects`, `deep_causality_macros` and `deep_causality_sparse` were moved to
@@ -386,7 +386,7 @@ Internal dev-only dependency (tests/benches, not part of any published runtime):
 ### External Dependencies
 
 Only crates with at least one external (crates.io) runtime dependency are listed.
-The other 23 library crates have no external runtime dependencies.
+The other 24 library crates have no external runtime dependencies.
 
 | Crate | External dependency | Status |
 |-------|---------------------|--------|

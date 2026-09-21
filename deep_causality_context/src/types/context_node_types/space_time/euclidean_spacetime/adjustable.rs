@@ -82,7 +82,7 @@ impl<R: RealField + Default> Adjustable<R> for EuclideanSpacetime<R> {
         let adjusted_z = self.z + new_z;
         let adjusted_t = self.t + new_t;
 
-        // Check if the adjusted data are safe to update i.e. not greater than max R value
+        // Reject non-finite adjusted coordinates (NaN, ±inf)
         if !adjusted_x.is_finite() {
             return Err(AdjustmentError(
                 "Adjustment failed, adjusted X is not a finite value ".into(),

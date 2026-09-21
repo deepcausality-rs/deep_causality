@@ -25,7 +25,7 @@ impl<R: RealField + Default> Adjustable<R> for NedSpace<R> {
         let new_east = array_grid.get(p2);
         let new_down = array_grid.get(p3);
 
-        // Check if the adjusted data are safe to update i.e. not greater than max R value
+        // Reject non-finite adjusted coordinates (NaN, ±inf)
         if !new_north.is_finite() {
             return Err(UpdateError(
                 "Update failed, new north value is not finite".into(),
@@ -71,7 +71,7 @@ impl<R: RealField + Default> Adjustable<R> for NedSpace<R> {
         let adjusted_east = self.east + new_east;
         let adjusted_down = self.down + new_down;
 
-        // Check if the adjusted data are safe to update i.e. not greater than max R value
+        // Reject non-finite adjusted coordinates (NaN, ±inf)
         if !adjusted_north.is_finite() {
             return Err(AdjustmentError(
                 "Adjustment failed, new north value is not finite".into(),

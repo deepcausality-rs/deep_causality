@@ -531,3 +531,82 @@ fn test_extra_ctx_get_edge_without_active_context() {
     let context = get_context();
     assert_eq!(context.extra_ctx_get_edge(0, 1), None);
 }
+
+#[test]
+fn test_extra_ctx_get_edge_with_invalid_current_id() {
+    // A map of extra contexts exists, but the current id names none of them. `extra_ctx_add_new`
+    // with `default = false` leaves the current id at 0, which is never a context id.
+    let mut context = get_context();
+    context
+        .extra_ctx_add_new_with_id(1, 10, false)
+        .expect("failed to create the extra context");
+    assert!(context.extra_ctx_check_exists(1));
+    assert_eq!(context.extra_ctx_get_current_id(), 0);
+
+    assert_eq!(context.extra_ctx_get_edge(0, 1), None);
+}
+
+#[test]
+fn test_extra_ctx_get_edge_after_the_current_context_is_unset() {
+    // An edge is stored, and then the current id is cleared. The stored edge is still in the map
+    // under context 1, so a lookup that ignored the current id — by taking the only context, or
+    // the first one — would still find it. It must report nothing instead.
+    let mut context = get_context();
+    let ctx_id = context.extra_ctx_add_new(10, true);
+
+    let a = context
+        .extra_ctx_add_node(Contextoid::new(1, ContextoidType::Root(Root::new(1))))
+        .expect("failed to add node a");
+    let b = context
+        .extra_ctx_add_node(Contextoid::new(2, ContextoidType::Root(Root::new(2))))
+        .expect("failed to add node b");
+    context
+        .extra_ctx_add_edge(a, b, RelationKind::Temporal)
+        .expect("failed to add edge");
+    assert_eq!(
+        context.extra_ctx_get_edge(a, b),
+        Some(&RelationKind::Temporal)
+    );
+
+    context
+        .extra_ctx_unset_current_id()
+        .expect("failed to unset the current extra context");
+    assert_eq!(context.extra_ctx_get_edge(a, b), None);
+
+    // Restoring the current id brings the same edge back, so the edge itself was never touched.
+    context
+        .extra_ctx_set_current_id(ctx_id)
+        .expect("failed to restore the current extra context");
+    assert_eq!(
+        context.extra_ctx_get_edge(a, b),
+        Some(&RelationKind::Temporal)
+    );
+}
+
+#[test]
+fn test_extra_ctx_get_edge_with_unknown_source_node() {
+    // The source index is out of the extra context's range. `get_edges` returns nothing for it,
+    // and the lookup has to pass that on rather than index into the edge list.
+    let mut context = get_context();
+    context.extra_ctx_add_new(10, true);
+
+    let a = context
+        .extra_ctx_add_node(Contextoid::new(1, ContextoidType::Root(Root::new(1))))
+        .expect("failed to add node a");
+    let b = context
+        .extra_ctx_add_node(Contextoid::new(2, ContextoidType::Root(Root::new(2))))
+        .expect("failed to add node b");
+    context
+        .extra_ctx_add_edge(a, b, RelationKind::Spatial)
+        .expect("failed to add edge");
+
+    assert_eq!(
+        context.extra_ctx_get_edge(a, b),
+        Some(&RelationKind::Spatial)
+    );
+    assert_eq!(context.extra_ctx_get_edge(999, b), None);
+    // The target may be unknown too; the search simply finds no match.
+    assert_eq!(context.extra_ctx_get_edge(a, 999), None);
+    // Edges are directed, so the reverse lookup finds nothing even though both nodes exist.
+    assert_eq!(context.extra_ctx_get_edge(b, a), None);
+}

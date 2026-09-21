@@ -51,14 +51,14 @@ impl<R: RealField + Default> Adjustable<R> for LorentzianTime<R> {
         }
 
         // Check for errors i.e. div by zero / overflow and return either an error or OK().
-        if adjusted_time < R::default() {
+        if adjusted_time < R::zero() {
             return Err(AdjustmentError(
                 "Adjustment failed, result is a negative number".into(),
             ));
         }
 
         // Check if the new time is non-zero
-        if adjusted_time == R::default() {
+        if adjusted_time == R::zero() {
             return Err(AdjustmentError(
                 "Adjustment failed, new time is ZERO".into(),
             ));

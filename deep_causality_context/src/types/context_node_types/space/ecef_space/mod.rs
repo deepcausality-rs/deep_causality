@@ -38,7 +38,7 @@ mod spatial;
 /// This type implements:
 /// - `Identifiable`
 /// - `Coordinate`
-/// - `Distance` using the Haversine approximation
+/// - `Distance` as the Euclidean norm over the `x`, `y`, `z` difference
 /// - `Spatial`
 /// - `Display` for human-readable output
 ///

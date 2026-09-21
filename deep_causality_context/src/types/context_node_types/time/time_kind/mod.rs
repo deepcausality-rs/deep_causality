@@ -33,12 +33,12 @@ use deep_causality_algebra::RealField;
 ///
 /// - `Lorentzian(LorentzianTime<R>)`
 ///   - Real-valued time coordinate used in special/general relativity
-///   - Distance signature: `(-+++), t ∈ ℝ`
+///   - Metric signature: `(-+++), t ∈ ℝ`
 ///   - Appears in causal structure and physical propagation
 ///
 /// - `Euclidean(EuclideanTime<R>)`
 ///   - Imaginary time (Wick-rotated), used in quantum/statistical physics
-///   - Distance signature: `(++++)`
+///   - Metric signature: `(++++)`
 ///   - Common in quantum field theory (QFT), path integrals, and lattice simulations
 ///
 /// - `Discrete(DiscreteTime)`
@@ -68,7 +68,7 @@ use deep_causality_algebra::RealField;
 /// # Trait Compatibility
 /// - Implements `Identifiable` based on the inner ID
 /// - Implements `Display` for readable output
-/// - Can be extended to support `Temporal` and `Temporal`
+/// - Implements `Temporal` with `TimeUnit = R`, where `R: FromPrimitive`
 ///
 /// # See also
 /// - `LorentzianTime`, `EuclideanTime`, `DiscreteTime`, `SymbolicTime`

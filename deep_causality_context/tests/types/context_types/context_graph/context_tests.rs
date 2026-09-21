@@ -5,7 +5,7 @@
 
 use deep_causality_context::{
     BaseContext, Context, Contextoid, ContextoidType, ContextuableGraph, EuclideanTime,
-    Identifiable, RelationKind, Root, TimeScale,
+    ExtendableContextuableGraph, Identifiable, RelationKind, Root, TimeScale,
 };
 
 fn get_context() -> BaseContext {
@@ -255,4 +255,109 @@ fn test_to_string() {
     let exp = "Context: id: 1, name: base context, node_count: 0, edge_count: 0".to_string();
     let act = context.to_string();
     assert_eq!(exp, act);
+}
+
+#[test]
+fn test_set_name() {
+    let mut context = get_context();
+    assert_eq!(context.name(), "base context");
+
+    context.set_name("renamed context".to_string());
+    assert_eq!(context.name(), "renamed context");
+    assert_eq!(context.id(), 1, "renaming leaves the identity alone");
+}
+
+#[test]
+fn test_get_node_index_by_id() {
+    let mut context = get_context();
+
+    // Contextoid ids are chosen by the caller and need not be dense or ordered, so the map from
+    // id to graph index is not the identity. Adding them out of order makes that visible: a
+    // lookup that returned the id itself, or the insertion counter, disagrees here.
+    let ids = [42u64, 7, 1000];
+    for (expected_index, id) in ids.iter().enumerate() {
+        let node = Contextoid::new(*id, ContextoidType::Root(Root::new(*id)));
+        let index = context.add_node(node).expect("failed to add node");
+        assert_eq!(index, expected_index);
+    }
+
+    assert_eq!(context.get_node_index_by_id(42), Some(0));
+    assert_eq!(context.get_node_index_by_id(7), Some(1));
+    assert_eq!(context.get_node_index_by_id(1000), Some(2));
+
+    // An id no contextoid carries resolves to nothing rather than to index zero.
+    assert_eq!(context.get_node_index_by_id(0), None);
+    assert_eq!(context.get_node_index_by_id(43), None);
+}
+
+#[test]
+fn test_clone_copies_nodes_edges_and_name() {
+    let mut context = get_context();
+    context.set_name("original".to_string());
+
+    let a = context
+        .add_node(Contextoid::new(11, ContextoidType::Root(Root::new(11))))
+        .expect("failed to add node a");
+    let b = context
+        .add_node(Contextoid::new(
+            22,
+            ContextoidType::Tempoid(EuclideanTime::new(22, TimeScale::Second, 5.0)),
+        ))
+        .expect("failed to add node b");
+    context
+        .add_edge(a, b, RelationKind::Temporal)
+        .expect("failed to add edge");
+
+    let cloned = context.clone();
+
+    assert_eq!(cloned.id(), context.id());
+    assert_eq!(cloned.name(), "original");
+    assert_eq!(cloned.number_of_nodes(), context.number_of_nodes());
+    assert_eq!(cloned.number_of_edges(), context.number_of_edges());
+    assert_eq!(cloned.get_edge(a, b), Some(&RelationKind::Temporal));
+    // The id-to-index map is a separate field from the graph, so a clone that rebuilt the graph
+    // and left the map behind still answers the counts above and fails here.
+    assert_eq!(cloned.get_node_index_by_id(11), Some(a));
+    assert_eq!(cloned.get_node_index_by_id(22), Some(b));
+}
+
+#[test]
+fn test_clone_is_independent_of_the_original() {
+    let mut context = get_context();
+    context
+        .add_node(Contextoid::new(1, ContextoidType::Root(Root::new(1))))
+        .expect("failed to add node");
+
+    let mut cloned = context.clone();
+    cloned.set_name("clone".to_string());
+    cloned
+        .add_node(Contextoid::new(2, ContextoidType::Root(Root::new(2))))
+        .expect("failed to add node to the clone");
+
+    // A clone that shared the graph or the map would carry these writes back.
+    assert_eq!(context.name(), "base context");
+    assert_eq!(context.number_of_nodes(), 1);
+    assert_eq!(context.get_node_index_by_id(2), None);
+
+    assert_eq!(cloned.name(), "clone");
+    assert_eq!(cloned.number_of_nodes(), 2);
+    assert_eq!(cloned.get_node_index_by_id(2), Some(1));
+}
+
+#[test]
+fn test_clone_carries_the_extra_contexts() {
+    let mut context = get_context();
+    let extra_id = context.extra_ctx_add_new(10, true);
+    let node = context
+        .extra_ctx_add_node(Contextoid::new(9, ContextoidType::Root(Root::new(9))))
+        .expect("failed to add node to the extra context");
+
+    let cloned = context.clone();
+
+    // `extra_contexts`, `number_of_extra_contexts` and `extra_context_id` are three separate
+    // fields. A clone that dropped any one of them reports a different answer here.
+    assert!(cloned.extra_ctx_check_exists(extra_id));
+    assert_eq!(cloned.extra_ctx_get_current_id(), extra_id);
+    assert_eq!(cloned.extra_ctx_node_count().unwrap(), 1);
+    assert!(cloned.extra_ctx_contains_node(node));
 }

@@ -12,7 +12,6 @@ mod temporable;
 
 use crate::{TimeKind, TimeScale};
 use deep_causality_algebra::RealField;
-use deep_causality_num::FromPrimitive;
 
 /// A time model based on **Euclidean (imaginary) time**, primarily used in theoretical and computational physics.
 ///
@@ -92,7 +91,7 @@ impl<R: RealField> EuclideanTime<R> {
     }
 }
 
-impl<R: RealField + FromPrimitive> From<EuclideanTime<R>> for TimeKind<R> {
+impl<R: RealField> From<EuclideanTime<R>> for TimeKind<R> {
     fn from(t: EuclideanTime<R>) -> Self {
         TimeKind::Euclidean(t)
     }

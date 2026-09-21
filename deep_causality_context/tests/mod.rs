@@ -7,3 +7,4 @@ mod errors;
 #[cfg(not(miri))]
 mod traits;
 mod types;
+mod utils_test;
