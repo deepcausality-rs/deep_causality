@@ -5,8 +5,7 @@
 
 use deep_causality_context::*;
 
-pub type StdCtx =
-    ContextoidType<Data<i32>, EuclideanSpace, EuclideanTime, EuclideanSpacetime, f64, f64>;
+pub type StdCtx = ContextoidType<Data<i32>, EuclideanSpace, EuclideanTime, EuclideanSpacetime>;
 
 #[test]
 fn test_contextoid_kind_and_accessors() {

@@ -5,4 +5,4 @@
 
 use crate::{MinkowskiSpacetime, Spatial};
 
-impl Spatial<f64> for MinkowskiSpacetime {}
+impl Spatial for MinkowskiSpacetime {}

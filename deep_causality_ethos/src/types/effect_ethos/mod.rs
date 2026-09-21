@@ -24,16 +24,14 @@ use ultragraph::GraphView;
 /// <https://github.com/deepcausality-rs/papers/blob/main/effect_propagation_process/epp.pdf>
 ///
 #[derive(Clone, Debug, Default)]
-pub struct EffectEthos<D, S, T, ST, VS, VT>
+pub struct EffectEthos<D, S, T, ST>
 where
     D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    VS: Clone,
-    VT: Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone,
 {
-    teloid_store: TeloidStore<D, S, T, ST, VS, VT>,
+    teloid_store: TeloidStore<D, S, T, ST>,
     tag_index: TagIndex,
     teloid_graph: TeloidGraph,
     id_to_index_map: HashMap<TeloidID, usize>,
@@ -43,14 +41,12 @@ where
 
 // Constructor and management methods
 #[allow(clippy::type_complexity)]
-impl<D, S, T, ST, VS, VT> EffectEthos<D, S, T, ST, VS, VT>
+impl<D, S, T, ST> EffectEthos<D, S, T, ST>
 where
     D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    VS: Clone,
-    VT: Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone,
 {
     /// Creates a new, empty `EffectEthos`.
     pub fn new() -> Self {
@@ -65,7 +61,7 @@ where
 
     /// Build an effect ethos
     pub fn from(
-        teloid_store: TeloidStore<D, S, T, ST, VS, VT>,
+        teloid_store: TeloidStore<D, S, T, ST>,
         tag_index: TagIndex,
         teloid_graph: TeloidGraph,
     ) -> Self {

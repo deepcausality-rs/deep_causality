@@ -5,7 +5,8 @@
 
 use crate::{EntropicTime, Temporal, TimeScale};
 
-impl Temporal<u64> for EntropicTime {
+impl Temporal for EntropicTime {
+    type TimeUnit = u64;
     fn time_scale(&self) -> TimeScale {
         TimeScale::NoScale
     }

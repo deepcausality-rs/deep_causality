@@ -18,7 +18,9 @@
 /// - If you're implementing this in a curved or non-Euclidean space,
 ///   you may need to inject a metric tensor
 ///
-pub trait Metric<V> {
+use crate::Coordinate;
+
+pub trait Distance: Coordinate {
     /// Computes a scalar distance or influence between `self` and `other`.
-    fn distance(&self, other: &Self) -> V;
+    fn distance(&self, other: &Self) -> Self::Coord;
 }

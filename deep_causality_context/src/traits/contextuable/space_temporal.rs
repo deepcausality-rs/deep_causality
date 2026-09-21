@@ -21,9 +21,9 @@ use deep_causality_core::Identifiable;
 /// # Note
 /// The actual meaning of `t()` depends on the context—e.g., wall clock time,
 /// simulation ticks, or a relativistic coordinate frame.
-pub trait SpaceTemporal<VS, VT>: Identifiable + Spatial<VS> + Temporal<VT> {
+pub trait SpaceTemporal: Identifiable + Spatial + Temporal {
     /// Returns the value associated with the temporal (4th) dimension.
-    fn t(&self) -> &VT;
+    fn t(&self) -> &Self::TimeUnit;
 }
 
 /// Trait for spacetime types that support Minkowski-style interval calculations.

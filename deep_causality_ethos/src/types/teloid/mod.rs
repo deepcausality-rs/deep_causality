@@ -19,21 +19,19 @@ pub type TeloidMetaData = HashMap<String, String>;
 
 #[derive(Debug, Clone)]
 #[allow(clippy::type_complexity)]
-pub struct Teloid<D, S, T, ST, VS, VT>
+pub struct Teloid<D, S, T, ST>
 where
     D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    VS: Clone,
-    VT: Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone,
 {
     id: TeloidID,
     // DDIC Norm Components
     action_identifier: String,
     // A teloid can have either a deterministic or an uncertain predicate.
-    activation_predicate: Option<fn(&Context<D, S, T, ST, VS, VT>, &ProposedAction) -> bool>,
-    uncertain_activation_predicate: Option<UncertainActivationPredicate<D, S, T, ST, VS, VT>>,
+    activation_predicate: Option<fn(&Context<D, S, T, ST>, &ProposedAction) -> bool>,
+    uncertain_activation_predicate: Option<UncertainActivationPredicate<D, S, T, ST>>,
     uncertain_parameter: Option<UncertainParameter>,
     modality: TeloidModal,
 
@@ -47,14 +45,12 @@ where
     metadata: Option<TeloidMetaData>,
 }
 
-impl<D, S, T, ST, VS, VT> Teloid<D, S, T, ST, VS, VT>
+impl<D, S, T, ST> Teloid<D, S, T, ST>
 where
     D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    VS: Clone,
-    VT: Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone,
 {
     /// Creates a new `Teloid` with a deterministic predicate.
     /// This represents a complete, computable norm with a hard, boolean activation condition.
@@ -63,7 +59,7 @@ where
     pub fn new_deterministic(
         id: TeloidID,
         action_identifier: String,
-        activation_predicate: fn(&Context<D, S, T, ST, VS, VT>, &ProposedAction) -> bool,
+        activation_predicate: fn(&Context<D, S, T, ST>, &ProposedAction) -> bool,
         modality: TeloidModal,
         timestamp: u64,
         specificity: u32,
@@ -93,7 +89,7 @@ where
     pub fn new_uncertain(
         id: TeloidID,
         action_identifier: String,
-        uncertain_activation_predicate: UncertainActivationPredicate<D, S, T, ST, VS, VT>,
+        uncertain_activation_predicate: UncertainActivationPredicate<D, S, T, ST>,
         predicate_parameter: UncertainParameter,
         modality: TeloidModal,
         timestamp: u64,

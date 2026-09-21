@@ -21,14 +21,12 @@ pub enum ContextKind {
 }
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
-pub enum ContextoidType<D, S, T, ST, VS, VT>
+pub enum ContextoidType<D, S, T, ST>
 where
     D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    VS: Clone,
-    VT: Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone,
 {
     Datoid(D),
     Tempoid(T),
@@ -36,17 +34,15 @@ where
     Spaceoid(S),
     SpaceTempoid(ST),
     #[doc(hidden)]
-    _Marker(PhantomData<(VS, VT)>),
+    _Marker(PhantomData<()>),
 }
 
-impl<D, S, T, ST, VS, VT> ContextoidType<D, S, T, ST, VS, VT>
+impl<D, S, T, ST> ContextoidType<D, S, T, ST>
 where
     D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    VS: Clone,
-    VT: Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone,
 {
     pub fn kind(&self) -> ContextKind {
         match self {
@@ -60,14 +56,12 @@ where
     }
 }
 
-impl<D, S, T, ST, VS, VT> ContextoidType<D, S, T, ST, VS, VT>
+impl<D, S, T, ST> ContextoidType<D, S, T, ST>
 where
     D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    VS: Clone,
-    VT: Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone,
 {
     pub fn root(&self) -> Option<&Root> {
         if let ContextoidType::Root(b) = self {
@@ -107,14 +101,12 @@ where
     }
 }
 
-impl<D, S, T, ST, VS, VT> Display for ContextoidType<D, S, T, ST, VS, VT>
+impl<D, S, T, ST> Display for ContextoidType<D, S, T, ST>
 where
     D: Display + Datable + Clone,
-    S: Display + Spatial<VS> + Clone,
-    T: Display + Temporal<VT> + Clone,
-    ST: Display + SpaceTemporal<VS, VT> + Clone,
-    VS: Display + Clone,
-    VT: Display + Clone,
+    S: Display + Spatial + Clone,
+    T: Display + Temporal + Clone,
+    ST: Display + SpaceTemporal + Clone,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         match self {

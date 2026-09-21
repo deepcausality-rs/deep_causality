@@ -5,4 +5,4 @@
 
 use crate::{EcefSpace, Spatial};
 
-impl Spatial<f64> for EcefSpace {}
+impl Spatial for EcefSpace {}

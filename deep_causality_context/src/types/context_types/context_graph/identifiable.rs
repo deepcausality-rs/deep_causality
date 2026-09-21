@@ -10,14 +10,12 @@ use crate::{Context, Datable};
 use deep_causality_core::Identifiable;
 
 #[allow(clippy::type_complexity)]
-impl<D, S, T, ST, VS, VT> Identifiable for Context<D, S, T, ST, VS, VT>
+impl<D, S, T, ST> Identifiable for Context<D, S, T, ST>
 where
     D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    VS: Clone,
-    VT: Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone,
 {
     /// Returns the id of the context.
     fn id(&self) -> u64 {

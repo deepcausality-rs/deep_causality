@@ -45,7 +45,7 @@ use crate::{TimeKind, TimeScale};
 ///
 /// # Trait Compatibility
 /// - Implements `Identifiable` via `id`
-/// - Implements `Temporal<f64>` via `time_unit`
+/// - Implements `Temporal` via `time_unit`
 ///
 /// # Theoretical Background
 /// Coordinate time in Lorentzian geometry appears in the invariant spacetime interval:

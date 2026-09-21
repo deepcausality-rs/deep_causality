@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::TeloidStore;
-use deep_causality::{FloatType, NumericalValue};
+use deep_causality::NumericalValue;
 use deep_causality_context::{Data, EuclideanSpace, EuclideanSpacetime, EuclideanTime};
 
 pub type TeloidTag = &'static str;
@@ -41,11 +41,5 @@ pub type TeloidID = u64;
 /// offering a consistent and easily recognizable structure for managing and
 /// querying temporal causal data in general-purpose causal reasoning and
 /// simulation scenarios.
-pub type BaseTeloidStore = TeloidStore<
-    Data<NumericalValue>,
-    EuclideanSpace,
-    EuclideanTime,
-    EuclideanSpacetime,
-    FloatType,
-    FloatType,
->;
+pub type BaseTeloidStore =
+    TeloidStore<Data<NumericalValue>, EuclideanSpace, EuclideanTime, EuclideanSpacetime>;

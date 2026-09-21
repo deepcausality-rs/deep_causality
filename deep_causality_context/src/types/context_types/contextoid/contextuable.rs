@@ -8,16 +8,14 @@ use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
 use crate::{Contextoid, ContextoidType, Datable};
 
-impl<D, S, T, ST, VS, VT> Contextoid<D, S, T, ST, VS, VT>
+impl<D, S, T, ST> Contextoid<D, S, T, ST>
 where
     D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    VS: Clone,
-    VT: Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone,
 {
-    pub fn vertex_type(&self) -> &ContextoidType<D, S, T, ST, VS, VT> {
+    pub fn vertex_type(&self) -> &ContextoidType<D, S, T, ST> {
         &self.vertex_type
     }
 }

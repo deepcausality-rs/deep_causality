@@ -42,8 +42,8 @@
 //!
 //! ## 🔩 How It's Designed
 //!
-//! - All space types implement `Spatial<V>` and `Coordinate<V>`
-//! - All time types implement `Temporal<VT>`
+//! - All space types implement `Spatial` and `Coordinate`
+//! - All time types implement `Temporal`
 //! - `SpaceKind` and `TimeKind` enums allow polymorphic usage in core systems
 //! - Contexts are statically typed, but composable
 //!

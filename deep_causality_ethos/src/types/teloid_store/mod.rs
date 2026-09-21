@@ -11,26 +11,22 @@ mod store;
 /// A generic, in-memory storage for Teloids, indexed by their unique ID.
 #[derive(Debug, Default, Clone)]
 #[allow(clippy::type_complexity)]
-pub struct TeloidStore<D, S, T, ST, VS, VT>
+pub struct TeloidStore<D, S, T, ST>
 where
     D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    VS: Clone,
-    VT: Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone,
 {
-    index: HashMap<TeloidID, Teloid<D, S, T, ST, VS, VT>>,
+    index: HashMap<TeloidID, Teloid<D, S, T, ST>>,
 }
 
-impl<D, S, T, ST, VS, VT> TeloidStore<D, S, T, ST, VS, VT>
+impl<D, S, T, ST> TeloidStore<D, S, T, ST>
 where
     D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    VS: Clone,
-    VT: Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone,
 {
     /// Creates a new, empty `TeloidStore`.
     ///

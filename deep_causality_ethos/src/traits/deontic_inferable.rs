@@ -9,14 +9,12 @@ use deep_causality_context::{Context, Datable, SpaceTemporal, Spatial, Temporal}
 
 /// Defines the public API for a deontic reasoning engine.
 #[allow(clippy::type_complexity)]
-pub trait DeonticInferable<D, S, T, ST, VS, VT>
+pub trait DeonticInferable<D, S, T, ST>
 where
     D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    VS: Clone,
-    VT: Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone,
 {
     /// Evaluates a proposed action against the set of norms within a given context.
     ///
@@ -32,7 +30,7 @@ where
     fn evaluate_action(
         &self,
         action: &ProposedAction,
-        context: &Context<D, S, T, ST, VS, VT>,
+        context: &Context<D, S, T, ST>,
         tags: &[TeloidTag],
     ) -> Result<Verdict, DeonticError>;
 }

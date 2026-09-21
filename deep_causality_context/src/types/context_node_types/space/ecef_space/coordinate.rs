@@ -5,7 +5,8 @@
 
 use crate::{Coordinate, EcefSpace, IndexError};
 
-impl Coordinate<f64> for EcefSpace {
+impl Coordinate for EcefSpace {
+    type Coord = f64;
     /// Returns the number of dimensions in the coordinate system (always 3).
     fn dimension(&self) -> usize {
         3

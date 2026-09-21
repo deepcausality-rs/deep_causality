@@ -10,14 +10,12 @@ use crate::{DeonticError, EffectEthos, Teloid, TeloidID, TeloidRelation};
 use deep_causality_context::{Datable, SpaceTemporal, Spatial, Temporal};
 use ultragraph::{GraphTraversal, GraphView};
 #[allow(clippy::type_complexity)]
-impl<D, S, T, ST, VS, VT> EffectEthos<D, S, T, ST, VS, VT>
+impl<D, S, T, ST> EffectEthos<D, S, T, ST>
 where
     D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    VS: Clone,
-    VT: Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone,
 {
     /// Resolves conflicts among teloids based on a given set of active teloids.
     ///
@@ -45,11 +43,11 @@ where
     /// during the process (e.g., teloid not found).
     pub(super) fn resolve_conflicts(
         &self,
-        active_teloids: &[&Teloid<D, S, T, ST, VS, VT>],
-    ) -> Result<Vec<Teloid<D, S, T, ST, VS, VT>>, DeonticError> {
+        active_teloids: &[&Teloid<D, S, T, ST>],
+    ) -> Result<Vec<Teloid<D, S, T, ST>>, DeonticError> {
         let mut queue: VecDeque<usize> = VecDeque::new();
         let mut visited: HashSet<usize> = HashSet::new();
-        let mut inferred_beliefs: HashMap<TeloidID, Teloid<D, S, T, ST, VS, VT>> = HashMap::new();
+        let mut inferred_beliefs: HashMap<TeloidID, Teloid<D, S, T, ST>> = HashMap::new();
 
         // Use the authoritative mapping maintained by EffectEthos
         let id_to_index = &self.id_to_index_map;

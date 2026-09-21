@@ -9,8 +9,7 @@ use deep_causality_core::Identifiable;
 pub mod coordinate;
 pub mod datable;
 pub mod datable_uncertain;
-pub mod metric;
-pub mod metric_coordinate;
+pub mod distance;
 pub mod metric_tensor;
 pub mod space_temporal;
 pub mod spatial;
@@ -33,25 +32,21 @@ pub mod temporal;
 /// - `T`: A [`Temporal`] node
 /// - `ST`: A [`SpaceTemporal`] node (4D entity)
 /// - `SYM`: A [`Symbolic`] node (logical/abstract)
-/// - `VS`: The numeric or symbolic coordinate type
-/// - `VT`: The numeric or symbolic time type
 ///
 /// # Design Note
 /// This trait is the dispatch point for `ContextoidType`, allowing static or
 /// dynamic graph traversal based on node kind. It intentionally generalizes
 /// over all possible causal node roles.
-pub trait Contextuable<D, S, T, ST, VS, VT>: Identifiable
+pub trait Contextuable<D, S, T, ST>: Identifiable
 where
     D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    VS: Clone,
-    VT: Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone,
 {
     /// Returns a reference to the type-erased node variant.
     ///
     /// Use this to determine the role of the current node (data, space, time, etc.)
     /// and then downcast or dispatch accordingly.
-    fn vertex_type(&self) -> &ContextoidType<D, S, T, ST, VS, VT>;
+    fn vertex_type(&self) -> &ContextoidType<D, S, T, ST>;
 }

@@ -5,7 +5,8 @@
 
 use crate::{DiscreteTime, Temporal, TimeScale};
 
-impl Temporal<u64> for DiscreteTime {
+impl Temporal for DiscreteTime {
+    type TimeUnit = u64;
     fn time_scale(&self) -> TimeScale {
         self.tick_scale
     }

@@ -24,7 +24,8 @@ pub enum SpaceKind {
     Quaternion(QuaternionSpace),
 }
 
-impl Coordinate<f64> for SpaceKind {
+impl Coordinate for SpaceKind {
+    type Coord = f64;
     fn dimension(&self) -> usize {
         match self {
             SpaceKind::Geo(s) => s.dimension(),
@@ -58,7 +59,7 @@ impl Identifiable for SpaceKind {
     }
 }
 
-impl Spatial<f64> for SpaceKind {}
+impl Spatial for SpaceKind {}
 
 impl std::fmt::Display for SpaceKind {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

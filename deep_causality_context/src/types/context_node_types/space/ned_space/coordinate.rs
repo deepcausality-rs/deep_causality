@@ -6,7 +6,8 @@
 use crate::errors::IndexError;
 use crate::{Coordinate, NedSpace};
 
-impl Coordinate<f64> for NedSpace {
+impl Coordinate for NedSpace {
+    type Coord = f64;
     /// Returns the number of dimensions in the coordinate system (always 3).
     fn dimension(&self) -> usize {
         3

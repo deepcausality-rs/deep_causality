@@ -32,12 +32,12 @@ use crate::{DiscreteTime, EntropicTime, EuclideanTime, LorentzianTime};
 ///
 /// - `Lorentzian(LorentzianTime)`
 ///   - Real-valued time coordinate used in special/general relativity
-///   - Metric signature: `(-+++), t ∈ ℝ`
+///   - Distance signature: `(-+++), t ∈ ℝ`
 ///   - Appears in causal structure and physical propagation
 ///
 /// - `Euclidean(EuclideanTime)`
 ///   - Imaginary time (Wick-rotated), used in quantum/statistical physics
-///   - Metric signature: `(++++)`
+///   - Distance signature: `(++++)`
 ///   - Common in quantum field theory (QFT), path integrals, and lattice simulations
 ///
 /// - `Discrete(DiscreteTime)`
@@ -64,7 +64,7 @@ use crate::{DiscreteTime, EntropicTime, EuclideanTime, LorentzianTime};
 /// # Trait Compatibility
 /// - Implements `Identifiable` based on the inner ID
 /// - Implements `Display` for readable output
-/// - Can be extended to support `Temporal<f64>` and `Temporal<u64>`
+/// - Can be extended to support `Temporal` and `Temporal`
 ///
 /// # See also
 /// - `LorentzianTime`, `EuclideanTime`, `DiscreteTime`, `SymbolicTime`

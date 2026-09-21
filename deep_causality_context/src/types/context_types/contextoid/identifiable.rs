@@ -9,14 +9,12 @@ use crate::traits::contextuable::temporal::Temporal;
 use crate::{Contextoid, Datable};
 use deep_causality_core::Identifiable;
 
-impl<D, S, T, ST, VS, VT> Identifiable for Contextoid<D, S, T, ST, VS, VT>
+impl<D, S, T, ST> Identifiable for Contextoid<D, S, T, ST>
 where
     D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    VS: Clone,
-    VT: Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone,
 {
     fn id(&self) -> u64 {
         self.id

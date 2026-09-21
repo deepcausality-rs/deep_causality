@@ -14,7 +14,7 @@ mod temporable;
 /// rather than purely numeric values. It wraps a `SymbolicTimeUnit` enum that encodes
 /// relations like `"Before Event X"`, `"After Event Y"`, or `"Simultaneous with A and B"`,
 /// while also assigning a numeric `i64` scalar value to make it compatible with
-/// systems that require `Temporal<i64>`.
+/// systems that require `Temporal`.
 ///
 /// The `id` field is a globally unique numeric identifier for disambiguation and integration
 /// with `Identifiable` graphs or context systems.
@@ -56,7 +56,7 @@ mod temporable;
 ///
 /// # Trait Compatibility
 /// - Implements `Identifiable` using `id`
-/// - Implements `Temporal<i64>` using the scalar inside the `SymbolicTimeUnit`
+/// - Implements `Temporal` using the scalar inside the `SymbolicTimeUnit`
 /// - Can be used in graphs, timelines, or symbolic propagation engines
 ///
 /// # Note
@@ -84,7 +84,7 @@ impl SymbolicTime {
 ///
 /// Each variant carries a human-readable label (or multiple labels) and a numeric scalar
 /// `i64` value for optional ordering, interval estimation, or compatibility with systems
-/// that require `Temporal<i64>`.
+/// that require `Temporal`.
 ///
 /// # Variants
 ///

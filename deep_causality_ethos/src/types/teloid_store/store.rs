@@ -7,14 +7,12 @@ use deep_causality_context::{Datable, SpaceTemporal, Spatial, Temporal};
 
 use crate::{Teloid, TeloidID, TeloidStorable, TeloidStore};
 
-impl<D, S, T, ST, VS, VT> TeloidStorable<D, S, T, ST, VS, VT> for TeloidStore<D, S, T, ST, VS, VT>
+impl<D, S, T, ST> TeloidStorable<D, S, T, ST> for TeloidStore<D, S, T, ST>
 where
     D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    VS: Clone,
-    VT: Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone,
 {
     /// Inserts a `Teloid` into the store.
     ///
@@ -30,10 +28,7 @@ where
     ///
     /// An `Option` containing the old `Teloid` if the ID already existed, otherwise `None`.
     ///
-    fn insert(
-        &mut self,
-        teloid: Teloid<D, S, T, ST, VS, VT>,
-    ) -> Option<Teloid<D, S, T, ST, VS, VT>> {
+    fn insert(&mut self, teloid: Teloid<D, S, T, ST>) -> Option<Teloid<D, S, T, ST>> {
         self.index.insert(teloid.id(), teloid)
     }
     /// Retrieves a reference to a `Teloid` from the store.
@@ -46,7 +41,7 @@ where
     ///
     /// An `Option` containing a reference to the `Teloid` if it exists, otherwise `None`.
     ///
-    fn get(&self, id: &TeloidID) -> Option<&Teloid<D, S, T, ST, VS, VT>> {
+    fn get(&self, id: &TeloidID) -> Option<&Teloid<D, S, T, ST>> {
         self.index.get(id)
     }
     /// Removes a `Teloid` from the store, returning it.
@@ -59,7 +54,7 @@ where
     ///
     /// An `Option` containing the removed `Teloid` if it existed, otherwise `None`.
     ///
-    fn remove(&mut self, id: &TeloidID) -> Option<Teloid<D, S, T, ST, VS, VT>> {
+    fn remove(&mut self, id: &TeloidID) -> Option<Teloid<D, S, T, ST>> {
         self.index.remove(id)
     }
     /// Updates a `Teloid` in the store. This is an alias for `insert`.
@@ -76,10 +71,7 @@ where
     ///
     /// An `Option` containing the old `Teloid` if the ID already existed, otherwise `None`.
     ///
-    fn update(
-        &mut self,
-        teloid: Teloid<D, S, T, ST, VS, VT>,
-    ) -> Option<Teloid<D, S, T, ST, VS, VT>> {
+    fn update(&mut self, teloid: Teloid<D, S, T, ST>) -> Option<Teloid<D, S, T, ST>> {
         self.index.insert(teloid.id(), teloid)
     }
     /// Checks if the store contains a `Teloid` with the specified ID.

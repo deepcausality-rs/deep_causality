@@ -11,14 +11,12 @@ use crate::traits::contextuable_graph::ContextuableGraph;
 use crate::{Context, Datable};
 
 #[allow(clippy::type_complexity)]
-impl<D, S, T, ST, VS, VT> Context<D, S, T, ST, VS, VT>
+impl<D, S, T, ST> Context<D, S, T, ST>
 where
     D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    VS: Clone,
-    VT: Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone,
 {
     fn format(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         write!(
@@ -32,28 +30,24 @@ where
     }
 }
 
-impl<D, S, T, ST, VS, VT> Debug for Context<D, S, T, ST, VS, VT>
+impl<D, S, T, ST> Debug for Context<D, S, T, ST>
 where
     D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    VS: Clone,
-    VT: Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         self.format(f)
     }
 }
 
-impl<D, S, T, ST, VS, VT> Display for Context<D, S, T, ST, VS, VT>
+impl<D, S, T, ST> Display for Context<D, S, T, ST>
 where
     D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    VS: Clone,
-    VT: Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone,
 {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         self.format(f)

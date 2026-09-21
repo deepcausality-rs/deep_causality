@@ -147,20 +147,18 @@ impl Interpreter {
     /// - Complete audit log of all operations
     #[allow(clippy::type_complexity)]
     #[allow(clippy::type_complexity)]
-    pub fn execute<I, O, D, S, T, ST, VS, VT>(
+    pub fn execute<I, O, D, S, T, ST>(
         &self,
-        tree: &OpTree<I, O, Context<D, S, T, ST, VS, VT>, Contextoid<D, S, T, ST, VS, VT>>,
-        initial_state: CausalSystemState<I, O, Context<D, S, T, ST, VS, VT>>,
-    ) -> AuditableGraphGenerator<CausalSystemState<I, O, Context<D, S, T, ST, VS, VT>>>
+        tree: &OpTree<I, O, Context<D, S, T, ST>, Contextoid<D, S, T, ST>>,
+        initial_state: CausalSystemState<I, O, Context<D, S, T, ST>>,
+    ) -> AuditableGraphGenerator<CausalSystemState<I, O, Context<D, S, T, ST>>>
     where
         I: Default + Clone,
         O: Default + Debug + Clone,
         D: Datable + Clone + PartialEq + std::fmt::Debug,
-        S: Spatial<VS> + Clone + std::fmt::Debug,
-        T: Temporal<VT> + Clone + std::fmt::Debug,
-        ST: SpaceTemporal<VS, VT> + Clone + std::fmt::Debug,
-        VS: Clone + std::fmt::Debug,
-        VT: Clone + std::fmt::Debug,
+        S: Spatial + Clone + std::fmt::Debug,
+        T: Temporal + Clone + std::fmt::Debug,
+        ST: SpaceTemporal + Clone + std::fmt::Debug,
     {
         self.walk(tree, initial_state)
     }
@@ -171,20 +169,18 @@ impl Interpreter {
     /// applying each operation and composing the results monadically.
     #[allow(clippy::only_used_in_recursion)]
     #[allow(clippy::type_complexity)]
-    fn walk<I, O, D, S, T, ST, VS, VT>(
+    fn walk<I, O, D, S, T, ST>(
         &self,
-        op_node: &OpTree<I, O, Context<D, S, T, ST, VS, VT>, Contextoid<D, S, T, ST, VS, VT>>,
-        state: CausalSystemState<I, O, Context<D, S, T, ST, VS, VT>>,
-    ) -> AuditableGraphGenerator<CausalSystemState<I, O, Context<D, S, T, ST, VS, VT>>>
+        op_node: &OpTree<I, O, Context<D, S, T, ST>, Contextoid<D, S, T, ST>>,
+        state: CausalSystemState<I, O, Context<D, S, T, ST>>,
+    ) -> AuditableGraphGenerator<CausalSystemState<I, O, Context<D, S, T, ST>>>
     where
         I: Default + Clone,
         O: Default + Debug + Clone,
         D: Datable + Clone + PartialEq + std::fmt::Debug,
-        S: Spatial<VS> + Clone + std::fmt::Debug,
-        T: Temporal<VT> + Clone + std::fmt::Debug,
-        ST: SpaceTemporal<VS, VT> + Clone + std::fmt::Debug,
-        VS: Clone + std::fmt::Debug,
-        VT: Clone + std::fmt::Debug,
+        S: Spatial + Clone + std::fmt::Debug,
+        T: Temporal + Clone + std::fmt::Debug,
+        ST: SpaceTemporal + Clone + std::fmt::Debug,
     {
         type Witness = <GraphGeneratableEffectSystem as Effect3>::HktWitness;
 

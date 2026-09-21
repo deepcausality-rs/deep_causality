@@ -5,7 +5,7 @@
 
 use crate::{SpaceTemporal, TangentSpacetime};
 
-impl SpaceTemporal<f64, f64> for TangentSpacetime {
+impl SpaceTemporal for TangentSpacetime {
     fn t(&self) -> &f64 {
         &self.t
     }

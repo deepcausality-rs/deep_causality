@@ -5,4 +5,4 @@
 
 use crate::{NedSpace, Spatial};
 
-impl Spatial<f64> for NedSpace {}
+impl Spatial for NedSpace {}

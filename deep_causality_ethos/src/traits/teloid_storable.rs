@@ -4,14 +4,12 @@
  */
 use crate::{Teloid, TeloidID};
 use deep_causality_context::{Datable, SpaceTemporal, Spatial, Temporal};
-pub trait TeloidStorable<D, S, T, ST, VS, VT>
+pub trait TeloidStorable<D, S, T, ST>
 where
     D: Clone + Datable,
-    S: Clone + Spatial<VS>,
-    ST: Clone + SpaceTemporal<VS, VT>,
-    T: Clone + Temporal<VT>,
-    VS: Clone,
-    VT: Clone,
+    S: Clone + Spatial,
+    ST: Clone + SpaceTemporal,
+    T: Clone + Temporal,
 {
     /// Inserts a `Teloid` into the store.
     ///
@@ -27,10 +25,7 @@ where
     ///
     /// An `Option` containing the old `Teloid` if the ID already existed, otherwise `None`.
     ///
-    fn insert(
-        &mut self,
-        teloid: Teloid<D, S, T, ST, VS, VT>,
-    ) -> Option<Teloid<D, S, T, ST, VS, VT>>;
+    fn insert(&mut self, teloid: Teloid<D, S, T, ST>) -> Option<Teloid<D, S, T, ST>>;
     /// Retrieves a reference to a `Teloid` from the store.
     ///
     /// # Arguments
@@ -41,7 +36,7 @@ where
     ///
     /// An `Option` containing a reference to the `Teloid` if it exists, otherwise `None`.
     ///
-    fn get(&self, id: &TeloidID) -> Option<&Teloid<D, S, T, ST, VS, VT>>;
+    fn get(&self, id: &TeloidID) -> Option<&Teloid<D, S, T, ST>>;
     /// Removes a `Teloid` from the store, returning it.
     ///
     /// # Arguments
@@ -52,7 +47,7 @@ where
     ///
     /// An `Option` containing the removed `Teloid` if it existed, otherwise `None`.
     ///
-    fn remove(&mut self, id: &TeloidID) -> Option<Teloid<D, S, T, ST, VS, VT>>;
+    fn remove(&mut self, id: &TeloidID) -> Option<Teloid<D, S, T, ST>>;
     /// Updates a `Teloid` in the store. This is an alias for `insert`.
     ///
     /// If the store did not have this ID present, `None` is returned.
@@ -67,10 +62,7 @@ where
     ///
     /// An `Option` containing the old `Teloid` if the ID already existed, otherwise `None`.
     ///
-    fn update(
-        &mut self,
-        teloid: Teloid<D, S, T, ST, VS, VT>,
-    ) -> Option<Teloid<D, S, T, ST, VS, VT>>;
+    fn update(&mut self, teloid: Teloid<D, S, T, ST>) -> Option<Teloid<D, S, T, ST>>;
     /// Checks if the store contains a `Teloid` with the specified ID.
     ///
     /// # Arguments

@@ -3,10 +3,10 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{GeoSpace, Metric};
+use crate::{Distance, GeoSpace};
 
-// Metric (with simple haversine approximation)
-impl Metric<f64> for GeoSpace {
+// Distance (with simple haversine approximation)
+impl Distance for GeoSpace {
     fn distance(&self, other: &Self) -> f64 {
         let radius = 6_371_000.0; // Earth's mean radius in meters
 

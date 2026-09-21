@@ -55,6 +55,6 @@ fn test_metric_trait() {
 
 #[test]
 fn test_spatial_trait_is_implemented() {
-    fn assert_spatial_impl<T: Spatial<f64>>() {}
+    fn assert_spatial_impl<T: Spatial>() {}
     assert_spatial_impl::<NedSpace>();
 }

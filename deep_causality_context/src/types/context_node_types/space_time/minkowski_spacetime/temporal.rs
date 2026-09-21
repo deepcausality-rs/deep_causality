@@ -5,7 +5,8 @@
 
 use crate::{MinkowskiSpacetime, Temporal, TimeScale};
 
-impl Temporal<f64> for MinkowskiSpacetime {
+impl Temporal for MinkowskiSpacetime {
+    type TimeUnit = f64;
     fn time_scale(&self) -> TimeScale {
         self.time_scale
     }

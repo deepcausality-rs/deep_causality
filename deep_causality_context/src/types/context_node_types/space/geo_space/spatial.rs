@@ -5,4 +5,4 @@
 
 use crate::{GeoSpace, Spatial};
 
-impl Spatial<f64> for GeoSpace {}
+impl Spatial for GeoSpace {}

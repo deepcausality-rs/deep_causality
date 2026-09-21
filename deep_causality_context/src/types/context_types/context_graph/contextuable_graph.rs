@@ -12,19 +12,14 @@ use crate::{
 use deep_causality_core::{ContextoidId, Identifiable};
 
 #[allow(clippy::type_complexity)]
-impl<D, S, T, ST, VS, VT> ContextuableGraph<D, S, T, ST, VS, VT> for Context<D, S, T, ST, VS, VT>
+impl<D, S, T, ST> ContextuableGraph<D, S, T, ST> for Context<D, S, T, ST>
 where
     D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    VS: Clone,
-    VT: Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone,
 {
-    fn add_node(
-        &mut self,
-        value: Contextoid<D, S, T, ST, VS, VT>,
-    ) -> Result<usize, ContextIndexError> {
+    fn add_node(&mut self, value: Contextoid<D, S, T, ST>) -> Result<usize, ContextIndexError> {
         let contextoid_id = value.id();
         let index = match self.base_context.add_node(value) {
             Ok(index) => index,
@@ -41,7 +36,7 @@ where
 
     /// Returns a reference to the contextoid with the given index.
     /// If the context does not contain the contextoid, it will return None.
-    fn get_node(&self, index: usize) -> Option<&Contextoid<D, S, T, ST, VS, VT>> {
+    fn get_node(&self, index: usize) -> Option<&Contextoid<D, S, T, ST>> {
         self.base_context.get_node(index)
     }
 
@@ -66,7 +61,7 @@ where
     fn update_node(
         &mut self,
         node_id: ContextoidId,
-        new_node: Contextoid<D, S, T, ST, VS, VT>,
+        new_node: Contextoid<D, S, T, ST>,
     ) -> Result<(), ContextIndexError> {
         if let Some(&index_to_update) = self.id_to_index_map.get(&node_id) {
             let new_node_id = new_node.id(); // Extract the new node's ID

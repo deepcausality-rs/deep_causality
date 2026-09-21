@@ -26,7 +26,9 @@ use crate::IndexError;
 ///     z: f64,
 /// }
 ///
-/// impl Coordinate<f64> for Vec3D {
+/// impl Coordinate for Vec3D {
+///     type Coord = f64;
+///
 ///     fn dimension(&self) -> usize {
 ///         3
 ///     }
@@ -41,7 +43,10 @@ use crate::IndexError;
 ///     }
 /// }
 /// ```
-pub trait Coordinate<V> {
+pub trait Coordinate {
+    /// The type each axis of this coordinate system is measured in.
+    type Coord;
+
     /// Returns the number of dimensions defined in this coordinate system.
     fn dimension(&self) -> usize;
 
@@ -49,5 +54,5 @@ pub trait Coordinate<V> {
     ///
     /// # Errors
     /// Returns `IndexError` if the index is out of bounds.
-    fn coordinate(&self, index: usize) -> Result<&V, IndexError>;
+    fn coordinate(&self, index: usize) -> Result<&Self::Coord, IndexError>;
 }

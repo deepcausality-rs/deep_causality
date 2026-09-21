@@ -5,4 +5,4 @@
 
 use crate::{LorentzianSpacetime, Spatial};
 
-impl Spatial<f64> for LorentzianSpacetime {}
+impl Spatial for LorentzianSpacetime {}

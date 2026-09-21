@@ -595,8 +595,10 @@ dependencies = [
 name = "deep_causality_context"
 version = "0.1.0"
 dependencies = [
+ "deep_causality_algebra",
  "deep_causality_core",
  "deep_causality_data_structures",
+ "deep_causality_metric",
  "deep_causality_uncertain",
  "ultragraph",
 ]

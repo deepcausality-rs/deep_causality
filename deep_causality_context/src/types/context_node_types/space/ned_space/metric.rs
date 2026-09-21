@@ -3,9 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Metric, NedSpace};
+use crate::{Distance, NedSpace};
 
-impl Metric<f64> for NedSpace {
+impl Distance for NedSpace {
     fn distance(&self, other: &Self) -> f64 {
         let dn = self.north - other.north;
         let de = self.east - other.east;

@@ -40,12 +40,20 @@ exclude = [
 # Disabled by default to use native Rust rng instead.
 os-random = ["deep_causality_uncertain/os-random"]
 
+[dependencies.deep_causality_algebra]
+workspace = true
+features = ["default"]
+
 [dependencies.deep_causality_core]
 workspace = true
 features = ["default"]
 
 [dependencies.deep_causality_data_structures]
 workspace = true
+
+[dependencies.deep_causality_metric]
+workspace = true
+features = ["default"]
 
 [dependencies.deep_causality_uncertain]
 workspace = true

@@ -8,7 +8,7 @@
 //! `Base*` fixes concrete Euclidean space, time and spacetime; `Uniform*` uses the `Kind` enums so
 //! one type signature serves every space, time and spacetime variant.
 
-use deep_causality_core::{FloatType, NumberType, NumericalValue};
+use deep_causality_core::{NumberType, NumericalValue};
 
 use crate::{
     Context, Contextoid, Data, EuclideanSpace, EuclideanSpacetime, EuclideanTime, SpaceKind,
@@ -36,22 +36,12 @@ use crate::{
 /// - **`EuclideanSpacetime`**: Combines the Euclidean spatial and temporal
 ///   contexts into a unified spacetime representation, where both space and
 ///   time are treated with Euclidean properties.
-/// - **`FloatType` (x2)**: Two `FloatType` parameters, which are typically
-///   used for internal calculations, scalar values, metrics, or other generic
-///   numerical requirements within the `Context` structure, such as probabilities,
-///   weights, or magnitudes.
 ///
 /// This `BaseContext` is designed to be a sensible default for many applications,
 /// offering a consistent and easily recognizable context structure for
 /// general-purpose causal reasoning and data representation.
-pub type BaseContext = Context<
-    Data<NumericalValue>,
-    EuclideanSpace,
-    EuclideanTime,
-    EuclideanSpacetime,
-    FloatType,
-    FloatType,
->;
+pub type BaseContext =
+    Context<Data<NumericalValue>, EuclideanSpace, EuclideanTime, EuclideanSpacetime>;
 
 /// A type alias for a default, general-purpose `Contextoid` configuration.
 ///
@@ -72,21 +62,12 @@ pub type BaseContext = Context<
 /// - **`EuclideanSpacetime`**: Combines the Euclidean spatial and temporal
 ///   contexts into a unified spacetime representation (a `SpaceTempoid`).
 ///
-/// The two `FloatType` parameters correspond to the generic `VS` and `VT` types
-/// required by the underlying `Contextoid` structure, representing the value types
-/// for spatial and temporal coordinates, respectively.
 ///
 /// This `BaseContextoid` is the standard choice for creating individual context nodes
 /// that are compatible with other "base" types like `BaseContext` and `BaseCausalGraph`,
 /// ensuring a consistent and easily understandable modeling environment.
-pub type BaseContextoid = Contextoid<
-    Data<NumericalValue>,
-    EuclideanSpace,
-    EuclideanTime,
-    EuclideanSpacetime,
-    FloatType,
-    FloatType,
->;
+pub type BaseContextoid =
+    Contextoid<Data<NumericalValue>, EuclideanSpace, EuclideanTime, EuclideanSpacetime>;
 
 /// A type alias for a default, general-purpose `Context` configuration that uses
 /// abstract "kind" enums for its spatial, temporal, and symbolic contexts.
@@ -115,10 +96,6 @@ pub type BaseContextoid = Contextoid<
 ///   unified spacetime representation using an abstract `SpaceTimeKind` enum,
 ///   allowing for various spacetime geometries (e.g., `EuclideanSpacetime`,
 ///   `LorentzianSpacetime`, `MinkowskiSpacetime`) in a uniform manner.
-/// - **`FloatType` (x2)**: Two `FloatType` parameters, typically used for
-///   internal calculations, scalar values, metrics, or other generic numerical
-///   requirements within the `Context` structure, such as probabilities, weights,
-///   or magnitudes. `FloatType` is generally an alias for a standard floating-point type.
 ///
 /// This `UniformContext` is designed to be a sensible default for many applications
 /// requiring a flexible yet consistent context structure that can adapt to different
@@ -126,8 +103,7 @@ pub type BaseContextoid = Contextoid<
 /// respective `Kind` enums. It promotes code reusability and simplifies type
 /// declarations when the exact concrete type of a context component is not
 /// fixed but rather belongs to a set of predefined "kinds".
-pub type UniformContext =
-    Context<Data<NumberType>, SpaceKind, TimeKind, SpaceTimeKind, FloatType, FloatType>;
+pub type UniformContext = Context<Data<NumberType>, SpaceKind, TimeKind, SpaceTimeKind>;
 
 /// A type alias for a default, general-purpose `Contextoid` configuration that uses
 /// abstract "kind" enums for its spatial, temporal, and symbolic contexts.
@@ -156,10 +132,6 @@ pub type UniformContext =
 ///   unified spacetime representation using an abstract `SpaceTimeKind` enum,
 ///   allowing for various spacetime geometries (e.g., `EuclideanSpacetime`,
 ///   `LorentzianSpacetime`, `MinkowskiSpacetime`) in a uniform manner.
-/// - **`FloatType` (x2)**: Two `FloatType` parameters, typically used for
-///   internal calculations, scalar values, metrics, or other generic numerical
-///   requirements within the `Contextoid` structure, such as probabilities, weights,
-///   or magnitudes. `FloatType` is generally an alias for a standard floating-point type.
 ///
 /// This `UniformContextoid` is designed to be a sensible default for many applications
 /// requiring a flexible yet consistent contextoid structure that can adapt to different
@@ -167,5 +139,4 @@ pub type UniformContext =
 /// respective `Kind` enums. It promotes code reusability and simplifies type
 /// declarations when the exact concrete type of a context component is not
 /// fixed but rather belongs to a set of predefined "kinds".
-pub type UniformContextoid =
-    Contextoid<Data<NumberType>, SpaceKind, TimeKind, SpaceTimeKind, FloatType, FloatType>;
+pub type UniformContextoid = Contextoid<Data<NumberType>, SpaceKind, TimeKind, SpaceTimeKind>;

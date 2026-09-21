@@ -6,14 +6,12 @@
 use crate::Teloid;
 use deep_causality_context::{Datable, SpaceTemporal, Spatial, Temporal};
 
-impl<D, S, T, ST, VS, VT> std::fmt::Display for Teloid<D, S, T, ST, VS, VT>
+impl<D, S, T, ST> std::fmt::Display for Teloid<D, S, T, ST>
 where
     D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    VS: Clone,
-    VT: Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(

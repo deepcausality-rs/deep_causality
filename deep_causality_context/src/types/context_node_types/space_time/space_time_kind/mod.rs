@@ -44,10 +44,10 @@ use std::fmt::Formatter;
 /// `SpaceTimeKind` implements:
 ///
 /// - [`Identifiable`]: Unique ID for referencing entities.
-/// - [`Coordinate<f64>`]: Spatial dimensionality and index access.
-/// - [`Temporal<f64>`]: Temporal metadata and tick-based behavior.
-/// - [`Spatial<f64>`]: Marker trait for spatial context.
-/// - [`SpaceTemporal<f64, f64>`]: Full space-time reasoning abstraction.
+/// - [`Coordinate`]: Spatial dimensionality and index access.
+/// - [`Temporal`]: Temporal metadata and tick-based behavior.
+/// - [`Spatial`]: Marker trait for spatial context.
+/// - [`SpaceTemporal`]: Full space-time reasoning abstraction.
 ///
 /// # Index Mapping
 /// Coordinate indexing depends on the inner type variant. The most common mapping is:
@@ -72,7 +72,8 @@ pub enum SpaceTimeKind {
     Tangent(TangentSpacetime),
 }
 
-impl Coordinate<f64> for SpaceTimeKind {
+impl Coordinate for SpaceTimeKind {
+    type Coord = f64;
     fn dimension(&self) -> usize {
         match self {
             SpaceTimeKind::Euclidean(euclidean) => euclidean.dimension(),
@@ -103,9 +104,10 @@ impl Identifiable for SpaceTimeKind {
     }
 }
 
-impl Spatial<f64> for SpaceTimeKind {}
+impl Spatial for SpaceTimeKind {}
 
-impl Temporal<f64> for SpaceTimeKind {
+impl Temporal for SpaceTimeKind {
+    type TimeUnit = f64;
     fn time_scale(&self) -> TimeScale {
         match self {
             SpaceTimeKind::Euclidean(euclidean) => euclidean.time_scale(),
@@ -125,7 +127,7 @@ impl Temporal<f64> for SpaceTimeKind {
     }
 }
 
-impl SpaceTemporal<f64, f64> for SpaceTimeKind {
+impl SpaceTemporal for SpaceTimeKind {
     fn t(&self) -> &f64 {
         match self {
             SpaceTimeKind::Euclidean(euclidean) => euclidean.t(),

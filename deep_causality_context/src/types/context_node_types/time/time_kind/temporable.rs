@@ -5,7 +5,8 @@
 
 use crate::{Temporal, TimeKind, TimeScale};
 
-impl Temporal<f64> for TimeKind {
+impl Temporal for TimeKind {
+    type TimeUnit = f64;
     fn time_scale(&self) -> TimeScale {
         match self {
             TimeKind::Discrete(t) => t.time_scale(),

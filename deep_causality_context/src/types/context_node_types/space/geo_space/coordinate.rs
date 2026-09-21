@@ -6,7 +6,8 @@
 use crate::errors::IndexError;
 use crate::{Coordinate, GeoSpace};
 
-impl Coordinate<f64> for GeoSpace {
+impl Coordinate for GeoSpace {
+    type Coord = f64;
     fn dimension(&self) -> usize {
         3
     }

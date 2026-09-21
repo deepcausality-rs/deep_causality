@@ -5,4 +5,4 @@
 
 use crate::{EuclideanSpacetime, Spatial};
 
-impl Spatial<f64> for EuclideanSpacetime {}
+impl Spatial for EuclideanSpacetime {}

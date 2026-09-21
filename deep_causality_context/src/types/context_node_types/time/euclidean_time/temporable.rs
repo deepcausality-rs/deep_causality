@@ -5,7 +5,8 @@
 
 use crate::{EuclideanTime, Temporal, TimeScale};
 
-impl Temporal<f64> for EuclideanTime {
+impl Temporal for EuclideanTime {
+    type TimeUnit = f64;
     fn time_scale(&self) -> TimeScale {
         self.time_scale
     }

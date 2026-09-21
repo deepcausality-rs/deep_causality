@@ -3,9 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{EcefSpace, Metric};
+use crate::{Distance, EcefSpace};
 
-impl Metric<f64> for EcefSpace {
+impl Distance for EcefSpace {
     fn distance(&self, other: &Self) -> f64 {
         let dx = self.x - other.x;
         let dy = self.y - other.y;

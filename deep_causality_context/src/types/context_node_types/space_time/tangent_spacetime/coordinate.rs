@@ -6,7 +6,8 @@
 use crate::errors::IndexError;
 use crate::{Coordinate, TangentSpacetime};
 
-impl Coordinate<f64> for TangentSpacetime {
+impl Coordinate for TangentSpacetime {
+    type Coord = f64;
     /// Returns the number of dimensions in the coordinate system (always 4).
     fn dimension(&self) -> usize {
         4

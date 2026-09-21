@@ -7,14 +7,12 @@ use crate::{DeonticError, EffectEthos};
 use deep_causality_context::{Datable, SpaceTemporal, Spatial, Temporal};
 use ultragraph::TopologicalGraphAlgorithms;
 #[allow(clippy::type_complexity)]
-impl<D, S, T, ST, VS, VT> EffectEthos<D, S, T, ST, VS, VT>
+impl<D, S, T, ST> EffectEthos<D, S, T, ST>
 where
     D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    VS: Clone,
-    VT: Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone,
 {
     pub fn is_verified(&self) -> bool {
         self.is_verified

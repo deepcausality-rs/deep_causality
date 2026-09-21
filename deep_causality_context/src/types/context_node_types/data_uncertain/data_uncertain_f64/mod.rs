@@ -16,7 +16,7 @@ mod identifiable;
 ///
 /// `R` is whatever scalar the quantity is carried at. Making it one costs `Context` nothing:
 /// [`Datable`](crate::Datable) has an associated `Data` type rather than a parameter of its own, so
-/// `UncertainData<R>` is just another `D` in `Context<D, S, T, ST, VS, VT>` — exactly as the
+/// `UncertainData<R>` is just another `D` in `Context<D, S, T, ST>` — exactly as the
 /// plain [`Data<T>`](crate::Data) already is inside [`BaseContext`](crate::BaseContext).
 #[derive(Debug, Clone)]
 pub struct UncertainData<R: RandScalar> {

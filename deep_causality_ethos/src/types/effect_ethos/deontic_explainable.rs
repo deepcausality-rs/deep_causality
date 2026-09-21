@@ -8,15 +8,12 @@ use crate::{DeonticError, EffectEthos, TeloidModal, Verdict};
 use deep_causality_context::{Datable, SpaceTemporal, Spatial, Temporal};
 
 #[allow(clippy::type_complexity)]
-impl<D, S, T, ST, VS, VT> DeonticExplainable<D, S, T, ST, VS, VT>
-    for EffectEthos<D, S, T, ST, VS, VT>
+impl<D, S, T, ST> DeonticExplainable<D, S, T, ST> for EffectEthos<D, S, T, ST>
 where
     D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    VS: Clone,
-    VT: Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone,
 {
     fn explain_verdict(&self, verdict: &Verdict) -> Result<String, DeonticError> {
         let mut explanation = format!("The final verdict is {}.\n\n", verdict.outcome());

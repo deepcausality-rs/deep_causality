@@ -6,7 +6,8 @@
 use crate::errors::IndexError;
 use crate::{Coordinate, EuclideanSpacetime};
 
-impl Coordinate<f64> for EuclideanSpacetime {
+impl Coordinate for EuclideanSpacetime {
+    type Coord = f64;
     /// Returns the number of dimensions in the coordinate system (always 4).
     fn dimension(&self) -> usize {
         4

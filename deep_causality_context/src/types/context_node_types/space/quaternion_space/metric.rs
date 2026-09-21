@@ -3,9 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Metric, QuaternionSpace};
+use crate::{Distance, QuaternionSpace};
 
-impl Metric<f64> for QuaternionSpace {
+impl Distance for QuaternionSpace {
     /// Computes the Euclidean distance between two quaternions in 4D space.
     ///
     /// The quaternion is treated as a 4D vector in ℝ⁴ with components `[w, x, y, z]`.

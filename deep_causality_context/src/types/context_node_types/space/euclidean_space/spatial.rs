@@ -5,4 +5,4 @@
 
 use crate::{EuclideanSpace, Spatial};
 
-impl Spatial<f64> for EuclideanSpace {}
+impl Spatial for EuclideanSpace {}

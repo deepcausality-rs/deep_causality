@@ -30,26 +30,21 @@ use deep_causality_core::ContextoidId;
 /// Methods return Result or Option types for error handling.
 ///
 #[allow(clippy::type_complexity)]
-pub trait ContextuableGraph<D, S, T, ST, VS, VT>
+pub trait ContextuableGraph<D, S, T, ST>
 where
     D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    VS: Clone,
-    VT: Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone,
 {
-    fn add_node(
-        &mut self,
-        value: Contextoid<D, S, T, ST, VS, VT>,
-    ) -> Result<usize, ContextIndexError>;
+    fn add_node(&mut self, value: Contextoid<D, S, T, ST>) -> Result<usize, ContextIndexError>;
     fn contains_node(&self, index: usize) -> bool;
-    fn get_node(&self, index: usize) -> Option<&Contextoid<D, S, T, ST, VS, VT>>;
+    fn get_node(&self, index: usize) -> Option<&Contextoid<D, S, T, ST>>;
     fn remove_node(&mut self, node_id: ContextoidId) -> Result<(), ContextIndexError>;
     fn update_node(
         &mut self,
         node_id: ContextoidId,
-        new_node: Contextoid<D, S, T, ST, VS, VT>,
+        new_node: Contextoid<D, S, T, ST>,
     ) -> Result<(), ContextIndexError>;
     fn add_edge(
         &mut self,
@@ -90,14 +85,12 @@ where
 /// Methods return Result or Option types for error handling.
 ///
 #[allow(clippy::type_complexity)]
-pub trait ExtendableContextuableGraph<D, S, T, ST, VS, VT>
+pub trait ExtendableContextuableGraph<D, S, T, ST>
 where
     D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    VS: Clone,
-    VT: Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone,
 {
     /// Creates a new, empty "extra" context and adds it to the collection.
     ///
@@ -193,7 +186,7 @@ where
     /// - `ContextIndexError` if no extra context is currently active.
     fn extra_ctx_add_node(
         &mut self,
-        value: Contextoid<D, S, T, ST, VS, VT>,
+        value: Contextoid<D, S, T, ST>,
     ) -> Result<usize, ContextIndexError>;
 
     /// Checks if a node with the given index exists in the currently active extra context.
@@ -223,7 +216,7 @@ where
     fn extra_ctx_get_node(
         &self,
         index: usize,
-    ) -> Result<&Contextoid<D, S, T, ST, VS, VT>, ContextIndexError>;
+    ) -> Result<&Contextoid<D, S, T, ST>, ContextIndexError>;
 
     /// Removes a node by its index from the currently active extra context.
     ///

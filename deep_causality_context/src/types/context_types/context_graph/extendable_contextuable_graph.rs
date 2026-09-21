@@ -11,15 +11,12 @@ use crate::{
 };
 
 #[allow(clippy::type_complexity)]
-impl<D, S, T, ST, VS, VT> ExtendableContextuableGraph<D, S, T, ST, VS, VT>
-    for Context<D, S, T, ST, VS, VT>
+impl<D, S, T, ST> ExtendableContextuableGraph<D, S, T, ST> for Context<D, S, T, ST>
 where
     D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    VS: Clone,
-    VT: Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone,
 {
     fn extra_ctx_add_new(&mut self, capacity: usize, default: bool) -> u64 {
         // This now acts as a wrapper, generating a new ID and calling the specific implementation.
@@ -93,7 +90,7 @@ where
 
     fn extra_ctx_add_node(
         &mut self,
-        value: Contextoid<D, S, T, ST, VS, VT>,
+        value: Contextoid<D, S, T, ST>,
     ) -> Result<usize, ContextIndexError> {
         if let Some(extra_contexts) = self.extra_contexts.as_mut() {
             if let Some(current_ctx) = extra_contexts.get_mut(&self.extra_context_id) {
@@ -133,7 +130,7 @@ where
     fn extra_ctx_get_node(
         &self,
         index: usize,
-    ) -> Result<&Contextoid<D, S, T, ST, VS, VT>, ContextIndexError> {
+    ) -> Result<&Contextoid<D, S, T, ST>, ContextIndexError> {
         if let Some(extra_contexts) = self.extra_contexts.as_ref() {
             if let Some(current_ctx) = extra_contexts.get(&self.extra_context_id) {
                 current_ctx.get_node(index).ok_or_else(|| {

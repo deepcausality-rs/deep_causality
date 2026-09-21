@@ -61,16 +61,14 @@ where
 }
 
 #[allow(clippy::type_complexity)]
-impl<I, O, D, S, T, ST, VS, VT> Model<I, O, Context<D, S, T, ST, VS, VT>>
+impl<I, O, D, S, T, ST> Model<I, O, Context<D, S, T, ST>>
 where
     I: Default + Clone,
     O: Default + Debug + Clone,
     D: Datable + Clone + PartialEq + std::fmt::Debug,
-    S: Spatial<VS> + Clone + std::fmt::Debug,
-    T: Temporal<VT> + Clone + std::fmt::Debug,
-    ST: SpaceTemporal<VS, VT> + Clone + std::fmt::Debug,
-    VS: Clone + std::fmt::Debug,
-    VT: Clone + std::fmt::Debug,
+    S: Spatial + Clone + std::fmt::Debug,
+    T: Temporal + Clone + std::fmt::Debug,
+    ST: SpaceTemporal + Clone + std::fmt::Debug,
 {
     /// Evolves the model by applying a sequence of operations defined in an `OpTree`.
     ///
@@ -78,12 +76,7 @@ where
     /// and returns a new `Model` instance reflecting the changes, along with a log of modifications.
     pub fn evolve(
         &self,
-        op_tree: &crate::OpTree<
-            I,
-            O,
-            Context<D, S, T, ST, VS, VT>,
-            Contextoid<D, S, T, ST, VS, VT>,
-        >,
+        op_tree: &crate::OpTree<I, O, Context<D, S, T, ST>, Contextoid<D, S, T, ST>>,
     ) -> Result<(Self, crate::ModificationLog), crate::ModelValidationError> {
         // 1. Initialize the interpreter state with the current model's components.
         let mut state = crate::CausalSystemState::new();

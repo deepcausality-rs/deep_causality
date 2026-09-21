@@ -5,4 +5,4 @@
 
 use crate::{Spatial, TangentSpacetime};
 
-impl Spatial<f64> for TangentSpacetime {}
+impl Spatial for TangentSpacetime {}

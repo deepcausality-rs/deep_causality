@@ -5,4 +5,4 @@
 
 use crate::{QuaternionSpace, Spatial};
 
-impl Spatial<f64> for QuaternionSpace {}
+impl Spatial for QuaternionSpace {}

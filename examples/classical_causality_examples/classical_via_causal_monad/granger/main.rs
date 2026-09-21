@@ -40,14 +40,8 @@ type FloatType = f64;
 /// `Adjustable` impl, where `ArrayGrid`'s fixed-size array backing needs it. That is what makes
 /// `Data<Vec<FloatType>>` a valid context node and lets this example carry a real `Context`
 /// instead of a struct of its own.
-type SeriesContext = Context<
-    Data<Vec<FloatType>>,
-    EuclideanSpace,
-    EuclideanTime,
-    EuclideanSpacetime,
-    FloatType,
-    FloatType,
->;
+type SeriesContext =
+    Context<Data<Vec<FloatType>>, EuclideanSpace, EuclideanTime, EuclideanSpacetime>;
 
 /// Node indices of the two series contextoids.
 const OIL_PRICES: usize = 0;

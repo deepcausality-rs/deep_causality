@@ -29,9 +29,9 @@ mod spatial;
 /// # Trait Implementations
 /// This type implements:
 /// - `Identifiable`
-/// - `Coordinate<f64>`
-/// - `Metric` using the Haversine approximation
-/// - `Spatial<f64>`
+/// - `Coordinate`
+/// - `Distance` using the Haversine approximation
+/// - `Spatial`
 /// - `Display` for human-readable output
 ///
 /// # Common Use Cases

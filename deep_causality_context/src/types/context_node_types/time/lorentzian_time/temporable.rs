@@ -5,7 +5,8 @@
 
 use crate::{LorentzianTime, Temporal, TimeScale};
 
-impl Temporal<f64> for LorentzianTime {
+impl Temporal for LorentzianTime {
+    type TimeUnit = f64;
     fn time_scale(&self) -> TimeScale {
         self.time_scale
     }

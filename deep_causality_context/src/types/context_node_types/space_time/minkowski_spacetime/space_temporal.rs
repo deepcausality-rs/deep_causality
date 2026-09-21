@@ -5,7 +5,7 @@
 
 use crate::{MinkowskiSpacetime, SpaceTemporal};
 
-impl SpaceTemporal<f64, f64> for MinkowskiSpacetime {
+impl SpaceTemporal for MinkowskiSpacetime {
     fn t(&self) -> &f64 {
         &self.t
     }

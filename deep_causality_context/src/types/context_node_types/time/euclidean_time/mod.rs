@@ -52,7 +52,7 @@ use crate::{TimeKind, TimeScale};
 ///
 /// # Trait Compatibility
 /// - Implements `Identifiable` via `id`
-/// - Implements `Temporal<f64>` via `time_unit`
+/// - Implements `Temporal` via `time_unit`
 ///
 /// # Important Note
 /// The field `time_unit` contains a **real-valued representation of imaginary time** (τ),

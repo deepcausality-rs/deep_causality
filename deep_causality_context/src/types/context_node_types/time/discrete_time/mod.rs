@@ -44,7 +44,7 @@ use crate::{TimeKind, TimeScale};
 ///
 /// # Trait Compatibility
 /// - Implements `Identifiable` via `id`
-/// - Implements `Temporal<u64>`, so it can be used in any time-aware causal context
+/// - Implements `Temporal`, so it can be used in any time-aware causal context
 ///
 /// # Use Cases
 /// - Agent-based simulations with fixed timesteps

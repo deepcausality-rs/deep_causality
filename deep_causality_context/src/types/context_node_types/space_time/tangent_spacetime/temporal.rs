@@ -5,7 +5,8 @@
 
 use crate::{TangentSpacetime, Temporal, TimeScale};
 
-impl Temporal<f64> for TangentSpacetime {
+impl Temporal for TangentSpacetime {
+    type TimeUnit = f64;
     fn time_scale(&self) -> TimeScale {
         TimeScale::Second
     }

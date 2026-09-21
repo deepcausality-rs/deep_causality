@@ -10,14 +10,12 @@ use deep_causality_context::{Datable, SpaceTemporal, Spatial, Temporal};
 use crate::types::teloid::TeloidMetaData;
 use crate::{Teloid, TeloidID, TeloidModal, TeloidTag};
 
-impl<D, S, T, ST, VS, VT> Teloid<D, S, T, ST, VS, VT>
+impl<D, S, T, ST> Teloid<D, S, T, ST>
 where
     D: Datable + Clone,
-    S: Spatial<VS> + Clone,
-    T: Temporal<VT> + Clone,
-    ST: SpaceTemporal<VS, VT> + Clone,
-    VS: Clone,
-    VT: Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone,
 {
     /// Returns the unique identifier of the teloid.
     ///
@@ -41,12 +39,12 @@ where
     ///
     /// # Returns
     ///
-    /// An `Option` containing a function pointer `fn(&Context<D, S, T, ST, VS, VT>, &ProposedAction) -> bool`
+    /// An `Option` containing a function pointer `fn(&Context<D, S, T, ST>, &ProposedAction) -> bool`
     /// that represents the activation predicate.
     #[allow(clippy::type_complexity)]
     pub fn activation_predicate(
         &self,
-    ) -> Option<fn(&Context<D, S, T, ST, VS, VT>, &ProposedAction) -> bool> {
+    ) -> Option<fn(&Context<D, S, T, ST>, &ProposedAction) -> bool> {
         self.activation_predicate
     }
 
@@ -58,7 +56,7 @@ where
     #[allow(clippy::type_complexity)]
     pub fn uncertain_activation_predicate(
         &self,
-    ) -> Option<UncertainActivationPredicate<D, S, T, ST, VS, VT>> {
+    ) -> Option<UncertainActivationPredicate<D, S, T, ST>> {
         self.uncertain_activation_predicate
     }
 

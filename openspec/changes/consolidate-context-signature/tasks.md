@@ -1,28 +1,30 @@
 ## 1. Baseline and dependencies
 
-- [ ] 1.1 Re-derive the impl census before changing anything, and record it: how many types
+- [x] 1.1 Re-derive the impl census before changing anything, and record it: how many types
       implement `Coordinate`, `Spatial`, `Temporal`, `SpaceTemporal` and `Metric`, and at which
       value types. The change rests on no type implementing one of them twice, so confirm that
       still holds
-- [ ] 1.2 Count `VS`/`VT` occurrences per crate as the before-number for task 4.5
-- [ ] 1.3 Add `deep_causality_algebra` to `deep_causality_context/Cargo.toml` for the real-field
+- [x] 1.2 Count `VS`/`VT` occurrences per crate as the before-number for task 4.5
+- [x] 1.3 Add `deep_causality_algebra` to `deep_causality_context/Cargo.toml` for the real-field
       bound, and confirm the tier order still places it below the context crate
-- [ ] 1.4 Add `deep_causality_metric` for the signature enum, and confirm the same
-- [ ] 1.5 Verify `deep_causality_num` is reachable for whatever the bound needs; add it only if the
-      algebra bound does not already carry it
+- [x] 1.4 Add `deep_causality_metric` for the signature enum, and confirm the same
+- [x] 1.5 Verified: `deep_causality_num` arrives transitively through `deep_causality_algebra`, so
+      no direct dependency was added. `deep_causality_metric` needed `features = ["default"]`,
+      because the workspace entry sets `default-features = false` and its error type needs `alloc`
 
 ## 2. Associated types on the traits
 
-- [ ] 2.1 `Coordinate` gains `type Coord`; every method that returned `V` returns `Self::Coord`
-- [ ] 2.2 `Temporal` gains `type TimeUnit`; `time_unit` returns `Self::TimeUnit`
-- [ ] 2.3 `Spatial` becomes `Identifiable + Coordinate` with no parameter
-- [ ] 2.4 `SpaceTemporal` becomes `Identifiable + Spatial + Temporal`, with `t` returning
+- [x] 2.1 `Coordinate` gains `type Coord`; every method that returned `V` returns `Self::Coord`
+- [x] 2.2 `Temporal` gains `type TimeUnit`; `time_unit` returns `Self::TimeUnit`
+- [x] 2.3 `Spatial` becomes `Identifiable + Coordinate` with no parameter
+- [x] 2.4 `SpaceTemporal` becomes `Identifiable + Spatial + Temporal`, with `t` returning
       `&Self::TimeUnit`
-- [ ] 2.5 Rename `Metric<V>` to `Distance` with `fn distance(&self, other: &Self) -> Self::Coord`,
+- [x] 2.5 Rename `Metric<V>` to `Distance` with `fn distance(&self, other: &Self) -> Self::Coord`,
       and update its six implementors
-- [ ] 2.6 Remove `MetricCoordinate`. Confirm first that it still has zero implementors and is named
+- [x] 2.6 Remove `MetricCoordinate`. Confirm first that it still has zero implementors and is named
       as a bound nowhere; if that changed, stop and re-decide
-- [ ] 2.7 `cargo test -p deep_causality_context` green, still at `f64` throughout
+- [x] 2.7 `cargo test -p deep_causality_context` green, still at `f64` throughout: 431 unit tests
+      and 22 doctests pass
 
 ## 3. The scalar parameter
 
@@ -66,15 +68,26 @@
 
 ## 4. Six parameters to four
 
-- [ ] 4.1 Drop `VS`/`VT` from `Context`, `Contextoid` and `ContextoidType`
-- [ ] 4.2 Drop them from `Contextuable`, `ContextuableGraph` and `ExtendableContextuableGraph`
-- [ ] 4.3 Fix `deep_causality`: `Model`, the generative interpreter, and the `Base*`/`Uniform*`
+**Sequencing corrected during apply.** Tasks 4.1 and 4.2 landed inside group 2. The plan had the
+trait rewrite and the parameter removal as separate steps, and they cannot separate: `Context`
+bounds `S: Spatial<VS>`, so the moment `Spatial` loses its parameter, `VS` has nothing to bind to
+and the crate stops compiling. Group 2 therefore ends at four parameters in the context crate, and
+group 4 is the downstream fan-out that follows from it.
+
+- [x] 4.1 Drop `VS`/`VT` from `Context`, `Contextoid` and `ContextoidType` (landed with group 2)
+- [x] 4.2 Drop them from `Contextuable`, `ContextuableGraph` and `ExtendableContextuableGraph`
+      (landed with group 2)
+- [x] 4.3 Fix `deep_causality`: `Model`, the generative interpreter, and the `Base*`/`Uniform*`
       aliases
-- [ ] 4.4 Fix `deep_causality_ethos`: `Teloid`, `TeloidStore` and `EffectEthos` thread these
+- [x] 4.4 Fix `deep_causality_ethos`: `Teloid`, `TeloidStore` and `EffectEthos` thread these
       parameters through their own signatures
-- [ ] 4.5 Fix the example packages, then confirm `VS`/`VT` appear nowhere as a generic parameter and
-      report the count against task 1.2
-- [ ] 4.6 `bazel test //...` green. **Land this before starting group 6** — four parameters is
+- [x] 4.5 Fix the example packages, then confirm `VS`/`VT` appear nowhere as a generic parameter.
+      Against task 1.2's baseline of 648 (deep_causality 50, context 318, ethos 280, examples 0):
+      now zero in every crate, including the three stale doc references that described parameters
+      the types no longer take
+- [x] 4.6 `bazel test //...` green: 1409/1409. Bazel caught one ethos test file that
+      `cargo test --no-run` did not, because Bazel compiles each test file as its own crate.
+      **Land this before starting group 6** — four parameters is
       independently releasable, and keeping the two failure modes apart is the point of the sequence
 
 ## 5. The coordinate families

@@ -5,7 +5,8 @@
 
 use crate::{SymbolicTime, SymbolicTimeUnit, Temporal, TimeScale};
 
-impl Temporal<i64> for SymbolicTime {
+impl Temporal for SymbolicTime {
+    type TimeUnit = i64;
     fn time_scale(&self) -> TimeScale {
         TimeScale::Symbolic
     }

@@ -23,5 +23,5 @@ pub type UncertainF64 = deep_causality_uncertain::Uncertain<FloatType>;
 
 // Type alias for the uncertain activation predicate function pointer.
 #[allow(clippy::type_complexity)]
-pub type UncertainActivationPredicate<D, S, T, ST, VS, VT> =
-    fn(&Context<D, S, T, ST, VS, VT>, &ProposedAction) -> Result<UncertainBool, CausalityError>;
+pub type UncertainActivationPredicate<D, S, T, ST> =
+    fn(&Context<D, S, T, ST>, &ProposedAction) -> Result<UncertainBool, CausalityError>;
