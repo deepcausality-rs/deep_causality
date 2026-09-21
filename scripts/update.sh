@@ -24,6 +24,10 @@ command echo ""
 command echo "Checking for rustup stable update"
 command rustup update stable
 
+command echo ""
+command echo "Checking crate updates"
+command cargo update
+
 # ---------------------------------------------------------------------------------------------
 # Websites
 # ---------------------------------------------------------------------------------------------
