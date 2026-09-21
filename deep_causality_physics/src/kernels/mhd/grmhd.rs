@@ -23,10 +23,12 @@ use deep_causality_topology::SimplicialManifold;
 ///
 /// where δ is the codifferential operator.
 ///
-/// # Sign Convention
+/// # Sign convention
 ///
-/// Uses the `LorentzianMetric` trait to ensure consistent sign conventions.
-/// Default is East Coast (-+++) via `RelativityMetric`.
+/// `spacetime_metric` is read for its `dimension()` alone. The codifferential on a k-form in n
+/// dimensions carries a sign that depends on n, k and the signature, and this kernel applies
+/// none of it, so the argument does not currently influence the result. A caller passing a west
+/// coast metric receives the same answer as one passing east coast.
 ///
 /// # Arguments
 /// * `em_manifold` - Manifold with electromagnetic 2-form F data on 2-simplices

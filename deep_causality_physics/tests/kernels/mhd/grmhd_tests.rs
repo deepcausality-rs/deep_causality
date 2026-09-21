@@ -95,6 +95,75 @@ fn test_energy_momentum_tensor() {
     // T00 = 0.5 * E^2
     let t00 = t.data()[0];
     assert!((t00 - 0.5).abs() < 1e-10);
+    // This does discriminate the 1/4 coefficient (1/2 would give 0, 1/8 would give 0.75), but
+    // it is a two-dimensional fixture, and the strongest invariant the tensor has --
+    // tracelessness -- holds only in four. The test below supplies that case.
+}
+
+#[test]
+fn test_energy_momentum_tensor_is_traceless_in_four_dimensions() {
+    // The Maxwell stress-energy tensor
+    //     T^uv = F^ua F^v_a - (1/4) g^uv F_ab F^ab
+    // is traceless in four dimensions and only there: its trace is F^2 (1 - D/4). That makes
+    // g_uv T^uv == 0 an exact oracle for the 1/4, and one that owes nothing to this
+    // implementation -- it is pure index algebra. Measured on this fixture, a coefficient of
+    // 1/8 leaves a trace of +7 and 1/2 leaves -14, so the assertion has teeth.
+    //
+    // Fixture: east-coast metric diag(-1,1,1,1), E along x and B along z, with
+    //     F^01 = E = 3,  F^12 = -B = -4
+    // following F^0i = E^i and F^ij = -eps^ijk B_k. E and B are given different magnitudes so
+    // that no test below can pass by their coinciding.
+    //
+    // Provenance of the two pinned numbers, both standard results quoted in any classical
+    // electrodynamics text (e.g. Jackson 3rd ed. Ch. 12), not derived from this code:
+    //     F_ab F^ab = 2 (B^2 - E^2) = 14
+    //     T^00      = (E^2 + B^2)/2 = 12.5      (the electromagnetic energy density)
+    const E: f64 = 3.0;
+    const B: f64 = 4.0;
+    const T00: f64 = 12.5;
+
+    let mut f_data = vec![0.0_f64; 16];
+    f_data[1] = E; // F^01
+    f_data[4] = -E; // F^10
+    f_data[6] = -B; // F^12
+    f_data[9] = B; // F^21
+    let em: CausalTensor<f64> = CausalTensor::new(f_data, vec![4, 4]).unwrap();
+
+    let mut g_data = vec![0.0_f64; 16];
+    g_data[0] = -1.0;
+    g_data[5] = 1.0;
+    g_data[10] = 1.0;
+    g_data[15] = 1.0;
+    let metric: CausalTensor<f64> = CausalTensor::new(g_data.clone(), vec![4, 4]).unwrap();
+
+    let t = energy_momentum_tensor_em_kernel(&em, &metric).unwrap();
+    assert_eq!(t.shape(), &[4, 4]);
+
+    // The energy density.
+    assert!(
+        (t.data()[0] - T00).abs() < 1e-10,
+        "T^00 = {}, expected {T00}",
+        t.data()[0]
+    );
+
+    // The trace. g is diagonal here, so g_uv T^uv reduces to the signed sum of the diagonal.
+    let trace: f64 = (0..4)
+        .map(|m| g_data[m * 4 + m] * t.data()[m * 4 + m])
+        .sum();
+    assert!(
+        trace.abs() < 1e-10,
+        "g_uv T^uv = {trace}, must vanish in four dimensions"
+    );
+
+    // The energy flux carries the Poynting magnitude |E x B| = 12. Only the magnitude is
+    // asserted: the sign of T^0i depends on index placement and on the signature convention,
+    // and this test does not undertake to pin which of those the crate uses.
+    assert!(
+        (t.data()[2].abs() - E * B).abs() < 1e-10,
+        "|T^02| = {}, expected |E x B| = {}",
+        t.data()[2].abs(),
+        E * B
+    );
 }
 
 #[test]

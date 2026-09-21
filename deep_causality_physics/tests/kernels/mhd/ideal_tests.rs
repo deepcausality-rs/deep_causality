@@ -42,6 +42,45 @@ fn test_alfven_speed() {
 }
 
 #[test]
+fn test_alfven_speed_matches_physical_reference() {
+    // The fixture above sets mu0 = rho = 1, where the permeability is the multiplicative
+    // identity and therefore invisible: a kernel that dropped mu0, squared it, or inverted it
+    // returns 1 all the same. These inputs are physical, so mu0 has to be in the right place.
+    //
+    // Provenance: v_A = B / √(mu0 rho) evaluated from CODATA 2022 mu0 at B = 1 T and
+    // rho = 1e-7 kg/m³.
+    //
+    // Cross-checked against the NRL Plasma Formulary's practical form,
+    // v_A = 2.18e11 · mu^-1/2 · n_i^-1/2 · B cm/s (B in gauss, n_i in cm⁻³), which gives
+    // 2.8194e6 m/s for a hydrogen plasma at this mass density — agreement to 5.5e-4, the
+    // rounding of NRL's three-digit coefficient.
+    const V_A: f64 = 2_820_947.917_925_010_4;
+    const MU_0: f64 = 1.256_637_061_27e-6;
+
+    let b_vec = CausalMultiVector::new(vec![0.0, 1.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap();
+    let b_field = PhysicalField::<f64>::new(b_vec);
+    let rho = Density::<f64>::new(1.0e-7).unwrap();
+
+    let va = alfven_speed_kernel(&b_field, &rho, MU_0).unwrap();
+    assert!(
+        (va.value() - V_A).abs() / V_A < 1e-12,
+        "v_A = {}, expected {V_A}",
+        va.value()
+    );
+
+    // v_A ∝ B / √rho. Quadrupling the density halves the speed; the pinned value above fixes
+    // one point but cannot distinguish √rho from rho.
+    let denser = Density::<f64>::new(4.0e-7).unwrap();
+    let va_dense = alfven_speed_kernel(&b_field, &denser, MU_0).unwrap();
+    assert!(
+        (va_dense.value() - 0.5 * V_A).abs() / V_A < 1e-12,
+        "4x density gave {}, expected {}",
+        va_dense.value(),
+        0.5 * V_A
+    );
+}
+
+#[test]
 fn test_alfven_speed_errors() {
     let b_vec = CausalMultiVector::new(vec![0.0, 1.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap();
     let b_field = PhysicalField::<f64>::new(b_vec);
@@ -105,6 +144,44 @@ fn test_magnetic_pressure() {
     assert!(res.is_ok());
     // P = B^2 / 2mu0 = 4 / 2 = 2
     assert!((res.unwrap().value() - 2.0).abs() < 1e-10);
+}
+
+#[test]
+fn test_magnetic_pressure_matches_physical_reference() {
+    // As with the Alfven speed above, the fixture that precedes this one leaves mu0 = 1, where
+    // a missing, squared or inverted permeability cannot change the answer.
+    //
+    // Provenance: p_B = B²/(2 mu0) evaluated from CODATA 2022 mu0. At B = 1 T this is the
+    // standard textbook figure of ~3.98e5 Pa, about four atmospheres.
+    const MU_0: f64 = 1.256_637_061_27e-6;
+    const P_B_1T: f64 = 397_887.357_782_272_5;
+    const P_B_5T: f64 = 9_947_183.944_556_812;
+
+    let one_tesla = PhysicalField::<f64>::new(
+        CausalMultiVector::new(vec![0.0, 1.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap(),
+    );
+    let p1 = magnetic_pressure_kernel(&one_tesla, MU_0).unwrap();
+    assert!(
+        (p1.value() - P_B_1T).abs() / P_B_1T < 1e-12,
+        "p_B(1 T) = {}, expected {P_B_1T}",
+        p1.value()
+    );
+
+    // Quadratic in B: five tesla is twenty-five times the pressure, not five.
+    let five_tesla = PhysicalField::<f64>::new(
+        CausalMultiVector::new(vec![0.0, 5.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap(),
+    );
+    let p5 = magnetic_pressure_kernel(&five_tesla, MU_0).unwrap();
+    assert!(
+        (p5.value() - P_B_5T).abs() / P_B_5T < 1e-12,
+        "p_B(5 T) = {}, expected {P_B_5T}",
+        p5.value()
+    );
+    assert!(
+        (p5.value() / p1.value() - 25.0).abs() < 1e-9,
+        "p_B(5 T)/p_B(1 T) = {}, expected 25",
+        p5.value() / p1.value()
+    );
 }
 
 #[test]

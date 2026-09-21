@@ -157,3 +157,36 @@ fn test_reconnection_rate() {
     // vin = va / sqrt(S) = 100 / 10 = 10
     assert!((res.unwrap().value() - 10.0).abs() < 1e-10);
 }
+
+#[test]
+fn test_reconnection_rate_follows_the_sweet_parker_exponent() {
+    // The Sweet-Parker model's content is the exponent: the dimensionless rate is
+    // M = v_in/v_A = S^(-1/2). A single pinned quotient fixes one point and cannot tell that
+    // exponent from -1 or -1/3, all of which agree somewhere.
+    //
+    // Provenance: Sweet, *Electromagnetic Phenomena in Cosmical Physics*, 1958; Parker,
+    // J. Geophys. Res. 62, 509 (1957). Contrast Petschek, which scales as 1/ln S.
+    let va = AlfvenSpeed::<f64>::new(1.0e6).unwrap();
+
+    let at = |s: f64| {
+        magnetic_reconnection_rate_kernel(AlfvenSpeed::<f64>::new(1.0e6).unwrap(), s)
+            .unwrap()
+            .value()
+    };
+
+    // Quadrupling S halves the inflow speed.
+    assert!(
+        (at(4.0e6) * 2.0 - at(1.0e6)).abs() / at(1.0e6) < 1e-12,
+        "4x Lundquist gave {}, expected {}",
+        at(4.0e6),
+        at(1.0e6) / 2.0
+    );
+
+    // A millionfold Lundquist number gives a rate of exactly 1e-3 of the Alfven speed, the
+    // figure quoted for Sweet-Parker reconnection in the solar corona.
+    assert!(
+        (at(1.0e6) / va.value() - 1.0e-3).abs() < 1e-15,
+        "M = {}, expected 1e-3",
+        at(1.0e6) / va.value()
+    );
+}
