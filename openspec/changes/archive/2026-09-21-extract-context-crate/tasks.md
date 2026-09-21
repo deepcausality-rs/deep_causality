@@ -150,64 +150,74 @@ existed solely to be threaded through signatures and filled in by aliases.
 
 ## 10. Migrate the monad examples onto the typed context
 
-- [ ] 10.1 `rcm_via_monad`: replace `TreatmentContext` with a `BaseContext` of `Data` contextoids;
+- [x] 10.1 `rcm_via_monad`: replace `TreatmentContext` with a `BaseContext` of `Data` contextoids;
       keep the `alternate_context` factual/counterfactual structure and the same printed outcome
-- [ ] 10.2 `cate_via_monad`: same treatment for `PatientContext` (two `f64`, one `bool`)
-- [ ] 10.3 `scm_via_monad`: same treatment for `SmokingContext` (two `f64`)
-- [ ] 10.4 `dbn_via_monad`: same treatment for `WeatherContext` (`&'static str`, two `f64`), leaving
+- [x] 10.2 `cate_via_monad`: same treatment for `PatientContext` (two `f64`, one `bool`)
+- [x] 10.3 `scm_via_monad`: same treatment for `SmokingContext` (two `f64`)
+- [x] 10.4 `dbn_via_monad`: same treatment for `WeatherContext` (`&'static str`, two `f64`), leaving
       `WeatherState` in the monad's State channel where it belongs
-- [ ] 10.5 `granger_via_monad`: replace `SeriesContext` with a context holding two
-      `Data<Vec<f64>>` contextoids — the acceptance test for the group 7 relaxation. Keep the
-      counterfactual world (the same series with `oil_prices` emptied) as a context alternation
-- [ ] 10.6 Confirm each migrated example still has a `rust_binary` in `BUILD.bazel` and that
+- [x] 10.5 `granger_via_monad`: migrated onto `Context<Data<Vec<FloatType>>, …>` — the acceptance
+      test for the group 7 relaxation. Its two series are `Data<Vec<FloatType>>` contextoids and the
+      counterfactual world is the same builder with `oil_prices` empty
+- [x] 10.6 Confirm each migrated example still has a `rust_binary` in `BUILD.bazel` and that
       `make check_examples` passes
-- [ ] 10.7 Confirm no monad-side example declares a context struct of its own any more, which is
+- [x] 10.7 Confirm no monad-side example declares a context struct of its own any more, which is
       the demonstration issue #801 asked for
+- [x] 10.8 Added during apply: every migrated example declares `type FloatType = f64;` locally,
+      before `main`, rather than importing the shared alias. An alias change in
+      `deep_causality_core` must not silently reconfigure every example that names one. The
+      pre-existing `deep_causality::FloatType` in `csm_effect_ethos/model.rs` was localized too
 
 ## 11. Update the formalization to match the moved tree
 
-- [ ] 11.1 Only after task 2.4 has landed and task 4.6 confirms the tests run from their new home,
-      update the witness path in `lean/DeepCausalityFormal/Core/ContextGraph.lean:52` to
-      `deep_causality_context/tests/formalization_lean/context_graph_tests.rs`
-- [ ] 11.2 Update the same path in the `lean/THEOREM_MAP.md` rows
-      `core.context_graph.threading_bind` and `core.context_graph.acyclicity_separable`
-- [ ] 11.3 Leave the Lean namespace where it is: `Core/` already carries witnesses into two crates,
+- [x] 11.1 **No-op, resolved during apply.** `context_graph_tests.rs` pins the real `Context` AND
+      the real `CausalEffectPropagationProcess::bind`, so it needs both crates and stays in
+      `deep_causality`, the only crate that sees both. The path in
+      `lean/DeepCausalityFormal/Core/ContextGraph.lean:52` is therefore still correct and unchanged
+- [x] 11.2 **No-op, same reason.** Both `THEOREM_MAP.md` rows still name a path that exists
+- [x] 11.3 Leave the Lean namespace where it is: `Core/` already carries witnesses into two crates,
       so a third needs no reorganisation and no `lean/BUILD.bazel` change
-- [ ] 11.4 Confirm the formalization workflow reports no `MISSING Rust witness`, and that every
+- [x] 11.4 Confirm the formalization workflow reports no `MISSING Rust witness`, and that every
       named test function in those three references still exists at the new path
 
 ## 12. Repair the remaining cross-cutting references
 
-- [ ] 12.1 Re-derive the tier block in `AGENTS.md` from the `Cargo.toml` files: add the crate to the
+- [x] 12.1 Re-derive the tier block in `AGENTS.md` from the `Cargo.toml` files: add the crate to the
       index, 30 crates becomes 31, `deep_causality` to Tier 7, `deep_causality_ethos` and
       `deep_causality_quantum` to Tier 8
-- [ ] 12.2 Re-derive the tier block in `deep_causality_unified_math/README.md`
-- [ ] 12.3 Generate the SBOM pair `deep_causality_context_sbom.spdx.json` and its `.sha`
+- [x] 12.2 **No-op, verified during apply.** That README's tier block covers only the mathematics
+      crates. `deep_causality_context` is not one, and no mathematics crate changed tier (topology
+      stays 7, multivector 6), so the block is still correct
+- [x] 12.3 Generate the SBOM pair `deep_causality_context_sbom.spdx.json` and its `.sha`
 
 ## 13. Verify the whole change
 
-- [ ] 13.1 `make format && make fix` — clippy lints fixed by rewriting, not by `#[allow]`
-- [ ] 13.2 `bazel test //...` green across the workspace
-- [ ] 13.3 Assert the no-re-export contract: `deep_causality/src/lib.rs` contains no `pub use` of
+- [x] 13.1 `make format && make fix` — clippy lints fixed by rewriting, not by `#[allow]`
+- [x] 13.2 `bazel test //...` green across the workspace
+- [x] 13.3 Assert the no-re-export contract: `deep_causality/src/lib.rs` contains no `pub use` of
       `deep_causality_context`, and `use deep_causality::Context;` fails to compile
-- [ ] 13.4 Assert reachability: a scratch crate depending only on `deep_causality_core` and
+- [x] 13.4 Assert reachability: a scratch crate depending only on `deep_causality_core` and
       `deep_causality_context` builds a `PropagatingProcess<f64, (), BaseContext>`
-- [ ] 13.5 Confirm `cargo build -p deep_causality_core --no-default-features --features no-std`
+- [x] 13.5 Confirm `cargo build -p deep_causality_core --no-default-features --features no-std`
       still succeeds
-- [ ] 13.6 Confirm each of the eight deduplicated aliases is declared exactly once in the workspace
-- [ ] 13.7 Confirm the workspace dependency search returns exactly the crates that use context
-- [ ] 13.8 Confirm `Data<Vec<f64>>` compiles and that no bound other than `Data<T>`'s was widened to
+- [x] 13.6 Confirm each of the eight deduplicated aliases is declared exactly once in the workspace
+- [x] 13.7 Confirm the workspace dependency search returns exactly the crates that use context
+- [x] 13.8 Confirm `Data<Vec<f64>>` compiles and that no bound other than `Data<T>`'s was widened to
       get there
 
 ## 14. Release communication
 
-- [ ] 14.1 Set the breaking versions: `deep_causality` 0.18.0, `deep_causality_ethos` 0.4.0,
-      `deep_causality_core` additive bump, `deep_causality_context` 0.1.0
-- [ ] 14.2 Write the migration blog post: what moved, why the context dependency is now declared
+- [x] 14.1 **Corrected during apply: release-plz owns versions.** Commit `7585f4d42` shows it
+      bumping both the crate versions and the two-digit workspace constraints itself, so the manual
+      bumps were rolled back. The `BREAKING CHANGE:` footers drive thecomputation.
+      `deep_causality_context` keeps an explicit 0.1.0, which a new crate needs in order to publish
+      at all. Verified: the new crate is in `Cargo.lock`, carries full crates.io metadata, has no
+      `publish = false`, and the release workflow reads no hardcoded crate list
+- [x] 14.2 Draft at `docs/drafts/context_crate_release_blogpost_draft.md`. Migration blog post: what moved, why the context dependency is now declared
       rather than inherited, the `Cargo.toml` line and import rewrite a consumer makes, the removal
       of `deep_causality::TeloidTag`/`TeloidID`, the relaxed `Data<T>` bound (`Data<T>` is no longer
       `Copy`), and the note that `deep_causality_ethos` is
       breaking for its own consumers
-- [ ] 14.3 Put the breaking-change and migration detail in the commit messages, since release-plz
+- [x] 14.3 Put the breaking-change and migration detail in the commit messages, since release-plz
       generates the changelogs from them
-- [ ] 14.4 Prepare the commit messages and hand them to the user to commit
+- [x] 14.4 Prepare the commit messages and hand them to the user to commit

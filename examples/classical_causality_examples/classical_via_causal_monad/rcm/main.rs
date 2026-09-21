@@ -6,8 +6,10 @@
 //! # RCM via the Causal Monad
 //!
 //! Rubin's potential-outcomes definition of a causal effect, implemented
-//! directly on `PropagatingProcess<f64, (), TreatmentContext>` using the
-//! `Alternatable` family.
+//! directly on `PropagatingProcess<FloatType, (), BaseContext>` using the
+//! `Alternatable` family. The world each run reasons against is a typed
+//! `Context` from `deep_causality_context`, so the monad chain carries the
+//! same context the structural causaloid side uses — not a struct of its own.
 //!
 //! The estimand:
 //!
@@ -34,20 +36,14 @@
 mod model;
 
 use deep_causality_core::AlternatableContext;
-use model::{PATIENT_INITIAL_BP, TreatmentContext, apply_drug_effect, compute_final_bp, start};
+use model::{PATIENT_INITIAL_BP, apply_drug_effect, compute_final_bp, start, treatment_world};
 
 fn main() {
     println!("\n--- RCM via the Causal Monad: Drug Effect on Blood Pressure ---");
     println!("Patient baseline BP: {PATIENT_INITIAL_BP:.1}");
 
-    let treatment_ctx = TreatmentContext {
-        drug_administered: true,
-        drug_effect_if_administered: -10.0,
-    };
-    let control_ctx = TreatmentContext {
-        drug_administered: false,
-        drug_effect_if_administered: -10.0,
-    };
+    let treatment_ctx = treatment_world(true, -10.0);
+    let control_ctx = treatment_world(false, -10.0);
 
     // Factual run: chain executes against treatment_ctx.
     println!("\nSimulating treated outcome Y(1) under T=1...");

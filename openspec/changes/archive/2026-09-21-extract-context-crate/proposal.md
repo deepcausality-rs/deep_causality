@@ -23,11 +23,12 @@ today, so the cut is clean and the new crate can sit beside `deep_causality` rat
 ## What Changes
 
 - **New crate `deep_causality_context` 0.1.0** at the repository root, holding the whole context
-  layer: the `Context` hypergraph, `Contextoid`, `ContextoidType`, `RelationKind`, `TimeScale`, all
-  twenty-four context node types, the twelve `contextuable` traits, `ContextuableGraph` /
+  layer: the `Context` hypergraph, `Contextoid`, `ContextoidType`, `RelationKind`, `TimeScale`, the
+  context node types, the `contextuable` traits, `ContextuableGraph` /
   `ExtendableContextuableGraph`, `Adjustable` / `UncertainAdjustable`, the six indexable traits,
   `ScalarProjector` / `ScalarValue`, four error types, and the `BaseContext` / `UniformContext` /
-  `BaseContextoid` / `UniformContextoid` aliases. About 7,800 source lines over 182 files.
+  `BaseContextoid` / `UniformContextoid` aliases, plus the `SymbolicRepresentation` the symbol nodes
+  needed. 187 source files and 99 test files moved by `git mv`, so history follows.
 - **`Identifiable` moves to `deep_causality_core`.** It returns `IdentificationValue`, which core
   already owns (`deep_causality_core/src/alias/mod.rs`), and it is implemented on both sides of the
   cut — `Contextoid` on the context side, `Causaloid`, `Model`, `Inference`, `Assumption`,
@@ -43,8 +44,8 @@ today, so the cut is clean and the new crate can sit beside `deep_causality` rat
   `deep_causality` takes a dependency on the context crate for it.
 - **`Data<T>` loses its `Copy` bound.** `Data<T>` bounds `T: Default + Copy + Clone + PartialEq`
   (`deep_causality/src/types/context_node_types/data/mod.rs:30`) and is the **only** context node
-  type that constrains a payload parameter this way — `EcefSpace`, `GeoSpace`, `SpaceKind` and
-  `SymbolKind` are `Clone`-only. Nothing about being a context node needs `Copy`: `Datable` requires
+  type that constrains a payload parameter this way — `EcefSpace`, `GeoSpace`, `EuclideanSpace` and
+  `SpaceKind` are `Clone`-only. Nothing about being a context node needs `Copy`: `Datable` requires
   nothing, `Context` requires `D: Datable + Clone`, and `Contextoid`'s `#[derive(Copy, Hash, Eq)]`
   is conditional — and already inapplicable to `BaseContext`, whose `EuclideanSpace` is `Clone`-only.
   The bound is relaxed to `T: Default + Clone + PartialEq`, and `Copy` stays on the `Adjustable`
@@ -61,8 +62,19 @@ today, so the cut is clean and the new crate can sit beside `deep_causality` rat
   live aliases are re-exported from core so `deep_causality`'s surface is unchanged, and
   `TeloidTag` / `TeloidID` are dropped rather than re-exported because they are dead there —
   the vocabulary belongs to `deep_causality_ethos`, which declares its own pair.
+- **BREAKING: the symbolic dimension is withdrawn.** `Context`, `Contextoid` and `ContextoidType`
+  drop from seven type parameters to six; `BaseSymbol`, `SymbolKind`, `SymbolicRepresentation`,
+  `SymbolicResult`, the `Symbolic` trait and `ContextoidType::Symboid` are removed. Nothing in the
+  workspace ever constructed a symbol contextoid: outside the enum's own arms and a few tests there
+  was no construction site at all, so the parameter existed only to be threaded and filled in by
+  aliases. `SymbolicTime`, `TimeScale::Symbolic` and the `symbol_spacetime` nodes are temporal and
+  spacetime types and are untouched.
 - **A migration blog post** ships with the change, published on release date: what moved, why the
   dependency is now explicit, and the one-line `Cargo.toml` plus import edit each consumer needs.
+  Drafted at `docs/drafts/context_crate_release_blogpost_draft.md`.
+- **Versions are left to release-plz**, which bumps the crates and the workspace constraints from
+  the conventional-commit footers. The new crate carries an explicit 0.1.0 because a crate cannot
+  be published without a starting version.
 - **Out of scope, stated so it is not assumed:** the monad's `Context` parameter stays unbounded.
   Bounding it on a contract trait requires that trait to live in `deep_causality_core` (Tier 3),
   which cannot see a hypergraph that needs `ultragraph`, `deep_causality_uncertain` and `std`. It
@@ -81,6 +93,9 @@ today, so the cut is clean and the new crate can sit beside `deep_causality` rat
   moved item, so reaching context requires a declared dependency on `deep_causality_context`. States
   the migration obligation each consumer carries and what a dependency search is therefore entitled
   to conclude.
+- `context-symbolic-dimension-removed`: the withdrawal of the `SYM` parameter, the symbol node
+  types, the `Symbolic` trait and the `Symboid` arm. `Context` goes from seven type parameters to
+  six. Nothing in the workspace ever constructed a symbol contextoid.
 - `context-data-node-payload`: what `Data<T>` requires of its payload — `Clone`, not `Copy` — and
   where the `Copy` requirement properly belongs (the `Adjustable` impl, because `ArrayGrid` is
   array-backed). Makes a sequence-valued context node expressible.

@@ -1,4 +1,11 @@
-## ADDED Requirements
+# context-data-node-payload Specification
+
+## Purpose
+Defines what `Data<T>` requires of its payload: `Clone`, not `Copy`. `Copy` belongs to the
+`Adjustable` impl, where `ArrayGrid`'s fixed-size array backing needs it. A context node can
+therefore carry a sequence.
+
+## Requirements
 
 ### Requirement: `Data<T>` requires `Clone` of its payload, not `Copy`
 
@@ -58,6 +65,11 @@ reaches a type parameter.
 `Data<T>` SHALL NOT derive `Copy`, and every call site that relied on an implicit copy SHALL be
 migrated to an explicit `clone()`.
 
+Every consumer that required `Copy` of a `Datable` only incidentally SHALL drop it too. Three such
+sites were found during implementation, each of which already required `Clone` beside it: the
+`Display` impl for `Data<T>`, the `Model` type, and the generative `Interpreter`. None of them
+copies a data node; they carry or format it.
+
 Nothing above `Data` changes shape as a result: `BaseContextoid` is already not `Copy` because
 `EuclideanSpace` is `Clone`-only.
 
@@ -66,6 +78,12 @@ Nothing above `Data` changes shape as a result: `BaseContextoid` is already not 
 - **WHEN** `bazel test //...` runs after the `Copy` derive is removed from `Data<T>`
 - **THEN** every target builds and passes, with each former implicit copy replaced by an explicit
   `clone()`
+
+#### Scenario: A `Model` over a non-`Copy` data node still evolves
+
+- **WHEN** a `Model` whose context uses a non-`Copy` `Data<T>` is passed to `evolve`
+- **THEN** it compiles and runs, because `Model` and the generative interpreter require `Clone` of
+  the data node rather than `Copy`
 
 #### Scenario: `Contextoid` shape is unchanged for the canonical context
 

@@ -4,17 +4,17 @@
 
 The crate `deep_causality_context` SHALL own the context layer in full: the `Context` hypergraph,
 `Contextoid`, `ContextoidType`, `RelationKind` and `TimeScale`; the context node types for data,
-space, spacetime, symbol, symbolic spacetime and time; the `Contextuable`, `Coordinate`, `Datable`,
+space, spacetime, symbolic spacetime and time; the `Contextuable`, `Coordinate`, `Datable`,
 `UncertainDatable`, `Metric`, `MetricCoordinate`, `MetricTensor4D`, `SpaceTemporal`,
-`SpaceTemporalInterval`, `Spatial`, `Symbolic` and `Temporal` traits; `ContextuableGraph` and
+`SpaceTemporalInterval`, `Spatial` and `Temporal` traits; `ContextuableGraph` and
 `ExtendableContextuableGraph`; `Adjustable` and `UncertainAdjustable`; the data- and time-indexable
 traits; `ScalarProjector` and `ScalarValue`; the `ContextIndexError`, `IndexError`,
 `AdjustmentError` and `UpdateError` error types; and the `BaseContext`, `BaseContextoid`,
 `UniformContext` and `UniformContextoid` aliases.
 
-No moved item SHALL change its semantics, its signature or its public name as part of the move, with
-one stated exception: the `Data<T>` payload bound is relaxed as `context-data-node-payload`
-requires.
+No moved item SHALL change its semantics, its signature or its public name as part of the move,
+except where `context-data-node-payload` relaxes the `Data<T>` payload bound and
+`context-symbolic-dimension-removed` withdraws the symbolic dimension.
 
 #### Scenario: The context hypergraph is constructed from the new crate
 
@@ -25,7 +25,7 @@ requires.
 #### Scenario: Moved behaviour is pinned by the tests that moved with it
 
 - **WHEN** the test suite of `deep_causality_context` runs
-- **THEN** it contains the 62 test files that moved out of `deep_causality/tests`, and every one of
+- **THEN** it contains the test files that moved out of `deep_causality/tests`, and every one of
   them passes without an assertion having been weakened or removed
 
 ### Requirement: The crate does not depend on `deep_causality`
@@ -71,21 +71,42 @@ about a new bound.
 - **THEN** each carries a context built from `Data` contextoids rather than a locally declared
   struct, and each produces the same factual and counterfactual outcomes it produced before
 
+#### Scenario: The Lean witness stays with the crate that can see both sides
+
+- **WHEN** the Rust witness for `core.context_graph.threading_bind` is located
+- **THEN** it is in `deep_causality`, which depends on both the context crate and the core monad,
+  because it pins the real `Context` graph and the real `CausalEffectPropagationProcess::bind`
+  together, and the paths in `Core/ContextGraph.lean` and `THEOREM_MAP.md` resolve unchanged
+
 ### Requirement: The crate carries the repository's standard crate infrastructure
 
 `deep_causality_context` SHALL ship the infrastructure every workspace member carries: a
-`BUILD.bazel` and `tests/BUILD.bazel`, an SBOM pair, a README, `[lints] workspace = true` so the
-repository-wide `unsafe_code = "forbid"` applies, a root `Cargo.toml` member entry, and a
-`[workspace.dependencies]` entry at two-digit version precision.
+`BUILD.bazel` declaring the library, its docs and one `rust_test_suite` per test folder; an SBOM
+pair; a README; `[lints] workspace = true` so the repository-wide `unsafe_code = "forbid"` applies;
+a root `Cargo.toml` member entry; and a `[workspace.dependencies]` entry at two-digit version
+precision.
+
+Versions SHALL be left to release-plz, which bumps both the crate versions and the workspace
+constraints from the conventional-commit footers. The new crate carries an explicit starting
+version because a crate cannot be published without one.
 
 Its `CHANGELOG.md` SHALL NOT be hand-written, because release-plz generates it.
 
-#### Scenario: Bazel and Cargo agree on the test count
+#### Scenario: Bazel runs every test file Cargo runs
 
 - **WHEN** the crate's tests are run under both `cargo test -p deep_causality_context` and
   `bazel test //deep_causality_context/...`
-- **THEN** both report the same number of tests, and that number equals the count those tests had
-  before the move
+- **THEN** both pass, and the Bazel target count equals the number of moved test files, so no test
+  file is left unregistered by a missing `rust_test_suite` glob. The two tools count different
+  units, Bazel one target per file and Cargo one result per test function, so the raw numbers
+  differ and only the file coverage is comparable
+
+#### Scenario: The crate is releasable without hand-editing the release tooling
+
+- **WHEN** release-plz runs against the workspace
+- **THEN** `deep_causality_context` is publishable — present in `Cargo.lock`, carrying the
+  crates.io metadata, with no `publish = false` — and its position in the dependency graph puts it
+  after `deep_causality_core` in the publish order
 
 #### Scenario: The crate is visible to the derived CI crate list
 

@@ -10,6 +10,10 @@ use deep_causality_context::{
     BaseContext, Context, Contextoid, ContextoidType, ContextuableGraph, Root,
 };
 use deep_causality_ethos::{EffectEthos, TeloidModal};
+
+/// The scalar this example works in. Declared here, per example, so changing the shared alias in
+/// `deep_causality_core` cannot silently reconfigure every example that names one.
+type FloatType = f64;
 use std::sync::{Arc, RwLock};
 
 // Type aliases for manageable generics
@@ -20,8 +24,8 @@ pub type CsmEthos = EffectEthos<
     deep_causality_context::EuclideanSpace,
     deep_causality_context::EuclideanTime,
     deep_causality_context::EuclideanSpacetime,
-    deep_causality::FloatType,
-    deep_causality::FloatType,
+    FloatType,
+    FloatType,
 >;
 
 pub(crate) fn get_effect_ethos() -> CsmEthos {

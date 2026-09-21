@@ -6,7 +6,7 @@
 //! # SCM via the Causal Monad
 //!
 //! Pearl's Ladder of Causation on the smoking-tar-cancer chain,
-//! implemented directly on `PropagatingProcess<f64, (), SmokingContext>`
+//! implemented directly on `PropagatingProcess<FloatType, (), BaseContext>`
 //! using the `Alternatable` family. Each rung uses one operator from the
 //! family:
 //!
@@ -24,9 +24,20 @@
 //! because each rung carries non-trivial CausaloidGraph and Contextoid
 //! scaffolding.
 
+use deep_causality_context::{
+    BaseContext, Context, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+};
 use deep_causality_core::{
     AlternatableContext, AlternatableValue, CausalEffect, PropagatingEffect, PropagatingProcess,
 };
+
+/// The scalar this example works in. Declared here, per example, so changing the shared alias in
+/// `deep_causality_core` cannot silently reconfigure every example that names one.
+type FloatType = f64;
+
+/// Node indices of the two `Data` contextoids each smoking world carries.
+const NICOTINE: usize = 0;
+const TAR: usize = 1;
 
 fn main() {
     println!("\n=== SCM via the Causal Monad: Pearl's Ladder on smoking-tar-cancer ===\n");
@@ -41,10 +52,7 @@ fn run_rung1_association() {
     println!("--- Rung 1: Association ---");
     println!("Observation: a person has high nicotine consumption (0.8).");
 
-    let world = SmokingContext {
-        nicotine_level: 0.8,
-        tar_level: 0.0,
-    };
+    let world = smoking_world(0.8, 0.0);
 
     let final_effect = start(world).bind(stage_has_tar).bind(stage_cancer_risk);
 
@@ -60,14 +68,11 @@ fn run_rung2_intervention() {
     println!("--- Rung 2: Intervention ---");
     println!("Operator: do(Tar := 0.0). High-nicotine world, tar forced absent mid-chain.");
 
-    let world = SmokingContext {
-        nicotine_level: 0.8,
-        tar_level: 0.0,
-    };
+    let world = smoking_world(0.8, 0.0);
 
     let final_effect = start(world)
         .bind(stage_has_tar)
-        .alternate_value(0.0_f64) // do(Tar := 0.0)
+        .alternate_value(0.0 as FloatType) // do(Tar := 0.0)
         .bind(stage_cancer_risk);
 
     let cancer_risk = cancer_risk_from(final_effect.value().unwrap());
@@ -88,14 +93,9 @@ fn run_rung3_counterfactual() {
     println!("--- Rung 3: Counterfactual ---");
     println!("Query: given a smoker with high tar, what if they had not smoked?");
 
-    let factual = SmokingContext {
-        nicotine_level: 0.8,
-        tar_level: 0.8,
-    };
-    let counterfactual = SmokingContext {
-        nicotine_level: 0.1, // they did not smoke
-        tar_level: 0.8,      // but tar is still in the lungs from earlier
-    };
+    let factual = smoking_world(0.8, 0.8);
+    // They did not smoke (low nicotine), but tar is still in the lungs from earlier.
+    let counterfactual = smoking_world(0.1, 0.8);
 
     let factual_final = start(factual.clone())
         .bind(stage_has_tar)
@@ -129,21 +129,38 @@ fn run_rung3_counterfactual() {
 
 // --- Model: world state, chain seed, and bind stages ---
 
-/// Smoking-tar-cancer world state, carried in the Context channel.
-/// `nicotine_level` is current consumption; `tar_level` is pre-existing
-/// tar already in the lungs from earlier smoking.
-#[derive(Clone, Debug, PartialEq)]
-struct SmokingContext {
-    nicotine_level: f64,
-    tar_level: f64,
+/// Build the world a run reasons against: current nicotine consumption and pre-existing
+/// tar, as two `Data` contextoids in one typed [`BaseContext`].
+fn smoking_world(nicotine_level: FloatType, tar_level: FloatType) -> BaseContext {
+    let mut context = Context::with_capacity(1, "smoking world", 2);
+    for (id, value) in [(1, nicotine_level), (2, tar_level)] {
+        context
+            .add_node(Contextoid::new(
+                id,
+                ContextoidType::Datoid(Data::new(id, value)),
+            ))
+            .expect("smoking contextoid is accepted");
+    }
+    context
+}
+
+/// Read one `Data` contextoid's payload out of a smoking world.
+fn read(context: &BaseContext, index: usize) -> FloatType {
+    context
+        .get_node(index)
+        .expect("contextoid is present")
+        .vertex_type()
+        .dataoid()
+        .expect("contextoid is a Datoid")
+        .get_data()
 }
 
 /// Decision threshold for the binary qualifiers.
-const THRESHOLD: f64 = 0.6;
+const THRESHOLD: FloatType = 0.6;
 
 /// Build the seed carrier with the given world state.
-fn start(world: SmokingContext) -> PropagatingProcess<f64, (), SmokingContext> {
-    let seed = PropagatingEffect::pure(0.0_f64);
+fn start(world: BaseContext) -> PropagatingProcess<FloatType, (), BaseContext> {
+    let seed = PropagatingEffect::pure(0.0 as FloatType);
     PropagatingProcess::with_state(seed, (), Some(world))
 }
 
@@ -151,13 +168,13 @@ fn start(world: SmokingContext) -> PropagatingProcess<f64, (), SmokingContext> {
 /// or tar has already accumulated. Emits a numeric tar indicator so the
 /// value channel is alternable mid-chain.
 fn stage_has_tar(
-    _value: CausalEffect<f64>,
+    _value: CausalEffect<FloatType>,
     state: (),
-    context: Option<SmokingContext>,
-) -> PropagatingProcess<f64, (), SmokingContext> {
-    let ctx = context.expect("SmokingContext must be set before stage 1");
-    let high_nicotine = ctx.nicotine_level > THRESHOLD;
-    let pre_existing_tar = ctx.tar_level > THRESHOLD;
+    context: Option<BaseContext>,
+) -> PropagatingProcess<FloatType, (), BaseContext> {
+    let ctx = context.expect("the smoking world must be set before stage 1");
+    let high_nicotine = read(&ctx, NICOTINE) > THRESHOLD;
+    let pre_existing_tar = read(&ctx, TAR) > THRESHOLD;
     let has_tar = high_nicotine || pre_existing_tar;
     let next = PropagatingEffect::pure(if has_tar { 1.0 } else { 0.0 });
     PropagatingProcess::with_state(next, state, Some(ctx))
@@ -168,10 +185,10 @@ fn stage_has_tar(
 /// is what makes `alternate_value(...)` between the two stages a clean
 /// `do(Tar := x)`.
 fn stage_cancer_risk(
-    value: CausalEffect<f64>,
+    value: CausalEffect<FloatType>,
     state: (),
-    context: Option<SmokingContext>,
-) -> PropagatingProcess<f64, (), SmokingContext> {
+    context: Option<BaseContext>,
+) -> PropagatingProcess<FloatType, (), BaseContext> {
     let tar_indicator = value
         .into_value()
         .expect("stage_has_tar must produce a numeric tar indicator");
@@ -180,6 +197,6 @@ fn stage_cancer_risk(
     PropagatingProcess::with_state(next, state, context)
 }
 
-fn cancer_risk_from(value: &f64) -> bool {
+fn cancer_risk_from(value: &FloatType) -> bool {
     *value > 0.5
 }
