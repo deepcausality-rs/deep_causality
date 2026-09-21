@@ -211,7 +211,7 @@ fn test_east_coast_new_accepts_a_degenerate_space_dimension() {
     // The loop admits 0 beside +1, so a null space generator is not a convention violation.
     let metric = Metric::Custom {
         dim: 4,
-        neg_mask: 0b0001, // e0 = -1
+        neg_mask: 0b0001,  // e0 = -1
         zero_mask: 0b1000, // e3 = 0
     };
     let east = EastCoastMetric::new(metric).expect("a null space generator is admitted");
