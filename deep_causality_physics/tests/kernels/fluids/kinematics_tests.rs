@@ -56,8 +56,8 @@ fn test_strain_rate_equals_input_for_pure_strain() {
 #[test]
 fn test_strain_rate_is_unchanged_by_an_antisymmetric_shift() {
     // S is the symmetric part of the velocity gradient, so adding any antisymmetric matrix to
-    // ∇u — a rigid rotation superposed on the flow — must leave it untouched. Calling the kernel
-    // twice with the same argument, as this test used to, cannot fail for any implementation.
+    // ∇u — a rigid rotation superposed on the flow — must leave it untouched. The two calls take
+    // different arguments; calling it twice with the same one cannot fail for any implementation.
     let base = [[1.0, 0.5, -2.0], [3.0, 2.0, 0.25], [-1.5, 4.0, 3.0]];
     let skew = [[0.0, 1.25, -0.75], [-1.25, 0.0, 2.5], [0.75, -2.5, 0.0]];
 

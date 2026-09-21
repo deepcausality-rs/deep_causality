@@ -187,9 +187,9 @@ where
         // `2e-16` at `f64`. A fixed `1e-15` therefore sits below anything `f32` arithmetic can
         // produce, and an iterate that solves the equation to the last bit the type has would
         // still be refused — measured at `a = 2, e = 0.9, M = 0.25`, where `f64` converges and
-        // `f32` returned `NotConverged`. Eight ulp keeps `f64` where it was (`1.8e-15` against the
-        // old `1e-15`, so the `e = 0.9999` case below still exhausts the step test) and puts the
-        // narrower scalars inside their own noise floor.
+        // `f32` does not. Eight ulp is `1.8e-15` at `f64`, loose enough that the `e = 0.9999` case
+        // below still exhausts the step test, and puts the narrower scalars inside their own
+        // noise floor.
         let tol = Self::lit(8.0)? * R::epsilon();
         let mut ea = m;
         for _ in 0..100 {

@@ -490,7 +490,7 @@ fn test_pure_electric_field() {
 
     // `is_radiation_field` tests |E.B| < tol and nothing else, so a pure E field satisfies it
     // trivially: B = 0 makes E.B = 0 for any E. Asserting that is the honest statement of what
-    // the predicate does; discarding the answer, as this test used to, asserted nothing.
+    // the predicate does, and the answer is read rather than discarded.
     assert!(
         e_only.is_radiation_field().unwrap(),
         "E.B = 0 holds trivially when B = 0, so the orthogonality predicate must accept it"

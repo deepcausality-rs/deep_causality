@@ -151,9 +151,9 @@ fn massive_dirac_k0() -> (
 
 #[test]
 fn test_qgt_band_1_is_the_conjugate_of_band_0() {
-    // The band index is what this test is named for, so the two bands have to be distinguishable
-    // and their values checked. The previous fixture used an all-ones eigenvector matrix, where
-    // the bands are identical, and asserted only `is_ok()`.
+    // The band index is what this test is named for, so the two bands have to be distinguishable.
+    // An all-ones eigenvector matrix would not do: there the bands are identical and any band
+    // index gives the same answer.
     //
     // For a two-level system the Berry curvature of the two bands is equal and opposite, so the
     // imaginary part of Q_xy flips sign:
@@ -325,8 +325,7 @@ fn test_effective_band_drude_weight_error_nan_curvature() {
 #[test]
 fn test_effective_band_drude_weight_rejects_a_non_positive_lattice_constant() {
     // `Length::new` admits zero and rejects negatives, so the kernel owns the zero case and the
-    // type owns the negative one. The test is named for both because both must be refused; it
-    // used to be named for a negative value and pass zero.
+    // type owns the negative one. Both are exercised, because both must be refused.
     let energy_n = Energy::new(1.0).unwrap();
     let energy_0 = Energy::new(0.0).unwrap();
     let curvature = 0.5;

@@ -20,16 +20,15 @@
 //!
 //! # Why this asserts an invariant and not just `Ok`
 //!
-//! It used to assert only that every case returned `Ok`, and that proved too weak twice over. It
-//! says nothing about whether the returned state is *right*, and — because the solver's acceptance
-//! then depended on where an oscillating iteration happened to stop — it was not even stable across
-//! platforms: this sweep passed on macOS/aarch64 and reported `NotConverged` for
-//! `e = 0.9999, a = 7e6` on the Linux/x86_64 CI, the two libms differing only in the last bits of
-//! `sin` and `cos`. The solver's convergence test was mis-scaled; see `solve_fictitious_time`.
+//! Asserting that every case returns `Ok` is too weak twice over. It says nothing about whether
+//! the returned state is *right*, and it is not stable across platforms when the solver's
+//! acceptance depends on where an oscillating iteration happens to stop — two libms differing in
+//! the last bits of `sin` and `cos` are enough to move it. See `solve_fictitious_time` for the
+//! scaling of that convergence test.
 //!
-//! Every case now also has to conserve the specific orbital energy `v²/2 − μ/r`, which is constant
-//! along a Kepler orbit and is the property a caller actually depends on. A solver that returned
-//! `Ok` with the wrong root would satisfy the old assertion and fail this one.
+//! Every case therefore has to conserve the specific orbital energy `v²/2 − μ/r`, which is
+//! constant along a Kepler orbit and is the property a caller depends on. A solver returning `Ok`
+//! with the wrong root satisfies a status check and fails this one.
 
 use deep_causality_physics::KsPropagator;
 

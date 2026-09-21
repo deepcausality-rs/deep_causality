@@ -74,13 +74,10 @@ fn test_velocity_gradient_traits() {
 
 #[test]
 fn test_velocity_gradient_decomposes_into_strain_and_rotation() {
-    // The gradient used to be constructed into `_grad` and discarded: the decomposition was
-    // computed from the raw array in this test and then checked against that same array, so the
-    // `VelocityGradient` newtype played no part and the assertion was arithmetic the test had
-    // just performed itself.
-    //
-    // The split now goes through the kernels that own it, and the reconstruction is checked
-    // against the gradient read back out of the newtype.
+    // The split goes through the kernels that own it, and the reconstruction is checked against
+    // the gradient read back out of the newtype. Decomposing the raw array here and comparing it
+    // against that same array would leave the `VelocityGradient` newtype out of the assertion and
+    // check only arithmetic the test had just performed itself.
     let g = [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
     let grad = VelocityGradient::<f64>::new(g).unwrap();
 

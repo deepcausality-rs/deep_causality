@@ -1417,10 +1417,9 @@ fn test_area_mach_ratio_wrapper_error_path() {
 // =============================================================================
 // Delegation, against the independent oracle
 //
-// Every wrapper below used to be tested by `assert!(f(..).is_ok())` and nothing else. That is
-// satisfied by any implementation that returns `Ok` of anything: replacing `weber_number`'s body
-// with `PropagatingEffect::pure(R::zero())` — reporting zero for every input in the world — passed
-// the whole of this file.
+// `assert!(f(..).is_ok())` would not do for the wrappers below: it is satisfied by any
+// implementation returning `Ok` of anything. Measured — a `weber_number` whose body is
+// `PropagatingEffect::pure(R::zero())`, reporting zero for every input in the world, passes it.
 //
 // A wrapper's job is to carry the kernel's value into a `PropagatingEffect` and its error into a
 // failed one, so the test is that the value arrives intact, over the same diverse inputs the

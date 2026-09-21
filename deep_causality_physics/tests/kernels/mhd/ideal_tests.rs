@@ -199,12 +199,9 @@ fn test_magnetic_pressure_error() {
 
 #[test]
 fn test_ideal_induction_refuses_a_2d_complex_from_real_geometry() {
-    // This test asserted `is_ok()` until the silent skips were removed, and it was never able to
-    // see anything: `create_dummy_manifold` is a single triangle in a 2D ambient space filled with
-    // `0.0` at every simplex, so the kernel's answer was zero whether or not the algebra was right.
-    // Two silent-default idioms kept the shape error invisible — `if col < vector.len()` in the
-    // CSR product, and `.get(i).unwrap_or(&zero)` in the wedge — and the all-zero data made the
-    // truncated result indistinguishable from the correct one.
+    // `create_dummy_manifold` is a single triangle in a 2D ambient space filled with `0.0` at
+    // every simplex, so an assertion on its value would hold whatever the algebra did. What is
+    // pinned here is the refusal instead.
     //
     // The kernel is 3D-only: `i_v B = *(v ^ *B)` applies `*` on 2-forms and on `(n-1)`-forms as a
     // single operator, which holds only at `n = 3`. A triangle is 2D, so the refusal is correct.
@@ -309,13 +306,9 @@ fn fixture_manifold(complex: SimplicialComplex<f64>) -> SimplicialManifold<f64, 
 
 #[test]
 fn test_ideal_induction_refuses_a_2d_complex_carrying_no_two_form_star() {
-    // **The subject of this test no longer exists.** It was written when the kernel read
-    // `hodge_star_operators()[2]` and pinned the message for a complex that did not carry one.
-    // Since task 6.7u the kernel does not consult the Hodge star at all — the contraction is
-    // Whitney interpolation — so there is no missing-⋆₂ branch to reach.
-    //
-    // The fixture is kept because it still pins something: a 2D complex is refused by the
-    // dimension guard, whatever operators it carries or does not carry.
+    // A 2D complex is refused by the dimension guard whatever Hodge ⋆ operators it carries or
+    // omits. The kernel never consults the Hodge star — the contraction is Whitney interpolation
+    // — so a complex missing ⋆₂ is refused for its dimension, not for the missing operator.
     let complex = SimplicialComplex::new(
         skeletons_of(&[&[0, 1], &[0, 2], &[1, 2]], &[&[0, 1, 2]]),
         vec![],
@@ -324,8 +317,8 @@ fn test_ideal_induction_refuses_a_2d_complex_carrying_no_two_form_star() {
     );
     let m = fixture_manifold(complex);
 
-    // 2D fixture: the kernel is 3D-only, so the dimension guard answers before the
-    // branch this test was written for. It pinned the missing-⋆₂ message, which is now unreachable from a 2D complex.
+    // 2D fixture: the kernel is 3D-only, so the dimension guard answers first, whatever
+    // operators the complex carries.
     let msg = format!("{}", ideal_induction_kernel(&m, &m).unwrap_err());
     assert!(
         msg.contains("needs a 3D complex"),
@@ -346,8 +339,8 @@ fn test_ideal_induction_rejects_missing_coboundary_operator() {
     );
     let m = fixture_manifold(complex);
 
-    // 2D fixture: the kernel is 3D-only, so the dimension guard answers before the
-    // branch this test was written for. It pinned the missing-d₁ message, which is now unreachable from a 2D complex.
+    // 2D fixture: the kernel is 3D-only, so the dimension guard answers first, whatever
+    // operators the complex carries.
     let msg = format!("{}", ideal_induction_kernel(&m, &m).unwrap_err());
     assert!(
         msg.contains("needs a 3D complex"),
@@ -357,13 +350,12 @@ fn test_ideal_induction_rejects_missing_coboundary_operator() {
 
 #[test]
 fn test_ideal_induction_refuses_a_2d_triangle_with_hand_built_operators() {
-    // A 2D fixture. The kernel is 3D-only, so the dimension guard now answers first
-    // and this fixture can no longer reach the branch it was written for.
-    // It pinned dtB = 1.0 for the well-formed triangle with hand-built (3,1) operators.
-    // The same property is covered in-domain by the tetrahedron fixtures below.
-
-    // What it formerly asserted, kept as the record of the 2D convention it encoded.
-    // Note the fixture's ⋆₂ is (3, 1), which on a triangle is ambiguous between faces→edges
+    // A 2D fixture with hand-built (3, 1) operators. The kernel is 3D-only, so the dimension
+    // guard answers first; the induction itself is covered in-domain by the tetrahedron fixtures
+    // below.
+    //
+    // The arithmetic below records the 2D convention this fixture encodes. Its ⋆₂ is (3, 1),
+    // which on a triangle is ambiguous between faces→edges
     // (the 3D reading this kernel wants) and faces→vertices (the correct 2D one), because
     // n0 = n1 = 3. That ambiguity is why the wrong convention went unnoticed here.
     //   ∂ₜB = d(⋆(v ∧ ⋆B)) with the fixture operators:
@@ -388,10 +380,9 @@ fn test_ideal_induction_refuses_a_2d_triangle_with_hand_built_operators() {
 
 #[test]
 fn test_ideal_induction_refuses_a_2d_complex_with_a_non_triangular_face() {
-    // A 2D fixture. The kernel is 3D-only, so the dimension guard now answers first
-    // and this fixture can no longer reach the branch it was written for.
-    // It pinned that a 4-vertex 2-skeleton entry contributes zero to the wedge.
-    // The same property is covered in-domain by the tetrahedron fixtures below.
+    // A 2D fixture. The kernel is 3D-only, so the dimension guard answers first. The property
+    // the geometry below describes — that a 4-vertex 2-skeleton entry contributes zero to the wedge — is
+    // covered in-domain by the tetrahedron fixtures further down.
 
     // The wedge of two 1-forms is defined on triangles. A 2-skeleton entry with
     // four vertices carries no such value, so it contributes zero to v ∧ ⋆B and
@@ -413,10 +404,9 @@ fn test_ideal_induction_refuses_a_2d_complex_with_a_non_triangular_face() {
 
 #[test]
 fn test_ideal_induction_refuses_a_2d_complex_with_an_absent_boundary_edge() {
-    // A 2D fixture. The kernel is 3D-only, so the dimension guard now answers first
-    // and this fixture can no longer reach the branch it was written for.
-    // It pinned that a face whose [v1,v2] edge is absent contributes zero.
-    // The same property is covered in-domain by the tetrahedron fixtures below.
+    // A 2D fixture. The kernel is 3D-only, so the dimension guard answers first. The property
+    // the geometry below describes — that a face whose [v1,v2] edge is absent contributes zero — is
+    // covered in-domain by the tetrahedron fixtures further down.
 
     // The cup product reads α on [v0,v1] and β on [v1,v2]. Here edge [1,2] is
     // absent from the 1-skeleton, so the face [0,1,2] has no [v1,v2] slot to
@@ -437,13 +427,12 @@ fn test_ideal_induction_refuses_a_2d_complex_with_an_absent_boundary_edge() {
 }
 
 // =============================================================================
-// The hand-built star-wedge fixtures that used to live here are gone.
+// Why there are no hand-built star-wedge fixtures here.
 //
-// They supplied a degree-changing `⋆₂` of shape (6, 4) — an operator the crate never vends — so
-// that the old `∂ₜB = d(⋆(v ∧ ⋆B))` chain could be exercised at all. With the contraction moved
-// onto `Manifold::interior_product` (task 6.7u) the kernel reads no Hodge star, and a fixture
-// asserting a hand-evaluated result of that chain would be pinning a formulation rather than the
-// physics. What replaces them is below: real coordinates, and a closed form to check against.
+// The kernel reads no Hodge star: the contraction is `Manifold::interior_product`, Whitney
+// interpolation on real geometry. A hand-built fixture supplying a degree-changing `⋆₂` of shape
+// (6, 4) — an operator the crate never vends — would pin a formulation rather than the physics.
+// The fixtures below use real coordinates and a closed form to check against.
 // =============================================================================
 
 // =============================================================================
@@ -588,9 +577,6 @@ fn test_a_uniform_field_in_a_uniform_flow_does_not_change() {
     // zero on every face. So `∂ₜB = 0` — **exactly**, not to a tolerance, because Whitney
     // interpolation reproduces constant fields without error.
     //
-    // This is the test the old hand-built fixture could not be: its `⋆₂` was an operator the crate
-    // never vends, so its hand-evaluated expectation described a formulation rather than the
-    // physics.
     for (tets, coords) in [unit_tet(), two_tets()] {
         for (v, b) in [
             ([1.0, 0.0, 0.0], [0.0, 1.0, 0.0]),
@@ -762,12 +748,7 @@ fn test_ideal_induction_is_linear_in_the_magnetic_field() {
 
 #[test]
 fn test_ideal_induction_refuses_a_complex_without_geometry() {
-    // **What this replaces.** The test here used to hand the kernel the `(4, 4)` diagonal star the
-    // crate actually vends and pin the refusal, because the kernel needed a degree-changing
-    // `(6, 4)` one. That refusal is gone with the star: the contraction no longer reads
-    // `hodge_star_operators` at all, which is the point of task 6.7u.
-    //
-    // The refusal that replaces it is the one the new formulation actually has. Whitney
+    // Whitney
     // interpolation is geometric, so a complex built without coordinates cannot be contracted on,
     // and the kernel says so rather than inventing any.
     let (tets, coords) = unit_tet();

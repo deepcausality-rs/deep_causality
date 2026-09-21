@@ -171,8 +171,8 @@ fn test_master_equation_sums_the_markov_and_memory_contributions() {
     use deep_causality_physics::Probability;
     use deep_causality_physics::generalized_master_equation_kernel;
 
-    // 0.4 from the Markov term and 0.05 from the memory term add to 0.45. Splitting the three
-    // cases apart means a failure in the Markov term no longer hides the memory term.
+    // 0.4 from the Markov term and 0.05 from the memory term add to 0.45. The three cases are
+    // separate so that a failure in the Markov term cannot hide the memory term.
     let state = vec![Probability::<f64>::new(0.5).unwrap()];
     let history = vec![vec![Probability::<f64>::new(0.5).unwrap()]];
     let mk = vec![CausalTensor::new(vec![0.1], vec![1, 1]).unwrap()];

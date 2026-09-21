@@ -299,8 +299,7 @@ fn test_proca_equation_wrapper_error() {
 #[test]
 fn test_proca_equation_wrapper_error_propagation() {
     // A NaN mass drives `proca_equation_kernel` into its finiteness guard, and the wrapper must
-    // forward that refusal rather than absorb it. The body used to assert success under an
-    // error-propagation name, because the fixture it was written for had stopped failing.
+    // forward that refusal rather than absorb it.
     let field = create_simple_manifold();
     let potential = create_simple_manifold();
 

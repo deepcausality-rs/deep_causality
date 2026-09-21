@@ -65,9 +65,6 @@ fn test_plasma_frequency_monotonic() {
 
 #[test]
 fn test_debye_length() {
-    // This test asserted only `is_ok()` and `value() > 0.0`, which any formula returning a
-    // positive number satisfies — the Debye length had no numeric oracle anywhere in the suite.
-    //
     // Provenance: λ_D = √(ε₀ k_B T_e / (n_e e²)) evaluated at the fixture's own constants,
     // ε₀ = 8.854e-12 F/m and e = 1.602e-19 C, with T = 100 K and n = 1e18 m⁻³.
     const LAMBDA_D_100K: f64 = 6.901_585_751_398_446e-7;

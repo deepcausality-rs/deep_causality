@@ -25,8 +25,8 @@ fn test_hookes_law_kernel_valid() {
     let stress = hookes_law_kernel(&stiffness, &strain).unwrap();
 
     // sigma_ij = C_ijkl eps_kl. Only C_0000 is non-zero and every strain entry is 1, so
-    // sigma_00 = 1 and every other component vanishes. Asserting the rank alone, as this test
-    // used to, admits any rank-2 output whatever the contraction did.
+    // sigma_00 = 1 and every other component vanishes. The components are asserted, not only the
+    // rank, which any rank-2 output would satisfy whatever the contraction did.
     assert_eq!(stress.inner().num_dim(), 2, "result is rank-2");
     let d: &[f64] = stress.inner().as_slice();
     assert_eq!(d.len(), 9, "3x3 stress tensor");

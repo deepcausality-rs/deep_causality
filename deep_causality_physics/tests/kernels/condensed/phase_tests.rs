@@ -142,8 +142,7 @@ fn test_ginzburg_landau_error_metric_mismatch() {
 fn test_ginzburg_landau_accepts_a_vector_potential_of_matching_size() {
     // `Metric::Euclidean(n)` fixes the component count, so a vector potential built from the same
     // metric as the gradient always matches and the kernel's length guard cannot fire from here.
-    // This test used to carry an error-path name and assert `is_ok()`; it is named for what it
-    // does, and it now observes the value rather than only the status.
+    // The value is asserted rather than the status alone.
     //
     // psi = 1, alpha = beta = 1, zero gradient and zero potential:
     //   F = alpha |psi|^2 + (beta/2) |psi|^4 = 1 + 0.5 = 1.5

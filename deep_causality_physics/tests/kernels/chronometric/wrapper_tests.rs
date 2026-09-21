@@ -249,8 +249,7 @@ fn test_wrapper_logs_field_present() {
     );
 
     // A successful effect carries a value and no error, and its log channel is present and
-    // separate from that value. Formatting the logs and discarding the string, as this test used
-    // to, asserted nothing at all.
+    // separate from that value. The logs are read, not merely formatted and dropped.
     let effect = solve_gm_analytical(&coord_a, &coord_b, &body);
     assert!(effect.error().is_none(), "the call succeeds");
     assert!(

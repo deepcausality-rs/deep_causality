@@ -31,14 +31,11 @@ use deep_causality_topology::SimplicialManifold;
 /// δ_k = M_{k-1}^{-1} B_k M_k
 /// ```
 ///
-/// with `B_k` the **boundary** operator taking k-cells to (k−1)-cells. This kernel previously
-/// open-coded `⋆d⋆` against the raw `hodge_star_operators()`, applying the **coboundary**
-/// `d: Λ² → Λ³` where δ requires the boundary `Λ² → Λ¹`. The result therefore landed on
-/// 3-simplices, and a current density that is documented as a 1-form was returned indexed by
-/// the wrong skeleton entirely. Nothing caught it: the only test asserted `is_ok()` and that
-/// shape, so it pinned the wrong skeleton as correct.
+/// with `B_k` the **boundary** operator taking k-cells to (k−1)-cells. It is the boundary and not
+/// the coboundary that δ needs: `Λ² → Λ¹`, so `J` lands on the 1-simplices where a current-density
+/// 1-form belongs.
 ///
-/// Routing through the crate's operator also makes `δ² = 0` hold exactly, because
+/// Going through this operator makes `δ² = 0` hold exactly, since
 /// `δ_{k-1} δ_k = M^{-1} B_{k-1} B_k M` and `B_{k-1} B_k = 0`. That identity is charge
 /// conservation, `∂_μ J^μ = 0`, and it holds whatever the mass matrices contain — which is what
 /// makes it usable as an oracle here.

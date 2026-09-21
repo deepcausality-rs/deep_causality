@@ -414,8 +414,8 @@ fn test_isentropic_ratio_guards() {
 #[test]
 fn test_isentropic_pressure_ratio_rises_monotonically_with_mach() {
     // p0/p = (1 + (gamma-1)/2 M^2)^(gamma/(gamma-1)) is 1 at rest and strictly increasing in M,
-    // because the base grows with M^2 and the exponent is positive for gamma > 1. Calling the
-    // function twice with identical arguments, as this test used to, cannot fail for any
+    // because the base grows with M^2 and the exponent is positive for gamma > 1. The calls below
+    // take different Mach numbers; two calls with identical arguments cannot fail for any
     // deterministic implementation.
     let at_rest = isentropic_pressure_ratio_kernel(0.0_f64, 1.4).unwrap();
     assert!((at_rest - 1.0).abs() < TOL, "p0/p must be 1 at M = 0");
