@@ -224,15 +224,24 @@ fn test_relativistic_current_wrapper_success() {
     let cloud = PointCloud::new(point_tensor, CausalTensor::<f64>::zeros(&[5]), 0).unwrap();
     let complex = cloud.triangulate(1.5).unwrap();
     let total = complex.total_simplices();
-    let manifold = Manifold::new(
+    let num_edges = complex.skeletons()[1].simplices().len();
+    // The kernel takes the codifferential, which reads a Regge geometry's mass matrices, so the
+    // manifold must carry one. This was `Manifold::new` before the kernel stopped open-coding
+    // its own operator chain.
+    let regge =
+        ReggeGeometry::new(CausalTensor::new(vec![1.0; num_edges], vec![num_edges]).unwrap());
+    let manifold = Manifold::with_metric(
         complex,
         CausalTensor::new(vec![0.0; total], vec![total]).unwrap(),
+        Some(regge),
         0,
     )
     .unwrap();
 
     let metric = EastCoastMetric::new_nd(4).unwrap();
-    // Delegation, not merely success.
+    // Delegation, not merely success. Note this pins the wrapper only: both sides call the same
+    // kernel, so a defect in the kernel appears on both and cancels. The kernel's own behaviour
+    // is pinned in grmhd_tests.rs by charge conservation.
     let result = relativistic_current(&manifold, &metric);
     let carried = result.value_cloned().unwrap();
     let direct = relativistic_current_kernel(&manifold, &metric).unwrap();

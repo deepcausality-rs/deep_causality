@@ -54,9 +54,13 @@ fn test_relativistic_current_kernel_4d() {
         data[n0 + n1 + i] = (i as f64) * 0.1;
     }
 
-    let manifold = Manifold::new(
+    // The codifferential reads the mass matrices a Regge geometry vends, so the manifold must
+    // carry one. This was `Manifold::new` while the kernel open-coded its own operator chain.
+    let regge = ReggeGeometry::new(CausalTensor::new(vec![1.0; n1], vec![n1]).unwrap());
+    let manifold = Manifold::with_metric(
         complex,
         CausalTensor::new(data, vec![total_simplices]).unwrap(),
+        Some(regge),
         0,
     )
     .unwrap();
@@ -73,8 +77,159 @@ fn test_relativistic_current_kernel_4d() {
     );
 
     let j = result.unwrap();
-    // J is returned as a dual 1-form on 3-simplices
-    assert_eq!(j.shape(), &[n3]);
+    // J is a current-density 1-form, so it is indexed by the 1-simplices.
+    //
+    // This assertion read `&[n3]` while the kernel open-coded the codifferential as a chain
+    // ending in the *coboundary* d: Lambda^2 -> Lambda^3. That put the answer on 3-simplices,
+    // and the test pinned it there. delta takes a 2-form to a 1-form; n1 is the only shape a
+    // current density can have.
+    assert_eq!(
+        j.shape(),
+        &[n1],
+        "delta F is a 1-form: n0={n0}, n1={n1}, n2={n2}, n3={n3}"
+    );
+}
+
+#[test]
+fn test_relativistic_current_is_divergence_free() {
+    // Charge conservation, d_mu J^mu = 0, which on the complex is delta J = delta^2 F = 0.
+    //
+    // This is exact rather than approximate, and it owes nothing to this implementation:
+    //     delta_k = M_{k-1}^-1 B_k M_k
+    // so delta_{k-1} delta_k = M^-1 B_{k-1} B_k M, and B_{k-1} B_k = 0 because the boundary of
+    // a boundary is empty. The identity therefore holds whatever the mass matrices contain --
+    // which is what makes it usable while the intermediate-grade Hodge star is still wrong.
+    //
+    // It is also the test that would have caught the defect this kernel carried: a chain built
+    // on the coboundary instead of the boundary lands on the wrong skeleton, and delta cannot
+    // even be applied to the result.
+    let points_data = vec![
+        0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
+        0.0, 1.0,
+    ];
+    let point_tensor = CausalTensor::new(points_data, vec![5, 4]).unwrap();
+    let cloud = PointCloud::new(point_tensor, CausalTensor::<f64>::zeros(&[5]), 0).unwrap();
+    let complex = cloud.triangulate(1.5).unwrap();
+
+    let skeletons = complex.skeletons();
+    let n0 = skeletons[0].simplices().len();
+    let n1 = skeletons[1].simplices().len();
+    let n2 = skeletons[2].simplices().len();
+    let total = complex.total_simplices();
+    let num_edges = n1;
+
+    // A 2-form with distinct entries on every face. A uniform or all-zero F would make
+    // delta F vanish for any operator at all, so the divergence check would pin nothing.
+    let mut data = vec![0.0_f64; total];
+    for i in 0..n2 {
+        data[n0 + n1 + i] = 1.0 + (i as f64) * 0.37;
+    }
+
+    let regge =
+        ReggeGeometry::new(CausalTensor::new(vec![1.0; num_edges], vec![num_edges]).unwrap());
+    let manifold = Manifold::with_metric(
+        complex,
+        CausalTensor::new(data, vec![total]).unwrap(),
+        Some(regge),
+        0,
+    )
+    .unwrap();
+
+    let j = relativistic_current_kernel(&manifold, &EastCoastMetric::minkowski_4d()).unwrap();
+    assert_eq!(j.shape(), &[n1]);
+
+    // The current must not be trivially zero, or the divergence below would hold vacuously.
+    let magnitude: f64 = j.as_slice().iter().map(|x: &f64| x.abs()).sum();
+    assert!(
+        magnitude > 1e-9,
+        "J vanishes identically; the divergence check would pin nothing. |J| = {magnitude}"
+    );
+
+    // delta J, a 0-form on the vertices, must vanish.
+    let div = manifold.codifferential_of(j.as_slice(), 1);
+    assert_eq!(div.shape(), &[n0]);
+    for (i, d) in div.as_slice().iter().enumerate() {
+        assert!(
+            d.abs() < 1e-9,
+            "vertex {i}: div J = {d}, charge conservation requires 0"
+        );
+    }
+}
+
+#[test]
+fn test_relativistic_current_is_linear_in_the_field() {
+    // delta is linear, so scaling F scales J by the same factor. A kernel that squared the
+    // field, or that added a constant anywhere, fails this while still returning plausible
+    // numbers of the right shape.
+    let points_data = vec![
+        0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
+        0.0, 1.0,
+    ];
+    let build = |scale: f64| {
+        let point_tensor = CausalTensor::new(points_data.clone(), vec![5, 4]).unwrap();
+        let cloud = PointCloud::new(point_tensor, CausalTensor::<f64>::zeros(&[5]), 0).unwrap();
+        let complex = cloud.triangulate(1.5).unwrap();
+        let sk = complex.skeletons();
+        let (n0, n1, n2) = (
+            sk[0].simplices().len(),
+            sk[1].simplices().len(),
+            sk[2].simplices().len(),
+        );
+        let total = complex.total_simplices();
+        let mut data = vec![0.0_f64; total];
+        for i in 0..n2 {
+            data[n0 + n1 + i] = scale * (1.0 + (i as f64) * 0.37);
+        }
+        let regge = ReggeGeometry::new(CausalTensor::new(vec![1.0; n1], vec![n1]).unwrap());
+        let m = Manifold::with_metric(
+            complex,
+            CausalTensor::new(data, vec![total]).unwrap(),
+            Some(regge),
+            0,
+        )
+        .unwrap();
+        relativistic_current_kernel(&m, &EastCoastMetric::minkowski_4d()).unwrap()
+    };
+
+    let single = build(1.0);
+    let triple = build(3.0);
+    for (i, (a, b)) in single.as_slice().iter().zip(triple.as_slice()).enumerate() {
+        assert!(
+            (3.0 * a - b).abs() < 1e-9,
+            "edge {i}: 3*J(F) = {}, J(3F) = {b}",
+            3.0 * a
+        );
+    }
+}
+
+#[test]
+fn test_relativistic_current_refuses_a_manifold_without_a_metric() {
+    // `codifferential_of` panics on a metric-less manifold, and `Manifold::new` builds exactly
+    // that. The kernel must refuse rather than let the panic out.
+    let points_data = vec![
+        0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
+        0.0, 1.0,
+    ];
+    let point_tensor = CausalTensor::new(points_data, vec![5, 4]).unwrap();
+    let cloud = PointCloud::new(point_tensor, CausalTensor::<f64>::zeros(&[5]), 0).unwrap();
+    let complex = cloud.triangulate(1.5).unwrap();
+    let total = complex.total_simplices();
+    let manifold = Manifold::new(
+        complex,
+        CausalTensor::new(vec![1.0; total], vec![total]).unwrap(),
+        0,
+    )
+    .unwrap();
+
+    let err = relativistic_current_kernel(&manifold, &EastCoastMetric::minkowski_4d()).unwrap_err();
+    assert!(
+        matches!(err.0, PhysicsErrorEnum::DimensionMismatch { .. }),
+        "expected a DimensionMismatch refusal, got {err:?}"
+    );
+    assert!(
+        format!("{err}").contains("with_metric"),
+        "the refusal must name the constructor that fixes it: {err}"
+    );
 }
 
 #[test]
@@ -277,9 +432,13 @@ fn test_relativistic_current_kernel_missing_coboundary_operators_error() {
     // is read before the coboundary count is checked.
     let hodge: Vec<CsrMatrix<f64>> = (0..4).map(|_| CsrMatrix::new()).collect();
     let complex = SimplicialComplex::new(skeletons, vec![], vec![], hodge);
-    let manifold = Manifold::new(
+    // A metric is needed to get past the guard that precedes the coboundary count; the three
+    // edge lengths are never read, because the coboundary check answers first.
+    let regge = ReggeGeometry::new(CausalTensor::new(vec![1.0; 3], vec![3]).unwrap());
+    let manifold = Manifold::with_metric(
         complex,
         CausalTensor::new(vec![0.0; 7], vec![7]).unwrap(),
+        Some(regge),
         0,
     )
     .unwrap();
