@@ -81,8 +81,8 @@ greater than `RECORD_VERSION` with `ProjectionError::Version { found, supported 
 ### Requirement: The identifier reserve is opaque except for `next`
 
 `IdReserve` SHALL hold identifiers a store has made unique and expose `new(Vec<ContextoidId>)`,
-`next(&mut self) -> Option<ContextoidId>` and `remaining(&self) -> usize`, and nothing that says
-how an identifier was made unique.
+`next(&mut self) -> Option<ContextoidId>` as its `Iterator` implementation, and `remaining(&self)
+-> usize`, and nothing that says how an identifier was made unique.
 
 #### Scenario: A reserve yields each identifier once
 
@@ -92,10 +92,12 @@ how an identifier was made unique.
 
 ### Requirement: `ProjectionError` names the node and the rule
 
-The store crate SHALL declare `ProjectionError` with the variants `WrongVariant { id, expected,
-found }`, `WrongPayload { id, expected, found }`, `MissingField { id, field }`, `Unrecordable { id,
-kind }`, `Scalar { id, value }`, `Identity { id, rule }` and `Version { found, supported }`,
-implementing `Debug`, `Clone`, `PartialEq`, `Display` and `std::error::Error`.
+The store crate SHALL declare `ProjectionError` in the repository's error convention: a public
+tuple struct around a public `ProjectionErrorEnum`, with one constructor function per variant, a
+`kind()` accessor, and `Debug`, `Clone`, `PartialEq`, `Display` and `std::error::Error` on the
+struct. The enum's variants are `WrongVariant { id, expected, found }`, `WrongPayload { id,
+expected, found }`, `MissingField { id, field }`, `Unrecordable { id, kind }`, `Scalar { id,
+value }`, `Identity { id, rule }` and `Version { found, supported }`.
 
 `expected`, `found`, `field`, `kind` and `rule` are `&'static str`; `id` is a `ContextoidId`, or a
 `ContextId` where the rule concerns a container.

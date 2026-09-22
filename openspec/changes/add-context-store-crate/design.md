@@ -363,14 +363,20 @@ floor, because `utils_test` counts toward the crate's coverage.
 
 ### 18. Errors
 
-`ProjectionError` in the store crate: `WrongVariant { id, expected, found }`, `WrongPayload { id,
-expected, found }`, `MissingField { id, field }`, `Unrecordable { id, kind }`, `Scalar { id, value }`,
-`Identity { id, rule }`, `Version { found, supported }`. It implements `Display` and
-`std::error::Error`. `MissingField` is for a `Storable` implementation reading a `Fields` record
-that lacks a name it expects.
+Every error type follows the repository's convention, as `PhysicsError` shows it: a public tuple
+struct around a public enum (`ProjectionError(pub ProjectionErrorEnum)`), one constructor
+function per variant, a `kind()` accessor, and `Display` and `std::error::Error` on the struct, so
+the classification can grow without the struct changing.
 
-`StoreError<E, B = core::convert::Infallible>` in the context crate: `Storage(E)`, `Substrate(B)`,
-`Projection(ProjectionError)`. The default makes the plain paths read `StoreError<S::Error>`.
+`ProjectionErrorEnum` in the store crate: `WrongVariant { id, expected, found }`, `WrongPayload {
+id, expected, found }`, `MissingField { id, field }`, `Unrecordable { id, kind }`, `Scalar { id,
+value }`, `Identity { id, rule }`, `Version { found, supported }`. `MissingField` is for a
+`Storable` implementation reading a `Fields` record that lacks a name it expects.
+
+`StoreError<E, B = core::convert::Infallible>` in the context crate wraps `StoreErrorEnum<E, B>`:
+`Storage(E)`, `Substrate(B)`, `Projection(ProjectionError)`. The default makes the plain paths read
+`StoreError<S::Error>`. The in-memory backend's `MemoryStorageError` wraps `MemoryStorageErrorEnum`
+the same way.
 
 ### 19. Snapshots are canonical
 

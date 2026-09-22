@@ -1,3 +1,6 @@
+Groups 3 onward follow the `unified-math-tdd-protocol`: API-only, suite observed failing, defect
+audit, implementation, mutants. The record is `tdd-notes.md` beside this file.
+
 ## 1. Scaffold `deep_causality_context_store`
 
 - [x] 1.1 Create `deep_causality_context_store/` with `Cargo.toml`: version 0.1.0,
@@ -35,48 +38,51 @@
 
 ## 3. Aliases, constants, errors, records
 
-- [ ] 3.1 `src/alias/mod.rs`: `IdentificationValue = u64`, `ContextId`, `ContextoidId`, each with
+- [x] 3.1 `src/alias/mod.rs`: `IdentificationValue = u64`, `ContextId`, `ContextoidId`, each with
       a docstring stating that the width is the record's and that the projection pins it to the
       engine's
-- [ ] 3.2 `src/constants/mod.rs`: `pub const RECORD_VERSION: u16 = 1;`
-- [ ] 3.3 `src/errors/projection_error.rs`: `ProjectionError` with the seven variants, `Display`
-      naming the identifier and both names, `std::error::Error`; tests for every variant's display
-      and equality
-- [ ] 3.4 `src/types/records/data_record/mod.rs`: the eight-variant value tree with `Fields` as an
+- [x] 3.2 `src/constants/mod.rs`: `pub const RECORD_VERSION: u16 = 1;`
+- [x] 3.3 `src/errors/projection_error.rs`: `ProjectionError(pub ProjectionErrorEnum)` in the
+      repository's error convention with the seven variants, a constructor per variant, `kind()`,
+      `Display` naming the identifier and both names, `std::error::Error`; tests for every variant's
+      display and equality. Corrected during apply: struct-around-enum, as `PhysicsError` shows it
+- [x] 3.4 `src/types/records/data_record/mod.rs`: the eight-variant value tree with `Fields` as an
       ordered `Vec<(String, DataRecord)>`; `Debug`, `Clone`, `PartialEq`
-- [ ] 3.5 `src/types/records/`: `TimeRecord`, `SpaceRecord`, `SpaceTimeRecord`, `NodeRecord` as
-      enums with named fields; `ContextRecord`, `ContextoidRecord`, `RelationRecord`,
+- [x] 3.5 `src/types/records/<record>/mod.rs`, one folder module per record: `TimeRecord`,
+      `SpaceRecord`, `SpaceTimeRecord`, `NodeRecord` as enums with named fields; `ContextRecord`, `ContextoidRecord`, `RelationRecord`,
       `ExtraContextSnapshot` (`id`, `name`, `nodes`, `edges`) as structs with private fields,
       constructors and getters; `Copy` wherever no field forbids it
-- [ ] 3.6 `src/types/records/context_snapshot/mod.rs`: `ContextSnapshot` (`version`, `context`,
+- [x] 3.6 `src/types/records/context_snapshot/mod.rs`: `ContextSnapshot` (`version`, `context`,
       `nodes`, `edges`, `extras`) with `new` setting `version` to `RECORD_VERSION`, getters, and
       `into_parts` for `restore`
-- [ ] 3.7 `src/types/id_reserve/mod.rs`: `IdReserve` with `new`, `next`, `remaining`
-- [ ] 3.8 `src/types/context_event/mod.rs`: `ContextEvent` with the twelve variants
-- [ ] 3.9 Tests under `tests/types/` mirroring every file: constructor and getter round trips, derive
+- [x] 3.7 `src/types/id_reserve/mod.rs`: `IdReserve` with `new`, `remaining`, and `next` as its
+      `Iterator` implementation in `iterator.rs` (clippy's `should_implement_trait`)
+- [x] 3.8 `src/types/context_event/mod.rs`: `ContextEvent` with the twelve variants
+- [x] 3.9 Tests under `tests/types/` mirroring every file: constructor and getter round trips, derive
       behaviour, one test per record enum asserting its variant count against the number the spec
       states, the ordered-equality scenario for `Fields`
 
 ## 4. Traits
 
-- [ ] 4.1 `src/traits/recordable.rs`: `Recordable<Rec>` with `to_record` and `from_record`
-- [ ] 4.2 `src/traits/context_storage.rs`: `ContextStorage` with `Error`, `Slice` and the thirteen
+- [x] 4.1 `src/traits/recordable.rs`: `Recordable<Rec>` with `to_record` and `from_record`
+- [x] 4.2 `src/traits/context_storage.rs`: `ContextStorage` with `Error`, `Slice` and the thirteen
       operations returning `impl Future<Output = Result<…, Self::Error>> + Send`; docstrings state
       each refusal, the idempotence rules, the one-level materialisation of references and the
       edition-2024 borrow note
-- [ ] 4.3 `src/traits/substrate.rs`: `Substrate` with `deposit` and `resolve` over `DataRecord`
-- [ ] 4.4 `src/traits/context_events.rs`: `ContextEvents` with `Error`, `Cursor` and `next`
-- [ ] 4.5 `src/traits/context_storage_stream.rs`: `ContextStorageStream: ContextStorage` with
+- [x] 4.3 `src/traits/substrate.rs`: `Substrate` with `deposit` and `resolve` over `DataRecord`
+- [x] 4.4 `src/traits/context_events.rs`: `ContextEvents` with `Error`, `Cursor` and `next`
+- [x] 4.5 `src/traits/context_storage_stream.rs`: `ContextStorageStream: ContextStorage` with
       `Cursor`, `Events`, `subscribe`, `apply`, `apply_batch`, no default bodies; docstring states
       the fixed scope of a subscription
-- [ ] 4.6 Export every trait from `lib.rs`; add `tests/traits/*_tests.rs` with a minimal
+- [x] 4.6 Export every trait from `lib.rs`; add `tests/traits/*_tests.rs` with a minimal
       implementor of each trait to pin static dispatch and the `Send` bound through an
       `assert_send` helper
 
 ## 5. In-memory backend under `utils_test`
 
-- [ ] 5.1 `src/utils_test/block_on.rs`: `block_on<F: Future>(F) -> F::Output` polling on
-      `Waker::noop()`; test with `ready` and with a once-pending future
+- [x] 5.1 `src/utils_test/block_on.rs`: `block_on<F: Future>(F) -> F::Output` polling on
+      `Waker::noop()`; test with `ready`, a once-pending and a five-times-pending future. Pulled
+      forward into group 4 because the trait tests drive futures with it
 - [ ] 5.2 `src/utils_test/memory_storage/`: `MemoryStorage` holding `Mutex<MemoryState>` and the
       event log; `MemoryState` as a fold over `ContextEvent` with the reserve counter, nodes,
       edges, containers (name, links, references); `MemoryStorageError` with one variant per

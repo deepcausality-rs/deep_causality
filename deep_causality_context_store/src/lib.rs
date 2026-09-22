@@ -6,9 +6,11 @@
 //! The persistence contract for the DeepCausality context.
 //!
 //! A `Context` in `deep_causality_context` lives in memory. This crate declares what a store has
-//! to hold to keep one: the record vocabulary a context projects onto, the storage trait a backend
-//! implements, and the vocabulary types both sides name. It depends on nothing, so a backend links
-//! this crate alone.
+//! to hold to keep one: the record vocabulary a context projects onto, the [`ContextStorage`]
+//! trait a backend implements, the [`Recordable`] projection the context crate implements beside
+//! its node types, the [`Substrate`] a reference-holding store keeps values in, and the
+//! [`ContextStorageStream`] a backend adds when it can report changes. It depends on nothing, so a
+//! backend links this crate alone.
 //!
 //! See <https://docs.deepcausality.com/> for the documentation.
 
@@ -19,6 +21,38 @@ mod traits;
 mod types;
 pub mod utils_test;
 
+//
+// Aliases and constants
+//
+pub use crate::alias::*;
+pub use crate::constants::*;
+//
+// Error types
+//
+pub use crate::errors::*;
+//
+// Traits
+//
+pub use crate::traits::context_events::{ContextEventItem, ContextEvents};
+pub use crate::traits::context_storage::ContextStorage;
+pub use crate::traits::context_storage_stream::ContextStorageStream;
+pub use crate::traits::recordable::Recordable;
+pub use crate::traits::substrate::Substrate;
+//
+// Records
+//
+pub use crate::types::context_event::ContextEvent;
+pub use crate::types::id_reserve::IdReserve;
+pub use crate::types::records::context_record::ContextRecord;
+pub use crate::types::records::context_snapshot::ContextSnapshot;
+pub use crate::types::records::contextoid_record::ContextoidRecord;
+pub use crate::types::records::data_record::DataRecord;
+pub use crate::types::records::extra_context_snapshot::ExtraContextSnapshot;
+pub use crate::types::records::node_record::NodeRecord;
+pub use crate::types::records::relation_record::RelationRecord;
+pub use crate::types::records::space_record::SpaceRecord;
+pub use crate::types::records::space_time_record::SpaceTimeRecord;
+pub use crate::types::records::time_record::TimeRecord;
 //
 // Vocabulary shared with the context node types
 //

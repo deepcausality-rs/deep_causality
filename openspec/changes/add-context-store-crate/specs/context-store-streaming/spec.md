@@ -24,8 +24,9 @@ payload. `NodeEntered` and `NodeLeft` are a view's answer moving with no operati
 ### Requirement: `ContextEvents` is an asynchronous iterator the store crate declares
 
 The store crate SHALL declare `ContextEvents` with `type Error: Debug + Display`, `type Cursor:
-Clone + Send` and `fn next(&mut self) -> impl Future<Output = Option<Result<(Self::Cursor,
-ContextEvent), Self::Error>>> + Send`, taking no stream trait from any crate.
+Clone + Send` and `fn next(&mut self) -> impl Future<Output = ContextEventItem<Self::Cursor,
+Self::Error>> + Send`, where `ContextEventItem<Cursor, Error>` is the alias
+`Option<Result<(Cursor, ContextEvent), Error>>`, taking no stream trait from any crate.
 
 `None` means the stream has ended. Each item carries the cursor after the event, so a subscriber
 can resume from it.
