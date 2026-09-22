@@ -3,5 +3,4 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-pub mod context_graph;
-pub mod contextoid;
+mod types;

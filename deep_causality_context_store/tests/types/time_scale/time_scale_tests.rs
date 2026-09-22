@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_context::TimeScale;
+use deep_causality_context_store::TimeScale;
 
 #[test]
 fn test_time_scale() {

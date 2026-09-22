@@ -44,6 +44,9 @@ os-random = ["deep_causality_uncertain/os-random"]
 workspace = true
 features = ["default"]
 
+[dependencies.deep_causality_context_store]
+workspace = true
+
 [dependencies.deep_causality_core]
 workspace = true
 features = ["default"]

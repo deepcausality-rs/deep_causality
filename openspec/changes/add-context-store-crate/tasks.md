@@ -1,35 +1,35 @@
 ## 1. Scaffold `deep_causality_context_store`
 
-- [ ] 1.1 Create `deep_causality_context_store/` with `Cargo.toml`: version 0.1.0,
+- [x] 1.1 Create `deep_causality_context_store/` with `Cargo.toml`: version 0.1.0,
       workspace-inherited edition, rust-version, license, repository and homepage, crates.io
       metadata, the standard `exclude` list, `[lints] workspace = true`, and no `[dependencies]`
       table
-- [ ] 1.2 Add `deep_causality_context_store` to `members` in the root `Cargo.toml` and add
+- [x] 1.2 Add `deep_causality_context_store` to `members` in the root `Cargo.toml` and add
       `deep_causality_context_store = { path = "deep_causality_context_store", version = "0.1" }`
       to `[workspace.dependencies]`
-- [ ] 1.3 Add `BUILD.bazel` modelled on `deep_causality_context/BUILD.bazel`: `rust_library` with
+- [x] 1.3 Add `BUILD.bazel` modelled on `deep_causality_context/BUILD.bazel`: `rust_library` with
       `all_crate_deps(normal = True)` (resolves empty), `rust_doc`, `rust_doc_test`; test suites are
       added as the test folders appear
-- [ ] 1.4 Add `README.md` and `LICENSE`; do not create `CHANGELOG.md`
-- [ ] 1.5 Create `src/lib.rs` with the SPDX header and the module skeleton (`alias`, `constants`,
+- [x] 1.4 Add `README.md` and `LICENSE`; do not create `CHANGELOG.md`
+- [x] 1.5 Create `src/lib.rs` with the SPDX header and the module skeleton (`alias`, `constants`,
       `errors`, `traits`, `types`, `pub mod utils_test`); confirm `cargo build -p
       deep_causality_context_store` succeeds and `source scripts/crates.sh` lists the crate
 
 ## 2. Move the vocabulary down
 
-- [ ] 2.1 `git mv deep_causality_context/src/types/context_types/{relation_kind,time_scale,vertical_datum}`
+- [x] 2.1 `git mv deep_causality_context/src/types/context_types/{relation_kind,time_scale,vertical_datum}`
       to `deep_causality_context_store/src/types/`, and `mv` the untracked
       `deep_causality_context/src/types/context_types/substrate_ref` beside them; register all four
       in `src/types/mod.rs` and export them from `lib.rs`
-- [ ] 2.2 `git mv deep_causality_context/tests/types/context_types/{relation_kind,time_scale,vertical_datum}`
+- [x] 2.2 `git mv deep_causality_context/tests/types/context_types/{relation_kind,time_scale,vertical_datum}`
       to `deep_causality_context_store/tests/types/`; add `tests/types/substrate_ref/substrate_ref_tests.rs`
       covering constructor, getters, `Display`, `Default`, `Hash` and equality; register every file
       in its `mod.rs` chain
-- [ ] 2.3 Add `deep_causality_context_store = { workspace = true }` to
+- [x] 2.3 Add `deep_causality_context_store = { workspace = true }` to
       `deep_causality_context/Cargo.toml`; replace the four removed modules in
       `deep_causality_context/src/lib.rs` with `pub use deep_causality_context_store::{RelationKind,
       SubstrateRef, TimeScale, VerticalDatum};` above a comment stating why they are re-exported
-- [ ] 2.4 Remove the three vocabulary `rust_test_suite` targets from
+- [x] 2.4 Remove the three vocabulary `rust_test_suite` targets from
       `deep_causality_context/BUILD.bazel`; add the matching suites to the store crate's
       `BUILD.bazel`. Confirm `cargo build --workspace` passes with no import changed anywhere else
 

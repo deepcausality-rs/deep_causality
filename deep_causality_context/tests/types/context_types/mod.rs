@@ -5,6 +5,3 @@
 
 mod context_graph;
 mod contextoid;
-mod relation_kind;
-mod time_scale;
-mod vertical_datum;

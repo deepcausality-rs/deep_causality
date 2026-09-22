@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) "2026" . The DeepCausality Authors and Contributors. All Rights Reserved.
+
+[package]
+name = "deep_causality_context_store"
+version = "0.1.0"
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+
+readme = "README.md"
+description = "Persistence contract for the DeepCausality context: records, storage traits, and the projection vocabulary."
+documentation = "https://docs.rs/deep_causality_context_store"
+keywords = ["causality", "context", "persistence", "storage"]
+authors = ["Marvin Hansen <marvin.hansen@gmail.com>"]
+categories = [
+    "data-structures",
+    "database",
+    "science",
+]
+exclude = [
+    "*.bazel",
+    "*/*.bazel",
+    "*.bazel.*",
+    "BUILD",
+    "BUILD.bazel",
+    "MODULE.bazel",
+    ".bazelignore",
+    ".bazelrc",
+    "tests/**/*",
+]
+
+[lints]
+workspace = true

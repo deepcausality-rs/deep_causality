@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_context::VerticalDatum;
+use deep_causality_context_store::VerticalDatum;
 use std::collections::HashSet;
 
 /// Every member, paired with the name `Display` owes it. The names are the identifiers the

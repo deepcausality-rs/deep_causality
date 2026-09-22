@@ -226,63 +226,6 @@ rust_test_suite(
 )
 
 rust_test_suite(
-    name = "ctx_types_relation_kind_tests",
-    srcs = glob([
-        "tests/types/context_types/relation_kind/*_tests.rs",
-    ]),
-    tags = [
-        "context_types_tests",
-        "unit-test",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        # Crate to test
-        ":deep_causality_context",
-    ] + all_crate_deps(
-        normal = True,
-        normal_dev = True,
-    ),
-)
-
-rust_test_suite(
-    name = "ctx_types_time_scale_tests",
-    srcs = glob([
-        "tests/types/context_types/time_scale/*_tests.rs",
-    ]),
-    tags = [
-        "context_types_tests",
-        "unit-test",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        # Crate to test
-        ":deep_causality_context",
-    ] + all_crate_deps(
-        normal = True,
-        normal_dev = True,
-    ),
-)
-
-rust_test_suite(
-    name = "ctx_types_vertical_datum_tests",
-    srcs = glob([
-        "tests/types/context_types/vertical_datum/*_tests.rs",
-    ]),
-    tags = [
-        "context_types_tests",
-        "unit-test",
-    ],
-    visibility = ["//visibility:public"],
-    deps = [
-        # Crate to test
-        ":deep_causality_context",
-    ] + all_crate_deps(
-        normal = True,
-        normal_dev = True,
-    ),
-)
-
-rust_test_suite(
     name = "error_types_tests",
     srcs = glob([
         "tests/errors/*_tests.rs",

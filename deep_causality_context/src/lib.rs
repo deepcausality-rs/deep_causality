@@ -107,10 +107,10 @@ pub use crate::types::context_types::context_graph;
 pub use crate::types::context_types::context_graph::Context;
 pub use crate::types::context_types::contextoid::contextoid_type::*;
 pub use crate::types::context_types::contextoid::*;
-// Other context types
-pub use crate::types::context_types::relation_kind::*;
-pub use crate::types::context_types::time_scale::TimeScale;
-pub use crate::types::context_types::vertical_datum::VerticalDatum;
+// Vocabulary declared in the persistence contract crate. The node types return these from
+// `datum()`, `time_scale()` and every edge accessor, so a consumer can name them without a second
+// dependency.
+pub use deep_causality_context_store::{RelationKind, SubstrateRef, TimeScale, VerticalDatum};
 
 // Re-exported so an implementor of a context trait does not need a second import for the identity
 // trait every context node carries.
