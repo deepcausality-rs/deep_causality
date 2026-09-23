@@ -11,9 +11,9 @@
 use deep_causality_discovery::{
     BrcdConfig, CdlBuilder, CdlConfigBuilder, MixedGraph, load_cpdag_csv, save_cpdag_csv,
 };
+use deep_causality_tempfile::NamedTempFile;
 use deep_causality_tensor::CausalTensor;
 use std::io::Write;
-use tempfile::NamedTempFile;
 
 /// Deterministic x -> y -> z chain. `intercept` shifts y's conditional mean so the
 /// anomalous regime injects a root cause at y (variable index 1).
@@ -32,7 +32,7 @@ fn write_chain(intercept: f64, seed: u64) -> NamedTempFile {
         let z = 2.0 * y + next();
         csv.push_str(&format!("{:.6},{:.6},{:.6}\n", x, y, z));
     }
-    let mut f = tempfile::Builder::new().suffix(".csv").tempfile().unwrap();
+    let mut f = NamedTempFile::with_suffix(".csv").unwrap();
     f.write_all(csv.as_bytes()).unwrap();
     f
 }
@@ -40,7 +40,7 @@ fn write_chain(intercept: f64, seed: u64) -> NamedTempFile {
 /// The undirected x -- y -- z chain CPDAG, matching the structure of `write_chain`.
 fn write_supplied_cpdag() -> NamedTempFile {
     let s = "# vertices=3\nsrc,dst,mark_src,mark_dst\n0,1,Tail,Tail\n1,2,Tail,Tail\n";
-    let mut f = tempfile::Builder::new().suffix(".csv").tempfile().unwrap();
+    let mut f = NamedTempFile::with_suffix(".csv").unwrap();
     f.write_all(s.as_bytes()).unwrap();
     f
 }
@@ -176,7 +176,7 @@ fn test_cache_hit_trusts_poisoned_graph() {
     // Independently compute what BRCD yields on the poisoned graph by feeding it
     // through the SUPPLIED path; this is the unambiguous "the cache was used"
     // oracle.
-    let poison_supplied = tempfile::Builder::new().suffix(".csv").tempfile().unwrap();
+    let poison_supplied = NamedTempFile::with_suffix(".csv").unwrap();
     save_cpdag_csv(&poison, poison_supplied.path().to_str().unwrap()).unwrap();
     let poison_oracle_config = CdlConfigBuilder::build_brcd_config()
         .with_normal_path(normal.path().to_str().unwrap())

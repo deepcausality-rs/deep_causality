@@ -196,6 +196,12 @@ exclude_re = [
     # the term it adds is `a[i][i] * x[i]` where `x[i]` is still zero, because it is assigned on the
     # line after the sum.
     "replace \\+ with \\* in solve_upper",
+
+    # `NamedTempFile::flush` versus `Ok(())` in `deep_causality_tempfile`. The body forwards to
+    # `std::fs::File::flush`, and `File` is unbuffered: std's platform `flush` is `Ok(())` with no
+    # system call (`library/std/src/sys/fs/unix.rs:1667` and `sys/fs/windows.rs:660` in the 1.98.1
+    # toolchain). Bytes reach the file in `write`, which two tests pin.
+    "replace <impl Write for NamedTempFile>::flush -> io::Result<\\(\\)> with Ok\\(\\(\\)\\)",
 ]
 
 # ---------------------------------------------------------------------------------------------

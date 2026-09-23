@@ -4,11 +4,11 @@
  */
 
 use deep_causality_discovery::{BrcdConfig, CdlBuilder, CdlConfigBuilder};
+use deep_causality_tempfile::NamedTempFile;
 use std::io::Write;
-use tempfile::NamedTempFile;
 
 fn write_csv(content: &str) -> NamedTempFile {
-    let mut f = tempfile::Builder::new().suffix(".csv").tempfile().unwrap();
+    let mut f = NamedTempFile::with_suffix(".csv").unwrap();
     f.write_all(content.as_bytes()).unwrap();
     f
 }

@@ -9,10 +9,11 @@
 use deep_causality_file::{NumericTable, TableColumn, TableScalar, read_table, write_table};
 use deep_causality_haft::IoAction;
 use deep_causality_num::Float106;
+use deep_causality_tempfile::TempDir;
 
 #[test]
 fn write_read_round_trip_preserves_semantics_and_bits() {
-    let dir = tempfile::tempdir().expect("tempdir");
+    let dir = TempDir::new().expect("tempdir");
     let path = dir.path().join("result.csv");
 
     // Awkward values on purpose: shortest-round-trip formatting must recover exact bits.
@@ -46,7 +47,7 @@ fn write_read_round_trip_preserves_semantics_and_bits() {
 
 #[test]
 fn a_column_name_with_a_delimiter_is_rejected_before_writing() {
-    let dir = tempfile::tempdir().expect("tempdir");
+    let dir = TempDir::new().expect("tempdir");
     let path = dir.path().join("bad.csv");
     let table = NumericTable::new(vec![TableColumn::new("a,b", "")], vec![vec![1.0_f64]])
         .expect("rectangular");
@@ -61,7 +62,7 @@ fn a_column_name_with_a_delimiter_is_rejected_before_writing() {
 fn a_delimiter_in_a_later_column_is_found_too() {
     // The refusal scans every column. Tested only on a one-column table, a check that looked at
     // the first column alone would pass, and the offending name would reach the file.
-    let dir = tempfile::tempdir().expect("tempdir");
+    let dir = TempDir::new().expect("tempdir");
     let path = dir.path().join("bad_third.csv");
     let table = NumericTable::new(
         vec![
@@ -81,7 +82,7 @@ fn a_delimiter_in_a_later_column_is_found_too() {
 
 #[test]
 fn the_write_is_lazy_until_run() {
-    let dir = tempfile::tempdir().expect("tempdir");
+    let dir = TempDir::new().expect("tempdir");
     let path = dir.path().join("lazy.csv");
     let table = NumericTable::new(vec![TableColumn::new("x", "")], vec![vec![1.0_f64]])
         .expect("rectangular");
@@ -93,7 +94,7 @@ fn the_write_is_lazy_until_run() {
 
 #[test]
 fn an_unwritable_path_is_an_error() {
-    let dir = tempfile::tempdir().expect("tempdir");
+    let dir = TempDir::new().expect("tempdir");
     let path = dir.path().join("no_such_dir").join("result.csv");
     let table = NumericTable::new(vec![TableColumn::new("x", "")], vec![vec![1.0_f64]])
         .expect("rectangular");
@@ -103,7 +104,7 @@ fn an_unwritable_path_is_an_error() {
 /// `read(write(t)) == t` at the written precision. Generic over any `R: TableScalar` with a
 /// bit-comparison, so the same round trip is asserted for `f64`, `f32`, and `Float106`.
 fn assert_round_trip<R: TableScalar + PartialEq>(values: Vec<R>, bits_eq: impl Fn(&R, &R) -> bool) {
-    let dir = tempfile::tempdir().expect("tempdir");
+    let dir = TempDir::new().expect("tempdir");
     let path = dir.path().join("rt.csv");
     let rows: Vec<Vec<R>> = values.iter().map(|&v| vec![v]).collect();
     let table = NumericTable::new(vec![TableColumn::new("x", "-")], rows).expect("rectangular");

@@ -1,0 +1,30 @@
+[package]
+name = "deep_causality_tempfile"
+version = "0.1.0"
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+
+authors = ["Marvin Hansen <marvin.hansen@gmail.com>"]
+description = "Scratch files and directories removed on drop, std only, for the deep_causality test suites."
+documentation = "https://docs.rs/deep_causality_tempfile"
+categories = ["filesystem", "development-tools::testing"]
+keywords = ["tempfile", "tempdir", "testing"]
+exclude = [
+    "*.bazel",
+    "*/*.bazel",
+    "*.bazel.*",
+    "BUILD",
+    "BUILD.bazel",
+    "MODULE.bazel",
+    ".bazelignore",
+    ".bazelrc",
+    "tests/**/*",
+]
+
+[dependencies]
+
+[lints]
+workspace = true

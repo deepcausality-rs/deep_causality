@@ -8,7 +8,7 @@
 
 use deep_causality_file::{FromTableRow, TableRow, read_rows, write_rows};
 use deep_causality_haft::IoAction;
-use tempfile::tempdir;
+use deep_causality_tempfile::TempDir;
 
 #[derive(Debug, Clone, PartialEq)]
 struct MapRow {
@@ -41,7 +41,7 @@ impl FromTableRow for MapRow {
 
 #[test]
 fn write_rows_emits_schema_header_and_units() {
-    let dir = tempdir().unwrap();
+    let dir = TempDir::new().unwrap();
     let path = dir.path().join("map.csv");
     let rows = vec![MapRow {
         p_ratio: 0.9,
@@ -79,7 +79,7 @@ impl TableRow for UnitfulRow {
 
 #[test]
 fn the_units_row_follows_the_schema_column_order() {
-    let dir = tempdir().unwrap();
+    let dir = TempDir::new().unwrap();
     let path = dir.path().join("unitful.csv");
     write_rows(
         &path,
@@ -112,7 +112,7 @@ impl TableRow for WrongWidthRow {
 
 #[test]
 fn write_rows_rejects_a_row_whose_cell_count_disagrees_with_the_schema() {
-    let dir = tempdir().unwrap();
+    let dir = TempDir::new().unwrap();
     let path = dir.path().join("bad.csv");
     let err = write_rows(&path, vec![WrongWidthRow]).run().unwrap_err();
     let msg = format!("{err}");
@@ -150,7 +150,7 @@ fn write_rows_surfaces_a_filesystem_write_error() {
 
 #[test]
 fn write_then_read_rows_round_trips() {
-    let dir = tempdir().unwrap();
+    let dir = TempDir::new().unwrap();
     let path = dir.path().join("map.csv");
     let rows = vec![
         MapRow {

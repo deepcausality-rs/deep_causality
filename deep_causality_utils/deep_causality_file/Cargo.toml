@@ -43,7 +43,7 @@ features = ["default"]
 chrono = { workspace = true }
 
 [dev-dependencies]
-tempfile = { workspace = true }
+deep_causality_tempfile = { workspace = true }
 
 [lints]
 workspace = true

@@ -7,7 +7,10 @@
       "Bash(brew list *)",
       "Bash(grep -rl \"Seven Stages of Causal Inference\" --include=*.md --include=*.mdx .)",
       "Bash(find . -iname '*seven*' -not -path '*/node_modules/*')",
-      "Bash(echo \"exit=$? \\(1 = no matches = clean\\)\")"
+      "Bash(echo \"exit=$? \\(1 = no matches = clean\\)\")",
+      "Bash(awk '/^# Internal crates/,/^# External crates/')",
+      "Bash(awk '/^# Internal crates/,/^# External crates/' Cargo.toml)",
+      "Bash(awk '-Fuse ' '{print $NF}')"
     ]
   }
 }

@@ -1,0 +1,84 @@
+load("@crates//:defs.bzl", "aliases", "all_crate_deps", "lint_config")
+load("@rules_rs//rs:rust_library.bzl", "rust_library")
+load("@rules_rs//rs:rust_test.bzl", "rust_test")
+load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_test_suite")
+
+rust_library(
+    name = "deep_causality_tempfile",
+    srcs = glob([
+        "src/**",
+    ]),
+    aliases = aliases(),
+    crate_root = "src/lib.rs",
+    lint_config = lint_config(),
+    tags = [
+        "tempfile",
+    ],
+    visibility = ["//visibility:public"],
+    deps = all_crate_deps(normal = True),
+)
+
+rust_doc(
+    name = "doc",
+    crate = ":deep_causality_tempfile",
+    tags = ["doc"],
+    visibility = ["//visibility:public"],
+)
+
+rust_doc_test(
+    name = "doc_test",
+    crate = ":deep_causality_tempfile",
+    tags = ["doc-test"],
+    visibility = ["//visibility:public"],
+)
+
+rust_test_suite(
+    name = "types_named_temp_file_tests",
+    srcs = glob([
+        "tests/types/named_temp_file/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_tempfile",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "types_temp_dir_tests",
+    srcs = glob([
+        "tests/types/temp_dir/*_tests.rs",
+    ]),
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_tempfile",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+# The crate's own in-src `#[cfg(test)]` modules. They exercise the `pub(crate)` items `temp_path`
+# and `create_at`, which the `tests/` tree cannot reach.
+rust_test(
+    name = "lib_unit_tests",
+    crate = ":deep_causality_tempfile",
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)

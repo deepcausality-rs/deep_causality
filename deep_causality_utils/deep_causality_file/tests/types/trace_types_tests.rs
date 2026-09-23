@@ -7,11 +7,12 @@
 
 use deep_causality_file::read_sensor_trace;
 use deep_causality_haft::IoAction;
+use deep_causality_tempfile::TempDir;
 use std::fs;
 
 #[test]
 fn channel_lookup_and_alignment() {
-    let dir = tempfile::tempdir().expect("tempdir");
+    let dir = TempDir::new().expect("tempdir");
     let path = dir.path().join("trace.csv");
     fs::write(&path, "t,a,b\n0.0,1.0,\n1.0,,2.0\n").expect("write");
     let trace = read_sensor_trace::<f64>(&path).run().expect("parses");

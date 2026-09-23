@@ -7,8 +7,8 @@
 //! report, and a dimension mismatch surfaces as a pipeline error.
 
 use deep_causality_discovery::{BrcdConfig, CdlBuilder, CdlConfigBuilder, CdlError};
+use deep_causality_tempfile::NamedTempFile;
 use std::io::Write;
-use tempfile::NamedTempFile;
 
 fn write_chain(intercept: f64, seed: u64) -> NamedTempFile {
     let mut state = seed | 1;
@@ -25,13 +25,13 @@ fn write_chain(intercept: f64, seed: u64) -> NamedTempFile {
         let z = 2.0 * y + next();
         csv.push_str(&format!("{:.6},{:.6},{:.6}\n", x, y, z));
     }
-    let mut f = tempfile::Builder::new().suffix(".csv").tempfile().unwrap();
+    let mut f = NamedTempFile::with_suffix(".csv").unwrap();
     f.write_all(csv.as_bytes()).unwrap();
     f
 }
 
 fn write_csv(content: &str) -> NamedTempFile {
-    let mut f = tempfile::Builder::new().suffix(".csv").tempfile().unwrap();
+    let mut f = NamedTempFile::with_suffix(".csv").unwrap();
     f.write_all(content.as_bytes()).unwrap();
     f
 }

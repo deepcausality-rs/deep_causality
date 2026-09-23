@@ -4,9 +4,9 @@
  */
 
 use deep_causality_discovery::{CsvConfig, CsvDataLoader, DataLoader, DataLoaderConfig};
+use deep_causality_tempfile::NamedTempFile;
 use deep_causality_tensor::CausalTensor;
 use std::io::Write;
-use tempfile::NamedTempFile;
 
 fn create_temp_csv(content: &str) -> NamedTempFile {
     let mut file = NamedTempFile::new().unwrap();

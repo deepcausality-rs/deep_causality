@@ -5,11 +5,11 @@
 
 use deep_causality_file::{DataManager, read_gnss_single_satellite};
 use deep_causality_haft::IoAction;
+use deep_causality_tempfile::NamedTempFile;
 use std::io::Write;
-use tempfile::NamedTempFile;
 
 fn write_file(suffix: &str, content: &str) -> NamedTempFile {
-    let mut f = tempfile::Builder::new().suffix(suffix).tempfile().unwrap();
+    let mut f = NamedTempFile::with_suffix(suffix).unwrap();
     f.write_all(content.as_bytes()).unwrap();
     f.flush().unwrap();
     f

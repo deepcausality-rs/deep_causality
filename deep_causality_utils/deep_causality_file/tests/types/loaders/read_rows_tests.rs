@@ -9,8 +9,8 @@
 
 use deep_causality_file::{FromTableRow, TableRow, read_rows};
 use deep_causality_haft::IoAction;
+use deep_causality_tempfile::TempDir;
 use std::io::Write;
-use tempfile::tempdir;
 
 #[derive(Debug, Clone, PartialEq)]
 struct FlightPoint {
@@ -45,7 +45,7 @@ fn write_file(dir: &std::path::Path, name: &str, body: &str) -> std::path::PathB
 #[test]
 fn read_rows_reorders_file_columns_to_schema_order() {
     // File columns are in the opposite order from SCHEMA and carry an extra numeric column `q`.
-    let dir = tempdir().unwrap();
+    let dir = TempDir::new().unwrap();
     let path = write_file(
         dir.path(),
         "matrix.csv",
@@ -91,7 +91,7 @@ impl FromTableRow for ValidatedPoint {
 
 #[test]
 fn read_rows_errors_when_a_row_does_not_form_a_valid_typed_row() {
-    let dir = tempdir().unwrap();
+    let dir = TempDir::new().unwrap();
     // A negative Mach: `from_cells` returns `None`, which the reader reports as a parse error.
     let path = write_file(dir.path(), "invalid.csv", "mach\n#units,-\n-1.0\n");
     let err = read_rows::<ValidatedPoint>(&path).run().unwrap_err();
@@ -104,7 +104,7 @@ fn read_rows_errors_when_a_row_does_not_form_a_valid_typed_row() {
 
 #[test]
 fn read_rows_names_a_missing_required_column() {
-    let dir = tempdir().unwrap();
+    let dir = TempDir::new().unwrap();
     // No "alt" column: the schema requires it.
     let path = write_file(dir.path(), "bad.csv", "mach\n#units,-\n1.2\n");
     let err = read_rows::<FlightPoint>(&path).run().unwrap_err();
