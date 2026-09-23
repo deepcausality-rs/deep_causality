@@ -15,7 +15,8 @@
 //! row n/a.
 
 use deep_causality_context::{
-    ContextStore, ContextuableGraph, ExtendableContextuableGraph, UniformContext,
+    ContextStore, Contextoid, ContextoidType, ContextuableGraph, Data, ExtendableContextuableGraph,
+    UniformContext,
 };
 use deep_causality_context_store::utils_test::{MemoryStorage, block_on};
 use deep_causality_context_store::{
@@ -404,4 +405,74 @@ fn test_a_context_driven_by_its_stream_converges_to_the_store() {
     block_on(storage.link(base, &[a])).unwrap();
     converges(ctx, &mut events, &storage, base);
     assert_eq!(ctx.snapshot().unwrap().edges().len(), 2);
+}
+
+#[test]
+fn test_a_store_event_never_reaches_a_local_extra() {
+    // Extras 40 and 41 come from the store; 42 is allocated locally and holds node 8. The store
+    // assigns container identifiers, so its container 42 is a different container.
+    let mut ctx = world();
+    let local = ctx.extra_ctx_add_new("local", 1, true);
+    assert_eq!(local, 42);
+    ctx.extra_ctx_add_node(Contextoid::new(8, ContextoidType::Datoid(Data::new(8, 80))))
+        .unwrap();
+    let held = |ctx: &UniformContext| {
+        (
+            ctx.extra_ctx_get_name(local).map(str::to_string),
+            extra_nodes(ctx, local),
+        )
+    };
+    let before = held(&ctx);
+    assert_eq!(before, (Some("local".to_string()), vec![8]));
+
+    // The store's container 42 is attached: refused, not merged into the local graph.
+    assert_eq!(
+        ctx.apply(&ContextEvent::ContextAttached {
+            context: 7,
+            extra: ContextRecord::new(local, "sea".to_string()),
+        }),
+        Err(ProjectionError::Identity(
+            local,
+            "an attached container's identifier is held by a local extra context"
+        ))
+    );
+    // Membership naming 42 is a container this context does not hold.
+    let not_held = Err(ProjectionError::Identity(
+        local,
+        "an event names a container this context does not hold",
+    ));
+    assert_eq!(
+        ctx.apply(&ContextEvent::NodeLinked {
+            context: local,
+            node: count(5, 50),
+            edges: vec![],
+        }),
+        not_held
+    );
+    assert_eq!(
+        ctx.apply(&ContextEvent::NodeUnlinked {
+            context: local,
+            node: 8,
+        }),
+        not_held
+    );
+    // A detach or retraction of the store's 42 leaves the local extra in place.
+    ctx.apply(&ContextEvent::ContextDetached {
+        context: 7,
+        extra: local,
+    })
+    .unwrap();
+    ctx.apply(&ContextEvent::ContextRetracted(local)).unwrap();
+    assert_eq!(held(&ctx), before);
+    assert_eq!(ctx.extra_ctx_get_current_id(), local);
+
+    // A stored extra still takes every store event.
+    ctx.apply(&ContextEvent::ContextAttached {
+        context: 7,
+        extra: ContextRecord::new(40, "weather".to_string()),
+    })
+    .unwrap();
+    assert_eq!(extra_nodes(&ctx, 40), vec![3, 4]);
+    ctx.apply(&ContextEvent::ContextRetracted(40)).unwrap();
+    assert_eq!(ctx.extra_ctx_get_name(40), None);
 }

@@ -114,7 +114,8 @@ names it, resumed from the cursor the host has reached.
 `Context<D, S, T, ST>` SHALL provide `pub fn apply(&mut self, event: &ContextEvent) -> Result<(),
 ProjectionError>` under the `Recordable` bounds of `snapshot`, routing by the container an event
 names: the context's own identifier is the base graph, an extra's identifier is that extra, any
-other is `ProjectionError::Identity`.
+other is `ProjectionError::Identity`. A local extra, one the host added rather than the store,
+counts as not held, as `context-named-extra-contexts` specifies.
 
 | Event | Effect |
 |---|---|

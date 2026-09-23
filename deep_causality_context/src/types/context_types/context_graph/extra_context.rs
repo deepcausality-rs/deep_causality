@@ -6,10 +6,12 @@
 use crate::{Contextoid, Datable, RelationKind, SpaceTemporal, Spatial, Temporal};
 use ultragraph::UltraGraphWeighted;
 
-/// One extra context: its name and its graph.
+/// One extra context: its name, its graph, and whether its identifier is the store's.
 ///
 /// A stored extra context is a container referenced by identifier and name, so the name is kept
-/// beside the graph it belongs to.
+/// beside the graph it belongs to. An extra restored from a snapshot or attached by a store event
+/// is `stored`; one created through `extra_ctx_add_new` or `extra_ctx_add_new_with_id` is local,
+/// and no store event reaches it.
 #[derive(Clone)]
 pub(super) struct ExtraContext<D, S, T, ST>
 where
@@ -20,6 +22,7 @@ where
 {
     pub(super) name: String,
     pub(super) graph: UltraGraphWeighted<Contextoid<D, S, T, ST>, RelationKind>,
+    pub(super) stored: bool,
 }
 
 impl<D, S, T, ST> ExtraContext<D, S, T, ST>
@@ -33,6 +36,7 @@ where
         Self {
             name: name.to_string(),
             graph: UltraGraphWeighted::with_capacity(capacity, None),
+            stored: false,
         }
     }
 }

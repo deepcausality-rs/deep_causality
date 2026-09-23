@@ -70,3 +70,27 @@ trip; the stored containers' identifiers replace them.
 - **WHEN** one container referencing another is hydrated twice, into two `Context` values
 - **THEN** both hold the extra under the same identifier and name, and a `NodeLinked` event naming
   that identifier applies to both without translation
+
+### Requirement: A store event never reaches a local extra
+
+`Context` SHALL mark each extra as stored or local: an extra from `Context::restore` or from
+`Context::apply` of `ContextAttached` is stored, and one from `extra_ctx_add_new` or
+`extra_ctx_add_new_with_id` is local. The store assigns container identifiers, so a local extra is
+not a container of the store even when its identifier equals one. `Context::apply` treats a local
+extra as not held: a membership event naming it is `ProjectionError::Identity`, a
+`ContextDetached` or `ContextRetracted` naming it leaves it in place, and a `ContextAttached` under
+its identifier is `ProjectionError::Identity`, so no graph is merged into, kept under, or dropped
+for another container's identifier. A context that never applies a store event is unaffected.
+
+#### Scenario: An attachment under a local identifier is refused
+
+- **WHEN** a subscribed context allocates a local extra, and the store then creates a container
+  under the same identifier and attaches it to the subscribed container
+- **THEN** applying the `ContextAttached` event is `Err(ProjectionError::Identity(..))`, the local
+  extra keeps its name and nodes, and a fresh subscription holds the store's container under that
+  identifier
+
+#### Scenario: A local extra survives a store detach
+
+- **WHEN** `ContextDetached` and `ContextRetracted` naming a local extra's identifier are applied
+- **THEN** both return `Ok(())` and the local extra, and the current extra, are unchanged

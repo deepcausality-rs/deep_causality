@@ -23,6 +23,7 @@ where
 {
     /// A context rebuilt from a snapshot: the base graph and every extra under the identifier
     /// and name the snapshot gives it, with no extra context current and every index empty.
+    /// Every extra's identifier is taken as the store's, so store events reach it.
     ///
     /// Refused with `ProjectionError::Version` for a snapshot newer than `RECORD_VERSION`, and
     /// with `ProjectionError::Identity` for a node carried twice, an edge naming no node, an edge
@@ -48,6 +49,13 @@ where
                 .map_err(|_| {
                     ProjectionError::Identity(id, "an extra context identifier is carried twice")
                 })?;
+            if let Some(extra) = restored
+                .extra_contexts
+                .as_mut()
+                .and_then(|extras| extras.get_mut(&id))
+            {
+                extra.stored = true;
+            }
             restored.fill(&nodes, &edges, true)?;
         }
         restored.extra_context_id = 0;

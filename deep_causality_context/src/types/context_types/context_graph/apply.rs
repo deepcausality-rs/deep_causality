@@ -39,6 +39,13 @@ where
     /// A membership event naming a container this context does not hold is
     /// `ProjectionError::Identity`. An attached container under identifier 0 is refused the same
     /// way. An echo of the host's own write lands on a state it already produced.
+    ///
+    /// The store assigns container identifiers. An extra created locally, through
+    /// `extra_ctx_add_new` or `extra_ctx_add_new_with_id`, is not a container of the store, so a
+    /// store event naming its identifier treats it as not held: a membership event is
+    /// `Identity`, a detach or retraction is none and the local extra survives, and an attachment
+    /// under that identifier is `Identity`, because the store's container and the local graph
+    /// would share one identifier.
     pub fn apply(&mut self, event: &ContextEvent) -> Result<(), ProjectionError> {
         match event {
             ContextEvent::NodeCreated(_) | ContextEvent::ContextCreated(_) => Ok(()),
@@ -52,12 +59,16 @@ where
                 node,
                 edges,
             } => {
+                self.store_container(*context)?;
                 self.hold(*context, node)?;
                 let graph = self.graph_mut(*context)?;
                 edges.iter().try_for_each(|edge| Self::connect(graph, edge))
             }
             ContextEvent::NodeUnlinked { context, node }
-            | ContextEvent::NodeLeft { context, node } => self.release(*context, *node),
+            | ContextEvent::NodeLeft { context, node } => {
+                self.store_container(*context)?;
+                self.release(*context, *node)
+            }
             ContextEvent::NodeRetracted(id) => {
                 if self.id_to_index_map.contains_key(id) {
                     self.release(self.id, *id)?;
@@ -80,10 +91,21 @@ where
                         "an extra context identifier is 0",
                     ));
                 }
-                self.extra_contexts
-                    .get_or_insert_with(Default::default)
-                    .entry(extra.id())
-                    .or_insert_with(|| ExtraContext::new(extra.name(), 0));
+                let extras = self.extra_contexts.get_or_insert_with(Default::default);
+                match extras.get(&extra.id()) {
+                    Some(held) if !held.stored => {
+                        return Err(ProjectionError::Identity(
+                            extra.id(),
+                            "an attached container's identifier is held by a local extra context",
+                        ));
+                    }
+                    Some(_) => {}
+                    None => {
+                        let mut attached = ExtraContext::new(extra.name(), 0);
+                        attached.stored = true;
+                        extras.insert(extra.id(), attached);
+                    }
+                }
                 self.highest_extra_context_id = self.highest_extra_context_id.max(extra.id());
                 Ok(())
             }
@@ -202,14 +224,36 @@ where
         Ok(())
     }
 
-    /// Drops the extra under `id`, and the current extra with it when it is the one dropped.
+    /// Drops the stored extra under `id`, and the current extra with it when it is the one
+    /// dropped. A local extra under `id` is not the store's container and survives.
     fn drop_extra(&mut self, id: ContextId) {
-        if let Some(extras) = self.extra_contexts.as_mut() {
+        let Some(extras) = self.extra_contexts.as_mut() else {
+            return;
+        };
+        if extras.get(&id).is_some_and(|extra| extra.stored) {
             extras.remove(&id);
+            if self.extra_context_id == id {
+                self.extra_context_id = 0;
+            }
         }
-        if self.extra_context_id == id {
-            self.extra_context_id = 0;
+    }
+
+    /// `Ok` when `context` names the base graph or a stored extra; a local extra is not a
+    /// container of the store, so an event naming it is `Identity` as for any container not held.
+    fn store_container(&self, context: ContextId) -> Result<(), ProjectionError> {
+        let local = context != self.id
+            && self
+                .extra_contexts
+                .as_ref()
+                .and_then(|extras| extras.get(&context))
+                .is_some_and(|extra| !extra.stored);
+        if local {
+            return Err(ProjectionError::Identity(
+                context,
+                "an event names a container this context does not hold",
+            ));
         }
+        Ok(())
     }
 
     /// The base graph, then every extra's graph.

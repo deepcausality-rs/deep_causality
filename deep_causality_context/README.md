@@ -145,7 +145,10 @@ An extra context has a name and an identifier. `extra_ctx_add_new(name, capacity
 allocates the identifier as one past the highest ever held; `extra_ctx_add_new_with_id` takes one, and
 refuses 0. In a store an extra is a separate container the base references, so a hydrated context
 holds each referenced container as an extra under that container's identifier and name, and a
-stored branch's extras become containers of their own.
+stored branch's extras become containers of their own. The store assigns container identifiers:
+an extra added locally is not a container of the store, so a store event naming its identifier
+never reaches it, and `Context::apply` refuses an attachment under that identifier with
+`ProjectionError::Identity` rather than hold two containers under one identifier.
 
 ### Precision in the store
 
