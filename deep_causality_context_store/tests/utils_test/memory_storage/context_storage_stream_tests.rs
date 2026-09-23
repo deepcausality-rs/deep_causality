@@ -16,8 +16,9 @@
 
 use deep_causality_context_store::utils_test::{MemoryStorage, block_on};
 use deep_causality_context_store::{
-    ContextEvent, ContextEvents, ContextRecord, ContextStorage, ContextStorageStream, ContextoidId,
-    ContextoidRecord, DataRecord, MemoryStorageError, NodeRecord, RelationKind, RelationRecord,
+    ContainerRef, ContextEvent, ContextEvents, ContextRecord, ContextStorage, ContextStorageStream,
+    ContextWrite, ContextoidId, ContextoidRecord, DataRecord, MemoryStorageError, NodeRecord,
+    RelationKind, RelationRecord,
 };
 
 fn number(id: ContextoidId, value: f64) -> ContextoidRecord {
@@ -51,7 +52,8 @@ fn test_no_change_falls_between_snapshot_and_stream() {
         delivered[0].1,
         ContextEvent::NodeLinked {
             context: c,
-            node: number(n[0], 1.0)
+            node: number(n[0], 1.0),
+            edges: vec![],
         }
     );
     assert_eq!(drain(&mut events), vec![]);
@@ -83,11 +85,13 @@ fn test_every_operation_emits_its_event() {
             ContextEvent::EdgeCreated(edge),
             ContextEvent::NodeLinked {
                 context: c,
-                node: number(n[0], 1.0)
+                node: number(n[0], 1.0),
+                edges: vec![],
             },
             ContextEvent::NodeLinked {
                 context: c,
-                node: number(n[1], 2.0)
+                node: number(n[1], 2.0),
+                edges: vec![edge],
             },
             ContextEvent::ContextAttached {
                 context: c,
@@ -157,11 +161,13 @@ fn test_apply_performs_the_operation_the_event_names() {
     apply(ContextEvent::NodeLinked {
         context: c,
         node: number(n[0], 1.0),
+        edges: vec![],
     })
     .unwrap();
     apply(ContextEvent::NodeLinked {
         context: c,
         node: number(n[1], 2.0),
+        edges: vec![RelationRecord::new(n[1], n[0], RelationKind::Temporal)],
     })
     .unwrap();
     apply(ContextEvent::ContextAttached {
@@ -214,7 +220,8 @@ fn test_apply_keeps_every_refusal() {
     assert_eq!(
         apply(ContextEvent::NodeLinked {
             context: c,
-            node: number(n[0], 1.0)
+            node: number(n[0], 1.0),
+            edges: vec![],
         }),
         Err(MemoryStorageError::UnknownNode(n[0]))
     );
@@ -222,7 +229,8 @@ fn test_apply_keeps_every_refusal() {
     assert_eq!(
         apply(ContextEvent::NodeLinked {
             context: c,
-            node: number(n[0], 9.0)
+            node: number(n[0], 9.0),
+            edges: vec![],
         }),
         Err(MemoryStorageError::NodeConflict(n[0]))
     );
@@ -236,7 +244,8 @@ fn test_apply_keeps_every_refusal() {
     assert_eq!(
         apply(ContextEvent::NodeEntered {
             context: c,
-            node: number(n[0], 1.0)
+            node: number(n[0], 1.0),
+            edges: vec![],
         }),
         Err(MemoryStorageError::EventNotApplicable("NodeEntered"))
     );
@@ -275,6 +284,7 @@ fn test_apply_batch_is_atomic() {
         ContextEvent::NodeLinked {
             context: c,
             node: number(n[0], 1.0),
+            edges: vec![],
         },
         ContextEvent::NodeCreated(number(n[0] + 1_000, 2.0)),
     ];
@@ -318,7 +328,8 @@ fn test_a_subscription_resumes_from_a_cursor() {
         vec![
             ContextEvent::NodeLinked {
                 context: c,
-                node: number(n[1], 2.0)
+                node: number(n[1], 2.0),
+                edges: vec![],
             },
             ContextEvent::NodeUnlinked {
                 context: c,
@@ -404,5 +415,95 @@ fn test_an_attachment_is_delivered_and_materialised_by_resubscribing() {
             context: c,
             node: n[0]
         }]
+    );
+}
+
+#[test]
+fn test_a_link_carries_the_relations_to_members() {
+    // Nodes a < b < c < d. Edges in both directions, a self-loop, and one to d, which is never
+    // linked. b is linked first; c and a arrive in one call, c before a.
+    let storage = MemoryStorage::new();
+    let n = ids(&storage, 4);
+    let (a, b, c, d) = (n[0], n[1], n[2], n[3]);
+    block_on(storage.create_node(&[
+        number(a, 1.0),
+        number(b, 2.0),
+        number(c, 3.0),
+        number(d, 4.0),
+    ]))
+    .unwrap();
+    let a_b = RelationRecord::new(a, b, RelationKind::Datial);
+    let c_a = RelationRecord::new(c, a, RelationKind::Spatial);
+    let a_a = RelationRecord::new(a, a, RelationKind::Temporal);
+    let a_d = RelationRecord::new(a, d, RelationKind::SpaceTemporal);
+    block_on(storage.create_edge(&[c_a, a_d, a_b, a_a])).unwrap();
+    let ctx = block_on(storage.create_context("c")).unwrap();
+    block_on(storage.link(ctx, &[b])).unwrap();
+    let (_, mut events) = block_on(storage.subscribe(&ctx, None)).unwrap();
+    block_on(storage.link(ctx, &[c, a])).unwrap();
+    let linked_a = ContextEvent::NodeLinked {
+        context: ctx,
+        node: number(a, 1.0),
+        edges: vec![a_a, a_b, c_a],
+    };
+    let delivered: Vec<ContextEvent> = drain(&mut events).into_iter().map(|(_, e)| e).collect();
+    assert_eq!(
+        delivered,
+        vec![
+            ContextEvent::NodeLinked {
+                context: ctx,
+                node: number(c, 3.0),
+                edges: vec![],
+            },
+            linked_a.clone(),
+        ]
+    );
+    // Relinked after an unlink, a carries the same relations again.
+    block_on(storage.unlink(ctx, &[a])).unwrap();
+    block_on(storage.link(ctx, &[a])).unwrap();
+    let delivered: Vec<ContextEvent> = drain(&mut events).into_iter().map(|(_, e)| e).collect();
+    assert_eq!(
+        delivered,
+        vec![
+            ContextEvent::NodeUnlinked {
+                context: ctx,
+                node: a
+            },
+            linked_a,
+        ]
+    );
+}
+
+#[test]
+fn test_a_committed_link_carries_the_relations_to_members() {
+    let storage = MemoryStorage::new();
+    let n = ids(&storage, 2);
+    let c = block_on(storage.create_context("c")).unwrap();
+    let (_, mut events) = block_on(storage.subscribe(&c, None)).unwrap();
+    let edge = RelationRecord::new(n[1], n[0], RelationKind::Datial);
+    let writes = [
+        ContextWrite::CreateNode(vec![number(n[0], 1.0), number(n[1], 2.0)]),
+        ContextWrite::CreateEdge(vec![edge]),
+        ContextWrite::Link {
+            context: ContainerRef::Held(c),
+            nodes: n.clone(),
+        },
+    ];
+    block_on(storage.commit(&writes)).unwrap();
+    let delivered: Vec<ContextEvent> = drain(&mut events).into_iter().map(|(_, e)| e).collect();
+    assert_eq!(
+        delivered[3..],
+        [
+            ContextEvent::NodeLinked {
+                context: c,
+                node: number(n[0], 1.0),
+                edges: vec![],
+            },
+            ContextEvent::NodeLinked {
+                context: c,
+                node: number(n[1], 2.0),
+                edges: vec![edge],
+            },
+        ]
     );
 }

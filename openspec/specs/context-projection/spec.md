@@ -31,7 +31,8 @@ The crate ships `Storable` for `f32`, `f64`, `u64`, `i64`, `bool`, `String`, `Su
 
 | Type | Record | Reading back |
 |---|---|---|
-| `f32`, `f64` | `Number` | any other variant is `WrongPayload` |
+| `f64` | `Number` | any other variant is `WrongPayload` |
+| `f32` | `Number`, widened exactly | rounded to the nearest `f32`; a magnitude too small for the smallest `f32` subnormal is a zero of the same sign; a finite value too large for a finite `f32` is `Scalar`; a value written by an `f32` reads back exactly; any other variant is `WrongPayload` |
 | `u64` | `Count` | any other variant is `WrongPayload` |
 | `i64` | `Integer` | any other variant is `WrongPayload` |
 | `bool` | `Flag` | any other variant is `WrongPayload` |

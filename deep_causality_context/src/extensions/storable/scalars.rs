@@ -23,8 +23,10 @@ impl Storable for f64 {
     }
 }
 
-/// Widened into a `Number` exactly. A finite double with no finite `f32` value is refused as
-/// `Scalar`; an infinite or `NaN` double is what it was.
+/// Widened into a `Number` exactly, so every value an `f32` writes reads back exactly. Reading a
+/// `Number` rounds it to the nearest `f32`: a magnitude too small for the smallest `f32` subnormal
+/// becomes a zero of the same sign, and a finite double too large for a finite `f32` is refused as
+/// `Scalar`. An infinite or `NaN` double is what it was.
 impl Storable for f32 {
     fn to_record(&self) -> DataRecord {
         DataRecord::Number(f64::from(*self))

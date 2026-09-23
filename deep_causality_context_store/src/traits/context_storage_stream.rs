@@ -35,6 +35,7 @@ pub trait ContextStorageStream: ContextStorage {
 
     /// Performs the operation an event names, under the same refusals, and returns the cursor
     /// after it. Refuses the report-only variants `ContextCreated`, `NodeEntered` and `NodeLeft`.
+    /// The `edges` of a `NodeLinked` request are not read.
     fn apply(
         &self,
         event: &ContextEvent,

@@ -14,10 +14,14 @@
 //! held by two of three graphs, `test_an_edge_lands_wherever_both_ends_are_held`; every other
 //! row n/a.
 
-use deep_causality_context::{ContextuableGraph, ExtendableContextuableGraph, UniformContext};
+use deep_causality_context::{
+    ContextStore, ContextuableGraph, ExtendableContextuableGraph, UniformContext,
+};
+use deep_causality_context_store::utils_test::{MemoryStorage, block_on};
 use deep_causality_context_store::{
-    ContextEvent, ContextRecord, ContextSnapshot, ContextoidId, ContextoidRecord, DataRecord,
-    ExtraContextSnapshot, NodeRecord, ProjectionError, RelationKind, RelationRecord,
+    ContextEvent, ContextEvents, ContextRecord, ContextSnapshot, ContextStorage, ContextoidId,
+    ContextoidRecord, DataRecord, ExtraContextSnapshot, NodeRecord, ProjectionError, RelationKind,
+    RelationRecord,
 };
 use deep_causality_core::Identifiable;
 
@@ -72,6 +76,7 @@ fn test_an_echo_is_harmless() {
     ctx.apply(&ContextEvent::NodeLinked {
         context: 7,
         node: count(3, 30),
+        edges: vec![],
     })
     .unwrap();
     ctx.apply(&ContextEvent::EdgeCreated(RelationRecord::new(
@@ -95,11 +100,13 @@ fn test_a_membership_event_is_self_contained() {
     ctx.apply(&ContextEvent::NodeLinked {
         context: 7,
         node: count(5, 50),
+        edges: vec![],
     })
     .unwrap();
     ctx.apply(&ContextEvent::NodeEntered {
         context: 41,
         node: count(6, 60),
+        edges: vec![],
     })
     .unwrap();
     let snapshot = ctx.snapshot().unwrap();
@@ -244,7 +251,8 @@ fn test_an_unknown_container_is_refused() {
     assert_eq!(
         ctx.apply(&ContextEvent::NodeLinked {
             context: 999,
-            node: count(5, 50)
+            node: count(5, 50),
+            edges: vec![],
         }),
         Err(ProjectionError::Identity(
             999,
@@ -285,7 +293,8 @@ fn test_a_payload_the_type_cannot_hold_is_refused() {
     assert_eq!(
         ctx.apply(&ContextEvent::NodeLinked {
             context: 7,
-            node: wrong
+            node: wrong,
+            edges: vec![],
         }),
         Err(ProjectionError::WrongPayload(8, "Count", "Number"))
     );
@@ -311,4 +320,88 @@ fn test_a_dropped_extra_identifier_is_never_reallocated() {
     })
     .unwrap();
     assert_eq!(ctx.extra_ctx_add_new("local2", 1, false), 51);
+}
+
+#[test]
+fn test_a_carried_edge_lands_with_its_node() {
+    // Node 5 enters base 7, which holds 3 and 4, carrying an edge to each and one to 9, which no
+    // graph holds. Extra 40 also holds 3 and 4 and is not named, so it gains nothing.
+    let mut ctx = world();
+    ctx.apply(&ContextEvent::NodeLinked {
+        context: 7,
+        node: count(5, 50),
+        edges: vec![
+            RelationRecord::new(4, 5, RelationKind::Temporal),
+            RelationRecord::new(5, 3, RelationKind::Spatial),
+            RelationRecord::new(5, 9, RelationKind::Datial),
+        ],
+    })
+    .unwrap();
+    assert_eq!(
+        ctx.snapshot().unwrap().edges(),
+        &[
+            RelationRecord::new(3, 4, RelationKind::Datial),
+            RelationRecord::new(4, 5, RelationKind::Temporal),
+            RelationRecord::new(5, 3, RelationKind::Spatial),
+        ]
+    );
+    assert_eq!(extra_edges(&ctx, 40), 1);
+    // A view's entry carries edges the same way, into the extra it names.
+    ctx.apply(&ContextEvent::NodeEntered {
+        context: 41,
+        node: count(4, 40),
+        edges: vec![RelationRecord::new(3, 4, RelationKind::Datial)],
+    })
+    .unwrap();
+    assert_eq!(extra_edges(&ctx, 41), 1);
+}
+
+/// Drains the stream into the context, then compares its snapshot with a fresh hydrate.
+fn converges<E: ContextEvents>(
+    ctx: &mut UniformContext,
+    events: &mut E,
+    storage: &MemoryStorage,
+    base: u64,
+) {
+    while let Some(item) = block_on(events.next()) {
+        ctx.apply(&item.unwrap().1).unwrap();
+    }
+    assert_eq!(
+        ctx.snapshot().unwrap(),
+        block_on(storage.hydrate(&base)).unwrap()
+    );
+}
+
+#[test]
+fn test_a_context_driven_by_its_stream_converges_to_the_store() {
+    let storage = MemoryStorage::new();
+    let store = ContextStore::new(storage.clone());
+    let base = block_on(storage.create_context("base")).unwrap();
+    let n: Vec<ContextoidId> = block_on(storage.reserve(3)).unwrap().collect();
+    let (a, b, c) = (n[0], n[1], n[2]);
+    // c is linked, and an edge from it to b is stored, before the subscription begins.
+    block_on(storage.create_node(&[count(c, 3)])).unwrap();
+    block_on(storage.link(base, &[c])).unwrap();
+    let (mut ctx, mut events) = block_on(store.subscribe::<_, _, _, _>(&base, None)).unwrap();
+    let ctx: &mut UniformContext = &mut ctx;
+
+    // An edge created before either end is linked.
+    block_on(storage.create_node(&[count(a, 1), count(b, 2)])).unwrap();
+    block_on(storage.create_edge(&[
+        RelationRecord::new(a, b, RelationKind::Datial),
+        RelationRecord::new(c, b, RelationKind::Spatial),
+    ]))
+    .unwrap();
+    block_on(storage.link(base, &[a])).unwrap();
+    block_on(storage.link(base, &[b])).unwrap();
+    converges(ctx, &mut events, &storage, base);
+    assert_eq!(ctx.snapshot().unwrap().edges().len(), 2);
+
+    // Unlinked, a loses its edge; relinked, it has it again.
+    block_on(storage.unlink(base, &[a])).unwrap();
+    converges(ctx, &mut events, &storage, base);
+    assert_eq!(ctx.snapshot().unwrap().edges().len(), 1);
+    block_on(storage.link(base, &[a])).unwrap();
+    converges(ctx, &mut events, &storage, base);
+    assert_eq!(ctx.snapshot().unwrap().edges().len(), 2);
 }

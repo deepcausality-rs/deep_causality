@@ -84,7 +84,8 @@ fn test_membership_events_of_other_containers_are_withheld() {
         vec![
             ContextEvent::NodeLinked {
                 context: r,
-                node: number(n[0], 1.0)
+                node: number(n[0], 1.0),
+                edges: vec![],
             },
             ContextEvent::ContextRetracted(r),
         ]

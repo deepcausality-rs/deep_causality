@@ -154,6 +154,9 @@ Every scalar field of a record is `f64`. A node type over a wider or narrower sc
 double precision and `EuclideanSpace<BFloat16>` coordinates restore rounded as that type rounds.
 Ticks stay `u64`. The exception is a `Float106` data payload: `Storable` stores its two halves as
 `Fields [("hi", Number), ("lo", Number)]` and restores every bit.
+An `f32` payload widens exactly and reads back exactly; a `Number` it did not write rounds to
+the nearest `f32`, a magnitude too small for the smallest subnormal becomes a zero of the same sign, and a
+finite value beyond the `f32` range is `ProjectionError::Scalar`.
 
 ## Licence
 

@@ -8,13 +8,17 @@ Defines how a context is kept current from a store: `ContextStorageStream` and `
 The store crate SHALL declare `ContextEvent` with the variants `ContextCreated(ContextRecord)`,
 `ContextRetracted(ContextId)`, `NodeCreated(ContextoidRecord)`, `NodeRetracted(ContextoidId)`,
 `EdgeCreated(RelationRecord)`, `EdgeRetracted { from, to }`, `NodeLinked { context, node:
-ContextoidRecord }`, `NodeUnlinked { context, node: ContextoidId }`, `ContextAttached { context,
-extra: ContextRecord }`, `ContextDetached { context, extra: ContextId }`, `NodeEntered { context,
-node: ContextoidRecord }` and `NodeLeft { context, node: ContextoidId }`, deriving `Debug`, `Clone`
-and `PartialEq`.
+ContextoidRecord, edges: Vec<RelationRecord> }`, `NodeUnlinked { context, node: ContextoidId }`,
+`ContextAttached { context, extra: ContextRecord }`, `ContextDetached { context, extra: ContextId
+}`, `NodeEntered { context, node: ContextoidRecord, edges: Vec<RelationRecord> }` and `NodeLeft {
+context, node: ContextoidId }`, deriving `Debug`, `Clone` and `PartialEq`.
 
-A membership event carries the container it concerns and, when it adds a node, the node's record,
-so a subscriber applies it to a hydrated context without having seen any earlier event. The event
+A membership event carries the container it concerns and, when it adds a node, the node's record
+and `edges`: every stored relation, in either direction, between that node and the container's
+members, the node itself included, ordered by `(from, to)`. A subscriber therefore applies it to a
+hydrated context without having seen any earlier event. `ContextAttached` carries the attached
+container's record and none of its contents; a new subscription materialises them. A request's
+`edges` are not read: the store reports the relations it holds. The event
 carries no time: order is the stream's cursor, and the time a node describes is the node's own
 payload. `NodeEntered` and `NodeLeft` are a view's answer moving with no operation behind it;
 `reserve`, `lookup` and `hydrate` change nothing and have no event.
@@ -23,6 +27,13 @@ payload. `NodeEntered` and `NodeLeft` are a view's answer moving with no operati
 
 - **WHEN** a `NodeLinked` event is applied to a context that does not hold the node
 - **THEN** the context holds it afterwards, without any earlier event having been seen
+
+#### Scenario: A link carries the relations to members
+
+- **WHEN** nodes a, b and c are created, the edges a→b, c→a and a→a are stored, b is linked, and
+  then c and a are linked in one call
+- **THEN** the stream yields `NodeLinked` for c with no edges and `NodeLinked` for a with a→a, a→b
+  and c→a in that order, and an unlink and relink of a yields the same `NodeLinked` again
 
 ### Requirement: `ContextEvents` is an asynchronous iterator the store crate declares
 
@@ -108,7 +119,7 @@ other is `ProjectionError::Identity`.
 | Event | Effect |
 |---|---|
 | `NodeCreated`, `ContextCreated` | none |
-| `NodeLinked`, `NodeEntered` | add the record to the named graph; present already: none |
+| `NodeLinked`, `NodeEntered` | add the record to the named graph, then each carried edge whose ends that graph holds; present already: none |
 | `NodeUnlinked`, `NodeLeft` | remove from the named graph; absent: none |
 | `NodeRetracted` | remove from every graph; absent: none |
 | `EdgeCreated` | add to every graph holding both ends; present already: none |
@@ -129,6 +140,12 @@ other is `ProjectionError::Identity`.
 - **WHEN** the base graph and one extra both hold nodes 3 and 4 and `EdgeCreated { 3, 4, Spatial }`
   is applied
 - **THEN** both graphs hold the edge and a second extra holding only node 3 does not
+
+#### Scenario: A context driven by its stream converges to the store
+
+- **WHEN** an edge is stored before either end is linked, both ends are then linked one at a time,
+  and one end is later unlinked and relinked, while a subscribed context applies every event
+- **THEN** after each step the context's snapshot equals a fresh `hydrate` of the same slice
 
 #### Scenario: The held context cannot retract itself
 

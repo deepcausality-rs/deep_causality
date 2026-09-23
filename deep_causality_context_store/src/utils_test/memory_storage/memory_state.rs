@@ -80,8 +80,8 @@ impl MemoryState {
             ContextEvent::EdgeRetracted { from, to } => {
                 self.edges.remove(&(*from, *to));
             }
-            ContextEvent::NodeLinked { context, node }
-            | ContextEvent::NodeEntered { context, node } => {
+            ContextEvent::NodeLinked { context, node, .. }
+            | ContextEvent::NodeEntered { context, node, .. } => {
                 if let Some(container) = self.containers.get_mut(context) {
                     container.links.insert(node.id());
                 }
@@ -234,14 +234,31 @@ impl MemoryState {
         for id in nodes {
             let record = self.node(*id)?;
             if !container.links.contains(id) && pending.insert(*id) {
+                let member = |other: &ContextoidId| {
+                    container.links.contains(other) || pending.contains(other)
+                };
                 events.push(ContextEvent::NodeLinked {
                     context,
                     node: ContextoidRecord::new(*id, record.clone()),
+                    edges: self.incident(*id, member),
                 });
             }
         }
         self.fold_all(&events);
         Ok(events)
+    }
+
+    /// Every edge between `id` and a node `member` admits, in either direction, by `(from, to)`.
+    fn incident(
+        &self,
+        id: ContextoidId,
+        member: impl Fn(&ContextoidId) -> bool,
+    ) -> Vec<RelationRecord> {
+        self.edges
+            .iter()
+            .filter(|((from, to), _)| (*from == id && member(to)) || (*to == id && member(from)))
+            .map(|((from, to), kind)| RelationRecord::new(*from, *to, *kind))
+            .collect()
     }
 
     pub(crate) fn unlink(
@@ -413,7 +430,7 @@ impl MemoryState {
             ContextEvent::NodeRetracted(id) => self.retract_node(*id),
             ContextEvent::EdgeCreated(record) => self.create_edge(std::slice::from_ref(record)),
             ContextEvent::EdgeRetracted { from, to } => self.retract_edge(*from, *to),
-            ContextEvent::NodeLinked { context, node } => {
+            ContextEvent::NodeLinked { context, node, .. } => {
                 if self.node(node.id())? != node.node() {
                     return Err(MemoryStorageError::NodeConflict(node.id()));
                 }

@@ -136,7 +136,9 @@ Two further traits are optional, and a backend that implements neither is comple
   event names and return the cursor after it. The scope of a subscription is fixed for its life; a
   container created or attached afterwards is reached by a new subscription from the cursor
   reached. `ContextEvent` has one variant per mutating operation plus `NodeEntered` and `NodeLeft`
-  for a view whose answer moves.
+  for a view whose answer moves. `NodeLinked` and `NodeEntered` carry the node's record and every
+  relation between it and the container's members, so a subscriber applies them without earlier
+  events.
 - `Substrate` is for a store that holds structure and not values. `deposit(node, &record)` stores
   a value and returns a `SubstrateRef`; `resolve(&reference)` returns the value. `deposit` is
   idempotent per node: a deposit under a node replaces the value held for it and returns the same

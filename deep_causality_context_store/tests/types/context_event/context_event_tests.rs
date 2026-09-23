@@ -26,6 +26,7 @@ fn one_of_each() -> Vec<ContextEvent> {
         ContextEvent::NodeLinked {
             context: 9,
             node: node.clone(),
+            edges: vec![RelationRecord::new(1, 2, RelationKind::Datial)],
         },
         ContextEvent::NodeUnlinked {
             context: 9,
@@ -39,7 +40,11 @@ fn one_of_each() -> Vec<ContextEvent> {
             context: 9,
             extra: 40,
         },
-        ContextEvent::NodeEntered { context: 9, node },
+        ContextEvent::NodeEntered {
+            context: 9,
+            node,
+            edges: vec![],
+        },
         ContextEvent::NodeLeft {
             context: 9,
             node: 1,
@@ -60,12 +65,18 @@ fn test_twelve_variants_all_distinct() {
 
 #[test]
 fn test_a_membership_event_carries_the_record() {
-    let ContextEvent::NodeLinked { context, node } = one_of_each().swap_remove(6) else {
+    let ContextEvent::NodeLinked {
+        context,
+        node,
+        edges,
+    } = one_of_each().swap_remove(6)
+    else {
         panic!("a NodeLinked event");
     };
     assert_eq!(context, 9);
     assert_eq!(node.id(), 1);
     assert_eq!(node.node(), &NodeRecord::Root);
+    assert_eq!(edges, vec![RelationRecord::new(1, 2, RelationKind::Datial)]);
 }
 
 #[test]

@@ -26,7 +26,7 @@ where
     /// | Event | Effect |
     /// |---|---|
     /// | `NodeCreated`, `ContextCreated` | none |
-    /// | `NodeLinked`, `NodeEntered` | add the record to the named graph; present already: none |
+    /// | `NodeLinked`, `NodeEntered` | add the record to the named graph, then each carried edge whose ends that graph holds; present already: none |
     /// | `NodeUnlinked`, `NodeLeft` | remove from the named graph; absent: none |
     /// | `NodeRetracted` | remove from every graph; absent: none |
     /// | `EdgeCreated` | add to every graph holding both ends; present already: none |
@@ -42,8 +42,20 @@ where
     pub fn apply(&mut self, event: &ContextEvent) -> Result<(), ProjectionError> {
         match event {
             ContextEvent::NodeCreated(_) | ContextEvent::ContextCreated(_) => Ok(()),
-            ContextEvent::NodeLinked { context, node }
-            | ContextEvent::NodeEntered { context, node } => self.hold(*context, node),
+            ContextEvent::NodeLinked {
+                context,
+                node,
+                edges,
+            }
+            | ContextEvent::NodeEntered {
+                context,
+                node,
+                edges,
+            } => {
+                self.hold(*context, node)?;
+                let graph = self.graph_mut(*context)?;
+                edges.iter().try_for_each(|edge| Self::connect(graph, edge))
+            }
             ContextEvent::NodeUnlinked { context, node }
             | ContextEvent::NodeLeft { context, node } => self.release(*context, *node),
             ContextEvent::NodeRetracted(id) => {
@@ -150,21 +162,28 @@ where
 
     /// Adds the edge to every graph holding both ends; present already: nothing.
     fn join(&mut self, edge: &RelationRecord) -> Result<(), ProjectionError> {
-        for graph in self.graphs_mut() {
-            let (Some(a), Some(b)) = (
-                Self::index_of(graph, edge.from()),
-                Self::index_of(graph, edge.to()),
-            ) else {
-                continue;
-            };
-            if graph.contains_edge(a, b) {
-                continue;
-            }
-            graph.add_edge(a, b, edge.kind()).map_err(|_| {
-                ProjectionError::Identity(edge.from(), "an edge could not be added")
-            })?;
+        self.graphs_mut()
+            .try_for_each(|graph| Self::connect(graph, edge))
+    }
+
+    /// Adds the edge to the graph when it holds both ends; either end absent, or the edge
+    /// present already: nothing.
+    fn connect(
+        graph: &mut UltraGraphWeighted<Contextoid<D, S, T, ST>, RelationKind>,
+        edge: &RelationRecord,
+    ) -> Result<(), ProjectionError> {
+        let (Some(a), Some(b)) = (
+            Self::index_of(graph, edge.from()),
+            Self::index_of(graph, edge.to()),
+        ) else {
+            return Ok(());
+        };
+        if graph.contains_edge(a, b) {
+            return Ok(());
         }
-        Ok(())
+        graph
+            .add_edge(a, b, edge.kind())
+            .map_err(|_| ProjectionError::Identity(edge.from(), "an edge could not be added"))
     }
 
     /// Removes the edge from every graph holding it; absent: nothing.

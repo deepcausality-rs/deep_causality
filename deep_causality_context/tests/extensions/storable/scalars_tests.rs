@@ -10,7 +10,8 @@
 //! `f32` and `i64`, `test_negative_round_trips`; H `u64::MAX`, `i64::MIN`, `f64::MAX`,
 //! `test_boundaries_round_trip`; I `NaN` and infinity, `test_non_finite_round_trips`; J an
 //! `f64` beyond `f32` range is `Scalar`, `test_an_f32_that_cannot_hold_the_double_is_refused`;
-//! K `f32` and `f64` both covered; every other row n/a.
+//! K `f32` and `f64` both covered; the `f32` read rounds (`1.1`), underflows to a signed zero
+//! (`±1e-50`), refuses `1e39` and restores an `f32`-written value exactly; every other row n/a.
 
 use deep_causality_context::Storable;
 use deep_causality_context_store::{DataRecord, ProjectionError};
@@ -99,4 +100,40 @@ fn test_an_f32_that_cannot_hold_the_double_is_refused() {
     // 1e300 has no f32 value: the widest f32 is about 3.4e38.
     let result = f32::from_record(8, DataRecord::Number(1e300));
     assert_eq!(result, Err(ProjectionError::Scalar(8, 1e300)));
+}
+
+#[test]
+fn test_an_f32_reads_a_double_as_the_nearest_f32() {
+    assert_eq!(f32::from_record(1, DataRecord::Number(1.1)), Ok(1.1f32));
+    assert_ne!(f64::from(1.1f32), 1.1);
+}
+
+#[test]
+fn test_an_f32_reads_a_tiny_double_as_a_signed_zero() {
+    let positive = f32::from_record(1, DataRecord::Number(1e-50)).unwrap();
+    assert_eq!(positive, 0.0);
+    assert!(positive.is_sign_positive());
+    let negative = f32::from_record(1, DataRecord::Number(-1e-50)).unwrap();
+    assert_eq!(negative, 0.0);
+    assert!(negative.is_sign_negative());
+}
+
+#[test]
+fn test_an_f32_refuses_a_double_just_beyond_its_range() {
+    assert_eq!(
+        f32::from_record(8, DataRecord::Number(1e39)),
+        Err(ProjectionError::Scalar(8, 1e39))
+    );
+}
+
+#[test]
+fn test_an_f32_value_reads_back_exactly() {
+    // 0.1f32 is not 0.1: the record holds the f32's exact widening, and reading it gives the f32.
+    let value = 0.1f32;
+    assert_eq!(value.to_record(), DataRecord::Number(0.10000000149011612));
+    assert_eq!(f32::from_record(1, value.to_record()), Ok(0.1f32));
+    assert_eq!(
+        f32::from_record(1, value.to_record()).map(|v| v.to_bits()),
+        Ok(0.1f32.to_bits())
+    );
 }
