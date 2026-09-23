@@ -7,6 +7,8 @@
 
 mod temp_dir_drop;
 
+use crate::utils::temp_name::temp_path;
+use std::fs::DirBuilder;
 use std::io;
 use std::path::{Path, PathBuf};
 
@@ -36,20 +38,22 @@ impl TempDir {
     ///
     /// Returns the `std::io::Error` of the failed directory creation.
     pub fn new() -> io::Result<TempDir> {
-        unimplemented!()
+        TempDir::create_at(temp_path(""))
     }
 
     /// The absolute path of the directory.
     pub fn path(&self) -> &Path {
-        let _ = &self.path;
-        unimplemented!()
+        &self.path
     }
 
     /// Creates the directory at `path`, failing with `ErrorKind::AlreadyExists` if any entry is
     /// there.
     pub(crate) fn create_at(path: PathBuf) -> io::Result<TempDir> {
-        let _ = path;
-        unimplemented!()
+        let mut builder = DirBuilder::new();
+        #[cfg(unix)]
+        std::os::unix::fs::DirBuilderExt::mode(&mut builder, 0o700);
+        builder.create(&path)?;
+        Ok(TempDir { path })
     }
 }
 

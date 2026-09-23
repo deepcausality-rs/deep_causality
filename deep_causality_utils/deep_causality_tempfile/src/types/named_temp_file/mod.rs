@@ -8,7 +8,8 @@
 mod named_temp_file_drop;
 mod named_temp_file_write;
 
-use std::fs::File;
+use crate::utils::temp_name::temp_path;
+use std::fs::{File, OpenOptions};
 use std::io;
 use std::path::{Path, PathBuf};
 
@@ -40,7 +41,7 @@ impl NamedTempFile {
     ///
     /// Returns the `std::io::Error` of the failed file creation.
     pub fn new() -> io::Result<NamedTempFile> {
-        unimplemented!()
+        NamedTempFile::create_at(temp_path(""))
     }
 
     /// Creates the file with a name ending in `suffix`, such as `".csv"`.
@@ -50,24 +51,31 @@ impl NamedTempFile {
     /// # Errors
     ///
     /// Returns `ErrorKind::InvalidInput`, and creates nothing, when `suffix` contains `/` or
-    /// `\`. Otherwise returns the `std::io::Error` of the failed
-    /// file creation.
+    /// `\`. Otherwise returns the `std::io::Error` of the failed file creation.
     pub fn with_suffix(suffix: &str) -> io::Result<NamedTempFile> {
-        let _ = suffix;
-        unimplemented!()
+        if suffix.contains(['/', '\\']) {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "temp file suffix must not contain a path separator",
+            ));
+        }
+        NamedTempFile::create_at(temp_path(suffix))
     }
 
     /// The absolute path of the file.
     pub fn path(&self) -> &Path {
-        let _ = (&self.path, &self.file);
-        unimplemented!()
+        &self.path
     }
 
     /// Creates the file at `path`, failing with `ErrorKind::AlreadyExists` if any entry is there,
     /// including a symlink.
     pub(crate) fn create_at(path: PathBuf) -> io::Result<NamedTempFile> {
-        let _ = path;
-        unimplemented!()
+        let mut options = OpenOptions::new();
+        options.write(true).create_new(true);
+        #[cfg(unix)]
+        std::os::unix::fs::OpenOptionsExt::mode(&mut options, 0o600);
+        let file = options.open(&path)?;
+        Ok(NamedTempFile { path, file })
     }
 }
 

@@ -147,3 +147,40 @@ drop cannot be reused. The clock test brackets the value between two independent
 
 The throwaway implementation was discarded (`git checkout -- src`). A copy outside the repository
 served as the audit's restore point.
+
+## 4. Implementation
+
+The implementation follows design D2, D4, D5 and D6. No test was edited.
+
+| Check | Result |
+|---|---|
+| `cargo test -p deep_causality_tempfile` | 33 passed (10 in-src, 21 `tests/`, 2 doc) |
+| `bazel test //deep_causality_utils/deep_causality_tempfile/...` | 7 targets, 33 test cases passed |
+| `cargo llvm-cov -p deep_causality_tempfile --summary-only` | regions 305/305, functions 31/31, lines 154/154: 100% |
+| `cargo tree -p deep_causality_tempfile -e normal` | the crate alone, no dependency |
+| `cargo clippy -p deep_causality_tempfile --all-targets` | no warning |
+
+## 5. Mutation testing
+
+`scripts/mutants.sh deep_causality_tempfile`, cargo-mutants on rustc 1.98.1.
+
+First run: 11 mutants, 5 caught, 5 unviable, 1 missed.
+
+- **Missed:** `replace <impl Write for NamedTempFile>::flush -> io::Result<()> with Ok(())`.
+  This mutant is equivalent. The body forwards to `std::fs::File::flush`, and std's platform
+  `File::flush` is `Ok(())` with no system call: `library/std/src/sys/fs/unix.rs:1667` and
+  `sys/fs/windows.rs:660` in the 1.98.1 toolchain source. `File` has no buffer, so bytes reach
+  the file in `write`, which `written_bytes_are_read_back_by_path` and `consecutive_writes_append`
+  pin. The phase-3 defect "flush a no-op over a `BufWriter`" is the non-equivalent version of this
+  mutant, and it was killed.
+- **Entry added to `.cargo/mutants.toml`**, with `(`, `)` escaped. The `comm` check for
+  `deep_causality_tempfile` reports 11 listed, 10 kept, and exactly this mutant excluded. Listed
+  across the whole workspace, the pattern matches exactly 1 mutant.
+- **The 5 unviable mutants** replace `create_at`, `with_suffix` and both `path()` bodies with
+  `Default::default()` values. Neither type implements `Default`, so those mutants do not compile.
+
+Second run: 10 mutants, 5 caught, 5 unviable, 0 missed.
+
+cargo-mutants does not mutate constants, string literals or method arguments in this crate. It
+leaves alone the `0o600`/`0o700` modes, the separator set, `create_new(true)` and the `fetch_add`
+step. The phase-3 audit covers those decisions with its 21 hand-written defects.

@@ -7,11 +7,10 @@ use std::io::{self, Write};
 
 impl Write for NamedTempFile {
     fn write(&mut self, buf: &[u8]) -> io::Result<usize> {
-        let _ = buf;
-        unimplemented!()
+        self.file.write(buf)
     }
 
     fn flush(&mut self) -> io::Result<()> {
-        unimplemented!()
+        self.file.flush()
     }
 }

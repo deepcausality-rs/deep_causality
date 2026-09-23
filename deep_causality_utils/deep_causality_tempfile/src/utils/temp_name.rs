@@ -6,16 +6,25 @@
 //! Unique paths for scratch entries under the OS temp directory.
 
 use std::path::PathBuf;
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::time::{SystemTime, UNIX_EPOCH};
+use std::{env, process};
+
+static COUNTER: AtomicU64 = AtomicU64::new(0);
 
 /// Returns `std::env::temp_dir()` joined with `.dct-{pid}-{nanos}-{counter}{suffix}`.
 ///
 /// `pid` is the process id, `nanos` the wall clock in nanoseconds since the Unix epoch, and
 /// `counter` a process-wide count incremented on every call. The pid and counter keep names
 /// distinct across live processes and within one process; the clock separates a process from an
-/// earlier one that had the same pid. The caller validates `suffix`.
+/// earlier one that had the same pid. A clock set before the epoch reads as 0. The caller
+/// validates `suffix`.
 pub(crate) fn temp_path(suffix: &str) -> PathBuf {
-    let _ = suffix;
-    unimplemented!()
+    let nanos = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_or(0, |d| d.as_nanos());
+    let counter = COUNTER.fetch_add(1, Ordering::Relaxed);
+    env::temp_dir().join(format!(".dct-{}-{nanos}-{counter}{suffix}", process::id()))
 }
 
 #[cfg(test)]

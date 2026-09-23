@@ -63,17 +63,17 @@ All paths in groups 1–5 are relative to `deep_causality_utils/deep_causality_t
 
 ## 4. Phase 4 — Implementation
 
-- [ ] 4.1 Implement `temp_name` as in D2, and `TempDir` and `NamedTempFile` as in D2, D4, D5 and D6.
-- [ ] 4.2 Verify: `cargo test -p deep_causality_tempfile` and
+- [x] 4.1 Implement `temp_name` as in D2, and `TempDir` and `NamedTempFile` as in D2, D4, D5 and D6.
+- [x] 4.2 Verify: `cargo test -p deep_causality_tempfile` and
       `bazel test //deep_causality_utils/deep_causality_tempfile/...` pass, and the counts agree.
-- [ ] 4.3 Verify full line coverage with `cargo llvm-cov -p deep_causality_tempfile`.
-- [ ] 4.4 Verify that `cargo tree -p deep_causality_tempfile -e normal` lists no dependency.
+- [x] 4.3 Verify full line coverage with `cargo llvm-cov -p deep_causality_tempfile`.
+- [x] 4.4 Verify that `cargo tree -p deep_causality_tempfile -e normal` lists no dependency.
 
 ## 5. Phase 5 — Mutation testing
 
-- [ ] 5.1 Run `scripts/mutants.sh deep_causality_tempfile` over `src/utils/temp_name.rs`,
+- [x] 5.1 Run `scripts/mutants.sh deep_causality_tempfile` over `src/utils/temp_name.rs`,
       `src/types/temp_dir/` and `src/types/named_temp_file/`, and record the report in `notes.md`.
-- [ ] 5.2 Kill each survivor with a test, or add an escaped `.cargo/mutants.toml` entry that carries
+- [x] 5.2 Kill each survivor with a test, or add an escaped `.cargo/mutants.toml` entry that carries
       the measurement, verified with the file's `comm` check.
 
 ## 6. Migration
