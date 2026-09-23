@@ -8,10 +8,11 @@
 
 use deep_causality_file::read_table;
 use deep_causality_haft::IoAction;
+use deep_causality_tempfile::TempDir;
 use std::fs;
 
-fn write_temp(content: &str) -> (tempfile::TempDir, std::path::PathBuf) {
-    let dir = tempfile::tempdir().expect("tempdir");
+fn write_temp(content: &str) -> (TempDir, std::path::PathBuf) {
+    let dir = TempDir::new().expect("tempdir");
     let path = dir.path().join("table.csv");
     fs::write(&path, content).expect("write");
     (dir, path)
@@ -19,7 +20,7 @@ fn write_temp(content: &str) -> (tempfile::TempDir, std::path::PathBuf) {
 
 #[test]
 fn the_read_is_lazy_until_run() {
-    let dir = tempfile::tempdir().expect("tempdir");
+    let dir = TempDir::new().expect("tempdir");
     let path = dir.path().join("late.csv");
     // Describe the read while the file does not exist yet: constructing the action is pure.
     let action = read_table::<f64>(&path);
@@ -32,7 +33,7 @@ fn the_read_is_lazy_until_run() {
 
 #[test]
 fn a_missing_file_is_an_error_at_run() {
-    let dir = tempfile::tempdir().expect("tempdir");
+    let dir = TempDir::new().expect("tempdir");
     let action = read_table::<f64>(dir.path().join("absent.csv"));
     assert!(action.run().is_err());
 }

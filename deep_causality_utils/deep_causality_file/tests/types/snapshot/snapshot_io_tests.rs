@@ -11,6 +11,7 @@ use deep_causality_file::{
     force_load_snapshot, load_snapshot, save_snapshot,
 };
 use deep_causality_haft::IoAction;
+use deep_causality_tempfile::TempDir;
 use std::fs;
 
 fn sample_package(fingerprint: u64) -> SnapshotPackage {
@@ -26,8 +27,8 @@ fn sample_package(fingerprint: u64) -> SnapshotPackage {
     )
 }
 
-fn save_to_temp(package: SnapshotPackage) -> (tempfile::TempDir, std::path::PathBuf) {
-    let dir = tempfile::tempdir().expect("tempdir");
+fn save_to_temp(package: SnapshotPackage) -> (TempDir, std::path::PathBuf) {
+    let dir = TempDir::new().expect("tempdir");
     let path = dir.path().join("state.dcsnap");
     save_snapshot(&path, package).run().expect("saves");
     (dir, path)
@@ -154,7 +155,7 @@ fn an_empty_package_and_inspection_mode_work() {
 
 #[test]
 fn a_non_snapshot_file_is_corrupt_not_a_panic() {
-    let dir = tempfile::tempdir().expect("tempdir");
+    let dir = TempDir::new().expect("tempdir");
     let path = dir.path().join("not_a_snapshot.bin");
     fs::write(&path, b"just some text, definitely not a snapshot").expect("write");
     let err = load_snapshot(&path, ScalarTypeTag::F64, None)
@@ -173,7 +174,7 @@ const SECTION_COUNT_OFFSET: usize = 28;
 /// rather than refusing before the body is parsed.
 fn force_load_damaged(
     damage: impl FnOnce(&mut Vec<u8>),
-) -> (tempfile::TempDir, deep_causality_file::DataLoadingError) {
+) -> (TempDir, deep_causality_file::DataLoadingError) {
     let fp = fingerprint64(b"world-v1");
     let (dir, path) = save_to_temp(sample_package(fp));
     let mut bytes = fs::read(&path).expect("read");
@@ -187,7 +188,7 @@ fn force_load_damaged(
 
 #[test]
 fn a_file_shorter_than_the_header_is_corrupt() {
-    let dir = tempfile::tempdir().expect("tempdir");
+    let dir = TempDir::new().expect("tempdir");
     let path = dir.path().join("stub.dcsnap");
     // The magic alone: 8 bytes, short of the 16 the magic-plus-checksum header needs.
     fs::write(&path, b"DCFSNP01").expect("write");
@@ -294,7 +295,7 @@ fn the_digest_matches_the_published_fnv_1a_64_vectors() {
 fn the_saved_bytes_match_the_documented_container_layout() {
     // `encode` is otherwise only ever checked against `decode`, the matching half of the same
     // module: a magic, an endianness or a field order wrong in both directions round trips.
-    let dir = tempfile::tempdir().expect("tempdir");
+    let dir = TempDir::new().expect("tempdir");
     let path = dir.path().join("layout.dcsnap");
     save_snapshot(
         &path,
@@ -361,7 +362,7 @@ fn container_with_declared_count(count: u32, filler: usize) -> Vec<u8> {
 }
 
 fn load_bytes(bytes: &[u8]) -> Result<SnapshotPackage, deep_causality_file::DataLoadingError> {
-    let dir = tempfile::tempdir().expect("tempdir");
+    let dir = TempDir::new().expect("tempdir");
     let path = dir.path().join("crafted.dcsnap");
     fs::write(&path, bytes).expect("write");
     load_snapshot(&path, ScalarTypeTag::F64, None).run()
@@ -391,7 +392,7 @@ fn the_section_count_bound_is_exactly_the_bytes_each_section_needs() {
 fn a_sixteen_byte_file_clears_the_header_check_and_fails_on_its_empty_body() {
     // The length gate is `< magic + checksum`, so exactly 16 bytes is enough header and the
     // refusal must come from the empty body behind it, not from the gate.
-    let dir = tempfile::tempdir().expect("tempdir");
+    let dir = TempDir::new().expect("tempdir");
     let path = dir.path().join("header_only.dcsnap");
     let mut bytes = b"DCFSNP01".to_vec();
     bytes.extend_from_slice(&fnv1a64(&[]).to_le_bytes());

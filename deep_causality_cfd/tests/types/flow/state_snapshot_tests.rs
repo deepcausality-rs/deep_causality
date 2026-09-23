@@ -15,6 +15,7 @@ use deep_causality_file::{
     BitCodec, SnapshotPackage, SnapshotSection, SnapshotTier, fingerprint64,
 };
 use deep_causality_haft::LogAddEntry;
+use deep_causality_tempfile::TempDir;
 use deep_causality_tensor::{CausalTensor, Truncation};
 
 const WORLD: &[u8] = b"snapshot-test-world-v1";
@@ -55,7 +56,7 @@ fn populated_field() -> CoupledField<f64> {
 
 #[test]
 fn a_resume_package_round_trips_through_disk_bit_exact() {
-    let dir = tempfile::tempdir().expect("tempdir");
+    let dir = TempDir::new().expect("tempdir");
     let path = dir.path().join("suspended.dcsnap");
     let field = populated_field();
 
@@ -99,7 +100,7 @@ fn a_resume_package_round_trips_through_disk_bit_exact() {
 
 #[test]
 fn a_resumed_state_steps_bit_identically_to_the_unsuspended_one() {
-    let dir = tempfile::tempdir().expect("tempdir");
+    let dir = TempDir::new().expect("tempdir");
     let path = dir.path().join("mid_march.dcsnap");
 
     let mut original = populated_field();
@@ -126,7 +127,7 @@ fn a_resumed_state_steps_bit_identically_to_the_unsuspended_one() {
 
 #[test]
 fn a_stale_world_fingerprint_refuses_at_the_seam() {
-    let dir = tempfile::tempdir().expect("tempdir");
+    let dir = TempDir::new().expect("tempdir");
     let path = dir.path().join("stale.dcsnap");
     let field = populated_field();
     save_resume_state(&path, &field, 1, WORLD).expect("saves");

@@ -182,12 +182,12 @@ It uses three main components:
 
 ## Project Structure
 
-The project is a monorepo containing 32 library crates.
+The project is a monorepo containing 33 library crates.
 
 ### Directory layout
 
 Twelve crates sit at the repository root. The **seventeen mathematics crates live under
-`deep_causality_unified_math/`** and the **three utility crates under
+`deep_causality_unified_math/`** and the **four utility crates under
 `deep_causality_utils/`**, one directory per crate:
 
 ```
@@ -196,7 +196,7 @@ deep_causality_unified_math/deep_causality_{algebra, calculus, fft, haft, homolo
                                             num_dual, num_rational, rand, stats, tensor,
                                             topology, uncertain}
 
-deep_causality_utils/deep_causality_{ast, file, par}
+deep_causality_utils/deep_causality_{ast, file, par, tempfile}
 ```
 
 Package names are unchanged, so every `use` statement, every `cargo -p <name>` and every crates.io
@@ -210,9 +210,10 @@ The crates that stayed at the root are `deep_causality`, `_algorithms`, `_cfd`, 
 
 The groupings below are conceptual and cut across that split: `metric` is filed under Core, `haft`
 under Functional Programming, and `homology` and `topology` under Topology and Physics, but all
-four live in `deep_causality_unified_math/`. `ast`, `file` and `par` are filed under Core and Data
-Structures but live in `deep_causality_utils/`: none of the three is mathematics, and each is used
-by crates on both sides of the split.
+four live in `deep_causality_unified_math/`. `ast`, `file`, `par` and `tempfile` are filed under
+Core and Data Structures but live in `deep_causality_utils/`: none of the four is mathematics.
+`ast`, `file` and `par` are each used by crates on both sides of the split; `tempfile` is a
+test-only dependency.
 
 ### Core Crates
 * `deep_causality`: Computational causality library. Provides causality graph, collections, context and causal reasoning.
@@ -233,6 +234,8 @@ by crates on both sides of the split.
 ### Data Structure Crates
 * `deep_causality_data_structures`: Data structures for deep_causality (sliding-window, grid-array).
 * `deep_causality_file`: File and receiver-data (RINEX GNSS SP3/CLK) loaders over the haft IO monad.
+* `deep_causality_tempfile`: Scratch files and directories removed on drop, std only. No
+  dependencies; the test suites use it for temporary paths.
 * `ultragraph`: Hypergraph data structure used as a backend in deep_causality.
 
 ### Algorithm and Discovery Crates
@@ -271,7 +274,7 @@ by crates on both sides of the split.
 
 ## Project Dependencies
 
-Scope: the 32 library crates that are workspace members. Example crates (`examples/*`)
+Scope: the 33 library crates that are workspace members. Example crates (`examples/*`)
 and `yanked/*` are excluded. Third-party crates are resolved from the registry by
 rules_rs into `@crates`; there is no vendored source tree.
 `deep_causality_effects`, `deep_causality_macros` and `deep_causality_sparse` were moved to
@@ -300,6 +303,7 @@ Tier 0 — Foundational (no internal runtime dependencies)
   deep_causality_metric
   deep_causality_num
   deep_causality_par
+  deep_causality_tempfile
   ultragraph
 
 Tier 1
@@ -390,11 +394,13 @@ Internal dev-only dependency (tests/benches, not part of any published runtime):
 * `deep_causality_num_complex` and `deep_causality_num_rational` are dev-dependencies of
   `deep_causality_linear`.
 * `deep_causality_topology` is a dev-dependency of `deep_causality_quantum`.
+* `deep_causality_tempfile` is a dev-dependency of `deep_causality_cfd`,
+  `deep_causality_discovery` and `deep_causality_file`.
 
 ### External Dependencies
 
 Only crates with at least one external (crates.io) runtime dependency are listed.
-The other 25 library crates have no external runtime dependencies.
+The other 26 library crates have no external runtime dependencies.
 
 | Crate | External dependency | Status |
 |-------|---------------------|--------|
@@ -411,7 +417,6 @@ External dev-only dependencies (tests/benches, not part of any published runtime
   `deep_causality_cfd`, `deep_causality_data_structures`, `deep_causality_fft`,
   `deep_causality_multivector`, `deep_causality_tensor`, `deep_causality_uncertain`,
   `ultragraph`.
-* `tempfile` — `deep_causality_cfd`, `deep_causality_discovery` and `deep_causality_file` tests.
 * `rusty-fork` — `deep_causality_uncertain` tests.
 
 
@@ -621,7 +626,7 @@ Coding style:
 * Prefer functional style i.e. map, flatmap, filter when dealing with collections
 
 Safety and security style:
-* No `unsafe`. This is enforced repo-wide via `[workspace.lints.rust] unsafe_code = "forbid"` in the root `Cargo.toml`. All 47 workspace members opt in with `[lints]` and `workspace = true` in their own `Cargo.toml` — new crates MUST include this.
+* No `unsafe`. This is enforced repo-wide via `[workspace.lints.rust] unsafe_code = "forbid"` in the root `Cargo.toml`. All 48 workspace members opt in with `[lints]` and `workspace = true` in their own `Cargo.toml` — new crates MUST include this.
 * There are no exemptions. 
 * Avoid macros in all lib code i.e. everything under /src. However, macros for testing are permissible when using sparingly i.e. for bulk testing many types implementing the same trait. 
 * Avoid the introduction of external crates unless it is necessary for testing.

@@ -8,10 +8,11 @@
 
 use deep_causality_file::read_sensor_trace;
 use deep_causality_haft::IoAction;
+use deep_causality_tempfile::TempDir;
 use std::fs;
 
-fn write_temp(content: &str) -> (tempfile::TempDir, std::path::PathBuf) {
-    let dir = tempfile::tempdir().expect("tempdir");
+fn write_temp(content: &str) -> (TempDir, std::path::PathBuf) {
+    let dir = TempDir::new().expect("tempdir");
     let path = dir.path().join("trace.csv");
     fs::write(&path, content).expect("write");
     (dir, path)
@@ -32,7 +33,7 @@ fn an_intermittent_channel_keeps_its_gaps() {
 
 #[test]
 fn the_load_is_lazy_until_run() {
-    let dir = tempfile::tempdir().expect("tempdir");
+    let dir = TempDir::new().expect("tempdir");
     let path = dir.path().join("late.csv");
     let action = read_sensor_trace::<f64>(&path);
     fs::write(&path, "t,a\n0.0,1.0\n").expect("write");

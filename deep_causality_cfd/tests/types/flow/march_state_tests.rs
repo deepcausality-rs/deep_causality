@@ -12,6 +12,7 @@ use deep_causality_cfd::{
     CoupledField, DescentSchedule, MarchState, MarchStop, QttObserve,
 };
 use deep_causality_physics::EARTH_RADIUS;
+use deep_causality_tempfile::TempDir;
 use deep_causality_tensor::Truncation;
 
 const GAMMA_EFF: f64 = 1.1;
@@ -90,7 +91,7 @@ fn a_pause_exports_its_state_with_field_and_step() {
 
 #[test]
 fn the_state_round_trips_through_disk() {
-    let dir = tempfile::tempdir().expect("tempdir");
+    let dir = TempDir::new().expect("tempdir");
     let path = dir.path().join("state.dcsnap");
     let state = paused_state();
 
@@ -107,7 +108,7 @@ fn the_state_round_trips_through_disk() {
 
 #[test]
 fn disk_resume_equals_in_memory_resume() {
-    let dir = tempfile::tempdir().expect("tempdir");
+    let dir = TempDir::new().expect("tempdir");
     let path = dir.path().join("state.dcsnap");
     let state = paused_state();
     state.save(&path, WORLD_FP).expect("saves");

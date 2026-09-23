@@ -29,10 +29,8 @@ repository = "https://github.com/deepcausality/deep_causality.rs"
 homepage = "https://deepcausality.com/"
 
 [workspace.dependencies]
-# Declared once here and inherited by every member with `{ workspace = true }`.
-# `default-features = false` appears wherever ANY member needs defaults off.
-
 # Internal crates
+# `default-features = false` appears when defaults features are opt-in by default.
 ##
 deep_causality = { path = "deep_causality", version = "0.17" }
 deep_causality_algorithms = { path = "deep_causality_algorithms", version = "0.5" }
@@ -80,7 +78,6 @@ getrandom = { version = "0.4" }
 libm = { version = "0.2" }
 parquet = { version = "60", default-features = false }
 rayon = { version = "1.12" }
-tempfile = { version = "3", default-features = false }
 tokio = { version = "1" }
 
 # Repo-wide lint policy.

@@ -124,8 +124,7 @@ assertion ("path still exists"). This deviation is recorded in the phase-2 notes
 3. Rewrite call sites crate by crate, `file`, then `cfd`, then `discovery`. In each crate, replace
    the `tempfile` dev-dependency with `deep_causality_tempfile`, then build and test it and compare
    counts.
-4. Remove `tempfile` from `[workspace.dependencies]`. Update `AGENTS.md` and the tier block in
-   `deep_causality_unified_math/README.md`.
+4. Remove `tempfile` from `[workspace.dependencies]` and update `AGENTS.md`.
 5. Run the source and manifest checks from the spec.
 
 Rollback reverts the commit. No public item is removed.

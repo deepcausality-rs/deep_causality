@@ -9,11 +9,11 @@
 use deep_causality_discovery::{
     BrcdConfig, CdlConfigBuilder, CdlError, MaxOrder, SurdAnalyzeConfig,
 };
+use deep_causality_tempfile::NamedTempFile;
 use std::io::Write;
-use tempfile::NamedTempFile;
 
 fn temp() -> NamedTempFile {
-    let mut f = tempfile::Builder::new().suffix(".csv").tempfile().unwrap();
+    let mut f = NamedTempFile::with_suffix(".csv").unwrap();
     f.write_all(b"x,y\n1.0,2.0\n").unwrap();
     f
 }

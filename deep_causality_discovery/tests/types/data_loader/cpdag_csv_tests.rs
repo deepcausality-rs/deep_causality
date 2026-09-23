@@ -4,9 +4,9 @@
  */
 
 use deep_causality_discovery::{CpdagError, MixedGraph, load_cpdag_csv, save_cpdag_csv};
+use deep_causality_tempfile::NamedTempFile;
 use deep_causality_tensor::CausalTensor;
 use std::io::Write;
-use tempfile::NamedTempFile;
 
 fn unit_graph(n: usize) -> MixedGraph<()> {
     let data = CausalTensor::new(vec![(); n], vec![n]).unwrap();
@@ -14,7 +14,7 @@ fn unit_graph(n: usize) -> MixedGraph<()> {
 }
 
 fn write(content: &str) -> NamedTempFile {
-    let mut f = tempfile::Builder::new().suffix(".csv").tempfile().unwrap();
+    let mut f = NamedTempFile::with_suffix(".csv").unwrap();
     f.write_all(content.as_bytes()).unwrap();
     f
 }
@@ -29,7 +29,7 @@ fn test_round_trip_preserves_structure_and_isolated_vertex() {
     g.add_undirected(1, 2).unwrap();
     g.add_bidirected(0, 3).unwrap();
 
-    let file = tempfile::Builder::new().suffix(".csv").tempfile().unwrap();
+    let file = NamedTempFile::with_suffix(".csv").unwrap();
     let path = file.path().to_str().unwrap();
     save_cpdag_csv(&g, path).unwrap();
 

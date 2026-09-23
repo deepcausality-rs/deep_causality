@@ -84,26 +84,28 @@ In each crate below, replace the `tempfile` dev-dependency with
 `Builder::new().suffix(s).tempfile()` → `NamedTempFile::with_suffix(s)`. Then run cargo and Bazel
 tests and compare the counts with 0.2.
 
-- [ ] 6.1 `deep_causality_file`: 10 test files.
-- [ ] 6.2 `deep_causality_cfd`: 3 test files.
-- [ ] 6.3 `deep_causality_discovery`: 20 test files.
-- [ ] 6.4 Remove `tempfile` from the root `[workspace.dependencies]`. Run `cargo build --workspace
+- [x] 6.1 `deep_causality_file`: 10 test files.
+- [x] 6.2 `deep_causality_cfd`: 3 test files.
+- [x] 6.3 `deep_causality_discovery`: 20 test files.
+- [x] 6.4 Remove `tempfile` from the root `[workspace.dependencies]`. Run `cargo build --workspace
       --all-targets` and `bazel build //...`.
 
 ## 7. Close-out
 
-- [ ] 7.1 Verify the "No workspace member declares tempfile" scenarios. Run
+- [x] 7.1 Verify the "No workspace member declares tempfile" scenarios. Run
       `grep -rn "tempfile" --include=Cargo.toml .` and `grep -rn "tempfile::" --include=*.rs .`,
       excluding `target/` and `yanked/`. Both must return no match.
-- [ ] 7.2 Update `AGENTS.md`:
+- [x] 7.2 Update `AGENTS.md`:
       - 32 → 33 library crates, and four utility crates under `deep_causality_utils/`
       - the Core and Data Structures listing
       - Tier 0
       - `deep_causality_tempfile` as an internal dev-only dependency of the three crates
       - remove the `tempfile` bullet
-      - 25 → 26 crates without external runtime dependencies
+      - 25 → 26 crates without external runtime dependencies; 47 → 48 workspace members
 
-      Apply the same Tier 0 edit to `deep_causality_unified_math/README.md`.
-- [ ] 7.3 Run `make format && make fix` (three crates changed) and fix the lints rather than
+      `deep_causality_unified_math/README.md` needs no edit: its tier block covers only the
+      mathematics crates, and `deep_causality_tempfile` is neither one of them nor a dependency of
+      one.
+- [x] 7.3 Run `make format && make fix` (three crates changed) and fix the lints rather than
       suppressing them.
-- [ ] 7.4 Prepare a commit message for the user. Do not commit.
+- [x] 7.4 Prepare a commit message for the user. Do not commit.

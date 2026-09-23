@@ -14,6 +14,7 @@ use deep_causality_cfd::{
 };
 use deep_causality_file::{FromTableRow, TableRow};
 use deep_causality_physics::PhysicsError;
+use deep_causality_tempfile::TempDir;
 
 #[derive(Debug, Clone, PartialEq)]
 struct MapRow {
@@ -76,7 +77,7 @@ fn map_gates() -> GateSeq<MapRow> {
 
 #[test]
 fn pointwise_study_passes_all_gates_and_records_the_table() {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = TempDir::new().unwrap();
     let path = dir.path().join("map.csv");
 
     let verdict = CfdFlow::study("nozzle map")
@@ -98,7 +99,7 @@ fn pointwise_study_passes_all_gates_and_records_the_table() {
 
 #[test]
 fn a_failing_gate_fails_the_verdict_but_keeps_the_recorded_table() {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = TempDir::new().unwrap();
     let path = dir.path().join("map.csv");
 
     let verdict = CfdFlow::study("nozzle map")
@@ -118,7 +119,7 @@ fn a_failing_gate_fails_the_verdict_but_keeps_the_recorded_table() {
 
 #[test]
 fn a_sweep_error_short_circuits_and_names_the_verb() {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = TempDir::new().unwrap();
     let path = dir.path().join("map.csv");
 
     let outcome = CfdFlow::study("nozzle map")
@@ -190,7 +191,7 @@ impl FromTableRow for FlightPoint {
 
 #[test]
 fn read_entry_loads_a_schedule_column_as_the_case_axis() {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = TempDir::new().unwrap();
     let path = dir.path().join("schedule.csv");
     std::fs::write(&path, "p\n#units,-\n0.9\n0.6\n0.3\n").unwrap();
 
@@ -206,7 +207,7 @@ fn read_entry_loads_a_schedule_column_as_the_case_axis() {
 
 #[test]
 fn matrix_entry_and_prepared_rig_share_the_apparatus() {
-    let dir = tempfile::tempdir().unwrap();
+    let dir = TempDir::new().unwrap();
     let path = dir.path().join("matrix.csv");
     std::fs::write(&path, "mach,alt\n#units,-,km\n1.2,11.0\n0.8,0.0\n").unwrap();
 

@@ -6,9 +6,9 @@
 use deep_causality_discovery::{
     DataLoader, DataLoaderConfig, DataLoadingError, ParquetConfig, ParquetDataLoader,
 };
+use deep_causality_tempfile::NamedTempFile;
 use std::fs;
 use std::path::Path;
-use tempfile::NamedTempFile;
 
 use deep_causality_tensor::CausalTensor;
 use parquet::basic::Type as PhysicalType;

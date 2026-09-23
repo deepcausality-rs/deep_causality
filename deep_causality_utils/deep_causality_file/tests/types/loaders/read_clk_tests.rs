@@ -6,14 +6,14 @@
 use chrono::NaiveDate;
 use deep_causality_file::{ReadClockData, SatId, read_clock_data};
 use deep_causality_haft::IoAction;
+use deep_causality_tempfile::{NamedTempFile, TempDir};
 use std::fs;
 use std::io::Write;
 use std::path::Path;
-use tempfile::NamedTempFile;
 
 /// Write `content` to a temporary `.clk` file kept alive for the test's duration.
 fn write_clk(content: &str) -> NamedTempFile {
-    let mut f = tempfile::Builder::new().suffix(".clk").tempfile().unwrap();
+    let mut f = NamedTempFile::with_suffix(".clk").unwrap();
     f.write_all(content.as_bytes()).unwrap();
     f.flush().unwrap();
     f
@@ -181,7 +181,7 @@ fn test_missing_file_is_io_error() {
 fn test_read_clock_data_returns_lazy_action() {
     // Constructing the action performs no IO: the description is built while the path is absent,
     // and the saved action still reads the file that is created afterwards.
-    let dir = tempfile::tempdir().unwrap();
+    let dir = TempDir::new().unwrap();
     let path = dir.path().join("late.clk");
     let action: ReadClockData<f64> = read_clock_data::<f64>(&path, "E14");
     fs::write(

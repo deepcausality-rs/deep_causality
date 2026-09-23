@@ -6,14 +6,14 @@
 use chrono::NaiveDate;
 use deep_causality_file::{DataLoadingError, OrbitData, ReadOrbitData, read_orbit_data};
 use deep_causality_haft::IoAction;
+use deep_causality_tempfile::{NamedTempFile, TempDir};
 use std::fs;
 use std::io::Write;
 use std::path::Path;
-use tempfile::NamedTempFile;
 
 /// Write `content` to a temporary `.sp3` file kept alive for the test's duration.
 fn write_sp3(content: &str) -> NamedTempFile {
-    let mut f = tempfile::Builder::new().suffix(".sp3").tempfile().unwrap();
+    let mut f = NamedTempFile::with_suffix(".sp3").unwrap();
     f.write_all(content.as_bytes()).unwrap();
     f.flush().unwrap();
     f
@@ -273,7 +273,7 @@ fn test_missing_file_is_io_error() {
 fn test_read_orbit_data_returns_lazy_action() {
     // Constructing the action performs no IO: the description is built while the path is absent,
     // and the saved action still reads the file that is created afterwards.
-    let dir = tempfile::tempdir().unwrap();
+    let dir = TempDir::new().unwrap();
     let path = dir.path().join("late.sp3");
     let action: ReadOrbitData<f64> = read_orbit_data::<f64>(&path, "E14");
     fs::write(

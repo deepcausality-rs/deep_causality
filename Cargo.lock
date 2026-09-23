@@ -585,10 +585,10 @@ dependencies = [
  "deep_causality_num_dual",
  "deep_causality_par",
  "deep_causality_physics",
+ "deep_causality_tempfile",
  "deep_causality_tensor",
  "deep_causality_topology",
  "deep_causality_uncertain",
- "tempfile",
 ]
 
 [[package]]
@@ -636,10 +636,10 @@ dependencies = [
  "deep_causality_par",
  "deep_causality_rand",
  "deep_causality_stats",
+ "deep_causality_tempfile",
  "deep_causality_tensor",
  "deep_causality_topology",
  "parquet",
- "tempfile",
 ]
 
 [[package]]
@@ -671,7 +671,7 @@ dependencies = [
  "deep_causality_algebra",
  "deep_causality_haft",
  "deep_causality_num",
- "tempfile",
+ "deep_causality_tempfile",
 ]
 
 [[package]]

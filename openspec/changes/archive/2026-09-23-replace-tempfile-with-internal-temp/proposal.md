@@ -22,7 +22,7 @@ serve as a test dependency for any member without pulling in anything else.
 - In those three crates, replace the `tempfile` dev-dependency with `deep_causality_tempfile`.
   Replace the `tempfile` entry in the root `[workspace.dependencies]` with
   `deep_causality_tempfile`.
-- Update `AGENTS.md` and the tier block in `deep_causality_unified_math/README.md`:
+- Update `AGENTS.md`:
   - 33 library crates; four utility crates under `deep_causality_utils/`.
   - `deep_causality_tempfile` in Tier 0.
   - `deep_causality_tempfile` listed as an internal dev-only dependency of the three crates.
