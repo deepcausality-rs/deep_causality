@@ -4,8 +4,8 @@
  */
 //! Gauge field operations.
 //!
-//! Includes legacy gauge transformations and staple calculations.
-//! Note: For robust gauge transformations with error handling, see `ops_gauge_transform.rs`.
+//! The gauge transformation of a field by a site-wise group element. A random transformation
+//! built on it lives in `ops_gauge_transform.rs`.
 
 use crate::{GaugeGroup, LatticeGaugeField, LinkVariable};
 use deep_causality_algebra::{ComplexField, DivisionAlgebra, Field, RealField};
@@ -25,7 +25,7 @@ impl<
     S,
 > LatticeGaugeField<G, D, M, R, S>
 {
-    /// Apply a gauge transformation (infallible version).
+    /// Apply a gauge transformation.
     ///
     /// # Mathematics
     ///
@@ -68,10 +68,7 @@ impl<
                 let g_n_plus_mu_dag = gauge_fn(&site_plus_mu).dagger();
 
                 // U' = g(n) U g(n+μ)†
-                let new_u = g_n.try_mul(u).and_then(|tmp| tmp.try_mul(&g_n_plus_mu_dag));
-
-                // Panic on failure (infallible in theory if shapes match)
-                let new_u = new_u.expect("Gauge transform multiplication failed");
+                let new_u = g_n.mul(u).mul(&g_n_plus_mu_dag);
 
                 (cell, new_u)
             })

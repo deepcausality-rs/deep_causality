@@ -200,7 +200,7 @@ impl<
             if i > 0 {
                 pos[r_dir] = (pos[r_dir] + 1) % shape[r_dir];
                 let link = self.get_link_or_identity(&LatticeCell::edge(pos, r_dir));
-                result = result.try_mul(&link).map_err(TopologyError::from)?;
+                result = result.mul(&link);
             }
         }
         pos[r_dir] = (pos[r_dir] + 1) % shape[r_dir];
@@ -208,7 +208,7 @@ impl<
         // Right edge: move in t_dir (T links)
         for _ in 0..t {
             let link = self.get_link_or_identity(&LatticeCell::edge(pos, t_dir));
-            result = result.try_mul(&link).map_err(TopologyError::from)?;
+            result = result.mul(&link);
             pos[t_dir] = (pos[t_dir] + 1) % shape[t_dir];
         }
 
@@ -216,18 +216,14 @@ impl<
         for _ in 0..r {
             pos[r_dir] = (pos[r_dir] + shape[r_dir] - 1) % shape[r_dir];
             let link = self.get_link_or_identity(&LatticeCell::edge(pos, r_dir));
-            result = result
-                .try_mul(&link.dagger())
-                .map_err(TopologyError::from)?;
+            result = result.mul(&link.dagger());
         }
 
         // Left edge: move in -t_dir (T links, conjugated)
         for _ in 0..t {
             pos[t_dir] = (pos[t_dir] + shape[t_dir] - 1) % shape[t_dir];
             let link = self.get_link_or_identity(&LatticeCell::edge(pos, t_dir));
-            result = result
-                .try_mul(&link.dagger())
-                .map_err(TopologyError::from)?;
+            result = result.mul(&link.dagger());
         }
 
         // Return Re[Tr(W)] / N
@@ -304,7 +300,7 @@ impl<
         for _ in 1..nt {
             pos[temporal_dir] = (pos[temporal_dir] + 1) % shape[temporal_dir];
             let link = self.get_link_or_identity(&LatticeCell::edge(pos, temporal_dir));
-            result = result.try_mul(&link).map_err(TopologyError::from)?;
+            result = result.mul(&link);
         }
 
         // Return Re[Tr(P)] / N

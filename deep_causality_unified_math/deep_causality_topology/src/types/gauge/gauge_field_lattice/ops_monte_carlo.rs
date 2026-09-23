@@ -79,10 +79,8 @@ impl<
             let u_nu_at_n = self.get_link_or_identity(&LatticeCell::edge(site, nu));
 
             let forward = u_nu_at_n_plus_mu
-                .try_mul(&u_mu_at_n_plus_nu.dagger())
-                .map_err(TopologyError::from)?
-                .try_mul(&u_nu_at_n.dagger())
-                .map_err(TopologyError::from)?;
+                .mul(&u_mu_at_n_plus_nu.dagger())
+                .mul(&u_nu_at_n.dagger());
 
             // Backward staple: U_ν†(n+μ̂-ν̂) U_μ†(n-ν̂) U_ν(n-ν̂)
             let mut site_minus_nu = site;
@@ -100,14 +98,12 @@ impl<
 
             let backward = u_nu_at_n_plus_mu_minus_nu
                 .dagger()
-                .try_mul(&u_mu_at_n_minus_nu.dagger())
-                .map_err(TopologyError::from)?
-                .try_mul(&u_nu_at_n_minus_nu)
-                .map_err(TopologyError::from)?;
+                .mul(&u_mu_at_n_minus_nu.dagger())
+                .mul(&u_nu_at_n_minus_nu);
 
             // Add staples to sum
-            staple_sum = staple_sum.try_add(&forward).map_err(TopologyError::from)?;
-            staple_sum = staple_sum.try_add(&backward).map_err(TopologyError::from)?;
+            staple_sum = staple_sum.add(&forward);
+            staple_sum = staple_sum.add(&backward);
         }
 
         Ok(staple_sum)
@@ -156,14 +152,8 @@ impl<
         // ΔS = β * (Re[Tr(U·V)] - Re[Tr(U'·V)]) / N
         // (This is the change in action, negative means lower action)
 
-        let old_tr = old_link
-            .try_mul(&staple)
-            .map_err(TopologyError::from)?
-            .re_trace();
-        let new_tr = new_link
-            .try_mul(&staple)
-            .map_err(TopologyError::from)?
-            .re_trace();
+        let old_tr = old_link.mul(&staple).re_trace();
+        let new_tr = new_link.mul(&staple).re_trace();
 
         Ok(self.beta * (old_tr - new_tr) / n_t)
     }

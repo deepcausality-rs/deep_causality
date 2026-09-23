@@ -123,15 +123,9 @@ impl<
                 let staple = current.try_staple(&edge)?.dagger();
 
                 // Weighted combination: (1-α) U + (α/(2(D-1))) C
-                let weighted_old = old_link
-                    .try_scale(&one_minus_alpha_m)
-                    .map_err(TopologyError::from)?;
-                let weighted_staple = staple
-                    .try_scale(&staple_weight_m)
-                    .map_err(TopologyError::from)?;
-                let combined = weighted_old
-                    .try_add(&weighted_staple)
-                    .map_err(TopologyError::from)?;
+                let weighted_old = old_link.scale(&one_minus_alpha_m);
+                let weighted_staple = staple.scale(&staple_weight_m);
+                let combined = weighted_old.add(&weighted_staple);
 
                 // Project to SU(N)
                 let projected = combined.project_sun().map_err(TopologyError::from)?;

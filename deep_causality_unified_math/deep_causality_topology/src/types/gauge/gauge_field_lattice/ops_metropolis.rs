@@ -83,9 +83,7 @@ impl<
         let perturbation = self.generate_small_su_n_update(epsilon, rng)?;
 
         // Propose: U' = R · U
-        let proposed = perturbation
-            .try_mul(&current)
-            .map_err(TopologyError::from)?;
+        let proposed = perturbation.mul(&current);
 
         // Compute action change (negative means lower action = favorable)
         // Returns R

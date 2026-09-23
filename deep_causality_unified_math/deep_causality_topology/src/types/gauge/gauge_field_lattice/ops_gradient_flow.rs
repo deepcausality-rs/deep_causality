@@ -145,14 +145,10 @@ impl<
             })? * *epsilon;
             let neg_eps_m = M::from_re_im(neg_eps, R::zero());
             let beta_norm_m = M::from_re_im(self.beta / n_t, R::zero());
-            let update = u_v_dag
-                .try_scale(&neg_eps_m)
-                .map_err(TopologyError::from)?
-                .try_scale(&beta_norm_m)
-                .map_err(TopologyError::from)?;
+            let update = u_v_dag.scale(&neg_eps_m).scale(&beta_norm_m);
 
             // U' = U + ε F, then project
-            let new_u = u.try_add(&update).map_err(TopologyError::from)?;
+            let new_u = u.add(&update);
             let projected = new_u.project_sun().map_err(TopologyError::from)?;
 
             if let Some(i) = link_index(&self.lattice, &edge) {
@@ -176,21 +172,21 @@ impl<
     ///
     /// Note: This generally breaks unitarity (U † U = I), so the result
     /// is no longer in SU(N). This is an intermediate operation for RK3.
-    fn try_scale(&self, factor: &M) -> Result<Self, TopologyError> {
+    fn scale(&self, factor: &M) -> Self {
         let shape = *self.lattice.shape();
         let mut new_links = alloc_slots(&shape);
         for (cell, link) in self.iter_links() {
-            let new_link = link.try_scale(factor).map_err(TopologyError::from)?;
+            let new_link = link.scale(factor);
             if let Some(i) = link_index(&self.lattice, &cell) {
                 new_links[i] = Some(new_link);
             }
         }
-        Ok(Self {
+        Self {
             lattice: self.lattice.clone(),
             links: new_links,
             beta: self.beta, // beta doesn't really scale in this context
             source: self.source.clone(),
-        })
+        }
     }
 
     /// Adds two gauge fields.
@@ -205,7 +201,7 @@ impl<
         let mut new_links = alloc_slots(&shape);
         for (cell, link) in self.iter_links() {
             if let Some(other_link) = other.link(&cell) {
-                let new_link = link.try_add(other_link).map_err(TopologyError::from)?;
+                let new_link = link.add(other_link);
                 if let Some(i) = link_index(&self.lattice, &cell) {
                     new_links[i] = Some(new_link);
                 }
@@ -279,8 +275,8 @@ impl<
         // Or we rely on Euler steps being unitary?
         // SSP-RK schemes usually assume linear vector space.
         // For Lie Groups, this linear mixing is an approximation valid for small epsilon.
-        let term1 = self.try_scale(&three_quarters)?;
-        let term2 = u1.try_euler_step(epsilon)?.try_scale(&one_quarter)?;
+        let term1 = self.scale(&three_quarters);
+        let term2 = u1.try_euler_step(epsilon)?.scale(&one_quarter);
         let u2_unprojected = term1.try_add(&term2)?;
 
         // We must project u2 back to SU(N) before calculating force for next step
@@ -288,8 +284,8 @@ impl<
         let u2 = u2_unprojected.project_to_group()?;
 
         // Stage 3: U_new = 1/3 U0 + 2/3 Euler(U2)
-        let term3 = self.try_scale(&one_third)?;
-        let term4 = u2.try_euler_step(epsilon)?.try_scale(&two_thirds)?;
+        let term3 = self.scale(&one_third);
+        let term4 = u2.try_euler_step(epsilon)?.scale(&two_thirds);
         let u_new_unprojected = term3.try_add(&term4)?;
 
         // Final projection

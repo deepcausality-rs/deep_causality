@@ -95,9 +95,7 @@ impl<
             })?,
             R::zero(),
         );
-        let diff = u_munu
-            .try_add(&u_dag.try_scale(&neg_one).map_err(TopologyError::from)?)
-            .map_err(TopologyError::from)?;
+        let diff = u_munu.add(&u_dag.scale(&neg_one));
         let half = M::from_re_im(
             R::from_f64(0.5).ok_or_else(|| {
                 TopologyError::LatticeGaugeError("Failed to convert 0.5 to T".to_string())
@@ -105,7 +103,7 @@ impl<
             R::zero(),
         );
 
-        diff.try_scale(&half).map_err(TopologyError::from)
+        Ok(diff.scale(&half))
     }
 
     /// Compute the topological charge density q(x).
@@ -179,19 +177,19 @@ impl<
         // F_01 * F_23
         let f01 = self.try_field_strength(site, 0, 1)?;
         let f23 = self.try_field_strength(site, 2, 3)?;
-        let prod1 = f01.try_mul(&f23).map_err(TopologyError::from)?;
+        let prod1 = f01.mul(&f23);
         q += prod1.re_trace();
 
         // F_02 * F_31 (note: F_31 = -F_13)
         let f02 = self.try_field_strength(site, 0, 2)?;
         let f13 = self.try_field_strength(site, 1, 3)?;
-        let prod2 = f02.try_mul(&f13).map_err(TopologyError::from)?;
+        let prod2 = f02.mul(&f13);
         q -= prod2.re_trace(); // minus from epsilon
 
         // F_03 * F_12
         let f03 = self.try_field_strength(site, 0, 3)?;
         let f12 = self.try_field_strength(site, 1, 2)?;
-        let prod3 = f03.try_mul(&f12).map_err(TopologyError::from)?;
+        let prod3 = f03.mul(&f12);
         q += prod3.re_trace();
 
         Ok(normalization * q)

@@ -129,13 +129,6 @@ fn test_link_variable_dagger() {
 }
 
 #[test]
-fn test_link_variable_try_dagger() {
-    let id: LinkVariable<SU2, Complex<f64>, f64> = LinkVariable::identity();
-    let result = id.try_dagger();
-    assert!(result.is_ok());
-}
-
-#[test]
 fn test_link_variable_mul_identity() {
     // I * I = I
     let id: LinkVariable<SU2, Complex<f64>, f64> = LinkVariable::identity();
@@ -143,13 +136,6 @@ fn test_link_variable_mul_identity() {
     // Result should be identity
     assert!((result.as_slice()[0] - Complex::new(1.0, 0.0)).norm() < 1e-10);
     assert!((result.as_slice()[3] - Complex::new(1.0, 0.0)).norm() < 1e-10);
-}
-
-#[test]
-fn test_link_variable_try_mul() {
-    let id: LinkVariable<SU2, Complex<f64>, f64> = LinkVariable::identity();
-    let result = id.try_mul(&id);
-    assert!(result.is_ok());
 }
 
 #[test]
@@ -162,13 +148,6 @@ fn test_link_variable_add() {
 }
 
 #[test]
-fn test_link_variable_try_add() {
-    let id: LinkVariable<SU2, Complex<f64>, f64> = LinkVariable::identity();
-    let result = id.try_add(&id);
-    assert!(result.is_ok());
-}
-
-#[test]
 fn test_link_variable_scale() {
     let id: LinkVariable<SU2, Complex<f64>, f64> = LinkVariable::identity();
     let scaled = id.scale(&Complex::new(3.0, 0.0));
@@ -177,14 +156,7 @@ fn test_link_variable_scale() {
 }
 
 #[test]
-fn test_link_variable_try_scale() {
-    let id: LinkVariable<SU2, Complex<f64>, f64> = LinkVariable::identity();
-    let result = id.try_scale(&Complex::new(2.0, 0.0));
-    assert!(result.is_ok());
-}
-
-#[test]
-fn test_link_variable_try_ops_match_infallible_on_non_commuting_matrices() {
+fn test_link_variable_ops_on_non_commuting_matrices() {
     // A = [[1+2i, 3], [4, 5-i]], B = [[i, 2], [1-i, 0]]: complex, non-symmetric, AB != BA.
     let a: LinkVariable<SU2, Complex<f64>, f64> = LinkVariable::try_from_matrix(vec![
         Complex::new(1.0, 2.0),
@@ -209,21 +181,24 @@ fn test_link_variable_try_ops_match_infallible_on_non_commuting_matrices() {
         Complex::new(4.0, -2.0),
         Complex::new(8.0, 0.0),
     ];
-    assert_eq!(a.try_mul(&b).unwrap().as_slice(), &ab);
     assert_eq!(a.mul(&b).as_slice(), &ab);
     assert_ne!(b.mul(&a).as_slice(), &ab);
 
-    assert_eq!(a.try_add(&b).unwrap(), a.add(&b));
-    assert_eq!(a.try_scale(&alpha).unwrap(), a.scale(&alpha));
-    assert_eq!(a.try_dagger().unwrap(), a.dagger());
-    assert_eq!(
-        a.try_scale(&alpha).unwrap().as_slice()[1],
-        Complex::new(6.0, -3.0)
-    );
-    assert_eq!(
-        a.try_add(&b).unwrap().as_slice()[2],
-        Complex::new(5.0, -1.0)
-    );
+    // A + B and (2 - i) A, entry by entry.
+    let sum = [
+        Complex::new(1.0, 3.0),
+        Complex::new(5.0, 0.0),
+        Complex::new(5.0, -1.0),
+        Complex::new(5.0, -1.0),
+    ];
+    assert_eq!(a.add(&b).as_slice(), &sum);
+    let scaled = [
+        Complex::new(4.0, 3.0),
+        Complex::new(6.0, -3.0),
+        Complex::new(8.0, -4.0),
+        Complex::new(9.0, -7.0),
+    ];
+    assert_eq!(a.scale(&alpha).as_slice(), &scaled);
 }
 
 #[test]
@@ -329,13 +304,6 @@ fn test_link_variable_error_display() {
     };
     let display = format!("{}", err);
     assert!(display.contains("Shape mismatch"));
-}
-
-#[test]
-fn test_link_variable_error_tensor_creation() {
-    let err = LinkVariableError::TensorCreation("test error".to_string());
-    let display = format!("{}", err);
-    assert!(display.contains("Tensor creation failed"));
 }
 
 #[test]
@@ -593,7 +561,7 @@ fn test_link_variable_dagger_non_trivial() {
         Complex::new(5.0, -1.0),
     ];
     let link: LinkVariable<SU2, Complex<f64>, f64> = LinkVariable::from_matrix_unchecked(data);
-    let d = link.try_dagger().unwrap();
+    let d = link.dagger();
     let s = d.as_slice();
     // d[0,0] = conj(link[0,0]) = 1 - 2i
     assert!((s[0] - Complex::new(1.0, -2.0)).norm() < 1e-10);
@@ -615,4 +583,12 @@ fn test_link_variable_project_sun_general_su3() {
     // Trace should be close to 3 (or with phase normalization, det=1 enforced)
     let tr = projected.trace();
     assert!(tr.norm() > 2.0);
+}
+
+#[cfg(debug_assertions)]
+#[test]
+#[should_panic(expected = "LinkVariable data length must be N * N")]
+fn test_link_variable_from_matrix_unchecked_asserts_length_in_debug() {
+    let _link: LinkVariable<SU2, Complex<f64>, f64> =
+        LinkVariable::from_matrix_unchecked(vec![Complex::new(1.0, 0.0); 3]);
 }

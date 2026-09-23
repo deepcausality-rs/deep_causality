@@ -985,3 +985,41 @@ fn test_lattice_gauge_field_with_source_transforms_type() {
     assert_eq!(*attached.source(), 123);
     assert!((*attached.beta() - 2.0_f64).abs() < 1e-12);
 }
+
+#[test]
+fn test_four_by_four_group_supports_random_start_sweep_smearing_and_flow() {
+    use deep_causality_stats::Xoshiro256;
+    use deep_causality_topology::{FlowMethod, FlowParams, SO3_1, SmearingParams};
+
+    let lattice = create_test_lattice();
+    let mut rng = Xoshiro256::from_seed(3);
+    let mut field: LatticeGaugeField<SO3_1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::try_random(lattice, 6.0, &mut rng).expect("hot start for a 4x4 group");
+
+    let rate = field
+        .try_metropolis_sweep(0.2, &mut rng)
+        .expect("sweep for a 4x4 group");
+    assert!((0.0..=1.0).contains(&rate));
+
+    let smeared = field
+        .try_smear(&SmearingParams::ape_default())
+        .expect("smearing for a 4x4 group");
+    let params = FlowParams {
+        epsilon: 0.01,
+        t_max: 0.02,
+        method: FlowMethod::RungeKutta3,
+    };
+    let flowed = smeared.try_flow(&params).expect("flow for a 4x4 group");
+
+    // Every link stays in SU(4): U†U = I and det U = 1.
+    for (_, u) in flowed.iter_links() {
+        let udu = u.dagger().mul(u);
+        for i in 0..4 {
+            for j in 0..4 {
+                let want = if i == j { 1.0 } else { 0.0 };
+                assert!((udu.as_slice()[i * 4 + j] - Complex::new(want, 0.0)).norm() < 1e-9);
+            }
+        }
+        assert!((u.determinant() - Complex::new(1.0, 0.0)).norm() < 1e-9);
+    }
+}

@@ -19,25 +19,6 @@ impl<
     ///
     /// For real matrices, this is the transpose.
     /// For complex matrices, this is transpose + complex conjugate.
-    ///
-    /// # Returns
-    ///
-    /// The Hermitian conjugate.
-    ///
-    /// # Errors
-    ///
-    /// Never returns an error; the result equals [`dagger`](Self::dagger).
-    pub fn try_dagger(&self) -> Result<Self, LinkVariableError>
-    where
-        M: ComplexField<R>,
-        R: RealField,
-    {
-        Ok(self.dagger())
-    }
-
-    /// Hermitian conjugate U† (convenience method).
-    ///
-    /// For real matrices, this is the transpose.
     pub fn dagger(&self) -> Self
     where
         M: ComplexField<R>,
@@ -71,18 +52,6 @@ impl<
     /// # Returns
     ///
     /// The product $U \cdot V$.
-    ///
-    /// # Errors
-    ///
-    /// Never returns an error; the result equals [`mul`](Self::mul).
-    pub fn try_mul(&self, other: &Self) -> Result<Self, LinkVariableError>
-    where
-        M: Field,
-    {
-        Ok(self.mul(other))
-    }
-
-    /// Group multiplication: self * other (convenience method).
     pub fn mul(&self, other: &Self) -> Self
     where
         M: Field,
@@ -111,18 +80,6 @@ impl<
     }
 
     /// Matrix addition: self + other.
-    ///
-    /// # Errors
-    ///
-    /// Never returns an error; the result equals [`add`](Self::add).
-    pub fn try_add(&self, other: &Self) -> Result<Self, LinkVariableError>
-    where
-        M: Field,
-    {
-        Ok(self.add(other))
-    }
-
-    /// Matrix addition: self + other (convenience method).
     pub fn add(&self, other: &Self) -> Self
     where
         M: Field,
@@ -144,18 +101,6 @@ impl<
     }
 
     /// Scalar multiplication: α * self.
-    ///
-    /// # Errors
-    ///
-    /// Never returns an error; the result equals [`scale`](Self::scale).
-    pub fn try_scale(&self, alpha: &M) -> Result<Self, LinkVariableError>
-    where
-        M: Field,
-    {
-        Ok(self.scale(alpha))
-    }
-
-    /// Scalar multiplication: α * self (convenience method).
     pub fn scale(&self, alpha: &M) -> Self
     where
         M: Field,
@@ -233,8 +178,7 @@ impl<
     ///
     /// # Errors
     ///
-    /// Returns `LinkVariableError::InvalidDimension` if `N >= 4`: the determinant that fixes
-    /// `det = 1` is implemented for `N = 2` and `N = 3` only.
+    /// Returns `LinkVariableError::InvalidDimension` if `G::matrix_dim()` is zero.
     /// Returns `LinkVariableError::NumericalError` if a numeric constant does not convert to `R`.
     pub fn project_sun(&self) -> Result<Self, LinkVariableError>
     where
@@ -282,11 +226,11 @@ impl<
         let minus_one_m = M::from_re_im(-R::one(), R::zero());
 
         for _ in 0..max_iter {
-            let x_dag = x.try_dagger()?;
-            let xdx = x_dag.try_mul(&x)?;
+            let x_dag = x.dagger();
+            let xdx = x_dag.mul(&x);
 
             // Check convergence before next iteration (compute_identity_deviation returns ||X-I||_F^2)
-            let residual_sq = compute_identity_deviation::<G, M, R>(&xdx)?;
+            let residual_sq = compute_identity_deviation::<G, M, R>(&xdx);
             if residual_sq < epsilon {
                 break;
             }
@@ -296,11 +240,11 @@ impl<
             let three_i = identity.scale(&three_m);
             // xdx * -1
             let xdx_neg = xdx.scale(&minus_one_m);
-            let diff = three_i.try_add(&xdx_neg)?;
+            let diff = three_i.add(&xdx_neg);
 
             // X_{k+1} = 0.5 * X * diff
             // order: X * diff * 0.5
-            x = x.try_mul(&diff)?.scale(&half_m);
+            x = x.mul(&diff).scale(&half_m);
         }
 
         // Ensure determinant = 1 for SU(N) by dividing by det^{1/N}
@@ -309,7 +253,7 @@ impl<
         // So we only apply this if N >= 2
         let n = G::matrix_dim();
         if n >= 2 {
-            let det = self.try_determinant(&x)?;
+            let det = x.determinant();
             // Compute phase factor to remove: alpha = det^{-1/N}
             // det = r * exp(i * theta) -> because it's unitary, r=1
             // det^{-1/N} = exp(-i * theta / N)
@@ -333,17 +277,22 @@ impl<
         Ok(x)
     }
 
-    /// Compute determinant of the matrix.
+    /// Determinant of the `N x N` matrix.
     ///
-    /// Only implemented for N=2 and N=3.
-    fn try_determinant(&self, link: &Self) -> Result<M, LinkVariableError>
+    /// Closed forms for `N <= 3`. Above that, LU elimination with partial pivoting: at each
+    /// column the row with the largest `|z|²` becomes the pivot, the determinant is the product
+    /// of the pivots, and each row swap negates it. A column with no non-zero pivot candidate
+    /// makes the determinant exactly zero. `N = 0` gives one, the empty product.
+    pub fn determinant(&self) -> M
     where
         M: ComplexField<R>,
     {
         let n = G::matrix_dim();
-        let s = link.as_slice();
+        let s = self.as_slice();
 
         match n {
+            0 => M::one(),
+            1 => s[0],
             2 => {
                 // | a b |
                 // | c d |
@@ -352,7 +301,7 @@ impl<
                 let b = s[1];
                 let c = s[2];
                 let d = s[3];
-                Ok(a * d - b * c)
+                a * d - b * c
             }
             3 => {
                 // Rule of Sarrus
@@ -374,17 +323,51 @@ impl<
                 let term5 = m01 * m10 * m22;
                 let term6 = m00 * m12 * m21;
 
-                Ok(term1 + term2 + term3 - term4 - term5 - term6)
+                term1 + term2 + term3 - term4 - term5 - term6
             }
-            _ => Err(LinkVariableError::InvalidDimension(n)),
+            _ => lu_determinant::<M, R>(s.to_vec(), n),
         }
     }
 }
 
+/// Determinant of the row-major `n x n` matrix `work` by LU elimination with partial pivoting.
+fn lu_determinant<M, R>(mut work: Vec<M>, n: usize) -> M
+where
+    M: ComplexField<R> + Copy,
+    R: RealField,
+{
+    let mut det = M::one();
+    for col in 0..n {
+        // The row at or below `col` whose entry in this column has the largest modulus.
+        let (pivot_row, pivot_norm) = (col..n).map(|r| (r, work[r * n + col].norm_sqr())).fold(
+            (col, R::zero()),
+            |best, cand| {
+                if cand.1 > best.1 { cand } else { best }
+            },
+        );
+        if pivot_norm <= R::zero() {
+            return M::zero();
+        }
+        if pivot_row != col {
+            for c in 0..n {
+                work.swap(col * n + c, pivot_row * n + c);
+            }
+            det = M::zero() - det;
+        }
+        let head = work[col * n + col];
+        det = det * head;
+        for r in (col + 1)..n {
+            let factor = work[r * n + col] / head;
+            for c in col..n {
+                work[r * n + c] = work[r * n + c] - factor * work[col * n + c];
+            }
+        }
+    }
+    det
+}
+
 /// Compute ||X - I||_F for checking how close X is to identity.
-fn compute_identity_deviation<G: GaugeGroup, M, R>(
-    x: &LinkVariable<G, M, R>,
-) -> Result<R, LinkVariableError>
+fn compute_identity_deviation<G: GaugeGroup, M, R>(x: &LinkVariable<G, M, R>) -> R
 where
     M: ComplexField<R> + Debug + Copy,
     R: RealField,
@@ -403,7 +386,7 @@ where
         }
     }
 
-    Ok(sum)
+    sum
 }
 
 #[inline]

@@ -132,10 +132,15 @@ impl<G: GaugeGroup, M: Field + Copy + Default + PartialOrd, R: RealField> LinkVa
 
     /// Create from raw matrix data without validation.
     ///
-    /// # Safety
-    ///
-    /// Caller must ensure `data.len() == N * N`.
+    /// `data` must hold the `N * N` row-major elements, `N = G::matrix_dim()`. Debug builds
+    /// assert the length; release builds do not check it, and a link of the wrong length panics
+    /// on out-of-bounds indexing in the matrix operations.
     pub fn from_matrix_unchecked(data: Vec<M>) -> Self {
+        debug_assert_eq!(
+            data.len(),
+            G::matrix_dim() * G::matrix_dim(),
+            "LinkVariable data length must be N * N"
+        );
         Self {
             data,
             _gauge: PhantomData,
@@ -197,7 +202,7 @@ impl<G: GaugeGroup, M: Field + Copy + Default + PartialOrd, R: RealField> LinkVa
     /// # Errors
     ///
     /// Returns `LinkVariableError::InvalidDimension` if `G::matrix_dim()` is zero, and otherwise
-    /// any error of [`project_sun`](Self::project_sun), which rejects `N >= 4`.
+    /// any error of [`project_sun`](Self::project_sun).
     ///
     /// # Example
     ///
