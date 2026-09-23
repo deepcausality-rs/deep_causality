@@ -379,7 +379,7 @@ fn test_relativistic_current_kernel_insufficient_hodge_ops_error() {
     // A 2D triangular complex has skeletons {0,1,2} (len 3, passes the >=3
     // check) and a 4D metric (passes the dimension>=4 check), but only 3 Hodge
     // star operators (dims 0..=2) — fewer than the 4 required — so the kernel
-    // hits the "Missing Hodge star operators" guard (grmhd.rs:69-74).
+    // hits the "Missing Hodge star operators" guard in `relativistic_current_kernel`.
     let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0, 0.5, 0.866], vec![3, 2]).unwrap();
     let cloud = PointCloud::new(points, CausalTensor::<f64>::zeros(&[3]), 0).unwrap();
     let complex = cloud.triangulate(1.1).unwrap();
@@ -492,12 +492,12 @@ fn test_relativistic_current_refuses_a_complex_without_boundary_operators() {
 }
 
 // NOTE on defensively-unreachable GRMHD branches:
-//   * grmhd.rs:91-93 — "Manifold data too short for 2-form extraction".
-//     `Manifold::new` rejects any data tensor whose length differs from the
-//     complex's total simplex count, and that total is at least n0 + n1 + n2,
-//     so the data slab is never shorter than the 2-form domain.
-//   * grmhd.rs:206 (the `|| (len == 1 && [0] == 1)` operand) and 210-212
-//     (the "Scalar contraction failed" else-arm): the kernel admits only rank-2
+//   * `relativistic_current_kernel`, "Manifold data too short for 2-form extraction".
+//     `Manifold::new` and `Manifold::with_metric` reject any data tensor whose length differs
+//     from the complex's total simplex count, and that total is at least n0 + n1 + n2, so the
+//     data slab is never shorter than the 2-form domain.
+//   * `energy_momentum_tensor_em_kernel`, the `|| (len == 1 && [0] == 1)` operand and the
+//     "Scalar contraction failed" else-arm: the kernel admits only rank-2
 //     `em_tensor` and `metric`, and contracting two rank-2 tensors over both
 //     axes always yields a scalar whose shape `is_empty()` is true. That
 //     short-circuits the `||` and never takes the else. The scalar path is

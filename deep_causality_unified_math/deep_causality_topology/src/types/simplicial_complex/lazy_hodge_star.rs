@@ -276,9 +276,11 @@ where
         }
     }
 
-    // The intermediate grades sum over the top cells carrying each simplex. Those cells are
-    // looked up among the cells incident on the simplex's first vertex, listed here in cell
-    // order, and each cell's gradient Gram is computed on first use and kept.
+    // The top cells incident on each vertex, in cell order. The vertex grade
+    // sums over them directly; the intermediate grades look up the cells carrying a simplex among
+    // those at its first vertex, and compute each cell's gradient Gram on first use and keep it.
+    // A cell with a repeated vertex is listed twice under it, which changes nothing: such a cell
+    // has zero volume, and above `max_dim == 0` the threshold check has already rejected it.
     let top_cells = &skeletons[max_dim].simplices;
     let mut vertex_star: Vec<Vec<usize>> = Vec::new();
     for (cell_idx, cell) in top_cells.iter().enumerate() {
@@ -303,12 +305,8 @@ where
 
             let mass_val = if k_dim == 0 {
                 let mut dual_vol = T::zero();
-                let n_skel = &skeletons[max_dim];
-                let n_vols = &primal_volumes[max_dim];
-                for (cell_idx, cell) in n_skel.simplices.iter().enumerate() {
-                    if cell.contains_vertex(&i) {
-                        dual_vol += n_vols[cell_idx];
-                    }
+                for &cell_idx in vertex_star.get(i).map_or(&[][..], Vec::as_slice) {
+                    dual_vol += primal_volumes[max_dim][cell_idx];
                 }
                 dual_vol / max_dim_plus_one
             } else if k_dim == max_dim {

@@ -31,8 +31,10 @@ constant.
 
 2. **Measured against exact**: On an `8x8` periodic lattice, 400 thermalization sweeps precede
    400 measured sweeps at each $\beta$ from 0.5 (strong coupling) to 10 (weak coupling). The
-   measured $\langle P \rangle$ must lie within 0.02 of $I_1(\beta)/I_0(\beta)$. This is the
-   only check that tests the lattice and the physics together.
+   measured $\langle P \rangle$ must lie within a per-$\beta$ band of $I_1(\beta)/I_0(\beta)$,
+   between 0.020 and 0.050, derived from the spread over 60 seeds (see
+   `AGREEMENT_TOLERANCES` in `main.rs`). The run uses a fixed seed, so it reproduces exactly.
+   This is the only check that tests the lattice and the physics together.
 
 3. **Reference Cross-Check**: Two independent algorithms compute $I_1(\beta)/I_0(\beta)$ and
    must agree to `1e-12`, so the reference curve is itself sound:
@@ -41,8 +43,8 @@ constant.
 
 ## Precision
 
-`FloatType` is `f64`. The measurement is a Monte Carlo average whose statistical error, a few
-times `1e-3`, sits thirteen orders of magnitude above `f64` rounding. `Float106` would only
+`FloatType` is `f64`. The measurement is a Monte Carlo average whose seed-to-seed spread,
+`4e-3` to `1.4e-2`, sits more than ten orders of magnitude above `f64` rounding. `Float106` would only
 sharpen the reference curve.
 
 ## Reference
