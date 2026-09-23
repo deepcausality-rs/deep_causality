@@ -1,6 +1,6 @@
 # Gravitational Wave: Regge Calculus
 
-This example releases a metric perturbation at the centre of a triangulated spatial slice and lets it propagate under a discrete wave equation whose restoring term is the curvature the mesh carries. It then measures whether what happened was propagation.
+This example releases a metric perturbation at the centre of a triangulated spatial slice and lets it propagate under a discrete wave equation whose restoring term is the curvature the mesh carries. It then measures whether the perturbation propagated.
 
 ## How to Run
 
@@ -14,12 +14,12 @@ The run exits with status 0 when every propagation check passes and with an erro
 
 ## Engineering Value
 
-Regge Calculus is useful for:
-- **Numerical Relativity**: Simulating black hole mergers, gravitational waves
-- **Quantum Gravity**: Discrete approaches to spacetime quantization
-- **Mesh-Based Physics**: Games, simulations with dynamic geometry
+Regge Calculus serves:
+- **Numerical Relativity**: black hole mergers, gravitational waves
+- **Quantum Gravity**: discrete approaches to spacetime quantization
+- **Mesh-Based Physics**: games and simulations with dynamic geometry
 
-This example shows how `calculate_ricci_curvature` computes curvature on a simplicial mesh, and how a leapfrog driven by that curvature carries a disturbance outward.
+`calculate_ricci_curvature` computes the curvature on a simplicial mesh, and a leapfrog driven by that curvature carries a disturbance outward.
 
 ---
 
@@ -27,7 +27,7 @@ This example shows how `calculate_ricci_curvature` computes curvature on a simpl
 
 ### Regge Calculus
 
-Instead of continuous curvature, Regge Calculus uses:
+Regge Calculus replaces continuous curvature with:
 - **Simplicial Complex**: Spacetime as triangles/tetrahedra
 - **Edge Lengths**: Metric encoded in edge lengths
 - **Deficit Angles**: Curvature concentrated at "bones" (n-2 simplices)
@@ -39,7 +39,7 @@ For a 2D surface, curvature at a vertex is:
 δ = 2π - Σ(angles at vertex)
 ```
 
-If angles sum to less than 2π → positive curvature (like a sphere).
+Angles that sum to less than 2π mean positive curvature (like a sphere).
 
 ### The wave equation on the mesh
 
@@ -73,7 +73,7 @@ The table shows the largest displacement from rest in each ring at each step; a 
      4   25.76    5.50   12.57    2.70    0.12       .       .
 ```
 
-Four checks follow, and each is stated as what was measured:
+Four checks follow, each stated as a measurement:
 
 ```
   first motion at ring: r1@t1  r2@t2  r3@t3  r4@t4  r5@t6
@@ -84,8 +84,8 @@ Four checks follow, and each is stated as what was measured:
 ```
 
 - **every ring reached**: a ring that never moved would make the next two claims vacuous, so the run requires an arrival on every ring before it makes them.
-- **ordered outward front** and **finite signal speed**: what "an outward front" means. A nearest-neighbour stencil carries a signal at most one ring per step, so ring `k` moving before step `k` would mean the scheme is not a wave.
-- **peak within 16 steps**: a threshold on the sampled peak over the run. An explicit leapfrog at `C ≤ 1` should stay below it. A finite window cannot prove stability, and the report does not say it does.
+- **ordered outward front** and **finite signal speed**: together they define "an outward front". A nearest-neighbour stencil carries a signal at most one ring per step, so ring `k` moving before step `k` would mean the scheme is not a wave.
+- **peak within 16 steps**: a threshold on the sampled peak over the run. An explicit leapfrog at `C ≤ 1` should stay below it. A finite window cannot prove stability, and the report does not claim it.
 
 The leading edge advances one ring per step, which is the stencil's domain of dependence; the Courant number governs how fast the energy peak follows it.
 
@@ -99,16 +99,16 @@ The leading edge advances one ring per step, which is the stencil's domain of de
 
 ## Adapting This Example
 
-1. **3D mesh**: Use tetrahedra for full 3D+1 simulation
-2. **Different topologies**: Try torus, sphere, or hyperbolic meshes
-3. **Source terms**: Add matter/energy sources
-4. **Wave detection**: Implement "LIGO-like" detector nodes
+1. **3D mesh**: use tetrahedra for a full 3D+1 simulation
+2. **Different topologies**: try torus, sphere or hyperbolic meshes
+3. **Source terms**: add matter/energy sources
+4. **Wave detection**: add "LIGO-like" detector nodes
 
 ---
 
 ## Key APIs Used
 
-- `SimplicialComplexBuilder` - Construct discrete spacetime
-- `ReggeGeometry::calculate_ricci_curvature()` - Deficit angles
-- `CausalTensor` - Edge length storage
-- `BaseTopology` trait - Mesh navigation
+- `SimplicialComplexBuilder`: constructs the discrete spacetime
+- `ReggeGeometry::calculate_ricci_curvature()`: deficit angles
+- `CausalTensor`: edge length storage
+- `BaseTopology` trait: mesh navigation

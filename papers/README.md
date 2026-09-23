@@ -5,9 +5,8 @@
 [//]: # (---)
 
 # Papers
-Papers, articles, and other content written by the DeepCausality team.
-All articles are formatted in [LaTex](https://www.latex-project.org) with the source code available in the [src folder](src). 
-The DeepCasuality project uses [texifier](https://www.texifier.com/mac) for type-setting of all documents shared in this repository. 
+Papers and articles by the DeepCausality team, written in [LaTex](https://www.latex-project.org); the sources are in the [src folder](src). 
+The project typesets all documents in this repository with [texifier](https://www.texifier.com/mac). 
 
 ## 2026
 
@@ -105,5 +104,5 @@ Citation:
 
 ## About
 
-[DeepCausality](https://deepcausality.com/) is a hyper-geometric computational causality library that enables fast and
-deterministic context-aware causal reasoning in Rust. Please give us a [star on GitHub.](https://github.com/deepcausality-rs/deep_causality)
+[DeepCausality](https://deepcausality.com/) is a hyper-geometric computational causality library for fast,
+deterministic, context-aware causal reasoning in Rust. Please give us a [star on GitHub.](https://github.com/deepcausality-rs/deep_causality)

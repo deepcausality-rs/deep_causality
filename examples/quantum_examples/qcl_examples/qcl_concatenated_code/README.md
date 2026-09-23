@@ -1,8 +1,8 @@
 # QCL-2 chain: a concatenated code
 
-The hand-built `[[4,2,2]]` code concatenated with itself, as two abstractions composed. The inner
-code's four physical qubits form two blocks of two, each encoded by the outer code; eight physical
-qubits stand under four middle qubits under two logical ones.
+This example concatenates the hand-built `[[4,2,2]]` code with itself as two composed abstractions.
+The inner code's four physical qubits form two blocks of two, each encoded by the outer code; eight
+physical qubits stand under four middle qubits under two logical ones.
 
 ```bash
 cargo run -p quantum_examples --example qcl_concatenated_code
@@ -15,7 +15,7 @@ cargo run -p quantum_examples --example qcl_concatenated_code
 
 `Abstraction::compose` pastes the two squares and records, per query, `ε₁`, `ε₂`, `‖τ₁‖_pre`,
 `‖τ₂‖_post`, the bound `‖τ₂‖_post · ε₁ + ‖τ₁‖_pre · ε₂` and the composite's measured residual. For
-`Z̄` and `X̄` both links are exact and the composite is exact, the Rust witness of Lorenz & Tull's
+`Z̄` and `X̄` both links and the composite are exact, the Rust witness of Lorenz & Tull's
 Proposition 17 whose Lean statement is `lean/DeepCausalityFormal/Quantum/Abstraction.lean`. `CZ̄`
 pairs a qubit of each block and is refused by name: no transversal gadget between code blocks is
 part of this construction. The program runs the chain at `f32`, `f64` and `Float106`.

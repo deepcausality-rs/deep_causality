@@ -6,13 +6,12 @@
 RUSTFLAGS='-C target-cpu=native'  cargo run --example gauge_gr --release
 ```
 
-This example demonstrates **General Relativity (GR)** as an SO(3,1) Lorentz gauge theory
-using the **Causal Monad** (`PropagatingEffect`) for type-safe, modular composition of
-physics stages.
+This example treats **General Relativity (GR)** as an SO(3,1) Lorentz gauge theory and
+composes the analysis of a Schwarzschild black hole with the **Causal Monad** (`CausalFlow`).
 
 ## Overview: General Relativity in 5 Lines
 
-The following 5 lines of code encapsulate the essential workflow of modern numerical relativity:
+Five lines chain the workflow of numerical relativity:
 
 ```rust
 let result = initial_stage_create_schwarzschild()
@@ -24,22 +23,22 @@ let result = initial_stage_create_schwarzschild()
 
 ## The Gravitas of each Stage
 
-While the code looks simple, each stage performs a fundamental operation that defines our understanding of the universe:
+Each stage performs one operation of the analysis:
 
 ### 1. Building a Black Hole (Initial Stage)
-We start by constructing the fabric of space-time itself. In this example, we model a Schwarzschild black hole that is a region of space so dense that even light cannot escape. We're defining the gravitational arena where everything happens.
+The first stage constructs the spacetime: a Schwarzschild black hole, a region so dense that even light cannot escape.
 
 ### 2. Measuring the Warp (Curvature Invariants)
-Einstein's greatest insight was that gravity is the curvature of space-time itself. In this stage, we measure exactly how "warped" the universe is at our specific location. By checking the **Ricci Scalar**, we confirm we are in a vacuum—there is no matter here, only the pure gravitational influence of the distant mass.
+Gravity is the curvature of spacetime. This stage measures how "warped" spacetime is at the probe's location with the **Kretschmann scalar**. The **Ricci Scalar** is zero, which marks a vacuum: no matter at this point, only the gravitational influence of the distant mass.
 
 ### 3. The Path of Least Resistance (Geodesic Analysis)
-Everything in the universe follows the "straightest possible path" through curved space, called a **geodesic**. Here, we calculate how objects (and light) move. We also calculate **Tidal Forces**, which are the physical stretching effect felt by an explorer, and we measure **Time Dilation**, where time literally slows down because of the strenghtening gravity as you get closer to the black hole.
+Free objects and light follow the "straightest possible path" through curved spacetime, a **geodesic**. This stage computes the **Tidal Forces**, the stretching an explorer would feel, from the geodesic deviation, and the **Time Dilation**: clocks slow as gravity strengthens closer to the black hole.
 
 ### 4. Slicing through Time (ADM Formalism)
-To simulate gravity on a computer, we slice the 4D universe into layers of 3D space, much like frames in a movie. This stage uses the **Hamiltonian Constraint** to check if our slices are mathematically correct. It ensures that the laws of physics are preserved as space-time evolves from one moment to the next.
+Numerical relativity slices 4D spacetime into layers of 3D space, like frames in a movie. This stage checks the slice against the **Hamiltonian Constraint**, which every valid slice must satisfy as spacetime evolves.
 
 ### 5. Finding the Event Horizon (Horizon Detection)
-Finally, we locate the boundaries that define a black hole. We find the **Event Horizon**, the point of no return; the **Photon Sphere**, where light itself orbits in a circle; and the **ISCO**, the last safe harbor where a planet or moon can orbit without being dragged into the black hole.
+The last stage locates the boundaries of the black hole: the **Event Horizon**, the point of no return; the **Photon Sphere**, where light orbits in a circle; and the **ISCO** (innermost stable circular orbit), the closest radius at which matter can orbit stably.
 
 ---
 
@@ -73,12 +72,12 @@ cargo run --example gauge_gr -p physics_examples
 
 ## Design Pattern: The Causal Monad
 
-This example showcases the power of the **Causal Monad** (`PropagatingEffect`). By using `.bind_or_error()`, we treat the complex mathematics of General Relativity as a simple pipeline of operations.
+`CausalFlow` chains the stages with `.bind_or_error()`, so the mathematics of General Relativity runs as a pipeline of operations.
 
 ### Why this matters:
-1. **Type-Safe**: Each stage is guaranteed to have the physical data it needs from the previous one.
-2. **Error Handling**: If a computation becomes physically impossible (like trying to measure time inside a singularity), the pipeline stops and explains why, without crashing.
-3. **Modularity**: You could swap the "Black Hole" stage for a "Neutron Star" or "Gravitational Wave" stage without changing any of the analysis code.
+1. **Type-Safe**: Each stage receives the physical data it needs from the previous one.
+2. **Error Handling**: If a computation becomes physically impossible (like measuring time inside a singularity), the pipeline stops and reports why, without crashing.
+3. **Modularity**: A "Neutron Star" or "Gravitational Wave" stage can replace the "Black Hole" stage without changes to the analysis code.
 
 
 ## GR Operations Used
@@ -86,17 +85,17 @@ This example showcases the power of the **Causal Monad** (`PropagatingEffect`). 
 | Operation              | Method                               | Description         |
 |------------------------|--------------------------------------|---------------------|
 | Schwarzschild radius   | `GR::schwarzschild_radius()`         | r_s = 2GM/c²        |
-| Kretschmann scalar     | `gr.kretschmann_scalar()`            | Curvature invariant |
-| Ricci scalar           | `gr.ricci_scalar()`                  | Ricci contraction   |
-| Geodesic deviation     | `gr.geodesic_deviation()`            | Tidal forces        |
+| Kretschmann scalar     | analytic, `48M²/r⁶`                  | Curvature invariant |
+| Ricci scalar           | vacuum, `R = 0`                      | Ricci contraction   |
+| Geodesic deviation     | `gr.geodesic_deviation_si()`         | Tidal forces        |
 | Hamiltonian constraint | `AdmState::hamiltonian_constraint()` | ADM constraint      |
 | Mean curvature         | `AdmState::mean_curvature()`         | Trace of K_ij       |
 
 ## Related Examples
 
-- [`gauge_qed`](../gauge_qed/) — Electromagnetic field analysis
-- [`gauge_weak_force`](../gauge_weak_force/) — SU(2) weak interaction
-- [`gauge_electroweak`](../gauge_electroweak/) — Electroweak unification
+- [`gauge_qed`](../gauge_qed/): Electromagnetic field analysis
+- [`gauge_weak_force`](../gauge_weak_force/): SU(2) weak interaction
+- [`gauge_electroweak`](../gauge_electroweak/): Electroweak unification
 
 ## References
 

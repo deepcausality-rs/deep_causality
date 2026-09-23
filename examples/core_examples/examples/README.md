@@ -1,6 +1,6 @@
 # Core Examples: PropagatingEffect and PropagatingProcess
 
-This directory contains examples demonstrating the core monadic types from `deep_causality_core`:
+These examples demonstrate the core monadic types of `deep_causality_core`:
 - **PropagatingEffect**: A pure monadic effect for value propagation
 - **PropagatingProcess**: A stateful monadic process with state and context
 
@@ -18,7 +18,7 @@ cargo run -p core_examples --example propagating_effect_example
 
 ### 2. Propagating Effect with Counterfactuals
 
-Demonstrates counterfactual reasoning using `PropagatingEffect`.
+Counterfactual reasoning with `PropagatingEffect`.
 
 ```bash
 cargo run -p core_examples --example propagating_effect_counterfactual_example
@@ -34,7 +34,7 @@ cargo run -p core_examples --example propagating_process_example
 
 ### 4. Propagating Process with Counterfactuals
 
-Demonstrates counterfactual reasoning using `PropagatingProcess`.
+Counterfactual reasoning with `PropagatingProcess`.
 
 ```bash
 cargo run -p core_examples --example propagating_process_counterfactual
@@ -53,8 +53,8 @@ cargo run -p core_examples --example propagating_process_counterfactual
 
 Both types support:
 - Monadic `bind` for chaining operations
-- Error propagation via `Option<CausalityError>`
-- Logging via the logs field
+- Error propagation via a `Result<_, CausalityError>` outcome
+- Logging to an `EffectLog`
 
 ### Monadic Composition
 

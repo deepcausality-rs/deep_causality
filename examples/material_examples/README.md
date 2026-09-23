@@ -18,8 +18,8 @@ cargo run -p material_examples --example <example_name>
 ## Technial properties
 
 1. **Precision is a parameter.** A `FloatType` alias sits directly above `main`, and every quantity
-   carries it. Both default to `Float106` rather than `f64`, because a hard-coded `f64` is
-   invisible while the alias *is* `f64` and a compile error the moment the two differ. Both run at
+   carries it. Both examples set the alias to `Float106` rather than `f64`: a hard-coded `f64` goes
+   unnoticed while the alias *is* `f64`, and fails to compile once the two differ. Both run at
    `BFloat16`, `f32`, `f64` and `Float106`.
 2. **Constants are declared at the working type** through `const_scalar_from_int!` and
    `const_scalar_from_float!`, so the compiler resolves them against the alias and no conversion
@@ -40,10 +40,9 @@ operations; `model.rs` holds the domain model; `utils_print.rs` holds the presen
 | `extend` | an element and its neighbourhood | structural_health_monitor | one load-redistribution step across the bonded hull |
 | `alternate_value_if` | a value in a flow | structural_health_monitor | the intervention, as Pearl's do-operator |
 
-The pattern to take away: `fmap` applies a law to one value, `fold` reduces a payload to a number,
-and `extend` is what a quantity asks for when it needs to see a neighbourhood. A reader who learns
-`extend` on a graph can run it on a manifold or a point cloud, which is what the medicine examples
-do.
+`fmap` applies a law to one value, `fold` reduces a payload to a number, and `extend` serves a
+quantity that needs to see a neighbourhood. `extend` on a graph carries over to a manifold or a
+point cloud, as the medicine examples show.
 
 ## Crates used
 

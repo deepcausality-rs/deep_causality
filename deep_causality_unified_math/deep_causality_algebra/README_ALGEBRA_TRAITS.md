@@ -1,6 +1,6 @@
 # Algebraic Traits
 
-This document is a reference for the algebraic trait hierarchy in `deep_causality_algebra`. These traits model the structures of abstract algebra, giving a type-safe vocabulary for number systems from the naturals and the integers, through the rationals and the reals, to complex numbers, quaternions, and octonions.
+This document is a reference for the algebraic trait hierarchy in `deep_causality_algebra`. The traits model the structures of abstract algebra and give a typed vocabulary for number systems from the naturals and integers, through the rationals and reals, to complex numbers, quaternions, and octonions.
 
 ## Trait Hierarchy
 
@@ -135,7 +135,7 @@ graph TD
 
 ### Marker Traits
 
-These marker traits encode fundamental algebraic properties. They have no methods—implementing them is a compile-time promise that the type satisfies the corresponding law.
+These marker traits encode algebraic laws. They have no methods; implementing one promises at compile time that the type satisfies the law.
 
 | Trait | Law | Formula |
 |-------|-----|---------|
@@ -148,12 +148,12 @@ These marker traits encode fundamental algebraic properties. They have no method
 #### Why two of them name an operation
 
 Associativity and commutativity are properties of a **single** operation, so the law is a statement
-about a *pair* — a set together with an operation. ℍ is the case that forces the distinction:
+about a *pair*: a set together with an operation. ℍ forces the distinction:
 quaternion addition commutes and quaternion multiplication does not, so "ℍ is commutative" is not a
 well-formed claim. Only "(ℍ, +) commutes" and "(ℍ, ×) does not" are.
 
 A flat marker cannot say which operation it means, and a type can implement a non-generic trait only
-once — so one `Commutative` has exactly one slot where ℍ needs two opposite answers. The operator
+once, so one `Commutative` has one slot where ℍ needs two opposite answers. The operator
 parameter gives each law its operation:
 
 ```rust
@@ -163,23 +163,23 @@ pub struct Multiplicative;  // whatever `Mul` does — the DEFAULT
 pub struct Combining;       // whatever `Monoid::combine` does
 ```
 
-`Associative` and `Associative<Multiplicative>` are the same bound, because that is what the flat
-marker always meant: every law impl and six of the eight law bounds state the multiplicative case.
+The operator parameter has no default, so every bound and impl names its operator. Every law impl
+and six of the eight law bounds state the multiplicative case.
 
 `Combining` exists because `Monoid::combine` is neither addition nor multiplication and cannot be
 mapped onto either: `Prob::combine` multiplies, `Count::combine` adds, `Conjunction`/`Disjunction`
 are `∧` and `∨`. The operation is `combine`, whatever it wraps.
 
-**Distributivity takes no operator.** It *relates* the two operations rather than describing one, so
-"multiplication distributes over addition" is the entire statement — there is no additive variant.
+**Distributivity takes no operator.** It *relates* the two operations, so
+"multiplication distributes over addition" is the entire statement; there is no additive variant.
 The two variants that do exist are **left** ($a(b+c) = ab+ac$) and **right** ($(b+c)a = ba+ca$),
 which differ only in non-commutative rings; no type here distinguishes them, and the marker promises
 both. `Annihilating` is likewise a two-operation law and takes no operator.
 
 None of the five is blanket-implemented. A blanket over `Num` or `Float` would hand the promise to
-any downstream type that happened to meet the structural bound, and a marker whose whole purpose is
-to record what the compiler cannot check must not be granted by inference. Each type is listed by
-hand, in the crate that defines it.
+any downstream type that met the structural bound, and a marker that records what the compiler
+cannot check must not be granted by inference. Each type is listed by hand, in the crate that
+defines it.
 
 Two of the five exist because the law they name does not follow from the others:
 
@@ -200,7 +200,7 @@ The five number systems first, then the algebras and containers built over them.
 | ℕ | `u8`…`u128`, `usize`     | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | `CommutativeSemiring` |
 | ℤ | `i8`…`i128`, `isize`     | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ | `CommutativeRing`, `EuclideanDomain` |
 | ℚ | `Rational<T>`            | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | `Field` |
-| ℝ | `f32`, `f64`, `Float106` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | `RealField` |
+| ℝ | `f32`, `f64`, `Float106`, `BFloat16` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | `RealField` |
 | ℂ | `Complex<T>`             | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | `Field`, `ComplexField<T>` |
 | ℍ | `Quaternion<T>`          | ✅ | ✅ | ✅ | **❌** | ✅ | ✅ | ✅ | `AssociativeDivisionAlgebra` |
 | 𝕆 | `Octonion<T>`            | ✅ | ✅ | **❌** | **❌** | ✅ | ✅ | ❌ | `DivisionAlgebra` |
@@ -212,10 +212,10 @@ The five number systems first, then the algebras and containers built over them.
 Every entry above is conditioned on the element type where the container is generic: `CausalTensor<T>`
 promises a law exactly when `T` does.
 
-**The multiplicative column is the one that discriminates.** Every type in the table associates and
-commutes additively — abelian addition is what makes any of them a ring in the first place. The
-structure is decided by what happens under `×`: ℍ associates but does not commute, 𝕆 does neither,
-and `CsrMatrix` matches ℍ because its `Mul` is matrix multiplication.
+**The multiplicative column discriminates.** Every type in the table associates and commutes
+additively; abelian addition is what makes any of them a ring. The `×` columns decide the structure:
+ℍ associates but does not commute, 𝕆 does neither, and `CsrMatrix` matches ℍ because its `Mul` is
+matrix multiplication.
 
 | Type | Operator | Assoc⟨∘⟩ | Comm⟨∘⟩ | Idempotent | `combine` is |
 |------|----------|:---:|:---:|:---:|--------------|
@@ -271,10 +271,9 @@ pub trait AddSemigroup: Add<Output = Self> + Associative<Additive> + Clone {}
 2. **Associativity:** $(a + b) + c = a + (b + c)$
 
 > [!IMPORTANT]
-> This bound previously read `Associative`, which — before the marker took an operator — promised
-> $(a \cdot b) \cdot c = a \cdot (b \cdot c)$. An additive structure was asserting the
-> multiplicative law. Every type it admitted happens to satisfy both, so no wrong type was ever
-> admitted, but the bound named the wrong operation and nothing could detect it.
+> The bound is `Associative<Additive>`. `Associative<Multiplicative>` would promise
+> $(a \cdot b) \cdot c = a \cdot (b \cdot c)$, the wrong law for an additive structure, and the
+> compiler cannot tell which law a marker means; only the operator parameter names it.
 
 ---
 
@@ -322,10 +321,10 @@ pub trait AddGroup:
 2. **Inverse:** $a + (-a) = 0$
 
 > [!IMPORTANT]
-> `Neg` is load-bearing, and `Sub` alone will not do. `Sub` supplies an operation, not the inverse
-> axiom: a truncating implementation satisfies $a - a = 0$ while having no inverses at all. That is
-> how `u64` once satisfied `AddGroup` and made `T::zero() - x` return `18446744073709551615`. `Neg`
-> is exactly the property separating ℤ from ℕ.
+> `Neg` is required; `Sub` alone will not do. `Sub` supplies an operation, not the inverse
+> axiom: a truncating implementation satisfies $a - a = 0$ while having no inverses at all. With
+> `Sub` alone, `u64` would satisfy `AddGroup`, and `T::zero() - x` would return
+> `18446744073709551615`. `Neg` is the property that separates ℤ from ℕ.
 
 ---
 
@@ -389,7 +388,7 @@ where
 
 > [!IMPORTANT]
 > `Div` and `DivAssign` are not enough to reach `InvMonoid`. The blanket also demands
-> [`Invertible`](#marker-traits), the promise that `/` really inverts. `i64` has both operators and
+> [`Invertible`](#marker-traits), the promise that `/` inverts. `i64` has both operators and
 > is still not an `InvMonoid`, because `1 / 5 == 0`.
 
 > [!TIP]
@@ -417,9 +416,9 @@ pub trait DivGroup: MulGroup {}
 
 ### Semiring Structures
 
-A semiring is a ring with the additive inverses removed. It is the structure the natural numbers
-have and cannot exceed: `3 - 5` has no value in ℕ, so there is no `-a`, so the additive monoid never
-becomes a group. This branch of the tower never rejoins the ring branch.
+A semiring is a ring without additive inverses. It is the structure the natural numbers have and
+cannot exceed: `3 - 5` has no value in ℕ, so there is no `-a`, and the additive monoid never becomes
+a group. This branch of the tower never rejoins the ring branch.
 
 #### Semiring
 
@@ -437,15 +436,15 @@ pub trait Semiring:
 4. **Annihilation:** $0 \cdot a = a \cdot 0 = 0$
 
 > [!NOTE]
-> The additive side reads `Add + Zero + Clone` rather than `AddMonoid`, and the weakening is
-> deliberate. `AddMonoid` also demands `AddAssign<Self>`, which `Ring`'s own `AbelianGroup` bound
+> The additive side reads `Add + Zero + Clone` rather than `AddMonoid`, on purpose. `AddMonoid`
+> also demands `AddAssign<Self>`, which `Ring`'s own `AbelianGroup` bound
 > does not, so requiring it here would leave `Semiring` *stronger* than `Ring` on the additive side.
-> `CausalTensor` implements `AddAssign<T>` for a scalar right-hand side but never `AddAssign<Self>`,
-> and would then have satisfied `Ring` while failing `Semiring`.
+> `CausalTensor` implements `AddAssign<T>` for a scalar right-hand side but not `AddAssign<Self>`,
+> so it would satisfy `Ring` while failing `Semiring`.
 
-Every `Ring` is a `Semiring`, because these bounds are a strict subset of `Ring`'s. `Ring` is
-nevertheless not declared as `Ring: Semiring`; the blanket impls already give every ring the weaker
-bound, so re-rooting the supertrait would change nothing about membership.
+Every `Ring` is a `Semiring`, because these bounds are a strict subset of `Ring`'s. `Ring` is not
+declared as `Ring: Semiring`; the blanket impls already give every ring the weaker bound, so
+re-rooting the supertrait would not change membership.
 
 ---
 
@@ -499,7 +498,7 @@ pub trait CommutativeRing: Ring + Commutative<Multiplicative> {}
 ---
 
 #### IntegralDomain
-A non-trivial commutative ring with no zero divisors — the rung between `CommutativeRing` and
+A non-trivial commutative ring with no zero divisors, the rung between `CommutativeRing` and
 `EuclideanDomain`.
 
 ```rust
@@ -510,24 +509,24 @@ pub trait IntegralDomain: CommutativeRing {}
 - **Non-triviality:** $1 \neq 0$
 - **No zero divisors:** $a \cdot b = 0 \implies a = 0 \lor b = 0$
 
-The absence of zero divisors is what licenses **cancellation**: $a \cdot b = a \cdot c$ with
-$a \neq 0$ gives $b = c$. That is the property exact elimination over a ring rests on, and it is
-what fraction-free (Bareiss) elimination needs — not a Euclidean valuation.
+Without zero divisors, **cancellation** holds: $a \cdot b = a \cdot c$ with $a \neq 0$ gives
+$b = c$. Exact elimination over a ring rests on this property; fraction-free (Bareiss) elimination
+needs it, not a Euclidean valuation.
 
-**Implemented for:** `i8`…`isize`, `f32`, `f64`, `Float106`, `Complex<T>`, `Rational<T>`.
+**Implemented for:** `i8`…`isize`, `f32`, `f64`, `Float106`, `BFloat16`, `Complex<T>`, `Rational<T>`.
 
 > [!IMPORTANT]
-> `Dual<T>` is the case that makes this rung load-bearing. ℝ[ε] is a `CommutativeRing`, but
+> `Dual<T>` is the case this rung exists for. ℝ[ε] is a `CommutativeRing`, but
 > $\varepsilon \cdot \varepsilon = 0$ with $\varepsilon \neq 0$, so cancellation fails and it is
-> **not** an `IntegralDomain` — the same reason it is not a `Field`. `Quaternion<T>` is excluded
+> **not** an `IntegralDomain`, for the same reason it is not a `Field`. `Quaternion<T>` is excluded
 > because an integral domain is commutative (ℍ is a division ring); the container types because
 > element-wise and matrix products both have zero divisors; ℕ because it is not a ring at all.
 
 ---
 
 #### EuclideanDomain
-An integral domain carrying a Euclidean function, so that division with remainder — and therefore
-the Euclidean algorithm — is well defined. This is the rung at which exact integer arithmetic lives.
+An integral domain with a Euclidean function, so division with remainder, and with it the Euclidean
+algorithm, is well defined. Exact integer arithmetic lives on this rung.
 
 ```rust
 pub trait EuclideanDomain: IntegralDomain {
@@ -554,10 +553,10 @@ states them on the rung they belong to.
 **Implemented for:** `i8`, `i16`, `i32`, `i64`, `i128`, `isize`.
 
 > [!NOTE]
-> The unsigned types are absent by construction, not by oversight: ℕ has no additive inverses, so it
-> is not an `AbelianGroup`, so it is not a `CommutativeRing` and cannot reach this trait at all. A
-> Euclidean domain is a *ring* first, and ℕ is only a semiring. `ℤ/6ℤ` is excluded for the other
-> reason — it is a commutative ring, but $2 \cdot 3 = 0$.
+> The unsigned types are absent by construction: ℕ has no additive inverses, so it is not an
+> `AbelianGroup`, not a `CommutativeRing`, and cannot reach this trait. A Euclidean domain is a
+> *ring* first, and ℕ is only a semiring. `ℤ/6ℤ` is excluded for the other reason: it is a
+> commutative ring, but $2 \cdot 3 = 0$.
 
 ---
 
@@ -579,9 +578,9 @@ pub trait Field: CommutativeRing + InvMonoid + Div<Output = Self> + DivAssign {}
 
 #### Real
 The analytic real interface: a commutative ring with ordering, negation, and the elementary
-functions — but **without** requiring field division. Splitting `Real` out of `RealField` lets
-non-field reals carry the same analytic API; the load-bearing case is `Dual<T>`, whose `ε` is a
-zero divisor (it is **not** a field, yet it is `Real`).
+functions, **without** field division. Splitting `Real` out of `RealField` lets non-field reals
+carry the same analytic API. The case that needs it is `Dual<T>`, whose `ε` is a zero divisor: it
+is **not** a field, yet it is `Real`.
 
 ```rust
 pub trait Real:
@@ -609,7 +608,7 @@ pub trait Scalar: Real + Div<Output = Self> + FromPrimitive {}
 ```
 
 **Position in the tower:** between `Real` and `RealField`. It adds `Div` to `Real`, but unlike a
-`Field`/`RealField` it does **not** require a total inverse — so `Dual<T>` qualifies (`ε` is a zero
+`Field`/`RealField` it does **not** require a total inverse, so `Dual<T>` qualifies (`ε` is a zero
 divisor: division exists, yet it is not a field).
 
 **Why each bound:**
@@ -618,9 +617,9 @@ divisor: division exists, yet it is not a field).
   higher derivatives).
 - `FromPrimitive` — the precision-safe constant lift: a model raises its literal constants into the
   working scalar at any precision (`f32` / `f64` / `Float106`, and `Dual` over each). `From<f64>` is
-  deliberately *not* used, because `f32` does not implement it.
+  *not* used, because `f32` does not implement it.
 
-Blanket-implemented, so every qualifying number is a `Scalar` automatically.
+A blanket impl makes every qualifying number a `Scalar`.
 `deep_causality_calculus` writes its differentiation and integration operators against `Scalar`, so
 a single model evaluates at `f64` (the value) and at `Dual` (the derivative).
 
@@ -635,7 +634,7 @@ A real that is also a field: the analytic real (`Real`) intersected with field d
 pub trait RealField: Real + Field {}
 ```
 
-`RealField` adds nothing of its own — it is exactly the reals that are fields. The ordering,
+`RealField` adds nothing of its own; it is exactly the reals that are fields. The ordering,
 transcendentals (`sin`, `cos`, `exp`, `ln`, `sqrt`, …), and constants (`pi()`, `e()`, `epsilon()`)
 come from `Real`; total division comes from `Field`. `f32` / `f64` are `RealField`; `Dual<T>` is
 `Real` / `Scalar` but **not** `RealField` (no total inverse).
@@ -776,16 +775,16 @@ pub trait Rotation<T: RealField> {
 The concrete number types implement these traits in their own crates: `Complex`, `Quaternion`, and `Octonion` live in
 `deep_causality_num_complex`; `Dual` lives in `deep_causality_num_dual`; `Rational` lives in `deep_causality_num_rational`.
 
-The primitive integers *are* part of this hierarchy — signed types reach `CommutativeRing` and
-`EuclideanDomain`, unsigned types reach `CommutativeSemiring`. What lives in `deep_causality_num`
-instead is the set-named vocabulary: `NaturalNumber` for ℕ, and `Integer` / `SignedInt` /
+The primitive integers *are* part of this hierarchy: signed types reach `CommutativeRing` and
+`EuclideanDomain`, unsigned types reach `CommutativeSemiring`. `deep_causality_num` holds the
+set-named vocabulary instead: `NaturalNumber` for ℕ, and `Integer` / `SignedInt` /
 `UnsignedInt` for the machine widths. Those traits state the *operations* of each set; the traits
 here state the *laws*. `NaturalNumber` carries the gcd for the unsigned types, because ℕ is not a
 ring and so cannot reach `EuclideanDomain`, where the signed gcd lives.
 
 | Type | Primary Traits |
 |------|----------------|
-| `f32`, `f64`, `Float106` | `RealField`, `Real`, `Scalar`, `Field`, `DivisionAlgebra<Self>` |
+| `f32`, `f64`, `Float106`, `BFloat16` | `RealField`, `Real`, `Scalar`, `Field`, `DivisionAlgebra<Self>` |
 | `i8`…`i128`, `isize` | `CommutativeRing`, `EuclideanDomain` (not a `Field`: `1 / 5` is `0`) |
 | `u8`…`u128`, `usize` | `CommutativeSemiring` (not a `Ring`: ℕ has no additive inverses) |
 | `Rational<T>` | `Field` (not a `Real`: there is no rational `sqrt(2)`) |

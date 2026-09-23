@@ -14,7 +14,7 @@ connect their dimensions.
 | [fields_on_complexes.rs](fields_on_complexes.rs) | `CellComplexWitness`, `LatticeComplexWitness` and `TopologyWitness`: `Functor` and `Foldable` across a honeycomb, a lattice and a simplicial patch, and the `CoMonad` only one of them carries | `cargo run -p mathematics_examples --example fields_on_complexes_examples` |
 | [manifold_curvature.rs](manifold_curvature.rs) | `CurvatureTensorWitness` carrying `RiemannMap`, checked against the closed form for constant curvature, and `GenericManifoldWitness` over a cubical lattice | `cargo run -p mathematics_examples --example manifold_curvature_examples` |
 
-The boundary operators hold `i8`. Their entries are the incidence signs `-1`, `0` and `+1`,
-which is combinatorics, so the working scalar stays out of them.
+The boundary operators hold `i8`: their entries are the incidence signs `-1`, `0` and `+1`, so
+the working scalar stays out of them.
 
 Fourteen witness types live in this crate; `2_composition/extension/` shows them under `extend`.

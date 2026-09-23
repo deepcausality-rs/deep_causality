@@ -6,19 +6,18 @@
 
 # The Flight-Envelope Placard Table
 
-A Mach-altitude test matrix goes in; one gated placard table comes out. For every grid point
-the study interpolates the freestream state from a cited US-1976 atmosphere table, computes
-the dynamic pressure `q = 1/2 * rho * V^2`, the exact Rankine-Hugoniot post-shock stagnation
-temperature, and the Sutton-Graves stagnation-point heating, then checks each point against
-the stated q-max and stagnation-temperature placards. Any point outside the envelope is named
-in the gate detail, not averaged away.
+The study reads a Mach-altitude test matrix and writes one gated placard table. For every grid
+point it interpolates the freestream state from a cited US-1976 atmosphere table, computes the
+dynamic pressure `q = 1/2 * rho * V^2`, the exact Rankine-Hugoniot post-shock stagnation
+temperature, and the Sutton-Graves stagnation-point heating, then checks each point against the
+stated q-max and stagnation-temperature placards. The gate detail names every point outside the
+envelope.
 
-This is the pointwise study path on purpose. The matrix rows go through 
-the same `sweep` combinator a solver study would use: 
-the study shape (read a case table, compute per case,
-gate, write one result table) does not change when the per-case body is a closed form instead
-of a full march. Besides `sweep`, the only DSL pieces touched are `GateSeq` and the group-1
-table reader and writer.
+The study takes the pointwise path: the matrix rows go through the same `sweep` combinator a
+solver study uses. The study shape (read a case table, compute per case, write one result
+table, gate) stays the same when the per-case body is a closed form instead of a full march.
+The whole study is one `CfdFlow::study` expression: `matrix`, `prepare`, `sweep`, `record`,
+`gates`.
 
 ## How to Run
 
@@ -27,11 +26,11 @@ cargo run --release -p avionics_examples --example flight_envelope_placard
 ```
 
 The default matrix is `mach_alt_matrix.csv`, sixteen points along a supersonic climb corridor
-from Mach 0.5 at 5 km to Mach 5 at 40 km. Both gates pass and the process exits 0. The
-run completes in well under a second.
+from Mach 0.5 at 5 km to Mach 5 at 40 km. Both gates pass, and the process exits 0 in well
+under a second.
 
-The example accepts one optional argument, a path to a different matrix file. The recorded
-negative scenario runs the same corridor plus one point beyond the q-max placard:
+An optional argument names a different matrix file. The recorded negative scenario runs the
+same corridor plus one point beyond the q-max placard:
 
 ```bash
 cargo run --release -p avionics_examples --example flight_envelope_placard \
@@ -49,8 +48,8 @@ matrix restores the recorded green table.
 
 ## What Happens When You Run It
 
-1. **Read.** The Mach-altitude matrix loads through the group-1 table reader
-   (`read_table`), which validates the header, the `#units` row, and every cell. A missing
+1. **Read.** The Mach-altitude matrix loads through the typed row reader (`read_rows`, built
+   on `read_table`), which validates the header, the `#units` row, and every cell. A missing
    `mach` or `alt` column, a non-numeric cell, or an empty matrix is a setup failure (exit 2)
    naming the file and the fix.
 2. **Compute.** `sweep` maps the placard closure over the matrix rows in input order. Per
@@ -63,11 +62,13 @@ matrix restores the recorded green table.
 3. **Gate.** Two gates: every point inside the q-max placard (detail names the max-q point)
    and every point inside the stagnation-temperature placard (detail names the hottest
    point). Offending points are listed by their Mach-altitude coordinates. Neither gate
-   counts computed rows against the input file. Each fails on an empty row set and nothing
-   more, so a matrix that loses rows between the reader and the sweep is not caught here.
-4. **Write.** The placard table lands in `placard_table.csv` through the group-1 writer, with
-   named and unit-carrying columns: `mach(-)`, `alt(km)`, `q(kPa)`, `t0_post_shock(K)`,
-   `qdot(W/cm2)`. The write is the one place the working precision downcasts to raw `f64`.
+   counts computed rows against the input file; each fails only on an empty row set, so a
+   matrix that loses rows between the reader and the sweep passes these gates.
+4. **Write.** `record` writes the placard table to `placard_table.csv` through the typed row
+   writer (`write_rows`), with named, unit-carrying columns: `mach(-)`, `alt(km)`, `q(kPa)`,
+   `t0_post_shock(K)`, `qdot(W/cm2)`. The write is the one place the working precision
+   downcasts to raw `f64`. Recording precedes the gates, so the table exists even when a gate
+   fails.
 
 The recorded default run peaks at q = 23.7 kPa (M 1.20 / 11 km) and T0 = 1502.1 K
 (M 5.00 / 40 km), both inside the placards. The full console record is `output.txt`.
@@ -85,29 +86,28 @@ outside the atmosphere table) exit 2 with the file and the fix named.
 
 ## Limitations
 
-* **The placards are demonstration values, not certification data.** 60 kPa and 1700 K are
-  chosen in `constants.rs` to bound this corridor with margin; a real placard comes from a
-  structures and thermal analysis.
+* **The placards are demonstration values.** `constants.rs` sets 60 kPa and 1700 K to bound
+  this corridor with margin; a real placard comes from a structures and thermal analysis.
 * **The gas is calorically perfect.** The Rankine-Hugoniot jump runs with gamma = 1.4, so the
   post-shock stagnation temperature equals the freestream total temperature exactly and the
-  supersonic and subsonic branches meet continuously at Mach 1. The approximation is at its
-  crudest in the low supersonic range near a blunt body, where the bow shock is detached and
-  curved rather than the normal shock assumed here; the stagnation streamline still crosses a
-  locally normal shock, and total temperature is conserved regardless, so the placard-level
-  numbers stand. Above the grid's hottest point (about 1500 K) vibrational excitation would
-  start to matter; this grid stops below that regime.
+  supersonic and subsonic branches meet continuously at Mach 1. The approximation is crudest
+  in the low supersonic range near a blunt body, where the bow shock is detached and curved
+  rather than normal. The stagnation streamline still crosses a locally normal shock, and total
+  temperature is conserved regardless, so the placard-level numbers stand. Vibrational
+  excitation matters above about 1500 K, the grid's hottest point; this grid stops below that
+  regime.
 * **Sutton-Graves is an entry-speed correlation.** At the low-Mach end of the grid the heating
-  column is a fraction of a W/cm2 and serves as a trend, not a thermal-protection input.
+  column is a fraction of a W/cm2: a trend, not a thermal-protection input.
 * **The atmosphere interpolates linearly** between US-1976 rows spaced 5 to 10 km apart, which
   overstates density between rows (the true profile decays exponentially). For a placard
-  demonstration the error is benign and conservative; a finer table drops in without code
+  demonstration the error is small and conservative; a finer table drops in without code
   changes.
 
 ## Where Things Live
 
 | File | Contents |
 |---|---|
-| `main.rs` | The whole study: read, sweep, gate, write |
+| `main.rs` | The whole study as one `CfdFlow::study` expression, and the exit codes |
 | [`model.rs`](model.rs) | Domain logic: atmosphere interpolation and the per-point placard computation |
 | [`model_config.rs`](model_config.rs) | Configuration: matrix and table paths, the fitted shock model |
 | `constants.rs` | Every constant with its justification: gas model, Sutton-Graves, placards, atmosphere |
@@ -116,9 +116,9 @@ outside the atmosphere table) exit 2 with the file and the fix named.
 | `placard_table.csv` | The written placard table of the recorded default run |
 | `output.txt` | The recorded console output of the default run |
 
-The machinery used: `sweep` and `GateSeq` from `deep_causality_cfd`, `FittedNormalShock` from
-the same crate's compressible solver, and `read_table`, `NumericTable::from_columns`, and
-`write_table` from `deep_causality_file`.
+The machinery used: the `CfdFlow` study grammar and `GateSeq` from `deep_causality_cfd`,
+`FittedNormalShock` from the same crate's compressible solver, and `read_rows` and `write_rows`
+from `deep_causality_file` (called by `matrix` and `record`).
 
 ## References
 

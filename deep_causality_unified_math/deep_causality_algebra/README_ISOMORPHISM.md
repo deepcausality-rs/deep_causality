@@ -6,9 +6,9 @@
 
 # Isomorphism Traits
 
-`deep_causality_algebra` ships a type-checked vocabulary for **isomorphisms** between algebraic structures. An iso is a bijection that preserves the relevant operations: `f(x) = y` and `g(y) = x` and `f(a + b) = f(a) + f(b)`, `f(a * b) = f(a) * f(b)`, and so on for whatever structure the two types share. Wiring this through the trait system turns "these two types are interchangeable" into a compiler-enforced guarantee. Generic code can then accept either representation without re-deriving every operation.
+`deep_causality_algebra` provides a type-checked vocabulary for **isomorphisms** between algebraic structures. An iso is a bijection that preserves the relevant operations: `f(x) = y` and `g(y) = x` and `f(a + b) = f(a) + f(b)`, `f(a * b) = f(a) * f(b)`, and so on for whatever structure the two types share. The trait system turns "these two types are interchangeable" into a compiler-enforced guarantee, so generic code can accept either representation without re-deriving every operation.
 
-The design has three tiers. They scale from concrete types to type constructors.
+Three tiers scale from concrete types to type constructors.
 
 | Tier | Module | Foundation | Iso between |
 |---|---|---|---|
@@ -22,7 +22,7 @@ Tiers 1 and 2 live in this crate. Tier 3 (`NaturalIso` through `NaturalIso5`) li
 
 ## Tier 1: `From`-Based Marker Subtraits
 
-Tier 1 builds on Rust's standard `From` / `Into` machinery. If you have bidirectional `From` impls between two types, you can opt in to the marker subtrait that matches the algebraic structure they share. Generic code parameterised over that subtrait then swaps representations transparently.
+Tier 1 builds on Rust's standard `From` / `Into`. Given bidirectional `From` impls between two types, you opt in to the marker subtrait that matches the algebraic structure they share. Generic code parameterised over that subtrait then swaps representations transparently.
 
 ### Trait hierarchy
 
@@ -35,7 +35,7 @@ AlgebraIso<T, R>                  // Preserves scalar multiplication
   |- DivisionAlgebraIso<T, R>     // Preserves conjugation
 ```
 
-All traits are empty marker subtraits. They demand nothing at the type level beyond the named structure plus bidirectional `From`. The laws (homomorphism, round-trip) are pinned by the test helpers in `iso::test_support`.
+All traits are empty marker subtraits: they demand nothing beyond the named structure plus bidirectional `From`. The test helpers in `iso::test_support` pin the laws (homomorphism, round-trip).
 
 ### Example: declaring an iso between two `Field`s
 
@@ -56,7 +56,7 @@ impl RingIso<RatB> for RatA {}
 impl FieldIso<RatB> for RatA {}
 ```
 
-Once declared, generic code can write `where A: FieldIso<B>` and accept either side as the canonical representation. The reverse impl is symmetric.
+Generic code can then write `where A: FieldIso<B>` and accept either side as the canonical representation. The reverse impl is symmetric.
 
 ### Verifying the laws
 
@@ -87,17 +87,17 @@ fn rat_a_b_is_a_field_iso() {
 
 ### When Tier 1 doesn't fit
 
-The orphan rule blocks bidirectional `From` between types whose crates have an asymmetric dependency. The downstream crate can impl `From<Upstream>`, but not the reverse. For those cases, drop down to Tier 2.
+The orphan rule blocks bidirectional `From` between types whose crates have an asymmetric dependency: the downstream crate can impl `From<Upstream>`, but not the reverse. Use Tier 2 there.
 
 ---
 
 ## Tier 2: Witness-Typed `Iso<S, T>`
 
-Tier 2 introduces a **witness type**: a separate marker (typically zero-sized) that carries the iso impl. The trait `Iso<S, T>` is parameterised over both source and target, with `to_target` / `to_source` methods. Because the impl lives on the witness rather than on `S` or `T`, the orphan rule no longer applies. Any crate can ship a witness for any type pair.
+Tier 2 adds a **witness type**: a separate marker (typically zero-sized) that carries the iso impl. The trait `Iso<S, T>` is parameterised over both source and target, with `to_target` / `to_source` methods. The impl lives on the witness rather than on `S` or `T`, so the orphan rule does not apply and any crate can ship a witness for any type pair.
 
 ### Method names
 
-Why `to_target` / `to_source`? Two reasons. `forward` / `backward` clashes with the EPP temporal vocabulary used elsewhere in this codebase. `from` / `into` clashes with std semantics. The chosen pair sidesteps both.
+`forward` / `backward` would clash with the EPP temporal vocabulary used elsewhere in this codebase, and `from` / `into` with std semantics. `to_target` / `to_source` avoids both.
 
 ### Trait hierarchy
 
@@ -116,7 +116,7 @@ All Tier 2 traits live under `deep_causality_algebra::iso::witness`. They are no
 
 ### `StandardIso<S, T>`: automatic blanket impl
 
-For the common case where bidirectional `From` already exists (and you simply have no place to land a Tier 1 marker), `StandardIso<S, T>` is a zero-sized witness with blanket impls for every Tier 2 marker. You get the full subtrait chain for free.
+When bidirectional `From` already exists but you have no place to land a Tier 1 marker, use `StandardIso<S, T>`: a zero-sized witness with blanket impls for every Tier 2 marker.
 
 ```rust,ignore
 use deep_causality_algebra::iso::witness::{Iso, StandardIso};
@@ -129,7 +129,7 @@ let t: f64 = StandardIso::<FloatWrap, f64>::to_target(FloatWrap(2.5));
 let s: FloatWrap = StandardIso::<FloatWrap, f64>::to_source(2.5);
 ```
 
-`StandardIso<S, T>` auto-derives every marker subtrait it has the bounds for. Declare your types as `Group`, `Ring`, `Field`, etc., and `StandardIso<S, T>` immediately satisfies `GroupIso<S, T>`, `RingIso<S, T>`, `FieldIso<S, T>` without any extra `impl` blocks.
+`StandardIso<S, T>` derives every marker subtrait it has the bounds for. Declare your types as `Group`, `Ring`, `Field`, etc., and `StandardIso<S, T>` satisfies `GroupIso<S, T>`, `RingIso<S, T>`, `FieldIso<S, T>` without extra `impl` blocks.
 
 ### Example: manual witness
 
@@ -163,7 +163,7 @@ impl FieldIso<TypeA, TypeB> for MyDomainIso {}
 | `assert_witness_algebra_iso_law::<W>(a, r)` | Scalar-multiplication preservation |
 | `assert_witness_division_algebra_iso_law::<W>(a)` | Conjugation preservation |
 
-The round-trip helper takes an independent `(s, t)` pair on purpose. Deriving `t` from `s` via `to_target` only exercises the image of `to_target`; witnesses where `to_source` is many-to-one (i.e. `T` values outside that image collapse to a single `S`) would slip through undetected. Pass two genuinely independent inputs.
+The round-trip helper takes an independent `(s, t)` pair. Deriving `t` from `s` via `to_target` exercises only the image of `to_target`, so a witness whose `to_source` is many-to-one (`T` values outside that image collapse to a single `S`) would pass undetected. Pass two independent inputs.
 
 ```rust,ignore
 use deep_causality_algebra::iso::witness::test_support::*;
@@ -190,17 +190,17 @@ fn float_wrap_f64_is_a_field_iso() {
 | Cross-crate types with asymmetric dependency (orphan rule blocks reverse `From`) | **Tier 2** witness in the dependent crate |
 | You want a domain-specific name for the iso (`PropEffectProcessIso`, etc.) | **Tier 2** named witness |
 
-A common pattern is mixed-tier. Forward direction as a Tier 1 `From` impl (where the orphan rule allows it), reverse direction as a Tier 2 `Iso` impl on a witness in the dependent crate. This is the recommended pattern for `CausalTensor<F>` <-> `CsrMatrix<F>` (sparse-tensor representation), where `deep_causality_sparse` depends on `deep_causality_tensor` but not vice versa.
+A common pattern mixes tiers: the forward direction as a Tier 1 `From` impl (where the orphan rule allows it), the reverse direction as a Tier 2 `Iso` impl on a witness in the dependent crate. `CausalTensor<F>` <-> `CsrMatrix<F>` uses this pattern in `deep_causality_tensor`, which depends on `deep_causality_linear` (the owner of `CsrMatrix`) but not vice versa.
 
 ---
 
 ## Tier 3: `NaturalIso<F, G>` Between HKT Witnesses
 
-Tier 3 lifts the iso vocabulary from concrete types to *type constructors*. It lives in [`deep_causality_haft`](../deep_causality_haft/README.md#natural-isomorphisms-tier-3-iso-traits) (the crate that owns the HKT machinery) but is included here for completeness.
+Tier 3 lifts the iso vocabulary from concrete types to *type constructors*. It lives in [`deep_causality_haft`](../deep_causality_haft/README.md#natural-isomorphisms-tier-3-iso-traits), the crate that owns the HKT machinery.
 
 ### Why a separate tier
 
-Tiers 1 and 2 both bottom out in some form of value-level conversion. `From::from` consumes an `S` and returns a `T`; `Iso::to_target` does the same on a witness. Both presume that values exist. At the HKT level, that presumption fails. An HKT witness like `OptionWitness` or `VecWitness` is a zero-sized marker with no instances; you cannot apply `From` to something that has no values. The conversion has to operate on `F::Type<T>` (e.g. `Option<T>`) for every `T`, which is a different shape of trait.
+Tiers 1 and 2 both bottom out in a value-level conversion: `From::from` consumes an `S` and returns a `T`, and `Iso::to_target` does the same on a witness. Both presume that values exist. An HKT witness like `OptionWitness` or `VecWitness` is a zero-sized marker with no instances, so `From` has nothing to apply to. The conversion must operate on `F::Type<T>` (e.g. `Option<T>`) for every `T`, which needs a different shape of trait.
 
 ### Trait family
 
@@ -223,7 +223,7 @@ Every implementer must satisfy two laws:
    * `to_target(to_source(ga)) == ga`
 2. **Naturality** with respect to `fmap`: `to_target(F::fmap(fa, h)) == G::fmap(to_target(fa), h)` for any function `h: T -> U`.
 
-Naturality is the law that distinguishes a *structure-preserving* iso from a mere bijection of carriers. It means the iso commutes with every later transformation; once you've crossed over to `G`, mapping behaves the same as it would have on `F`.
+Naturality distinguishes a *structure-preserving* iso from a bijection of carriers: the iso commutes with every later transformation, so mapping after crossing to `G` behaves as it would have on `F`.
 
 ### Example: `Option` and a structurally-equivalent twin
 
@@ -261,7 +261,7 @@ impl NaturalIso<OptionWitness, MyOptionWitness> for OptionMyOptionIso {
 | `assert_natural_iso_round_trip::<W, F, G, T>(fa, ga)` | Round-trip in both directions (independent inputs) |
 | `assert_natural_iso_naturality::<W, F, G, A, B, Func>(fa, h)` | Naturality against a caller-supplied function `h` |
 
-The round-trip helper inherits the same independent-input discipline used at Tiers 1 and 2; pass an `fa: F::Type<T>` and an `ga: G::Type<T>` that are not derived from each other.
+The round-trip helper follows the independent-input discipline of Tiers 1 and 2: pass an `fa: F::Type<T>` and a `ga: G::Type<T>` that are not derived from each other.
 
 ```rust,ignore
 use deep_causality_haft::iso::test_support::*;

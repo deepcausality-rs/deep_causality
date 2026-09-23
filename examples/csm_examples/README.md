@@ -1,6 +1,6 @@
 # Causal State Machine (CSM) Examples
 
-This directory contains examples demonstrating the **Causal State Machine** pattern. CSMs are systems where state transitions are governed not just by events, but by causal reasoning (Cause -> Effect -> New State) and potentially ethical/normative rules.
+These examples demonstrate the **Causal State Machine** (CSM) pattern. In a CSM, causal reasoning (Cause -> Effect -> New State) decides which actions fire, and normative rules can constrain them.
 
 ## Quick Start
 
@@ -16,25 +16,24 @@ cargo run -p csm_examples --example <example_name>
 
 | Example | Pattern | Description |
 |---------|---------|-------------|
-| [csm_basic](csm_basic/README.md) | **Basic CSM** | A simple monitoring system (Sensor -> Action) demonstrating the fundamental State-Causaloid-Action loop. |
-| [csm_context](csm_context/README.md) | **Contextual CSM** | Demonstrates sharing mutable data (`BaseContext`) across the causal graph using `Arc<RwLock>`, allowing complex state aggregations. |
-| [csm_effect_ethos](csm_effect_ethos/README.md) | **Ethical CSM** | Integrates **Deontic Logic** (Obligation, Permission, Prohibition) into the state machine, allowing the system to evaluate the "moral permissibility" of an action before execution. |
+| [csm_basic](csm_basic/README.md) | **Basic CSM** | A monitoring system (Sensor -> Action) built on the State-Causaloid-Action loop. |
+| [csm_context](csm_context/README.md) | **Contextual CSM** | Shares mutable data (`BaseContext`) with the causal model through `Arc<RwLock>` to fuse several sensor readings. |
+| [csm_effect_ethos](csm_effect_ethos/README.md) | **Ethical CSM** | Pairs a CSM with an `EffectEthos` that applies **Deontic Logic** (Obligation, Permission, Prohibition) to decide whether the CSM's action is permissible. |
 
 ---
 
 ## Common Patterns
 
 ### 1. The Causaloid
-The core unit of a CSM is the `Causaloid`. Unlike a simple state transition function, a Causaloid encapsulates:
+The core unit of a CSM is the `Causaloid`. Beyond a state transition function, a Causaloid holds:
 - **Causal Function**: The logic $f(data) \to bool$.
-- **Description**: Human-readable explanation of *why* this causal link exists.
-- **Weights**: For probabilistic reasoning.
+- **Description**: A human-readable explanation of *why* this causal link exists.
 
 ### 2. Contextual State
-In complex systems, decisions often depend on a global context (e.g., total system power, user permissions) rather than just local inputs. The `csm_context` example shows how to thread this context safely through the graph.
+Decisions often depend on a global context (e.g., total system power, user permissions) as well as local inputs. The `csm_context` example shares such a context safely with the causal model.
 
 ### 3. Normative Reasoning
-The `csm_effect_ethos` example demonstrates a "Super-Ego" layer for AI agents. Even if an action is *causally* possible, the system checks if it is *ethically* permissible (e.g., "Do not delete root files").
+The `csm_effect_ethos` example adds a normative layer: for an action that is *causally* triggered, the system checks whether it is *ethically* permissible.
 
 ---
 

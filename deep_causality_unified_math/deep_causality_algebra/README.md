@@ -24,8 +24,8 @@
 
 ## Summary
 
-Abstract algebra traits for the [DeepCausality project](http://www.deepcausality.com). The crate defines the trait
-tower that the numeric and physics crates build on:
+Abstract algebra traits for the [DeepCausality project](http://www.deepcausality.com): the trait tower the numeric
+and physics crates build on.
 
 - **Structure traits:** Magma, Semigroup, Monoid, Group, Ring, Field, and the algebra-over-a-ring traits.
 - **Scalar traits:** `Real`, `Scalar`, `RealField`, `ComplexField`, `Normed`, `NormedScalar`, and `ConjugateScalar`.
@@ -33,7 +33,7 @@ tower that the numeric and physics crates build on:
 - **Isomorphism markers:** `GroupIso`, `RingIso`, `FieldIso`, `AlgebraIso`, and `DivisionAlgebraIso`, plus their
   witness-typed Tier 2 counterparts.
 
-Blanket implementations cover the real primitives (`f32`, `f64`, `Float106`) through the `Float` trait from
+Blanket implementations cover the real scalars (`f32`, `f64`, `Float106`, `BFloat16`) through the `Float` trait from
 `deep_causality_num`. The concrete number types implement these traits in their own crates: `Complex`, `Quaternion`,
 and `Octonion` in `deep_causality_num_complex`, and `Dual` in `deep_causality_num_dual`.
 

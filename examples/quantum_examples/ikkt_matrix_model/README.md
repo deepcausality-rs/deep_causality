@@ -1,7 +1,8 @@
 # The IKKT Matrix Model: Spacetime as a Property of Matrices
 
-The IKKT model is a candidate non-perturbative formulation of type IIB superstring theory. It has no
-spacetime in it. Spacetime is what the matrices acquire at the minimum of the action.
+This example relaxes the IKKT matrix model toward the minimum of its action at fixed norm, where the
+matrices come to commute and acquire a spacetime. The IKKT model is a candidate non-perturbative
+formulation of type IIB superstring theory, and it contains no spacetime of its own.
 
 ```bash
 cargo run -p quantum_examples --example ikkt_matrix_model
@@ -16,9 +17,8 @@ S = Σ_{μ<ν} ‖[X_μ, X_ν]‖²
 ```
 
 which is zero exactly when every pair of them commutes. Commuting matrices can be simultaneously
-diagonalised, and their joint eigenvalues are then a set of points. That set is the emergent
-spacetime: it is a property of the configuration at the minimum, not a stage the matrices were
-placed on.
+diagonalised, and their joint eigenvalues form a set of points. That set is the emergent
+spacetime, a property of the configuration at the minimum.
 
 ## Relaxing along the equation of motion
 
@@ -28,28 +28,26 @@ Varying the action gives
 Σ_ν [X_ν, [X_μ, X_ν]] = 0
 ```
 
-so that double commutator is zero exactly at a solution, and moving against it drives the
-configuration toward one. It is two nested calls to `commutator_kernel`, and its zeros are the
+so the double commutator is zero exactly at a solution, and moving against it drives the
+configuration toward one. It takes two nested calls to `commutator_kernel`. Its zeros are the
 configurations the model is about: mutually commuting matrices, and the fuzzy spheres where the
 double commutator cancels while the single one does not.
 
-The run prints the action at every step it shows, and reports whether it fell at each one. A step
-that raised it would mean the step length was too long, and that is worth seeing rather than hiding.
+The run prints the action at every step it shows and reports whether it fell at each one. A step
+that raised it would mean the step length was too long, and the run shows that openly.
 
 ## The norm has to be held fixed
 
-This is the part that is easy to get wrong, and getting it wrong produces output that looks correct.
+This part is easy to get wrong, and the wrong version produces output that looks correct.
 
 The action is **quartic** in the coordinates. Multiplying every matrix by `1 − η` multiplies the
-action by `(1 − η)⁴` regardless of what the matrices are doing. So a run that simply shrinks
-everything toward the origin reports an action falling smoothly to zero while demonstrating nothing
-whatsoever: the limit is an empty vacuum, no matrices commute that did not commute before, and no
-spacetime emerges.
+action by `(1 − η)⁴` whatever the matrices do. A run that shrinks everything toward the origin
+reports an action falling smoothly to zero and demonstrates nothing: the limit is an empty vacuum,
+no matrices commute that did not commute before, and no spacetime emerges.
 
-Each step here restores the norm the configuration started with. The only way left for the action to
-fall is for the matrices to genuinely commute. The norm column in the output is there so the
-constraint is visible rather than asserted — it holds at `1.356465997` from the first step to the
-last.
+Each step here restores the norm the configuration started with, so the action can fall only if the
+matrices commute. The norm column in the output shows the constraint: it holds at `1.356465997` from
+the first step to the last.
 
 ## What the code demonstrates
 
@@ -59,8 +57,8 @@ last.
 | `fold` over `ν` | the double commutator at one coordinate: the equation of motion |
 | `fold` over coefficients | the norm each step restores |
 
-Each is a reduction over a structure the model already has, so the relaxation step stays one call
-and the loop carries nothing but the configuration and what to report.
+Each reduces a structure the model already has, so the relaxation step stays one call and the
+loop carries only the configuration and what to report.
 
 ## Output
 
@@ -89,8 +87,8 @@ Outcome
   action fell every step             yes
 ```
 
-The action drops by five orders of magnitude while the norm does not move at all. The matrices
-commute because they turned into commuting matrices, not because they shrank.
+The action drops by five orders of magnitude while the norm stays fixed, so the matrices commute
+without shrinking.
 
 ## Precision is a parameter
 
@@ -99,10 +97,10 @@ pub type FloatType = Float106;
 ```
 
 Every constant is declared at that type through `const_scalar_from_int!`, so no conversion runs at
-any call site. It sits at `Float106` rather than `f64` on purpose: a hard-coded `f64` is invisible
-while the alias *is* `f64`, and a compile error the moment the two differ.
+any call site. The alias defaults to `Float106` so that a hard-coded `f64`, invisible while the alias
+*is* `f64`, becomes a compile error.
 
-All four scalars run, and they do not all agree, which is the interesting part:
+All four scalars run, and they disagree:
 
 | Scalar | Steps | Final action | Fell every step |
 |---|---|---|---|
@@ -113,30 +111,30 @@ All four scalars run, and they do not all agree, which is the interesting part:
 
 `BFloat16` has an eight-bit mantissa. Once the action is down around `1e-4` the step it needs is
 smaller than the last bit of the coordinates, so the descent stalls and the monotonicity check
-reports it. That line exists to catch a step length that overshoots; here it catches a scalar that
-has run out of room, which is the same question asked of a different part of the setup.
+reports it. The check exists to catch a step length that overshoots; here it catches a scalar that
+has run out of room.
 
 ## What this example covers
 
-The goal is to reformulate the essence of the model as a relaxation over the library's types, and to
-get precision as a parameter and categorical composition for free once it is in that form. The
-essence is that an action built only from commutators is minimised by commuting, and that the
-minimum has a spectrum where the model had none. The example keeps that and holds everything else
-simple: four coordinates rather than ten, `Cl(2)` multivectors standing in for `N × N` matrices, the
-bosonic action with no fermions, and a fixed step length instead of a line search.
+The example restates the essence of the model as a relaxation over the library's types; precision
+as a parameter and categorical composition then come for free. The essence: commuting minimises an
+action built only from commutators, and the minimum has a spectrum where the model had none. The
+example keeps that and holds everything else simple: four coordinates instead of ten, `Cl(2)`
+multivectors standing in for `N × N` matrices, the bosonic action with no fermions, and a fixed step
+length instead of a line search.
 
 A calculation a researcher would quote adds what this leaves out: the full ten coordinates of type
 IIB, genuine large-`N` Hermitian matrices, the fermionic determinant that makes the model finite and
-picks out four large dimensions from ten, and Monte Carlo sampling of the partition function rather
-than relaxation to one solution. The joint spectrum is also the observable of interest, and reading
-it needs a simultaneous diagonalisation this example does not perform.
+picks out four large dimensions from ten, and Monte Carlo sampling of the partition function in
+place of relaxation to one solution. The joint spectrum is the observable of interest, and reading it
+needs a simultaneous diagonalisation this example does not perform.
 
 ## How to grow the example toward a research calculation
 
 Each step keeps the structure already here.
 
 - **Read the emergent geometry.** Diagonalise the converged configuration and plot the joint
-  eigenvalues. That is the spacetime, and it is the one thing the run currently stops short of.
+  eigenvalues: the spacetime, which the run stops short of.
 - **Ten coordinates.** `N_MATRICES` is a constant and every loop is written over it.
 - **Real matrices.** Replace the `Cl(2)` multivectors with `deep_causality_tensor` rank-2 tensors.
   `commutator_kernel` is the only call that needs a counterpart; the action and the equation of
@@ -144,7 +142,7 @@ Each step keeps the structure already here.
 - **A line search.** Choose the step length by testing the action instead of fixing it, which is
   also what would carry `BFloat16` past the stall in the table above.
 - **Fuzzy-sphere initial data.** Start from an `SU(2)` representation and watch the run hold a
-  non-zero action, which is the other kind of solution the equation of motion admits.
+  non-zero action, the other kind of solution the equation of motion admits.
 
 ## Files
 
@@ -156,6 +154,6 @@ Each step keeps the structure already here.
 
 ## Key APIs used
 
-- `commutator_kernel()` — `[A, B] = AB − BA`, called twice per coordinate per step
-- `HilbertState` (as `Operator`) — the coordinate matrices
-- `Metric::Euclidean(dim)` — the algebra signature they share
+- `commutator_kernel()`: `[A, B] = AB − BA`, called twice per coordinate per step
+- `HilbertState` (as `Operator`): the coordinate matrices
+- `Metric::Euclidean(dim)`: the algebra signature they share

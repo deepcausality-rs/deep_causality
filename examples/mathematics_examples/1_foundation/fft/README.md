@@ -1,12 +1,12 @@
 # Foundation: `deep_causality_fft`
 
 Plan-based transforms. A plan is built once for a length, holds every precomputed twiddle and
-stage schedule, and is immutable after construction; execution borrows caller-supplied scratch
-and holds all its state from construction, so a transform can sit inside a hot loop.
+stage schedule, and is immutable after construction. Execution borrows caller-supplied scratch,
+so a transform can sit inside a hot loop.
 
-Three things make the crate worth reading:
+Three properties of the crate:
 
-- **Every length is O(N log N).** The planner picks by length — hardcoded kernels for small
+- **Every length is O(N log N).** The planner picks by length: hardcoded kernels for small
   powers of two, an iterative mixed radix-4/radix-2 Stockham pipeline for larger ones, and
   Bluestein's chirp-z for everything else. A prime length runs at the same order as a power of two.
 - **The inverse is the forward kernel.** `ifft(x) = conj(fft(conj(x))) / N`, so one kernel

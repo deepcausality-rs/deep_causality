@@ -1,8 +1,8 @@
 # Graded-metric MMS truncation study — CFD rung R1
 
 Measures the **accuracy order** of the two operators of the incompressible march on graded
-meshes — the **convective** `i_X ω` (interior product) and the **viscous** `Δ₀ = δd`
-(Laplacian) — in **two norms** (max + L2). The heavy-verification companion to the fast CI
+meshes, the **convective** `i_X ω` (interior product) and the **viscous** `Δ₀ = δd`
+(Laplacian), in **two norms** (max + L2). The heavy-verification companion to the fast CI
 gate, per tests-fast / examples-verify.
 
 ```text
@@ -34,19 +34,16 @@ but `O(ℓ)`-wrong on a graded one.
 
 Two conclusions:
 
-1. **Smooth grading retains second order — for both operators.** The sweep is
+1. **Smooth grading retains second order for both operators.** The sweep is
    `a ∈ {0.0, 0.1, 0.2, 0.3}`. At the strongest grading measured, `a = 0.3`, `ℓ` runs from
    0.7 to 1.3: a **1.86:1 spacing ratio**, and the order holds at ≈ 2; only the error
    constant grows. Amplitudes above 0.3 are not run, so a 3:1 ratio (`a = 0.5`) is untested.
-   The R1 promise — resolve walls cheaply *and* keep fast convergence — holds today, no
-   follow-up needed.
-2. **Structure is metric-free and exact at any grading** — divergence-freeness of the Leray
+   The R1 promise, resolving walls cheaply *and* keeping fast convergence, holds.
+2. **Structure is metric-free and exact at any grading**: divergence-freeness of the Leray
    projection is combinatorial, pinned independently by the topology exactness test.
 
-> **History / caveat.** An earlier revision of this study mis-measured a convective
-> "order collapse" on graded meshes. The cause was a *measurement* bug — feeding pointwise
-> 1-form values instead of edge-integrals (omitting the `ℓ` factor above), inconsistently
-> between `ω` and `X♭`. With consistent cochains the convective operator is second order,
-> like the self-adjoint viscous operator that was always measured correctly (0-forms carry
-> no length factor). This example enforces the correct convention so the mistake cannot
-> recur.
+> **Caveat.** Feeding pointwise 1-form values instead of edge-integrals (omitting the `ℓ`
+> factor above), inconsistently between `ω` and `X♭`, produces a spurious convective "order
+> collapse" on graded meshes. With consistent cochains the convective operator is second
+> order, like the self-adjoint viscous operator (0-forms carry no length factor). This
+> example enforces the cochain convention.

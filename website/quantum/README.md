@@ -13,10 +13,9 @@ pnpm check          # astro check; needs TypeScript 6.x, see below
 pnpm check:tokens   # verify the token mirror has not drifted
 ```
 
-There is **no Bazel target for this site**. `pnpm build` is the only build path.
-`website/quantum/node_modules` is listed in `.bazelignore` so the Rust build
-ignores it, and that is the whole of the Bazel involvement. This matches
-`website/cfd`, and differs from `website/web` and `website/docs`.
+There is **no Bazel target for this site**; `pnpm build` is the only build path.
+`.bazelignore` lists `website/quantum/node_modules` so the Rust build ignores it.
+The same holds for the other three sites.
 
 ## Deploy
 
@@ -25,15 +24,14 @@ Cloudflare Workers Builds. The dashboard supplies the root directory
 lives in `wrangler.toml` as a `[build]` command, so an empty dashboard build
 field cannot break the deploy.
 
-The Worker is **`deep-causality-quantum-prod`**, and `wrangler.toml` must carry
-that exact name. See [`../README.md`](../README.md) for the two ways this fails
+The Worker is **`quantum`**, and `wrangler.toml` must carry that exact name. See [`../README.md`](../README.md) for the two ways this fails
 quietly.
 
 ## Design
 
 The binding spec is [`../web/DESIGN.md`](../web/DESIGN.md); the descriptive
-companion is [`../web_design/`](../web_design/). This site follows both, and it
-inherits `website/cfd`'s two deliberate improvements on the marketing site:
+companion is [`../web_design/`](../web_design/). This site follows both and
+shares `website/cfd`'s two deliberate differences from the project website:
 
 1. **Every §12 convention is a shared utility in `global.css`.** The eyebrow,
    panel, reticle, corner-bracket, chip and hairline-list rules are declared
@@ -51,9 +49,9 @@ it across, then run `pnpm check:tokens`. Site-local tokens go in
 ### Inherited defect
 
 The light-mode accent (`#0a8a98`) fails WCAG AA at 4.12:1, which affects body
-links and the primary CTA. This comes from the shared token set and is recorded
-in DESIGN.md §2.1 and §10. Fixing it is a colour decision for the whole project,
-not something this site should diverge on.
+links and the primary CTA. The defect comes from the shared token set and is
+recorded in DESIGN.md §2.1 and §10. Fixing it is a colour decision for the whole
+project; this site does not diverge on it.
 
 ## Content rules
 
@@ -61,15 +59,15 @@ not something this site should diverge on.
 the crate source under `deep_causality_quantum/src/`, a paper under
 `deep_causality_quantum/papers/`, the LEAN tree under
 `lean/DeepCausalityFormal/Quantum/`, `lean/THEOREM_MAP.md`, or the output of an
-example under `examples/quantum_examples/`. That constraint is absolute, and it
-is what makes the site citable.
+example under `examples/quantum_examples/`. That constraint is absolute and makes
+the site citable.
 
 Three consequences shape the pages.
 
 **No roadmap, and no future work.** The site describes the crate as it is today.
 When something is not built, the page says what is not built and stops there.
 `/formalization/` lists seven targets that carry test witnesses and no LEAN
-proof; that list is a statement about today, not a schedule.
+proof; that list states the present and sets no schedule.
 
 **A committed file is not a claim.** Three of the six papers under `papers/` are
 not cited from any module. `/papers/` lists them in their own section, so the
@@ -89,9 +87,8 @@ Numbers on the site come from a command anyone can re-run:
 | 10 LEAN theorems | the quantum section of `lean/THEOREM_MAP.md` |
 | Freeze-check output | `cargo run --release -p quantum_examples --example qcm_freeze_check` |
 
-The test count is the figure the suite reports, not a count of `#[test]`
-attributes in the tree; one of those attributes appears inside a doc comment,
-so grep says 198 and the runner says 197.
+The test count is the figure the suite reports. A grep for `#[test]` finds 198
+because one attribute sits inside a doc comment.
 
 Prose follows `docs/writing_guides/AiStyleguide.md` and
 `docs/writing_guides/ClarityTechnicalReporting.pdf`.
@@ -103,7 +100,7 @@ Each fact lives in exactly one place, split by shape:
 | Worked examples | `src/content/examples/en/*.mdx` | Prose with a walkthrough. Frontmatter carries the facts a listing needs, so index and detail cannot disagree. |
 | API inventory, error variants, theorems, papers | `src/data/*.ts` | Matrices, not prose. Rendered as tables and typed at compile time. |
 
-The MDX collection is declared in `src/content.config.ts`, same `glob` plus
+`src/content.config.ts` declares the MDX collection with the same `glob` plus
 locale-stripping pattern as `website/cfd` and `website/web`.
 
 ## Pages
@@ -153,8 +150,8 @@ uses system faces rather than the vendored woff2 files, which rsvg cannot embed.
 ## Logo
 
 `public/img/deepcausality-quantum-on-{dark,light}.svg` are copies of
-`img/project-logos/quantum/` at the repository root. They are not two renderings
-of one file: each variant is drawn in its own theme's tokens, dark carrying
+`img/project-logos/quantum/` at the repository root. Each variant is drawn in its
+own theme's tokens, dark carrying
 `#5cd4e1` on `#e6edf3` and light carrying `#0a8a98` on `#0b1118`. The header
 ships both and shows one, switched on `[data-theme]` the same way `ThemeToggle`
 swaps its glyphs.
@@ -171,8 +168,8 @@ programmatic API the checker uses (withastro/roadmap#1321), so `typescript` is
 pinned to `^6.0.3` across all four sites. Do not let a routine upgrade move it
 to 7.x.
 
-`@astrojs/markdown-satteri` is also pinned, in `pnpm-workspace.yaml`, because
-two resolved copies break Bazel's `public_hoist_packages`. See
+`@astrojs/markdown-satteri` is also pinned, in `pnpm-workspace.yaml`, so pnpm
+resolves a single copy. See
 [`../README.md`](../README.md) for both constraints.
 
 `shiki` is pinned in the same file. `shiki-rust-themes.mjs` derives its themes
@@ -180,13 +177,13 @@ from the `bundledThemes` of this project's own copy, while astro highlights with
 the copy its `^4.0.2` dependency resolves; a single override keeps those the
 same shiki.
 
-Note that pnpm 11 no longer reads the `pnpm` field from `package.json`, so
+pnpm 11 does not read the `pnpm` field from `package.json`, so
 `overrides` and `onlyBuiltDependencies` must live in `pnpm-workspace.yaml`.
 
 ## Deliberate omissions
 
-- **No Pagefind.** The marketing site ships an unread search index on every
-  deploy (DESIGN.md §8.9). Not repeated here.
+- **No Pagefind.** The project website ships an unread search index on every
+  deploy (DESIGN.md §8.9); this site does not.
 - **No mermaid.** The one diagram is hand-drawn SVG, which keeps the heaviest
   dependency off every route.
 - **No client islands.** Zero framework runtime; interactivity is three small

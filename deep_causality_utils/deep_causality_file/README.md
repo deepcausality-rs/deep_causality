@@ -21,18 +21,18 @@
 
 ## Introduction
 
-`deep_causality_file` provides file and receiver-data loaders for the DeepCausality project. Every loader is expressed
-over the **haft IO monad** ([`deep_causality_haft::IoAction`]): a lazy, composable description of a read that performs no
-side effect until `.run()` is called at the edge of the program.
+`deep_causality_file` provides file and receiver-data loaders and writers for the DeepCausality project. Every loader is
+expressed over the **haft IO monad** ([`deep_causality_haft::IoAction`]): a lazy, composable description of a read that
+performs no side effect until `.run()` is called at the edge of the program.
 
-The first supported format family is **RINEX GNSS** precise products:
+The receiver-data format family is **RINEX GNSS** precise products:
 
-* **SP3** — precise satellite orbits (ECEF positions).
-* **`.clk`** — precise satellite clocks (bias samples).
+* **SP3**: precise satellite orbits (ECEF positions).
+* **`.clk`**: precise satellite clocks (bias samples).
 
 This is the real Galileo / multi-GNSS data behind the chronometric and avionics examples (GM recovery, INS clock holdover
-through GNSS blackout). The loaders are precision-generic over the scalar `R`, so a single ingestion path serves every
-example — and the CFD crate — without duplicating parsing code.
+through GNSS blackout). The crate also reads and writes typed numeric tables, typed rows, sensor traces, and snapshots.
+The loaders are precision-generic over the scalar `R`, so one ingestion path serves every example and the CFD crate.
 
 ## Loaders
 
@@ -58,14 +58,19 @@ let action = read_gnss_single_satellite::<f64>("gbm.clk", "gbm.sp3", "E14");
 let (clocks, orbits): (Vec<ClockData<f64>>, Vec<OrbitData<f64>>) = action.run().unwrap();
 ```
 
-Because the loaders are `IoAction`s, they compose with the rest of the haft monadic combinators (`map`, `and_then`)
-before any read happens, keeping side effects at the program boundary.
+Because the loaders are `IoAction`s, they compose with the haft monadic combinators (`map`, `and_then`) before any read
+happens, which keeps side effects at the program boundary.
 
 ## Public API
 
-* Loaders: `read_clock_data`, `read_orbit_data`, `read_gnss_single_satellite`, `DataManager`,
-  `ReadClockData`, `ReadOrbitData`.
-* Types: `ClockData`, `OrbitData`, `GnssDataResult`, `SatId`.
+* Loaders: `read_clock_data`, `read_orbit_data`, `read_gnss_single_satellite`, `read_table`, `read_rows`,
+  `read_sensor_trace`, `DataManager`, `ReadClockData`, `ReadOrbitData`, `ReadTable`, `ReadRows`, `ReadSensorTrace`.
+* Writers: `write_table`, `write_rows`, `WriteTable`, `WriteRows`.
+* Snapshots: `save_snapshot`, `load_snapshot`, `force_load_snapshot`, `SaveSnapshot`, `LoadSnapshot`,
+  `ForceLoadSnapshot`, `SnapshotPackage`, `SnapshotSection`, `SnapshotTier`, `ScalarTypeTag`, `fingerprint64`, `fnv1a64`.
+* Types: `ClockData`, `OrbitData`, `GnssDataResult`, `SatId`, `NumericTable`, `TableColumn`, `SensorChannel`,
+  `SensorTraceSet`.
+* Traits: `BitCodec`, `FromTableRow`, `TableRow`, `TableScalar`.
 * Errors: `ConversionError`, `DataLoadingError`.
 
 ## Install

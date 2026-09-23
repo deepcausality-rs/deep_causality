@@ -2,14 +2,13 @@
 
 **HAFT: Higher-Order Abstract Functional Traits**
 
-`deep_causality_haft` is a sub-crate of the `deep_causality` project, providing traits for Higher-Kinded Types (HKTs) in
-Rust. This enables writing generic, abstract code that can operate over different container types like `Option<T>` and
-`Result<T, E>`.
+`deep_causality_haft` provides traits for Higher-Kinded Types (HKTs) in Rust, so generic code can operate over
+different container types like `Option<T>` and `Result<T, E>`. It is a sub-crate of the `deep_causality` project.
 
 ## Runnable examples
 
-The snippets in this document are written to teach one trait at a time and print their own output.
-The runnable examples take a domain problem instead, so their output differs from the snippets:
+The snippets in this document teach one trait at a time and print their own output.
+The runnable examples solve a domain problem instead, so their output differs from the snippets:
 
 ```bash
 cargo run -p mathematics_examples --example haft_functor_examples        # data anonymization
@@ -20,37 +19,36 @@ cargo run -p mathematics_examples --example haft_effect_system_examples  # audit
 
 ## What are Higher-Kinded Types?
 
-In Rust, types like `Option<T>` and `Vec<T>` are generic over a type `T`. We can think of `Option` and `Vec` as "type
+In Rust, types like `Option<T>` and `Vec<T>` are generic over a type `T`. `Option` and `Vec` are "type
 constructors": they take a type and produce a new type.
 
-A Higher-Kinded Type is an abstraction over these type constructors. It allows us to write functions that are generic
-not just over a type, but over the *shape* or *kind* of a type constructor. For example, we can write a function that
-works with any type constructor that can be mapped over (a `Functor`), without caring if it's an `Option`, a `Result`,
-or something else.
+A Higher-Kinded Type abstracts over type constructors. Functions can then be generic over the *shape* or *kind* of a
+type constructor, not only over a type. For example, one function can work with any type constructor that can be
+mapped over (a `Functor`), whether it is an `Option`, a `Result`, or something else.
 
 This crate provides the fundamental traits (`HKT`, `HKT2`, `HKT3`, `HKT4`, `HKT5`) and functional traits (`Functor`,
-`Applicative`, `Monad`, `Foldable`, `Traversable`) to enable this pattern.
+`Applicative`, `Monad`, `Foldable`, `Traversable`) for this pattern.
 
 ## Usage
 
-This crate uses a "witness" pattern to represent HKTs. For each type constructor (like `Option`), we define a
-zero-sized "witness" type (like `OptionWitness`) that implements the `HKT` trait. These witness types are zero-sized
-and incur no runtime overhead, making them zero-cost abstractions. This crates also comes with default
-witness pattern implementations for commonly used Rust types such as:
+This crate represents HKTs with a "witness" pattern. Each type constructor (like `Option`) gets a zero-sized
+"witness" type (like `OptionWitness`) that implements the `HKT` trait. Witnesses are zero-sized and carry no runtime
+cost. The crate ships witnesses for common Rust types, such as:
 
 * Option -> OptionWitness
 * Result -> ResultWitness
 * Box -> BoxWitness
 * Vec -> VecWitness
 
-Each of those withness types implements the following traits and methods:
+Each of these witness types implements the following traits and methods:
 
-* Applicative: `pure<T>(value: T)` and `apply<A, B, Func>(f_ab:HKT, f_a:HKT)`
+* Pure: `pure<T>(value: T)`
+* Applicative: `apply<A, B, Func>(f_ab:HKT, f_a:HKT)`
 * Functor: `fmap<A, B, Func>(m_a: HKT, f: Func)`
 * Foldable: `fold<A, B, Func>(fa: HKT, init: B, f: Func)`
 * Monad: `bind<A, B, Func>(m_a:HKT, f: Func)`
 
-Witness types that only implement Functor and Fold:
+Witness types that implement only Functor and Foldable:
 * BTreeMap -> BTreeMapWitness
 * HashMap -> HashMapWitness
 * VecDeque -> VecDequeWitness
@@ -116,7 +114,7 @@ Original VecDec: [2, 4, 6]
 Doubled VecDec: [4, 8, 12]
 ```
 
-When combined with the deep_causality_num crate, you can abstract even further:
+Combined with the deep_causality_num crate, the abstraction extends to the numeric type:
 
 ```rust
 use deep_causality_haft::{Functor, HKT};
@@ -131,9 +129,7 @@ fn double_float<F, T>(m_a: F::Type<T>) -> F::Type<T>
 }
 ```
 
-This level of abstraction helps in domains like numerical computing where you often deal with various
-data structures holding different numeric types. It allows for highly expressive and maintainable code that preserves
-high performance characteristics.
+This helps in numerical computing, where many data structures hold different numeric types.
 
 ### Example: Using `Functor` with `Option`
 
@@ -180,7 +176,6 @@ fn main() {
 
 ### Example: Using `Foldable` with `Vec`
 
-I
 Here's how you can use the `Foldable` trait with `Vec` via its witness type, `VecWitness`.
 
 ```rust
@@ -277,53 +272,46 @@ Sequenced outcome: 75
 ... (Truncated)
 ```
 
-The `Effect3`, `Effect4`, `Effect5` and `MonadEffect3`, `MonadEffect4`, `MonadEffect5` traits provide a powerful
-mechanism for building a **type-encoded effect system**. This allows you to manage side-effects (like errors and
-logging) in a structured, safe, and composable way, which is particularly useful for building complex data processing
-pipelines. It leverages Rust's powerful type system to ensure that these effects are explicitly handled
-and tracked throughout your program.
+The `Effect3`, `Effect4`, `Effect5` and `MonadEffect3`, `MonadEffect4`, `MonadEffect5` traits build a
+**type-encoded effect system**. It manages side-effects (like errors and logging) in a structured, composable way, for
+example in data processing pipelines, and uses the type system to make every effect explicit and tracked.
 
-Here's a breakdown of how it works:
+How it works:
 
-1. **Effects as Types**: Instead of side-effects occurring implicitly, this system represents them explicitly as generic
-   type parameters on a container type. For instance, you might have a custom effect type like
+1. **Effects as Types**: The system represents side-effects explicitly as generic type parameters on a container
+   type. For instance, you might have a custom effect type like
    `MyCustomEffectType<T, E, W>`, where:
     * `T` is the primary value of the computation.
     * `E` represents an error type.
     * `W` represents a warning or log type.
-      By making these effects part of the type signature, the presence of potential side-effects becomes explicit and
-      verifiable by the compiler.
+      With the effects in the type signature, the compiler sees and verifies every potential side-effect.
 
 2. **Higher-Kinded Type (HKT) Witnesses**: To make these effect types generic over their primary value `T` while keeping
-   the effect types (`E`, `W`, etc.) fixed, the system utilizes Higher-Kinded Types (HKTs). Traits like `Effect3`,
-   `Effect4`, and `Effect5` are used to "fix" a certain number of generic parameters of an underlying HKT type (e.g.,
-   `HKT3`, `HKT4`, `HKT5`). This allows you to define a "witness" type (e.g., `MyEffectHktWitness<E, W>`) that
-   represents the *shape* of your effect container with specific, fixed effect types, leaving one parameter (`T`) open
-   for the actual value.
+   the effect types (`E`, `W`, etc.) fixed, the system uses Higher-Kinded Types (HKTs). Traits like `Effect3`,
+   `Effect4`, and `Effect5` fix a number of generic parameters of an underlying HKT type (e.g., `HKT3`, `HKT4`,
+   `HKT5`). You define a "witness" type (e.g., `MyEffectHktWitness<E, W>`) that represents the *shape* of your effect
+   container with specific, fixed effect types, leaving one parameter (`T`) open for the actual value.
 
-3. **Monadic Logic for Effects (`MonadEffect` traits)**: The core logic for how these effects are handled and combined
-   is defined through `MonadEffect` traits (e.g., `MonadEffect3`, `MonadEffect4`, `MonadEffect5`). These traits provide:
+3. **Monadic Logic for Effects (`MonadEffect` traits)**: The `MonadEffect` traits (e.g., `MonadEffect3`,
+   `MonadEffect4`, `MonadEffect5`) define how effects are handled and combined. They provide:
     * **`pure`**: A method to lift a "pure" value (a value without any side-effects) into the effectful context.
-    * **`bind`**: The central sequencing operation. It allows you to chain computations where each step might produce
-      new effects. The implementation of `bind` dictates how effects from different steps are combined. For example, in
-      the provided `MyCustomEffectType`, the `bind` implementation ensures that if an error occurs at any point, it
-      propagates, and warnings from all steps are accumulated.
+    * **`bind`**: The central sequencing operation. It chains computations where each step might produce new effects,
+      and its implementation decides how effects from different steps combine. In the provided `MyCustomEffectType`,
+      `bind` propagates an error from any step and accumulates the warnings from all steps.
 
-4. **Specialized Effect Handling (`LoggableEffect` traits)**: The system can be extended with specialized traits for
-   specific types of effects. For example, `LoggableEffect3`, `LoggableEffect4`, and `LoggableEffect5` provide a `log`
-   function. This function allows you to add a log message (of a specific fixed type, like `E::Fixed2` for
-   `LoggableEffect3`) to the effect container without altering the primary value or causing an error.
+4. **Specialized Effect Handling (`LoggableEffect` traits)**: Specialized traits extend the system for specific kinds
+   of effects. The test utilities in `utils_tests` define `LoggableEffect3`, `LoggableEffect4`, and `LoggableEffect5`,
+   whose `log` function adds a log message (of a fixed type, like `E::Fixed2` for `LoggableEffect3`) to the effect
+   container without altering the primary value or causing an error.
 
-5. **Compiler-Enforced Safety**: A significant advantage of this system is that because effects are part of the type
-   signature, the Rust compiler statically verifies that all effects are handled correctly. This means that if a
-   function is declared to produce a certain type of effect, the compiler ensures that the effect is either explicitly
-   handled or propagated. This prevents common bugs related to unhandled errors or forgotten logging, leading to more
-   robust and predictable code.
+5. **Compiler-Enforced Safety**: Because effects are part of the type signature, the compiler statically verifies
+   that they are handled. If a function declares an effect, the compiler ensures the effect is either handled or
+   propagated, which prevents unhandled errors and forgotten logging.
 
 
 ## Unbound HKTs & Functional Traits (Arity 2-5)
 
-This crate also supports "Unbound" Higher-Kinded Types, where all generic parameters are free to vary. This enables advanced functional patterns from Category Theory that are crucial for complex systems modeling.
+The crate also supports "Unbound" Higher-Kinded Types, where all generic parameters are free to vary. They carry functional patterns from category theory used in systems modeling.
 
 ### Unbound HKT Traits
 
@@ -336,7 +324,7 @@ This crate also supports "Unbound" Higher-Kinded Types, where all generic parame
     *   *Usage*: Conservation laws, optimization (Primal/Dual), and Galois connections.
 *   **`ParametricMonad`**: A Monad where the state type changes (Indexed Monad).
     *   *Usage*: Modeling state transitions (e.g., `Solid -> Liquid -> Gas`) or protocol state machines.
-*   **`Promonad`**: Models interaction or fusion of contexts.
+*   **`MonoidalMerge`**: Models interaction or fusion of contexts.
     *   *Usage*: Tensor products, force calculations (merging fields), and quantum entanglement.
 *   **`RiemannMap`**: Models curvature and scattering (Arity 4).
     *   *Usage*: General Relativity (Curvature Tensor), Particle Physics (Scattering Matrices).
@@ -370,9 +358,9 @@ let new_res = ResultWitness::bimap(res, |x| x * 2.0, |e| e.len()); // Result<f64
 
 ## Natural Isomorphisms (Tier 3 Iso Traits)
 
-This crate also provides traits for **natural isomorphisms** between HKT witnesses — bijections between two type constructors that commute with `fmap`. They sit at Tier 3 of the three-tier isomorphism design (Tiers 1 and 2 live in `deep_causality_num` for concrete-type isos; Tier 3 lifts the idea to type constructors).
+The crate provides traits for **natural isomorphisms** between HKT witnesses: bijections between two type constructors that commute with `fmap`. They form Tier 3 of the three-tier isomorphism design; Tiers 1 and 2, for concrete-type isos, live in `deep_causality_algebra`.
 
-Because HKT witnesses are zero-sized markers without values, `From`/`Into` cannot apply at this level — a witness-typed trait is required. Each `NaturalIso*` is parameterised over the two witnesses `F` and `G` and exposes `to_target` / `to_source`:
+HKT witnesses are zero-sized markers without values, so `From`/`Into` cannot apply at this level and a witness-typed trait is required. Each `NaturalIso*` is parameterised over the two witnesses `F` and `G` and exposes `to_target` / `to_source`:
 
 | Trait | Base HKT | Free type parameters |
 |---|---|---|
@@ -389,7 +377,7 @@ Every implementer must satisfy, for every type parameter tuple permitted by both
 1. **Round-trip identity** (both directions independently):
    * `to_source(to_target(fa)) == fa`
    * `to_target(to_source(ga)) == ga`
-2. **Naturality**: `to_target(F::fmap(fa, h)) == G::fmap(to_target(fa), h)` for any function `h: T -> U` (and the symmetric law through `to_source`). Naturality is the law that makes the iso a *structure-preserving* one — not just a bijection of carriers, but one that respects every later `fmap`.
+2. **Naturality**: `to_target(F::fmap(fa, h)) == G::fmap(to_target(fa), h)` for any function `h: T -> U` (and the symmetric law through `to_source`). Naturality makes the iso *structure-preserving*: it respects every later `fmap`.
 
 The `deep_causality_haft::iso::test_support` module provides `assert_natural_iso_round_trip` and `assert_natural_iso_naturality` helpers for property-style verification in downstream crates.
 
@@ -425,15 +413,13 @@ impl NaturalIso<OptionWitness, MyOptionWitness> for OptionMyOptionIso {
 
 ## non-std support
 
-The `deep_causality_haft` crate provides support for `no-std` environments. This is particularly useful for embedded systems or other contexts where the standard library is not available. Note, the `std` feature is enabled by default thus you need to opt-into non-std via feature flags.
-
-To use this crate in a `no-std` environment, you need to disable the default `std` feature. You can optionally enable the `alloc` feature if you have an allocator available, which enables support for dynamic collections like `Vec`, `Box`, `BTreeMap`, etc.
+The crate supports `no-std` environments such as embedded systems. The `std` feature is on by default, so disable it to build for `no-std`. With an allocator, enable the `alloc` feature for dynamic collections like `Vec`, `Box`, `BTreeMap`, etc.
 
 ### Cargo Build and Test for `no-std`
 
 **1. Building for `no-std` with Allocator:**
 
-To build the crate for `no-std` while including support for dynamic collections (via `alloc`), use the following command:
+To build for `no-std` with dynamic collections (via `alloc`):
 
 ```bash
 cargo build --no-default-features --features alloc -p deep_causality_haft
@@ -441,7 +427,7 @@ cargo build --no-default-features --features alloc -p deep_causality_haft
 
 **2. Testing for `no-std` with Allocator:**
 
-To run tests in a `no-std` environment with allocator support, use:
+To test for `no-std` with an allocator:
 
 ```bash
 cargo test --no-default-features --features alloc -p deep_causality_haft
@@ -449,7 +435,7 @@ cargo test --no-default-features --features alloc -p deep_causality_haft
 
 **3. Building for `no-std` without Allocator (Core/Algebra only):**
 
-If your `no-std` application does not have an allocator, you can build without the `alloc` feature. This restricts the crate to core HKT traits and algebraic structures that don't require dynamic memory.
+Without an allocator, build without the `alloc` feature. The crate then offers only the core HKT traits and algebraic structures that need no dynamic memory.
 
 ```bash
 cargo build --no-default-features -p deep_causality_haft
@@ -475,7 +461,7 @@ and
    bazel test //deep_causality_haft/...
 ```
 
-for tests. When you want to build for non-std, use
+for tests. To build for non-std, use
 
 ```bash
    bazel build --@rules_rust//rust/settings:no_std=alloc //deep_causality_haft/...

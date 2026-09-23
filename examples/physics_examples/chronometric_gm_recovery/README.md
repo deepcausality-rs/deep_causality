@@ -1,8 +1,8 @@
 # Chronometric GM Recovery
 
 This example recovers Earth's gravitational parameter from one week of Galileo
-satellite clock data. The only physics input is time-dilation differences
-between satellites at different altitudes.
+satellite clock data. The only physics input is the time-dilation difference
+between points at different altitudes.
 
 ## The Result
 
@@ -18,11 +18,10 @@ the J2-corrected weak-field 1PN inversion, produces this:
   Relative error (M):    0.2047 %   (2.047e-3)
 ```
 
-That is Earth's mass, weighed by satellite clocks accurate to 0.2%.
-Two important things that are worth mentioning. First, an analytical inversion of
-the relativistic clock equation worked at high precision despite a small dataset.
-Second, the bind-chain composition, wrapping the kernel into a typed pipeline you can
-compose further with either causal monads or causaloids.
+Satellite clocks weigh the Earth to within 0.2%. The analytical inversion of
+the relativistic clock equation reaches this precision on a small dataset, and
+the chain wraps the kernel into a typed pipeline that composes further with
+causal monads or causaloids.
 
 ## Running It
 
@@ -31,13 +30,14 @@ cargo run -p physics_examples --example chronometric_gm_recovery --release
 ```
 
 Real Galileo broadcast clock and SP3 orbit data ship with the example: one
-full GPS week, satellite E14. No external downloads, no dependencies beyond
-the workspace.
+full GPS week, satellite E14. The run needs no downloads and no dependencies
+beyond the workspace.
 
 ## The Pipeline
 
-`main.rs` shows the structural showcase up front. Five stages, each returning
-a `PropagatingEffect`, composed through `.bind`:
+`main.rs` composes five stages into one `CausalFlow` chain. Each stage returns
+a `Result`, and `CausalFlow::try_step` chains them and short-circuits on the
+first error:
 
 ```rust
 let result = PropagatingEffect::pure(inputs)
@@ -50,32 +50,33 @@ let result = PropagatingEffect::pure(inputs)
 
 What each stage does, in order:
 
-1. **load**. Reads `.clk` and `.sp3` files for a single satellite across all
-   bundled GPS-week datasets, concatenates them, sorts by timestamp.
-2. **align**. Runs a 10th-order Lagrange interpolation on the orbit data to
-   match clock timestamps. Output: a vector of `SpaceTimeCoordinate` samples.
-3. **pair**. Slides a window across the coordinate vector, picking pairs
+1. **load**. Reads the `.clk` and `.sp3` files for one satellite across all
+   bundled GPS-week datasets, concatenates them, and sorts by timestamp.
+2. **align**. Interpolates the orbit data onto the clock timestamps with a
+   10th-order Lagrange polynomial and returns a vector of
+   `SpaceTimeCoordinate` samples.
+3. **pair**. Slides a window across the coordinate vector and picks pairs
    separated by roughly 50 minutes of orbital phase. The sliding scheme
-   matches chronometric-geodesy convention and avoids the all-pairs failure
-   mode where every pair ends up anchored to the first few coordinates.
+   follows chronometric-geodesy convention; an all-pairs scheme anchors
+   every pair to the first few coordinates.
 4. **solve_gm**. Applies the J2-corrected 1PN kernel (`solve_gm_analytical`)
    from `deep_causality_physics::chronometric` to each pair.
-5. **aggregate**. Filters the per-pair estimates through a Median Absolute
-   Deviation outlier rejection, then reduces to mean, median, standard
-   deviation. Earth's mass is derived as $M = GM / G$.
+5. **aggregate**. Rejects outliers among the per-pair estimates by Median
+   Absolute Deviation, then reduces them to mean, median and standard
+   deviation. Earth's mass follows as $M = GM / G$.
 
 Each stage is generic over the floating-point type. The default is
-`Float106` (double-double, around 32 decimal digits); switching to `f64` is
-a one-line change to the `FloatType` alias in `main.rs`.
+`Float106` (double-double, around 32 decimal digits); the `FloatType` alias
+in `main.rs` switches it to `f64` in one line.
 
 ## 10th-order Lagrange interpolation
 
-The two GNSS product streams arrive at different intervalls:
+The two GNSS product streams arrive at different intervals:
 
 - **Clock data** (`.clk`): IGS precise clocks at **30-second** intervals
 - **Orbit data** (`.sp3`): IGS precise ephemeris at **15-minute** intervals (900 s)
 
-The 1PN kernel needs position, velocity, *and* clock drift at the same
+The 1PN kernel needs position, velocity *and* clock drift at the same
 instant, so the align stage re-samples the coarse 15-minute orbit grid
 onto the dense 30-second clock grid with a 10th-order Lagrange
 polynomial. The implementation lives in
@@ -85,12 +86,12 @@ For each clock timestamp:
 
 1. **Locate the interpolation window.** Advance an orbit cursor so it
    brackets the clock time, then take the surrounding 10 SP3 epochs
-   (4 before, 5 after, plus the bracket) — a slight forward bias keeps
+   (4 before, 5 after, plus the bracket). The slight forward bias keeps
    most of the support ahead of the interpolation point.
 2. **Interpolate position** $P(t) = (x, y, z)$ by evaluating a
    10th-order Lagrange polynomial through those 10 points at the clock
    timestamp.
-3. **Compute ECEF velocity** by centered numerical derivative around
+3. **Compute ECEF velocity** by a centered numerical derivative around
    the clock time: $V(t) = (P(t+\varepsilon) - P(t-\varepsilon)) / 2\varepsilon$
    with $\varepsilon = 0.01\ \text{s}$. The polynomial is reused; only
    the evaluation point changes.
@@ -115,49 +116,44 @@ $$\Delta t_\text{periodic} = -\frac{2\,(\mathbf{r} \cdot \mathbf{v})}{c^2}$$
 
 This term oscillates over each orbit because $\mathbf{r} \cdot \mathbf{v}$
 peaks near perigee and crosses zero at the apsides. IGS removes it so
-positioning users do not have to recompute it, but chronometric
-geodesy needs it back, because that periodic signal *is* part of the
-relativistic clock behavior the kernel inverts. `get_total_bias()`
-re-adds it using the freshly interpolated $r$ and $v$ from steps 2–4,
-which is why the drift rate is computed in a **second pass**: position
-and velocity first, then $\dot\tau = dB_\text{total}/dt$ over the fully
-reconstructed bias. This keeps the drift rate geometrically
-self-consistent with the $(r, v)$ the kernel reads from the same
-`SpaceTimeCoordinate`, which is what makes the GM inversion numerically
-stable.
+positioning users need not recompute it. Chronometric geodesy needs it
+back: the periodic signal belongs to the relativistic clock behavior the
+kernel inverts. `get_total_bias()` re-adds it from the interpolated $r$
+and $v$ of steps 2–4, so the drift rate is computed in a **second pass**:
+position and velocity first, then $\dot\tau = dB_\text{total}/dt$ over the
+reconstructed bias. The drift rate then agrees geometrically with the
+$(r, v)$ the kernel reads from the same `SpaceTimeCoordinate`, and that
+agreement keeps the GM inversion numerically stable.
 
 ### Methodological note
 
-A careful reader should ask: by adding the periodic relativistic term
-back into the bias before computing $\dot\tau$, are we contaminating
-the input with the very GM signal we then claim to recover?
-
-The short answer is no, and the reasoning has three parts.
+Does adding the periodic relativistic term back into the bias before
+computing $\dot\tau$ contaminate the input with the GM signal the
+example then recovers? No, for three reasons.
 
 **The correction is parameter-free in GM.** The added term
 
 $$\Delta t_\text{periodic} = -\frac{2\,(\mathbf{r} \cdot \mathbf{v})}{c^2}$$
 
-contains no gravitational parameter — only observed kinematic
+contains no gravitational parameter, only the observed kinematic
 quantities $(\mathbf{r}, \mathbf{v})$ from the SP3 ephemeris and the
-defined constant $c$. There is no GM to inject.
+defined constant $c$. It has no GM to inject.
 
 **The discriminating signal is already in the IGS bias.** What the
 kernel inverts is the *secular* difference in clock rate between
 satellites at different altitudes. IGS does not strip that secular
 component; it strips only the orbit-period oscillation around it.
-The information from which GM is recovered was in the data before any
-correction was applied. The periodic add-back exists so that
-*instantaneous* $(r, v, \dot\tau)$ samples are mutually consistent at
-each timestamp, which the algebraic inversion requires.
+The data carry the GM information before any correction. The periodic
+add-back makes the *instantaneous* $(r, v, \dot\tau)$ samples agree at
+each timestamp, as the algebraic inversion requires.
 
 **The remaining loop is quantitatively negligible at this accuracy.**
 The SP3 orbits are themselves the product of an orbit determination
 that assumed a gravity model with some baked-in GM. Strictly, that
-makes $(r, v)$ weakly dependent on a prior GM estimate. In practice
-the SP3 GM is known to sub-ppm (EGM2008-class), while this example
-recovers GM to ~0.2 % — roughly a thousand times coarser. The
-orbit-encoded GM acts as a fixed geometric reference.
+makes $(r, v)$ weakly dependent on a prior GM estimate. The SP3 GM is
+known to sub-ppm (EGM2008-class), while this example recovers GM to
+~0.2 %, roughly a thousand times coarser. The orbit-encoded GM acts as a
+fixed geometric reference.
 
 
 ## Data Layout
@@ -175,8 +171,8 @@ data/gnss/
 
 GPS week 1877, days 0 through 6, from 2016. The `.clk` files are RINEX 3
 clock products from the GFZ Multi-GNSS analysis center; the `.sp3` files
-are precise satellite orbits in standard SP3 format. Both are parsed by
-the local `data_loader` module.
+are precise satellite orbits in standard SP3 format. `DataManager` from
+`deep_causality_file` parses both.
 
 ## The Math, Briefly
 
@@ -196,38 +192,38 @@ $$GM = \frac{c^2(\dot\tau_b - \dot\tau_a) + \tfrac{1}{2}(v_b^2 - v_a^2)}{1/r_{\t
 
 Bjerhammar (1975) and Vermeer (1983) established this kind of inversion as
 the foundation of chronometric geodesy. The kernel implements it directly,
-generic over any precision type that satisfies `RealField + From<f64>`. See
+generic over any precision type that satisfies `RealField + FromPrimitive`. See
 the [chronometric kernel
 documentation](../../../deep_causality_physics/src/kernels/chronometric/) for the full
 assumption envelope and the regimes where the method stops working.
 
 ## Scope and Limitations
 
-This is a public demonstration of the kernel, not a production-grade GM
-determination. With one week of one satellite, accuracy tops out around the
+The example demonstrates the kernel; it is not a production-grade GM
+determination. One week of one satellite limits the accuracy to about the
 per-mille level. The full multi-year, multi-satellite analysis at the
-Center for Causal Dynamics reaches sub-ppm.
+Center for Dynamic Causality reaches sub-ppm.
 
-A few simplifications worth knowing about:
+The example simplifies three things:
 
 - The Lagrange interpolation does not handle SP3 boundary discontinuities
   specially. Most Galileo SP3 products are continuous across day
   boundaries, so the simplification holds for the bundled data.
-- The MAD outlier filter runs once over per-pair estimates. Iterative
-  refinement and per-orbit outlier classification are intentionally omitted
-  to keep the example readable.
-- Pair construction uses a fixed-window sliding scheme. See `pipeline.rs`
-  for the window-size and step constants if you want to tune it.
+- The MAD outlier filter runs once over the per-pair estimates. Iterative
+  refinement and per-orbit outlier classification are omitted to keep the
+  example readable.
+- Pair construction uses a fixed-window sliding scheme. `pipeline.rs` holds
+  the window-size and step constants for tuning.
 
-What the example does demonstrate well: the framework's bind-chain composes
-a real physical-inverse problem end-to-end, and the chronometric kernel
-recovers published JGM-3 reference values on real data.
+The chain composes a real physical inverse problem end to end, and the
+chronometric kernel recovers the published JGM-3 reference values on real
+data.
 
 ## Acknowledgments
 
-This example was contributed by the Center for Dynamic Causality. It is a
-smaller, public replication of a larger experiment covering multiple years of GNSS data of the 
-Galileo constellation. The complete experiment and a [preview of a peprint](https://github.com/causalcenter/chronodynamics/blob/main/papers/draft_chrono_mass.md) is publicly available at:
+The Center for Dynamic Causality contributed this example. It is a smaller,
+public replication of an experiment covering multiple years of GNSS data from
+the Galileo constellation. The complete experiment and a [preview of a preprint](https://github.com/causalcenter/chronodynamics/blob/main/papers/draft_chrono_mass.md) are publicly available at:
 
 https://github.com/causalcenter/chronodynamics
 

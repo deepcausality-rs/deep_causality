@@ -1,9 +1,7 @@
 # Mathematics Examples
 
-This directory consolidates examples for all four major DeepCausality mathematics
-crates (`deep_causality_multivector`, `deep_causality_sparse`, `deep_causality_tensor`,
-`deep_causality_topology`), alongside the cross-crate composition examples that
-show how they fit together through the HKT machinery and the causal effect monad.
+These examples demonstrate the DeepCausality mathematics crates one at a time, then
+compose them across crate boundaries through the HKT traits and the causal effect monad.
 
 ## Quick Start
 
@@ -41,9 +39,9 @@ mathematics_examples/
 
 | Folder | What's inside | README |
 |---|---|---|
-| [1_foundation](1_foundation/) | The two towers the workspace rests on, plus the API surface of each math crate. Start here to learn what a bound promises, what a trait buys, or what one crate can do | [1_foundation/README.md](1_foundation/README.md) |
-| [2_composition](2_composition/) | Every example spans more than one crate, and the folder names the mechanism it uses to cross. A reader who learns `extend` on a graph can run it on a manifold, a point cloud or a sparse matrix | [2_composition/README.md](2_composition/README.md) |
-| [3_applications](3_applications/) | One use case per example, in the least code that shows it | — |
+| [1_foundation](1_foundation/) | The two towers the workspace rests on, plus the API surface of each math crate. Start here to learn what a bound promises, what a trait provides, or what one crate does | [1_foundation/README.md](1_foundation/README.md) |
+| [2_composition](2_composition/) | Every example spans more than one crate; the folder names the mechanism it uses to cross. A reader who learns `extend` on a graph can run it on a manifold, a point cloud or a sparse matrix | [2_composition/README.md](2_composition/README.md) |
+| [3_applications](3_applications/) | One use case per example, in the least code that shows it | [3_applications/README.md](3_applications/README.md) |
 
 Each folder carries its own README with the per-example table.
 
@@ -79,13 +77,12 @@ Every example exposes a single type alias at the top of `main.rs`:
 pub type FloatType = Float106;   // or f64, or f32
 ```
 
-That alias flows through every tensor, every multivector, every manifold, and every
-monadic step. Change the line; the example re-runs at the new precision, in one edit.
+The alias flows through every tensor, multivector, manifold and monadic step. Change
+that one line and the example runs at the new precision.
 
-`make check_precision` enforces that. It flips every declared `FloatType` through
-`Float106`, `f32` and `f64` and rebuilds, so the claim stays true as the examples change.
-Where an example is fixed to one precision, `scripts/check_precision.sh` lists it together
-with the bound that fixes it.
+`make check_precision` flips every declared `FloatType` through `Float106`, `f32` and
+`f64` and rebuilds each. Where an example is fixed to one precision,
+`scripts/check_precision.sh` lists it together with the bound that fixes it.
 
 ### Why numerical precision is important
 
@@ -98,23 +95,20 @@ composed result against `(cosh θ, sinh θ)` for the summed rapidity.
 | `f64`      | ~1.1e-16          |
 | `Float106` | ~1.7e-31          |
 
-That is **fifteen orders of magnitude** of additional precision recovered by editing
-one line. The numerical algorithm is identical; the topology, tensor contraction,
-Clifford rotor, and monadic chain are all the same. Only the underlying float type
-changed.
-
-This is the practical payoff of the HKT-and-algebraic-traits architecture: precision
-is a parameter of the program, set in one place.
+Editing one line recovers **fifteen orders of magnitude** of precision. The topology,
+tensor storage, Clifford rotor and monadic chain stay the same; only the float type
+changes. The HKT and algebraic traits make precision a parameter of the program, set in
+one place.
 
 ### When the precision dial actually matters
 
-Switching precision is cheap; deciding whether you need it is the real question. The
-rule of thumb from these examples:
+Switching precision is cheap; the question is whether you need it. The rule of thumb
+from these examples:
 
 > **Drift widens with precision only when there is a multi-step, non-rational,
 > transcendental computation.**
 
-Use that as the decision tree:
+Decision table:
 
 | Workload shape | Recommended `FloatType` | Why |
 |----------------|-------------------------|-----|
@@ -125,10 +119,10 @@ Use that as the decision tree:
 | Ill-conditioned linear algebra (near-singular matrices, narrow eigengaps, GMRES on poorly preconditioned systems) | `Float106` | The condition number multiplies rounding error. Extra mantissa bits buy back lost digits directly. |
 | Verification, reference implementations, regression baselines | `Float106` | The point is to expose error in the f64 path. Float106 is the oracle to diff against. |
 
-The capstone example sits in the chained-transcendental row and visibly benefits. The
-Laplacian and diffusion examples sit in the rational-arithmetic row, where `f64` is exact
-for the values involved. The roundtrip example sits in the single-shot row, where Float106
-surfaces a residual that `f64` rounds away.
+The spinor-transport example sits in the chained-transcendental row and benefits
+visibly. The Laplacian and diffusion examples sit in the rational-arithmetic row, where
+`f64` is exact for the values involved. The roundtrip example sits in the single-shot row,
+where Float106 surfaces a residual that `f64` rounds away.
 
 Default to `f64`. Reach for `Float106` where the structure of the computation amplifies
 rounding error.
@@ -150,12 +144,12 @@ rounding error.
    name = "your_example_examples"
    path = "<subfolder>/your_example.rs"   # or <subfolder>/your_example/main.rs
    ```
-5. Every example name ends with the `_examples` suffix. Two older targets,
-   `multifield_data_pipeline` and `tensor_sparse_memory_budget`, keep their bare names.
+5. Every example name ends with the `_examples` suffix, except
+   `multifield_data_pipeline` and `tensor_sparse_memory_budget`.
 6. Add a row to the relevant subfolder's `README.md`.
 7. Top-of-file `main.rs` declares `pub type FloatType = f64;` (or `f32` / `Float106`)
    and threads it through every numerical site. Run `make check_precision` before
-   opening the PR. Four things break the flip while still building at `f64`:
+   opening the PR. Four patterns build at `f64` but break the flip:
    - a `const` holding the working type. A `const` takes a primitive literal, so
      `const ALPHA: FloatType = 0.15;` fixes the type to a primitive. Use a function
      returning `lift(0.15)`.

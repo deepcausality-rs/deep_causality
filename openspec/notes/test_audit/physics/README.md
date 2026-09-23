@@ -6,13 +6,12 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 # Test-suite audit — findings, and the case for a dedicated change
 
 This folder holds the evidence for a change set of its own. It was produced while closing
-`unified-math-next` task group 7 (C6), where mutation testing over
-`deep_causality_physics` was about to run and the question came up of whether the suite it would be
-measured against was worth measuring. It is not, in a way that turned out to be large enough that
-folding the repair into that programme would have swamped it.
+`unified-math-next` task group 7 (C6): mutation testing over `deep_causality_physics` was about to
+run, and the question arose whether the suite it would be measured against was worth measuring. It
+was not, and the repair was large enough to swamp that programme.
 
-**Nothing here is a proposal.** It is what was measured, what was proved, what was already repaired
-in passing, and what a dedicated change would have to take on.
+**Nothing here is a proposal.** It records what was measured, what was proved, what was repaired in
+passing, and what a dedicated change would have to take on.
 
 ## Contents
 
@@ -45,9 +44,8 @@ replaced with `PropagatingEffect::pure(R::zero())` — **reporting zero for ever
 world** — and the entire `kernels/fluids/wrappers_tests.rs` suite **passed**. After the rewrite the
 same one-line defect **fails** it.
 
-The claim has to be bounded, too. Blunter defects were tried first — Weber losing the square on its
-velocity, Knudsen inverted — and the *old* suite caught those. The old tests are not uniformly
-worthless. Their failure mode is specific:
+The claim has bounds. Blunter defects were tried first (Weber losing the square on its velocity,
+Knudsen inverted), and the *old* suite caught those. Its failure mode is specific:
 
 * a single hand-chosen input catches an error that moves every value, and misses one the chosen
   input happens to be blind to (`L` against `L²` when the test uses `L = 1`);
@@ -57,24 +55,23 @@ worthless. Their failure mode is specific:
 
 ## Calibration — three false-positive classes removed
 
-The first scan over-reported and was corrected three times, each against real code. This is recorded
-because the corrected numbers are the ones to plan from, and because the same mistakes are easy to
-repeat:
+The first scan over-reported and was corrected three times, each against real code. The corrected
+numbers are the ones to plan from, and the same mistakes are easy to repeat:
 
-1. **`assert!(x.is_err())` is a real claim.** An error-path test asserting only a refusal is doing its
+1. **`assert!(x.is_err())` is a real claim.** An error-path test asserting only a refusal does its
    job. First pass: 535 "weak-only". After: 169.
-2. **`assert!(!x.is_ok())` is also an error claim.** It matches `.is_ok()` textually and was being
+2. **`assert!(!x.is_ok())` is also an error claim.** It matches `.is_ok()` textually and was
    counted as weak. 169 → 120.
 3. **Assertions may live in a helper.** `constants_accessors_f64` calls `check_constants::<f64>()`,
    which asserts. 48 "assertion-free" → 1.
 
-A residual limitation, stated so it is not mistaken for a work list: **single-input** counts any test
-without a loop or table, so a test pinning one genuinely singular case — a boundary, a refusal — is
-counted beside a value test that should have swept a range. It is a ceiling, not a backlog.
+A residual limitation, which is not a work list: **single-input** counts any test without a loop or
+table, so a test pinning one singular case (a boundary, a refusal) counts beside a value test that
+should have swept a range. The count is a ceiling, not a backlog.
 
-And one class the scanner cannot decide: a *conversion* is not a *re-solve*.
+The scanner also cannot tell a *conversion* from a *re-solve*.
 `kernels/astro/solver_convergence_tests.rs` builds its expected position as `a(cos E − e)` from a
-root obtained by an independent bisection. The detector flags it as circular. It is not.
+root obtained by an independent bisection. The detector wrongly flags it as circular.
 
 ## What was already repaired, in passing
 
@@ -86,20 +83,20 @@ So the dedicated change does not redo it:
 | `kernels/fluids/wrappers_tests.rs` | 119 tests, 80 tautology | the 18 dimensionless wrappers assert the carried value against the oracle, over every table row |
 | 8 further `wrappers_tests.rs` files | `assert!(effect.is_ok())` | 36 tautologies converted to delegation assertions against the kernel |
 
-`scripts/physics_oracles.py` was added for this and is the pattern to extend: textbook definitions
-evaluated in **50-digit decimal**, so the expectation is nearer the true value than any `f64`
-evaluation, and the test measures the kernel's error against the mathematics rather than against a
-second copy of itself.
+`scripts/physics_oracles.py` was added for this and is the pattern to extend: it evaluates textbook
+definitions in **50-digit decimal**, so the expectation is nearer the true value than any `f64`
+evaluation, and the test measures the kernel's error against the mathematics instead of a second copy
+of itself.
 
 ## Why the rest is not mechanical
 
 The transformer that converted those 36 moved the tautology count by four. It only fires where a
 wrapper is a true passthrough — `Ok(v) => PropagatingEffect::pure(v)` — and where the test matches
 `let x = w(..); assert!(x.is_ok())` exactly. **65 of 170 wrappers re-wrap their result** (into a
-`PhysicalField`, say), so the value types differ and the comparison does not even typecheck.
+`PhysicalField`, say), so the value types differ and the comparison does not typecheck.
 
-The remainder is therefore family-by-family work: an oracle per kernel family, then table-driven
-tests written against it. That is the shape of the dedicated change, and it is why it is one.
+The remainder is family-by-family work: an oracle per kernel family, then table-driven tests
+against it. That work needs a dedicated change.
 
 ## The standard any rewrite should meet
 
@@ -113,10 +110,9 @@ tests written against it. That is the shape of the dedicated change, and it is w
 4. **Error paths and improper state** — every documented refusal exercised, every invariant violation
    rejected rather than absorbed.
 
-Cross-quantity identities are the strongest instrument available and should be used wherever the
-physics offers them. `Pe = Re·Pr`, `Ra = Gr·Pr` and `Le = Sc/Pr` each relate kernels that share no
-code, so no consistently-retyped formula can satisfy them, and an error in any one is caught by the
-other two.
+Cross-quantity identities are the strongest instrument; use them wherever the physics offers them.
+`Pe = Re·Pr`, `Ra = Gr·Pr` and `Le = Sc/Pr` each relate kernels that share no code, so no
+consistently retyped formula can satisfy them, and the other two catch an error in any one.
 
 ## Scope worth considering for the dedicated change
 
@@ -126,6 +122,5 @@ Highest severity first, since these are the tests that catch nothing:
 2. **629 cherry-picked.** The bulk. Needs an oracle per family; the largest piece of work.
 3. **1579 single-input.** Overlaps (2) heavily; mostly closed by the same table-driven rewrites.
 
-Only `deep_causality_physics` was scanned. `audit_tests.py` takes a root directory and the same
-classes almost certainly exist in the other 29 crates — worth measuring before the scope is fixed
-rather than after.
+Only `deep_causality_physics` was scanned. `audit_tests.py` takes a root directory, and the same
+classes almost certainly exist in the other 29 crates; measure them before fixing the scope.

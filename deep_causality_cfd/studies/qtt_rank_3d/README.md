@@ -9,17 +9,16 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 cargo run --release -p deep_causality_cfd --example qtt_rank_3d
 ```
 
-**What it tests.** 3-D is where avionics and space CFD actually live. The question: when a curved
-shock *surface* forms in 3-D, how large is the QTT bond dimension, and how does it **scale with
-resolution**? That scaling is the real Tier-B verdict for the low-tensor-train-rank thesis.
+**What it tests.** Avionics and space CFD run in 3-D. When a curved shock *surface* forms in 3-D,
+how large is the QTT bond dimension, and how does it **scale with resolution**? That scaling decides
+Tier-B for the low-tensor-train-rank thesis.
 
-**Method (realistic, per request).** Form the shock with the canonical naive scheme, explicit Euler
+**Method (realistic formation).** Form the shock with the canonical naive scheme, explicit Euler
 plus central differences, on the true 3-D Burgers equation `u_t + ½∇·(u²) = ν∇²u`, where a smooth
 radial bump self-advects into a curved front. The march runs in the **dense** representation, so
 shock formation is exact with no QTT-solver approximation, and the field is QTT-encoded each sample
 step to read the bond dimension a 3-D tensor-train solver *would have to carry*. This needs no 3-D
-QTT marcher, since the crate has none yet, and it gives an honest **lower bound** on a live solver's
-rank.
+QTT marcher and gives a **lower bound** on a live solver's rank.
 
 **Findings (gated, exit nonzero on regression).** Measured on an Apple M3 Max (release):
 

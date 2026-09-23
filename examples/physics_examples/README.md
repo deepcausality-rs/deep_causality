@@ -1,6 +1,6 @@
 # Physics Examples
 
-This directory contains examples demonstrating the `deep_causality_physics` crate and related multi-physics capabilities.
+These examples run the kernels of the `deep_causality_physics` crate, alone and composed into multi-physics pipelines.
 
 ## Quick Start
 
@@ -20,16 +20,19 @@ cargo run -p physics_examples --example <example_name>
 | [carnot_cycle_engine](carnot_cycle_engine/README.md) | Thermodynamics | 4-stage heat engine at Carnot efficiency limit |
 | [laser_resonator_stability](laser_resonator_stability/README.md) | Optics | Gaussian beam propagation via ABCD matrices |
 | [maxwell_example](maxwell/README.md) | Electromagnetism | Maxwell's equations via Geometric Algebra |
+| [gauge_em](gauge_em/README.md) | Electromagnetism | U(1) gauge-field analysis of a plane wave |
+| [gauge_weak_force](gauge_weak_force/README.md) | Particle Physics | SU(2) charged and neutral currents, decay properties |
+| [gauge_lattice_u1_2d](gauge_lattice_u1_2d/README.md) | Lattice Gauge Theory | Monte Carlo plaquette against the exact 2D U(1) solution |
+| [gauge_gr](gauge_gr/README.md) | Relativity | Schwarzschild black hole as an SO(3,1) gauge theory |
+| [event_horizon_probe](event_horizon_probe/README.md) | Relativity | Probe switching from Newtonian to relativistic physics near a horizon |
 | [grmhd_example](grmhd/README.md) | Relativity | General Relativistic Magnetohydrodynamics |
-
-> **Moved:** the IMU tilt estimator now lives at
-> [mathematics_examples/3_applications/imu_tilt_estimation](../mathematics_examples/3_applications/imu_tilt_estimation/),
-> which checks the recovered roll against the applied roll.
 | [multi_physics_pipeline](multi_physics_pipeline/README.md) | Particle Physics | QFT → Hadronization → Hydro → Detection |
 | [gravitational_wave](gravitational_wave/README.md) | Relativity | Regge Calculus on simplicial mesh |
 | [chronometric_gm_recovery](chronometric_gm_recovery/README.md) | Chronometric Geodesy | Earth's $GM_\oplus$ and mass inverted from Galileo satellite clock time-dilation |
 
-> **See also:** [medicine_examples](../medicine_examples/README.md) for biophysics examples (protein folding, etc.)
+> **See also:** [medicine_examples](../medicine_examples/README.md) for biophysics examples (protein folding, etc.), and
+> [mathematics_examples/3_applications/imu_tilt_estimation](../mathematics_examples/3_applications/imu_tilt_estimation/)
+> for the IMU tilt estimator, which checks the recovered roll against the applied roll.
 
 ---
 
@@ -37,7 +40,7 @@ cargo run -p physics_examples --example <example_name>
 
 ### Monadic Composition
 
-All examples use `PropagatingEffect` or `CausalEffectPropagationProcess` for composing physics operations:
+Most examples compose their physics operations with `CausalFlow`, `PropagatingEffect` or `CausalEffectPropagationProcess`:
 
 ```rust
 let result = step1()
@@ -47,7 +50,7 @@ let result = step1()
 
 ### Error Handling
 
-Use `bind_or_error` for robust pipelines:
+`bind_or_error` turns a missing value into an error:
 
 ```rust
 let result = risky_operation()
@@ -57,9 +60,9 @@ let result = risky_operation()
 ### Type-Safe Physics
 
 Physics types enforce invariants:
-- `Probability` - Values in [0, 1]
-- `EnergyDensity` - Non-negative energy
-- `HilbertState` - Normalized quantum states
+- `Probability`: values in [0, 1]
+- `EnergyDensity`: non-negative energy
+- `HilbertState`: normalized quantum states
 
 ---
 
@@ -77,7 +80,7 @@ Physics types enforce invariants:
 
 ## Adding New Examples
 
-1. Create directory: `examples/<your_example>/`
+1. Create the directory `examples/physics_examples/<your_example>/`
 2. Add `main.rs` with doc comments (`//!` module docs)
 3. Add `README.md` with:
    - How to run
@@ -89,5 +92,6 @@ Physics types enforce invariants:
    ```toml
    [[example]]
    name = "your_example"
-   path = "examples/your_example/main.rs"
+   path = "your_example/main.rs"
    ```
+5. Add a matching `rust_binary` target to `BUILD.bazel`; `make check_examples` fails without it.

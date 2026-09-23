@@ -6,21 +6,19 @@
 
 # ArrayGrid - A Faster Tensor For Low Dimensional Data
 
-ArrayGrid is an abstraction over scalars, vectors, and lod dimensional matrices similar in idea to a tensor.
-In contrast to a tensor, an ArrayGrid is limited to low dimensions (1 to 4), only allowing a scalar,
-vector, or matrix type, but all of them are represented as a static fixed-size const generic array.
-Fixed-sized arrays allow for several compiler optimizations, including a cache aligned data layout and the removal of
-runtime array boundary checks, because all structural parameters are known upfront, providing a significant
-performance boost over tensors.
+ArrayGrid stores scalars, vectors, and low-dimensional matrices, similar in idea to a tensor but
+limited to 1 to 4 dimensions. Every ArrayGrid is a static, fixed-size const generic array. Because
+all structural parameters are known at compile time, the compiler can lay the data out
+cache-aligned, which makes ArrayGrid faster than a tensor on low-dimensional data.
 
 
 ## Usage
 
 Important details:
 
-* All const generic parameters are requires regardless of which ArrayType you are using
-* To change the ArrayGrid type, just change the enum and your good.
-* There are no array bounds checks past compilation, so you have to ensure PointIndex does not exceed the Array boundaries.
+* All const generic parameters are required, whichever ArrayType you use.
+* To change the ArrayGrid type, change the enum.
+* Indexing is bounds-checked at run time: a PointIndex outside the array boundaries panics, so keep it within the const dimensions.
 
 ```rust
 use dcl_data_structures::prelude::{ArrayGrid, ArrayType, PointIndex};
@@ -88,9 +86,9 @@ pub fn main(){
 
 ## Performance
 
-The benchmark measures the performance of set operations on a 1D, 2D, 3D, and 4D ArryGrid.
-Because of the const generic, the get operation performs at a near constant time O(1),
-therefore the benchmark skips the get operation because there is nothing worth measuring.
+The benchmark measures set operations on a 1D, 2D, 3D, and 4D ArrayGrid.
+The get operation runs in near-constant time O(1) thanks to the const generics, so the
+benchmark skips it.
 
 
 ### Performance Summary
@@ -101,54 +99,46 @@ therefore the benchmark skips the get operation because there is nothing worth m
 
 
 ### Key Observations
-1. The 1D and 2D grid operations maintain excellent performance
-2. Performance degrades progressively with higher dimensions, particularly noticeable in 3D and 4D operations
-3. The 4D grid operations show the most significant performance impact, taking nearly twice as long as lower-dimensional operations
+1. The 1D and 2D grid operations are fastest.
+2. Cost rises with dimension, most visibly in 3D and 4D.
+3. 4D operations take nearly twice as long as the lower-dimensional ones.
 
 ## Technical Details
 - Sample size: 100 measurements per benchmark
-- Outliers properly detected and handled (2-8% outliers per benchmark)
-- All benchmarks were run with random access patterns to simulate real-world usage
+- Outliers detected and handled (2-8% outliers per benchmark)
+- All benchmarks use random access patterns to simulate real-world usage
 
 ## Hardware & OS
 - Architecture: ARM64 (Apple Silicon, M3 Max)
-- OS: macOS Darwin 24.1.0 (Seqoia 15.1)
+- OS: macOS Darwin 24.1.0 (Sequoia 15.1)
 - Kernel: XNU 11215.41.3~2
 - Machine: MacBook Pro (T6031)
 
 ## Problem
 
-DeepCausality allows fast and efficient adjustment of all values stored in a context hyper-graph.
-Often, this requires the formulation of an adjustment matrix. The matrix can already be attached to each element of the
-context graph but may require periodic updates depending on the required changes.
+DeepCausality adjusts the values stored in a context hypergraph, often through an adjustment matrix.
+The matrix can be attached to each element of the context graph and may need periodic updates.
 
-The exact adjustment for temporal-spatial data depends on the actual structure of the representative structure.
-Theoretically, a tensor would be the preferred data structure to do so because a tensor allowing for multi-dimensional
-adjustment representation with just a single structure. In practice, however, tensors incur a non-trivial overhead
-leading to a significant performance penalty especially on low (<5) dimensional data. For adjusting values in a context
-graph, no more than a 4D matrix is expected in practice hence a tensor really is unnecessary.
-The root cause of the tensor performance problem comes from its complex object model that increases the number of CPU
-cache misses because of a non-aligned data layout.
+The adjustment for temporal-spatial data depends on the structure of the data. A tensor would
+represent a multi-dimensional adjustment in a single structure, but tensors carry overhead that
+costs performance, especially on low (<5) dimensional data. Adjusting values in a context graph
+needs at most a 4D matrix, so a tensor is unnecessary. The tensor overhead comes from its complex
+object model, whose non-aligned data layout increases CPU cache misses.
 
 ## Solution
 
-In response, DeepCausality brings a custom data structure called a ArrayGrid that is indexed with a variable PointIndex
-encoded as a struct. The difference to a tensor is that a tensor remains parametric over N dimensions, thus requiring a
-complex object representation. In contrast, a Grid is limited to low dimensions (1 to 4), only allowing a scalar,
-vector, or matrix type, but all of them are represented as a static fixed-size array. Fixed-sized arrays allow for
-several compiler optimizations, including a cache aligned data layout and the removal of runtime array boundary checks,
-because all structural parameters are known upfront, providing a significant performance boost over tensors.
-Performance is critical because context hyper-graphs may grow large with millions of nodes, and obviously, one wants the
-fastest possible global adjustment in those cases.
+ArrayGrid is a custom data structure indexed by a PointIndex struct. A tensor stays parametric over
+N dimensions and needs a complex object representation; a Grid is limited to 1 to 4 dimensions and
+stores every variant as a static fixed-size array, which the compiler can lay out cache-aligned.
+Performance matters because a context hypergraph may grow to millions of nodes, and a global
+adjustment must then run as fast as possible.
 
 ## Index
 
-To index a grid of variable size, one have to deal with the reality that Rust does not support
-variadic arguments. The frequently cited alternative of passing a vector instead bears the risk
-of null index errors. Because the grid type is limited to 4D anyways, a simple struct with four usized
-index variables is used. The trick is to set unused variables to zero during initialization to preserve
-invariant signatures. The full point index type is show below. Here, X,Y,Z referring to 3D coordinates
-with T referring to time as the fourth dimension.
+Rust has no variadic arguments, so indexing a grid of variable dimension needs another approach.
+Passing a vector risks null index errors. Because the grid is limited to 4D, the index is a struct
+with four `usize` fields; the constructors set unused fields to zero, so every index has the same
+signature. X, Y, Z are the 3D coordinates and T is time, the fourth dimension:
 
 ```rust
 /// A point used to index a GridArray up to four dimensions.
@@ -170,14 +160,11 @@ impl PointIndex{
 
 ## Storage API
 
-Because the grid type requires a different storage implementation for each of the four dimensions,
-a storage API was designed based to abstract over the implementation details while retaining generic constant array
-sizes
-for best performance. The storage API is inspired by
+Each of the four dimensions needs its own storage implementation. The storage trait abstracts over
+them while keeping the const generic array sizes. It follows
 the [graph storage API in Petgraph](https://github.com/petgraph/petgraph/issues/563).
-Because not all four implementations can return the coordinates other than x (height),
-the storage trait contains a default implementation that returns None by default for all other coordinates unless
-the getter is overwritten by the implementing type.
+Every implementation defines `height`; the other dimension getters return `None` by default unless
+the implementing type overrides them.
 
 ```rust
 use crate::prelude::PointIndex;
@@ -192,21 +179,16 @@ pub trait Storage<T>where  T: Copy {
 }
 ```
 
-Note, the getter methods return an option to a reference instead of
-a reference to an option to prevent accidental overwriting in case of mutual reference. Specifically, in case
-of a reference to an option i,e, &Option<T>, the option value can be overwritten if the callsite holds a mutual
-reference. If the storage contains data, the option would be Some, but the callsite, when holding a mutual reference,
-could change the
-this to a None and by doing so accidentally overwrite the containing data. Conversely, when returning an Option holding
-a reference to the data, the option type cannot be change therefore some data remain some data.
+The getters return an option of a reference (`Option<&T>`) rather than a reference to an option
+(`&Option<T>`). A call site holding a mutable reference to an `&Option<T>` could replace `Some` with
+`None` and so overwrite the stored data. An `Option<&T>` cannot change the stored value.
 
 ## Storage Implementation
 
-The magic of the grid types happens in the implementation of the storage trait. Theoretically,
-one could use any heap allocated type, for example a vector. But because of the PointIndex, once
-can also used a fixed sized array via const generics and therefore reach a significant performance gain.
-To illustrate the technique, the 2D Matrix type is implemented over a 2D static array as shown below.
-It's woth mentioning that the const generic array requires an additional type bound to Sized to prevent compiler errors.
+The storage trait could be implemented for any heap-allocated type, such as a vector. The
+PointIndex also permits a fixed-size array through const generics, which is faster. The 2D matrix
+type, for example, is implemented over a 2D static array. The const generic array needs an extra
+`Sized` bound to compile.
 
 ```rust
 impl<T, const W: usize, const H: usize> Storage<T> for [[T; W]; H]
@@ -221,21 +203,19 @@ impl<T, const W: usize, const H: usize> Storage<T> for [[T; W]; H]
 }
 ```
 
-Besides the set & get value, the 2D array implements the getter for x (height) and overwrites the getter for
-w (width) as to expose the underlying array boundaries. Note, because we deal with const generics, the compiler
-will remove all runtime array bound checks therefore we have to ensure that, for example, an index is within the
-array bounds therefore each type must return all applicable bounds. The same pattern applies to the 3D and 4D type as
-well.
+Besides `get` and `set`, the 2D array implements `height` and overrides `width` to expose the
+array boundaries. Indexing stays bounds-checked, so an out-of-range index panics; each type returns
+all its applicable bounds so a caller can check an index first. The 3D and 4D types follow the same
+pattern.
 
 ## Grid Type
 
-The grid type abstracts over the specific storage using the storage trait in its implementation, a common technique.
-There are only a few considerations:
+The grid type abstracts over the specific storage through the storage trait. Three details:
 
-* Because Grid abstracts over Storage<T> without referencing T, we need a PhantomData binding for T
-* Because Grid serves as a container abstraction, interior mutability is preferred via RefCell
-* Because each storage implementation returns array bounds as Option with a reference to data, we have to dereference
-  and return a value since we cannot return an internal reference.
+* Grid abstracts over `Storage<T>` without otherwise referencing `T`, so it needs a `PhantomData` for `T`.
+* Grid is a container, so it provides interior mutability through `RefCell`.
+* Each storage returns its bounds as an `Option` of a reference; Grid dereferences it and returns a
+  value, because it cannot return a reference into the `RefCell`.
 
 ```rust
 #[derive(Debug, Clone)]
@@ -250,11 +230,9 @@ pub struct Grid<S, T>
 
 ```
 
-The main idea remains relatively simple, the specific storage gets injected via the constructor and stored in an RefCell
-for interior mutability.
-Because of the interior mutability, borrow and borrow_mut become required when accessing the storage as seen
-in the set and get methods. Type T must implement Default because of the PhantomData binding in the type signature. The
-complete Grid type implementation is relatively verbose, the listing below shows only the important parts.
+The constructor takes the storage and stores it in a `RefCell`, so `get` and `set` access it
+through `borrow` and `borrow_mut`. The impl requires `T: Copy + Default`. The listing below shows
+the important parts of the Grid implementation.
 
 ```rust
 
@@ -278,19 +256,16 @@ impl<S, T> Grid<S, T>
     pub fn height(&self) -> Option<usize> {...} 
 ```
 
-The grid type is not meant to be used directly because it still requires the instantiation
-of the underlying storage type before the grid type can be constructed. Instead, the GridArray abstracts over
-all for storage implementations via algebraic types implemented as enums.
+The grid type is not meant for direct use, because it needs an instance of the storage type before
+it can be constructed. ArrayGrid instead abstracts over all four storage implementations through an
+enum.
 
 ## ArrayGrid
 
-When stepping back, it becomes obvious that each of the four different storage implementations have a different type
-signature, which is inconvenient because one would rather have one single type to keep interfaces and function
-signatures stable. Because each implementation uses const generic, the generic parameters also differ for each
-implementation with the implication that a shared super type must have as much generic parameters as the
-highest number of any available implementation, which is the 4DArray implementation. Also, because the
-const generic array signatures become a bit hard to read over time, a handful of type aliases have been defined
-as shown below.
+Each of the four storage implementations has a different type signature, but interfaces and
+function signatures stay stable only with a single type. The const generic parameters also differ
+per implementation, so a shared type needs as many generic parameters as the largest
+implementation, the 4D array. Type aliases keep the const generic array signatures readable:
 
 ```rust
 // Fixed sized static ArrayGrid
@@ -300,8 +275,7 @@ pub type ArrayGrid3DType<T, const W: usize, const H: usize, const D: usize> = Gr
 pub type ArrayGrid4DType<T, const W: usize, const H: usize, const D: usize, const C: usize> = Grid<[[[[T; W]; H]; D]; C], T>;
 ```
 
-Next, we need an enum to identify each of the four storage implementations. A basic enum suffice in this case
-as we only need them for identification reasons.
+A plain enum identifies each of the four storage implementations:
 
 ```rust
 pub enum ArrayType {
@@ -312,11 +286,10 @@ pub enum ArrayType {
 }
 ```
 
-The magic of the ArrayGrid type comes in form of an algebraic type encoded as type enum for which each value may contain
-an actual instance of the corresponding storage. Because of the previously mentioned const generic requirement, this
-enum must have generic parameters over all four dimensional types plus the actual type t that is stored, totalling
-in five generic parameters. At this point it becomes painfully obvious why the number of implementations was
-deliberately restricted up to a 4D Matrix.
+ArrayGrid itself is an enum whose variants each hold an instance of the corresponding storage.
+Because of the const generic requirement, the enum is generic over all four dimensions plus the
+stored type `T`: five generic parameters. Each additional dimension would add another, which is
+why ArrayGrid stops at 4D.
 
 ```rust
 // T Type
@@ -335,8 +308,8 @@ pub enum ArrayGrid<T, const W: usize, const H: usize, const D: usize, const C: u
 }
 ```
 
-The type aliases make the enum type signatures quite a bit more human readable and actually help to verify
-the correct type embedding. The implementation of the ArrayGrid is split into three parts:
+The type aliases make the enum signatures readable and help verify the type embedding. The
+ArrayGrid implementation has three parts:
 
 1) Constructor
 2) API
@@ -344,10 +317,8 @@ the correct type embedding. The implementation of the ArrayGrid is split into th
 
 **Constructor**
 
-The constructor follows the standard pattern of implementing the an enum type. Ignoring the generic type signature,
-all the constructor does it takes the ArrayType enum, matches it and for the match creates a new Grid with the correct
-dimensions and storage implementations. Default for type T is required for the PhantomData binding in the Grid
-implementation.
+The constructor matches on the ArrayType and creates a Grid with the matching dimensions and
+storage. `T: Default` fills the new array with `T::default()`.
 
 ```rust
 impl<T, const W: usize, const H: usize, const D: usize, const C: usize> ArrayGrid<T, W, H, D, C>
@@ -367,10 +338,9 @@ impl<T, const W: usize, const H: usize, const D: usize, const C: usize> ArrayGri
 
 **API**
 
-The API is relatively simple and only sets or gets a value of type T. Considering the intended use case
-as adjustment matrix, get and set will be the most commonly used operations. Notice, the standard API does
-not exposes array dimensions. While it would be possible, matching over each enum type feels cumbersome for
-a questionable gain. Instead, low level access to the underlying grid is possible through the getter.
+The API sets or gets a value of type `T`, the most common operations for an adjustment matrix.
+It does not expose array dimensions, which would require matching over every variant; the getters
+below give low-level access to the underlying grid instead.
 
 ```rust
 impl<T, const W: usize, const H: usize, const D: usize, const C: usize> ArrayGrid<T, W, H, D, C>
@@ -399,11 +369,10 @@ impl<T, const W: usize, const H: usize, const D: usize, const C: usize> ArrayGri
 
 **Getters**
 
-There are use cases where a more low level access to the underlying grid implementation might be warranted and
-in that case the grid can be retrieved via the corresponding getter. Notice, the the return type is an option with
-a reference for the same reasons as discussed earlier: preventing accidental data loss in case of a mutable reference.
-The other reason for returning an option is that the enum stores, say a 2D Grid, but all other variants are set to
-None by default. In case the callsite accidentally calls the wrong getter, the option check makes the mistake clear.
+For low-level access, each getter returns the underlying grid. The return type is an option of a
+reference, for the reason given above: it prevents accidental data loss through a mutable reference.
+The option also covers the variant mismatch: an ArrayGrid holding a 2D grid returns `None` from the
+1D, 3D and 4D getters, so calling the wrong getter shows up at the call site.
 
 ```rust
 impl<T, const W: usize, const H: usize, const D: usize, const C: usize> ArrayGrid<T, W, H, D, C>
@@ -426,8 +395,7 @@ impl<T, const W: usize, const H: usize, const D: usize, const C: usize> ArrayGri
 
 ## Usage
 
-At this point, the reader may wonder how all the above will be used?
-In practice, there are three steps requires to build an ArrayGrid:
+Building an ArrayGrid takes three steps:
 
 1) Define constant array boundaries.
 2) Set the storage type
@@ -474,8 +442,6 @@ const TIME: usize = 5;
     assert_eq!(g.depth().unwrap(), DEPTH);
 ```
 
-One important detail is that the ArrayGrid constructor requires all generic parameter regardless of
-which specific storage will be instantiated. When writing a library that, for example, at most relies on
-a 2D Matrix, then its best to set the remaining const generic values (Depth, Time) to one. As explained above,
-there is no practical way around this requirement. Another observation is that the ArrayGrid type, once created,
-behaves like any other API with the added bonus of interior mutability.
+The ArrayGrid constructor requires all generic parameters, whichever storage it instantiates. A
+library that uses at most a 2D matrix should set the remaining const generic values (Depth, Time)
+to one. Once created, an ArrayGrid behaves like any other API, with interior mutability.

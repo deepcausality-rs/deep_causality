@@ -2,13 +2,11 @@
 
 ## Introduction
 
-This is the relativistic version of "carry a state forward in time and watch it transform along the way." The state is a spinor (a generalization of a 4-vector that physicists use to describe particles with spin). The "time" is a discretized worldline, broken into segments. At each segment the spinor receives a Lorentz boost, which is the special-relativity version of a rotation, mixing a time coordinate with a space coordinate.
+This example parallel-transports a unit timelike spinor along a discretized worldline in flat Minkowski spacetime, one causal-monad step per segment. The spinor generalizes a 4-vector and describes particles with spin. At each segment it receives a Lorentz boost, the special-relativity analogue of a rotation, which mixes a time coordinate with a space coordinate.
 
-Where this matters in practice: GPS satellites need relativistic corrections of about 38 microseconds per day or the position error grows by 10 km within a day. Particle accelerators (LHC, Fermilab) simulate beam dynamics with relativistic transports along every magnet section. Astrodynamics codes for deep-space missions track frame transformations along long worldlines. Quantum-optics simulations propagate qubit states by chained unitary rotors, which is structurally the same operation in a different signature. Anywhere a "thing with orientation or spin" moves through "a path made of segments," this is the inner loop.
+The same inner loop appears wherever something with orientation or spin moves along a path made of segments. GPS satellites need relativistic corrections of about 38 microseconds per day or the position error grows by 10 km within a day. Particle accelerators (LHC, Fermilab) simulate beam dynamics with relativistic transports along every magnet section. Astrodynamics codes for deep-space missions track frame transformations along long worldlines. Quantum-optics simulations propagate qubit states by chained unitary rotors, the same operation in a different signature.
 
-The example is also where the architecture shows its value. Five mathematical structures (topology, tensor, geometric algebra, monadic effect chain, high-precision scalar) collaborate. The composition is: extract from the manifold, contract a tensor, rotate a multivector, advance one step in the causal monad, repeat. The final spinor differs from the closed-form expected value by roughly `1.7e-31` at `Float106`, which is fifteen orders of magnitude tighter than the same calculation at `f64`.
-
-A unit timelike spinor is parallel-transported along a discretized worldline in flat Minkowski spacetime. Every core crate participates and the four-step composition is wired through the causal monad.
+Five mathematical structures take part: topology, tensor, geometric algebra, the monadic effect chain and a high-precision scalar. Each step extracts a rapidity from the manifold's data tensor, rotates a multivector and advances the causal monad. The final spinor differs from the closed-form value by roughly `1.7e-31` at `Float106`, fifteen orders of magnitude tighter than the same calculation at `f64`.
 
 ## How to Run
 
@@ -18,9 +16,7 @@ cargo run -p mathematics_examples --example relativistic_spinor_transport_exampl
 
 ## What It Demonstrates
 
-The example exists to show one thing: the same uniform API (`extend`, `bind`, `geometric_product`, `ein_sum`) describes a problem that crosses topology, tensor algebra, geometric algebra and effect tracking, with each crate meeting the next through the witness.
-
-Concretely:
+One uniform API (`extract`, `bind`, `geometric_product`) describes a problem that crosses topology, tensor algebra, geometric algebra and effect tracking, with each crate meeting the next through the witness:
 
 - `deep_causality_topology::Manifold` provides the discretized timelike path. Vertices index "events"; edges index transport segments.
 - `deep_causality_tensor::CausalTensor` stores the per-edge rapidities inside the manifold's data tensor. Edges are addressed by repositioning the comonadic cursor and calling `ManifoldWitness::extract`.
@@ -37,8 +33,8 @@ B~(theta) = cosh(theta/2) + sinh(theta/2) * e0^e1
 ```
 
 The reverse flips the sign of every grade-2 element. The sign on the bivector puts the sandwich on
-the standard active convention `(t, x) -> (cosh(theta) t + sinh(theta) x, ...)`, which is what the
-code builds and what the composition check below reads back. The transport law on a vector is the sandwich `psi' = B psi B~`. For an initial `psi = e0`, after edges with rapidities `theta_1, ..., theta_N`, the result is
+the standard active convention `(t, x) -> (cosh(theta) t + sinh(theta) x, ...)`, which the code
+builds and the composition check below reads back. The transport law on a vector is the sandwich `psi' = B psi B~`. For an initial `psi = e0`, after edges with rapidities `theta_1, ..., theta_N`, the result is
 
 ```
 psi_final = cosh(sum theta_i) * e0 + sinh(sum theta_i) * e1
@@ -48,7 +44,7 @@ The example checks this composition law numerically.
 
 ## Bit-String Basis Indexing
 
-The 16 basis elements of `Cl(3,1)` are indexed by the bitmask over `(e0, e1, e2, e3)`. So `e0` lives at index `0b0001 = 1`, `e1` at `0b0010 = 2`, the bivector `e0 ^ e1` at `0b0011 = 3`, and the pseudoscalar at `0b1111 = 15`.
+The 16 basis elements of `Cl(3,1)` are indexed by the bitmask over `(e0, e1, e2, e3)`: `e0` lives at index `0b0001 = 1`, `e1` at `0b0010 = 2`, the bivector `e0 ^ e1` at `0b0011 = 3`, and the pseudoscalar at `0b1111 = 15`.
 
 ## Key APIs
 

@@ -2,35 +2,35 @@
 
 **Topological Data Analysis (TDA) and Causal Geometry for Rust**
 
-`deep_causality_topology` is a core crate of the `deep_causality` project, providing rigorous topological data
-structures and algorithms for causal modeling, geometric deep learning, and complex systems analysis.
+`deep_causality_topology` provides topological data structures and algorithms for causal modeling, geometric deep
+learning, and complex systems analysis in the `deep_causality` project.
 
-It bridges the gap between discrete data (graphs, point clouds) and continuous geometric structures (manifolds,
-simplicial complexes), enabling advanced reasoning about the "shape" and connectivity of causal systems.
+It connects discrete data (graphs, point clouds) to continuous geometric structures (manifolds, simplicial complexes),
+so a model can reason about the "shape" and connectivity of a causal system.
 
 ## Features
 
-* **Comprehensive Topological Types**:
-    * **Graph**: Efficient sparse-matrix based graphs for causal networks.
-    * **Hypergraph**: Modeling higher-order relationships (hyperedges) between multiple nodes.
-    * **SimplicialComplex**: Generalizing graphs to higher dimensions (triangles, tetrahedra) to capture voids and
+* **Topological Types**:
+    * **Graph**: Sparse-matrix graphs for causal networks.
+    * **Hypergraph**: Higher-order relationships (hyperedges) between multiple nodes.
+    * **SimplicialComplex**: Graphs generalized to higher dimensions (triangles, tetrahedra) to capture voids and
       holes.
     * **LatticeComplex** (alias `CubicalComplex`): The cubical complex of a regular ℤᴰ grid, with optional periodic
-      boundaries — the natural substrate for voxel grids, sensor arrays, and lattice gauge theory.
+      boundaries, for voxel grids, sensor arrays, and lattice gauge theory.
     * **CellComplex**: General CW-complex over arbitrary user-defined cells.
     * **Manifold**: Validated geometric structures, generic over any chain complex (`Manifold<K: ChainComplex, F>`).
     * **PointCloud**: Raw multi-dimensional data with Vietoris-Rips triangulation capabilities.
 * **Unified Chain-Complex Abstraction**:
     * **`ChainComplex` trait**: A single static-dispatch trait (GAT-backed cell iteration, `Cow`-returning
       boundary/coboundary matrices) that `SimplicialComplex`, `LatticeComplex`, and `CellComplex` all implement.
-      Downstream code (notably `Manifold`'s differential operators) reads ∂ and δ through the trait — zero-copy on
+      Downstream code (notably `Manifold`'s differential operators) reads ∂ and δ through the trait: zero-copy on
       the cache-rich simplicial path, lazy-memoized on the cubical path.
 * **Topological Algorithms**:
     * **Vietoris-Rips Triangulation**: Convert point clouds into simplicial complexes at a given scale.
     * **Euler Characteristic**: Compute topological invariants ($\chi$) to classify shapes (e.g., healthy vs.
       pathological tissue).
     * **Boundary/Coboundary Operators**: Sparse matrix operators for algebraic topology computations.
-    * **Betti Numbers**: Counting independent k-dimensional holes via the rank of ∂.
+    * **Betti Numbers**: Count independent k-dimensional holes via the rank of ∂.
 * **Algebraic Topology & Differential Geometry**:
     * **Chain Algebra**: Perform algebraic operations on chains (formal sums of simplices) and verify fundamental
       topological theorems like `∂∂=0`.
@@ -40,37 +40,35 @@ simplicial complexes), enabling advanced reasoning about the "shape" and connect
     * **Hodge Theory**: Detect topological features like holes and voids by finding harmonic forms (solutions to
       `Δω = 0`).
     * **Poisson Solves & Projections**: `Manifold::leray_project` (the divergence-free projection of a 1-form) and
-      `hodge_decompose` route their grade-0 Poisson solves through a dispatch over three domain classes —
+      `hodge_decompose` route their grade-0 Poisson solves through a dispatch over three domain classes:
       fully periodic uniform boxes solve **directly via rFFT** (torus eigenbasis), wall-bounded/mixed uniform
       boxes solve **directly via DCT-I/DFT** (the boundary-corrected Δ₀ diagonalizes exactly in the cosine
       basis), and everything else (per-edge metrics, degenerate extents) falls back to **Jacobi-preconditioned
       CG** on the mass-weighted normal form. The direct paths are exact to rounding with no iteration budget.
     * **Constrained Leray Projection**: `Manifold::leray_project_constrained_opts` projects onto the
-      *intersection* of the divergence-free subspace with an essential edge constraint set (`u|_E = 0`) — the
-      M-orthogonal intersection projection that wall-bounded no-slip flows require (the plain projector and
-      the coordinate constraint do not commute). Runs the masked-mass Poisson solve through Jacobi-PCG.
+      *intersection* of the divergence-free subspace with an essential edge constraint set (`u|_E = 0`). Wall-bounded
+      no-slip flows require this M-orthogonal intersection projection, because the plain projector and the
+      coordinate constraint do not commute. The masked-mass Poisson solve runs through Jacobi-PCG.
     * **Boundary-Corrected Hodge Star**: on open (wall) lattice axes, dual volumes clip by `2^{-b}` per
       boundary incidence (wall faces halve, edges quarter, 3D corners eighth); fully periodic lattices are
-      bit-unchanged. The corrected star keeps `M_k·Δ_k` symmetric positive (semi)definite — the property the
+      bit-unchanged. The corrected star keeps `M_k·Δ_k` symmetric positive (semi)definite, which the
       CG solves and the energy arguments rely on.
     * **Compiled DEC Stencils**: `DecStencilTables` compiles per-manifold flat gather tables for `d`, `δ`, and
       the convective chain (interior-product transport + cup-product wedge), folding incidence signs, Hodge
-      diagonals, transport weights, and cup signs into the stored coefficients — the streaming evaluation
-      strategy behind the DEC Navier–Stokes solver's hot loop, equivalence-gated against the generic
-      operators in CI.
+      diagonals, transport weights, and cup signs into the stored coefficients. The DEC Navier–Stokes solver's hot
+      loop evaluates these tables in a stream; CI gates them for equivalence against the generic operators.
 * **Neighborhood Strategies** (static-dispatch zero-sized strategy types):
-    * **Chain-complex-generic**: `FaceAdjacent`, `CofaceAdjacent` — defined via ∂ and δ, work on any `ChainComplex`.
-    * **Grid-only**: `VonNeumann`, `Moore`, `KRing<const K: usize>` — implemented for `LatticeComplex<D>` only.
-      Useful for cellular-automata, sensor fusion, image filters, voxel-based diffusion.
+    * **Chain-complex-generic**: `FaceAdjacent`, `CofaceAdjacent`, defined via ∂ and δ; they work on any `ChainComplex`.
+    * **Grid-only**: `VonNeumann`, `Moore`, `KRing<const K: usize>`, implemented for `LatticeComplex<D>` only.
+      Uses: cellular automata, sensor fusion, image filters, voxel-based diffusion.
     * Users add their own strategies (anisotropic LIDAR cones, half-space RF, etc.) by implementing
       `Neighborhood<K>` for a custom zero-sized type.
 * **Higher-Kinded Types (HKT)**:
     * Implements `Functor`, `CoMonad` (Extract/Extend), and `Adjunction` (Unit/Counit) via
-      `deep_causality_haft`. Both traits carry a `Context` parameter and replace the retired
-      `BoundedComonad` / `BoundedAdjunction` pair.
-    * Enables functional geometric patterns like "neighborhood extraction" (Comonad) and "geometric realization" (
-      Adjunction).
-    * Witnesses ship for each topology: `SimplicialManifoldWitness<C>` (full HKT stack), `GenericManifoldWitness<K>`
+      `deep_causality_haft`. Both traits carry a `Context` parameter.
+    * They support functional geometric patterns such as "neighborhood extraction" (Comonad) and "geometric
+      realization" (Adjunction).
+    * Each topology has witnesses: `SimplicialManifoldWitness<C>` (full HKT stack), `GenericManifoldWitness<K>`
       (Functor over any chain complex), and `LatticeComplexWitness<D>` for the lattice-complex HKT plumbing.
 
 ## Core Concepts
@@ -94,7 +92,7 @@ simplicial complexes), enabling advanced reasoning about the "shape" and connect
 | **DifferentialForm**                 | Discrete differential k-forms on a complex.                                       | $\Omega^k(M)$                               |
 | **CurvatureTensor**                  | Riemann/Ricci curvature tensor.                                                   | $R^{\mu}_{\nu\rho\sigma}$                   |
 | **ReggeGeometry&lt;T&gt;**           | Simplicial metric (edge lengths, deficit angles). Implements `Manifold` `Metric`. | Regge Calculus                              |
-| **CubicalReggeGeometry&lt;D&gt;**           | Cubical analogue of Regge geometry on a `LatticeComplex<D>` (Stage C: edge-length storage + signature; derived volumes / deficit angles / Hodge ⋆ forward-looking). | Cubical Regge calculus                      |
+| **CubicalReggeGeometry&lt;D&gt;**           | Cubical analogue of Regge geometry on a `LatticeComplex<D>`: edge lengths, signature, cell volumes, deficit angles, metric tensors, Regge action. | Cubical Regge calculus                      |
 | **GaugeField**                       | Gauge field on a manifold (connections).                                          | Principal Bundle Connection                 |
 | **LatticeGaugeField**                | Wilson-formulation lattice gauge theory (physics term, retained).                 | $U_\mu(n) \in G$                            |
 | **LinkVariable**                     | Group element on a lattice edge.                                                  | $\text{SU}(N)$ Element                      |
@@ -110,40 +108,38 @@ simplicial complexes), enabling advanced reasoning about the "shape" and connect
 
 ## Mathematical Naming Convention
 
-This crate uses dual names only where the same mathematical object lives at the intersection of two equally-canonical traditions — never as a back-compat shim or cosmetic preservation. The principle, applied object by object:
+This crate uses dual names only where two equally canonical traditions name the same mathematical object. Object by object:
 
 ### `LatticeComplex<D>` ↔ `CubicalComplex<D>`
 
-The struct stores `shape: [usize; D] + periodic: [bool; D]` — a **regular $\mathbb{Z}^D$ grid**, with elementary cubes computed on demand. Two mathematical traditions describe this same object, each emphasizing a different structural layer:
+The struct stores `shape: [usize; D] + periodic: [bool; D]`, a **regular $\mathbb{Z}^D$ grid**, and computes elementary cubes on demand. Two mathematical traditions describe this object, each emphasizing a different structural layer:
 
-- **Physics / number theory: "lattice."** Meaning #3 in standard math vocabulary — a regular integer grid such as $\mathbb{Z}^D$ or a bounded box thereof. The substrate-emphasizing name. Used by `LatticeGaugeField`, lattice QCD, the Ising model, crystallography.
-- **Algebraic topology: "cubical complex."** Kaczynski–Mischaikow–Mrozek (*Computational Homology*, 2004, Def. 2.36) and Edelsbrunner–Harer (*Computational Topology*). The cellular-decomposition-emphasizing name — the cubes are products of degenerate and non-degenerate intervals (which is exactly what the orientation bitmask on `LatticeCell<D>` encodes).
+- **Physics / number theory: "lattice."** A regular integer grid such as $\mathbb{Z}^D$ or a bounded box of it; the name emphasizes the substrate. Used by `LatticeGaugeField`, lattice QCD, the Ising model, crystallography.
+- **Algebraic topology: "cubical complex."** Kaczynski–Mischaikow–Mrozek (*Computational Homology*, 2004, Def. 2.36) and Edelsbrunner–Harer (*Computational Topology*). The name emphasizes the cellular decomposition: the cubes are products of degenerate and non-degenerate intervals, which the orientation bitmask on `LatticeCell<D>` encodes.
 
-Both names are equally canonical for what they emphasize. `LatticeComplex<D>` is the declared type; `CubicalComplex<D>` is a `pub type` alias on it. Use whichever name fits the surrounding text — neither is a "primary" choice over the other.
+`LatticeComplex<D>` is the declared type; `CubicalComplex<D>` is a `pub type` alias on it. Use whichever name fits the surrounding text.
 
-The same dual-name principle applies to the elementary cell: **`LatticeCell<D>` ↔ `CubicalCell<D>`**. No other aliases exist in the lattice family — types like `DualLatticeComplex<D>`, `LatticeComplexWitness<D>`, or the per-axis iterators have only their canonical name because there is no genuinely distinct cubic-specialization reading for them.
+The elementary cell follows the same principle: **`LatticeCell<D>` ↔ `CubicalCell<D>`**. No other aliases exist in the lattice family. Types such as `DualLatticeComplex<D>`, `LatticeComplexWitness<D>`, or the per-axis iterators have only their canonical name, because no distinct cubical reading exists for them.
 
-**Scope note.** `LatticeComplex<D>` represents specifically the cubical complex of a *regular* $\mathbb{Z}^D$ grid. It is **not** a sparse cubical complex (only-active-cubes) or an irregular one (cubes of varying side lengths) — those are deferred follow-ups.
+**Scope note.** `LatticeComplex<D>` is the cubical complex of a *regular* $\mathbb{Z}^D$ grid. It is **not** a sparse cubical complex (only active cubes) or an irregular one (cubes of varying side lengths); the crate implements neither.
 
 ### `ReggeGeometry<T>` ↔ `CubicalReggeGeometry<D>`
 
-These are parallel by role, not by alias: each is the discrete-geometry / metric data on its respective complex, and each is named after the **same construction** (Regge calculus) transported to a different cellular world:
+These two share a role, not an alias: each holds the discrete-geometry (metric) data on its complex, and each is named after the **same construction**, Regge calculus, on a different kind of cell:
 
-- **`ReggeGeometry<T>`** — Tullio Regge's original 1961 construction for simplicial complexes: edge lengths plus deficit angles on codimension-2 hinges, yielding a discrete general relativity.
-- **`CubicalReggeGeometry<D>`** — the same construction on a cubical complex. Sometimes called "cubical Regge calculus" or "hypercubic Regge calculus" in the lattice quantum gravity literature. Stage C ships the edge-length storage layer (unit / isotropic / per-axis / per-edge) and the Lorentzian-signature computation; cell volumes, deficit angles, Hodge ⋆, and per-cell metric tensors are forward-looking and tracked as a follow-up.
-
-The naming is parallel because the *math* is parallel.
+- **`ReggeGeometry<T>`**: Tullio Regge's 1961 construction for simplicial complexes. Edge lengths plus deficit angles on codimension-2 hinges yield a discrete general relativity.
+- **`CubicalReggeGeometry<D>`**: the same construction on a cubical complex, called "cubical Regge calculus" or "hypercubic Regge calculus" in the lattice quantum gravity literature. It stores edge lengths (unit / isotropic / per-axis / per-edge) and computes the Lorentzian signature, cell volumes, deficit angles, per-cell metric tensors, the Regge action, and the Hodge ⋆.
 
 ### `Manifold<K: ChainComplex, F>` ↔ `SimplicialManifold<C, F>`
 
 The struct is generic over the underlying chain complex `K` and the field data type `F`:
 
-- **`Manifold<K, F>`** — the general form. `K` can be any `ChainComplex` (currently `SimplicialComplex<C>`, `LatticeComplex<D>`, `CellComplex<C>`, or user-defined). The optional metric is typed via `K::Metric` (the associated type on `ChainComplex`), so a simplicial manifold carries `Option<ReggeGeometry<C>>` and a lattice manifold carries `Option<CubicalReggeGeometry<D>>` — with no `dyn`, no enum, no runtime dispatch.
-- **`SimplicialManifold<C, F>` = `Manifold<SimplicialComplex<C>, F>`** — alias for the textbook simplicial case. Existing simplicial code uses this name unchanged.
+- **`Manifold<K, F>`**: the general form. `K` can be any `ChainComplex` (`SimplicialComplex<C>`, `LatticeComplex<D>`, `CellComplex<C>`, or user-defined). The optional metric is typed via `K::Metric` (the associated type on `ChainComplex`), so a simplicial manifold carries `Option<ReggeGeometry<C>>` and a lattice manifold carries `Option<CubicalReggeGeometry<D>>`, with no `dyn`, no enum, and no runtime dispatch.
+- **`SimplicialManifold<C, F>` = `Manifold<SimplicialComplex<C>, F>`**: alias for the textbook simplicial case.
 
-### `ChainComplex` (was `CWComplex`)
+### `ChainComplex`
 
-The trait was renamed to align with algebraic-topology textbook usage. *Chain complex* is the standard term for a sequence of abelian groups (here, free $\mathbb{Z}$-modules generated by k-cells) connected by boundary operators with $\partial \circ \partial = 0$. The previous name `CWComplex` referred more narrowly to the underlying CW (Closure-finite, Weak topology) cellular structure. Functionally identical; just the textbook-correct name.
+The trait follows algebraic-topology textbook usage. *Chain complex* is the standard term for a sequence of abelian groups (here, free $\mathbb{Z}$-modules generated by k-cells) connected by boundary operators with $\partial \circ \partial = 0$. The narrower term *CW complex* (Closure-finite, Weak topology) names only the underlying cellular structure.
 
 ## Lattice Gauge Field Verification ✓
 
@@ -164,7 +160,7 @@ The `LatticeGaugeField` implementation is verified against known results from la
 | **Thermalization** | 3 | Hot/cold start difference, Metropolis sweep runs, field modification |
 | **Anisotropy** | 2 | Plaquette orientation detection (temporal vs spatial), local perturbation effect |
 
-Run verification tests:
+Run the verification tests:
 ```bash
 cargo test -p deep_causality_topology verification_tests --release
 ```
@@ -179,7 +175,7 @@ deep_causality_topology = { version = "0.1" }
 
 ### 1. Basic Graph Construction
 
-Efficiently model causal dependencies using sparse adjacency matrices.
+Model causal dependencies with sparse adjacency matrices.
 
 ```rust
 use deep_causality_sparse::CsrMatrix;
@@ -253,7 +249,7 @@ let laplacian = manifold.laplacian(0);
 
 ## Higher-Kinded Types (HKT)
 
-This crate leverages `deep_causality_haft` to provide functional geometric abstractions.
+This crate uses `deep_causality_haft` to provide functional geometric abstractions.
 
 * **Functor**: Map functions over the data stored in the topology (e.g., transform node weights).
 * **CoMonad (Extract/Extend)**:
@@ -269,7 +265,7 @@ This crate leverages `deep_causality_haft` to provide functional geometric abstr
 | Witness                          | Operates on                              | HKT impls available                            |
 |:---------------------------------|:-----------------------------------------|:-----------------------------------------------|
 | `SimplicialManifoldWitness<C>`   | `SimplicialManifold<C, _>`               | `HKT`, `Functor`, `Foldable`, `Pure`, `Monad`, `Applicative`, `CoMonad` |
-| `GenericManifoldWitness<K>`      | `Manifold<K, _>` for any `K: ChainComplex` | `HKT`, `Functor` (others deferred to follow-up) |
+| `GenericManifoldWitness<K>`      | `Manifold<K, _>` for any `K: ChainComplex` | `HKT`, `Functor`                                |
 | `LatticeComplexWitness<D>` | `LatticeComplex<D>` HKT plumbing | `HKT` and related                              |
 | Graph / Hypergraph / PointCloud / CellComplex / Topology / Chain witnesses | Their namesake types        | Per-type capability set                        |
 

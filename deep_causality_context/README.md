@@ -6,13 +6,13 @@ traits that describe them.
 
 ## What this crate is for
 
-Every causal model reasons about something. The context holds that something — a typed environment
-a causaloid or a causal-monad chain reads as it runs.
+The context holds what a causal model reasons about: a typed environment that a causaloid or a
+causal-monad chain reads as it runs.
 
-Splitting context into its own crate lets a consumer on `deep_causality_core` alone pay nothing for
-it: a model that needs context declares this dependency and imports from it. `deep_causality`
-depends on this crate unconditionally, so a causaloid model gets context either way. Listing the
-crates that depend on this one directly therefore answers which crates model a context.
+A consumer of `deep_causality_core` alone pays nothing for context; a model that needs context
+declares this dependency and imports from it. `deep_causality` depends on this crate
+unconditionally, so a causaloid model gets context either way. The crates that depend on this one
+directly are the crates that model a context.
 
 ```toml
 [dependencies]
@@ -21,8 +21,8 @@ deep_causality_context = "0.1"
 
 ## Using context with the causal monad
 
-A `deep_causality_core`-only dependency set reaches the context, so a monad chain carries a typed
-context without pulling in the causaloid stack:
+With `deep_causality_core` and this crate, a monad chain carries a typed context without pulling
+in the causaloid stack:
 
 ```rust,ignore
 use deep_causality_context::BaseContext;
@@ -66,8 +66,8 @@ rounding, so widening its significand buys nothing.
 
 ## Persistence
 
-A context lives in memory. `deep_causality_context_store` describes what a store keeps of one, and
-this crate does the projection in both directions.
+A context lives in memory. `deep_causality_context_store` describes what a store keeps of one;
+this crate projects in both directions.
 
 `Context::snapshot` writes the base graph and every extra context into a `ContextSnapshot`, in
 canonical order, and `Context::restore` builds a context from one. A `ContextStore` puts the

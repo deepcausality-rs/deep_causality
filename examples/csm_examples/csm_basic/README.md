@@ -1,10 +1,10 @@
 # EPP Example: Causal State Machine (CSM)
 
-This crate demonstrates how the `DeepCausality` library, which implements the Effect Propagation Process (EPP), can be used to build a Causal State Machine (CSM). 
+This example builds a Causal State Machine (CSM) with the `DeepCausality` library, which implements the Effect Propagation Process (EPP). 
 
-Specifically, this example models a simple industrial monitoring system with three sensors: smoke, fire, and explosion. Each sensor is represented by a `CausalState` that, when its conditions are met, triggers a corresponding `CausalAction` (e.g., raising an alert).
+It models an industrial monitoring system with three sensors: smoke, fire, and explosion. Each sensor is a `CausalState` that triggers a `CausalAction` (e.g., raising an alert) when its condition is met.
 
-This showcases how the EPP's architecture provides a formal bridge between causal reasoning and deterministic intervention, a concept that aligns with Rung 2 (Intervention) of Pearl's Ladder of Causation.
+The CSM links causal reasoning to deterministic intervention, which corresponds to Rung 2 (Intervention) of Pearl's Ladder of Causation.
 
 ## How to Run
 
@@ -18,29 +18,29 @@ cargo run -p csm_examples --example csm_example
 
 ### How It Works: Mapping CSM Concepts to EPP
 
-The CSM provides a mechanism to link causal inferences to real-world actions. It is a collection of state-action pairs, where each state's activation is determined by a causal model.
+The CSM links causal inferences to real-world actions. It is a collection of state-action pairs, and a causal model decides whether each state is active.
 
 1.  **Causal Logic as `Causaloid`s:**
-    The trigger condition for each sensor is encapsulated in a `Causaloid`. For example, the `smoke_sensor_causaloid` contains a simple `causal_fn` that checks if an incoming numerical value (the sensor reading) exceeds a predefined threshold (e.g., 65.0).
+    A `Causaloid` holds each sensor's trigger condition. For example, the smoke sensor's `causal_fn` checks whether the incoming sensor reading reaches a threshold (65.0).
 
 2.  **States as `CausalState`s:**
-    Each sensor in the system is represented by a `CausalState`. The `CausalState` struct holds a reference to the `Causaloid` that defines its logic. For instance, the `smoke_cs` holds the `smoke_sensor_causaloid`. When the CSM evaluates this state, it uses the causaloid to determine if the state is active.
+    Each sensor is a `CausalState` that holds the `Causaloid` defining its logic; `smoke_cs`, for instance, holds the smoke sensor causaloid. When the CSM evaluates the state, the causaloid decides whether it is active.
 
 3.  **Actions as `CausalAction`s:**
-    Each potential intervention is defined as a `CausalAction`. This struct wraps a function that will be executed when the action is fired. In this example, the actions (`get_smoke_alert_action`, `get_fire_alert_action`, etc.) simply print a message to the console, but they could just as easily trigger an API call, send an email, or control a physical device.
+    Each intervention is a `CausalAction` that wraps a function to run when the action fires. Here the actions (`get_smoke_alert_action`, `get_fire_alert_action`, etc.) print a message; they could equally trigger an API call, send an email, or control a physical device.
 
 4.  **The `CSM` as an Orchestrator:**
-    The `CSM` is initialized with a collection of state-action pairs. Its primary role is to orchestrate the evaluation process. The `main` loop simulates a stream of sensor data. In each iteration:
-    - A `PropagatingEffect::Numerical` is created from the raw sensor data.
+    The `CSM` starts with a collection of state-action pairs (the explosion sensor is added afterwards with `add_single_state`) and orchestrates evaluation. The `main` loop simulates a stream of sensor data. In each iteration:
+    - Each raw sensor reading is wrapped with `PropagatingEffect::pure`.
     - `csm.eval_single_state()` is called for each sensor.
-    - The CSM finds the corresponding `CausalState`, evaluates its `Causaloid` against the provided data, and if the result is `Deterministic(true)`, it automatically calls the `fire()` method on the associated `CausalAction`.
+    - The CSM finds the corresponding `CausalState`, evaluates its `Causaloid` against the data, and, if the state is active, fires the associated `CausalAction`.
 
 ### Conclusion
 
-This example demonstrates how the CSM acts as a powerful bridge between the abstract world of causal reasoning and the concrete world of action and intervention. By formally linking `CausalState`s (defined by `Causaloid`s) to `CausalAction`s, the EPP provides a robust, auditable, and deterministic way to build systems that not only understand cause and effect but can also act on that understanding.
+The CSM connects causal reasoning to action. By linking `CausalState`s (defined by `Causaloid`s) to `CausalAction`s, the EPP gives an auditable, deterministic way to build systems that act on cause and effect.
 
 
 ## Reference
 
-For more information on the EPP, please see chapter 5 in the EPP document:
+For more on the EPP, see chapter 5 of the EPP document:
 https://github.com/deepcausality-rs/papers/blob/main/effect_propagation_process/epp.pdf

@@ -1,8 +1,8 @@
 # The Quantum Geometric Tensor, and the Transport It Forces
 
-A flat band has no dispersion, so conventional band theory says it cannot conduct. Magic-angle
-twisted bilayer graphene has flat bands and conducts anyway. The missing term is geometric, and this
-example computes it and hands it to transport.
+This example computes the quantum geometric tensor of a flat band and feeds its metric into the
+Drude weight. A flat band has no dispersion, so conventional band theory says it cannot conduct, yet
+magic-angle twisted bilayer graphene has flat bands and conducts. The missing term is geometric.
 
 ```bash
 cargo run -p quantum_examples --example quantum_geometric_tensor
@@ -10,25 +10,24 @@ cargo run -p quantum_examples --example quantum_geometric_tensor
 
 ## The problem
 
-A band is usually described by its energies. That leaves out everything about the *states*: how much
-the wavefunction itself turns as momentum moves across the Brillouin zone. The **quantum geometric
-tensor** carries exactly that:
+Band energies leave out the *states*: how much the wavefunction turns as momentum moves across the
+Brillouin zone. The **quantum geometric tensor** carries that information:
 
 ```text
 Q_ij = Σ_{m ≠ n}  ⟨n|v_i|m⟩ ⟨m|v_j|n⟩ / (E_n − E_m)²
 ```
 
-where `v_i = ∂H/∂k_i` is the velocity operator. It is one complex number per pair of axes, and its
-two parts are two different pieces of physics:
+where `v_i = ∂H/∂k_i` is the velocity operator. It gives one complex number per pair of axes, and
+its two parts describe different physics:
 
 | Part | Definition | Symmetry | Meaning |
 |---|---|---|---|
 | Quantum metric | `g_ij = Re(Q_ij)` | symmetric | how far apart two neighbouring states are |
 | Berry curvature | `Ω_ij = −2 Im(Q_ij)` | antisymmetric | a magnetic field in momentum space |
 
-The symmetry is forced rather than imposed. A real symmetric part and an imaginary antisymmetric
-part is what a Hermitian tensor decomposes into, so `Ω_xx` is zero for the same reason a
-cross-product of a vector with itself is.
+The Hermitian structure forces the symmetry: a Hermitian tensor decomposes into a real symmetric
+part and an imaginary antisymmetric part, so `Ω_xx` is zero for the same reason the cross product of
+a vector with itself is.
 
 ## From geometry to a current
 
@@ -39,24 +38,24 @@ library computes adds the geometric term to it:
 D = (D_conv + g̃_xx · E_gap) · a²
 ```
 
-With a perfectly flat band `D_conv = 0`, so the entire weight is geometric. That is the **geometric
-lower bound** on conductivity.
+With a perfectly flat band `D_conv = 0`, so the entire weight is geometric: the **geometric lower
+bound** on conductivity.
 
-The run computes `g_xx` from the model and feeds it into that formula. The two halves are one chain:
-the number that reaches the transport kernel is the number the tensor produced, not a stand-in.
+The run computes `g_xx` from the model and feeds that value into the formula, so the transport kernel
+receives the number the tensor produced.
 
 ### The step that is easy to skip
 
-`Q_ij` comes out in **nm²** — the velocity matrix elements carry energy × length, so the quantum
-metric is an area. The transport kernel wants the metric in units of the cell:
+`Q_ij` comes out in **nm²**: the velocity matrix elements carry energy × length, so the quantum
+metric is an area. The transport kernel expects the metric in units of the cell:
 
 ```text
 g̃_xx = g_xx / a²
 ```
 
-Handing the kernel `g_xx` directly gives it an area where it expects a ratio, and since the kernel
-then multiplies the whole weight by `a²`, the answer comes out wrong by the cell area twice over.
-`model::reduced_metric` is that one division, and it is the reason the units line up.
+Passing `g_xx` directly gives the kernel an area where it expects a ratio, and since the kernel
+then multiplies the whole weight by `a²`, the answer is off by the cell area twice over.
+`model::reduced_metric` performs that division.
 
 ## What the code demonstrates
 
@@ -67,20 +66,19 @@ then multiplies the whole weight by `a²`, the answer comes out wrong by the cel
 | `fmap` | `Q → Re(Q)` and `Q → −2 Im(Q)`, the two readings of one object |
 | `fold` | the diagonal of `g` → its trace |
 
-**`sequence` is what makes the failure honest.** `fmap` leaves a tensor whose every cell might have
-failed. Turning that inside out is one call, so a single `?` covers all four components, and the
-`[2, 2]` shape survives the traversal. A component that carried no value stops the run rather than
-quietly vanishing from the output.
+**`sequence` surfaces every failure.** `fmap` leaves a tensor whose every cell might have failed.
+One call turns that inside out, so a single `?` covers all four components and the `[2, 2]` shape
+survives the traversal. A component that carried no value stops the run instead of vanishing from
+the output.
 
 ## Units
 
 One system throughout: **energies in meV, lengths in nm, velocity matrix elements in meV·nm**. Mixed
-units are what make the metric-to-transport step go wrong silently, so there is only one system here
-and the header prints it.
+units break the metric-to-transport step silently; the header prints the system.
 
-Decimals such as `0.246` are derived from integers at the working precision rather than written as
-literals. A literal is an `f64` value rounded once and then widened, and the point of the alias is
-that nothing is rounded at a precision other than the one in force.
+Decimals such as `0.246` are derived from integers at the working precision instead of written as
+literals. A literal is an `f64` value rounded once and then widened; deriving from integers rounds
+only at the precision in force.
 
 ## Output
 
@@ -116,9 +114,9 @@ From geometry to transport
 ```
 
 `g_xx = 0.34 / 9² = 0.004198 nm²` follows from the one non-zero matrix element,
-`⟨0|v_x|1⟩ = 0.5 + 0.3i`, and the 9 meV gap. The metric is diagonal and the curvature is purely
-off-diagonal, which is what the relative phase between `v_x` and `v_y` puts there: equal phases would
-leave `Q` real and the Berry curvature zero everywhere.
+`⟨0|v_x|1⟩ = 0.5 + 0.3i`, and the 9 meV gap. The metric is diagonal and the curvature purely
+off-diagonal because of the relative phase between `v_x` and `v_y`: equal phases would leave `Q`
+real and the Berry curvature zero everywhere.
 
 ## Precision is a parameter
 
@@ -127,26 +125,23 @@ pub type FloatType = Float106;
 ```
 
 Every constant is declared at that type through `const_scalar_from_int!`, so no conversion runs at
-any call site. It sits at `Float106` rather than `f64` on purpose: a hard-coded `f64` is invisible
-while the alias *is* `f64`, and a compile error the moment the two differ. All four scalars run, and
-`BFloat16` lands `g̃_xx` at `0.068848` against `0.069362`, which is the eight-bit mantissa showing
-through.
+any call site. The alias is `Float106` so that a hard-coded `f64` fails to compile; with the alias
+at `f64` it would go unnoticed. All four scalars run, and `BFloat16` lands `g̃_xx` at `0.068848`
+against `0.069362`, the error of its eight-bit mantissa.
 
 ## What this example covers
 
-The goal is to reformulate the essence of band geometry as a composition over the library's types,
-and to get precision as a parameter and categorical composition for free once it is in that form.
-The essence is that the tensor is one object with two readings, and that the real one forces a
-current the energies alone do not account for. The model keeps that and holds everything else
-simple: two bands at a single **k**-point, eigenstates taken as the basis, velocity operators
-written down rather than differentiated from a Hamiltonian, and no integration over the Brillouin
-zone.
+The example states band geometry as a composition over the library's types; precision as a
+parameter and categorical composition follow from that form. The tensor is one object with two
+readings, and the real one forces a current the energies alone do not account for. Everything else
+stays simple: two bands at a single **k**-point, eigenstates as the basis, velocity operators written
+down instead of differentiated from a Hamiltonian, and no integration over the Brillouin zone.
 
 A calculation an experimentalist would compare against adds the parts this one leaves out: a
 tight-binding or continuum Hamiltonian for real TBG at the magic angle, `v_i` obtained by
 differentiating it, a **k**-mesh with the tensor computed at every point, and the Chern number and
-orbital magnetisation as integrals of `Ω` over that mesh. The moiré lattice constant is also ~13 nm
-rather than graphene's 0.246 nm, which moves the scales considerably.
+orbital magnetisation as integrals of `Ω` over that mesh. The moiré lattice constant is ~13 nm
+against graphene's 0.246 nm, which shifts the scales.
 
 ## How to grow the example toward a band-structure calculation
 
@@ -157,8 +152,8 @@ Each step keeps the structure already here.
 - **Chern number.** `fold` the `Ω_xy` cells over the mesh and divide by `2π`. The reduction is the
   one already in `main`, with a different closure.
 - **A real Hamiltonian.** Replace `model::two_band_model` with a tight-binding `H(k)` and obtain
-  `v_i = ∂H/∂k_i` by automatic differentiation through `deep_causality_calculus`, so the velocity
-  operators stop being written down by hand.
+  `v_i = ∂H/∂k_i` by automatic differentiation through `deep_causality_calculus` instead of writing
+  the velocity operators by hand.
 - **More bands.** `NUM_BANDS` is a constant, and the kernel already sums over every `m ≠ n`.
 
 ## References

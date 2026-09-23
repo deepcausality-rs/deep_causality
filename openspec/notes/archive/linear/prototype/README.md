@@ -7,8 +7,8 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Throwaway code kept for its evidence. It answers two questions that
 `../../../../changes/archive/2026-08-30-add-linear-algebra-crate` states as requirements — now the
-`linear-*` specs under `../../../../specs` — and the requirements are only
-as good as these measurements, so the measurements are kept runnable.
+`linear-*` specs under `../../../../specs`. The requirements are only
+as good as these measurements, so the measurements stay runnable.
 
 This is a **separate Cargo workspace**, deliberately not a member of the repository workspace. It
 builds against the real `deep_causality_num` and `deep_causality_algebra` by relative path, so it
@@ -78,4 +78,4 @@ depends on it.
   row-operation trait supports through an overridable method and which this prototype does not
   exercise.
 - `rows_of_rows.rs` and `DensePivoted` in `consumer_b` are unused by the benchmark and carry dead-code
-  warnings. Left as written rather than tidied, so the measured artifact stays the measured artifact.
+  warnings. They stay as written, so the measured artifact is unchanged.

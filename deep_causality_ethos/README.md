@@ -13,27 +13,27 @@
 
 **DeepCausality Ethos** is a programmable deontic reasoning layer for the DeepCausality stack. It evaluates a `ProposedAction` against a set of norms and returns a justified `Verdict` (`Obligatory`, `Impermissible`, or `Optional(cost)`).
 
-The crate implements the teleological layer described in section 8 of the Effect Propagation Process paper. It pairs a defeasible deontic logic with the DeepCausality `Context` so that norms can read the same spatio-temporal state that causal reasoning operates on.
+The crate implements the teleological layer from section 8 of the Effect Propagation Process paper. It pairs a defeasible deontic logic with the DeepCausality `Context`, so norms read the same spatio-temporal state as causal reasoning.
 
 ## Overview
 
-The unit of regulation is a `Teloid`: a single norm that names an action, an activation predicate over `(Context, ProposedAction)`, a modality, and three heuristics used for conflict resolution (specificity, priority, timestamp). Teloids are kept in a `TeloidStore`, indexed by tag in a `TagIndex`, and linked in a `TeloidGraph` whose edges carry a `TeloidRelation` of either `Inherits` or `Defeats`.
+The unit of regulation is a `Teloid`: a single norm that names an action, an activation predicate over `(Context, ProposedAction)`, a modality, and three conflict-resolution heuristics (specificity, priority, timestamp). A `TeloidStore` holds the teloids, a `TagIndex` indexes them by tag, and a `TeloidGraph` links them with edges carrying a `TeloidRelation` of `Inherits` or `Defeats`.
 
 The `EffectEthos` struct owns these components and exposes the reasoning API. Evaluation runs in five steps:
 
 1. Tag-based filtering selects candidate norms from the `TagIndex`.
-2. Each candidate's activation predicate is run against the `Context` and the `ProposedAction`. Uncertain predicates are tested with the teloid's `UncertainParameter` (threshold, confidence, epsilon, sample bound).
-3. Active norms are reduced through the `Defeats` edges in the graph (defeasance).
-4. Survivors are checked for consistency under `Lex Specialis`, `Lex Superior`, and `Lex Posterior`.
-5. A `Verdict` is returned, carrying the final modality and the IDs of the norms that justify it.
+2. Each candidate's activation predicate runs against the `Context` and the `ProposedAction`. The teloid's `UncertainParameter` (threshold, confidence, epsilon, sample bound) tests uncertain predicates.
+3. The `Defeats` edges in the graph remove defeated norms from the active set (defeasance).
+4. `Lex Specialis`, `Lex Superior`, and `Lex Posterior` check the survivors for consistency.
+5. The engine returns a `Verdict` carrying the final modality and the IDs of the norms that justify it.
 
-The graph must be frozen and verified for acyclicity before evaluation; calling `verify_graph()` performs both.
+Evaluation requires a frozen, acyclic graph; `verify_graph()` freezes the graph and checks it for cycles.
 
 ## Features
 
-* **Deterministic and uncertain norms:** `add_deterministic_norm` takes a `fn` predicate. `add_uncertain_norm` takes an `UncertainActivationPredicate` and an `UncertainParameter`, lifting probabilistic activation into the deontic layer.
+* **Deterministic and uncertain norms:** `add_deterministic_norm` takes a `fn` predicate. `add_uncertain_norm` takes an `UncertainActivationPredicate` and an `UncertainParameter`, bringing probabilistic activation into the deontic layer.
 * **Explicit conflict resolution:** specificity, priority, and recency are first-class fields on every `Teloid`. Resolution is deterministic and reproducible.
-* **Auditable verdicts:** every `Verdict` carries a `justification: Vec<TeloidID>` so a decision can be traced back to the norms that produced it. The `DeonticExplainable` trait exposes this trail.
+* **Auditable verdicts:** every `Verdict` carries a `justification: Vec<TeloidID>` that traces the decision to the norms that produced it. The `DeonticExplainable` trait exposes this trail.
 * **Context-aware predicates:** norms read the full DeepCausality `Context<D, S, T, ST>`, so deontic rules can depend on data, space, time, and spacetime in one expression.
 * **Static dispatch:** no `dyn` in the public API; the engine is generic over the same four type parameters as the context layer.
 
@@ -125,7 +125,7 @@ for norm_id in verdict.justification() {
 }
 ```
 
-A full worked example, including the `Context` setup and a CSM integration, lives at
+A full example, including the `Context` setup and a CSM integration, lives at
 [`examples/csm_examples/csm_effect_ethos`](../examples/csm_examples/csm_effect_ethos).
 
 ## Modalities
@@ -138,7 +138,7 @@ A full worked example, including the `Context` setup and a CSM integration, live
 
 ## Relation to other DeepCausality crates
 
-* `deep_causality` supplies `ProposedAction`, `ActionParameterValue`, and `Uncertain`.
+* `deep_causality` supplies `ProposedAction`, `ActionParameterValue`, `UncertainActivationPredicate`, and `UncertainParameter`.
 * `deep_causality_context` supplies `Context` and the four generic parameters used here.
 * `ultragraph` backs the `TeloidGraph`; freeze and acyclicity checks come from it.
 
@@ -151,8 +151,8 @@ A full worked example, including the `Context` setup and a CSM integration, live
 
 ## Contribution
 
-Contributions are welcomed especially related to documentation, example code, and fixes.
-If unsure where to start, just open an issue and ask.
+Contributions are welcome, especially documentation, example code, and fixes.
+If unsure where to start, open an issue and ask.
 
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in deep_causality by you,
 shall be licensed under the MIT licence, without any additional terms or conditions.

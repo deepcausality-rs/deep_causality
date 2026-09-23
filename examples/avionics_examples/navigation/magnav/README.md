@@ -1,39 +1,41 @@
 # Advanced Drone MagNav (Magnetic Navigation)
 
 ## Avionics Background
-Modern navigation systems rely heavily on GNSS (GPS) for absolute positioning. However, GPS signals are weak (~ -160 dBW), easily jammed, or spoofed in contested environments. Inertial Navigation Systems (INS) provide autonomy but suffer from integration drift that grows unbounded over time (typically drifting >1 km per hour of flight for tactical grade sensors). **Magnetic Navigation (MagNav)** offers a robust solution by using the Earth's crustal magnetic anomaly field—a stable, unique, and unjammable "fingerprint" of the terrain—to continuously correct this INS drift.
+This example corrects INS drift with a particle filter that matches magnetometer readings against a magnetic anomaly map.
+
+Modern navigation systems rely on GNSS (GPS) for absolute positioning. GPS signals are weak (~ -160 dBW) and easily jammed or spoofed in contested environments. Inertial Navigation Systems (INS) provide autonomy but suffer from integration drift that grows without bound (typically >1 km per hour of flight for tactical-grade sensors). **Magnetic Navigation (MagNav)** corrects this drift with the Earth's crustal magnetic anomaly field, a stable, unjammable "fingerprint" of the terrain.
 
 ## The Challenge
-The primary engineering challenge in MagNav is **real-time map matching** under uncertainty.
-1.  **Non-Uniqueness**: The magnetic field is not unique; many locations may have the same reading (Perceptual Aliasing).
-2.  **Non-Linearity**: The magnetic map is highly non-linear and "rough", making standard Extended Kalman Filters (EKF) diverge.
-3.  **Sensor Noise**: Magnetometers are noisy and affected by the drone's own electronics.
+The core engineering problem in MagNav is **real-time map matching** under uncertainty.
+1.  **Non-Uniqueness**: Many locations may share the same reading (Perceptual Aliasing).
+2.  **Non-Linearity**: The magnetic map is non-linear and "rough", which makes standard Extended Kalman Filters (EKF) diverge.
+3.  **Sensor Noise**: Magnetometers are noisy and pick up the drone's own electronics.
 
 The system must correlate noisy observations $z_t$ with a high-resolution grid map $h(x_t)$ to estimate the posterior distribution $P(x_t | z_{1:t})$.
 
 ## The DeepCausality Solution
-DeepCausality implements a **Causal Particle Filter (Sequencial Monte Carlo)** to solve this problem efficiently:
+The example implements a **Causal Particle Filter (Sequential Monte Carlo)**:
 
-### 1. Efficient Map Storage (`CausalTensor`)
-We uses `CausalTensor` to store the Magnetic Anomaly Map. This provides optimized memory layout and fast random access for millions of particles.
-*   **Bilinear Interpolation**: The `model.rs` implements fast sampling between grid points to support continuous particle positions.
+### 1. Map Storage (`CausalTensor`)
+A `CausalTensor` stores the Magnetic Anomaly Map with contiguous memory and constant-time random access for each of the 1000 particles.
+*   **Bilinear Interpolation**: `model.rs` samples between grid points to support continuous particle positions.
 
 ### 2. Causal Bayesian Update (`PropagatingEffect`)
-The core innovation is wrapping the "Measurement Update" in the `PropagatingEffect` monad.
-*   **Decoupled Logic**: The observation ($z_t$) is treated as a causal effect that binds to the state.
+The "Measurement Update" runs inside the `PropagatingEffect` monad.
+*   **Decoupled Logic**: The observation ($z_t$) is a causal effect that binds to the state.
 *   **Likelihood Calculation**:
     $$ w_t^{(i)} \propto w_{t-1}^{(i)} \cdot \exp\left(-\frac{(z_t - h(x_t^{(i)}))^2}{2\sigma^2}\right) $$
-    This ensures that the "Data" drives the "Probability" in a strictly causal chain, preventing future information leakage in simulations.
+    Each weight update consumes only the current observation, so the data drives the probability in a causal chain.
 
 ### 3. Convergence & Resilience
-The example demonstrates a "Global Localization" problem:
-*   **Initialization**: Particles are scattered with high uncertainty.
-*   **Convergence**: As the drone simulates movement, the filter rapidly converges to the true position (Ground Truth) by eliminating particles that do not match the magnetic sequence.
+*   **Initialization**: Particles start in a Gaussian cloud (σ = 200 m) around the a-priori fix.
+*   **Convergence**: As the drone moves, the filter converges toward the true position (Ground Truth) by down-weighting particles that do not match the magnetic sequence.
+*   **Recovery**: If all weights collapse to near zero, the filter resets them to uniform.
 
 ## Mathematical Details
-*   **State Space**: $x_t = [p_x, p_y, v_x, v_y]^T$
+*   **State Space**: $x_t = [p_x, p_y]^T$; the INS velocity $[v_x, v_y]$ enters as the control input of the constant-velocity motion model.
 *   **Observation Model**: $z_t = \text{Map}(p_x, p_y) + \mathcal{N}(0, R)$
-*   **Resampling**: Uses a "Low Variance" or "Systematic" resampling approach (simplified in this example) to prevent particle degeneracy.
+*   **Resampling**: Systematic resampling, triggered when the effective sample size falls below half the particle count, prevents particle degeneracy.
 
 ## Running the Example
 ```bash

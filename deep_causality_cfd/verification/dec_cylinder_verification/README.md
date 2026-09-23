@@ -1,7 +1,7 @@
 # Isolated-cylinder validation — CFD Stage 4 (tasks D2/D3)
 
-Flow past an isolated circular cylinder, assembled from the full Stage-4 boundary-zone stack. It
-measures the shedding **Strouhal** number against the Williamson lineage and the **drag
+Flow past an isolated circular cylinder, assembled from the full Stage-4 boundary-zone stack,
+measuring the shedding **Strouhal** number against the Williamson lineage and the **drag
 coefficient** against the 2-D unconfined laminar consensus band (see "What it reports" below).
 
 The domain is external flow: **west `Inflow`** (uniform `U`), **east `Outflow`** (pressure-reference,
@@ -36,7 +36,7 @@ The discretisation, geometry, and inflow are all top-to-bottom symmetric. A symm
 converges to the steady symmetric wake and never sheds, even though that wake is linearly unstable at
 `Re ≥ ~47`. To break the symmetry, the harness seeds a uniform stream plus a small single-signed
 transverse-velocity blob one diameter behind the cylinder. The seed projection makes it
-divergence-free, and it tips the flow off the symmetric branch so the von-Kármán instability can grow.
+divergence-free, and the blob tips the flow off the symmetric branch so the von-Kármán instability can grow.
 
 ## Running
 
@@ -98,8 +98,8 @@ STAIRCASE=1 CELLS_PER_D=24 LX_D=16 LY_D=12 STEPS=3500 CFL=0.4 CG_TOL=1e-6 \
 
 ### Aperture-resolved 
 
-The aperture-resolved no-slip should shed at a **lower** resolution than the staircase by placing the
-wall at the true surface and sharpening separation. The gate is a sustained street at **16 cells/D**,
+The aperture-resolved no-slip sheds at a **lower** resolution than the staircase: it places the wall
+at the true surface and sharpens separation. The gate is a sustained street at **16 cells/D**,
 where the staircase stays steady, with `St` toward `0.164` and `C_d` toward the reference. Run the pair
 at the same grid and compare `v_probe` (the aperture-resolved one is the default; no flag):
 
@@ -120,30 +120,30 @@ Grundmann 2007, Williamson, as compiled in arXiv:2303.09262): `St ≈ 0.164–0.
 
 | body                | 16/D shedding | `St` | cycle-mean `C_d` |
 |---------------------|---------------|------|------------------|
-| staircase           | **none** — wake decays to a steady residual `v_probe ≈ -0.0069` (flat from t≈20 to t=100) | n/a (printed `0.244` is the crossing-detector on 7th-decimal noise) | `1.356` (p `0.704` + f `0.652`), swing `[1.356, 1.356]` — a **steady-flow** value, not the shedding mean |
+| staircase           | **none**: wake decays to a steady residual `v_probe ≈ -0.0069` (flat from t≈20 to t=100) | n/a (printed `0.244` is the crossing-detector on 7th-decimal noise) | `1.356` (p `0.704` + f `0.652`), swing `[1.356, 1.356]`, a **steady-flow** value, not the shedding mean |
 | **aperture-resolved** | **sustained von-Kármán street**, saturated limit cycle (amplitude ≈ 0.41) | **`0.171`** (period `T ≈ 5.835`) | **`1.246`** (p `1.078` + f `0.167`), `C_l ≈ 0.010`, swing `[1.238, 1.254]` |
 
-So the aperture-resolved no-slip **sheds at 16/D where the staircase stays dead steady**. The Strouhal
-is competitive: `St ≈ 0.171` is ~4 % above `0.164`, but most of that is the `LY_D=16` (≈ 6.25 %)
-blockage, so the blockage-corrected method error is only ~1–2 %. The drag is **acceptable but not
+The aperture-resolved no-slip **sheds at 16/D where the staircase stays steady**. `St ≈ 0.171` is
+~4 % above `0.164`; most of that is the `LY_D=16` (≈ 6.25 %) blockage, so the blockage-corrected
+method error is ~1–2 %. The drag is **acceptable but not
 DNS-grade at this coarse grid**: cycle-mean `C_d ≈ 1.246` is **~6 % below** the `1.32–1.36` consensus
 (it matches only the low-side cut-cell value of Dröge–Verstappen 1.24). The integrated drag is close
-but for the wrong reason — the pressure/friction split is off (friction ≈ 13 % here versus the ~25 %
-reference: pressure over, friction under), which points at wall-shear under-resolution at 16/D. The
-drag does physically oscillate (`C_d` swing `±0.008`, `C_l ≈ 0.01`). The staircase's `St`/`C_d` are by
-contrast **steady-flow artifacts** (zero `C_d` swing, `C_l = 0`, friction `0.652` ≈ 48 % — the staircase
+for the wrong reason: the pressure/friction split is off (friction ≈ 13 % here versus the ~25 %
+reference; pressure over, friction under), which points at wall-shear under-resolution at 16/D. The
+drag oscillates physically (`C_d` swing `±0.008`, `C_l ≈ 0.01`). The staircase's `St`/`C_d` are
+**steady-flow artifacts** (zero `C_d` swing, `C_l = 0`, friction `0.652` ≈ 48 %: the staircase
 wall mis-estimates shear, and the body never sheds).
 
 A defensible accuracy claim needs a **grid-convergence study** (16→24→32/D, Richardson-extrapolated)
-plus `C_L,rms` / `θ_sep` / `C_pb` — sketched in `openspec/notes/archive/cfd/cfd-validation-plan.md`.
+plus `C_L,rms` / `θ_sep` / `C_pb`, sketched in `openspec/notes/archive/cfd/cfd-validation-plan.md`.
 
 **Performance.** The aperture-resolved run is much slower than the staircase one, but the 16/D-vs-16/D
 comparison is misleading: the staircase reaches a *steady* state and then coasts (its warm-started CG
-converges in ~1 iteration once the field stops changing), whereas the aperture-resolved is *actually
-shedding* and does a real projection solve every step. The fair speed comparison is against the
+converges in ~1 iteration once the field stops changing), whereas the aperture-resolved run *sheds*
+and does a full projection solve every step. The fair speed comparison is against the
 staircase at 24/D (the only staircase that sheds). Practical levers: the flow is **developed by
 `t ≈ 30` (step ~1200)**, so `STEPS` can drop from 4000 to ~1600 (a few clean cycles) for a ~2.5× cut
-with no accuracy loss. The per-stage projection now **warm-starts both the φ potential and the λ
+with no accuracy loss. The per-stage projection **warm-starts both the φ potential and the λ
 (cut-face multiplier) block** from the previous step, so in a developed limit cycle (both vary slowly)
 the coupled CG converges in fewer iterations; the marched result is unchanged (warm tracks cold to
 `< 1e-8`).
@@ -160,27 +160,26 @@ RE_D=200 CELLS_PER_D=32 LX_D=24 LY_D=12 STEPS=12000 \
 
 ## A note on Resolution
 
-The composed primitive stack is correct: the march is stable and **interior-divergence-free to the
-projection tolerance** at every resolution (the global residual is just the open-boundary inlet flux).
-Shedding, though, is resolution-gated, and the threshold has been measured: at `CELLS_PER_D` = 12 and
+The march is stable and **interior-divergence-free to the projection tolerance** at every resolution
+(the global residual is the open-boundary inlet flux). Shedding is resolution-gated, with a measured
+threshold: at `CELLS_PER_D` = 12 and
 16 the **staircase** `Re=100` wake stays **steady** (the boundary layer, thickness `~D/√Re ≈ 0.1 D`,
-is ~1–2 cells — under-resolved, so the discrete scheme is effectively sub-critical and the trigger's
+is ~1–2 cells: under-resolved, so the discrete scheme is effectively sub-critical and the trigger's
 perturbation decays), while at **24 cells/D a marginal von-Kármán street develops** (early transient
 `St ≈ 0.21`). A domain-width experiment (24/D at `LY_D=8` vs a wider domain) moved `St` only from
 ~0.21 to ~0.22, so **blockage is not the dominant `St` error** at these widths: the staircase wall and
-the marginal resolution are. That is the error the **aperture-resolved no-slip**
-(`add-aperture-resolved-noslip`, now the default here) attacks — it places the wall at the true surface.
-This is **confirmed**: at 16 cells/D the aperture-resolved body sheds a sustained limit cycle with
-`St ≈ 0.171` and cycle-mean `C_d ≈ 1.246` (both inside the reference bands; the small `St` excess from
-`LY_D=16` blockage) while the staircase body stays dead steady (see the gate-result table above). The
-threshold drop from ~24/D to ~16/D is the
-accuracy win; the per-step cost of the weighted projection is mitigated by warm-starting both the φ and
-λ blocks, and the wall-clock win wants the `STEPS`-to-developed-window trim.
+the marginal resolution are. The **aperture-resolved no-slip**
+(`add-aperture-resolved-noslip`, the default here) targets that error by placing the wall at the true
+surface. At 16 cells/D the aperture-resolved body sheds a sustained limit cycle with `St ≈ 0.171`
+(~4 % high, mostly `LY_D=16` blockage) and cycle-mean `C_d ≈ 1.246` (~6 % below the consensus band),
+while the staircase body stays steady (see the gate-result table above). The threshold drop from
+~24/D to ~16/D is the accuracy gain; warm-starting both the φ and λ blocks offsets the per-step cost
+of the weighted projection, and trimming `STEPS` to the developed window cuts wall-clock time.
 
 ## A note on `--features parallel`
 
 The `parallel` feature rayon-parallelises the DEC **operator loops** (de Rham, sharp, wedge, interior
 product). It does not touch the CG projection solves, which dominate the per-step cost here. On small
-and medium grids it actually slows the run down, because the threads oversubscribe on short loops. It
+and medium grids it slows the run down, because the threads oversubscribe on short loops. It
 helps only on large grids where the operator loops are substantial. Prefer the default serial build
 unless you are running a large `CELLS_PER_D` and have measured a speedup.

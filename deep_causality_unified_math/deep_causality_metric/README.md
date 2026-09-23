@@ -9,10 +9,10 @@ vocabulary covers the workspace and a mismatch surfaces as a type error rather t
 
 ### Key Features
 
-- **One source of truth** — every metric signature in the workspace comes from this crate
-- **No dependencies** — a leaf of the dependency graph
-- **Conventions in the type system** — a wrapper fixes the sign convention, so mixing two fails to compile
-- **No default convention** — every name says which convention it means
+- **One source of truth**: every metric signature in the workspace comes from this crate
+- **No dependencies**: a leaf of the dependency graph
+- **Conventions in the type system**: a wrapper fixes the sign convention, so mixing two fails to compile
+- **No default convention**: every name says which convention it means
 
 ## Core Types
 

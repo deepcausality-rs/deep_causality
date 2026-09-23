@@ -7,4 +7,4 @@
 > the crate is not yanked from the registry, and no further release is planned.
 >
 > `deep_causality_sparse` receives no further development. Its contents live in
-> **[`deep_causality_linear`](../../deep_causality_linear)**, 
+> **[`deep_causality_linear`](../../deep_causality_linear)**.

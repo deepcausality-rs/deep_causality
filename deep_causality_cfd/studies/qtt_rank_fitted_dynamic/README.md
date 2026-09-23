@@ -9,12 +9,12 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 cargo run --release -p deep_causality_cfd --example qtt_rank_fitted_dynamic
 ```
 
-**What it tests.** `qtt_rank_nonlinear` measured that a *captured* 2-D curved shock raises rank as
-it forms, 7 to 20. `qtt_rank_3d` measured the Cartesian upper bound `χ ~ √side`. Both left the
-decisive cell open. Does a marcher that keeps the feature **aligned to a coordinate axis** hold
-the bond bounded *and* resolution-independent over the march, the thing Resolution 5 claims "by
+**What it tests.** `qtt_rank_nonlinear` measures that a *captured* 2-D curved shock raises rank as
+it forms, 7 to 20; `qtt_rank_3d` measures the Cartesian upper bound `χ ~ √side`. Neither settles
+the decisive cell: does a marcher that keeps the feature **aligned to a coordinate axis** hold the
+bond bounded *and* resolution-independent over the march, as Resolution 5 claims "by
 construction"? Three marched viscous-Burgers cases answer it, each at two resolutions, so the
-**resolution scaling** is the headline rather than any single number.
+headline is the **resolution scaling** rather than any single number.
 
 **Findings (gated, exit nonzero on regression).** Peak `max_bond` over the march:
 
@@ -36,7 +36,7 @@ construction"? Three marched viscous-Burgers cases answer it, each at two resolu
 **Conclusion.** Alignment is the lever; maintaining it is the mechanism. A one-time fitted
 coordinate does not stay aligned once the flux march moves the front, which makes Resolution 5's
 **feedback re-pinning (D9)** necessary rather than optional. `qtt_repin_marcher` carries the
-finding further and shows that re-pinning alone is still not sufficient. Analysis:
+finding further: re-pinning alone is not sufficient. Analysis:
 `openspec/notes/archive/cfd-plasma-blackout/gap-2/`.
 
 **Caveats.** Viscous Burgers is a scalar shock-former, not compressible Euler/NS. 64² and 128² are

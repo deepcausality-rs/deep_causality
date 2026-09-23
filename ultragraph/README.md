@@ -23,76 +23,68 @@
 
 ## Goal
 
-ultragraph provides a high-performance, ergonomic, and directed graph data structure. It is designed around a
-state-machine architecture that offers both a flexible, mutable graph and a blazing-fast, immutable graph, allowing
-users to choose the right tool for the right phase of their application.
+ultragraph provides a directed graph data structure with two states: a mutable graph for construction and an
+immutable graph for fast analysis. Users pick the state that fits each phase of their application.
 
 ## Features
 
-* **Dual-State Architecture:** A `DynamicGraph` for easy mutations and a `Static` (frozen) `CsmGraph` for extreme read
-  performance.
-* **Ergonomic Mutations:** Simple `add_node`, `add_edge`, `remove_node`, etc., in the dynamic state.
-* **High-Performance Algorithms:** A suite of algorithms (`shortest_path`, `topological_sort`, `has_cycle`) that operate
+* **Dual-State Architecture:** A `DynamicGraph` for mutations and a `Static` (frozen) `CsmGraph` for fast reads.
+* **Mutations:** `add_node`, `add_edge`, `remove_node`, and others in the dynamic state.
+* **Algorithms:** Algorithms (`shortest_path`, `topological_sort`, `has_cycle`) that operate
   on the frozen graph.
 * **Efficient Traversals:** Cache-friendly neighbor iteration (`outbound_edges`) on the frozen graph.
-* **Full Lifecycle:** Seamlessly `freeze()` a graph for analysis and `unfreeze()` it to resume mutations.
+* **Full Lifecycle:** `freeze()` a graph for analysis and `unfreeze()` it to resume mutations.
 
 ##  Implementation
 
-`ultragraph`'s power comes from its state-machine design, which separates the concerns of graph *construction* from
-graph *analysis*.
+`ultragraph` separates graph *construction* from graph *analysis* with a state machine.
 
 ### 1. The Dynamic State: `DynamicGraph`
 
-This is the default state, optimized for flexibility and mutations.
+The default state, optimized for mutations.
 
 * **Underlying Structure:** A standard adjacency list (`Vec<Vec<...>>`).
-* **Best For:** Building and modifying your graph topology. Adding, removing, and updating nodes and edges is
-  straightforward.
-* **Performance:** While flexible, this representation is not ideal for high-speed traversals due to scattered memory
-  allocation, which can lead to CPU cache misses.
+* **Best For:** Building and modifying the graph topology: adding, removing, and updating nodes and edges.
+* **Performance:** Scattered memory allocation causes CPU cache misses, which slows traversals.
 
 ### 2. The Transition: `freeze()`
 
-This is the bridge between the two states. Calling `g.freeze()` consumes the `DynamicGraph` and transforms it into a
-`CsmGraph`. Think of this as a one-time "compilation" step that prepares your graph for high-speed analysis.
+Calling `g.freeze()` consumes the `DynamicGraph` and transforms it into a `CsmGraph`, a one-time "compilation" step
+that prepares the graph for analysis.
 
 ### 3. The Static State: `CsmGraph` (Frozen)
 
-This is the high-performance, read-only state.
+The read-only state, optimized for analysis.
 
-* **Underlying Structure:** A **Compressed Sparse Row (CSR)** format. This layout stores all graph edges in a few large,
-  contiguous memory blocks, making it extremely cache-friendly for the CPU.
-* **Best For:** Running algorithms, performing complex traversals, and any read-heavy workload.
-* **Performance:** Because of its exceptional data locality, traversals and algorithms on a `CsmGraph` are orders of
-  magnitude faster than on a `DynamicGraph`. All methods on the `GraphAlgorithms` trait require the graph to be in this
-  state.
+* **Underlying Structure:** A **Compressed Sparse Row (CSR)** format that stores all edges in a few large, contiguous
+  memory blocks, which keeps the CPU cache warm.
+* **Best For:** Running algorithms, complex traversals, and any read-heavy workload.
+* **Performance:** Data locality makes traversals and algorithms on a `CsmGraph` orders of magnitude faster than on a
+  `DynamicGraph`. All methods on the `GraphAlgorithms` trait require this state.
 
 ### 4. The Reverse Transition: `unfreeze()`
 
-If you need to make further changes after a period of analysis, `g.unfreeze()` efficiently converts the `CsmGraph` back
-into a `DynamicGraph`, allowing the cycle of mutation and analysis to begin again.
+`g.unfreeze()` converts the `CsmGraph` back into a `DynamicGraph`, so mutation and analysis can alternate.
 
 ##  Graph Algorithms
 
-The `UltraGraph` crate provides a suite of high-performance, read-only analytical algorithms for
-graph analysis. These algorithms are implemented on static, optimized graph structures for efficient
-computation.
+The `ultragraph` crate provides read-only analytical algorithms, implemented on the static graph
+structure.
 
 * **`find_cycle()`**: Finds a single cycle in the
   graph and returns the path of nodes that form it.
   Returns `None` if the graph is a Directed Acyclic Graph
   (DAG).
 
-* **`has_cycle()`**: Checks if the graph contains any
-  directed cycles.
+* **`has_cycle()`**: Checks whether the graph contains a
+  directed cycle.
 
 * **`topological_sort()`**: Computes a topological
   sort of the graph if it is a DAG. Returns `None` if the
   graph contains a cycle.
 
 * **`is_reachable(start_index, stop_index)`**: Checks
-  if a path of any length exists from a start node to a
+  whether a path of any length exists from a start node to a
   stop node.
 
 * **`shortest_path_len(start_index, stop_index)`**:
@@ -110,11 +102,10 @@ computation.
 
 * **`strongly_connected_components()`**: Finds all
   Strongly Connected Components (SCCs) in the graph using
-  Tarjan's algorithm, returning a list of node sets, where
-  each set represents an SCC.
+  Tarjan's algorithm, returning one node set per SCC.
 
-* **`betweenness_centrality()`**: Measures a node's importance by counting how often it
-  appears on the shortest paths between all other pairs of nodes using Brandes' algorithm.
+* **`betweenness_centrality()`**: Measures each node's importance with Brandes' algorithm by
+  counting how often it appears on the shortest paths between all other pairs of nodes.
 
 ## Benchmark Results
 
@@ -137,14 +128,12 @@ Benchmark source code in [ultragraph/benches ](../ultragraph/benches/benchmarks)
 
 ---
 
-* **`add_node` Performance:** Adding a node is consistently fast, with median times ranging from **29 to 46 nanoseconds
-  **. This confirms it as an efficient O(1) operation. The minor time variations are expected and are due to
-  system-level memory allocation behavior.
-* **`get_node` Performance:** Accessing a node is extremely fast and stable across all graph sizes, with a median time
-  of approximately **4 nanoseconds**. This demonstrates the O(1) efficiency of retrieving data from the underlying
-  `Vec`.
-* **Outliers:** The presence of outliers is normal for benchmarks running on a non-dedicated machine and indicates that
-  `Criterion` is correctly identifying and filtering system-level interruptions to provide a more accurate measurement.
+* **`add_node` Performance:** Median times range from **29 to 46 nanoseconds**, consistent with an O(1) operation.
+  System-level memory allocation causes the variation.
+* **`get_node` Performance:** The median time stays at about **4 nanoseconds** across all graph sizes, an O(1) lookup
+  into the underlying `Vec`.
+* **Outliers:** Outliers are normal on a non-dedicated machine; `Criterion` identifies and filters these system-level
+  interruptions.
 
 ### Static CSM Graph
 
@@ -169,47 +158,36 @@ Benchmark source code in [deep_causality/benches ](../deep_causality/benches)
 
 ## Performance Design
 
-The design of `ultragraph`'s static analysis structure, `CsmGraph`, is based on the principles for high-performance
-sparse graph representation detailed in the paper "NWHy: A Framework for Hypergraph Analytics" (Liu et al.).
-Specifically, `ultragraph` adopts the paper's foundational model of using two mutually-indexed Compressed Sparse Row (
-CSR) structures to enable efficient, `O(degree)` bidirectional traversal—one for forward (outbound) edges and one for
-the transposed graph for backward (inbound) edges.
+`ultragraph`'s static analysis structure, `CsmGraph`, follows the sparse graph representation in the paper
+"NWHy: A Framework for Hypergraph Analytics" (Liu et al.). It adopts the paper's two mutually-indexed Compressed
+Sparse Row (CSR) structures for `O(degree)` bidirectional traversal: one for forward (outbound) edges and one for the
+transposed graph's backward (inbound) edges.
 
-However, `ultragraph` introduces three significant architectural enhancements over this baseline to provide optimal
-performance and to support the specific requirements of dynamically evolving systems.
+`ultragraph` extends this baseline in three ways to support dynamically evolving systems.
 
-1. **Struct of Arrays (SoA) Memory Layout:** The internal CSR adjacency structures are implemented using a Struct of
-   Arrays layout. Instead of a single `Vec<(target, weight)>`, `ultragraph` uses two parallel vectors: `Vec<target>` and
-   `Vec<weight>`. This memory layout improves data locality for topology-only algorithms (e.g., reachability, cycle
-   detection). By iterating exclusively over the `targets` vector, these algorithms avoid loading unused edge weight
-   data into the CPU cache, which minimizes memory bandwidth usage and reduces cache pollution.
+1. **Struct of Arrays (SoA) Memory Layout:** The internal CSR adjacency structures use two parallel vectors,
+   `Vec<target>` and `Vec<weight>`, instead of a single `Vec<(target, weight)>`. Topology-only algorithms (e.g.,
+   reachability, cycle detection) iterate over the `targets` vector alone, so they never load unused edge weights into
+   the CPU cache, which saves memory bandwidth and reduces cache pollution.
 
-2. **Adaptive Edge Containment Checks:** The `contains_edge` method employs a hybrid algorithm that adapts to the data's
-   shape at runtime. It performs an `O(1)` degree check on the source node and selects the optimal search strategy: a
-   cache-friendly linear scan for low-degree nodes (where the number of neighbors is less than a compile-time threshold,
-   e.g., 64) and a logarithmically faster binary search for high-degree nodes. This ensures the best possible lookup
-   performance across varied graph structures.
+2. **Adaptive Edge Containment Checks:** `contains_edge` checks the source node's degree in `O(1)` and picks a search
+   strategy: a cache-friendly linear scan for low-degree nodes (fewer neighbors than a compile-time threshold, e.g.,
+   64) and a binary search for high-degree nodes.
 
-3. **Formal Evolutionary Lifecycle:** The most significant architectural addition is a formal two-state model for graph
-   evolution. `ultragraph` defines two distinct representations: a mutable `DynamicGraph` optimized for efficient `O(1)`
-   node and edge additions, and the immutable `CsmGraph` optimized for analysis. The library provides high-performance
-   `O(V + E)` `.freeze()` and `.unfreeze()` operations to transition between these states. This two-state model directly
-   supports systems that require dynamic structural evolution, such as those modeling emergent causality, by providing a
-   controlled mechanism to separate the mutation phase from the immutable analysis phase.
-
-While the NWHypergraph paper provides an excellent blueprint for a high-performance static graph engine, these
-modifications extend that foundation into a more flexible, cache-aware, and dynamically adaptable framework
-purpose-built for the lifecycle of evolving graph systems.
+3. **Formal Evolutionary Lifecycle:** A two-state model for graph evolution: a mutable `DynamicGraph` with `O(1)` node
+   and edge additions, and the immutable `CsmGraph` for analysis. `O(V + E)` `.freeze()` and `.unfreeze()` operations
+   move between the states. Systems that evolve their structure, such as models of emergent causality, use this to
+   separate the mutation phase from the analysis phase.
 
 ## Install
 
-Just run:
+Run:
 
 ```bash
 cargo add ultragraph
 ```
 
-Alternatively, add the following to your Cargo.toml
+Or add the following to your Cargo.toml:
 
 ```toml
 ultragraph = "current_version"
@@ -286,8 +264,8 @@ The project took inspiration from:
 
 ## Contribution
 
-Contributions are welcomed especially related to documentation, example code, and fixes.
-If unsure where to start, just open an issue and ask.
+Contributions are welcome, especially documentation, example code, and fixes.
+If unsure where to start, open an issue and ask.
 
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in deep_causality by you,
 shall be licensed under the MIT licence, without any additional terms or conditions.
@@ -298,6 +276,5 @@ This project is licensed under the [MIT license](LICENSE).
 
 ## Security
 
-For details about security, please read
-the [security policy](https://github.com/deepcausality-rs/deep_causality/blob/main/SECURITY.md).
+See the [security policy](https://github.com/deepcausality-rs/deep_causality/blob/main/SECURITY.md).
 

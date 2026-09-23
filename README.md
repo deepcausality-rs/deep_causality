@@ -60,16 +60,16 @@
 # Dynamic Causality for a Dynamic World
 
 DeepCausality is the reference implementation of the **Effect Propagation Process (EPP)**, a single axiomatic foundation
-for dynamic causality based on Whitehead's process metaphysics, with the consequence that the resulting framework is
-general-relativistic-native and quantum-native. Classical computational causality frameworks (Pearl's SCM, Granger
-causality, DBNs) assume fixed background spacetime and static causal structure and thus cannot handle dynamic causal
-structures; DeepCausality contributes **dynamic, adaptive, and emergent** causality as first-class modalities, with a
-programmable deontic layer for verifiable safety. DeepCausality is hosted as a sandbox project at
+for dynamic causality built on Whitehead's process metaphysics, which makes the framework general-relativistic-native and
+quantum-native. Classical computational causality frameworks (Pearl's SCM, Granger causality, DBNs) assume a fixed
+background spacetime and a static causal structure, so they cannot model causal structures that change. DeepCausality
+treats **dynamic, adaptive, and emergent** causality as first-class modalities and adds a programmable deontic layer for
+verifiable safety. DeepCausality is a sandbox project at
 the [Linux Foundation for Data & AI](https://landscape.lfai.foundation/).
 
 ## Support
 
-Dynamic causality can be daunting at first, and if you need more support for a larger or commercial project, please feel free to reach out to the [Center of Dynamic Causality](https://www.causalcenter.com/contact/) that backs the Deep Causality project.
+Dynamic causality can be daunting at first. For support on a larger or commercial project, contact the [Center for Dynamic Causality](https://www.causalcenter.com/contact/), which backs the DeepCausality project.
 
 ## Getting Started
 
@@ -118,7 +118,7 @@ This walks **Pearl's Ladder of Causation**:
 3. **Counterfactual** (Rung 3): Same chain, different outcome under the intervention.
 
 DeepCausality can express
-all [major frameworks of classical computation causality](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/classical_causality_examples).
+all [major frameworks of classical computational causality](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/classical_causality_examples).
 
 ---
 
@@ -154,20 +154,20 @@ See [examples/README.md](examples/README.md) for the full catalogue of available
 
 ## Architecture
 
-The EPP rests on a single axiom: **`m₂ = m₁ >>= f`**. Effect propagation becomes a monadic dependency, with no
-assumption of any background spacetime. Three computable primitives operationalize the axiom, and an optional fourth
-provides the safety layer for emergent behaviour.
+The EPP rests on a single axiom: **`m₂ = m₁ >>= f`**. Effect propagation is a monadic dependency that assumes no
+background spacetime. Three computable primitives implement the axiom; an optional fourth, the safety layer, governs
+emergent behaviour.
 
 ### The Three Primitives
 
 #### 1. Causaloid and CausalMonad
 
-The monadic axiom admits two isomorphic structural expressions of the same causal computation. Both are first-class
-causal entities; neither is more fundamental than the other.
+The monadic axiom admits two isomorphic expressions of the same causal computation. Both are first-class causal
+entities; neither is more fundamental.
 
 - **Causaloid.** A polymorphic container for the causal function `f` (after Hardy). It carries causal *structure* and is
-  isomorphic across three forms (**Singleton**, **Collection**, **Graph**), which lets recursive causal structures be
-  composed without changing the calling code.
+  isomorphic across three forms (**Singleton**, **Collection**, **Graph**), so recursive causal structures compose
+  without changes to the calling code.
 - **CausalMonad.** The bind side of the axiom, carrying causal *sequencing* through Kleisli composition. `bind`
   short-circuits on error, accumulates the audit log, and supports counterfactual `intervene` operations.
 
@@ -178,9 +178,9 @@ Both inhabit the same propagating-effect carrier:
 | `PropagatingEffect<T>`  | Stateless effect propagation | Value · Error · Log                   |
 | `PropagatingProcess<T>` | Stateful effect propagation  | Value · State · Context · Error · Log |
 
-Because both consume and produce the same carrier, they compose freely. A Causaloid evaluation can feed a `.bind()`
-step. A `.bind()` step can feed a Causaloid evaluation. State and audit log accumulate across both. One pipeline can
-mix structural and sequential reasoning, picking the right shape at each stage:
+Both consume and produce the same carrier, so they compose freely: a Causaloid evaluation can feed a `.bind()` step,
+a `.bind()` step can feed a Causaloid evaluation, and state and audit log accumulate across both. One pipeline can mix
+structural and sequential reasoning and pick the shape that fits each stage:
 
 * **Sequential transforms** belong in a CausalMonad bind-chain.
 * **Parallel aggregation** belongs in a Causaloid collection.
@@ -194,27 +194,27 @@ with state and audit log threaded across every stage.
 #### 2. Context
 
 An explicit hypergraph carrying the operational environment: sensor data, temporal structures (linear and non-linear),
-spatial locations (Euclidean and non-Euclidean). Detaching causality from a fixed background spacetime requires the
-Context to be queryable and dynamic.
+spatial locations (Euclidean and non-Euclidean). The Context must be queryable and dynamic for causality to detach
+from a fixed background spacetime.
 
 #### 3. Causal State Machine (CSM)
 
-The bridge from causal inference to action. The CSM separates state from action so that a proposed action can be
-verified before execution.
+The CSM connects causal inference to action. It separates state from action, so a proposed action can be verified
+before it executes.
 
 ### The Safety Layer
 
 #### Effect Ethos
 
 An optional, programmable deontic layer that uses a **defeasible deontic calculus** to resolve normative conflicts and
-decide whether a CSM-proposed action is permissible under an immutable ethos. Required wherever emergent causality is in
-play, since static verifiability is no longer possible there.
+decide whether a CSM-proposed action is permissible under an immutable ethos. It is required wherever causality is
+emergent, because static verification is impossible there.
 
 ### Uniform mathematics
 
-Most scientific-computing stacks force you to bridge silos: one library for tensors, another for geometric algebra, a
-third for topology, with glue code in between. The DeepCausality stack lifts every mathematical layer into the same
-categorical interface through the `deep_causality_haft` crate's arity-5 higher-kinded types:
+Scientific-computing stacks often split tensors, geometric algebra and topology across separate libraries joined by
+glue code. DeepCausality lifts each mathematical layer into one categorical interface through the
+`deep_causality_haft` crate's arity-5 higher-kinded types:
 
 | Domain    | Type                   | Categorical role                |
 |-----------|------------------------|---------------------------------|
@@ -225,11 +225,11 @@ categorical interface through the `deep_causality_haft` crate's arity-5 higher-k
 
 A single `bind`-chain can therefore step from a Tensor (general relativity), through a MultiVector (geometric algebra),
 onto a Manifold (topology), and finish in a `PropagatingEffect` (causal logic) without serialisation or adapter code.
-The [GRMHD example](examples/physics_examples/grmhd/) does exactly this for relativistic magnetohydrodynamics: Einstein
+The [GRMHD example](examples/physics_examples/grmhd/) does this for relativistic magnetohydrodynamics: Einstein
 tensor curvature feeds metric selection, which feeds a multivector Lorentz force, which feeds causal stability analysis,
 all in one monadic chain. The [Maxwell example](examples/physics_examples/maxwell/) derives `E` and `B` as bivector
 grades of a single electromagnetic field `F = ∇A`, which cuts the scalar count from six to four (~50% compute reduction)
-and is directly applicable to 5G/6G phased-array antenna design.
+and applies to 5G/6G phased-array antenna design.
 
 ---
 
@@ -246,8 +246,9 @@ and is directly applicable to 5G/6G phased-array antenna design.
 
 | Crate                                                            | Description                                                                                          |
 |------------------------------------------------------------------|------------------------------------------------------------------------------------------------------|
-| [`deep_causality`](deep_causality/README.md)                     | Causaloid (Singleton/Collection/Graph), Context, CSM, Teloid, Effect Ethos integration               |
-| [`deep_causality_core`](deep_causality_core/README.md)           | `PropagatingEffect`, `PropagatingProcess`, `CausalMonad`, `CausalEffectSystem`, `ControlFlowBuilder` |
+| [`deep_causality`](deep_causality/README.md)                     | Causaloid (Singleton/Collection/Graph), CausaloidGraph reasoning, CSM                                |
+| [`deep_causality_context`](deep_causality_context/README.md)     | `Context` hypergraph: contextoids and data, space, time and spacetime nodes                          |
+| [`deep_causality_core`](deep_causality_core/README.md)           | `PropagatingEffect`, `PropagatingProcess`, `CausalMonad`, `CausalArrow`, `CausalFlow`                |
 | [`deep_causality_ethos`](deep_causality_ethos/README.md)         | `EffectEthos` and `Teloid` for defeasible deontic reasoning                                          |
 | [`deep_causality_uncertain`](deep_causality_unified_math/deep_causality_uncertain/README.md) | `Uncertain<T>` and `MaybeUncertain<T>` (after Bornholt et al.)                                       |
 
@@ -271,7 +272,7 @@ and is directly applicable to 5G/6G phased-array antenna design.
 
 | Crate                                                      | Description                                                                                       |
 |------------------------------------------------------------|---------------------------------------------------------------------------------------------------|
-| [`deep_causality_num`](deep_causality_unified_math/deep_causality_num/README.md)       | Magma → Field algebraic hierarchy, `Float106`, Complex/Quaternion/Octonion division algebras      |
+| [`deep_causality_num`](deep_causality_unified_math/deep_causality_num/README.md)       | Numerical traits (casts, identity, float, integer) and `Float106`                                 |
 | [`deep_causality_haft`](deep_causality_unified_math/deep_causality_haft/README.md)     | Arity-5 higher-kinded types via witness pattern; Effect / Functor / Applicative / Monad / CoMonad |
 | [`deep_causality_metric`](deep_causality_unified_math/deep_causality_metric/README.md) | Single source of truth for metric signatures (East Coast, West Coast, Cl(p,q,r))                  |
 | [`ultragraph`](ultragraph/README.md)                       | Two-phase hypergraph backend for CausaloidGraph and Context                                       |
@@ -281,7 +282,7 @@ and is directly applicable to 5G/6G phased-array antenna design.
 | Crate                                                                        | Description                                                  |
 |------------------------------------------------------------------------------|--------------------------------------------------------------|
 | [`deep_causality_data_structures`](deep_causality_data_structures/README.md) | Sliding-window, grid-array, and other specialised structures |
-| [`deep_causality_rand`](deep_causality_unified_math/deep_causality_rand/README.md)                       | RNG and statistical distributions                            |
+| [`deep_causality_rand`](deep_causality_unified_math/deep_causality_rand/README.md)                       | RNGs, uniform range sampling, Sobol sequences                |
 | [`deep_causality_ast`](deep_causality_utils/deep_causality_ast/README.md)                         | Generic abstract syntax tree                                 |
 
 ---
@@ -311,17 +312,17 @@ make check     # Security audit
 
 ### Using Bazel
 
-The repository also supports Bazel builds. Install [bazelisk](https://github.com/bazelbuild/bazelisk) and run:
+The repository also builds with Bazel. Install [bazelisk](https://github.com/bazelbuild/bazelisk) and run:
 
 ```bash
 bazel build //...
 bazel test  //...
 ```
 
-Every example is a Bazel binary — except `example_ml_rca` in `causal_discovery_examples`, which is
-deliberately Cargo-only (it is listed in `CARGO_ONLY` in `scripts/check_examples.sh`, so the
-example-coverage check does not expect a Bazel target for it). The two commands in the
-[Examples](#examples) section above therefore have Bazel equivalents:
+Every example is a Bazel binary except `example_ml_rca` in `causal_discovery_examples`, which is
+Cargo-only: `CARGO_ONLY` in `scripts/check_examples.sh` lists it, so the example-coverage check
+expects no Bazel target for it. The two commands in the [Examples](#examples) section run under
+Bazel as:
 
 ```bash
 bazel run //examples/physics_examples:event_horizon_probe
@@ -336,7 +337,7 @@ workspace root, so they read and write the same files under either build system.
 
 ## Contributing
 
-Contributions are welcome! Please read:
+Contributions are welcome. Please read:
 
 * [AI Coding Assistants](AiCodingAssistants.md)
 * [Contributing Guide](CONTRIBUTING.md)
@@ -393,8 +394,8 @@ Implemented research:
 
 ## 👮 Security
 
-CRA stewardship: The DeepCausality project is under the Linux Foundation CRA stewardship framework
-to comply wiht the EU Cyber Resilience Act (CRA).
+The DeepCausality project follows the Linux Foundation CRA stewardship framework to comply with
+the EU Cyber Resilience Act (CRA).
 
 See [SECURITY.md](SECURITY.md) for security policies and details.
 

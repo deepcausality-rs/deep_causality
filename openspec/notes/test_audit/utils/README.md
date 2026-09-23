@@ -12,10 +12,10 @@ Scanned 2026-09-08: **155 test functions across 34 files**, comprising 2,443 tes
 * `deep_causality_file`
 * `deep_causality_par`
 
-The scanner is `openspec/notes/test_audit/physics/audit_tests.py`. It was run unchanged except for
-substituting its hard-coded `ROOT` value in memory for each crate. The script's output was then
-calibrated by reading every site it classified as `no-assertion` or `cherry-picked`, and by checking
-the suites for conditional early exits that the scanner cannot detect.
+The scanner is `openspec/notes/test_audit/physics/audit_tests.py`, run unchanged except for its
+hard-coded `ROOT` value, substituted in memory for each crate. Its output was calibrated by reading
+every site it classified as `no-assertion` or `cherry-picked`, and by checking the suites for
+conditional early exits the scanner cannot detect.
 
 ## Finding in one line
 
@@ -42,10 +42,10 @@ The classes overlap. A `cherry-picked` test is also `single-input` by constructi
 
 For comparison, a fresh run of the same scanner over the current physics tree found 116 tautologies,
 52 circular expectations, and 632 cherry-picked tests among 1,766 tests; it found no assertion-free
-test. On the same detector, the suspected defect pattern is therefore **not** present in the utility
-crates at a comparable rate. The 87.1% single-input rate is close to physics's current 89.8%, but that
-detector is too broad to establish a defect on its own. These current physics counts supersede the
-older snapshots recorded in the physics audit markdown for purposes of this comparison.
+test. On the same detector, the utility crates therefore do **not** show the suspected defect pattern
+at a comparable rate. The 87.1% single-input rate is close to physics's current 89.8%, but that
+detector is too broad to establish a defect on its own. For this comparison, these physics counts
+supersede the older snapshots in the physics audit markdown.
 
 ## Confirmed defects
 
@@ -61,7 +61,7 @@ if !clk.exists() || !sp3.exists() {
 }
 ```
 
-This is a false-green path, not a test skip visible to the harness. More importantly, the test's own
+This is a false-green path, invisible to the harness as a skip. Worse, the test's own
 `data_dir` documentation says that under `bazel test` neither runtime path variable is set and the
 fixtures are not declared as data. `deep_causality_file/BUILD.bazel` registers the integration test
 but supplies no fixture data. The Bazel test therefore succeeds while exercising none of the loader,
@@ -70,9 +70,8 @@ the real files, or the composed action.
 The Cargo run performed for this audit did exercise the test because both fixture files are present
 in the workspace. That does not remove the CI blind spot.
 
-**Required repair:** declare the two files as Bazel test data and make absence a failure. If the test
-is intentionally unsupported under a runner, exclude it explicitly instead of returning success
-from the test body.
+**Required repair:** declare the two files as Bazel test data and make absence a failure. If a runner
+cannot support the test, exclude it explicitly instead of returning success from the test body.
 
 ### 2. The clock laziness test has no behavioural oracle
 
@@ -83,8 +82,8 @@ declared return type:
 let _action: ReadClockData<f64> = read_clock_data::<f64>("unread.clk", "E14");
 ```
 
-Compilation proves the API shape, but the test name and comment claim the stronger property that
-construction performs no I/O. The test never observes that property. An implementation that performs
+Compilation proves the API shape, but the test name and comment claim that construction performs no
+I/O, and the test never observes that. An implementation that performs
 work during construction and still returns `ReadClockData` would satisfy this test whenever that work
 does not panic.
 
@@ -111,8 +110,8 @@ coordinates.
 | `read_sp3_tests.rs:195` | **Confirmed ineffective.** Same defect for the SP3 loader. |
 | `maybe_parallel_tests.rs:27` | **False positive.** The property is compile-time satisfiability of `T: MaybeParallel + ?Sized` for `str` and slices. Successful compilation is the oracle. |
 
-The scanner's definition of `no-assertion` is appropriate for runtime behaviour but cannot distinguish
-a missing runtime oracle from a compile-pass contract.
+The scanner's `no-assertion` definition suits runtime behaviour but cannot distinguish a missing
+runtime oracle from a compile-pass contract.
 
 ### `cherry-picked`: seven raw, no confirmed defects
 
@@ -122,23 +121,22 @@ The seven flags fall into three legitimate test forms:
 |---|---|
 | `orbit_types_tests.rs:19,35`; `clock_types_tests.rs:18` | Constructor/accessor round trips use exact values. The orbit radius uses a documented 3-4-12 triple with an independently known result of 13. |
 | `read_clk_tests.rs:25`; `read_trace_tests.rs:21`; `read_gnss_tests.rs:61` | Parser fixtures state the input text and assert the decoded representation. These are direct format or delegation oracles, not values copied from a numeric implementation. |
-| `maybe_parallel_tests.rs:14` | Numeric literals merely instantiate several scalar types for a compile-time blanket-trait contract. There is no numeric algorithm or external oracle. |
+| `maybe_parallel_tests.rs:14` | Numeric literals only instantiate several scalar types for a compile-time blanket-trait contract. There is no numeric algorithm or external oracle. |
 
-The physics detector deliberately treats an unexplained floating literal as suspicious. That
-heuristic is useful for scientific kernels, but it overreaches on constructors, parsers, and marker
-traits.
+The physics detector treats an unexplained floating literal as suspicious. That heuristic suits
+scientific kernels but overreaches on constructors, parsers, and marker traits.
 
 ## The single-input result
 
-`single-input` is the dominant raw class in every crate, but most instances are not broken tests.
+`single-input` is the dominant raw class in every crate, but most instances are sound tests.
 Error paths such as a malformed SP3 month, an absent table column, or a truncated snapshot each pin a
-specific branch and should not be converted into a range merely to satisfy the detector.
+specific branch and should not become ranges just to satisfy the detector.
 
-There is nevertheless one concentration worth further testing: **23 of 24 `deep_causality_ast`
+One concentration deserves further testing: **23 of 24 `deep_causality_ast`
 tests are single-input.** Traversal, mapping, joining, search, size, and depth are each tested against
-one principal non-trivial tree shape. The assertions are meaningful, so this is neither tautology nor
-circular testing, but correlated indexing or traversal defects may survive when all expectations are
-drawn from a small set of shallow trees. Mutation testing should decide whether this is a real gap;
+one principal non-trivial tree shape. The assertions are meaningful, so this is neither tautological
+nor circular, but correlated indexing or traversal defects may survive when every expectation comes
+from a small set of shallow trees. Mutation testing should decide whether this is a real gap;
 the static detector cannot.
 
 `deep_causality_par` is stronger than its 77.8% figure suggests. Its main `scoped_map` test compares
@@ -168,8 +166,8 @@ The raw counts must not be converted directly into a remediation backlog:
 
 ## Verification
 
-The audit script was run separately against all three test roots. The following suites were also run
-to confirm the measured tests compile and pass:
+The audit script ran separately against all three test roots. These suites also ran, to confirm
+the measured tests compile and pass:
 
 ```text
 cargo test -p deep_causality_ast                         24 tests + 19 doctests passed

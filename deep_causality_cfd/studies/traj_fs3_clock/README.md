@@ -19,10 +19,9 @@ numerical.
 - **Numerical.** The missing forward clock kernel `dτ/dt = 1 + Φ/c² − v²/(2c²)`, with `Φ = −μ/r`, is
   checked against the textbook GPS relativistic split, the canonical falsifiable anchor.
 
-The forward clock rate offset has since been **promoted out of this study into a reusable physics
-kernel** (`relativistic_clock_offset_kernel`, capability ⑤, itself the difference of two
-`relativistic_clock_drift_rate_kernel` evaluations). The study consumes the shipped kernel for the
-**net** rate only. The kernel returns a combined offset, not a split, so the gravitational and
+The forward clock rate offset is a **reusable physics kernel** (`relativistic_clock_offset_kernel`,
+capability ⑤, itself the difference of two `relativistic_clock_drift_rate_kernel` evaluations).
+The study calls the kernel for the **net** rate only. The kernel returns a combined offset, not a split, so the gravitational and
 velocity rows below are computed inline in `main.rs` from `EARTH_GM`, `SPEED_OF_LIGHT`, and the two
 radii. They sum to the kernel net by construction; each of the three numbers is gated separately
 against its textbook value, and no gate asserts the sum.
@@ -45,7 +44,7 @@ kernel supplying the net and the two components computed inline, so ns-level onb
 feasible with the existing constants. The linearising `s` and the proper
 time `τ` are **distinct clocks** and the spec must carry both, which is a conceptual fix to
 Resolution 1 rather than an implementation detail. Over a 3-minute reentry blackout the uncorrected
-clock drifts tens of metres, quantifying why the correction must be carried internally (B3).
+clock drifts 17.2 m of ranging, which is why the correction must be carried internally (B3).
 Analysis: `openspec/notes/archive/cfd-plasma-blackout/gap-3/gap-three-resolution-3-trajectory-axis.md`.
 
 **Caveats.** The GPS split uses a circular orbit and an equatorial-radius geoid clock, the textbook

@@ -1,17 +1,17 @@
 # ML-gated Causal Root-Cause Analysis (Candle × DeepCausality)
 
 **"ML detects, causality explains."** This example combines the [Candle](https://github.com/huggingface/candle)
-machine-learning framework with DeepCausality on a problem each one solves only halfway:
+machine-learning framework with DeepCausality on a problem each solves only halfway:
 
-- A small **Candle** classifier learns, from labeled telemetry, to *detect* that a microservice
-  system is anomalous. It is fast and cheap, yet it cannot say *which* service is at fault.
-- The existing DeepCausality **BRCD** causal-discovery pipeline *explains* the anomaly by ranking the
-  culprit service or metric, but it needs a detector to decide *when* to run.
+- A small **Candle** classifier learns from labeled telemetry to *detect* that a microservice
+  system is anomalous. It is fast and cheap but cannot say *which* service is at fault.
+- The DeepCausality **BRCD** causal-discovery pipeline *explains* the anomaly by ranking the
+  culprit service or metric, but needs a detector to decide *when* to run.
 
-The two stages are sequenced through a `PropagatingProcess` monad. The Candle anomaly score **gates**
-the causal stage, the carried value becomes the root-cause verdict, and the escalation is recorded in
-the `EffectLog`. This is the canonical AIOps "detect, triage, root-cause" split, expressed as one
-typed, auditable causal chain.
+A `PropagatingProcess` monad sequences the two stages. The Candle anomaly score **gates**
+the causal stage, the carried value becomes the root-cause verdict, and the `EffectLog` records the
+escalation. The chain expresses the AIOps "detect, triage, root-cause" split as one typed, auditable
+causal chain.
 
 ```text
  telemetry row ──► Candle detector ──► anomaly score ──► gate (PropagatingProcess.bind)
@@ -24,11 +24,11 @@ typed, auditable causal chain.
 
 ## Why both, and why it is not redundant
 
-A classifier reduces 44 noisy signals to a single "is something wrong?" probability. A positive is an
-alarm, not a diagnosis. The causal pipeline consumes the *normal* and *anomalous* windows plus the
+A classifier reduces 44 noisy signals to a single "is something wrong?" probability; a positive raises
+an alarm without a diagnosis. The causal pipeline consumes the *normal* and *anomalous* windows plus the
 service-call graph (CPDAG) and returns a *ranked, posterior-weighted* set of candidate root causes.
-Running the more expensive causal stage only when the learned detector fires is how you would wire an
-on-call pipeline: cheap detection everywhere, causal explanation on escalation.
+An on-call pipeline runs the more expensive causal stage only when the learned detector fires: cheap
+detection everywhere, causal explanation on escalation.
 
 ## Architecture (three files)
 
@@ -36,7 +36,7 @@ on-call pipeline: cheap detection everywhere, causal explanation on escalation.
 |------|----------------|
 | [`model.rs`](model.rs) | The value/state/context types (`RcaSignal`, `RcaState`, `RcaConfig`), the Candle `Detector` (training and scoring), the reused BRCD explainer, and the `PropagatingProcess` **gate** that bridges detect to explain. |
 | [`utils.rs`](utils.rs) | Dataset loading (`load_csv`, `load_truth_index`), preparation (`build_training_set`, `fit_standardizer`), and all console-reporting functions. |
-| [`main.rs`](main.rs) | A lean orchestration: load, train, calibrate the gate, run both windows, print. |
+| [`main.rs`](main.rs) | Orchestration: load, train, calibrate the gate, run both windows, print. |
 
 ### The detector (Candle, `candle-core` only)
 
@@ -50,7 +50,7 @@ Weights are zero-initialized and the split is fixed, so the run is deterministic
 
 ### The explainer (DeepCausality BRCD)
 
-Reuses the exact CDL surface as [`example_brcd_discovery`](../../cdl/brcd_discovery/main.rs):
+Uses the same CDL calls as [`example_brcd_discovery`](../../cdl/brcd_discovery/main.rs):
 `CdlConfigBuilder::build_brcd_config(...)` feeds `CdlBuilder::build_brcd(&cfg).brcd_load_input().brcd_discover()`,
 and the top-ranked culprit column is read from `BrcdResult::ranks()` and `::posterior()`.
 
@@ -66,11 +66,11 @@ ground truth, and carries a `RootCause` verdict. Every decision is appended to t
 The shipped RCAEval Sock Shop case [`data/sock-shop-2/carts_cpu_1/`](../../data/sock-shop-2/carts_cpu_1/):
 
 - `normal.csv` (label 0) and `anomalous.csv` (label 1): 44 service metrics (CPU, memory, workload,
-  latency), about 720 labeled rows in total. This is a ready-made supervised training set.
+  latency), about 720 labeled rows in total, which form a supervised training set.
 - `expected.txt`: the ground-truth root-cause ranking; `shipping_latency` (column 42) is first.
 - `cpdag.csv`: the supplied service-call causal graph the BRCD stage consumes.
 
-No new data is added. Candle is an **example-only** dependency (latest `main`, CPU-only); no
+Candle is an **example-only** dependency (`candle-core` 0.11, CPU-only); no
 `deep_causality_*` library crate depends on it.
 
 ## Run
@@ -102,11 +102,11 @@ causal stage recovers `shipping_latency`, matching the shipped ground truth.
 
 ## Notes
 
-- **Gate calibration.** The threshold is set at runtime to the midpoint between the held-out normal
-  and anomalous mean scores (the detector's operating point), so both branches are exercised: the
-  healthy short-circuit and the escalate-to-explain path. The point of the example is the
-  integration pattern, not detector accuracy. The held-out normal tail sits near the boundary, which
-  is realistic for windows close to a regime change and is exactly why a calibrated gate matters.
+- **Gate calibration.** At runtime the threshold is set to the midpoint between the held-out normal
+  and anomalous mean scores (the detector's operating point), so both branches run: the
+  healthy short-circuit and the escalate-to-explain path. The example demonstrates the integration
+  pattern; detector accuracy is secondary. The held-out normal tail sits near the boundary, as it does
+  for windows close to a regime change, which is why the gate needs calibration.
 - **Determinism.** Zero weight init plus a fixed data split make the printed numbers reproducible.
 - **Extending it.** Swap the logistic regression for an MLP (add `candle-nn`), iterate over
   `carts_cpu_2` as well, or replace the midpoint gate with a learned threshold. None of these changes

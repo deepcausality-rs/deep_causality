@@ -1,32 +1,33 @@
 # Glioblastoma TTFields Optimization
 
+This example finds the electrode orientation that aligns a Tumor Treating Field with the most cell-division axes in a glioblastoma.
+
 ## 1. Medical Background
 
-**Glioblastoma Multiforme (GBM)** is an aggressive brain cancer. **Tumor Treating Fields (TTFields)** are a therapy using alternating electric fields to disrupt cancer cell division (mitosis).
+**Glioblastoma Multiforme (GBM)** is an aggressive brain cancer. **Tumor Treating Fields (TTFields)** disrupt cancer cell division (mitosis) with alternating electric fields.
 
-TTFields work by exerting dielectrophoretic forces on polar molecules (like tubulin) during cell division. Crucially, the force is maximal when the **Electric Field (E)** is parallel to the **Axis of Cell Division**.
+The field exerts dielectrophoretic forces on polar molecules such as tubulin during cell division. The force peaks when the **Electric Field (E)** runs parallel to the **Axis of Cell Division**.
 
 ## 2. The Challenge
 
-*   **Anisotropy:** Tumor cells don't all divide in the same direction. They are disorganized.
-*   **Placement:** The electric field direction depends on where electrodes are placed on the patient's scalp.
-*   **Blindspots:** A suboptimal placement might hit 50% of cells but leave the other 50% (dividing orthogonally) unaffected, leading to recurrence.
+*   **Anisotropy:** Tumor cells divide in disorganized directions.
+*   **Placement:** The field direction depends on where the electrodes sit on the patient's scalp.
+*   **Blind spots:** A poor placement might reach 50% of the cells and leave the other 50% (dividing orthogonally) unaffected, which leads to recurrence.
 
 ## 3. The DeepCausality Solution
 
-This example uses **Geometric Algebra** and **Causal Optimization** to find the personalized "perfect angle."
+The example maximizes the mean alignment $\langle|E(\theta,\phi) \cdot a_i|\rangle$ between the field direction and the division axes $a_i$ over the electrode angles $(\theta, \phi)$.
 
-*   **Geometric Algebra (`MultiVector`):** We treat the Electric Field $E$ and Cell Division Axes $a_i$ as geometric vectors. The alignment efficacy is computed via the **Inner Product** (contraction) $E \cdot a_i$. We aggregate this over the entire tumor volume (Mocked as a Voxel Grid).
-*   **Causal Optimization:** We use a **Simulated Annealing** process wrapped in a `PropagatingEffect` monad.
-    *   **Intervention:** "Set electrode angle to $(\theta, \phi)$".
-    *   **Observation:** Calculate total disruption score.
-    *   **Feedback:** If score improves, update state. If not, maybe explore (probabilistic).
-    
+*   **Tumor model:** A seeded generator samples 100 voxels in a box, each with a division axis biased toward the tumor's invasion axis, so every run reports the same anatomy.
+*   **Exact gradient:** The objective is written once over the `Scalar` bound. Evaluated over `Dual`, it returns its exact gradient, and the optimizer ascends that gradient.
+*   **Causal monad:** `CausalFlow` sequences the ascent, and each step returns a `PropagatingEffect`. A gradient or value that leaves the finite range ends the run through the error channel.
+*   **Precision as a parameter:** The `FloatType` alias in `main.rs` re-runs the objective and its gradient at another scalar.
+
 ## 4. Gained Value
 
-1.  **Personalization:** Customizes therapy to the specific geometry of the patient's tumor (from MRI DTI).
-2.  **Maximized Efficacy:** Ensuring the field aligns with the majority of dividing cells could significantly improve survival rates.
-3.  **Mathematical Elegance:** Geometric Algebra provides a coordinate-free, robust way to handle 3D alignments and rotations compared to traditional linear algebra.
+1.  **Personalization:** Fits the therapy to the geometry of the patient's tumor, for example from MRI DTI.
+2.  **Efficacy:** Aligning the field with most dividing cells could improve survival.
+3.  **Exact derivatives:** Automatic differentiation gives the gradient without finite-difference error or a hand-derived formula.
 
 ## 5. Running the Example
 

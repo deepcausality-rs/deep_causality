@@ -1,6 +1,6 @@
 # Carnot Cycle Heat Engine
 
-A simulation of the theoretical limit of thermodynamic efficiency using Causal Monads.
+This example runs a four-stroke Carnot cycle as one causal-monad pipeline and checks that the cycle closes at the Carnot efficiency limit.
 
 ## How to Run
 
@@ -28,16 +28,16 @@ Carnot Efficiency Limit: 40.0%
 
 ## Physics Overview
 
-The **Carnot Cycle** represents the theoretical upper limit of efficiency for any heat engine operating between two thermal reservoirs. It consists of 4 reversible processes:
+The **Carnot Cycle** sets the upper limit of efficiency for any heat engine running between two thermal reservoirs. It consists of four reversible processes:
 
 ### The Four Stages
 
 | Stage | Process | Description |
 |-------|---------|-------------|
-| A→B | **Isothermal Expansion** | Gas expands at constant $T_H$. Heat $Q_{in}$ absorbed from hot reservoir. Work done by gas. |
-| B→C | **Adiabatic Expansion** | Gas expands with no heat exchange ($Q=0$). Temperature drops from $T_H$ to $T_C$. Work done by gas. |
-| C→D | **Isothermal Compression** | Gas compressed at constant $T_C$. Heat $Q_{out}$ rejected to cold reservoir. Work done on gas. |
-| D→A | **Adiabatic Compression** | Gas compressed with no heat exchange. Temperature rises from $T_C$ to $T_H$. Work done on gas. |
+| A→B | **Isothermal Expansion** | Gas expands at constant $T_H$, absorbs heat $Q_{in}$ from the hot reservoir, and does work. |
+| B→C | **Adiabatic Expansion** | Gas expands with no heat exchange ($Q=0$); temperature drops from $T_H$ to $T_C$. Gas does work. |
+| C→D | **Isothermal Compression** | Gas is compressed at constant $T_C$ and rejects heat $Q_{out}$ to the cold reservoir. Work is done on the gas. |
+| D→A | **Adiabatic Compression** | Gas is compressed with no heat exchange; temperature rises from $T_C$ to $T_H$. Work is done on the gas. |
 
 ### Key Equations
 
@@ -67,13 +67,13 @@ $$W = C_V (T_i - T_f) = \frac{3}{2}nR(T_i - T_f)$$
 | $T_C$ | 300 K | Cold reservoir temperature |
 | $V_A$ | 0.01 m³ | Initial volume (10 L) |
 | $P_A$ | 415,700 Pa | Initial pressure (~4 atm) |
-| Compression Ratio | 2.0 | $V_B/V_A$ |
+| Expansion Ratio | 2.0 | $V_B/V_A$ |
 
 ---
 
 ## Causal Chain Architecture
 
-The simulation models the Carnot cycle as a **causal propagation process** using `CausalEffectPropagationProcess` from `deep_causality_core`. Each thermodynamic stage is represented as a `.bind()` operation:
+`CausalFlow::value` from `deep_causality_core` starts the pipeline with the state at point A, and each stroke is one `.bind()`:
 
 ```
 Initial State → Step 1 (A→B) → Step 2 (B→C) → Step 3 (C→D) → Step 4 (D→A) → Final State
@@ -83,20 +83,21 @@ Initial State → Step 1 (A→B) → Step 2 (B→C) → Step 3 (C→D) → Step 
 
 ### EngineState Structure
 
-Each state in the cycle tracks:
-- **Pressure** ($P$): Current gas pressure in Pascals
-- **Volume** ($V$): Current gas volume in m³
-- **Temperature** ($T$): Current gas temperature in Kelvin
-- **Entropy** ($S$): Cumulative entropy change in J/K
-- **Work Done**: Cumulative work output in Joules
-- **Phase**: Human-readable description of current stage
+Each state holds:
+- **Pressure** ($P$): gas pressure in Pascals
+- **Volume** ($V$): gas volume in m³
+- **Temperature** ($T$): gas temperature in Kelvin
+- **Entropy** ($S$): cumulative entropy change in J/K
+- **Work Done**: cumulative work output in Joules
+- **Heat Absorbed**: cumulative heat taken from the hot reservoir in Joules
+- **Phase**: the stage name
 
 ### Key Design Patterns
 
-1. **Monadic Composition**: Each stage transforms the engine state and propagates it to the next stage
-2. **Closure Captures**: Configuration parameters are captured from the outer scope for use in bind closures
-3. **Value Propagation**: The `EngineState` flows through the chain as the monadic value
-4. **Physics Validation**: Ideal Gas Law is verified at critical points
+1. **Monadic Composition**: Each stroke reads the last `EngineState` on the trace and appends the next one.
+2. **Derived End Point**: The closing stroke D→A derives its end point from the adiabat $T V^{\gamma-1} = \text{constant}$ instead of restating the starting values.
+3. **Closure Check**: `ideal_gas_law` recovers $R$ from the end state, and the run compares it with CODATA and the returned volume with $V_A$.
+4. **Efficiency Check**: The measured $W / Q_{in}$ is compared with `carnot_efficiency`.
 
 ---
 
@@ -108,17 +109,17 @@ Each state in the cycle tracks:
 | `deep_causality_physics::Volume` | Type-safe volume values (m³) |
 | `deep_causality_physics::Temperature` | Type-safe temperature values (K) |
 | `deep_causality_physics::AmountOfSubstance` | Type-safe amount (mol) |
-| `deep_causality_physics::carnot_efficiency` | Computes theoretical efficiency limit |
+| `deep_causality_physics::carnot_efficiency` | Computes the theoretical efficiency limit |
 | `deep_causality_physics::ideal_gas_law` | Verifies P, V, n, T consistency |
-| `deep_causality_core::CausalEffectPropagationProcess` | Monadic effect propagation |
+| `deep_causality_core::CausalFlow` | Monadic effect propagation |
 
 ---
 
 ## Thermodynamic Verification
 
-The simulation demonstrates key thermodynamic principles:
+The run checks four thermodynamic principles:
 
-1. **Entropy Conservation**: After completing the cycle, entropy returns to its initial value (S=0), confirming reversibility
-2. **State Cycle Closure**: The system returns exactly to its initial state (P, V, T)
-3. **Efficiency Bound**: Net work output (~1153 J) is consistent with the 40% Carnot limit
+1. **Entropy Conservation**: Entropy returns to its initial value (S=0) after the cycle, as reversibility requires
+2. **State Cycle Closure**: The system returns to its initial state (P, V, T)
+3. **Efficiency Bound**: Net work output (~1153 J) matches the 40% Carnot limit
 4. **Energy Conservation**: Work equals net heat transfer ($W = Q_{in} - Q_{out}$)

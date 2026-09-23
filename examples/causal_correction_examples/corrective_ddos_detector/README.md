@@ -1,6 +1,6 @@
 # corrective_ddos_detector
 
-Volumetric DDoS detection and mitigation as a closed-loop corrective
+Detects and mitigates a volumetric DDoS attack with a closed-loop corrective
 `alternate_value` over the causal monad.
 
 ```
@@ -10,19 +10,18 @@ cargo run -p causal_correction_examples --example corrective_ddos_detector
 ## What it shows
 
 A virtual network interface carries traffic from a deterministic generator.
-An array-backed sliding window, carried as Markovian `State`, holds the
-recent throughput as a rolling baseline. Each second the new measured
-throughput is scored as a z-score against that baseline. When the score
-stays above the parametric threshold (`sigma_threshold`, 3σ) for
-`trigger_slots` consecutive seconds (5), a volumetric attack is declared and
-the loop fires `.alternate_value(THROTTLE_ON)`. The NIC's regulator reads that
-command from the value channel and rate-limits the interface to the throttle
-ceiling, mitigating the flood from the next tick.
+An array-backed sliding window, carried as Markovian `State`, holds recent
+throughput as a rolling baseline. Each second the loop scores the new
+throughput as a z-score against that baseline. When the score stays above
+the threshold (`sigma_threshold`, 3σ) for `trigger_slots` consecutive
+seconds (5), the loop declares a volumetric attack and fires
+`.alternate_value(THROTTLE_ON)`. The NIC's regulator reads that command from
+the value channel and rate-limits the interface to the throttle ceiling from
+the next tick on.
 
 Unlike the other four corrective examples, this one runs **closed loop
-only**; there is no open-loop variant. The point is not a setpoint
-controller. It is a stateful, real-time anomaly detector embedded in the
-correction loop.
+only**. It embeds a stateful, real-time anomaly detector in the correction
+loop in place of a setpoint controller.
 
 ## The three channels
 
@@ -39,13 +38,12 @@ type DetectorProcess<T> = PropagatingProcess<T, DetectorState, DetectorConfig>;
 ## Detecting a *sustained* surge
 
 The detector scores each incoming sample against the baseline and admits
-only non-anomalous samples to the window. That withholding is deliberate.
-The naive alternative pushes every sample, then tests whether the window max
-exceeds the window's own mean + 3σ. That self-masks. As flood samples
-accumulate they inflate the window's mean and σ, so the z-score of the max
-collapses back under the threshold within a few ticks, and "3σ for 5
-consecutive seconds" never holds. Keeping the baseline clean lets the flood
-read as anomalous for its full duration.
+only non-anomalous samples to the window. The naive alternative pushes every
+sample, then tests whether the window max exceeds the window's own mean + 3σ.
+That test masks itself: flood samples inflate the window's mean and σ, the
+z-score of the max falls back under the threshold within a few ticks, and
+"3σ for 5 consecutive seconds" never holds. A clean baseline keeps the flood
+anomalous for its full duration.
 
 A wider window (30 one-second samples, capacity over-allocated 2× to 60)
 keeps the baseline mean and σ steady; the attack starts only after the window
@@ -77,7 +75,7 @@ The `throttle == OFF` guard makes the mitigation fire exactly once.
 
 ## Reading the output
 
-The run prints the per-tick throughput, z-score, and throttle trajectories, a
+The run prints per-tick throughput, z-score, and throttle trajectories, a
 summary line, and the per-tick `EffectLog` (including the `!!ValueAlternation!!`
 entry). With the default configuration:
 
@@ -96,12 +94,11 @@ apart by construction.
 
 ## Extending it: standing down after the attack abates
 
-The example latches the throttle ON and leaves it on. A production detector
-would also *release* mitigation once the attack is over. The robust rule is
-to confirm abatement on the **offered (raw inbound) load**, not the throttled
-delivered rate. A rate-limiter forces the delivered signal normal, so judging
-recovery on it is circular. A scrubbing appliance still observes the
-true inbound rate while limiting what it forwards; release the throttle once
-that raw signal has been normal for, say, twice the detection duration
-(`2 × trigger_slots`). The exact policy depends on the deployment and is
-intentionally left out of this minimal example.
+The example latches the throttle ON. A production detector would also
+*release* mitigation once the attack ends, and would confirm abatement on the
+**offered (raw inbound) load** rather than the throttled delivered rate. A
+rate-limiter forces the delivered signal to normal, so judging recovery on it
+is circular. A scrubbing appliance still observes the true inbound rate while
+limiting what it forwards; release the throttle once that raw signal has been
+normal for, say, twice the detection duration (`2 × trigger_slots`). The exact
+policy depends on the deployment, so this example omits it.

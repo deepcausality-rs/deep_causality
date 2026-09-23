@@ -1,6 +1,6 @@
 # GRMHD: General Relativistic Magnetohydrodynamics
 
-This example demonstrates a "Multi-Physics Monad" approach for coupling General Relativity with Magnetohydrodynamics using DeepCausality's monadic composition.
+This example couples General Relativity to Magnetohydrodynamics through DeepCausality's monadic composition: a curvature quantity the GR solver computes decides which algebra the MHD solver runs in.
 
 ## How to Run
 
@@ -18,56 +18,59 @@ Simulating extreme environments (Black Holes, Neutron Stars) requires coupling:
 - **General Relativity**: Gravity and Spacetime Curvature
 - **Magnetohydrodynamics**: Plasma and Electromagnetic Fields
 
-This architecture ensures that the simulation adapts its mathematical foundation to the physical conditions, preventing validity errors in extreme regimes.
+The simulation adapts its mathematical foundation to the physical conditions, so it stays valid in extreme regimes.
 
 ---
 
 ## Causal Chain
 
 ```text
-[Step 1] GR Solver          → Spacetime Metric (g_uv) → Curvature Intensity
+[Step 1] GR Solver          → Schwarzschild metric → Kretschmann scalar, tidal acceleration
                                        ↓
 [Step 2] Coupling Layer     → Select Metric (Euclidean vs Minkowski)
                                        ↓
-[Step 3] MHD Solver         → Lorentz Force (F = J · B)
+[Step 3] MHD Solver         → Lorentz force density (F = J ∧ B)
                                        ↓
-[Step 4] Stability Analysis → Confinement Status
+[Step 4] Feedback           → EM stress-energy T^tt on the Schwarzschild metric
+                                       ↓
+[Step 5] Stability Analysis → Confinement Status
 ```
+
+`CausalFlow::value` starts the chain, one `.next` runs each stage, and `finish` returns the final state or the error a stage short-circuited with.
 
 ---
 
 ## Physics Components
 
-### GR Solver (Tensor Monad)
+All quantities are in geometric units, `G = c = 1`; the tidal acceleration is also reported in `m/s^2`.
 
-Uses `CausalTensor` and the Applicative HKT to compute the Einstein tensor:
+### GR Solver (`CausalTensor`)
 
-```rust
-G_uv ≈ R * g_uv  (Simplified Einstein Field Equations)
-```
+Builds the Schwarzschild metric with `generate_schwarzschild_metric`. In the vacuum exterior the Ricci scalar is zero, so the curvature invariant that carries the tidal physics is the Kretschmann scalar `K = 48 M^2 / r^6`. The stage also computes the radial tidal acceleration across the plasma column, `a = 2 M L / r^3`.
 
 ### Coupling Layer
 
-Dynamically selects the metric based on curvature intensity:
-- **High Curvature (> 0.05)**: Minkowski(4) - Relativistic 4D spacetime
-- **Low Curvature (≤ 0.05)**: Euclidean(3) - Classical 3D space
+Selects the Clifford metric from the tidal acceleration:
+- **Above the threshold (`1e-12`)**: Minkowski(4), relativistic 4D spacetime
+- **At or below the threshold**: Euclidean(3), classical 3D space
 
-### MHD Solver (MultiVector Monad)
+### MHD Solver (`CausalMultiVector`)
 
-Uses `CausalMultiVector` to compute the Lorentz force:
+Computes the Lorentz force density with `lorentz_force` as the wedge product `F = J ∧ B` of the current and the magnetic field, in the algebra the coupling layer selected.
 
-```rust
-F = J · B  (Inner product of current and magnetic field)
-```
+### Feedback
+
+Carries the observer's `B` into coordinates, computes the EM stress-energy with `energy_momentum_tensor_em`, and projects `T^tt` back onto the observer. The result must equal `B^2 / 2`; the run checks this identity and exits nonzero if it fails.
 
 ### Stability Analysis
 
-Interprets the force direction:
-- **Negative Force**: Relativistic Reversal - Frame dragging effect
-- **Positive Force**: Standard stable confinement
+Compares the curvature the plasma sources, `8 pi rho_EM`, with the curvature the hole imposes, `sqrt(K)`:
+- **Negative force**: reversed confinement, the force points out of the column
+- **`8 pi rho_EM > sqrt(K)`**: magnetically dominated
+- **Otherwise**: tidally dominated
 
 ---
 
 ## Key Insight
 
-The example demonstrates how different mathematical structures (Tensors, MultiVectors) can be composed monadically to model complex multi-physics systems. Each step in the causal chain transforms state through pure functions, maintaining referential transparency while handling sophisticated physics.
+Tensors and multivectors compose monadically into one multi-physics chain. Each stage transforms the state through a pure function.

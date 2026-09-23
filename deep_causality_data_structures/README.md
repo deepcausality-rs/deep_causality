@@ -25,22 +25,20 @@
 
  
 
-High performance datastructures used in [DeepCausality](https://github.com/deepcausality-rs/deep_causality).
+This crate provides two data structures used in [DeepCausality](https://github.com/deepcausality-rs/deep_causality):
+ArrayGrid and SlidingWindow.
 
-ArrayGrid is an abstraction over scalars, vectors, and low dimensional matrices similar to a tensor.
-In contrast to a tensor, an ArrayGrid is limited to low dimensions (1 to 4), only allowing a scalar,
-vector, or matrix type. Still, all of them are represented as a static fixed-size const generic array.
-Fixed-sized arrays allow for several compiler optimizations, including a cache-aligned data layout and the removal of
-runtime array boundary checks because all structural parameters are known upfront, providing a significant performance
-boost over tensors.
+ArrayGrid abstracts over scalars, vectors, and low-dimensional matrices, similar to a tensor but
+limited to 1 to 4 dimensions. Every ArrayGrid is a static, fixed-size const generic array.
+Because all structural parameters are known at compile time, the compiler can lay the data out
+cache-aligned, which makes ArrayGrid faster than a tensor.
 
 
-The sliding window implementation over-allocates to trade space (memory) for time complexity by delaying the rewind
-operation when hitting the end of the underlying data structure.
-Specifically, a sliding window of size N can hold, without any array copy, approximately C-1 elements,
-where C is the total capacity defined as NxM with N as the window size and M as a multiple.
-This crate has two implementations, one over vector and the second over a const generic array. The const generic
-implementation is significantly faster than the vector-based version.
+The sliding window over-allocates, trading memory for time by delaying the rewind when it reaches
+the end of the underlying storage. A sliding window of size N holds approximately C-1 elements
+without any array copy, where the capacity C is NxM with N the window size and M a multiple.
+The crate implements the window over a vector and over a const generic array; the const generic
+version is significantly faster.
 
 ## Why?
 
@@ -62,8 +60,8 @@ implementation is significantly faster than the vector-based version.
 | 3D Grid   | 862.16 ps           | 577.04 ps             | 33.0%       |
 | 4D Grid   | 1.137 ns            | 812.62 ps             | 28.5%       |
 
-More details on performance can be found in the [Performance](README_ArrayGrid.md#performance) section
-of the [ArrayGrid document](README_ArrayGrid.md).
+See the [Performance](README_ArrayGrid.md#performance) section
+of the [ArrayGrid document](README_ArrayGrid.md) for details.
 
 ## Sliding Window
 
@@ -85,12 +83,12 @@ of the [ArrayGrid document](README_ArrayGrid.md).
 | UnsafeVectorStorage | ~750ps         | Good for mixed workloads | 
 | VectorStorage       | ~850ps         | Most predictable         |
 
-More details on performance can be found in the [Performance](README_SlidingWindow.md#performance) section
-of the [SlidingWindow document](README_SlidingWindow.md).
+See the [Performance](README_SlidingWindow.md#performance) section
+of the [SlidingWindow document](README_SlidingWindow.md) for details.
 
 ## Install
 
-Just run:
+Run:
 
 ```bash
 cargo add deep_causality_data_structures
@@ -128,8 +126,8 @@ The project took inspiration from:
 
 ## Contribution
 
-Contributions are welcomed especially related to documentation, example code, and fixes.
-If unsure where to start, just open an issue and ask.
+Contributions are welcome, especially documentation, example code, and fixes.
+If unsure where to start, open an issue and ask.
 
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in deep_causality by you,
 shall be licensed under the MIT licence, without any additional terms or conditions.

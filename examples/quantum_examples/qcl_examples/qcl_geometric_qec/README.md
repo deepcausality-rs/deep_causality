@@ -1,7 +1,7 @@
 # QCL code path: the toric code, verified exactly
 
-`validate` takes a chain complex. On the `4 × 4` square torus, Kitaev's `[[32, 2]]` toric code, it
-runs four exact checks and none of them simulates anything.
+This example runs `validate` on a chain complex: the `4 × 4` square torus, Kitaev's `[[32, 2]]`
+toric code. Its four checks are exact and none of them simulates anything.
 
 ```bash
 cargo run -p quantum_examples --example qcl_geometric_qec
@@ -15,5 +15,5 @@ cargo run -p quantum_examples --example qcl_geometric_qec
 | `check_clifford_action` | `H̄` on each class swaps `Z̄(γ)` and `X̄(γ̃)` | a symplectic tableau over 𝔽₂ |
 
 The in-process simulator caps at 24 qubits and this code has 32. The checks do not need it: every
-verdict is a computation over supports, bounded by the weights of the chains rather than by the
-register, which is what lets a code whose Hilbert space no simulator holds be decided at all.
+verdict is a computation over supports, bounded by the weights of the chains instead of by the
+register, so the pipeline decides a code whose Hilbert space no simulator holds.

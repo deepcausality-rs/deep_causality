@@ -4,9 +4,8 @@ A witness carries data; an `Arrow` carries a computation. `Euler`, `Rk4` and `Di
 that *are* transformations: built now, composed with each other, and run later against whatever
 they are handed.
 
-That separation is the whole point. The integrator and the thing being integrated are two
-values, so swapping `Euler` for `Rk4` raises the time order and the rate field stays exactly as
-it was written.
+The integrator and the thing being integrated are two values, so swapping `Euler` for `Rk4`
+raises the time order and leaves the rate field as written.
 
 ## Integrating
 
@@ -24,11 +23,11 @@ it was written.
 
 ## Where the derivative comes from
 
-Two of these take a derivative by evaluating over `Dual` and reading the `ε` channel, which makes
-`∇f` exact. `extension/manifold_laplacian_stencil` takes a three-point difference, where the step
-size *is* the accuracy. Same folder tree, two kinds of derivative, and each one prints the
-residual that follows from its method.
+`field_gradient_flow` and `sampled_integration` take a derivative by evaluating over `Dual` and
+reading the `ε` channel, which makes `∇f` exact. `extension/manifold_laplacian_stencil` takes a
+three-point difference, where the step size *is* the accuracy. Each prints the residual that
+follows from its method.
 
-`sampled_integration` reaches further: every estimator is generic over `Scalar` and `Dual` is a
-`Scalar`, so differentiation passes straight through a *sampled* fold. The draws that estimate
+In `sampled_integration`, every estimator is generic over `Scalar` and `Dual` is a `Scalar`, so
+differentiation passes straight through a *sampled* fold. The draws that estimate
 `I(θ)` estimate `dI/dθ` at the same time.

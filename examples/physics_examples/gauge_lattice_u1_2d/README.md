@@ -3,71 +3,48 @@
 ## Run the example
 
 ```bash
-RUSTFLAGS='-C target-cpu=native' cargo run --example lattice_u1_2d --release
+RUSTFLAGS='-C target-cpu=native' cargo run -p physics_examples --example gauge_lattice_u1_2d --release
 ```
 
 ## Overview
 
-This example validates the `LatticeGaugeField` implementation by comparing computed
-values against the **exact analytical solution** of the 2D U(1) lattice gauge theory.
-
-## Precision Achievement: 1e-31 Agreement
-
-Using the `DoubleFloat` type (106-bit mantissa ≈ 32 decimal digits), two independent
-algorithms for computing I₁(β)/I₀(β) agree to **~10⁻³¹** relative error:
-
-| β    | Error Between Algorithms |
-|------|--------------------------|
-| 0.5  | 0 (exact agreement)      |
-| 1.0  | 7.7 × 10⁻³³              |
-| 10.0 | 4.9 × 10⁻³²              |
-| 20.0 | 6.2 × 10⁻³²              |
-
-**Why this is significant:**
-
-- Standard `f64` (64-bit double) provides ~15 significant digits → ~10⁻¹⁵ precision
-- `DoubleFloat` provides ~32 significant digits → ~10⁻³¹ precision
-- This demonstrates that Deep Causality's `DoubleFloat` enables precision
-  **16 orders of magnitude beyond** typical floating-point libraries
-
-**Physical scale context (SI prefixes):**
-
-| Prefix         | Factor    | Decimal Digits | Physical Reference              |
-|----------------|-----------|----------------|---------------------------------|
-| nano (n)       | 10⁻⁹      | 9 digits       | DNA helix width                 |
-| pico (p)       | 10⁻¹²     | 12 digits      | Atom diameter                   |
-| **femto (f)**  | **10⁻¹⁵** | **15 digits**  | **Proton size ← f64 precision** |
-| atto (a)       | 10⁻¹⁸     | 18 digits      | Quark scale                     |
-| zepto (z)      | 10⁻²¹     | 21 digits      |                                 |
-| yocto (y)      | 10⁻²⁴     | 24 digits      |                                 |
-| ronto (r)      | 10⁻²⁷     | 27 digits      |                                 |
-| **quecto (q)** | **10⁻³⁰** | **30 digits**  | **← DoubleFloat precision**     |
-|                | 10⁻³⁵     | 35 digits      | Planck length                   |
-
-If you measured the observable universe (~10²⁶ m) with DoubleFloat precision,
-your error would be smaller than the Planck length.
+This example tests the `LatticeGaugeField` implementation against the **exact analytical
+solution** of 2D U(1) lattice gauge theory. It thermalizes a hot random field with Metropolis
+sweeps at each coupling $\beta$, measures the average plaquette, and compares the measurement
+with $I_1(\beta)/I_0(\beta)$.
 
 ## Theory Background
 
-The 2D U(1) lattice gauge theory is one of the rare exactly solvable models in
-lattice gauge theory. The average plaquette expectation value satisfies:
+The 2D U(1) lattice gauge theory is one of the few exactly solvable lattice gauge theories. In
+the infinite-volume limit the average plaquette is
 
 $$\langle P \rangle = \frac{I_1(\beta)}{I_0(\beta)}$$
 
-where $I_n$ are modified Bessel functions of the first kind, and $\beta$ is the
-inverse coupling constant.
+where $I_n$ are modified Bessel functions of the first kind and $\beta$ is the inverse coupling
+constant.
 
 ## Verification Strategy
 
-1. **Identity Configuration Check**: For a "cold start" (all links = identity),
-   the average plaquette should be exactly 1.0.
+1. **Identity Configuration Check**: For a "cold start" (all links = identity), the average
+   plaquette is exactly 1.0 at every $\beta$. This check exercises the plaquette machinery,
+   not the thermodynamics.
 
-2. **Dual-Algorithm Verification**: Two independent algorithms compute I₁(β)/I₀(β)
-   at DoubleFloat precision:
-    - **Series expansion**: Direct summation of the power series
-    - **Miller's backward recurrence**: Numerically stable continued fraction
+2. **Measured against exact**: On an `8x8` periodic lattice, 400 thermalization sweeps precede
+   400 measured sweeps at each $\beta$ from 0.5 (strong coupling) to 10 (weak coupling). The
+   measured $\langle P \rangle$ must lie within 0.02 of $I_1(\beta)/I_0(\beta)$. This is the
+   only check that tests the lattice and the physics together.
+
+3. **Reference Cross-Check**: Two independent algorithms compute $I_1(\beta)/I_0(\beta)$ and
+   must agree to `1e-12`, so the reference curve is itself sound:
+    - **Series expansion**: direct summation of the power series
+    - **Miller's backward recurrence**: a numerically stable continued fraction
+
+## Precision
+
+`FloatType` is `f64`. The measurement is a Monte Carlo average whose statistical error, a few
+times `1e-3`, sits thirteen orders of magnitude above `f64` rounding. `Float106` would only
+sharpen the reference curve.
 
 ## Reference
 
 > M. Creutz, *Quarks, Gluons and Lattices*, Cambridge University Press (1983), Chapter 8
-

@@ -24,27 +24,22 @@
 
 ## Summary
 
-Linear algebra for the [DeepCausality project](http://www.deepcausality.com). The crate owns the workspace's matrix
+Linear algebra for the [DeepCausality project](http://www.deepcausality.com). The crate holds the workspace's matrix
 representations and the algorithms over them: sparse (CSR), dense row-major, and bit-packed 𝔽₂ matrices, a dense
 vector, eliminations, decompositions, direct and iterative solvers, and an exact integer path. It has zero external
 runtime dependencies; its only dependencies are `deep_causality_num`, `deep_causality_algebra`, and
 `deep_causality_haft`.
 
-Two decisions shape everything else. Storage is a local choice rather than an architectural one, because all three
-representations sit behind one read trait. And every operation is bounded on the weakest trait from the algebra tower
-that makes it correct, which is what admits the integers and 𝔽₂ alongside the floats.
+Two decisions shape the design. Storage is a local choice, because all three representations sit behind one read
+trait. And every operation is bounded on the weakest trait from the algebra tower that makes it correct, which admits
+the integers and 𝔽₂ alongside the floats.
 
 The crate defines no scalar trait, marker, or newtype of its own. `Gf2`, `Float106`, and the primitives come from
 `deep_causality_num`; the laws they satisfy come from `deep_causality_algebra`.
 
-`CsrMatrix`, its HKT witness, and the conjugate-gradient solvers arrived here from `deep_causality_sparse`, which is
-retired and now a re-export shim. Signatures, convergence behaviour, and iteration counts carried over unchanged. Two
-things did change: `CgFailure` is a three-case enum where the retired crate had one struct, and the errors of both
-crates fold into a single `LinearError`.
-
 ## Three representations, one read seam
 
-Choosing a representation is the central decision in linear algebra, so the crate holds all three.
+Choosing a representation is the central decision in linear algebra, so the crate holds all three, plus a vector.
 
 | Type            | Storage                    | Reach for it when                                                  |
 |-----------------|----------------------------|--------------------------------------------------------------------|
@@ -53,8 +48,8 @@ Choosing a representation is the central decision in linear algebra, so the crat
 | `PackedGf2<W>`  | one bit per entry, in `W`  | mod-2 elimination, homology read as a code                          |
 | `DenseVector<T>`| contiguous buffer          | chains, states, right-hand sides, coefficient vectors               |
 
-The vector is the larger half of the workload rather than an ornament on the matrix work. A census across the seven
-consumer crates counted 60 rank-1 constructions against 46 rank-2.
+The vector carries the larger half of the workload: a census across the seven consumer crates counted 60 rank-1
+constructions against 46 rank-2.
 
 Three traits form the seam:
 
@@ -68,10 +63,10 @@ Three traits form the seam:
 reference to. Reading a position outside a sparse matrix's stored pattern returns the scalar zero and is not an error;
 only an index outside the *shape* fails.
 
-`CsrMatrix` implements the read side and stops there. Adding a multiple of one sparse row to another changes that row's
-non-zero pattern, which in CSR means reallocating every row after it. Sparse elimination wants a fill-reducing ordering
-and a symbolic factorisation, so a caller who needs it converts to a dense layout and writes that conversion at the call
-site, where its cost is visible.
+`CsrMatrix` implements only the read side. Adding a multiple of one sparse row to another changes that row's non-zero
+pattern, which in CSR means reallocating every row after it. Sparse elimination needs a fill-reducing ordering and a
+symbolic factorisation, so a caller who needs elimination converts to a dense layout at the call site, where the cost is
+visible.
 
 ```rust
 use deep_causality_linear::{CsrMatrix, MatrixView, PackedGf2, csr_to_dense};
@@ -93,22 +88,22 @@ let packed = PackedGf2::<u64>::from_i64_mod2(&[1, -1, 0, 0, 1, 1], 2, 3).unwrap(
 assert_eq!(packed.shape(), (2, 3));
 ```
 
-`PackedGf2` is generic over its word type. A caller picks the width that suits the target, and the suite runs at a
-narrow width so that a column count crossing a word boundary shows up in a matrix small enough to read. The same matrix
-packed at two widths reports the same rank and the same pivot columns, and that is a test rather than an assumption.
+`PackedGf2` is generic over its word type. A caller picks the width that suits the target; the suite runs at a narrow
+width so that a column count crossing a word boundary shows up in a matrix small enough to read. A test checks that the
+same matrix packed at two widths reports the same rank and the same pivot columns.
 
 ## Where this sits against `deep_causality_tensor`
 
-The split is by arity, not by density. A two-index object is a matrix and lives here. `ein_sum`, broadcasting, the
+The split is by arity. A two-index object is a matrix and lives here. `ein_sum`, broadcasting, the
 Kronecker product, the axis reductions, and the tensor-train stack take an N-index object and stay in the tensor crate.
 
 `deep_causality_linear` sits **below** `deep_causality_tensor` in the dependency graph and never depends on it.
-`CausalTensor`'s rank-2 decompositions delegate into the bodies here, which is why a density matrix in the quantum layer
-and a stiffness matrix in the fluids layer run the same kernel.
+`CausalTensor`'s rank-2 decompositions delegate to the bodies here, so a density matrix in the quantum layer and a
+stiffness matrix in the fluids layer run the same kernel.
 
 ## Bounded by algebra
 
-Each operation names the algebra rung it actually needs:
+Each operation names the algebra rung it needs:
 
 | Operation                           | Bound              | Admits                            |
 |-------------------------------------|--------------------|-----------------------------------|
@@ -123,16 +118,16 @@ Each operation names the algebra rung it actually needs:
 The determinant is a polynomial in the entries and needs no division, so it is defined over any commutative ring.
 Gaussian elimination divides by its pivot and leaves ℤ on the first step. Both facts are in the bounds.
 
-Four `compile_fail` doctests hold the line where a widened bound would still compile and still pass every behavioural
+Four `compile_fail` doctests guard the bounds that a widening would leave compiling and passing every behavioural
 test: `f64` refused by `EuclideanDomain` on both integer entry points, and a matrix refused by `CommutativeRing` and by
 `IntegralDomain`. `[[1,0],[0,0]]` times `[[0,0],[0,1]]` is zero with neither factor zero, so cancellation fails over
 matrices, and Bareiss elimination rests on cancellation.
 
 The container memberships run the other way. Every matrix reaches `Ring` and `Module<R>`; the vector reaches
 `AbelianGroup` and `Module<R>` and no multiplicative rung, having no `Mul` that returns a vector. `Module<R: Ring>` is
-the tower's name for a vector space, and stating it over a *ring* is what admits `DenseVector<i64>`, which topology's
-integer chains need. These memberships are pinned in `src/traits/tower_pins.rs` as ordinary items rather than as tests,
-because a membership test passes by compiling and reports nothing the build has not already settled.
+the tower's name for a vector space, and stating it over a *ring* admits `DenseVector<i64>`, which topology's integer
+chains need. `src/traits/tower_pins.rs` pins these memberships as ordinary items rather than tests, because a
+membership test passes by compiling and reports nothing the build has not already settled.
 
 ## Elimination, and everything read off it
 
@@ -144,12 +139,12 @@ word width. They come in pairs, because the pivot rule cannot be chosen by the r
 | none      | first non-zero at or below the row    | any `Field`: 𝔽₂, ℚ, ℝ, ℂ                     |
 | `_stable` | largest modulus at or below the row   | any `NormedScalar`: ℝ, ℂ, `Float106`         |
 
-The exact rule needs no ordering and no epsilon, which is how 𝔽₂ and ℚ get through. Over the floats a pivot near zero
-amplifies rounding, so a float caller wants the `_stable` entry point. Both search the column; neither takes the
-diagonal on faith. That matters more than it sounds: a Cayley-Menger matrix has `m[0][0] = 0` by construction, and an
-elimination that assumes the diagonal returns zero for every simplex volume.
+The exact rule needs no ordering and no epsilon, which admits 𝔽₂ and ℚ. Over the floats a pivot near zero amplifies
+rounding, so a float caller wants the `_stable` entry point. Both search the column; neither assumes a non-zero
+diagonal. A Cayley-Menger matrix has `m[0][0] = 0` by construction, and an elimination that assumes the diagonal
+returns zero for every simplex volume.
 
-`rref` and `rref_stable` return a `Reduced` carrying the rank and the pivot columns, since both come out of one pass.
+`rref` and `rref_stable` return a `Reduced` carrying the rank and the pivot columns, both from one pass.
 `rank`, `rank_stable`, `kernel_basis`, `image_basis`, and `determinant` read off the same core.
 
 ```rust
@@ -181,20 +176,19 @@ that solve repeatedly, the Kalman filter in `deep_causality_physics` and the rid
 hold one matrix and many right-hand sides. The permutation travels inside the factorisation, since applying `L` and `U`
 without it solves a different system.
 
-Positive-definiteness is discovered rather than asserted. The Cholesky factorisation *is* the test, and the first
-diagonal entry whose radicand is non-positive is where the input is shown not to qualify;
-`LinearError::NotPositiveDefinite` carries that index. A matrix can be non-singular and still fail there, which is why
-it is a separate variant from `Singular`.
+The Cholesky factorisation tests positive-definiteness: the first diagonal entry whose radicand is non-positive shows
+that the input does not qualify, and `LinearError::NotPositiveDefinite` carries that index. A non-singular matrix can
+still fail there, so the variant is separate from `Singular`.
 
 ## Decompositions
 
 `svd`, `svd_sorted`, `svd_truncated`, `singular_values`, `qr`, `eigen_hermitian`, and `cholesky` are bounded on
 `ConjugateScalar`. That bound spans real fields, dual numbers for forward-mode AD, and complex. Magnitudes and
 thresholds live in the associated real type and only the rotations are injected back, so a Hermitian complex matrix
-decomposes as readily as a real symmetric one, and `RealField` could never cover it because `Complex` is unordered.
+decomposes as readily as a real symmetric one. `RealField` cannot cover it, because `Complex` is unordered.
 
 `qr` and `eigen_hermitian` take `MatrixView` rather than `RowOps`. They copy the entries into a flat buffer and never
-mutate a row, so demanding the mutating trait would exclude every read-only representation for nothing.
+mutate a row, so they accept read-only representations.
 
 Thresholds scale by the input's Frobenius norm. An absolute epsilon burns the whole sweep budget on a large-magnitude
 matrix and fires immediately on a small one.
@@ -216,8 +210,7 @@ assert_eq!(values.len(), 2);
 assert_eq!(vectors.shape(), (2, 2));
 ```
 
-`Truncation` keeps "at most rank k" and "everything above epsilon" as distinct requests, so a caller who means one does
-not silently get the other.
+`Truncation` keeps "at most rank k" and "everything above epsilon" as distinct requests.
 
 ## Exact paths
 
@@ -226,7 +219,7 @@ of field is visible at the call site.
 
 ### Over 𝔽₂
 
-`rank_gf2`, `kernel_basis_gf2`, and `image_basis_gf2` are the generic elimination fixed to the bit-packed
+`rank_gf2`, `kernel_basis_gf2`, and `image_basis_gf2` run the generic elimination on the bit-packed
 representation. They take no tolerance and apply none; every non-zero element of 𝔽₂ is its own inverse, so the
 elimination divides by nothing that could be near zero.
 
@@ -254,7 +247,7 @@ assert_eq!(determinant_exact(&m).unwrap(), 5);
 assert_eq!(rank_exact(&m).unwrap(), 2);
 ```
 
-`EuclideanDomain` supplies the division; `IntegralDomain` one rung below is what makes those divisions exact, because an
+`EuclideanDomain` supplies the division; `IntegralDomain`, one rung below, makes those divisions exact, because an
 integral domain has no zero divisors and therefore licenses cancellation.
 
 ## Conjugate gradient, matrix-free
@@ -283,15 +276,15 @@ assert!((x[0] - 1.5).abs() < 1e-10);
 assert!((x[1] - 2.0).abs() < 1e-10);
 ```
 
-LU on a sparse matrix fills in, and the factors are dense even when the matrix is not. These cover the symmetric
-positive-definite case, which is the one the workspace actually solves.
+LU on a sparse matrix fills in, and the factors are dense even when the matrix is not. The CG solvers cover the
+symmetric positive-definite case, which is the one the workspace solves.
 
 ## Vectors and norms
 
 `vector_norm_l1`, `vector_norm_l2`, `vector_norm_sq`, and `vector_norm_inf` are generic over a **slice**, and the
-`DenseVector` methods of the same names delegate to them. The slice form exists because
-`deep_causality_multivector` holds a `Vec<T>` of coefficients and `CausalMultiField` holds a tensor's buffer; routing
-either through a vector type would copy the whole coefficient vector on every norm.
+`DenseVector` methods of the same names delegate to them. `deep_causality_multivector` holds a `Vec<T>` of
+coefficients and `CausalMultiField` holds a tensor's buffer; the slice form lets both take a norm without copying the
+coefficient vector.
 
 `matrix_norm_l1`, `matrix_norm_inf`, and `matrix_norm_frobenius` are generic over any `MatrixView`, so they apply to the
 sparse and packed representations too.
@@ -323,10 +316,10 @@ same here as on a tensor, a manifold, or a propagating effect.
 | `DenseMatrixWitness` | `DenseMatrix<T>`  | `Functor`, `Foldable`, `Pure`, `Applicative`, `CoMonad` |
 | `DenseVectorWitness` | `DenseVector<T>`  | the same, plus `Monad`                              |
 
-`DenseVector` claims `Monad`; the two matrices stop at `Applicative` and `CoMonad`. A shaped container cannot satisfy
+`DenseVector` implements `Monad`; the two matrices stop at `Applicative` and `CoMonad`. A shaped container cannot satisfy
 the monad laws: `pure` has to choose a shape for a single value, and right identity `bind(m, pure) == m` then asks
 `bind` to reassemble an `m × n` matrix from `m · n` one-by-ones. A vector's only shape is its length, so it satisfies
-the laws and states them.
+the laws.
 
 `CsrMatrixWitness::fmap` maps the **stored** entries and leaves the structural zeros alone, which keeps the result
 sparse. A caller who wants a function applied to the whole logical matrix densifies first, explicitly.
@@ -348,7 +341,7 @@ for `Type<T>` to name; the route out is `packed_to_dense_gf2`.
 
 ## Conversions
 
-Conversions are explicit and never implicit, because a conversion changes the cost model of everything done afterwards.
+Conversions are explicit, because a conversion changes the cost model of everything done afterwards.
 
 | From              | To            | |
 |-------------------|---------------|---|
@@ -358,12 +351,12 @@ Conversions are explicit and never implicit, because a conversion changes the co
 | packed 𝔽₂         | dense `Gf2`   | total |
 
 Only the packing direction fails, and for one reason: an entry outside `{0, 1}`. The error names the position, so a
-caller does not re-scan to find it. `csr_to_packed_gf2_mod2` reduces instead, which is what topology's boundary
-operators need, their entries being `{-1, 0, 1}`.
+caller does not re-scan to find it. `csr_to_packed_gf2_mod2` reduces mod 2 instead, for topology's boundary operators,
+whose entries are `{-1, 0, 1}`.
 
 ## Errors
 
-One error type, `LinearError`, across all representations and all algorithms. It is a newtype over `LinearErrorEnum`,
+One error type, `LinearError`, covers all representations and all algorithms. It is a newtype over `LinearErrorEnum`,
 so a new failure mode is a new variant on the inner enum and a downstream `match` with a wildcard arm keeps compiling.
 Variants carry the numbers needed to say what went wrong: `IndexOutOfBounds` carries the position and the shape it was
 checked against, `Singular` carries the column elimination stopped at, `WrongTriangle` carries the first offending
@@ -390,9 +383,9 @@ compile-time pin instead.
 
 The 𝔽₂ layer is machine-checked in Lean 4 against Mathlib. Four theorems, zero `sorry`, each with a Rust witness test
 under `tests/formalization_lean/`. The load-bearing one is rank-nullity: `ChainComplex::betti_number_over` in
-`deep_causality_topology` substitutes `n_k − rank ∂_k` for `dim ker ∂_k`, and nothing in either crate's source states
+`deep_causality_homology` substitutes `n_k − rank ∂_k` for `dim ker ∂_k`, and nothing in either crate's source states
 that identity. The witnesses compute the two sides by different routines, the rank by elimination and the nullity by
-counting kernel-basis columns, so the test is two independent computations agreeing rather than one rearranged. See
+counting kernel-basis columns, so the test is two independent computations agreeing. See
 [`LEAN_LINEAR.md`](LEAN_LINEAR.md).
 
 ## Dependency
@@ -431,7 +424,7 @@ bazel test  //deep_causality_linear/...
 
 ## Safety
 
-No `unsafe` — the crate opts into the workspace-wide `unsafe_code = "forbid"` lint policy. No macros in library code.
+No `unsafe`: the crate opts into the workspace-wide `unsafe_code = "forbid"` lint policy. No macros in library code.
 
 ## Contribution
 

@@ -26,15 +26,16 @@
 
 Hypercomplex number types for the [DeepCausality project](http://www.deepcausality.com):
 
-- **`Complex`** — the complex field, with the `Complex32` and `Complex64` aliases.
-- **`Quaternion`** — the non-commutative division ring, with `Quaternion32` and `Quaternion64`.
-- **`Octonion`** — the non-associative division algebra, with `Octonion32` and `Octonion64`.
+- **`Complex`**: the complex field, with the `Complex32` and `Complex64` aliases.
+- **`Quaternion`**: the non-commutative division ring, with `Quaternion32` and `Quaternion64`.
+- **`Octonion`**: the non-associative division algebra, with `Octonion32` and `Octonion64`.
 
 Each type is generic over its real base and implements the algebra traits from `deep_causality_algebra` that its
 structure supports. `Complex` is a `Field` and a `ComplexField`; `Quaternion` is an associative ring; `Octonion` is a
 division algebra. All three carry rotation, conjugation, and norm operations.
 
-The implementation is macro-free and unsafe-free. It depends on `deep_causality_num` and `deep_causality_algebra`.
+The implementation is unsafe-free. It depends on `deep_causality_num`, `deep_causality_algebra`, and
+`deep_causality_haft`.
 
 ## Dependency
 

@@ -1,25 +1,25 @@
 # DeepCausality Technical Steering Committee (TSC)
 
-The DeepCausality TSC will be responsible for all technical oversight of the open source Project.
+The DeepCausality TSC oversees all technical matters of the open source project.
 
 ## DeepCausality Technical Charter
 
-The DeepCausality Project Charter is located in [CHARTER](../DeepCausalityProjectCharter.pdf)
+The project charter is in [CHARTER](../DeepCausalityProjectCharter.pdf).
 
 ## Collaboration Tools
 
 ### Public Mailing List
 
-The TSC for DeepCausality Foundation can be reached at their [mailing list](https://deepcausality.com/community/). This list is intended for public technical discussions.
+The TSC can be reached on its [mailing list](https://deepcausality.com/community/), which hosts public technical discussions.
 
 ### Discord
 
-The DeepCausality Foundation maintains a [Discord Server](https://discord.gg/Bxj9P7JXSj) for communication and collaboration.
-The Discord is open for anyone to join and participate in the public channels.
+The DeepCausality Foundation maintains a [Discord Server](https://discord.gg/Bxj9P7JXSj).
+Anyone can join and participate in its public channels.
 
 ### DCO
 
-Everyone must sign the DeepCausality DCO prior to making a contribution. You may either sign the DCO on your own, or your company can sign it for you. At a high level, if you aren't covered by a DCO, you will be notified the first time you open a PR. Please see our [documentation on the DCO](../WHAT_IS_DCO.md).
+Every contributor must sign the DeepCausality DCO before contributing, either personally or through their company. A contributor not covered by a DCO is notified on opening their first PR. See the [documentation on the DCO](../WHAT_IS_DCO.md).
 
 ## Members
 
@@ -31,36 +31,36 @@ The current members of the DeepCausality TSC are:
 | Michael Freeman | mfreeman451    | Dec 1, 2024 | Dec 1, 2026 | Cerver Automation |
 
 
-TSC membership is open to all DeepCausality project committers. Prior to each election, candidates must submit a self 
-nomination to one or more of the active maintainers either by email or via the Discord Server. 
+TSC membership is open to all DeepCausality project committers. Before each election, candidates nominate themselves 
+to one or more active maintainers by email or on the Discord Server. 
 
-Beginning in 2026, the TSC has 5 seats. Per the charter, TSC voting member terms are one year. If a member does 
-not step down, the term extends automatically by another year. 
+From 2026, the TSC has 5 seats. Per the charter, a voting member's term is one year and extends automatically 
+by another year unless the member steps down. 
 
 ## Policies and procedures
 
-The DeepCausality TSC is governed by the [CHARTER](../DeepCausalityProjectCharter.pdf)  The Charter provides a foundational structure for the TSC on topics such as its scope, how to make decisions, and how to make changes to itself.  At the same time, it grants the TSC a high degree of freedom when determining how to implement the policies of the DeepCausality Foundation.
+The [CHARTER](../DeepCausalityProjectCharter.pdf) governs the TSC. It sets the TSC's scope, how it decides, and how it changes itself, and leaves the TSC wide freedom in implementing the policies of the DeepCausality Foundation.
 
-The following policies and procedures have been adopted by the TSC.
+The TSC has adopted the following policies and procedures.
 
 ### Making decisions
 
-Per the [CHARTER](../DeepCausalityProjectCharter.pdf), wherever possible the TSC will attempt to make decisions by consensus.  In circumstances where consensus is not possible or if a vote is explicitly required, a majority (or higher, if required by the governance) of TSC voting members must approve in order for the action to proceed.  Votes will be taken over email, and documented in the next meeting.
+Per the [CHARTER](../DeepCausalityProjectCharter.pdf), the TSC decides by consensus wherever possible. Where consensus fails or a vote is explicitly required, an action proceeds only with the approval of a majority of TSC voting members (or more, if the governance requires). Votes are taken over email and documented in the next meeting.
 
 ### Merging PRs into the TSC repository
 
-Pull requests that do not change the charter or governance of the TSC can be merged into this repository provided the following conditions have been met:
+A pull request that does not change the TSC's charter or governance can be merged if:
 
 * There are no outstanding objections
 * There are two approvals by TSC members
 
 Pull requests that change governance of the TSC (excluding the charter) must be open for at least 14 days, unless consensus is reached in a meeting with quorum of voting members.
 
-If consensus cannot be reached, a pull request may still be landed after a vote by the Voting members to override outstanding objections.
+Without consensus, a pull request may still land after a vote of the voting members overrides outstanding objections.
 
 ### Fast-Tracking PRs
 
-Special exception is made for pull requests seeking to make any of the following changes to this repository:
+Pull requests making any of the following changes to this repository may be fast-tracked:
 
 - Errata fixes.
 - Editorial changes.
@@ -74,13 +74,13 @@ To propose fast-tracking a pull request, apply the ***fast-track*** label. Then 
 
 The pull request may be fast-tracked if two TSC members approve the fast-tracking request. To land, the pull request itself still needs two TSC member approvals.
 
-TSC members may request fast-tracking of pull requests they did not author. In that case only, the request itself is also one fast-track approval. Upvote the comment anyway to avoid any doubt.
+TSC members may request fast-tracking of pull requests they did not author; only then does the request count as one fast-track approval. Upvote the comment anyway to avoid doubt.
 
 
 #### Copyright notices
 
-DeepCausality project follows the [community best practice](https://www.linuxfoundation.org/blog/2020/01/copyright-notices-in-open-source-software-projects/) of not requiring contributors to add a notice to each file. Instead, a one time entry to the [MAINTAINERS.md](../MAINTAINERS.md) file should be added after or during the merge of the first PR. 
+The DeepCausality project follows the [community best practice](https://www.linuxfoundation.org/blog/2020/01/copyright-notices-in-open-source-software-projects/) of not requiring a notice in each file. Instead, a contributor adds a one-time entry to [MAINTAINERS.md](../MAINTAINERS.md) during or after the merge of their first PR. 
 
 #### SPDX
 
-Contributors are encouraged (but not required) to adopt the practice of including [SPDX short form identifiers](https://spdx.dev/about/overview/) in their files. The DeepCausality uses MIT licence and the SPDX designator is: "SPDX-License-Identifier: MIT"
+Contributors are encouraged, not required, to include [SPDX short form identifiers](https://spdx.dev/about/overview/) in their files. DeepCausality uses the MIT licence; its SPDX designator is "SPDX-License-Identifier: MIT".

@@ -7,16 +7,15 @@ Quantum causal models (QCM) based on the causal monad for
 
 A **quantum causal model** replaces the classical conditional-probability tables of a
 causal graph with quantum channels. Each node `Aᵢ` carries a Choi–Jamiołkowski operator
-`ρ_{Aᵢ|Pa(Aᵢ)}`, and the whole model is their product `σ = ∏ᵢ ρ_{Aᵢ|Pa(Aᵢ)}` — the
-*process operator*. This crate is the quantum-information layer of the workspace: the
+`ρ_{Aᵢ|Pa(Aᵢ)}`, and the whole model is their product `σ = ∏ᵢ ρ_{Aᵢ|Pa(Aᵢ)}`, the
+*process operator*. This crate is the workspace's quantum-information layer: the
 operator algebra that builds and validates those factors, the freeze-time checks that
 decide whether a factorization is a legal QCM, and the gate kernels that lift quantum
 mechanics into the DeepCausality causal monad (`PropagatingEffect`).
 
 The pure-state ket (`HilbertState`, a minimal-left-ideal element of a Clifford algebra)
-stays in `deep_causality_multivector` as the foundational carrier; all metric signatures
-come from `deep_causality_metric`, the workspace's single source of truth. This crate
-defines no metric type of its own.
+lives in `deep_causality_multivector`. All metric signatures come from
+`deep_causality_metric`; this crate defines no metric type of its own.
 
 ### Key features
 
@@ -32,7 +31,7 @@ defines no metric type of its own.
 - **Gate kernels on the causal monad** — Born probability, expectation value, gate
   application, commutator, fidelity, and the Haruna gauge-field logical gates, each with a
   `PropagatingEffect` wrapper that routes failure to the error channel.
-- **Typed errors** — `QuantumError` names the exact failure: dimension / metric mismatch,
+- **Typed errors** — `QuantumError` names the failure: dimension / metric mismatch,
   non-finite values, normalization, non-positive operators, non-CPTP channels,
   non-convergence, freeze-time commutativity, or an unfaithful structure.
 - **Two modalities, kept apart** — a *verifiable* default path backed by Lean proofs and
@@ -47,13 +46,13 @@ product of operators is a valid QCM: the factors must satisfy the **quantum Mark
 condition** — factors whose Hilbert supports intersect must **pairwise commute** (Lorenz
 2022, Def. 3.3).
 
-This crate makes that condition a **freeze-time gate**. The factors ride an external
+This crate checks that condition when the graph freezes. The factors sit in an external
 `ProcessFactors` decoration (the operator analogue of the engine's edge-keyed lambda
 store); they are *static freeze-time data*, never carried on the runtime state channel.
 `freeze_quantum` embeds each intersecting-support pair onto its common support, forms the
 commutator, and compares `‖[ρⱼ, ρₖ]‖_F` against a depth-aware forward-error tolerance
-(`CommutatorTolerance`). The check is **sound** — it never accepts a non-commuting model —
-and may be incomplete. A failure names the exact offending pair and rolls the graph back to
+(`CommutatorTolerance`). The check is **sound** (it never accepts a non-commuting model)
+and may be incomplete. A failure names the offending pair and rolls the graph back to
 its dynamic state.
 
 ```rust
@@ -79,15 +78,15 @@ assert!(outcome.is_err()); // QuantumError::CommutatorNonZero { node_j: 0, node_
 ### Faithfulness (C₃-exclusion)
 
 When the declared input/output systems are supplied (the last `freeze_quantum` argument),
-the freeze additionally enforces **C₃-exclusion faithfulness** (van der Lugt & Lorenz,
+the freeze also enforces **C₃-exclusion faithfulness** (van der Lugt & Lorenz,
 arXiv:2508.11762): a causal structure that contains a `C₃` sub-relation (canonically, two
 commuting CNOTs) has no traditional-circuit causally-faithful decomposition and is rejected
-at freeze. The structure is derived from the frozen graph's reachability over the declared
-systems by `CausalStructure`.
+at freeze. `CausalStructure` derives the structure from the frozen graph's reachability over
+the declared systems.
 
 ## Two modalities
 
-The crate keeps two senses of "quantum" strictly apart by construction:
+The crate keeps two senses of "quantum" apart by construction:
 
 | Modality | What it is | Build |
 |---|---|---|
@@ -108,13 +107,13 @@ The emergent seam adds no network or async dependency; it is a typed boundary, n
 | `Projection<R, D>` | Orthomodular projection-lattice `Verdict` carrier |
 | `QuantumOps<R>` / `QuantumGates` | Dirac-notation state operations and the standard gate interface |
 | `Operator<R>` / `Gate<R>` | Aliases for `HilbertState<R>` (from `deep_causality_multivector`) |
-| `QuantumCircuit` / `GateOp` / `SimQpu` / `QpuSampler` | The `qpu`-feature emergent seam |
+| `QuantumCircuit` / `GateOp` / `SimQpu` / `QpuSampler` | The reified circuit (`QuantumCircuit`, `GateOp`; always compiled) and the `qpu`-feature emergent seam (`SimQpu`, `QpuSampler`) |
 
 ## The operator layer
 
 The Choi–Jamiołkowski isomorphism represents a channel `E: L(H_in) → L(H_out)` as an
 operator `J(E) = Σ_{ik} |i⟩⟨k| ⊗ E(|i⟩⟨k|)`. `E` is completely positive iff `J ⪰ 0` and
-trace-preserving iff `Tr_out(J) = I_in`. The crate provides both directions and the
+trace-preserving iff `Tr_out(J) = I_in`. The crate provides both directions and their
 validation:
 
 - `choi_from_kraus` / `kraus_from_choi` — the isomorphism, gated on finiteness and
@@ -128,8 +127,8 @@ validation:
 ## Verdicts at the measurement boundary
 
 A quantum causaloid does not carry a `Verdict` over its operators — general effects
-`0 ≤ E ≤ I` form only an effect algebra with *partial* meet/join. Instead a verdict is
-*read out* at the measurement boundary: the Born rule `Tr(Pρ)` becomes a `Prob` MV-algebra
+`0 ≤ E ≤ I` form only an effect algebra with *partial* meet/join. The measurement boundary
+*reads out* a verdict instead: the Born rule `Tr(Pρ)` becomes a `Prob` MV-algebra
 verdict (`born_projective_prob`), or the measurement projection itself is a proposition in
 the orthomodular lattice `Projection<R, D>` — a bounded lattice with orthocomplement
 `I − P` and meet/join on subspace ranges, which satisfies the orthomodular law but *fails*
@@ -153,11 +152,10 @@ signature-dependent: the reversion adjoint on a positive-signature (Euclidean) m
 the Clifford (Dirac) conjugation on a negative-signature `Cl(0,n)` metric
 (`dirac_bracket_kernel`, `clifford_conjugation`). The **Haruna logical gates**
 (`logical_s` / `z` / `x` / `hadamard` / `cz` / `t`, after Haruna 2025, arXiv:2511.15224)
-realize gauge-field-formalism gates on those fields; their matrix exponential surfaces
-overflow and non-convergence as typed errors rather than a silent identity.
+realize gauge-field-formalism gates on those fields; their matrix exponential reports
+overflow and non-convergence as typed errors.
 
 ## Usage
-
 
 ```toml
 [dependencies]
@@ -194,7 +192,9 @@ cargo run --release -p quantum_examples --example qcm_freeze_check
 
 | Feature | Default | Description |
 |---|:---:|---|
-| `qpu` | | The emergent QPU seam: `QpuSampler` / `ShotHistogram` / the shots→`Uncertain` bridges / `qpu_effect` / the in-process `SimQpu`. Adds no network or async dependency. |
+| `qcm` | ✓ | The quantum causal-model slice: `CausalStructure`, the Markov freeze check, and the C₃-exclusion faithfulness check. Pulls in `deep_causality`; implies `std`. |
+| `dem` | ✓ | The Stim detector-error-model text constructor of `DemModel`. Implies `qcm`. |
+| `qpu` | | The emergent QPU seam: `QpuSampler` / the shots→`Uncertain` bridges / `qpu_effect` / the in-process `SimQpu`. Adds no network or async dependency. |
 
 ## Formalization
 
@@ -202,14 +202,14 @@ The verifiable path is backed by Lean 4 proofs under
 [`lean/DeepCausalityFormal/Quantum/`](../lean/DeepCausalityFormal/Quantum): the
 partial-trace identities (`PartialTrace.lean`), the Choi application (`Choi.lean`), and the
 counterexample showing that the partial trace does **not** preserve commutation
-(`PartialTraceCounterexample.lean`) — the theorem that makes the freeze commutativity check
-a genuine obligation. Each proved theorem is tied to an executable Rust witness under
+(`PartialTraceCounterexample.lean`), the theorem that makes the freeze commutativity check
+necessary. Each proved theorem has an executable Rust witness under
 `tests/formalization_lean/`.
 
 ## Contribution
 
-Contributions are welcomed especially related to documentation, example code, and fixes.
-If unsure where to start, just open an issue and ask.
+Contributions are welcome, especially documentation, example code, and fixes.
+If unsure where to start, open an issue and ask.
 
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in deep_causality by you,
 shall be licensed under the MIT licence, without any additional terms or conditions.

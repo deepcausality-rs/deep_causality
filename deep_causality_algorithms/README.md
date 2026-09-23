@@ -19,49 +19,38 @@
 
  
 
-A collection of computational causality algorithms used in
-the [DeepCausality](https://github.com/deepcausality-rs/deep_causality) project. This crate provides tools for analyzing
-and decomposing causal relationships in complex systems.
+Computational causality algorithms for the [DeepCausality](https://github.com/deepcausality-rs/deep_causality)
+project: causal decomposition (SURD), root-cause localization (BRCD) and feature selection (mRMR).
 
-The cornerstone of this crate is `surd_states`, a high-performance Rust implementation of the **SURD-states algorithm**.
-Based on the paper "Observational causality by states and interaction type for scientific discovery"
-(Martínez-Sánchez and Lozano-Durán, 2025), this algorithm decomposes the mutual information between a set of source
-variables and a target variable into its fundamental components: **S**ynergistic, **U**nique, and **R**edundant
-(**SURD**).
+`surd_states` implements the **SURD-states algorithm** from "Observational causality by states and interaction type for
+scientific discovery" (Martínez-Sánchez and Lozano-Durán, 2025). It decomposes the mutual information between a set of
+source variables and a target variable into **S**ynergistic, **U**nique, and **R**edundant (**SURD**) components, which
+shows how multiple variables interact rather than only whether they correlate.
 
-This decomposition allows for a deep, nuanced understanding of causal structures, moving beyond simple correlations to
-reveal the nature of multi-variable interactions.
-
-Alongside SURD, the crate provides `brcd`, a Rust implementation of **Bayesian Root Cause Discovery (BRCD)** based on
-the paper "Root Cause Analysis of Failures in Microservices via Bayesian Root Cause Discovery" (Lee, Zhou, and Kocaoglu,
-2026). SURD decomposes how a set of sources jointly influence a target; BRCD answers a different question. Given a normal
-dataset, an anomalous dataset, and a causal graph over the same variables, it identifies which variables most likely
-caused the anomaly. BRCD scores every candidate root-cause set with a Bayesian posterior and returns the candidates
-ranked from most to least probable.
+`brcd` implements **Bayesian Root Cause Discovery (BRCD)** from "Root Cause Analysis of Failures in Microservices via
+Bayesian Root Cause Discovery" (Lee, Zhou, and Kocaoglu, 2026). SURD decomposes how a set of sources jointly influence a
+target. BRCD takes a normal dataset, an anomalous dataset, and a causal graph over the same variables, scores every
+candidate root-cause set with a Bayesian posterior, and ranks the candidates from most to least probable.
 
 ## Key Features
 
-* **Faithful & Performant Implementation**: A high-performance, mathematically faithful Rust port of the SURD-states
-  algorithm, optimized for speed and memory efficiency.
-* **Rich Causal Decomposition**: Decomposes the total causal influence into:
+* **SURD-states port**: A Rust port of the SURD-states algorithm that follows the published mathematics.
+* **Causal Decomposition**: Decomposes the total causal influence into:
     * **Redundant (R)**: Overlapping information provided by multiple sources.
     * **Unique (U)**: Information provided by a single source independently.
     * **Synergistic (S)**: New information that emerges only from the combination of sources.
-* **State-Dependent Analysis**: Provides detailed state-dependent maps that reveal how causal influences change based on
-  the system's current state.
-* **Information Leak Quantification**: Explicitly calculates the "information leak," which quantifies the influence of
-  unobserved variables or inherent randomness in the system.
-* **Robust Incomplete Data Handling (CDL Variant)**: The `surd_states_cdl` function provides a variant of the
-  SURD-states algorithm specifically designed to gracefully manage missing or undefined probability values (`None` in
-  `CausalTensor<Option<f64>>`). This is crucial for real-world datasets where data incompleteness is common, allowing
-  for meaningful causal insights even with partial information by ignoring `None` values in calculations and propagating
-  uncertainty.
-* **Minimum Redundancy Maximum Relevance (mRMR) Feature Selection**: Implements the mRMR algorithm to select features that are maximally relevant to a target variable and minimally redundant among themselves. The algorithm now returns a ranked list of features along with their normalized importance scores (between 0.0 and 1.0), providing a clear indication of each feature's contribution.
-* **Bayesian Root Cause Discovery (BRCD)**: The `brcd_run` function localizes the root cause of an anomaly. Given two aligned datasets (a normal regime and an anomalous regime) and a CPDAG over the shared variables, it augments the graph with a soft-intervention F-node, scores each candidate root-cause set with a plug-in ridge-Gaussian (continuous) or Dirichlet (discrete) likelihood, and ranks the candidates by their posterior probability `p(R | D)`. The ranking is computed on the log-posterior directly, so it stays stable when a single fault dominates.
-* **Performance Optimized**:
-    * **Algorithmic Capping**: Use the `MaxOrder` enum to limit the analysis to a tractable number of interactions (
+* **State-Dependent Analysis**: State-dependent maps show how causal influences change with the system's current state.
+* **Information Leak Quantification**: Calculates the "information leak": the influence of unobserved variables or
+  inherent randomness in the system.
+* **Incomplete Data Handling (CDL Variant)**: `surd_states_cdl` handles missing or undefined probability values (`None`
+  in `CausalTensor<Option<f64>>`) by ignoring `None` values in calculations and propagating uncertainty, so datasets
+  with gaps still yield causal results.
+* **Minimum Redundancy Maximum Relevance (mRMR) Feature Selection**: Selects features that are maximally relevant to a target variable and minimally redundant among themselves, and returns them ranked with normalized importance scores (between 0.0 and 1.0).
+* **Bayesian Root Cause Discovery (BRCD)**: `brcd_run` localizes the root cause of an anomaly. Given two aligned datasets (a normal regime and an anomalous regime) and a CPDAG over the shared variables, it augments the graph with a soft-intervention F-node, scores each candidate root-cause set with a plug-in ridge-Gaussian (continuous) or Dirichlet (discrete) likelihood, and ranks the candidates by their posterior probability `p(R | D)`. It ranks on the log-posterior directly, so the ranking stays stable when a single fault dominates.
+* **Performance**:
+    * **Algorithmic Capping**: The `MaxOrder` enum limits the analysis to a tractable number of interactions (
       e.g., pairwise), reducing complexity from exponential `O(2^N)` to polynomial `O(N^k)`.
-    * **Parallel Execution**: When compiled with the `parallel` feature flag, the main decomposition loop of the SURD algorithm, the feature selection loops of the mRMR algorithm, and the per-family likelihood scoring of the BRCD algorithm run in parallel across all available CPU cores using `rayon`. The BRCD family scoring is the dominant cost, and each family is independent, so the parallel and sequential results are identical.
+    * **Parallel Execution**: With the `parallel` feature flag, the main SURD decomposition loop, the mRMR feature selection loops, and BRCD's per-candidate structural enumeration and per-family likelihood scoring run across all available CPU cores using `rayon`. Candidates and families are independent, and each candidate derives its own RNG seed, so parallel and sequential results are identical.
 
 ## Installation
 
@@ -105,9 +94,8 @@ if let Some(synergy) = full_result.synergistic_info().get(&vec![1, 2]) {
 
 ### Handling Incomplete Data with `surd_states_cdl`
 
-For datasets containing missing or incomplete information, the `surd_states_cdl` function provides a robust solution. It
-operates on `CausalTensor<Option<f64>>`, gracefully handling `None` values by ignoring them in calculations and
-propagating uncertainty, allowing for causal discovery even with partial data.
+`surd_states_cdl` handles datasets with missing values. It operates on `CausalTensor<Option<f64>>`, ignores `None`
+values in calculations, and propagates uncertainty.
 
 ```rust
 use deep_causality_algorithms::{surd_states_cdl, MaxOrder};
@@ -135,10 +123,10 @@ println!("CDL Information Leak: {:.3}", full_result_cdl.info_leak());
 
 ### Minimum Redundancy Maximum Relevance (mRMR) Feature Selection
 
-The mRMR algorithm is a powerful tool for selecting a subset of features that are maximally relevant to a target
-variable and minimally redundant among themselves. This helps in reducing dimensionality and focusing causal analysis on
-the most informative variables. This implementation follows the mRMR formulation of Zhao, Anand, and Wang (2019). It
-returns a ranked list of features along with their normalized importance scores (between 0.0 and 1.0).
+mRMR selects the subset of features that are maximally relevant to a target variable and minimally redundant among
+themselves, which reduces dimensionality and focuses causal analysis on the most informative variables. The
+implementation follows the formulation of Zhao, Anand, and Wang (2019) and returns a ranked list of features with
+normalized importance scores (between 0.0 and 1.0).
 
 ```rust
 use deep_causality_algorithms::mrmr::mrmr_features_selector;
@@ -160,15 +148,14 @@ println!("Selected Features and Scores: {:?}", selected_features_with_scores);
 ```
 
 A higher mRMR score (and thus a higher normalized importance score)
-indicates that the feature is not only highly relevant to the target but also
-provides new, non-redundant information compared to the features already
-chosen. It's a measure of a feature's unique and strong contribution to
-predicting the target within the context of the selected feature set.
+means the feature is relevant to the target and adds information that the
+features already chosen do not carry. The score measures a feature's
+contribution to predicting the target within the selected feature set.
 
 ### Bayesian Root Cause Discovery (BRCD)
 
-Where SURD and mRMR describe how variables influence a target, BRCD answers a different question: which variable most
-likely caused an observed anomaly? The `brcd_run` function takes a normal dataset, an anomalous dataset, a CPDAG over
+SURD and mRMR describe how variables influence a target; BRCD asks which variable most likely caused an observed
+anomaly. `brcd_run` takes a normal dataset, an anomalous dataset, a CPDAG over
 the shared variables, and a `BrcdConfig`. It returns a `BrcdResult` whose `ranks()` list the candidate root-cause sets
 from most to least probable, and whose `top()` returns the single most probable set.
 
@@ -212,12 +199,11 @@ println!("Top root cause: {:?}", result.top()); // Some([1]) = Y
 
 `BrcdConfig::continuous(seed)` selects the ridge-Gaussian family for continuous data; `BrcdConfig::discrete(seed)`
 selects the Dirichlet family for categorical data. The `num_root_causes` field sets how many simultaneous root causes a
-candidate set holds (`k`). 
+candidate set holds (`k`).
 
 ## From Discovery to Model: Connecting SURD to DeepCausality
 
-The `surd_states` algorithm serves as a bridge from observational data to executable causal models with the
-DeepCausality.
+`surd_states` connects observational data to executable DeepCausality causal models.
 
 ### 1. Mapping Causal Links to `CausaloidGraph` Structure
 
@@ -231,27 +217,25 @@ The aggregate SURD results inform the structure of the `CausaloidGraph`.
 
 ### 2. Mapping State-Dependency to `Causaloid` Logic
 
-The state-dependent maps provide the exact conditional logic for a `Causaloid`'s `causal_fn`. For example, if SURD shows
-that `S1`'s influence on `T` is strong only when `S1 > 0`, this condition can be programmed directly into the
-`Causaloid`.
+The state-dependent maps supply the conditional logic for a `Causaloid`'s `causal_fn`. If SURD shows that `S1`'s
+influence on `T` is strong only when `S1 > 0`, that condition goes directly into the `Causaloid`.
 
 ### 3. Modeling Multiple Causes with `CausaloidCollection`
 
-SURD's ability to detect multi-causal relationships is perfectly complemented by the `CausaloidCollection`, which models
-the interplay of multiple factors. The SURD results guide the choice of the collection's `AggregateLogic`:
+SURD detects multi-causal relationships; a `CausaloidCollection` models the interplay of multiple factors. The SURD
+results guide the choice of the collection's `AggregateLogic`:
 
 * **Strong SYNERGY** (e.g., A and B are required for C) maps to `AggregateLogic::All` (Conjunction).
 * **Strong UNIQUE or REDUNDANT** influences (e.g., A or B can cause C) maps to `AggregateLogic::Any` (Disjunction).
 * **Complex mixed influences** (e.g., any two of three factors cause C) maps to `AggregateLogic::Some(k)` (Threshold).
 
-In summary, `surd_states` provides the data-driven evidence to identify multi-causal structures, and the DeepCausality
-primitives provide the formal mechanisms to build an executable model of that precise structure.
+`surd_states` supplies the evidence that identifies a multi-causal structure; the DeepCausality primitives turn that
+structure into an executable model.
 
 ## Example: Decomposing Causal Structure
 
-The crate includes a detailed example (`example_surd`) that demonstrates how to use the `surd_states` algorithm and,
-more importantly, how to interpret its rich output. It runs through several test cases with different underlying causal
-structures (e.g., synergistic, noisy, random) and explains what each part of the output means.
+The `example_surd` example shows how to call `surd_states` and how to interpret its output. It runs several cases
+with different underlying causal structures (e.g., synergistic, noisy, random) and explains each part of the output.
 
 To run the example:
 
@@ -276,8 +260,8 @@ their original authors.
 
 ## Contribution
 
-Contributions are welcomed especially related to documentation, example code, and fixes.
-If unsure where to start, just open an issue and ask.
+Contributions are welcome, especially documentation, example code, and fixes.
+If unsure where to start, open an issue and ask.
 
 Unless you explicitly state otherwise, any contribution intentionally submitted for inclusion in deep_causality by you,
 shall be licensed under the MIT licence, without any additional terms or conditions.

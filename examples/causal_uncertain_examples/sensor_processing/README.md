@@ -1,8 +1,8 @@
 # Sensor Data Processing Example
 
 A stateful six-stage `PropagatingProcess<_, FleetState, FleetConfig>` pipeline
-that triages a heterogeneous sensor fleet, fuses healthy readings, detects
-anomalies, runs physics cross-checks, and emits a final reliability verdict.
+triages a heterogeneous sensor fleet, fuses healthy readings, detects
+anomalies, runs physics cross-checks, and emits a reliability verdict.
 
 ## Pipeline
 
@@ -22,30 +22,29 @@ PropagatingProcess { value: RawReadings, state: FleetState::default(), context: 
 |----------|------------------|---------------------------------------------------------------------------------------------|
 | `value`  | `RawReadings` → `ProcessedReadings` | Per-sensor data carried stage-to-stage; type projects after Stage 1.    |
 | `state`  | `FleetState`     | Accumulates counts, total uncertainty, fused temperature, anomaly list, final verdict.       |
-| `context`| `FleetConfig`    | Read-only plausibility bands, calibration offsets, anomaly thresholds. Replaces magic numbers in the original example. |
+| `context`| `FleetConfig`    | Read-only plausibility bands, calibration offsets, anomaly thresholds. |
 | `logs`   | `EffectLog`      | Each stage appends one or more entries; `main.rs` prints them once at the end.               |
-| `error`  | `Option<CausalityError>` | Set if a stage's preconditions fail; downstream `bind` calls short-circuit automatically.  |
+| `error`  | `CausalityError` | Shares the outcome `Result` with `value`; set if a stage's preconditions fail, after which downstream `bind` calls short-circuit.  |
 
 ## What the example demonstrates
 
-- **`PropagatingProcess` with non-trivial state and context** — the canonical
-  multi-stage pattern from the avionics
+- **`PropagatingProcess` with non-trivial state and context:** the
+  multi-stage pattern of the avionics
   [`flight_envelope_monitor`](../../avionics_examples/control/flight_envelope_monitor)
   example, applied to a sensor fleet.
-- **Configuration in the `Context` channel** — physical-plausibility ranges,
-  calibration offsets, and anomaly thresholds live in `FleetConfig`, not in
-  free functions, so the same stages run against a different fleet by
-  swapping the context.
-- **Per-stage `EffectLog` observability** — stages emit log entries instead
-  of `println!`-ing during the chain; the final state and log are printed
-  once at the end.
-- **Uncertainty-aware triage** — `Healthy`, `Degraded`, `OutOfRange`,
+- **Configuration in the `Context` channel:** physical-plausibility ranges,
+  calibration offsets, and anomaly thresholds live in `FleetConfig`, so the
+  same stages run against a different fleet by swapping the context.
+- **Per-stage `EffectLog` observability:** stages append log entries
+  instead of printing during the chain; `main.rs` prints the final state and
+  log once at the end.
+- **Uncertainty-aware triage:** `Healthy`, `Degraded`, `OutOfRange`,
   `CalibrationDrift`, `Failed`, and `CommunicationError` each map to a
   different `Uncertain<f64>` construction (or to a stage-local error
   string).
-- **Inverse-variance fusion** — temperature sensors weighted by
+- **Inverse-variance fusion:** temperature sensors weighted by
   `1 / (σ + ε)`; large disagreement raises a fleet anomaly.
-- **Cross-modal validation** — Stage 5 checks temperature against a
+- **Cross-modal validation:** Stage 5 checks temperature against a
   pressure-derived estimate as a physics sanity test.
 
 ## How to run

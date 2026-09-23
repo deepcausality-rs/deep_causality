@@ -1,6 +1,6 @@
 # Granger via the Causal Monad
 
-Granger's predictive-causality test on `PropagatingProcess<f64, (), SeriesContext>` using the [`AlternatableContext`](../../../../deep_causality_core/src/traits/alternatable_context/mod.rs) trait.
+Runs Granger's predictive-causality test on `PropagatingProcess<f64, (), SeriesContext>` with the [`AlternatableContext`](../../../../deep_causality_core/src/traits/alternatable_context/mod.rs) trait.
 
 ## How to run
 
@@ -10,12 +10,12 @@ cargo run -p classical_causality_examples --example granger_via_monad
 
 ## The test
 
-The Granger question: does including past oil-price history improve our prediction of next-period shipping activity? Two predictions, one chain:
+The Granger question: does past oil-price history improve the prediction of next-period shipping activity? One chain makes two predictions:
 
-1. **Factual** — predict from a Context that carries both `shipping_activities` and `oil_prices`.
-2. **Counterfactual** — same chain, but `.alternate_context(no_oil_ctx)` swaps to a Context whose `oil_prices` vector is empty before the bind runs.
+1. **Factual:** predict from a Context that carries both `shipping_activities` and `oil_prices`.
+2. **Counterfactual:** the same chain, but `.alternate_context(no_oil_ctx)` swaps in a Context with an empty `oil_prices` vector before the bind runs.
 
-The error of each prediction is compared against the actual Q5 shipping value. If the factual prediction is closer, the oil series Granger-causes shipping.
+The example compares each prediction's error against the actual Q5 shipping value. If the factual prediction is closer, the oil series Granger-causes shipping.
 
 ## The mechanism
 
@@ -28,7 +28,7 @@ let counter_pred = start(factual_series())
     .unwrap();
 ```
 
-The single-stage `predict_shipping` bind reads the series from the Context. It averages past shipping, adds a trend, and adjusts by `(mean(oil_prices) - 50.0) * 0.5` *only when* the oil series is non-empty. The counterfactual world emits its prediction without that oil-driven adjustment.
+The single-stage `predict_shipping` bind reads the series from the Context. It averages past shipping, adds a trend, and adjusts by `(mean(oil_prices) - 50.0) * 0.5` *only when* the oil series is non-empty, so the counterfactual prediction omits the oil adjustment.
 
 ## How this differs from the Causaloid version
 
@@ -43,4 +43,4 @@ Both versions produce identical numbers for the same fixture.
 
 ## Reference
 
-For the conceptual background, see the [Counterfactuals concept page](https://docs.deepcausality.com/concepts/counterfactuals/) and the RCM example which establishes the single-chain-two-contexts pattern.
+For background, see the [Counterfactuals concept page](https://docs.deepcausality.com/concepts/counterfactuals/) and the RCM example, which introduces the single-chain, two-context pattern.

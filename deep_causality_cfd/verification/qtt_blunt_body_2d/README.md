@@ -1,10 +1,11 @@
 # QTT blunt-body bow shock — the Stage-5 rank lever (Tier-B)
 
-The **rank-lever gate**. A blunt-body bow shock stands off the nose at a constant *physical* radius
-`R`. In a body-fitted coordinate that surface is a line `η = const`, a step in one axis, so its
-quantized-tensor-train bond `χ` is `O(10)` and resolution-independent. Sampled on a Cartesian
-lattice the identical physical shock is curved on the grid, so `χ` grows with resolution.
-Body-fittedness buys the bond reduction, and that lever is what this gate pins.
+This example gates the **rank lever**: a body-fitted coordinate keeps the quantized-tensor-train
+bond `χ` of a bow shock bounded where a Cartesian lattice lets it grow. A blunt-body bow shock
+stands off the nose at a constant *physical* radius `R`. In a body-fitted coordinate that surface
+is a line `η = const`, a step in one axis, so its bond `χ` is `O(10)` and resolution-independent.
+Sampled on a Cartesian lattice the same physical shock is curved on the grid, so `χ` grows with
+resolution.
 
 ```bash
 cargo run --release -p deep_causality_cfd --example qtt_blunt_body_2d
@@ -20,8 +21,7 @@ coordinates see the same shock. Each sampled density field is quantized by `quan
 tolerance `1e-8`, and its `max_bond()` is read off over a `2^5 → 2^7` ladder.
 
 The marcher (`CompressibleMarcher2d`) runs the **same solver** over both coordinates through the
-`MetricProvider` seam (design D8). This is therefore a one-solver comparison, where the coordinate
-is the only variable.
+`MetricProvider` seam (design D8), so the coordinate is the only variable.
 
 ## What it verifies (exit nonzero on break)
 
@@ -41,12 +41,12 @@ gate for the compressible solver is `qtt_sod`, against the exact Riemann solutio
 | 2^6 | 4 | 32 |
 | 2^7 | 5 | 61 |
 
-Fitted runs 3 to 5 and is flat. The capture cost runs 16 to 61: a 3.8× rise for a 4× refinement,
+Fitted `χ` runs 3 to 5 and stays flat. The capture cost runs 16 to 61: a 3.8× rise for a 4× refinement,
 so `χ ≈ side/2`, roughly linear in `side`. A `√side` law would give 6, 8, 11. Both gates **PASS**.
 
 ## Reported, not gated
 
-The **dynamic marched** rank is an open remainder. A plain flux-through-front marcher injects
+The **dynamic marched** rank remains open. A plain flux-through-front marcher injects
 angular structure across the captured front and grows `χ` to **64** over 6 steps, even in the
 fitted coordinate. Bounding the marched `χ` needs re-pinning plus an exact-RH interface, meaning
 smooth on each side with no flux marched across the front. That is design D9 and the

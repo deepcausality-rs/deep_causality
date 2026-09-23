@@ -1,7 +1,6 @@
 # Alignment
 
-Two structures sampled at the same positions belong together position by position: slot `i` with
-slot `i`. `Semigroupal::zip_with` pairs and combines in one pass, and
+Two structures sampled at the same positions pair slot `i` with slot `i`. `Semigroupal::zip_with` pairs and combines in one pass, and
 `DiagonalTraversable::sequence_zip` lifts that to a whole structure of them.
 
 A container can be read as an applicative in more than one way. `CausalTensorWitness` broadcasts

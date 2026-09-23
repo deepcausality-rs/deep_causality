@@ -1,54 +1,45 @@
 # Example: Causal State Machine with Effect Ethos
 
-This example demonstrates the integration of a **Causal State Machine (CSM)** with an **Effect Ethos** to add a layer of
-deontic (normative) reasoning to a reactive system.
+This example pairs a **Causal State Machine (CSM)** with an **Effect Ethos**, which adds deontic (normative)
+reasoning to a reactive system.
 
-It models a simple temperature monitoring system that triggers an alert when the temperature exceeds a threshold.
-However, the action of sending the alert is subject to approval by the `EffectEthos`, which evaluates it against a set
-of predefined norms.
+It models a temperature monitoring system that triggers an alert when the temperature exceeds a threshold. The
+`EffectEthos` then evaluates the alert action against a set of predefined norms.
 
 ## How it Works
 
-The example is structured to highlight the difference between a purely reactive system and one governed by deontic
-rules.
+The example contrasts a purely reactive system with one governed by deontic rules.
 
 ### 1. The Components
 
-* **`CausalState`**: A state that becomes active when a specific condition is met. Here, it checks if the `temperature`
-  data value is greater than `50.0`.
-* **`CausalAction`**: An action that is triggered when the corresponding state is active. In this case, it's a simple
-  function that prints an alert to the console.
-* **`CausalStateMachine (CSM)`**: Manages the link between states and actions. When a state evaluates to `true`, the CSM
-  triggers its associated action.
-* **`EffectEthos`**: A deontic reasoning engine that contains a set of norms (`Teloids`). It evaluates a
-  `ProposedAction` to determine if it is permissible, obligatory, or impermissible.
-* **`Teloid` (Norm)**: A single rule within the ethos. In this example, we define a norm that makes the
-  `High temp alert` **Impermissible**. This simulates a scenario where, for instance, alerts might be suppressed to
-  prevent spamming or if a manual override is in effect.
+* **`CausalState`**: A state that becomes active when its condition holds. Here, its `Causaloid` checks whether the
+  input reading reaches the threshold `0.55`.
+* **`CausalAction`**: An action that fires when the corresponding state is active. Here, a function that prints an
+  alert to the console.
+* **`CausalStateMachine (CSM)`**: Links states to actions. When a state evaluates to `true`, the CSM fires its
+  associated action.
+* **`EffectEthos`**: A deontic reasoning engine holding a set of norms (`Teloids`). It evaluates a `ProposedAction` and
+  decides whether it is permissible, obligatory, or impermissible.
+* **`Teloid` (Norm)**: A single rule within the ethos. The example defines a norm that makes the `high_temp_alert`
+  action **Impermissible**, as when alerts are suppressed to prevent spamming or during a manual override.
 
 ### 2. The Scenario
 
-The `main` function executes the same logic twice to provide a clear comparison:
+The `main` function runs in two parts:
 
-**A. Execution without `EffectEthos`**
+**A. CSM evaluation without the `EffectEthos`**
 
-1. The `CSM` is initialized with the high-temperature state and the alert action, but **without** the `EffectEthos`.
-2. The `CSM` is evaluated with a temperature of `60.0`, which exceeds the threshold.
+1. The `CSM` holds the high-temperature state and the alert action.
+2. The `CSM` is evaluated with a reading of `0.6`, which exceeds the threshold.
 3. The `CausalState` becomes active.
-4. The `CSM` immediately fires the `CausalAction`, and the alert "Alert! High temperature detected!" is printed.
-5. The result is `Ok(())`, as the action was executed without restriction.
+4. The `CSM` fires the `CausalAction`, which prints "Alert! High temperature detected!".
 
-**B. Execution with `EffectEthos`**
+**B. Deontic evaluation with the `EffectEthos`**
 
-1. The `CSM` is initialized with the state, the action, **and** the `EffectEthos` containing the impermissibility norm.
-   A `TeloidTag` (`High temp alert`) is provided to link the evaluation to the correct norm.
-2. The `CSM` is evaluated again with a temperature of `60.0`.
-3. The `CausalState` becomes active.
-4. Instead of firing the action directly, the `CSM` creates a `ProposedAction` and submits it to the `EffectEthos` for
-   evaluation.
-5. The `EffectEthos` finds the active `High temp alert` norm, which renders the action **Impermissible**.
-6. Because the action is forbidden, the `CSM` does **not** fire the action. Instead, it returns a `CsmError::Forbidden`
-   containing a detailed explanation of the verdict.
+1. The example builds a `ProposedAction` named `high_temp_alert`.
+2. `EffectEthos::evaluate_action` checks it against the norms tagged `temperature`, using the shared context.
+3. The active `high_temp_alert` norm renders the action **Impermissible**.
+4. The example prints the verdict, the norms in its justification, and that the ethos forbids the alert.
 
 ## How to Run
 
@@ -70,5 +61,4 @@ Result with ethos: Err(Forbidden("The final verdict is Impermissible....
 The outcome is Impermissible because at least one impermissible norm was active and undefeated, which has the highest precedence."))
 ```
 
-This output clearly illustrates the core concept: the `EffectEthos` successfully intercepted and blocked an action that
-would have otherwise been executed, providing a powerful mechanism for building safer and more robust systems.
+The `EffectEthos` blocks an action that the causal model alone would have executed.

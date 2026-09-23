@@ -1,12 +1,11 @@
 # Hyperbolic Metamaterial Lens
 
-An ordinary lens cannot resolve detail finer than the light it uses. This example shows why, and
-shows one way around it, with the material described by nothing but a metric signature.
+An ordinary lens cannot resolve detail finer than the wavelength of its light. This example shows
+why, and shows one way around it, describing the material by a metric signature alone.
 
-It is a demonstration rather than a solver. The point is that once the essence of the problem is
-written as a causal process over the library's types, precision as a parameter and categorical
-composition come for free: the same source runs at four scalars, and the sweep is a `fmap` and a
-`fold`. [What this example is, and where it stops](#what-this-example-is-and-where-it-stops) says
+It is a demonstration, not a solver. Once the problem is written as a causal process over the
+library's types, precision as a parameter and categorical composition follow at no extra cost: the
+same source runs at four scalars, and the sweep is a `fmap` and a `fold`. [What this example is, and where it stops](#what-this-example-is-and-where-it-stops) says
 what the model holds fixed and how it grows toward a device-grade treatment.
 
 ```bash
@@ -15,7 +14,7 @@ cargo run -p material_examples --example hyperlens_example
 
 ## The physics
 
-Fine detail is carried by high spatial frequencies. A periodic object of period `d` carries
+High spatial frequencies carry fine detail. A periodic object of period `d` carries
 `k_x = 2π/d`, and a wave leaving it has an out-of-plane wavenumber set by the dispersion relation.
 For a TM wave in a uniaxial medium:
 
@@ -35,8 +34,7 @@ positive at every `k_x`. Nothing bounds the detail that propagates.
 
 ## The metric is the material
 
-A sign pattern over principal axes is exactly what a metric signature carries, so the two
-materials are two metrics:
+A metric signature is a sign pattern over principal axes, so the two materials are two metrics:
 
 | Material | Metric | Signature | ε_x | ε_y | ε_z |
 |---|---|---|---|---|---|
@@ -44,7 +42,7 @@ materials are two metrics:
 | Type I metamaterial | `Metric::Generic { p: 2, q: 1, r: 0 }` | (+, +, −) | +1 | +1 | −1 |
 
 `model::permittivity` reads each sign with `Metric::sign_of_sq`, so the optics never writes a sign
-of its own. Swapping the metric swaps the physics, and that is the whole claim this example makes.
+of its own. Swapping the metric swaps the physics; that is the example's whole claim.
 
 ## What the code demonstrates
 
@@ -83,17 +81,17 @@ pub type FloatType = Float106;
 ```
 
 Every constant is declared at that type through `const_scalar_from_int!` and
-`const_scalar_from_float!`, so no conversion runs at any call site. It sits at `Float106` rather
-than `f64` on purpose: a hard-coded `f64` is invisible while the alias *is* `f64`, and a compile
-error the moment the two differ. All four scalars run.
+`const_scalar_from_float!`, so no conversion runs at any call site. The alias is `Float106` rather
+than `f64` so that a hard-coded `f64`, unnoticed while the alias *is* `f64`, fails to compile. All
+four scalars run.
 
 ## What the example covers
 
-The goal here is to reformulate the essence of a physical problem as a causal process, and to get
-precision as a parameter and categorical composition for free once it is in that form. The essence
-of a hyperlens is one sign flip in a signature, so the model keeps that and holds everything else
-fixed: both permittivity magnitudes sit at 1, the medium is unbounded and lossless, and the
-illumination is a single frequency. What remains is the mechanism, and the mechanism is the claim.
+The example reformulates the core of a physical problem as a causal process, which brings
+precision as a parameter and categorical composition along. The core of a hyperlens is one sign
+flip in a signature, so the model keeps that and holds everything else fixed: both permittivity
+magnitudes sit at 1, the medium is unbounded and lossless, and the illumination is a single
+frequency. What remains is the mechanism.
 
 A production-grade solver adds the parts a device needs: magnitudes that differ per axis and vary
 with frequency, a complex permittivity carrying loss, a finite layer stack with its own reflections,
@@ -105,11 +103,11 @@ Each step keeps the structure already here.
 
 - **Per-axis and frequency-dependent magnitudes.** `permittivity` already takes an axis, so only
   its magnitude source changes: a per-axis table, then a Drude or Lorentz model in the frequency.
-  Sweeping period against frequency makes the tensor rank 2, and the `fmap` carries over untouched.
+  Sweeping period against frequency makes the tensor rank 2, and the `fmap` carries over unchanged.
 - **Loss.** A lossy medium has a complex permittivity, and the dispersion relation is the same
   expression over `Complex<FloatType>`, with the imaginary part of `k_z` giving the decay length.
-  The one change is writing the relation over a scalar bound instead of the alias, which is what
-  lets one definition serve both scalars.
+  The one change is writing the relation over a scalar bound instead of the alias, so one
+  definition serves both scalars.
 - **A finite layer stack.** A real hyperlens is alternating layers, and a stack is a product of
   transfer matrices: `DenseMatrix` for the matrices and a `fold` for the product.
 - **Curved geometry.** A cylindrical hyperlens magnifies as it propagates, which the topology crate

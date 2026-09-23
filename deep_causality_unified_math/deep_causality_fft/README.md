@@ -1,10 +1,9 @@
 # deep_causality_fft
 
-Fast Fourier transforms for the DeepCausality stack: plan-based forward and
-inverse transforms, generic over `RealField`, with zero external runtime
-dependencies. The crate exists to give the DEC-native Navier-Stokes solver a
-spectral Poisson solve on periodic lattices (the `add-fft` OpenSpec change),
-but the transforms are general-purpose.
+Plan-based forward and inverse fast Fourier transforms, generic over
+`RealField`, with no external runtime dependencies. The DEC-native
+Navier-Stokes solver uses them for its spectral Poisson solve on periodic
+lattices; the transforms themselves are general-purpose.
 
 ## Types
 
@@ -15,11 +14,11 @@ but the transforms are general-purpose.
 | `FftPlanNd<R>` | N-dimensional complex FFT by row-column decomposition |
 | `RfftPlanNd<R>` | N-dimensional real FFT: rFFT along the last axis, complex along the rest |
 
-`DctPlan<R>` adds plan-based discrete cosine transforms (types I, II, III,
-unnormalized with `execute_inverse` applying the exact scaled inverse),
-built on the rFFT core via the Makhoul (DCT-II/III) and even-extension
-(DCT-I) embeddings — the building block for direct Neumann-Poisson solves
-on wall-bounded uniform boxes.
+`DctPlan<R>` provides discrete cosine transforms of types I, II, and III,
+unnormalized, with `execute_inverse` applying the exact scaled inverse. It
+runs on the rFFT core through the Makhoul (DCT-II/III) and even-extension
+(DCT-I) embeddings and serves direct Neumann-Poisson solves on wall-bounded
+uniform boxes.
 
 `naive_dft` / `naive_idft` / `naive_dct_*` are the O(n²) correctness
 references used by the test suite; the planner never selects them.
@@ -28,19 +27,19 @@ references used by the test suite; the planner never selects them.
 
 Following the survey in `openspec/notes/archive/fft/fft_state_of_the_art.md`:
 
-1. **Hardcoded small-N kernels** (lengths 1–32): in-place, scratch-free
-   planner base cases.
+1. **Hardcoded small-N kernels** (power-of-two lengths 1–32): in-place,
+   scratch-free planner base cases.
 2. **Mixed radix-4/radix-2 Stockham pipeline** (powers of two above 32):
-   autosorting — no bit-reversal pass — with regular, unit-stride,
-   auto-vectorizable access. This is deliberately *not* flop-minimal
-   split-radix; regular access wins on real hardware.
+   autosorting (no bit-reversal pass), with regular, unit-stride,
+   auto-vectorizable access. It trades the flop count of split-radix for
+   regular access, which runs faster on real hardware.
 3. **Bluestein's chirp-z fallback** (every other length): the DFT as a
    circular convolution against a chirp, evaluated with the power-of-two
    core, so every length is O(N log N).
 
-The inverse is conjugation reuse of the forward path
-(`ifft(x) = conj(fft(conj(x))) / N`) — one kernel serves both directions and
-the pair stays consistent by construction.
+The inverse reuses the forward path through conjugation
+(`ifft(x) = conj(fft(conj(x))) / N`), so one kernel serves both directions
+and the pair stays consistent by construction.
 
 ## Normalization contract
 
@@ -53,8 +52,8 @@ Plans are immutable after construction and hold all precomputed state
 (twiddle tables, stage schedules, chirp sequences). Execution borrows a
 caller-provided scratch buffer of `plan.scratch_len()` elements and performs
 no heap allocation. Twiddles are computed directly per index (no recurrence),
-so table accuracy is the scalar's `sin`/`cos` accuracy — which is what makes
-the transforms meaningful at `Float106` extended precision, not just `f64`.
+so table accuracy equals the scalar's `sin`/`cos` accuracy. The transforms
+therefore hold at `Float106` extended precision as well as at `f64`.
 
 ```rust
 use deep_causality_fft::FftPlan;
@@ -71,10 +70,10 @@ plan.execute_inverse(&mut data, &mut scratch)?;  // back to the input
 
 ## The `parallel` feature
 
-`--features parallel` enables Rayon fan-out of the independent 1-D batches
-inside the N-dimensional plans (the same opt-in pattern as
-`deep_causality_topology` and `deep_causality_physics`). Results are
-identical to the serial path. A measured granularity threshold keeps small
+`--features parallel` fans the independent 1-D batches inside the
+N-dimensional plans out over Rayon, the same opt-in pattern as
+`deep_causality_topology` and `deep_causality_physics`. Results match the
+serial path exactly. A measured granularity threshold keeps small
 transforms serial: on Apple Silicon, a 32³ pass ran 2× *slower* under an
 unconditional fan-out (short lines, fork-join overhead), while 64³ gains
 ~1.7×; the threshold sits between the two. Parallel sections allocate
@@ -94,14 +93,14 @@ Silicon, f64, serial):
 | 3-D real round-trip (rFFT + irFFT), 32³ | ~337 µs |
 | 3-D complex forward, 64³ | ~4.8 ms (serial) / ~2.8 ms (`parallel`) |
 
-For scale: the CG-based Leray projection this replaced on periodic lattices
-dominated the 388 ms (32³) DEC solver step; with the spectral path the
-projection is 1.9 ms and the full step is 137 ms serial / 57 ms parallel
-(see the Taylor-Green example README for the full table).
+For scale: on periodic lattices the CG-based Leray projection dominates the
+388 ms (32³) DEC solver step; the spectral path cuts the projection to
+1.9 ms and the full step to 137 ms serial / 57 ms parallel (see the
+Taylor-Green example README for the full table).
 
 ## Safety
 
-No `unsafe` — the crate opts into the workspace-wide
+No `unsafe`: the crate opts into the workspace-wide
 `unsafe_code = "forbid"` lint policy.
 
 ## Contribution

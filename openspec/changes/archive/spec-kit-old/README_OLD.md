@@ -10,31 +10,31 @@ The DeepCausality project phased out spec-kit and replaced it with a simpler, le
 
 The DeepCausality project adopted spec-driven development with [spec-kit](https://github.com/github/spec-kit?tab=readme-ov-file#-detailed-process).
 
-It is important to note that the project conventions for the AI agent are documented in the AGENTS.md file. That way, your coding agent will use the right build and test tools by default and will understand the structure of the repository. Alternatively, you can pre-load the agent's context by simply typing `read @GEMINI.md`.
+AGENTS.md documents the project conventions for the AI agent, so your coding agent uses the right build and test tools by default and understands the repository structure. Alternatively, pre-load the agent's context by typing `read @GEMINI.md`.
 
-Next, it is important that you have spec-kit installed on your machine. See the [spec-kit](https://github.com/github/spec-kit?tab=readme-ov-file#-detailed-process) repository for details.
+Next, install spec-kit. See the [spec-kit](https://github.com/github/spec-kit?tab=readme-ov-file#-detailed-process) repository for details.
 
-If you have spec-kit already installed, but its over a week old, please run an update via:
+If your spec-kit installation is over a week old, update it via:
 
 uvx --from git+https://github.com/github/spec-kit.git specify init .
 
-Notice the dot at the end? Its a short-hand for "here" assuming you are executing the command from your project root. 
+The trailing dot means "here", assuming you run the command from the project root.
 
-Before you go ahead with your project, ensure
+Before you start, ensure
 
 A) You have a sensible AGENTS.md file in place
 B) You have a project specific constitution in place.
 
-For A, visit https://agents.md, look at the examples, and build one. 
-In this repo, you find a sample AGENTS.md in the root folder and a 
-legacy Gemini.md with instructions of how to configure Gemini CLI to use the
-AGENTS.md file by default.
+For A, visit https://agents.md, look at the examples, and build one.
+This repo has a sample AGENTS.md in the root folder and a
+legacy Gemini.md explaining how to configure Gemini CLI to use
+AGENTS.md by default.
 
-For B, start your coding agent, and run the following command. 
+For B, start your coding agent and run:
 
 /constitution
 
-Once spec-kit is installed, the basic workflow is as follows:
+Once spec-kit is installed, the basic workflow is:
 
 0) Start your coding CLI agent (e.g., Gemini-CLI, Claude Code, Copilot, or Cursor).
 1) Pre-load the agent's context with all relevant crates (e.g., type `read @deep_causality`).
@@ -47,9 +47,9 @@ Once spec-kit is installed, the basic workflow is as follows:
 8) Verify the implementation, test, and conduct a code review.
 9) Submit a PR and check CI status.
 
-If you are unsure about a feature or implementation technique, you can ask the agent to do research for you. However, without a good starting source (e.g., a blueprint, a technical blog post, or sample code), your mileage and luck may vary.
+If you are unsure about a feature or implementation technique, ask the agent to research it. Without a good starting source (e.g., a blueprint, a technical blog post, or sample code), results vary.
 
-Plan validation significantly increases the chances of a speedy implementation without the agent running in random loops. A sample prompt to ask the agent to validate the plan, from the spec-kit example, is:
+Plan validation raises the chance of a quick implementation without the agent running in loops. A sample validation prompt from the spec-kit example:
 
     Now I want you to go and audit the implementation plan and the implementation detail files.
     Read through it with an eye on determining whether or not there is a sequence of tasks that you need
@@ -57,28 +57,28 @@ Plan validation significantly increases the chances of a speedy implementation w
     when I look at the core implementation, it would be useful to reference the appropriate places in the implementation
     details where it can find the information as it walks through each step in the core implementation or in the refinement.
 
-For complex, large, or advanced features, it is recommended to ask the agent to conduct a risk assessment, derive a mitigation for each identified risk, and update the plan accordingly. A sample prompt would be:
+For complex or large features, ask the agent to assess risks, derive a mitigation for each, and update the plan. A sample prompt:
 
     Please do a comprehensive risk assessment of the implementation plan and the implementation details, identify
     all applicable risks, derive an effective mitigation for each identified risk,
     and then update the plan accordingly.
 
-A handful of best practices have proven effective:
+These practices have proven effective:
 
 *   Define traits upfront whenever possible.
 *   Define Error types and Enums upfront for the most common error cases.
 *   If possible, define key structs.
-*   For complex algorithms, let the agent read a publication or reference document to pre-fill the context. It makes a
-    meaningful difference, especially if the publication is detailed.
+*   For complex algorithms, let the agent read a publication or reference document to pre-fill the context. It helps
+    most when the publication is detailed.
 *   Referencing existing code in the repository via `@path/to/file.rs` gives meaningful context to inform the plan.
 *   Adding a sample API and/or mock API usage usually results in an exact replication of the sample API with proper
     implementation.
 
-When these best practices are applied, it is very common for the agent to write 90% to 95% of the code while maintaining a code style and standard that is similar to the overall code quality of the project.
+With these practices, the agent commonly writes 90% to 95% of the code, in a style and standard close to the rest of the project.
 
-By experience, steps 1-7 usually run fairly straightforward, even for complex implementations, especially when the specs and plan document are very specific and detailed.
+Steps 1-7 usually run smoothly, even for complex implementations, especially when the specs and plan are specific and detailed.
 
-Steps 8 and 9, especially code coverage, require follow-up interventions because most agents, even if told to test all methods and code branches, fail to do so on the first run. Nevertheless, most coding agents do correct missing code coverage during the follow-up. Since the DeepCausality project maintains a sustained code coverage rate of about 95% to 97%, QA and testing require the majority of time for any given feature.
+Steps 8 and 9, especially code coverage, need follow-up: most agents, even when told to test all methods and branches, miss some on the first run, and most fill the gaps in the follow-up. Since the project sustains code coverage of about 95% to 97%, QA and testing take most of the time for any feature.
 
 Resources:
 * https://github.blog/ai-and-ml/generative-ai/spec-driven-development-with-ai-get-started-with-a-new-open-source-toolkit

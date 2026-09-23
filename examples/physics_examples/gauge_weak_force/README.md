@@ -1,17 +1,17 @@
 # Weak Force (SU(2)) Example
 
-This example demonstrates the **Weak Nuclear Force** using the specialized DeepCausality physics module.
+This example computes **Weak Nuclear Force** observables with `WeakTheory` from `deep_causality_physics` and chains the stages with the causal monad (`CausalFlow`).
 
 ## Overview
 
-The Weak Force is responsible for radioactive decay (like beta decay) and neutrino interactions.
-This pipeline simulates:
+The Weak Force drives radioactive decay (like beta decay) and neutrino interactions.
+The pipeline has four stages:
 
-1. **Particle Initialization**: Creation of left-handed lepton doublets (SU(2) states).
+1. **Particle Initialization**: Creates left-handed lepton doublets (SU(2) states).
 2. **Charged Current (CC)**: W boson exchange (e.g., muon decay).
-   - Demonstrates the W propagator at low energy.
+   - Computes the W propagator at low energy.
 3. **Neutral Current (NC)**: Z boson exchange (e.g., neutrino scattering).
-   - Calculates effective couplings g_V and g_A.
+   - Computes the effective couplings g_V and g_A.
 4. **Decay Analysis**:
    - Computes muon lifetime from Fermi theory.
    - Estimates W and Z boson decay widths.
@@ -20,7 +20,7 @@ This pipeline simulates:
 
 - **Weak Isospin**: Left-handed fermions have isospin I=1/2.
 - **W/Z Propagators**: 1/(q² - M²) dependence.
-- **Fermi Constants**: G_F determines the strength of weak interactions at low energy.
+- **Fermi Constant**: G_F sets the strength of weak interactions at low energy.
 
 ## Running
 

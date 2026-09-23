@@ -1,16 +1,12 @@
 # Quantum Examples
 
-Worked examples whose subject matter is directly quantum: quantum
-computing, quantum geometry of electronic bands, topological quantum
-matter, electroweak loop corrections, and the spinor/Bloch-sphere
-structure of a qubit state.
+Worked examples on quantum subjects: quantum computing, quantum
+geometry of electronic bands, topological quantum matter, electroweak
+loop corrections, quantum error correction, quantum causal models, and
+the spinor/Bloch-sphere structure of a qubit state. Each example is
+self-contained; the package has no shared library code.
 
-These were consolidated here from `physics_examples`,
-`material_examples`, and `mathematics_examples` so that the quantum
-material lives in one place. Each example is self-contained; there is no
-shared library code.
-
-This crate sits alongside
+This package sits alongside
 [`physics_examples`](../physics_examples),
 [`material_examples`](../material_examples), and
 [`mathematics_examples`](../mathematics_examples).
@@ -20,8 +16,8 @@ This crate sits alongside
 | Example | Field | What it shows | Command |
 |---|---|---|---|
 | [`quantum_counterfactual`](quantum_counterfactual/README.md) | Quantum computing | The three-qubit repetition code: a real `X` gate, two parity measurements whose values are `±1` whatever the amplitudes are, and a decoder that restores the state exactly. `alternate_value_if` then forces a different syndrome, and the same decoder destroys it. | `cargo run -p quantum_examples --example quantum_counterfactual` |
-| [`quantum_geometric_tensor`](quantum_geometric_tensor/README.md) | Condensed matter | The quantum geometric tensor as one object with two readings: a symmetric metric and an antisymmetric Berry curvature. The metric computed here is what feeds the flat-band Drude weight, so the geometry-to-transport chain is made rather than asserted. | `cargo run -p quantum_examples --example quantum_geometric_tensor` |
-| [`gauge_electroweak`](gauge_electroweak/README.md) | Quantum field theory | The W mass predicted from three measured numbers: tree level misses by 1.5 GeV, one loop lands within 8 MeV of the measurement. The tolerance the run checks against is the accuracy the summary claims. | `cargo run -p quantum_examples --example gauge_electroweak` |
+| [`quantum_geometric_tensor`](quantum_geometric_tensor/README.md) | Condensed matter | The quantum geometric tensor as one object with two readings: a symmetric metric and an antisymmetric Berry curvature. The computed metric feeds the flat-band Drude weight, so the run carries the chain from geometry to transport. | `cargo run -p quantum_examples --example quantum_geometric_tensor` |
+| [`gauge_electroweak`](gauge_electroweak/README.md) | Quantum field theory | The W mass predicted from three measured numbers: tree level misses by 1.5 GeV, one loop lands within 8 MeV of the measurement. The run checks against the tolerance the summary claims. | `cargo run -p quantum_examples --example gauge_electroweak` |
 | [`topological_insulator`](topological_insulator/README.md) | Quantum materials | The Chern number two independent ways: exact tangent-functor derivatives under nested quadrature, against a Fukui-Hatsugai-Suzuki lattice sum. One differentiates and never forms a spinor; the other forms spinors and never differentiates. | `cargo run -p quantum_examples --example topological_insulator` |
 | [`hopf_fibration_multivector`](hopf_fibration_multivector/README.md) | Quantum state geometry | Why a qubit's global phase is unobservable: the state as a rotor in `Cl(3)`, the Bloch vector as a sandwich product, and a full circuit of the fiber showing the state travel while its shadow holds still. The spinor double cover is visible in the walk. | `cargo run -p quantum_examples --example hopf_fibration_multivector` |
 | [`qcm_freeze_check`](qcm_freeze_check/README.md) | Quantum causal models | The condition that decides whether a graph of Choi-Jamiolkowski factors is a quantum causal model at all: factors sharing a Hilbert leg must pairwise commute. Enforced at the freeze boundary, and a failure rolls the graph back to dynamic. | `cargo run -p quantum_examples --example qcm_freeze_check` |
@@ -36,7 +32,7 @@ This crate sits alongside
 
 ## Adding New Examples
 
-1. Create directory: `<your_example>/`
+1. Create the directory `<your_example>/`
 2. Add `main.rs` with doc comments (`//!` module docs)
 3. Add `README.md` following the [standard template](../physics_examples/README.md)
 4. Register in `Cargo.toml`:
@@ -45,3 +41,4 @@ This crate sits alongside
    name = "your_example"
    path = "your_example/main.rs"
    ```
+5. Add a matching `rust_binary` target to `BUILD.bazel`; `make check_examples` fails without it.

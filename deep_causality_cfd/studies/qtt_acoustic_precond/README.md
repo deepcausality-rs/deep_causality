@@ -29,14 +29,12 @@ an unbounded question, "does AMEn converge?", into a measurable perturbation bou
 - **The core inverts cheaply and stays cheap.** Bond 8 at both L=8 and L=10 is bounded and
   resolution-stable, so `A₀⁻¹` is a usable preconditioner with no AMEn-convergence gamble on the
   core itself.
-- **On a smooth interior the preconditioned operator contracts.** `ρ = 0.59 < 1` by a comfortable
-  margin, so the implicit step converges geometrically. That is the Res-6 claim, measured.
+- **On a smooth interior the preconditioned operator contracts.** `ρ = 0.59 < 1` with margin, so the implicit step converges geometrically. That is the Res-6 claim, measured.
 - **The captured jump is the hard part.** Across a sharp `c` jump `ρ` rises to **0.872**, 1.5×
   worse and heading toward the divergence threshold at 1.
 
 **Conclusion.** The split plus closed-form core de-risks the implicit acoustic step. The AC-C
-degradation is the honest counterpart rather than a failure: it is precisely why shock-**fitting**
-(Res 5) pays twice. By keeping the interior smooth, fitting is what keeps the implicit solve cheap.
+degradation is the expected counterpart: it is why shock-**fitting** (Res 5) pays twice. By keeping the interior smooth, fitting is what keeps the implicit solve cheap.
 Analysis: `openspec/notes/archive/cfd-plasma-blackout/gap-2/`.
 
 **Caveats.** `ρ` is measured by power iteration on a model coefficient field, not on a live marched

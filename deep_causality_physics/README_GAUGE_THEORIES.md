@@ -1,8 +1,7 @@
 # Gauge Theories & Geometric Algebra
 
-In `deep_causality_physics`, we adopt a modern, unified approach to theoretical physics by leveraging **Geometric
-Algebra (GA)** and **Gauge Fields** as our foundational abstractions. This document covers the **theory layer**
-(`src/theories/`) — the high-level implementations of complete physical theories that integrate with
+`deep_causality_physics` builds its physical theories on two abstractions: **Geometric Algebra (GA)** and **Gauge
+Fields**. This document covers the **theory layer** (`src/theories/`): complete physical theories that build on
 `deep_causality_topology` and compose across domains.
 
 For the **kernel layer** — isolated pure-function kernels per physics domain — see
@@ -12,24 +11,23 @@ For the **kernel layer** — isolated pure-function kernels per physics domain �
 
 ## 🏗️ The Unification Problem
 
-In standard physics simulations, different theories are often implemented with completely different data structures:
+Physics simulations often implement each theory with its own data structures:
 
 * **Gravity (GR)**: Uses metric tensors $g_{\mu\nu}$ and Riemann curvature tensors $R^\mu_{\nu\rho\sigma}$.
 * **Electromagnetism (EM)**: Uses electric $\vec{E}$ and magnetic $\vec{B}$ vectors, or the Faraday tensor $F_{\mu\nu}$.
 * **Particle Physics (Weak/Strong)**: Uses Lie algebra generators, spinors, and gauge potentials $A_\mu$.
 
-This fragmentation makes it difficult to simulate interactions *between* theories (e.g., gravity affecting an
-electromagnetic field) without writing bespoke glue code for every pair of interactions.
+Simulating interactions *between* theories (e.g., gravity affecting an electromagnetic field) then needs bespoke glue
+code for every pair.
 
 ## 🔑 The Solution: Gauge Fields & Geometric Algebra
 
-We unify these theories by treating them all as **Gauge Theories** defined over a manifold, powered by **Geometric
-Algebra**.
+The crate treats every theory as a **Gauge Theory** over a manifold, computed with **Geometric Algebra**.
 
 ### 1. Everything is a Gauge Field
 
-The `GaugeField<G>` abstraction (from `deep_causality_topology`) serves as the universal container for all physical
-fields. It is parameterized by a `GaugeGroup` (G), which defines the symmetry of the theory:
+`GaugeField<G>` (from `deep_causality_topology`) holds every physical field. Its `GaugeGroup` parameter (G) defines
+the symmetry of the theory:
 
 | Theory                 | Gauge Group    | Physics Impl       | Description                                               |
 |------------------------|----------------|--------------------|-----------------------------------------------------------|
@@ -38,7 +36,7 @@ fields. It is parameterized by a `GaugeGroup` (G), which defines the symmetry of
 | **Electroweak**        | `SU(2) x U(1)` | `ElectroweakField` | Unified EM + Weak. Symmetry breaking via Higgs.           |
 | **General Relativity** | `Lorentz`      | `GR`               | Gauge theory of the Lorentz group (Gravity as curvature). |
 
-By using a shared `GaugeField` struct, we gain access to universal topological operations:
+The shared `GaugeField` struct gives every theory the same topological operations:
 
 * **Field Strength Computation**: $F = dA + A \wedge A$ (Works for EM, Weak, and Gravity)
 * **Covariant Derivatives**: $D_\mu = \partial_\mu + [A_\mu, \cdot]$
@@ -47,57 +45,53 @@ By using a shared `GaugeField` struct, we gain access to universal topological o
 
 ### 2. Geometric Algebra (GA) as the Engine
 
-Geometric Algebra (Clifford Algebra) generalizes complex numbers and quaternions to $n$-dimensions. It allows us to:
+Geometric Algebra (Clifford Algebra) generalizes complex numbers and quaternions to $n$ dimensions. It lets you:
 
 * **Multiply Vectors**: $uv = u \cdot v + u \wedge v$ (Dot product + Wedge product).
 * **Unify Spacetime**: Treat space and time on equal footing in 4D spacetime.
 * **Coordinate Independence**: Write equations that are true regardless of the basis choice.
 
-In `deep_causality_physics`, we use `CausalMultiVector` to represent physical quantities. This means an electromagnetic
-field isn't just a list of numbers; it's a **bivector** field that inherently encodes the rotational properties
-of $\vec{E}$ and $\vec{B}$.
+`deep_causality_physics` represents physical quantities as `CausalMultiVector`. An electromagnetic field is a
+**bivector** field, which encodes the rotational properties of $\vec{E}$ and $\vec{B}$.
 
 ---
 
 ## 🚀 Practical Benefits
 
-This architecture provides three major advantages:
+The architecture has three consequences:
 
 ### A. Code Re-use via Witness Types
 
-Instead of rewriting the "Field Strength" calculation for every theory, we implement it **once** in the topology layer
-using **HKT Witness Types** (`GaugeFieldOps`).
+The topology layer implements shared gauge operations **once**, with **HKT Witness Types** (`GaugeFieldOps`).
 
 * **Electromagnetism**: Uses `field_strength_from_eb_vectors` (Topology)
 * **Weak Force**: Uses `compute_field_strength_non_abelian` (Topology)
-* **Gravity**: Uses `expand_lie_to_riemann` (Topology)
+* **Gravity**: Uses `expand_lie_to_riemann` (Physics, `src/theories/general_relativity/gr_lie_mapping.rs`)
 
-This ensures that a bug fix in the topology layer improves *all* physics theories simultaneously.
+A bug fix in the topology layer reaches every theory that calls it.
 
 ### B. Topological Consistency
 
-Because all fields are grounded in the same topological manifold (`deep_causality_topology`), we can guarantee
-consistency:
+All fields live on the same topological manifold (`deep_causality_topology`), so theories share one definition of each
+quantity:
 
-* **Gap Closure**: We recently identified and closed gaps where physics implementation diverged from topological
-  definitions (e.g., [Weinberg Mixing](./src/theories/electroweak/electroweak_impl.rs)
+* **Shared definitions**: physics computations call the topology definitions directly
+  (e.g., [Weinberg Mixing](./src/theories/electroweak/electroweak_impl.rs)
   and [Kretschmann Scalar](./src/theories/general_relativity/gr_ops_impl.rs)).
-* **Precision**: Topological operations often yield higher precision by preserving geometric invariants that standard
-  floating-point arithmetic might violate.
+* **Precision**: Topological operations can preserve geometric invariants that naive floating-point arithmetic
+  violates.
 
 ### C. Future-Proofing
 
-New theories (e.g., QCD with `SU(3)`) can be added simply by defining a new `GaugeGroup`. The existing machinery for
-field strength, transport, and curvature will work "out of the box."
+A new theory needs only a `GaugeGroup`; the field strength, transport, and curvature machinery applies unchanged. The
+`QCD` (`SU(3)`) and `SMField` (`SU(3) x SU(2) x U(1)`) aliases in `src/theories/alias/mod.rs` are defined this way.
 
 ---
 
 ## 🔬 Configurable Precision
 
-One of the unique features of `deep_causality_physics` is that all Gauge Theories are generic over the floating-point
-type. This allows you to trade off between speed and extreme precision without changing your physics code.
-
-Different precision levels are supported via type aliases (see `deep_causality_physics/src/theories/alias/mod.rs`):
+All Gauge Theories are generic over the floating-point type, so you trade speed against precision without changing
+physics code. The type aliases in `deep_causality_physics/src/theories/alias/mod.rs` document the precision levels:
 
 | Float Type    | Precision          | Use Case                                                  |
 |---------------|--------------------|-----------------------------------------------------------|
@@ -107,8 +101,8 @@ Different precision levels are supported via type aliases (see `deep_causality_p
 
 ### Example: Switching Precision
 
-As shown in `examples/physics_examples/gauge_gr/main.rs`, you can switch the entire simulation precision by changing a
-single type alias:
+`examples/physics_examples/gauge_gr/main.rs` switches the precision of the whole simulation by changing one type
+alias:
 
 ```rust
 use deep_causality_physics::{GR, EM};
@@ -125,8 +119,7 @@ type HighPrecisionGR = GR<DoubleFloat>;
 type GamePhysicsEM = EM<f32>;
 ```
 
-All internal operations—matrix inversions, wedge products, and curvature contractions—will automatically use the
-specified precision.
+All internal operations (matrix inversions, wedge products, curvature contractions) use the chosen precision.
 
 
 ---
@@ -139,7 +132,7 @@ specified precision.
 
 2. **Physics Kernel Layer (`src/kernels/*`)**:
     * Implements isolated equations (`einstein_tensor_kernel`, `lorentz_force_kernel`).
-    * Used when you just need a number, not a simulation.
+    * Use them when you need a number, not a simulation.
     * Detailed in [README_KERNELS.md](./README_KERNELS.md).
 
 3. **Physics Theory Layer (`src/theories/*`)**:

@@ -31,14 +31,13 @@ orbit: `a = 7038.0 km`, `e = 0.1323`, period 5876.0 s, `μ = EARTH_GM`.
 | **G3** | max position error over a full orbit | **1.584e-8 m** = 2.251e-15·a |
 | **G4** | semigroup law `‖e^(Ωs₁)e^(Ωs₂) − e^(Ω(s₁+s₂))‖_max` | **1.110e-16** |
 
-- **The orbit closes to round-off.** The matrix exponential is an exact Kepler solver, not an
-  approximation that happens to be accurate.
+- **The orbit closes to round-off.** The matrix exponential is an exact Kepler solver.
 - **The "matrix exponential" is literal.** Generic scaling-and-squaring matches the closed-form
-  cos/sin block, so nothing is hand-waved into the notation.
+  cos/sin block.
 - **The trajectory matches an independent propagation.** Positions reconstructed from `e^{Ω·s}·ψ₀`
   agree with a Newton-solved orbital-element Kepler propagation to 2.3e-15·a over a full orbit.
 - **One constant generator drives the whole flow.** The semigroup law holds to round-off, so `G` is
-  genuinely `s`-independent.
+  `s`-independent.
 
 **Conclusion.** The bound inverse-square core **is** an exact constant-generator matrix
 exponential. Resolution-1's B1 holds, with the concrete generator `Ω` supplied. The production 3-D,
