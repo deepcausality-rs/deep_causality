@@ -71,16 +71,19 @@ trip; the stored containers' identifiers replace them.
 - **THEN** both hold the extra under the same identifier and name, and a `NodeLinked` event naming
   that identifier applies to both without translation
 
-### Requirement: A store event never reaches a local extra
+### Requirement: A store container event never reaches a local extra
 
 `Context` SHALL mark each extra as stored or local: an extra from `Context::restore` or from
 `Context::apply` of `ContextAttached` is stored, and one from `extra_ctx_add_new` or
 `extra_ctx_add_new_with_id` is local. The store assigns container identifiers, so a local extra is
 not a container of the store even when its identifier equals one. `Context::apply` treats a local
-extra as not held: a membership event naming it is `ProjectionError::Identity`, a
-`ContextDetached` or `ContextRetracted` naming it leaves it in place, and a `ContextAttached` under
-its identifier is `ProjectionError::Identity`, so no graph is merged into, kept under, or dropped
-for another container's identifier. A context that never applies a store event is unaffected.
+extra as not held by any event that names a container: a membership event naming it is
+`ProjectionError::Identity`, a `ContextDetached` or `ContextRetracted` naming it leaves it in
+place, and a `ContextAttached` under its identifier is `ProjectionError::Identity`, so no graph is
+merged into, kept under, or dropped for another container's identifier. Node identifiers are the
+store's, so `NodeRetracted`, `EdgeCreated` and `EdgeRetracted` apply by node identity to every
+graph holding the node, local extras included. A context that never applies a store event is
+unaffected.
 
 #### Scenario: An attachment under a local identifier is refused
 
@@ -94,3 +97,10 @@ for another container's identifier. A context that never applies a store event i
 
 - **WHEN** `ContextDetached` and `ContextRetracted` naming a local extra's identifier are applied
 - **THEN** both return `Ok(())` and the local extra, and the current extra, are unchanged
+
+#### Scenario: A node or edge event reaches a local extra holding the node
+
+- **WHEN** a local extra holds nodes 3 and 4, and `EdgeCreated { 4, 3 }`, `EdgeRetracted { 4, 3 }`
+  and `NodeRetracted(3)` are applied in turn
+- **THEN** the local extra gains the edge, loses it, and then loses node 3, as every other graph
+  holding those nodes does

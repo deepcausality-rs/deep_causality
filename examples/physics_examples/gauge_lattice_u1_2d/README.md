@@ -32,18 +32,26 @@ constant.
 2. **Measured against exact**: On an `8x8` periodic lattice, 400 thermalization sweeps precede
    400 measured sweeps at each $\beta$ from 0.5 (strong coupling) to 10 (weak coupling). The
    measured $\langle P \rangle$ must lie within a per-$\beta$ band of $I_1(\beta)/I_0(\beta)$,
-   from 0.050 at strong coupling to 0.010 at weak coupling, derived from the spread over 60
-   seeds (see `AGREEMENT_TOLERANCES` in `main.rs`). Each band is below half of
+   from 0.045 to 0.050 at $\beta \le 1$ down to 0.010 at $\beta \ge 6$, derived from the
+   spread over 60 seeds (see `AGREEMENT_TOLERANCES` in `main.rs`). Each band is below half of
    $1 - I_1/I_0$, so a field that never moves is reported. The run uses a fixed seed, so it
    reproduces exactly. This is the only check that tests the lattice and the physics together.
 
    The field starts at the identity, in the topological sector $Q = 0$. Metropolis tunnels
    between sectors hundreds of times per run at strong coupling and rarely at
    $\beta \ge 6$ (never in 60 runs at $\beta = 10$). There a random start stays in whatever
-   sector it lands in and biases $\langle P \rangle$ low by up to `4e-2`. From the identity,
+   sector it lands in and biases $\langle P \rangle$ low by up to `4.3e-2`. From the identity,
    the $\beta = 10$ run sits about `9e-4` above $I_1/I_0$. The exact finite-volume correction on
    this lattice accounts for `3.6e-4` of that; the rest is consistent with the run staying at
    $Q = 0$ and missing the weight of the other sectors.
+
+   Every number in this section comes from the calibration mode, which sweeps seeds 101 to 160
+   from both starts and prints the deviation statistics, the derived bands, the charge changes
+   per run, the deviation by sector and the exact finite-volume plaquette:
+
+   ```bash
+   cargo run -p physics_examples --example gauge_lattice_u1_2d --release -- --calibrate
+   ```
 
 3. **Reference Cross-Check**: Two independent algorithms compute $I_1(\beta)/I_0(\beta)$ and
    must agree to `1e-12`, so the reference curve is itself sound:

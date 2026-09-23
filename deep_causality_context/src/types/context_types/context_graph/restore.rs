@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use super::extra_context::ExtraContext;
 use crate::{
     Context, Contextoid, ContextuableGraph, Datable, ExtendableContextuableGraph, SpaceTemporal,
     Spatial, Temporal,
@@ -45,17 +46,10 @@ where
                 ));
             }
             restored
-                .extra_ctx_add_new_with_id(id, &name, nodes.len(), true)
+                .insert_extra(id, ExtraContext::stored(&name, nodes.len()), true)
                 .map_err(|_| {
                     ProjectionError::Identity(id, "an extra context identifier is carried twice")
                 })?;
-            if let Some(extra) = restored
-                .extra_contexts
-                .as_mut()
-                .and_then(|extras| extras.get_mut(&id))
-            {
-                extra.stored = true;
-            }
             restored.fill(&nodes, &edges, true)?;
         }
         restored.extra_context_id = 0;

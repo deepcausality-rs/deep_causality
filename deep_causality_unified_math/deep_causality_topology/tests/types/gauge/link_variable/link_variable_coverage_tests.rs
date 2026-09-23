@@ -117,6 +117,16 @@ fn matrix_4x4() -> Vec<Complex<f64>> {
     ]
 }
 
+/// `matrix_4x4` with its last row replaced by row 0 + i * row 1: complex linear dependence, so
+/// the determinant is zero and the rank is three.
+fn rank_deficient_4x4() -> Vec<Complex<f64>> {
+    let mut data = matrix_4x4();
+    for k in 0..4 {
+        data[12 + k] = data[k] + c(0.0, 1.0) * data[4 + k];
+    }
+    data
+}
+
 #[test]
 fn test_determinant_4x4_pivoted_lu() {
     // det = -79 - 34i by cofactor expansion in exact Gaussian integers.
@@ -162,12 +172,8 @@ fn test_determinant_5x5_pivoted_lu() {
 
 #[test]
 fn test_determinant_4x4_singular() {
-    // Last row = row 0 + i * row 1: complex linear dependence, det = 0.
-    let mut data = matrix_4x4();
-    for k in 0..4 {
-        data[12 + k] = data[k] + c(0.0, 1.0) * data[4 + k];
-    }
-    let m: LinkVariable<SO3_1, Complex<f64>, f64> = LinkVariable::try_from_matrix(data).unwrap();
+    let m: LinkVariable<SO3_1, Complex<f64>, f64> =
+        LinkVariable::try_from_matrix(rank_deficient_4x4()).unwrap();
     assert!(m.determinant().norm() < 1e-10);
 
     // A zero column leaves no pivot at all, and the determinant is exactly zero.
@@ -247,12 +253,8 @@ fn test_project_sun_rejects_rank_deficient_2x2() {
 
 #[test]
 fn test_project_sun_rejects_rank_deficient_4x4() {
-    // Last row = row 0 + i * row 1.
-    let mut data = matrix_4x4();
-    for k in 0..4 {
-        data[12 + k] = data[k] + c(0.0, 1.0) * data[4 + k];
-    }
-    let m: LinkVariable<SO3_1, Complex<f64>, f64> = LinkVariable::try_from_matrix(data).unwrap();
+    let m: LinkVariable<SO3_1, Complex<f64>, f64> =
+        LinkVariable::try_from_matrix(rank_deficient_4x4()).unwrap();
     assert_projection_rejected(&m);
 }
 

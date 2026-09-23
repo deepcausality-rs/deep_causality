@@ -15,8 +15,9 @@ use crate::{BFloat16, Float106};
 ///
 /// # Which types promise it
 ///
-/// Past the primitives below, nine types carry `Associative<Multiplicative>`, each in the crate
-/// that defines it: `Complex<T>` and `Quaternion<T>` in `deep_causality_num_complex`, `Dual<T>` in
+/// Besides the scalars implemented below (the primitive integers and floats, `BFloat16`,
+/// `Float106` and `deep_causality_num::Gf2`), these types carry
+/// `Associative<Multiplicative>`, each in the crate that defines it: `Complex<T>` and `Quaternion<T>` in `deep_causality_num_complex`, `Dual<T>` in
 /// `deep_causality_num_dual`, `Rational<T>` in `deep_causality_num_rational`, `CausalTensor<T>`
 /// and `CausalTensorTrain<T>` in `deep_causality_tensor`, and `CsrMatrix<T>`, `DenseMatrix<T>`
 /// and `PackedGf2<W>` in `deep_causality_linear`. `Quaternion<T>` and the three matrix types are

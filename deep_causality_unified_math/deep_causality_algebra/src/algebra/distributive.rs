@@ -11,7 +11,9 @@ use crate::{BFloat16, Float106};
 ///
 /// # Which types promise it
 ///
-/// Past the primitives below, ten types carry `Distributive`, each in the crate that defines it:
+/// Besides the scalars implemented below (the primitive integers and floats, `BFloat16`,
+/// `Float106` and `deep_causality_num::Gf2`), these types carry
+/// `Distributive`, each in the crate that defines it:
 /// `Complex<T>`, `Quaternion<T>` and `Octonion<T>` in `deep_causality_num_complex`, `Dual<T>` in
 /// `deep_causality_num_dual`, `Rational<T>` in `deep_causality_num_rational`, `CausalTensor<T>`
 /// and `CausalTensorTrain<T>` in `deep_causality_tensor`, and `CsrMatrix<T>`, `DenseMatrix<T>`

@@ -396,11 +396,10 @@ impl<T, const W: usize, const H: usize, const D: usize, const C: usize> ArrayGri
 
 ## Usage
 
-Building an ArrayGrid takes three steps:
+Building an ArrayGrid takes two steps:
 
 1) Define constant array boundaries.
-2) Set the storage type
-3) Construct an ArrayGrid with a chosen type
+2) Construct an ArrayGrid with a chosen array type and value type.
 
 ```rust
 use deep_causality_data_structures::{Array2D, Array3D, ArrayGrid, PointIndex};

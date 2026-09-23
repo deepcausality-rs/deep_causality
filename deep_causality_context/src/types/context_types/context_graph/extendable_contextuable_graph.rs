@@ -43,25 +43,7 @@ where
             ));
         }
 
-        // Ensure the extra_contexts map exists, creating it if it's the first time.
-        let extra_contexts = self.extra_contexts.get_or_insert_with(Default::default);
-
-        // Check for a duplicate ID to prevent overwriting an existing context.
-        if extra_contexts.contains_key(&id) {
-            return Err(ContextIndexError(format!(
-                "Extra context with ID {id} already exists."
-            )));
-        }
-
-        // Create and insert the new context graph.
-        extra_contexts.insert(id, ExtraContext::new(name, capacity));
-        self.highest_extra_context_id = self.highest_extra_context_id.max(id);
-
-        if default {
-            self.extra_context_id = id;
-        }
-
-        Ok(())
+        self.insert_extra(id, ExtraContext::new(name, capacity), default)
     }
 
     fn extra_ctx_get_name(&self, id: ContextId) -> Option<&str> {
@@ -354,5 +336,35 @@ where
                 "Cannot get edge count. No extra contexts have been created.".to_string(),
             ))
         }
+    }
+}
+
+impl<D, S, T, ST> Context<D, S, T, ST>
+where
+    D: Datable + Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone,
+{
+    /// Inserts `extra` under a non-zero `id` no extra holds, raises the high-water mark, and
+    /// makes it current when `default` is set. An `id` already held is refused and left as it is.
+    pub(super) fn insert_extra(
+        &mut self,
+        id: ContextId,
+        extra: ExtraContext<D, S, T, ST>,
+        default: bool,
+    ) -> Result<(), ContextIndexError> {
+        let extra_contexts = self.extra_contexts.get_or_insert_with(Default::default);
+        if extra_contexts.contains_key(&id) {
+            return Err(ContextIndexError(format!(
+                "Extra context with ID {id} already exists."
+            )));
+        }
+        extra_contexts.insert(id, extra);
+        self.highest_extra_context_id = self.highest_extra_context_id.max(id);
+        if default {
+            self.extra_context_id = id;
+        }
+        Ok(())
     }
 }

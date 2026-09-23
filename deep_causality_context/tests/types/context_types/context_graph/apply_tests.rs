@@ -408,7 +408,7 @@ fn test_a_context_driven_by_its_stream_converges_to_the_store() {
 }
 
 #[test]
-fn test_a_store_event_never_reaches_a_local_extra() {
+fn test_a_store_container_event_never_reaches_a_local_extra() {
     // Extras 40 and 41 come from the store; 42 is allocated locally and holds node 8. The store
     // assigns container identifiers, so its container 42 is a different container.
     let mut ctx = world();
@@ -475,4 +475,33 @@ fn test_a_store_event_never_reaches_a_local_extra() {
     assert_eq!(extra_nodes(&ctx, 40), vec![3, 4]);
     ctx.apply(&ContextEvent::ContextRetracted(40)).unwrap();
     assert_eq!(ctx.extra_ctx_get_name(40), None);
+}
+
+#[test]
+fn test_a_node_or_edge_event_reaches_a_local_extra_holding_the_node() {
+    // Node identifiers are the store's: a local extra holding nodes 3 and 4 holds the store's
+    // nodes 3 and 4, so events naming them apply to it as to every other graph.
+    let mut ctx = world();
+    let local = ctx.extra_ctx_add_new("local", 2, true);
+    for (id, value) in [(3, 30), (4, 40)] {
+        ctx.extra_ctx_add_node(Contextoid::new(
+            id,
+            ContextoidType::Datoid(Data::new(id, value)),
+        ))
+        .unwrap();
+    }
+    assert_eq!(extra_edges(&ctx, local), 0);
+    ctx.apply(&ContextEvent::EdgeCreated(RelationRecord::new(
+        4,
+        3,
+        RelationKind::Spatial,
+    )))
+    .unwrap();
+    assert_eq!(extra_edges(&ctx, local), 1);
+    ctx.apply(&ContextEvent::EdgeRetracted { from: 4, to: 3 })
+        .unwrap();
+    assert_eq!(extra_edges(&ctx, local), 0);
+    ctx.apply(&ContextEvent::NodeRetracted(3)).unwrap();
+    assert_eq!(extra_nodes(&ctx, local), vec![4]);
+    assert_eq!(extra_nodes(&ctx, 40), vec![4]);
 }

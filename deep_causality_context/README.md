@@ -147,7 +147,7 @@ refuses 0. In a store an extra is a separate container the base references, so a
 holds each referenced container as an extra under that container's identifier and name, and a
 stored branch's extras become containers of their own. The store assigns container identifiers:
 an extra added locally is not a container of the store, so a store event naming its identifier
-never reaches it, and `Context::apply` refuses an attachment under that identifier with
+as a container never reaches it, and `Context::apply` refuses an attachment under that identifier with
 `ProjectionError::Identity` rather than hold two containers under one identifier.
 
 ### Precision in the store

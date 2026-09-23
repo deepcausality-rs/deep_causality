@@ -31,6 +31,10 @@
 //! says nothing about the thermodynamics. The Bessel cross-check validates the reference curve,
 //! not the lattice. Only the sampled measurement tests both together.
 //!
+//! Run with `-- --calibrate` to regenerate every seed statistic quoted in the comments: the
+//! per-coupling deviation table behind `AGREEMENT_TOLERANCES` for both starts, the charge
+//! changes per run, the deviation by sector, and the exact finite-volume plaquette.
+//!
 //! ## APIs Demonstrated
 //! - `LatticeGaugeField::identity`, `try_metropolis_sweep`, `try_average_plaquette`
 //! - `CubicalComplex` with periodic boundaries
@@ -42,12 +46,16 @@ use deep_causality_rand::Xoshiro256;
 use deep_causality_topology::{CubicalComplex, LatticeGaugeField, TopologyError, U1};
 use std::sync::Arc;
 
+mod calibration;
+
 /// Seed of the one generator every coupling draws from, so a run reproduces bit for bit.
 const SEED: u64 = 0x5EED_0001;
 
 /// Lattice side; the lattice is `SIDE x SIDE` with periodic boundaries in both directions.
 const SIDE: usize = 8;
-/// Metropolis sweeps discarded before any measurement, so the field forgets its start.
+/// Metropolis sweeps discarded before any measurement. They relax the field within its starting
+/// topological sector: at weak coupling the local update almost never changes the charge, so a run
+/// from the identity thermalizes at `Q = 0` (see `measure`).
 const THERMAL_SWEEPS: usize = 400;
 /// Sweeps measured after thermalization. The statistical error falls as `1 / sqrt(N)`.
 const MEASURE_SWEEPS: usize = 400;
@@ -59,7 +67,7 @@ const BETA_VALUES: [f64; 6] = [0.5, 1.0, 2.0, 4.0, 6.0, 10.0];
 /// How far a measured plaquette may sit from `I_1/I_0` and still count as agreement, per entry
 /// of `BETA_VALUES`.
 ///
-/// Measured, not guessed: 60 seeds (101..=160) from the identity start at the sweep counts above
+/// Measured, not guessed: `--calibrate` runs 60 seeds (101..=160) from the identity start at the sweep counts above
 /// gave, per coupling, the mean deviation `m`, its standard deviation `s` and the largest
 /// `|deviation|` seen, against the gap `1 - I_1/I_0` that a field which never moves would show:
 ///
@@ -100,9 +108,15 @@ const MEASURED: FloatType = const_scalar_from_int!(FloatType, MEASURE_SWEEPS as 
 type FloatType = f64;
 
 fn main() -> Result<(), TopologyError> {
-    print_header();
-
     let lattice = Arc::new(CubicalComplex::new([SIDE, SIDE], [true, true]));
+
+    // `--calibrate` regenerates the seed statistics quoted in `AGREEMENT_TOLERANCES` and on
+    // `measure` instead of running the check.
+    if std::env::args().any(|a| a == "--calibrate") {
+        return calibration::run(&lattice);
+    }
+
+    print_header();
     print_setup();
 
     // The plaquette machinery, on its own. An identity field has every plaquette equal to the
@@ -112,7 +126,13 @@ fn main() -> Result<(), TopologyError> {
     let mut generator = Xoshiro256::from_seed(SEED);
     let mut results = Vec::with_capacity(BETA_VALUES.len());
     for (&beta, &tolerance) in BETA_VALUES.iter().zip(AGREEMENT_TOLERANCES.iter()) {
-        results.push(measure(&lattice, beta, lift(tolerance), &mut generator)?);
+        results.push(measure(
+            &lattice,
+            beta,
+            lift(tolerance),
+            Start::Identity,
+            &mut generator,
+        )?);
     }
     print_results(&results);
 
@@ -144,6 +164,21 @@ struct Measurement {
     frozen_gap: FloatType,
     /// Whether the band is below half of `frozen_gap`, so a field that never moves disagrees.
     discriminating: bool,
+    /// `measured - exact`, with its sign.
+    signed_deviation: FloatType,
+    /// Topological charge after thermalization.
+    charge: i64,
+    /// How many measured sweeps changed the topological charge.
+    charge_changes: usize,
+}
+
+/// The configuration a run thermalizes from.
+#[derive(Clone, Copy, PartialEq)]
+enum Start {
+    /// Every link the identity: topological charge zero.
+    Identity,
+    /// Every link drawn at random from the generator.
+    Random,
 }
 
 /// Thermalizes a field at `beta` from the identity, then averages the plaquette over a run of
@@ -155,7 +190,7 @@ struct Measurement {
 /// `Q = (1/2pi) sum_p arg U_p`, and the local update tunnels between them readily at strong
 /// coupling (about 300, 250 and 90 changes of `Q` per measured run at `beta = 0.5, 1, 2`) and
 /// almost never at `beta >= 6` (none in the median run). A random start lands in a random sector
-/// and stays there. Over 60 random starts at `beta = 10`, none changed `Q`, and the mean deviation
+/// and stays there. Over 60 random starts at `beta = 10` (`--calibrate`), none changed `Q`, and the mean deviation
 /// by sector was `+1.0e-3` at `Q = 0` (21 runs), `-3.8e-3` at `|Q| = 1` (30), `-1.9e-2` at
 /// `|Q| = 2` (6) and `-4.3e-2` at `|Q| = 3` (3); `beta = 6` shows the same pattern. The identity
 /// has `Q = 0`, the sector of largest weight. At strong coupling the start makes no difference: the field
@@ -169,11 +204,15 @@ fn measure(
     lattice: &Arc<CubicalComplex<2, FloatType>>,
     beta: f64,
     tolerance: FloatType,
+    start: Start,
     generator: &mut Xoshiro256,
 ) -> Result<Measurement, TopologyError> {
-    // Cold start: every link the identity, which puts the field in the Q = 0 sector.
-    let mut field: LatticeGaugeField<U1, 2, Complex<FloatType>, FloatType> =
-        LatticeGaugeField::identity(lattice.clone(), lift(beta));
+    // The check uses the cold start: every link the identity, which puts the field in the Q = 0
+    // sector. The random start exists for `--calibrate`, which compares the two.
+    let mut field: LatticeGaugeField<U1, 2, Complex<FloatType>, FloatType> = match start {
+        Start::Identity => LatticeGaugeField::identity(lattice.clone(), lift(beta)),
+        Start::Random => LatticeGaugeField::random(lattice.clone(), lift(beta), generator),
+    };
 
     for _ in 0..THERMAL_SWEEPS {
         field.try_metropolis_sweep(EPSILON, generator)?;
@@ -181,11 +220,19 @@ fn measure(
 
     // Measurement run. Each sweep produces a new configuration; the plaquette is averaged over
     // all of them, which is what `<P>` means.
+    let charge = topological_charge(&field)?;
+    let mut last_charge = charge;
+    let mut charge_changes = 0;
     let mut total = ZERO;
     let mut accepted = 0.0;
     for _ in 0..MEASURE_SWEEPS {
         accepted += field.try_metropolis_sweep(EPSILON, generator)?;
         total += field.try_average_plaquette()?;
+        let q = topological_charge(&field)?;
+        if q != last_charge {
+            charge_changes += 1;
+            last_charge = q;
+        }
     }
     let measured = total / MEASURED;
 
@@ -205,7 +252,24 @@ fn measure(
         reference_agrees: Real::abs(exact - exact_miller) < REFERENCE_TOLERANCE,
         frozen_gap: ONE - exact,
         discriminating: TWO * tolerance < ONE - exact,
+        signed_deviation: measured - exact,
+        charge,
+        charge_changes,
     })
+}
+
+/// Topological charge `Q = (1/2pi) sum_p arg U_p`, an integer on the periodic lattice.
+fn topological_charge(
+    field: &LatticeGaugeField<U1, 2, Complex<FloatType>, FloatType>,
+) -> Result<i64, TopologyError> {
+    let mut sum = ZERO;
+    for x in 0..SIDE {
+        for y in 0..SIDE {
+            let p = field.try_plaquette(&[x, y], 0, 1)?.as_slice()[0];
+            sum += Real::atan2(p.im, p.re);
+        }
+    }
+    Ok(lower(sum / (TWO * <FloatType as Real>::pi())).round() as i64)
 }
 
 /// An identity field has `<P> = 1` at any coupling. Exercises the plaquette sum, not the physics.

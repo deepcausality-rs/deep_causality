@@ -44,11 +44,12 @@ use crate::{BFloat16, Float106};
 ///
 /// # Implementing
 ///
-/// Implement it for any type whose zero really does annihilate. Past the primitives below, eleven
-/// types carry the marker, each in the crate that defines it: `Complex<T>`, `Quaternion<T>` and
-/// `Octonion<T>` in `deep_causality_num_complex`, `Dual<T>` in `deep_causality_num_dual`,
-/// `Rational<T>` in `deep_causality_num_rational`, `CausalTensor<T>` and `CausalTensorTrain<T>`
-/// in `deep_causality_tensor`, and `CsrMatrix<T>`, `DenseMatrix<T>`, `PackedGf2<W>` and
+/// Implement it for any type whose zero really does annihilate. Besides the scalars implemented
+/// below (the primitive integers and floats, `BFloat16`, `Float106` and `deep_causality_num::Gf2`),
+/// these types carry the marker, each in the crate that defines it: `Complex<T>`, `Quaternion<T>`
+/// and `Octonion<T>` in `deep_causality_num_complex`, `Dual<T>` in `deep_causality_num_dual`,
+/// `Rational<T>` in `deep_causality_num_rational`, `CausalTensor<T>` and `CausalTensorTrain<T>` in
+/// `deep_causality_tensor`, and `CsrMatrix<T>`, `DenseMatrix<T>`, `PackedGf2<W>` and
 /// `DenseVector<T>` in `deep_causality_linear`. On `DenseVector<T>` the law is the module action:
 /// `v * 0` is the zero vector.
 ///

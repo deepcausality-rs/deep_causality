@@ -42,10 +42,11 @@ where
     ///
     /// The store assigns container identifiers. An extra created locally, through
     /// `extra_ctx_add_new` or `extra_ctx_add_new_with_id`, is not a container of the store, so a
-    /// store event naming its identifier treats it as not held: a membership event is
-    /// `Identity`, a detach or retraction is none and the local extra survives, and an attachment
-    /// under that identifier is `Identity`, because the store's container and the local graph
-    /// would share one identifier.
+    /// store event naming its identifier as a container treats it as not held: a membership event
+    /// is `Identity`, a detach or retraction is none and the local extra survives, and an
+    /// attachment under that identifier is `Identity`, because the store's container and the
+    /// local graph would share one identifier. Node and edge events name nodes, whose identifiers
+    /// are the store's, and apply to every graph holding the node, local extras included.
     pub fn apply(&mut self, event: &ContextEvent) -> Result<(), ProjectionError> {
         match event {
             ContextEvent::NodeCreated(_) | ContextEvent::ContextCreated(_) => Ok(()),
@@ -101,9 +102,7 @@ where
                     }
                     Some(_) => {}
                     None => {
-                        let mut attached = ExtraContext::new(extra.name(), 0);
-                        attached.stored = true;
-                        extras.insert(extra.id(), attached);
+                        extras.insert(extra.id(), ExtraContext::stored(extra.name(), 0));
                     }
                 }
                 self.highest_extra_context_id = self.highest_extra_context_id.max(extra.id());

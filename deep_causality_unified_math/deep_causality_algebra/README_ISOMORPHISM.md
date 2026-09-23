@@ -190,7 +190,7 @@ fn float_wrap_f64_is_a_field_iso() {
 | Cross-crate types with asymmetric dependency (orphan rule blocks reverse `From`) | **Tier 2** witness in the dependent crate |
 | You want a domain-specific name for the iso (`PropEffectProcessIso`, etc.) | **Tier 2** named witness |
 
-A common pattern mixes tiers: the forward direction as a standard conversion impl (`From`, or `TryFrom` when the conversion is partial) where the orphan rule allows it, the reverse direction as a Tier 2 `Iso` impl in the dependent crate. `CausalTensor<F>` <-> `CsrMatrix<F>` uses this pattern in `deep_causality_tensor`, which depends on `deep_causality_linear` (the owner of `CsrMatrix`) but not vice versa. The forward half is `TryFrom<CausalTensor<F>> for CsrMatrix<F>`, which returns `CsrFromTensorError` for a tensor whose rank is not 2. The reverse half is `Iso<CsrMatrix<F>, CausalTensor<F>>`, implemented on `CsrMatrix<F>` itself.
+`CausalTensor<F>` <-> `CsrMatrix<F>` in `deep_causality_tensor` mixes the standard conversion traits with the Tier 2 `Iso` trait, without a witness. `deep_causality_tensor` depends on `deep_causality_linear` (the owner of `CsrMatrix`), not the reverse, so both impls live in `deep_causality_tensor`, where `CausalTensor` is the local type. The forward half is `TryFrom<CausalTensor<F>> for CsrMatrix<F>`, which returns `CsrFromTensorError` for a tensor whose rank is not 2. The reverse half is `Iso<CsrMatrix<F>, CausalTensor<F>> for CsrMatrix<F>`. Neither the trait nor `CsrMatrix` is local to `deep_causality_tensor`; the orphan rule admits both impls because `CausalTensor<F>`, a local type, appears among the trait's type parameters. A witness is not needed here. It is needed when neither type of the pair is local to the crate that ships the iso.
 
 ---
 
