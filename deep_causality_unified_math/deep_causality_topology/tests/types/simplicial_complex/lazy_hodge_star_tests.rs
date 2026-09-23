@@ -234,7 +234,7 @@ fn test_intermediate_masses_scale_as_h_to_the_n_minus_two_k() {
 }
 
 #[test]
-fn test_intermediate_mass_sums_over_every_cell_carrying_the_simplex() {
+fn test_vertex_and_edge_masses_sum_over_every_cell_carrying_the_simplex() {
     // Two triangles sharing edge 12: T1 = (0,0), (1,0), (0,1) and T2 = (1,0), (0,1), (2,2).
     // T2 is not congruent to T1, so the shared edge's two contributions differ, and the edges
     // each carried by a single cell differ from the shared one.
@@ -244,8 +244,11 @@ fn test_intermediate_mass_sums_over_every_cell_carrying_the_simplex() {
     // with numpy. Edge 12 carries 1/6 + 7/18 = 5/9. Vertex 1 is the first vertex of edges 12 and
     // 13 and lies on both cells, so for edge 13 one of the cells at its first vertex does not
     // carry it and must contribute nothing.
+    //
+    // Vertex masses are the incident areas over n + 1 = 3, with |T1| = 1/2 and |T2| = 3/2:
+    //     v0 = 1/6, v1 = v2 = 2/3, v3 = 1/2, and v4, on no cell, 0.
     let skeletons = vec![
-        Skeleton::new(0, (0..4).map(|v| Simplex::new(vec![v])).collect()),
+        Skeleton::new(0, (0..5).map(|v| Simplex::new(vec![v])).collect()),
         Skeleton::new(
             1,
             vec![
@@ -261,11 +264,18 @@ fn test_intermediate_mass_sums_over_every_cell_carrying_the_simplex() {
             vec![Simplex::new(vec![0, 1, 2]), Simplex::new(vec![1, 2, 3])],
         ),
     ];
-    let coords = vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 2.0, 2.0];
+    let coords = vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 2.0, 2.0, 5.0, 5.0];
     let complex: SimplicialComplex<f64> =
         SimplicialComplex::with_geometry(skeletons, Vec::new(), Vec::new(), coords, 2);
+    let ops = complex.hodge_star_operators().unwrap();
 
-    let edges = diagonal(&complex.hodge_star_operators().unwrap()[1]);
+    let vertices = diagonal(&ops[0]);
+    let expected = [1.0 / 6.0, 2.0 / 3.0, 2.0 / 3.0, 1.0 / 2.0, 0.0];
+    for (i, (g, e)) in vertices.iter().zip(expected.iter()).enumerate() {
+        assert!((g - e).abs() < 1e-12, "vertex {i}: got {g}, expected {e}");
+    }
+
+    let edges = diagonal(&ops[1]);
     let expected = [1.0 / 3.0, 1.0 / 3.0, 5.0 / 9.0, 2.0 / 9.0, 2.0 / 9.0];
     for (i, (g, e)) in edges.iter().zip(expected.iter()).enumerate() {
         assert!((g - e).abs() < 1e-12, "edge {i}: got {g}, expected {e}");
