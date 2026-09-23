@@ -97,3 +97,53 @@ raised in `src/` is `not implemented` (40 panics under cargo, counting the 8 wor
 concurrent test). The one panic raised in a test file is `h.join().unwrap()` in
 `concurrent_creation_yields_distinct_paths`, which passes on a worker thread's `unimplemented`
 panic.
+
+## 3. Defect audit
+
+A throwaway implementation passed all 33 tests. Each defect below was applied alone as a
+single-site patch, the suite was run, and the patch was reverted. The patched string had to occur
+exactly once in its file.
+
+**Miscalibration found and fixed.** The first run reported three survivors: nanos dropped, file
+mode `0o644` and dir mode `0o755`. Each patch had replaced the first occurrence of its string, and
+in each case that first occurrence was in a rustdoc comment, so the code never changed. After the
+patches were retargeted to code-only strings, all three are killed. The audit script now requires
+every patch target to be unique in its file.
+
+| Defect | Killed by (subject-matched test) |
+|---|---|
+| counter not incremented | `counter_strictly_increases_within_a_thread`, `thousand_files_have_distinct_paths`, `concurrent_creation_yields_distinct_paths` |
+| pid term dropped | `name_carries_pid_clock_and_counter` |
+| nanos term dropped | `name_carries_pid_clock_and_counter` |
+| suffix prepended | `suffix_is_appended_after_the_counter`, the three suffix tests |
+| `with_suffix` ignores the suffix | `dotted_suffix_is_the_extension`, `undotted_suffix_is_appended_verbatim`, `dot_suffixes_stay_inside_temp_dir` |
+| `/` check removed | `slash_in_suffix_is_invalid_input_and_creates_nothing` |
+| `\` check removed | `backslash_in_suffix_is_invalid_input_on_every_platform` |
+| `create(true)` for `create_new(true)` | `create_at_existing_file_is_already_exists_and_keeps_content`, `create_at_planted_symlink_is_already_exists_and_not_followed` |
+| parent = current dir | the four parent-equals-`temp_dir()` tests, the three `temp_name` tests |
+| dir created with `recursive(true)` (reuses an existing dir) | `create_at_existing_directory_is_already_exists` |
+| `remove_dir` for `remove_dir_all` | `drop_removes_a_populated_tree` |
+| dir drop removal skipped | `drop_removes_a_populated_tree`, `drop_removes_an_empty_directory` |
+| file drop removal skipped | `drop_removes_a_written_file` |
+| `unwrap()` on dir drop removal | `temp_dir_drop_tests::drop_after_external_removal_does_not_panic` |
+| `unwrap()` on file drop removal | `named_temp_file_drop_tests::drop_after_external_removal_does_not_panic` |
+| file mode `0o644` | `file_mode_is_owner_read_write_only` |
+| dir mode `0o755` | `directory_mode_is_owner_only` |
+| `write` returns `Ok(0)` | `written_bytes_are_read_back_by_path`, `consecutive_writes_append` |
+| `write` drops half the buffer | `written_bytes_are_read_back_by_path`, `consecutive_writes_append` |
+| `flush` a no-op over a `BufWriter` | `written_bytes_are_read_back_by_path`, `consecutive_writes_append` |
+| `path()` returns the parent | 14 `NamedTempFile` tests |
+
+21 of 21 are killed, and no suite widening was needed.
+
+**Input-variety review.** One coincidence remains, and it comes from the environment rather than
+the suite. The mode tests read `mode & 0o777` after the umask has applied. Under umask `0022`,
+which this machine uses, `0o644` and `0o600` differ. Under umask `0077` they coincide, and a
+mode defect would pass. std has no way to set the umask without `unsafe`, which the workspace
+forbids, so the mode tests discriminate only under a umask that leaves group or other bits set.
+The other cases in the enumeration keep distinct quantities apart. The dotted-suffix test asserts
+both `ends_with` and `extension()`. The distinctness tests hold values alive, so a path freed by
+drop cannot be reused. The clock test brackets the value between two independent clock readings.
+
+The throwaway implementation was discarded (`git checkout -- src`). A copy outside the repository
+served as the audit's restore point.

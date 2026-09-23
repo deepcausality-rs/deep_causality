@@ -51,14 +51,14 @@ All paths in groups 1–5 are relative to `deep_causality_utils/deep_causality_t
 
 ## 3. Phase 3 — Defect audit
 
-- [ ] 3.1 Write a throwaway correct implementation, then introduce each defect one at a time and
+- [x] 3.1 Write a throwaway correct implementation, then introduce each defect one at a time and
       confirm that a test whose subject is that behaviour fails:
       the counter not incremented; the pid or nanos term dropped; the suffix prepended rather than
       appended; the `/` check removed; the `\` check removed; `create(true)` in place of
       `create_new(true)`; the parent set to the current directory rather than `temp_dir()`; `remove_dir`
       in place of `remove_dir_all`; the drop removal skipped; `unwrap()` on the drop removal; mode
       `0o644` / `0o755`; `write` returning `Ok(0)`; `flush` as a no-op on a `BufWriter`.
-- [ ] 3.2 Add a test for each defect that survives, and repeat the audit. Record the results in
+- [x] 3.2 Add a test for each defect that survives, and repeat the audit. Record the results in
       `notes.md`, then discard the throwaway implementation.
 
 ## 4. Phase 4 — Implementation
