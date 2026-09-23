@@ -314,13 +314,6 @@ fn test_link_variable_error_invalid_dimension() {
 }
 
 #[test]
-fn test_link_variable_error_singular_matrix() {
-    let err = LinkVariableError::SingularMatrix;
-    let display = format!("{}", err);
-    assert!(display.contains("Matrix is singular"));
-}
-
-#[test]
 fn test_link_variable_error_numerical() {
     let err = LinkVariableError::NumericalError("overflow".to_string());
     let display = format!("{}", err);
@@ -386,10 +379,10 @@ fn test_link_variable_matrix_dim_static() {
 
 #[test]
 fn test_link_variable_error_conversion() {
-    let lv_err = LinkVariableError::SingularMatrix;
+    let lv_err = LinkVariableError::InvalidDimension(7);
     let topo_err: deep_causality_topology::TopologyError = lv_err.into();
     let msg = format!("{}", topo_err);
-    assert!(msg.contains("Matrix is singular"));
+    assert!(msg.contains("Invalid matrix dimension: 7"));
 }
 
 #[test]

@@ -34,13 +34,12 @@
 //! - **Plaquettes:** Ordered product around elementary squares
 //! - **Wilson action:** S = β Σ_p (1 - Re[Tr(U_p)]/N)
 
+use self::utils::{alloc_slots, link_index, slots_from_map};
 use crate::traits::cellular_complex::CellularComplex;
 use crate::{ChainComplex, GaugeGroup, RandomField};
 use crate::{LatticeCell, LatticeComplex, LinkVariable, TopologyError};
 use deep_causality_algebra::{ComplexField, DivisionAlgebra, Field, RealField};
 use deep_causality_num::{FromPrimitive, ToPrimitive};
-// use deep_causality_tensor::TensorData; // Removed
-use self::utils::{alloc_slots, link_index, slots_from_map};
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::sync::Arc;

@@ -86,8 +86,6 @@ impl<
 
         // F_μν ≈ (U_μν - U_μν†) / 2
         // This gives the anti-Hermitian part (proportional to ia²F)
-        // F_μν ≈ (U_μν - U_μν†) / 2
-        // This gives the anti-Hermitian part (proportional to ia²F)
         let u_dag = u_munu.dagger();
         let neg_one = M::from_re_im(
             R::from_f64(-1.0).ok_or_else(|| {

@@ -10,7 +10,7 @@
 
 use crate::traits::cellular_complex::CellularComplex;
 use crate::{GaugeGroup, LatticeGaugeField, TopologyError};
-use deep_causality_algebra::Field; // TensorData removed
+use deep_causality_algebra::Field;
 use deep_causality_algebra::{ComplexField, DivisionAlgebra, RealField};
 use deep_causality_num::{FromPrimitive, ToPrimitive};
 use std::fmt::Debug;

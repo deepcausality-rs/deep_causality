@@ -35,7 +35,7 @@ use std::sync::Arc;
 ///
 /// * `G` - Gauge group (U1, SU2, SU3, etc.)
 /// * `D` - Spacetime dimension
-/// * `M` - Matrix element type (TensorData)
+/// * `M` - Matrix element type
 #[derive(Debug, Clone, Copy, Default)]
 pub struct LatticeGaugeFieldOps<G: GaugeGroup, const D: usize, M>(PhantomData<(G, M)>);
 

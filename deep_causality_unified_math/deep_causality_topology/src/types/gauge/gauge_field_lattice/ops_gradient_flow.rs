@@ -8,12 +8,11 @@
 //! Implements the Wilson flow equation to continuously smooth gauge fields
 //! towards the stationary points of the action. Used for scale setting and renormalization.
 
+use super::utils::{alloc_slots, link_index};
 use crate::traits::cellular_complex::CellularComplex;
 use crate::{GaugeGroup, LatticeGaugeField, TopologyError};
 use deep_causality_algebra::{ComplexField, DivisionAlgebra, Field, RealField};
 use deep_causality_num::{FromPrimitive, ToPrimitive, lift};
-// use deep_causality_tensor::TensorData; // Removed
-use super::utils::{alloc_slots, link_index};
 use std::fmt::Debug;
 // ============================================================================
 // Gradient Flow (Section 13)
@@ -189,14 +188,21 @@ impl<
         }
     }
 
-    /// Adds two gauge fields.
+    /// Adds two gauge fields link by link.
     ///
     /// # Mathematics
     ///
     /// $$U_\mu(x) \to U_\mu^{(1)}(x) + U_\mu^{(2)}(x)$$
     ///
-    /// Note: This generally breaks unitarity. Intermediate RK3 operation.
-    fn try_add(&self, other: &Self) -> Result<Self, TopologyError> {
+    /// The sum of two group elements is generally not in the group; the RK3 flow step projects
+    /// the result back. The result carries `self`'s lattice, coupling and source, and a link on
+    /// every edge where `self` has one.
+    ///
+    /// # Errors
+    ///
+    /// Returns `TopologyError::LatticeGaugeError` if `other` has no link on an edge where `self`
+    /// has one.
+    pub fn try_add(&self, other: &Self) -> Result<Self, TopologyError> {
         let shape = *self.lattice.shape();
         let mut new_links = alloc_slots(&shape);
         for (cell, link) in self.iter_links() {

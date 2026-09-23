@@ -9,6 +9,8 @@ use deep_causality_topology::FlowParams;
 use deep_causality_topology::GaugeGroup;
 use deep_causality_topology::LatticeComplex;
 use deep_causality_topology::LatticeGaugeField;
+use deep_causality_topology::{CellularComplex, ChainComplex, LinkVariable};
+use std::collections::HashMap;
 use std::sync::Arc;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -33,14 +35,62 @@ fn test_flow_params_default() {
     assert_eq!(params.t_max, 1.0);
 }
 
+/// A field on `lattice` whose link on the `k`-th edge of `cells(1)` is the 1x1 matrix `value(k)`.
+fn field_from<F: Fn(f64) -> Complex<f64>>(
+    lattice: &Arc<LatticeComplex<2, f64>>,
+    beta: f64,
+    value: F,
+) -> LatticeGaugeField<U1, 2, Complex<f64>, f64> {
+    let links: HashMap<_, _> = lattice
+        .cells(1)
+        .enumerate()
+        .map(|(k, e)| {
+            (
+                e,
+                LinkVariable::try_from_matrix(vec![value(k as f64)]).unwrap(),
+            )
+        })
+        .collect();
+    LatticeGaugeField::try_from_links(lattice.clone(), links, beta).unwrap()
+}
+
 #[test]
 fn test_try_add_success() {
-    let shape = [2, 2];
-    let lattice = Arc::new(LatticeComplex::new(shape, [true, true]));
-    let _f1 = LatticeGaugeField::<U1, 2, Complex<f64>, f64>::identity(lattice.clone(), 1.0);
-    let _f2 = LatticeGaugeField::<U1, 2, Complex<f64>, f64>::identity(lattice.clone(), 1.0);
+    // Non-square periodic lattice, and a different link on every edge.
+    let lattice: Arc<LatticeComplex<2, f64>> = Arc::new(LatticeComplex::new([2, 3], [true, true]));
+    let f1 = field_from(&lattice, 1.5, |k| Complex::new(k, 1.0));
+    let f2 = field_from(&lattice, 2.5, |k| Complex::new(2.0, -k));
 
-    // Test logic kept as comments/exploration from previous step
+    let sum = f1.try_add(&f2).expect("both fields carry every edge");
+
+    assert_eq!(sum.num_links(), lattice.num_cells(1));
+    assert_eq!(*sum.beta(), 1.5);
+    for (k, edge) in lattice.cells(1).enumerate() {
+        let k = k as f64;
+        // (k + i) + (2 - k i) = (k + 2) + (1 - k) i
+        let got = sum.link(&edge).expect("sum carries every edge").as_slice()[0];
+        assert_eq!(got, Complex::new(k + 2.0, 1.0 - k), "edge {edge:?}");
+    }
+}
+
+#[test]
+fn test_try_add_missing_link_errors() {
+    let lattice: Arc<LatticeComplex<2, f64>> = Arc::new(LatticeComplex::new([2, 3], [true, true]));
+    let f1 = field_from(&lattice, 1.0, |k| Complex::new(k, 1.0));
+
+    // `other` lacks the link on one edge that `self` carries.
+    let dropped = lattice.cells(1).nth(4).unwrap();
+    let partial: HashMap<_, _> = lattice
+        .cells(1)
+        .filter(|e| *e != dropped)
+        .map(|e| (e, LinkVariable::<U1, Complex<f64>, f64>::identity()))
+        .collect();
+    let f2 = LatticeGaugeField::from_links_unchecked(lattice.clone(), partial, 1.0, ());
+
+    assert!(f1.try_add(&f2).is_err());
+    // The other way round there is nothing missing: every link of `f2` has a partner in `f1`.
+    let reverse = f2.try_add(&f1).expect("f1 carries every edge f2 does");
+    assert_eq!(reverse.num_links(), lattice.num_cells(1) - 1);
 }
 
 #[test]

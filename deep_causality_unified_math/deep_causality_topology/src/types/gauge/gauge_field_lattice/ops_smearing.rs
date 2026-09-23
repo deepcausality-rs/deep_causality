@@ -8,11 +8,10 @@
 //! Implements APE (Array Processor Experiment) smearing and Stout smearing
 //! to reduce ultraviolet fluctuations and enhance the signal of long-range physics.
 
+use super::utils::{alloc_slots, link_index};
 use crate::{GaugeGroup, LatticeGaugeField, TopologyError};
 use deep_causality_algebra::{ComplexField, DivisionAlgebra, Field, RealField};
 use deep_causality_num::{FromPrimitive, ToPrimitive};
-// use deep_causality_tensor::TensorData; // Removed
-use super::utils::{alloc_slots, link_index};
 use std::fmt::Debug;
 // ============================================================================
 // Smearing Algorithms

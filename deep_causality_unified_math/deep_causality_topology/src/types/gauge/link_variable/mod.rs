@@ -297,11 +297,7 @@ impl<G: GaugeGroup, M: Field + Copy + Default + PartialOrd, R: RealField> LinkVa
         }
 
         // Create block-diagonal matrix with phase in U(1) sector.
-        //
-        // Dispatch is by matrix dimension only — an earlier draft had a
-        // `G::name() == "SU2_U1"` special case that produced output identical to the
-        // n = 3 general arm below, and the name string mismatched the actual
-        // `SU2_U1::name()` return ("SU(2)×U(1)") making it dead code.
+        // Dispatch is by matrix dimension only.
         let mut data = vec![M::zero(); n * n];
 
         match n {

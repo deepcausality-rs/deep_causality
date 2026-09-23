@@ -12,7 +12,6 @@ use crate::traits::cellular_complex::CellularComplex;
 use crate::{GaugeGroup, LatticeCell, LatticeGaugeField, LinkVariable, TopologyError};
 use deep_causality_algebra::{ComplexField, DivisionAlgebra, Field, RealField};
 use deep_causality_num::{FromPrimitive, ToPrimitive};
-// use deep_causality_tensor::TensorData; // Removed
 use std::fmt::Debug;
 
 impl<
@@ -92,7 +91,6 @@ impl<
         let u4 = self.get_link_or_identity(&edge4);
 
         // Plaquette = U_μ(n) U_ν(n+μ̂) U_μ†(n+ν̂) U_ν†(n)
-        // Plaquette = U_μ(n) U_ν(n+μ̂) U_μ†(n+ν̂) U_ν†(n)
         let u1_u2 = u1.mul(&u2);
         let u3_dag = u3.dagger();
         let u4_dag = u4.dagger();
@@ -150,7 +148,6 @@ impl<
         // Forward: U_μ(n), U_ν(n+μ̂), U_ν(n+μ̂+ν̂)
         // Backward: U_μ†(n+2ν̂), U_ν†(n+ν̂), U_ν†(n)
 
-        let _pos = *site;
         let mut pos = *site;
         let mut result = LinkVariable::<G, M, R>::identity();
 
