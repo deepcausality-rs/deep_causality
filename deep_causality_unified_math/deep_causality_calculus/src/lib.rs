@@ -17,7 +17,7 @@
 //!   over `Dual`, the scalar-polymorphism lives in [`DifferentiableArrow`], whose `run` is
 //!   generic over the scalar. [`Diff`] is the derivative-arrow view (a concrete `Arrow` over
 //!   `Dual`); the [`DifferentiateExt`] / [`DifferentiateFieldExt`] methods
-//!   (`model.derivative(x)`, `field.gradient(&x)`) are its fluent surface.
+//!   (`model.derivative(x)`, `field.gradient(&x)`, `field.hessian(&x)`) are its fluent surface.
 //! - **Integration is endomorphism iteration.** [`Euler`] and [`Rk4`] build value-level
 //!   endo-arrows (`Arrow<In = S, Out = S>`); the [`EndoArrow`] extension adds the value-level
 //!   `iterate_n` / `iterate_to_fixpoint` / `iterate_until` — the three modes being fixed
