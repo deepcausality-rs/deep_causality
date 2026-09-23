@@ -100,9 +100,11 @@ fn backslash_in_suffix_is_invalid_input_on_every_platform() {
 
 #[cfg(unix)]
 #[test]
-fn file_mode_is_owner_read_write_only() {
+fn file_mode_grants_nothing_to_group_or_other() {
+    // The umask can only clear bits of the requested 0o600, so under any umask no group or other
+    // bit may be set. Under a umask that leaves those bits, 0o644 would set them.
     use std::os::unix::fs::PermissionsExt;
     let f = NamedTempFile::new().unwrap();
     let mode = fs::metadata(f.path()).unwrap().permissions().mode();
-    assert_eq!(mode & 0o777, 0o600);
+    assert_eq!(mode & 0o077, 0, "{mode:o}");
 }

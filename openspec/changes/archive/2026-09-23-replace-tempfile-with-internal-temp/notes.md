@@ -184,3 +184,44 @@ Second run: 10 mutants, 5 caught, 5 unviable, 0 missed.
 cargo-mutants does not mutate constants, string literals or method arguments in this crate. It
 leaves alone the `0o600`/`0o700` modes, the separator set, `create_new(true)` and the `fetch_add`
 step. The phase-3 audit covers those decisions with its 21 hand-written defects.
+
+## Post-archive review
+
+A review raised seven findings. Five were valid and fixed, one was valid with a different fix,
+and one was declined.
+
+1. **A relative `TMPDIR` gave relative paths.** `env::temp_dir()` returns `TMPDIR` verbatim, and
+   `temp_path` joined onto it, contradicting "the absolute path". `temp_path` now delegates to
+   `temp_path_in(base, suffix)`, which applies `std::path::absolute`. Tests:
+   `relative_base_is_resolved_against_the_current_directory`, `absolute_base_is_kept` and
+   `empty_base_is_an_error` (`InvalidInput`). The constructors propagate the error with `?`.
+   Setting `TMPDIR` in a test is `unsafe` in edition 2024, so those `?` branches are the 4 regions
+   coverage does not reach (lines 168/168, regions 358/362).
+2. **The name test assumed a monotonic wall clock.** This is resolved by 5: names no longer
+   contain the clock, and the test that bracketed it is gone.
+3. **The 7.1 grep commands could never return "no match".** `tempfile` is a substring of
+   `deep_causality_tempfile`. Task 7.1 and the spec's two scenarios now use
+   `^\s*tempfile\s*=` and `(^|[^a-z_])tempfile::`. A control confirmed that both patterns match
+   the old forms and do not match the new crate name.
+4. **`AGENTS.md` still said "one of the three".** It now says "one of the four".
+5. **Names were predictable.** A local process could pre-create candidate names, and with no retry
+   that made construction fail. Confidentiality was already held by `create_new` and the 0o600
+   and 0o700 modes. The clock term is replaced by 64 bits: the counter hashed with SipHash under
+   one `RandomState` per process, whose 128-bit key std draws from the OS random source.
+   A first version built a fresh `RandomState` per call. The audit showed that version's counter
+   input was dead: removing `write_u64(counter)` survived, because std bumps the keys of each new
+   `RandomState` internally. With one keyed state per process, that defect is killed by
+   `random_field_differs_across_thousand_names`.
+6. **The exact-mode assertion breaks under a restrictive umask.** The suggested
+   `mode & 0o600 == 0o600` also holds for `0o644`, so it would have stopped catching the defect
+   the test exists for. The property is now "no group or other bit": `mode & 0o077 == 0`.
+   It holds under any umask and still kills `0o644`/`0o755`. `0o000` is killed by the write and
+   drop tests.
+7. **"Prefer the canonical `tempfile`" was declined.** Removing the external crate is the
+   decision this change implements (design D1: zero dependencies), and `AGENTS.md` keeps
+   justification out of code docs.
+
+Re-audit of the changed code, 9 single-site defects, all killed: random term constant;
+`absolute` skipped; pid dropped; counter not incremented; hasher not fed the counter; modes
+`0o644`, `0o755`, `0o000` (file) and `0o000` (dir). cargo-mutants: 11 mutants, 6 caught,
+5 unviable, 0 missed. Tests: 37 under cargo and Bazel (14 in-src, 21 `tests/`, 2 doc).

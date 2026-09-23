@@ -126,11 +126,11 @@ On Unix, a `NamedTempFile` SHALL be created with permission bits `0o600` and a `
 
 #### Scenario: File mode
 - **WHEN** a `NamedTempFile` is created on Unix
-- **THEN** `metadata(path()).permissions().mode() & 0o777` equals `0o600`
+- **THEN** `metadata(path()).permissions().mode() & 0o077` equals `0`, under any umask
 
 #### Scenario: Directory mode
 - **WHEN** a `TempDir` is created on Unix
-- **THEN** `metadata(path()).permissions().mode() & 0o777` equals `0o700`
+- **THEN** `metadata(path()).permissions().mode() & 0o077` equals `0`, under any umask
 
 ### Requirement: deep_causality_tempfile has no dependencies
 The `deep_causality_tempfile` crate at `deep_causality_utils/deep_causality_tempfile` SHALL declare no entry in `[dependencies]`, SHALL export `TempDir` and `NamedTempFile` from its crate root, and SHALL opt into the workspace lints.
@@ -144,14 +144,14 @@ The `deep_causality_tempfile` crate at `deep_causality_utils/deep_causality_temp
 - **THEN** it compiles
 
 ### Requirement: No workspace member declares tempfile
-The root `Cargo.toml` `[workspace.dependencies]` table and the `Cargo.toml` of every workspace member SHALL NOT declare `tempfile` under any dependency table, and no source file of a workspace member outside `yanked/` SHALL reference the path `tempfile::`.
+The root `Cargo.toml` `[workspace.dependencies]` table and the `Cargo.toml` of every workspace member SHALL NOT declare the dependency key `tempfile` under any dependency table, and no source file of a workspace member outside `yanked/` SHALL reference a path whose root is `tempfile`. `deep_causality_tempfile` is a different name and matches neither.
 
 #### Scenario: Manifests are free of tempfile
-- **WHEN** every `Cargo.toml` in the workspace is searched for a `tempfile` dependency key
+- **WHEN** every `Cargo.toml` in the workspace is searched with `grep -rnE '^\s*tempfile\s*='`
 - **THEN** there is no match
 
 #### Scenario: Sources are free of tempfile
-- **WHEN** every `.rs` file outside `target/` and `yanked/` is searched for `tempfile::`
+- **WHEN** every `.rs` file outside `target/` and `yanked/` is searched with `grep -rnE '(^|[^a-z_])tempfile::'`
 - **THEN** there is no match
 
 #### Scenario: Migrated suites pass under both build systems

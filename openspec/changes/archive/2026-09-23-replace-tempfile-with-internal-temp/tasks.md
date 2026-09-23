@@ -93,8 +93,10 @@ tests and compare the counts with 0.2.
 ## 7. Close-out
 
 - [x] 7.1 Verify the "No workspace member declares tempfile" scenarios. Run
-      `grep -rn "tempfile" --include=Cargo.toml .` and `grep -rn "tempfile::" --include=*.rs .`,
-      excluding `target/` and `yanked/`. Both must return no match.
+      `grep -rnE '^\s*tempfile\s*=' --include=Cargo.toml .` and
+      `grep -rnE '(^|[^a-z_])tempfile::' --include=*.rs .`, excluding `target/` and `yanked/`.
+      Both must return no match. The patterns are anchored so that `deep_causality_tempfile`
+      does not match.
 - [x] 7.2 Update `AGENTS.md`:
       - 32 → 33 library crates, and four utility crates under `deep_causality_utils/`
       - the Core and Data Structures listing

@@ -201,7 +201,7 @@ deep_causality_utils/deep_causality_{ast, file, par, tempfile}
 
 Package names are unchanged, so every `use` statement, every `cargo -p <name>` and every crates.io
 entry reads exactly as before. Only paths moved: a Cargo path dependency into one of the seventeen is
-`../deep_causality_unified_math/deep_causality_x` and into one of the three is
+`../deep_causality_unified_math/deep_causality_x` and into one of the four is
 `../deep_causality_utils/deep_causality_x`; the Bazel labels are
 `//deep_causality_unified_math/deep_causality_x` and `//deep_causality_utils/deep_causality_x`.
 The crates that stayed at the root are `deep_causality`, `_algorithms`, `_cfd`, `_context`,

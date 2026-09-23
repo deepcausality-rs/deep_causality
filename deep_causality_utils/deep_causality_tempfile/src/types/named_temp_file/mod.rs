@@ -39,9 +39,10 @@ impl NamedTempFile {
     ///
     /// # Errors
     ///
-    /// Returns the `std::io::Error` of the failed file creation.
+    /// Returns the `std::io::Error` of the failed file creation, or of resolving a relative temp
+    /// directory against an unreadable current directory.
     pub fn new() -> io::Result<NamedTempFile> {
-        NamedTempFile::create_at(temp_path(""))
+        NamedTempFile::create_at(temp_path("")?)
     }
 
     /// Creates the file with a name ending in `suffix`, such as `".csv"`.
@@ -51,7 +52,7 @@ impl NamedTempFile {
     /// # Errors
     ///
     /// Returns `ErrorKind::InvalidInput`, and creates nothing, when `suffix` contains `/` or
-    /// `\`. Otherwise returns the `std::io::Error` of the failed file creation.
+    /// `\`. Otherwise returns the errors of [`NamedTempFile::new`].
     pub fn with_suffix(suffix: &str) -> io::Result<NamedTempFile> {
         if suffix.contains(['/', '\\']) {
             return Err(io::Error::new(
@@ -59,7 +60,7 @@ impl NamedTempFile {
                 "temp file suffix must not contain a path separator",
             ));
         }
-        NamedTempFile::create_at(temp_path(suffix))
+        NamedTempFile::create_at(temp_path(suffix)?)
     }
 
     /// The absolute path of the file.

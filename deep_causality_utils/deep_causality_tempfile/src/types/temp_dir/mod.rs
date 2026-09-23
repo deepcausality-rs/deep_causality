@@ -36,9 +36,10 @@ impl TempDir {
     ///
     /// # Errors
     ///
-    /// Returns the `std::io::Error` of the failed directory creation.
+    /// Returns the `std::io::Error` of the failed directory creation, or of resolving a relative
+    /// temp directory against an unreadable current directory.
     pub fn new() -> io::Result<TempDir> {
-        TempDir::create_at(temp_path(""))
+        TempDir::create_at(temp_path("")?)
     }
 
     /// The absolute path of the directory.

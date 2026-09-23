@@ -25,9 +25,11 @@ fn thousand_directories_have_distinct_paths() {
 
 #[cfg(unix)]
 #[test]
-fn directory_mode_is_owner_only() {
+fn directory_mode_grants_nothing_to_group_or_other() {
+    // The umask can only clear bits of the requested 0o700, so under any umask no group or other
+    // bit may be set. Under a umask that leaves those bits, 0o755 would set them.
     use std::os::unix::fs::PermissionsExt;
     let dir = TempDir::new().unwrap();
     let mode = fs::metadata(dir.path()).unwrap().permissions().mode();
-    assert_eq!(mode & 0o777, 0o700);
+    assert_eq!(mode & 0o077, 0, "{mode:o}");
 }
