@@ -55,7 +55,12 @@ run an optimizer to find the M that maximizes write throughput.
 * Capacity is the maximum number of elements stored before a rewind.
 
 ```rust
-use dcl_data_structures::prelude::{ArrayStorage, SlidingWindow,sliding_window};
+use deep_causality_data_structures::{ArrayStorage, SlidingWindow, window_type};
+
+#[derive(Debug, Default, Copy, Clone, PartialEq)]
+struct Data {
+    dats: i32,
+}
 
 // Size refers to the maximum number of elements the sliding window can store.
 const SIZE: usize = 4;
@@ -67,7 +72,7 @@ const CAPACITY: usize = 1200;
 
 // Util function that helps with type inference.
 fn get_sliding_window() -> SlidingWindow<ArrayStorage<Data, SIZE, CAPACITY>, Data> {
-    sliding_window::new_with_array_storage()
+    window_type::new_with_array_storage()
 }
 
 pub fn main(){

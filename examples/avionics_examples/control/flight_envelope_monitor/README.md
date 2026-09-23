@@ -274,5 +274,7 @@ contains only entries produced before and including the failing stage.
   replace these with calibrated probabilistic models, sensor-fused
   uncertainty estimates, configuration-aware tuning, and per-aircraft-type
   envelope tables.
-- The example depends only on the workspace crates `deep_causality` and
-  `deep_causality_core`.
+- The example's source files import only the workspace crates
+  `deep_causality` and `deep_causality_core`. The shared
+  `avionics_examples` package declares more dependencies for its other
+  examples.

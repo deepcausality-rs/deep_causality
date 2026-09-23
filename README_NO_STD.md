@@ -62,8 +62,9 @@ that choice, for example `no-std = ["deep_causality_num/no-std"]`.
 
 ### `alloc` on its own is not a configuration
 
-`alloc` says a heap is available; it says nothing about where float math comes from. `--no-default-features --features alloc` therefore selects neither `std` nor
-`no-std`, `deep_causality_num` gets no backend, and its `Float` impls compile with no bodies:
+`alloc` says a heap is available; it says nothing about where float math comes from.
+`--no-default-features --features alloc` therefore selects neither `std` nor `no-std`,
+`deep_causality_num` gets no backend, and its `Float` impls compile with no bodies:
 
 ```
 error[E0425]: cannot find value `n` in this scope
@@ -118,8 +119,8 @@ same allocator requirement as the rest of this table.
 
 ## Allocators
 
-A `#[global_allocator]` is a software choice. Any target with RAM can have one, and with [`embedded-alloc`](https://github.com/rust-embedded/embedded-alloc) it takes
-about ten lines:
+A `#[global_allocator]` is a software choice. Any target with RAM can have one, and with
+[`embedded-alloc`](https://github.com/rust-embedded/embedded-alloc) it takes about ten lines:
 
 ```rust
 use embedded_alloc::LlffHeap as Heap;
@@ -272,8 +273,8 @@ Unlike the libm split, this needs no `cfg`. std hands you hashbrown anyway, so u
 both paths costs nothing on the host and removes a divergence that would otherwise go untested.
 
 `ultragraph` needs neither crate and has no dependencies. Its centrality traversal deduplicates
-neighbours by sort-and-dedup over a `Vec`, and its biconnectivity pass counts edge multiplicity in an
-`alloc::collections::BTreeMap`, so neither result depends on a per-run `RandomState` ordering.
+neighbours by sort-and-dedup over a `Vec`, and its biconnectivity pass counts edge multiplicity in
+an `alloc::collections::BTreeMap`, so neither result depends on a per-run `RandomState` ordering.
 Removing hash sites one by one stops paying off at the sixty or ninety sites that
 `deep_causality_topology` and `deep_causality_algorithms` carry.
 

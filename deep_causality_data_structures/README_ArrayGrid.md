@@ -21,7 +21,7 @@ Important details:
 * Indexing is bounds-checked at run time: a PointIndex outside the array boundaries panics, so keep it within the const dimensions.
 
 ```rust
-use dcl_data_structures::prelude::{ArrayGrid, ArrayType, PointIndex};
+use deep_causality_data_structures::{ArrayGrid, ArrayType, PointIndex};
 
 // Consts dimensions requires for const generic paramaters
 // Use these to check whether your PointIndex stays within the Array boundaries.
@@ -167,7 +167,7 @@ Every implementation defines `height`; the other dimension getters return `None`
 the implementing type overrides them.
 
 ```rust
-use crate::prelude::PointIndex;
+use crate::PointIndex;
 
 pub trait Storage<T>where  T: Copy {
     fn get(&self, p: PointIndex) -> &T;
@@ -179,9 +179,11 @@ pub trait Storage<T>where  T: Copy {
 }
 ```
 
-The getters return an option of a reference (`Option<&T>`) rather than a reference to an option
-(`&Option<T>`). A call site holding a mutable reference to an `&Option<T>` could replace `Some` with
-`None` and so overwrite the stored data. An `Option<&T>` cannot change the stored value.
+The dimension getters (`height`, `depth`, `time`, `width`) return an option of a reference
+(`Option<&usize>`) rather than a reference to an option (`&Option<usize>`). An `Option<&usize>`
+does not require the storage to hold an `Option`: an implementation without a dimension returns
+`None` and stores nothing. Neither form lets a caller change the stored value, since replacing
+`Some` with `None` in place takes a `&mut Option<usize>`.
 
 ## Storage Implementation
 
@@ -369,9 +371,8 @@ impl<T, const W: usize, const H: usize, const D: usize, const C: usize> ArrayGri
 
 **Getters**
 
-For low-level access, each getter returns the underlying grid. The return type is an option of a
-reference, for the reason given above: it prevents accidental data loss through a mutable reference.
-The option also covers the variant mismatch: an ArrayGrid holding a 2D grid returns `None` from the
+For low-level access, each getter returns the underlying grid as an option of a reference. The
+option covers the variant mismatch: an ArrayGrid holding a 2D grid returns `None` from the
 1D, 3D and 4D getters, so calling the wrong getter shows up at the call site.
 
 ```rust
@@ -402,16 +403,16 @@ Building an ArrayGrid takes three steps:
 3) Construct an ArrayGrid with a chosen type
 
 ```rust
+use deep_causality_data_structures::{Array2D, Array3D, ArrayGrid, PointIndex};
+
 // 1) Define constant array boundaries.
 const WIDTH: usize = 5;
 const HEIGHT: usize = 5;
 const DEPTH: usize = 5;
 const TIME: usize = 5;
 
-    // 2) Set the storage type. Use float64 in this case 
-    let storage = [[0.0f64; WIDTH]; HEIGHT];
-
-    // 3) Construct an ArrayGrid with a chosen type 
+fn main() {
+    // 2) Construct an ArrayGrid; the first type parameter is the stored value type (usize)
     let array_type = Array2D;
     let ag: ArrayGrid<usize, WIDTH, HEIGHT, DEPTH, TIME> = ArrayGrid::new(array_type);
 
@@ -434,12 +435,13 @@ const TIME: usize = 5;
     let res = ag.get(p);
     
     // Low level access to the 3D grid
-      let g = ag.array_grid_3d()
+    let g = ag.array_grid_3d()
         .expect("failed to create array grid");
 
-    assert_eq!(g.height().unwrap(), HEIGHT);
-    assert_eq!(g.width().unwrap(), WIDTH);
-    assert_eq!(g.depth().unwrap(), DEPTH);
+    assert_eq!(g.height(), Some(HEIGHT));
+    assert_eq!(g.width(), Some(WIDTH));
+    assert_eq!(g.depth(), Some(DEPTH));
+}
 ```
 
 The ArrayGrid constructor requires all generic parameters, whichever storage it instantiates. A

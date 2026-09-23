@@ -19,14 +19,14 @@ deep_causality_physics = { version = "0.5" }
 # deep_causality_physics = { version = "0.5", features = ["os-random"] }
 ```
 
-## Two Pillars
+## Three Parts
 
 The crate has three parts:
 
 1. **Kernels** — pure, stateless, domain-specific computations. Schwarzschild radius, Lorentz
    force, Cahn-Hilliard flux, Lund string fragmentation, etc. Use them to solve a single equation
    in isolation. Every kernel is generic over `R: RealField` so the caller picks
-   the precision (`f32`, `f64`, `DoubleFloat`, …).
+   the precision (`f32`, `f64`, `Float106`, …).
 
    **See [README_KERNELS.md](./README_KERNELS.md)** for the full list of kernel domains,
    architecture details, and worked examples (Relativistic Dynamics, Chronometric GM Recovery,
@@ -65,7 +65,7 @@ The crate has three parts:
 
 All kernels, quantity wrappers, and theories are generic over `R: RealField`. The same source code
 runs at `f32` for real-time visualisation, `f64` for engineering simulations, or
-`DoubleFloat` (~31 decimal digits) for cosmology and quantum field theory. The two READMEs above
+`Float106` (~31 decimal digits) for cosmology and quantum field theory. The two READMEs above
 each have a precision section.
 
 ## Configuration

@@ -57,6 +57,7 @@ Witness types that implement only Functor and Foldable:
 
 ```rust
 use deep_causality_haft::*;
+use std::collections::VecDeque;
 
 fn double_value<F>(m_a: F::Type<i32>) -> F::Type<i32>
 where
@@ -210,7 +211,15 @@ fn main() {
 use deep_causality_haft::utils_tests::*;
 use deep_causality_haft::{Effect5, MonadEffect5, HKT5};
 
-  // 1. Start with a pure value, lifting it into the effect context
+type MyEffectType<T> = <<MyEffect5 as Effect5>::HktWitness as HKT5<
+    <MyEffect5 as Effect5>::Fixed1,
+    <MyEffect5 as Effect5>::Fixed2,
+    <MyEffect5 as Effect5>::Fixed3,
+    <MyEffect5 as Effect5>::Fixed4,
+>>::Type<T>;
+
+fn main() {
+    // 1. Start with a pure value, lifting it into the effect context
     let initial_effect: MyEffectType<i32> = MyMonadEffect5::pure(10);
 
     // 2. Define a collection of step functions
@@ -218,7 +227,7 @@ use deep_causality_haft::{Effect5, MonadEffect5, HKT5};
     let step_functions: Vec<Box<dyn Fn(i32) -> MyEffectType<i32>>> = vec![
         Box::new(|x: i32| {
             MyCustomEffectType5 {
-                value: x * 2,
+                value: Some(x * 2),
                 f1: None,
                 f2: vec!["Operation A: Multiplied by 2".to_string()],
                 f3: vec![1],
@@ -227,7 +236,7 @@ use deep_causality_haft::{Effect5, MonadEffect5, HKT5};
         }),
         Box::new(|x: i32| {
             MyCustomEffectType5 {
-                value: x + 5,
+                value: Some(x + 5),
                 f1: None,
                 f2: vec!["Operation B: Added 5".to_string()],
                 f3: vec![1],
@@ -236,7 +245,7 @@ use deep_causality_haft::{Effect5, MonadEffect5, HKT5};
         }),
         Box::new(|x: i32| {
             MyCustomEffectType5 {
-                value: x * 3,
+                value: Some(x * 3),
                 f1: None,
                 f2: vec!["Operation C: Multiplied by 3".to_string()],
                 f3: vec![1],
@@ -245,7 +254,7 @@ use deep_causality_haft::{Effect5, MonadEffect5, HKT5};
         }),
     ];
 
-    // 3. Execute all step functions in sequence 
+    // 3. Execute all step functions in sequence
     println!("Process Steps: ");
     let mut current_effect = initial_effect;
     for (i, f) in step_functions.into_iter().enumerate() {
@@ -257,6 +266,7 @@ use deep_causality_haft::{Effect5, MonadEffect5, HKT5};
     }
 
     println!("Sequenced outcome: {:?}", current_effect.value);
+}
 ```
 
 Running that snippet prints:
@@ -267,7 +277,7 @@ Process Steps:
   Log (Step 2): Operation B: Added 5
   Log (Step 3): Operation C: Multiplied by 3
 
-Sequenced outcome: 75
+Sequenced outcome: Some(75)
 
 ... (Truncated)
 ```
@@ -353,7 +363,7 @@ impl Bifunctor<ResultWitness> for ResultWitness {
 
 // Usage
 let res: Result<i32, &str> = Ok(10);
-let new_res = ResultWitness::bimap(res, |x| x * 2.0, |e| e.len()); // Result<f64, usize>
+let new_res = ResultWitness::bimap(res, |x| f64::from(x) * 2.0, |e| e.len()); // Result<f64, usize>
 ```
 
 ## Natural Isomorphisms (Tier 3 Iso Traits)

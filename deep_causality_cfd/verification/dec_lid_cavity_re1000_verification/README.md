@@ -67,9 +67,8 @@ bottom-right,0.8750,0.1562,+4.3673e-4,0.8594,0.1094
 in place; the weak bottom-left eddy separates at finer resolution and
 longer horizons.)
 
-The CI gate for this case is the coarse rung in
-`deep_causality_cfd/tests/solvers/dec/cavity_tests.rs`
-(17² → 33² centerline RMSE 0.2523 → 0.2156, pinned with headroom at the
-fast t = 10 spin-up; the time-converged values 0.252 → 0.133 belong
-here). This example produces the full-resolution artifacts, the same
-ones a CFD-challenge entry needs.
+The CI gate for this case is `coarse_cavity_gates_against_ghia` in
+`deep_causality_cfd/tests/solvers/dec/cavity_tests.rs`. It marches the
+17² cavity to t = 10 and asserts a pooled centerline RMSE below 0.32
+(0.2523 measured). No CI test runs the 33² rung. This example produces
+the full-resolution artifacts, the same ones a CFD-challenge entry needs.

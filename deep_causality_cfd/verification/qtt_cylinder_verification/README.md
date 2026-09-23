@@ -53,7 +53,8 @@ Accuracy vs bond: immersed cylinder, drag from the penalization contraction
 - **Accuracy vs bond:** `C_d` settles `24.05 → 23.76 → 23.7577 → 23.7577`, with the successive change
   collapsing `2.9e-1 → 7.2e-3 → 1.9e-11`: clean convergence as the tensor-train gets more rank. The
   divergence residual drops `3.8e-1 → 5.5e-14`; at a tight bond cap the projection cannot fully
-  enforce incompressibility, and by bond 16 it reaches machine precision. **This convergence is the
+  enforce incompressibility. It is `3.0e-7` at bond 16 and reaches machine precision (`5.5e-14`) at
+  bond 24. **This convergence is the
   verification result.**
 - **No-slip:** interior `max|u| ≈ 4.2e-2` vs the free-stream `1.0`; the penalization brakes the flow to a
   few-percent floor inside the body.

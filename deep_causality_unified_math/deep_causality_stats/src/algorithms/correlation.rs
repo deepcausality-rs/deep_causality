@@ -22,7 +22,7 @@ use deep_causality_num::FromPrimitive;
 /// "carries no information", which is the right answer for a constant column.
 ///
 /// A sample whose *centred sums* leave the type is not that case and does not take that exit; see
-/// the reach note on [`correlate`].
+/// the reach note on `correlate`.
 pub fn pearson<T>(x: &[T], y: &[T]) -> Result<(T, usize), StatsError>
 where
     T: RealField + FromPrimitive,

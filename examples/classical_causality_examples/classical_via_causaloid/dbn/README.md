@@ -1,6 +1,6 @@
 # EPP Example: Dynamic Bayesian Network (DBN)
 
-This example models a simple Dynamic Bayesian Network (DBN) with the `DeepCausality` library, which implements the Effect Propagation Process (EPP). 
+This example models a simple Dynamic Bayesian Network (DBN) with the `DeepCausality` library, which implements the Effect Propagation Process (EPP).
 
 It models the "Umbrella World" scenario: the decision to take an umbrella today depends on whether it is raining, and the probability of rain today depends on whether it rained yesterday.
 
@@ -24,9 +24,9 @@ A DBN models a temporal process by "unrolling" a causal graph over discrete time
     Instead of creating new nodes for each time step (e.g., `Rain_t-1`, `Rain_t`), the EPP represents the timeline as a single, dynamic `Context`. Its `Datoid` nodes hold the state of variables (like `Rain`) at different points in time, and the simulation updates them as time moves forward.
 
 2.  **State Variables as Causaloids:**
-    Each DBN state variable (e.g., `Rain` and `Umbrella`) is a `Causaloid` whose `causal_fn` holds the variable's conditional probability table (CPT).
-    -   The `rain_causaloid` implements `P(Rain_t | Rain_t-1)`. It reads the previous day's rain state from its input `WeatherState` and returns the probability of rain today.
-    -   The `umbrella_causaloid` implements `P(Umbrella_t | Rain_t)`. It takes the probability of rain today as input and decides whether to take an umbrella.
+    Each DBN state variable (`Rain` and `Umbrella`) is a `Causaloid` node in the graph. Only the rain node's `causal_fn` holds a conditional probability table (CPT).
+    -   The `rain_causaloid` implements `P(Rain_t | Rain_t-1)`. It reads the previous day's rain state from its input `WeatherState` and returns the probability of rain today (0.7 after a rainy day, 0.2 after a dry one).
+    -   The `umbrella_causaloid` stands for `P(Umbrella_t | Rain_t)`, but its `causal_fn` passes its input `WeatherState` through unchanged. The umbrella decision itself is a threshold in `main.rs`: take the umbrella when `prob_rain_today > 0.5`.
 
 3.  **Dependencies as a CausaloidGraph:**
     A `CausaloidGraph` holds the DBN's directed edges (the causal dependencies), here the chain `Rain -> Umbrella`.
@@ -35,7 +35,7 @@ A DBN models a temporal process by "unrolling" a causal graph over discrete time
     The DBN's "filtering" process (updating the belief state as new evidence arrives) is a loop over days. In each iteration:
     - The graph is evaluated from the `rain_causaloid` to get the probability of rain for the current day.
     - A random sample decides whether it actually rained (simulating a real-world observation).
-    - The umbrella decision follows from the probability of rain.
+    - `main.rs` decides on the umbrella from the probability of rain (`prob_rain_today > 0.5`).
     - The `Context` records today's rain state, and the next day's input carries it forward.
 
 ### Conclusion

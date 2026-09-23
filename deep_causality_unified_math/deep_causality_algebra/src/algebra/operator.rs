@@ -34,13 +34,12 @@ pub struct Additive;
 
 /// The multiplicative operation — whatever a type's `Mul` implementation does.
 ///
-/// This is the **default** operator for the law markers, so `Associative` and
-/// `Associative<Multiplicative>` are the same bound and the same impl. The default matches what the
-/// flat markers already meant: every law impl, and six of the eight law bounds, stated the
-/// multiplicative case.
-///
-/// The two that did not are why the operators exist — [`AddSemigroup`](crate::AddSemigroup) meant
-/// addition, and [`CommutativeMonoid`](crate::CommutativeMonoid) meant [`Combining`].
+/// Written `Associative<Multiplicative>` or `Commutative<Multiplicative>`. The law markers have no
+/// default operator, so a bare `Associative` does not compile; every bound and impl names its
+/// operator. [`MulSemigroup`](crate::MulSemigroup) and
+/// [`CommutativeRing`](crate::CommutativeRing) state the multiplicative case,
+/// [`AddSemigroup`](crate::AddSemigroup) and [`AbelianGroup`](crate::AbelianGroup) the additive
+/// one, and [`CommutativeMonoid`](crate::CommutativeMonoid) states [`Combining`].
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub struct Multiplicative;
 

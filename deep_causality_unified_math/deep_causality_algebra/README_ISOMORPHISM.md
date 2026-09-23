@@ -190,7 +190,7 @@ fn float_wrap_f64_is_a_field_iso() {
 | Cross-crate types with asymmetric dependency (orphan rule blocks reverse `From`) | **Tier 2** witness in the dependent crate |
 | You want a domain-specific name for the iso (`PropEffectProcessIso`, etc.) | **Tier 2** named witness |
 
-A common pattern mixes tiers: the forward direction as a Tier 1 `From` impl (where the orphan rule allows it), the reverse direction as a Tier 2 `Iso` impl on a witness in the dependent crate. `CausalTensor<F>` <-> `CsrMatrix<F>` uses this pattern in `deep_causality_tensor`, which depends on `deep_causality_linear` (the owner of `CsrMatrix`) but not vice versa.
+A common pattern mixes tiers: the forward direction as a standard conversion impl (`From`, or `TryFrom` when the conversion is partial) where the orphan rule allows it, the reverse direction as a Tier 2 `Iso` impl in the dependent crate. `CausalTensor<F>` <-> `CsrMatrix<F>` uses this pattern in `deep_causality_tensor`, which depends on `deep_causality_linear` (the owner of `CsrMatrix`) but not vice versa. The forward half is `TryFrom<CausalTensor<F>> for CsrMatrix<F>`, which returns `CsrFromTensorError` for a tensor whose rank is not 2. The reverse half is `Iso<CsrMatrix<F>, CausalTensor<F>>`, implemented on `CsrMatrix<F>` itself.
 
 ---
 

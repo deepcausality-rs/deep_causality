@@ -73,8 +73,7 @@ fn main() {
 
         println!("Day {}: Probability of Rain: {:.2}", day, prob_rain_today);
 
-        // Determine umbrella decision based on the output from umbrella causaloid
-        // The umbrella causaloid gets the rain probability and logs whether to take umbrella
+        // The umbrella causaloid passes the state through; the decision is this threshold.
         let take_umbrella = prob_rain_today > 0.5;
 
         println!("Day {}: Take Umbrella: {}", day, take_umbrella);

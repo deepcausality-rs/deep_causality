@@ -318,22 +318,23 @@ assert_eq!(quantity.run(at).unwrap(), quantity.run(at).unwrap());
 
 ## More Examples
 
-For larger, real-world scenarios, see the `examples` directory:
+For larger, real-world scenarios, see
+[`examples/causal_uncertain_examples`](../../examples/causal_uncertain_examples):
 
-*   **GPS Navigation (`example_gps_navigation.rs`)**: Simulates GPS readings, propagates uncertainty through distance and time calculations, and makes route decisions.
-  
-*   **Sensor Data Processing (`example_sensor_processing.rs`)**: Processes sensor data with error handling, sensor fusion, and anomaly detection under uncertainty.
+*   **GPS Navigation (`gps_navigation`)**: Simulates GPS readings, propagates uncertainty through distance and time calculations, and makes route decisions.
 
-*   **Aspirin Headache Trial Analysis (`example_clinical_trial.rs`)**: Models clinical trial data with probabilistic presence through `MaybeUncertain<T>` and analyzes drug effectiveness under uncertainty.
+*   **Sensor Data Processing (`sensor_processing`)**: Processes sensor data with error handling, sensor fusion, and anomaly detection under uncertainty.
+
+*   **Aspirin Headache Trial Analysis (`clinical_trial`)**: Models clinical trial data with probabilistic presence through `MaybeUncertain<T>` and analyzes drug effectiveness under uncertainty.
 
 To run an example:
 
 ```bash
-cargo run --example example_gps_navigation 
+cargo run -p causal_uncertain_examples --example gps_navigation
 
-cargo run --example example_sensor_processing 
+cargo run -p causal_uncertain_examples --example sensor_processing
 
-cargo run --example example_clinical_trial 
+cargo run -p causal_uncertain_examples --example clinical_trial
 ```
 
 ## Benchmarks

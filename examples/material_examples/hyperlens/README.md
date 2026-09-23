@@ -5,8 +5,10 @@ why, and shows one way around it, describing the material by a metric signature 
 
 It is a demonstration, not a solver. Once the problem is written as a causal process over the
 library's types, precision as a parameter and categorical composition follow at no extra cost: the
-same source runs at four scalars, and the sweep is a `fmap` and a `fold`. [What this example is, and where it stops](#what-this-example-is-and-where-it-stops) says
-what the model holds fixed and how it grows toward a device-grade treatment.
+same source runs at four scalars, and the sweep is a `fmap` and a `fold`.
+[What the example covers](#what-the-example-covers) says what the model holds fixed, and
+[How to grow the example toward a complete solver](#how-to-grow-the-example-toward-a-complete-solver)
+says how it grows toward a device-grade treatment.
 
 ```bash
 cargo run -p material_examples --example hyperlens_example

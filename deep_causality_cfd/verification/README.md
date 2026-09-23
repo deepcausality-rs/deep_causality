@@ -347,7 +347,8 @@ analysis (immersed body + surface observables). Driven through `CfdFlow::march`.
 **Self-check.** Five gates, **exit nonzero** on break: (a) no-slip, interior `max|u|` at the
 penalization floor; (b) bond saturation, the drag coefficient **converges** as the round bond cap rises;
 (c) physical drag, positive and finite; (d) the η ladder and (e) the mask-smoothing ladder, each
-establishing a limit for `C_d` (`[reference]`). See the ⚠ note above for the ladder results.
+testing whether `C_d` settles to a limit (`[reference]`). In the committed `L = 5` baseline both
+ladders report `NOT CONVERGING` and fail; see the ⚠ note above.
 
 **Measured (f64, committed `L = 5` baseline: 32², 4 bond caps, ~1 s).** `C_d` settles `24.05 → 23.76 → 23.7577 → 23.7577`, with the
 successive change collapsing `2.9e-1 → 7.2e-3 → 1.9e-11` and divergence dropping `3.8e-1 → 5.5e-14` as the

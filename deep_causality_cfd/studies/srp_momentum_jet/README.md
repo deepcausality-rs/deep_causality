@@ -14,10 +14,11 @@ SRP_MJ_L=6 SRP_MJ_SWEEP=1.0,2.0,4.0 cargo run --release -p deep_causality_cfd --
 and its recorded amber finding: that verification's whole-envelope **pinned-state** plume shields
 the forebody monotonically but cannot produce the Jarvinen–Adams central-nozzle drag collapse. The
 verdict names "a momentum-carrying jet interaction rather than a pinned obstruction state" as the
-first upgrade path, and this study measures that variant on the **same harness**: same freestream, body, sponge, strip, and at defaults the same grid and
-bond cap, with the plume envelope pin replaced by a nozzle-exit **patch** at the body face pinned
-to a supersonic upstream-firing exit state. The plume is not imposed. It forms, spreads, and
-interacts in the marched field.
+first upgrade path, and this study measures that variant on the **same harness**: same
+freestream, body, sponge, strip, and at defaults the same grid and bond cap, with the plume
+envelope pin replaced by a nozzle-exit **patch** at the body face pinned to a supersonic
+upstream-firing exit state. The plume is not imposed. It forms, spreads, and interacts in the
+marched field.
 
 The question is an attribution. Is the missing collapse a property of the **model class**, the
 static imprint, or of the **harness**, meaning the 2-D plane, coarse grid, and dissipation floor

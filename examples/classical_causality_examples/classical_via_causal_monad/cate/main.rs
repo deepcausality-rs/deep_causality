@@ -6,7 +6,7 @@
 //! # CATE via the Causal Monad
 //!
 //! Conditional Average Treatment Effect on
-//! `PropagatingProcess<f64, (), PatientContext>` using the `Alternatable`
+//! `PropagatingProcess<FloatType, (), BaseContext>` using the `Alternatable`
 //! family. The CATE for a subgroup `S` is the mean of per-patient
 //! individual treatment effects:
 //!

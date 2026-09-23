@@ -82,39 +82,33 @@ cargo add deep_causality_core
 ### Counterfactual & Intervention Example
 
 ```rust
-use deep_causality_core::{Intervenable, PropagatingEffect};
+use deep_causality_core::{AlternatableValue, PropagatingEffect};
 
 fn main() {
     // Causal chain: Dose → Absorption → Metabolism → Response
     let observed = PropagatingEffect::pure(10.0_f64)
-        .bind(|dose, _, _| PropagatingEffect::pure(dose * 0.8))   // Absorption: 8.0
-        .bind(|level, _, _| PropagatingEffect::pure(level - 2.0)) // Metabolism: 6.0
-        .bind(|level, _, _| {
-            let response = if level > 5.0 { "Effective" } else { "Ineffective" };
-            PropagatingEffect::pure(response)
-        });
+        .fmap(|dose| dose * 0.8)   // Absorption: 8.0
+        .fmap(|level| level - 2.0) // Metabolism: 6.0
+        .fmap(|level| if level > 5.0 { "Effective" } else { "Ineffective" });
     // Result: "Effective"
 
-    // Intervention: Replace value MID-CHAIN with do(BloodLevel := 3.0)
+    // Intervention: replace the value MID-CHAIN with BloodLevel := 3.0
     let intervened = PropagatingEffect::pure(10.0_f64)
-        .bind(|dose, _, _| PropagatingEffect::pure(dose * 0.8))   // Absorption: 8.0
-        .intervene(3.0)  // ← Force BloodLevel to 3.0, preserving log
-        .bind(|level, _, _| PropagatingEffect::pure(level - 2.0)) // Metabolism: 1.0
-        .bind(|level, _, _| {
-            let response = if level > 5.0 { "Effective" } else { "Ineffective" };
-            PropagatingEffect::pure(response)
-        });
+        .fmap(|dose| dose * 0.8)   // Absorption: 8.0
+        .alternate_value(3.0)      // ← Force BloodLevel to 3.0; the log records the substitution
+        .fmap(|level| level - 2.0) // Metabolism: 1.0
+        .fmap(|level| if level > 5.0 { "Effective" } else { "Ineffective" });
     // Result: "Ineffective" — intervention changed the outcome
 
-    println!("Observed:   {:?}", observed.value());   // "Effective"
-    println!("Intervened: {:?}", intervened.value()); // "Ineffective"
+    println!("Observed:   {:?}", observed.value());   // Some("Effective")
+    println!("Intervened: {:?}", intervened.value()); // Some("Ineffective")
 }
 ```
 
 This walks **Pearl's Ladder of Causation**:
 
 1. **Association** (Rung 1): `dose=10` correlates with "Effective".
-2. **Intervention** (Rung 2): `intervene(3.0)` forces a value mid-chain.
+2. **Intervention** (Rung 2): `alternate_value(3.0)` forces a value mid-chain.
 3. **Counterfactual** (Rung 3): Same chain, different outcome under the intervention.
 
 DeepCausality can express
@@ -169,7 +163,7 @@ entities; neither is more fundamental.
   isomorphic across three forms (**Singleton**, **Collection**, **Graph**), so recursive causal structures compose
   without changes to the calling code.
 - **CausalMonad.** The bind side of the axiom, carrying causal *sequencing* through Kleisli composition. `bind`
-  short-circuits on error, accumulates the audit log, and supports counterfactual `intervene` operations.
+  short-circuits on error, accumulates the audit log, and supports counterfactual value substitution through `alternate_value`.
 
 Both inhabit the same propagating-effect carrier:
 
@@ -248,6 +242,7 @@ and applies to 5G/6G phased-array antenna design.
 |------------------------------------------------------------------|------------------------------------------------------------------------------------------------------|
 | [`deep_causality`](deep_causality/README.md)                     | Causaloid (Singleton/Collection/Graph), CausaloidGraph reasoning, CSM                                |
 | [`deep_causality_context`](deep_causality_context/README.md)     | `Context` hypergraph: contextoids and data, space, time and spacetime nodes                          |
+| [`deep_causality_context_store`](deep_causality_context_store/README.md) | Persistence contract for `Context`: the records it projects onto and the `ContextStorage` trait a backend implements |
 | [`deep_causality_core`](deep_causality_core/README.md)           | `PropagatingEffect`, `PropagatingProcess`, `CausalMonad`, `CausalArrow`, `CausalFlow`                |
 | [`deep_causality_ethos`](deep_causality_ethos/README.md)         | `EffectEthos` and `Teloid` for defeasible deontic reasoning                                          |
 | [`deep_causality_uncertain`](deep_causality_unified_math/deep_causality_uncertain/README.md) | `Uncertain<T>` and `MaybeUncertain<T>` (after Bornholt et al.)                                       |

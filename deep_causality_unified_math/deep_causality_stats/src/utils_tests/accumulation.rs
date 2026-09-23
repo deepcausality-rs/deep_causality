@@ -5,7 +5,7 @@
 
 //! Reach into the balanced-tree accumulator, for the suite that tests it.
 //!
-//! [`PairwiseSum`](crate::types::pairwise_sum::PairwiseSum) is `pub(crate)`: it is how every
+//! `PairwiseSum` is `pub(crate)`: it is how every
 //! reduction in this crate forms a sum, and not something a caller constructs. The `tests` tree
 //! cannot name it, so the two observations a test needs are taken here instead — the total, and
 //! which slots hold a partial sum. Nothing else about the type is exposed, and the type itself

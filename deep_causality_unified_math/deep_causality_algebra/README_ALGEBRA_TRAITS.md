@@ -159,12 +159,13 @@ parameter gives each law its operation:
 ```rust
 pub trait Operator {}
 pub struct Additive;        // whatever `Add` does
-pub struct Multiplicative;  // whatever `Mul` does — the DEFAULT
+pub struct Multiplicative;  // whatever `Mul` does
 pub struct Combining;       // whatever `Monoid::combine` does
 ```
 
-The operator parameter has no default, so every bound and impl names its operator. Every law impl
-and six of the eight law bounds state the multiplicative case.
+The operator parameter has no default, so every bound and impl names its operator:
+`Associative<Multiplicative>`, `Commutative<Additive>`, `Commutative<Combining>`. A bare
+`Associative` does not compile.
 
 `Combining` exists because `Monoid::combine` is neither addition nor multiplication and cannot be
 mapped onto either: `Prob::combine` multiplies, `Count::combine` adds, `Conjunction`/`Disjunction`

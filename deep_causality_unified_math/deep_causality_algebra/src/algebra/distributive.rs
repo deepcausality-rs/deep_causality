@@ -11,26 +11,27 @@ use crate::{BFloat16, Float106};
 ///
 /// # Which types promise it
 ///
-/// Past the primitives below, seven types carry `Distributive`, each in the crate that defines it:
+/// Past the primitives below, ten types carry `Distributive`, each in the crate that defines it:
 /// `Complex<T>`, `Quaternion<T>` and `Octonion<T>` in `deep_causality_num_complex`, `Dual<T>` in
-/// `deep_causality_num_dual`, `Rational<T>` in `deep_causality_num_rational`, and
-/// `CausalTensor<T>` and `CausalTensorTrain<T>` in `deep_causality_tensor`.
+/// `deep_causality_num_dual`, `Rational<T>` in `deep_causality_num_rational`, `CausalTensor<T>`
+/// and `CausalTensorTrain<T>` in `deep_causality_tensor`, and `CsrMatrix<T>`, `DenseMatrix<T>`
+/// and `PackedGf2<W>` in `deep_causality_linear`.
 ///
 /// This is the widest of the three multiplicative laws, and the list shows why. ℍ and 𝕆 appear
 /// here even though they are missing from [`Commutative`](crate::Commutative) and 𝕆 is missing
 /// from [`Associative`](crate::Associative): distributivity is what makes a division algebra an
 /// algebra at all, so it survives where the other two fail.
 ///
-/// One absence is structural. `CsrMatrix<T>` in `deep_causality_sparse` stops at
-/// [`AbelianGroup`](crate::AbelianGroup) and carries none of the multiplicative markers.
+/// `DenseVector<T>` in `deep_causality_linear` is absent because it has no product of two
+/// vectors.
 ///
 /// For `f32`, `f64`, `BFloat16` and `Float106` the promise covers the finite values. See the scope note on
 /// [`Annihilating`](crate::Annihilating).
 ///
 /// # Why these are written out one by one
 ///
-/// This trait was once blanket-implemented over `Num`, which is unsealed: any downstream type
-/// implementing `Num` silently acquired this law without anyone promising it, and could then enter
+/// A blanket impl over `Num`, which is unsealed, would hand this law to any downstream type
+/// implementing `Num` without anyone promising it, and that type could then enter
 /// `CommutativeRing` and `Field` on a claim nobody made. A marker whose whole purpose is to record
 /// an unverifiable promise cannot be handed out by inference.
 ///

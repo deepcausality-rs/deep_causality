@@ -15,7 +15,8 @@ use crate::{BFloat16, Float106};
 ///
 /// # Which types promise it
 ///
-/// Past the primitives below, four types carry `Commutative`, each in the crate that defines it:
+/// Past the primitives below, five types carry `Commutative<Multiplicative>`, each in the crate
+/// that defines it:
 /// `Complex<T>` in `deep_causality_num_complex`, `Dual<T>` in `deep_causality_num_dual`,
 /// `Rational<T>` in `deep_causality_num_rational`, and `CausalTensor<T>` and
 /// `CausalTensorTrain<T>` in `deep_causality_tensor`. The two tensor impls are conditional on
@@ -24,18 +25,17 @@ use crate::{BFloat16, Float106};
 /// `Conjunction`, `Disjunction`, `Count` and `Prob`, which need the marker to reach
 /// [`CommutativeMonoid`](crate::CommutativeMonoid).
 ///
-/// Two absences are deliberate. `Quaternion<T>` does not commute: `i * j` is `k`, and `j * i` is
-/// `-k`. `Octonion<T>` inherits that failure. A third absence is structural: `CsrMatrix<T>` in
-/// `deep_causality_sparse` stops at [`AbelianGroup`](crate::AbelianGroup) and carries none of the
-/// multiplicative markers.
+/// `Quaternion<T>` does not commute: `i * j` is `k`, and `j * i` is `-k`. `Octonion<T>` inherits
+/// that failure. `CsrMatrix<T>`, `DenseMatrix<T>` and `PackedGf2<W>` in `deep_causality_linear`
+/// are absent because matrix multiplication does not commute, whatever the element type.
 ///
 /// For `f32`, `f64`, `BFloat16` and `Float106` the promise covers the finite values. See the scope note on
 /// [`Annihilating`](crate::Annihilating).
 ///
 /// # Why these are written out one by one
 ///
-/// This trait was once blanket-implemented over `Num`, which is unsealed: any downstream type
-/// implementing `Num` silently acquired this law without anyone promising it, and could then enter
+/// A blanket impl over `Num`, which is unsealed, would hand this law to any downstream type
+/// implementing `Num` without anyone promising it, and that type could then enter
 /// `CommutativeRing` and `Field` on a claim nobody made. A marker whose whole purpose is to record
 /// an unverifiable promise cannot be handed out by inference.
 ///

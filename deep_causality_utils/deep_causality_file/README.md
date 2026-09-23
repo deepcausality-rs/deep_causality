@@ -31,8 +31,8 @@ The receiver-data format family is **RINEX GNSS** precise products:
 * **`.clk`**: precise satellite clocks (bias samples).
 
 This is the real Galileo / multi-GNSS data behind the chronometric and avionics examples (GM recovery, INS clock holdover
-through GNSS blackout). The crate also reads and writes typed numeric tables, typed rows, sensor traces, and snapshots.
-The loaders are precision-generic over the scalar `R`, so one ingestion path serves every example and the CFD crate.
+through GNSS blackout). The crate also reads and writes typed numeric tables, typed rows, and snapshots, and reads
+sensor traces. The loaders are precision-generic over the scalar `R`, so one ingestion path serves every example and the CFD crate.
 
 ## Loaders
 

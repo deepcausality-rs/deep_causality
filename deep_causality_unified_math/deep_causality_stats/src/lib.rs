@@ -71,16 +71,22 @@
 //!
 //! # Precision
 //!
-//! Every function is generic over its scalar under the algebra tower's bounds. Two of the
-//! implementations this crate absorbs compute in `f64` behind a generic signature, which silently
-//! discards the caller's precision; the point of the bound is that every scalar gets its own.
+//! Functions are generic over their scalar under the algebra tower's bounds, with the exceptions
+//! below.
 //!
-//! Three signatures name a concrete float, and each says why at the function. The unit coordinate
-//! of an inverse-CDF transform is `f64` because it is a position on `[0, 1)` rather than a value in
-//! the caller's scalar, and rounding it into a narrow scalar before the transform is destructive at
-//! the endpoints — see [`standard_normal_inverse_cdf_at`]. Beside it,
-//! [`standard_normal_inverse_cdf`] and [`standard_normal_inverse_cdf_f106`] are the same transform
-//! at one precision each, kept so that values recorded against them do not move.
+//! Four signatures name a concrete float. The unit coordinate of an inverse-CDF transform is `f64`
+//! because it is a position on `[0, 1)` rather than a value in the caller's scalar, and rounding it
+//! into a narrow scalar before the transform is destructive at the endpoints — see
+//! [`standard_normal_inverse_cdf_at`]. Beside it, [`standard_normal_inverse_cdf`] and
+//! [`standard_normal_inverse_cdf_f106`] are the same transform at one fixed precision each.
+//! [`bernoulli_inverse_cdf`] compares an `f64` coordinate with an `f64` probability.
+//!
+//! Three generic paths pass through `f64` internally. [`Bernoulli::new`] lowers `p` to `f64` and
+//! quantises it to a multiple of `2^-64`, and [`Bernoulli::p`] returns that value through `f64`, so
+//! probability detail finer than `f64` is lost at `Float106`. [`Poisson::new`] lowers the rate to
+//! `f64` only to compare it with [`MAX_RATE`]; the stored rate stays in the caller's scalar.
+//! [`bernoulli_proportion`] divides in the caller's scalar when both counts are exact there, and
+//! otherwise divides in `f64` and rounds the quotient once into the scalar.
 //!
 //! # Shape
 //!

@@ -346,7 +346,7 @@ crates directly, because this crate's signatures expose their types without re-e
   traits behind the `CfdScalar` bound, needed to call scalar methods in generic code.
 
 The plasma-blackout examples also use `deep_causality_physics`, through the shared stages in
-`examples/avionics_examples/src/shared/`.
+`../examples/avionics_examples/src/shared/`.
 
 ## License
 

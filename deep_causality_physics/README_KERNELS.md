@@ -54,7 +54,7 @@ Kernels are organized in four layers:
 3. **Quantities (`quantities/<domain>/`)** — Newtype wrappers
    (`Speed`, `Mass`, `Temperature`, `FourMomentum`, `Hadron`, …) that enforce physical invariants
    (e.g. mass cannot be negative). **Every wrapper is generic over
-   `R: RealField`**, so the same code runs at `f32`, `f64`, `DoubleFloat`, or any other field that
+   `R: RealField`**, so the same code runs at `f32`, `f64`, `Float106`, or any other field that
    implements `RealField`.
 
 4. **Metric Types** — Re-exports from `deep_causality_metric` for sign-convention handling
@@ -172,11 +172,11 @@ precision at the call site:
 
 ```rust
 use deep_causality_physics::Mass;
-use deep_causality_num::DoubleFloat;
+use deep_causality_num::Float106;
 
 let m_fast: Mass<f32>           = Mass::new(5.0_f32).unwrap();   // games / viz
 let m_std:  Mass<f64>           = Mass::new(5.0_f64).unwrap();   // engineering default
-let m_hi:   Mass<DoubleFloat>   = Mass::new(DoubleFloat::from(5.0)).unwrap(); // cosmology
+let m_hi:   Mass<Float106>      = Mass::new(Float106::from(5.0)).unwrap(); // cosmology
 ```
 
 The exception is the physical constants under `src/constants/` and the PDG quark-mass constants

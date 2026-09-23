@@ -14,8 +14,8 @@ apart.
 
 The study sweeps airspeed over the validated isolated-cylinder configuration, computes each wake
 with the DEC incompressible solver, extracts the shedding frequency from the wake probe, and
-gates the margin to a stated structural mode. It writes one table with a row per airspeed:
-Reynolds number, Strouhal number, shedding frequency, margin.
+gates the margin to a stated structural mode. It writes one table with a row per airspeed and
+the columns `airspeed` (m/s), `reynolds`, `strouhal`, `shedding_frequency` (Hz) and `margin`.
 
 ## How to Run
 

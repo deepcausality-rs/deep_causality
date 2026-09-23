@@ -63,8 +63,8 @@ Use **default features** for general applications. For bare-metal `no_std`, disa
 `PropagatingEffect` is a monadic container for stateless causal effects. It supports the functional transformations `map` and `bind` through the `Functor` and `Monad` traits.
 
 ```rust
-use deep_causality_core::{PropagatingEffect, PropagatingEffectWitness};
-use deep_causality_haft::{Functor, Applicative};
+use deep_causality_core::PropagatingEffectWitness;
+use deep_causality_haft::{Functor, Pure};
 
 fn main() {
     // Create a pure effect
@@ -82,8 +82,8 @@ fn main() {
 `PropagatingProcess` extends `PropagatingEffect` with **State** and **Context**. It models Markovian processes in which each step reads and writes state and reads a configuration context.
 
 ```rust
-use deep_causality_core::{PropagatingProcess, PropagatingEffectWitness, EffectValue};
-use deep_causality_haft::Applicative;
+use deep_causality_core::{CausalEffectPropagationProcess, PropagatingEffectWitness, PropagatingProcess};
+use deep_causality_haft::Pure;
 
 #[derive(Clone, Default, Debug)]
 struct State { count: i32 }
@@ -91,14 +91,14 @@ struct State { count: i32 }
 fn main() {
     // Lift a pure effect into a stateful process
     let effect = PropagatingEffectWitness::pure(10);
-    let process = PropagatingProcess::with_state(effect, State::default(), None);
+    let process = PropagatingProcess::with_state(effect, State::default(), None::<()>);
 
     // Chain stateful computation. Value and error are one channel (`outcome`), so a step
     // builds the process with `new(Ok(..)/Err(..), state, context, logs)`.
     let next = process.bind(|val, mut state, ctx| {
         state.count += 1;
-        deep_causality_core::CausalEffectPropagationProcess::new(
-            Ok(EffectValue::Value(val.into_value().unwrap() + 1)),
+        CausalEffectPropagationProcess::new(
+            Ok(val.map(|v| v + 1)),
             state,
             ctx,
             Default::default(),
@@ -117,26 +117,28 @@ A running effect or process can have its value substituted to simulate a counter
 The `AlternatableValue` trait adds `.alternate_value(value)` to both `PropagatingEffect` and `PropagatingProcess`.
 
 ```rust
-use deep_causality_core::{PropagatingEffectWitness, Intervenable};
+use deep_causality_core::{AlternatableValue, PropagatingEffectWitness};
+use deep_causality_haft::Pure;
 
 // 1. Create a factual effect
 let effect = PropagatingEffectWitness::pure(10);
 
-// 2. Intervene to force a new value (Counterfactual)
-// This preserves logs and error states but overrides the value.
-let counterfactual = effect.intervene(42);
+// 2. Substitute a new value (counterfactual).
+// State, context and logs are preserved; an errored effect is returned unchanged.
+let counterfactual = effect.alternate_value(42);
+assert_eq!(counterfactual.value(), Some(&42));
 ```
 
 ### CausalFlow (Fluent DSL)
 
-`CausalFlow` is a thin, fluent facade over the causal monad. It hides the HKT witness types, the `pure` / `with_state` constructors, the `EffectValue` wrapping, and the manual error short-circuit, so a pipeline reads top to bottom. Every method lowers to an existing monad operation; the facade adds no semantics.
+`CausalFlow` is a thin, fluent facade over the causal monad. It hides the HKT witness types, the `pure` / `with_state` constructors, the `CausalEffect` wrapping, and the manual error short-circuit, so a pipeline reads top to bottom. Every method lowers to an existing monad operation; the facade adds no semantics.
 
 ```rust
 use deep_causality_core::CausalFlow;
 
 // `try_step` runs a fallible stage (`Ok` lifts a value, `Err` short-circuits),
 // `map` is an infallible transform, and `finish` extracts the final value or the
-// error the flow stopped on. The witness types and `EffectValue` never appear.
+// error the flow stopped on. The witness types and `CausalEffect` never appear.
 let outcome = CausalFlow::value(2_i64)
     .try_step(|x| Ok(x + 3))
     .map(|x| x * 10)

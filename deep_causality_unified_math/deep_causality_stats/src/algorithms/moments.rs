@@ -22,7 +22,7 @@
 //! It can also stall inside the type, which is quieter and bites far sooner. A running total grows
 //! while its addends do not, and once the total passes the point where an addend falls below its
 //! last place, every further addend rounds away — no infinity, no error, just a total that stops
-//! moving. Every sum here is therefore formed as a balanced tree by [`pairwise_sum`], including the
+//! moving. Every sum here is therefore formed as a balanced tree by `pairwise_sum`, including the
 //! rescaled passes, which are just as exposed: a left-to-right `mean([3e38; 1000])` at `BFloat16`
 //! returns 7.68e37 not because the sum overflows but because the *rescaled* sum of a thousand ones
 //! stalls at 256.

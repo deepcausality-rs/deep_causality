@@ -35,8 +35,9 @@ whether a model is differentiable.
 **Real and complex uniformly** starts from two families in separate parts of the tower: reals
 are ordered and live under `Real`, complex numbers live under `ComplexField`. `Normed` spans
 them by making the real type *associated*, so `f64::Real` and `Complex<f64>::Real` are both
-`f64` and one signature covers both. `Normed::modulus` uses the scaled form, so `|1e308 + 0i|` returns `1e308` and `|1e-200 + 0i|` returns `1e-200`, at both ends
-of the range.
+`f64` and one signature covers both. `Normed::modulus` uses the scaled form, so it stays exact
+at both ends of the range: `|1e308 + 0i|` returns `1e308` and `|1e-200 + 0i|` returns
+`1e-200`.
 
 **Verdict logic** names the structure that pass/fail checks and graded confidences share — a
 bounded lattice with an involution — so one implementation of `all`, `any` and `none` serves both.

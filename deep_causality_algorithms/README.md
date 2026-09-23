@@ -234,16 +234,18 @@ structure into an executable model.
 
 ## Example: Decomposing Causal Structure
 
-The `example_surd` example shows how to call `surd_states` and how to interpret its output. It runs several cases
-with different underlying causal structures (e.g., synergistic, noisy, random) and explains each part of the output.
+The `example_surd` example in `examples/causal_discovery_examples` shows how to call `surd_states` and how to
+interpret its output. It runs several cases with different underlying causal structures (e.g., synergistic, noisy,
+random) and explains each part of the output.
 
 To run the example:
 
 ```bash
-cargo run --example example_surd
+cargo run -p causal_discovery_examples --example example_surd
 ```
 
-For a detailed walkthrough of the output, see the [example's README](examples/README.md).
+For a detailed walkthrough of the output, see the
+[example's README](../examples/causal_discovery_examples/README.md#example-decomposing-causal-structure-with-surd-states).
 
 ## References
 

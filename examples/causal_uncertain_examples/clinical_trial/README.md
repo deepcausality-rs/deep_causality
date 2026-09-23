@@ -1,21 +1,22 @@
 # Aspirin Headache Trial Analysis Example
 
-A stateless five-stage `PropagatingEffect` chain over `MaybeUncertain<f64>`
-compares aspirin with placebo in a small clinical trial where data presence is
-itself uncertain.
+A stateless five-stage `CausalFlow` chain over `MaybeUncertain<f64>` compares
+aspirin with placebo in a small clinical trial where data presence is itself
+uncertain.
 
 ## Pipeline
 
 ```
-PropagatingEffect::pure(())
-    .bind(|_, _, _| cohort_stage())           // Stage 1: assemble per-patient MaybeUncertain values
-    .bind(presence_stage)                     // Stage 2: print Bernoulli-style presence probabilities
-    .bind(lift_stage)                         // Stage 3: lift MaybeUncertain → Uncertain per patient
-    .bind(aggregate_stage)                    // Stage 4: average within each arm
-    .bind(verdict_stage)                      // Stage 5: probability_exceeds verdict
+CausalFlow::effect()
+    .map(|_| cohort_stage())    // Stage 1: assemble per-patient MaybeUncertain values
+    .map(presence_stage)        // Stage 2: print Bernoulli-style presence probabilities
+    .try_step(lift_stage)       // Stage 3: lift MaybeUncertain → Uncertain per patient; Err if none clears
+    .map(aggregate_stage)       // Stage 4: average within each arm
+    .map(verdict_stage)         // Stage 5: probability_exceeds verdict
+    .run(on_ok, on_err)
 ```
 
-## Why `MaybeUncertain` + `PropagatingEffect`
+## Why `MaybeUncertain` + `CausalFlow`
 
 Patient data has two independent uncertainty sources:
 
@@ -25,26 +26,30 @@ Patient data has two independent uncertainty sources:
 - **Value uncertainty:** how noisy the measurement is, given it exists,
   modelled by the `Uncertain<f64>` arm.
 
-`MaybeUncertain` propagates `None` through arithmetic. Mapping that onto
-`CausalEffect::none()` at the `lift_to_uncertain` boundary makes the chain
-short-circuit: failed lifts drop out of the arm, and empty arms drop out of
-the verdict, with no `if let Err(_) = ... { return; }` ladders.
+`MaybeUncertain` propagates `None` through arithmetic. `lift_stage` carries
+that into the flow at the `lift_to_uncertain_from_entropy` boundary. A patient
+who fails the presence gate drops out of their arm. If no patient in either arm
+clears the gate, `lift_stage` returns `Err(CausalityError)`, `try_step` skips
+the remaining stages, and `run` calls its error handler. An arm left empty
+while the other is not reaches `verdict_stage`, which reports insufficient
+data instead of a verdict.
 
 ## What the example demonstrates
 
 - **`MaybeUncertain<f64>` constructors:** `from_value`, `from_uncertain`,
   `from_bernoulli_and_uncertain`, `always_none`.
 - **Presence assessment:** `is_some` returning `Uncertain<bool>`, then
-  `estimate_probability`.
-- **Probabilistic gating:** `lift_to_uncertain(min_presence, confidence,
-  epsilon, samples)` as a per-patient reliability filter; patients who pass
+  `estimate_probability_from_entropy`.
+- **Probabilistic gating:** `lift_to_uncertain_from_entropy(min_presence,
+  confidence, epsilon, samples)` as a per-patient reliability filter; patients who pass
   contribute to the arm average, the others drop out.
-- **Per-arm aggregation:** average `Uncertain<f64>` via fold + division by
-  cohort size.
+- **Per-arm aggregation:** average `Uncertain<f64>` via `reduce` + division
+  by cohort size.
 - **Comparative verdict:** `greater_than` + `probability_exceeds` for
   evidence-based recommendation.
-- **Monadic chaining:** five `bind` calls on `PropagatingEffect`; each stage
-  is a stateless `CausalEffect<T> -> PropagatingEffect<U>` function.
+- **Flow chaining:** four `map` calls and one `try_step` on `CausalFlow`.
+  Each stage is a stateless function: `T -> U` for `map`, and
+  `T -> Result<U, CausalityError>` for `try_step`.
 
 ## How to run
 

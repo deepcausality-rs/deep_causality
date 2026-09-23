@@ -44,13 +44,13 @@ use crate::{BFloat16, Float106};
 ///
 /// # Implementing
 ///
-/// Implement it for any type whose zero really does annihilate. Past the primitives below, seven
+/// Implement it for any type whose zero really does annihilate. Past the primitives below, eleven
 /// types carry the marker, each in the crate that defines it: `Complex<T>`, `Quaternion<T>` and
 /// `Octonion<T>` in `deep_causality_num_complex`, `Dual<T>` in `deep_causality_num_dual`,
-/// `Rational<T>` in `deep_causality_num_rational`, and `CausalTensor<T>` and
-/// `CausalTensorTrain<T>` in `deep_causality_tensor`. `CsrMatrix<T>` in `deep_causality_sparse`
-/// does not: it stops at [`AbelianGroup`](crate::AbelianGroup) and carries none of the
-/// multiplicative markers.
+/// `Rational<T>` in `deep_causality_num_rational`, `CausalTensor<T>` and `CausalTensorTrain<T>`
+/// in `deep_causality_tensor`, and `CsrMatrix<T>`, `DenseMatrix<T>`, `PackedGf2<W>` and
+/// `DenseVector<T>` in `deep_causality_linear`. On `DenseVector<T>` the law is the module action:
+/// `v * 0` is the zero vector.
 ///
 /// The types are listed one by one rather than inferred, for the reason given in
 /// [`Commutative`](crate::Commutative).

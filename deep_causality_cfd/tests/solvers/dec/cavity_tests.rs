@@ -147,8 +147,7 @@ fn cavity_centerline_rmse(n: usize, t_end: f64) -> f64 {
 /// The coarse CI rung: the pinned RMSE gate at 17², spin-up horizon
 /// `T = 10` (the 17² RMSE is already time-converged there: 0.2523
 /// measured, equal to the `T = 20` value; the gate carries ~25 %
-/// headroom for cross-platform drift). The refinement-trend companion
-/// below carries the 33² rung.
+/// headroom for cross-platform drift).
 #[test]
 fn coarse_cavity_gates_against_ghia() {
     let rmse = cavity_centerline_rmse(17, 10.0);

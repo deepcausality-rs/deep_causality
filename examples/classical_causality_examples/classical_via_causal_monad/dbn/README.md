@@ -1,6 +1,6 @@
 # DBN via the Causal Monad
 
-Models Umbrella World as a Dynamic Bayesian Network on `PropagatingProcess<f64, WeatherState, WeatherContext>`. The example uses **all three carrier channels**, and [`alternate_context`](../../../../deep_causality_core/src/traits/alternatable_context/mod.rs) swaps the conditional probability tables, so a climate-regime change takes one method call instead of a graph rebuild.
+Models Umbrella World as a Dynamic Bayesian Network on `PropagatingProcess<FloatType, WeatherState, BaseContext>`, where `FloatType` is a local alias for `f64`. The example uses **all three carrier channels**, and [`alternate_context`](../../../../deep_causality_core/src/traits/alternatable_context/mod.rs) swaps the conditional probability tables, so a climate-regime change takes one method call instead of a graph rebuild.
 
 ## How to run
 
@@ -12,9 +12,9 @@ cargo run -p classical_causality_examples --example dbn_via_monad
 
 | Channel | Type | Role |
 |---|---|---|
-| **Value** | `f64` | Today's rain probability emitted by each step. |
+| **Value** | `FloatType` (`f64`) | Today's rain probability emitted by each step. |
 | **State** | `WeatherState` | Markov state: `rained_yesterday`, `day` counter, `rainy_days`, `umbrellas_carried`. Evolves through every `bind`. |
-| **Context** | `WeatherContext` | The CPTs for the current climate regime (P(rain \| rained_yesterday), P(rain \| dry_yesterday)). Constant within a regime; alternated when the regime changes. |
+| **Context** | `BaseContext` | The CPTs for the current climate regime, stored as two Datoid contextoids (P(rain \| rained_yesterday), P(rain \| dry_yesterday)). Constant within a regime; alternated when the regime changes. |
 
 One bind is one day. The `step_day` closure reads the climate from the Context and the previous day's outcome from the State, then emits today's probability and updates the State.
 
@@ -31,17 +31,17 @@ The Markov state (`rained_yesterday`, the running counters) passes through the r
 
 In the [Causaloid version](../../classical_via_causaloid/dbn), changing the CPTs means rebuilding the Causaloid (or the graph) with the new probability function inside its closure. The Context tracks historical state; the model and its parameters live together inside the Causaloid.
 
-In the monad version, the model is the `bind` closure and its parameters are the `WeatherContext`. `alternate_context(new_cpts)` swaps the parameters while the chain, the State, and the umbrella accounting continue uninterrupted.
+In the monad version, the model is the `bind` closure and its parameters are the climate `BaseContext`. `alternate_context(new_cpts)` swaps the parameters while the chain, the State, and the umbrella accounting continue uninterrupted.
 
 ## How this differs from the Causaloid version
 
 | Concern | `classical_via_causaloid/dbn` | `classical_via_causal_monad/dbn` |
 |---|---|---|
-| CPTs live in | `Causaloid` closure body (hard-coded) | `WeatherContext` (alternable) |
+| CPTs live in | `Causaloid` closure body (hard-coded) | Climate `BaseContext` (alternable) |
 | Previous-day state lives in | `BaseContext` Datoid (manually updated each tick via `RwLock`) | `WeatherState` (threaded by `bind`) |
 | Regime change mechanism | Rebuild Causaloid or rewrite the closure | `.alternate_context(new_cpts)` mid-loop |
 | Sampling | `deep_causality_rand::rng()` (non-deterministic) | Deterministic `p > 0.5` rule for reproducibility |
-| Lines of code | ~200 across 3 files (main + model + types) | ~160 in a single file |
+| Lines of code | ~250 across 3 files (main + model + types) | ~205 in a single file |
 
 The causaloid version mirrors the textbook DBN architecture (Context = world state, Causaloid = the probability function). The monad version separates *model parameters* (Context) from *model state* (State), which reduces the regime change to one operator.
 

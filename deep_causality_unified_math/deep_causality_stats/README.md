@@ -51,9 +51,26 @@ This crate sits below those containers so they can delegate to it without a cycl
 
 ## Precision as a parameter
 
-Every function is generic over its scalar under the algebra tower's bounds, and no public signature
-names a concrete float, so no function discards the caller's precision by computing in `f64`
-internally.
+Functions are generic over their scalar under the algebra tower's bounds, with the exceptions
+listed here.
+
+Four public functions name a concrete float:
+
+- `standard_normal_inverse_cdf_at::<R>(u: f64)` takes the unit coordinate as `f64`, because it is a
+  position on `[0, 1)` and rounding it into a narrow scalar before the transform is destructive at
+  the endpoints. The result is in `R`.
+- `standard_normal_inverse_cdf` (`f64`) and `standard_normal_inverse_cdf_f106` (`Float106`) are the
+  same transform at one fixed precision each.
+- `bernoulli_inverse_cdf(u: f64, p: f64)` compares two `f64` values.
+
+Three generic paths pass through `f64` internally:
+
+- `Bernoulli::new` lowers `p` to `f64` and quantises it to a multiple of `2^-64`, and `Bernoulli::p`
+  returns that value through `f64`. At `Float106`, probability detail finer than `f64` is lost.
+- `Poisson::new` lowers the rate to `f64` only to compare it with `MAX_RATE`; the stored rate stays
+  in the caller's scalar.
+- `bernoulli_proportion` divides in the caller's scalar when both counts are exact there, and
+  otherwise divides in `f64` and rounds the quotient once into the scalar.
 
 The suites run at four scalars, from ~2 to ~32 decimal digits:
 

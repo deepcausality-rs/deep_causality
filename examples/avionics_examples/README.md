@@ -73,7 +73,7 @@ Both `geometric_tcas` and `hypersonic_2t` use **Geometric Algebra (`deep_causali
 | `deep_causality_calculus` | Arrow calculus: the `Rk4` integration operator (the turbulence-forecast march) |
 | `deep_causality_physics` | The shipped relativistic-clock kernel carried through the GPS-denial blackout (`ins_gnss_blackout`) |
 | `deep_causality_file` | Real RINEX GNSS (SP3/CLK) ingestion over the haft IO monad (`ins_gnss_blackout`) |
-| `deep_causality_cfd` | CFD solvers and the `CfdFlow` DSL behind the `cfd/` examples |
+| `deep_causality_cfd` | CFD solvers and the `CfdFlow` DSL behind `cfd/flight_envelope_placard`, `cfd/nozzle_operating_map`, `cfd/plasma_blackout` (`corridor`, `retropulsion`, `weather`) and `cfd/viv_resonance_margin` |
 
 ---
 

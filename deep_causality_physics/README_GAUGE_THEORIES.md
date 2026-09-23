@@ -97,7 +97,7 @@ physics code. The type aliases in `deep_causality_physics/src/theories/alias/mod
 |---------------|--------------------|-----------------------------------------------------------|
 | `f32`         | ~7 decimal digits  | **Game Physics / Real-time Viz** (Max Speed)              |
 | `f64`         | ~16 decimal digits | **Standard Engineering / Simulations** (Default)          |
-| `DoubleFloat` | ~31 decimal digits | **Cosmology / Quantum Field Theory** (Error Minimization) |
+| `Float106`    | ~31 decimal digits | **Cosmology / Quantum Field Theory** (Error Minimization) |
 
 ### Example: Switching Precision
 
@@ -106,14 +106,14 @@ alias:
 
 ```rust
 use deep_causality_physics::{GR, EM};
-use deep_causality_num::DoubleFloat;
+use deep_causality_num::Float106;
 
 // 1. Standard Precision Analysis
 type StandardGR = GR<f64>;
 
 // 2. High-Precision Cosmology (128-bit sim)
 // Useful for integrating geodesics near singularities where errors accumulate
-type HighPrecisionGR = GR<DoubleFloat>;
+type HighPrecisionGR = GR<Float106>;
 
 // 3. Low-Precision/Fast Visualization
 type GamePhysicsEM = EM<f32>;

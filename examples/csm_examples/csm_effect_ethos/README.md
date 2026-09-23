@@ -52,13 +52,26 @@ cargo run -p csm_examples --example csm_effect_ethos_example
 ### Expected Output
 
 ```text
---- Running CSM without EffectEthos ---
-Alert! High temperature detected!
-Result without ethos: Ok(())
+--- Effect Ethos Example ---
 
---- Running CSM with EffectEthos ---
-Result with ethos: Err(Forbidden("The final verdict is Impermissible....
-The outcome is Impermissible because at least one impermissible norm was active and undefeated, which has the highest precedence."))
+=== Part 1: CSM Evaluation (no ethos check) ===
+Alert! High temperature detected!
+CSM: Action triggered (temperature threshold exceeded)
+
+=== Part 2: EffectEthos Deontic Reasoning ===
+Proposed action: high_temp_alert
+Ethos verdict outcome: Impermissible
+Justification:
+  - Norm #1: action 'high_temp_alert' is Impermissible
+
+>>> Action is FORBIDDEN by the ethos!
+The ethos prevents triggering this alert based on deontic rules.
+
+--- Example Complete ---
+
+Key insight: EffectEthos provides deontic reasoning (what SHOULD happen)
+separate from causal reasoning (what WILL happen given causes).
 ```
 
-The `EffectEthos` blocks an action that the causal model alone would have executed.
+The CSM fires the alert, and the `EffectEthos` rules the same action impermissible. The two checks run
+side by side: the example does not gate the CSM on the ethos verdict.
