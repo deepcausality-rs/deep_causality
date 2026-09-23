@@ -61,6 +61,34 @@ pub trait DifferentiateFieldExt<const N: usize>: DifferentiableField<N> {
         let seed: [Dual<R>; N] = core::array::from_fn(|j| Dual::new(x[j], dir[j]));
         self.run(&seed).derivative()
     }
+
+    /// `∇²f(x)` — the Hessian, `H[i][j] = ∂²f / ∂xᵢ∂xⱼ`, from the same model instantiated at
+    /// `Dual<Dual<R>>`.
+    ///
+    /// Entry `(i, j)` seeds `xᵢ` in the inner `ε` and `xⱼ` in the outer `ε` and reads the
+    /// `ε₁ε₂` channel. Only the upper triangle is evaluated, `N(N+1)/2` passes, and each value is
+    /// written to both `(i, j)` and `(j, i)`, so the result is exactly symmetric. Allocation-free.
+    #[inline]
+    fn hessian<R: Scalar>(&self, x: &[R; N]) -> [[R; N]; N] {
+        let mut h = [[R::zero(); N]; N];
+        (0..N)
+            .flat_map(|i| (i..N).map(move |j| (i, j)))
+            .for_each(|(i, j)| {
+                let seed: [Dual<Dual<R>>; N] = core::array::from_fn(|k| {
+                    let inner = if k == i {
+                        Dual::variable(x[k])
+                    } else {
+                        Dual::constant(x[k])
+                    };
+                    let outer = if k == j { R::one() } else { R::zero() };
+                    Dual::new(inner, Dual::constant(outer))
+                });
+                let hij = self.run(&seed).derivative().derivative();
+                h[i][j] = hij;
+                h[j][i] = hij;
+            });
+        h
+    }
 }
 
 impl<const N: usize, A: DifferentiableField<N>> DifferentiateFieldExt<N> for A {}
