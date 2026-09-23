@@ -44,9 +44,9 @@ fn test_an_empty_reserve() {
 }
 
 #[test]
-fn test_clone_equality_and_debug() {
+fn test_equality_and_debug() {
     let mut reserve = IdReserve::new(vec![1, 2]);
-    let fresh = reserve.clone();
+    let fresh = IdReserve::new(vec![1, 2]);
     assert_eq!(reserve, fresh);
     reserve.next();
     assert_ne!(reserve, fresh);

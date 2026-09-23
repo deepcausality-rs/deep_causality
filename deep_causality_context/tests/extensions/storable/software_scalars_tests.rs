@@ -11,7 +11,8 @@
 //! Corner cases (rows A to K): A `Fields` with no entries, `test_a_missing_half_is_named`; F zero
 //! in both types, `test_zero_round_trips`; G negative halves,
 //! `test_float106_round_trips_to_every_bit`; H a `lo` half at the edge of `f64`'s significand,
-//! same test; I `NaN` and infinity in `test_non_finite`; K both software scalars covered; every
+//! same test; I `NaN` and infinity in `test_non_finite` and
+//! `test_float106_restores_non_finite_halves_as_written`; K both software scalars covered; every
 //! other row n/a.
 
 use deep_causality_context::Storable;
@@ -105,4 +106,19 @@ fn test_non_finite() {
             .hi()
             .is_nan()
     );
+}
+
+#[test]
+fn test_float106_restores_non_finite_halves_as_written() {
+    // Normalising (inf, 0) computes inf - inf for the low half, which is NaN.
+    let record = halves(f64::INFINITY, 0.0);
+    let restored = Float106::from_record(1, record.clone()).unwrap();
+    assert_eq!(restored.hi(), f64::INFINITY);
+    assert_eq!(restored.lo(), 0.0);
+    assert_eq!(restored.to_record(), record);
+    let raw = Float106::from_raw(f64::NEG_INFINITY, 0.0);
+    assert_eq!(raw.to_record(), halves(f64::NEG_INFINITY, 0.0));
+    let restored = Float106::from_record(1, raw.to_record()).unwrap();
+    assert_eq!(restored.hi(), f64::NEG_INFINITY);
+    assert_eq!(restored.lo(), 0.0);
 }

@@ -21,14 +21,10 @@ where
     ST: SpaceTemporal + Clone,
 {
     fn extra_ctx_add_new(&mut self, name: &str, capacity: usize, default: bool) -> ContextId {
-        // One past the highest identifier held, so an identifier added explicitly, or restored
-        // from a store, is never allocated again. The call below cannot fail: the identifier is
-        // fresh and never 0.
-        let new_id = self
-            .extra_contexts
-            .as_ref()
-            .and_then(|extra_contexts| extra_contexts.keys().max().copied())
-            .map_or(1, |highest| highest + 1);
+        // One past the highest identifier ever held, so an identifier added explicitly, restored
+        // from a store, or dropped since, is never allocated again. The call below cannot fail:
+        // the identifier is fresh and never 0.
+        let new_id = self.highest_extra_context_id + 1;
         self.extra_ctx_add_new_with_id(new_id, name, capacity, default)
             .expect("a fresh non-zero identifier is never refused");
         new_id
@@ -59,6 +55,7 @@ where
 
         // Create and insert the new context graph.
         extra_contexts.insert(id, ExtraContext::new(name, capacity));
+        self.highest_extra_context_id = self.highest_extra_context_id.max(id);
 
         if default {
             self.extra_context_id = id;

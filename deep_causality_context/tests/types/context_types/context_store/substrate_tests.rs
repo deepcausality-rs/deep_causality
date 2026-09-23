@@ -23,6 +23,9 @@ use deep_causality_context_store::{
     ContextId, ContextStorage, ContextoidId, ContextoidRecord, DataRecord, MemoryStorageError,
     MemorySubstrateError, NodeRecord, ProjectionError, SpaceRecord, Substrate,
 };
+use std::cell::{Cell, RefCell};
+use std::collections::HashMap;
+use std::future::Future;
 
 fn number(
     id: ContextoidId,
@@ -272,5 +275,146 @@ fn test_extras_are_resolved_too() {
     assert_eq!(
         snapshot.extras()[0].nodes(),
         extra.snapshot().unwrap().nodes()
+    );
+}
+
+/// A substrate under the `Substrate` contract, keyed by node, that also counts its deposits.
+struct CountingSubstrate {
+    values: RefCell<HashMap<String, DataRecord>>,
+    deposits: Cell<usize>,
+}
+
+impl CountingSubstrate {
+    fn new() -> Self {
+        Self {
+            values: RefCell::new(HashMap::new()),
+            deposits: Cell::new(0),
+        }
+    }
+}
+
+impl Substrate for CountingSubstrate {
+    type Error = MemorySubstrateError;
+
+    fn deposit(
+        &self,
+        node: ContextoidId,
+        value: &DataRecord,
+    ) -> impl Future<Output = Result<SubstrateRef, Self::Error>> + Send {
+        self.deposits.set(self.deposits.get() + 1);
+        let key = node.to_string();
+        self.values.borrow_mut().insert(key.clone(), value.clone());
+        std::future::ready(Ok(SubstrateRef::new(
+            MemorySubstrate::SOURCE.to_string(),
+            key,
+        )))
+    }
+
+    fn resolve(
+        &self,
+        reference: &SubstrateRef,
+    ) -> impl Future<Output = Result<DataRecord, Self::Error>> + Send {
+        let held = self.values.borrow().get(reference.key()).cloned();
+        std::future::ready(
+            held.ok_or_else(|| MemorySubstrateError::UnknownReference(reference.clone())),
+        )
+    }
+}
+
+#[test]
+fn test_create_node_via_is_idempotent() {
+    // A retry must not deposit again and must hand create_node the record it accepted before.
+    let storage = MemoryStorage::new();
+    let substrate = CountingSubstrate::new();
+    let store = ContextStore::new(storage.clone());
+    let n: Vec<ContextoidId> = block_on(store.reserve(2)).unwrap().collect();
+    let nodes = [
+        ContextoidRecord::new(n[0], NodeRecord::Data(DataRecord::Number(1.5))),
+        ContextoidRecord::new(n[1], NodeRecord::Data(DataRecord::Number(2.5))),
+    ];
+    block_on(store.create_node_via(&substrate, &nodes)).unwrap();
+    let first = block_on(storage.lookup(&n)).unwrap();
+    assert_eq!(substrate.deposits.get(), 2);
+    assert_eq!(block_on(store.create_node_via(&substrate, &nodes)), Ok(()));
+    assert_eq!(substrate.deposits.get(), 2, "nothing deposited twice");
+    assert_eq!(block_on(storage.lookup(&n)).unwrap(), first);
+    // A partial retry deposits only the node the store does not hold yet.
+    let more: Vec<ContextoidId> = block_on(store.reserve(1)).unwrap().collect();
+    let mixed = [
+        nodes[0].clone(),
+        ContextoidRecord::new(more[0], NodeRecord::Data(DataRecord::Number(3.5))),
+    ];
+    block_on(store.create_node_via(&substrate, &mixed)).unwrap();
+    assert_eq!(substrate.deposits.get(), 3);
+}
+
+#[test]
+fn test_create_node_via_refuses_a_changed_value_under_a_held_identifier() {
+    // The store holds n under a reference to 1.5; asking for 9.5 under n must be refused as a
+    // conflict, deposit nothing, and leave the value the reference names unchanged.
+    let storage = MemoryStorage::new();
+    let substrate = CountingSubstrate::new();
+    let store = ContextStore::new(storage.clone());
+    let n: Vec<ContextoidId> = block_on(store.reserve(1)).unwrap().collect();
+    let first = [ContextoidRecord::new(
+        n[0],
+        NodeRecord::Data(DataRecord::Number(1.5)),
+    )];
+    block_on(store.create_node_via(&substrate, &first)).unwrap();
+    let held = block_on(storage.lookup(&n)).unwrap();
+
+    let changed = [ContextoidRecord::new(
+        n[0],
+        NodeRecord::Data(DataRecord::Number(9.5)),
+    )];
+    let refused = block_on(store.create_node_via(&substrate, &changed)).unwrap_err();
+    assert_eq!(
+        refused.kind(),
+        &StoreErrorEnum::Storage(MemoryStorageError::NodeConflict(n[0]))
+    );
+    assert_eq!(
+        substrate.deposits.get(),
+        1,
+        "nothing deposited for the refusal"
+    );
+    assert_eq!(block_on(storage.lookup(&n)).unwrap(), held);
+    let Some(Some(record)) = held.first() else {
+        panic!("held")
+    };
+    let NodeRecord::Data(DataRecord::Reference(reference)) = record.node() else {
+        panic!("a reference")
+    };
+    assert_eq!(
+        block_on(substrate.resolve(reference)),
+        Ok(DataRecord::Number(1.5))
+    );
+}
+
+#[test]
+fn test_a_refused_create_leaves_one_value_per_node() {
+    // An identifier the store never reserved: every attempt deposits and is refused, and the
+    // substrate still holds one value for the node, the last one deposited.
+    let storage = MemoryStorage::new();
+    let substrate = CountingSubstrate::new();
+    let store = ContextStore::new(storage.clone());
+    let unreserved: ContextoidId = 1_000;
+    for value in [1.5, 2.5] {
+        let nodes = [ContextoidRecord::new(
+            unreserved,
+            NodeRecord::Data(DataRecord::Number(value)),
+        )];
+        assert_eq!(
+            block_on(store.create_node_via(&substrate, &nodes)).map_err(|e| e.0),
+            Err(StoreErrorEnum::Storage(
+                MemoryStorageError::IdentityNotReserved(unreserved)
+            ))
+        );
+    }
+    assert_eq!(substrate.deposits.get(), 2);
+    assert_eq!(substrate.values.borrow().len(), 1);
+    let reference = SubstrateRef::new(MemorySubstrate::SOURCE.to_string(), unreserved.to_string());
+    assert_eq!(
+        block_on(substrate.resolve(&reference)),
+        Ok(DataRecord::Number(2.5))
     );
 }

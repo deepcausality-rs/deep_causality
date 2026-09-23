@@ -4,7 +4,7 @@
  */
 
 //! A one-byte node type pins the trait's two directions and its two refusals. Expected values are
-//! the literals the probe is built from.
+//! the literals the probe is built from, starting from a node and from an independent record.
 //!
 //! Corner cases (rows A to K): H the sentinel byte at the top of the range, `u8::MAX`, in
 //! `test_to_record_may_refuse` and `test_from_record_may_refuse_and_names_the_node`; F zero level
@@ -44,6 +44,14 @@ fn round_trip<T: Recordable<u8>>(id: ContextoidId, value: &T) -> Result<T, Proje
 fn test_round_trip_through_the_generic_bound() {
     let probe = Probe { id: 3, level: 42 };
     assert_eq!(round_trip(3, &probe).unwrap(), probe);
+}
+
+#[test]
+fn test_an_independent_record_round_trips() {
+    let node = Probe::from_record(5, 17).unwrap();
+    assert_eq!(node, Probe { id: 5, level: 17 });
+    assert_eq!(node.to_record(), Ok(17));
+    assert_eq!(round_trip(5, &node), Ok(node));
 }
 
 #[test]

@@ -290,3 +290,25 @@ fn test_a_payload_the_type_cannot_hold_is_refused() {
         Err(ProjectionError::WrongPayload(8, "Count", "Number"))
     );
 }
+
+#[test]
+fn test_a_dropped_extra_identifier_is_never_reallocated() {
+    // Extras 40 and 41 are held; dropping 41 must not let the allocator hand 41 out again, or a
+    // later ContextAttached { 7, 41 } echo would keep a local graph under the store's identifier.
+    let mut ctx = world();
+    ctx.apply(&ContextEvent::ContextRetracted(41)).unwrap();
+    assert_eq!(ctx.extra_ctx_get_name(41), None);
+    assert_eq!(ctx.extra_ctx_add_new("local", 1, false), 42);
+    // An identifier that arrives through an attachment raises the mark as well.
+    ctx.apply(&ContextEvent::ContextAttached {
+        context: 7,
+        extra: ContextRecord::new(50, "sea".to_string()),
+    })
+    .unwrap();
+    ctx.apply(&ContextEvent::ContextDetached {
+        context: 7,
+        extra: 50,
+    })
+    .unwrap();
+    assert_eq!(ctx.extra_ctx_add_new("local2", 1, false), 51);
+}

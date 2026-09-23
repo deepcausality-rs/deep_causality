@@ -29,6 +29,8 @@ pub enum MemoryStorageErrorEnum {
     IdentityNotReserved(ContextoidId),
     /// The store holds this identifier under a different record.
     NodeConflict(ContextoidId),
+    /// The store holds this container under a different name.
+    ContextConflict(ContextId),
     /// The store holds a relation of a different kind between these two contextoids.
     EdgeConflict {
         from: ContextoidId,
@@ -41,6 +43,8 @@ pub enum MemoryStorageErrorEnum {
     EventNotApplicable(&'static str),
     /// A cursor past the end of the log.
     UnknownCursor(usize),
+    /// A commit names the `n`-th container it creates before any write of it created that many.
+    UnknownCreated(usize),
 }
 
 impl MemoryStorageError {
@@ -78,6 +82,11 @@ impl MemoryStorageError {
     }
 
     #[allow(non_snake_case)]
+    pub const fn ContextConflict(context: ContextId) -> Self {
+        Self(MemoryStorageErrorEnum::ContextConflict(context))
+    }
+
+    #[allow(non_snake_case)]
     pub const fn EdgeConflict(from: ContextoidId, to: ContextoidId) -> Self {
         Self(MemoryStorageErrorEnum::EdgeConflict { from, to })
     }
@@ -95,6 +104,11 @@ impl MemoryStorageError {
     #[allow(non_snake_case)]
     pub const fn UnknownCursor(cursor: usize) -> Self {
         Self(MemoryStorageErrorEnum::UnknownCursor(cursor))
+    }
+
+    #[allow(non_snake_case)]
+    pub const fn UnknownCreated(index: usize) -> Self {
+        Self(MemoryStorageErrorEnum::UnknownCreated(index))
     }
 }
 
@@ -118,6 +132,10 @@ impl Display for MemoryStorageError {
                 f,
                 "MemoryStorageError: contextoid {node} is held under a different record"
             ),
+            MemoryStorageErrorEnum::ContextConflict(context) => write!(
+                f,
+                "MemoryStorageError: container {context} is held under a different name"
+            ),
             MemoryStorageErrorEnum::EdgeConflict { from, to } => write!(
                 f,
                 "MemoryStorageError: a relation of another kind exists from {from} to {to}"
@@ -140,6 +158,10 @@ impl Display for MemoryStorageError {
                     "MemoryStorageError: cursor {cursor} is past the end of the log"
                 )
             }
+            MemoryStorageErrorEnum::UnknownCreated(index) => write!(
+                f,
+                "MemoryStorageError: the commit has created no container {index} yet"
+            ),
         }
     }
 }

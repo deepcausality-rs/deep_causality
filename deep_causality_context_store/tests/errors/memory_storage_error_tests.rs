@@ -43,6 +43,11 @@ fn test_every_variant_by_constructor() {
             "contextoid 3",
         ),
         (
+            MemoryStorageError::ContextConflict(10),
+            MemoryStorageErrorEnum::ContextConflict(10),
+            "container 10",
+        ),
+        (
             MemoryStorageError::EdgeConflict(4, 5),
             MemoryStorageErrorEnum::EdgeConflict { from: 4, to: 5 },
             "from 4 to 5",
@@ -62,8 +67,13 @@ fn test_every_variant_by_constructor() {
             MemoryStorageErrorEnum::UnknownCursor(11),
             "cursor 11",
         ),
+        (
+            MemoryStorageError::UnknownCreated(12),
+            MemoryStorageErrorEnum::UnknownCreated(12),
+            "container 12",
+        ),
     ];
-    assert_eq!(cases.len(), 9);
+    assert_eq!(cases.len(), 11);
     for (err, kind, needle) in cases {
         assert_eq!(err.kind(), &kind);
         assert_eq!(err, MemoryStorageError::new(kind));

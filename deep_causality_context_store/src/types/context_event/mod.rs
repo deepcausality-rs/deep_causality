@@ -5,16 +5,19 @@
 
 use crate::{ContextId, ContextRecord, ContextoidId, ContextoidRecord, RelationRecord};
 
-/// One change to a store. The same type flows both ways: a store reports it, and a host requests
-/// it.
+/// One change to a store. The same type flows both ways: a store reports every variant, and a
+/// host requests one through `ContextStorageStream::apply`.
 ///
 /// Each variant is one storage operation by the same name, except `NodeEntered` and `NodeLeft`,
-/// which are a view's answer moving with no operation behind it. A membership event names the
-/// context it concerns and, when it adds a node, carries the node's record, so a subscriber
-/// applies it to a hydrated context without having seen any earlier event. The event carries no
-/// time: the order of events is the stream's cursor.
+/// which are a view's answer moving with no operation behind it. Three variants are report-only
+/// and refused by `apply`: `ContextCreated`, because a container's identifier comes from
+/// `create_context` and never from the caller, and the two view variants. A membership event
+/// names the context it concerns and, when it adds a node, carries the node's record, so a
+/// subscriber applies it to a hydrated context without having seen any earlier event. The event
+/// carries no time: the order of events is the stream's cursor.
 #[derive(Debug, Clone, PartialEq)]
 pub enum ContextEvent {
+    /// A container `create_context` made. Report-only: `apply` refuses it.
     ContextCreated(ContextRecord),
     ContextRetracted(ContextId),
     NodeCreated(ContextoidRecord),

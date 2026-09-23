@@ -62,7 +62,7 @@ lifts it on the way in. A backend therefore stores one scalar width. The one exc
 payload of `Float106`, which the context crate stores as `Fields [("hi", Number), ("lo", Number)]`
 and restores to every bit; a backend sees two ordinary numbers.
 
-## The thirteen operations
+## The fourteen operations
 
 `ContextStorage` is the trait a backend implements. Every operation returns
 `impl Future<Output = Result<_, Self::Error>> + Send`, so a backend that awaits a network never
@@ -81,6 +81,7 @@ blocks, and a synchronous backend returns `core::future::ready`. The trait bring
 | `unlink(context, &[id])` | nodes leave a container |
 | `attach(context, extra)` | a container references another |
 | `detach(context, extra)` | the reference goes |
+| `commit(&[ContextWrite])` | the writes in order, all or none; returns the identifiers of the containers it created |
 | `lookup(&[id])` | the record under each identifier, or `None` |
 | `hydrate(&slice)` | one container as a `ContextSnapshot`, its references materialised one level deep |
 
@@ -96,6 +97,11 @@ Every backend keeps these invariants; the trait's documentation states each in f
 - **A reference is a link between containers.** `attach` is idempotent, refused for a self-reference
   and for a container the store does not hold; `detach` of a reference not held is not an error.
   References are many to many and may form a cycle.
+- **A commit is all or nothing.** `commit` performs a sequence of `ContextWrite`s (`CreateContext`,
+  `CreateNode`, `CreateEdge`, `Link`, `Attach`) under each operation's own refusals, or none of
+  them. A `ContainerRef::Created(i)` names the container the commit's `i`-th `CreateContext` made,
+  so a commit can link into and attach a container it creates. A refused commit leaves the store
+  as it was and reports no event.
 - **`hydrate` materialises one level.** The snapshot holds the container's nodes, the edges among
   them, and one `ExtraContextSnapshot` per container it references. Their own references are not
   followed.
@@ -132,7 +138,9 @@ Two further traits are optional, and a backend that implements neither is comple
   reached. `ContextEvent` has one variant per mutating operation plus `NodeEntered` and `NodeLeft`
   for a view whose answer moves.
 - `Substrate` is for a store that holds structure and not values. `deposit(node, &record)` stores
-  a value and returns a `SubstrateRef`; `resolve(&reference)` returns the value. The context crate's
+  a value and returns a `SubstrateRef`; `resolve(&reference)` returns the value. `deposit` is
+  idempotent per node: a deposit under a node replaces the value held for it and returns the same
+  reference, so the substrate holds at most one value per node. The context crate's
   `create_node_via` and `hydrate_via` run every data payload through it, so the store sees only
   `DataRecord::Reference`.
 
@@ -147,8 +155,8 @@ above as behaviour a backend can compare against.
 
 * `ContextStorage`, `ContextStorageStream`, `ContextEvents`, `Substrate` and `Recordable`.
 * `ContextRecord`, `ContextoidRecord`, `RelationRecord`, `ContextSnapshot`, `ExtraContextSnapshot`,
-  `NodeRecord`, `DataRecord`, `SpaceRecord`, `TimeRecord`, `SpaceTimeRecord`, `ContextEvent`
-  and `IdReserve`.
+  `NodeRecord`, `DataRecord`, `SpaceRecord`, `TimeRecord`, `SpaceTimeRecord`, `ContextEvent`,
+  `ContextWrite`, `ContainerRef` and `IdReserve`.
 * `ContextId`, `ContextoidId`, `IdentificationValue` and `RECORD_VERSION`.
 * `ProjectionError`, `MemoryStorageError` and `MemorySubstrateError`.
 * `RelationKind`, `TimeScale`, `VerticalDatum` and `SubstrateRef`, the vocabulary the records and

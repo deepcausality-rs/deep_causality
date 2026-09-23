@@ -39,6 +39,9 @@ where
     id_to_index_map: HashMap<ContextoidId, usize>,
     extra_contexts: Option<ExtraContextMap<D, S, T, ST>>,
     extra_context_id: ContextId,
+    /// The highest extra-context identifier ever held, so a dropped identifier is never
+    /// allocated again.
+    highest_extra_context_id: ContextId,
     current_data_map: HashMap<usize, usize>,
     previous_data_map: HashMap<usize, usize>,
     current_index_map: HashMap<usize, usize>,
@@ -60,6 +63,7 @@ where
             id_to_index_map: self.id_to_index_map.clone(),
             extra_contexts: self.extra_contexts.clone(),
             extra_context_id: self.extra_context_id,
+            highest_extra_context_id: self.highest_extra_context_id,
             current_data_map: self.current_data_map.clone(),
             previous_data_map: self.previous_data_map.clone(),
             current_index_map: self.current_index_map.clone(),
@@ -84,6 +88,7 @@ where
             id_to_index_map: HashMap::new(),
             extra_contexts: None,
             extra_context_id: 0,
+            highest_extra_context_id: 0,
             current_data_map: HashMap::new(),
             previous_data_map: HashMap::new(),
             current_index_map: HashMap::new(),

@@ -11,8 +11,8 @@ mod iterator;
 ///
 /// Opaque except for `next`, its [`Iterator`] implementation: a caller sees a unique number and
 /// never how it was made unique. A reserve is a lease with no return; an identifier handed out and
-/// never used is never used.
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// never used is never used. It is not `Clone`: a copy would hand the same identifiers out twice.
+#[derive(Debug, PartialEq, Eq)]
 pub struct IdReserve {
     ids: Vec<ContextoidId>,
     taken: usize,

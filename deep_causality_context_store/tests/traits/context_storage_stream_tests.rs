@@ -12,7 +12,7 @@ use core::future::{Future, ready};
 use deep_causality_context_store::utils_test::block_on;
 use deep_causality_context_store::{
     ContextEvent, ContextEventItem, ContextEvents, ContextId, ContextRecord, ContextSnapshot,
-    ContextStorage, ContextStorageStream, ContextoidId, ContextoidRecord, IdReserve,
+    ContextStorage, ContextStorageStream, ContextWrite, ContextoidId, ContextoidRecord, IdReserve,
     RelationRecord,
 };
 use std::fmt::{Display, Formatter};
@@ -118,6 +118,12 @@ impl ContextStorage for Tape {
         _extra: ContextId,
     ) -> impl Future<Output = Result<(), Self::Error>> + Send {
         ready(Ok(()))
+    }
+    fn commit(
+        &self,
+        _writes: &[ContextWrite],
+    ) -> impl Future<Output = Result<Vec<ContextId>, Self::Error>> + Send {
+        ready(Ok(vec![]))
     }
     fn lookup(
         &self,

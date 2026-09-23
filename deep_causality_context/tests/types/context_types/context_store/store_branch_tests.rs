@@ -20,9 +20,11 @@ use deep_causality_context::{
 };
 use deep_causality_context_store::utils_test::{MemoryStorage, block_on};
 use deep_causality_context_store::{
-    ContextId, ContextSnapshot, ContextStorage, ContextoidId, ContextoidRecord, DataRecord,
-    IdReserve, MemoryStorageError, NodeRecord, ProjectionError, RelationRecord,
+    ContextId, ContextSnapshot, ContextStorage, ContextStorageStream, ContextWrite, ContextoidId,
+    ContextoidRecord, DataRecord, IdReserve, MemoryStorageError, NodeRecord, ProjectionError,
+    RelationRecord,
 };
+use deep_causality_core::Identifiable;
 use std::future::Future;
 
 fn count(id: ContextoidId, value: u64) -> UniformContextoid {
@@ -215,16 +217,29 @@ fn test_an_unrecordable_branch_is_refused() {
     );
 }
 
-/// The in-memory backend with a reserve that always answers empty: a backend in breach of the
-/// contract, so that the store's refusal of a short reserve is observed.
-struct ShortReserve(MemoryStorage);
+/// How `Breaching` breaks the contract.
+#[derive(Clone, Copy, PartialEq)]
+enum Breach {
+    /// Every reserve answers empty.
+    ShortReserve,
+    /// Every commit applies and reports no created container.
+    EmptyCommit,
+}
 
-impl ContextStorage for ShortReserve {
+/// The in-memory backend in breach of the contract in one way, so that the store's refusal of the
+/// breach is observed.
+struct Breaching(MemoryStorage, Breach);
+
+impl ContextStorage for Breaching {
     type Error = MemoryStorageError;
     type Slice = ContextId;
 
-    fn reserve(&self, _: usize) -> impl Future<Output = Result<IdReserve, Self::Error>> + Send {
-        std::future::ready(Ok(IdReserve::new(Vec::new())))
+    fn reserve(&self, n: usize) -> impl Future<Output = Result<IdReserve, Self::Error>> + Send {
+        let reserve = match self.1 {
+            Breach::ShortReserve => Ok(IdReserve::new(Vec::new())),
+            Breach::EmptyCommit => block_on(self.0.reserve(n)),
+        };
+        std::future::ready(reserve)
     }
     fn create_context(
         &self,
@@ -291,6 +306,16 @@ impl ContextStorage for ShortReserve {
     ) -> impl Future<Output = Result<(), Self::Error>> + Send {
         self.0.detach(context, extra)
     }
+    fn commit(
+        &self,
+        writes: &[ContextWrite],
+    ) -> impl Future<Output = Result<Vec<ContextId>, Self::Error>> + Send {
+        let created = block_on(self.0.commit(writes));
+        std::future::ready(match self.1 {
+            Breach::ShortReserve => created,
+            Breach::EmptyCommit => created.map(|_| Vec::new()),
+        })
+    }
     fn lookup(
         &self,
         nodes: &[ContextoidId],
@@ -309,7 +334,7 @@ impl ContextStorage for ShortReserve {
 fn test_a_short_reserve_is_refused() {
     let storage = MemoryStorage::new();
     let (base, _, n) = stored_world(&storage);
-    let store = ContextStore::new(ShortReserve(storage));
+    let store = ContextStore::new(Breaching(storage, Breach::ShortReserve));
     let mut branch: UniformContext = block_on(store.hydrate(&base)).unwrap();
     branch.update_node(n[1], count(n[1], 99)).unwrap();
     let result = block_on(store.store_branch("short", &branch));
@@ -318,6 +343,173 @@ fn test_a_short_reserve_is_refused() {
         Err(StoreErrorEnum::Projection(ProjectionError::Identity(
             n[1],
             "the backend's reserve held fewer identifiers than asked"
+        )))
+    );
+}
+
+#[test]
+fn test_a_shared_conflicting_node_keeps_one_identity() {
+    // The same node, changed in place, sits in the base and in an extra. It must be re-created
+    // once, under one fresh identifier, and both containers must link that identifier.
+    let storage = MemoryStorage::new();
+    let (base, extra, n) = stored_world(&storage);
+    // Put the base's count into the extra too, so both graphs hold node n[1].
+    block_on(storage.link(extra, &n[1..2])).unwrap();
+    let store = ContextStore::new(storage.clone());
+    let mut branch: UniformContext = block_on(store.hydrate(&base)).unwrap();
+    branch.update_node(n[1], count(n[1], 99)).unwrap();
+    branch.extra_ctx_set_current_id(extra).unwrap();
+    let index = (0..8)
+        .find(|i| {
+            branch
+                .extra_ctx_get_node(*i)
+                .is_ok_and(|node| node.id() == n[1])
+        })
+        .unwrap();
+    branch.extra_ctx_remove_node(index).unwrap();
+    branch.extra_ctx_add_node(count(n[1], 99)).unwrap();
+
+    let stored = block_on(store.store_branch("shared", &branch)).unwrap();
+    let snapshot = block_on(storage.hydrate(&stored)).unwrap();
+    let in_base: Vec<ContextoidId> = snapshot
+        .nodes()
+        .iter()
+        .filter(|r| r.node() == &NodeRecord::Data(DataRecord::Count(99)))
+        .map(|r| r.id())
+        .collect();
+    let in_extra: Vec<ContextoidId> = snapshot.extras()[0]
+        .nodes()
+        .iter()
+        .filter(|r| r.node() == &NodeRecord::Data(DataRecord::Count(99)))
+        .map(|r| r.id())
+        .collect();
+    assert_eq!(in_base.len(), 1);
+    assert_eq!(in_base, in_extra, "one fresh identifier in both containers");
+    assert_ne!(in_base[0], n[1]);
+}
+
+/// Hydrates the stored world with node n[1] linked into the extra as well as the base.
+fn shared_branch(
+    storage: &MemoryStorage,
+) -> (
+    ContextStore<MemoryStorage>,
+    UniformContext,
+    ContextId,
+    Vec<ContextoidId>,
+) {
+    let (base, extra, n) = stored_world(storage);
+    block_on(storage.link(extra, &n[1..2])).unwrap();
+    let store = ContextStore::new(storage.clone());
+    let branch: UniformContext = block_on(store.hydrate(&base)).unwrap();
+    (store, branch, extra, n)
+}
+
+/// The identifiers a container links for one record.
+fn ids_holding(records: &[ContextoidRecord], node: &NodeRecord) -> Vec<ContextoidId> {
+    records
+        .iter()
+        .filter(|r| r.node() == node)
+        .map(|r| r.id())
+        .collect()
+}
+
+#[test]
+fn test_a_shared_node_changed_in_one_graph_keeps_the_other_value() {
+    // n[1] is shared by the base and the extra; only the base changes it. The base must link a
+    // fresh node holding 99 and the extra must keep linking n[1] holding 5.
+    let storage = MemoryStorage::new();
+    let (store, mut branch, _, n) = shared_branch(&storage);
+    branch.update_node(n[1], count(n[1], 99)).unwrap();
+
+    let stored = block_on(store.store_branch("one-sided", &branch)).unwrap();
+    let snapshot = block_on(storage.hydrate(&stored)).unwrap();
+    let changed = ids_holding(snapshot.nodes(), &NodeRecord::Data(DataRecord::Count(99)));
+    assert_eq!(changed.len(), 1);
+    assert_ne!(changed[0], n[1]);
+    assert_eq!(
+        ids_holding(
+            snapshot.extras()[0].nodes(),
+            &NodeRecord::Data(DataRecord::Count(5))
+        ),
+        vec![n[1]],
+        "the extra keeps the unchanged node"
+    );
+    assert!(
+        ids_holding(
+            snapshot.extras()[0].nodes(),
+            &NodeRecord::Data(DataRecord::Count(99))
+        )
+        .is_empty()
+    );
+}
+
+#[test]
+fn test_two_records_under_one_new_identifier_store_two_nodes() {
+    // A node the store does not hold, carried by the base and the extra with different values:
+    // the base claims the identifier, the extra gets a fresh one, and each keeps its value.
+    let storage = MemoryStorage::new();
+    let (store, mut branch, extra, _) = shared_branch(&storage);
+    let id = next_id(&storage);
+    branch.add_node(count(id, 1)).unwrap();
+    branch.extra_ctx_set_current_id(extra).unwrap();
+    branch.extra_ctx_add_node(count(id, 2)).unwrap();
+
+    let stored = block_on(store.store_branch("two", &branch)).unwrap();
+    let snapshot = block_on(storage.hydrate(&stored)).unwrap();
+    assert_eq!(
+        ids_holding(snapshot.nodes(), &NodeRecord::Data(DataRecord::Count(1))),
+        vec![id]
+    );
+    let in_extra = ids_holding(
+        snapshot.extras()[0].nodes(),
+        &NodeRecord::Data(DataRecord::Count(2)),
+    );
+    assert_eq!(in_extra.len(), 1);
+    assert_ne!(in_extra[0], id);
+}
+
+#[test]
+fn test_a_refused_store_writes_nothing() {
+    // The branch adds a node and changes the kind of a stored edge. The edge is refused; the
+    // node created before it in the same store must not remain, and no event may be emitted.
+    let storage = MemoryStorage::new();
+    let (base, _, n) = stored_world(&storage);
+    let store = ContextStore::new(storage.clone());
+    let mut branch: UniformContext = block_on(store.hydrate(&base)).unwrap();
+    let added = next_id(&storage);
+    branch.add_node(count(added, 3)).unwrap();
+    let a = branch.get_node_index_by_id(n[0]).unwrap();
+    let b = branch.get_node_index_by_id(n[1]).unwrap();
+    branch.remove_edge(a, b).unwrap();
+    branch.add_edge(a, b, RelationKind::Spatial).unwrap();
+    let cursor = block_on(storage.apply_batch(&[])).unwrap();
+
+    let result = block_on(store.store_branch("refused", &branch));
+    assert_eq!(
+        result.map_err(|e| e.0),
+        Err(StoreErrorEnum::Storage(MemoryStorageError::EdgeConflict(
+            n[0], n[1]
+        )))
+    );
+    assert_eq!(block_on(storage.lookup(&[added])).unwrap(), vec![None]);
+    assert_eq!(
+        block_on(storage.apply_batch(&[])).unwrap(),
+        cursor,
+        "no event emitted"
+    );
+}
+
+#[test]
+fn test_a_commit_that_reports_no_container_is_refused() {
+    let storage = MemoryStorage::new();
+    let (base, _, _) = stored_world(&storage);
+    let store = ContextStore::new(Breaching(storage, Breach::EmptyCommit));
+    let branch: UniformContext = block_on(store.hydrate(&base)).unwrap();
+    assert_eq!(
+        block_on(store.store_branch("empty", &branch)).map_err(|e| e.0),
+        Err(StoreErrorEnum::Projection(ProjectionError::Identity(
+            0,
+            "the backend's commit returned no created container"
         )))
     );
 }

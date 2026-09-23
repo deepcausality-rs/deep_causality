@@ -70,23 +70,50 @@ fn test_every_other_variant_is_refused() {
 
 #[test]
 fn test_zero_and_negative_round_trip() {
-    for node in [
-        EuclideanSpace::new(1, 0.0, 0.0, 0.0),
-        EuclideanSpace::new(1, -1.0, -2.0, -0.5),
-    ] {
-        assert_eq!(
-            EuclideanSpace::from_record(1, node.to_record().unwrap()),
-            Ok(node)
-        );
+    let pairs = [
+        (
+            EuclideanSpace::new(1, 0.0, 0.0, 0.0),
+            SpaceRecord::Euclidean {
+                x: 0.0,
+                y: 0.0,
+                z: 0.0,
+            },
+        ),
+        (
+            EuclideanSpace::new(1, -1.0, -2.0, -0.5),
+            SpaceRecord::Euclidean {
+                x: -1.0,
+                y: -2.0,
+                z: -0.5,
+            },
+        ),
+    ];
+    for (node, record) in pairs {
+        assert_eq!(node.to_record(), Ok(record));
+        assert_eq!(EuclideanSpace::from_record(1, record), Ok(node));
     }
 }
 
 #[test]
 fn test_non_finite_round_trips() {
-    let node = EuclideanSpace::new(1, 0.0, f64::NAN, 0.0);
-    let restored = EuclideanSpace::<f64>::from_record(1, node.to_record().unwrap()).unwrap();
-    assert_ne!(restored, node);
-    assert_eq!(restored.to_record().unwrap().kind_name(), "Euclidean");
+    let node = EuclideanSpace::new(1, 1.5, f64::NAN, f64::NEG_INFINITY);
+    match node.to_record() {
+        Ok(SpaceRecord::Euclidean { x, y, z }) => {
+            assert_eq!(x, 1.5);
+            assert!(y.is_nan());
+            assert_eq!(z, f64::NEG_INFINITY);
+        }
+        other => panic!("expected a Euclidean record, found {other:?}"),
+    }
+    let record = SpaceRecord::Euclidean {
+        x: 1.5,
+        y: f64::NAN,
+        z: f64::NEG_INFINITY,
+    };
+    let restored = EuclideanSpace::<f64>::from_record(1, record).unwrap();
+    assert_eq!(restored.x(), 1.5);
+    assert!(restored.y().is_nan());
+    assert_eq!(restored.z(), f64::NEG_INFINITY);
 }
 
 #[test]
@@ -99,15 +126,20 @@ fn test_precision_is_spent_at_the_bound() {
         Float106::new(2.0, low),
         Float106::new(3.0, low),
     );
-    let restored = EuclideanSpace::<Float106>::from_record(2, wide.to_record().unwrap()).unwrap();
+    let wide_record = SpaceRecord::Euclidean {
+        x: 1.0,
+        y: 2.0,
+        z: 3.0,
+    };
+    assert_eq!(wide.to_record(), Ok(wide_record));
     assert_eq!(
-        restored,
-        EuclideanSpace::new(
+        EuclideanSpace::<Float106>::from_record(2, wide_record),
+        Ok(EuclideanSpace::new(
             2,
             Float106::new(1.0, 0.0),
             Float106::new(2.0, 0.0),
             Float106::new(3.0, 0.0)
-        )
+        ))
     );
     let narrow = EuclideanSpace::new(
         2,
@@ -115,8 +147,14 @@ fn test_precision_is_spent_at_the_bound() {
         BFloat16::from(2.5),
         BFloat16::from(3.5),
     );
+    let narrow_record = SpaceRecord::Euclidean {
+        x: 1.5,
+        y: 2.5,
+        z: 3.5,
+    };
+    assert_eq!(narrow.to_record(), Ok(narrow_record));
     assert_eq!(
-        EuclideanSpace::<BFloat16>::from_record(2, narrow.to_record().unwrap()),
+        EuclideanSpace::<BFloat16>::from_record(2, narrow_record),
         Ok(narrow)
     );
 }

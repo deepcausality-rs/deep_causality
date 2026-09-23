@@ -72,6 +72,7 @@ where
                     .get_or_insert_with(Default::default)
                     .entry(extra.id())
                     .or_insert_with(|| ExtraContext::new(extra.name(), 0));
+                self.highest_extra_context_id = self.highest_extra_context_id.max(extra.id());
                 Ok(())
             }
             ContextEvent::ContextDetached { context, extra } => {

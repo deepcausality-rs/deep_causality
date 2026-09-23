@@ -33,6 +33,7 @@ use deep_causality_context_store::{
 ///     fn unlink(&self, _: ContextId, _: &[ContextoidId]) -> impl Future<Output = Result<(), Self::Error>> + Send { ready(Ok(())) }
 ///     fn attach(&self, _: ContextId, _: ContextId) -> impl Future<Output = Result<(), Self::Error>> + Send { ready(Ok(())) }
 ///     fn detach(&self, _: ContextId, _: ContextId) -> impl Future<Output = Result<(), Self::Error>> + Send { ready(Ok(())) }
+///     fn commit(&self, _: &[ContextWrite]) -> impl Future<Output = Result<Vec<ContextId>, Self::Error>> + Send { ready(Ok(vec![])) }
 ///     fn lookup(&self, _: &[ContextoidId]) -> impl Future<Output = Result<Vec<Option<ContextoidRecord>>, Self::Error>> + Send { ready(Ok(vec![])) }
 ///     fn hydrate(&self, spec: &Self::Slice) -> impl Future<Output = Result<ContextSnapshot, Self::Error>> + Send {
 ///         ready(Ok(ContextSnapshot::new(ContextRecord::new(*spec, String::new()), vec![], vec![], vec![])))

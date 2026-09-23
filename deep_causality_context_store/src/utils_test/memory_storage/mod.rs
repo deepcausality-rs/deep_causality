@@ -22,7 +22,7 @@ pub(crate) struct Shared {
 ///
 /// Its state is a fold over its own event log: every mutating operation appends the events it
 /// emits, a subscription from a cursor replays the log to that position into a fresh state, and a
-/// batch applies to a clone of the state and commits only on success. Identifiers come from one
+/// batch or a commit applies to a clone of the state and replaces the state only on success. Identifiers come from one
 /// counter that starts at 1 and is never reused, so no container is 0 and no reserve repeats.
 ///
 /// A `Mutex` gives interior mutability behind `&self`; a poisoned lock is recovered rather than

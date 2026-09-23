@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! A backend that holds nothing pins the trait's shape: thirteen operations, each a `Send` future
+//! A backend that holds nothing pins the trait's shape: fourteen operations, each a `Send` future
 //! that `block_on` completes. Expected values are the literals the null backend returns.
 //!
 //! Corner cases (rows A to K): A a reserve of zero and a lookup of no identifiers in
@@ -12,8 +12,8 @@
 use core::future::{Future, ready};
 use deep_causality_context_store::utils_test::block_on;
 use deep_causality_context_store::{
-    ContextId, ContextRecord, ContextSnapshot, ContextStorage, ContextoidId, ContextoidRecord,
-    IdReserve, NodeRecord, RelationKind, RelationRecord,
+    ContextId, ContextRecord, ContextSnapshot, ContextStorage, ContextWrite, ContextoidId,
+    ContextoidRecord, IdReserve, NodeRecord, RelationKind, RelationRecord,
 };
 use std::fmt::{Display, Formatter};
 
@@ -112,6 +112,17 @@ impl ContextStorage for NullStorage {
         ready(Ok(()))
     }
 
+    fn commit(
+        &self,
+        writes: &[ContextWrite],
+    ) -> impl Future<Output = Result<Vec<ContextId>, Self::Error>> + Send {
+        let created = writes
+            .iter()
+            .filter(|write| matches!(write, ContextWrite::CreateContext(_)))
+            .count();
+        ready(Ok((1..=created as ContextId).collect()))
+    }
+
     fn lookup(
         &self,
         ids: &[ContextoidId],
@@ -153,6 +164,7 @@ where
     assert_send(&storage.unlink(1, &[1]));
     assert_send(&storage.attach(1, 2));
     assert_send(&storage.detach(1, 2));
+    assert_send(&storage.commit(&[ContextWrite::CreateNode(vec![node.clone()])]));
     assert_send(&storage.lookup(&[1]));
     assert_send(&storage.hydrate(slice));
 }
@@ -180,6 +192,11 @@ fn test_every_operation_completes_with_block_on() {
     assert_eq!(block_on(storage.unlink(1, &[1])), Ok(()));
     assert_eq!(block_on(storage.attach(1, 2)), Ok(()));
     assert_eq!(block_on(storage.detach(1, 2)), Ok(()));
+    let writes = [
+        ContextWrite::CreateContext("a".to_string()),
+        ContextWrite::CreateContext("b".to_string()),
+    ];
+    assert_eq!(block_on(storage.commit(&writes)), Ok(vec![1, 2]));
     assert_eq!(block_on(storage.lookup(&[1, 2])), Ok(vec![None, None]));
     let snapshot = block_on(storage.hydrate(&7)).unwrap();
     assert_eq!(snapshot.context().id(), 7);

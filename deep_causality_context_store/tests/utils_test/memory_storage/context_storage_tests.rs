@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! The thirteen operations and every invariant of `context-storage-contract`, against the
+//! The fourteen operations and every invariant of `context-storage-contract`, against the
 //! in-memory backend. Expected values are the records handed to the operations, read back through
 //! `hydrate` and `lookup`; identifiers come from `reserve` and `create_context` and are compared
 //! by relation, never assumed.
@@ -16,12 +16,14 @@
 //! `test_a_reference_materialises_one_level`, an edge with only one end linked,
 //! `test_hydrate_holds_only_edges_among_members`, and edges observed through `retract_edge`
 //! rather than through membership, `test_a_retracted_node_takes_only_its_own_edges`; E n/a; F identifier 0 refused as a node in
-//! `test_an_identifier_not_from_a_reserve_is_refused`; G n/a; H n/a; I/J/K n/a.
+//! `test_an_identifier_not_from_a_reserve_is_refused`, container 0 of a commit named before any
+//! was created, `test_a_commit_names_only_containers_it_created`; G n/a; H n/a; I/J/K n/a.
 
 use deep_causality_context_store::utils_test::{MemoryStorage, block_on};
 use deep_causality_context_store::{
-    ContextStorage, ContextoidId, ContextoidRecord, DataRecord, MemoryStorageError, NodeRecord,
-    RelationKind, RelationRecord, SpaceRecord, TimeRecord, TimeScale,
+    ContainerRef, ContextStorage, ContextStorageStream, ContextWrite, ContextoidId,
+    ContextoidRecord, DataRecord, MemoryStorageError, NodeRecord, RelationKind, RelationRecord,
+    SpaceRecord, TimeRecord, TimeScale,
 };
 
 fn number(id: ContextoidId, value: f64) -> ContextoidRecord {
@@ -468,4 +470,126 @@ fn test_a_retracted_node_takes_only_its_own_edges() {
         Err(MemoryStorageError::UnknownEdge(n[1], n[0]))
     );
     assert_eq!(block_on(storage.retract_edge(n[2], n[3])), Ok(()));
+}
+
+/// The log position: the cursor an empty batch returns.
+fn cursor(storage: &MemoryStorage) -> usize {
+    block_on(storage.apply_batch(&[])).unwrap()
+}
+
+#[test]
+fn test_a_commit_applies_every_write_and_returns_the_containers_it_created() {
+    let storage = MemoryStorage::new();
+    let n = ids(&storage, 2);
+    let held = block_on(storage.create_context("held")).unwrap();
+    let before = cursor(&storage);
+    let edge = RelationRecord::new(n[0], n[1], RelationKind::Datial);
+    let writes = [
+        ContextWrite::CreateNode(vec![number(n[0], 1.0), number(n[1], 2.0)]),
+        ContextWrite::CreateEdge(vec![edge]),
+        ContextWrite::CreateContext("a".to_string()),
+        ContextWrite::CreateContext("b".to_string()),
+        ContextWrite::Link {
+            context: ContainerRef::Created(0),
+            nodes: n.clone(),
+        },
+        ContextWrite::Link {
+            context: ContainerRef::Created(1),
+            nodes: vec![n[1]],
+        },
+        ContextWrite::Link {
+            context: ContainerRef::Held(held),
+            nodes: vec![n[0]],
+        },
+        ContextWrite::Attach {
+            context: ContainerRef::Created(0),
+            extra: ContainerRef::Created(1),
+        },
+        ContextWrite::Attach {
+            context: ContainerRef::Held(held),
+            extra: ContainerRef::Created(0),
+        },
+    ];
+    let created = block_on(storage.commit(&writes)).unwrap();
+    assert_eq!(created.len(), 2);
+    let (a, b) = (created[0], created[1]);
+    assert!(a != b && a != held && b != held);
+
+    let snapshot = block_on(storage.hydrate(&a)).unwrap();
+    assert_eq!(snapshot.context().name(), "a");
+    assert_eq!(snapshot.nodes(), &[number(n[0], 1.0), number(n[1], 2.0)]);
+    assert_eq!(snapshot.edges(), &[edge]);
+    assert_eq!(snapshot.extras().len(), 1);
+    assert_eq!(snapshot.extras()[0].id(), b);
+    assert_eq!(snapshot.extras()[0].name(), "b");
+    assert_eq!(snapshot.extras()[0].nodes(), &[number(n[1], 2.0)]);
+    let snapshot = block_on(storage.hydrate(&held)).unwrap();
+    assert_eq!(snapshot.nodes(), &[number(n[0], 1.0)]);
+    assert_eq!(snapshot.extras()[0].id(), a);
+    // Two nodes, one edge, two containers, four links, two references: one event each.
+    assert_eq!(cursor(&storage), before + 11);
+}
+
+#[test]
+fn test_a_refused_commit_leaves_the_store_unchanged() {
+    let storage = MemoryStorage::new();
+    let n = ids(&storage, 1);
+    let c = block_on(storage.create_context("c")).unwrap();
+    let before = cursor(&storage);
+    let writes = [
+        ContextWrite::CreateNode(vec![number(n[0], 1.0)]),
+        ContextWrite::CreateContext("x".to_string()),
+        ContextWrite::Link {
+            context: ContainerRef::Created(0),
+            nodes: vec![n[0]],
+        },
+        ContextWrite::Attach {
+            context: ContainerRef::Held(c),
+            extra: ContainerRef::Created(0),
+        },
+        ContextWrite::Attach {
+            context: ContainerRef::Created(0),
+            extra: ContainerRef::Created(0),
+        },
+    ];
+    assert_eq!(
+        block_on(storage.commit(&writes)),
+        Err(MemoryStorageError::SelfReference(c + 1))
+    );
+    assert_eq!(block_on(storage.lookup(&n)), Ok(vec![None]));
+    assert!(block_on(storage.hydrate(&c)).unwrap().extras().is_empty());
+    assert_eq!(
+        block_on(storage.hydrate(&(c + 1))),
+        Err(MemoryStorageError::UnknownContext(c + 1))
+    );
+    assert_eq!(cursor(&storage), before, "no event emitted");
+    // The reserved identifier is still reserved: the refused commit consumed nothing.
+    assert_eq!(block_on(storage.create_node(&[number(n[0], 1.0)])), Ok(()));
+}
+
+#[test]
+fn test_a_commit_names_only_containers_it_created() {
+    let storage = MemoryStorage::new();
+    let before = cursor(&storage);
+    let early = [ContextWrite::Link {
+        context: ContainerRef::Created(0),
+        nodes: vec![],
+    }];
+    assert_eq!(
+        block_on(storage.commit(&early)),
+        Err(MemoryStorageError::UnknownCreated(0))
+    );
+    let past = [
+        ContextWrite::CreateContext("a".to_string()),
+        ContextWrite::Attach {
+            context: ContainerRef::Created(0),
+            extra: ContainerRef::Created(1),
+        },
+    ];
+    assert_eq!(
+        block_on(storage.commit(&past)),
+        Err(MemoryStorageError::UnknownCreated(1))
+    );
+    assert_eq!(cursor(&storage), before);
+    assert_eq!(block_on(storage.commit(&[])), Ok(vec![]));
 }

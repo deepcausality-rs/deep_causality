@@ -44,7 +44,9 @@ pub use crate::traits::substrate::Substrate;
 //
 // Records
 //
+pub use crate::types::container_ref::ContainerRef;
 pub use crate::types::context_event::ContextEvent;
+pub use crate::types::context_write::ContextWrite;
 pub use crate::types::id_reserve::IdReserve;
 pub use crate::types::records::context_record::ContextRecord;
 pub use crate::types::records::context_snapshot::ContextSnapshot;

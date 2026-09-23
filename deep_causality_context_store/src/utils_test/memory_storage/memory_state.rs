@@ -4,8 +4,9 @@
  */
 
 use crate::{
-    ContextEvent, ContextId, ContextRecord, ContextSnapshot, ContextoidId, ContextoidRecord,
-    ExtraContextSnapshot, MemoryStorageError, NodeRecord, RelationKind, RelationRecord,
+    ContainerRef, ContextEvent, ContextId, ContextRecord, ContextSnapshot, ContextWrite,
+    ContextoidId, ContextoidRecord, ExtraContextSnapshot, MemoryStorageError, NodeRecord,
+    RelationKind, RelationRecord,
 };
 use std::collections::{BTreeMap, BTreeSet};
 
@@ -296,6 +297,42 @@ impl MemoryState {
         Ok(events)
     }
 
+    /// Performs every write in order and returns the containers created with the events emitted.
+    /// A refusal returns early with the state part-folded, so a caller commits on a clone.
+    pub(crate) fn commit(
+        &mut self,
+        writes: &[ContextWrite],
+    ) -> Result<(Vec<ContextId>, Vec<ContextEvent>), MemoryStorageError> {
+        let mut created: Vec<ContextId> = Vec::new();
+        let mut events = Vec::new();
+        let at = |created: &[ContextId], container: &ContainerRef| match container {
+            ContainerRef::Held(id) => Ok(*id),
+            ContainerRef::Created(index) => created
+                .get(*index)
+                .copied()
+                .ok_or(MemoryStorageError::UnknownCreated(*index)),
+        };
+        for write in writes {
+            let emitted = match write {
+                ContextWrite::CreateContext(name) => {
+                    let (id, emitted) = self.create_context(name);
+                    created.push(id);
+                    emitted
+                }
+                ContextWrite::CreateNode(nodes) => self.create_node(nodes)?,
+                ContextWrite::CreateEdge(edges) => self.create_edge(edges)?,
+                ContextWrite::Link { context, nodes } => {
+                    self.link(at(&created, context)?, nodes)?
+                }
+                ContextWrite::Attach { context, extra } => {
+                    self.attach(at(&created, context)?, at(&created, extra)?)?
+                }
+            };
+            events.extend(emitted);
+        }
+        Ok((created, events))
+    }
+
     pub(crate) fn lookup(&self, ids: &[ContextoidId]) -> Vec<Option<ContextoidRecord>> {
         ids.iter()
             .map(|id| {
@@ -385,7 +422,7 @@ impl MemoryState {
             ContextEvent::NodeUnlinked { context, node } => self.unlink(*context, &[*node]),
             ContextEvent::ContextAttached { context, extra } => {
                 if self.container(extra.id())?.name != extra.name() {
-                    return Err(MemoryStorageError::EventNotApplicable("ContextAttached"));
+                    return Err(MemoryStorageError::ContextConflict(extra.id()));
                 }
                 self.attach(*context, extra.id())
             }

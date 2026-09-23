@@ -4,7 +4,8 @@
  */
 
 use crate::{
-    ContextId, ContextSnapshot, ContextoidId, ContextoidRecord, IdReserve, RelationRecord,
+    ContextId, ContextSnapshot, ContextWrite, ContextoidId, ContextoidRecord, IdReserve,
+    RelationRecord,
 };
 
 /// What a store of contexts does. Every operation is persistent; the crate's name says so, and no
@@ -32,6 +33,9 @@ use crate::{
 /// - A **reference is a link between containers**: `attach` is idempotent, refused for a container
 ///   the store does not hold and for a self-reference; `detach` of a reference not held is not an
 ///   error. References are many to many and may form a cycle.
+/// - A **commit is all or nothing**: `commit` applies every write it is given, in order, or none of
+///   them. A refused commit leaves the store as it was, and a backend that reports changes reports
+///   none of it.
 /// - `hydrate` **materialises one level**: the snapshot holds the container's nodes, the edges among
 ///   them, and one extra per container it references, carrying that container's identifier, name,
 ///   nodes and edges. The referenced containers' own references are not followed.
@@ -114,6 +118,16 @@ pub trait ContextStorage {
         context: ContextId,
         extra: ContextId,
     ) -> impl Future<Output = Result<(), Self::Error>> + Send;
+
+    /// Performs the writes in order as one transaction and returns the identifier of every
+    /// container a `CreateContext` made, in the order of those writes. Refused whole if any write
+    /// would be, or if a `ContainerRef::Created` names no container an earlier write made. A
+    /// backend that reports changes reports, on success only, the event each write's own operation
+    /// reports.
+    fn commit(
+        &self,
+        writes: &[ContextWrite],
+    ) -> impl Future<Output = Result<Vec<ContextId>, Self::Error>> + Send;
 
     /// The record held under each identifier, in the order given, or `None` where the store holds
     /// none.

@@ -70,23 +70,60 @@ fn test_every_other_variant_is_refused() {
 
 #[test]
 fn test_zero_and_negative_round_trip() {
-    for node in [
-        GeoSpace::new(1, 0.0, 0.0, 0.0, VerticalDatum::WGS84),
-        GeoSpace::new(1, -33.9, -70.6, -12.0, VerticalDatum::Terrain),
-    ] {
-        assert_eq!(
-            GeoSpace::from_record(1, node.to_record().unwrap()),
-            Ok(node)
-        );
+    let pairs = [
+        (
+            GeoSpace::new(1, 0.0, 0.0, 0.0, VerticalDatum::WGS84),
+            SpaceRecord::Geo {
+                lat: 0.0,
+                lon: 0.0,
+                alt: 0.0,
+                datum: VerticalDatum::WGS84,
+            },
+        ),
+        (
+            GeoSpace::new(1, -33.9, -70.6, -12.0, VerticalDatum::Terrain),
+            SpaceRecord::Geo {
+                lat: -33.9,
+                lon: -70.6,
+                alt: -12.0,
+                datum: VerticalDatum::Terrain,
+            },
+        ),
+    ];
+    for (node, record) in pairs {
+        assert_eq!(node.to_record(), Ok(record));
+        assert_eq!(GeoSpace::from_record(1, record), Ok(node));
     }
 }
 
 #[test]
 fn test_non_finite_round_trips() {
-    let node = GeoSpace::new(1, f64::NAN, 0.0, 0.0, VerticalDatum::WGS84);
-    let restored = GeoSpace::<f64>::from_record(1, node.to_record().unwrap()).unwrap();
-    assert_ne!(restored, node);
-    assert_eq!(restored.to_record().unwrap().kind_name(), "Geo");
+    let node = GeoSpace::new(1, f64::NAN, 13.4, f64::INFINITY, VerticalDatum::WGS84);
+    match node.to_record() {
+        Ok(SpaceRecord::Geo {
+            lat,
+            lon,
+            alt,
+            datum,
+        }) => {
+            assert!(lat.is_nan());
+            assert_eq!(lon, 13.4);
+            assert_eq!(alt, f64::INFINITY);
+            assert_eq!(datum, VerticalDatum::WGS84);
+        }
+        other => panic!("expected a Geo record, found {other:?}"),
+    }
+    let record = SpaceRecord::Geo {
+        lat: f64::NAN,
+        lon: 13.4,
+        alt: f64::INFINITY,
+        datum: VerticalDatum::WGS84,
+    };
+    let restored = GeoSpace::<f64>::from_record(1, record).unwrap();
+    assert!(restored.lat().is_nan());
+    assert_eq!(restored.lon(), 13.4);
+    assert_eq!(restored.alt(), f64::INFINITY);
+    assert_eq!(restored.datum(), VerticalDatum::WGS84);
 }
 
 #[test]
@@ -100,16 +137,22 @@ fn test_precision_is_spent_at_the_bound() {
         Float106::new(3.0, low),
         VerticalDatum::ISA,
     );
-    let restored = GeoSpace::<Float106>::from_record(2, wide.to_record().unwrap()).unwrap();
+    let wide_record = SpaceRecord::Geo {
+        lat: 1.0,
+        lon: 2.0,
+        alt: 3.0,
+        datum: VerticalDatum::ISA,
+    };
+    assert_eq!(wide.to_record(), Ok(wide_record));
     assert_eq!(
-        restored,
-        GeoSpace::new(
+        GeoSpace::<Float106>::from_record(2, wide_record),
+        Ok(GeoSpace::new(
             2,
             Float106::new(1.0, 0.0),
             Float106::new(2.0, 0.0),
             Float106::new(3.0, 0.0),
             VerticalDatum::ISA
-        )
+        ))
     );
     let narrow = GeoSpace::new(
         2,
@@ -118,8 +161,15 @@ fn test_precision_is_spent_at_the_bound() {
         BFloat16::from(3.5),
         VerticalDatum::EGM2008,
     );
+    let narrow_record = SpaceRecord::Geo {
+        lat: 1.5,
+        lon: 2.5,
+        alt: 3.5,
+        datum: VerticalDatum::EGM2008,
+    };
+    assert_eq!(narrow.to_record(), Ok(narrow_record));
     assert_eq!(
-        GeoSpace::<BFloat16>::from_record(2, narrow.to_record().unwrap()),
+        GeoSpace::<BFloat16>::from_record(2, narrow_record),
         Ok(narrow)
     );
 }

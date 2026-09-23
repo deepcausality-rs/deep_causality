@@ -6,15 +6,15 @@
 use crate::utils_test::MemoryStorage;
 use crate::utils_test::memory_storage::MemoryState;
 use crate::{
-    ContextEvent, ContextId, ContextSnapshot, ContextStorage, ContextoidId, ContextoidRecord,
-    IdReserve, MemoryStorageError, RelationRecord,
+    ContextEvent, ContextId, ContextSnapshot, ContextStorage, ContextWrite, ContextoidId,
+    ContextoidRecord, IdReserve, MemoryStorageError, RelationRecord,
 };
 use core::future::ready;
 
 impl MemoryStorage {
     /// Runs one operation on the state and appends the events it emitted to the log. An
     /// operation validates before it folds, so a refusal leaves both untouched.
-    fn commit(
+    fn perform(
         &self,
         operation: impl FnOnce(&mut MemoryState) -> Result<Vec<ContextEvent>, MemoryStorageError>,
     ) -> Result<(), MemoryStorageError> {
@@ -48,28 +48,28 @@ impl ContextStorage for MemoryStorage {
         &self,
         context: ContextId,
     ) -> impl Future<Output = Result<(), Self::Error>> + Send {
-        ready(self.commit(|state| state.retract_context(context)))
+        ready(self.perform(|state| state.retract_context(context)))
     }
 
     fn create_node(
         &self,
         nodes: &[ContextoidRecord],
     ) -> impl Future<Output = Result<(), Self::Error>> + Send {
-        ready(self.commit(|state| state.create_node(nodes)))
+        ready(self.perform(|state| state.create_node(nodes)))
     }
 
     fn retract_node(
         &self,
         node: ContextoidId,
     ) -> impl Future<Output = Result<(), Self::Error>> + Send {
-        ready(self.commit(|state| state.retract_node(node)))
+        ready(self.perform(|state| state.retract_node(node)))
     }
 
     fn create_edge(
         &self,
         edges: &[RelationRecord],
     ) -> impl Future<Output = Result<(), Self::Error>> + Send {
-        ready(self.commit(|state| state.create_edge(edges)))
+        ready(self.perform(|state| state.create_edge(edges)))
     }
 
     fn retract_edge(
@@ -77,7 +77,7 @@ impl ContextStorage for MemoryStorage {
         from: ContextoidId,
         to: ContextoidId,
     ) -> impl Future<Output = Result<(), Self::Error>> + Send {
-        ready(self.commit(|state| state.retract_edge(from, to)))
+        ready(self.perform(|state| state.retract_edge(from, to)))
     }
 
     fn link(
@@ -85,7 +85,7 @@ impl ContextStorage for MemoryStorage {
         context: ContextId,
         nodes: &[ContextoidId],
     ) -> impl Future<Output = Result<(), Self::Error>> + Send {
-        ready(self.commit(|state| state.link(context, nodes)))
+        ready(self.perform(|state| state.link(context, nodes)))
     }
 
     fn unlink(
@@ -93,7 +93,7 @@ impl ContextStorage for MemoryStorage {
         context: ContextId,
         nodes: &[ContextoidId],
     ) -> impl Future<Output = Result<(), Self::Error>> + Send {
-        ready(self.commit(|state| state.unlink(context, nodes)))
+        ready(self.perform(|state| state.unlink(context, nodes)))
     }
 
     fn attach(
@@ -101,7 +101,7 @@ impl ContextStorage for MemoryStorage {
         context: ContextId,
         extra: ContextId,
     ) -> impl Future<Output = Result<(), Self::Error>> + Send {
-        ready(self.commit(|state| state.attach(context, extra)))
+        ready(self.perform(|state| state.attach(context, extra)))
     }
 
     fn detach(
@@ -109,7 +109,21 @@ impl ContextStorage for MemoryStorage {
         context: ContextId,
         extra: ContextId,
     ) -> impl Future<Output = Result<(), Self::Error>> + Send {
-        ready(self.commit(|state| state.detach(context, extra)))
+        ready(self.perform(|state| state.detach(context, extra)))
+    }
+
+    fn commit(
+        &self,
+        writes: &[ContextWrite],
+    ) -> impl Future<Output = Result<Vec<ContextId>, Self::Error>> + Send {
+        let mut shared = self.lock();
+        let mut working = shared.state.clone();
+        let result = working.commit(writes).map(|(created, events)| {
+            shared.state = working;
+            shared.log.extend(events);
+            created
+        });
+        ready(result)
     }
 
     fn lookup(

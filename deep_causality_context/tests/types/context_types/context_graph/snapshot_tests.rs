@@ -241,3 +241,28 @@ fn test_a_removed_node_is_not_recorded() {
         (10, 30)
     );
 }
+
+#[test]
+fn test_a_parallel_edge_is_refused() {
+    // The in-memory graph accepts a second edge between the same two nodes; a store holds one
+    // relation per pair, so the snapshot refuses the graph rather than record a form restore
+    // refuses.
+    let mut ctx: UniformContext = Context::with_capacity(1, "parallel", 2);
+    let a = ctx
+        .add_node(Contextoid::new(1, ContextoidType::Datoid(Data::new(1, 1))))
+        .unwrap();
+    let b = ctx
+        .add_node(Contextoid::new(2, ContextoidType::Datoid(Data::new(2, 2))))
+        .unwrap();
+    ctx.add_edge(a, b, RelationKind::Datial).unwrap();
+    assert!(ctx.snapshot().is_ok());
+    ctx.add_edge(a, b, RelationKind::Spatial).unwrap();
+    assert_eq!(
+        ctx.snapshot().map(|_| ()),
+        Err(ProjectionError::Identity(1, "an edge is carried twice"))
+    );
+    // The opposite direction is a different relation and is recorded.
+    ctx.remove_edge(a, b).unwrap();
+    ctx.add_edge(b, a, RelationKind::Spatial).unwrap();
+    assert_eq!(ctx.snapshot().unwrap().edges().len(), 2);
+}

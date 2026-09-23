@@ -5,21 +5,49 @@
 
 use crate::{Context, ContextStore, Datable, SpaceTemporal, Spatial, StoreError, Temporal};
 use deep_causality_context_store::{
-    ContextSnapshot, ContextStorage, ContextoidRecord, DataRecord, ExtraContextSnapshot,
-    NodeRecord, Recordable, SpaceRecord, SpaceTimeRecord, Substrate, TimeRecord,
+    ContextSnapshot, ContextStorage, ContextoidId, ContextoidRecord, DataRecord,
+    ExtraContextSnapshot, NodeRecord, Recordable, SpaceRecord, SpaceTimeRecord, Substrate,
+    TimeRecord,
 };
 
 impl<S: ContextStorage> ContextStore<S> {
     /// Creates nodes through a substrate: every data payload that is not already a `Reference`
     /// is deposited and replaced by where it now lives before the store sees it, so a
-    /// value-typed context reaches a store that holds references alone.
+    /// value-typed context reaches a store that holds references alone. A node the store holds
+    /// already is not deposited again: when the value its reference resolves to is the value
+    /// given, the held record is passed on, so a repeated call is idempotent like `create_node`;
+    /// otherwise the record is passed on unchanged and the store refuses the conflict. A value
+    /// deposited before a refusal from the store stays in the substrate.
     pub async fn create_node_via<B: Substrate>(
         &self,
         substrate: &B,
         nodes: &[ContextoidRecord],
     ) -> Result<(), StoreError<S::Error, B::Error>> {
+        let ids: Vec<ContextoidId> = nodes.iter().map(ContextoidRecord::id).collect();
+        let held = self
+            .storage
+            .lookup(&ids)
+            .await
+            .map_err(StoreError::Storage)?;
         let mut deposited = Vec::with_capacity(nodes.len());
-        for record in nodes {
+        for (record, held) in nodes.iter().zip(held) {
+            if let Some(held) = held {
+                let same = match (held.node(), record.node()) {
+                    (
+                        NodeRecord::Data(DataRecord::Reference(reference)),
+                        NodeRecord::Data(value),
+                    ) if !matches!(value, DataRecord::Reference(_)) => {
+                        substrate
+                            .resolve(reference)
+                            .await
+                            .map_err(StoreError::Substrate)?
+                            == *value
+                    }
+                    _ => false,
+                };
+                deposited.push(if same { held } else { record.clone() });
+                continue;
+            }
             let node = match record.node() {
                 NodeRecord::Data(payload) if !matches!(payload, DataRecord::Reference(_)) => {
                     let reference = substrate

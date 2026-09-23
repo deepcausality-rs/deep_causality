@@ -13,14 +13,15 @@ use deep_causality_context_store::{DataRecord, ProjectionError};
 
 #[test]
 fn test_a_reference_is_a_reference() {
-    let reference = SubstrateRef::new("series".to_string(), "k".to_string());
+    let s = SubstrateRef::new("series".to_string(), "k".to_string());
+    let t = DataRecord::Reference(SubstrateRef::new("series".to_string(), "k".to_string()));
+    assert_eq!(s.to_record(), t);
+    assert_eq!(SubstrateRef::from_record(1, t.clone()), Ok(s.clone()));
+    // S -> T -> S and T -> S -> T.
+    assert_eq!(SubstrateRef::from_record(1, s.to_record()), Ok(s));
     assert_eq!(
-        reference.to_record(),
-        DataRecord::Reference(reference.clone())
-    );
-    assert_eq!(
-        SubstrateRef::from_record(1, DataRecord::Reference(reference.clone())),
-        Ok(reference)
+        SubstrateRef::from_record(1, t.clone()).map(|r| r.to_record()),
+        Ok(t)
     );
 }
 

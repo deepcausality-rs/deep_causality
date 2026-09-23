@@ -84,9 +84,10 @@ let branch_id = store.store_branch("branch", &branch).await?;
 
 `store_branch` links every node the store already holds under the same record, creates every node
 it does not hold, and creates under a fresh identifier every node the store holds under a different
-record. A stored branch is a record of a world, not a continuation of one; to keep exploring it,
-hydrate it. With a backend that streams, `subscribe` returns a context and the stream of changes to
-it, and `Context::apply` applies each event idempotently.
+record, all in one `commit`, so a refused store leaves nothing behind. A stored branch is a record
+of a world, not a continuation of one; to keep exploring it, hydrate it. With a backend that
+streams, `subscribe` returns a context and the stream of changes to it, and `Context::apply` applies
+each event idempotently.
 
 ### Payloads
 
@@ -141,7 +142,7 @@ names that shape, and `ContextStore::create_node_via` and `hydrate_via` move the
 ### Extra contexts
 
 An extra context has a name and an identifier. `extra_ctx_add_new(name, capacity, default)`
-allocates the identifier as one past the highest held; `extra_ctx_add_new_with_id` takes one, and
+allocates the identifier as one past the highest ever held; `extra_ctx_add_new_with_id` takes one, and
 refuses 0. In a store an extra is a separate container the base references, so a hydrated context
 holds each referenced container as an extra under that container's identifier and name, and a
 stored branch's extras become containers of their own.

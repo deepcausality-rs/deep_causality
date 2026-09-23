@@ -23,6 +23,11 @@ where
     /// by identifier, in canonical order (nodes by identifier, edges by `(from, to)`, extras by
     /// identifier). The index maps, the current extra context and the frozen form are run-time
     /// state and are not recorded.
+    ///
+    /// A relation exists once between two nodes in a store, and the in-memory graph accepts
+    /// parallel edges, so a graph holding two edges from one node to another is refused with
+    /// `ProjectionError::Identity(from, "an edge is carried twice")` rather than recorded in a
+    /// form `restore` refuses.
     pub fn snapshot(&self) -> Result<ContextSnapshot, ProjectionError> {
         let (nodes, edges) = Self::walk(&self.base_context)?;
         let mut extras = match &self.extra_contexts {
@@ -47,6 +52,7 @@ where
 
     /// Every live node with its record and every edge with its relation, by identifier. The
     /// graph's `get_edges` reports only edges to live nodes, so every target has an identifier.
+    /// A second edge between the same two nodes is refused.
     fn walk(
         graph: &UltraGraphWeighted<Contextoid<D, S, T, ST>, RelationKind>,
     ) -> Result<(Vec<ContextoidRecord>, Vec<RelationRecord>), ProjectionError> {
@@ -67,6 +73,15 @@ where
         }
         nodes.sort_by_key(ContextoidRecord::id);
         edges.sort_by_key(|edge| (edge.from(), edge.to()));
+        if let Some(twice) = edges
+            .windows(2)
+            .find(|pair| (pair[0].from(), pair[0].to()) == (pair[1].from(), pair[1].to()))
+        {
+            return Err(ProjectionError::Identity(
+                twice[0].from(),
+                "an edge is carried twice",
+            ));
+        }
         Ok((nodes, edges))
     }
 }

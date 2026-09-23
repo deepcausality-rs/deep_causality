@@ -252,7 +252,7 @@ fn test_apply_keeps_every_refusal() {
             context: c,
             extra: ContextRecord::new(d, "not d".to_string())
         }),
-        Err(MemoryStorageError::EventNotApplicable("ContextAttached"))
+        Err(MemoryStorageError::ContextConflict(d))
     );
     assert_eq!(
         apply(ContextEvent::ContextAttached {

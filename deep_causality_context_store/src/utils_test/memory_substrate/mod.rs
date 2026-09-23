@@ -11,7 +11,8 @@ mod substrate;
 
 /// An in-memory substrate: values keyed by the node that carries them, under the source `"memory"`.
 ///
-/// A second deposit under the same node replaces the first, because a node carries one value.
+/// A second deposit under the same node replaces the first and returns the same reference, as the
+/// `Substrate` contract requires: a node carries one value.
 pub struct MemorySubstrate {
     values: Mutex<BTreeMap<String, DataRecord>>,
 }

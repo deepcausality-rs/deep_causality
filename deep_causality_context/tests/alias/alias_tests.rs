@@ -15,7 +15,10 @@ use deep_causality_context::{
     TimeKind, TimeScale,
 };
 use deep_causality_context_store::utils_test::{MemoryStorage, block_on};
-use deep_causality_context_store::{ContextStorage, ContextoidId, DataRecord, NodeRecord};
+use deep_causality_context_store::{
+    ContextStorage, ContextoidId, ContextoidRecord, DataRecord, NodeRecord, SpaceRecord,
+    SpaceTimeRecord, TimeRecord,
+};
 
 #[test]
 fn test_the_alias_snapshots_without_a_substrate() {
@@ -24,10 +27,7 @@ fn test_the_alias_snapshots_without_a_substrate() {
     let mut ctx: SubstrateContext = SubstrateContext::with_capacity(1, "refs", 4);
     let reference = SubstrateRef::new("series".to_string(), "k".to_string());
     let nodes: [SubstrateContextoid; 4] = [
-        Contextoid::new(
-            n[0],
-            ContextoidType::Datoid(Data::new(n[0], reference.clone())),
-        ),
+        Contextoid::new(n[0], ContextoidType::Datoid(Data::new(n[0], reference))),
         Contextoid::new(
             n[1],
             ContextoidType::Spaceoid(SpaceKind::Ned(NedSpace::new(n[1], 1.0, 2.0, 3.0))),
@@ -56,11 +56,41 @@ fn test_the_alias_snapshots_without_a_substrate() {
         ctx.add_node(node).unwrap();
     }
     let snapshot = ctx.snapshot().unwrap();
-    assert_eq!(snapshot.nodes().len(), 4);
-    assert_eq!(
-        snapshot.nodes()[0].node(),
-        &NodeRecord::Data(DataRecord::Reference(reference))
-    );
+    let expected = [
+        ContextoidRecord::new(
+            n[0],
+            NodeRecord::Data(DataRecord::Reference(SubstrateRef::new(
+                "series".to_string(),
+                "k".to_string(),
+            ))),
+        ),
+        ContextoidRecord::new(
+            n[1],
+            NodeRecord::Space(SpaceRecord::Ned {
+                north: 1.0,
+                east: 2.0,
+                down: 3.0,
+            }),
+        ),
+        ContextoidRecord::new(
+            n[2],
+            NodeRecord::Time(TimeRecord::Discrete {
+                scale: TimeScale::Steps,
+                tick: 1,
+            }),
+        ),
+        ContextoidRecord::new(
+            n[3],
+            NodeRecord::SpaceTime(SpaceTimeRecord::Euclidean {
+                x: 1.0,
+                y: 2.0,
+                z: 3.0,
+                t: 4.0,
+                scale: TimeScale::Second,
+            }),
+        ),
+    ];
+    assert_eq!(snapshot.nodes(), &expected);
     assert_eq!(block_on(storage.create_node(snapshot.nodes())), Ok(()));
     assert_eq!(
         block_on(storage.lookup(&n))

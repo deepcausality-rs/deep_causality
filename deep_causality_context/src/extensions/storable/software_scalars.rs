@@ -7,7 +7,8 @@ use crate::Storable;
 use deep_causality_context_store::{ContextoidId, DataRecord, ProjectionError};
 use deep_causality_num::{BFloat16, Float106};
 
-/// Two `f64` halves under the names `hi` and `lo`, so the round trip is exact.
+/// Two `f64` halves under the names `hi` and `lo`, restored as they were written, so the round
+/// trip is exact for every representation, a non-finite half included.
 impl Storable for Float106 {
     fn to_record(&self) -> DataRecord {
         DataRecord::Fields(vec![
@@ -31,7 +32,7 @@ impl Storable for Float106 {
                 .map(|(_, value)| f64::from_record(id, value.clone()))
                 .unwrap_or(Err(ProjectionError::MissingField(id, name)))
         };
-        Ok(Float106::new(half("hi")?, half("lo")?))
+        Ok(Float106::from_raw(half("hi")?, half("lo")?))
     }
 }
 

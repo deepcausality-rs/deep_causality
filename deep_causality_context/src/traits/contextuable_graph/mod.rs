@@ -99,9 +99,9 @@ where
 {
     /// Creates a new, empty, named "extra" context and adds it to the collection.
     ///
-    /// The identifier is one more than the highest extra-context identifier held, and 1 when none
-    /// is held, so an identifier added through `extra_ctx_add_new_with_id` is never allocated
-    /// again.
+    /// The identifier is one more than the highest extra-context identifier this context has ever
+    /// held, and 1 when it has held none, so an identifier added through
+    /// `extra_ctx_add_new_with_id`, or one since removed, is never allocated again.
     ///
     /// # Parameters
     /// - `name`: The name the extra context is referenced by.

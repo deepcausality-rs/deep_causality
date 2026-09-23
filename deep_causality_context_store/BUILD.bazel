@@ -112,9 +112,47 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "types_container_ref_tests",
+    srcs = glob([
+        "tests/types/container_ref/*_tests.rs",
+    ]),
+    tags = [
+        "context_store_types_tests",
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_context_store",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
     name = "types_context_event_tests",
     srcs = glob([
         "tests/types/context_event/*_tests.rs",
+    ]),
+    tags = [
+        "context_store_types_tests",
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_context_store",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "types_context_write_tests",
+    srcs = glob([
+        "tests/types/context_write/*_tests.rs",
     ]),
     tags = [
         "context_store_types_tests",
