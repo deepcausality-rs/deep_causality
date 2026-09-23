@@ -10,6 +10,11 @@
 - **AND** `path().parent()` equals `std::env::temp_dir()`
 - **AND** `path()` is absolute
 
+#### Scenario: An existing path is never reused
+- **WHEN** the directory is created at a path where a directory or a file already exists
+- **THEN** creation returns an error of kind `AlreadyExists`
+- **AND** the existing entry is unchanged
+
 #### Scenario: Two directories never share a path
 - **WHEN** `TempDir::new()` is called 1000 times in one thread and the values are kept alive
 - **THEN** all 1000 paths are distinct
@@ -38,6 +43,16 @@ When a `TempDir` is dropped, it SHALL remove its directory together with every f
 - **AND** `path().parent()` equals `std::env::temp_dir()`
 - **AND** `path()` is absolute
 
+#### Scenario: An existing path is never opened
+- **WHEN** the file is created at a path where a file with content `b"keep"` already exists
+- **THEN** creation returns an error of kind `AlreadyExists`
+- **AND** the existing file still reads `b"keep"`
+
+#### Scenario: A planted symlink is never followed
+- **WHEN** the file is created on Unix at a path holding a symlink to a path that does not exist
+- **THEN** creation returns an error of kind `AlreadyExists`
+- **AND** the symlink target still does not exist
+
 #### Scenario: Two files never share a path
 - **WHEN** `NamedTempFile::new()` is called 1000 times in one thread and the values are kept alive
 - **THEN** all 1000 paths are distinct
@@ -47,7 +62,7 @@ When a `TempDir` is dropped, it SHALL remove its directory together with every f
 - **THEN** all 800 paths are distinct and every call succeeds
 
 ### Requirement: NamedTempFile::with_suffix ends the file name with the suffix
-`NamedTempFile::with_suffix(suffix)` SHALL create a file as `NamedTempFile::new()` does, and the file name SHALL end with `suffix` exactly. An empty suffix SHALL behave as `NamedTempFile::new()`. A suffix that contains a path separator, or that is `.` or `..`, SHALL be rejected with an `std::io::Error` of kind `InvalidInput`, and no file SHALL be created.
+`NamedTempFile::with_suffix(suffix)` SHALL create a file as `NamedTempFile::new()` does, and the file name SHALL end with `suffix` exactly. An empty suffix SHALL behave as `NamedTempFile::new()`. A suffix that contains `/` or `\` SHALL be rejected on every platform with an `std::io::Error` of kind `InvalidInput`, and no file SHALL be created. The suffix is appended to a non-empty generated stem, so no suffix without a separator can form a `.` or `..` path component.
 
 #### Scenario: A dotted suffix is the file extension
 - **WHEN** `NamedTempFile::with_suffix(".csv")` succeeds
@@ -67,9 +82,13 @@ When a `TempDir` is dropped, it SHALL remove its directory together with every f
 - **THEN** it returns an error of kind `InvalidInput`
 - **AND** no entry ending in `<marker>.csv` exists in `std::env::temp_dir()` or in its parent
 
-#### Scenario: A Windows separator and the dot names are rejected
-- **WHEN** `with_suffix` is called with `"a\\b"`, `"."` and `".."` in turn
-- **THEN** each call returns an error of kind `InvalidInput` on every platform
+#### Scenario: A Windows separator is rejected on every platform
+- **WHEN** `with_suffix` is called with `"a\\b.csv"`
+- **THEN** it returns an error of kind `InvalidInput`
+
+#### Scenario: Dot suffixes stay inside the temp directory
+- **WHEN** `with_suffix` is called with `"."` and then with `".."`
+- **THEN** each call succeeds, the file name ends with the suffix, and `path().parent()` equals `std::env::temp_dir()`
 
 ### Requirement: NamedTempFile accepts writes through std::io::Write
 `NamedTempFile` SHALL implement `std::io::Write`. Bytes written and flushed SHALL be readable by path through `std::fs::read`, in the order written, while the `NamedTempFile` is still alive.

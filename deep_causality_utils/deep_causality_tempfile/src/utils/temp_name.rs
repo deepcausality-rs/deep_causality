@@ -17,3 +17,69 @@ pub(crate) fn temp_path(suffix: &str) -> PathBuf {
     let _ = suffix;
     unimplemented!()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::temp_path;
+    use std::collections::HashSet;
+    use std::time::{SystemTime, UNIX_EPOCH};
+    use std::{env, process};
+
+    fn now_nanos() -> u128 {
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    }
+
+    // Splits `.dct-{pid}-{nanos}-{counter}` (no suffix) into its three numbers.
+    fn fields(name: &str) -> (u32, u128, u64) {
+        let rest = name.strip_prefix(".dct-").expect("prefix");
+        let parts: Vec<&str> = rest.split('-').collect();
+        assert_eq!(parts.len(), 3, "{name}");
+        (
+            parts[0].parse().unwrap(),
+            parts[1].parse().unwrap(),
+            parts[2].parse().unwrap(),
+        )
+    }
+
+    fn name_of(suffix: &str) -> String {
+        let p = temp_path(suffix);
+        assert_eq!(p.parent(), Some(env::temp_dir().as_path()));
+        p.file_name().unwrap().to_str().unwrap().to_string()
+    }
+
+    #[test]
+    fn name_carries_pid_clock_and_counter() {
+        let before = now_nanos();
+        let (pid, nanos, _) = fields(&name_of(""));
+        let after = now_nanos();
+        // Oracle: the process id from std, and the clock read by the test around the call.
+        assert_eq!(pid, process::id());
+        assert!(
+            before <= nanos && nanos <= after,
+            "{before} <= {nanos} <= {after}"
+        );
+    }
+
+    #[test]
+    fn counter_strictly_increases_within_a_thread() {
+        let (_, _, first) = fields(&name_of(""));
+        let (_, _, second) = fields(&name_of(""));
+        assert!(second > first, "{first} then {second}");
+    }
+
+    #[test]
+    fn suffix_is_appended_after_the_counter() {
+        let name = name_of(".sp3");
+        let stem = name.strip_suffix(".sp3").expect("suffix at the end");
+        fields(stem);
+    }
+
+    #[test]
+    fn thousand_back_to_back_paths_are_distinct() {
+        let paths: HashSet<_> = (0..1000).map(|_| temp_path(".csv")).collect();
+        assert_eq!(paths.len(), 1000);
+    }
+}

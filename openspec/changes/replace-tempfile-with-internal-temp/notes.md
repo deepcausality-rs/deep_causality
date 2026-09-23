@@ -19,3 +19,81 @@ change. `tests/config_tests.rs` is a second Cargo test binary whose whole body i
 Cargo runs every `tests/types` test twice. Bazel's 205 matches the authored count: 194 `#[test]`
 in `tests/`, 8 in `src/`, and 3 doc tests. This change compares each build system against its own
 baseline.
+
+## Phase 1 deviation — crate placement
+
+Phase 1 first placed the API inside `deep_causality_file`. It moved to the dedicated crate
+`deep_causality_utils/deep_causality_tempfile` before any test was written (commit `a6e3e314e`),
+and `deep_causality_file` was restored unchanged.
+
+## Phase 2 deviations — recorded
+
+1. **An internal seam was added after phase 1.** The requirement "creation SHALL fail rather than
+   open an existing path" cannot be reached through the public API: names contain the clock, so a
+   test cannot plant an entry at the next name. Without a seam, the phase-3 defect
+   `create(true)` in place of `create_new(true)` would survive. Both types therefore gained
+   `pub(crate) fn create_at(path: PathBuf)` with an `unimplemented!()` body, and the public
+   constructors will call it. The public surface is unchanged.
+2. **The dot-name suffix rule was removed from the spec.** Rejecting `.` or `..` as a suffix
+   protects nothing: the suffix is appended to a non-empty generated stem, so it can never form a
+   `.` or `..` path component. Only a separator can move the file out of the temp directory. The
+   spec, design D4, the rustdoc and the README now reject `/` and `\` only, and a test pins that
+   `.` and `..` are accepted and stay inside `temp_dir()`.
+3. **Drop tests fail inside the constructor, not on their assertion.** Design D7 expected them to
+   fail on "path still exists". They call `new()` first, which panics `unimplemented`. The empty
+   `Drop` bodies still matter, because a panicking `Drop` during unwind would abort the binary.
+4. **In-src probe cleanup uses a guard.** The first phase-2 runs panicked between planting a probe
+   entry and removing it, which left `dct-unit-<pid>-*` entries in `$TMPDIR`. A `Probe` guard now
+   removes the entry on drop, including during a panic. Leftovers from pids 92523, 93548 and 93643
+   remain in `$TMPDIR` pending the user's permission to remove them.
+
+## 2.1 Corner-case enumeration
+
+| Case | Test |
+|---|---|
+| empty suffix | `named_temp_file_tests::empty_suffix_creates_a_file_under_temp_dir` |
+| suffix without a dot | `named_temp_file_tests::undotted_suffix_is_appended_verbatim` |
+| dotted suffix → extension | `named_temp_file_tests::dotted_suffix_is_the_extension` |
+| `/` in suffix (escape attempt) | `named_temp_file_tests::slash_in_suffix_is_invalid_input_and_creates_nothing` |
+| `\` in suffix, every platform | `named_temp_file_tests::backslash_in_suffix_is_invalid_input_on_every_platform` |
+| `.` and `..` as the whole suffix | `named_temp_file_tests::dot_suffixes_stay_inside_temp_dir` |
+| suffix placed after the counter | `temp_name::tests::suffix_is_appended_after_the_counter` |
+| empty `TempDir` dropped | `temp_dir_drop_tests::drop_removes_an_empty_directory` |
+| nested populated `TempDir` dropped | `temp_dir_drop_tests::drop_removes_a_populated_tree` |
+| dir removed externally before drop | `temp_dir_drop_tests::drop_after_external_removal_does_not_panic` |
+| file removed externally before drop | `named_temp_file_drop_tests::drop_after_external_removal_does_not_panic` |
+| written file removed on drop | `named_temp_file_drop_tests::drop_removes_a_written_file` |
+| 1000 sequential dirs / files | `temp_dir_tests::thousand_directories_have_distinct_paths`, `named_temp_file_tests::thousand_files_have_distinct_paths` |
+| 1000 back-to-back names (clock ties) | `temp_name::tests::thousand_back_to_back_paths_are_distinct` |
+| 8×100 concurrent creations | `named_temp_file_tests::concurrent_creation_yields_distinct_paths` |
+| name fields: pid, clock, counter | `temp_name::tests::name_carries_pid_clock_and_counter`, `counter_strictly_increases_within_a_thread` |
+| consecutive writes | `named_temp_file_write_tests::consecutive_writes_append` |
+| write + flush read back | `named_temp_file_write_tests::written_bytes_are_read_back_by_path` |
+| overwrite through another writer | `named_temp_file_write_tests::another_writer_can_overwrite_the_path` |
+| existing file at the path | `named_temp_file::tests::create_at_existing_file_is_already_exists_and_keeps_content` |
+| planted dangling symlink (Unix) | `named_temp_file::tests::create_at_planted_symlink_is_already_exists_and_not_followed` |
+| existing dir / file at the dir path | `temp_dir::tests::create_at_existing_directory_is_already_exists`, `create_at_existing_file_is_already_exists` |
+| Unix modes | `named_temp_file_tests::file_mode_is_owner_read_write_only`, `temp_dir_tests::directory_mode_is_owner_only` |
+| fresh, empty, absolute, parent = `temp_dir()` | `temp_dir_tests::new_creates_an_empty_absolute_directory_under_temp_dir`, `named_temp_file_tests::new_creates_an_empty_absolute_file_under_temp_dir` |
+
+Error kinds constructed: `InvalidInput` (the two separator tests) and `AlreadyExists` (the four
+`create_at` tests). Each test asserts the kind.
+
+Independent oracles: the name-field test compares against `std::process::id()` and against clock
+readings the test takes before and after the call. Byte expectations are literals. Distinctness is
+checked with a `HashSet` count. No expectation is computed through the code under test.
+
+## 2.5 Failure run against the unimplemented API
+
+| Target | cargo | bazel |
+|---|---|---|
+| in-src (`lib_unit_tests`) | 0 passed, 10 failed | 0 passed, 10 failed |
+| `tests/` (5 files) | 0 passed, 21 failed | 0 passed, 21 failed |
+| doc tests | 0 passed, 2 failed | 0 passed, 2 failed |
+| **total** | **33 failed** | **33 failed** |
+
+Authored count: 10 `#[test]` in `src/`, 21 in `tests/` and 2 doc examples, 33 in total. Every panic
+raised in `src/` is `not implemented` (40 panics under cargo, counting the 8 worker threads of the
+concurrent test). The one panic raised in a test file is `h.join().unwrap()` in
+`concurrent_creation_yields_distinct_paths`, which passes on a worker thread's `unimplemented`
+panic.

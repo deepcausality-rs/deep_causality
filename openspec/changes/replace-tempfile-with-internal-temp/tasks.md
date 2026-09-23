@@ -30,22 +30,22 @@ All paths in groups 1–5 are relative to `deep_causality_utils/deep_causality_t
 
 ## 2. Phase 2 — Full suite, observed failing
 
-- [ ] 2.1 Write the corner-case enumeration into `notes.md` and name the test that covers each
-      case. The cases are: an empty suffix; a suffix without a dot; `/`, `\`, `.` and `..` in the
-      suffix; an empty `TempDir`; a nested populated `TempDir`; an entry removed externally before
+- [x] 2.1 Write the corner-case enumeration into `notes.md` and name the test that covers each
+      case. The cases are: an empty suffix; a suffix without a dot; `/` and `\` in the suffix; `.` and `..` as
+      the suffix; an empty `TempDir`; a nested populated `TempDir`; an entry removed externally before
       drop; 1000 sequential creations; 8×100 concurrent creations; consecutive writes; an overwrite
       through another writer; Unix modes.
-- [ ] 2.2 Add `tests/types/temp_dir/temp_dir_tests.rs` and `temp_dir_drop_tests.rs`, one test per
+- [x] 2.2 Add `tests/types/temp_dir/temp_dir_tests.rs` and `temp_dir_drop_tests.rs`, one test per
       `TempDir` scenario in `specs/tempfile-crate/spec.md`.
-- [ ] 2.3 Add `tests/types/named_temp_file/named_temp_file_tests.rs`,
+- [x] 2.3 Add `tests/types/named_temp_file/named_temp_file_tests.rs`,
       `named_temp_file_write_tests.rs` and `named_temp_file_drop_tests.rs`, covering every
       `NamedTempFile` scenario, the `InvalidInput` variant (asserting the kind, not only
       `is_err()`) and the Unix mode scenarios under `#[cfg(unix)]`. Expected byte strings are
       literals.
-- [ ] 2.4 Register the test modules through `tests/mod.rs` → `tests/types/mod.rs` → the two
+- [x] 2.4 Register the test modules through `tests/mod.rs` → `tests/types/mod.rs` → the two
       directory `mod.rs` files. In `BUILD.bazel`, add `rust_test_suite` targets for
       `tests/types/temp_dir/*_tests.rs` and `tests/types/named_temp_file/*_tests.rs`.
-- [ ] 2.5 Run the suite under cargo and Bazel. Confirm that every new test fails with the
+- [x] 2.5 Run the suite under cargo and Bazel. Confirm that every new test fails with the
       `unimplemented` panic, or on the drop assertion (D7). Record the output and the test count in
       `notes.md`.
 
@@ -54,7 +54,7 @@ All paths in groups 1–5 are relative to `deep_causality_utils/deep_causality_t
 - [ ] 3.1 Write a throwaway correct implementation, then introduce each defect one at a time and
       confirm that a test whose subject is that behaviour fails:
       the counter not incremented; the pid or nanos term dropped; the suffix prepended rather than
-      appended; the separator check removed; the `.`/`..` check removed; `create(true)` in place of
+      appended; the `/` check removed; the `\` check removed; `create(true)` in place of
       `create_new(true)`; the parent set to the current directory rather than `temp_dir()`; `remove_dir`
       in place of `remove_dir_all`; the drop removal skipped; `unwrap()` on the drop removal; mode
       `0o644` / `0o755`; `write` returning `Ok(0)`; `flush` as a no-op on a `BufWriter`.

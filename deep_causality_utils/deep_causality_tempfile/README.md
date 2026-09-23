@@ -45,5 +45,5 @@ assert_eq!(std::fs::read(f.path()).unwrap(), b"a,b\n1,2\n");
 ```
 
 Creation never opens a path that already exists. On Unix, files are created with mode `0o600` and
-directories with mode `0o700`, before the umask applies. A suffix that contains `/` or `\`, or that
-is `.` or `..`, is rejected with `ErrorKind::InvalidInput`.
+directories with mode `0o700`, before the umask applies. A suffix that contains `/` or `\` is rejected
+with `ErrorKind::InvalidInput`.

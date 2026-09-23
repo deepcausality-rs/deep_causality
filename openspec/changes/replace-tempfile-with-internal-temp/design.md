@@ -77,7 +77,7 @@ would drop the kind. Call sites keep `.unwrap()` and `.expect("tempdir")` unchan
 ### D4 — `with_suffix` replaces `Builder`
 `NamedTempFile::with_suffix(&str)` replaces the one `Builder` chain in use, and `tempfile` offers a
 function with the same name. The suffix is rejected with `InvalidInput` when it contains `/` or `\`
-on any platform, or when it equals `.` or `..`. Without that check, `"/../x"` would create the file
+on any platform. Without that check, `"/../x"` would create the file
 outside the temp directory.
 
 ### D5 — Unix permissions 0o600 / 0o700

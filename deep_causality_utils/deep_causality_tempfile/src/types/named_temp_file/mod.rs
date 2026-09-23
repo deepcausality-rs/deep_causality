@@ -50,7 +50,7 @@ impl NamedTempFile {
     /// # Errors
     ///
     /// Returns `ErrorKind::InvalidInput`, and creates nothing, when `suffix` contains `/` or
-    /// `\`, or equals `.` or `..`. Otherwise returns the `std::io::Error` of the failed
+    /// `\`. Otherwise returns the `std::io::Error` of the failed
     /// file creation.
     pub fn with_suffix(suffix: &str) -> io::Result<NamedTempFile> {
         let _ = suffix;
@@ -61,5 +61,63 @@ impl NamedTempFile {
     pub fn path(&self) -> &Path {
         let _ = (&self.path, &self.file);
         unimplemented!()
+    }
+
+    /// Creates the file at `path`, failing with `ErrorKind::AlreadyExists` if any entry is there,
+    /// including a symlink.
+    pub(crate) fn create_at(path: PathBuf) -> io::Result<NamedTempFile> {
+        let _ = path;
+        unimplemented!()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::NamedTempFile;
+    use std::io::ErrorKind;
+    use std::path::PathBuf;
+    use std::{env, fs, process};
+
+    // A path unique to one test in this process. The guard removes whatever the test planted
+    // there, including when the test panics.
+    struct Probe(PathBuf);
+
+    impl Drop for Probe {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.0);
+            let _ = fs::remove_file(&self.0);
+        }
+    }
+
+    fn probe(name: &str) -> Probe {
+        Probe(env::temp_dir().join(format!("dct-unit-{}-file-{name}", process::id())))
+    }
+
+    #[test]
+    fn create_at_fresh_path_creates_that_file() {
+        let p = probe("fresh");
+        let f = NamedTempFile::create_at(p.0.clone()).unwrap();
+        assert_eq!(f.path(), p.0.as_path());
+        assert!(p.0.is_file());
+    }
+
+    #[test]
+    fn create_at_existing_file_is_already_exists_and_keeps_content() {
+        let p = probe("existing");
+        fs::write(&p.0, b"keep").unwrap();
+        let err = NamedTempFile::create_at(p.0.clone()).unwrap_err();
+        assert_eq!(err.kind(), ErrorKind::AlreadyExists);
+        assert_eq!(fs::read(&p.0).unwrap(), b"keep");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn create_at_planted_symlink_is_already_exists_and_not_followed() {
+        let link = probe("link");
+        let target = probe("link_target");
+        std::os::unix::fs::symlink(&target.0, &link.0).unwrap();
+        let err = NamedTempFile::create_at(link.0.clone()).unwrap_err();
+        assert_eq!(err.kind(), ErrorKind::AlreadyExists);
+        assert!(!target.0.exists());
     }
 }

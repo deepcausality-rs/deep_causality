@@ -44,4 +44,61 @@ impl TempDir {
         let _ = &self.path;
         unimplemented!()
     }
+
+    /// Creates the directory at `path`, failing with `ErrorKind::AlreadyExists` if any entry is
+    /// there.
+    pub(crate) fn create_at(path: PathBuf) -> io::Result<TempDir> {
+        let _ = path;
+        unimplemented!()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::TempDir;
+    use std::io::ErrorKind;
+    use std::path::PathBuf;
+    use std::{env, fs, process};
+
+    // A path unique to one test in this process. The guard removes whatever the test planted
+    // there, including when the test panics.
+    struct Probe(PathBuf);
+
+    impl Drop for Probe {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.0);
+            let _ = fs::remove_file(&self.0);
+        }
+    }
+
+    fn probe(name: &str) -> Probe {
+        Probe(env::temp_dir().join(format!("dct-unit-{}-dir-{name}", process::id())))
+    }
+
+    #[test]
+    fn create_at_fresh_path_creates_that_directory() {
+        let p = probe("fresh");
+        let dir = TempDir::create_at(p.0.clone()).unwrap();
+        assert_eq!(dir.path(), p.0.as_path());
+        assert!(p.0.is_dir());
+    }
+
+    #[test]
+    fn create_at_existing_directory_is_already_exists() {
+        let p = probe("existing_dir");
+        fs::create_dir(&p.0).unwrap();
+        fs::write(p.0.join("keep"), b"keep").unwrap();
+        let err = TempDir::create_at(p.0.clone()).unwrap_err();
+        assert_eq!(err.kind(), ErrorKind::AlreadyExists);
+        assert_eq!(fs::read(p.0.join("keep")).unwrap(), b"keep");
+    }
+
+    #[test]
+    fn create_at_existing_file_is_already_exists() {
+        let p = probe("existing_file");
+        fs::write(&p.0, b"keep").unwrap();
+        let err = TempDir::create_at(p.0.clone()).unwrap_err();
+        assert_eq!(err.kind(), ErrorKind::AlreadyExists);
+        assert_eq!(fs::read(&p.0).unwrap(), b"keep");
+    }
 }
