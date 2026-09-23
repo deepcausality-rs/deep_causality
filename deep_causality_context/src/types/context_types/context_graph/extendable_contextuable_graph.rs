@@ -4,6 +4,7 @@
  */
 
 use crate::ContextId;
+use crate::types::context_types::context_graph::extra_context::ExtraContext;
 use ultragraph::*;
 
 use crate::{
@@ -19,20 +20,33 @@ where
     T: Temporal + Clone,
     ST: SpaceTemporal + Clone,
 {
-    fn extra_ctx_add_new(&mut self, capacity: usize, default: bool) -> ContextId {
-        // This now acts as a wrapper, generating a new ID and calling the specific implementation.
-        let new_id = ContextId::from(self.number_of_extra_contexts) + 1;
-        self.extra_ctx_add_new_with_id(new_id, capacity, default)
-            .expect("Failed to add new extra context with generated ID");
+    fn extra_ctx_add_new(&mut self, name: &str, capacity: usize, default: bool) -> ContextId {
+        // One past the highest identifier held, so an identifier added explicitly, or restored
+        // from a store, is never allocated again. The call below cannot fail: the identifier is
+        // fresh and never 0.
+        let new_id = self
+            .extra_contexts
+            .as_ref()
+            .and_then(|extra_contexts| extra_contexts.keys().max().copied())
+            .map_or(1, |highest| highest + 1);
+        self.extra_ctx_add_new_with_id(new_id, name, capacity, default)
+            .expect("a fresh non-zero identifier is never refused");
         new_id
     }
 
     fn extra_ctx_add_new_with_id(
         &mut self,
         id: ContextId,
+        name: &str,
         capacity: usize,
         default: bool,
     ) -> Result<(), ContextIndexError> {
+        if id == 0 {
+            return Err(ContextIndexError(
+                "Extra context ID 0 is reserved for 'no extra context is current'.".to_string(),
+            ));
+        }
+
         // Ensure the extra_contexts map exists, creating it if it's the first time.
         let extra_contexts = self.extra_contexts.get_or_insert_with(Default::default);
 
@@ -44,16 +58,20 @@ where
         }
 
         // Create and insert the new context graph.
-        let new_extra_context = UltraGraphWeighted::with_capacity(capacity, None);
-        extra_contexts.insert(id, new_extra_context);
+        extra_contexts.insert(id, ExtraContext::new(name, capacity));
 
-        // Update metadata.
-        self.number_of_extra_contexts += 1;
         if default {
             self.extra_context_id = id;
         }
 
         Ok(())
+    }
+
+    fn extra_ctx_get_name(&self, id: ContextId) -> Option<&str> {
+        self.extra_contexts
+            .as_ref()?
+            .get(&id)
+            .map(|extra| extra.name.as_str())
     }
 
     fn extra_ctx_check_exists(&self, idx: ContextId) -> bool {
@@ -95,7 +113,7 @@ where
     ) -> Result<usize, ContextIndexError> {
         if let Some(extra_contexts) = self.extra_contexts.as_mut() {
             if let Some(current_ctx) = extra_contexts.get_mut(&self.extra_context_id) {
-                let index = match current_ctx.add_node(value) {
+                let index = match current_ctx.graph.add_node(value) {
                     Ok(index) => index,
                     Err(e) => {
                         return Err(ContextIndexError(e.to_string()));
@@ -119,7 +137,7 @@ where
     fn extra_ctx_contains_node(&self, index: usize) -> bool {
         if let Some(extra_contexts) = self.extra_contexts.as_ref() {
             if let Some(current_ctx) = extra_contexts.get(&self.extra_context_id) {
-                current_ctx.contains_node(index)
+                current_ctx.graph.contains_node(index)
             } else {
                 false
             }
@@ -134,7 +152,7 @@ where
     ) -> Result<&Contextoid<D, S, T, ST>, ContextIndexError> {
         if let Some(extra_contexts) = self.extra_contexts.as_ref() {
             if let Some(current_ctx) = extra_contexts.get(&self.extra_context_id) {
-                current_ctx.get_node(index).ok_or_else(|| {
+                current_ctx.graph.get_node(index).ok_or_else(|| {
                     ContextIndexError(format!(
                         "Node with index {} not found in current extra context with ID {}.",
                         index, self.extra_context_id
@@ -157,6 +175,7 @@ where
         if let Some(extra_contexts) = self.extra_contexts.as_mut() {
             if let Some(current_ctx) = extra_contexts.get_mut(&self.extra_context_id) {
                 current_ctx
+                    .graph
                     .remove_node(index)
                     .map_err(|e| ContextIndexError(e.to_string()))
             } else {
@@ -181,6 +200,7 @@ where
         if let Some(extra_contexts) = self.extra_contexts.as_mut() {
             if let Some(current_ctx) = extra_contexts.get_mut(&self.extra_context_id) {
                 current_ctx
+                    .graph
                     .add_edge(a, b, weight)
                     .map_err(|e| ContextIndexError(e.to_string()))
             } else {
@@ -204,7 +224,7 @@ where
                 // Now that we have a valid context, we can check for the edge.
                 // The underlying ultragraph's `contains_edge` is robust and will
                 // return false if the nodes don't exist.
-                current_ctx.contains_edge(a, b)
+                current_ctx.graph.contains_edge(a, b)
             } else {
                 // The map exists, but the current ID is invalid.
                 false
@@ -219,6 +239,7 @@ where
         self.extra_contexts
             .as_ref()?
             .get(&self.extra_context_id)?
+            .graph
             .get_edges(a)?
             .into_iter()
             .find(|(target, _)| *target == b)
@@ -232,7 +253,7 @@ where
                 // We have a valid context, now check the nodes.
 
                 // 2. Test if node `a` exists
-                if !current_ctx.contains_node(a) {
+                if !current_ctx.graph.contains_node(a) {
                     return Err(ContextIndexError(format!(
                         "Cannot remove edge: source node with index {} does not exist in current extra context with ID {}.",
                         a, self.extra_context_id
@@ -240,7 +261,7 @@ where
                 }
 
                 // 3. Test if node `b` exists
-                if !current_ctx.contains_node(b) {
+                if !current_ctx.graph.contains_node(b) {
                     return Err(ContextIndexError(format!(
                         "Cannot remove edge: target node with index {} does not exist in current extra context with ID {}.",
                         b, self.extra_context_id
@@ -250,8 +271,7 @@ where
                 // 4. Try to remove the edge.
                 // At this point, we know the nodes exist, so an error from the underlying
                 // graph call means the edge itself does not exist.
-                current_ctx
-                    .remove_edge(a, b)
+                current_ctx.graph.remove_edge(a, b)
                     .map_err(|_| ContextIndexError(format!(
                         "Cannot remove edge: an edge from node {} to node {} does not exist in current extra context with ID {}.",
                         a, b, self.extra_context_id
@@ -274,7 +294,7 @@ where
     fn extra_ctx_size(&self) -> Result<usize, ContextIndexError> {
         if let Some(extra_contexts) = self.extra_contexts.as_ref() {
             if let Some(current_ctx) = extra_contexts.get(&self.extra_context_id) {
-                Ok(current_ctx.number_nodes())
+                Ok(current_ctx.graph.number_nodes())
             } else {
                 Err(ContextIndexError(format!(
                     "Cannot get size. Current extra context with ID {} not found.",
@@ -291,7 +311,7 @@ where
     fn extra_ctx_is_empty(&self) -> Result<bool, ContextIndexError> {
         if let Some(extra_contexts) = self.extra_contexts.as_ref() {
             if let Some(current_ctx) = extra_contexts.get(&self.extra_context_id) {
-                Ok(current_ctx.is_empty())
+                Ok(current_ctx.graph.is_empty())
             } else {
                 Err(ContextIndexError(format!(
                     "Cannot check if empty. Current extra context with ID {} not found.",
@@ -308,7 +328,7 @@ where
     fn extra_ctx_node_count(&self) -> Result<usize, ContextIndexError> {
         if let Some(extra_contexts) = self.extra_contexts.as_ref() {
             if let Some(current_ctx) = extra_contexts.get(&self.extra_context_id) {
-                Ok(current_ctx.number_nodes())
+                Ok(current_ctx.graph.number_nodes())
             } else {
                 Err(ContextIndexError(format!(
                     "Cannot get node count. Current extra context with ID {} not found.",
@@ -325,7 +345,7 @@ where
     fn extra_ctx_edge_count(&self) -> Result<usize, ContextIndexError> {
         if let Some(extra_contexts) = self.extra_contexts.as_ref() {
             if let Some(current_ctx) = extra_contexts.get(&self.extra_context_id) {
-                Ok(current_ctx.number_edges())
+                Ok(current_ctx.graph.number_edges())
             } else {
                 Err(ContextIndexError(format!(
                     "Cannot get edge count. Current extra context with ID {} not found.",

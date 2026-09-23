@@ -347,15 +347,15 @@ fn test_clone_is_independent_of_the_original() {
 #[test]
 fn test_clone_carries_the_extra_contexts() {
     let mut context = get_context();
-    let extra_id = context.extra_ctx_add_new(10, true);
+    let extra_id = context.extra_ctx_add_new("extra", 10, true);
     let node = context
         .extra_ctx_add_node(Contextoid::new(9, ContextoidType::Root(Root::new(9))))
         .expect("failed to add node to the extra context");
 
     let cloned = context.clone();
 
-    // `extra_contexts`, `number_of_extra_contexts` and `extra_context_id` are three separate
-    // fields. A clone that dropped any one of them reports a different answer here.
+    // `extra_contexts` and `extra_context_id` are two separate fields. A clone that dropped
+    // either of them reports a different answer here.
     assert!(cloned.extra_ctx_check_exists(extra_id));
     assert_eq!(cloned.extra_ctx_get_current_id(), extra_id);
     assert_eq!(cloned.extra_ctx_node_count().unwrap(), 1);

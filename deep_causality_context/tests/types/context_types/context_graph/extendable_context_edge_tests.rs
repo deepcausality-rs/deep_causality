@@ -14,7 +14,7 @@ fn test_extra_ctx_add_edge() {
     let capacity = 100;
     let default = true;
 
-    let ctx_id = context.extra_ctx_add_new(capacity, default);
+    let ctx_id = context.extra_ctx_add_new("extra", capacity, default);
     assert_eq!(ctx_id, 1);
 
     let exists = context.extra_ctx_check_exists(ctx_id);
@@ -62,7 +62,7 @@ fn test_extra_ctx_add_edge_err() {
     let capacity = 100;
     let default = true;
 
-    let ctx_id = context.extra_ctx_add_new(capacity, default);
+    let ctx_id = context.extra_ctx_add_new("extra", capacity, default);
     assert_eq!(ctx_id, 1);
 
     let exists = context.extra_ctx_check_exists(ctx_id);
@@ -123,7 +123,7 @@ fn test_extra_ctx_contains_edge() {
     let capacity = 100;
     let default = true;
 
-    let ctx_id = context.extra_ctx_add_new(capacity, default);
+    let ctx_id = context.extra_ctx_add_new("extra", capacity, default);
     assert_eq!(ctx_id, 1);
 
     let exists = context.extra_ctx_check_exists(ctx_id);
@@ -174,7 +174,7 @@ fn test_extra_ctx_contains_edge_err() {
     let capacity = 100;
     let default = true;
 
-    let ctx_id = context.extra_ctx_add_new(capacity, default);
+    let ctx_id = context.extra_ctx_add_new("extra", capacity, default);
     assert_eq!(ctx_id, 1);
 
     let exists = context.extra_ctx_check_exists(ctx_id);
@@ -251,7 +251,9 @@ fn test_extra_ctx_contains_edge_with_invalid_current_id() {
     // This test hits the inner `else` branch.
     let mut context = get_context();
     // Create an extra context but do NOT set it as the current one.
-    context.extra_ctx_add_new_with_id(1, 10, false).unwrap();
+    context
+        .extra_ctx_add_new_with_id(1, "extra", 10, false)
+        .unwrap();
 
     // The current_id is still 0, which is not a valid key in the map.
     assert!(!context.extra_ctx_contains_edge(0, 1));
@@ -261,7 +263,9 @@ fn test_extra_ctx_contains_edge_with_invalid_current_id() {
 fn test_extra_ctx_contains_edge_happy_path_and_no_edge() {
     // This test hits the main logic path.
     let mut context = get_context();
-    context.extra_ctx_add_new_with_id(1, 10, true).unwrap();
+    context
+        .extra_ctx_add_new_with_id(1, "extra", 10, true)
+        .unwrap();
 
     let id = 1;
     let c_1 = Contextoid::new(id, ContextoidType::Root(Root::new(id)));
@@ -299,7 +303,7 @@ fn test_extra_ctx_remove_edge() {
     let capacity = 10;
     let default = true;
 
-    let ctx_id = context.extra_ctx_add_new(capacity, default);
+    let ctx_id = context.extra_ctx_add_new("extra", capacity, default);
     assert_eq!(ctx_id, 1);
 
     let exists = context.extra_ctx_check_exists(ctx_id);
@@ -380,7 +384,7 @@ fn test_extra_ctx_remove_edge_err() {
     let capacity = 10;
     let default = true;
 
-    let ctx_id = context.extra_ctx_add_new(capacity, default);
+    let ctx_id = context.extra_ctx_add_new("extra", capacity, default);
     assert_eq!(ctx_id, 1);
 
     let exists = context.extra_ctx_check_exists(ctx_id);
@@ -493,7 +497,7 @@ fn test_extra_ctx_remove_edge_err() {
 #[test]
 fn test_extra_ctx_edge_relation_survives_storage() {
     let mut context = get_context();
-    let ctx_id = context.extra_ctx_add_new(10, true);
+    let ctx_id = context.extra_ctx_add_new("extra", 10, true);
     assert!(context.extra_ctx_check_exists(ctx_id));
 
     let a = context
@@ -538,7 +542,7 @@ fn test_extra_ctx_get_edge_with_invalid_current_id() {
     // with `default = false` leaves the current id at 0, which is never a context id.
     let mut context = get_context();
     context
-        .extra_ctx_add_new_with_id(1, 10, false)
+        .extra_ctx_add_new_with_id(1, "extra", 10, false)
         .expect("failed to create the extra context");
     assert!(context.extra_ctx_check_exists(1));
     assert_eq!(context.extra_ctx_get_current_id(), 0);
@@ -552,7 +556,7 @@ fn test_extra_ctx_get_edge_after_the_current_context_is_unset() {
     // under context 1, so a lookup that ignored the current id — by taking the only context, or
     // the first one — would still find it. It must report nothing instead.
     let mut context = get_context();
-    let ctx_id = context.extra_ctx_add_new(10, true);
+    let ctx_id = context.extra_ctx_add_new("extra", 10, true);
 
     let a = context
         .extra_ctx_add_node(Contextoid::new(1, ContextoidType::Root(Root::new(1))))
@@ -588,7 +592,7 @@ fn test_extra_ctx_get_edge_with_unknown_source_node() {
     // The source index is out of the extra context's range. `get_edges` returns nothing for it,
     // and the lookup has to pass that on rather than index into the edge list.
     let mut context = get_context();
-    context.extra_ctx_add_new(10, true);
+    context.extra_ctx_add_new("extra", 10, true);
 
     let a = context
         .extra_ctx_add_node(Contextoid::new(1, ContextoidType::Root(Root::new(1))))

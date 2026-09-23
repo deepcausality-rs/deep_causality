@@ -83,35 +83,35 @@ audit, implementation, mutants. The record is `tdd-notes.md` beside this file.
 - [x] 5.1 `src/utils_test/block_on.rs`: `block_on<F: Future>(F) -> F::Output` polling on
       `Waker::noop()`; test with `ready`, a once-pending and a five-times-pending future. Pulled
       forward into group 4 because the trait tests drive futures with it
-- [ ] 5.2 `src/utils_test/memory_storage/`: `MemoryStorage` holding `Mutex<MemoryState>` and the
-      event log; `MemoryState` as a fold over `ContextEvent` with the reserve counter, nodes,
-      edges, containers (name, links, references); `MemoryStorageError` with one variant per
-      refusal
-- [ ] 5.3 Implement `ContextStorage` for `MemoryStorage`: every operation validates, mutates,
+- [x] 5.2 `src/utils_test/memory_storage/`: `MemoryStorage` holding `Arc<Mutex<Shared>>`, the state
+      and the event log; `MemoryState` as a fold over `ContextEvent` with the reserve counter, nodes,
+      edges, containers (name, links, references); `MemoryStorageError` in `src/errors/` with one
+      variant per refusal (nine), `MemorySubstrateError` beside it
+- [x] 5.3 Implement `ContextStorage` for `MemoryStorage`: every operation validates, mutates,
       appends its events, and returns `ready(...)`; `hydrate` assembles the container and its
       referenced containers one level deep, ordering nodes and edges canonically
-- [ ] 5.4 Implement `ContextStorageStream` for `MemoryStorage`: `MemoryEvents` over
+- [x] 5.4 Implement `ContextStorageStream` for `MemoryStorage`: `MemoryEvents` over
       `Arc<Mutex<…>>` and a position, filtered to the slice's container and the containers it
       referenced at subscription; `subscribe` with replay from a cursor; `apply` dispatching to the
       operation the event names; `apply_batch` on a cloned state committed on success
-- [ ] 5.5 `src/utils_test/memory_substrate.rs`: `MemorySubstrate` implementing `Substrate` over a
+- [x] 5.5 `src/utils_test/memory_substrate.rs`: `MemorySubstrate` implementing `Substrate` over a
       map keyed by `key`, `source` fixed to `"memory"`
-- [ ] 5.6 Tests under `tests/utils_test/`: one test per invariant in `context-storage-contract`
+- [x] 5.6 Tests under `tests/utils_test/`: one test per invariant in `context-storage-contract`
       including the three reference scenarios, one per refusal variant, subscription with and
       without a cursor, the fixed-scope scenarios, the atomic batch, the stream ending, the
       substrate round trip and refusals. Register the `utils_tests` suite in `BUILD.bazel`
 
 ## 6. Named extra contexts in the context crate
 
-- [ ] 6.1 `context_graph/extra_context.rs`: a private `ExtraContext { name, graph }`; the
+- [x] 6.1 `context_graph/extra_context.rs`: a private `ExtraContext { name, graph }`; the
       extra-context map holds it
-- [ ] 6.2 Change `ExtendableContextuableGraph`: `extra_ctx_add_new(name, capacity, default)`,
+- [x] 6.2 Change `ExtendableContextuableGraph`: `extra_ctx_add_new(name, capacity, default)`,
       `extra_ctx_add_new_with_id(id, name, capacity, default)` refusing identifier 0,
       `extra_ctx_get_name(id) -> Option<&str>`; update the implementation and the four test files
       that call the two constructors
-- [ ] 6.3 Change `extra_ctx_add_new` to allocate `max held extra identifier + 1`, 1 when none;
+- [x] 6.3 Change `extra_ctx_add_new` to allocate `max held extra identifier + 1`, 1 when none;
       correct any existing test that asserted the count-based number after an explicit insertion
-- [ ] 6.4 Tests: every scenario in `context-named-extra-contexts`
+- [x] 6.4 Tests: every scenario in `context-named-extra-contexts`
 
 ## 7. `Storable` and the projection
 

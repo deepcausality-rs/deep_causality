@@ -115,3 +115,156 @@ that do not compile: inside a `const fn` body (the getters of the record structs
 `ProjectionError` constructors, `ContextRecord::id`), or on a type with no `Default`
 (`ProjectionErrorEnum`, `ContextRecord`, `ContextoidRecord`, `NodeRecord`,
 `ExtraContextSnapshot`). No survivor, so no entry was added to `.cargo/mutants.toml`.
+
+## Task group 5: the in-memory backend
+
+### Phase 1: API-only
+
+`MemoryStorage`, `MemoryState`, `MemoryEvents`, `MemorySubstrate`, their trait implementations
+and the two error types were landed with every signature and `unimplemented!()` bodies (a
+future-returning body as `ready(unimplemented!())`). The error types are declarations with no
+logic, like the record enums of groups 3 and 4, and were complete at this phase. The crate built.
+
+### Phase 2: the suite, observed failing
+
+Ten new test files, 50 test functions, mirroring `src/utils_test/` and `src/errors/`, each with
+its corner-case table and provenance note. Against the API-only crate:
+
+```
+test result: FAILED. 109 passed; 44 failed   (153 in all; 103 from groups 3 and 4)
+```
+
+All 44 failures are the `not implemented` panic from `deep_causality_context_store/src/`. The six
+new tests that pass are the two error types' constructor and display tests, which exercise no
+body reduced in phase 1.
+
+Every `MemoryStorageErrorEnum` variant is provoked through the public API: `UnknownContext`,
+`UnknownNode`, `UnknownEdge`, `IdentityNotReserved`, `NodeConflict`, `EdgeConflict`,
+`SelfReference`, `EventNotApplicable`, `UnknownCursor`, in `context_storage_tests.rs` and
+`context_storage_stream_tests.rs`; both `MemorySubstrateErrorEnum` variants in
+`substrate_tests.rs`.
+
+### Phase 3: the defect audit
+
+Twelve defects, injected one at a time into the implementation and restored byte for byte:
+
+| Class | Injection | Subject test | Result |
+|---|---|---|---|
+| off-by-one | `reserve` hands out one identifier short | `test_reserve_hands_out_fresh_identifiers` | rejected, 27 |
+| guard removed | `create_node` accepts unreserved identifiers | `test_an_identifier_not_from_a_reserve_is_refused` | rejected, 3 |
+| flipped comparison | equal record conflicts, different passes | `test_a_node_is_immutable_under_its_name` | rejected, 2 |
+| early return | retracted container leaves dangling references | `test_a_retracted_container_leaves_no_dangling_reference` | **missed**: `hydrate` filters unknown references, so the dangling entry was invisible there |
+| constant changed | identifiers start at 0 | `test_reserve_hands_out_fresh_identifiers` | rejected, 3 |
+| guard loosened | `hydrate` keeps edges with one end outside | `test_hydrate_holds_only_edges_among_members` | rejected, 2 |
+| value replaced | `scope` drops the references | `test_scope_holds_the_references_at_subscription` | rejected, 3 |
+| off-by-one | `apply` returns the cursor before its event | `test_cursors_are_log_positions` | rejected, 2 |
+| guard removed | the stream ignores its scope | `test_membership_events_of_other_containers_are_withheld` | rejected, 3 |
+| early return | a failed batch commits its prefix | `test_apply_batch_is_atomic` | rejected, 1 |
+| off-by-one | replay includes the event at the cursor | `test_a_subscription_resumes_from_a_cursor` | rejected, 5 |
+| guard removed | `resolve` ignores the reference's source | `test_an_unknown_reference_is_refused` | rejected, 1 |
+
+The missed defect widened the suite: `test_scope_drops_a_retracted_reference` observes the
+reference through the subscription scope, where a dangling entry is visible, and the same
+injection then fails it. Twelve of twelve rejected after the widening. Tolerance loosening is n/a.
+
+### Phase 4: implementation against the audited suite
+
+`cargo test -p deep_causality_context_store`: 155 passed. Clippy and fmt clean. Coverage:
+
+```
+TOTAL  regions 1254/1267 98.97%  functions 155/155 100%  lines 933/936 99.68%
+```
+
+The three uncovered lines are the `NodeEntered` and `NodeLeft` alternatives of two match arms,
+`MemoryState::fold` (`memory_state.rs`, two lines) and `MemoryEvents::in_scope`
+(`memory_events/mod.rs`, one line). They are unreachable by construction: the log is appended only
+by this backend's operations, none of which emits either variant, and `apply` refuses both, so no
+event of these variants can be in a log. The arms exist because the match over `ContextEvent` must
+be exhaustive, and they are grouped with `NodeLinked` and `NodeUnlinked` because that is what the
+streaming spec says a view's answer means to a context.
+
+`bazel test //deep_causality_context_store/...`: 36 targets pass, 35 test files, 35 suite
+targets.
+
+## Task group 6: named extra contexts
+
+### Phase 1: API-only
+
+`ExtendableContextuableGraph` gained the `name` parameter on `extra_ctx_add_new` and
+`extra_ctx_add_new_with_id` and the new `extra_ctx_get_name`; the extra-context map's value became
+the private `ExtraContext { name, graph }`. The getter's body was `unimplemented!()`, the
+allocator and the zero check were left as they were, and the 53 call sites in the crate's own four
+test files gained a name argument. The crate built and its 455 existing tests passed.
+
+### Phase 2: the suite, observed failing
+
+`tests/types/context_types/context_graph/extra_context_tests.rs`, six tests with its corner-case
+table, against the phase 1 crate:
+
+```
+test result: FAILED. 0 passed; 6 failed
+```
+
+Three fail with the unimplemented panic from `extendable_contextuable_graph.rs` (the name tests),
+three on their assertions: identifier 0 accepted, and the count-based allocator answering 1 and 4
+where 8 and 42 are required.
+
+### Phase 3: the defect audit
+
+| Class | Injection | Subject test | Result |
+|---|---|---|---|
+| off-by-one | allocator lands two past the highest | `test_sequential_numbering_is_unchanged` | rejected, 5 |
+| constant changed | allocator starts at 0 when empty | `test_sequential_numbering_is_unchanged` | rejected, 32 |
+| regression | allocator counts extras again | `test_an_explicit_identifier_is_never_reached` | rejected, 2 |
+| guard removed | identifier 0 accepted | `test_identifier_zero_is_refused` | rejected, 1 |
+| value replaced | the name getter answers `None` | `test_a_name_is_kept_with_the_extra` | rejected, 3 |
+
+Five of five rejected. Sources restored byte for byte.
+
+### Phase 4: implementation against the audited suite
+
+`cargo test -p deep_causality_context`: 461 passed. Clippy and fmt clean. The `expect` on the
+allocator's insertion stays: the identifier it inserts is fresh and non-zero by construction, and
+the method returns a `ContextId` with no error channel.
+
+### Phase 5 (group 5): mutation testing
+
+`cargo mutants -p deep_causality_context_store -j 8` over the whole crate, 7 minutes:
+
+```
+203 mutants tested: 104 caught, 1 missed, 92 unviable, 6 timeouts
+```
+
+- The miss, `replace != with == in MemoryState::fold` at the `NodeRetracted` arm, kept an edge
+  into a retracted node and dropped unrelated edges. Every test had observed edges through
+  `hydrate`, which filters by membership, so the lingering edge was invisible. The suite was
+  widened with `test_a_retracted_node_takes_only_its_own_edges`, which observes edges through
+  `retract_edge`. A re-run over `memory_state.rs` after the widening: 63 mutants, 45 caught, 18
+  unviable, none missed.
+- The 6 timeouts are five `IdReserve` mutants that stop the iterator advancing (`taken` fixed at
+  0 or 1, `advance` emptied, `+=` to `*=`, `next` returning a constant) and the `MemoryEvents::next`
+  position update mutated to a multiplication. Each makes a draining loop in the suite run
+  forever, so the harness detects the mutant by non-termination rather than by an assertion. They
+  are not survivors and need no equivalence entry.
+- The 92 unviable mutants are `Default::default()` substitutions on types without `Default`
+  (`Self`, `MemoryStorageError`, the records) and inside `const fn` bodies.
+
+### Phase 5 (group 6): mutation testing
+
+`cargo mutants -p deep_causality_context` over `extendable_contextuable_graph.rs` and
+`extra_context.rs`, 11 minutes:
+
+```
+39 mutants tested: 37 caught, 1 missed, 1 unviable
+```
+
+The miss was `+= to *=` on `number_of_extra_contexts`, a counter the count-based allocator read
+and the new allocator does not, which left the field write-only. The field, its initialiser, its
+clone and its increment were removed rather than pinned: a value nothing reads is not a decision
+a test can defend. The re-run after the removal is recorded below.
+
+Re-run over the same two files after the removal, 5 minutes:
+
+```
+37 mutants tested: 36 caught, 1 unviable, 0 missed
+```

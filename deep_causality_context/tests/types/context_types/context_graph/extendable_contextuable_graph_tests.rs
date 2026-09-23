@@ -30,14 +30,14 @@ fn test_extra_ctx_add_new() {
     assert_eq!(context.extra_ctx_get_current_id(), 0);
 
     // Add a new context, but don't set it as default
-    let new_id_1 = context.extra_ctx_add_new(10, false);
+    let new_id_1 = context.extra_ctx_add_new("extra", 10, false);
     assert_eq!(new_id_1, 1);
     assert!(context.extra_ctx_check_exists(1));
     // Current ID should not have changed
     assert_eq!(context.extra_ctx_get_current_id(), 0);
 
     // Add another context and set it as default
-    let new_id_2 = context.extra_ctx_add_new(10, true);
+    let new_id_2 = context.extra_ctx_add_new("extra", 10, true);
     assert_eq!(new_id_2, 2);
     assert!(context.extra_ctx_check_exists(2));
     // Current ID should now be the new one
@@ -51,14 +51,14 @@ fn test_extra_ctx_add_new_with_id() {
     let capacity = 10;
 
     // Add with default=false
-    let res = context.extra_ctx_add_new_with_id(id, capacity, false);
+    let res = context.extra_ctx_add_new_with_id(id, "extra", capacity, false);
     assert!(res.is_ok());
     assert!(context.extra_ctx_check_exists(id));
     assert_eq!(context.extra_ctx_get_current_id(), 0);
 
     // Add with default=true
     let id2 = 100;
-    let res2 = context.extra_ctx_add_new_with_id(id2, capacity, true);
+    let res2 = context.extra_ctx_add_new_with_id(id2, "extra", capacity, true);
     assert!(res2.is_ok());
     assert!(context.extra_ctx_check_exists(id2));
     assert_eq!(context.extra_ctx_get_current_id(), id2);
@@ -70,11 +70,11 @@ fn test_extra_ctx_add_new_with_id_err() {
     let id = 1;
     let capacity = 10;
     let default = true;
-    let res = context.extra_ctx_add_new_with_id(id, capacity, default);
+    let res = context.extra_ctx_add_new_with_id(id, "extra", capacity, default);
     assert!(res.is_ok());
 
     // Attempt to add again with the same ID
-    let res = context.extra_ctx_add_new_with_id(id, capacity, default);
+    let res = context.extra_ctx_add_new_with_id(id, "extra", capacity, default);
     assert!(res.is_err());
 }
 
@@ -82,7 +82,7 @@ fn test_extra_ctx_add_new_with_id_err() {
 fn test_extra_ctx_check_exists() {
     let mut context = get_context();
     assert!(!context.extra_ctx_check_exists(1));
-    context.extra_ctx_add_new(10, false);
+    context.extra_ctx_add_new("extra", 10, false);
     assert!(context.extra_ctx_check_exists(1));
     assert!(!context.extra_ctx_check_exists(99));
 }
@@ -91,7 +91,9 @@ fn test_extra_ctx_check_exists() {
 fn test_extra_ctx_set_and_get_current_id() {
     let mut context = get_context();
     let id = 42;
-    context.extra_ctx_add_new_with_id(id, 10, false).unwrap();
+    context
+        .extra_ctx_add_new_with_id(id, "extra", 10, false)
+        .unwrap();
 
     // Set current ID
     let res = context.extra_ctx_set_current_id(id);
@@ -107,7 +109,9 @@ fn test_extra_ctx_set_and_get_current_id() {
 fn test_extra_ctx_unset_current_id() {
     let mut context = get_context();
     let id = 42;
-    context.extra_ctx_add_new_with_id(id, 10, true).unwrap();
+    context
+        .extra_ctx_add_new_with_id(id, "extra", 10, true)
+        .unwrap();
     assert_eq!(context.extra_ctx_get_current_id(), id);
 
     // Unset the current ID
@@ -132,7 +136,9 @@ fn test_extra_ctx_unset_current_id_err() {
 fn test_extra_ctx_node_ops_happy_path() {
     let mut context = get_context();
     let ctx_id = 1;
-    context.extra_ctx_add_new_with_id(ctx_id, 10, true).unwrap();
+    context
+        .extra_ctx_add_new_with_id(ctx_id, "extra", 10, true)
+        .unwrap();
 
     // Add node
     let contextoid = get_contextoid(101);
@@ -161,7 +167,9 @@ fn test_extra_ctx_contains_node_when_no_extra_contexts_exist() {
     let mut context = get_context();
 
     let ctx_id = 1;
-    context.extra_ctx_add_new_with_id(ctx_id, 10, true).unwrap();
+    context
+        .extra_ctx_add_new_with_id(ctx_id, "extra", 10, true)
+        .unwrap();
 
     // 2. Call the function. The outer `if let` will fail.
     let result = context.extra_ctx_contains_node(43);
@@ -177,7 +185,9 @@ fn test_extra_ctx_contains_node_with_invalid_current_id() {
 
     // 2. Add an extra context with ID `1` but do NOT set it as the current one.
     // `extra_contexts` is now `Some`, but `extra_context_id` remains `0`.
-    context.extra_ctx_add_new_with_id(1, 10, false).unwrap();
+    context
+        .extra_ctx_add_new_with_id(1, "extra", 10, false)
+        .unwrap();
 
     // 3. Call the function. The inner `if let` will fail because the key `0` is not in the map.
     let result = context.extra_ctx_contains_node(78);
@@ -196,7 +206,7 @@ fn test_extra_ctx_add_node_err() {
     assert!(res.is_err());
 
     // Error: Extra contexts exist, but the current_id is invalid (0)
-    context.extra_ctx_add_new(10, false);
+    context.extra_ctx_add_new("extra", 10, false);
     let res2 = context.extra_ctx_add_node(contextoid);
     assert!(res2.is_err());
 }
@@ -208,7 +218,9 @@ fn test_extra_ctx_get_node_err() {
     // Error: No extra contexts exist
     assert!(context.extra_ctx_get_node(0).is_err());
 
-    context.extra_ctx_add_new_with_id(1, 10, true).unwrap();
+    context
+        .extra_ctx_add_new_with_id(1, "extra", 10, true)
+        .unwrap();
     // Error: Extra context exists, but node index is invalid
     assert!(context.extra_ctx_get_node(0).is_err());
 }
@@ -220,7 +232,9 @@ fn test_extra_ctx_get_node_fails_with_invalid_current_id() {
 
     // 2. Create an extra context with ID `1` but do NOT set it as the default.
     // This initializes `extra_contexts` but leaves `context.extra_context_id` as `0`.
-    context.extra_ctx_add_new_with_id(1, 10, false).unwrap();
+    context
+        .extra_ctx_add_new_with_id(1, "extra", 10, false)
+        .unwrap();
 
     // 3. Attempt to get a node. The `get(&0)` call will fail because the map
     //    only contains the key `1`, triggering the inner `else` branch.
@@ -243,7 +257,9 @@ fn test_extra_ctx_remove_node_err() {
     // Error: No extra contexts exist
     assert!(context.extra_ctx_remove_node(0).is_err());
 
-    context.extra_ctx_add_new_with_id(1, 10, true).unwrap();
+    context
+        .extra_ctx_add_new_with_id(1, "extra", 10, true)
+        .unwrap();
     // Error: Extra context exists, but node index is invalid
     assert!(context.extra_ctx_remove_node(0).is_err());
 }
@@ -274,7 +290,9 @@ fn test_extra_ctx_remove_node_fails_with_invalid_current_id() {
 
     // 2. Create an extra context with ID `1` but do NOT set it as the default.
     // This initializes `extra_contexts` but leaves `context.extra_context_id` as `0`.
-    context.extra_ctx_add_new_with_id(1, 10, false).unwrap();
+    context
+        .extra_ctx_add_new_with_id(1, "extra", 10, false)
+        .unwrap();
 
     // 3. Attempt to remove a node. The `get_mut(&0)` call will fail,
     //    triggering the inner `else` branch.
@@ -296,7 +314,9 @@ fn test_extra_ctx_remove_node_fails_with_invalid_current_id() {
 #[test]
 fn test_extra_ctx_edge_ops_happy_path() {
     let mut context = get_context();
-    context.extra_ctx_add_new_with_id(1, 10, true).unwrap();
+    context
+        .extra_ctx_add_new_with_id(1, "extra", 10, true)
+        .unwrap();
 
     let node_a_idx = context.extra_ctx_add_node(get_contextoid(1)).unwrap();
     let node_b_idx = context.extra_ctx_add_node(get_contextoid(2)).unwrap();
@@ -323,7 +343,9 @@ fn test_extra_ctx_add_edge_err() {
     let res = context.extra_ctx_add_edge(0, 1, RelationKind::Datial);
     assert!(res.is_err());
 
-    context.extra_ctx_add_new_with_id(1, 10, true).unwrap();
+    context
+        .extra_ctx_add_new_with_id(1, "extra", 10, true)
+        .unwrap();
     // Error: Extra context exists, but node indices are invalid
     let res2 = context.extra_ctx_add_edge(0, 1, RelationKind::Datial);
     assert!(res2.is_err());
@@ -338,7 +360,9 @@ fn test_extra_ctx_add_edge_fails_with_invalid_current_id() {
     // 2. Create an extra context with ID `1`. Crucially, we pass `default: false`.
     // This initializes `extra_contexts` to `Some(HashMap)` and inserts a graph
     // with the key `1`. However, `context.extra_context_id` remains `0`.
-    context.extra_ctx_add_new_with_id(1, 10, false).unwrap();
+    context
+        .extra_ctx_add_new_with_id(1, "extra", 10, false)
+        .unwrap();
 
     // 3. Now, attempt to add an edge. The code will execute the following logic:
     //    - `if let Some(extra_contexts) = ...` -> This succeeds.
@@ -363,7 +387,9 @@ fn test_extra_ctx_add_edge_fails_with_invalid_current_id() {
 #[test]
 fn test_extra_ctx_graph_properties() {
     let mut context = get_context();
-    context.extra_ctx_add_new_with_id(1, 10, true).unwrap();
+    context
+        .extra_ctx_add_new_with_id(1, "extra", 10, true)
+        .unwrap();
 
     // Check properties on empty graph
     assert!(context.extra_ctx_is_empty().unwrap());

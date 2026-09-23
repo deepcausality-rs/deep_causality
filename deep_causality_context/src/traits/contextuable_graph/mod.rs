@@ -97,26 +97,31 @@ where
     T: Temporal + Clone,
     ST: SpaceTemporal + Clone,
 {
-    /// Creates a new, empty "extra" context and adds it to the collection.
+    /// Creates a new, empty, named "extra" context and adds it to the collection.
     ///
-    /// This method generates a unique ID for the new context internally.
+    /// The identifier is one more than the highest extra-context identifier held, and 1 when none
+    /// is held, so an identifier added through `extra_ctx_add_new_with_id` is never allocated
+    /// again.
     ///
     /// # Parameters
+    /// - `name`: The name the extra context is referenced by.
     /// - `capacity`: The initial storage capacity to pre-allocate for the new context's graph.
     /// - `default`: If `true`, the newly created context is immediately set as the
     ///   currently active context for subsequent `extra_ctx_*` operations.
     ///
     /// # Returns
-    /// The unique `u64` ID assigned to the newly created context.
-    fn extra_ctx_add_new(&mut self, capacity: usize, default: bool) -> ContextId;
+    /// The `ContextId` assigned to the newly created context.
+    fn extra_ctx_add_new(&mut self, name: &str, capacity: usize, default: bool) -> ContextId;
 
-    /// Creates a new extra context with a specific, user-provided ID.
+    /// Creates a new, named extra context with a specific, caller-provided ID.
     ///
-    /// This is useful for scenarios where context IDs need to be deterministic,
-    /// such as when reconstructing a state from a saved configuration.
+    /// This is what a context hydrated from a store uses: the extra lands under the identifier
+    /// the store holds it by.
     ///
     /// # Parameters
-    /// - `id`: The user-defined `u64` ID for the new context.
+    /// - `id`: The `ContextId` for the new context. 0 is refused, because 0 means no extra
+    ///   context is current.
+    /// - `name`: The name the extra context is referenced by.
     /// - `capacity`: The initial storage capacity for the new context's graph.
     /// - `default`: If `true`, this new context is set as the currently active one.
     ///
@@ -124,13 +129,17 @@ where
     /// - `Ok(())` if the context was created successfully.
     ///
     /// # Errors
-    /// - `ContextIndexError` if a context with the provided `id` already exists.
+    /// - `ContextIndexError` if a context with the provided `id` already exists, or if `id` is 0.
     fn extra_ctx_add_new_with_id(
         &mut self,
         id: ContextId,
+        name: &str,
         capacity: usize,
         default: bool,
     ) -> Result<(), ContextIndexError>;
+
+    /// The name of the extra context with the given ID, or `None` when no extra holds it.
+    fn extra_ctx_get_name(&self, id: ContextId) -> Option<&str>;
 
     /// Checks if an extra context with the given ID exists.
     ///

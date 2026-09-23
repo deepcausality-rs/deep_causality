@@ -13,11 +13,12 @@ use crate::{ContextId, ContextoidId};
 mod contextuable_graph;
 mod debug;
 mod extendable_contextuable_graph;
+mod extra_context;
 mod identifiable;
 mod indexable_data;
 mod indexable_time;
 
-type ExtraContext<D, S, T, ST> = UltraGraphWeighted<Contextoid<D, S, T, ST>, RelationKind>;
+use extra_context::ExtraContext;
 
 type ExtraContextMap<D, S, T, ST> = HashMap<ContextId, ExtraContext<D, S, T, ST>>;
 
@@ -34,7 +35,6 @@ where
     base_context: UltraGraphWeighted<Contextoid<D, S, T, ST>, RelationKind>,
     id_to_index_map: HashMap<ContextoidId, usize>,
     extra_contexts: Option<ExtraContextMap<D, S, T, ST>>,
-    number_of_extra_contexts: u64,
     extra_context_id: ContextId,
     current_data_map: HashMap<usize, usize>,
     previous_data_map: HashMap<usize, usize>,
@@ -56,7 +56,6 @@ where
             base_context: self.base_context.clone(),
             id_to_index_map: self.id_to_index_map.clone(),
             extra_contexts: self.extra_contexts.clone(),
-            number_of_extra_contexts: self.number_of_extra_contexts,
             extra_context_id: self.extra_context_id,
             current_data_map: self.current_data_map.clone(),
             previous_data_map: self.previous_data_map.clone(),
@@ -81,7 +80,6 @@ where
             base_context: UltraGraphWeighted::with_capacity(capacity, None),
             id_to_index_map: HashMap::new(),
             extra_contexts: None,
-            number_of_extra_contexts: 0,
             extra_context_id: 0,
             current_data_map: HashMap::new(),
             previous_data_map: HashMap::new(),

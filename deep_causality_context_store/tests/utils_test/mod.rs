@@ -4,3 +4,6 @@
  */
 #[cfg(test)]
 mod block_on_tests;
+mod memory_events;
+mod memory_storage;
+mod memory_substrate;

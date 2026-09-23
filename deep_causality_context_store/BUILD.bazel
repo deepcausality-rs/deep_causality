@@ -247,11 +247,11 @@ rust_test_suite(
 rust_test_suite(
     name = "utils_tests",
     srcs = glob([
-        "tests/utils_test/*_tests.rs",
+        "tests/utils_test/**/*_tests.rs",
     ]),
     tags = [
-        "utils_tests",
         "unit-test",
+        "utils_tests",
     ],
     visibility = ["//visibility:public"],
     deps = [
