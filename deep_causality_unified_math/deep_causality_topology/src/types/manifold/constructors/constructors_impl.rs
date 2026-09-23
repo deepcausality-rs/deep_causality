@@ -99,7 +99,14 @@ where
         // failure at access time. Failures surface here as
         // `TopologyError::PointCloudError` instead of as a panic downstream.
         if metric.is_some() {
-            let _ = complex.hodge_star_operators()?;
+            let ops = complex.hodge_star_operators()?;
+            if ops.len() != complex.skeletons.len() {
+                return Err(TopologyError::DimensionMismatch(format!(
+                    "Manifold::with_metric: {} Hodge ⋆ operators for {} skeletons",
+                    ops.len(),
+                    complex.skeletons.len()
+                )));
+            }
         }
 
         Ok(Self {

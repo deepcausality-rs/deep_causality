@@ -155,7 +155,7 @@ impl<
             let new_u = u.try_add(&update).map_err(TopologyError::from)?;
             let projected = new_u.project_sun().map_err(TopologyError::from)?;
 
-            if let Some(i) = link_index(&shape, &edge) {
+            if let Some(i) = link_index(&self.lattice, &edge) {
                 new_links[i] = Some(projected);
             }
         }
@@ -181,7 +181,7 @@ impl<
         let mut new_links = alloc_slots(&shape);
         for (cell, link) in self.iter_links() {
             let new_link = link.try_scale(factor).map_err(TopologyError::from)?;
-            if let Some(i) = link_index(&shape, &cell) {
+            if let Some(i) = link_index(&self.lattice, &cell) {
                 new_links[i] = Some(new_link);
             }
         }
@@ -206,7 +206,7 @@ impl<
         for (cell, link) in self.iter_links() {
             if let Some(other_link) = other.link(&cell) {
                 let new_link = link.try_add(other_link).map_err(TopologyError::from)?;
-                if let Some(i) = link_index(&shape, &cell) {
+                if let Some(i) = link_index(&self.lattice, &cell) {
                     new_links[i] = Some(new_link);
                 }
             } else {
@@ -306,7 +306,7 @@ impl<
         let mut new_links = alloc_slots(&shape);
         for (cell, link) in self.iter_links() {
             let projected = link.project_sun().map_err(TopologyError::from)?;
-            if let Some(i) = link_index(&shape, &cell) {
+            if let Some(i) = link_index(&self.lattice, &cell) {
                 new_links[i] = Some(projected);
             }
         }

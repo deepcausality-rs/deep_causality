@@ -89,3 +89,15 @@ fn manifold_hodge_star_with_metric_returns_expected_shape() {
         );
     }
 }
+
+#[test]
+fn grade_above_the_held_operators_is_an_error() {
+    let m = triangle_complex();
+    let geom = ReggeGeometry::new(CausalTensor::new(vec![1.0, 1.0, 1.0], vec![3]).unwrap());
+    let held = m.complex().hodge_star_operators().unwrap().len();
+    let err = geom.hodge_star_matrix(m.complex(), held).unwrap_err();
+    assert!(matches!(
+        err.0,
+        deep_causality_topology::TopologyErrorEnum::InvalidGradeOperation(_)
+    ));
+}

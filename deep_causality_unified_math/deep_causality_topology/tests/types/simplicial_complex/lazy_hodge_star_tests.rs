@@ -232,3 +232,42 @@ fn test_intermediate_masses_scale_as_h_to_the_n_minus_two_k() {
         );
     }
 }
+
+#[test]
+fn test_intermediate_mass_sums_over_every_cell_carrying_the_simplex() {
+    // Two triangles sharing edge 12: T1 = (0,0), (1,0), (0,1) and T2 = (1,0), (0,1), (2,2).
+    // T2 is not congruent to T1, so the shared edge's two contributions differ, and the edges
+    // each carried by a single cell differ from the shared one.
+    //     T1: e01 = 1/3, e02 = 1/3, e12 = 1/6
+    //     T2: e12 = 7/18, e13 = 2/9, e23 = 2/9
+    // from M[e_ij] = (2|T| / 12)(|grad l_i|^2 + |grad l_j|^2 - grad l_i . grad l_j), cross-checked
+    // with numpy. Edge 12 carries 1/6 + 7/18 = 5/9. Vertex 1 is the first vertex of edges 12 and
+    // 13 and lies on both cells, so for edge 13 one of the cells at its first vertex does not
+    // carry it and must contribute nothing.
+    let skeletons = vec![
+        Skeleton::new(0, (0..4).map(|v| Simplex::new(vec![v])).collect()),
+        Skeleton::new(
+            1,
+            vec![
+                Simplex::new(vec![0, 1]),
+                Simplex::new(vec![0, 2]),
+                Simplex::new(vec![1, 2]),
+                Simplex::new(vec![1, 3]),
+                Simplex::new(vec![2, 3]),
+            ],
+        ),
+        Skeleton::new(
+            2,
+            vec![Simplex::new(vec![0, 1, 2]), Simplex::new(vec![1, 2, 3])],
+        ),
+    ];
+    let coords = vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 2.0, 2.0];
+    let complex: SimplicialComplex<f64> =
+        SimplicialComplex::with_geometry(skeletons, Vec::new(), Vec::new(), coords, 2);
+
+    let edges = diagonal(&complex.hodge_star_operators().unwrap()[1]);
+    let expected = [1.0 / 3.0, 1.0 / 3.0, 5.0 / 9.0, 2.0 / 9.0, 2.0 / 9.0];
+    for (i, (g, e)) in edges.iter().zip(expected.iter()).enumerate() {
+        assert!((g - e).abs() < 1e-12, "edge {i}: got {g}, expected {e}");
+    }
+}

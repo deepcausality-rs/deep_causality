@@ -3,15 +3,12 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_linear::CsrMatrix;
 use deep_causality_metric::{EastCoastMetric, LorentzianMetric};
 use deep_causality_physics::{
     PhysicsErrorEnum, energy_momentum_tensor_em_kernel, relativistic_current_kernel,
 };
 use deep_causality_tensor::CausalTensor;
-use deep_causality_topology::{
-    Manifold, PointCloud, ReggeGeometry, Simplex, SimplicialComplex, Skeleton,
-};
+use deep_causality_topology::{Manifold, PointCloud, ReggeGeometry, SimplicialComplex};
 
 #[test]
 fn test_relativistic_current_kernel_4d() {
@@ -222,9 +219,11 @@ fn test_relativistic_current_refuses_a_manifold_without_a_metric() {
     .unwrap();
 
     let err = relativistic_current_kernel(&manifold, &EastCoastMetric::minkowski_4d()).unwrap_err();
+    // A missing metric means the operator cannot be formed, which the crate's topology-error
+    // mapping reports as a CalculationError; the dimensions themselves are fine.
     assert!(
-        matches!(err.0, PhysicsErrorEnum::DimensionMismatch { .. }),
-        "expected a DimensionMismatch refusal, got {err:?}"
+        matches!(err.0, PhysicsErrorEnum::CalculationError { .. }),
+        "expected a CalculationError refusal, got {err:?}"
     );
     assert!(
         format!("{err}").contains("with_metric"),
@@ -409,44 +408,83 @@ fn test_relativistic_current_kernel_insufficient_hodge_ops_error() {
     );
 }
 
-#[test]
-fn test_relativistic_current_kernel_missing_coboundary_operators_error() {
-    // The codifferential J = ★d★F reads d off `coboundary_operators()[2]`. A
-    // complex assembled directly through `SimplicialComplex::new` can carry a
-    // full Hodge ★ surface and no coboundary operators at all, which is the only
-    // way to observe the coboundary-count guard (grmhd.rs:77-81) — a
-    // triangulated point cloud always supplies both families together.
-    let vertices: Vec<Simplex> = (0..3usize).map(|v| Simplex::new(vec![v])).collect();
-    let edges = vec![
-        Simplex::new(vec![0, 1]),
-        Simplex::new(vec![0, 2]),
-        Simplex::new(vec![1, 2]),
+/// The pentatope complex with a 2-form of distinct entries on every face, rebuilt through
+/// `SimplicialComplex::new` from the given boundary and coboundary operators. The skeletons and
+/// Hodge ⋆ operators are those of the triangulation.
+fn pentatope_manifold(
+    keep_boundary: bool,
+    keep_coboundary: bool,
+) -> Manifold<SimplicialComplex<f64>, f64> {
+    let points_data = vec![
+        0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0,
+        0.0, 1.0,
     ];
-    let faces = vec![Simplex::new(vec![0, 1, 2])];
-    let skeletons = vec![
-        Skeleton::new(0, vertices),
-        Skeleton::new(1, edges),
-        Skeleton::new(2, faces),
-    ];
-    // Four Hodge ★ operators clear the `hodge_ops.len() < 4` guard; none of them
-    // is read before the coboundary count is checked.
-    let hodge: Vec<CsrMatrix<f64>> = (0..4).map(|_| CsrMatrix::new()).collect();
-    let complex = SimplicialComplex::new(skeletons, vec![], vec![], hodge);
-    // A metric is needed to get past the guard that precedes the coboundary count; the three
-    // edge lengths are never read, because the coboundary check answers first.
-    let regge = ReggeGeometry::new(CausalTensor::new(vec![1.0; 3], vec![3]).unwrap());
-    let manifold = Manifold::with_metric(
+    let point_tensor = CausalTensor::new(points_data, vec![5, 4]).unwrap();
+    let cloud = PointCloud::new(point_tensor, CausalTensor::<f64>::zeros(&[5]), 0).unwrap();
+    let full = cloud.triangulate(1.5).unwrap();
+
+    let skeletons = full.skeletons().clone();
+    let (n0, n1, n2) = (
+        skeletons[0].simplices().len(),
+        skeletons[1].simplices().len(),
+        skeletons[2].simplices().len(),
+    );
+    let total = full.total_simplices();
+    let boundary = if keep_boundary {
+        full.boundary_operators().clone()
+    } else {
+        vec![]
+    };
+    let coboundary = if keep_coboundary {
+        full.coboundary_operators().clone()
+    } else {
+        vec![]
+    };
+    let hodge = full.hodge_star_operators().unwrap().clone();
+    let complex = SimplicialComplex::new(skeletons, boundary, coboundary, hodge);
+
+    let mut data = vec![0.0_f64; total];
+    for i in 0..n2 {
+        data[n0 + n1 + i] = 1.0 + (i as f64) * 0.37;
+    }
+    let regge = ReggeGeometry::new(CausalTensor::new(vec![1.0; n1], vec![n1]).unwrap());
+    Manifold::with_metric(
         complex,
-        CausalTensor::new(vec![0.0; 7], vec![7]).unwrap(),
+        CausalTensor::new(data, vec![total]).unwrap(),
         Some(regge),
         0,
     )
-    .unwrap();
+    .unwrap()
+}
+
+#[test]
+fn test_relativistic_current_does_not_need_coboundary_operators() {
+    // delta_2 = M_1^-1 B_2 M_2 reads the boundary operator, never the coboundary. A complex that
+    // carries its boundary operators and no coboundary operators therefore yields the same J as
+    // the full complex.
+    let full = pentatope_manifold(true, true);
+    let no_coboundary = pentatope_manifold(true, false);
+    let metric = EastCoastMetric::minkowski_4d();
+
+    let expected = relativistic_current_kernel(&full, &metric).unwrap();
+    let got = relativistic_current_kernel(&no_coboundary, &metric).unwrap();
+    assert!(
+        expected.as_slice().iter().any(|x: &f64| x.abs() > 1e-9),
+        "J vanishes on the full complex, so the comparison would pin nothing"
+    );
+    assert_eq!(got.as_slice(), expected.as_slice());
+}
+
+#[test]
+fn test_relativistic_current_refuses_a_complex_without_boundary_operators() {
+    // `codifferential_of` reads an absent boundary operator as zero, so without this refusal a
+    // complex carrying only coboundary operators would return J = 0 for any F.
+    let manifold = pentatope_manifold(false, true);
 
     let err = relativistic_current_kernel(&manifold, &EastCoastMetric::minkowski_4d()).unwrap_err();
     match err.0 {
         PhysicsErrorEnum::CalculationError(msg) => assert!(
-            msg.contains("Missing coboundary operators") && msg.contains("have 0"),
+            msg.contains("Missing boundary operator") && msg.contains("have 0"),
             "unexpected message: {msg}"
         ),
         other => panic!("expected CalculationError, got {other:?}"),

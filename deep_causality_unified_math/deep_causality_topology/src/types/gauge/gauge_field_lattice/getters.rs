@@ -56,7 +56,8 @@ impl<G: GaugeGroup, const D: usize, M, R: deep_causality_algebra::RealField, S>
     ///
     /// # Returns
     ///
-    /// Tuple of (lattice, links, beta).
+    /// Tuple of (lattice, links, beta). `links` has one slot per site per direction, indexed
+    /// `site_offset * D + mu` with `site_offset` row-major over the lattice shape.
     #[inline]
     #[allow(clippy::type_complexity)]
     pub fn into_parts(
@@ -93,7 +94,7 @@ impl<G: GaugeGroup, const D: usize, M, R: deep_causality_algebra::RealField, S>
     /// Option containing reference to the link variable if present.
     #[inline]
     pub fn link(&self, edge: &LatticeCell<D>) -> Option<&LinkVariable<G, M, R>> {
-        let i = link_index(self.lattice.shape(), edge)?;
+        let i = link_index(&self.lattice, edge)?;
         self.links.get(i)?.as_ref()
     }
 
@@ -108,11 +109,15 @@ impl<G: GaugeGroup, const D: usize, M, R: deep_causality_algebra::RealField, S>
     /// Option containing mutable reference to the link variable.
     #[inline]
     pub fn link_mut(&mut self, edge: &LatticeCell<D>) -> Option<&mut LinkVariable<G, M, R>> {
-        let i = link_index(self.lattice.shape(), edge)?;
+        let i = link_index(&self.lattice, edge)?;
         self.links.get_mut(i)?.as_mut()
     }
 
-    /// Every link the field carries, paired with the edge it sits on, in lattice order.
+    /// Every link the field carries, paired with the edge it sits on.
+    ///
+    /// Sites come in row-major order over the lattice shape (last axis fastest), and at each site
+    /// the directions in ascending axis order. This is not the order of `lattice.cells(1)`,
+    /// which is direction-major with axis 0 fastest.
     #[inline]
     pub fn iter_links(&self) -> impl Iterator<Item = (LatticeCell<D>, &LinkVariable<G, M, R>)> {
         let shape = *self.lattice.shape();
@@ -122,15 +127,10 @@ impl<G: GaugeGroup, const D: usize, M, R: deep_causality_algebra::RealField, S>
             .filter_map(move |(i, slot)| slot.as_ref().map(|l| (link_cell(&shape, i), l)))
     }
 
-    /// The edges carrying a link, in lattice order.
+    /// The edges carrying a link, in the order of [`iter_links`](Self::iter_links).
     #[inline]
     pub fn link_cells(&self) -> Vec<LatticeCell<D>> {
-        let shape = *self.lattice.shape();
-        self.links
-            .iter()
-            .enumerate()
-            .filter_map(|(i, slot)| slot.as_ref().map(|_| link_cell(&shape, i)))
-            .collect()
+        self.iter_links().map(|(cell, _)| cell).collect()
     }
 
     /// Whether the field carries no links at all.
@@ -141,13 +141,16 @@ impl<G: GaugeGroup, const D: usize, M, R: deep_causality_algebra::RealField, S>
 
     /// Set a specific link variable.
     ///
+    /// Does nothing if `edge` is not an edge of the lattice, including an edge that would leave
+    /// the lattice across a non-periodic boundary.
+    ///
     /// # Arguments
     ///
     /// * `edge` - The edge cell key
     /// * `link` - The new link variable
     #[inline]
     pub fn set_link(&mut self, edge: LatticeCell<D>, link: LinkVariable<G, M, R>) {
-        if let Some(i) = link_index(self.lattice.shape(), &edge) {
+        if let Some(i) = link_index(&self.lattice, &edge) {
             self.links[i] = Some(link);
         }
     }

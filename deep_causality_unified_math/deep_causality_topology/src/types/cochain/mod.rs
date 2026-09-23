@@ -10,7 +10,10 @@ use crate::errors::topology_error::{TopologyError, TopologyErrorEnum};
 /// # What this type is for
 ///
 /// Binding the values to their degree. The cup product takes cochains rather than data-and-degree
-/// pairs, so a degree mismatch is a type error rather than a runtime check.
+/// pairs, so it reads each operand's degree from the operand itself. The degree is a runtime
+/// `usize`: the cup product checks at run time that the degrees sum to at most the complex's
+/// dimension and that each cochain's length matches the cell count of its degree, and returns an
+/// error otherwise.
 ///
 /// # Representation
 ///

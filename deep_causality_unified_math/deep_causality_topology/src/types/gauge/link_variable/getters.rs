@@ -13,7 +13,7 @@ impl<G: GaugeGroup, M: Clone, R> LinkVariable<G, M, R> {
     /// The row-major `N x N` elements.
     #[inline]
     pub fn matrix(&self) -> &[M] {
-        &self.data
+        self.as_slice()
     }
 
     /// Matrix elements, mutably.

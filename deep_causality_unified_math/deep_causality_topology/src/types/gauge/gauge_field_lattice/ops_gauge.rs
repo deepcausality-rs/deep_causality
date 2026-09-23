@@ -76,7 +76,7 @@ impl<
                 (cell, new_u)
             })
             .fold(alloc_slots(&shape), |mut slots, (cell, u)| {
-                if let Some(i) = link_index(&shape, &cell) {
+                if let Some(i) = link_index(&self.lattice, &cell) {
                     slots[i] = Some(u);
                 }
                 slots

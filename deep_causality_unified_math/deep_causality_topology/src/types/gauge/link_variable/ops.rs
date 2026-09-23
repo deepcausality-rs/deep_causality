@@ -26,34 +26,15 @@ impl<
     ///
     /// # Errors
     ///
-    /// Returns error if tensor creation fails.
-    /// Returns error if tensor creation fails.
+    /// Never returns an error; the result equals [`dagger`](Self::dagger).
     pub fn try_dagger(&self) -> Result<Self, LinkVariableError>
     where
         M: ComplexField<R>,
         R: RealField,
     {
-        let n = G::matrix_dim();
-        let slice = self.data.as_slice();
-        let mut result = vec![M::default(); n * n];
-
-        // Transpose + Conjugate
-        for i in 0..n {
-            for j in 0..n {
-                result[j * n + i] = slice[i * n + j].conjugate();
-            }
-        }
-
-        Ok(Self {
-            data: result,
-            _gauge: PhantomData,
-            _scalar: PhantomData,
-        })
+        Ok(self.dagger())
     }
 
-    /// Hermitian conjugate U† (convenience method).
-    ///
-    /// For real matrices, this is the transpose.
     /// Hermitian conjugate U† (convenience method).
     ///
     /// For real matrices, this is the transpose.
@@ -62,7 +43,6 @@ impl<
         M: ComplexField<R>,
         R: RealField,
     {
-        // This is a simple memory operation that cannot fail for valid LinkVariable
         let n = G::matrix_dim();
         let slice = self.data.as_slice();
         let mut result = vec![M::default(); n * n];
@@ -73,7 +53,6 @@ impl<
             }
         }
 
-        // Safe because we're creating the correct shape
         Self {
             data: result,
             _gauge: PhantomData,
@@ -95,34 +74,12 @@ impl<
     ///
     /// # Errors
     ///
-    /// Returns error if tensor creation fails.
-    /// Returns error if tensor creation fails.
+    /// Never returns an error; the result equals [`mul`](Self::mul).
     pub fn try_mul(&self, other: &Self) -> Result<Self, LinkVariableError>
     where
         M: Field,
     {
-        let n = G::matrix_dim();
-        let a = self.data.as_slice();
-        let b = other.data.as_slice();
-        let mut result = vec![M::default(); n * n];
-
-        // Standard matrix multiplication: C[i,j] = Σ_k A[i,k] * B[k,j]
-        for i in 0..n {
-            for j in 0..n {
-                let mut sum = M::default();
-                for k in 0..n {
-                    let prod = a[i * n + k] * b[k * n + j];
-                    sum = sum + prod;
-                }
-                result[i * n + j] = sum;
-            }
-        }
-
-        Ok(Self {
-            data: result,
-            _gauge: PhantomData,
-            _scalar: PhantomData,
-        })
+        Ok(self.mul(other))
     }
 
     /// Group multiplication: self * other (convenience method).
@@ -157,26 +114,12 @@ impl<
     ///
     /// # Errors
     ///
-    /// Returns error if tensor creation fails.
-    /// Returns error if tensor creation fails.
+    /// Never returns an error; the result equals [`add`](Self::add).
     pub fn try_add(&self, other: &Self) -> Result<Self, LinkVariableError>
     where
         M: Field,
     {
-        let n = G::matrix_dim();
-        let a = self.data.as_slice();
-        let b = other.data.as_slice();
-        let mut result = vec![M::default(); n * n];
-
-        for i in 0..(n * n) {
-            result[i] = a[i] + b[i];
-        }
-
-        Ok(Self {
-            data: result,
-            _gauge: PhantomData,
-            _scalar: PhantomData,
-        })
+        Ok(self.add(other))
     }
 
     /// Matrix addition: self + other (convenience method).
@@ -204,25 +147,12 @@ impl<
     ///
     /// # Errors
     ///
-    /// Returns error if tensor creation fails.
-    /// Returns error if tensor creation fails.
+    /// Never returns an error; the result equals [`scale`](Self::scale).
     pub fn try_scale(&self, alpha: &M) -> Result<Self, LinkVariableError>
     where
         M: Field,
     {
-        let n = G::matrix_dim();
-        let a = self.data.as_slice();
-        let mut result = vec![M::default(); n * n];
-
-        for i in 0..(n * n) {
-            result[i] = *alpha * a[i];
-        }
-
-        Ok(Self {
-            data: result,
-            _gauge: PhantomData,
-            _scalar: PhantomData,
-        })
+        Ok(self.scale(alpha))
     }
 
     /// Scalar multiplication: α * self (convenience method).
@@ -294,7 +224,8 @@ impl<
     /// Project to SU(N) using polar decomposition.
     ///
     /// Given a general matrix M, computes U = M (M†M)^{-1/2}
-    /// which is the closest unitary matrix to M in Frobenius norm.
+    /// which is the closest unitary matrix to M in Frobenius norm. The zero matrix projects to
+    /// the identity.
     ///
     /// # Returns
     ///
@@ -302,21 +233,9 @@ impl<
     ///
     /// # Errors
     ///
-    /// Returns `LinkVariableError::SingularMatrix` if M†M is not invertible.
-    /// Returns `LinkVariableError::NumericalError` for other numerical issues.
-    /// Project to SU(N) using polar decomposition.
-    ///
-    /// Given a general matrix M, computes U = M (M†M)^{-1/2}
-    /// which is the closest unitary matrix to M in Frobenius norm.
-    ///
-    /// # Returns
-    ///
-    /// The projected SU(N) matrix.
-    ///
-    /// # Errors
-    ///
-    /// Returns `LinkVariableError::SingularMatrix` if M†M is not invertible.
-    /// Returns `LinkVariableError::NumericalError` for other numerical issues.
+    /// Returns `LinkVariableError::InvalidDimension` if `N >= 4`: the determinant that fixes
+    /// `det = 1` is implemented for `N = 2` and `N = 3` only.
+    /// Returns `LinkVariableError::NumericalError` if a numeric constant does not convert to `R`.
     pub fn project_sun(&self) -> Result<Self, LinkVariableError>
     where
         M: ComplexField<R>,
@@ -360,7 +279,7 @@ impl<
         // Convert to M
         let three_m = M::from_re_im(three_r, R::zero());
         let half_m = M::from_re_im(half_r, R::zero());
-        let minus_one_m = M::from_re_im(R::from_f64(-1.0).unwrap(), R::zero());
+        let minus_one_m = M::from_re_im(-R::one(), R::zero());
 
         for _ in 0..max_iter {
             let x_dag = x.try_dagger()?;

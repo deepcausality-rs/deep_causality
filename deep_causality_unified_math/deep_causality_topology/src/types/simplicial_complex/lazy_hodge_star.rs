@@ -260,24 +260,37 @@ where
     let max_dim_plus_one =
         <T as FromPrimitive>::from_usize(max_dim + 1).expect("max_dim + 1 fits in every RealField");
 
-    // Every top-dimensional volume is checked before any grade is built. The intermediate grades
-    // read the barycentric gradients of these same cells, and those do not exist for a degenerate
-    // one, so without this the caller would see a failure to invert an edge-Gram at grade 1
-    // instead of the degeneracy named as such at grade n.
-    // Only where there are intermediate grades, which is where the gradients are read. Below
-    // that the per-grade branches keep the behaviour they had: at `max_dim == 0` the `k == 0`
-    // arm answers first and a vertexless cell is legitimately given no mass, which this check
-    // would otherwise reject.
-    if max_dim >= 2 {
+    // Every top-dimensional volume is checked before any grade is built. The top grade divides by
+    // these volumes and the intermediate grades read the barycentric gradients of these cells,
+    // which do not exist for a degenerate one; checking here names the degeneracy as such rather
+    // than as a failure to invert an edge-Gram at grade 1.
+    // At `max_dim == 0` the top grade is the vertex grade, which the `k == 0` arm builds from dual
+    // volumes, so a vertexless cell there is given no mass rather than rejected.
+    if max_dim >= 1 {
         for (i, v) in primal_volumes[max_dim].iter().enumerate() {
             if *v <= top_threshold {
                 return Err(TopologyError::PointCloudError(format!(
-                    "hodge_star_operators: top-dimensional simplex at index {} has volume below tolerance (T::epsilon() * 100), indicating degenerate input geometry",
-                    i
+                    "hodge_star_operators: top-dimensional simplex at index {i} has volume below tolerance (T::epsilon() * 100), indicating degenerate input geometry"
                 )));
             }
         }
     }
+
+    // The intermediate grades sum over the top cells carrying each simplex. Those cells are
+    // looked up among the cells incident on the simplex's first vertex, listed here in cell
+    // order, and each cell's gradient Gram is computed on first use and kept.
+    let top_cells = &skeletons[max_dim].simplices;
+    let mut vertex_star: Vec<Vec<usize>> = Vec::new();
+    for (cell_idx, cell) in top_cells.iter().enumerate() {
+        for &v in &cell.vertices {
+            if v >= vertex_star.len() {
+                vertex_star.resize_with(v + 1, Vec::new);
+            }
+            vertex_star[v].push(cell_idx);
+        }
+    }
+    let all_cells: Vec<usize> = (0..top_cells.len()).collect();
+    let mut grams: Vec<Option<Vec<T>>> = (0..top_cells.len()).map(|_| None).collect();
 
     let mut hodge_ops = Vec::with_capacity(skeletons.len());
 
@@ -299,14 +312,8 @@ where
                 }
                 dual_vol / max_dim_plus_one
             } else if k_dim == max_dim {
-                if primal_vol > top_threshold {
-                    T::one() / primal_vol
-                } else {
-                    return Err(TopologyError::PointCloudError(format!(
-                        "hodge_star_operators: top-dimensional simplex at index {} has volume below tolerance (T::epsilon() * 100), indicating degenerate input geometry",
-                        i
-                    )));
-                }
+                // Positive: every top volume cleared the threshold above.
+                T::one() / primal_vol
             } else {
                 debug_assert!(
                     primal_vol > T::zero(),
@@ -321,8 +328,13 @@ where
                 // which a primal volume also has, so a refinement study cannot separate the two
                 // at that grade and the tests pin closed forms instead.
                 let mut mass = T::zero();
-                for (cell_idx, cell) in skeletons[max_dim].simplices.iter().enumerate() {
-                    let sigma = &skeletons[k_dim].simplices[i];
+                let sigma = &skeletons[k_dim].simplices[i];
+                // A vertexless simplex has no first vertex to look up, so every cell is tried.
+                let candidates = sigma.vertices.first().map_or(all_cells.as_slice(), |v| {
+                    vertex_star.get(*v).map_or(&[][..], Vec::as_slice)
+                });
+                for &cell_idx in candidates {
+                    let cell = &top_cells[cell_idx];
                     let local: Option<Vec<usize>> = sigma
                         .vertices
                         .iter()
@@ -332,16 +344,22 @@ where
                         continue; // this cell does not carry the simplex
                     };
 
-                    let gram = barycentric_gradient_gram(cell, coords, dim).ok_or_else(|| {
-                        TopologyError::PointCloudError(format!(
-                            "hodge_star_operators: top-dimensional simplex at index {cell_idx} is \
-                             degenerate, so the barycentric gradients it needs do not exist"
-                        ))
-                    })?;
+                    let gram = match &mut grams[cell_idx] {
+                        Some(gram) => gram,
+                        slot => slot.insert(
+                            barycentric_gradient_gram(cell, coords, dim).ok_or_else(|| {
+                                TopologyError::PointCloudError(format!(
+                                    "hodge_star_operators: top-dimensional simplex at index \
+                                     {cell_idx} is degenerate, so the barycentric gradients it \
+                                     needs do not exist"
+                                ))
+                            })?,
+                        ),
+                    };
                     let m = cell.vertices.len();
                     mass += whitney_self_mass(
                         &local,
-                        &gram,
+                        gram,
                         m,
                         primal_volumes[max_dim][cell_idx],
                         max_dim,

@@ -154,7 +154,8 @@ impl<
     {
         // Each update below draws from `rng`, so the sweep order decides how the stream is
         // consumed and therefore whether a run is reproducible from its seed. `link_cells`
-        // walks the flat link table, which fixes that order to the lattice's own.
+        // walks the flat link table, which fixes that order: sites row-major, directions
+        // ascending at each site.
         //
         // A fixed order leaves the chain's stationary distribution alone: each single-link
         // update satisfies detailed balance on its own, and composing them in any fixed order

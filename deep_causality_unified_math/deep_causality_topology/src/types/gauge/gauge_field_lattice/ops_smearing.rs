@@ -136,7 +136,7 @@ impl<
                 // Project to SU(N)
                 let projected = combined.project_sun().map_err(TopologyError::from)?;
 
-                if let Some(i) = link_index(&shape, &edge) {
+                if let Some(i) = link_index(&current.lattice, &edge) {
                     new_links[i] = Some(projected);
                 }
             }

@@ -24,11 +24,10 @@ pub(crate) mod random;
 /// A link variable U_μ(n) ∈ G on a lattice edge.
 ///
 /// For SU(N), this is an N×N unitary matrix with det = 1.
-/// The matrix is stored as a flattened tensor.
+/// The matrix is stored row-major in a flat `Vec` of `N * N` elements.
 ///
 /// # Type Parameters
 ///
-/// * `G` - The gauge group (U1, SU2, SU3, etc.)
 /// * `G` - The gauge group (U1, SU2, SU3, etc.)
 /// * `M` - Matrix element type (Field + `DivisionAlgebra<R>`)
 /// * `R` - Scalar type (RealField)
@@ -40,9 +39,8 @@ pub(crate) mod random;
 /// - **Continuum limit:** U_μ(x) ≈ exp(ia A_μ(x))
 #[derive(Debug, Clone)]
 pub struct LinkVariable<G: GaugeGroup, M, R> {
-    /// Matrix elements of the group element.
-    /// Shape: [N, N] for SU(N) where N = matrix dimension.
-    /// Row-major `N x N` matrix elements, `N = G::matrix_dim()`.
+    /// Matrix elements of the group element:
+    /// row-major `N x N` matrix elements, `N = G::matrix_dim()`.
     ///
     /// The gauge group fixes the extent, so the shape is not carried alongside the elements.
     data: Vec<M>,
@@ -61,7 +59,7 @@ impl<G: GaugeGroup, M: Field + Copy + Default + PartialOrd, R: RealField> LinkVa
     ///
     /// # Errors
     ///
-    /// Returns `LinkVariableError::TensorCreation` if matrix allocation fails.
+    /// Returns `LinkVariableError::InvalidDimension` if `G::matrix_dim()` is zero.
     pub fn try_identity() -> Result<Self, LinkVariableError>
     where
         M: Field,
@@ -91,7 +89,7 @@ impl<G: GaugeGroup, M: Field + Copy + Default + PartialOrd, R: RealField> LinkVa
     ///
     /// # Panics
     ///
-    /// Panics if tensor creation fails (should never happen for valid groups).
+    /// Panics if `G::matrix_dim()` is zero.
     pub fn identity() -> Self
     where
         M: Field,
@@ -104,7 +102,7 @@ impl<G: GaugeGroup, M: Field + Copy + Default + PartialOrd, R: RealField> LinkVa
     ///
     /// # Arguments
     ///
-    /// * `data` - Tensor of shape [N, N] for SU(N)
+    /// * `data` - Row-major `N x N` elements, `N = G::matrix_dim()`
     ///
     /// # Returns
     ///
@@ -112,8 +110,8 @@ impl<G: GaugeGroup, M: Field + Copy + Default + PartialOrd, R: RealField> LinkVa
     ///
     /// # Errors
     ///
-    /// Returns `LinkVariableError::ShapeMismatch` if tensor shape doesn't match
-    /// expected [N, N] for the gauge group.
+    /// Returns `LinkVariableError::ShapeMismatch` if `data.len() != N * N`; `got` carries the
+    /// length.
     pub fn try_from_matrix(data: Vec<M>) -> Result<Self, LinkVariableError> {
         let n = G::matrix_dim();
         let expected = vec![n, n];
@@ -149,7 +147,7 @@ impl<G: GaugeGroup, M: Field + Copy + Default + PartialOrd, R: RealField> LinkVa
     ///
     /// # Errors
     ///
-    /// Returns error if tensor creation fails.
+    /// Returns `LinkVariableError::InvalidDimension` if `G::matrix_dim()` is zero.
     pub fn try_zero() -> Result<Self, LinkVariableError>
     where
         M: Field,
@@ -198,8 +196,8 @@ impl<G: GaugeGroup, M: Field + Copy + Default + PartialOrd, R: RealField> LinkVa
     ///
     /// # Errors
     ///
-    /// Returns `LinkVariableError::TensorCreation` if matrix allocation fails,
-    /// or `LinkVariableError::SingularMatrix` if projection fails.
+    /// Returns `LinkVariableError::InvalidDimension` if `G::matrix_dim()` is zero, and otherwise
+    /// any error of [`project_sun`](Self::project_sun), which rejects `N >= 4`.
     ///
     /// # Example
     ///
@@ -270,7 +268,8 @@ impl<G: GaugeGroup, M: Field + Copy + Default + PartialOrd, R: RealField> LinkVa
     ///
     /// # Errors
     ///
-    /// Returns `LinkVariableError::TensorCreation` if matrix allocation fails.
+    /// Returns `LinkVariableError::InvalidDimension` if `G::matrix_dim()` is zero, or
+    /// `LinkVariableError::NumericalError` if `N - 1` does not convert to `R` (`N >= 4`).
     ///
     /// # Example
     ///
@@ -353,7 +352,7 @@ impl<G: GaugeGroup, M: Field + Copy + Default + PartialOrd, R: RealField> LinkVa
     ///
     /// # Panics
     ///
-    /// Panics if tensor creation fails (should never happen for valid groups).
+    /// Panics where [`try_from_phase`](Self::try_from_phase) returns an error.
     pub fn from_phase(phase: R) -> Self
     where
         M: ComplexField<R> + Field,

@@ -184,6 +184,49 @@ fn test_link_variable_try_scale() {
 }
 
 #[test]
+fn test_link_variable_try_ops_match_infallible_on_non_commuting_matrices() {
+    // A = [[1+2i, 3], [4, 5-i]], B = [[i, 2], [1-i, 0]]: complex, non-symmetric, AB != BA.
+    let a: LinkVariable<SU2, Complex<f64>, f64> = LinkVariable::try_from_matrix(vec![
+        Complex::new(1.0, 2.0),
+        Complex::new(3.0, 0.0),
+        Complex::new(4.0, 0.0),
+        Complex::new(5.0, -1.0),
+    ])
+    .unwrap();
+    let b: LinkVariable<SU2, Complex<f64>, f64> = LinkVariable::try_from_matrix(vec![
+        Complex::new(0.0, 1.0),
+        Complex::new(2.0, 0.0),
+        Complex::new(1.0, -1.0),
+        Complex::new(0.0, 0.0),
+    ])
+    .unwrap();
+    let alpha = Complex::new(2.0, -1.0);
+
+    // AB, computed by hand.
+    let ab = [
+        Complex::new(1.0, -2.0),
+        Complex::new(2.0, 4.0),
+        Complex::new(4.0, -2.0),
+        Complex::new(8.0, 0.0),
+    ];
+    assert_eq!(a.try_mul(&b).unwrap().as_slice(), &ab);
+    assert_eq!(a.mul(&b).as_slice(), &ab);
+    assert_ne!(b.mul(&a).as_slice(), &ab);
+
+    assert_eq!(a.try_add(&b).unwrap(), a.add(&b));
+    assert_eq!(a.try_scale(&alpha).unwrap(), a.scale(&alpha));
+    assert_eq!(a.try_dagger().unwrap(), a.dagger());
+    assert_eq!(
+        a.try_scale(&alpha).unwrap().as_slice()[1],
+        Complex::new(6.0, -3.0)
+    );
+    assert_eq!(
+        a.try_add(&b).unwrap().as_slice()[2],
+        Complex::new(5.0, -1.0)
+    );
+}
+
+#[test]
 fn test_link_variable_trace() {
     let id: LinkVariable<SU2, Complex<f64>, f64> = LinkVariable::identity();
     let tr = id.trace();

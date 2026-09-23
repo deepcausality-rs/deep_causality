@@ -83,7 +83,7 @@ where
     // 2. `codifferential_of` panics on a manifold with no metric, so refuse one here instead.
     // `Manifold::new` builds exactly that, and it is the constructor callers reach for first.
     if em_manifold.metric().is_none() {
-        return Err(PhysicsError::DimensionMismatch(
+        return Err(PhysicsError::CalculationError(
             "relativistic current reads the mass matrices a Regge geometry vends; this manifold \
              carries no metric. Construct it with Manifold::with_metric"
                 .into(),
@@ -92,14 +92,8 @@ where
 
     // 3. The operator counts stand in for the complex's own dimension: a 2-form on spacetime
     // needs a complex that carries 3-simplices, which a 4D metric alone does not establish.
-    //
-    // Reading `hodge_star_operators()` here also forces the lazy build while its error is still
-    // recoverable. `codifferential_of` reaches the same accessor through `hodge_star_matrix` and
-    // `.expect()`s it, so a complex with degenerate geometry would panic inside the crate rather
-    // than return; this call converts that into the kernel's own `Result`.
-    let hodge_ops = complex
-        .hodge_star_operators()
-        .map_err(|e| PhysicsError::CalculationError(format!("Hodge ⋆ unavailable: {}", e)))?;
+    // `Manifold::with_metric` has already built the Hodge ⋆ operators, so this reads the cache.
+    let hodge_ops = complex.hodge_star_operators()?;
 
     if hodge_ops.len() < 4 {
         return Err(PhysicsError::CalculationError(format!(
@@ -108,10 +102,12 @@ where
         )));
     }
 
-    if complex.coboundary_operators().len() < 3 {
+    // `codifferential_of` applies the boundary operator ∂₂ and reads an absent one as zero, which
+    // would return J = 0 for any F.
+    if complex.boundary_operators().len() < 2 {
         return Err(PhysicsError::CalculationError(format!(
-            "Missing coboundary operators: need 3, have {}",
-            complex.coboundary_operators().len()
+            "Missing boundary operator ∂₂: need 2 boundary operators, have {}",
+            complex.boundary_operators().len()
         )));
     }
 
