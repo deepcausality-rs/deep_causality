@@ -352,11 +352,7 @@ fn test_a_shared_conflicting_node_keeps_one_identity() {
     // The same node, changed in place, sits in the base and in an extra. It must be re-created
     // once, under one fresh identifier, and both containers must link that identifier.
     let storage = MemoryStorage::new();
-    let (base, extra, n) = stored_world(&storage);
-    // Put the base's count into the extra too, so both graphs hold node n[1].
-    block_on(storage.link(extra, &n[1..2])).unwrap();
-    let store = ContextStore::new(storage.clone());
-    let mut branch: UniformContext = block_on(store.hydrate(&base)).unwrap();
+    let (store, mut branch, extra, n) = shared_branch(&storage);
     branch.update_node(n[1], count(n[1], 99)).unwrap();
     branch.extra_ctx_set_current_id(extra).unwrap();
     let index = (0..8)

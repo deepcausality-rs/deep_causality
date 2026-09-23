@@ -31,9 +31,19 @@ fn test_five_variants_all_distinct() {
     ];
     for (i, a) in all.iter().enumerate() {
         for (j, b) in all.iter().enumerate() {
-            assert_eq!(a == b, i == j);
+            assert_eq!(
+                a == b,
+                i == j,
+                "variant {i} {a:?} against variant {j} {b:?}"
+            );
         }
     }
     assert_eq!(all.clone(), all);
-    assert!(format!("{:?}", all[3]).contains("Link"));
+    assert!(matches!(
+        &all[3],
+        ContextWrite::Link {
+            context: ContainerRef::Created(0),
+            nodes,
+        } if nodes.is_empty()
+    ));
 }

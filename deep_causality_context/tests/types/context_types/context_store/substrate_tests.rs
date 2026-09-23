@@ -23,8 +23,7 @@ use deep_causality_context_store::{
     ContextId, ContextStorage, ContextoidId, ContextoidRecord, DataRecord, MemoryStorageError,
     MemorySubstrateError, NodeRecord, ProjectionError, SpaceRecord, Substrate,
 };
-use std::cell::{Cell, RefCell};
-use std::collections::HashMap;
+use std::cell::Cell;
 use std::future::Future;
 
 fn number(
@@ -278,16 +277,16 @@ fn test_extras_are_resolved_too() {
     );
 }
 
-/// A substrate under the `Substrate` contract, keyed by node, that also counts its deposits.
+/// The in-memory substrate, counting the deposits it is asked for.
 struct CountingSubstrate {
-    values: RefCell<HashMap<String, DataRecord>>,
+    inner: MemorySubstrate,
     deposits: Cell<usize>,
 }
 
 impl CountingSubstrate {
     fn new() -> Self {
         Self {
-            values: RefCell::new(HashMap::new()),
+            inner: MemorySubstrate::new(),
             deposits: Cell::new(0),
         }
     }
@@ -302,22 +301,14 @@ impl Substrate for CountingSubstrate {
         value: &DataRecord,
     ) -> impl Future<Output = Result<SubstrateRef, Self::Error>> + Send {
         self.deposits.set(self.deposits.get() + 1);
-        let key = node.to_string();
-        self.values.borrow_mut().insert(key.clone(), value.clone());
-        std::future::ready(Ok(SubstrateRef::new(
-            MemorySubstrate::SOURCE.to_string(),
-            key,
-        )))
+        self.inner.deposit(node, value)
     }
 
     fn resolve(
         &self,
         reference: &SubstrateRef,
     ) -> impl Future<Output = Result<DataRecord, Self::Error>> + Send {
-        let held = self.values.borrow().get(reference.key()).cloned();
-        std::future::ready(
-            held.ok_or_else(|| MemorySubstrateError::UnknownReference(reference.clone())),
-        )
+        self.inner.resolve(reference)
     }
 }
 
@@ -411,7 +402,7 @@ fn test_a_refused_create_leaves_one_value_per_node() {
         );
     }
     assert_eq!(substrate.deposits.get(), 2);
-    assert_eq!(substrate.values.borrow().len(), 1);
+    assert_eq!(substrate.inner.len(), 1);
     let reference = SubstrateRef::new(MemorySubstrate::SOURCE.to_string(), unreserved.to_string());
     assert_eq!(
         block_on(substrate.resolve(&reference)),

@@ -248,7 +248,9 @@ impl MemoryState {
         Ok(events)
     }
 
-    /// Every edge between `id` and a node `member` admits, in either direction, by `(from, to)`.
+    /// The relations the store holds between `id` and each node for which `member` returns true,
+    /// in either direction and ordered by `(from, to)`. `link` sends them as the `edges` of the
+    /// `NodeLinked` event it emits for `id`.
     fn incident(
         &self,
         id: ContextoidId,
