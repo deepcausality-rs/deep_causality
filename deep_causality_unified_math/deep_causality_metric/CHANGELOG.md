@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_metric-v0.2.9...deep_causality_metric-v0.3.0) - 2026-09-23
+
+### Added
+
+- *(deep_causality_context)* [**breaking**] add ContextFrame, NoSpaceTime and MetricFamily; declare FloatType per crate
+
+### Other
+
+- edit all READMEs for clarity, concision and correctness
+- *(deep_causality_metric)* Improved documentation.
+- *(deep_causality_metric)* Improved tests and test coverage.
+- *(deep_causality_metric)* Improved tests and test coverage.
+- *(metric)* [**breaking**] remove the unqualified metric default
+- *(deep_causality_unified_math)* regenerated SBOM.
+
 ## [0.2.9](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_metric-v0.2.8...deep_causality_metric-v0.2.9) - 2026-09-15
 
 ### Fixed

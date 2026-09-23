@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.6](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_uncertain-v0.5.5...deep_causality_uncertain-v0.5.6) - 2026-09-23
+
+### Other
+
+- align READMEs, rustdoc and example comments with the code
+- edit all READMEs for clarity, concision and correctness
+- *(deep_causality_unified_math)* regenerated SBOM.
+
 ## [0.5.5](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_uncertain-v0.5.3...deep_causality_uncertain-v0.5.5) - 2026-09-15
 
 ### Added

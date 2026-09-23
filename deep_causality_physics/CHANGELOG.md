@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_physics-v0.9.0...deep_causality_physics-v0.10.0) - 2026-09-23
+
+### Fixed
+
+- *(topology,physics)* gauge boundary edges, Hodge validation and build cost, grmhd guards
+- *(deep_causality_physics)* take the codifferential from the crate that owns it
+- *(deep_causality_physics)* Added missing core::error impl to PhysicsError for enable proper error propagation.
+
+### Other
+
+- align READMEs, rustdoc and example comments with the code
+- *(deep_causality_topology)* grade-0 Hodge star reads the vertex star
+- edit all READMEs for clarity, concision and correctness
+- *(deep_causality_physics)* Improved documentation
+- *(deep_causality_physics)* give the mhd kernels external reference values; correct a false docstring
+- *(deep_causality_physics)* review the quantities suite; drop a redundant assertion
+- *(deep_causality_physics)* pin every refusal's reason; finish the wrapper and fixture repairs
+- *(deep_causality_physics)* break the circular oracles and finish the wrapper delegation
+- *(deep_causality_physics)* pin the connection kernels; fix a panic in geodesic deviation
+- *(metric)* [**breaking**] remove the unqualified metric default
+- *(deep_causality_physics)* regenerated SBOM.
+- code formattng and linting
+- *(examples)* fold chronometric_examples into physics_examples
+
 ## [0.9.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_physics-v0.8.3...deep_causality_physics-v0.9.0) - 2026-09-15
 
 ### Fixed

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.11](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num_complex-v0.1.10...deep_causality_num_complex-v0.1.11) - 2026-09-23
+
+### Other
+
+- edit all READMEs for clarity, concision and correctness
+- *(deep_causality_unified_math)* regenerated SBOM.
+
 ## [0.1.10](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num_complex-v0.1.9...deep_causality_num_complex-v0.1.10) - 2026-09-15
 
 ### Other
