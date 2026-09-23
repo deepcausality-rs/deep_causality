@@ -486,3 +486,30 @@ node at the base release and is untouched by an extra's release. No entry was ad
 `.cargo/mutants.toml`. The unviable mutants are `Default::default()` substitutions on return
 types with no `Default`: `StoreError`, `&S`, `IdReserve`, `Context`, the `(Context, Events)`
 pair and `ContextoidRecord`.
+
+## Task groups 11 to 13: documentation and verification
+
+Documentation carries no tests; this section records the verification that closes the change.
+
+- `cargo test -p deep_causality_context_store`: 156 passed. `cargo test -p deep_causality_context`:
+  618 passed, 22 doctests, the `compile_fail` doctest passed.
+- Coverage floor. Store crate: every file at 100% of lines except three lines in `utils_test`,
+  the `NodeEntered` and `NodeLeft` alternatives of match arms recorded as unreachable under
+  group 5. Context crate: every added or edited file at 100% except the unreachable graph-refusal
+  arms recorded under groups 7 to 10 (`restore.rs`, `apply.rs`) and the same arm in
+  `extra_ctx_add_node` (`extendable_contextuable_graph.rs`, two lines), where the graph is never
+  frozen and the extra is the one just looked up.
+- `make format && make fix`: clean, no `#[allow]` added.
+- `bazel test //...`: 1482 tests pass. 97 test files under `deep_causality_context/tests` and 35
+  under `deep_causality_context_store/tests`, each matched by a suite glob.
+- `cargo build -p deep_causality_core --no-default-features --features no-std`: builds.
+- The store crate's manifest has no `[dependencies]` table; `cargo tree` shows the crate alone.
+- `u64` in the store crate's sources: the `IdentificationValue` declaration, the `Count` payload
+  and the two `tick` fields. No identifier position names the width.
+- SBOM pairs generated for the store crate and regenerated for the context crate, whose
+  dependency set changed, with the command `scripts/sbom.sh` runs per crate. The other thirty
+  crates' SBOMs are unchanged and were not regenerated.
+- `openspec validate --changes`: passes.
+- AGENTS.md's tier block was re-derived from the 32 manifests. Besides the new crate it gained one
+  correction: `deep_causality_uncertain` depends on `deep_causality_haft`, which the block had
+  omitted.
