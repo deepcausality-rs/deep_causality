@@ -207,3 +207,263 @@ fn test_descent_reaches_ground_via_iterate_until() {
     assert!(touchdown.h <= 0.0);
     assert!(touchdown.v < 0.0); // still moving downward at impact
 }
+
+// ============================================================================
+// Field Hessian: `hessian(&x)[i][j] = ∂²f / ∂xᵢ∂xⱼ`
+// ============================================================================
+//
+// Every expected entry is the hand-derived closed-form second derivative of the fixture,
+// written as a literal (or, for the transcendental fixture, as the analytic expression).
+// The fixtures carry distinct, non-zero entries so that a dropped mirror write, a skipped
+// diagonal, a wrong `ε` channel, or a wrong seeded coordinate changes the answer. Swapping the
+// inner and outer seeds cannot: a C² field has a symmetric Hessian, and each value is written to
+// both `(i, j)` and `(j, i)`.
+
+// f(x, y, z) = x²y + 3yz³ + xz
+//   H = [[2y, 2x, 1], [2x, 0, 9z²], [1, 9z², 18yz]]
+struct Cubic3;
+impl DifferentiableField<3> for Cubic3 {
+    fn run<S: Scalar>(&self, p: &[S; 3]) -> S {
+        let three = S::from_f64(3.0).unwrap();
+        p[0] * p[0] * p[1] + three * p[1] * p[2] * p[2] * p[2] + p[0] * p[2]
+    }
+}
+
+// f(x) = Σ_{i ≤ j} a_ij xᵢ xⱼ with a_ij = 1 + i + 4j (i ≤ j), so
+//   H[i][i] = 2·a_ii,  H[i][j] = H[j][i] = a_ij (i < j).
+struct UpperQuadratic4;
+impl DifferentiableField<4> for UpperQuadratic4 {
+    fn run<S: Scalar>(&self, p: &[S; 4]) -> S {
+        let mut acc = S::zero();
+        for i in 0..4 {
+            for j in i..4 {
+                let a = S::from_usize(1 + i + 4 * j).unwrap();
+                acc += a * p[i] * p[j];
+            }
+        }
+        acc
+    }
+}
+
+// Rosenbrock f(x, y) = (1 − x)² + 100(y − x²)²
+//   H = [[2 − 400(y − x²) + 800x², −400x], [−400x, 200]]
+struct Rosenbrock;
+impl DifferentiableField<2> for Rosenbrock {
+    fn run<S: Scalar>(&self, p: &[S; 2]) -> S {
+        let one = S::one();
+        let hundred = S::from_f64(100.0).unwrap();
+        let a = one - p[0];
+        let b = p[1] - p[0] * p[0];
+        a * a + hundred * b * b
+    }
+}
+
+// f(x, y) = sin(x·y) + x·exp(y)
+//   H = [[−y² sin(xy),              cos(xy) − xy sin(xy) + exp(y)],
+//        [cos(xy) − xy sin(xy) + exp(y), −x² sin(xy) + x exp(y)]]
+struct SinExp;
+impl DifferentiableField<2> for SinExp {
+    fn run<S: Scalar>(&self, p: &[S; 2]) -> S {
+        (p[0] * p[1]).sin() + p[0] * p[1].exp()
+    }
+}
+
+// f(x) = x³ → f''(x) = 6x
+struct Cube1;
+impl DifferentiableField<1> for Cube1 {
+    fn run<S: Scalar>(&self, p: &[S; 1]) -> S {
+        p[0] * p[0] * p[0]
+    }
+}
+
+// The zero-input field: a constant.
+struct Constant0;
+impl DifferentiableField<0> for Constant0 {
+    fn run<S: Scalar>(&self, _p: &[S; 0]) -> S {
+        S::from_f64(7.0).unwrap()
+    }
+}
+
+// f(x, y) = x²y — used for NaN propagation.
+struct XSquaredY;
+impl DifferentiableField<2> for XSquaredY {
+    fn run<S: Scalar>(&self, p: &[S; 2]) -> S {
+        p[0] * p[0] * p[1]
+    }
+}
+
+#[test]
+fn test_hessian_cubic_distinct_entries() {
+    // (x, y, z) = (1, 2, 3): H = [[4, 2, 1], [2, 0, 81], [1, 81, 108]] (closed form above).
+    let h = Cubic3.hessian(&[1.0_f64, 2.0, 3.0]);
+    assert_eq!(h, [[4.0, 2.0, 1.0], [2.0, 0.0, 81.0], [1.0, 81.0, 108.0]]);
+}
+
+#[test]
+fn test_hessian_cubic_negative_point() {
+    // (x, y, z) = (−1, 2, −3): H = [[4, −2, 1], [−2, 0, 81], [1, 81, −108]] (closed form above).
+    let h = Cubic3.hessian(&[-1.0_f64, 2.0, -3.0]);
+    assert_eq!(
+        h,
+        [[4.0, -2.0, 1.0], [-2.0, 0.0, 81.0], [1.0, 81.0, -108.0]]
+    );
+}
+
+#[test]
+fn test_hessian_quadratic_n4_every_position() {
+    // a_ij = 1 + i + 4j:
+    //   diagonal 2·a_ii = 2, 12, 22, 32;
+    //   a_01 = 5, a_02 = 9, a_03 = 13, a_12 = 10, a_13 = 14, a_23 = 15.
+    // A quadratic has a constant Hessian, so the point only has to be generic.
+    let h = UpperQuadratic4.hessian(&[0.3_f64, -1.7, 2.9, 0.4]);
+    let want = [
+        [2.0, 5.0, 9.0, 13.0],
+        [5.0, 12.0, 10.0, 14.0],
+        [9.0, 10.0, 22.0, 15.0],
+        [13.0, 14.0, 15.0, 32.0],
+    ];
+    for i in 0..4 {
+        for j in 0..4 {
+            assert!(
+                (h[i][j] - want[i][j]).abs() < 1e-12,
+                "H[{i}][{j}] = {} want {}",
+                h[i][j],
+                want[i][j]
+            );
+        }
+    }
+}
+
+#[test]
+fn test_hessian_rosenbrock_at_minimum() {
+    // At the minimum (1, 1): H = [[802, −400], [−400, 200]] (closed form above).
+    let h = Rosenbrock.hessian(&[1.0_f64, 1.0]);
+    assert_eq!(h, [[802.0, -400.0], [-400.0, 200.0]]);
+}
+
+#[test]
+fn test_hessian_rosenbrock_off_minimum() {
+    // At (−1.2, 1): y − x² = −0.44, so H_xx = 2 + 176 + 1152 = 1330, H_xy = 480, H_yy = 200.
+    let h = Rosenbrock.hessian(&[-1.2_f64, 1.0]);
+    let want = [[1330.0, 480.0], [480.0, 200.0]];
+    for i in 0..2 {
+        for j in 0..2 {
+            assert!(
+                (h[i][j] - want[i][j]).abs() < 1e-9,
+                "H[{i}][{j}] = {}",
+                h[i][j]
+            );
+        }
+    }
+}
+
+#[test]
+fn test_hessian_transcendental_closed_form() {
+    let (x, y) = (0.8_f64, -0.6_f64);
+    let h = SinExp.hessian(&[x, y]);
+    let (s, c, e) = ((x * y).sin(), (x * y).cos(), y.exp());
+    let hxx = -y * y * s;
+    let hxy = c - x * y * s + e;
+    let hyy = -x * x * s + x * e;
+    assert!((h[0][0] - hxx).abs() < 1e-14);
+    assert!((h[0][1] - hxy).abs() < 1e-14);
+    assert!((h[1][0] - hxy).abs() < 1e-14);
+    assert!((h[1][1] - hyy).abs() < 1e-14);
+}
+
+#[test]
+fn test_hessian_is_exactly_symmetric() {
+    // Schwarz: H[i][j] = H[j][i] for a C² field; the returned matrix holds it bit for bit.
+    let h = SinExp.hessian(&[1.3_f64, 0.7]);
+    assert_eq!(h[0][1].to_bits(), h[1][0].to_bits());
+    let h = UpperQuadratic4.hessian(&[0.1_f64, 0.2, 0.3, 0.4]);
+    (0..4)
+        .flat_map(|i| (0..4).map(move |j| (i, j)))
+        .for_each(|(i, j)| assert_eq!(h[i][j].to_bits(), h[j][i].to_bits()));
+}
+
+#[test]
+fn test_hessian_agrees_with_finite_difference_of_gradient() {
+    // Independent algorithm: central differences of the first-order gradient.
+    let p = [0.8_f64, -0.6];
+    let h = SinExp.hessian(&p);
+    let step = 1e-5;
+    for j in 0..2 {
+        let mut plus = p;
+        let mut minus = p;
+        plus[j] += step;
+        minus[j] -= step;
+        let gp = SinExp.gradient(&plus);
+        let gm = SinExp.gradient(&minus);
+        for i in 0..2 {
+            let fd = (gp[i] - gm[i]) / (2.0 * step);
+            assert!(
+                (h[i][j] - fd).abs() < 1e-7,
+                "H[{i}][{j}] = {} fd {fd}",
+                h[i][j]
+            );
+        }
+    }
+}
+
+#[test]
+fn test_hessian_single_input() {
+    // f(x) = x³ at x = 2: f'' = 12.
+    assert_eq!(Cube1.hessian(&[2.0_f64]), [[12.0]]);
+    // At x = −0.5: f'' = −3.
+    assert_eq!(Cube1.hessian(&[-0.5_f64]), [[-3.0]]);
+}
+
+#[test]
+fn test_hessian_zero_inputs() {
+    // A `[[f64; 0]; 0]` has no entry to assert on; the test pins that `N = 0` returns without
+    // panicking.
+    let _h: [[f64; 0]; 0] = Constant0.hessian(&[]);
+}
+
+#[test]
+fn test_hessian_nan_input_propagates() {
+    // A NaN coordinate reaches every entry of x²y's Hessian; nothing is substituted.
+    let h = XSquaredY.hessian(&[f64::NAN, 1.0]);
+    for row in h {
+        for v in row {
+            assert!(v.is_nan());
+        }
+    }
+    // A finite point gives [[2y, 2x], [2x, 0]] = [[2, 6], [6, 0]] at (3, 1).
+    assert_eq!(XSquaredY.hessian(&[3.0_f64, 1.0]), [[2.0, 6.0], [6.0, 0.0]]);
+}
+
+// --- Precision is a parameter: the same field and point at f32 / f64 / Float106 ---
+// At (1, 2, 3) every entry of Cubic3's Hessian is a small integer, exact at all three. The `f64`
+// case is `test_hessian_cubic_distinct_entries`.
+
+#[test]
+fn test_hessian_precision_f32() {
+    let h = Cubic3.hessian(&[1.0_f32, 2.0, 3.0]);
+    assert_eq!(h, [[4.0, 2.0, 1.0], [2.0, 0.0, 81.0], [1.0, 81.0, 108.0]]);
+}
+
+#[test]
+fn test_hessian_precision_float106() {
+    let f = Float106::from;
+    let h = Cubic3.hessian(&[f(1.0), f(2.0), f(3.0)]);
+    let want = [
+        [f(4.0), f(2.0), f(1.0)],
+        [f(2.0), f(0.0), f(81.0)],
+        [f(1.0), f(81.0), f(108.0)],
+    ];
+    assert_eq!(h, want);
+}
+
+#[test]
+fn test_hessian_precision_float106_transcendental() {
+    // Float106 resolves the transcendental Hessian far below f64's ε.
+    let f = Float106::from;
+    let (x, y) = (f(0.8), f(-0.6));
+    let h = SinExp.hessian(&[x, y]);
+    let (s, c, e) = ((x * y).sin(), (x * y).cos(), y.exp());
+    let hxy = c - x * y * s + e;
+    assert!((h[0][1] - hxy).abs() < f(1e-28));
+    assert!((h[1][1] - (-x * x * s + x * e)).abs() < f(1e-28));
+}

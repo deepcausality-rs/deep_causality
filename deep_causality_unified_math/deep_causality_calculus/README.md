@@ -65,8 +65,10 @@ let d2 = XSinX.second_derivative(0.9);         // same model, instantiated at Du
 ```
 
 Multi-input fields implement `DifferentiableField<N>` (`Rᴺ → R`) and reach
-`gradient` and `directional_derivative` via `DifferentiateFieldExt`; the gradient
-seeds one coordinate per pass and allocates nothing.
+`gradient`, `directional_derivative` and `hessian` via `DifferentiateFieldExt`.
+The gradient seeds one coordinate per pass; the Hessian runs the same model over
+`Dual<Dual<R>>`, one pass per upper-triangle entry, and returns an exactly
+symmetric `[[R; N]; N]`. Neither allocates.
 
 ```rust
 use deep_causality_calculus::{DifferentiableField, DifferentiateFieldExt, Scalar};
@@ -80,6 +82,7 @@ impl DifferentiableField<2> for NormSquared {
 
 let g = NormSquared.gradient(&[3.0_f64, 4.0]);                 // [6.0, 8.0]
 let d = NormSquared.directional_derivative(&[1.0, 1.0], &[2.0, 0.0]); // 4.0
+let h = NormSquared.hessian(&[3.0_f64, 4.0]);                  // [[2.0, 0.0], [0.0, 2.0]]
 ```
 
 `Diff` is the same functor applied to a *morphism*: a concrete `Arrow` from
