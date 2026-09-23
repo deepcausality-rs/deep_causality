@@ -67,9 +67,10 @@ const BETA_VALUES: [f64; 6] = [0.5, 1.0, 2.0, 4.0, 6.0, 10.0];
 /// How far a measured plaquette may sit from `I_1/I_0` and still count as agreement, per entry
 /// of `BETA_VALUES`.
 ///
-/// Measured, not guessed: `--calibrate` runs 60 seeds (101..=160) from the identity start at the sweep counts above
-/// gave, per coupling, the mean deviation `m`, its standard deviation `s` and the largest
-/// `|deviation|` seen, against the gap `1 - I_1/I_0` that a field which never moves would show:
+/// Measured, not guessed: 60 seeds (101..=160) from the identity start at the sweep counts
+/// above, rerun by `--calibrate`, gave per coupling the mean deviation `m`, its standard
+/// deviation `s` and the largest `|deviation|` seen, against the gap `1 - I_1/I_0` that a field
+/// which never moves would show:
 ///
 /// ```text
 /// beta    m          s         max|dev|   band    gap
@@ -100,10 +101,10 @@ const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
 /// Sweeps in the measurement run, at the working type, for the average.
 const MEASURED: FloatType = const_scalar_from_int!(FloatType, MEASURE_SWEEPS as i128);
 
-/// `f64` is the right precision here, and the reason is worth stating: the measurement is a
-/// Monte Carlo average whose seed-to-seed spread is `8e-4` to `1.6e-2` at these run lengths
-/// (see `AGREEMENT_TOLERANCES`). That is more than ten orders of magnitude above `f64` rounding, so extra
-/// precision buys nothing the error bars would notice. `Float106` would only sharpen the
+/// `f64` is the right precision here, and the reason is worth stating: the measurement is a Monte
+/// Carlo average whose seed-to-seed spread is `8e-4` to `1.6e-2` at these run lengths (see
+/// `AGREEMENT_TOLERANCES`). That is more than ten orders of magnitude above `f64` rounding, so
+/// extra precision buys nothing the error bars would notice. `Float106` would only sharpen the
 /// *reference* curve, which already agrees with itself to `1e-12`.
 type FloatType = f64;
 
@@ -189,12 +190,13 @@ enum Start {
 /// The 2D torus splits configurations into sectors of topological charge
 /// `Q = (1/2pi) sum_p arg U_p`, and the local update tunnels between them readily at strong
 /// coupling (about 300, 250 and 90 changes of `Q` per measured run at `beta = 0.5, 1, 2`) and
-/// almost never at `beta >= 6` (none in the median run). A random start lands in a random sector
-/// and stays there. Over 60 random starts at `beta = 10` (`--calibrate`), none changed `Q`, and the mean deviation
-/// by sector was `+1.0e-3` at `Q = 0` (21 runs), `-3.8e-3` at `|Q| = 1` (30), `-1.9e-2` at
-/// `|Q| = 2` (6) and `-4.3e-2` at `|Q| = 3` (3); `beta = 6` shows the same pattern. The identity
-/// has `Q = 0`, the sector of largest weight. At strong coupling the start makes no difference: the field
-/// tunnels hundreds of times during the run, and both starts give means within their error.
+/// almost never at `beta >= 6` (none in the median run). A random start lands in a random
+/// sector and stays there. Over 60 random starts at `beta = 10` (`--calibrate`), none changed
+/// `Q`, and the mean deviation by sector was `+1.0e-3` at `Q = 0` (21 runs), `-3.8e-3` at
+/// `|Q| = 1` (30), `-1.9e-2` at `|Q| = 2` (6) and `-4.3e-2` at `|Q| = 3` (3); `beta = 6` shows
+/// the same pattern. The identity has `Q = 0`, the sector of largest weight. At strong coupling
+/// the start makes no difference: the field tunnels hundreds of times during the run, and both
+/// starts give means within their error.
 ///
 /// At `beta = 10` the identity start still sits `+9e-4` above `I_1/I_0`. The exact finite-volume
 /// correction on this lattice accounts for `3.6e-4`; the rest is consistent with the run staying
