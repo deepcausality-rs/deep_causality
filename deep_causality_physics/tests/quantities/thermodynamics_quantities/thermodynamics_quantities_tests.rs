@@ -19,8 +19,13 @@ fn test_entropy_new_valid() {
 #[test]
 fn test_entropy_new_negative() {
     // Entropy can be negative in some contexts (relative entropy)
-    let entropy = Entropy::<f64>::new(-10.0);
-    assert!(entropy.is_ok());
+    let entropy = Entropy::<f64>::new(-10.0).unwrap();
+    // `is_ok()` alone admitted any carried value, including a constant.
+    assert!(
+        (entropy.value() - (-10.0)).abs() < 1e-10,
+        "constructed value = {}",
+        entropy.value()
+    );
 }
 
 #[test]
@@ -49,20 +54,36 @@ fn test_efficiency_new_valid() {
 
 #[test]
 fn test_efficiency_new_zero() {
-    let eff = Efficiency::<f64>::new(0.0);
-    assert!(eff.is_ok());
+    let eff = Efficiency::<f64>::new(0.0).unwrap();
+    // `is_ok()` alone admitted any carried value, including a constant.
+    assert!(
+        (eff.value() - (0.0)).abs() < 1e-10,
+        "constructed value = {}",
+        eff.value()
+    );
 }
 
 #[test]
 fn test_efficiency_new_one() {
-    let eff = Efficiency::<f64>::new(1.0);
-    assert!(eff.is_ok());
+    let eff = Efficiency::<f64>::new(1.0).unwrap();
+    // `is_ok()` alone admitted any carried value, including a constant.
+    assert!(
+        (eff.value() - (1.0)).abs() < 1e-10,
+        "constructed value = {}",
+        eff.value()
+    );
 }
 
 #[test]
 fn test_efficiency_new_error_negative() {
     let eff = Efficiency::<f64>::new(-0.1);
-    assert!(eff.is_err());
+    assert!(
+        matches!(
+            eff.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
     let err = eff.unwrap_err();
     assert!(matches!(
         &err.0,
@@ -73,7 +94,13 @@ fn test_efficiency_new_error_negative() {
 #[test]
 fn test_efficiency_new_error_greater_than_one() {
     let eff = Efficiency::<f64>::new(1.1);
-    assert!(eff.is_err());
+    assert!(
+        matches!(
+            eff.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

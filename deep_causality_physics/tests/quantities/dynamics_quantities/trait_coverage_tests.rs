@@ -9,50 +9,41 @@ use deep_causality_physics::{
     Acceleration, Area, Force, Frequency, Length, Mass, MomentOfInertia, Speed, Torque, Volume,
 };
 
+/// The trait contract for a newtype over a scalar, checked against two *distinct* values.
+///
+/// `assert_eq!(a, a.clone())` is reflexive: it holds for any derived `PartialEq` and for a broken
+/// one that always returns true, so it cannot fail. The inequality is what discriminates, and
+/// comparing the two `Debug` renderings is what makes `Debug` observable instead of discarded.
+macro_rules! assert_scalar_traits {
+    ($ty:ty, $small:expr, $large:expr) => {{
+        let a = <$ty>::new($small).unwrap();
+        let b = <$ty>::new($large).unwrap();
+        assert_eq!(a, a.clone(), "clone must preserve equality");
+        assert_ne!(a, b, "distinct values must not compare equal");
+        assert!(a < b, "ordering must follow the wrapped value");
+        assert_ne!(
+            format!("{:?}", a),
+            format!("{:?}", b),
+            "Debug must distinguish distinct values"
+        );
+    }};
+}
+
 #[test]
-#[allow(clippy::clone_on_copy)] // exercising Clone impl for coverage
 fn test_dynamics_scalars_traits() {
+    // Copy semantics: a bitwise copy compares equal to its source.
     let m1 = Mass::<f64>::new(1.0).unwrap();
     let m2 = m1;
-    let m3 = m1.clone();
     assert_eq!(m1, m2);
-    assert_eq!(m1, m3);
-    assert!(m1 < Mass::<f64>::new(2.0).unwrap());
-    let _ = format!("{:?}", m1);
 
-    let s = Speed::<f64>::new(3.0).unwrap();
-    assert!(s < Speed::<f64>::new(4.0).unwrap());
-    let _ = format!("{:?}", s);
-
-    let a = Acceleration::<f64>::new(-1.0).unwrap();
-    let _ = format!("{:?}", a);
-    assert_eq!(a.clone(), a);
-
-    let f = Force::<f64>::new(-5.0).unwrap();
-    let _ = format!("{:?}", f);
-    assert_eq!(f, f.clone());
-
-    let t = Torque::<f64>::new(2.0).unwrap();
-    let _ = format!("{:?}", t);
-    assert_eq!(t, t.clone());
-
-    let l = Length::<f64>::new(2.0).unwrap();
-    assert!(l < Length::<f64>::new(3.0).unwrap());
-    let _ = format!("{:?}", l);
-
-    let ar = Area::<f64>::new(4.0).unwrap();
-    assert!(ar < Area::<f64>::new(5.0).unwrap());
-    let _ = format!("{:?}", ar);
-
-    let v = Volume::<f64>::new(1.0).unwrap();
-    assert!(v < Volume::<f64>::new(2.0).unwrap());
-    let _ = format!("{:?}", v);
-
-    let i = MomentOfInertia::<f64>::new(0.5).unwrap();
-    assert!(i < MomentOfInertia::<f64>::new(1.0).unwrap());
-    let _ = format!("{:?}", i);
-
-    let fr = Frequency::<f64>::new(60.0).unwrap();
-    assert!(fr < Frequency::<f64>::new(120.0).unwrap());
-    let _ = format!("{:?}", fr);
+    assert_scalar_traits!(Mass<f64>, 1.0, 2.0);
+    assert_scalar_traits!(Speed<f64>, 3.0, 4.0);
+    assert_scalar_traits!(Acceleration<f64>, -1.0, 1.0);
+    assert_scalar_traits!(Force<f64>, -5.0, 5.0);
+    assert_scalar_traits!(Torque<f64>, 2.0, 3.0);
+    assert_scalar_traits!(Length<f64>, 2.0, 3.0);
+    assert_scalar_traits!(Area<f64>, 4.0, 5.0);
+    assert_scalar_traits!(Volume<f64>, 1.0, 2.0);
+    assert_scalar_traits!(MomentOfInertia<f64>, 0.5, 1.0);
+    assert_scalar_traits!(Frequency<f64>, 60.0, 120.0);
 }

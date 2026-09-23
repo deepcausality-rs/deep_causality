@@ -23,7 +23,14 @@ fn test_hydrostatic_pressure_wrapper_error_path() {
     let depth = Length::<f64>::new(1.0e200).unwrap();
 
     let effect = hydrostatic_pressure(&p0, &density, &depth);
-    assert!(!effect.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 // =============================================================================
@@ -39,7 +46,14 @@ fn test_dynamic_pressure_wrapper_error_path() {
     let u = Speed::<f64>::new(1.0e200).unwrap();
 
     let effect = dynamic_pressure(&rho, &u);
-    assert!(!effect.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 // NOTE on defensively-unreachable error arms in `kernels::fluids::wrappers`.

@@ -107,31 +107,18 @@ where
 ///
 /// # The contraction is the crate's, not this kernel's
 ///
-/// The interior product is [`deep_causality_topology::SimplicialManifold::interior_product`]
-/// (`unified-math-next` task 6.7u). This kernel previously open-coded the star–wedge identity
-/// `i_v B = ⋆(v ∧ ⋆B)` against `hodge_star_operators()[2]`, and that chain could not be made to
-/// work: it needs a **degree-changing** star `Λ² → Λ¹`, and what the crate vends is the square
-/// diagonal one. The shape check refused every complex built from real geometry, which was correct
-/// and left the kernel unusable in its own domain.
+/// The interior product is [`deep_causality_topology::SimplicialManifold::interior_product`]. It
+/// interpolates both cochains with **Whitney forms** on each tetrahedron and contracts the
+/// reconstructed vector fields, so it needs no Hodge star and is exact for constant fields, which
+/// is the property its tests pin.
 ///
-/// The replacement does not repair that chain, it takes the other standard route. The crate's
-/// simplicial contraction interpolates both cochains with **Whitney forms** on each tetrahedron and
-/// contracts the reconstructed vector fields, which needs no Hodge star at all — and is exact for
-/// constant fields, which is the property its tests pin.
-///
-/// That matters here beyond convenience, because the star this kernel used to reach for is wrong at
-/// intermediate grades: `build_lumped_mass_hodge_star` returns the dual/primal volume ratio only at
-/// `k = 0` and `k = n`, and the primal volume `|σ|` in between. On a regular tetrahedron scaled by
-/// `h`, `⋆₂` measures as `O(h²)` where a Hodge star on 2-forms in three dimensions must scale as
-/// `O(h⁻¹)`. Any formulation composing it would have returned a plausible number that is wrong by a
-/// factor of `h³`. That defect is recorded separately; this kernel no longer depends on it.
+/// The star–wedge route, `i_v B = ⋆(v ∧ ⋆B)`, is not available here: it needs a degree-changing
+/// star `Λ² → Λ¹`, and what the crate vends is the square diagonal one.
 ///
 /// # Sign convention
 ///
 /// `i_v B = (B × V)♭`, read off the components of the contraction, so `−d(i_v B)` is `∇×(v × B)` —
-/// the induction equation as written above. The previous implementation returned `+d(i_v B)` from a
-/// chain whose wedge order was also reversed, and no test could tell, because no in-domain input
-/// ever reached the arithmetic.
+/// the induction equation as written above.
 ///
 /// # Domain
 ///

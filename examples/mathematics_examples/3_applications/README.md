@@ -1,8 +1,8 @@
 # Applications: one use case per example
 
-Every example here takes a problem someone actually has and solves it end to end, in the least
-code that shows the whole shape. `1_foundation/` teaches the vocabulary and `2_composition/`
-teaches the mechanisms; these put both to work on a use case and print an answer.
+Each example solves one practical problem end to end, in the least code that shows the whole
+shape, and prints an answer. `1_foundation/` teaches the vocabulary and `2_composition/` the
+mechanisms; these examples put both to work.
 
 Each example is a folder with a `main.rs`. Run any of them from the repository root:
 
@@ -12,7 +12,7 @@ cargo run -p mathematics_examples --example <example_name>
 
 | Folder | Domain | What it does | Command |
 |---|---|---|---|
-| [differentiate_under_integral](differentiate_under_integral/) | sensitivity analysis | One quadrature sweep over `Dual` returns a definite integral together with its derivative in a parameter, which is the Leibniz rule obtained from the tangent functor | `cargo run -p mathematics_examples --example differentiate_under_integral_examples` |
+| [differentiate_under_integral](differentiate_under_integral/) | sensitivity analysis | One quadrature sweep over `Dual` returns a definite integral together with its derivative in a parameter: the Leibniz rule obtained from the tangent functor | `cargo run -p mathematics_examples --example differentiate_under_integral_examples` |
 | [electromagnetic_field](electromagnetic_field/) | antenna design | Derives the electromagnetic bivector `F = ∇A` from the 4-vector potential by one geometric product, then reads the Lorenz gauge, `E` and `B` out of its blades | `cargo run -p mathematics_examples --example electromagnetic_field_examples` |
 | [imu_tilt_estimation](imu_tilt_estimation/) | robotics, attitude | A geometric tilt estimator with an adaptive gravity observer: a gyro rotor prediction, a Kalman update on body-frame gravity with motion detection and adaptive noise, and a blended correction rotor | `cargo run -p mathematics_examples --example imu_tilt_estimation_examples` |
 | [lattice_gauge_thermalization](lattice_gauge_thermalization/) | lattice QCD | An SU(3) gauge field on a `4⁴` lattice: hot start, Metropolis thermalization, plaquette, Wilson loop, Polyakov loop, APE smearing and Wilson gradient flow | `cargo run -p mathematics_examples --example lattice_gauge_thermalization_examples` |
@@ -23,10 +23,10 @@ cargo run -p mathematics_examples --example <example_name>
 
 ## The house rules
 
-Every example here follows the same five:
+Every example here follows five rules:
 
 1. **Precision is a parameter.** A `FloatType` alias sits directly above `main`, and every
-   quantity in the program carries it. Changing that one line reruns the whole example at
+   quantity in the program carries it. Change that one line to rerun the whole example at
    another scalar.
 2. **Values cross the precision boundary through `deep_causality_num::lift`.** Configuration
    literals are written as `f64`, the widest form a source file holds, and lifted once.

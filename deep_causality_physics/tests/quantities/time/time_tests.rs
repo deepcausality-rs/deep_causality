@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::Time;
+use deep_causality_physics::{PhysicsErrorEnum, Time};
 
 // =============================================================================
 // Time Constructor Tests
@@ -26,7 +26,13 @@ fn test_time_new_zero() {
 #[test]
 fn test_time_new_negative_error() {
     let t = Time::<f64>::new(-1.0);
-    assert!(t.is_err(), "Negative time should error");
+    assert!(
+        matches!(
+            t.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

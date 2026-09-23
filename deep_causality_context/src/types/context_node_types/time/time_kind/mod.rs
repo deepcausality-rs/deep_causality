@@ -5,6 +5,7 @@
 
 mod display;
 mod identifiable;
+mod recordable;
 mod scalar_projector;
 mod temporable;
 

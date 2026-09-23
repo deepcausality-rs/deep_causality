@@ -9,8 +9,8 @@ Machine-checked proofs of the DeepCausality core laws, plus the traceability bri
 each proof to a Rust witness. This is the **L1** layer of the four-layer verification architecture
 in [`../openspec/notes/archive/causal-algebra/Formalization.md`](../openspec/notes/archive/causal-algebra/Formalization.md).
 
-**Separate toolchain.** This is a Lean/`lake` project, *not* part of the Rust workspace. It does
-not affect `cargo build`/`cargo test`. Keep it self-contained here under `lean/`.
+**Separate toolchain.** This Lean/`lake` project sits outside the Rust workspace and does not
+affect `cargo build`/`cargo test`. Keep it self-contained under `lean/`.
 
 ## Layout
 
@@ -37,10 +37,11 @@ lake exe cache get                               # download prebuilt Mathlib (fa
 lake build                                       # compile & check all proofs
 ```
 
-A broken law fails `lake build`. That is the CI gate (`.github/workflows/formalization.yml`).
+A broken law fails `lake build`, the CI gate in `.github/workflows/formalization.yml`. Under Bazel,
+`bazel test //lean:proofs` runs the same check as one `lean_test` target per namespace.
 
 > **Version note.** `lean-toolchain` and the Mathlib `rev` in `lakefile.toml` are pinned together
-> (`v4.15.0`). If `lake build` reports a toolchain/Mathlib mismatch, bump **both** to a matching
+> (`v4.32.0`). If `lake build` reports a toolchain/Mathlib mismatch, bump **both** to a matching
 > released tag from <https://github.com/leanprover-community/mathlib4/tags>.
 
 ## The Lean ↔ Rust bridge
@@ -54,7 +55,7 @@ in Rust (checked), sharing an **id** recorded in [`THEOREM_MAP.md`](THEOREM_MAP.
 ## Scope
 
 The numeric layers are formalized in full against Mathlib carriers, each theorem bound to a Rust
-witness (see `THEOREM_MAP.md`):
+witness in `THEOREM_MAP.md`:
 
 - `Num` — identity (`Zero`/`One`), integer ring laws, cast round-trips, and the `Float106`
   real-field model. The bit-exact double-double error bounds are **[open]** (out of L1 scope; the

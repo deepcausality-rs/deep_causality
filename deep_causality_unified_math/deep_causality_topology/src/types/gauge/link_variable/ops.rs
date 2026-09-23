@@ -6,7 +6,6 @@
 use crate::{GaugeGroup, LinkVariable, LinkVariableError};
 use deep_causality_algebra::{ComplexField, Field, RealField};
 use deep_causality_num::FromPrimitive;
-use deep_causality_tensor::CausalTensor;
 use std::fmt::Debug;
 use std::marker::PhantomData;
 
@@ -20,52 +19,11 @@ impl<
     ///
     /// For real matrices, this is the transpose.
     /// For complex matrices, this is transpose + complex conjugate.
-    ///
-    /// # Returns
-    ///
-    /// The Hermitian conjugate.
-    ///
-    /// # Errors
-    ///
-    /// Returns error if tensor creation fails.
-    /// Returns error if tensor creation fails.
-    pub fn try_dagger(&self) -> Result<Self, LinkVariableError>
-    where
-        M: ComplexField<R>,
-        R: RealField,
-    {
-        let n = G::matrix_dim();
-        let slice = self.data.as_slice();
-        let mut result = vec![M::default(); n * n];
-
-        // Transpose + Conjugate
-        for i in 0..n {
-            for j in 0..n {
-                result[j * n + i] = slice[i * n + j].conjugate();
-            }
-        }
-
-        CausalTensor::new(result, vec![n, n])
-            .map(|tensor| Self {
-                data: tensor,
-                _gauge: PhantomData,
-                _scalar: PhantomData,
-            })
-            .map_err(|e| LinkVariableError::TensorCreation(format!("{:?}", e)))
-    }
-
-    /// Hermitian conjugate U† (convenience method).
-    ///
-    /// For real matrices, this is the transpose.
-    /// Hermitian conjugate U† (convenience method).
-    ///
-    /// For real matrices, this is the transpose.
     pub fn dagger(&self) -> Self
     where
         M: ComplexField<R>,
         R: RealField,
     {
-        // This is a simple memory operation that cannot fail for valid LinkVariable
         let n = G::matrix_dim();
         let slice = self.data.as_slice();
         let mut result = vec![M::default(); n * n];
@@ -76,10 +34,8 @@ impl<
             }
         }
 
-        // Safe because we're creating the correct shape
         Self {
-            data: CausalTensor::new(result, vec![n, n])
-                .unwrap_or_else(|_| panic!("Dagger failed for valid {}x{} matrix", n, n)),
+            data: result,
             _gauge: PhantomData,
             _scalar: PhantomData,
         }
@@ -96,42 +52,6 @@ impl<
     /// # Returns
     ///
     /// The product $U \cdot V$.
-    ///
-    /// # Errors
-    ///
-    /// Returns error if tensor creation fails.
-    /// Returns error if tensor creation fails.
-    pub fn try_mul(&self, other: &Self) -> Result<Self, LinkVariableError>
-    where
-        M: Field,
-    {
-        let n = G::matrix_dim();
-        let a = self.data.as_slice();
-        let b = other.data.as_slice();
-        let mut result = vec![M::default(); n * n];
-
-        // Standard matrix multiplication: C[i,j] = Σ_k A[i,k] * B[k,j]
-        for i in 0..n {
-            for j in 0..n {
-                let mut sum = M::default();
-                for k in 0..n {
-                    let prod = a[i * n + k] * b[k * n + j];
-                    sum = sum + prod;
-                }
-                result[i * n + j] = sum;
-            }
-        }
-
-        CausalTensor::new(result, vec![n, n])
-            .map(|tensor| Self {
-                data: tensor,
-                _gauge: PhantomData,
-                _scalar: PhantomData,
-            })
-            .map_err(|e| LinkVariableError::TensorCreation(format!("{:?}", e)))
-    }
-
-    /// Group multiplication: self * other (convenience method).
     pub fn mul(&self, other: &Self) -> Self
     where
         M: Field,
@@ -153,42 +73,13 @@ impl<
         }
 
         Self {
-            data: CausalTensor::new(result, vec![n, n])
-                .unwrap_or_else(|_| panic!("Matrix multiply failed for {}x{}", n, n)),
+            data: result,
             _gauge: PhantomData,
             _scalar: PhantomData,
         }
     }
 
     /// Matrix addition: self + other.
-    ///
-    /// # Errors
-    ///
-    /// Returns error if tensor creation fails.
-    /// Returns error if tensor creation fails.
-    pub fn try_add(&self, other: &Self) -> Result<Self, LinkVariableError>
-    where
-        M: Field,
-    {
-        let n = G::matrix_dim();
-        let a = self.data.as_slice();
-        let b = other.data.as_slice();
-        let mut result = vec![M::default(); n * n];
-
-        for i in 0..(n * n) {
-            result[i] = a[i] + b[i];
-        }
-
-        CausalTensor::new(result, vec![n, n])
-            .map(|tensor| Self {
-                data: tensor,
-                _gauge: PhantomData,
-                _scalar: PhantomData,
-            })
-            .map_err(|e| LinkVariableError::TensorCreation(format!("{:?}", e)))
-    }
-
-    /// Matrix addition: self + other (convenience method).
     pub fn add(&self, other: &Self) -> Self
     where
         M: Field,
@@ -203,41 +94,13 @@ impl<
         }
 
         Self {
-            data: CausalTensor::new(result, vec![n, n])
-                .unwrap_or_else(|_| panic!("Matrix add failed")),
+            data: result,
             _gauge: PhantomData,
             _scalar: PhantomData,
         }
     }
 
     /// Scalar multiplication: α * self.
-    ///
-    /// # Errors
-    ///
-    /// Returns error if tensor creation fails.
-    /// Returns error if tensor creation fails.
-    pub fn try_scale(&self, alpha: &M) -> Result<Self, LinkVariableError>
-    where
-        M: Field,
-    {
-        let n = G::matrix_dim();
-        let a = self.data.as_slice();
-        let mut result = vec![M::default(); n * n];
-
-        for i in 0..(n * n) {
-            result[i] = *alpha * a[i];
-        }
-
-        CausalTensor::new(result, vec![n, n])
-            .map(|tensor| Self {
-                data: tensor,
-                _gauge: PhantomData,
-                _scalar: PhantomData,
-            })
-            .map_err(|e| LinkVariableError::TensorCreation(format!("{:?}", e)))
-    }
-
-    /// Scalar multiplication: α * self (convenience method).
     pub fn scale(&self, alpha: &M) -> Self
     where
         M: Field,
@@ -251,8 +114,7 @@ impl<
         }
 
         Self {
-            data: CausalTensor::new(result, vec![n, n])
-                .unwrap_or_else(|_| panic!("Matrix scale failed")),
+            data: result,
             _gauge: PhantomData,
             _scalar: PhantomData,
         }
@@ -307,7 +169,12 @@ impl<
     /// Project to SU(N) using polar decomposition.
     ///
     /// Given a general matrix M, computes U = M (M†M)^{-1/2}
-    /// which is the closest unitary matrix to M in Frobenius norm.
+    /// which is the closest unitary matrix to M in Frobenius norm. The zero matrix projects to
+    /// the identity.
+    ///
+    /// The Newton–Schulz iteration maps each singular value σ of the normalised input to
+    /// σ(3 − σ²)/2, so a zero singular value stays zero and a rank-deficient input has no unitary
+    /// limit. The projection is accepted only when `‖X†X − I‖²_F` ends at or below `√ε` of `R`.
     ///
     /// # Returns
     ///
@@ -315,21 +182,10 @@ impl<
     ///
     /// # Errors
     ///
-    /// Returns `LinkVariableError::SingularMatrix` if M†M is not invertible.
-    /// Returns `LinkVariableError::NumericalError` for other numerical issues.
-    /// Project to SU(N) using polar decomposition.
-    ///
-    /// Given a general matrix M, computes U = M (M†M)^{-1/2}
-    /// which is the closest unitary matrix to M in Frobenius norm.
-    ///
-    /// # Returns
-    ///
-    /// The projected SU(N) matrix.
-    ///
-    /// # Errors
-    ///
-    /// Returns `LinkVariableError::SingularMatrix` if M†M is not invertible.
-    /// Returns `LinkVariableError::NumericalError` for other numerical issues.
+    /// Returns `LinkVariableError::InvalidDimension` if `G::matrix_dim()` is zero.
+    /// Returns `LinkVariableError::NumericalError` if a numeric constant does not convert to `R`,
+    /// or if the iteration does not reach a unitary matrix: the input is singular, too
+    /// ill-conditioned for 50 iterations, or not finite.
     pub fn project_sun(&self) -> Result<Self, LinkVariableError>
     where
         M: ComplexField<R>,
@@ -350,8 +206,9 @@ impl<
         let norm_sq = self.frobenius_norm_sq();
         let zero = R::zero();
 
-        if norm_sq.partial_cmp(&zero) != Some(std::cmp::Ordering::Greater) {
-            // Zero matrix - return identity
+        // Zero matrix - return identity. A NaN norm is not zero: it flows through the iteration
+        // and fails the convergence gate below.
+        if norm_sq == zero {
             return Self::try_identity();
         }
 
@@ -373,15 +230,17 @@ impl<
         // Convert to M
         let three_m = M::from_re_im(three_r, R::zero());
         let half_m = M::from_re_im(half_r, R::zero());
-        let minus_one_m = M::from_re_im(R::from_f64(-1.0).unwrap(), R::zero());
+        let minus_one_m = M::from_re_im(-R::one(), R::zero());
 
+        let mut converged = false;
         for _ in 0..max_iter {
-            let x_dag = x.try_dagger()?;
-            let xdx = x_dag.try_mul(&x)?;
+            let x_dag = x.dagger();
+            let xdx = x_dag.mul(&x);
 
             // Check convergence before next iteration (compute_identity_deviation returns ||X-I||_F^2)
-            let residual_sq = compute_identity_deviation::<G, M, R>(&xdx)?;
+            let residual_sq = compute_identity_deviation::<G, M, R>(&xdx);
             if residual_sq < epsilon {
+                converged = true;
                 break;
             }
 
@@ -390,11 +249,26 @@ impl<
             let three_i = identity.scale(&three_m);
             // xdx * -1
             let xdx_neg = xdx.scale(&minus_one_m);
-            let diff = three_i.try_add(&xdx_neg)?;
+            let diff = three_i.add(&xdx_neg);
 
             // X_{k+1} = 0.5 * X * diff
             // order: X * diff * 0.5
-            x = x.try_mul(&diff)?.scale(&half_m);
+            x = x.mul(&diff).scale(&half_m);
+        }
+
+        // Out of iterations: accept only a result that is unitary to working precision. A
+        // rank-deficient input keeps a residual of at least one per missing direction, and a
+        // non-finite one a NaN residual; both fail here, before det^{1/N} is taken of a
+        // determinant near zero.
+        if !converged {
+            let residual_sq = compute_identity_deviation::<G, M, R>(&x.dagger().mul(&x));
+            if residual_sq.is_nan() || residual_sq > R::epsilon().sqrt() {
+                return Err(LinkVariableError::NumericalError(
+                    "SU(N) projection did not converge: the input is singular, too \
+                     ill-conditioned, or not finite"
+                        .to_string(),
+                ));
+            }
         }
 
         // Ensure determinant = 1 for SU(N) by dividing by det^{1/N}
@@ -403,7 +277,7 @@ impl<
         // So we only apply this if N >= 2
         let n = G::matrix_dim();
         if n >= 2 {
-            let det = self.try_determinant(&x)?;
+            let det = x.determinant();
             // Compute phase factor to remove: alpha = det^{-1/N}
             // det = r * exp(i * theta) -> because it's unitary, r=1
             // det^{-1/N} = exp(-i * theta / N)
@@ -427,17 +301,22 @@ impl<
         Ok(x)
     }
 
-    /// Compute determinant of the matrix.
+    /// Determinant of the `N x N` matrix.
     ///
-    /// Only implemented for N=2 and N=3.
-    fn try_determinant(&self, link: &Self) -> Result<M, LinkVariableError>
+    /// Closed forms for `N <= 3`. Above that, LU elimination with partial pivoting: at each
+    /// column the row with the largest `|z|²` becomes the pivot, the determinant is the product
+    /// of the pivots, and each row swap negates it. A column with no non-zero pivot candidate
+    /// makes the determinant exactly zero. `N = 0` gives one, the empty product.
+    pub fn determinant(&self) -> M
     where
         M: ComplexField<R>,
     {
         let n = G::matrix_dim();
-        let s = link.as_slice();
+        let s = self.as_slice();
 
         match n {
+            0 => M::one(),
+            1 => s[0],
             2 => {
                 // | a b |
                 // | c d |
@@ -446,7 +325,7 @@ impl<
                 let b = s[1];
                 let c = s[2];
                 let d = s[3];
-                Ok(a * d - b * c)
+                a * d - b * c
             }
             3 => {
                 // Rule of Sarrus
@@ -468,17 +347,57 @@ impl<
                 let term5 = m01 * m10 * m22;
                 let term6 = m00 * m12 * m21;
 
-                Ok(term1 + term2 + term3 - term4 - term5 - term6)
+                term1 + term2 + term3 - term4 - term5 - term6
             }
-            _ => Err(LinkVariableError::InvalidDimension(n)),
+            _ => lu_determinant::<M, R>(s.to_vec(), n),
         }
     }
 }
 
+/// Determinant of the row-major `n x n` matrix `work` by LU elimination with partial pivoting.
+fn lu_determinant<M, R>(mut work: Vec<M>, n: usize) -> M
+where
+    M: ComplexField<R> + Copy,
+    R: RealField,
+{
+    let mut det = M::one();
+    for col in 0..n {
+        // The row at or below `col` whose entry in this column has the largest modulus. A NaN
+        // modulus wins, so a NaN entry propagates into the determinant instead of the column
+        // reading as all zero.
+        let (pivot_row, pivot_norm) = (col..n).map(|r| (r, work[r * n + col].norm_sqr())).fold(
+            (col, R::zero()),
+            |best, cand| {
+                if !best.1.is_nan() && (cand.1.is_nan() || cand.1 > best.1) {
+                    cand
+                } else {
+                    best
+                }
+            },
+        );
+        if pivot_norm <= R::zero() {
+            return M::zero();
+        }
+        if pivot_row != col {
+            for c in 0..n {
+                work.swap(col * n + c, pivot_row * n + c);
+            }
+            det = M::zero() - det;
+        }
+        let head = work[col * n + col];
+        det = det * head;
+        for r in (col + 1)..n {
+            let factor = work[r * n + col] / head;
+            for c in col..n {
+                work[r * n + c] = work[r * n + c] - factor * work[col * n + c];
+            }
+        }
+    }
+    det
+}
+
 /// Compute ||X - I||_F for checking how close X is to identity.
-fn compute_identity_deviation<G: GaugeGroup, M, R>(
-    x: &LinkVariable<G, M, R>,
-) -> Result<R, LinkVariableError>
+fn compute_identity_deviation<G: GaugeGroup, M, R>(x: &LinkVariable<G, M, R>) -> R
 where
     M: ComplexField<R> + Debug + Copy,
     R: RealField,
@@ -497,7 +416,7 @@ where
         }
     }
 
-    Ok(sum)
+    sum
 }
 
 #[inline]

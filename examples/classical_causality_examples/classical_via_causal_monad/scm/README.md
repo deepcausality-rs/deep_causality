@@ -1,6 +1,6 @@
 # SCM via the Causal Monad
 
-Pearl's Ladder of Causation on the smoking-tar-cancer chain, implemented directly on `PropagatingProcess<f64, (), SmokingContext>` using the [`Alternatable`](../../../../deep_causality_core/src/traits/alternatable/mod.rs) family. Each rung uses one operator from the family.
+Walks Pearl's Ladder of Causation on the smoking-tar-cancer chain, implemented on `PropagatingProcess<FloatType, (), BaseContext>` (`FloatType` is a local alias for `f64`; each world is a `BaseContext` holding `NICOTINE` and `TAR` Datoid contextoids) with the [`Alternatable`](../../../../deep_causality_core/src/traits/alternatable/mod.rs) family. Each rung uses one operator from the family.
 
 ## How to run
 
@@ -18,7 +18,7 @@ cargo run -p classical_causality_examples --example scm_via_monad
 
 ## Why one file, not three
 
-The Causaloid version ([`classical_via_causaloid/scm`](../../classical_via_causaloid/scm)) splits Pearl's three rungs across `rung1_association.rs`, `rung2_intervention.rs`, `rung3_counterfactual.rs` because each rung carries non-trivial `CausaloidGraph` and `Contextoid` construction. The monad version does not need that scaffolding: a two-stage bind chain plus one operator per rung fits in a single file under 150 lines. The rungs are functions, not modules.
+The Causaloid version ([`classical_via_causaloid/scm`](../../classical_via_causaloid/scm)) splits Pearl's three rungs across `rung1_association.rs`, `rung2_intervention.rs`, `rung3_counterfactual.rs` because each rung needs its own `CausaloidGraph` and `Contextoid` construction. The monad version skips that scaffolding: a two-stage bind chain plus one operator per rung fits in a single file of about 200 lines, with each rung a function.
 
 ## How this differs from the Causaloid version
 
@@ -28,10 +28,10 @@ The Causaloid version ([`classical_via_causaloid/scm`](../../classical_via_causa
 | Rung 2 mechanism | CSM-style "decide to act on observed risk" | Pearl's `do(...)` via `.alternate_value(...)` mid-chain |
 | Rung 3 mechanism | Contextoid clone + modify + re-evaluate against a separate `BaseContext` | `.alternate_context(other_world)` at the seed |
 | Audit log | None by default; user must instrument | `!!ValueAlternation!!` / `!!ContextAlternation!!` entries appended automatically (visible in stdout) |
-| Lines of code | ~250 across 5 files | ~150 in a single file |
+| Lines of code | ~385 across 5 files | ~200 in a single file |
 
-Both implementations reach the same conclusions for the same worlds. Neither is more correct; they are two faces of the same Causaloid/Context separation.
+Both implementations reach the same conclusions for the same worlds; both rest on the same Causaloid/Context separation.
 
 ## Reference
 
-For the conceptual background, see the [Counterfactuals concept page](https://docs.deepcausality.com/concepts/counterfactuals/) and the [Effect Propagation Process preprint](https://github.com/deepcausality-rs/deep_causality/blob/main/papers/effect_propagation_process/epp.pdf).
+For background, see the [Counterfactuals concept page](https://docs.deepcausality.com/concepts/counterfactuals/) and the [Effect Propagation Process preprint](https://github.com/deepcausality-rs/deep_causality/blob/main/papers/effect_propagation_process/epp.pdf).

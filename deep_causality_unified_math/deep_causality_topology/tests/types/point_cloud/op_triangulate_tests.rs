@@ -220,8 +220,8 @@ fn test_point_cloud_triangulate_rejects_rank_one_points_tensor() {
 fn test_point_cloud_triangulate_rejects_rank_three_points_tensor() {
     use deep_causality_topology::TopologyError;
 
-    // Shape [2, 2, 2] has an axis 1, so the old code read an ambient dimension
-    // of 2 and silently triangulated 2 of the 8 coordinates.
+    // Shape [2, 2, 2] has an axis 1, so reading the ambient dimension off that axis alone gives
+    // 2 and silently triangulates 2 of the 8 coordinates. The rank is refused instead.
     let points =
         CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0], vec![2, 2, 2]).unwrap();
     let metadata = CausalTensor::new(vec![0.0; 2], vec![2]).unwrap();

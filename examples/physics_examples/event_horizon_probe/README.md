@@ -1,6 +1,6 @@
 # Event Horizon Probe
 
-This example simulates a space probe falling towards a black hole, dynamically switching between Newtonian and Relativistic physics models based on its proximity to the event horizon.
+This example simulates a probe falling towards a black hole and switches between Newtonian and relativistic physics as the probe nears the event horizon.
 
 ## How to Run
 
@@ -12,15 +12,16 @@ cargo run -p physics_examples --example event_horizon_probe
 
 ## Physics Overview
 
-The simulation tracks a probe falling towards a supermassive black hole (like Sgr A*).
+The probe falls towards a supermassive black hole of Sgr A*'s mass, halving its distance each step.
 
-1.  **Far Field ($r \gg R_s$)**: The system uses Newtonian mechanics. Gravity is a simple force, and escape velocity is $\sqrt{2GM/r}$.
-2.  **Near Field ($r \approx R_s$)**: As the probe approaches the Schwarzschild radius ($R_s = 2GM/c^2$), the system switches to Relativistic physics. It calculates the **Rapidity** ($\eta$) and Time Dilation using Geometric Algebra on Minkowski spacetime.
+1.  **Far Field ($r \gg R_s$)**: Newtonian mechanics applies. Gravity is a simple force, and the escape velocity is $\sqrt{2GM/r}$.
+2.  **Near Field ($r \approx R_s$)**: Near the Schwarzschild radius ($R_s = 2GM/c^2$) the simulation switches to relativistic physics and computes the **Rapidity** ($\eta$) and time dilation with Geometric Algebra on Minkowski spacetime.
 
 ## Key Concepts
 
-*   **Regime Switching**: The Causal Monad (`PropagatingEffect`) allows logic that adapts to the state context.
-*   **Geometric Algebra**: Used to calculate relativistic rapidity in a coordinate-free manner.
+*   **Regime Switching**: Each step runs as a stateful `CausalFlow` that carries the probe state and the black-hole mass and picks the physics from the distance.
+*   **Automatic Differentiation**: The gravitational acceleration and tidal gradient are the first and second derivatives of the potential $\Phi(r) = -GM/r$.
+*   **Geometric Algebra**: Computes the relativistic rapidity without coordinates.
 *   **Causal Chain**: State -> Distance Check -> Physics Kernel Selection -> State Update.
 
 ## APIs Used

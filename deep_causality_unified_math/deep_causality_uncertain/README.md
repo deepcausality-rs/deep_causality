@@ -14,14 +14,14 @@
 
  
 
-A Rust library for first-order uncertain data types, enabling robust computation and decision-making under uncertainty.
+A Rust library of first-order uncertain data types for computation and decisions under uncertainty.
 
 
 ## Introduction
 
-In many modern applications, from sensor data processing and machine learning to probabilistic modeling, estimates are often treated as precise facts. This can lead to "uncertainty bugs" where random errors are ignored, computations compound these errors, and probabilistic data leads to misleading boolean decisions (false positives/negatives).
+Applications from sensor data processing and machine learning to probabilistic modeling often treat estimates as precise facts. The result is "uncertainty bugs": random errors go ignored, computations compound them, and probabilistic data drives misleading Boolean decisions (false positives/negatives).
 
-`deep_causality_uncertain` introduces `Uncertain<T>`, a programming language abstraction for explicitly modeling and propagating uncertainty. Inspired by the research presented in "Uncertain<T>: A First-Order Type for Uncertain Data" by Bornholt et al., this crate provides a powerful yet intuitive way to work with probabilistic data. By treating uncertainty as a first-class citizen, `Uncertain<T>` improves the expressiveness, accuracy, and correctness of applications dealing with inherent data variability.
+`deep_causality_uncertain` provides `Uncertain<T>`, a programming language abstraction that models and propagates uncertainty explicitly. It follows "Uncertain<T>: A First-Order Type for Uncertain Data" by Bornholt et al. Treating uncertainty as a first-class type makes applications that handle variable data more expressive, accurate, and correct.
 
 ## Key Features
 
@@ -32,33 +32,33 @@ In many modern applications, from sensor data processing and machine learning to
     concrete scalar.
 *   **Two carriers over one graph.** `Uncertain<R>` is a real quantity; `UncertainBool<R>` is a
     truth value. A comparison or a Bernoulli leaf yields the Boolean carrier over the *same*
-    `R`-carrying graph, because the tree beneath a Boolean root holds reals — a threshold, a
+    `R`-carrying graph, because the tree beneath a Boolean root holds reals: a threshold, a
     Bernoulli parameter, an arithmetic operand.
 *   **Probabilistic presence (`MaybeUncertain<R>`):** a real quantity that may be absent. Its
     presence channel is an `UncertainBool<R>` and its value channel an `Uncertain<R>`, drawn at one
     sample index so the two always belong to the same draw.
-*   **Rich distribution support:** `point`, `normal(mean, std_dev)`, `uniform(low, high)` on the
-    real carrier, and `bernoulli(p)` on the Boolean one — every parameter in the caller's scalar.
-*   **Intuitive operator overloading:** arithmetic (`+`, `-`, `*`, `/`, unary `-`) on the real
+*   **Distributions:** `point`, `normal(mean, std_dev)`, `uniform(low, high)` on the
+    real carrier, and `bernoulli(p)` on the Boolean one, every parameter in the caller's scalar.
+*   **Operator overloading:** arithmetic (`+`, `-`, `*`, `/`, unary `-`) on the real
     carrier, logic (`&`, `|`, `!`, `^`) on the Boolean one, and comparisons (`greater_than`,
     `less_than`, `equals`, `approx_eq`, `within_range`, and the `*_uncertain` forms) crossing from
     one to the other.
 *   **Lazy computation graph:** operations build a graph rather than evaluating, so a quantity used
-    twice in one expression is drawn once — `x - x` is exactly zero at every index.
-*   **Reproducible, addressed draws:** a draw is a function of three numbers — a `SampleSession`'s
-    seed, the sample index, and the leaf's ordinal — and of nothing else. Nothing is stored between
+    twice in one expression is drawn once: `x - x` is exactly zero at every index.
+*   **Reproducible, addressed draws:** a draw is a function of three numbers (a `SampleSession`'s
+    seed, the sample index, and the leaf's ordinal) and of nothing else. Nothing is stored between
     calls, no global or thread-local is consulted, and two graphs sharing a leaf agree about that
     leaf at the same index. The same seed replays the same values in a later process.
 *   **Statistical analysis, in the caller's scalar:** `expected_value`, `standard_deviation`,
     `estimate_probability`, and quasi-Monte-Carlo variants (`expected_value_qmc`,
     `standard_deviation_qmc`, `estimate_probability_qmc`) over a low-discrepancy Sobol sequence.
-*   **Robust decision making:** `to_bool`, `probability_exceeds` and `implicit_conditional` collapse
+*   **Decision making:** `to_bool`, `probability_exceeds` and `implicit_conditional` collapse
     a distribution to one verdict by sequential hypothesis testing (SPRT), drawing only as many
     samples as the decision needs; `conditional` implements `if-then-else` on an uncertain
     condition.
-*   **Ensembles into a carrier you name:** `materialize::<W>` returns `W::Type<R>` — a
-    `DenseVector`, a rank-1 `CausalTensor`, a `Vec` — so the ensemble arrives carrying that
-    container's own structure and this crate declares no ensemble type of its own.
+*   **Ensembles into a carrier you name:** `materialize::<W>` returns `W::Type<R>` (a
+    `DenseVector`, a rank-1 `CausalTensor`, a `Vec`), so the ensemble arrives with that
+    container's structure, and this crate declares no ensemble type of its own.
 *   **The graph is an `Arrow`:** `Uncertain<R>: Arrow<In = SampleIndex, Out = Result<R, _>>`, so it
     composes with downstream computation through `haft`'s combinators, statically and with no trait
     object anywhere in the crate.
@@ -280,7 +280,7 @@ match intermittent.lift_to_uncertain(&gate, 0.6, 0.95, 0.05, 1000) {
 ### Ensembles
 
 `materialize` draws `n` samples into a container you name. The crate declares no ensemble type and
-depends on neither container crate — the witness decides where the draws land.
+depends on neither container crate; the witness decides where the draws land.
 
 ```rust,ignore
 use deep_causality_linear::{DenseVector, DenseVectorWitness};
@@ -302,8 +302,8 @@ arithmetic for ensembles at scale.
 
 ### The graph as an `Arrow`
 
-Evaluating the graph at an address is a pure function, which is what lets it be an `Arrow` and
-compose statically with downstream computation.
+Evaluating the graph at an address is a pure function, so the graph is an `Arrow` and composes
+statically with downstream computation.
 
 ```rust
 use deep_causality_haft::Arrow;
@@ -318,22 +318,23 @@ assert_eq!(quantity.run(at).unwrap(), quantity.run(at).unwrap());
 
 ## More Examples
 
-For more complex and real-world scenarios, refer to the `examples` directory:
+For larger, real-world scenarios, see
+[`examples/causal_uncertain_examples`](../../examples/causal_uncertain_examples):
 
-*   **GPS Navigation (`example_gps_navigation.rs`)**: Simulates GPS readings, propagates uncertainty through distance and time calculations, and makes route decisions.
-  
-*   **Sensor Data Processing (`example_sensor_processing.rs`)**: Demonstrates robust sensor data processing with error handling, sensor fusion, and anomaly detection under uncertainty.
+*   **GPS Navigation (`gps_navigation`)**: Simulates GPS readings, propagates uncertainty through distance and time calculations, and makes route decisions.
 
-*   **Aspirin Headache Trial Analysis (`example_clinical_trial.rs`)**: Demonstrates using `MaybeUncertain<T>` to model clinical trial data with probabilistic presence, analyzing drug effectiveness under uncertainty.
+*   **Sensor Data Processing (`sensor_processing`)**: Processes sensor data with error handling, sensor fusion, and anomaly detection under uncertainty.
+
+*   **Aspirin Headache Trial Analysis (`clinical_trial`)**: Models clinical trial data with probabilistic presence through `MaybeUncertain<T>` and analyzes drug effectiveness under uncertainty.
 
 To run an example:
 
 ```bash
-cargo run --example example_gps_navigation 
+cargo run -p causal_uncertain_examples --example gps_navigation
 
-cargo run --example example_sensor_processing 
+cargo run -p causal_uncertain_examples --example sensor_processing
 
-cargo run --example example_clinical_trial 
+cargo run -p causal_uncertain_examples --example clinical_trial
 ```
 
 ## Benchmarks
@@ -346,10 +347,10 @@ cargo bench -p deep_causality_uncertain --bench uncertain_benchmarks
 
 ## Acknowledgements
 
-This crate is inspired by the Blog post ["Uncertain⟨T⟩"](https://nshipster.com/uncertainty) by [@Mattt](https://github.com/mattt) and his Implementation of [Uncertain for Swift](https://github.com/mattt/Uncertain).
-Furthermore, prior art in the [uncertain crate](https://crates.io/crates/uncertain) and [uncertain-rs](https://crates.io/crates/uncertain-rs) crate inspired some of the implementation and examples. 
+This crate is inspired by the blog post ["Uncertain⟨T⟩"](https://nshipster.com/uncertainty) by [@Mattt](https://github.com/mattt) and his implementation of [Uncertain for Swift](https://github.com/mattt/Uncertain).
+Prior art in the [uncertain crate](https://crates.io/crates/uncertain) and the [uncertain-rs](https://crates.io/crates/uncertain-rs) crate inspired some of the implementation and examples.
 
-The Uncertain⟨T⟩ type is based by the foundational research presented in:
+The Uncertain⟨T⟩ type is based on the research presented in:
 
 *   Bornholt, J., Mytkowicz, T., & McKinley, K. S. (2014). [**Uncertain<T>: A First-Order Type for Uncertain Data**.](https://www.microsoft.com/en-us/research/publication/uncertaint-a-first-order-type-for-uncertain-data-2) *Proceedings of the 19th International Conference on Architectural Support for Programming Languages and Operating Systems (ASPLOS '14)*. ACM, New York, NY, USA, 123-136. ([Download Paper](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/asplos077-bornholtA.pdf))
 

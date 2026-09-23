@@ -23,7 +23,7 @@ below are the one-line summaries.
 | Study | Question | Finding |
 |---|---|---|
 | `qtt_rank_study` | Is a reentry flowfield low tensor-train rank? (the Tier-B make-or-break) | Not automatically. A *captured* misaligned shock is net-negative, at χ ≈ 151–394, larger than dense. It is **low rank by construction** in a shock-aligned or body-fitted coordinate, χ ≈ 5, roughly a 290× win. The driver is coordinate *alignment*, not curvature. |
-| `qtt_rank_dynamic` | Does a *marcher* keep the field low-rank over time? | Yes for linear transport. Fixed-tolerance rounding is rank-safe with no runaway, settling at the static rank (8/8/7 over 3000 steps). Nonlinear shock-*steepening* was left untested, since it needs a nonlinear marcher; see `qtt_rank_nonlinear`. |
+| `qtt_rank_dynamic` | Does a *marcher* keep the field low-rank over time? | Yes for linear transport. Fixed-tolerance rounding is rank-safe with no runaway, settling at the static rank (8/8/7 over 3000 steps). Nonlinear shock-*steepening* needs a nonlinear marcher and is not tested here; see `qtt_rank_nonlinear`. |
 | `qtt_rank_nonlinear` | Does a *forming* (nonlinear) shock stay low-rank? | In 1-D, yes: peak 8, cheap. A 2-D *curved* shock rises 7 → 20 dynamically, so the threat is **real**. Thickening could **not** be tested as a lever here: the explicit diffusion limit confines stable ν below 1.25 dx, so the scheme has no room to thicken, and the one over-thick run (ν = 6 dx) saturates to full rank because it violates that limit. That curvature sets the rank is `qtt_rank_study`'s finding, not this one. The candidate levers are coordinate alignment plus an implicit/IMEX step (C3). |
 | `qtt_rank_3d` | What is the **upper bound** of rank in 3-D (the avionics and space regime)? | A realistically-formed 3-D curved shock, via explicit Euler and central differences, has **χ ~ √side, unbounded**, running 45 → 135 over 16³ → 128³. The flat and body-fitted references read **χ ~ 6**, but they were encoded at 64³ only and not swept, so their constancy in resolution is inferred, not measured here. QTT storage still beats dense asymptotically, with a crossover near 64³, but the √side **solve** cost is what bites. A body-fitted coordinate is **mandatory** for 3-D tractability. |
 
@@ -33,7 +33,7 @@ de-risk the *Tier-B* compressible marcher.
 
 ## Round 2 — de-risking the resolution-4/5/6 design nodes
 
-A second batch, run before the compressible build, tests the make-or-break claims behind the newer
+A second batch, run before the compressible build, tests the make-or-break claims behind the
 Tier-B resolutions (`openspec/notes/archive/cfd-plasma-blackout/gap-2/`, resolutions 4–9).
 
 | Study | Question | Finding |
@@ -43,22 +43,21 @@ Tier-B resolutions (`openspec/notes/archive/cfd-plasma-blackout/gap-2/`, resolut
 | `qtt_acoustic_precond` | Does the split preconditioner de-risk the implicit step (Res 6)? | The constant-coefficient core inverts at bond 8, flat from L=8 to L=10, so it is low-rank and resolution-stable. On a smooth interior the perturbation spectral radius ρ(A₀⁻¹A₁) = 0.59 < 1, so the preconditioned operator `I + A₀⁻¹A₁` contracts and the implicit solve converges geometrically. Across a captured 5× sound-speed jump ρ rises to 0.87, toward the divergence threshold at 1. The jump is the hard part, which is why fitting (Res 5), by keeping the interior smooth, keeps the implicit step cheap. |
 | `qtt_blend_metric` | Is body-fit a valid, low-rank free parameter (Res 4)? | The position-blend `Tλ = (1−λ)·Cartesian + λ·fitted` stays a valid map, with det J holding one sign at min‖det J‖ ≈ 1.5 across the whole λ sweep, so no cell folds. A fixed physical shock sampled on the blended lattice falls monotonically from bond 114 at λ=0, the capture, to 5 at λ=1, fitted, but the reduction concentrates above λ ≈ 0.75: three quarters of the dial buys 114 → 54, the last quarter buys 54 → 5. A partial blend therefore delivers little rank benefit. λ is monotone and so usable, with the useful range near λ=1. |
 
-Round-2 result: two make-or-break claims confirmed, since the alignment lever survives marching and
-the constant-coefficient preconditioner is low-rank and contracts on a smooth interior; one residual
-closed, since the body-fit blend is valid and dialable; and the Stage-4 mechanism pinned down
-precisely. A static fitted coordinate does not self-bound under marching, and re-pinning the
-coordinate alone does not fix it either. The rank driver is carrying Cartesian fluxes *through* a
-curved front. The lever that works is re-pinning **plus** treating the front as an exact
-Rankine–Hugoniot interface, so fluxes are never marched across it and each side stays smooth.
+Round-2 result: two make-or-break claims hold (the alignment lever survives marching; the
+constant-coefficient preconditioner is low-rank and contracts on a smooth interior), one residual
+closes (the body-fit blend is valid and dialable), and the Stage-4 mechanism is pinned down. A
+static fitted coordinate does not self-bound under marching, and re-pinning the coordinate alone
+does not fix it: carrying Cartesian fluxes *through* a curved front drives the rank. The lever that
+works is re-pinning **plus** treating the front as an exact Rankine–Hugoniot interface, so fluxes
+never march across it and each side stays smooth.
 
 ## Plasma-retropulsion de-risk — the SRP coupling measurements
 
 The front-loaded risk milestone of the plasma-retropulsion descent
 (`openspec/notes/archive/cfd-plasma-retropulsion/`; verdict in `derisk-verdict.md`). `qtt_rank_plume`
 measured fork economics and plume rank (roadmap M1 risks 2 and 3, both green). `srp_momentum_jet` is
-the imprint-fidelity follow-up (risk 1); it supersedes the pinned-envelope harness now parked at
-`reverted/srp_drag_decrement/`, which originally lived at `verification/srp_drag_decrement/` (see
-`reverted/README.md`).
+the imprint-fidelity follow-up (risk 1); it supersedes the pinned-envelope harness in
+`reverted/srp_drag_decrement/` (see `reverted/README.md`).
 
 | Study | Question | Finding |
 |---|---|---|
@@ -78,7 +77,7 @@ before specifying the propagator. See
 | `traj_fs3_clock` | Is the "two-time" parameter the proper time, and does a forward `dτ/dt` kernel hit ns-level offsets? | **Forward kernel feasible, and a conceptual fix.** `dτ/dt = 1+Φ/c²−v²/2c²` reproduces the GPS split at **+45.65 / −7.21 / +38.44 µs/day** against the textbook +45.7/−7.2/+38.5. The KS linearising `s` is a *reparametrisation*, **not** proper time `τ`, so the spec must carry **both**. A 180 s reentry blackout drifts **−57 ns, i.e. 17 m,** uncorrected. |
 
 Gap-3 result: the three hardest physics items of the trajectory axis, the generator, the
-aero-coupling law, and the relativistic clock, are now **measured facts**, and two of them
+aero-coupling law, and the relativistic clock, are **measured facts**, and two of them
 **simplify** Resolution 1, since KS replaces a hand-set `(4,2)` and a physical-space split replaces a
 conformal-coupling law. The axis is spec-ready for a gravity-clock-core **Phase 1**. Only the real
 aero interface (Tier-B Stage-4+) gates **Phase 2**.

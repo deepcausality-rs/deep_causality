@@ -13,9 +13,9 @@ bank-angle sweep, commit, peak passage and reacquisition. 60 s, 24 fps, 1440 fra
 | `telemetry.csv`                  | Per-frame altitude / plasma level / RF reception, read off the scene's animation curves                                                                                   |
 | `hud_composite.py`               | Post-process: telemetry box + phase captions burned onto rendered frames, sized relative to frame height                                                                  |
 | `finish_540.sh`                  | 540p frames → Lanczos 2× to 1080p → HUD → `corridor_final_1080p_hud.mp4`                                                                                                  |
-| `final540/`                      | The 1440 rendered master frames at 960×540 (≈30 min of GPU time; everything downstream is reproducible from these in minutes)                                             |
-| `corridor_final_1080p_hud.mp4`   | The final                                                                                                                                                                 |
-| `corridor_preview.mp4`           | 30 % preview with HUD                                                                                                                                                     |
+| `final540/`                      | The 1440 master frames at 960×540, written by step 2 (≈30 min of GPU time); not committed                                                                                 |
+| `corridor_final_1080p_hud.mp4`   | The final video, written by step 3; not committed                                                                                                                         |
+| `corridor_preview.mp4`           | 30 % preview with HUD; not committed                                                                                                                                      |
 | `corridor_render_prompt.md`      | Physics brief the scene geometry was built from                                                                                                                           |
 | `HOW_TO_RENDER.md`               | Notes from the first attempt (partly superseded; still useful for camera/material knobs)                                                                                  |
 
@@ -32,13 +32,13 @@ blender -b corridor_sequence.blend -a          # writes final540/c_0001.png …
 ./finish_540.sh
 ```
 
-Rendering at 100 % instead of 50 % costs ~100 min for a marginally sharper star field; the volumes, fan and hardware are
-visually identical after the Lanczos upscale (tested: 49–52 dB PSNR against a native 1080p frame). Never AI-upscale
-frames that already carry the HUD — composite the HUD after any upscaling so the text stays exact.
+Rendering at 100 % instead of 50 % costs ~100 min for a marginally sharper star field; the volumes, fan and hardware
+look identical after the Lanczos upscale (49–52 dB PSNR against a native 1080p frame). Composite the HUD after any
+upscaling, never AI-upscale frames that already carry it, so the text stays exact.
 
 ## Where the numbers come from
 
-Every figure in the captions and telemetry is from the committed `output.txt` of the example:
+Every figure in the captions and telemetry comes from the example's committed `output.txt`:
 onset 73.2 km, coarse misses 20.0/11.6/3.5/6.0/14.3/28.9 m, committed 11.5° at 2.07 m vs the 20.0 m ballistic miss, peak
 n_e 2.6e19 m⁻³ at 61 km, exit at 47 km, INS drift 0.18 → 1.56 → 2.29 → 0.28 m. Frame constants for the phases are at the
 top of both scripts and must agree.

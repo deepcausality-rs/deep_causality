@@ -5,8 +5,10 @@
 
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_physics::{
-    lorentz_force, lorenz_gauge, magnetic_helicity_density, maxwell_gradient, poynting_vector,
-    proca_equation,
+    lorentz_force, lorentz_force_kernel, lorenz_gauge, lorenz_gauge_kernel,
+    magnetic_helicity_density, magnetic_helicity_density_kernel, maxwell_gradient,
+    maxwell_gradient_kernel, poynting_vector, poynting_vector_kernel, proca_equation,
+    proca_equation_kernel,
 };
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, PointCloud, ReggeGeometry, SimplicialManifold};
@@ -80,8 +82,16 @@ fn test_lorentz_force_wrapper_success() {
     )
     .unwrap();
 
+    // Delegation, not merely success: `assert!(effect.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
     let effect = lorentz_force(&j, &b);
-    assert!(effect.is_ok());
+    let carried = effect.value_cloned().unwrap();
+    let direct = lorentz_force_kernel(&j, &b).unwrap();
+    assert_eq!(
+        carried.inner().data(),
+        direct.data(),
+        "lorentz_force must carry the value its kernel produced"
+    );
 }
 
 #[test]
@@ -90,7 +100,14 @@ fn test_lorentz_force_wrapper_error() {
     let b = CausalMultiVector::new(vec![1.0; 4], Metric::Euclidean(2)).unwrap(); // Mismatch
 
     let effect = lorentz_force(&j, &b);
-    assert!(effect.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Dimension Mismatch"),
+        "expected a Dimension Mismatch refusal, got {err}"
+    );
 }
 
 // =============================================================================
@@ -111,8 +128,15 @@ fn test_poynting_vector_wrapper_success() {
     )
     .unwrap();
 
+    // Delegation, not merely success.
     let effect = poynting_vector(&e, &b);
-    assert!(effect.is_ok());
+    let carried = effect.value_cloned().unwrap();
+    let direct = poynting_vector_kernel(&e, &b).unwrap();
+    assert_eq!(
+        carried.inner().data(),
+        direct.data(),
+        "poynting_vector must carry the value its kernel produced"
+    );
 }
 
 #[test]
@@ -121,7 +145,14 @@ fn test_poynting_vector_wrapper_error() {
     let b = CausalMultiVector::new(vec![1.0; 4], Metric::Euclidean(2)).unwrap(); // Mismatch
 
     let effect = poynting_vector(&e, &b);
-    assert!(effect.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Dimension Mismatch"),
+        "expected a Dimension Mismatch refusal, got {err}"
+    );
 }
 
 // =============================================================================
@@ -151,8 +182,13 @@ fn test_magnetic_helicity_density_wrapper_success() {
     )
     .unwrap();
 
+    // Delegation, not merely success.
     let effect = magnetic_helicity_density(&potential, &field);
-    assert!(effect.is_ok());
+    assert_eq!(
+        effect.value_cloned().unwrap().value(),
+        magnetic_helicity_density_kernel(&potential, &field).unwrap(),
+        "magnetic_helicity_density must carry the value its kernel produced"
+    );
 }
 
 #[test]
@@ -161,7 +197,14 @@ fn test_magnetic_helicity_density_wrapper_error() {
     let b = CausalMultiVector::new(vec![1.0; 4], Metric::Euclidean(2)).unwrap(); // Mismatch
 
     let effect = magnetic_helicity_density(&a, &b);
-    assert!(effect.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Dimension Mismatch"),
+        "expected a Dimension Mismatch refusal, got {err}"
+    );
 }
 
 // =============================================================================
@@ -170,16 +213,30 @@ fn test_magnetic_helicity_density_wrapper_error() {
 
 #[test]
 fn test_maxwell_gradient_wrapper_success() {
+    // Delegation, not merely success.
     let manifold = create_simple_manifold();
     let effect = maxwell_gradient(&manifold);
-    assert!(effect.is_ok());
+    let carried = effect.value_cloned().unwrap();
+    let direct = maxwell_gradient_kernel(&manifold).unwrap();
+    assert_eq!(
+        carried.as_slice(),
+        direct.as_slice(),
+        "maxwell_gradient must carry the value its kernel produced"
+    );
 }
 
 #[test]
 fn test_lorenz_gauge_wrapper_success() {
+    // Delegation, not merely success.
     let manifold = create_simple_manifold();
     let effect = lorenz_gauge(&manifold);
-    assert!(effect.is_ok());
+    let carried = effect.value_cloned().unwrap();
+    let direct = lorenz_gauge_kernel(&manifold).unwrap();
+    assert_eq!(
+        carried.as_slice(),
+        direct.as_slice(),
+        "lorenz_gauge must carry the value its kernel produced"
+    );
 }
 
 #[test]
@@ -189,12 +246,20 @@ fn test_proca_equation_wrapper_success() {
     let field = create_simple_manifold();
     let potential = create_simple_manifold(); // full simplex data
 
+    // Delegation, not merely success. `proca_equation_kernel` is where cargo mutants left four
+    // survivors, including the sign of the current, because no success-path test looked at the
+    // value it produced.
     let effect = proca_equation(&field, &potential, 0.5);
-
+    let carried = effect.value_cloned().unwrap();
+    let direct = proca_equation_kernel(&field, &potential, 0.5).unwrap();
+    assert_eq!(
+        carried.as_slice(),
+        direct.as_slice(),
+        "proca_equation must carry the value its kernel produced"
+    );
     assert!(
-        effect.is_ok(),
-        "Proca should succeed now with internal slicing logic: {:?}",
-        effect.error()
+        carried.as_slice().iter().any(|v: &f64| v.abs() > 0.0),
+        "the Proca current must not be identically zero for this fixture"
     );
 }
 
@@ -204,7 +269,14 @@ fn test_maxwell_gradient_wrapper_error() {
     // must take the Err arm (wrappers.rs:39) and yield an error effect.
     let manifold = create_1d_manifold();
     let effect = maxwell_gradient(&manifold);
-    assert!(effect.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Dimension Mismatch"),
+        "expected a Dimension Mismatch refusal, got {err}"
+    );
 }
 
 #[test]
@@ -214,24 +286,42 @@ fn test_proca_equation_wrapper_error() {
     let field = create_simple_manifold();
     let potential = create_simple_manifold();
     let effect = proca_equation(&field, &potential, f64::NAN);
-    assert!(effect.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Numerical Instability"),
+        "expected a Numerical Instability refusal, got {err}"
+    );
 }
 
 #[test]
 fn test_proca_equation_wrapper_error_propagation() {
-    // This test was checking error propagation. Since the default setup now works,
-    // we need to construct a scenario that legitimately fails to test error propagation.
-    // However, the wrapper just delegates. If we want to test that errors propagate,
-    // we can use invalid inputs that trigger error inside validity checks (e.g. NaN mass?? or empty manifold?)
-
-    // For now, let's keep it verifying SUCCESS because the previous "failure" was due to a bug we fixed.
-    // If we really want to test error propagation, we'd need to mock an internal failure.
-    // Let's just update this to confirm success as well, or remove it if redundant.
-    // I'll update it to check a valid case for now to verify consistent behavior.
-
+    // A NaN mass drives `proca_equation_kernel` into its finiteness guard, and the wrapper must
+    // forward that refusal rather than absorb it.
     let field = create_simple_manifold();
     let potential = create_simple_manifold();
 
-    let effect = proca_equation(&field, &potential, 1.0);
-    assert!(effect.is_ok());
+    let effect = proca_equation(&field, &potential, f64::NAN);
+    // The refusal must name its cause: a wrapper forwards the kernel's `PhysicsError`
+    // text through a `CausalityError`, and asserting it keeps the *reason* pinned.
+    assert!(
+        effect
+            .error()
+            .expect("the call must fail")
+            .to_string()
+            .contains("Numerical Instability: Non-finite mass in Proca"),
+        "unexpected refusal: {:?}",
+        effect.error()
+    );
+
+    assert!(
+        effect.is_err(),
+        "a non-finite mass must propagate out of the wrapper as an error"
+    );
+    assert!(
+        effect.value().is_none(),
+        "an errored effect carries no value"
+    );
 }

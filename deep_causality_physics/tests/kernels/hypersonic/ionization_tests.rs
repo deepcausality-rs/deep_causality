@@ -4,8 +4,8 @@
  */
 
 use deep_causality_physics::{
-    IonizationFraction, NO_IONIZATION_ENERGY_EV, Temperature, electron_density_kernel,
-    park2t_ionization_surrogate_kernel, saha_ionization_fraction_kernel,
+    IonizationFraction, NO_IONIZATION_ENERGY_EV, PhysicsErrorEnum, Temperature,
+    electron_density_kernel, park2t_ionization_surrogate_kernel, saha_ionization_fraction_kernel,
 };
 
 #[test]
@@ -70,13 +70,43 @@ fn test_electron_density_is_alpha_times_density() {
 #[test]
 fn test_saha_rejects_bad_inputs() {
     let t = Temperature::<f64>::new(8000.0).unwrap();
-    assert!(saha_ionization_fraction_kernel(t, 0.0, NO_IONIZATION_ENERGY_EV, 2.0).is_err());
-    assert!(saha_ionization_fraction_kernel(t, 1.0e22, 0.0, 2.0).is_err());
-    assert!(saha_ionization_fraction_kernel(t, 1.0e22, NO_IONIZATION_ENERGY_EV, 0.0).is_err());
+    assert!(
+        matches!(
+            saha_ionization_fraction_kernel(t, 0.0, NO_IONIZATION_ENERGY_EV, 2.0)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
+    );
+    assert!(
+        matches!(
+            saha_ionization_fraction_kernel(t, 1.0e22, 0.0, 2.0)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            saha_ionization_fraction_kernel(t, 1.0e22, NO_IONIZATION_ENERGY_EV, 0.0)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
 fn test_electron_density_rejects_negative_density() {
     let alpha = IonizationFraction::<f64>::new(0.01).unwrap();
-    assert!(electron_density_kernel(alpha, -1.0).is_err());
+    assert!(
+        matches!(
+            electron_density_kernel(alpha, -1.0).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }

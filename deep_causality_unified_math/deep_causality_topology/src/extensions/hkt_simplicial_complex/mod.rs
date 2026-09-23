@@ -19,9 +19,9 @@ use std::marker::PhantomData;
 /// # `fmap` preserves the complex
 ///
 /// The complex is indexed by the precision parameter, which mapping the coefficients does not
-/// touch, so it is carried across and its Hodge ⋆ operators survive. This used to be false: a
-/// single parameter served both roles, `fmap` had to rebuild the complex with
-/// `..Default::default()`, and the functor identity law failed for any complex carrying geometry.
+/// touch, so it is carried across and its Hodge ⋆ operators survive. This is what keeps the
+/// functor identity law holding for a complex carrying geometry: a single parameter serving both
+/// roles would force `fmap` to rebuild the complex and drop those operators.
 pub struct ChainWitness<R>(PhantomData<R>);
 
 impl<R> HKT for ChainWitness<R> {
@@ -71,11 +71,11 @@ impl<R> Foldable<ChainWitness<R>> for ChainWitness<R> {
 // context's complex through `Arc`, so the precision parameter is never cloned.
 // `Adjunction` is deliberately absent for this witness.
 //
-// It used to claim `Chain` is adjoint to itself, with `unit` building a one-entry chain of a
-// one-entry chain and `counit` taking the first weight of the first inner chain. That pair cannot
-// satisfy the defining bijection: `right_adjunct` after `left_adjunct` rebuilds a chain from a
-// single stored weight, so it agrees with the original only when the chain had one entry to begin
-// with. An `f` reading the whole chain, such as the sum of its weights, separates the two.
+// `Chain` is not adjoint to itself. The candidate pair — `unit` building a one-entry chain of a
+// one-entry chain, `counit` taking the first weight of the first inner chain — cannot satisfy the
+// defining bijection: `right_adjunct` after `left_adjunct` rebuilds a chain from a single stored
+// weight, so it agrees with the original only for a chain that had one entry. An `f` reading the
+// whole chain, such as the sum of its weights, separates the two.
 //
 // The obstruction is structural, not a coding error: `unit` receives one value and must produce a
 // chain over the whole complex, so everything but that one entry is invented. `StokesAdjunction`

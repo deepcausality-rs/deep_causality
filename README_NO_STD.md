@@ -23,9 +23,8 @@ cargo build -p deep_causality_core \
   --target aarch64-unknown-none
 ```
 
-Four crates need only `core`. The other fourteen need an allocator. See
-[Allocators](#allocators) for what that does and does not rule out; the short answer is that it
-rules out very little.
+Four crates need only `core`. The other fourteen need an allocator, which rules out very little;
+[Allocators](#allocators) explains why.
 
 ## The feature levels
 
@@ -59,13 +58,13 @@ libm_math = ["dep:libm"]
 
 `std` takes the intrinsics; `no-std` routes through `libm`. The other three core-only crates,
 `deep_causality_algebra`, `deep_causality_num_complex` and `deep_causality_num_dual`, only forward
-that choice, for example `no-std = ["deep_causality_unified_math/deep_causality_num/no-std"]`.
+that choice, for example `no-std = ["deep_causality_num/no-std"]`.
 
 ### `alloc` on its own is not a configuration
 
-`alloc` is a level, not a platform. It says a heap is available; it says nothing about where float
-math comes from. `--no-default-features --features alloc` therefore selects neither `std` nor
-`no-std`, `deep_causality_num` gets no backend, and its `Float` impls compile with no bodies:
+`alloc` says a heap is available; it says nothing about where float math comes from.
+`--no-default-features --features alloc` therefore selects neither `std` nor `no-std`,
+`deep_causality_num` gets no backend, and its `Float` impls compile with no bodies:
 
 ```
 error[E0425]: cannot find value `n` in this scope
@@ -107,7 +106,7 @@ These four are exactly the crates that declare no `alloc` feature.
 | `deep_causality_multivector` | Geometric algebra, `HilbertState`, `CausalMultiVector` |
 | `deep_causality_sparse` | CSR matrices, conjugate-gradient solver |
 | `deep_causality_fft` | 1-D and N-D FFT, real transforms |
-| `deep_causality_rand` | Xoshiro256, Sobol sequences, normal and uniform distributions |
+| `deep_causality_rand` | Xoshiro256, Sobol sequences, uniform distributions |
 | `deep_causality_par` | The `MaybeParallel` marker and `scoped_map` |
 | `deep_causality_quantum` | Density matrices, quantum gates, channels, Born read-out |
 | `ultragraph` | `CsmGraph`, `DynamicGraph`, traversal, centrality, biconnectivity |
@@ -115,14 +114,13 @@ These four are exactly the crates that declare no `alloc` feature.
 `deep_causality_calculus` is the borderline case. Its own operators allocate nothing: the
 integrators step over stack values and `gradient` seeds one coordinate per pass. It is listed here
 because it depends on `deep_causality_haft`, and both its `std` and its `no-std` feature enable
-`alloc = ["deep_causality_unified_math/deep_causality_haft/alloc"]`. Differentiation and integration therefore arrive with the
+`alloc = ["deep_causality_haft/alloc"]`. Differentiation and integration therefore carry the
 same allocator requirement as the rest of this table.
 
 ## Allocators
 
-A `#[global_allocator]` is a software choice, not a hardware capability. Any target with RAM can
-have one, and with [`embedded-alloc`](https://github.com/rust-embedded/embedded-alloc) it takes
-about ten lines:
+A `#[global_allocator]` is a software choice. Any target with RAM can have one, and with
+[`embedded-alloc`](https://github.com/rust-embedded/embedded-alloc) it takes about ten lines:
 
 ```rust
 use embedded_alloc::LlffHeap as Heap;
@@ -137,23 +135,23 @@ unsafe { HEAP.init(HEAP_MEM.as_ptr() as usize, HEAP_SIZE) }
 The attribute has been stable since Rust 1.28. A Cortex-M0+ with 8 KB of RAM can carry a heap, so
 the fourteen allocator-dependent crates are not gated on device class.
 
-**The constraint that matters is timing, not availability.** Allocation is not bounded-time, so the
-question is whether a given crate allocates in the deadline path or only at init. A system can have
-a perfectly good heap and still be unable to afford a `Vec::push` inside a 235 µs syndrome round.
+**The constraint that matters is timing.** Allocation is not bounded-time, so the question is
+whether a crate allocates in the deadline path or only at init. A system with a working heap may
+still be unable to afford a `Vec::push` inside a 235 µs syndrome round.
 
 Two things soften that. `embedded-alloc` ships `TlsfHeap` as well as `LlffHeap`, and Two-Level
 Segregated Fit allocates in bounded O(1), which answers the timing objection though not
 fragmentation. And the usual embedded pattern is to allocate during init and never again, which
 makes the heap a startup convenience rather than a runtime hazard.
 
-What genuinely rules out a heap is policy. Safety-certified work under DO-178C, IEC 61508 or MISRA
+Policy is what rules out a heap. Safety-certified work under DO-178C, IEC 61508 or MISRA
 commonly forbids dynamic allocation after init whatever the RAM budget. That is the case where the
 four allocator-free crates carry weight: the scalar tower, `Float106` extended precision, complex
 numbers and dual numbers, usable with no heap at all. The Euler and RK4 integrators allocate
 nothing either, but they arrive through `deep_causality_calculus`, which links
 `deep_causality_haft` and brings the allocator with it.
 
-Note that `deep_causality_core` allocates per stage. `EffectLog::add_entry` pushes an owned
+`deep_causality_core` allocates per stage. `EffectLog::add_entry` pushes an owned
 `String` on every entry, so a hard-deadline loop wants a bounded log rather than the default one.
 
 ## What you give up
@@ -268,18 +266,17 @@ pub type FxMap<K, V> = HashMap<K, V, FxBuildHasher>;
 pub type FxSet<T> = HashSet<T, FxBuildHasher>;
 ```
 
-Note that `rustc_hash::FxHashMap` and `FxHashSet` are aliases over *std's* containers and are
+`rustc_hash::FxHashMap` and `FxHashSet` are aliases over *std's* containers and are
 therefore std-only. Take `FxBuildHasher` from `rustc-hash` and the container from `hashbrown`.
 
 Unlike the libm split, this needs no `cfg`. std hands you hashbrown anyway, so using it directly on
 both paths costs nothing on the host and removes a divergence that would otherwise go untested.
 
-`ultragraph` did not need either crate; it still has no dependencies. Its two hash sites were small
-enough to remove: the `HashSet` deduplicating neighbours in the centrality traversal became a
-sort-and-dedup over a `Vec`, and the edge-multiplicity map in the biconnectivity pass became an
-`alloc::collections::BTreeMap`. Both changes also dropped a per-run ordering dependence that
-`RandomState` had introduced. That trade goes the other way at sixty or ninety sites, which is what
-`deep_causality_topology` and `deep_causality_algorithms` face.
+`ultragraph` needs neither crate and has no dependencies. Its centrality traversal deduplicates
+neighbours by sort-and-dedup over a `Vec`, and its biconnectivity pass counts edge multiplicity in
+an `alloc::collections::BTreeMap`, so neither result depends on a per-run `RandomState` ordering.
+Removing hash sites one by one stops paying off at the sixty or ninety sites that
+`deep_causality_topology` and `deep_causality_algorithms` carry.
 
 Dropping SipHash is not a security regression in these crates. HashDoS resistance guards against an
 adversary choosing keys to force collisions, and the keys here are internal: lattice cells, simplex

@@ -1,8 +1,7 @@
 # Gauge EM: Relativistic Electrodynamics Pipeline
 
-This example demonstrates **gauge-theoretic electromagnetism** analysis
-using the **Causal Monad** (`PropagatingEffect`) for type-safe, modular composition of
-physics stages.
+This example analyzes an electromagnetic plane wave with **gauge-theoretic electromagnetism**
+and composes the physics stages with the **Causal Monad** (`CausalFlow`).
 
 ## Running
 
@@ -10,10 +9,16 @@ physics stages.
 RUSTFLAGS='-C target-cpu=native' cargo run --example gauge_em -p physics_examples --release
 ```
 
+or, without the optimized build:
+
+```bash
+cargo run --example gauge_em -p physics_examples
+```
+
 ## Overview
 
-The pipeline processes an electromagnetic plane wave through a sequence of independent
-analysis stages, each composed via `bind_or_error`:
+The pipeline passes the plane wave through a sequence of independent analysis stages, each
+composed with `bind_or_error`:
 
 ```
 Stage 1: Create Plane Wave (with U(1) gauge field structure)
@@ -33,7 +38,7 @@ Stage 5: Field Classification (radiation/null)
 
 ### U(1) Gauge Field Structure
 
-The electromagnetic field is represented using relativistic gauge theory:
+The example represents the electromagnetic field as a relativistic gauge theory:
 
 | Property | Value |
 |----------|-------|
@@ -46,18 +51,18 @@ The electromagnetic field is represented using relativistic gauge theory:
 
 ### Lorentz Invariants
 
-- **Field invariant**: `F_μν F^μν = 2(B² - E²)` — same in all reference frames
-- **Dual invariant**: `F_μν F̃^μν = -4 E·B` — measures CP violation
+- **Field invariant**: `F_μν F^μν = 2(B² - E²)`, the same in all reference frames
+- **Dual invariant**: `F_μν F̃^μν = -4 E·B`, which measures CP violation
 
 ### Energy Quantities
 
-- **Energy density**: `u = (E² + B²)/2` — the T^{00} component of stress-energy
-- **Lagrangian density**: `L = (E² - B²)/2` — the EM Lagrangian
+- **Energy density**: `u = (E² + B²)/2`, the T^{00} component of stress-energy
+- **Lagrangian density**: `L = (E² - B²)/2`, the EM Lagrangian
 
 ### Radiation Properties
 
-- **Poynting vector**: `S = E × B` — energy flux (power per unit area)
-- **Intensity**: `|S|` — magnitude of energy flux
+- **Poynting vector**: `S = E × B`, the energy flux (power per unit area)
+- **Intensity**: `|S|`, the magnitude of the energy flux
 
 ### Field Classification
 
@@ -68,15 +73,9 @@ The electromagnetic field is represented using relativistic gauge theory:
 | Electric-dominated | \|E\| > \|B\| | Capacitor  |
 | Magnetic-dominated | \|B\| > \|E\| | Solenoid   |
 
-## Running the Example
-
-```bash
-cargo run --example gauge_em -p physics_examples
-```
-
 ## Design Pattern: Causal Monad
 
-This example showcases the **Causal Monad** pattern using `bind_or_error`:
+The stages compose through `bind_or_error`:
 
 ```rust
 let result = create_plane_wave()
@@ -88,13 +87,13 @@ let result = create_plane_wave()
 
 ### Benefits
 
-1. **Type-Safe Error Propagation**: Errors automatically propagate through the chain
+1. **Type-Safe Error Propagation**: Errors propagate through the chain on their own
 2. **Modular Stages**: Each stage is an independent function that can be:
     - Tested in isolation
     - Replaced without affecting other stages
-    - Reused in different pipelines
-3. **Clean Composition**: No nested error handling or match statements
-4. **Explicit Failure Points**: Each `bind_or_error` has a descriptive error message
+    - Reused in other pipelines
+3. **Flat Composition**: No nested error handling or match statements
+4. **Explicit Failure Points**: Each `bind_or_error` carries a descriptive error message
 
 ## Code Structure
 
@@ -106,9 +105,9 @@ gauge_em/
 
 ## Related Examples
 
-- [`multi_physics_pipeline`](../multi_physics_pipeline/) — QFT → QCD → Thermal → Detection
-- [`maxwell`](../maxwell/) — Classical EM field propagation
-- [`gravitational_wave`](../gravitational_wave/) — GR wave detection
+- [`multi_physics_pipeline`](../multi_physics_pipeline/): QFT → QCD → Thermal → Detection
+- [`maxwell`](../maxwell/): Classical EM field propagation
+- [`gravitational_wave`](../gravitational_wave/): GR wave detection
 
 ## References
 

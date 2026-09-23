@@ -6,9 +6,8 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 # `deep_causality_cfd/papers/`
 
 Load-bearing constants, kernels, and validation references cite their source by author-year in the
-docstring or harness where they are used; the source PDF lives here. This index maps each PDF to the
-code that cites it, so an uncited PDF is visible rather than silently carried (AUDIT-REPORT Phase 4,
-item 23).
+docstring or harness that uses them; the source PDF lives here. This index maps each PDF to the code
+that cites it, so an uncited PDF shows up.
 
 ## Present and cited
 
@@ -18,9 +17,6 @@ item 23).
 | `Droege2005.pdf` | Dröge & Verstappen (2005) | `verification/dec_cylinder_verification/` (St and C_d reference bands) |
 | `mohamed2016.pdf` | Mohamed, Hirani & Samtaney (2016), "Discrete exterior calculus discretization of incompressible Navier–Stokes equations over surface simplicial meshes", J. Comput. Phys. 312:175–191 | `src/solvers/dec/mod.rs` (the DEC NS formulation this solver follows, on a periodic lattice complex rather than a surface simplicial mesh) |
 | `mittal2005.pdf` | Mittal & Iaccarino (2005), "Immersed Boundary Methods", Annu. Rev. Fluid Mech. 37:239–261 | `src/solvers/qtt/immersed_2d.rs` (the immersed-boundary method class the Brinkman penalization belongs to) |
-
-Both `mohamed2016.pdf` and `mittal2005.pdf` were carried here uncited until the Phase-4 sweep; each
-was read, confirmed on topic, and cited at the module it supports.
 
 ## Cited in code, PDF not yet present
 
@@ -38,10 +34,10 @@ states; confirm each against the published record when adding the file.
   Inverse". Cited by `src/tensor_bridge/mod.rs` for the QTT finite-difference operator construction.
   Author and title are as recorded in
   `openspec/notes/archive/cfd-plasma-blackout/gap-1/gap-one-cfd-tensor-bridge.md`; **venue and year are
-  not recorded anywhere in this repository**, so they are deliberately omitted here rather than
-  supplied from recall. Fill them in from the published record when adding the PDF.
+  not recorded anywhere in this repository**, so this index omits them. Fill them in from the
+  published record when adding the PDF.
 
 Other references cited in prose without a PDF here (Park, RAM-C II, Millikan–White, Ghia 1982,
 Taylor & Green 1937, Sod 1978, Gourianov et al. 2022) are named at their use sites with enough
-detail to locate them; the crate README's `papers/` row points at this index rather than claiming
-every cited source is present.
+detail to locate them. The crate README's `papers/` row points at this index and does not claim
+that every cited source is present.

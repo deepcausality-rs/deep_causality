@@ -13,6 +13,7 @@ mod display;
 mod getters;
 mod identifiable;
 mod metric;
+mod recordable;
 mod spatial;
 
 /// A 3-dimensional spatial context represented in standard Euclidean coordinates (x, y, z).

@@ -1,8 +1,8 @@
 # EPP Example: Pearl's Ladder of Causation
 
-This crate demonstrates how the `DeepCausality` library, which implements the Effect Propagation Process (EPP), models the three rungs of Judea Pearl's Ladder of Causation. Each rung represents a different level of causal reasoning, and this example shows how the EPP's unique architecture addresses each one.
+This example models the three rungs of Judea Pearl's Ladder of Causation with the `DeepCausality` library, which implements the Effect Propagation Process (EPP). Each rung is a different level of causal reasoning.
 
-The examples are separated into three files, each corresponding to a rung on the ladder:
+Each rung has its own file:
 
 - `rung1_association.rs`
 - `rung2_intervention.rs`
@@ -13,7 +13,7 @@ The examples are separated into three files, each corresponding to a rung on the
 From the root of the `deep_causality` project, run:
 
 ```bash
-cargo run -p classical_causality_examples --example scm_example
+cargo run -p classical_causality_examples --example scm_via_causaloid
 ```
 
 ---
@@ -21,45 +21,44 @@ cargo run -p classical_causality_examples --example scm_example
 ### Rung 1: Association (Seeing)
 
 - **File:** `rung1_association.rs`
-- **Goal:** Demonstrates simple observational inference. It answers the question: "Given that we observe X, what is the likelihood of Y?" (i.e., `P(Y|X)`).
+- **Goal:** Observational inference. It answers the question: "Given that we observe X, what is the likelihood of Y?" (i.e., `P(Y|X)`).
 
 #### EPP Implementation
 
-Association is modeled as a straightforward evaluation of a `CausaloidGraph`. The graph represents the assumed causal chain (`Smoking -> Tar -> Cancer`). We provide an initial `PropagatingEffect` representing the observation (e.g., high nicotine levels), and the graph's evaluation propagates this effect to determine the associated outcome (cancer risk).
+Association is a plain evaluation of a `CausaloidGraph` that represents the assumed causal chain (`Smoking -> Tar -> Cancer`). An initial `PropagatingEffect` carries the observation (e.g., high nicotine levels), and the graph's evaluation propagates it to the associated outcome (cancer risk).
 
-This aligns with **Rung 1** by showing how the system processes passive observations to find statistical associations within the model.
+This matches **Rung 1**: the system processes passive observations to find associations within the model.
 
 ### Rung 2: Intervention (Doing)
 
 - **File:** `rung2_intervention.rs`
-- **Goal:** Demonstrates taking an action based on an observation. It answers the question: "What would Y be if we *do* X?" (i.e., `P(Y|do(X))`).
+- **Goal:** Taking an action based on an observation. It answers the question: "What would Y be if we *do* X?" (i.e., `P(Y|do(X))`).
 
 #### EPP Implementation
 
-Intervention is modeled using the **Causal State Machine (CSM)**. 
+Intervention acts on the result of the causal graph, in the style of a Causal State Machine (CSM):
 
-1.  A `CausalState` is defined, with its condition for activation being the result of the causal graph (e.g., "High Cancer Risk" is true).
-2.  A `CausalAction` is defined, which represents the real-world intervention (e.g., prescribing therapy).
-3.  The CSM links the state to the action. When the CSM is evaluated with an effect that makes the state true, it automatically fires the action.
+1.  The `CausaloidGraph` is evaluated along the shortest path from smoking to cancer for a high-nicotine observation.
+2.  If the result reports high cancer risk, the example fires the intervention (prescribing cessation therapy).
 
-This aligns with **Rung 2** by providing a formal mechanism to move from inference to a deterministic, real-world action.
+This matches **Rung 2**: the model moves from inference to a deterministic, real-world action.
 
 ### Rung 3: Counterfactuals (Imagining)
 
 - **File:** `rung3_counterfactual.rs`
-- **Goal:** Demonstrates reasoning about alternate possibilities. It answers the retrospective question: "What would Y have been, had X been different?"
+- **Goal:** Reasoning about alternate possibilities. It answers the retrospective question: "What would Y have been, had X been different?"
 
 #### EPP Implementation
 
-The EPP models counterfactuals not by surgically altering the causal model itself, but through **Contextual Alternation**.
+The EPP models counterfactuals through **Contextual Alternation**, leaving the causal model unchanged:
 
-1.  A **Factual Context** is created to represent the observed reality (e.g., a person who smokes and has high tar).
-2.  A **Counterfactual Context** is created by cloning the factual one and then modifying a specific past condition (e.g., setting the smoking level to low, but leaving the tar level high).
-3.  The *exact same* `Causaloid` (representing the causal laws) is evaluated against both contexts.
+1.  A **Factual Context** represents the observed reality (e.g., a person who smokes and has high tar).
+2.  A **Counterfactual Context** clones the factual one and modifies a past condition (e.g., sets the smoking level to low but leaves the tar level high).
+3.  The *same* causal logic (the causal laws), bound into one contextual `Causaloid` per context, is evaluated against both contexts.
 
-This example shows that even if we imagine the person had not smoked, their cancer risk remains high because the direct consequence (tar) is still present in the counterfactual world. This demonstrates the EPP's powerful ability to reason about alternative realities by separating causal logic from the context it operates on.
+Even if the person had not smoked, their cancer risk stays high, because the direct consequence (tar) remains in the counterfactual world. Separating causal logic from its context lets the EPP reason about such alternative realities.
 
 ## Reference
 
-For more information on the EPP, please see chapter 5 in the EPP document:
+For more on the EPP, see chapter 5 of the EPP document:
 https://github.com/deepcausality-rs/papers/blob/main/effect_propagation_process/epp.pdf

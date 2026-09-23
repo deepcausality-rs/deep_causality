@@ -9,11 +9,11 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 cargo run --release -p deep_causality_cfd --example qtt_rank_plume
 ```
 
-**What it tests.** Two measurements on the plume-imprinted compressible layer, neither taken
-before (`plasma-retropulsion-de-risk`, capability `plume-rank-fork-study`).
+**What it tests.** Two measurements on the plume-imprinted compressible layer
+(`plasma-retropulsion-de-risk`, capability `plume-rank-fork-study`).
 
 **Phase A, rank.** The retro-plume is a colliding-shock system of barrel shock, Mach disk, shear
-layer, and displaced bow shock, and its tensor-train rank was unmeasured. **A1** marches the
+layer, and displaced bow shock. **A1** marches the
 imprinted layer (sponge, body, and plume, all through the forcing seam) per thrust coefficient
 under a *tolerance* round policy and records the peak bond, giving the dynamic rank. **A2** encodes
 an analytic plume-plus-standoff-shock proxy on the λ-blended lattice (`BlendedMap`, the
@@ -44,29 +44,29 @@ the no-plume body/shock baseline. The plume imprint costs nothing in rank over t
 | 4.00 | 32 | 12 |
 
 A2 samples on its own lattice, 2⁶ × 2⁶, whose saturation bond is 64. The Cartesian 32 is therefore
-neither a cap nor a ceiling but an uncapped measurement at roughly half saturation. Why all four
-λ=0 rows land on exactly 32 is not explained here and was not investigated. The fitted coordinate
+neither a cap nor a ceiling but an uncapped measurement at roughly half saturation. This study
+does not explain why all four λ=0 rows land on exactly 32. The fitted coordinate
 holds `O(10)` and grows only weakly with thrust, so the blend-metric dial works on a
 plume-plus-shock field, not just on a clean bow shock.
 
-*B, fork economics:* sharing is **structural**, with `shares fluid + field = true`. That is the
-load-bearing result, and it is a property of the code rather than of a clock: no tensor is copied at
-fork time.
+*B, fork economics:* sharing is **structural**, with `shares fluid + field = true`. This
+load-bearing result follows from the code, with no timing involved: no tensor is copied at fork
+time.
 
 Continuation cost against an unforked trunk is a ratio of **about 1× for every powered branch**,
 with coast cheaper at **0.66**. Three recordings on the machine below span 0.95 to 1.05 on the
-powered rows, which is the resolution this harness has; read the ratio as "indistinguishable from an
+powered rows, the resolution of this harness; read the ratio as "indistinguishable from an
 unforked march", not as a figure to three digits.
 
 The printed setup cost is **noise-dominated and should not be quoted**. It is a single sub-microsecond
 measurement: the first recording gave 42 ns and two consecutive re-runs both gave 83 ns, with every
 physics observable identical across all three. The mirrored post-fork bond is **16, flat** across the
-roster. Final-field L2 against coast spreads 0.0 to 0.608 with throttle, so the branches genuinely
+roster. Final-field L2 against coast spreads 0.0 to 0.608 with throttle, so the branches
 diverge; the corridor's branch-invariant flow columns are the explicit foil.
 
 **Conclusion.** Both M1 risks land **green**. Plume rank is viable, and viable cheaply under the
 blend metric. Forking is structurally O(1) with a continuation cost indistinguishable from an
-unforked march. Feeds the verdict in
+unforked march. These results feed the verdict in
 `openspec/notes/archive/cfd-plasma-retropulsion/derisk-verdict.md`.
 
 **Caveats.** Only structural breaks gate: fork sharing lost, rank saturating the representational

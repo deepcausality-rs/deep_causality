@@ -4,7 +4,8 @@
  */
 
 use deep_causality_physics::{
-    Length, RayAngle, Wavelength, grating_equation_kernel, single_slit_irradiance_kernel,
+    Length, PhysicsErrorEnum, RayAngle, Wavelength, grating_equation_kernel,
+    single_slit_irradiance_kernel,
 };
 use std::f64::consts::PI;
 
@@ -48,11 +49,27 @@ fn test_single_slit_errors() {
     let lambda_valid = Wavelength::<f64>::new(1.0).unwrap();
 
     // i0 < 0
-    assert!(single_slit_irradiance_kernel(-1.0, a, theta, lambda_valid).is_err());
+    assert!(
+        matches!(
+            single_slit_irradiance_kernel(-1.0, a, theta, lambda_valid)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 
     // lambda = 0
     let lambda_zero = Wavelength::<f64>::new_unchecked(0.0);
-    assert!(single_slit_irradiance_kernel(1.0, a, theta, lambda_zero).is_err());
+    assert!(
+        matches!(
+            single_slit_irradiance_kernel(1.0, a, theta, lambda_zero)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
+    );
 }
 
 #[test]
@@ -63,9 +80,25 @@ fn test_grating_errors() {
 
     // pitch <= 0
     let pitch_invalid = Length::<f64>::new_unchecked(0.0);
-    assert!(grating_equation_kernel(pitch_invalid, 1, inc, lambda).is_err());
+    assert!(
+        matches!(
+            grating_equation_kernel(pitch_invalid, 1, inc, lambda)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 
     // sin_theta_m > 1
     // m*lambda/d = 2*1/1 = 2
-    assert!(grating_equation_kernel(pitch_valid, 2, inc, lambda).is_err());
+    assert!(
+        matches!(
+            grating_equation_kernel(pitch_valid, 2, inc, lambda)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }

@@ -1,6 +1,6 @@
 # Protein Folding: Generalized Master Equation
 
-This example simulates protein folding dynamics using the Generalized Master Equation (GME) with memory kernels for non-Markovian behavior.
+This example simulates protein folding with the Generalized Master Equation (GME), whose memory kernels make the dynamics non-Markovian.
 
 ## How to Run
 
@@ -12,12 +12,12 @@ cargo run -p medicine_examples --example protein_folding
 
 ## Engineering Value
 
-Protein folding simulation is crucial for:
-- **Drug Discovery**: Understanding protein misfolding diseases (Alzheimer's, Parkinson's)
-- **Bioengineering**: Designing proteins with specific functions
-- **Computational Biology**: Predicting 3D structure from sequence
+Protein folding simulation serves:
+- **Drug discovery**: misfolding diseases (Alzheimer's, Parkinson's)
+- **Bioengineering**: proteins designed for specific functions
+- **Computational biology**: 3D structure predicted from sequence
 
-The GME approach captures **memory effects** - proteins "remember" recent conformations.
+The GME captures **memory effects**: proteins "remember" recent conformations.
 
 ---
 
@@ -66,21 +66,21 @@ Where:
   Intermed1:  30.00% ██████
 ```
 
-Visual bars show the population flowing from Unfolded → Native over time.
+The bars show the population flowing from Unfolded to Native over time.
 
 ---
 
 ## Adapting This Example
 
-1. **More states**: Model detailed folding pathway with more intermediates
-2. **Different kinetics**: Adjust transition matrix for fast/slow folders
-3. **Memory effects**: Tune memory kernels for different physical regimes
-4. **Temperature dependence**: Add Arrhenius-type rate modifications
+1. **More states**: add intermediates to model a detailed folding pathway
+2. **Different kinetics**: adjust the transition matrix for fast or slow folders
+3. **Memory effects**: tune the memory kernels for other physical regimes
+4. **Temperature dependence**: add Arrhenius-type rate modifications
 
 ---
 
 ## Key APIs Used
 
-- `generalized_master_equation()` - Non-Markovian dynamics
-- `Probability` - Type-safe probability values [0,1]
-- `CausalTensor` - Transition and memory kernel matrices
+- `generalized_master_equation()`: non-Markovian dynamics
+- `Probability`: type-safe probability values in [0,1]
+- `CausalTensor`: transition and memory kernel matrices

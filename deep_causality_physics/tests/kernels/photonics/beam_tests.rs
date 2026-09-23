@@ -5,7 +5,7 @@
 
 use deep_causality_num_complex::Complex;
 use deep_causality_physics::{
-    AbcdMatrix, ComplexBeamParameter, Wavelength, beam_spot_size_kernel,
+    AbcdMatrix, ComplexBeamParameter, PhysicsErrorEnum, Wavelength, beam_spot_size_kernel,
     gaussian_q_propagation_kernel,
 };
 use deep_causality_tensor::CausalTensor;
@@ -54,28 +54,32 @@ fn test_gaussian_propagation_wrong_matrix_shape() {
 
     let q_in = ComplexBeamParameter::<f64>::new(Complex::new(0.0, 1.0)).unwrap();
     let res = gaussian_q_propagation_kernel(q_in, &mat);
-    assert!(res.is_err());
+    assert!(
+        matches!(
+            res.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
 fn test_gaussian_propagation_singularity() {
-    // Create matrix that causes C*q + D = 0
-    // q = i (so re=0, im=1). Want C*i + D = 0. So D=0, C= real? No.
-    // C*q + D = Ci + D. If C=-1, D=i, then -i + i = 0.
-    // But D is real in ABCD matrix normally. Use pathological case.
-    // Actually, for imaginary singularity, let's use C=1, D=0, q = 0 (but q must have Im>0 from ComplexBeamParameter).
-    // So we can't easily create a true singularity with valid q. Skip this or use very small Im.
-    // Actually, set D = -Im(q)*C/Re(something). Complex math needed.
-    // Simplest: use mat where C=-i component from q cancels - hard to construct.
-    // Alternative: This test is about the Singularity error enum hit at den.norm_sqr()==0.
-    // We need C*q + D with norm 0. If q = a + bi, C*q + D = Ca + Cbi + D.
-    // For norm_sqr=0, both parts must be 0: Ca + D = 0 AND Cb = 0. Since q must have b>0, C=0.
-    // Then Ca + D = D = 0. So C=0, D=0 triggers singularity.
-    let m_data = vec![1.0, 1.0, 0.0, 0.0]; // C=0, D=0
+    // The singularity guard fires when the denominator C q + D has zero norm. Writing
+    // q = a + bi, that needs C a + D = 0 and C b = 0 at once. A valid `ComplexBeamParameter`
+    // has b > 0, so C must be zero, and then D must be zero too. C = D = 0 is the only
+    // singular ABCD matrix reachable from a well-formed q.
+    let m_data = vec![1.0, 1.0, 0.0, 0.0]; // A = B = 1, C = D = 0
     let mat = AbcdMatrix::<f64>::new(CausalTensor::new(m_data, vec![2, 2]).unwrap());
     let q_in = ComplexBeamParameter::<f64>::new(Complex::new(0.0, 1.0)).unwrap();
     let res = gaussian_q_propagation_kernel(q_in, &mat);
-    assert!(res.is_err());
+    assert!(
+        matches!(
+            res.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
+    );
 }
 
 #[test]
@@ -86,17 +90,35 @@ fn test_beam_spot_size_zero_q_error() {
     let q = ComplexBeamParameter::<f64>::new_unchecked(Complex::new(0.0, 0.0));
     let lambda = Wavelength::<f64>::new(1.0).unwrap();
     let res = beam_spot_size_kernel(q, lambda);
-    assert!(res.is_err());
+    assert!(
+        matches!(
+            res.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
+    );
 }
 
 #[test]
 fn test_complex_beam_parameter_new_non_positive_im_error() {
     // Test the ComplexBeamParameter constructor validation
     let res = ComplexBeamParameter::<f64>::new(Complex::new(1.0, 0.0));
-    assert!(res.is_err());
+    assert!(
+        matches!(
+            res.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 
     let res2 = ComplexBeamParameter::<f64>::new(Complex::new(1.0, -1.0));
-    assert!(res2.is_err());
+    assert!(
+        matches!(
+            res2.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -107,7 +129,13 @@ fn test_gaussian_propagation_unphysical_output_error() {
     let mat = AbcdMatrix::<f64>::new(m);
 
     let res = gaussian_q_propagation_kernel(q_in, &mat);
-    assert!(res.is_err());
+    assert!(
+        matches!(
+            res.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -121,5 +149,11 @@ fn test_beam_spot_size_invalid_q_error() {
     let q = ComplexBeamParameter::<f64>::new_unchecked(Complex::new(0.0, -1.0));
     let lambda = Wavelength::<f64>::new(1.0).unwrap();
     let res = beam_spot_size_kernel(q, lambda);
-    assert!(res.is_err());
+    assert!(
+        matches!(
+            res.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }

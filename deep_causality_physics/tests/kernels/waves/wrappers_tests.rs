@@ -4,7 +4,8 @@
  */
 
 use deep_causality_physics::{
-    Frequency, Length, Speed, doppler_effect_approaching, wave_speed, wave_speed_kernel,
+    Frequency, Length, Speed, doppler_effect_approaching, doppler_effect_kernel, wave_speed,
+    wave_speed_kernel,
 };
 
 #[test]
@@ -32,11 +33,22 @@ fn test_doppler_effect_approaching_wrapper_success() {
     let vo = Speed::<f64>::new(10.0).unwrap();
     let vs = Speed::<f64>::new(10.0).unwrap();
 
+    // Delegation, not merely success. `wave_speed` in this file already had this assertion;
+    // `doppler_effect_approaching` did not.
     let effect = doppler_effect_approaching(&f_src, &v, &vo, &vs);
-    assert!(effect.is_ok());
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        doppler_effect_kernel(&f_src, &v, &vo, &vs).unwrap(),
+        "doppler_effect_approaching must carry the value its kernel produced"
+    );
 
+    // 1000 * (340 + 10) / (340 - 10) = 1000 * 350/330.
     let f_obs = effect.value_cloned().unwrap();
-    assert!(f_obs.value() > 1000.0);
+    assert!(
+        (f_obs.value() - 1_000.0 * 350.0 / 330.0).abs() < 1e-9,
+        "f_obs = {}",
+        f_obs.value()
+    );
 }
 
 #[test]
@@ -61,5 +73,12 @@ fn test_doppler_effect_approaching_wrapper_sonic_error() {
     let vs = Speed::<f64>::new(340.0).unwrap(); // Mach 1
 
     let effect = doppler_effect_approaching(&f_src, &v, &vo, &vs);
-    assert!(effect.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Metric Singularity"),
+        "expected a Metric Singularity refusal, got {err}"
+    );
 }

@@ -32,7 +32,7 @@ use deep_causality_num::FromPrimitive;
 ///
 /// # Accumulation order
 ///
-/// The sum is formed as a balanced tree by [`PairwiseSum`], exactly as [`mean`](crate::mean) sums a
+/// The sum is formed as a balanced tree by `PairwiseSum`, exactly as [`mean`](crate::mean) sums a
 /// slice, so the same observations in the same order give the same answer to the last bit. Feeding
 /// a slice through this type is a way of getting `mean` without the slice, not a different
 /// estimator. That agreement is a property of the arrangement rather than a coincidence: which

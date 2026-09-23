@@ -9,7 +9,9 @@
 //! (2nd order, linear-in-ε, zero-perturbation identity), and the rejections. f64 + Float106.
 
 use deep_causality_num::Float106;
-use deep_causality_physics::{EARTH_GM, KsPropagator, TwoBodyPropagator, ks_strang_step};
+use deep_causality_physics::{
+    EARTH_GM, KsPropagator, PhysicsErrorEnum, TwoBodyPropagator, ks_strang_step,
+};
 
 // A bound, inclined, eccentric orbit (genuinely 3-D).
 fn state_3d() -> ([f64; 3], [f64; 3]) {
@@ -112,12 +114,34 @@ fn rejects_unbound_and_degenerate() {
     // Escape velocity => energy >= 0 => rejected.
     let vesc = (2.0 * EARTH_GM / 7.0e6).sqrt();
     assert!(
-        KsPropagator::from_state([7.0e6, 0.0, 0.0], [0.0, vesc * 1.01, 0.0], EARTH_GM).is_err()
+        matches!(
+            KsPropagator::from_state([7.0e6, 0.0, 0.0], [0.0, vesc * 1.01, 0.0], EARTH_GM)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
     );
     // Non-positive GM.
-    assert!(KsPropagator::from_state([7.0e6, 0.0, 0.0], [0.0, 7.5e3, 0.0], -1.0).is_err());
+    assert!(
+        matches!(
+            KsPropagator::from_state([7.0e6, 0.0, 0.0], [0.0, 7.5e3, 0.0], -1.0)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
     // Zero radius.
-    assert!(KsPropagator::from_state([0.0, 0.0, 0.0], [0.0, 7.5e3, 0.0], EARTH_GM).is_err());
+    assert!(
+        matches!(
+            KsPropagator::from_state([0.0, 0.0, 0.0], [0.0, 7.5e3, 0.0], EARTH_GM)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
+    );
 }
 
 // ── Strang perturbation hook (FS-2) ─────────────────────────────────────────────────────────────

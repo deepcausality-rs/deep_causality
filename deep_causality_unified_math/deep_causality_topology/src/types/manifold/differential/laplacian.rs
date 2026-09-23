@@ -34,10 +34,9 @@ where
 
     /// [`Self::laplacian`] evaluated on a caller-supplied k-form instead
     /// of the manifold's stored data. Composes the `_of` variants of `d`
-    /// and `δ` directly, so — unlike the stored-data path used to — it
-    /// builds **no** temporary manifolds: this is the operator the CG
-    /// solves apply once per iteration and the DEC solver's rate evaluates
-    /// once per RK4 stage.
+    /// and `δ` directly and builds **no** temporary manifolds: this is the
+    /// operator the CG solves apply once per iteration and the DEC solver's
+    /// rate evaluates once per RK4 stage.
     ///
     /// # Panics
     /// As [`Self::laplacian`].

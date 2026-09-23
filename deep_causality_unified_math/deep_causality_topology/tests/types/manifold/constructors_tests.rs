@@ -402,3 +402,23 @@ fn test_new_rejects_a_complex_without_vertices() {
         ref other => panic!("Expected ManifoldError, got {:?}", other),
     }
 }
+
+/// A complex built with fewer pre-supplied Hodge ⋆ operators than skeletons is
+/// refused when a metric is attached, instead of panicking in a later
+/// differential operator.
+#[test]
+fn test_with_metric_refuses_a_short_hodge_star_list() {
+    use deep_causality_linear::CsrMatrix;
+    use deep_causality_topology::{Simplex, SimplicialComplex, Skeleton};
+
+    let sk0 = Skeleton::new(0, vec![Simplex::new(vec![0]), Simplex::new(vec![1])]);
+    let sk1 = Skeleton::new(1, vec![Simplex::new(vec![0, 1])]);
+    let stars = vec![CsrMatrix::from_triplets(2, 2, &[(0, 0, 1.0f64), (1, 1, 1.0)]).unwrap()];
+    let complex: SimplicialComplex<f64> =
+        SimplicialComplex::new(vec![sk0, sk1], vec![], vec![], stars);
+    let regge = ReggeGeometry::new(CausalTensor::new(vec![1.0f64], vec![1]).unwrap());
+    let data = CausalTensor::new(vec![0.0f64; 3], vec![3]).unwrap();
+
+    let err = Manifold::with_metric(complex, data, Some(regge), 0).unwrap_err();
+    assert!(matches!(err.0, TopologyErrorEnum::DimensionMismatch(_)));
+}

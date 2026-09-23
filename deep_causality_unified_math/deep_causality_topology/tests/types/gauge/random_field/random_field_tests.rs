@@ -5,8 +5,9 @@
 
 //! `RandomField` at every scalar the lattice can run in.
 //!
-//! Until this change the trait was implemented for `f64` alone, so a gauge field had one precision
-//! whatever its scalar parameter said. These tests are the evidence that it now has the caller's.
+//! The trait is implemented for every scalar the lattice runs in, so a gauge field has the
+//! precision its scalar parameter names. An implementation for `f64` alone would give every field
+//! that one precision whatever the parameter said, and these tests are what rules it out.
 
 use deep_causality_num::{Float106, ToPrimitive};
 use deep_causality_num_complex::Complex;

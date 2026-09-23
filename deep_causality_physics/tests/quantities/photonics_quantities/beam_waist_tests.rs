@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::BeamWaist;
+use deep_causality_physics::{BeamWaist, PhysicsErrorEnum};
 
 #[test]
 fn test_beam_waist() {
@@ -11,7 +11,13 @@ fn test_beam_waist() {
     assert_eq!(w0.value(), 1e-3);
 
     let err = BeamWaist::<f64>::new(-1.0);
-    assert!(err.is_err());
+    assert!(
+        matches!(
+            err.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

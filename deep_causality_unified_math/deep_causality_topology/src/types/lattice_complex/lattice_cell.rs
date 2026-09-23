@@ -10,7 +10,10 @@ use crate::traits::cell::Cell;
 /// A lattice is a regular CW complex where all k-cells are hypercubes.
 /// Each cell is identified by its base vertex coordinates and an orientation mask
 /// indicating which dimensions it extends into.
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+///
+/// The derived `Ord` is lexicographic by `position`, then `orientation`, which gives any
+/// collection of cells a reproducible order.
+#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct LatticeCell<const D: usize> {
     /// Base vertex position [x₀, x₁, ..., x_{D-1}]
     /// For a k-cell extending in dimension i, the vertex coordinate is the lower bound.

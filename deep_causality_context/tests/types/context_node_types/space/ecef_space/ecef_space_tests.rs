@@ -102,7 +102,13 @@ fn test_distance_is_symmetric_and_vanishes_only_on_coincidence() {
         let b = EcefSpace::new(2, dx, dy, dz);
 
         assert_eq!(a.distance(&b), b.distance(&a), "for ({dx}, {dy}, {dz})");
-        assert!(expected > 0.0);
+        // Distinct points must separate. Asserting the fixture's `expected` here would hold for
+        // an implementation that returned a constant.
+        assert!(a.distance(&b) > 0.0, "for ({dx}, {dy}, {dz})");
+        assert!(
+            expected > 0.0,
+            "fixture ({dx}, {dy}, {dz}) is not a distinct pair"
+        );
         assert_eq!(a.distance(&a), 0.0);
         assert_eq!(b.distance(&b), 0.0);
     }

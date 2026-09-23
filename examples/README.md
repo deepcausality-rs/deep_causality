@@ -1,6 +1,6 @@
 # DeepCausality Examples Overview
 
-This directory contains examples demonstrating various features and applications of the DeepCausality library. Each example showcases how to model and reason about causal relationships using the Effect Propagation Process (EPP) and PropagatingEffect monads.
+This directory holds runnable examples of the DeepCausality library's features and applications. The causal examples model and reason about causal relationships with the Effect Propagation Process (EPP) and the PropagatingEffect monads.
 
 ## Example Categories
 
@@ -40,7 +40,7 @@ Basic introduction to DeepCausality. **Start here if you are new.**
 
 **Location:** `examples/classical_causality_examples`
 
-Traditional causal inference methods implemented using the DeepCausality framework. Each method is implemented **twice**: once with `Causaloid` + Contextual Alternation, once with `PropagatingProcess` + the `Alternatable` family. 
+Traditional causal inference methods in DeepCausality. Each method is implemented **twice**: once with `Causaloid` + Contextual Alternation, once with `PropagatingProcess` + the `Alternatable` family.
 
 | Example | Method | `via_causaloid` command | `via_monad` command |
 |---------|--------|-------------------------|---------------------|
@@ -81,8 +81,8 @@ See [causal_discovery_examples/README.md](causal_discovery_examples/README.md) f
 
 **Location:** `examples/causal_uncertain_examples`
 
-Runnable examples for the `deep_causality_uncertain` crate, restructured so
-each example is a daisy-chained monadic pipeline. The `Uncertain<f64>` and
+Runnable examples for the `deep_causality_uncertain` crate, each a
+daisy-chained monadic pipeline. The `Uncertain<f64>` and
 `MaybeUncertain<f64>` API does the numerical work; the surrounding monad
 supplies the chain's plumbing and short-circuit on failure.
 
@@ -125,7 +125,7 @@ tick by tick; when the value drifts outside the safe envelope, `alternate_value`
 snaps it back and the chain continues from the corrected state. The first
 four run the same chain twice: open loop (no monitor, catastrophic failure)
 and closed loop (monitor + `alternate_value`, failure averted). The fifth,
-`corrective_ddos_detector`, runs closed loop only. Its point is the stateful
+`corrective_ddos_detector`, runs closed loop only and shows the stateful
 sliding-window detector that drives the intervention.
 
 | Example | Monad | Topic | Command |
@@ -160,7 +160,7 @@ See [csm_examples/README.md](csm_examples/README.md) for detailed documentation.
 
 **Location:** `examples/core_examples`
 
-Fundamental examples demonstrating the monadic API.
+Fundamentals of the monadic API.
 
 | Example | Focus | Command |
 |---------|-------|---------|
@@ -174,7 +174,7 @@ Fundamental examples demonstrating the monadic API.
 
 **Location:** `examples/avionics_examples`
 
-High-assurance examples for Aerospace, Defense, and Safety Critical systems.
+High-assurance examples for aerospace, defense, and safety-critical systems.
 
 | Example | Domain | Description | Command |
 |---------|--------|-------------|---------|
@@ -182,7 +182,7 @@ High-assurance examples for Aerospace, Defense, and Safety Critical systems.
 | geometric_tcas | Collision Avoidance | NextGen TCAS using Geometric Algebra collision detection and `AlternatableValue` safety interlocks | `cargo run -p avionics_examples --example geometric_tcas` |
 | hypersonic_2t | Defense/Tracking | Tracking Hypersonic Glide Vehicles (HGV) using Dual-Time (2T) Physics in 6D phase space | `cargo run -p avionics_examples --example hypersonic_2t` |
 | flight_envelope_monitor | Health Monitoring | Three-stage stateful pipeline (sensor collection → bind chain → envelope hypergraph) demonstrating uniform composition through `PropagatingProcess<_, FlightState, AircraftConfig>` | `cargo run -p avionics_examples --example flight_envelope_monitor` |
-| ins_gnss_blackout | Navigation / Timing | INS clock holdover through a GPS-denial blackout (jamming / urban canyon / tunnel) on **real Galileo** data: a grmhd-style regime detector + the `alternate_value` corrective loop (withheld through the dark) + a carried relativistic clock kernel, in one auditable `CausalFlow` — the navigation/timing core of any GPS-denied flight | `cargo run -p avionics_examples --example ins_gnss_blackout` |
+| ins_gnss_blackout | Navigation / Timing | INS clock holdover through a GPS-denial blackout (jamming / urban canyon / tunnel) on **real Galileo** data: a grmhd-style regime detector + the `alternate_value` corrective loop (withheld through the dark) + a carried relativistic clock kernel, in one auditable `CausalFlow` | `cargo run -p avionics_examples --example ins_gnss_blackout` |
 
 ### CFD Examples
 
@@ -193,29 +193,29 @@ gate set that exits nonzero on regression. Run these with `--release`.
 
 | Example | Domain | Description | Command |
 |---------|--------|-------------|---------|
-| plasma_blackout_corridor | Multiphysics / GNC | One continuous Mach-25 descent through plasma blackout: a tensor-train compressed compressible carrier with a shock-fitted Rankine–Hugoniot inflow strip, evolved-state Park-2T ionization gated against the RAM-C II flight anchor, flow-resolved GNSS denial driving a 17-state ESKF, O(1) counterfactual bank branches, and a cybernetic envelope gate whose clamped command actually steers the 3-DOF lift | `cargo run --release -p avionics_examples --example plasma_blackout_corridor` |
+| plasma_blackout_corridor | Multiphysics / GNC | One continuous Mach-25 descent through plasma blackout: a tensor-train compressed compressible carrier with a shock-fitted Rankine–Hugoniot inflow strip, evolved-state Park-2T ionization gated against the RAM-C II flight anchor, flow-resolved GNSS denial driving a 17-state ESKF, O(1) counterfactual bank branches, and a cybernetic envelope gate whose clamped command steers the 3-DOF lift | `cargo run --release -p avionics_examples --example plasma_blackout_corridor` |
 | plasma_blackout_weather | Digital Twin / Dispersion | The table factory for the corridor: six weather conditions as counterfactual worlds alternated from one validated baseline, flown concurrently, reduced to a dispersion table tracking navigation precision against weather | `cargo run --release -p avionics_examples --example plasma_blackout_weather` |
-| plasma_blackout_retropulsion | Multiphysics / GNC | Closes the family loop: consumes the weather table **in flight**, commits an ignition inside the Jarvinen–Adams band, and forks the marched plume-coupled state mid-burn — a *state* fork a parameter sweep cannot express — then coasts to the ignition altitude and lands at 2.0 m/s | `cargo run --release -p avionics_examples --example plasma_blackout_retropulsion` |
+| plasma_blackout_retropulsion | Multiphysics / GNC | Closes the family loop: consumes the weather table **in flight**, commits an ignition inside the Jarvinen–Adams band, forks the marched plume-coupled state mid-burn (a *state* fork a parameter sweep cannot express), then coasts to the ignition altitude and lands at 2.0 m/s | `cargo run --release -p avionics_examples --example plasma_blackout_retropulsion` |
 | flight_envelope_placard | Certification / Placards | A Mach-altitude matrix in, one placard table out: US-1976 freestream, dynamic pressure, exact Rankine–Hugoniot stagnation temperature, Sutton–Graves heating, every point gated and any out-of-envelope point named | `cargo run --release -p avionics_examples --example flight_envelope_placard` |
 | nozzle_operating_map | Propulsion | A back-pressure sweep over a converging–diverging duct: shock position and thrust across the operating regimes, gated against gas-dynamics closed forms | `cargo run --release -p avionics_examples --example nozzle_operating_map` |
 | viv_resonance_margin | Structures / Aeroelasticity | Vortex-induced-vibration margin as a computed study: one validated cylinder-wake case marched per airspeed, shedding frequency extracted from each wake probe, margin to the structural mode tabled | `cargo run --release -p avionics_examples --example viv_resonance_margin` |
 | turbulence_flow | Turbulence / Chaos | Forecast horizon of a chaotic convective flow (Lorenz / Rayleigh–Bénard truncation); the same `Rk4` march at f32/f64/Float106 shows precision setting how far ahead a turbulent flow can be trusted | `cargo run -p avionics_examples --example turbulence_flow` |
 
-The three plasma-blackout examples are one story, not three variants — see
+The three plasma-blackout examples tell one story; see
 [cfd/plasma_blackout/README.md](avionics_examples/cfd/plasma_blackout/README.md) for the family
 overview.
 
 See [avionics_examples/README.md](avionics_examples/README.md) for detailed documentation.
 
-> The CFD/MMS verification examples (Taylor–Green MMS, Re-1600 DEC solver, lid-driven cavity, graded-MMS, cylinder) have moved into the `deep_causality_cfd` crate as self-verifying examples under `deep_causality_cfd/verification/`; run them with `cargo run -p deep_causality_cfd --example <name>_verification`.
+> The CFD/MMS verification examples (Taylor–Green MMS, Re-1600 DEC solver, lid-driven cavity, graded-MMS, cylinder) are self-verifying examples in the `deep_causality_cfd` crate under `deep_causality_cfd/verification/`; run them with `cargo run -p deep_causality_cfd --example <name>_verification`.
 
 ## Mathematics Examples
 
 **Location:** `examples/mathematics_examples`
 
-Consolidated examples for all four major DeepCausality mathematics crates
-(`deep_causality_multivector`, `deep_causality_sparse`, `deep_causality_tensor`,
-`deep_causality_topology`), plus the cross-crate composition examples that show
+Examples for the DeepCausality mathematics crates (among them
+`deep_causality_linear`, `deep_causality_multivector`, `deep_causality_tensor`,
+`deep_causality_topology`), plus cross-crate composition examples that show
 how they fit together through HKT (`Functor`, `Monad`, `CoMonad`) and the causal
 effect monad.
 
@@ -234,7 +234,7 @@ effect monad.
 | algebraic_scanner | multivector | Scans Clifford algebras `Cl(p, q, r)` for complex structure (`I² = -1`) | `cargo run -p mathematics_examples --example algebraic_scanner_examples` |
 | electromagnetic_field | multivector | Derives the electromagnetic bivector from the 4-vector potential by one geometric product, and reads the Lorenz gauge, E and B out of it | `cargo run -p mathematics_examples --example electromagnetic_field_examples` |
 | pga3d_multivector | multivector | Projective Geometric Algebra (PGA) for rigid-body motions in graphics and robotics | `cargo run -p mathematics_examples --example pga3d_multivector_examples` |
-| basic_csr_ops | sparse | Constructing a `CsrMatrix` from triplets; row/column iteration | `cargo run -p mathematics_examples --example basic_csr_ops_examples` |
+| basic_csr_ops | linear | Constructing a `CsrMatrix` from triplets; row/column iteration | `cargo run -p mathematics_examples --example basic_csr_ops_examples` |
 | ein_sum_causal_tensor | tensor | Einstein-summation contractions via `EinSumOp` | `cargo run -p mathematics_examples --example ein_sum_causal_tensor_examples` |
 | einstein_field_causal_tensor | tensor | Index raising and lowering with the metric; Ricci-style contractions | `cargo run -p mathematics_examples --example einstein_field_causal_tensor_examples` |
 | manifold_analysis | topology | Constructing a `Manifold<SimplicialComplex<R>, F>`; Euler characteristic; orientation | `cargo run -p mathematics_examples --example manifold_analysis_examples` |
@@ -244,8 +244,8 @@ effect monad.
 | structural_stress_on_mesh | composition | 3D linear-elastic stress on a tetrahedral mesh: strain, Hooke, normal, Cauchy traction, material rotor, von Mises in one `extend` call | `cargo run -p mathematics_examples --example structural_stress_on_mesh_examples` |
 | diffusion_space_and_time | composition | Heat equation: spatial Laplacian via `extend`, time stepping via `bind`, stability short-circuit on CFL violation | `cargo run -p mathematics_examples --example diffusion_space_and_time_examples` |
 | relativistic_spinor_transport | composition | Parallel transport of a unit timelike spinor along a discretized Minkowski worldline in `Cl(3,1)`. Final drift versus closed-form `(cosh θ, sinh θ)` is ~1.7e-31 at `Float106` | `cargo run -p mathematics_examples --example relativistic_spinor_transport_examples` |
-| tensor_sparse_memory_budget | isomorphism | Dense `CausalTensor` <-> `CsrMatrix` via the `tensor-iso` feature: sparsify, run a sparse-only op, materialise back to dense | `cargo run -p mathematics_examples --example tensor_sparse_memory_budget` |
-| multifield_data_pipeline | isomorphism | `CausalMultiField<T>` <-> `(CausalTensor<T>, Metric, dx, shape)` iso lets external code build/extract/transform a multifield without touching `pub(crate)` internals | `cargo run -p mathematics_examples --example multifield_data_pipeline` |
+| tensor_sparse_memory_budget | isomorphism | Dense `CausalTensor` <-> `CsrMatrix`: sparsify, run a sparse-only op, materialise back to dense | `cargo run -p mathematics_examples --example tensor_sparse_memory_budget` |
+| multifield_data_pipeline | isomorphism | The `CausalMultiField<T>` <-> `(CausalTensor<T>, Metric, dx, shape)` iso lets external code build, extract, and transform a multifield without touching `pub(crate)` internals | `cargo run -p mathematics_examples --example multifield_data_pipeline` |
 
 See [mathematics_examples/README.md](mathematics_examples/README.md) for the full
 table of all 77 registered examples and the precision-abstraction decision tree
@@ -257,7 +257,7 @@ table of all 77 registered examples and the precision-abstraction decision tree
 
 **Location:** `examples/physics_examples`
 
-Multi-physics simulations using Geometric Algebra, Tensor operations, and Topology,
+Multi-physics simulations with geometric algebra, tensors, and topology,
 plus chronometric geodesy that inverts the J2-corrected weak-field 1PN kernel from
 `deep_causality_physics::chronometric`.
 
@@ -286,8 +286,7 @@ See [physics_examples/README.md](physics_examples/README.md) for detailed docume
 
 **Location:** `examples/quantum_examples`
 
-Examples whose subject matter is directly quantum, consolidated here from
-the physics, material, and mathematics example crates: quantum computing,
+Examples whose subject matter is quantum: quantum computing,
 quantum geometry of electronic bands, topological quantum matter,
 electroweak loop corrections, the Hopf/Bloch-sphere structure of a qubit
 state, and a quantum-gravity matrix model.
@@ -309,7 +308,7 @@ See [quantum_examples/README.md](quantum_examples/README.md) for detailed docume
 
 **Location:** `examples/medicine_examples`
 
-Biomedical and life sciences applications using causal monads.
+Biomedical and life-science applications built on causal monads.
 
 | Example | Domain | Command |
 |---------|--------|---------|
@@ -328,7 +327,7 @@ See [medicine_examples/README.md](medicine_examples/README.md) for detailed docu
 
 **Location:** `examples/material_examples`
 
-Material Science and Metamaterial simulations using topology, multivectors, and causal interventions.
+Material science and metamaterial simulations with topology, multivectors, and causal interventions.
 
 | Example | Domain | Command |
 |---------|--------|---------|

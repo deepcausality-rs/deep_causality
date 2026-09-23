@@ -12,7 +12,6 @@ use crate::traits::cellular_complex::CellularComplex;
 use crate::{GaugeGroup, LatticeCell, LatticeGaugeField, LinkVariable, TopologyError};
 use deep_causality_algebra::{ComplexField, DivisionAlgebra, Field, RealField};
 use deep_causality_num::{FromPrimitive, ToPrimitive};
-// use deep_causality_tensor::TensorData; // Removed
 use std::fmt::Debug;
 
 impl<
@@ -92,12 +91,11 @@ impl<
         let u4 = self.get_link_or_identity(&edge4);
 
         // Plaquette = U_μ(n) U_ν(n+μ̂) U_μ†(n+ν̂) U_ν†(n)
-        // Plaquette = U_μ(n) U_ν(n+μ̂) U_μ†(n+ν̂) U_ν†(n)
-        let u1_u2 = u1.try_mul(&u2).map_err(TopologyError::from)?;
+        let u1_u2 = u1.mul(&u2);
         let u3_dag = u3.dagger();
         let u4_dag = u4.dagger();
-        let u1_u2_u3dag = u1_u2.try_mul(&u3_dag).map_err(TopologyError::from)?;
-        let result = u1_u2_u3dag.try_mul(&u4_dag).map_err(TopologyError::from)?;
+        let u1_u2_u3dag = u1_u2.mul(&u3_dag);
+        let result = u1_u2_u3dag.mul(&u4_dag);
 
         Ok(result)
     }
@@ -150,51 +148,38 @@ impl<
         // Forward: U_μ(n), U_ν(n+μ̂), U_ν(n+μ̂+ν̂)
         // Backward: U_μ†(n+2ν̂), U_ν†(n+ν̂), U_ν†(n)
 
-        let _pos = *site;
         let mut pos = *site;
         let mut result = LinkVariable::<G, M, R>::identity();
 
         // Step 1: n → n+μ̂
         let edge1 = LatticeCell::edge(pos, mu);
-        result = result
-            .try_mul(&self.get_link_or_identity(&edge1))
-            .map_err(TopologyError::from)?;
+        result = result.mul(&self.get_link_or_identity(&edge1));
         pos[mu] = (pos[mu] + 1) % shape[mu];
 
         // Step 2: n+μ̂ → n+μ̂+ν̂
         let edge2 = LatticeCell::edge(pos, nu);
-        result = result
-            .try_mul(&self.get_link_or_identity(&edge2))
-            .map_err(TopologyError::from)?;
+        result = result.mul(&self.get_link_or_identity(&edge2));
         pos[nu] = (pos[nu] + 1) % shape[nu];
 
         // Step 3: n+μ̂+ν̂ → n+μ̂+2ν̂
         let edge3 = LatticeCell::edge(pos, nu);
-        result = result
-            .try_mul(&self.get_link_or_identity(&edge3))
-            .map_err(TopologyError::from)?;
+        result = result.mul(&self.get_link_or_identity(&edge3));
         pos[nu] = (pos[nu] + 1) % shape[nu];
 
         // Step 4: n+μ̂+2ν̂ → n+2ν̂ (backward in μ)
         pos[mu] = (pos[mu] + shape[mu] - 1) % shape[mu];
         let edge4 = LatticeCell::edge(pos, mu);
-        result = result
-            .try_mul(&self.get_link_or_identity(&edge4).dagger())
-            .map_err(TopologyError::from)?;
+        result = result.mul(&self.get_link_or_identity(&edge4).dagger());
 
         // Step 5: n+2ν̂ → n+ν̂ (backward in ν)
         pos[nu] = (pos[nu] + shape[nu] - 1) % shape[nu];
         let edge5 = LatticeCell::edge(pos, nu);
-        result = result
-            .try_mul(&self.get_link_or_identity(&edge5).dagger())
-            .map_err(TopologyError::from)?;
+        result = result.mul(&self.get_link_or_identity(&edge5).dagger());
 
         // Step 6: n+ν̂ → n (backward in ν)
         pos[nu] = (pos[nu] + shape[nu] - 1) % shape[nu];
         let edge6 = LatticeCell::edge(pos, nu);
-        result = result
-            .try_mul(&self.get_link_or_identity(&edge6).dagger())
-            .map_err(TopologyError::from)?;
+        result = result.mul(&self.get_link_or_identity(&edge6).dagger());
 
         Ok(result)
     }

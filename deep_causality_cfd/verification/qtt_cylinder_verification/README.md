@@ -1,38 +1,37 @@
 # QTT immersed cylinder — Brinkman-penalized drag (tensor-train)
 
-Verifies the immersed-body QTT solver (`QttImmersed2d`): a cylinder in a periodic free-stream, enforced
-by **Brinkman volume penalization**, with drag read as a **tensor-train contraction** of the body mask
-with the velocity deficit. This is the last piece of **Gap 1** of the plasma-blackout analysis (the
-immersed body + surface observables). Driven through `CfdFlow::march`.
+This example verifies the immersed-body QTT solver (`QttImmersed2d`) on a cylinder in a periodic
+free-stream. **Brinkman volume penalization** enforces the body, and drag is a **tensor-train
+contraction** of the body mask with the velocity deficit. The case closes **Gap 1** of the
+plasma-blackout analysis (the immersed body + surface observables) and runs through `CfdFlow::march`.
 
 ## The method
 
-The body is a smoothed volume-fraction mask `χ_body ∈ [0, 1]` (no cut cells — the periodic
+The body is a smoothed volume-fraction mask `χ_body ∈ [0, 1]` (no cut cells; the periodic
 power-of-two grid is uniform). Each step adds the forcing `−(1/η)·χ_body ⊙ (u − u_body)` to the velocity
 rate, driving the velocity to zero inside the solid; the divergence-free projection then cleans up. Drag
-falls out as `F = (1/η) ∫ χ_body ⊙ (u − u_body) dV` — a single train `inner` product, no surface
-reconstruction — nondimensionalized to `C_d = F_x / (½ ρ U² D)`.
+is `F = (1/η) ∫ χ_body ⊙ (u − u_body) dV`, a single train `inner` product with no surface
+reconstruction, nondimensionalized to `C_d = F_x / (½ ρ U² D)`.
 
 The shipped `config.rs` constants are `ν = 0.05`, `U = 1`, `RADIUS_FRAC = 0.15` on a `[0, 2π]²` box, so
-the diameter is `D = 2 · 0.15 · 2π = 1.8850` and the Reynolds number is `Re_D = U·D/ν = 37.7`. That is
-the case this harness runs. Neither the program banner nor the gates print `Re`; it follows from the
-constants above.
+the diameter is `D = 2 · 0.15 · 2π = 1.8850` and the harness runs at `Re_D = U·D/ν = 37.7`. Neither
+the program banner nor the gates print `Re`; it follows from these constants.
 
 ## What is verified (5 gates, exit nonzero on break)
 
-1. **No-slip** — the velocity inside the body (mask > 0.9) falls to the penalization floor. Tripwire.
-2. **Bond saturation** — the drag coefficient stops moving as the round bond cap is raised. Tripwire.
-   It says the tensor-train compression has converged; it says nothing about whether the compressed
-   quantity is the right one.
-3. **Physical drag** — the streamwise drag is positive and below `DRAG_SANITY_MAX = 100`. Tripwire, a
+1. **No-slip.** The velocity inside the body (mask > 0.9) falls to the penalization floor. Tripwire.
+2. **Bond saturation.** The drag coefficient stops moving as the round bond cap is raised. Tripwire.
+   It shows the tensor-train compression has converged, not that the compressed quantity is the
+   right one.
+3. **Physical drag.** The streamwise drag is positive and below `DRAG_SANITY_MAX = 100`. Tripwire: a
    wide blow-up guard, not an `O(1)` claim.
-4. **η ladder** — whether the reported `C_d` settles as the Brinkman parameter is reduced. Reference
-   class: the `η → 0` limit is what would license calling the penalization integral a drag.
-5. **Mask-smoothing ladder** — whether `C_d` settles as the mask skirt width is varied. Reference
-   class: a `C_d` that tracks the skirt width is reporting a numerical choice.
+4. **η ladder.** Does the reported `C_d` settle as the Brinkman parameter shrinks? Reference
+   class: only the `η → 0` limit licenses calling the penalization integral a drag.
+5. **Mask-smoothing ladder.** Does `C_d` settle as the mask skirt width varies? Reference
+   class: a `C_d` that tracks the skirt width reports a numerical choice.
 
-Gates 4 and 5 are the ones that constrain the number. On the superseded `L = 5` configuration both
-reported `NOT CONVERGING`, and the harness exited nonzero on them rather than passing them over.
+Only gates 4 and 5 constrain the number. On the superseded `L = 5` configuration both reported
+`NOT CONVERGING`, and the harness exited nonzero on them.
 
 ## Measured (superseded `L = 5` configuration, f64, Apple M3 Max, release, ~1 s)
 
@@ -52,36 +51,37 @@ Accuracy vs bond: immersed cylinder, drag from the penalization contraction
 ```
 
 - **Accuracy vs bond:** `C_d` settles `24.05 → 23.76 → 23.7577 → 23.7577`, with the successive change
-  collapsing `2.9e-1 → 7.2e-3 → 1.9e-11` — clean convergence as the tensor-train is allowed more rank. The
-  divergence residual likewise drops `3.8e-1 → 5.5e-14`: at a tight bond cap the projection can't fully
-  enforce incompressibility; by bond 16 it is at machine precision. **This convergence is the verification
-  result.**
-- **No-slip:** interior `max|u| ≈ 4.2e-2` vs the free-stream `1.0` — the penalization brakes the flow to a
+  collapsing `2.9e-1 → 7.2e-3 → 1.9e-11`: clean convergence as the tensor-train gets more rank. The
+  divergence residual drops `3.8e-1 → 5.5e-14`; at a tight bond cap the projection cannot fully
+  enforce incompressibility. It is `3.0e-7` at bond 16 and reaches machine precision (`5.5e-14`) at
+  bond 24. **This convergence is the
+  verification result.**
+- **No-slip:** interior `max|u| ≈ 4.2e-2` vs the free-stream `1.0`; the penalization brakes the flow to a
   few-percent floor inside the body.
 
 All three readings above are `L = 5` readings. Whether they carry over to `L = 8` is untested here.
 
 ## Honest reading of the absolute C_d
 
-The absolute `C_d` reported here is **not** an isolated-cylinder value. The DEC harness reports
-`C_d ≈ 1.345`, and that number is measured at `Re = 100`. The difference is expected and disclaimed:
+The absolute `C_d` reported here is **not** an isolated-cylinder value. The DEC harness measures
+`C_d ≈ 1.345` at `Re = 100`. The two differ for these reasons:
 
-- **Reynolds mismatch** — the shipped constants put this case at `Re_D = 37.7`, not at the `Re = 100`
-  of the DEC cross-reference. The two numbers therefore differ in Reynolds number as well as in
-  domain and force definition. No published `C_d` at `Re ≈ 37.7` is cited here, so the DEC value is
-  the only external number in the file and it describes a different flow.
-- **~30 % blockage** — the cylinder spans a large fraction of the periodic box, so the effective drag
+- **Reynolds mismatch.** The shipped constants put this case at `Re_D = 37.7`, not at the `Re = 100`
+  of the DEC cross-reference, so the numbers differ in Reynolds number as well as in domain and
+  force definition. The file cites no published `C_d` at `Re ≈ 37.7`; the DEC value is its only
+  external number, and it describes a different flow.
+- **~30 % blockage.** The cylinder spans a large fraction of the periodic box, so the effective drag
   is far above the unconfined value.
-- **Penalization-integral force** — `F` counts the momentum sink over the whole *smoothed skirt*, not just
-  pressure + friction on a sharp surface; with a 2-cell smoothing this inflates the magnitude.
-- **Transient** — a periodic box has no momentum source to hold the free-stream, so `C_d` is read at a
+- **Penalization-integral force.** `F` counts the momentum sink over the whole *smoothed skirt*, not
+  only pressure + friction on a sharp surface; a 2-cell smoothing inflates the magnitude.
+- **Transient.** A periodic box has no momentum source to hold the free-stream, so `C_d` is read at a
   fixed horizon, not a true steady state.
 
-So the committed DEC `C_d` is a **cross-reference**, not a target: the verification claim is the
-*convergence trend* + no-slip + positivity, **not** the absolute number. Reproducing an absolute
+The committed DEC `C_d` is therefore a **cross-reference**, not a target. The verification claim is
+the *convergence trend* + no-slip + positivity, **not** the absolute number. An absolute
 isolated-cylinder `C_d` would need an inflow/outflow domain (the DEC solver's configuration) and a
-retune of `ν`, `U`, or the radius onto the reference Reynolds number. Both are out of scope for the
-periodic QTT solver as configured.
+retune of `ν`, `U`, or the radius onto the reference Reynolds number; the periodic QTT solver as
+configured has neither.
 
 ## Running it
 
@@ -89,9 +89,9 @@ periodic QTT solver as configured.
 cargo run --release -p deep_causality_cfd --example qtt_cylinder_verification
 ```
 
-The accuracy-vs-bond table, the two parameter ladders, the five gate lines, and the closing verdict are
-on stdout; the finest-bond summary and the DEC cross-reference are on stderr. Exit is nonzero on a
-broken gate. At the shipped `L = 8` this is an hours-long run, not a smoke test.
+stdout carries the accuracy-vs-bond table, the two parameter ladders, the five gate lines, and the
+closing verdict; stderr carries the finest-bond summary and the DEC cross-reference. Exit is nonzero
+on a broken gate. At the shipped `L = 8` the run takes hours.
 
 ## File layout
 

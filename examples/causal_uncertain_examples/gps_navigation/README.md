@@ -1,7 +1,7 @@
 # GPS Navigation Example
 
-A stateless four-stage `PropagatingEffect` chain that propagates GPS, speed,
-and fuel-efficiency uncertainty through a planning pipeline.
+A stateless four-stage `PropagatingEffect` chain propagates GPS, speed,
+and fuel-efficiency uncertainty through a route-planning pipeline.
 
 ## Pipeline
 

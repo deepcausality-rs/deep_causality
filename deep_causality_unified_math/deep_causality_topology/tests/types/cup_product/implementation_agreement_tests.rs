@@ -5,19 +5,16 @@
 
 //! `Topology::cup_product` delegates, and these tests pin what the delegation owes.
 //!
-//! This crate used to compute the cup product twice: the free [`cup_product`], generic over
-//! `K: CellularComplex` with `K::CellType: SplittableCell`, and a second, simplicial-only
-//! implementation on `Topology` extracting the Alexander–Whitney front and back faces by hand.
-//! Neither called the other. These tests were written to pin that the two agreed, and having
-//! established it, the duplicate was retired: the method now delegates.
+//! The cup product has one implementation: the free [`cup_product`], generic over
+//! `K: CellularComplex` with `K::CellType: SplittableCell`. `Topology::cup_product` delegates to
+//! it.
 //!
-//! **So the first test below is no longer an agreement test.** With one implementation left, it
-//! checks the wrapping the method adds around the shared body: the result's grade, its length, and
-//! its values. It is kept because the wrapping is real code and because a regression there would
+//! The first test below checks the wrapping the method adds around that shared body: the result's
+//! grade, its length and its values. The wrapping is real code, and a regression in it would
 //! otherwise be silent.
 //!
-//! The tests after it cover the contracts that *changed* when the method began delegating. The
-//! grade tightening is here; the tolerance loosening is in
+//! The tests after it cover the contracts the delegation owes. The grade tightening is here; the
+//! tolerance loosening is in
 //! `tests/types/topology/topology_tests.rs`, where the complex it needs is already built.
 //!
 //! A third delta was expected and turned out not to exist. The retired implementation reached
@@ -51,9 +48,8 @@ fn topology_cochain(
 fn test_the_method_wraps_the_shared_body_faithfully() {
     let complex = Arc::new(tetrahedron());
 
-    // All ten admissible pairs, not the six this test covered while it was pinning two
-    // implementations against each other. A tetrahedron has max_dim 3, so every pair summing to
-    // three or less is in range.
+    // All ten admissible pairs. A tetrahedron has max_dim 3, so every pair summing to three or
+    // less is in range.
     for (p, q) in [
         (0usize, 0usize),
         (0, 1),

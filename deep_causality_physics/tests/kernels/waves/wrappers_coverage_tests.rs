@@ -15,5 +15,12 @@ fn test_wave_speed_wrapper_error_path() {
     let lambda = Length::<f64>::new(1.0e200).unwrap();
 
     let effect = wave_speed(&f, &lambda);
-    assert!(!effect.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Numerical Instability"),
+        "expected a Numerical Instability refusal, got {err}"
+    );
 }

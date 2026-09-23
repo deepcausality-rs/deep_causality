@@ -1,9 +1,9 @@
 # Tissue classification by topology
 
-A tumour that outgrows its blood supply dies from the inside out, leaving a necrotic core: a shell
-of living cells around a dead centre. On an MRI slice that reads as a ring, and telling it apart
-from a solid mass marks the tumour as aggressive. This example tells the two apart by counting
-holes.
+This example tells a solid tumour from one with a necrotic core by counting holes. A tumour that
+outgrows its blood supply dies from the inside out and leaves a shell of living cells around a
+dead centre. On an MRI slice that shell reads as a ring, and a ring instead of a solid mass marks
+the tumour as aggressive.
 
 ```bash
 cargo run -p medicine_examples --example tissue_classification

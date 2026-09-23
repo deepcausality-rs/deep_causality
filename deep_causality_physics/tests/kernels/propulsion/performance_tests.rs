@@ -4,7 +4,7 @@
  */
 
 use deep_causality_physics::{
-    Force, Mass, propellant_mass_flow_kernel, tsiolkovsky_delta_v_kernel,
+    Force, Mass, PhysicsErrorEnum, propellant_mass_flow_kernel, tsiolkovsky_delta_v_kernel,
 };
 
 const G0: f64 = 9.80665;
@@ -32,14 +32,46 @@ fn test_mass_flow_zero_thrust_is_zero() {
 
 #[test]
 fn test_mass_flow_rejects_nonpositive_isp() {
-    assert!(propellant_mass_flow_kernel(Force::new(1000.0_f64).unwrap(), 0.0).is_err());
-    assert!(propellant_mass_flow_kernel(Force::new(1000.0).unwrap(), -10.0).is_err());
-    assert!(propellant_mass_flow_kernel(Force::new(1000.0).unwrap(), f64::NAN).is_err());
+    assert!(
+        matches!(
+            propellant_mass_flow_kernel(Force::new(1000.0_f64).unwrap(), 0.0)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            propellant_mass_flow_kernel(Force::new(1000.0).unwrap(), -10.0)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            propellant_mass_flow_kernel(Force::new(1000.0).unwrap(), f64::NAN)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
 fn test_mass_flow_rejects_negative_thrust() {
-    assert!(propellant_mass_flow_kernel(Force::new(-1.0_f64).unwrap(), 300.0).is_err());
+    assert!(
+        matches!(
+            propellant_mass_flow_kernel(Force::new(-1.0_f64).unwrap(), 300.0)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -66,35 +98,50 @@ fn test_tsiolkovsky_equal_masses_zero_dv() {
 #[test]
 fn test_tsiolkovsky_rejects_burn_ending_heavier() {
     assert!(
-        tsiolkovsky_delta_v_kernel(
-            300.0_f64,
-            Mass::new(400.0).unwrap(),
-            Mass::new(500.0).unwrap()
-        )
-        .is_err()
+        matches!(
+            tsiolkovsky_delta_v_kernel(
+                300.0_f64,
+                Mass::new(400.0).unwrap(),
+                Mass::new(500.0).unwrap()
+            )
+            .unwrap_err()
+            .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
     );
 }
 
 #[test]
 fn test_tsiolkovsky_rejects_zero_final_mass() {
     assert!(
-        tsiolkovsky_delta_v_kernel(
-            300.0_f64,
-            Mass::new(500.0).unwrap(),
-            Mass::new(0.0).unwrap()
-        )
-        .is_err()
+        matches!(
+            tsiolkovsky_delta_v_kernel(
+                300.0_f64,
+                Mass::new(500.0).unwrap(),
+                Mass::new(0.0).unwrap()
+            )
+            .unwrap_err()
+            .0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
     );
 }
 
 #[test]
 fn test_tsiolkovsky_rejects_nonpositive_isp() {
     assert!(
-        tsiolkovsky_delta_v_kernel(
-            0.0_f64,
-            Mass::new(500.0).unwrap(),
-            Mass::new(400.0).unwrap()
-        )
-        .is_err()
+        matches!(
+            tsiolkovsky_delta_v_kernel(
+                0.0_f64,
+                Mass::new(500.0).unwrap(),
+                Mass::new(400.0).unwrap()
+            )
+            .unwrap_err()
+            .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
     );
 }

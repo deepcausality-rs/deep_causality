@@ -45,16 +45,16 @@ is `L²/L¹` and `|e|` is `L¹` — and is still not the same number. `⋆₂ = 
 `ReggeGeometry` vends these operators verbatim. So the contract and the implementation disagree at
 every grade strictly between `0` and `n`.
 
-Note that the docstring was already corrected once, under task 6.7o, for saying the wrong *shape*.
-This is a different error in the same operator, and it survived that correction because the shape
-was what was being checked.
+The docstring was corrected once before, under task 6.7o, for stating the wrong *shape*. This is a
+different error in the same operator; it survived that correction because only the shape was
+checked.
 
 ## What it reaches
 
 Every generic differential operator on `Manifold<SimplicialComplex<R>, R>` goes through
 `hodge_star_matrix`: `hodge_star`, `codifferential`, `laplacian`, `hodge_decomposition`, `leray`,
-`neumann_poisson`. Each of them uses an intermediate grade whenever it is asked for one — which for
-a 3D complex is `k = 1` and `k = 2`, and for a 2D complex is `k = 1`.
+`neumann_poisson`. Each uses an intermediate grade whenever asked for one: `k = 1` and `k = 2` on a
+3D complex, `k = 1` on a 2D complex.
 
 The cubical backend is unaffected: `CubicalReggeGeometry` computes its entries from per-cell volume
 data and is a separate implementation.
@@ -70,10 +70,10 @@ the mesh is not well-centred. That is a real piece of DEC construction (Hirani, 
 Calculus*, Caltech 2003, §2.5), and it comes with a well-centredness question the lumped-mass form
 was presumably chosen to avoid.
 
-The alternative, which avoids that question, is the Galerkin/Whitney **mass matrix** — `M_k` with
-entries `∫ w_i · w_j` over the Whitney basis. It is not diagonal, which is a change to the operator
-surface rather than to one function, but it needs no circumcentres and is the standard choice for
-meshes that are not well-centred. Task 6.7h recorded it as the alternative for the same reason.
+The alternative, which avoids that question, is the Galerkin/Whitney **mass matrix**: `M_k` with
+entries `∫ w_i · w_j` over the Whitney basis. It is not diagonal, so it changes the operator surface
+rather than one function, but it needs no circumcentres and is the standard choice for meshes that
+are not well-centred. Task 6.7h recorded it as the alternative for the same reason.
 
 Either way this is a change of its own, with its own oracles: the dimensional scaling above is a
 necessary condition and nowhere near a sufficient one.

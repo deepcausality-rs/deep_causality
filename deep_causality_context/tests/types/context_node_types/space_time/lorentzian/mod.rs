@@ -5,4 +5,6 @@
 mod adjustable_tests;
 mod lorentzian_spacetime_tests;
 mod metric_signature_tests;
+#[cfg(test)]
+mod recordable_tests;
 mod space_temporal_interval_tests;

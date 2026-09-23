@@ -7,34 +7,33 @@ use deep_causality_physics::{
     BeamWaist, FocalLength, NumericalAperture, OpticalPower, RayAngle, RayHeight, Wavelength,
 };
 
+/// The trait contract for a newtype over a scalar, checked against two *distinct* values.
+///
+/// `assert_eq!(a, a.clone())` is reflexive: it holds for any derived `PartialEq` and for a broken
+/// one that always returns true, so it cannot fail. The inequality is what discriminates, and
+/// comparing the two `Debug` renderings is what makes `Debug` observable instead of discarded.
+macro_rules! assert_scalar_traits {
+    ($ty:ty, $small:expr, $large:expr) => {{
+        let a = <$ty>::new($small).unwrap();
+        let b = <$ty>::new($large).unwrap();
+        assert_eq!(a, a.clone(), "clone must preserve equality");
+        assert_ne!(a, b, "distinct values must not compare equal");
+        assert!(a < b, "ordering must follow the wrapped value");
+        assert_ne!(
+            format!("{:?}", a),
+            format!("{:?}", b),
+            "Debug must distinguish distinct values"
+        );
+    }};
+}
+
 #[test]
 fn test_photonics_scalars_traits() {
-    let f = FocalLength::<f64>::new(1.0).unwrap();
-    assert_eq!(f, f.clone());
-    let _ = format!("{:?}", f);
-
-    let p = OpticalPower::<f64>::new(2.0).unwrap();
-    assert_eq!(p, p.clone());
-    let _ = format!("{:?}", p);
-
-    let w = Wavelength::<f64>::new(500e-9).unwrap();
-    assert_eq!(w, w.clone());
-    assert!(w < Wavelength::<f64>::new(600e-9).unwrap());
-    let _ = format!("{:?}", w);
-
-    let na = NumericalAperture::<f64>::new(0.5).unwrap();
-    assert_eq!(na, na.clone());
-    let _ = format!("{:?}", na);
-
-    let bw = BeamWaist::<f64>::new(1e-6).unwrap();
-    assert_eq!(bw, bw.clone());
-    let _ = format!("{:?}", bw);
-
-    let rh = RayHeight::<f64>::new(0.01).unwrap();
-    assert_eq!(rh, rh.clone());
-    let _ = format!("{:?}", rh);
-
-    let ra = RayAngle::<f64>::new(0.1).unwrap();
-    assert_eq!(ra, ra.clone());
-    let _ = format!("{:?}", ra);
+    assert_scalar_traits!(FocalLength<f64>, 1.0, 2.0);
+    assert_scalar_traits!(OpticalPower<f64>, 2.0, 3.0);
+    assert_scalar_traits!(Wavelength<f64>, 500e-9, 600e-9);
+    assert_scalar_traits!(NumericalAperture<f64>, 0.5, 0.75);
+    assert_scalar_traits!(BeamWaist<f64>, 1e-6, 2e-6);
+    assert_scalar_traits!(RayHeight<f64>, 0.01, 0.02);
+    assert_scalar_traits!(RayAngle<f64>, 0.1, 0.2);
 }

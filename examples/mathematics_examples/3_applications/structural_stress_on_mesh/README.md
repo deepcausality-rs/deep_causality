@@ -1,13 +1,13 @@
 # 3D Stress Analysis Blueprint: Strain to von Mises in One `extend`
 
-This example demonstrates **modular composition** across (`topology`, `tensor`, `multivector`) inside a single comonadic step.
-It runs a six-step linear-elastic stress pipeline on a  3D simplicial complex and produces per-vertex von Mises stress in Pascals.
+This example runs a six-step linear-elastic stress pipeline on a 3D simplicial complex and produces per-vertex von Mises stress in Pascals.
+It composes `topology`, `tensor` and `multivector` inside a single comonadic step.
 
 ## Introduction
 
-Imagine you have a meshed part (a bracket, a beam, a turbine blade). At every vertex you know the local strain (how the material is deformed). You need to know the stress, project it onto a surface direction to get a traction, rotate it into the material's own frame (because steel cares about its grain direction), and reduce it to a single number an engineer can compare against a yield criterion.
+Take a meshed part (a bracket, a beam, a turbine blade) with the local strain known at every vertex. The pipeline computes the stress, projects it onto a surface direction to get a traction, rotates the traction into the material's own frame (steel responds to its grain direction), and reduces the stress to one number an engineer compares against a yield criterion.
 
-That sequence shows up in structural engineering (bridges, buildings, machined parts), mechanical CAE (FEA solvers like Abaqus, Ansys, Nastran), materials science (anisotropic composites, single-crystal turbine blades), and any simulation that translates "what is the field at this point" into "what does that field do in a rotated local frame." The same pattern also lives inside graphics shaders that compute per-vertex lighting in a tangent-space basis.
+That sequence appears in structural engineering (bridges, buildings, machined parts), mechanical CAE (FEA solvers like Abaqus, Ansys, Nastran), materials science (anisotropic composites, single-crystal turbine blades), and any simulation that asks what a field does in a rotated local frame. Graphics shaders that compute per-vertex lighting in a tangent-space basis follow the same pattern.
 
 ## How to Run
 
@@ -38,7 +38,7 @@ One `extend` call. Three crates participated:
   multivector applied the material-frame rotation in Cl(3,0)
 ```
 
-The 240 MPa peak is exactly what you would expect: the prescribed strain is proportional to the x-coordinate, so the two vertices at maximum `x` see the largest stress; the three vertices at `x = 0` see none.
+The prescribed strain is proportional to the x-coordinate, so the two vertices at maximum `x` carry the 240 MPa peak and the three vertices at `x = 0` carry none.
 
 ---
 
@@ -90,7 +90,7 @@ strain field  ->  constitutive law  ->  normal  ->  Cauchy traction  ->  materia
 
 ## What Each Aspect Holds Today
 
-This is a **blueprint**. It exposes the wiring so an engineer can plug in the
+This is a **blueprint**: it exposes the wiring so an engineer can plug in the
 material-specific physics. Each row names what the example holds and what production puts there.
 
 | Aspect                  | This Example                              | Production                                  |
@@ -111,7 +111,7 @@ material-specific physics. Each row names what the example holds and what produc
 
 ## Path to Production Code
 
-To evolve this example into a credible FEA inner loop, replace the placeholder functions one at a time. Each replacement is local: the `extend` walk, the cross-crate composition, and the surrounding pipeline stay where they are.
+To turn this example into an FEA inner loop, replace the placeholder functions one at a time. Each replacement is local: the `extend` walk, the cross-crate composition and the surrounding pipeline stay in place.
 
 ### Step 1: Real Strain from a Displacement Field
 
@@ -194,7 +194,7 @@ Note: anisotropic criteria need `sigma` in the **material frame**, so they consu
 + fn build_structured_grid(nx: usize, ny: usize, nz: usize) -> Manifold<f64, FloatType> { ... }
 ```
 
-A practical add: a `mesh_io` helper module that parses a Gmsh `.msh` or VTK `.vtu` file into the same `Skeleton + boundary matrix` structure the example builds by hand. Orientation consistency (the topology crate's manifold-validation check) is the part to be careful about; for unstructured tet meshes produced by Gmsh, the writer outputs consistently oriented tets and the check passes.
+A useful addition: a `mesh_io` helper module that parses a Gmsh `.msh` or VTK `.vtu` file into the same `Skeleton + boundary matrix` structure the example builds by hand. Watch orientation consistency (the topology crate's manifold-validation check); Gmsh writes consistently oriented tets for unstructured meshes, so the check passes.
 
 ### Step 7: From "Apply Stress" to "Solve for Equilibrium"
 
@@ -209,7 +209,7 @@ A practical add: a `mesh_io` helper module that parses a Gmsh `.msh` or VTK `.vt
 + // Iterate until convergence.
 ```
 
-The per-vertex closure in this example becomes the **kernel** invoked during residual assembly. The outer loop runs in a `bind` chain that handles convergence, line search, and load stepping. Same architectural pattern as the multi-physics pipeline.
+The per-vertex closure in this example becomes the **kernel** invoked during residual assembly. The outer loop runs in a `bind` chain that handles convergence, line search and load stepping.
 
 ---
 
@@ -231,7 +231,7 @@ let stress_field = ManifoldWitness::extend(&manifold, |w| {
 });
 ```
 
-The **cross-crate composition pattern remains the same**. Only the function bodies change.
+The **cross-crate composition pattern stays the same**; only the function bodies change.
 
 ---
 
@@ -259,4 +259,4 @@ This pattern applies to any per-vertex field-computation pipeline that crosses t
 - **Geophysics**: strain-rate tensors on subduction-zone meshes
 - **Biomechanics**: tissue stress on patient-specific anatomical meshes
 
-The key insight: **mesh walk, tensor algebra, and frame rotation are orthogonal concerns; composing them through HKT witnesses keeps each replaceable.**
+**Mesh walk, tensor algebra and frame rotation are orthogonal concerns; composing them through HKT witnesses keeps each replaceable.**

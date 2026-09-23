@@ -19,7 +19,13 @@ fn test_density_new_valid() {
 #[test]
 fn test_density_new_negative_error() {
     let density = Density::<f64>::new(-1.0);
-    assert!(density.is_err());
+    assert!(
+        matches!(
+            density.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -52,7 +58,6 @@ fn test_density_default() {
 #[test]
 fn test_density_new_nan_error() {
     let d = Density::<f64>::new(f64::NAN);
-    assert!(d.is_err());
     match &d.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => assert!(msg.contains("finite")),
         _ => panic!("Expected finite-check error"),
@@ -61,7 +66,13 @@ fn test_density_new_nan_error() {
 
 #[test]
 fn test_density_new_infinity_error() {
-    assert!(Density::<f64>::new(f64::INFINITY).is_err());
+    assert!(
+        matches!(
+            Density::<f64>::new(f64::INFINITY).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 // =============================================================================
@@ -74,5 +85,14 @@ fn test_density_traits() {
     let b = a;
     assert_eq!(a, b);
     assert!(a < Density::<f64>::new(2.0).unwrap());
-    let _ = format!("{:?}", a);
+    // `assert_eq!(x, x.clone())` is reflexive and holds for a `PartialEq` that always
+    // returns true. The inequality discriminates, and comparing the two `Debug`
+    // renderings makes `Debug` observable rather than discarded.
+    let other = Density::<f64>::new(2.0).unwrap();
+    assert_ne!(a, other, "distinct values must not compare equal");
+    assert_ne!(
+        format!("{a:?}"),
+        format!("{other:?}"),
+        "Debug must distinguish distinct values"
+    );
 }

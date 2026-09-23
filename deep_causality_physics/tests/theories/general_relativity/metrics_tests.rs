@@ -5,6 +5,8 @@
 
 //! Tests for metrics.rs - Spacetime metric constructors and error handling
 
+use deep_causality_physics::PhysicsErrorEnum;
+
 use deep_causality_physics::theories::general_relativity::{
     flrw_metric_at, kerr_metric_at, minkowski_metric, schwarzschild_christoffel_at,
     schwarzschild_kretschmann, schwarzschild_metric_at,
@@ -77,10 +79,39 @@ fn test_kerr_black_hole() {
         );
     }
 
-    // Case 2: Extreme Kerr (a=M)
-    // At horizon r = M + sqrt(M^2 - a^2) = M
-    // Here we test outside horizon
-    let _kerr_rot = kerr_metric_at(mass, mass * 0.9, r, theta).unwrap();
+    // Case 2: a rotating black hole. Frame dragging is the whole difference between Kerr and
+    // Schwarzschild, and it lives in the off-diagonal g_{t phi} term: zero when a = 0, non-zero
+    // otherwise. Discarding this result, as the test used to, left the spin parameter unobserved.
+    let spin = mass * 0.9;
+    let kerr_rot = kerr_metric_at(mass, spin, r, theta).unwrap();
+    let rot = kerr_rot.as_slice();
+
+    let g_t_phi: f64 = rot[3]; // row 0, column 3
+    let g_phi_t: f64 = rot[12]; // row 3, column 0
+    assert!(
+        g_t_phi.abs() > 1e-12,
+        "a rotating Kerr metric must have a non-zero g_(t phi); got {g_t_phi}"
+    );
+    assert!(
+        (g_t_phi - g_phi_t).abs() < 1e-12,
+        "the metric must stay symmetric: g_(t phi) = {g_t_phi}, g_(phi t) = {g_phi_t}"
+    );
+
+    // And the non-rotating case must not have it, so the term tracks the spin rather than being
+    // present for every input.
+    let g_t_phi_static: f64 = k_data[3];
+    assert!(
+        g_t_phi_static.abs() < 1e-12,
+        "a = 0 must switch frame dragging off; got {g_t_phi_static}"
+    );
+
+    // Frame dragging grows with the spin.
+    let slower = kerr_metric_at(mass, spin * 0.5, r, theta).unwrap();
+    let g_t_phi_slower: f64 = slower.as_slice()[3];
+    assert!(
+        g_t_phi_slower.abs() < g_t_phi.abs(),
+        "halving the spin must reduce frame dragging: {g_t_phi_slower} against {g_t_phi}"
+    );
 }
 
 #[test]
@@ -185,7 +216,13 @@ fn test_schwarzschild_kretschmann_various_values() {
 #[test]
 fn test_kerr_metric_negative_radius_error() {
     let result = kerr_metric_at(1.0, 0.5, -5.0, PI / 2.0);
-    assert!(result.is_err(), "Negative radius should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -196,28 +233,48 @@ fn test_kerr_metric_horizon_singularity() {
     // At r = 2M (horizon), Δ = r² - 2Mr + a² = 4 - 4 = 0
     // This should trigger singularity error
     let result = kerr_metric_at(mass, a, 2.0 * mass, PI / 2.0);
-    assert!(result.is_err(), "Horizon (Δ=0) should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
 fn test_kerr_metric_ring_singularity() {
-    // Ring singularity: Σ = r² + a²cos²θ → 0
-    // This happens at r=0, θ=π/2 with a≠0
+    // The ring singularity is where Σ = r² + a² cos²θ vanishes. At r = 0 and θ = π/2 the
+    // cosine is zero, so Σ = 0 + a² · 0 = 0 for any spin.
     let result = kerr_metric_at(1.0, 0.5, 0.0, PI / 2.0);
-    // Actually at r=0, Σ=0 + a²×0 = 0 for θ=π/2
     assert!(
-        result.is_err(),
-        "Ring singularity (Σ=0) should return error"
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
     );
 }
 
 #[test]
 fn test_flrw_metric_nonpositive_scale_factor() {
     let result = flrw_metric_at(0.0, 0.0, 5.0, PI / 2.0);
-    assert!(result.is_err(), "Zero scale factor should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 
     let result = flrw_metric_at(-1.0, 0.0, 5.0, PI / 2.0);
-    assert!(result.is_err(), "Negative scale factor should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -228,18 +285,33 @@ fn test_flrw_metric_coordinate_singularity() {
 
     let result = flrw_metric_at(1.0, k, r, PI / 2.0);
     assert!(
-        result.is_err(),
-        "Coordinate singularity (1-kr²=0) should return error"
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
     );
 }
 
 #[test]
 fn test_schwarzschild_metric_nonpositive_radius() {
     let result = schwarzschild_metric_at(1.0, 0.0);
-    assert!(result.is_err(), "Zero radius should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 
     let result = schwarzschild_metric_at(1.0, -5.0);
-    assert!(result.is_err(), "Negative radius should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -249,24 +321,54 @@ fn test_schwarzschild_metric_inside_horizon() {
 
     // At horizon
     let result = schwarzschild_metric_at(mass, r_s);
-    assert!(result.is_err(), "At horizon should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 
     // Inside horizon
     let result = schwarzschild_metric_at(mass, r_s * 0.5);
-    assert!(result.is_err(), "Inside horizon should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
 fn test_schwarzschild_christoffel_error_paths() {
     // Zero radius
     let result = schwarzschild_christoffel_at(1.0, 0.0);
-    assert!(result.is_err(), "Zero radius should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 
     // Negative radius
     let result = schwarzschild_christoffel_at(1.0, -5.0);
-    assert!(result.is_err(), "Negative radius should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 
     // Inside horizon
     let result = schwarzschild_christoffel_at(1.0, 1.5); // r_s = 2
-    assert!(result.is_err(), "Inside horizon should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }

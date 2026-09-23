@@ -18,9 +18,13 @@ fn test_stress_new_valid() {
 
 #[test]
 fn test_stress_new_negative() {
-    // Stress can be negative (compressive)
-    let stress = Stress::<f64>::new(-50e6);
-    assert!(stress.is_ok());
+    // Stress can be negative (compressive), and the sign must survive construction.
+    let stress = Stress::<f64>::new(-50e6).unwrap();
+    assert!(
+        (stress.value() + 50e6).abs() < 1.0,
+        "stress = {}",
+        stress.value()
+    );
 }
 
 #[test]
@@ -42,14 +46,13 @@ fn test_stress_default() {
 
 #[test]
 fn test_stiffness_new_valid() {
-    let stiff = Stiffness::<f64>::new(200e9); // Steel Young's modulus
-    assert!(stiff.is_ok());
+    let stiff = Stiffness::<f64>::new(200e9).unwrap(); // Steel Young's modulus
+    assert!((stiff.value() - 200e9).abs() < 1.0, "E = {}", stiff.value());
 }
 
 #[test]
 fn test_stiffness_new_negative_error() {
     let stiff = Stiffness::<f64>::new(-1.0);
-    assert!(stiff.is_err());
     match &stiff.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => {
             assert!(msg.contains("Stiffness") || msg.contains("Negative"));
@@ -62,7 +65,6 @@ fn test_stiffness_new_negative_error() {
 fn test_stiffness_new_nan_error() {
     // materials/mod.rs:58-61 — explicit finiteness guard (NaN < 0 is false).
     let stiff = Stiffness::<f64>::new(f64::NAN);
-    assert!(stiff.is_err());
     match &stiff.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => {
             assert!(msg.contains("finite"));
@@ -74,7 +76,6 @@ fn test_stiffness_new_nan_error() {
 #[test]
 fn test_stiffness_new_infinity_error() {
     let stiff = Stiffness::<f64>::new(f64::INFINITY);
-    assert!(stiff.is_err());
     match &stiff.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => {
             assert!(msg.contains("finite"));
@@ -99,10 +100,15 @@ use deep_causality_tensor::CausalTensor;
 
 #[test]
 fn test_stress_traits() {
+    // `assert_eq!(s, s.clone())` is reflexive and holds for a `PartialEq` that always returns
+    // true. The inequality is what discriminates, and comparing the two `Debug` renderings is
+    // what makes `Debug` observable rather than discarded.
     let s = Stress::<f64>::new(1.0).unwrap();
+    let bigger = Stress::<f64>::new(2.0).unwrap();
     assert_eq!(s, s.clone());
-    assert!(s < Stress::<f64>::new(2.0).unwrap());
-    let _ = format!("{:?}", s);
+    assert_ne!(s, bigger);
+    assert!(s < bigger);
+    assert_ne!(format!("{s:?}"), format!("{bigger:?}"));
 }
 
 #[test]
@@ -114,54 +120,82 @@ fn test_stiffness_default() {
 #[test]
 fn test_stiffness_traits() {
     let s = Stiffness::<f64>::new(1.0).unwrap();
+    let bigger = Stiffness::<f64>::new(2.0).unwrap();
     assert_eq!(s, s.clone());
-    assert!(s < Stiffness::<f64>::new(2.0).unwrap());
-    let _ = format!("{:?}", s);
+    assert_ne!(s, bigger);
+    assert!(s < bigger);
+    assert_ne!(format!("{s:?}"), format!("{bigger:?}"));
 }
 
 // =============================================================================
 // Tensor wrappers: Strain / StiffnessTensor / StressTensor
 // =============================================================================
 
+/// Nine distinct entries, so a wrapper that reordered, zeroed or truncated the data cannot
+/// look the same as one that carried it through. A uniform `vec![1.0; 9]` can.
+fn distinct_3x3() -> CausalTensor<f64> {
+    CausalTensor::new((1..=9).map(|i| i as f64 * 0.5).collect(), vec![3, 3]).unwrap()
+}
+
 #[test]
 fn test_strain_new_and_inner() {
-    let t: CausalTensor<f64> = CausalTensor::new(vec![1.0; 9], vec![3, 3]).unwrap();
+    let t = distinct_3x3();
     let strain = Strain::<f64>::new(t.clone());
     assert_eq!(strain.inner().shape(), t.shape());
+    assert_eq!(
+        strain.inner().as_slice(),
+        t.as_slice(),
+        "the wrapper must carry the data, not merely the shape"
+    );
 }
 
 #[test]
 fn test_strain_into_inner() {
-    let t: CausalTensor<f64> = CausalTensor::new(vec![1.0; 9], vec![3, 3]).unwrap();
-    let strain = Strain::<f64>::new(t.clone());
-    let inner = strain.into_inner();
+    let t = distinct_3x3();
+    let inner = Strain::<f64>::new(t.clone()).into_inner();
     assert_eq!(inner.shape(), t.shape());
+    assert_eq!(inner.as_slice(), t.as_slice());
 }
 
 #[test]
-fn test_strain_clone_debug() {
-    let t: CausalTensor<f64> = CausalTensor::new(vec![1.0; 9], vec![3, 3]).unwrap();
-    let s = Strain::<f64>::new(t);
-    let _ = s.clone();
-    let _ = format!("{:?}", s);
+fn test_strain_clone_is_equal_and_debug_names_the_type() {
+    // This test used to clone and format, discarding both, so it asserted nothing at all.
+    let s = Strain::<f64>::new(distinct_3x3());
+    let cloned = s.clone();
+    assert_eq!(cloned.inner().as_slice(), s.inner().as_slice());
+
+    let rendered = format!("{s:?}");
+    assert!(rendered.contains("Strain"), "Debug rendering: {rendered}");
+    let other = Strain::<f64>::new(CausalTensor::new(vec![0.0; 9], vec![3, 3]).unwrap());
+    assert_ne!(
+        rendered,
+        format!("{other:?}"),
+        "Debug must distinguish distinct values"
+    );
 }
 
 #[test]
 fn test_stiffness_tensor_new_inner_into() {
-    let t: CausalTensor<f64> = CausalTensor::new(vec![0.0; 81], vec![3, 3, 3, 3]).unwrap();
+    let t: CausalTensor<f64> = CausalTensor::new(
+        (1..=81).map(|i| i as f64 * 0.25).collect(),
+        vec![3, 3, 3, 3],
+    )
+    .unwrap();
     let st = StiffnessTensor::<f64>::new(t.clone());
     assert_eq!(st.inner().shape(), t.shape());
+    assert_eq!(st.inner().as_slice(), t.as_slice());
     let inner = st.clone().into_inner();
-    assert_eq!(inner.shape(), t.shape());
-    let _ = format!("{:?}", st);
+    assert_eq!(inner.as_slice(), t.as_slice());
+    assert!(format!("{st:?}").contains("StiffnessTensor"));
 }
 
 #[test]
 fn test_stress_tensor_new_inner_into() {
-    let t: CausalTensor<f64> = CausalTensor::new(vec![0.0; 9], vec![3, 3]).unwrap();
+    let t = distinct_3x3();
     let st = StressTensor::<f64>::new(t.clone());
     assert_eq!(st.inner().shape(), t.shape());
+    assert_eq!(st.inner().as_slice(), t.as_slice());
     let inner = st.clone().into_inner();
-    assert_eq!(inner.shape(), t.shape());
-    let _ = format!("{:?}", st);
+    assert_eq!(inner.as_slice(), t.as_slice());
+    assert!(format!("{st:?}").contains("StressTensor"));
 }

@@ -37,6 +37,11 @@ where
         k: usize,
     ) -> Result<Cow<'a, CsrMatrix<R>>, TopologyError> {
         let ops = complex.hodge_star_operators()?;
-        Ok(Cow::Borrowed(&ops[k]))
+        ops.get(k).map(Cow::Borrowed).ok_or_else(|| {
+            TopologyError::InvalidGradeOperation(format!(
+                "hodge_star_matrix: grade {k} exceeds the {} Hodge ⋆ operators held",
+                ops.len()
+            ))
+        })
     }
 }

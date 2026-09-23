@@ -4,8 +4,8 @@
  */
 
 use deep_causality_physics::{
-    Acceleration, Length, Speed, ignition_altitude_kernel, stopping_distance_kernel,
-    suicide_burn_deceleration_kernel,
+    Acceleration, Length, PhysicsErrorEnum, Speed, ignition_altitude_kernel,
+    stopping_distance_kernel, suicide_burn_deceleration_kernel,
 };
 
 const G0: f64 = 9.80665;
@@ -24,12 +24,22 @@ fn test_stopping_distance_identity() {
 #[test]
 fn test_stopping_distance_rejects_nonpositive_deceleration() {
     assert!(
-        stopping_distance_kernel(Speed::new(100.0).unwrap(), Acceleration::new(0.0).unwrap())
-            .is_err()
+        matches!(
+            stopping_distance_kernel(Speed::new(100.0).unwrap(), Acceleration::new(0.0).unwrap())
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
     );
     assert!(
-        stopping_distance_kernel(Speed::new(100.0).unwrap(), Acceleration::new(-1.0).unwrap())
-            .is_err()
+        matches!(
+            stopping_distance_kernel(Speed::new(100.0).unwrap(), Acceleration::new(-1.0).unwrap())
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
     );
 }
 
@@ -52,13 +62,18 @@ fn test_ignition_altitude_rejects_thrust_to_weight_below_one() {
     // a_T = g exactly: the vehicle hovers, never stops. a_T < g: falls.
     for a_t in [G0, 0.5 * G0] {
         assert!(
-            ignition_altitude_kernel(
-                Speed::new(100.0).unwrap(),
-                Acceleration::new(a_t).unwrap(),
-                Acceleration::new(G0).unwrap(),
-                Length::new(0.0).unwrap(),
-            )
-            .is_err()
+            matches!(
+                ignition_altitude_kernel(
+                    Speed::new(100.0).unwrap(),
+                    Acceleration::new(a_t).unwrap(),
+                    Acceleration::new(G0).unwrap(),
+                    Length::new(0.0).unwrap(),
+                )
+                .unwrap_err()
+                .0,
+                PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+            ),
+            "expected a PhysicalInvariantBroken refusal"
         );
     }
 }
@@ -66,13 +81,18 @@ fn test_ignition_altitude_rejects_thrust_to_weight_below_one() {
 #[test]
 fn test_ignition_altitude_rejects_nonpositive_gravity() {
     assert!(
-        ignition_altitude_kernel(
-            Speed::new(100.0).unwrap(),
-            Acceleration::new(30.0).unwrap(),
-            Acceleration::new(0.0).unwrap(),
-            Length::new(0.0).unwrap(),
-        )
-        .is_err()
+        matches!(
+            ignition_altitude_kernel(
+                Speed::new(100.0).unwrap(),
+                Acceleration::new(30.0).unwrap(),
+                Acceleration::new(0.0).unwrap(),
+                Length::new(0.0).unwrap(),
+            )
+            .unwrap_err()
+            .0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
     );
 }
 
@@ -131,19 +151,29 @@ fn test_suicide_burn_hover_limit_at_zero_speed() {
 #[test]
 fn test_suicide_burn_rejects_ground_contact_and_bad_gravity() {
     assert!(
-        suicide_burn_deceleration_kernel(
-            Speed::new(10.0).unwrap(),
-            Length::new(0.0).unwrap(),
-            Acceleration::new(G0).unwrap(),
-        )
-        .is_err()
+        matches!(
+            suicide_burn_deceleration_kernel(
+                Speed::new(10.0).unwrap(),
+                Length::new(0.0).unwrap(),
+                Acceleration::new(G0).unwrap(),
+            )
+            .unwrap_err()
+            .0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
     );
     assert!(
-        suicide_burn_deceleration_kernel(
-            Speed::new(10.0).unwrap(),
-            Length::new(100.0).unwrap(),
-            Acceleration::new(0.0).unwrap(),
-        )
-        .is_err()
+        matches!(
+            suicide_burn_deceleration_kernel(
+                Speed::new(10.0).unwrap(),
+                Length::new(100.0).unwrap(),
+                Acceleration::new(0.0).unwrap(),
+            )
+            .unwrap_err()
+            .0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
     );
 }

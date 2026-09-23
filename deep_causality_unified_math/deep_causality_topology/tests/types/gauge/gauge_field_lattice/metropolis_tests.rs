@@ -43,7 +43,7 @@ fn test_metropolis_sweep_empty_lattice() {
     );
 
     // Verify it is empty
-    assert!(field.links().is_empty());
+    assert!(field.has_no_links());
 
     let mut rng = Xoshiro256::new();
     let acceptance = field.try_metropolis_sweep(0.1, &mut rng).unwrap();
@@ -61,14 +61,14 @@ fn test_metropolis_update_acceptance() {
         LatticeGaugeField::<U1, 2, Complex<f64>, f64>::try_identity(lattice.clone(), beta).unwrap();
     let mut rng = Xoshiro256::new();
 
-    let edge = field.links().keys().next().unwrap().clone();
+    let edge = field.link_cells()[0].clone();
 
     let accepted = field.try_metropolis_update(&edge, 0.01, &mut rng).unwrap();
     assert!([true, false].contains(&accepted));
 
     let mut hot_field =
         LatticeGaugeField::<U1, 2, Complex<f64>, f64>::try_random(lattice, beta, &mut rng).unwrap();
-    let edge_hot = hot_field.links().keys().next().unwrap().clone();
+    let edge_hot = hot_field.link_cells()[0].clone();
 
     let _ = hot_field
         .try_metropolis_update(&edge_hot, 0.1, &mut rng)
@@ -100,7 +100,7 @@ fn test_metropolis_update_rejects_non_positive_epsilon() {
     let lattice = Arc::new(LatticeComplex::new(shape, [true, true]));
     let mut field =
         LatticeGaugeField::<U1, 2, Complex<f64>, f64>::try_identity(lattice, 1.0).unwrap();
-    let edge = field.links().keys().next().unwrap().clone();
+    let edge = field.link_cells()[0].clone();
     let mut rng = Xoshiro256::new();
 
     let err = field
@@ -143,7 +143,7 @@ fn test_generate_small_su_n_update() {
         LatticeGaugeField::<U1, 1, Complex<f64>, f64>::try_identity(lattice, 1.0).unwrap();
     let mut rng = Xoshiro256::new();
 
-    let edge = field.links().keys().next().unwrap().clone();
+    let edge = field.link_cells()[0].clone();
 
     for _ in 0..100 {
         field.try_metropolis_update(&edge, 0.2, &mut rng).unwrap();
@@ -261,24 +261,94 @@ fn test_u1_metropolis_sweep_moves_the_field() {
 /// 0.9 for `beta = 10`. A frozen field started hot would sit near zero instead.
 #[test]
 fn test_u1_metropolis_thermalizes_toward_the_exact_solution() {
-    let lattice = Arc::new(LatticeComplex::new([4, 4], [true, true]));
-    let mut rng = Xoshiro256::from_seed(7);
-    let mut field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
-        LatticeGaugeField::random(lattice, 10.0, &mut rng);
+    // Two dimensional U(1) has a closed-form average plaquette, <P> = I_1(beta) / I_0(beta),
+    // and it is checked here at two widely separated couplings rather than one. A single point
+    // is a weak oracle: a 2% band around beta = 10 also contains beta = 8 and beta = 12, so
+    // matching there says little. Between beta = 2 and beta = 10 the exact value moves by 0.25,
+    // and an implementation with the wrong action or the wrong coupling does not track that.
+    //
+    // Reference values from I_1/I_0 (scipy.special):
+    //   beta =  2 -> 0.697775
+    //   beta = 10 -> 0.948600
+    //
+    // The estimate is the mean over the measurement sweeps, not the plaquette of the final
+    // configuration. One configuration is a single sample of a distribution whose spread here is
+    // about 0.02, far too wide to test a 0.5% agreement against.
+    for (beta, epsilon, exact) in [(2.0_f64, 1.0_f64, 0.697_775_f64), (10.0, 0.5, 0.948_600)] {
+        let lattice = Arc::new(LatticeComplex::new([4, 4], [true, true]));
+        let mut rng = Xoshiro256::from_seed(7);
+        let mut field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+            LatticeGaugeField::random(lattice, beta, &mut rng);
 
-    for _ in 0..400 {
-        field
-            .try_metropolis_sweep(0.5, &mut rng)
-            .expect("a sweep over a populated lattice succeeds");
+        for _ in 0..200 {
+            field
+                .try_metropolis_sweep(epsilon, &mut rng)
+                .expect("a sweep over a populated lattice succeeds");
+        }
+
+        let measurements = 300;
+        let mut acc = 0.0;
+        for _ in 0..measurements {
+            field
+                .try_metropolis_sweep(epsilon, &mut rng)
+                .expect("a sweep over a populated lattice succeeds");
+            acc += field
+                .try_average_plaquette()
+                .expect("the thermalized field has a well-defined plaquette");
+        }
+        let mean = acc / f64::from(measurements);
+
+        // Measured: 1.58% at beta = 2 and 0.47% at beta = 10, the residual being finite-volume
+        // and the O(epsilon^2) projection of the proposal. Three percent leaves room for a
+        // platform whose rounding sends the chain down a different trajectory, while still
+        // separating these two couplings, whose exact values differ by 36%.
+        let deviation = (mean - exact).abs() / exact;
+        assert!(
+            deviation < 0.03,
+            "beta = {beta}: <P> = {mean}, exact I_1/I_0 = {exact}, off by {:.2}%",
+            deviation * 100.0
+        );
     }
+}
 
-    let plaquette = field
-        .try_average_plaquette()
-        .expect("the thermalized field has a well-defined plaquette");
+#[test]
+fn test_metropolis_sweep_is_reproducible_from_its_seed() {
+    // Every update draws from the rng, so the sweep order decides how the stream is consumed.
+    // Two fields built from the same seed must therefore agree exactly, down to the bit.
+    //
+    // A sweep order taken from a `HashMap` would not satisfy this: `RandomState` advances a
+    // thread-local counter per map, so the two fields below would receive different hashers
+    // inside this one process and walk their links in different orders.
+    let run = || {
+        let lattice = Arc::new(LatticeComplex::new([4, 4], [true, true]));
+        let mut rng = Xoshiro256::from_seed(7);
+        let mut field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+            LatticeGaugeField::random(lattice, 10.0, &mut rng);
+        let mut rates = Vec::new();
+        for _ in 0..40 {
+            rates.push(
+                field
+                    .try_metropolis_sweep(0.5, &mut rng)
+                    .expect("a sweep over a populated lattice succeeds"),
+            );
+        }
+        (
+            rates,
+            field
+                .try_average_plaquette()
+                .expect("the field has a well-defined plaquette"),
+        )
+    };
 
-    // I_1(10)/I_0(10) = 0.9486. A 4x4 lattice plus Monte Carlo noise leaves ample room.
-    assert!(
-        plaquette > 0.9,
-        "beta = 10 should order the field toward <P> = 0.9486, got {plaquette}"
+    let (rates_a, plaquette_a) = run();
+    let (rates_b, plaquette_b) = run();
+
+    assert_eq!(
+        rates_a, rates_b,
+        "the per-sweep acceptance rates must not depend on the hasher"
+    );
+    assert_eq!(
+        plaquette_a, plaquette_b,
+        "the same seed must give the same field, bit for bit"
     );
 }

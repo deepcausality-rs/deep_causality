@@ -15,8 +15,13 @@ fn test_energy_new_valid() {
 #[test]
 fn test_energy_new_negative() {
     // Energy can be negative (potential wells)
-    let e = Energy::<f64>::new(-50.0);
-    assert!(e.is_ok());
+    let e = Energy::<f64>::new(-50.0).unwrap();
+    // `is_ok()` alone admitted any carried value, including a constant.
+    assert!(
+        (e.value() - (-50.0)).abs() < 1e-10,
+        "constructed value = {}",
+        e.value()
+    );
 }
 
 #[test]

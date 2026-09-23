@@ -6,8 +6,8 @@ use deep_causality_haft::Functor;
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_num_complex::Complex;
 use deep_causality_physics::{
-    ChemicalPotentialGradient, Concentration, Mobility, OrderParameter, VectorPotential,
-    cahn_hilliard_flux_kernel, ginzburg_landau_free_energy_kernel,
+    ChemicalPotentialGradient, Concentration, Mobility, OrderParameter, PhysicsErrorEnum,
+    VectorPotential, cahn_hilliard_flux_kernel, ginzburg_landau_free_energy_kernel,
 };
 use deep_causality_tensor::CausalTensor;
 
@@ -78,9 +78,16 @@ fn test_ginzburg_landau_superconducting_state() {
     let res = ginzburg_landau_free_energy_kernel::<f64>(psi, alpha, beta, &grad_complex, None);
     assert!(res.is_ok());
 
-    // |psi|^2 = 1 + 0.25 = 1.25
+    // |psi|^2 = 1 + 0.25 = 1.25, |psi|^4 = 1.5625
     // F = -1 * 1.25 + (1/2) * 1.5625 = -1.25 + 0.78125 = -0.46875
+    // The comment derived the exact value and the assertion then only checked the sign, which any
+    // negative answer satisfies.
     let energy = res.unwrap();
+    assert!(
+        (energy.value() - (-0.46875)).abs() < 1e-12,
+        "F = {}, expected -0.46875",
+        energy.value()
+    );
     assert!(energy.value() < 0.0); // Negative energy in superconducting state
 }
 
@@ -122,37 +129,45 @@ fn test_ginzburg_landau_error_metric_mismatch() {
         &grad_complex,
         Some(&vector_potential),
     );
-    assert!(res.is_err());
+    assert!(
+        matches!(
+            res.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
-fn test_ginzburg_landau_error_vector_size_mismatch() {
+fn test_ginzburg_landau_accepts_a_vector_potential_of_matching_size() {
+    // `Metric::Euclidean(n)` fixes the component count, so a vector potential built from the same
+    // metric as the gradient always matches and the kernel's length guard cannot fire from here.
+    // The value is asserted rather than the status alone.
+    //
+    // psi = 1, alpha = beta = 1, zero gradient and zero potential:
+    //   F = alpha |psi|^2 + (beta/2) |psi|^4 = 1 + 0.5 = 1.5
     let psi = OrderParameter::new(Complex::new(1.0, 0.0));
 
-    // Gradient with 4 components
     let grad = CausalMultiVector::new(vec![0.0; 4], Metric::Euclidean(2)).unwrap();
     let grad_complex =
         deep_causality_multivector::CausalMultiVectorWitness::fmap(grad, |x| Complex::new(x, 0.0));
 
-    // Vector potential with 2 components (same metric but different size won't happen with same Metric)
-    // This test is tricky because Metric::Euclidean(n) determines the size
-    // Let's test with matching metric but the kernel checks data length equality
-    // Actually the size is determined by the Metric enum, so this case may not be easily triggered
-    // Skip this test as the Metric type enforces consistent sizing
-
-    // The kernel checks if a.data().len() != grad_data.len()
-    // With matching Metric, this should always pass
     let a_field = CausalMultiVector::new(vec![0.0; 4], Metric::Euclidean(2)).unwrap();
     let vector_potential = VectorPotential::new(a_field);
 
-    let res = ginzburg_landau_free_energy_kernel::<f64>(
+    let energy = ginzburg_landau_free_energy_kernel::<f64>(
         psi,
         1.0,
         1.0,
         &grad_complex,
         Some(&vector_potential),
+    )
+    .unwrap();
+    assert!(
+        (energy.value() - 1.5).abs() < 1e-12,
+        "F = {}, expected 1.5",
+        energy.value()
     );
-    assert!(res.is_ok()); // Should pass with matching sizes
 }
 
 #[test]
@@ -208,7 +223,13 @@ fn test_cahn_hilliard_flux_error_dimension_mismatch() {
     let grad = ChemicalPotentialGradient::new(CausalTensor::new(vec![1.0], vec![1]).unwrap());
 
     let res = cahn_hilliard_flux_kernel::<f64>(&conc, m, &grad);
-    assert!(res.is_err());
+    assert!(
+        matches!(
+            res.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]

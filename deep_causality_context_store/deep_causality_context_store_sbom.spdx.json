@@ -1,0 +1,53 @@
+{
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "creationInfo": {
+    "created": "2026-09-23T02:08:53Z",
+    "creators": [
+      "Tool: cargo-sbom-v0.10.0"
+    ]
+  },
+  "dataLicense": "CC0-1.0",
+  "documentNamespace": "https://spdx.org/spdxdocs/deep_causality_context_store-8a0a8c74-1621-49a8-b04b-5081748b9d78",
+  "files": [
+    {
+      "SPDXID": "SPDXRef-File-deep_causality_context_store",
+      "checksums": [
+        {
+          "algorithm": "SHA1",
+          "checksumValue": "7e075d05846751324a324e148cda8a9b3caa1f45"
+        }
+      ],
+      "fileName": "./Cargo.lock",
+      "fileTypes": [
+        "SOURCE",
+        "TEXT"
+      ]
+    }
+  ],
+  "name": "deep_causality_context_store",
+  "packages": [
+    {
+      "SPDXID": "SPDXRef-Package-deep--causality--context--store-0.1.0",
+      "description": "Persistence contract for the DeepCausality context: records, storage traits, and the projection vocabulary.",
+      "downloadLocation": "NONE",
+      "homepage": "https://deepcausality.com/",
+      "licenseConcluded": "MIT",
+      "licenseDeclared": "MIT",
+      "name": "deep_causality_context_store",
+      "versionInfo": "0.1.0"
+    }
+  ],
+  "relationships": [
+    {
+      "relatedSpdxElement": "SPDXRef-Package-deep--causality--context--store-0.1.0",
+      "relationshipType": "GENERATED_FROM",
+      "spdxElementId": "SPDXRef-File-deep_causality_context_store"
+    },
+    {
+      "relatedSpdxElement": "SPDXRef-File-deep_causality_context_store",
+      "relationshipType": "DESCRIBES",
+      "spdxElementId": "SPDXRef-DOCUMENT"
+    }
+  ],
+  "spdxVersion": "SPDX-2.3"
+}

@@ -12,8 +12,8 @@
 //! * **State channel** (`WeatherState`): the Markov state. Carries
 //!   `rained_yesterday`, the running day index, and the umbrella counter
 //!   that evolves day by day through the bind chain.
-//! * **Context channel** (`WeatherContext`): the conditional probability
-//!   tables (CPTs) for the current climate regime. Constant within a
+//! * **Context channel** (`BaseContext`): the conditional probability
+//!   tables (CPTs) for the current climate regime, held as two Datoid contextoids. Constant within a
 //!   regime, alternated via `alternate_context` when the regime changes.
 //! * **Value channel**: today's rain probability emitted by each step.
 //!

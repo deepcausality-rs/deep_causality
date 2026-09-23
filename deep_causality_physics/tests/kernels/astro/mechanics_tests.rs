@@ -31,7 +31,13 @@ fn test_orbital_velocity_kernel_zero_radius_error() {
     let radius = Length::<f64>::new(0.0).unwrap();
 
     let result = orbital_velocity_kernel(&mass, &radius);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::MetricSingularity { .. }
+        ),
+        "expected a MetricSingularity refusal"
+    );
 
     let err = result.unwrap_err();
     match &err.0 {
@@ -81,7 +87,13 @@ fn test_escape_velocity_kernel_zero_radius_error() {
     let radius = Length::<f64>::new(0.0).unwrap();
 
     let result = escape_velocity_kernel(&mass, &radius);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::MetricSingularity { .. }
+        ),
+        "expected a MetricSingularity refusal"
+    );
 
     let err = result.unwrap_err();
     match &err.0 {
@@ -144,6 +156,14 @@ fn test_schwarzschild_radius_sun_known_value() {
         (r_s.value() - expected).abs() < 1e-10,
         "Schwarzschild radius formula mismatch"
     );
+    // The line above retypes the kernel's formula from the crate's own constants, so it cannot
+    // detect a misreading of the definition. The value this test is named for is the published
+    // one: the Sun's Schwarzschild radius is 2.95 km.
+    assert!(
+        (r_s.value() - 2953.0).abs() < 5.0,
+        "the Sun's Schwarzschild radius is about 2953 m, got {}",
+        r_s.value()
+    );
 }
 
 #[test]
@@ -164,12 +184,24 @@ fn test_schwarzschild_radius_kernel_zero_mass() {
 #[test]
 fn test_negative_mass_rejected() {
     let result = Mass::<f64>::new(-1.0);
-    assert!(result.is_err(), "Negative mass should be rejected");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 /// Test that negative Length is rejected at the Length type level
 #[test]
 fn test_negative_length_rejected() {
     let result = Length::<f64>::new(-1.0);
-    assert!(result.is_err(), "Negative length should be rejected");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }

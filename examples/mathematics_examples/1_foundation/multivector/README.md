@@ -3,16 +3,15 @@
 Geometric algebra. A `CausalMultiVector` holds the `2^n` blade coefficients of one point in
 `Cl(p, q, r)`; a `CausalMultiField` holds one multivector per grid cell.
 
-The storage is worth knowing up front. A field holds the **matrix isomorphism** of each
-multivector, shaped `[Nx, Ny, Nz, D, D]` where `D = matrix_dim(n)`, which turns a field product
+A field stores the **matrix isomorphism** of each multivector, shaped `[Nx, Ny, Nz, D, D]` where `D = matrix_dim(n)`, which turns a field product
 into one batched matrix multiply. Blades come back out through `to_coefficients`.
 
 ## The type
 
 | Example | What it covers | Command |
 |---|---|---|
-| [basic_multivector.rs](basic_multivector.rs) | The three products — geometric, outer, inner — plus squaring, the inverse, and non-commutativity | `cargo run -p mathematics_examples --example basic_multivector_examples` |
-| [matrix_representation.rs](matrix_representation.rs) | `to_matrix` / `from_matrix` / `get_gamma_matrix`, and the homomorphism that makes the representation useful: the geometric product *is* the matrix product | `cargo run -p mathematics_examples --example matrix_representation_examples` |
+| [basic_multivector.rs](basic_multivector.rs) | The three products (geometric, outer, inner), squaring, the inverse, and non-commutativity | `cargo run -p mathematics_examples --example basic_multivector_examples` |
+| [matrix_representation.rs](matrix_representation.rs) | `to_matrix` / `from_matrix` / `get_gamma_matrix`, and the homomorphism behind the representation: the geometric product *is* the matrix product | `cargo run -p mathematics_examples --example matrix_representation_examples` |
 
 ## The field
 
@@ -30,5 +29,5 @@ into one batched matrix multiply. Blades come back out through `to_coefficients`
 | [algebraic_scanner](algebraic_scanner/) | Scanning `Cl(p, q)` for the signatures whose pseudoscalar squares to `-1`, which is what lets an algebra stand in for the complex numbers | `cargo run -p mathematics_examples --example algebraic_scanner_examples` |
 | [multifield_witness.rs](multifield_witness.rs) | `CausalMultiFieldWitness`: `fmap` carrying the metric, spacing and shape across, the comonad law `extend(extract) == id`, and `fmap` commuting with `gradient` | `cargo run -p mathematics_examples --example multifield_witness_examples` |
 
-`PGA3DMultiVector` is an alias for `CausalMultiVector<f64>` and its constructors take `f64`
-directly, so that one type fixes its precision at the crate.
+`PGA3DMultiVector` is an alias for `CausalMultiVector<f64>` whose constructors take `f64`
+directly; the crate fixes its precision.

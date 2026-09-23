@@ -3,7 +3,6 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-const TOLERANCE: f64 = 1e-12;
 use deep_causality_physics::{SPEED_OF_LIGHT, SpaceTimeCoordinate};
 
 // =============================================================================
@@ -24,12 +23,12 @@ fn test_space_time_coordinate_basic_construction() {
     };
     assert_eq!(coord.timestamp, 1_700_000_000);
     assert_eq!(coord.sat_id, 14);
-    assert!((coord.r_m - 2.93e7).abs() < TOLERANCE);
-    assert!((coord.v_ms - 3650.0).abs() < TOLERANCE);
-    assert!((coord.clock_bias_s - (-1.234e-7)).abs() < TOLERANCE);
+    assert_eq!(coord.r_m, 2.93e7);
+    assert_eq!(coord.v_ms, 3650.0);
+    assert_eq!(coord.clock_bias_s, -1.234e-7);
     assert_eq!(coord.position, [1.5e7, 2.1e7, 1.2e7]);
     assert_eq!(coord.velocity, [-2400.0, 1800.0, 1000.0]);
-    assert!((coord.clock_drift_rate - (-3.5e-10)).abs() < TOLERANCE);
+    assert_eq!(coord.clock_drift_rate, -3.5e-10);
 }
 
 #[test]

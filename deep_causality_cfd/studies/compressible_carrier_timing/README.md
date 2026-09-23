@@ -11,8 +11,7 @@ cargo run --release -p deep_causality_cfd --example compressible_carrier_timing
 
 **What it tests.** Task 0 of `add-compressible-blackout-carrier`, and a go/no-go rather than a
 physics probe. Can the body-fitted 3-D compressible marcher carry the plasma-blackout corridor
-inside the minutes-not-hours budget? Everything downstream hangs on two measured numbers per
-configuration:
+inside the minutes-not-hours budget? Two measured numbers per configuration decide it:
 
 1. **Per-step wall-clock** of `CompressibleMarcher3dFitted::step`. The corridor marches roughly 200
    coupled steps, three leg spans plus the counterfactual branch study, so the projected corridor
@@ -43,8 +42,8 @@ grids are a foregone conclusion. The 2-D fallback is swept at two resolutions an
   10 rebuilds per run add **0.04 %** to the march. Freestream-drift rebuilds need no rationing.
 
 **Conclusion: GO, the corridor carrier is 2-D at 64², bond cap 32** (0.175 s/step, peak bond 32).
-The gate is that at least one configuration must fit, and the recommended configuration, the
-largest one inside budget, is printed as the go/no-go record. A regression where nothing fits exits
+The gate requires at least one configuration to fit; the study prints the recommended
+configuration, the largest inside budget, as the go/no-go record. A regression where nothing fits exits
 nonzero, which is the documented trigger for revisiting the `CompressibleMarcher2d` fallback
 decision.
 

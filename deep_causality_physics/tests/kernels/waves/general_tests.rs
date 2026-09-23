@@ -3,7 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::{Frequency, Length, Speed, doppler_effect_kernel, wave_speed_kernel};
+use deep_causality_physics::{
+    Frequency, Length, PhysicsErrorEnum, Speed, doppler_effect_kernel, wave_speed_kernel,
+};
 
 // =============================================================================
 // wave_speed_kernel Tests
@@ -51,7 +53,15 @@ fn test_doppler_effect_kernel_approaching() {
     assert!(result.is_ok());
 
     let f_obs = result.unwrap();
-    // f_obs = 1000 * (340 + 10) / (340 - 10) = 1000 * 350/330 ≈ 1060.6 Hz
+    // f_obs = 1000 * (340 + 10) / (340 - 10) = 1000 * 350/330 = 1060.606... Hz. The ratio is
+    // written from the physical speeds, not from the kernel's expression.
+    // The comment already carried the answer; asserting only `> 1000.0` admitted any value above
+    // the source frequency, including one from a wrong formula.
+    assert!(
+        (f_obs.value() - 1_000.0 * 350.0 / 330.0).abs() < 1e-9,
+        "f_obs = {} Hz, expected 1060.606 Hz",
+        f_obs.value()
+    );
     assert!(f_obs.value() > 1000.0, "Observed frequency should increase");
 }
 
@@ -79,7 +89,13 @@ fn test_doppler_effect_kernel_sonic_singularity() {
     let vs = Speed::<f64>::new(340.0).unwrap(); // Source at Mach 1
 
     let result = doppler_effect_kernel(&f_src, &v, &vo, &vs);
-    assert!(result.is_err(), "Sonic singularity should error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::MetricSingularity { .. }
+        ),
+        "expected a MetricSingularity refusal"
+    );
 }
 
 #[test]
@@ -91,5 +107,11 @@ fn test_doppler_effect_kernel_supersonic_error() {
     let vs = Speed::<f64>::new(400.0).unwrap(); // Supersonic
 
     let result = doppler_effect_kernel(&f_src, &v, &vo, &vs);
-    assert!(result.is_err(), "Supersonic source should error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::MetricSingularity { .. }
+        ),
+        "expected a MetricSingularity refusal"
+    );
 }

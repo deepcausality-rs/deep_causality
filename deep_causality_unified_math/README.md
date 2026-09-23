@@ -5,7 +5,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 # Unified Math
 
-Unified math grew from a small idea. Tensors and multivectors needed to compose, so they were given a shared higher-kinded interface. That interface turned out to want an algebra tower under it, the tower wanted numeric traits under that, and the composition kept finding new things it could reach: geometric algebra, discrete exterior calculus, chain complexes, spectral methods, uncertainty.
+Unified math holds the seventeen mathematics crates of the workspace. They share a higher-kinded interface, an algebra tower beneath it, and numeric traits beneath that, so tensors, multivectors, discrete exterior calculus, chain complexes, spectral methods, and uncertain values compose with one another at a precision the program chooses.
 
 ## The stack
 
@@ -82,8 +82,8 @@ gates that are disabled by default.
 
 Composition runs through `deep_causality_haft`. A crate that owns a container generic in its element
 declares a *witness* type, binds `type Type<T>` to that container, and implements the categorical
-traits against the witness. Two mechanisms then fall out, and both are load-bearing in
-`examples/mathematics_examples/2_composition/`.
+traits against the witness. That yields two mechanisms, and the examples in
+`examples/mathematics_examples/2_composition/` depend on both.
 
 **Nesting.** A witness accepts any element type, including one another crate owns.
 A tensor of multivectors is an ordinary `CausalTensor<CausalMultiVector<T>>`, and
@@ -538,9 +538,8 @@ between crates, because there was nothing to convert.
 
 Mixed precision comes down to one engineering trade-off: higher precision costs time and memory,
 lower precision saves both, and the right choice differs from one part of a simulation to the
-next. Library authors used to make that choice once for everyone, as well as they could, and a
-program inherited it with no way to revise it per part. With precision as a parameter the program
-author makes the choice, and makes it per part.
+next. A library that fixes its scalar type makes that choice once for every caller. With precision
+as a parameter the program author makes the choice, per part.
 
 The three computations below are bound by three different limits.
 
@@ -557,8 +556,8 @@ The three computations below are bound by three different limits.
 Which precision a part needs is often not known in advance. The program below measures each part
 at `f32`, `f64` and `Float106` against its closed form, states an error budget per part, and picks the
 narrowest precision whose error meets the budget. The composition that follows is written at the
-picked precisions, and an assertion ties it to the pick, so a changed budget fails loudly rather
-than drifting.
+picked precisions, and an assertion ties it to the pick, so a changed budget fails the assertion
+instead of drifting.
 
 ```rust
 use deep_causality_algebra::{Real, Scalar};

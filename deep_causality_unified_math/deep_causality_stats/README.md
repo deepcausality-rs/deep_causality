@@ -24,13 +24,16 @@
 
 ## Summary
 
-Descriptive and information statistics for the [DeepCausality project](http://www.deepcausality.com), over slices,
-generic in the scalar. The crate owns Shannon entropy and its conditional form, the log-sum-exp reduction, the moments,
-Pearson correlation, ridge and logistic regression, the Gaussian log-density, and two binning strategies. It depends on
-`deep_causality_num`, `deep_causality_algebra` and `deep_causality_linear`, and on nothing else.
+Descriptive and information statistics and the shaped distributions for the
+[DeepCausality project](http://www.deepcausality.com), over slices, generic in the scalar. The crate owns Shannon
+entropy and its conditional form, the log-sum-exp reduction, the moments, covariance, Pearson correlation, ridge and
+logistic regression, the Gaussian log-density, two binning strategies, and the distributions (normal, exponential,
+Cauchy, Weibull, log-normal, Poisson, Bernoulli, categorical) with their inverse CDFs. It depends on
+`deep_causality_num`, `deep_causality_algebra`, `deep_causality_linear` and `deep_causality_rand`, and on nothing else.
+It re-exports the generator traits of `deep_causality_rand` by name, so a caller that draws from a distribution needs
+no second dependency.
 
-It does not exist to remove duplication. It adds more source than it removes, and says so in its own change notes. It
-exists because shipped implementations of the same statistic disagreed about what they compute.
+One crate holds one implementation of each statistic, so two call sites cannot disagree about what it computes.
 
 ## Surface
 
@@ -41,18 +44,35 @@ exists because shipped implementations of the same statistic disagreed about wha
 | Regression | `fit_ridge`, `fit_ridge_streaming`, `fit_logistic`, `sigmoid` |
 | Density | `gaussian_log_density` |
 | Binning | `bin_equal_width`, `bin_equal_frequency` |
+| Distributions | `Normal`, `Exponential`, `Cauchy`, `Weibull`, `LogNormal`, `Poisson`, `Bernoulli`, `Categorical` |
 
-Anything with axes — marginalising a joint distribution, reducing a tensor — belongs with the container that has them.
-This crate sits below those containers so they can delegate to it without a cycle, and its surface is over slices.
+Anything with axes (marginalising a joint distribution, reducing a tensor) belongs with the container that has them.
+This crate sits below those containers so they can delegate to it without a cycle; its surface is over slices.
 
 ## Precision as a parameter
 
-Every function is generic over its scalar under the algebra tower's bounds, and no public signature
-names a concrete float. Two of the implementations this crate absorbs compute in `f64` behind a
-generic signature, which silently discards the caller's precision.
+Functions are generic over their scalar under the algebra tower's bounds, with the exceptions
+listed here.
 
-The suites run at four scalars, and the widest and narrowest are three orders of magnitude apart in
-*digits*:
+Four public functions name a concrete float:
+
+- `standard_normal_inverse_cdf_at::<R>(u: f64)` takes the unit coordinate as `f64`, because it is a
+  position on `[0, 1)` and rounding it into a narrow scalar before the transform is destructive at
+  the endpoints. The result is in `R`.
+- `standard_normal_inverse_cdf` (`f64`) and `standard_normal_inverse_cdf_f106` (`Float106`) are the
+  same transform at one fixed precision each.
+- `bernoulli_inverse_cdf(u: f64, p: f64)` compares two `f64` values.
+
+Three generic paths pass through `f64` internally:
+
+- `Bernoulli::new` lowers `p` to `f64` and quantises it to a multiple of `2^-64`, and `Bernoulli::p`
+  returns that value through `f64`. At `Float106`, probability detail finer than `f64` is lost.
+- `Poisson::new` lowers the rate to `f64` only to compare it with `MAX_RATE`; the stored rate stays
+  in the caller's scalar.
+- `bernoulli_proportion` divides in the caller's scalar when both counts are exact there, and
+  otherwise divides in `f64` and rounds the quotient once into the scalar.
+
+The suites run at four scalars, from ~2 to ~32 decimal digits:
 
 | Scalar | Epsilon | Decimal digits | Integers exact to |
 |---|---|---|---|
@@ -61,36 +81,36 @@ The suites run at four scalars, and the widest and narrowest are three orders of
 | `f64` | `2.22e-16` | ~16 | 2⁵³ |
 | `Float106` | `4.93e-32` | ~32 | 2¹⁰⁶ |
 
-`BFloat16` is a truncated `f32` — the same eight exponent bits, the
-mantissa cut from 23 to 7 — so it has `f32`'s reach at a hundred-thousandth of its resolution, but at half the 
-memory footprint. 
+`BFloat16` is a truncated `f32` (the same eight exponent bits, the
+mantissa cut from 23 to 7), so it has `f32`'s reach at a hundred-thousandth of its resolution and half its
+memory footprint.
 
 `sigmoid` is bounded on `Scalar` rather than `RealField`: the quotient needs division, which `Real` does not carry, but
-it does not need field invertibility. That is exactly the middle `Scalar` names, so a dual number flows through it and
-the derivative comes with it.
+not field invertibility. `Scalar` names exactly that middle, so a dual number flows through `sigmoid` and carries its
+derivative.
 
 ## Conventions worth knowing before you call it
 
-Three of these are deliberate and would look like defects otherwise.
+Three of these are deliberate and would otherwise look like defects.
 
-**Zero variance in `pearson` returns `Ok((0, n))`, not an error.** The correlation is undefined there — the denominator
-vanishes — but the absorbed caller ranks features by `|r|`, and a rank of zero says "carries no information", which is
-the right answer for a constant column.
+**Zero variance in `pearson` returns `Ok((0, n))`, not an error.** The correlation is undefined there (the denominator
+vanishes), but callers rank features by `|r|`, and a rank of zero says "carries no information", the right answer for
+a constant column.
 
-**A one-element sample refuses `variance` with `InsufficientSamples`.** This is a behaviour change. The absorbed
-`variance_ddof1` returned `T::one()` there, and that sentinel fed a Gaussian density.
+**A one-element sample refuses `variance` with `InsufficientSamples`.** No sentinel value takes the place of the
+undefined corrected variance, so none can feed a Gaussian density.
 
 **`gaussian_log_density` takes a variance, not a standard deviation.** Both are plausible readings of a scale argument
 and they agree only at `σ = 1`. The suite pins the choice at `σ² = 4`, where they differ.
 
-Two more, less surprising. Binning uses `[lower, upper)` for every bin except the last, which is closed, so the maximum
+Two more are less surprising. Binning uses `[lower, upper)` for every bin except the last, which is closed, so the maximum
 falls inside the range rather than one bin past its end; a constant column is not an error and every observation lands
 in bin 0. And `log_sum_exp` is total: the empty slice is `−∞`, the identity of that reduction, rather than an error.
 
 ## Errors
 
 `StatsError` wraps `StatsErrorEnum` and offers a named constructor per variant, so a call site reads as the failure it
-reports rather than as a nested construction:
+reports:
 
 ```rust
 return Err(StatsError::InsufficientSamples(

@@ -4,8 +4,9 @@
  */
 
 use deep_causality_physics::{
-    all_structure_constants, confinement_potential_kernel, covariant_derivative_kernel,
-    gell_mann_matrices, running_coupling_kernel, structure_constant, wilson_loop_kernel,
+    PhysicsErrorEnum, all_structure_constants, confinement_potential_kernel,
+    covariant_derivative_kernel, gell_mann_matrices, running_coupling_kernel, structure_constant,
+    wilson_loop_kernel,
 };
 
 // =============================================================================
@@ -183,7 +184,13 @@ fn test_covariant_derivative_dimension_error_psi() {
     let gluon_field = vec![0.0; 32];
 
     let result = covariant_derivative_kernel::<f64>(&psi, &psi_gradient, &gluon_field, 1.0);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -193,7 +200,13 @@ fn test_covariant_derivative_dimension_error_gradient() {
     let gluon_field = vec![0.0; 32];
 
     let result = covariant_derivative_kernel::<f64>(&psi, &psi_gradient, &gluon_field, 1.0);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -203,7 +216,13 @@ fn test_covariant_derivative_dimension_error_gluon() {
     let gluon_field = vec![0.0; 16]; // Wrong size
 
     let result = covariant_derivative_kernel::<f64>(&psi, &psi_gradient, &gluon_field, 1.0);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -218,8 +237,11 @@ fn test_covariant_derivative_non_finite_error() {
 
     let result = covariant_derivative_kernel::<f64>(&psi, &psi_gradient, &gluon_field, coupling);
     assert!(
-        result.is_err(),
-        "NaN gluon field must yield NumericalInstability"
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
     );
 }
 
@@ -269,7 +291,13 @@ fn test_wilson_loop_dimension_error() {
     let path_lengths = vec![1.0, 2.0]; // 2 segments - mismatch
 
     let result = wilson_loop_kernel::<f64>(&gluon_values, &path_lengths, 1.0);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -280,7 +308,13 @@ fn test_wilson_loop_non_finite_error() {
     let path_lengths = vec![1.0];
 
     let result = wilson_loop_kernel::<f64>(&gluon_values, &path_lengths, 1.0);
-    assert!(result.is_err(), "NaN gluon values must yield an error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 // =============================================================================
@@ -323,25 +357,49 @@ fn test_confinement_potential_with_coulomb() {
 #[test]
 fn test_confinement_potential_nan_string_tension_error() {
     let r = confinement_potential_kernel::<f64>(1.0, f64::NAN, None);
-    assert!(r.is_err());
+    assert!(
+        matches!(
+            r.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
 fn test_confinement_potential_nan_coulomb_error() {
     let r = confinement_potential_kernel::<f64>(1.0, 0.18, Some(f64::NAN));
-    assert!(r.is_err());
+    assert!(
+        matches!(
+            r.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
 fn test_confinement_potential_zero_distance_error() {
     let result = confinement_potential_kernel::<f64>(0.0, 0.18, None);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
 fn test_confinement_potential_negative_distance_error() {
     let result = confinement_potential_kernel::<f64>(-1.0, 0.18, None);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 // =============================================================================
@@ -384,26 +442,50 @@ fn test_running_coupling_decreases_with_q2() {
 fn test_running_coupling_q2_below_lambda_error() {
     // Q² ≤ Λ² should error (non-perturbative regime)
     let result = running_coupling_kernel::<f64>(0.01, 0.2, 3);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
 fn test_running_coupling_zero_q2_error() {
     let result = running_coupling_kernel::<f64>(0.0, 0.2, 3);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
 fn test_running_coupling_zero_lambda_error() {
     let result = running_coupling_kernel::<f64>(100.0, 0.0, 3);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
 fn test_running_coupling_too_many_flavors_error() {
     // nf = 17 would make b0 = 11 - 34/3 < 0
     let result = running_coupling_kernel::<f64>(100.0, 0.2, 17);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -413,7 +495,10 @@ fn test_running_coupling_infinite_q2_non_finite_alpha_error() {
     // branch triggers.
     let result = running_coupling_kernel::<f64>(f64::INFINITY, 0.2, 3);
     assert!(
-        result.is_err(),
-        "Infinite Q² must collapse α_s and yield an error"
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
     );
 }

@@ -1,28 +1,26 @@
 # Turbulence predictability: the forecast horizon of a chaotic flow
 
-An avionics example about turbulence, and specifically about how far ahead a turbulent flow can be
-forecast at all. Aircraft must cope with turbulence (atmospheric convection, thermals, storm cells,
-wake and clear-air turbulence) for structural loads, ride quality, and control. Turbulent flow is
-chaotic, so a forecast of it has a hard predictability horizon: beyond some lead time the prediction
-is worthless however good the model, because the flow amplifies the smallest error exponentially.
-This example finds that horizon and shows the one knob that moves it.
+This example measures how far ahead a turbulent flow can be forecast, and shows that arithmetic
+precision moves that horizon. Aircraft must cope with turbulence (atmospheric convection, thermals,
+storm cells, wake and clear-air turbulence) for structural loads, ride quality, and control.
+Turbulent flow is chaotic, so its forecast has a hard predictability horizon: beyond some lead time
+the prediction is worthless however good the model, because the flow amplifies the smallest error
+exponentially.
 
 The testbed is the Lorenz system, Saltzman and Lorenz's three-mode truncation of Rayleigh-Bénard
-convection. It is the original model of atmospheric convective turbulence and the birthplace of
-chaos theory, small enough to run in a few lines yet carrying the property that caps every
-turbulence forecast: exponential growth of any perturbation, at a rate set by the leading Lyapunov
-exponent `λ ≈ 0.906`.
+convection and the original model of atmospheric convective turbulence. It runs in a few lines yet
+carries the property that caps every turbulence forecast: exponential growth of any perturbation,
+at a rate set by the leading Lyapunov exponent `λ ≈ 0.906`.
 
 ## Why this matters in avionics
 
-Turbulence forecasting is a chaotic-prediction problem, in the same family as weather. You cannot
-run it arbitrarily far ahead; the flow has a finite predictability window, and engineering anything
-that consumes a turbulence forecast (gust-load alleviation, route planning around convection, ride
-control) means knowing how long that window is and what sets it. The answer is uncomfortable: the
-horizon is governed by the size of the smallest error in the computation. Truncation error you can
-shrink with a finer step, but underneath it lies the irreducible floor of floating-point roundoff.
-A chaotic flow magnifies that floor exponentially, so the achievable forecast horizon is capped by
-arithmetic precision. Precision is not a detail here; it is the lever that buys lead time.
+Turbulence forecasting is a chaotic-prediction problem, in the same family as weather. The flow
+has a finite predictability window, and any system that consumes a turbulence forecast (gust-load
+alleviation, route planning around convection, ride control) must know how long that window is and
+what sets it. The size of the smallest error in the computation sets it. A finer step shrinks
+truncation error, but underneath lies the irreducible floor of floating-point roundoff. A chaotic
+flow magnifies that floor exponentially, so arithmetic precision caps the achievable forecast
+horizon, and raising precision buys lead time.
 
 ## What caps the forecast, in one equation
 
@@ -37,14 +35,14 @@ t_horizon ≈ ln(L / ε) / λ
 ```
 
 This example sets `L = 1`, the unit separation threshold in `main.rs`, and `Report::horizon_law`
-evaluates the law at that value: `t ≈ −ln(ε)/λ`. The choice is conservative. The attractor is tens
-of state-space units across (the divergence table below reaches `3.3e1`), so a forecast that has
-drifted one unit is called dead while it still looks like the right flow. Declaring the loss at the
+evaluates the law at that value: `t ≈ −ln(ε)/λ`. The choice is conservative. The attractor spans
+tens of state-space units (the divergence table below reaches `3.3e1`), so a forecast that has
+drifted one unit counts as lost while it still looks like the right flow. Declaring the loss at the
 attractor scale instead would raise every horizon by `ln(L)/λ`, about 2.5 time units per decade,
 and would not change their order.
 
-Past that time the forecast is no longer the trajectory that follows from the initial condition. It
-is still a plausible turbulent state on the same attractor. The horizon grows linearly in the
+Past that time the forecast still shows a plausible turbulent state on the same attractor, but no
+longer the trajectory that follows from the initial condition. The horizon grows linearly in the
 number of correct digits, so each step up in precision extends the trustworthy window by a fixed
 amount.
 
@@ -85,8 +83,8 @@ The full run is committed as `output.txt`; rerun it to diff.
 **An f64 forecast of this flow is trustworthy to about `t ≈ 44`,** then becomes fiction. Its
 divergence starts near `1e-14` (the `~2e-16` roundoff seed, already amplified a little) and climbs
 by roughly `e^{λ t}`. It crosses the unit threshold at `t = 44.5` and saturates at attractor scale,
-order ten units, a few time units after that (`1.55e1` at `t = 50`). No smaller `dt` helps; the
-wall is roundoff, not truncation.
+order ten units, a few time units after that (`1.55e1` at `t = 50`). No smaller `dt` helps,
+because roundoff sets the limit.
 
 **f32 fails far sooner, at `t ≈ 21`,** because its seed (`~1e-7`) is nine orders larger.
 **Float106 reaches `t ≈ 81`** by the same law, roughly double f64. The measured spacing between the
@@ -99,25 +97,25 @@ time linearly.
     F106 (ε≈1.0e-32):  t ≈ 81.3
 ```
 
-Past a forecast's own horizon the numbers fluctuate, because the distance is then just the gap
-between two unrelated points on the attractor; only the first crossing of the threshold is
-meaningful. The growth is bursty rather than smooth, since the local stretching rate varies along
+Past a forecast's own horizon the numbers fluctuate, because the distance then measures the gap
+between two unrelated points on the attractor; only the first crossing of the threshold carries
+meaning. The growth is bursty rather than smooth, since the local stretching rate varies along
 the orbit, and `λ` is the long-run average.
 
 ## The precision angle
 
 For most CFD the precision floor is irrelevant: discretization and modeling error dwarf `f64`
-roundoff, which is why production solvers are `f64` or even `f32`. Chaotic flow is the exception,
-and turbulence is the headline case. There, roundoff is amplified without bound, the reliable
-horizon is capped by precision, and `f64` simply cannot reach the long-range forecast that a wider
-type can. Extending the horizon by raising precision is the established recipe for trustworthy
-chaotic-flow trajectories (Liao's Clean Numerical Simulation, which uses hundreds of digits for
-converged turbulence references). This example is that idea in miniature: `Float106`, reached by
-changing a type parameter, roughly doubles the horizon `f64` can certify.
+roundoff, which is why production solvers run in `f64` or even `f32`. Chaotic flow, turbulence
+above all, is the exception. There the flow amplifies roundoff without bound, precision caps the
+reliable horizon, and `f64` cannot reach the long-range forecast a wider type can. Raising precision
+is the established recipe for trustworthy chaotic-flow trajectories (Liao's Clean Numerical
+Simulation uses hundreds of digits for converged turbulence references). This example applies that
+idea in miniature: `Float106`, reached by changing a type parameter, roughly doubles the horizon
+`f64` can certify.
 
 ## How it is built
 
-The whole example is three DeepCausality pillars and almost no glue:
+The example combines three DeepCausality pieces with little glue:
 
 - **The Arrow calculus.** `Rk4` is the integration operator; a forecast is one `iterate_n` call.
 - **Precision as a parameter.** The rate field and the march are written once over the `Scalar`
@@ -127,9 +125,9 @@ The whole example is three DeepCausality pillars and almost no glue:
 
 | File | Responsibility |
 | --- | --- |
-| `main.rs` | The workflow: the monadic *simulate → analyse* pipeline and the report types. |
-| `model.rs` | The scalar-generic `Vec3`, the convective rate field, the `Rk4` march, and the cross-precision distance and horizon helpers. |
+| `main.rs` | The workflow: the monadic *simulate → analyse* pipeline. |
+| `model.rs` | The scalar-generic `Vec3`, the convective rate field, the `Rk4` march, the cross-precision distance and horizon helpers, and the report types. |
 | `print_utils.rs` | Presentation only: the divergence table and the horizon summary. |
 
-The model layer is the whole of the physics: a three-line rate field and a one-line march, written
-once and run at three precisions. Everything else is measurement and presentation.
+The model layer holds all the physics: a three-line rate field and a one-line march, written once
+and run at three precisions. Everything else is measurement and presentation.

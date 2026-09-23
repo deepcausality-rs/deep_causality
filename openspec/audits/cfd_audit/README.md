@@ -7,10 +7,10 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Audit of `deep_causality_cfd` for avionics **R&D** certification, 2026-07-21.
 
-**Verdict: not yet certifiable. Phase 1 complete; Phase 2 is next.** The numerical core is sound —
+**Verdict: not yet certifiable. Phase 1 complete; Phase 2 is next.** The numerical core is sound:
 Rankine–Hugoniot exact, Ghia cavity matched to four decimal places, Sod against the exact Riemann
-solution. What blocked certification was the assurance layer: many advertised gates could not fail or
-could not discriminate, and none of them ran in CI.
+solution. The assurance layer blocked certification: many advertised gates could not fail or could
+not discriminate, and none ran in CI.
 
 ## Remediation status
 
@@ -33,10 +33,10 @@ could not discriminate, and none of them ran in CI.
 | Baselines carrying a verdict | 6 / 12 | 13 / 13 |
 | Unit tests | 813 | 828 |
 
-Phase 1 also **found three things this report missed**, all recorded in the report itself: two further
-ungated harnesses beyond B-3, six baselines with no verdict rather than one truncated, and a new
-physics finding from a gate that did not previously exist (§5b). It also **refuted one finding** —
-the energy-budget gate is not a tautology (§5), and the correct action was to change nothing.
+Phase 1 also **found three things this report missed**, all recorded in the report: two more
+ungated harnesses beyond B-3, six baselines with no verdict rather than one truncated, and a physics
+finding from a new gate (§5b). It also **refuted one finding**: the energy-budget gate is not a
+tautology (§5), so nothing changed.
 
 ## Read in this order
 
@@ -83,13 +83,11 @@ the energy-budget gate is not a tautology (§5), and the correct action was to c
 ## On method
 
 The adversarial stage was re-run to completion, including two modules whose first verifiers hit a
-session limit. It cut criticals from 26 to 4 and majors from 131 to 72, and refuted 4 findings outright
-— including **one the lead auditor had personally endorsed** (see §5 of the audit report). Two verifiers
-executed probes against the shipped code to reproduce or disprove the auditors' numbers rather than
-reasoning about them.
+session limit. It cut criticals from 26 to 4 and majors from 131 to 72, and refuted 4 findings
+outright, including **one the lead auditor had personally endorsed** (§5 of the audit report). Two
+verifiers ran probes against the shipped code to reproduce or disprove the auditors' numbers.
 
-Findings were not accepted because they sounded plausible. Where the evidence did not survive, it is
-recorded as overturned rather than quietly dropped.
+A finding whose evidence did not survive is recorded as overturned, not dropped.
 
 ## Caveats
 
@@ -99,17 +97,17 @@ recorded as overturned rather than quietly dropped.
 
 ## Next step
 
-**Phase 2 — close the physics defects** (`AUDIT-REPORT.md` §9, items 7–15). Propose it the same way
-Phase 1 was proposed, drawing its scope from §9 and its per-finding evidence from `ACTION-LIST.md`.
+**Phase 2: close the physics defects** (`AUDIT-REPORT.md` §9, items 7–15). Propose it as Phase 1
+was proposed, with scope from §9 and per-finding evidence from `ACTION-LIST.md`.
 
-Two things make Phase 2 easier than Phase 1 was:
+Two things make Phase 2 easier than Phase 1:
 
 - **Item 10 already has a failing acceptance test.** `qtt_cylinder_verification` fails nightly on
   exactly the Brinkman-envelope condition item 10 describes; the fix is done when its η ladder
   converges. No new harness is needed.
-- **Every other item is now detectable.** Phase 1's job was to make the evidence layer capable of
-  catching these; a Phase-2 fix that regresses will be caught by a gate that can fail.
+- **Every other item is now detectable.** Phase 1 made the evidence layer able to catch these; a
+  Phase-2 fix that regresses trips a gate that can fail.
 
-Item 7 (`REDUCED_MASS_AMU`) is the one to sequence first and carefully: correcting it likely *removes*
-the headline RAM-C agreement rather than preserving it, and the report is explicit that the gates must
-be re-derived from the corrected physics rather than re-tuned to restore the old number.
+Sequence item 7 (`REDUCED_MASS_AMU`) first and carefully: correcting it likely *removes* the
+headline RAM-C agreement, and the report requires re-deriving the gates from the corrected physics,
+not re-tuning them to restore the old number.

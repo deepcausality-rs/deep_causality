@@ -3,15 +3,33 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::Conductivity;
+use deep_causality_physics::{Conductivity, PhysicsErrorEnum};
 
 #[test]
 fn test_conductivity() {
     let s = Conductivity::<f64>::new(1e7).unwrap();
     assert_eq!(s.value(), 1e7);
-    assert!(Conductivity::<f64>::new(0.0).is_err());
-    assert!(Conductivity::<f64>::new(f64::NAN).is_err());
-    assert!(Conductivity::<f64>::new(f64::INFINITY).is_err());
+    assert!(
+        matches!(
+            Conductivity::<f64>::new(0.0).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            Conductivity::<f64>::new(f64::NAN).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            Conductivity::<f64>::new(f64::INFINITY).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -28,6 +46,18 @@ fn test_conductivity_default() {
 
 #[test]
 fn test_conductivity_new_nan_error() {
-    assert!(Conductivity::<f64>::new(f64::NAN).is_err());
-    assert!(Conductivity::<f64>::new(f64::INFINITY).is_err());
+    assert!(
+        matches!(
+            Conductivity::<f64>::new(f64::NAN).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            Conductivity::<f64>::new(f64::INFINITY).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }

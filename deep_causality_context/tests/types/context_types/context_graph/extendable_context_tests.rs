@@ -23,7 +23,7 @@ fn test_extra_ctx_add_new() {
     let capacity = 100;
     let default = true;
 
-    let res = context.extra_ctx_add_new(capacity, default);
+    let res = context.extra_ctx_add_new("extra", capacity, default);
     assert_eq!(res, 1);
 }
 
@@ -36,7 +36,7 @@ fn test_extra_ctx_check_exists() {
     let capacity = 100;
     let default = true;
 
-    let ctx_id = context.extra_ctx_add_new(capacity, default);
+    let ctx_id = context.extra_ctx_add_new("extra", capacity, default);
     assert_eq!(ctx_id, 1);
 
     let exists = context.extra_ctx_check_exists(ctx_id);
@@ -49,7 +49,9 @@ fn test_extra_ctx_set_default_err() {
 
     // Add an extra context with a non-zero ID (e.g., 1).
     // Crucially, pass `default: false` so that `context.extra_context_id` remains `0`.
-    context.extra_ctx_add_new_with_id(1, 10, false).unwrap();
+    context
+        .extra_ctx_add_new_with_id(1, "extra", 10, false)
+        .unwrap();
 
     // Current state:
     // - `context.extra_contexts` is `Some({1: UltraGraph})`
@@ -119,7 +121,7 @@ fn test_extra_ctx_get_current_id() {
     let capacity = 100;
     let default = true;
 
-    let ctx_id = context.extra_ctx_add_new(capacity, default);
+    let ctx_id = context.extra_ctx_add_new("extra", capacity, default);
     assert_eq!(ctx_id, 1);
 
     let exists = context.extra_ctx_check_exists(ctx_id);
@@ -138,13 +140,13 @@ fn test_extra_ctx_set_current_id() {
     let capacity = 100;
     let default = true;
 
-    let first_ctx_id = context.extra_ctx_add_new(capacity, default);
+    let first_ctx_id = context.extra_ctx_add_new("extra", capacity, default);
     assert_eq!(first_ctx_id, 1);
 
     let current_id = context.extra_ctx_get_current_id();
     assert_eq!(current_id, first_ctx_id);
 
-    let second_ctx_id = context.extra_ctx_add_new(capacity, default);
+    let second_ctx_id = context.extra_ctx_add_new("extra", capacity, default);
     assert_eq!(second_ctx_id, 2);
 
     // When default is set to true, the current extra context is set to the second context
@@ -153,7 +155,7 @@ fn test_extra_ctx_set_current_id() {
 
     let capacity = 10;
     let default = false;
-    let third_ctx_id = context.extra_ctx_add_new(capacity, default);
+    let third_ctx_id = context.extra_ctx_add_new("extra", capacity, default);
     assert_eq!(third_ctx_id, 3);
 
     // When default is set to false, the current extra context remains at its previous value,
@@ -179,7 +181,7 @@ fn test_extra_ctx_unset_current_id() {
     let capacity = 10;
     let default = true;
 
-    let ctx_id = context.extra_ctx_add_new(capacity, default);
+    let ctx_id = context.extra_ctx_add_new("extra", capacity, default);
     assert_eq!(ctx_id, 1);
 
     let exists = context.extra_ctx_check_exists(ctx_id);
@@ -217,7 +219,7 @@ fn test_extra_ctx_add_node() {
     let capacity = 100;
     let default = true;
 
-    let ctx_id = context.extra_ctx_add_new(capacity, default);
+    let ctx_id = context.extra_ctx_add_new("extra", capacity, default);
     assert_eq!(ctx_id, 1);
 
     let exists = context.extra_ctx_check_exists(ctx_id);
@@ -243,7 +245,7 @@ fn test_extra_ctx_contains_node() {
     let capacity = 100;
     let default = true;
 
-    let ctx_id = context.extra_ctx_add_new(capacity, default);
+    let ctx_id = context.extra_ctx_add_new("extra", capacity, default);
     assert_eq!(ctx_id, 1);
 
     let exists = context.extra_ctx_check_exists(ctx_id);
@@ -279,7 +281,7 @@ fn test_extra_ctx_contains_node_err() {
     let capacity = 100;
     let default = true;
 
-    let first_ctx_id = context.extra_ctx_add_new(capacity, default);
+    let first_ctx_id = context.extra_ctx_add_new("extra", capacity, default);
     assert_eq!(first_ctx_id, 1);
 
     let random_node_id = 42;
@@ -296,7 +298,7 @@ fn test_extra_ctx_get_node() {
     let capacity = 100;
     let default = true;
 
-    let ctx_id = context.extra_ctx_add_new(capacity, default);
+    let ctx_id = context.extra_ctx_add_new("extra", capacity, default);
     assert_eq!(ctx_id, 1);
 
     let exists = context.extra_ctx_check_exists(ctx_id);
@@ -331,7 +333,7 @@ fn test_extra_ctx_get_node_err() {
     let capacity = 100;
     let default = true;
 
-    let ctx_id = context.extra_ctx_add_new(capacity, default);
+    let ctx_id = context.extra_ctx_add_new("extra", capacity, default);
     assert_eq!(ctx_id, 1);
 
     let exists = context.extra_ctx_check_exists(ctx_id);
@@ -354,7 +356,7 @@ fn test_extra_ctx_remove_node() {
     let capacity = 100;
     let default = true;
 
-    let ctx_id = context.extra_ctx_add_new(capacity, default);
+    let ctx_id = context.extra_ctx_add_new("extra", capacity, default);
     assert_eq!(ctx_id, 1);
 
     let exists = context.extra_ctx_check_exists(ctx_id);
@@ -389,7 +391,7 @@ fn test_extra_ctx_remove_node_err() {
     let capacity = 100;
     let default = true;
 
-    let ctx_id = context.extra_ctx_add_new(capacity, default);
+    let ctx_id = context.extra_ctx_add_new("extra", capacity, default);
     assert_eq!(ctx_id, 1);
 
     let exists = context.extra_ctx_check_exists(ctx_id);
@@ -412,7 +414,7 @@ fn test_extra_ctx_size() {
     let capacity = 100;
     let default = true;
 
-    let ctx_id = context.extra_ctx_add_new(capacity, default);
+    let ctx_id = context.extra_ctx_add_new("extra", capacity, default);
     assert_eq!(ctx_id, 1);
 
     let exists = context.extra_ctx_check_exists(ctx_id);
@@ -437,7 +439,7 @@ fn test_extra_ctx_is_empty() {
     let capacity = 100;
     let default = true;
 
-    let ctx_id = context.extra_ctx_add_new(capacity, default);
+    let ctx_id = context.extra_ctx_add_new("extra", capacity, default);
     assert_eq!(ctx_id, 1);
 
     let exists = context.extra_ctx_check_exists(ctx_id);
@@ -467,7 +469,7 @@ fn test_extra_ctx_node_count() {
     let capacity = 100;
     let default = true;
 
-    let ctx_id = context.extra_ctx_add_new(capacity, default);
+    let ctx_id = context.extra_ctx_add_new("extra", capacity, default);
     assert_eq!(ctx_id, 1);
 
     let exists = context.extra_ctx_check_exists(ctx_id);
@@ -496,7 +498,7 @@ fn test_extra_ctx_edge_count() {
     let capacity = 100;
     let default = true;
 
-    let ctx_id = context.extra_ctx_add_new(capacity, default);
+    let ctx_id = context.extra_ctx_add_new("extra", capacity, default);
     assert_eq!(ctx_id, 1);
 
     let exists = context.extra_ctx_check_exists(ctx_id);

@@ -34,12 +34,12 @@
 //! - **Plaquettes:** Ordered product around elementary squares
 //! - **Wilson action:** S = β Σ_p (1 - Re[Tr(U_p)]/N)
 
+use self::utils::{alloc_slots, link_index, slots_from_map};
 use crate::traits::cellular_complex::CellularComplex;
 use crate::{ChainComplex, GaugeGroup, RandomField};
 use crate::{LatticeCell, LatticeComplex, LinkVariable, TopologyError};
 use deep_causality_algebra::{ComplexField, DivisionAlgebra, Field, RealField};
 use deep_causality_num::{FromPrimitive, ToPrimitive};
-// use deep_causality_tensor::TensorData; // Removed
 use std::collections::HashMap;
 use std::fmt::Debug;
 use std::sync::Arc;
@@ -75,9 +75,14 @@ pub struct LatticeGaugeField<G: GaugeGroup, const D: usize, M, R: RealField, S =
     /// The underlying lattice structure.
     lattice: Arc<LatticeComplex<D, R>>,
 
-    /// Link variables indexed by LatticeCell (1-cells only).
-    /// Key: edge cell, Value: group element
-    links: HashMap<LatticeCell<D>, LinkVariable<G, M, R>>,
+    /// Link variables indexed by `site_offset * D + mu`, one slot per site per direction.
+    ///
+    /// A lattice is regular, so an edge's address is computed rather than looked up. Iteration
+    /// visits sites in row-major order (last axis fastest) and, at each site, the directions in
+    /// ascending axis order; this is not the direction-major order of `lattice.cells(1)`. A slot
+    /// is `None` where no link was supplied for that edge, and always `None` for the slot of a
+    /// last-site edge along a non-periodic axis, which is not an edge of the lattice.
+    links: Vec<Option<LinkVariable<G, M, R>>>,
 
     /// Coupling parameter β = 2N/g².
     beta: R,
@@ -111,12 +116,15 @@ impl<
         M: Field,
         R: RealField,
     {
-        let mut links = HashMap::new();
+        let shape = *lattice.shape();
+        let mut links = alloc_slots(&shape);
 
         // Iterate over all 1-cells (edges)
         for cell in lattice.cells(1) {
             let link = LinkVariable::try_identity().map_err(TopologyError::from)?;
-            links.insert(cell, link);
+            if let Some(i) = link_index(&lattice, &cell) {
+                links[i] = Some(link);
+            }
         }
 
         Ok(Self {
@@ -155,7 +163,9 @@ impl<
     ///
     /// # Errors
     ///
-    /// Returns error if links are missing for some edges.
+    /// Returns `TopologyError::LatticeGaugeError` if the map's size differs from the lattice's
+    /// edge count, or if a key is not an edge of the lattice. The keys of a map that passes both
+    /// checks are exactly the lattice's edges.
     pub fn try_from_links(
         lattice: Arc<LatticeComplex<D, R>>,
         links: HashMap<LatticeCell<D>, LinkVariable<G, M, R>>,
@@ -170,6 +180,15 @@ impl<
                 links.len()
             )));
         }
+
+        if let Some(cell) = links.keys().find(|c| link_index(&lattice, c).is_none()) {
+            return Err(TopologyError::LatticeGaugeError(format!(
+                "Link key {:?} is not an edge of the lattice",
+                cell
+            )));
+        }
+
+        let links = slots_from_map(&lattice, links);
 
         Ok(Self {
             lattice,
@@ -212,11 +231,14 @@ impl<
         M: RandomField + DivisionAlgebra<R> + Field,
         R: RealField,
     {
-        let mut links = HashMap::new();
+        let shape = *lattice.shape();
+        let mut links = alloc_slots(&shape);
 
         for cell in lattice.cells(1) {
             let link = LinkVariable::try_random(rng).map_err(TopologyError::from)?;
-            links.insert(cell, link);
+            if let Some(i) = link_index(&lattice, &cell) {
+                links[i] = Some(link);
+            }
         }
 
         Ok(Self {
@@ -249,7 +271,8 @@ impl<
 impl<G: GaugeGroup, const D: usize, M, R: RealField, S> LatticeGaugeField<G, D, M, R, S> {
     /// Create from explicit link data without validation.
     ///
-    /// This constructor has minimal bounds for HKT compatibility.
+    /// This constructor has minimal bounds for HKT compatibility. Entries whose key is not an
+    /// edge of the lattice are dropped, and edges without an entry carry no link.
     ///
     /// # Arguments
     ///
@@ -267,6 +290,8 @@ impl<G: GaugeGroup, const D: usize, M, R: RealField, S> LatticeGaugeField<G, D, 
         beta: R,
         source: S,
     ) -> Self {
+        let links = slots_from_map(&lattice, links);
+
         Self {
             lattice,
             links,

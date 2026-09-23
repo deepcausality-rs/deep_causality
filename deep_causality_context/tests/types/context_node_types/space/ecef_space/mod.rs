@@ -7,3 +7,5 @@
 mod adjustable_ecef_space_tests;
 #[cfg(test)]
 mod ecef_space_tests;
+#[cfg(test)]
+mod recordable_tests;

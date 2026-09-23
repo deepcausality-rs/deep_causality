@@ -182,7 +182,6 @@ fn test_power_law_known_value() {
 #[test]
 fn test_power_law_errors_on_negative_shear_rate() {
     let r = power_law_apparent_viscosity_kernel::<f64>(1.0, 0.5, -0.1);
-    assert!(r.is_err());
     match &r.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => assert!(msg.contains("shear_rate")),
         _ => panic!("Expected PhysicalInvariantBroken"),
@@ -193,7 +192,13 @@ fn test_power_law_errors_on_negative_shear_rate() {
 fn test_power_law_zero_shear_rate_with_shear_thinning_errors() {
     // n < 1, γ̇ = 0 => γ̇^(n-1) = 0^(negative) = +∞ => Viscosity::new rejects.
     let r = power_law_apparent_viscosity_kernel::<f64>(1.0, 0.5, 0.0);
-    assert!(r.is_err());
+    assert!(
+        matches!(
+            r.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -208,8 +213,24 @@ fn test_newtonian_viscous_stress_errors_on_non_finite_div_u() {
     // must be surfaced rather than admitted silently into the stress tensor.
     let mu = Viscosity::<f64>::new(1.0).unwrap();
     let s = StrainRateTensor::<f64>::default();
-    assert!(newtonian_viscous_stress_kernel(&mu, &s, f64::NAN).is_err());
-    assert!(newtonian_viscous_stress_kernel(&mu, &s, f64::INFINITY).is_err());
+    assert!(
+        matches!(
+            newtonian_viscous_stress_kernel(&mu, &s, f64::NAN)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            newtonian_viscous_stress_kernel(&mu, &s, f64::INFINITY)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -217,6 +238,22 @@ fn test_newtonian_viscous_stress_with_bulk_errors_on_non_finite_div_u() {
     let mu = Viscosity::<f64>::new(1.0).unwrap();
     let zeta = Viscosity::<f64>::new(0.5).unwrap();
     let s = StrainRateTensor::<f64>::default();
-    assert!(newtonian_viscous_stress_with_bulk_kernel(&mu, &zeta, &s, f64::NAN).is_err());
-    assert!(newtonian_viscous_stress_with_bulk_kernel(&mu, &zeta, &s, f64::INFINITY).is_err());
+    assert!(
+        matches!(
+            newtonian_viscous_stress_with_bulk_kernel(&mu, &zeta, &s, f64::NAN)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            newtonian_viscous_stress_with_bulk_kernel(&mu, &zeta, &s, f64::INFINITY)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }

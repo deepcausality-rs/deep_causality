@@ -15,7 +15,6 @@ fn test_wave_speed_kernel_infinite_product() {
     let lambda = Length::<f64>::new(1.0e200).unwrap();
 
     let result = wave_speed_kernel(&f, &lambda);
-    assert!(result.is_err());
     match result.unwrap_err().0 {
         PhysicsErrorEnum::NumericalInstability(_) => {}
         e => panic!("Expected NumericalInstability, got {e:?}"),

@@ -1,21 +1,20 @@
 # DeepCausality Multivector
 
-A dynamic, universal Clifford Algebra implementation for Rust, designed for theoretical physics, causal modeling, and
-geometric algebra applications.
+Clifford algebras with a runtime metric signature, for theoretical physics, causal modeling, and geometric algebra.
 
 ## Features
 
 * **Dynamic Metric Signature**: Supports arbitrary signatures $Cl(p, q, r)$ at runtime via the `Metric` enum.
     * Euclidean, Non-Euclidean, Minkowski, PGA, and Custom signatures.
-* **Universal Multivector**: A single type `CausalMultiVector<T>` can represent scalars, vectors, bivectors, and
+* **Universal Multivector**: One type, `CausalMultiVector<T>`, represents scalars, vectors, bivectors, and
   higher-grade blades.
 * **Comprehensive Operations**:
     * Geometric Product, Outer Product, Inner Product (Left Contraction).
     * Reversion, Squared Magnitude, Inverse, Dual.
     * Grade Projection.
-* **Higher-Kinded Types (HKT)**: Implements `Functor`, `Pure`, `Applicative`, `Foldable`, and `CoMonad`
-  (via `deep_causality_haft`) for advanced functional patterns.
-    * There is deliberately no `Monad`. See [Higher-Kinded Types](#higher-kinded-types-hkt) for the reason.
+* **Higher-Kinded Types (HKT)**: Implements `Functor`, `Pure`, `Applicative`, `Foldable`, `Traversable`, and
+  `CoMonad` from `deep_causality_haft`.
+    * There is no `Monad`. See [Higher-Kinded Types](#higher-kinded-types-hkt) for the reason.
 
 ## Pre-configured Algebras
 
@@ -74,17 +73,16 @@ Type: `RealMultiVector`
 
 ### Quantum State Vector (HilbertState)
 
-The `HilbertState` type represents a quantum state vector (ket) $|\psi\rangle$ within a Clifford Algebra.
-It acts as a strong type for elements of a minimal left ideal of the algebra, which serves as the Hilbert space.
+`HilbertState` represents a quantum state vector (ket) $|\psi\rangle$ in a Clifford algebra: a strong type for
+elements of a minimal left ideal of the algebra, which serves as the Hilbert space.
 
-* **Coefficients**: Always `Complex<f64>`.
+* **Coefficients**: `Complex<R>` for any `R: RealField` (`f32`, `f64`, `Float106`); call sites name `R`.
 * **Metric**: Fixed at construction, typically `Cl(0,10)` (NonEuclidean, 10D) for the Grand Unified
   Algebra ($\mathfrak{spin}(10)$).
 
-This ensures type safety and prevents mixed-algebra operations, crucial for consistent quantum mechanical calculations
-within the algebraic framework.
+The fixed metric rules out mixed-algebra operations.
 
-Type: `HilbertState` (Alias for `CausalMultiVector<Complex<f64>>` with specific constructors)
+Type: `HilbertState<R>` (a wrapper around `CausalMultiVector<Complex<R>>` with specific constructors)
 
 | Alias (Contextual Name)  | Canonical Signature | Constructor / Alias                              |
 |:-------------------------|:--------------------|:-------------------------------------------------|
@@ -200,11 +198,11 @@ fn main() {
 
 #### Why there is no Monad
 
-A `CausalMultiVector` holds exactly $2^N$ coefficients, where $N$ comes from its `Metric`, so the metric is not
-decoration: it fixes the length. `Monad::bind` receives one metric from its input and another from every `f(a)`, and the
+A `CausalMultiVector` holds exactly $2^N$ coefficients, where $N$ comes from its `Metric`, so the metric fixes the
+length. `Monad::bind` receives one metric from its input and another from every `f(a)`, and the
 two identity laws demand opposite choices. Left identity, `bind(pure(a), f) == f(a)`, needs the metric taken from `f`'s
 result, because `pure(a)` carries only `Euclidean(0)`. Right identity, `bind(m, pure) == m`, needs the metric taken from
-the input, for the same reason. No metric choice satisfies both, so the instance is left out rather than shipped broken.
+the input, for the same reason. No metric choice satisfies both, so the crate has no `Monad` instance.
 
 `Pure` stays. `pure(x)` names $Cl(0)$, the one algebra reachable without inventing geometry, and its single coefficient
 is exactly $2^0$, so the value it builds is well formed.

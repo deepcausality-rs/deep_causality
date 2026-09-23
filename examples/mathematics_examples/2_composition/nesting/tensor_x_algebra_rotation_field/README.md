@@ -2,11 +2,9 @@
 
 ## Introduction
 
-Imagine a grid where every cell holds an arrow pointing somewhere. You want to rotate every arrow by the same angle, all at once. That is what this example does.
+This example rotates every arrow in a grid by the same angle, all at once. A `CausalTensor` holds a grid of `CausalMultiVector` values, and one `Functor::fmap` call on the outer tensor applies the same Clifford-algebra rotor to each cell.
 
-You hit this pattern in computer graphics (rotating every normal vector on a mesh after the camera moves), in robotics (transforming a grid of velocity vectors into a different reference frame), in fluid simulation (rotating the velocity field of every cell during an advection step), and in any image processing job that aligns or warps oriented features. The "Clifford rotor" piece is a numerically robust replacement for the rotation matrices and quaternions you may already know. The result is the same; the bookkeeping is simpler and composes better when you stack multiple rotations.
-
-A `CausalTensor` holds a grid of `CausalMultiVector` values. Each cell is rotated by the same Clifford-algebra rotor using a single `Functor::fmap` call on the outer tensor.
+The pattern appears in computer graphics (rotating every normal vector on a mesh after the camera moves), robotics (transforming a grid of velocity vectors into another reference frame), fluid simulation (rotating the velocity field of every cell during an advection step), and image processing that aligns or warps oriented features. A Clifford rotor replaces the rotation matrices and quaternions you may know; the result is the same, and the bookkeeping is simpler when you stack rotations.
 
 ## How to Run
 
@@ -16,12 +14,12 @@ cargo run -p mathematics_examples --example tensor_x_algebra_rotation_field_exam
 
 ## What It Demonstrates
 
-Two HKT layers stack cleanly:
+Two HKT layers stack:
 
 1. The outer container is a tensor (rank-2 grid).
 2. Each cell is itself a multivector in `Cl(2,0)`.
 
-The map operation lives at the tensor level. The cell-level closure performs the geometric product `R v R~`. No special handling is needed; the same `fmap` that works on `CausalTensor<f64>` works on `CausalTensor<CausalMultiVector<f64>>`.
+The map operation lives at the tensor level; the cell-level closure performs the geometric product `R v R~`. The same `fmap` that works on `CausalTensor<f64>` works on `CausalTensor<CausalMultiVector<f64>>`.
 
 ## Mathematical Content
 

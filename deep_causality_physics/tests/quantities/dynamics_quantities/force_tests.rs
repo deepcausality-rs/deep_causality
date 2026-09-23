@@ -5,30 +5,52 @@
 
 // Force allows negative values for direction.
 
-use deep_causality_physics::Force;
+use deep_causality_physics::{Force, PhysicsErrorEnum};
 
 #[test]
 fn test_force_new_positive() {
-    let force = Force::<f64>::new(100.0);
-    assert!(force.is_ok());
+    let force = Force::<f64>::new(100.0).unwrap();
+    // `is_ok()` alone admitted any carried value, including a constant.
+    assert!(
+        (force.value() - (100.0)).abs() < 1e-10,
+        "constructed value = {}",
+        force.value()
+    );
 }
 
 #[test]
 fn test_force_new_negative() {
-    let force = Force::<f64>::new(-50.0);
-    assert!(force.is_ok());
+    let force = Force::<f64>::new(-50.0).unwrap();
+    // `is_ok()` alone admitted any carried value, including a constant.
+    assert!(
+        (force.value() - (-50.0)).abs() < 1e-10,
+        "constructed value = {}",
+        force.value()
+    );
 }
 
 #[test]
 fn test_force_new_nan_error() {
     let force = Force::<f64>::new(f64::NAN);
-    assert!(force.is_err());
+    assert!(
+        matches!(
+            force.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
 fn test_force_new_infinity_error() {
     let force = Force::<f64>::new(f64::INFINITY);
-    assert!(force.is_err());
+    assert!(
+        matches!(
+            force.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

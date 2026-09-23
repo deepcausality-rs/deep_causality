@@ -3,25 +3,41 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::HalfLife;
+use deep_causality_physics::{HalfLife, PhysicsErrorEnum};
 
 #[test]
 fn test_half_life_new_valid() {
-    let hl = HalfLife::<f64>::new(5730.0); // C-14
-    assert!(hl.is_ok());
+    let hl = HalfLife::<f64>::new(5730.0).unwrap(); // C-14
+    assert!(
+        (hl.value() - 5730.0).abs() < 1e-10,
+        "t_half = {}",
+        hl.value()
+    );
 }
 
 #[test]
 fn test_half_life_new_zero() {
     // Zero half-life is invalid because it implies infinite decay rate
     let hl = HalfLife::<f64>::new(0.0);
-    assert!(hl.is_err(), "Zero half-life should be rejected");
+    assert!(
+        matches!(
+            hl.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
 fn test_half_life_new_negative_error() {
     let hl = HalfLife::<f64>::new(-100.0);
-    assert!(hl.is_err());
+    assert!(
+        matches!(
+            hl.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -46,6 +62,18 @@ fn test_half_life_default_uses_epsilon() {
 
 #[test]
 fn test_half_life_new_nan_error() {
-    assert!(HalfLife::<f64>::new(f64::NAN).is_err());
-    assert!(HalfLife::<f64>::new(f64::INFINITY).is_err());
+    assert!(
+        matches!(
+            HalfLife::<f64>::new(f64::NAN).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            HalfLife::<f64>::new(f64::INFINITY).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }

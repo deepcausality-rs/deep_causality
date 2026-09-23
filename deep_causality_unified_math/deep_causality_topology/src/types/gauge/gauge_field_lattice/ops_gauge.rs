@@ -4,14 +4,14 @@
  */
 //! Gauge field operations.
 //!
-//! Includes legacy gauge transformations and staple calculations.
-//! Note: For robust gauge transformations with error handling, see `ops_gauge_transform.rs`.
+//! The gauge transformation of a field by a site-wise group element. A random transformation
+//! built on it lives in `ops_gauge_transform.rs`.
 
 use crate::{GaugeGroup, LatticeGaugeField, LinkVariable};
 use deep_causality_algebra::{ComplexField, DivisionAlgebra, Field, RealField};
 use deep_causality_num::{FromPrimitive, ToPrimitive};
 
-use std::collections::HashMap;
+use super::utils::{alloc_slots, link_index};
 use std::fmt::Debug;
 
 // ============================================================================
@@ -25,7 +25,7 @@ impl<
     S,
 > LatticeGaugeField<G, D, M, R, S>
 {
-    /// Apply a gauge transformation (infallible version).
+    /// Apply a gauge transformation.
     ///
     /// # Mathematics
     ///
@@ -37,7 +37,9 @@ impl<
     ///
     /// # Arguments
     ///
-    /// * `gauge_fn` - Closure providing $\Omega(x)$ for each site
+    /// * `gauge_fn` - Closure providing $\Omega(x)$ for each site. It is called exactly once per
+    ///   site, in row-major site order (last axis fastest), so every link touching a site sees
+    ///   the same $\Omega(x)$ even when the closure returns a different element on each call.
     ///
     /// # Returns
     ///
@@ -48,35 +50,49 @@ impl<
         M: Field + DivisionAlgebra<R>,
         R: RealField,
     {
-        let shape = self.lattice.shape();
-        let new_links: HashMap<_, _> = self
-            .links
-            .iter()
+        let shape = *self.lattice.shape();
+
+        // Ω(x) for every site, indexed row-major over the shape.
+        let num_sites: usize = shape.iter().product();
+        let site_of = |mut offset: usize| {
+            let mut site = [0usize; D];
+            for d in (0..D).rev() {
+                site[d] = offset % shape[d];
+                offset /= shape[d];
+            }
+            site
+        };
+        let offset_of = |site: &[usize; D]| {
+            site.iter()
+                .zip(shape.iter())
+                .fold(0, |acc, (p, l)| acc * l + p)
+        };
+        let omega: Vec<LinkVariable<G, M, R>> =
+            (0..num_sites).map(|o| gauge_fn(&site_of(o))).collect();
+
+        let new_links: Vec<Option<LinkVariable<G, M, R>>> = self
+            .iter_links()
             .map(|(cell, u)| {
                 let site = *cell.position();
-
-                // Find direction of this edge
                 let dir = cell.orientation().trailing_zeros() as usize;
 
-                // Get g(n)
-                let g_n = gauge_fn(&site);
-
-                // Get n + μ̂
+                // n + μ̂, wrapped periodically.
                 let mut site_plus_mu = site;
                 site_plus_mu[dir] = (site_plus_mu[dir] + 1) % shape[dir];
 
-                // Get g(n+μ)†
-                let g_n_plus_mu_dag = gauge_fn(&site_plus_mu).dagger();
+                // U' = Ω(n) U Ω(n+μ̂)†
+                let new_u = omega[offset_of(&site)]
+                    .mul(u)
+                    .mul(&omega[offset_of(&site_plus_mu)].dagger());
 
-                // U' = g(n) U g(n+μ)†
-                let new_u = g_n.try_mul(u).and_then(|tmp| tmp.try_mul(&g_n_plus_mu_dag));
-
-                // Panic on failure (infallible in theory if shapes match)
-                let new_u = new_u.expect("Gauge transform multiplication failed");
-
-                (cell.clone(), new_u)
+                (cell, new_u)
             })
-            .collect();
+            .fold(alloc_slots(&shape), |mut slots, (cell, u)| {
+                if let Some(i) = link_index(&self.lattice, &cell) {
+                    slots[i] = Some(u);
+                }
+                slots
+            });
 
         self.links = new_links;
     }

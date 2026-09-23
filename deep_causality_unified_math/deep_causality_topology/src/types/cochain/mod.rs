@@ -9,12 +9,13 @@ use crate::errors::topology_error::{TopologyError, TopologyErrorEnum};
 ///
 /// # What this type is for
 ///
-/// The cup product used to take a cochain and its degree as separate arguments, so a binary product
-/// was five parameters and the `n`-fold form was a slice of tuples paired by convention. Nothing
-/// bound the data to the degree, and a mismatch was a runtime check rather than a type error. This
-/// binds them.
+/// Binding the values to their degree. The cup product takes cochains rather than data-and-degree
+/// pairs, so it reads each operand's degree from the operand itself. The degree is a runtime
+/// `usize`: the cup product checks at run time that the degrees sum to at most the complex's
+/// dimension and that each cochain's length matches the cell count of its degree, and returns an
+/// error otherwise.
 ///
-/// # The representation is unchanged
+/// # Representation
 ///
 /// The values are the same flat slice indexed by cell index that `deep_causality_physics` uses for
 /// velocity one-forms and pressure zero-forms. [`values`](Self::values) hands that slice back

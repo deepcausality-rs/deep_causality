@@ -10,15 +10,15 @@ cargo run --release -p deep_causality_cfd --example srp_momentum_jet
 SRP_MJ_L=6 SRP_MJ_SWEEP=1.0,2.0,4.0 cargo run --release -p deep_causality_cfd --example srp_momentum_jet
 ```
 
-**What it tests.** The imprint-fidelity follow-up (risk 1) to the de-risk verification
-`srp_drag_decrement` and its recorded amber finding. That verification's whole-envelope
-**pinned-state** plume shields the forebody monotonically but cannot produce the Jarvinen–Adams
-central-nozzle drag collapse. The verdict named "a momentum-carrying jet interaction rather than a
-pinned obstruction state" as the first upgrade path, and this study measures exactly that variant
-on the **same harness**: same freestream, body, sponge, strip, and at defaults the same grid and
-bond cap, with the plume envelope pin replaced by a nozzle-exit **patch** at the body face pinned
-to a supersonic upstream-firing exit state. The plume is not imposed. It forms, spreads, and
-interacts in the marched field.
+**What it tests.** Imprint fidelity (risk 1) after the de-risk verification `srp_drag_decrement`
+and its recorded amber finding: that verification's whole-envelope **pinned-state** plume shields
+the forebody monotonically but cannot produce the Jarvinen–Adams central-nozzle drag collapse. The
+verdict names "a momentum-carrying jet interaction rather than a pinned obstruction state" as the
+first upgrade path, and this study measures that variant on the **same harness**: same
+freestream, body, sponge, strip, and at defaults the same grid and bond cap, with the plume
+envelope pin replaced by a nozzle-exit **patch** at the body face pinned to a supersonic
+upstream-firing exit state. The plume is not imposed. It forms, spreads, and interacts in the
+marched field.
 
 The question is an attribution. Is the missing collapse a property of the **model class**, the
 static imprint, or of the **harness**, meaning the 2-D plane, coarse grid, and dissipation floor
@@ -27,8 +27,7 @@ static imprint, or of the **harness**, meaning the 2-D plane, coarse grid, and d
 **Instrumentation.** The de-risk adversarial review pre-registered the evidence bar:
 
 - **time-averaged tail read**: strip force sampled every step over the tail window, with mean, std,
-  and a first-half/second-half drift witness. The committed harness contracted a single terminal
-  snapshot;
+  and a first-half/second-half drift witness;
 - **three strip bands**: the verification's full strip verbatim, an **annulus** excluding the jet's
   rows (the J–A aeroshell surface, free of the exit pin), and an **outer** band one further cell
   out, since a collapse must appear off-axis to count;
@@ -69,13 +68,13 @@ cap 24.
 correlation channel keeps the drag authority**. The J–A miss is the recorded finding, not a
 regression; the structural bands gate the default configuration only, and
 `openspec/notes/archive/cfd-plasma-retropulsion/derisk-verdict.md` with its addendum is the authority. This
-study supersedes the reverted `verification/srp_drag_decrement/` pinned-envelope harness (see
+study supersedes the reverted `reverted/srp_drag_decrement/` pinned-envelope harness (see
 `reverted/README.md`).
 
 **Caveats.** Carried unchanged from the verification: a 2-D plane rather than axisymmetric, a
 smoothed-mask body, periodic and sponge blockage, and a single marched γ. The J–A correlation is
-axisymmetric, so the quantitative fractions do not transfer. The collapse *structure* is what is
-being measured, and J–A is the structural reference, not a quantitative fit target. `C_T` is the
+axisymmetric, so the quantitative fractions do not transfer. The study measures the collapse
+*structure*; J–A is the structural reference, not a quantitative fit target. `C_T` is the
 declared 2-D per-depth definition (`config.rs`).
 
 See `output.txt` for the recorded reference output.

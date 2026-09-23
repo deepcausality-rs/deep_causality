@@ -6,17 +6,19 @@
 
 # The Nozzle Operating Map
 
-Dropping the back pressure on a converging-diverging duct walks it through its operating
-regimes. Above the first critical ratio the duct flows subsonic throughout. Below it the
-throat chokes and a normal shock stands in the diverging section, marching toward the exit as
-the back pressure falls. Below the exit-shock ratio the duct runs supersonic all the way out.
-Where the shock sits and what thrust coefficient each point produces is the operating map, and
-computing one is routine sizing work in propulsion and test.
+This example computes the operating map of a converging-diverging nozzle with the 1-D
+compressible duct march and gates every row against gas-dynamics closed forms.
 
-This example computes that map with the 1-D compressible duct march and gates every row
-against gas-dynamics closed forms. Nothing in the gates comes from the solver itself: choking
-checks against the sonic throat, shock positions check against the isentropic-plus-
-Rankine-Hugoniot construction, and shock-free profiles check against the area-Mach relation.
+Dropping the back pressure walks the duct through its operating regimes. Above the first
+critical ratio the duct flows subsonic throughout. Below it the throat chokes and a normal
+shock stands in the diverging section, moving toward the exit as the back pressure falls.
+Below the exit-shock ratio the duct runs supersonic all the way out. The operating map records
+where the shock sits and what thrust coefficient each point produces; propulsion and test
+engineers compute one routinely when sizing a nozzle.
+
+No gate takes its reference from the solver: choking checks against the sonic throat, shock
+positions against the isentropic-plus-Rankine-Hugoniot construction, and shock-free profiles
+against the area-Mach relation.
 
 ## How to Run
 
@@ -26,12 +28,12 @@ From the repository root:
 cargo run --release -p avionics_examples --example nozzle_operating_map
 ```
 
-Wall-clock is under a second: six duct marches at 128 cells, run concurrently under the
+The run takes under a second: six duct marches at 128 cells, run concurrently under the
 `parallel` feature. The whole computation runs in the shared example `FloatType` alias; `f64`
 appears only where the result table is written.
 
-To see the reader refuse a malformed schedule (the wrong-usage path), pass the provided bad
-file and watch the error name the file, the row, and the column:
+To see the reader refuse a malformed schedule, pass the provided bad file; the error names
+the file, the row, and the column:
 
 ```bash
 cargo run --release -p avionics_examples --example nozzle_operating_map \
@@ -45,8 +47,8 @@ The run exits nonzero and writes no table.
 1. The schedule loads from [`back_pressures.csv`](back_pressures.csv): six ratios
    `p_back / p0` from 0.90 down to 0.10, spanning the internal-shock window (the analytic
    references print with the run: first critical at 0.937, exit-plane shock at 0.513).
-2. `sweep` runs one `CfdFlow::duct_march` per ratio on the 2:1:2 parabolic nozzle
-   (reservoir 300 kPa, 500 K, gamma 1.4).
+2. `.case(model_config::duct_case).march()` binds one duct case per ratio on the 2:1:2
+   parabolic nozzle (reservoir 300 kPa, 500 K, gamma 1.4) and marches each through `sweep`.
 3. Each report reduces to one row: exit Mach, shock station, thrust coefficient. The measured
    map: the shock marches from 0.656 m to 0.930 m as the ratio falls from 0.90 to 0.60, and
    the two supersonic-exit rows leave at Mach 2.12 against the design value 2.197.
@@ -55,9 +57,9 @@ The run exits nonzero and writes no table.
 
 ## Gates
 
-Four gates, exit nonzero on any regression. (Schedule integrity — every scheduled ratio producing
-a converged march — is not a separate gate: it is guaranteed by the sweep construction, which
-produces one row per case and short-circuits on the first march failure.)
+Four gates; any regression exits nonzero. Schedule integrity (every scheduled ratio yields a
+converged march) needs no gate of its own: the sweep produces one row per case and
+short-circuits on the first march failure.
 
 1. **Choking.** Every choked row crosses Mach 1 within the stated band of the throat.
 2. **Shock position.** Every internal-shock row lands within the measured band (twelve cell
@@ -66,13 +68,13 @@ produces one row per case and short-circuits on the first march failure.)
    measured 5 percent band.
 4. **Physical thrust.** The thrust coefficient is finite and positive on every row.
 
-The bands live in [`constants.rs`](constants.rs) with their derivations; they were measured by
-the duct-march verification tests at this resolution, not chosen.
+The bands live in [`constants.rs`](constants.rs) with their derivations. The duct-march
+verification tests measured them at this resolution.
 
 ## Limitations
 
 The duct march is a first-order quasi-1-D scheme: shocks smear over a few cells and the
-profiles carry a resolution-dependent bias, which is exactly what the measured bands express.
+profiles carry a resolution-dependent bias, which the measured bands express.
 The geometry is the parabolic demonstration nozzle, perfect gas at gamma 1.4; real nozzle
 work adds wall friction, heat transfer, and real-gas effects this example does not model.
 The back-pressure schedule stays inside the choked regimes; the unchoked window above the
@@ -82,7 +84,7 @@ first critical ratio is not swept.
 
 | File | Contents |
 |---|---|
-| [`main.rs`](main.rs) | Orchestration: schedule in, sweep, table out, gate verdict |
+| [`main.rs`](main.rs) | Orchestration: one `CfdFlow::study` expression, schedule in, table out, gate verdict |
 | [`model.rs`](model.rs) | Domain logic: the march-and-reduce step and the closed-form references |
 | [`model_config.rs`](model_config.rs) | Configuration: the duct case description per back pressure |
 | [`utils_print.rs`](utils_print.rs) | Console rendering; the gating sequence lives in `model.rs` |

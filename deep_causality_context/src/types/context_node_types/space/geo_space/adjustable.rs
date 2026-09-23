@@ -29,7 +29,7 @@ impl<R: RealField + Default> Adjustable<R> for GeoSpace<R> {
         let new_lon = array_grid.get(p2);
         let new_alt = array_grid.get(p3);
 
-        // Reject non-finite adjusted coordinates (NaN, ±inf)
+        // Reject non-finite replacement coordinates (NaN, ±inf)
         if !new_lat.is_finite() {
             return Err(UpdateError(
                 "Update failed, new lat value is not finite".into(),

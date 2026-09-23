@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::VibrationalTemperature;
+use deep_causality_physics::{PhysicsErrorEnum, VibrationalTemperature};
 
 #[test]
 fn test_vibrational_temperature_valid() {
@@ -17,13 +17,33 @@ fn test_vibrational_temperature_valid() {
 
 #[test]
 fn test_vibrational_temperature_rejects_negative() {
-    assert!(VibrationalTemperature::<f64>::new(-1.0).is_err());
+    assert!(
+        matches!(
+            VibrationalTemperature::<f64>::new(-1.0).unwrap_err().0,
+            PhysicsErrorEnum::ZeroKelvinViolation
+        ),
+        "expected a ZeroKelvinViolation refusal"
+    );
 }
 
 #[test]
 fn test_vibrational_temperature_rejects_nonfinite() {
-    assert!(VibrationalTemperature::<f64>::new(f64::NAN).is_err());
-    assert!(VibrationalTemperature::<f64>::new(f64::INFINITY).is_err());
+    assert!(
+        matches!(
+            VibrationalTemperature::<f64>::new(f64::NAN).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            VibrationalTemperature::<f64>::new(f64::INFINITY)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

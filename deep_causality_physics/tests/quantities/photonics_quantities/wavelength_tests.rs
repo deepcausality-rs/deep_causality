@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::Wavelength;
+use deep_causality_physics::{PhysicsErrorEnum, Wavelength};
 
 #[test]
 fn test_wavelength() {
@@ -11,7 +11,13 @@ fn test_wavelength() {
     assert_eq!(w.value(), 500e-9);
 
     let err = Wavelength::<f64>::new(-1.0);
-    assert!(err.is_err());
+    assert!(
+        matches!(
+            err.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

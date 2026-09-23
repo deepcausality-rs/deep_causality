@@ -81,10 +81,8 @@ where
         ));
     }
 
-    // Helper to compute matrix element <n | V | m>
-    // Since we are given velocity vector columns V|m> directly (or pre-computed matrix elements?
-    // The previous implementation assumed `velocity_i` stores the velocity vectors V|u_m>).
-    // Specifically: dot product of <u_n| (conjugated) and V|u_m>.
+    // The matrix element <u_n| V |u_m>: the dot product of the conjugated <u_n| with the
+    // velocity vector column V|u_m>, which is what `velocity_i` stores.
     let inner_prod = |col_u: usize, col_v_matrix: &[Complex<R>], col_v_idx: usize| -> Complex<R> {
         let mut sum = Complex::new(R::zero(), R::zero());
         // Iterate over basis elements

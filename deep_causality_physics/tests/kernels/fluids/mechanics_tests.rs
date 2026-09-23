@@ -30,6 +30,14 @@ fn test_hydrostatic_pressure_kernel_valid() {
         expected,
         p_total.value()
     );
+    // The formula above is the kernel's own, retyped, so it only asserts the expression was
+    // written the same way twice. The independent number breaks that: 1 atm plus ten metres of
+    // water is 101325 + 1000 * 9.80665 * 10 = 199391.5 Pa.
+    assert!(
+        (p_total.value() - 199_391.5).abs() < 0.1,
+        "P = {} Pa, expected 199391.5",
+        p_total.value()
+    );
 }
 
 #[test]

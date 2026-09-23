@@ -1,7 +1,7 @@
 # Physics Kernels
 
-This document covers the **kernel layer** of `deep_causality_physics` — the pure, stateless,
-domain-specific computations and the type-safe quantity wrappers built around them.
+This document covers the **kernel layer** of `deep_causality_physics`: pure, stateless,
+domain-specific computations and the typed quantity wrappers around them.
 
 For the **theory layer** (Gauge Theories on a shared topological backend) see
 [README_GAUGE_THEORIES.md](./README_GAUGE_THEORIES.md).
@@ -11,24 +11,25 @@ For the project overview see [README.md](./README.md).
 
 ## Domains
 
-Kernels live under `src/kernels/<domain>/`. Each domain ships pure computation kernels, monadic
-wrappers (`wrappers.rs`), and domain-specific quantity newtypes (`quantities.rs`). The table below
-lists the source files (excluding `mod.rs`, `quantities.rs`, and `wrappers.rs`) shipped under each
-domain and a short description of what each one covers.
+Kernels live under `src/kernels/<domain>/`. Each domain holds pure computation kernels and monadic
+wrappers (`wrappers.rs`); its quantity newtypes live under `src/quantities/<domain>/`. The table
+lists each domain's kernel source files (excluding `mod.rs` and `wrappers.rs`) and what they cover.
 
 | Domain | Source files | Coverage |
 |---|---|---|
-| **Astro** | `mechanics` | Schwarzschild radius, orbital velocity, escape velocity, gravitational redshift. |
-| **Chronometric** | `solve_gm`, `wrapper` | Inverts the J2-corrected weak-field 1PN clock equation (Bjerhammar 1975, Vermeer 1983) to recover $GM_\oplus$ and the derived planetary mass from satellite clock time-dilation measurements. `CentralBody` (gravity-model parameters), `SpaceTimeCoordinate` (clock + kinematic state), `solve_gm_analytical`. |
+| **Astro** | `ks_constraint`, `ks_propagator`, `mechanics`, `two_body` | Schwarzschild radius, orbital velocity, escape velocity, gravitational redshift; exact two-body (Kepler) propagation, Kustaanheimo–Stiefel regularised propagation and constraint projection. |
+| **Chronometric** | `forward_clock`, `solve_gm`, `wrapper` | Forward proper-time rate and clock-offset kernels. Inverts the J2-corrected weak-field 1PN clock equation (Bjerhammar 1975, Vermeer 1983) to recover $GM_\oplus$ and the derived planetary mass from satellite clock time-dilation measurements. `CentralBody` (gravity-model parameters), `SpaceTimeCoordinate` (clock + kinematic state), `solve_gm_analytical`. |
 | **Condensed** | `moire`, `phase`, `qgt` | Twistronics (Bistritzer–MacDonald moiré Hamiltonian), phase-field models (Ginzburg–Landau, Cahn–Hilliard), Quantum Geometric Tensor. |
 | **Dynamics** | `estimation`, `kinematics` | Classical mechanics (Newton's laws, kinematics), state estimation (Kalman filters), Euler integration. |
 | **Electromagnetism (`em`)** | `fields`, `forces`, `solver` | Maxwell's equations, Lorentz force, Poynting vectors, gauge fields via Geometric Algebra. |
+| **Hypersonic** | `finite_rate`, `ionization`, `shock`, `thermochemistry` | Park two-temperature reacting air: vibrational relaxation, Arrhenius rates, Saha / Park-2T ionization, Rankine–Hugoniot temperature jump, recovery-temperature reconstruction. |
 | **Fluids** | `boundary_layer`, `coherent_structures`, `compressible`, `constitutive`, `dimensionless`, `governing`, `ideal_flow`, `kinematics`, `mechanics`, `turbulence` | Full Navier–Stokes surface: continuity / momentum / energy RHS, Newtonian and power-law stress, kinematics (S, Ω, vorticity, CPC invariants), 18 dimensionless numbers, turbulence quantities (TKE, ε, Kolmogorov scales, Reynolds stress, Boussinesq), coherent-structure detectors (Q, Δ, λ₂, swirling strength), compressible thermodynamics (speed of sound, isentropic stagnation, entropy production), wall functions, ideal-flow primitives (Bernoulli, stream function, circulation, Kutta–Joukowski). |
 | **Materials** | `mechanics` | Stress, strain, Hooke's law, Young's modulus, thermal expansion. |
 | **MHD** | `grmhd`, `ideal`, `plasma`, `resistive` | Alfvén waves, magnetic pressure, ideal induction on manifolds, General Relativistic MHD with manifold-based current computation, plasma parameters. |
 | **Nuclear** | `lund`, `pdg`, `physics`, `qcd` | Binding energy, radioactive decay, PDG particle database, **Lund String Fragmentation** for QCD hadronization. |
+| **Propulsion** | `descent`, `nozzle`, `performance`, `plume`, `srp` | Rocket performance, nozzle exit state, supersonic-retropropulsion similarity numbers and Jarvinen–Adams drag correlation, plume-boundary geometry, powered-descent closed forms. |
 | **Photonics** | `beam`, `diffraction`, `polarization`, `ray` | Ray optics, polarization calculus, Gaussian beam optics, diffraction. |
-| **Quantum** | `gates`, `gates_haruna`, `mechanics` | Wavefunctions, operators, gates, expectation values; Haruna's Gauge Field gates. |
+| **Quantum** | `mechanics` | Klein–Gordon operator on a simplicial manifold. Gates, Haruna gates, and Dirac-notation operations live in `deep_causality_quantum`. |
 | **Relativity** | `gravity`, `spacetime` | Special and General Relativity: spacetime intervals, time dilation, Einstein tensor, geodesic deviation. |
 | **Thermodynamics** | `stats` | Statistical mechanics: entropy, Carnot efficiency, ideal gas law, heat diffusion. |
 | **Waves** | `general` | Doppler effect, wave speed, frequency/wavelength relations. |
@@ -39,35 +40,34 @@ domain and a short description of what each one covers.
 
 Kernels are organized in four layers:
 
-1. **Kernels (`kernels/<domain>/mechanics.rs`, `kernels/<domain>/gravity.rs`, etc.)** — Pure
-   functions that perform the raw physical computations. They operate on `CausalTensor`,
-   `CausalMultiVector`, `Manifold`, or primitive types. Stateless, side-effect free.
+1. **Kernels (`kernels/<domain>/mechanics.rs`, `kernels/<domain>/gravity.rs`, etc.)** — Pure,
+   stateless functions that compute the physics. They operate on `CausalTensor`,
+   `CausalMultiVector`, `Manifold`, or primitive types.
    *Example*: `klein_gordon_kernel` computes $(\Delta + m^2)\psi$.
 
 2. **Wrappers (`kernels/<domain>/wrappers.rs`)** — Monadic wrappers that lift kernels into the
-   `PropagatingEffect` monad. They allow physics functions to be directly embedded into
-   `CausalEffect` functions within a DeepCausality graph.
-   *Example*: `apply_gate` wraps `apply_gate_kernel` to validly propagate state changes in the
-   causal graph.
+   `PropagatingEffect` monad, so a causal function in a DeepCausality graph can call a physics
+   function directly.
+   *Example*: `klein_gordon` wraps `klein_gordon_kernel` and returns its result or error as a
+   `PropagatingEffect`.
 
-3. **Quantities (`kernels/<domain>/quantities.rs`, `units::*`)** — Newtype wrappers
+3. **Quantities (`quantities/<domain>/`)** — Newtype wrappers
    (`Speed`, `Mass`, `Temperature`, `FourMomentum`, `Hadron`, …) that enforce physical invariants
-   (e.g. mass cannot be negative) and type safety. **Every wrapper is generic over
-   `R: RealField`**, so the same code runs at `f32`, `f64`, `DoubleFloat`, or any other field that
+   (e.g. mass cannot be negative). **Every wrapper is generic over
+   `R: RealField`**, so the same code runs at `f32`, `f64`, `Float106`, or any other field that
    implements `RealField`.
 
 4. **Metric Types** — Re-exports from `deep_causality_metric` for sign-convention handling
-   (`LorentzianMetric`, `EastCoastMetric`, `WestCoastMetric`, `PhysicsMetric`).
+   (`LorentzianMetric`, `EastCoastMetric`, `WestCoastMetric`, `RelativityMetric`, `ParticleMetric`).
 
 ---
 
 ## When to use kernels vs. theories
 
-* **Kernels for Isolation**: If you need to solve a specific equation (e.g., `schwarzschild_radius`,
-  `lorentz_force`, `cahn_hilliard_flux`) in isolation, use the standalone kernels. They are pure
-  functions, stateless, and efficient.
-* **Theories for Frameworks**: If you are working within a full physical theory (General Relativity,
-  Electroweak Theory, etc.), use the Physics Theories modules under `src/theories/`. See
+* **Kernels for Isolation**: To solve a single equation (e.g., `schwarzschild_radius`,
+  `lorentz_force`, `cahn_hilliard_flux`), use the standalone kernels.
+* **Theories for Frameworks**: To work within a full physical theory (General Relativity,
+  Electroweak Theory, etc.), use the theory modules under `src/theories/`. See
   [README_GAUGE_THEORIES.md](./README_GAUGE_THEORIES.md).
 
 ---
@@ -128,12 +128,10 @@ fn main() {
 }
 ```
 
-A complete worked example processing one full GPS week of Galileo broadcast clock data
-(satellite E14) is in
-[`examples/physics_examples/chronometric_gm_recovery`](../examples/physics_examples/chronometric_gm_recovery).
-It demonstrates the framework's `CausalMonad` bind chain end-to-end and recovers
-$GM_\oplus$ and Earth's mass to ~0.2% relative error against published JGM-3 / IERS 2010
-references — *the planet weighed by clock time-dilation alone.*
+[`examples/physics_examples/chronometric_gm_recovery`](../examples/physics_examples/chronometric_gm_recovery)
+processes one full GPS week of Galileo broadcast clock data (satellite E14). It runs the
+`CausalMonad` bind chain end to end and recovers $GM_\oplus$ and Earth's mass to ~0.2% relative
+error against published JGM-3 / IERS 2010 references, from clock time dilation alone.
 
 ### Lund String Fragmentation (QCD Hadronization)
 
@@ -174,15 +172,15 @@ precision at the call site:
 
 ```rust
 use deep_causality_physics::Mass;
-use deep_causality_num::DoubleFloat;
+use deep_causality_num::Float106;
 
 let m_fast: Mass<f32>           = Mass::new(5.0_f32).unwrap();   // games / viz
 let m_std:  Mass<f64>           = Mass::new(5.0_f64).unwrap();   // engineering default
-let m_hi:   Mass<DoubleFloat>   = Mass::new(DoubleFloat::from(5.0)).unwrap(); // cosmology
+let m_hi:   Mass<Float106>      = Mass::new(Float106::from(5.0)).unwrap(); // cosmology
 ```
 
-The single carve-out is physical constants under `src/constants/` and the PDG quark-mass constants
-in `kernels/nuclear/pdg.rs`. Those stay declared as `pub const X: f64 = literal` and the consumer
-converts at the call site via `R::from_f64(SPEED_OF_LIGHT)`. Rationale: the values themselves do not
-benefit from precision-parametricity (exact-defined CODATA constants fit in `f64` exactly; measured
-constants have measurement uncertainty far below `f64` precision).
+The exception is the physical constants under `src/constants/` and the PDG quark-mass constants
+in `kernels/nuclear/pdg.rs`. They are declared as `pub const X: f64 = literal`, and the consumer
+converts at the call site via `R::from_f64(SPEED_OF_LIGHT)`. The values gain nothing from a wider
+type: exactly defined CODATA constants fit in `f64`, and measured constants carry measurement
+uncertainty far larger than `f64` rounding.

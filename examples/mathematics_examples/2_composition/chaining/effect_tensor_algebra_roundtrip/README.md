@@ -2,13 +2,13 @@
 
 ## Introduction
 
-Every nontrivial numerical pipeline converts data between representations. A vector becomes a quaternion, the quaternion gets applied to something, the result is converted back to a vector, and a downstream consumer reads the answer. Every conversion is a place where bugs hide. The standard engineering question is: did the round-trip preserve the property it was supposed to preserve.
+This example converts a vector into geometric algebra and back inside the causal monad, and checks that the round trip preserves its length. Numerical pipelines convert data between representations: a vector becomes a quaternion, the quaternion rotates something, the result becomes a vector again, and a downstream consumer reads it. Each conversion can hide a bug, so the check is whether the round trip preserved the property it should.
 
-This example is the minimal version of that pattern. It takes a vector with length 5 (the 3-4-5 triangle), lifts it into a geometric-algebra representation, rotates it, brings it back to a plain vector, and asks: is the length still 5. The answer should be yes, exactly, because rotations preserve length. If the answer is no, something in the pipeline is wrong.
+The example takes a vector of length 5 (the 3-4-5 triangle), lifts it into a geometric-algebra representation, rotates it, brings it back to a plain vector, and asks whether the length is still 5. Rotations preserve length, so the answer should be yes; a no means something in the pipeline is wrong.
 
-This is the shape of a property-based test, a regression baseline, and the kind of conservation-law check that catches bugs in graphics code, robotics transforms, physics engines, and signal-processing pipelines before they reach production. The fact that the value type changes at every step (vector -> multivector -> multivector -> vector -> scalar) is the point: the monad keeps the bookkeeping invisible while each stage does exactly its own job.
+This is the shape of a property-based test, a regression baseline, and the conservation-law check that catches bugs in graphics code, robotics transforms, physics engines and signal-processing pipelines. The value type changes at every step (vector -> multivector -> multivector -> vector -> scalar), and the monad keeps the bookkeeping out of sight while each stage does its own job.
 
-A 3-vector travels through four `bind` steps: lift into `Cl(3,0)`, rotate, lower back to a tensor, then compute its norm by tensor dot product. The carried value type changes at every step; the monad threads them in a single straight line.
+A 3-vector travels through four `bind` steps: lift into `Cl(3,0)`, rotate, lower back to a tensor, then compute its squared norm by tensor dot product.
 
 ## How to Run
 
@@ -28,9 +28,9 @@ Process<CausalTensor<f64>>
   -> Process<f64>
 ```
 
-Each transition is one `ProcessWitness::bind` call. The state, context, and accumulating log pass through unchanged; only the value type morphs.
+Each transition is one `ProcessWitness::bind` call. The state, context and accumulating log pass through unchanged; only the value type changes.
 
-The round-trip preserves the squared norm to machine epsilon. That fact is the test: if either the lift, the rotation, or the lower introduced a defect, the final norm would drift visibly.
+The round trip preserves the squared norm to machine epsilon. That is the test: a defect in the lift, the rotation or the lowering would make the final norm drift visibly.
 
 ## Mathematical Content
 

@@ -15,26 +15,27 @@ use crate::{BFloat16, Float106};
 ///
 /// # Which types promise it
 ///
-/// Past the primitives below, six types carry `Associative`, each in the crate that defines it:
-/// `Complex<T>` and `Quaternion<T>` in `deep_causality_num_complex`, `Dual<T>` in
-/// `deep_causality_num_dual`, `Rational<T>` in `deep_causality_num_rational`, and
-/// `CausalTensor<T>` and `CausalTensorTrain<T>` in `deep_causality_tensor`. `Quaternion<T>` is on
-/// that list although it is missing from [`Commutative`](crate::Commutative): ℍ associates, it
-/// just does not commute.
+/// Besides the scalars implemented below (the primitive integers and floats, `BFloat16`,
+/// `Float106` and `deep_causality_num::Gf2`), these types carry
+/// `Associative<Multiplicative>`, each in the crate that defines it: `Complex<T>` and `Quaternion<T>` in `deep_causality_num_complex`, `Dual<T>` in
+/// `deep_causality_num_dual`, `Rational<T>` in `deep_causality_num_rational`, `CausalTensor<T>`
+/// and `CausalTensorTrain<T>` in `deep_causality_tensor`, and `CsrMatrix<T>`, `DenseMatrix<T>`
+/// and `PackedGf2<W>` in `deep_causality_linear`. `Quaternion<T>` and the three matrix types are
+/// on that list although they are missing from [`Commutative`](crate::Commutative): ℍ and matrix
+/// multiplication associate but do not commute.
 ///
 /// `Octonion<T>` is absent, and the absence is the definition. 𝕆 satisfies only the weaker
 /// alternative law, and associativity fails on any triple of imaginary units that does not lie in
-/// a common quaternion subalgebra. A second absence is structural: `CsrMatrix<T>` in
-/// `deep_causality_sparse` stops at [`AbelianGroup`](crate::AbelianGroup) and carries none of the
-/// multiplicative markers.
+/// a common quaternion subalgebra. `DenseVector<T>` in `deep_causality_linear` is absent because
+/// it has no product of two vectors.
 ///
 /// For `f32`, `f64`, `BFloat16` and `Float106` the promise covers the finite values. See the scope note on
 /// [`Annihilating`](crate::Annihilating).
 ///
 /// # Why these are written out one by one
 ///
-/// This trait was once blanket-implemented over `Num`, which is unsealed: any downstream type
-/// implementing `Num` silently acquired this law without anyone promising it, and could then enter
+/// A blanket impl over `Num`, which is unsealed, would hand this law to any downstream type
+/// implementing `Num` without anyone promising it, and that type could then enter
 /// `CommutativeRing` and `Field` on a claim nobody made. A marker whose whole purpose is to record
 /// an unverifiable promise cannot be handed out by inference.
 ///

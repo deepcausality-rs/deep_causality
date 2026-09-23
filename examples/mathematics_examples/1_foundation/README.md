@@ -1,11 +1,11 @@
 # Foundation: the vocabulary, one crate at a time
 
-The layer under everything else. Two folders teach the towers that the rest of the workspace
-is built from, and eight show the API surface of a single crate each.
+Two folders teach the towers the rest of the workspace builds on; eight show the API surface
+of one crate each.
 
-Start here to learn what a bound promises, what a trait buys, or what one crate can do.
+Start here to learn what a bound promises, what a trait provides, or what one crate does.
 [2_composition](../2_composition/) uses this vocabulary to cross crate boundaries, and
-[3_applications](../3_applications/) puts whole use cases on top.
+[3_applications](../3_applications/) builds whole use cases on top.
 
 Run any example from the repository root:
 
@@ -25,25 +25,25 @@ generic in its scalar.
 
 ## One crate at a time
 
-Each of these uses a single crate and shows what it offers, and what each operation returns.
+Each folder uses a single crate and shows what each operation returns.
 
 | Folder | Crate | What it covers |
 |---|---|---|
 | [calculus](calculus/) | `deep_causality_calculus` | differentiation by forward-mode AD, quadrature, time integrators |
 | [fft](fft/) | `deep_causality_fft` | plan-based FFT, rFFT, and the Hermitian half-spectrum |
-| [linear](linear/) | `deep_causality_linear` | sparse CSR matrices and their operations |
+| [linear](linear/) | `deep_causality_linear` | sparse CSR and dense matrices and their operations |
 | [multivector](multivector/) | `deep_causality_multivector` | geometric algebra: multivectors, fields, the matrix isomorphism |
 | [num](num/) | `deep_causality_num`, `deep_causality_num_complex` | the four scalars and the precision boundary; 𝔽₂; the Cayley-Dickson ladder |
 | [stats](stats/) | `deep_causality_stats` | moments, correlation, and the shaped distributions |
 | [tensor](tensor/) | `deep_causality_tensor` | N-index tensors, broadcasting, Einstein summation |
 | [topology](topology/) | `deep_causality_topology` | graphs, complexes, manifolds, boundary operators |
 
-`deep_causality_num` has a folder's worth of presence in every one of them: the `FloatType`
-alias at the top of each file, and the `lift` / `lower` pair at its boundaries.
+`deep_causality_num` appears in every one of them: the `FloatType` alias at the top of each
+file, and the `lift` / `lower` pair at its boundaries.
 
 ## House rules
 
-Every example here follows four:
+Every example here follows four rules:
 
 1. **Precision is a parameter.** One `FloatType` alias, directly above `main`, threaded through
    every numerical site.

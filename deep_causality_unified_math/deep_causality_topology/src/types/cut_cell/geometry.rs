@@ -306,11 +306,9 @@ pub(super) fn circle_in_rect_arc_len<R: RealField + FromPrimitive>(
     // circle crosses one of the four rectangle lines. Collecting those crossing angles and
     // testing one interior point per resulting interval is exact, with no resolution to tune.
     //
-    // This was a fixed 2048-point uniform sweep. A cell subtending less than one step, 2π/2048
-    // radians, could contain no sample at all and measured an arc length of exactly zero, so a
-    // genuinely cut cell recorded no cut-face fragment and the aperture-resolved no-slip stage
-    // dropped that wetted surface. Measured on a 1e-4 cell on the unit circle at polar angle
-    // 512.5·2π/2048, which is midway between two samples: the sweep returned 0.
+    // A uniform angular sweep cannot do this: a cell subtending less than one step contains no
+    // sample and measures an arc length of exactly zero, so a genuinely cut cell records no
+    // cut-face fragment and the aperture-resolved no-slip stage drops that wetted surface.
     let two_pi = R::pi() * (R::one() + R::one());
     let mut breaks: Vec<R> = Vec::with_capacity(10);
     breaks.push(R::zero());

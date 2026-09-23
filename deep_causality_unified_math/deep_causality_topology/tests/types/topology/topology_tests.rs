@@ -179,8 +179,8 @@ fn test_topology_cup_product_tolerates_a_complex_missing_a_face() {
     // body skips a split whose partner is not in the complex rather than failing, and that skip is
     // load-bearing elsewhere: on a lattice complex with a non-periodic axis, the cells at the
     // boundary genuinely have no partner and must contribute zero rather than raise. Inheriting the
-    // generic body means inheriting that tolerance, so a malformed simplicial complex now yields
-    // zeros where it used to error.
+    // generic body means inheriting that tolerance, so a malformed simplicial complex yields
+    // zeros rather than an error.
     //
     // The trade is deliberate. Nothing in this crate constructs such a complex; `SimplicialComplex`
     // builds its skeletons from its facets, so the missing face here had to be assembled by hand.

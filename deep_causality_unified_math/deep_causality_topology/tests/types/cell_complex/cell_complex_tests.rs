@@ -121,9 +121,8 @@ fn test_compute_boundary_matrix_k_zero() {
     let complex = CellComplex::from_cells(cells);
 
     // ∂₀ maps C₀ into a group with no generators, so it has no rows — and one column per 0-cell,
-    // because those cells exist. This asserted `(0, 0)` until the degenerate grades were given the
-    // shape their dimension implies; an empty matrix here breaks `cols(∂₀) == rows(∂₁)` and makes
-    // the `∂∘∂ = 0` composite unformable at the bottom of the complex.
+    // because those cells exist. A `(0, 0)` matrix here would break `cols(∂₀) == rows(∂₁)` and
+    // leave the `∂∘∂ = 0` composite unformable at the bottom of the complex.
     let bdry = complex.compute_boundary_matrix(0);
     assert_eq!(
         bdry.shape(),

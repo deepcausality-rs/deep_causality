@@ -23,7 +23,6 @@ fn test_carnot_efficiency_zero_hot_reservoir() {
     let tc = Temperature::<f64>::new(0.0).unwrap();
 
     let result = carnot_efficiency_kernel(th, tc);
-    assert!(result.is_err());
     match result.unwrap_err().0 {
         PhysicsErrorEnum::ZeroKelvinViolation => {}
         e => panic!("Expected ZeroKelvinViolation, got {e:?}"),
@@ -44,7 +43,6 @@ fn test_partition_function_non_finite_beta() {
     let energies = CausalTensor::new(vec![1.0_f64, 2.0, 3.0], vec![3]).unwrap();
 
     let result = partition_function_kernel(&energies, temp);
-    assert!(result.is_err());
     match result.unwrap_err().0 {
         PhysicsErrorEnum::NumericalInstability(_) => {}
         e => panic!("Expected NumericalInstability (non-finite beta), got {e:?}"),
@@ -68,7 +66,6 @@ fn test_partition_function_non_finite_z_overflow() {
     let energies = CausalTensor::new(vec![-1.0e30_f64; n], vec![n]).unwrap();
 
     let result = partition_function_kernel(&energies, temp);
-    assert!(result.is_err());
     match result.unwrap_err().0 {
         PhysicsErrorEnum::NumericalInstability(_) => {}
         e => panic!("Expected NumericalInstability (non-finite Z), got {e:?}"),

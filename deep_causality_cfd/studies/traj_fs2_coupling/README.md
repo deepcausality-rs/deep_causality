@@ -11,8 +11,8 @@ cargo run --release -p deep_causality_cfd --example traj_fs2_coupling
 
 **What it tests.** Gap-3 Resolution-3, de-risking item ③, which is the corridor's standing
 `[open]`: "coupling Bars 2T to non-conformal external forcing is a research move, not textbook".
-The thesis under test is that you do **not** need to express aero inside the conformal or
-regularised algebra. Split the step instead: an exact inverse-square core, the FS-1 generator, here
+The thesis under test: aero need **not** be expressed inside the conformal or regularised
+algebra. Split the step instead: an exact inverse-square core, the FS-1 generator, here
 exact Kepler drift, plus a between-step perturbation **kick applied in physical Cartesian
 velocity**. If the symmetric Strang composition is 2nd-order accurate and its error vanishes with
 the perturbation, the `[open]` concern dissolves.
@@ -35,14 +35,14 @@ Orbit period 5876.0 s, `k = 1.0e-6/s`, giving `ε = |a_aero|/|a_grav| = 9.301e-4
 
 - **G1: the split is 2nd-order.** Observed order on the finest pair is **2.000**.
 - **G2: the error vanishes with the perturbation.** At N = 200, shrinking `ε` by 10× drops the split
-  error from 2.754e0 to 2.756e-1 m, a clean **10.0×**. As `ε` goes to 0 the exact Kepler drift is
+  error from 2.754e0 to 2.756e-1 m, a factor of **10.0×**. As `ε` goes to 0 the exact Kepler drift is
   the whole answer.
 - **G3: a moderate macro-step tracks the reference.** Relative accuracy at N = 200 is
   `|error|/a = 3.913e-7`.
 
 **Conclusion.** Non-conformal aero rides a between-step Cartesian kick at 2nd order with the
 inverse-square core left an untouched exact matrix exponential. The `[open]` concern **dissolves**:
-you split in physical space, Encke/Strang, and you do not express aero in the conformal algebra.
+the step splits in physical space (Encke/Strang) and aero stays outside the conformal algebra.
 B1's perturbation factoring holds, and Resolution 1 simplifies, since a physical-space split
 replaces a hand-set conformal-coupling law. Analysis:
 `openspec/notes/archive/cfd-plasma-blackout/gap-3/gap-three-resolution-3-trajectory-axis.md`.

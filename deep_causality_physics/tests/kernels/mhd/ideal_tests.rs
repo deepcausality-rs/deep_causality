@@ -6,7 +6,8 @@
 use deep_causality_linear::CsrMatrix;
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_physics::{
-    Density, PhysicalField, alfven_speed_kernel, ideal_induction_kernel, magnetic_pressure_kernel,
+    Density, PhysicalField, PhysicsErrorEnum, alfven_speed_kernel, ideal_induction_kernel,
+    magnetic_pressure_kernel,
 };
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
@@ -41,18 +42,79 @@ fn test_alfven_speed() {
 }
 
 #[test]
+fn test_alfven_speed_matches_physical_reference() {
+    // The fixture above sets mu0 = rho = 1, where the permeability is the multiplicative
+    // identity and therefore invisible: a kernel that dropped mu0, squared it, or inverted it
+    // returns 1 all the same. These inputs are physical, so mu0 has to be in the right place.
+    //
+    // Provenance: v_A = B / √(mu0 rho) evaluated from CODATA 2022 mu0 at B = 1 T and
+    // rho = 1e-7 kg/m³.
+    //
+    // Cross-checked against the NRL Plasma Formulary's practical form,
+    // v_A = 2.18e11 · mu^-1/2 · n_i^-1/2 · B cm/s (B in gauss, n_i in cm⁻³), which gives
+    // 2.8194e6 m/s for a hydrogen plasma at this mass density — agreement to 5.5e-4, the
+    // rounding of NRL's three-digit coefficient.
+    const V_A: f64 = 2_820_947.917_925_010_4;
+    const MU_0: f64 = 1.256_637_061_27e-6;
+
+    let b_vec = CausalMultiVector::new(vec![0.0, 1.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap();
+    let b_field = PhysicalField::<f64>::new(b_vec);
+    let rho = Density::<f64>::new(1.0e-7).unwrap();
+
+    let va = alfven_speed_kernel(&b_field, &rho, MU_0).unwrap();
+    assert!(
+        (va.value() - V_A).abs() / V_A < 1e-12,
+        "v_A = {}, expected {V_A}",
+        va.value()
+    );
+
+    // v_A ∝ B / √rho. Quadrupling the density halves the speed; the pinned value above fixes
+    // one point but cannot distinguish √rho from rho.
+    let denser = Density::<f64>::new(4.0e-7).unwrap();
+    let va_dense = alfven_speed_kernel(&b_field, &denser, MU_0).unwrap();
+    assert!(
+        (va_dense.value() - 0.5 * V_A).abs() / V_A < 1e-12,
+        "4x density gave {}, expected {}",
+        va_dense.value(),
+        0.5 * V_A
+    );
+}
+
+#[test]
 fn test_alfven_speed_errors() {
     let b_vec = CausalMultiVector::new(vec![0.0, 1.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap();
     let b_field = PhysicalField::<f64>::new(b_vec);
     let rho_valid = Density::<f64>::new(1.0).unwrap();
 
     // Permeability error
-    assert!(alfven_speed_kernel(&b_field, &rho_valid, 0.0).is_err());
-    assert!(alfven_speed_kernel(&b_field, &rho_valid, -1.0).is_err());
+    assert!(
+        matches!(
+            alfven_speed_kernel(&b_field, &rho_valid, 0.0)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            alfven_speed_kernel(&b_field, &rho_valid, -1.0)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 
     // Density error (zero)
     let rho_zero = Density::<f64>::new_unchecked(0.0);
-    assert!(alfven_speed_kernel(&b_field, &rho_zero, 1.0).is_err());
+    assert!(
+        matches!(
+            alfven_speed_kernel(&b_field, &rho_zero, 1.0).unwrap_err().0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
+    );
 }
 
 #[test]
@@ -63,7 +125,13 @@ fn test_alfven_speed_negative_density_error() {
     let b_vec = CausalMultiVector::new(vec![0.0, 1.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap();
     let b_field = PhysicalField::<f64>::new(b_vec);
     let rho_neg = Density::<f64>::new_unchecked(-1.0);
-    assert!(alfven_speed_kernel(&b_field, &rho_neg, 1.0).is_err());
+    assert!(
+        matches!(
+            alfven_speed_kernel(&b_field, &rho_neg, 1.0).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -79,20 +147,61 @@ fn test_magnetic_pressure() {
 }
 
 #[test]
+fn test_magnetic_pressure_matches_physical_reference() {
+    // As with the Alfven speed above, the fixture that precedes this one leaves mu0 = 1, where
+    // a missing, squared or inverted permeability cannot change the answer.
+    //
+    // Provenance: p_B = B²/(2 mu0) evaluated from CODATA 2022 mu0. At B = 1 T this is the
+    // standard textbook figure of ~3.98e5 Pa, about four atmospheres.
+    const MU_0: f64 = 1.256_637_061_27e-6;
+    const P_B_1T: f64 = 397_887.357_782_272_5;
+    const P_B_5T: f64 = 9_947_183.944_556_812;
+
+    let one_tesla = PhysicalField::<f64>::new(
+        CausalMultiVector::new(vec![0.0, 1.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap(),
+    );
+    let p1 = magnetic_pressure_kernel(&one_tesla, MU_0).unwrap();
+    assert!(
+        (p1.value() - P_B_1T).abs() / P_B_1T < 1e-12,
+        "p_B(1 T) = {}, expected {P_B_1T}",
+        p1.value()
+    );
+
+    // Quadratic in B: five tesla is twenty-five times the pressure, not five.
+    let five_tesla = PhysicalField::<f64>::new(
+        CausalMultiVector::new(vec![0.0, 5.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap(),
+    );
+    let p5 = magnetic_pressure_kernel(&five_tesla, MU_0).unwrap();
+    assert!(
+        (p5.value() - P_B_5T).abs() / P_B_5T < 1e-12,
+        "p_B(5 T) = {}, expected {P_B_5T}",
+        p5.value()
+    );
+    assert!(
+        (p5.value() / p1.value() - 25.0).abs() < 1e-9,
+        "p_B(5 T)/p_B(1 T) = {}, expected 25",
+        p5.value() / p1.value()
+    );
+}
+
+#[test]
 fn test_magnetic_pressure_error() {
     let b_vec = CausalMultiVector::new(vec![0.0, 2.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap();
     let b_field = PhysicalField::<f64>::new(b_vec);
-    assert!(magnetic_pressure_kernel(&b_field, 0.0).is_err());
+    assert!(
+        matches!(
+            magnetic_pressure_kernel(&b_field, 0.0).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
 fn test_ideal_induction_refuses_a_2d_complex_from_real_geometry() {
-    // This test asserted `is_ok()` until the silent skips were removed, and it was never able to
-    // see anything: `create_dummy_manifold` is a single triangle in a 2D ambient space filled with
-    // `0.0` at every simplex, so the kernel's answer was zero whether or not the algebra was right.
-    // Two silent-default idioms kept the shape error invisible — `if col < vector.len()` in the
-    // CSR product, and `.get(i).unwrap_or(&zero)` in the wedge — and the all-zero data made the
-    // truncated result indistinguishable from the correct one.
+    // `create_dummy_manifold` is a single triangle in a 2D ambient space filled with `0.0` at
+    // every simplex, so an assertion on its value would hold whatever the algebra did. What is
+    // pinned here is the refusal instead.
     //
     // The kernel is 3D-only: `i_v B = *(v ^ *B)` applies `*` on 2-forms and on `(n-1)`-forms as a
     // single operator, which holds only at `n = 3`. A triangle is 2D, so the refusal is correct.
@@ -137,7 +246,13 @@ fn test_ideal_induction_dimension_error() {
     .unwrap();
 
     let res = ideal_induction_kernel(&m, &m);
-    assert!(res.is_err());
+    assert!(
+        matches!(
+            res.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 // =============================================================================
@@ -191,13 +306,9 @@ fn fixture_manifold(complex: SimplicialComplex<f64>) -> SimplicialManifold<f64, 
 
 #[test]
 fn test_ideal_induction_refuses_a_2d_complex_carrying_no_two_form_star() {
-    // **The subject of this test no longer exists.** It was written when the kernel read
-    // `hodge_star_operators()[2]` and pinned the message for a complex that did not carry one.
-    // Since task 6.7u the kernel does not consult the Hodge star at all — the contraction is
-    // Whitney interpolation — so there is no missing-⋆₂ branch to reach.
-    //
-    // The fixture is kept because it still pins something: a 2D complex is refused by the
-    // dimension guard, whatever operators it carries or does not carry.
+    // A 2D complex is refused by the dimension guard whatever Hodge ⋆ operators it carries or
+    // omits. The kernel never consults the Hodge star — the contraction is Whitney interpolation
+    // — so a complex missing ⋆₂ is refused for its dimension, not for the missing operator.
     let complex = SimplicialComplex::new(
         skeletons_of(&[&[0, 1], &[0, 2], &[1, 2]], &[&[0, 1, 2]]),
         vec![],
@@ -206,8 +317,8 @@ fn test_ideal_induction_refuses_a_2d_complex_carrying_no_two_form_star() {
     );
     let m = fixture_manifold(complex);
 
-    // 2D fixture: the kernel is 3D-only, so the dimension guard answers before the
-    // branch this test was written for. It pinned the missing-⋆₂ message, which is now unreachable from a 2D complex.
+    // 2D fixture: the kernel is 3D-only, so the dimension guard answers first, whatever
+    // operators the complex carries.
     let msg = format!("{}", ideal_induction_kernel(&m, &m).unwrap_err());
     assert!(
         msg.contains("needs a 3D complex"),
@@ -228,8 +339,8 @@ fn test_ideal_induction_rejects_missing_coboundary_operator() {
     );
     let m = fixture_manifold(complex);
 
-    // 2D fixture: the kernel is 3D-only, so the dimension guard answers before the
-    // branch this test was written for. It pinned the missing-d₁ message, which is now unreachable from a 2D complex.
+    // 2D fixture: the kernel is 3D-only, so the dimension guard answers first, whatever
+    // operators the complex carries.
     let msg = format!("{}", ideal_induction_kernel(&m, &m).unwrap_err());
     assert!(
         msg.contains("needs a 3D complex"),
@@ -239,13 +350,12 @@ fn test_ideal_induction_rejects_missing_coboundary_operator() {
 
 #[test]
 fn test_ideal_induction_refuses_a_2d_triangle_with_hand_built_operators() {
-    // A 2D fixture. The kernel is 3D-only, so the dimension guard now answers first
-    // and this fixture can no longer reach the branch it was written for.
-    // It pinned dtB = 1.0 for the well-formed triangle with hand-built (3,1) operators.
-    // The same property is covered in-domain by the tetrahedron fixtures below.
-
-    // What it formerly asserted, kept as the record of the 2D convention it encoded.
-    // Note the fixture's ⋆₂ is (3, 1), which on a triangle is ambiguous between faces→edges
+    // A 2D fixture with hand-built (3, 1) operators. The kernel is 3D-only, so the dimension
+    // guard answers first; the induction itself is covered in-domain by the tetrahedron fixtures
+    // below.
+    //
+    // The arithmetic below records the 2D convention this fixture encodes. Its ⋆₂ is (3, 1),
+    // which on a triangle is ambiguous between faces→edges
     // (the 3D reading this kernel wants) and faces→vertices (the correct 2D one), because
     // n0 = n1 = 3. That ambiguity is why the wrong convention went unnoticed here.
     //   ∂ₜB = d(⋆(v ∧ ⋆B)) with the fixture operators:
@@ -270,10 +380,9 @@ fn test_ideal_induction_refuses_a_2d_triangle_with_hand_built_operators() {
 
 #[test]
 fn test_ideal_induction_refuses_a_2d_complex_with_a_non_triangular_face() {
-    // A 2D fixture. The kernel is 3D-only, so the dimension guard now answers first
-    // and this fixture can no longer reach the branch it was written for.
-    // It pinned that a 4-vertex 2-skeleton entry contributes zero to the wedge.
-    // The same property is covered in-domain by the tetrahedron fixtures below.
+    // A 2D fixture. The kernel is 3D-only, so the dimension guard answers first. The property
+    // the geometry below describes — that a 4-vertex 2-skeleton entry contributes zero to the wedge — is
+    // covered in-domain by the tetrahedron fixtures further down.
 
     // The wedge of two 1-forms is defined on triangles. A 2-skeleton entry with
     // four vertices carries no such value, so it contributes zero to v ∧ ⋆B and
@@ -295,10 +404,9 @@ fn test_ideal_induction_refuses_a_2d_complex_with_a_non_triangular_face() {
 
 #[test]
 fn test_ideal_induction_refuses_a_2d_complex_with_an_absent_boundary_edge() {
-    // A 2D fixture. The kernel is 3D-only, so the dimension guard now answers first
-    // and this fixture can no longer reach the branch it was written for.
-    // It pinned that a face whose [v1,v2] edge is absent contributes zero.
-    // The same property is covered in-domain by the tetrahedron fixtures below.
+    // A 2D fixture. The kernel is 3D-only, so the dimension guard answers first. The property
+    // the geometry below describes — that a face whose [v1,v2] edge is absent contributes zero — is
+    // covered in-domain by the tetrahedron fixtures further down.
 
     // The cup product reads α on [v0,v1] and β on [v1,v2]. Here edge [1,2] is
     // absent from the 1-skeleton, so the face [0,1,2] has no [v1,v2] slot to
@@ -319,13 +427,12 @@ fn test_ideal_induction_refuses_a_2d_complex_with_an_absent_boundary_edge() {
 }
 
 // =============================================================================
-// The hand-built star-wedge fixtures that used to live here are gone.
+// Why there are no hand-built star-wedge fixtures here.
 //
-// They supplied a degree-changing `⋆₂` of shape (6, 4) — an operator the crate never vends — so
-// that the old `∂ₜB = d(⋆(v ∧ ⋆B))` chain could be exercised at all. With the contraction moved
-// onto `Manifold::interior_product` (task 6.7u) the kernel reads no Hodge star, and a fixture
-// asserting a hand-evaluated result of that chain would be pinning a formulation rather than the
-// physics. What replaces them is below: real coordinates, and a closed form to check against.
+// The kernel reads no Hodge star: the contraction is `Manifold::interior_product`, Whitney
+// interpolation on real geometry. A hand-built fixture supplying a degree-changing `⋆₂` of shape
+// (6, 4) — an operator the crate never vends — would pin a formulation rather than the physics.
+// The fixtures below use real coordinates and a closed form to check against.
 // =============================================================================
 
 // =============================================================================
@@ -470,9 +577,6 @@ fn test_a_uniform_field_in_a_uniform_flow_does_not_change() {
     // zero on every face. So `∂ₜB = 0` — **exactly**, not to a tolerance, because Whitney
     // interpolation reproduces constant fields without error.
     //
-    // This is the test the old hand-built fixture could not be: its `⋆₂` was an operator the crate
-    // never vends, so its hand-evaluated expectation described a formulation rather than the
-    // physics.
     for (tets, coords) in [unit_tet(), two_tets()] {
         for (v, b) in [
             ([1.0, 0.0, 0.0], [0.0, 1.0, 0.0]),
@@ -644,12 +748,7 @@ fn test_ideal_induction_is_linear_in_the_magnetic_field() {
 
 #[test]
 fn test_ideal_induction_refuses_a_complex_without_geometry() {
-    // **What this replaces.** The test here used to hand the kernel the `(4, 4)` diagonal star the
-    // crate actually vends and pin the refusal, because the kernel needed a degree-changing
-    // `(6, 4)` one. That refusal is gone with the star: the contraction no longer reads
-    // `hodge_star_operators` at all, which is the point of task 6.7u.
-    //
-    // The refusal that replaces it is the one the new formulation actually has. Whitney
+    // Whitney
     // interpolation is geometric, so a complex built without coordinates cannot be contracted on,
     // and the kernel says so rather than inventing any.
     let (tets, coords) = unit_tet();

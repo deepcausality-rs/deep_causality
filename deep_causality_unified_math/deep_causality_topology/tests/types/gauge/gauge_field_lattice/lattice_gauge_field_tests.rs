@@ -10,8 +10,9 @@
 
 use deep_causality_num_complex::Complex;
 use deep_causality_topology::{
-    CellularComplex, LatticeComplex, LatticeGaugeField, LinkVariable, U1,
+    CellularComplex, ChainComplex, LatticeCell, LatticeComplex, LatticeGaugeField, LinkVariable, U1,
 };
+use std::collections::HashMap;
 use std::sync::Arc;
 
 // ============================================================================
@@ -153,8 +154,7 @@ fn test_lattice_gauge_field_links() {
     let lattice = create_test_lattice();
     let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
         LatticeGaugeField::identity(lattice, 6.0);
-    let links = field.links();
-    assert!(!links.is_empty());
+    assert_eq!(field.num_links(), field.lattice().cells(1).count());
 }
 
 #[test]
@@ -169,6 +169,119 @@ fn test_lattice_gauge_field_set_link() {
         field.set_link(edges[0].clone(), new_link);
         assert!(field.link(&edges[0]).is_some());
     }
+}
+
+/// Every base position in the shape, row-major (last axis fastest).
+fn all_positions<const D: usize>(shape: [usize; D]) -> Vec<[usize; D]> {
+    let total: usize = shape.iter().product();
+    (0..total)
+        .map(|mut site| {
+            let mut pos = [0usize; D];
+            for d in (0..D).rev() {
+                pos[d] = site % shape[d];
+                site /= shape[d];
+            }
+            pos
+        })
+        .collect()
+}
+
+/// `set_link` on every candidate `(position, direction)` of the shape stores exactly the
+/// lattice's edges: a candidate leaving the lattice across a non-periodic axis is ignored.
+fn assert_set_link_stores_only_lattice_edges<const D: usize>(
+    shape: [usize; D],
+    periodic: [bool; D],
+) {
+    let lattice = Arc::new(LatticeComplex::<D, f64>::new(shape, periodic));
+    let edges: std::collections::HashSet<LatticeCell<D>> = lattice.cells(1).collect();
+    let phase: LinkVariable<U1, Complex<f64>, f64> = LinkVariable::from_phase(0.7);
+
+    for pos in all_positions(shape) {
+        for mu in 0..D {
+            let candidate = LatticeCell::edge(pos, mu);
+            let mut field: LatticeGaugeField<U1, D, Complex<f64>, f64> =
+                LatticeGaugeField::identity(lattice.clone(), 6.0);
+            field.set_link(candidate.clone(), phase.clone());
+
+            assert_eq!(
+                field.num_links(),
+                edges.len(),
+                "set_link({candidate:?}) changed the link count on {shape:?} {periodic:?}"
+            );
+            assert_eq!(
+                field.link(&candidate).is_some(),
+                edges.contains(&candidate),
+                "{candidate:?} on {shape:?} {periodic:?}"
+            );
+            if edges.contains(&candidate) {
+                let stored = field.link(&candidate).map(|l| l.as_slice()[0]);
+                assert_eq!(stored, Some(phase.as_slice()[0]));
+            }
+        }
+    }
+}
+
+#[test]
+fn test_set_link_ignores_edges_leaving_open_boundaries() {
+    assert_set_link_stores_only_lattice_edges([3, 4], [false, false]);
+    assert_set_link_stores_only_lattice_edges([3, 4], [true, false]);
+    assert_set_link_stores_only_lattice_edges([3, 4], [false, true]);
+    assert_set_link_stores_only_lattice_edges([2, 3, 4], [false, true, false]);
+}
+
+#[test]
+fn test_try_from_links_rejects_key_that_is_not_an_edge() {
+    // Open along axis 0 only: [3, 1] is the last site on axis 0, so its axis-0 edge would leave
+    // the lattice.
+    let lattice: Arc<LatticeComplex<2, f64>> = Arc::new(LatticeComplex::new([3, 4], [false, true]));
+    let edges: Vec<LatticeCell<2>> = lattice.cells(1).collect();
+    let full: HashMap<_, LinkVariable<U1, Complex<f64>, f64>> = edges
+        .iter()
+        .map(|e| (e.clone(), LinkVariable::identity()))
+        .collect();
+
+    let replacements = [
+        LatticeCell::edge([2, 1], 0), // leaves the lattice across the open axis
+        LatticeCell::edge([5, 1], 1), // position outside the shape
+        LatticeCell::vertex([1, 1]),  // a 0-cell
+    ];
+    for bogus in replacements {
+        let mut links = full.clone();
+        links.remove(&edges[3]);
+        links.insert(bogus.clone(), LinkVariable::identity());
+        assert_eq!(links.len(), lattice.num_cells(1));
+
+        let result: Result<LatticeGaugeField<U1, 2, Complex<f64>, f64>, _> =
+            LatticeGaugeField::try_from_links(lattice.clone(), links, 1.0);
+        assert!(result.is_err(), "accepted a map keyed by {bogus:?}");
+    }
+
+    let result: Result<LatticeGaugeField<U1, 2, Complex<f64>, f64>, _> =
+        LatticeGaugeField::try_from_links(lattice.clone(), full, 1.0);
+    let field = result.expect("a map keyed by exactly the lattice's edges is accepted");
+    assert_eq!(field.num_links(), lattice.num_cells(1));
+}
+
+#[test]
+fn test_link_iteration_order_is_site_major() {
+    // Non-square and mixed periodicity, so row-major and column-major orders differ and the
+    // open axis drops its last-site edges.
+    let shape = [2, 3];
+    let lattice: Arc<LatticeComplex<2, f64>> = Arc::new(LatticeComplex::new(shape, [true, false]));
+    let field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::identity(lattice.clone(), 6.0);
+
+    let expected: Vec<LatticeCell<2>> = all_positions(shape)
+        .into_iter()
+        .flat_map(|pos| (0..2).map(move |mu| LatticeCell::edge(pos, mu)))
+        .filter(|e| !(e.orientation() == 2 && e.position()[1] == 2))
+        .collect();
+
+    assert_eq!(field.link_cells(), expected);
+    let iterated: Vec<LatticeCell<2>> = field.iter_links().map(|(c, _)| c).collect();
+    assert_eq!(iterated, expected);
+    // The documented difference from the complex's own direction-major order.
+    assert_ne!(expected, lattice.cells(1).collect::<Vec<_>>());
 }
 
 // ============================================================================
@@ -871,4 +984,74 @@ fn test_lattice_gauge_field_with_source_transforms_type() {
     let attached: LatticeGaugeField<U1, 2, Complex<f64>, f64, i32> = field.with_source(123);
     assert_eq!(*attached.source(), 123);
     assert!((*attached.beta() - 2.0_f64).abs() < 1e-12);
+}
+
+#[test]
+fn test_four_by_four_group_supports_random_start_sweep_smearing_and_flow() {
+    use deep_causality_stats::Xoshiro256;
+    use deep_causality_topology::{FlowMethod, FlowParams, SO3_1, SmearingParams};
+
+    let lattice = create_test_lattice();
+    let mut rng = Xoshiro256::from_seed(3);
+    let mut field: LatticeGaugeField<SO3_1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::try_random(lattice, 6.0, &mut rng).expect("hot start for a 4x4 group");
+
+    let rate = field
+        .try_metropolis_sweep(0.2, &mut rng)
+        .expect("sweep for a 4x4 group");
+    assert!((0.0..=1.0).contains(&rate));
+
+    let smeared = field
+        .try_smear(&SmearingParams::ape_default())
+        .expect("smearing for a 4x4 group");
+    let params = FlowParams {
+        epsilon: 0.01,
+        t_max: 0.02,
+        method: FlowMethod::RungeKutta3,
+    };
+    let flowed = smeared.try_flow(&params).expect("flow for a 4x4 group");
+
+    // Every link stays in SU(4): U†U = I and det U = 1.
+    for (_, u) in flowed.iter_links() {
+        let udu = u.dagger().mul(u);
+        for i in 0..4 {
+            for j in 0..4 {
+                let want = if i == j { 1.0 } else { 0.0 };
+                assert!((udu.as_slice()[i * 4 + j] - Complex::new(want, 0.0)).norm() < 1e-9);
+            }
+        }
+        assert!((u.determinant() - Complex::new(1.0, 0.0)).norm() < 1e-9);
+    }
+}
+
+#[test]
+fn test_gauge_transform_uses_one_element_per_site() {
+    use deep_causality_stats::Xoshiro256;
+    use std::cell::Cell;
+
+    // A closure that returns a different element on every call. A gauge transformation must
+    // still use one element per site, or plaquettes change.
+    let lattice: Arc<LatticeComplex<2, f64>> = Arc::new(LatticeComplex::new([3, 4], [true, true]));
+    let mut rng = Xoshiro256::from_seed(9);
+    let mut field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::try_random(lattice, 6.0, &mut rng).unwrap();
+    let before: Vec<Complex<f64>> = (0..3)
+        .flat_map(|x| (0..4).map(move |y| [x, y]))
+        .map(|site| field.try_plaquette(&site, 0, 1).unwrap().as_slice()[0])
+        .collect();
+
+    let calls = Cell::new(0usize);
+    field.gauge_transform(|_site| {
+        calls.set(calls.get() + 1);
+        LinkVariable::from_phase(0.37 * calls.get() as f64)
+    });
+
+    assert_eq!(calls.get(), 12, "one call per site");
+    for (k, site) in (0..3).flat_map(|x| (0..4).map(move |y| [x, y])).enumerate() {
+        let after = field.try_plaquette(&site, 0, 1).unwrap().as_slice()[0];
+        assert!(
+            (after - before[k]).norm() < 1e-12,
+            "plaquette at {site:?} changed"
+        );
+    }
 }

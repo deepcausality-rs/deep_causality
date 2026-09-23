@@ -7,7 +7,7 @@
 //! perturbed velocity to the surface, the projection is the *nearest* point (the removed component is
 //! along the constraint gradient), and the zero-position rejection.
 
-use deep_causality_physics::{ks_bilinear_residual, ks_project_velocity};
+use deep_causality_physics::{PhysicsErrorEnum, ks_bilinear_residual, ks_project_velocity};
 
 // A KS state (u, w) that already satisfies b(u, w) = 0 by construction: pick u freely and pick w in the
 // constraint's null space. g = (u4, −u3, u2, −u1); any w orthogonal to g satisfies b = 0. Take w = u
@@ -86,5 +86,13 @@ fn projection_is_the_nearest_point() {
 
 #[test]
 fn rejects_zero_position() {
-    assert!(ks_project_velocity([0.0; 4], [1.0, 2.0, 3.0, 4.0]).is_err());
+    assert!(
+        matches!(
+            ks_project_velocity([0.0; 4], [1.0, 2.0, 3.0, 4.0])
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
+    );
 }

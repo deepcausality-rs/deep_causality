@@ -3,15 +3,33 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::LarmorRadius;
+use deep_causality_physics::{LarmorRadius, PhysicsErrorEnum};
 
 #[test]
 fn test_larmor_radius() {
     let r = LarmorRadius::<f64>::new(1.0).unwrap();
     assert_eq!(r.value(), 1.0);
-    assert!(LarmorRadius::<f64>::new(0.0).is_err()); // Must be positive
-    assert!(LarmorRadius::<f64>::new(f64::NAN).is_err());
-    assert!(LarmorRadius::<f64>::new(f64::INFINITY).is_err());
+    assert!(
+        matches!(
+            LarmorRadius::<f64>::new(0.0).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    ); // Must be positive
+    assert!(
+        matches!(
+            LarmorRadius::<f64>::new(f64::NAN).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            LarmorRadius::<f64>::new(f64::INFINITY).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -28,6 +46,18 @@ fn test_larmor_radius_default() {
 
 #[test]
 fn test_larmor_radius_new_nan_error() {
-    assert!(LarmorRadius::<f64>::new(f64::NAN).is_err());
-    assert!(LarmorRadius::<f64>::new(f64::INFINITY).is_err());
+    assert!(
+        matches!(
+            LarmorRadius::<f64>::new(f64::NAN).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            LarmorRadius::<f64>::new(f64::INFINITY).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }

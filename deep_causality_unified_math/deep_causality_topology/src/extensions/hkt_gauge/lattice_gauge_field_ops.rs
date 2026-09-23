@@ -35,7 +35,7 @@ use std::sync::Arc;
 ///
 /// * `G` - Gauge group (U1, SU2, SU3, etc.)
 /// * `D` - Spacetime dimension
-/// * `M` - Matrix element type (TensorData)
+/// * `M` - Matrix element type
 #[derive(Debug, Clone, Copy, Default)]
 pub struct LatticeGaugeFieldOps<G: GaugeGroup, const D: usize, M>(PhantomData<(G, M)>);
 
@@ -63,11 +63,9 @@ impl<G: GaugeGroup, const D: usize, M> LatticeGaugeFieldOps<G, D, M> {
 //
 // What stops `Functor` is that `fmap` must rebuild each `LinkVariable<G, B, R>`, which
 // needs `B: Field + Copy + Default + PartialOrd + Debug`. The trait gives the body no
-// bound on `B` at all, so the body cannot do the arithmetic. An earlier version of this
-// note blamed the element marker the trait used to carry; that marker is gone, and its
-// removal changed nothing here, because an empty marker never granted a capability
-// either. The next-generation trait solver does not change it, measured on
-// `rustc 1.100.0-nightly (bff8e12ff 2026-08-26)`.
+// bound on `B` at all, so the body cannot do the arithmetic. An empty element marker on the
+// trait would not help either, since a marker grants no capability. The next-generation trait
+// solver does not change it, measured on `rustc 1.100.0-nightly (bff8e12ff 2026-08-26)`.
 //
 // The inherent methods below are therefore the right design rather than a stopgap: they
 // name the real bounds, which the compiler enforces and no downstream crate can forge.
@@ -113,8 +111,8 @@ impl<G: GaugeGroup, const D: usize, R: RealField + FromPrimitive + ToPrimitive>
         // map leaves alone, so it carries over unchanged.
         let beta = *field.beta();
 
-        let mut new_links = HashMap::with_capacity(field.links().len());
-        for (cell, link) in field.links().iter() {
+        let mut new_links = HashMap::with_capacity(field.num_links());
+        for (cell, link) in field.iter_links() {
             let new_link = map_link_variable::<G, A, B, R, F>(link, &mut f);
             new_links.insert(cell.clone(), new_link);
         }
@@ -162,9 +160,9 @@ impl<G: GaugeGroup, const D: usize, R: RealField + FromPrimitive + ToPrimitive>
         let beta = *field_a.beta();
 
         // Combine link variables
-        let mut new_links = HashMap::with_capacity(field_a.links().len());
-        for (cell, link_a) in field_a.links() {
-            let link_b = field_b.links().get(cell).ok_or_else(|| {
+        let mut new_links = HashMap::with_capacity(field_a.num_links());
+        for (cell, link_a) in field_a.iter_links() {
+            let link_b = field_b.link(&cell).ok_or_else(|| {
                 TopologyError::LatticeGaugeError(format!(
                     "Missing link for cell {:?} during zip_with",
                     cell
@@ -241,15 +239,10 @@ where
     F: FnMut(A) -> B,
     A: Debug,
 {
-    let n = G::matrix_dim();
-
     let old_data = link.as_slice();
     let new_data: Vec<B> = old_data.iter().map(|x| f(*x)).collect();
 
-    let tensor = deep_causality_tensor::CausalTensor::new(new_data, vec![n, n])
-        .unwrap_or_else(|_| panic!("LinkVariable fmap failed for {}x{} matrix", n, n));
-
-    LinkVariable::from_matrix_unchecked(tensor)
+    LinkVariable::from_matrix_unchecked(new_data)
 }
 
 /// Combine two LinkVariables element-wise using a binary function.
@@ -264,7 +257,6 @@ where
     F: FnMut(&T, &T) -> T,
     T: Debug,
 {
-    let n = G::matrix_dim();
     let data_a = link_a.as_slice();
     let data_b = link_b.as_slice();
 
@@ -274,10 +266,7 @@ where
         .map(|(a, b)| f(a, b))
         .collect();
 
-    let tensor = deep_causality_tensor::CausalTensor::new(new_data, vec![n, n])
-        .unwrap_or_else(|_| panic!("LinkVariable zip failed for {}x{} matrix", n, n));
-
-    LinkVariable::from_matrix_unchecked(tensor)
+    LinkVariable::from_matrix_unchecked(new_data)
 }
 
 // ============================================================================

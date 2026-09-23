@@ -21,23 +21,23 @@ A persistent, immutable, thread-safe tree data structure for the `deep_causality
 
 ## Overview
 
-This crate provides `ConstTree<T>`, a foundational Abstract Syntax Tree (AST) structure designed for efficiency and safety in concurrent environments. It is a persistent data structure, meaning that all modifications are non-destructive and return a new instance of the tree, sharing as much of the underlying data as possible with the original.
+This crate provides `ConstTree<T>`, an Abstract Syntax Tree (AST) structure for concurrent use. It is a persistent data structure: every modification is non-destructive and returns a new tree that shares as much of the underlying data as possible with the original.
 
-This copy-on-write behavior makes it highly efficient to pass trees around and create modified versions without incurring the cost of deep copies.
+Because of this copy-on-write behavior, passing trees around and creating modified versions costs no deep copies.
 
 ## Core Features
 
-*   **Persistent & Immutable**: Operations that "modify" the tree are non-destructive. They return a new, modified `ConstTree`, leaving the original unchanged.
-*   **Efficient Cloning**: `ConstTree` is built on `std::sync::Arc`. Cloning a tree is a cheap, constant-time operation that simply increments a reference count.
-*   **Thread-Safe**: It is `Send` and `Sync` (if `T` is `Send` and `Sync`), allowing it to be safely shared across threads without locks.
-*   **Rich API**: Includes a comprehensive API for construction, traversal, searching, and functional mapping.
+*   **Persistent & Immutable**: Operations that "modify" the tree return a new `ConstTree` and leave the original unchanged.
+*   **Cheap Cloning**: `ConstTree` is built on `std::sync::Arc`. Cloning a tree takes constant time: it increments a reference count.
+*   **Thread-Safe**: It is `Send` and `Sync` (if `T` is `Send` and `Sync`), so threads share it without locks.
+*   **API**: Construction, traversal, searching, and functional mapping.
     *   Multiple iteration strategies (pre-order, post-order, level-order, consuming).
     *   Consuming (`into_map`) and non-consuming (`map`) mapping methods.
     *   Monadic `join` method to flatten a `ConstTree<ConstTree<T>>`.
 
 ## Usage
 
-Here is a basic example of how to create and interact with a `ConstTree`.
+Create and use a `ConstTree`:
 
 ```rust
 use deep_causality_ast::ConstTree;

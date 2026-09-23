@@ -6,22 +6,21 @@
 
 # sliding_window
 
-This sliding window implementation over-allocates to trade space (memory) for time complexity by delaying expensive
-array copy operations.
-Specifically, for a sliding window of size N, the number of elements that can be hold without any array copy
-is approx C-1, where C is the total capacity defined as NxM with M as a multiple.
+The sliding window over-allocates memory to delay array copies, trading space for time.
+A window of size N holds about C-1 elements without an array copy, where the capacity C is N x M
+for a multiple M.
 
-For example, if the window size N is 7, and the multiple M is 7, then the max capacity C is 49 (7*7),
-means the sliding window can hold up to 48 elements before a rewind occurs.
+For example, a window size N of 7 and a multiple M of 7 give a capacity C of 49 (7*7),
+so the window holds up to 48 elements before a rewind copies the window to the start of the array.
 
-Two different implementations are available:
+Two implementations exist:
 
 1) Vector backed
 2) Array backed
 
 ## Vector backed implementation
 
-Take window size N and multiple M as arguments
+Takes the window size N and the multiple M as runtime arguments.
 
 See:
 
@@ -31,8 +30,8 @@ See:
 
 ## Array backed implementation
 
-Takes window size SIZE and a CAPACITY as generic parameters.
-This is because static arrays requiring const generics parameter.
+Takes the window size SIZE and the CAPACITY as const generic parameters, because a static array
+needs its length at compile time.
 
 See:
 
@@ -42,26 +41,26 @@ See:
 
 ## Configuration
 
-When N is reasonable small (1 ... 50), then only M determines the performance. In this case, a multiple of 100 to 1000,
-gives an additional 30% to 50% performance boost over a comparable small multiplier (2 to 10). However,
-when the total capacity exceeds a certain threshold, performance deteriorates significantly because of increased CPU
-cache misses. The exact threshold depends on the actual CPU cache size and CPU type.
+When N is small (1 ... 50), M alone determines performance. A multiple of 100 to 1000
+runs 30% to 50% faster than a small multiple (2 to 10). Above a threshold total capacity,
+performance drops sharply because CPU cache misses increase. The threshold depends on the CPU and its cache size.
 
-Therefore, it is generally recommended to run benchmarks with various configurations
-to determine the best total capacity based on N and M. When the window size N is known to be fixed,
-then it's best to run an optimizer to find the best value for M that maximizes total write throughput.
+Benchmark several configurations to find the best total capacity for your N and M. When N is fixed,
+run an optimizer to find the M that maximizes write throughput.
 
 ## Usage
 
-
-Important details:
-
-* ArrayStorage and VectorStorage have different signatures because only ArrayStorage requires const generics
-* Size refers to the maximum number of elements the sliding window can store.
-* Capacity refers to the maximum number of elements before a rewind occurs.
+* ArrayStorage and VectorStorage have different signatures because only ArrayStorage uses const generics.
+* Size is the maximum number of elements the sliding window holds.
+* Capacity is the maximum number of elements stored before a rewind.
 
 ```rust
-use dcl_data_structures::prelude::{ArrayStorage, SlidingWindow,sliding_window};
+use deep_causality_data_structures::{ArrayStorage, SlidingWindow, window_type};
+
+#[derive(Debug, Default, Copy, Clone, PartialEq)]
+struct Data {
+    dats: i32,
+}
 
 // Size refers to the maximum number of elements the sliding window can store.
 const SIZE: usize = 4;
@@ -73,7 +72,7 @@ const CAPACITY: usize = 1200;
 
 // Util function that helps with type inference.
 fn get_sliding_window() -> SlidingWindow<ArrayStorage<Data, SIZE, CAPACITY>, Data> {
-    sliding_window::new_with_array_storage()
+    window_type::new_with_array_storage()
 }
 
 pub fn main(){
@@ -158,8 +157,8 @@ Sequential Operations
 
 ## Technical Details
 - Sample size: 100 measurements per benchmark
-- Outliers properly detected and handled (2-8% outliers per benchmark)
-- All benchmarks were run with random access patterns to simulate real-world usage
+- Outliers detected and handled (2-8% outliers per benchmark)
+- All benchmarks use random access patterns
 
 
 ## Hardware & OS
@@ -171,60 +170,43 @@ Sequential Operations
 # Implementation Details
 
 **Memory Layout**
-* Contiguous stack memory allocation
-* Better cache line utilization
-* No heap allocation overhead
+* ArrayStorage stores the window in an inline `[T; CAPACITY]` array; it allocates nothing on the heap.
+* VectorStorage pre-allocates a `Vec` of size x multiple and aligns the struct to a 64-byte cache line.
 
-**Optimized Head Management**
-* Branchless head adjustment
-* Reduced CPU pipeline stalls
-* Better branch prediction
+**Head Management**
+* `push` writes at the tail and moves the head to `tail - size` once the window is filled.
+* When the tail reaches the capacity, a rewind moves the last `size` elements to the start with `copy_within`.
 
-**Direct Memory Access**
-* No safety abstractions overhead
-* Minimal pointer indirection 
+**Safe Rust**
+* Both storages use bounds-checked indexing and no `unsafe`.
 
 ## When to Use Each Implementation
 
 ### ArrayStorage
 
 ✅ Use When:
-* Safety is a primary concern 
-* Performance needs are moderate to high
-* Window size is fixed
-* Code maintainability is important
+* Window size and capacity are known at compile time
+* Heap allocation is unwanted
+* Throughput matters (faster in all three benchmarks above)
 
 ❌ Avoid When:
-* Dynamic sizing is required
-* Absolute maximum performance is needed
+* Window size is only known at runtime
 
 ### VectorStorage
 ✅ Use When:
-* Dynamic sizing is needed
-* Memory usage varies significantly
-* Code safety is critical
-* Flexibility is key
+* Window size or multiple is chosen at runtime
 
 ❌ Avoid When:
-* Fixed size windows are used
-* Performance is critical
-* Memory is constrained
+* Size and capacity are known at compile time
+* Every nanosecond per push counts
 
 
 ### Recommendation
-**Start with ArrayStorage**
-* Safe default choice
-* Good performance characteristics
-* Easy to maintain and debug
-
-**Use VectorStorage variants if:**
-Dynamic sizing is required
-Safety is more important than performance
-Memory usage patterns are unpredictable
+Start with ArrayStorage. Use VectorStorage when the window size is only known at runtime.
 
 ### Remember to benchmark with your specific use case:
 
-Performance can vary based on
+Performance depends on
 * Window size
 * Data types
 * Access patterns

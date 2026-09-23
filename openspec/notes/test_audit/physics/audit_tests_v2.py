@@ -100,7 +100,12 @@ def mask_non_code(source: str) -> str:
                 out[i] = " "
         elif state == "string":
             if ch == "\\" and i + 1 < len(source):
-                out[i] = out[i + 1] = " "
+                out[i] = " "
+                # A backslash before a newline is Rust's line continuation. Blanking that
+                # newline as well would shorten the mask by a line and shift every line
+                # number after it.
+                if source[i + 1] != "\n":
+                    out[i + 1] = " "
                 i += 2
                 continue
             if ch == '"':

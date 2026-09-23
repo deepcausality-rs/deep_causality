@@ -10,11 +10,15 @@
 use deep_causality_physics::{
     Acceleration, Area, Density, FlowBranch, Force, Length, Mass, Pressure, Temperature,
     choked_mass_flow, cordell_braun_plume_boundary, cordell_braun_plume_boundary_kernel,
-    ignition_altitude, inverse_area_mach, jarvinen_adams_baseline_axial_coefficient,
-    momentum_flux_ratio, nozzle_exit_state, prandtl_meyer, propellant_mass_flow,
-    srp_flow_regime_margin, srp_jet_edge_mach, srp_post_bow_shock_total_pressure,
-    srp_post_bow_shock_total_pressure_kernel, srp_preserved_drag_fraction, srp_terminal_shock_mach,
-    srp_thrust_coefficient, srp_total_axial_force_coefficient, stopping_distance,
+    ignition_altitude, inverse_area_mach, inverse_area_mach_kernel,
+    jarvinen_adams_baseline_axial_coefficient, jarvinen_adams_baseline_axial_coefficient_kernel,
+    momentum_flux_ratio, nozzle_exit_state, prandtl_meyer, prandtl_meyer_kernel,
+    propellant_mass_flow, propellant_mass_flow_kernel, srp_flow_regime_margin,
+    srp_flow_regime_margin_kernel, srp_jet_edge_mach, srp_jet_edge_mach_kernel,
+    srp_post_bow_shock_total_pressure, srp_post_bow_shock_total_pressure_kernel,
+    srp_preserved_drag_fraction, srp_preserved_drag_fraction_kernel, srp_terminal_shock_mach,
+    srp_terminal_shock_mach_kernel, srp_thrust_coefficient, srp_total_axial_force_coefficient,
+    srp_total_axial_force_coefficient_kernel, stopping_distance, stopping_distance_kernel,
     suicide_burn_deceleration, tsiolkovsky_delta_v,
 };
 
@@ -24,7 +28,14 @@ const GAMMA: f64 = 1.4;
 
 #[test]
 fn test_performance_wrappers() {
-    assert!(propellant_mass_flow(Force::new(1000.0_f64).unwrap(), 300.0).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = propellant_mass_flow(Force::new(1000.0_f64).unwrap(), 300.0);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        propellant_mass_flow_kernel(Force::new(1000.0_f64).unwrap(), 300.0).unwrap(),
+        "propellant_mass_flow must carry the value its kernel produced"
+    );
     assert!(!propellant_mass_flow(Force::new(1000.0_f64).unwrap(), 0.0).is_ok());
     assert!(
         tsiolkovsky_delta_v(
@@ -46,7 +57,14 @@ fn test_performance_wrappers() {
 
 #[test]
 fn test_nozzle_wrappers() {
-    assert!(inverse_area_mach(2.0_f64, GAMMA, FlowBranch::Supersonic).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = inverse_area_mach(2.0_f64, GAMMA, FlowBranch::Supersonic);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        inverse_area_mach_kernel(2.0_f64, GAMMA, FlowBranch::Supersonic).unwrap(),
+        "inverse_area_mach must carry the value its kernel produced"
+    );
     assert!(!inverse_area_mach(0.5_f64, GAMMA, FlowBranch::Supersonic).is_ok());
     assert!(
         nozzle_exit_state(
@@ -72,7 +90,14 @@ fn test_nozzle_wrappers() {
 
 #[test]
 fn test_descent_wrappers() {
-    assert!(stopping_distance(Speed_new(100.0), Acceleration::new(5.0).unwrap()).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = stopping_distance(Speed_new(100.0), Acceleration::new(5.0).unwrap());
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        stopping_distance_kernel(Speed_new(100.0), Acceleration::new(5.0).unwrap()).unwrap(),
+        "stopping_distance must carry the value its kernel produced"
+    );
     assert!(!stopping_distance(Speed_new(100.0), Acceleration::new(-1.0).unwrap()).is_ok());
     assert!(
         ignition_altitude(
@@ -146,19 +171,54 @@ fn test_srp_wrappers() {
         )
         .is_ok()
     );
-    assert!(srp_preserved_drag_fraction(1.0_f64).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = srp_preserved_drag_fraction(1.0_f64);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        srp_preserved_drag_fraction_kernel(1.0_f64).unwrap(),
+        "srp_preserved_drag_fraction must carry the value its kernel produced"
+    );
     assert!(!srp_preserved_drag_fraction(20.0_f64).is_ok());
-    assert!(jarvinen_adams_baseline_axial_coefficient(1.5_f64).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = jarvinen_adams_baseline_axial_coefficient(1.5_f64);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        jarvinen_adams_baseline_axial_coefficient_kernel(1.5_f64).unwrap(),
+        "jarvinen_adams_baseline_axial_coefficient must carry the value its kernel produced"
+    );
     assert!(!jarvinen_adams_baseline_axial_coefficient(3.0_f64).is_ok());
-    assert!(srp_total_axial_force_coefficient(2.0_f64, 2.0).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = srp_total_axial_force_coefficient(2.0_f64, 2.0);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        srp_total_axial_force_coefficient_kernel(2.0_f64, 2.0).unwrap(),
+        "srp_total_axial_force_coefficient must carry the value its kernel produced"
+    );
     assert!(!srp_total_axial_force_coefficient(20.0_f64, 2.0).is_ok());
-    assert!(srp_flow_regime_margin(2.0_f64, 1.0).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = srp_flow_regime_margin(2.0_f64, 1.0);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        srp_flow_regime_margin_kernel(2.0_f64, 1.0).unwrap(),
+        "srp_flow_regime_margin must carry the value its kernel produced"
+    );
     assert!(!srp_flow_regime_margin(2.0_f64, 0.0).is_ok());
 }
 
 #[test]
 fn test_plume_wrappers() {
-    assert!(prandtl_meyer(2.0_f64, GAMMA).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = prandtl_meyer(2.0_f64, GAMMA);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        prandtl_meyer_kernel(2.0_f64, GAMMA).unwrap(),
+        "prandtl_meyer must carry the value its kernel produced"
+    );
     assert!(!prandtl_meyer(0.5_f64, GAMMA).is_ok());
     assert!(
         choked_mass_flow(
@@ -191,7 +251,14 @@ fn test_plume_wrappers() {
     );
     assert!(!srp_post_bow_shock_total_pressure(Pressure::new(P_INF).unwrap(), 0.5, GAMMA).is_ok());
     let pt_1_val = *pt_1.value().unwrap();
-    assert!(srp_terminal_shock_mach(Pressure::new(1.0e7_f64).unwrap(), pt_1_val, GAMMA).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = srp_terminal_shock_mach(Pressure::new(1.0e7_f64).unwrap(), pt_1_val, GAMMA);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        srp_terminal_shock_mach_kernel(Pressure::new(1.0e7_f64).unwrap(), pt_1_val, GAMMA).unwrap(),
+        "srp_terminal_shock_mach must carry the value its kernel produced"
+    );
     assert!(
         !srp_terminal_shock_mach(
             Pressure::new(pt_1_val.value() * 0.5).unwrap(),
@@ -201,7 +268,14 @@ fn test_plume_wrappers() {
         .is_ok()
     );
     let p_exit = Pressure::new(1.0e7_f64 / 40.0).unwrap();
-    assert!(srp_jet_edge_mach(4.0_f64, p_exit, pt_1_val, GAMMA).is_ok());
+    // Delegation, not merely success: `assert!(x.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant.
+    let effect = srp_jet_edge_mach(4.0_f64, p_exit, pt_1_val, GAMMA);
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        srp_jet_edge_mach_kernel(4.0_f64, p_exit, pt_1_val, GAMMA).unwrap(),
+        "srp_jet_edge_mach must carry the value its kernel produced"
+    );
     assert!(!srp_jet_edge_mach(0.5_f64, p_exit, pt_1_val, GAMMA).is_ok());
 }
 
@@ -264,7 +338,14 @@ fn test_plume_boundary_wrapper() {
         5.0, // Mach outside [2, 4]
         GAMMA,
     );
-    assert!(!bad.is_ok());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = bad.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Physical Invariant Broken"),
+        "expected a Physical Invariant Broken refusal, got {err}"
+    );
 }
 
 // Local helper: the descent/srp wrappers take `Speed<f64>`; keep the call

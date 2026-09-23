@@ -1,7 +1,7 @@
 # A Quantum Causal Model, and the Check That Decides Whether It Is One
 
-Not every graph carrying quantum operators is a quantum causal model. This example shows the
-condition that separates the two, and where the library enforces it.
+This example checks whether a graph carrying quantum operators is a quantum causal model, and shows
+where the library enforces that condition: at the freeze boundary.
 
 ```bash
 cargo run -p quantum_examples --example qcm_freeze_check
@@ -12,19 +12,15 @@ cargo run -p quantum_examples --example qcm_freeze_check
 A quantum causal model describes a process as a graph whose nodes carry Choi–Jamiołkowski factors.
 The factors that share a Hilbert leg have to **pairwise commute**.
 
-That is not a modelling preference or a convenience. The model's Markov condition is a statement
-about those factors being simultaneously assignable, and non-commuting operators have no joint
-assignment to make. A graph that fails the condition is not a quantum causal model that happens to
-be awkward — it is not a quantum causal model.
-
-Which makes the condition worth checking, and worth checking somewhere specific.
+The model's Markov condition requires those factors to be simultaneously assignable, and
+non-commuting operators have no joint assignment. A graph that fails the condition is not a quantum
+causal model.
 
 ## Freezing is where the check belongs
 
 A causal graph in this library is **dynamic** while it is being built and **frozen** once it is ready
-to run. Freezing is the one moment at which the structure is complete and nothing has yet depended
-on it. That makes it the only place a structural condition can be enforced without either rejecting
-a half-built graph or discovering the problem after a result has already been used.
+to run. At the freeze the structure is complete and nothing depends on it yet, so a structural check
+there neither rejects a half-built graph nor finds the problem after a result has been used.
 
 `freeze_quantum` runs the pairwise commutator checks at that boundary:
 
@@ -33,8 +29,8 @@ a half-built graph or discovering the problem after a result has already been us
 | every shared-leg pair commutes | the graph freezes; the report names the pairs tested and the worst margin |
 | some pair does not | the freeze **aborts**, the error names the pair, and the graph **rolls back to dynamic** |
 
-The rollback is the part worth noticing. A model that cannot be frozen is never left half-frozen, so
-a failure costs the caller a rebuild and never a result computed on a structure that does not hold.
+A model that cannot be frozen is never left half-frozen. A failure costs the caller a rebuild, never
+a result computed on a structure that does not hold.
 
 ## What the run does
 
@@ -46,13 +42,12 @@ sigma_x and sigma_z     on leg 0   anticommute    aborts, names the pair, rolls 
 ```
 
 Pauli `X` and `Z` anticommute, so `[σx, σz] = −2i σy` and its norm is as far from zero as a
-single-qubit commutator gets. That is deliberate: a pair that *nearly* commuted would test the
-tolerance rather than the condition.
+single-qubit commutator gets. A pair that *nearly* commuted would test the tolerance instead of the
+condition.
 
 The commuting pair is `σz` with `diag(3, −1)`. Both are diagonal, and any two diagonal operators
-commute exactly, so the margin is zero rather than merely small. `diag(3, −1)` is used instead of a
-multiple of the identity, which would commute with everything and demonstrate nothing about
-diagonality.
+commute exactly, so the margin is zero. A multiple of the identity would commute with everything
+and demonstrate nothing about diagonality.
 
 ## Output
 
@@ -72,8 +67,7 @@ diagonality.
       is_frozen()        false
 ```
 
-The error names the pair. A check that reported only that something failed would leave a real model
-of any size with nowhere to start looking.
+The error names the pair, so a large model shows where to start looking.
 
 ## Precision is a parameter
 
@@ -82,24 +76,22 @@ pub type FloatType = Float106;
 ```
 
 Every constant is declared at that type through `const_scalar_from_int!` and
-`const_scalar_from_float!`. It sits at `Float106` rather than `f64` on purpose: a hard-coded `f64` is
-invisible while the alias *is* `f64`, and a compile error the moment the two differ.
+`const_scalar_from_float!`. The alias is `Float106` so that a hard-coded `f64` fails to compile; with
+the alias at `f64` it would go unnoticed.
 
-All four scalars run and all four agree. The margin here is either exactly zero or as large as a
-single-qubit commutator can be, and neither is a quantity a shorter mantissa can shave.
+All four scalars run and agree. The margin is either exactly zero or as large as a single-qubit
+commutator can be, and a shorter mantissa changes neither.
 
-The nodes' own predicate is written out in `model.rs` rather than taken from the library's test
-helpers. Those are fixed at `f64` and would pin the graph to one precision while the factors
-followed the alias — which is how a precision parameter quietly stops being one.
+`model.rs` writes out the nodes' predicate instead of taking it from the library's test helpers.
+Those are fixed at `f64` and would pin the graph to one precision while the factors followed the
+alias.
 
 ## What this example covers
 
-The goal is to reformulate the essence of the validity condition as a step in the library's own
-lifecycle, and to get precision as a parameter for free once it is in that form. The essence is that
-the condition is structural, that the freeze boundary is where structure is settled, and that a
-failed check leaves nothing behind. The model keeps that and holds everything else simple: two nodes,
-one shared leg, single-qubit factors given directly rather than derived from a channel, and one
-pairwise check.
+The example states the validity condition as a step in the library's lifecycle: the condition is
+structural, the freeze boundary settles structure, and a failed check leaves nothing behind.
+Precision as a parameter follows from that form. Everything else stays simple: two nodes, one shared
+leg, single-qubit factors given directly instead of derived from a channel, and one pairwise check.
 
 A model of a real process adds what this leaves out: factors obtained from actual channels through
 the Choi–Jamiołkowski isomorphism, several legs per node with overlapping supports, a tolerance
@@ -115,7 +107,7 @@ Each step keeps the structure already here.
 - **More legs and more nodes.** `factors_on_shared_leg` declares one support per node. Declaring
   several turns one pairwise check into the full set the condition asks for.
 - **A chosen tolerance.** `CommutatorTolerance::default()` is a starting point. Deriving it from the
-  factors' norms is what a model with numerically-obtained factors needs.
+  factors' norms suits a model with numerically obtained factors.
 - **The `C₃` check alongside.** `freeze_quantum` already takes the structural argument this example
   passes empty, so adding a `C₃` relation exercises the other half of the freeze.
 

@@ -14,7 +14,7 @@
 
 use deep_causality_metric::LorentzianMetric;
 use deep_causality_multivector::{CausalMultiVector, MultiVector};
-use deep_causality_physics::{EM, GaugeEmOps};
+use deep_causality_physics::{EM, GaugeEmOps, PhysicsErrorEnum};
 
 // ============================================================================
 // Field Creation Tests
@@ -89,9 +89,9 @@ fn test_electric_field_extraction() {
     // Check that E is extracted correctly from F_{0i}
     let data = e.data();
     // In 4D multivector with +--- signature, spatial indices are 2, 3, 4
-    let ex: f64 = data.get(2).copied().unwrap_or(0.0);
-    let ey: f64 = data.get(3).copied().unwrap_or(0.0);
-    let ez: f64 = data.get(4).copied().unwrap_or(0.0);
+    let ex: f64 = data[2];
+    let ey: f64 = data[3];
+    let ez: f64 = data[4];
 
     assert!((ex - 1.0).abs() < 1e-10, "E_x = {} should be 1.0", ex);
     assert!((ey - 2.0).abs() < 1e-10, "E_y = {} should be 2.0", ey);
@@ -106,9 +106,9 @@ fn test_magnetic_field_extraction() {
 
     // Check that B is extracted correctly from F_{ij}
     let data = b.data();
-    let bx = data.get(2).copied().unwrap_or(0.0);
-    let by = data.get(3).copied().unwrap_or(0.0);
-    let bz = data.get(4).copied().unwrap_or(0.0);
+    let bx = data[2];
+    let by = data[3];
+    let bz = data[4];
 
     assert!((bx - 1.0f64).abs() < 1e-10, "B_x = {} should be 1.0", bx);
     assert!((by - 2.0f64).abs() < 1e-10, "B_y = {} should be 2.0", by);
@@ -377,8 +377,8 @@ fn test_computed_field_strength_antisymmetry() {
                     let idx_nu_mu =
                         p * (dim * dim * lie_dim) + nu * (dim * lie_dim) + mu * lie_dim + a;
 
-                    let f_mu_nu: f64 = data.get(idx_mu_nu).copied().unwrap_or(0.0);
-                    let f_nu_mu: f64 = data.get(idx_nu_mu).copied().unwrap_or(0.0);
+                    let f_mu_nu: f64 = data[idx_mu_nu];
+                    let f_nu_mu: f64 = data[idx_nu_mu];
 
                     assert!(
                         (f_mu_nu + f_nu_mu).abs() < 1e-10,
@@ -413,7 +413,7 @@ fn test_computed_field_strength_diagonal_zero() {
         for a in 0..lie_dim {
             for mu in 0..dim {
                 let idx = p * (dim * dim * lie_dim) + mu * (dim * lie_dim) + mu * lie_dim + a;
-                let f_mu_mu: f64 = data.get(idx).copied().unwrap_or(0.0);
+                let f_mu_mu: f64 = data[idx];
 
                 assert!(
                     f_mu_mu.abs() < 1e-10,
@@ -488,11 +488,21 @@ fn test_pure_electric_field() {
     // Should not be a null field (|E| ≠ |B|)
     assert!(!e_only.is_null_field().unwrap(), "Pure E field is not null");
 
-    // Should not be radiation (E not perpendicular to B makes no sense here)
-    // Actually with B=0, E·B=0 so it might pass the orthogonality test
-    let is_rad = e_only.is_radiation_field().unwrap();
-    // Just ensure it computes without error
-    let _ = is_rad;
+    // `is_radiation_field` tests |E.B| < tol and nothing else, so a pure E field satisfies it
+    // trivially: B = 0 makes E.B = 0 for any E. Asserting that is the honest statement of what
+    // the predicate does, and the answer is read rather than discarded.
+    assert!(
+        e_only.is_radiation_field().unwrap(),
+        "E.B = 0 holds trivially when B = 0, so the orthogonality predicate must accept it"
+    );
+
+    // A field that is genuinely not orthogonal must be rejected, so the predicate is not a
+    // constant `true`.
+    let skew = EM::from_components(1.0, 2.0, 3.0, 1.0, 0.0, 0.0).unwrap();
+    assert!(
+        !skew.is_radiation_field().unwrap(),
+        "E.B = 1 is not zero, so this field is not a radiation field"
+    );
 }
 
 #[test]
@@ -543,7 +553,7 @@ fn test_poynting_vector_orthogonal_fields() {
 
     // E_x × B_y should give S_z
     // For (1,0,0) × (0,1,0) = (0,0,1)
-    let sz: f64 = s_data.get(4).copied().unwrap_or(0.0);
+    let sz: f64 = s_data[4];
     assert!(sz.abs() > 0.0, "S_z should be non-zero for E_x × B_y");
 }
 
@@ -584,21 +594,36 @@ fn test_momentum_density_equals_poynting_scaled() {
 #[test]
 fn test_plane_wave_nan_amplitude_error() {
     let result = EM::plane_wave(f64::NAN, 0);
-    assert!(result.is_err(), "NaN amplitude should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
 fn test_plane_wave_infinity_amplitude_error() {
     let result = EM::plane_wave(f64::INFINITY, 0);
-    assert!(result.is_err(), "Infinite amplitude should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
 fn test_plane_wave_neg_infinity_amplitude_error() {
     let result = EM::plane_wave(f64::NEG_INFINITY, 0);
     assert!(
-        result.is_err(),
-        "Negative infinite amplitude should return error"
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
     );
 }
 
@@ -606,10 +631,22 @@ fn test_plane_wave_neg_infinity_amplitude_error() {
 fn test_plane_wave_invalid_polarization_error() {
     // Polarization must be 0 or 1
     let result = EM::plane_wave(1.0, 2);
-    assert!(result.is_err(), "Polarization 2 should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 
     let result = EM::plane_wave(1.0, 100);
-    assert!(result.is_err(), "Polarization 100 should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -623,7 +660,7 @@ fn test_plane_wave_polarization_zero() {
     let data = e.data();
 
     // Polarization 0: E_x = amplitude, E_y = E_z = 0
-    let ex: f64 = data.get(2).copied().unwrap_or(0.0);
+    let ex: f64 = data[2];
     assert!((ex - 3.0).abs() < 1e-10, "E_x should be 3.0 for pol=0");
 }
 
@@ -638,7 +675,7 @@ fn test_plane_wave_polarization_one() {
     let data = e.data();
 
     // Polarization 1: E_y = amplitude, E_x = E_z = 0
-    let ey: f64 = data.get(3).copied().unwrap_or(0.0);
+    let ey: f64 = data[3];
     assert!((ey - 4.0).abs() < 1e-10, "E_y should be 4.0 for pol=1");
 }
 
@@ -704,8 +741,11 @@ fn test_from_fields_metric_mismatch_error() {
 
     let result = EM::from_fields(base, e_field, b_field);
     assert!(
-        result.is_err(),
-        "from_fields with mismatched metrics should return error"
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
     );
 }
 

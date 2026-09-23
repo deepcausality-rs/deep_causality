@@ -4,7 +4,8 @@
  */
 
 use deep_causality_physics::{
-    Length, Mass, escape_velocity, escape_velocity_kernel, orbital_velocity, schwarzschild_radius,
+    Length, Mass, escape_velocity, escape_velocity_kernel, orbital_velocity,
+    orbital_velocity_kernel, schwarzschild_radius, schwarzschild_radius_kernel,
 };
 
 // =============================================================================
@@ -16,11 +17,23 @@ fn test_orbital_velocity_wrapper_success() {
     let mass = Mass::<f64>::new(5.972e24).unwrap();
     let radius = Length::<f64>::new(6.371e6).unwrap();
 
+    // Delegation, not merely success: `assert!(effect.is_ok())` alone passed even when a wrapper
+    // discarded its kernel's answer and returned a constant. `escape_velocity` in this file
+    // already had this assertion; its two siblings did not.
     let effect = orbital_velocity(&mass, &radius);
-    assert!(effect.is_ok(), "Expected successful PropagatingEffect");
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        orbital_velocity_kernel(&mass, &radius).unwrap(),
+        "orbital_velocity must carry the value its kernel produced"
+    );
 
+    // v = sqrt(GM/r) for Earth is about 7.9 km/s.
     let speed = effect.value_cloned().unwrap();
-    assert!(speed.value() > 0.0);
+    let v: f64 = speed.value();
+    assert!(
+        (v - 7_909.0).abs() < 20.0,
+        "low Earth orbital speed is about 7.9 km/s, got {v}"
+    );
 }
 
 #[test]
@@ -29,9 +42,13 @@ fn test_orbital_velocity_wrapper_error() {
     let radius = Length::<f64>::new(0.0).unwrap();
 
     let effect = orbital_velocity(&mass, &radius);
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
     assert!(
-        effect.is_err(),
-        "Expected error PropagatingEffect for zero radius"
+        err.to_string().contains("Metric Singularity"),
+        "expected a Metric Singularity refusal, got {err}"
     );
 }
 
@@ -63,7 +80,14 @@ fn test_escape_velocity_wrapper_error() {
     let radius = Length::<f64>::new(0.0).unwrap();
 
     let effect = escape_velocity(&mass, &radius);
-    assert!(effect.is_err());
+    // A wrapper forwards its kernel's refusal through a `CausalityError`, which keeps the
+    // `PhysicsError` text. Asserting the text is how the *reason* stays pinned once the
+    // variant itself is erased by the effect channel.
+    let err = effect.error().expect("the call must fail");
+    assert!(
+        err.to_string().contains("Metric Singularity"),
+        "expected a Metric Singularity refusal, got {err}"
+    );
 }
 
 // =============================================================================
@@ -74,11 +98,21 @@ fn test_escape_velocity_wrapper_error() {
 fn test_schwarzschild_radius_wrapper_success() {
     let mass = Mass::<f64>::new(1.989e30).unwrap();
 
+    // Delegation, not merely success.
     let effect = schwarzschild_radius(&mass);
-    assert!(effect.is_ok());
+    assert_eq!(
+        effect.value_cloned().unwrap(),
+        schwarzschild_radius_kernel(&mass).unwrap(),
+        "schwarzschild_radius must carry the value its kernel produced"
+    );
 
+    // The Sun's Schwarzschild radius is about 2.95 km.
     let r_s = effect.value_cloned().unwrap();
-    assert!(r_s.value() > 0.0);
+    let radius_m: f64 = r_s.value();
+    assert!(
+        (radius_m - 2953.0).abs() < 5.0,
+        "expected about 2953 m, got {radius_m}"
+    );
 }
 
 #[test]
@@ -102,6 +136,18 @@ fn test_schwarzschild_radius_wrapper_error_negative_mass() {
     let mass = Mass::<f64>::new_unchecked(-1.989e30);
 
     let effect = schwarzschild_radius(&mass);
+    // The refusal must name its cause: a wrapper forwards the kernel's `PhysicsError`
+    // text through a `CausalityError`, and asserting it keeps the *reason* pinned.
+    assert!(
+        effect
+            .error()
+            .expect("the call must fail")
+            .to_string()
+            .contains("Physical Invariant Broken: Length cannot be negative"),
+        "unexpected refusal: {:?}",
+        effect.error()
+    );
+
     assert!(
         effect.is_err(),
         "negative mass must produce a negative radius rejected by Length::new"

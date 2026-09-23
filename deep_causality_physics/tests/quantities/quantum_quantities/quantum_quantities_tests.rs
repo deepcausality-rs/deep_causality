@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::{PhaseAngle, Probability};
+use deep_causality_physics::{PhaseAngle, PhysicsErrorEnum, Probability};
 use std::f64::consts::PI;
 // =============================================================================
 // Probability Tests
@@ -33,25 +33,49 @@ fn test_probability_new_one() {
 #[test]
 fn test_probability_new_error_negative() {
     let prob = Probability::<f64>::new(-0.1);
-    assert!(prob.is_err());
+    assert!(
+        matches!(
+            prob.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NormalizationError { .. }
+        ),
+        "expected a NormalizationError refusal"
+    );
 }
 
 #[test]
 fn test_probability_new_error_greater_than_one() {
     let prob = Probability::<f64>::new(1.1);
-    assert!(prob.is_err());
+    assert!(
+        matches!(
+            prob.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NormalizationError { .. }
+        ),
+        "expected a NormalizationError refusal"
+    );
 }
 
 #[test]
 fn test_probability_new_nan_error() {
     let prob = Probability::<f64>::new(f64::NAN);
-    assert!(prob.is_err());
+    assert!(
+        matches!(
+            prob.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NormalizationError { .. }
+        ),
+        "expected a NormalizationError refusal"
+    );
 }
 
 #[test]
 fn test_probability_new_infinity_error() {
     let prob = Probability::<f64>::new(f64::INFINITY);
-    assert!(prob.is_err());
+    assert!(
+        matches!(
+            prob.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NormalizationError { .. }
+        ),
+        "expected a NormalizationError refusal"
+    );
 }
 
 #[test]
@@ -89,13 +113,25 @@ fn test_phase_angle_new_valid() {
 #[test]
 fn test_phase_angle_new_nan_error() {
     let angle = PhaseAngle::<f64>::new(f64::NAN);
-    assert!(angle.is_err());
+    assert!(
+        matches!(
+            angle.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
 fn test_phase_angle_new_infinity_error() {
     let angle = PhaseAngle::<f64>::new(f64::INFINITY);
-    assert!(angle.is_err());
+    assert!(
+        matches!(
+            angle.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]

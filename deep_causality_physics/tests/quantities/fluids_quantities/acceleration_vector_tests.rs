@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::AccelerationVector;
+use deep_causality_physics::{AccelerationVector, PhysicsErrorEnum};
 
 // =============================================================================
 // AccelerationVector — finiteness only
@@ -17,8 +17,24 @@ fn test_acceleration_vector_new_valid() {
 
 #[test]
 fn test_acceleration_vector_rejects_non_finite() {
-    assert!(AccelerationVector::<f64>::new([f64::NAN, 0.0, 0.0]).is_err());
-    assert!(AccelerationVector::<f64>::new([0.0, 0.0, f64::INFINITY]).is_err());
+    assert!(
+        matches!(
+            AccelerationVector::<f64>::new([f64::NAN, 0.0, 0.0])
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            AccelerationVector::<f64>::new([0.0, 0.0, f64::INFINITY])
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -40,7 +56,16 @@ fn test_acceleration_vector_traits() {
     let c = a.clone();
     assert_eq!(a, b);
     assert_eq!(a, c);
-    let _ = format!("{:?}", a);
+    // `assert_eq!(x, x.clone())` is reflexive and holds for a `PartialEq` that always
+    // returns true. The inequality discriminates, and comparing the two `Debug`
+    // renderings makes `Debug` observable rather than discarded.
+    let other = AccelerationVector::<f64>::new([9.0, 8.0, 7.0]).unwrap();
+    assert_ne!(a, other, "distinct values must not compare equal");
+    assert_ne!(
+        format!("{a:?}"),
+        format!("{other:?}"),
+        "Debug must distinguish distinct values"
+    );
 }
 
 // =============================================================================

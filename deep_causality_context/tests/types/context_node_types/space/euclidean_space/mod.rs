@@ -7,3 +7,5 @@
 mod adjustable_euclidean_space_tests;
 #[cfg(test)]
 mod euclidean_space_tests;
+#[cfg(test)]
+mod recordable_tests;

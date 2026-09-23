@@ -5,8 +5,8 @@
 
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_physics::{
-    lorenz_gauge_kernel, magnetic_helicity_density_kernel, maxwell_gradient_kernel,
-    poynting_vector_kernel, proca_equation_kernel,
+    PhysicsErrorEnum, lorenz_gauge_kernel, magnetic_helicity_density_kernel,
+    maxwell_gradient_kernel, poynting_vector_kernel, proca_equation_kernel,
 };
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{Manifold, PointCloud, ReggeGeometry, SimplicialManifold};
@@ -44,26 +44,62 @@ fn create_simple_manifold() -> SimplicialManifold<f64, f64> {
 
 #[test]
 fn test_poynting_vector_kernel_valid() {
-    // S = E x B
-    // E = [0, 1, 0, 0] (x)
-    // B = [0, 0, 1, 0] (y)
-    // S should be x^y bivector
+    // `poynting_vector_kernel` delegates to `euclidean_cross_product_3d`, which reads the spatial
+    // components from slots 2, 3 and 4 and writes the result back to the same three slots. The
+    // previous fixture put E at slot 1 and B at slot 2, so the kernel saw ax = ay = az = 0 and
+    // returned the zero vector; `!data().is_empty()` could not see that.
+    //
+    // E = x, B = y, so S = E x B = z, which lands in slot 4.
     let e = CausalMultiVector::<f64>::new(
-        vec![0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
-        Metric::Euclidean(3),
-    )
-    .unwrap();
-    let b = CausalMultiVector::<f64>::new(
         vec![0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         Metric::Euclidean(3),
     )
     .unwrap();
+    let b = CausalMultiVector::<f64>::new(
+        vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
 
-    let result = poynting_vector_kernel(&e, &b);
-    assert!(result.is_ok());
+    let s = poynting_vector_kernel(&e, &b).unwrap();
 
-    let s = result.unwrap();
-    assert!(!s.data().is_empty());
+    let d: &[f64] = s.data();
+    assert!((d[4] - 1.0).abs() < 1e-12, "e3 component = {}", d[4]);
+    for (i, v) in d.iter().enumerate() {
+        if i != 4 {
+            assert!(v.abs() < 1e-12, "blade {i} should vanish, got {v}");
+        }
+    }
+}
+
+#[test]
+fn test_poynting_vector_is_antisymmetric_and_vanishes_on_parallel_fields() {
+    // E x B = -(B x E), and E x E = 0. Both hold for any field and pin the cross product.
+    // Spatial components live in slots 2, 3 and 4.
+    let e = CausalMultiVector::<f64>::new(
+        vec![0.0, 0.0, 1.0, 2.0, 3.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+    let b = CausalMultiVector::<f64>::new(
+        vec![0.0, 0.0, -0.5, 1.5, 0.25, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+
+    let forward = poynting_vector_kernel(&e, &b).unwrap();
+    let reversed = poynting_vector_kernel(&b, &e).unwrap();
+    let x: &[f64] = forward.data();
+    let y: &[f64] = reversed.data();
+    for (i, (f, r)) in x.iter().zip(y).enumerate() {
+        assert!((f + r).abs() < 1e-12, "blade {i}: {f} and {r}");
+    }
+
+    let parallel = poynting_vector_kernel(&e, &e).unwrap();
+    let z: &[f64] = parallel.data();
+    for (i, v) in z.iter().enumerate() {
+        assert!(v.abs() < 1e-12, "E x E blade {i} = {v}");
+    }
 }
 
 #[test]
@@ -76,7 +112,13 @@ fn test_poynting_vector_kernel_dimension_error() {
     let b = CausalMultiVector::<f64>::new(vec![0.0, 0.0, 1.0, 0.0], Metric::Euclidean(2)).unwrap();
 
     let result = poynting_vector_kernel(&e, &b);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -93,7 +135,13 @@ fn test_poynting_vector_kernel_nan_error() {
     .unwrap();
 
     let result = poynting_vector_kernel(&e, &b);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
@@ -128,7 +176,13 @@ fn test_magnetic_helicity_density_error() {
     let b = CausalMultiVector::<f64>::new(vec![0.0, 1.0, 0.0, 0.0], Metric::Euclidean(2)).unwrap();
 
     let result = magnetic_helicity_density_kernel(&a, &b);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 // Helper: a purely 1-dimensional complex (vertices + edges only, no faces).
@@ -197,7 +251,13 @@ fn test_maxwell_gradient_kernel_empty_2form_error() {
     // DimensionMismatch guard at fields.rs:34-38.
     let manifold = create_1d_manifold();
     let result = maxwell_gradient_kernel(&manifold);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -237,7 +297,13 @@ fn test_proca_equation_kernel_nan_mass() {
     let mass = f64::NAN;
 
     let result = proca_equation_kernel(&field_manifold, &potential_manifold, mass);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
@@ -247,7 +313,13 @@ fn test_proca_equation_kernel_inf_mass() {
     let mass = f64::INFINITY;
 
     let result = proca_equation_kernel(&field_manifold, &potential_manifold, mass);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 // Helper: build a 2D triangle manifold whose data slab is supplied verbatim,
@@ -291,7 +363,13 @@ fn test_proca_equation_kernel_delta_f_non_finite() {
     let potential = create_simple_manifold();
 
     let result = proca_equation_kernel(&field, &potential, 0.5);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
@@ -317,8 +395,11 @@ fn test_proca_equation_kernel_potential_too_short() {
 
     let result = proca_equation_kernel(&field, &potential, 0.5);
     assert!(
-        result.is_err(),
-        "expected dimension mismatch; field edges should exceed potential data length"
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
     );
 }
 
@@ -336,7 +417,13 @@ fn test_proca_equation_kernel_a_1form_non_finite() {
     let potential = manifold_with_data(pot_data);
 
     let result = proca_equation_kernel(&field, &potential, 0.5);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
@@ -352,7 +439,13 @@ fn test_proca_equation_kernel_m2_a_overflow() {
 
     // mass = 10 -> m^2 = 100 (finite); MAX * 100 overflows to +inf.
     let result = proca_equation_kernel(&field, &potential, 10.0);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
@@ -374,7 +467,13 @@ fn test_proca_equation_kernel_j_sum_overflow() {
     let potential = manifold_with_data(pot_data);
 
     let result = proca_equation_kernel(&field, &potential, 1.0);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 // NOTE on two defensively-unreachable Proca branches:
@@ -415,7 +514,13 @@ fn test_energy_density_kernel_sum_overflow_result_rejected() {
         Metric::Euclidean(3),
     )
     .unwrap();
-    assert!(energy_density_kernel(&e, &b).is_err());
+    assert!(
+        matches!(
+            energy_density_kernel(&e, &b).unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 // NOTE on fields.rs:317-319 (lagrangian non-finite *result* guard): the result
@@ -481,7 +586,13 @@ fn test_energy_density_kernel_dimension_mismatch() {
     let b = CausalMultiVector::<f64>::new(vec![0.0, 0.0, 1.0, 0.0], Metric::Euclidean(2)).unwrap();
 
     let result = energy_density_kernel(&e, &b);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -498,7 +609,13 @@ fn test_energy_density_kernel_nan_error() {
     .unwrap();
 
     let result = energy_density_kernel(&e, &b);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 // =============================================================================
@@ -596,7 +713,13 @@ fn test_poynting_vector_kernel_nan_b_error() {
         Metric::Euclidean(3),
     )
     .unwrap();
-    assert!(poynting_vector_kernel(&e, &b).is_err());
+    assert!(
+        matches!(
+            poynting_vector_kernel(&e, &b).unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
@@ -611,7 +734,13 @@ fn test_energy_density_kernel_nan_b_error() {
         Metric::Euclidean(3),
     )
     .unwrap();
-    assert!(energy_density_kernel(&e, &b).is_err());
+    assert!(
+        matches!(
+            energy_density_kernel(&e, &b).unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
@@ -626,7 +755,16 @@ fn test_lagrangian_density_kernel_nan_b_error() {
         Metric::Euclidean(3),
     )
     .unwrap();
-    assert!(lagrangian_density_kernel(&e, &b).is_err());
+    // The input guard runs before the squared magnitudes, so a NaN in B alone must be reported as
+    // a non-finite *input*. Asserting only `is_err()` admitted the later squared-magnitude guard,
+    // which also fires on a NaN and made a guard testing only E indistinguishable from one
+    // testing both.
+    let err = lagrangian_density_kernel(&e, &b).unwrap_err();
+    let message = format!("{err}");
+    assert!(
+        message.contains("Non-finite input"),
+        "a NaN in B alone must trip the input guard; got {message}"
+    );
 }
 
 // =============================================================================
@@ -648,7 +786,13 @@ fn test_poynting_vector_kernel_overflow_result_is_rejected() {
         Metric::Euclidean(3),
     )
     .unwrap();
-    assert!(poynting_vector_kernel(&e, &b).is_err());
+    assert!(
+        matches!(
+            poynting_vector_kernel(&e, &b).unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
@@ -657,7 +801,13 @@ fn test_proca_equation_kernel_m_squared_overflow_is_rejected() {
     let field_manifold = create_simple_manifold();
     let potential_manifold = create_simple_manifold();
     let result = proca_equation_kernel(&field_manifold, &potential_manifold, f64::MAX);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
@@ -672,7 +822,13 @@ fn test_energy_density_kernel_overflow_squared_magnitude_is_rejected() {
         Metric::Euclidean(3),
     )
     .unwrap();
-    assert!(energy_density_kernel(&e, &b).is_err());
+    assert!(
+        matches!(
+            energy_density_kernel(&e, &b).unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
@@ -687,7 +843,13 @@ fn test_lagrangian_density_kernel_overflow_squared_magnitude_is_rejected() {
         Metric::Euclidean(3),
     )
     .unwrap();
-    assert!(lagrangian_density_kernel(&e, &b).is_err());
+    assert!(
+        matches!(
+            lagrangian_density_kernel(&e, &b).unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
@@ -700,5 +862,163 @@ fn test_lagrangian_density_kernel_dimension_mismatch() {
     let b = CausalMultiVector::<f64>::new(vec![0.0, 0.0, 1.0, 0.0], Metric::Euclidean(2)).unwrap();
 
     let result = lagrangian_density_kernel(&e, &b);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
+}
+
+// =============================================================================
+// Value tests for the Proca current and the finiteness guards
+//
+// A wrapper delegation assertion compares the wrapper against its kernel, so both sides carry any
+// defect the kernel has and it can never pin the kernel itself. These do.
+// =============================================================================
+
+#[test]
+fn test_proca_current_is_affine_in_the_mass_squared() {
+    // J = delta(F) + m^2 A. With the potential's 1-form equal to 1 in every slot, that is
+    //
+    //     J(m)[i] = J(0)[i] + m^2
+    //
+    // component by component, which pins both the square on the mass and the sign of the sum
+    // without reimplementing the codifferential.
+    let field = create_simple_manifold();
+    let potential = create_simple_manifold(); // data is 1.0 at every simplex
+
+    let base = proca_equation_kernel(&field, &potential, 0.0).unwrap();
+    for m in [0.5_f64, 1.5, 3.0] {
+        let j = proca_equation_kernel(&field, &potential, m).unwrap();
+        let b: &[f64] = base.as_slice();
+        let v: &[f64] = j.as_slice();
+        assert_eq!(v.len(), b.len());
+        for (i, (got, zero)) in v.iter().zip(b).enumerate() {
+            let want = zero + m * m;
+            assert!(
+                (got - want).abs() < 1e-12,
+                "m = {m}, component {i}: J = {got}, expected J(0) + m^2 = {want}"
+            );
+        }
+    }
+}
+
+#[test]
+fn test_proca_current_grows_quadratically_not_linearly_with_the_mass() {
+    // Doubling the mass must quadruple the mass-dependent part. A mass term built as m + m
+    // instead of m * m doubles it instead, and matches the correct answer at m = 2 only.
+    let field = create_simple_manifold();
+    let potential = create_simple_manifold();
+
+    let j0 = proca_equation_kernel(&field, &potential, 0.0).unwrap();
+    let j1 = proca_equation_kernel(&field, &potential, 1.5).unwrap();
+    let j2 = proca_equation_kernel(&field, &potential, 3.0).unwrap();
+
+    let a: &[f64] = j0.as_slice();
+    let b: &[f64] = j1.as_slice();
+    let c: &[f64] = j2.as_slice();
+    for i in 0..a.len() {
+        let single = b[i] - a[i];
+        let doubled = c[i] - a[i];
+        assert!(
+            (doubled - 4.0 * single).abs() < 1e-12,
+            "component {i}: doubling the mass gave {doubled}, expected 4 x {single}"
+        );
+    }
+}
+
+#[test]
+fn test_energy_density_reports_the_squared_magnitude_guard_for_a_single_overflowing_field() {
+    // Both existing overflow tests give E and B the same huge value, so a guard needing only one
+    // of them is indistinguishable from a guard needing both. Overflowing one at a time separates
+    // them, and the message says which guard fired.
+    let huge = f64::MAX;
+    let modest = CausalMultiVector::<f64>::new(
+        vec![0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+    let overflowing = CausalMultiVector::<f64>::new(
+        vec![0.0, 0.0, huge, 0.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+
+    for (e, b, which) in [(&overflowing, &modest, "E"), (&modest, &overflowing, "B")] {
+        let err = energy_density_kernel(e, b).unwrap_err();
+        let message = format!("{err}");
+        assert!(
+            message.contains("Non-finite squared magnitude"),
+            "{which} alone overflows, so the squared-magnitude guard must fire; got {message}"
+        );
+    }
+}
+
+#[test]
+fn test_lagrangian_density_reports_the_squared_magnitude_guard_for_a_single_overflowing_field() {
+    let huge = f64::MAX;
+    let modest = CausalMultiVector::<f64>::new(
+        vec![0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+    let overflowing = CausalMultiVector::<f64>::new(
+        vec![0.0, 0.0, huge, 0.0, 0.0, 0.0, 0.0, 0.0],
+        Metric::Euclidean(3),
+    )
+    .unwrap();
+
+    for (e, b, which) in [(&overflowing, &modest, "E"), (&modest, &overflowing, "B")] {
+        let err = lagrangian_density_kernel(e, b).unwrap_err();
+        let message = format!("{err}");
+        assert!(
+            message.contains("Non-finite squared magnitude"),
+            "{which} alone overflows, so the squared-magnitude guard must fire; got {message}"
+        );
+    }
+}
+
+/// A two-point line: 2 vertices and 1 edge, so `total_simplices() == 3`.
+fn two_point_line_manifold() -> SimplicialManifold<f64, f64> {
+    let points = CausalTensor::new(vec![0.0, 0.0, 1.0, 0.0], vec![2, 2]).unwrap();
+    let point_cloud =
+        PointCloud::new(points, CausalTensor::new(vec![0.0; 2], vec![2]).unwrap(), 0).unwrap();
+    let complex = point_cloud.triangulate(1.5).unwrap();
+    let num_simplices = complex.total_simplices();
+    let num_edges = complex.skeletons()[1].simplices().len();
+    let metric =
+        ReggeGeometry::new(CausalTensor::new(vec![1.0; num_edges], vec![num_edges]).unwrap());
+    Manifold::with_metric(
+        complex,
+        CausalTensor::new(vec![2.0; num_simplices], vec![num_simplices]).unwrap(),
+        Some(metric),
+        0,
+    )
+    .unwrap()
+}
+
+#[test]
+fn test_proca_accepts_a_potential_exactly_as_long_as_the_one_form_domain() {
+    // The length guard is `a_full.len() < needed_len`, so the boundary is equality: a potential
+    // whose data is exactly as long as the field's 1-form domain must be accepted. Every other
+    // fixture in this file is strictly longer or strictly shorter, which leaves `<` and `<=`
+    // indistinguishable.
+    //
+    // A triangle has 3 edges, and a two-point line has 3 simplices in total.
+    let field = create_simple_manifold();
+    let potential = two_point_line_manifold();
+
+    let needed_len = field.complex().skeletons()[1].simplices().len();
+    let available = potential.data().as_slice().len();
+    assert_eq!(
+        available, needed_len,
+        "precondition: the potential must be exactly as long as the 1-form domain"
+    );
+
+    assert!(
+        proca_equation_kernel(&field, &potential, 0.5).is_ok(),
+        "a potential of exactly the required length is long enough and must be accepted"
+    );
 }

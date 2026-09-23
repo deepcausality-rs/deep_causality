@@ -6,8 +6,8 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 # Remaining-crates test-suite audit
 
 This report applies the physics test-audit scanner to the nine workspace crates not covered by the
-physics, utility, or unified-math audits. It is an inventory and a calibrated review, not a
-proposal and not a claim that every syntactic match is a defective test.
+physics, utility, or unified-math audits. It is an inventory and a calibrated review; it proposes
+no change and does not treat every syntactic match as a defective test.
 
 ## Scope
 
@@ -39,13 +39,13 @@ review queues, not defect counts.
 
 ## Method
 
-The unchanged classification logic from `openspec/notes/test_audit/physics/audit_tests.py` was run
-once per crate with that crate's `tests/` directory as its root. It inspected 490 Rust test files,
-containing 82,315 lines, and recognized 3,633 explicit `#[test]` functions. Tests embedded in
-`src/`, doctests, and macro expansions are outside that static count.
+The unchanged classification logic from `openspec/notes/test_audit/physics/audit_tests.py` ran
+once per crate with that crate's `tests/` directory as its root. It inspected 490 Rust test files
+(82,315 lines) and recognized 3,633 explicit `#[test]` functions. Tests embedded in `src/`,
+doctests, and macro expansions are outside that static count.
 
 The classes overlap. A test can be both single-input and cherry-picked, or both circular and
-cherry-picked. Counts must not be added to obtain a number of defective tests.
+cherry-picked. Adding the counts does not give a number of defective tests.
 
 | Class | Raw count | Share | Scanner meaning |
 |---|---:|---:|---|
@@ -73,7 +73,7 @@ overlapping classifications.
 | `ultragraph` | 15 | 129 | 98 (76.0%) | 1 (0.8%) | 1 (0.8%) | 2 (1.6%) | 0 |
 | **Total** | **490** | **3,633** | **3,005 (82.7%)** | **326 (9.0%)** | **60 (1.7%)** | **62 (1.7%)** | **5 (0.1%)** |
 
-The percentages do not measure test quality by themselves. `deep_causality_core` has a 96.4%
+The percentages alone do not measure test quality. `deep_causality_core` has a 96.4%
 single-input rate but no hard or cherry-picked matches: its tests mostly pin discrete monadic,
 state, error, and control-flow behavior at individually named cases. Conversely, one test with many
 inputs can still repeat the same ineffective assertion.
@@ -86,7 +86,7 @@ The three discovery flags are false positives. `test_from_csv_error`, `test_from
 and `test_from_mrmr_error` use explicit variant matching and panic on the wrong branch. The scanner
 recognizes neither `if let ... else { panic!() }` nor match-and-panic assertions.
 
-The two `deep_causality` matches genuinely contain no observation:
+The two `deep_causality` matches contain no observation:
 
 - `deep_causality/tests/types/csm_types/csm_action/csm_action_tests.rs`,
   `test_causal_action_creation`, constructs and clones an action and formats its debug output into
@@ -114,8 +114,7 @@ corresponding validation returns `Ok`.
 The 76 quantum cherry-picked matches are also a mixed population. For example,
 `operator_residual_tests.rs` explicitly documents hand-evaluated 3-4-5 oracles, overflow scaling,
 and enumerated corner cases at module level. The scanner misses that provenance because it is too
-far from individual assertions. That file is evidence of good test design, not an 11-test repair
-target.
+far from individual assertions. That file shows good test design and needs no repair.
 
 ### Root `deep_causality` tests often assert completion instead of behavior
 
@@ -142,17 +141,17 @@ Other confirmed or high-confidence gaps are:
   default method's stated `abs(1 - observation)` expression at one input. It lacks an independent
   law or range that could expose a shared formula error.
 
-The tangent-spacetime and NED distance tests are also classified as circular because they calculate
+The tangent-spacetime and NED distance tests are classified as circular because they calculate
 Euclidean norms in the test. Those formulas can be legitimate independent definitions, but one
-3-4-12 or 100-50-10 example cannot distinguish a generally correct metric implementation from an
-implementation specialized to the same uncomplicated case.
+3-4-12 or 100-50-10 example cannot distinguish a correct metric implementation from one specialized
+to the same simple case.
 
 ### CFD has the largest candidate set, but many candidates are strong controls
 
 CFD accounts for 129 of the 326 cherry-picked and 46 of the 62 circular matches. Most of the
 circular label is syntactic noise: analytic decay solutions, Fourier-mode diffusion, Taylor-Green
 energy, step-refinement invariance, dense-versus-QTT stencil comparisons, and coordinate Jacobian
-identities are independent or metamorphic controls. They should not be mechanically rewritten.
+identities are independent or metamorphic controls. Do not rewrite them mechanically.
 
 The clear weak cases are narrower:
 
@@ -166,8 +165,8 @@ The clear weak cases are narrower:
   positive-path tests when acceptance is the contract; they are not numeric oracle tests.
 
 `march_run_tests.rs::test_centerline_profile_is_recorded` checks only that the named series exists.
-That exactly establishes presence, but does not validate the series length or values. It is an
-incomplete result check rather than a tautology.
+It establishes presence but not the series length or values: an incomplete result check, not a
+tautology.
 
 ### Algorithms' circular flags are predominantly independent oracles
 
@@ -201,8 +200,8 @@ failure.
 
 `deep_causality_data_structures` has only two cherry-picked matches. Both are ordinary grid
 dimension and storage round-trip tests. The suite also contains explicit distinct-dimension indexing
-regressions, boundary cases, storage variants, and stress tests. No hard defect was established by
-this audit.
+regressions, boundary cases, storage variants, and stress tests. This audit established no hard
+defect.
 
 ## Files with the largest raw hard/cherry signal
 
@@ -222,8 +221,8 @@ This table ranks syntactic leads, not confirmed defect counts.
 | 6 | `deep_causality_quantum/tests/formalization_lean/partial_trace_tests.rs` | 6 cherry-picked |
 | 6 | `deep_causality/tests/types/csm_types/csm/csm_all_states_tests.rs` | 6 tautology candidates |
 
-The first and third rows demonstrate why ranking cannot replace review: both contain unusually
-explicit independent-oracle documentation even though the scanner ranks them worst.
+The first and third rows show why ranking cannot replace review: both document their independent
+oracles explicitly, yet the scanner ranks them worst.
 
 ## Scanner limits
 
@@ -242,17 +241,16 @@ explicit independent-oracle documentation even though the scanner ranks them wor
 
 ## Verification
 
-All nine packages were tested together with one `cargo test` invocation. The command completed
-successfully. This establishes that the current suites pass, not that every oracle would detect an
-incorrect implementation.
+One `cargo test` invocation tested all nine packages and completed successfully. This establishes
+that the current suites pass, not that every oracle would detect an incorrect implementation.
 
-No production code or tests were changed for this audit.
+This audit changed no production code or tests.
 
 ## Recommended order of fixes
 
-This ordering covers the nine crates in this report. It prioritizes confirmed ineffective behavior
-checks, consequence of a missed defect, and then raw mutation risk; it does not sort by scanner
-percentage alone.
+This ordering covers the nine crates in this report. It ranks by confirmed ineffective behavior
+checks, then the consequence of a missed defect, then raw mutation risk, not by scanner percentage
+alone.
 
 1. **`deep_causality_quantum`** — repair the eight output-blind kernel and wrapper success tests
    first. Exact values and identity laws are available, so these are high-confidence, bounded

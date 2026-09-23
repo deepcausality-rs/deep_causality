@@ -17,15 +17,49 @@ fn test_velocity3_new_valid() {
 
 #[test]
 fn test_velocity3_new_rejects_nan() {
-    assert!(Velocity3::<f64>::new([f64::NAN, 0.0, 0.0]).is_err());
-    assert!(Velocity3::<f64>::new([0.0, f64::NAN, 0.0]).is_err());
-    assert!(Velocity3::<f64>::new([0.0, 0.0, f64::NAN]).is_err());
+    assert!(
+        matches!(
+            Velocity3::<f64>::new([f64::NAN, 0.0, 0.0]).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            Velocity3::<f64>::new([0.0, f64::NAN, 0.0]).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            Velocity3::<f64>::new([0.0, 0.0, f64::NAN]).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
 fn test_velocity3_new_rejects_infinity() {
-    assert!(Velocity3::<f64>::new([f64::INFINITY, 0.0, 0.0]).is_err());
-    assert!(Velocity3::<f64>::new([0.0, f64::NEG_INFINITY, 0.0]).is_err());
+    assert!(
+        matches!(
+            Velocity3::<f64>::new([f64::INFINITY, 0.0, 0.0])
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            Velocity3::<f64>::new([0.0, f64::NEG_INFINITY, 0.0])
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -61,7 +95,16 @@ fn test_velocity3_traits() {
     let c = a.clone();
     assert_eq!(a, b);
     assert_eq!(a, c);
-    let _ = format!("{:?}", a);
+    // `assert_eq!(x, x.clone())` is reflexive and holds for a `PartialEq` that always
+    // returns true. The inequality discriminates, and comparing the two `Debug`
+    // renderings makes `Debug` observable rather than discarded.
+    let other = Velocity3::<f64>::new([9.0, 8.0, 7.0]).unwrap();
+    assert_ne!(a, other, "distinct values must not compare equal");
+    assert_ne!(
+        format!("{a:?}"),
+        format!("{other:?}"),
+        "Debug must distinguish distinct values"
+    );
 }
 
 // =============================================================================

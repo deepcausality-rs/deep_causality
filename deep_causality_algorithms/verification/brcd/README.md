@@ -28,8 +28,8 @@ cargo run -p deep_causality_algorithms --example verification_online_boutique
 cargo run -p deep_causality_algorithms --example verification_sockshop
 ```
 
-`brcd_run` scores node families in parallel under the `parallel` feature. The result is
-identical to the sequential path, so every example reproduces the same ranking either way.
+Under the `parallel` feature, `brcd_run` enumerates candidates and scores node families in
+parallel. The result matches the sequential path, so every example reproduces the same ranking.
 Add `--features parallel` to any command to exercise that path.
 
 ## What gets checked, and against what
@@ -60,8 +60,8 @@ two checks.
    structure and BRCD ranks against it. The injected fault lands at rank 1.
 
 A learned CPDAG is not identical to the service-map CPDAG, and it need not be. BOSS is a
-heuristic search, and the downstream ranking is robust to a Markov-equivalent graph. The
-check is structural recovery plus fault recall, not an exact match to `expected.txt`.
+heuristic search, and the downstream ranking tolerates a Markov-equivalent graph. The check
+is structural recovery plus fault recall; it does not require an exact match to `expected.txt`.
 
 ### `verification_boss_sockshop`, `verification_boss_online_boutique`: supplied vs learned CPDAG
 
@@ -90,8 +90,8 @@ variables depends on the edges, and the learned edges are not the service map's.
 stays near 0.8, so the rankings are broadly similar, but the leading agreement is shallow; on
 `carts_cpu_2` the learned CPDAG pushes the fault from rank 1 to rank 4.
 
-This gap is expected, not a BOSS defect. The paper offers BRCD-C (use the map) and the
-bootstrap variants BRCD-B10/B100 (average over learned CPDAGs) for exactly this reason. To
+The gap is expected. The paper offers BRCD-C (use the map) and the bootstrap variants
+BRCD-B10/B100 (average over learned CPDAGs) for this reason. To
 judge BOSS itself, compare it to a known true graph on synthetic data, which
 `verification_boss` does.
 
@@ -102,7 +102,7 @@ candidate)` configurations; the cost is exponential in the local undirected degr
 Appendix E). Online Boutique's larger cases (about 50 variables, 2100 rows) learn a CPDAG with
 a high-degree undirected hub, and the learned run does not complete in reasonable time. That
 intractability is itself an argument for a directed service map. The Online Boutique comparison
-example is kept but flagged, and the table above is from Sock Shop, which completes.
+example stays in the tree, flagged; the table above comes from Sock Shop, which completes.
 
 ### `verification_online_boutique`, `verification_sockshop`: real-world acceptance
 
@@ -167,11 +167,12 @@ sampling and the Python numeric stack are not reproducible in Rust. `verificatio
 the recovery principle on Rust-generated data; the real-world examples check the ranking against
 the captured reference on identical inputs.
 
-**Ranking underflow, fixed in the capture.** The first Online Boutique capture exponentiated the
-log-posterior before sorting (`np.exp(lp − max)`). When one fault dominates, that step underflows
-every other candidate to zero and collapses the lower ranks to index order. The Rust port sorts on
-the log-posterior, which the paper's `p(R | D)` (Eq. 3) implies and which does not underflow.
-Re-captured with that fix, Python and Rust agree on the full ranking. See
+**Ranking underflow.** The reference Python exponentiates the log-posterior before sorting
+(`np.exp(lp − max)`). When one fault dominates, that step underflows every other candidate to zero
+and collapses the lower ranks to index order. The Rust port sorts on the log-posterior, which the
+paper's `p(R | D)` (Eq. 3) implies and which does not underflow. The committed references were
+captured with Python patched to sort the same way; on them, Python and Rust agree on the full
+ranking. See
 `openspec/changes/archive/brcd/brcd_python_ranking_bug.md`.
 
 **BOSS score sign.** The port uses the higher-is-better BIC sign, the convention of causal-learn

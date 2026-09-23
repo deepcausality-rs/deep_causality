@@ -1,7 +1,7 @@
 # Foundation: `deep_causality_linear`
 
-Sparse and dense linear algebra. `CsrMatrix` stores the entries that exist, so memory tracks
-the stored entries.
+Sparse and dense linear algebra. `CsrMatrix` stores only its explicit entries, so memory
+scales with their count.
 
 | Example | What it covers | Command |
 |---|---|---|

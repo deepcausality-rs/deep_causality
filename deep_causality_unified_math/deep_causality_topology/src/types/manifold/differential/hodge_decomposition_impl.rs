@@ -291,8 +291,7 @@ where
     // star clips dual volumes at walls. Solve the mass-weighted normal
     // form instead: M_k·Δ_k is symmetric positive (semi)definite for any
     // positive diagonal masses, with the same solution for the weighted
-    // RHS M_k·rhs. On constant-mass lattices this is a pure rescaling of
-    // the old system.
+    // RHS M_k·rhs. On constant-mass lattices this is a pure rescaling.
     let mass_k: Vec<R> = {
         let metric = manifold.metric.as_ref().ok_or_else(|| {
             TopologyError::InvalidInput(

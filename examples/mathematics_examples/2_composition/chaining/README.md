@@ -1,10 +1,10 @@
 # Chaining
 
 `bind` threads a value through dependent steps. Each step may fail, and a failure short-circuits
-the rest, so the error path is part of the chain itself. The carried type is free to change at
-every step, which is what lets a chain leave one crate and arrive in another.
+the rest, so the error path is part of the chain itself. The carried type may change at every
+step, which lets a chain leave one crate and arrive in another.
 
-Every monad comes with a Kleisli category, so these chains compose as morphisms — see
+Every monad comes with a Kleisli category, so these chains compose as morphisms; see
 `1_foundation/haft/category.rs`.
 
 | Example | What it shows | Command |

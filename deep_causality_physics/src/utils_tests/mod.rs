@@ -83,6 +83,59 @@ pub fn sup_norm<R: RealField>(v: &[R]) -> R {
         .fold(R::zero(), |m, x| if x > m { x } else { m })
 }
 
+// =================================================================================================
+// Chronometric fixtures
+// =================================================================================================
+
+/// The 1PN clock-rate model for a J2-corrected monopole, used to forward-model a
+/// `SpaceTimeCoordinate` from a chosen `GM`.
+///
+/// `1/r_eff = 1/r - J2 R_eq^2 P2(cos theta) / r^3` and `drift = Phi/c^2 - v^2/(2 c^2)` with
+/// `Phi = -GM / r_eff`. At `J2 = 0` this is exactly
+/// [`crate::relativistic_clock_drift_rate_kernel`], which is checked against the published GPS
+/// relativistic split; `solve_gm_tests.rs` asserts that agreement.
+///
+/// It lives here because the Bazel test suite compiles each `*_tests.rs` as its own crate, so the
+/// two chronometric test files cannot otherwise share it and were carrying a copy each.
+pub fn chronometric_forward_drift_rate(
+    target_gm: f64,
+    r: f64,
+    v: f64,
+    z: f64,
+    body: &crate::CentralBody<f64>,
+) -> f64 {
+    let cos_theta = z / r;
+    let legendre_p2 = 0.5 * (3.0 * cos_theta * cos_theta - 1.0);
+    let r_cubed = r * r * r;
+    let req_sq = body.equatorial_radius_m * body.equatorial_radius_m;
+    let inv_r_eff = 1.0 / r - body.j2 * req_sq * legendre_p2 / r_cubed;
+    let phi = -target_gm * inv_r_eff;
+    let c_sq = crate::SPEED_OF_LIGHT * crate::SPEED_OF_LIGHT;
+    phi / c_sq - 0.5 * v * v / c_sq
+}
+
+/// A `SpaceTimeCoordinate` whose `clock_drift_rate` is forward-modelled from `target_gm` by
+/// [`chronometric_forward_drift_rate`].
+pub fn chronometric_build_coord(
+    target_gm: f64,
+    r: f64,
+    v: f64,
+    position: [f64; 3],
+    velocity: [f64; 3],
+    body: &crate::CentralBody<f64>,
+) -> crate::SpaceTimeCoordinate<f64> {
+    crate::SpaceTimeCoordinate::<f64> {
+        timestamp: 0,
+        sat_id: 0,
+        r_m: r,
+        v_ms: v,
+        clock_bias_s: 0.0,
+        position,
+        velocity,
+        clock_drift_rate: chronometric_forward_drift_rate(target_gm, r, v, position[2], body),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -99,6 +152,37 @@ mod tests {
         let b = random_cochain::<f64>(16, 7);
         assert_eq!(a, b);
         assert!(a.iter().all(|&x| (-1.0..=1.0).contains(&x)));
+    }
+
+    #[test]
+    fn test_chronometric_forward_model_matches_the_shipped_kernel_without_j2() {
+        // At J2 = 0 the model reduces to Phi/c^2 - v^2/(2c^2), which is the shipped kernel.
+        let body = crate::CentralBody::<f64>::new(crate::EARTH_GM, 6.378e6, 0.0);
+        for (r, v) in [(6.378e6_f64, 0.0_f64), (2.6561e7, 3.874e3)] {
+            let ours = chronometric_forward_drift_rate(crate::EARTH_GM, r, v, 0.0, &body);
+            let shipped =
+                crate::relativistic_clock_drift_rate_kernel(r, v, crate::EARTH_GM).unwrap();
+            assert!((ours - shipped).abs() <= 1e-15 * shipped.abs().max(1e-18));
+        }
+    }
+
+    #[test]
+    fn test_chronometric_build_coord_carries_the_forward_modelled_drift() {
+        let body = crate::CentralBody::<f64>::new(crate::EARTH_GM, 6.378e6, 0.0);
+        let coord = chronometric_build_coord(
+            crate::EARTH_GM,
+            2.93e7,
+            3650.0,
+            [2.93e7, 0.0, 0.0],
+            [0.0, 3650.0, 0.0],
+            &body,
+        );
+        assert_eq!(coord.r_m, 2.93e7);
+        assert_eq!(coord.v_ms, 3650.0);
+        assert_eq!(
+            coord.clock_drift_rate,
+            chronometric_forward_drift_rate(crate::EARTH_GM, 2.93e7, 3650.0, 0.0, &body)
+        );
     }
 
     #[test]

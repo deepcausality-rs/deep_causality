@@ -1,7 +1,7 @@
 # Multi-Physics Pipeline: QFT → QCD → Thermal → Detection
 
-This example demonstrates **modular composition** via the **Causal Monad** (`CausalEffectPropagationProcess`)
-for a complete high-energy physics simulation chain.
+This example chains a complete high-energy physics simulation, from a scalar field to a detection probability,
+by **modular composition** with the **Causal Monad** (`CausalFlow`).
 
 ## How to Run
 
@@ -47,7 +47,7 @@ Stage 5: Quantum Detection
 
 ## Key Pattern: Causal Monad Composition
 
-The power of this example is the **decoupled, modular pipeline**:
+The stages form a **decoupled, modular pipeline**:
 
 ```rust
 let result = klein_gordon( & phi_manifold, mass)
@@ -59,10 +59,10 @@ let result = klein_gordon( & phi_manifold, mass)
 
 Each stage is a **standalone function** that can be:
 
-- ✅ **Tested independently**
-- ✅ **Replaced without affecting other stages**
-- ✅ **Reused in different pipelines**
-- ✅ **Extended with new physics**
+- **Tested independently**
+- **Replaced without affecting other stages**
+- **Reused in other pipelines**
+- **Extended with new physics**
 
 ---
 
@@ -79,13 +79,13 @@ Klein-Gordon Field  →  Virtual q-q̄ Creation  →  Lund Fragmentation  →  T
 | 2     | Virtual q-q̄ creation from field energy | Manual conversion                    |
 | 3     | QCD string fragmentation (PYTHIA-like)  | `lund_string_fragmentation_kernel()` |
 | 4     | Heat diffusion: ∂T/∂t = κ∇²T            | `heat_diffusion()`                   |
-| 5     | Born probability: P =                   | ⟨basis\|ψ⟩                           |² | `born_probability()` |
+| 5     | Born probability: P = \|⟨basis\|ψ⟩\|²   | `born_probability()`                 |
 
 ---
 
 ## ⚠️ Simplifications in This Example
 
-This is a **pedagogical demonstration**.
+The example is a **teaching demonstration**.
 
 | Aspect                  | This Example           | Production Reality             |
 |-------------------------|------------------------|--------------------------------|
@@ -107,7 +107,7 @@ This is a **pedagogical demonstration**.
 
 ## Path to Production Code
 
-To evolve this example into realistic simulation:
+Turning this example into a realistic simulation takes five replacements:
 
 ### Stage 1: Replace Initial Conditions
 
@@ -168,7 +168,7 @@ let result = initial_state::glauber( & nucleus_a, & nucleus_b)
 .bind_or_error(analysis::jet_quenching, "Analysis failed");
 ```
 
-The **Causal Monad pattern remains the same** — only the stage implementations change.
+The **Causal Monad pattern stays the same**; only the stage implementations change.
 
 ---
 
@@ -176,7 +176,7 @@ The **Causal Monad pattern remains the same** — only the stage implementations
 
 | API                                  | Purpose                             |
 |--------------------------------------|-------------------------------------|
-| `CausalEffectPropagationProcess`     | Causal Monad for composition        |
+| `CausalFlow`                         | Causal Monad for composition        |
 | `bind_or_error()`                    | Monadic bind with error propagation |
 | `klein_gordon()`                     | Scalar field dynamics               |
 | `lund_string_fragmentation_kernel()` | QCD hadronization                   |
@@ -187,7 +187,7 @@ The **Causal Monad pattern remains the same** — only the stage implementations
 
 ## Engineering Value
 
-This pattern is applicable to any multi-stage simulation:
+The pattern applies to any multi-stage simulation:
 
 - **Particle Physics**: LHC event generation
 - **Astrophysics**: Supernova, neutron star mergers
@@ -195,4 +195,4 @@ This pattern is applicable to any multi-stage simulation:
 - **Climate**: Atmosphere-ocean-ice coupling
 - **Finance**: Multi-factor risk modeling
 
-The key insight: **Decouple physics stages for maintainability, compose with monads for correctness.**
+**Decouple physics stages for maintainability; compose them with monads for correctness.**

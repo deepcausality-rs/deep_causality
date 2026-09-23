@@ -35,9 +35,9 @@ fn geometric_line() -> SimplicialComplex<f64> {
 
 #[test]
 fn fmap_preserves_the_complex_geometry() {
-    // `Chain` used to hold one parameter for both the complex's precision and the coefficient
-    // group, so `fmap` had to rebuild the complex and dropped its Hodge ⋆ operators. With the two
-    // separated the complex is carried across, and this is the regression guard for that.
+    // `Chain` holds the complex's precision and the coefficient group as separate parameters, so
+    // `fmap` carries the complex across rather than rebuilding it and dropping its Hodge ⋆
+    // operators. This is the guard on that.
     use deep_causality_haft::Functor;
 
     let source = geometric_line();

@@ -9,7 +9,15 @@ TBD - created by archiving change consolidate-context-signature. Update Purpose 
 from another crate.
 
 `ContextId` and `ContextoidId` move here from `deep_causality_core`, which declared them and never
-used them. They are not duplicated: after the move core has no context identifier alias at all.
+used them. They are not duplicated in core: after the move core has no context identifier alias at
+all.
+
+`deep_causality_context_store` declares aliases of the same two names for the identifiers its
+records carry, resolving to its own `IdentificationValue`. The two declarations are independent
+and are pinned equal by the projection: `Context::snapshot` writes a contextoid's identifier into
+a `ContextoidRecord` and the context's identifier into a `ContextRecord`, so a widening on either
+side alone fails the context crate's build. A consumer that
+glob-imports both crates and names `ContextId` resolves the ambiguity by importing one path.
 
 A context's identifier width is a property of contexts, so the crate that owns `Context` and
 `Contextoid` owns the alias. An alias declared elsewhere is that crate's decision: were it widened
@@ -26,11 +34,17 @@ there, every context type would change width without this crate having said anyt
 - **WHEN** a crate the context crate depends on changes its own identifier alias
 - **THEN** the context types are unaffected, because they do not name it
 
-#### Scenario: The identifiers have exactly one declaration site
+#### Scenario: The identifiers have one declaration site per crate that owns them
 
 - **WHEN** the workspace is searched for declarations of the context identifier aliases
-- **THEN** each appears only in `deep_causality_context`, and neither `deep_causality_core` nor
-  `deep_causality` declares or re-exports one
+- **THEN** each appears in `deep_causality_context` and in `deep_causality_context_store`, and
+  neither `deep_causality_core` nor `deep_causality` declares or re-exports one
+
+#### Scenario: The two widths are pinned equal
+
+- **WHEN** a `Contextoid`'s identifier is written into a `ContextoidRecord` by `Context::snapshot`
+- **THEN** it compiles without a cast, and a test passes a context crate `ContextoidId` to a
+  function taking the store crate's `ContextoidId`
 
 ### Requirement: No context type spells a raw integer for an identifier
 

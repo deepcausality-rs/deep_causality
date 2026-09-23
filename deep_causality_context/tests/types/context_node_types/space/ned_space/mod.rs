@@ -7,3 +7,5 @@
 mod adjustable_ned_space_tests;
 #[cfg(test)]
 mod ned_space_tests;
+#[cfg(test)]
+mod recordable_tests;

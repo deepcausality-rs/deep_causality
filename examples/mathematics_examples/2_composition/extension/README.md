@@ -1,11 +1,11 @@
 # Extension
 
 `CoMonad::extend` hands a closure a cursor into the whole structure and asks for one value back,
-at every position. The closure may call into any crate it likes, which is the reach: topology
-supplies the walk, tensor holds the payload, and the kernel decides what a neighbourhood means.
+at every position. The closure may call into any crate: topology supplies the walk, tensor holds
+the payload, and the kernel decides what a neighbourhood means.
 
-This is how a graph convolution, a diffusion step, a stencil or a cellular automaton is written:
-the witness walks the positions and the kernel says what one position means.
+Graph convolutions, diffusion steps, stencils and cellular automata all take this form: the
+witness walks the positions and the kernel computes the value at one position.
 
 | Example | What it shows | Command |
 |---|---|---|

@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::IndexOfRefraction;
+use deep_causality_physics::{IndexOfRefraction, PhysicsErrorEnum};
 
 #[test]
 fn test_index_of_refraction_new_valid() {
@@ -24,29 +24,46 @@ fn test_index_of_refraction_vacuum() {
 #[test]
 fn test_index_of_refraction_glass() {
     // Crown glass ~ 1.52
-    let n = IndexOfRefraction::<f64>::new(1.52);
-    assert!(n.is_ok());
+    let n = IndexOfRefraction::<f64>::new(1.52).unwrap();
+    // `is_ok()` alone admitted any carried value, including a constant.
+    assert!(
+        (n.value() - (1.52)).abs() < 1e-10,
+        "constructed value = {}",
+        n.value()
+    );
 }
 
 #[test]
 fn test_index_of_refraction_diamond() {
     // Diamond ~ 2.42
-    let n = IndexOfRefraction::<f64>::new(2.42);
-    assert!(n.is_ok());
+    let n = IndexOfRefraction::<f64>::new(2.42).unwrap();
+    // `is_ok()` alone admitted any carried value, including a constant.
+    assert!(
+        (n.value() - (2.42)).abs() < 1e-10,
+        "constructed value = {}",
+        n.value()
+    );
 }
 
 #[test]
 fn test_index_of_refraction_metamaterial_negative() {
     // Metamaterials can have negative refractive index
-    let n = IndexOfRefraction::<f64>::new(-1.0);
-    assert!(n.is_ok()); // Commented in source: "can be negative in metamaterials"
+    let n = IndexOfRefraction::<f64>::new(-1.0).unwrap();
+    // The sign is the whole point of a metamaterial index, so it must survive construction.
+    assert!((n.value() + 1.0).abs() < 1e-10, "n = {}", n.value());
 }
 
 #[test]
 fn test_index_of_refraction_zero_error() {
     // Zero index is invalid (causes division errors)
     let n = IndexOfRefraction::<f64>::new(0.0);
-    assert!(n.is_err(), "Zero index should error");
+    assert!(
+        matches!(
+            n.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

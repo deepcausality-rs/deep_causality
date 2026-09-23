@@ -4,8 +4,8 @@
  */
 
 use deep_causality_physics::{
-    AmountOfSubstance, HalfLife, Mass, SPEED_OF_LIGHT, Time, binding_energy_kernel,
-    radioactive_decay_kernel,
+    AmountOfSubstance, HalfLife, Mass, PhysicsErrorEnum, SPEED_OF_LIGHT, Time,
+    binding_energy_kernel, radioactive_decay_kernel,
 };
 
 // =============================================================================
@@ -72,8 +72,11 @@ fn test_radioactive_decay_zero_half_life() {
     // This test verifies that HalfLife::<f64>::new(0.0) correctly returns an error
     let half_life_result = HalfLife::<f64>::new(0.0);
     assert!(
-        half_life_result.is_err(),
-        "Zero half-life should be rejected at construction"
+        matches!(
+            half_life_result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
     );
 
     match half_life_result {
@@ -98,8 +101,11 @@ fn test_radioactive_decay_zero_half_life_kernel_singularity() {
 
     let result = radioactive_decay_kernel(&n0, &half_life, &time);
     assert!(
-        result.is_err(),
-        "Zero half-life must yield a Singularity error"
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
     );
 
     match result {
@@ -185,6 +191,14 @@ fn test_binding_energy_mc2_formula() {
     assert!(
         (energy.value() - expected).abs() / expected < 1e-6,
         "E=mc² calculation mismatch"
+    );
+    // The line above retypes the kernel's own formula. The number this test is named for is the
+    // atomic mass unit's energy equivalent, 931.49 MeV = 1.4924e-10 J, and asserting it is what
+    // makes the test independent of the implementation.
+    assert!(
+        (energy.value() - 1.4924e-10).abs() / 1.4924e-10 < 1e-4,
+        "1 amu should carry 1.4924e-10 J (931.49 MeV), got {}",
+        energy.value()
     );
 }
 

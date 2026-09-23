@@ -1,6 +1,6 @@
 # Algebraic Scanner: Automated Theory Search
 
-This example demonstrates an automated search through Clifford Algebras to find dimensions that admit a complex structure (I² = -1).
+This example searches Clifford algebras for the dimensions that admit a complex structure (I² = -1).
 
 ## How to Run
 
@@ -12,18 +12,18 @@ cargo run -p mathematics_examples --example algebraic_scanner_examples
 
 ## Engineering Value
 
-In theoretical physics, finding algebras with complex structure is crucial for:
-- **Quantum Mechanics**: Complex numbers are fundamental (wavefunctions)
-- **Supersymmetry**: Requires specific Clifford algebra properties
-- **Signal Processing**: Complex structure enables Fourier analysis
+An algebra with a complex structure can stand in for the complex numbers, which matters for:
+- **Quantum Mechanics**: wavefunctions are complex-valued
+- **Supersymmetry**: requires specific Clifford algebra properties
+- **Signal Processing**: Fourier analysis runs on a complex structure
 
-This example automates what would otherwise be tedious manual calculation.
+The scan replaces a tedious manual calculation.
 
 ---
 
 ## What It Does
 
-Scans Clifford Algebras Cl(p,q) from dimension 1 to 9 and checks if the pseudoscalar I satisfies:
+Scans Clifford algebras Cl(p,q), Euclidean and Minkowski, from dimension 1 to 9 and checks whether the pseudoscalar I satisfies:
 
 ```
 I² = -1  (Complex Structure)
@@ -31,7 +31,7 @@ I² = -1  (Complex Structure)
 
 ### Pseudoscalar
 
-The pseudoscalar I is the highest-grade element of the algebra (product of all basis vectors). Its square depends on the metric signature:
+The pseudoscalar I is the highest-grade element of the algebra, the product of all basis vectors. Its square depends on the metric signature:
 - **Euclidean Cl(n,0)**: I² = ±1 depending on dimension
 - **Minkowski Cl(p,q)**: I² depends on signature
 
@@ -43,13 +43,13 @@ The pseudoscalar I is the highest-grade element of the algebra (product of all b
 [MATCH] Dimension 3: Euclidean signature Cl(3, 0) admits Complex Structure. I² = -1.0000
 ```
 
-This means Cl(3,0) - the algebra of 3D Euclidean space - has a complex structure, which is why quaternions (related to Cl(3,0)) are so useful in 3D rotations.
+Cl(3,0), the algebra of 3D Euclidean space, has a complex structure; the quaternions used for 3D rotations are related to Cl(3,0).
 
 ---
 
 ## Adapting This Example
 
-1. **Change dimension range**: Modify `max_dim` (note: memory grows as 2^n)
+1. **Change dimension range**: Modify `MAX_DIM` (memory grows as 2^n)
 2. **Add custom signatures**: Use `Metric::Custom` for arbitrary (p,q) signatures
 3. **Check other properties**: Extend to check for division algebra structure, etc.
 

@@ -22,15 +22,52 @@ fn test_hookes_law_kernel_valid() {
         StiffnessTensor::<f64>::new(CausalTensor::new(stiffness_data, vec![3, 3, 3, 3]).unwrap());
     let strain = Strain::<f64>::new(CausalTensor::new(vec![1.0; 9], vec![3, 3]).unwrap());
 
-    let result = hookes_law_kernel(&stiffness, &strain);
-    assert!(result.is_ok());
+    let stress = hookes_law_kernel(&stiffness, &strain).unwrap();
 
-    let stress = result.unwrap();
-    assert_eq!(
-        stress.inner().num_dim(),
-        2,
-        "Result should be rank-2 tensor"
-    );
+    // sigma_ij = C_ijkl eps_kl. Only C_0000 is non-zero and every strain entry is 1, so
+    // sigma_00 = 1 and every other component vanishes. The components are asserted, not only the
+    // rank, which any rank-2 output would satisfy whatever the contraction did.
+    assert_eq!(stress.inner().num_dim(), 2, "result is rank-2");
+    let d: &[f64] = stress.inner().as_slice();
+    assert_eq!(d.len(), 9, "3x3 stress tensor");
+    assert!((d[0] - 1.0).abs() < 1e-12, "sigma_00 = {}", d[0]);
+    for (i, v) in d.iter().enumerate().skip(1) {
+        assert!(
+            v.abs() < 1e-12,
+            "sigma component {i} should vanish, got {v}"
+        );
+    }
+}
+
+#[test]
+fn test_hookes_law_is_linear_in_the_strain() {
+    // sigma(k eps) = k sigma(eps) for any stiffness tensor. No oracle needed.
+    let mut stiffness_data = vec![0.0_f64; 81];
+    stiffness_data[0] = 2.0;
+    stiffness_data[40] = -1.5;
+    let stiffness =
+        StiffnessTensor::<f64>::new(CausalTensor::new(stiffness_data, vec![3, 3, 3, 3]).unwrap());
+    let eps_base: Vec<f64> = (1..=9).map(|i| i as f64 * 0.25).collect();
+
+    let base = hookes_law_kernel(
+        &stiffness,
+        &Strain::<f64>::new(CausalTensor::new(eps_base.clone(), vec![3, 3]).unwrap()),
+    )
+    .unwrap();
+
+    for k in [0.5_f64, 2.0, -3.0] {
+        let scaled_eps: Vec<f64> = eps_base.iter().map(|x| x * k).collect();
+        let scaled = hookes_law_kernel(
+            &stiffness,
+            &Strain::<f64>::new(CausalTensor::new(scaled_eps, vec![3, 3]).unwrap()),
+        )
+        .unwrap();
+        let a: &[f64] = base.inner().as_slice();
+        let b: &[f64] = scaled.inner().as_slice();
+        for (i, (x, y)) in a.iter().zip(b).enumerate() {
+            assert!((y - k * x).abs() < 1e-12, "k = {k}, component {i}");
+        }
+    }
 }
 
 #[test]
@@ -41,7 +78,6 @@ fn test_hookes_law_kernel_dimension_mismatch_stiffness() {
     let strain = Strain::<f64>::new(CausalTensor::new(vec![1.0; 9], vec![3, 3]).unwrap());
 
     let result = hookes_law_kernel(&stiffness, &strain);
-    assert!(result.is_err());
 
     match &result.unwrap_err().0 {
         PhysicsErrorEnum::DimensionMismatch(msg) => {
@@ -58,7 +94,13 @@ fn test_hookes_law_kernel_dimension_mismatch_strain() {
     let strain = Strain::<f64>::new(CausalTensor::new(vec![1.0, 2.0, 3.0], vec![3]).unwrap());
 
     let result = hookes_law_kernel(&stiffness, &strain);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 // =============================================================================
@@ -101,7 +143,6 @@ fn test_von_mises_stress_kernel_dimension_error() {
     let stress = StressTensor::<f64>::new(CausalTensor::new(vec![1.0; 4], vec![2, 2]).unwrap());
 
     let result = von_mises_stress_kernel(&stress);
-    assert!(result.is_err());
 
     match &result.unwrap_err().0 {
         PhysicsErrorEnum::DimensionMismatch(msg) => {
@@ -115,14 +156,26 @@ fn test_von_mises_stress_kernel_dimension_error() {
 fn test_von_mises_stress_kernel_rank_error() {
     let stress = StressTensor::<f64>::new(CausalTensor::new(vec![0.0; 27], vec![3, 3, 3]).unwrap());
     let result = von_mises_stress_kernel(&stress);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
 fn test_von_mises_stress_kernel_shape_error() {
     let stress = StressTensor::<f64>::new(CausalTensor::new(vec![0.0; 12], vec![3, 4]).unwrap());
     let result = von_mises_stress_kernel(&stress);
-    assert!(result.is_err());
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 // =============================================================================

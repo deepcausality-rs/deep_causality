@@ -3,15 +3,33 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::Diffusivity;
+use deep_causality_physics::{Diffusivity, PhysicsErrorEnum};
 
 #[test]
 fn test_diffusivity() {
     let eta = Diffusivity::<f64>::new(1.0).unwrap();
     assert_eq!(eta.value(), 1.0);
-    assert!(Diffusivity::<f64>::new(-1.0).is_err());
-    assert!(Diffusivity::<f64>::new(f64::NAN).is_err());
-    assert!(Diffusivity::<f64>::new(f64::INFINITY).is_err());
+    assert!(
+        matches!(
+            Diffusivity::<f64>::new(-1.0).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            Diffusivity::<f64>::new(f64::NAN).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            Diffusivity::<f64>::new(f64::INFINITY).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -28,6 +46,18 @@ fn test_diffusivity_default() {
 
 #[test]
 fn test_diffusivity_new_nan_error() {
-    assert!(Diffusivity::<f64>::new(f64::NAN).is_err());
-    assert!(Diffusivity::<f64>::new(f64::INFINITY).is_err());
+    assert!(
+        matches!(
+            Diffusivity::<f64>::new(f64::NAN).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            Diffusivity::<f64>::new(f64::INFINITY).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }

@@ -253,8 +253,7 @@ where
         let one = R::one();
 
         // The Cayley-Menger matrix, row-major. Its `(0,0)` entry is zero by construction, so the
-        // determinant has to pivot by search; `deep_causality_linear::determinant` does, and the
-        // Laplace expansion this replaces sidestepped the question by never pivoting at all.
+        // determinant has to pivot by search, which `deep_causality_linear::determinant` does.
         let mat = DenseMatrix::from_vec(
             vec![
                 zero, one, one, one, one, //

@@ -34,7 +34,7 @@ fn test_su2_metropolis_update_runs_perturbation_loops() {
         LatticeGaugeField::<SU2, 2, Complex<f64>, f64>::try_random(lattice, 4.0, &mut rng)
             .expect("random SU(2) field");
 
-    let edges: Vec<_> = field.links().keys().cloned().collect();
+    let edges: Vec<_> = field.link_cells();
     assert!(!edges.is_empty());
 
     let mut saw_accept = false;

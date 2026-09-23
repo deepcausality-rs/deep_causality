@@ -19,14 +19,18 @@ fn test_kinematic_viscosity_new_valid() {
 
 #[test]
 fn test_kinematic_viscosity_new_zero() {
-    let nu = KinematicViscosity::<f64>::new(0.0);
-    assert!(nu.is_ok());
+    let nu = KinematicViscosity::<f64>::new(0.0).unwrap();
+    // `is_ok()` alone admitted any carried value, including a constant.
+    assert!(
+        (nu.value() - (0.0)).abs() < 1e-10,
+        "constructed value = {}",
+        nu.value()
+    );
 }
 
 #[test]
 fn test_kinematic_viscosity_new_negative_error() {
     let nu = KinematicViscosity::<f64>::new(-1.0e-5);
-    assert!(nu.is_err());
     match &nu.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => {
             assert!(msg.contains("Negative") || msg.contains("KinematicViscosity"));
@@ -38,7 +42,6 @@ fn test_kinematic_viscosity_new_negative_error() {
 #[test]
 fn test_kinematic_viscosity_new_nan_error() {
     let nu = KinematicViscosity::<f64>::new(f64::NAN);
-    assert!(nu.is_err());
     match &nu.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => assert!(msg.contains("finite")),
         _ => panic!("Expected finite-check error"),
@@ -47,8 +50,22 @@ fn test_kinematic_viscosity_new_nan_error() {
 
 #[test]
 fn test_kinematic_viscosity_new_infinity_error() {
-    assert!(KinematicViscosity::<f64>::new(f64::INFINITY).is_err());
-    assert!(KinematicViscosity::<f64>::new(f64::NEG_INFINITY).is_err());
+    assert!(
+        matches!(
+            KinematicViscosity::<f64>::new(f64::INFINITY).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            KinematicViscosity::<f64>::new(f64::NEG_INFINITY)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -79,5 +96,14 @@ fn test_kinematic_viscosity_traits() {
     assert_eq!(a, b);
     assert_eq!(a, c);
     assert!(a < KinematicViscosity::<f64>::new(2.0e-6).unwrap());
-    let _ = format!("{:?}", a);
+    // `assert_eq!(x, x.clone())` is reflexive and holds for a `PartialEq` that always
+    // returns true. The inequality discriminates, and comparing the two `Debug`
+    // renderings makes `Debug` observable rather than discarded.
+    let other = KinematicViscosity::<f64>::new(2.0e-6).unwrap();
+    assert_ne!(a, other, "distinct values must not compare equal");
+    assert_ne!(
+        format!("{a:?}"),
+        format!("{other:?}"),
+        "Debug must distinguish distinct values"
+    );
 }

@@ -18,8 +18,13 @@ fn test_specific_enthalpy_new_positive() {
 
 #[test]
 fn test_specific_enthalpy_new_zero() {
-    let h = SpecificEnthalpy::<f64>::new(0.0);
-    assert!(h.is_ok());
+    let h = SpecificEnthalpy::<f64>::new(0.0).unwrap();
+    // `is_ok()` alone admitted any carried value, including a constant.
+    assert!(
+        (h.value() - (0.0)).abs() < 1e-10,
+        "constructed value = {}",
+        h.value()
+    );
 }
 
 #[test]
@@ -33,7 +38,6 @@ fn test_specific_enthalpy_new_negative_allowed() {
 #[test]
 fn test_specific_enthalpy_new_nan_error() {
     let h = SpecificEnthalpy::<f64>::new(f64::NAN);
-    assert!(h.is_err());
     match &h.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(msg) => assert!(msg.contains("finite")),
         _ => panic!("Expected finite-check error"),
@@ -42,8 +46,22 @@ fn test_specific_enthalpy_new_nan_error() {
 
 #[test]
 fn test_specific_enthalpy_new_infinity_error() {
-    assert!(SpecificEnthalpy::<f64>::new(f64::INFINITY).is_err());
-    assert!(SpecificEnthalpy::<f64>::new(f64::NEG_INFINITY).is_err());
+    assert!(
+        matches!(
+            SpecificEnthalpy::<f64>::new(f64::INFINITY).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            SpecificEnthalpy::<f64>::new(f64::NEG_INFINITY)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -74,5 +92,14 @@ fn test_specific_enthalpy_traits() {
     assert_eq!(a, b);
     assert_eq!(a, c);
     assert!(a < SpecificEnthalpy::<f64>::new(2.0e5).unwrap());
-    let _ = format!("{:?}", a);
+    // `assert_eq!(x, x.clone())` is reflexive and holds for a `PartialEq` that always
+    // returns true. The inequality discriminates, and comparing the two `Debug`
+    // renderings makes `Debug` observable rather than discarded.
+    let other = SpecificEnthalpy::<f64>::new(2.0e5).unwrap();
+    assert_ne!(a, other, "distinct values must not compare equal");
+    assert_ne!(
+        format!("{a:?}"),
+        format!("{other:?}"),
+        "Debug must distinguish distinct values"
+    );
 }

@@ -1,8 +1,8 @@
 # Electroweak Unification: The W Mass, From First Principles
 
-Fix three measured numbers and the Standard Model predicts the W boson mass. The measurement is good
-to better than a part in ten thousand. Comparing the two is one of the sharpest tests the theory
-faces, and this example runs the comparison.
+This example predicts the W boson mass from three measured numbers and compares the prediction with
+the measurement, which is good to better than a part in ten thousand. The comparison is one of the
+sharpest tests the Standard Model faces.
 
 ```bash
 cargo run -p quantum_examples --example gauge_electroweak
@@ -15,9 +15,9 @@ Above about 100 GeV the electromagnetic and weak forces are one force, a gauge t
 of the four gauge bosons acquire mass and become the `W⁺`, `W⁻` and `Z`, and the fourth stays
 massless and is the photon.
 
-What makes this testable is how little freedom is left afterwards. Fix `α_EM`, the Fermi constant
-and `M_Z`, and the couplings, the remaining masses, the decay widths and the resonance cross-section
-all follow.
+Little freedom remains afterwards, and that makes the theory testable. Fix `α_EM`, the Fermi
+constant and `M_Z`, and the couplings, the remaining masses, the decay widths and the resonance
+cross-section all follow.
 
 ## Why the tree level is not enough
 
@@ -29,12 +29,11 @@ At tree level `M_W = g·v/2`. The run prints what that gives:
   the corrections move it by 1.459770 GeV
 ```
 
-A 1.5 GeV gap, roughly two percent, and it is not experimental error. It is the one-loop radiative
-corrections, dominated by the top quark running around the loop. The `ρ` parameter is exactly `1` at
-tree level and the loops move it by `Δρ ≈ 0.0093`.
+The 1.5 GeV gap, roughly two percent, comes from the one-loop radiative corrections, dominated by
+the top quark running around the loop. The `ρ` parameter is exactly `1` at tree level and the loops
+move it by `Δρ ≈ 0.0093`.
 
-Printing both is the point. A run that showed only the corrected number would leave the reader with
-no way to see what the correction was worth.
+The run prints both numbers so the reader sees what the correction is worth.
 
 ## The tolerance is the claim
 
@@ -42,10 +41,10 @@ no way to see what the correction was worth.
 pub const W_MASS_TOLERANCE_GEV: FloatType = const_scalar_from_float!(FloatType, 0.020);
 ```
 
-Twenty MeV is what a one-loop calculation is worth: the terms left out are two-loop and enter at
-roughly that size. The summary claims one-loop accuracy and the check tests for exactly that, so
-the two cannot drift apart. A tolerance looser than the accuracy being claimed would pass a
-calculation that had stopped agreeing with the measurement.
+Twenty MeV is the accuracy of a one-loop calculation: the omitted two-loop terms enter at roughly
+that size. The summary claims one-loop accuracy and the check tests exactly that, so the two cannot
+drift apart. A looser tolerance would pass a calculation that had stopped agreeing with the
+measurement.
 
 ## What the code demonstrates
 
@@ -58,8 +57,8 @@ Four stages, composed as one `CausalFlow`:
 | gauge mixing | the `W`/`Z` mass relation and the `ρ` parameter |
 | Z resonance | the widths and the peak cross-section |
 
-`bind_or_error` is what makes the chain a chain: a stage that fails stops the ones after it and
-carries its reason to the summary, so no stage reads a state an earlier one never filled.
+`bind_or_error` links the stages: a stage that fails stops the ones after it and carries its
+reason to the summary, so no stage reads a state an earlier one never filled.
 
 ## Output
 
@@ -82,12 +81,12 @@ Stage 4: the Z resonance
   peak cross-section    41.409896 nb
 ```
 
-The invisible width is a prediction, not an input. Measuring it at LEP is how the number of light
-neutrino generations was established to be three.
+The invisible width is a prediction. Its measurement at LEP established that there are three light
+neutrino generations.
 
-The two mixing angles in stage 1 differ — `sin²θ_W = 0.2232` on-shell against `sin²θ_eff = 0.2305` —
-because they are defined by different measurements, one by the boson masses and one by the Z decay
-asymmetries. At tree level they are the same number, and the gap between them is a loop effect.
+The two mixing angles in stage 1 differ (`sin²θ_W = 0.2232` on-shell against `sin²θ_eff = 0.2305`)
+because different measurements define them: the boson masses define one, the Z decay asymmetries the
+other. At tree level they are the same number; the gap between them is a loop effect.
 
 ## Precision is a parameter
 
@@ -96,9 +95,8 @@ pub type FloatType = Float106;
 ```
 
 Every constant is declared at that type through `const_scalar_from_int!` and
-`const_scalar_from_float!`, so no conversion runs at any call site. It sits at `Float106` rather
-than `f64` on purpose: a hard-coded `f64` is invisible while the alias *is* `f64`, and a compile
-error the moment the two differ.
+`const_scalar_from_float!`, so no conversion runs at any call site. The alias defaults to
+`Float106` so that a hard-coded `f64`, invisible while the alias *is* `f64`, becomes a compile error.
 
 All four scalars run, and the verdict line is where the difference shows:
 
@@ -109,19 +107,18 @@ All four scalars run, and the verdict line is where the difference shows:
 | `Float106` | 7.928 MeV | inside one-loop accuracy |
 | `BFloat16` | 500.000 MeV | outside one-loop accuracy |
 
-`BFloat16` carries an eight-bit mantissa, so `80.4 GeV` is resolved to about half a GeV and an
-8 MeV difference between two such numbers is below the last bit. The run says so rather than
-printing a number it cannot support. That is what the tolerance check is for, and it is the reason
-it is stated in the same place as the claim.
+`BFloat16` carries an eight-bit mantissa, so it resolves `80.4 GeV` to about half a GeV, and an
+8 MeV difference between two such numbers falls below the last bit. The tolerance check reports
+that, and the claim it guards is stated in the same place.
 
 ## What this example covers
 
-The goal is to reformulate the essence of an electroweak precision test as a causal process over the
-library's types, and to get precision as a parameter and categorical composition for free once it is
-in that form. The essence is that the theory has almost no freedom and the leftover disagreement is
-where new physics would have to live. The model keeps that and holds everything else simple: the
-on-shell scheme with the library's packaged one-loop corrections, three fermion generations with
-their measured masses, and the `Z` treated as a Breit-Wigner resonance at its peak.
+The example restates the essence of an electroweak precision test as a causal process over the
+library's types; precision as a parameter and categorical composition then come for free. The
+essence: the theory has almost no freedom, and any leftover disagreement is where new physics would
+live. The model keeps that and holds everything else simple: the on-shell scheme with the library's
+packaged one-loop corrections, three fermion generations with their measured masses, and the `Z`
+treated as a Breit-Wigner resonance at its peak.
 
 A calculation a precision-electroweak group would publish adds what this leaves out: the full
 two-loop corrections to `Δr`, QED and QCD corrections to the widths, initial-state radiation
@@ -134,14 +131,14 @@ question a real analysis exists to settle.
 
 Each step keeps the structure already here.
 
-- **Report an uncertainty.** Carry the inputs as `deep_causality_uncertain` distributions instead of
-  numbers, and the deviation becomes a pull rather than a difference.
+- **Report an uncertainty.** Carry the inputs as `deep_causality_uncertain` distributions, and the
+  deviation becomes a pull.
 - **Scan the inputs.** The stages are a `CausalFlow`; running it over a grid of top and Higgs masses
   turns the single prediction into the `M_W`-vs-`m_t` band that precision plots show.
-- **A second scheme.** The library already carries both mixing angles. Computing the same
-  observables in the `MS-bar` scheme and comparing is a direct check on the scheme dependence.
-- **More observables.** The widths and asymmetries are already available on `ElectroweakParams`;
-  folding them into one figure of merit makes the run a fit instead of a comparison.
+- **A second scheme.** The library carries both mixing angles. Computing the same observables in
+  the `MS-bar` scheme and comparing checks the scheme dependence directly.
+- **More observables.** `ElectroweakParams` provides the widths and asymmetries; folding them into
+  one figure of merit turns the comparison into a fit.
 
 ## Files
 

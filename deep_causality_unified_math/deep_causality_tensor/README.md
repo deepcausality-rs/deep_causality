@@ -6,9 +6,9 @@
 
 # CausalTensor - A Flexible Tensor for Dynamic Data
 
-The CausalTensor provides a flexible, multi-dimensional array (tensor) backed by a single, contiguous `Vec<T>`. It is designed for efficient numerical computations, featuring a stride-based memory layout that supports broadcasting for
-element-wise binary operations. It offers a comprehensive API for shape manipulation, element access, and common reduction operations like `sum` and `mean`, making it a versatile tool for causal modeling and other data-intensive
-tasks.
+`CausalTensor` is a multi-dimensional array (tensor) backed by a single, contiguous `Vec<T>`. Its stride-based memory layout supports broadcasting for
+element-wise binary operations. The API covers shape manipulation, element access, and reductions such as `sum` and `mean`. The crate also provides
+Einstein summation and a tensor-train (MPS/MPO) layer.
 
 ## Docs
 
@@ -20,20 +20,20 @@ tasks.
 
 ## Scalar generality (tensor-network layer)
 
-Precision and scalar *kind* are a parameter throughout the tensor-train / MPS–MPO layer, via the
-[`deep_causality_num::ConjugateScalar`] bridge trait (arithmetic + conjugation + a real modulus). One
+Precision and scalar *kind* are a parameter throughout the tensor-train (MPS/MPO) layer, via the
+[`deep_causality_num::ConjugateScalar`] bridge trait (arithmetic, conjugation, and a real modulus). One
 generic implementation serves three families:
 
 | Scalar | What you get |
 |--------|--------------|
 | `f32` / `f64` / `Float106` | the ordinary real stack at three precisions (`Float106` is double-double, ~32 digits) |
-| `Dual<f64>` | forward-mode **automatic differentiation** — derivatives flow through TT-SVD, MPO apply, and the solvers by the chain rule |
+| `Dual<f64>` | forward-mode **automatic differentiation**: derivatives flow through TT-SVD, MPO apply, and the solvers by the chain rule |
 | `Complex<f64>` | the genuine **Hermitian** stack: conjugated inner products `⟨a\|b⟩ = Σ āᵢ bᵢ`, real singular values, unitary `U`/`V`/`Q`, complex Givens/Householder kernels, and a complex Hermitian DMRG eigensolver |
 
 
 ## CausalTensor
 
-`CausalTensor` is straightforward to use. You create it from a flat vector of data and a vector defining its shape.
+Create a `CausalTensor` from a flat vector of data and a vector defining its shape.
 
 ```rust
 use deep_causality_tensor::CausalTensor;
@@ -78,7 +78,7 @@ fn main() {
 
 ## Einstein Sum (ein_sum)
 
-The `ein_sum` function provides a powerful and flexible way to perform various tensor operations, including matrix multiplication, dot products, and more, by constructing an Abstract Syntax Tree (AST) of operations.
+The `ein_sum` function performs tensor operations such as matrix multiplication and dot products by evaluating an Abstract Syntax Tree (AST) of operations.
 
 ```rust
 use deep_causality_tensor::CausalTensor;
@@ -119,7 +119,7 @@ fn main() {
 
 ## Functional Composition 
 
-Causal Tensor implements a Higher Kinded Type via the `deep_causality_haft` crate as Witness Type. When imported, the CausalTensorWitness type allows monadic composition and abstract type programming. For example, one can write generic functions that uniformly process tensors and other types:
+`CausalTensor` implements a Higher Kinded Type through the `deep_causality_haft` crate, with `CausalTensorWitness` as its witness type. The witness enables monadic composition and abstract type programming; for example, one generic function can process tensors and other types alike:
 
 ```rust
 use deep_causality_haft::{Functor, HKT, OptionWitness, ResultWitness};
@@ -157,7 +157,7 @@ fn main() {
     assert_eq!(proc_tensor.data(), &[3, 6, 9]);
 }
 ```
-Functional composition of HKS tensors works best via an effect system that captures side effects and provides detailed errors and logs for each processing step. In the example below, Tensors are composed and the container MyMonadEffect3 capture the final tensor value, optional errors, and detailed logs from each processing step. 
+Functional composition of HKT tensors works best through an effect system that captures side effects and records errors and logs for each processing step. In the example below, tensors are composed, and the container `MyMonadEffect3` captures the final tensor value, optional errors, and the logs from each step.
 
 ```rust
     // ... Truncated  
@@ -175,15 +175,15 @@ Functional composition of HKS tensors works best via an effect system that captu
     println!("Logs: {:?}", final_effect.logs);
 ```
 
-For complex data processing pipelines, these information are invaluable for debugging and optimization. Also, in case more detailed information are required i.e. processing time for each step, then an Effect Monad of arity 4 or 5 can be used to capture additional fields at each step.
+In complex data processing pipelines, this information helps with debugging and optimization. When a pipeline needs more, such as the processing time of each step, an effect monad of arity 4 or 5 captures additional fields at each step.
 
 
 ## CausalTensorTrain
 
 `CausalTensorTrain` is a **tensor train** (matrix-product state / MPS): a high-order tensor stored as a
 chain of rank-3 cores, so the element count grows *linearly* with the order instead of exponentially.
-It is the curse-of-dimensionality escape hatch for the rest of the library. A train is built from a
-dense tensor by **TT-SVD** (or from an oracle, without ever forming the dense tensor, via `cross`),
+The rest of the library uses it to escape the curse of dimensionality. A train is built from a
+dense tensor by **TT-SVD** (or from an oracle, without forming the dense tensor, via `cross`),
 compressed with an explicit [`Truncation`] policy, and queried with `eval`/`norm`/`inner` without
 re-materializing it. The companion `CausalTensorTrainOperator` is a **matrix-product operator** (MPO)
 that maps one train to another. The behaviour lives on the `TensorTrain` / `TensorTrainOperator`
@@ -252,7 +252,7 @@ fn main() {
 ```
 
 Beyond these, the layer provides QR/SVD canonicalization, `cross` (build a train from an oracle),
-and a `solve` module — `linear` (AMEn `A·x = b`), `fit` (ALS completion from samples), `eigen`
+and a `solve` module: `linear` (AMEn `A·x = b`), `fit` (ALS completion from samples), `eigen`
 (DMRG3S ground state), and `tdvp_step` (two-site time evolution). Every operation is generic over the
 scalar via [`deep_causality_num::ConjugateScalar`], so the same code runs at `f32`/`f64`/`Float106`,
 forward-mode AD (`Dual`), and the full Hermitian complex stack (`Complex`).
@@ -276,23 +276,23 @@ The following benchmarks were run on a `CausalTensor` of size 100x100 (10,000 `f
 - All benchmarks were run with random access patterns to simulate real-world usage
 
 ### Key Observations
-1.  **Element Access (`get`):** Access is extremely fast, demonstrating the efficiency of the stride-based index calculation.
-2.  **Shape Manipulation (`reshape`):** This operation is very fast as it only adjusts metadata (shape and strides) and clones the underlying data vector.
-3.  **Arithmetic Operations:** Performance is excellent. The optimized `binary_op` function provides efficient broadcasting for tensor-tensor operations, avoiding allocations in hot loops.
+1.  **Element Access (`get`):** A single access takes ~2 ns, the cost of the stride-based index calculation.
+2.  **Shape Manipulation (`reshape`):** The operation adjusts only metadata (shape and strides); the benchmark time includes a clone of the data vector.
+3.  **Arithmetic Operations:** The `binary_op` function broadcasts tensor-tensor operations without allocating in the inner loop.
 
 ### CausalTensorTrain Performance
 
 `f64` median times on small, deliberately-sized instances (the whole tensor-network bench suite runs
 in seconds). Each row is a Criterion `bench_function`; the `Size` column gives the instance shape.
 
-**Stage 0 — numerical kernels**
+**Stage 0: numerical kernels**
 
 | Operation             | Time       | Size       | Notes                                             |
 |-----------------------|------------|------------|---------------------------------------------------|
 | `svd_truncated`       | ~1.35 ms   | 48 × 48    | One-sided Jacobi truncated thin-SVD.              |
-| `qr`                  | ~62 µs     | 48 × 48    | Householder QR — the cheap canonicalization gauge.|
+| `qr`                  | ~62 µs     | 48 × 48    | Householder QR, the cheap canonicalization gauge.|
 
-**Stage 1 — core tensor-train algebra** (order-4 train, physical dim 4 → 256 dense entries)
+**Stage 1: core tensor-train algebra** (order-4 train, physical dim 4 → 256 dense entries)
 
 | Operation             | Time       | Notes                                            |
 |-----------------------|------------|--------------------------------------------------|
@@ -305,7 +305,7 @@ in seconds). Each row is a Criterion `bench_function`; the `Size` column gives t
 | `from_dense` (TT-SVD) | ~55 µs     | Left-to-right truncated-SVD sweep.               |
 | `round`               | ~73 µs     | Left-canonicalize + R→L truncated-SVD sweep.     |
 
-**Stage 2 — MPO and TT-cross** (operator: 3 sites, dim 2; cross: 4 sites, dim 3, rank-1 oracle)
+**Stage 2: MPO and TT-cross** (operator: 3 sites, dim 2; cross: 4 sites, dim 3, rank-1 oracle)
 
 | Operation              | Time       | Notes                                            |
 |------------------------|------------|--------------------------------------------------|
@@ -315,7 +315,7 @@ in seconds). Each row is a Criterion `bench_function`; the `Size` column gives t
 | `mpo_compose` (MPO·MPO)| ~14.5 µs   | Operator product.                               |
 | `cross`                | ~39 µs     | Build a train from an oracle without going dense.|
 
-**Stage 2c/3 — solvers** (small instances; all four share the alternating-sweep engine)
+**Stage 2c/3: solvers** (small instances; all four share the alternating-sweep engine)
 
 | Operation             | Time       | Notes                                |
 |-----------------------|------------|--------------------------------------|
@@ -326,12 +326,12 @@ in seconds). Each row is a Criterion `bench_function`; the `Size` column gives t
 
 #### Key Observations
 
-1. **The format buys linear, not exponential, scaling.** A 256-entry order-4 tensor is constructed,
+1. **The format scales linearly with the order.** A 256-entry order-4 tensor is constructed,
    recompressed, normed, and queried in tens of microseconds; `eval` reads a single logical entry in
-   ~189 ns *without ever forming the dense tensor* — the reason the tensor-train layer exists.
+   ~189 ns *without forming the dense tensor*.
 2. **SVD is the cost center; QR is the gauge of choice.** `svd_truncated` (~1.35 ms at 48 × 48)
-   dominates everything that compounds over it (`from_dense`, `round`). `qr` is ~20× cheaper, which is
-   exactly why canonicalization sweeps use QR rather than SVD.
+   dominates everything built on it (`from_dense`, `round`). `qr` is ~20× cheaper, so
+   canonicalization sweeps use QR rather than SVD.
 3. **Cheap algebra, costlier compression.** Operations that only contract or grow bonds (`eval`,
    `marginalize`, `add`, `integrate`) are sub-microsecond to low-microsecond; the truncating
    operations (`from_dense`, `round`, `hadamard`) cost more because each carries an SVD/normalization.
@@ -354,10 +354,10 @@ Its cost is `O(rows·cols·ℓ)` versus the deterministic `O(min(rows,cols)³)` 
 | deterministic                   | ~112 µs  |
 | randomized (`oversample = 8`)   | ~124 µs  |
 
-Here randomized is **~10 % slower** — the unfoldings are tiny, Jacobi converges in a few sweeps, and
+Here randomized is **~10 % slower**: the unfoldings are tiny, Jacobi converges in a few sweeps, and
 the sketch/QR overhead does not amortize.
 
-**Large low-rank matrices (randomized wins, hugely).** The truncated SVD of a rank-20 `S×S` matrix
+**Large low-rank matrices (randomized wins by orders of magnitude).** The truncated SVD of a rank-20 `S×S` matrix
 (the kernel every rounding step calls), deterministic Jacobi vs. randomized range-finder:
 
 | `S × S`     | rank | deterministic | randomized | speedup |
@@ -369,17 +369,16 @@ the sketch/QR overhead does not amortize.
 | 1000 × 1000 | 20   | 29.1 s        | 31.2 ms    | 935×    |
 
 The gap widens ~linearly with size because the Jacobi SVD is `O(S³)` regardless of rank while the
-range-finder is `O(S²·ℓ)` with `ℓ ≈ rank + oversample`. (Part of this gap is that our deterministic
-Jacobi does not shortcut low rank; it is the accuracy-first default, not a rank-revealing method.)
+range-finder is `O(S²·ℓ)` with `ℓ ≈ rank + oversample`. (Part of the gap comes from the deterministic
+Jacobi, which does not shortcut low rank: it is the accuracy-first default, not a rank-revealing method.)
 
-**TT `round()` — randomize-then-orthogonalize.** Naively swapping the SVD kernel inside the existing
-`round()` does *not* help (a measured breakdown showed ~92 % of `round`'s time is the deterministic
-left-canonicalization QR sweep, which already shrinks the bonds before any SVD runs). So the randomized
-`round` instead uses the literature's **randomize-then-orthogonalize** scheme (Al Daas–Ballard 2023): it
-sketches the train against random Gaussians via a structured (Khatri-Rao) right-to-left contraction,
-then orthogonalizes only the small `ℓ`-column sketched basis — **never canonicalizing the full high-bond
-train**. Rounding a *sum of `k` copies* of a bond-6 train over `[16,16,16,16]` (the "sum of TT-tensors"
-regime — large input bond, output rank 6):
+**TT `round()`: randomize-then-orthogonalize.** Swapping the SVD kernel inside the deterministic
+`round()` does *not* help: ~92 % of `round`'s time goes to the left-canonicalization QR sweep, which
+shrinks the bonds before any SVD runs. The randomized `round` therefore uses the
+**randomize-then-orthogonalize** scheme (Al Daas–Ballard 2023). It sketches the train against random
+Gaussians via a structured (Khatri-Rao) right-to-left contraction, then orthogonalizes only the small
+`ℓ`-column sketched basis, **never canonicalizing the full high-bond train**. Rounding a *sum of `k` copies* of a bond-6 train over `[16,16,16,16]` (the "sum of TT-tensors"
+regime: large input bond, output rank 6):
 
 | input bond | deterministic `round` | randomized `round` | speedup |
 |------------|-----------------------|--------------------|---------|
@@ -389,7 +388,7 @@ regime — large input bond, output rank 6):
 | 144        | 370 ms                | 6.38 ms            | **58×** |
 
 The randomized `round` time stays **nearly flat (~4–6 ms)** as the input bond grows, while the
-deterministic round grows cubically — so the speedup widens with bond (1.1× → 58×), matching the 20–50×
+deterministic round grows cubically, so the speedup widens with bond (1.1× → 58×), in line with the 20–50×
 the papers report for rounding sums of TT-tensors. Both strategies produce the same result to the
 requested tolerance (verified), and the deterministic kernel stays the **default**. Reproduce with
 `cargo test --release --test mod -- --ignored svd_crossover_study tt_round_compressing_study`.
@@ -398,11 +397,6 @@ requested tolerance (verified), and the deterministic kernel stays the **default
 - Scalar: `f64`
 - Reproduce with `cargo bench -p deep_causality_tensor --bench bench_causal_tensor`.
 
-
-### Technical Details
-- Sample size: 10 measurements per benchmark
-- All benchmarks were run with random access patterns to simulate real-world usage
-
 ### Hardware & OS
 - Architecture: ARM64 (Apple Silicon, M3 Max)
 - OS: macOS 26.5
@@ -410,17 +404,17 @@ requested tolerance (verified), and the deterministic kernel stays the **default
 ## Technical Implementation
 
 ### Strides
-The core of `CausalTensor` is its stride-based memory layout. For a given shape (e.g., `[d1, d2, d3]`), the strides represent the number of elements to skip in the flat data vector to move one step along a particular dimension. For a row-major layout, the strides would be `[d2*d3, d3, 1]`. This allows the tensor to calculate the flat index for any multi-dimensional index `[i, j, k]` with a simple dot product: `i*strides[0] + j*strides[1] + k*strides[2]`.
+`CausalTensor` stores its data in a stride-based memory layout. For a shape such as `[d1, d2, d3]`, the strides give the number of elements to skip in the flat data vector to move one step along each dimension. For a row-major layout, the strides are `[d2*d3, d3, 1]`, and the flat index of any multi-dimensional index `[i, j, k]` is the dot product `i*strides[0] + j*strides[1] + k*strides[2]`.
 
 ### Broadcasting
-Binary operations support broadcasting, which follows rules similar to those in libraries like NumPy. When operating on two tensors, `CausalTensor` compares their shapes dimension by dimension (from right to left). Two dimensions are compatible if:
+Binary operations support broadcasting under rules similar to NumPy's. `CausalTensor` compares the shapes of two tensors dimension by dimension, from right to left. Two dimensions are compatible if:
 1. They are equal.
 2. One of them is 1.
 
-The smaller tensor's data is conceptually "stretched" or repeated along the dimensions where its size is 1 to match the larger tensor's shape, without actually copying the data. The optimized `binary_op` implementation achieves this by manipulating how it calculates the flat index for each tensor inside the computation loop.
+The smaller tensor's data is conceptually repeated along the dimensions where its size is 1 to match the larger tensor's shape, without copying the data. `binary_op` does this by adjusting how it calculates each tensor's flat index inside the computation loop.
 
 ### API Overview
-The `CausalTensor` API is designed to be comprehensive and intuitive:
+The `CausalTensor` API:
 -   **Constructor:** `CausalTensor::new(data: Vec<T>, shape: Vec<usize>)`
 -   **Inspectors:** `shape()`, `num_dim()`, `len()`, `is_empty()`, `as_slice()`
 -   **Indexing:** `get()`, `get_mut()`

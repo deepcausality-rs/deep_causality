@@ -3,11 +3,14 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! Additional coverage for LinkVariable phase construction and SU(N) projection
-//! paths that require matrix dimensions other than 1, 2 or 3.
+//! Additional coverage for LinkVariable phase construction, the determinant and SU(N)
+//! projection at matrix dimensions other than 1, 2 or 3.
 
 use deep_causality_num_complex::Complex;
-use deep_causality_topology::{LinkVariable, LinkVariableError, SE3, SO3_1};
+use deep_causality_stats::Xoshiro256;
+use deep_causality_topology::{
+    GaugeGroup, LinkVariable, LinkVariableError, RandomField, SE3, SO3_1, SU2, SU3, SU3_SU2_U1,
+};
 
 // ============================================================================
 // try_from_phase: general SU(n) arm for n >= 4 (matrix_dim() == 4 here).
@@ -48,20 +51,249 @@ fn test_try_from_phase_general_arm_se3() {
 }
 
 // ============================================================================
-// project_sun -> try_determinant: dimension other than 2/3 returns an error.
+// determinant: closed forms for N <= 3, pivoted LU above.
 // ============================================================================
 
-#[test]
-fn test_project_sun_unsupported_determinant_dimension_errors() {
-    // SO3_1 has n == 4. project_sun runs the Newton-Schulz iteration, then (since
-    // n >= 2) calls try_determinant, whose only supported sizes are 2 and 3.
-    // The 4x4 case hits the `_ => Err(InvalidDimension)` arm.
-    let id: LinkVariable<SO3_1, Complex<f64>, f64> = LinkVariable::identity();
-    let err = id
-        .project_sun()
-        .expect_err("4x4 determinant is unsupported");
-    match err {
-        LinkVariableError::InvalidDimension(n) => assert_eq!(n, 4),
-        other => panic!("expected InvalidDimension(4), got {:?}", other),
+/// A 5x5 gauge group, used only to reach the determinant at an odd order above four.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+struct FiveDimGroup;
+impl GaugeGroup for FiveDimGroup {
+    const LIE_ALGEBRA_DIM: usize = 24;
+    const IS_ABELIAN: bool = false;
+    fn matrix_dim() -> usize {
+        5
     }
+    fn name() -> &'static str {
+        "FiveDim"
+    }
+}
+
+fn c(re: f64, im: f64) -> Complex<f64> {
+    Complex::new(re, im)
+}
+
+fn assert_close(got: Complex<f64>, want: Complex<f64>) {
+    assert!((got - want).norm() < 1e-10, "got {got:?}, want {want:?}");
+}
+
+#[test]
+fn test_determinant_3x3_closed_form() {
+    // [[1+i, 2, 0], [-i, 3, 1-2i], [4, i, 2]]; det = 13 - 9i by cofactor expansion.
+    let m: LinkVariable<SU3, Complex<f64>, f64> = LinkVariable::try_from_matrix(vec![
+        c(1.0, 1.0),
+        c(2.0, 0.0),
+        c(0.0, 0.0),
+        c(0.0, -1.0),
+        c(3.0, 0.0),
+        c(1.0, -2.0),
+        c(4.0, 0.0),
+        c(0.0, 1.0),
+        c(2.0, 0.0),
+    ])
+    .unwrap();
+    assert_close(m.determinant(), c(13.0, -9.0));
+}
+
+/// [[0, 2+i, 1, -i], [3-i, 1, 0, 2], [i, -2, 4+2i, 1], [1, 1+i, -1, 3]].
+/// The zero in the corner forces a row swap at the first column.
+fn matrix_4x4() -> Vec<Complex<f64>> {
+    vec![
+        c(0.0, 0.0),
+        c(2.0, 1.0),
+        c(1.0, 0.0),
+        c(0.0, -1.0),
+        c(3.0, -1.0),
+        c(1.0, 0.0),
+        c(0.0, 0.0),
+        c(2.0, 0.0),
+        c(0.0, 1.0),
+        c(-2.0, 0.0),
+        c(4.0, 2.0),
+        c(1.0, 0.0),
+        c(1.0, 0.0),
+        c(1.0, 1.0),
+        c(-1.0, 0.0),
+        c(3.0, 0.0),
+    ]
+}
+
+/// `matrix_4x4` with its last row replaced by row 0 + i * row 1: complex linear dependence, so
+/// the determinant is zero and the rank is three.
+fn rank_deficient_4x4() -> Vec<Complex<f64>> {
+    let mut data = matrix_4x4();
+    for k in 0..4 {
+        data[12 + k] = data[k] + c(0.0, 1.0) * data[4 + k];
+    }
+    data
+}
+
+#[test]
+fn test_determinant_4x4_pivoted_lu() {
+    // det = -79 - 34i by cofactor expansion in exact Gaussian integers.
+    let m: LinkVariable<SO3_1, Complex<f64>, f64> =
+        LinkVariable::try_from_matrix(matrix_4x4()).unwrap();
+    assert_close(m.determinant(), c(-79.0, -34.0));
+}
+
+#[test]
+fn test_determinant_5x5_pivoted_lu() {
+    // [[0, 1, 2-i, 0, i], [2, 0, 1, 1+i, -1], [1-2i, 3, 0, 1, 2], [0, i, 1, -2, 1],
+    //  [1, 0, -i, 2, 3+i]]; det = -86 + 84i by cofactor expansion.
+    let m: LinkVariable<FiveDimGroup, Complex<f64>, f64> = LinkVariable::try_from_matrix(vec![
+        c(0.0, 0.0),
+        c(1.0, 0.0),
+        c(2.0, -1.0),
+        c(0.0, 0.0),
+        c(0.0, 1.0),
+        c(2.0, 0.0),
+        c(0.0, 0.0),
+        c(1.0, 0.0),
+        c(1.0, 1.0),
+        c(-1.0, 0.0),
+        c(1.0, -2.0),
+        c(3.0, 0.0),
+        c(0.0, 0.0),
+        c(1.0, 0.0),
+        c(2.0, 0.0),
+        c(0.0, 0.0),
+        c(0.0, 1.0),
+        c(1.0, 0.0),
+        c(-2.0, 0.0),
+        c(1.0, 0.0),
+        c(1.0, 0.0),
+        c(0.0, 0.0),
+        c(0.0, -1.0),
+        c(2.0, 0.0),
+        c(3.0, 1.0),
+    ])
+    .unwrap();
+    assert_close(m.determinant(), c(-86.0, 84.0));
+}
+
+#[test]
+fn test_determinant_4x4_singular() {
+    let m: LinkVariable<SO3_1, Complex<f64>, f64> =
+        LinkVariable::try_from_matrix(rank_deficient_4x4()).unwrap();
+    assert!(m.determinant().norm() < 1e-10);
+
+    // A zero column leaves no pivot at all, and the determinant is exactly zero.
+    let mut data = matrix_4x4();
+    for r in 0..4 {
+        data[r * 4 + 2] = c(0.0, 0.0);
+    }
+    let m: LinkVariable<SO3_1, Complex<f64>, f64> = LinkVariable::try_from_matrix(data).unwrap();
+    assert_eq!(m.determinant(), c(0.0, 0.0));
+}
+
+// ============================================================================
+// project_sun for N >= 4.
+// ============================================================================
+
+/// U†U = I and det U = 1 within `tol`.
+fn assert_special_unitary<G: GaugeGroup>(u: &LinkVariable<G, Complex<f64>, f64>, tol: f64) {
+    let n = G::matrix_dim();
+    let udu = u.dagger().mul(u);
+    for i in 0..n {
+        for j in 0..n {
+            let want = if i == j { c(1.0, 0.0) } else { c(0.0, 0.0) };
+            let got = udu.as_slice()[i * n + j];
+            assert!((got - want).norm() < tol, "U†U[{i},{j}] = {got:?}");
+        }
+    }
+    let det = u.determinant();
+    assert!((det - c(1.0, 0.0)).norm() < tol, "det U = {det:?}");
+}
+
+#[test]
+fn test_project_sun_random_4x4_is_special_unitary() {
+    let mut rng = Xoshiro256::from_seed(11);
+    let m: LinkVariable<SO3_1, Complex<f64>, f64> = LinkVariable::try_from_matrix(
+        (0..16)
+            .map(|_| Complex::<f64>::generate_uniform(&mut rng))
+            .collect(),
+    )
+    .unwrap();
+    // The input is neither unitary nor of unit determinant.
+    assert!((m.determinant() - c(1.0, 0.0)).norm() > 1e-3);
+
+    let u = m.project_sun().expect("4x4 projection");
+    assert_special_unitary(&u, 1e-9);
+}
+
+#[test]
+fn test_try_random_for_groups_above_three() {
+    let mut rng = Xoshiro256::from_seed(5);
+    let u: LinkVariable<SE3, Complex<f64>, f64> = LinkVariable::try_random(&mut rng).unwrap();
+    assert_special_unitary(&u, 1e-9);
+    let u: LinkVariable<SU3_SU2_U1, Complex<f64>, f64> =
+        LinkVariable::try_random(&mut rng).unwrap();
+    assert_special_unitary(&u, 1e-9);
+}
+
+// ============================================================================
+// project_sun rejects inputs with no unitary limit; determinant propagates NaN.
+// ============================================================================
+
+fn assert_projection_rejected<G: GaugeGroup>(m: &LinkVariable<G, Complex<f64>, f64>) {
+    match m.project_sun() {
+        Err(LinkVariableError::NumericalError(msg)) => assert!(msg.contains("did not converge")),
+        other => panic!("expected a non-convergence error, got {other:?}"),
+    }
+}
+
+#[test]
+fn test_project_sun_rejects_rank_deficient_2x2() {
+    // [[1, 2i], [1 + i, -2 + 2i]]: second column = 2i * first column, rank one, not zero.
+    let m: LinkVariable<SU2, Complex<f64>, f64> =
+        LinkVariable::try_from_matrix(vec![c(1.0, 0.0), c(0.0, 2.0), c(1.0, 1.0), c(-2.0, 2.0)])
+            .unwrap();
+    assert!(m.determinant().norm() < 1e-12);
+    assert_projection_rejected(&m);
+}
+
+#[test]
+fn test_project_sun_rejects_rank_deficient_4x4() {
+    let m: LinkVariable<SO3_1, Complex<f64>, f64> =
+        LinkVariable::try_from_matrix(rank_deficient_4x4()).unwrap();
+    assert_projection_rejected(&m);
+}
+
+#[test]
+fn test_project_sun_rejects_non_finite_input() {
+    let mut data = matrix_4x4();
+    data[5] = c(f64::NAN, 0.0);
+    let m: LinkVariable<SO3_1, Complex<f64>, f64> = LinkVariable::try_from_matrix(data).unwrap();
+    assert_projection_rejected(&m);
+}
+
+#[test]
+fn test_project_sun_accepts_ill_conditioned_non_singular_input() {
+    // diag(1, 1e-6) rotated by a non-diagonal unitary: condition number 1e6, still invertible.
+    let m: LinkVariable<SU2, Complex<f64>, f64> =
+        LinkVariable::try_from_matrix(vec![c(1.0, 0.0), c(0.0, 1e-6), c(0.0, 1.0), c(1e-6, 0.0)])
+            .unwrap();
+    assert!(m.determinant().norm() > 0.0);
+    let u = m
+        .project_sun()
+        .expect("an invertible input has a unitary polar factor");
+    assert_special_unitary(&u, 1e-9);
+}
+
+#[test]
+fn test_determinant_propagates_nan() {
+    // A whole column of NaN: no pivot compares greater than zero, yet the determinant is NaN.
+    let mut data = matrix_4x4();
+    for r in 0..4 {
+        data[r * 4 + 1] = c(f64::NAN, f64::NAN);
+    }
+    let m: LinkVariable<SO3_1, Complex<f64>, f64> = LinkVariable::try_from_matrix(data).unwrap();
+    let det = m.determinant();
+    assert!(det.re.is_nan() || det.im.is_nan(), "det = {det:?}");
+
+    // A single NaN entry.
+    let mut data = matrix_4x4();
+    data[6] = c(f64::NAN, 0.0);
+    let m: LinkVariable<SO3_1, Complex<f64>, f64> = LinkVariable::try_from_matrix(data).unwrap();
+    let det = m.determinant();
+    assert!(det.re.is_nan() || det.im.is_nan(), "det = {det:?}");
 }

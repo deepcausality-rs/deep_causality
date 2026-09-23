@@ -3,18 +3,28 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::Activity;
+use deep_causality_physics::{Activity, PhysicsErrorEnum};
 
 #[test]
 fn test_activity_new_valid() {
-    let activity = Activity::<f64>::new(3.7e10); // 1 Curie in Becquerels
-    assert!(activity.is_ok());
+    let activity = Activity::<f64>::new(3.7e10).unwrap(); // 1 Curie in Becquerels
+    assert!(
+        (activity.value() - 3.7e10).abs() < 1.0,
+        "one curie is 3.7e10 Bq, got {}",
+        activity.value()
+    );
 }
 
 #[test]
 fn test_activity_new_negative_error() {
     let activity = Activity::<f64>::new(-1.0);
-    assert!(activity.is_err());
+    assert!(
+        matches!(
+            activity.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]

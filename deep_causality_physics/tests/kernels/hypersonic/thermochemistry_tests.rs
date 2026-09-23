@@ -5,7 +5,7 @@
 
 use deep_causality_physics::{
     PARK_NO_IONIZATION_ACTIVATION_TEMP, PARK_NO_IONIZATION_EXPONENT, PARK_NO_IONIZATION_PREFACTOR,
-    THETA_VIB_N2, Temperature, VibrationalTemperature, arrhenius_rate_kernel,
+    PhysicsErrorEnum, THETA_VIB_N2, Temperature, VibrationalTemperature, arrhenius_rate_kernel,
     vibrational_relaxation_kernel,
 };
 
@@ -53,13 +53,25 @@ fn test_arrhenius_monotonic_in_temperature() {
 fn test_arrhenius_rejects_nonpositive_temperature() {
     // Temperature::new already rejects negatives; zero is rejected by the kernel.
     let zero = Temperature::<f64>::new(0.0).unwrap();
-    assert!(arrhenius_rate_kernel(zero, 1.0, 0.0, 100.0).is_err());
+    assert!(
+        matches!(
+            arrhenius_rate_kernel(zero, 1.0, 0.0, 100.0).unwrap_err().0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
+    );
 }
 
 #[test]
 fn test_arrhenius_rejects_negative_prefactor() {
     let t = Temperature::<f64>::new(7000.0).unwrap();
-    assert!(arrhenius_rate_kernel(t, -1.0, 0.0, 100.0).is_err());
+    assert!(
+        matches!(
+            arrhenius_rate_kernel(t, -1.0, 0.0, 100.0).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 // ── Vibrational relaxation (LER) kernel ──────────────────────────────────
@@ -97,8 +109,40 @@ fn test_vibrational_relaxation_is_bounded_and_monotone() {
 fn test_vibrational_relaxation_rejects_bad_inputs() {
     let t_ve = VibrationalTemperature::<f64>::new(300.0).unwrap();
     let t_tr = Temperature::<f64>::new(7000.0).unwrap();
-    assert!(vibrational_relaxation_kernel(t_ve, t_tr, 0.0, 14.0, THETA_VIB_N2, 1e-6).is_err());
-    assert!(vibrational_relaxation_kernel(t_ve, t_tr, 1.0, 0.0, THETA_VIB_N2, 1e-6).is_err());
-    assert!(vibrational_relaxation_kernel(t_ve, t_tr, 1.0, 14.0, 0.0, 1e-6).is_err());
-    assert!(vibrational_relaxation_kernel(t_ve, t_tr, 1.0, 14.0, THETA_VIB_N2, -1.0).is_err());
+    assert!(
+        matches!(
+            vibrational_relaxation_kernel(t_ve, t_tr, 0.0, 14.0, THETA_VIB_N2, 1e-6)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
+    );
+    assert!(
+        matches!(
+            vibrational_relaxation_kernel(t_ve, t_tr, 1.0, 0.0, THETA_VIB_N2, 1e-6)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            vibrational_relaxation_kernel(t_ve, t_tr, 1.0, 14.0, 0.0, 1e-6)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
+    assert!(
+        matches!(
+            vibrational_relaxation_kernel(t_ve, t_tr, 1.0, 14.0, THETA_VIB_N2, -1.0)
+                .unwrap_err()
+                .0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }

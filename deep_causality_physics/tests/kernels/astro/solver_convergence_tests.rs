@@ -131,11 +131,10 @@ fn test_a_perfectly_circular_orbit_is_refused_rather_than_returning_nan() {
     // not rediscovered. At `e = 0` exactly the eccentricity vector vanishes, so the periapsis
     // direction — and with it the mean anomaly — is undefined; `from_state` reports the right
     // eccentricity and mean motion but a `NaN` mean anomaly. Newton's step is then `NaN` at every
-    // iteration, and the old code returned that as a position without a word.
+    // iteration, which surfaces as non-convergence rather than as a silently returned position.
     //
-    // Signalling non-convergence converts the silent `NaN` into a typed refusal. That is strictly
-    // better and is still not a fix: giving a circular orbit a reference direction is a decision
-    // about convention, and belongs to whoever makes it rather than to this stage.
+    // A typed refusal is not a fix: giving a circular orbit a reference direction is a decision
+    // about convention, and belongs to whoever makes it.
     let orbit = periapsis_orbit(1.0, 0.0);
     assert_eq!(orbit.eccentricity(), 0.0, "the orbit itself is well formed");
     let err = orbit

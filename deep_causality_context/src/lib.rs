@@ -30,6 +30,7 @@
 
 mod alias;
 mod errors;
+mod extensions;
 mod traits;
 mod types;
 pub mod utils_test;
@@ -69,6 +70,8 @@ pub use crate::traits::indexable::data_indexable::DataIndexable;
 pub use crate::traits::indexable::time_index_current::CurrentTimeIndex;
 pub use crate::traits::indexable::time_index_previous::PreviousTimeIndex;
 pub use crate::traits::indexable::time_indexable::TimeIndexable;
+// Storable trait
+pub use crate::traits::storable::Storable;
 // Scalar traits
 pub use crate::traits::scalar::scalar_projector::ScalarProjector;
 pub use crate::traits::scalar::scalar_value::ScalarValue;
@@ -105,12 +108,13 @@ pub use crate::types::context_node_types::time::time_kind::TimeKind;
 // Context types
 pub use crate::types::context_types::context_graph;
 pub use crate::types::context_types::context_graph::Context;
+pub use crate::types::context_types::context_store::ContextStore;
 pub use crate::types::context_types::contextoid::contextoid_type::*;
 pub use crate::types::context_types::contextoid::*;
-// Other context types
-pub use crate::types::context_types::relation_kind::*;
-pub use crate::types::context_types::time_scale::TimeScale;
-pub use crate::types::context_types::vertical_datum::VerticalDatum;
+// Vocabulary declared in the persistence contract crate. The node types return these from
+// `datum()`, `time_scale()` and every edge accessor, so a consumer can name them without a second
+// dependency.
+pub use deep_causality_context_store::{RelationKind, SubstrateRef, TimeScale, VerticalDatum};
 
 // Re-exported so an implementor of a context trait does not need a second import for the identity
 // trait every context node carries.

@@ -5,6 +5,8 @@
 
 //! Tests for adm_state.rs - ADM State structure and operations
 
+use deep_causality_physics::PhysicsErrorEnum;
+
 use deep_causality_physics::theories::general_relativity::{AdmOps, AdmState};
 use deep_causality_tensor::CausalTensor;
 use std::f64::consts::PI;
@@ -41,8 +43,11 @@ fn test_adm_structures() {
 
     // Test momentum constraint interface (Expect Error due to missing derivatives)
     assert!(
-        state.momentum_constraint(None).is_err(),
-        "Momentum constraint should error without spatial derivatives"
+        matches!(
+            state.momentum_constraint(None).unwrap_err().0,
+            PhysicsErrorEnum::CalculationError { .. }
+        ),
+        "expected a CalculationError refusal"
     );
 }
 
@@ -190,7 +195,13 @@ fn test_adm_hamiltonian_constraint_singular_metric() {
     let state = AdmState::new(gamma, k, alpha, beta, 0.0);
 
     let result = state.hamiltonian_constraint(None);
-    assert!(result.is_err(), "Singular metric should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 // ============================================================================
@@ -237,8 +248,11 @@ fn test_adm_momentum_constraint_wrong_christoffel_shape() {
 
     let result = state.momentum_constraint(None);
     assert!(
-        result.is_err(),
-        "Wrong Christoffel shape should return error"
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
     );
 }
 
@@ -258,7 +272,10 @@ fn test_adm_inverse_spatial_metric_wrong_size() {
 
     let result = state.hamiltonian_constraint(None);
     assert!(
-        result.is_err(),
-        "Wrong spatial metric size should return error"
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
     );
 }

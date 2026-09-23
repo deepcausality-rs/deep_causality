@@ -4,7 +4,7 @@
 
 [//]: # (---)
 
-All project documentation has been moves the project website:
+Project documentation lives on the project website:
 
 https://deepcausality.com/docs/intro/
 

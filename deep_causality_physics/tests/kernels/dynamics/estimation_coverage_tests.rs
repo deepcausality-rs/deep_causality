@@ -62,7 +62,13 @@ fn test_kalman_early_matmul_mismatch_preempts_late_guards() {
     let q = CausalTensor::new(vec![0.0, 0.0, 0.0, 0.0], vec![2, 2]).unwrap();
 
     let res = kalman_filter_linear_kernel::<f64>(&x_pred, &p_pred, &z, &h, &r, &q);
-    assert!(res.is_err());
+    assert!(
+        matches!(
+            res.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::Singularity { .. }
+        ),
+        "expected a Singularity refusal"
+    );
     // The error originates from the matmul layer, not the late shape guards.
     // A tensor-layer error wrapped as a non-DimensionMismatch variant is equally
     // fine; the point is that the late guards were not the failure site.

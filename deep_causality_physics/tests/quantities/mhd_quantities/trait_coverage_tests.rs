@@ -35,40 +35,39 @@ fn test_mhd_scalars_into_f64() {
     assert_eq!(v, 1.0);
 }
 
+/// The trait contract for a newtype over a scalar, checked against two *distinct* values.
+///
+/// `assert_eq!(a, a.clone())` is reflexive: it holds for any derived `PartialEq` and for a broken
+/// one that always returns true, so it cannot fail. The inequality is what discriminates, and
+/// comparing the two `Debug` renderings is what makes `Debug` observable instead of discarded.
+macro_rules! assert_scalar_traits {
+    ($ty:ty, $small:expr, $large:expr) => {{
+        let a = <$ty>::new($small).unwrap();
+        let b = <$ty>::new($large).unwrap();
+        assert_eq!(a, a.clone(), "clone must preserve equality");
+        assert_ne!(a, b, "distinct values must not compare equal");
+        assert!(a < b, "ordering must follow the wrapped value");
+        assert_ne!(
+            format!("{:?}", a),
+            format!("{:?}", b),
+            "Debug must distinguish distinct values"
+        );
+    }};
+}
+
 #[test]
 fn test_mhd_scalars_traits() {
+    // Copy semantics: a bitwise copy compares equal to its source.
     let a = AlfvenSpeed::<f64>::new(1.0).unwrap();
-    let b = a;
-    assert_eq!(a, b);
-    assert_eq!(a, a.clone());
-    assert!(a < AlfvenSpeed::<f64>::new(2.0).unwrap());
-    let _ = format!("{:?}", a);
+    let copied = a;
+    assert_eq!(a, copied);
 
-    let pb = PlasmaBeta::<f64>::new(0.5).unwrap();
-    assert!(pb < PlasmaBeta::<f64>::new(1.0).unwrap());
-    let _ = format!("{:?}", pb);
-
-    let mp = MagneticPressure::<f64>::new(100.0).unwrap();
-    assert!(mp < MagneticPressure::<f64>::new(200.0).unwrap());
-    let _ = format!("{:?}", mp);
-
-    let lr = LarmorRadius::<f64>::new(1.0).unwrap();
-    assert!(lr < LarmorRadius::<f64>::new(2.0).unwrap());
-    let _ = format!("{:?}", lr);
-
-    let dl = DebyeLength::<f64>::new(1.0).unwrap();
-    assert!(dl < DebyeLength::<f64>::new(2.0).unwrap());
-    let _ = format!("{:?}", dl);
-
-    let pf = PlasmaFrequency::<f64>::new(1.0).unwrap();
-    assert!(pf < PlasmaFrequency::<f64>::new(2.0).unwrap());
-    let _ = format!("{:?}", pf);
-
-    let c = Conductivity::<f64>::new(1.0).unwrap();
-    assert!(c < Conductivity::<f64>::new(2.0).unwrap());
-    let _ = format!("{:?}", c);
-
-    let d = Diffusivity::<f64>::new(1.0).unwrap();
-    assert!(d < Diffusivity::<f64>::new(2.0).unwrap());
-    let _ = format!("{:?}", d);
+    assert_scalar_traits!(AlfvenSpeed<f64>, 1.0, 2.0);
+    assert_scalar_traits!(PlasmaBeta<f64>, 0.5, 1.0);
+    assert_scalar_traits!(MagneticPressure<f64>, 100.0, 200.0);
+    assert_scalar_traits!(LarmorRadius<f64>, 1.0, 2.0);
+    assert_scalar_traits!(DebyeLength<f64>, 1.0, 2.0);
+    assert_scalar_traits!(PlasmaFrequency<f64>, 1.0, 2.0);
+    assert_scalar_traits!(Conductivity<f64>, 1.0, 2.0);
+    assert_scalar_traits!(Diffusivity<f64>, 1.0, 2.0);
 }

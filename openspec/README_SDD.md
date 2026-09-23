@@ -1,7 +1,7 @@
 # SDD: Spec Driven Development
 
-The DeepCausality project makes extensive use of agentic spec-driven development by leaning on the OpenSpec framework
-and a handful of conventions. For web design, the taste skills are used. Ensure you have these installed.
+DeepCausality develops with AI agents from specifications, using the OpenSpec framework and a handful of
+conventions. Web design uses the taste skills. Install both before you start.
 
 ## Installation
  
@@ -13,47 +13,47 @@ and a handful of conventions. For web design, the taste skills are used. Ensure 
 ### Build context first
 
 The first task is always to build context.
-Mandatory context files the agent must read before doing anything are:
+Before doing anything, the agent must read:
 
 @AGENTS.md
 @docs/writing_guides/AiStyleguide.md
 @AffectedCrate
 @RelevantDocumentation
 
-All crate dependencies and repo conventions are documented in AGENTS.md so the agent will find sub-dependencies 
-on its own and use all applicable coding conventions. Always load the  AGENTS.md at the beginning of an Ai coding session. 
+AGENTS.md documents all crate dependencies and repo conventions, so the agent finds sub-dependencies
+on its own and applies the coding conventions. Load AGENTS.md at the start of every AI coding session.
 
-The AiStyleguide is a document that tells the Agent to write in a sensible style that is more readable.
+The AiStyleguide tells the agent how to write readable prose.
 
-Affected crate refers to the primary crate you want to work on.
+The affected crate is the primary crate you work on.
 
-Relevant documentation refers to all documents or publications that help the agent to understand the problem.
+Relevant documentation means every document or publication that helps the agent understand the problem.
 
-Note, for scientific publications, please only use publicly available or open access papers e.g. from arxiv.org, and add these
-to the paper folder of the crate for future references. However, please stay away from ever committing paywalled or otherwise non-public or inaccessible papers as this would amount to a copyright violation.
+Use only publicly available or open-access papers, e.g. from arxiv.org, and add them to the crate's
+papers folder for future reference. Never commit paywalled or otherwise non-public papers; doing so violates copyright.
 
 ### Begin with a note
 
-Start with a note that lays out what you want to do, what the relevant context is, and which constraints apply.
-If unsure where to start, use the explore skills from OpenSpec:
+Start with a note that states what you want to do, the relevant context, and the constraints.
+If unsure where to start, use the OpenSpec explore skill:
 
 ```shell
 /opsx:explore
 ```
 
-Add and commit the note to folder 'openspec/notes' where all current notes reside.
+Add and commit the note to 'openspec/notes', which holds all current notes.
 
-Iterate over the note. Inquire the AI agent for:
+Iterate over the note. Ask the agent for:
 * Hidden assumptions
 * Make or break requirements
 * Important gaps
 
-Once you and the agent agree that the note is reasonably complete, proceed to derive the full specification. Please do not delete any notes that were used to derice a specification. Ensure all notes, specs and relavant information are tracked in Git within the openspec folder. 
+Once you and the agent agree the note is reasonably complete, derive the full specification. Do not delete notes used to derive a specification. Track all notes, specs and relevant information in Git within the openspec folder.
 
 ### Derive the full specification from the note
 
-Use the propose skill and refer to the note to derive the specification from the note and let OpenSpec do the work.
-Ensure to give the specification a meaningful name, for example, add-verification-to-haft-crate.
+Run the propose skill with a reference to the note, and OpenSpec derives the specification.
+Give the specification a meaningful name, for example add-verification-to-haft-crate.
 
 ```shell
 /opsx:propose add-verification-to-haft-crate
@@ -63,74 +63,71 @@ This generates a design document, a proposal, a task list, and a number of speci
 
 ### Review the specification
 
-Begin the review with the proposal document because it lays out the overall idea and process and then pay attention to the design document. If you find unintended decisions, ask the agent to correct, which usually also updates the affected specs and items on the task list.
+Begin with the proposal, which lays out the overall idea and process, then read the design document. If you find unintended decisions, ask the agent to correct them; the correction usually updates the affected specs and task-list items too.
 
-It is common to iterate 2 to 3 times over the specification to hammer out the details required for smooth implementation.
+Expect 2 to 3 iterations over the specification to settle the details implementation needs.
 
 ### Commit the final specification
 
-For provenance reasons, it is important to commit the final specification before implementing it.
+Commit the final specification before implementing it, for provenance.
 
 ### Defer the implemention when deemeded temporary infeasible 
 
-In rare cases, it can happen that the full specication cannot be implemented 
-for some reason. In that case, move the derived specs into folder:
+When a specification cannot be implemented in full, move the derived specs into:
 
 openspec/changes/deferred
 
-and document why the implementation is defered. Sometimes, there are valid reasons e.g. missnig feature in the Rust compiler. If that is the case, please document 
-the exact requiremnt that would unblock the deferred specifcation. 
+and document why the implementation is deferred, e.g. a missing feature in the Rust compiler. Document
+the exact requirement that would unblock the deferred specification.
 
 
 ### Implement the specification
 
-Next, ask the agent to implement the specification using the apply skill.
+Ask the agent to implement the specification with the apply skill.
 
 ```shell
 /opsx:apply add-verification-to-haft-crate
 ```
 
-In general, Claude ultracode or Codex Xhigh are recommended modalities for the implementation because this usually spawns multiple subagents to implement independent specs in parallel, which accelerates the completion. Furthermore, these modes use adversarial sub-agents that verify the correct implementation, which generally results in faster acceptance during CI.
+Claude ultracode or Codex Xhigh are the recommended modes for implementation. They spawn subagents that implement independent specs in parallel, and adversarial subagents that verify the implementation, which usually speeds acceptance in CI.
 
 ### Review the implementation
 
-Most frontier models are very good at implementing according to the specification. Therefore, it is advised to focus the review on the most complex part of the code, such as algorithm or multi-layered integration.
+Frontier models implement specifications well, so focus the review on the most complex code, such as algorithms or multi-layered integration.
 
-After your review concluded that the spec has been implemented, please archive it:
+Once the review confirms the spec is implemented, archive it:
 
 ```shell
 /opsx:archive add-verification-to-haft-crate
 ```
 
-This moves the entire folder into the archive. Note, you have to move the corresponding note yourself
-into the note archive in 'openspec/notes/archive'. Also, please use the refactoring of your IDE to do the move
-to ensure all references to the note are updated to the new location.
+This moves the change folder into the archive. Move the corresponding note yourself
+into 'openspec/notes/archive', using your IDE's refactoring so that every reference to the note follows it.
 
 ### Prepare for PR
 
-Before filing a PR, please ensure the following checks pass:
+Before filing a PR, make sure these checks pass:
 
 * make test
 * make check
 * make format && make fix
 
-Then file a PR and tag some of the team for review.
+Then file a PR and tag team members for review.
 
-Notice, CI runs a large number of tests and also conducts an AI code review, so it's normal
-that multiple code fixes need to be applied before CI turns green.
+CI runs a large test suite and an AI code review, so expect several rounds of fixes before CI
+turns green.
 
-You can always use the PR review prompt from the prompt folder to prepare a PR review yourself
-while waiting for the assigned reviewer to begin the review process. This may catch things the review bot on CI could miss.
+While waiting for the assigned reviewer, run the PR review prompt from 'openspec/prompts' yourself.
+It may catch things the CI review bot misses.
 
 ### Reverting an implementation 
 
-In rare cases, it may become neccesary to revert a fully implemented specification. 
-For that, please draft a specification, complete the refactoring to revert the change, and importanlty, move the specs that were revered AND the specs of the removal into folder:
+To revert a fully implemented specification, draft a specification for the removal, complete the refactoring, and move both the reverted specs AND the removal specs into:
 
 openspec/changes/reverted
 
-Please document why it became necessary to revert the implemented specs and if anything would trigger a re-evaluation. If it was a fundamental dead-end, please document why its not possible. 
+Document why the revert was necessary and what would trigger a re-evaluation. If the approach is a fundamental dead end, document why.
 
 ### Apply improvements
 
-When you encounter valuable lessons learned, please update this and related documents of the development process so that subsequent implementations benefit from those improvements. 
+When you learn a lesson worth keeping, update this document and related process documents so later implementations benefit. 

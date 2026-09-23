@@ -4,7 +4,5 @@
  */
 
 pub mod context_graph;
+pub mod context_store;
 pub mod contextoid;
-pub mod relation_kind;
-pub mod time_scale;
-pub mod vertical_datum;

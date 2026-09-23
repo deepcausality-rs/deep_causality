@@ -8,7 +8,7 @@
 use deep_causality_metric::{EastCoastMetric, LorentzianMetric};
 use deep_causality_physics::theories::GR;
 use deep_causality_physics::theories::general_relativity::{GrOps, schwarzschild_metric_at};
-use deep_causality_physics::{NEWTONIAN_CONSTANT_OF_GRAVITATION, SPEED_OF_LIGHT};
+use deep_causality_physics::{NEWTONIAN_CONSTANT_OF_GRAVITATION, PhysicsErrorEnum, SPEED_OF_LIGHT};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{GaugeField, Manifold, Simplex, SimplicialComplexBuilder};
 // ============================================================================
@@ -300,7 +300,13 @@ fn test_momentum_constraint_wrong_2d_shape() {
     let bad_k = CausalTensor::zeros(&[2, 3]);
     let result = gr.momentum_constraint_field(&bad_k, None);
 
-    assert!(result.is_err(), "Wrong 2D shape [2, 3] should error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -327,7 +333,13 @@ fn test_momentum_constraint_wrong_3d_shape() {
     let bad_k = CausalTensor::zeros(&[num_simplices, 2, 3]);
     let result = gr.momentum_constraint_field(&bad_k, None);
 
-    assert!(result.is_err(), "Wrong 3D shape [N, 2, 3] should error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -353,12 +365,24 @@ fn test_momentum_constraint_wrong_dimension() {
     // 1D K should fail
     let k_1d = CausalTensor::zeros(&[9]);
     let result = gr.momentum_constraint_field(&k_1d, None);
-    assert!(result.is_err(), "1D K_ij should error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 
     // 4D K should fail
     let k_4d = CausalTensor::zeros(&[1, 1, 3, 3]);
     let result = gr.momentum_constraint_field(&k_4d, None);
-    assert!(result.is_err(), "4D K_ij should error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -392,8 +416,11 @@ fn test_momentum_constraint_matter_size_mismatch() {
     let result = gr.momentum_constraint_field(&k, Some(&wrong_j));
 
     assert!(
-        result.is_err(),
-        "Matter momentum size mismatch should error"
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
     );
 }
 
@@ -678,8 +705,11 @@ fn test_kretschmann_with_singular_metric() {
 
     let result = gr.kretschmann_scalar();
     assert!(
-        result.is_err(),
-        "Singular metric should cause kretschmann_scalar to fail"
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
     );
 }
 
@@ -776,7 +806,13 @@ fn test_ricci_scalar_singular_metric_errors() {
     let riemann = CausalTensor::zeros(&[n, 4, 4, 6]);
     let topo_metric = EastCoastMetric::minkowski_4d().into_metric();
     let gr: GR<f64> = GaugeField::new(base, topo_metric, connection, riemann).unwrap();
-    assert!(gr.ricci_scalar().is_err());
+    assert!(
+        matches!(
+            gr.ricci_scalar().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
@@ -798,8 +834,11 @@ fn test_ricci_scalar_connection_cols_too_small_errors() {
     let gr: GR<f64> = GaugeField::new(base, topo_metric, connection, riemann).unwrap();
 
     assert!(
-        gr.ricci_scalar().is_err(),
-        "Connection with last dim < 4 must fail invert_4x4 (cols < 4)"
+        matches!(
+            gr.ricci_scalar().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
     );
 }
 
@@ -822,8 +861,11 @@ fn test_ricci_scalar_connection_too_small_data_errors() {
     let gr: GR<f64> = GaugeField::new(base, topo_metric, connection, riemann).unwrap();
 
     assert!(
-        gr.ricci_scalar().is_err(),
-        "Connection with too few elements for 4xcols must fail invert_4x4"
+        matches!(
+            gr.ricci_scalar().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
     );
 }
 
@@ -915,8 +957,11 @@ fn test_momentum_constraint_singular_spatial_metric() {
     let k = CausalTensor::zeros(&[3, 3]);
     let result = gr.momentum_constraint_field(&k, None);
     assert!(
-        result.is_err(),
-        "Singular spatial metric must propagate as error"
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
     );
 }
 

@@ -9,6 +9,8 @@ use crate::{Coordinate, EcefSpace, EuclideanSpace, GeoSpace, NedSpace, Spatial};
 use deep_causality_algebra::RealField;
 use deep_causality_core::Identifiable;
 
+mod recordable;
+
 /// An enumeration over supported spatial context types.
 ///
 /// This abstraction allows unified handling of multiple space types:

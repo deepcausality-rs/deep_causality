@@ -21,42 +21,38 @@
 
 **Core types and abstractions for the [DeepCausality project](http://www.deepcausality.com).**
 
-This crate provides the foundational building blocks for causal reasoning and effect propagation. It is the monadic foundation of the wider DeepCausality ecosystem and supports `no_std` (with `alloc`) for embedded and high-assurance systems.
+This crate provides the causal monad that the rest of DeepCausality builds on: the types for causal reasoning and effect propagation. It supports `no_std` (with `alloc`) for embedded and high-assurance systems.
 
 ### Architecture
 
-`deep_causality_core` is built on a single, unified abstraction: a **monadic effect system** for dynamic causal
+`deep_causality_core` rests on one abstraction: a **monadic effect system** for dynamic causal
 reasoning.
 
-*   **What It Is**: A flexible, functional foundation for modeling processes using monadic types like
-    `PropagatingEffect` (stateless) and `PropagatingProcess` (stateful), all built on the unified
-    `CausalEffectPropagationProcess` container.
-*   **Key Feature**: **Flexibility & Composability**. It allows for dynamic chaining of operations (`bind`), state
-    propagation, context-awareness, and causal interventions (Pearl's do-calculus).
-*   **Best For**:
-    *   The foundation of the main `deep_causality` library.
-    *   Complex simulations where state and context evolve.
-    *   Systems that need to reason about and dynamically respond to events.
-*   **Relationship**: This system is the foundation that enables the advanced causal reasoning capabilities of the wider
-    DeepCausality ecosystem.
+*   **What it is**: Monadic types for modeling processes: `PropagatingEffect` (stateless) and
+    `PropagatingProcess` (stateful), both built on the `CausalEffectPropagationProcess` container.
+*   **Composition**: Operations chain dynamically (`bind`) with state propagation, context, and
+    counterfactual value substitution (`AlternatableValue`).
+*   **Used for**:
+    *   The main `deep_causality` library.
+    *   Simulations where state and context evolve.
+    *   Systems that reason about and respond to events.
 
 ## Core Capabilities
 
 ### Causal Effect Systems
-The crate defines the core types for modeling causal systems using **Monadic Effect Systems**.
-*   **`CausalMonad`**: A monadic interface for chaining causal effects, allowing for composable and testable logic.
-*   **`PropagatingEffect` / `PropagatingProcess`**: Types that model how effects ripple through a system, integrated with Higher-Kinded Types (HKT) via `deep_causality_haft`.
-*   **`Intervenable`**: Support for causal interventions (Pearl's do-calculus) over both effect and process types.
+*   **`CausalMonad`**: The monadic interface for chaining causal effects into composable, testable logic.
+*   **`PropagatingEffect` / `PropagatingProcess`**: Types that model how effects propagate through a system, integrated with Higher-Kinded Types (HKT) via `deep_causality_haft`.
+*   **`AlternatableValue`**, **`AlternatableState`**, **`AlternatableContext`**: Counterfactual substitution of the value, state, or context of an effect or process.
 
 ## Feature Flags
 
 | Feature | Default | Description |
 | :--- | :--- | :--- |
-| **`std`** | Yes | Enables standard library support. Suitable for servers, desktops, and research. |
-| **`no-std`** | No | Builds without the standard library and routes float math through `libm`. Suitable for bare metal, embedded Linux / RTOS. |
-| **`alloc`** | Yes | Enables heap allocation (`Vec`, `Box`). Enabled by both `std` and `no-std`, which are the two features to choose between. |
+| **`std`** | Yes | Enables the standard library. For servers, desktops, and research. |
+| **`no-std`** | No | Builds without the standard library and routes float math through `libm`. For bare metal, embedded Linux / RTOS. |
+| **`alloc`** | Yes | Enables heap allocation (`Vec`, `Box`). Both `std` and `no-std` enable it. |
 
-Pick exactly one platform level: `std` or `no-std`. Because `alloc` sits on top of either one and leaves the float-math backend unselected, enabling it alone fails the build with a message pointing back here.
+Pick exactly one platform level: `std` or `no-std`. `alloc` alone leaves the float-math backend unselected, so enabling it alone fails the build with a message pointing back here.
 
 Use **default features** for general applications. For bare-metal `no_std`, disable defaults and enable `no-std` (see [non-std Support](#non-std-support) below).
 
@@ -64,11 +60,11 @@ Use **default features** for general applications. For bare-metal `no_std`, disa
 
 ### PropagatingEffect (Stateless)
 
-`PropagatingEffect` is a monadic container for stateless causal effects. It supports standard functional transformations (`map`, `bind`) via the `Functor` and `Monad` traits.
+`PropagatingEffect` is a monadic container for stateless causal effects. It supports the functional transformations `map` and `bind` through the `Functor` and `Monad` traits.
 
 ```rust
-use deep_causality_core::{PropagatingEffect, PropagatingEffectWitness};
-use deep_causality_haft::{Functor, Applicative};
+use deep_causality_core::PropagatingEffectWitness;
+use deep_causality_haft::{Functor, Pure};
 
 fn main() {
     // Create a pure effect
@@ -83,11 +79,11 @@ fn main() {
 
 ### PropagatingProcess (Stateful)
 
-`PropagatingProcess` extends `PropagatingEffect` with **State** and **Context**. It allows you to model Markovian processes where each step can read/write state and access configuration context.
+`PropagatingProcess` extends `PropagatingEffect` with **State** and **Context**. It models Markovian processes in which each step reads and writes state and reads a configuration context.
 
 ```rust
-use deep_causality_core::{PropagatingProcess, PropagatingEffectWitness, EffectValue};
-use deep_causality_haft::Applicative;
+use deep_causality_core::{CausalEffectPropagationProcess, PropagatingEffectWitness, PropagatingProcess};
+use deep_causality_haft::Pure;
 
 #[derive(Clone, Default, Debug)]
 struct State { count: i32 }
@@ -95,14 +91,14 @@ struct State { count: i32 }
 fn main() {
     // Lift a pure effect into a stateful process
     let effect = PropagatingEffectWitness::pure(10);
-    let process = PropagatingProcess::with_state(effect, State::default(), None);
+    let process = PropagatingProcess::with_state(effect, State::default(), None::<()>);
 
     // Chain stateful computation. Value and error are one channel (`outcome`), so a step
     // builds the process with `new(Ok(..)/Err(..), state, context, logs)`.
     let next = process.bind(|val, mut state, ctx| {
         state.count += 1;
-        deep_causality_core::CausalEffectPropagationProcess::new(
-            Ok(EffectValue::Value(val.into_value().unwrap() + 1)),
+        CausalEffectPropagationProcess::new(
+            Ok(val.map(|v| v + 1)),
             state,
             ctx,
             Default::default(),
@@ -116,31 +112,33 @@ fn main() {
 
 ### Intervention & Counterfactuals
 
-DeepCausality Core supports **Causal Interventions** (Pearl's "Do-calculus"). You can intervene on a running process to override values and simulate counterfactual scenarios ("What if X had been Y?").
+A running effect or process can have its value substituted to simulate a counterfactual ("What if X had been Y?"). This is value substitution on the monad; Pearl's `do(...)` graph surgery lives in the `deep_causality` Causaloid and hypergraph layer, where a graph is in scope.
 
-The `Intervenable` trait adds the `.intervene(value)` method to both `PropagatingEffect` and `PropagatingProcess`.
+The `AlternatableValue` trait adds `.alternate_value(value)` to both `PropagatingEffect` and `PropagatingProcess`.
 
 ```rust
-use deep_causality_core::{PropagatingEffectWitness, Intervenable};
+use deep_causality_core::{AlternatableValue, PropagatingEffectWitness};
+use deep_causality_haft::Pure;
 
 // 1. Create a factual effect
 let effect = PropagatingEffectWitness::pure(10);
 
-// 2. Intervene to force a new value (Counterfactual)
-// This preserves logs and error states but overrides the value.
-let counterfactual = effect.intervene(42);
+// 2. Substitute a new value (counterfactual).
+// State, context and logs are preserved; an errored effect is returned unchanged.
+let counterfactual = effect.alternate_value(42);
+assert_eq!(counterfactual.value(), Some(&42));
 ```
 
 ### CausalFlow (Fluent DSL)
 
-`CausalFlow` is a thin, fluent facade over the causal monad. It hides the HKT witness types, the verbose `pure` / `with_state` constructors, the `EffectValue` wrapping, and the manual error short-circuit, so a pipeline reads top to bottom. Every method lowers to an existing monad operation, so the facade adds sugar, not new semantics.
+`CausalFlow` is a thin, fluent facade over the causal monad. It hides the HKT witness types, the `pure` / `with_state` constructors, the `CausalEffect` wrapping, and the manual error short-circuit, so a pipeline reads top to bottom. Every method lowers to an existing monad operation; the facade adds no semantics.
 
 ```rust
 use deep_causality_core::CausalFlow;
 
 // `try_step` runs a fallible stage (`Ok` lifts a value, `Err` short-circuits),
 // `map` is an infallible transform, and `finish` extracts the final value or the
-// error the flow stopped on. The witness types and `EffectValue` never appear.
+// error the flow stopped on. The witness types and `CausalEffect` never appear.
 let outcome = CausalFlow::value(2_i64)
     .try_step(|x| Ok(x + 3))
     .map(|x| x * 10)
@@ -182,8 +180,8 @@ The same facade covers the whole monad surface, grouped by role:
 
 | Operator | Description |
 | :--- | :--- |
-| `intervene(value)` | Apply Pearl's `do(value)` mid-flow, recording the override in the audit log. |
-| `intervene_if(cond, f)` | Intervene only when `cond` holds over the current value. |
+| `alternate_value(value)` | Substitute the value mid-flow, recording the override in the audit log. |
+| `alternate_value_if(cond, f)` | Substitute `f(value)` only when `cond` holds over the current value. |
 
 **Terminals**
 

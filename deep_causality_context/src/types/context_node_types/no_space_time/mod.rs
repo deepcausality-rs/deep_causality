@@ -10,6 +10,7 @@ mod coordinate;
 mod display;
 mod identifiable;
 mod metric_signature;
+mod recordable;
 mod space_temporal;
 mod spatial;
 mod temporal;

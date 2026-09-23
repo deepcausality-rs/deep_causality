@@ -10,7 +10,7 @@ Stage-4 stack end to end:
 - the cut **Hodge star** (B5) makes every operator, meaning compiled stencils, the constrained Leray
   projection, and the codifferential, see the partial cells transparently;
 - the immersed **no-slip / no-penetration** condition (B4) pins the body's edges through the
-  existing constrained projector;
+  constrained projector;
 - the channel is driven by a **moving top wall whose velocity is a `MaybeUncertain<f64>` sensor
   stream** (Group C). Each step the reading is presence-gated and collapsed to a scalar inflow. A
   **dropout** falls back to the last-good value through a Pearl `do(...)` intervention, recorded in
@@ -64,8 +64,8 @@ The solver is **stateless and portable** (`step(&self, field)`); the **state liv
 Each step is the `inflow_march_step` bind stage over a
 `PropagatingProcess<f64, InflowMarchState, InflowContext>`. It presence-gates the sensor sample
 (`MaybeUncertain::lift_to_uncertain`), collapses a present reading to a prescribed wall velocity
-(`expected_value`), reconfigures the boundary through the **existing** moving-wall lift, and
-marches. **The uncertain types never enter the solver core, and the solver is unchanged.** On a
+(`expected_value`), reconfigures the boundary through the moving-wall lift, and
+marches. **The uncertain types never enter the solver core.** On a
 dropout the last-good value is substituted through `intervene`, a logged value alternation. This
 example drives the march one bind at a time so the wake probe can be streamed;
 `deep_causality_cfd::march_inflow` packages the identical stage as a `CausalFlow::iterate_n` loop.
@@ -73,10 +73,10 @@ example drives the march one bind at a time so the wake probe can be streamed;
 ## What this harness is, and is not
 
 The DEC solver has **no inflow/outflow surface**. The sensor drives a **prescribed moving wall**, a
-Dirichlet boundary the solver already supports, confined in a **periodic-x channel** (periodic-x,
+Dirichlet boundary the solver supports, confined in a **periodic-x channel** (periodic-x,
 wall-y) containing the cylinder. At 25 % blockage that confinement damps the von-Kármán street, so
-no street is shed here. The run is a faithful exercise of the cut-cell and uncertain-zone machinery;
-it is not a shedding case. `dec_cylinder_verification` is the harness that sheds.
+no street is shed here. The run exercises the cut-cell and uncertain-zone machinery; it is not a
+shedding case. `dec_cylinder_verification` is the harness that sheds.
 
 The quantitative **isolated-cylinder Reynolds ladder** against Lehmkuhl et al. (2013) and the
 Williamson lineage, tasks D2/D3 covering Strouhal and drag over Re 100–3900, needs a true
@@ -112,5 +112,6 @@ this example, per the tests-fast / examples-verify split:
 - **immersed no-slip**: an immersed solid block pins its edges to zero and the flow stays
   divergence-free (`deep_causality_cfd` `cut_cell_wiring_tests`).
 
-The **small-cell stability** rung, where a deliberately tiny cut marches without CFL blow-up under
-the chosen stabilizer, lands with the B1–B3 stabilizer selection.
+The **small-cell stability** rung, where deliberately tiny cut cells march without CFL blow-up with
+and without the cell-merging stabilizer, is `deep_causality_cfd`
+`cut_cell_wiring_tests::tiny_cut_cells_are_inherently_small_cell_stable`.

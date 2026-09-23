@@ -5,11 +5,11 @@ structures built on them.
 
 A witness stands in for a type constructor, so `Functor`,
 `Monad`, `CoMonad` and the rest are written once and used over `Vec`, `Option`, `Result`, a
-tensor or a multivector. Each example takes one structure, puts it on a domain problem, and
-shows what the structure buys.
+tensor or a multivector. Each example applies one structure to a domain problem and shows what
+the structure provides.
 
-These are the vocabulary. `2_composition/` uses it to cross crate boundaries, and
-`3_applications/` puts whole use cases on top.
+`2_composition/` uses this vocabulary to cross crate boundaries, and `3_applications/` builds
+whole use cases on top.
 
 Every example follows the three house rules: precision is a parameter (`FloatType`), values
 cross the precision boundary through `deep_causality_num::lift`, and printing lives in helper
@@ -42,8 +42,8 @@ cargo run -p mathematics_examples --example <example_name>
 
 ## The same traits on the math witnesses
 
-The vocabulary above is written against `Option`, `Vec` and `Result`. These three put it on
-the witnesses the math crates own, which is where `2_composition/` picks it up.
+The examples above use `Option`, `Vec` and `Result`. These three apply the same traits to the
+witnesses the math crates own, which `2_composition/` builds on.
 
 | File | Description | Command |
 |------|-------------|---------|
@@ -53,8 +53,9 @@ the witnesses the math crates own, which is where `2_composition/` picks it up.
 
 ## Patterns written out by hand
 
-Two examples build the pattern directly. The shipped implementations live in other crates, and
-each row says where.
+`adjunction.rs` and `parametric_monad.rs` build their pattern by hand; the shipped
+`ParametricMonad` lives in `deep_causality_haft`. `free_and_cofree.rs` uses the shipped `Free`
+and `Cofree` from `deep_causality_haft`.
 
 | File | Description | Command |
 |------|-------------|---------|

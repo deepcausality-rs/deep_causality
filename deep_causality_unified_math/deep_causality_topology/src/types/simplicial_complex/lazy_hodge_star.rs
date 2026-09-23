@@ -5,18 +5,14 @@
 
 //! Lazy lumped-mass Hodge ⋆ population for `SimplicialComplex<T>`.
 //!
-//! The construction was previously inlined inside `PointCloud::triangulate`,
-//! eagerly computed for every triangulated complex regardless of whether the
-//! caller consumed the Hodge ⋆ surface. That conflated topological (TDA /
-//! clique-complex / Euler-characteristic) consumers with geometric (DEC / Hodge
-//! ⋆ / Laplacian) consumers and forced TDA callers to satisfy geometric
-//! preconditions they never used.
+//! The build is a single `pub(crate)` function the lazy accessor invokes on first read, so a
+//! triangulated complex pays for the Hodge ⋆ surface only when a caller consumes it.
 //!
-//! This module exposes the build as a single `pub(crate)` function that the
-//! lazy accessor invokes on first read. The top-volume degeneracy rejection
-//! lives here, not in `triangulate`. TDA-only consumers never reach this code
-//! path; DEC consumers see the unified `"top-dimensional simplex below
-//! tolerance"` error at the point of access.
+//! That separates the two kinds of consumer. Topological ones — TDA, clique complexes, Euler
+//! characteristics — never reach this path and need satisfy no geometric precondition. Geometric
+//! ones — DEC, Hodge ⋆, the Laplacian — see the `"top-dimensional simplex below tolerance"` error
+//! at the point of access, since the degeneracy rejection lives here rather than in
+//! `PointCloud::triangulate`.
 
 use crate::{Simplex, Skeleton, TopologyError};
 use deep_causality_algebra::RealField;
@@ -79,10 +75,9 @@ where
     }
 
     // The Gram matrix is square by construction, so the only error `determinant` can raise
-    // cannot arise. Unlike the fixed-diagonal elimination this replaces, it pivots by search and
-    // scales its degeneracy floor by the matrix's own magnitude, so a uniformly small simplex is
-    // no longer read as degenerate merely for being small. The caller's absolute top-volume
-    // threshold still rejects one.
+    // cannot arise. It pivots by search and scales its degeneracy floor by the matrix's own
+    // magnitude, so a uniformly small simplex is not read as degenerate merely for being small;
+    // the caller's absolute top-volume threshold is what rejects one.
     let gram = DenseMatrix::from_vec(matrix_data, n_vecs, n_vecs)
         .expect("Gram matrix is square by construction");
     let det = determinant(&gram).expect("Gram matrix is square by construction");
@@ -99,6 +94,131 @@ where
         .expect("factorial of n_vecs fits in every RealField");
 
     det.sqrt() / factorial_t
+}
+
+/// `P[a][b] = ∇λ_a · ∇λ_b` for one simplex, row-major over `(n+1)²`.
+///
+/// Only the inner products are ever needed, never the gradient vectors, and they are read
+/// straight off the inverse edge-Gram: with `e_i = p_i − p_0`, the barycentric coordinates
+/// satisfy `λ = (EᵀE)⁻¹ Eᵀ (x − p_0)`, so `∇λ_i · ∇λ_j = (EᵀE)⁻¹[i][j]` for `i, j ≥ 1`. The
+/// row and column for `λ_0` follow from `Σ_a ∇λ_a = 0`, since the barycentric coordinates sum
+/// to one everywhere.
+///
+/// Returns `None` when the edge-Gram is singular, which is a degenerate cell.
+fn barycentric_gradient_gram<T>(simplex: &Simplex, points: &[T], dim: usize) -> Option<Vec<T>>
+where
+    T: RealField + FromPrimitive,
+{
+    let vs = &simplex.vertices;
+    let n = vs.len().checked_sub(1)?;
+    if n == 0 {
+        return Some(vec![T::zero()]);
+    }
+
+    let coord = |v: usize| &points[v * dim..(v + 1) * dim];
+    let p0 = coord(vs[0]);
+    let edges: Vec<Vec<T>> = (1..=n)
+        .map(|i| {
+            let pi = coord(vs[i]);
+            (0..dim).map(|d| pi[d] - p0[d]).collect()
+        })
+        .collect();
+
+    let mut gram = vec![T::zero(); n * n];
+    for i in 0..n {
+        for j in 0..n {
+            let mut acc = T::zero();
+            for (a, b) in edges[i].iter().zip(edges[j].iter()) {
+                acc += *a * *b;
+            }
+            gram[i * n + j] = acc;
+        }
+    }
+
+    let gm = DenseMatrix::from_vec(gram, n, n).ok()?;
+    let ginv = deep_causality_linear::inverse(&gm).ok()?;
+    let gi = ginv.as_slice();
+
+    let m = n + 1;
+    let mut p = vec![T::zero(); m * m];
+    let mut total = T::zero();
+    for i in 0..n {
+        for j in 0..n {
+            p[(i + 1) * m + (j + 1)] = gi[i * n + j];
+            total += gi[i * n + j];
+        }
+    }
+    for j in 0..n {
+        let mut col = T::zero();
+        for i in 0..n {
+            col += gi[i * n + j];
+        }
+        p[j + 1] = T::zero() - col;
+        p[(j + 1) * m] = T::zero() - col;
+    }
+    p[0] = total;
+    Some(p)
+}
+
+/// `∫_T W_σ · W_σ dV`, the self-mass of the Whitney k-form of a k-simplex on the cell that
+/// carries it.
+///
+/// With `W_σ = k! Σ_l (−1)^l λ_{i_l} dλ_{i_0} ∧ … ∧ ^dλ_{i_l} ∧ … ∧ dλ_{i_k}` and
+/// `∫_T λ_a λ_b dV = |T| (1 + δ_ab) / ((n+1)(n+2))`, expanding the product gives
+///
+/// ```text
+/// (k!)^2 Σ_{l,m} (−1)^{l+m} ∫λ_{i_l}λ_{i_m} · det[ ∇λ_a · ∇λ_b ]
+/// ```
+///
+/// where the determinant is the Gram of the two index lists with positions `l` and `m` removed
+/// — the inner product of two decomposable k-covectors. `local` gives σ's vertices as positions
+/// within the cell's own vertex list.
+fn whitney_self_mass<T>(
+    local: &[usize],
+    grad_gram: &[T],
+    m: usize,
+    volume: T,
+    n: usize,
+) -> Option<T>
+where
+    T: RealField + FromPrimitive,
+{
+    let k = local.len().checked_sub(1)?;
+    let denom = <T as FromPrimitive>::from_usize((n + 1) * (n + 2))?;
+    let two = <T as FromPrimitive>::from_f64(2.0)?;
+
+    let mut total = T::zero();
+    for l in 0..=k {
+        for mm in 0..=k {
+            let rows: Vec<usize> = (0..=k).filter(|t| *t != l).map(|t| local[t]).collect();
+            let cols: Vec<usize> = (0..=k).filter(|t| *t != mm).map(|t| local[t]).collect();
+
+            let det = if k == 0 {
+                T::one()
+            } else {
+                let mut sub = vec![T::zero(); k * k];
+                for (a, &ra) in rows.iter().enumerate() {
+                    for (b, &cb) in cols.iter().enumerate() {
+                        sub[a * k + b] = grad_gram[ra * m + cb];
+                    }
+                }
+                determinant(&DenseMatrix::from_vec(sub, k, k).ok()?).ok()?
+            };
+
+            // ∫ λ_a λ_b carries the extra factor of two on the diagonal.
+            let coincide = if local[l] == local[mm] { two } else { T::one() };
+            let integral = volume * coincide / denom;
+            let term = integral * det;
+            if (l + mm) % 2 == 0 {
+                total += term;
+            } else {
+                total -= term;
+            }
+        }
+    }
+
+    let k_fact = <T as FromPrimitive>::from_usize((1..=k).product::<usize>().max(1))?;
+    Some(total * k_fact * k_fact)
 }
 
 /// Builds the lumped-mass Hodge ⋆ operators for a simplicial complex from its
@@ -140,6 +260,40 @@ where
     let max_dim_plus_one =
         <T as FromPrimitive>::from_usize(max_dim + 1).expect("max_dim + 1 fits in every RealField");
 
+    // Every top-dimensional volume is checked before any grade is built. The top grade divides by
+    // these volumes and the intermediate grades read the barycentric gradients of these cells,
+    // which do not exist for a degenerate one; checking here names the degeneracy as such rather
+    // than as a failure to invert an edge-Gram at grade 1.
+    // At `max_dim == 0` the top grade is the vertex grade, which the `k == 0` arm builds from dual
+    // volumes, so a vertexless cell there is given no mass rather than rejected.
+    if max_dim >= 1 {
+        for (i, v) in primal_volumes[max_dim].iter().enumerate() {
+            if *v <= top_threshold {
+                return Err(TopologyError::PointCloudError(format!(
+                    "hodge_star_operators: top-dimensional simplex at index {i} has volume below tolerance (T::epsilon() * 100), indicating degenerate input geometry"
+                )));
+            }
+        }
+    }
+
+    // The top cells incident on each vertex, in cell order. The vertex grade
+    // sums over them directly; the intermediate grades look up the cells carrying a simplex among
+    // those at its first vertex, and compute each cell's gradient Gram on first use and keep it.
+    // A cell with a repeated vertex is listed twice under it, which changes nothing: such a cell
+    // has zero volume, and above `max_dim == 0` the threshold check has already rejected it.
+    let top_cells = &skeletons[max_dim].simplices;
+    let mut vertex_star: Vec<Vec<usize>> = Vec::new();
+    for (cell_idx, cell) in top_cells.iter().enumerate() {
+        for &v in &cell.vertices {
+            if v >= vertex_star.len() {
+                vertex_star.resize_with(v + 1, Vec::new);
+            }
+            vertex_star[v].push(cell_idx);
+        }
+    }
+    let all_cells: Vec<usize> = (0..top_cells.len()).collect();
+    let mut grams: Vec<Option<Vec<T>>> = (0..top_cells.len()).map(|_| None).collect();
+
     let mut hodge_ops = Vec::with_capacity(skeletons.len());
 
     for k_dim in 0..=max_dim {
@@ -151,29 +305,71 @@ where
 
             let mass_val = if k_dim == 0 {
                 let mut dual_vol = T::zero();
-                let n_skel = &skeletons[max_dim];
-                let n_vols = &primal_volumes[max_dim];
-                for (cell_idx, cell) in n_skel.simplices.iter().enumerate() {
-                    if cell.contains_vertex(&i) {
-                        dual_vol += n_vols[cell_idx];
-                    }
+                for &cell_idx in vertex_star.get(i).map_or(&[][..], Vec::as_slice) {
+                    dual_vol += primal_volumes[max_dim][cell_idx];
                 }
                 dual_vol / max_dim_plus_one
             } else if k_dim == max_dim {
-                if primal_vol > top_threshold {
-                    T::one() / primal_vol
-                } else {
-                    return Err(TopologyError::PointCloudError(format!(
-                        "hodge_star_operators: top-dimensional simplex at index {} has volume below tolerance (T::epsilon() * 100), indicating degenerate input geometry",
-                        i
-                    )));
-                }
+                // Positive: every top volume cleared the threshold above.
+                T::one() / primal_vol
             } else {
                 debug_assert!(
                     primal_vol > T::zero(),
                     "intermediate-grade simplex has non-positive primal volume; upstream duplicate-point check and top-volume rejection should have caught this"
                 );
-                primal_vol
+
+                // The lumped Whitney mass, summed over the star of the simplex. This is the
+                // same quantity the endpoint grades carry: `∫λ_i` over the vertex star at
+                // `k = 0`, `1/|T|` at `k = n`.
+                //
+                // It scales as `h^(n-2k)`. At `k = 1` in three dimensions that exponent is 1,
+                // which a primal volume also has, so a refinement study cannot separate the two
+                // at that grade and the tests pin closed forms instead.
+                let mut mass = T::zero();
+                let sigma = &skeletons[k_dim].simplices[i];
+                // A vertexless simplex has no first vertex to look up, so every cell is tried.
+                let candidates = sigma.vertices.first().map_or(all_cells.as_slice(), |v| {
+                    vertex_star.get(*v).map_or(&[][..], Vec::as_slice)
+                });
+                for &cell_idx in candidates {
+                    let cell = &top_cells[cell_idx];
+                    let local: Option<Vec<usize>> = sigma
+                        .vertices
+                        .iter()
+                        .map(|v| cell.vertices.iter().position(|w| w == v))
+                        .collect();
+                    let Some(local) = local else {
+                        continue; // this cell does not carry the simplex
+                    };
+
+                    let gram = match &mut grams[cell_idx] {
+                        Some(gram) => gram,
+                        slot => slot.insert(
+                            barycentric_gradient_gram(cell, coords, dim).ok_or_else(|| {
+                                TopologyError::PointCloudError(format!(
+                                    "hodge_star_operators: top-dimensional simplex at index \
+                                     {cell_idx} is degenerate, so the barycentric gradients it \
+                                     needs do not exist"
+                                ))
+                            })?,
+                        ),
+                    };
+                    let m = cell.vertices.len();
+                    mass += whitney_self_mass(
+                        &local,
+                        gram,
+                        m,
+                        primal_volumes[max_dim][cell_idx],
+                        max_dim,
+                    )
+                    .ok_or_else(|| {
+                        TopologyError::PointCloudError(format!(
+                            "hodge_star_operators: Whitney mass unavailable for grade {k_dim} \
+                             simplex {i}"
+                        ))
+                    })?;
+                }
+                mass
             };
 
             triplets.push((i, i, mass_val));

@@ -2,9 +2,9 @@
 
 Differentiation and integration as values, built once and applied later.
 
-A model is written **once**, generic over `Scalar`. Evaluated at the working type it is the
-model; evaluated at `Dual` it is the model together with its derivative. The derivative comes
-from the same expression tree, so it is exact to the last bit on a polynomial.
+A model is written **once**, generic over `Scalar`. Evaluated at the working type it returns
+the model's value; evaluated at `Dual` it returns the value together with its derivative. The
+derivative comes from the same expression tree, so it is exact to the last bit on a polynomial.
 
 | Example | What it covers | Command |
 |---|---|---|

@@ -11,7 +11,7 @@ cargo run --release -p deep_causality_cfd --example qtt_rank_study
 
 **What it tests.** The Tier-B shock-capturing plan rests on one load-bearing assumption: *the
 reentry flowfield is low tensor-train rank, so a `2^L` grid costs `O(χ²·L)`.* This example measures
-the actual QTT bond dimension of shock-like profiles with the real codec (`quantize` / `quantize_2d`
+the QTT bond dimension of shock-like profiles with the real codec (`quantize` / `quantize_2d`
 plus TT-SVD) and settles whether that assumption holds.
 
 **Findings (gated, exit nonzero on regression).**

@@ -247,11 +247,10 @@ impl<const D: usize, R: RealField> LatticeComplex<D, R> {
     /// position is out of range for its orientation (the open-boundary
     /// trim), mirroring exactly which cells the iterator visits.
     ///
-    /// This replaces the per-call `HashMap<LatticeCell, usize>` index maps
-    /// the DEC operators (wedge, interior-product transport, de Rham,
-    /// sharp) previously built on every evaluation: the map construction
-    /// was O(n) allocation and hashing per operator call, where the lookup
-    /// itself is pure stride arithmetic on a regular lattice.
+    /// The DEC operators — wedge, interior-product transport, de Rham, sharp —
+    /// index through this rather than building a `HashMap` per call: on a
+    /// regular lattice the lookup is stride arithmetic, needing no allocation
+    /// and no hashing.
     pub(crate) fn cell_index(&self, cell: &LatticeCell<D>) -> Option<usize> {
         let o = cell.orientation();
 

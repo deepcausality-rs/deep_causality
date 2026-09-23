@@ -1,13 +1,13 @@
 # Foundation: `deep_causality_stats`
 
-The statistics of a sample, and the distributions those statistics describe — one crate,
-because a distribution *is* its density and its moments, and both are statistics.
+The statistics of a sample, and the distributions those statistics describe. One crate holds
+both, because a distribution *is* its density and its moments.
 
 `deep_causality_rand` holds the entropy: a source of bits, the raw machine word, the Boolean
 draw, the Sobol sequence, and a value uniform over a range.
 
-Every function returns a `Result`, so an empty slice or a length mismatch arrives as a value the
-caller handles, and every one is generic over the working scalar.
+Every function is generic over the working scalar and returns a `Result`, so an empty slice or
+a length mismatch arrives as a value the caller handles.
 
 | Example | What it covers | Command |
 |---|---|---|

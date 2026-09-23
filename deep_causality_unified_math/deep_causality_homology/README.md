@@ -32,13 +32,12 @@ A chain complex is a sequence of groups `C_k` with maps `∂ₖ : C_k → C_{k�
 mentions no space, no cell, and no metric. Homology, `H_k = ker ∂ₖ / im ∂ₖ₊₁`, is defined the moment the composite
 vanishes, and everything needed to compute it is linear algebra over the boundary matrices.
 
-Geometry supplies chain complexes. It is not the only thing that does. A quantum error-correcting code is a chain
-complex with no cells: `H_X` and `H_Z` are parity-check matrices whose product vanishes over 𝔽₂, and their homology is
-the code's logical space. Before this crate existed, reaching 419 lines of chain-complex machinery meant depending on
-`deep_causality_topology` and its 27,317 lines of geometry. That is the split this crate makes.
+Geometry supplies chain complexes, and so do quantum codes. A quantum error-correcting code is a chain complex with no
+cells: `H_X` and `H_Z` are parity-check matrices whose product vanishes over 𝔽₂, and their homology is the code's logical
+space. This crate gives such code the chain-complex machinery without the geometry of `deep_causality_topology`.
 
-`deep_causality_topology` keeps the geometric half on `CellularComplex: ChainComplex` and re-exports the three names
-that moved, so existing code that uses only homology compiles unchanged.
+`deep_causality_topology` holds the geometric half on `CellularComplex: ChainComplex` and re-exports `ChainComplex`,
+`Gf2Chain`, and `HomologyField`, so code that uses only homology compiles against either crate.
 
 ## The law, and who owes it
 
@@ -98,11 +97,11 @@ the breakage only because it saturates its subtractions.
 
 ## The coefficient field is an argument
 
-Rank is a property of a matrix over a field, and a boundary matrix has a different rank over ℚ than over 𝔽₂. So `β_k` is
-not a number until the field is named. `HomologyField` names it at the call site, and there is no other way to set it:
-no default, no feature flag, no global.
+Rank is a property of a matrix over a field, and a boundary matrix can have a different rank over ℚ than over 𝔽₂, so
+`β_k` is not a number until the field is named. `HomologyField` names it at the call site, and there is no other way to
+set it: no default, no feature flag, no global.
 
-The two answers genuinely differ. Real projective space has 2-torsion, and the universal coefficient theorem makes it
+The two answers differ. Real projective space has 2-torsion, and the universal coefficient theorem makes it
 visible over 𝔽₂ and invisible over ℚ:
 
 | space | β over ℚ | β over 𝔽₂ |
@@ -127,16 +126,16 @@ assert_eq!(rp2.betti_number_over(1, HomologyField::Gf2).unwrap(), 1);
 `Rational` runs fraction-free elimination over ℤ, which never leaves the integers and so never rounds; rank is a
 fraction-field notion, so the answer over ℤ is the answer over ℚ. `Gf2` runs packed mod-2 elimination. Only the
 first can fail, because its fraction-free intermediates are minors of the whole matrix and can overflow `i64`;
-reporting that is what keeps a wrapped intermediate from being returned as a rank.
+reporting the overflow keeps a wrapped intermediate from being returned as a rank.
 
 ## Boundary matrices carry `i8`
 
-`boundary_matrix` returns `Cow<'_, CsrMatrix<i8>>`, and that is not a storage convenience. The entries are incidence
-numbers, and they lie in `{−1, 0, 1}` by construction: a face is dropped from a cell at most once, with one sign. The
-type records an invariant of the boundary operator.
+`boundary_matrix` returns `Cow<'_, CsrMatrix<i8>>`. The entries are incidence numbers, and they lie in `{−1, 0, 1}` by
+construction: a face is dropped from a cell at most once, with one sign. The type records an invariant of the boundary
+operator.
 
 So the trait takes no coefficient parameter. The coefficient field belongs to the computation rather than to the
-complex, and `HomologyField` carries it where the choice is actually made.
+complex, and `HomologyField` carries it where the choice is made.
 
 ## Mod-2 chains
 
@@ -156,8 +155,8 @@ assert_eq!(a.intersect(&b).unwrap().support().collect::<Vec<_>>(), vec![5, 70]);
 assert_eq!(a.inner(&b).unwrap().bit(), false);
 ```
 
-The support is enumerable as elements, as unordered pairs, and as unordered triples. Those three shapes are what the
-gate decompositions in Haruna's Table 1 range over: single-qubit factors over `supp(γ)`, two-qubit factors over its
+The support enumerates as elements, as unordered pairs, and as unordered triples. The gate decompositions in Haruna's
+Table 1 range over these three shapes: single-qubit factors over `supp(γ)`, two-qubit factors over its
 pairs, `CCZ` factors over its triples. Enumeration walks set bits, so it costs the weight rather than the length.
 
 ### What identifies a chain group
@@ -165,8 +164,8 @@ pairs, `CCZ` factors over its triples. Enumeration walks set bits, so it costs t
 The pair `(degree, len)`, and nothing else. `C_k = 𝔽₂^{n_k}` is fixed by the cell count, so two complexes with twelve
 1-cells have the same `C₁`, and a sum of two of its elements is right whichever complex produced them.
 
-That is why the type holds no complex handle. Every operation it offers belongs to the group rather than to a complex,
-and both halves of the identity are checked in one place:
+So the type holds no complex handle. Every operation it offers belongs to the group rather than to a complex, and one
+place checks both halves of the identity:
 
 ```rust
 use deep_causality_homology::{Gf2Chain, HomologyError, HomologyErrorEnum};
@@ -193,16 +192,15 @@ than the dimension they live in, and those two numbers differ whenever the matri
 
 ## Verification
 
-The suite is checked against published values, not against itself.
+The suite checks against published values.
 
 `openspec/notes/archive/homology/reference/reference.py` builds ten spaces in Python, computes their Betti numbers with
 exact arithmetic, and compares them against Hatcher, *Algebraic Topology*. It imports nothing from this workspace. The
 fixtures in `utils_tests` are an independent construction of the same spaces, checked against the same published values.
 Two implementations agreeing with a source is a different claim from one implementation agreeing with itself.
 
-`ℝP²` and the Klein bottle are in that set for a specific reason. Every complex this workspace shipped before the crate
-existed is orientable and torsion-free, so ℚ and 𝔽₂ agreed at every grade of every fixture and the coefficient field was
-never discriminated. These two separate them.
+`ℝP²` and the Klein bottle discriminate the coefficient field. On an orientable, torsion-free complex, ℚ and 𝔽₂ agree
+at every grade; these two separate them.
 
 The Euler characteristic is computed twice per space, once from cell counts and once from Betti numbers. The first never
 reaches the rank routine, so their agreement is evidence rather than arithmetic.
@@ -215,10 +213,9 @@ Two statements are machine-checked in Lean 4 with Mathlib, and carry Rust witnes
 | `homology.chain.dd_zero_implies_range_le_ker` | `∂ₖ ⬝ ∂ₖ₊₁ = 0 → im ∂ₖ₊₁ ⊆ ker ∂ₖ` |
 | `homology.chain.betti_from_dd_zero` | `dim H_k = (n_k − rank ∂ₖ) − rank ∂ₖ₊₁`, given the chain condition |
 
-The first exists because the second needs it. `linear.gf2.betti_from_ranks` had proved the Betti identity under the
-subspace inclusion as an unproved hypothesis, so every Betti number the workspace computed rested on an assumption
-written down once, as an argument to a theorem. The inclusion cannot be tested directly. The matrix identity can, and
-the implication is what lets the testable statement stand in for the one the proof needs.
+The second needs the first. `linear.gf2.betti_from_ranks` proves the Betti identity with the subspace inclusion as a
+hypothesis. The inclusion cannot be tested directly; the matrix identity can, and the implication lets the testable
+statement stand in for the hypothesis the proof needs.
 
 `LEAN_HOMOLOGY.md` in this directory carries the details, including what is left unformalized and why.
 

@@ -3,7 +3,10 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_physics::{RotationRateTensor, StrainRateTensor, VelocityGradient};
+use deep_causality_physics::{
+    PhysicsErrorEnum, RotationRateTensor, StrainRateTensor, VelocityGradient,
+    rotation_rate_tensor_kernel, strain_rate_tensor_kernel,
+};
 
 // =============================================================================
 // VelocityGradient — Jacobian convention pinned at construction
@@ -20,7 +23,13 @@ fn test_velocity_gradient_new_valid() {
 fn test_velocity_gradient_rejects_non_finite() {
     let mut m = [[0.0; 3]; 3];
     m[1][2] = f64::NAN;
-    assert!(VelocityGradient::<f64>::new(m).is_err());
+    assert!(
+        matches!(
+            VelocityGradient::<f64>::new(m).unwrap_err().0,
+            PhysicsErrorEnum::PhysicalInvariantBroken { .. }
+        ),
+        "expected a PhysicalInvariantBroken refusal"
+    );
 }
 
 #[test]
@@ -46,7 +55,17 @@ fn test_velocity_gradient_traits() {
     let c = a.clone();
     assert_eq!(a, b);
     assert_eq!(a, c);
-    let _ = format!("{:?}", a);
+    // `assert_eq!(x, x.clone())` is reflexive and holds for a `PartialEq` that always
+    // returns true. The inequality discriminates, and comparing the two `Debug`
+    // renderings makes `Debug` observable rather than discarded.
+    let other =
+        VelocityGradient::<f64>::new([[9.0, 0.0, 0.0], [0.0, 9.0, 0.0], [0.0, 0.0, 9.0]]).unwrap();
+    assert_ne!(a, other, "distinct values must not compare equal");
+    assert_ne!(
+        format!("{a:?}"),
+        format!("{other:?}"),
+        "Debug must distinguish distinct values"
+    );
 }
 
 // =============================================================================
@@ -55,34 +74,37 @@ fn test_velocity_gradient_traits() {
 
 #[test]
 fn test_velocity_gradient_decomposes_into_strain_and_rotation() {
-    // Arbitrary finite gradient
+    // The split goes through the kernels that own it, and the reconstruction is checked against
+    // the gradient read back out of the newtype. Decomposing the raw array here and comparing it
+    // against that same array would leave the `VelocityGradient` newtype out of the assertion and
+    // check only arithmetic the test had just performed itself.
     let g = [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]];
-    let _grad = VelocityGradient::<f64>::new(g).unwrap();
+    let grad = VelocityGradient::<f64>::new(g).unwrap();
 
-    // Symmetric part S = 0.5*(G + G^T)
-    let mut s = [[0.0; 3]; 3];
-    for i in 0..3 {
-        for j in 0..3 {
-            s[i][j] = 0.5 * (g[i][j] + g[j][i]);
-        }
-    }
-    // Antisymmetric part Omega = 0.5*(G - G^T)
-    let mut omega = [[0.0; 3]; 3];
-    for i in 0..3 {
-        for j in 0..3 {
-            omega[i][j] = 0.5 * (g[i][j] - g[j][i]);
-        }
-    }
+    let strain: StrainRateTensor<f64> = strain_rate_tensor_kernel(&grad).unwrap();
+    let rotation: RotationRateTensor<f64> = rotation_rate_tensor_kernel(&grad).unwrap();
 
-    let strain = StrainRateTensor::<f64>::new(s).unwrap();
-    let rotation = RotationRateTensor::<f64>::new(omega).unwrap();
+    // The newtype must hand back what it was given, so the target of the reconstruction is the
+    // gradient itself rather than the local array.
+    let g_raw: [[f64; 3]; 3] = grad.into();
+    assert_eq!(g_raw, g, "the newtype must carry the matrix verbatim");
 
-    // Verify S + Omega == G
     let s_raw: [[f64; 3]; 3] = strain.into();
     let o_raw: [[f64; 3]; 3] = rotation.into();
     for i in 0..3 {
         for j in 0..3 {
-            assert!((s_raw[i][j] + o_raw[i][j] - g[i][j]).abs() < 1e-12);
+            assert!(
+                (s_raw[i][j] + o_raw[i][j] - g_raw[i][j]).abs() < 1e-12,
+                "[{i}][{j}]: S + Omega = {}, expected {}",
+                s_raw[i][j] + o_raw[i][j],
+                g_raw[i][j]
+            );
+            // S is symmetric and Omega antisymmetric; neither holds for an arbitrary split.
+            assert!((s_raw[i][j] - s_raw[j][i]).abs() < 1e-12, "S not symmetric");
+            assert!(
+                (o_raw[i][j] + o_raw[j][i]).abs() < 1e-12,
+                "Omega not antisymmetric"
+            );
         }
     }
 }

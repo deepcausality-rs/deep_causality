@@ -1,12 +1,12 @@
 # QTT 3-D re-entry forebody sheath — the Stage-6 rank lever (Tier-B)
 
-The 3-D form of the `qtt_blunt_body_2d` rank lever, on the crate's serial `x`-`y`-`z` codec
-(`quantize_3d`). The re-entry **forebody sheath** is a curved bow-shock surface standing off the
+This example gates the 3-D form of the `qtt_blunt_body_2d` rank lever on the crate's serial
+`x`-`y`-`z` codec (`quantize_3d`). The re-entry **forebody sheath** is a curved bow-shock surface standing off the
 nose at a constant *physical* radius `R`. In a body-fitted spherical coordinate, with radial axis
 `ζ` across the shock, that surface is a step in `ζ` and therefore a function of one axis, so its
 bond `χ` is `O(1)` and resolution-independent. Sampled on a Cartesian `2^l × 2^l × 2^l` lattice the
-identical physical shell is curved, so `χ` grows with resolution. How fast it grows is the standing
-`studies/qtt_rank_3d` question; this harness gates that it grows, not the exponent.
+same physical shell is curved, so `χ` grows with resolution. The growth rate is the open
+`studies/qtt_rank_3d` question; this harness gates that `χ` grows, not the exponent.
 
 ```bash
 cargo run --release -p deep_causality_cfd --example qtt_reentry_3d
@@ -25,9 +25,9 @@ A smoothed step at the standoff radius `R = 1.5` is sampled three ways and quant
 ## Scope (design D9)
 
 The **forebody** is in scope and gated. The **wake** is out of scope, because a separated, unsteady
-wake needs turbulence; its bond is reported only as a datapoint for the standing `qtt_rank_3d`
-research question. The dynamic *marched* forebody rank is likewise reported, since there is no 3-D
-body-fit metric yet and the marcher runs Cartesian.
+wake needs turbulence; its bond is reported only as a datapoint for the open `qtt_rank_3d`
+research question. The dynamic *marched* forebody rank is also reported but not gated: the crate
+has no 3-D body-fit metric, so the marcher runs Cartesian.
 
 ## What it verifies (exit nonzero on break)
 
@@ -46,7 +46,7 @@ Both gates are **structural**. They bound *rank*, not physical accuracy.
 | 2^4 | 4 | 30 |
 | 2^5 | 4 | 59 |
 
-Fitted runs 2 to 4 and plateaus. The capture cost runs 10 to 59: a 5.9× rise for a 4× refinement,
+Fitted `χ` runs 2 to 4 and plateaus. The capture cost runs 10 to 59: a 5.9× rise for a 4× refinement,
 so `χ ~ side^1.3`, at or above linear in `side`. A `√side` law would give 3, 4, 6. The `side^0.53`
 exponent `studies/qtt_rank_3d` fits comes from a different shock construction over a wider `16³–128³`
 ladder; this ladder does not reproduce it. Both gates **PASS**.
@@ -56,6 +56,6 @@ ladder; this ladder does not reproduce it. Both gates **PASS**.
 - **wake**: `χ = 41` at `2^5`, comparable to the Cartesian capture and un-fittable by construction.
   Out of scope, never gated.
 - **dynamic marched forebody**: the Cartesian 3-D marcher grows `χ` to **16** over 6 steps. A 3-D
-  body-fit metric plus re-pinning is the open remainder.
+  body-fit metric plus re-pinning remains open.
 
 See `baseline.txt` for the recorded reference output.

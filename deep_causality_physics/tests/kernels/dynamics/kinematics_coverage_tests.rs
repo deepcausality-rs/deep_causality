@@ -24,7 +24,6 @@ fn test_kinetic_energy_kernel_non_finite_velocity() {
     .unwrap();
 
     let result = kinetic_energy_kernel(mass, &velocity);
-    assert!(result.is_err());
     match result.unwrap_err().0 {
         PhysicsErrorEnum::NumericalInstability(_) => {}
         e => panic!("Expected NumericalInstability, got {e:?}"),
@@ -51,7 +50,6 @@ fn test_kinetic_energy_kernel_negative_squared_speed() {
     );
 
     let result = kinetic_energy_kernel(mass, &velocity);
-    assert!(result.is_err());
     match result.unwrap_err().0 {
         PhysicsErrorEnum::PhysicalInvariantBroken(_) => {}
         e => panic!("Expected PhysicalInvariantBroken, got {e:?}"),

@@ -6,12 +6,12 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 # Unified-math test-suite audit
 
 This report applies the physics test-audit scanner to every crate directly under
-`deep_causality_unified_math/`. It is an inventory and a calibrated review, not a proposal and not
-a claim that every syntactic match is a defective test.
+`deep_causality_unified_math/`. It is an inventory and a calibrated review; it proposes no change
+and does not treat every syntactic match as a defective test.
 
-The existing [simplicial Hodge-star note](topology/simplicial_hodge_star/README.md) remains a
-separate, specific implementation finding. It did not audit the rest of the topology suite. The
-topology row below covers that crate's complete `tests/` tree.
+The [simplicial Hodge-star note](topology/simplicial_hodge_star/README.md) records a separate,
+specific implementation finding and did not audit the rest of the topology suite. The topology row
+below covers that crate's complete `tests/` tree.
 
 ## Finding in one line
 
@@ -30,13 +30,13 @@ The scan covered these seventeen crates:
 `algebra`, `calculus`, `fft`, `haft`, `homology`, `linear`, `metric`, `multivector`, `num`,
 `num_complex`, `num_dual`, `num_rational`, `rand`, `stats`, `tensor`, `topology`, and `uncertain`.
 
-The unchanged classification logic from `openspec/notes/test_audit/physics/audit_tests.py` was run
-once per crate with that crate's `tests/` directory as its root. It inspected 680 Rust test files,
-containing 125,286 lines, and recognized 6,824 explicit `#[test]` functions. Macro-generated cases
-are counted as their source declaration rather than as every runtime expansion.
+The unchanged classification logic from `openspec/notes/test_audit/physics/audit_tests.py` ran
+once per crate with that crate's `tests/` directory as its root. It inspected 680 Rust test files
+(125,286 lines) and recognized 6,824 explicit `#[test]` functions. A macro-generated case counts as
+its source declaration, not as every runtime expansion.
 
 The classes overlap. A test can be both single-input and cherry-picked, or both circular and
-cherry-picked. Their counts therefore must not be added to obtain a number of defective tests.
+cherry-picked. Adding the counts does not give a number of defective tests.
 
 | Class | Raw count | Share | Scanner meaning |
 |---|---:|---:|---|
@@ -89,8 +89,7 @@ The remaining topology test is ineffective:
   `test_simplicial_complex_default_is_empty`, creates a default complex and clones it into
   `_cloned`. It asserts neither that the default is empty nor that cloning preserves any state.
 
-This calibration matters. Reporting 46 assertion-free defects would exaggerate the result by a
-factor of 46.
+Reporting 46 assertion-free defects would exaggerate the result by a factor of 46.
 
 ### Weak predicates conceal missing answer checks
 
@@ -124,18 +123,18 @@ pin the claimed answer:
 - `deep_causality_algebra/tests/algebra/field_real_f64_tests.rs::test_nan` constructs
   `f64::NAN` and calls the standard library's `is_nan`; it exercises no algebra-crate behavior.
 
-These examples justify a targeted weak-assertion repair, but not relabelling every raw predicate
-match as a defect.
+These examples justify a targeted weak-assertion repair, not relabelling every raw predicate match
+as a defect.
 
 ### Circular candidates require semantic review
 
-Arithmetic in an expected value is not sufficient proof of circularity. The scan also catches
+Arithmetic in an expected value does not prove circularity. The scan also catches
 independent closed forms, metamorphic laws, scale equivariance, and cross-implementation checks.
 Examples include the exact-rational adjugate and LU cross-checks in `deep_causality_linear`, the
 analytic derivatives used to test automatic differentiation in `deep_causality_calculus`, and
 closed-form scaling laws in topology and stats. Those are useful controls.
 
-There is nevertheless a clear circular family in
+One clear circular family remains, in
 `deep_causality_num_complex/tests/complex/quaternion_number/ops_tests.rs`. Tests such as
 `test_sin_general` and `test_cos_general` reconstruct the scalar/vector decomposition, norm,
 trigonometric factors, and component scaling used by the production implementation. The file has
@@ -144,9 +143,9 @@ a shared error in the chosen formula. The general quaternion multiplication test
 retypes the component formula; the basis identities in the same suite are the stronger independent
 checks.
 
-The 192 raw circular matches are therefore a review ceiling. The quaternion formula family is a
-confirmed priority; the remaining matches should be retained when they are demonstrably
-independent and rewritten only when their oracle shares the implementation's derivation.
+The 192 raw circular matches are a review ceiling. The quaternion formula family is a confirmed
+priority; keep the remaining matches when they are demonstrably independent, and rewrite them only
+when their oracle shares the implementation's derivation.
 
 ### Single inputs and unexplained literal oracles are the broadest risk
 
@@ -155,7 +154,7 @@ trait checks often need only one input. Likewise, many `deep_causality_num` test
 method with the corresponding standard-library operation at one value; those are differential
 checks, not circular literal oracles.
 
-The combined pattern is still material in numerical code: 1,222 tests use a literal expectation at
+The combined pattern still matters in numerical code: 1,222 tests use a literal expectation at
 one input without recognized provenance. The highest raw cherry-picked shares are
 `num_dual` (61.1%), `calculus` (43.3%), `num_complex` (30.1%), `multivector` (28.4%),
 `linear` (28.0%), `num` (25.4%), and `uncertain` (24.1%). A plausible wrong coefficient, sign, or
@@ -186,8 +185,8 @@ This table ranks syntactic leads, not confirmed defect counts.
 | 21 | `deep_causality_num/tests/float/bfloat16_impl_tests.rs` | 21 cherry-picked |
 | 19 | `deep_causality_topology/tests/types/gauge/link_variable/link_variable_tests.rs` | 5 tautology, 14 cherry-picked |
 
-`small_tests.rs` is an important warning about the ranking: its arithmetic expectations include
-independently derived exact results and cross-algorithm checks. A high raw count indicates where to
+`small_tests.rs` warns against trusting the ranking: its arithmetic expectations include
+independently derived exact results and cross-algorithm checks. A high raw count shows where to
 review, not what to delete or mechanically rewrite.
 
 ## Topology: aggregate audit versus the existing failure note
@@ -196,12 +195,11 @@ The topology scan covered 1,668 explicit tests in 187 files and found 1,228 sing
 cherry-picked, 40 circular, 29 weak-predicate, and one no-assertion candidate. Those figures describe
 test construction across the full crate.
 
-The existing simplicial Hodge-star note records a different kind of evidence: an actual
-implementation failure at intermediate grades. The implementation's `star_2` scaling on a regular
-tetrahedron is `L^2`, where a three-dimensional Hodge star requires `L^-1`. That defect survived the
-suite even though the operator is exercised. It is a concrete example of why execution and
-coverage do not prove that an oracle constrains the mathematics. The note remains the authoritative
-description of that failure and its blast radius.
+The simplicial Hodge-star note records a different kind of evidence: an actual implementation
+failure at intermediate grades. The implementation's `star_2` scaling on a regular tetrahedron is
+`L^2`, where a three-dimensional Hodge star requires `L^-1`. That defect survived a suite that
+exercises the operator: execution and coverage do not prove that an oracle constrains the
+mathematics. The note is the authoritative description of that failure and its blast radius.
 
 ## Recommended order for a dedicated repair
 
@@ -235,8 +233,8 @@ description of that failure and its blast radius.
 
 ## Verification
 
-All seventeen packages were tested together with `cargo test -p ...`; the command exited
-successfully. That establishes that the current suites pass. It does not resolve the audit findings:
-a passing suite is the condition being evaluated, not evidence that every oracle is effective.
+One `cargo test -p ...` invocation tested all seventeen packages and exited successfully. That
+establishes that the current suites pass. It does not resolve the audit findings: a passing suite
+is the condition being evaluated, not evidence that every oracle is effective.
 
-No production code or tests were changed for this audit.
+This audit changed no production code or tests.

@@ -15,7 +15,9 @@
 use deep_causality_physics::theories::{
     WeakField, WeakFieldOps, WeakIsospin, pauli_matrices, su2_generators,
 };
-use deep_causality_physics::{FERMI_CONSTANT, HIGGS_VEV, SIN2_THETA_W, W_MASS, Z_MASS};
+use deep_causality_physics::{
+    FERMI_CONSTANT, HIGGS_VEV, PhysicsErrorEnum, SIN2_THETA_W, W_MASS, Z_MASS,
+};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{BaseTopology, Manifold, Simplex, SimplicialComplexBuilder};
 
@@ -130,13 +132,25 @@ fn test_charged_current_propagator_low_energy() {
 fn test_charged_current_propagator_on_shell_error() {
     // At q² = M_W², propagator diverges (on-shell)
     let result = WeakField::<f64>::charged_current_propagator(W_MASS * W_MASS);
-    assert!(result.is_err(), "On-shell W should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
 fn test_charged_current_propagator_invalid() {
     let result = WeakField::<f64>::charged_current_propagator(f64::NAN);
-    assert!(result.is_err(), "NaN momentum should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
@@ -152,7 +166,13 @@ fn test_neutral_current_propagator_neutrino() {
 fn test_neutral_current_propagator_on_shell_error() {
     let nu = WeakIsospin::neutrino();
     let result = WeakField::<f64>::neutral_current_propagator(Z_MASS * Z_MASS, &nu);
-    assert!(result.is_err(), "On-shell Z should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 // ============================================================================
@@ -169,10 +189,22 @@ fn test_weak_decay_width_positive_mass() {
 #[test]
 fn test_weak_decay_width_invalid_mass() {
     let result = WeakField::<f64>::weak_decay_width(-1.0);
-    assert!(result.is_err(), "Negative mass should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 
     let result = WeakField::<f64>::weak_decay_width(0.0);
-    assert!(result.is_err(), "Zero mass should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
@@ -294,7 +326,13 @@ fn test_vector_axial_couplings() {
 fn test_isospin_constraint() {
     // I₃ must satisfy |I₃| ≤ I
     let result = WeakIsospin::new(0.5, 1.0, 0.0);
-    assert!(result.is_err(), "|I₃| > I should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 // ============================================================================
@@ -454,50 +492,160 @@ fn test_weak_field_ops_sin2_theta_w() {
     );
 }
 
-#[test]
-fn test_weak_field_strength() {
-    let weak = create_weak_field();
+/// A `WeakField` whose SU(2) connection is supplied by the caller.
+///
+/// `create_weak_field` uses a zero connection, where `F = dA + g[A, A]` vanishes term by term and
+/// nothing about either term is observable. The tests below need a connection that is actually
+/// there.
+fn weak_field_with_connection(conn_data: Vec<f64>) -> WeakField<f64> {
+    let mut builder = SimplicialComplexBuilder::new(0);
+    let _ = builder.add_simplex(Simplex::new(vec![0]));
+    let complex = builder.build().expect("Failed to build complex");
+    let data = CausalTensor::new(vec![0.0], vec![1]).unwrap();
+    let base = Manifold::new(complex, data, 0).expect("Failed to create manifold");
 
-    // weak_field_strength computes non-abelian field strength F_μν
+    let num_points = base.len();
+    assert_eq!(conn_data.len(), num_points * 4 * 3, "connection shape");
+    let conn = CausalTensor::from_vec(conn_data, &[num_points, 4, 3]);
+    WeakField::new_field(base, conn).expect("Failed to create WeakField")
+}
+
+/// An SU(2) connection with two independent non-zero components.
+///
+/// Index layout is `[point, mu, a]`, flattened as `mu * 3 + a` for a single point.
+/// `A_1^0 = 2` and `A_2^1 = 3`, so the commutator `f^{abc} A_mu^b A_nu^c` has a term to build
+/// from and the two entries sit in different spacetime and different Lie slots.
+fn su2_connection(scale: f64) -> Vec<f64> {
+    let mut conn = vec![0.0f64; 4 * 3];
+    conn[3] = 2.0 * scale; // A_1^0 -> mu = 1, a = 0
+    conn[7] = 3.0 * scale; // A_2^1 -> mu = 2, a = 1
+    conn
+}
+
+#[test]
+fn test_weak_field_strength_vanishes_for_a_zero_connection() {
+    // The flat limit. It pins neither term on its own, so it sits beside the tests below rather
+    // than standing in for them.
+    let weak = create_weak_field();
     let f = weak.weak_field_strength();
 
-    // Check shape: [num_points, dim, dim, lie_dim] = [1, 4, 4, 3]
     assert_eq!(f.shape(), &[1, 4, 4, 3]);
-
-    // For zero connection, F = dA + [A, A] should be zero
-    // Since A = 0, both terms are zero
     for val in f.as_slice() {
-        assert!(
-            val.abs() < 1e-10,
-            "Field strength should be 0 for zero connection"
-        );
+        assert!(val.abs() < 1e-10, "F must vanish when A = 0");
     }
+}
+
+#[test]
+fn test_weak_field_strength_is_antisymmetric_in_its_spacetime_indices() {
+    // F^a_{mu nu} = -F^a_{nu mu} for any connection, and the diagonal vanishes. Both are
+    // structural, hold in every convention, and need no oracle.
+    let f = weak_field_with_connection(su2_connection(1.0)).weak_field_strength();
+    let d = f.as_slice();
+    let idx = |mu: usize, nu: usize, a: usize| mu * (4 * 3) + nu * 3 + a;
+
+    for a in 0..3 {
+        for mu in 0..4 {
+            assert!(
+                d[idx(mu, mu, a)].abs() < 1e-12,
+                "F^{a}_{{{mu}{mu}}} = {} must be zero",
+                d[idx(mu, mu, a)]
+            );
+            for nu in 0..4 {
+                assert!(
+                    (d[idx(mu, nu, a)] + d[idx(nu, mu, a)]).abs() < 1e-12,
+                    "antisymmetry broken at a={a}, mu={mu}, nu={nu}"
+                );
+            }
+        }
+    }
+}
+
+#[test]
+fn test_weak_field_strength_is_non_zero_for_a_non_zero_connection() {
+    let f = weak_field_with_connection(su2_connection(1.0)).weak_field_strength();
+    assert!(
+        f.as_slice().iter().any(|v: &f64| v.abs() > 1e-9),
+        "a non-zero SU(2) connection must produce a non-zero field strength"
+    );
+}
+
+#[test]
+fn test_weak_field_strength_is_not_linear_in_the_connection() {
+    // This is the test for the non-abelian term, and it needs no convention.
+    //
+    // `F = dA + g[A, A]` splits into a part linear in A and a part quadratic in A, so
+    // `F(kA) = k dA + k^2 g[A, A]` and
+    //
+    //   F(2A) - 2 F(A) = (4 - 2) g[A, A] = 2 g[A, A]
+    //
+    // A U(1)-style field strength, or one that dropped the commutator, is exactly linear in A and
+    // leaves this difference at zero. A non-zero difference is the commutator, isolated.
+    let f1 = weak_field_with_connection(su2_connection(1.0)).weak_field_strength();
+    let f2 = weak_field_with_connection(su2_connection(2.0)).weak_field_strength();
+
+    let commutator: Vec<f64> = f2
+        .as_slice()
+        .iter()
+        .zip(f1.as_slice())
+        .map(|(a, b)| a - 2.0 * b)
+        .collect();
+
+    let largest = commutator.iter().fold(0.0_f64, |m, v| m.max(v.abs()));
+    assert!(
+        largest > 1e-9,
+        "F is linear in A, so the commutator term g[A, A] is absent or zero; \
+         largest |F(2A) - 2F(A)| = {largest:e}"
+    );
 }
 
 #[test]
 fn test_neutral_current_propagator_nan_error() {
     let nu = WeakIsospin::neutrino();
     let result = WeakField::<f64>::neutral_current_propagator(f64::NAN, &nu);
-    assert!(result.is_err(), "NaN momentum should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
 fn test_neutral_current_propagator_infinity_error() {
     let nu = WeakIsospin::neutrino();
     let result = WeakField::<f64>::neutral_current_propagator(f64::INFINITY, &nu);
-    assert!(result.is_err(), "Infinite momentum should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::NumericalInstability { .. }
+        ),
+        "expected a NumericalInstability refusal"
+    );
 }
 
 #[test]
 fn test_weak_decay_width_nan_error() {
     let result = WeakField::<f64>::weak_decay_width(f64::NAN);
-    assert!(result.is_err(), "NaN mass should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]
 fn test_weak_decay_width_infinity_error() {
     let result = WeakField::<f64>::weak_decay_width(f64::INFINITY);
-    assert!(result.is_err(), "Infinite mass should return error");
+    assert!(
+        matches!(
+            result.as_ref().unwrap_err().0,
+            PhysicsErrorEnum::DimensionMismatch { .. }
+        ),
+        "expected a DimensionMismatch refusal"
+    );
 }
 
 #[test]

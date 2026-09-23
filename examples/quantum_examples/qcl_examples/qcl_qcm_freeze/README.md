@@ -19,4 +19,4 @@ Three scenarios:
    which rolls the graph back to its dynamic state.
 
 The decomposability check on a 1 × 1 system relation examines no 3 × 3 block and reads as a
-vacuous pass, which the report says rather than hides.
+vacuous pass; the report says so.

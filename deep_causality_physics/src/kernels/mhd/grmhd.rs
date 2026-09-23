@@ -8,6 +8,7 @@ use core::fmt::Debug;
 use core::iter::Sum;
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
+use deep_causality_par::MaybeParallel;
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
 use deep_causality_topology::SimplicialManifold;
 
@@ -18,28 +19,48 @@ use deep_causality_topology::SimplicialManifold;
 /// Computes the source current from Maxwell's equations:
 /// $$ J^\mu = \nabla_\nu F^{\mu\nu} $$
 ///
-/// Using differential forms on a simplicial complex:
-/// $$ J = \delta F = \star d \star F $$
+/// which on a simplicial complex is the codifferential of the electromagnetic 2-form:
+/// $$ J = \delta F $$
 ///
-/// where δ is the codifferential operator.
+/// # The codifferential is the crate's, not this kernel's
 ///
-/// # Sign Convention
+/// δ is [`deep_causality_topology::SimplicialManifold::codifferential_of`], the adjoint of `d`
+/// under the mass-matrix inner product:
 ///
-/// Uses the `LorentzianMetric` trait to ensure consistent sign conventions.
-/// Default is East Coast (-+++) via `RelativityMetric`.
+/// ```text
+/// δ_k = M_{k-1}^{-1} B_k M_k
+/// ```
+///
+/// with `B_k` the **boundary** operator taking k-cells to (k−1)-cells. It is the boundary and not
+/// the coboundary that δ needs: `Λ² → Λ¹`, so `J` lands on the 1-simplices where a current-density
+/// 1-form belongs.
+///
+/// Going through this operator makes `δ² = 0` hold exactly, since
+/// `δ_{k-1} δ_k = M^{-1} B_{k-1} B_k M` and `B_{k-1} B_k = 0`. That identity is charge
+/// conservation, `∂_μ J^μ = 0`, and it holds whatever the mass matrices contain — which is what
+/// makes it usable as an oracle here.
+///
+/// # Signature
+///
+/// `spacetime_metric` is read for its `dimension()` alone. `codifferential_of` builds a
+/// Riemannian adjoint from the complex's mass matrices; the sign a Lorentzian signature
+/// contributes to δ is applied nowhere in the crate, so a west coast metric and an east coast
+/// metric yield the same answer. The current returned is the Riemannian codifferential of F.
 ///
 /// # Arguments
-/// * `em_manifold` - Manifold with electromagnetic 2-form F data on 2-simplices
+/// * `em_manifold` - Manifold with electromagnetic 2-form F data on 2-simplices. It **must**
+///   carry a Regge geometry: build it with `Manifold::with_metric`, since the codifferential
+///   reads the mass matrices that geometry vends.
 /// * `spacetime_metric` - Spacetime signature implementing `LorentzianMetric`
 ///
 /// # Returns
-/// Current density 1-form J as a `CausalTensor<R>`.
+/// Current density 1-form J as a `CausalTensor<R>`, indexed by the 1-simplices.
 pub fn relativistic_current_kernel<R, M>(
     em_manifold: &SimplicialManifold<R, R>,
     spacetime_metric: &M,
 ) -> Result<CausalTensor<R>, PhysicsError>
 where
-    R: RealField + FromPrimitive + Default + PartialEq + Debug,
+    R: RealField + MaybeParallel + FromPrimitive + Default + PartialEq + Debug,
     M: LorentzianMetric,
 {
     let complex = em_manifold.complex();
@@ -59,12 +80,20 @@ where
         )));
     }
 
-    // 2. Get operators from complex. The Hodge ⋆ accessor is fallible;
-    // the  surface its degeneracy errors through the kernel's existing `Result` return.
-    let hodge_ops = complex
-        .hodge_star_operators()
-        .map_err(|e| PhysicsError::CalculationError(format!("Hodge ⋆ unavailable: {}", e)))?;
-    let coboundary_ops = complex.coboundary_operators();
+    // 2. `codifferential_of` panics on a manifold with no metric, so refuse one here instead.
+    // `Manifold::new` builds exactly that, and it is the constructor callers reach for first.
+    if em_manifold.metric().is_none() {
+        return Err(PhysicsError::CalculationError(
+            "relativistic current reads the mass matrices a Regge geometry vends; this manifold \
+             carries no metric. Construct it with Manifold::with_metric"
+                .into(),
+        ));
+    }
+
+    // 3. The operator counts stand in for the complex's own dimension: a 2-form on spacetime
+    // needs a complex that carries 3-simplices, which a 4D metric alone does not establish.
+    // `Manifold::with_metric` has already built the Hodge ⋆ operators, so this reads the cache.
+    let hodge_ops = complex.hodge_star_operators()?;
 
     if hodge_ops.len() < 4 {
         return Err(PhysicsError::CalculationError(format!(
@@ -73,10 +102,12 @@ where
         )));
     }
 
-    if coboundary_ops.len() < 3 {
+    // `codifferential_of` applies the boundary operator ∂₂ and reads an absent one as zero, which
+    // would return J = 0 for any F.
+    if complex.boundary_operators().len() < 2 {
         return Err(PhysicsError::CalculationError(format!(
-            "Missing coboundary operators: need 3, have {}",
-            coboundary_ops.len()
+            "Missing boundary operator ∂₂: need 2 boundary operators, have {}",
+            complex.boundary_operators().len()
         )));
     }
 
@@ -93,24 +124,10 @@ where
         ));
     }
 
-    let f_2form: Vec<R> = data[n0 + n1..n0 + n1 + n2].to_vec();
+    let f_2form = &data[n0 + n1..n0 + n1 + n2];
 
-    // 4. Compute J = ★d★F (codifferential of F)
-    // Step 4a: ★F (apply Hodge star to 2-form). Hodge ops carry R (manifold scalar).
-    let star_f = hodge_ops[2].vec_mult(&f_2form)?;
-
-    // Step 4b: d(★F) (apply coboundary / exterior derivative).
-    // Coboundary operators are CsrMatrix<i8>: their entries are pure ±1 (orientation
-    // signs from the simplicial complex's incidence structure). They carry no
-    // measurement and never need higher precision than i8, so we keep them as i8
-    // and lift the i8 → R conversion only at multiply-time.
-    let d_star_f = coboundary_ops[2].vec_mult_real(&star_f)?;
-
-    // Step 4c: ★(d★F) (apply Hodge star to get 1-form)
-    let j_data = hodge_ops[3].vec_mult(&d_star_f)?;
-
-    let len = j_data.len();
-    CausalTensor::new(j_data, vec![len]).map_err(PhysicsError::from)
+    // 4. J = δF, a 1-form on the 1-simplices.
+    Ok(em_manifold.codifferential_of(f_2form, 2))
 }
 
 /// Calculates the electromagnetic stress-energy tensor $T^{\mu\nu}_{EM}$.
