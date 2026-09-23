@@ -37,7 +37,9 @@ impl<
     ///
     /// # Arguments
     ///
-    /// * `gauge_fn` - Closure providing $\Omega(x)$ for each site
+    /// * `gauge_fn` - Closure providing $\Omega(x)$ for each site. It is called exactly once per
+    ///   site, in row-major site order (last axis fastest), so every link touching a site sees
+    ///   the same $\Omega(x)$ even when the closure returns a different element on each call.
     ///
     /// # Returns
     ///
@@ -49,26 +51,39 @@ impl<
         R: RealField,
     {
         let shape = *self.lattice.shape();
+
+        // Ω(x) for every site, indexed row-major over the shape.
+        let num_sites: usize = shape.iter().product();
+        let site_of = |mut offset: usize| {
+            let mut site = [0usize; D];
+            for d in (0..D).rev() {
+                site[d] = offset % shape[d];
+                offset /= shape[d];
+            }
+            site
+        };
+        let offset_of = |site: &[usize; D]| {
+            site.iter()
+                .zip(shape.iter())
+                .fold(0, |acc, (p, l)| acc * l + p)
+        };
+        let omega: Vec<LinkVariable<G, M, R>> =
+            (0..num_sites).map(|o| gauge_fn(&site_of(o))).collect();
+
         let new_links: Vec<Option<LinkVariable<G, M, R>>> = self
             .iter_links()
             .map(|(cell, u)| {
                 let site = *cell.position();
-
-                // Find direction of this edge
                 let dir = cell.orientation().trailing_zeros() as usize;
 
-                // Get g(n)
-                let g_n = gauge_fn(&site);
-
-                // Get n + μ̂
+                // n + μ̂, wrapped periodically.
                 let mut site_plus_mu = site;
                 site_plus_mu[dir] = (site_plus_mu[dir] + 1) % shape[dir];
 
-                // Get g(n+μ)†
-                let g_n_plus_mu_dag = gauge_fn(&site_plus_mu).dagger();
-
-                // U' = g(n) U g(n+μ)†
-                let new_u = g_n.mul(u).mul(&g_n_plus_mu_dag);
+                // U' = Ω(n) U Ω(n+μ̂)†
+                let new_u = omega[offset_of(&site)]
+                    .mul(u)
+                    .mul(&omega[offset_of(&site_plus_mu)].dagger());
 
                 (cell, new_u)
             })

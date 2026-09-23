@@ -8,7 +8,9 @@
 
 use deep_causality_num_complex::Complex;
 use deep_causality_stats::Xoshiro256;
-use deep_causality_topology::{GaugeGroup, LinkVariable, RandomField, SE3, SO3_1, SU3, SU3_SU2_U1};
+use deep_causality_topology::{
+    GaugeGroup, LinkVariable, LinkVariableError, RandomField, SE3, SO3_1, SU2, SU3, SU3_SU2_U1,
+};
 
 // ============================================================================
 // try_from_phase: general SU(n) arm for n >= 4 (matrix_dim() == 4 here).
@@ -220,4 +222,76 @@ fn test_try_random_for_groups_above_three() {
     let u: LinkVariable<SU3_SU2_U1, Complex<f64>, f64> =
         LinkVariable::try_random(&mut rng).unwrap();
     assert_special_unitary(&u, 1e-9);
+}
+
+// ============================================================================
+// project_sun rejects inputs with no unitary limit; determinant propagates NaN.
+// ============================================================================
+
+fn assert_projection_rejected<G: GaugeGroup>(m: &LinkVariable<G, Complex<f64>, f64>) {
+    match m.project_sun() {
+        Err(LinkVariableError::NumericalError(msg)) => assert!(msg.contains("did not converge")),
+        other => panic!("expected a non-convergence error, got {other:?}"),
+    }
+}
+
+#[test]
+fn test_project_sun_rejects_rank_deficient_2x2() {
+    // [[1, 2i], [1 + i, -2 + 2i]]: second column = 2i * first column, rank one, not zero.
+    let m: LinkVariable<SU2, Complex<f64>, f64> =
+        LinkVariable::try_from_matrix(vec![c(1.0, 0.0), c(0.0, 2.0), c(1.0, 1.0), c(-2.0, 2.0)])
+            .unwrap();
+    assert!(m.determinant().norm() < 1e-12);
+    assert_projection_rejected(&m);
+}
+
+#[test]
+fn test_project_sun_rejects_rank_deficient_4x4() {
+    // Last row = row 0 + i * row 1.
+    let mut data = matrix_4x4();
+    for k in 0..4 {
+        data[12 + k] = data[k] + c(0.0, 1.0) * data[4 + k];
+    }
+    let m: LinkVariable<SO3_1, Complex<f64>, f64> = LinkVariable::try_from_matrix(data).unwrap();
+    assert_projection_rejected(&m);
+}
+
+#[test]
+fn test_project_sun_rejects_non_finite_input() {
+    let mut data = matrix_4x4();
+    data[5] = c(f64::NAN, 0.0);
+    let m: LinkVariable<SO3_1, Complex<f64>, f64> = LinkVariable::try_from_matrix(data).unwrap();
+    assert_projection_rejected(&m);
+}
+
+#[test]
+fn test_project_sun_accepts_ill_conditioned_non_singular_input() {
+    // diag(1, 1e-6) rotated by a non-diagonal unitary: condition number 1e6, still invertible.
+    let m: LinkVariable<SU2, Complex<f64>, f64> =
+        LinkVariable::try_from_matrix(vec![c(1.0, 0.0), c(0.0, 1e-6), c(0.0, 1.0), c(1e-6, 0.0)])
+            .unwrap();
+    assert!(m.determinant().norm() > 0.0);
+    let u = m
+        .project_sun()
+        .expect("an invertible input has a unitary polar factor");
+    assert_special_unitary(&u, 1e-9);
+}
+
+#[test]
+fn test_determinant_propagates_nan() {
+    // A whole column of NaN: no pivot compares greater than zero, yet the determinant is NaN.
+    let mut data = matrix_4x4();
+    for r in 0..4 {
+        data[r * 4 + 1] = c(f64::NAN, f64::NAN);
+    }
+    let m: LinkVariable<SO3_1, Complex<f64>, f64> = LinkVariable::try_from_matrix(data).unwrap();
+    let det = m.determinant();
+    assert!(det.re.is_nan() || det.im.is_nan(), "det = {det:?}");
+
+    // A single NaN entry.
+    let mut data = matrix_4x4();
+    data[6] = c(f64::NAN, 0.0);
+    let m: LinkVariable<SO3_1, Complex<f64>, f64> = LinkVariable::try_from_matrix(data).unwrap();
+    let det = m.determinant();
+    assert!(det.re.is_nan() || det.im.is_nan(), "det = {det:?}");
 }

@@ -1023,3 +1023,35 @@ fn test_four_by_four_group_supports_random_start_sweep_smearing_and_flow() {
         assert!((u.determinant() - Complex::new(1.0, 0.0)).norm() < 1e-9);
     }
 }
+
+#[test]
+fn test_gauge_transform_uses_one_element_per_site() {
+    use deep_causality_stats::Xoshiro256;
+    use std::cell::Cell;
+
+    // A closure that returns a different element on every call. A gauge transformation must
+    // still use one element per site, or plaquettes change.
+    let lattice: Arc<LatticeComplex<2, f64>> = Arc::new(LatticeComplex::new([3, 4], [true, true]));
+    let mut rng = Xoshiro256::from_seed(9);
+    let mut field: LatticeGaugeField<U1, 2, Complex<f64>, f64> =
+        LatticeGaugeField::try_random(lattice, 6.0, &mut rng).unwrap();
+    let before: Vec<Complex<f64>> = (0..3)
+        .flat_map(|x| (0..4).map(move |y| [x, y]))
+        .map(|site| field.try_plaquette(&site, 0, 1).unwrap().as_slice()[0])
+        .collect();
+
+    let calls = Cell::new(0usize);
+    field.gauge_transform(|_site| {
+        calls.set(calls.get() + 1);
+        LinkVariable::from_phase(0.37 * calls.get() as f64)
+    });
+
+    assert_eq!(calls.get(), 12, "one call per site");
+    for (k, site) in (0..3).flat_map(|x| (0..4).map(move |y| [x, y])).enumerate() {
+        let after = field.try_plaquette(&site, 0, 1).unwrap().as_slice()[0];
+        assert!(
+            (after - before[k]).norm() < 1e-12,
+            "plaquette at {site:?} changed"
+        );
+    }
+}

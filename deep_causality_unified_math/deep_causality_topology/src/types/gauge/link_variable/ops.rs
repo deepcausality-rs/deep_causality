@@ -172,6 +172,10 @@ impl<
     /// which is the closest unitary matrix to M in Frobenius norm. The zero matrix projects to
     /// the identity.
     ///
+    /// The Newton–Schulz iteration maps each singular value σ of the normalised input to
+    /// σ(3 − σ²)/2, so a zero singular value stays zero and a rank-deficient input has no unitary
+    /// limit. The projection is accepted only when `‖X†X − I‖²_F` ends at or below `√ε` of `R`.
+    ///
     /// # Returns
     ///
     /// The projected SU(N) matrix.
@@ -179,7 +183,9 @@ impl<
     /// # Errors
     ///
     /// Returns `LinkVariableError::InvalidDimension` if `G::matrix_dim()` is zero.
-    /// Returns `LinkVariableError::NumericalError` if a numeric constant does not convert to `R`.
+    /// Returns `LinkVariableError::NumericalError` if a numeric constant does not convert to `R`,
+    /// or if the iteration does not reach a unitary matrix: the input is singular, too
+    /// ill-conditioned for 50 iterations, or not finite.
     pub fn project_sun(&self) -> Result<Self, LinkVariableError>
     where
         M: ComplexField<R>,
@@ -200,8 +206,9 @@ impl<
         let norm_sq = self.frobenius_norm_sq();
         let zero = R::zero();
 
-        if norm_sq.partial_cmp(&zero) != Some(std::cmp::Ordering::Greater) {
-            // Zero matrix - return identity
+        // Zero matrix - return identity. A NaN norm is not zero: it flows through the iteration
+        // and fails the convergence gate below.
+        if norm_sq == zero {
             return Self::try_identity();
         }
 
@@ -225,6 +232,7 @@ impl<
         let half_m = M::from_re_im(half_r, R::zero());
         let minus_one_m = M::from_re_im(-R::one(), R::zero());
 
+        let mut converged = false;
         for _ in 0..max_iter {
             let x_dag = x.dagger();
             let xdx = x_dag.mul(&x);
@@ -232,6 +240,7 @@ impl<
             // Check convergence before next iteration (compute_identity_deviation returns ||X-I||_F^2)
             let residual_sq = compute_identity_deviation::<G, M, R>(&xdx);
             if residual_sq < epsilon {
+                converged = true;
                 break;
             }
 
@@ -245,6 +254,21 @@ impl<
             // X_{k+1} = 0.5 * X * diff
             // order: X * diff * 0.5
             x = x.mul(&diff).scale(&half_m);
+        }
+
+        // Out of iterations: accept only a result that is unitary to working precision. A
+        // rank-deficient input keeps a residual of at least one per missing direction, and a
+        // non-finite one a NaN residual; both fail here, before det^{1/N} is taken of a
+        // determinant near zero.
+        if !converged {
+            let residual_sq = compute_identity_deviation::<G, M, R>(&x.dagger().mul(&x));
+            if residual_sq.is_nan() || residual_sq > R::epsilon().sqrt() {
+                return Err(LinkVariableError::NumericalError(
+                    "SU(N) projection did not converge: the input is singular, too \
+                     ill-conditioned, or not finite"
+                        .to_string(),
+                ));
+            }
         }
 
         // Ensure determinant = 1 for SU(N) by dividing by det^{1/N}
@@ -338,11 +362,17 @@ where
 {
     let mut det = M::one();
     for col in 0..n {
-        // The row at or below `col` whose entry in this column has the largest modulus.
+        // The row at or below `col` whose entry in this column has the largest modulus. A NaN
+        // modulus wins, so a NaN entry propagates into the determinant instead of the column
+        // reading as all zero.
         let (pivot_row, pivot_norm) = (col..n).map(|r| (r, work[r * n + col].norm_sqr())).fold(
             (col, R::zero()),
             |best, cand| {
-                if cand.1 > best.1 { cand } else { best }
+                if !best.1.is_nan() && (cand.1.is_nan() || cand.1 > best.1) {
+                    cand
+                } else {
+                    best
+                }
             },
         );
         if pivot_norm <= R::zero() {
