@@ -6,3 +6,5 @@
 mod metric_signature_tests;
 #[cfg(test)]
 mod no_space_time_tests;
+#[cfg(test)]
+mod recordable_tests;

@@ -4,6 +4,7 @@
  */
 
 mod errors;
+mod extensions;
 #[cfg(not(miri))]
 mod traits;
 mod types;

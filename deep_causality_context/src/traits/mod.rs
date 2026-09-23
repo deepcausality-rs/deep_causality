@@ -8,3 +8,4 @@ pub mod contextuable;
 pub mod contextuable_graph;
 pub mod indexable;
 pub mod scalar;
+pub mod storable;

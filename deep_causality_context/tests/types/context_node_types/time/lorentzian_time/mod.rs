@@ -4,3 +4,5 @@
  */
 mod adjustable_tests;
 mod lorentzian_time_tests;
+#[cfg(test)]
+mod recordable_tests;

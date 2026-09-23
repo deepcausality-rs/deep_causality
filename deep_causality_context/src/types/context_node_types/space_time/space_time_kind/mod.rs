@@ -13,6 +13,8 @@ use deep_causality_algebra::RealField;
 use deep_causality_core::Identifiable;
 use std::fmt::Formatter;
 
+mod recordable;
+
 /// A polymorphic enum over supported spacetime context types.
 ///
 /// `SpaceTimeKind` provides a unified abstraction over multiple spacetime representations.

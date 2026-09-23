@@ -27,4 +27,8 @@ mod graph_root_tests;
 #[cfg(test)]
 mod mixed_spacetime_tests;
 #[cfg(test)]
+mod restore_tests;
+#[cfg(test)]
 mod scalar_parameter_tests;
+#[cfg(test)]
+mod snapshot_tests;

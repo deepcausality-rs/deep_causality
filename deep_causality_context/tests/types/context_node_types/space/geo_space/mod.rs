@@ -9,3 +9,5 @@ mod adjustable_geo_space_tests;
 mod geo_space_tests;
 #[cfg(test)]
 mod metric_tests;
+#[cfg(test)]
+mod recordable_tests;

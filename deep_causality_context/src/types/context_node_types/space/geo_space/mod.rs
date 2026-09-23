@@ -11,6 +11,7 @@ mod display;
 mod getters;
 mod identifiable;
 mod metric;
+mod recordable;
 mod spatial;
 
 /// A non-Euclidean spatial context based on geodetic coordinates.

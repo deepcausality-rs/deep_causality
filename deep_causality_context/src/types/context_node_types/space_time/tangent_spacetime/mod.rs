@@ -13,6 +13,7 @@ mod getters;
 mod identifiable;
 mod metric_signature;
 mod metric_tensor;
+mod recordable;
 mod space_temporal;
 mod space_temporal_interval;
 mod spatial;

@@ -115,38 +115,38 @@ audit, implementation, mutants. The record is `tdd-notes.md` beside this file.
 
 ## 7. `Storable` and the projection
 
-- [ ] 7.1 `src/traits/storable/mod.rs`: `Storable` with `to_record` and `from_record`
-- [ ] 7.2 `src/extensions/storable/`: implementations for `f32`, `f64`, `u64`, `i64`, `bool`,
+- [x] 7.1 `src/traits/storable/mod.rs`: `Storable` with `to_record` and `from_record`
+- [x] 7.2 `src/extensions/storable/`: implementations for `f32`, `f64`, `u64`, `i64`, `bool`,
       `String`, `SubstrateRef`, `Vec<T>`, `Option<T>`, `Float106` as `Fields { hi, lo }`, and
       `BFloat16`; one file per group; tests under `tests/extensions/storable/` for every round
       trip, every wrong payload, the missing field, and `Float106` to every bit
-- [ ] 7.3 `data/recordable.rs`: `impl<T: Storable + Default + Clone + PartialEq>
+- [x] 7.3 `data/recordable.rs`: `impl<T: Storable + Default + Clone + PartialEq>
       Recordable<DataRecord> for Data<T>`; test with the shipped payloads and with a test-local
       struct implementing `Storable` as `Fields`
-- [ ] 7.4 `recordable.rs` beside each of `GeoSpace`, `EcefSpace`, `EuclideanSpace`, `NedSpace`
+- [x] 7.4 `recordable.rs` beside each of `GeoSpace`, `EcefSpace`, `EuclideanSpace`, `NedSpace`
       and `SpaceKind` implementing `Recordable<SpaceRecord>` with `R: RealField + Into<f64> +
       FromPrimitive`; wrong-variant refusals name the node
-- [ ] 7.5 `recordable.rs` beside each of `EuclideanTime`, `LorentzianTime`, `DiscreteTime`,
+- [x] 7.5 `recordable.rs` beside each of `EuclideanTime`, `LorentzianTime`, `DiscreteTime`,
       `EntropicTime` and `TimeKind` implementing `Recordable<TimeRecord>`
-- [ ] 7.6 `recordable.rs` beside each of `EuclideanSpacetime`, `LorentzianSpacetime`,
+- [x] 7.6 `recordable.rs` beside each of `EuclideanSpacetime`, `LorentzianSpacetime`,
       `TangentSpacetime` and `SpaceTimeKind` implementing `Recordable<SpaceTimeRecord>`;
       `TangentSpacetime::from_record` restores the stored metric through `update_metric_tensor`
-- [ ] 7.7 `recordable.rs` beside `NoSpaceTime` implementing both `Recordable<SpaceRecord>` and
+- [x] 7.7 `recordable.rs` beside `NoSpaceTime` implementing both `Recordable<SpaceRecord>` and
       `Recordable<SpaceTimeRecord>` as `Unrecordable` / `WrongVariant`
-- [ ] 7.8 `recordable.rs` beside `Contextoid` implementing `Recordable<NodeRecord>`, dispatching to
+- [x] 7.8 `recordable.rs` beside `Contextoid` implementing `Recordable<NodeRecord>`, dispatching to
       the four parameters, `Root` both ways, the phantom arm as `Unrecordable`
-- [ ] 7.9 `recordable_tests.rs` beside every implementing type: round trip at a value where every
+- [x] 7.9 `recordable_tests.rs` beside every implementing type: round trip at a value where every
       field differs; every wrong variant refused with the node's identifier; `Float106` and
       `BFloat16` coordinate round trips on one space type; the root round trip
 
 ## 8. `Context::snapshot` and `Context::restore`
 
-- [ ] 8.1 `context_graph/snapshot.rs`: the walk over base and extras through `get_last_index`,
+- [x] 8.1 `context_graph/snapshot.rs`: the walk over base and extras through `get_last_index`,
       `get_node`, `get_edges`; canonical ordering; each extra's identifier and name recorded
-- [ ] 8.2 `context_graph/restore.rs`: version check, duplicate and dangling-identifier checks,
+- [x] 8.2 `context_graph/restore.rs`: version check, duplicate and dangling-identifier checks,
       extra identifier 0 refused, base and extras rebuilt through the graph traits under the
       snapshot's identifiers and names, current extra identifier left at 0
-- [ ] 8.3 `snapshot_tests.rs` and `restore_tests.rs`: the canonical-order scenario, the
+- [x] 8.3 `snapshot_tests.rs` and `restore_tests.rs`: the canonical-order scenario, the
       identifier-not-index scenario, the unrecordable-node scenario, the full `UniformContext`
       round trip with two named extras and all four relation kinds, the run-time-state scenario,
       the newer-version refusal, the dangling edge, the duplicate identifier, the

@@ -7,6 +7,7 @@ use crate::ContextoidId;
 mod adjustable;
 mod display;
 mod identifiable;
+mod recordable;
 mod scalar_projector;
 mod temporable;
 

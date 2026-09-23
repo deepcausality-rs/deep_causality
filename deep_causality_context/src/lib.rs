@@ -30,6 +30,7 @@
 
 mod alias;
 mod errors;
+mod extensions;
 mod traits;
 mod types;
 pub mod utils_test;
@@ -69,6 +70,8 @@ pub use crate::traits::indexable::data_indexable::DataIndexable;
 pub use crate::traits::indexable::time_index_current::CurrentTimeIndex;
 pub use crate::traits::indexable::time_index_previous::PreviousTimeIndex;
 pub use crate::traits::indexable::time_indexable::TimeIndexable;
+// Storable trait
+pub use crate::traits::storable::Storable;
 // Scalar traits
 pub use crate::traits::scalar::scalar_projector::ScalarProjector;
 pub use crate::traits::scalar::scalar_value::ScalarValue;

@@ -8,6 +8,7 @@ pub mod adjustable;
 mod datable;
 mod display;
 mod identifiable;
+mod recordable;
 
 /// A generic container for a piece of data, associated with a unique identifier.
 ///

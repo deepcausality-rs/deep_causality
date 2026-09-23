@@ -14,6 +14,7 @@ pub mod contextoid_type;
 mod contextuable;
 mod display;
 mod identifiable;
+mod recordable;
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct Contextoid<D, S, T, ST>

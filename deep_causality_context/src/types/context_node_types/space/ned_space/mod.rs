@@ -11,6 +11,7 @@ mod display;
 mod getters;
 mod identifiable;
 mod metric;
+mod recordable;
 mod spatial;
 
 /// A local tangent-plane spatial context using the North-East-Down (NED) reference frame.

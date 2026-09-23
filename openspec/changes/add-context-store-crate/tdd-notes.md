@@ -268,3 +268,98 @@ Re-run over the same two files after the removal, 5 minutes:
 ```
 37 mutants tested: 36 caught, 1 unviable, 0 missed
 ```
+
+## Task groups 7 and 8: `Storable`, the projection, `snapshot` and `restore`
+
+One stage for both groups: the projection and the two `Context` methods share a suite and a
+mutation run.
+
+### Phase 1: API-only
+
+`Storable` was declared in `deep_causality_context/src/traits/storable/`, its eleven
+implementations under `src/extensions/storable/`, `Recordable` beside every node type (four
+space, five time, four spacetime, the absent spacetime twice, `Data<T: Storable>`, `Contextoid`),
+and `Context::snapshot` and `Context::restore` under `context_graph/`, every body
+`unimplemented!()`. The crate built; the 461 existing tests passed.
+
+### Phase 2: the suite, observed failing
+
+27 new test files, 115 test functions, each file with its corner-case table and provenance note:
+`tests/traits/storable/`, `tests/extensions/storable/`, `recordable_tests.rs` beside every node
+type, `snapshot_tests.rs` and `restore_tests.rs`. Against the API-only crate:
+
+```
+test result: FAILED. 461 passed; 115 failed
+```
+
+All 115 failures are the `not implemented` panic from `deep_causality_context/src/`; no new test
+passed. The scenarios of `context-projection` are each covered: the shape-change compile failure
+is a property of the layout rather than a test; every other scenario names its test in a table.
+
+### Phase 3: the defect audit
+
+Fourteen defects, injected one at a time and restored byte for byte:
+
+| Class | Injection | Subject test | Result |
+|---|---|---|---|
+| guard removed | `f32` accepts a double it cannot hold | `scalars_tests::test_an_f32_that_cannot_hold_the_double_is_refused` | rejected, 3 |
+| guard loosened | a longer list read as an `Option` | `collections_tests::test_a_longer_list_is_not_an_option` | rejected, 3 |
+| plausible neighbour | `Float106` halves swapped on read | `software_scalars_tests::test_float106_round_trips_to_every_bit` | rejected, 4 |
+| plausible neighbour | `GeoSpace` writes `lon` into `lat` | `geo_space::recordable_tests::test_round_trip` | rejected, 6 |
+| plausible neighbour | `NedSpace` reads `east` as `north` | `ned_space::recordable_tests::test_round_trip` | rejected, 9 |
+| early return | `TangentSpacetime` keeps the default metric | `test_the_stored_metric_is_restored_not_the_default` | rejected, 3 |
+| flipped label | an `Ecef` record lands in `Euclidean` | `space_kind::recordable_tests::test_every_variant_round_trips` | rejected, 3 |
+| constant changed | a restored root gets identifier 0 | `contextoid::recordable_tests::test_a_root_is_an_ordinary_record` | rejected, 4 |
+| constant changed | `DiscreteTime` writes `NoScale` | `discrete_time::recordable_tests::test_round_trip` | rejected, 6 |
+| early return | `snapshot` leaves edges unsorted | `snapshot_tests::test_a_snapshot_is_canonical` | rejected, 3 |
+| flipped comparison | the current version is refused | `restore_tests::test_a_newer_snapshot_is_refused` | rejected, 13 |
+| early return | the current extra stays set after restore | `restore_tests::test_run_time_state_starts_empty` | rejected, 3 |
+| guard removed | a duplicate node identifier is accepted | `restore_tests::test_a_duplicate_identifier_is_refused` | rejected, 3 |
+| guard removed | a duplicate edge is accepted | `restore_tests::test_a_duplicate_edge_is_refused` | rejected, 1 |
+
+Fourteen of fourteen rejected. Tolerance loosening is n/a.
+
+### Phase 4: implementation against the audited suite
+
+`cargo test -p deep_causality_context`: 577 passed. Clippy and fmt clean. Two facts of the tree
+changed the implementation or a test during this phase, each recorded here:
+
+- `ultragraph` accepts parallel edges, so the "edge could not be added" arm of `restore` is
+  unreachable with valid indices. A relation exists once between two nodes in the storage
+  contract, so `restore` refuses a duplicate `(from, to)` itself, with
+  `Identity(from, "an edge is carried twice")`, and a test provokes it.
+- `TangentSpacetime::new` builds its default metric with `c²` held exactly in `Float106`'s two
+  halves. The metric narrows to `f64` in the record like every other field, so the restored
+  metric is the narrowed one. The test had expected the exact one; its expectation was corrected
+  to the rule the spec states, not weakened.
+- `deep_causality_num` narrows a huge double to an infinite `f32` rather than refusing. The `f32`
+  `Storable` refuses a finite double whose `f32` value is not finite with `Scalar`, so the
+  spec's scenario holds. The generic coordinate implementations rely on `FromPrimitive::from_f64`
+  and inherit the crate's behaviour for `f32`, which never returns `None`.
+
+Two scenarios joined the suite during phase 4, both from facts found while implementing: the
+duplicate-edge refusal above, and a snapshot taken after `remove_node`, whose tombstoned index the
+walk steps over (`snapshot_tests::test_a_removed_node_is_not_recorded`, which coverage showed
+missing). Final count: 578 tests in the crate, 117 of them from this stage.
+
+Coverage over the stage's files: every `Storable` and `Recordable` file and `snapshot.rs` at
+100% of lines. `restore.rs` has two uncovered lines, the `map_err` arm for an edge the graph
+refuses to add. It is unreachable by construction: both indices come from the map the same
+function filled, `ultragraph` accepts parallel edges, and duplicates are refused before the call.
+The matching arm for a node the graph refuses to add is unreachable for the same reason on a
+fresh dynamic graph and is a closure coverage reports as a missed function.
+
+`bazel test //deep_causality_context/...`: 90 targets pass, 89 test files, 89 suite targets.
+
+### Phase 5: mutation testing
+
+`cargo mutants -p deep_causality_context` over `src/extensions/**`, every `recordable.rs`,
+`snapshot.rs` and `restore.rs`, 7 minutes:
+
+```
+84 mutants tested: 26 caught, 0 missed, 58 unviable, 0 timeouts
+```
+
+The unviable mutants are `Default::default()` substitutions on return types with no `Default`:
+the node types behind `Result<Self, _>`, `ProjectionError`, `ContextSnapshot`, and the
+record-vector pairs `walk` returns. No survivor, so no entry was added to `.cargo/mutants.toml`.

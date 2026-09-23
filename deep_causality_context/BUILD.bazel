@@ -264,6 +264,44 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "extensions_tests",
+    srcs = glob([
+        "tests/extensions/**/*_tests.rs",
+    ]),
+    tags = [
+        "extension_tests",
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_context",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "traits_storable",
+    srcs = glob([
+        "tests/traits/storable/*_tests.rs",
+    ]),
+    tags = [
+        "trait_tests",
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_context",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
     name = "utils_tests",
     srcs = glob([
         "tests/utils_test/*_tests.rs",

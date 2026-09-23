@@ -11,6 +11,7 @@ mod display;
 mod getters;
 mod identifiable;
 mod metric;
+mod recordable;
 mod spatial;
 
 /// A spatial context in Earth-Centered, Earth-Fixed (ECEF) coordinates.

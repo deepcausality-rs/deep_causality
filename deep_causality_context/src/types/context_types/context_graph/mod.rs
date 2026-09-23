@@ -17,6 +17,8 @@ mod extra_context;
 mod identifiable;
 mod indexable_data;
 mod indexable_time;
+mod restore;
+mod snapshot;
 
 use extra_context::ExtraContext;
 
