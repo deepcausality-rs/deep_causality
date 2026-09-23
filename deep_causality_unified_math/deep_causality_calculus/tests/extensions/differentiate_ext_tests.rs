@@ -214,8 +214,10 @@ fn test_descent_reaches_ground_via_iterate_until() {
 //
 // Every expected entry is the hand-derived closed-form second derivative of the fixture,
 // written as a literal (or, for the transcendental fixture, as the analytic expression).
-// The fixtures carry distinct, non-zero entries so that an index swap, a dropped mirror, or a
-// wrong channel changes the answer.
+// The fixtures carry distinct, non-zero entries so that a dropped mirror write, a skipped
+// diagonal, a wrong `ε` channel, or a wrong seeded coordinate changes the answer. Swapping the
+// inner and outer seeds cannot: a C² field has a symmetric Hessian, and each value is written to
+// both `(i, j)` and `(j, i)`.
 
 // f(x, y, z) = x²y + 3yz³ + xz
 //   H = [[2y, 2x, 1], [2x, 0, 9z²], [1, 9z², 18yz]]
@@ -414,8 +416,9 @@ fn test_hessian_single_input() {
 
 #[test]
 fn test_hessian_zero_inputs() {
-    let h: [[f64; 0]; 0] = Constant0.hessian(&[]);
-    assert!(h.is_empty());
+    // A `[[f64; 0]; 0]` has no entry to assert on; the test pins that `N = 0` returns without
+    // panicking.
+    let _h: [[f64; 0]; 0] = Constant0.hessian(&[]);
 }
 
 #[test]
@@ -432,17 +435,12 @@ fn test_hessian_nan_input_propagates() {
 }
 
 // --- Precision is a parameter: the same field and point at f32 / f64 / Float106 ---
-// At (1, 2, 3) every entry of Cubic3's Hessian is a small integer, exact at all three.
+// At (1, 2, 3) every entry of Cubic3's Hessian is a small integer, exact at all three. The `f64`
+// case is `test_hessian_cubic_distinct_entries`.
 
 #[test]
 fn test_hessian_precision_f32() {
     let h = Cubic3.hessian(&[1.0_f32, 2.0, 3.0]);
-    assert_eq!(h, [[4.0, 2.0, 1.0], [2.0, 0.0, 81.0], [1.0, 81.0, 108.0]]);
-}
-
-#[test]
-fn test_hessian_precision_f64() {
-    let h = Cubic3.hessian(&[1.0_f64, 2.0, 3.0]);
     assert_eq!(h, [[4.0, 2.0, 1.0], [2.0, 0.0, 81.0], [1.0, 81.0, 108.0]]);
 }
 
