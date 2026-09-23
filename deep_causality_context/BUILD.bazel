@@ -302,6 +302,44 @@ rust_test_suite(
 )
 
 rust_test_suite(
+    name = "alias_tests",
+    srcs = glob([
+        "tests/alias/*_tests.rs",
+    ]),
+    tags = [
+        "alias_tests",
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_context",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "ctx_types_context_store_tests",
+    srcs = glob([
+        "tests/types/context_types/context_store/*_tests.rs",
+    ]),
+    tags = [
+        "context_types_tests",
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_context",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
     name = "utils_tests",
     srcs = glob([
         "tests/utils_test/*_tests.rs",

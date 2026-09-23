@@ -4,4 +4,5 @@
  */
 
 pub mod context_graph;
+pub mod context_store;
 pub mod contextoid;

@@ -30,7 +30,7 @@ pub type ContextoidId = IdentificationValue;
 
 use crate::{
     Context, Contextoid, Data, EuclideanSpace, EuclideanSpacetime, EuclideanTime, SpaceKind,
-    SpaceTimeKind, TimeKind,
+    SpaceTimeKind, SubstrateRef, TimeKind,
 };
 
 /// A type alias for a default, general-purpose `Context` configuration.
@@ -168,6 +168,23 @@ pub type UniformContext =
 /// fixed but rather belongs to a set of predefined "kinds".
 pub type UniformContextoid = Contextoid<
     Data<NumberType>,
+    SpaceKind<FloatType>,
+    TimeKind<FloatType>,
+    SpaceTimeKind<FloatType>,
+>;
+
+/// The shape a store that holds references accepts: the three `Kind` enums, for which the
+/// projection is total, and a data node that holds where its value lives rather than the value.
+pub type SubstrateContext = Context<
+    Data<SubstrateRef>,
+    SpaceKind<FloatType>,
+    TimeKind<FloatType>,
+    SpaceTimeKind<FloatType>,
+>;
+
+/// The contextoid of a [`SubstrateContext`].
+pub type SubstrateContextoid = Contextoid<
+    Data<SubstrateRef>,
     SpaceKind<FloatType>,
     TimeKind<FloatType>,
     SpaceTimeKind<FloatType>,

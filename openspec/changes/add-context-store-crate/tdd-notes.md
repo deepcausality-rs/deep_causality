@@ -363,3 +363,126 @@ fresh dynamic graph and is a closure coverage reports as a missed function.
 The unviable mutants are `Default::default()` substitutions on return types with no `Default`:
 the node types behind `Result<Self, _>`, `ProjectionError`, `ContextSnapshot`, and the
 record-vector pairs `walk` returns. No survivor, so no entry was added to `.cargo/mutants.toml`.
+
+## Task groups 9 and 10: `ContextStore`, `StoreError`, the aliases, `Context::apply` and `subscribe`
+
+One stage for both groups: the store handle and the streaming block share the in-memory backend,
+one suite and one mutation run.
+
+### Phase 1: API-only
+
+`StoreError<E, B = Infallible>` in `deep_causality_context/src/errors/store_error.rs` after the
+physics convention (a public struct around `StoreErrorEnum`, per-variant constructors, `kind`,
+`Display`, `Error`, `From<ProjectionError>`); `ContextStore<S>` under
+`src/types/context_types/context_store/` with `new`, `storage`, `reserve`, `hydrate`,
+`store_branch`, `create_node_via`, `hydrate_via` and, in a block bounded on
+`ContextStorageStream`, `subscribe`; `Context::apply` in `context_graph/apply.rs`; the aliases
+`SubstrateContext` and `SubstrateContextoid` in `src/alias/mod.rs`. Every method body
+`unimplemented!()`. The error type and the aliases carry no logic beyond construction and so were
+complete in this phase. The crate built; the 578 existing tests passed.
+
+### Phase 2: the suite, observed failing
+
+Eight new test files, 37 test functions, each file with its corner-case table and provenance note:
+`tests/errors/store_error_tests.rs`, `tests/alias/alias_tests.rs`,
+`tests/types/context_types/context_store/{context_store,hydrate,store_branch,substrate,subscribe}_tests.rs`
+and `tests/types/context_types/context_graph/apply_tests.rs`. Against the API-only crate:
+
+```
+test result: FAILED. 584 passed; 31 failed
+```
+
+All 31 failures are the `not implemented` panic from `deep_causality_context/src/`. Six new tests
+passed already: the four `StoreError` tests and the alias test exercise construction alone, and
+`context_store_tests::test_the_store_is_thin` reaches the backend through `storage()`, a getter.
+Every scenario of `context-store-facade` names its test; of `context-store-streaming` the
+context-side scenarios do (the five stream-mechanics scenarios were closed in the store crate
+in group 6), and the store-only backend scenario is the `compile_fail` doctest on the
+`subscribe` block, which `cargo test --doc` runs.
+
+### Phase 3: the defect audit
+
+Twenty defects, injected one at a time by `audit910.py` and restored byte for byte:
+
+| Class | Injection | Subject test | Result |
+|---|---|---|---|
+| early return | `store_branch` stores edges unremapped | `store_branch_tests::test_a_changed_value_is_a_new_node` | rejected, 1 |
+| plausible neighbour | a remapped node linked under its old identifier | same | rejected, 1 |
+| flipped guard | nodes never linked into the container | four tests | rejected, 4 |
+| swapped arguments | extras attached the wrong way round | three tests | rejected, 3 |
+| flipped comparison | a held equal node re-created | four tests | rejected, 4 |
+| guard removed | a `Reference` payload deposited again | `substrate_tests::test_an_empty_slice_deposits_nothing` | rejected, 1 |
+| early return | extras' references left unresolved | `substrate_tests::test_extras_are_resolved_too` | rejected, 1 (after widening) |
+| constant changed | `hydrate_via` drops the snapshot version | four tests | rejected, 4 |
+| early return | `hold` skips the base identifier index | `apply_tests::test_a_membership_event_is_self_contained` | **missed, then rejected, 1** |
+| early return | `NodeRetracted` leaves the extras | `apply_tests::test_unlink_left_and_retract` | rejected, 1 |
+| early return | an edge joined in the base alone | `apply_tests::test_an_edge_lands_wherever_both_ends_are_held` | rejected, 1 |
+| early return | the current extra not reset on drop | `apply_tests::test_attach_and_detach_on_the_held_context` | rejected, 1 |
+| constant changed | an attached container under 0 accepted | `apply_tests::test_an_attached_container_under_zero_is_refused` | rejected, 1 |
+| guard removed | an attachment on another container adds an extra | `apply_tests::test_attach_and_detach_on_the_held_context` | rejected, 1 |
+| constant changed | the unknown-container rule reworded | `apply_tests::test_an_unknown_container_is_refused` | rejected, 1 |
+| flipped guard | `sever` removes only an absent edge | `apply_tests::test_an_edge_lands_wherever_both_ends_are_held` | rejected, 1 |
+| constant changed | retracting the held context accepted | `apply_tests::test_context_retracted` | rejected, 1 |
+| swapped variant | a projection failure in `hydrate` reported as another | `hydrate_tests::test_a_projection_failure_names_the_node` | rejected, 1 |
+| swapped label | `Display` names the substrate variant "storage" | `store_error_tests::test_substrate_variant` | rejected, 1 |
+| off by one | `reserve(n)` asks the backend for `n + 1` | five tests | rejected, 5 |
+
+Nineteen of twenty rejected on the first pass; one missed. `hold` added a node to the base
+graph without recording it in the identifier index, and every assertion read the graph through
+`snapshot`, which walks the graph and never consults the index. The test now reads the linked node
+back through `get_node_index_by_id` and removes it through `remove_node`, which goes through the
+index, and the unlink test asserts the index forgets a node at once and is left alone by an event
+on an extra. The `sever` anchor had drifted under `rustfmt` and was re-anchored; the defect was then
+rejected. Tolerance loosening is n/a.
+
+### Phase 4: implementation against the audited suite
+
+`cargo test -p deep_causality_context`: 618 passed, 40 of them from this stage; the `compile_fail`
+doctest passes. Clippy and fmt clean. Facts of the tree that shaped the implementation or a test:
+
+- The `apply` fixture first gave an extra both ends of a stored edge and not the edge. A store
+  holds edges between nodes, not per container, so a container holding both ends holds the edge,
+  and the echo of `EdgeCreated` rightly added it. The fixture was corrected to a snapshot a store
+  can produce; the routing rule was not changed.
+- `store_branch` creates every remapped edge, including edges between two shared nodes the store
+  already holds. The storage contract makes `create_edge` idempotent for an identical edge, so no
+  comparison against the store is made for edges.
+- `store_graph` refuses, with `ProjectionError::Identity(id, "the backend's reserve held fewer
+  identifiers than asked")`, a reserve that answers short. No conforming backend does; the arm
+  is reached by `store_branch_tests::test_a_short_reserve_is_refused` through a wrapper around the
+  in-memory backend whose `reserve` answers empty.
+- `Context` has no freeze, and every index `apply` passes to the graph comes from a scan of that
+  same graph, so the `map_err` arms for a node or edge the graph refuses to add or remove are
+  unreachable. They are the uncovered lines of `apply.rs` (the `add_edge` arm) and its missed
+  closures, as in `restore.rs`.
+
+Two tests joined the suite during phase 4 from coverage: `hydrate_via` over a container that
+references another (the extras loop and the non-reference pass-through were never run), and the
+context-side form of the fixed-scope scenario in which the host's own `store_branch` creates a
+container outside its subscription (`subscribe_tests::test_a_new_container_is_outside_an_existing_subscription`).
+
+Coverage over the stage's files: `hydrate.rs`, `mod.rs`, `subscribe.rs` and `substrate.rs` at
+100% of lines; `store_error.rs` and `store_branch.rs` with one region each that coverage counts
+as a missed line and lists no line for; `apply.rs` with the unreachable arms above.
+
+`bazel test //deep_causality_context/... //deep_causality_context_store/...`: 134 targets pass;
+the eight new test files each have a suite target (`alias_tests`, `error_types_tests`,
+`ctx_graph_types_tests`, `ctx_types_context_store_tests`).
+
+### Phase 5: mutation testing
+
+`cargo mutants -p deep_causality_context` over `store_error.rs`, `context_store/*.rs` and
+`apply.rs`, two runs of 3 and 2 minutes:
+
+```
+52 mutants tested: 40 caught, 1 missed, 11 unviable     (first run)
+52 mutants tested: 41 caught, 0 missed, 11 unviable     (after the widening)
+```
+
+The survivor was `==` to `!=` in `Context::release` at the test that decides whether the base
+identifier index is updated. The unlink test released a node from the base and then from an extra,
+so the flipped test still emptied the index by the end. The test now asserts the index forgets the
+node at the base release and is untouched by an extra's release. No entry was added to
+`.cargo/mutants.toml`. The unviable mutants are `Default::default()` substitutions on return
+types with no `Default`: `StoreError`, `&S`, `IdReserve`, `Context`, the `(Context, Events)`
+pair and `ContextoidRecord`.

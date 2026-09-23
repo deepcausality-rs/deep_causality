@@ -108,6 +108,7 @@ pub use crate::types::context_node_types::time::time_kind::TimeKind;
 // Context types
 pub use crate::types::context_types::context_graph;
 pub use crate::types::context_types::context_graph::Context;
+pub use crate::types::context_types::context_store::ContextStore;
 pub use crate::types::context_types::contextoid::contextoid_type::*;
 pub use crate::types::context_types::contextoid::*;
 // Vocabulary declared in the persistence contract crate. The node types return these from

@@ -154,29 +154,29 @@ audit, implementation, mutants. The record is `tdd-notes.md` beside this file.
 
 ## 9. `ContextStore`, errors, aliases
 
-- [ ] 9.1 `src/errors/store_error.rs`: `StoreError<E, B = Infallible>` with `Storage`, `Substrate`,
+- [x] 9.1 `src/errors/store_error.rs`: `StoreError<E, B = Infallible>` with `Storage`, `Substrate`,
       `Projection`, `Display`, `std::error::Error`, `From<ProjectionError>`; tests
-- [ ] 9.2 `context_store/mod.rs`: `ContextStore<S>` with `new`, `storage`, `reserve`
-- [ ] 9.3 `context_store/hydrate.rs`: backend `hydrate` then `restore`
-- [ ] 9.4 `context_store/store_branch.rs`: snapshot, `lookup`, partition into create / share /
+- [x] 9.2 `context_store/mod.rs`: `ContextStore<S>` with `new`, `storage`, `reserve`
+- [x] 9.3 `context_store/hydrate.rs`: backend `hydrate` then `restore`
+- [x] 9.4 `context_store/store_branch.rs`: snapshot, `lookup`, partition into create / share /
       remap, `reserve` for remaps, edge remapping, `create_node`, `create_edge`,
       `create_context(name)`, `link`; the same per extra under the extra's name, then `attach`;
       returns the base container's identifier
-- [ ] 9.5 `context_store/substrate.rs`: `create_node_via` and `hydrate_via`
-- [ ] 9.6 `src/alias/mod.rs`: `SubstrateContext` and `SubstrateContextoid`
-- [ ] 9.7 `tests/types/context_types/context_store/*_tests.rs` over `MemoryStorage` and
+- [x] 9.5 `context_store/substrate.rs`: `create_node_via` and `hydrate_via`
+- [x] 9.6 `src/alias/mod.rs`: `SubstrateContext` and `SubstrateContextoid`
+- [x] 9.7 `tests/types/context_types/context_store/*_tests.rs` over `MemoryStorage` and
       `MemorySubstrate` via the store crate's `utils_test`: every scenario in
       `context-store-facade`, including the struct payload through the substrate and the loud
       `WrongPayload`. Add the `ctx_types_context_store_tests` suite to `BUILD.bazel`
 
 ## 10. Streaming on the context side
 
-- [ ] 10.1 `context_graph/apply.rs`: `Context::apply` with the routing table from
+- [x] 10.1 `context_graph/apply.rs`: `Context::apply` with the routing table from
       `context-store-streaming`; extra removal and empty-extra creation through the private map;
       every path idempotent
-- [ ] 10.2 `context_store/subscribe.rs`: `impl<S: ContextStorageStream> ContextStore<S>` with
+- [x] 10.2 `context_store/subscribe.rs`: `impl<S: ContextStorageStream> ContextStore<S>` with
       `subscribe` restoring the snapshot and returning the stream
-- [ ] 10.3 `apply_tests.rs` and `subscribe_tests.rs`: every scenario in `context-store-streaming`
+- [x] 10.3 `apply_tests.rs` and `subscribe_tests.rs`: every scenario in `context-store-streaming`
       including both fixed-scope scenarios, plus a `compile_fail` doc test that a `ContextStore`
       over a store-only backend has no `subscribe`
 

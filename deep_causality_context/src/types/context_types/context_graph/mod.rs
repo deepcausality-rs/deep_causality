@@ -10,6 +10,7 @@ use ultragraph::*;
 use crate::*;
 use crate::{ContextId, ContextoidId};
 
+mod apply;
 mod contextuable_graph;
 mod debug;
 mod extendable_contextuable_graph;
