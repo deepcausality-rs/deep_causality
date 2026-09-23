@@ -26,10 +26,10 @@ name.
 
 #### Scenario: A stored context with references hydrates whole
 
-- **WHEN** a container holding a root, two data nodes and an edge, and referencing a second
-  container of three nodes, is hydrated
-- **THEN** the context's base graph holds the four nodes and the edge, and one extra under the
-  second container's identifier and name holds the three nodes
+- **WHEN** a container holding a root, a data node and a time node, with an edge from the root to
+  each, and referencing a second container of one node, is hydrated
+- **THEN** the context's base graph holds the three nodes and the two edges, and one extra under
+  the second container's identifier and name holds the one node
 
 ### Requirement: `store_branch` stores a world as a new context
 

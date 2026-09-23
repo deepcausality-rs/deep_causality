@@ -134,9 +134,10 @@ other is `ProjectionError::Identity`.
 
 ### Requirement: `ContextStore::subscribe` keeps a context current
 
-`impl<S: ContextStorageStream> ContextStore<S>` SHALL provide `subscribe<D, S_, T, ST>(&self,
-spec: &S::Slice, from: Option<S::Cursor>) -> Result<(Context<D, S_, T, ST>, S::Events),
-StoreError<S::Error>>`, restoring the snapshot and returning the stream beside the context.
+`impl<S: ContextStorageStream> ContextStore<S>` SHALL provide the asynchronous method
+`subscribe<D, S_, T, ST>(&self, spec: &S::Slice, from: Option<S::Cursor>)`, whose future
+resolves to `Result<(Context<D, S_, T, ST>, S::Events), StoreError<S::Error>>`: it awaits the
+backend's `subscribe`, restores the snapshot and returns the stream beside the context.
 
 #### Scenario: A subscribed context follows the store
 

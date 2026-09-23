@@ -15,7 +15,8 @@ dependency beyond `std`.
 lock is recovered with `PoisonError::into_inner`. Identifiers are handed out from a counter that
 starts past every identifier held; container identifiers start at 1. Every mutating operation
 appends the events it emits to a log, `subscribe` from a cursor replays the log to that position
-into a fresh state, and `apply_batch` applies to a clone of the state and commits only on success.
+into a fresh state, and `apply_batch` and `commit` apply to a clone of the state and replace the
+state only on success.
 `MemoryEvents` yields every node and edge event and the membership, attachment and retraction
 events of the container its slice names and of the containers that container referenced at
 subscription, and ends at the end of the log.
@@ -38,7 +39,8 @@ Every function of `utils_test` counts toward the crate's coverage and is tested 
 
 `utils_test` SHALL declare `MemorySubstrate`, implementing `Substrate` over a map keyed by the
 reference's `key`, with `source` fixed to `"memory"`, refusing a `Reference` on `deposit` and an
-unknown reference on `resolve`.
+unknown reference on `resolve`. The key is the node's identifier, so a deposit under a node
+replaces the value held for it and returns the same reference.
 
 #### Scenario: Deposit and resolve
 

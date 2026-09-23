@@ -1,12 +1,12 @@
 # context-storage-contract Specification
 
 ## Purpose
-Defines `ContextStorage`, the thirteen asynchronous operations a backend implements, and the invariants every backend keeps: a context is a set of links, a node is immutable under its identifier, identity is the store's, a relation exists once, references are links between containers, and `hydrate` materialises one level.
+Defines `ContextStorage`, the fourteen asynchronous operations a backend implements, and the invariants every backend keeps: a context is a set of links, a node is immutable under its identifier, identity is the store's, a relation exists once, references are links between containers, a commit is all or nothing, and `hydrate` materialises one level. Defines `Substrate`, whose deposit is idempotent per node.
 ## Requirements
-### Requirement: `ContextStorage` declares thirteen asynchronous operations
+### Requirement: `ContextStorage` declares fourteen asynchronous operations
 
 The store crate SHALL declare `ContextStorage` with `type Error: Debug + Display`, `type Slice`,
-and thirteen operations, each returning `impl Future<Output = Result<…, Self::Error>> + Send`:
+and fourteen operations, each returning `impl Future<Output = Result<…, Self::Error>> + Send`:
 
 ```rust
 fn reserve(&self, n: usize) -> … Result<IdReserve, _>;
@@ -20,6 +20,7 @@ fn link(&self, context: ContextId, nodes: &[ContextoidId]) -> … Result<(), _>;
 fn unlink(&self, context: ContextId, nodes: &[ContextoidId]) -> … Result<(), _>;
 fn attach(&self, context: ContextId, extra: ContextId) -> … Result<(), _>;
 fn detach(&self, context: ContextId, extra: ContextId) -> … Result<(), _>;
+fn commit(&self, writes: &[ContextWrite]) -> … Result<Vec<ContextId>, _>;
 fn lookup(&self, ids: &[ContextoidId]) -> … Result<Vec<Option<ContextoidRecord>>, _>;
 fn hydrate(&self, spec: &Self::Slice) -> … Result<ContextSnapshot, _>;
 ```
@@ -106,6 +107,41 @@ SHALL pin each with a test:
 - **WHEN** A references B and B is retracted
 - **THEN** `hydrate` of A holds no extra, and A's nodes are unchanged
 
+### Requirement: `commit` applies a sequence of writes all or nothing
+
+A backend's `commit` SHALL perform every write it is given, in order and under each write's own
+operation's refusals, or none of them. `ContextWrite` has the variants `CreateContext(String)`,
+`CreateNode(Vec<ContextoidRecord>)`, `CreateEdge(Vec<RelationRecord>)`, `Link { context:
+ContainerRef, nodes: Vec<ContextoidId> }` and `Attach { context: ContainerRef, extra: ContainerRef
+}`. `ContainerRef` is `Held(ContextId)`, a container the store holds, or `Created(usize)`, the
+container made by the commit's `n`-th `CreateContext`, counting from 0. A commit that names a
+`Created` container no earlier write made is refused. On success `commit` returns the identifier of
+every container a `CreateContext` made, in the order of those writes. A refused commit leaves the
+store as it was; a backend that reports changes reports, on success only, the event each write's
+own operation reports, and on refusal none.
+
+The single-operation methods stay; `commit` adds no event variant.
+
+#### Scenario: A commit returns the containers it created
+
+- **WHEN** a commit creates two nodes, an edge, two containers, links into both and into a held
+  container, attaches the second created container to the first and the first to the held one
+- **THEN** it returns the two new identifiers in order, hydrating each shows the links and
+  references the writes named, and the log grows by one event per node, edge, container, link and
+  reference
+
+#### Scenario: A refused commit leaves the store unchanged
+
+- **WHEN** a commit whose last write is refused follows writes that create a node, a container, a
+  link and a reference
+- **THEN** it returns the refusal, `lookup` of the node returns `None`, the container does not
+  exist, no reference was added, no event was emitted, and the node's identifier is still reserved
+
+#### Scenario: A commit names only containers it created
+
+- **WHEN** a commit names `Created(0)` before any `CreateContext`, or `Created(1)` after one
+- **THEN** it is refused and no event is emitted
+
 ### Requirement: `Substrate` holds values and hands back references
 
 The store crate SHALL declare `Substrate` with `type Error: Debug + Display` and two operations
@@ -116,11 +152,22 @@ Result<SubstrateRef, _>` and `resolve(&self, reference: &SubstrateRef) -> Result
 with its own error. `resolve` returns the record the reference names and refuses a reference it
 does not hold. The store crate declares the trait and implements it only in `utils_test`.
 
+`deposit` is idempotent per node: a substrate holds at most one value for a node, a deposit under
+a node replaces the value deposited under it before, and every deposit under a node returns the
+same reference. A caller that must keep a value a store already references checks before it
+deposits.
+
 #### Scenario: A value round-trips through a substrate
 
 - **WHEN** a `Fields` record with three entries is deposited under node 7 and the returned
   reference is resolved
 - **THEN** the result equals the deposited record
+
+#### Scenario: A second deposit under a node replaces the first
+
+- **WHEN** two different records are deposited under node 4
+- **THEN** both deposits return the same reference, it resolves to the second record, and the
+  substrate holds one value
 
 #### Scenario: A reference is not a value
 

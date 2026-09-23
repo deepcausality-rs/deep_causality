@@ -11,7 +11,7 @@ all.
 
 `deep_causality_context_store` declares aliases of the same two names for the identifiers its
 records carry, resolving to its own `IdentificationValue`. The two declarations are independent
-and are pinned equal by the projection: `to_record` writes a context identifier into a record
+and are pinned equal by the projection: `Context::snapshot` writes a context identifier into a record
 field, so a widening on either side alone fails the context crate's build. A consumer that
 glob-imports both crates and names `ContextId` resolves the ambiguity by importing one path.
 
@@ -38,6 +38,6 @@ there, every context type would change width without this crate having said anyt
 
 #### Scenario: The two widths are pinned equal
 
-- **WHEN** a `Contextoid`'s identifier is written into a `ContextoidRecord` by `to_record`
+- **WHEN** a `Contextoid`'s identifier is written into a `ContextoidRecord` by `Context::snapshot`
 - **THEN** it compiles without a cast, and a test passes a context crate `ContextoidId` to a
   function taking the store crate's `ContextoidId`

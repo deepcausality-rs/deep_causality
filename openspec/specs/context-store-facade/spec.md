@@ -29,10 +29,10 @@ name.
 
 #### Scenario: A stored context with references hydrates whole
 
-- **WHEN** a container holding a root, two data nodes and an edge, and referencing a second
-  container of three nodes, is hydrated
-- **THEN** the context's base graph holds the four nodes and the edge, and one extra under the
-  second container's identifier and name holds the three nodes
+- **WHEN** a container holding a root, a data node and a time node, with an edge from the root to
+  each, and referencing a second container of one node, is hydrated
+- **THEN** the context's base graph holds the three nodes and the two edges, and one extra under
+  the second container's identifier and name holds the one node
 
 ### Requirement: `store_branch` stores a world as a new context
 
@@ -43,6 +43,10 @@ does not hold, re-creates under a fresh reserved identifier every node the store
 different record, remaps the branch's edges accordingly, creates the edges, creates the container
 under `name`, links every node, and returns the container's identifier. Each extra of the branch is
 stored the same way as a new container under the extra's own name and attached to the new one.
+The node rule is applied once over the base and every extra together: a record two graphs share
+keeps one identifier, and two graphs carrying different records under one identifier store two
+nodes. Every write goes to the backend as one `commit`, so a refused store leaves nothing of the
+branch in the store.
 
 The in-memory branch is unchanged by the call. A stored branch is a record of a world, not a
 continuation of one; to keep exploring it, hydrate it.
@@ -64,8 +68,25 @@ continuation of one; to keep exploring it, hydrate it.
 #### Scenario: A shared node is linked, not copied
 
 - **WHEN** a branch is stored whose nodes are all held by the store under the same records
-- **THEN** `create_node` is called with an empty slice or not at all, and the new container links
-  every node
+- **THEN** the commit carries no `CreateNode` write, and the new container links every node
+
+#### Scenario: A shared changed node keeps one identity
+
+- **WHEN** a node linked by the base and an extra is changed in both and the branch is stored
+- **THEN** both new containers link one fresh identifier holding the changed record
+
+#### Scenario: A node changed in one graph keeps the other's value
+
+- **WHEN** a node linked by the base and an extra is changed in the base only and the branch is
+  stored
+- **THEN** the new base container links a fresh identifier holding the changed record and the new
+  extra container links the original identifier
+
+#### Scenario: A refused store writes nothing
+
+- **WHEN** a branch that adds a node and changes the kind of a stored edge is stored
+- **THEN** the backend's edge conflict is returned, the added node is not held, and no event is
+  emitted
 
 #### Scenario: Extras become attached containers
 
@@ -90,7 +111,10 @@ continuation of one; to keep exploring it, hydrate it.
 `ContextStore` SHALL provide `create_node_via` and `hydrate_via`, so that a value-holding context
 reaches a store that holds references alone. `create_node_via<B: Substrate>(&self, substrate: &B,
 nodes: &[ContextoidRecord])` deposits every data payload that is not already a `Reference` and
-replaces it by the returned reference before `create_node` sees it. `hydrate_via<B: Substrate, D,
+replaces it by the returned reference before `create_node` sees it. A node the store already holds
+is not deposited again: when its held reference resolves to the value given, the held record is
+passed on, so a repeated call is idempotent; otherwise the record is passed on unchanged and the
+store refuses the conflict, with the substrate untouched. `hydrate_via<B: Substrate, D,
 S_, T, ST>(&self, substrate: &B, spec: &S::Slice)` resolves every `Reference` payload into the
 record the substrate returns before `restore` sees it. Both return `StoreError<S::Error,
 B::Error>`.
@@ -102,6 +126,19 @@ B::Error>`.
   `hydrate_via` as a `BaseContext`
 - **THEN** the data nodes hold their original `f64` values, and the store's `lookup` shows
   `Reference` payloads for both
+
+#### Scenario: A repeated create through a substrate is idempotent
+
+- **WHEN** the same value nodes are created through `create_node_via` twice
+- **THEN** the second call deposits nothing and succeeds, and `lookup` returns the first call's
+  records
+
+#### Scenario: A changed value under a held identifier is refused
+
+- **WHEN** a node is created through `create_node_via` and a different value is then created under
+  its identifier the same way
+- **THEN** the store's conflict is returned, nothing is deposited, and the held reference still
+  resolves to the first value
 
 #### Scenario: A struct payload reaches a reference-holding store
 

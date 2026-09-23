@@ -28,9 +28,10 @@ four test files in the context crate.
 ### Requirement: The extra-context allocator never collides with a held identifier
 
 `extra_ctx_add_new` SHALL derive the next identifier as one more than the highest extra-context
-identifier the context holds, and 1 when it holds none, so that an identifier added through
-`extra_ctx_add_new_with_id` or through `Context::restore` is never allocated again. In the
-sequential case the numbering is unchanged: 1, 2, 3.
+identifier the context has ever held, and 1 when it has held none, so that an identifier added
+through `extra_ctx_add_new_with_id`, through `Context::restore` or through `Context::apply`, and
+an identifier dropped since, is never allocated again. In the sequential case the numbering is
+unchanged: 1, 2, 3.
 
 #### Scenario: Sequential numbering is unchanged
 
@@ -41,6 +42,12 @@ sequential case the numbering is unchanged: 1, 2, 3.
 
 - **WHEN** `extra_ctx_add_new_with_id(7, ..)` is followed by `extra_ctx_add_new`
 - **THEN** the latter returns 8 rather than panicking on a collision
+
+#### Scenario: A dropped identifier is not reallocated
+
+- **WHEN** a context holding extras 40 and 41 drops 41 through `Context::apply` of
+  `ContextRetracted(41)` and `extra_ctx_add_new` is then called
+- **THEN** it returns 42
 
 #### Scenario: A restored context allocates past its extras
 
