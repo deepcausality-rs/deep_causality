@@ -108,6 +108,17 @@ On Unix, a `NamedTempFile` SHALL be created with permission bits `0o600` and a `
 - **WHEN** a `TempDir` is created on Unix
 - **THEN** `metadata(path()).permissions().mode() & 0o777` equals `0o700`
 
+### Requirement: deep_causality_tempfile has no dependencies
+The `deep_causality_tempfile` crate at `deep_causality_utils/deep_causality_tempfile` SHALL declare no entry in `[dependencies]`, SHALL export `TempDir` and `NamedTempFile` from its crate root, and SHALL opt into the workspace lints.
+
+#### Scenario: The dependency table is empty
+- **WHEN** `cargo tree -p deep_causality_tempfile -e normal` runs
+- **THEN** it prints only `deep_causality_tempfile` itself
+
+#### Scenario: Root imports resolve
+- **WHEN** a consumer writes `use deep_causality_tempfile::{NamedTempFile, TempDir};`
+- **THEN** it compiles
+
 ### Requirement: No workspace member declares tempfile
 The root `Cargo.toml` `[workspace.dependencies]` table and the `Cargo.toml` of every workspace member SHALL NOT declare `tempfile` under any dependency table, and no source file of a workspace member outside `yanked/` SHALL reference the path `tempfile::`.
 
@@ -122,5 +133,4 @@ The root `Cargo.toml` `[workspace.dependencies]` table and the `Cargo.toml` of e
 #### Scenario: Migrated suites pass under both build systems
 - **WHEN** `cargo test -p deep_causality_file -p deep_causality_cfd -p deep_causality_discovery` and `bazel test` for the same three packages run
 - **THEN** both pass
-- **AND** the executed test counts of `deep_causality_cfd` and `deep_causality_discovery` equal those recorded before the migration
-- **AND** the executed test count of `deep_causality_file` equals its pre-migration count plus the tests this change adds
+- **AND** for each of the three crates and each build system, the executed test count equals the count recorded before the migration

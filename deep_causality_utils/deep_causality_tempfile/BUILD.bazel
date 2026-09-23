@@ -1,0 +1,32 @@
+load("@crates//:defs.bzl", "aliases", "all_crate_deps", "lint_config")
+load("@rules_rs//rs:rust_library.bzl", "rust_library")
+load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_test_suite")
+
+rust_library(
+    name = "deep_causality_tempfile",
+    srcs = glob([
+        "src/**",
+    ]),
+    aliases = aliases(),
+    crate_root = "src/lib.rs",
+    lint_config = lint_config(),
+    tags = [
+        "tempfile",
+    ],
+    visibility = ["//visibility:public"],
+    deps = all_crate_deps(normal = True),
+)
+
+rust_doc(
+    name = "doc",
+    crate = ":deep_causality_tempfile",
+    tags = ["doc"],
+    visibility = ["//visibility:public"],
+)
+
+rust_doc_test(
+    name = "doc_test",
+    crate = ":deep_causality_tempfile",
+    tags = ["doc-test"],
+    visibility = ["//visibility:public"],
+)
