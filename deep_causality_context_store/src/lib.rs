@@ -5,12 +5,15 @@
 
 //! The persistence contract for the DeepCausality context.
 //!
-//! A `Context` in `deep_causality_context` lives in memory. This crate declares what a store has
-//! to hold to keep one: the record vocabulary a context projects onto, the [`ContextStorage`]
-//! trait a backend implements, the [`Recordable`] projection the context crate implements beside
-//! its node types, the [`Substrate`] a reference-holding store keeps values in, and the
-//! [`ContextStorageStream`] a backend adds when it can report changes. It depends on nothing, so a
-//! backend links this crate alone.
+//! A `Context` in `deep_causality_context` lives in memory. This crate declares what a store
+//! holds to keep one: the records a context projects onto ([`ContextoidRecord`],
+//! [`RelationRecord`], [`ContextSnapshot`] and the [`NodeRecord`] tree under them), the
+//! [`ContextStorage`] trait a backend implements, the [`Recordable`] projection the context crate
+//! implements beside its node types, the [`Substrate`] a reference-holding store keeps values in,
+//! and the [`ContextStorageStream`] a backend adds when it reports changes. Every scalar in a
+//! record is `f64` and every tick `u64`; every identifier is a `u64` the store hands out. The
+//! crate depends on nothing, so a backend links it alone. [`utils_test`] holds an in-memory
+//! backend for tests on both sides of the contract.
 //!
 //! See <https://docs.deepcausality.com/> for the documentation.
 

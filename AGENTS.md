@@ -182,11 +182,11 @@ It uses three main components:
 
 ## Project Structure
 
-The project is a monorepo containing 31 library crates.
+The project is a monorepo containing 32 library crates.
 
 ### Directory layout
 
-Eleven crates sit at the repository root. The **seventeen mathematics crates live under
+Twelve crates sit at the repository root. The **seventeen mathematics crates live under
 `deep_causality_unified_math/`** and the **three utility crates under
 `deep_causality_utils/`**, one directory per crate:
 
@@ -205,7 +205,8 @@ entry reads exactly as before. Only paths moved: a Cargo path dependency into on
 `../deep_causality_utils/deep_causality_x`; the Bazel labels are
 `//deep_causality_unified_math/deep_causality_x` and `//deep_causality_utils/deep_causality_x`.
 The crates that stayed at the root are `deep_causality`, `_algorithms`, `_cfd`, `_context`,
-`_core`, `_data_structures`, `_discovery`, `_ethos`, `_physics`, `_quantum` and `ultragraph`.
+`_context_store`, `_core`, `_data_structures`, `_discovery`, `_ethos`, `_physics`, `_quantum` and
+`ultragraph`.
 
 The groupings below are conceptual and cut across that split: `metric` is filed under Core, `haft`
 under Functional Programming, and `homology` and `topology` under Topology and Physics, but all
@@ -218,7 +219,12 @@ by crates on both sides of the split.
 * `deep_causality_context`: The context layer — the `Context` hypergraph, its contextoids, the
   context node types (data, space, time, spacetime) and the contextuable traits. Separate from
   `deep_causality` so context is an opt-in dependency: reasoning without context costs nothing, and
-  a model that needs context declares this crate.
+  a model that needs context declares this crate. Persists through `deep_causality_context_store`:
+  `Storable`, `ContextStore`, `Context::snapshot`, `restore` and `apply`.
+* `deep_causality_context_store`: The persistence contract for the context — the records a
+  `Context` projects onto, the `ContextStorage` trait a backend implements, the optional
+  `ContextStorageStream` and `Substrate` traits, and an in-memory backend under `utils_test`.
+  No dependencies, so a backend links this crate alone.
 * `deep_causality_core`: Core types for the deep_causality crate.
 * `deep_causality_ast`: AST data structure for the deep_causality crate.
 * `deep_causality_metric`: Foundational metric signatures used acros tensor, multivector, and physics. 
@@ -265,7 +271,7 @@ by crates on both sides of the split.
 
 ## Project Dependencies
 
-Scope: the 31 library crates that are workspace members. Example crates (`examples/*`)
+Scope: the 32 library crates that are workspace members. Example crates (`examples/*`)
 and `yanked/*` are excluded. Third-party crates are resolved from the registry by
 rules_rs into `@crates`; there is no vendored source tree.
 `deep_causality_effects`, `deep_causality_macros` and `deep_causality_sparse` were moved to
@@ -289,6 +295,7 @@ dependency. Dev/test/bench-only dependencies are shown separately below.
 ```
 Tier 0 — Foundational (no internal runtime dependencies)
   deep_causality_ast
+  deep_causality_context_store
   deep_causality_data_structures
   deep_causality_metric
   deep_causality_num
@@ -324,13 +331,14 @@ Tier 5
                                 deep_causality_linear, deep_causality_num,
                                 deep_causality_num_complex, deep_causality_num_dual,
                                 deep_causality_stats
-  deep_causality_uncertain    → deep_causality_algebra, deep_causality_ast, deep_causality_num,
-                                deep_causality_rand, deep_causality_stats
+  deep_causality_uncertain    → deep_causality_algebra, deep_causality_ast, deep_causality_haft,
+                                deep_causality_num, deep_causality_rand, deep_causality_stats
 
 Tier 6
-  deep_causality_context      → deep_causality_algebra, deep_causality_core,
-                                deep_causality_data_structures, deep_causality_metric,
-                                deep_causality_num, deep_causality_uncertain, ultragraph
+  deep_causality_context      → deep_causality_algebra, deep_causality_context_store,
+                                deep_causality_core, deep_causality_data_structures,
+                                deep_causality_metric, deep_causality_num, deep_causality_uncertain,
+                                ultragraph
   deep_causality_multivector  → deep_causality_algebra, deep_causality_haft, deep_causality_linear,
                                 deep_causality_metric, deep_causality_num,
                                 deep_causality_num_complex, deep_causality_tensor
@@ -386,7 +394,7 @@ Internal dev-only dependency (tests/benches, not part of any published runtime):
 ### External Dependencies
 
 Only crates with at least one external (crates.io) runtime dependency are listed.
-The other 24 library crates have no external runtime dependencies.
+The other 25 library crates have no external runtime dependencies.
 
 | Crate | External dependency | Status |
 |-------|---------------------|--------|
@@ -613,7 +621,7 @@ Coding style:
 * Prefer functional style i.e. map, flatmap, filter when dealing with collections
 
 Safety and security style:
-* No `unsafe`. This is enforced repo-wide via `[workspace.lints.rust] unsafe_code = "forbid"` in the root `Cargo.toml`. All 46 workspace members opt in with `[lints]` and `workspace = true` in their own `Cargo.toml` — new crates MUST include this.
+* No `unsafe`. This is enforced repo-wide via `[workspace.lints.rust] unsafe_code = "forbid"` in the root `Cargo.toml`. All 47 workspace members opt in with `[lints]` and `workspace = true` in their own `Cargo.toml` — new crates MUST include this.
 * There are no exemptions. 
 * Avoid macros in all lib code i.e. everything under /src. However, macros for testing are permissible when using sparingly i.e. for bulk testing many types implementing the same trait. 
 * Avoid the introduction of external crates unless it is necessary for testing.

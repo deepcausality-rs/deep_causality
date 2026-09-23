@@ -182,38 +182,38 @@ audit, implementation, mutants. The record is `tdd-notes.md` beside this file.
 
 ## 11. Documentation
 
-- [ ] 11.1 `AGENTS.md`: crate count 31 to 32, root list gains `_context_store`, Tier 0 gains
+- [x] 11.1 `AGENTS.md`: crate count 31 to 32, root list gains `_context_store`, Tier 0 gains
       `deep_causality_context_store`, `deep_causality_context`'s entry lists it; re-derive the
       block from the manifests rather than editing by hand
-- [ ] 11.2 `deep_causality_context_store/README.md`: what the crate is, the record vocabulary and
+- [x] 11.2 `deep_causality_context_store/README.md`: what the crate is, the record vocabulary and
       the `DataRecord` value tree, the thirteen operations, references between containers, how a
       backend implements the trait, the precision statement, the in-memory backend for tests;
       written for a backend implementor
-- [ ] 11.3 `deep_causality_context/README.md`: a persistence section naming `Storable` with a
+- [x] 11.3 `deep_causality_context/README.md`: a persistence section naming `Storable` with a
       struct example, `ContextStore`, `snapshot` / `restore`, `SubstrateContext`, the named extras
       and the precision statement including the `Float106` exception; the re-exported vocabulary
       listed in Contents
-- [ ] 11.4 Crate-level docstring for the store crate's `lib.rs` stating what the code does, with
+- [x] 11.4 Crate-level docstring for the store crate's `lib.rs` stating what the code does, with
       no history
 
 ## 12. Verification
 
-- [ ] 12.1 `cargo test -p deep_causality_context_store` and `cargo test -p deep_causality_context`
+- [x] 12.1 `cargo test -p deep_causality_context_store` and `cargo test -p deep_causality_context`
       green; coverage of every added or edited file at the floor, `utils_test` included
-- [ ] 12.2 `make format && make fix`; lints fixed by rewriting, not by `#[allow]`
-- [ ] 12.3 `bazel test //...` green; every `*_tests.rs` under both crates' `tests/` matched by a
+- [x] 12.2 `make format && make fix`; lints fixed by rewriting, not by `#[allow]`
+- [x] 12.3 `bazel test //...` green; every `*_tests.rs` under both crates' `tests/` matched by a
       suite glob
-- [ ] 12.4 `cargo build -p deep_causality_core --no-default-features --features no-std` still
+- [x] 12.4 `cargo build -p deep_causality_core --no-default-features --features no-std` still
       succeeds
-- [ ] 12.5 Confirm the store crate's `[dependencies]` is empty and that `cargo tree -p
+- [x] 12.5 Confirm the store crate's `[dependencies]` is empty and that `cargo tree -p
       deep_causality_context_store` shows the crate alone
-- [ ] 12.6 Confirm `grep -rn "u64" deep_causality_context_store/src` finds no identifier position
+- [x] 12.6 Confirm `grep -rn "u64" deep_causality_context_store/src` finds no identifier position
       outside the `IdentificationValue` declaration
-- [ ] 12.7 Run `scripts/sbom.sh` so the new crate's SBOM pair exists
-- [ ] 12.8 `openspec validate --changes` passes
+- [x] 12.7 Run `scripts/sbom.sh` so the new crate's SBOM pair exists
+- [x] 12.8 `openspec validate --changes` passes
 
 ## 13. Hand-off
 
-- [ ] 13.1 Prepare commit messages per task group, with the breaking change to
+- [x] 13.1 Prepare commit messages per task group, with the breaking change to
       `ExtendableContextuableGraph`, the behaviour change to `extra_ctx_add_new` and the vocabulary
       relocation stated in the footers for release-plz, and hand them to the user to commit
