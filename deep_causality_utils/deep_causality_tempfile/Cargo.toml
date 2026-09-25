@@ -21,7 +21,6 @@ exclude = [
     "MODULE.bazel",
     ".bazelignore",
     ".bazelrc",
-    "tests/**/*",
 ]
 
 [dependencies]
