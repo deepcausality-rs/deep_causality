@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.7](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.9.6...ultragraph-v0.9.7) - 2026-09-25
+
+### Other
+
+- Merge remote-tracking branch 'origin/main'
+- Commit message for the exclude change:
+
 ## [0.9.6](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.9.5...ultragraph-v0.9.6) - 2026-09-23
 
 ### Other
