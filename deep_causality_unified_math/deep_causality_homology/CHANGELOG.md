@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_homology-v0.1.3...deep_causality_homology-v0.1.4) - 2026-09-23
+
+### Added
+
+- *(deep_causality_homology)* the Euler characteristic on ChainComplex
+
+### Other
+
+- edit all READMEs for clarity, concision and correctness
+- *(deep_causality_unified_math)* regenerated SBOM.
+
 ## [0.1.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_homology-v0.1.2...deep_causality_homology-v0.1.3) - 2026-09-15
 
 ### Other

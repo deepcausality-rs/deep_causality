@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.5](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_algebra-v0.4.4...deep_causality_algebra-v0.4.5) - 2026-09-23
+
+### Other
+
+- *(deep_causality_context)* restore builds stored extras directly; scope the local-extra rule to container events
+- align READMEs, rustdoc and example comments with the code
+- edit all READMEs for clarity, concision and correctness
+- *(deep_causality_unified_math)* regenerated SBOM.
+
 ## [0.4.4](https://github.com/marvin-hansen/deep_causality/compare/deep_causality_algebra-v0.4.3...deep_causality_algebra-v0.4.4) - 2026-09-08
 
 ### Added
