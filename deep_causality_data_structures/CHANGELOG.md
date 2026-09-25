@@ -21,6 +21,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.19](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_data_structures-v0.10.18...deep_causality_data_structures-v0.10.19) - 2026-09-25
+
+### Other
+
+- release
+- *(deep_causality_context)* restore builds stored extras directly; scope the local-extra rule to container events
+- align READMEs, rustdoc and example comments with the code
+- edit all READMEs for clarity, concision and correctness
+- *(deep_causality_data_structures)* regenerated SBOM.
+
 ## [0.10.19](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_data_structures-v0.10.18...deep_causality_data_structures-v0.10.19) - 2026-09-23
 
 ### Other
