@@ -1,0 +1,55 @@
+#SPDX-License-Identifier: MIT
+#Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+
+# Answers: is this workspace publishable?
+#
+# Both jobs gate the release-plz pull request, where a fix still costs nothing. Once
+# `chore: release` reaches main the version bumps are committed, and a failed publish leaves the
+# workspace half released.
+#
+# Neither job simulates release-plz. A green run says nothing about the registry token, a
+# malformed changelog, or a crates.io outage mid-release.
+
+name: Publish check
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # Seconds, no build. Catches what the dry run below structurally cannot see: a dev-dependency
+  # requirement only the registry can satisfy, for a crate release-plz publishes nothing before.
+  dev-dependencies:
+    name: internal dev-dependencies are on crates.io
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install Rust
+        run: rustup update stable
+      - run: bash scripts/check_dev_deps.sh
+
+  # Packages and builds all 33 crates from their own `.crate` archives, which makes this the slow
+  # job. It catches a broken `exclude`, a file the build needs and the package omits, and a crate
+  # that fails to compile once unpacked. Keep the verification build: without it the job only
+  # checks that the manifests resolve.
+  workspace-dry-run:
+    name: cargo publish --workspace --dry-run
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install Rust
+        run: rustup update stable
+      # `--locked` fails the check on a stale Cargo.lock rather than updating it, so the run
+      # reflects the versions a release would publish.
+      - run: cargo publish --workspace --dry-run --locked
