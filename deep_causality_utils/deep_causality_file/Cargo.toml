@@ -22,8 +22,9 @@ exclude = [
     "MODULE.bazel",
     ".bazelignore",
     ".bazelrc",
-    "tests/**/*",
     "papers/*",
+    # Reads GNSS fixtures from examples/, which lie outside this package.
+    "tests/load_real_galileo.rs",
 ]
 
 [dependencies.deep_causality_haft]

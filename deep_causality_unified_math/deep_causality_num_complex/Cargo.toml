@@ -23,7 +23,6 @@ exclude = [
     ".bazelignore",
     ".bazelrc",
     "tests/*",
-    "tests/**/*",
     "papers/*",
 ]
 
