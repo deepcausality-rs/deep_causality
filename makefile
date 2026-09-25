@@ -10,6 +10,7 @@ help:
 	@echo '    make count   	Count LoC across the project.'
 	@echo '    make check_examples	Checks that every Cargo example has a Bazel target.'
 	@echo '    make check_precision	Checks every FloatType alias still builds at each precision.'
+	@echo '    make check_publishable	Checks the workspace is publishable before a release.'
 	@echo '    make fix   		Fixes linting issues as reported by clippy.'
 	@echo '    make format   	Formats call code according to cargo fmt style.'
 	@echo '    make install   	Tests and installs all make script dependencies.'
@@ -50,6 +51,11 @@ check_examples:
 .PHONY: check_precision
 check_precision:
 	@source scripts/check_precision.sh
+
+
+.PHONY: check_publishable
+check_publishable:
+	@source scripts/check_publishable.sh
 
 
 .PHONY: fix
