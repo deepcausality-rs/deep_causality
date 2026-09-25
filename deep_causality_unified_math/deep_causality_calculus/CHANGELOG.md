@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.8](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_calculus-v0.1.7...deep_causality_calculus-v0.1.8) - 2026-09-23
+
+### Added
+
+- *(deep_causality_calculus)* add the field Hessian ([#799](https://github.com/deepcausality-rs/deep_causality/pull/799))
+
+### Other
+
+- *(deep_causality_calculus)* tighten the field Hessian tests
+- edit all READMEs for clarity, concision and correctness
+- *(deep_causality_unified_math)* regenerated SBOM.
+
 ## [0.1.7](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_calculus-v0.1.6...deep_causality_calculus-v0.1.7) - 2026-09-15
 
 ### Other

@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.17.0...deep_causality-v0.18.0) - 2026-09-23
+
+### Added
+
+- *(deep_causality_context)* [**breaking**] add ContextFrame, NoSpaceTime and MetricFamily; declare FloatType per crate
+
+### Other
+
+- align READMEs, rustdoc and example comments with the code
+- edit all READMEs for clarity, concision and correctness
+- *(deep_causality)* Improved docstrings.
+- *(deep_causality)* regenerated SBOM.
+- *(context)* [**breaking**] merge MinkowskiSpacetime into LorentzianSpacetime, add edge read accessors
+- *(context)* [**breaking**] own the context identifiers, store the edge relation, drop QuaternionSpace
+- *(context)* [**breaking**] replace the value parameters with associated types
+- *(context)* [**breaking**] make context an opt-in crate, drop the symbolic dimension
+- *(context)* [**breaking**] make context an opt-in crate, drop the symbolic dimension
+- *(deep_causality_context)* move the context layer to deep_causality_context
+
 ## [0.17.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.16.0...deep_causality-v0.17.0) - 2026-09-15
 
 ### Other
