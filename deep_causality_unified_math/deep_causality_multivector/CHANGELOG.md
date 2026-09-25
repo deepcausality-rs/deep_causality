@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_multivector-v0.6.4...deep_causality_multivector-v0.7.0) - 2026-09-23
+
+### Fixed
+
+- *(multivector)* [**breaking**] place the spinor's beta components so project() is the Bloch vector
+
+### Other
+
+- edit all READMEs for clarity, concision and correctness
+- *(deep_causality_unified_math)* regenerated SBOM.
+- Code formatting and linting
+
 ## [0.6.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_multivector-v0.6.3...deep_causality_multivector-v0.6.4) - 2026-09-15
 
 ### Other

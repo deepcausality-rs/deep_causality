@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_cfd-v0.3.0...deep_causality_cfd-v0.3.1) - 2026-09-23
+
+### Added
+
+- replace the tempfile dev-dependency with deep_causality_tempfile
+
+### Other
+
+- align READMEs, rustdoc and example comments with the code
+- edit all READMEs for clarity, concision and correctness
+- *(deep_causality_cfd)* regenerated SBOM.
+
 ## [0.3.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_cfd-v0.2.0...deep_causality_cfd-v0.3.0) - 2026-09-15
 
 ### Other

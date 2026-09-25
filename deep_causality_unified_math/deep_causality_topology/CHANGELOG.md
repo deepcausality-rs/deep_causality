@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_topology-v0.11.0...deep_causality_topology-v0.12.0) - 2026-09-23
+
+### Added
+
+- *(deep_causality_topology)* [**breaking**] general link determinant; drop infallible try_* link ops
+- *(deep_causality_topology)* [**breaking**] general link determinant, gauge boundary edges, Hodge validation; grmhd guards
+
+### Fixed
+
+- *(deep_causality_topology)* reject singular SU(N) projections; one gauge element per site
+- *(topology,physics)* gauge boundary edges, Hodge validation and build cost, grmhd guards
+- *(deep_causality_topology)* give the Hodge star a mass at the intermediate grades
+- *(physics_examples)* make every example do what it claims, at any precision
+
+### Other
+
+- *(deep_causality_context)* restore builds stored extras directly; scope the local-extra rule to container events
+- *(deep_causality_topology)* grade-0 Hodge star reads the vertex star
+- edit all READMEs for clarity, concision and correctness
+- *(deep_causality_topology)* Improved documentation
+- *(deep_causality_topology)* index gauge links by lattice position, not by hash
+- *(deep_causality_unified_math)* regenerated SBOM.
+- *(deep_causality_topology)* [**breaking**] move the Euler characteristic to BaseTopology
+
 ## [0.11.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_topology-v0.10.0...deep_causality_topology-v0.11.0) - 2026-09-15
 
 ### Added

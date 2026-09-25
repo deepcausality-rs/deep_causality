@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num-v0.5.2...deep_causality_num-v0.5.3) - 2026-09-23
+
+### Added
+
+- *(deep_causality_num)* const_int! and const_float!, and split the lift module
+
+### Fixed
+
+- *(num)* IEEE 754 at the origin and NaN for Float106::atan2; exact residue at the top of i128
+- *(num)* return the IEEE 754 value from Float106::atan2 at the origin
+
+### Other
+
+- edit all READMEs for clarity, concision and correctness
+- *(deep_causality_unified_math)* regenerated SBOM.
+
 ## [0.5.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num-v0.5.1...deep_causality_num-v0.5.2) - 2026-09-15
 
 ### Fixed

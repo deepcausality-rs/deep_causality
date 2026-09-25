@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_algorithms-v0.5.0...deep_causality_algorithms-v0.5.1) - 2026-09-23
+
+### Fixed
+
+- *(deep_causality_algorithms)* Added missing core::error impl to MrmrError for enable proper error propagation.
+
+### Other
+
+- align READMEs, rustdoc and example comments with the code
+- edit all READMEs for clarity, concision and correctness
+- *(deep_causality_algorithm)* regenerated SBOM.
+
 ## [0.5.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_algorithms-v0.4.5...deep_causality_algorithms-v0.5.0) - 2026-09-15
 
 ### Added
