@@ -21,6 +21,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.20](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_data_structures-v0.10.19...deep_causality_data_structures-v0.10.20) - 2026-09-25
+
+### Other
+
+- Merge remote-tracking branch 'origin/main'
+- Commit message for the exclude change:
+
 ## [0.10.19](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_data_structures-v0.10.18...deep_causality_data_structures-v0.10.19) - 2026-09-23
 
 ### Other
