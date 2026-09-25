@@ -15,7 +15,9 @@
 # Cargo drops a dev-dependency declared with a bare path from the published manifest, and
 # `cargo metadata` reports its requirement as `*`. This skips those.
 #
-# Requirements other than a caret fail the check instead of being guessed at.
+# Only a caret over a numeric `major[.minor[.patch]]` is evaluated. Any other requirement,
+# including one with a pre-release or build-metadata suffix, fails the check instead of being
+# guessed at.
 set -o errexit
 set -o nounset
 set -o pipefail
@@ -154,7 +156,7 @@ while IFS=$'\t' read -r crate dep req; do
 
     if ! bounds="$(dc__caret_bounds "$req")"; then
         printf '  %-4s %s -> %s %s\n' "FAIL" "$crate" "$dep" "$req"
-        echo "       '$req' is not a caret requirement. Extend dc__caret_bounds." >&2
+        echo "       '$req' is not a caret over a numeric major[.minor[.patch]]. Extend dc__caret_bounds." >&2
         violations=$((violations + 1))
         continue
     fi

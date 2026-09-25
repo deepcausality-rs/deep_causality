@@ -44,12 +44,15 @@ jobs:
   # that fails to compile once unpacked. Keep the verification build: without it the job only
   # checks that the manifests resolve.
   workspace-dry-run:
-    name: cargo publish --workspace --dry-run
+    name: cargo publish --dry-run
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - name: Install Rust
         run: rustup update stable
-      # `--locked` fails the check on a stale Cargo.lock rather than updating it, so the run
-      # reflects the versions a release would publish.
-      - run: cargo publish --workspace --dry-run --locked
+      # The crate list comes from `scripts/crates.sh`, which excludes `examples/*`: the examples
+      # are never published. `--locked` fails the check on a stale Cargo.lock, so the run reflects the versions a release would
+      # publish.
+      - run: |
+          source scripts/crates.sh
+          cargo publish --dry-run --locked $(printf -- '-p %s ' "${DC_CRATES[@]}")
