@@ -24,13 +24,12 @@
 //! # Feature levels
 //!
 //! `default = ["std"]`, `std = ["alloc"]`, `alloc = []`, and
-//! `no-std = ["alloc"]` follow the workspace three-level convention. The
-//! crate's own needs are small: `core` for the marker trait, `alloc` for
-//! the [`Vec`](alloc::vec::Vec) that [`scoped_map`] returns. There is no
-//! external dependency to forward a level to, so `std` and `no-std` differ
-//! only in whether the crate declares `no_std`. Bare-metal builds use
-//! `--no-default-features --features no-std` and get the serial inline
-//! map.
+//! `no-std = []` follow the workspace three-level convention. The crate's
+//! own needs are small: `core` for the marker trait, `alloc` for the `Vec`
+//! that `scoped_map` returns, so `scoped_map` exists only with `alloc`.
+//! `--no-default-features --features no-std` builds on `core` alone and
+//! needs no `#[global_allocator]`; add `alloc` for the serial inline
+//! `scoped_map`. There is no external dependency to forward a level to.
 //!
 //! # Why `parallel = ["std"]` stays
 //!
@@ -68,14 +67,16 @@ compile_error!(
      over `std::thread::scope`, but the selected target has no `std`. Cargo features are \
      additive, so `--features no-std,parallel` does not turn `parallel` off; it turns `std` back \
      on through `parallel = [\"std\"]`, and the build then fails to find the `std` crate. Build \
-     bare-metal targets without `parallel` — `--no-default-features --features no-std` — and \
-     `scoped_map` runs the serial inline map."
+     bare-metal targets without `parallel` — `--no-default-features --features no-std,alloc` — \
+     and `scoped_map` runs the serial inline map."
 );
 
+#[cfg(feature = "alloc")]
 extern crate alloc;
 
 mod functions;
 pub mod traits;
 
+#[cfg(feature = "alloc")]
 pub use crate::functions::scoped_map::scoped_map;
 pub use crate::traits::maybe_parallel::MaybeParallel;
