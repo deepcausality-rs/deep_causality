@@ -4,8 +4,6 @@
  */
 
 use crate::WindowStorage;
-use alloc::string::String;
-use alloc::string::ToString;
 
 const ERROR_EMPTY_ARRAY: &str = "Array is empty";
 const ERROR_ARRAY_NOT_FILLED: &str = "Array is not yet filled";
@@ -116,11 +114,11 @@ where
     ///
     /// # Returns
     /// * `Ok(T)` - The first element in the window
-    /// * `Err(String)` - If the window is empty
+    /// * `Err(&'static str)` - If the window is empty
     #[inline(always)]
-    fn first(&self) -> Result<T, String> {
+    fn first(&self) -> Result<T, &'static str> {
         if self.tail == 0 {
-            return Err(ERROR_EMPTY_ARRAY.to_string());
+            return Err(ERROR_EMPTY_ARRAY);
         }
         Ok(self.arr[self.head])
     }
@@ -129,11 +127,11 @@ where
     ///
     /// # Returns
     /// * `Ok(T)` - The last element in the window
-    /// * `Err(String)` - If the window is not yet filled
+    /// * `Err(&'static str)` - If the window is not yet filled
     #[inline(always)]
-    fn last(&self) -> Result<T, String> {
+    fn last(&self) -> Result<T, &'static str> {
         if !self.filled() {
-            return Err(ERROR_ARRAY_NOT_FILLED.to_string());
+            return Err(ERROR_ARRAY_NOT_FILLED);
         }
         Ok(self.arr[self.tail - 1])
     }

@@ -4,8 +4,6 @@
  */
 
 use crate::WindowStorage;
-use alloc::string::String;
-use alloc::string::ToString;
 use alloc::vec::Vec;
 
 /// A highly optimized vector-based sliding window implementation using only safe Rust.
@@ -101,15 +99,15 @@ where
     ///
     /// # Returns
     /// * `Ok(T)` - The first element if the window is not empty
-    /// * `Err(String)` - An error message if the window is empty
+    /// * `Err(&'static str)` - An error message if the window is empty
     ///
     /// # Implementation Notes
     /// - Uses direct indexing for performance
     /// - Maintains safety through explicit empty check
     #[inline(always)]
-    fn first(&self) -> Result<T, String> {
+    fn first(&self) -> Result<T, &'static str> {
         if self.tail == 0 {
-            return Err("Vector is empty. Add some elements to the array first".to_string());
+            return Err("Vector is empty. Add some elements to the array first");
         }
         Ok(self.vec[self.head])
     }
@@ -118,17 +116,15 @@ where
     ///
     /// # Returns
     /// * `Ok(T)` - The last element if the window is filled
-    /// * `Err(String)` - An error message if the window is not yet filled
+    /// * `Err(&'static str)` - An error message if the window is not yet filled
     ///
     /// # Implementation Notes
     /// - Uses direct indexing for performance
     /// - Maintains safety through explicit filled check
     #[inline(always)]
-    fn last(&self) -> Result<T, String> {
+    fn last(&self) -> Result<T, &'static str> {
         if !self.filled() {
-            return Err(
-                "Vector is not yet filled. Add some elements to the array first".to_string(),
-            );
+            return Err("Vector is not yet filled. Add some elements to the array first");
         }
         Ok(self.vec[self.tail - 1])
     }

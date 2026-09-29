@@ -377,7 +377,7 @@ fn test_arr_err() {
     assert_eq!(window.size(), SIZE);
     assert!(!window.filled());
 
-    let res: Result<[Data; SIZE], String> = window.arr();
+    let res: Result<[Data; SIZE], &'static str> = window.arr();
     assert!(res.is_err());
 }
 

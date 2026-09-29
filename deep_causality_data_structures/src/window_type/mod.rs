@@ -3,12 +3,14 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use alloc::string::String;
+#[cfg(feature = "alloc")]
 use alloc::vec::Vec;
 
 use core::marker::PhantomData;
 
-use crate::{ArrayStorage, VectorStorage, WindowStorage};
+#[cfg(feature = "alloc")]
+use crate::VectorStorage;
+use crate::{ArrayStorage, WindowStorage};
 
 pub(crate) mod storage;
 pub(crate) mod storage_safe;
@@ -43,6 +45,7 @@ pub(crate) mod storage_safe;
 /// assert!(window.empty());
 /// assert_eq!(window.size(), SIZE);
 /// ```
+#[cfg(feature = "alloc")]
 pub fn new_with_vector_storage<T>(
     size: usize,
     multiple: usize,
@@ -147,11 +150,11 @@ where
         self.storage.push(value)
     }
     /// Returns the first element in the sliding window
-    pub fn first(&self) -> Result<T, String> {
+    pub fn first(&self) -> Result<T, &'static str> {
         self.storage.first()
     }
     /// Returns the last element in the sliding window
-    pub fn last(&self) -> Result<T, String> {
+    pub fn last(&self) -> Result<T, &'static str> {
         self.storage.last()
     }
     /// Returns true if the window is empty.
@@ -167,15 +170,16 @@ where
         self.storage.size()
     }
     /// Returns the sliding window as a fixed size static array.
-    pub fn arr<const SIZE: usize>(&self) -> Result<[T; SIZE], String> {
+    pub fn arr<const SIZE: usize>(&self) -> Result<[T; SIZE], &'static str> {
         self.storage.arr()
     }
     /// Returns sliding window as slice
-    pub fn slice(&self) -> Result<&[T], String> {
+    pub fn slice(&self) -> Result<&[T], &'static str> {
         self.storage.slice()
     }
     /// Returns the sliding window as a vector.
-    pub fn vec(&self) -> Result<Vec<T>, String> {
+    #[cfg(feature = "alloc")]
+    pub fn vec(&self) -> Result<Vec<T>, &'static str> {
         self.storage.vec()
     }
 }

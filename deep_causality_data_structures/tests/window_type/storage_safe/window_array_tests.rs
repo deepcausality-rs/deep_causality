@@ -208,10 +208,11 @@ fn test_slice_err() {
     assert_eq!(window.size(), SIZE);
     assert!(!window.filled());
 
-    let s: Result<&[Data], String> = window.slice();
+    let s: Result<&[Data], &'static str> = window.slice();
     assert!(s.is_err());
 }
 
+#[cfg(feature = "alloc")]
 #[test]
 fn test_vec() {
     let d1 = Data { dats: 0 };
@@ -247,13 +248,14 @@ fn test_vec() {
     assert_eq!(e2.dats, v2.dats);
 }
 
+#[cfg(feature = "alloc")]
 #[test]
 fn test_vec_err() {
     let window = get_sliding_window();
     assert_eq!(window.size(), SIZE);
     assert!(!window.filled());
 
-    let v: Result<Vec<Data>, String> = window.vec();
+    let v: Result<Vec<Data>, &'static str> = window.vec();
     assert!(v.is_err());
 }
 
@@ -321,10 +323,11 @@ fn test_arr_err() {
     assert_eq!(window.size(), SIZE);
     assert!(!window.filled());
 
-    let arr: Result<[Data; SIZE], String> = window.arr();
+    let arr: Result<[Data; SIZE], &'static str> = window.arr();
     assert!(arr.is_err());
 }
 
+#[cfg(feature = "alloc")]
 #[test]
 fn test_drop_old_values() {
     const SIZE: usize = 3;

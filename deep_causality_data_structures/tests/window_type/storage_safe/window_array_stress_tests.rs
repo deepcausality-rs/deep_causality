@@ -4,6 +4,7 @@
  */
 
 use deep_causality_data_structures::{ArrayStorage, WindowStorage};
+#[cfg(feature = "alloc")]
 #[test]
 fn test_vector_storage_capacity_limits() {
     const SIZE: usize = 2;
@@ -24,6 +25,7 @@ fn test_vector_storage_capacity_limits() {
     assert_eq!(storage.vec().unwrap(), vec![3, 4]);
 }
 
+#[cfg(feature = "alloc")]
 #[test]
 fn test_vector_storage_memory_behavior() {
     const SIZE: usize = 3;
@@ -44,6 +46,7 @@ fn test_vector_storage_memory_behavior() {
     assert_eq!(storage.vec().unwrap(), vec![2, 3, 4]);
 }
 
+#[cfg(feature = "alloc")]
 #[test]
 fn test_array_storage_memory_behavior() {
     const SIZE: usize = 3;

@@ -5,6 +5,7 @@
 
 #![cfg_attr(not(feature = "std"), no_std)]
 
+#[cfg(feature = "alloc")]
 extern crate alloc;
 
 pub mod grid_type;
@@ -23,4 +24,5 @@ pub use crate::grid_type::storage::Storage;
 pub use crate::window_type::SlidingWindow;
 pub use crate::window_type::storage::WindowStorage;
 pub use crate::window_type::storage_safe::storage_array::ArrayStorage;
+#[cfg(feature = "alloc")]
 pub use crate::window_type::storage_safe::storage_vec::VectorStorage;
