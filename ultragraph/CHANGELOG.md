@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.8](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.9.7...ultragraph-v0.9.8) - 2026-09-29
+
+### Fixed
+
+- *(deep_causality_physics)* build under no_std; gate topology behind a feature ([#816](https://github.com/deepcausality-rs/deep_causality/pull/816))
+
 ## [0.9.7](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.9.6...ultragraph-v0.9.7) - 2026-09-25
 
 ### Other

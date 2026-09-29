@@ -540,7 +540,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_algorithms"
-version = "0.5.2"
+version = "0.5.3"
 dependencies = [
  "criterion",
  "deep_causality_algebra",
@@ -570,7 +570,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_cfd"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "criterion",
  "deep_causality_algebra",
@@ -618,7 +618,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_data_structures"
-version = "0.10.20"
+version = "0.10.21"
 dependencies = [
  "criterion",
  "deep_causality_rand",
@@ -626,7 +626,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_discovery"
-version = "0.7.1"
+version = "0.7.2"
 dependencies = [
  "csv",
  "deep_causality_algebra",
@@ -706,7 +706,7 @@ version = "0.3.1"
 
 [[package]]
 name = "deep_causality_multivector"
-version = "0.7.1"
+version = "0.7.2"
 dependencies = [
  "criterion",
  "deep_causality_algebra",
@@ -720,7 +720,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_num"
-version = "0.5.4"
+version = "0.5.5"
 dependencies = [
  "libm",
 ]
@@ -757,7 +757,7 @@ version = "0.1.7"
 
 [[package]]
 name = "deep_causality_physics"
-version = "0.10.0"
+version = "0.10.1"
 dependencies = [
  "deep_causality_algebra",
  "deep_causality_calculus",
@@ -778,7 +778,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_quantum"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "deep_causality",
  "deep_causality_algebra",
@@ -808,7 +808,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_stats"
-version = "0.2.3"
+version = "0.2.4"
 dependencies = [
  "deep_causality_algebra",
  "deep_causality_linear",
@@ -818,11 +818,11 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_tempfile"
-version = "0.1.0"
+version = "0.1.1"
 
 [[package]]
 name = "deep_causality_tensor"
-version = "0.6.2"
+version = "0.6.3"
 dependencies = [
  "criterion",
  "deep_causality_algebra",
@@ -857,7 +857,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_uncertain"
-version = "0.5.7"
+version = "0.5.8"
 dependencies = [
  "criterion",
  "deep_causality_algebra",
@@ -2248,7 +2248,7 @@ checksum = "8e28f89b80c87b8fb0cf04ab448d5dd0dd0ade2f8891bae878de66a75a28600e"
 
 [[package]]
 name = "ultragraph"
-version = "0.9.7"
+version = "0.9.8"
 dependencies = [
  "criterion",
  "deep_causality_rand",
