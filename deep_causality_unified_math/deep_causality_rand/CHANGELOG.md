@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_rand-v0.2.8...deep_causality_rand-v0.3.0) - 2026-09-29
+
+### Added
+
+- *(deep_causality_rand)* no-std builds on core alone; RngError carries typed data
+
+### Other
+
+- link-check the core-level crates; README_NO_STD for 11 core crates
+
 ## [0.2.8](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_rand-v0.2.7...deep_causality_rand-v0.2.8) - 2026-09-25
 
 ### Other

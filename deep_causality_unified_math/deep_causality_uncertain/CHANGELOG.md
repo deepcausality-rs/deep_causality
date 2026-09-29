@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.9](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_uncertain-v0.5.8...deep_causality_uncertain-v0.5.9) - 2026-09-29
+
+### Added
+
+- lift context_store, uncertain and context to no_std
+
+### Other
+
+- link-check the core-level crates; README_NO_STD for 11 core crates
+- Merge branch 'deepcausality-rs:main' into main
+
 ## [0.5.8](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_uncertain-v0.5.7...deep_causality_uncertain-v0.5.8) - 2026-09-29
 
 ### Fixed

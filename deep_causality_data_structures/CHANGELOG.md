@@ -21,6 +21,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_data_structures-v0.10.21...deep_causality_data_structures-v0.11.0) - 2026-09-29
+
+### Added
+
+- *(deep_causality_data_structures)* no-std builds on core alone; Vec storage requires alloc
+
+### Other
+
+- link-check the core-level crates; README_NO_STD for 11 core crates
+
 ## [0.10.21](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_data_structures-v0.10.20...deep_causality_data_structures-v0.10.21) - 2026-09-29
 
 ### Fixed

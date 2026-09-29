@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_haft-v0.6.2...deep_causality_haft-v0.7.0) - 2026-09-29
+
+### Fixed
+
+- *(haft)* no-std builds on core alone; alloc is opt-in
+
+### Other
+
+- link-check the core-level crates; README_NO_STD for 11 core crates
+
 ## [0.6.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_haft-v0.6.1...deep_causality_haft-v0.6.2) - 2026-09-25
 
 ### Other
