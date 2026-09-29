@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_quantum-v0.4.1...deep_causality_quantum-v0.4.2) - 2026-09-29
+
+### Added
+
+- *(deep_causality_metric)* no-std builds on core alone; MetricError holds static messages
+- lift context_store, uncertain and context to no_std
+
+### Other
+
+- link-check the core-level crates; README_NO_STD for 11 core crates
+- Merge branch 'deepcausality-rs:main' into main
+
 ## [0.4.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_quantum-v0.4.0...deep_causality_quantum-v0.4.1) - 2026-09-29
 
 ### Fixed

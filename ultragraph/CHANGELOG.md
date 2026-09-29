@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.9](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.9.8...ultragraph-v0.9.9) - 2026-09-29
+
+### Other
+
+- *(rand)* release deep_causality_rand 0.3.0" manually
+- link-check the core-level crates; README_NO_STD for 11 core crates
+
 ## [0.9.8](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.9.7...ultragraph-v0.9.8) - 2026-09-29
 
 ### Fixed

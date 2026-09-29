@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_physics-v0.10.1...deep_causality_physics-v0.10.2) - 2026-09-29
+
+### Added
+
+- *(deep_causality_metric)* no-std builds on core alone; MetricError holds static messages
+
+### Other
+
+- link-check the core-level crates; README_NO_STD for 11 core crates
+
 ## [0.10.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_physics-v0.10.0...deep_causality_physics-v0.10.1) - 2026-09-29
 
 ### Fixed
