@@ -139,8 +139,10 @@ tangent functor instantiated at `Dual<Dual<R>>` over the same model.
 The crate builds `#![no_std]` when the default `std` feature is off. The `std`
 feature enables `std` on the `deep_causality_haft`, `deep_causality_num`,
 `deep_causality_algebra`, and `deep_causality_num_dual` dependencies. For `no_std`
-targets, build with the `no-std` feature; `alloc` alone does not pick a float-math
-backend and fails with a `compile_error!`.
+targets, build with the `no-std` feature. It needs only `core`: the integrators and the
+differentiation operators allocate nothing, so no `#[global_allocator]` is required. Add
+`alloc` for the heap witnesses of `deep_causality_haft`. `alloc` alone does not pick a
+float-math backend and stops at the `[no-float-backend]` guard in `deep_causality_num`.
 
 ## Safety
 
