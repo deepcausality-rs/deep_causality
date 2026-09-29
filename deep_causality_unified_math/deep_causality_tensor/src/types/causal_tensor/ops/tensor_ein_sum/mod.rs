@@ -4,5 +4,6 @@
  */
 pub(crate) mod ein_sum_execution;
 mod ein_sum_impl;
+#[cfg(test)]
 mod ein_sum_impl_tests;
 pub(crate) mod ein_sum_op;
