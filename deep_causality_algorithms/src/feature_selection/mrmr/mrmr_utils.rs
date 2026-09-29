@@ -4,6 +4,8 @@
  */
 
 use crate::feature_selection::mrmr::mrmr_error::MrmrError;
+use alloc::string::ToString;
+use alloc::vec::Vec;
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
 use deep_causality_stats::{StatsErrorEnum, pearson_pairwise_complete};
@@ -114,7 +116,7 @@ where
         return Err(MrmrError::SampleTooSmall(3));
     }
 
-    let r2 = r.powi(2);
+    let r2 = r * r;
 
     if (1.0 - r2).abs() < 1e-9 {
         // Correlation is 1 or -1, implying infinite relevance.
@@ -123,4 +125,14 @@ where
 
     let f_stat = (n - 2.0) * r2 / (1.0 - r2);
     Ok(f_stat)
+}
+
+/// Whether `candidate` outranks `best`, each an `(index, score)` pair: a strictly higher score, or
+/// an equal score at a lower column index.
+///
+/// This is a total order on finite scores, so the maximum does not depend on the order in which
+/// pairs are compared. The serial scan and the parallel reduction therefore select the same feature
+/// on a tie.
+pub(super) fn outranks(candidate: (usize, f64), best: (usize, f64)) -> bool {
+    candidate.1 > best.1 || (candidate.1 == best.1 && candidate.0 < best.0)
 }

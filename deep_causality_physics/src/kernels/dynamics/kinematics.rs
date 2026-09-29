@@ -4,6 +4,7 @@
  */
 
 use crate::{Frequency, Mass, MomentOfInertia, PhysicsError};
+use alloc::{format, vec};
 use deep_causality_algebra::RealField;
 use deep_causality_multivector::{CausalMultiVector, MultiVector};
 

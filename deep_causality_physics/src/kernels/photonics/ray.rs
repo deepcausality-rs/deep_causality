@@ -4,6 +4,7 @@
  */
 
 use crate::{AbcdMatrix, OpticalPower, RayAngle, RayHeight};
+use alloc::vec;
 
 use crate::{IndexOfRefraction, PhysicsError};
 use deep_causality_algebra::RealField;

@@ -44,6 +44,7 @@ std = [
     "deep_causality_num_complex/std",
     "deep_causality_num_dual/std",
     "deep_causality_physics/std",
+    "deep_causality_physics/topology",
     "deep_causality_calculus/std",
     "deep_causality_haft/std",
     "deep_causality_tensor/std",

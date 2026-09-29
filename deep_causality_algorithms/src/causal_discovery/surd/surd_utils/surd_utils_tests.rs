@@ -8,6 +8,8 @@
 
 use crate::causal_discovery::surd::surd_utils;
 use crate::causal_discovery::surd::surd_utils::surd_utils_cdl;
+use alloc::string::ToString;
+use alloc::{vec, vec::Vec};
 use deep_causality_tensor::{CausalTensor, CausalTensorError};
 
 #[test]

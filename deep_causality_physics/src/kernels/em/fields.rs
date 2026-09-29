@@ -3,16 +3,20 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use alloc::format;
 use deep_causality_multivector::{CausalMultiVector, MultiVector};
 
 // Kernels
 
 use crate::PhysicsError;
+#[cfg(feature = "topology")]
 use core::fmt::Debug;
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
 use deep_causality_par::MaybeParallel;
+#[cfg(feature = "topology")]
 use deep_causality_tensor::CausalTensor;
+#[cfg(feature = "topology")]
 use deep_causality_topology::SimplicialManifold;
 
 /// Calculates the Maxwell gradient (Electromagnetic Field Tensor).
@@ -25,6 +29,7 @@ use deep_causality_topology::SimplicialManifold;
 ///
 /// # Returns
 /// * `Result<CausalTensor<R>, PhysicsError>` - Field tensor $F$ (2-form) on the 2-simplices.
+#[cfg(feature = "topology")]
 pub fn maxwell_gradient_kernel<R>(
     potential_manifold: &SimplicialManifold<R, R>,
 ) -> Result<CausalTensor<R>, PhysicsError>
@@ -49,6 +54,7 @@ where
 ///
 /// # Returns
 /// * `Result<CausalTensor<R>, PhysicsError>` - Divergence scalar field (0-form) on vertices.
+#[cfg(feature = "topology")]
 pub fn lorenz_gauge_kernel<R>(
     potential_manifold: &SimplicialManifold<R, R>,
 ) -> Result<CausalTensor<R>, PhysicsError>
@@ -141,6 +147,7 @@ where
 ///
 /// # Returns
 /// * `Result<CausalTensor<R>, PhysicsError>` - Current density 1-form $J$.
+#[cfg(feature = "topology")]
 pub fn proca_equation_kernel<R>(
     field_manifold: &SimplicialManifold<R, R>,
     potential_manifold: &SimplicialManifold<R, R>,

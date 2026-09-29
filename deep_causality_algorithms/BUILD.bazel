@@ -4,12 +4,21 @@ load("@rules_rs//rs:rust_library.bzl", "rust_library")
 load("@rules_rs//rs:rust_test.bzl", "rust_test")
 load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_test_suite")
 
+# Bazel does not read Cargo features, so the default set (`std`, `topology`) is listed here once
+# and shared by the library, its docs and its unit tests. `topology` gates BRCD and the DAG sampler.
+CRATE_FEATURES = [
+    "alloc",
+    "std",
+    "topology",
+]
+
 rust_library(
     name = "deep_causality_algorithms",
     srcs = glob([
         "src/**",
     ]),
     aliases = aliases(),
+    crate_features = CRATE_FEATURES,
     crate_root = "src/lib.rs",
     lint_config = lint_config(),
     tags = [
@@ -22,6 +31,7 @@ rust_library(
 rust_doc(
     name = "doc",
     crate = ":deep_causality_algorithms",
+    crate_features = CRATE_FEATURES,
     tags = ["doc"],
     visibility = ["//visibility:public"],
 )
@@ -29,6 +39,7 @@ rust_doc(
 rust_doc_test(
     name = "doc_test",
     crate = ":deep_causality_algorithms",
+    crate_features = CRATE_FEATURES,
     tags = ["doc-test"],
     visibility = ["//visibility:public"],
 )
@@ -251,9 +262,7 @@ rust_test_suite(
 rust_test(
     name = "lib_unit_tests",
     crate = ":deep_causality_algorithms",
-    crate_features = [
-        "default",
-    ],
+    crate_features = CRATE_FEATURES,
     tags = [
         "unit-test",
     ],

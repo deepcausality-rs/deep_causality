@@ -4,6 +4,6 @@
  */
 mod causal_discovery;
 // MIRI takes forever on DAG sampling
-#[cfg(not(miri))]
+#[cfg(all(not(miri), feature = "topology"))]
 mod dag_sampling;
 mod feature_selection;

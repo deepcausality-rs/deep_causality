@@ -19,6 +19,8 @@ pub mod assertions;
 pub mod oracles;
 pub mod precision;
 pub mod samples;
+// Spawns a thread to bound a non-terminating draw, so it needs `std`.
+#[cfg(feature = "std")]
 pub mod sampling;
 
 use alloc::vec::Vec;

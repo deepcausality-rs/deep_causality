@@ -58,6 +58,20 @@ candidate root-cause set with a Bayesian posterior, and ranks the candidates fro
 cargo add deep_causality_algorithms
 ```
 
+## Configuration
+
+SURD and mRMR build without the standard library; BRCD requires it.
+
+* `default`: Enables `std` and `topology`.
+* `std`: Uses the standard library (includes `alloc`).
+* `no-std`: Builds without the standard library (includes `alloc`); floating-point math comes from
+  `libm`. Select with `default-features = false, features = ["no-std"]`.
+* `alloc`: Allocation (Vec, String). Enabled by both `std` and `no-std`; on its own it selects no
+  floating-point backend and does not build.
+* `topology`: Enables BRCD and the DAG sampler it draws from, both built on the `MixedGraph` of
+  `deep_causality_topology`. That crate requires `std`, so this feature enables `std`.
+* `parallel`: Rayon-parallel execution, described under Performance above. Disabled by default.
+
 ## Usage
 
 The primary function is `surd_states`, which takes a `CausalTensor` representing a joint probability distribution and

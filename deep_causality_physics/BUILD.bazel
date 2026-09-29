@@ -7,6 +7,8 @@ load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_test_suite
 # already enables it (resolver-2 unification via `physics_examples`), so Bazel
 # carrying it keeps the two builds on the same
 # feature set and makes those kernels reachable from the example binaries.
+# `topology` gates the gauge theories, the DEC kernels and the fluid-dynamics
+# forms; it is in the Cargo default set and `deep_causality_cfd` requires it.
 rust_library(
     name = "deep_causality_physics",
     srcs = glob([
@@ -18,6 +20,7 @@ rust_library(
         "deep_causality_rand",
         "os-random",
         "std",
+        "topology",
     ],
     crate_root = "src/lib.rs",
     lint_config = lint_config(),
@@ -36,6 +39,7 @@ rust_doc(
         "deep_causality_rand",
         "os-random",
         "std",
+        "topology",
     ],
     tags = ["doc"],
     visibility = ["//visibility:public"],
@@ -49,6 +53,7 @@ rust_doc_test(
         "deep_causality_rand",
         "os-random",
         "std",
+        "topology",
     ],
     tags = ["doc-test"],
     visibility = ["//visibility:public"],
@@ -609,6 +614,7 @@ rust_test(
         "deep_causality_rand",
         "os-random",
         "std",
+        "topology",
     ],
     tags = [
         "unit-test",

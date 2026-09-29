@@ -18,6 +18,7 @@
 use crate::PhysicsError;
 use crate::{Density, KinematicViscosity, Viscosity};
 use crate::{Length, Speed};
+use alloc::format;
 use deep_causality_algebra::RealField;
 
 #[inline]

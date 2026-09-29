@@ -4,6 +4,7 @@
  */
 
 use crate::PhysicsError;
+use alloc::format;
 use deep_causality_algebra::RealField;
 use deep_causality_multivector::{CausalMultiVector, MultiVector};
 use deep_causality_num::FromPrimitive;

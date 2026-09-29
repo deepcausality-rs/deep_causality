@@ -203,24 +203,11 @@ cargo test --no-default-features --features libm_math -p deep_causality_num
 Small floating-point differences between the std and non-std implementations can make some tests fail. If you hit
 one, please submit a PR with a fix.
 
-**3. Building for `no-std` without Floating-Point Math (if not needed):**
+**3. A float-math backend is required:**
 
-Without floating-point operations, build without the `libm_math` feature:
-
-```bash
-cargo build --no-default-features -p deep_causality_num
-```
-
-**4. Testing for `no-std` without Floating-Point Math (if not needed):**
-
-To test without floating-point math:
-
-```bash
-cargo test --no-default-features -p deep_causality_num
-```
-
-About 138 tests fail in this configuration, because they are not gated for no-std without floating-point math, a
-corner case. If you need better support for it, please open an issue.
+Every `Float` method is implemented through either `std` or `libm`, so one of the two must be enabled. A build with
+neither, such as `cargo build --no-default-features -p deep_causality_num`, stops at a `compile_error!` tagged
+`[no-float-backend]` that names the fix. The `no-std` feature enables `libm_math`.
 
 ### Bazel Build
 

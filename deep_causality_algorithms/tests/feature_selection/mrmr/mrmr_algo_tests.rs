@@ -35,6 +35,25 @@ fn test_mrmr_select_features() {
 }
 
 #[test]
+fn test_mrmr_exact_tie_selects_lowest_index() {
+    // F2 is a bit-identical copy of F0, so their relevance scores tie exactly and both beat F1.
+    // Candidates are visited in ascending index order and replaced only on a strictly higher
+    // score, so F0 is chosen.
+    let data = vec![
+        // F0, F1,  F2,  Target
+        1.0, 5.0, 1.0, 2.1, //
+        2.0, 1.0, 2.0, 3.9, //
+        3.0, 4.0, 3.0, 6.2, //
+        4.0, 2.0, 4.0, 7.8, //
+        5.0, 3.0, 5.0, 10.1,
+    ];
+    let tensor = CausalTensor::new(data, vec![5, 4]).unwrap();
+    let selected = mrmr::mrmr_features_selector(&tensor, 1, 3).unwrap();
+
+    assert_eq!(selected.iter().next().map(|(idx, _)| *idx), Some(0));
+}
+
+#[test]
 fn test_select_features_non_2d_tensor() {
     let tensor = CausalTensor::new(vec![1.0; 4], vec![4]).unwrap();
     let result = mrmr::mrmr_features_selector(&tensor, 1, 0);

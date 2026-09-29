@@ -4,6 +4,7 @@
  */
 
 use crate::{JonesVector, PhysicsError, Ratio, RayAngle, StokesVector};
+use alloc::vec;
 use deep_causality_algebra::{DivisionAlgebra, RealField};
 use deep_causality_num::FromPrimitive;
 use deep_causality_num_complex::Complex;

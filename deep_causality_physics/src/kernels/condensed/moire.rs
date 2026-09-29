@@ -3,17 +3,21 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use crate::{Displacement, Energy, Momentum, PhysicsError, Ratio, Speed, Stiffness, TwistAngle};
+use alloc::{vec, vec::Vec};
+#[cfg(feature = "topology")]
 use core::fmt::Debug;
 
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
 use deep_causality_num_complex::Complex;
+#[cfg(feature = "topology")]
 use deep_causality_par::MaybeParallel;
 use deep_causality_tensor::{CausalTensor, Tensor};
 
 use crate::constants::{graphene_lattice_const, real_from_f64, reduced_planck_constant};
+use core::f64::consts::PI;
+#[cfg(feature = "topology")]
 use deep_causality_topology::SimplicialManifold;
-use std::f64::consts::PI;
 
 /// Constructs the Bistritzer-MacDonald Continuum Hamiltonian for Twisted Bilayer Graphene (TBG).
 ///
@@ -98,7 +102,7 @@ where
     // q1 = (0, -k_theta)
     // q2 = (sqrt(3)/2 k_theta, 1/2 k_theta)
     // q3 = (-sqrt(3)/2 k_theta, 1/2 k_theta)
-    let sqrt3 = real_from_f64::<R>(3.0_f64.sqrt());
+    let sqrt3 = real_from_f64::<R>(3.0).sqrt();
     let q_vectors = [
         (zero, -k_theta),
         (sqrt3 * half * k_theta, half * k_theta),
@@ -274,6 +278,7 @@ where
 ///
 /// # Returns
 /// *   `Result<CausalTensor<R>, PhysicsError>` - The computed Stress Tensor field.
+#[cfg(feature = "topology")]
 pub fn foppl_von_karman_strain_kernel<R>(
     u_manifold: &SimplicialManifold<R, R>,
     w_manifold: &SimplicialManifold<R, R>,

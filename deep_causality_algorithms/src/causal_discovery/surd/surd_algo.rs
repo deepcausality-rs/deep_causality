@@ -4,12 +4,13 @@
  */
 use crate::causal_discovery::surd::surd_utils;
 use crate::causal_discovery::surd::{MaxOrder, SurdResult};
+use alloc::collections::BTreeMap;
+use alloc::{vec, vec::Vec};
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::CausalTensorError;
 use deep_causality_tensor::CausalTensorMathExt;
 use deep_causality_tensor::{CausalTensor, Tensor};
-use std::collections::HashMap;
 
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
@@ -142,7 +143,7 @@ where
     }
 
     let p_s = p.sum_axes(&agent_indices)?;
-    let mut is_map: HashMap<Vec<usize>, CausalTensor<T>> = HashMap::new();
+    let mut is_map: BTreeMap<Vec<usize>, CausalTensor<T>> = BTreeMap::new();
     for j_comb in &combs {
         let noj: Vec<usize> = agent_indices
             .iter()
@@ -201,7 +202,7 @@ where
         is_map.insert(j_comb.clone(), ravel);
     }
 
-    let mi: HashMap<Vec<usize>, T> = is_map
+    let mi: BTreeMap<Vec<usize>, T> = is_map
         .iter()
         .map(|(key, v)| {
             let prod = v * &p_s;
@@ -250,14 +251,14 @@ where
     };
 
     // --- 5. Merge results from all target states ---
-    let mut i_r = HashMap::new();
-    let mut i_s = HashMap::new();
-    let mut temp_causal_rd_states: HashMap<Vec<usize>, Vec<CausalTensor<T>>> = HashMap::new();
-    let mut temp_causal_un_states: HashMap<Vec<usize>, Vec<CausalTensor<T>>> = HashMap::new();
-    let mut temp_causal_sy_states: HashMap<Vec<usize>, Vec<CausalTensor<T>>> = HashMap::new();
-    let mut temp_non_causal_rd_states: HashMap<Vec<usize>, Vec<CausalTensor<T>>> = HashMap::new();
-    let mut temp_non_causal_un_states: HashMap<Vec<usize>, Vec<CausalTensor<T>>> = HashMap::new();
-    let mut temp_non_causal_sy_states: HashMap<Vec<usize>, Vec<CausalTensor<T>>> = HashMap::new();
+    let mut i_r = BTreeMap::new();
+    let mut i_s = BTreeMap::new();
+    let mut temp_causal_rd_states: BTreeMap<Vec<usize>, Vec<CausalTensor<T>>> = BTreeMap::new();
+    let mut temp_causal_un_states: BTreeMap<Vec<usize>, Vec<CausalTensor<T>>> = BTreeMap::new();
+    let mut temp_causal_sy_states: BTreeMap<Vec<usize>, Vec<CausalTensor<T>>> = BTreeMap::new();
+    let mut temp_non_causal_rd_states: BTreeMap<Vec<usize>, Vec<CausalTensor<T>>> = BTreeMap::new();
+    let mut temp_non_causal_un_states: BTreeMap<Vec<usize>, Vec<CausalTensor<T>>> = BTreeMap::new();
+    let mut temp_non_causal_sy_states: BTreeMap<Vec<usize>, Vec<CausalTensor<T>>> = BTreeMap::new();
 
     for result in results_per_target {
         for (key, v) in result.i_r {
@@ -328,14 +329,14 @@ where
 
 /// A private struct to hold the results of analyzing a single target state.
 struct PerTargetStateResults<T> {
-    i_r: HashMap<Vec<usize>, T>,
-    i_s: HashMap<Vec<usize>, T>,
-    causal_rd_states: HashMap<Vec<usize>, CausalTensor<T>>,
-    causal_un_states: HashMap<Vec<usize>, CausalTensor<T>>,
-    causal_sy_states: HashMap<Vec<usize>, CausalTensor<T>>,
-    non_causal_rd_states: HashMap<Vec<usize>, CausalTensor<T>>,
-    non_causal_un_states: HashMap<Vec<usize>, CausalTensor<T>>,
-    non_causal_sy_states: HashMap<Vec<usize>, CausalTensor<T>>,
+    i_r: BTreeMap<Vec<usize>, T>,
+    i_s: BTreeMap<Vec<usize>, T>,
+    causal_rd_states: BTreeMap<Vec<usize>, CausalTensor<T>>,
+    causal_un_states: BTreeMap<Vec<usize>, CausalTensor<T>>,
+    causal_sy_states: BTreeMap<Vec<usize>, CausalTensor<T>>,
+    non_causal_rd_states: BTreeMap<Vec<usize>, CausalTensor<T>>,
+    non_causal_un_states: BTreeMap<Vec<usize>, CausalTensor<T>>,
+    non_causal_sy_states: BTreeMap<Vec<usize>, CausalTensor<T>>,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -343,7 +344,7 @@ fn analyze_single_target_state<T>(
     t: usize,
     n_vars: usize,
     combs: &[Vec<usize>],
-    is_map: &HashMap<Vec<usize>, CausalTensor<T>>,
+    is_map: &BTreeMap<Vec<usize>, CausalTensor<T>>,
     p_s: &CausalTensor<T>,
     p: &CausalTensor<T>,
     agent_indices: &[usize],
@@ -370,14 +371,14 @@ where
     let rank_tol =
         <T as FromPrimitive>::from_f64(1e-9).expect("1e-9 is representable in RealField");
 
-    let mut i_r = HashMap::new();
-    let mut i_s = HashMap::new();
-    let mut causal_rd_states = HashMap::new();
-    let mut causal_un_states = HashMap::new();
-    let mut causal_sy_states = HashMap::new();
-    let mut non_causal_rd_states = HashMap::new();
-    let mut non_causal_un_states = HashMap::new();
-    let mut non_causal_sy_states = HashMap::new();
+    let mut i_r = BTreeMap::new();
+    let mut i_s = BTreeMap::new();
+    let mut causal_rd_states = BTreeMap::new();
+    let mut causal_un_states = BTreeMap::new();
+    let mut causal_sy_states = BTreeMap::new();
+    let mut non_causal_rd_states = BTreeMap::new();
+    let mut non_causal_un_states = BTreeMap::new();
+    let mut non_causal_sy_states = BTreeMap::new();
 
     let i1_values: Vec<T> = combs.iter().map(|c| is_map[c].as_slice()[t]).collect();
     let i1_sorted_indices = surd_utils::arg_sort_stable(&i1_values, rank_tol);

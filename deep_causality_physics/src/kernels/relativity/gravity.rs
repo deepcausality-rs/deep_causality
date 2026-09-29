@@ -4,6 +4,7 @@
  */
 
 use crate::error::PhysicsError;
+use alloc::{format, vec, vec::Vec};
 use deep_causality_algebra::Field;
 use deep_causality_num::{Float, FromPrimitive, lift};
 use deep_causality_tensor::CausalTensor;

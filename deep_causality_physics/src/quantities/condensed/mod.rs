@@ -4,6 +4,7 @@
  */
 
 use crate::PhysicsError;
+use alloc::vec;
 use deep_causality_algebra::DivisionAlgebra;
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_num_complex::Complex;

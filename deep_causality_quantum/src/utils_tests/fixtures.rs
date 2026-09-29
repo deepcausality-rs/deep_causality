@@ -64,18 +64,20 @@ where
     R: RealField + FromPrimitive + Default + core::fmt::Debug,
 {
     let c = |v: f64| Complex::new(R::from_f64(v).expect("a literal"), R::zero());
+    // The square root is taken in `R`: `f64::sqrt` is not in `core`.
+    let c_sqrt = |v: f64| Complex::new(R::from_f64(v).expect("a literal").sqrt(), R::zero());
     let zero = c(0.0);
     let flip = |q: f64| -> Vec<CausalTensor<Complex<R>>> {
-        let stay = c((1.0 - q).sqrt());
-        let go = c(q.sqrt());
+        let stay = c_sqrt(1.0 - q);
+        let go = c_sqrt(q);
         vec![
             CausalTensor::from_slice(&[stay, zero, zero, stay], &[2, 2]),
             CausalTensor::from_slice(&[zero, go, go, zero], &[2, 2]),
         ]
     };
     let two_flip = |q: f64| -> Vec<CausalTensor<Complex<R>>> {
-        let stay = c((1.0 - q).sqrt());
-        let go = c(q.sqrt());
+        let stay = c_sqrt(1.0 - q);
+        let go = c_sqrt(q);
         let mut identity = vec![zero; 16];
         let mut xx = vec![zero; 16];
         for i in 0..4 {

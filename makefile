@@ -8,7 +8,9 @@ help:
 	@echo '    make bench   	Runs all benchmarks across all crates.'
 	@echo '    make check   	Checks the code base for security vulnerabilities.'
 	@echo '    make count   	Count LoC across the project.'
+	@echo '    make check_alloc	Checks every alloc-only build builds or stops at the deep_causality_num guard.'
 	@echo '    make check_examples	Checks that every Cargo example has a Bazel target.'
+	@echo '    make check_no_std	Checks every crate builds for a bare-metal target or is listed as std-only.'
 	@echo '    make check_precision	Checks every FloatType alias still builds at each precision.'
 	@echo '    make check_publishable	Checks the workspace is publishable before a release.'
 	@echo '    make fix   		Fixes linting issues as reported by clippy.'
@@ -43,9 +45,19 @@ count:
 	@source scripts/count.sh
 
 
+.PHONY: check_alloc
+check_alloc:
+	@source scripts/check_alloc.sh
+
+
 .PHONY: check_examples
 check_examples:
 	@source scripts/check_examples.sh
+
+
+.PHONY: check_no_std
+check_no_std:
+	@source scripts/check_no_std.sh
 
 
 .PHONY: check_precision
