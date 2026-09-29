@@ -4,6 +4,7 @@
  */
 
 use crate::Storable;
+use alloc::vec::Vec;
 use deep_causality_context_store::{ContextoidId, DataRecord, ProjectionError};
 
 /// A sequence is a `List` of its elements' records, in order.

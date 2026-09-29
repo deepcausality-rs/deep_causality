@@ -3,13 +3,13 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-#[cfg(test)]
+#[cfg(all(test, feature = "std"))]
 mod context_events_tests;
-#[cfg(test)]
+#[cfg(all(test, feature = "std"))]
 mod context_storage_stream_tests;
-#[cfg(test)]
+#[cfg(all(test, feature = "std"))]
 mod context_storage_tests;
 #[cfg(test)]
 mod recordable_tests;
-#[cfg(test)]
+#[cfg(all(test, feature = "std"))]
 mod substrate_tests;

@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use std::fmt::{Debug, Display, Formatter};
+use core::fmt::{Debug, Display, Formatter};
 
 use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
@@ -18,7 +18,7 @@ where
     T: Temporal + Clone,
     ST: SpaceTemporal + Clone,
 {
-    fn format(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn format(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         write!(
             f,
             "Context: id: {}, name: {}, node_count: {}, edge_count: {}",
@@ -37,7 +37,7 @@ where
     T: Temporal + Clone,
     ST: SpaceTemporal + Clone,
 {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         self.format(f)
     }
 }
@@ -49,7 +49,7 @@ where
     T: Temporal + Clone,
     ST: SpaceTemporal + Clone,
 {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         self.format(f)
     }
 }

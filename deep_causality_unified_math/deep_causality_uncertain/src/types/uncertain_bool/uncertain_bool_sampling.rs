@@ -7,6 +7,7 @@ use crate::{
     LeafOrdinals, QmcSampler, SampleSession, Sampler, SequentialSampler, UncertainBool,
     UncertainError,
 };
+use alloc::vec::Vec;
 use deep_causality_rand::RandScalar;
 
 // The Boolean carrier's sampling surface. Identical to the real carrier's in every respect except

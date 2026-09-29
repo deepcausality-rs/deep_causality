@@ -3,7 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use std::ops::{BitAnd, BitOr, BitXor, Not};
+use alloc::vec;
+use core::ops::{BitAnd, BitOr, BitXor, Not};
 
 use crate::{LogicalOperator, Node, UncertainBool};
 use deep_causality_rand::RandScalar;

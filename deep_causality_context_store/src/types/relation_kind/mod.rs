@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use std::fmt::{Debug, Display};
+use core::fmt::{Debug, Display};
 
 /// The kind of relation an edge in a `Context` carries.
 ///
@@ -21,7 +21,7 @@ pub enum RelationKind {
 }
 
 impl Display for RelationKind {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "{self:?}")
     }
 }

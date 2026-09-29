@@ -130,7 +130,10 @@ impl QpuSampler for SimQpu {
         let s = 1.0 / core::f64::consts::SQRT_2;
         let pi4 = core::f64::consts::FRAC_PI_4;
         // e^{iπ/4}, the T phase. T† is its conjugate.
-        let (t_re, t_im) = (pi4.cos(), pi4.sin());
+        let (t_re, t_im) = (
+            deep_causality_num::Float::cos(pi4),
+            deep_causality_num::Float::sin(pi4),
+        );
         let minus_one = C::new(-1.0, 0.0);
         for op in circuit.ops() {
             // Exhaustive over all GateOp variants — no catch-all, so a new gate

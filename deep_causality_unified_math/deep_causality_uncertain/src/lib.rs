@@ -107,6 +107,10 @@
 //! while `y` holds ordinal 0 alone and ordinal 1 inside the sum and does not. Within one graph a
 //! leaf reached twice is one draw, which is what makes `x - x` exactly zero.
 
+#![cfg_attr(not(feature = "std"), no_std)]
+
+extern crate alloc;
+
 mod algos;
 mod errors;
 mod extensions;

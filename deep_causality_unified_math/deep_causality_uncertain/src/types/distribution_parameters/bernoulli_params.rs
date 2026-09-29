@@ -43,8 +43,8 @@ impl BernoulliParams {
     }
 }
 
-impl std::fmt::Display for BernoulliParams {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl core::fmt::Display for BernoulliParams {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(f, "BernoulliParams {{ p: {:.2} }}", self.p)
     }
 }

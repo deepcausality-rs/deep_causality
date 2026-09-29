@@ -4,6 +4,8 @@
  */
 
 use crate::Storable;
+use alloc::string::ToString;
+use alloc::vec;
 use deep_causality_context_store::{ContextoidId, DataRecord, ProjectionError};
 use deep_causality_num::{BFloat16, Float106};
 

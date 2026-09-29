@@ -3,9 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use core::hash::Hash;
+use core::ops::{Add, Mul, Sub};
 use deep_causality_data_structures::{ArrayGrid, PointIndex};
-use std::hash::Hash;
-use std::ops::{Add, Mul, Sub};
 
 use crate::{Adjustable, AdjustmentError, Data, Datable, UpdateError};
 

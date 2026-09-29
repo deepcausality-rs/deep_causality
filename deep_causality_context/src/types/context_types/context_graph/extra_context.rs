@@ -4,6 +4,7 @@
  */
 
 use crate::{Contextoid, Datable, RelationKind, SpaceTemporal, Spatial, Temporal};
+use alloc::{string::String, string::ToString};
 use ultragraph::UltraGraphWeighted;
 
 /// One extra context: its name, its graph, and whether its identifier is the store's.

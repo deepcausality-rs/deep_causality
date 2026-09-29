@@ -4,6 +4,7 @@
  */
 
 use crate::SubstrateRef;
+use alloc::{string::String, vec::Vec};
 
 /// The payload of a data node, as a store holds it.
 ///

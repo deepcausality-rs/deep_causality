@@ -4,6 +4,7 @@
  */
 
 use crate::{Context, Contextoid, Datable, RelationKind, SpaceTemporal, Spatial, Temporal};
+use alloc::vec::Vec;
 use deep_causality_context_store::{
     ContextRecord, ContextSnapshot, ContextoidRecord, DataRecord, ExtraContextSnapshot,
     ProjectionError, Recordable, RelationRecord, SpaceRecord, SpaceTimeRecord, TimeRecord,

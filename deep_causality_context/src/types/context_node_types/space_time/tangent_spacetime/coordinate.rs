@@ -5,6 +5,7 @@
 
 use crate::errors::IndexError;
 use crate::{Coordinate, TangentSpacetime};
+use alloc::format;
 use deep_causality_algebra::RealField;
 
 impl<R: RealField> Coordinate for TangentSpacetime<R> {

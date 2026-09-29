@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use std::fmt::{Display, Formatter};
+use core::fmt::{Display, Formatter};
 
 use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
@@ -17,7 +17,7 @@ where
     T: Temporal + Clone + Display,
     ST: SpaceTemporal + Clone + Display,
 {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         write!(f, "Contextoid ID: {} Type: {}", self.id, self.vertex_type)
     }
 }

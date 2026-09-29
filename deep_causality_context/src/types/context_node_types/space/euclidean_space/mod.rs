@@ -4,8 +4,8 @@
  */
 
 use crate::ContextoidId;
+use core::fmt::Debug;
 use deep_causality_algebra::RealField;
-use std::fmt::Debug;
 
 mod adjustable;
 mod coordinate;

@@ -4,9 +4,9 @@
  */
 
 use crate::GeoSpace;
+use core::fmt;
+use core::fmt::{Display, Formatter};
 use deep_causality_algebra::RealField;
-use std::fmt;
-use std::fmt::{Display, Formatter};
 
 /// Implements human-readable formatting for a geographic spatial context.
 ///

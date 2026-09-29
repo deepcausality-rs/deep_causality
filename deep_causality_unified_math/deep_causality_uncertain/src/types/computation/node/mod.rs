@@ -5,7 +5,8 @@
 
 //! The computation graph's node, generic in the scalar.
 
-use std::fmt::Debug;
+use alloc::vec::Vec;
+use core::fmt::Debug;
 
 use deep_causality_ast::ConstTree;
 
@@ -64,7 +65,7 @@ pub enum Node<R> {
 }
 
 impl<R: Debug> Debug for Node<R> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             Node::Value(v) => write!(f, "Value({:?})", v),
             Node::Distribution(d) => write!(f, "Distribution({:?})", d),

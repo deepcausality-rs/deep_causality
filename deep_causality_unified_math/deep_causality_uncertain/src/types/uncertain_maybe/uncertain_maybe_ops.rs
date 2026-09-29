@@ -13,8 +13,8 @@
 //! precision. They are one impl each now.
 
 use crate::MaybeUncertain;
+use core::ops::{Add, Div, Mul, Neg, Sub};
 use deep_causality_rand::RandScalar;
-use std::ops::{Add, Div, Mul, Neg, Sub};
 
 impl<R: RandScalar> Add for MaybeUncertain<R> {
     type Output = Self;

@@ -12,7 +12,7 @@ path = "no_lib.rs"
 [dependencies]
 deep_causality_core = { workspace = true, features = ["default"] }
 deep_causality_haft = { workspace = true, features = ["default"] }
-deep_causality_uncertain = { workspace = true }
+deep_causality_uncertain = { workspace = true, features = ["default"] }
 
 [[example]]
 name = "gps_navigation"

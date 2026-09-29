@@ -52,7 +52,7 @@ impl ArithmeticOperator {
     }
 }
 
-use std::fmt;
+use core::fmt;
 
 impl fmt::Display for ArithmeticOperator {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

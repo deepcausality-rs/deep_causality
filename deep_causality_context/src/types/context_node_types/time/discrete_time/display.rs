@@ -4,10 +4,10 @@
  */
 
 use crate::DiscreteTime;
-use std::fmt::Display;
+use core::fmt::Display;
 
 impl Display for DiscreteTime {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(
             f,
             "DiscreteTime: id: {}, tick_scale: {}, tick_unit: {:?}",

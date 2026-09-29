@@ -6,6 +6,7 @@
 //! What one evaluation of a node produces.
 
 use crate::UncertainError;
+use alloc::string::ToString;
 use core::fmt::{Display, Formatter};
 
 /// The value a node yields for one draw: a real at the graph's scalar, or a Boolean.

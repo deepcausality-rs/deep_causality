@@ -8,7 +8,7 @@ use crate::traits::contextuable::space_temporal::SpaceTemporal;
 use crate::traits::contextuable::spatial::Spatial;
 use crate::traits::contextuable::temporal::Temporal;
 use crate::{ContextoidType, Datable};
-use std::hash::Hash;
+use core::hash::Hash;
 
 pub mod contextoid_type;
 mod contextuable;

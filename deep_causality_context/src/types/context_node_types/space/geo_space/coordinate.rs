@@ -5,6 +5,7 @@
 
 use crate::errors::IndexError;
 use crate::{Coordinate, GeoSpace};
+use alloc::format;
 use deep_causality_algebra::RealField;
 
 impl<R: RealField> Coordinate for GeoSpace<R> {

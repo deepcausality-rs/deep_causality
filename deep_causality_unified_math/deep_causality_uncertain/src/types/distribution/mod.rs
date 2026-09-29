@@ -5,6 +5,7 @@
 use crate::{
     BernoulliParams, NormalDistributionParams, Sample, UncertainError, UniformDistributionParams,
 };
+use alloc::string::ToString;
 // The shaped distributions are mathematics and come from `stats`, and so do the two traits a
 // caller needs to name in order to draw from one — `stats` re-exports them so a crate reaching for
 // distributions needs no second dependency to spell a bound.
@@ -12,10 +13,10 @@ use crate::{
 // `Uniform` is the exception and comes from `rand` directly, because it is range sampling rather
 // than a shaped distribution: it is built on `SampleUniform`, which can only be implemented in the
 // crate that owns it, so it cannot move. Naming the entropy crate for it is truthful.
+use core::fmt::{Display, Formatter};
 use deep_causality_rand::RandScalar;
 use deep_causality_rand::Uniform;
 use deep_causality_stats::{Bernoulli, Distribution, Normal, Rng};
-use std::fmt::{Display, Formatter};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum DistributionEnum<T> {
@@ -80,7 +81,7 @@ impl<T> Display for DistributionEnum<T>
 where
     T: Display,
 {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         match self {
             DistributionEnum::Point(d) => write!(f, "Distribution: Point {{ D: {} }}", d),
             DistributionEnum::Normal(d) => write!(f, "Distribution: Normal {{ D: {} }}", d),

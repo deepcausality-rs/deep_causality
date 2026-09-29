@@ -34,7 +34,7 @@ use deep_causality_algebra::RealField;
 /// ```rust
 /// use deep_causality_context::{Identifiable, LorentzianTime, Temporal, TimeScale};
 ///
-/// let t = LorentzianTime::new(1, TimeScale::Second, std::f64::consts::E);
+/// let t = LorentzianTime::new(1, TimeScale::Second, core::f64::consts::E);
 ///
 /// assert_eq!(t.id(), 1);
 /// assert_eq!(t.time_scale(), TimeScale::Second);

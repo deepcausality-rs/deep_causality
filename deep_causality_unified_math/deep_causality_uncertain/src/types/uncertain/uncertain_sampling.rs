@@ -6,6 +6,7 @@
 use crate::{
     LeafOrdinals, QmcSampler, SampleSession, Sampler, SequentialSampler, Uncertain, UncertainError,
 };
+use alloc::vec::Vec;
 use deep_causality_rand::RandScalar;
 
 // The sampling surface. Every draw is a function of the session's seed, the sample index and the

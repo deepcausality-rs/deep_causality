@@ -28,16 +28,13 @@ DC_BARE_METAL_DEFAULT_TARGET="thumbv7em-none-eabihf"
 
 # <crate>|<reason>. Reasons name what ties the crate to `std`.
 DC_STD_ONLY=(
-    "deep_causality|depends on deep_causality_context and deep_causality_uncertain; uses std HashMap and std::sync"
+    "deep_causality|uses std HashMap, RwLock, Mutex and std::time"
     "deep_causality_cfd|depends on deep_causality_topology and deep_causality_file; writes output files (std::fs, std::io)"
-    "deep_causality_context|depends on deep_causality_uncertain; uses std HashMap and HashSet"
-    "deep_causality_context_store|the in-memory reference backend in utils_test uses std::sync::Mutex"
     "deep_causality_discovery|reads CSV and Parquet files (std::fs, std::io, csv, parquet); depends on deep_causality_topology"
-    "deep_causality_ethos|depends on deep_causality_context; uses std HashMap and HashSet"
+    "deep_causality_ethos|depends on deep_causality; uses std HashMap and HashSet"
     "deep_causality_file|filesystem loaders (std::fs, std::io); depends on chrono"
     "deep_causality_tempfile|creates and removes files and directories (std::fs, std::io)"
     "deep_causality_topology|uses std HashMap, HashSet and std::sync; Rayon-parallel loops"
-    "deep_causality_uncertain|uses std HashMap and HashSet"
 )
 
 # Prints the reason when <crate> is listed as std-only; returns 1 otherwise.

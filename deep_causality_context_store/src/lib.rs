@@ -17,11 +17,18 @@
 //!
 //! See <https://docs.deepcausality.com/> for the documentation.
 
+#![cfg_attr(not(feature = "std"), no_std)]
+
+extern crate alloc;
+
 mod alias;
 mod constants;
 mod errors;
 mod traits;
 mod types;
+// In-memory reference backends for the test suites. They lock with `std::sync::Mutex`, so they
+// need `std`; the records and traits do not.
+#[cfg(feature = "std")]
 pub mod utils_test;
 
 //

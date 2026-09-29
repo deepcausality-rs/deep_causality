@@ -6,8 +6,8 @@
 use crate::TangentSpacetime;
 use deep_causality_algebra::RealField;
 
-impl<R: RealField + std::fmt::Display> std::fmt::Display for TangentSpacetime<R> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl<R: RealField + core::fmt::Display> core::fmt::Display for TangentSpacetime<R> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(
             f,
             "TangentSpacetime(id={}, t={:.3}s, x={:.2}, y={:.2}, z={:.2}, vx={:.2}, vy={:.2}, vz={:.2})",

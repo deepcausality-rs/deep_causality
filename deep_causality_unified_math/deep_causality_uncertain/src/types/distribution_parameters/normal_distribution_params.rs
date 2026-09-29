@@ -29,8 +29,8 @@ impl<R> NormalDistributionParams<R> {
         Self { mean, std_dev }
     }
 }
-impl<R: std::fmt::Display> std::fmt::Display for NormalDistributionParams<R> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl<R: core::fmt::Display> core::fmt::Display for NormalDistributionParams<R> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(
             f,
             "NormalDistributionParams {{ mean:  {:.4} , std_dev:  {:.4}  }}",

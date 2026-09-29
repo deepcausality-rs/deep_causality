@@ -4,8 +4,8 @@
  */
 
 use crate::{ArithmeticOperator, Node, Uncertain};
+use core::ops::{Add, Div, Mul, Neg, Sub};
 use deep_causality_rand::RandScalar;
-use std::ops::{Add, Div, Mul, Neg, Sub};
 
 // Arithmetic on the real carrier. The nodes are scalar-agnostic — they only thread `ConstTree`s —
 // and the scalar arrives with the graph, so there is one impl per operator rather than one per

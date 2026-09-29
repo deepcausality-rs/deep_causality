@@ -72,6 +72,22 @@ Add `deep_causality_uncertain` to your `Cargo.toml` file:
 deep_causality_uncertain = "0.5" # Or the latest version
 ```
 
+## Configuration
+
+The crate builds without the standard library.
+
+* `default`: Enables `std`.
+* `std`: Uses the standard library (includes `alloc`).
+* `no-std`: Builds without the standard library (includes `alloc`); floating-point math comes from
+  `libm`. Select with `default-features = false, features = ["no-std"]`.
+* `alloc`: Allocation (Vec, String). Enabled by both `std` and `no-std`; on its own it selects no
+  floating-point backend and does not build.
+* `os-random`: Seeds `deep_causality_rand` from the operating system. Host-only.
+
+Without `std` there is no ambient entropy. `SampleSession::from_entropy` and the sequential sampler
+draw from `deep_causality_rand::rng()`, whose sequence then repeats after every reset. Where runs
+must differ per boot, construct the session with `SampleSession::seeded` and a seed from the board.
+
 ## Usage
 
 ### Creating uncertain values

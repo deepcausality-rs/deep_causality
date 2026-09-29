@@ -151,7 +151,20 @@ Two further traits are optional, and a backend that implements neither is comple
 `utils_test` ships `MemoryStorage`, `MemoryEvents` and `MemorySubstrate`, an in-memory
 implementation of all three traits, and `block_on`, which polls a future to completion with no
 runtime. They exist for tests on both sides of the contract, and their tests state the invariants
-above as behaviour a backend can compare against.
+above as behaviour a backend can compare against. They lock with `std::sync::Mutex`, so they are
+compiled only with the `std` feature.
+
+## Configuration
+
+The records and traits build without the standard library.
+
+* `default`: Enables `std`.
+* `std`: Uses the standard library (includes `alloc`) and compiles the in-memory backends in
+  `utils_test`.
+* `no-std`: Builds without the standard library (includes `alloc`). Select with
+  `default-features = false, features = ["no-std"]`.
+* `alloc`: Allocation (Vec, String). The crate has no floating-point dependency, so `alloc` alone
+  builds as well.
 
 ## Contents
 

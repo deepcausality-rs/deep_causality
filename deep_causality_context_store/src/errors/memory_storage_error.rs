@@ -4,8 +4,8 @@
  */
 
 use crate::{ContextId, ContextoidId};
-use std::error::Error;
-use std::fmt::{Display, Formatter};
+use core::error::Error;
+use core::fmt::{Display, Formatter};
 
 /// A refusal of the in-memory backend, one variant per rule of the storage contract it enforces.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -113,7 +113,7 @@ impl MemoryStorageError {
 }
 
 impl Display for MemoryStorageError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         match &self.0 {
             MemoryStorageErrorEnum::UnknownContext(context) => {
                 write!(f, "MemoryStorageError: no container {context}")

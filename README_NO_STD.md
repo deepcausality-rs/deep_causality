@@ -5,11 +5,12 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 # Building DeepCausality without `std`
 
-Twenty-three of the thirty-three library crates build on bare metal. That covers all maths crates,
-the causal monad, linear algebra, statistics, tensors, multivectors, homology, FFT, the
-physics kernels, SURD and mRMR, the quantum layer, and the `ultragraph` graph store. What stays
-behind is uncertainty, topology, the context hypergraph and its store, the reasoning engine in
-`deep_causality` with the ethos layer on top of it, and everything that touches files.
+Twenty-six of the thirty-three library crates build on bare metal. That covers all maths crates
+except topology, the causal monad, uncertainty, the context hypergraph and its store, linear
+algebra, statistics, tensors, multivectors, homology, FFT, the physics kernels, SURD and mRMR, the
+quantum layer, and the `ultragraph` graph store. What stays behind is topology, the reasoning
+engine in `deep_causality` with the ethos layer on top of it, and everything that touches files.
+Those seven are std-only by decision.
 
 CI checks this on every pull request. `.github/workflows/rust_no_std.yml` builds each covered crate
 for `thumbv7em-none-eabihf`, a 32-bit Cortex-M4F with no `std`, so nothing here is inferred from a
@@ -25,7 +26,7 @@ cargo build -p deep_causality_core \
   --target thumbv7em-none-eabihf
 ```
 
-Five crates need only `core`. The other eighteen need an allocator, which rules out very little;
+Five crates need only `core`. The other twenty-one need an allocator, which rules out very little;
 [Allocators](#allocators) explains why.
 
 ## Support by crate
@@ -48,6 +49,7 @@ the features that stay host-only, and for the std-only crates, what ties them to
 | `deep_causality_data_structures` | – | ✓ | ✓ | Builds with `alloc` alone |
 | `ultragraph` | – | ✓ | ✓ | Builds with `alloc` alone |
 | `deep_causality_par` | – | ✓ | ✓ | Builds with `alloc` alone; `parallel` is host-only |
+| `deep_causality_context_store` | – | ✓ | ✓ | Builds with `alloc` alone; the in-memory backends in `utils_test` need `std` |
 | `deep_causality_haft` | – | ✓ | ✓ | |
 | `deep_causality_calculus` | – | ✓ | ✓ | The allocator comes from `deep_causality_haft` |
 | `deep_causality_core` | – | ✓ | ✓ | `EffectLog` allocates per entry |
@@ -60,24 +62,23 @@ the features that stay host-only, and for the std-only crates, what ties them to
 | `deep_causality_fft` | – | ✓ | ✓ | `parallel` is host-only |
 | `deep_causality_physics` | – | ✓ | ✓ | `topology`, `parallel` and `os-random` are host-only |
 | `deep_causality_algorithms` | – | ✓ | ✓ | `topology` (BRCD) and `parallel` are host-only |
-| `deep_causality_quantum` | – | ✓ | ✓ | `qcm`, `dem` and `qpu` are host-only |
-| `deep_causality_uncertain` | – | – | ✓ | `HashMap`, `HashSet` |
+| `deep_causality_quantum` | – | ✓ | ✓ | `qcm` and `dem` are host-only |
+| `deep_causality_uncertain` | – | ✓ | ✓ | `os-random` is host-only; unseeded sessions repeat after a reset |
+| `deep_causality_context` | – | ✓ | ✓ | `os-random` is host-only; the id index is a `BTreeMap` without `std` |
 | `deep_causality_topology` | – | – | ✓ | `HashMap`/`HashSet`, `std::sync`, Rayon loops |
-| `deep_causality_context_store` | – | – | ✓ | `std::sync::Mutex` in the in-memory test backend |
-| `deep_causality_context` | – | – | ✓ | Depends on `deep_causality_context_store` and `deep_causality_uncertain` |
-| `deep_causality` | – | – | ✓ | Depends on `deep_causality_context` and `deep_causality_uncertain` |
-| `deep_causality_ethos` | – | – | ✓ | Depends on `deep_causality` and `deep_causality_context` |
+| `deep_causality` | – | – | ✓ | `HashMap`, `RwLock`, `Mutex`, `std::time` |
+| `deep_causality_ethos` | – | – | ✓ | Depends on `deep_causality` |
 | `deep_causality_file` | – | – | ✓ | Filesystem loaders; out of scope |
 | `deep_causality_tempfile` | – | – | ✓ | Scratch files for the test suites; out of scope |
 | `deep_causality_discovery` | – | – | ✓ | Reads CSV and Parquet files; out of scope |
 | `deep_causality_cfd` | – | – | ✓ | Writes output files; out of scope |
 
-Five crates reach `core`, eighteen more reach `alloc`, and ten are std-only: twenty-three of the
+Five crates reach `core`, twenty-one more reach `alloc`, and seven are std-only: twenty-six of the
 thirty-three build on bare metal.
 
 ## The feature levels
 
-The eighteen allocator-required crates declare the same three levels:
+The twenty-one allocator-required crates declare the same three levels:
 
 ```toml
 [features]
@@ -137,8 +138,8 @@ on it. The guards in `deep_causality_core` and `deep_causality_calculus` state t
 never get the chance to fire.
 
 The crates that never reach `deep_causality_num` (`deep_causality_ast`, `deep_causality_metric`,
-`deep_causality_par`, `deep_causality_data_structures` and `ultragraph`) do build with `alloc`
-alone. For the rest, pick a platform level, `std` or `no-std`, and add `alloc` only through one of
+`deep_causality_par`, `deep_causality_data_structures`, `deep_causality_context_store` and
+`ultragraph`) do build with `alloc` alone. For the rest, pick a platform level, `std` or `no-std`, and add `alloc` only through one of
 them.
 
 ## Covered crates
@@ -180,6 +181,9 @@ These five are exactly the crates that declare no `alloc` feature.
 | `deep_causality_algorithms` | SURD causal decomposition and mRMR feature selection, without BRCD |
 | `deep_causality_quantum` | Density matrices, quantum gates, channels, Born read-out |
 | `ultragraph` | `CsmGraph`, `DynamicGraph`, traversal, centrality, biconnectivity |
+| `deep_causality_uncertain` | `Uncertain<T>`, sampling sessions, SPRT evaluation |
+| `deep_causality_context_store` | Context records, the storage traits, the projection vocabulary |
+| `deep_causality_context` | The context hypergraph, its node types, snapshot, restore and apply |
 
 `deep_causality_calculus` is the borderline case. Its own operators allocate nothing: the
 integrators step over stack values and `gradient` seeds one coordinate per pass. It is listed here
@@ -203,7 +207,7 @@ unsafe { HEAP.init(HEAP_MEM.as_ptr() as usize, HEAP_SIZE) }
 ```
 
 The attribute has been stable since Rust 1.28. A Cortex-M0+ with 8 KB of RAM can carry a heap, so
-the eighteen allocator-dependent crates are not gated on device class.
+the twenty-one allocator-dependent crates are not gated on device class.
 
 **The constraint that matters is timing.** Allocation is not bounded-time, so the question is
 whether a crate allocates in the deadline path or only at init. A system with a working heap may
@@ -267,8 +271,9 @@ five closed-loop programs in `examples/causal_correction_examples` are built fro
 
 `ultragraph` is covered too, so the graph store underneath is available: `CsmGraph`,
 `DynamicGraph`, traversal, centrality, biconnectivity. `deep_causality` itself, which holds
-`CausableGraph` and the reasoning engine, is not covered; it waits on `deep_causality_context` and
-`deep_causality_uncertain`. So you get the monad and the graph store, not the causal-graph engine.
+`CausableGraph` and the reasoning engine, is not covered: it uses `HashMap`, `RwLock` and
+`std::time` itself. So you get the monad, the context and the graph store, not the causal-graph
+engine.
 For a control loop that monitors, tests an envelope, and intervenes, the monad is the part you
 need.
 
@@ -298,8 +303,8 @@ cargo build -p deep_causality_physics \
 `deep_causality_quantum` reaches bare metal with `qcm` off. That feature carries `CausalStructure`,
 the Markov freeze check and the C₃-exclusion faithfulness check, and it pulls in `deep_causality`
 for the graph. Density matrices, gates, channels and Born read-out are unaffected. The `qpu`
-feature (`QpuSampler`, `ShotHistogram`, the shots-to-`Uncertain` bridges, `SimQpu`) pulls in
-`deep_causality_uncertain` and so stays on the host as well.
+feature (`QpuSampler`, `ShotHistogram`, the shots-to-`Uncertain` bridges, `SimQpu`) builds on
+bare metal too, and brings `deep_causality_uncertain` with it.
 
 ```bash
 # host: everything
@@ -325,25 +330,18 @@ second matters more, because it cannot be worked around locally.
 
 | Crate | Uncovered dependencies | Own blockers |
 |---|---|---|
-| `deep_causality_uncertain` | none | `HashMap`, `HashSet` |
 | `deep_causality_topology` | none | `HashMap`/`HashSet`, `Arc` and `OnceLock` from `std::sync`, Rayon loops |
-| `deep_causality_context_store` | none | `std::sync::Mutex` in the in-memory reference backend; the contract itself needs only `core` |
-| `deep_causality_context` | `deep_causality_context_store`, `deep_causality_uncertain` | `HashMap`, `HashSet` |
-| `deep_causality` | `deep_causality_context`, `deep_causality_uncertain` | `HashMap`, `std::sync`, `std::time` |
-| `deep_causality_ethos` | `deep_causality`, `deep_causality_context` | `HashMap`, `HashSet` |
+| `deep_causality` | none | `HashMap`, `RwLock`, `Mutex`, `std::time` |
+| `deep_causality_ethos` | `deep_causality` | `HashMap`, `HashSet` |
 | `deep_causality_file` | none | `std::fs`, `std::io`; out of scope |
 | `deep_causality_tempfile` | none | `std::fs`, `std::io`; out of scope |
 | `deep_causality_discovery` | `deep_causality_topology`, through BRCD as well as directly | `std::fs`, `std::io`; out of scope |
-| `deep_causality_cfd` | `deep_causality_file`, `deep_causality_topology`, `deep_causality_uncertain` | `std::fs`, `std::io`; out of scope |
+| `deep_causality_cfd` | `deep_causality_file`, `deep_causality_topology` | `std::fs`, `std::io`; out of scope |
 
-Five crates have no uncovered dependency. Leave out the two that handle files, and three can be
-worked on today: `deep_causality_uncertain`, `deep_causality_topology` and
-`deep_causality_context_store`. Everything else waits on one of them.
-
-`deep_causality_context_store` is the cheapest: its records and traits already need only `core`,
-and the `Mutex` sits in the test backend under `utils_test`. With it and `deep_causality_uncertain`
-covered, `deep_causality_context` is next, then `deep_causality`, then `deep_causality_ethos`.
-`deep_causality_topology` unlocks the topology slices of `deep_causality_physics` and
+Four crates have no uncovered dependency: `deep_causality_topology`, `deep_causality` and the two
+that handle files. `deep_causality_ethos` waits on `deep_causality`. All seven are std-only by
+decision, and `scripts/bare_metal.sh` records the reason for each. Lifting
+`deep_causality_topology` would unlock the topology slices of `deep_causality_physics` and
 `deep_causality_algorithms`.
 
 ### The `HashMap` question
@@ -354,8 +352,17 @@ hasher is: `RandomState` seeds SipHash from OS entropy, and that is what bare me
 
 Where the keys are ordered and the maps are small, `alloc::collections::BTreeMap` needs no hasher at
 all. SURD took that route: its maps key on `Vec<usize>` variable sets, and sorted iteration makes
-its output order deterministic. `ultragraph` did the same, deduplicating neighbours by
-sort-and-dedup over a `Vec` and counting edge multiplicity in a `BTreeMap`.
+its output order deterministic. So did `deep_causality_uncertain`, whose samplers key on the
+handful of nodes one sample touches; a `BTreeMap` that small is cheaper than a SipHash per lookup,
+and its sampling benchmarks run 31–64% faster with it than with `HashMap` (M3 Max). `ultragraph`
+did the same, deduplicating neighbours by sort-and-dedup over a `Vec` and counting edge
+multiplicity in a `BTreeMap`.
+
+Large maps are the exception. `deep_causality_context` finds a node by its id, and at 10 000 keys
+a `BTreeMap` lookup costs about five times a hashed one, nine times at 100 000 (M3 Max). It keeps
+`HashMap` under `std` and switches to `BTreeMap` without it, through one type alias. That is a
+`cfg` split of the kind the hashbrown route below avoids. It adds no dependency, and the crate's
+test suite runs in both configurations, `--no-default-features --features no-std` included.
 
 Replacing sites one by one stops paying off at the forty or so `HashMap` and `HashSet` sites in
 `deep_causality_topology`. There the remedy is to name a hasher rather than switch container:

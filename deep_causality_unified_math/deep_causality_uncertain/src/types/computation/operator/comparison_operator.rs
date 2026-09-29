@@ -45,7 +45,7 @@ impl ComparisonOperator {
         }
     }
 }
-use std::fmt;
+use core::fmt;
 
 impl fmt::Display for ComparisonOperator {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {

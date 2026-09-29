@@ -6,6 +6,7 @@
 use crate::{
     ContextRecord, ContextoidRecord, ExtraContextSnapshot, RECORD_VERSION, RelationRecord,
 };
+use alloc::vec::Vec;
 
 /// One context as a store returns it: the container, its nodes, the edges among them, and the
 /// contexts it references, materialised one level deep.
