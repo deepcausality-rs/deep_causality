@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.18.1...deep_causality-v0.18.2) - 2026-09-29
+
+### Added
+
+- lift context_store, uncertain and context to no_std
+
 ## [0.18.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.18.0...deep_causality-v0.18.1) - 2026-09-25
 
 ### Other
