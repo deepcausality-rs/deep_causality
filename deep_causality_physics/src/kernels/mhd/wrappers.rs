@@ -3,10 +3,11 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+#[cfg(feature = "topology")]
+use crate::Diffusivity;
 use crate::kernels::mhd::{grmhd, ideal, plasma, resistive};
 use crate::{
-    AlfvenSpeed, DebyeLength, Diffusivity, ElectronDensity, LarmorRadius, MagneticPressure,
-    PlasmaFrequency,
+    AlfvenSpeed, DebyeLength, ElectronDensity, LarmorRadius, MagneticPressure, PlasmaFrequency,
 };
 use crate::{Density, Mass, PhysicalField, Speed, Temperature};
 use core::fmt::Debug;
@@ -15,6 +16,7 @@ use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_num::FromPrimitive;
 use deep_causality_par::MaybeParallel;
 use deep_causality_tensor::CausalTensor;
+#[cfg(feature = "topology")]
 use deep_causality_topology::SimplicialManifold;
 
 // ============================================================================
@@ -45,6 +47,7 @@ where
     }
 }
 
+#[cfg(feature = "topology")]
 pub fn ideal_induction<R>(
     v: &SimplicialManifold<R, R>,
     b: &SimplicialManifold<R, R>,
@@ -62,6 +65,7 @@ where
 // Resistive MHD Wrappers
 // ============================================================================
 
+#[cfg(feature = "topology")]
 pub fn resistive_diffusion<R>(
     b: &SimplicialManifold<R, R>,
     eta: Diffusivity<R>,
@@ -89,11 +93,13 @@ where
 // GRMHD Wrappers
 // ============================================================================
 
+#[cfg(feature = "topology")]
 use crate::LorentzianMetric;
 
 /// Wrapper for relativistic current density calculation.
 ///
 /// Computes J = ★d★F using differential forms on the manifold.
+#[cfg(feature = "topology")]
 pub fn relativistic_current<R, M>(
     em_manifold: &SimplicialManifold<R, R>,
     spacetime_metric: &M,

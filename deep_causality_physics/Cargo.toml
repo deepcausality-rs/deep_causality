@@ -24,16 +24,45 @@ exclude = [
 ]
 
 [features]
-default = ["std"]
+default = ["std", "topology"]
 std = [
     "alloc",
+    "deep_causality_calculus/std",
     "deep_causality_core/std",
+    "deep_causality_haft/std",
+    "deep_causality_metric/std",
+    "deep_causality_multivector/std",
     "deep_causality_num/std",
     "deep_causality_algebra/std",
+    "deep_causality_stats/std",
     "deep_causality_num_complex/std",
     "deep_causality_num_dual/std",
+    "deep_causality_linear/std",
+    "deep_causality_tensor/std",
+    "deep_causality_par/std",
 ]
 alloc = []
+no-std = [
+    "alloc",
+    "deep_causality_calculus/no-std",
+    "deep_causality_core/no-std",
+    "deep_causality_haft/no-std",
+    "deep_causality_metric/no-std",
+    "deep_causality_multivector/no-std",
+    "deep_causality_num/no-std",
+    "deep_causality_algebra/no-std",
+    "deep_causality_stats/no-std",
+    "deep_causality_num_complex/no-std",
+    "deep_causality_num_dual/no-std",
+    "deep_causality_linear/no-std",
+    "deep_causality_tensor/no-std",
+    "deep_causality_par/no-std",
+]
+# The gauge theories, the DEC kernels (EM, MHD, condensed matter, quantum,
+# thermodynamics) and the fluid-dynamics differential forms, all of which are
+# built on deep_causality_topology. The topology crate is std-only, so this
+# feature enables `std`.
+topology = ["std", "dep:deep_causality_topology"]
 # Enables random number generator from the host OS for secure random numbers.
 # Enabling os-random adds an indirect depdency on getrandom and libc.
 # Disabled by default to use native Rust prng instead.
@@ -41,51 +70,42 @@ alloc = []
 os-random = ["deep_causality_rand/os-random"] # required for lund hadronization
 # Enables parallel execution of the DEC operator loops underneath the
 # Navier-Stokes solver (wedge, interior product, de Rham, sharp) by
-# forwarding to the topology crate's Rayon feature. Disabled by default.
+# forwarding to the topology crate's Rayon feature when `topology` is enabled.
+# Disabled by default.
 parallel = [
-    "deep_causality_topology/parallel",
+    "deep_causality_topology?/parallel",
     "deep_causality_par/parallel",
 ]
 
 [dependencies.deep_causality_calculus]
 workspace = true
-features = ["default"]
 
 [dependencies.deep_causality_core]
 workspace = true
-features = ["default"]
 
 [dependencies.deep_causality_haft]
 workspace = true
-features = ["default"]
 
 [dependencies.deep_causality_metric]
 workspace = true
-features = ["default"]
 
 [dependencies.deep_causality_multivector]
 workspace = true
-features = ["default"]
 
 [dependencies.deep_causality_num]
 workspace = true
-features = ["default"]
 
 [dependencies.deep_causality_algebra]
 workspace = true
-features = ["default"]
 
 [dependencies.deep_causality_stats]
 workspace = true
-features = ["std"]
 
 [dependencies.deep_causality_num_complex]
 workspace = true
-features = ["default"]
 
 [dependencies.deep_causality_num_dual]
 workspace = true
-features = ["default"]
 
 [dependencies.deep_causality_rand]
 workspace = true
@@ -96,14 +116,13 @@ workspace = true
 
 [dependencies.deep_causality_tensor]
 workspace = true
-features = ["default"]
 
 [dependencies.deep_causality_topology]
 workspace = true
+optional = true
 
 [dependencies.deep_causality_par]
 workspace = true
-features = ["default"]
 
 [lints]
 workspace = true

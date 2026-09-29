@@ -57,7 +57,7 @@ deep_causality_num = { path = "deep_causality_unified_math/deep_causality_num", 
 deep_causality_num_complex = { path = "deep_causality_unified_math/deep_causality_num_complex", version = "0.1", default-features = false }
 deep_causality_num_dual = { path = "deep_causality_unified_math/deep_causality_num_dual", version = "0.1", default-features = false }
 deep_causality_num_rational = { path = "deep_causality_unified_math/deep_causality_num_rational", version = "0.1", default-features = false }
-deep_causality_rand = { path = "deep_causality_unified_math/deep_causality_rand", version = "0.2" }
+deep_causality_rand = { path = "deep_causality_unified_math/deep_causality_rand", version = "0.2", default-features = false }
 deep_causality_stats = { path = "deep_causality_unified_math/deep_causality_stats", version = "0.2", default-features = false }
 deep_causality_tensor = { path = "deep_causality_unified_math/deep_causality_tensor", version = "0.6", default-features = false }
 deep_causality_topology = { path = "deep_causality_unified_math/deep_causality_topology", version = "0.12" }

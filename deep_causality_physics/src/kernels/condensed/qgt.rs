@@ -7,6 +7,7 @@ use crate::{
     BandDrudeWeight, Energy, Length, PhysicsError, QuantumEigenvector, QuantumMetric,
     QuantumVelocity,
 };
+use alloc::format;
 use deep_causality_algebra::RealField;
 use deep_causality_num_complex::Complex;
 use deep_causality_tensor::CausalTensor;

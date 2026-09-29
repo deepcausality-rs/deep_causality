@@ -7,6 +7,7 @@ use crate::PhaseAngle;
 use crate::SpacetimeVector;
 use crate::kernels::relativity::gravity;
 use crate::kernels::relativity::spacetime;
+use alloc::vec::Vec;
 use core::fmt::Debug;
 use deep_causality_algebra::RealField;
 use deep_causality_core::{CausalityError, PropagatingEffect};

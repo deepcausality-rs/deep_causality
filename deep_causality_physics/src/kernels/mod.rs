@@ -14,6 +14,7 @@ pub(crate) mod mhd;
 pub(crate) mod nuclear;
 pub(crate) mod photonics;
 pub(crate) mod propulsion;
+#[cfg(feature = "topology")]
 pub(crate) mod quantum;
 pub(crate) mod relativity;
 pub(crate) mod thermodynamics;

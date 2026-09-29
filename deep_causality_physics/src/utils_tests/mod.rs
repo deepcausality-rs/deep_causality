@@ -11,13 +11,18 @@
 //! `*_tests.rs` file as a standalone crate, so test files cannot share helpers
 //! across one another — only the crate under test is visible to all of them.
 
-use alloc::{vec, vec::Vec};
+#[cfg(feature = "topology")]
+use alloc::vec;
+use alloc::vec::Vec;
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
+#[cfg(feature = "topology")]
 use deep_causality_tensor::CausalTensor;
+#[cfg(feature = "topology")]
 use deep_causality_topology::{ChainComplex, CubicalReggeGeometry, LatticeComplex, Manifold};
 
 /// A 2D square-torus lattice manifold of side `n` with unit cubical metric.
+#[cfg(feature = "topology")]
 pub fn unit_manifold<R>(n: usize) -> Manifold<LatticeComplex<2, R>, R>
 where
     R: RealField
@@ -52,6 +57,7 @@ pub fn random_cochain<R: RealField + FromPrimitive>(len: usize, seed: u64) -> Ve
 }
 
 /// Discrete divergence of an edge cochain: place at grade 1, apply δ.
+#[cfg(feature = "topology")]
 pub fn divergence<R>(manifold: &Manifold<LatticeComplex<2, R>, R>, one_form: &[R]) -> Vec<R>
 where
     R: RealField
@@ -185,6 +191,7 @@ mod tests {
         );
     }
 
+    #[cfg(feature = "topology")]
     #[test]
     fn test_unit_manifold_and_divergence_dimensions() {
         let manifold = unit_manifold::<f64>(4);

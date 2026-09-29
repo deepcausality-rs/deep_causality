@@ -20,6 +20,7 @@ use crate::{
     KinematicViscosity, ReynoldsStress, StrainRateTensor, Velocity3, VelocityGradient, Viscosity,
 };
 use crate::{Length, Speed};
+use alloc::format;
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
 

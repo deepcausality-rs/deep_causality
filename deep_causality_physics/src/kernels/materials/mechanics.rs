@@ -4,6 +4,7 @@
  */
 
 use crate::{PhysicsError, StiffnessTensor, Strain, Stress, StressTensor, Temperature};
+use alloc::{format, vec};
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};

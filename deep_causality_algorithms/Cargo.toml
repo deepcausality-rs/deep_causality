@@ -50,6 +50,7 @@ workspace = true
 
 [dependencies.deep_causality_rand]
 workspace = true
+features = ["default"]
 
 [dependencies.deep_causality_par]
 workspace = true

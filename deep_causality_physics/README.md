@@ -72,9 +72,17 @@ each have a precision section.
 
 The crate supports `no_std` environments via feature flags.
 
-* `default`: Enables `std`.
+* `default`: Enables `std` and `topology`.
 * `std`: Uses the standard library (includes `alloc`).
-* `alloc`: Uses allocation (Vec, String) without full `std`.
+* `no-std`: Builds without the standard library (includes `alloc`); floating-point math comes from
+  `libm`. Select with `default-features = false, features = ["no-std"]`.
+* `alloc`: Allocation (Vec, String). Enabled by both `std` and `no-std`; on its own it selects no
+  floating-point backend and does not build.
+* `topology`: Enables the gauge theories, the DEC kernels (Maxwell gradient, Lorenz gauge, Proca,
+  ideal induction, resistive diffusion, relativistic current, Klein–Gordon, heat diffusion,
+  Föppl–von Kármán strain) and the fluid-dynamics forms (`VelocityOneForm`, `SolenoidalField`,
+  and the rest), all built on `deep_causality_topology`. That crate requires `std`, so this
+  feature enables `std`.
 * `os-random`: Enables the OS-backed secure random number generator and Lund string fragmentation
   for QCD hadronization.
 * `parallel`: Enables Rayon-parallel execution of the DEC operator loops underneath the

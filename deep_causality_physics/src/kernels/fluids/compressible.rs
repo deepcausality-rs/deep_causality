@@ -17,6 +17,7 @@ use crate::PhysicsError;
 use crate::Speed;
 use crate::Temperature;
 use crate::{Pressure, SpecificEnthalpy, Velocity3, VelocityGradient, ViscousStress};
+use alloc::format;
 use deep_causality_algebra::RealField;
 use deep_causality_linear::{dot_n, double_dot_3x3};
 use deep_causality_num::FromPrimitive;

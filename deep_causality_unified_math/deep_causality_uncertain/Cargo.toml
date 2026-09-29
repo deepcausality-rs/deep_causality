@@ -34,30 +34,31 @@ features = ["std"]
 
 [dependencies.deep_causality_rand]
 workspace = true
+features = ["std"]
 
 [package.metadata.docs.rs]
 all-features = true
 
 [dependencies.deep_causality_ast]
 workspace = true
-features = ["default"]
+features = ["std"]
 
 [dependencies.deep_causality_num]
 workspace = true
-features = ["default"]
+features = ["std"]
 
 [dependencies.deep_causality_algebra]
 workspace = true
-features = ["default"]
+features = ["std"]
 
 [dependencies.deep_causality_haft]
 workspace = true
-features = ["default"]
+features = ["std"]
 
 [dev-dependencies]
 criterion = { workspace = true }
-deep_causality_linear = { path = "../deep_causality_linear", default-features = false, features = ["default"] }
-deep_causality_tensor = { path = "../deep_causality_tensor", default-features = false, features = ["default"] }
+deep_causality_linear = { path = "../deep_causality_linear", default-features = false, features = ["std"] }
+deep_causality_tensor = { path = "../deep_causality_tensor", default-features = false, features = ["std"] }
 
 [[bench]]
 name = "uncertain_benchmarks"

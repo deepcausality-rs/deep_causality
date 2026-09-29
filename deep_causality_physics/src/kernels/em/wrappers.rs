@@ -9,9 +9,12 @@ use core::fmt::Debug;
 use deep_causality_algebra::RealField;
 use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_multivector::CausalMultiVector;
+#[cfg(feature = "topology")]
 use deep_causality_num::FromPrimitive;
 use deep_causality_par::MaybeParallel;
+#[cfg(feature = "topology")]
 use deep_causality_tensor::CausalTensor;
+#[cfg(feature = "topology")]
 use deep_causality_topology::SimplicialManifold;
 
 /// Causal wrapper for [`forces::lorentz_force_kernel`].
@@ -29,6 +32,7 @@ where
 }
 
 /// Causal wrapper for [`fields::maxwell_gradient_kernel`].
+#[cfg(feature = "topology")]
 pub fn maxwell_gradient<R>(
     potential_manifold: &SimplicialManifold<R, R>,
 ) -> PropagatingEffect<CausalTensor<R>>
@@ -42,6 +46,7 @@ where
 }
 
 /// Causal wrapper for [`fields::lorenz_gauge_kernel`].
+#[cfg(feature = "topology")]
 pub fn lorenz_gauge<R>(
     potential_manifold: &SimplicialManifold<R, R>,
 ) -> PropagatingEffect<CausalTensor<R>>
@@ -86,6 +91,7 @@ where
 }
 
 /// Causal wrapper for [`fields::proca_equation_kernel`].
+#[cfg(feature = "topology")]
 pub fn proca_equation<R>(
     field_manifold: &SimplicialManifold<R, R>,
     potential_manifold: &SimplicialManifold<R, R>,

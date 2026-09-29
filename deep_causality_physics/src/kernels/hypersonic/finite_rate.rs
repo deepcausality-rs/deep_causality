@@ -34,6 +34,7 @@ use crate::{
     DissociationFraction, ElectronDensity, ElectronTemperature, EquilibriumConstant, PhysicsError,
     ReactionRate, Temperature,
 };
+use alloc::format;
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
 

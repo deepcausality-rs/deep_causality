@@ -12,6 +12,7 @@ pub(crate) mod constants;
 pub(crate) mod error;
 pub(crate) mod kernels;
 pub mod quantities;
+#[cfg(feature = "topology")]
 pub mod theories;
 #[cfg(feature = "alloc")]
 // Test fixtures, public because Bazel test targets cannot reach the `tests` tree, hidden
@@ -35,6 +36,7 @@ pub use crate::kernels::mhd::*;
 pub use crate::kernels::nuclear::*;
 pub use crate::kernels::photonics::*;
 pub use crate::kernels::propulsion::*;
+#[cfg(feature = "topology")]
 pub use crate::kernels::quantum::*;
 pub use crate::kernels::relativity::*;
 pub use crate::kernels::thermodynamics::*;
@@ -45,6 +47,7 @@ pub use crate::kernels::waves::*;
 // regardless of where the type lives within `quantities/`.
 pub use crate::quantities::*;
 
+#[cfg(feature = "topology")]
 pub use crate::theories::*;
 
 // Re-export metric types and conventions from deep_causality_metric

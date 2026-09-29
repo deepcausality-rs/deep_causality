@@ -3,13 +3,18 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{LorentzianMetric, PhysicsError};
+#[cfg(feature = "topology")]
+use crate::LorentzianMetric;
+use crate::PhysicsError;
+use alloc::vec;
 use core::fmt::Debug;
 use core::iter::Sum;
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
+#[cfg(feature = "topology")]
 use deep_causality_par::MaybeParallel;
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};
+#[cfg(feature = "topology")]
 use deep_causality_topology::SimplicialManifold;
 
 /// Calculates relativistic current density J^μ via covariant divergence.
@@ -55,6 +60,7 @@ use deep_causality_topology::SimplicialManifold;
 ///
 /// # Returns
 /// Current density 1-form J as a `CausalTensor<R>`, indexed by the 1-simplices.
+#[cfg(feature = "topology")]
 pub fn relativistic_current_kernel<R, M>(
     em_manifold: &SimplicialManifold<R, R>,
     spacetime_metric: &M,

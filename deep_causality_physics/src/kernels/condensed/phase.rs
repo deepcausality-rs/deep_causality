@@ -7,12 +7,13 @@ use crate::{
     ChemicalPotentialGradient, Concentration, Energy, Mobility, OrderParameter, PhysicsError,
     VectorPotential,
 };
+use alloc::{format, vec::Vec};
+use core::iter::Sum;
 use deep_causality_algebra::{DivisionAlgebra, RealField};
 use deep_causality_multivector::CausalMultiVector;
 use deep_causality_num::FromPrimitive;
 use deep_causality_num_complex::Complex;
 use deep_causality_tensor::CausalTensor;
-use std::iter::Sum;
 
 /// Calculates the Ginzburg-Landau Free Energy density.
 ///

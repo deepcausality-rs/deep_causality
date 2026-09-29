@@ -9,6 +9,7 @@ help:
 	@echo '    make check   	Checks the code base for security vulnerabilities.'
 	@echo '    make count   	Count LoC across the project.'
 	@echo '    make check_examples	Checks that every Cargo example has a Bazel target.'
+	@echo '    make check_no_std	Checks every crate with a no-std feature builds for a bare-metal target.'
 	@echo '    make check_precision	Checks every FloatType alias still builds at each precision.'
 	@echo '    make check_publishable	Checks the workspace is publishable before a release.'
 	@echo '    make fix   		Fixes linting issues as reported by clippy.'
@@ -46,6 +47,11 @@ count:
 .PHONY: check_examples
 check_examples:
 	@source scripts/check_examples.sh
+
+
+.PHONY: check_no_std
+check_no_std:
+	@source scripts/check_no_std.sh
 
 
 .PHONY: check_precision

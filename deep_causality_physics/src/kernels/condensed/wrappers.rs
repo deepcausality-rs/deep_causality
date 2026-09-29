@@ -12,15 +12,17 @@ use crate::{
     Speed, Stiffness, TwistAngle, VectorPotential,
 };
 use core::fmt::Debug;
+use core::iter::Sum;
 use deep_causality_algebra::RealField;
 use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_multivector::CausalMultiVector;
 use deep_causality_num::FromPrimitive;
 use deep_causality_num_complex::Complex;
+#[cfg(feature = "topology")]
 use deep_causality_par::MaybeParallel;
 use deep_causality_tensor::CausalTensor;
+#[cfg(feature = "topology")]
 use deep_causality_topology::SimplicialManifold;
-use std::iter::Sum;
 
 // ============================================================================
 // QGT Wrappers
@@ -146,6 +148,7 @@ where
 }
 
 /// Wrapper for [`moire::foppl_von_karman_strain_kernel`].
+#[cfg(feature = "topology")]
 pub fn foppl_von_karman_strain<R>(
     u_manifold: &SimplicialManifold<R, R>,
     w_manifold: &SimplicialManifold<R, R>,

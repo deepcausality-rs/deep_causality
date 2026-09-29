@@ -1,0 +1,33 @@
+#SPDX-License-Identifier: MIT
+#Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+
+# Answers: does every crate that declares a `no-std` feature build without the standard library?
+#
+# The target is a 32-bit Cortex-M4F with no `std`, so a dependency that pulls in `std` fails the
+# build instead of linking it. The crate list is derived in `scripts/check_no_std.sh`.
+
+name: no_std
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  no-std:
+    name: no_std build (thumbv7em-none-eabihf)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: thumbv7em-none-eabihf
+      - run: bash scripts/check_no_std.sh thumbv7em-none-eabihf

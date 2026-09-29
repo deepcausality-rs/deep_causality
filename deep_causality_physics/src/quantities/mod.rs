@@ -30,6 +30,7 @@ pub mod relativity;
 pub mod thermodynamics;
 
 // ── Physical-unit types (DEC fluid solver forms) ──────────────────────────
+#[cfg(feature = "topology")]
 pub(crate) mod fluid_dynamics;
 
 // ── Flat re-exports ───────────────────────────────────────────────────────
@@ -52,8 +53,9 @@ pub use propulsion::*;
 pub use relativity::*;
 pub use thermodynamics::*;
 
-pub use fluid_dynamics::body_force_one_form::BodyForceOneForm;
-pub use fluid_dynamics::pressure_zero_form::PressureZeroForm;
-pub use fluid_dynamics::solenoidal_field::SolenoidalField;
-pub use fluid_dynamics::velocity_one_form::VelocityOneForm;
-pub use fluid_dynamics::vorticity_two_form::VorticityTwoForm;
+#[cfg(feature = "topology")]
+pub use fluid_dynamics::{
+    body_force_one_form::BodyForceOneForm, pressure_zero_form::PressureZeroForm,
+    solenoidal_field::SolenoidalField, velocity_one_form::VelocityOneForm,
+    vorticity_two_form::VorticityTwoForm,
+};

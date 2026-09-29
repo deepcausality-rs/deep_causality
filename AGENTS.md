@@ -368,7 +368,7 @@ Tier 8
                                 deep_causality_num, deep_causality_num_complex,
                                 deep_causality_num_dual, deep_causality_par, deep_causality_rand
                                 (opt), deep_causality_stats, deep_causality_tensor,
-                                deep_causality_topology
+                                deep_causality_topology (opt)
   deep_causality_quantum      → deep_causality (opt), deep_causality_algebra, deep_causality_core,
                                 deep_causality_haft, deep_causality_homology, deep_causality_linear,
                                 deep_causality_metric, deep_causality_multivector,
