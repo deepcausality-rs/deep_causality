@@ -4,6 +4,19 @@
  */
 
 #![cfg_attr(not(feature = "std"), no_std)]
+
+// Every float method body is either `std` or `libm`. Without one of the two, the crate is a
+// wall of missing values, and this crate compiles before every crate that depends on it, so a
+// downstream guard never gets the chance to explain. A downstream `alloc` feature selects the
+// allocator level only and reaches here with neither backend.
+#[cfg(not(any(feature = "std", feature = "libm_math")))]
+compile_error!(
+    "deep_causality_num has no float-math backend: enable `std`, or `no-std` for bare metal \
+     (libm). The `alloc` feature of a dependent crate selects the allocator level only and does \
+     not choose a backend, so it cannot be enabled on its own. Use the default features for \
+     hosted targets, or `--no-default-features --features no-std` for bare metal."
+);
+
 extern crate core;
 
 mod alias;

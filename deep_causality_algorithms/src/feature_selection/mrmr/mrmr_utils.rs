@@ -4,6 +4,8 @@
  */
 
 use crate::feature_selection::mrmr::mrmr_error::MrmrError;
+use alloc::string::ToString;
+use alloc::vec::Vec;
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
 use deep_causality_stats::{StatsErrorEnum, pearson_pairwise_complete};
@@ -114,7 +116,7 @@ where
         return Err(MrmrError::SampleTooSmall(3));
     }
 
-    let r2 = r.powi(2);
+    let r2 = r * r;
 
     if (1.0 - r2).abs() < 1e-9 {
         // Correlation is 1 or -1, implying infinite relevance.

@@ -6,11 +6,12 @@
 use crate::feature_selection::mrmr::mrmr_error::MrmrError;
 use crate::mrmr::mrmr_result::MrmrResult;
 use crate::mrmr::mrmr_utils;
+use alloc::collections::BTreeSet;
+use alloc::{format, string::ToString, vec::Vec};
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
 use deep_causality_par::MaybeParallel;
 use deep_causality_tensor::CausalTensor;
-use std::collections::HashSet;
 
 #[cfg(feature = "parallel")]
 use rayon::prelude::*;
@@ -42,11 +43,11 @@ use rayon::prelude::*;
 /// # Note
 ///
 /// If multiple features have the same maximum relevance score (for the first feature) or the
-/// same maximum mRMR score (for subsequent features), the selection order is not
-/// guaranteed due to the internal use of a `HashSet`. The feature that is encountered first
-/// during iteration will be chosen. That means, different runs may return a different set
-/// of features with identical scores. When that happens, increase the num_features parameter to
-/// capture more of those features and use subsequent processing i.e. with SURD to identify confounders.
+/// same maximum mRMR score (for subsequent features), the one with the lowest column index is
+/// chosen: candidates are visited in ascending index order, and a later candidate replaces the
+/// current best only when its score is strictly higher. The other tied features are not dropped
+/// from consideration; increase the num_features parameter to capture more of them and use
+/// subsequent processing i.e. with SURD to identify confounders.
 ///
 /// # Arguments
 ///
@@ -130,7 +131,7 @@ where
         ));
     }
 
-    let mut all_features: HashSet<usize> = (0..n_cols).collect();
+    let mut all_features: BTreeSet<usize> = (0..n_cols).collect();
     all_features.remove(&target_col);
 
     let mut selected_features_with_scores: Vec<(usize, f64)> = Vec::with_capacity(num_features);

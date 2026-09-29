@@ -6,26 +6,26 @@
 use deep_causality_algorithms::surd::SurdResult;
 use deep_causality_discovery::ProcessResultAnalyzer;
 use deep_causality_discovery::{SurdAnalyzeConfig, SurdResultAnalyzer};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 // Helper function to create a default SurdResult for testing
 fn create_test_surd_result(
     info_leak: f64,
-    synergistic_data: HashMap<Vec<usize>, f64>,
-    mutual_data: HashMap<Vec<usize>, f64>,
-    redundant_data: HashMap<Vec<usize>, f64>,
+    synergistic_data: BTreeMap<Vec<usize>, f64>,
+    mutual_data: BTreeMap<Vec<usize>, f64>,
+    redundant_data: BTreeMap<Vec<usize>, f64>,
 ) -> SurdResult<f64> {
     SurdResult::new(
         redundant_data,
         synergistic_data,
         mutual_data,
         info_leak,
-        HashMap::new(), // causal_redundant_states
-        HashMap::new(), // causal_unique_states
-        HashMap::new(), // causal_synergistic_states
-        HashMap::new(), // non_causal_redundant_states
-        HashMap::new(), // non_causal_unique_states
-        HashMap::new(), // non_causal_synergistic_states
+        BTreeMap::new(), // causal_redundant_states
+        BTreeMap::new(), // causal_unique_states
+        BTreeMap::new(), // causal_synergistic_states
+        BTreeMap::new(), // non_causal_redundant_states
+        BTreeMap::new(), // non_causal_unique_states
+        BTreeMap::new(), // non_causal_synergistic_states
     )
 }
 
@@ -60,9 +60,9 @@ fn test_format_variables_multiple() {
 fn test_analyze_high_info_leak_no_influences() {
     let surd_result = create_test_surd_result(
         0.6, // High info leak
-        HashMap::new(),
-        HashMap::new(),
-        HashMap::new(),
+        BTreeMap::new(),
+        BTreeMap::new(),
+        BTreeMap::new(),
     );
     let config = SurdAnalyzeConfig::new(0.5, 0.5, 0.5);
     let analyzer = SurdResultAnalyzer;
@@ -85,9 +85,9 @@ fn test_analyze_high_info_leak_no_influences() {
 fn test_analyze_low_info_leak_no_influences() {
     let surd_result = create_test_surd_result(
         0.3, // Low info leak
-        HashMap::new(),
-        HashMap::new(),
-        HashMap::new(),
+        BTreeMap::new(),
+        BTreeMap::new(),
+        BTreeMap::new(),
     );
     let config = SurdAnalyzeConfig::new(0.5, 0.5, 0.5);
     let analyzer = SurdResultAnalyzer;
@@ -104,15 +104,15 @@ fn test_analyze_low_info_leak_no_influences() {
 
 #[test]
 fn test_analyze_with_all_strong_influences() {
-    let mut synergistic_data = HashMap::new();
+    let mut synergistic_data = BTreeMap::new();
     synergistic_data.insert(vec![0, 1], 0.6);
 
-    let mut mutual_data = HashMap::new();
+    let mut mutual_data = BTreeMap::new();
     mutual_data.insert(vec![0], 0.7);
     mutual_data.insert(vec![1], 0.4);
     mutual_data.insert(vec![0, 1], 0.8);
 
-    let mut redundant_data = HashMap::new();
+    let mut redundant_data = BTreeMap::new();
     redundant_data.insert(vec![0, 1], 0.6);
 
     let surd_result = create_test_surd_result(
@@ -146,15 +146,15 @@ fn test_analyze_with_all_strong_influences() {
 
 #[test]
 fn test_analyze_with_mixed_influences_and_thresholds() {
-    let mut synergistic_data = HashMap::new();
+    let mut synergistic_data = BTreeMap::new();
     synergistic_data.insert(vec![0, 1], 0.8);
     synergistic_data.insert(vec![0, 2], 0.6);
 
-    let mut mutual_data = HashMap::new();
+    let mut mutual_data = BTreeMap::new();
     mutual_data.insert(vec![0], 0.9);
     mutual_data.insert(vec![1], 0.7);
 
-    let mut redundant_data = HashMap::new();
+    let mut redundant_data = BTreeMap::new();
     redundant_data.insert(vec![0, 1], 0.8);
     redundant_data.insert(vec![0, 2], 0.6);
 

@@ -2,8 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use alloc::{format, string::ToString};
+use core::fmt::{Display, Formatter};
 use deep_causality_tensor::CausalTensorError;
-use std::fmt::{Display, Formatter};
 
 /// Defines the maximum order of interactions to consider in the SURD analysis.
 #[derive(Debug, Clone, Copy, PartialEq, Ord, PartialOrd, Eq, Hash)]
@@ -56,7 +57,7 @@ impl MaxOrder {
 }
 
 impl Display for MaxOrder {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         match self {
             MaxOrder::Min => write!(f, "Min"),
             MaxOrder::Some(k) => write!(f, "Some({})", k),

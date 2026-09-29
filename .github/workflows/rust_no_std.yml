@@ -1,10 +1,11 @@
 #SPDX-License-Identifier: MIT
 #Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
 
-# Answers: does every crate that declares a `no-std` feature build without the standard library?
+# Answers: does every crate build without the standard library, or is it std-only by decision?
 #
 # The target is a 32-bit Cortex-M4F with no `std`, so a dependency that pulls in `std` fails the
-# build instead of linking it. The crate list is derived in `scripts/check_no_std.sh`.
+# build instead of linking it. Both jobs walk every workspace crate; the std-only crates and the
+# reason for each are listed in `scripts/bare_metal.sh`.
 
 name: no_std
 
@@ -31,3 +32,15 @@ jobs:
         with:
           targets: thumbv7em-none-eabihf
       - run: bash scripts/check_no_std.sh thumbv7em-none-eabihf
+
+  # `alloc` is a level without a float-math backend. Each alloc-only build must either build or
+  # stop at the deep_causality_num guard, with no other crate failing.
+  alloc:
+    name: alloc-only build (thumbv7em-none-eabihf)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: thumbv7em-none-eabihf
+      - run: bash scripts/check_alloc.sh thumbv7em-none-eabihf

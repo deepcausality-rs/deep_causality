@@ -2,11 +2,12 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use alloc::{string::ToString, vec, vec::Vec};
+use core::cmp::Ordering;
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
 use deep_causality_stats::{EntropyConfig, StatsError, entropy};
 use deep_causality_tensor::{CausalTensor, CausalTensorError, Tensor};
-use std::cmp::Ordering;
 
 pub(crate) mod surd_utils_cdl;
 #[cfg(test)]

@@ -3,8 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use std::fmt::{Display, Formatter};
-use std::slice::Iter;
+use alloc::vec::Vec;
+use core::fmt::{Display, Formatter};
+use core::slice::Iter;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct MrmrResult {
@@ -39,7 +40,7 @@ impl MrmrResult {
 }
 
 impl Display for MrmrResult {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         writeln!(f, "mRMR Selected Features:")?;
         writeln!(f, "-----------------------")?;
         writeln!(f, "{:<10} | {:<10}", "Index", "Score")?;
@@ -54,7 +55,7 @@ impl Display for MrmrResult {
 
 impl IntoIterator for MrmrResult {
     type Item = (usize, f64);
-    type IntoIter = std::vec::IntoIter<Self::Item>;
+    type IntoIter = alloc::vec::IntoIter<Self::Item>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.features.into_iter()
@@ -63,7 +64,7 @@ impl IntoIterator for MrmrResult {
 
 impl<'a> IntoIterator for &'a MrmrResult {
     type Item = &'a (usize, f64);
-    type IntoIter = std::slice::Iter<'a, (usize, f64)>;
+    type IntoIter = core::slice::Iter<'a, (usize, f64)>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.features.iter()

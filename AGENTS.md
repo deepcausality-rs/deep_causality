@@ -360,7 +360,7 @@ Tier 7
 Tier 8
   deep_causality_algorithms   → deep_causality_algebra, deep_causality_linear, deep_causality_num,
                                 deep_causality_par, deep_causality_rand, deep_causality_stats,
-                                deep_causality_tensor, deep_causality_topology
+                                deep_causality_tensor, deep_causality_topology (opt)
   deep_causality_ethos        → deep_causality, deep_causality_context, ultragraph
   deep_causality_physics      → deep_causality_algebra, deep_causality_calculus,
                                 deep_causality_core, deep_causality_haft, deep_causality_linear,

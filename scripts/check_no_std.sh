@@ -6,8 +6,8 @@
 # library. Building with `--features no-std` on the host proves nothing: the host has `std`, so a
 # dependency that enables `std` links it without complaint. Only a target without `std` refuses.
 #
-# The crate list is the workspace crates (crates.sh) whose `[features]` table has a `no-std` key.
-# A crate that adds the feature is checked from then on; no list here needs an edit.
+# Every workspace crate is accounted for: it declares `no-std` and is built, or it is listed as
+# std-only in bare_metal.sh with the reason. A crate that is neither fails the check.
 #
 # Each crate builds in its own `cargo` call. One call over several `-p` flags unifies their
 # features, so a sibling that enables `std` would mask the crate that needs checking.
@@ -17,46 +17,49 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
-source "$(dirname "${BASH_SOURCE[0]}")/crates.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/bare_metal.sh"
 cd "$DC_REPO_ROOT"
 
-TARGET="${1:-thumbv7em-none-eabihf}"
-
-if ! rustup target list --installed | grep -qx "$TARGET"; then
-    echo "Target $TARGET is not installed. Run: rustup target add $TARGET"
-    exit 1
-fi
-
-NO_STD_CRATES=()
-for i in "${!DC_CRATES[@]}"; do
-    if awk '
-        /^\[features\]/ { in_f = 1; next }
-        /^\[/           { in_f = 0 }
-        in_f && /^no-std[[:space:]]*=/ { found = 1 }
-        END             { exit !found }
-    ' "${DC_CRATE_DIRS[$i]}/Cargo.toml"; then
-        NO_STD_CRATES+=("${DC_CRATES[$i]}")
-    fi
-done
-
-# An empty list would pass by checking nothing.
-if [ "${#NO_STD_CRATES[@]}" -eq 0 ]; then
-    echo "No workspace crate declares a no-std feature; refusing to report success."
-    exit 1
-fi
+TARGET="${1:-$DC_BARE_METAL_DEFAULT_TARGET}"
+dc_require_target "$TARGET"
 
 failed=()
-for c in "${NO_STD_CRATES[@]}"; do
-    echo "==> $c ($TARGET)"
-    if ! cargo build -p "$c" --lib --no-default-features --features no-std --target "$TARGET"; then
+built=0
+dc_check_std_only_list || failed+=("(std-only list)")
+
+for i in "${!DC_CRATES[@]}"; do
+    c="${DC_CRATES[$i]}"
+    reason="$(dc_std_only_reason "$c" || true)"
+    if dc_has_feature "${DC_CRATE_DIRS[$i]}" no-std; then
+        if [ -n "$reason" ]; then
+            echo "!! $c declares no-std but is listed as std-only in bare_metal.sh; delete the entry"
+            failed+=("$c")
+            continue
+        fi
+        echo "==> $c ($TARGET)"
+        if cargo build -p "$c" --lib --no-default-features --features no-std --target "$TARGET"; then
+            built=$((built + 1))
+        else
+            failed+=("$c")
+        fi
+    elif [ -n "$reason" ]; then
+        echo "--- $c: std-only ($reason)"
+    else
+        echo "!! $c declares no no-std feature and is not listed as std-only in bare_metal.sh"
         failed+=("$c")
     fi
 done
 
 if [ "${#failed[@]}" -ne 0 ]; then
-    echo "no_std build failed for ${#failed[@]} of ${#NO_STD_CRATES[@]} crates on $TARGET:"
+    echo "no_std check failed on $TARGET:"
     printf '  %s\n' "${failed[@]}"
     exit 1
 fi
 
-echo "All ${#NO_STD_CRATES[@]} no-std crates build for $TARGET."
+# An empty run would pass by checking nothing.
+if [ "$built" -eq 0 ]; then
+    echo "No crate was built; refusing to report success."
+    exit 1
+fi
+
+echo "All $built no-std crates build for $TARGET; ${#DC_STD_ONLY[@]} crates are std-only."

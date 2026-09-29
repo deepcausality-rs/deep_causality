@@ -41,7 +41,7 @@ std = [
     "deep_causality_tensor/std",
     "deep_causality_par/std",
 ]
-alloc = []
+alloc = ["deep_causality_metric/alloc"]
 no-std = [
     "alloc",
     "deep_causality_calculus/no-std",

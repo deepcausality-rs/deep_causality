@@ -27,41 +27,66 @@ exclude = [
 
 [dependencies.deep_causality_tensor]
 workspace = true
-features = ["default"]
 
 [dependencies.deep_causality_num]
 workspace = true
-features = ["default"]
 
 [dependencies.deep_causality_algebra]
 workspace = true
-features = ["default"]
 
 [dependencies.deep_causality_linear]
 workspace = true
-features = ["std"]
 
 [dependencies.deep_causality_stats]
 workspace = true
-features = ["std"]
 
 [dependencies.deep_causality_topology]
 workspace = true
+optional = true
 
 [dependencies.deep_causality_rand]
 workspace = true
-features = ["default"]
 
 [dependencies.deep_causality_par]
 workspace = true
-features = ["default"]
 
 [dependencies.rayon]
 workspace = true
 optional = true
 
 [features]
-default = []
+default = ["std", "topology"]
+std = [
+    "alloc",
+    "deep_causality_tensor/std",
+    "deep_causality_num/std",
+    "deep_causality_algebra/std",
+    "deep_causality_linear/std",
+    "deep_causality_stats/std",
+    "deep_causality_rand/std",
+    "deep_causality_par/std",
+]
+alloc = [
+    "deep_causality_tensor/alloc",
+    "deep_causality_linear/alloc",
+    "deep_causality_stats/alloc",
+    "deep_causality_rand/alloc",
+    "deep_causality_par/alloc",
+]
+no-std = [
+    "alloc",
+    "deep_causality_tensor/no-std",
+    "deep_causality_num/no-std",
+    "deep_causality_algebra/no-std",
+    "deep_causality_linear/no-std",
+    "deep_causality_stats/no-std",
+    "deep_causality_rand/no-std",
+    "deep_causality_par/no-std",
+]
+# BRCD and the DAG sampler it draws from, both built on the `MixedGraph` of
+# deep_causality_topology. The topology crate is std-only, so this feature
+# enables `std`. SURD and MRMR do not need it.
+topology = ["std", "dep:deep_causality_topology"]
 # Enables parallel execution (via Rayon) of the SURD decomposition and the BRCD
 # per-candidate ranking loop; forwards `deep_causality_par/parallel` so the shared
 # `MaybeParallel` bound resolves to `Send + Sync`. Disabled by default.

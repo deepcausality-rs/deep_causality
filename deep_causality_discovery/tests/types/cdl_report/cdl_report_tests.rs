@@ -7,17 +7,17 @@ use deep_causality_algorithms::brcd::BrcdResult;
 use deep_causality_algorithms::feature_selection::mrmr::MrmrResult;
 use deep_causality_algorithms::surd::SurdResult;
 use deep_causality_discovery::{CdlDiscoveryOutcome, CdlReport};
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 #[test]
 fn test_surd_report_display() {
     let mrmr_res = MrmrResult::new(vec![(0, 0.9), (2, 0.8)]);
     let surd_res = SurdResult::new(
-        HashMap::from([(vec![0], 0.5)]),
-        HashMap::from([(vec![1], 0.3)]),
-        HashMap::default(),
+        BTreeMap::from([(vec![0], 0.5)]),
+        BTreeMap::from([(vec![1], 0.3)]),
+        BTreeMap::default(),
         0.1,
-        HashMap::default(),
+        BTreeMap::default(),
         Default::default(),
         Default::default(),
         Default::default(),
