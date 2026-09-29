@@ -143,7 +143,7 @@ fn test_from_quantum_error_for_causality_error() {
 
 #[test]
 fn test_from_metric_error() {
-    let err: QuantumError = MetricError::InvalidDimension("dim 0".into()).into();
+    let err: QuantumError = MetricError::InvalidDimension("dim 0").into();
     match &err.0 {
         QuantumErrorEnum::UnsupportedMetric(msg) => assert!(msg.contains("dim 0")),
         other => panic!("expected UnsupportedMetric, got {:?}", other),

@@ -165,13 +165,14 @@ The metric tensor g has:
 | Feature | Default | Description |
 |---------|---------|-------------|
 | `std` | ✓ | Standard library support |
-| `alloc` | ✓ | Allocation support (via std) |
+| `alloc` | ✓ | The heap level, for the crates built on this one to forward; this crate allocates nothing (via std) |
+| `no-std` | | Builds on `core` alone; no `#[global_allocator]` is required |
 
 For `no_std` environments, disable default features:
 
 ```toml
 [dependencies]
-deep_causality_metric = { version = "0.2", default-features = false, features = ["alloc"] }
+deep_causality_metric = { version = "0.3", default-features = false, features = ["no-std"] }
 ```
 
 ## Contribution

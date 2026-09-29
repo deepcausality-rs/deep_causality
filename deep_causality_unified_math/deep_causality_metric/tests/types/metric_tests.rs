@@ -358,6 +358,8 @@ fn test_from_signs_invalid() {
     assert!(result.is_err());
 }
 
+// `to_signs` returns a Vec.
+#[cfg(feature = "alloc")]
 #[test]
 fn test_to_signs_roundtrip() {
     let original = Metric::Minkowski(4);

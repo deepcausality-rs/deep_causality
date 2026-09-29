@@ -3,43 +3,42 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-#[cfg(feature = "alloc")]
-use alloc::string::String;
-
 use core::fmt;
 
 /// Errors that can occur during metric operations.
+///
+/// Each variant carries a fixed message, so the type needs no allocator.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum MetricError {
     /// Sign convention mismatch (e.g., expected East Coast, got West Coast)
-    SignConventionMismatch(String),
+    SignConventionMismatch(&'static str),
     /// Invalid dimension (e.g., zero or exceeds bitmask capacity)
-    InvalidDimension(String),
+    InvalidDimension(&'static str),
     /// Metric validation failed
-    ValidationFailed(String),
+    ValidationFailed(&'static str),
     /// Conversion not possible
-    ConversionError(String),
+    ConversionError(&'static str),
 }
 
 impl MetricError {
     /// Creates a SignConventionMismatch error.
-    pub fn sign_convention_mismatch(msg: impl Into<String>) -> Self {
-        Self::SignConventionMismatch(msg.into())
+    pub fn sign_convention_mismatch(msg: &'static str) -> Self {
+        Self::SignConventionMismatch(msg)
     }
 
     /// Creates an InvalidDimension error.
-    pub fn invalid_dimension(msg: impl Into<String>) -> Self {
-        Self::InvalidDimension(msg.into())
+    pub fn invalid_dimension(msg: &'static str) -> Self {
+        Self::InvalidDimension(msg)
     }
 
     /// Creates a ValidationFailed error.
-    pub fn validation_failed(msg: impl Into<String>) -> Self {
-        Self::ValidationFailed(msg.into())
+    pub fn validation_failed(msg: &'static str) -> Self {
+        Self::ValidationFailed(msg)
     }
 
     /// Creates a ConversionError.
-    pub fn conversion_error(msg: impl Into<String>) -> Self {
-        Self::ConversionError(msg.into())
+    pub fn conversion_error(msg: &'static str) -> Self {
+        Self::ConversionError(msg)
     }
 }
 
@@ -62,5 +61,4 @@ impl fmt::Display for MetricError {
     }
 }
 
-#[cfg(feature = "std")]
-impl std::error::Error for MetricError {}
+impl core::error::Error for MetricError {}

@@ -294,7 +294,6 @@ impl Metric {
     /// # Returns
     /// * `Ok(Metric)` - A Custom metric with the specified signs
     /// * `Err(MetricError)` - If dimension is 0 or exceeds 64
-    #[cfg(feature = "alloc")]
     pub fn from_signs(signs: &[i32]) -> Result<Self, MetricError> {
         let dim = signs.len();
         if dim == 0 {
