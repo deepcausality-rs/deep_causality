@@ -8,6 +8,7 @@ use crate::kernels::dynamics::estimation;
 use crate::kernels::dynamics::kinematics;
 use crate::kernels::dynamics::kinematics::PhysicalVector;
 use crate::{Frequency, Mass, MomentOfInertia, Probability};
+use alloc::vec::Vec;
 use core::fmt::Debug;
 use deep_causality_algebra::RealField;
 use deep_causality_core::{CausalityError, PropagatingEffect};

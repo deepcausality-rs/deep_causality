@@ -172,6 +172,7 @@ impl From<deep_causality_linear::LinearError> for PhysicsError {
     }
 }
 
+#[cfg(feature = "topology")]
 impl From<deep_causality_topology::TopologyError> for PhysicsError {
     /// Maps a topology refusal onto this crate's error.
     ///

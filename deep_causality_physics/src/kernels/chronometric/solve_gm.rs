@@ -2,6 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use alloc::string::ToString;
 use core::fmt::Debug;
 use core::ops::Div;
 use deep_causality_algebra::Real;

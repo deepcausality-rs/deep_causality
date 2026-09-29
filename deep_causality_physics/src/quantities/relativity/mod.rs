@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use alloc::vec;
 use deep_causality_core::CausalityError;
 
 /// Spacetime Interval ($s^2$).

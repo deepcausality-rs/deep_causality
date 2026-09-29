@@ -5,6 +5,7 @@
 
 use crate::PhysicsError;
 use crate::Probability;
+use alloc::{format, vec, vec::Vec};
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
 use deep_causality_tensor::{CausalTensor, EinSumOp, Tensor};

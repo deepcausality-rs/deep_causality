@@ -26,6 +26,29 @@ fn test_bistritzer_macdonald_shape() {
 }
 
 #[test]
+fn test_bistritzer_macdonald_first_shell_is_equidistant() {
+    // The three first-shell vectors q_j have length k_theta and sit 120 degrees apart, which
+    // holds only with the sqrt(3)/2 component in q_2 and q_3. At k = 0 each shell block is
+    // H(q_j), whose off-diagonal entry has modulus hbar * v_F * |q_j|, so all three agree.
+    let theta = TwistAngle::from_degrees(1.1);
+    let w = Energy::new(0.11).unwrap();
+    let vf = Speed::new(1e6).unwrap();
+    let k = Momentum::new(CausalMultiVector::new(vec![0.0; 8], Metric::Euclidean(3)).unwrap());
+
+    let ham = bistritzer_macdonald_kernel::<f64>(theta, w, vf, k, 1).unwrap();
+    let data = ham.as_slice();
+    let modulus = |blk: usize| {
+        let c = data[(2 * blk) * 8 + (2 * blk + 1)];
+        (c.re * c.re + c.im * c.im).sqrt()
+    };
+
+    let (m1, m2, m3) = (modulus(1), modulus(2), modulus(3));
+    assert!(m1 > 0.0);
+    assert!((m2 - m1).abs() <= 1e-12 * m1, "|q_2| = {m2}, |q_1| = {m1}");
+    assert!((m3 - m1).abs() <= 1e-12 * m1, "|q_3| = {m3}, |q_1| = {m1}");
+}
+
+#[test]
 fn test_bistritzer_macdonald_cutoff_error() {
     let theta = TwistAngle::new(0.1).unwrap();
     let w = Energy::new(0.1).unwrap();

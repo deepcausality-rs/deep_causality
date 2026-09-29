@@ -5,12 +5,14 @@
 
 use crate::BOLTZMANN_CONSTANT;
 use crate::{AmountOfSubstance, Energy, PhysicsError, Pressure, Probability, Temperature, Volume};
+#[cfg(feature = "topology")]
 use core::fmt::Debug;
 use core::iter::Sum;
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
 use deep_causality_par::MaybeParallel;
 use deep_causality_tensor::CausalTensor;
+#[cfg(feature = "topology")]
 use deep_causality_topology::SimplicialManifold;
 
 /// Calculates the Heat Equation step: $\frac{\partial u}{\partial t} = \alpha \Delta u$.
@@ -24,6 +26,7 @@ use deep_causality_topology::SimplicialManifold;
 ///
 /// # Returns
 /// * `Result<CausalTensor<f64>, PhysicsError>` - Rate of change tensor $\frac{du}{dt}$.
+#[cfg(feature = "topology")]
 pub fn heat_diffusion_kernel<R>(
     temp_manifold: &SimplicialManifold<R, R>,
     diffusivity: R,

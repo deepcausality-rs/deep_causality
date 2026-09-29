@@ -6,8 +6,8 @@
 // The implementation is all module private thus tests can only be within the same module.
 
 mod tests {
-    #![allow(unused_imports)]
     use crate::*;
+    use alloc::vec;
 
     #[test]
     fn test_get_binary_operands_success() {

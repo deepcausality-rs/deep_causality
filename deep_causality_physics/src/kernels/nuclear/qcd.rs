@@ -18,6 +18,7 @@
 
 use crate::PhysicsError;
 use crate::real_from_f64;
+use alloc::{format, vec, vec::Vec};
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
 
@@ -62,7 +63,7 @@ pub fn gell_mann_matrices<R: RealField + FromPrimitive>() -> [[R; 9]; 8] {
     let lambda7 = [zero, zero, zero, zero, zero, zero, zero, zero, zero]; // Imaginary
 
     // λ_8: diagonal (1, 1, -2) / sqrt(3)
-    let inv_sqrt3 = real_from_f64::<R>(1.0 / 3.0_f64.sqrt());
+    let inv_sqrt3 = one / real_from_f64::<R>(3.0).sqrt();
     let lambda8 = [
         inv_sqrt3,
         zero,
@@ -96,7 +97,7 @@ pub fn structure_constant<R: RealField + FromPrimitive>(a: usize, b: usize, c: u
     // Canonical non-zero structure constants (1-indexed in physics convention)
     // We convert to 0-indexed internally
     let half = real_from_f64::<R>(0.5);
-    let sqrt3_half = real_from_f64::<R>(3.0_f64.sqrt() * 0.5);
+    let sqrt3_half = real_from_f64::<R>(3.0).sqrt() * half;
 
     // Normalize to sorted order with sign tracking for antisymmetry
     let mut indices = [a, b, c];
@@ -134,7 +135,7 @@ pub fn structure_constant<R: RealField + FromPrimitive>(a: usize, b: usize, c: u
 /// Returns all non-zero structure constants as a list of (a, b, c, f^abc).
 pub fn all_structure_constants<R: RealField + FromPrimitive>() -> Vec<(usize, usize, usize, R)> {
     let half = real_from_f64::<R>(0.5);
-    let sqrt3_half = real_from_f64::<R>(3.0_f64.sqrt() * 0.5);
+    let sqrt3_half = real_from_f64::<R>(3.0).sqrt() * half;
 
     vec![
         (1, 2, 3, R::one()),
@@ -411,7 +412,7 @@ where
     let b0 = real_from_f64::<R>(b0_f64);
 
     let log_ratio = (q_squared / lambda_squared).ln();
-    let four_pi = real_from_f64::<R>(4.0 * std::f64::consts::PI);
+    let four_pi = real_from_f64::<R>(4.0 * core::f64::consts::PI);
     let alpha_s = four_pi / (b0 * log_ratio);
 
     if !alpha_s.is_finite() || alpha_s <= zero {

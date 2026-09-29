@@ -4,11 +4,14 @@
  */
 use crate::{AlfvenSpeed, MagneticPressure};
 use crate::{Density, PhysicalField, PhysicsError};
+#[cfg(feature = "topology")]
 use core::fmt::Debug;
 use deep_causality_algebra::RealField;
 use deep_causality_multivector::MultiVector;
 use deep_causality_num::FromPrimitive;
+#[cfg(feature = "topology")]
 use deep_causality_tensor::CausalTensor;
+#[cfg(feature = "topology")]
 use deep_causality_topology::SimplicialManifold;
 
 /// Calculates the characteristic speed of Alfven waves.
@@ -124,6 +127,7 @@ where
 ///
 /// **Three dimensions only.** A 2-form on a 3-complex contracts to a 1-form; the same identity in
 /// two dimensions is a different operator on different skeletons.
+#[cfg(feature = "topology")]
 pub fn ideal_induction_kernel<R>(
     v_manifold: &SimplicialManifold<R, R>,
     b_manifold: &SimplicialManifold<R, R>,

@@ -2,6 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use alloc::{vec, vec::Vec};
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
 use deep_causality_stats::{EntropyConfig, Normalisation, ZeroPolicy, entropy};
@@ -221,7 +222,6 @@ pub(crate) fn safe_div_cdl<T: RealField + Default>(
     denominator: &CausalTensor<Option<T>>,
 ) -> Result<CausalTensor<Option<T>>, CausalTensorError> {
     if numerator.shape() != denominator.shape() {
-        dbg!("safe_div_cdl: Input tensor ShapeMismatch");
         return Err(CausalTensorError::ShapeMismatch);
     }
 
@@ -295,7 +295,6 @@ pub(crate) fn mul_cdl<T: RealField + Default>(
     b: &CausalTensor<Option<T>>,
 ) -> Result<CausalTensor<Option<T>>, CausalTensorError> {
     if a.shape() != b.shape() {
-        dbg!("mul_cdl: Input tensor ShapeMismatch");
         return Err(CausalTensorError::ShapeMismatch);
     }
 
@@ -328,7 +327,6 @@ pub(crate) fn sub_cdl<T: RealField + Default>(
     b: &CausalTensor<Option<T>>,
 ) -> Result<CausalTensor<Option<T>>, CausalTensorError> {
     if a.shape() != b.shape() {
-        dbg!("sub_cdl: Input tensor ShapeMismatch");
         return Err(CausalTensorError::ShapeMismatch);
     }
 
@@ -373,7 +371,6 @@ pub(crate) fn broadcast_to_cdl<T: RealField + Default>(
     let tensor_ndim = tensor_shape.len();
 
     if tensor_ndim > target_ndim {
-        dbg!("broadcast_to_cdl: Input tensor ShapeMismatch");
         return Err(CausalTensorError::ShapeMismatch);
     }
 

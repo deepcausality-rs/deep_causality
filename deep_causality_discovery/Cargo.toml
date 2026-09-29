@@ -63,7 +63,7 @@ parquet = { workspace = true }
 
 [dev-dependencies]
 deep_causality_tempfile = { workspace = true }
-deep_causality_rand = { workspace = true }
+deep_causality_rand = { workspace = true, features = ["default"] }
 # Comparison: cold (BOSS learns) vs warm (CPDAG cache) end-to-end runs.
 #   cargo run --release -p deep_causality_discovery --example brcd_cache_cold_vs_warm
 [[example]]

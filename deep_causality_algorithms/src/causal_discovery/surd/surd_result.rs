@@ -2,9 +2,10 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use alloc::collections::BTreeMap;
+use alloc::vec::Vec;
+use core::fmt::Debug;
 use deep_causality_tensor::CausalTensor;
-use std::collections::HashMap;
-use std::fmt::Debug;
 
 /// A structured result for the SURD state decomposition.
 ///
@@ -14,35 +15,35 @@ use std::fmt::Debug;
 #[derive(Debug)]
 pub struct SurdResult<T> {
     // Aggregate information (total increments)
-    redundant_info: HashMap<Vec<usize>, T>,
-    synergistic_info: HashMap<Vec<usize>, T>,
-    mutual_info: HashMap<Vec<usize>, T>,
+    redundant_info: BTreeMap<Vec<usize>, T>,
+    synergistic_info: BTreeMap<Vec<usize>, T>,
+    mutual_info: BTreeMap<Vec<usize>, T>,
     info_leak: T,
 
     // State-dependent causal maps (positive increments)
-    causal_redundant_states: HashMap<Vec<usize>, CausalTensor<T>>,
-    causal_unique_states: HashMap<Vec<usize>, CausalTensor<T>>,
-    causal_synergistic_states: HashMap<Vec<usize>, CausalTensor<T>>,
+    causal_redundant_states: BTreeMap<Vec<usize>, CausalTensor<T>>,
+    causal_unique_states: BTreeMap<Vec<usize>, CausalTensor<T>>,
+    causal_synergistic_states: BTreeMap<Vec<usize>, CausalTensor<T>>,
 
     // State-dependent non-causal maps (negative increments)
-    non_causal_redundant_states: HashMap<Vec<usize>, CausalTensor<T>>,
-    non_causal_unique_states: HashMap<Vec<usize>, CausalTensor<T>>,
-    non_causal_synergistic_states: HashMap<Vec<usize>, CausalTensor<T>>,
+    non_causal_redundant_states: BTreeMap<Vec<usize>, CausalTensor<T>>,
+    non_causal_unique_states: BTreeMap<Vec<usize>, CausalTensor<T>>,
+    non_causal_synergistic_states: BTreeMap<Vec<usize>, CausalTensor<T>>,
 }
 
 impl<T> SurdResult<T> {
     #[allow(clippy::too_many_arguments)] // Internal constructor with many fields is acceptable here
     pub fn new(
-        redundant_info: HashMap<Vec<usize>, T>,
-        synergistic_info: HashMap<Vec<usize>, T>,
-        mutual_info: HashMap<Vec<usize>, T>,
+        redundant_info: BTreeMap<Vec<usize>, T>,
+        synergistic_info: BTreeMap<Vec<usize>, T>,
+        mutual_info: BTreeMap<Vec<usize>, T>,
         info_leak: T,
-        causal_redundant_states: HashMap<Vec<usize>, CausalTensor<T>>,
-        causal_unique_states: HashMap<Vec<usize>, CausalTensor<T>>,
-        causal_synergistic_states: HashMap<Vec<usize>, CausalTensor<T>>,
-        non_causal_redundant_states: HashMap<Vec<usize>, CausalTensor<T>>,
-        non_causal_unique_states: HashMap<Vec<usize>, CausalTensor<T>>,
-        non_causal_synergistic_states: HashMap<Vec<usize>, CausalTensor<T>>,
+        causal_redundant_states: BTreeMap<Vec<usize>, CausalTensor<T>>,
+        causal_unique_states: BTreeMap<Vec<usize>, CausalTensor<T>>,
+        causal_synergistic_states: BTreeMap<Vec<usize>, CausalTensor<T>>,
+        non_causal_redundant_states: BTreeMap<Vec<usize>, CausalTensor<T>>,
+        non_causal_unique_states: BTreeMap<Vec<usize>, CausalTensor<T>>,
+        non_causal_synergistic_states: BTreeMap<Vec<usize>, CausalTensor<T>>,
     ) -> Self {
         Self {
             redundant_info,
@@ -61,15 +62,15 @@ impl<T> SurdResult<T> {
 
 // --- Getters for aggregate information ---
 impl<T> SurdResult<T> {
-    pub fn redundant_info(&self) -> &HashMap<Vec<usize>, T> {
+    pub fn redundant_info(&self) -> &BTreeMap<Vec<usize>, T> {
         &self.redundant_info
     }
 
-    pub fn synergistic_info(&self) -> &HashMap<Vec<usize>, T> {
+    pub fn synergistic_info(&self) -> &BTreeMap<Vec<usize>, T> {
         &self.synergistic_info
     }
 
-    pub fn mutual_info(&self) -> &HashMap<Vec<usize>, T> {
+    pub fn mutual_info(&self) -> &BTreeMap<Vec<usize>, T> {
         &self.mutual_info
     }
 
@@ -83,39 +84,39 @@ impl<T> SurdResult<T> {
 
 // --- Getters for state-dependent causal maps ---
 impl<T> SurdResult<T> {
-    pub fn causal_redundant_states(&self) -> &HashMap<Vec<usize>, CausalTensor<T>> {
+    pub fn causal_redundant_states(&self) -> &BTreeMap<Vec<usize>, CausalTensor<T>> {
         &self.causal_redundant_states
     }
 
-    pub fn causal_unique_states(&self) -> &HashMap<Vec<usize>, CausalTensor<T>> {
+    pub fn causal_unique_states(&self) -> &BTreeMap<Vec<usize>, CausalTensor<T>> {
         &self.causal_unique_states
     }
 
-    pub fn causal_synergistic_states(&self) -> &HashMap<Vec<usize>, CausalTensor<T>> {
+    pub fn causal_synergistic_states(&self) -> &BTreeMap<Vec<usize>, CausalTensor<T>> {
         &self.causal_synergistic_states
     }
 }
 
 // --- Getters for state-dependent non-causal maps ---
 impl<T> SurdResult<T> {
-    pub fn non_causal_redundant_states(&self) -> &HashMap<Vec<usize>, CausalTensor<T>> {
+    pub fn non_causal_redundant_states(&self) -> &BTreeMap<Vec<usize>, CausalTensor<T>> {
         &self.non_causal_redundant_states
     }
 
-    pub fn non_causal_unique_states(&self) -> &HashMap<Vec<usize>, CausalTensor<T>> {
+    pub fn non_causal_unique_states(&self) -> &BTreeMap<Vec<usize>, CausalTensor<T>> {
         &self.non_causal_unique_states
     }
 
-    pub fn non_causal_synergistic_states(&self) -> &HashMap<Vec<usize>, CausalTensor<T>> {
+    pub fn non_causal_synergistic_states(&self) -> &BTreeMap<Vec<usize>, CausalTensor<T>> {
         &self.non_causal_synergistic_states
     }
 }
 
-impl<T> std::fmt::Display for SurdResult<T>
+impl<T> core::fmt::Display for SurdResult<T>
 where
     T: Debug,
 {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         writeln!(f, "--- SURD Decomposition Result ---")?;
         writeln!(f, "Aggregate Redundant Info: {:?}", self.redundant_info)?;
         writeln!(f, "Aggregate Synergistic Info: {:?}", self.synergistic_info)?;

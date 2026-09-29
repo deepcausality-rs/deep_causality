@@ -3,17 +3,24 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{AlfvenSpeed, Diffusivity};
+use crate::AlfvenSpeed;
+#[cfg(feature = "topology")]
+use crate::Diffusivity;
 use crate::{PhysicsError, Speed};
+#[cfg(feature = "topology")]
 use core::fmt::Debug;
 use deep_causality_algebra::RealField;
+#[cfg(feature = "topology")]
 use deep_causality_num::FromPrimitive;
 use deep_causality_par::MaybeParallel;
+#[cfg(feature = "topology")]
 use deep_causality_tensor::CausalTensor;
+#[cfg(feature = "topology")]
 use deep_causality_topology::SimplicialManifold;
 
 /// Calculates the diffusion term of the induction equation.
 /// $$ \frac{\partial \mathbf{B}}{\partial t}_{diff} = \eta \nabla^2 \mathbf{B} $$
+#[cfg(feature = "topology")]
 pub fn resistive_diffusion_kernel<R>(
     b_manifold: &SimplicialManifold<R, R>,
     diffusivity: Diffusivity<R>,

@@ -5,52 +5,52 @@
 
 use deep_causality_algorithms::causal_discovery::surd::SurdResult;
 use deep_causality_tensor::CausalTensor;
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 // Helper function to create a default SurdResult for testing
 fn create_test_surd_result() -> SurdResult<f64> {
-    let mut redundant_info = HashMap::new();
+    let mut redundant_info = BTreeMap::new();
     redundant_info.insert(vec![1, 2], 0.5);
 
-    let mut synergistic_info = HashMap::new();
+    let mut synergistic_info = BTreeMap::new();
     synergistic_info.insert(vec![3, 4], 0.8);
 
-    let mut mutual_info = HashMap::new();
+    let mut mutual_info = BTreeMap::new();
     mutual_info.insert(vec![5, 6], 1.2);
 
     let info_leak = 0.1;
 
-    let mut causal_redundant_states = HashMap::new();
+    let mut causal_redundant_states = BTreeMap::new();
     causal_redundant_states.insert(
         vec![1],
         CausalTensor::new(vec![1.0], vec![1]).expect("Failed to create CausalTensor"),
     );
 
-    let mut causal_unique_states = HashMap::new();
+    let mut causal_unique_states = BTreeMap::new();
     causal_unique_states.insert(
         vec![2],
         CausalTensor::new(vec![2.0], vec![1]).expect("Failed to create CausalTensor"),
     );
 
-    let mut causal_synergistic_states = HashMap::new();
+    let mut causal_synergistic_states = BTreeMap::new();
     causal_synergistic_states.insert(
         vec![3],
         CausalTensor::new(vec![3.0], vec![1]).expect("Failed to create CausalTensor"),
     );
 
-    let mut non_causal_redundant_states = HashMap::new();
+    let mut non_causal_redundant_states = BTreeMap::new();
     non_causal_redundant_states.insert(
         vec![4],
         CausalTensor::new(vec![4.0], vec![1]).expect("Failed to create CausalTensor"),
     );
 
-    let mut non_causal_unique_states = HashMap::new();
+    let mut non_causal_unique_states = BTreeMap::new();
     non_causal_unique_states.insert(
         vec![5],
         CausalTensor::new(vec![5.0], vec![1]).expect("Failed to create CausalTensor"),
     );
 
-    let mut non_causal_synergistic_states = HashMap::new();
+    let mut non_causal_synergistic_states = BTreeMap::new();
     non_causal_synergistic_states.insert(
         vec![6],
         CausalTensor::new(vec![6.0], vec![1]).expect("Failed to create CausalTensor"),
@@ -76,17 +76,17 @@ fn test_constructor_and_all_getters() {
 
     // Test aggregate info getters
     assert_eq!(*result.redundant_info(), {
-        let mut map = HashMap::new();
+        let mut map = BTreeMap::new();
         map.insert(vec![1, 2], 0.5);
         map
     });
     assert_eq!(*result.synergistic_info(), {
-        let mut map = HashMap::new();
+        let mut map = BTreeMap::new();
         map.insert(vec![3, 4], 0.8);
         map
     });
     assert_eq!(*result.mutual_info(), {
-        let mut map = HashMap::new();
+        let mut map = BTreeMap::new();
         map.insert(vec![5, 6], 1.2);
         map
     });
