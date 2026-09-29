@@ -15,7 +15,6 @@
 //! match a widely used reference implementation bit-for-bit.
 
 use crate::{RandScalar, RngCore, RngError, Xoshiro256};
-use alloc::format;
 
 /// Maximum dimension supported by the embedded direction-number table.
 pub const MAX_SOBOL_DIM: usize = 16;
@@ -58,9 +57,10 @@ impl SobolSequence {
 
     fn check_dim(dim: usize) -> Result<(), RngError> {
         if dim == 0 || dim > MAX_SOBOL_DIM {
-            return Err(RngError::UnsupportedDimension(format!(
-                "dimension {dim} outside 1..={MAX_SOBOL_DIM}"
-            )));
+            return Err(RngError::UnsupportedDimension {
+                dimension: dim,
+                max: MAX_SOBOL_DIM,
+            });
         }
         Ok(())
     }

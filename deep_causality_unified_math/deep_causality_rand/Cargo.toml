@@ -36,7 +36,7 @@ workspace = true
 default = ["std"]
 std = ["alloc", "deep_causality_num/std", "deep_causality_algebra/std"]
 alloc = []
-no-std = ["alloc", "deep_causality_num/no-std", "deep_causality_algebra/no-std"]
+no-std = ["deep_causality_num/no-std", "deep_causality_algebra/no-std"]
 # Enables random number generator from the host OS.
 # Enabling os-random adds an indirect depdency on getrandom and libc.
 # Disabled by default. Use aead-random instead to protect against hardware RNG attacks.

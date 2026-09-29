@@ -3,8 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Rng, RngError, SampleUniform, UniformSampler};
-use alloc::string::ToString;
+use crate::{Rng, RngError, SampleUniform, UniformDistributionError, UniformSampler};
 use core::ops::Range;
 
 /// A range a value can be drawn from.
@@ -28,11 +27,11 @@ where
     fn sample_single<R: Rng + ?Sized>(self, rng: &mut R) -> Result<T, RngError> {
         if self.is_empty() {
             return Err(RngError::InvalidRange(
-                "Invalid range: low must be less than high".to_string(),
+                UniformDistributionError::InvalidRange,
             ));
         }
         let sampler = <T::Sampler as UniformSampler>::new(self.start, self.end)
-            .map_err(|e| RngError::InvalidRange(e.to_string()))?;
+            .map_err(RngError::InvalidRange)?;
         Ok(sampler.sample(rng))
     }
 
