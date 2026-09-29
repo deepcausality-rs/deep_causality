@@ -7,11 +7,17 @@
 # target without `std`, must do one of two things:
 #
 #   - build, when nothing below it needs float math, or
-#   - stop at the guard in deep_causality_num, with deep_causality_num the only crate that fails.
+#   - stop at the guard in deep_causality_num.
+#
+# The second case is read from cargo's JSON messages, not from rendered text. A rejected build must
+# fail, deep_causality_num must be the only compile target that emits an error, and its first error
+# must carry the `[no-float-backend]` tag of the guard's `compile_error!`. rustc emits that error
+# during macro expansion, before the missing-backend errors that follow it in the same crate.
 #
 # Anything else fails the check: a `std` leak, an `alloc` level that is not forwarded to a
-# dependency, a guard that went missing. `--keep-going` builds every crate that does not depend on
-# the failed one, so the set of failures does not depend on job scheduling.
+# dependency, a guard that went missing, a failure cargo reports outside the compiler.
+# `--keep-going` builds every crate that does not depend on the failed one, so the set of failures
+# does not depend on job scheduling.
 #
 # Every workspace crate is accounted for: std-only crates are listed in bare_metal.sh, a no_std
 # crate without an `alloc` feature is core-only and has no alloc level to check, and a crate that
@@ -28,7 +34,19 @@ cd "$DC_REPO_ROOT"
 TARGET="${1:-$DC_BARE_METAL_DEFAULT_TARGET}"
 dc_require_target "$TARGET"
 
-GUARD="deep_causality_num has no float-math backend"
+GUARD_TAG="[no-float-backend]"
+
+command -v jq >/dev/null || { echo "check_alloc.sh needs jq to read cargo's JSON messages"; exit 1; }
+
+stderr_log="$(mktemp)"
+trap 'rm -f "$stderr_log"' EXIT
+
+# The compile errors in a stream of cargo JSON messages, one `<target>\t<message>` line each, in
+# the order rustc emitted them.
+compile_errors() {
+    jq -r 'select(.reason == "compiler-message" and .message.level == "error")
+           | [.target.name, .message.message] | @tsv'
+}
 
 failed=()
 checked=0
@@ -54,19 +72,22 @@ for i in "${!DC_CRATES[@]}"; do
 
     echo "==> $c alloc-only ($TARGET)"
     checked=$((checked + 1))
-    # The output is parsed below, so colour is off whatever CARGO_TERM_COLOR says: CI sets it to
-    # `always`, and the escape codes then hide the `error: could not compile` lines.
-    if out="$(cargo build --color never --keep-going -p "$c" --lib --no-default-features \
-        --features alloc --target "$TARGET" 2>&1)"; then
+    if json="$(cargo build --message-format=json --keep-going -p "$c" --lib \
+        --no-default-features --features alloc --target "$TARGET" 2>"$stderr_log")"; then
         echo "    builds"
         continue
     fi
-    broken="$(echo "$out" | sed -n 's/^error: could not compile `\([^`]*\)`.*/\1/p' | sort -u)"
-    if [ "$broken" = "deep_causality_num" ] && echo "$out" | grep -q "$GUARD"; then
+    errors="$(echo "$json" | compile_errors)"
+    broken="$(echo "$errors" | cut -f1 | sed '/^$/d' | sort -u)"
+    first="$(echo "$errors" | head -1 | cut -f2)"
+    if [ "$broken" = "deep_causality_num" ] && [[ "$first" == "$GUARD_TAG"* ]]; then
         echo "    rejected by the deep_causality_num guard"
     else
-        echo "$out"
-        echo "!! $c: alloc-only build did not stop at the deep_causality_num guard; failed crates:" $broken
+        echo "$json" | jq -r 'select(.reason == "compiler-message" and .message.level == "error")
+                              | .message.rendered'
+        cat "$stderr_log"
+        echo "!! $c: alloc-only build did not stop at the deep_causality_num guard;" \
+            "targets with errors:" ${broken:-none}
         failed+=("$c")
     fi
 done

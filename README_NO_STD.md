@@ -5,7 +5,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 # Building DeepCausality without `std`
 
-Twenty-three of the thirty-three library crates build on bare metal. That covers all maths crtes,
+Twenty-three of the thirty-three library crates build on bare metal. That covers all maths crates,
 the causal monad, linear algebra, statistics, tensors, multivectors, homology, FFT, the
 physics kernels, SURD and mRMR, the quantum layer, and the `ultragraph` graph store. What stays
 behind is uncertainty, topology, the context hypergraph and its store, the reasoning engine in
@@ -126,9 +126,9 @@ libm_math = ["dep:libm"]
 fix:
 
 ```
-error: deep_causality_num has no float-math backend: enable `std`, or `no-std` for bare metal
-(libm). The `alloc` feature of a dependent crate selects the allocator level only and does not
-choose a backend, so it cannot be enabled on its own. ...
+error: [no-float-backend] deep_causality_num has no float-math backend: enable `std`, or `no-std`
+for bare metal (libm). The `alloc` feature of a dependent crate selects the allocator level only
+and does not choose a backend, so it cannot be enabled on its own. ...
 ```
 
 `rustc` still reports the missing float bodies after that line; the first error is the one to read.
@@ -395,10 +395,13 @@ its own `cargo` call, so a sibling's features cannot mask it. A crate that does 
 `scripts/bare_metal.sh` with the reason it needs `std`; one that is neither fails the check, and so
 does a listed crate that has since gained `no-std`. The default target is `thumbv7em-none-eabihf`.
 Pass another as the first argument, for example `bash scripts/check_no_std.sh aarch64-unknown-none`.
+Both scripts refuse a target whose `target_os` is not `none`, because a hosted target ships `std`
+and would let a leak through.
 
-The alloc check builds with `--keep-going` and passes a failed build only when
-`deep_causality_num` is the one crate that failed and the guard message is present. An `alloc`
-feature that does not reach a dependency's `alloc` shows up there as a second failing crate.
+The alloc check builds with `--keep-going` and reads cargo's JSON messages. It passes a failed
+build only when `deep_causality_num` is the one compile target with errors and its first error
+carries the `[no-float-backend]` tag. An `alloc` feature that does not reach a dependency's `alloc`
+shows up there as a second target with errors.
 
 CI runs both checks in `.github/workflows/rust_no_std.yml` on every pull request and every push to
 `main`.

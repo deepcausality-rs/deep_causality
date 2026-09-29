@@ -44,8 +44,9 @@ use rayon::prelude::*;
 ///
 /// If multiple features have the same maximum relevance score (for the first feature) or the
 /// same maximum mRMR score (for subsequent features), the one with the lowest column index is
-/// chosen: candidates are visited in ascending index order, and a later candidate replaces the
-/// current best only when its score is strictly higher. The other tied features are not dropped
+/// chosen. The comparison itself ranks equal scores by index, so the serial and the `parallel`
+/// build select the same feature whatever order the candidates are compared in. The other tied
+/// features are not dropped
 /// from consideration; increase the num_features parameter to capture more of them and use
 /// subsequent processing i.e. with SURD to identify confounders.
 ///
@@ -158,7 +159,11 @@ where
                 |acc, res| {
                     let acc = acc?;
                     let res = res?;
-                    if res.1 > acc.1 { Ok(res) } else { Ok(acc) }
+                    if mrmr_utils::outranks(res, acc) {
+                        Ok(res)
+                    } else {
+                        Ok(acc)
+                    }
                 },
             )?
     };
@@ -176,7 +181,7 @@ where
                     feature_idx, relevance
                 )));
             }
-            if relevance > max_relevance {
+            if mrmr_utils::outranks((feature_idx, relevance), (first_feature, max_relevance)) {
                 max_relevance = relevance;
                 first_feature = feature_idx;
             }
@@ -267,7 +272,7 @@ where
                     |acc, res| {
                         let acc = acc?;
                         let res = res?;
-                        if res.1 > acc.1 {
+                        if mrmr_utils::outranks(res, acc) {
                             Ok(res)
                         } else {
                             Ok(acc)
@@ -337,7 +342,7 @@ where
                 // Otherwise, the division of two finite numbers (relevance / redundancy) where
                 // redundancy is non-zero will always yield a finite result.
 
-                if mrmr_score > max_mrmr_score {
+                if mrmr_utils::outranks((feature_idx, mrmr_score), (best_feature, max_mrmr_score)) {
                     max_mrmr_score = mrmr_score;
                     best_feature = feature_idx;
                 }

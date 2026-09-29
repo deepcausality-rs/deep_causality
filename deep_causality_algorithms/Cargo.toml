@@ -106,10 +106,12 @@ harness = false
 [[bench]]
 name = "brcd_benchmark"
 harness = false
+required-features = ["topology"]
 
 [[bench]]
 name = "brcd_benchmark_wide"
 harness = false
+required-features = ["topology"]
 
 # --- BRCD verification examples (run individually) ---
 # Base verification: self-contained synthetic recovery (no Python needed).
@@ -119,10 +121,12 @@ harness = false
 [[example]]
 name = "verification_meek_r4"
 path = "verification/brcd/verification_meek_r4.rs"
+required-features = ["topology"]
 
 [[example]]
 name = "verification_base"
 path = "verification/brcd/verification_base.rs"
+required-features = ["topology"]
 
 # Comparison: MAP-config pruning vs full enumeration (accuracy/compute).
 # Exact config counts (2^du vs du+1) plus a controlled-degree clique sweep and a
@@ -131,6 +135,7 @@ path = "verification/brcd/verification_base.rs"
 [[example]]
 name = "brcd_eval_accuracy_compute"
 path = "verification/brcd/brcd_eval_accuracy_compute.rs"
+required-features = ["topology"]
 
 # BOSS structure-learning verification: self-contained structural recovery plus
 # a learned-CPDAG (cpdag=None) end-to-end run on committed Online Boutique data.
@@ -138,6 +143,7 @@ path = "verification/brcd/brcd_eval_accuracy_compute.rs"
 [[example]]
 name = "verification_boss"
 path = "verification/brcd/verification_boss.rs"
+required-features = ["topology"]
 
 # Supplied-CPDAG vs BOSS-learned comparison (illustrates the learned-vs-map gap).
 # Sock Shop completes; Online Boutique's ~50-var / 2100-row cases can be intractable
@@ -147,22 +153,26 @@ path = "verification/brcd/verification_boss.rs"
 [[example]]
 name = "verification_boss_sockshop"
 path = "verification/brcd/verification_boss_sockshop.rs"
+required-features = ["topology"]
 
 [[example]]
 name = "verification_boss_online_boutique"
 path = "verification/brcd/verification_boss_online_boutique.rs"
+required-features = ["topology"]
 
 # Real-world verification (Online Boutique): replays committed Python-derived
 #   cargo run -p deep_causality_algorithms --example verification_online_boutique
 [[example]]
 name = "verification_online_boutique"
 path = "verification/brcd/verification_online_boutique.rs"
+required-features = ["topology"]
 
 # Real-world verification (Sock Shop).
 #   cargo run -p deep_causality_algorithms --example verification_sockshop
 [[example]]
 name = "verification_sockshop"
 path = "verification/brcd/verification_sockshop.rs"
+required-features = ["topology"]
 
 [lints]
 workspace = true

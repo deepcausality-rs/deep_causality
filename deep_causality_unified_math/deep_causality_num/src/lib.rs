@@ -9,12 +9,15 @@
 // wall of missing values, and this crate compiles before every crate that depends on it, so a
 // downstream guard never gets the chance to explain. A downstream `alloc` feature selects the
 // allocator level only and reaches here with neither backend.
+//
+// scripts/check_alloc.sh identifies this error by the leading `[no-float-backend]` tag. The wording
+// after the tag can change; the tag cannot.
 #[cfg(not(any(feature = "std", feature = "libm_math")))]
 compile_error!(
-    "deep_causality_num has no float-math backend: enable `std`, or `no-std` for bare metal \
-     (libm). The `alloc` feature of a dependent crate selects the allocator level only and does \
-     not choose a backend, so it cannot be enabled on its own. Use the default features for \
-     hosted targets, or `--no-default-features --features no-std` for bare metal."
+    "[no-float-backend] deep_causality_num has no float-math backend: enable `std`, or `no-std` \
+     for bare metal (libm). The `alloc` feature of a dependent crate selects the allocator level \
+     only and does not choose a backend, so it cannot be enabled on its own. Use the default \
+     features for hosted targets, or `--no-default-features --features no-std` for bare metal."
 );
 
 extern crate core;

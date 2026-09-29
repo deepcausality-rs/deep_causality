@@ -62,10 +62,17 @@ dc_has_feature() {
     ' "$1/Cargo.toml"
 }
 
-# Exits with the install command when <target> has no installed standard library.
+# Exits unless <target> is installed and has no operating system. A hosted target ships `std`,
+# so a dependency that enables `std` links there without complaint and the check proves nothing.
+# `target_os = "none"` is the condition deep_causality_par's `parallel` guard keys on as well.
 dc_require_target() {
     if ! rustup target list --installed | grep -qx "$1"; then
         echo "Target $1 is not installed. Run: rustup target add $1"
+        exit 1
+    fi
+    if ! rustc --print cfg --target "$1" | grep -qx 'target_os="none"'; then
+        echo "Target $1 has an operating system and ships std; pass a bare-metal target such as" \
+            "$DC_BARE_METAL_DEFAULT_TARGET."
         exit 1
     fi
 }

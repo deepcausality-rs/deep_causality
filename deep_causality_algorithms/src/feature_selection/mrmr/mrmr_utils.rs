@@ -126,3 +126,13 @@ where
     let f_stat = (n - 2.0) * r2 / (1.0 - r2);
     Ok(f_stat)
 }
+
+/// Whether `candidate` outranks `best`, each an `(index, score)` pair: a strictly higher score, or
+/// an equal score at a lower column index.
+///
+/// This is a total order on finite scores, so the maximum does not depend on the order in which
+/// pairs are compared. The serial scan and the parallel reduction therefore select the same feature
+/// on a tie.
+pub(super) fn outranks(candidate: (usize, f64), best: (usize, f64)) -> bool {
+    candidate.1 > best.1 || (candidate.1 == best.1 && candidate.0 < best.0)
+}

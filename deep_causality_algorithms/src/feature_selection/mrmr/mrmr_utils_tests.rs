@@ -4,6 +4,8 @@
  */
 use crate::feature_selection::mrmr::mrmr_error::MrmrError;
 use crate::mrmr::mrmr_utils;
+use alloc::string::ToString;
+use alloc::vec;
 use deep_causality_tensor::CausalTensor;
 
 #[test]
@@ -155,4 +157,52 @@ fn test_f_statistic_index_out_of_bounds() {
         result.unwrap_err().to_string(),
         "Invalid input: Column index out of bounds"
     );
+}
+
+#[test]
+fn test_outranks_prefers_the_higher_score() {
+    assert!(mrmr_utils::outranks((5, 2.0), (1, 1.0)));
+    assert!(!mrmr_utils::outranks((1, 1.0), (5, 2.0)));
+}
+
+#[test]
+fn test_outranks_breaks_a_tie_by_the_lower_index() {
+    assert!(mrmr_utils::outranks((1, 3.0), (4, 3.0)));
+    assert!(!mrmr_utils::outranks((4, 3.0), (1, 3.0)));
+    assert!(!mrmr_utils::outranks((2, 3.0), (2, 3.0)));
+}
+
+#[test]
+fn test_outranks_selects_the_same_winner_in_every_comparison_order() {
+    // Three features tie at the top score. A parallel reduction may combine the pairs in any
+    // order, so every order has to select the lowest tied index.
+    let pairs = [(3, 0.5), (7, 2.0), (2, 2.0), (9, 2.0), (0, 1.0)];
+    let orders: [[usize; 5]; 4] = [
+        [0, 1, 2, 3, 4],
+        [4, 3, 2, 1, 0],
+        [1, 3, 0, 4, 2],
+        [3, 2, 4, 0, 1],
+    ];
+    for order in orders {
+        let winner = order
+            .iter()
+            .map(|&i| pairs[i])
+            .reduce(|best, c| {
+                if mrmr_utils::outranks(c, best) {
+                    c
+                } else {
+                    best
+                }
+            })
+            .unwrap();
+        assert_eq!(winner, (2, 2.0), "comparison order {order:?}");
+    }
+    // A right-leaning combination, as a reduction tree can produce.
+    let right = pairs
+        .iter()
+        .rev()
+        .copied()
+        .reduce(|acc, c| if mrmr_utils::outranks(acc, c) { acc } else { c })
+        .unwrap();
+    assert_eq!(right, (2, 2.0));
 }
