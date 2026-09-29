@@ -1,0 +1,95 @@
+---
+/**
+ * The limits a new user meets first. Each links to the page holding the
+ * measurement behind it. Sources: the Solver strip and Scale copy this replaces,
+ * `data/boundaries.ts` (turbulence, srp) and the roadmap's non-goals.
+ */
+import { CRATE_URL } from '../../consts';
+import { boundaries } from '../../data/boundaries';
+
+const WORDS = ['no', 'one', 'two', 'three', 'four', 'five', 'six'];
+const refuted = boundaries.filter((b) => b.refuted).length;
+
+const limits = [
+  {
+    lead: 'It does not wrap your solver.',
+    text: 'Branches run on this library’s own solvers. It reads no mesh format, and geometry is declared in code.',
+    href: '/solvers/',
+    link: 'Solvers',
+  },
+  {
+    lead: 'Rust only.',
+    text: 'The crate has no Python or C interface.',
+    href: '/blueprints/install/',
+    link: 'Install',
+  },
+  {
+    lead: 'No turbulence models yet.',
+    text: 'The validated incompressible cases run at Re 100 to 1600. Turbulence closures are planned on the DEC solver.',
+    href: '/boundaries/#turbulence',
+    link: 'Turbulence',
+  },
+  {
+    lead: 'Small grids so far.',
+    text: 'The what-if examples run on 32×32 cells. Nothing has run at production mesh scale.',
+    href: '/boundaries/',
+    link: 'All limits',
+  },
+  {
+    lead: 'One machine.',
+    text: 'Branches use the cores of a single machine. Distributed execution is a stated non-goal, and GPU work is deferred.',
+    href: '/roadmap/',
+    link: 'Roadmap',
+  },
+  {
+    lead: 'The examples simplify the vehicle and the flow.',
+    text: 'They fly a point-mass 3-DOF vehicle with no winds or aerodynamic dispersions, a 2-D flow layer with single-point sheath chemistry, and compressed time: one coupled step is 0.1 s of flight.',
+    href: '/tutorial/stage-1-corridor/',
+    link: 'The corridor walk',
+  },
+  {
+    lead: 'Pre-1.0.',
+    text: 'The API can change between minor releases. The crate is MIT licensed and maintained by the Center for Dynamic Causality.',
+    href: `${CRATE_URL}/CHANGELOG.md`,
+    link: 'Changelog',
+  },
+  {
+    lead: 'A cited correlation carries the retropulsion drag.',
+    text: 'The plume’s effect on drag comes from a published correlation, not from the simulated plume.',
+    href: '/boundaries/#srp',
+    link: 'The measurement',
+  },
+];
+---
+<ul class="limits">
+  {limits.map((l, i) => (
+    <li class="rise" style={`--i:${i}`}>
+      <p><b>{l.lead}</b> {l.text}</p>
+      <a href={l.href}>{l.link} <span aria-hidden="true">→</span></a>
+    </li>
+  ))}
+</ul>
+<p class="foot">
+  The <a href="/boundaries/">Limits page</a> also lists the {WORDS[refuted] ?? refuted} hypotheses the
+  project measured and found wrong.
+</p>
+
+<style>
+  .limits { list-style: none; margin: 0; padding: 0; }
+  .limits li {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-2);
+    padding: var(--space-4) 0;
+    border-top: 1px solid var(--line-1);
+  }
+  .limits li:last-child { border-bottom: 1px solid var(--line-1); }
+  @media (min-width: 720px) {
+    .limits li { grid-template-columns: 1fr 10rem; gap: var(--space-5); align-items: baseline; }
+    .limits li a { justify-self: end; }
+  }
+  .limits p { margin: 0; color: var(--fg-1); max-width: var(--measure); }
+  .limits b { color: var(--fg-0); font-weight: var(--fw-heading); }
+  .limits a { font-size: var(--t-body-sm); white-space: nowrap; }
+  .foot { margin: var(--space-4) 0 0; color: var(--fg-2); font-size: var(--t-body-sm); }
+</style>

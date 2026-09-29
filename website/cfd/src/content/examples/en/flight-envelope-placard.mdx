@@ -1,7 +1,7 @@
 ---
 title: Flight envelope placard
-question: Feed a Mach–altitude test matrix in, get a gated placard table out.
-summary: A parameter sweep over a closed-form body, gated against stated limits. No grid, no march and no solver state.
+question: Does every point in a Mach–altitude test matrix stay inside the dynamic-pressure and temperature limits?
+summary: One sweep evaluates sixteen flight conditions in closed form, gates them against two stated limits and writes a placard table. It uses no grid, no march and no solver state.
 order: 1
 command: cargo run --release -p avionics_examples --example flight_envelope_placard
 uses:
@@ -9,7 +9,7 @@ uses:
   - Gates
   - read_table / write_table
   - FittedNormalShock
-runtime: well under a second
+runtime: well under a second (README figure)
 results:
   - max q = 23.7 kPa at M 1.20 / 11.0 km, inside the 60 kPa placard
   - max T0 = 1502.1 K at M 5.00 / 40.0 km, inside the 1700 K placard
@@ -19,67 +19,71 @@ recorded: true
 source: examples/avionics_examples/cfd/flight_envelope_placard
 ---
 
-No grid and no time stepping. A CSV of Mach–altitude points goes in, each point
-is evaluated through closed-form relations, and a gated table comes out.
+## What the run printed
 
-The study shape is the same one the marched examples use. The `sweep` combinator
-driving sixteen closed-form evaluations here drives four concurrent
-Navier–Stokes marches in the [VIV example](/examples/viv-resonance-margin/).
+A gate is a pass or fail check on a result.
+
+```text
+     M    alt(km)    q(kPa)    T0(K)    qdot(W/cm2)
+  0.50      5.0       9.5    268.5         0.09
+  0.80      8.0      16.5    266.5         0.27
+  0.80     11.0      10.6    250.3         0.20
+  1.20     11.0      23.7    285.8         0.69
+  1.20     15.0      12.2    279.0         0.48
+  1.60     15.0      21.7    327.6         1.14
+  2.00     18.0      22.9    390.0         1.83
+  2.00     21.0      13.8    391.7         1.43
+  2.50     21.0      21.6    489.7         2.80
+  3.00     24.0      19.9    617.6         3.92
+  3.00     27.0      12.7    625.9         3.17
+  3.50     27.0      17.3    771.2         5.04
+  4.00     30.0      13.4    951.3         5.87
+  4.50     33.0      13.4   1180.0         7.66
+  5.00     36.0      11.8   1444.9         9.15
+  5.00     40.0       5.0   1502.1         6.21
+
+--- flight envelope placard ---
+  [PASS] q-max placard: max q = 23.7 kPa at M 1.20 / 11.0 km, inside the 60 kPa placard
+  [PASS] stagnation temperature: max T0 = 1502.1 K at M 5.00 / 40.0 km, inside the 1700 K placard
+=== All gates passed: flight envelope placard. ===
+```
+
+Peak dynamic pressure, stagnation temperature and heating fall at three different
+points: M 1.20 / 11.0 km, M 5.00 / 40.0 km and M 5.00 / 36.0 km. The gates cover the
+first two. Heating has no placard.
 
 ## What runs per row
 
-Each matrix row is a flight condition. For each one the example computes dynamic
-pressure, takes the exact Rankine–Hugoniot jump through `FittedNormalShock` to get
-the post-shock stagnation temperature, and applies the Sutton–Graves correlation
-for stagnation-point heating.
+Each row is a flight condition. The example computes dynamic pressure, the
+post-shock stagnation temperature (the exact Rankine–Hugoniot jump through
+`FittedNormalShock`) and the stagnation-point heating (Sutton–Graves). Every
+quantity is a closed-form function of Mach, altitude and the atmosphere table, so
+nothing iterates. The `sweep` that runs them also drives the
+[VIV example](/examples/viv-resonance-margin/)'s Navier–Stokes marches.
 
-Nothing here is iterative. Every quantity is a closed-form function of Mach,
-altitude and the atmosphere table.
+## What a failing run looks like
 
-## Output
-
-```text
-   M   alt[km]  q[kPa]   T0[K]   qdot
- 0.50      5.0     9.5   268.5   0.09
- ...
- 5.00     40.0     5.0  1502.1   6.21
- 5.00     36.0    11.8  1444.9   9.15   <- hottest heating
-
-[PASS] q-max placard: max q = 23.7 kPa at M 1.20 / 11.0 km, inside the 60 kPa placard
-[PASS] stagnation temperature: max T0 = 1502.1 K at M 5.00 / 40.0 km, inside the 1700 K placard
-[PASS] matrix integrity: 16 of 16 matrix rows computed
-```
-
-Peak dynamic pressure, peak temperature and peak heating occur at three
-different points in the matrix.
-
-## Negative path
-
-The example ships a second matrix that violates the dynamic-pressure placard:
+A second matrix violates the dynamic-pressure placard:
 
 ```bash
 cargo run --release -p avionics_examples --example flight_envelope_placard \
   examples/avionics_examples/cfd/flight_envelope_placard/mach_alt_matrix_exceeds.csv
 ```
 
+The example README records the result. `output.txt` holds only the default run.
+
 ```text
 [FAIL] q-max placard: q = 85.1 kPa at M 1.50 / 5.0 km exceeds the 60 kPa placard
 ```
 
-The process exits 1 and writes no table, so a failed run leaves no artifact that
-could later be mistaken for a valid one. Every example and verification target
-follows this convention.
+The process exits 1. The table is written before the gates run, so a failed run
+overwrites `placard_table.csv`. Rerun the default matrix to restore it.
 
-## Applicability limits
+## More on the limits
 
-The gas is calorically perfect at γ = 1.4. The assumption is weakest for a blunt
-body at low supersonic speed, a condition present in this matrix.
+The gas assumption is weakest for a blunt body at low supersonic speed, a condition
+present in this matrix. The atmosphere interpolates linearly between US-1976 rows
+5 to 10 km apart, which overstates density between rows.
 
-Sutton–Graves is an entry-speed correlation. The heating column at M 0.5 is a
-trend and is not suitable for sizing thermal protection.
-
-The atmosphere interpolates linearly between US-1976 rows spaced 5 to 10 km
-apart, which overstates density between rows.
-
-The placard values of 60 kPa and 1700 K are demonstration figures. They are not
-certification data.
+The gates do not count rows against the input file. Each fails only on an empty row
+set, so a matrix that loses rows between the reader and the sweep passes them.

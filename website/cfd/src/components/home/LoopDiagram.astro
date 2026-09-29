@@ -1,0 +1,95 @@
+---
+/**
+ * The six stages a corridor step runs, in the order it runs them, over one shared
+ * state. Order and content follow the coupling stack (`corridor/README.md`, "The
+ * Causal Chain") and `corridor/gate.rs`.
+ *
+ * What each stage reads, per the source: the link flag gates which fixes the
+ * navigation filter folds; the safety gate senses heat flux and g-load from the
+ * coupled state, not from the filter; the vehicle stage flies the previous step's
+ * clamped command, and the true vehicle position sets the next freestream. There
+ * is no arrow from navigation to the gate because the code has no such
+ * dependency. The layout snakes: the top row reads left to right, the bottom row
+ * right to left, and the caption carries the step-to-step link.
+ */
+// `d` is the arrow that leaves the stage on wide screens; every stage but the last
+// points down on narrow ones.
+const stages = [
+  { name: 'Flow', d: '→', text: 'A compressible solver marches the shock layer in front of the vehicle.' },
+  { name: 'Chemistry', d: '→', text: 'The hot air ionizes. Electron density rises in the layer.' },
+  { name: 'Link', d: '↓', text: 'A classifier turns that density into a yes or no: does the plasma block the GPS signal?' },
+  { name: 'Vehicle', d: '←', text: 'The aerodynamic stage flies the last clamped bank command and moves the vehicle. Its new altitude and speed set the air the flow meets next.' },
+  { name: 'Navigation', d: '←', text: 'A 17-state Kalman filter folds in GPS fixes while the link is up and dead-reckons while it is down.' },
+  { name: 'Safety gate', d: '', text: 'The gate senses heat flux and g-load and clamps the next bank command into the allowed range.' },
+];
+---
+<ol class="loop">
+  {stages.map((s, i) => (
+    <li class={`stage s${i + 1} panel corner-brackets rise`} style={`--i:${i}`}>
+      <p class="n">{i + 1}</p>
+      <h3>{s.name}</h3>
+      <p class="t">{s.text}</p>
+      {i < stages.length - 1 && <span class="ar ar-m" aria-hidden="true">↓</span>}
+      {s.d && <span class="ar ar-d" aria-hidden="true">{s.d}</span>}
+    </li>
+  ))}
+</ol>
+<p class="return">
+  Every step runs the six stages in this order over one shared state. The gate’s clamped command is
+  flown by stage 4 on the next step, and stage 4’s new position sets the air stage 1 meets.
+</p>
+
+<style>
+  .loop {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+  }
+  @media (min-width: 900px) {
+    .loop { grid-template-columns: repeat(3, 1fr); gap: var(--space-6); }
+    /* Bottom row runs right to left: 4 under 3, 5 under 2, 6 under 1. */
+    .s4 { grid-column: 3; grid-row: 2; }
+    .s5 { grid-column: 2; grid-row: 2; }
+    .s6 { grid-column: 1; grid-row: 2; }
+  }
+
+  .stage { position: relative; padding: var(--space-5); }
+  .n {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    color: var(--accent);
+    margin: 0 0 var(--space-1);
+  }
+  .stage h3 { font-size: var(--t-h4); margin: 0 0 var(--space-2); }
+  .stage .t { color: var(--fg-1); font-size: var(--t-body-sm); margin: 0; }
+
+  /* Connectors are elements, not pseudo-elements: .corner-brackets owns ::before
+     and ::after. Mobile shows a down arrow under every stage but the last;
+     wide screens show the arrow that follows the snake. */
+  .ar {
+    position: absolute;
+    font-family: var(--font-mono);
+    color: var(--accent);
+    line-height: 1;
+  }
+  .ar-m { left: 50%; bottom: calc(-1 * var(--space-5)); transform: translate(-50%, 0.15em); }
+  .ar-d { display: none; }
+  @media (min-width: 900px) {
+    .ar-m { display: none; }
+    .ar-d { display: block; }
+    .s1 .ar-d, .s2 .ar-d { right: calc(-1 * var(--space-6) / 2); top: 50%; transform: translate(50%, -50%); }
+    .s3 .ar-d { left: 50%; bottom: calc(-1 * var(--space-6) / 2); transform: translate(-50%, 50%); }
+    .s4 .ar-d, .s5 .ar-d { left: calc(-1 * var(--space-6) / 2); top: 50%; transform: translate(-50%, -50%); }
+  }
+
+  .return {
+    margin: var(--space-5) 0 0;
+    color: var(--fg-2);
+    font-size: var(--t-body-sm);
+    max-width: var(--measure);
+  }
+</style>

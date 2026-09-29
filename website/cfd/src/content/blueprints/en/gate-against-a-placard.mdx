@@ -1,7 +1,7 @@
 ---
 title: Gate a run against a placard
-task: You need the run to fail and exit nonzero when a limit is exceeded.
-summary: Gates turn a run into a check. Every verification target and every example exits nonzero when a gate fails, so the suite runs as a CI gate.
+task: I need the run to fail and exit nonzero when a limit is exceeded.
+summary: A gate is a pass or fail check on the results. A run exits nonzero when a gate fails, so the same program serves as a check in CI.
 order: 2
 verbs:
   - GateSeq
@@ -14,63 +14,109 @@ worked:
   - label: Nozzle operating map
     href: /examples/nozzle-operating-map/
 ---
-
-A gate is a named predicate over the recorded rows. It reports; it does not print
-and does not exit.
-
-```rust
-let gates = GateSeq::new()
-    .add("q-max placard", |rows| {
-        let peak = rows.iter().map(|r| r.q_kpa).fold(f64::MIN, f64::max);
-        if peak <= Q_PLACARD_KPA {
-            GateOutcome::pass(format!("max q = {peak:.1} kPa, inside the {Q_PLACARD_KPA} kPa placard"))
-        } else {
-            GateOutcome::fail(format!("q = {peak:.1} kPa exceeds the {Q_PLACARD_KPA} kPa placard"))
-        }
-    });
-```
-
-`verdict()` resolves the study to a `Verdict`. Mapping it to an exit code is the
-caller's responsibility, so the same study serves as a CI gate in one binary and
-a report in another.
-
-## Write the number into the message
-
-Every gate message in this crate carries the measured value and the limit:
+A placard is a posted operating limit, such as a maximum dynamic pressure. The flight envelope
+placard example checks sixteen Mach-altitude points against two limits and prints:
 
 ```text
 [PASS] q-max placard: max q = 23.7 kPa at M 1.20 / 11.0 km, inside the 60 kPa placard
+[PASS] stagnation temperature: max T0 = 1502.1 K at M 5.00 / 40.0 km, inside the 1700 K placard
+=== All gates passed: flight envelope placard. ===
+```
+
+Give it a matrix with one point past the limit and it prints the offender, then exits 1. The
+closing line reads `=== Gate REGRESSION in flight envelope placard: see the FAIL lines. ===`.
+
+```text
 [FAIL] q-max placard: q = 85.1 kPa at M 1.50 / 5.0 km exceeds the 60 kPa placard
 ```
 
-A bare `[PASS]` records only the outcome. Including the measured value and the
-limit records the remaining margin: a pass at 58 kPa against a 60 kPa placard and
-a pass at 24 kPa carry different information.
+Two pieces of code produce this. The first names the gates. From
+`examples/avionics_examples/cfd/flight_envelope_placard/model.rs`:
+
+```rust
+pub fn placard_gates() -> GateSeq<PlacardRow> {
+    GateSeq::new("flight envelope placard")
+        .gate("q-max placard", gate_q_max)
+        .gate("stagnation temperature", gate_stagnation_temperature)
+}
+```
+
+Each gate is a function from the study's rows to a pass flag and a message. Condensed from
+`gate_q_max`:
+
+```rust
+pub fn gate_q_max(view: &StudyView<'_, PlacardRow>) -> (bool, String) {
+    // q_max is the placard limit lifted into FloatType; peak is the row with the highest q.
+    let offenders: Vec<String> = view.rows().iter()
+        .filter(|r| r.q_kpa > q_max)
+        .map(|r| format!("q = {:.1} kPa at M {:.2} / {:.1} km", r.q_kpa, r.mach, r.alt_km))
+        .collect();
+    if offenders.is_empty() {
+        (true, format!("max q = {:.1} kPa at M {:.2} / {:.1} km, inside the {Q_MAX_PLACARD_KPA:.0} kPa placard",
+                       peak.q_kpa, peak.mach, peak.alt_km))
+    } else {
+        (false, format!("{} exceeds the {Q_MAX_PLACARD_KPA:.0} kPa placard", offenders.join("; ")))
+    }
+}
+```
+
+The second maps the verdict to an exit code. From `main.rs`:
+
+```rust
+match placard_study() {
+    Ok(verdict) => {
+        print!("{verdict}");
+        if verdict.passed() { ExitCode::SUCCESS } else { ExitCode::from(1) }
+    }
+    Err(e) => {
+        eprintln!("flight envelope placard setup failed: {e}");
+        ExitCode::from(2)
+    }
+}
+```
+
+## The library reports and your program decides
+
+`verdict()` resolves the study to a `Verdict`. It does not print and does not exit. Mapping it to
+an exit code is your program's job, so one study serves as a CI check in one binary and as a
+report in another. The examples use 0 for all gates passed, 1 for a failed gate and 2 for a
+setup failure. Every verification target and every gated example exits nonzero when a gate
+fails.
+
+## A gate is a tripwire or a reference
+
+`.gate` adds a tripwire: its bound is pinned from this code's own earlier output, so a pass
+shows the result has not regressed. `.reference_gate` adds a reference: its bound is an
+analytic solution or a published value, and the citation belongs where the bound is defined.
+The verdict prints the class after PASS or FAIL, as in the corridor's `[PASS] [tripwire] ...` lines.
+The committed placard output predates the class tag.
+
+## Write the number into the message
+
+The placard messages carry the measured value and the limit. A bare `[PASS]` records only the
+outcome. A message with both records the margin: a pass at 58 kPa against a 60 kPa placard and a
+pass at 24 kPa carry different information.
 
 ## Gate the validated band
 
-The [VIV example](/examples/viv-resonance-margin/) checks Strouhal against
-`[0.16, 0.21]`, described as the validated band for that grid, rather than
-against the literature value. Coarse grids bias Strouhal high, so a literature
-gate would fail correct runs at affordable resolution.
-
-The convention across the crate is to pin the band from a measured run and then
-gate regressions against it.
+The [VIV example](/examples/viv-resonance-margin/) checks its Strouhal number against
+`[0.16, 0.21]`, a band pinned from a measured run on its own grid and domain. Grid resolution
+and 16.7 percent blockage push the Strouhal number above the unconfined value of about 0.164.
+The example pins the band from its own measurement and gates regressions against it.
 
 ## A passing gate is not a passing physics target
 
-In the retropulsion studies, "GATES PASSED" appears above a recorded miss
-against the Jarvinen–Adams reference. The gate protects a negative finding from
-regressing. Its claim is that the measured structure is reproducible.
+The momentum-jet study for supersonic retropropulsion ends with `GATES PASSED`, directly under a
+recorded miss against the Jarvinen–Adams drag reference. The gate protects a negative finding
+from regressing. Its claim is that the measured structure is reproducible.
 
-Read what each gate asserts before treating a green run as validation. See
-[capability boundaries](/boundaries/#srp).
+Read what each gate asserts before you treat a green run as validation. See the
+[limits page](/boundaries/#srp).
 
-## Gate for the detectable failure mode
+## Gate for the failure you can detect
 
-A wake march that decays to steady produces a finite signal, and a frequency
-extractor will report noise as a frequency. The VIV example gates on a finite,
-oscillating wake rather than on finiteness alone. The
-[cylinder verification](/validation/#dec-cylinder) records the failure mode: with
-a staircase boundary the wake decays and the detector reports `St ≈ 0.244` from
+A wake march that decays to a steady state produces a finite signal, and a frequency extractor
+reports noise as a frequency. The VIV example gates on a finite, oscillating wake rather than
+on finiteness alone. The [cylinder verification](/validation/#dec-cylinder) records the failure:
+with a staircase wall the wake decays, and the detector reports `St ≈ 0.244` from
 seventh-decimal noise.

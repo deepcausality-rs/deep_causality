@@ -19,6 +19,9 @@ export const DISCORD_URL = 'https://discord.gg/Bxj9P7JXSj';
 /** Released on crates.io since 2026-08-12. */
 export const CARGO_ADD = 'cargo add deep_causality_cfd';
 
+/** Minimum supported Rust version: `rust-version` in the workspace `Cargo.toml`. */
+export const MSRV = '1.98';
+
 /** Git dependency, for work that has not been released yet. */
 export const CARGO_DEP =
   'deep_causality_cfd = { git = "https://github.com/deepcausality-rs/deep_causality.git", branch = "main" }';

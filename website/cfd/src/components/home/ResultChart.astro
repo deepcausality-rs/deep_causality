@@ -1,0 +1,138 @@
+---
+/**
+ * A result chart: measured points on labelled axes.
+ *
+ * Lines and grid are SVG in a 0-100 box stretched over the plot area, with
+ * `vector-effect: non-scaling-stroke` so a stroke stays one pixel at any width.
+ * That is safe here because charts carry no draw-in; the fork figure, which
+ * does, sets stroke width in user units instead (README "Diagrams"). Points,
+ * labels and tick text are HTML, so they stay round and readable.
+ */
+interface Pt {
+  x: number;
+  y: number;
+  kind?: 'plain' | 'r2' | 'win';
+  label?: string;
+  at?: 'above' | 'below' | 'left' | 'right';
+  /** Extra vertical offset for the label, in pixels (positive is down). */
+  dy?: number;
+  tip?: string;
+}
+interface Axis {
+  domain: [number, number];
+  ticks: number[];
+  title: string;
+  fmt?: (v: number) => string;
+}
+interface Props {
+  points: Pt[];
+  x: Axis;
+  y: Axis;
+  /** Horizontal reference line; `shade` tints the region below it. */
+  ref?: { y: number; label: string; shade?: boolean };
+  /** Accessible description of what the chart shows. */
+  label: string;
+}
+
+const { points, x, y, ref, label } = Astro.props;
+const px = (v: number) => ((v - x.domain[0]) / (x.domain[1] - x.domain[0])) * 100;
+const py = (v: number) => 100 - ((v - y.domain[0]) / (y.domain[1] - y.domain[0])) * 100;
+const line = points.map((p) => `${px(p.x).toFixed(3)},${py(p.y).toFixed(3)}`).join(' ');
+const fx = (v: number) => (x.fmt ? x.fmt(v) : String(v));
+const fy = (v: number) => (y.fmt ? y.fmt(v) : String(v));
+---
+<figure class="chart" data-rise role="group" aria-label={label}>
+  <div class="frame rise">
+    <p class="ytitle">{y.title}</p>
+    <div class="yaxis" aria-hidden="true">
+      {y.ticks.map((t) => <span style={`top:${py(t)}%`}>{fy(t)}</span>)}
+    </div>
+    <div class="plot">
+      <svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        {y.ticks.map((t) => <line class="grid" x1="0" x2="100" y1={py(t)} y2={py(t)} />)}
+        {ref?.shade && <rect class="shade" x="0" y={py(ref.y)} width="100" height={100 - py(ref.y)} />}
+        {ref && <line class="ref" x1="0" x2="100" y1={py(ref.y)} y2={py(ref.y)} />}
+        <polyline class="series" points={line} />
+      </svg>
+      {ref && <span class="ref-l" style={`top:${py(ref.y)}%`}>{ref.label}</span>}
+      {points.map((p) => (
+        <span class:list={['pt', p.kind ?? 'plain']} style={`left:${px(p.x)}%; top:${py(p.y)}%`} title={p.tip}></span>
+      ))}
+      {points.filter((p) => p.label).map((p) => (
+        <span class:list={['pl', `at-${p.at ?? 'above'}`, { win: p.kind === 'win' }]} style={`left:${px(p.x)}%; top:${py(p.y)}%${p.dy ? `; margin-top:${p.dy}px` : ''}`}>
+          {p.label}
+        </span>
+      ))}
+    </div>
+    <div class="xaxis" aria-hidden="true">
+      {x.ticks.map((t) => <span style={`left:${px(t)}%`}>{fx(t)}</span>)}
+    </div>
+    <p class="xtitle">{x.title}</p>
+  </div>
+  <figcaption><slot /></figcaption>
+</figure>
+
+<style>
+  .chart { margin: 0; }
+
+  .frame {
+    display: grid;
+    grid-template-columns: 2.75rem minmax(0, 1fr);
+    grid-template-rows: auto auto 1.6rem auto;
+  }
+  .ytitle, .xtitle, .yaxis, .xaxis, .ref-l, .pl {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    line-height: 1.3;
+    color: var(--fg-2);
+  }
+  .ytitle { grid-column: 1 / -1; margin: 0 0 var(--space-3); }
+  .xtitle { grid-column: 2; margin: 0; text-align: center; }
+
+  .yaxis { position: relative; }
+  .yaxis span { position: absolute; right: 0.6rem; transform: translateY(-50%); }
+
+  .plot {
+    position: relative;
+    height: clamp(220px, 34vw, 340px);
+    border-left: 1px solid var(--line-2);
+    border-bottom: 1px solid var(--line-2);
+  }
+  svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  svg line, svg polyline, svg rect { vector-effect: non-scaling-stroke; }
+  .grid { stroke: var(--line-1); stroke-width: 1; }
+  .ref { stroke: var(--fg-2); stroke-width: 1; stroke-dasharray: 4 4; }
+  .shade { fill: color-mix(in srgb, var(--warn) 9%, transparent); }
+  .series { fill: none; stroke: var(--fg-2); stroke-width: 1; stroke-linejoin: round; }
+
+  .ref-l { position: absolute; right: var(--space-2); transform: translateY(-130%); color: var(--fg-1); }
+
+  .xaxis { position: relative; grid-column: 2; }
+  .xaxis span { position: absolute; top: 0.35rem; transform: translateX(-50%); }
+
+  .pt {
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: var(--bg-1);
+    border: 1.5px solid var(--fg-1);
+  }
+  .pt.r2 { width: 6px; height: 6px; border: none; background: color-mix(in srgb, var(--accent) 65%, transparent); }
+  .pt.win { width: 13px; height: 13px; border: none; background: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 25%, transparent); }
+
+  .pl { position: absolute; white-space: nowrap; color: var(--fg-1); }
+  .pl.win { color: var(--accent); }
+  .at-above { transform: translate(-50%, -175%); }
+  .at-below { transform: translate(-50%, 90%); }
+  .at-left { transform: translate(calc(-100% - 12px), -50%); }
+  .at-right { transform: translate(12px, -50%); }
+
+  figcaption {
+    margin-top: var(--space-4);
+    color: var(--fg-2);
+    font-size: var(--t-body-sm);
+    max-width: var(--measure);
+  }
+</style>

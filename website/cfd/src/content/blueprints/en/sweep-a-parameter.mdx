@@ -1,7 +1,7 @@
 ---
 title: Sweep a parameter and get a table
-task: You have a parameter and need a table of outcomes across it.
-summary: A study is a family of cases run to a verdict. The table is written before judgment, so it survives a failed gate.
+task: I need to vary one parameter and get a table of outcomes across it.
+summary: A study runs one case per parameter value, scores each run as a table row, writes the table, then applies gates (pass or fail checks). The table exists before judgment, so it survives a failed gate.
 order: 1
 verbs:
   - cases
@@ -18,49 +18,83 @@ worked:
   - label: Flight envelope placard
     href: /examples/flight-envelope-placard/
 ---
+The nozzle operating map sweeps six back pressures through a converging-diverging duct and
+prints one row per pressure. The last two rows have no shock, and the four gates pass.
 
-A study takes a list of cases, runs each one, reduces the runs to table rows, writes
-the table, judges it, and returns a verdict.
+```text
+  p_back/p0   M_exit   shock x [m]      Cf
+      0.90    0.325       0.6562    0.242
+      0.80    0.368       0.7656    0.277
+      0.70    0.420       0.8516    0.316
+      0.60    0.493       0.9297    0.365
+      0.30    2.123         none    0.857
+      0.10    2.123         none    1.254
 
-```rust
-let verdict = CfdFlow::study("nozzle operating map")
-    .cases(back_pressure_ratios)          // Vec<T>, one entry per row
-    .sweep(|case| march_one(case))        // runs concurrently under `parallel`
-    .reduce_all(|runs| rows_from(runs))?  // needs the whole set -> sequential
-    .record("operating_map.csv")          // table exists even if gates then fail
-    .gates(operating_map_gates())
-    .verdict()?;
+operating map written to operating_map.csv
+--- nozzle operating map ---
+  [PASS] [tripwire] choking: every choked row crosses Mach 1 at the throat
+  [PASS] [tripwire] shock position: every internal-shock row matches the closed form
+  [PASS] [tripwire] shock-free profiles: every shock-free row tracks the area-Mach relation
+  [PASS] [tripwire] physical thrust: thrust coefficient finite and positive on every row
+=== All gates passed: nozzle operating map. ===
 ```
 
-## Ordering is enforced at compile time
+One expression produces it. Condensed from
+`examples/avionics_examples/cfd/nozzle_operating_map/main.rs`, with the print calls left out:
 
-Each verb is defined only on the phase where it applies. No `record` or
-`gates` before rows exist, and no `verdict` before a gating sequence is applied.
-Four `compile_fail` doctests pin this, including a `GateSeq<i32>` applied to
-`f64` rows.
+```rust
+CfdFlow::study("nozzle operating map")
+    .read::<FloatType>(&path, "p_back_over_p0") // one case per value in the CSV column
+    .case(model_config::duct_case)              // bind each case to a solver config
+    .march()                                    // march every case
+    .reduce(model::map_row)                     // one report becomes one row
+    .record(out_path())                         // write the table
+    .gates(model::nozzle_gates())               // pass or fail checks on the rows
+    .verdict()                                  // the table and the gate results, as data
+```
 
-A mis-ordered study does not compile.
+## Which verb builds the cases?
 
-## reduce versus reduce_all
+`read` takes a column of a CSV file. `cases` takes a `Vec<T>` you built. `matrix` reads typed
+rows from a CSV file. Each value becomes one case, and each case becomes one row.
 
-`reduce` maps one run to one row and runs per case. `reduce_all` receives the whole
-slice at once and therefore runs sequentially.
+## Which verb turns a case into a row?
 
-`reduce_all` applies when a row depends on the other rows, such as a
-normalisation, a ranking, or a column identifying the selected case. `reduce`
-does not serialise the fan-out.
+When each row is a closed-form evaluation, `sweep` maps a function over the cases. The flight
+envelope placard does this with no march at all (print calls left out):
 
-## Record precedes judgment
+```rust
+CfdFlow::study("flight envelope placard")
+    .matrix::<FlightPoint>(&matrix)
+    .prepare(model_config::shock_model)   // build the shared apparatus once
+    .sweep(model::placard_point)          // one closed-form row per point
+    .record(model_config::table_path())
+    .gates(model::placard_gates())
+    .verdict()
+```
 
-`record` precedes `gates`, so a failed gate still leaves the table that shows why
-it failed.
+When each row needs a solver march, `case` binds a config, `march` runs every case, and a
+reduction turns each report into a row.
 
-The [envelope placard](/examples/flight-envelope-placard/) inverts this on its
-negative path: a failing run exits nonzero and writes no table, so no artifact
-remains that could be mistaken for a valid one.
+`reduce` maps one run to one row and runs per case. `reduce_all` receives every run at once and
+runs sequentially. Use `reduce_all` when a row depends on other rows, such as a shared reference
+point derived from one case that every other case scores against. The corridor derives its aim
+point this way. `reduce` does not serialize the fan-out.
 
-## Concurrency
+## The compiler enforces the order
 
-`sweep` runs cases concurrently under the `parallel` feature and inline
-otherwise, reporting in case order in both modes. The VIV example records a
-concurrent result bit-identical to its sequential run.
+Each verb exists only in the phase where it applies. `record` and `gates` need rows first, and
+`verdict` needs a gating sequence first. Five `compile_fail` doctests on `CfdFlow::study` pin
+this, including a `GateSeq<i32>` applied to `f64` rows. A mis-ordered study does not compile.
+
+## The table is written before the gates run
+
+`record` precedes `gates`, so a failed gate still leaves the table that shows why it failed. The
+flight envelope placard shows it. With a matrix that violates the placard, the example exits 1
+and still overwrites `placard_table.csv`.
+
+## Sweeps run concurrently
+
+`sweep` and `reduce` run cases concurrently under the `parallel` feature, which is on by
+default. Without it they run inline. Results come back in case order in both modes. The VIV
+example records a concurrent run that matches its sequential run bit for bit.

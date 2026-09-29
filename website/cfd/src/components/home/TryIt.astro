@@ -1,0 +1,96 @@
+---
+/**
+ * Run it. The command is the corridor example from a shallow clone; the excerpt
+ * is lines copied verbatim from its committed `output.txt`, with the elision
+ * marked. `--depth 1` matters: the full-history pack is 2.46 GiB against 195 MB
+ * shallow.
+ */
+import { Code } from 'astro:components';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+import { CARGO_ADD, CARGO_DEP, MACHINE, MSRV } from '../../consts';
+import { corridor } from '../../data/results';
+
+const SHIKI = { light: rustLight, dark: rustDark };
+
+const run = `git clone --depth 1 https://github.com/deepcausality-rs/deep_causality.git
+cd deep_causality
+cargo run --release -p avionics_examples --example plasma_blackout_corridor`;
+
+/* corridor/output.txt lines 9-10, 77 and 87-88, verbatim; the elisions are marked. */
+const out = `--- Leg: descent to blackout onset ---
+  marched 131 steps to 73.2 km, Mach 27.2 | regime: slip (Kn = 1.27e-2) | link: GNSS DENIED
+  ...
+  [PASS] [tripwire] (4e) guidance precision from the sweep: committed 11.5 deg lands 2.07 m off the aim vs the ballistic 20.00 m (9.7x better; gate requires 3x)
+  ...
+  [PASS] [tripwire] (5b) wall-clock budget: 44.4 s elapsed (budget 600 s)
+=== All gates passed: bank-angle corridor + corridor legs. ===`;
+
+const next = [
+  { href: '/tutorial/', title: 'Tutorial', text: 'Read the corridor, the weather table and the landing as three annotated programs.' },
+  { href: '/blueprints/', title: 'How-to guides', text: 'Sweep a parameter, fork a run, gate against a limit, pick a solver.' },
+  { href: '/examples/', title: 'Examples', text: 'Four smaller studies, each answering one question in under three minutes.' },
+];
+---
+<div class="try">
+  <div class="cmd">
+    <h3>Run the corridor</h3>
+    <Code code={run} lang="bash" themes={SHIKI} wrap />
+    <p class="note">
+      Needs Rust {MSRV} or newer and no configuration. The run takes {corridor.wallClockS} seconds on
+      {MACHINE}; expect longer on slower hardware.
+    </p>
+
+    <h3>Use it as a library</h3>
+    <Code code={CARGO_ADD} lang="bash" themes={SHIKI} wrap />
+    <p class="note">
+      For unreleased work, depend on the repository directly:
+      <code class="dep">{CARGO_DEP}</code>
+    </p>
+  </div>
+
+  <div class="out">
+    <h3>What you see</h3>
+    <Code code={out} lang="text" themes={SHIKI} wrap />
+    <p class="note">
+      An excerpt of the committed <code>output.txt</code>. Each <code>[PASS]</code> line is a gate: a
+      check the run applies to its own results. <code>[tripwire]</code> marks a bound pinned from this
+      code’s own earlier output, and <code>[reference]</code> marks one taken from an analytic or
+      published value. The program exits nonzero when a gate fails.
+    </p>
+  </div>
+</div>
+
+<ul class="next">
+  {next.map((n, i) => (
+    <li class="panel corner-brackets rise" style={`--i:${i}`}>
+      <a href={n.href}>
+        <h3>{n.title} <span aria-hidden="true">→</span></h3>
+        <p>{n.text}</p>
+      </a>
+    </li>
+  ))}
+</ul>
+
+<style>
+  .try { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-6); }
+  @media (min-width: 900px) { .try { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-7); } }
+  .try h3 { font-size: var(--t-h4); margin: 0 0 var(--space-3); }
+  .cmd h3:not(:first-child) { margin-top: var(--space-6); }
+  .note { color: var(--fg-2); font-size: var(--t-body-sm); margin: 0; max-width: var(--measure); }
+  .dep { display: block; margin-top: var(--space-2); word-break: break-all; }
+
+  .next {
+    list-style: none;
+    margin: var(--space-7) 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+  @media (min-width: 800px) { .next { grid-template-columns: repeat(3, 1fr); } }
+  .next li { padding: 0; }
+  .next a { display: block; padding: var(--space-5); border-bottom: none; color: var(--fg-1); height: 100%; }
+  .next a:hover h3 { color: var(--accent); }
+  .next h3 { font-size: var(--t-h4); margin: 0 0 var(--space-2); color: var(--fg-0); transition: color var(--dur-fast) var(--ease-out); }
+  .next p { margin: 0; font-size: var(--t-body-sm); }
+</style>

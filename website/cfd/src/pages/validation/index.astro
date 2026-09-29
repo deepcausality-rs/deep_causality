@@ -1,173 +1,287 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import SiteHeader from '../../components/nav/SiteHeader.astro';
+/**
+ * /validation/: the adoption document. Opens with how to read a record, then a
+ * summary table of every record, then the full records. Each record's `headline`
+ * and `shortfall` also feed the landing page's evidence table, so the two pages
+ * cannot disagree.
+ *
+ * CI counts in "How to read" come from .github/workflows/cfd_verification.yml:
+ * FAST_HARNESSES run on every pull request, SLOW_HARNESSES monthly,
+ * OFFLINE_HARNESSES by hand.
+ */
+import PageShell from '../../components/nav/PageShell.astro';
 import { validation, statusLabel, statusClass } from '../../data/validation';
 import { VERIFICATION_URL, MACHINE } from '../../consts';
 
-const title = 'Validation status — DeepCausality CFD';
+const title = 'Validation | DeepCausality CFD';
 const description =
-  'One page per solver: what was validated, against which published reference, to what number. Sod, Ghia, Williamson, RAM-C II, Taylor–Green, with every caveat stated.';
+  'What each solver was checked against: exact solutions, published tables and flight data. Thirteen records with the measured numbers, the run command and where each falls short.';
 
 const groups = [
-  { family: 'QTT' as const, label: 'QTT compressible marchers' },
-  { family: 'DEC' as const, label: 'DEC Navier–Stokes' },
-  { family: 'Analytic' as const, label: 'Analytic and pointwise closures' },
+  {
+    family: 'QTT' as const,
+    id: 'family-qtt',
+    label: 'Quantized tensor-train (QTT) solvers',
+    intro:
+      'A quantized tensor train (QTT) stores a field on a fine grid as a chain of small matrices. The size of those matrices, the bond dimension or rank, shows how far the field compresses.',
+  },
+  {
+    family: 'DEC' as const,
+    id: 'family-dec',
+    label: 'Discrete-exterior-calculus (DEC) solver',
+    intro:
+      'The incompressible Navier–Stokes solver on a mesh. It keeps the velocity field divergence-free by construction.',
+  },
+  {
+    family: 'Analytic' as const,
+    id: 'family-analytic',
+    label: 'Analytic check of one kernel',
+    intro: 'One kernel checked against an exact solution, with no grid.',
+  },
 ];
+
+/* Plain names for the summary table. The record's `target` is the program name. */
+const caseName: Record<string, string> = {
+  'qtt-sod': 'Sod shock tube',
+  'qtt-ramc': 'RAM-C II reentry sheath',
+  'dec-cavity': 'Lid-driven cavity, Re 1000',
+  'dec-cylinder': 'Isolated cylinder, Re 100',
+  'dec-graded-mms': 'Convergence order on graded meshes',
+  'mms-tgv': 'Taylor–Green kernel check',
+  'qtt-tgv': 'Taylor–Green vortex, 2-D',
+  'dec-tgv-re1600': 'Taylor–Green vortex, 3-D, Re 1600',
+  'qtt-cylinder': 'Cylinder in a periodic box',
+  'dec-cylinder-wake': 'Cylinder in a channel with sensor dropout',
+  'qtt-blunt-2d': 'Blunt-body bow shock, 2-D',
+  'qtt-reentry-3d': 'Reentry forebody, 3-D',
+  'qtt-park2t': 'Blackout closure, Tier A (superseded)',
+};
+
+/* Strongest reference first. */
+const kindOrder = ['quantitative', 'anchored', 'invariant', 'structural'];
+const summary = [...validation].sort((a, b) => kindOrder.indexOf(a.status) - kindOrder.indexOf(b.status));
+
+/* A caveat longer than this collapses behind its one-sentence shortfall. */
+const LONG_CAVEAT = 420;
 ---
-<BaseLayout title={title} description={description} path="/validation/">
-  <SiteHeader slot="header" />
+<PageShell title={title} description={description} path="/validation/">
+  <header class="doc-head">
+    <p class="eyebrow">Validation</p>
+    <h1>What the solvers were checked against</h1>
+    <p class="lede">
+      Each of {validation.length} programs in the repository runs a solver on a known case and compares the
+      result with an exact solution, a published table or flight data. Each record also says where it falls
+      short: coarse grids, uncalibrated chemistry, and one cylinder run that fails two of its five checks.
+    </p>
+  </header>
 
-  <article class="page vpage">
-    <header class="vhead">
-      <p class="eyebrow">Validation status</p>
-      <h1>Validation status by solver and reference</h1>
-      <p class="lede">
-        Thirteen self-verifying targets. Each checks a run against a published
-        reference or against an invariant the discretization must preserve. Each
-        exits nonzero when its check fails, so the suite runs as a CI gate.
-      </p>
-      <p class="lede">
-        Every number below is copied from a committed run artifact. All figures
-        are <code>f64</code>, release build, on {MACHINE}.
-      </p>
-
-      <div class="callout">
-        <p class="callout-title">How to read the status column</p>
-        <ul>
-          <li><span class="status status-validated">Quantitative</span>: checked against a published reference to a stated tolerance.</li>
-          <li><span class="status status-measured">Flight-anchored</span>: checked against flight data at order of magnitude, not per point.</li>
-          <li><span class="status status-measured">Invariant</span>: checked against a property the discretization must preserve at any grid.</li>
-          <li><span class="status status-partial">Structural</span>: gates rank and cost. <strong>Not physical accuracy.</strong></li>
-        </ul>
+  <section class="doc-sec" id="how-to-read">
+    <h2>How to read this page</h2>
+    <p>
+      Each record is a program that runs a case, compares the result with a reference, and exits nonzero
+      when a gate fails. A gate is a pass or fail check on a result. The kind of a record says what the
+      reference is.
+    </p>
+    <dl class="deflist">
+      <div>
+        <dt><span class="status status-validated">Quantitative</span></dt>
+        <dd>Checked against a published reference to a stated tolerance.</dd>
       </div>
-
-      <div class="callout callout-warn">
-        <p class="callout-title">Global caveat, from the verification README</p>
-        <p>
-          Divergence figures are single-machine measurements at the default
-          configuration. They are dominated by spatial resolution rather than by
-          the discretization's asymptotic accuracy. Reference-grid runs tighten
-          every figure. Re-measure on the target hardware before citing these
-          values in an analysis of record.
-        </p>
+      <div>
+        <dt><span class="status status-measured">Flight-anchored</span></dt>
+        <dd>Checked against flight data at order of magnitude, not point by point.</dd>
       </div>
-    </header>
+      <div>
+        <dt><span class="status status-measured">Invariant</span></dt>
+        <dd>Checked against a property the method must preserve at any grid, such as energy that never grows or a convergence order.</dd>
+      </div>
+      <div>
+        <dt><span class="status status-partial">Structural</span></dt>
+        <dd>Checks a structure, such as how far a compressed field's rank grows, or that a coupling behaves as built. It makes no accuracy claim.</dd>
+      </div>
+    </dl>
+    <p>
+      Each gate also carries a label. <code>[reference]</code> means the bound comes from the reference.
+      <code>[tripwire]</code> means the bound was pinned from this code's own earlier output, so a pass
+      shows only that the result has not regressed. A Quantitative record can still contain tripwires, and
+      its caveat says which.
+    </p>
+    <p>
+      CI runs nine of the {validation.length} programs on every pull request and three monthly (the cavity,
+      the isolated cylinder and the channel cylinder). <code>qtt_cylinder_verification</code> runs by hand,
+      because a full run takes about 4 to 9 hours.
+    </p>
 
-    {groups.map((g) => (
-      <section class="vgroup">
-        <h2 class="vgroup-head">{g.label}</h2>
+    <div class="callout">
+      <p class="callout-title">What the references are</p>
+      <p>
+        The references are exact solutions, published tables and flight data. Several of the tables, such as
+        Ghia's cavity, the cylinder drag band and the Re 1600 DNS curve, were computed by other researchers'
+        simulations. No row compares against a run of another CFD code such as Fluent, SU2 or OpenFOAM.
+      </p>
+    </div>
 
-        {validation.filter((v) => v.family === g.family).map((v) => (
-          <section class="vcard panel corner-brackets" id={v.id}>
-            <header class="vcard-head">
-              <div>
-                <h3><code>{v.target}</code></h3>
-                <p class="vproblem">{v.problem}</p>
-              </div>
-              <span class:list={['status', statusClass[v.status]]}>{statusLabel[v.status]}</span>
-            </header>
+    <div class="callout callout-warn">
+      <p class="callout-title">Measured on one machine</p>
+      <p>
+        Every number is copied from a committed run artifact. All figures are <code>f64</code>, release
+        build, on {MACHINE}. They are single-machine measurements at each program's default configuration.
+        Spatial resolution dominates them, not the method's asymptotic accuracy, and runs on finer grids
+        tighten every figure. Re-measure on the target hardware before you cite a value in an analysis of
+        record.
+      </p>
+    </div>
+  </section>
 
-            <div class="vref">
-              <p class="k">Reference</p>
-              <p>{v.reference}</p>
+  <section class="doc-sec" id="summary">
+    <h2>What each record found, and where it falls short</h2>
+    <p>Rows run from the strongest kind of reference to the weakest. Each case links to its full record: the case, the reference, the measured values, the caveat and the command that reproduces it.</p>
+    <div class="panel corner-brackets sum">
+      <div class="table-scroll">
+        <table class="table-stack">
+          <thead>
+            <tr>
+              <th scope="col">Case</th>
+              <th scope="col">Kind</th>
+              <th scope="col">Result</th>
+              <th scope="col">Where it falls short</th>
+            </tr>
+          </thead>
+          <tbody>
+            {summary.map((v) => (
+              <tr>
+                <th scope="row">
+                  <a href={`#${v.id}`}>{caseName[v.id] ?? v.target}</a>
+                  <code class="tgt">{v.target}</code>
+                </th>
+                <td data-label="Kind"><span class:list={['status', statusClass[v.status]]}>{statusLabel[v.status]}</span></td>
+                <td data-label="Result">{v.headline}</td>
+                <td class="short" data-label="Where it falls short">{v.shortfall}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  {groups.map((g) => (
+    <section class="doc-sec" id={g.id}>
+      <h2>{g.label}</h2>
+      <p class="gintro">{g.intro}</p>
+
+      {validation.filter((v) => v.family === g.family).map((v) => (
+        <article class="vcard panel corner-brackets" id={v.id}>
+          <header class="vcard-head">
+            <div>
+              <h3>{caseName[v.id] ?? v.target}</h3>
+              <p class="vtarget"><code>{v.target}</code></p>
             </div>
+            <span class:list={['status', statusClass[v.status]]}>{statusLabel[v.status]}</span>
+          </header>
 
-            <div class="table-scroll">
-              <table>
-                <thead>
+          <p class="vheadline">{v.headline}</p>
+          <p class="vproblem">{v.problem}</p>
+
+          <div class="vref">
+            <p class="k">Reference</p>
+            <p>{v.reference}</p>
+          </div>
+
+          <div class="table-scroll">
+            <table class="table-stack">
+              <thead>
+                <tr>
+                  <th scope="col">Quantity</th>
+                  <th scope="col">Computed</th>
+                  <th scope="col">Reference</th>
+                  <th scope="col">Δ / tolerance</th>
+                </tr>
+              </thead>
+              <tbody>
+                {v.measured.map((m) => (
                   <tr>
-                    <th scope="col">Quantity</th>
-                    <th scope="col">Computed</th>
-                    <th scope="col">Reference</th>
-                    <th scope="col">Δ / tolerance</th>
+                    <th scope="row">{m.quantity}</th>
+                    <td data-label="Computed"><code class="num">{m.computed}</code></td>
+                    <td data-label="Reference"><code class="num">{m.expected}</code></td>
+                    <td data-label="Δ / tolerance"><code class="num">{m.delta}</code></td>
                   </tr>
-                </thead>
-                <tbody>
-                  {v.measured.map((m) => (
-                    <tr>
-                      <th scope="row">{m.quantity}</th>
-                      <td class="num">{m.computed}</td>
-                      <td class="num">{m.expected}</td>
-                      <td class="num">{m.delta}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
-            <div class="vcaveat">
-              <p class="k">Caveat</p>
-              <p>{v.caveat}</p>
-            </div>
+          <div class="vcaveat">
+            {v.caveat.length > LONG_CAVEAT ? (
+              <>
+                <p class="k">Where it falls short</p>
+                <p>{v.shortfall}</p>
+                <details class="more">
+                  <summary>Full caveat</summary>
+                  <p>{v.caveat}</p>
+                </details>
+              </>
+            ) : (
+              <>
+                <p class="k">Caveat</p>
+                <p>{v.caveat}</p>
+              </>
+            )}
+          </div>
 
-            <div class="vfoot">
-              <code class="cmd">{v.command}</code>
-              {!v.hasArtifact && (
-                <p class="noartifact">
-                  <span class="status status-partial">No committed baseline</span>
-                  figures come from the target README rather than a run artifact
-                </p>
-              )}
-            </div>
-          </section>
-        ))}
-      </section>
-    ))}
-
-    <section class="vgroup">
-      <h2 class="vgroup-head">Records where the headline number is not the claim</h2>
-      <div class="prose">
-        <p>
-          Three records report a figure that does not correspond to the quantity
-          a reader may expect. Each states its actual claim below.
-        </p>
-        <p>
-          <strong>QTT cylinder, <span class="num">C_d ≈ 23.8</span>.</strong>
-          The domain carries roughly 30% blockage, the force is a penalization
-          integral over a smoothed skirt, and the value is read at a fixed
-          horizon rather than at steady state. The target claims the convergence
-          trend, the no-slip interior, and positivity. It does not claim an
-          isolated-cylinder drag coefficient.
-        </p>
-        <p>
-          <strong>3-D Taylor–Green, peak dissipation 80% below DNS.</strong>
-          The default grid is 16³ and cannot resolve the small-scale dissipation
-          peak. The gate covers energy monotonicity; the DNS comparison is
-          informational. Reporting resolutions of 64³ to 128³ close the gap.
-        </p>
-        <p>
-          <strong>Tier-A blackout closure, three decades above the flight anchor.</strong>
-          The closure rides an incompressible rollout with a recovery-temperature
-          reconstruction. The Tier-B compressible marcher
-          <code>qtt_ramc_stagline</code> supersedes it: its uncalibrated
-          finite-rate network lands within about a factor of two of the anchor.
-        </p>
-        <p>
-          Source for every target:
-          <a href={VERIFICATION_URL}>deep_causality_cfd/verification/ <span aria-hidden="true">↗</span></a>
-        </p>
-      </div>
+          <div class="vfoot">
+            <code class="cmd">{v.command}</code>
+            <p class="vsrc"><a href={`${VERIFICATION_URL}/${v.target}`}>Source and committed output <span aria-hidden="true">↗</span></a></p>
+            {!v.hasArtifact && (
+              <p class="noartifact">
+                <span class="status status-partial">No committed baseline</span>
+                figures come from the target README rather than a run artifact
+              </p>
+            )}
+          </div>
+        </article>
+      ))}
     </section>
-  </article>
-</BaseLayout>
+  ))}
+
+  <section class="doc-sec" id="sources">
+    <h2>Where the records live</h2>
+    <p>Every record is a runnable program with its own README and a committed output.</p>
+    <p class="next-links">
+      <a href={VERIFICATION_URL}>Source for every record <span aria-hidden="true">↗</span></a>
+      <a href="/boundaries/">Limits the project measured</a>
+      <a href="/solvers/">What each solver is for</a>
+    </p>
+  </section>
+</PageShell>
 
 <style>
-  .vpage { max-width: var(--w-panel); }
-  .vhead { margin-bottom: var(--space-8); }
-  .vhead h1 { margin: var(--space-3) 0 var(--space-4); max-width: 20ch; }
-  .vhead .lede { color: var(--fg-1); max-width: var(--measure); margin: 0 0 var(--space-4); }
+  .doc-sec :global(.callout p) { color: var(--fg-1); font-size: var(--t-body-sm); margin: 0; }
+  .doc-sec code { font-size: var(--t-mono-sm); }
 
-  .callout ul { margin: 0; padding-left: var(--space-5); }
-  .callout li { color: var(--fg-1); font-size: var(--t-body-sm); margin: var(--space-2) 0; }
-  .callout p { color: var(--fg-1); font-size: var(--t-body-sm); }
-
-  .vgroup { margin-bottom: var(--space-8); }
-  .vgroup-head {
-    font-size: var(--t-h3);
-    padding-bottom: var(--space-3);
-    border-bottom: 1px solid var(--line-1);
-    margin-bottom: var(--space-5);
+  /* Summary table */
+  .sum { padding: var(--space-5); margin-top: var(--space-4); }
+  .sum table { width: 100%; border-collapse: collapse; font-size: var(--t-body-sm); }
+  .sum th, .sum td { text-align: left; vertical-align: top; padding: var(--space-3); border-bottom: 1px solid var(--line-1); }
+  .sum thead th {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+    font-weight: 400;
+    white-space: nowrap;
   }
+  .sum tbody th { font-weight: var(--fw-heading); min-width: 11rem; }
+  .sum tbody td { color: var(--fg-1); }
+  .sum tbody td:nth-child(2) { white-space: nowrap; }
+  .sum .short { color: var(--fg-2); min-width: 13rem; }
+  .sum .tgt { display: block; margin-top: var(--space-1); font-weight: 400; font-size: var(--t-eyebrow); color: var(--fg-2); background: none; padding: 0; }
+  .sum tbody tr:last-child th, .sum tbody tr:last-child td { border-bottom: none; }
+  .sum tbody tr:hover { background: color-mix(in srgb, var(--accent) 5%, transparent); }
+
+  /* Full records */
+  .gintro { margin: 0 0 var(--space-5); }
 
   .vcard { padding: var(--space-5); margin-bottom: var(--space-5); scroll-margin-top: calc(var(--header-h) + var(--space-4)); }
   .vcard-head {
@@ -176,11 +290,13 @@ const groups = [
     gap: var(--space-3);
     align-items: start;
     justify-content: space-between;
-    margin-bottom: var(--space-4);
+    margin-bottom: var(--space-3);
   }
-  .vcard-head h3 { font-size: var(--t-h4); margin: 0 0 var(--space-2); }
-  .vcard-head code { background: none; padding: 0; color: var(--fg-0); }
-  .vproblem { color: var(--fg-1); font-size: var(--t-body-sm); margin: 0; max-width: var(--measure); }
+  .vcard-head h3 { font-size: var(--t-h4); margin: 0 0 var(--space-1); }
+  .vtarget { margin: 0; }
+  .vtarget code { background: none; padding: 0; color: var(--fg-2); }
+  .vheadline { color: var(--fg-0); margin: 0 0 var(--space-3); max-width: var(--measure); }
+  .vproblem { color: var(--fg-1); font-size: var(--t-body-sm); margin: 0 0 var(--space-4); max-width: var(--measure); }
 
   .k {
     font-family: var(--font-mono);
@@ -193,9 +309,9 @@ const groups = [
   .vref { margin-bottom: var(--space-4); }
   .vref p:last-child { color: var(--fg-1); font-size: var(--t-body-sm); margin: 0; max-width: var(--measure); }
 
-  table { width: 100%; border-collapse: collapse; font-size: var(--t-body-sm); }
-  th, td { text-align: left; padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--line-1); }
-  thead th {
+  .vcard table { width: 100%; border-collapse: collapse; font-size: var(--t-body-sm); }
+  .vcard th, .vcard td { text-align: left; padding: var(--space-2) var(--space-3); border-bottom: 1px solid var(--line-1); }
+  .vcard thead th {
     font-family: var(--font-mono);
     font-size: var(--t-eyebrow);
     letter-spacing: var(--ls-eyebrow);
@@ -204,9 +320,10 @@ const groups = [
     font-weight: 400;
     white-space: nowrap;
   }
-  tbody th { font-weight: 400; color: var(--fg-0); }
-  tbody td { color: var(--fg-1); white-space: nowrap; }
-  tbody tr:last-child th, tbody tr:last-child td { border-bottom: none; }
+  .vcard tbody th { font-weight: 400; color: var(--fg-0); }
+  .vcard tbody td { color: var(--fg-1); white-space: nowrap; }
+  .vcard td code { background: none; padding: 0; color: inherit; }
+  .vcard tbody tr:last-child th, .vcard tbody tr:last-child td { border-bottom: none; }
 
   .vcaveat {
     margin: var(--space-4) 0 0;
@@ -215,7 +332,28 @@ const groups = [
     border-radius: var(--radius-sm);
     border-left: 3px solid var(--warn);
   }
-  .vcaveat p:last-child { color: var(--fg-1); font-size: var(--t-body-sm); margin: 0; max-width: var(--measure); }
+  .vcaveat p:not(.k) { color: var(--fg-1); font-size: var(--t-body-sm); margin: 0; max-width: var(--measure); }
+
+  .more { margin-top: var(--space-3); }
+  .more summary {
+    cursor: pointer;
+    font-size: var(--t-body-sm);
+    color: var(--fg-1);
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+  .more summary::-webkit-details-marker { display: none; }
+  .more summary::before {
+    content: '▸';
+    color: var(--fg-2);
+    transition: transform var(--dur-fast) var(--ease-out);
+    display: inline-block;
+  }
+  .more[open] summary::before { transform: rotate(90deg); }
+  .more summary:hover { color: var(--fg-0); }
+  .more p { margin: var(--space-3) 0 0; }
 
   .vfoot { margin-top: var(--space-4); padding-top: var(--space-4); border-top: 1px solid var(--line-1); }
   .cmd {
@@ -228,6 +366,7 @@ const groups = [
     font-size: var(--t-mono-sm);
     color: var(--fg-1);
   }
+  .vsrc { margin: var(--space-3) 0 0; font-size: var(--t-body-sm); }
   .noartifact {
     display: flex;
     flex-wrap: wrap;

@@ -1,7 +1,7 @@
 ---
 title: VIV resonance margin
-question: Sweep airspeed over a circular member and get the shedding-frequency margin table.
-summary: Four concurrent Navier–Stokes wake marches, Strouhal extracted from a wake probe, and a resonance margin gated against a structural mode.
+question: How close does vortex shedding come to a structure's natural frequency as airspeed rises?
+summary: Four concurrent Navier–Stokes wake marches give the Strouhal number and the shedding frequency at each airspeed. A resonance margin is gated against a structural mode.
 order: 3
 command: cargo run --release -p avionics_examples --example viv_resonance_margin
 uses:
@@ -9,7 +9,7 @@ uses:
   - sweep
   - Gates
   - Strouhal extraction
-runtime: about two and a half minutes
+runtime: about two and a half minutes (README figure)
 results:
   - extracted St in [0.1818, 0.1909], validated band [0.16, 0.21] for this grid
   - min |f_struct − f_shed| / f_struct = 0.236 against a 0.15 placard minimum
@@ -19,22 +19,13 @@ recorded: true
 source: examples/avionics_examples/cfd/viv_resonance_margin
 ---
 
-A cylindrical member sheds vortices at a frequency set by flow speed. When that
-frequency approaches a structural mode, the member is driven at resonance.
+## What the run printed
 
-This example reports the margin between the two across an airspeed sweep. The
-flow solve is an intermediate step; the margin table is the output.
-
-## What runs per row
-
-Each airspeed gets a full DEC incompressible Navier–Stokes march past a circular
-member. A probe in the wake records transverse velocity; the shedding frequency
-comes from that signal, and the Strouhal number follows as `St = f·D/U`.
-
-Four marches run concurrently under the `parallel` feature. The concurrent result
-is bit-identical to the sequential run.
-
-## Output
+A cylindrical member sheds vortices at a frequency set by the flow speed. When that
+frequency approaches a structural mode, the member is driven at resonance. The
+margin is `|f_struct − f_shed| / f_struct`. At the fastest airspeed (1.20 m/s,
+Re 160) the wake sheds at 114.5 Hz against a 150 Hz mode, a margin of 0.236 against
+the 0.15 placard minimum.
 
 ```text
 airspeed [m/s]   Re      St      f_shed [Hz]   margin
@@ -44,37 +35,38 @@ airspeed [m/s]   Re      St      f_shed [Hz]   margin
       1.20       160  0.1909       114.5     0.236
 ```
 
-Member `D = 2.0 mm`, structural mode `f_struct = 150 Hz`.
+The member is `D = 2.0 mm`, and `f_struct = 150 Hz` is a stated demonstration value.
+The margin falls at every step. Each step cuts it by 0.09 to 0.12, so one more step of
+the same size would take it below the placard (extrapolated, not run).
 
-The margin column falls monotonically from 0.545 to 0.236. One further step at
-the same increment would cross the 0.15 placard.
-
-## Gates
+A gate is a pass or fail check on a result. All three pass:
 
 ```text
 [PASS] strouhal band: extracted St in [0.1818, 0.1909], validated band [0.16, 0.21] for this grid
 [PASS] resonance margin: min |f_struct - f_shed| / f_struct = 0.236, placard minimum 0.15
 [PASS] finite wake: 4 sweeps returned a finite, oscillating wake
+=== All gates passed: vortex-shedding resonance margin. ===
 ```
 
-The first gate checks St against a band validated for this grid rather than
-against the 0.164 to 0.21 range for a smooth cylinder. A coarse grid biases
-Strouhal high, and the extracted values sit at the upper end of the validated
-band. Gating against the literature value would fail a correct run at this
-resolution.
+## What runs per row
 
-The third gate requires oscillation rather than mere finiteness. A wake march that
-decays to steady produces a finite signal, and the frequency extractor will
-report noise as a frequency. The
-[cylinder verification](/validation/#dec-cylinder) records this case: a staircase
-boundary yields a steady wake and a reported Strouhal of 0.244 taken from
-seventh-decimal noise.
+Each airspeed gets a full DEC incompressible Navier–Stokes march past the member. A
+wake probe gives the shedding frequency, and `St = f·D/U`. Four marches run
+concurrently under the `parallel` feature, bit-identical to the sequential run.
 
-## Applicability limits
+## What each gate checks
 
-The sweep covers Re 100 to 160, which is laminar shedding. A flight-Reynolds
-strut operates orders of magnitude above this range and depends on the
-[staged turbulence work](/boundaries/#turbulence).
+The Strouhal gate uses a band validated for this grid. The unconfined laminar
+reference is about 0.164 at Re 100, rising to about 0.185 at Re 160 (Williamson, per
+the example README). Blockage and the coarse grid push St upward, to 0.1818 at
+Re 100, and the band is wider than the reference to record that shift.
 
-The structural frequency and the 0.15 placard are demonstration values, not
-measured properties of a member.
+The finite-wake gate requires oscillation, not just finiteness. A wake that decays
+to steady still produces a finite signal, and the frequency extractor reports noise
+as a frequency. The [cylinder verification](/validation/#dec-cylinder) records the
+case: a staircase boundary at 16 cells per diameter yields a steady wake and a
+printed Strouhal of 0.2444, taken from seventh-decimal noise.
+
+## More on the limits
+
+A flight-Reynolds strut depends on the [staged turbulence work](/boundaries/#turbulence).

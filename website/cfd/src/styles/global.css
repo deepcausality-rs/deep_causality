@@ -374,3 +374,92 @@ a.chip { border-bottom: 1px solid var(--line-1); }
 
 /* Numeric columns read as instrument output. */
 .num { font-family: var(--font-mono); font-size: var(--t-mono-sm); font-variant-numeric: tabular-nums; }
+
+/* ==========================================================================
+   Interior pages: the page skeleton. `PageShell` supplies `.doc`; a page is one
+   `.doc-head` followed by `.doc-sec` sections, each opened by an h2.
+   ========================================================================== */
+
+.doc {
+  max-width: var(--w-doc);
+  margin: 0 auto;
+  padding: var(--space-7) var(--space-4) var(--space-9);
+}
+@media (min-width: 720px) { .doc { padding: var(--space-8) var(--space-5) var(--space-9); } }
+
+.doc-head { margin-bottom: var(--space-7); }
+.doc-head h1 {
+  margin: var(--space-3) 0 var(--space-4);
+  max-width: 22ch;
+  font-size: clamp(2rem, 3.6vw + 0.5rem, 3rem);
+  line-height: var(--lh-h1);
+}
+.doc-head .lede {
+  color: var(--fg-1);
+  font-size: var(--t-h4);
+  line-height: var(--lh-h4);
+  max-width: var(--measure-lede);
+  margin: 0 0 var(--space-4);
+}
+.doc-head .lede:last-child { margin-bottom: 0; }
+
+.doc-sec {
+  padding: var(--space-7) 0;
+  border-top: 1px solid var(--line-1);
+  scroll-margin-top: calc(var(--header-h) + var(--space-4));
+}
+.doc-sec > h2 { margin: 0 0 var(--space-4); max-width: 28ch; }
+.doc-sec > h3 { margin: var(--space-6) 0 var(--space-3); font-size: var(--t-h4); }
+.doc-sec > p,
+.doc-sec > ul,
+.doc-sec > ol,
+.doc-sec > dl { max-width: var(--measure); color: var(--fg-1); }
+.doc-sec > ul, .doc-sec > ol { padding-left: var(--space-5); margin: 0 0 var(--space-4); }
+.doc-sec li { margin: var(--space-2) 0; }
+.doc-sec .callout { max-width: var(--measure); }
+
+/* A definition list read as label and meaning. */
+.deflist { margin: 0 0 var(--space-4); }
+.deflist > div { padding: var(--space-3) 0; border-top: 1px solid var(--line-1); }
+.deflist > div:last-child { border-bottom: 1px solid var(--line-1); }
+.deflist dt { color: var(--fg-0); font-weight: var(--fw-heading); margin: 0 0 var(--space-1); }
+.deflist dd { margin: 0; color: var(--fg-1); }
+@media (min-width: 720px) {
+  .deflist > div { display: grid; grid-template-columns: var(--w-label) 1fr; gap: var(--space-5); }
+  .deflist dt { margin: 0; }
+}
+
+/* Links to the next page, closing a section. */
+.next-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  margin: var(--space-5) 0 0;
+  font-size: var(--t-body-sm);
+}
+
+/* --- Tables that stack into labelled cards on narrow screens. Put `.table-stack`
+   on the table and `data-label` (the column heading) on every td; the header row
+   stays for screen readers. Above 720px nothing changes. */
+@media (max-width: 719px) {
+  .table-stack,
+  .table-stack tbody,
+  .table-stack tr,
+  .table-stack th,
+  .table-stack td { display: block; width: 100%; }
+  .table-stack thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+  .table-stack tr { padding: var(--space-4) 0; border-bottom: 1px solid var(--line-1); }
+  .table-stack tbody tr:last-child { border-bottom: none; }
+  .table-stack th,
+  .table-stack td { border: none; padding: var(--space-1) 0; min-width: 0 !important; white-space: normal; }
+  .table-stack td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+    margin-bottom: 2px;
+  }
+}

@@ -86,8 +86,8 @@ From `openspec/notes/archive/cfd-website/cfd-docs-website.md`:
   gate against a placard, fork a running simulation, pick a solver.
 - **One citable validation page.** `/validation/` is the adoption document:
   per target, what was validated, against which reference, to what number.
-- **Honest boundaries, stated where they will be hit.** `/boundaries/` leads
-  with the four hypotheses the project refuted by running them.
+- **Honest boundaries, stated where they will be hit.** `/boundaries/` groups
+  its entries by what a reader hits, and names the hypotheses the project refuted by running them.
 
 Every number on the site is copied from a committed run artifact under
 `deep_causality_cfd/verification/`, `deep_causality_cfd/studies/`, or an
@@ -103,7 +103,66 @@ Each figure lives in exactly one place, split by shape:
 `src/content.config.ts` declares the MDX collections with the same `glob` +
 locale-stripping pattern as `website/web`.
 
-Prose follows `docs/writing_guides/AiStyleguide.md` and `ElementsOfStyle.md`.
+## Voice and vocabulary
+
+Prose follows `docs/writing_guides/AiStyleguide.md`, `ElementsOfStyle.md` and
+`ParamedicEditing.md`. These rules decide most edits.
+
+**The reader** is a working engineer who knows CFD, has never seen this library,
+and leaves in ten seconds if the page does not say what it does. Assume none of
+this project's vocabulary.
+
+**Lead with the outcome.** A page opens with the answer to the question its title
+asks, in one or two sentences, before any mechanism. A section opens with its
+finding; the evidence follows. Show the result (a chart, a table, real output)
+before the code that produced it.
+
+**One word per concept.** Define each term once, where the reader first needs it.
+
+| Say | Meaning | Instead of |
+|---|---|---|
+| what-if | an alternative continued from a pause | scenario, alternation |
+| counterfactual | a what-if that starts from something that really happened; defined once, then rare | used as a synonym for branch |
+| pause | the state a run returns when its condition becomes true | onset, fork point, event-fork |
+| branch | one alternative, continued from the pause | leg, roster member |
+| table | the scored rows a study returns | roster, verdict (the data object) |
+| gate | a pass or fail check on a result; gloss it on first use per page | assertion, check (when naming the thing the API calls a gate) |
+| event log | the ordered record of everything a run did; the code calls it the provenance log or `EffectLog` | provenance (in prose) |
+| world | a description of a run with one declared difference; only where the code names it (`alternate`, `bank_world`) | scenario, config |
+| condition | what a march waits for | predicate, trigger |
+
+Internal terms stay off the landing page and the first paragraph of any page:
+copy-on-write, O(1), tensor train, bond dimension, cochain, Leray projection,
+quasi-steady, causaloid. Where one is needed, say the plain thing first and give
+the term in parentheses.
+
+**Sentences.** Prefer concrete nouns and active verbs. Vary length: a four-word
+sentence after a twenty-five-word one earns its emphasis. Put the new or
+heavy word last. No more than one em dash per 250 words; use a period, a colon
+or parentheses. Never open a paragraph with *Additionally*, *Furthermore* or
+*Moreover*. Cut hedges (*somewhat*, *arguably*), *very*, *really*, and the
+phrases *delve into*, *shed light on*, *game-changer*, *unlock*, *seamless*,
+*robust*, *powerful*, *leverage* and *not only … but also*. State a fact; do not
+argue against a rival (no "not A, but B"), and make no uniqueness claims.
+Never say "flagship"; say "the plasma-blackout example". Say "project website",
+not "marketing site".
+
+**Numbers** come from a committed artifact and keep its precision. A wall-clock
+figure names the machine (`MACHINE` in `src/consts.ts`). A number with no
+artifact says so on its row.
+
+**Page skeleton.** Every interior page uses `PageShell`, then one `.doc-head`
+(eyebrow, one `h1`, a `.lede` that answers the title) and a series of
+`.doc-sec` sections, each opened by an `h2` phrased as a question or a finding.
+Utilities are in `global.css`: `.doc-head`, `.doc-sec`, `.deflist`, `.next-links`,
+`.callout`, `.panel`, `.status`. Charts and figures come from
+`src/components/home/` (`ResultChart`, `CostBars`, `LoopDiagram`); data comes
+from `src/data/`.
+
+**Whitespace in `.astro` templates.** `compressHTML` is off in `astro.config.mjs`. With it on,
+Astro drops the line break between a line of text and a following inline element
+or `{expression}`, and words join ("rerun,12 steps"). Leave it off.
+
 
 ## Toolchain note
 
@@ -123,7 +182,7 @@ same shiki.
 
 ## Diagrams
 
-The fork tree in `src/components/home/ForkTree.astro` sets the convention for
+The fan figure in `src/components/home/FanFigure.astro` sets the convention for
 figures. Follow it rather than inventing a second mechanism.
 
 - **Hand-drawn inline SVG**, in the instrument vocabulary: hairline strokes,
@@ -146,7 +205,7 @@ figures. Follow it rather than inventing a second mechanism.
   `.section-divider line` rule in `global.css` pairs the two, which is why the
   dividers from `SectionDivider.astro` render dashed rather than drawing in.
 
-The Open Graph card at `public/img/social-share.jpg` is built from the same
+The Open Graph card at `public/img/social-share.jpg` is built from the fork
 figure. Its source is committed beside it as `social-share.source.svg`; re-render
 with `rsvg-convert -w 1200 -h 630`, then convert to JPEG.
 

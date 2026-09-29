@@ -1,31 +1,35 @@
 ---
-import BaseLayout from '../layouts/BaseLayout.astro';
-import SiteHeader from '../components/nav/SiteHeader.astro';
+import PageShell from '../components/nav/PageShell.astro';
+import { GITHUB_URL } from '../consts';
+
+const title = 'Page not found | DeepCausality CFD';
+const description = 'No page exists at this address.';
+
+const links = [
+  { href: '/how-it-works/', label: 'How it works', text: 'March a simulation until a condition becomes true, pause, fork the state and compare the branches.' },
+  { href: '/examples/', label: 'Examples', text: 'Four studies, each answering one question.' },
+  { href: '/tutorial/', label: 'Tutorial', text: 'The corridor, the weather table and the powered descent, read as three programs.' },
+  { href: GITHUB_URL, label: 'GitHub repository', text: 'The source code and every committed run output.' },
+];
 ---
-<BaseLayout
-  title="Not found — DeepCausality CFD"
-  description="That page does not exist."
-  path="/404"
->
-  <SiteHeader slot="header" />
+<PageShell title={title} description={description} path="/404">
+  <header class="doc-head">
+    <p class="eyebrow">404</p>
+    <h1>Page not found</h1>
+    <p class="lede">
+      No page exists at this address. The link may be out of date or mistyped.
+    </p>
+  </header>
 
-  <article class="static-page">
-    <header>
-      <p class="eyebrow">404</p>
-      <h1>Page not found</h1>
-      <p class="lede">
-        The requested page does not exist on this site.
-      </p>
-    </header>
-
-    <ul class="hairline-list">
-      <li><a href="/">Overview</a></li>
-      <li><a href="/tutorial/">Tutorial</a></li>
-      <li><a href="/blueprints/">Blueprints</a></li>
-      <li><a href="/validation/">Validation status</a></li>
-      <li><a href="/examples/">Worked examples</a></li>
-      <li><a href="/boundaries/">Capability boundaries</a></li>
-      <li><a href="/roadmap/">Roadmap</a></li>
-    </ul>
-  </article>
-</BaseLayout>
+  <section class="doc-sec">
+    <h2>Where to go from here</h2>
+    <dl class="deflist">
+      {links.map((l) => (
+        <div>
+          <dt><a href={l.href}>{l.label}</a></dt>
+          <dd>{l.text}</dd>
+        </div>
+      ))}
+    </dl>
+  </section>
+</PageShell>

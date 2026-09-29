@@ -1,0 +1,77 @@
+---
+/**
+ * Four validation rows, chosen because each has a committed run artifact and a
+ * reference a reader can look up. The cylinder is off the list: its capture
+ * predates the harness move and has not been regenerated (see its record on
+ * /validation/). The result sentence is each record's `headline`, so this page
+ * and /validation/ cannot disagree.
+ */
+import { validation } from '../../data/validation';
+import { gateSemantics } from '../../data/boundaries';
+
+const featured = [
+  { id: 'qtt-sod', name: 'Sod shock tube', against: 'The exact Riemann solution' },
+  { id: 'dec-cavity', name: 'Lid-driven cavity, Re 1000', against: 'Ghia, Ghia and Shin (1982)' },
+  { id: 'qtt-tgv', name: 'Taylor–Green vortex', against: 'The exact solution' },
+  { id: 'qtt-ramc', name: 'RAM-C II reentry sheath', against: 'NASA flight data, 1970' },
+];
+const rows = featured.flatMap((f) => {
+  const rec = validation.find((v) => v.id === f.id);
+  return rec ? [{ ...f, rec }] : [];
+});
+---
+<div class="panel corner-brackets ev rise">
+  <div class="table-scroll">
+    <table class="table-stack">
+      <thead>
+        <tr>
+          <th scope="col">Case</th>
+          <th scope="col">Compared against</th>
+          <th scope="col">Result</th>
+          <th scope="col">Where it falls short</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((r) => (
+          <tr>
+            <th scope="row"><a href={`/validation/#${r.id}`}>{r.name}</a></th>
+            <td data-label="Compared against">{r.against}</td>
+            <td data-label="Result">{r.rec.headline}</td>
+            <td class="short" data-label="Where it falls short">{r.rec.shortfall}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  <p class="more">
+    <a href="/validation/">All {validation.length} validation targets <span aria-hidden="true">→</span></a>
+  </p>
+</div>
+
+<div class="callout callout-warn note">
+  <p class="callout-title">What a passing check means</p>
+  <p>{gateSemantics}</p>
+</div>
+
+<style>
+  .ev { padding: var(--space-5); }
+  table { width: 100%; border-collapse: collapse; font-size: var(--t-body-sm); }
+  th, td { text-align: left; vertical-align: top; padding: var(--space-3); border-bottom: 1px solid var(--line-1); }
+  thead th {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+    font-weight: 400;
+    white-space: nowrap;
+  }
+  tbody th { font-weight: var(--fw-heading); min-width: 11rem; }
+  tbody td { color: var(--fg-1); }
+  tbody td:nth-child(2) { min-width: 11rem; }
+  .short { color: var(--fg-2); min-width: 13rem; }
+  tbody tr:last-child th, tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: color-mix(in srgb, var(--accent) 5%, transparent); }
+  .more { margin: var(--space-4) 0 0; padding-top: var(--space-4); border-top: 1px solid var(--line-1); font-size: var(--t-body-sm); }
+  .note { margin: var(--space-5) 0 0; }
+</style>

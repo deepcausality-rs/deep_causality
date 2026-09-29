@@ -1,39 +1,46 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <rect width="1200" height="630" fill="#0d1416"/>
   <rect x="0" y="0" width="1200" height="3" fill="#3fb6c4"/>
-
-  <text x="80" y="112" font-family="Helvetica,Arial,sans-serif" font-size="19"
-        letter-spacing="4.2" fill="#3fb6c4">DEEPCAUSALITY · CFD</text>
-
-  <text x="80" y="196" font-family="Helvetica,Arial,sans-serif" font-size="62"
-        font-weight="600" fill="#e4ecec">Counterfactual Fluid Dynamics</text>
-
-  <text x="80" y="256" font-family="Helvetica,Arial,sans-serif" font-size="31"
-        fill="#a3b3b5">Your run finished. Now answer the what-if.</text>
-
-  <!-- The fork tree, same geometry as the landing page figure. -->
-  <g transform="translate(255,236) scale(8.6)">
-    <g fill="none" stroke="#3a4b4f" stroke-width="0.16">
-      <line x1="3" y1="21" x2="26" y2="21"/>
-      <path d="M26,21 C38,21 40,5 52,5"/>   <line x1="52" y1="5"  x2="70" y2="5"/>
-      <path d="M70,5  C80,5  80,21 88,21"/>
-      <path d="M26,21 C38,21 40,13 52,13"/> <line x1="52" y1="13" x2="70" y2="13"/>
-      <path d="M70,13 C80,13 80,21 88,21"/>
-      <path d="M26,21 C38,21 40,29 52,29"/> <line x1="52" y1="29" x2="70" y2="29"/>
-      <path d="M70,29 C80,29 80,21 88,21"/>
-      <path d="M26,21 C38,21 40,37 52,37"/> <line x1="52" y1="37" x2="70" y2="37"/>
-      <path d="M70,37 C80,37 80,21 88,21"/>
-    </g>
-    <line x1="26" y1="21" x2="88" y2="21" stroke="#3fb6c4" stroke-width="0.22"/>
-    <g fill="#7d8f93">
-      <circle cx="61" cy="5" r="1"/><circle cx="61" cy="13" r="1"/>
-      <circle cx="61" cy="29" r="1"/><circle cx="61" cy="37" r="1"/>
-    </g>
-    <g fill="#3fb6c4">
-      <circle cx="26" cy="21" r="1.5"/><circle cx="61" cy="21" r="1.2"/><circle cx="88" cy="21" r="1.5"/>
-    </g>
+  <text x="80" y="104" font-family="Helvetica,Arial,sans-serif" font-size="19" letter-spacing="4.2" fill="#3fb6c4">DEEPCAUSALITY · CFD</text>
+  <text x="80" y="188" font-family="Helvetica,Arial,sans-serif" font-size="64" font-weight="600" fill="#e4ecec">Pause a simulation.</text>
+  <text x="80" y="262" font-family="Helvetica,Arial,sans-serif" font-size="64" font-weight="600" fill="#8fa3a6">Try every what-if.</text>
+  <text x="80" y="330" font-family="Helvetica,Arial,sans-serif" font-size="27" fill="#a3b3b5">One descent, 17 branches, one table.</text>
+  <text x="80" y="372" font-family="Helvetica,Arial,sans-serif" font-size="27" fill="#a3b3b5">The best lands 2.07 m from the aim point.</text>
+  <g fill="none" stroke-linecap="round">
+    <line x1="620" y1="392" x2="700" y2="392" stroke="#8fa3a6" stroke-width="2.4"/>
+    <path d="M700,392 C790,392 850,412.0 1010,412.0" stroke="#4a5c60" stroke-width="1.6"/>
+    <path d="M700,392 C790,392 850,474.3 1010,474.3" stroke="#4a5c60" stroke-width="1.6"/>
+    <path d="M700,392 C790,392 850,533.9 1010,533.9" stroke="#4a5c60" stroke-width="1.6"/>
+    <path d="M700,392 C790,392 850,515.6 1010,515.6" stroke="#4a5c60" stroke-width="1.6"/>
+    <path d="M700,392 C790,392 850,454.2 1010,454.2" stroke="#4a5c60" stroke-width="1.6"/>
+    <path d="M700,392 C790,392 850,346.3 1010,346.3" stroke="#4a5c60" stroke-width="1.6"/>
+    <path d="M700,392 C790,392 850,505.0 1010,505.0" stroke="#3fb6c4" stroke-opacity="0.55" stroke-width="1.6"/>
+    <path d="M700,392 C790,392 850,511.1 1010,511.1" stroke="#3fb6c4" stroke-opacity="0.55" stroke-width="1.6"/>
+    <path d="M700,392 C790,392 850,517.0 1010,517.0" stroke="#3fb6c4" stroke-opacity="0.55" stroke-width="1.6"/>
+    <path d="M700,392 C790,392 850,522.8 1010,522.8" stroke="#3fb6c4" stroke-opacity="0.55" stroke-width="1.6"/>
+    <path d="M700,392 C790,392 850,528.5 1010,528.5" stroke="#3fb6c4" stroke-opacity="0.55" stroke-width="1.6"/>
+    <path d="M700,392 C790,392 850,533.9 1010,533.9" stroke="#3fb6c4" stroke-opacity="0.55" stroke-width="1.6"/>
+    <path d="M700,392 C790,392 850,538.7 1010,538.7" stroke="#3fb6c4" stroke-opacity="0.55" stroke-width="1.6"/>
+    <path d="M700,392 C790,392 850,542.5 1010,542.5" stroke="#3fb6c4" stroke-opacity="0.55" stroke-width="1.6"/>
+    <path d="M700,392 C790,392 850,544.7 1010,544.7" stroke="#3fb6c4" stroke-opacity="0.55" stroke-width="1.6"/>
+    <path d="M700,392 C790,392 850,544.4 1010,544.4" stroke="#3fb6c4" stroke-opacity="0.55" stroke-width="1.6"/>
+    <path d="M700,392 C790,392 850,541.7 1010,541.7" stroke="#3fb6c4" stroke-opacity="0.55" stroke-width="1.6"/>
+    <path d="M700,392 C790,392 850,544.7 1010,544.7" stroke="#3fb6c4" stroke-width="3.4"/>
   </g>
-
-  <text x="80" y="586" font-family="Menlo,monospace" font-size="20" fill="#75868a"
-        letter-spacing="1.1">cfd.deepcausality.com</text>
+  <line x1="700" y1="560" x2="1010" y2="560" stroke="#4a5c60" stroke-width="1.4" stroke-dasharray="6 6"/>
+  <text x="706" y="586" font-family="Menlo,monospace" font-size="17" fill="#75868a">Aim point</text>
+  <circle cx="700" cy="392" r="9" fill="#3fb6c4"/>
+  <circle cx="1010" cy="412.0" r="5" fill="#75868a"/>
+  <text x="1026" y="418.0" font-family="Menlo,monospace" font-size="18" fill="#c5d2d3">0°  20.0 m</text>
+  <circle cx="1010" cy="474.3" r="5" fill="#75868a"/>
+  <text x="1026" y="480.3" font-family="Menlo,monospace" font-size="18" fill="#c5d2d3">5°  11.6 m</text>
+  <circle cx="1010" cy="515.6" r="5" fill="#75868a"/>
+  <text x="1026" y="521.6" font-family="Menlo,monospace" font-size="18" fill="#c5d2d3">15°  6.0 m</text>
+  <circle cx="1010" cy="454.2" r="5" fill="#75868a"/>
+  <text x="1026" y="460.2" font-family="Menlo,monospace" font-size="18" fill="#c5d2d3">20°  14.3 m</text>
+  <circle cx="1010" cy="346.3" r="5" fill="#75868a"/>
+  <text x="1026" y="352.3" font-family="Menlo,monospace" font-size="18" fill="#c5d2d3">40°  28.9 m</text>
+  <circle cx="1010" cy="544.7" r="8" fill="#3fb6c4"/>
+  <text x="1026" y="550.7" font-family="Menlo,monospace" font-size="20" font-weight="700" fill="#3fb6c4">11.5°  2.07 m</text>
+  <text x="80" y="586" font-family="Menlo,monospace" font-size="20" fill="#75868a" letter-spacing="1.1">cfd.deepcausality.com</text>
 </svg>

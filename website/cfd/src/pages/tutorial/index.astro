@@ -1,129 +1,141 @@
 ---
+/**
+ * /tutorial/: the reader's map to the three annotated walks. Who the walks are
+ * for, in what order to read them and how long each run takes, then the cards.
+ *
+ * Run times come from the `runtime` frontmatter of each walk, which quotes the
+ * wall-clock gate in that program's committed output.txt.
+ */
 import { getCollection } from 'astro:content';
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import SiteHeader from '../../components/nav/SiteHeader.astro';
+import PageShell from '../../components/nav/PageShell.astro';
 import { Code } from 'astro:components';
 import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
-import { GITHUB_URL } from '../../consts';
+import { GITHUB_URL, MACHINE } from '../../consts';
 
 const SHIKI = { light: rustLight, dark: rustDark };
 
 const cloneCmd = `git clone https://github.com/deepcausality-rs/deep_causality.git
 cd deep_causality`;
 
-const title = 'Tutorial — DeepCausality CFD';
+const title = 'Tutorial | DeepCausality CFD';
 const description =
-  'A guided walk through the plasma-blackout programs: three walks, seventeen stations, each showing the committed code, the reason it is written that way, and the alternative that was rejected.';
+  'Three annotated walks through committed programs that fly a reentry descent through plasma blackout, tabulate its weather and land it under a retro burn.';
 
 const stages = (await getCollection('tutorial')).sort(
   (a, b) => a.data.stage - b.data.stage
 );
 
+// Each runtime string opens with the measured seconds ("44.4 s against a 600 s budget").
+const seconds = stages.map((s) => parseFloat(s.data.runtime));
+const totalSeconds = seconds.reduce((a, b) => a + b, 0);
+const totalMinutes = (totalSeconds / 60).toFixed(1);
+const runList = seconds.map((s) => `${s.toFixed(1)} s`);
+const runText = runList.length > 1 ? `${runList.slice(0, -1).join(', ')} and ${runList[runList.length - 1]}` : runList.join('');
+
 const FAMILY_URL = `${GITHUB_URL}/tree/main/examples/avionics_examples/cfd/plasma_blackout`;
 ---
-<BaseLayout title={title} description={description} path="/tutorial/">
-  <SiteHeader slot="header" />
+<PageShell title={title} description={description} path="/tutorial/">
+  <header class="doc-head">
+    <p class="eyebrow">Tutorial</p>
+    <h1>Reading the plasma-blackout programs</h1>
+    <p class="lede">
+      Three annotated walks through programs that fly a reentry descent through blackout, when the
+      vehicle’s own plasma cuts off GPS. They tabulate the weather it flies in and land it under a
+      retro burn.
+    </p>
+  </header>
 
-  <article class="page tpage">
-    <header class="thead">
-      <p class="eyebrow">Tutorial</p>
-      <h1>Reading the plasma-blackout programs</h1>
-      <p class="lede">
-        Three walks through code that is committed, runs, and gates itself.
-        Each station gives what the program does, the reason for that
-        construction, and the failure mode of the alternative.
-      </p>
-    </header>
-
-    <section class="tsection">
-      <h2>What you will be able to do</h2>
-      <div class="prose">
-        <p>
-          After the third walk you can open an unfamiliar
-          <code>CfdFlow</code> program and answer four questions about it:
-          where its leg boundaries sit and why, whether its counterfactual
-          forks a state or alternates a world, what its gates would catch, and
-          which of its constants record a measurement rather than a
-          preference.
-        </p>
-        <p>
-          The subject is a reentry vehicle that enters at Mach 25, loses every
-          GNSS link to its own plasma sheath, navigates without one, and lands
-          under a retro burn. That problem requires fluid dynamics, plasma
-          chemistry, navigation, and control to be correct simultaneously,
-          which is the multidisciplinary coupling the NASA CFD Vision 2030
-          Study names as an open challenge. The <a href="/why/">Why page</a>
-          carries that mapping in full.
-        </p>
+  <section class="doc-sec" id="who">
+    <h2>Who is this for, and how long does it take?</h2>
+    <dl class="deflist">
+      <div>
+        <dt>Who</dt>
+        <dd>
+          A Rust programmer who wants to see a whole pause-and-fork study written out. No CFD or
+          reentry background is needed. The walks explain the physics only where a design decision
+          depends on it.
+        </dd>
       </div>
-    </section>
-
-    <section class="tsection">
-      <h2>Before you start</h2>
-      <div class="prose">
-        <p>
-          The walks require a Rust toolchain and a clone of the repository.
-          They assume no prior familiarity with the crate, and cover reentry
-          physics only where a design decision depends on it.
-        </p>
+      <div>
+        <dt>Order</dt>
+        <dd>
+          Walk 1, then 2, then 3. Walk 2 writes <code>weather_table.csv</code> and walk 3 reads it.
+        </dd>
       </div>
-      <Code code={cloneCmd} lang="bash" themes={SHIKI} />
-      <div class="prose">
-        <p>
-          Each walk opens by running its program. Run them in order the first
-          time, because walk 2 writes the table walk 3 reads. Total runtime is
-          about eleven minutes. Every number quoted in the walks comes from a
-          committed run output, so your output should match.
-        </p>
+      <div>
+        <dt>Run time</dt>
+        <dd>
+          {runText}: {totalMinutes} minutes in all, measured on {MACHINE}. Start each run
+          first and read while it finishes.
+        </dd>
       </div>
-    </section>
+      <div>
+        <dt>You need</dt>
+        <dd>A Rust toolchain and a clone of the repository.</dd>
+      </div>
+    </dl>
+    <Code code={cloneCmd} lang="bash" themes={SHIKI} />
+    <p>
+      Every number in the walks comes from that program’s committed <code>output.txt</code>.
+      Compare your run against it; the wall-clock times will differ.
+    </p>
+  </section>
 
-    <section class="tsection" data-rise>
-      <h2>The three walks</h2>
+  <section class="doc-sec" id="walks" data-rise>
+    <h2>The three walks</h2>
 
-      <ol class="pipeline">
-        {stages.map((s) => (
-          <li class="pstage rise" style={`--i:${s.data.stage - 1}`}>
-            <a class="panel corner-brackets pcard" href={`/tutorial/${s.id.replace(/^en\//, '')}/`}>
-              <span class="pix num">{String(s.data.stage).padStart(2, '0')}</span>
-              <span class="pmain">
-                <span class="ptitle">{s.data.title}</span>
-                <span class="pq">{s.data.question}</span>
-                <span class="pio">
-                  <span class="pio-row"><span class="k">you learn</span> {s.data.objective}</span>
-                  <span class="pio-row"><span class="k">produces</span> {s.data.produces}</span>
-                </span>
-                <span class="pmeta num">{s.data.runtime}</span>
-              </span>
-              <span class="pgo" aria-hidden="true">→</span>
-            </a>
-          </li>
-        ))}
-      </ol>
+    <ol class="pipeline">
+      {stages.map((s) => (
+        <li class="pstage rise" style={`--i:${s.data.stage - 1}`}>
+          <a class="panel corner-brackets pcard" href={`/tutorial/${s.id.replace(/^en\//, '')}/`}>
+            <div class="pmain">
+              <h3 class="ptitle">{s.data.title}</h3>
+              <p class="pq">{s.data.question}</p>
+              <p class="pio-row"><span class="k">You learn</span> {s.data.objective}</p>
+              <p class="pio-row"><span class="k">Produces</span> {s.data.produces}</p>
+              <p class="pmeta num">{s.data.runtime}.</p>
+            </div>
+            <span class="pgo" aria-hidden="true"></span>
+          </a>
+        </li>
+      ))}
+    </ol>
 
-      <p class="pnote">
-        Source for all three programs:
-        <a href={FAMILY_URL}>examples/avionics_examples/cfd/plasma_blackout/ <span aria-hidden="true">↗</span></a>
-      </p>
-    </section>
-  </article>
-</BaseLayout>
+    <p class="next-links">
+      <a href={FAMILY_URL}>Source for all three programs <span aria-hidden="true">↗</span></a>
+    </p>
+  </section>
+
+  <section class="doc-sec" id="after">
+    <h2>What can you do after the third walk?</h2>
+    <p>
+      Open an unfamiliar <code>CfdFlow</code> program and answer four questions about it:
+    </p>
+    <ul>
+      <li>Where its leg boundaries sit, and why there.</li>
+      <li>
+        Whether its what-if (an alternative continued from a pause) forks a paused state or changes
+        the world.
+      </li>
+      <li>What its gates would catch. A gate is a pass or fail check on a result.</li>
+      <li>Which of its constants record a measurement, not a preference.</li>
+    </ul>
+  </section>
+
+  <section class="doc-sec" id="subject">
+    <h2>What do the programs simulate?</h2>
+    <p>
+      A reentry vehicle whose plasma sheath cuts every GNSS (satellite navigation) link. It
+      navigates on inertial sensors through the dark, then lands under a retro burn. The problem
+      needs fluid dynamics, plasma chemistry, navigation and control to be right at once. The NASA
+      CFD Vision 2030 Study names that multidisciplinary coupling as an open challenge, and the
+      <a href="/why/">Why page</a> maps it in full.
+    </p>
+  </section>
+</PageShell>
 
 <style>
-  .tpage { max-width: var(--w-panel); }
-  .thead { margin-bottom: var(--space-8); }
-  .thead h1 { margin: var(--space-3) 0 var(--space-4); }
-  .thead .lede { color: var(--fg-1); max-width: var(--measure); margin: 0; }
-
-  .tsection { margin-bottom: var(--space-8); }
-  .tsection h2 {
-    font-size: var(--t-h3);
-    padding-bottom: var(--space-3);
-    border-bottom: 1px solid var(--line-1);
-    margin-bottom: var(--space-5);
-  }
-
-  .pipeline { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-4); }
+  .pipeline { list-style: none; margin: 0 0 var(--space-4); padding: 0; max-width: none; display: grid; gap: var(--space-4); }
   /* The connector: what one walk produces, the next consumes. */
   .pstage + .pstage { position: relative; margin-top: var(--space-4); }
   .pstage + .pstage::before {
@@ -138,7 +150,7 @@ const FAMILY_URL = `${GITHUB_URL}/tree/main/examples/avionics_examples/cfd/plasm
 
   .pcard {
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: 1fr auto;
     gap: var(--space-4);
     align-items: start;
     padding: var(--space-5);
@@ -151,13 +163,12 @@ const FAMILY_URL = `${GITHUB_URL}/tree/main/examples/avionics_examples/cfd/plasm
     border-color: var(--line-2);
     background-color: color-mix(in srgb, var(--accent) 5%, transparent);
   }
-  .pix { color: var(--fg-2); }
   .pmain { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
-  .ptitle { font-weight: var(--fw-heading); font-size: var(--t-h4); }
+  .pmain p { margin: 0; }
+  .ptitle { font-weight: var(--fw-heading); font-size: var(--t-h4); line-height: var(--lh-h4); }
   .pq { color: var(--fg-1); font-size: var(--t-body-sm); max-width: var(--measure); }
-  .pio { display: grid; gap: var(--space-1); margin-top: var(--space-1); }
   .pio-row { color: var(--fg-1); font-size: var(--t-body-sm); }
-  .pio .k {
+  .pio-row .k {
     font-family: var(--font-mono);
     font-size: var(--t-eyebrow);
     letter-spacing: var(--ls-eyebrow);
@@ -166,9 +177,14 @@ const FAMILY_URL = `${GITHUB_URL}/tree/main/examples/avionics_examples/cfd/plasm
     margin-right: var(--space-2);
   }
   .pmeta { color: var(--fg-2); font-size: var(--t-eyebrow); margin-top: var(--space-1); }
-  .pgo { color: var(--accent); align-self: center; transition: transform var(--dur-fast) var(--ease-out); }
-  .pcard:hover .pgo { transform: translateX(2px); }
+  .pgo { align-self: center; }
+  .pgo::after {
+    content: '→';
+    display: inline-block;
+    color: var(--accent);
+    transition: transform var(--dur-fast) var(--ease-out);
+  }
+  .pcard:hover .pgo::after { transform: translateX(2px); }
 
-  .pnote { color: var(--fg-1); font-size: var(--t-body-sm); margin: var(--space-5) 0 0; max-width: var(--measure); }
-
+  .doc-sec :global(pre.astro-code) { max-width: none; }
 </style>

@@ -1,116 +1,131 @@
 ---
 /**
- * Hero. Single column, left aligned.
+ * Hero. States what the tool does, then shows it.
  *
- * The page opens on the reader's day rather than on the tool's architecture:
- * the question that arrives after a case finishes is the thing this answers,
- * and it is the one a working CFD engineer recognizes without translation.
- *
- * Three facts sit in the run caption on purpose — grid, dimensionality and the
- * quasi-steady closure. They are printed in the corridor's own first two output
- * lines, and a reader who finds them there rather than here stops trusting
- * everything above them.
+ * The headline names the outcome in the reader's terms; "counterfactual" is the
+ * category name and sits in the eyebrow, where it labels the page without
+ * carrying it. The figure is the demonstration: a real run, seventeen what-ifs,
+ * and the one that lands closest.
  */
-import { Code } from 'astro:components';
-import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
-import { CARGO_ADD } from '../../consts';
+import FanFigure from './FanFigure.astro';
+import { corridor } from '../../data/results';
+import { GITHUB_URL } from '../../consts';
 
-const SHIKI = { light: rustLight, dark: rustDark };
-
-/* `--depth 1` is load-bearing: the full-history pack is 2.46 GiB against
-   195 MB shallow, and on an ordinary connection the clone is the only step
-   that can miss a ten-minute promise. */
-const run = `git clone --depth 1 https://github.com/deepcausality-rs/deep_causality.git
-cd deep_causality
-cargo run --release -p avionics_examples --example plasma_blackout_corridor`;
+const best = corridor.committed;
+const branches = corridor.coarse.length + corridor.fine.length;
 ---
 <section class="hero">
   <div class="hero-inner">
-    <p class="eyebrow">DeepCausality · CFD</p>
-    <h1>Counterfactual Fluid Dynamics</h1>
+    <p class="eyebrow">Counterfactual fluid dynamics</p>
+    <h1>
+      <span>Pause a simulation.</span>
+      <span>Try every what-if from that moment.</span>
+    </h1>
 
-    <p class="tagline">Your run finished. Now answer the what-if.</p>
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <p class="sub">
+          DeepCausality CFD stops a running flow simulation at a moment you
+          define, copies its exact state into branches, changes one decision in
+          each, and runs them all at once. One table compares the outcomes.
+        </p>
+        <p class="gloss">
+          A counterfactual is a what-if that starts from something that did
+          happen. Built for problems where flow interacts with guidance,
+          navigation or control, such as reentry and powered descent. It runs
+          on its own solvers and does not wrap Fluent, SU2 or OpenFOAM.
+        </p>
 
-    <p class="sub">
-      Pause a coupled run at a point the physics picks, continue every
-      alternative from that one state, and get back a single gated table with a
-      per-branch record of why. Flow, chemistry, navigation and control run in
-      one process over one shared field, so an interaction between them lands in
-      the result.
-    </p>
+        <p class="proof">
+          {`The example: a vehicle re-enters at Mach ${corridor.onsetMach.toFixed(0)} and loses GPS inside a
+          plasma sheath. The run forks ${branches} branches from the moment the link drops, each
+          with a different bank angle. The example places its aim point ${corridor.aimOffsetM} m to the side of
+          the unsteered path, so the sweep has a gap to close. The best branch closes it to
+          ${best.miss.toFixed(2)} m. The whole example, from descent to reacquisition, takes
+          ${corridor.wallClockS} seconds on an Apple M3 Max, on a ${corridor.gridCells}-cell flow layer.`}
+        </p>
 
-    <Code code={run} lang="bash" themes={SHIKI} />
+        <div class="cta-row">
+          <a class="btn btn-primary" href="/how-it-works/">
+            See how it works
+            <span class="btn-ico" aria-hidden="true">→</span>
+          </a>
+          <a class="btn btn-ghost" href="#run">Run it yourself</a>
+        </div>
 
-    <p class="run-note">
-      A 32×32 two-dimensional quasi-steady layer, one solver pseudo-step per
-      0.1 s of flight. It marches 131 coupled steps to a flow-resolved blackout
-      onset, forks seventeen worlds, and reports thirteen gates in 44.4 s. Rust
-      1.93 or newer; no feature flags, no config.
-    </p>
+        <ul class="facts">
+          <li>Rust library</li>
+          <li>MIT licensed</li>
+          <li>Runs on one machine</li>
+          <li><a href={GITHUB_URL}>Source on GitHub <span aria-hidden="true">↗</span></a></li>
+        </ul>
+      </div>
 
-    <p class="lib-note">
-      As a library: <code>{CARGO_ADD}</code>
-    </p>
-
-    <div class="cta-row">
-      <a class="btn btn-primary" href="/validation/">
-        See the validation
-        <span class="btn-ico" aria-hidden="true">→</span>
-      </a>
-      <a class="btn btn-ghost" href="/boundaries/">
-        Read the boundaries
-      </a>
+      <div class="hero-fig"><FanFigure /></div>
     </div>
-
-    <p class="proof">
-      Fork a mid-burn state five ways and the coupling reorders the answer. The
-      vehicle decelerates <em>less</em> under 20% throttle,
-      <strong>7.472 m/s²</strong>, than it does coasting, <strong>10.595
-      m/s²</strong>. A drag model solved separately and composed afterwards
-      predicts the opposite ordering.
-    </p>
   </div>
 </section>
 
 <style>
-  .hero { padding: var(--space-8) var(--space-4) var(--space-7); }
-  @media (min-width: 720px) { .hero { padding: var(--space-9) var(--space-5) var(--space-8); } }
+  .hero { padding: var(--space-7) var(--space-4) var(--space-8); }
+  @media (min-width: 720px) { .hero { padding: var(--space-8) var(--space-5) var(--space-9); } }
 
-  .hero-inner { max-width: var(--w-panel); margin: 0 auto; }
+  .hero-inner { max-width: calc(var(--w-doc) - 2 * var(--space-5)); margin: 0 auto; }
 
   h1 {
-    font-size: clamp(2.25rem, 5vw + 0.5rem, 3.5rem);
+    font-size: clamp(2.125rem, 4.6vw + 0.4rem, 3.75rem);
     line-height: var(--lh-display);
     letter-spacing: var(--ls-display);
-    margin: var(--space-3) 0 var(--space-4);
-    max-width: 18ch;
+    margin: var(--space-3) 0 var(--space-6);
   }
-  .tagline {
-    font-size: var(--t-h3);
-    line-height: var(--lh-h3);
-    color: var(--fg-0);
-    max-width: var(--measure-lede);
-    margin: 0 0 var(--space-4);
+  h1 span { display: block; }
+  h1 span:last-child { color: var(--fg-1); }
+
+  /* Narrow screens: intro, then the figure, then the proof and the buttons, so the
+     demonstration is on the first screen. `display: contents` lets the copy's
+     children join the grid's ordering; wide screens restore two columns. */
+  .hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    align-items: start;
   }
+  .hero-copy { display: contents; }
+  .sub { order: 1; }
+  .hero-fig { order: 2; margin-bottom: var(--space-6); }
+  .gloss { order: 1; }
+  .proof { order: 3; }
+  .cta-row { order: 4; }
+  .facts { order: 5; }
+  @media (min-width: 1000px) {
+    .hero-grid { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--space-8); }
+    .hero-copy { display: block; }
+    .hero-fig { order: 0; margin-bottom: 0; }
+  }
+
   .sub {
+    color: var(--fg-0);
+    font-size: var(--t-h4);
+    line-height: var(--lh-h4);
+    max-width: var(--measure-lede);
+    margin: 0 0 var(--space-5);
+  }
+  .gloss {
     color: var(--fg-1);
+    font-size: var(--t-body-sm);
+    max-width: var(--measure-lede);
+    margin: 0 0 var(--space-5);
+  }
+  .proof {
+    color: var(--fg-1);
+    font-size: var(--t-body-sm);
     max-width: var(--measure-lede);
     margin: 0 0 var(--space-6);
+    padding-left: var(--space-4);
+    border-left: 2px solid var(--accent);
   }
 
-  .run-note {
-    color: var(--fg-1);
-    font-size: var(--t-body-sm);
-    max-width: var(--measure);
-    margin: var(--space-3) 0 var(--space-3);
-  }
-  .lib-note {
-    color: var(--fg-2);
-    font-size: var(--t-body-sm);
-    margin: 0 0 var(--space-6);
-  }
-
-  .cta-row { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-bottom: var(--space-6); }
+  .cta-row { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-bottom: var(--space-5); }
   .btn {
     display: inline-flex;
     align-items: center;
@@ -121,7 +136,6 @@ cargo run --release -p avionics_examples --example plasma_blackout_corridor`;
     border: 1px solid transparent;
     font-size: var(--t-body-sm);
     font-weight: var(--fw-heading);
-    border-bottom: 1px solid transparent;
     transition: transform var(--dur-fast) var(--ease-out),
                 background-color var(--dur-fast) var(--ease-out),
                 border-color var(--dur-fast) var(--ease-out),
@@ -132,7 +146,6 @@ cargo run --release -p avionics_examples --example plasma_blackout_corridor`;
   .btn-primary:hover {
     background: color-mix(in srgb, var(--accent) 90%, white);
     border-color: transparent;
-    border-bottom-color: transparent;
   }
   .btn-ico { transition: transform var(--dur-fast) var(--ease-out); }
   .btn-primary:hover .btn-ico { transform: translateX(2px); }
@@ -140,16 +153,21 @@ cargo run --release -p avionics_examples --example plasma_blackout_corridor`;
   .btn-ghost:hover {
     border-color: var(--fg-2);
     background: color-mix(in srgb, var(--accent) 5%, transparent);
-    border-bottom-color: var(--fg-2);
   }
 
-  .proof {
-    color: var(--fg-1);
-    font-size: var(--t-body-sm);
-    max-width: var(--measure);
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    list-style: none;
     margin: 0;
-    padding-left: var(--space-4);
-    border-left: 2px solid var(--accent);
+    padding: 0;
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
   }
-  .proof strong { color: var(--fg-0); }
+  .facts a { color: var(--fg-2); border-bottom: 1px solid var(--line-2); }
+  .facts a:hover { color: var(--fg-0); border-bottom-color: var(--fg-2); }
 </style>

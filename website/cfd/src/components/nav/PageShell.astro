@@ -1,0 +1,26 @@
+---
+/**
+ * Shell for every interior page: layout, header and the article column.
+ *
+ * Page skeleton (see README "Content rules"):
+ *   <header class="doc-head"> eyebrow, one h1, and a .lede that answers the page's question
+ *   <section class="doc-sec"> one per question, each opened by an h2
+ * The utilities live in global.css so no page redeclares them.
+ */
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from './SiteHeader.astro';
+
+interface Props {
+  title: string;
+  description: string;
+  /** Absolute path, e.g. "/how-it-works/". */
+  path: string;
+}
+const { title, description, path } = Astro.props;
+---
+<BaseLayout title={title} description={description} path={path}>
+  <SiteHeader slot="header" />
+  <article class="doc">
+    <slot />
+  </article>
+</BaseLayout>
