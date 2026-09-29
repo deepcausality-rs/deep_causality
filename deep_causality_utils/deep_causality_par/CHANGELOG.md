@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_par-v0.1.7...deep_causality_par-v0.2.0) - 2026-09-29
+
+### Added
+
+- *(deep_causality_par)* no-std builds on core alone; scoped_map requires alloc
+
+### Other
+
+- link-check the core-level crates; README_NO_STD for 11 core crates
+
 ## [0.1.7](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_par-v0.1.6...deep_causality_par-v0.1.7) - 2026-09-25
 
 ### Other
