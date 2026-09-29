@@ -68,6 +68,19 @@ runs at `f32` for real-time visualisation, `f64` for engineering simulations, or
 `Float106` (~31 decimal digits) for cosmology and quantum field theory. The two READMEs above
 each have a precision section.
 
+## Build configurations
+
+| Configuration | Cargo features | Supported |
+|---|---|:-:|
+| `std`, hosted | default | ✓ |
+| `no-std` with a heap | `default-features = false, features = ["no-std"]` | ✓ |
+| `no-std` on `core` alone, no heap | – | – |
+
+Without `std` the crate needs a heap: the program must define a `#[global_allocator]`. `topology`, `parallel` and `os-random` are host-only.
+
+CI builds every supported bare-metal configuration for `thumbv7em-none-eabihf`.
+[README_NO_STD.md](https://github.com/deepcausality-rs/deep_causality/blob/main/README_NO_STD.md) describes the build configuration of every crate in the workspace.
+
 ## Configuration
 
 The crate supports `no_std` environments via feature flags.

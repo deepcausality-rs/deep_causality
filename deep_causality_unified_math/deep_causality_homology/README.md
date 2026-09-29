@@ -237,6 +237,19 @@ deep_causality_homology = { version = "0.1", default-features = false, features 
 
 Both `Gf2Chain` and the boundary matrices allocate, so `alloc` is required in either configuration.
 
+## Build configurations
+
+| Configuration | Cargo features | Supported |
+|---|---|:-:|
+| `std`, hosted | default | ✓ |
+| `no-std` with a heap | `default-features = false, features = ["no-std"]` | ✓ |
+| `no-std` on `core` alone, no heap | – | – |
+
+Without `std` the crate needs a heap: the program must define a `#[global_allocator]`.
+
+CI builds every supported bare-metal configuration for `thumbv7em-none-eabihf`.
+[README_NO_STD.md](https://github.com/deepcausality-rs/deep_causality/blob/main/README_NO_STD.md) describes the build configuration of every crate in the workspace.
+
 ## Licence
 
 MIT. See [LICENSE](https://github.com/deepcausality-rs/deep_causality/blob/main/LICENSE).

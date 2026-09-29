@@ -13,8 +13,9 @@ engine in `deep_causality` with the ethos layer on top of it, and everything tha
 Those seven are std-only by decision.
 
 CI checks this on every pull request. `.github/workflows/rust_no_std.yml` builds each covered crate
-for `thumbv7em-none-eabihf`, a 32-bit Cortex-M4F with no `std`, so nothing here is inferred from a
-host build with `std` switched off. [Verification](#verification) has the commands.
+for `thumbv7em-none-eabihf`, a 32-bit Cortex-M4F with no `std`, and links each `core`-level crate
+into a program with no allocator, so nothing here is inferred from a host build with `std` switched
+off. [Verification](#verification) has the commands.
 
 ## Quick start
 
@@ -26,14 +27,16 @@ cargo build -p deep_causality_core \
   --target thumbv7em-none-eabihf
 ```
 
-Five crates need only `core`. The other twenty-one need an allocator, which rules out very little;
+Eleven crates need only `core`. The other fifteen need an allocator, which rules out very little;
 [Allocators](#allocators) explains why.
 
 ## Support by crate
 
-`core` is bare metal with no heap. `alloc` is bare metal once the application provides a
-`#[global_allocator]`. `std` is a hosted target. CI builds every crate with a mark under `core` or
-`alloc` for `thumbv7em-none-eabihf` with `--no-default-features --features no-std`. The notes name
+`core` is bare metal with no heap: `--no-default-features --features no-std` links with no
+`#[global_allocator]`. `alloc` is bare metal once the application provides one; a `core`-level
+crate adds its heap-using parts with `features = ["no-std", "alloc"]`. `std` is a hosted target. CI
+builds every crate with a mark under `core` or `alloc` for `thumbv7em-none-eabihf`, and links
+every crate marked under `core` without an allocator. The notes name
 the features that stay host-only, and for the std-only crates, what ties them to `std`;
 [Not covered](#not-covered) has the detail.
 
@@ -44,17 +47,17 @@ the features that stay host-only, and for the std-only crates, what ties them to
 | `deep_causality_num_complex` | ✓ | ✓ | ✓ | |
 | `deep_causality_num_dual` | ✓ | ✓ | ✓ | |
 | `deep_causality_num_rational` | ✓ | ✓ | ✓ | |
+| `deep_causality_haft` | ✓ | ✓ | ✓ | The collection witnesses need `alloc`; the `HashMap` witnesses need `std` |
+| `deep_causality_calculus` | ✓ | ✓ | ✓ | |
+| `deep_causality_rand` | ✓ | ✓ | ✓ | `os-random` is host-only |
+| `deep_causality_par` | ✓ | ✓ | ✓ | `scoped_map` needs `alloc`; `parallel` is host-only |
+| `deep_causality_metric` | ✓ | ✓ | ✓ | `to_signs` needs `alloc` |
+| `deep_causality_data_structures` | ✓ | ✓ | ✓ | `VectorStorage` and `vec()` need `alloc` |
 | `deep_causality_ast` | – | ✓ | ✓ | Builds with `alloc` alone |
-| `deep_causality_metric` | – | ✓ | ✓ | Builds with `alloc` alone |
-| `deep_causality_data_structures` | – | ✓ | ✓ | Builds with `alloc` alone |
 | `ultragraph` | – | ✓ | ✓ | Builds with `alloc` alone |
-| `deep_causality_par` | – | ✓ | ✓ | Builds with `alloc` alone; `parallel` is host-only |
 | `deep_causality_context_store` | – | ✓ | ✓ | Builds with `alloc` alone; the in-memory backends in `utils_test` need `std` |
-| `deep_causality_haft` | – | ✓ | ✓ | |
-| `deep_causality_calculus` | – | ✓ | ✓ | The allocator comes from `deep_causality_haft` |
 | `deep_causality_core` | – | ✓ | ✓ | `EffectLog` allocates per entry |
 | `deep_causality_linear` | – | ✓ | ✓ | |
-| `deep_causality_rand` | – | ✓ | ✓ | `os-random` is host-only |
 | `deep_causality_stats` | – | ✓ | ✓ | `os-random` is host-only |
 | `deep_causality_tensor` | – | ✓ | ✓ | |
 | `deep_causality_multivector` | – | ✓ | ✓ | |
@@ -73,12 +76,12 @@ the features that stay host-only, and for the std-only crates, what ties them to
 | `deep_causality_discovery` | – | – | ✓ | Reads CSV and Parquet files; out of scope |
 | `deep_causality_cfd` | – | – | ✓ | Writes output files; out of scope |
 
-Five crates reach `core`, twenty-one more reach `alloc`, and seven are std-only: twenty-six of the
+Eleven crates reach `core`, fifteen more reach `alloc`, and seven are std-only: twenty-six of the
 thirty-three build on bare metal.
 
 ## The feature levels
 
-The twenty-one allocator-required crates declare the same three levels:
+The fifteen allocator-required crates declare the same three levels:
 
 ```toml
 [features]
@@ -101,8 +104,18 @@ dependency its own defaults and `std` returns through the back door, which compi
 and fails only when you cross-compile. A member cannot opt out on its own: when the workspace entry
 omits `default-features = false`, Cargo ignores the member's.
 
-The five `core`-only crates declare no `alloc` feature at all, because nothing in them touches the
-heap. They carry `default`, `std` and `no-std`, and `no-std` does not name `alloc`.
+The eleven `core`-level crates build `no-std` without `alloc`. Five of them declare no `alloc`
+feature at all, because nothing in them touches the heap: they carry `default`, `std` and `no-std`.
+The other six declare `alloc` as an add-on that `no-std` does not name. In `deep_causality_haft`,
+`deep_causality_par`, `deep_causality_metric` and `deep_causality_data_structures` it switches on
+the parts that need a heap, named in the table above. `deep_causality_calculus` and
+`deep_causality_rand` allocate nothing; their `alloc` forwards the level to the crates below them.
+
+A `core`-level `no-std` must not reach any `alloc` feature anywhere in its dependency graph. Once
+the `alloc` crate is linked, rustc demands a `#[global_allocator]` from the application whether or
+not anything allocates, and it checks that only when it links the final program. A library build
+passes either way, which is why [Verification](#verification) links each `core`-level crate.
+
 `deep_causality_num` is where the float-math backend is chosen:
 
 ```toml
@@ -114,7 +127,8 @@ no-std    = ["libm_math"]
 libm_math = ["dep:libm"]
 ```
 
-`std` takes the intrinsics; `no-std` routes through `libm`. The other four core-only crates,
+`std` takes the intrinsics; `no-std` routes through `libm`. The other four crates without an
+`alloc` feature,
 `deep_causality_algebra`, `deep_causality_num_complex`, `deep_causality_num_dual` and
 `deep_causality_num_rational`, only forward that choice, for example
 `no-std = ["deep_causality_num/no-std"]`.
@@ -139,8 +153,8 @@ never get the chance to fire.
 
 The crates that never reach `deep_causality_num` (`deep_causality_ast`, `deep_causality_metric`,
 `deep_causality_par`, `deep_causality_data_structures`, `deep_causality_context_store` and
-`ultragraph`) do build with `alloc` alone. For the rest, pick a platform level, `std` or `no-std`, and add `alloc` only through one of
-them.
+`ultragraph`) do build with `alloc` alone. For the rest, pick a platform level, `std` or `no-std`,
+and add `alloc` only through one of them.
 
 ## Covered crates
 
@@ -156,27 +170,27 @@ reasoning about allocator behaviour.
 | `deep_causality_num_complex` | Complex scalars over the tower |
 | `deep_causality_num_dual` | Dual numbers for forward-mode differentiation |
 | `deep_causality_num_rational` | Exact rationals over the integers |
+| `deep_causality_haft` | HKT witnesses, `Functor`/`Monad`/`Arrow`, `SymMonoidal`; the collection witnesses need `alloc` |
+| `deep_causality_calculus` | Euler and RK4 integrators as causal arrows, forward-mode gradients |
+| `deep_causality_rand` | Xoshiro256, Sobol sequences, range sampling |
+| `deep_causality_par` | The `MaybeParallel` marker; `scoped_map` needs `alloc` |
+| `deep_causality_metric` | Metric signatures shared by tensor, multivector and physics |
+| `deep_causality_data_structures` | Array grids and fixed-size sliding windows; `VectorStorage` needs `alloc` |
 
-These five are exactly the crates that declare no `alloc` feature.
+The first five declare no `alloc` feature; the other six gate their heap-using parts behind one.
 
 ### Allocator required
 
 | Crate | What it gives you |
 |---|---|
-| `deep_causality_haft` | HKT witnesses, `Functor`/`Monad`/`Arrow`, `SymMonoidal` |
-| `deep_causality_calculus` | Euler and RK4 integrators as causal arrows; see the note below |
 | `deep_causality_core` | The causal monad, `CausalFlow`, `EffectLog`, `alternate_value` |
-| `deep_causality_metric` | Metric signatures shared by tensor, multivector and physics |
 | `deep_causality_ast` | `ConstTree`, the persistent tree behind the HKT impls |
-| `deep_causality_data_structures` | Array grids, ring buffers, sliding windows |
 | `deep_causality_linear` | Sparse (CSR), dense and bit-packed 𝔽₂ matrices; eliminations, decompositions, conjugate gradient |
 | `deep_causality_stats` | Distributions, densities, moments and estimators |
 | `deep_causality_tensor` | `CausalTensor`, einsum, SVD, QR, eigen, tensor trains |
 | `deep_causality_multivector` | Geometric algebra, `HilbertState`, `CausalMultiVector` |
 | `deep_causality_homology` | Chain complexes, boundary operators, homology over a chosen field |
 | `deep_causality_fft` | 1-D and N-D FFT, real transforms |
-| `deep_causality_rand` | Xoshiro256, Sobol sequences, range sampling |
-| `deep_causality_par` | The `MaybeParallel` marker and `scoped_map` |
 | `deep_causality_physics` | Physics kernels and quantities, without the `topology` slice |
 | `deep_causality_algorithms` | SURD causal decomposition and mRMR feature selection, without BRCD |
 | `deep_causality_quantum` | Density matrices, quantum gates, channels, Born read-out |
@@ -184,12 +198,6 @@ These five are exactly the crates that declare no `alloc` feature.
 | `deep_causality_uncertain` | `Uncertain<T>`, sampling sessions, SPRT evaluation |
 | `deep_causality_context_store` | Context records, the storage traits, the projection vocabulary |
 | `deep_causality_context` | The context hypergraph, its node types, snapshot, restore and apply |
-
-`deep_causality_calculus` is the borderline case. Its own operators allocate nothing: the
-integrators step over stack values and `gradient` seeds one coordinate per pass. It is listed here
-because it depends on `deep_causality_haft`, and both its `std` and its `no-std` feature enable
-`alloc = ["deep_causality_haft/alloc"]`. Differentiation and integration therefore carry the
-same allocator requirement as the rest of this table.
 
 ## Allocators
 
@@ -207,7 +215,7 @@ unsafe { HEAP.init(HEAP_MEM.as_ptr() as usize, HEAP_SIZE) }
 ```
 
 The attribute has been stable since Rust 1.28. A Cortex-M0+ with 8 KB of RAM can carry a heap, so
-the twenty-one allocator-dependent crates are not gated on device class.
+the fifteen allocator-dependent crates are not gated on device class.
 
 **The constraint that matters is timing.** Allocation is not bounded-time, so the question is
 whether a crate allocates in the deadline path or only at init. A system with a working heap may
@@ -220,10 +228,10 @@ makes the heap a startup convenience rather than a runtime hazard.
 
 Policy is what rules out a heap. Safety-certified work under DO-178C, IEC 61508 or MISRA
 commonly forbids dynamic allocation after init whatever the RAM budget. That is the case where the
-five allocator-free crates carry weight: the scalar tower, `Float106` extended precision, complex
-numbers, dual numbers and exact rationals, usable with no heap at all. The Euler and RK4
-integrators allocate nothing either, but they arrive through `deep_causality_calculus`, which links
-`deep_causality_haft` and brings the allocator with it.
+eleven allocator-free crates carry weight: the scalar tower, `Float106` extended precision, complex,
+dual and rational numbers, the HKT traits, the Euler and RK4 integrators and forward-mode gradients,
+the random generators, metric signatures, and fixed-size grids and sliding windows, all usable with
+no heap at all.
 
 `deep_causality_core` allocates per stage. `EffectLog::add_entry` pushes an owned
 `String` on every entry, so a hard-deadline loop wants a bounded log rather than the default one.
@@ -235,7 +243,8 @@ integrators allocate nothing either, but they arrive through `deep_causality_cal
 `deep_causality_par` exposes `scoped_map`, which fans out over `std::thread::scope` under its
 `parallel` feature. On bare metal the feature is unavailable: `parallel = ["std"]`, and on a target
 without an operating system a `compile_error!` in `deep_causality_par` rejects it with the reason.
-`scoped_map` still works and still returns results in input order; it runs the map inline.
+`scoped_map` still works with `alloc`, because it returns a `Vec`, and still returns results in
+input order; it runs the map inline. The `MaybeParallel` marker needs neither.
 
 Everything downstream inherits this. `deep_causality_fft`, `deep_causality_topology`,
 `deep_causality_physics` and `deep_causality_algorithms` forward their own `parallel` features to
@@ -243,7 +252,7 @@ the same definition, so their parallel paths are host-only.
 
 ### Ambient entropy, not randomness
 
-`deep_causality_rand` builds, and the generators work. Two things change.
+`deep_causality_rand` builds on `core` alone, and the generators work. Two things change.
 
 `ThreadRng` is gone, because there is no thread to be local to. `rng()` returns an owned
 `Xoshiro256` instead of a handle to a process-wide one, so the caller holds it.
@@ -395,20 +404,25 @@ rustup target add thumbv7em-none-eabihf
 
 make check_no_std   # every crate builds for the target, or is listed as std-only
 make check_alloc    # every alloc-only build builds, or stops at the deep_causality_num guard
+make check_core     # every core-level crate links without a global allocator
 ```
 
-Both checks walk every workspace crate. A crate that declares `no-std` is built for the target in
+The first two checks walk every workspace crate. A crate that declares `no-std` is built for the target in
 its own `cargo` call, so a sibling's features cannot mask it. A crate that does not must appear in
 `scripts/bare_metal.sh` with the reason it needs `std`; one that is neither fails the check, and so
 does a listed crate that has since gained `no-std`. The default target is `thumbv7em-none-eabihf`.
 Pass another as the first argument, for example `bash scripts/check_no_std.sh aarch64-unknown-none`.
-Both scripts refuse a target whose `target_os` is not `none`, because a hosted target ships `std`
-and would let a leak through.
+All three scripts refuse a target whose `target_os` is not `none`, because a hosted target ships
+`std` and would let a leak through.
 
 The alloc check builds with `--keep-going` and reads cargo's JSON messages. It passes a failed
 build only when `deep_causality_num` is the one compile target with errors and its first error
 carries the `[no-float-backend]` tag. An `alloc` feature that does not reach a dependency's `alloc`
 shows up there as a second target with errors.
 
-CI runs both checks in `.github/workflows/rust_no_std.yml` on every pull request and every push to
-`main`.
+The core check links each crate whose `no-std` feature does not name `alloc` into a throwaway
+`no_std` static library that defines no allocator. That is the only check that sees an `alloc`
+feature switched on somewhere in the dependency graph: a library build passes, and the link fails.
+
+CI runs all three checks in `.github/workflows/rust_no_std.yml` on every pull request and every push
+to `main`.

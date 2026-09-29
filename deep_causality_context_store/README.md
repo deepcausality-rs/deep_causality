@@ -154,6 +154,19 @@ runtime. They exist for tests on both sides of the contract, and their tests sta
 above as behaviour a backend can compare against. They lock with `std::sync::Mutex`, so they are
 compiled only with the `std` feature.
 
+## Build configurations
+
+| Configuration | Cargo features | Supported |
+|---|---|:-:|
+| `std`, hosted | default | ✓ |
+| `no-std` with a heap | `default-features = false, features = ["no-std"]` | ✓ |
+| `no-std` on `core` alone, no heap | – | – |
+
+Without `std` the crate needs a heap: the program must define a `#[global_allocator]`. The crate never reaches a float backend, so `alloc` alone builds as well. The in-memory backends in `utils_test` need `std`.
+
+CI builds every supported bare-metal configuration for `thumbv7em-none-eabihf`.
+[README_NO_STD.md](https://github.com/deepcausality-rs/deep_causality/blob/main/README_NO_STD.md) describes the build configuration of every crate in the workspace.
+
 ## Configuration
 
 The records and traits build without the standard library.

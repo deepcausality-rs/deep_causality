@@ -94,6 +94,19 @@ Run:
 cargo add deep_causality_data_structures
 ```
 
+## Build configurations
+
+| Configuration | Cargo features | Supported |
+|---|---|:-:|
+| `std`, hosted | default | ✓ |
+| `no-std` with a heap | `default-features = false, features = ["no-std", "alloc"]` | ✓ |
+| `no-std` on `core` alone, no heap | `default-features = false, features = ["no-std"]` | ✓ |
+
+With `no-std` alone the crate needs only `core` and links into a program that defines no `#[global_allocator]`; `alloc` adds the parts that need a heap. `VectorStorage`, `window_type::new_with_vector_storage` and the `vec()` accessor need `alloc`.
+
+CI builds every supported bare-metal configuration for `thumbv7em-none-eabihf` and links the `core` configuration without an allocator.
+[README_NO_STD.md](https://github.com/deepcausality-rs/deep_causality/blob/main/README_NO_STD.md) describes the build configuration of every crate in the workspace.
+
 ## Configuration
 
 The crate builds without the standard library, on `core` alone.

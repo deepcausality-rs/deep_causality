@@ -47,6 +47,19 @@ fn start(ctx: BaseContext) -> PropagatingProcess<f64, (), BaseContext> {
 * `RelationKind`, `TimeScale`, `VerticalDatum` and `SubstrateRef`, re-exported from
   `deep_causality_context_store`, so a model names them from this crate alone.
 
+## Build configurations
+
+| Configuration | Cargo features | Supported |
+|---|---|:-:|
+| `std`, hosted | default | ✓ |
+| `no-std` with a heap | `default-features = false, features = ["no-std"]` | ✓ |
+| `no-std` on `core` alone, no heap | – | – |
+
+Without `std` the crate needs a heap: the program must define a `#[global_allocator]`. `os-random` is host-only. Without `std` the id index is a `BTreeMap`.
+
+CI builds every supported bare-metal configuration for `thumbv7em-none-eabihf`.
+[README_NO_STD.md](https://github.com/deepcausality-rs/deep_causality/blob/main/README_NO_STD.md) describes the build configuration of every crate in the workspace.
+
 ## Configuration
 
 The context builds without the standard library.

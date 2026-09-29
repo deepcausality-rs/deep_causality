@@ -59,6 +59,19 @@ The `rand` traits are reimplemented without macros, because macros are hard to m
 
 Macros have valid uses, and this crate uses them to generate tests where a generic trait is implemented for many types. Keeping the library code free of macros, unsafe, and external dependencies simplifies maintenance.
 
+## Build configurations
+
+| Configuration | Cargo features | Supported |
+|---|---|:-:|
+| `std`, hosted | default | ✓ |
+| `no-std` with a heap | `default-features = false, features = ["no-std", "alloc"]` | ✓ |
+| `no-std` on `core` alone, no heap | `default-features = false, features = ["no-std"]` | ✓ |
+
+With `no-std` alone the crate needs only `core` and links into a program that defines no `#[global_allocator]`; `alloc` adds the parts that need a heap. `os-random` is host-only: `getrandom` has no backend for a bare-metal target.
+
+CI builds every supported bare-metal configuration for `thumbv7em-none-eabihf` and links the `core` configuration without an allocator.
+[README_NO_STD.md](https://github.com/deepcausality-rs/deep_causality/blob/main/README_NO_STD.md) describes the build configuration of every crate in the workspace.
+
 ## No-Std
 
 This crate builds without a standard library. Three feature levels select the target environment:
