@@ -13,15 +13,15 @@
     "check:tokens": "diff -u ../web/src/styles/tokens.css src/styles/tokens.css && echo 'tokens in sync'"
   },
   "dependencies": {
-    "@astrojs/mdx": "^8.0.1",
+    "@astrojs/mdx": "^8.0.2",
     "@astrojs/sitemap": "^3.7.4",
-    "astro": "^7.3.3"
+    "astro": "^7.3.5"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
     "shiki": "4.4.3",
     "typescript": "^6.0.3",
-    "wrangler": "4.135.0"
+    "wrangler": "4.142.0"
   },
   "packageManager": "pnpm@11.9.0"
 }
