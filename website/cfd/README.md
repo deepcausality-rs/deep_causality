@@ -11,6 +11,8 @@ pnpm dev        # local server
 pnpm build      # -> dist/
 pnpm check      # astro check; needs TypeScript 6.x, see below
 pnpm check:tokens   # verify the token mirror has not drifted
+pnpm check:prose    # build, then lint prose and internal links (scripts/sitecheck.py)
+pnpm check:prose:test   # the lint's own tests
 ```
 
 There is **no Bazel target for this site**; `pnpm build` is the only build path.
@@ -150,6 +152,17 @@ not "marketing site".
 **Numbers** come from a committed artifact and keep its precision. A wall-clock
 figure names the machine (`MACHINE` in `src/consts.ts`). A number with no
 artifact says so on its row.
+
+**Checking.** `pnpm check:prose` builds the site and runs `scripts/sitecheck.py` over every
+page. It lints the text a reader sees: the content of `<main>`, plus each page's `<title>` and
+meta description. Errors fail the run (exit 1): a banned phrase, *very* or *really*, a paragraph
+that opens with *Additionally*, *Furthermore* or *Moreover*, a duplicate id, a broken link or
+anchor, and a page that yields no prose at all (its layout lost `<main>`). Warnings print and fail
+only under `--strict`: jargon outside the pages that define it, more than one em dash per 250
+words, "not A, but B", a sentence over 45 words, uniform sentence length, words glued across
+markup, unclosed markup that truncated the page. Exit 2 means a usage error (no build, unknown
+route). The allowlists (which page may use which term) are at the top of the script, each with
+its reason. Code blocks and `aria-hidden` figure text are not linted.
 
 **Page skeleton.** Every interior page uses `PageShell`, then one `.doc-head`
 (eyebrow, one `h1`, a `.lede` that answers the title) and a series of
