@@ -28,9 +28,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions-rs/toolchain@v1
         with:
-          targets: thumbv7em-none-eabihf
+          toolchain: stable
+          override: true
+          target: thumbv7em-none-eabihf
       - run: bash scripts/check_no_std.sh thumbv7em-none-eabihf
 
   # `alloc` is a level without a float-math backend. Each alloc-only build must either build or
@@ -40,9 +42,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions-rs/toolchain@v1
         with:
-          targets: thumbv7em-none-eabihf
+          toolchain: stable
+          override: true
+          target: thumbv7em-none-eabihf
       - run: bash scripts/check_alloc.sh thumbv7em-none-eabihf
 
   # A crate whose `no-std` feature does not name `alloc` must link into an application with no
@@ -53,7 +57,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions-rs/toolchain@v1
         with:
-          targets: thumbv7em-none-eabihf
+          toolchain: stable
+          override: true
+          target: thumbv7em-none-eabihf
       - run: bash scripts/check_core.sh thumbv7em-none-eabihf
