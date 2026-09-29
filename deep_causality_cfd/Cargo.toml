@@ -113,7 +113,7 @@ workspace = true
 
 [dev-dependencies]
 criterion = { workspace = true }
-deep_causality_tempfile = { workspace = true }
+deep_causality_tempfile = { path = "../deep_causality_utils/deep_causality_tempfile" }
 
 [[bench]]
 name = "bench_dec_ns_march"

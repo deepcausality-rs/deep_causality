@@ -136,11 +136,29 @@ dc__edges() {
     '
 }
 
+# Counts the internal dev-dependencies declared with a bare path. Cargo drops those from the
+# published manifest, and `cargo metadata` reports their requirement as `*`.
+dc__bare_path_edges() {
+    cargo metadata --no-deps --format-version 1 | jq '
+        ([.packages[].name]) as $members
+        | [.packages[].dependencies[]
+           | select(.kind == "dev" and .req == "*")
+           | select(.name as $dep | $members | index($dep))]
+        | length
+    '
+}
+
 edges="$(dc__edges)"
 
-# An empty list would pass forever while the invariant rotted. This workspace has such edges, so
-# refuse: their disappearance is a change to argue with, not to read off a green tick.
+# An empty list is fine when every internal dev-dependency uses a bare path: none reaches the
+# index. It would also be empty if `cargo metadata` stopped reporting dev-dependencies, and that
+# must not read as a green tick, so the bare-path edges have to be there to pass.
 if [ -z "$edges" ]; then
+    bare="$(dc__bare_path_edges)"
+    if [ "$bare" -gt 0 ]; then
+        echo "check_dev_deps: all $bare internal dev-dependencies use a bare path; none reaches the index."
+        exit 0
+    fi
     echo "check_dev_deps: no internal dev-dependency carries a version requirement." >&2
     echo "  Either every one now uses a bare path, which makes this check moot, or" >&2
     echo "  'cargo metadata' stopped reporting them. Confirm which before deleting this." >&2

@@ -40,12 +40,10 @@ workspace = true
 workspace = true
 
 [dev-dependencies.deep_causality_num_complex]
-workspace = true
-features = ["default"]
+path = "../deep_causality_num_complex"
 
 [dev-dependencies.deep_causality_num_rational]
 path = "../deep_causality_num_rational"
-features = ["default"]
 
 [lints]
 workspace = true
