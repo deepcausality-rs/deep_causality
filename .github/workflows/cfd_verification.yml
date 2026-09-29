@@ -80,7 +80,7 @@ jobs:
   # Guards the two lists above against drift from Cargo.toml. Cheap, so it runs on every trigger.
   verification-suite-complete:
     name: Every verification harness is scheduled
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
 
@@ -120,7 +120,7 @@ jobs:
     name: Fast harnesses (pull request)
     # Skipped on the monthly schedule: the PR run already covers these.
     if: github.event_name != 'schedule'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
 
@@ -177,7 +177,7 @@ jobs:
     name: Slow harnesses (monthly)
     # Monthly and manual only — ~12 min, dominated by dec_cylinder. Never gates a pull request.
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 90
     steps:
       - uses: actions/checkout@v7

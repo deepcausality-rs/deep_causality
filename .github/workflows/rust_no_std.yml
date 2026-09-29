@@ -25,7 +25,7 @@ env:
 jobs:
   no-std:
     name: no_std build (thumbv7em-none-eabihf)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: actions-rs/toolchain@v1
@@ -39,7 +39,7 @@ jobs:
   # stop at the deep_causality_num guard, with no other crate failing.
   alloc:
     name: alloc-only build (thumbv7em-none-eabihf)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: actions-rs/toolchain@v1
@@ -54,7 +54,7 @@ jobs:
   # jobs, which build rlibs, cannot see it.
   core:
     name: core-only link (thumbv7em-none-eabihf)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: actions-rs/toolchain@v1
