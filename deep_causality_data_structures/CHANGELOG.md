@@ -27,6 +27,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - *(deep_causality_physics)* build under no_std; gate topology behind a feature ([#816](https://github.com/deepcausality-rs/deep_causality/pull/816))
 
+### Other
+
+- release
+
+## [0.10.21](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_data_structures-v0.10.20...deep_causality_data_structures-v0.10.21) - 2026-09-29
+
+### Fixed
+
+- *(deep_causality_physics)* build under no_std; gate topology behind a feature ([#816](https://github.com/deepcausality-rs/deep_causality/pull/816))
+
 ## [0.10.20](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_data_structures-v0.10.19...deep_causality_data_structures-v0.10.20) - 2026-09-25
 
 ### Other
