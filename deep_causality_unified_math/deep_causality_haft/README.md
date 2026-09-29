@@ -423,38 +423,38 @@ impl NaturalIso<OptionWitness, MyOptionWitness> for OptionMyOptionIso {
 
 ## non-std support
 
-The crate supports `no-std` environments such as embedded systems. The `std` feature is on by default, so disable it to build for `no-std`. With an allocator, enable the `alloc` feature for dynamic collections like `Vec`, `Box`, `BTreeMap`, etc.
+The crate supports `no-std` environments such as embedded systems. The `std` feature is on by default.
+The `no-std` feature builds on `core` alone: the HKT traits and algebraic structures, with no allocator
+required. Add the `alloc` feature for the witnesses over dynamic collections such as `Vec`, `Box` and
+`BTreeMap`. The `HashMap` witnesses need `std`.
 
 ### Cargo Build and Test for `no-std`
 
-**1. Building for `no-std` with Allocator:**
-
-To build for `no-std` with dynamic collections (via `alloc`):
+**1. Building for `no-std` with an Allocator:**
 
 ```bash
-cargo build --no-default-features --features alloc -p deep_causality_haft
+cargo build --no-default-features --features no-std,alloc -p deep_causality_haft
 ```
 
-**2. Testing for `no-std` with Allocator:**
-
-To test for `no-std` with an allocator:
+**2. Testing for `no-std` with an Allocator:**
 
 ```bash
-cargo test --no-default-features --features alloc -p deep_causality_haft
+cargo test --no-default-features --features no-std,alloc -p deep_causality_haft
 ```
 
-**3. Building for `no-std` without Allocator (Core/Algebra only):**
-
-Without an allocator, build without the `alloc` feature. The crate then offers only the core HKT traits and algebraic structures that need no dynamic memory.
+**3. Building for `no-std` without an Allocator (Core/Algebra only):**
 
 ```bash
-cargo build --no-default-features -p deep_causality_haft
+cargo build --no-default-features --features no-std -p deep_causality_haft
 ```
 
-**4. Testing for `no-std` without Allocator:**
+**4. Testing for `no-std` without an Allocator:**
+
+The doc examples use `Vec` and `Box` witnesses and need `alloc`, so test the library and the
+integration tests:
 
 ```bash
-cargo test --no-default-features -p deep_causality_haft
+cargo test --no-default-features --features no-std --lib --tests -p deep_causality_haft
 ```
 
 ### Bazel Build

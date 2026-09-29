@@ -30,7 +30,7 @@ mod category_tests;
 // `Cofree` is alloc-only, like `Free`.
 #[cfg(all(test, feature = "alloc"))]
 mod cofree_tests;
-#[cfg(test)]
+#[cfg(all(test, feature = "alloc"))]
 mod comonad_tests;
 #[cfg(test)]
 mod effect_system_tests;
@@ -38,7 +38,7 @@ mod effect_system_tests;
 mod either_tests;
 #[cfg(test)]
 mod endomorphism_tests;
-#[cfg(test)]
+#[cfg(all(test, feature = "alloc"))]
 mod foldable_tests;
 #[cfg(all(test, feature = "alloc"))]
 mod free_monad_tests;
@@ -70,7 +70,7 @@ mod profunctor_tests;
 mod pure_tests;
 #[cfg(test)]
 mod signatures_tests;
-#[cfg(test)]
+#[cfg(all(test, feature = "alloc"))]
 mod traversable_list_tests;
 #[cfg(test)]
 mod traversable_tests;

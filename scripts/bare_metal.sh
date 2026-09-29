@@ -59,6 +59,18 @@ dc_has_feature() {
     ' "$1/Cargo.toml"
 }
 
+# Succeeds when the `no-std` feature of <crate dir>/Cargo.toml exists and does not name `alloc`,
+# which makes it a `core`-only build.
+dc_no_std_is_core() {
+    awk '
+        /^\[features\]/                      { in_f = 1; next }
+        /^\[/                                { in_f = 0 }
+        in_f && /^no-std[[:space:]]*=/       { in_n = 1; found = 1 }
+        in_n                                 { if ($0 ~ /"alloc"/) has_alloc = 1; if ($0 ~ /\]/) in_n = 0 }
+        END                                  { exit !(found && !has_alloc) }
+    ' "$1/Cargo.toml"
+}
+
 # Exits unless <target> is installed and has no operating system. A hosted target ships `std`,
 # so a dependency that enables `std` links there without complaint and the check proves nothing.
 # `target_os = "none"` is the condition deep_causality_par's `parallel` guard keys on as well.

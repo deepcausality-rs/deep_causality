@@ -23,9 +23,9 @@ mod endomorphism_tests;
 // `Free`/`Cofree` are alloc-only; gate like `formalization_lean/free_monad_tests`.
 #[cfg(all(test, feature = "alloc"))]
 mod eq_debug_functor_tests;
-#[cfg(test)]
+#[cfg(all(test, feature = "alloc"))]
 mod foldable_tests;
-#[cfg(test)]
+#[cfg(all(test, feature = "alloc"))]
 mod functor_tests;
 #[cfg(test)]
 mod io_tests;
@@ -38,9 +38,9 @@ mod morphism_tests;
 #[cfg(test)]
 mod parametric_monad_tests;
 mod profunctor_tests;
-#[cfg(test)]
+#[cfg(all(test, feature = "alloc"))]
 mod pure_tests;
 #[cfg(test)]
 mod riemann_map_tests;
-#[cfg(test)]
+#[cfg(all(test, feature = "alloc"))]
 mod traversable_tests;

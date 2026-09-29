@@ -3,6 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+// The fixtures under test are heap witnesses.
+#![cfg(feature = "alloc")]
+
 use deep_causality_haft::utils_tests::*;
 use deep_causality_haft::{
     Applicative, Effect3, Effect4, Effect5, Functor, HKT, HKT3, HKT4, HKT5, Monad, MonadEffect3,
