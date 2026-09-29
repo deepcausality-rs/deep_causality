@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_algorithms-v0.5.2...deep_causality_algorithms-v0.5.3) - 2026-09-29
+
+### Fixed
+
+- review findings on the no_std checks, mRMR ties and BRCD targets
+- *(deep_causality_physics)* build under no_std; gate topology behind a feature ([#816](https://github.com/deepcausality-rs/deep_causality/pull/816))
+
+### Other
+
+- alloc-only check, std-only list, no_std port of algorithms
+
 ## [0.5.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_algorithms-v0.5.1...deep_causality_algorithms-v0.5.2) - 2026-09-25
 
 ### Other

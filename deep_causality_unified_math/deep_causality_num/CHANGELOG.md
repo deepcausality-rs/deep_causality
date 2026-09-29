@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.5](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num-v0.5.4...deep_causality_num-v0.5.5) - 2026-09-29
+
+### Fixed
+
+- review findings on the no_std checks, mRMR ties and BRCD targets
+
+### Other
+
+- alloc-only check, std-only list, no_std port of algorithms
+
 ## [0.5.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num-v0.5.3...deep_causality_num-v0.5.4) - 2026-09-25
 
 ### Other
