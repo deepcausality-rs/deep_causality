@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_tensor-v0.6.2...deep_causality_tensor-v0.6.3) - 2026-09-29
+
+### Fixed
+
+- *(tensor)* lib tests build under no-std
+
 ## [0.6.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_tensor-v0.6.1...deep_causality_tensor-v0.6.2) - 2026-09-25
 
 ### Other
