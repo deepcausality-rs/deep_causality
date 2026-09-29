@@ -1,6 +1,6 @@
 ---
 /**
- * Shared detail shell for blueprints blueprints and worked examples.
+ * Shared detail shell for how-to guides, worked examples and tutorial walks.
  *
  * Single column at --w-prose, with an optional meta rail above the body for
  * the structured frontmatter facts. The prose rules come from global.css, so
@@ -103,8 +103,18 @@ const {
   @media (min-width: 720px) { .detail { padding: var(--space-9) var(--space-5); } }
 
   .d-head { margin-bottom: var(--space-7); }
-  .d-head h1 { margin: var(--space-3) 0 var(--space-4); }
-  .d-summary { color: var(--fg-1); max-width: var(--measure); margin: 0 0 var(--space-5); }
+  .d-head h1 {
+    margin: var(--space-3) 0 var(--space-4);
+    font-size: clamp(1.875rem, 3.2vw + 0.5rem, 2.75rem);
+    line-height: var(--lh-h1);
+  }
+  .d-summary {
+    color: var(--fg-1);
+    font-size: var(--t-h4);
+    line-height: var(--lh-h4);
+    max-width: var(--measure-lede);
+    margin: 0 0 var(--space-5);
+  }
 
   .d-tags { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-5); }
 
@@ -119,8 +129,8 @@ const {
   }
   .d-cmd code {
     display: block;
-    overflow-x: auto;
-    white-space: pre;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
     background: var(--bg-2);
     padding: var(--space-3) var(--space-4);
     border-radius: var(--radius-sm);

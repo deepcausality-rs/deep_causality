@@ -1,15 +1,20 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import SiteHeader from '../../components/nav/SiteHeader.astro';
+/**
+ * /why/: the open CFD problems this library addresses, argued from Teschner's survey.
+ *
+ * Section ids are linked from other pages: algorithms, modelling, mdao, knowledge,
+ * counterfactual. The survey's challenge numbers follow Teschner's article.
+ */
+import PageShell from '../../components/nav/PageShell.astro';
 import { Code } from 'astro:components';
 import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
 import { CRATE_URL, STUDIES_URL, VERIFICATION_URL, MACHINE } from '../../consts';
 
 const SHIKI = { light: rustLight, dark: rustDark };
 
-const title = 'Why — DeepCausality CFD';
+const title = 'Open CFD problems this library addresses | DeepCausality CFD';
 const description =
-  'Which of the six standing challenges in CFD this crate answers, and the measurement behind each answer.';
+  'Which of the six unsolved CFD problems in Teschner’s survey this library addresses, what it does about each, and the measurement behind each answer.';
 
 const couplingCode = `Coupling::between_steps()
     .then(VibrationalLagStage::new(/* Millikan-White bath */))
@@ -44,338 +49,306 @@ const studyCode = `let table = CfdFlow::study("weather-dispersion table")
     .gates(model::weather_gates())
     .verdict()?;`;
 ---
-<BaseLayout title={title} description={description} path="/why/">
-  <SiteHeader slot="header" />
+<PageShell title={title} description={description} path="/why/">
+  <header class="doc-head">
+    <p class="eyebrow">Why</p>
+    <h1>Open CFD problems this library addresses</h1>
+    <p class="lede">
+      Teschner’s survey, drawn from the NASA CFD Vision 2030 Study, names six unsolved problems in
+      CFD. This library addresses four of them and one the survey omits: forking a running
+      simulation.
+    </p>
+  </header>
 
-  <article class="page wpage">
-    <header class="whead">
-      <p class="eyebrow">Why</p>
-      <h1>Four grand challenges</h1>
-      <p class="lede">
-        Teschner's survey of the six biggest unsolved problems in CFD, drawn from
-        the NASA CFD Vision 2030 Study, names where the field is stuck. Four of
-        those six have informed the design of this CFD library. 
-      </p>
-    </header>
+  <section class="doc-sec wcard-accent" id="counterfactual">
+    <p class="tag">Not on the survey’s list</p>
+    <h2>A running simulation can pause and fork</h2>
 
-    <!-- ---------------------------------------------------------------- -->
+    <p>
+      <code>CfdFlow</code> pauses a running simulation when a condition you name becomes true, then
+      continues one branch per candidate decision from that state. The survey’s six entries omit
+      this. A simulation has been something you configure and run to completion, so changing a
+      decision meant editing an input file and paying for the whole trajectory again.
+    </p>
 
-    <section class="wcard panel corner-brackets" id="algorithms">
-      <p class="tag">Challenge 3: Numerical algorithms</p>
-      <h2>Error is attributed, and cost falls out of the representation</h2>
+    <p>
+      <code>CfdFlow</code> separates a problem’s description from its execution. A march runs a
+      description until a condition becomes true and returns a resumable pause. A campaign forks
+      that pause once per candidate and continues each branch in its own world, a run description
+      with one declared difference. The branches share the paused state until one writes to it,
+      tensor fields, navigation engine and event log included. The branch point is a flow-resolved
+      state, not a rerun from initial conditions.
+    </p>
 
-      <p class="quote">
-        The survey records that uncertainty quantification is "unexplored in most
-        cases," that error estimation for time-dependent flows lacks robustness,
-        and that modelling error, boundary-condition error and numerical error
-        resist being quantified at the same time.
-      </p>
+    <p>
+      Forking parameters gives a sweep. Forking state mid-flight gives the decision the vehicle
+      faces, with the flow, the plasma sheath (the ionized gas around the vehicle) and the
+      navigation filter as they stand at that instant.
+    </p>
 
-      <p class="body">
-        Every theory, solver, stage and observable in the crate is generic over a
-        single real scalar. A program fixes one alias and the whole computation
-        runs at that precision, from the flux stencils through to the Kalman
-        filter, downcasting to <code>f64</code> only at the display boundary.
-      </p>
+    <ul class="nums">
+      <li>Fork sharing is structural and checked by a gate (a pass or fail check on a result): branches enter by reference, with no tensor copied at fork time. Continuing a branch costs about the same as an unforked march; coasting is cheaper at 0.66×.</li>
+      <li>Bank-angle corridor (the bank angle is the roll that steers the vehicle’s lift sideways): seventeen branches, six coarse and eleven fine, with the best committed mid-descent.</li>
+      <li>Plasma retropulsion (an engine fired against the flow to slow a descent): across the five mid-burn branches, the velocity shed departs a frozen-drag prediction by up to 139.4 m/s. The drag change is the cited Jarvinen-Adams correlation, not the simulated plume.</li>
+    </ul>
 
-      <Code code={precisionCode} lang="rust" themes={SHIKI} />
+    <p class="src">
+      <a href="/fork-or-sweep/">When to fork and when to sweep</a>
+      <a href="/blueprints/fork-a-running-simulation/">Fork a running simulation</a>
+      <a href="/examples/">Worked examples</a>
+    </p>
+  </section>
 
-      <p class="body">
-        That turns error attribution into an experiment. The turbulence example
-        runs one Lorenz rate field at all three precisions in a single program
-        and reports what each buys: the forecast horizon of a chaotic flow lands
-        at t ≈ 21.5, 44.5 and about 81 for <code>f32</code>, <code>f64</code>
-        and <code>Float106</code>, so round-off, not the step size, is what caps
-        the prediction.
-      </p>
+  <section class="doc-sec" id="modelling">
+    <p class="tag">Challenge 2: Physical modelling</p>
+    <h2>The regime is read from the flow on every step</h2>
 
-      <p class="body">
-        The plasma-blackout corridor was flown the same way once, at
-        <code>f64</code> and again at 106-bit, and every gate and every discrete
-        event step came out identical with the continuous witnesses agreeing to
-        15 or 16 significant digits. That result stands as history: it was
-        recorded on the superseded surrogate-era build, and re-flying the
-        corridor at 106-bit today fails to compile, because the example has
-        accumulated <code>f64</code>-specific code and a few spots in the crate
-        have too. Closing that gap is what would make the corridor's round-off
+    <p>
+      The library classifies the flow regime from the evolved state on every step and logs every
+      change. A march can stop on a change, so the run finds a regime change; nobody tells it where
+      to switch. The classification does not switch closures: the crate implements closures for the
+      continuum band only.
+    </p>
+
+    <p>
+      The freestream Knudsen number (the ratio of the molecular mean free path to a length scale)
+      bands the flow into continuum Navier–Stokes, slip-corrected continuum, transitional or
+      free-molecular. The evolved electron density sets the plasma frequency, which decides whether
+      the GNSS link (satellite navigation) exists and so which measurements the navigation filter
+      folds in. The retropulsion descent also bands the Mach number and tracks the thrust state.
+    </p>
+
+    <p>
+      A second criterion, the force ratio <code>ε = a_aero/a_grav</code>, marks where a trajectory
+      should change integrator: the exact KS-conformal core with aero as a between-step kick while
+      gravity dominates, then direct Cowell integration once aero does. That switch is public API
+      (<code>RegimeSwitch</code>) the shipped engine does not call.
+    </p>
+
+    <p>The four regime entries in the event log of a committed corridor run:</p>
+
+    <Code code={regimeLog} lang="text" themes={SHIKI} />
+
+    <p>
+      One descent passes through slip flow, continuum flow, comms blackout and reacquisition in one
+      uninterrupted program. The log shows one Knudsen band crossing, slip to continuum, and the
+      link going denied and returning. Turbulence closures are staged on the discrete-exterior-calculus
+      (DEC) solver behind the spectra observables; the <a href="/roadmap/">roadmap</a> carries the
+      sequencing.
+    </p>
+
+    <ul class="nums">
+      <li>RAM-C II (a reentry flight experiment) stagnation streamline, ~71 km, Mach 25: the uncalibrated finite-rate network, run as prediction rather than fit, lands at 2.251e19 m⁻³ against the ~1e19 m⁻³ flight anchor, +0.35 decades (a decade is a factor of ten) inside a ±0.70 band.</li>
+      <li>The closed-form Park-2T controller (a two-temperature relaxation model) lands at 5.31e17 m⁻³, 1.27 decades below the anchor after the N₂–N₂ reduced-mass correction; the offset is reported, not tuned away.</li>
+      <li>Plasma frequency ω_p 4.111e10 rad/s against the 9.40e9 rad/s comms band; blackout classified true.</li>
+      <li>Validated incompressible envelope Re 100 to 1600; the wake is reported and never gated.</li>
+    </ul>
+
+    <p class="quote">
+      Teschner’s survey, challenge 2: closures are calibrated over a range of flows, then fail
+      outside it, and the failure is invisible from inside the run.
+    </p>
+
+    <p class="src">
+      <a href="/validation/">Validation records</a>
+      <a href="/boundaries/">Capability boundaries</a>
+      <a href="/boundaries/#regime-diagnostic">Regime classification is a diagnostic</a>
+    </p>
+  </section>
+
+  <section class="doc-sec" id="algorithms">
+    <p class="tag">Challenge 3: Numerical algorithms</p>
+    <h2>Error is attributed by precision, and cost falls out of the representation</h2>
+
+    <p>
+      The library attributes error by running one program at several precisions. It cuts cost in
+      the representation of the flow. Every theory, solver, stage and observable is generic over a
+      single real scalar. A program fixes one alias and the whole computation runs at that
+      precision, from the flux stencils through to the Kalman filter, downcasting to
+      <code>f64</code> only at the display boundary.
+    </p>
+
+    <Code code={precisionCode} lang="rust" themes={SHIKI} />
+
+    <p>
+      That turns error attribution into an experiment. The turbulence example runs one Lorenz rate
+      field at all three precisions in a single program and reports what each buys. The forecast
+      horizon of a chaotic flow lands at t ≈ 21.5, 44.5 and about 81 for <code>f32</code>,
+      <code>f64</code> and <code>Float106</code>, so round-off, not the step size, caps the
+      prediction.
+    </p>
+
+    <div class="callout callout-warn">
+      <p class="callout-title">Limit: the 106-bit corridor result is a record</p>
+      <p>
+        The plasma-blackout corridor was flown the same way once, at <code>f64</code> and again at
+        106-bit. Every gate and every discrete event step came out identical, with the continuous
+        witnesses agreeing to 15 or 16 significant digits. That result stands as history: it was
+        recorded on the superseded surrogate-era build, and re-flying the corridor at 106-bit today
+        fails to compile, because the example has accumulated <code>f64</code>-specific code and a
+        few spots in the crate have too. Closing that gap would make the corridor’s round-off
         budget a claim rather than a record.
       </p>
+    </div>
 
-      <p class="body">
-        Cost is attacked at the representation. The compressible marchers run on
-        quantized tensor trains, where a <code>2^L</code> grid costs order
-        <code>χ² · L</code>: logarithmic in point count, with sharp structure
-        paid for in bond dimension. The rank studies located the driver as
-        coordinate alignment, and the compressible carrier answers it with a
-        shock-fitted inflow strip, so the exact Rankine–Hugoniot state bounds the
-        marched layer and the shock is never captured.
-      </p>
+    <p>
+      Cost is cut at the representation. The compressible marchers store the flow in a compressed
+      quantized form (see <a href="/solvers/">Solvers</a>). A <code>2^L</code> grid
+      costs order <code>χ² · L</code>, where χ is the rank of the compression: logarithmic in point
+      count, with sharp structure paid for in rank. The rank studies located the cost driver as
+      coordinate alignment. The compressible carrier answers it with a shock-fitted inflow strip, so
+      the exact Rankine–Hugoniot state bounds the marched layer and the shock is never captured.
+    </p>
 
-      <ul class="nums">
-        <li>Graded-torus MMS, 8² → 64²: observed order 1.98–2.01 against 2.00; divergence-freeness exact by construction.</li>
-        <li>Taylor–Green RHS kernel against exact autodiff derivatives: max abs error 1.11e-16.</li>
-        <li>Precision ladder on the same program: 3e-8 (f32) / 1e-16 (f64) / 8e-33 (Float106).</li>
-        <li>Sod shock tube at 512 cells, t = 0.2: density L1 0.0175, velocity 0.0274, pressure 0.0151, all against a 0.03 tolerance; star-region pressure 0.3032 against the canonical p* = 0.3031.</li>
-        <li>Taylor–Green on a tensor train at 32²: bond 32 against 1024 dense, a 32× compression, observed order 2.18.</li>
-        <li>Blunt-body bow shock, 2⁵ → 2⁷: fitted bond 3 → 5, Cartesian capture bond 16 → 61.</li>
-      </ul>
+    <ul class="nums">
+      <li>Graded-torus MMS (method of manufactured solutions), 8² → 64²: observed order 1.98–2.01 against 2.00; divergence-freeness exact by construction.</li>
+      <li>Taylor–Green RHS kernel against exact autodiff derivatives: max abs error 1.11e-16.</li>
+      <li>Precision ladder on the same program: 3e-8 (f32) / 1e-16 (f64) / 8e-33 (Float106).</li>
+      <li>Sod shock tube at 512 cells, t = 0.2: density L1 0.0175, velocity 0.0274, pressure 0.0151, all against a 0.03 tolerance; star-region pressure 0.3032 against the canonical p* = 0.3031.</li>
+      <li>Taylor–Green in the compressed form at 32²: bond 32 (the rank) against 1024 dense, a 32× compression, observed order 2.18.</li>
+      <li>Blunt-body bow shock, 2⁵ → 2⁷: fitted bond 3 → 5, Cartesian capture bond 16 → 61.</li>
+    </ul>
 
-      <p class="src">
-        <a href={VERIFICATION_URL}>verification/ <span aria-hidden="true">↗</span></a>
-        <a href={STUDIES_URL}>studies/ <span aria-hidden="true">↗</span></a>
-      </p>
-    </section>
+    <p class="quote">
+      Teschner’s survey, challenge 3: uncertainty quantification is “unexplored in most cases”, and
+      modelling, boundary-condition and numerical error resist being quantified together.
+    </p>
 
-    <!-- ---------------------------------------------------------------- -->
+    <p class="src">
+      <a href={VERIFICATION_URL}>verification/ <span aria-hidden="true">↗</span></a>
+      <a href={STUDIES_URL}>studies/ <span aria-hidden="true">↗</span></a>
+    </p>
+  </section>
 
-    <section class="wcard panel corner-brackets" id="modelling">
-      <p class="tag">Challenge 2: Physical modelling</p>
-      <h2>A model's calibration range is a runtime predicate</h2>
+  <section class="doc-sec" id="knowledge">
+    <p class="tag">Challenge 5: Knowledge extraction</p>
+    <h2>The run returns a verdict, not a field</h2>
 
-      <p class="quote">
-        The survey's charge against the standard closures is that they are
-        calibrated over a range of flows and then fail outside it, with the
-        failure invisible from inside the run.
-      </p>
+    <p>
+      The study grammar reduces inside the process. A campaign names its cases, marches or forks
+      them, reduces each outcome to a scored row, and gates the table. The table and the verdict
+      cross the process boundary; the field stays where it was computed.
+    </p>
 
-      <p class="body">
-        Here the regime is a classified property of the evolved state, decided
-        again on every step from a measured quantity. Three axes switch
-        independently. The freestream Knudsen number selects the governing model:
-        continuum Navier–Stokes, slip-corrected continuum, transitional, or
-        free-molecular. The force ratio <code>ε = a_aero/a_grav</code> selects the
-        integrator, so a trajectory advances on the exact KS-conformal core with
-        aero as a between-step kick while gravity dominates, then switches to
-        direct Cowell once aero does. The evolved electron density sets the plasma
-        frequency, and the plasma frequency decides whether the GNSS link exists
-        at all.
-      </p>
+    <Code code={studyCode} lang="rust" themes={SHIKI} />
 
-      <p class="body">
-        Because the classification is read off the field, a regime change is an
-        event the run finds rather than a station it is told to switch at. Every
-        transition lands in the provenance log. From a committed corridor run:
-      </p>
+    <p>
+      <code>verdict()</code> returns data. The DSL never prints and never exits, so the caller
+      decides what an exit code means. The gating sequence is a named value the study inserts whole,
+      which makes an acceptance criterion a reviewable object rather than a comment in a
+      post-processing script. Every branch stamps a <code>!!ContextAlternation!!</code> marker into
+      its event log that names its baseline. On the <code>march_for</code> path, an optional
+      <code>save_log(path)</code> flushes the log to disk, one file per branch under a fan-out; fork
+      branches keep the log in the returned report.
+    </p>
 
-      <Code code={regimeLog} lang="text" themes={SHIKI} />
+    <p>
+      The same discipline covers the crate’s own evidence. <code>verification/</code> holds runnable
+      programs gated against analytic solutions, published references, or invariants the
+      discretization must preserve. <code>studies/</code> holds the empirical probes that settled
+      design questions, with each finding encoded as a gate so the conclusion stays reproducible
+      instead of surviving as folklore. Three hypotheses were refuted this way and are recorded as
+      refuted.
+    </p>
 
-      <p class="body">
-        One descent moves through orbit-like dynamics, slip flow, continuum flow,
-        comms blackout and reacquisition inside one uninterrupted program, with
-        the governing model changing underneath it four times. Turbulence
-        closures are staged on the DEC solver behind the spectra observables; the
-        <a href="/roadmap/">roadmap</a> carries the sequencing.
-      </p>
+    <ul class="nums">
+      <li>Thirteen gated verification programs on the validation page, each with a committed run artifact and a stated caveat.</li>
+      <li>Findings encoded as gates: a study that stops reproducing fails, rather than quietly ageing.</li>
+      <li>Three refuted hypotheses kept on the record with the measurement that overturned each.</li>
+    </ul>
 
-      <ul class="nums">
-        <li>RAM-C II stagnation streamline, ~71 km, M = 25: the uncalibrated finite-rate network, run as prediction rather than fit, lands at 2.251e19 m⁻³ against the ~1e19 m⁻³ flight anchor, +0.35 decades inside a ±0.70 band.</li>
-        <li>The closed-form Park-2T controller lands at 5.31e17 m⁻³, 1.27 decades below the anchor after the N₂–N₂ reduced-mass correction; the offset is reported, not tuned away.</li>
-        <li>Plasma frequency ω_p 4.111e10 rad/s against the 9.40e9 comms band; blackout classified true.</li>
-        <li>Validated incompressible envelope Re 100 to 1600; the wake is reported and never gated.</li>
-      </ul>
+    <p class="quote">
+      Teschner’s survey, challenge 5: pulling whole simulations onto a workstation stops being
+      possible at scale, and extracting actionable information from single runs and parameter
+      sweeps needs better frameworks than the post-processor.
+    </p>
 
-      <p class="src">
-        <a href="/validation/">Validation records</a>
-        <a href="/boundaries/">Capability boundaries</a>
-      </p>
-    </section>
+    <p class="src">
+      <a href="/validation/">Validation records</a>
+      <a href="/boundaries/">Capability boundaries</a>
+    </p>
+  </section>
 
-    <!-- ---------------------------------------------------------------- -->
+  <section class="doc-sec" id="mdao">
+    <p class="tag">Challenge 6: Multidisciplinary analysis and optimization</p>
+    <h2>Nothing is exchanged, because nothing is separate</h2>
 
-    <section class="wcard panel corner-brackets" id="mdao">
-      <p class="tag">Challenge 6: Multidisciplinary analysis and optimization</p>
-      <h2>Nothing is exchanged, because nothing is separate</h2>
+    <p>
+      A coupling here is a compile-time list of physics stages stepping one shared field. The
+      disciplines never ran in separate processes, so no file, no adapter and no exchange format
+      exist.
+    </p>
 
-      <p class="quote">
-        The survey observes that coupling several physics solvers needs a robust
-        framework, that uncertainty propagation across a solver chain is
-        unaddressed, and that no standardized multidisciplinary exchange format
-        exists in the way CGNS serves CFD alone.
-      </p>
+    <Code code={couplingCode} lang="rust" themes={SHIKI} />
 
-      <p class="body">
-        A coupling stack here is a static cons-tuple of physics stages stepping
-        one shared field. No file, no adapter, and no exchange format exist,
-        because the disciplines were never in separate processes.
-      </p>
+    <p>
+      One loop body holds vibrational relaxation, reacting plasma chemistry, regime classification,
+      steered aerodynamic force, a 17-state error-state Kalman navigation engine, and a
+      bounded-correction safety envelope. Stages communicate through named fields on the evolved
+      state, and an <code>Err</code> from any stage short-circuits the whole step.
+    </p>
 
-      <Code code={couplingCode} lang="rust" themes={SHIKI} />
+    <p>
+      Uncertainty crosses the chain the same way. The ensemble index threads into the stack, so a
+      Monte-Carlo draw is a parameter of the coupled physics rather than a wrapper around it. The
+      evolved electron density gates which measurements the Kalman filter may fold. The safety
+      envelope’s clamped bank command is flown by the aero stage and steers the trajectory that sets
+      the next step’s freestream. Fluid dynamics, estimation and control close one loop.
+    </p>
 
-      <p class="body">
-        Vibrational relaxation, reacting plasma chemistry, regime classification,
-        steered aerodynamic force, a 17-state error-state Kalman navigation
-        engine, and a bounded-correction safety gate, in one loop body. Stages
-        communicate through named fields on the evolved state, and an
-        <code>Err</code> from any stage short-circuits the whole step.
-      </p>
+    <ul class="nums">
+      <li>Plasma retropulsion descent, blackout exit to touchdown: sixteen gates in 337.5 s on {MACHINE}.</li>
+      <li>Weather-dispersion table: six atmospheres declared as differences from one baseline, each an ensemble of receiver-noise draws, flown concurrently to one gated table.</li>
+      <li>Branch fan-outs run on scoped threads and produce bits identical to the sequential run.</li>
+    </ul>
 
-      <p class="body">
-        Uncertainty crosses the chain the same way. The ensemble index threads
-        into the stack, so a Monte-Carlo draw is a parameter of the coupled
-        physics rather than a wrapper around it. The evolved electron density
-        gates which measurements the Kalman filter is permitted to fold; the
-        Knudsen number selects the governing model; the safety gate's clamped
-        bank command is flown by the aero stage and steers the trajectory that
-        sets the next step's freestream. Fluid dynamics, estimation and control
-        close one loop.
-      </p>
+    <p class="quote">
+      Teschner’s survey, challenge 6: coupled solvers need a framework, uncertainty propagation
+      across a solver chain is unaddressed, and no multidisciplinary exchange format exists
+      comparable to CGNS for CFD alone.
+    </p>
 
-      <ul class="nums">
-        <li>Plasma retropulsion descent, blackout exit to touchdown: sixteen gates in 337.5 s.</li>
-        <li>Weather-dispersion table: six atmospheres alternated from one baseline, each an ensemble of receiver-noise draws, flown concurrently to one gated table.</li>
-        <li>Branch fan-outs run on scoped threads and produce bits identical to the sequential run.</li>
-      </ul>
+    <p class="src">
+      <a href="/examples/">Worked examples</a>
+      <a href={CRATE_URL}>deep_causality_cfd/ <span aria-hidden="true">↗</span></a>
+    </p>
+  </section>
 
-      <p class="src">
-        <a href="/examples/">Worked examples</a>
-        <a href={CRATE_URL}>deep_causality_cfd/ <span aria-hidden="true">↗</span></a>
-      </p>
-    </section>
-
-    <!-- ---------------------------------------------------------------- -->
-
-    <section class="wcard panel corner-brackets" id="knowledge">
-      <p class="tag">Challenge 5: Knowledge extraction</p>
-      <h2>The run returns a verdict, not a field</h2>
-
-      <p class="quote">
-        The survey notes that pulling whole simulations onto a workstation stops
-        being possible at scale, and that extracting actionable information from
-        single runs and parameter sweeps needs better frameworks than the
-        post-processor.
-      </p>
-
-      <p class="body">
-        The study grammar reduces inside the process. A campaign names its cases,
-        marches or forks them, reduces each outcome to a scored row, and gates
-        the table. What crosses the boundary is the table and the verdict; the
-        field stays where it was computed.
-      </p>
-
-      <Code code={studyCode} lang="rust" themes={SHIKI} />
-
-      <p class="body">
-        <code>verdict()</code> returns data. The DSL never prints and never exits,
-        so the caller decides what an exit code means. The gating sequence is a
-        named value the study inserts whole, which makes an acceptance criterion
-        a reviewable object rather than a comment in a post-processing script.
-        Every branch stamps a <code>!!ContextAlternation!!</code> marker into its
-        provenance log naming its baseline, and an optional
-        <code>save_log(path)</code> flushes provenance to disk, one file per
-        branch under a fan-out.
-      </p>
-
-      <p class="body">
-        The same discipline covers the crate's own evidence.
-        <code>verification/</code> holds thirteen runnable programs gated against
-        analytic solutions, published references, or invariants the
-        discretization must preserve. <code>studies/</code> holds the empirical
-        probes that settled design questions, with each finding encoded as a gate
-        so the conclusion stays reproducible instead of surviving as folklore.
-        Four hypotheses were refuted this way and are recorded as refuted.
-      </p>
-
-      <ul class="nums">
-        <li>Thirteen gated verification programs, each with a committed run artifact and a stated caveat.</li>
-        <li>Findings encoded as gates: a study that stops reproducing fails, rather than quietly ageing.</li>
-        <li>Four refuted hypotheses kept on the record with the measurement that killed them.</li>
-      </ul>
-
-      <p class="src">
-        <a href="/validation/">Validation records</a>
-        <a href="/boundaries/">Capability boundaries</a>
-      </p>
-    </section>
-
-    <!-- ---------------------------------------------------------------- -->
-
-    <section class="wcard panel corner-brackets wcard-accent" id="counterfactual">
-      <p class="tag">Not on the list</p>
-      <h2>Forking a running simulation</h2>
-
-      <p class="body">
-        The survey's six entries are the problems the field has agreed to name.
-        Counterfactual dynamics is absent from them, and the reason is that a
-        simulation has been something you configure and then run
-        to completion. Changing a decision meant changing an input file and
-        paying for the whole trajectory again.
-      </p>
-
-      <p class="body">
-        <code>CfdFlow</code> separates the description of a problem from its
-        execution. A march runs a description until a predicate fires and
-        yields a resumable pause. A campaign forks
-        that pause once per candidate and continues each branch in its own
-        alternated world. The fork shares the paused state in O(1) through
-        copy-on-write, tensor fields, navigation engine and provenance log
-        included, so the branch point is a flow-resolved state rather than a
-        rerun from initial conditions.
-      </p>
-
-      <p class="body">
-        The distinction carries a practical consequence. Forking parameters
-        gives a sweep; forking state mid-flight gives the decision the vehicle
-        faces, with its plume, its sheath, and its filter as they stand at that
-        instant.
-      </p>
-
-      <ul class="nums">
-        <li>Fork sharing is structural and gated: branches enter by reference, with no tensor copied at fork time. Continuing a branch costs about the same as an unforked march; coasting is cheaper at 0.66×.</li>
-        <li>Bank-angle corridor: seventeen worlds, six coarse and eleven fine, with the best committed mid-descent.</li>
-        <li>Plasma retropulsion: the mid-burn fork of a marched plume-coupled state departs a frozen-drag prediction by 139.4 m/s.</li>
-      </ul>
-
-      <p class="src">
-        <a href="/blueprints/fork-a-running-simulation/">Fork a running simulation</a>
-        <a href="/examples/">Worked examples</a>
-      </p>
-    </section>
-
-    <!-- ---------------------------------------------------------------- -->
-
-    <section class="wsection">
-      <h2 class="wsection-head">References</h2>
-      <ol class="refs">
-        <li>
-          Teschner, T.-R. <em>The 6 Biggest and Unsolved Challenges in CFD.</em>
-          CFD University, Cranfield University. Accessed 21 July 2026.
-          <a href="https://cfd.university/blog/the-6-biggest-and-unoslved-challenges-in-cfd/">
-            cfd.university <span aria-hidden="true">↗</span>
-          </a>
-        </li>
-        <li>
-          Slotnick, J., Khodadoust, A., Alonso, J., Darmofal, D., Gropp, W.,
-          Lurie, E., and Mavriplis, D. <em>CFD Vision 2030 Study: A Path to
-          Revolutionary Computational Aerosciences.</em> NASA/CR-2014-218178,
-          NASA Langley Research Center, March 2014.
-          <a href="https://ntrs.nasa.gov/citations/20140003093">
-            ntrs.nasa.gov/citations/20140003093 <span aria-hidden="true">↗</span>
-          </a>
-        </li>
-      </ol>
-      <p class="note">
-        The challenge numbering above follows Teschner's article. Every measured
-        figure is copied from a committed artifact under
-        <a href={VERIFICATION_URL}>verification/ <span aria-hidden="true">↗</span></a>
-        or <a href={STUDIES_URL}>studies/ <span aria-hidden="true">↗</span></a>,
-        at <code>f64</code>, release build, on {MACHINE}.
-      </p>
-    </section>
-  </article>
-</BaseLayout>
+  <section class="doc-sec">
+    <h2>References</h2>
+    <ol class="refs">
+      <li>
+        Teschner, T.-R. <em>The 6 Biggest and Unsolved Challenges in CFD.</em>
+        CFD University, Cranfield University. Accessed 21 July 2026.
+        <a href="https://cfd.university/blog/the-6-biggest-and-unoslved-challenges-in-cfd/">
+          cfd.university <span aria-hidden="true">↗</span>
+        </a>
+      </li>
+      <li>
+        Slotnick, J., Khodadoust, A., Alonso, J., Darmofal, D., Gropp, W.,
+        Lurie, E., and Mavriplis, D. <em>CFD Vision 2030 Study: A Path to
+        Revolutionary Computational Aerosciences.</em> NASA/CR-2014-218178,
+        NASA Langley Research Center, March 2014.
+        <a href="https://ntrs.nasa.gov/citations/20140003093">
+          ntrs.nasa.gov/citations/20140003093 <span aria-hidden="true">↗</span>
+        </a>
+      </li>
+    </ol>
+    <p class="note">
+      The challenge numbering above follows Teschner's article. Every measured
+      figure is copied from a committed artifact: a run under
+      <a href={VERIFICATION_URL}>verification/ <span aria-hidden="true">↗</span></a>
+      or <a href={STUDIES_URL}>studies/ <span aria-hidden="true">↗</span></a>,
+      or an example’s <code>output.txt</code>. All were measured at <code>f64</code> in a release
+      build, and the wall-clock figures on {MACHINE}.
+    </p>
+  </section>
+</PageShell>
 
 <style>
-  .wpage { max-width: var(--w-panel); }
-  .whead { margin-bottom: var(--space-8); }
-  .whead h1 { margin: var(--space-3) 0 var(--space-4); }
-  .whead .lede { color: var(--fg-1); max-width: var(--measure); margin: 0; }
+  .doc-sec :global(pre.astro-code) { max-width: none; }
 
-  .wcard {
-    padding: var(--space-5);
-    margin-bottom: var(--space-6);
-    scroll-margin-top: calc(var(--header-h) + var(--space-4));
-  }
-  .wcard-accent { border-left: 3px solid var(--accent); }
+  .wcard-accent { border-left: 3px solid var(--accent); padding-left: var(--space-5); }
 
   .tag {
     font-family: var(--font-mono);
@@ -385,29 +358,19 @@ const studyCode = `let table = CfdFlow::study("weather-dispersion table")
     color: var(--fg-2);
     margin: 0 0 var(--space-2);
   }
-  .wcard h2 {
-    font-size: var(--t-h3);
-    margin: 0 0 var(--space-4);
-    max-width: var(--measure);
-  }
 
   .quote {
-    color: var(--fg-1);
+    color: var(--fg-2);
     font-size: var(--t-body-sm);
-    margin: 0 0 var(--space-4);
     padding-left: var(--space-4);
     border-left: 1px solid var(--line-2);
-    max-width: var(--measure);
-  }
-  .body {
-    color: var(--fg-1);
-    margin: 0 0 var(--space-4);
-    max-width: var(--measure);
   }
 
   .nums { list-style: none; margin: 0 0 var(--space-4); padding: 0; display: grid; gap: var(--space-2); }
+  .doc-sec > ul.nums { padding-left: 0; }
   .nums li {
     color: var(--fg-1);
+    margin: 0;
     padding-left: var(--space-3);
     border-left: 1px solid var(--line-2);
     font-size: var(--t-mono-sm);
@@ -424,14 +387,8 @@ const studyCode = `let table = CfdFlow::study("weather-dispersion table")
     font-size: var(--t-body-sm);
   }
 
-  .wsection { margin-bottom: var(--space-8); }
-  .wsection-head {
-    font-size: var(--t-h3);
-    padding-bottom: var(--space-3);
-    border-bottom: 1px solid var(--line-1);
-    margin-bottom: var(--space-4);
-  }
-  .refs { margin: 0 0 var(--space-4); padding-left: var(--space-5); }
-  .refs li { color: var(--fg-1); margin: 0 0 var(--space-3); max-width: var(--measure); }
-  .note { color: var(--fg-2); font-size: var(--t-body-sm); margin: 0; max-width: var(--measure); }
+  .refs li { color: var(--fg-1); margin: 0 0 var(--space-3); }
+  .note { color: var(--fg-2); font-size: var(--t-body-sm); }
+
+  .callout p { color: var(--fg-1); }
 </style>

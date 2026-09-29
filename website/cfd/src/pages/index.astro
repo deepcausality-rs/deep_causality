@@ -2,17 +2,20 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteHeader from '../components/nav/SiteHeader.astro';
 import Hero from '../components/home/Hero.astro';
-import SectionDivider from '../components/home/SectionDivider.astro';
-import ForkNotSweep from '../components/home/ForkNotSweep.astro';
-import NoCluster from '../components/home/NoCluster.astro';
-import ValidationSnapshot from '../components/home/ValidationSnapshot.astro';
-import Practice from '../components/home/Practice.astro';
-import WhereItFits from '../components/home/WhereItFits.astro';
+import HomeSection from '../components/home/HomeSection.astro';
+import CostBars from '../components/home/CostBars.astro';
+import FourSteps from '../components/home/FourSteps.astro';
+import ResultChart from '../components/home/ResultChart.astro';
+import LoopDiagram from '../components/home/LoopDiagram.astro';
+import Evidence from '../components/home/Evidence.astro';
+import Limits from '../components/home/Limits.astro';
+import TryIt from '../components/home/TryIt.astro';
+import { corridor, retropulsion } from '../data/results';
 import { GITHUB_URL } from '../consts';
 
-const title = 'DeepCausality CFD — Counterfactual Fluid Dynamics in Rust';
+const title = 'DeepCausality CFD | Pause a simulation, try every what-if';
 const description =
-  'Fork a coupled simulation at the moment the physics gets interesting and fly every what-if from the state the vehicle actually reached, instead of rerunning each case from a checkpoint. Validated against Sod, Ghia, Williamson and RAM-C II, with measured capability boundaries.';
+  'A Rust library that pauses a running flow simulation at a moment you define, forks its exact state into branches, runs every alternative at once, and returns one table that compares them.';
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -23,24 +26,174 @@ const jsonLd = {
   codeRepository: GITHUB_URL,
   license: 'https://opensource.org/licenses/MIT',
 };
+
+/* Bank-angle chart: both rounds on one axis. The 10 degree branch flew in both
+   rounds with the same miss, so it is plotted once, as a round 2 point. */
+const round1 = corridor.coarse.filter((b) => b.bank !== 10);
+const bankPoints = [
+  ...round1.map((b) => ({ x: b.bank, y: b.miss, kind: 'plain' as const, tip: `${b.bank}° (round 1): ${b.miss.toFixed(3)} m` })),
+  ...corridor.fine.map((b) => ({
+    x: b.bank,
+    y: b.miss,
+    kind: b.bank === corridor.committed.bank ? ('win' as const) : ('r2' as const),
+    tip: `${b.bank}° (round 2): ${b.miss.toFixed(3)} m`,
+  })),
+].sort((a, b) => a.x - b.x);
+const label = (x: number, text: string, at: 'above' | 'below' | 'left' | 'right', dy = 0) => {
+  const p = bankPoints.find((q) => q.x === x);
+  if (p) Object.assign(p, { label: text, at, dy });
+};
+label(0, '0°  20.0 m', 'right');
+label(40, '40°  28.9 m', 'left');
+// dy clears the aim-point line, which sits 2.07 m below the point.
+label(corridor.committed.bank, '11.5°  2.07 m', 'below', 20);
+
+/* Throttle chart: every branch labelled, placed clear of the rising line. */
+const throttleAt = { coast: 'above', low: 'below', mid: 'below', high: 'right', hard: 'left' } as const;
+const throttlePoints = retropulsion.roster.map((b) => ({
+  x: b.flown,
+  y: b.axial,
+  kind: b.name === 'low' ? ('win' as const) : ('plain' as const),
+  tip: `${(b.flown * 100).toFixed(0)}% throttle: ${b.axial.toFixed(3)} m/s²`,
+  label: b.name === 'coast' ? undefined : `${Math.round(b.flown * 100)}%  ${b.axial.toFixed(2)}`,
+  at: throttleAt[b.name as keyof typeof throttleAt],
+}));
 ---
 <BaseLayout title={title} description={description} path="/">
   <SiteHeader slot="header" />
 
-  <!-- Five sections, ordered by what a cold reader needs in order to keep
-       reading: what it does, whether it fits their machine, whether the physics
-       holds and where it stops, what the day looks like, and where it sits. -->
   <Hero />
-  <SectionDivider />
-  <ForkNotSweep />
-  <SectionDivider />
-  <NoCluster />
-  <SectionDivider />
-  <ValidationSnapshot />
-  <SectionDivider />
-  <Practice />
-  <SectionDivider />
-  <WhereItFits />
+
+  <HomeSection ix="02 / 09" label="The problem" title="A what-if usually costs a rerun.">
+    <Fragment slot="lede">
+      <p>
+        A run finishes and someone asks what would have happened with a different setting. The
+        usual answer is another run: from the start, or from a restart file saved at a time you
+        chose in advance. Each answer repeats the shared past.
+      </p>
+      <p>
+        Here the run pauses when a condition you name becomes true. Every what-if continues from
+        that state, and the shared past is computed once.
+      </p>
+    </Fragment>
+    <CostBars />
+  </HomeSection>
+
+  <HomeSection ix="03 / 09" label="How it works" title="Four steps in one program.">
+    <Fragment slot="lede">
+      <p>
+        You write the run as one program that marches, pauses, forks and compares. The four cards
+        map onto the Rust program you can open beneath them.
+      </p>
+    </Fragment>
+    <FourSteps />
+  </HomeSection>
+
+  <HomeSection ix="04 / 09" label="Result 1: a decision" title="Which bank angle lands on target?">
+    <Fragment slot="lede">
+      <p>
+        A reentry vehicle loses GPS while plasma surrounds it, and the run must choose a bank
+        angle to steer by. The corridor example pauses when the link drops, then flies six angles
+        from that state. A second round forks the same pause again with eleven angles, half a
+        degree apart, around the best of the six. The example sets its aim point {corridor.aimOffsetM} m
+        to the side of where the unsteered vehicle lands, so the sweep has a gap to close.
+      </p>
+    </Fragment>
+    <ResultChart
+      points={bankPoints}
+      x={{ domain: [0, 42], ticks: [0, 10, 20, 30, 40], title: 'Bank angle commanded after the pause (degrees)', fmt: (v) => `${v}°` }}
+      y={{ domain: [-3.5, 30], ticks: [0, 10, 20, 30], title: 'Miss distance from the aim point (m)', fmt: (v) => `${v}` }}
+      ref={{ y: 0, label: 'Aim point' }}
+      label="Miss distance against bank angle for 17 branches forked from one paused descent. The distance falls from 20.0 metres at 0 degrees to a minimum of 2.07 metres at 11.5 degrees, then rises to 28.9 metres at 40 degrees."
+    >
+      The best branch banks {corridor.committed.bank}° and lands {corridor.committed.miss.toFixed(2)} m
+      from the aim point. Zero bank lands {corridor.aimOffsetM.toFixed(1)} m away by construction. The 40°
+      command asks for more than the safety cap allows, so the run clamps it, and that branch
+      lands 28.9 m away. All 17 branches continue from the same state at {corridor.onsetKm} km.
+      This shows the sweep at work, not guidance accuracy: the example scores each branch on the
+      same model that flew it. Grey rings are round 1; blue dots are round 2. Values are from
+      <a href="/tutorial/stage-1-corridor/"><code>corridor/output.txt</code></a>.
+    </ResultChart>
+  </HomeSection>
+
+  <HomeSection ix="05 / 09" label="Result 2: a reversal" title="A lit engine can slow the vehicle less than coasting.">
+    <Fragment slot="lede">
+      <p>
+        The retropulsion example forks a descent in the middle of an engine burn into five
+        throttle settings. It then measures the deceleration each branch actually flew. The drag
+        change in this example comes from a published 1970 correlation, not from the simulated
+        plume; the fork shows what that drag law does to the trajectory.
+      </p>
+    </Fragment>
+    <ResultChart
+      points={throttlePoints}
+      x={{ domain: [-0.04, 0.85], ticks: [0, 0.2, 0.4, 0.6, 0.8], title: 'Throttle flown (fraction of maximum)', fmt: (v) => `${Math.round(v * 100)}%` }}
+      y={{ domain: [6, 18], ticks: [6, 8, 10, 12, 14, 16, 18], title: 'Deceleration flown (m/s²)' }}
+      ref={{ y: retropulsion.roster[0].axial, label: 'Coasting: 10.60 m/s²', shade: true }}
+      label="Deceleration against throttle for five branches forked mid-burn. Coasting decelerates at 10.60 metres per second squared. At 20 percent throttle the vehicle decelerates at 7.47, and at 40 percent at 9.97, both below coasting. At 60 percent it reaches 12.89 and at 79 percent 17.20."
+    >
+      At 20% throttle the vehicle decelerates at 7.47 m/s². Coasting gives 10.60 m/s². The plume
+      disturbs the bow shock and strips away drag, and at low throttle the drag lost is about as
+      large as the thrust gained. Somewhere between 40% and 60% throttle, thrust wins. If the drag is
+      held at its value from the fork instead of letting the plume change it, the prediction misses
+      the outcome by up to {Math.round(retropulsion.frozenDragSeparation)} m/s over the
+      continuation. Values are from
+      <a href="/tutorial/stage-3-retropulsion/"><code>retropulsion/output.txt</code></a>.
+    </ResultChart>
+    <div class="callout callout-warn note">
+      <p class="callout-title">Where the drag change comes from</p>
+      <p>
+        Jarvinen and Adams measured this effect in wind tunnels in 1970. The example applies their
+        published correlation, evaluated for each branch. The simulated plume alone does not
+        reproduce it: a momentum-jet study on this solver returned drag that rises with thrust where
+        the wind tunnel shows it collapse. What the fork adds is the consequence for the trajectory:
+        how each throttle setting plays out in the coupled descent.
+        <a href="/boundaries/#srp">Read the measurement.</a>
+      </p>
+    </div>
+  </HomeSection>
+
+  <HomeSection ix="06 / 09" label="One state" title="Flow, chemistry, navigation and control share one state.">
+    <Fragment slot="lede">
+      <p>
+        A branch forks the whole state, so a change made in one stage reaches every stage that reads
+        it. Each simulation step runs six stages in order over the same data. Nothing passes through
+        files, because the stages were never separate programs.
+      </p>
+    </Fragment>
+    <LoopDiagram />
+  </HomeSection>
+
+  <HomeSection ix="07 / 09" label="Evidence" title="What it has been checked against.">
+    <Fragment slot="lede">
+      <p>
+        Each row is a program in the repository. It runs a case, compares the result with a
+        reference, and exits nonzero when the comparison fails. CI runs the fast ones on every pull
+        request. The references are exact solutions, published tables (some of them other researchers’ solver
+        results) and flight data. The project sets each tolerance and states it with the row. No
+        row compares against a run of Fluent, SU2 or OpenFOAM.
+      </p>
+    </Fragment>
+    <Evidence />
+  </HomeSection>
+
+  <HomeSection ix="08 / 09" label="Limits" title="What it does not do yet.">
+    <Fragment slot="lede">
+      <p>These are the limits a new user meets first. Each links to the measurement behind it.</p>
+    </Fragment>
+    <Limits />
+  </HomeSection>
+
+  <HomeSection id="run" ix="09 / 09" label="Run it" title="Run it yourself.">
+    <Fragment slot="lede">
+      <p>One command runs the corridor example from a clean clone.</p>
+    </Fragment>
+    <TryIt />
+  </HomeSection>
 
   <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
 </BaseLayout>
+
+<style>
+  .note { margin-top: var(--space-6); max-width: var(--measure); }
+</style>

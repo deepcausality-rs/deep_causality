@@ -1,88 +1,139 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import SiteHeader from '../../components/nav/SiteHeader.astro';
+/**
+ * /roadmap/: the line between what works today and what does not. Three lists are stages of one
+ * ladder (works today, building, open). The fourth holds decisions with their reasons.
+ *
+ * Sources: verification/qtt_sod/baseline.txt, verification/qtt_ramc_stagline/baseline.txt,
+ * studies/qtt_rank_plume/output.txt, retropulsion/output.txt, benches and studies READMEs, and
+ * the compile_fail doctests on `CfdFlow::study`.
+ */
+import PageShell from '../../components/nav/PageShell.astro';
+import { MACHINE } from '../../consts';
 
-const title = 'Roadmap — DeepCausality CFD';
+const title = 'Roadmap | DeepCausality CFD';
 const description =
-  'The line between what works today and what is aspirational, stated per item with the measurement or open question behind it.';
+  'What runs today, what is being built, what is unsolved and what the project chose not to build, with the measurement or reason behind each item.';
 
 const now = [
-  { item: 'DEC incompressible solver on fixed meshes', note: 'Ghia cavity, cylinder Re 100, graded MMS at order 2.00.' },
-  { item: 'QTT compressible marchers, 1-D through 3-D', note: 'Sod to L1 ≤ 0.027 against the exact Riemann solution.' },
-  { item: 'Fitted closures and the reacting-air kernel suite', note: 'RAM-C II peak electron density: the uncalibrated finite-rate network lands within about a factor of two of the flight anchor (+0.35 dec).' },
-  { item: 'The CfdFlow study grammar with compile-time phase discipline', note: 'sweep, gates, record, verdict; four compile_fail doctests pin the ordering.' },
-  { item: 'O(1) copy-on-write forks of a paused marched state', note: 'Sharing is structural, gated: branches enter by reference and no tensor is copied at fork time. Continuing one costs about the same as an unforked march, and coasting is cheaper at 0.66×.' },
-  { item: 'Precision as a type parameter', note: 'f32 / f64 / Float106 through the same physics, switched at one alias.' },
+  {
+    item: 'Incompressible flow on fixed meshes (the DEC solver)',
+    note: 'Validation targets cover the Ghia lid-driven cavity at Re 1000, the cylinder wake at Re 100 and a graded-mesh manufactured solution. The manufactured solution converges at observed order 1.98 to 2.01 against a design order of 2.00.',
+  },
+  {
+    item: 'Compressible flow in 1-D to 3-D (the QTT solvers)',
+    note: 'The Sod shock tube matches the exact Riemann solution, with L1 errors of 0.0175 (density), 0.0274 (velocity) and 0.0151 (pressure) against a 0.03 tolerance.',
+  },
+  {
+    item: 'Closed-form shock, relaxation and ionization models (the fitted closures)',
+    note: 'For the RAM-C II flight test, the finite-rate ionization network predicts a peak electron density of 2.251e19 m⁻³ against the flight anchor of about 1e19 m⁻³ (+0.35 decades). It uses no calibration.',
+  },
+  {
+    item: 'The study language, with step order enforced at compile time',
+    note: 'A study runs sweep, record, gates and verdict in that order. Five compile-fail doctests reject a mis-ordered study.',
+  },
+  {
+    item: 'Forks of a paused simulation state',
+    note: 'Branches share the paused state until one writes to it, and a gate confirms that no tensor is copied at fork time. A continued branch costs about the same as an unforked march, and a coasting branch costs 0.66 times as much.',
+  },
+  {
+    item: 'Precision as a type parameter',
+    note: 'The same physics runs at f32, f64 and Float106, switched at one alias. The plasma-blackout corridor does not currently compile at Float106.',
+  },
   {
     item: 'Plasma retropulsion descent, blackout exit to touchdown',
-    note: 'Sixteen gates in 337.5 s. The mid-burn fork of the marched plume-coupled state departs a frozen-drag prediction by 139.4 m/s, which is what forking state rather than parameters buys.',
+    note: `Sixteen gates pass in 337.5 s on ${MACHINE}. Branches forked mid-burn depart a frozen-drag prediction by up to 139.4 m/s.`,
   },
 ];
 
 const building = [
   {
-    item: 'Re-pinning plus exact Rankine–Hugoniot interface for marched rank',
-    note: 'The measured lever: radial flux with the front as a tracked interface holds bond 8 flat in resolution, where flux-through-front grows 25 → 35.',
+    item: 'A bounded rank for a marched shock',
+    note: 'Treating the shock front as an exact Rankine–Hugoniot interface and marching smooth flow on each side holds the rank (bond 8) flat as resolution grows. Marching fluxes through the front grows it from 25 to 35.',
   },
   {
     item: 'Grid-convergence study for the cylinder',
-    note: '16 → 24 → 32 cells/D, Richardson-extrapolated, plus C_L,rms, θ_sep and C_pb. Required before any DNS-grade accuracy claim.',
+    note: 'Grids of 16, 24 and 32 cells per diameter, Richardson-extrapolated, plus C_L,rms, the separation angle θ_sep and the base pressure C_pb. Any DNS-grade accuracy claim waits for it.',
   },
 ];
 
 const later = [
   {
     item: 'Turbulence, staged on the DEC solver',
-    note: 'LES after the spectra observables land. The wake is currently reported and never gated.',
+    note: 'Large-eddy simulation (LES) follows once the spectra observables land. The wake is reported and never gated.',
   },
   {
     item: 'A tractable 3-D fitted marcher',
-    note: 'Measured >3× over the ten-minute budget at 16³ with bond cap 16, which is why the shipped corridor runs a 2-D layer.',
+    note: 'At 16³ with a bond cap of 16 it runs more than 3× over the ten-minute budget, so the shipped corridor marches a 2-D layer.',
   },
   {
-    item: 'Plume-resolved compressible SRP on tensor trains',
-    note: 'Rank behaviour of a colliding-shock system on a quantized tensor train is unmeasured. Open research, named as such.',
+    item: 'Plume-resolved compressible supersonic retropropulsion (SRP) on QTT solvers',
+    note: 'The rank of a colliding-shock system is unmeasured in this format. It is open research.',
   },
   {
-    item: 'Off-axis SRP, thrust vectoring, 6-DOF',
-    note: 'Excluded by validity discipline: off-axis leaves the Cordell–Braun validated envelope, so a surprising result would be unattributable.',
+    item: 'Off-axis SRP, thrust vectoring, 6-DOF (six degrees of freedom)',
+    note: 'Off-axis flight leaves the validated envelope of the Cordell–Braun correlation, so a surprising result could not be traced to a cause. The project excludes these cases for that reason.',
   },
 ];
 
 /**
- * Stated non-goals. Not a fourth stage of the ladder — these are decisions, and
- * an unstated decision reads as a gap. Both are on record in the project's own
- * de-risk verdict; this list is where they become visible.
+ * Stated non-goals. Not a fourth stage of the ladder: these are decisions, and an unstated
+ * decision reads as a gap. Both are on record in the project's own de-risk verdict.
  */
 const nonGoals = [
   {
     item: 'Distributed execution across a cluster',
-    note: 'A branch roster fans out across the cores of one machine and is bit-identical to the sequential run. Scaling that across nodes buys no early user an answer they cannot already get, and it brings a deployment and operations surface that would have to be maintained forever. The acceleration ladder is algorithm first, parallelism second.',
+    note: 'The branches of a study already run across the cores of one machine and match a sequential run bit for bit. A cluster gives an early user no answer they cannot get now, and it adds a deployment and operations surface to maintain indefinitely.',
   },
   {
-    item: 'GPU acceleration over the tensor-train layer',
-    note: 'Deferred, not refused. A single bond-≤64 train is latency-bound small-matrix work, and double precision rules out the local hardware. It earns its place on batched branch rosters, or at 3-D and bond ≥ 128, so it is revisited at the batched-roster stage rather than now.',
+    item: 'GPU acceleration for QTT solvers',
+    note: 'Deferred, not refused. A single state at bond ≤ 64 is latency-bound small-matrix work, and double precision rules out the local hardware; a GPU pays off on large batches of branches, or at 3-D and bond ≥ 128.',
   },
 ];
+
+const marks = [
+  { cls: 'status-validated', label: 'Works today', text: 'A committed run output or verification baseline backs the item.' },
+  { cls: 'status-partial', label: 'Building', text: 'A de-risk study (a small measurement of whether the approach can work) exists and the work is under way.' },
+  { cls: 'status-roadmap', label: 'Open', text: 'An unsolved question with no scheduled date.' },
+  { cls: 'status-nongoal', label: 'Not pursued', text: 'A decision not to build the item, with its reason.' },
+];
+
+const lists = [
+  { cls: 'status-validated', label: 'Works today', items: now },
+  { cls: 'status-partial', label: 'Building', items: building },
+  { cls: 'status-roadmap', label: 'Open', items: later },
+  { cls: 'status-nongoal', label: 'Not pursued', items: nonGoals },
+];
 ---
-<BaseLayout title={title} description={description} path="/roadmap/">
-  <SiteHeader slot="header" />
+<PageShell title={title} description={description} path="/roadmap/">
+  <header class="doc-head">
+    <p class="eyebrow">Roadmap</p>
+    <h1>What works today, and what does not</h1>
+    <p class="lede">
+      Four lists mark the line between what runs now and what does not. Each item names its
+      evidence or its reason.
+    </p>
+  </header>
 
-  <article class="page rpage">
-    <header class="rhead">
-      <p class="eyebrow">Roadmap</p>
-      <h1>Implementation status</h1>
-      <p class="lede">
-        Entries in the first list have a committed run artifact. Entries in the
-        third are open questions with no scheduled date. The fourth list is
-        different in kind: decisions not to build something, with the reason.
-      </p>
-    </header>
+  <section class="doc-sec" id="meaning">
+    <h2>What does each list mean?</h2>
+    <dl class="deflist">
+      {marks.map((m) => (
+        <div>
+          <dt><span class={`status ${m.cls}`}>{m.label}</span></dt>
+          <dd>{m.text}</dd>
+        </div>
+      ))}
+    </dl>
+    <p>
+      QTT, DEC, bond and rank are defined on <a href="/solvers/">the solvers page</a>.
+    </p>
+  </section>
 
-    <section class="rgroup">
-      <h2><span class="status status-validated">Works today</span></h2>
+  {lists.map((l) => (
+    <section class="doc-sec">
+      <h2><span class={`status ${l.cls}`}>{l.label}</span></h2>
       <ul class="rlist">
-        {now.map((r) => (
+        {l.items.map((r) => (
           <li>
             <span class="ritem">{r.item}</span>
             <span class="rnote">{r.note}</span>
@@ -90,82 +141,30 @@ const nonGoals = [
         ))}
       </ul>
     </section>
+  ))}
 
-    <section class="rgroup">
-      <h2><span class="status status-partial">Building</span></h2>
-      <ul class="rlist">
-        {building.map((r) => (
-          <li>
-            <span class="ritem">{r.item}</span>
-            <span class="rnote">{r.note}</span>
-          </li>
-        ))}
-      </ul>
-    </section>
-
-    <section class="rgroup">
-      <h2><span class="status status-roadmap">Open</span></h2>
-      <ul class="rlist">
-        {later.map((r) => (
-          <li>
-            <span class="ritem">{r.item}</span>
-            <span class="rnote">{r.note}</span>
-          </li>
-        ))}
-      </ul>
-    </section>
-
-    <section class="rgroup">
-      <h2><span class="status status-nongoal">Not pursued</span></h2>
-      <ul class="rlist">
-        {nonGoals.map((r) => (
-          <li>
-            <span class="ritem">{r.item}</span>
-            <span class="rnote">{r.note}</span>
-          </li>
-        ))}
-      </ul>
-    </section>
-
-    <section class="rgroup">
-      <h2>How this list is maintained</h2>
-      <div class="prose">
-        <p>
-          An item moves from <em>open</em> to <em>building</em> once a de-risk
-          study exists, and from <em>building</em> to <em>works today</em> once a
-          self-verifying target or a committed example output covers it. Four
-          items were removed after measurement refuted them; they are recorded on
-          the <a href="/boundaries/">boundaries</a> page.
-        </p>
-        <p>
-          Nothing moves out of <em>not pursued</em> on effort alone. Those two
-          entries change only if the reason behind them stops holding, and the
-          reason is stated so you can judge that for yourself.
-        </p>
-      </div>
-    </section>
-  </article>
-</BaseLayout>
+  <section class="doc-sec" id="maintenance">
+    <h2>How does an item move between lists?</h2>
+    <p>
+      An item moves from <em>open</em> to <em>building</em> once a de-risk study exists. It moves
+      from <em>building</em> to <em>works today</em> once a self-verifying target or a committed
+      example output covers it. Four items were removed after measurement refuted them; the
+      <a href="/boundaries/">limits page</a> records them.
+    </p>
+    <p>
+      Nothing leaves <em>not pursued</em> on effort alone. An entry changes only if its reason
+      stops holding, and the reason is stated so you can judge that yourself.
+    </p>
+  </section>
+</PageShell>
 
 <style>
-  .rpage { max-width: var(--w-panel); }
-  .rhead { margin-bottom: var(--space-8); }
-  .rhead h1 { margin: var(--space-3) 0 var(--space-4); }
-  .rhead .lede { color: var(--fg-1); max-width: var(--measure); margin: 0; }
-
-  .rgroup { margin-bottom: var(--space-8); }
-  .rgroup h2 {
-    font-size: var(--t-h3);
-    padding-bottom: var(--space-3);
-    border-bottom: 1px solid var(--line-1);
-    margin-bottom: var(--space-4);
-  }
-
-  .rlist { list-style: none; margin: 0; padding: 0; }
+  .doc-sec > .rlist { list-style: none; margin: 0; padding: 0; max-width: none; }
   .rlist li {
     display: grid;
     grid-template-columns: 1fr;
     gap: var(--space-2);
+    margin: 0;
     padding: var(--space-4) 0;
     border-bottom: 1px solid var(--line-1);
   }

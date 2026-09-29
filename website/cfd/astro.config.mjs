@@ -13,6 +13,12 @@ export default defineConfig({
   site: 'https://cfd.deepcausality.com',
   output: 'static',
 
+  // Off on purpose. The default compressor strips the line break between a line
+  // of text and a following inline element or {expression}, so "rerun,\n{n} steps"
+  // renders "rerun,12 steps". Prose on this site is written with ordinary line
+  // breaks, so the compressor cannot stay on.
+  compressHTML: false,
+
   // Astro 7.2. Static output with no adapter, so the session runtime is already
   // tree-shaken; declaring it keeps `Astro.session` undefined by contract rather
   // than by inference.
@@ -33,6 +39,10 @@ export default defineConfig({
         const path = new URL(item.url).pathname;
         if (path === '/' || path === '') {
           item.priority = 1.0;
+        } else if (path.startsWith('/how-it-works/')) {
+          // The concept page every other page links back to.
+          item.priority = 0.95;
+          item.changefreq = 'monthly';
         } else if (path.startsWith('/validation/')) {
           // The validation-status page is the adoption document; rank it high.
           item.priority = 0.9;

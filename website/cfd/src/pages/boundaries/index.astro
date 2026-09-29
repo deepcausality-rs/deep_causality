@@ -1,79 +1,85 @@
 ---
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import SiteHeader from '../../components/nav/SiteHeader.astro';
+/**
+ * /boundaries/ ("Limits"): every measured limit, grouped by what the reader
+ * experiences. The route and every entry id stay, because the landing page and
+ * the blueprints link to #turbulence, #srp, #sqrt-side and #alignment.
+ * Entries come from data/boundaries.ts.
+ */
+import PageShell from '../../components/nav/PageShell.astro';
 import { boundaries, gateSemantics } from '../../data/boundaries';
-import { STUDIES_URL } from '../../consts';
+import { STUDIES_URL, MACHINE } from '../../consts';
 
-const title = 'Capability boundaries — DeepCausality CFD';
+const title = 'Limits | DeepCausality CFD';
 const description =
-  'Where this toolbox stops working, stated where you will hit it, with the measurements behind each limit. Includes the hypotheses the project refuted by running them.';
+  'What a new user meets first, and what the project measured wrong: no turbulence models, an integrator switch nothing calls, 3-D size and cost limits, and three hypotheses that failed when run.';
 
-const refuted = boundaries.filter((b) => b.refuted);
-const limits = boundaries.filter((b) => !b.refuted);
+const entry = (id: string) => {
+  const b = boundaries.find((x) => x.id === id);
+  if (!b) throw new Error(`boundaries.ts has no entry "${id}"`);
+  return b;
+};
+
+const groups = [
+  {
+    id: 'not-available',
+    heading: 'What does it not do today?',
+    summary: 'Four things a new user may expect and will not find.',
+    entries: ['turbulence', 'regime-diagnostic', 'precision-alias-drift', 'regime-switch-uncalled'].map(entry),
+  },
+  {
+    id: 'size-and-cost',
+    heading: 'Where does a run get too big or too slow?',
+    summary: `Two measured limits on how far a 3-D run can grow. Timings were measured on ${MACHINE}.`,
+    entries: ['timing-3d', 'sqrt-side'].map(entry),
+  },
+  {
+    id: 'refuted',
+    heading: 'Which hypotheses did the project get wrong?',
+    summary: 'The project ran each of these hypotheses, and each result went against it.',
+    entries: ['srp', 'static-fit', 'repin'].map(entry),
+  },
+  {
+    id: 'developers',
+    heading: 'What do solver developers need to know?',
+    summary: 'The measurements behind the design of the compressed solvers.',
+    scope:
+      'The alignment numbers come from frozen analytic profiles. The marching, thickening and 3-D growth numbers come from scalar Burgers runs with explicit Euler and central differences. Neither kind is a compressible Euler or Navier–Stokes solver, and the marched studies state their ranks as lower bounds on a live solver’s rank.',
+    entries: ['alignment', 'thickening'].map(entry),
+  },
+];
 ---
-<BaseLayout title={title} description={description} path="/boundaries/">
-  <SiteHeader slot="header" />
+<PageShell title={title} description={description} path="/boundaries/">
+  <header class="doc-head">
+    <p class="eyebrow">Measured limits</p>
+    <h1>Limits</h1>
+    <p class="lede">
+      A new user meets four gaps first: turbulence models, closures beyond the continuum regime, 106-bit
+      precision in the corridor example, and an integrator switch that nothing calls. Three of the
+      project’s own hypotheses failed when run, and one of them is why the retropulsion example takes its
+      drag change from a published correlation.
+    </p>
+  </header>
 
-  <article class="page bpage">
-    <header class="bhead">
-      <p class="eyebrow">Capability boundaries</p>
-      <h1>Measured capability boundaries</h1>
-      <p class="lede">
-        Each limit below was measured. Each entry states the condition under
-        which it applies, so a reader can determine whether a given problem
-        crosses it.
-      </p>
-      <p class="lede">
-        {refuted.length} entries record hypotheses that measurement refuted.
-        They appear first. The remaining {limits.length} are standing limits of
-        the current design.
-      </p>
+  <div class="callout callout-warn gate-note">
+    <p class="callout-title">A passing gate is not a passing physics target</p>
+    <p>{gateSemantics}</p>
+  </div>
 
-      <div class="callout callout-warn">
-        <p class="callout-title">A passing gate is not a passing physics target</p>
-        <p>{gateSemantics}</p>
-      </div>
-    </header>
+  {groups.map((g) => (
+    <section class="doc-sec" id={g.id}>
+      <h2>{g.heading}</h2>
+      <p class="gsum">{g.summary}</p>
+      {g.scope && <p class="scope">{g.scope}</p>}
 
-    <section class="bsection">
-      <h2 class="bsection-head">
-        <span class="status status-partial">Refuted</span>
-        Hypotheses overturned by measurement
-      </h2>
-
-      {refuted.map((b) => (
-        <section class="bcard panel corner-brackets" id={b.id}>
+      {g.entries.map((b) => (
+        <article class="entry panel corner-brackets" id={b.id}>
           <h3>{b.title}</h3>
           <p class="hit"><span class="k">You hit this when</span> {b.hitWhen}</p>
-
-          {b.question && (
-            <div class="qa">
-              <p class="k">The question asked</p>
-              <p class="qtext">{b.question}</p>
-            </div>
-          )}
-
           <p class="finding">{b.finding}</p>
 
           <ul class="nums">
-            {b.numbers.map((n) => <li class="num">{n}</li>)}
+            {b.numbers.map((n) => <li><code class="num">{n}</code></li>)}
           </ul>
-
-          {b.attribution && (
-            <div class="block">
-              <p class="k">Attributed to</p>
-              <p>{b.attribution}</p>
-            </div>
-          )}
-
-          {b.ruledOut && (
-            <div class="block block-ruled">
-              <p class="k">Ruled out by the measurement</p>
-              <ul class="ruled">
-                {b.ruledOut.map((r) => <li>{r}</li>)}
-              </ul>
-            </div>
-          )}
 
           {b.consequence && (
             <div class="block block-consequence">
@@ -82,90 +88,70 @@ const limits = boundaries.filter((b) => !b.refuted);
             </div>
           )}
 
+          {(b.question || b.attribution || b.ruledOut) && (
+            <details class="more">
+              <summary>How the project traced the cause</summary>
+              {b.question && (
+                <div class="block">
+                  <p class="k">The question asked</p>
+                  <p>{b.question}</p>
+                </div>
+              )}
+              {b.attribution && (
+                <div class="block">
+                  <p class="k">Attributed to</p>
+                  <p>{b.attribution}</p>
+                </div>
+              )}
+              {b.ruledOut && (
+                <div class="block block-ruled">
+                  <p class="k">Ruled out by the measurement</p>
+                  <ul class="ruled">
+                    {b.ruledOut.map((r) => <li>{r}</li>)}
+                  </ul>
+                </div>
+              )}
+            </details>
+          )}
+
           {b.history && (
-            <details class="history">
+            <details class="more">
               <summary>Earlier attempt, and why it was superseded</summary>
               <p>{b.history}</p>
             </details>
           )}
 
-          <p class="src"><code>{b.study}</code></p>
-        </section>
+          <p class="src"><span class="k">Source</span> <code>{b.study}</code></p>
+        </article>
       ))}
     </section>
+  ))}
 
-    <section class="bsection">
-      <h2 class="bsection-head">
-        <span class="status status-roadmap">Standing</span>
-        Limits of the current design
-      </h2>
-
-      {limits.map((b) => (
-        <section class="bcard panel corner-brackets" id={b.id}>
-          <h3>{b.title}</h3>
-          <p class="hit"><span class="k">You hit this when</span> {b.hitWhen}</p>
-          <p class="finding">{b.finding}</p>
-          <ul class="nums">
-            {b.numbers.map((n) => <li class="num">{n}</li>)}
-          </ul>
-          <p class="src"><code>{b.study}</code></p>
-        </section>
-      ))}
-    </section>
-
-    <section class="bsection">
-      <h2 class="bsection-head">Summary</h2>
-      <div class="prose">
-        <p>
-          The compression result holds under one condition: coordinate
-          alignment. Holding alignment through a march requires both re-pinning
-          and an exact Rankine–Hugoniot interface. The 3-D fitted marcher that
-          the approach depends on exceeds its wall-clock budget at the smallest
-          grid measured, so the shipped corridor marches a 2-D layer.
-        </p>
-        <p>
-          Every rank measurement uses scalar Burgers with explicit Euler and
-          central differences rather than compressible Euler or Navier–Stokes.
-          Each is stated as a lower bound on a live solver's rank.
-        </p>
-        <p>
-          Turbulence is staged work. The validated incompressible cases cover
-          Re 100 to 1600. Wake rank is reported and not gated.
-        </p>
-        <p>
-          Source for every measurement:
-          <a href={STUDIES_URL}>deep_causality_cfd/studies/ <span aria-hidden="true">↗</span></a>
-        </p>
-      </div>
-    </section>
-  </article>
-</BaseLayout>
+  <section class="doc-sec" id="sources">
+    <h2>Where the measurements live</h2>
+    <p>Each entry names the study or example that produced its numbers. Every study is a runnable program with its own README and committed output.</p>
+    <p class="next-links">
+      <a href={STUDIES_URL}>Source for every study <span aria-hidden="true">↗</span></a>
+      <a href="/validation/">What the solvers were checked against</a>
+      <a href="/roadmap/">What is planned</a>
+      <a href="/solvers/">What each solver is for</a>
+    </p>
+  </section>
+</PageShell>
 
 <style>
-  .bpage { max-width: var(--w-panel); }
-  .bhead { margin-bottom: var(--space-8); }
-  .bhead h1 { margin: var(--space-3) 0 var(--space-4); }
-  .bhead .lede { color: var(--fg-1); max-width: var(--measure); margin: 0 0 var(--space-4); }
-  .callout p { color: var(--fg-1); font-size: var(--t-body-sm); margin: 0; }
+  .gate-note { margin-bottom: var(--space-7); max-width: var(--measure); }
+  .gate-note p:not(.callout-title) { color: var(--fg-1); font-size: var(--t-body-sm); margin: 0; }
 
-  .bsection { margin-bottom: var(--space-8); }
-  .bsection-head {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-3);
-    align-items: baseline;
-    font-size: var(--t-h3);
-    padding-bottom: var(--space-3);
-    border-bottom: 1px solid var(--line-1);
-    margin-bottom: var(--space-5);
-  }
+  .gsum { color: var(--fg-0); }
+  .scope { font-size: var(--t-body-sm); }
 
-  .bcard {
+  .entry {
     padding: var(--space-5);
     margin-bottom: var(--space-5);
     scroll-margin-top: calc(var(--header-h) + var(--space-4));
   }
-  .bcard h3 { font-size: var(--t-h4); margin: 0 0 var(--space-3); }
+  .entry h3 { font-size: var(--t-h4); margin: 0 0 var(--space-3); }
   .k {
     font-family: var(--font-mono);
     font-size: var(--t-eyebrow);
@@ -179,27 +165,17 @@ const limits = boundaries.filter((b) => !b.refuted);
 
   .nums { list-style: none; margin: 0 0 var(--space-4); padding: 0; display: grid; gap: var(--space-2); }
   .nums li {
+    margin: 0;
     color: var(--fg-1);
     padding-left: var(--space-3);
     border-left: 1px solid var(--line-2);
-    font-size: var(--t-mono-sm);
   }
+  .nums code { background: none; padding: 0; color: inherit; }
   .src { margin: 0; padding-top: var(--space-3); border-top: 1px solid var(--line-1); }
-  .src code { font-size: var(--t-eyebrow); color: var(--fg-2); background: none; padding: 0; }
-
-  /* --- Worked negative result --- */
-
-  .qa { margin: 0 0 var(--space-4); }
-  .qtext {
-    color: var(--fg-1);
-    font-size: var(--t-body-sm);
-    margin: 0;
-    padding-left: var(--space-4);
-    border-left: 1px solid var(--line-2);
-    max-width: var(--measure);
-  }
+  .src code { font-size: var(--t-eyebrow); color: var(--fg-2); background: none; padding: 0; overflow-wrap: anywhere; }
 
   .block { margin: 0 0 var(--space-4); }
+  .block .k { display: block; margin: 0 0 var(--space-2); }
   .block p:last-child {
     color: var(--fg-1);
     font-size: var(--t-body-sm);
@@ -213,6 +189,7 @@ const limits = boundaries.filter((b) => !b.refuted);
   .block-ruled { padding: var(--space-4); background: var(--bg-2); border-radius: var(--radius-sm); }
   .ruled { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); }
   .ruled li {
+    margin: 0;
     color: var(--fg-1);
     font-size: var(--t-body-sm);
     padding-left: var(--space-5);
@@ -236,12 +213,12 @@ const limits = boundaries.filter((b) => !b.refuted);
     border-radius: var(--radius-sm);
   }
 
-  .history {
+  .more {
     margin: 0 0 var(--space-4);
     border-top: 1px solid var(--line-1);
     padding-top: var(--space-3);
   }
-  .history summary {
+  .more summary {
     cursor: pointer;
     font-size: var(--t-body-sm);
     color: var(--fg-1);
@@ -250,19 +227,21 @@ const limits = boundaries.filter((b) => !b.refuted);
     align-items: center;
     gap: var(--space-2);
   }
-  .history summary::-webkit-details-marker { display: none; }
-  .history summary::before {
+  .more summary::-webkit-details-marker { display: none; }
+  .more summary::before {
     content: '▸';
     color: var(--fg-2);
     transition: transform var(--dur-fast) var(--ease-out);
     display: inline-block;
   }
-  .history[open] summary::before { transform: rotate(90deg); }
-  .history summary:hover { color: var(--fg-0); }
-  .history p {
+  .more[open] summary::before { transform: rotate(90deg); }
+  .more summary:hover { color: var(--fg-0); }
+  .more > .block:first-of-type,
+  .more > p { margin-top: var(--space-3); }
+  .more > p {
     color: var(--fg-1);
     font-size: var(--t-body-sm);
-    margin: var(--space-3) 0 0;
+    margin-bottom: 0;
     max-width: var(--measure);
   }
 </style>

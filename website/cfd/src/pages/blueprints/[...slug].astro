@@ -20,25 +20,25 @@ const { Content } = await render(entry);
 const d = entry.data;
 ---
 <BaseLayout
-  title={`${d.title} — DeepCausality CFD`}
+  title={`${d.title} | DeepCausality CFD`}
   description={d.summary}
   path={`/blueprints/${entry.id.replace(/^en\//, '')}/`}
 >
   <SiteHeader slot="header" />
 
   <DocDetail
-    eyebrow="Blueprints"
+    eyebrow="How-to"
     title={d.title}
     summary={d.summary}
     tags={d.verbs}
     backHref="/blueprints/"
-    backLabel="All blueprints"
+    backLabel="All how-to guides"
   >
     <Content />
 
     {d.worked.length > 0 && (
       <section class="worked">
-        <p class="mk">Worked examples using this</p>
+        <p class="mk">Worked examples that use this guide</p>
         <ul class="hairline-list">
           {d.worked.map((w) => <li><a href={w.href}>{w.label}</a></li>)}
         </ul>

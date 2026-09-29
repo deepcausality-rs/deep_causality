@@ -1,0 +1,207 @@
+---
+/**
+ * The hero figure: one descent, seventeen what-ifs.
+ *
+ * Each line is one branch. All leave the same pause; the height a line reaches
+ * at the right edge is that branch's measured miss distance from the aim point
+ * (`corridor` in `src/data/results.ts`). The path between the pause and the end
+ * point is drawn for the eye, and the caption says so.
+ *
+ * Geometry lives in the SVG and words live in HTML, per the diagram convention
+ * in README.md. Labels are positioned as percentages of one fixed-ratio frame,
+ * so they track the drawing at any width.
+ *
+ * Draw-in runs through the shared `data-anim-draw` contract. Round 2 starts
+ * after round 1 through a scoped `transition-delay`, and the labels fade in on
+ * the wrapper's own `.in-view`.
+ */
+import { corridor } from '../../data/results';
+
+const W = 100;
+const H = 68;
+const BASE = 62; // y of a zero miss
+const PER_M = 1.9; // user units per metre of miss
+const FORK = { x: 28, y: 33 };
+const END_X = 74;
+
+const yOf = (miss: number) => BASE - miss * PER_M;
+const path = (y: number) => `M${FORK.x},${FORK.y} C46,${FORK.y} 54,${y} ${END_X},${y}`;
+const pct = (v: number, of: number) => `${((v / of) * 100).toFixed(2)}%`;
+
+const round1 = corridor.coarse.map((b, i) => ({ ...b, i, y: yOf(b.miss) }));
+const round2 = corridor.fine.map((b, i) => ({ ...b, i, y: yOf(b.miss) }));
+const win = { ...corridor.committed, y: yOf(corridor.committed.miss) };
+
+// The 10 degree branch flew in both rounds and ends where round 2's 10.0 degree
+// strand ends, so it gets no dot and no label of its own.
+const labelled = round1.filter((b) => b.bank !== 10);
+---
+<figure class="fan panel corner-brackets" data-rise>
+  <div class="frame">
+    <svg viewBox={`0 0 ${W} ${H}`} data-anim-draw aria-hidden="true" focusable="false">
+      <!-- Shared past. -->
+      <line class="trunk" x1="2" y1={FORK.y} x2={FORK.x} y2={FORK.y} pathLength="100" />
+
+      <!-- Round 1: six angles. -->
+      {round1.map((b) => (
+        <path class="r1" data-i={b.i} d={path(b.y)} pathLength="100" />
+      ))}
+
+      <!-- Round 2: eleven angles, half a degree apart, from the same pause. -->
+      {round2.map((b) => (
+        <path class="r2" d={path(b.y)} pathLength="100" />
+      ))}
+      <path class="win" d={path(win.y)} pathLength="100" />
+
+      <!-- Nodes in reading order: the pause, the round 1 end points, the winner.
+           Eight is the most the shared stagger covers; this figure uses seven. -->
+      <circle class="pause" cx={FORK.x} cy={FORK.y} r="1.5" />
+      {labelled.map((b) => (
+        <circle class="end" cx={END_X} cy={b.y} r="0.9" />
+      ))}
+      <circle class="winner" cx={END_X} cy={win.y} r="1.4" />
+    </svg>
+
+    <div class="aim" style={`left:${pct(FORK.x, W)}; width:${pct(END_X - FORK.x, W)}; top:${pct(BASE, H)}`}></div>
+    <span class="aim-l" style={`left:${pct(FORK.x + 1, W)}; top:${pct(BASE + 1.2, H)}`}>Aim point</span>
+
+    <p class="cap cap-pause" style={`left:1%; width:${pct(FORK.x - 3, W)}; top:${pct(FORK.y - 3, H)}`}>
+      <b>Blackout starts</b> at {corridor.onsetKm} km. The run pauses.
+    </p>
+    <p class="cap cap-trunk" style={`left:1%; width:${pct(FORK.x - 3, W)}; top:${pct(FORK.y + 3, H)}`}>
+      One descent, flown once.
+    </p>
+
+    <ul class="labs">
+      {labelled.map((b) => (
+        <li class="lab" data-i={b.i} style={`top:${pct(b.y, H)}; --i:${b.i + 2}`}>
+          <b>{b.bank}°</b> {b.miss.toFixed(1)} m
+        </li>
+      ))}
+      <li class="lab lab-win" style={`top:${pct(win.y, H)}; --i:9`}>
+        <b>{corridor.committed.bank}°</b> {corridor.committed.miss.toFixed(2)} m
+      </li>
+    </ul>
+  </div>
+
+  <div class="key">
+    <span class="k k-1">Round 1: {corridor.coarse.length} angles</span>
+    <span class="k k-2">Round 2: {corridor.fine.length} angles, 0.5° apart</span>
+    <span class="k k-3">Best branch</span>
+  </div>
+
+  <figcaption>
+    Each line is one what-if: the bank angle flown after the pause. Height at the right edge is
+    the measured miss distance from the aim point
+    (<a href="/tutorial/stage-1-corridor/"><code>corridor/output.txt</code></a>). The example sets
+    the aim point {corridor.aimOffsetM} m to the side of the no-bank path. The paths are drawn for
+    the eye.
+  </figcaption>
+</figure>
+
+<noscript>
+  <style is:inline>
+    .fan svg path, .fan svg line { stroke-dashoffset: 0 !important; }
+    .fan svg circle { opacity: 1 !important; transform: none !important; }
+    .fan .lab { opacity: 1 !important; }
+  </style>
+</noscript>
+
+<style>
+  .fan { margin: 0; padding: var(--space-5); }
+
+  .frame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 100 / 68;
+  }
+  svg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  /* Stroke widths are in user units; see README "Diagrams". */
+  svg line, svg path { fill: none; stroke-linecap: round; }
+  .trunk { stroke: var(--fg-1); stroke-width: 0.3; }
+  .r1 { stroke: var(--fg-2); stroke-width: 0.2; transition: stroke var(--dur-fast) var(--ease-out); }
+  .r2 { stroke: color-mix(in srgb, var(--accent) 55%, transparent); stroke-width: 0.2; }
+  .win { stroke: var(--accent); stroke-width: 0.42; }
+  circle { fill: var(--fg-2); }
+  circle.pause, circle.winner { fill: var(--accent); }
+
+  /* Round 2 starts once round 1 is mostly drawn; the winner draws last. */
+  @media (prefers-reduced-motion: no-preference) {
+    .r2 { transition-delay: calc(var(--dur-draw) * 1.1); }
+    .win { transition-delay: calc(var(--dur-draw) * 1.6); }
+  }
+
+  .aim {
+    position: absolute;
+    border-top: 1px dashed var(--fg-2);
+    opacity: 0.7;
+  }
+  .aim-l, .cap, .lab, .key {
+    font-family: var(--font-mono);
+    font-size: clamp(0.625rem, 2.6vw, 0.75rem);
+    line-height: 1.35;
+    color: var(--fg-2);
+  }
+  .aim-l { position: absolute; }
+  .cap { position: absolute; margin: 0; }
+  .cap b { color: var(--fg-0); font-weight: 500; }
+  .cap-pause { transform: translateY(-100%); }
+
+  .labs { list-style: none; margin: 0; padding: 0; }
+  .lab {
+    position: absolute;
+    left: 76%;
+    transform: translateY(-50%);
+    white-space: nowrap;
+    color: var(--fg-1);
+    cursor: default;
+    opacity: 0;
+    transition: opacity var(--dur-slow) var(--ease-out);
+    transition-delay: calc(var(--dur-draw) * 0.9 + var(--i) * var(--stagger));
+  }
+  .lab b { color: var(--fg-0); font-weight: 500; }
+  .lab-win { color: var(--accent); }
+  .lab-win b { color: var(--accent); }
+  .lab-win { transition-delay: calc(var(--dur-draw) * 1.9); }
+  .in-view .lab { opacity: 1; }
+
+  /* Hovering a label lights its line. */
+  .fan:has(.lab[data-i='0']:hover) .r1[data-i='0'],
+  .fan:has(.lab[data-i='1']:hover) .r1[data-i='1'],
+  .fan:has(.lab[data-i='3']:hover) .r1[data-i='3'],
+  .fan:has(.lab[data-i='4']:hover) .r1[data-i='4'],
+  .fan:has(.lab[data-i='5']:hover) .r1[data-i='5'] { stroke: var(--fg-0); }
+
+  .key {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    margin-top: var(--space-4);
+  }
+  .k::before {
+    content: '';
+    display: inline-block;
+    width: 1.25rem;
+    height: 0;
+    margin-right: 0.5em;
+    vertical-align: middle;
+    border-top: 1.5px solid var(--fg-2);
+  }
+  .k-2::before { border-top-color: color-mix(in srgb, var(--accent) 55%, transparent); }
+  .k-3::before { border-top: 2.5px solid var(--accent); }
+
+  figcaption {
+    margin-top: var(--space-3);
+    color: var(--fg-2);
+    font-size: var(--t-body-sm);
+    max-width: var(--measure);
+  }
+  figcaption code { font-size: 0.85em; }
+</style>

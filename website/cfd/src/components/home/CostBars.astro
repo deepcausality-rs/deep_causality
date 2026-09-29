@@ -1,0 +1,153 @@
+---
+/**
+ * Rerun versus fork, as step counts.
+ *
+ * The horizontal axis is solver steps in the corridor example: `onsetStep`
+ * steps to reach the pause and `branchSteps` for each branch after it (both in
+ * `src/data/results.ts`). Rerunning an alternative repeats the shared past;
+ * forking computes it once. The counts ignore parallelism, which shortens the
+ * forked wall clock further.
+ */
+import { corridor } from '../../data/results';
+
+const past = corridor.onsetStep;
+const fut = corridor.branchSteps;
+const total = past + fut;
+const drawn = 6;
+const all = corridor.coarse.length + corridor.fine.length;
+
+const rerun = (n: number, p: number = past) => n * (p + fut);
+const fork = (n: number, p: number = past) => p + n * fut;
+const fmt = (n: number) => n.toLocaleString('en-US');
+const pastPct = `${((past / total) * 100).toFixed(2)}%`;
+const rows = Array.from({ length: drawn });
+---
+<figure class="cost" data-rise>
+  <div class="pair rise">
+    <section class="case" aria-labelledby="cost-rerun">
+      <h3 id="cost-rerun">Rerun each alternative</h3>
+      <div class="bars bars-rerun" style={`--past:${pastPct}`}>
+        {rows.map(() => (
+          <>
+            <span class="past"></span>
+            <span class="fut"></span>
+          </>
+        ))}
+      </div>
+      <div class="legend" style={`--past:${pastPct}`}>
+        <span>Steps 1 to {past}, repeated</span>
+        <span>{fut} steps</span>
+      </div>
+      <p class="total"><b>{fmt(rerun(drawn))}</b> solver steps <span>= {drawn} × {total}</span></p>
+    </section>
+
+    <section class="case case-fork" aria-labelledby="cost-fork">
+      <h3 id="cost-fork">Fork once</h3>
+      <div class="bars bars-fork" style={`--past:${pastPct}`}>
+        <span class="past shared"><em>shared past</em></span>
+        {rows.map(() => <span class="fut"></span>)}
+      </div>
+      <div class="legend" style={`--past:${pastPct}`}>
+        <span>Steps 1 to {past}, once</span>
+        <span>{fut} steps each</span>
+      </div>
+      <p class="total"><b>{fmt(fork(drawn))}</b> solver steps <span>= {past} + {drawn} × {fut}</span></p>
+    </section>
+  </div>
+
+  <figcaption>
+    Solver steps in the corridor example: {past} to reach the pause, {fut} for each branch after
+    it. Six alternatives are drawn. The full example flies {all}: {fmt(rerun(all))} steps rerun,
+    {fmt(fork(all))} forked. The branches also run at the same time, which shortens the wall
+    clock further. The saving grows with the length of the shared past: with a past ten times
+    longer, the same six branches would cost {fmt(fork(drawn, past * 10))} steps forked against
+    {fmt(rerun(drawn, past * 10))} rerun. A restart file saved at the pause costs the same steps
+    as a fork. The fork finds that pause from a condition on the flow and runs the branches
+    together.
+  </figcaption>
+</figure>
+
+<style>
+  .cost { margin: 0; }
+  .pair {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+  }
+  @media (min-width: 720px) { .pair { grid-template-columns: 1fr 1fr; gap: var(--space-7); } }
+
+  .case h3 {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    font-weight: 400;
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-1);
+    margin: 0 0 var(--space-3);
+  }
+  .case-fork h3 { color: var(--accent); }
+
+  .bars {
+    display: grid;
+    grid-template-columns: var(--past) 1fr;
+    grid-auto-rows: 1rem;
+    gap: 0.3rem 0;
+  }
+  .past {
+    background: var(--bg-3);
+    border: 1px solid var(--line-2);
+    border-right: none;
+    border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  }
+  .fut {
+    background: color-mix(in srgb, var(--accent) 70%, transparent);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  }
+  .shared {
+    grid-column: 1;
+    grid-row: 1 / span 6;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-sm) 0 0 var(--radius-sm);
+  }
+  .shared em {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    font-style: normal;
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+  }
+
+  .legend {
+    display: grid;
+    grid-template-columns: var(--past) 1fr;
+    margin-top: var(--space-2);
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    color: var(--fg-2);
+  }
+  .legend span:last-child { padding-left: var(--space-2); }
+
+  .total {
+    margin: var(--space-4) 0 0;
+    color: var(--fg-1);
+    font-size: var(--t-body-sm);
+  }
+  .total b {
+    color: var(--fg-0);
+    font-family: var(--font-mono);
+    font-weight: 500;
+    font-size: var(--t-h4);
+    font-variant-numeric: tabular-nums;
+    margin-right: 0.25em;
+  }
+  .total span { font-family: var(--font-mono); font-size: var(--t-mono-sm); color: var(--fg-2); }
+
+  figcaption {
+    margin-top: var(--space-5);
+    color: var(--fg-2);
+    font-size: var(--t-body-sm);
+    max-width: var(--measure);
+  }
+</style>

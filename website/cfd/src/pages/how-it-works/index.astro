@@ -1,0 +1,251 @@
+---
+/**
+ * /how-it-works/: the concept page. Four steps, then the loop that makes a
+ * branch carry every discipline, then what a fork costs, then where it sits next
+ * to tools the reader already runs, then the words the site uses.
+ *
+ * Sources: crate README (Counterfactual Dynamics, Dynamic Multiphysics),
+ * corridor/main.rs, corridor/output.txt, retropulsion/output.txt (gate 4g and the
+ * 18.3 MB figure in retropulsion/README.md).
+ */
+import PageShell from '../../components/nav/PageShell.astro';
+import LoopDiagram from '../../components/home/LoopDiagram.astro';
+import { Code } from 'astro:components';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+import { MACHINE } from '../../consts';
+
+const SHIKI = { light: rustLight, dark: rustDark };
+
+const title = 'How it works | DeepCausality CFD';
+const description =
+  'March a coupled simulation until a condition becomes true, pause, fork the state into branches, run every branch at once, and read one table.';
+
+const march = `let onset = CfdFlow::march(&nominal)
+    .couple(world::corridor_coupling(1.0, 0))
+    .from_field(world::initial_field())
+    .until(|field, _| field.regime().map(|r| r.gnss_denied).unwrap_or(false))?;`;
+
+const fork = `let corridor = CfdFlow::study("bank-angle corridor")
+    .cases(model::coarse_commands())   // one case per bank angle
+    .fork(&onset)                      // one branch per case, from the pause
+    .branch(model::bank_world)         // the description each branch runs
+    .continue_for(constants::BRANCH_STEPS)
+    .reduce_all(model::score_branches) // one scored row per branch
+    .gates(model::corridor_gates())    // pass or fail checks on the table
+    .verdict()?;                       // the table and the gate results, as data`;
+
+const stack = `Coupling::between_steps()
+    .then(VibrationalLagStage::new(/* Millikan-White bath */))
+    .then(FiniteRateIonizationStage::new(n_tot).with_density_field("n_tot"))
+    .then(RegimeClassify::new(l_char, trigger))
+    .then(BankSteeredLift::new(rho_ref, cda_over_m, l_over_d))
+    .then(TrajectoryNav::new(q_diag, gnss_var, optical_var).with_imu(imu))
+    .then(CyberneticCorrect::new(SafetyEnvelope::new(q_max, g_max, bank_max)))
+    .build()`;
+
+const fits = [
+  {
+    what: 'Restart files',
+    how: 'A Fluent case and data pair, an SU2 restart_flow.dat and an OpenFOAM time directory already let you continue from a saved state. A fork differs in three ways. A condition on the evolving state picks the pause, not a time you chose in advance. The branches run at once in one process and share the state. The results come back as one scored table with pass or fail gates.',
+  },
+  {
+    what: 'Monte Carlo dispersion',
+    how: 'Noise draws are part of the same language: a study can fly several draws per case. The two compose. The weather table sizes a margin, and the descent then forks against it.',
+    href: '/fork-or-sweep/',
+    link: 'Fork or sweep',
+  },
+  {
+    what: 'DAKOTA and other UQ or design-of-experiments drivers',
+    how: 'Those sample input distributions before a run. This library branches a state during one.',
+  },
+  {
+    what: 'Your solver and your GNC toolchain',
+    how: 'This library does not wrap them and reads no mesh format. Meshing, converged flow at scale, turbulence closures and certification stay with your tools. Where you run a solver and a separate guidance, navigation and control toolchain, here they run in one process over one state. The navigation filter follows the link state that the flow’s plasma produces, and the vehicle’s position sets the air the flow meets next.',
+    href: '/solvers/',
+    link: 'Solvers',
+  },
+];
+
+const words = [
+  { term: 'Counterfactual', text: 'A what-if that starts from something that did happen. Here it starts from the exact state a running simulation reached.' },
+  { term: 'Pause', text: 'The state a march returns when its condition becomes true. It holds the flow, the chemistry, the navigation filter and the event log.' },
+  { term: 'Branch', text: 'One alternative, continued from the pause.' },
+  { term: 'World', text: 'A description of a run with one declared difference, such as a bank angle or an atmosphere. The code names it where a branch is built (bank_world, alternate).' },
+  { term: 'Table', text: 'The scored rows a study returns, one per branch.' },
+  { term: 'Gate', text: 'A pass or fail check on the table. The shipped examples exit nonzero when a gate fails.' },
+  { term: 'Event log', text: 'The ordered record of everything a run did: regime changes, navigation mode changes, and a marker for each branch that names the world it replaced. The code calls it the provenance log or EffectLog.' },
+  { term: 'Coupling', text: 'An ordered list of stages that run after every solver step over one shared state.' },
+];
+---
+<PageShell title={title} description={description} path="/how-it-works/">
+  <header class="doc-head">
+    <p class="eyebrow">How it works</p>
+    <h1>March, pause, fork, compare</h1>
+    <p class="lede">
+      A program marches a coupled simulation until a condition you name becomes true. The run
+      pauses and returns its complete state. You fork that state into one branch per alternative,
+      run every branch at once, and read one table.
+    </p>
+  </header>
+
+  <section class="doc-sec" id="steps">
+    <h2>Four steps</h2>
+
+    <h3>1. March</h3>
+    <p>
+      <code>CfdFlow::march</code> runs a coupled simulation step by step. <code>.until</code> stops
+      it when a condition on the evolved state becomes true.
+    </p>
+    <Code code={march} lang="rust" themes={SHIKI} />
+    <p>
+      The condition reads the flow, not the clock. In the corridor example it becomes true when the
+      plasma’s electron density crosses the GPS L1 cutoff, at step 131 and 73.2 km. No constant in
+      the program says where blackout starts. The simulation finds it.
+    </p>
+
+    <h3>2. Pause</h3>
+    <p>
+      The march returns the state it stopped in. That value, <code>onset</code> above, holds the
+      flow tensors, the navigation filter and the event log. Nothing is discarded. You can march it
+      further, fork it, or save it to disk and load it later; a fingerprint of the run’s constants
+      guards the load.
+    </p>
+
+    <h3>3. Fork</h3>
+    <p>
+      <code>.fork(&amp;onset)</code> starts one branch per case, and <code>.branch</code> builds
+      each branch’s world: the run’s description with one declared difference, such as a bank
+      angle. Every branch begins from the same paused state and records a marker in its event log
+      that names the world it replaced.
+    </p>
+    <p>
+      A branch can change a command, such as a bank angle or a throttle setting, or a whole
+      description, such as an atmosphere. A description is separate from the code that runs it, so
+      a branch is the same flow handed a different description.
+    </p>
+    <p>
+      If you know Unix <code>fork()</code>, this is the same idea applied to a running simulation.
+      The branches share the paused state by reference. A branch copies it when it first writes to
+      it, so forking itself copies no field data.
+    </p>
+
+    <h3>4. Compare</h3>
+    <p>
+      <code>.continue_for</code> runs every branch for a fixed number of steps. The branches run at
+      the same time on the cores of one machine, and the results are bit-identical to running them
+      one after another. <code>.reduce_all</code> turns each branch into a scored row.
+      <code>.gates</code> applies pass or fail checks to the table, and <code>.verdict()</code>
+      returns the table and the gate results as data.
+    </p>
+    <Code code={fork} lang="rust" themes={SHIKI} />
+    <p>
+      The library never prints and never exits. Your program decides what a failed gate means. The
+      shipped examples exit nonzero.
+    </p>
+  </section>
+
+  <section class="doc-sec" id="loop">
+    <h2>Every branch carries the whole state</h2>
+    <p>
+      A coupling is an ordered list of stages that run after every solver step. The stages pass data
+      through named fields on one shared state, and an error from any stage stops the step. A branch
+      forks that state, so it carries all six stages. A branch that changes one stage’s input changes
+      whatever reads it: a different bank command changes the vehicle, and the vehicle sets the air
+      the flow meets next.
+    </p>
+    <LoopDiagram />
+    <Code code={stack} lang="rust" themes={SHIKI} />
+    <p class="src-note">
+      The corridor’s coupling stack, from the crate README. Vibrational relaxation and ionization
+      form the chemistry stage. The steered aerodynamic force is the vehicle stage, and the safety
+      gate runs last.
+    </p>
+  </section>
+
+  <section class="doc-sec" id="cost">
+    <h2>What a fork costs</h2>
+    <p>
+      The shared past is computed once. Each branch then pays for its own copy at its first write:
+      the per-cell fields, the navigation filter and the event log. Size a larger fan-out against
+      that memory figure.
+    </p>
+    <p>
+      In the retropulsion example, five concurrent branches ran at 1.09 times the per-step cost of
+      the unforked run they came from. The whole descent, including that five-branch fan-out at
+      1,024 cells, peaks at 18.3 MB of resident memory. Both figures were measured on {MACHINE}.
+    </p>
+  </section>
+
+  <section class="doc-sec" id="solvers">
+    <h2>What runs underneath</h2>
+    <p>
+      The branches run on this library’s own solvers. It does not wrap Fluent, SU2 or OpenFOAM.
+      Three families sit behind the same march and study language, and a problem uses the one that
+      fits it.
+    </p>
+    <dl class="deflist">
+      <div>
+        <dt>Incompressible flow</dt>
+        <dd>
+          For flows that do not compress, such as a lid-driven cavity or the wake behind a cylinder.
+          The velocity field stays divergence-free at every step by construction. (The method is
+          discrete exterior calculus, DEC.)
+        </dd>
+      </div>
+      <div>
+        <dt>Compressible flow</dt>
+        <dd>
+          Marchers for compressible flow in one to three dimensions, such as the shock layer in
+          front of a reentry vehicle. They store the flow in a compressed form (quantized tensor
+          trains) and fit the shock as a boundary instead of capturing it.
+        </dd>
+      </div>
+      <div>
+        <dt>Closed-form closures</dt>
+        <dd>
+          Point-by-point formulas with no grid: shock jump relations, two-temperature relaxation and
+          finite-rate ionization chemistry. A stagnation line runs on these alone.
+        </dd>
+      </div>
+    </dl>
+    <p class="next-links"><a href="/solvers/">What each solver is for</a></p>
+  </section>
+
+  <section class="doc-sec" id="fit">
+    <h2>Where it fits next to your tools</h2>
+    <dl class="deflist">
+      {fits.map((f) => (
+        <div>
+          <dt>{f.what}</dt>
+          <dd>
+            {f.how}
+            {f.href && <>{' '}<a href={f.href}>{f.link}</a></>}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  </section>
+
+  <section class="doc-sec" id="words">
+    <h2>Words this site uses</h2>
+    <dl class="deflist">
+      {words.map((w) => (
+        <div>
+          <dt>{w.term}</dt>
+          <dd>{w.text}</dd>
+        </div>
+      ))}
+    </dl>
+    <p class="next-links">
+      <a href="/tutorial/">Read the corridor as a tutorial</a>
+      <a href="/examples/">Browse the examples</a>
+      <a href="/blueprints/">Find a how-to guide</a>
+      <a href="/fork-or-sweep/">Compare a fork with a sweep</a>
+    </p>
+  </section>
+</PageShell>
+
+<style>
+  .src-note { color: var(--fg-2); font-size: var(--t-body-sm); }
+  .doc-sec :global(pre.astro-code) { max-width: none; }
+</style>

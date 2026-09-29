@@ -1,0 +1,168 @@
+---
+/**
+ * The mechanism as four verbs, each tied to the API name it becomes in the
+ * program below it. The code is condensed from
+ * `examples/avionics_examples/cfd/plasma_blackout/corridor/main.rs`: it drops
+ * the trigger, the inspect hooks, the second refine round and the record call,
+ * and keeps every call that carries a step.
+ */
+import { Code } from 'astro:components';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+import { EXAMPLES_URL } from '../../consts';
+
+const SHIKI = { light: rustLight, dark: rustDark };
+
+const steps = [
+  {
+    verb: 'March',
+    text: 'Run the coupled simulation until a condition on the flow becomes true. Here: the plasma around the vehicle blocks the GPS signal.',
+    api: 'march(…).until(…)',
+  },
+  {
+    verb: 'Pause',
+    text: 'The run stops and returns its complete state: the flow, the chemistry, the navigation filter and the event log.',
+    api: 'onset',
+  },
+  {
+    verb: 'Fork',
+    text: 'Copy that state into one branch per alternative. The branches share it by reference until one of them writes to it.',
+    api: 'fork(&onset).branch(…)',
+  },
+  {
+    verb: 'Compare',
+    text: 'Every branch runs at the same time. The results reduce to one scored table, and gates, which are pass or fail checks you define, judge it.',
+    api: 'continue_for(…).reduce_all(…).verdict()',
+  },
+];
+
+const code = `// 1. March until the plasma blocks the GPS signal.
+// 2. Pause: \`onset\` holds the complete state at that moment.
+let onset = CfdFlow::march(&nominal)
+    .couple(world::corridor_coupling(1.0, 0))   // flow, chemistry, navigation, control
+    .from_field(world::initial_field())
+    .until(|field, _| field.regime().map(|r| r.gnss_denied).unwrap_or(false))?;
+
+// 3. Fork one branch per bank angle.
+// 4. Run every branch at once and reduce them to one checked table.
+let corridor = CfdFlow::study("bank-angle corridor")
+    .cases(model::coarse_commands())
+    .fork(&onset)
+    .branch(model::bank_world)
+    .continue_for(constants::BRANCH_STEPS)
+    .reduce_all(model::score_branches)
+    .gates(model::corridor_gates())
+    .verdict()?;`;
+---
+<div class="steps">
+  <ol class="cards">
+    {steps.map((s, i) => (
+      <li class="card panel corner-brackets rise" style={`--i:${i}`}>
+        <svg class="glyph" viewBox="0 0 120 44" fill="none" aria-hidden="true" focusable="false">
+          {i === 0 && (
+            <>
+              <line x1="6" y1="22" x2="92" y2="22" />
+              <path d="M84,15 L94,22 L84,29" />
+              <line x1="108" y1="10" x2="108" y2="34" class="acc" />
+            </>
+          )}
+          {i === 1 && (
+            <>
+              <line x1="6" y1="22" x2="62" y2="22" />
+              <circle cx="62" cy="22" r="7" class="acc" />
+              <line x1="59.5" y1="18.5" x2="59.5" y2="25.5" class="acc" />
+              <line x1="64.5" y1="18.5" x2="64.5" y2="25.5" class="acc" />
+            </>
+          )}
+          {i === 2 && (
+            <>
+              <line x1="6" y1="22" x2="40" y2="22" />
+              <path d="M40,22 C58,22 62,6 108,6" />
+              <path d="M40,22 C58,22 66,15 108,15" />
+              <path d="M40,22 C58,22 66,29 108,29" class="acc" />
+              <path d="M40,22 C58,22 62,38 108,38" />
+              <circle cx="40" cy="22" r="2.5" class="acc" />
+            </>
+          )}
+          {i === 3 && (
+            <>
+              <line x1="8" y1="8" x2="96" y2="8" />
+              <line x1="8" y1="17" x2="72" y2="17" />
+              <line x1="8" y1="26" x2="22" y2="26" class="acc" />
+              <line x1="8" y1="35" x2="58" y2="35" />
+              <path d="M104,24 l5,5 l9,-11" class="acc" />
+            </>
+          )}
+        </svg>
+        <p class="n">{i + 1}</p>
+        <h3>{s.verb}</h3>
+        <p class="t">{s.text}</p>
+        <p class="api"><code>{s.api}</code></p>
+      </li>
+    ))}
+  </ol>
+
+  <details class="prog">
+    <summary>See the program in Rust</summary>
+    <Code code={code} lang="rust" themes={SHIKI} />
+    <p class="src">
+      Condensed from the corridor example's
+      <a href={`${EXAMPLES_URL}/plasma_blackout/corridor/main.rs`}><code>main.rs</code></a>.
+    </p>
+  </details>
+</div>
+
+<style>
+  .cards {
+    list-style: none;
+    margin: 0 0 var(--space-6);
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+  @media (min-width: 620px) { .cards { grid-template-columns: 1fr 1fr; } }
+  @media (min-width: 1000px) { .cards { grid-template-columns: repeat(4, 1fr); } }
+
+  .card { padding: var(--space-5); display: flex; flex-direction: column; }
+  .glyph { width: 100%; max-width: 8rem; height: auto; margin-bottom: var(--space-4); }
+  .glyph line, .glyph path, .glyph circle {
+    stroke: var(--fg-1);
+    stroke-width: 1.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .glyph .acc { stroke: var(--accent); }
+
+  .n {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    color: var(--fg-2);
+    margin: 0 0 var(--space-1);
+  }
+  .card h3 { font-size: var(--t-h3); margin: 0 0 var(--space-3); }
+  .t { color: var(--fg-1); font-size: var(--t-body-sm); margin: 0 0 var(--space-4); }
+  .api { margin: auto 0 0; padding-top: var(--space-3); border-top: 1px solid var(--line-1); }
+  .api code { background: none; padding: 0; color: var(--accent); font-size: var(--t-eyebrow); }
+
+  .src { color: var(--fg-2); font-size: var(--t-body-sm); margin: 0; }
+
+  .prog summary {
+    cursor: pointer;
+    list-style: none;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    margin-bottom: var(--space-4);
+    border: 1px solid var(--line-2);
+    border-radius: var(--radius-sm);
+    color: var(--fg-0);
+    font-size: var(--t-body-sm);
+    transition: border-color var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-out);
+  }
+  .prog summary::-webkit-details-marker { display: none; }
+  .prog summary::before { content: '+'; font-family: var(--font-mono); color: var(--accent); }
+  .prog[open] summary::before { content: '−'; }
+  .prog summary:hover { border-color: var(--fg-2); background: color-mix(in srgb, var(--accent) 5%, transparent); }
+</style>

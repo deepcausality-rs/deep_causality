@@ -1,33 +1,34 @@
 ---
+/**
+ * /blueprints/: the how-to guides. The route keeps its old name; the nav label and the
+ * heading say "How-to".
+ */
 import { getCollection } from 'astro:content';
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import SiteHeader from '../../components/nav/SiteHeader.astro';
+import PageShell from '../../components/nav/PageShell.astro';
 import { CRATE_URL } from '../../consts';
 
-const title = 'Blueprints — DeepCausality CFD';
+const title = 'How-to guides | DeepCausality CFD';
 const description =
-  'Task-shaped blueprints: sweep a parameter and get a table, gate a run against a placard, fork a running simulation into counterfactual worlds, and pick a solver family.';
+  'Task-shaped guides: sweep a parameter into a table, gate a run against a limit, fork a running simulation, couple physics stages and pick a solver.';
 
-const blueprints = (await getCollection('blueprints')).sort(
+const guides = (await getCollection('blueprints')).sort(
   (a, b) => a.data.order - b.data.order
 );
 ---
-<BaseLayout title={title} description={description} path="/blueprints/">
-  <SiteHeader slot="header" />
+<PageShell title={title} description={description} path="/blueprints/">
+  <header class="doc-head">
+    <p class="eyebrow">How-to</p>
+    <h1>How-to guides</h1>
+    <p class="lede">
+      Each guide does one task: the outcome, then the shortest working code, then the explanation.
+      The verbs under a title are the <code>CfdFlow</code> calls the guide uses.
+    </p>
+  </header>
 
-  <article class="page cpage">
-    <header class="chead">
-      <p class="eyebrow">Blueprints</p>
-      <h1>One task per blueprint</h1>
-      <p class="lede">
-        Each entry covers a single task, with the DSL verbs it uses and the
-        worked examples that exercise it. Generated API documentation lives with
-        the crate.
-      </p>
-    </header>
-
+  <section class="doc-sec" id="guides">
+    <h2>Which task do you need to do?</h2>
     <ol class="rlist">
-      {blueprints.map((r, i) => (
+      {guides.map((r, i) => (
         <li class="ritem">
           <a href={`/blueprints/${r.id.replace(/^en\//, '')}/`}>
             <span class="rix num">{String(i).padStart(2, '0')}</span>
@@ -46,20 +47,15 @@ const blueprints = (await getCollection('blueprints')).sort(
     </ol>
 
     <p class="src-note">
-      Full API reference lives with the source:
+      Generated API documentation lives with the source:
       <a href={CRATE_URL}>deep_causality_cfd <span aria-hidden="true">↗</span></a>
     </p>
-  </article>
-</BaseLayout>
+  </section>
+</PageShell>
 
 <style>
-  .cpage { max-width: var(--w-panel); }
-  .chead { margin-bottom: var(--space-7); }
-  .chead h1 { margin: var(--space-3) 0 var(--space-4); }
-  .chead .lede { color: var(--fg-1); max-width: var(--measure); margin: 0; }
-
-  .rlist { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line-1); }
-  .ritem { border-bottom: 1px solid var(--line-1); }
+  .doc-sec > .rlist { list-style: none; margin: 0; padding: 0; max-width: none; border-top: 1px solid var(--line-1); }
+  .ritem { margin: 0; border-bottom: 1px solid var(--line-1); }
   .ritem a {
     display: grid;
     grid-template-columns: auto 1fr auto;

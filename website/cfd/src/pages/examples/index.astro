@@ -1,30 +1,33 @@
 ---
+/**
+ * /examples/: one card per worked example, led by the question it answers.
+ * Cards follow the frontmatter `order`. Facts on a card come from the example's
+ * own frontmatter, so the index and the detail page cannot disagree.
+ */
 import { getCollection } from 'astro:content';
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import SiteHeader from '../../components/nav/SiteHeader.astro';
+import PageShell from '../../components/nav/PageShell.astro';
 import { EXAMPLES_URL } from '../../consts';
 
-const title = 'Worked examples — DeepCausality CFD';
+const title = 'Examples | DeepCausality CFD';
 const description =
-  'Four runnable examples ordered by what they demand of the solver, each with its committed output, its walkthrough, and its stated limitation.';
+  'Four runnable examples, each answering one engineering question with committed output and a stated limit.';
 
 const examples = (await getCollection('examples')).sort(
   (a, b) => a.data.order - b.data.order
 );
 ---
-<BaseLayout title={title} description={description} path="/examples/">
-  <SiteHeader slot="header" />
+<PageShell title={title} description={description} path="/examples/">
+  <header class="doc-head">
+    <p class="eyebrow">Worked examples</p>
+    <h1>Four worked examples</h1>
+    <p class="lede">
+      Each example answers one engineering question with a program you can run, its committed
+      output and a stated limit. They are ordered by the solver and study surface each one needs.
+    </p>
+  </header>
 
-  <article class="page epage">
-    <header class="ehead">
-      <p class="eyebrow">Worked examples</p>
-      <h1>Four worked examples</h1>
-      <p class="lede">
-        Ordered by the solver and DSL surface each example requires. Figures are
-        quoted from committed <code>output.txt</code> files, except where an
-        entry states otherwise.
-      </p>
-    </header>
+  <section class="doc-sec" id="examples">
+    <h2>Which question do you have?</h2>
 
     <ol class="elist">
       {examples.map((ex) => {
@@ -32,51 +35,51 @@ const examples = (await getCollection('examples')).sort(
         return (
           <li class="ecard panel corner-brackets">
             <a class="ecard-link" href={`/examples/${slug}/`}>
-              <header class="ecard-head">
-                <span class="eix num">{String(ex.data.order).padStart(2, '0')}</span>
-                <div>
-                  <h2>{ex.data.title}</h2>
-                  <p class="equestion">{ex.data.question}</p>
-                </div>
-                <span class="ego" aria-hidden="true">→</span>
-              </header>
-
-              <p class="esummary">{ex.data.summary}</p>
-
-              <div class="euses">
-                {ex.data.uses.map((u) => <span class="chip chip-mono">{u}</span>)}
+              <span class="eix num">{String(ex.data.order).padStart(2, '0')}</span>
+              <div class="ebody">
+                <h3 class="equestion">{ex.data.question}</h3>
+                <p class="etitle">{ex.data.title}</p>
+                <p class="esummary">{ex.data.summary}</p>
+                <p class="euses">
+                  {ex.data.uses.map((u) => <span class="chip chip-mono">{u}</span>)}
+                </p>
+                <p class="efoot">
+                  <span class="eruntime num">{ex.data.runtime}.</span>
+                  {!ex.data.recorded && (
+                    <span class="status status-partial">No committed output</span>
+                  )}
+                </p>
               </div>
-
-              <div class="efoot">
-                <span class="eruntime num">{ex.data.runtime}</span>
-                {!ex.data.recorded && (
-                  <span class="status status-partial">No committed output</span>
-                )}
-              </div>
+              <span class="ego" aria-hidden="true"></span>
             </a>
           </li>
         );
       })}
     </ol>
+  </section>
 
-    <p class="src-note">
-      Source for all of these:
-      <a href={EXAMPLES_URL}>examples/avionics_examples/cfd/ <span aria-hidden="true">↗</span></a>
+  <section class="doc-sec" id="numbers">
+    <h2>Where do the numbers come from?</h2>
+    <p>
+      Each example page opens with its measured results, quoted from the example’s committed
+      <code>output.txt</code>. No <code>output.txt</code> records timing, so the run times on the
+      cards are README figures, not measurements from a named machine.
     </p>
-  </article>
-</BaseLayout>
+    <p class="next-links">
+      <a href={EXAMPLES_URL}>Source for all of these <span aria-hidden="true">↗</span></a>
+    </p>
+  </section>
+</PageShell>
 
 <style>
-  .epage { max-width: var(--w-panel); }
-  .ehead { margin-bottom: var(--space-7); }
-  .ehead h1 { margin: var(--space-3) 0 var(--space-4); }
-  .ehead .lede { color: var(--fg-1); max-width: var(--measure); margin: 0; }
-
-  .elist { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-4); }
+  .elist { list-style: none; margin: 0; padding: 0; max-width: none; display: grid; gap: var(--space-4); }
 
   .ecard { padding: 0; }
   .ecard-link {
-    display: block;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: var(--space-4);
+    align-items: start;
     padding: var(--space-5);
     color: var(--fg-0);
     border-bottom: none;
@@ -90,28 +93,24 @@ const examples = (await getCollection('examples')).sort(
     background: color-mix(in srgb, var(--accent) 5%, transparent);
   }
 
-  .ecard-head {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    gap: var(--space-4);
-    align-items: start;
-    margin-bottom: var(--space-3);
-  }
   .eix { color: var(--fg-2); }
-  .ecard-head h2 { font-size: var(--t-h4); margin: 0 0 var(--space-2); }
-  .equestion { color: var(--fg-1); font-size: var(--t-body-sm); margin: 0; max-width: var(--measure); }
-  .ego { color: var(--accent); transition: transform var(--dur-fast) var(--ease-out); }
-  .ecard-link:hover .ego { transform: translateX(2px); }
-
-  .esummary {
-    color: var(--fg-1);
-    font-size: var(--t-body-sm);
-    margin: 0 0 var(--space-4);
+  .ebody { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+  .ebody p { margin: 0; }
+  .equestion {
+    font-weight: var(--fw-heading);
+    font-size: var(--t-h4);
+    line-height: var(--lh-h4);
     max-width: var(--measure);
   }
-
-  .euses { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-4); }
-
+  .etitle {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
+  }
+  .esummary { color: var(--fg-1); font-size: var(--t-body-sm); max-width: var(--measure); }
+  .euses { display: flex; flex-wrap: wrap; gap: var(--space-2); }
   .efoot {
     display: flex;
     flex-wrap: wrap;
@@ -121,6 +120,6 @@ const examples = (await getCollection('examples')).sort(
     border-top: 1px solid var(--line-1);
   }
   .eruntime { color: var(--fg-2); font-size: var(--t-eyebrow); }
-
-  .src-note { color: var(--fg-2); font-size: var(--t-body-sm); margin-top: var(--space-6); }
+  .ego::after { content: '→'; color: var(--accent); display: inline-block; transition: transform var(--dur-fast) var(--ease-out); }
+  .ecard-link:hover .ego::after { transform: translateX(2px); }
 </style>

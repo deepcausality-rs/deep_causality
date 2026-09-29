@@ -1,7 +1,7 @@
 ---
 title: Install and run a reference case
-task: You need the crate as a dependency, or a single command that exercises it.
-summary: One line from crates.io, or a git dependency pinned to the monorepo, and one command that exercises the full coupling stack in about forty seconds.
+task: I need the crate in my project, or one command that shows it working.
+summary: Add the crate with one command, or clone the repository and run the corridor example, which takes 44.4 s on an Apple M3 Max.
 order: 0
 verbs:
   - cargo
@@ -9,69 +9,80 @@ worked:
   - label: Plasma blackout corridor
     href: /tutorial/stage-1-corridor/
 ---
+import { MACHINE, MSRV } from '../../../consts';
 
-The crate is on crates.io.
+Rust {MSRV} or newer builds the crate. The workspace `Cargo.toml` sets
+`rust-version = "1.98.0"`, and crates.io lists the same minimum for the 0.3 releases.
+
+## Add the crate to a project
 
 ```bash
 cargo add deep_causality_cfd
 ```
 
-It is also versioned with the monorepo, so a git dependency tracks work that has
-not been released yet.
+To use work that has not been released, depend on the repository:
 
 ```toml
 [dependencies]
 deep_causality_cfd = { git = "https://github.com/deepcausality-rs/deep_causality.git", branch = "main" }
 ```
 
-Pin by `branch`, `tag`, or `rev`. The crate moves with the monorepo and has no
-release cadence of its own, so `rev` is the stable choice.
+Use `tag` or `rev` in place of `branch` to fix the version. `rev` names an exact commit.
 
-## Features
+## Run the corridor example
 
-```toml
-deep_causality_cfd = { git = "...", features = ["parallel"] }
-```
-
-`std` is on by default. `parallel` opts into CPU parallelism through
-`deep_causality_par`, which is what makes sweeps and branch fan-outs concurrent.
-
-Measured on the DEC solver, `parallel` reduces throughput on small and medium
-grids, where per-operator work does not cover the coordination cost. Benchmark at
-the target grid size before enabling it.
-
-## Reference run
+The corridor example marches a compressible flow, reacts the plasma chemistry in it and cuts a
+navigation filter's GPS fix while the plasma blocks the signal. It forks the marched state into
+17 what-if branches and prints 13 gate results. A gate is a pass or fail check on the run's own
+results. The run takes 44.4 s on {MACHINE} and exits 0 when every gate passes.
 
 ```bash
+git clone --depth 1 https://github.com/deepcausality-rs/deep_causality.git
+cd deep_causality
 cargo run --release -p avionics_examples --example plasma_blackout_corridor
 ```
 
-Runtime is 44.4 s. The run marches a compressible flow, reacts its plasma
-chemistry, gates a Kalman filter on the result, forks the marched state into
-seventeen counterfactual worlds, and reports thirteen gate verdicts.
+Run it from a checkout. The example package is part of the repository and is not published to
+crates.io. Use `--release`: the committed timings come from release builds.
 
-Use `--release`. Several examples carry wall-clock budgets that a debug build
-exceeds.
-
-## Run the verification suite
-
-Every verification target is an example on the crate itself:
+## Run a verification target
 
 ```bash
 cargo run --release -p deep_causality_cfd --example qtt_sod
 cargo run --release -p deep_causality_cfd --example dec_lid_cavity_re1000_verification trend
 ```
 
-Each self-verifies and exits nonzero when its check fails. The
-[validation status](/validation/) page lists what each target asserts and to what
-number.
+Each target checks its own results and exits nonzero when a check fails. On {MACHINE},
+`qtt_sod` takes about 1 s and the cavity `trend` mode about 1 min. The
+[validation page](/validation/) lists what each target asserts and to what number. The
+example names are the `[[example]]` entries in `deep_causality_cfd/Cargo.toml`.
 
-Several target READMEs document an older `-p avionics_examples` invocation. The
-authoritative names are the `[[example]]` entries in
-`deep_causality_cfd/Cargo.toml`.
+## Choose serial or parallel builds
+
+`std` and `parallel` are both on by default. `parallel` runs sweeps and branch fan-outs
+concurrently and parallelizes the loops inside the DEC solver. On small grids the coordination
+costs more than the loops save. Speedup is serial time divided by parallel time. The table shows it
+for the DEC marcher over a 20-step march, measured on {MACHINE}.
+
+| Grid | Speedup |
+|---|---|
+| 16 × 16 | 0.31× |
+| 64 × 64 | 0.82× |
+| 256 × 256 | 1.04× |
+| 512 × 512 | 1.47× |
+
+Below about 256 × 256 cells, switch `parallel` off. Sweeps and branch fan-outs then run one
+after another.
+
+```bash
+cargo add deep_causality_cfd --no-default-features --features std
+```
+
+The crossover depends on the hardware, so benchmark your own grid. The figures come from
+`deep_causality_cfd/benches/PERFORMANCE.md` (2026-06-17).
 
 ## Where to go next
 
-The [worked examples](/examples/) are ordered by the solver and DSL surface each
-requires. The [capability boundaries](/boundaries/) page records the measured
-limits, including several uses of the QTT marcher that measurement ruled out.
+The [examples](/examples/) are four studies, each answering one question. The
+[tutorial](/tutorial/) walks the corridor. The [limits](/boundaries/) page records what
+measurement ruled out.

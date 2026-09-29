@@ -1,7 +1,7 @@
 ---
-title: Fork a running simulation into counterfactual worlds
-task: You need to compare commands evaluated from the same physical state.
-summary: March until the physics fires an event, pause, then continue every candidate from that shared marched state. The fork is O(1) copy-on-write and each branch is alternated into its own audited world.
+title: Fork a running simulation into what-if branches
+task: I need to compare several commands that all start from the same physical state.
+summary: March until a condition becomes true and the run pauses. Then continue every candidate command from that paused state and score the branches in one table. Branches share the paused state until one writes to it.
 order: 3
 verbs:
   - march ... until
@@ -18,142 +18,116 @@ worked:
   - label: Weather dispersion table
     href: /tutorial/stage-2-weather/
 ---
+The corridor example pauses a reentry descent when the plasma blocks the GPS signal. It then
+flies six bank angles from that one pause and prints how far each lands from the aim point.
 
-Two levels. The trunk marches to an event; the study fans out from the pause it
-returns.
+| Bank angle | Miss from the aim point |
+|---|---|
+| 0.0° | 20.000 m |
+| 5.0° | 11.581 m |
+| 10.0° | 3.533 m (closest) |
+| 15.0° | 6.002 m |
+| 20.0° | 14.303 m |
+| 40.0° | 28.881 m |
 
-## Trunk: march until the field satisfies a predicate
+The setup fixes the first row. The aim point sits 20 m to the side of where the unsteered
+branch lands (`AIM_CROSS_RANGE_M = 20.0` in the example's `constants.rs`), so a zero-bank miss
+of 20.000 m is a property of the setup and not a measurement. The study measures which bank
+angle gets closest. A second round of eleven finer branches, forked from the same pause, lands
+at 11.5° and 2.07 m.
 
-`examples/avionics_examples/cfd/plasma_blackout/corridor/main.rs:81-89`:
+Two calls produce this. The march pauses when a condition on the evolved flow becomes true. The
+study forks that pause. Condensed from
+`examples/avionics_examples/cfd/plasma_blackout/corridor/main.rs`, with the `.kappa`, `.inspect`
+and error-mapping calls left out:
 
 ```rust
+// March until the plasma blocks the GPS signal, then pause.
 let onset = CfdFlow::march(&nominal)
     .couple(world::corridor_coupling(1.0, 0))
-    .trigger(trigger)
+    .trigger(utils::trigger())
     .from_field(world::initial_field())
     .until(|field, _| field.regime().map(|r| r.gnss_denied).unwrap_or(false))?;
-```
 
-The predicate reads the evolved field, so the pause lands where the chemistry
-crossed the receiver cutoff. See
-[detect and act on a regime change](/blueprints/handle-regime-change/).
-
-## Campaign: fork the pause
-
-`main.rs:91-112`:
-
-```rust
+// Fork the pause: one branch per bank command, then refine from the same pause.
 let corridor = CfdFlow::study("bank-angle corridor")
     .cases(model::coarse_commands())
     .fork(&onset)
     .branch(model::bank_world)
     .continue_for(constants::BRANCH_STEPS)
-    .reduce_all(model::score_branches) // aim point from the ballistic branch first
-    .inspect(|rows| utils_print::print_branches(COARSE_TITLE, rows))
-    .refine(&onset, model::fine_candidates) // 0.5-deg bracket around the coarse winner
+    .reduce_all(model::score_branches)      // aim point from the ballistic branch first
+    .refine(&onset, model::fine_candidates) // 0.5-degree bracket around the coarse winner
     .branch(model::bank_world)
     .continue_for(constants::BRANCH_STEPS)
-    .reduce_all(model::score_branches) // same aim point: the rounds stay comparable
+    .reduce_all(model::score_branches)      // same aim point: the rounds stay comparable
     .record(table_path())
     .gates(model::corridor_gates())
     .verdict()?;
 ```
 
+The condition reads the evolved field, so the pause lands where the chemistry crossed the
+receiver cutoff. See [detect and act on a regime change](/blueprints/handle-regime-change/).
 `refine` forks the same `onset` pause a second time. Both rounds call
-`reduce_all(model::score_branches)`, so they score against one shared aim point
-and remain comparable.
+`reduce_all(model::score_branches)`, so they score against one shared aim point.
 
-## Per-branch command injection
+## A branch differs in one published constant
 
-Branches differ only in a world-published constant. `model.rs:107-130`:
+Each branch builds its own world: the description of the run with one declared difference. Here
+the difference is the commanded bank angle. From `model.rs`:
 
 ```rust
-pub fn descent_world(
-    name: &'static str,
-    bank_deg: FloatType,
-) -> Result<CompressibleMarchConfig<FloatType>, PhysicsError> {
-    world::descent_world(
-        name,
-        world::standard_atmosphere(),
-        STEPS,
-        &[("commanded_bank", utils::rad(bank_deg))],
-    )
-}
-
 pub fn bank_world(cmd: &BankCommand) -> Result<CompressibleMarchConfig<FloatType>, PhysicsError> {
     descent_world(cmd.name, cmd.deg)
 }
 ```
 
-The constant reaches the marcher through the builder
-(`shared/world.rs:122-124`):
+`descent_world` passes `&[("commanded_bank", utils::rad(bank_deg))]` to the shared world
+builder, which publishes each constant with `publish_constant`. The `CommandedBank` stage reads
+that constant into the control channel every step, and `CyberneticCorrect` clamps it against
+the envelope.
 
-```rust
-    for &(cname, value) in constants {
-        builder = builder.publish_constant(cname, value);
-    }
+## The event log records which world a branch replaced
+
+Every branch continues from the pause in its own world and adds a `!!ContextAlternation!!` entry
+to its event log, naming the world it replaced. The corridor gate reports it:
+
+```text
+[PASS] [tripwire] (4c) counterfactual steering: 17 alternated worlds (6 coarse + 11 fine) from one shared onset; coarse-winner-vs-ballistic terminal separation 16.85 m; coarse miss spread [3.53, 28.88] m
 ```
 
-`CommandedBank` (`shared/stages.rs:146-156`) reads the published scalar into the
-control channel each step, and `CyberneticCorrect` clamps it against the
-envelope.
+The retropulsion example gates it per branch: 5 of 5 branches record an applied world change
+naming the world they replace. After the study, the corridor's diagnostic legs call
+`alternate_context` directly to fly the committed branch's world.
 
-## World alternation is applied by the driver
+## A fork costs little until a branch writes
 
-The example passes a world constructor to `.branch(..)`. The study driver calls
-`alternate_context` for any branch whose world name differs from the baseline
-(`deep_causality_cfd/src/types/flow/study/mod.rs:815-825`):
+The fork shares the marched flow state, and a gate confirms that no tensor is copied at fork
+time. Each branch copies the coupled field (the per-cell scalars, the navigation filter and the
+event log) at its first write, so the per-branch cost grows with the cell count.
 
-```rust
-                let world = &c.worlds[i];
-                let stack = (c.coupling)(&c.cases[i], draw);
-                let mut run = CfdFlow::march(&c.baseline);
-                if world.name() != c.baseline.name() {
-                    run = run.alternate_context(world);
-                }
-```
+Continuing a branch costs about the same as an unforked march. In the plume-coupled study
+(`studies/qtt_rank_plume`), three recordings span 0.95 to 1.05 times the unforked step cost on
+the powered branches, and a coasting branch costs 0.66 times as much because it does less work.
+Read those as indistinguishable from an unforked march, not as three-digit figures. The study
+also prints a fork setup time. It is one sub-microsecond measurement that moved from 42 ns to
+83 ns between recordings, so do not plan against it.
 
-The audit rejoin (`study/mod.rs:833-840`) detects the `!!ContextAlternation!!`
-marker and labels each branch alternated or baseline.
+`fork` itself does not fail. A broken pause passes through, and each branch reports the pause's
+error at `continue_for`, so the failure stays attributable.
 
-The corridor example also calls `alternate_context` directly at `main.rs:127`
-and `main.rs:143`, on diagnostic legs outside the study.
+## A state fork differs from a parameter fork
 
-## Measured fork cost
+A parameter fork reruns a model from different inputs, and each branch is an independent run.
+The [weather table](/tutorial/stage-2-weather/) has that shape.
 
-Sharing is O(1). Branches share the trunk read-only through `Arc` and take a
-copy-on-write clone at first divergent write. That sharing is structural rather
-than timed: the study gates `shares fluid + field = true`, so no tensor is
-copied at fork time.
+A state fork pauses one marched, coupled field and continues every branch from it, so each
+intervention feeds back into the flow it inherited. The corridor has that shape.
 
-On a plume-coupled state (`studies/qtt_rank_plume`), per-branch continuation
-costs about the same as an unforked trunk step, and a coast branch is cheaper at
-0.66× because it performs less work. Three recordings span 0.95 to 1.05 on the
-powered rows, so read that as indistinguishable from an unforked march rather
-than as a figure to three digits. The setup cost the study prints is a single
-sub-microsecond measurement and moves by a factor of two between runs; it is not
-a number to plan against.
+For a state fork, compare each branch against a frozen-field prediction of the same
+intervention: the same command schedule with the flow closure held at its value at the fork. If
+simple kinematics reproduces the divergence, the flow did not contribute to it.
 
-`fork` does not fail. A broken pause is carried through and surfaces as each
-branch's error at `continue_for`, which keeps the failure attributable to the
-branch.
-
-## State forks compared with parameter forks
-
-A parameter fork re-runs a model from different inputs; each branch is an
-independent world. The [weather table](/tutorial/stage-2-weather/) has
-that shape.
-
-A state fork pauses one marched coupled field and continues every branch from
-it, so each intervention feeds back into the flow it inherited. The corridor has
-that shape.
-
-For a state fork, compare each branch against a frozen-field prediction of the
-same intervention: the same command schedule with the flow closure held at the
-fork's value. If simple kinematics reproduces the divergence, the flow did not
-contribute to it.
-
-The [retropulsion descent](/tutorial/stage-3-retropulsion/) runs that
-comparison as gate 4c. Its branches depart the frozen-drag prediction by up to
-139.4 m/s against a 100 m/s threshold, and its flow observables spread 0.0202
-across the roster where the corridor's bank branches agreed to three digits.
+The [retropulsion descent](/tutorial/stage-3-retropulsion/) runs that comparison as gate 4c. Its
+branches depart the frozen-drag prediction by up to 139.4 m/s against a 100 m/s threshold. Its
+flow observables spread 0.0202 across the branches, where the corridor's bank branches agreed
+to three digits.

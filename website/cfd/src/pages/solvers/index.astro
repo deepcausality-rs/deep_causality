@@ -1,214 +1,209 @@
 ---
 /**
- * /solvers/ — the three solver families, off the landing page.
+ * /solvers/: the three solver families the library ships, and the defining home of the solver
+ * terms (DEC, quantized tensor train, bond dimension, Rankine-Hugoniot, Park two-temperature).
  *
- * These moved here because presenting them as headline capabilities invites a
- * comparison this project loses and does not want: mesh scale, turbulence
- * closures, BC libraries, ecosystem maturity. The honest job they do is
- * narrower and stronger — they are why the coupled loop closes without an
- * external dependency.
- *
- * Content is copied from `components/home/SolverStack.astro`, which stays on
- * the landing page until the rework's cleanup phase retires it. Duplication is
- * deliberate and temporary: nothing loses a destination mid-flight.
+ * Sources: deep_causality_cfd/README.md (solver families), src/types/flow_config/mesh.rs and
+ * body.rs (geometry), Cargo.toml (dependencies), deep_causality_physics
+ * quantities/fluid_dynamics/solenoidal_field.rs, verification baselines, and src/data/boundaries.ts.
  */
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import SiteHeader from '../../components/nav/SiteHeader.astro';
+import PageShell from '../../components/nav/PageShell.astro';
 
-const title = 'Solvers — DeepCausality CFD';
+const title = 'Solvers | DeepCausality CFD';
 const description =
-  'Three solver families behind one CfdFlow language: a DEC-native incompressible discretization, quantized tensor-train compressible marchers, and gridless fitted closures. What each is for, and what each does not do.';
+  'Which solver for which problem: a discrete-exterior-calculus incompressible solver, quantized tensor-train compressible marchers and closed-form closures. What each is for, and what each cannot do.';
+
+/** The table that opens the page: problem class, solver family, evidence. */
+const choose = [
+  {
+    problem: 'Incompressible flow on a fixed mesh: cavities, channels, a cylinder wake.',
+    family: 'Discrete exterior calculus solver (DEC)',
+    evidence: [
+      { text: 'Ghia cavity, Re 1000', href: '/validation/#dec-cavity' },
+      { text: 'Cylinder, Re 100', href: '/validation/#dec-cylinder' },
+      { text: 'Graded-mesh manufactured solution, order 2.00', href: '/validation/#dec-graded-mms' },
+    ],
+  },
+  {
+    problem: 'Compressible flow in 1-D to 3-D, including a reentry layer.',
+    family: 'Quantized tensor-train marcher (QTT)',
+    evidence: [
+      { text: 'Sod shock tube, L1 ≤ 0.0274', href: '/validation/#qtt-sod' },
+      { text: 'RAM-C II anchor', href: '/validation/#qtt-ramc' },
+      { text: 'Alignment drives the rank', href: '/boundaries/#alignment' },
+    ],
+  },
+  {
+    problem: 'A stagnation line, relaxation or ionization, with no grid.',
+    family: 'Closed-form closures',
+    evidence: [
+      { text: 'Manufactured solution to machine round-off', href: '/validation/#mms-tgv' },
+      { text: 'Envelope placard example', href: '/examples/flight-envelope-placard/' },
+    ],
+  },
+  {
+    problem: 'A curved shock captured on Cartesian axes at high resolution.',
+    family: 'Not supported',
+    evidence: [{ text: 'Rank grows as √side in 3-D', href: '/boundaries/#sqrt-side' }],
+  },
+  {
+    problem: 'Turbulence at flight Reynolds number, large-eddy simulation.',
+    family: 'Not available; staged on the DEC solver',
+    evidence: [{ text: 'Turbulence is staged', href: '/boundaries/#turbulence' }],
+  },
+];
 
 const families = [
   {
-    key: 'DEC',
-    label: 'Calculus',
-    title: 'DEC-native Navier–Stokes',
-    forWhat: 'Incompressible flow on a fixed mesh.',
-    body:
-      'Velocity lives as an edge 1-form on a discrete exterior calculus. Each step marches the Leray-projected rate, so the field is divergence-free at every step. The SolenoidalField type-state carries that: there is no public constructor, every constructing path is a projection, and the type implements no arithmetic, so two projected fields cannot be added into an unprojected one.',
-    caveat:
-      'Two wall-bounded escape hatches are public. constrain_edges and with_lift re-wrap a modified tensor without re-projecting, because the solver re-enters them on the output of a projection that already pinned those edges. Off that path the caller carries the invariant.',
+    id: 'dec',
+    title: 'DEC solves incompressible flow on a fixed mesh',
+    use: 'Incompressible flow in a box, a channel or around an immersed disk: cavities, Couette and Poiseuille flow, Taylor–Green decay, cylinder wakes.',
+    how: 'Discrete exterior calculus (DEC) writes the flow equations so that the discrete operators obey the same identities as the continuous ones. Velocity lives on the mesh edges. Each step projects the velocity update onto divergence-free fields (a Leray projection), so the divergence stays at round-off: 3.33e-15 against a 1e-6 tolerance on the wake case. The SolenoidalField type has no public constructor and no arithmetic, so a program cannot step an unprojected field by accident.',
+    cannot: 'It solves no compressible flow and has no turbulence model. The validated cases sit at Re 100 to 1600, and the Re 100 cylinder wake is acceptable rather than reference quality at 16 cells per diameter. Two public methods, constrain_edges and with_lift, re-wrap a modified field without re-projecting. The solver calls them on the output of a projection that already pinned those edges. Off that path the caller carries the invariant.',
     evidence: [
-      { text: 'Ghia cavity Re 1000', href: '/validation/#dec-cavity' },
-      { text: 'Cylinder Re 100', href: '/validation/#dec-cylinder' },
-      { text: 'Graded MMS, order 2.00', href: '/validation/#dec-graded-mms' },
+      { text: 'Ghia cavity, Re 1000', href: '/validation/#dec-cavity' },
+      { text: 'Cylinder, Re 100', href: '/validation/#dec-cylinder' },
+      { text: 'Graded-mesh manufactured solution, order 2.00', href: '/validation/#dec-graded-mms' },
     ],
   },
   {
-    key: 'QTT',
-    label: 'Compression',
-    title: 'Quantized tensor-train marchers',
-    forWhat: 'Compressible Euler, 1-D through 3-D, including a body-fitted variant.',
-    body:
-      'A 2^L grid stores order χ²·L: logarithmic in point count for a bounded bond dimension χ, with sharp structure paid for in χ. Whether χ stays bounded is the question the rank studies answered, and they found the driver to be coordinate alignment rather than sharpness. The compressible carrier acts on that with a shock-fitted inflow strip, which imposes the exact Rankine–Hugoniot state as the boundary of the marched layer, so the shock is never captured at all.',
-    caveat:
-      'Storage is not runtime. On the incompressible immersed harness, per-step wall clock rose far faster than χ²·L while the achieved bond stayed flat, so a non-compression bottleneck dominates that path.',
+    id: 'qtt',
+    title: 'QTT marchers solve compressible flow in compressed storage',
+    use: 'Compressible Euler flow in 1-D, 2-D and 3-D, including a body-fitted variant. The corridor example marches a reentry shock layer this way.',
+    how: 'A quantized tensor train (QTT) stores a field on a 2^L grid as a chain of L small tensors. The bond dimension χ is the width of the links between neighbours. Storage grows as χ²·L, which is logarithmic in the point count while χ stays bounded, and sharp structure costs χ. The rank studies asked whether χ stays bounded and found that coordinate alignment drives it, not sharpness. The compressible carrier acts on that with a shock-fitted inflow strip: it imposes the exact Rankine–Hugoniot state (the jump conditions across a shock) as the boundary of the marched layer, so the layer never captures the shock.',
+    cannot: 'A curved shock captured on Cartesian axes costs 3.1 times dense storage. In 3-D the bond dimension grows as roughly the square root of the side length (χ ≈ 45 at 16³, 135 at 128³). Storage is not runtime: on the incompressible immersed harness, per-step wall clock rose far faster than χ²·L while the bond stayed flat. The 3-D fitted marcher runs more than 3 times over the ten-minute budget at 16³, so the corridor marches a 2-D layer.',
     evidence: [
-      { text: 'Sod, L1 ≤ 0.027', href: '/validation/#qtt-sod' },
+      { text: 'Sod shock tube, L1 ≤ 0.0274', href: '/validation/#qtt-sod' },
       { text: 'RAM-C II anchor', href: '/validation/#qtt-ramc' },
-      { text: 'Alignment is the rank driver', href: '/boundaries/#alignment' },
+      { text: 'Alignment drives the rank', href: '/boundaries/#alignment' },
     ],
   },
   {
-    key: 'Analytic',
-    label: 'Pointwise',
-    title: 'Fitted closures',
-    forWhat: 'Gridless stagnation-line and relaxation problems.',
-    body:
-      'Exact Rankine–Hugoniot jumps, Park two-temperature relaxation, the finite-rate ionization network, and pointwise Navier–Stokes regime evaluators with their causal-effect wrappers. A stagnation line with a fitted shock runs entirely on these, with no grid.',
-    caveat: null,
+    id: 'closures',
+    title: 'Closed-form closures need no grid',
+    use: 'Stagnation-line, relaxation and ionization problems. A stagnation line with a fitted shock runs entirely on closures.',
+    how: 'Each closure evaluates one point at a time: the exact Rankine–Hugoniot shock jumps, Park two-temperature relaxation (separate translational and vibrational-electron temperatures, with ionization driven at their geometric mean), the finite-rate ionization network from NASA RP-1232, and pointwise Navier–Stokes regime evaluators.',
+    cannot: 'A closure resolves no spatial structure. The corridor’s chemistry is a single-point closure with the electron temperature set equal to the vibrational one, which is worth roughly 2×. Against the RAM-C II flight anchor, the finite-rate network lands 0.35 decades high and the closed-form Park controller lands 1.27 decades low.',
     evidence: [
-      { text: 'MMS to machine ε', href: '/validation/#mms-tgv' },
+      { text: 'Manufactured solution to machine round-off', href: '/validation/#mms-tgv' },
       { text: 'Envelope placard example', href: '/examples/flight-envelope-placard/' },
     ],
   },
 ];
 ---
-<BaseLayout title={title} description={description} path="/solvers/">
-  <SiteHeader slot="header" />
+<PageShell title={title} description={description} path="/solvers/">
+  <header class="doc-head">
+    <p class="eyebrow">Solvers</p>
+    <h1>The solvers underneath</h1>
+    <p class="lede">
+      The library runs three solver families of its own and does not wrap Fluent, SU2 or OpenFOAM.
+      A program picks the family that fits its problem.
+    </p>
+  </header>
 
-  <article class="page spage">
-    <header class="shead">
-      <p class="eyebrow">Solvers</p>
-      <h1>Three solvers, one job</h1>
-      <p class="lede">
-        These exist so the coupled loop can close without an external
-        dependency. They are not offered as a replacement for the solver you
-        already run.
-      </p>
-    </header>
-
-    <section class="handoff panel corner-brackets">
-      <h2>Where the line sits</h2>
-      <p class="detail">
-        Meshing is your mesher's job — this reads no mesh format, and geometry
-        is declared in code on structured Cartesian grids with aperture-resolved
-        cut cells. Converged flow at industrial scale, turbulence closures and
-        certification stay with your solver. What happens at the seams between
-        domains, under alternatives, with the record of why, is what this is
-        for.
-      </p>
-      <p class="detail">
-        All three families sit behind the same <code>CfdFlow</code> language and
-        the same scalar type, so a program picks by problem: the DEC solver for
-        an incompressible cavity, the QTT marcher for a reentry layer, a fitted
-        closure for the stagnation line.
-      </p>
-    </section>
-
-    <div class="stack">
-      {families.map((f, i) => (
-        <article class="layer" style={`--i:${i}`}>
-          <div class="layer-label">
-            <span class="lk">{f.label}</span>
-            <span class="lv">{f.key}</span>
-          </div>
-          <div class="layer-body">
-            <h3>{f.title}</h3>
-            <p class="for-what">{f.forWhat}</p>
-            <p class="detail">{f.body}</p>
-            {f.caveat && <p class="caveat">{f.caveat}</p>}
-            <div class="ev-row">
-              {f.evidence.map((e) => (
-                <a class="chip chip-mono" href={e.href}>
-                  {e.text}<span aria-hidden="true">→</span>
-                </a>
-              ))}
-            </div>
-          </div>
-        </article>
-      ))}
+  <section class="doc-sec" id="which">
+    <h2>Which solver for which problem?</h2>
+    <div class="table-scroll">
+      <table class="table-stack">
+        <thead>
+          <tr>
+            <th scope="col">Problem</th>
+            <th scope="col">Solver family</th>
+            <th scope="col">Evidence</th>
+          </tr>
+        </thead>
+        <tbody>
+          {choose.map((r) => (
+            <tr>
+              <th scope="row">{r.problem}</th>
+              <td data-label="Solver family">{r.family}</td>
+              <td data-label="Evidence">
+                <ul class="evl">
+                  {r.evidence.map((e) => <li><a href={e.href}>{e.text}</a></li>)}
+                </ul>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
+    <p>
+      All three families use the same <code>CfdFlow</code> language and the same scalar type. The
+      config type selects the solver at compile time.
+    </p>
+  </section>
 
-    <section class="tail">
-      <p class="more">
-        <a href="/solvers/precision/">Precision as a parameter →</a>
-        <a href="/blueprints/pick-a-solver/">Blueprint: pick a solver</a>
-        <a href="/validation/">Validation status</a>
-        <a href="/boundaries/">Measured boundaries</a>
+  <section class="doc-sec" id="boundary">
+    <h2>What stays with your own tools?</h2>
+    <div class="callout">
+      <p class="callout-title">What the library does not do</p>
+      <p>
+        It does not wrap Fluent, SU2 or OpenFOAM. It reads no mesh format. It has no Python or C
+        interface. Its <code>Cargo.toml</code> declares no runtime dependency outside the DeepCausality
+        workspace.
       </p>
+    </div>
+    <p>
+      Geometry is declared in code: a lattice with uniform spacing (optionally graded along one
+      axis) and one immersed disk or ball, whose cut cells the solver resolves exactly. The
+      library reads and writes two kinds of files: data tables (CSV) and saved run states.
+    </p>
+    <p>
+      Meshing, converged flow at industrial scale, turbulence closures and certification stay with
+      your own tools. The library is built for the coupled loop: what happens where flow,
+      chemistry and navigation meet, under alternative commands, with a record of why.
+    </p>
+  </section>
+
+  {families.map((f) => (
+    <section class="doc-sec" id={f.id}>
+      <h2>{f.title}</h2>
+      <dl class="deflist fam">
+        <div><dt>Use it for</dt><dd>{f.use}</dd></div>
+        <div><dt>How it works</dt><dd>{f.how}</dd></div>
+        <div><dt>It cannot</dt><dd>{f.cannot}</dd></div>
+        <div>
+          <dt>Evidence</dt>
+          <dd>
+            <ul class="evl row">
+              {f.evidence.map((e) => <li><a href={e.href}>{e.text}</a></li>)}
+            </ul>
+          </dd>
+        </div>
+      </dl>
     </section>
-  </article>
-</BaseLayout>
+  ))}
+
+  <section class="doc-sec">
+    <p class="next-links">
+      <a href="/solvers/precision/">Precision as a parameter</a>
+      <a href="/blueprints/pick-a-solver/">How-to: pick a solver</a>
+      <a href="/validation/">Validation</a>
+      <a href="/boundaries/">Limits</a>
+    </p>
+  </section>
+</PageShell>
 
 <style>
-  .spage { max-width: var(--w-panel); }
-  .shead { margin-bottom: var(--space-7); }
-  .shead h1 { margin: var(--space-3) 0 var(--space-4); }
-  .shead .lede { color: var(--fg-1); max-width: var(--measure-lede); margin: 0; }
-
-  .handoff { padding: var(--space-5); margin-bottom: var(--space-7); }
-  .handoff h2 { font-size: var(--t-h4); margin: 0 0 var(--space-3); }
-
-  .stack { border-top: 1px solid var(--line-1); }
-
-  .layer {
-    position: relative;
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: var(--space-3);
-    padding: var(--space-5) var(--space-4);
-    border-bottom: 1px solid var(--line-1);
-    transition: background-color var(--dur-fast) var(--ease-out);
-  }
-  @media (min-width: 720px) {
-    .layer { grid-template-columns: var(--w-label) 1fr; gap: var(--space-5); }
-  }
-  /* The tick grows 18px → 28px on hover (DESIGN.md §8.4). Implemented as
-     scaleY rather than an animated `height`, which §13.10 bans: 28/18 = 1.556
-     on a fixed 18px base gives the same result on the compositor. */
-  .layer::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 50%;
-    width: 3px;
-    height: 18px;
-    transform: translateY(-50%) scaleY(1);
-    transform-origin: center;
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-    background: color-mix(in srgb, var(--accent) 55%, transparent);
-    transition: transform var(--dur-med) var(--ease-out),
-                background-color var(--dur-med) var(--ease-out);
-  }
-  .layer:hover { background: color-mix(in srgb, var(--accent) 5%, transparent); }
-  .layer:hover::before { transform: translateY(-50%) scaleY(1.556); background: var(--accent); }
-
-  .layer-label { display: flex; flex-direction: column; gap: var(--space-1); }
-  .lk {
+  table { width: 100%; border-collapse: collapse; font-size: var(--t-body-sm); }
+  th, td { text-align: left; vertical-align: top; padding: var(--space-3); border-bottom: 1px solid var(--line-1); }
+  thead th {
     font-family: var(--font-mono);
     font-size: var(--t-eyebrow);
     letter-spacing: var(--ls-eyebrow);
     text-transform: uppercase;
     color: var(--fg-2);
+    font-weight: 400;
+    white-space: nowrap;
   }
-  .lv {
-    font-family: var(--font-mono);
-    font-size: var(--t-mono-sm);
-    color: var(--accent);
-  }
+  tbody th { font-weight: var(--fw-heading); min-width: 14rem; }
+  tbody td { color: var(--fg-1); }
+  tbody tr:last-child th, tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: color-mix(in srgb, var(--accent) 5%, transparent); }
 
-  .layer-body h3 { margin: 0 0 var(--space-2); }
-  .for-what { color: var(--fg-0); font-size: var(--t-body-sm); margin: 0 0 var(--space-3); }
-  .detail { color: var(--fg-1); font-size: var(--t-body-sm); max-width: var(--measure); margin: 0 0 var(--space-4); }
-  .detail:last-child { margin-bottom: 0; }
-  .caveat {
-    color: var(--fg-2);
-    font-size: var(--t-body-sm);
-    max-width: var(--measure);
-    margin: 0 0 var(--space-4);
-    padding-left: var(--space-4);
-    border-left: 1px solid var(--line-2);
-  }
-  .ev-row { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+  .evl { list-style: none; margin: 0; padding: 0; }
+  .evl li { margin: 0; }
+  .evl.row { display: flex; flex-wrap: wrap; gap: var(--space-2) var(--space-4); }
 
-  .tail { padding-top: var(--space-5); }
-  .more {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-4);
-    margin: 0;
-    font-size: var(--t-body-sm);
-  }
+  .doc-sec > .fam { max-width: calc(var(--w-label) + var(--space-5) + var(--measure)); }
 </style>

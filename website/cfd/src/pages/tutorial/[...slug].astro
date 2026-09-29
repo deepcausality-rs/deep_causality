@@ -4,7 +4,7 @@ import { getCollection, render } from 'astro:content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SiteHeader from '../../components/nav/SiteHeader.astro';
 import DocDetail from '../../components/docs/DocDetail.astro';
-import { GITHUB_URL } from '../../consts';
+import { GITHUB_URL, MACHINE } from '../../consts';
 
 export async function getStaticPaths() {
   const entries = await getCollection('tutorial');
@@ -26,7 +26,7 @@ const { entry } = Astro.props;
 const { Content } = await render(entry);
 const d = entry.data;
 
-// Prev/next stage navigation, ordered by the stage number.
+// Prev/next walk navigation, ordered by the stage number.
 const all = (await getCollection('tutorial')).sort((a, b) => a.data.stage - b.data.stage);
 const ix = all.findIndex((e) => e.id === entry.id);
 const prev = ix > 0 ? all[ix - 1] : undefined;
@@ -34,23 +34,23 @@ const next = ix < all.length - 1 ? all[ix + 1] : undefined;
 const hrefOf = (e: (typeof all)[number]) => `/tutorial/${e.id.replace(/^en\//, '')}/`;
 ---
 <BaseLayout
-  title={`${d.title} — DeepCausality CFD`}
+  title={`${d.title} | DeepCausality CFD`}
   description={d.summary}
   path={`/tutorial/${entry.id.replace(/^en\//, '')}/`}
 >
   <SiteHeader slot="header" />
 
   <DocDetail
-    eyebrow={`Tutorial · Stage ${d.stage} of ${all.length}`}
+    eyebrow={`Tutorial · Walk ${d.stage} of ${all.length}`}
     title={d.title}
     summary={d.summary}
     tags={d.uses}
     command={d.command}
     meta={[
       { label: 'You will be able to', value: d.objective },
-      { label: 'Runtime', value: d.runtime, mono: true },
-      { label: 'Consumes', value: d.consumes },
-      { label: 'Produces', value: d.produces },
+      { label: 'Run time', value: `${d.runtime} on ${MACHINE}`, mono: true },
+      { label: 'Takes from the last walk', value: d.consumes },
+      { label: 'Hands to the next walk', value: d.produces },
     ]}
     backHref="/tutorial/"
     backLabel="Tutorial overview"
@@ -74,16 +74,16 @@ const hrefOf = (e: (typeof all)[number]) => `/tutorial/${e.id.replace(/^en\//, '
 
     <Content />
 
-    <nav class="stage-nav" aria-label="Tutorial stages">
+    <nav class="stage-nav" aria-label="Tutorial walks">
       {prev ? (
         <a class="sn sn-prev" href={hrefOf(prev)}>
-          <span class="sn-k">← Stage {prev.data.stage}</span>
+          <span class="sn-k">← Walk {prev.data.stage}</span>
           <span class="sn-t">{prev.data.title}</span>
         </a>
       ) : <span />}
       {next && (
         <a class="sn sn-next" href={hrefOf(next)}>
-          <span class="sn-k">Stage {next.data.stage} →</span>
+          <span class="sn-k">Walk {next.data.stage} →</span>
           <span class="sn-t">{next.data.title}</span>
         </a>
       )}
