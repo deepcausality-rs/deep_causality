@@ -54,8 +54,10 @@ for i in "${!DC_CRATES[@]}"; do
 
     echo "==> $c alloc-only ($TARGET)"
     checked=$((checked + 1))
-    if out="$(cargo build --keep-going -p "$c" --lib --no-default-features --features alloc \
-        --target "$TARGET" 2>&1)"; then
+    # The output is parsed below, so colour is off whatever CARGO_TERM_COLOR says: CI sets it to
+    # `always`, and the escape codes then hide the `error: could not compile` lines.
+    if out="$(cargo build --color never --keep-going -p "$c" --lib --no-default-features \
+        --features alloc --target "$TARGET" 2>&1)"; then
         echo "    builds"
         continue
     fi

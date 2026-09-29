@@ -28,6 +28,53 @@ cargo build -p deep_causality_core \
 Five crates need only `core`. The other eighteen need an allocator, which rules out very little;
 [Allocators](#allocators) explains why.
 
+## Support by crate
+
+`core` is bare metal with no heap. `alloc` is bare metal once the application provides a
+`#[global_allocator]`. `std` is a hosted target. CI builds every crate with a mark under `core` or
+`alloc` for `thumbv7em-none-eabihf` with `--no-default-features --features no-std`. The notes name
+the features that stay host-only, and for the std-only crates, what ties them to `std`;
+[Not covered](#not-covered) has the detail.
+
+| Crate | `core` | `alloc` | `std` | Notes |
+|---|:-:|:-:|:-:|---|
+| `deep_causality_num` | ✓ | ✓ | ✓ | Chooses the float backend: intrinsics under `std`, `libm` under `no-std` |
+| `deep_causality_algebra` | ✓ | ✓ | ✓ | |
+| `deep_causality_num_complex` | ✓ | ✓ | ✓ | |
+| `deep_causality_num_dual` | ✓ | ✓ | ✓ | |
+| `deep_causality_num_rational` | ✓ | ✓ | ✓ | |
+| `deep_causality_ast` | – | ✓ | ✓ | Builds with `alloc` alone |
+| `deep_causality_metric` | – | ✓ | ✓ | Builds with `alloc` alone |
+| `deep_causality_data_structures` | – | ✓ | ✓ | Builds with `alloc` alone |
+| `ultragraph` | – | ✓ | ✓ | Builds with `alloc` alone |
+| `deep_causality_par` | – | ✓ | ✓ | Builds with `alloc` alone; `parallel` is host-only |
+| `deep_causality_haft` | – | ✓ | ✓ | |
+| `deep_causality_calculus` | – | ✓ | ✓ | The allocator comes from `deep_causality_haft` |
+| `deep_causality_core` | – | ✓ | ✓ | `EffectLog` allocates per entry |
+| `deep_causality_linear` | – | ✓ | ✓ | |
+| `deep_causality_rand` | – | ✓ | ✓ | `os-random` is host-only |
+| `deep_causality_stats` | – | ✓ | ✓ | `os-random` is host-only |
+| `deep_causality_tensor` | – | ✓ | ✓ | |
+| `deep_causality_multivector` | – | ✓ | ✓ | |
+| `deep_causality_homology` | – | ✓ | ✓ | |
+| `deep_causality_fft` | – | ✓ | ✓ | `parallel` is host-only |
+| `deep_causality_physics` | – | ✓ | ✓ | `topology`, `parallel` and `os-random` are host-only |
+| `deep_causality_algorithms` | – | ✓ | ✓ | `topology` (BRCD) and `parallel` are host-only |
+| `deep_causality_quantum` | – | ✓ | ✓ | `qcm`, `dem` and `qpu` are host-only |
+| `deep_causality_uncertain` | – | – | ✓ | `HashMap`, `HashSet` |
+| `deep_causality_topology` | – | – | ✓ | `HashMap`/`HashSet`, `std::sync`, Rayon loops |
+| `deep_causality_context_store` | – | – | ✓ | `std::sync::Mutex` in the in-memory test backend |
+| `deep_causality_context` | – | – | ✓ | Depends on `deep_causality_context_store` and `deep_causality_uncertain` |
+| `deep_causality` | – | – | ✓ | Depends on `deep_causality_context` and `deep_causality_uncertain` |
+| `deep_causality_ethos` | – | – | ✓ | Depends on `deep_causality` and `deep_causality_context` |
+| `deep_causality_file` | – | – | ✓ | Filesystem loaders; out of scope |
+| `deep_causality_tempfile` | – | – | ✓ | Scratch files for the test suites; out of scope |
+| `deep_causality_discovery` | – | – | ✓ | Reads CSV and Parquet files; out of scope |
+| `deep_causality_cfd` | – | – | ✓ | Writes output files; out of scope |
+
+Five crates reach `core`, eighteen more reach `alloc`, and ten are std-only: twenty-three of the
+thirty-three build on bare metal.
+
 ## The feature levels
 
 The eighteen allocator-required crates declare the same three levels:
