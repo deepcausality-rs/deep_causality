@@ -4,8 +4,9 @@
  */
 
 use crate::ContextoidId;
-use std::collections::BTreeSet;
-use std::fmt::Display;
+use alloc::collections::BTreeSet;
+use alloc::string::String;
+use core::fmt::Display;
 
 /// A symbolic, discrete model of spacetime based on causal set theory (CST).
 ///
@@ -49,7 +50,7 @@ pub struct CausalSetSpacetime {
     pub label: Option<String>,
 
     /// List of causally preceding event IDs (must be acyclic)
-    pub predecessors: std::collections::BTreeSet<ContextoidId>,
+    pub predecessors: alloc::collections::BTreeSet<ContextoidId>,
 }
 
 impl CausalSetSpacetime {
@@ -80,7 +81,7 @@ impl CausalSetSpacetime {
 }
 
 impl Display for CausalSetSpacetime {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(
             f,
             "CausalSetSpacetime {{ id: {}, label: {:?}, predecessors: {:?} }}",

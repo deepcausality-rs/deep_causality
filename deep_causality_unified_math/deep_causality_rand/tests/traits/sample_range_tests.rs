@@ -4,7 +4,7 @@
  */
 
 use deep_causality_rand::{Distribution, SampleRange, Uniform};
-use deep_causality_rand::{Rng, RngCore, RngError};
+use deep_causality_rand::{Rng, RngCore, RngError, UniformDistributionError};
 
 // Mock Rng for deterministic testing
 struct MockFloatRng {
@@ -52,7 +52,7 @@ fn test_f32_sample_single_empty_range_error() {
     assert!(res.is_err());
     assert_eq!(
         res.unwrap_err(),
-        RngError::InvalidRange("Invalid range: low must be less than high".to_string())
+        RngError::InvalidRange(UniformDistributionError::InvalidRange)
     );
 }
 
@@ -89,7 +89,7 @@ fn test_f64_sample_single_empty_range_error() {
     assert!(res.is_err());
     assert_eq!(
         res.unwrap_err(),
-        RngError::InvalidRange("Invalid range: low must be less than high".to_string())
+        RngError::InvalidRange(UniformDistributionError::InvalidRange)
     );
 }
 

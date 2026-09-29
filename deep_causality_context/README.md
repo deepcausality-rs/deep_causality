@@ -47,6 +47,35 @@ fn start(ctx: BaseContext) -> PropagatingProcess<f64, (), BaseContext> {
 * `RelationKind`, `TimeScale`, `VerticalDatum` and `SubstrateRef`, re-exported from
   `deep_causality_context_store`, so a model names them from this crate alone.
 
+## Build configurations
+
+| Configuration | Cargo features | Supported |
+|---|---|:-:|
+| `std`, hosted | default | ✓ |
+| `no-std` with a heap | `default-features = false, features = ["no-std"]` | ✓ |
+| `no-std` on `core` alone, no heap | – | – |
+
+Without `std` the crate needs a heap: the program must define a `#[global_allocator]`. `os-random` is host-only. Without `std` the id index is a `BTreeMap`.
+
+CI builds every supported bare-metal configuration for `thumbv7em-none-eabihf`.
+[README_NO_STD.md](https://github.com/deepcausality-rs/deep_causality/blob/main/README_NO_STD.md) describes the build configuration of every crate in the workspace.
+
+## Configuration
+
+The context builds without the standard library.
+
+* `default`: Enables `std`.
+* `std`: Uses the standard library (includes `alloc`).
+* `no-std`: Builds without the standard library (includes `alloc`); floating-point math comes from
+  `libm`. Select with `default-features = false, features = ["no-std"]`.
+* `alloc`: Allocation (Vec, String). Enabled by both `std` and `no-std`; on its own it selects no
+  floating-point backend and does not build.
+* `os-random`: Seeds `deep_causality_rand` from the operating system. Host-only.
+
+The context finds a node by its id through an index map. Under `std` that map is a `HashMap`.
+Without `std` there is no entropy to seed the default hasher, so it is a `BTreeMap`, and a lookup
+costs O(log n): at 10 000 nodes about five times a hashed lookup (measured on an M3 Max).
+
 ## The scalar is a parameter
 
 Spatial, spacetime and real-valued temporal types carry the scalar they measure in, bounded once on

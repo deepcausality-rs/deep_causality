@@ -175,12 +175,25 @@ because it uses native f64 FMA operations.
 * One / ConstOne
 * Zero / ConstZero
 
+## Build configurations
+
+| Configuration | Cargo features | Supported |
+|---|---|:-:|
+| `std`, hosted | default | ✓ |
+| `no-std` with a heap | `default-features = false, features = ["no-std"]` | ✓ |
+| `no-std` on `core` alone, no heap | `default-features = false, features = ["no-std"]` | ✓ |
+
+The crate needs only `core`: with `no-std` it links into a program that defines no `#[global_allocator]`. `no-std` chooses the float backend: the intrinsics under `std`, `libm` under `no-std`.
+
+CI builds every supported bare-metal configuration for `thumbv7em-none-eabihf` and links the `core` configuration without an allocator.
+[README_NO_STD.md](https://github.com/deepcausality-rs/deep_causality/blob/main/README_NO_STD.md) describes the build configuration of every crate in the workspace.
+
 ## non-std support
 
 The crate supports `no-std` environments such as embedded systems. The `std` feature is on by default, so opt into
-`no-std` via feature flags: disable the default `std` feature and, if your application needs floating-point operations,
-enable the `libm_math` feature. `libm_math` pulls in the `libm` crate, which provides software implementations of
-floating-point math functions.
+`no-std` via feature flags: disable the default `std` feature and enable `no-std`, which selects `libm_math`.
+`libm_math` pulls in the `libm` crate, which provides software implementations of floating-point math functions. One
+of `std` and `libm_math` must be enabled.
 
 ### Cargo Build and Test for `no-std`
 

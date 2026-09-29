@@ -8,37 +8,49 @@ use std::error::Error;
 
 #[test]
 fn test_os_random_generator_display() {
-    let error = RngError::OsRandomGenerator("test error".to_string());
-    let expected = "OS random generator error: test error";
-    assert_eq!(format!("{}", error), expected);
+    let error = RngError::OsRandomGenerator;
+    assert_eq!(format!("{}", error), "OS random generator error");
 }
 
 #[test]
 fn test_invalid_range_display() {
-    let error = RngError::InvalidRange("test range".to_string());
-    let expected = "Invalid range: test range";
+    let error = RngError::InvalidRange(UniformDistributionError::EmptyRange);
+    let expected = "Invalid range: Empty range in uniform distribution";
     assert_eq!(format!("{}", error), expected);
 }
 
 #[test]
 fn test_unsupported_dimension_display() {
-    let error = RngError::UnsupportedDimension("dimension 0 outside 1..=16".to_string());
+    let error = RngError::UnsupportedDimension {
+        dimension: 0,
+        max: 16,
+    };
     let expected = "Unsupported dimension: dimension 0 outside 1..=16";
     assert_eq!(format!("{}", error), expected);
 }
 
 #[test]
 fn test_rng_error_debug() {
-    let error_os = RngError::OsRandomGenerator("debug error".to_string());
     assert_eq!(
-        format!("{:?}", error_os),
-        r#"OsRandomGenerator("debug error")"#
+        format!("{:?}", RngError::OsRandomGenerator),
+        "OsRandomGenerator"
     );
-
-    let error_range = RngError::InvalidRange("debug range".to_string());
     assert_eq!(
-        format!("{:?}", error_range),
-        r#"InvalidRange("debug range")"#
+        format!(
+            "{:?}",
+            RngError::InvalidRange(UniformDistributionError::NonFinite)
+        ),
+        "InvalidRange(NonFinite)"
+    );
+    assert_eq!(
+        format!(
+            "{:?}",
+            RngError::UnsupportedDimension {
+                dimension: 17,
+                max: 16
+            }
+        ),
+        "UnsupportedDimension { dimension: 17, max: 16 }"
     );
 }
 
@@ -52,19 +64,29 @@ fn test_rng_error_from_uniform_distribution_error() {
         format!("{}", rng_error),
         format!("Invalid range: {}", expected_msg)
     );
+    assert_eq!(
+        rng_error,
+        RngError::InvalidRange(UniformDistributionError::InvalidRange)
+    );
+}
 
-    if let RngError::InvalidRange(msg) = rng_error {
-        assert_eq!(msg, expected_msg);
-    } else {
-        panic!("Conversion from UniformDistributionError failed");
+#[test]
+fn test_rng_error_from_keeps_every_uniform_variant() {
+    for e in [
+        UniformDistributionError::NonFinite,
+        UniformDistributionError::InvalidRange,
+        UniformDistributionError::EmptyRange,
+    ] {
+        assert_eq!(RngError::from(e), RngError::InvalidRange(e));
     }
 }
 
 #[test]
 fn test_rng_error_trait() {
-    let error_os = RngError::OsRandomGenerator("source error".to_string());
-    assert!(error_os.source().is_none());
-
-    let error_range = RngError::InvalidRange("source range".to_string());
-    assert!(error_range.source().is_none());
+    assert!(RngError::OsRandomGenerator.source().is_none());
+    assert!(
+        RngError::InvalidRange(UniformDistributionError::InvalidRange)
+            .source()
+            .is_none()
+    );
 }

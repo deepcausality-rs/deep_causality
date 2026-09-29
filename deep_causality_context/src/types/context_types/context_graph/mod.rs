@@ -3,7 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use std::collections::HashMap;
+use crate::utils::id_map::IdMap;
+use alloc::{string::String, string::ToString};
 
 use ultragraph::*;
 
@@ -23,7 +24,7 @@ mod snapshot;
 
 use extra_context::ExtraContext;
 
-type ExtraContextMap<D, S, T, ST> = HashMap<ContextId, ExtraContext<D, S, T, ST>>;
+type ExtraContextMap<D, S, T, ST> = IdMap<ContextId, ExtraContext<D, S, T, ST>>;
 
 #[allow(clippy::type_complexity)]
 pub struct Context<D, S, T, ST>
@@ -36,16 +37,16 @@ where
     id: ContextId,
     name: String,
     base_context: UltraGraphWeighted<Contextoid<D, S, T, ST>, RelationKind>,
-    id_to_index_map: HashMap<ContextoidId, usize>,
+    id_to_index_map: IdMap<ContextoidId, usize>,
     extra_contexts: Option<ExtraContextMap<D, S, T, ST>>,
     extra_context_id: ContextId,
     /// The highest extra-context identifier ever held, so a dropped identifier is never
     /// allocated again.
     highest_extra_context_id: ContextId,
-    current_data_map: HashMap<usize, usize>,
-    previous_data_map: HashMap<usize, usize>,
-    current_index_map: HashMap<usize, usize>,
-    previous_index_map: HashMap<usize, usize>,
+    current_data_map: IdMap<usize, usize>,
+    previous_data_map: IdMap<usize, usize>,
+    current_index_map: IdMap<usize, usize>,
+    previous_index_map: IdMap<usize, usize>,
 }
 
 impl<D, S, T, ST> Clone for Context<D, S, T, ST>
@@ -85,14 +86,14 @@ where
             id,
             name: name.to_string(),
             base_context: UltraGraphWeighted::with_capacity(capacity, None),
-            id_to_index_map: HashMap::new(),
+            id_to_index_map: IdMap::new(),
             extra_contexts: None,
             extra_context_id: 0,
             highest_extra_context_id: 0,
-            current_data_map: HashMap::new(),
-            previous_data_map: HashMap::new(),
-            current_index_map: HashMap::new(),
-            previous_index_map: HashMap::new(),
+            current_data_map: IdMap::new(),
+            previous_data_map: IdMap::new(),
+            current_index_map: IdMap::new(),
+            previous_index_map: IdMap::new(),
         }
     }
 

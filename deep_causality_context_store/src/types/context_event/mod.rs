@@ -4,6 +4,7 @@
  */
 
 use crate::{ContextId, ContextRecord, ContextoidId, ContextoidRecord, RelationRecord};
+use alloc::vec::Vec;
 
 /// One change to a store. The same type flows both ways: a store reports every variant, and a
 /// host requests one through `ContextStorageStream::apply`.

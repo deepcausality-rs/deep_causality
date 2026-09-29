@@ -14,7 +14,7 @@ env:
 jobs:
   unused_dependencies:
     name: cargo machete
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - uses: actions-rs/toolchain@v1

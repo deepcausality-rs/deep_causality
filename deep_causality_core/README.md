@@ -44,6 +44,19 @@ reasoning.
 *   **`PropagatingEffect` / `PropagatingProcess`**: Types that model how effects propagate through a system, integrated with Higher-Kinded Types (HKT) via `deep_causality_haft`.
 *   **`AlternatableValue`**, **`AlternatableState`**, **`AlternatableContext`**: Counterfactual substitution of the value, state, or context of an effect or process.
 
+## Build configurations
+
+| Configuration | Cargo features | Supported |
+|---|---|:-:|
+| `std`, hosted | default | ✓ |
+| `no-std` with a heap | `default-features = false, features = ["no-std"]` | ✓ |
+| `no-std` on `core` alone, no heap | – | – |
+
+Without `std` the crate needs a heap: the program must define a `#[global_allocator]`. `EffectLog` allocates an owned `String` per entry.
+
+CI builds every supported bare-metal configuration for `thumbv7em-none-eabihf`.
+[README_NO_STD.md](https://github.com/deepcausality-rs/deep_causality/blob/main/README_NO_STD.md) describes the build configuration of every crate in the workspace.
+
 ## Feature Flags
 
 | Feature | Default | Description |
@@ -52,7 +65,7 @@ reasoning.
 | **`no-std`** | No | Builds without the standard library and routes float math through `libm`. For bare metal, embedded Linux / RTOS. |
 | **`alloc`** | Yes | Enables heap allocation (`Vec`, `Box`). Both `std` and `no-std` enable it. |
 
-Pick exactly one platform level: `std` or `no-std`. `alloc` alone leaves the float-math backend unselected, so enabling it alone fails the build with a message pointing back here.
+Pick exactly one platform level: `std` or `no-std`. `alloc` alone leaves the float-math backend unselected, so enabling it alone stops the build at the `[no-float-backend]` guard in `deep_causality_num`.
 
 Use **default features** for general applications. For bare-metal `no_std`, disable defaults and enable `no-std` (see [non-std Support](#non-std-support) below).
 

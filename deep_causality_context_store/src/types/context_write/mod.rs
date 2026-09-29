@@ -4,6 +4,7 @@
  */
 
 use crate::{ContainerRef, ContextoidId, ContextoidRecord, RelationRecord};
+use alloc::{string::String, vec::Vec};
 
 /// One write of a `ContextStorage::commit`. Each variant is the storage operation of the same
 /// name, under the same refusals; a container is named by a `ContainerRef`, so a commit can link

@@ -29,7 +29,7 @@ exclude = [
 default = ["std"]
 std = ["alloc"]
 alloc = []
-no-std = ["alloc"]
+no-std = []
 
 [lints]
 workspace = true

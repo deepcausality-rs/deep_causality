@@ -188,6 +188,19 @@ Run one with, for example:
 cargo run --release -p quantum_examples --example qcm_freeze_check
 ```
 
+## Build configurations
+
+| Configuration | Cargo features | Supported |
+|---|---|:-:|
+| `std`, hosted | default | ✓ |
+| `no-std` with a heap | `default-features = false, features = ["no-std"]` | ✓ |
+| `no-std` on `core` alone, no heap | – | – |
+
+Without `std` the crate needs a heap: the program must define a `#[global_allocator]`. `qcm` and `dem` are host-only; `qpu` builds on bare metal.
+
+CI builds every supported bare-metal configuration for `thumbv7em-none-eabihf`.
+[README_NO_STD.md](https://github.com/deepcausality-rs/deep_causality/blob/main/README_NO_STD.md) describes the build configuration of every crate in the workspace.
+
 ## Feature flags
 
 | Feature | Default | Description |

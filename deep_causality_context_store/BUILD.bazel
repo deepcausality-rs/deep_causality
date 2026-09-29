@@ -2,12 +2,20 @@ load("@crates//:defs.bzl", "aliases", "all_crate_deps", "lint_config")
 load("@rules_rs//rs:rust_library.bzl", "rust_library")
 load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_test_suite")
 
+# Bazel does not read Cargo features, so the default set is listed here once and shared by the
+# library, its docs and its doc tests. `std` also gates the in-memory backends in `utils_test`.
+CRATE_FEATURES = [
+    "alloc",
+    "std",
+]
+
 rust_library(
     name = "deep_causality_context_store",
     srcs = glob([
         "src/**",
     ]),
     aliases = aliases(),
+    crate_features = CRATE_FEATURES,
     crate_root = "src/lib.rs",
     lint_config = lint_config(),
     tags = [
@@ -21,6 +29,7 @@ rust_library(
 rust_doc(
     name = "doc",
     crate = ":deep_causality_context_store",
+    crate_features = CRATE_FEATURES,
     tags = ["doc"],
     visibility = ["//visibility:public"],
 )
@@ -28,6 +37,7 @@ rust_doc(
 rust_doc_test(
     name = "doc_test",
     crate = ":deep_causality_context_store",
+    crate_features = CRATE_FEATURES,
     tags = ["doc-test"],
     visibility = ["//visibility:public"],
 )

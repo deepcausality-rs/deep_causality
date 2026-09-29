@@ -4,6 +4,7 @@
  */
 
 use crate::{QmcSampler, SampleSession, Uncertain, UncertainError};
+use alloc::{string::ToString, vec::Vec};
 use deep_causality_rand::RandScalar;
 use deep_causality_stats::{MeanAccumulator, StatsError, std_dev};
 

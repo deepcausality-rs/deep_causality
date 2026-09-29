@@ -29,7 +29,7 @@ exclude = [
 default = ["std"]
 std = ["alloc", "deep_causality_algebra/std"]
 alloc = []
-no-std = ["alloc", "deep_causality_algebra/no-std"]
+no-std = ["deep_causality_algebra/no-std"]
 
 [dependencies.deep_causality_algebra]
 workspace = true

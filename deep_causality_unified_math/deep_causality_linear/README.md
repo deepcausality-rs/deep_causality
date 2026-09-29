@@ -397,6 +397,19 @@ Add the crate to your `Cargo.toml`:
 deep_causality_linear = "0.1"
 ```
 
+## Build configurations
+
+| Configuration | Cargo features | Supported |
+|---|---|:-:|
+| `std`, hosted | default | ✓ |
+| `no-std` with a heap | `default-features = false, features = ["no-std"]` | ✓ |
+| `no-std` on `core` alone, no heap | – | – |
+
+Without `std` the crate needs a heap: the program must define a `#[global_allocator]`.
+
+CI builds every supported bare-metal configuration for `thumbv7em-none-eabihf`.
+[README_NO_STD.md](https://github.com/deepcausality-rs/deep_causality/blob/main/README_NO_STD.md) describes the build configuration of every crate in the workspace.
+
 ## Features and `no-std`
 
 | Feature   | Effect                                                            |

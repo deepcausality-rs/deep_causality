@@ -6,9 +6,10 @@
 // The shaped distributions' errors come from `stats` with the distributions. The uniform's stays
 // in `rand` with `Uniform` itself, which is range sampling rather than a shaped distribution and
 // cannot leave the crate that owns `SampleUniform`.
+use alloc::{string::String, string::ToString};
+use core::fmt;
 use deep_causality_rand::UniformDistributionError;
 use deep_causality_stats::{BernoulliDistributionError, NormalDistributionError};
-use std::fmt;
 
 /// Custom error type for the `deep_causality_uncertain` crate.
 #[derive(Debug)]
@@ -53,7 +54,7 @@ impl fmt::Display for UncertainError {
     }
 }
 
-impl std::error::Error for UncertainError {}
+impl core::error::Error for UncertainError {}
 
 // Allow easy conversion from rand_distr errors into our custom error type.
 impl From<UniformDistributionError> for UncertainError {

@@ -4,10 +4,10 @@
  */
 
 use crate::{Temporal, TimeKind};
+use core::fmt;
 use deep_causality_algebra::RealField;
 use deep_causality_core::Identifiable;
 use deep_causality_num::FromPrimitive;
-use std::fmt;
 
 impl<R: RealField + FromPrimitive + fmt::Display> fmt::Display for TimeKind<R> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

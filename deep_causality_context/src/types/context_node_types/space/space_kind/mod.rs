@@ -63,8 +63,8 @@ impl<R: RealField> Identifiable for SpaceKind<R> {
 
 impl<R: RealField> Spatial for SpaceKind<R> {}
 
-impl<R: RealField + std::fmt::Display> std::fmt::Display for SpaceKind<R> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl<R: RealField + core::fmt::Display> core::fmt::Display for SpaceKind<R> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             SpaceKind::Geo(s) => write!(f, "{s}"),
             SpaceKind::Ecef(s) => write!(f, "{s}"),

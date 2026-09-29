@@ -4,11 +4,11 @@
  */
 
 use crate::NoSpaceTime;
+use core::fmt::{Display, Formatter};
 use deep_causality_algebra::RealField;
-use std::fmt::{Display, Formatter};
 
 impl<R: RealField> Display for NoSpaceTime<R> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         write!(f, "NoSpaceTime")
     }
 }

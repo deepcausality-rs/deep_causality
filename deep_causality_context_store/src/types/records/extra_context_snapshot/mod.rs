@@ -4,6 +4,7 @@
  */
 
 use crate::{ContextId, ContextoidRecord, RelationRecord};
+use alloc::{string::String, vec::Vec};
 
 /// A context a stored context references, materialised: the referenced container's identifier
 /// and name, its nodes, and the edges among them.

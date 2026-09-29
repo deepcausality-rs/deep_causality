@@ -18,20 +18,21 @@
 
 use crate::types::sampler::sequential_sampler::apply_logical;
 use crate::{DistributionEnum, Node, Sample, Sampler, Uncertain, UncertainBool, UncertainError};
+use alloc::collections::{BTreeMap, BTreeSet};
+use alloc::{format, string::ToString, vec::Vec};
 use deep_causality_ast::ConstTree;
 use deep_causality_rand::RandScalar;
 use deep_causality_rand::{MAX_SOBOL_DIM, SobolSequence};
 use deep_causality_stats::{
     bernoulli_inverse_cdf, standard_normal_inverse_cdf_at, uniform_inverse_cdf,
 };
-use std::collections::{HashMap, HashSet};
 
 /// A Quasi-Monte-Carlo sampler bound to a specific computation graph's dimension layout.
 #[derive(Debug, Clone)]
 pub struct QmcSampler {
     sobol: SobolSequence,
     /// Stochastic-leaf node id → Sobol dimension index.
-    dims: HashMap<usize, usize>,
+    dims: BTreeMap<usize, usize>,
 }
 
 impl QmcSampler {
@@ -68,7 +69,7 @@ impl QmcSampler {
         root: &ConstTree<Node<R>>,
         seed: Option<u64>,
     ) -> Result<Self, UncertainError> {
-        let mut dims = HashMap::new();
+        let mut dims = BTreeMap::new();
         let mut next_dim = 0usize;
         assign_dimensions(root, &mut dims, &mut next_dim)?;
 
@@ -149,7 +150,7 @@ impl QmcSampler {
         &self,
         node: &ConstTree<Node<R>>,
         index: u64,
-        context: &mut HashMap<usize, Sample<R>>,
+        context: &mut BTreeMap<usize, Sample<R>>,
     ) -> Result<Sample<R>, UncertainError> {
         let current_node_id = node.get_id();
         if let Some(value) = context.get(&current_node_id) {
@@ -219,7 +220,7 @@ impl<R: RandScalar> Sampler<R> for QmcSampler {
         root_node: &ConstTree<Node<R>>,
         sample_index: u64,
     ) -> Result<Sample<R>, UncertainError> {
-        let mut context: HashMap<usize, Sample<R>> = HashMap::new();
+        let mut context: BTreeMap<usize, Sample<R>> = BTreeMap::new();
         self.evaluate_node(root_node, sample_index, &mut context)
     }
 }
@@ -228,7 +229,7 @@ impl<R: RandScalar> Sampler<R> for QmcSampler {
 /// structure (a branch-divergent `ConditionalOp`).
 fn assign_dimensions<R: RandScalar>(
     node: &ConstTree<Node<R>>,
-    dims: &mut HashMap<usize, usize>,
+    dims: &mut BTreeMap<usize, usize>,
     next_dim: &mut usize,
 ) -> Result<(), UncertainError> {
     match node.value() {
@@ -266,9 +267,9 @@ fn assign_dimensions<R: RandScalar>(
             assign_dimensions(if_true, dims, next_dim)?;
             assign_dimensions(if_false, dims, next_dim)?;
 
-            let mut true_leaves = HashSet::new();
+            let mut true_leaves = BTreeSet::new();
             collect_stochastic_leaves(if_true, &mut true_leaves);
-            let mut false_leaves = HashSet::new();
+            let mut false_leaves = BTreeSet::new();
             collect_stochastic_leaves(if_false, &mut false_leaves);
             if true_leaves != false_leaves {
                 return Err(UncertainError::SamplingError(
@@ -283,7 +284,7 @@ fn assign_dimensions<R: RandScalar>(
 }
 
 /// Collects the node ids of every non-`Point` distribution leaf in `node`'s subtree.
-fn collect_stochastic_leaves<R: RandScalar>(node: &ConstTree<Node<R>>, set: &mut HashSet<usize>) {
+fn collect_stochastic_leaves<R: RandScalar>(node: &ConstTree<Node<R>>, set: &mut BTreeSet<usize>) {
     match node.value() {
         Node::Distribution(dist) => {
             if dist.draws() {

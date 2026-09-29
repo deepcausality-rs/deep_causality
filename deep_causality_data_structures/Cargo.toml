@@ -42,13 +42,14 @@ path = "examples/window_type/array_storage.rs"
 [[example]]
 name = "window_type_vector_storage"
 path = "examples/window_type/vector_storage.rs"
+required-features = ["alloc"]
 
 
 [features]
 default = ["std"]
 std = ["alloc"]
 alloc = []
-no-std = ["alloc"]
+no-std = []
 
 [dev-dependencies]
 criterion = { workspace = true }
@@ -57,6 +58,8 @@ deep_causality_rand = { workspace = true, features = ["default"] }
 [[bench]]
 name = "bench_data_structures"
 harness = false
+# Benchmarks VectorStorage alongside ArrayStorage.
+required-features = ["alloc"]
 
 [lints]
 workspace = true

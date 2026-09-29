@@ -4,6 +4,7 @@
  */
 
 use crate::ContextoidId;
+use alloc::vec::Vec;
 
 mod iterator;
 

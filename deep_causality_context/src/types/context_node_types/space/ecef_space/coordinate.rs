@@ -4,6 +4,7 @@
  */
 
 use crate::{Coordinate, EcefSpace, IndexError};
+use alloc::format;
 use deep_causality_algebra::RealField;
 
 impl<R: RealField> Coordinate for EcefSpace<R> {

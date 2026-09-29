@@ -7,6 +7,7 @@ use crate::{
     ContextId, ContextSnapshot, ContextWrite, ContextoidId, ContextoidRecord, IdReserve,
     RelationRecord,
 };
+use alloc::vec::Vec;
 
 /// What a store of contexts does. Every operation is persistent; the crate's name says so, and no
 /// operation name repeats it.

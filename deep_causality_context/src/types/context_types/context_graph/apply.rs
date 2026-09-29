@@ -5,6 +5,7 @@
 
 use super::extra_context::ExtraContext;
 use crate::{Context, Contextoid, Datable, RelationKind, SpaceTemporal, Spatial, Temporal};
+use alloc::vec::Vec;
 use deep_causality_context_store::{
     ContextEvent, ContextId, ContextoidId, ContextoidRecord, DataRecord, ProjectionError,
     Recordable, RelationRecord, SpaceRecord, SpaceTimeRecord, TimeRecord,

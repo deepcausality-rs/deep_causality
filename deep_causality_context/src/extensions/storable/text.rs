@@ -4,6 +4,7 @@
  */
 
 use crate::Storable;
+use alloc::string::String;
 use deep_causality_context_store::{ContextoidId, DataRecord, ProjectionError};
 
 impl Storable for String {

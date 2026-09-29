@@ -5,7 +5,7 @@
 
 use crate::SymbolicTime;
 use crate::types::context_node_types::time::symbolic_time::SymbolicTimeUnit;
-use std::fmt;
+use core::fmt;
 
 impl fmt::Display for SymbolicTime {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {

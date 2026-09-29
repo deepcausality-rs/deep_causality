@@ -4,8 +4,8 @@
  */
 
 use crate::{ContextoidId, SubstrateRef};
-use std::error::Error;
-use std::fmt::{Display, Formatter};
+use core::error::Error;
+use core::fmt::{Display, Formatter};
 
 /// A refusal of the in-memory substrate.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -43,7 +43,7 @@ impl MemorySubstrateError {
 }
 
 impl Display for MemorySubstrateError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         match &self.0 {
             MemorySubstrateErrorEnum::ReferenceRefused(node) => write!(
                 f,

@@ -3,9 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use std::fmt::{Display, Formatter};
-use std::hash::Hash;
-use std::marker::PhantomData;
+use core::fmt::{Display, Formatter};
+use core::hash::Hash;
+use core::marker::PhantomData;
 
 use crate::*;
 
@@ -108,7 +108,7 @@ where
     T: Display + Temporal + Clone,
     ST: Display + SpaceTemporal + Clone,
 {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         match self {
             ContextoidType::Datoid(b) => write!(f, "Datoid: {b}"),
             ContextoidType::Tempoid(b) => write!(f, "Tempoid: {b}"),

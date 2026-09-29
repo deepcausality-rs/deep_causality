@@ -28,11 +28,16 @@
 //!
 //! See <https://docs.deepcausality.com/> for the documentation.
 
+#![cfg_attr(not(feature = "std"), no_std)]
+
+extern crate alloc;
+
 mod alias;
 mod errors;
 mod extensions;
 mod traits;
 mod types;
+mod utils;
 pub mod utils_test;
 
 //

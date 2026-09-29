@@ -6,9 +6,10 @@
 use crate::LeafOrdinals;
 use crate::types::sampler::leaf_draws::{AddressedDraws, AmbientDraws, LeafDraws};
 use crate::{LogicalOperator, Node, Sample, Sampler, UncertainError};
+use alloc::collections::BTreeMap;
+use alloc::vec::Vec;
 use deep_causality_ast::ConstTree;
 use deep_causality_rand::RandScalar;
-use std::collections::HashMap;
 
 /// A basic, single-threaded sampler.
 #[derive(Default)]
@@ -19,7 +20,7 @@ impl<R: RandScalar> Sampler<R> for SequentialSampler {
     /// Samples a value from the given root computation node.
     ///
     /// This method initiates the sampling process by evaluating the computation graph
-    /// starting from the `root_node`. It uses a `HashMap` for memoization to avoid
+    /// starting from the `root_node`. It uses a `BTreeMap` for memoization to avoid
     /// recomputing values for the same node multiple times within a single sample operation.
     ///
     /// # Arguments
@@ -38,7 +39,7 @@ impl<R: RandScalar> Sampler<R> for SequentialSampler {
     ) -> Result<Sample<R>, UncertainError> {
         // `_sample_index` is unused on this path: a stateful generator has no notion of an
         // index. `sample_addressed` is the one that takes the index seriously.
-        let mut context: HashMap<usize, Sample<R>> = HashMap::new();
+        let mut context: BTreeMap<usize, Sample<R>> = BTreeMap::new();
         // Host entropy, straight through. There is no seed slot to consult any more: a draw that
         // is meant to be reproducible goes through `sample_addressed`, where the seed is the
         // caller's and arrives in the signature.
@@ -72,7 +73,7 @@ impl SequentialSampler {
         session_seed: u64,
         index: u64,
     ) -> Result<Sample<R>, UncertainError> {
-        let mut context: HashMap<usize, Sample<R>> = HashMap::new();
+        let mut context: BTreeMap<usize, Sample<R>> = BTreeMap::new();
         let mut draws = AddressedDraws {
             seed: session_seed,
             index,
@@ -105,7 +106,7 @@ impl SequentialSampler {
     fn evaluate_node<R: RandScalar>(
         &self,
         node: &ConstTree<Node<R>>,
-        context: &mut HashMap<usize, Sample<R>>,
+        context: &mut BTreeMap<usize, Sample<R>>,
         draws: &mut impl LeafDraws<R>,
     ) -> Result<Sample<R>, UncertainError> {
         let current_node_id = node.get_id();

@@ -42,7 +42,7 @@ use deep_causality_algebra::RealField;
 /// ```rust
 /// use deep_causality_context::{EuclideanTime, Identifiable, Temporal, TimeScale};
 ///
-/// let tau = EuclideanTime::new(42, TimeScale::Second, std::f64::consts::PI);
+/// let tau = EuclideanTime::new(42, TimeScale::Second, core::f64::consts::PI);
 ///
 /// assert_eq!(tau.id(), 42);
 /// assert_eq!(tau.time_scale(), TimeScale::Second);

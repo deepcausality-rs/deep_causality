@@ -3,8 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use alloc::string::String;
-use alloc::string::ToString;
+#[cfg(feature = "alloc")]
 use alloc::vec::Vec;
 
 /// Trait defining the interface for a sliding window data structure
@@ -32,15 +31,15 @@ where
     ///
     /// # Returns
     /// * `Ok(T)` - The first element in the window
-    /// * `Err(String)` - If the window is empty
-    fn first(&self) -> Result<T, String>;
+    /// * `Err(&'static str)` - If the window is empty
+    fn first(&self) -> Result<T, &'static str>;
 
     /// Returns the last (newest) element in the sliding window
     ///
     /// # Returns
     /// * `Ok(T)` - The last element in the window
-    /// * `Err(String)` - If the window is not yet filled
-    fn last(&self) -> Result<T, String>;
+    /// * `Err(&'static str)` - If the window is not yet filled
+    fn last(&self) -> Result<T, &'static str>;
 
     /// Returns the current tail position of the window
     ///
@@ -93,16 +92,13 @@ where
     ///
     /// # Returns
     /// * `Ok([T; S])` - The window contents as a fixed-size array
-    /// * `Err(String)` - If the window is not yet filled
+    /// * `Err(&'static str)` - If the window is not yet filled
     ///
     /// # Implementation Note
     /// Default implementation copies window contents into a new fixed-size array
-    fn arr<const S: usize>(&self) -> Result<[T; S], String> {
+    fn arr<const S: usize>(&self) -> Result<[T; S], &'static str> {
         if !self.filled() {
-            return Err(
-                "Sliding window is not yet filled. Add some elements to the array first"
-                    .to_string(),
-            );
+            return Err("Sliding window is not yet filled. Add some elements to the array first");
         }
 
         let mut arr: [T; S] = [T::default(); S];
@@ -116,35 +112,30 @@ where
     ///
     /// # Returns
     /// * `Ok(&[T])` - A slice of the window contents
-    /// * `Err(String)` - If the window is not yet filled
+    /// * `Err(&'static str)` - If the window is not yet filled
     ///
     /// # Implementation Note
     /// Default implementation returns the slice only if the window is filled
-    fn slice(&self) -> Result<&[T], String> {
+    fn slice(&self) -> Result<&[T], &'static str> {
         if !self.filled() {
-            Err(
-                "Sliding window is not yet filled. Add some elements to the array first"
-                    .to_string(),
-            )
+            Err("Sliding window is not yet filled. Add some elements to the array first")
         } else {
             Ok(self.get_slice())
         }
     }
 
+    #[cfg(feature = "alloc")]
     /// Returns the sliding window as a vector
     ///
     /// # Returns
     /// * `Ok(Vec<T>)` - A vector containing the window contents
-    /// * `Err(String)` - If the window is not yet filled
+    /// * `Err(&'static str)` - If the window is not yet filled
     ///
     /// # Implementation Note
     /// Default implementation converts the window slice to a vector
-    fn vec(&self) -> Result<Vec<T>, String> {
+    fn vec(&self) -> Result<Vec<T>, &'static str> {
         if !self.filled() {
-            Err(
-                "Sliding window is not yet filled. Add some elements to the array first"
-                    .to_string(),
-            )
+            Err("Sliding window is not yet filled. Add some elements to the array first")
         } else {
             Ok(self.get_slice().to_vec())
         }

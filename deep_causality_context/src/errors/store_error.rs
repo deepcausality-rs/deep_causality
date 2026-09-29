@@ -4,9 +4,9 @@
  */
 
 use core::convert::Infallible;
+use core::error::Error;
+use core::fmt::{Debug, Display, Formatter};
 use deep_causality_context_store::ProjectionError;
-use std::error::Error;
-use std::fmt::{Debug, Display, Formatter};
 
 /// Why a store operation failed: the backend refused, the substrate refused, or the projection
 /// between records and nodes did.
@@ -61,7 +61,7 @@ impl<E, B> From<ProjectionError> for StoreError<E, B> {
 }
 
 impl<E: Display, B: Display> Display for StoreError<E, B> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         match &self.0 {
             StoreErrorEnum::Storage(error) => write!(f, "StoreError: storage: {error}"),
             StoreErrorEnum::Substrate(error) => write!(f, "StoreError: substrate: {error}"),

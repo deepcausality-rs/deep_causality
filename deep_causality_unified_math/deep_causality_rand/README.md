@@ -59,13 +59,26 @@ The `rand` traits are reimplemented without macros, because macros are hard to m
 
 Macros have valid uses, and this crate uses them to generate tests where a generic trait is implemented for many types. Keeping the library code free of macros, unsafe, and external dependencies simplifies maintenance.
 
+## Build configurations
+
+| Configuration | Cargo features | Supported |
+|---|---|:-:|
+| `std`, hosted | default | ✓ |
+| `no-std` with a heap | `default-features = false, features = ["no-std", "alloc"]` | ✓ |
+| `no-std` on `core` alone, no heap | `default-features = false, features = ["no-std"]` | ✓ |
+
+With `no-std` alone the crate needs only `core` and links into a program that defines no `#[global_allocator]`; `alloc` adds the parts that need a heap. `os-random` is host-only: `getrandom` has no backend for a bare-metal target.
+
+CI builds every supported bare-metal configuration for `thumbv7em-none-eabihf` and links the `core` configuration without an allocator.
+[README_NO_STD.md](https://github.com/deepcausality-rs/deep_causality/blob/main/README_NO_STD.md) describes the build configuration of every crate in the workspace.
+
 ## No-Std
 
 This crate builds without a standard library. Three feature levels select the target environment:
 
 * `std` (the default) builds against the standard library. This level enables the thread-local generator behind `rng()` and host entropy for seeding.
-* `alloc` adds the heap without the standard library. It is a level, not a complete configuration, because it does not say where floating-point math comes from; select it through `std` or `no-std`.
-* `no-std` builds against `core` plus `alloc` and routes float math through the pure-Rust `libm` crate that `deep_causality_num` pulls in, so still no libc. Build with `cargo build --no-default-features --features no-std`, and cross-compile to a bare-metal target the same way, for example `--target aarch64-unknown-none`.
+* `alloc` names the heap level so the crates built on this one can forward theirs. This crate allocates nothing, so the feature adds nothing here. It is a level, not a complete configuration, because it does not say where floating-point math comes from; select it through `std` or `no-std`.
+* `no-std` builds against `core` alone, so an application needs no `#[global_allocator]`, and routes float math through the pure-Rust `libm` crate that `deep_causality_num` pulls in, so still no libc. Build with `cargo build --no-default-features --features no-std`, and cross-compile to a bare-metal target the same way, for example `--target aarch64-unknown-none`.
 
 On bare metal, seeding needs care. A bare-metal target offers no ambient entropy and no thread identity, so `Xoshiro256::new()` falls back to a per-call counter mixed into a fixed base seed. Successive calls within one run yield distinct streams, but the whole sequence repeats identically after every reset, which makes the default seeding reproducible rather than random. When the stream has to differ per boot, seed explicitly with `Xoshiro256::from_seed` from whatever entropy the board offers, such as a hardware RNG peripheral, ADC noise, or a timer capture. This crate cannot know what a given board provides, so that entropy belongs to the firmware. The counter also uses a 32-bit atomic, so targets without atomic compare-and-swap must call `Xoshiro256::from_seed` directly.
 

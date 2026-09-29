@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use std::fmt::{Display, Formatter};
+use core::fmt::{Display, Formatter};
 
 #[derive(Debug, Default, Copy, Clone, Hash, Eq, PartialEq)]
 #[repr(u8)]
@@ -26,7 +26,7 @@ pub enum TimeScale {
 }
 
 impl Display for TimeScale {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         write!(f, "{self:?}")
     }
 }

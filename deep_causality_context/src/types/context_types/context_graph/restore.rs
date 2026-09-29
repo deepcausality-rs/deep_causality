@@ -4,6 +4,7 @@
  */
 
 use super::extra_context::ExtraContext;
+use crate::utils::id_map::{IdMap, IdSet, id_map_with_capacity, id_set_with_capacity};
 use crate::{
     Context, Contextoid, ContextuableGraph, Datable, ExtendableContextuableGraph, SpaceTemporal,
     Spatial, Temporal,
@@ -12,7 +13,6 @@ use deep_causality_context_store::{
     ContextSnapshot, ContextoidId, ContextoidRecord, DataRecord, ProjectionError, RECORD_VERSION,
     Recordable, RelationRecord, SpaceRecord, SpaceTimeRecord, TimeRecord,
 };
-use std::collections::{HashMap, HashSet};
 
 #[allow(clippy::type_complexity)]
 impl<D, S, T, ST> Context<D, S, T, ST>
@@ -64,7 +64,7 @@ where
         edges: &[RelationRecord],
         into_extra: bool,
     ) -> Result<(), ProjectionError> {
-        let mut index_of: HashMap<ContextoidId, usize> = HashMap::with_capacity(nodes.len());
+        let mut index_of: IdMap<ContextoidId, usize> = id_map_with_capacity(nodes.len());
         for record in nodes {
             let id = record.id();
             if index_of.contains_key(&id) {
@@ -83,7 +83,7 @@ where
                 added.map_err(|_| ProjectionError::Identity(id, "a node could not be added"))?;
             index_of.insert(id, index);
         }
-        let mut seen: HashSet<(ContextoidId, ContextoidId)> = HashSet::with_capacity(edges.len());
+        let mut seen: IdSet<(ContextoidId, ContextoidId)> = id_set_with_capacity(edges.len());
         for edge in edges {
             let unknown =
                 |id| ProjectionError::Identity(id, "an edge names an identifier no node carries");

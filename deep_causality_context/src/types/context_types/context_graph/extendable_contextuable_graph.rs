@@ -5,6 +5,7 @@
 
 use crate::ContextId;
 use crate::types::context_types::context_graph::extra_context::ExtraContext;
+use alloc::{format, string::ToString};
 use ultragraph::*;
 
 use crate::{

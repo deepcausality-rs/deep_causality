@@ -4,8 +4,9 @@
  */
 
 use crate::ContextoidId;
-use std::collections::BTreeSet;
-use std::fmt::Display;
+use alloc::collections::BTreeSet;
+use alloc::string::String;
+use core::fmt::Display;
 
 /// A minimal spacetime model preserving only causal and angular structure,
 /// based on conformal geometry.
@@ -46,7 +47,7 @@ pub struct ConformalSpacetime {
     pub label: Option<String>,
 
     /// Causally reachable nodes (light cone structure only)
-    pub causal_links: std::collections::BTreeSet<ContextoidId>,
+    pub causal_links: alloc::collections::BTreeSet<ContextoidId>,
 }
 
 impl ConformalSpacetime {
@@ -77,7 +78,7 @@ impl ConformalSpacetime {
 }
 
 impl Display for ConformalSpacetime {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(
             f,
             "ConformalSpacetime {{ id: {}, label: {:?} }}",

@@ -4,8 +4,8 @@
  */
 
 use crate::{ContextoidId, IdentificationValue};
-use std::error::Error;
-use std::fmt::{Display, Formatter};
+use core::error::Error;
+use core::fmt::{Display, Formatter};
 
 /// Why a record could not be read into a node type, or a node type written into a record.
 ///
@@ -117,7 +117,7 @@ impl ProjectionError {
 }
 
 impl Display for ProjectionError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         match &self.0 {
             ProjectionErrorEnum::WrongVariant {
                 id,

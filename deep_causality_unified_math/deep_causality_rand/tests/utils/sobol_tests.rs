@@ -77,13 +77,14 @@ fn test_point_matches_coordinate() {
 fn test_dimension_cap_and_accessor() {
     assert_eq!(
         SobolSequence::new(0).err(),
-        Some(RngError::UnsupportedDimension(
-            "dimension 0 outside 1..=16".to_string()
-        ))
+        Some(RngError::UnsupportedDimension {
+            dimension: 0,
+            max: 16
+        })
     );
     assert!(matches!(
         SobolSequence::new(MAX_SOBOL_DIM + 1),
-        Err(RngError::UnsupportedDimension(_))
+        Err(RngError::UnsupportedDimension { .. })
     ));
     assert_eq!(
         SobolSequence::new(MAX_SOBOL_DIM).unwrap().dim(),

@@ -3,7 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use std::fmt::{Display, Formatter};
+use alloc::string::String;
+use core::fmt::{Display, Formatter};
 
 /// Where a data node's value is stored, for a context that outlives the process.
 ///
@@ -42,7 +43,7 @@ impl SubstrateRef {
 }
 
 impl Display for SubstrateRef {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         write!(f, "{}/{}", self.source, self.key)
     }
 }

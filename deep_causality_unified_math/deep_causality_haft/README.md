@@ -421,40 +421,53 @@ impl NaturalIso<OptionWitness, MyOptionWitness> for OptionMyOptionIso {
 * **Effect-system migration**: `NaturalIso5` is the natural fit for swapping the propagating-effect carrier `<V, S, C, E, L>` with an equivalent shape (e.g. a logging-only specialisation), with naturality guaranteeing that any pipeline written against the old carrier still composes against the new one.
 * **Theory-side equivalences**: encode "these two functors are the same" as a checked law rather than a comment.
 
+## Build configurations
+
+| Configuration | Cargo features | Supported |
+|---|---|:-:|
+| `std`, hosted | default | ✓ |
+| `no-std` with a heap | `default-features = false, features = ["no-std", "alloc"]` | ✓ |
+| `no-std` on `core` alone, no heap | `default-features = false, features = ["no-std"]` | ✓ |
+
+With `no-std` alone the crate needs only `core` and links into a program that defines no `#[global_allocator]`; `alloc` adds the parts that need a heap. The collection witnesses (`Vec`, `Box`, `BTreeMap`, `VecDeque`, `LinkedList`) need `alloc`; the `HashMap` witnesses need `std`.
+
+CI builds every supported bare-metal configuration for `thumbv7em-none-eabihf` and links the `core` configuration without an allocator.
+[README_NO_STD.md](https://github.com/deepcausality-rs/deep_causality/blob/main/README_NO_STD.md) describes the build configuration of every crate in the workspace.
+
 ## non-std support
 
-The crate supports `no-std` environments such as embedded systems. The `std` feature is on by default, so disable it to build for `no-std`. With an allocator, enable the `alloc` feature for dynamic collections like `Vec`, `Box`, `BTreeMap`, etc.
+The crate supports `no-std` environments such as embedded systems. The `std` feature is on by default.
+The `no-std` feature builds on `core` alone: the HKT traits and algebraic structures, with no allocator
+required. Add the `alloc` feature for the witnesses over dynamic collections such as `Vec`, `Box` and
+`BTreeMap`. The `HashMap` witnesses need `std`.
 
 ### Cargo Build and Test for `no-std`
 
-**1. Building for `no-std` with Allocator:**
-
-To build for `no-std` with dynamic collections (via `alloc`):
+**1. Building for `no-std` with an Allocator:**
 
 ```bash
-cargo build --no-default-features --features alloc -p deep_causality_haft
+cargo build --no-default-features --features no-std,alloc -p deep_causality_haft
 ```
 
-**2. Testing for `no-std` with Allocator:**
-
-To test for `no-std` with an allocator:
+**2. Testing for `no-std` with an Allocator:**
 
 ```bash
-cargo test --no-default-features --features alloc -p deep_causality_haft
+cargo test --no-default-features --features no-std,alloc -p deep_causality_haft
 ```
 
-**3. Building for `no-std` without Allocator (Core/Algebra only):**
-
-Without an allocator, build without the `alloc` feature. The crate then offers only the core HKT traits and algebraic structures that need no dynamic memory.
+**3. Building for `no-std` without an Allocator (Core/Algebra only):**
 
 ```bash
-cargo build --no-default-features -p deep_causality_haft
+cargo build --no-default-features --features no-std -p deep_causality_haft
 ```
 
-**4. Testing for `no-std` without Allocator:**
+**4. Testing for `no-std` without an Allocator:**
+
+The doc examples use `Vec` and `Box` witnesses and need `alloc`, so test the library and the
+integration tests:
 
 ```bash
-cargo test --no-default-features -p deep_causality_haft
+cargo test --no-default-features --features no-std --lib --tests -p deep_causality_haft
 ```
 
 ### Bazel Build

@@ -6,9 +6,10 @@
 //! Which slot of the address each drawing leaf occupies.
 
 use crate::{Node, Uncertain, UncertainBool};
+use alloc::collections::{BTreeMap, BTreeSet};
+use alloc::vec::Vec;
 use deep_causality_ast::ConstTree;
 use deep_causality_rand::RandScalar;
-use std::collections::{HashMap, HashSet};
 
 /// The ordinal of every leaf in a tree that draws.
 ///
@@ -49,7 +50,7 @@ use std::collections::{HashMap, HashSet};
 /// draws.
 #[derive(Debug, Clone, Default)]
 pub struct LeafOrdinals {
-    by_node: HashMap<usize, u64>,
+    by_node: BTreeMap<usize, u64>,
 }
 
 impl LeafOrdinals {
@@ -68,8 +69,8 @@ impl LeafOrdinals {
     /// Crate-internal, matching [`QmcSampler::from_root_node`](crate::QmcSampler); it lets the
     /// traversal be tested against node shapes no public builder produces.
     pub(crate) fn from_root_node<R: RandScalar>(root: &ConstTree<Node<R>>) -> Self {
-        let mut by_node = HashMap::new();
-        let mut seen = HashSet::new();
+        let mut by_node = BTreeMap::new();
+        let mut seen = BTreeSet::new();
         let mut next = 0u64;
         assign(root, &mut by_node, &mut seen, &mut next);
         Self { by_node }
@@ -108,8 +109,8 @@ impl LeafOrdinals {
 /// the ordinals of a sub-graph are settled by its first visit.
 fn assign<R: RandScalar>(
     node: &ConstTree<Node<R>>,
-    by_node: &mut HashMap<usize, u64>,
-    seen: &mut HashSet<usize>,
+    by_node: &mut BTreeMap<usize, u64>,
+    seen: &mut BTreeSet<usize>,
     next: &mut u64,
 ) {
     if !seen.insert(node.get_id()) {

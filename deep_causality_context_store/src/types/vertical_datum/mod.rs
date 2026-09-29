@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use std::fmt::{Display, Formatter};
+use core::fmt::{Display, Formatter};
 
 /// The reference an altitude is measured against.
 ///
@@ -52,7 +52,7 @@ pub enum VerticalDatum {
 }
 
 impl Display for VerticalDatum {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         write!(f, "{self:?}")
     }
 }

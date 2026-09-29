@@ -9,6 +9,7 @@ help:
 	@echo '    make check   	Checks the code base for security vulnerabilities.'
 	@echo '    make count   	Count LoC across the project.'
 	@echo '    make check_alloc	Checks every alloc-only build builds or stops at the deep_causality_num guard.'
+	@echo '    make check_core	Checks every core-only crate links without a global allocator.'
 	@echo '    make check_examples	Checks that every Cargo example has a Bazel target.'
 	@echo '    make check_no_std	Checks every crate builds for a bare-metal target or is listed as std-only.'
 	@echo '    make check_precision	Checks every FloatType alias still builds at each precision.'
@@ -48,6 +49,11 @@ count:
 .PHONY: check_alloc
 check_alloc:
 	@source scripts/check_alloc.sh
+
+
+.PHONY: check_core
+check_core:
+	@source scripts/check_core.sh
 
 
 .PHONY: check_examples

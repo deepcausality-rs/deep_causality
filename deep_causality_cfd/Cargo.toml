@@ -51,6 +51,7 @@ std = [
     "deep_causality_par/std",
     "deep_causality_fft/std",
     "dep:deep_causality_uncertain",
+    "deep_causality_uncertain/std",
 ]
 
 # CPU parallelism. Forwards to the topology crate's Rayon-backed DEC operator

@@ -9,6 +9,9 @@
 # Every workspace crate is accounted for: it declares `no-std` and is built, or it is listed as
 # std-only in bare_metal.sh with the reason. A crate that is neither fails the check.
 #
+# A crate whose `no-std` builds on `core` alone and that declares `alloc` as an add-on is built a
+# second time with `no-std,alloc`, so the parts it gates behind `alloc` build for the target too.
+#
 # Each crate builds in its own `cargo` call. One call over several `-p` flags unifies their
 # features, so a sibling that enables `std` would mask the crate that needs checking.
 #
@@ -41,6 +44,13 @@ for i in "${!DC_CRATES[@]}"; do
             built=$((built + 1))
         else
             failed+=("$c")
+        fi
+        if dc_no_std_is_core "${DC_CRATE_DIRS[$i]}" && dc_has_feature "${DC_CRATE_DIRS[$i]}" alloc; then
+            echo "==> $c with alloc ($TARGET)"
+            if ! cargo build -p "$c" --lib --no-default-features --features no-std,alloc \
+                --target "$TARGET"; then
+                failed+=("$c (no-std,alloc)")
+            fi
         fi
     elif [ -n "$reason" ]; then
         echo "--- $c: std-only ($reason)"

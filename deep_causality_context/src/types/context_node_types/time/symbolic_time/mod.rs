@@ -4,6 +4,7 @@
  */
 
 use crate::ContextoidId;
+use alloc::{string::String, vec::Vec};
 mod display;
 mod identifiable;
 mod scalar_projector;

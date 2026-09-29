@@ -9,9 +9,9 @@ use crate::{
     Coordinate, EuclideanSpacetime, LorentzianSpacetime, MetricSignature, SpaceTemporal, Spatial,
     TangentSpacetime, Temporal, TimeScale,
 };
+use core::fmt::Formatter;
 use deep_causality_algebra::RealField;
 use deep_causality_core::Identifiable;
-use std::fmt::Formatter;
 
 mod recordable;
 
@@ -148,8 +148,8 @@ impl<R: RealField> SpaceTemporal for SpaceTimeKind<R> {
     }
 }
 
-impl<R: RealField + std::fmt::Display> std::fmt::Display for SpaceTimeKind<R> {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+impl<R: RealField + core::fmt::Display> core::fmt::Display for SpaceTimeKind<R> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         match self {
             SpaceTimeKind::Euclidean(euclidean) => euclidean.fmt(f),
             SpaceTimeKind::Lorentzian(lorentzian) => lorentzian.fmt(f),

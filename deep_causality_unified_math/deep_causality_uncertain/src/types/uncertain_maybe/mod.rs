@@ -8,6 +8,7 @@
 mod uncertain_maybe_ops;
 
 use crate::{SampleSession, Uncertain, UncertainBool, UncertainError};
+use alloc::string::ToString;
 use deep_causality_rand::RandScalar;
 
 /// A real quantity that is probabilistically present or absent. When present, its value is

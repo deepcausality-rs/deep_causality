@@ -29,8 +29,8 @@ impl<R> UniformDistributionParams<R> {
     }
 }
 
-impl<R: std::fmt::Display> std::fmt::Display for UniformDistributionParams<R> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+impl<R: core::fmt::Display> core::fmt::Display for UniformDistributionParams<R> {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         write!(
             f,
             "UniformDistributionParams {{ low: {:.4} , high: {:.4} }}",

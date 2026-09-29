@@ -115,7 +115,10 @@ where
     } else {
         0.0
     };
-    Ok(Uncertain::normal(mean, variance.sqrt()))
+    Ok(Uncertain::normal(
+        mean,
+        deep_causality_num::Float::sqrt(variance),
+    ))
 }
 
 /// Lifts a physical-QPU call into a causaloid `f` at the Kleisli boundary: on

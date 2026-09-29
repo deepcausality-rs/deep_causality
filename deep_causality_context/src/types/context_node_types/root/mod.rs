@@ -4,7 +4,7 @@
  */
 
 use crate::ContextoidId;
-use std::fmt::{Display, Formatter};
+use core::fmt::{Display, Formatter};
 
 use deep_causality_core::Identifiable;
 
@@ -26,7 +26,7 @@ impl Identifiable for Root {
 }
 
 impl Display for Root {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> core::fmt::Result {
         write!(f, "Root ID: {}", self.id,)
     }
 }

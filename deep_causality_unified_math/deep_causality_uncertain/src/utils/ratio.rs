@@ -6,6 +6,7 @@
 //! A probability, in the caller's scalar.
 
 use crate::UncertainError;
+use alloc::format;
 use deep_causality_rand::RandScalar;
 
 /// The fraction `hits / total`, formed at `R` rather than at a fixed precision and lowered.

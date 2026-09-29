@@ -465,6 +465,19 @@ cited in the doc comment of the source file where it is implemented.
   methods for matrix-product states," *Ann. Phys.* 411, 167998 (2019).
   [doi:10.1016/j.aop.2019.167998](https://doi.org/10.1016/j.aop.2019.167998) (arXiv:1901.05824) — TDVP and time-evolution review.
 
+## Build configurations
+
+| Configuration | Cargo features | Supported |
+|---|---|:-:|
+| `std`, hosted | default | ✓ |
+| `no-std` with a heap | `default-features = false, features = ["no-std"]` | ✓ |
+| `no-std` on `core` alone, no heap | – | – |
+
+Without `std` the crate needs a heap: the program must define a `#[global_allocator]`.
+
+CI builds every supported bare-metal configuration for `thumbv7em-none-eabihf`.
+[README_NO_STD.md](https://github.com/deepcausality-rs/deep_causality/blob/main/README_NO_STD.md) describes the build configuration of every crate in the workspace.
+
 ## Contribution
 
 Contributions are welcomed especially related to documentation, example code, and fixes.

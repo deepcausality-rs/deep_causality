@@ -215,7 +215,7 @@ fn test_topology_error_display() {
 fn test_from_metric_error() {
     // Exercises From<MetricError> for PhysicsError (physics_error.rs:132-134).
     // Construct a real MetricError and convert it.
-    let metric_err = deep_causality_metric::MetricError::ValidationFailed("bad metric".into());
+    let metric_err = deep_causality_metric::MetricError::ValidationFailed("bad metric");
     let err: PhysicsError = PhysicsError::from(metric_err);
     match err.0 {
         PhysicsErrorEnum::MetricConventionError(m) => assert!(!m.is_empty()),

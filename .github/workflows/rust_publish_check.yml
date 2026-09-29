@@ -32,7 +32,7 @@ jobs:
   # requirement only the registry can satisfy, for a crate release-plz publishes nothing before.
   dev-dependencies:
     name: internal dev-dependencies are on crates.io
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - name: Install Rust
@@ -45,7 +45,7 @@ jobs:
   # checks that the manifests resolve.
   workspace-dry-run:
     name: cargo publish --dry-run
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@v7
       - name: Install Rust

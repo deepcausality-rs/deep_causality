@@ -7,11 +7,11 @@
 mod alias_adjunction_tests;
 #[cfg(test)]
 mod alias_comonad_tests;
-#[cfg(test)]
+#[cfg(all(test, feature = "alloc"))]
 mod alias_foldable_tests;
-#[cfg(test)]
+#[cfg(all(test, feature = "alloc"))]
 mod alias_functor_tests;
-#[cfg(test)]
+#[cfg(all(test, feature = "alloc"))]
 mod alias_monad_tests;
 #[cfg(test)]
 mod alias_profunctor_tests;

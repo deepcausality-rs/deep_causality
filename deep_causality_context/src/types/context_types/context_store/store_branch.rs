@@ -3,16 +3,17 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::utils::id_map::{IdMap, IdSet};
 use crate::{Context, ContextStore, Datable, SpaceTemporal, Spatial, StoreError, Temporal};
+use alloc::{string::String, string::ToString, vec, vec::Vec};
 use deep_causality_context_store::{
     ContainerRef, ContextId, ContextStorage, ContextWrite, ContextoidId, ContextoidRecord,
     DataRecord, IdReserve, ProjectionError, Recordable, RelationRecord, SpaceRecord,
     SpaceTimeRecord, TimeRecord,
 };
-use std::collections::{HashMap, HashSet};
 
 /// A graph's map from a branch identifier to the fresh one it links instead.
-type Remap = HashMap<ContextoidId, ContextoidId>;
+type Remap = IdMap<ContextoidId, ContextoidId>;
 
 impl<S: ContextStorage> ContextStore<S> {
     /// Stores a branch as a new context that links what it shares and creates what it changed.
@@ -50,7 +51,7 @@ impl<S: ContextStorage> ContextStore<S> {
             .collect();
 
         // One remap per graph: the base first, then each extra in order.
-        let node_sets: Vec<&[ContextoidRecord]> = std::iter::once(nodes.as_slice())
+        let node_sets: Vec<&[ContextoidRecord]> = core::iter::once(nodes.as_slice())
             .chain(extras.iter().map(|(_, nodes, _)| nodes.as_slice()))
             .collect();
         let (to_create, remaps) = self.plan_nodes(&node_sets).await?;
@@ -96,7 +97,7 @@ impl<S: ContextStorage> ContextStore<S> {
     ) -> Result<(Vec<ContextoidRecord>, Vec<Remap>), StoreError<S::Error>> {
         // The distinct records in first-seen order, each with the graphs that carry it.
         let mut records: Vec<(&ContextoidRecord, Vec<usize>)> = Vec::new();
-        let mut by_id: HashMap<ContextoidId, Vec<usize>> = HashMap::new();
+        let mut by_id: IdMap<ContextoidId, Vec<usize>> = IdMap::new();
         for (graph, nodes) in graphs.iter().enumerate() {
             for record in nodes.iter() {
                 let seen = by_id.entry(record.id()).or_default();
@@ -111,7 +112,7 @@ impl<S: ContextStorage> ContextStore<S> {
         }
 
         let ids: Vec<ContextoidId> = by_id.keys().copied().collect();
-        let held: HashMap<ContextoidId, Option<ContextoidRecord>> = ids
+        let held: IdMap<ContextoidId, Option<ContextoidRecord>> = ids
             .iter()
             .copied()
             .zip(
@@ -123,7 +124,7 @@ impl<S: ContextStorage> ContextStore<S> {
             .collect();
 
         // Whether each record needs a fresh identifier.
-        let mut claimed: HashSet<ContextoidId> = HashSet::new();
+        let mut claimed: IdSet<ContextoidId> = IdSet::new();
         let mut to_create = Vec::with_capacity(records.len());
         let mut needs_fresh = Vec::with_capacity(records.len());
         for (record, _) in &records {
@@ -146,7 +147,7 @@ impl<S: ContextStorage> ContextStore<S> {
                 .await
                 .map_err(StoreError::Storage)?
         };
-        let mut remaps: Vec<Remap> = vec![HashMap::new(); graphs.len()];
+        let mut remaps: Vec<Remap> = vec![IdMap::new(); graphs.len()];
         for ((record, carriers), _) in records
             .iter()
             .zip(&needs_fresh)

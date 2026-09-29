@@ -4,6 +4,7 @@
  */
 
 use crate::ContextId;
+use alloc::string::String;
 
 /// A stored context: its identifier and its name.
 #[derive(Debug, Clone, PartialEq, Eq)]

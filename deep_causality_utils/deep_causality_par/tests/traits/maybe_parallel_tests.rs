@@ -42,7 +42,10 @@ fn test_the_serial_bound_is_vacuous() {
     use std::rc::Rc;
     assert_eq!(*requires_maybe_parallel(Rc::new(1.5f64)), 1.5f64);
 
-    // The same holds through the bound's one consumer.
-    let out = deep_causality_par::scoped_map(&[Rc::new(1.0f64), Rc::new(2.0)], |x| **x);
-    assert_eq!(out, vec![1.0, 2.0]);
+    // The same holds through the bound's one consumer, which needs `alloc`.
+    #[cfg(feature = "alloc")]
+    {
+        let out = deep_causality_par::scoped_map(&[Rc::new(1.0f64), Rc::new(2.0)], |x| **x);
+        assert_eq!(out, vec![1.0, 2.0]);
+    }
 }
