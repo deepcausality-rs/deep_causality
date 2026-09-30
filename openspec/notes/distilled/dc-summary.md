@@ -87,14 +87,14 @@ fn kepler_step(state: Orbit, dt: FloatType) -> PropagatingEffect<Orbit> {
     }
 }
 
-let epoch: Orbit = ([7.0e6, 0.0], [1.0e3, 7.5e3]);
+let epoch: Orbit = ([7.0e6, 0.0], [0.0, 7.8e3]);
 // Outer layer: step 2 depends on step 1, although its physical time runs backwards.
 let result = PropagatingEffect::pure(epoch)
     .bind_or_error(|s, _, _| kepler_step(s, 600.0), "no state")
     .bind_or_error(|s, _, _| kepler_step(s, -600.0), "no state");
 ```
 
-Run against the workspace, the chain returns to the epoch position within `8.15e-10` m.
+Run against the workspace, the chain returns to the epoch position within `5.67e-10` m.
 
 ### 1.3 Three channels, and a log
 
