@@ -10,7 +10,9 @@
     "preview": "astro preview",
     "astro": "astro",
     "check": "astro check",
-    "check:tokens": "diff -u ../web/src/styles/tokens.css src/styles/tokens.css && echo 'tokens in sync'"
+    "check:tokens": "diff -u ../web/src/styles/tokens.css src/styles/tokens.css && echo 'tokens in sync'",
+    "check:prose": "astro build && python3 scripts/sitecheck.py",
+    "check:prose:test": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts -p 'test_*.py'"
   },
   "dependencies": {
     "@astrojs/mdx": "^8.0.2",
@@ -21,7 +23,7 @@
     "@astrojs/check": "^0.9.10",
     "shiki": "4.4.3",
     "typescript": "^6.0.3",
-    "wrangler": "4.142.0"
+    "wrangler": "4.143.0"
   },
   "packageManager": "pnpm@11.9.0"
 }

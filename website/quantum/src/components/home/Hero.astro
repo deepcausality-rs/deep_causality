@@ -1,101 +1,124 @@
 ---
 /**
- * Hero. Single column, left aligned.
+ * Hero. States what the library does, then shows it.
  *
- * The page opens on what the crate decides rather than on what it contains.
- * A reader who already knows what a quantum causal model is wants to know
- * whether this one checks the Markov condition or assumes it, and that answer
- * is the first concrete thing on the page.
- *
- * The install line quotes CARGO_ADD and CRATE_VERSION rather than spelling a
- * version out, so a release bump is one edit in consts.ts.
+ * The headline names the outcome in the reader's terms. "QCL" and the
+ * category name sit in the eyebrow and the gloss, where they label the page
+ * without carrying it. The figure is the demonstration: three rival causes,
+ * one observation, one survivor. Every number reads from `src/data/crosstalk.ts`.
  */
-import { Code } from 'astro:components';
-import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
-import { CARGO_ADD, CRATE_VERSION, MSRV } from '../../consts';
-
-const SHIKI = { light: rustLight, dark: rustDark };
-
-const dep = `${CARGO_ADD}
-
-# or, in Cargo.toml
-# deep_causality_quantum = "${CRATE_VERSION}"`;
+import DecisionFigure from './DecisionFigure.astro';
+import { RUN } from '../../data/crosstalk';
+import { GITHUB_URL } from '../../consts';
 ---
 <section class="hero">
   <div class="hero-inner">
-    <p class="eyebrow">DeepCausality · Quantum</p>
-    <h1>Quantum causal models</h1>
+    <p class="eyebrow">Quantum causal reasoning</p>
+    <h1>
+      <span>Two qubits fail together.</span>
+      <span>Find the cause in two experiments.</span>
+    </h1>
 
-    <p class="tagline">A causal graph whose factors are quantum channels.</p>
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <p class="sub">
+          DeepCausality Quantum is a Rust library for choosing between rival
+          causes. You declare the candidate causal structures. It screens them,
+          plans the cheapest experiments that tell them apart, and names the
+          candidate the data leaves standing.
+        </p>
+        <p class="gloss">
+          QCL, the Quantum Causal Language, is the builder that writes this as
+          one program: configure, validate, control. It runs on your machine
+          against a simulated plant or your own read-outs, and it does not
+          drive quantum hardware.
+        </p>
 
-    <p class="sub">
-      Each node carries a Choi–Jamiołkowski operator; the whole model is their
-      product. Not every product is a legal model, and this crate decides which
-      ones are at the freeze boundary, before a single step runs.
-    </p>
+        <p class="proof">
+          {`The example: two qubits show correlated errors. Three structures fit the passive data equally well, and a fourth is a cycle, which the builder refuses. The plan costs ${RUN.planCost}, where process tomography costs ${RUN.tomographyCost} in the same unit, and after ${RUN.shots.toLocaleString('en-US')} shots one candidate is left, ${RUN.survivorSeparationBits} bits from its nearest rival. The whole decision takes ${RUN.wallClock} on an Apple M3 Max.`}
+        </p>
 
-    <Code code={dep} lang="bash" themes={SHIKI} />
+        <div class="cta-row">
+          <a class="btn btn-primary" href="/how-it-works/">
+            See how it works
+            <span class="btn-ico" aria-hidden="true">→</span>
+          </a>
+          <a class="btn btn-ghost" href="#run">Run it yourself</a>
+        </div>
 
-    <p class="run-note">
-      Version {CRATE_VERSION}, MIT licensed. The default build compiles the
-      verifiable path and the causal-model slice; it pulls in no network and no
-      async dependency at any feature setting. Rust {MSRV} or newer.
-    </p>
+        <ul class="facts">
+          <li>Rust library</li>
+          <li>MIT licensed</li>
+          <li>Runs on one machine</li>
+          <li><a href={GITHUB_URL}>Source on GitHub <span aria-hidden="true">↗</span></a></li>
+        </ul>
+      </div>
 
-    <div class="cta-row">
-      <a class="btn btn-primary" href="/qcm/">
-        Read the model
-        <span class="btn-ico" aria-hidden="true">→</span>
-      </a>
-      <a class="btn btn-ghost" href="/formalization/">
-        See what is proved
-      </a>
+      <div class="hero-fig"><DecisionFigure /></div>
     </div>
-
-    <p class="proof">
-      Two factors declared on the same Hilbert leg. Diagonal ones commute, and
-      the graph freezes with a recorded margin of <strong>0.000e0</strong>. Swap
-      in <strong>σx</strong> against <strong>σz</strong> and the freeze aborts,
-      names nodes 0 and 1 as the offending pair, and rolls the graph back:
-      <code>is_frozen()</code> reports false.
-    </p>
   </div>
 </section>
 
 <style>
-  .hero { padding: var(--space-8) var(--space-4) var(--space-7); }
-  @media (min-width: 720px) { .hero { padding: var(--space-9) var(--space-5) var(--space-8); } }
+  .hero { padding: var(--space-7) var(--space-4) var(--space-8); }
+  @media (min-width: 720px) { .hero { padding: var(--space-8) var(--space-5) var(--space-9); } }
 
-  .hero-inner { max-width: var(--w-panel); margin: 0 auto; }
+  .hero-inner { max-width: calc(var(--w-doc) - 2 * var(--space-5)); margin: 0 auto; }
 
   h1 {
-    font-size: clamp(2.25rem, 5vw + 0.5rem, 3.5rem);
+    font-size: clamp(2.125rem, 4.6vw + 0.4rem, 3.75rem);
     line-height: var(--lh-display);
     letter-spacing: var(--ls-display);
-    margin: var(--space-3) 0 var(--space-4);
-    max-width: 18ch;
-  }
-  .tagline {
-    font-size: var(--t-h3);
-    line-height: var(--lh-h3);
-    color: var(--fg-0);
-    max-width: var(--measure-lede);
-    margin: 0 0 var(--space-4);
-  }
-  .sub {
-    color: var(--fg-1);
-    max-width: var(--measure-lede);
-    margin: 0 0 var(--space-6);
-  }
-
-  .run-note {
-    color: var(--fg-1);
-    font-size: var(--t-body-sm);
-    max-width: var(--measure);
     margin: var(--space-3) 0 var(--space-6);
   }
+  h1 span { display: block; }
+  h1 span:last-child { color: var(--fg-1); }
 
-  .cta-row { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-bottom: var(--space-6); }
+  /* Narrow screens: intro, then the figure, then the proof and the buttons, so the
+     demonstration is on the first screen. `display: contents` lets the copy's
+     children join the grid's ordering; wide screens restore two columns. */
+  .hero-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    align-items: start;
+  }
+  .hero-copy { display: contents; }
+  .sub { order: 1; }
+  .hero-fig { order: 2; margin-bottom: var(--space-6); }
+  .gloss { order: 1; }
+  .proof { order: 3; }
+  .cta-row { order: 4; }
+  .facts { order: 5; }
+  @media (min-width: 1000px) {
+    .hero-grid { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--space-8); }
+    .hero-copy { display: block; }
+    .hero-fig { order: 0; margin-bottom: 0; }
+  }
+
+  .sub {
+    color: var(--fg-0);
+    font-size: var(--t-h4);
+    line-height: var(--lh-h4);
+    max-width: var(--measure-lede);
+    margin: 0 0 var(--space-5);
+  }
+  .gloss {
+    color: var(--fg-1);
+    font-size: var(--t-body-sm);
+    max-width: var(--measure-lede);
+    margin: 0 0 var(--space-5);
+  }
+  .proof {
+    color: var(--fg-1);
+    font-size: var(--t-body-sm);
+    max-width: var(--measure-lede);
+    margin: 0 0 var(--space-6);
+    padding-left: var(--space-4);
+    border-left: 2px solid var(--accent);
+  }
+
+  .cta-row { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-bottom: var(--space-5); }
   .btn {
     display: inline-flex;
     align-items: center;
@@ -106,7 +129,6 @@ const dep = `${CARGO_ADD}
     border: 1px solid transparent;
     font-size: var(--t-body-sm);
     font-weight: var(--fw-heading);
-    border-bottom: 1px solid transparent;
     transition: transform var(--dur-fast) var(--ease-out),
                 background-color var(--dur-fast) var(--ease-out),
                 border-color var(--dur-fast) var(--ease-out),
@@ -117,7 +139,6 @@ const dep = `${CARGO_ADD}
   .btn-primary:hover {
     background: color-mix(in srgb, var(--accent) 90%, white);
     border-color: transparent;
-    border-bottom-color: transparent;
   }
   .btn-ico { transition: transform var(--dur-fast) var(--ease-out); }
   .btn-primary:hover .btn-ico { transform: translateX(2px); }
@@ -125,16 +146,21 @@ const dep = `${CARGO_ADD}
   .btn-ghost:hover {
     border-color: var(--fg-2);
     background: color-mix(in srgb, var(--accent) 5%, transparent);
-    border-bottom-color: var(--fg-2);
   }
 
-  .proof {
-    color: var(--fg-1);
-    font-size: var(--t-body-sm);
-    max-width: var(--measure);
+  .facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    list-style: none;
     margin: 0;
-    padding-left: var(--space-4);
-    border-left: 2px solid var(--accent);
+    padding: 0;
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-2);
   }
-  .proof strong { color: var(--fg-0); }
+  .facts a { color: var(--fg-2); border-bottom: 1px solid var(--line-2); }
+  .facts a:hover { color: var(--fg-0); border-bottom-color: var(--fg-2); }
 </style>

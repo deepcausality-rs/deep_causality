@@ -1,27 +1,59 @@
 ---
-title: "Quantum geometric tensor"
-question: "How do the quantum metric and the Berry curvature come apart?"
-summary: "The QGT for a flat-band system, split into its symmetric real part and its antisymmetric imaginary part."
-order: 4
+title: "The quantum geometric tensor"
+question: "Why does a flat band conduct?"
+summary: "The tensor of a flat band splits into a symmetric metric and an antisymmetric Berry curvature. The computed metric feeds the Drude weight, so geometry alone produces the transport."
+order: 11
+group: other
 command: "cargo run --release -p quantum_examples --example quantum_geometric_tensor"
 usesCrate: false
 crates:
+  - deep_causality_haft
+  - deep_causality_num
   - deep_causality_num_complex
   - deep_causality_physics
   - deep_causality_tensor
 source: "examples/quantum_examples/quantum_geometric_tensor"
 ---
 
-The quantum geometric tensor carries both the geometry and the topology of a
-family of quantum states over a parameter space. Its real symmetric part is the
-quantum metric; its imaginary antisymmetric part is the Berry curvature. The
-example computes both for twisted bilayer graphene, where the flat bands make
-geometric contributions to transport dominant.
+The quantum metric alone gives the flat band a conductivity, 0.037778 meV·nm² in the example, and
+band curvature contributes zero. A flat band has no dispersion, so conventional band theory says
+it cannot conduct, yet magic-angle twisted bilayer graphene has flat bands and conducts. The
+missing term is geometric.
 
-The velocity operator is `vᵢ = ∂_{kᵢ} H`, and the tensor sums over the bands
-other than the one being tracked, weighted by the inverse square of the energy
-gap.
+The tensor `Q_ij` gives one complex number per pair of axes. Its real part is the quantum metric,
+which measures how far apart neighbouring states are. Its imaginary part is the Berry curvature,
+a magnetic field in momentum space.
 
-This example does not import `deep_causality_quantum`. It builds on
-`deep_causality_physics` for the band model and `deep_causality_tensor` for the
-numerics.
+## What you see
+
+```text
+Q_ij for the flat band, and its decomposition
+  pair      Re(Q_ij)      Im(Q_ij)      g_ij          Omega_ij
+  Q_xx       0.004198      0.000000      0.004198      0.000000
+  Q_xy       0.000000     -0.004198      0.000000      0.008395
+  Q_yx       0.000000      0.004198      0.000000     -0.008395
+  Q_yy       0.004198      0.000000      0.004198      0.000000
+
+The symmetry the decomposition forces
+  g_xy - g_yx                 0.000e0   the metric is symmetric
+  Omega_xy + Omega_yx         0.000e0   the curvature is antisymmetric
+  Omega_xx                    0.000e0   so the diagonal of it vanishes
+
+  D = (D_conv + g~_xx * E_gap) * a^2
+    flat band alone             0.000000 meV*nm^2
+    with the geometry           0.037778 meV*nm^2
+```
+
+The excerpt drops the header and unit lines and keeps each printed row.
+
+## The step that is easy to skip
+
+`Q_ij` comes out in nm², because the velocity matrix elements carry energy times length. The
+transport kernel expects the metric divided by the cell area, `g̃_xx = g_xx / a²`. Passing `g_xx`
+directly would hand the kernel an area where it expects a ratio, and since the kernel multiplies
+the weight by a² again, the answer would be off by the cell area twice over.
+
+## Crates
+
+This example does not import `deep_causality_quantum`. The band model and the transport kernel
+come from `deep_causality_physics`, and the numerics from `deep_causality_tensor`.

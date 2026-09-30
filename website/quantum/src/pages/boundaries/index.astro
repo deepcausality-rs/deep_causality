@@ -1,0 +1,142 @@
+---
+import PageShell from '../../components/nav/PageShell.astro';
+import { boundaries } from '../../data/boundaries';
+import { CRATE_URL } from '../../consts';
+
+const title = 'Boundaries | DeepCausality Quantum';
+const description =
+  'What the library does not do, what its examples assume, and how its two senses of quantum stay apart. Each row names the file that shows it.';
+---
+<PageShell title={title} description={description} path="/boundaries/">
+  <header class="doc-head">
+    <p class="eyebrow">Boundaries</p>
+    <h1>Where the library stops.</h1>
+    <p class="lede">
+      Each row below is a decision or a limit, and each names the file that shows it. The page
+      describes the crate as it is, and it sets no schedule.
+    </p>
+  </header>
+
+  <section class="doc-sec" id="limits">
+    <h2>What does it not do?</h2>
+    <ul class="rows">
+      {boundaries.map((b) => (
+        <li class="row" id={b.id}>
+          <p class={`status status-${b.status}`}>{b.mark}</p>
+          <div>
+            <h3>{b.title}</h3>
+            <p class="t">{b.text}</p>
+            <p class="ev">Shown in <code>{b.evidence}</code></p>
+          </div>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="doc-sec" id="assumptions">
+    <h2>What do the examples assume?</h2>
+    <dl class="deflist">
+      <div>
+        <dt>The read-outs are inputs</dt>
+        <dd>
+          The crosstalk example states what each candidate predicts for each experiment, in
+          <code>constants.rs</code>. The plan and the verdict follow from those numbers. The run
+          shows the decision procedure reaching the right answer on stated assumptions, and it
+          makes no claim about any device.
+        </dd>
+      </div>
+      <div>
+        <dt>The observation is simulated</dt>
+        <dd>
+          The example draws its shots from the Born sampler at H1’s predicted read-out, then
+          checks that the adjudication names H1. The example exits nonzero if it does not.
+        </dd>
+      </div>
+      <div>
+        <dt>Cost is one arbitrary unit</dt>
+        <dd>
+          Tomography costs 200, a targeted intervention costs 1 and an echo costs 2, all in the
+          same unit. The ratio comes from the example’s constants and is not a measurement of a
+          laboratory.
+        </dd>
+      </div>
+      <div>
+        <dt>The factors are diagonal</dt>
+        <dd>
+          Every candidate in the crosstalk example is a legal model by construction, so the Markov
+          check has nothing to reject. The whole weight of the discrimination falls on the
+          interventions.
+        </dd>
+      </div>
+      <div>
+        <dt>One candidate is not a circuit</dt>
+        <dd>
+          The circuit version of the example keeps the shared bath as a factorization. A bath that
+          drives two qubits needs a node with two output wires. Under the dilation’s leg
+          convention that node has a leg of 256 dimensions, and the Markov union over its three
+          legs is a 65536 × 65536 matrix with 2<sup>32</sup> entries, beyond the crate’s cap of
+          2<sup>24</sup>.
+        </dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="doc-sec" id="modalities">
+    <h2>How do the two senses of quantum stay apart?</h2>
+    <p>
+      The crate names two senses of quantum and keeps them apart by construction. The verifiable
+      path is the default build and the target of the Lean proofs. The emergent path is a seam.
+    </p>
+    <div class="table-scroll">
+      <table class="table-stack">
+        <thead>
+          <tr><th>Modality</th><th>What it is</th><th>Build</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td data-label="Modality"><b>Verifiable</b></td>
+            <td data-label="What it is">Deterministic simulated Choi–Jamiołkowski operators, checked at the freeze boundary and backed by Lean proofs.</td>
+            <td data-label="Build">Default</td>
+          </tr>
+          <tr>
+            <td data-label="Modality"><b>Emergent</b></td>
+            <td data-label="What it is">A physical-QPU call lifted into the causal monad as a typed effect (<code>qpu_effect</code>), with an in-process <code>SimQpu</code> behind it.</td>
+            <td data-label="Build"><code>qpu</code> feature</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p>
+      The emergent seam is a typed boundary and not a driver. It adds no network or async
+      dependency. Its source is under
+      <a href={`${CRATE_URL}/src/types/qpu`}><code>src/types/qpu/</code></a>.
+    </p>
+  </section>
+</PageShell>
+
+<style>
+  .rows { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line-1); }
+  .row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2);
+    padding: var(--space-5) 0;
+    border-bottom: 1px solid var(--line-1);
+    scroll-margin-top: calc(var(--header-h) + var(--space-4));
+  }
+  @media (min-width: 720px) {
+    .row { grid-template-columns: var(--w-label) minmax(0, 1fr); gap: var(--space-5); }
+  }
+  .status { margin: 0; }
+  .row h3 { font-size: var(--t-h4); margin: 0 0 var(--space-2); }
+  .t { color: var(--fg-1); margin: 0 0 var(--space-2); max-width: var(--measure); }
+  .ev { color: var(--fg-2); font-size: var(--t-body-sm); margin: 0; }
+  .ev code { overflow-wrap: anywhere; }
+
+  .table-scroll table { width: 100%; border-collapse: collapse; }
+  .table-scroll th, .table-scroll td { text-align: left; vertical-align: top; padding: var(--space-3); border-top: 1px solid var(--line-1); }
+  .table-scroll thead th {
+    font-family: var(--font-mono); font-size: var(--t-eyebrow); letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase; font-weight: 400; color: var(--fg-2); border-top: none;
+  }
+</style>

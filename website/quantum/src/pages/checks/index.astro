@@ -1,0 +1,91 @@
+---
+import PageShell from '../../components/nav/PageShell.astro';
+import { groups } from '../../data/checks';
+import { CRATE_URL } from '../../consts';
+
+const title = 'Checks | DeepCausality Quantum';
+const description =
+  'Every check the library runs: the question it decides, what a rejection names, when it certifies nothing, and whether Lean proves it or tests witness it.';
+
+const mark = { proved: 'proved in Lean', partial: 'proved in part', tested: 'tested', decision: 'by decision' } as const;
+const cls = { proved: 'validated', partial: 'partial', tested: 'measured', decision: 'nongoal' } as const;
+---
+<PageShell title={title} description={description} path="/checks/">
+  <header class="doc-head">
+    <p class="eyebrow">Checks</p>
+    <h1>What each check decides, and what a failure names.</h1>
+    <p class="lede">
+      A check decides one question. When it rejects, the error names what failed. When it
+      examines nothing, it says so. Each entry states what backs it: a Lean proof, tests that
+      witness it, or a decision the crate records.
+    </p>
+  </header>
+
+  {groups.map((g) => (
+    <section class="doc-sec" id={g.id}>
+      <h2>{g.title}</h2>
+      <p class="glede">{g.lede}</p>
+      <dl class="checks">
+        {g.checks.map((c) => (
+          <div class="check">
+            <dt>
+              <code class="cname">{c.name}</code>
+              <span class="on">{c.on}</span>
+              <span class={`status status-${cls[c.backing]}`}>{mark[c.backing]}</span>
+            </dt>
+            <dd>
+              <p class="q">{c.question}</p>
+              <dl class="meta">
+                <div><dt>A rejection carries</dt><dd>{c.rejection}</dd></div>
+                <div><dt>Certifies nothing when</dt><dd>{c.vacuous}</dd></div>
+                <div><dt>Evidence</dt><dd>{c.evidence}</dd></div>
+                <div><dt>Source</dt><dd><a href={`${CRATE_URL}/${c.source}`}><code>{c.source}</code></a></dd></div>
+              </dl>
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </section>
+  ))}
+
+  <section class="doc-sec" id="verdicts">
+    <h2>How does a measurement become a verdict?</h2>
+    <p>
+      The library attaches no verdict to the operators themselves, because general effects
+      (<code>0 ≤ E ≤ I</code>) form only an effect algebra with partial meet and join. The
+      measurement boundary reads a verdict out instead. The Born rule <code>Tr(Pρ)</code> becomes
+      a probability verdict, or the measurement projection itself becomes a proposition in the
+      lattice of projections.
+    </p>
+    <p>
+      That lattice is bounded, has the orthocomplement <code>I − P</code>, and satisfies the
+      orthomodular law. It fails distributivity, the way probability verdicts fail excluded middle.
+      The Lean statement that the lattice is orthomodular is a deferred target, and the carrier and
+      its law tests are complete.
+    </p>
+    <p class="next-links">
+      <a href="/proof/#deferred">The deferred targets →</a>
+    </p>
+  </section>
+</PageShell>
+
+<style>
+  .glede { color: var(--fg-1); max-width: var(--measure); margin: 0 0 var(--space-5); }
+
+  .checks { margin: 0; }
+  .check { padding: var(--space-5) 0; border-top: 1px solid var(--line-1); }
+  .check:last-child { border-bottom: 1px solid var(--line-1); }
+  .check > dt { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-2) var(--space-4); margin: 0 0 var(--space-3); }
+  .cname { background: none; padding: 0; color: var(--fg-0); font-size: var(--t-body); font-weight: var(--fw-heading); }
+  .on { color: var(--fg-2); font-family: var(--font-mono); font-size: var(--t-eyebrow); letter-spacing: var(--ls-eyebrow); text-transform: uppercase; }
+  .check > dd { margin: 0; }
+  .q { color: var(--fg-0); margin: 0 0 var(--space-4); max-width: var(--measure); }
+
+  .meta { margin: 0; display: grid; gap: var(--space-2); }
+  .meta > div { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  .meta dt { color: var(--fg-2); font-family: var(--font-mono); font-size: var(--t-eyebrow); letter-spacing: var(--ls-eyebrow); text-transform: uppercase; }
+  .meta dd { margin: 0; color: var(--fg-1); font-size: var(--t-body-sm); max-width: var(--measure); overflow-wrap: anywhere; }
+  @media (min-width: 720px) {
+    .meta > div { grid-template-columns: 11rem minmax(0, 1fr); gap: var(--space-4); }
+  }
+</style>

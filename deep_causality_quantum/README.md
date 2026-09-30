@@ -159,13 +159,13 @@ overflow and non-convergence as typed errors.
 
 ```toml
 [dependencies]
-deep_causality_quantum = { version = "0.1.1" }
+deep_causality_quantum = { version = "0.4.2" }
 ```
 
 Enable the emergent QPU seam with the `qpu` feature:
 
 ```toml
-deep_causality_quantum = { version = "0.1.1", features = ["qpu"] }
+deep_causality_quantum = { version = "0.4.2", features = ["qpu"] }
 ```
 
 ## Examples

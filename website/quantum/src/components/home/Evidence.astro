@@ -1,0 +1,71 @@
+---
+/**
+ * What the library has been checked against. Each row names its source, so a
+ * reader can rerun it. The counts are the figures the tools report:
+ *   tests    cargo test -p deep_causality_quantum --all-features
+ *              772 tests plus 1 doc test, all passing
+ *   theorems the quantum section of lean/THEOREM_MAP.md, 14 rows marked proved
+ * Statuses use the shared `.status` marks.
+ */
+import { TESTS } from '../../data/evidence';
+
+const rows = [
+  {
+    status: 'validated',
+    mark: 'proved',
+    title: `${TESTS.proved} theorems proved in Lean`,
+    text: 'Partial-trace identities, the Choi application, and the exact case of abstraction composition. Each theorem has a named Rust test that witnesses it.',
+    href: '/proof/#theorems',
+  },
+  {
+    status: 'measured',
+    mark: 'tested',
+    title: `${TESTS.count} tests pass`,
+    text: 'Each check has tests, including tests where it must reject. Every example printed identical output on a second run.',
+    href: '/proof/#tests',
+  },
+  {
+    status: 'validated',
+    mark: 'refuted',
+    title: 'A tempting claim is false, and Lean proves it',
+    text: 'Two commuting operators can lose that property under a partial trace. The counterexample is proved. The library’s boundary check returns a bound with a stated amplification and a flag against your tolerance.',
+    href: '/proof/#refuted',
+  },
+  {
+    status: 'partial',
+    mark: 'not proved',
+    title: `${TESTS.deferred} targets stated, none proved yet`,
+    text: 'The Markov condition, the circuit-faithfulness criterion and the verdict lattice have tests and no Lean proof. The page lists each one.',
+    href: '/proof/#deferred',
+  },
+];
+---
+<ul class="rows">
+  {rows.map((r, i) => (
+    <li class="row panel corner-brackets rise" style={`--i:${i}`}>
+      <p class={`status status-${r.status}`}>{r.mark}</p>
+      <h3>{r.title}</h3>
+      <p class="t">{r.text}</p>
+      <p class="go"><a href={r.href}>Details <span aria-hidden="true">→</span></a></p>
+    </li>
+  ))}
+</ul>
+
+<style>
+  .rows {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+  @media (min-width: 720px) { .rows { grid-template-columns: 1fr 1fr; } }
+  @media (min-width: 1100px) { .rows { grid-template-columns: repeat(4, 1fr); } }
+
+  .row { padding: var(--space-5); display: flex; flex-direction: column; }
+  .status { margin: 0 0 var(--space-3); }
+  .row h3 { font-size: var(--t-h4); margin: 0 0 var(--space-3); }
+  .t { color: var(--fg-1); font-size: var(--t-body-sm); margin: 0 0 var(--space-4); }
+  .go { margin: auto 0 0; font-size: var(--t-body-sm); }
+</style>

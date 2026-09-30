@@ -1,26 +1,55 @@
 ---
-title: "Hopf fibration"
-question: "Where does this spinor sit on the Bloch sphere?"
-summary: "A qubit state encoded as a multivector, projected through the Hopf fibration onto S²; a global phase shift moves along the fibre and leaves the projection fixed."
-order: 7
+title: "The Hopf fibration"
+question: "Why is a qubit's global phase unobservable?"
+summary: "A qubit as a rotor in Cl(3), its Bloch vector as a sandwich product, and a full circuit of the fiber in which the state travels while its shadow holds still."
+order: 14
+group: other
 command: "cargo run --release -p quantum_examples --example hopf_fibration_multivector"
 usesCrate: false
 crates:
+  - deep_causality_algebra
+  - deep_causality_haft
   - deep_causality_multivector
+  - deep_causality_num
   - deep_causality_num_complex
+  - deep_causality_tensor
 source: "examples/quantum_examples/hopf_fibration_multivector"
 ---
 
-The Hopf fibration maps the 3-sphere onto the 2-sphere, which is exactly the map
-from a normalized two-component spinor to a point on the Bloch sphere. The
-example encodes the state as a `HopfState` multivector, applies a fibre shift,
-and projects.
+Multiplying a state by a global phase moves it along a circle in the space of states and leaves
+its projection onto the Bloch sphere where it was. The example walks one full circuit of that
+circle. The state moves by up to 4.000000 and its shadow moves by 0.000000.
 
-The fibre shift is a global phase change. It moves the state along the fibre and
-leaves the projected point where it was, which is the geometric statement of why
-global phase is not observable. Anyone debugging a quantum control loop has hit
-that fact from the other direction.
+A qubit state is a point on the 3-sphere, and an experiment reads a point on the 2-sphere. The
+Hopf fibration is the map between them. Each point of the 2-sphere is the image of a whole circle
+in the 3-sphere, the fiber, and moving along the fiber is exactly a global phase.
 
-This example does not import `deep_causality_quantum`. `HopfState` lives in
-`deep_causality_multivector`, alongside the `HilbertState` ket this crate builds
-on.
+## What you see
+
+```text
+Walking the fiber from |+>, one complete circuit in 8 steps
+  theta      state moved on S^3   shadow moved on S^2
+   1.571 rad         0.585786            0.000000
+   3.142 rad         2.000000            0.000000
+   4.712 rad         3.414214            0.000000
+   6.283 rad         4.000000            0.000000
+   7.854 rad         3.414214            0.000000
+   9.425 rad         2.000000            0.000000
+  10.996 rad         0.585786            0.000000
+  12.566 rad         0.000000            0.000000
+```
+
+The state column peaks at 4 halfway round, where the rotor has reached −R, and returns to 0 only
+at the end of the circuit. A spinor takes two turns to come back, and the shadow takes one.
+
+## How the map is written
+
+The state is a rotor in Cl(3), the even subalgebra whose elements are the unit quaternions. The
+projection is the sandwich product `R σ₃ R̃`, so no coordinate formula for the Bloch vector
+appears anywhere. The example first pins all three axes with the six cardinal states, so no two
+of them can be exchanged unnoticed.
+
+## Crates
+
+This example does not import `deep_causality_quantum`. The state type `HopfState` lives in
+`deep_causality_multivector`, beside the `HilbertState` ket that this crate builds on.

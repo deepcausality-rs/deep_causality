@@ -1,0 +1,96 @@
+---
+/**
+ * Run it. The command runs the crosstalk example from a shallow clone. The
+ * excerpt is lines copied verbatim from that run's output, with each elision
+ * marked. Regenerate it with the command shown and compare, line by line.
+ */
+import { Code } from 'astro:components';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+import { CARGO_ADD, CARGO_DEP, MACHINE, MSRV } from '../../consts';
+import { RUN } from '../../data/crosstalk';
+
+const SHIKI = { light: rustLight, dark: rustDark };
+
+const run = `git clone --depth 1 https://github.com/deepcausality-rs/deep_causality.git
+cd deep_causality
+${RUN.command}`;
+
+const out = `[build] four declared structures
+    ✓ refused at build(): candidate 'H4 Q1->Q2->B->Q1' declares a cyclic causal structure; ...
+...
+    plan: ["E1 do(Q1=|1>) P(e2)", "E2 do(Q2=|1>) P(e1)"]  total cost 2   (tomography alone would cost 200, 100× more)
+...
+[E1 do(Q1=|1>) P(e2)] observed 0.377 ± 0.015 over 1024 shots, drawn from the Born sampler at H1's prediction
+    H1 Q1->Q2          predicts 0.40   consistent
+    H2 Q2->Q1          predicts 0.10   rejected
+    H3 Q1<-B->Q2       predicts 0.10   rejected
+...
+    H1 Q1->Q2 survives, 100.1 bits from its nearest rival. Direct cause, not shared bath.`;
+
+const next = [
+  { href: '/how-it-works/', title: 'How it works', text: 'The three stages of a QCL program, and what each one guarantees.' },
+  { href: '/examples/', title: 'Examples', text: 'Fourteen runnable programs. Nine use this crate; five are quantum in subject and build on sibling crates.' },
+  { href: '/checks/', title: 'Checks', text: 'Every check the library runs, what it decides and what a rejection names.' },
+];
+---
+<div class="try">
+  <div class="cmd">
+    <h3>Run the crosstalk example</h3>
+    <Code code={run} lang="bash" themes={SHIKI} wrap />
+    <p class="note">
+      Needs Rust {MSRV} or newer and no configuration. The run is seeded and repeats exactly. It
+      takes {RUN.wallClock} on {MACHINE}, a release build.
+    </p>
+
+    <h3>Use it as a library</h3>
+    <Code code={CARGO_ADD} lang="bash" themes={SHIKI} wrap />
+    <p class="note">
+      For unreleased work, depend on the repository directly:
+      <code class="dep">{CARGO_DEP}</code>
+    </p>
+  </div>
+
+  <div class="out">
+    <h3>What you see</h3>
+    <Code code={out} lang="text" themes={SHIKI} wrap />
+    <p class="note">
+      An excerpt of the program’s output, with each elision marked. The program exits nonzero if
+      the decision it reaches disagrees with the structure the observation was drawn from.
+    </p>
+  </div>
+</div>
+
+<ul class="next">
+  {next.map((n, i) => (
+    <li class="panel corner-brackets rise" style={`--i:${i}`}>
+      <a href={n.href}>
+        <h3>{n.title} <span aria-hidden="true">→</span></h3>
+        <p>{n.text}</p>
+      </a>
+    </li>
+  ))}
+</ul>
+
+<style>
+  .try { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-6); }
+  @media (min-width: 900px) { .try { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-7); } }
+  .try h3 { font-size: var(--t-h4); margin: 0 0 var(--space-3); }
+  .cmd h3:not(:first-child) { margin-top: var(--space-6); }
+  .note { color: var(--fg-2); font-size: var(--t-body-sm); margin: 0; max-width: var(--measure); }
+  .dep { display: block; margin-top: var(--space-2); word-break: break-all; }
+
+  .next {
+    list-style: none;
+    margin: var(--space-7) 0 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+  @media (min-width: 800px) { .next { grid-template-columns: repeat(3, 1fr); } }
+  .next li { padding: 0; }
+  .next a { display: block; padding: var(--space-5); border-bottom: none; color: var(--fg-1); height: 100%; }
+  .next a:hover h3 { color: var(--accent); }
+  .next h3 { font-size: var(--t-h4); margin: 0 0 var(--space-2); color: var(--fg-0); transition: color var(--dur-fast) var(--ease-out); }
+  .next p { margin: 0; font-size: var(--t-body-sm); }
+</style>

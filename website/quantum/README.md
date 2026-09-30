@@ -11,6 +11,8 @@ pnpm dev            # local server
 pnpm build          # -> dist/
 pnpm check          # astro check; needs TypeScript 6.x, see below
 pnpm check:tokens   # verify the token mirror has not drifted
+pnpm check:prose    # build, then lint prose and internal links (scripts/sitecheck.py)
+pnpm check:prose:test   # the lint's own tests
 ```
 
 There is **no Bazel target for this site**; `pnpm build` is the only build path.
@@ -58,94 +60,174 @@ project; this site does not diverge on it.
 **Every claim on this site traces to something committed in this repository**:
 the crate source under `deep_causality_quantum/src/`, a paper under
 `deep_causality_quantum/papers/`, the LEAN tree under
-`lean/DeepCausalityFormal/Quantum/`, `lean/THEOREM_MAP.md`, or the output of an
-example under `examples/quantum_examples/`. That constraint is absolute and makes
-the site citable.
+`lean/DeepCausalityFormal/Quantum/`, `lean/THEOREM_MAP.md`, the output of an
+example under `examples/quantum_examples/`, or, for what the library leaves out,
+the out-of-scope list of the archived `add-qcl` proposal. That constraint is
+absolute and makes the site citable.
 
-Three consequences shape the pages.
+**One demonstration carries the site.** The landing page is built around the
+crosstalk-attribution example (`qcl_crosstalk`): two qubits fail together, three
+structures fit the passive data, the planner picks two experiments, and one
+candidate survives. Every page after it either explains a step of that run,
+shows another subject the same builder takes, or states where the evidence stops.
+Structure, order and emphasis serve a reader who arrives cold from a link and
+leaves in ten seconds if the page does not say what it does.
+
+**The demonstration is simulated, and the page says so.** The read-outs each
+candidate predicts are constants in the example, the observation is drawn from
+the Born sampler at H1's prediction, and the cost unit is arbitrary. The hero
+figure, the plan table and `/boundaries/` state each of these. No figure on the
+site describes a device.
 
 **No roadmap, and no future work.** The site describes the crate as it is today.
 When something is not built, the page says what is not built and stops there.
-`/formalization/` lists seven targets that carry test witnesses and no LEAN
-proof; that list states the present and sets no schedule.
+`/proof/` lists seven targets that carry tests and no LEAN proof; the list states
+the present and sets no schedule.
 
-**A committed file is not a claim.** Three of the six papers under `papers/` are
-not cited from any module. `/papers/` lists them in their own section, so the
-presence of a PDF is never read as an implementation.
+**A committed file is not a claim.** One of the seven papers under `papers/`
+(Hsin, Kobayashi and Zhu, arXiv:2411.15848) is cited from no module. `/proof/`
+lists it in its own section, so the presence of a PDF is never read as an
+implementation.
 
-**Coverage is stated, not implied.** Five of the seven examples in
+**Coverage is stated, not implied.** Five of the fourteen examples in
 `quantum_examples` are quantum in subject and do not import this crate.
-`/examples/` splits the list on that line and each detail page names the crates
-its example actually uses.
+`/examples/` groups the list by the question each answers, marks that split on
+every row, and each detail page names the crates its example uses.
 
 Numbers on the site come from a command anyone can re-run:
 
 | Figure | Source |
 | --- | --- |
-| 197 tests passing | `cargo test -p deep_causality_quantum --all-features` |
-| Version 0.1.2, released 2026-08-25 | `crates.io/crates/deep_causality_quantum` |
-| 10 LEAN theorems | the quantum section of `lean/THEOREM_MAP.md` |
-| Freeze-check output | `cargo run --release -p quantum_examples --example qcm_freeze_check` |
+| 773 tests passing (772 tests plus 1 doc test) | `cargo test -p deep_causality_quantum --all-features` |
+| Version 0.4.2, released 2026-09-29 | `deep_causality_quantum/CHANGELOG.md` and `Cargo.toml` |
+| 14 proved theorems, 7 deferred targets | the quantum section of `lean/THEOREM_MAP.md` |
+| The crosstalk run: plan cost 2 against 200, 100.1 bits, 164.8 bits | `cargo run --release -p quantum_examples --example qcl_crosstalk` |
+| 2 to 3 ms per run | release binary, process start included, Apple M3 Max: median 3.0 ms over 20 runs, and 2.4 ms over 30 runs on a second measurement |
+| MSRV 1.98.0 | `rust-version` in the root `Cargo.toml` |
 
-The test count is the figure the suite reports. A grep for `#[test]` finds 198
-because one attribute sits inside a doc comment.
+The test count is the figure the suite reports. A grep for `#[test]` finds a
+different number, because it counts attributes and not the tests the harness runs.
 
-Prose follows `docs/writing_guides/AiStyleguide.md` and
-`docs/writing_guides/ClarityTechnicalReporting.pdf`.
+All fourteen examples were run twice on one machine and printed identical
+output, which is what the pages say. A wall-clock figure names the machine
+(`MACHINE` in `src/consts.ts`).
 
 Each fact lives in exactly one place, split by shape:
 
 | Content | Home | Why |
 | --- | --- | --- |
+| The crosstalk run: read-outs, costs, observation, plan | `src/data/crosstalk.ts` | The hero figure, the plan table and the prose read it, so they cannot disagree. |
+| Counts: tests, theorems, targets, papers | `src/data/evidence.ts` | One place to update after a release. |
+| Checks: question, rejection, when vacuous, backing | `src/data/checks.ts` | Rendered on `/checks/`; each row was read against the crate source. |
+| Boundaries | `src/data/boundaries.ts` | The landing page shows six, `/boundaries/` shows all, from one list. |
+| Theorems, deferred targets, papers | `src/data/formalization.ts`, `src/data/papers.ts` | `theorems` is generated from `lean/THEOREM_MAP.md`. |
 | Worked examples | `src/content/examples/en/*.mdx` | Prose with a walkthrough. Frontmatter carries the facts a listing needs, so index and detail cannot disagree. |
-| API inventory, error variants, theorems, papers | `src/data/*.ts` | Matrices, not prose. Rendered as tables and typed at compile time. |
 
-`src/content.config.ts` declares the MDX collection with the same `glob` plus
-locale-stripping pattern as `website/cfd` and `website/web`.
+Program output in a page is copied from a run, with each elision marked by an
+ellipsis. Regenerate an excerpt with the command the page shows and compare it
+line by line.
+
+## Voice and vocabulary
+
+Prose follows `docs/writing_guides/AiStyleguide.md`, `ElementsOfStyle.md` and
+`ParamedicEditing.md`. These rules decide most edits.
+
+**The reader** works with quantum devices or codes, knows the field's vocabulary,
+has never seen this library, and leaves if the page does not say what it does.
+
+**Lead with the outcome.** A page opens with the answer to the question its title
+asks, in one or two sentences, before any mechanism. A section opens with its
+finding. Show the result (a figure, a table, real output) before the code that
+produced it.
+
+**One word per concept.** Define each term once, where the reader first needs it.
+
+| Say | Meaning | Instead of |
+|---|---|---|
+| candidate | one proposed causal structure for the system | hypothesis (the type is `Hypothesis`), structural candidate |
+| structure | who influences whom, as a directed graph over the parts of the system | causal graph, DAG |
+| screen | the candidates that pass every validate check (`Screened`) | filter |
+| check | a decision that reports what it measured, its threshold, its margin and how many items it examined | test (a unit test is a test), gate |
+| experiment | an intervention or a measurement, with a cost and a predicted read-out under each candidate | probe (the builder method is `probes`) |
+| plan | the cheapest set of experiments that separates each coverable pair of candidates | design (the stage is `design`) |
+| read-out | the number a measurement returns | outcome, result |
+| survivor | the candidate the observation leaves standing | winner |
+| bits | the separation between two candidates' predicted read-outs at an experiment's shot count | information, entropy |
+
+**Never call a check a gate.** A gate is a quantum gate in this crate, and the
+CFD site's use of the word for a pass-or-fail check does not carry over.
+
+Internal terms stay off the landing page and the first paragraph of any page:
+Choi–Jamiołkowski, orthomodular, Kraus, causaloid, monad. Where one is needed,
+say the plain thing first and give the term in parentheses. The linter's
+allowlist names the pages that define each one.
+
+**Sentences.** Prefer concrete nouns and active verbs. Vary length: a four-word
+sentence after a thirty-word one earns its emphasis. Put the new or heavy word
+last. No more than one em dash per 250 words. Never open a paragraph with
+*Additionally*, *Furthermore* or *Moreover*. Cut hedges, *very*, *really*, and
+the phrases *delve into*, *shed light on*, *game-changer*, *unlock*, *seamless*,
+*robust*, *powerful*, *leverage* and *not only … but also*. State a fact; do not
+argue against a rival, and make no uniqueness claims. Do not begin a sentence
+with a numeral.
+
+**Checking.** `pnpm check:prose` builds the site and runs `scripts/sitecheck.py`
+over every page. It lints the text a reader sees: the content of `<main>`, plus
+each page's `<title>` and meta description. Errors fail the run (exit 1): a banned
+phrase, *very* or *really*, a paragraph that opens with a transition word, a
+duplicate id, a broken link or anchor, a redirect whose target does not exist,
+and a page that yields no prose at all. Warnings print and fail only under
+`--strict`: jargon outside the pages that define it, more than one em dash per 250
+words, "not A, but B", a sentence over 45 words, uniform sentence length, words
+glued across markup. The site passes `--strict` with no warnings. Redirect stubs
+are not linted for prose. Code blocks and `aria-hidden` figure text are not linted.
+
+**Whitespace in `.astro` templates.** `compressHTML` is off in `astro.config.mjs`.
+With it on, Astro drops the line break between a line of text and a following
+inline element or `{expression}`, and words join ("over1,024 shots"). Leave it off.
 
 ## Pages
 
-| Route | Carries |
+| Route | Answers |
 | --- | --- |
-| `/` | Five sections: the model, the freeze gate, the five-band stack, the evidence, the fit |
-| `/qcm/` | The factorization, the Markov condition, the Q-TOL threshold, C₃-exclusion faithfulness |
-| `/operators/` | Density matrices, the Choi–Jamiołkowski isomorphism, the CPTP checks, the dense kernels |
-| `/gates/` | The five kernels and their monad wrappers, the signature-dependent adjoint, the Haruna gates |
-| `/verdicts/` | The orthomodular projection lattice and Born read-out to `Prob` |
-| `/modalities/` | The verifiable and emergent split, and what the `qpu` feature contains |
-| `/formalization/` | Ten proved theorems with Rust witnesses, seven deferred targets |
-| `/examples/` | Seven runnable examples, split by whether they import this crate |
-| `/papers/` | Six committed papers, split by whether a module cites them |
-| `/errors/` | Twelve `QuantumErrorEnum` variants and the modules that raise them |
-| `/start/` | Installing from crates.io, the feature flags, the no-std story, the MSRV |
+| `/` | What does it do? Eight sections: the verdict, the problem, four steps, the plan, other subjects, evidence, limits, run it |
+| `/how-it-works/` | What are the stages of a QCL program, what does a check report, what does an abstraction add? |
+| `/checks/` | What does each check decide, and what does a failure name? |
+| `/examples/` | Fourteen runnable examples, grouped by the question each answers |
+| `/proof/` | What is proved in Lean, what is tested, what is stated and not proved, which papers does it implement? |
+| `/boundaries/` | What does it not do, what do the examples assume, how do the two senses of quantum stay apart? |
+| `/start/` | How do I run it, add it, and choose features? |
 
-## Diagrams
+The layer-by-layer pages of the earlier site redirect: `redirects` in
+`astro.config.mjs` maps `/qcm/`, `/operators/`, `/verdicts/`, `/gates/`,
+`/modalities/`, `/formalization/`, `/papers/` and `/errors/` to the page that now
+holds their content. The pages themselves are in `superseded/`, moved with
+`git mv` and excluded from the build. `superseded/README.md` records what replaced
+each one.
 
-`src/components/home/SupportsDiagram.astro` is the site's figure and sets the
-convention, following `website/cfd`'s `ForkTree.astro`.
+## Figures
 
-- **Hand-drawn inline SVG**, in the instrument vocabulary: hairline strokes,
-  accent node circles, no fills, no gradients, no raster.
-- **Geometry in the SVG, words in HTML.** SVG text scales with the viewBox, so a
-  label that reads well on a desktop lands at eight or nine pixels on a phone.
-  Labels go in an HTML row beneath, using the site's own type tokens.
-- **Animate through the shared contract.** Put `data-anim-draw` on the `<svg>`,
-  give every `<line>` and `<path>` `pathLength="100"`, and let the site-wide
-  observer add `.in-view`. No per-diagram script; the reduced-motion contract in
-  §6 then holds for free.
-- **Order circles the way the figure should be read.** The node stagger is
-  `circle:nth-of-type(n)` in `global.css`, declared to eight.
-- **Colour is scoped to the component**, never global. `global.css` carries dash
-  and node *timing* only.
-- **Never combine `vector-effect: non-scaling-stroke` with the draw-in.** It
-  resolves `stroke-dasharray` in device pixels, which fights the
-  `pathLength="100"` normalization and renders every stroke as a dashed line
-  instead of a drawn one.
+The figures are HTML and CSS with small inline SVG glyphs, in the site's
+instrument vocabulary: hairline strokes, accent dots, no gradients, no raster.
 
-The Open Graph card at `public/img/social-share.jpg` is built from the same
+- **Geometry in CSS, words in HTML.** Every label is text a reader can select and
+  a screen reader can read. `DecisionFigure.astro` sets the convention.
+- **Each row draws its own segment of a shared band.** Rows have no gaps, so on a
+  wide screen the segments join, and on a narrow screen, where rows stack, each
+  track still reads on its own.
+- **Tables collapse into labelled cards on narrow screens.** Put `.table-stack` on
+  the table and `data-label` on every `td`. `PlanTable.astro` overrides the shared
+  rule to keep the three predictions on one row.
+- **Animate through the shared contract.** Put `data-rise` on the figure and
+  `.rise` with a `--i` index on the parts that enter in turn. The site-wide
+  observer adds `.in-view`, and a `<noscript>` style makes the parts visible
+  without it.
+- **Data comes from `src/data/`.** No figure hard-codes a number.
+
+The Open Graph card at `public/img/social-share.jpg` is a miniature of the hero
 figure. Its source is committed beside it as `social-share.source.svg`;
-re-render with `rsvg-convert -w 1200 -h 630`, then convert to JPEG. The card
-uses system faces rather than the vendored woff2 files, which rsvg cannot embed.
+re-render with `rsvg-convert -w 1200 -h 630`, then convert to JPEG. The card uses
+system faces rather than the vendored woff2 files, which rsvg cannot embed.
 
 ## Logo
 
@@ -184,10 +266,13 @@ pnpm 11 does not read the `pnpm` field from `package.json`, so
 
 - **No Pagefind.** The project website ships an unread search index on every
   deploy (DESIGN.md §8.9); this site does not.
-- **No mermaid.** The one diagram is hand-drawn SVG, which keeps the heaviest
+- **No mermaid.** The figures are HTML and CSS, which keeps the heaviest
   dependency off every route.
 - **No client islands.** Zero framework runtime; interactivity is three small
   module scripts (the observer, the mobile sheet, the theme toggle).
+- **No API reference.** docs.rs builds it from the source with all features, so a
+  copy here would age. The earlier site's inventory had no entry for the QCL
+  builder.
 
 ## License
 

@@ -29,8 +29,8 @@ export const TENSOR_URL = `${GITHUB_URL}/tree/main/deep_causality_tensor`;
 export const DISCORD_URL = 'https://discord.gg/Bxj9P7JXSj';
 
 /** Released on crates.io. Quote these rather than writing a version inline. */
-export const CRATE_VERSION = '0.1.2';
-export const CRATE_RELEASED = '25 August 2026';
+export const CRATE_VERSION = '0.4.2';
+export const CRATE_RELEASED = '29 September 2026';
 export const CRATESIO_URL = 'https://crates.io/crates/deep_causality_quantum';
 export const DOCSRS_URL = 'https://docs.rs/deep_causality_quantum';
 
@@ -40,8 +40,11 @@ export const CARGO_ADD = 'cargo add deep_causality_quantum';
 export const CARGO_DEP =
   'deep_causality_quantum = { git = "https://github.com/deepcausality-rs/deep_causality.git", branch = "main" }';
 
+/** Machine behind every wall-clock figure on this site. */
+export const MACHINE = 'an Apple M3 Max (16 cores, 128 GB)';
+
 /** Workspace MSRV, from `rust-version` in the root Cargo.toml. */
-export const MSRV = '1.97.1';
+export const MSRV = '1.98.0';
 
 /** Steward of the DeepCausality project. */
 export const MAINTAINER = 'Center for Dynamic Causality';

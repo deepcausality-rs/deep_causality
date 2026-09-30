@@ -1,28 +1,58 @@
 ---
-title: "Topological insulator"
+title: "A topological insulator"
 question: "Is this material's band topology trivial or not?"
-summary: "The Chern number of the Qi-Wu-Zhang model, from Berry flux summed over a discretized Brillouin zone."
-order: 5
+summary: "The Chern number of the Qi-Wu-Zhang model computed two independent ways: exact derivatives under quadrature, and a lattice sum of Berry flux. The routes agree to 1.2e-15."
+order: 13
+group: other
 command: "cargo run --release -p quantum_examples --example topological_insulator"
 usesCrate: false
 crates:
   - deep_causality_algebra
   - deep_causality_calculus
   - deep_causality_core
+  - deep_causality_haft
+  - deep_causality_num
   - deep_causality_num_complex
+  - deep_causality_tensor
 source: "examples/quantum_examples/topological_insulator"
 ---
 
-The Qi-Wu-Zhang Hamiltonian on a two-dimensional square lattice is
-`H(k) = sin(kₓ)σₓ + sin(k_y)σ_y + (u + cos(kₓ) + cos(k_y))σ_z`. Its lower band
-carries a Chern number, and that integer decides whether the material is a
-trivial insulator or a topological one with conducting edge states.
+The model is trivial for |u| > 2 and topological for |u| < 2, with Chern number +1 for 0 < u < 2
+and −1 for −2 < u < 0. The Chern number is an integer that stays fixed however the material is
+deformed, and it changes only when the gap closes.
 
-The walk computes the Berry connection as the overlap of neighbouring
-eigenstates, takes the Berry flux around each plaquette as `F = Im ln(U₁U₂U₃U₄)`,
-and sums the flux over the whole Brillouin zone. Dividing by 2π has to land on
-an integer, which is the check that the discretization is fine enough.
+The example computes it by two routes that share only the d-vector. One differentiates and never
+forms a spinor. The other forms spinors and never differentiates.
+
+## What you see
+
+```text
+     u    | C (quadrature) | C (Wilson loop) |  C  | phase
+  --------+----------------+-----------------+-----+------------------------
+     3.0  |      0.000000  |      -0.000000  | +0  | trivial (|u| > 2)
+     1.0  |      1.000000  |       1.000000  | +1  | topological (0 < u < 2)
+    -1.0  |     -1.000000  |      -1.000000  | -1  | topological (-2 < u < 0)
+
+Agreement
+  largest gap between the two routes      1.190e-15
+  largest departure from an integer       1.190e-15
+```
+
+The second number is the one that matters. Nothing in either calculation rounds or snaps to an
+integer. Both integrate a smooth function over a closed surface, and an integer comes out. The
+first number makes the second believable, because the routes have nothing in common but the
+d-vector.
+
+## The two routes
+
+| Route | How | What it needs |
+|---|---|---|
+| Quadrature | Berry curvature from exact ∂d/∂k, integrated by nested composite Simpson | derivatives, no spinors |
+| Wilson loop | Berry flux around each plaquette of a k-grid, summed | spinors, no derivatives |
+
+The derivatives come from the tangent functor, so no finite difference and no step size enters.
+
+## Crates
 
 This example does not import `deep_causality_quantum`. The quadrature comes from
-`deep_causality_calculus` and the complex arithmetic from
-`deep_causality_num_complex`.
+`deep_causality_calculus` and the complex arithmetic from `deep_causality_num_complex`.

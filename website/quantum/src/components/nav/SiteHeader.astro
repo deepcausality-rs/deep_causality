@@ -12,17 +12,14 @@ const isActive = (href: string) =>
   href === '/' ? pathname === '/' : pathname.startsWith(href);
 
 const nav = [
-  // Six items, ordered as the crate stacks: the model first, then the operator
-  // algebra it is built from, then the kernels that run on the causal monad,
-  // then the read-out, then the evidence, then something to run. Six is the
-  // rail's capacity at 900px with labels this long; the two modalities, the
-  // papers, the error surface and the install line are footer-weight.
-  { href: '/qcm/', label: 'Causal models' },
-  { href: '/operators/', label: 'Operators' },
-  { href: '/gates/', label: 'Gates' },
-  { href: '/verdicts/', label: 'Verdicts' },
-  { href: '/formalization/', label: 'Formalization' },
+  // Five items, one per question a reader arrives with: how does it work, what
+  // does it run on, what does it check, what backs that up, and where does it
+  // stop. Installing is footer-weight and sits in the mobile sheet.
+  { href: '/how-it-works/', label: 'How it works' },
   { href: '/examples/', label: 'Examples' },
+  { href: '/checks/', label: 'Checks' },
+  { href: '/proof/', label: 'Proof' },
+  { href: '/boundaries/', label: 'Boundaries' },
 ];
 ---
 <header class="site-header">
@@ -96,10 +93,7 @@ const nav = [
       {nav.map((item) => (
         <li><a href={item.href}>{item.label}</a></li>
       ))}
-      <li><a href="/modalities/">Two modalities</a></li>
-      <li><a href="/papers/">Papers</a></li>
-      <li><a href="/errors/">Error surface</a></li>
-      <li><a href="/start/">Add the crate</a></li>
+      <li><a href="/start/">Get started</a></li>
     </ul>
   </div>
 </div>

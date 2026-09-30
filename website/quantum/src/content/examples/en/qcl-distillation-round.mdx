@@ -1,0 +1,57 @@
+---
+title: "A distillation round"
+question: "How much of a round's noise survives the ideal recovery?"
+summary: "Noisy encoded T̄ H̄ on the [[4,2,2]] code under the ideal recovery, the case the source paper defers. The run claims the residual it measures and the bound the law records."
+order: 8
+group: compose
+command: "cargo run --release -p quantum_examples --example qcl_distillation_round"
+usesCrate: true
+uses:
+  - distillation_round
+  - CompositionLaw
+  - NumericCaps
+  - QuantumError
+crates:
+  - deep_causality_algebra
+  - deep_causality_num
+  - deep_causality_quantum
+source: "examples/quantum_examples/qcl_examples/qcl_distillation_round"
+---
+
+Almost all of it. At a physical error rate of 1 in 100, the recovery leaves 0.1638 of the noise's
+0.1639. The composite's measured residual is the part of the noise the recovery does not remove,
+which is the part a distillation round exists to drive down.
+
+The example builds the case Lorenz and Tull defer (their section 7.1) as two abstractions on the
+hand-built [[4,2,2]] code. The first link is the noise on every physical qubit with probability
+p. The second link is the code's ideal recovery.
+
+## What you see
+
+```text
+[p = 0]
+composition law in frobenius-on-choi: ε ≤ ‖τ₂‖_post · ε₁ + ‖τ₁‖_pre · ε₂ over 1 queries, holds
+  io: ε₁ = 0.000e0, ε₂ = 3.283e-15, ‖τ₁‖_pre = 1.000e0, ‖τ₂‖_post = 2.000e0, bound = 3.283e-15, measured = 3.283e-15
+    exact: without noise both links commute
+
+[p = 1/100]
+composition law in frobenius-on-choi: ε ≤ ‖τ₂‖_post · ε₁ + ‖τ₁‖_pre · ε₂ over 1 queries, holds
+  io: ε₁ = 1.639e-1, ε₂ = 3.283e-15, ‖τ₁‖_pre = 1.000e0, ‖τ₂‖_post = 2.000e0, bound = 3.277e-1, measured = 1.638e-1
+    the recovery leaves 1.638e-1 of the noise's 1.639e-1; the law allows 3.277e-1
+
+[p = 5/100]
+composition law in frobenius-on-choi: ε ≤ ‖τ₂‖_post · ε₁ + ‖τ₁‖_pre · ε₂ over 1 queries, holds
+  io: ε₁ = 7.680e-1, ε₂ = 3.283e-15, ‖τ₁‖_pre = 1.000e0, ‖τ₂‖_post = 2.000e0, bound = 1.536e0, measured = 7.667e-1
+    the recovery leaves 7.667e-1 of the noise's 7.680e-1; the law allows 1.536e0
+...
+
+Every law held, at every probability and every precision.
+```
+
+The program sweeps p over 0, 0.01 and 0.05 and repeats the p = 0.05 chain at `f32`, `f64`
+and `Float106`.
+
+## Read before you cite
+
+This is an example with checks. It claims the residuals it measures and the bound the law
+records. The source paper defers this case, so the example carries no theorem to compare against.

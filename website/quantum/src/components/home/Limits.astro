@@ -1,0 +1,40 @@
+---
+/**
+ * The limits a new user meets first. The rows come from `src/data/boundaries.ts`,
+ * the same list `/boundaries/` prints in full, so the two cannot disagree.
+ */
+import { boundaries } from '../../data/boundaries';
+
+const first = ['no-hardware', 'no-decoder', 'cycles', 'predictions', 'scale', 'std'];
+const rows = first.map((id) => boundaries.find((b) => b.id === id)!);
+---
+<ul class="rows">
+  {rows.map((b, i) => (
+    <li class="row rise" style={`--i:${i}`}>
+      <p class={`status status-${b.status}`}>{b.mark}</p>
+      <div>
+        <h3>{b.title}</h3>
+        <p class="t">{b.text}</p>
+      </div>
+    </li>
+  ))}
+</ul>
+<p class="more"><a href="/boundaries/">Every boundary, with the file that shows it <span aria-hidden="true">→</span></a></p>
+
+<style>
+  .rows { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line-1); }
+  .row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2);
+    padding: var(--space-4) 0;
+    border-bottom: 1px solid var(--line-1);
+  }
+  @media (min-width: 720px) {
+    .row { grid-template-columns: var(--w-label) minmax(0, 1fr); gap: var(--space-5); }
+  }
+  .status { margin: 0; }
+  .row h3 { font-size: var(--t-h4); margin: 0 0 var(--space-2); }
+  .t { color: var(--fg-1); font-size: var(--t-body-sm); margin: 0; max-width: var(--measure); }
+  .more { margin: var(--space-5) 0 0; font-size: var(--t-body-sm); }
+</style>

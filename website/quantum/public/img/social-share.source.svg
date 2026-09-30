@@ -4,8 +4,8 @@
     Re-render with:  rsvg-convert -w 1200 -h 630 social-share.source.svg -o card.png
                      magick card.png -quality 90 social-share.jpg
 
-    Same figure as src/components/home/SupportsDiagram.astro: three Hilbert
-    legs, two factors, the shared leg in the accent. Colours are the dark
+    The figure is a miniature of src/components/home/DecisionFigure.astro:
+    three rival causes and the read-out that singles one out. Colours are the dark
     palette from tokens.css. Text uses a system sans and mono rather than the
     site's vendored woff2 files, which rsvg cannot embed; the card is a raster
     and the substitution is not visible against the real page.
@@ -71,34 +71,36 @@
   </g>
 
   <!-- Headline -->
-  <text x="104" y="268" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="68" font-weight="500" fill="#e6edf3" letter-spacing="-1.4">
-    Quantum causal models
+  <text x="104" y="262" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="60" font-weight="500" fill="#e6edf3" letter-spacing="-1.2">
+    Two qubits fail together.
+  </text>
+  <text x="104" y="330" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="60" font-weight="500" fill="#aab3bd" letter-spacing="-1.2">
+    Find the cause in two experiments.
   </text>
 
-  <!-- Tagline -->
-  <text x="104" y="322" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="29" fill="#aab3bd">
-    A causal graph whose factors are quantum channels.
-  </text>
-
-  <!-- The shared-support figure. Three legs; the middle one is shared. -->
-  <g transform="translate(104, 384)">
-    <line x1="0" y1="24" x2="992" y2="24" stroke="#2a3a4a" stroke-width="2"/>
-    <line x1="0" y1="72" x2="992" y2="72" stroke="#5cd4e1" stroke-width="3"/>
-    <line x1="0" y1="120" x2="992" y2="120" stroke="#2a3a4a" stroke-width="2"/>
-
-    <rect x="168" y="0" width="240" height="96" fill="none" stroke="#6b7682" stroke-width="2"/>
-    <rect x="584" y="48" width="240" height="96" fill="none" stroke="#6b7682" stroke-width="2"/>
-
-    <circle cx="288" cy="24" r="8" fill="#6b7682"/>
-    <circle cx="288" cy="72" r="8" fill="#5cd4e1"/>
-    <circle cx="496" cy="72" r="11" fill="#5cd4e1"/>
-    <circle cx="704" cy="72" r="8" fill="#5cd4e1"/>
-    <circle cx="704" cy="120" r="8" fill="#6b7682"/>
-  </g>
+  <!-- The verdict figure, as in DecisionFigure.astro: three rival causes, each
+       one's predicted read-out (the dot) against the observed read-out plus or
+       minus three standard errors (the band). Values from src/data/crosstalk.ts. -->
+  <rect x="885.7" y="377" width="112.7" height="50" fill="#5cd4e1" opacity="0.16"/>
+  <line x1="470" y1="402" x2="1096" y2="402" stroke="#2a3a4a" stroke-width="2"/>
+  <text x="104" y="409" font-family="Menlo, monospace" font-size="22" letter-spacing="0.5" fill="#e6edf3">H1  Q1 → Q2</text>
+  <text x="322" y="409" font-family="Menlo, monospace" font-size="19" fill="#5cd4e1">✓ survives</text>
+  <circle cx="970.8" cy="402" r="10" fill="#5cd4e1"/>
+  <rect x="885.7" y="427" width="112.7" height="50" fill="#5cd4e1" opacity="0.16"/>
+  <line x1="470" y1="452" x2="1096" y2="452" stroke="#2a3a4a" stroke-width="2"/>
+  <text x="104" y="459" font-family="Menlo, monospace" font-size="22" letter-spacing="0.5" fill="#6b7682">H2  Q2 → Q1</text>
+  <text x="322" y="459" font-family="Menlo, monospace" font-size="19" fill="#6b7682">× rejected</text>
+  <circle cx="595.2" cy="452" r="8" fill="#6b7682"/>
+  <rect x="885.7" y="477" width="112.7" height="50" fill="#5cd4e1" opacity="0.16"/>
+  <line x1="470" y1="502" x2="1096" y2="502" stroke="#2a3a4a" stroke-width="2"/>
+  <text x="104" y="509" font-family="Menlo, monospace" font-size="22" letter-spacing="0.5" fill="#6b7682">H3  Q1 ← B → Q2</text>
+  <text x="322" y="509" font-family="Menlo, monospace" font-size="19" fill="#6b7682">× rejected</text>
+  <circle cx="595.2" cy="502" r="8" fill="#6b7682"/>
+  <line x1="942.0" y1="377" x2="942.0" y2="527" stroke="#5cd4e1" stroke-width="2" stroke-dasharray="6 5"/>
 
   <!-- Figure caption, mono, at the foot of the figure column. -->
-  <text x="104" y="556" font-family="Menlo, monospace" font-size="19" letter-spacing="1.1" fill="#6b7682">
-    SUPPORTS INTERSECT → THE COMMUTATOR MUST VANISH
+  <text x="104" y="556" font-family="Menlo, monospace" font-size="18" letter-spacing="1.1" fill="#6b7682">
+    E1: HOLD QUBIT 1 EXCITED · SIMULATED OBSERVATION
   </text>
 
   <!-- Domain, right rail. -->

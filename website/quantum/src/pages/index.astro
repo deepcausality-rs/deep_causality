@@ -2,17 +2,20 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteHeader from '../components/nav/SiteHeader.astro';
 import Hero from '../components/home/Hero.astro';
-import SectionDivider from '../components/home/SectionDivider.astro';
-import WhatItIs from '../components/home/WhatItIs.astro';
-import FreezeGate from '../components/home/FreezeGate.astro';
-import LayerStack from '../components/home/LayerStack.astro';
-import EvidenceSnapshot from '../components/home/EvidenceSnapshot.astro';
-import WhereItFits from '../components/home/WhereItFits.astro';
+import HomeSection from '../components/home/HomeSection.astro';
+import SameReadout from '../components/home/SameReadout.astro';
+import FourSteps from '../components/home/FourSteps.astro';
+import PlanTable from '../components/home/PlanTable.astro';
+import Subjects from '../components/home/Subjects.astro';
+import Evidence from '../components/home/Evidence.astro';
+import Limits from '../components/home/Limits.astro';
+import TryIt from '../components/home/TryIt.astro';
+import { RUN } from '../data/crosstalk';
 import { GITHUB_URL } from '../consts';
 
-const title = 'DeepCausality Quantum — quantum causal models on the causal monad';
+const title = 'DeepCausality Quantum | Find the cause of correlated qubit errors';
 const description =
-  'A causal graph whose factors are quantum channels. The quantum Markov condition is enforced as a commutativity check at the freeze boundary, with C₃-exclusion faithfulness, a validated operator layer, an orthomodular verdict carrier, and LEAN proofs behind the verifiable path.';
+  'A Rust library for choosing between rival causes of quantum errors. Declare the candidate causal structures; it screens them, plans the cheapest experiments that tell them apart, and names the one the data leaves standing.';
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -27,20 +30,83 @@ const jsonLd = {
 <BaseLayout title={title} description={description} path="/">
   <SiteHeader slot="header" />
 
-  <!-- Five sections, ordered as a reader needs them: what a quantum causal
-       model is, what this crate does about it, how the code is stacked, what
-       the evidence is, and where the thing sits. -->
   <Hero />
-  <SectionDivider />
-  <WhatItIs />
-  <SectionDivider />
-  <FreezeGate />
-  <SectionDivider />
-  <LayerStack />
-  <SectionDivider />
-  <EvidenceSnapshot />
-  <SectionDivider />
-  <WhereItFits />
+
+  <HomeSection ix="02 / 08" label="The problem" title="Passive data cannot tell a direct cause from a shared one.">
+    <Fragment slot="lede">
+      <p>
+        Two qubits show correlated error events. One may drive the other, or both may answer to a
+        shared source of noise, and the repair differs with the cause. Over two yes-or-no error
+        indicators, all three structures reproduce any observed pattern exactly. Watching harder
+        does not help.
+      </p>
+      <p>
+        An intervention separates them. Hold qubit 1 excited and read qubit 2: H1 predicts 0.40,
+        and H2 and H3 predict 0.10. Which experiments to run is a calculation, and QCL does it.
+      </p>
+    </Fragment>
+    <SameReadout />
+  </HomeSection>
+
+  <HomeSection ix="03 / 08" label="How it works" title="Four steps in one program.">
+    <Fragment slot="lede">
+      <p>
+        You write the problem as one Rust program that declares, screens, plans and decides. Each
+        card maps onto a call in the code beneath it, in the same order.
+      </p>
+    </Fragment>
+    <FourSteps />
+  </HomeSection>
+
+  <HomeSection ix="04 / 08" label="The plan" title="Two experiments separate all three.">
+    <Fragment slot="lede">
+      <p>
+        The planner solves a minimum-cost cover. Some chosen experiment must separate each pair
+        of candidates by at least {RUN.floorBits} bits, measured at that experiment’s shot count,
+        and the plan lists any pair that no experiment reaches.
+        The passive run separates nothing. Tomography separates everything for {RUN.tomographyCost}.
+        Holding qubit 1 excited resolves two of the three pairs, holding qubit 2 excited resolves
+        two, and the two experiments together, at cost 1 each, cover all three.
+      </p>
+    </Fragment>
+    <PlanTable />
+  </HomeSection>
+
+  <HomeSection ix="05 / 08" label="Other subjects" title="The same builder takes models, codes and stacked abstractions.">
+    <Fragment slot="lede">
+      <p>
+        The subject you name after <code>config</code> decides which checks exist. A plant has
+        candidates and experiments, a quantum causal model has factors that must commute, and a
+        code has structural checks that run exactly. These excerpts come from three more
+        examples.
+      </p>
+    </Fragment>
+    <Subjects />
+  </HomeSection>
+
+  <HomeSection ix="06 / 08" label="Evidence" title="What has been checked.">
+    <Fragment slot="lede">
+      <p>
+        Each row names its source, so you can rerun it. The counts are the figures the tools
+        report.
+      </p>
+    </Fragment>
+    <Evidence />
+  </HomeSection>
+
+  <HomeSection ix="07 / 08" label="Limits" title="What it does not do.">
+    <Fragment slot="lede">
+      <p>These are the limits a new user meets first.</p>
+    </Fragment>
+    <Limits />
+  </HomeSection>
+
+  <HomeSection id="run" ix="08 / 08" label="Run it" title="Run it yourself.">
+    <Fragment slot="lede">
+      <p>One command runs the crosstalk example from a clean clone.</p>
+    </Fragment>
+    <TryIt />
+  </HomeSection>
 
   <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
 </BaseLayout>

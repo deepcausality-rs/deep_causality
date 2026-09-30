@@ -1,0 +1,193 @@
+---
+import PageShell from '../../components/nav/PageShell.astro';
+import { theorems, deferred } from '../../data/formalization';
+import { papers, citedElsewhere } from '../../data/papers';
+import { TESTS, numberWord } from '../../data/evidence';
+import { LEAN_URL, THEOREM_MAP_URL, LEAN_STATUS_URL, PAPERS_URL, CRATE_URL } from '../../consts';
+
+const title = 'Proof | DeepCausality Quantum';
+const description =
+  'What is proved in Lean, what tests witness, what is stated and not proved, and which papers the crate implements. Each row names the file that shows it.';
+
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+const split = (s: string) => {
+  const [file, item] = s.split(' :: ');
+  return { file, item };
+};
+
+const cited = papers.filter((p) => p.citedFrom.length > 0);
+const uncited = papers.filter((p) => p.citedFrom.length === 0);
+---
+<PageShell title={title} description={description} path="/proof/">
+  <header class="doc-head">
+    <p class="eyebrow">Proof</p>
+    <h1>What is proved, what is tested, and what is neither.</h1>
+    <p class="lede">
+      {cap(numberWord(TESTS.proved))} theorems are proved in Lean, and each has a Rust test that
+      witnesses it. The suite runs {TESTS.count} tests, and all of them pass.
+      {cap(numberWord(TESTS.deferred))} targets are stated and not proved yet. One tempting claim
+      is false, and Lean proves that too.
+    </p>
+  </header>
+
+  <section class="doc-sec" id="theorems">
+    <h2>Which theorems are proved?</h2>
+    <p>
+      The rows come from the quantum section of
+      <a href={THEOREM_MAP_URL}><code>lean/THEOREM_MAP.md</code></a>. Lean has no partial trace and
+      no Choi–Jamiołkowski layer, so both are built from first principles under
+      <a href={LEAN_URL}><code>lean/DeepCausalityFormal/Quantum/</code></a>. The Rust witness is the
+      test that checks the same statement on numbers.
+    </p>
+    <div class="table-scroll">
+      <table class="table-stack">
+        <thead>
+          <tr><th>Statement</th><th>Lean declaration</th><th>Rust witness</th></tr>
+        </thead>
+        <tbody>
+          {theorems.map((t) => (
+            <tr>
+              <td data-label="Statement"><span class="num">{t.statement}</span><br /><code class="tid">{t.id}</code></td>
+              <td data-label="Lean declaration"><code class="item">{split(t.lean).item}</code><br /><span class="fpath">{split(t.lean).file}</span></td>
+              <td data-label="Rust witness"><code class="item">{split(t.witness).item}</code><br /><span class="fpath">{split(t.witness).file}</span></td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="doc-sec" id="refuted">
+    <h2>Which claim turned out false?</h2>
+    <p>
+      Two commuting operators can lose that property under a partial trace. Take X and Y on a
+      system with two parts, with <code>[X, Y] = 0</code>. Lean proves an explicit pair for which
+      <code>[Tr_B X, Tr_B Y] = [[0, 4], [−4, 0]]</code>, which equals <code>+4i·σy</code>. A
+      factorization that is legal on the whole system can therefore give a marginal that is not.
+    </p>
+    <p>
+      Two true statements sit beside it. The boundary version holds: if the boundary operator
+      commutes with M, its kept-side part commutes with <code>Tr_B M</code>. And
+      <code>Tr_B([Z⊗1, M]) = [Z, Tr_B M]</code> holds without a hypothesis. The second lets the
+      crate turn a measured residual into a bound with a stated <code>√(d_B)</code> amplification.
+      A commutator within tolerance is warrant for the conclusion at <code>√(d_B)</code> times
+      that tolerance, and no warrant for the exact one, so the check returns the bound and a flag
+      against the caller’s tolerance.
+    </p>
+    <p>
+      The boundary theorem’s hypothesis is exact equality over a commutative ring, and a
+      floating-point caller cannot discharge it directly. That gap is why the bound exists.
+    </p>
+  </section>
+
+  <section class="doc-sec" id="tests">
+    <h2>What do the tests cover?</h2>
+    <p>
+      {TESTS.count} tests pass under
+      <code>cargo test -p deep_causality_quantum --all-features</code>: 772 unit and integration
+      tests and one doc test. Each check has tests, including tests where it must reject and tests
+      that read a report on a case with nothing to examine. Every example printed identical output
+      when run twice on one machine. A grep for the test attribute finds a different number, because it counts
+      attributes and not the tests the harness runs.
+    </p>
+    <p class="next-links">
+      <a href={`${CRATE_URL}/tests`}>The test tree ↗</a>
+    </p>
+  </section>
+
+  <section class="doc-sec" id="deferred">
+    <h2>What is stated and not proved?</h2>
+    <p>
+      These {TESTS.deferred} targets are named in the theorem map and in
+      <a href={LEAN_STATUS_URL}><code>LEAN_QUANTUM.md</code></a>. The Rust behaviour behind each
+      has tests today. No Lean proof exists yet, and the page sets no schedule.
+    </p>
+    <dl class="deflist">
+      {deferred.map((d) => (
+        <div>
+          <dt><code>{d.id}</code></dt>
+          <dd>
+            <p class="dstate">{d.statement}</p>
+            <p class="dtoday">{d.today}</p>
+          </dd>
+        </div>
+      ))}
+    </dl>
+    <p>
+      The Markov check, the decomposability check, every code check and the numeric naturality
+      residual therefore stand on tests. The
+      <a href="/checks/">checks page</a> marks each one.
+    </p>
+  </section>
+
+  <section class="doc-sec" id="papers">
+    <h2>Which papers does the crate implement?</h2>
+    <p>
+      {TESTS.papers} PDFs are committed under <a href={PAPERS_URL}><code>papers/</code></a>. The
+      first list names the papers a module cites. A committed file is not a claim, so the second
+      list holds the paper that no module cites.
+    </p>
+    <ol class="papers">
+      {cited.map((p) => (
+        <li>
+          <p class="ptitle">{p.title}</p>
+          <p class="pmeta">{p.authors}. {p.ref}, {p.year}.</p>
+          {p.usedFor && <p class="pused">{p.usedFor}</p>}
+          <p class="pcite">Cited from <code>{p.citedFrom.slice(0, 4).join(', ')}</code>{p.citedFrom.length > 4 ? ` and ${p.citedFrom.length - 4} more` : ''}.</p>
+        </li>
+      ))}
+    </ol>
+
+    <h3>Committed and not cited</h3>
+    <ol class="papers">
+      {uncited.map((p) => (
+        <li>
+          <p class="ptitle">{p.title}</p>
+          <p class="pmeta">{p.authors}. {p.ref}, {p.year}.</p>
+          <p class="pcite">No module in <code>src/</code>, the tests, the README or the changelog cites it.</p>
+        </li>
+      ))}
+    </ol>
+
+    <h3>Cited from the source, not committed</h3>
+    <ul class="papers">
+      {citedElsewhere.map((c) => (
+        <li>
+          <p class="pmeta">{c.work}</p>
+          <p class="pcite">Cited from <code>{c.citedFrom}</code>.</p>
+        </li>
+      ))}
+    </ul>
+  </section>
+</PageShell>
+
+<style>
+  .tid { color: var(--fg-2); background: none; padding: 0; font-size: var(--t-eyebrow); }
+  .table-scroll table { width: 100%; border-collapse: collapse; }
+  .table-scroll th, .table-scroll td { text-align: left; vertical-align: top; padding: var(--space-3); border-top: 1px solid var(--line-1); }
+  .table-scroll thead th {
+    font-family: var(--font-mono); font-size: var(--t-eyebrow); letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase; font-weight: 400; color: var(--fg-2); border-top: none;
+  }
+  .table-scroll td code { overflow-wrap: anywhere; }
+  @media (min-width: 720px) {
+    .table-scroll table { table-layout: fixed; }
+    .table-scroll th:nth-child(1) { width: 29%; }
+    .table-scroll th:nth-child(2) { width: 31%; }
+    .table-scroll th:nth-child(3) { width: 40%; }
+  }
+  .item { background: none; padding: 0; color: var(--fg-0); font-size: var(--t-mono-sm); }
+  .fpath { color: var(--fg-2); font-family: var(--font-mono); font-size: var(--t-eyebrow); overflow-wrap: anywhere; }
+
+  .dstate { margin: 0 0 var(--space-1); color: var(--fg-0); }
+  .dtoday { margin: 0; color: var(--fg-1); font-size: var(--t-body-sm); }
+
+  .papers { list-style: none; margin: 0 0 var(--space-5); padding: 0; border-top: 1px solid var(--line-1); max-width: var(--measure); }
+  .papers li { padding: var(--space-4) 0; border-bottom: 1px solid var(--line-1); }
+  .papers p { margin: 0 0 var(--space-1); }
+  .ptitle { color: var(--fg-0); font-weight: var(--fw-heading); }
+  .pmeta { color: var(--fg-1); font-size: var(--t-body-sm); }
+  .pused { color: var(--fg-1); font-size: var(--t-body-sm); }
+  .pcite { color: var(--fg-2); font-size: var(--t-body-sm); }
+  .pcite code { overflow-wrap: anywhere; }
+</style>

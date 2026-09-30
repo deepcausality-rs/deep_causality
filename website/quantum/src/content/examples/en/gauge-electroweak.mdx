@@ -1,27 +1,52 @@
 ---
-title: "Electroweak one-loop"
-question: "What does the W boson mass come out at once quantum loops are included?"
-summary: "The implicit loop equation for M_W, with Veltman screening from the top quark and QED running of the coupling."
-order: 6
+title: "The W mass from three measured numbers"
+question: "What does the Standard Model predict for the W boson mass?"
+summary: "Tree level misses the W mass by 1.5 GeV. One loop lands 7.9 MeV from the measurement, and the run checks against the tolerance it claims."
+order: 12
+group: other
 command: "cargo run --release -p quantum_examples --example gauge_electroweak"
 usesCrate: false
 crates:
-  - deep_causality_algebra
   - deep_causality_core
   - deep_causality_num
   - deep_causality_physics
 source: "examples/quantum_examples/gauge_electroweak"
 ---
 
-The example solves the implicit equation linking the Fermi constant to the gauge
-boson masses,
-`M_W²(1 − M_W²/M_Z²) = πα / (√2 G_F (1 − Δr))`, and reports the W mass and the ρ
-parameter with one-loop radiative corrections included.
+The one-loop prediction is 80.369072 GeV, and the measurement is 80.377000 GeV. Fix the fine
+structure constant, the Fermi constant and the Z mass, and the couplings, the remaining masses,
+the decay widths and the resonance cross-section all follow.
 
-Two corrections carry the result. Veltman screening, `Δρ`, comes from the
-top-bottom mass splitting and lands near 0.009. QED running, `Δα`, comes from
-photon vacuum polarization. Leave either out and the prediction misses the
-measured mass by far more than the roughly 0.02% the example achieves.
+At tree level `M_W = g·v/2` gives 78.909302 GeV, which misses by 1.459770 GeV. That gap is
+roughly two percent, and the one-loop radiative corrections close it, dominated by the top quark
+in the loop.
+
+## What you see
+
+```text
+  M_W tree level        78.909302 GeV   from g*v/2
+  M_W loop corrected    80.369072 GeV   from the loop solver
+  the corrections move it by 1.459770 GeV
+...
+  M_W computed          80.369072 GeV
+  M_W measured          80.377000 GeV   PDG
+  deviation                 7.928 MeV   tolerance 20 MeV
+  verdict            inside one-loop accuracy
+```
+
+## The tolerance is the claim
+
+The run's tolerance is 20 MeV, the accuracy of a one-loop calculation, since the omitted two-loop
+terms enter at about that size. The summary claims one-loop accuracy and the check tests exactly
+that, so the two cannot drift apart. A looser tolerance would pass a calculation that had stopped
+agreeing with the measurement.
+
+Four stages compose as one flow: unification, symmetry breaking, gauge mixing and the Z
+resonance. A stage that fails stops the ones after it and carries its error forward. The
+invisible width of the Z is a prediction and not an input, and measuring it at LEP established
+that there are three light neutrino generations.
+
+## Crates
 
 This example does not import `deep_causality_quantum`. The formulas come from
 `deep_causality_physics`.
