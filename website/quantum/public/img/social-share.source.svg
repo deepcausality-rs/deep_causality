@@ -4,8 +4,8 @@
     Re-render with:  rsvg-convert -w 1200 -h 630 social-share.source.svg -o card.png
                      magick card.png -quality 90 social-share.jpg
 
-    The figure is a miniature of src/components/home/DecisionFigure.astro:
-    three rival causes and the read-out that singles one out. Colours are the dark
+    The figure is a miniature of src/components/home/HeroVerdicts.astro:
+    the three questions and one line of real output for each. Colours are the dark
     palette from tokens.css. Text uses a system sans and mono rather than the
     site's vendored woff2 files, which rsvg cannot embed; the card is a raster
     and the substitution is not visible against the real page.
@@ -71,40 +71,35 @@
   </g>
 
   <!-- Headline -->
-  <text x="104" y="262" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="60" font-weight="500" fill="#e6edf3" letter-spacing="-1.2">
-    Two qubits fail together.
+  <text x="104" y="250" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="60" font-weight="500" fill="#e6edf3" letter-spacing="-1.2">
+    Find the cause. Verify the code.
   </text>
-  <text x="104" y="330" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="60" font-weight="500" fill="#aab3bd" letter-spacing="-1.2">
-    Find the cause in two experiments.
+  <text x="104" y="308" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="60" font-weight="500" fill="#aab3bd" letter-spacing="-1.2">
+    Bound the error.
   </text>
 
-  <!-- The verdict figure, as in DecisionFigure.astro: three rival causes, each
-       one's predicted read-out (the dot) against the observed read-out plus or
-       minus three standard errors (the band). Values from src/data/crosstalk.ts. -->
-  <rect x="885.7" y="377" width="112.7" height="50" fill="#5cd4e1" opacity="0.16"/>
-  <line x1="470" y1="402" x2="1096" y2="402" stroke="#2a3a4a" stroke-width="2"/>
-  <text x="104" y="409" font-family="Menlo, monospace" font-size="22" letter-spacing="0.5" fill="#e6edf3">H1  Q1 → Q2</text>
-  <text x="322" y="409" font-family="Menlo, monospace" font-size="19" fill="#5cd4e1">✓ survives</text>
-  <circle cx="970.8" cy="402" r="10" fill="#5cd4e1"/>
-  <rect x="885.7" y="427" width="112.7" height="50" fill="#5cd4e1" opacity="0.16"/>
-  <line x1="470" y1="452" x2="1096" y2="452" stroke="#2a3a4a" stroke-width="2"/>
-  <text x="104" y="459" font-family="Menlo, monospace" font-size="22" letter-spacing="0.5" fill="#6b7682">H2  Q2 → Q1</text>
-  <text x="322" y="459" font-family="Menlo, monospace" font-size="19" fill="#6b7682">× rejected</text>
-  <circle cx="595.2" cy="452" r="8" fill="#6b7682"/>
-  <rect x="885.7" y="477" width="112.7" height="50" fill="#5cd4e1" opacity="0.16"/>
-  <line x1="470" y1="502" x2="1096" y2="502" stroke="#2a3a4a" stroke-width="2"/>
-  <text x="104" y="509" font-family="Menlo, monospace" font-size="22" letter-spacing="0.5" fill="#6b7682">H3  Q1 ← B → Q2</text>
-  <text x="322" y="509" font-family="Menlo, monospace" font-size="19" fill="#6b7682">× rejected</text>
-  <circle cx="595.2" cy="502" r="8" fill="#6b7682"/>
-  <line x1="942.0" y1="377" x2="942.0" y2="527" stroke="#5cd4e1" stroke-width="2" stroke-dasharray="6 5"/>
+  <!-- The verdict figure, as in HeroVerdicts.astro: the three questions and one
+       line of real output for each. Values from the runs of qcl_crosstalk,
+       qcl_geometric_qec and qcl_code_switching. -->
+  <line x1="104" y1="340" x2="1096" y2="340" stroke="#1f2a36" stroke-width="1"/>
+  <text x="104" y="380" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="26" font-weight="500" fill="#e6edf3">Which cause?</text>
+  <text x="490" y="380" font-family="Menlo, monospace" font-size="19" fill="#5cd4e1">H1 Q1-&gt;Q2 survives, 100.1 bits from its nearest rival</text>
+  <line x1="104" y1="400" x2="1096" y2="400" stroke="#1f2a36" stroke-width="1"/>
+  <text x="104" y="440" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="26" font-weight="500" fill="#e6edf3">Is the code sound?</text>
+  <text x="490" y="440" font-family="Menlo, monospace" font-size="19" fill="#5cd4e1">[[32, 2]] toric code: four checks Accepted</text>
+  <line x1="104" y1="460" x2="1096" y2="460" stroke="#1f2a36" stroke-width="1"/>
+  <text x="104" y="500" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="26" font-weight="500" fill="#e6edf3">What do stacked codes cost?</text>
+  <text x="490" y="500" font-family="Menlo, monospace" font-size="19" fill="#5cd4e1">measured 0.4619, the composition law allows 3.695</text>
+
+  <line x1="104" y1="520" x2="1096" y2="520" stroke="#1f2a36" stroke-width="1"/>
 
   <!-- Figure caption, mono, at the foot of the figure column. -->
-  <text x="104" y="556" font-family="Menlo, monospace" font-size="18" letter-spacing="1.1" fill="#6b7682">
-    E1: HOLD QUBIT 1 EXCITED · SIMULATED OBSERVATION
+  <text x="104" y="566" font-family="Menlo, monospace" font-size="16" letter-spacing="1.1" fill="#6b7682">
+    SIMULATED EVIDENCE · EACH LINE FROM A RUN OF AN EXAMPLE
   </text>
 
   <!-- Domain, right rail. -->
-  <text x="1096" y="556" text-anchor="end" font-family="Menlo, monospace" font-size="20" letter-spacing="1.2" fill="#5cd4e1">
+  <text x="1096" y="566" text-anchor="end" font-family="Menlo, monospace" font-size="20" letter-spacing="1.2" fill="#5cd4e1">
     quantum.deepcausality.com
   </text>
 </svg>

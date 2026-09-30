@@ -64,9 +64,11 @@ const ticks = [0, 0.1, 0.2, 0.3, 0.4, 0.5];
   <figcaption>
     The band is the observed read-out, {estimate.toFixed(3)} ± {standardError.toFixed(3)} over
     {RUN.shots.toLocaleString('en-US')} shots, widened to {RUN.agreementSigmas} standard errors.
-    The predicted read-outs are the example’s stated assumptions, and the observation is
-    simulated from H1’s prediction. The figure shows the method naming the structure the data
-    came from. It reports no hardware measurement. Values are from
+    H1’s prediction falls inside the band; H2’s and H3’s fall outside it. The example types in
+    the predictions, and the simulator drew the observation from H1’s prediction, so the run
+    recovers the structure it started from. It observes E1 only. Had H2 or H3 been true, a
+    read-out near 0.10 would leave both standing, and E2 would split them: it predicts 0.40
+    under H2 and 0.10 under H3. No hardware produced any number here. Values come from
     <a href="/examples/qcl-crosstalk/"><code>qcl_crosstalk</code></a>.
   </figcaption>
 </figure>

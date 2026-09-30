@@ -25,9 +25,10 @@ crates:
 source: "examples/quantum_examples/qcl_examples/qcl_crosstalk_circuits"
 ---
 
-Yes. The circuit version reaches the same plan at cost 2 and the same survivor, H1. Only the way
-the candidates are written changes: in [the first example](/examples/qcl-crosstalk/) each
-structure is declared as a factorization, and here the wiring of a circuit carries it.
+Yes. The circuit version reaches the same plan at cost 2 and the same survivor, H1, because it
+reuses the first example's typed predictions and costs. Only the way the candidates are written
+changes: in [the first example](/examples/qcl-crosstalk/) each structure is declared as a
+factorization, and here the wiring of a circuit carries it.
 
 ## What you see
 
@@ -66,5 +67,7 @@ decomposability check reads Vacuous on the two circuits because a two-node struc
 The bath candidate H3 stays a factorization. A bath that drives two qubits needs a node with two
 output wires, and under the dilation's leg convention that node has a leg of 256 dimensions. The
 Markov union over its three legs is a 65536 × 65536 matrix with 2<sup>32</sup> entries, which is
-beyond the crate's cap of 2<sup>24</sup>. The read-outs, the observation and the cost unit carry
-the same caveats as in the first example.
+beyond the crate's cap of 2<sup>24</sup>. The circuits set the structure and what the screen
+reads; they do not set the predictions. H1 and H2 use the same two boxes, and only the grouping of
+the boxes into nodes reverses the edge. The read-outs, the observation and the cost unit carry the
+same caveats as in the first example, so the plan and the survivor follow from those constants.

@@ -1,7 +1,7 @@
 ---
 title: "The Hopf fibration"
 question: "Why is a qubit's global phase unobservable?"
-summary: "A qubit as a rotor in Cl(3), its Bloch vector as a sandwich product, and a full circuit of the fiber in which the state travels while its shadow holds still."
+summary: "A qubit state walks one circuit of the Hopf fiber (θ up to 4π): the state moves by up to 4.000000 on S³ and its Bloch vector moves by 0.000000 on S²."
 order: 14
 group: other
 command: "cargo run --release -p quantum_examples --example hopf_fibration_multivector"
@@ -16,13 +16,14 @@ crates:
 source: "examples/quantum_examples/hopf_fibration_multivector"
 ---
 
-Multiplying a state by a global phase moves it along a circle in the space of states and leaves
-its projection onto the Bloch sphere where it was. The example walks one full circuit of that
-circle. The state moves by up to 4.000000 and its shadow moves by 0.000000.
+Over one full circuit of the fiber (8 steps, `θ` up to 4π), the state moves by up to 4.000000 and
+its Bloch vector moves by 0.000000. Multiplying a qubit state by a global phase therefore changes
+the state and leaves fixed the one quantity an experiment reads. Both displacements are squared
+Euclidean distances in the ambient algebra.
 
-A qubit state is a point on the 3-sphere, and an experiment reads a point on the 2-sphere. The
-Hopf fibration is the map between them. Each point of the 2-sphere is the image of a whole circle
-in the 3-sphere, the fiber, and moving along the fiber is exactly a global phase.
+A qubit state is a point on the 3-sphere `S³`, and the Bloch vector is a point on the 2-sphere `S²`.
+The Hopf fibration maps `S³` to `S²`. Each point of `S²` is the image of a whole circle in `S³`, the
+fiber, and moving along the fiber multiplies the state by a global phase.
 
 ## What you see
 
@@ -39,17 +40,28 @@ Walking the fiber from |+>, one complete circuit in 8 steps
   12.566 rad         0.000000            0.000000
 ```
 
-The state column peaks at 4 halfway round, where the rotor has reached −R, and returns to 0 only
-at the end of the circuit. A spinor takes two turns to come back, and the shadow takes one.
+Each row is one `fiber_shift` from `|+>`. The second column is the squared distance between the
+starting rotor and the shifted rotor; the third is the squared distance between their Bloch
+vectors. The state column reaches 4.000000 at `θ = 2π`, where the rotor equals its antipode −R, and
+returns to 0.000000 at `θ = 4π`. `fiber_shift(θ)` applies the phase `θ/2`, so the rotor needs `4π`
+to come back; this is the spinor double cover. The shadow column is 0.000000 in every row.
 
 ## How the map is written
 
-The state is a rotor in Cl(3), the even subalgebra whose elements are the unit quaternions. The
-projection is the sandwich product `R σ₃ R̃`, so no coordinate formula for the Bloch vector
-appears anywhere. The example first pins all three axes with the six cardinal states, so no two
-of them can be exchanged unnoticed.
+`HopfState` holds the state as a rotor in Cl(3), the even subalgebra whose elements are the unit
+quaternions. `project` computes the sandwich product `R σ₃ R̃`, so no coordinate formula for the
+Bloch vector appears anywhere. Three tensor operations drive the run: `fmap` takes the fiber steps,
+`zip_with` pairs each state with its own projection, and `fold` keeps the largest displacement in
+each column. Those two maxima are the 4.000000 and the 0.000000.
 
-## Crates
+Before the walk, the run projects the six cardinal states: `|0>` and `|1>` land on ±z, `|+>` and
+`|−>` on ±x, `|+i>` and `|−i>` on ±y. A projection that exchanged two axes would put `|+>` on +y, so
+the six rows pin all three axes.
 
-This example does not import `deep_causality_quantum`. The state type `HopfState` lives in
+## What this run leaves out
+
+The run covers one qubit in pure states, with no dynamics and no noise. Mixed states, where the
+Bloch vector lies inside the ball, and the relative phase between qubits are outside it.
+
+This example does not import `deep_causality_quantum`. `HopfState` lives in
 `deep_causality_multivector`, beside the `HilbertState` ket that this crate builds on.

@@ -48,11 +48,13 @@ const same = (p: [number, number, number]) => p[0] === p[1] && p[1] === p[2];
     </table>
   </div>
   <figcaption>
-    Cost is in one arbitrary unit, and the predicted read-outs are the example’s stated
-    assumptions
-    (<a href="/examples/qcl-crosstalk/"><code>constants.rs</code></a>). The plan totals
-    {RUN.planCost}; tomography alone would total {RUN.tomographyCost}.
-    Under the plan the tightest pair of candidates separates at {RUN.tightestPairBits} bits, against a floor of {RUN.floorBits}.
+    Costs share one arbitrary unit. The costs and the predicted read-outs are inputs the example
+    types into <a href="/examples/qcl-crosstalk/"><code>constants.rs</code></a>, and the planner
+    works from them. The plan totals {RUN.planCost}, and tomography alone totals
+    {RUN.tomographyCost}. Under the plan the tightest pair of candidates is
+    {RUN.tightestPairBits} bits apart, against a floor of {RUN.floorBits}. The line the example
+    prints as “tightest pair separates at {RUN.tightestPairBestOfferedBits} bits” gives the best
+    separation any offered experiment reaches, which is tomography’s.
   </figcaption>
 </figure>
 

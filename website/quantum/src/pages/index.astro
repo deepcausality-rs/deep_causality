@@ -3,19 +3,21 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteHeader from '../components/nav/SiteHeader.astro';
 import Hero from '../components/home/Hero.astro';
 import HomeSection from '../components/home/HomeSection.astro';
+import VerdictAnatomy from '../components/home/VerdictAnatomy.astro';
 import SameReadout from '../components/home/SameReadout.astro';
-import FourSteps from '../components/home/FourSteps.astro';
 import PlanTable from '../components/home/PlanTable.astro';
-import Subjects from '../components/home/Subjects.astro';
-import Evidence from '../components/home/Evidence.astro';
+import DecisionFigure from '../components/home/DecisionFigure.astro';
+import FourSteps from '../components/home/FourSteps.astro';
+import CodeChecks from '../components/home/CodeChecks.astro';
+import Stack from '../components/home/Stack.astro';
 import Limits from '../components/home/Limits.astro';
 import TryIt from '../components/home/TryIt.astro';
 import { RUN } from '../data/crosstalk';
 import { GITHUB_URL } from '../consts';
 
-const title = 'DeepCausality Quantum | Find the cause of correlated qubit errors';
+const title = 'DeepCausality Quantum | Find the cause, verify the code, bound the error';
 const description =
-  'A Rust library for choosing between rival causes of quantum errors. Declare the candidate causal structures; it screens them, plans the cheapest experiments that tell them apart, and names the one the data leaves standing.';
+  'A Rust library that finds the causal structure behind correlated qubit errors, verifies error-correcting codes exactly without simulating them, and bounds the error of stacked codes. Every verdict reports what it examined, its margin, and whether an exact or a numeric path decided it.';
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -32,81 +34,112 @@ const jsonLd = {
 
   <Hero />
 
-  <HomeSection ix="02 / 08" label="The problem" title="Passive data cannot tell a direct cause from a shared one.">
+  <HomeSection ix="02 / 09" label="What a verdict carries" title="Every verdict shows its evidence.">
     <Fragment slot="lede">
       <p>
-        Two qubits show correlated error events. One may drive the other, or both may answer to a
-        shared source of noise, and the repair differs with the cause. Over two yes-or-no error
-        indicators, all three structures reproduce any observed pattern exactly. Watching harder
-        does not help.
+        A bare pass looks the same as a check that examined nothing. Every check in the library
+        returns one record with the four properties below.
+      </p>
+    </Fragment>
+    <VerdictAnatomy />
+  </HomeSection>
+
+  <HomeSection ix="03 / 09" label="Which cause?" title="Passive data cannot separate these causes.">
+    <Fragment slot="lede">
+      <p>
+        Two qubits show correlated errors. Qubit 1 may drive qubit 2, qubit 2 may drive qubit 1,
+        or a shared bath may drive both. The three structures are Markov equivalent: each fits
+        the passive observation exactly, so more passive data separates nothing.
       </p>
       <p>
-        An intervention separates them. Hold qubit 1 excited and read qubit 2: H1 predicts 0.40,
-        and H2 and H3 predict 0.10. Which experiments to run is a calculation, and QCL does it.
+        An intervention separates them. Hold qubit 1 excited and read qubit 2; the number
+        returned is the read-out. H1 predicts 0.40, and H2 and H3 each predict 0.10. You supply
+        those predictions; the library plans from them.
       </p>
     </Fragment>
     <SameReadout />
   </HomeSection>
 
-  <HomeSection ix="03 / 08" label="How it works" title="Four steps in one program.">
+  <HomeSection ix="04 / 09" label="The plan and the decision" title="Two experiments separate all three causes.">
     <Fragment slot="lede">
       <p>
-        You write the problem as one Rust program that declares, screens, plans and decides. Each
-        card maps onto a call in the code beneath it, in the same order.
+        The planner picks E1 and E2 at a total cost of {RUN.planCost}; process tomography alone
+        would cost {RUN.tomographyCost}, in the example’s arbitrary unit. Its minimum-cost cover
+        requires a chosen experiment to separate each pair of candidates by at least
+        {RUN.floorBits} bits at that experiment’s shot count, and it lists any pair that no
+        experiment reaches.
+      </p>
+      <p>
+        E1 (hold qubit 1 excited) separates H1 from the others, and E2 (hold qubit 2 excited)
+        separates H2 from the others. At cost 1 each, together they cover all three pairs. The
+        passive run E0 separates nothing.
+      </p>
+    </Fragment>
+    <PlanTable />
+    <div class="decision">
+      <h3>The decision</h3>
+      <p>
+        The run observes E1 on data the simulator draws from H1’s prediction, judges each
+        candidate against it, and one survives.
+      </p>
+      <DecisionFigure />
+    </div>
+  </HomeSection>
+
+  <HomeSection ix="05 / 09" label="The program" title="One Rust program declares, screens, plans and decides.">
+    <Fragment slot="lede">
+      <p>
+        The crosstalk program declares the problem, screens the candidates, plans the
+        experiments and names a survivor. Each card shows the call for its step.
       </p>
     </Fragment>
     <FourSteps />
   </HomeSection>
 
-  <HomeSection ix="04 / 08" label="The plan" title="Two experiments separate all three.">
+  <HomeSection ix="06 / 09" label="Is the code sound?" title="Four exact checks verify a code.">
     <Fragment slot="lede">
       <p>
-        The planner solves a minimum-cost cover. Some chosen experiment must separate each pair
-        of candidates by at least {RUN.floorBits} bits, measured at that experiment’s shot count,
-        and the plan lists any pair that no experiment reaches.
-        The passive run separates nothing. Tomography separates everything for {RUN.tomographyCost}.
-        Holding qubit 1 excited resolves two of the three pairs, holding qubit 2 excited resolves
-        two, and the two experiments together, at cost 1 each, cover all three.
+        A CSS code puts qubits on a lattice’s edges, Z checks on its faces and X checks on its
+        vertices. QCL reads the lattice as a chain complex and decides four questions from
+        supports over 𝔽₂, with exact rational phases. It builds no state vector, so it reaches
+        the 32-qubit [[32, 2]] toric code although the crate’s simulator stops at 24 qubits.
       </p>
     </Fragment>
-    <PlanTable />
+    <CodeChecks />
   </HomeSection>
 
-  <HomeSection ix="05 / 08" label="Other subjects" title="The same builder takes models, codes and stacked abstractions.">
+  <HomeSection ix="07 / 09" label="What do stacked codes cost?" title="The composition law bounds the error of stacked codes.">
     <Fragment slot="lede">
       <p>
-        The subject you name after <code>config</code> decides which checks exist. A plant has
-        candidates and experiments, a quantum causal model has factors that must commute, and a
-        code has structural checks that run exactly. These excerpts come from three more
-        examples.
+        An abstraction says a simple model summarises a detailed one, as two logical qubits stand
+        for eight physical ones. QCL measures the residual, the distance between two channels:
+        the detailed circuit followed by the ideal recovery, and the simple circuit. When
+        abstractions stack, the law <code>ε ≤ ‖τ₂‖_post · ε₁ + ‖τ₁‖_pre · ε₂</code> bounds the
+        composite residual by the links’ residuals (Lorenz and Tull, arXiv:2602.16612).
       </p>
     </Fragment>
-    <Subjects />
+    <Stack />
   </HomeSection>
 
-  <HomeSection ix="06 / 08" label="Evidence" title="What has been checked.">
-    <Fragment slot="lede">
-      <p>
-        Each row names its source, so you can rerun it. The counts are the figures the tools
-        report.
-      </p>
-    </Fragment>
-    <Evidence />
-  </HomeSection>
-
-  <HomeSection ix="07 / 08" label="Limits" title="What it does not do.">
-    <Fragment slot="lede">
-      <p>These are the limits a new user meets first.</p>
-    </Fragment>
+  <HomeSection ix="08 / 09" label="Limits" title="Where the library stops.">
     <Limits />
   </HomeSection>
 
-  <HomeSection id="run" ix="08 / 08" label="Run it" title="Run it yourself.">
+  <HomeSection id="run" ix="09 / 09" label="Run it" title="One command reruns the example.">
     <Fragment slot="lede">
-      <p>One command runs the crosstalk example from a clean clone.</p>
+      <p>
+        Three shell lines clone the repository and run the crosstalk example. The other examples
+        run the same way.
+      </p>
     </Fragment>
     <TryIt />
   </HomeSection>
 
   <script type="application/ld+json" is:inline set:html={JSON.stringify(jsonLd)} />
 </BaseLayout>
+
+<style>
+  .decision { margin-top: var(--space-7); }
+  .decision h3 { font-size: var(--t-h3); margin: 0 0 var(--space-2); }
+  .decision > p { color: var(--fg-1); max-width: var(--measure); margin: 0 0 var(--space-5); }
+</style>

@@ -5,7 +5,7 @@ import { CRATE_URL } from '../../consts';
 
 const title = 'Checks | DeepCausality Quantum';
 const description =
-  'Every check the library runs: the question it decides, what a rejection names, when it certifies nothing, and whether Lean proves it or tests witness it.';
+  'Every check in deep_causality_quantum: the question it decides, the error a rejection raises, when it passes without examining anything, and whether Lean proves it or tests witness it.';
 
 const mark = { proved: 'proved in Lean', partial: 'proved in part', tested: 'tested', decision: 'by decision' } as const;
 const cls = { proved: 'validated', partial: 'partial', tested: 'measured', decision: 'nongoal' } as const;
@@ -15,9 +15,10 @@ const cls = { proved: 'validated', partial: 'partial', tested: 'measured', decis
     <p class="eyebrow">Checks</p>
     <h1>What each check decides, and what a failure names.</h1>
     <p class="lede">
-      A check decides one question. When it rejects, the error names what failed. When it
-      examines nothing, it says so. Each entry states what backs it: a Lean proof, tests that
-      witness it, or a decision the crate records.
+      Each entry names a check, the subjects that run it and the question it decides. It then
+      gives what a rejection carries, when the check passes without examining anything (a
+      Vacuous verdict), and what backs it. None of the fourteen entries is fully proved in
+      Lean: two are proved in part, eleven are tested, and one is a decision the crate records.
     </p>
   </header>
 
@@ -36,8 +37,8 @@ const cls = { proved: 'validated', partial: 'partial', tested: 'measured', decis
             <dd>
               <p class="q">{c.question}</p>
               <dl class="meta">
-                <div><dt>A rejection carries</dt><dd>{c.rejection}</dd></div>
-                <div><dt>Certifies nothing when</dt><dd>{c.vacuous}</dd></div>
+                <div><dt>On rejection</dt><dd>{c.rejection}</dd></div>
+                <div><dt>When vacuous</dt><dd>{c.vacuous}</dd></div>
                 <div><dt>Evidence</dt><dd>{c.evidence}</dd></div>
                 <div><dt>Source</dt><dd><a href={`${CRATE_URL}/${c.source}`}><code>{c.source}</code></a></dd></div>
               </dl>
@@ -51,17 +52,17 @@ const cls = { proved: 'validated', partial: 'partial', tested: 'measured', decis
   <section class="doc-sec" id="verdicts">
     <h2>How does a measurement become a verdict?</h2>
     <p>
-      The library attaches no verdict to the operators themselves, because general effects
-      (<code>0 ≤ E ≤ I</code>) form only an effect algebra with partial meet and join. The
-      measurement boundary reads a verdict out instead. The Born rule <code>Tr(Pρ)</code> becomes
-      a probability verdict, or the measurement projection itself becomes a proposition in the
-      lattice of projections.
+      The crate reads a verdict from a state and a measurement projection <code>P</code>. The
+      Born rule <code>Tr(Pρ)</code> gives a probability verdict, and the projection itself is a
+      proposition in the lattice of projections. The operators carry no verdict of their own,
+      because general effects (<code>0 ≤ E ≤ I</code>) form only an effect algebra, which has
+      partial meet and join.
     </p>
     <p>
-      That lattice is bounded, has the orthocomplement <code>I − P</code>, and satisfies the
-      orthomodular law. It fails distributivity, the way probability verdicts fail excluded middle.
-      The Lean statement that the lattice is orthomodular is a deferred target, and the carrier and
-      its law tests are complete.
+      The lattice of projections is bounded, has the orthocomplement <code>I − P</code> and
+      satisfies the orthomodular law. It fails distributivity, as probability verdicts fail
+      excluded middle. The Rust carrier and its law tests are complete; the Lean statement that
+      the lattice is orthomodular is a deferred target.
     </p>
     <p class="next-links">
       <a href="/proof/#deferred">The deferred targets →</a>

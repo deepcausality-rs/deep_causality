@@ -33,7 +33,7 @@ export const papers: Paper[] = [
     file: 'Quantum causal models-lorenz2022.pdf',
     citedFrom: ['types/density_matrix', 'types/qgates/channel', 'types/qcm/markov_freeze'],
     usedFor:
-      'The definition the crate implements: the per-node Choi–Jamiołkowski factorization, and the quantum Markov condition of Definition 3.3 that the Markov check tests.',
+      'The model the crate implements: a Choi–Jamiołkowski factor per node, and Definition 3.3, the quantum Markov condition that the Markov check tests.',
   },
   {
     title:
@@ -44,7 +44,7 @@ export const papers: Paper[] = [
     file: 'Unitary causal decompositions-2508.11762v1.pdf',
     citedFrom: ['types/qcm/faithfulness', 'error/quantum_error'],
     usedFor:
-      'Definition 3.1 and Theorem 3.2, the C₃-exclusion criterion. A causal structure containing a C₃ has no traditional-circuit causally faithful decomposition, and the decomposability check rejects it.',
+      'Definition 3.1 and Theorem 3.2, the C₃-exclusion criterion. A causal structure containing a C₃ has no traditional-circuit causally faithful decomposition, and the decomposability check rejects such a structure.',
   },
   {
     title: 'Causal and Compositional Abstraction',
@@ -93,7 +93,7 @@ export const papers: Paper[] = [
     file: 'Causal and compositional structure of unitary transformations-2001.07774v2.pdf',
     citedFrom: ['types/qcm/faithfulness'],
     usedFor:
-      'Theorem 3. It bounds what the decomposability check claims: it rejects a structure and not a unitary, and only for traditional, non-routed circuits.',
+      'Theorem 3, which sets the scope of the decomposability check: the check rejects a causal structure and makes no claim about a unitary, and it applies to traditional, non-routed circuits only.',
   },
   {
     title: 'Cyclic Quantum Causal Models',
@@ -103,7 +103,7 @@ export const papers: Paper[] = [
     file: 'Cyclic Quantum Causal Models-2002.12157v3.pdf',
     citedFrom: ['error/quantum_error', 'types/qcm/markov_freeze', 'types/qcm/hypothesis', 'types/qcm/dilation'],
     usedFor:
-      'The scope of the cyclic-structure refusal: the error that build() returns cites this paper as the setting the crate leaves out.',
+      'The error that build() returns for a cyclic structure cites this paper as the setting the crate leaves out.',
   },
   {
     title:

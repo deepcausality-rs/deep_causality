@@ -38,24 +38,25 @@ const next = [
     <h3>Run the crosstalk example</h3>
     <Code code={run} lang="bash" themes={SHIKI} wrap />
     <p class="note">
-      Needs Rust {MSRV} or newer and no configuration. The run is seeded and repeats exactly. It
-      takes {RUN.wallClock} on {MACHINE}, a release build.
+      The example needs Rust {MSRV} or newer and no configuration. It is seeded, so repeated runs
+      print identical output. A release build takes {RUN.wallClock}, process start included, on
+      {MACHINE}.
     </p>
 
     <h3>Use it as a library</h3>
     <Code code={CARGO_ADD} lang="bash" themes={SHIKI} wrap />
     <p class="note">
-      For unreleased work, depend on the repository directly:
+      To use unreleased code, depend on the repository directly:
       <code class="dep">{CARGO_DEP}</code>
     </p>
   </div>
 
   <div class="out">
-    <h3>What you see</h3>
+    <h3>What the run prints</h3>
     <Code code={out} lang="text" themes={SHIKI} wrap />
     <p class="note">
-      An excerpt of the program’s output, with each elision marked. The program exits nonzero if
-      the decision it reaches disagrees with the structure the observation was drawn from.
+      The excerpt marks each elision with an ellipsis. The program exits with a nonzero status when
+      its decision differs from the structure the observation was drawn from.
     </p>
   </div>
 </div>

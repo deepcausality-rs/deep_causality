@@ -15,7 +15,7 @@ const subjects = [
   {
     kind: 'A quantum causal model',
     q: 'Is this set of factors a legal model?',
-    text: 'Factors that share a Hilbert leg must pairwise commute. A failure names the pair and rolls the graph back to its dynamic state.',
+    text: 'Factors that share a Hilbert leg must commute in pairs. In this run a pair fails: the freeze aborts, names nodes 0 and 1, and rolls the graph back to its dynamic (unfrozen) state.',
     out: `[3] The same non-commuting model on a dynamic graph, through the shipped freeze
     ✓ freeze aborted: factors at nodes 0 and 1 do not commute
     is_frozen() = false (rolled back)`,
@@ -25,7 +25,7 @@ const subjects = [
   {
     kind: 'An error-correcting code',
     q: 'Does this code have the structure it claims?',
-    text: 'Four stages run exactly on the [[32, 2]] toric code, over finite supports, with no state vector. The crate’s in-process simulator stops at 24 qubits, and this code has 32.',
+    text: 'It does: all four stages accept the [[32, 2]] toric code. Each stage decides exactly over finite supports and builds no state vector, which matters because the code has 32 qubits and the crate’s in-process simulator stops at 24.',
     out: `[validate]
     derive_code              Accepted  examined 32
     check_ldpc_weights       Accepted  examined 96
@@ -37,7 +37,7 @@ const subjects = [
   {
     kind: 'Stacked abstractions',
     q: 'How much error survives when codes stack?',
-    text: 'A code maps physical qubits to logical ones. When two such maps compose, a law bounds the error that survives, and the run prints the bound beside the error it measured.',
+    text: 'Almost all of it. An abstraction relates a detailed model to a simpler one, and a code is one. At a physical error rate of 1 in 100 the noise is 0.1639 and the ideal recovery leaves 0.1638. The composition law, which bounds two stacked abstractions by the weighted sum of their links’ residuals, allows 0.3277.',
     out: `[p = 1/100]
     the recovery leaves 1.638e-1 of the noise's 1.639e-1; the law allows 3.277e-1`,
     href: '/examples/qcl-distillation-round/',

@@ -84,14 +84,25 @@ program exits nonzero if any check it makes on its own decision fails.
 
 ## Read before you cite
 
-The predictions and the plan are computed, and the observation is sampled. The example draws its
-1,024 shots from the Born sampler at H1's own predicted read-out and then checks that the
-adjudication names H1. The run shows the decision procedure reaching the right answer on stated
-assumptions. It reports no measurement on a device.
+The plan and the adjudication are computed. The qubit factors, the five experiments' costs and the
+read-out each candidate predicts for each experiment are inputs typed into `constants.rs` and
+`model.rs`, and the observation is sampled. The example draws its 1,024 shots from the Born
+sampler at H1's own predicted read-out and then checks that the adjudication names H1. The run
+shows the decision procedure reaching the right answer on stated assumptions. It reports no
+measurement on a device.
 
-The predicted read-outs are constants in `constants.rs`, and the cost unit is arbitrary. The
+The cost unit is arbitrary, so the ratio of 2 to 200 comes from the costs the example chose. The
 factors are diagonal, so the Markov check has nothing to reject and the interventions carry the
 whole discrimination.
+
+The run observes E1 only, the first experiment of the plan. E1 predicts 0.10 under both H2 and
+H3, so had the truth been H2 or H3, a read-out near 0.10 would leave both standing. E2 predicts
+0.40 under H2 and 0.10 under H3 and splits them. That is why the plan holds two experiments.
+
+The example prints one line that the excerpt above omits: "tightest pair separates at 164.8 bits
+against the floor". It is the best separation any offered experiment reaches for the tightest
+pair, and process tomography reaches it. Under the chosen plan the tightest pair separates at
+99.5 bits.
 
 ## Prior work
 

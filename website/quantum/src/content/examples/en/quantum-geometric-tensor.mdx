@@ -1,7 +1,7 @@
 ---
 title: "The quantum geometric tensor"
 question: "Why does a flat band conduct?"
-summary: "The tensor of a flat band splits into a symmetric metric and an antisymmetric Berry curvature. The computed metric feeds the Drude weight, so geometry alone produces the transport."
+summary: "A flat band with zero band curvature gets a Drude weight of 0.037778 meV·nm² from the quantum metric of its states; the tensor splits into a symmetric metric and an antisymmetric Berry curvature."
 order: 11
 group: other
 command: "cargo run --release -p quantum_examples --example quantum_geometric_tensor"
@@ -15,14 +15,14 @@ crates:
 source: "examples/quantum_examples/quantum_geometric_tensor"
 ---
 
-The quantum metric alone gives the flat band a conductivity, 0.037778 meV·nm² in the example, and
-band curvature contributes zero. A flat band has no dispersion, so conventional band theory says
-it cannot conduct, yet magic-angle twisted bilayer graphene has flat bands and conducts. The
-missing term is geometric.
+The example computes the quantum geometric tensor of a two-band model whose lower band is flat, and
+feeds its metric into the Drude weight. Band curvature contributes 0.000000 meV·nm² to that weight,
+and the quantum metric alone gives 0.037778 meV·nm². Conventional band theory says a flat band
+cannot conduct, because it has no dispersion; the geometric term is what remains.
 
-The tensor `Q_ij` gives one complex number per pair of axes. Its real part is the quantum metric,
-which measures how far apart neighbouring states are. Its imaginary part is the Berry curvature,
-a magnetic field in momentum space.
+The tensor `Q_ij` gives one complex number per pair of axes. Its real part is the quantum metric
+`g_ij`, which measures how far apart neighbouring states are. The Berry curvature is
+`Ω_ij = −2 Im(Q_ij)`, a magnetic field in momentum space.
 
 ## What you see
 
@@ -44,16 +44,30 @@ The symmetry the decomposition forces
     with the geometry           0.037778 meV*nm^2
 ```
 
-The excerpt drops the header and unit lines and keeps each printed row.
+The metric is diagonal (`g_xx = g_yy = 0.004198` nm²) and the curvature is purely off-diagonal
+(`Ω_xy = 0.008395`), because the two velocity operators have a relative phase. Equal phases would
+leave `Q` real and the curvature zero. The three symmetry lines read zero, as they must for a
+Hermitian tensor: the metric is symmetric, the curvature is antisymmetric, and the diagonal of the
+curvature vanishes. The value `g_xx = 0.34 / 9²` follows from the one non-zero matrix element,
+`⟨0|v_x|1⟩ = 0.5 + 0.3i`, and the 9 meV gap between the bands. The last two lines evaluate
+`D = (D_conv + g~_xx · E_gap) · a²` twice: with the metric set to zero, and with the computed one.
 
 ## The step that is easy to skip
 
 `Q_ij` comes out in nm², because the velocity matrix elements carry energy times length. The
-transport kernel expects the metric divided by the cell area, `g̃_xx = g_xx / a²`. Passing `g_xx`
-directly would hand the kernel an area where it expects a ratio, and since the kernel multiplies
-the weight by a² again, the answer would be off by the cell area twice over.
+transport kernel expects the metric divided by the cell area, `g̃_xx = g_xx / a²`, and
+`reduced_metric` performs that division: 0.004198 nm² over (0.246 nm)² gives 0.069362. Passing
+`g_xx` directly would hand the kernel an area where it expects a ratio, and since the kernel
+multiplies the weight by a² again, the answer would be off by the cell area twice over.
 
-## Crates
+## What this run leaves out
 
-This example does not import `deep_causality_quantum`. The band model and the transport kernel
-come from `deep_causality_physics`, and the numerics from `deep_causality_tensor`.
+The model has two bands at a single point of the Brillouin zone, with the eigenstates equal to the
+basis and the velocity matrix elements written down, not differentiated from a Hamiltonian. The
+flat band sits at 1 meV, the remote band at 10 meV, and the cell length is 0.246 nm, the graphene
+lattice constant. The Drude weight of 0.037778 meV·nm² therefore belongs to this toy model and is
+no prediction for magic-angle twisted bilayer graphene. The run integrates nothing over the
+Brillouin zone.
+
+This example does not import `deep_causality_quantum`. The tensor kernel and the Drude-weight
+kernel come from `deep_causality_physics`, and `CausalTensor` from `deep_causality_tensor`.

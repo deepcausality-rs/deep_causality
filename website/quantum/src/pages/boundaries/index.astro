@@ -10,10 +10,10 @@ const description =
 <PageShell title={title} description={description} path="/boundaries/">
   <header class="doc-head">
     <p class="eyebrow">Boundaries</p>
-    <h1>Where the library stops.</h1>
+    <h1>What the library leaves out.</h1>
     <p class="lede">
-      Each row below is a decision or a limit, and each names the file that shows it. The page
-      describes the crate as it is, and it sets no schedule.
+      Each row below states one thing the library leaves out or one limit a user meets, and names
+      the file that shows it. A second section lists what the crosstalk example assumes.
     </p>
   </header>
 
@@ -39,43 +39,40 @@ const description =
       <div>
         <dt>The read-outs are inputs</dt>
         <dd>
-          The crosstalk example states what each candidate predicts for each experiment, in
-          <code>constants.rs</code>. The plan and the verdict follow from those numbers. The run
-          shows the decision procedure reaching the right answer on stated assumptions, and it
-          makes no claim about any device.
+          <code>constants.rs</code> states the read-out each candidate predicts for each experiment;
+          the plan and the verdict follow from those numbers. The run shows the procedure reaching
+          the correct candidate under those assumptions, and no figure in it describes a device.
         </dd>
       </div>
       <div>
         <dt>The observation is simulated</dt>
         <dd>
           The example draws its shots from the Born sampler at H1’s predicted read-out, then
-          checks that the adjudication names H1. The example exits nonzero if it does not.
+          checks that the adjudication names H1; it exits nonzero if it does not. It observes E1,
+          the first experiment of the plan, and no other.
         </dd>
       </div>
       <div>
         <dt>Cost is one arbitrary unit</dt>
         <dd>
-          Tomography costs 200, a targeted intervention costs 1 and an echo costs 2, all in the
-          same unit. The ratio comes from the example’s constants and is not a measurement of a
-          laboratory.
+          In the example’s constants, tomography costs 200, a targeted intervention 1 and an echo 2,
+          all in one unit. The ratio comes from those constants; no laboratory measured it.
         </dd>
       </div>
       <div>
         <dt>The factors are diagonal</dt>
         <dd>
           Every candidate in the crosstalk example is a legal model by construction, so the Markov
-          check has nothing to reject. The whole weight of the discrimination falls on the
-          interventions.
+          check rejects none of them. The experiments alone separate the candidates.
         </dd>
       </div>
       <div>
         <dt>One candidate is not a circuit</dt>
         <dd>
-          The circuit version of the example keeps the shared bath as a factorization. A bath that
-          drives two qubits needs a node with two output wires. Under the dilation’s leg
-          convention that node has a leg of 256 dimensions, and the Markov union over its three
-          legs is a 65536 × 65536 matrix with 2<sup>32</sup> entries, beyond the crate’s cap of
-          2<sup>24</sup>.
+          In the circuit version of the example, candidate H3 (the shared bath) stays a
+          factorization. A circuit needs a bath node with two output wires. That node has a leg of
+          256 dimensions, and the Markov union over its three legs is a 65536 × 65536 matrix with
+          2<sup>32</sup> entries, above the crate’s cap of 2<sup>24</sup>.
         </dd>
       </div>
     </dl>
@@ -84,8 +81,9 @@ const description =
   <section class="doc-sec" id="modalities">
     <h2>How do the two senses of quantum stay apart?</h2>
     <p>
-      The crate names two senses of quantum and keeps them apart by construction. The verifiable
-      path is the default build and the target of the Lean proofs. The emergent path is a seam.
+      The crate has two modalities, and the default build compiles only the verifiable one. The
+      Lean proofs attach to the verifiable path. The emergent path is a seam to a QPU sampler and
+      needs the <code>qpu</code> feature.
     </p>
     <div class="table-scroll">
       <table class="table-stack">
@@ -95,7 +93,7 @@ const description =
         <tbody>
           <tr>
             <td data-label="Modality"><b>Verifiable</b></td>
-            <td data-label="What it is">Deterministic simulated Choi–Jamiołkowski operators, checked at the freeze boundary and backed by Lean proofs.</td>
+            <td data-label="What it is">Deterministic simulated Choi–Jamiołkowski operators, checked at the freeze boundary; the Lean proofs attach here.</td>
             <td data-label="Build">Default</td>
           </tr>
           <tr>
@@ -107,7 +105,7 @@ const description =
       </table>
     </div>
     <p>
-      The emergent seam is a typed boundary and not a driver. It adds no network or async
+      The emergent seam defines types and drives no hardware, and it adds no network or async
       dependency. Its source is under
       <a href={`${CRATE_URL}/src/types/qpu`}><code>src/types/qpu/</code></a>.
     </p>

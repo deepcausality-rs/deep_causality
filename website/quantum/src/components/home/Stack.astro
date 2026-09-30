@@ -1,0 +1,124 @@
+---
+/**
+ * Stacked abstractions. The three chains the crate builds over CSS codes, with
+ * what each run measured. Every number is copied from a run of the example named
+ * in the row, at Float106:
+ *   concatenation  qcl_concatenated_code   Z̄(0) and X̄(1) exact; CZ̄ refused
+ *   switching      qcl_code_switching      noiseless exact; noisy 1/10
+ *   distillation   qcl_distillation_round  p = 1/100 and p = 5/100
+ * The output block is verbatim. Regenerate each with the command its example
+ * page shows and compare line by line.
+ */
+import { Code } from 'astro:components';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+
+const SHIKI = { light: rustLight, dark: rustDark };
+
+const chains = [
+  {
+    chain: 'Concatenation',
+    builds: 'The [[4,2,2]] code inside itself: eight physical qubits, four middle qubits, two logical qubits.',
+    run: 'Z̄ and X̄ compose exactly; every residual is 0 at Float106. A CZ̄ across two outer blocks is refused by name, because no transversal gadget between blocks is part of the construction.',
+    href: '/examples/qcl-concatenated-code/',
+  },
+  {
+    chain: 'Code switching',
+    builds: 'Decode from [[4,2,2]], optionally add noise, encode into [[8,2,2]], then run Z̄.',
+    run: 'A noiseless gadget is exact. With depolarising noise of 1/10 on one logical wire the gadget’s residual is 0.4619, the composite’s is 0.4619, and the law allows 3.695.',
+    href: '/examples/qcl-code-switching/',
+  },
+  {
+    chain: 'Distillation round',
+    builds: 'Encode into [[4,2,2]], depolarise every physical qubit with probability p, then run the encoded T̄H̄.',
+    run: 'At p = 1/100 the noise is 0.1639, the recovery leaves 0.1638, and the law allows 0.3277. At p = 5/100 those numbers are 0.7680, 0.7667 and 1.536.',
+    href: '/examples/qcl-distillation-round/',
+  },
+];
+
+const out = `[gadget with depolarising noise p = 1/10 on one logical wire] at FloatType
+composition law in frobenius-on-choi: ε ≤ ‖τ₂‖_post · ε₁ + ‖τ₁‖_pre · ε₂ over 1 queries, holds
+  io: ε₁ = 4.619e-1, ε₂ = 0.000e0, ‖τ₁‖_pre = 1.000e0, ‖τ₂‖_post = 8.000e0, bound = 3.695e0, measured = 4.619e-1
+    the noise is the first link's residual; code B's link stays exact; the composite
+    sits under |t2|_post * e1 = 3.695e0
+...
+[p = 1/100]
+composition law in frobenius-on-choi: ε ≤ ‖τ₂‖_post · ε₁ + ‖τ₁‖_pre · ε₂ over 1 queries, holds
+  io: ε₁ = 1.639e-1, ε₂ = 3.283e-15, ‖τ₁‖_pre = 1.000e0, ‖τ₂‖_post = 2.000e0, bound = 3.277e-1, measured = 1.638e-1
+    the recovery leaves 1.638e-1 of the noise's 1.639e-1; the law allows 3.277e-1`;
+---
+<div class="stack">
+  <div class="table-scroll">
+    <table class="table-stack">
+      <thead>
+        <tr>
+          <th scope="col">Chain</th>
+          <th scope="col">What it builds</th>
+          <th scope="col">What the run measured</th>
+        </tr>
+      </thead>
+      <tbody>
+        {chains.map((c, i) => (
+          <tr class="rise" style={`--i:${i}`}>
+            <td data-label="Chain"><b>{c.chain}</b><br /><a href={c.href}>Example <span aria-hidden="true">→</span></a></td>
+            <td data-label="What it builds">{c.builds}</td>
+            <td data-label="What the run measured">{c.run}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="out">
+    <h3>What the runs print</h3>
+    <Code code={out} lang="text" themes={SHIKI} wrap />
+  </div>
+
+  <div class="notes">
+    <p>
+      The bound holds and is loose. In code switching the constant ‖τ₂‖_post is 8, so the law
+      allows eight times the residual the run measured. The [[4,2,2]] code has distance 2, which
+      detects a single error and corrects none, and the distillation rows show it: the recovery
+      removes almost none of the noise.
+    </p>
+    <p>
+      Lean proves the exact case, where both residuals are zero and so is the composite. The law
+      for nonzero residuals is the crate’s own statement, and the distillation round is a case the
+      source paper (Lorenz and Tull, arXiv:2602.16612, §7.1) defers. Each example claims the
+      residual it measures and the bound the law records.
+    </p>
+    <p>
+      The same machinery checks a decoder’s detector error model against a circuit, one fault at a
+      time, and names the location the model misrepresents most. The crate contains no decoder;
+      the decoder’s reading of the measurement record enters as a matrix. No example runs this
+      path.
+    </p>
+  </div>
+</div>
+
+<style>
+  .stack { display: grid; gap: var(--space-6); }
+  .table-scroll table { width: 100%; border-collapse: collapse; }
+  .table-scroll th, .table-scroll td {
+    text-align: left;
+    vertical-align: top;
+    padding: var(--space-3);
+    border-top: 1px solid var(--line-1);
+    font-size: var(--t-body-sm);
+  }
+  .table-scroll thead th {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    font-weight: 400;
+    color: var(--fg-2);
+    border-top: none;
+  }
+  .table-scroll td:first-child { white-space: nowrap; }
+  .table-scroll td b { color: var(--fg-0); font-weight: var(--fw-heading); }
+
+  .out h3 { font-size: var(--t-h4); margin: 0 0 var(--space-3); }
+  .out :global(pre) { margin: 0; font-size: var(--t-mono-sm); }
+  .notes { display: grid; gap: var(--space-3); max-width: var(--measure); }
+  .notes p { margin: 0; color: var(--fg-1); font-size: var(--t-body-sm); }
+</style>

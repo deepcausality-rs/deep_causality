@@ -15,22 +15,22 @@ const SHIKI = { light: rustLight, dark: rustDark };
 const steps = [
   {
     verb: 'Declare',
-    text: 'Name the plant, the candidate structures, and the experiments you could run, each with a cost and a predicted read-out under every candidate. A candidate that is a cycle is refused here.',
+    text: 'You name the plant (the qubit system under study), the candidate structures, and the experiments you could run, each with a cost and a predicted read-out under every candidate; you supply those numbers. The builder refuses a candidate that is a cycle.',
     api: 'config(…).candidates(…).probes(…).build()',
   },
   {
     verb: 'Screen',
-    text: 'Each candidate faces two checks: its factors must form a legal quantum causal model, and its structure must admit a circuit that realises it faithfully. A check reports what it measured, its threshold, its margin and how many items it examined.',
+    text: 'Two checks screen each candidate. The Markov check tests that factors with overlapping Hilbert supports commute, which makes the candidate a legal quantum causal model. The decomposability check rejects a C₃ sub-relation, the pattern two commuting CNOTs create, which no faithful model carries. Each check reports what it measured, its threshold, its margin and how many items it examined.',
     api: 'validate(&cfg).check_markov(…).finalize()',
   },
   {
     verb: 'Plan',
-    text: 'Structural candidates reach control only through the screen. Control forks one world per admitted candidate and picks the cheapest experiments that separate each coverable pair of candidates by a floor of bits.',
+    text: 'Control accepts only a screen. It forks one world per admitted candidate, then picks the cheapest experiments that separate each coverable pair of candidates by at least a floor of bits.',
     api: 'control(&screened).fork().design(…)',
   },
   {
     verb: 'Decide',
-    text: 'Judge each world’s prediction against the observation and fold the verdicts. The result is one survivor, or a named ambiguity when the data leaves several standing.',
+    text: 'The program judges each world’s prediction against the observation and folds the verdicts. The result is one survivor, or a named ambiguity when the data leaves several candidates standing.',
     api: 'adjudicate(&worlds, floor_bits)',
   },
 ];

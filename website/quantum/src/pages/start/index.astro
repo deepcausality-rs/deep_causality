@@ -34,17 +34,17 @@ deep_causality_quantum = { version = "${CRATE_VERSION}", default-features = fals
 
 const features = [
   { name: 'std', on: true, what: 'The standard-library build. It enables std on every non-optional workspace dependency.' },
-  { name: 'qcm', on: true, what: 'The quantum causal model slice and the QCL builder: CausalStructure, the Markov and decomposability checks, and the pipeline. It reaches the causal graph, which needs std, so qcm implies std.' },
-  { name: 'dem', on: true, what: 'The Stim detector-error-model text constructor of DemModel. It implies qcm and adds no dependency.' },
+  { name: 'qcm', on: true, what: 'The quantum causal model slice and the QCL builder: CausalStructure, the Markov and decomposability checks, and the pipeline. It uses the causal graph, which needs std, so qcm implies std.' },
+  { name: 'dem', on: true, what: 'Builds a DemModel from Stim detector-error-model text. It implies qcm and adds no dependency.' },
   { name: 'alloc', on: false, what: 'Allocation without the standard library. Both std and no-std imply it.' },
   { name: 'no-std', on: false, what: 'The bare-metal build. It implies alloc and switches every non-optional workspace dependency to its own no-std feature.' },
-  { name: 'qpu', on: false, what: 'The QPU seam: QpuSampler, the bridges from shots to Uncertain values, qpu_effect, evidence and shot budgets, and the in-process SimQpu. It adds deep_causality_uncertain and nothing network-facing or async.' },
+  { name: 'qpu', on: false, what: 'The QPU seam, the interface to a device: QpuSampler, the bridges from shots to Uncertain values, qpu_effect, evidence and shot budgets, and the in-process SimQpu. It adds one dependency, deep_causality_uncertain, and nothing network-facing or async.' },
 ];
 
 const configs = [
-  { cfg: 'std, hosted', flags: 'default', ok: true, note: 'Everything, including the QCL builder.' },
+  { cfg: 'std, hosted', flags: 'default', ok: true, note: 'All layers, including the QCL builder.' },
   { cfg: 'no-std with a heap', flags: 'default-features = false, features = ["no-std"]', ok: true, note: 'The operator, gate and verdict layers. qcm and dem are host only. The program must define a global allocator.' },
-  { cfg: 'no-std on core alone', flags: '', ok: false, note: 'Not supported.' },
+  { cfg: 'no-std on core alone', flags: '', ok: false, note: 'Without std the crate needs a heap.' },
 ];
 ---
 <PageShell title={title} description={description} path="/start/">
@@ -52,44 +52,49 @@ const configs = [
     <p class="eyebrow">Get started</p>
     <h1>Run the example, then add the crate.</h1>
     <p class="lede">
-      Version {CRATE_VERSION}, MIT licensed, released on crates.io on {CRATE_RELEASED}. It needs
-      Rust {MSRV} or newer.
+      Version {CRATE_VERSION} is MIT licensed and was released on crates.io on {CRATE_RELEASED}. It
+      needs Rust {MSRV} or newer.
     </p>
   </header>
 
   <section class="doc-sec" id="run">
     <h2>How do you see it work first?</h2>
     <p>
-      Clone the repository and run the crosstalk example. It prints the four stages, the plan and
-      the verdict, and it finishes in milliseconds.
+      Clone the repository and run the crosstalk example. It refuses a cyclic candidate, screens
+      three others, prints the plan (cost 2 against 200 in the example’s own unit) and names the
+      survivor, H1. The first run
+      compiles the crates it depends on; the example itself finishes in milliseconds.
     </p>
     <Code code={run} lang="bash" themes={SHIKI} wrap />
     <p>
-      <a href="/examples/qcl-crosstalk/">The example page</a> walks through the output line by
-      line.
+      <a href="/examples/qcl-crosstalk/">The example page</a> explains the output line by line.
     </p>
   </section>
 
   <section class="doc-sec" id="add">
     <h2>How do you add it to a project?</h2>
+    <p>Run <code>cargo add</code>, or write the dependency into <code>Cargo.toml</code> yourself.</p>
     <Code code={CARGO_ADD} lang="bash" themes={SHIKI} />
-    <p>Or in <code>Cargo.toml</code>:</p>
+    <p>The equivalent <code>Cargo.toml</code> entry:</p>
     <Code code={dep} lang="toml" themes={SHIKI} />
     <p>
-      To follow unreleased work, depend on the branch:
+      To follow unreleased work, depend on the <code>main</code> branch:
     </p>
     <Code code={gitdep} lang="toml" themes={SHIKI} wrap />
     <p>
-      The API reference is on <a href={DOCSRS_URL}>docs.rs</a>, built with all features, and the
+      The API reference is on <a href={DOCSRS_URL}>docs.rs</a>, built with all features; the
       release is on <a href={CRATESIO_URL}>crates.io</a>. Every dependency of the crate is a
-      workspace crate. It has no external runtime dependency. It forbids <code>unsafe</code> code
-      through the workspace lints, with no exemption.
+      workspace crate, so the crate has no external runtime dependency. The crate forbids
+      <code>unsafe</code> code through the workspace lints, without exemption.
     </p>
   </section>
 
   <section class="doc-sec" id="features">
     <h2>Which features does it have?</h2>
-    <p>The default set is <code>std</code>, <code>qcm</code> and <code>dem</code>.</p>
+    <p>
+      The crate has six features, and <code>std</code>, <code>qcm</code> and <code>dem</code> are
+      on by default. The <code>Cargo.toml</code> entry below the table turns on <code>qpu</code>.
+    </p>
     <div class="table-scroll">
       <table class="table-stack">
         <thead>
@@ -114,8 +119,8 @@ const configs = [
   <section class="doc-sec" id="layers">
     <h2>What else is in the crate?</h2>
     <p>
-      The QCL builder sits on layers that a program can also call directly. The API reference on
-      <a href={DOCSRS_URL}>docs.rs</a> documents each one.
+      The QCL builder sits on four layers that a program can also call directly. The API reference
+      on <a href={DOCSRS_URL}>docs.rs</a> documents each one.
     </p>
     <dl class="deflist">
       <div>
@@ -158,9 +163,10 @@ const configs = [
   <section class="doc-sec" id="builds">
     <h2>Does it build without the standard library?</h2>
     <p>
-      In part. CI builds the <code>no-std</code> feature alone for <code>thumbv7em-none-eabihf</code>.
-      The QCL builder sits behind <code>qcm</code>, so it stays on the host. No CI job builds the
-      <code>qpu</code> feature for bare metal.
+      Yes, with a heap and without the QCL builder. CI builds the <code>no-std</code> feature alone
+      for <code>thumbv7em-none-eabihf</code>. The QCL builder sits behind <code>qcm</code>, which
+      implies <code>std</code>, so it stays on the host. No CI job builds the <code>qpu</code>
+      feature for bare metal.
     </p>
     <div class="table-scroll">
       <table class="table-stack">

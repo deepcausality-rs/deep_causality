@@ -50,9 +50,9 @@ const passive = experiments.find((e) => e.id === 'E0')!;
     ))}
   </ul>
   <figcaption>
-    Experiment E0 watches both qubits idle. The three candidates predict the same read-out for it
-    (<a href="/examples/qcl-crosstalk/"><code>constants.rs</code></a>), so passive data cannot
-    separate them.
+    Experiment E0 watches both qubits idle, and all three candidates predict a read-out of
+    {passive.predicts[0].toFixed(2)}. The example types that number into
+    <a href="/examples/qcl-crosstalk/"><code>constants.rs</code></a>.
   </figcaption>
 </figure>
 

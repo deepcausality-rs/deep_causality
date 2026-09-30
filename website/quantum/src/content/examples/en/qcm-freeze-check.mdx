@@ -22,12 +22,10 @@ crates:
 source: "examples/quantum_examples/qcm_freeze_check"
 ---
 
-A graph of quantum factors is a quantum causal model only when the factors that share a Hilbert
-leg commute pairwise. The library checks this at the freeze boundary, where the graph turns from
-dynamic to frozen, and a failure aborts the freeze, names the pair and leaves the graph dynamic.
-
-The example builds one two-node graph twice. Both factors sit on leg 0, so the check has a pair
-to test.
+The example freezes one two-node graph with two factor pairs. `σz` with `diag(3, −1)` freezes
+cleanly, and `σx` with `σz` aborts the freeze at nodes 0 and 1 and leaves the graph dynamic. A graph
+is a quantum causal model only when the factors that share a Hilbert leg (one qubit's space) commute
+pairwise; `freeze_quantum` tests that condition at the moment the graph turns from dynamic to frozen.
 
 ## What you see
 
@@ -49,21 +47,28 @@ to test.
 ...
 ```
 
-The margin is the commutator's norm divided by the threshold, so anything at or below 1 accepts and anything above 1 rejects and names the pair.
-Two diagonal matrices commute exactly. The first margin is zero, not merely small. The second
-pair anticommutes, and its commutator sits as far from zero as a single-qubit commutator gets.
+Both factors sit on leg 0, so each run tests one pair. In run 1 the margin is the commutator's
+Frobenius norm divided by the threshold, and 0.000e0 means the commutator is zero: two diagonal
+matrices commute exactly. In run 2 the commutator `[σx, σz] = −2iσy` has norm 2√2, far above a
+threshold that scales with the scalar's unit roundoff. The margin exceeds 1, the freeze aborts, and
+`is_frozen()` reads false because the graph has rolled back to dynamic.
 
-## Why the boundary is the right place
+## Why the check runs at the freeze
 
-At the freeze the structure is complete and nothing depends on it yet. A check there never
-rejects a half-built graph, and never finds the problem after a result has been used. A failure
-costs the caller a rebuild. It never costs a result computed on a structure that does not hold.
+At the freeze the structure is complete and nothing depends on it yet. A check there never rejects
+a half-built graph and never finds the problem after a result has been used. A failure costs the
+caller a rebuild.
 
 The error carries `QuantumErrorEnum::CommutatorNonZero { node_j, node_k, detail }`, so the caller
 receives the node indices as data.
 
-## Read before you cite
+## What this run checks
 
-The example passes `None` for the faithfulness argument, so it runs the commutativity check
-alone. Supplying the declared inputs and outputs adds the C₃ check over the frozen graph. The
-check is sound, since it never accepts a non-commuting model, and it may be incomplete.
+The example passes `None` for the faithfulness argument, so only the commutativity check runs;
+supplying the declared inputs and outputs adds the C₃ check over the frozen graph. The check is
+sound, since it never accepts a non-commuting model, and it may be incomplete. The run tests one
+pair of hand-written 2×2 factors on one leg, with the default tolerance (safety factor 8, unit
+roundoff equal to the scalar's epsilon).
+
+The example imports `deep_causality_quantum` for `freeze_quantum`, `CommutatorTolerance`,
+`ProcessFactors` and `FactorSupports`, and `deep_causality` for the graph.

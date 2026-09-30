@@ -7,7 +7,7 @@ import { LEAN_URL, THEOREM_MAP_URL, LEAN_STATUS_URL, PAPERS_URL, CRATE_URL } fro
 
 const title = 'Proof | DeepCausality Quantum';
 const description =
-  'What is proved in Lean, what tests witness, what is stated and not proved, and which papers the crate implements. Each row names the file that shows it.';
+  'What Lean proves, what the tests check, which claim Lean refutes, which targets have no Lean proof, and which papers the crate implements. Each row names the file that shows it.';
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const split = (s: string) => {
@@ -21,21 +21,28 @@ const uncited = papers.filter((p) => p.citedFrom.length === 0);
 <PageShell title={title} description={description} path="/proof/">
   <header class="doc-head">
     <p class="eyebrow">Proof</p>
-    <h1>What is proved, what is tested, and what is neither.</h1>
+    <h1>{TESTS.proved} theorems proved, {TESTS.count} tests passing, {TESTS.deferred} targets without a proof.</h1>
     <p class="lede">
-      {cap(numberWord(TESTS.proved))} theorems are proved in Lean, and each has a Rust test that
-      witnesses it. The suite runs {TESTS.count} tests, and all of them pass.
-      {cap(numberWord(TESTS.deferred))} targets are stated and not proved yet. One tempting claim
-      is false, and Lean proves that too.
+      {cap(numberWord(TESTS.proved))} theorems are proved in Lean, and a Rust test checks each one
+      on numbers. The suite runs {TESTS.count} tests, and all of them pass. Lean also proves that
+      commuting operators can stop commuting under a partial trace, which refutes the claim that
+      a partial trace preserves commutation. {cap(numberWord(TESTS.deferred))} targets have tests
+      and no Lean proof.
     </p>
   </header>
 
   <section class="doc-sec" id="theorems">
     <h2>Which theorems are proved?</h2>
     <p>
-      The rows come from the quantum section of
-      <a href={THEOREM_MAP_URL}><code>lean/THEOREM_MAP.md</code></a>. Lean has no partial trace and
-      no Choi–Jamiołkowski layer, so both are built from first principles under
+      The table lists {TESTS.proved} theorems: six laws of the partial trace, the boundary theorem
+      and the commutator identity, the two statements of the counterexample below, two linearity
+      laws for the Choi action, and two showing that exact abstraction links compose. The rows
+      come from the quantum section of
+      <a href={THEOREM_MAP_URL}><code>lean/THEOREM_MAP.md</code></a>.
+    </p>
+    <p>
+      The pinned Mathlib has no partial trace and no Choi–Jamiołkowski layer, so the proofs build
+      both from first principles under
       <a href={LEAN_URL}><code>lean/DeepCausalityFormal/Quantum/</code></a>. The Rust witness is the
       test that checks the same statement on numbers.
     </p>
@@ -60,23 +67,29 @@ const uncited = papers.filter((p) => p.citedFrom.length === 0);
   <section class="doc-sec" id="refuted">
     <h2>Which claim turned out false?</h2>
     <p>
-      Two commuting operators can lose that property under a partial trace. Take X and Y on a
-      system with two parts, with <code>[X, Y] = 0</code>. Lean proves an explicit pair for which
-      <code>[Tr_B X, Tr_B Y] = [[0, 4], [−4, 0]]</code>, which equals <code>+4i·σy</code>. A
-      factorization that is legal on the whole system can therefore give a marginal that is not.
+      The claim that a partial trace preserves commutation is false. Take operators X and Y on a
+      system with parts A and B, with <code>[X, Y] = 0</code>. Lean proves an explicit pair for
+      which <code>[Tr_B X, Tr_B Y] = [[0, 4], [−4, 0]]</code>, which equals
+      <code>+4i·σy</code>. So two operators that commute on the whole system can have traced parts
+      that do not.
     </p>
     <p>
-      Two true statements sit beside it. The boundary version holds: if the boundary operator
-      commutes with M, its kept-side part commutes with <code>Tr_B M</code>. And
-      <code>Tr_B([Z⊗1, M]) = [Z, Tr_B M]</code> holds without a hypothesis. The second lets the
-      crate turn a measured residual into a bound with a stated <code>√(d_B)</code> amplification.
-      A commutator within tolerance is warrant for the conclusion at <code>√(d_B)</code> times
-      that tolerance, and no warrant for the exact one, so the check returns the bound and a flag
-      against the caller’s tolerance.
+      Two related statements are true. The boundary version (Q-PTP) holds: if the boundary
+      operator commutes with M, its kept-side part commutes with <code>Tr_B M</code>. The
+      commutator identity (Q-PTT), <code>Tr_B([Z⊗1, M]) = [Z, Tr_B M]</code>, holds with no
+      hypothesis.
     </p>
     <p>
-      The boundary theorem’s hypothesis is exact equality over a commutative ring, and a
-      floating-point caller cannot discharge it directly. That gap is why the bound exists.
+      The identity lets the crate turn a measured residual into a bound. A residual ε on
+      <code>[Z⊗1, M]</code> bounds <code>[Z, Tr_B M]</code> by <code>√(d_B)·ε</code> in Frobenius
+      norm, where <code>d_B</code> is the dimension traced away. A commutator within tolerance
+      therefore certifies the traced conclusion at <code>√(d_B)</code> times that tolerance and
+      never the exact one, and the check returns the bound with a flag against the caller’s
+      tolerance.
+    </p>
+    <p>
+      The boundary theorem assumes exact equality over a commutative ring, which floating-point
+      arithmetic cannot supply. The bound covers that gap.
     </p>
   </section>
 
@@ -85,10 +98,13 @@ const uncited = papers.filter((p) => p.citedFrom.length === 0);
     <p>
       {TESTS.count} tests pass under
       <code>cargo test -p deep_causality_quantum --all-features</code>: 772 unit and integration
-      tests and one doc test. Each check has tests, including tests where it must reject and tests
-      that read a report on a case with nothing to examine. Every example printed identical output
-      when run twice on one machine. A grep for the test attribute finds a different number, because it counts
-      attributes and not the tests the harness runs.
+      tests and one doc test. They include cases where a check must reject its input and cases
+      where a check has nothing to examine, such as an empty fault set. Every example printed
+      identical output when run twice on one machine.
+    </p>
+    <p>
+      A grep for the test attribute returns a different number, since it counts attributes and the
+      harness counts the tests it runs.
     </p>
     <p class="next-links">
       <a href={`${CRATE_URL}/tests`}>The test tree ↗</a>
@@ -96,11 +112,17 @@ const uncited = papers.filter((p) => p.citedFrom.length === 0);
   </section>
 
   <section class="doc-sec" id="deferred">
-    <h2>What is stated and not proved?</h2>
+    <h2>Which targets have no Lean proof?</h2>
     <p>
-      These {TESTS.deferred} targets are named in the theorem map and in
-      <a href={LEAN_STATUS_URL}><code>LEAN_QUANTUM.md</code></a>. The Rust behaviour behind each
-      has tests today. No Lean proof exists yet, and the page sets no schedule.
+      {cap(numberWord(TESTS.deferred))} targets have no Lean proof: the Choi–Jamiołkowski
+      reconstruction isomorphism and six theorems about quantum causal models. The theorem map and
+      <a href={LEAN_STATUS_URL}><code>LEAN_QUANTUM.md</code></a> name them, and the crate carries
+      numerical or property-test witnesses for each.
+    </p>
+    <p>
+      <code>LEAN_QUANTUM.md</code> says these proofs need net-new Mathlib machinery. For
+      <code>quantum.unitary_factorization</code> it names the machinery: direct-sum and
+      C*-algebra theory that Mathlib lacks.
     </p>
     <dl class="deflist">
       {deferred.map((d) => (
@@ -114,18 +136,19 @@ const uncited = papers.filter((p) => p.citedFrom.length === 0);
       ))}
     </dl>
     <p>
-      The Markov check, the decomposability check, every code check and the numeric naturality
-      residual therefore stand on tests. The
-      <a href="/checks/">checks page</a> marks each one.
+      <code>LEAN_QUANTUM.md</code> lists the Markov freeze check, the naturality check, the
+      structural precheck, the fault propagator and the decoder validation as witnessed by tests;
+      none claims a theorem. The <a href="/checks/">checks page</a> marks each check.
     </p>
   </section>
 
   <section class="doc-sec" id="papers">
     <h2>Which papers does the crate implement?</h2>
     <p>
-      {TESTS.papers} PDFs are committed under <a href={PAPERS_URL}><code>papers/</code></a>. The
-      first list names the papers a module cites. A committed file is not a claim, so the second
-      list holds the paper that no module cites.
+      {cap(numberWord(cited.length))} of the {TESTS.papers} PDFs under
+      <a href={PAPERS_URL}><code>papers/</code></a> are cited from a module in
+      <code>src/</code>. The first list gives each with what the crate takes from it. The second
+      list holds the one paper no module cites; a committed PDF alone shows no implementation.
     </p>
     <ol class="papers">
       {cited.map((p) => (

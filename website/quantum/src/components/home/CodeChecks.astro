@@ -1,0 +1,110 @@
+---
+/**
+ * Code verification. The four stages `validate` runs on a code subject, with
+ * what each decides and what it returned on the [[32, 2]] toric code. The
+ * output block is copied verbatim from a run of `qcl_geometric_qec`; the rows
+ * read the same run. Regenerate it with
+ *   cargo run --release -p quantum_examples --example qcl_geometric_qec
+ * and compare line by line.
+ */
+import { Code } from 'astro:components';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+
+const SHIKI = { light: rustLight, dark: rustDark };
+
+const stages = [
+  {
+    stage: 'derive_code',
+    decides: 'The qubit count n from the 1-cells (the lattice edges), the logical count k as the first Betti number over 𝔽₂, and the two check families.',
+    run: '[[32, 2]]: 16 Z checks and 16 X checks, each of weight 4. The report claims no distance.',
+  },
+  {
+    stage: 'check_ldpc_weights',
+    decides: 'Both weights of both check matrices against a bound you declare: the qubits a check acts on, and the checks acting on a qubit.',
+    run: 'Bound 4 accepts, with 96 items examined. Bound 3 rejects at the first Z check with margin 1.333.',
+  },
+  {
+    stage: 'check_class_invariance',
+    decides: 'Whether Z̄, S̄ and T̄ act on the homology class and not on the representative chosen. The phases are exact rationals, so no tolerance enters.',
+    run: 'Accepted, over 6 class and gate pairs and 16 boundaries each.',
+  },
+  {
+    stage: 'check_clifford_action',
+    decides: 'Whether H̄ swaps Z̄(γ) and X̄(γ̃) up to phase and stabilizers. A symplectic tableau over 𝔽₂ decides it.',
+    run: 'Accepted, for the 2 logical Hadamards.',
+  },
+];
+
+const out = `[validate]
+    derive_code              Accepted  examined 32
+    check_ldpc_weights       Accepted  examined 96
+    check_class_invariance   Accepted  examined 6
+    check_clifford_action    Accepted  examined 2
+...
+[check_ldpc_weights]  bound 4: max column weight 4, max row weight 2, 96 items examined, Accepted
+    bound 3: rejected at (Z, Column(0)) with margin 1.333 after 1 items`;
+---
+<div class="code">
+  <div class="table-scroll">
+    <table class="table-stack">
+      <thead>
+        <tr>
+          <th scope="col">Stage</th>
+          <th scope="col">What it decides</th>
+          <th scope="col">On the 4 × 4 torus</th>
+        </tr>
+      </thead>
+      <tbody>
+        {stages.map((s, i) => (
+          <tr class="rise" style={`--i:${i}`}>
+            <td data-label="Stage"><code>{s.stage}</code></td>
+            <td data-label="What it decides">{s.decides}</td>
+            <td data-label="On the 4 × 4 torus">{s.run}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="out">
+    <h3>What the run prints</h3>
+    <Code code={out} lang="text" themes={SHIKI} wrap />
+    <p class="note">
+      Bound 3 is there so that bound 4 means something: a suite that only ever accepts says
+      nothing about whether it would notice. The rejection names the Z check that broke it.
+    </p>
+  </div>
+
+  <p class="also">
+    The crate also pushes each weight-one Pauli fault through the physical program of a logical
+    gate and reports which of Haruna’s gates tolerate every one (<code>haruna_filter</code>). It
+    claims no threshold and no distance, and no example runs it.
+  </p>
+</div>
+
+<style>
+  .code { display: grid; gap: var(--space-6); }
+  .table-scroll table { width: 100%; border-collapse: collapse; }
+  .table-scroll th, .table-scroll td {
+    text-align: left;
+    vertical-align: top;
+    padding: var(--space-3);
+    border-top: 1px solid var(--line-1);
+    font-size: var(--t-body-sm);
+  }
+  .table-scroll thead th {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    font-weight: 400;
+    color: var(--fg-2);
+    border-top: none;
+  }
+  .table-scroll td:first-child { white-space: nowrap; }
+  .table-scroll td code { color: var(--accent); background: none; padding: 0; }
+
+  .out h3 { font-size: var(--t-h4); margin: 0 0 var(--space-3); }
+  .out :global(pre) { margin: 0 0 var(--space-3); font-size: var(--t-mono-sm); }
+  .note, .also { margin: 0; color: var(--fg-2); font-size: var(--t-body-sm); max-width: var(--measure); }
+</style>

@@ -1,0 +1,96 @@
+---
+/**
+ * What every verdict carries. Four properties of the decision form, each with a
+ * line copied verbatim from a run:
+ *
+ *   examined  qcl_qcm_freeze         check_decomposable, Vacuous
+ *   margin    qcl_geometric_qec      the LDPC bound that is too tight
+ *   path      qcl_code_switching     the composition law names its norm
+ *   refusal   qcl_concatenated_code  the gate across code blocks
+ *
+ * Two properties that need no output line follow as sentences: the tolerances
+ * derive from the working type, and the compiler orders validate before control.
+ */
+import { Code } from 'astro:components';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+
+const SHIKI = { light: rustLight, dark: rustDark };
+
+const props = [
+  {
+    kind: 'Examined',
+    title: 'Every check counts what it examined.',
+    text: 'A check that examined nothing reads Vacuous, so an empty pass cannot pass for evidence. A two-node chain has no C₃ sub-relation (the pattern two commuting CNOTs create), so the decomposability check has nothing to search and says so.',
+    out: `check_decomposable   Vacuous  examined 0  worst margin 0.000e0`,
+  },
+  {
+    kind: 'Margin',
+    title: 'Rejections name the offender.',
+    text: 'Each check reports its measurement, its threshold and their ratio, the margin. A weight bound of 3 fails the toric code at its first Z check, where the weight is 4.',
+    out: `bound 3: rejected at (Z, Column(0)) with margin 1.333 after 1 items`,
+  },
+  {
+    kind: 'Path',
+    title: 'Reports say exact or numeric.',
+    text: 'Abstraction and fault-tolerance reports say whether the exact or the numeric path decided, and a numeric report names its norm. No numeric verdict passes for exact.',
+    out: `composition law in frobenius-on-choi: ε ≤ ‖τ₂‖_post · ε₁ + ‖τ₁‖_pre · ε₂ over 1 queries, holds`,
+  },
+  {
+    kind: 'Refusal',
+    title: 'It refuses what it cannot decide.',
+    text: 'A cyclic structure, a gate across code blocks, a non-commuting pair on a model and a numeric evaluation over its size cap each fail with an error that names the cause.',
+    out: `refused: Calculation Error: Cz { control: 0, target: 2 } acts across outer blocks 0 and 1; a transversal gadget between code blocks is not part of this construction`,
+  },
+];
+---
+<ul class="rows">
+  {props.map((p, i) => (
+    <li class="row panel corner-brackets rise" style={`--i:${i}`}>
+      <p class="kind">{p.kind}</p>
+      <h3>{p.title}</h3>
+      <p class="t">{p.text}</p>
+      <div class="out"><Code code={p.out} lang="text" themes={SHIKI} wrap /></div>
+    </li>
+  ))}
+</ul>
+<div class="also">
+  <p>
+    Four of the five tolerance types derive from the working real type’s machine epsilon, so
+    switching <code>f64</code> to <code>f32</code> moves them; shot noise derives from the shot
+    count.
+  </p>
+  <p>
+    A candidate that names a causal structure reaches the experiment stage only through
+    validation: a plant configured with structural candidates has no <code>control</code>
+    implementation, so the compiler rejects the call.
+  </p>
+</div>
+
+<style>
+  .rows {
+    list-style: none;
+    margin: 0 0 var(--space-6);
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+  @media (min-width: 800px) { .rows { grid-template-columns: 1fr 1fr; } }
+
+  .row { padding: var(--space-5); display: flex; flex-direction: column; min-width: 0; }
+  .kind {
+    margin: 0 0 var(--space-2);
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .row h3 { font-size: var(--t-h4); margin: 0 0 var(--space-2); }
+  .t { color: var(--fg-1); font-size: var(--t-body-sm); margin: 0 0 var(--space-4); }
+  .out { margin-top: auto; min-width: 0; }
+  .out :global(pre) { margin: 0; font-size: var(--t-mono-sm); }
+
+  .also { display: grid; gap: var(--space-3); max-width: var(--measure); }
+  .also p { margin: 0; color: var(--fg-1); font-size: var(--t-body-sm); }
+</style>

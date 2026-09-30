@@ -65,19 +65,29 @@ example under `examples/quantum_examples/`, or, for what the library leaves out,
 the out-of-scope list of the archived `add-qcl` proposal. That constraint is
 absolute and makes the site citable.
 
-**One demonstration carries the site.** The landing page is built around the
-crosstalk-attribution example (`qcl_crosstalk`): two qubits fail together, three
-structures fit the passive data, the planner picks two experiments, and one
-candidate survives. Every page after it either explains a step of that run,
-shows another subject the same builder takes, or states where the evidence stops.
-Structure, order and emphasis serve a reader who arrives cold from a link and
-leaves in ten seconds if the page does not say what it does.
+**Three questions carry the site.** The crate decides three things, and the
+landing page names them in the headline and shows one real verdict for each in
+the hero: which causal structure explains correlated qubit errors
+(`qcl_crosstalk`), whether an error-correcting code is sound
+(`qcl_geometric_qec`), and what stacking codes costs (`qcl_code_switching`,
+`qcl_concatenated_code`, `qcl_distillation_round`). A fourth section, "What a
+verdict carries", states what all three share: the examined count, the margin,
+the exact or numeric path, and refusal by name. The source for every statement
+about the crate is `openspec/notes/quantum-site/quantum-essence.md`.
 
-**The demonstration is simulated, and the page says so.** The read-outs each
-candidate predicts are constants in the example, the observation is drawn from
-the Born sampler at H1's prediction, and the cost unit is arbitrary. The hero
-figure, the plan table and `/boundaries/` state each of these. No figure on the
-site describes a device.
+**The reader** is a quantum practitioner with basic familiarity who has never
+seen this library. After ten seconds the reader should know what the library
+does, what it adds, and why that is useful. Structure, order and emphasis serve
+a reader who arrives cold from a link.
+
+**The crosstalk run is simulated, and the page says so.** The qubit factors, the
+costs and the read-out each candidate predicts for each experiment are typed
+into the example's `constants.rs` and `model.rs`; the observation is drawn from
+the Born sampler at H1's prediction; the cost unit is arbitrary; and the run
+observes E1 only. The plan table, the decision figure and `/boundaries/` state
+each of these. The example prints "tightest pair separates at 164.8 bits", which
+is the best separation any offered experiment reaches; under the chosen plan the
+tightest pair separates at 99.5 bits. No figure on the site describes a device.
 
 **No roadmap, and no future work.** The site describes the crate as it is today.
 When something is not built, the page says what is not built and stops there.
@@ -101,7 +111,9 @@ Numbers on the site come from a command anyone can re-run:
 | 773 tests passing (772 tests plus 1 doc test) | `cargo test -p deep_causality_quantum --all-features` |
 | Version 0.4.2, released 2026-09-29 | `deep_causality_quantum/CHANGELOG.md` and `Cargo.toml` |
 | 14 proved theorems, 7 deferred targets | the quantum section of `lean/THEOREM_MAP.md` |
-| The crosstalk run: plan cost 2 against 200, 100.1 bits, 164.8 bits | `cargo run --release -p quantum_examples --example qcl_crosstalk` |
+| The crosstalk run: plan cost 2 against 200, 100.1 bits, 164.8 bits (best offered, tomography), 99.5 bits under the plan | `cargo run --release -p quantum_examples --example qcl_crosstalk`; 99.5 is n·Bhattacharyya distance of 0.40 and 0.10 over 1024 shots |
+| The toric code run: four checks accepted, bound 3 rejects with margin 1.333 | `cargo run --release -p quantum_examples --example qcl_geometric_qec` |
+| The stacking runs: gadget residual 0.4619 and bound 3.695; distillation 0.1639, 0.1638 and 0.3277 | `qcl_code_switching`, `qcl_distillation_round`, same command form |
 | 2 to 3 ms per run | release binary, process start included, Apple M3 Max: median 3.0 ms over 20 runs, and 2.4 ms over 30 runs on a second measurement |
 | MSRV 1.98.0 | `rust-version` in the root `Cargo.toml` |
 
@@ -190,7 +202,7 @@ inline element or `{expression}`, and words join ("over1,024 shots"). Leave it o
 
 | Route | Answers |
 | --- | --- |
-| `/` | What does it do? Eight sections: the verdict, the problem, four steps, the plan, other subjects, evidence, limits, run it |
+| `/` | What does it do? Nine sections: the hero, what a verdict carries, which cause, the plan and the decision, the program, is the code sound, what does stacking cost, limits, run it |
 | `/how-it-works/` | What are the stages of a QCL program, what does a check report, what does an abstraction add? |
 | `/checks/` | What does each check decide, and what does a failure name? |
 | `/examples/` | Fourteen runnable examples, grouped by the question each answers |

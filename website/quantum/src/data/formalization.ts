@@ -118,36 +118,36 @@ export const deferred: Deferred[] = [
   {
     id: 'CJ reconstruction isomorphism',
     statement: 'Applying the Choi operator of a channel E reconstructs E: applyChoi (choiOf E) = E.',
-    today: 'A round trip in the channel tests.',
+    today: 'The channel tests run the round trip.',
   },
   {
     id: 'quantum.markov_commutativity',
     statement: 'A process operator is Markov for a graph when it factorizes into pairwise commuting Choi operators.',
-    today: 'The freeze check, with tests that name the offending pair (markov_freeze_tests).',
+    today: 'The freeze check tests it, and the tests name the offending pair (markov_freeze_tests).',
   },
   {
     id: 'quantum.no_influence',
     statement: 'A does not influence D exactly when the partial trace of the process operator over B factors as the marginal on D given C, tensored with the identity on A.',
-    today: 'Numerical and property-test witnesses, per lean/THEOREM_MAP.md.',
+    today: 'Numerical and property-test witnesses (lean/THEOREM_MAP.md).',
   },
   {
     id: 'quantum.unitary_factorization',
     statement: 'For unitary channels the commuting factorization holds automatically.',
-    today: 'Marked research-grade in LEAN_QUANTUM.md: it needs direct-sum and C*-algebra theory Mathlib lacks.',
+    today: 'LEAN_QUANTUM.md marks it research-grade: the proof needs direct-sum and C*-algebra theory that Mathlib lacks.',
   },
   {
     id: 'quantum.classical_embedding',
     statement: 'Classical causal models are the special case of a diagonal process operator.',
-    today: 'Numerical and property-test witnesses. THEOREM_MAP names the target; its statement is in the formalization roadmap note.',
+    today: 'Numerical and property-test witnesses. lean/THEOREM_MAP.md names the target and gives no statement.',
   },
   {
     id: 'quantum.cyclic_support',
-    statement: 'THEOREM_MAP names the target and does not state it.',
-    today: 'The builder refuses cyclic structures by decision.',
+    statement: 'lean/THEOREM_MAP.md names this target and states no theorem for it.',
+    today: 'The builder refuses cyclic structures by decision, and the tests cover the refusal.',
   },
   {
     id: 'quantum.verdict.orthomodular',
     statement: 'The projection lattice is orthomodular.',
-    today: 'The verdict carrier and its law tests are complete (projection_tests); the Lean statement is future work.',
+    today: 'The Rust verdict carrier and its law tests are complete (projection_tests). The Lean statement would extend core.verdict.carriers.',
   },
 ];
