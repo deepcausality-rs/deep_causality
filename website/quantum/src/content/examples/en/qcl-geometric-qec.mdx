@@ -1,0 +1,71 @@
+---
+title: "The toric code, verified exactly"
+question: "Does this 32-qubit toric code have the structure it claims?"
+summary: "Four checks on the [[32, 2]] toric code, all exact over F₂. None simulates anything, so a code beyond the simulator's 24 qubits is decidable."
+order: 5
+group: code
+command: "cargo run --release -p quantum_examples --example qcl_geometric_qec"
+usesCrate: true
+uses:
+  - QclBuilder
+  - derive_code
+  - check_ldpc_weights
+  - CssCode
+  - LdpcWeights
+  - Screened
+crates:
+  - deep_causality_homology
+  - deep_causality_num
+  - deep_causality_quantum
+  - deep_causality_topology
+source: "examples/quantum_examples/qcl_examples/qcl_geometric_qec"
+---
+
+Yes, on all four checks. The subject is a 4×4 square torus read as a CSS code, with qubits on the
+edges, Z checks on the faces and X checks on the vertices. It has 16 vertices, 32 edges and 16
+faces, so it is a [[32, 2]] code.
+
+## What you see
+
+```text
+[subject] 16 vertices, 32 edges, 16 faces
+    no probes, no baseline, no evidence: the code subject offers validate stages only
+
+[validate]
+    derive_code              Accepted  examined 32
+    check_ldpc_weights       Accepted  examined 96
+    check_class_invariance   Accepted  examined 6
+    check_clifford_action    Accepted  examined 2
+
+[check_ldpc_weights]  bound 4: max column weight 4, max row weight 2, 96 items examined, Accepted
+    bound 3: rejected at (Z, Column(0)) with margin 1.333 after 1 items
+```
+
+## What each check decides
+
+| Stage | What it decides |
+|---|---|
+| `derive_code` | n = 32 from the 1-cells, k = 2 from the first Betti number over F₂, and 16 Z checks and 16 X checks of weight 4 |
+| `check_ldpc_weights` | every row and column weight of both check matrices against a bound of 4 |
+| `check_class_invariance` | Z̄, S̄ and T̄ on each class act on the class and not on the representative |
+| `check_clifford_action` | H̄ on each class swaps Z̄(γ) and X̄(γ̃) |
+
+The number of logical qubits, k, is the number of independent loops on the torus. It is a
+topological invariant of the surface the code was built on.
+
+## Why the checks reach past the simulator
+
+Every verdict is a computation over supports, bounded by the weights of the chains and not by the
+register. The in-process simulator stops at 24 qubits and this code has 32, so a state-vector
+check could not reach it. A support is a finite object a computer can settle without
+approximating.
+
+The second bound in the output exists so the first means something. A suite that only ever
+accepts says nothing about whether it would notice, and the rejection names the check
+matrix and the column where the bound fails.
+
+## Read before you cite
+
+The code report says "no distance claimed". The three code checks record a rejection in the
+report and let `finalize()` return `Ok`, so a program reads the report and does not rely on an
+error.

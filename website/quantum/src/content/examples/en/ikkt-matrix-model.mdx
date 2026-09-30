@@ -1,38 +1,78 @@
 ---
-title: "IKKT matrix model"
-question: "What does a non-commutative geometry calculation look like on this crate's kernels?"
-summary: "Spacetime from matrix dynamics, minimizing S = −Tr([X_μ, X_ν]²). The commutator kernel is the crate's contribution."
-order: 2
+title: "The IKKT matrix model"
+question: "Can spacetime be a property of matrices that commute?"
+summary: "Four matrices relax along the IKKT equation of motion at fixed norm: the action falls from 0.048 to 0.00000082 in 40 steps because the matrices come to commute. The run does not compute their joint spectrum."
+order: 9
+group: other
 command: "cargo run --release -p quantum_examples --example ikkt_matrix_model"
 usesCrate: true
 uses:
   - commutator_kernel
   - Operator
+  - QuantumError
 crates:
   - deep_causality_algebra
   - deep_causality_multivector
+  - deep_causality_num
   - deep_causality_num_complex
   - deep_causality_quantum
 source: "examples/quantum_examples/ikkt_matrix_model"
 ---
 
-The IKKT matrix model is a non-perturbative formulation of superstring theory in
-which spacetime is not assumed. It emerges from the dynamics of a set of
-matrices `X_μ`, which minimize an action built entirely out of their mutual
-commutators.
+In 40 relaxation steps at a fixed configuration norm of 1.356465997, the IKKT action falls from
+0.048 to 0.00000082 and the largest commutator falls to 0.000607444. The four matrices therefore
+come to commute without shrinking. The run stops at the first step where the action is below 1e-6.
 
-What this example takes from the crate is narrow and worth stating plainly: it
-imports `commutator_kernel` and the `Operator` alias, and nothing else. The
-geometry, the algebra and the printed report come from
-`deep_causality_multivector`, `deep_causality_algebra` and
-`deep_causality_num_complex`.
+The IKKT model is a candidate non-perturbative formulation of type IIB superstring theory and has
+no spacetime built in. Its action is `S = Σ ‖[X_μ, X_ν]‖²`, which is zero exactly when every pair
+of matrices commutes. Commuting matrices diagonalise together, their joint eigenvalues form a set
+of points, and that set is the emergent spacetime.
 
-That narrowness is the interesting part. `commutator_kernel` returns
-`Result<HilbertState<R>, QuantumError>` rather than a bare value, so a metric
-mismatch between the two operands is a named failure at the point it happens,
-not a silently wrong matrix that propagates into the action.
+## What you see
 
-The same kernel has a causal-monad wrapper, `commutator`, which returns a
-`PropagatingEffect` and routes that failure to the error channel. This example
-calls the kernel directly, which is the right choice when the caller is ordinary
-Rust rather than a causaloid.
+```text
+Relaxing against the equation of motion
+  step        action S    largest [X,X]    configuration norm
+     1     0.045250486     0.142697997     1.356465997
+    10     0.007037002     0.056273004     1.356465997
+    20     0.000361390     0.012752474     1.356465997
+    30     0.000017245     0.002785732     1.356465997
+    40     0.000000820     0.000607444     1.356465997
+
+Outcome
+  steps taken                         40
+  final action S             0.000000820
+  configuration norm         1.356465997
+  action fell every step             yes
+```
+
+The excerpt keeps five of the nine printed steps. Each row gives the action `S`, the norm of the
+largest single commutator and the configuration norm. The norm column reads 1.356465997 in every
+row, so the action fell because the commutators shrank. The outcome line `action fell every step`
+compares the action at each step with the one before it across all 40 steps.
+
+## Why the norm is held fixed
+
+The action is quartic in the coordinates. Multiplying every matrix by 1 − η multiplies the action
+by (1 − η)⁴ whatever the matrices do, so a run that shrank everything toward the origin would show
+an action falling smoothly to zero and demonstrate nothing. Each step in this run moves every
+matrix against the equation of motion `Σ_ν [X_ν, [X_μ, X_ν]]` with step length 1/5, then rescales
+the configuration to its starting norm. With the norm fixed, the action can fall only if the
+matrices commute.
+
+## What it takes from this crate
+
+The run uses three items from `deep_causality_quantum`: `commutator_kernel`, the `Operator` alias
+and `QuantumError`. The action calls the kernel once per pair of matrices, and the equation of
+motion calls it twice per partner matrix, once for the inner commutator and once for the outer. The
+kernel returns a `Result`, so two operands with different metrics fail with `MetricMismatch` at
+the call and never enter the action as a wrong matrix. The geometric algebra comes from
+`deep_causality_multivector`.
+
+## What this run leaves out
+
+The four matrices are `Cl(2)` multivectors with four complex coefficients each, where the model
+proper has ten coordinates and large Hermitian matrices. The action is the bosonic one, without
+fermions, and the step length is fixed. The run shows that the matrices commute to within 0.000607444;
+it does not diagonalise them, so their joint spectrum, the emergent spacetime itself, is not
+computed.

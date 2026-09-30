@@ -1,27 +1,67 @@
 ---
-title: "Electroweak one-loop"
-question: "What does the W boson mass come out at once quantum loops are included?"
-summary: "The implicit loop equation for M_W, with Veltman screening from the top quark and QED running of the coupling."
-order: 6
+title: "The W mass from three measured numbers"
+question: "What does the Standard Model predict for the W boson mass?"
+summary: "The one-loop W mass is 80.369072 GeV against a measured 80.377000 GeV, a 7.928 MeV gap inside the 20 MeV tolerance; tree level is 1.459770 GeV low."
+order: 12
+group: other
 command: "cargo run --release -p quantum_examples --example gauge_electroweak"
 usesCrate: false
 crates:
-  - deep_causality_algebra
   - deep_causality_core
   - deep_causality_num
   - deep_causality_physics
 source: "examples/quantum_examples/gauge_electroweak"
 ---
 
-The example solves the implicit equation linking the Fermi constant to the gauge
-boson masses,
-`M_W²(1 − M_W²/M_Z²) = πα / (√2 G_F (1 − Δr))`, and reports the W mass and the ρ
-parameter with one-loop radiative corrections included.
+The run predicts a W boson mass of 80.369072 GeV against a measured 80.377000 GeV. The 7.928 MeV
+difference is inside the 20 MeV tolerance the run sets. Tree level, `M_W = g·v/2`, gives 78.909302
+GeV, which is 1.459770 GeV low.
 
-Two corrections carry the result. Veltman screening, `Δρ`, comes from the
-top-bottom mass splitting and lands near 0.009. QED running, `Δα`, comes from
-photon vacuum polarization. Leave either out and the prediction misses the
-measured mass by far more than the roughly 0.02% the example achieves.
+The loop solver takes four measured inputs: the fine structure constant at the Z mass, the Fermi
+constant, the Z mass and the top-quark mass (172.52 GeV). From them the run derives the couplings,
+the W mass, the Z widths and the resonance cross-section. The tree-level gap is roughly two percent
+of `M_W`; the one-loop radiative corrections close it, and the top quark in the loop dominates them.
+
+## What you see
+
+```text
+  M_W tree level        78.909302 GeV   from g*v/2
+  M_W loop corrected    80.369072 GeV   from the loop solver
+  the corrections move it by 1.459770 GeV
+...
+  M_W computed          80.369072 GeV
+  M_W measured          80.377000 GeV   PDG
+  deviation                 7.928 MeV   tolerance 20 MeV
+  verdict            inside one-loop accuracy
+```
+
+The first three lines come from stage 2: the tree value, the loop-solver value and the 1.459770 GeV
+between them. The last four come from stage 3. The deviation is the absolute difference between the
+computed mass and the PDG value, and the verdict line reports whether that difference is below the
+tolerance.
+
+## The 20 MeV tolerance is the accuracy the verdict claims
+
+The tolerance is 20 MeV, roughly the size of the two-loop terms that a one-loop calculation omits.
+`within_one_loop_accuracy` returns true when the deviation is under it, so the verdict line tests
+exactly the claim it makes. A looser tolerance would pass a calculation that had stopped agreeing
+with the measurement.
+
+## Four stages run as one flow
+
+A `CausalFlow` chains the stages: unification (the couplings `g` and `g'`), symmetry breaking (the
+masses), gauge mixing (the W/Z mass relation and the `ρ` parameter) and the Z resonance (widths and
+peak cross-section). `bind_or_error` links them, so a stage that fails stops the later stages and
+passes its error to the printed summary. The invisible width of the Z, 0.502289 GeV, is three neutrino
+generations times one neutrino's partial width; its LEP measurement established that there are
+three light neutrino generations.
+
+## What this run leaves out
+
+The model uses the on-shell scheme with the library's packaged one-loop corrections and treats the
+Z as a Breit-Wigner resonance at its peak. It contains no two-loop corrections, no QED or QCD
+corrections to the widths, no initial-state radiation, no fit over several observables and no
+uncertainty on the inputs. The deviation is therefore one number with no error bar.
 
 This example does not import `deep_causality_quantum`. The formulas come from
-`deep_causality_physics`.
+`deep_causality_physics`, and `CausalFlow` comes from `deep_causality_core`.

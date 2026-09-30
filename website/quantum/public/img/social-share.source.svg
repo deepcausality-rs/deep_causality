@@ -4,8 +4,8 @@
     Re-render with:  rsvg-convert -w 1200 -h 630 social-share.source.svg -o card.png
                      magick card.png -quality 90 social-share.jpg
 
-    Same figure as src/components/home/SupportsDiagram.astro: three Hilbert
-    legs, two factors, the shared leg in the accent. Colours are the dark
+    The figure is a miniature of src/components/home/HeroVerdicts.astro:
+    the three questions and one line of real output for each. Colours are the dark
     palette from tokens.css. Text uses a system sans and mono rather than the
     site's vendored woff2 files, which rsvg cannot embed; the card is a raster
     and the substitution is not visible against the real page.
@@ -71,38 +71,35 @@
   </g>
 
   <!-- Headline -->
-  <text x="104" y="268" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="68" font-weight="500" fill="#e6edf3" letter-spacing="-1.4">
-    Quantum causal models
+  <text x="104" y="250" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="60" font-weight="500" fill="#e6edf3" letter-spacing="-1.2">
+    Find the cause. Verify the code.
+  </text>
+  <text x="104" y="308" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="60" font-weight="500" fill="#aab3bd" letter-spacing="-1.2">
+    Bound the error.
   </text>
 
-  <!-- Tagline -->
-  <text x="104" y="322" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="29" fill="#aab3bd">
-    A causal graph whose factors are quantum channels.
-  </text>
+  <!-- The verdict figure, as in HeroVerdicts.astro: the three questions and one
+       line of real output for each. Values from the runs of qcl_crosstalk,
+       qcl_geometric_qec and qcl_code_switching. -->
+  <line x1="104" y1="340" x2="1096" y2="340" stroke="#1f2a36" stroke-width="1"/>
+  <text x="104" y="380" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="26" font-weight="500" fill="#e6edf3">Which cause?</text>
+  <text x="490" y="380" font-family="Menlo, monospace" font-size="19" fill="#5cd4e1">H1 Q1-&gt;Q2 survives, 100.1 bits from its nearest rival</text>
+  <line x1="104" y1="400" x2="1096" y2="400" stroke="#1f2a36" stroke-width="1"/>
+  <text x="104" y="440" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="26" font-weight="500" fill="#e6edf3">Is the code sound?</text>
+  <text x="490" y="440" font-family="Menlo, monospace" font-size="19" fill="#5cd4e1">[[32, 2]] toric code: four checks Accepted</text>
+  <line x1="104" y1="460" x2="1096" y2="460" stroke="#1f2a36" stroke-width="1"/>
+  <text x="104" y="500" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="26" font-weight="500" fill="#e6edf3">What do stacked codes cost?</text>
+  <text x="490" y="500" font-family="Menlo, monospace" font-size="19" fill="#5cd4e1">measured 0.4619, the composition law allows 3.695</text>
 
-  <!-- The shared-support figure. Three legs; the middle one is shared. -->
-  <g transform="translate(104, 384)">
-    <line x1="0" y1="24" x2="992" y2="24" stroke="#2a3a4a" stroke-width="2"/>
-    <line x1="0" y1="72" x2="992" y2="72" stroke="#5cd4e1" stroke-width="3"/>
-    <line x1="0" y1="120" x2="992" y2="120" stroke="#2a3a4a" stroke-width="2"/>
-
-    <rect x="168" y="0" width="240" height="96" fill="none" stroke="#6b7682" stroke-width="2"/>
-    <rect x="584" y="48" width="240" height="96" fill="none" stroke="#6b7682" stroke-width="2"/>
-
-    <circle cx="288" cy="24" r="8" fill="#6b7682"/>
-    <circle cx="288" cy="72" r="8" fill="#5cd4e1"/>
-    <circle cx="496" cy="72" r="11" fill="#5cd4e1"/>
-    <circle cx="704" cy="72" r="8" fill="#5cd4e1"/>
-    <circle cx="704" cy="120" r="8" fill="#6b7682"/>
-  </g>
+  <line x1="104" y1="520" x2="1096" y2="520" stroke="#1f2a36" stroke-width="1"/>
 
   <!-- Figure caption, mono, at the foot of the figure column. -->
-  <text x="104" y="556" font-family="Menlo, monospace" font-size="19" letter-spacing="1.1" fill="#6b7682">
-    SUPPORTS INTERSECT → THE COMMUTATOR MUST VANISH
+  <text x="104" y="566" font-family="Menlo, monospace" font-size="16" letter-spacing="1.1" fill="#6b7682">
+    SIMULATED EVIDENCE · EACH LINE FROM A RUN OF AN EXAMPLE
   </text>
 
   <!-- Domain, right rail. -->
-  <text x="1096" y="556" text-anchor="end" font-family="Menlo, monospace" font-size="20" letter-spacing="1.2" fill="#5cd4e1">
+  <text x="1096" y="566" text-anchor="end" font-family="Menlo, monospace" font-size="20" letter-spacing="1.2" fill="#5cd4e1">
     quantum.deepcausality.com
   </text>
 </svg>

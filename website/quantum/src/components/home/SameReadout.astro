@@ -1,0 +1,111 @@
+---
+/**
+ * The problem in one picture: with nobody intervening, the three candidate
+ * causes predict the same read-out. The value is experiment E0 in
+ * `src/data/crosstalk.ts`, where every candidate predicts 0.04; the figure
+ * draws each candidate and prints that shared number under it.
+ */
+import { candidates, experiments } from '../../data/crosstalk';
+
+const passive = experiments.find((e) => e.id === 'E0')!;
+---
+<figure class="same" data-rise>
+  <ul class="cards">
+    {candidates.map((c, i) => (
+      <li class="card panel corner-brackets rise" style={`--i:${i}`}>
+        <svg class="glyph" viewBox="0 0 96 44" fill="none" aria-hidden="true" focusable="false">
+          {c.id === 'H1' && (
+            <>
+              <line x1="22" y1="22" x2="66" y2="22" />
+              <path d="M60,16 L68,22 L60,28" />
+              <circle cx="16" cy="22" r="6" />
+              <circle cx="80" cy="22" r="6" />
+            </>
+          )}
+          {c.id === 'H2' && (
+            <>
+              <line x1="28" y1="22" x2="72" y2="22" />
+              <path d="M34,16 L26,22 L34,28" />
+              <circle cx="16" cy="22" r="6" />
+              <circle cx="80" cy="22" r="6" />
+            </>
+          )}
+          {c.id === 'H3' && (
+            <>
+              <line x1="48" y1="12" x2="22" y2="32" />
+              <line x1="48" y1="12" x2="74" y2="32" />
+              <circle cx="48" cy="8" r="6" />
+              <circle cx="16" cy="36" r="6" />
+              <circle cx="80" cy="36" r="6" />
+            </>
+          )}
+        </svg>
+        <h3>{c.cause}</h3>
+        <p class="tag">{c.id} · {c.structure}</p>
+        <p class="pred">
+          <span class="num big">{passive.predicts[i].toFixed(2)}</span>
+          <span class="lab">predicted read-out, nobody intervening</span>
+        </p>
+      </li>
+    ))}
+  </ul>
+  <figcaption>
+    Experiment E0 watches both qubits idle, and all three candidates predict a read-out of
+    {passive.predicts[0].toFixed(2)}. The example types that number into
+    <a href="/examples/qcl-crosstalk/"><code>constants.rs</code></a>.
+  </figcaption>
+</figure>
+
+<noscript>
+  <style is:inline>
+    .same .rise { opacity: 1 !important; transform: none !important; }
+  </style>
+</noscript>
+
+<style>
+  .same { margin: 0; }
+  .cards {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+  @media (min-width: 720px) { .cards { grid-template-columns: repeat(3, 1fr); } }
+
+  .card { padding: var(--space-5); }
+  .glyph { width: 6rem; height: auto; margin-bottom: var(--space-4); }
+  .glyph line, .glyph path, .glyph circle {
+    stroke: var(--fg-1);
+    stroke-width: 1.3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .glyph circle { fill: var(--bg-1); }
+  .card h3 { font-size: var(--t-h4); margin: 0 0 var(--space-1); }
+  .tag {
+    margin: 0 0 var(--space-4);
+    color: var(--fg-2);
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: 0.02em;
+  }
+  .pred {
+    margin: 0;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--line-1);
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+  }
+  .big { color: var(--accent); font-size: var(--t-h2); line-height: 1; }
+  .lab { color: var(--fg-2); font-size: var(--t-body-sm); }
+
+  figcaption {
+    margin-top: var(--space-4);
+    color: var(--fg-2);
+    font-size: var(--t-body-sm);
+    max-width: var(--measure);
+  }
+</style>

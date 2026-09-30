@@ -1,91 +1,75 @@
 ---
 import { getCollection } from 'astro:content';
-import BaseLayout from '../../layouts/BaseLayout.astro';
-import SiteHeader from '../../components/nav/SiteHeader.astro';
+import PageShell from '../../components/nav/PageShell.astro';
 import { EXAMPLES_URL } from '../../consts';
+import { numberWord } from '../../data/evidence';
 
-const title = 'Examples — DeepCausality Quantum';
+const title = 'Examples | DeepCausality Quantum';
 const description =
-  'Seven runnable examples ship in the quantum_examples package. Two exercise this crate; the other five are quantum in subject and build on sibling crates.';
+  'Fourteen runnable examples, grouped by the question each answers. Nine use this crate; five are quantum in subject and build on sibling crates.';
 
 const all = (await getCollection('examples')).sort((a, b) => a.data.order - b.data.order);
-const uses = all.filter((e) => e.data.usesCrate);
-const others = all.filter((e) => !e.data.usesCrate);
-
 const slug = (id: string) => id.replace(/^en\//, '');
+
+const groups = [
+  { key: 'decide', title: 'Decide between rival causes', note: 'These examples declare candidate structures, screen them, plan the cheapest experiments and name the survivor.' },
+  { key: 'model', title: 'Check a quantum causal model', note: 'These examples test whether the factors that share a Hilbert leg commute; a failure names the pair.' },
+  { key: 'code', title: 'Verify an error-correcting code', note: 'This example runs exact checks over F₂ on a toric code, with no state vector.' },
+  { key: 'compose', title: 'Compose abstractions', note: 'These examples stack one abstraction on another and compare the measured error with the bound of the composition law.' },
+  { key: 'other', title: 'Quantum in subject, built on other crates', note: 'The first example, the IKKT matrix model, calls this crate’s commutator kernel. The other five do not import this crate, and each page names the crates it imports.' },
+] as const;
+
+const total = all.length;
+const usesCount = all.filter((e) => e.data.usesCrate).length;
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 ---
-<BaseLayout title={title} description={description} path="/examples/">
-  <SiteHeader slot="header" />
-
-  <article class="page cpage">
-    <header class="chead">
-      <p class="eyebrow">Examples</p>
-      <h1>Seven runnable examples</h1>
-      <p class="lede">
-        All seven live in the <code>quantum_examples</code> package and all seven
-        are quantum in subject. Two of them import this crate. The split is
-        listed rather than blurred, because a reader who runs the electroweak
-        example is not exercising anything documented on this site.
-      </p>
-    </header>
-
-    <h2 class="ghead">Exercising this crate</h2>
-    <ol class="rlist">
-      {uses.map((e, i) => (
-        <li class="ritem">
-          <a href={`/examples/${slug(e.id)}/`}>
-            <span class="rix num">{String(i + 1).padStart(2, '0')}</span>
-            <span class="rmain">
-              <span class="rtitle">{e.data.title}</span>
-              <span class="rq">{e.data.question}</span>
-              <span class="rsummary">{e.data.summary}</span>
-              <span class="rverbs">
-                {e.data.uses.map((v) => <code>{v}</code>)}
-              </span>
-            </span>
-            <span class="rgo" aria-hidden="true">→</span>
-          </a>
-        </li>
-      ))}
-    </ol>
-
-    <h2 class="ghead">Quantum in subject, built on sibling crates</h2>
-    <p class="gnote">
-      These do not import <code>deep_causality_quantum</code>. Each page names
-      the crates it does use.
+<PageShell title={title} description={description} path="/examples/">
+  <header class="doc-head">
+    <p class="eyebrow">Examples</p>
+    <h1>{cap(numberWord(total))} runnable examples, grouped by the question they answer.</h1>
+    <p class="lede">
+      {cap(numberWord(usesCount))} of them use this crate. The other {numberWord(total - usesCount)}
+      are quantum in subject and build on sibling crates, so running one of them does not exercise the
+      QCL builder (QCL is the Quantum Causal Language). A row lists the items of this crate that an example
+      calls or, for those {numberWord(total - usesCount)}, the crates it imports. The examples in the first four groups
+      exit nonzero when one of their checks fails.
     </p>
-    <ol class="rlist">
-      {others.map((e, i) => (
-        <li class="ritem">
-          <a href={`/examples/${slug(e.id)}/`}>
-            <span class="rix num">{String(i + 3).padStart(2, '0')}</span>
-            <span class="rmain">
-              <span class="rtitle">{e.data.title}</span>
-              <span class="rq">{e.data.question}</span>
-              <span class="rsummary">{e.data.summary}</span>
-              <span class="rverbs">
-                {e.data.crates.map((c) => <code>{c}</code>)}
-              </span>
-            </span>
-            <span class="rgo" aria-hidden="true">→</span>
-          </a>
-        </li>
-      ))}
-    </ol>
+  </header>
 
-    <p class="src-note">
-      Sources: <a href={EXAMPLES_URL}>examples/quantum_examples <span aria-hidden="true">↗</span></a>
-    </p>
-  </article>
-</BaseLayout>
+  {groups.map((g) => {
+    const items = all.filter((e) => e.data.group === g.key);
+    return (
+      <section class="doc-sec" id={g.key}>
+        <h2>{g.title}</h2>
+        <p class="gnote">{g.note}</p>
+        <ol class="rlist">
+          {items.map((e) => (
+            <li class="ritem">
+              <a href={`/examples/${slug(e.id)}/`}>
+                <span class="rix num">{String(e.data.order).padStart(2, '0')}</span>
+                <span class="rmain">
+                  <span class="rtitle">{e.data.title}</span>
+                  <span class="rq">{e.data.question}</span>
+                  <span class="rsummary">{e.data.summary}</span>
+                  <span class="rverbs">
+                    {(e.data.usesCrate ? e.data.uses : e.data.crates).map((v) => <code>{v}</code>)}
+                  </span>
+                </span>
+                <span class="rgo" aria-hidden="true">→</span>
+              </a>
+            </li>
+          ))}
+        </ol>
+      </section>
+    );
+  })}
+
+  <p class="src-note">
+    Sources: <a href={EXAMPLES_URL}>examples/quantum_examples <span aria-hidden="true">↗</span></a>
+  </p>
+</PageShell>
 
 <style>
-  .cpage { max-width: var(--w-panel); }
-  .chead { margin-bottom: var(--space-7); }
-  .chead h1 { margin: var(--space-3) 0 var(--space-4); }
-  .chead .lede { color: var(--fg-1); max-width: var(--measure); margin: 0; }
-
-  .ghead { font-size: var(--t-h4); margin: var(--space-7) 0 var(--space-3); }
   .gnote { color: var(--fg-1); font-size: var(--t-body-sm); max-width: var(--measure); margin: 0 0 var(--space-4); }
 
   .rlist { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line-1); }

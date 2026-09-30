@@ -1,0 +1,194 @@
+---
+/**
+ * The hero figure: three rival causes, one observation.
+ *
+ * Each row is one candidate cause. The dot is the read-out that candidate
+ * predicts for experiment E1 (hold qubit 1 excited, read qubit 2); the band is
+ * the observed read-out plus or minus three standard errors, the tolerance the
+ * example judges agreement by. The candidate whose dot falls inside the band is
+ * the one that survives. Values come from `src/data/crosstalk.ts`.
+ *
+ * Geometry lives in the CSS grid; every word is HTML. Each track draws its own
+ * band segment. Rows have no gaps, so on a wide screen the segments join into
+ * one band, and on a narrow screen, where each row stacks, each track still
+ * reads on its own.
+ */
+import { candidates, RUN } from '../../data/crosstalk';
+
+const AXIS_MAX = 0.5;
+const at = (v: number) => `${((v / AXIS_MAX) * 100).toFixed(2)}%`;
+const { estimate, standardError } = RUN.observed;
+const lo = estimate - RUN.agreementSigmas * standardError;
+const hi = estimate + RUN.agreementSigmas * standardError;
+const ticks = [0, 0.1, 0.2, 0.3, 0.4, 0.5];
+---
+<figure class="verdict panel corner-brackets" data-rise>
+  <p class="title">Experiment E1: hold qubit 1 excited, then read qubit 2</p>
+
+  <div class="rows" role="table" aria-label="Predicted read-out of each candidate cause against the observed read-out">
+    <div class="head" role="row">
+      <span role="columnheader">Candidate cause</span>
+      <span role="columnheader">Predicted read-out</span>
+    </div>
+
+    {candidates.map((c, i) => (
+      <div class:list={['row', 'rise', c.verdict === 'consistent' ? 'is-ok' : 'is-out']} style={`--i:${i + 1}`} role="row">
+        <div class="who" role="cell">
+          <b class="name">{c.cause}</b>
+          <span class="tag">{c.id} · {c.structure}</span>
+          <span class="res">
+            <span class="mark" aria-hidden="true">{c.verdict === 'consistent' ? '✓' : '×'}</span>
+            {c.verdict === 'consistent' ? 'survives' : 'rejected'}
+          </span>
+        </div>
+
+        <div class="track" role="cell">
+          <span class="band" style={`left:${at(lo)}; width:${at(hi - lo)}`}></span>
+          <span class="obs" style={`left:${at(estimate)}`}></span>
+          <span class="dot" style={`left:${at(c.predictsE1)}`}></span>
+          <span class="val num" style={`left:${at(c.predictsE1)}`}>{c.predictsE1.toFixed(2)}</span>
+        </div>
+      </div>
+    ))}
+
+    <div class="axis">
+      <span class="axis-pad"></span>
+      <span class="ticks">
+        {ticks.map((t) => (
+          <span class="tick num" style={`left:${at(t)}`}>{t.toFixed(1)}</span>
+        ))}
+      </span>
+    </div>
+  </div>
+
+  <figcaption>
+    The band is the observed read-out, {estimate.toFixed(3)} ± {standardError.toFixed(3)} over
+    {RUN.shots.toLocaleString('en-US')} shots, widened to {RUN.agreementSigmas} standard errors.
+    H1’s prediction falls inside the band; H2’s and H3’s fall outside it. The example types in
+    the predictions, and the simulator drew the observation from H1’s prediction, so the run
+    recovers the structure it started from. It observes E1 only. Had H2 or H3 been true, a
+    read-out near 0.10 would leave both standing, and E2 would split them: it predicts 0.40
+    under H2 and 0.10 under H3. No hardware produced any number here. Values come from
+    <a href="/examples/qcl-crosstalk/"><code>qcl_crosstalk</code></a>.
+  </figcaption>
+</figure>
+
+<noscript>
+  <style is:inline>
+    .verdict .rise { opacity: 1 !important; transform: none !important; }
+  </style>
+</noscript>
+
+<style>
+  .verdict { margin: 0; padding: var(--space-5); }
+  .title {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-1);
+    margin: 0 0 var(--space-4);
+  }
+
+  .head { display: none; }
+  .row, .axis { display: grid; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 560px) {
+    .head, .row, .axis {
+      display: grid;
+      grid-template-columns: 10.5rem minmax(0, 1fr);
+      column-gap: var(--space-4);
+    }
+    .head {
+      padding-bottom: var(--space-2);
+      font-family: var(--font-mono);
+      font-size: var(--t-eyebrow);
+      letter-spacing: var(--ls-eyebrow);
+      text-transform: uppercase;
+      color: var(--fg-2);
+    }
+  }
+
+  .row { border-top: 1px solid var(--line-1); }
+  @media (min-width: 560px) { .row { min-height: 5rem; } }
+
+  .who {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    padding: var(--space-3) 0;
+    min-width: 0;
+  }
+  .name { color: var(--fg-0); font-weight: var(--fw-heading); line-height: 1.25; }
+  .is-out .name { color: var(--fg-1); }
+  .tag { color: var(--fg-2); font-family: var(--font-mono); font-size: var(--t-eyebrow); letter-spacing: 0.02em; }
+  .res {
+    margin-top: var(--space-1);
+    font-family: var(--font-mono);
+    font-size: var(--t-mono-sm);
+    color: var(--fg-2);
+  }
+  .is-ok .res { color: var(--accent); }
+  .mark { margin-right: 0.35em; }
+
+  .track { position: relative; height: 3.25rem; }
+  @media (min-width: 560px) { .track { height: auto; } }
+  .track::before {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; top: 50%;
+    height: 1px;
+    background: var(--line-2);
+  }
+  .band {
+    position: absolute;
+    top: 0; bottom: 0;
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
+    border-left: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+    border-right: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+  .obs {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 0;
+    border-left: 1px dashed var(--accent);
+  }
+  .dot {
+    position: absolute;
+    top: 50%;
+    width: 0.85rem; height: 0.85rem;
+    margin: -0.425rem 0 0 -0.425rem;
+    border-radius: 50%;
+    background: var(--fg-2);
+    border: 2px solid var(--bg-1);
+  }
+  .is-ok .dot { background: var(--accent); }
+  .val {
+    position: absolute;
+    top: 50%;
+    transform: translateX(-50%);
+    margin-top: -1.65rem;
+    color: var(--fg-2);
+    font-size: var(--t-eyebrow);
+  }
+  .is-ok .val { color: var(--fg-0); }
+
+  .axis { border-top: 1px solid var(--line-1); }
+  .axis-pad { display: none; }
+  @media (min-width: 560px) { .axis-pad { display: block; } }
+  .ticks { position: relative; display: block; height: 1.5rem; margin-top: var(--space-1); }
+  .tick {
+    position: absolute;
+    transform: translateX(-50%);
+    color: var(--fg-2);
+    font-size: var(--t-eyebrow);
+  }
+  .tick:first-child { transform: none; }
+  .tick:last-child { transform: translateX(-100%); }
+
+  figcaption {
+    margin-top: var(--space-4);
+    color: var(--fg-2);
+    font-size: var(--t-body-sm);
+  }
+</style>

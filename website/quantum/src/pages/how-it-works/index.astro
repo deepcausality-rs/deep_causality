@@ -1,0 +1,259 @@
+---
+import { Code } from 'astro:components';
+import PageShell from '../../components/nav/PageShell.astro';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+import { CRATE_URL, DOCSRS_URL } from '../../consts';
+
+const SHIKI = { light: rustLight, dark: rustDark };
+
+const title = 'How QCL works | DeepCausality Quantum';
+const description =
+  'A QCL program configures a subject, validates it with checks that report what they examined, and controls it with experiments the planner chooses. Failures name what broke.';
+
+const shape = `config(subject, candidates)  →  validate(checks)  →  Screened  →  control(evidence)  →  report`;
+
+const vacuous = `check_markov         Accepted  examined 1  worst margin 0.000e0
+check_decomposable   Vacuous   examined 0  worst margin 0.000e0`;
+
+const failure = `[2] Non-commuting model: σx and σz on leg 0
+    ✓ validate failed: factors at nodes 0 and 1 do not commute
+    the subject is as built: is_frozen() = true
+
+[3] The same non-commuting model on a dynamic graph, through the shipped freeze
+    ✓ freeze aborted: factors at nodes 0 and 1 do not commute
+    is_frozen() = false (rolled back)`;
+
+const law = `[Z̄(0)] at the shipped precisions
+         f32: e1 = 1.19e-6, e2 = 4.77e-7, |t1|_pre = 1.000000, |t2|_post = 2.000000, bound = 2.86e-6, measured = 9.54e-7, holds
+         f64: e1 = 2.22e-15, e2 = 1.78e-15, |t1|_pre = 1.000000, |t2|_post = 2.000000, bound = 6.22e-15, measured = 1.78e-15, holds
+    Float106: e1 = 0.00e0, e2 = 0.00e0, |t1|_pre = 1.000000, |t2|_post = 2.000000, bound = 0.00e0, measured = 0.00e0, holds`;
+---
+<PageShell title={title} description={description} path="/how-it-works/">
+  <header class="doc-head">
+    <p class="eyebrow">How it works</p>
+    <h1>A QCL program configures, validates and controls.</h1>
+    <p class="lede">
+      QCL, the Quantum Causal Language, is a builder in Rust. You name a subject and its
+      candidates; the builder checks them, and the candidates that pass go to a stage that plans
+      experiments and reads their results. Every check reports what it examined, and every failure
+      names what broke.
+    </p>
+  </header>
+
+  <section class="doc-sec" id="shape">
+    <h2>What is the shape of a program?</h2>
+    <p>A program calls <code>config</code>, then <code>validate</code>, then <code>control</code>, and the compiler enforces that order.</p>
+    <Code code={shape} lang="text" themes={SHIKI} wrap />
+    <p>
+      <code>QclBuilder::config</code> names two working types once: a real type for accuracy and a
+      count type for headroom. The count type moves no threshold. <code>build()</code> refuses a
+      subject that would answer unsoundly, before any stage runs; an unfrozen graph, a cyclic
+      causal structure and a plant with no candidates are refused there.
+    </p>
+    <p>
+      <code>validate</code> ends in a <code>Screened</code> value: the candidates that passed every
+      check, with the report. A structural candidate reaches <code>control</code> only through that
+      value, so no path skips the checks. A plant configured with structural candidates has no
+      <code>control</code> implementation, and the compiler rejects the call.
+    </p>
+    <p>
+      The pipeline orders and names the stages of the causal monad, the crate’s effect type. It
+      defines no new monad.
+    </p>
+  </section>
+
+  <section class="doc-sec" id="subjects">
+    <h2>What can you name as the subject?</h2>
+    <p>
+      You name one of four subjects: a plant, a model, a code or a circuit. The subject decides
+      which checks exist. Only a plant reaches <code>control</code>; the other three stop after
+      <code>validate</code>.
+    </p>
+    <dl class="deflist">
+      <div>
+        <dt>Plant</dt>
+        <dd>
+          A system that evolves and is measured, with the observables it exposes and its
+          candidates. A structural candidate claims a causal structure and goes through the screen.
+          A mechanism candidate claims none and enters control directly. Checks:
+          <code>check_markov</code>, <code>check_decomposable</code>. Example:
+          <a href="/examples/qcl-crosstalk/">crosstalk</a>.
+        </dd>
+      </div>
+      <div>
+        <dt>Model</dt>
+        <dd>
+          A process written as one Choi–Jamiołkowski operator per node of a frozen graph, meaning a
+          graph with fixed node ids that passed the freeze checks. It behaves as a plant with one
+          structural candidate and no evidence, and the existing freeze check maps onto it. Checks:
+          <code>check_markov</code>, <code>check_decomposable</code>. Example:
+          <a href="/examples/qcl-qcm-freeze/">freeze</a>.
+        </dd>
+      </div>
+      <div>
+        <dt>Code</dt>
+        <dd>
+          A chain complex that defines a CSS code, evaluated exactly. It has no experiments, no
+          baseline and no evidence, so it offers validate stages only: <code>derive_code</code>,
+          <code>check_ldpc_weights</code>, <code>check_class_invariance</code>,
+          <code>check_clifford_action</code>. Example:
+          <a href="/examples/qcl-geometric-qec/">toric code</a>.
+        </dd>
+      </div>
+      <div>
+        <dt>Circuit</dt>
+        <dd>
+          A compositional circuit model. The library stores the circuit and screens its dilation,
+          the circuit rewritten as a factorization the checks can read. Only a circuit can enter an
+          abstraction. Checks:
+          <code>check_markov</code>, <code>check_decomposable</code>,
+          <code>check_alignment_structure</code>, <code>check_naturality</code>. Example:
+          <a href="/examples/qcl-crosstalk-circuits/">crosstalk over circuits</a>.
+        </dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="doc-sec" id="checks">
+    <h2>What does a check report?</h2>
+    <p>
+      Every check returns one shape: the quantity it measured, its threshold, the margin (a ratio
+      of the two; 1 or below accepts) and the number of items it examined. The verdict is
+      Accepted, Rejected or Vacuous. Vacuous means that nothing was examined, so nothing was
+      certified.
+    </p>
+    <p>
+      A bare pass would hide that case. On a two-node chain no 3×3 sub-relation exists, because one
+      needs three inputs and three outputs. So <code>check_decomposable</code> has nothing to
+      search, and the report says so.
+    </p>
+    <Code code={vacuous} lang="text" themes={SHIKI} wrap />
+    <p>
+      The tolerances form one family with five named members: commutator, validation, numerical
+      rank, state and shot noise. The first four derive from the machine epsilon of the working
+      real type, so moving from <code>f64</code> to <code>f32</code> moves those thresholds with
+      it. Shot noise derives from the shot count.
+    </p>
+    <p>
+      A rejection has three outcomes, set by the stage and the subject. On a plant,
+      <code>check_markov</code> and <code>check_decomposable</code> drop a failing candidate from
+      the admitted set. On a model or a circuit, a rejection from those two checks fails the
+      stage, and <code>finalize()</code> returns the error; on a circuit,
+      <code>check_alignment_structure</code> and <code>check_naturality</code> fail the stage the
+      same way. The code checks <code>check_ldpc_weights</code>,
+      <code>check_class_invariance</code> and <code>check_clifford_action</code> record the
+      rejection in the report, and <code>finalize()</code> returns <code>Ok</code>. A structural
+      error, such as a shape mismatch, fails the stage in every case.
+    </p>
+    <p class="next-links">
+      <a href="/checks/">Every check, and what backs it →</a>
+    </p>
+  </section>
+
+  <section class="doc-sec" id="control">
+    <h2>What does control do?</h2>
+    <p>
+      Control turns candidates into a decision: it forks one world per candidate, measures or
+      predicts in each world, and adjudicates the verdicts. Two stage orders are valid.
+      A mechanism plant runs <code>fork</code>, <code>observe</code>, <code>gate</code>,
+      <code>adjudicate</code>. A structural plant runs <code>observe</code>, <code>fork</code>,
+      <code>predict</code>, <code>compare</code>, <code>adjudicate</code>. The stage
+      <code>design</code> belongs to neither order, because it needs only the candidates and the
+      experiments on offer.
+    </p>
+    <dl class="deflist">
+      <div><dt><code>fork</code></dt><dd>Creates one world per candidate, each with its own ledger, and fails if the screen admitted no candidate. A structural candidate’s world holds the plant unchanged; a mechanism candidate’s world holds the plant evolved by that candidate’s channel.</dd></div>
+      <div><dt><code>observe</code></dt><dd>Measures an observable over a number of shots: the plant before the fork, each world’s plant after it.</dd></div>
+      <div><dt><code>predict</code></dt><dd>Evaluates each world’s model for an observable, without spending device time.</dd></div>
+      <div><dt><code>compare</code></dt><dd>Judges each world’s prediction against the observation, in standard errors of the observation.</dd></div>
+      <div><dt><code>gate</code></dt><dd>Judges a read-out against a specification: at least a given value, or at most one.</dd></div>
+      <div><dt><code>design</code></dt><dd>Solves the minimum-cost cover: the cheapest experiments that separate each coverable pair of candidates by a floor of bits. It also lists the pairs no experiment reaches.</dd></div>
+      <div><dt><code>adjudicate</code></dt><dd>Folds the worlds’ verdicts and names a survivor, or names why the data leaves several candidates standing.</dd></div>
+    </dl>
+    <p>
+      The ledger counts shots, experiments, predictions, device time, cost and bits. A shot budget
+      draws down through checked subtraction, and an overdrawn budget returns an error that names
+      the shortfall.
+    </p>
+  </section>
+
+  <section class="doc-sec" id="failure">
+    <h2>What happens when something fails?</h2>
+    <p>
+      The error names the offender, and the subject stays as it was built. A non-commuting pair
+      (<code>CommutatorNonZero</code>) carries the two node indices as typed fields. A Pauli
+      outside the code’s normalizer (<code>NotInNormalizer</code>) carries the index of the
+      stabilizer generator it anticommutes with. The triples of a C₃
+      (<code>NotFaithfullyRepresentable</code>) and the name of a cyclic candidate
+      (<code>CyclicStructureUnsupported</code>) appear in the error’s message.
+    </p>
+    <p>
+      A stage mutates nothing, so a failed <code>validate</code> leaves the subject as it was
+      built. A failed freeze rolls the graph back to its dynamic state, so a model that cannot
+      freeze is never left half frozen.
+    </p>
+    <Code code={failure} lang="text" themes={SHIKI} wrap />
+    <p class="next-links">
+      <a href={`${CRATE_URL}/src/error/quantum_error.rs`}>Every error variant in the source ↗</a>
+      <a href={DOCSRS_URL}>API reference on docs.rs ↗</a>
+    </p>
+  </section>
+
+  <section class="doc-sec" id="precision">
+    <h2>How do you choose the precision?</h2>
+    <p>
+      You change one type alias. Each example declares <code>type FloatType = Float106;</code>,
+      and the factors, the separations, the plan’s costs and every read-out recompute at that
+      precision. Switch it to <code>f32</code>, <code>f64</code> or <code>BFloat16</code> and no
+      other line of source changes. The results and thresholds move, and some examples state where
+      a narrow type stops meeting their tolerance.
+    </p>
+    <p>
+      A hard-coded <code>f64</code> stays invisible while the alias is <code>f64</code> and fails
+      to compile the moment the two differ. For that reason the examples default to
+      <code>Float106</code>.
+    </p>
+  </section>
+
+  <section class="doc-sec" id="abstractions">
+    <h2>What is an abstraction, and what does QCL do with one?</h2>
+    <p>
+      An abstraction relates a detailed model to a coarser one, and QCL measures how far the
+      relation is from exact. Eight physical qubits carry two logical qubits, and the logical model
+      describes the same behaviour with fewer parts. Lorenz and Tull (arXiv:2602.16612) define when
+      such a map is sound: it must commute with every query in a chosen signature, a set of
+      queries.
+    </p>
+    <p>
+      QCL measures the failure to commute as a residual, so an approximate abstraction reports its
+      distance from exact. When two abstractions compose, the composition law bounds the
+      composite’s residual: <code>ε ≤ ‖τ₂‖_post · ε₁ + ‖τ₁‖_pre · ε₂</code>. Here ε₁ and ε₂ are
+      the two links’ residuals, and τ₁ and τ₂ are their channel maps. The crate computes both
+      norms for each query. In the Frobenius norm on Choi operators neither equals 1 in general,
+      because a partial trace over a factor of dimension d has norm √d.
+    </p>
+    <p>
+      The concatenated-code example prints the law for the logical gate Z̄(0) at three precisions.
+      At <code>f32</code> the bound is 2 × 1.19e-6 + 1 × 4.77e-7 = 2.86e-6, and the measured
+      residual is 9.54e-7. At each precision the measured residual is at or under the bound.
+    </p>
+    <Code code={law} lang="text" themes={SHIKI} />
+    <p>
+      When both residuals are zero the composite is exact, and Lean proves that case
+      (<code>quantum.abstraction.compose_exact</code>). The bound for nonzero residuals follows
+      from the triangle inequality, and Lean has no statement of it.
+    </p>
+    <p>
+      A decoder is also an abstraction, from a circuit to its detector error model. The crate
+      contains no decoding algorithm; the decoder’s reading of the record enters as data. The
+      library injects a fault at each named circuit location and checks the model against the
+      circuit. A correlated error that the model omits produces the worst failure, and the failure
+      names the location. Tests cover this path, and no example runs it.
+    </p>
+    <p class="next-links">
+      <a href="/examples/qcl-concatenated-code/">Concatenated code example →</a>
+      <a href="/examples/qcl-code-switching/">Code switching example →</a>
+      <a href="/examples/qcl-distillation-round/">Distillation example →</a>
+    </p>
+  </section>
+</PageShell>

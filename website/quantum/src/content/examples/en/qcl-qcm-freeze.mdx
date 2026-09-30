@@ -1,0 +1,59 @@
+---
+title: "The freeze check through QCL"
+question: "Does the QCL pipeline agree with the shipped freeze on the same model?"
+summary: "A commuting model screens, a non-commuting one fails validate naming the pair, and the shipped freeze rolls the graph back. The two paths report the same pairs and margin."
+order: 4
+group: model
+command: "cargo run --release -p quantum_examples --example qcl_qcm_freeze"
+usesCrate: true
+uses:
+  - QclBuilder
+  - CheckVerdict
+  - CommutatorTolerance
+  - freeze_quantum
+  - QuantumErrorEnum
+crates:
+  - deep_causality
+  - deep_causality_num
+  - deep_causality_num_complex
+  - deep_causality_quantum
+  - deep_causality_tensor
+source: "examples/quantum_examples/qcl_examples/qcl_qcm_freeze"
+---
+
+Yes. The pipeline and the shipped freeze examine the same pairs and report the same margin. This
+example runs the model from [the freeze check](/examples/qcm-freeze-check/) through `validate`
+and compares.
+
+## What you see
+
+```text
+[1] Commuting model: σz and diag(3, −1) on leg 0
+    check_markov         Accepted  examined 1  worst margin 0.000e0
+    check_decomposable   Vacuous  examined 0  worst margin 0.000e0
+    screen: Accepted, 1 items examined across both checks
+    freeze_quantum on the same model: 1 pair(s), worst margin 0.000e0 — the same report
+    the pipeline and the shipped freeze examined the same pairs: yes
+    check_decomposable is vacuous (no C₃ sub-relation on a two-node chain): yes
+
+[2] Non-commuting model: σx and σz on leg 0
+    ✓ validate failed: factors at nodes 0 and 1 do not commute
+    the subject is as built: is_frozen() = true
+
+[3] The same non-commuting model on a dynamic graph, through the shipped freeze
+    ✓ freeze aborted: factors at nodes 0 and 1 do not commute
+    is_frozen() = false (rolled back)
+```
+
+## What the three scenarios show
+
+1. **A commuting model screens.** `validate` runs `check_markov` and `check_decomposable`, the
+   two checks the freeze runs internally, and ends in a `Screened` value whose report names the
+   pairs examined and the worst margin.
+2. **A non-commuting model fails `validate`.** The error names the pair, and the subject stays
+   exactly as built, because the pipeline mutates nothing.
+3. **The shipped freeze rolls back.** On a dynamic graph, `freeze_model` aborts and returns the
+   graph to its dynamic state.
+
+The decomposability check on a two-node chain examines no 3×3 block, so it reads Vacuous. The
+report says so.

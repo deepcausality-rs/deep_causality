@@ -1,0 +1,87 @@
+---
+/**
+ * Beyond one problem: the same builder takes other subjects. Each card is a
+ * question the reader might bring, one sentence on what the library does about
+ * it, and lines copied verbatim from the example's output. The excerpts are
+ * from `qcl_qcm_freeze`, `qcl_geometric_qec` and `qcl_distillation_round`;
+ * regenerate them with the command each example page shows.
+ */
+import { Code } from 'astro:components';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+
+const SHIKI = { light: rustLight, dark: rustDark };
+
+const subjects = [
+  {
+    kind: 'A quantum causal model',
+    q: 'Is this set of factors a legal model?',
+    text: 'Factors that share a Hilbert leg must commute in pairs. In this run a pair fails: the freeze aborts, names nodes 0 and 1, and rolls the graph back to its dynamic (unfrozen) state.',
+    out: `[3] The same non-commuting model on a dynamic graph, through the shipped freeze
+    ✓ freeze aborted: factors at nodes 0 and 1 do not commute
+    is_frozen() = false (rolled back)`,
+    href: '/examples/qcl-qcm-freeze/',
+    link: 'Freeze check example',
+  },
+  {
+    kind: 'An error-correcting code',
+    q: 'Does this code have the structure it claims?',
+    text: 'It does: all four stages accept the [[32, 2]] toric code. Each stage decides exactly over finite supports and builds no state vector, which matters because the code has 32 qubits and the crate’s in-process simulator stops at 24.',
+    out: `[validate]
+    derive_code              Accepted  examined 32
+    check_ldpc_weights       Accepted  examined 96
+    check_class_invariance   Accepted  examined 6
+    check_clifford_action    Accepted  examined 2`,
+    href: '/examples/qcl-geometric-qec/',
+    link: 'Toric code example',
+  },
+  {
+    kind: 'Stacked abstractions',
+    q: 'How much error survives when codes stack?',
+    text: 'Almost all of it. An abstraction relates a detailed model to a simpler one, and a code is one. At a physical error rate of 1 in 100 the noise is 0.1639 and the ideal recovery leaves 0.1638. The composition law, which bounds two stacked abstractions by the weighted sum of their links’ residuals, allows 0.3277.',
+    out: `[p = 1/100]
+    the recovery leaves 1.638e-1 of the noise's 1.639e-1; the law allows 3.277e-1`,
+    href: '/examples/qcl-distillation-round/',
+    link: 'Distillation example',
+  },
+];
+---
+<ul class="rows">
+  {subjects.map((s, i) => (
+    <li class="row rise" style={`--i:${i}`}>
+      <div class="copy">
+        <p class="kind">{s.kind}</p>
+        <h3>{s.q}</h3>
+        <p class="t">{s.text}</p>
+        <p class="go"><a href={s.href}>{s.link} <span aria-hidden="true">→</span></a></p>
+      </div>
+      <div class="out"><Code code={s.out} lang="text" themes={SHIKI} wrap={false} /></div>
+    </li>
+  ))}
+</ul>
+
+<style>
+  .rows { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line-1); }
+  .row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-4);
+    padding: var(--space-6) 0;
+    border-bottom: 1px solid var(--line-1);
+  }
+  @media (min-width: 900px) {
+    .row { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--space-7); align-items: center; }
+  }
+  .kind {
+    margin: 0 0 var(--space-2);
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .copy h3 { font-size: var(--t-h4); margin: 0 0 var(--space-3); }
+  .t { color: var(--fg-1); font-size: var(--t-body-sm); margin: 0 0 var(--space-3); max-width: var(--measure); }
+  .go { margin: 0; font-size: var(--t-body-sm); }
+  .out { min-width: 0; }
+  .out :global(pre) { margin: 0; font-size: var(--t-mono-sm); overflow-x: auto; }
+</style>

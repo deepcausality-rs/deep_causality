@@ -1,0 +1,119 @@
+---
+/**
+ * The planner's choice, laid out so the reason is visible.
+ *
+ * One row per experiment: what it does, what it costs (bar length is linear in
+ * cost, so the 200 fills the track and the 1s are slivers), and the read-out
+ * each candidate predicts. A row whose three predictions are equal separates
+ * nothing. The chosen rows are the minimum-cost cover of the three candidate
+ * pairs, as the run prints them. Values read from `src/data/crosstalk.ts`.
+ */
+import { candidates, experiments, RUN } from '../../data/crosstalk';
+
+const maxCost = Math.max(...experiments.map((e) => e.cost));
+const width = (cost: number) => `${Math.max((cost / maxCost) * 100, 1.2).toFixed(2)}%`;
+const same = (p: [number, number, number]) => p[0] === p[1] && p[1] === p[2];
+---
+<figure class="plan" data-rise>
+  <div class="scroll">
+    <table class="table-stack">
+      <thead>
+        <tr>
+          <th scope="col">Experiment</th>
+          <th scope="col">Cost</th>
+          {candidates.map((c) => <th scope="col" class="pcol">{c.id} predicts</th>)}
+          <th scope="col">Plan</th>
+        </tr>
+      </thead>
+      <tbody>
+        {experiments.map((e, i) => (
+          <tr class:list={['rise', { chosen: e.chosen }]} style={`--i:${i}`}>
+            <td data-label="Experiment" class="what">
+              <b>{e.id} · {e.name}</b>
+              <span>{e.does}</span>
+            </td>
+            <td data-label="Cost" class="cost">
+              <span class="bar"><span class="fill" style={`width:${width(e.cost)}`}></span></span>
+              <span class="num">{e.cost}</span>
+            </td>
+            {e.predicts.map((p, k) => (
+              <td data-label={candidates[k].id} class="num pcell">{p.toFixed(2)}</td>
+            ))}
+            <td data-label="Plan" class="pick">
+              {e.chosen ? 'chosen' : same(e.predicts) ? 'separates nothing' : ''}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  <figcaption>
+    Costs share one arbitrary unit. The costs and the predicted read-outs are inputs the example
+    types into <a href="/examples/qcl-crosstalk/"><code>constants.rs</code></a>, and the planner
+    works from them. The plan totals {RUN.planCost}, and tomography alone totals
+    {RUN.tomographyCost}. Under the plan the tightest pair of candidates is
+    {RUN.tightestPairBits} bits apart, against a floor of {RUN.floorBits}. The line the example
+    prints as “tightest pair separates at {RUN.tightestPairBestOfferedBits} bits” gives the best
+    separation any offered experiment reaches, which is tomography’s.
+  </figcaption>
+</figure>
+
+<noscript>
+  <style is:inline>
+    .plan .rise { opacity: 1 !important; transform: none !important; }
+  </style>
+</noscript>
+
+<style>
+  .plan { margin: 0; }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; min-width: 44rem; }
+  th, td { text-align: left; padding: var(--space-3) var(--space-3); border-top: 1px solid var(--line-1); vertical-align: middle; }
+  thead th {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    font-weight: 400;
+    color: var(--fg-2);
+    border-top: none;
+    white-space: nowrap;
+  }
+  .what b { display: block; color: var(--fg-0); font-weight: var(--fw-heading); }
+  .what span { color: var(--fg-2); font-size: var(--t-body-sm); }
+  .cost { min-width: 10rem; }
+  .cost .bar { display: inline-block; vertical-align: middle; width: 6rem; height: 0.55rem; background: var(--bg-2); border-radius: 2px; margin-right: var(--space-2); }
+  .cost .fill { display: block; height: 100%; background: var(--fg-2); border-radius: 2px; }
+  .chosen .cost .fill { background: var(--accent); }
+  .pcell { color: var(--fg-1); }
+  .chosen .pcell { color: var(--fg-0); }
+  .pick { font-family: var(--font-mono); font-size: var(--t-mono-sm); color: var(--fg-2); white-space: nowrap; }
+  .chosen .pick { color: var(--accent); }
+  tr.chosen { background: color-mix(in srgb, var(--accent) 6%, transparent); }
+
+  /* Narrow screens: one card per experiment. The name and cost take a full row,
+     the three predictions share one row, and the plan mark takes the last. The
+     shared stack rules print each cell's data-label above it; the name and cost
+     cells drop theirs because their content says what it is. */
+  @media (max-width: 719px) {
+    table { min-width: 0; }
+    tbody tr {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      column-gap: var(--space-3);
+      padding: var(--space-3) var(--space-3);
+    }
+    tbody td { padding: var(--space-1) 0; }
+    td.what, td.cost, td.pick { grid-column: 1 / -1; }
+    td.what::before, td.cost::before, td.pick::before { display: none; }
+    .cost .bar { width: min(12rem, 60vw); }
+    .pick:empty { display: none; }
+  }
+
+  figcaption {
+    margin-top: var(--space-4);
+    color: var(--fg-2);
+    font-size: var(--t-body-sm);
+    max-width: var(--measure);
+  }
+</style>

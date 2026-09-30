@@ -1,0 +1,57 @@
+---
+title: "Code switching through a gadget"
+question: "What does it cost to move two logical qubits from one code to another?"
+summary: "Two logical qubits move from [[4,2,2]] to [[8,2,2]] through a decode-and-re-encode gadget. A noiseless gadget composes exactly, and a depolarised one sits under the recorded bound."
+order: 7
+group: compose
+command: "cargo run --release -p quantum_examples --example qcl_code_switching"
+usesCrate: true
+uses:
+  - code_switching
+  - depolarizing_kraus
+  - CompositionLaw
+  - LogicalGate
+  - NumericCaps
+crates:
+  - deep_causality_algebra
+  - deep_causality_num
+  - deep_causality_quantum
+  - deep_causality_topology
+source: "examples/quantum_examples/qcl_examples/qcl_code_switching"
+---
+
+The detour costs the first link's residual, and the law turns that into a bound on the whole
+switch. Switching codes is how a machine gets gates that one code cannot do transversally. The
+price of the detour is a number, and the run prints it.
+
+Two logical qubits are encoded into the hand-built [[4,2,2]] code, decoded, and encoded into the
+[[8,2,2]] toric code, which then runs Z̄. The decode-and-re-encode is the switching gadget.
+
+## What you see
+
+```text
+[noiseless gadget] at FloatType
+composition law in frobenius-on-choi: ε ≤ ‖τ₂‖_post · ε₁ + ‖τ₁‖_pre · ε₂ over 1 queries, holds
+  io: ε₁ = 0.000e0, ε₂ = 0.000e0, ‖τ₁‖_pre = 1.000e0, ‖τ₂‖_post = 8.000e0, bound = 0.000e0, measured = 0.000e0
+    exact: the gadget is the identity on the logical space
+
+[gadget with depolarising noise p = 1/10 on one logical wire] at FloatType
+composition law in frobenius-on-choi: ε ≤ ‖τ₂‖_post · ε₁ + ‖τ₁‖_pre · ε₂ over 1 queries, holds
+  io: ε₁ = 4.619e-1, ε₂ = 0.000e0, ‖τ₁‖_pre = 1.000e0, ‖τ₂‖_post = 8.000e0, bound = 3.695e0, measured = 4.619e-1
+    the noise is the first link's residual; code B's link stays exact; the composite
+    sits under |t2|_post * e1 = 3.695e0
+...
+Outcome
+  every composition law held    yes
+  the noiseless switch exact    yes
+```
+
+With depolarising noise of probability 0.1 inside the gadget, the first link's residual is the
+noise and the second link's stays zero. The composite's measured residual, 0.4619, lies under the
+recorded bound, 3.695. The bound's first constant is the Frobenius-induced norm of code B's
+recovery, which is 8.
+
+## Read before you cite
+
+This is an example with checks. The bound is loose here, by a factor of eight, and the run
+records that looseness and does not hide it.

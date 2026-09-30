@@ -1,0 +1,112 @@
+---
+title: "Crosstalk attribution"
+question: "Do two qubits' correlated errors have a direct cause or a shared one?"
+summary: "Four candidate structures, one refused at build, three screened, a two-experiment plan at cost 2 against 200, and one named survivor."
+order: 1
+group: decide
+command: "cargo run --release -p quantum_examples --example qcl_crosstalk"
+usesCrate: true
+uses:
+  - QclBuilder
+  - Hypothesis
+  - Experiment
+  - MinCostCover
+  - adjudicate
+  - CheckReport
+  - ShotEstimate
+crates:
+  - deep_causality_algebra
+  - deep_causality_haft
+  - deep_causality_num
+  - deep_causality_num_complex
+  - deep_causality_quantum
+  - deep_causality_tensor
+source: "examples/quantum_examples/qcl_examples/qcl_crosstalk"
+---
+
+The run names H1, a direct cause from qubit 1 to qubit 2, and it takes 2 to 3 ms on an Apple M3 Max. It runs
+`validate` and then `control` on one problem, so it exercises the hand-off between the two halves.
+[The circuit version](/examples/qcl-crosstalk-circuits/) repeats the decision with circuit candidates.
+
+Two qubits show correlated errors. Three causal structures fit the passive data exactly, because
+they are Markov equivalent, and a fourth is a cycle. The program refuses the cycle, screens the
+other three, plans the cheapest experiments that separate them, and judges each candidate's
+prediction against an observation.
+
+## What you see
+
+```text
+[build] four declared structures
+    ✓ refused at build(): candidate 'H4 Q1->Q2->B->Q1' declares a cyclic causal structure; ...
+
+[validate] three acyclic structures
+    check_markov         Accepted  examined 5
+    check_decomposable   Accepted  examined 3
+    admitted: H1 Q1->Q2
+    admitted: H2 Q2->Q1
+    admitted: H3 Q1<-B->Q2
+...
+[design] minimum-cost cover, floor 5 bits
+    E0 passive P(e1,e2)        cost     1   —
+    E1 do(Q1=|1>) P(e2)        cost     1   chosen, resolves [(0, 1), (0, 2)]
+    E2 do(Q2=|1>) P(e1)        cost     1   chosen, resolves [(0, 1), (1, 2)]
+    E3 echo both P(e1,e2)      cost     2   —
+    E4 process tomography      cost   200   —
+    plan: ["E1 do(Q1=|1>) P(e2)", "E2 do(Q2=|1>) P(e1)"]  total cost 2   (tomography alone would cost 200, 100× more)
+...
+
+[E1 do(Q1=|1>) P(e2)] observed 0.377 ± 0.015 over 1024 shots, drawn from the Born sampler at H1's prediction
+    H1 Q1->Q2          predicts 0.40   consistent
+    H2 Q2->Q1          predicts 0.10   rejected
+    H3 Q1<-B->Q2       predicts 0.10   rejected
+
+[adjudicate] 3 worlds folded, 0 commutation pairs tested: a Boolean fold, §4 rule 2 does not apply
+    H1 Q1->Q2 survives, 100.1 bits from its nearest rival. Direct cause, not shared bath.
+    -> a scheduling or echo fix applies; frequency reallocation is not required.
+
+    the adjudication named the structure the observation came from: yes
+```
+
+The excerpt keeps the lines that carry a decision and marks each gap with an ellipsis. The
+program exits nonzero if any check it makes on its own decision fails.
+
+## What each stage decided
+
+1. **`build()` refuses the cycle.** Under Definition 3.1 of van der Lugt and Lorenz the C₃
+   criterion does not reject a cycle, so the builder does, and the error names the scope limit.
+2. **`validate` screens the other three.** The Markov check admits each one, because the factors
+   are diagonal. The decomposability check runs on the structure each candidate's own supports
+   encode. All three are admitted, and the screen is what `control` accepts.
+3. **`design` returns a plan.** Holding qubit 1 excited and holding qubit 2 excited cost 1 each
+   and cover all three pairs at the 5-bit floor. Process tomography would cover them at 200.
+4. **`adjudicate` folds the verdicts.** Each prediction is a read-out against a real-valued
+   specification, so no commutation test runs. H1 survives.
+
+## Read before you cite
+
+The plan and the adjudication are computed. The qubit factors, the five experiments' costs and the
+read-out each candidate predicts for each experiment are inputs typed into `constants.rs` and
+`model.rs`, and the observation is sampled. The example draws its 1,024 shots from the Born
+sampler at H1's own predicted read-out and then checks that the adjudication names H1. The run
+shows the decision procedure reaching the right answer on stated assumptions. It reports no
+measurement on a device.
+
+The cost unit is arbitrary, so the ratio of 2 to 200 comes from the costs the example chose. The
+factors are diagonal, so the Markov check has nothing to reject and the interventions carry the
+whole discrimination.
+
+The run observes E1 only, the first experiment of the plan. E1 predicts 0.10 under both H2 and
+H3, so had the truth been H2 or H3, a read-out near 0.10 would leave both standing. E2 predicts
+0.40 under H2 and 0.10 under H3 and splits them. That is why the plan holds two experiments.
+
+The example prints one line that the excerpt above omits: "tightest pair separates at 164.8 bits
+against the floor". It is the best separation any offered experiment reaches for the tightest
+pair, and process tomography reaches it. Under the chosen plan the tightest pair separates at
+99.5 bits.
+
+## Prior work
+
+Sarovar, Proctor, Rudinger, Young, Nielsen and Blume-Kohout (Quantum 4, 321, 2020) applied
+statistical causal inference to crosstalk, adapting the PC algorithm on 2- and 6-qubit
+processors. Their protocol runs a fixed set of experiments. This example names the candidate
+structures, screens them before any shots are spent, and chooses experiments against a cost.

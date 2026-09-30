@@ -1,0 +1,211 @@
+---
+/**
+ * The hero figure: the three jobs of the crate, each a diagram with one line of
+ * real output. The output line links to the example that printed it.
+ *
+ *   cause   three predictions against one observed band    qcl_crosstalk
+ *   code    a toric-code patch: a Z check and an X check   qcl_geometric_qec
+ *   switch  4 qubits, 2 logical qubits, 8 qubits           qcl_code_switching
+ *
+ * Geometry is CSS and SVG; every label is HTML. The cause row reads
+ * `src/data/crosstalk.ts`, so it cannot disagree with the figure in section 04.
+ * The output lines are copied from runs; regenerate them with the command each
+ * example page shows.
+ */
+import { candidates, RUN } from '../../data/crosstalk';
+
+const AXIS_MAX = 0.5;
+const at = (v: number) => `${((v / AXIS_MAX) * 100).toFixed(2)}%`;
+const { estimate, standardError } = RUN.observed;
+const lo = estimate - RUN.agreementSigmas * standardError;
+const hi = estimate + RUN.agreementSigmas * standardError;
+
+// Toric-code patch: vertices on a 4 x 3 grid, one qubit on each edge.
+const VX = (c: number) => 24 + c * 64;
+const VY = (r: number) => 16 + r * 34;
+const hEdges = [0, 1, 2].flatMap((c) => [0, 1, 2].map((r) => ({ x: (VX(c) + VX(c + 1)) / 2, y: VY(r) })));
+const vEdges = [0, 1, 2, 3].flatMap((c) => [0, 1].map((r) => ({ x: VX(c), y: (VY(r) + VY(r + 1)) / 2 })));
+// The Z check is the face between vertices (0,0) and (1,1): its four edges.
+const zQubits = [
+  { x: (VX(0) + VX(1)) / 2, y: VY(0) },
+  { x: (VX(0) + VX(1)) / 2, y: VY(1) },
+  { x: VX(0), y: (VY(0) + VY(1)) / 2 },
+  { x: VX(1), y: (VY(0) + VY(1)) / 2 },
+];
+// The X check is the star of vertex (2,1): its four edges.
+const xQubits = [
+  { x: (VX(1) + VX(2)) / 2, y: VY(1) },
+  { x: (VX(2) + VX(3)) / 2, y: VY(1) },
+  { x: VX(2), y: (VY(0) + VY(1)) / 2 },
+  { x: VX(2), y: (VY(1) + VY(2)) / 2 },
+];
+const isZ = (x: number, y: number) => zQubits.some((q) => q.x === x && q.y === y);
+const isX = (x: number, y: number) => xQubits.some((q) => q.x === x && q.y === y);
+---
+<figure class="hv panel corner-brackets" data-rise>
+  <div class="row rise" style="--i:0">
+    <div class="copy">
+      <h3>Which cause?</h3>
+      <p class="ctx">three candidate structures</p>
+      <p class="res"><a href="/examples/qcl-crosstalk/">H1 Q1-&gt;Q2 survives, 100.1 bits from its nearest rival.</a></p>
+    </div>
+    <div class="fig obs">
+      {candidates.map((c) => (
+        <div class:list={['trk', c.verdict === 'consistent' ? 'ok' : 'out']}>
+          <span class="lab">{c.id} {c.verdict === 'consistent' ? '✓' : '×'} {c.predictsE1.toFixed(2)}</span>
+          <span class="line">
+            <span class="band" style={`left:${at(lo)}; width:${at(hi - lo)}`}></span>
+            <span class="dot" style={`left:${at(c.predictsE1)}`}></span>
+          </span>
+        </div>
+      ))}
+      <p class="cap">band: observation ± {RUN.agreementSigmas} standard errors</p>
+    </div>
+  </div>
+
+  <div class="row rise" style="--i:1">
+    <div class="copy">
+      <h3>Is the code sound?</h3>
+      <p class="ctx">the [[32, 2]] toric code</p>
+      <p class="res"><a href="/examples/qcl-geometric-qec/">check_ldpc_weights       Accepted  examined 96</a></p>
+    </div>
+    <div class="fig lattice">
+      <svg viewBox="0 0 240 102" fill="none" aria-hidden="true" focusable="false">
+        <rect x={VX(0)} y={VY(0)} width={VX(1) - VX(0)} height={VY(1) - VY(0)} class="face" />
+        {[0, 1, 2].map((r) => <line x1={VX(0)} y1={VY(r)} x2={VX(3)} y2={VY(r)} />)}
+        {[0, 1, 2, 3].map((c) => <line x1={VX(c)} y1={VY(0)} x2={VX(c)} y2={VY(2)} />)}
+        <line x1={VX(1)} y1={VY(1)} x2={VX(3)} y2={VY(1)} class="star" />
+        <line x1={VX(2)} y1={VY(0)} x2={VX(2)} y2={VY(2)} class="star" />
+        {[...hEdges, ...vEdges].map((q) => (
+          <circle cx={q.x} cy={q.y} r="4" class:list={['q', { z: isZ(q.x, q.y), x: isX(q.x, q.y) }]} />
+        ))}
+      </svg>
+      <p class="legend">
+        <span class="lg"><span class="key z" aria-hidden="true"></span>Z check: 4 qubits round a face</span>
+        <span class="lg"><span class="key x" aria-hidden="true"></span>X check: 4 qubits at a vertex</span>
+      </p>
+    </div>
+  </div>
+
+  <div class="row rise" style="--i:2">
+    <div class="copy">
+      <h3>What do stacked codes cost?</h3>
+      <p class="ctx">[[4,2,2]] to [[8,2,2]]</p>
+      <p class="res"><a href="/examples/qcl-code-switching/">… bound = 3.695e0, measured = 4.619e-1</a></p>
+    </div>
+    <div class="fig switch">
+      <div class="stages">
+        <div class="stage">
+          <svg viewBox="0 0 40 16" fill="none" aria-hidden="true" focusable="false">
+            {[0, 1, 2, 3].map((k) => <circle cx={5 + k * 10} cy="8" r="3.4" />)}
+          </svg>
+          <p>[[4,2,2]]</p>
+        </div>
+        <span class="arr" aria-hidden="true">→</span>
+        <div class="stage mid">
+          <svg viewBox="0 0 28 16" fill="none" aria-hidden="true" focusable="false">
+            <circle cx="7" cy="8" r="5" />
+            <circle cx="21" cy="8" r="5" />
+          </svg>
+          <p>2 logical</p>
+          <p class="noise">noise 1/10</p>
+        </div>
+        <span class="arr" aria-hidden="true">→</span>
+        <div class="stage">
+          <svg viewBox="0 0 68 16" fill="none" aria-hidden="true" focusable="false">
+            {[0, 1, 2, 3, 4, 5, 6, 7].map((k) => <circle cx={4.5 + k * 8.5} cy="8" r="3" />)}
+          </svg>
+          <p>[[8,2,2]]</p>
+        </div>
+      </div>
+      <p class="bound">the law bounds the whole switch</p>
+    </div>
+  </div>
+</figure>
+
+<noscript>
+  <style is:inline>
+    .hv .rise { opacity: 1 !important; transform: none !important; }
+  </style>
+</noscript>
+
+<style>
+  .hv { margin: 0; padding: 0 var(--space-5); }
+
+  .row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-3);
+    align-items: center;
+    padding: var(--space-4) 0;
+    border-top: 1px solid var(--line-1);
+  }
+  .row:first-child { border-top: none; }
+  @media (min-width: 560px) {
+    .row { grid-template-columns: minmax(0, 9fr) minmax(0, 11fr); gap: var(--space-4); }
+  }
+
+  h3 { font-size: var(--t-h4); margin: 0 0 var(--space-1); }
+  .ctx { margin: 0 0 var(--space-2); color: var(--fg-2); font-family: var(--font-mono); font-size: var(--t-eyebrow); letter-spacing: 0; }
+  .res { margin: 0; font-family: var(--font-mono); font-size: var(--t-mono-sm); overflow-wrap: anywhere; }
+  .res a { color: var(--accent); border-bottom: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
+  .res a:hover { border-bottom-color: var(--accent); }
+
+  .fig { min-width: 0; }
+  .fig svg line, .fig svg circle, .fig svg rect {
+    stroke: var(--fg-2);
+    stroke-width: 1.3;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .fig svg circle { fill: var(--bg-1); }
+
+  /* Which cause: three tracks share one band, the survivor's dot inside it. */
+  .trk { display: grid; grid-template-columns: 5.6rem minmax(0, 1fr); align-items: stretch; }
+  .lab { align-self: center; font-family: var(--font-mono); font-size: var(--t-eyebrow); letter-spacing: 0; color: var(--fg-2); white-space: nowrap; }
+  .trk.ok .lab { color: var(--accent); }
+  .line { position: relative; height: 1.7rem; }
+  .line::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: var(--line-2); }
+  .band {
+    position: absolute; top: 0; bottom: 0;
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
+    border-left: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+    border-right: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  }
+  .dot { position: absolute; top: 50%; width: 0.8rem; height: 0.8rem; margin: -0.4rem 0 0 -0.4rem; border-radius: 50%; background: var(--fg-2); border: 2px solid var(--bg-1); }
+  .trk.ok .dot { background: var(--accent); }
+  .cap { margin: var(--space-1) 0 0; color: var(--fg-2); font-family: var(--font-mono); font-size: var(--t-eyebrow); letter-spacing: 0; }
+
+  /* Is the code sound: qubits on edges, one Z face and one X star. */
+  .lattice svg { display: block; width: 100%; height: auto; }
+  .lattice svg .face { fill: color-mix(in srgb, var(--accent) 20%, transparent); stroke: none; }
+  .lattice svg .star { stroke: var(--accent); stroke-width: 1.8; }
+  .lattice svg .q.z { fill: var(--accent); stroke: var(--accent); }
+  .lattice svg .q.x { fill: var(--bg-1); stroke: var(--accent); stroke-width: 1.8; }
+  .legend { margin: var(--space-2) 0 0; color: var(--fg-2); font-family: var(--font-mono); font-size: var(--t-eyebrow); letter-spacing: 0; line-height: 1.6; }
+  .key { display: inline-block; width: 0.65rem; height: 0.65rem; margin: 0 0.35rem 0 0; border-radius: 50%; vertical-align: -0.05rem; border: 1.5px solid var(--accent); }
+  .key.z { background: var(--accent); }
+  .key.x { background: var(--bg-1); }
+  .lg { display: block; }
+
+  /* What do stacked codes cost: 4, 2 and 8 qubits, one bound over the whole switch. */
+  .stages { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-1); }
+  .stage { text-align: center; }
+  .stage svg { display: block; margin: 0 auto; height: 1.4rem; width: auto; max-width: 100%; }
+  .stage p { margin: var(--space-1) 0 0; font-family: var(--font-mono); font-size: var(--t-eyebrow); letter-spacing: 0; color: var(--fg-2); white-space: nowrap; }
+  .stage .noise { margin-top: 0; color: var(--accent); }
+  .mid svg circle { stroke: var(--accent); }
+  .arr { color: var(--accent); line-height: 1.4rem; }
+  .bound {
+    margin: var(--space-2) 0 0;
+    padding-top: var(--space-1);
+    border: 1px dashed var(--accent);
+    border-top: none;
+    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+    text-align: center;
+    color: var(--accent);
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: 0;
+  }
+</style>

@@ -1,0 +1,62 @@
+---
+title: "A code concatenated with itself"
+question: "How much error survives when one abstraction stacks on another?"
+summary: "The [[4,2,2]] code concatenated with itself as two abstractions. The Pauli gates compose exactly, the law's bound holds at three precisions, and a gate across code blocks is refused by name."
+order: 6
+group: compose
+command: "cargo run --release -p quantum_examples --example qcl_concatenated_code"
+usesCrate: true
+uses:
+  - concatenated_code
+  - CompositionLaw
+  - LogicalGate
+  - NumericCaps
+  - QuantumError
+crates:
+  - deep_causality_algebra
+  - deep_causality_num
+  - deep_causality_quantum
+source: "examples/quantum_examples/qcl_examples/qcl_concatenated_code"
+---
+
+The Pauli gates Z̄ and X̄ compose exactly, and the law's bound holds at every precision. The inner
+code's four physical qubits form two blocks of two, each encoded by the outer code, so eight
+physical qubits stand under four middle qubits under two logical ones.
+
+## What you see
+
+```text
+[Z̄(0)] at FloatType
+composition law in frobenius-on-choi: ε ≤ ‖τ₂‖_post · ε₁ + ‖τ₁‖_pre · ε₂ over 1 queries, holds
+  io: ε₁ = 0.000e0, ε₂ = 0.000e0, ‖τ₁‖_pre = 1.000e0, ‖τ₂‖_post = 2.000e0, bound = 0.000e0, measured = 0.000e0
+    exact: two residual-zero links compose to residual zero (Proposition 17)
+...
+[CZ-bar(0, 1)] the inner CZ-bar pairs a qubit of each outer block
+    refused: Calculation Error: Cz { control: 0, target: 2 } acts across outer blocks 0 and 1; a transversal gadget between code blocks is not part of this construction
+
+Outcome
+  every composition law held      yes
+  every transversal Pauli exact   yes
+  the cross-block gate refused    yes
+```
+
+## The two links
+
+| Link | Low level | High level | τ |
+|---|---|---|---|
+| first | the eight-qubit model: inner encoder, two outer encoders, the outer-encoded program | the inner code's four-qubit model | the outer recovery on each block |
+| second | the inner code's four-qubit model | the logical gate on two qubits | the inner recovery |
+
+`Abstraction::compose` pastes the two squares. Per query it records both residuals, both norms,
+the bound and the composite's measured residual. For Z̄ and X̄ everything is zero, which is the
+exact case that Lean proves (`quantum.abstraction.compose_exact`). The program repeats the chain
+at `f32`, `f64` and `Float106`.
+
+The refusal on the controlled-Z gate matters as much as the passes. A construction that returned
+something for a gate it has no gadget for would compose cleanly and be wrong, and nothing in the
+law would say so.
+
+## Read before you cite
+
+This is an example with checks. It claims the residuals it measures and the bound the law
+records, and it proves nothing about concatenated codes in general.

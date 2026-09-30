@@ -1,0 +1,45 @@
+---
+/**
+ * One landing-page section: coordinate eyebrow, a claim or question as the
+ * heading, and an optional lede. Every section on the page shares this shell so
+ * the rhythm and the widths stay identical.
+ */
+interface Props {
+  id?: string;
+  /** Position on the page, e.g. "02 / 08". */
+  ix: string;
+  label: string;
+  title: string;
+}
+const { id, ix, label, title } = Astro.props;
+---
+<section class="hsec" id={id} data-rise>
+  <div class="hsec-in">
+  <header class="hsec-head">
+    <p class="eyebrow eyebrow-coord"><span class="ix">{ix}</span><span class="lb">{label}</span></p>
+    <h2>{title}</h2>
+    {Astro.slots.has('lede') && <div class="lede"><slot name="lede" /></div>}
+  </header>
+  <slot />
+  </div>
+</section>
+
+<style>
+  .hsec {
+    padding: 0 var(--space-4);
+    scroll-margin-top: var(--header-h);
+  }
+  @media (min-width: 720px) { .hsec { padding: 0 var(--space-5); } }
+  .hsec-in {
+    max-width: calc(var(--w-doc) - 2 * var(--space-5));
+    margin: 0 auto;
+    padding: var(--space-7) 0;
+    border-top: 1px solid var(--line-1);
+  }
+
+  .hsec-head { margin-bottom: var(--space-6); }
+  .hsec-head h2 { margin: var(--space-3) 0 var(--space-3); max-width: 24ch; }
+  .lede { color: var(--fg-1); max-width: var(--measure-lede); }
+  .lede :global(p) { margin: 0 0 var(--space-3); }
+  .lede :global(p:last-child) { margin-bottom: 0; }
+</style>
