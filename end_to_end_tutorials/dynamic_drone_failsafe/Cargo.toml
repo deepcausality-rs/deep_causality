@@ -1,0 +1,22 @@
+[package]
+name = "dynamic_drone_failsafe"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+deep_causality = { workspace = true }
+deep_causality_algebra = { workspace = true }
+deep_causality_num = { workspace = true, features = ["default"] }
+
+[[example]]
+name = "drone_failsafe_part_1"
+path = "part_1_dynamic_causality/main.rs"
+
+[lints]
+workspace = true

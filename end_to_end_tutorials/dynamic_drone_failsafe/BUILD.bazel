@@ -1,0 +1,28 @@
+load("@crates//:defs.bzl", "aliases", "all_crate_deps", "lint_config")
+load("@rules_rs//rs:rust_binary.bzl", "rust_binary")
+load("@rules_rs//rs:rust_library.bzl", "rust_library")
+
+rust_library(
+    name = "dynamic_drone_failsafe",
+    srcs = glob(["src/**"]),
+    aliases = aliases(),
+    crate_root = "src/lib.rs",
+    lint_config = lint_config(),
+    visibility = ["//visibility:public"],
+    deps = all_crate_deps(normal = True),
+)
+
+rust_binary(
+    name = "drone_failsafe_part_1",
+    srcs = glob(["part_1_dynamic_causality/**/*.rs"]),
+    crate_root = "part_1_dynamic_causality/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":dynamic_drone_failsafe",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
+)

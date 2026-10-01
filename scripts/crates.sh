@@ -65,9 +65,9 @@ dc__collect() {
     # Globs are expanded against the repo root, and anything without a Cargo.toml is dropped —
     # `examples/*` matches LICENSE and README.md, which Cargo ignores and so does this.
     #
-    # The example crates are dropped too. They are not published, not audited and not shipped, so
-    # none of the consumers wants them; excluding them here keeps every call site free of the
-    # filter.
+    # The example and tutorial crates are dropped too. They are not published, not audited and not
+    # shipped, so none of the consumers wants them; excluding them here keeps every call site free
+    # of the filter.
     for pattern in $(dc__raw_members); do
         for dir in "$DC_REPO_ROOT"/$pattern; do
             [ -f "$dir/Cargo.toml" ] || continue
@@ -76,7 +76,7 @@ dc__collect() {
             # Relative to the root, which is what every consumer wants to pass to a tool.
             dir="${dir#"$DC_REPO_ROOT"/}"
             case "$dir" in
-                examples/*) continue ;;
+                examples/* | end_to_end_tutorials/*) continue ;;
             esac
             DC_CRATES+=("$name")
             DC_CRATE_DIRS+=("$dir")
