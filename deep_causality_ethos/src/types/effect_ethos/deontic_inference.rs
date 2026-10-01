@@ -30,8 +30,10 @@ where
     ///    `ProposedAction` using a list of tags.
     /// 3. **Activation (Step 2)**: Filters the candidate `Teloid`s based on their activation predicates,
     ///    which determine if a `Teloid` is applicable in the given `Context`.
-    /// 4. **Belief Inference & Conflict Resolution (Steps 3 & 4)**: Resolves any conflicts among the
-    ///    active `Teloid`s to arrive at a final set of applicable norms.
+    /// 4. **Belief Inference & Conflict Resolution (Steps 3 & 4)**: Settles the active `Teloid`s
+    ///    and those they pass on by inheritance in the graph's topological order, removing each one a
+    ///    standing, higher-ranked norm defeats. The result depends only on the norms, their edges and
+    ///    which of them are active.
     /// 5. **Verdict Finding (Step 5)**: Derives a final `Verdict` based on the resolved norms.
     ///
     /// # Arguments
@@ -125,7 +127,7 @@ where
             return Err(DeonticError::InconclusiveVerdict);
         }
 
-        // Steps 3 & 4: Belief Inference and Conflict Resolution (combined in traversal)
+        // Steps 3 & 4: Belief Inference and Conflict Resolution, in topological order
         let final_norms = self.resolve_conflicts(&active_teloids)?;
 
         // Step 5: Verdict Finding
