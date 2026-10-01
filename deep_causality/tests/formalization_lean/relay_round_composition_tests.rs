@@ -98,8 +98,7 @@ fn relay_to_0(_: bool) -> PropagatingEffect<bool> {
 /// Lean: `run_self_relay_none`, `run_monotone_add` (`Core/CausalEffect.lean`). The fuel bound
 /// composes across rounds with no new termination argument (inherits
 /// `core.causal_effect.relay_termination`): a relay CYCLE — two causaloids relaying to each other —
-/// is cut at `MAX_RELAY_ROUNDS` with a specific "Relay budget exhausted" error rather than looping
-/// forever.
+/// is cut at `MAX_RELAY_ROUNDS` with a `MaxStepsExceeded` error rather than looping forever.
 #[test]
 fn test_relay_round_fuel_bound_composes() {
     // No edges: the relay jumps by index, so the EDGE graph is acyclic (freeze passes); the cycle is
@@ -116,9 +115,9 @@ fn test_relay_round_fuel_bound_composes() {
 
     let out = g.evaluate_subgraph_from_cause(n0, &PropagatingEffect::pure(true));
     assert!(out.is_err(), "a relay cycle must be cut, not loop forever");
-    let msg = out.error().unwrap().to_string();
-    assert!(
-        msg.contains("Relay budget exhausted") && msg.contains("relay_termination"),
-        "not the fuel-bound cut error: {msg}"
+    assert_eq!(
+        out.error(),
+        Some(&deep_causality::CausalityError::MaxStepsExceeded()),
+        "not the fuel-bound cut error"
     );
 }

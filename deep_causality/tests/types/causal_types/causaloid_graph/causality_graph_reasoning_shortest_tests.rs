@@ -90,12 +90,9 @@ fn test_shortest_path_error_conditions() {
     let mut g = test_utils_graph::build_linear_graph(3);
     g.unfreeze();
     let res = g.evaluate_shortest_path_between_causes(0, 1, &effect);
-    assert!(res.is_err());
-    assert!(
-        res.error()
-            .unwrap()
-            .to_string()
-            .contains("Graph is not frozen. Call freeze() first")
+    assert_eq!(
+        res.error(),
+        Some(&deep_causality::CausalityError::GraphNotFrozen())
     );
 
     // Setup for remaining tests
@@ -105,6 +102,9 @@ fn test_shortest_path_error_conditions() {
     let res = g.evaluate_shortest_path_between_causes(99, 1, &effect);
     assert!(res.is_err());
 
-    dbg!(&res);
-    assert!(res.error().unwrap().to_string().contains("No path found"));
+    let err = res.error().unwrap();
+    assert!(
+        matches!(&err.0, deep_causality::CausalityErrorEnum::GraphError(m) if m.contains("No path found")),
+        "expected GraphError: {err:?}"
+    );
 }

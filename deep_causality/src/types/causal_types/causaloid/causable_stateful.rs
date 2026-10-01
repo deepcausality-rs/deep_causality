@@ -15,7 +15,7 @@
 
 use crate::types::causal_types::causaloid::causable_utils;
 use crate::{Causaloid, CausaloidType, StatefulMonadicCausable};
-use deep_causality_core::{CausalityError, CausalityErrorEnum, PropagatingProcess};
+use deep_causality_core::{CausalityError, PropagatingProcess};
 use std::fmt::Debug;
 
 impl<I, O, PS, C> StatefulMonadicCausable<I, O, PS, C> for Causaloid<I, O, PS, C>
@@ -62,12 +62,11 @@ where
                 // mirrors the stateless `Causable::evaluate` path, where a command input errors.
                 if incoming_value.is_command() {
                     return PropagatingProcess::new(
-                        Err(CausalityError(CausalityErrorEnum::Custom(
+                        Err(CausalityError::UnexpectedCommand(
                             "Causaloid::evaluate_stateful: singleton received a command (RelayTo) \
                              on its input channel; commands are relayed by the reasoning engine, \
-                             not consumed by a singleton"
-                                .into(),
-                        ))),
+                             not consumed by a singleton",
+                        )),
                         incoming.state().clone(),
                         incoming.context().clone(),
                         incoming.logs().clone(),
@@ -77,9 +76,7 @@ where
                     Some(v) => v,
                     None => {
                         return PropagatingProcess::new(
-                            Err(CausalityError(CausalityErrorEnum::Custom(
-                                "Cannot evaluate: input value is None".into(),
-                            ))),
+                            Err(CausalityError::ValueNotAvailable()),
                             incoming.state().clone(),
                             incoming.context().clone(),
                             incoming.logs().clone(),
@@ -142,10 +139,7 @@ where
                         Some(v) => v,
                         None => {
                             return PropagatingProcess::new(
-                                Err(CausalityError(CausalityErrorEnum::Custom(
-                                    "Causaloid::evaluate_stateful: causal_fn returned None output"
-                                        .into(),
-                                ))),
+                                Err(CausalityError::ValueNotAvailable()),
                                 stage2_state,
                                 stage2_context,
                                 combined_logs,
@@ -174,20 +168,18 @@ where
             }
 
             CausaloidType::Collection => PropagatingProcess::new(
-                Err(CausalityError(CausalityErrorEnum::Custom(
-                    "Stateful collection evaluation requires StatefulMonadicCausableCollection::evaluate_collection_stateful"
-                        .into(),
-                ))),
+                Err(CausalityError::UnsupportedOperation(
+                    "Stateful collection evaluation requires StatefulMonadicCausableCollection::evaluate_collection_stateful",
+                )),
                 incoming.state().clone(),
                 incoming.context().clone(),
                 incoming.logs().clone(),
             ),
 
             CausaloidType::Graph => PropagatingProcess::new(
-                Err(CausalityError(CausalityErrorEnum::Custom(
-                    "Stateful graph evaluation requires StatefulMonadicCausableGraphReasoning::evaluate_subgraph_from_cause_stateful"
-                        .into(),
-                ))),
+                Err(CausalityError::UnsupportedOperation(
+                    "Stateful graph evaluation requires StatefulMonadicCausableGraphReasoning::evaluate_subgraph_from_cause_stateful",
+                )),
                 incoming.state().clone(),
                 incoming.context().clone(),
                 incoming.logs().clone(),

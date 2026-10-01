@@ -170,9 +170,7 @@ pub fn get_test_causaloid_deterministic_with_context(
         context: Option<Arc<RwLock<BaseContext>>>,
     ) -> PropagatingProcess<bool, (), Arc<RwLock<BaseContext>>> {
         if context.is_none() {
-            return PropagatingProcess::from_error(CausalityError(CausalityErrorEnum::Custom(
-                "Context is missing".into(),
-            )));
+            return PropagatingProcess::from_error(CausalityError::MissingContext());
         }
 
         let input_val = obs.into_value().unwrap_or(false);
@@ -216,9 +214,7 @@ pub fn get_test_error_causaloid() -> BaseCausaloid<bool, bool> {
     let description = "tests whether data exceeds threshold of 0.55";
 
     fn causal_fn(_: bool) -> PropagatingEffect<bool> {
-        PropagatingEffect::from_error(CausalityError::new(CausalityErrorEnum::Custom(
-            "Test error".into(),
-        )))
+        PropagatingEffect::from_error(CausalityError::Custom("Test error"))
     }
 
     Causaloid::new(id, causal_fn, description)
@@ -309,9 +305,7 @@ pub fn get_test_causaloid(id: IdentificationValue) -> BaseCausaloid<f64, bool> {
         if evidence.is_sign_negative() {
             log.add_entry("Observation is negative, returning error.");
             return PropagatingEffect::new(
-                Err(CausalityError::new(CausalityErrorEnum::Custom(
-                    "Observation is negative".into(),
-                ))),
+                Err(CausalityError::Custom("Observation is negative")),
                 (),
                 None,
                 log,
@@ -341,9 +335,7 @@ pub fn get_test_causaloid_num_input_output(id: IdentificationValue) -> BaseCausa
         if evidence.is_sign_negative() {
             log.add_entry("Observation is negative, returning error.");
             return PropagatingEffect::new(
-                Err(CausalityError::new(CausalityErrorEnum::Custom(
-                    "Observation is negative".into(),
-                ))),
+                Err(CausalityError::Custom("Observation is negative")),
                 (),
                 None,
                 log,

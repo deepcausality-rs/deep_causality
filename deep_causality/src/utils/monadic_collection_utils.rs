@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{AggregateLogic, CausalityError, CausalityErrorEnum};
+use crate::{AggregateLogic, CausalityError};
 use crate::{UncertainBool, UncertainF64};
 use deep_causality_algebra::Verdict;
 use deep_causality_core::CausalEffect;
@@ -52,9 +52,7 @@ pub fn aggregate_effects<T: Aggregatable>(
     threshold_value: Option<f64>,
 ) -> Result<CausalEffect<T>, CausalityError> {
     if effects.is_empty() {
-        return Err(CausalityError::new(CausalityErrorEnum::Custom(
-            "Cannot aggregate empty collection".to_string(),
-        )));
+        return Err(CausalityError::EmptyCollection());
     }
     T::aggregate(effects, logic, threshold_value)
 }
@@ -69,10 +67,10 @@ impl Aggregatable for bool {
             .iter()
             .map(|e| {
                 e.as_value().copied().ok_or_else(|| {
-                    CausalityError::new(CausalityErrorEnum::Custom(format!(
+                    CausalityError::TypeConversionError(format!(
                         "Expected Value(bool), found {:?}",
                         e
-                    )))
+                    ))
                 })
             })
             .collect();
@@ -98,10 +96,10 @@ impl Aggregatable for f64 {
             .iter()
             .map(|e| {
                 e.as_value().copied().ok_or_else(|| {
-                    CausalityError::new(CausalityErrorEnum::Custom(format!(
+                    CausalityError::TypeConversionError(format!(
                         "Expected Value(f64), found {:?}",
                         e
-                    )))
+                    ))
                 })
             })
             .collect();
@@ -127,48 +125,36 @@ impl Aggregatable for UncertainBool {
         threshold: Option<f64>,
     ) -> Result<CausalEffect<UncertainBool>, CausalityError> {
         let threshold = threshold.ok_or_else(|| {
-            CausalityError::new(CausalityErrorEnum::Custom(
-                "Threshold is required for uncertain aggregation".to_string(),
-            ))
+            CausalityError::MissingParameter("Threshold is required for uncertain aggregation")
         })?;
 
         let u_bools: Result<Vec<UncertainBool>, _> = effects
             .iter()
             .map(|e| {
                 e.as_value().cloned().ok_or_else(|| {
-                    CausalityError::new(CausalityErrorEnum::Custom(format!(
+                    CausalityError::TypeConversionError(format!(
                         "Expected Value(UncertainBool), found {:?}",
                         e
-                    )))
+                    ))
                 })
             })
             .collect();
 
         let u_bools = u_bools?;
         let final_ubool = match logic {
-            AggregateLogic::All => {
-                u_bools
-                    .into_iter()
-                    .reduce(|acc, u| acc & u)
-                    .ok_or_else(|| {
-                        CausalityError::new(CausalityErrorEnum::Custom("Empty reduction".into()))
-                    })?
-            }
-            AggregateLogic::Any => {
-                u_bools
-                    .into_iter()
-                    .reduce(|acc, u| acc | u)
-                    .ok_or_else(|| {
-                        CausalityError::new(CausalityErrorEnum::Custom("Empty reduction".into()))
-                    })?
-            }
+            AggregateLogic::All => u_bools
+                .into_iter()
+                .reduce(|acc, u| acc & u)
+                .ok_or_else(CausalityError::EmptyCollection)?,
+            AggregateLogic::Any => u_bools
+                .into_iter()
+                .reduce(|acc, u| acc | u)
+                .ok_or_else(CausalityError::EmptyCollection)?,
             AggregateLogic::None => {
                 let res = u_bools
                     .into_iter()
                     .reduce(|acc, u| acc | u)
-                    .ok_or_else(|| {
-                        CausalityError::new(CausalityErrorEnum::Custom("Empty reduction".into()))
-                    })?;
+                    .ok_or_else(CausalityError::EmptyCollection)?;
                 !res
             }
             AggregateLogic::Some(k) => {
@@ -177,7 +163,7 @@ impl Aggregatable for UncertainBool {
                     .map(|u| u.to_bool_from_entropy(threshold, 0.95, 0.05, 1000))
                     .collect();
                 let true_count = bools
-                    .map_err(|e| CausalityError::new(CausalityErrorEnum::Custom(e.to_string())))?
+                    .map_err(|e| CausalityError::UncertainError(e.to_string()))?
                     .iter()
                     .filter(|&&b| b)
                     .count();
@@ -194,9 +180,8 @@ impl Aggregatable for UncertainF64 {
         _logic: &AggregateLogic,
         _threshold: Option<f64>,
     ) -> Result<CausalEffect<UncertainF64>, CausalityError> {
-        Err(CausalityError::new(CausalityErrorEnum::Custom(
-            "Direct aggregation of UncertainF64 is not supported. Convert to UncertainBool first."
-                .to_string(),
-        )))
+        Err(CausalityError::UnsupportedOperation(
+            "Direct aggregation of UncertainF64 is not supported. Convert to UncertainBool first.",
+        ))
     }
 }

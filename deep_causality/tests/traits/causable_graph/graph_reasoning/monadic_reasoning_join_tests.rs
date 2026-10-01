@@ -66,11 +66,11 @@ fn test_cyclic_graph_is_rejected_before_any_node_runs() {
 
     let res = g.evaluate_subgraph_from_cause(0, &PropagatingEffect::from_value(true));
     assert!(res.is_err());
-    let msg = res
-        .error()
-        .expect("a cyclic graph must resolve to an error")
-        .to_string();
-    assert!(msg.contains("directed cycle"), "unexpected error: {msg}");
+    assert_eq!(
+        res.error(),
+        Some(&deep_causality::CausalityError::GraphContainsCycle()),
+        "a cyclic graph must resolve to the cycle error"
+    );
 }
 
 #[test]

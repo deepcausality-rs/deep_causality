@@ -243,8 +243,10 @@ fn evaluate_stateful_errors_on_a_none_input_value() {
     );
 
     let out = causaloid.evaluate_stateful(&incoming);
-    let err = out.error().expect("a None input value errors");
-    assert!(format!("{err:?}").contains("input value is None"));
+    assert_eq!(
+        out.error(),
+        Some(&deep_causality::CausalityError::ValueNotAvailable())
+    );
     assert_eq!(*out.state(), CounterState { count: 3 }, "state preserved");
 }
 
@@ -265,7 +267,11 @@ fn evaluate_stateful_errors_on_a_relay_command_input() {
     // silently collapsed to `None`, which would drop the relay target and sub-effect so downstream
     // reasoning would see absence of evidence instead of a dropped command.
     let err = out.error().expect("a command input errors");
-    assert!(format!("{err:?}").contains("received a command"));
+    assert!(
+        matches!(&err.0, deep_causality::CausalityErrorEnum::UnexpectedCommand(m) if m.contains("received a command")),
+        "expected UnexpectedCommand: {:?}",
+        err
+    );
     assert_eq!(*out.state(), CounterState { count: 4 }, "state preserved");
 }
 
@@ -280,8 +286,10 @@ fn evaluate_stateful_errors_when_the_closure_returns_a_none_output() {
     );
 
     let out = causaloid.evaluate_stateful(&incoming);
-    let err = out.error().expect("a None output errors");
-    assert!(format!("{err:?}").contains("returned None output"));
+    assert_eq!(
+        out.error(),
+        Some(&deep_causality::CausalityError::ValueNotAvailable())
+    );
 }
 
 #[test]

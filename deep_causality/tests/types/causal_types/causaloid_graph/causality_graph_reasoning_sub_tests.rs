@@ -26,8 +26,10 @@ fn test_evaluate_subgraph_requires_a_frozen_graph() {
     let idx = g.add_root_causaloid(c).expect("root");
     // Not frozen.
     let res = g.evaluate_subgraph_from_cause(idx, &PropagatingEffect::from_value(true));
-    assert!(res.is_err());
-    assert!(res.error().unwrap().to_string().contains("not frozen"));
+    assert_eq!(
+        res.error(),
+        Some(&deep_causality::CausalityError::GraphNotFrozen())
+    );
 }
 
 #[test]
@@ -35,12 +37,9 @@ fn test_evaluate_subgraph_rejects_a_missing_start_index() {
     let mut g: BaseCausalGraph = CausaloidGraph::new(0);
     g.freeze();
     let res = g.evaluate_subgraph_from_cause(99, &PropagatingEffect::from_value(true));
-    assert!(res.is_err());
-    assert!(
-        res.error()
-            .unwrap()
-            .to_string()
-            .contains("does not contain")
+    assert_eq!(
+        res.error(),
+        Some(&deep_causality::CausalityError::CausaloidNotFound(99))
     );
 }
 
@@ -104,12 +103,9 @@ fn test_evaluate_subgraph_cuts_a_relay_cycle_with_the_fuel_bound() {
     g.freeze();
 
     let res = g.evaluate_subgraph_from_cause(i0, &PropagatingEffect::from_value(true));
-    assert!(res.is_err());
-    assert!(
-        res.error()
-            .unwrap()
-            .to_string()
-            .contains("Relay budget exhausted")
+    assert_eq!(
+        res.error(),
+        Some(&deep_causality::CausalityError::MaxStepsExceeded())
     );
 }
 
@@ -127,8 +123,10 @@ fn test_evaluate_subgraph_rejects_a_relay_to_a_missing_target() {
     g.freeze();
 
     let res = g.evaluate_subgraph_from_cause(i0, &PropagatingEffect::from_value(true));
-    assert!(res.is_err());
-    assert!(res.error().unwrap().to_string().contains("RelayTo target"));
+    assert_eq!(
+        res.error(),
+        Some(&deep_causality::CausalityError::CausaloidNotFound(5))
+    );
 }
 
 fn add_one(x: bool) -> PropagatingEffect<bool> {

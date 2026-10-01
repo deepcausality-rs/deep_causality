@@ -36,13 +36,9 @@ fn test_evaluate_single_causaloid_not_found_error() {
     let res = g.evaluate_single_cause(non_existent_index, &effect);
     dbg!(&res);
 
-    assert!(res.is_err());
-    assert!(res.is_err());
-    assert!(
-        res.error()
-            .unwrap()
-            .to_string()
-            .contains("Causaloid with index 99 not found in graph"),
+    assert_eq!(
+        res.error(),
+        Some(&deep_causality::CausalityError::CausaloidNotFound(99))
     );
 }
 
@@ -55,8 +51,10 @@ fn test_evaluate_single_cause_requires_a_frozen_graph() {
 
     let effect = PropagatingEffect::from_value(true);
     let res = g.evaluate_single_cause(index, &effect);
-    assert!(res.is_err());
-    assert!(res.error().unwrap().to_string().contains("not frozen"));
+    assert_eq!(
+        res.error(),
+        Some(&deep_causality::CausalityError::GraphNotFrozen())
+    );
 }
 
 #[test]

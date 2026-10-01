@@ -276,8 +276,7 @@ fn stateful_methods_require_a_frozen_graph() {
         g.evaluate_subgraph_from_cause_stateful(0, &initial),
         g.evaluate_shortest_path_between_causes_stateful(0, 0, &initial),
     ] {
-        let err = out.error().expect("must reject an unfrozen graph");
-        assert!(format!("{err:?}").contains("frozen"));
+        assert_eq!(out.error(), Some(&CausalityError::GraphNotFrozen()));
     }
 }
 
@@ -288,8 +287,7 @@ fn evaluate_single_cause_stateful_rejects_a_missing_index() {
     let g = build_three_node_path();
     let initial = build_initial();
     let out = g.evaluate_single_cause_stateful(99, &initial);
-    let err = out.error().expect("missing index errors");
-    assert!(format!("{err:?}").contains("not found"));
+    assert_eq!(out.error(), Some(&CausalityError::CausaloidNotFound(99)));
 }
 
 #[test]
@@ -297,8 +295,7 @@ fn evaluate_subgraph_stateful_rejects_a_start_index_not_in_the_graph() {
     let g = build_three_node_path();
     let initial = build_initial();
     let out = g.evaluate_subgraph_from_cause_stateful(99, &initial);
-    let err = out.error().expect("missing start errors");
-    assert!(format!("{err:?}").contains("does not contain"));
+    assert_eq!(out.error(), Some(&CausalityError::CausaloidNotFound(99)));
 }
 
 fn node_relay_to_one(
@@ -342,10 +339,11 @@ fn evaluate_subgraph_stateful_cuts_a_relay_cycle_with_the_fuel_bound() {
     g.freeze();
 
     let out = g.evaluate_subgraph_from_cause_stateful(i0, &build_initial());
-    let err = out
-        .error()
-        .expect("the relay cycle errors instead of hanging");
-    assert!(format!("{err:?}").contains("Relay budget exhausted"));
+    assert_eq!(
+        out.error(),
+        Some(&CausalityError::MaxStepsExceeded()),
+        "the relay cycle errors instead of hanging"
+    );
 }
 
 #[test]
@@ -361,8 +359,8 @@ fn evaluate_subgraph_stateful_rejects_a_relay_to_a_missing_target() {
     g.freeze();
 
     let out = g.evaluate_subgraph_from_cause_stateful(0, &build_initial());
-    let err = out.error().expect("relay to a missing target errors");
-    assert!(format!("{err:?}").contains("RelayTo target"));
+    // The relayer names index 2; the graph holds only 0 and 1.
+    assert_eq!(out.error(), Some(&CausalityError::CausaloidNotFound(2)));
     // The errored carrier holds no value: the stale relay value is not preserved.
     assert!(out.value().is_none());
 }
@@ -448,11 +446,10 @@ fn evaluate_subgraph_stateful_multi_fired_reconvergence_errors_loudly() {
     g.freeze();
 
     let out = g.evaluate_subgraph_from_cause_stateful(0, &build_initial());
-    assert!(out.is_err());
+    let err = out.error().expect("a multi-fired join errors");
     assert!(
-        out.error()
-            .unwrap()
-            .to_string()
-            .contains("reconvergence merge (∇) is not")
+        matches!(&err.0, deep_causality::CausalityErrorEnum::UnsupportedOperation(m) if m.contains("reconvergence merge (∇) is not")),
+        "expected UnsupportedOperation: {:?}",
+        err
     );
 }
