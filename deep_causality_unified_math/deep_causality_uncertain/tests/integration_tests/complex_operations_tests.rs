@@ -95,12 +95,16 @@ fn integration_test_decision_making_under_uncertainty() {
     let condition = input_a_doubled.gt_uncertain(&input_b); // This returns UncertainBool<f64>
 
     // Decision 1: Use to_bool with high confidence.
-    // For this scenario, input_a_doubled (mean 30) is generally greater than input_b (mean 25).
-    // So, with high confidence, the condition should be true.
+    // P(A*2 > B) is about 0.75: likely, but not above a 0.95 threshold, and not inside the
+    // 0.92-0.98 indifference band either.
     let decision_high_confidence = condition
-        .to_bool(&session, 0.99, 0.95, 0.05, 1000)
+        .to_bool(&session, 0.95, 0.95, 0.03, 1000)
         .expect("Expected value calculation failed");
-    assert!(decision_high_confidence);
+    assert!(!decision_high_confidence);
+    let decision_more_likely_than_not = condition
+        .to_bool(&session, 0.5, 0.95, 0.03, 1000)
+        .expect("Expected value calculation failed");
+    assert!(decision_more_likely_than_not);
 
     // Decision 2: Use probability_exceeds with a threshold.
     // What is the probability that the condition is true?
@@ -119,8 +123,9 @@ fn integration_test_decision_making_under_uncertainty() {
 
     let condition_false = input_a_doubled.lt_uncertain(&input_c); // (A*2) < C (20-40 vs 50)
 
+    // P(A*2 < C) is about 0.995, above the 0.92-0.98 indifference band.
     let decision_false_high_confidence = condition_false
-        .to_bool(&session, 0.99, 0.95, 0.05, 1000)
+        .to_bool(&session, 0.95, 0.95, 0.03, 1000)
         .expect("Expected value calculation failed");
     assert!(decision_false_high_confidence);
 }
