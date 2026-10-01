@@ -182,3 +182,35 @@ fn eval_all_states_uncertain_float_success() {
     dbg!(&res);
     assert!(res.is_ok());
 }
+
+// Eight states inserted out of order: an unordered map returns them sorted by chance once in
+// 40,320 runs, so the assertion pins the ordering rather than the hash seed.
+#[test]
+fn eval_all_states_returns_every_effect_in_ascending_id_order() {
+    let states: Vec<_> = [9usize, 2, 7, 4, 1, 8, 3, 6]
+        .into_iter()
+        .map(|id| {
+            CausalState::new(
+                id,
+                1,
+                test_utils::get_test_single_data(0.60f64),
+                test_utils::get_test_causaloid_deterministic(id as u64),
+                None,
+            )
+        })
+        .collect();
+    let ca = test_utils_csm::get_test_action();
+    let pairs: Vec<_> = states.iter().map(|s| (s, &ca)).collect();
+    let csm = CSM::new(&pairs);
+
+    let results = csm.eval_all_states().expect("every state evaluates");
+
+    let ids: Vec<usize> = results.iter().map(|(id, _)| *id).collect();
+    assert_eq!(ids, vec![1, 2, 3, 4, 6, 7, 8, 9]);
+    for (id, effect) in &results {
+        assert_eq!(effect.value(), Some(&true));
+        let expected =
+            format!("CSM state {id} (version 1): active; fired 'Test action' (version 1)");
+        assert_eq!(effect.logs().messages().last(), Some(expected.as_str()));
+    }
+}
