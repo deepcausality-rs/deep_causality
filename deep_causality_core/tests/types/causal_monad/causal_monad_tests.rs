@@ -83,7 +83,7 @@ fn test_bind_error() {
     // Value and error are one channel: an errored carrier is constructed as `Err`
     // and cannot also hold a value.
     let initial: P<i32> =
-        PropagatingProcess::from_error(CausalityError::new(CausalityErrorEnum::InternalLogicError));
+        PropagatingProcess::from_error(CausalityError::InternalLogicError("test invariant"));
 
     // The continuation must not run when the upstream process already errored.
     let mut called = false;
@@ -112,7 +112,7 @@ fn test_bind_error_preserves_state_context_and_logs() {
     let mut logs = EffectLog::new();
     logs.add_entry("upstream");
     let initial: P<i32> = CausalEffectPropagationProcess::new(
-        Err(CausalityError::new(CausalityErrorEnum::InternalLogicError)),
+        Err(CausalityError::InternalLogicError("test invariant")),
         7,
         Some("ctx".to_string()),
         logs,
@@ -180,7 +180,7 @@ fn test_fmap_short_circuits_on_error_without_calling_f() {
     let mut logs = EffectLog::new();
     logs.add_entry("upstream");
     let initial: P<i32> = CausalEffectPropagationProcess::new(
-        Err(CausalityError::new(CausalityErrorEnum::InternalLogicError)),
+        Err(CausalityError::InternalLogicError("test invariant")),
         7,
         None,
         logs,

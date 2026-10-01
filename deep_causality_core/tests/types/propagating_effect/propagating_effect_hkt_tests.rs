@@ -50,13 +50,15 @@ fn test_functor_fmap_with_value() {
 
 #[test]
 fn test_functor_fmap_with_error() {
-    let m_a = setup_effect_with_error::<i32>(CausalityErrorEnum::TypeConversionError);
+    let m_a = setup_effect_with_error::<i32>(CausalityErrorEnum::TypeConversionError(
+        "test conversion".to_string(),
+    ));
     let f = |a: i32| a * 2; // This function should not be called
     let m_b = TestWitness::fmap(m_a, f);
     assert!(m_b.is_err());
     assert_eq!(
         m_b.error().unwrap().0,
-        CausalityErrorEnum::TypeConversionError
+        CausalityErrorEnum::TypeConversionError("test conversion".to_string())
     );
     assert!(m_b.value().is_none());
 }
@@ -111,7 +113,7 @@ fn test_applicative_apply_with_values() {
 fn test_applicative_apply_with_f_ab_error() {
     // Explicitly annotate f_ab as its 'T' (a function) cannot be inferred from an error
     let f_ab: PropagatingEffect<fn(i32) -> i32> = PropagatingEffect::new(
-        Err(CausalityError::new(CausalityErrorEnum::TypeConversionError)),
+        Err(CausalityError::TypeConversionError("test conversion")),
         (),
         None,
         EffectLog::new(),
@@ -121,7 +123,7 @@ fn test_applicative_apply_with_f_ab_error() {
     assert!(m_b.is_err());
     assert_eq!(
         m_b.error().unwrap().0,
-        CausalityErrorEnum::TypeConversionError
+        CausalityErrorEnum::TypeConversionError("test conversion".to_string())
     );
     assert!(m_b.value().is_none());
 }
@@ -135,12 +137,14 @@ fn test_applicative_apply_with_f_a_error() {
         None,
         EffectLog::new(),
     );
-    let f_a = setup_effect_with_error(CausalityErrorEnum::InternalLogicError);
+    let f_a = setup_effect_with_error(CausalityErrorEnum::InternalLogicError(
+        "test invariant".to_string(),
+    ));
     let m_b = TestWitness::apply(f_ab, f_a);
     assert!(m_b.is_err());
     assert_eq!(
         m_b.error().unwrap().0,
-        CausalityErrorEnum::InternalLogicError
+        CausalityErrorEnum::InternalLogicError("test invariant".to_string())
     );
     assert!(m_b.value().is_none());
 }
@@ -149,18 +153,20 @@ fn test_applicative_apply_with_f_a_error() {
 fn test_applicative_apply_with_both_errors() {
     // Explicitly annotate f_ab as its 'T' (a function) cannot be inferred from an error
     let f_ab: PropagatingEffect<fn(i32) -> i32> = PropagatingEffect::new(
-        Err(CausalityError::new(CausalityErrorEnum::TypeConversionError)),
+        Err(CausalityError::TypeConversionError("test conversion")),
         (),
         None,
         EffectLog::new(),
     );
-    let f_a = setup_effect_with_error(CausalityErrorEnum::InternalLogicError);
+    let f_a = setup_effect_with_error(CausalityErrorEnum::InternalLogicError(
+        "test invariant".to_string(),
+    ));
     let m_b = TestWitness::apply(f_ab, f_a);
     assert!(m_b.is_err());
     // f_ab's error takes precedence
     assert_eq!(
         m_b.error().unwrap().0,
-        CausalityErrorEnum::TypeConversionError
+        CausalityErrorEnum::TypeConversionError("test conversion".to_string())
     );
     assert!(m_b.value().is_none());
 }
@@ -225,13 +231,15 @@ fn test_monad_bind_with_value() {
 
 #[test]
 fn test_monad_bind_with_error_in_m_a() {
-    let m_a = setup_effect_with_error::<i32>(CausalityErrorEnum::TypeConversionError);
+    let m_a = setup_effect_with_error::<i32>(CausalityErrorEnum::TypeConversionError(
+        "test conversion".to_string(),
+    ));
     let f = |a: i32| setup_effect_with_value(a * 2); // This function should not be called
     let m_b = TestWitness::bind(m_a, f);
     assert!(m_b.is_err());
     assert_eq!(
         m_b.error().unwrap().0,
-        CausalityErrorEnum::TypeConversionError
+        CausalityErrorEnum::TypeConversionError("test conversion".to_string())
     );
     assert!(m_b.value().is_none());
 }
@@ -239,12 +247,16 @@ fn test_monad_bind_with_error_in_m_a() {
 #[test]
 fn test_monad_bind_with_error_in_f_result() {
     let m_a = setup_effect_with_value(5);
-    let f = |_a: i32| setup_effect_with_error::<i32>(CausalityErrorEnum::InternalLogicError); // Explicitly type T
+    let f = |_a: i32| {
+        setup_effect_with_error::<i32>(CausalityErrorEnum::InternalLogicError(
+            "test invariant".to_string(),
+        ))
+    }; // Explicitly type T
     let m_b = TestWitness::bind(m_a, f);
     assert!(m_b.is_err());
     assert_eq!(
         m_b.error().unwrap().0,
-        CausalityErrorEnum::InternalLogicError
+        CausalityErrorEnum::InternalLogicError("test invariant".to_string())
     );
     assert!(m_b.value().is_none());
 }

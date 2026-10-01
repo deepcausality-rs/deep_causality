@@ -4,7 +4,7 @@
  */
 
 use deep_causality_core::{CausalEffect, EffectLog};
-use deep_causality_core::{CausalEffectPropagationProcess, CausalityError, CausalityErrorEnum};
+use deep_causality_core::{CausalEffectPropagationProcess, CausalityError};
 use deep_causality_haft::LogAddEntry;
 
 #[test]
@@ -28,7 +28,7 @@ fn test_explain_value_only() {
 fn test_explain_with_error() {
     // Value and error are one channel: an errored process holds no value, so
     // explain() prints the error arm INSTEAD of a final value.
-    let error = CausalityError::new(CausalityErrorEnum::InternalLogicError);
+    let error = CausalityError::InternalLogicError("test invariant");
     let process: CausalEffectPropagationProcess<i32, (), (), CausalityError, EffectLog> =
         CausalEffectPropagationProcess::new(Err(error), (), None, EffectLog::new());
 
@@ -66,7 +66,7 @@ fn test_explain_with_error_and_logs() {
     logs.add_entry("Initial computation");
     logs.add_entry("Final computation");
 
-    let error = CausalityError::new(CausalityErrorEnum::InternalLogicError);
+    let error = CausalityError::InternalLogicError("test invariant");
     let process: CausalEffectPropagationProcess<i32, (), (), CausalityError, EffectLog> =
         CausalEffectPropagationProcess::new(Err(error), (), None, logs);
 

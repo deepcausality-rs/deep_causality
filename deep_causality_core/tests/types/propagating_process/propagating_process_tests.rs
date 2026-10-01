@@ -3,9 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_core::{
-    CausalEffect, CausalityError, CausalityErrorEnum, PropagatingEffect, PropagatingProcess,
-};
+use deep_causality_core::{CausalEffect, CausalityError, PropagatingEffect, PropagatingProcess};
 
 #[test]
 fn test_with_state() {
@@ -64,7 +62,7 @@ fn test_bind_with_state() {
 #[test]
 fn test_error_propagation() {
     let process: PropagatingProcess<i32, i32, String> = PropagatingProcess::new(
-        Err(CausalityError::new(CausalityErrorEnum::InternalLogicError)),
+        Err(CausalityError::InternalLogicError("test invariant")),
         0,
         None,
         Default::default(),
@@ -83,7 +81,7 @@ fn test_error_propagation() {
     assert!(next.is_err());
     assert_eq!(
         next.error(),
-        Some(&CausalityError::new(CausalityErrorEnum::InternalLogicError))
+        Some(&CausalityError::InternalLogicError("test invariant"))
     );
     // Error short-circuit preserves the state untouched.
     assert_eq!(*next.state(), 0);
