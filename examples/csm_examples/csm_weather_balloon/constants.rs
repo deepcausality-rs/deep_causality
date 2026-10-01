@@ -16,8 +16,11 @@ use deep_causality_num::const_scalar_from_float;
 pub const STEP_MIN: usize = 1;
 /// Local solar time at launch, in hours.
 pub const LAUNCH_HOUR: FloatType = const_scalar_from_float!(FloatType, 10.0);
-/// Ascent and descent rate of a typical sounding balloon, in m/s.
-pub const VERTICAL_SPEED_M_S: FloatType = const_scalar_from_float!(FloatType, 5.0);
+/// Ascent rate of a typical sounding balloon, in m/s.
+pub const ASCENT_SPEED_M_S: FloatType = const_scalar_from_float!(FloatType, 5.0);
+/// Parachute descent rate at sea-level density, in m/s. A parachute falls at its terminal
+/// speed, which scales with one over the square root of air density: about 18 m/s at 20 km.
+pub const SEA_LEVEL_DESCENT_M_S: FloatType = const_scalar_from_float!(FloatType, 5.0);
 /// Float altitude of the expedition, in metres.
 pub const FLOAT_ALTITUDE_M: FloatType = const_scalar_from_float!(FloatType, 20000.0);
 /// Planned start of the descent: 07:00 local time on the next morning, in minutes after launch.
@@ -44,7 +47,7 @@ pub const OPTICAL_DEPTH: FloatType = const_scalar_from_float!(FloatType, 0.288);
 pub const WARM_AIR_START_MIN: usize = 210;
 pub const WARM_AIR_END_MIN: usize = 360;
 /// How much warmer than the standard atmosphere that air mass is, in K.
-pub const WARM_AIR_EXCESS_K: FloatType = const_scalar_from_float!(FloatType, 25.0);
+pub const WARM_AIR_EXCESS_K: FloatType = const_scalar_from_float!(FloatType, 10.0);
 /// A bright cloud deck below reflects sunlight onto the gondola while the air mass passes.
 pub const CLOUD_DECK_GAIN: FloatType = const_scalar_from_float!(FloatType, 1.5);
 

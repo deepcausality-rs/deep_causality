@@ -124,6 +124,7 @@ pub fn heat_in_w(sun_w_m2: FloatType, charge_a: FloatType) -> FloatType {
 /// The simulated balloon: where it is, and the state of its pack.
 pub struct Flight {
     minute: usize,
+    altitude_m: FloatType,
     cell_c: FloatType,
     charge_wh: FloatType,
     lowest_charge_wh: FloatType,
@@ -135,6 +136,7 @@ impl Flight {
     pub fn launch() -> Self {
         Self {
             minute: 0,
+            altitude_m: lift::<FloatType>(0.0),
             cell_c: LAUNCH_CELL_C,
             charge_wh: LAUNCH_CHARGE * PACK_WH,
             lowest_charge_wh: LAUNCH_CHARGE * PACK_WH,
@@ -148,24 +150,8 @@ impl Flight {
         self.minute > DESCENT_START_MIN && self.altitude_m() <= lift::<FloatType>(0.0)
     }
 
-    /// Climb at the vertical speed, float, then descend from the planned start.
     pub fn altitude_m(&self) -> FloatType {
-        let rate_per_min = VERTICAL_SPEED_M_S * lift::<FloatType>(60.0);
-        let climbed = rate_per_min * lift_usize::<FloatType>(self.minute);
-        if self.minute < DESCENT_START_MIN {
-            return if climbed < FLOAT_ALTITUDE_M {
-                climbed
-            } else {
-                FLOAT_ALTITUDE_M
-            };
-        }
-        let descended = rate_per_min * lift_usize::<FloatType>(self.minute - DESCENT_START_MIN);
-        let altitude = FLOAT_ALTITUDE_M - descended;
-        if altitude > lift::<FloatType>(0.0) {
-            altitude
-        } else {
-            lift::<FloatType>(0.0)
-        }
+        self.altitude_m
     }
 
     /// Local solar time, in hours since midnight of launch day.
@@ -234,6 +220,26 @@ impl Flight {
         SOLAR_CONSTANT_W_M2 * transmitted * elevation * reflected
     }
 
+    /// Climb at the ascent speed to float, hold until the planned descent, then fall under the
+    /// parachute at the terminal speed of the air the balloon is in.
+    fn next_altitude_m(&self, density: FloatType, seconds: FloatType) -> FloatType {
+        if self.minute < DESCENT_START_MIN {
+            let climbed = self.altitude_m + ASCENT_SPEED_M_S * seconds;
+            return if climbed < FLOAT_ALTITUDE_M {
+                climbed
+            } else {
+                FLOAT_ALTITUDE_M
+            };
+        }
+        let speed = SEA_LEVEL_DESCENT_M_S * Real::sqrt(SEA_LEVEL_DENSITY / density);
+        let descended = self.altitude_m - speed * seconds;
+        if descended > lift::<FloatType>(0.0) {
+            descended
+        } else {
+            lift::<FloatType>(0.0)
+        }
+    }
+
     /// What the sensors report this minute.
     pub fn reading(&self) -> Reading {
         let (pressure_kpa, air_c) = self.air();
@@ -288,6 +294,7 @@ impl Flight {
         if self.cell_c > self.warmest_cell_c {
             self.warmest_cell_c = self.cell_c;
         }
+        self.altitude_m = self.next_altitude_m(density, seconds);
         self.minute += STEP_MIN;
     }
 }
