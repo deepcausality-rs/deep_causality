@@ -4,7 +4,7 @@
  */
 
 use crate::constants::*;
-use crate::model_types::{FailsafeState, Faults, Ground, LandNow};
+use crate::model_context::{FailsafeState, Faults, Ground, LandNow};
 use deep_causality::EffectLog;
 use deep_causality_algebra::Real;
 use deep_causality_num::lower;

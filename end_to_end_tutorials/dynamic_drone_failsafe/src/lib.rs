@@ -24,4 +24,4 @@ pub use types::terrain::Terrain;
 pub use types::touchdown::Touchdown;
 
 /// The working precision of the whole tutorial.
-pub type FloatType = f64;
+pub type FloatType = f32;

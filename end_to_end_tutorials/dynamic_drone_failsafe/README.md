@@ -248,15 +248,122 @@ on it, 3 m from a member of the crew. The controller knew the crew was there: it
 Every test it ran asked about the patch itself. None asked how close to a person the drone may land.
 
 In Orlando in December 2024, show drones fell into the crowd and a 7-year-old needed open-heart surgery (NTSB
-preliminary report, January 2025). Losing the drone is acceptable; harming a person is not. Nothing in the controller
-checks the machine's proposal against that rule: it lacks a check.
+preliminary report, January 2025). Losing a drone is acceptable; harming a person is not. Nothing in the flight controller
+software checks the machine's proposal against that rule: it lacks a check against safety rules before activating its fail-safe.
+
+## Part 4: Effect Ethos
+
+```bash
+cargo run -p dynamic_drone_failsafe --example drone_failsafe_part_4
+```
+
+The fail-safe machine now flies only what the Effect Ethos approves. Each landing it proposes becomes a
+`ProposedAction` naming a patch, and the Ethos judges it against norms. The norms read the same context the
+controller fills, which now also holds the drone's own state: where it is, its height, its position error, its
+battery endurance and the land temperature.
+
+| Norm | Forbids a proposal when | Priority |
+|------|-------------------------|----------|
+| person | a person is judged present, at 95 %, within the clearance of the patch | 4 |
+| not ruled out | a person is not ruled out, at 99 %, everywhere within the clearance; unseen ground rules out no one | 4 |
+| battery | the battery cannot get the drone to the patch and down with 5 s to spare | 3 |
+| drone | the drone would not survive the touchdown: steep ground, no surface, or unseen | 2 |
+| sacrifice | never; it permits ditching the drone and defeats the drone norm | 3 |
+| landing | never; it permits every proposal no other norm forbids | 1 |
+
+The clearance is 10 m, widened by the drone's position error, which grows 0.1 m for each second without a
+satellite fix, and by 2 m for a gust. Losing the drone is acceptable; harming a person is not. The sacrifice norm
+therefore overrides the drone norm, and nothing overrides the two person norms. The judge names a person at 95 %
+confidence; the Ethos needs 99 % that there is none.
+
+The machine proposes landings on the safe patches nearest the drone, then ditchings on the nearest water, until the
+Ethos approves one. A proposal forbidden only because a person is not yet ruled out may stand while the drone flies
+over the patch and looks; the machine gains a look state for that. Each second the Ethos reviews the plan in force
+again. When nothing is approved, the drone holds over the ground instead of descending where it is.
+
+```text
+ time   across   along   agl  confirmed faults                       below      fail-safe  maneuver
+   0s      60m      0m   40m  none                                   too steep  continue   none
+  18s      60m    144m   40m  none                                   safe       continue   none
+  20s      60m    160m   40m  none                                   too steep  continue   none
+  50s      60m    400m   40m  fix degraded                           too steep  continue   none
+  57s      56m    440m   40m  fix lost                               too steep  hold       hold over the ground
+  69s      56m    440m   40m  fix lost, link lost                    too steep  land now   fly over the patch and look
+  74s      41m    439m   40m  fix lost, link lost                    too steep  land now   land on the approved patch
+  76s      35m    438m   40m  fix lost, link lost                    safe       land now   land on the approved patch
+  85s      34m    438m   26m  fix lost, link lost, battery critical  safe       land now   land on the approved patch
+
+Touchdown at 94 s, 438 m along the line, 26 m from the nearest person.
+It landed upright and can be recovered.
+
+The ground as the controller judged it, one 4 m patch per cell, downhill to the left:
+
+              ~ / / / . . . / / / / / / / / / / / /
+              ~ / / / . . . / / / / / . P / / / / /
+              ~ / / / . . . / / / / / P P / / / / /
+              ~ / / / . . . / / / / / . . / / / / /
+              ~ / / / . . . / / / / / / / / / / / /
+              ~ / / / . . X / / / / / / / / / / / /
+              ~ / / / . . . / / / / / / / / / / / /
+              ? / / / . . . / / / / / / / / / / / /
+              ~ / / / . . . / / / / / / / / / / / /
+              ~ / / / . . . / / / / / / / / / / / /
+              ~ / / / / / / / / / / / / / / / / / /
+
+  . safe   / too steep   ~ water   P person   ? unsure   (blank) not seen
+  X where the drone came down
+
+The Effect Ethos rejected proposals for these reasons:
+    3  a person is within the clearance
+    3  a person is not yet ruled out within the clearance
+    0  the battery cannot get the drone there and down
+    0  the drone would not survive the touchdown
+It approved the patch at 34 m across and 438 m along once the drone had seen the ground around it.
+The controller's own map put the nearest person 27 m from that patch.
+
+The same Effect Ethos on three other proposals, against the context at touchdown, with the battery nearly spent:
+  Land next to the crew, at 58 m across and 446 m along: rejected: a person is within 16 m of it; a person is not yet ruled out within 16 m of it; the battery cannot get the drone there and down with 5 s to spare.
+  Land on the steep grass, at 38 m across and 438 m along: rejected: the drone would not survive the touchdown.
+  Ditch the drone in the creek, at 10 m across and 438 m along: rejected: a person is not yet ruled out within 16 m of it; the battery cannot get the drone there and down with 5 s to spare.
+    The drone would be lost there, and the sacrifice norm overrides the drone norm. Nothing overrides the person norms.
+
+Faults, fail-safes and maneuvers from the controller's log:
+  t=50 s: Satellite fix degraded: 7 satellites, HDOP 3.5.
+  t=57 s: Satellite fix lost: none for 3 s.
+  t=57 s: Fail-safe set to hold: no satellite fix, but the link is up, so wait for the fix or the operator.
+  t=57 s: Fail-safe machine runs "hold over the ground", state 2, version 1.
+  t=69 s: Command link lost: 95 % of packets dropped for 5 s.
+  t=69 s: Fail-safe set to land now: with no satellite fix and no link, the drone can neither navigate nor receive orders.
+  t=69 s: Proposal 1: land on the patch 6 m away, at 58 m across and 446 m along. Rejected: a person is within 13 m of it; a person is not yet ruled out within 13 m of it.
+  t=69 s: Proposal 2: land on the patch 8 m away, at 62 m across and 446 m along. Rejected: a person is within 13 m of it; a person is not yet ruled out within 13 m of it.
+  t=69 s: Proposal 3: land on the patch 14 m away, at 58 m across and 454 m along. Rejected: a person is within 13 m of it; a person is not yet ruled out within 13 m of it.
+  t=69 s: Proposal 4: land on the patch 22 m away, at 34 m across and 438 m along. Not yet: a person is not yet ruled out within 13 m of it, so the drone flies over it to look.
+  t=69 s: Land and look states replaced by version 2.
+  t=69 s: Fail-safe machine runs "fly over the patch and look", state 5, version 2.
+  t=74 s: The Effect Ethos approves the patch at 34 m across and 438 m along: a person is now ruled out within 14 m of it, and no other norm forbids it.
+  t=74 s: Fail-safe machine runs "land on the approved patch", state 4, version 2.
+  t=85 s: Battery critical: one cell at 3.25 V.
+```
+
+At 69 s the machine proposes the pad corner it landed on in part 3. The Ethos rejects it and the two pad patches after
+it: the crew stands within the clearance. It lets the terrace stand pending a look, because the camera has not yet
+seen enough of the ground around it to rule a person out. The drone flies over the terrace, and at 74 s the Ethos
+approves it. When the cell fails at 85 s, the Ethos reviews the plan again; the drone, 26 m up, can still descend
+with time to spare. It lands upright, 26 m from the nearest person.
+
+The rulings at the end show the priorities at work. Ditching the drone in the creek would lose it, and the sacrifice
+norm overrides the drone norm that forbids that; the Ethos still rejects the ditching, because it cannot rule out a
+person near the creek and the battery cannot get there.
 
 ## Precision
 
-`FloatType` in `src/lib.rs` sets the working precision of the whole tutorial. Part 1 produces the same output at
-`f32`, `f64` and `deep_causality_num::Float106`. Parts 2 and 3 produce the same output at `f32` and `f64`. At
-`Float106` one borderline patch on the edge of the first tower pad reads unsure for one second, at 19 s; every other
-line is the same.
+`FloatType` in `src/lib.rs` sets the working precision of the whole tutorial: `f32`. Every part produces the same
+output at `f64`. At `deep_causality_num::Float106`, part 1 is the same; in parts 2 to 4 one borderline patch on the
+edge of the first tower pad reads unsure for one second, at 19 s, and in part 4 the Effect Ethos approves the landing
+patch one second later, at 75 s. The drone lands at the same time and place.
+
+`deep_causality_num::BFloat16` runs too, but resolves positions only to 2 m at 440 m along the line, which moves a
+member of the crew into the next patch.
 
 ## Where Things Live
 
@@ -271,6 +378,7 @@ line is the same.
 | [`part_1_dynamic_causality/`](part_1_dynamic_causality) | The fail-safe controller with dynamic causality alone |
 | [`part_2_dynamic_context/`](part_2_dynamic_context) | The controller with the ground as its context |
 | [`part_3_dynamic_action/`](part_3_dynamic_action) | The controller with a fail-safe machine that acts on the context |
+| [`part_4_effect_ethos/`](part_4_effect_ethos) | The controller whose fail-safe machine flies only what the Effect Ethos approves |
 
 ## References
 

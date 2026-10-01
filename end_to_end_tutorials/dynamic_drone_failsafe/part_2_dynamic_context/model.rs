@@ -9,7 +9,7 @@
 
 use crate::constants::*;
 use crate::model_config::Detector;
-use crate::model_types::{
+use crate::model_context::{
     FailsafeProcess, FailsafeState, Faults, Frame, Fusion, Ground, GroundContext, GroundNode,
 };
 use deep_causality::{

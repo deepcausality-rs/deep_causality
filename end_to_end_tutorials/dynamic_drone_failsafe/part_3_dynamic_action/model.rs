@@ -10,7 +10,7 @@
 
 use crate::constants::*;
 use crate::model_config::{Detector, landing_state};
-use crate::model_types::{
+use crate::model_context::{
     FailsafeMachine, FailsafeProcess, FailsafeState, Faults, Frame, Fusion, Ground, GroundContext,
     GroundNode, LandingTarget, Maneuver, Situation,
 };

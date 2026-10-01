@@ -7,7 +7,7 @@
 //! and the fail-safe machine, one causal state per maneuver.
 
 use crate::constants::*;
-use crate::model_types::{
+use crate::model_context::{
     FailsafeMachine, Ground, GroundContext, LandingTarget, Maneuver, Situation,
 };
 use deep_causality::{

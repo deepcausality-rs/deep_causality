@@ -4,15 +4,17 @@
  */
 
 use crate::constants::*;
-use crate::model_context::{FailsafeState, Faults, Ground, Maneuver};
+use crate::model_types::{
+    FailsafeState, Faults, Ground, Maneuver, PlanStatus, Proposal, Review, Ruling,
+};
 use deep_causality::EffectLog;
 use deep_causality_num::lower;
 use dynamic_drone_failsafe::{Command, Drone, FloatType, Outcome, Surface, Touchdown};
 
 pub fn print_intro() {
-    println!("Dynamic drone fail-safe, part 3: dynamic action");
+    println!("Dynamic drone fail-safe, part 4: Effect Ethos");
     println!(
-        "The same drone flies the same night. A fail-safe machine now turns each fail-safe into a maneuver over the ground."
+        "The same drone flies the same night. The fail-safe machine now flies only what the Effect Ethos approves."
     );
     println!(
         "The column \"below\" is the controller's judgement of the ground directly under the drone."
@@ -99,24 +101,72 @@ pub fn print_map(state: &FailsafeState, touchdown: (i64, i64)) {
     println!("  X where the drone came down");
 }
 
-/// Prints how close to a person the chosen patch lay, by the controller's own map.
+/// Prints what the Effect Ethos rejected, and how far from a person the approved patch lay by the
+/// controller's own map.
 pub fn print_closing(state: &FailsafeState, person_m: Option<FloatType>) {
     println!();
-    if state.target.patch.is_none() {
-        println!("The fail-safe machine found no safe patch and landed where the drone was.");
-        return;
+    let count = |norm| state.rejections.get(&norm).copied().unwrap_or(0);
+    println!("The Effect Ethos rejected proposals for these reasons:");
+    for (norm, reason) in [
+        (NORM_PERSON, "a person is within the clearance"),
+        (
+            NORM_NOT_RULED_OUT,
+            "a person is not yet ruled out within the clearance",
+        ),
+        (
+            NORM_BATTERY,
+            "the battery cannot get the drone there and down",
+        ),
+        (NORM_DRONE, "the drone would not survive the touchdown"),
+    ] {
+        println!("  {:>3}  {reason}", count(norm));
     }
-    println!(
-        "The fail-safe machine chose the safe patch nearest the drone and landed on it. The patch"
-    );
-    println!("passed every test the controller ran: flat, dry, no one on it.");
-    if let Some(d) = person_m {
+    if let Some(plan) = state.plan.filter(|p| p.status == PlanStatus::Approved) {
         println!(
-            "The controller's own map showed a person on a patch {:.0} m away from it.",
-            lower(d)
+            "It approved the patch at {:.0} m across and {:.0} m along once the drone had seen the ground around it.",
+            lower(plan.target.centre.0),
+            lower(plan.target.centre.1),
         );
+        if let Some(d) = person_m {
+            println!(
+                "The controller's own map put the nearest person {:.0} m from that patch.",
+                lower(d)
+            );
+        }
+    } else {
+        println!("It approved no patch.");
     }
-    println!("No test asked how close to a person the drone may land. Part 4 adds that check.");
+}
+
+/// Prints how the Effect Ethos rules on three other proposals against the context at touchdown: a
+/// landing next to the crew, a landing on steep ground, and ditching the drone in the creek.
+pub fn print_rulings(rulings: &[Ruling]) {
+    println!();
+    println!(
+        "The same Effect Ethos on three other proposals, against the context at touchdown, with the battery nearly spent:"
+    );
+    for r in rulings {
+        let what = match (r.candidate.proposal, r.kind) {
+            (Proposal::Ditch, _) => "Ditch the drone in the creek",
+            (_, Ground::Steep) => "Land on the steep grass",
+            _ => "Land next to the crew",
+        };
+        let verdict = match &r.review {
+            Review::Approved => "approved".to_string(),
+            Review::Look => format!("forbidden until the drone looks: {}", r.why),
+            Review::Rejected(_) => format!("rejected: {}", r.why),
+        };
+        println!(
+            "  {what}, at {:.0} m across and {:.0} m along: {verdict}.",
+            lower(r.candidate.centre.0),
+            lower(r.candidate.centre.1)
+        );
+        if r.drone_norm_defeated {
+            println!(
+                "    The drone would be lost there, and the sacrifice norm overrides the drone norm. Nothing overrides the person norms."
+            );
+        }
+    }
 }
 
 /// Prints the faults, fail-safes and maneuvers from the controller's log. The log also holds each
@@ -176,8 +226,9 @@ fn maneuver_name(m: Maneuver) -> &'static str {
         Maneuver::None => "none",
         Maneuver::HoldOver { .. } => "hold over the ground",
         Maneuver::ReturnHome => "fly home",
-        Maneuver::LandOn { .. } => "land on the chosen patch",
-        Maneuver::ChooseTarget => "choose a landing patch",
+        Maneuver::LandOn { .. } => "land on the approved patch",
+        Maneuver::LookOver { .. } => "fly over the patch and look",
+        Maneuver::ChooseTarget => "hold: nothing approved",
     }
 }
 

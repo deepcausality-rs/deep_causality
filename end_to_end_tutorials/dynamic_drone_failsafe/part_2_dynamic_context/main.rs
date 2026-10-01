@@ -15,10 +15,10 @@
 mod constants;
 mod model;
 mod model_config;
-mod model_types;
+mod model_context;
 mod utils_print;
 
-use crate::model_types::{FailsafeProcess, FailsafeState, Frame, LandNow};
+use crate::model_context::{FailsafeProcess, FailsafeState, Frame, LandNow};
 use deep_causality::{CausalEffect, EffectLog};
 use dynamic_drone_failsafe::{Command, Drone, FLIGHT_LIMIT_S, Terrain, Touchdown};
 use std::error::Error;

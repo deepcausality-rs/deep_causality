@@ -3,21 +3,23 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! # Dynamic drone fail-safe, part 3: dynamic action
+//! # Dynamic drone fail-safe, part 4: Effect Ethos
 //!
-//! The drone of part 2 flies the same night with the same faults and the same ground context. A
-//! causal state machine now turns the fail-safe ladder's command into a maneuver over the ground:
-//! hold over the ground, fly home, or choose a landing patch and land on it. The drone flies these
-//! by its camera and LiDAR, so it no longer drifts without a satellite fix. Each patch the machine
-//! chooses replaces its landing state with a new version.
+//! The drone of part 3 flies the same night with the same faults, the same ground context and the
+//! same fail-safe machine. The machine now flies only what the Effect Ethos approves. Each landing
+//! it proposes goes to the Ethos, whose norms read the same context: no person within the
+//! clearance, no unseen ground within it, enough battery, and a touchdown the drone survives.
+//! Losing the drone is acceptable; harming a person is not, so nothing defeats the person norm.
 
 mod constants;
 mod model;
 mod model_config;
-mod model_context;
+mod model_types;
 mod utils_print;
 
-use crate::model_context::{FailsafeProcess, FailsafeState, Frame, Maneuver};
+use crate::model_types::{
+    Candidate, FailsafeProcess, FailsafeState, Frame, Ground, Maneuver, Proposal,
+};
 use deep_causality::{CausalEffect, EffectLog};
 use dynamic_drone_failsafe::{Command, Drone, FLIGHT_LIMIT_S, Guidance, Terrain, Touchdown};
 use std::error::Error;
@@ -25,12 +27,13 @@ use std::error::Error;
 fn main() -> Result<(), Box<dyn Error>> {
     let detectors = model_config::detectors();
     let machine = model_config::failsafe_machine();
+    let ethos = model_config::effect_ethos()?;
     let terrain = Terrain::new();
     let mut drone = Drone::launch();
     let mut process = FailsafeProcess::new(
         Ok(CausalEffect::value(Maneuver::None)),
         FailsafeState {
-            landing_version: 1,
+            plan_version: 1,
             ..FailsafeState::default()
         },
         Some(model_config::ground_context()?),
@@ -53,7 +56,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             .bind(model::judge)
             .bind(|value, state, ctx| model::detect(value, state, ctx, &detectors))
             .bind(|value, state, ctx| model::decide(value, state, ctx, time_s))
-            .bind(|value, state, ctx| model::act(value, state, ctx, &machine, time_s));
+            .bind(|value, state, ctx| model::act(value, state, ctx, &machine, &ethos, time_s));
         if let Some(err) = process.error() {
             return Err(Box::new(err.clone()));
         }
@@ -70,7 +73,13 @@ fn main() -> Result<(), Box<dyn Error>> {
         match maneuver {
             Maneuver::HoldOver { x, y } => drone.guide(Guidance::HoldOver { x, y }),
             Maneuver::LandOn { x, y } => drone.guide(Guidance::LandOn { x, y }),
+            Maneuver::LookOver { x, y } => drone.guide(Guidance::HoldOver { x, y }),
             Maneuver::ReturnHome => drone.step(Command::ReturnHome),
+            // Nothing approved: on land now the drone holds rather than descend where it is.
+            Maneuver::None | Maneuver::ChooseTarget if state.failsafe == Command::LandNow => {
+                let (x, y) = drone.position();
+                drone.guide(Guidance::HoldOver { x, y })
+            }
             Maneuver::None | Maneuver::ChooseTarget => drone.step(state.failsafe),
         }
     }
@@ -79,10 +88,33 @@ fn main() -> Result<(), Box<dyn Error>> {
     utils_print::print_touchdown(drone.time_s(), &Touchdown::assess(&terrain, x, y));
     let state = process.state();
     utils_print::print_map(state, drone.patch_below());
+    let target = state.plan.map(|p| p.target.centre);
     utils_print::print_closing(
         state,
-        model::nearest_person_seen_m(state, state.target.centre),
+        target.and_then(|centre| model::nearest_person_seen_m(state, centre)),
     );
+    let context = process
+        .context()
+        .as_ref()
+        .ok_or("the process lost its context")?;
+    let landed_at = drone.position();
+    let person = model::nearest_judged(state, Ground::Person, landed_at).map(|p| p.1);
+    let mut rulings = Vec::new();
+    for (proposal, kind, near) in [
+        (Proposal::Land, Ground::Safe, person.unwrap_or(landed_at)),
+        (Proposal::Land, Ground::Steep, landed_at),
+        (Proposal::Ditch, Ground::Water, landed_at),
+    ] {
+        if let Some((patch, centre)) = model::nearest_judged(state, kind, near) {
+            let candidate = Candidate {
+                proposal,
+                patch,
+                centre,
+            };
+            rulings.push(model::ruling(&ethos, context, kind, candidate)?);
+        }
+    }
+    utils_print::print_rulings(&rulings);
     utils_print::print_log(process.logs());
     Ok(())
 }

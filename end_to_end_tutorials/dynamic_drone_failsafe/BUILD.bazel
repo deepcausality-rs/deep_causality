@@ -52,3 +52,16 @@ rust_binary(
         normal_dev = True,
     ),
 )
+
+rust_binary(
+    name = "drone_failsafe_part_4",
+    srcs = glob(["part_4_effect_ethos/**/*.rs"]),
+    crate_root = "part_4_effect_ethos/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":dynamic_drone_failsafe",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)

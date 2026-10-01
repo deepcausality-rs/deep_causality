@@ -7,7 +7,7 @@
 //! with.
 
 use crate::constants::*;
-use crate::model_types::GroundContext;
+use crate::model_context::GroundContext;
 use deep_causality::{Causaloid, PropagatingEffect};
 use deep_causality_context::{
     ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, DiscreteTime, TimeScale,
