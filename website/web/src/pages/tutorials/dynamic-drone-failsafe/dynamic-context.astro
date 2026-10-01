@@ -1,0 +1,245 @@
+---
+import { Code } from 'astro:components';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SiteHeader from '../../../components/nav/SiteHeader.astro';
+import TopicList from '../../../components/overview/TopicList.astro';
+import {
+  DRONE_FAILSAFE_BASE,
+  DRONE_FAILSAFE_SOURCE,
+  droneFailsafeParts,
+} from '../../../components/tutorials/tutorials';
+import { GITHUB_URL } from '../../../consts';
+
+const themes = { light: 'github-light', dark: 'github-dark' } as const;
+const source = `${GITHUB_URL}/tree/main/${DRONE_FAILSAFE_SOURCE}/part_2_dynamic_context`;
+
+const run = `cargo run -p dynamic_drone_failsafe --example drone_failsafe_part_2`;
+
+const contextType = `/// The ground below the drone as the controller believes it to be. Each patch the camera and
+/// LiDAR have seen is a space node linked to five uncertain data nodes, one per measured quantity.
+/// A clock node holds the local time of day.
+pub type GroundContext = Context<
+    UncertainData<FloatType>,
+    EuclideanSpace<FloatType>,
+    DiscreteTime,
+    NoSpaceTime<FloatType>,
+>;`;
+
+const fuse = `if first_sight {
+    let (x, y) = reading.centre();
+    let space_id = node_id(patch, 0);
+    let space = context.add_node(Contextoid::new(
+        space_id,
+        ContextoidType::Spaceoid(EuclideanSpace::new(space_id, x, y, ZERO)),
+    ))?;
+    for q in Quantity::ALL {
+        let id = node_id(patch, q as u64 + 1);
+        let data = context.add_node(data_node(id, &fused, q))?;
+        context.add_edge(space, data, RelationKind::Spatial)?;
+    }
+} else {
+    for q in Quantity::ALL {
+        let id = node_id(patch, q as u64 + 1);
+        context.update_node(id, data_node(id, &fused, q))?;
+    }
+}`;
+
+const dataNode = `/// A data node holding the fused value of one quantity as a normal distribution.
+fn data_node(id: ContextoidId, fusion: &Fusion, q: Quantity) -> GroundNode {
+    let k = q as usize;
+    let mean = fusion.weighted[k] / fusion.precision[k];
+    let sigma = Real::sqrt(ONE / fusion.precision[k]);
+    Contextoid::new(
+        id,
+        ContextoidType::Datoid(UncertainData::new(id, Uncertain::normal(mean, sigma))),
+    )
+}`;
+
+const stages = `process = process
+    .bind(|_, state, ctx| model::sense(frame, state, ctx))
+    .bind(model::perceive)
+    .bind(model::judge)
+    .bind(|value, state, ctx| model::detect(value, state, ctx, &detectors))
+    .bind(|value, state, ctx| model::decide(value, state, ctx, time_s));`;
+
+const judge = `let read = |q: Quantity| belief(context, patch, q);
+let steep = read(Quantity::Slope)?.greater_than(TIP_OVER_DEG);
+let no_return = read(Quantity::Returns)?.less_than(NO_RETURN_BELOW);
+let contrast = if night {
+    read(Quantity::MeanTemperature)?.greater_than(land_c + WATER_CONTRAST_C)
+} else {
+    read(Quantity::MeanTemperature)?.less_than(land_c - WATER_CONTRAST_C)
+};
+let water = no_return.clone() & contrast;
+// The LiDAR measures a bump only where it has a return.
+let person = read(Quantity::HotSpot)?.greater_than(land_c + PERSON_EXCESS_C)
+    | (!no_return.clone() & read(Quantity::Protrusion)?.greater_than(PERSON_BUMP_M));
+
+if holds(&!(steep.clone() | no_return | person.clone()))? {
+    return Ok(Ground::Safe);
+}`;
+
+const holds = `fn holds(condition: &UncertainBool<FloatType>) -> Result<bool, CausalityError> {
+    condition
+        .probability_exceeds(
+            &SampleSession::seeded(JUDGE_SEED),
+            CONFIDENCE,
+            CONFIDENCE,
+            TEST_EPSILON,
+            MAX_SAMPLES,
+        )
+        .map_err(uncertain_error)
+}`;
+
+const output = `Dynamic drone fail-safe, part 2: dynamic context
+The same drone flies the same night. A thermal camera and a LiDAR now look at the ground below it.
+The column "below" is the controller's judgement of the ground directly under the drone.
+
+ time   across   along   agl  sats  hdop  loss   cell  confirmed faults                       below        fail-safe
+   0s      60m      0m   40m    14   0.8    2%  4.05V  none                                   too steep    continue
+  18s      60m    144m   40m    14   0.8    2%  4.01V  none                                   safe         continue
+  20s      60m    160m   40m    14   0.8    2%  4.01V  none                                   too steep    continue
+  50s      60m    400m   40m     7   3.5    2%  3.95V  fix degraded                           too steep    continue
+  57s      56m    440m   40m     3  99.0    2%  3.94V  fix lost                               too steep    hold
+  68s      34m    440m   40m     3  99.0   95%  3.91V  fix lost                               safe         hold
+  69s      32m    440m   40m     3  99.0   95%  3.91V  fix lost, link lost                    safe         land now
+  74s      22m    440m   32m     3  99.0   95%  3.90V  fix lost, link lost                    too steep    land now
+  80s      10m    440m   24m     3  99.0   95%  3.89V  fix lost, link lost                    water        land now
+  85s       0m    440m   16m     3  99.0   95%  3.25V  fix lost, link lost, battery critical  water        land now
+
+Touchdown at 91 s, 440 m along the line, 71 m from the nearest person.
+It dropped into the creek and was lost.
+
+The ground as the controller judged it, one 4 m patch per cell, downhill to the left:
+
+              ~ ~ / / / . . . / / / / / / / / /
+          ~ ~ ~ ~ / / / . . . / / / / / / / / /
+        ~ ~ ~ ~ ~ / / / . . . / / / / / . P / /
+      ~ ~ ~ ~ ~ ~ / / / . . . / / / / / P P / /
+      ~ ~ ~ ~ ~ ~ / / / . . . / / / / / . . / /
+      X ~ ~ ~ ~ ~ / / / . . L / / / / / / / / /
+      ~ ~ ~ ~ ~ ~ / / / . . . / / / / / / / / /
+      ~ ~ ~ ~ ~ ~ / / / . . . / / / / / / / / /
+      ~ ~ ~ ~ ~ ~ / / / . . . / / / / / / / / /
+        ~ ~ ~ ~ ~ / / / . . . / / / / / / / / /
+          ~ ~ ~ ~ / / / . . . / / / / / / / / /
+
+  . safe   / too steep   ~ water   P person   ? unsure   (blank) not seen
+  L where the fail-safe chose to land now   X where the drone came down
+
+At night the creek is warmer than the land. Read with the daytime rule, where water is the
+cooler surface, 0 of the 58 patches judged to be water would still read as water.
+
+When the fail-safe chose to land, at 69 s, the ground below was safe. The descent took 22 s,
+and the night wind carried the drone 44 m downhill before it touched down.
+The controller knew the ground, and nothing in it acted on what it knew. Part 3 adds action.
+
+Faults and fail-safes from the controller's log:
+  t=50 s: Satellite fix degraded: 7 satellites, HDOP 3.5.
+  t=57 s: Satellite fix lost: none for 3 s.
+  t=57 s: Fail-safe set to hold: no satellite fix, but the link is up, so wait for the fix or the operator.
+  t=69 s: Command link lost: 95 % of packets dropped for 5 s.
+  t=69 s: Fail-safe set to land now: with no satellite fix and no link, the drone can neither navigate nor receive orders.
+  t=85 s: Battery critical: one cell at 3.25 V.`;
+---
+<BaseLayout
+  title="Part 2: Dynamic context — DeepCausality"
+  description="Part 2 of the drone fail-safe tutorial: a thermal camera and a LiDAR fill a context with uncertain readings of the ground, and the controller judges every patch from it."
+>
+  <SiteHeader />
+  <article class="static-page">
+    <header>
+      <p class="eyebrow">Dynamic drone fail-safe · Part 2 of 5</p>
+      <h1>Part 2: Dynamic context</h1>
+      <p class="lede">
+        A thermal camera and a LiDAR now look down every second, and the controller fuses what
+        they see into a context. From the context it judges every patch of ground: safe, too
+        steep, water, a person, or unsure. The fail-safe ladder of part 1 still lands the drone
+        where it is, so the drone still drops into the creek.
+      </p>
+    </header>
+
+    <div class="prose">
+      <h2>Run it</h2>
+      <Code code={run} lang="bash" themes={themes} defaultColor={false} wrap />
+      <p>
+        The source lives in <a href={source}><code>part_2_dynamic_context</code></a>.
+      </p>
+
+      <h2>The ground as a context</h2>
+      <p>
+        Each second the camera and the LiDAR read every 4 m patch of ground in their footprint,
+        which shrinks as the drone descends. Each reading gives five quantities: the patch's mean
+        temperature, its hottest spot, its slope, the fraction of LiDAR beams that return, and how
+        far anything sticks up from it. Every reading is noisy, and noisier the higher the drone
+        flies.
+      </p>
+      <p>
+        The controller keeps the ground in a <a href="/overview/dynamic-context/">context</a>:
+      </p>
+      <Code code={contextType} lang="rust" themes={themes} defaultColor={false} wrap />
+      <p>
+        A patch seen for the first time gets a space node at its centre and five data nodes, one
+        per quantity, each linked to the space node. Every later frame updates the data nodes:
+      </p>
+      <Code code={fuse} lang="rust" themes={themes} defaultColor={false} wrap />
+      <p>
+        A data node holds an uncertain value. The controller fuses every frame that has seen the
+        patch, weighting each reading by its inverse variance, so the value sharpens with each look:
+      </p>
+      <Code code={dataNode} lang="rust" themes={themes} defaultColor={false} wrap />
+
+      <h2>Two new stages</h2>
+      <p>
+        The causal process gains two stages between <code>sense</code> and <code>detect</code>:
+      </p>
+      <Code code={stages} lang="rust" themes={themes} defaultColor={false} wrap />
+      <p>
+        <code>perceive</code> sets the context's clock to the local time and fuses the frame into
+        the context. <code>judge</code> reads each patch back from the context and judges it. The
+        ladder in <code>decide</code> stays the one from part 1.
+      </p>
+
+      <h2>Judging a patch</h2>
+      <ul>
+        <li><strong>Too steep:</strong> the slope exceeds 15°, where a drone on skids tips over.</li>
+        <li><strong>Water:</strong> the LiDAR finds no surface, and the patch reads more than 2 °C warmer than the land at night, or cooler by day. The clock node says which.</li>
+        <li><strong>A person:</strong> a hot spot 15 °C above the land, or a bump over 1 m where the LiDAR finds a surface.</li>
+        <li><strong>Safe:</strong> none of these, and the LiDAR finds a surface.</li>
+      </ul>
+      <p>
+        Each test compares uncertain values and yields an uncertain Boolean:
+      </p>
+      <Code code={judge} lang="rust" themes={themes} defaultColor={false} wrap />
+      <p>
+        A sequential probability test decides each one at 95 % confidence. It stops drawing samples
+        once the evidence settles the question, and its seeded draws make every run judge alike.
+        A patch neither safe nor a hazard at that confidence reads as unsure.
+      </p>
+      <Code code={holds} lang="rust" themes={themes} defaultColor={false} wrap />
+
+      <h2>What happened</h2>
+      <Code code={output} lang="text" themes={themes} defaultColor={false} />
+      <p>
+        The controller now knows the ground. It found the first tower pad at 18 s, the crew on the
+        second pad, the flat terrace below it when it chose to land, and the creek it drifted into.
+        The map shows the terrace as a strip of safe patches in the steep grass.
+      </p>
+      <p>
+        The time of day matters. The daytime rule expects water cooler than the land; read with
+        it, the same context finds no water in the creek.
+      </p>
+      <p>
+        The fail-safe still lands the drone in the creek. The controller knows the ground, and
+        nothing in it acts on what it knows. <a href={`${DRONE_FAILSAFE_BASE}dynamic-action/`}>Part 3</a> adds action.
+      </p>
+      <p>
+        The simulation places every frame in world coordinates, so a patch keeps its place while
+        the drone drifts without GPS. A real system registers frames against each other with
+        visual or LiDAR odometry.
+      </p>
+
+      <TopicList label="Dynamic drone fail-safe" current="dynamic-context" items={droneFailsafeParts} base={DRONE_FAILSAFE_BASE} />
+    </div>
+  </article>
+</BaseLayout>

@@ -103,7 +103,7 @@ const ddic = 'https://arxiv.org/abs/2407.04869';
       <ol>
         <li><strong>Select.</strong> Collect every norm filed under one of the requested tags. Selection uses tags alone, so give each kind of action its own tag.</li>
         <li><strong>Activate.</strong> Run each norm's predicate against the context and the action. An uncertain predicate activates when its probability test passes; a predicate or test that returns an error counts as inactive.</li>
-        <li><strong>Resolve.</strong> A <code>Defeats</code> edge removes the norm it points to when the defeating norm is active and exceeds it in specificity, timestamp or priority. An <code>Inherits</code> edge adds an active norm's more specific norms to the result without running their predicates.</li>
+        <li><strong>Resolve.</strong> Settle the norms in the graph's topological order. A <code>Defeats</code> edge removes the norm it points to when the defeating norm stands and outranks it: higher priority first, then higher specificity, then a later timestamp. Equal rank does not defeat, and a norm that falls defeats nothing. An <code>Inherits</code> edge adds a standing norm's more specific norms to the result without running their predicates.</li>
         <li><strong>Decide.</strong> Any surviving prohibition makes the verdict <code>Impermissible</code>. Otherwise any surviving obligation makes it <code>Obligatory</code>. Otherwise the verdict is <code>Optional</code>, at the summed cost of the surviving norms.</li>
       </ol>
       <p>

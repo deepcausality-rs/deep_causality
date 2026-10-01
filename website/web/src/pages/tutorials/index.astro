@@ -1,0 +1,27 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import TopicList from '../../components/overview/TopicList.astro';
+import { TUTORIALS_BASE, tutorials } from '../../components/tutorials/tutorials';
+---
+<BaseLayout
+  title="Tutorials — DeepCausality"
+  description="Tutorials build one engineering system from start to finish, one layer of DeepCausality per part, and run it after each part."
+>
+  <SiteHeader />
+  <article class="static-page">
+    <header>
+      <p class="eyebrow">Tutorials</p>
+      <h1>One system, built layer by layer</h1>
+      <p class="lede">
+        A tutorial builds one engineering system from start to finish. Each part adds one layer of
+        DeepCausality, runs the system again and shows what changed. Every part is a program in the
+        repository, and every output on these pages comes from running it.
+      </p>
+    </header>
+
+    <div class="prose">
+      <TopicList label="Tutorials" items={tutorials} base={TUTORIALS_BASE} />
+    </div>
+  </article>
+</BaseLayout>

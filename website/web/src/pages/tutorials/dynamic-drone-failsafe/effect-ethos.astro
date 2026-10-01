@@ -1,0 +1,349 @@
+---
+import { Code } from 'astro:components';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SiteHeader from '../../../components/nav/SiteHeader.astro';
+import TopicList from '../../../components/overview/TopicList.astro';
+import {
+  DRONE_FAILSAFE_BASE,
+  DRONE_FAILSAFE_SOURCE,
+  droneFailsafeParts,
+} from '../../../components/tutorials/tutorials';
+import { GITHUB_URL } from '../../../consts';
+
+const themes = { light: 'github-light', dark: 'github-dark' } as const;
+const source = `${GITHUB_URL}/tree/main/${DRONE_FAILSAFE_SOURCE}/part_4_effect_ethos`;
+
+const ardupilotGps =
+  'https://github.com/ArduPilot/ardupilot_wiki/blob/master/copter/source/docs/gps-failsafe-glitch-protection.rst';
+const ardupilotDeadReckoning = 'https://ardupilot.org/copter/docs/deadreckoning-failsafe.html';
+const casa = 'https://www.casa.gov.au/remotely-piloted-aircraft-systems-licensing-and-operations';
+const sora =
+  'http://jarus-rpas.org/wp-content/uploads/2024/06/SORA-v2.5-Main-Body-Release-JAR_doc_25.pdf';
+const soraAnnexA =
+  'http://jarus-rpas.org/wp-content/uploads/2024/06/SORA-v2.5-Annex-A-Release.JAR_doc_26-pdf.pdf';
+const faa = 'https://www.faa.gov/documentLibrary/media/Advisory_Circular/AC_107-2A.pdf';
+const flightpath =
+  'https://www.flightpath107.com/curriculum-home/section-three/emergency-procedures/';
+const pilotInstitute = 'https://pilotinstitute.com/drone-in-flight-emergency/';
+
+const run = `cargo run -p dynamic_drone_failsafe --example drone_failsafe_part_4`;
+
+const norms = `.add_deterministic_norm(
+    NORM_PERSON,
+    "land",
+    &[LANDING_TAG],
+    person_within_clearance,
+    impermissible,
+    1,
+    1,
+    4,
+)?
+.add_deterministic_norm(
+    NORM_NOT_RULED_OUT,
+    "land",
+    &[LANDING_TAG],
+    person_not_ruled_out,
+    impermissible,
+    1,
+    1,
+    4,
+)?`;
+
+const predicate = `/// The person norm. A norm that cannot read what it needs forbids the proposal.
+fn person_within_clearance(context: &GroundContext, action: &ProposedAction) -> bool {
+    proposed_patch(action).is_none_or(|patch| {
+        model::clearance_m(context)
+            .and_then(|clearance| model::person_within(context, patch, clearance))
+            .unwrap_or(true)
+    })
+}`;
+
+const defeats = `.link_defeasance(NORM_SACRIFICE, NORM_DRONE)?
+.link_defeasance(NORM_SACRIFICE, NORM_EDGE)?
+.link_defeasance(NORM_SACRIFICE, NORM_BATTERY)?
+.link_defeasance(NORM_EMERGENCY, NORM_NOT_RULED_OUT)?
+.link_defeasance(NORM_LAST_RESORT, NORM_NOT_RULED_OUT)?
+.link_defeasance(NORM_LAST_RESORT, NORM_PERSON)?;
+ethos.verify_graph()?;`;
+
+const tags = `fn tags(urgency: Urgency) -> &'static [&'static str] {
+    match urgency {
+        Urgency::Routine | Urgency::Practicable => &[LANDING_TAG],
+        Urgency::Possible => &[LANDING_TAG, EMERGENCY_TAG],
+        Urgency::LastResort => &[LANDING_TAG, EMERGENCY_TAG, LAST_RESORT_TAG],
+    }
+}`;
+
+const review = `let action = ProposedAction::new(0, name.to_string(), parameters);
+let verdict = ethos
+    .evaluate_action(&action, context, tags(urgency))
+    .map_err(|err| CausalityError::DeonticError(err.to_string()))?;
+match verdict.outcome() {
+    TeloidModal::Optional(cost) => return Ok(Review::Approved(cost)),
+    TeloidModal::Obligatory => return Ok(Review::Approved(0)),
+    TeloidModal::Impermissible => {}
+}`;
+
+const lastResort = `if urgency == Urgency::Possible {
+    logs.add_entry(&format!(
+        "t={time_s} s: Last resort: nothing is permitted under the emergency norms. The person bans yield to costs, so the drone comes down where it endangers the fewest, farthest from people."
+    ));
+    state.urgency = Urgency::LastResort;
+    return choose(context, state, machine, ethos, time_s, logs);
+}`;
+
+const output = `Dynamic drone fail-safe, part 4: Effect Ethos
+The same drone flies the same night under a safety protocol: the published contingency and emergency
+procedures for drone pilots, encoded as norms of the Effect Ethos. The drone flies only what the Ethos permits.
+The column "below" is the controller's judgement of the ground directly under the drone.
+
+ time   across   along   agl  confirmed faults                       below      urgency      maneuver
+   0s      60m      0m   40m  none                                   too steep  routine      fly the mission
+  18s      60m    144m   40m  none                                   safe       routine      fly the mission
+  20s      60m    160m   40m  none                                   too steep  routine      fly the mission
+  50s      60m    400m   40m  fix degraded                           too steep  routine      fly the mission
+  57s      56m    440m   40m  fix lost                               too steep  contingency  fly over the patch and look
+  58s      53m    440m   40m  fix lost                               too steep  contingency  fly over the patch and look
+  64s      36m    435m   40m  fix lost                               safe       contingency  fly over the patch and look
+  69s      30m    430m   36m  fix lost, link lost                    safe       contingency  fly over the patch and look
+  77s      30m    430m   25m  fix lost, link lost                    safe       contingency  land on the approved patch
+  85s      30m    430m   13m  fix lost, link lost, battery critical  safe       emergency    land on the approved patch
+
+Touchdown at 90 s, 430 m along the line, 34 m from the nearest person.
+It landed upright and can be recovered.
+
+The ground as the controller judged it, one 4 m patch per cell, downhill to the left:
+
+              ~ ~ / / / . . . / / / / / P P / / / /
+              ~ ~ / / / . . . / / / / / . . / / / /
+              ~ ~ / / / . . . / / / / / / / / / / /
+              ~ ~ / / / . . . / / / / / / / / / / /
+              ~ ~ / / / . . . / / / / / / / / / / /
+              ~ ~ / / / . X . / / / / / / / / / / /
+              ~ ~ / / / . . . / / / / / / / / / / /
+              ~ ~ / / / . . . / / / / / / / / / / /
+              ~ ~ / / / / / / / / / / / / / / / / /
+              ~ ~ / / / / / / / / / / / / / / / / /
+              ~ ~ / / / / / / / / / / / / / / / / /
+
+  . safe   / too steep   ~ water   T trees   P person   ? unsure   (blank) not seen
+  X where the drone came down
+
+The Effect Ethos forbade proposals for these reasons:
+   19  a person is within the clearance
+   54  a person is not yet ruled out within the clearance
+    0  the flight there would cross trees or unseen ground
+    0  the battery cannot get the drone there and down
+    0  the drone would not survive the touchdown
+   73  a gust could put the drone on steep ground beside it
+It permitted the patch at 30 m across and 430 m along.
+The controller's own map put the nearest person 34 m from that patch.
+
+The last-resort norms on three ditchings, against the context at 85 s, when the emergency began.
+Under them a person near a patch no longer forbids it but prices it, so the cheapest endangers the fewest:
+  Next to the crew, at 58 m across and 446 m along: permitted at harm cost 11111000.
+  On the steep grass, at 22 m across and 430 m along: permitted at harm cost 1000.
+  In the creek, at 10 m across and 430 m along: permitted at harm cost 11000.`;
+const log = `Faults, fail-safes and maneuvers from the controller's log:
+  t=50 s: Satellite fix degraded: 7 satellites, HDOP 3.5.
+  t=57 s: Satellite fix lost: none for 3 s.
+  t=57 s: Contingency: the satellite fix is lost. The battery is healthy, so the drone holds over the ground and waits up to 20 s for recovery.
+  t=57 s: 20 proposals put to the Effect Ethos under the contingency norms: 0 permitted.
+  t=57 s:   4 forbidden: a gust could put the drone on steep ground beside it.
+  t=57 s:   13 forbidden: a person is not yet ruled out within 13 m of it; a gust could put the drone on steep ground beside it.
+  t=57 s:   3 forbidden: a person is within 13 m of it; a person is not yet ruled out within 13 m of it; a gust could put the drone on steep ground beside it.
+  t=57 s: Chosen: land on the patch 22 m away, at 34 m across and 438 m along; pending a look. Land and look states replaced by version 2.
+  t=57 s: Fail-safe machine runs "fly over the patch and look", state 4, version 2.
+  t=58 s: The Effect Ethos withdrew the patch at 34 m across and 438 m along: a person is within 13 m of it; a person is not yet ruled out within 13 m of it; a gust could put the drone on steep ground beside it. Choosing again.
+  t=58 s: 24 proposals put to the Effect Ethos under the contingency norms: 0 permitted.
+  t=58 s:   4 forbidden: a gust could put the drone on steep ground beside it.
+  t=58 s:   1 forbidden: a person is not yet ruled out within 13 m of it.
+  t=58 s:   5 forbidden: a person is not yet ruled out within 13 m of it; a gust could put the drone on steep ground beside it.
+  t=58 s:   4 forbidden: a person is within 13 m of it; a person is not yet ruled out within 13 m of it.
+  t=58 s:   10 forbidden: a person is within 13 m of it; a person is not yet ruled out within 13 m of it; a gust could put the drone on steep ground beside it.
+  t=58 s: Chosen: land on the patch 20 m away, at 34 m across and 434 m along; pending a look. Land and look states replaced by version 3.
+  t=58 s: Fail-safe machine runs "fly over the patch and look", state 4, version 3.
+  t=64 s: The Effect Ethos withdrew the patch at 34 m across and 434 m along: a gust could put the drone on steep ground beside it. Choosing again.
+  t=64 s: 24 proposals put to the Effect Ethos under the contingency norms: 2 permitted.
+  t=64 s:   4 forbidden: a gust could put the drone on steep ground beside it.
+  t=64 s:   5 forbidden: a person is not yet ruled out within 13 m of it.
+  t=64 s:   11 forbidden: a person is not yet ruled out within 13 m of it; a gust could put the drone on steep ground beside it.
+  t=64 s:   2 forbidden: a person is within 13 m of it; a person is not yet ruled out within 13 m of it; a gust could put the drone on steep ground beside it.
+  t=64 s: Chosen: land on the patch 7 m away, at 30 m across and 430 m along; harm cost 0. Land and look states replaced by version 4.
+  t=64 s: Fail-safe machine runs "fly over the patch and look", state 4, version 4.
+  t=69 s: Command link lost: 95 % of packets dropped for 5 s.
+  t=77 s: No recovery after 20 s. The drone lands as soon as practicable.
+  t=77 s: Fail-safe machine runs "land on the approved patch", state 3, version 4.
+  t=85 s: Battery critical: one cell at 3.25 V.
+  t=85 s: Emergency: a cell has failed. The drone lands as soon as possible and may be ditched; it may not endanger a person.
+  t=85 s: 72 proposals put to the Effect Ethos under the emergency norms: 55 permitted.
+  t=85 s:   17 forbidden: a gust could put the drone on steep ground beside it.
+  t=85 s: Chosen: land on the patch 0 m away, at 30 m across and 430 m along; harm cost 0. Land and look states replaced by version 5.
+  t=85 s: Fail-safe machine runs "land on the approved patch", state 3, version 5.`;
+---
+<BaseLayout
+  title="Part 4: Effect Ethos — DeepCausality"
+  description="Part 4 of the drone fail-safe tutorial: the published contingency and emergency procedures for drone pilots, encoded as norms of the Effect Ethos that rule on every maneuver before the drone flies it."
+>
+  <SiteHeader />
+  <article class="static-page">
+    <header>
+      <p class="eyebrow">Dynamic drone fail-safe · Part 4 of 5</p>
+      <h1>Part 4: Effect Ethos</h1>
+      <p class="lede">
+        The published contingency and emergency procedures for drone pilots become norms of the
+        Effect Ethos. The fail-safe machine proposes every landing; the Ethos rules on each
+        proposal against the context, and the drone flies only what the Ethos permits. On the
+        default night the drone lands upright on the terrace, 34 m from the nearest person.
+      </p>
+    </header>
+
+    <div class="prose">
+      <h2>Run it</h2>
+      <Code code={run} lang="bash" themes={themes} defaultColor={false} wrap />
+      <p>
+        The source lives in <a href={source}><code>part_4_effect_ethos</code></a>.
+      </p>
+
+      <h2>The safety protocol</h2>
+      <p>
+        Drone pilots need not invent a response to lost GPS or a lost command link. Aviation authorities
+        and autopilot makers publish one: the FAA's guidance for Part 107 pilots, CASA's
+        requirements for operations manuals, the JARUS SORA risk method that EASA adopts, and the
+        fail-safes of the ArduPilot autopilot. Part 4 encodes that protocol as norms of the Effect
+        Ethos, and part 5 tests how well the encoded protocol works across 1,000 randomised
+        scenarios.
+      </p>
+      <p>
+        The published procedures assume a pilot and a briefed site. The drone here has neither: no
+        planned landing zone, no launch site it may assume safe, only the ground it has sensed. The
+        table gives each step, how part 4 carries it out, and its source.
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Step</th><th>Procedure</th><th>In part 4</th><th>Source</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>0. Before flight</td><td>A navigation fault triggers altitude hold, not a landing; recovery time limits are set in advance.</td><td>Lost GPS or a lost link never triggers a descent by itself; the recovery window is 20 s.</td><td><a href={ardupilotGps}>ArduPilot GPS fail-safe</a>; <a href={casa}>CASA AC 101-01</a></td></tr>
+            <tr><td>1. Stabilise</td><td>Stop the descent and hold.</td><td>The drone holds over the ground by camera and LiDAR.</td><td><a href={ardupilotDeadReckoning}>ArduPilot</a>; attitude-mode practice</td></tr>
+            <tr><td>2. Assess</td><td>Battery and control healthy, positioning or link lost: a contingency, recoverable. Energy or control failing: an emergency.</td><td>The <code>assess</code> stage sets the urgency: routine, contingency or emergency.</td><td><a href={sora}>JARUS SORA</a>: contingency and emergency procedures</td></tr>
+            <tr><td>3. Wait within limits</td><td>Hold and wait for GPS or the link to recover, for the time set in advance.</td><td>During the window the drone waits, chooses a site and flies over it to look. If GPS and the link return, the mission resumes.</td><td><a href={faa}>FAA lost-link guidance</a>; CASA</td></tr>
+            <tr><td>4. Move to known ground</td><td>Return toward a planned landing zone, clear of people.</td><td>With no planned zone, the drone moves to the best ground it has sensed and ruled clear of people, and explores unseen ground when it has none.</td><td><a href={soraAnnexA}>SORA flight geography</a>; pilot practice</td></tr>
+            <tr><td>5. Land as soon as practical</td><td>Land at a suitable site, not the nearest spot; avoid water, trees and power lines.</td><td>Each round the Ethos judges every candidate, and the drone lands on the cheapest permitted one, the sooner first among equal costs.</td><td><a href={flightpath}>FAA: "land as soon as practical"</a>; pilot practice</td></tr>
+            <tr><td>6. Emergency, only if unrecoverable</td><td>Terminate the flight in the ground risk buffer, free of people: people first, property second, the aircraft last.</td><td>Once the battery is critical, the drone may be ditched. If nothing is permitted, the person bans become costs, so the drone comes down where it endangers the fewest, farthest from people.</td><td><a href={soraAnnexA}>SORA ground risk buffer</a>; <a href={pilotInstitute}>Pilot Institute</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>The norms</h2>
+      <p>
+        The norms read the context the controller fills. Besides the ground, the context now holds
+        the drone's own state: where it is, its height, how accurately it lands, its endurance, its
+        descent rate and the land temperature. The table gives each norm and when it forbids or
+        prices a proposal:
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Norm</th><th>Applies</th><th>Forbids a proposal, or prices it, when</th><th>Priority</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>landing</td><td>always</td><td>never; it permits every proposal at no cost</td><td>1</td></tr>
+            <tr><td>person</td><td>always</td><td>a person is more likely than not within the clearance</td><td>4</td></tr>
+            <tr><td>not ruled out</td><td>always</td><td>a person is not ruled out, at 99 %, everywhere within the clearance; unseen ground and ground under canopy rule out no one</td><td>4</td></tr>
+            <tr><td>path</td><td>always</td><td>the flight there at the drone's height would cross the canopy or unseen ground</td><td>3</td></tr>
+            <tr><td>battery</td><td>always</td><td>the battery cannot get the drone there and down with 5 s to spare</td><td>3</td></tr>
+            <tr><td>drone</td><td>always</td><td>the drone would not survive the touchdown: steep, no surface, trees or unseen</td><td>2</td></tr>
+            <tr><td>edge</td><td>always</td><td>a gust could put the drone on seen steep ground beside the patch</td><td>2</td></tr>
+            <tr><td>sacrifice</td><td>ditching</td><td>never; it prices the drone's loss at 10³ and defeats the drone, edge and battery norms</td><td>4</td></tr>
+            <tr><td>emergency</td><td>emergency</td><td>never; it defeats "not ruled out"</td><td>5</td></tr>
+            <tr><td>near the unknown</td><td>emergency, last resort</td><td>a person is not ruled out within the clearance: 10⁴</td><td>1</td></tr>
+            <tr><td>last resort</td><td>last resort</td><td>never; it defeats both person norms</td><td>6</td></tr>
+            <tr><td>within 20, 10, 5 m</td><td>last resort</td><td>a person more likely than not lies that close: 10⁵, 10⁶, 10⁷</td><td>1</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        The clearance is 10 m, plus 1 m for landing accuracy and 2 m for a gust. Each norm takes an
+        identifier, the action it governs, its tags, a predicate over the context and the proposal,
+        a modality, a timestamp, a specificity and a priority:
+      </p>
+      <Code code={norms} lang="rust" themes={themes} defaultColor={false} wrap />
+      <p>
+        The person norm's predicate reads the context. When it cannot read what it needs, the norm
+        applies and forbids the proposal:
+      </p>
+      <Code code={predicate} lang="rust" themes={themes} defaultColor={false} wrap />
+      <p>
+        <code>Defeats</code> edges let one norm lift another, and a norm defeats only a norm it
+        outranks:
+      </p>
+      <Code code={defeats} lang="rust" themes={themes} defaultColor={false} wrap />
+      <p>
+        The harm costs follow the protocol's order, each step ten times the one before. Losing the
+        drone costs least; a person not ruled out near the patch costs more; a likely person within
+        20, 10 or 5 m costs most. Only the last-resort norm lifts the person bans, and it puts
+        these prices in their place. So a tree always beats a person, and a farther person beats a
+        nearer one.
+      </p>
+
+      <h2>Urgency selects the norms</h2>
+      <p>
+        A new stage, <code>assess</code>, replaces the ladder. It sets the urgency by the published
+        procedures. Lost GPS or a lost link, with a healthy battery, makes a contingency: hold,
+        wait out the 20 s recovery window, then land as soon as practicable. A battery with 60 s or
+        less left makes an emergency: land as soon as possible, and ditch the drone if no landing
+        is permitted. A failed cell shows as a one-second sag in the lowest cell's voltage and
+        leaves 20 s of flight. The urgency picks the tags, and the tags pick the norms:
+      </p>
+      <Code code={tags} lang="rust" themes={themes} defaultColor={false} wrap />
+
+      <h2>The machine proposes, the Ethos rules</h2>
+      <p>
+        Each round, the fail-safe machine puts every candidate site to the Ethos as a proposed
+        action:
+      </p>
+      <Code code={review} lang="rust" themes={themes} defaultColor={false} wrap />
+      <p>
+        The machine puts the cheapest permitted candidate in force, the sooner first among equal
+        costs, and the Ethos reviews it again every second. In a contingency, a patch forbidden
+        only by the not-ruled-out norm, alone or with the edge norm, competes at no harm cost with
+        10 s added for a look: if it wins, the drone flies over it and looks. With nothing permitted and nothing worth a look, the drone explores the nearest
+        unseen ground. In an emergency with nothing permitted, the last-resort norms apply and the
+        round runs again, so the drone never holds until it falls:
+      </p>
+      <Code code={lastResort} lang="rust" themes={themes} defaultColor={false} wrap />
+
+      <h2>What happened</h2>
+      <Code code={output} lang="text" themes={themes} defaultColor={false} />
+      <p>
+        When the controller confirms the loss of GPS at 57 s, the drone does not descend. It treats the loss as a
+        contingency and, while it waits, puts the candidates to the Effect Ethos. The Ethos rejects
+        the pad beside the crew, and the drone flies over the terrace to look. The first two
+        terrace patches it tries lie on the terrace's edge, where a gust could put it on the steep
+        step. At 64 s the Ethos permits a patch in the terrace's middle. The drone descends to
+        25 m over it and waits out the window, which ends at 77 s with no recovery, so it lands as
+        soon as practicable. When the cell fails at 85 s, the drone is 13 m above the permitted
+        patch. The emergency round confirms that patch, and the drone lands upright at 90 s, 34 m
+        from the nearest person.
+      </p>
+      <p>
+        The closing rulings show the last resort's prices at the moment the emergency began.
+        Ditching next to the crew costs over eleven million. Ditching in the creek costs eleven
+        thousand, because unseen ground lies within its clearance and a person there is not ruled
+        out. Ditching on empty steep grass costs a thousand.
+      </p>
+      <p>
+        The controller's log records every round the Ethos judged, with the norms behind each
+        verdict:
+      </p>
+      <Code code={log} lang="text" themes={themes} defaultColor={false} wrap />
+      <p>
+        One night shows the protocol at work once. <a href={`${DRONE_FAILSAFE_BASE}verification/`}>Part 5</a> tests it across 1,000 scenarios.
+      </p>
+
+      <TopicList label="Dynamic drone fail-safe" current="effect-ethos" items={droneFailsafeParts} base={DRONE_FAILSAFE_BASE} />
+    </div>
+  </article>
+</BaseLayout>

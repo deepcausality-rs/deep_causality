@@ -1,19 +1,24 @@
 ---
 /**
- * The Overview topics as a framed hairline list: HUD panel, reticle corners and an eyebrow
- * (DESIGN.md §12.14). `current` marks the page being read; it stays in the list, unlinked, so the
+ * A list of pages as a framed hairline list: HUD panel, reticle corners and an eyebrow
+ * (DESIGN.md §12.14). By default it lists the Overview topics; the Tutorials section passes its
+ * own pages and route. `current` marks the page being read; it stays in the list, unlinked, so the
  * reader sees where they are.
  */
-import { topics } from './topics';
+import { topics, type OverviewTopic } from './topics';
 
 interface Props {
-  /** Slug of the topic page that renders the list; omitted on the Overview index. */
+  /** Slug of the page that renders the list; omitted on an index page. */
   current?: string;
   /** Eyebrow label above the list. */
   label?: string;
+  /** The pages to list, in reading order. */
+  items?: OverviewTopic[];
+  /** Route prefix of every page in `items`, with leading and trailing slashes. */
+  base?: string;
 }
 
-const { current, label = 'Overview topics' } = Astro.props;
+const { current, label = 'Overview topics', items = topics, base = '/overview/' } = Astro.props;
 ---
 <nav class="topic-list reticle-host" aria-label={label}>
   <span class="reticle reticle-tl" aria-hidden="true"></span>
@@ -22,7 +27,7 @@ const { current, label = 'Overview topics' } = Astro.props;
   <span class="reticle reticle-br" aria-hidden="true"></span>
   <p class="eyebrow">{label}</p>
   <ol>
-    {topics.map((t, i) => (
+    {items.map((t, i) => (
       <li>
         {t.slug === current ? (
           <span class="row" aria-current="page">
@@ -33,7 +38,7 @@ const { current, label = 'Overview topics' } = Astro.props;
             </span>
           </span>
         ) : (
-          <a class="row" href={`/overview/${t.slug}/`}>
+          <a class="row" href={`${base}${t.slug}/`}>
             <span class="ix" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
             <span class="body">
               <strong>{t.title} <span aria-hidden="true">→</span></strong>
