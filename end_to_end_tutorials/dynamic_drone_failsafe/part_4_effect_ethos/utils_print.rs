@@ -3,26 +3,29 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::constants::*;
-use crate::model_types::{
-    FailsafeState, Faults, Ground, Maneuver, PlanStatus, Proposal, Review, Ruling,
+use super::constants::*;
+use super::model_context::{
+    FailsafeState, Faults, Ground, Maneuver, PlanStatus, Review, Ruling, Urgency,
 };
 use deep_causality::EffectLog;
 use deep_causality_num::lower;
-use dynamic_drone_failsafe::{Command, Drone, FloatType, Outcome, Surface, Touchdown};
+use dynamic_drone_failsafe::{Drone, FloatType, Outcome, Surface, Touchdown};
 
 pub fn print_intro() {
     println!("Dynamic drone fail-safe, part 4: Effect Ethos");
     println!(
-        "The same drone flies the same night. The fail-safe machine now flies only what the Effect Ethos approves."
+        "The same drone flies the same night under a safety protocol: the published contingency and emergency"
+    );
+    println!(
+        "procedures for drone pilots, encoded as norms of the Effect Ethos. The drone flies only what the Ethos permits."
     );
     println!(
         "The column \"below\" is the controller's judgement of the ground directly under the drone."
     );
     println!();
     println!(
-        "{:>5} {:>8} {:>7} {:>5}  {:<38} {:<10} {:<10} maneuver",
-        "time", "across", "along", "agl", "confirmed faults", "below", "fail-safe"
+        "{:>5} {:>8} {:>7} {:>5}  {:<38} {:<10} {:<12} maneuver",
+        "time", "across", "along", "agl", "confirmed faults", "below", "urgency"
     );
 }
 
@@ -30,19 +33,19 @@ pub fn print_second(
     drone: &Drone,
     faults: &Faults,
     below: Option<Ground>,
-    failsafe: Command,
+    urgency: Urgency,
     maneuver: Maneuver,
 ) {
     let (x, y) = drone.position();
     println!(
-        "{:>4}s {:>7.0}m {:>6.0}m {:>4.0}m  {:<38} {:<10} {:<10} {}",
+        "{:>4}s {:>7.0}m {:>6.0}m {:>4.0}m  {:<38} {:<10} {:<12} {}",
         drone.time_s(),
         lower(x),
         lower(y),
         lower(drone.altitude_agl_m()),
         describe(faults),
         below.map_or("not seen", ground),
-        name(failsafe),
+        urgency_name(urgency),
         maneuver_name(maneuver),
     );
 }
@@ -57,6 +60,8 @@ pub fn print_touchdown(time_s: usize, td: &Touchdown) {
     let verdict = match td.outcome() {
         Outcome::Safe => "It landed upright and can be recovered.".to_string(),
         Outcome::Ditched => "It dropped into the creek and was lost.".to_string(),
+        Outcome::HitTrees => "It flew into the trees and was lost.".to_string(),
+        Outcome::Fell => "Its battery died in the air, and it fell and was lost.".to_string(),
         Outcome::IntoRavine => "It fell into the ravine and was lost.".to_string(),
         Outcome::AmongPeople => format!(
             "It landed {:.0} m from a member of the crew.",
@@ -97,16 +102,16 @@ pub fn print_map(state: &FailsafeState, touchdown: (i64, i64)) {
         println!("  {}", row.trim_end());
     }
     println!();
-    println!("  . safe   / too steep   ~ water   P person   ? unsure   (blank) not seen");
+    println!("  . safe   / too steep   ~ water   T trees   P person   ? unsure   (blank) not seen");
     println!("  X where the drone came down");
 }
 
-/// Prints what the Effect Ethos rejected, and how far from a person the approved patch lay by the
-/// controller's own map.
+/// Prints how often each norm forbade a proposal, and how far from a person the patch in force
+/// lay by the controller's own map.
 pub fn print_closing(state: &FailsafeState, person_m: Option<FloatType>) {
     println!();
     let count = |norm| state.rejections.get(&norm).copied().unwrap_or(0);
-    println!("The Effect Ethos rejected proposals for these reasons:");
+    println!("The Effect Ethos forbade proposals for these reasons:");
     for (norm, reason) in [
         (NORM_PERSON, "a person is within the clearance"),
         (
@@ -114,16 +119,24 @@ pub fn print_closing(state: &FailsafeState, person_m: Option<FloatType>) {
             "a person is not yet ruled out within the clearance",
         ),
         (
+            NORM_PATH,
+            "the flight there would cross trees or unseen ground",
+        ),
+        (
             NORM_BATTERY,
             "the battery cannot get the drone there and down",
         ),
         (NORM_DRONE, "the drone would not survive the touchdown"),
+        (
+            NORM_EDGE,
+            "a gust could put the drone on steep ground beside it",
+        ),
     ] {
         println!("  {:>3}  {reason}", count(norm));
     }
     if let Some(plan) = state.plan.filter(|p| p.status == PlanStatus::Approved) {
         println!(
-            "It approved the patch at {:.0} m across and {:.0} m along once the drone had seen the ground around it.",
+            "It permitted the patch at {:.0} m across and {:.0} m along.",
             lower(plan.target.centre.0),
             lower(plan.target.centre.1),
         );
@@ -134,38 +147,37 @@ pub fn print_closing(state: &FailsafeState, person_m: Option<FloatType>) {
             );
         }
     } else {
-        println!("It approved no patch.");
+        println!("It permitted no patch.");
     }
 }
 
-/// Prints how the Effect Ethos rules on three other proposals against the context at touchdown: a
-/// landing next to the crew, a landing on steep ground, and ditching the drone in the creek.
-pub fn print_rulings(rulings: &[Ruling]) {
+/// Prints how the last-resort norms price three ditchings against the context when the emergency
+/// began: next to the crew, on steep grass, and in the creek.
+pub fn print_rulings(time_s: usize, rulings: &[Ruling]) {
     println!();
     println!(
-        "The same Effect Ethos on three other proposals, against the context at touchdown, with the battery nearly spent:"
+        "The last-resort norms on three ditchings, against the context at {time_s} s, when the emergency began."
+    );
+    println!(
+        "Under them a person near a patch no longer forbids it but prices it, so the cheapest endangers the fewest:"
     );
     for r in rulings {
-        let what = match (r.candidate.proposal, r.kind) {
-            (Proposal::Ditch, _) => "Ditch the drone in the creek",
-            (_, Ground::Steep) => "Land on the steep grass",
-            _ => "Land next to the crew",
+        let what = match r.kind {
+            Ground::Water => "In the creek",
+            Ground::Trees => "In the trees",
+            Ground::Steep => "On the steep grass",
+            _ => "Next to the crew",
         };
         let verdict = match &r.review {
-            Review::Approved => "approved".to_string(),
-            Review::Look => format!("forbidden until the drone looks: {}", r.why),
-            Review::Rejected(_) => format!("rejected: {}", r.why),
+            Review::Approved(cost) => format!("permitted at harm cost {cost}"),
+            Review::Look(_) => format!("forbidden until the drone looks: {}", r.why),
+            Review::Rejected(_) => format!("forbidden: {}", r.why),
         };
         println!(
             "  {what}, at {:.0} m across and {:.0} m along: {verdict}.",
             lower(r.candidate.centre.0),
             lower(r.candidate.centre.1)
         );
-        if r.drone_norm_defeated {
-            println!(
-                "    The drone would be lost there, and the sacrifice norm overrides the drone norm. Nothing overrides the person norms."
-            );
-        }
     }
 }
 
@@ -206,6 +218,7 @@ fn ground(g: Ground) -> &'static str {
         Ground::Safe => "safe",
         Ground::Steep => "too steep",
         Ground::Water => "water",
+        Ground::Trees => "trees",
         Ground::Person => "a person",
         Ground::Unsure => "unsure",
     }
@@ -216,6 +229,7 @@ fn symbol(g: &Ground) -> char {
         Ground::Safe => '.',
         Ground::Steep => '/',
         Ground::Water => '~',
+        Ground::Trees => 'T',
         Ground::Person => 'P',
         Ground::Unsure => '?',
     }
@@ -223,21 +237,21 @@ fn symbol(g: &Ground) -> char {
 
 fn maneuver_name(m: Maneuver) -> &'static str {
     match m {
-        Maneuver::None => "none",
+        Maneuver::None => "fly the mission",
         Maneuver::HoldOver { .. } => "hold over the ground",
-        Maneuver::ReturnHome => "fly home",
         Maneuver::LandOn { .. } => "land on the approved patch",
         Maneuver::LookOver { .. } => "fly over the patch and look",
-        Maneuver::ChooseTarget => "hold: nothing approved",
+        Maneuver::Explore { .. } => "explore unseen ground",
+        Maneuver::ChooseTarget => "hold: nothing permitted",
     }
 }
 
-fn name(command: Command) -> &'static str {
-    match command {
-        Command::Continue => "continue",
-        Command::Hold => "hold",
-        Command::ReturnHome => "return home",
-        Command::LandNow => "land now",
+fn urgency_name(urgency: Urgency) -> &'static str {
+    match urgency {
+        Urgency::Routine => "routine",
+        Urgency::Practicable => "contingency",
+        Urgency::Possible => "emergency",
+        Urgency::LastResort => "last resort",
     }
 }
 
@@ -249,6 +263,7 @@ fn resting_place(s: Surface) -> &'static str {
         Surface::Rock => "down the rock",
         Surface::Pad => "onto a tower pad",
         Surface::Ravine => "into the ravine",
+        Surface::Trees => "into the trees",
     }
 }
 
@@ -260,5 +275,6 @@ fn surface(s: Surface) -> &'static str {
         Surface::Rock => "rock",
         Surface::Pad => "a tower pad",
         Surface::Ravine => "the ravine",
+        Surface::Trees => "trees",
     }
 }

@@ -3,8 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::constants::*;
-use crate::model_context::{FailsafeState, Faults, Ground, Maneuver};
+use super::constants::*;
+use super::model_context::{FailsafeState, Faults, Ground, Maneuver};
 use deep_causality::EffectLog;
 use deep_causality_num::lower;
 use dynamic_drone_failsafe::{Command, Drone, FloatType, Outcome, Surface, Touchdown};
@@ -55,6 +55,8 @@ pub fn print_touchdown(time_s: usize, td: &Touchdown) {
     let verdict = match td.outcome() {
         Outcome::Safe => "It landed upright and can be recovered.".to_string(),
         Outcome::Ditched => "It dropped into the creek and was lost.".to_string(),
+        Outcome::HitTrees => "It flew into the trees and was lost.".to_string(),
+        Outcome::Fell => "Its battery died in the air, and it fell and was lost.".to_string(),
         Outcome::IntoRavine => "It fell into the ravine and was lost.".to_string(),
         Outcome::AmongPeople => format!(
             "It landed {:.0} m from a member of the crew.",
@@ -198,6 +200,7 @@ fn resting_place(s: Surface) -> &'static str {
         Surface::Rock => "down the rock",
         Surface::Pad => "onto a tower pad",
         Surface::Ravine => "into the ravine",
+        Surface::Trees => "into the trees",
     }
 }
 
@@ -209,5 +212,6 @@ fn surface(s: Surface) -> &'static str {
         Surface::Rock => "rock",
         Surface::Pad => "a tower pad",
         Surface::Ravine => "the ravine",
+        Surface::Trees => "trees",
     }
 }

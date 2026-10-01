@@ -5,16 +5,17 @@
 
 //! The fail-safe controller, as six stages of one causal process: read the telemetry and the
 //! sensor frame, fuse the frame and the drone's own state into the ground context, judge each patch
-//! from the context, detect the faults with a collection of causaloids, decide the fail-safe on the
-//! standard ladder, and turn it into a maneuver with the fail-safe machine, which flies only what
-//! the Effect Ethos approves. The checks the Ethos's norms run are here too.
+//! from the context, detect the faults with a collection of causaloids, assess the urgency after
+//! the contingency and emergency procedures pilots follow, and turn it into a maneuver with the
+//! fail-safe machine, which flies only what the Effect Ethos permits. The checks the Ethos's norms
+//! run are here too.
 
-use crate::constants::*;
-use crate::model_config::{Detector, landing_state, look_state};
-use crate::model_types::{
+use super::constants::*;
+use super::model_config::{Detector, landing_state, look_state};
+use super::model_context::{
     Candidate, FailsafeMachine, FailsafeProcess, FailsafeState, Faults, Frame, Fusion, Ground,
     GroundContext, GroundEthos, GroundNode, LandingTarget, Maneuver, Plan, PlanStatus, Proposal,
-    Review, Ruling, Situation,
+    Review, Ruling, Situation, Urgency,
 };
 use deep_causality::{
     ActionParameterValue, AggregateLogic, CausalEffect, CausalityError, EffectLog, LogAddEntry,
@@ -28,8 +29,8 @@ use deep_causality_context::{
 use deep_causality_ethos::{DeonticInferable, TeloidID, TeloidModal};
 use deep_causality_num::{lift_i64, lift_usize, lower};
 use deep_causality_uncertain::{SampleSession, Uncertain, UncertainBool, UncertainError};
-use dynamic_drone_failsafe::{Command, FLIGHT_START_HOUR, FloatType, Quantity, Telemetry};
-use std::collections::HashMap;
+use dynamic_drone_failsafe::{Command, Drone, FloatType, Guidance, Quantity, Telemetry, Terrain};
+use std::collections::{BTreeMap, HashMap};
 
 /// Stage 1: takes this second's telemetry and sensor frame into the process and records the
 /// telemetry in the log.
@@ -231,91 +232,130 @@ pub fn detect(
     FailsafeProcess::new(Ok(CausalEffect::value(faults)), state, ctx, logs)
 }
 
-/// Stage 5: the fail-safe ladder of part 1, unchanged. Each step up the ladder is recorded in the
-/// log with its reason.
-pub fn decide(
+/// Stage 5: assesses the urgency after the contingency and emergency procedures pilots follow. A
+/// battery with no more endurance than an emergency allows is an emergency: land as soon as
+/// possible. A lost fix or link, or a low battery, is a contingency: hold, wait out the recovery
+/// window, then land as soon as practicable.
+/// With no fault the mission continues. An emergency, and a last resort, last for the rest of the
+/// flight. Each change goes to the log with what the drone does about it.
+pub fn assess(
     value: CausalEffect<Faults>,
     mut state: FailsafeState,
     ctx: Option<GroundContext>,
     time_s: usize,
-) -> FailsafeProcess<Command> {
+) -> FailsafeProcess<Urgency> {
     let Some(faults) = value.into_value() else {
         return failed(CausalityError::ValueNotAvailable(), state, ctx);
     };
-    let (proposed, reason) = if faults.battery_critical {
-        (Command::LandNow, "land now: the battery is critical.")
-    } else if faults.gnss_lost && faults.link_lost {
-        (
-            Command::LandNow,
-            "land now: with no satellite fix and no link, the drone can neither navigate nor receive orders.",
-        )
-    } else if faults.gnss_lost {
-        (
-            Command::Hold,
-            "hold: no satellite fix, but the link is up, so wait for the fix or the operator.",
-        )
-    } else if faults.link_lost {
-        (
-            Command::ReturnHome,
-            "return home: the link is lost, but the fix holds.",
-        )
+    let Some(context) = ctx else {
+        return failed(CausalityError::MissingContext(), state, None);
+    };
+    let emergency = match battery_critical(&context) {
+        Ok(critical) => critical,
+        Err(err) => return failed(err, state, Some(context)),
+    };
+    let found = if emergency {
+        Urgency::Possible
+    } else if faults.gnss_lost || faults.link_lost || faults.battery_critical {
+        Urgency::Practicable
     } else {
-        (Command::Continue, "continue: no fault.")
+        Urgency::Routine
+    };
+    let urgency = match state.urgency {
+        Urgency::Possible | Urgency::LastResort => state.urgency,
+        _ => found,
     };
     let mut logs = EffectLog::new();
-    if severity(proposed) > severity(state.failsafe) {
-        logs.add_entry(&format!("t={time_s} s: Fail-safe set to {reason}"));
-        state.failsafe = proposed;
+    if urgency != state.urgency {
+        match urgency {
+            Urgency::Routine => {
+                logs.add_entry(&format!(
+                    "t={time_s} s: The satellite fix and the command link are back. The drone resumes its mission."
+                ));
+                let landing = state
+                    .waiting_since_s
+                    .is_some_and(|since| time_s >= since + RECOVERY_WINDOW_S)
+                    && state.plan.is_some_and(|p| p.status == PlanStatus::Approved);
+                if !landing {
+                    state.plan = None;
+                }
+                state.waiting_since_s = None;
+            }
+            Urgency::Practicable => {
+                logs.add_entry(&format!(
+                    "t={time_s} s: Contingency: {}. The battery is healthy, so the drone holds over the ground and waits up to {RECOVERY_WINDOW_S} s for recovery.",
+                    lost(&faults)
+                ));
+                state.waiting_since_s = Some(time_s);
+            }
+            _ => {
+                logs.add_entry(&format!(
+                    "t={time_s} s: Emergency: {}. The drone lands as soon as possible and may be ditched; it may not endanger a person.",
+                    if state.cell_failed_at_s.is_some() {
+                        "a cell has failed"
+                    } else {
+                        "the battery is nearly empty"
+                    }
+                ));
+                state.plan = None;
+                state.waiting_since_s = None;
+            }
+        }
+        state.urgency = urgency;
+    } else if urgency == Urgency::Practicable
+        && state.waiting_since_s == Some(time_s.saturating_sub(RECOVERY_WINDOW_S))
+    {
+        logs.add_entry(&format!(
+            "t={time_s} s: No recovery after {RECOVERY_WINDOW_S} s. The drone lands as soon as practicable."
+        ));
     }
-    let failsafe = state.failsafe;
-    FailsafeProcess::new(Ok(CausalEffect::value(failsafe)), state, ctx, logs)
+    FailsafeProcess::new(Ok(CausalEffect::value(urgency)), state, Some(context), logs)
 }
 
-/// Stage 6: the fail-safe machine turns the ladder's command into a maneuver, and flies only what
-/// the Effect Ethos approves. Each second the Ethos reviews the plan in force again. When no plan
-/// is in force and the ladder says land now, the machine proposes landings on the safe patches
-/// nearest the drone, then ditchings on the nearest water, until the Ethos approves one or lets it
-/// stand pending a look at unseen ground. Each plan that stands replaces the land and look states
-/// with a new version. Every proposal, verdict and change of the state running goes to the log.
+/// Stage 6: the fail-safe machine turns the urgency into a maneuver, and flies only what the
+/// Effect Ethos permits. Each second the Ethos reviews the plan in force again. When the drone
+/// must land and no plan is in force, the machine puts every candidate to the Ethos and flies the
+/// cheapest permitted one, nearest first among equal costs. In a contingency a landing may stand
+/// while the drone looks; in an emergency with nothing permitted the last-resort norms apply, so the
+/// drone never holds until it falls. Every round, plan and change of the state running goes to the
+/// log.
 pub fn act(
-    value: CausalEffect<Command>,
+    value: CausalEffect<Urgency>,
     mut state: FailsafeState,
     ctx: Option<GroundContext>,
     machine: &FailsafeMachine,
     ethos: &GroundEthos,
     time_s: usize,
 ) -> FailsafeProcess<Maneuver> {
-    let Some(failsafe) = value.into_value() else {
+    if value.into_value().is_none() {
         return failed(CausalityError::ValueNotAvailable(), state, ctx);
-    };
+    }
     let Some(context) = ctx else {
         return failed(CausalityError::MissingContext(), state, None);
     };
     let mut logs = EffectLog::new();
-    if let Err(err) = plan(
-        &context, &mut state, machine, ethos, failsafe, time_s, &mut logs,
-    ) {
+    if let Err(err) = plan(&context, &mut state, machine, ethos, time_s, &mut logs) {
         return failed(err, state, Some(context));
     }
 
     let mut maneuver = Maneuver::None;
     let mut running = None;
-    for id in [HOLD_STATE, HOME_STATE, LAND_STATE, LOOK_STATE] {
-        match run(machine, id, situation(&state, failsafe), &mut logs) {
+    for id in [HOLD_STATE, LAND_STATE, LOOK_STATE] {
+        match run(machine, id, situation(&state, time_s), &mut logs) {
             Ok(Maneuver::None) => {}
             Ok(m) => {
                 maneuver = m;
-                let version = if id == LAND_STATE || id == LOOK_STATE {
-                    state.plan_version
-                } else {
+                let version = if id == HOLD_STATE {
                     1
+                } else {
+                    state.plan_version
                 };
                 running = Some((id, version));
             }
             Err(err) => return failed(err, state, Some(context)),
         }
     }
-    if maneuver == Maneuver::None && failsafe == Command::LandNow {
+    if maneuver == Maneuver::None && state.urgency != Urgency::Routine {
         maneuver = Maneuver::ChooseTarget;
     }
     if running != state.running {
@@ -335,37 +375,79 @@ pub fn act(
     )
 }
 
+/// Flies the drone for one second: a maneuver over the ground by its camera and LiDAR, the mission
+/// when nothing is wrong, or a hover where it is when nothing is permitted yet.
+pub fn steer(drone: &mut Drone, terrain: &Terrain, maneuver: Maneuver, urgency: Urgency) {
+    match maneuver {
+        Maneuver::HoldOver { x, y } | Maneuver::Explore { x, y } => {
+            drone.guide(Guidance::HoldOver { x, y }, terrain)
+        }
+        Maneuver::LookOver { x, y } => drone.guide(
+            Guidance::DescendOver {
+                x,
+                y,
+                agl_m: LOOK_HEIGHT_M,
+            },
+            terrain,
+        ),
+        Maneuver::LandOn { x, y } => drone.guide(Guidance::LandOn { x, y }, terrain),
+        Maneuver::None if urgency == Urgency::Routine => drone.step(Command::Continue, terrain),
+        Maneuver::None | Maneuver::ChooseTarget => {
+            let (x, y) = drone.position();
+            drone.guide(Guidance::HoldOver { x, y }, terrain)
+        }
+    }
+}
+
 /// The clearance the Effect Ethos demands between a touchdown and any person, in m: the base
 /// clearance, widened by the drone's position error and a gust.
 pub fn clearance_m(context: &GroundContext) -> Result<FloatType, CausalityError> {
     Ok(PERSON_CLEARANCE_M + point_value(context, POSITION_ERROR_ID)? + GUST_MARGIN_M)
 }
 
-/// The person norm's check: whether, on any seen patch within the clearance of `patch`, a person
-/// is judged present at [`CONFIDENCE`], the confidence the judge names a person at.
-pub fn person_within_clearance(
+/// Whether, on any seen patch within `radius_m` of `patch`, a person is more likely present than
+/// not. The judge names a person on its map only at [`CONFIDENCE`]; for safety the Effect Ethos
+/// counts one at [`PERSON_LIKELY`], and rules one out only at [`PERSON_RULED_OUT`].
+pub fn person_within(
     context: &GroundContext,
     patch: (i64, i64),
+    radius_m: FloatType,
 ) -> Result<bool, CausalityError> {
     let land_c = point_value(context, LAND_TEMPERATURE_ID)?;
-    for near in patches_within(context, patch)? {
-        if seen(context, near) && holds(&person_belief(context, near, land_c)?)? {
+    for near in patches_within(patch, radius_m) {
+        if !seen(context, near) {
+            continue;
+        }
+        let likely = person_belief(context, near, land_c)?
+            .probability_exceeds(
+                &SampleSession::seeded(JUDGE_SEED),
+                PERSON_LIKELY,
+                CONFIDENCE,
+                TEST_EPSILON,
+                MAX_SAMPLES,
+            )
+            .map_err(uncertain_error)?;
+        if likely {
             return Ok(true);
         }
     }
     Ok(false)
 }
 
-/// The not-ruled-out norm's check: whether, on any patch within the clearance of `patch`, a person
-/// is not ruled out at [`PERSON_RULED_OUT`]. Unseen ground rules out no one; seen ground rules a
-/// person out once enough frames agree. Flying over the patch and looking settles both.
+/// The not-ruled-out check: whether, on any patch within the clearance of `patch`, a person is
+/// not ruled out at [`PERSON_RULED_OUT`]. Unseen ground rules out no one, and neither does ground
+/// that may lie under canopy, which hides a person from both sensors.
 pub fn person_not_ruled_out(
     context: &GroundContext,
     patch: (i64, i64),
 ) -> Result<bool, CausalityError> {
     let land_c = point_value(context, LAND_TEMPERATURE_ID)?;
-    for near in patches_within(context, patch)? {
+    for near in patches_within(patch, clearance_m(context)?) {
         if !seen(context, near) {
+            return Ok(true);
+        }
+        let open = !belief(context, near, Quantity::Protrusion)?.greater_than(CANOPY_LOWEST_M);
+        if !holds(&open)? {
             return Ok(true);
         }
         let no_person = !person_belief(context, near, land_c)?;
@@ -385,29 +467,59 @@ pub fn person_not_ruled_out(
     Ok(false)
 }
 
-/// The battery norm's check: whether flying to `patch` and descending onto it takes longer than the
-/// battery lasts, less the reserve. A critical battery descends at the emergency rate.
-pub fn battery_falls_short(
+/// The path check: whether flying straight from the drone to `patch` at the drone's height would
+/// cross the canopy without the margin, or cross unseen ground below the unseen ceiling. The patch
+/// itself is the drone norm's to judge.
+pub fn path_crosses_trees(
     context: &GroundContext,
     patch: (i64, i64),
 ) -> Result<bool, CausalityError> {
-    let at = (
+    let from = (
         point_value(context, DRONE_ACROSS_ID)?,
         point_value(context, DRONE_ALONG_ID)?,
     );
     let agl = point_value(context, DRONE_AGL_ID)?;
-    let endurance = point_value(context, ENDURANCE_ID)?;
-    let descent = if endurance <= CRITICAL_ENDURANCE_S {
-        EMERGENCY_DESCENT_M_S
-    } else {
-        LANDING_DESCENT_M_S
-    };
-    let needed = distance(patch_centre(patch), at) / APPROACH_SPEED_M_S + agl / descent;
-    Ok(needed > endurance - RESERVE_S)
+    let to = patch_centre(patch);
+    let step = PATCH_SIDE_M / (ONE + ONE);
+    let steps = lower(Real::ceil(distance(from, to) / step)) as usize;
+    let mut checked = Vec::new();
+    for k in 0..=steps {
+        let f = if steps == 0 {
+            ZERO
+        } else {
+            lift_usize::<FloatType>(k) / lift_usize::<FloatType>(steps)
+        };
+        let at = patch_of((from.0 + (to.0 - from.0) * f, from.1 + (to.1 - from.1) * f));
+        if at == patch || checked.contains(&at) {
+            continue;
+        }
+        checked.push(at);
+        if !seen(context, at) {
+            if agl < UNSEEN_CEILING_M {
+                return Ok(true);
+            }
+            continue;
+        }
+        let clear = belief(context, at, Quantity::Protrusion)?.less_than(agl - CANOPY_MARGIN_M);
+        if !holds(&clear)? {
+            return Ok(true);
+        }
+    }
+    Ok(false)
 }
 
-/// The drone norm's check: whether the drone would not survive touching down on `patch`, which it
-/// survives only on seen ground that is, at the stated confidence, not steep and has a surface.
+/// The battery check: whether flying to `patch` and descending onto it takes longer than the
+/// battery lasts, less the reserve.
+pub fn battery_falls_short(
+    context: &GroundContext,
+    patch: (i64, i64),
+) -> Result<bool, CausalityError> {
+    Ok(time_to_land_s(context, patch)? > point_value(context, ENDURANCE_ID)? - RESERVE_S)
+}
+
+/// The drone check: whether the drone would not survive touching down on `patch`, which it
+/// survives only on seen open ground that is, at the stated confidence, not steep and has a
+/// surface.
 pub fn drone_would_be_lost(
     context: &GroundContext,
     patch: (i64, i64),
@@ -417,171 +529,54 @@ pub fn drone_would_be_lost(
     }
     let steep = belief(context, patch, Quantity::Slope)?.greater_than(TIP_OVER_DEG);
     let no_return = belief(context, patch, Quantity::Returns)?.less_than(NO_RETURN_BELOW);
-    Ok(!holds(&!(steep | no_return))?)
+    let trees = belief(context, patch, Quantity::Protrusion)?.greater_than(CANOPY_LOWEST_M);
+    Ok(!holds(&!(steep | no_return | trees))?)
 }
 
-/// Reviews the plan in force with the Effect Ethos and, when no plan is in force and the choose
-/// state fires, puts new proposals to it.
-fn plan(
+/// The edge check: whether a gust could put the drone on steep ground beside `patch`: any seen
+/// neighbouring patch that is not, at the stated confidence, flat. Unseen neighbours are the
+/// not-ruled-out norm's to judge, and a look settles both.
+pub fn beside_steep_ground(
     context: &GroundContext,
-    state: &mut FailsafeState,
-    machine: &FailsafeMachine,
-    ethos: &GroundEthos,
-    failsafe: Command,
-    time_s: usize,
-    logs: &mut EffectLog,
-) -> Result<(), CausalityError> {
-    if let Some(plan) = state.plan
-        && let Some(patch) = plan.target.patch
-    {
-        let status = match review(ethos, context, patch, plan.proposal)? {
-            Review::Approved => Some(PlanStatus::Approved),
-            Review::Look => Some(PlanStatus::Look),
-            Review::Rejected(norms) => {
-                logs.add_entry(&format!(
-                    "t={time_s} s: The Effect Ethos withdrew the patch at {:.0} m across and {:.0} m along: {}. Choosing again.",
-                    lower(plan.target.centre.0),
-                    lower(plan.target.centre.1),
-                    reasons(context, &norms)?,
-                ));
-                None
-            }
-        };
-        match status {
-            Some(status) => {
-                if status == PlanStatus::Approved && plan.status != PlanStatus::Approved {
-                    logs.add_entry(&format!(
-                        "t={time_s} s: The Effect Ethos approves the patch at {:.0} m across and {:.0} m along: a person is now ruled out within {:.0} m of it, and no other norm forbids it.",
-                        lower(plan.target.centre.0),
-                        lower(plan.target.centre.1),
-                        lower(clearance_m(context)?),
-                    ));
-                }
-                state.plan = Some(Plan { status, ..plan });
-            }
-            None => state.plan = None,
+    patch: (i64, i64),
+) -> Result<bool, CausalityError> {
+    for (di, dj) in [(-1, 0), (1, 0), (0, -1), (0, 1)] {
+        let near = (patch.0 + di, patch.1 + dj);
+        if !seen(context, near) {
+            continue;
+        }
+        let flat = belief(context, near, Quantity::Slope)?.less_than(TIP_OVER_DEG);
+        if !holds(&flat)? {
+            return Ok(true);
         }
     }
-    if run(machine, CHOOSE_STATE, situation(state, failsafe), logs)? == Maneuver::ChooseTarget {
-        propose(context, state, machine, ethos, time_s, logs)?;
-    }
-    Ok(())
+    Ok(false)
 }
 
-/// Puts proposals to the Effect Ethos, nearest first, until one stands. A round in which none
-/// stands is logged once; the drone holds over the ground and the machine proposes again each
-/// second.
-fn propose(
-    context: &GroundContext,
-    state: &mut FailsafeState,
-    machine: &FailsafeMachine,
-    ethos: &GroundEthos,
-    time_s: usize,
-    logs: &mut EffectLog,
-) -> Result<(), CausalityError> {
-    let clearance = clearance_m(context)?;
-    let mut entries = Vec::new();
-    let mut rejected = Vec::new();
-    for (n, candidate) in candidates(state).into_iter().enumerate() {
-        let Candidate {
-            proposal,
-            patch,
-            centre,
-        } = candidate;
-        let what = format!(
-            "t={time_s} s: Proposal {}: {} the patch {:.0} m away, at {:.0} m across and {:.0} m along.",
-            n + 1,
-            match proposal {
-                Proposal::Land => "land on",
-                Proposal::Ditch => "ditch the drone on",
-            },
-            lower(distance(centre, state.position)),
-            lower(centre.0),
-            lower(centre.1),
-        );
-        let status = match review(ethos, context, patch, proposal)? {
-            Review::Approved => {
-                entries.push(format!("{what} Approved."));
-                PlanStatus::Approved
-            }
-            Review::Look => {
-                entries.push(format!(
-                    "{what} Not yet: a person is not yet ruled out within {:.0} m of it, so the drone flies over it to look.",
-                    lower(clearance)
-                ));
-                PlanStatus::Look
-            }
-            Review::Rejected(norms) => {
-                entries.push(format!("{what} Rejected: {}.", reasons(context, &norms)?));
-                rejected.extend(norms);
-                continue;
-            }
-        };
-        let target = LandingTarget {
-            patch: Some(patch),
-            centre,
-        };
-        state.plan_version += 1;
-        for (state_action, name) in [
-            (landing_state(state.plan_version, target), "land"),
-            (look_state(state.plan_version, target), "look"),
-        ] {
-            machine.update_single_state(state_action).map_err(|err| {
-                CausalityError::ActionError(format!("replacing the {name} state: {err}"))
-            })?;
-        }
-        state.plan = Some(Plan {
-            target,
-            proposal,
-            status,
-        });
-        entries.push(format!(
-            "t={time_s} s: Land and look states replaced by version {}.",
-            state.plan_version
-        ));
-        break;
-    }
-    if state.plan.is_none() {
-        if state.round_failed {
-            return Ok(());
-        }
-        entries.push(format!(
-            "t={time_s} s: No proposal passes the Effect Ethos; the drone holds over the ground."
-        ));
-        state.round_failed = true;
-    } else {
-        state.round_failed = false;
-    }
-    for norm in rejected {
-        *state.rejections.entry(norm).or_default() += 1;
-    }
-    for entry in entries {
-        logs.add_entry(&entry);
-    }
-    Ok(())
+/// Whether the battery is critical: no more endurance is left than an emergency allows.
+pub fn battery_critical(context: &GroundContext) -> Result<bool, CausalityError> {
+    Ok(point_value(context, ENDURANCE_ID)? <= EMERGENCY_ENDURANCE_S)
 }
 
-/// How the Effect Ethos rules on a proposal against `context`. The drone norm counts as defeated
-/// when its check holds but it does not forbid the proposal: the sacrifice norm overrode it.
+/// How the Effect Ethos rules on a proposal against `context`, under the norms of `urgency`.
 pub fn ruling(
     ethos: &GroundEthos,
     context: &GroundContext,
     kind: Ground,
     candidate: Candidate,
+    urgency: Urgency,
 ) -> Result<Ruling, CausalityError> {
-    let review = review(ethos, context, candidate.patch, candidate.proposal)?;
-    let norms = match &review {
-        Review::Approved => Vec::new(),
-        Review::Look => vec![NORM_NOT_RULED_OUT],
-        Review::Rejected(norms) => norms.clone(),
+    let review = review(ethos, context, candidate, urgency)?;
+    let why = match &review {
+        Review::Rejected(norms) => reasons(context, norms)?,
+        Review::Look(norms) => reasons(context, norms)?,
+        Review::Approved(_) => String::new(),
     };
     Ok(Ruling {
         kind,
         candidate,
-        why: reasons(context, &norms)?,
-        drone_norm_defeated: drone_would_be_lost(context, candidate.patch)?
-            && !norms.contains(&NORM_DRONE),
         review,
+        why,
     })
 }
 
@@ -603,14 +598,261 @@ pub fn nearest_judged(
         })
 }
 
-/// The proposals the machine puts to the Effect Ethos: landings on the safe patches nearest the
-/// drone, then ditchings on the nearest water, at most [`MAX_PROPOSALS`] of each.
-fn candidates(state: &FailsafeState) -> Vec<Candidate> {
-    let nearest = |kind: Ground, proposal: Proposal| {
+/// The distance from a point to the nearest patch the controller judged to hold a person, in m.
+/// `None` when it has seen no one.
+pub fn nearest_person_seen_m(
+    state: &FailsafeState,
+    at: (FloatType, FloatType),
+) -> Option<FloatType> {
+    nearest_judged(state, Ground::Person, at).map(|(_, centre)| distance(centre, at))
+}
+
+/// Reviews the plan in force with the Effect Ethos and, when the choose state fires and a round is
+/// due, puts the candidates to it.
+fn plan(
+    context: &GroundContext,
+    state: &mut FailsafeState,
+    machine: &FailsafeMachine,
+    ethos: &GroundEthos,
+    time_s: usize,
+    logs: &mut EffectLog,
+) -> Result<(), CausalityError> {
+    if let Some(plan) = state.plan
+        && plan.status == PlanStatus::Explore
+    {
+        if distance(plan.target.centre, state.position) < PATCH_SIDE_M
+            || time_s >= plan.look_until_s
+        {
+            logs.add_entry(&format!(
+                "t={time_s} s: The drone has looked over new ground. Choosing again."
+            ));
+            state.plan = None;
+        }
+    } else if let Some(plan) = state.plan
+        && let Some(patch) = plan.target.patch
+    {
+        let candidate = Candidate {
+            proposal: plan.proposal,
+            patch,
+            centre: plan.target.centre,
+        };
+        let at = format!(
+            "the patch at {:.0} m across and {:.0} m along",
+            lower(plan.target.centre.0),
+            lower(plan.target.centre.1)
+        );
+        let status = match review(ethos, context, candidate, plan.urgency)? {
+            Review::Approved(_) => {
+                if plan.status == PlanStatus::Look {
+                    logs.add_entry(&format!(
+                        "t={time_s} s: The Effect Ethos permits {at}: a person is now ruled out within {:.0} m of it.",
+                        lower(clearance_m(context)?)
+                    ));
+                }
+                Some(PlanStatus::Approved)
+            }
+            Review::Look(_)
+                if state.urgency == Urgency::Practicable && time_s >= plan.look_until_s =>
+            {
+                logs.add_entry(&format!(
+                    "t={time_s} s: After {LOOK_LIMIT_S} s of looking, a person is still not ruled out near {at}. It is set aside. Choosing again."
+                ));
+                state.set_aside.insert(patch);
+                None
+            }
+            Review::Look(_) if state.urgency == Urgency::Practicable => Some(PlanStatus::Look),
+            Review::Look(_) => {
+                logs.add_entry(&format!(
+                    "t={time_s} s: There is no time left to look at {at}. Choosing again."
+                ));
+                None
+            }
+            Review::Rejected(norms) => {
+                logs.add_entry(&format!(
+                    "t={time_s} s: The Effect Ethos withdrew {at}: {}. Choosing again.",
+                    reasons(context, &norms)?
+                ));
+                None
+            }
+        };
+        state.plan = status.map(|status| Plan {
+            status,
+            since_s: if status == plan.status {
+                plan.since_s
+            } else {
+                time_s
+            },
+            ..plan
+        });
+    }
+    let due = state
+        .failed_round_s
+        .is_none_or(|at| time_s >= at + REASSESS_S || state.urgency >= Urgency::Possible);
+    if due && run(machine, CHOOSE_STATE, situation(state, time_s), logs)? == Maneuver::ChooseTarget
+    {
+        choose(context, state, machine, ethos, time_s, logs)?;
+    }
+    Ok(())
+}
+
+/// One round: puts every candidate to the Effect Ethos and puts the cheapest one in force, sooner
+/// first among equal costs. In a contingency a landing that waits only on a look competes too, at no
+/// harm cost and with the look's time added, so a near patch worth a look beats a far one known
+/// already; with none of either, the drone explores the nearest unseen ground. In an emergency with
+/// none permitted, the last-resort norms apply and the round runs again.
+fn choose(
+    context: &GroundContext,
+    state: &mut FailsafeState,
+    machine: &FailsafeMachine,
+    ethos: &GroundEthos,
+    time_s: usize,
+    logs: &mut EffectLog,
+) -> Result<(), CausalityError> {
+    let urgency = state.urgency;
+    let mut best: Option<(i64, FloatType, Candidate, PlanStatus)> = None;
+    let mut consider = |cost: i64, time: FloatType, candidate: Candidate, status: PlanStatus| {
+        if best.is_none_or(|(c, t, _, _)| (cost, time) < (c, t)) {
+            best = Some((cost, time, candidate, status));
+        }
+    };
+    let mut forbidden: BTreeMap<String, usize> = BTreeMap::new();
+    let candidates = candidates(state, urgency);
+    for candidate in &candidates {
+        let time = time_to_land_s(context, candidate.patch)?;
+        let review = review(ethos, context, *candidate, urgency)?;
+        if matches!(review, Review::Look(_)) && urgency == Urgency::Practicable {
+            consider(0, time + LOOK_ALLOWANCE_S, *candidate, PlanStatus::Look);
+        }
+        match review {
+            Review::Approved(cost) => consider(cost, time, *candidate, PlanStatus::Approved),
+            Review::Look(norms) | Review::Rejected(norms) => {
+                for norm in &norms {
+                    *state.rejections.entry(*norm).or_default() += 1;
+                }
+                *forbidden.entry(reasons(context, &norms)?).or_default() += 1;
+            }
+        }
+    }
+    logs.add_entry(&format!(
+        "t={time_s} s: {} proposals put to the Effect Ethos under the {} norms: {} permitted.",
+        candidates.len(),
+        urgency_name(urgency),
+        candidates.len() - forbidden.values().sum::<usize>(),
+    ));
+    let chosen = best.map(|(cost, _, candidate, status)| (candidate, status, cost));
+    for (why, count) in &forbidden {
+        logs.add_entry(&format!("t={time_s} s:   {count} forbidden: {why}."));
+    }
+
+    if let Some((candidate, status, cost)) = chosen {
+        install(state, machine, candidate, status, urgency, time_s)?;
+        logs.add_entry(&format!(
+            "t={time_s} s: Chosen: {} the patch {:.0} m away, at {:.0} m across and {:.0} m along; {}. Land and look states replaced by version {}.",
+            verb(candidate.proposal),
+            lower(distance(candidate.centre, state.position)),
+            lower(candidate.centre.0),
+            lower(candidate.centre.1),
+            if status == PlanStatus::Look {
+                "pending a look".to_string()
+            } else {
+                format!("harm cost {cost}")
+            },
+            state.plan_version,
+        ));
+        state.failed_round_s = None;
+        return Ok(());
+    }
+    if urgency == Urgency::Possible {
+        logs.add_entry(&format!(
+            "t={time_s} s: Last resort: nothing is permitted under the emergency norms. The person bans yield to costs, so the drone comes down where it endangers the fewest, farthest from people."
+        ));
+        state.urgency = Urgency::LastResort;
+        return choose(context, state, machine, ethos, time_s, logs);
+    }
+    if let Some(frontier) = nearest_unseen(context, state) {
+        let candidate = Candidate {
+            proposal: Proposal::Land,
+            patch: frontier,
+            centre: patch_centre(frontier),
+        };
+        let reason = if path_crosses_trees(context, frontier)? {
+            None
+        } else {
+            Some(candidate)
+        };
+        if let Some(candidate) = reason {
+            install(
+                state,
+                machine,
+                candidate,
+                PlanStatus::Explore,
+                urgency,
+                time_s,
+            )?;
+            logs.add_entry(&format!(
+                "t={time_s} s: Nothing is permitted or worth a look here. The drone flies to unseen ground {:.0} m away, at {:.0} m across and {:.0} m along, to look for a landing site.",
+                lower(distance(candidate.centre, state.position)),
+                lower(candidate.centre.0),
+                lower(candidate.centre.1),
+            ));
+            state.failed_round_s = None;
+            return Ok(());
+        }
+    }
+    logs.add_entry(&format!(
+        "t={time_s} s: Nothing is permitted yet; the drone holds over the ground and proposes again in {REASSESS_S} s."
+    ));
+    state.failed_round_s = Some(time_s);
+    Ok(())
+}
+
+/// Puts a plan in force: replaces the land and look states with a new version that flies to its
+/// patch.
+fn install(
+    state: &mut FailsafeState,
+    machine: &FailsafeMachine,
+    candidate: Candidate,
+    status: PlanStatus,
+    urgency: Urgency,
+    time_s: usize,
+) -> Result<(), CausalityError> {
+    let target = LandingTarget {
+        patch: Some(candidate.patch),
+        centre: candidate.centre,
+    };
+    state.plan_version += 1;
+    for (state_action, name) in [
+        (landing_state(state.plan_version, target), "land"),
+        (look_state(state.plan_version, target), "look"),
+    ] {
+        machine.update_single_state(state_action).map_err(|err| {
+            CausalityError::ActionError(format!("replacing the {name} state: {err}"))
+        })?;
+    }
+    state.plan = Some(Plan {
+        target,
+        proposal: candidate.proposal,
+        status,
+        urgency,
+        since_s: time_s,
+        look_until_s: time_s
+            + lower(Real::ceil(
+                distance(candidate.centre, state.position) / APPROACH_SPEED_M_S,
+            )) as usize
+            + LOOK_LIMIT_S,
+    });
+    Ok(())
+}
+
+/// The candidates of a round: landings on the safe patches nearest the drone, except those a look
+/// could not clear in a contingency, and, in an emergency, ditchings on the nearest other ground and
+/// on the patch below the drone.
+fn candidates(state: &FailsafeState, urgency: Urgency) -> Vec<Candidate> {
+    let nearest = |kinds: &[Ground], proposal: Proposal, most: usize| {
         let mut found: Vec<Candidate> = state
             .ground
             .iter()
-            .filter(|(_, g)| **g == kind)
+            .filter(|(_, g)| kinds.contains(g))
             .filter_map(|(patch, _)| {
                 state.fusion.get(patch).map(|f| Candidate {
                     proposal,
@@ -624,36 +866,74 @@ fn candidates(state: &FailsafeState) -> Vec<Candidate> {
                 .partial_cmp(&distance(b.centre, state.position))
                 .unwrap_or(std::cmp::Ordering::Equal)
         });
-        found.truncate(MAX_PROPOSALS);
+        found.truncate(most);
         found
     };
-    let mut all = nearest(Ground::Safe, Proposal::Land);
-    all.extend(nearest(Ground::Water, Proposal::Ditch));
+    let mut all = nearest(&[Ground::Safe], Proposal::Land, MAX_LANDINGS);
+    if urgency == Urgency::Practicable {
+        all.retain(|c| !state.set_aside.contains(&c.patch));
+    }
+    if urgency >= Urgency::Possible {
+        all.extend(nearest(
+            &[Ground::Unsure, Ground::Steep, Ground::Water, Ground::Trees],
+            Proposal::Ditch,
+            MAX_DITCHINGS,
+        ));
+        let below = patch_of(state.position);
+        if state.ground.get(&below) != Some(&Ground::Safe)
+            && let Some(f) = state.fusion.get(&below)
+            && !all.iter().any(|c| c.patch == below)
+        {
+            all.push(Candidate {
+                proposal: Proposal::Ditch,
+                patch: below,
+                centre: f.centre,
+            });
+        }
+    }
     all
 }
 
-/// The Effect Ethos's verdict on one proposal. A proposal forbidden by the not-ruled-out norm alone
-/// may stand while the drone looks.
+/// The tags whose norms judge a proposal at `urgency`.
+fn tags(urgency: Urgency) -> &'static [&'static str] {
+    match urgency {
+        Urgency::Routine | Urgency::Practicable => &[LANDING_TAG],
+        Urgency::Possible => &[LANDING_TAG, EMERGENCY_TAG],
+        Urgency::LastResort => &[LANDING_TAG, EMERGENCY_TAG, LAST_RESORT_TAG],
+    }
+}
+
+/// The Effect Ethos's verdict on one proposal under the norms of `urgency`. A proposal forbidden by
+/// the not-ruled-out norm, alone or with the edge norm, may stand while the drone looks: the look
+/// shows the ground around the patch, where a flat patch clear of people may lie.
 fn review(
     ethos: &GroundEthos,
     context: &GroundContext,
-    patch: (i64, i64),
-    proposal: Proposal,
+    candidate: Candidate,
+    urgency: Urgency,
 ) -> Result<Review, CausalityError> {
     let parameters = HashMap::from([
-        ("across".to_string(), ActionParameterValue::Integer(patch.0)),
-        ("along".to_string(), ActionParameterValue::Integer(patch.1)),
+        (
+            "across".to_string(),
+            ActionParameterValue::Integer(candidate.patch.0),
+        ),
+        (
+            "along".to_string(),
+            ActionParameterValue::Integer(candidate.patch.1),
+        ),
     ]);
-    let name = match proposal {
+    let name = match candidate.proposal {
         Proposal::Land => "land",
         Proposal::Ditch => "ditch",
     };
     let action = ProposedAction::new(0, name.to_string(), parameters);
     let verdict = ethos
-        .evaluate_action(&action, context, &[LANDING_TAG])
+        .evaluate_action(&action, context, tags(urgency))
         .map_err(|err| CausalityError::DeonticError(err.to_string()))?;
-    if verdict.outcome() != TeloidModal::Impermissible {
-        return Ok(Review::Approved);
+    match verdict.outcome() {
+        TeloidModal::Optional(cost) => return Ok(Review::Approved(cost)),
+        TeloidModal::Obligatory => return Ok(Review::Approved(0)),
+        TeloidModal::Impermissible => {}
     }
     let mut norms: Vec<TeloidID> = verdict
         .justification()
@@ -666,8 +946,12 @@ fn review(
         })
         .collect();
     norms.sort_unstable();
-    Ok(if norms == [NORM_NOT_RULED_OUT] {
-        Review::Look
+    let look_settles = norms.contains(&NORM_NOT_RULED_OUT)
+        && norms
+            .iter()
+            .all(|n| *n == NORM_NOT_RULED_OUT || *n == NORM_EDGE);
+    Ok(if look_settles {
+        Review::Look(norms)
     } else {
         Review::Rejected(norms)
     })
@@ -676,6 +960,7 @@ fn review(
 /// Why the norms forbid a proposal, as one clause per norm.
 fn reasons(context: &GroundContext, norms: &[TeloidID]) -> Result<String, CausalityError> {
     let clearance = lower(clearance_m(context)?);
+    let agl = lower(point_value(context, DRONE_AGL_ID)?);
     Ok(norms
         .iter()
         .map(|norm| match *norm {
@@ -683,40 +968,65 @@ fn reasons(context: &GroundContext, norms: &[TeloidID]) -> Result<String, Causal
             NORM_NOT_RULED_OUT => {
                 format!("a person is not yet ruled out within {clearance:.0} m of it")
             }
+            NORM_PATH => {
+                format!("the flight there at {agl:.0} m would cross trees or unseen ground")
+            }
             NORM_BATTERY => format!(
                 "the battery cannot get the drone there and down with {:.0} s to spare",
                 lower(RESERVE_S)
             ),
             NORM_DRONE => "the drone would not survive the touchdown".to_string(),
+            NORM_EDGE => "a gust could put the drone on steep ground beside it".to_string(),
             _ => format!("norm {norm}"),
         })
         .collect::<Vec<_>>()
         .join("; "))
 }
 
-/// The distance from a point to the nearest patch the controller judged to hold a person, in m.
-/// `None` when it has seen no one.
-pub fn nearest_person_seen_m(
-    state: &FailsafeState,
-    at: (FloatType, FloatType),
-) -> Option<FloatType> {
-    state
-        .ground
-        .iter()
-        .filter(|(_, g)| **g == Ground::Person)
-        .filter_map(|(patch, _)| state.fusion.get(patch))
-        .map(|f| distance(f.centre, at))
-        .fold(None, |nearest, d| match nearest {
-            Some(n) if n <= d => Some(n),
-            _ => Some(d),
-        })
+/// How long flying to `patch` and descending onto it takes, in s, at the drone's descent rate.
+fn time_to_land_s(context: &GroundContext, patch: (i64, i64)) -> Result<FloatType, CausalityError> {
+    let at = (
+        point_value(context, DRONE_ACROSS_ID)?,
+        point_value(context, DRONE_ALONG_ID)?,
+    );
+    let descent = point_value(context, DESCENT_RATE_ID)?;
+    Ok(distance(patch_centre(patch), at) / APPROACH_SPEED_M_S
+        + point_value(context, DRONE_AGL_ID)? / descent)
 }
 
-/// The situation the fail-safe machine reads: the ladder's command, the drone's position, and
-/// where the plan in force stands.
-fn situation(state: &FailsafeState, failsafe: Command) -> Situation {
+/// What the faults have taken from the drone, in words.
+fn lost(faults: &Faults) -> &'static str {
+    match (faults.gnss_lost, faults.link_lost) {
+        (true, true) => "the satellite fix and the command link are lost",
+        (true, false) => "the satellite fix is lost",
+        (false, true) => "the command link is lost",
+        (false, false) => "the battery is low",
+    }
+}
+
+fn urgency_name(urgency: Urgency) -> &'static str {
+    match urgency {
+        Urgency::Routine | Urgency::Practicable => "contingency",
+        Urgency::Possible => "emergency",
+        Urgency::LastResort => "last-resort",
+    }
+}
+
+fn verb(proposal: Proposal) -> &'static str {
+    match proposal {
+        Proposal::Land => "land on",
+        Proposal::Ditch => "ditch the drone on",
+    }
+}
+
+/// The situation the fail-safe machine reads.
+fn situation(state: &FailsafeState, time_s: usize) -> Situation {
     Situation {
-        failsafe,
+        urgency: state.urgency,
+        waiting: state.urgency == Urgency::Practicable
+            && state
+                .waiting_since_s
+                .is_some_and(|since| time_s < since + RECOVERY_WINDOW_S),
         position: state.position,
         plan: state.plan.map_or(PlanStatus::None, |p| p.status),
     }
@@ -738,32 +1048,44 @@ fn run(
 }
 
 /// The belief that a person stands on a patch: a hot spot well above the land, or, where the LiDAR
-/// finds a surface, a bump as tall as a person.
+/// finds a surface, a bump as tall as a person and no taller.
 fn person_belief(
     context: &GroundContext,
     patch: (i64, i64),
     land_c: FloatType,
 ) -> Result<UncertainBool<FloatType>, CausalityError> {
     let no_return = belief(context, patch, Quantity::Returns)?.less_than(NO_RETURN_BELOW);
+    let bump = belief(context, patch, Quantity::Protrusion)?;
     Ok(
         belief(context, patch, Quantity::HotSpot)?.greater_than(land_c + PERSON_EXCESS_C)
-            | (!no_return
-                & belief(context, patch, Quantity::Protrusion)?.greater_than(PERSON_BUMP_M)),
+            | (!no_return & bump.greater_than(PERSON_BUMP_M) & bump.less_than(PERSON_TALLEST_M)),
     )
 }
 
-/// The patches whose centres lie within the clearance of `patch`'s centre, `patch` included.
-fn patches_within(
-    context: &GroundContext,
-    patch: (i64, i64),
-) -> Result<Vec<(i64, i64)>, CausalityError> {
-    let radius = clearance_m(context)?;
-    let reach = lower(Real::ceil(radius / PATCH_SIDE_M)) as i64;
+/// The unseen patch nearest the drone that borders seen ground, farther than the drone sees from
+/// where it hovers: the edge of what it knows.
+fn nearest_unseen(context: &GroundContext, state: &FailsafeState) -> Option<(i64, i64)> {
+    let below = patch_of(state.position);
+    state
+        .fusion
+        .keys()
+        .flat_map(|&(i, j)| [(i - 1, j), (i + 1, j), (i, j - 1), (i, j + 1)])
+        .filter(|patch| !seen(context, *patch) && *patch != below)
+        .min_by(|a, b| {
+            distance(patch_centre(*a), state.position)
+                .partial_cmp(&distance(patch_centre(*b), state.position))
+                .unwrap_or(std::cmp::Ordering::Equal)
+        })
+}
+
+/// The patches whose centres lie within `radius_m` of `patch`'s centre, `patch` included.
+fn patches_within(patch: (i64, i64), radius_m: FloatType) -> Vec<(i64, i64)> {
+    let reach = lower(Real::ceil(radius_m / PATCH_SIDE_M)) as i64;
     let centre = patch_centre(patch);
-    Ok((-reach..=reach)
+    (-reach..=reach)
         .flat_map(|di| (-reach..=reach).map(move |dj| (patch.0 + di, patch.1 + dj)))
-        .filter(|near| distance(patch_centre(*near), centre) <= radius)
-        .collect())
+        .filter(|near| distance(patch_centre(*near), centre) <= radius_m)
+        .collect()
 }
 
 /// Whether the camera and LiDAR have seen a patch.
@@ -780,28 +1102,49 @@ fn patch_centre(patch: (i64, i64)) -> (FloatType, FloatType) {
     )
 }
 
+/// The patch containing a point.
+fn patch_of(at: (FloatType, FloatType)) -> (i64, i64) {
+    (
+        lower(Real::floor(at.0 / PATCH_SIDE_M)) as i64,
+        lower(Real::floor(at.1 / PATCH_SIDE_M)) as i64,
+    )
+}
+
 /// Writes the drone's own state into the context: where the frames place it, its height, how far
-/// that place may be off, and how long its battery lasts.
+/// off it may land from a patch it tracks, how long its battery lasts and how fast it descends. A
+/// one-second sag in the lowest cell is a failed cell: the battery then lasts a fixed time and the
+/// drone descends at the emergency rate. Otherwise the battery lasts as long as the lowest cell takes
+/// to drain to empty.
 fn record_drone(
     context: &mut GroundContext,
     state: &mut FailsafeState,
     frame: &Frame,
 ) -> Result<(), ContextIndexError> {
     let t = &frame.telemetry;
-    if t.min_cell_v() < CRITICAL_CELL_V && state.critical_since_s.is_none() {
-        state.critical_since_s = Some(t.time_s());
+    let cell_v = t.min_cell_v();
+    if state.cell_failed_at_s.is_none()
+        && state.last_cell_v.is_some_and(|v| v - cell_v > CELL_SAG_V)
+    {
+        state.cell_failed_at_s = Some(t.time_s());
     }
-    let endurance = match state.critical_since_s {
-        Some(since) => CRITICAL_ENDURANCE_S - lift_usize::<FloatType>(t.time_s() - since),
-        None => (t.min_cell_v() - CRITICAL_CELL_V) / CELL_DRAIN_V_PER_S + CRITICAL_ENDURANCE_S,
+    state.last_cell_v = Some(cell_v);
+    let (endurance, descent) = match state.cell_failed_at_s {
+        Some(at) => (
+            CRITICAL_ENDURANCE_S - lift_usize::<FloatType>(t.time_s() - at),
+            EMERGENCY_DESCENT_M_S,
+        ),
+        None => (
+            (cell_v - CELL_EMPTY_V) / CELL_DRAIN_V_PER_S,
+            LANDING_DESCENT_M_S,
+        ),
     };
-    let position_error = POSITION_DRIFT_M_PER_S * lift_usize::<FloatType>(state.no_fix_for_s);
     for (id, value) in [
         (DRONE_ACROSS_ID, frame.position.0),
         (DRONE_ALONG_ID, frame.position.1),
         (DRONE_AGL_ID, t.altitude_agl_m()),
-        (POSITION_ERROR_ID, position_error),
+        (POSITION_ERROR_ID, LANDING_ACCURACY_M),
         (ENDURANCE_ID, endurance),
+        (DESCENT_RATE_ID, descent),
     ] {
         set_point(context, id, value)?;
     }
@@ -847,7 +1190,6 @@ fn state_name(id: usize) -> &'static str {
     match id {
         CHOOSE_STATE => "choose a landing patch",
         HOLD_STATE => "hold over the ground",
-        HOME_STATE => "fly home",
         LAND_STATE => "land on the approved patch",
         _ => "fly over the patch and look",
     }
@@ -860,7 +1202,7 @@ fn fuse(
     state: &mut FailsafeState,
     frame: &Frame,
 ) -> Result<(), ContextIndexError> {
-    let clock = DiscreteTime::new(CLOCK_ID, TimeScale::Second, clock_s(&frame.telemetry));
+    let clock = DiscreteTime::new(CLOCK_ID, TimeScale::Second, frame.telemetry.clock_s());
     context.update_node(
         CLOCK_ID,
         Contextoid::new(CLOCK_ID, ContextoidType::Tempoid(clock)),
@@ -911,8 +1253,9 @@ fn data_node(id: ContextoidId, fusion: &Fusion, q: Quantity) -> GroundNode {
 }
 
 /// What the context says about one patch. A patch is safe when, with the stated confidence, it is
-/// neither steep, nor a person, and the LiDAR found a surface on it. Otherwise the first hazard
-/// that holds with that confidence names it, people first; a patch with none is unsure.
+/// neither steep, nor a person, nor under canopy, and the LiDAR found a surface on it. Otherwise
+/// the first hazard that holds with that confidence names it, people first; a patch with none is
+/// unsure.
 fn judge_patch(
     context: &GroundContext,
     patch: (i64, i64),
@@ -929,12 +1272,14 @@ fn judge_patch(
     };
     let water = no_return.clone() & contrast;
     let person = person_belief(context, patch, land_c)?;
+    let trees = read(Quantity::Protrusion)?.greater_than(CANOPY_LOWEST_M);
 
-    if holds(&!(steep.clone() | no_return | person.clone()))? {
+    if holds(&!(steep.clone() | no_return | person.clone() | trees.clone()))? {
         return Ok(Ground::Safe);
     }
     for (ground, hazard) in [
         (Ground::Person, person),
+        (Ground::Trees, trees),
         (Ground::Water, water),
         (Ground::Steep, steep),
     ] {
@@ -1005,25 +1350,11 @@ fn land_temperature_c(state: &FailsafeState, frame: &Frame) -> Option<FloatType>
     land.get(land.len() / 2).copied()
 }
 
-/// The local time of day of a telemetry sample, in seconds since midnight.
-fn clock_s(telemetry: &Telemetry) -> u64 {
-    lower(FLIGHT_START_HOUR) as u64 * SECONDS_PER_HOUR + telemetry.time_s() as u64
-}
-
 /// The context identifier of a patch's node: slot 0 is its space node, slots 1 to 5 its data
 /// nodes. Patch indices stay within a thousand of zero, so the identifiers never meet the clock's.
 fn node_id(patch: (i64, i64), slot: u64) -> ContextoidId {
     let (i, j) = patch;
     (((i + 1000) as u64) * 10_000 + (j + 1000) as u64) * 8 + slot
-}
-
-fn severity(command: Command) -> u8 {
-    match command {
-        Command::Continue => 0,
-        Command::Hold => 1,
-        Command::ReturnHome => 2,
-        Command::LandNow => 3,
-    }
 }
 
 fn graph_error(err: ContextIndexError) -> CausalityError {

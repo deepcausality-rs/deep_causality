@@ -20,6 +20,8 @@ impl Terrain {
             (Surface::Road, false) => DAY_ROAD_C,
             (Surface::Pad, true) => NIGHT_PAD_C,
             (Surface::Pad, false) => DAY_PAD_C,
+            (Surface::Trees, true) => NIGHT_CANOPY_C,
+            (Surface::Trees, false) => DAY_CANOPY_C,
             (Surface::Rock | Surface::Ravine, true) => NIGHT_ROCK_C,
             (Surface::Rock | Surface::Ravine, false) => DAY_ROCK_C,
         }

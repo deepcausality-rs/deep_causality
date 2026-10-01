@@ -16,6 +16,10 @@ pub enum Outcome {
     IntoRavine,
     /// It came down too close to a person.
     AmongPeople,
+    /// Its battery died in the air and it fell.
+    Fell,
+    /// It flew or descended into the trees.
+    HitTrees,
     /// The ground was too steep: it tipped over and tumbled downhill until the ground flattened.
     TippedAndRolled {
         distance_m: FloatType,

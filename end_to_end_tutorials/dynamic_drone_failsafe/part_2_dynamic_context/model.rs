@@ -7,9 +7,9 @@
 //! sensor frame, fuse the frame into the ground context, judge each patch from the context, detect
 //! the faults with a collection of causaloids, and decide the fail-safe on the standard ladder.
 
-use crate::constants::*;
-use crate::model_config::Detector;
-use crate::model_context::{
+use super::constants::*;
+use super::model_config::Detector;
+use super::model_context::{
     FailsafeProcess, FailsafeState, Faults, Frame, Fusion, Ground, GroundContext, GroundNode,
 };
 use deep_causality::{
@@ -23,7 +23,7 @@ use deep_causality_context::{
 };
 use deep_causality_num::lower;
 use deep_causality_uncertain::{SampleSession, Uncertain, UncertainBool, UncertainError};
-use dynamic_drone_failsafe::{Command, FLIGHT_START_HOUR, FloatType, Quantity, Telemetry};
+use dynamic_drone_failsafe::{Command, FloatType, Quantity, Telemetry};
 
 /// Stage 1: takes this second's telemetry and sensor frame into the process and records the
 /// telemetry in the log.
@@ -289,7 +289,7 @@ fn fuse(
     state: &mut FailsafeState,
     frame: &Frame,
 ) -> Result<(), ContextIndexError> {
-    let clock = DiscreteTime::new(CLOCK_ID, TimeScale::Second, clock_s(&frame.telemetry));
+    let clock = DiscreteTime::new(CLOCK_ID, TimeScale::Second, frame.telemetry.clock_s());
     context.update_node(
         CLOCK_ID,
         Contextoid::new(CLOCK_ID, ContextoidType::Tempoid(clock)),
@@ -433,11 +433,6 @@ fn land_temperature_c(state: &FailsafeState, frame: &Frame) -> Option<FloatType>
         .collect();
     land.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
     land.get(land.len() / 2).copied()
-}
-
-/// The local time of day of a telemetry sample, in seconds since midnight.
-fn clock_s(telemetry: &Telemetry) -> u64 {
-    lower(FLIGHT_START_HOUR) as u64 * SECONDS_PER_HOUR + telemetry.time_s() as u64
 }
 
 /// The context identifier of a patch's node: slot 0 is its space node, slots 1 to 5 its data

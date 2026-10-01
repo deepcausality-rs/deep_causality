@@ -5,23 +5,25 @@
 
 //! # Dynamic drone fail-safe, part 4: Effect Ethos
 //!
-//! The drone of part 3 flies the same night with the same faults, the same ground context and the
-//! same fail-safe machine. The machine now flies only what the Effect Ethos approves. Each landing
-//! it proposes goes to the Ethos, whose norms read the same context: no person within the
-//! clearance, no unseen ground within it, enough battery, and a touchdown the drone survives.
-//! Losing the drone is acceptable; harming a person is not, so nothing defeats the person norm.
+//! The drone of part 3 flies the same night with the same faults and the same ground context, now
+//! under a safety protocol: the contingency and emergency procedures published for drone pilots,
+//! encoded as norms of the Effect Ethos. A lost fix or link with a healthy battery is a
+//! contingency: hold, wait for recovery, then land as soon as practicable. A critical battery is
+//! an emergency: land as soon as possible, and ditch the drone if no landing is permitted. Each
+//! round, the fail-safe machine puts every candidate to the Ethos and flies the cheapest permitted
+//! one. People first, the drone last: only as a last resort do the person bans yield, to costs.
 
 mod constants;
 mod model;
 mod model_config;
-mod model_types;
+mod model_context;
 mod utils_print;
 
-use crate::model_types::{
-    Candidate, FailsafeProcess, FailsafeState, Frame, Ground, Maneuver, Proposal,
+use crate::model_context::{
+    Candidate, FailsafeProcess, FailsafeState, Frame, Ground, Maneuver, Proposal, Urgency,
 };
 use deep_causality::{CausalEffect, EffectLog};
-use dynamic_drone_failsafe::{Command, Drone, FLIGHT_LIMIT_S, Guidance, Terrain, Touchdown};
+use dynamic_drone_failsafe::{Drone, FLIGHT_LIMIT_S, Terrain, Touchdown};
 use std::error::Error;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -42,6 +44,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     utils_print::print_intro();
     let mut last = None;
+    let mut emergency = None;
     while !drone.landed() && drone.time_s() < FLIGHT_LIMIT_S {
         let telemetry = drone.telemetry();
         let frame = Frame {
@@ -55,7 +58,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             .bind(model::perceive)
             .bind(model::judge)
             .bind(|value, state, ctx| model::detect(value, state, ctx, &detectors))
-            .bind(|value, state, ctx| model::decide(value, state, ctx, time_s))
+            .bind(|value, state, ctx| model::assess(value, state, ctx, time_s))
             .bind(|value, state, ctx| model::act(value, state, ctx, &machine, &ethos, time_s));
         if let Some(err) = process.error() {
             return Err(Box::new(err.clone()));
@@ -65,27 +68,22 @@ fn main() -> Result<(), Box<dyn Error>> {
             .ok_or("the fail-safe machine produced no maneuver")?;
         let state = process.state();
         let below = state.ground.get(&drone.patch_below()).copied();
-        let now = (state.faults, state.failsafe, below, maneuver);
+        let now = (state.faults, state.urgency, below, maneuver);
         if last != Some(now) {
-            utils_print::print_second(&drone, &now.0, below, state.failsafe, maneuver);
+            utils_print::print_second(&drone, &now.0, below, state.urgency, maneuver);
             last = Some(now);
         }
-        match maneuver {
-            Maneuver::HoldOver { x, y } => drone.guide(Guidance::HoldOver { x, y }),
-            Maneuver::LandOn { x, y } => drone.guide(Guidance::LandOn { x, y }),
-            Maneuver::LookOver { x, y } => drone.guide(Guidance::HoldOver { x, y }),
-            Maneuver::ReturnHome => drone.step(Command::ReturnHome),
-            // Nothing approved: on land now the drone holds rather than descend where it is.
-            Maneuver::None | Maneuver::ChooseTarget if state.failsafe == Command::LandNow => {
-                let (x, y) = drone.position();
-                drone.guide(Guidance::HoldOver { x, y })
-            }
-            Maneuver::None | Maneuver::ChooseTarget => drone.step(state.failsafe),
+        if emergency.is_none() && state.urgency >= Urgency::Possible {
+            let context = process
+                .context()
+                .clone()
+                .ok_or("the process lost its context")?;
+            emergency = Some((time_s, drone.position(), context, state.clone()));
         }
+        model::steer(&mut drone, &terrain, maneuver, state.urgency);
     }
 
-    let (x, y) = drone.position();
-    utils_print::print_touchdown(drone.time_s(), &Touchdown::assess(&terrain, x, y));
+    utils_print::print_touchdown(drone.time_s(), &Touchdown::of(&terrain, &drone));
     let state = process.state();
     utils_print::print_map(state, drone.patch_below());
     let target = state.plan.map(|p| p.target.centre);
@@ -93,28 +91,31 @@ fn main() -> Result<(), Box<dyn Error>> {
         state,
         target.and_then(|centre| model::nearest_person_seen_m(state, centre)),
     );
-    let context = process
-        .context()
-        .as_ref()
-        .ok_or("the process lost its context")?;
-    let landed_at = drone.position();
-    let person = model::nearest_judged(state, Ground::Person, landed_at).map(|p| p.1);
-    let mut rulings = Vec::new();
-    for (proposal, kind, near) in [
-        (Proposal::Land, Ground::Safe, person.unwrap_or(landed_at)),
-        (Proposal::Land, Ground::Steep, landed_at),
-        (Proposal::Ditch, Ground::Water, landed_at),
-    ] {
-        if let Some((patch, centre)) = model::nearest_judged(state, kind, near) {
-            let candidate = Candidate {
-                proposal,
-                patch,
-                centre,
-            };
-            rulings.push(model::ruling(&ethos, context, kind, candidate)?);
+    if let Some((time_s, at, context, state)) = &emergency {
+        let person = model::nearest_judged(state, Ground::Person, *at).map(|p| p.1);
+        let mut rulings = Vec::new();
+        for (kind, near) in [
+            (Ground::Safe, person.unwrap_or(*at)),
+            (Ground::Steep, *at),
+            (Ground::Water, *at),
+        ] {
+            if let Some((patch, centre)) = model::nearest_judged(state, kind, near) {
+                let candidate = Candidate {
+                    proposal: Proposal::Ditch,
+                    patch,
+                    centre,
+                };
+                rulings.push(model::ruling(
+                    &ethos,
+                    context,
+                    kind,
+                    candidate,
+                    Urgency::LastResort,
+                )?);
+            }
         }
+        utils_print::print_rulings(*time_s, &rulings);
     }
-    utils_print::print_rulings(&rulings);
     utils_print::print_log(process.logs());
     Ok(())
 }

@@ -6,8 +6,8 @@
 //! The fault detectors, one causaloid per fault, and the ground context the controller starts
 //! with.
 
-use crate::constants::*;
-use crate::model_context::GroundContext;
+use super::constants::*;
+use super::model_context::GroundContext;
 use deep_causality::{Causaloid, PropagatingEffect};
 use deep_causality_context::{
     ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, DiscreteTime, TimeScale,

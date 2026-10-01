@@ -11,6 +11,12 @@ use crate::FloatType;
 pub enum Guidance {
     /// Hover over a ground point, in m across and along.
     HoldOver { x: FloatType, y: FloatType },
+    /// Fly to a ground point at approach speed, then descend to a height above it, in m, and hover.
+    DescendOver {
+        x: FloatType,
+        y: FloatType,
+        agl_m: FloatType,
+    },
     /// Fly to a ground point at approach speed, then descend onto it.
     LandOn { x: FloatType, y: FloatType },
 }

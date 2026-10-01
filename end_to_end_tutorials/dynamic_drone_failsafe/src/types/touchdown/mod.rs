@@ -6,7 +6,7 @@
 mod touchdown_getters;
 
 use crate::constants::*;
-use crate::{FloatType, Outcome, Surface, Terrain};
+use crate::{Drone, FloatType, Outcome, Surface, Terrain};
 
 /// Where the drone came down, and what became of it: the ground truth no controller sees.
 #[derive(Debug, Clone, Copy)]
@@ -20,6 +20,36 @@ pub struct Touchdown {
 }
 
 impl Touchdown {
+    /// Judges where `drone` came down on `terrain`: a fall where its battery died, or a touchdown.
+    pub fn of(terrain: &Terrain, drone: &Drone) -> Self {
+        let (x, y) = drone.position();
+        if drone.fell() {
+            Self::fall(terrain, x, y, Outcome::Fell)
+        } else if drone.hit_trees() {
+            Self::fall(terrain, x, y, Outcome::HitTrees)
+        } else {
+            Self::assess(terrain, x, y)
+        }
+    }
+
+    /// Judges an uncontrolled descent at a point on `terrain`, a fall or a crash into the trees: the
+    /// drone is lost, as `lost` says, and anyone within the clearance is at risk.
+    pub fn fall(terrain: &Terrain, x: FloatType, y: FloatType, lost: Outcome) -> Self {
+        let nearest_person_m = terrain.nearest_person_m(x, y);
+        Self {
+            x,
+            y,
+            surface: terrain.surface(x, y),
+            slope_deg: terrain.slope_deg(x, y),
+            nearest_person_m,
+            outcome: if nearest_person_m < PERSON_CLEARANCE_M {
+                Outcome::AmongPeople
+            } else {
+                lost
+            },
+        }
+    }
+
     /// Judges a touchdown at a point on `terrain`.
     pub fn assess(terrain: &Terrain, x: FloatType, y: FloatType) -> Self {
         let surface = terrain.surface(x, y);
@@ -29,6 +59,8 @@ impl Touchdown {
             Outcome::Ditched
         } else if surface == Surface::Ravine {
             Outcome::IntoRavine
+        } else if surface == Surface::Trees {
+            Outcome::HitTrees
         } else if nearest_person_m < PERSON_CLEARANCE_M {
             Outcome::AmongPeople
         } else if slope_deg > TIP_OVER_DEG {

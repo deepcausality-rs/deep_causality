@@ -4,14 +4,14 @@
  */
 
 use crate::constants::*;
-use crate::{Drone, FloatType, Guidance};
+use crate::{Drone, FloatType, Guidance, Terrain};
 use deep_causality_algebra::Real;
 
 impl Drone {
-    /// Flies one second under `guidance`, holding or steering its ground position against the
-    /// wind by its camera and LiDAR. On a landing it descends only once it is over the point, and
-    /// faster once the battery has faulted.
-    pub fn guide(&mut self, guidance: Guidance) {
+    /// Flies one second under `guidance` over `terrain`, holding or steering its ground position
+    /// against the wind by its camera and LiDAR. On a landing it descends only once it is over the
+    /// point, and faster once the battery has faulted.
+    pub fn guide(&mut self, guidance: Guidance, terrain: &Terrain) {
         if self.landed {
             return;
         }
@@ -19,13 +19,19 @@ impl Drone {
             Guidance::HoldOver { x, y } => {
                 self.approach(x, y);
             }
+            Guidance::DescendOver { x, y, agl_m } => {
+                if self.approach(x, y) && self.agl_m > agl_m {
+                    let lower = self.agl_m - LANDING_DESCENT_M_S;
+                    self.agl_m = if lower > agl_m { lower } else { agl_m };
+                }
+            }
             Guidance::LandOn { x, y } => {
                 if self.approach(x, y) {
                     self.descend();
                 }
             }
         }
-        self.time_s += 1;
+        self.tick(terrain);
     }
 
     /// Moves toward a ground point at approach speed, and reports whether the drone is over it.

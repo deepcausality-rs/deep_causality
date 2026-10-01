@@ -5,7 +5,7 @@
 
 //! The fault detectors: one causaloid per fault, each a threshold on one second's telemetry.
 
-use crate::constants::*;
+use super::constants::*;
 use deep_causality::{Causaloid, PropagatingEffect};
 use dynamic_drone_failsafe::Telemetry;
 

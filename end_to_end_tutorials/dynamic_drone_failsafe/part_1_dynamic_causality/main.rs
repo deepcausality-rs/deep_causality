@@ -25,6 +25,7 @@ use std::error::Error;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let detectors = model_config::detectors();
+    let terrain = Terrain::new();
     let mut drone = Drone::launch();
     let mut process = FailsafeProcess::new(
         Ok(CausalEffect::value(Command::Continue)),
@@ -53,11 +54,10 @@ fn main() -> Result<(), Box<dyn Error>> {
             utils_print::print_second(&drone, &telemetry, &now.0, command);
             last = Some(now);
         }
-        drone.step(command);
+        drone.step(command, &terrain);
     }
 
-    let (x, y) = drone.position();
-    utils_print::print_touchdown(drone.time_s(), &Touchdown::assess(&Terrain::new(), x, y));
+    utils_print::print_touchdown(drone.time_s(), &Touchdown::of(&terrain, &drone));
     utils_print::print_log(process.logs());
     Ok(())
 }

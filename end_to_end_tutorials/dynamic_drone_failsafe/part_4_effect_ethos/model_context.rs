@@ -13,8 +13,8 @@ use deep_causality_context::{
     Context, Contextoid, DiscreteTime, EuclideanSpace, NoSpaceTime, UncertainData,
 };
 use deep_causality_ethos::{EffectEthos, TeloidID};
-use dynamic_drone_failsafe::{Command, FloatType, PatchReading, Telemetry};
-use std::collections::BTreeMap;
+use dynamic_drone_failsafe::{FloatType, PatchReading, Telemetry};
+use std::collections::{BTreeMap, BTreeSet};
 
 /// The ground below the drone as the controller believes it to be, and the drone's own state. Each
 /// patch the camera and LiDAR have seen is a space node linked to five uncertain data nodes, one
@@ -47,8 +47,8 @@ pub type GroundEthos = EffectEthos<
     NoSpaceTime<FloatType>,
 >;
 
-/// The fail-safe machine: a causal state machine that turns the ladder's command into a maneuver
-/// over the ground.
+/// The fail-safe machine: a causal state machine that turns the urgency of the situation into a
+/// maneuver over the ground.
 pub type FailsafeMachine = CSM<Situation, Maneuver, LandingTarget>;
 
 /// One second's input: the drone's telemetry, one frame of the thermal camera and LiDAR, and the
@@ -60,11 +60,30 @@ pub struct Frame {
     pub position: (FloatType, FloatType),
 }
 
-/// What the fail-safe machine reads each second: the ladder's command, where the drone is, and
-/// where the plan in force stands with the Effect Ethos.
+/// How urgent the situation is, after the contingency and emergency procedures pilots follow.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Urgency {
+    /// No fault: fly the mission.
+    #[default]
+    Routine,
+    /// The fix or the link is lost and the battery is healthy: a contingency. Hold and wait for
+    /// recovery, then land as soon as practicable.
+    Practicable,
+    /// A cell has failed or the battery has run down: an emergency. Land as soon as possible; the
+    /// drone may be ditched.
+    Possible,
+    /// No option under the emergency norms is permitted: come down where the fewest are
+    /// endangered, farthest from people.
+    LastResort,
+}
+
+/// What the fail-safe machine reads each second: the urgency, whether the drone is still waiting
+/// out the recovery window, where the drone is, and where the plan in force stands with the Effect
+/// Ethos.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Situation {
-    pub failsafe: Command,
+    pub urgency: Urgency,
+    pub waiting: bool,
     pub position: (FloatType, FloatType),
     pub plan: PlanStatus,
 }
@@ -80,6 +99,9 @@ pub enum PlanStatus {
     Look,
     /// The Ethos approves the landing.
     Approved,
+    /// Nothing is permitted or worth a look: fly at height to unseen ground and look for a landing
+    /// site.
+    Explore,
 }
 
 /// What the machine proposes: to land on a patch, or to ditch the drone on it.
@@ -89,13 +111,17 @@ pub enum Proposal {
     Ditch,
 }
 
-/// A plan the Effect Ethos has seen: the patch, what the machine proposed for it, and where it
-/// stands.
+/// A plan the Effect Ethos has seen: the patch, what the machine proposed for it, where it stands,
+/// the urgency whose norms judged it, when it was put in force, and until when a look at it may
+/// run.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Plan {
     pub target: LandingTarget,
     pub proposal: Proposal,
     pub status: PlanStatus,
+    pub urgency: Urgency,
+    pub since_s: usize,
+    pub look_until_s: usize,
 }
 
 /// One proposal the machine can put to the Effect Ethos: what, on which patch, and its centre.
@@ -106,23 +132,24 @@ pub struct Candidate {
     pub centre: (FloatType, FloatType),
 }
 
-/// How the Effect Ethos ruled on one proposal: the patch's judgement, the proposal, the verdict,
-/// why it forbids the proposal if it does, and whether the sacrifice norm defeated the drone norm.
+/// How the Effect Ethos ruled on one proposal: the patch's judgement, the proposal, and the
+/// verdict with why it forbids the proposal if it does.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Ruling {
     pub kind: Ground,
     pub candidate: Candidate,
     pub review: Review,
     pub why: String,
-    pub drone_norm_defeated: bool,
 }
 
 /// The Effect Ethos's verdict on one proposal.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Review {
-    Approved,
-    /// Forbidden only because a person is not yet ruled out near the patch.
-    Look,
+    /// Permitted, at this harm cost: the sum of the costs of the norms that stand.
+    Approved(i64),
+    /// Forbidden only by norms a look can settle: a person not yet ruled out near the patch, and
+    /// perhaps steep ground beside it. Carries those norms.
+    Look(Vec<TeloidID>),
     /// Forbidden by these norms.
     Rejected(Vec<TeloidID>),
 }
@@ -137,20 +164,20 @@ pub struct LandingTarget {
 /// What the fail-safe machine tells the drone to do.
 #[derive(Debug, Clone, Copy, Default, PartialEq)]
 pub enum Maneuver {
-    /// No state is active: the drone follows the ladder's command.
+    /// No state is active: the drone flies its mission.
     #[default]
     None,
     /// Hover over a ground point.
     HoldOver { x: FloatType, y: FloatType },
-    /// Fly back to the launch point.
-    ReturnHome,
     /// Fly to the landing patch and descend onto it.
     LandOn { x: FloatType, y: FloatType },
-    /// Fly over a patch at height and hover there, so the camera and LiDAR see the ground around
-    /// it.
+    /// Fly over a patch, descend to the look height and hover there, so the camera and LiDAR see
+    /// the ground around it sharply.
     LookOver { x: FloatType, y: FloatType },
-    /// Choose a landing patch and put it to the Effect Ethos. On land now with nothing approved,
-    /// the drone holds over the ground.
+    /// Fly at height to unseen ground and look for a landing site.
+    Explore { x: FloatType, y: FloatType },
+    /// Choose a landing patch and put it to the Effect Ethos. With nothing approved, the drone
+    /// holds over the ground.
     ChooseTarget,
 }
 
@@ -179,6 +206,7 @@ pub enum Ground {
     Safe,
     Steep,
     Water,
+    Trees,
     Person,
     Unsure,
 }
@@ -193,24 +221,28 @@ pub struct Fusion {
 }
 
 /// What the controller remembers: how long the fix and the link have been gone, the faults it has
-/// confirmed and the fail-safe it has latched; the fusion sums of every patch seen, its judgement
-/// of each, and the temperature of the land around it; where the drone is, when the battery went
-/// critical, the plan in force, the version of the states that fly it, the machine state running,
-/// whether the last round of proposals failed, and how many proposals each norm rejected.
+/// confirmed, the urgency and since when the drone has waited for recovery; the fusion sums of
+/// every patch seen, its judgement of each, and the temperature of the land around it; where the
+/// drone is, when a cell failed and the lowest cell's last voltage, the plan in force, the patches
+/// a look could not clear, the version of the states that fly the plan, the machine state running,
+/// when the machine last proposed in vain, and how many proposals each norm rejected.
 #[derive(Debug, Clone, Default)]
 pub struct FailsafeState {
     pub no_fix_for_s: usize,
     pub link_down_for_s: usize,
     pub faults: Faults,
-    pub failsafe: Command,
+    pub urgency: Urgency,
+    pub waiting_since_s: Option<usize>,
     pub fusion: BTreeMap<(i64, i64), Fusion>,
     pub ground: BTreeMap<(i64, i64), Ground>,
     pub land_temperature_c: Option<FloatType>,
     pub position: (FloatType, FloatType),
-    pub critical_since_s: Option<usize>,
+    pub cell_failed_at_s: Option<usize>,
+    pub last_cell_v: Option<FloatType>,
+    pub set_aside: BTreeSet<(i64, i64)>,
     pub plan: Option<Plan>,
     pub plan_version: usize,
     pub running: Option<(usize, usize)>,
-    pub round_failed: bool,
+    pub failed_round_s: Option<usize>,
     pub rejections: BTreeMap<TeloidID, usize>,
 }

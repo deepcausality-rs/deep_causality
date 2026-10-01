@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Drone, FloatType};
+use crate::{Drone, FloatType, Mission};
 
 impl Drone {
     /// Seconds since launch.
@@ -21,7 +21,23 @@ impl Drone {
         self.agl_m
     }
 
+    /// Whether the drone has come down, by landing or by falling.
     pub fn landed(&self) -> bool {
         self.landed
+    }
+
+    /// Whether the drone fell because its battery died in the air.
+    pub fn fell(&self) -> bool {
+        self.fell
+    }
+
+    /// Whether the drone flew or descended into the trees.
+    pub fn hit_trees(&self) -> bool {
+        self.hit_trees
+    }
+
+    /// The mission the drone flies.
+    pub fn mission(&self) -> Mission {
+        self.mission
     }
 }

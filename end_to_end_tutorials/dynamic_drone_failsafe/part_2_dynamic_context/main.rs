@@ -70,11 +70,10 @@ fn main() -> Result<(), Box<dyn Error>> {
                 below,
             });
         }
-        drone.step(command);
+        drone.step(command, &terrain);
     }
 
-    let (x, y) = drone.position();
-    utils_print::print_touchdown(drone.time_s(), &Touchdown::assess(&terrain, x, y));
+    utils_print::print_touchdown(drone.time_s(), &Touchdown::of(&terrain, &drone));
     let context = process
         .context()
         .as_ref()

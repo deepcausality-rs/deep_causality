@@ -6,9 +6,9 @@
 //! The fail-safe controller, as three stages of one causal process: read the telemetry, detect
 //! the faults with a collection of causaloids, and decide the fail-safe on the standard ladder.
 
-use crate::constants::*;
-use crate::model_config::Detector;
-use crate::model_types::{FailsafeProcess, FailsafeState, Faults};
+use super::constants::*;
+use super::model_config::Detector;
+use super::model_types::{FailsafeProcess, FailsafeState, Faults};
 use deep_causality::{
     AggregateLogic, CausalEffect, CausalityError, EffectLog, LogAddEntry, MonadicCausable,
     MonadicCausableCollection, PropagatingEffect,

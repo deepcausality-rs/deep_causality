@@ -65,3 +65,22 @@ rust_binary(
         normal_dev = True,
     ),
 )
+
+rust_binary(
+    name = "drone_failsafe_part_5",
+    # Part 5 mounts the controllers of parts 1, 3 and 4 from their own folders.
+    srcs = glob([
+        "part_5_verification/**/*.rs",
+        "part_1_dynamic_causality/**/*.rs",
+        "part_3_dynamic_action/**/*.rs",
+        "part_4_effect_ethos/**/*.rs",
+    ]),
+    crate_root = "part_5_verification/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":dynamic_drone_failsafe",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)

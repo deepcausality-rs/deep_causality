@@ -12,4 +12,5 @@ pub enum Surface {
     Rock,
     Pad,
     Ravine,
+    Trees,
 }

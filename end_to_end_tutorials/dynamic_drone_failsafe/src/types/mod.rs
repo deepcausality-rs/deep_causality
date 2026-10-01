@@ -5,7 +5,9 @@
 
 pub mod command;
 pub mod drone;
+pub mod fault_timeline;
 pub mod guidance;
+pub mod mission;
 pub mod outcome;
 pub mod patch_reading;
 pub mod quantity;

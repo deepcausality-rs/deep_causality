@@ -19,7 +19,7 @@ mod utils_print;
 
 use crate::model_context::{FailsafeProcess, FailsafeState, Frame, Maneuver};
 use deep_causality::{CausalEffect, EffectLog};
-use dynamic_drone_failsafe::{Command, Drone, FLIGHT_LIMIT_S, Guidance, Terrain, Touchdown};
+use dynamic_drone_failsafe::{Drone, FLIGHT_LIMIT_S, Terrain, Touchdown};
 use std::error::Error;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -67,16 +67,10 @@ fn main() -> Result<(), Box<dyn Error>> {
             utils_print::print_second(&drone, &now.0, below, state.failsafe, maneuver);
             last = Some(now);
         }
-        match maneuver {
-            Maneuver::HoldOver { x, y } => drone.guide(Guidance::HoldOver { x, y }),
-            Maneuver::LandOn { x, y } => drone.guide(Guidance::LandOn { x, y }),
-            Maneuver::ReturnHome => drone.step(Command::ReturnHome),
-            Maneuver::None | Maneuver::ChooseTarget => drone.step(state.failsafe),
-        }
+        model::steer(&mut drone, &terrain, maneuver, state.failsafe);
     }
 
-    let (x, y) = drone.position();
-    utils_print::print_touchdown(drone.time_s(), &Touchdown::assess(&terrain, x, y));
+    utils_print::print_touchdown(drone.time_s(), &Touchdown::of(&terrain, &drone));
     let state = process.state();
     utils_print::print_map(state, drone.patch_below());
     utils_print::print_closing(

@@ -12,7 +12,7 @@ use deep_causality_uncertain::{SampleSession, Uncertain, UncertainError};
 impl Drone {
     /// Local solar time, in hours since midnight of the launch day.
     pub fn local_hour(&self) -> FloatType {
-        FLIGHT_START_HOUR + lift_usize::<FloatType>(self.time_s) / SECONDS_PER_HOUR
+        self.mission.start_hour() + lift_usize::<FloatType>(self.time_s) / SECONDS_PER_HOUR
     }
 
     /// The grid index of the ground patch directly below the drone.
@@ -45,7 +45,7 @@ impl Drone {
                 let truth = truth(terrain, centre, hour);
                 let mut values = [ZERO; 5];
                 for (q, quantity) in Quantity::ALL.iter().enumerate() {
-                    let session = SampleSession::seeded(SCAN_SEED + q as u64);
+                    let session = SampleSession::seeded(self.mission.seed() + q as u64);
                     let draw = Uncertain::normal(truth[q], sigmas[q])
                         .sample_at(&session, noise_index(self.time_s, i, j))?;
                     values[q] = if *quantity == Quantity::Returns {
@@ -65,7 +65,9 @@ impl Drone {
 fn truth(terrain: &Terrain, centre: (FloatType, FloatType), hour: FloatType) -> [FloatType; 5] {
     let (x, y) = centre;
     let ground = terrain.ground_temperature_c(x, y, hour);
-    let person = terrain.person_within(x, y, PATCH_SIDE_M * HALF);
+    let canopy = terrain.canopy_m(x, y);
+    // A person under the canopy is hidden from the thermal camera and the LiDAR alike.
+    let person = canopy == ZERO && terrain.person_within(x, y, PATCH_SIDE_M * HALF);
     let returns = if terrain.surface(x, y) == crate::Surface::Water {
         WATER_RETURNS
     } else {
@@ -76,7 +78,7 @@ fn truth(terrain: &Terrain, centre: (FloatType, FloatType), hour: FloatType) -> 
         if person { PERSON_TEMPERATURE_C } else { ground },
         terrain.slope_deg(x, y),
         returns,
-        if person { PERSON_HEIGHT_M } else { ZERO },
+        if person { PERSON_HEIGHT_M } else { canopy },
     ]
 }
 

@@ -8,9 +8,9 @@
 //! the faults with a collection of causaloids, decide the fail-safe on the standard ladder, and
 //! turn it into a maneuver over the ground with the fail-safe machine.
 
-use crate::constants::*;
-use crate::model_config::{Detector, landing_state};
-use crate::model_context::{
+use super::constants::*;
+use super::model_config::{Detector, landing_state};
+use super::model_context::{
     FailsafeMachine, FailsafeProcess, FailsafeState, Faults, Frame, Fusion, Ground, GroundContext,
     GroundNode, LandingTarget, Maneuver, Situation,
 };
@@ -25,7 +25,7 @@ use deep_causality_context::{
 };
 use deep_causality_num::lower;
 use deep_causality_uncertain::{SampleSession, Uncertain, UncertainBool, UncertainError};
-use dynamic_drone_failsafe::{Command, FLIGHT_START_HOUR, FloatType, Quantity, Telemetry};
+use dynamic_drone_failsafe::{Command, Drone, FloatType, Guidance, Quantity, Telemetry, Terrain};
 
 /// Stage 1: takes this second's telemetry and sensor frame into the process and records the
 /// telemetry in the log.
@@ -430,6 +430,17 @@ fn state_name(id: usize) -> &'static str {
     }
 }
 
+/// Flies the drone for one second: a maneuver over the ground by its camera and LiDAR, or, when no
+/// machine state runs, the ladder's command.
+pub fn steer(drone: &mut Drone, terrain: &Terrain, maneuver: Maneuver, failsafe: Command) {
+    match maneuver {
+        Maneuver::HoldOver { x, y } => drone.guide(Guidance::HoldOver { x, y }, terrain),
+        Maneuver::LandOn { x, y } => drone.guide(Guidance::LandOn { x, y }, terrain),
+        Maneuver::ReturnHome => drone.step(Command::ReturnHome, terrain),
+        Maneuver::None | Maneuver::ChooseTarget => drone.step(failsafe, terrain),
+    }
+}
+
 /// Fuses one frame into the context and the fusion sums. A patch seen for the first time gets a
 /// space node at its centre and one data node per quantity, each linked to the space node.
 fn fuse(
@@ -437,7 +448,7 @@ fn fuse(
     state: &mut FailsafeState,
     frame: &Frame,
 ) -> Result<(), ContextIndexError> {
-    let clock = DiscreteTime::new(CLOCK_ID, TimeScale::Second, clock_s(&frame.telemetry));
+    let clock = DiscreteTime::new(CLOCK_ID, TimeScale::Second, frame.telemetry.clock_s());
     context.update_node(
         CLOCK_ID,
         Contextoid::new(CLOCK_ID, ContextoidType::Tempoid(clock)),
@@ -582,11 +593,6 @@ fn land_temperature_c(state: &FailsafeState, frame: &Frame) -> Option<FloatType>
         .collect();
     land.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
     land.get(land.len() / 2).copied()
-}
-
-/// The local time of day of a telemetry sample, in seconds since midnight.
-fn clock_s(telemetry: &Telemetry) -> u64 {
-    lower(FLIGHT_START_HOUR) as u64 * SECONDS_PER_HOUR + telemetry.time_s() as u64
 }
 
 /// The context identifier of a patch's node: slot 0 is its space node, slots 1 to 5 its data

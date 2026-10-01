@@ -6,8 +6,8 @@
 //! The fault detectors, one causaloid per fault; the ground context the controller starts with;
 //! and the fail-safe machine, one causal state per maneuver.
 
-use crate::constants::*;
-use crate::model_context::{
+use super::constants::*;
+use super::model_context::{
     FailsafeMachine, Ground, GroundContext, LandingTarget, Maneuver, Situation,
 };
 use deep_causality::{

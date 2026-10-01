@@ -4,33 +4,61 @@
  */
 
 use crate::constants::*;
-use crate::{Command, Drone, FloatType};
+use crate::{Command, Drone, FloatType, Terrain};
 use deep_causality_algebra::Real;
 
 impl Drone {
-    /// Flies one second under `command`. Without a satellite fix the drone cannot hold or steer
-    /// its ground position and drifts with the wind, whatever it was told.
-    pub fn step(&mut self, command: Command) {
+    /// Flies one second under `command` over `terrain`. Without a satellite fix the drone cannot
+    /// hold or steer its ground position and drifts with the wind, whatever it was told.
+    pub fn step(&mut self, command: Command, terrain: &Terrain) {
         if self.landed {
             return;
         }
         if self.has_gnss_fix() {
             match command {
-                Command::Continue => self.y += INSPECTION_SPEED_M_S,
-                Command::ReturnHome => self.fly_toward(LINE_ACROSS_M, MISSION_START_ALONG_M),
+                Command::Continue => {
+                    self.y += INSPECTION_SPEED_M_S;
+                    let higher = self.agl_m + CLIMB_M_S;
+                    self.agl_m = if higher < INSPECTION_AGL_M {
+                        higher
+                    } else {
+                        INSPECTION_AGL_M
+                    };
+                }
+                Command::ReturnHome => {
+                    self.fly_toward(self.mission.line_across_m(), MISSION_START_ALONG_M)
+                }
                 Command::Hold | Command::LandNow => {}
             }
         } else {
-            self.x += DOWNSLOPE_WIND_M_S;
+            let (wx, wy) = self.mission.wind_m_s();
+            self.x += wx;
+            self.y += wy;
         }
         if command == Command::LandNow {
             self.descend();
         }
-        self.time_s += 1;
+        self.tick(terrain);
     }
 
-    /// Descends for one second, faster once the battery has faulted, and lands on reaching the
-    /// ground.
+    /// Ends the second. A drone below the canopy over trees has flown into them; a drone still in
+    /// the air when its battery dies falls where it is.
+    pub(super) fn tick(&mut self, terrain: &Terrain) {
+        self.time_s += 1;
+        if self.landed {
+            return;
+        }
+        if self.agl_m < terrain.canopy_m(self.x, self.y) {
+            self.landed = true;
+            self.hit_trees = true;
+        } else if self.battery_dead() {
+            self.landed = true;
+            self.fell = true;
+        }
+    }
+
+    /// Descends for one second, faster once the battery has faulted. On reaching the ground the
+    /// mission's gust moves the drone before it lands.
     pub(super) fn descend(&mut self) {
         let rate = if self.battery_faulted() {
             EMERGENCY_DESCENT_M_S
@@ -39,6 +67,9 @@ impl Drone {
         };
         self.agl_m -= rate;
         if self.agl_m <= ZERO {
+            let (gx, gy) = self.mission.touchdown_gust_m();
+            self.x += gx;
+            self.y += gy;
             self.agl_m = ZERO;
             self.landed = true;
         }

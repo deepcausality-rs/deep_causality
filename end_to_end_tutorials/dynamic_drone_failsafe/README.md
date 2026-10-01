@@ -29,6 +29,7 @@ on, its thermal camera and LiDAR.
 | Creek | valley floor, below 12 m across | water |
 | Grass slope | 30 deg, 12-120 m across | a drone on skids tips over above 15 deg |
 | Terrace | flat, 24-36 m across, 420-470 m along | flat grass in the middle of the slope |
+| Trees | 64-104 m across, 520-600 m along, canopy 18 m | a drone below the canopy hits them; a person under them is hidden from both sensors |
 | Access road | flat, 120-135 m across | four of the crew work on it |
 | Rock slope | 25 deg, above the road | steep |
 | Tower pads | flat 12 m squares under the line, every 300 m | flat; two of the crew work on the second pad |
@@ -37,11 +38,15 @@ on, its thermal camera and LiDAR.
 
 The drone flies the line 60 m across the slope, 40 m above the ground, at 8 m/s. The flight starts at 22:00. The
 faults arrive on a fixed timeline: the fix degrades at 50 s and drops out at 55 s, the link drops at 65 s, and a cell
-fails at 85 s.
+fails at 85 s. The battery dies 25 s after a cell fails, or when the lowest cell runs down to 3.0 V.
 
 The ground has a temperature that depends on the surface and the time of day. At night the creek, at 11 °C, is warmer
 than the grass, at 4 °C; by day it is cooler. A person reads 30 °C and stands 1.7 m tall. The LiDAR finds a surface on
 95 % of its beams over land and on 10 % over water.
+
+A `Mission` sets the line, the launch hour, the wind, a gust at touchdown, the `FaultTimeline` and the sensor seed; a
+`Terrain` sets the line, the terrace, the trees and the crew. Parts 1 to 4 fly the defaults above. Part 5 draws both
+at random. A lost fix or link may come back, and a cell need not fail.
 
 ## Part 1: Dynamic Causality
 
@@ -257,110 +262,194 @@ software checks the machine's proposal against that rule: it lacks a check again
 cargo run -p dynamic_drone_failsafe --example drone_failsafe_part_4
 ```
 
-The fail-safe machine now flies only what the Effect Ethos approves. Each landing it proposes becomes a
-`ProposedAction` naming a patch, and the Ethos judges it against norms. The norms read the same context the
-controller fills, which now also holds the drone's own state: where it is, its height, its position error, its
-battery endurance and the land temperature.
+### The safety protocol
 
-| Norm | Forbids a proposal when | Priority |
-|------|-------------------------|----------|
-| person | a person is judged present, at 95 %, within the clearance of the patch | 4 |
-| not ruled out | a person is not ruled out, at 99 %, everywhere within the clearance; unseen ground rules out no one | 4 |
-| battery | the battery cannot get the drone to the patch and down with 5 s to spare | 3 |
-| drone | the drone would not survive the touchdown: steep ground, no surface, or unseen | 2 |
-| sacrifice | never; it permits ditching the drone and defeats the drone norm | 3 |
-| landing | never; it permits every proposal no other norm forbids | 1 |
+Drone pilots do not have to invent a response to a lost fix or a lost link. Aviation authorities and autopilot makers
+publish one: the FAA's guidance for Part 107 pilots, CASA's operations-manual requirements, the JARUS SORA risk
+method that EASA adopts, and the fail-safes of the ArduPilot autopilot. Part 4 encodes that protocol as norms of the
+Effect Ethos. Part 5 then tests how well the encoded protocol works across a thousand randomised scenarios.
 
-The clearance is 10 m, widened by the drone's position error, which grows 0.1 m for each second without a
-satellite fix, and by 2 m for a gust. Losing the drone is acceptable; harming a person is not. The sacrifice norm
-therefore overrides the drone norm, and nothing overrides the two person norms. The judge names a person at 95 %
-confidence; the Ethos needs 99 % that there is none.
+The published procedures assume a pilot and a briefed site; the drone here has neither. It has no planned landing
+zone and no launch site it may assume safe, only the ground it has sensed. The table gives each step, how Part 4
+carries it out, and its source.
 
-The machine proposes landings on the safe patches nearest the drone, then ditchings on the nearest water, until the
-Ethos approves one. A proposal forbidden only because a person is not yet ruled out may stand while the drone flies
-over the patch and looks; the machine gains a look state for that. Each second the Ethos reviews the plan in force
-again. When nothing is approved, the drone holds over the ground instead of descending where it is.
+| Step | Procedure | In part 4 | Source |
+|------|-----------|-----------|--------|
+| 0. Before flight | A navigation fault triggers altitude hold, not a landing; recovery time limits are set in advance. | A lost fix or link never triggers a descent by itself; the recovery window is 20 s. | ArduPilot GPS fail-safe (land or altitude hold); CASA AC 101-01 |
+| 1. Stabilise | Stop the descent and hold. | The drone holds over the ground by camera and LiDAR. | ArduPilot; attitude-mode practice |
+| 2. Assess | Battery and control healthy, positioning or link lost: a contingency, recoverable. Energy or control failing: an emergency. | The `assess` stage sets the urgency: routine, contingency, emergency. | JARUS SORA: contingency and emergency procedures |
+| 3. Wait within limits | Hold and wait for the fix or link to recover, for the time set in advance. | During the window the drone waits, chooses a site and flies over it to look. If the fix and link return, the mission resumes. | FAA lost-link guidance; CASA |
+| 4. Move to known ground | Return toward a planned landing zone, clear of people. | The drone has no planned zone. It moves to the best ground it has sensed and ruled clear of people, and explores unseen ground when there is none. | SORA flight geography; pilot practice |
+| 5. Land as soon as practical | Land at a suitable site, not the nearest spot; avoid water, trees and power lines. | Each round the Ethos judges every candidate, and the drone lands on the cheapest permitted one, sooner first among equal costs. | FAA: "land as soon as practical"; pilot practice |
+| 6. Emergency, only if unrecoverable | Terminate the flight in the ground risk buffer, free of people. People first, property second, the aircraft last. | Once the battery is critical, the drone may be ditched. If nothing is permitted, the person bans become costs, so the drone comes down where it endangers the fewest, farthest from people. | SORA ground risk buffer; Pilot Institute |
+
+### The norms
+
+The norms read the same context the controller fills. Besides the ground, it holds the drone's own state: where it
+is, its height, how accurately it lands, its endurance, its descent rate and the land temperature.
+
+| Norm | Applies | Forbids a proposal, or prices it, when | Priority |
+|------|---------|----------------------------------------|----------|
+| person | always | a person is more likely than not within the clearance | 4 |
+| not ruled out | always | a person is not ruled out, at 99 %, everywhere within the clearance; unseen ground and ground under canopy rule out no one | 4 |
+| path | always | the flight there at the drone's height would cross the canopy or unseen ground | 3 |
+| battery | always | the battery cannot get the drone there and down with 5 s to spare | 3 |
+| drone | always | the drone would not survive the touchdown: steep, no surface, trees or unseen | 2 |
+| edge | always | a gust could put the drone on seen steep ground beside the patch | 2 |
+| sacrifice | ditching | never; it prices the drone's loss at 10³ and defeats the drone, edge and battery norms | 4 |
+| emergency | emergency | never; it defeats "not ruled out" | 5 |
+| near the unknown | emergency, last resort | a person is not ruled out within the clearance: 10⁴ | 1 |
+| last resort | last resort | never; it defeats both person norms | 6 |
+| within 20, 10, 5 m | last resort | a person more likely than not lies that close: 10⁵, 10⁶, 10⁷ | 1 |
+
+The clearance is 10 m, plus 1 m for landing accuracy and 2 m for a gust. The harm costs follow the protocol's order:
+each step is ten times the one before. Losing the drone costs least; a person not ruled out near the patch costs
+more; a likely person within 20, 10 or 5 m costs most. Only the last-resort norm can lift the person bans, and it
+puts these prices in their place. So a tree always beats a person, and a farther person beats a nearer one.
+
+A failed cell shows as a one-second sag in the lowest cell's voltage. It leaves 20 s of flight, and the drone then
+descends at the emergency rate. Without one, the battery lasts as long as the lowest cell takes to drain to empty. The
+emergency begins with 60 s or less left; a low battery alone is a contingency.
 
 ```text
- time   across   along   agl  confirmed faults                       below      fail-safe  maneuver
-   0s      60m      0m   40m  none                                   too steep  continue   none
-  18s      60m    144m   40m  none                                   safe       continue   none
-  20s      60m    160m   40m  none                                   too steep  continue   none
-  50s      60m    400m   40m  fix degraded                           too steep  continue   none
-  57s      56m    440m   40m  fix lost                               too steep  hold       hold over the ground
-  69s      56m    440m   40m  fix lost, link lost                    too steep  land now   fly over the patch and look
-  74s      41m    439m   40m  fix lost, link lost                    too steep  land now   land on the approved patch
-  76s      35m    438m   40m  fix lost, link lost                    safe       land now   land on the approved patch
-  85s      34m    438m   26m  fix lost, link lost, battery critical  safe       land now   land on the approved patch
+ time   across   along   agl  confirmed faults                       below      urgency      maneuver
+   0s      60m      0m   40m  none                                   too steep  routine      fly the mission
+  18s      60m    144m   40m  none                                   safe       routine      fly the mission
+  20s      60m    160m   40m  none                                   too steep  routine      fly the mission
+  50s      60m    400m   40m  fix degraded                           too steep  routine      fly the mission
+  57s      56m    440m   40m  fix lost                               too steep  contingency  fly over the patch and look
+  58s      53m    440m   40m  fix lost                               too steep  contingency  fly over the patch and look
+  64s      36m    435m   40m  fix lost                               safe       contingency  fly over the patch and look
+  69s      30m    430m   36m  fix lost, link lost                    safe       contingency  fly over the patch and look
+  77s      30m    430m   25m  fix lost, link lost                    safe       contingency  land on the approved patch
+  85s      30m    430m   13m  fix lost, link lost, battery critical  safe       emergency    land on the approved patch
 
-Touchdown at 94 s, 438 m along the line, 26 m from the nearest person.
+Touchdown at 90 s, 430 m along the line, 34 m from the nearest person.
 It landed upright and can be recovered.
 
-The ground as the controller judged it, one 4 m patch per cell, downhill to the left:
 
-              ~ / / / . . . / / / / / / / / / / / /
-              ~ / / / . . . / / / / / . P / / / / /
-              ~ / / / . . . / / / / / P P / / / / /
-              ~ / / / . . . / / / / / . . / / / / /
-              ~ / / / . . . / / / / / / / / / / / /
-              ~ / / / . . X / / / / / / / / / / / /
-              ~ / / / . . . / / / / / / / / / / / /
-              ? / / / . . . / / / / / / / / / / / /
-              ~ / / / . . . / / / / / / / / / / / /
-              ~ / / / . . . / / / / / / / / / / / /
-              ~ / / / / / / / / / / / / / / / / / /
+              ~ ~ / / / . . . / / / / / P P / / / /
+              ~ ~ / / / . . . / / / / / . . / / / /
+              ~ ~ / / / . . . / / / / / / / / / / /
+              ~ ~ / / / . . . / / / / / / / / / / /
+              ~ ~ / / / . . . / / / / / / / / / / /
+              ~ ~ / / / . X . / / / / / / / / / / /
+              ~ ~ / / / . . . / / / / / / / / / / /
+              ~ ~ / / / . . . / / / / / / / / / / /
+              ~ ~ / / / / / / / / / / / / / / / / /
+              ~ ~ / / / / / / / / / / / / / / / / /
+              ~ ~ / / / / / / / / / / / / / / / / /
 
-  . safe   / too steep   ~ water   P person   ? unsure   (blank) not seen
+  . safe   / too steep   ~ water   T trees   P person   ? unsure   (blank) not seen
   X where the drone came down
 
-The Effect Ethos rejected proposals for these reasons:
-    3  a person is within the clearance
-    3  a person is not yet ruled out within the clearance
-    0  the battery cannot get the drone there and down
-    0  the drone would not survive the touchdown
-It approved the patch at 34 m across and 438 m along once the drone had seen the ground around it.
-The controller's own map put the nearest person 27 m from that patch.
-
-The same Effect Ethos on three other proposals, against the context at touchdown, with the battery nearly spent:
-  Land next to the crew, at 58 m across and 446 m along: rejected: a person is within 16 m of it; a person is not yet ruled out within 16 m of it; the battery cannot get the drone there and down with 5 s to spare.
-  Land on the steep grass, at 38 m across and 438 m along: rejected: the drone would not survive the touchdown.
-  Ditch the drone in the creek, at 10 m across and 438 m along: rejected: a person is not yet ruled out within 16 m of it; the battery cannot get the drone there and down with 5 s to spare.
-    The drone would be lost there, and the sacrifice norm overrides the drone norm. Nothing overrides the person norms.
-
-Faults, fail-safes and maneuvers from the controller's log:
-  t=50 s: Satellite fix degraded: 7 satellites, HDOP 3.5.
-  t=57 s: Satellite fix lost: none for 3 s.
-  t=57 s: Fail-safe set to hold: no satellite fix, but the link is up, so wait for the fix or the operator.
-  t=57 s: Fail-safe machine runs "hold over the ground", state 2, version 1.
-  t=69 s: Command link lost: 95 % of packets dropped for 5 s.
-  t=69 s: Fail-safe set to land now: with no satellite fix and no link, the drone can neither navigate nor receive orders.
-  t=69 s: Proposal 1: land on the patch 6 m away, at 58 m across and 446 m along. Rejected: a person is within 13 m of it; a person is not yet ruled out within 13 m of it.
-  t=69 s: Proposal 2: land on the patch 8 m away, at 62 m across and 446 m along. Rejected: a person is within 13 m of it; a person is not yet ruled out within 13 m of it.
-  t=69 s: Proposal 3: land on the patch 14 m away, at 58 m across and 454 m along. Rejected: a person is within 13 m of it; a person is not yet ruled out within 13 m of it.
-  t=69 s: Proposal 4: land on the patch 22 m away, at 34 m across and 438 m along. Not yet: a person is not yet ruled out within 13 m of it, so the drone flies over it to look.
-  t=69 s: Land and look states replaced by version 2.
-  t=69 s: Fail-safe machine runs "fly over the patch and look", state 5, version 2.
-  t=74 s: The Effect Ethos approves the patch at 34 m across and 438 m along: a person is now ruled out within 14 m of it, and no other norm forbids it.
-  t=74 s: Fail-safe machine runs "land on the approved patch", state 4, version 2.
-  t=85 s: Battery critical: one cell at 3.25 V.
+The last-resort norms on three ditchings, against the context at 85 s, when the emergency began.
+Under them a person near a patch no longer forbids it but prices it, so the cheapest endangers the fewest:
+  Next to the crew, at 58 m across and 446 m along: permitted at harm cost 11111000.
+  On the steep grass, at 22 m across and 430 m along: permitted at harm cost 1000.
+  In the creek, at 10 m across and 430 m along: permitted at harm cost 11000.
 ```
 
-At 69 s the machine proposes the pad corner it landed on in part 3. The Ethos rejects it and the two pad patches after
-it: the crew stands within the clearance. It lets the terrace stand pending a look, because the camera has not yet
-seen enough of the ground around it to rule a person out. The drone flies over the terrace, and at 74 s the Ethos
-approves it. When the cell fails at 85 s, the Ethos reviews the plan again; the drone, 26 m up, can still descend
-with time to spare. It lands upright, 26 m from the nearest person.
+When the fix drops at 57 s the drone does not descend. It treats the loss as a contingency and, while it waits, puts
+the candidates to the Effect Ethos. The Ethos rejects the pad beside the crew, and the drone flies over the terrace to
+look. The first two terrace patches it tries lie on the terrace's edge, where a gust could put it on the steep step.
+At 64 s the Ethos permits a patch in the terrace's middle. The drone descends to 25 m over it and waits out the window,
+which ends at 77 s with no recovery, so it lands as soon as practicable. When the cell fails at 85 s the drone is 13 m
+up over the permitted patch. The emergency round confirms that patch, and the drone lands upright at 90 s, 34 m from
+the nearest person.
 
-The rulings at the end show the priorities at work. Ditching the drone in the creek would lose it, and the sacrifice
-norm overrides the drone norm that forbids that; the Ethos still rejects the ditching, because it cannot rule out a
-person near the creek and the battery cannot get there.
+The closing rulings show the last resort's prices at the moment of the emergency. Ditching next to the crew costs
+over eleven million. Ditching in the creek costs eleven thousand, because unseen ground lies within its clearance and
+a person there is not ruled out. Ditching on empty steep grass costs a thousand.
+
+## Part 5: Verification
+
+```bash
+cargo run --release -p dynamic_drone_failsafe --example drone_failsafe_part_5
+cargo run --release -p dynamic_drone_failsafe --example drone_failsafe_part_5 -- scenario 810
+```
+
+A regulator asks whether a safety measure works across the conditions an operation can meet. Part
+5 flies the controllers of parts 1, 3 and 4, unchanged, through the same 1000 scenarios. Each controller's stages are
+wired the way that part's own `main` wires them. Each scenario draws, uniformly:
+
+- the launch time, any hour of the day or night;
+- a wind of 0 to 6 m/s from any direction, and a gust at touchdown of up to 2 m;
+- the line anywhere from 24 to 108 m across the slope;
+- the fix lost 20 to 90 s after launch, and the link lost from 20 s before to 30 s after;
+- in a third of scenarios the fix comes back 10 to 60 s later, and so, independently, does the link;
+- in half of them a cell fails up to 60 s after the later loss;
+- the terrace anywhere on the slope, and a stand of 18 m trees near where the fix drops out;
+- up to 8 people within 40 m across and 60 m along of that point, some perhaps under the trees.
+
+People stand around the point where the fix drops out, the worst place for a fail-safe that lands where it is. Every
+scenario is a function of its number alone, so any one can be flown again with each controller's log. Each controller
+flies each scenario in the same world, with the same sensor noise, so the three outcomes of a scenario answer what
+would have happened there under each controller. The campaign writes every scenario and its outcomes to
+`part_5_verification/campaign_1000.csv`; a campaign of another size writes its own file.
+
+```text
+How the flight ended                                 part 1         part 3         part 4
+                                                   textbook    context and       with the
+                                                  fail-safe         action   Effect Ethos
+resumed its mission                              0    0.0 %     0    0.0 %    37    3.7 %
+landed upright, clear of people                 51    5.1 %   691   69.1 %   599   59.9 %
+came down within 10 m of a person               35    3.5 %    41    4.1 %     1    0.1 %
+dropped into the creek                         234   23.4 %     3    0.3 %    72    7.2 %
+fell into the ravine                             8    0.8 %     0    0.0 %     0    0.0 %
+tipped over on steep ground                    631   63.1 %    79    7.9 %   272   27.2 %
+flew into the trees                             41    4.1 %     1    0.1 %    19    1.9 %
+fell when its battery died                       0    0.0 %   185   18.5 %     0    0.0 %
+
+Rates, each with its one-sided 95 % upper confidence bound:
+  all scenarios, 1000 scenarios:
+    Part 1, textbook fail-safe     near a person   3.5 % (at most  4.61 %)   drone lost  91.4 % (at most 92.82 %)
+    Part 3, context and action     near a person   4.1 % (at most  5.29 %)   drone lost  26.8 % (at most 29.20 %)
+    Part 4, with the Effect Ethos  near a person   0.1 % (at most  0.47 %)   drone lost  36.3 % (at most 38.88 %)
+  battery healthy, 495 scenarios:
+    Part 1, textbook fail-safe     near a person   3.0 % (at most  4.63 %)   drone lost  91.9 % (at most 93.84 %)
+    Part 3, context and action     near a person   3.8 % (at most  5.58 %)   drone lost   9.9 % (at most 12.39 %)
+    Part 4, with the Effect Ethos  near a person   0.0 % (at most  0.60 %)   drone lost  10.9 % (at most 13.49 %)
+  a cell fails, 505 scenarios:
+    Part 1, textbook fail-safe     near a person   4.0 % (at most  5.70 %)   drone lost  90.9 % (at most 92.91 %)
+    Part 3, context and action     near a person   4.4 % (at most  6.16 %)   drone lost  43.4 % (at most 47.11 %)
+    Part 4, with the Effect Ethos  near a person   0.2 % (at most  0.94 %)   drone lost  61.2 % (at most 64.80 %)
+```
+
+The upper bounds are one-sided Clopper-Pearson bounds at 95 %: zero events in 495 scenarios bounds the rate at 0.60 %.
+The campaign takes about 3.5 minutes on an M3 Max with 16 cores.
+
+With a healthy battery, the encoded protocol came down near no one in 495 scenarios, and lost about as many drones as
+part 3, 10.9 % against 9.9 %. Part 3 came down within 10 m of a person in 3.8 % of the same scenarios. When a cell
+fails, part 4 gives up more drones than part 3, 61.2 % against 43.4 %, and comes down near a person in 0.2 % of
+scenarios against 4.4 %. With 15 s of battery left, a landing beside ground where a person is not ruled out costs more
+than the drone, so the drone goes down on empty ground instead. That is the protocol's order: people first, the
+aircraft last.
+
+One scenario still ends near a person: 810. The cell fails 6 s after the controller confirms the lost link, while the
+drone is still at 40 m. Every patch the battery can still reach lies beside ground where a person cannot be ruled out,
+and the drone comes down 2 m from someone.
+
+### How the campaign changed part 4
+
+Part 4 reached this form through the campaign. Each run found a failure that the single night had not shown. The
+failure was traced in a flown-again scenario and fixed in the norms or the machine, and the campaign was run again.
+
+| Finding | Fix |
+|---------|-----|
+| With nothing permitted, the drone held until its battery died and fell where it hovered. All its near-person outcomes, 3.9 %, were such falls beside the crew: the protocol's veto was itself the unsafe control action. | In an emergency the drone may be ditched; a ditching may fly away from people even if the battery dies first. |
+| A patch the drone was still looking at was never cleared, because the clearance grew with the drone's absolute position drift. | The clearance grows with landing accuracy instead: the drone sees the patch and the people near it in the same frames. A look has a time limit. |
+| The controller read a battery running down normally as a failed cell, and gave up approved landings. | A failed cell shows as a sudden sag; otherwise the battery lasts until the lowest cell is empty. |
+| A patch judged flat at its centre lay on a terrace edge, and the gust tipped the drone. | The edge norm forbids a patch beside seen steep ground. |
+| With all seen ground set aside, the drone hovered with a healthy battery until the battery ran down. | The drone explores unseen ground. |
+| In an emergency the drone ditched beside people it had not ruled out. | A person not ruled out costs ten times the drone, and a person more likely than not forbids the patch. |
 
 ## Precision
 
-`FloatType` in `src/lib.rs` sets the working precision of the whole tutorial: `f32`. Every part produces the same
-output at `f64`. At `deep_causality_num::Float106`, part 1 is the same; in parts 2 to 4 one borderline patch on the
-edge of the first tower pad reads unsure for one second, at 19 s, and in part 4 the Effect Ethos approves the landing
-patch one second later, at 75 s. The drone lands at the same time and place.
+`FloatType` in `src/lib.rs` sets the working precision of the whole tutorial: `f32`. Parts 1 to 4 produce the same
+output at `f64`. At `deep_causality_num::Float106`, part 1 is the same. In parts 2 to 4 one borderline patch on the
+edge of the first tower pad reads unsure for one second, at 19 s. In part 4 the drone also lands on a neighbouring
+patch of the same terrace, at the same time, 30 m from the nearest person instead of 34 m. Part 5 was run at `f32`.
 
 `deep_causality_num::BFloat16` runs too, but resolves positions only to 2 m at 440 m along the line, which moves a
 member of the crew into the next patch.
@@ -369,18 +458,29 @@ member of the crew into the next patch.
 
 | Path | Contents |
 |------|----------|
-| [`src/types/terrain/`](src/types/terrain) | `Terrain`: elevation, slope, surface, ground temperature, the crew |
+| [`src/types/terrain/`](src/types/terrain) | `Terrain`: elevation, slope, surface, canopy, ground temperature, the crew |
 | [`src/types/drone/`](src/types/drone) | `Drone`: its mission, fault timeline, `Telemetry`, sensor frames, and response to a `Command` or `Guidance` |
-| [`src/types/guidance.rs`](src/types/guidance.rs) | `Guidance`: hover over or land on a ground point, flown by the camera and LiDAR |
+| [`src/types/guidance.rs`](src/types/guidance.rs) | `Guidance`: hover over, descend over or land on a ground point, flown by the camera and LiDAR |
+| [`src/types/mission/`](src/types/mission) | `Mission`: the line, the launch hour, the wind and gust, the faults and the sensor seed |
+| [`src/types/fault_timeline/`](src/types/fault_timeline) | `FaultTimeline`: when the fix and the link drop and come back, and when a cell fails |
 | [`src/types/patch_reading/`](src/types/patch_reading) | `PatchReading`: one frame's reading of one ground patch, by `Quantity` |
 | [`src/types/touchdown/`](src/types/touchdown) | `Touchdown`: the ground truth of where the drone came down, and its `Outcome` |
 | [`src/constants.rs`](src/constants.rs) | The world's dimensions and temperatures, the drone, its sensors, the fault timeline |
 | [`part_1_dynamic_causality/`](part_1_dynamic_causality) | The fail-safe controller with dynamic causality alone |
 | [`part_2_dynamic_context/`](part_2_dynamic_context) | The controller with the ground as its context |
 | [`part_3_dynamic_action/`](part_3_dynamic_action) | The controller with a fail-safe machine that acts on the context |
-| [`part_4_effect_ethos/`](part_4_effect_ethos) | The controller whose fail-safe machine flies only what the Effect Ethos approves |
+| [`part_4_effect_ethos/`](part_4_effect_ethos) | The controller under the safety protocol, encoded as norms of the Effect Ethos |
+| [`part_5_verification/`](part_5_verification) | The campaign: parts 1, 3 and 4 over 1000 randomised scenarios, and its record |
 
 ## References
 
 - ABC News, [Hundreds of drones plunge into Melbourne's Yarra River](https://www.abc.net.au/news/2023-07-16/hundreds-of-drones-plunge-into-yarra-river/102607576), 16 July 2023.
 - N. G. Leveson and J. P. Thomas, [STPA Handbook](https://www.flighttestsafety.org/images/STPA_Handbook.pdf), MIT, 2018.
+- NTSB, [Preliminary report DCA25LA065](https://data.ntsb.gov/carol-repgen/api/Aviation/ReportMain/GenerateNewestReport/199458/pdf), Orlando drone show, January 2025.
+- FAA, [Advisory Circular 107-2A, Small Unmanned Aircraft Systems](https://www.faa.gov/documentLibrary/media/Advisory_Circular/AC_107-2A.pdf).
+- Flightpath107, [Part 107 emergency procedures](https://www.flightpath107.com/curriculum-home/section-three/emergency-procedures/): "If GPS signal cannot be reacquired, land as soon as practical."
+- CASA, [AC 101-01, Remotely piloted aircraft systems: licensing and operations](https://www.casa.gov.au/remotely-piloted-aircraft-systems-licensing-and-operations).
+- JARUS, [SORA v2.5, main body](http://jarus-rpas.org/wp-content/uploads/2024/06/SORA-v2.5-Main-Body-Release-JAR_doc_25.pdf) and [Annex A](http://jarus-rpas.org/wp-content/uploads/2024/06/SORA-v2.5-Annex-A-Release.JAR_doc_26-pdf.pdf): flight geography, contingency volume, ground risk buffer, contingency and emergency procedures.
+- ArduPilot, [GPS failsafe and glitch protection](https://github.com/ArduPilot/ardupilot_wiki/blob/master/copter/source/docs/gps-failsafe-glitch-protection.rst) and [Dead Reckoning Failsafe](https://ardupilot.org/copter/docs/deadreckoning-failsafe.html).
+- Pilot Institute, [Drone in-flight emergencies](https://pilotinstitute.com/drone-in-flight-emergency/): "protect people first, property second, and the aircraft last."
+- C. J. Clopper and E. S. Pearson, "The use of confidence or fiducial limits illustrated in the case of the binomial", Biometrika 26 (4), 1934.

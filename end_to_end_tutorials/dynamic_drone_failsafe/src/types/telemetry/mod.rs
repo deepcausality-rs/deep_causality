@@ -11,6 +11,7 @@ use crate::FloatType;
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Telemetry {
     time_s: usize,
+    clock_s: u64,
     satellites: FloatType,
     hdop: FloatType,
     link_loss_pct: FloatType,
@@ -21,6 +22,7 @@ pub struct Telemetry {
 impl Telemetry {
     pub fn new(
         time_s: usize,
+        clock_s: u64,
         satellites: FloatType,
         hdop: FloatType,
         link_loss_pct: FloatType,
@@ -29,6 +31,7 @@ impl Telemetry {
     ) -> Self {
         Self {
             time_s,
+            clock_s,
             satellites,
             hdop,
             link_loss_pct,

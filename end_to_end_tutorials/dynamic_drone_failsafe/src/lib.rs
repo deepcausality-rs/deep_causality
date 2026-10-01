@@ -9,12 +9,16 @@
 //! [`Telemetry`] and acts on it only through a [`Command`].
 
 mod constants;
+mod paths;
 mod types;
 
-pub use constants::{FLIGHT_LIMIT_S, FLIGHT_START_HOUR};
+pub use constants::FLIGHT_LIMIT_S;
+pub use paths::manifest_dir;
 pub use types::command::Command;
 pub use types::drone::Drone;
+pub use types::fault_timeline::FaultTimeline;
 pub use types::guidance::Guidance;
+pub use types::mission::Mission;
 pub use types::outcome::Outcome;
 pub use types::patch_reading::PatchReading;
 pub use types::quantity::Quantity;

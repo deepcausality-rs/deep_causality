@@ -11,6 +11,11 @@ impl Telemetry {
         self.time_s
     }
 
+    /// Local time of day from the drone's clock, in seconds since midnight of the launch day.
+    pub fn clock_s(&self) -> u64 {
+        self.clock_s
+    }
+
     /// Satellites the receiver tracks.
     pub fn satellites(&self) -> FloatType {
         self.satellites

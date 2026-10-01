@@ -21,28 +21,20 @@ pub const ROAD_FROM_M: FloatType = const_scalar_from_int!(FloatType, 120);
 pub const ROAD_TO_M: FloatType = const_scalar_from_int!(FloatType, 135);
 /// The rock slope above the road rises at this angle, in degrees.
 pub const ROCK_SLOPE_DEG: FloatType = const_scalar_from_int!(FloatType, 25);
-/// Flat concrete pads under the line's towers: half their side, in m, and their centres.
+/// Flat concrete pads under the line's towers: half their side, in m, and their centres' distance
+/// along the valley, in m. Each pad is centred under the line.
 pub const PAD_HALF_SIDE_M: FloatType = const_scalar_from_int!(FloatType, 6);
-pub const PAD_CENTRES_M: [(FloatType, FloatType); 3] = [
-    (
-        const_scalar_from_int!(FloatType, 60),
-        const_scalar_from_int!(FloatType, 150),
-    ),
-    (
-        const_scalar_from_int!(FloatType, 60),
-        const_scalar_from_int!(FloatType, 450),
-    ),
-    (
-        const_scalar_from_int!(FloatType, 60),
-        const_scalar_from_int!(FloatType, 750),
-    ),
+pub const PAD_ALONG_M: [FloatType; 3] = [
+    const_scalar_from_int!(FloatType, 150),
+    const_scalar_from_int!(FloatType, 450),
+    const_scalar_from_int!(FloatType, 750),
 ];
 /// A ravine cut across the rock slope between these distances along the valley, in m, and its depth.
 pub const RAVINE_FROM_M: FloatType = const_scalar_from_int!(FloatType, 560);
 pub const RAVINE_TO_M: FloatType = const_scalar_from_int!(FloatType, 580);
 pub const RAVINE_DEPTH_M: FloatType = const_scalar_from_int!(FloatType, 15);
-/// Where each person stands, in m: a crew parked on the road for the night, and two workers at the
-/// base of the second tower.
+/// Where each person stands on the default ground, in m: a crew parked on the road for the night,
+/// and two workers at the base of the second tower.
 pub const CREW_M: [(FloatType, FloatType); 6] = [
     (
         const_scalar_from_int!(FloatType, 124),
@@ -69,7 +61,18 @@ pub const CREW_M: [(FloatType, FloatType); 6] = [
         const_scalar_from_int!(FloatType, 452),
     ),
 ];
-/// A natural flat terrace in the grass slope above the creek: across and along, in m.
+/// The default ground's stand of trees on the slope, across and along, in m, and the height of
+/// their canopy, in m.
+pub const WOODLAND_ACROSS_M: (FloatType, FloatType) = (
+    const_scalar_from_int!(FloatType, 64),
+    const_scalar_from_int!(FloatType, 104),
+);
+pub const WOODLAND_ALONG_M: (FloatType, FloatType) = (
+    const_scalar_from_int!(FloatType, 520),
+    const_scalar_from_int!(FloatType, 600),
+);
+pub const CANOPY_HEIGHT_M: FloatType = const_scalar_from_int!(FloatType, 18);
+/// The default ground's flat terrace in the grass slope above the creek: across and along, in m.
 pub const TERRACE_ACROSS_M: (FloatType, FloatType) = (
     const_scalar_from_int!(FloatType, 24),
     const_scalar_from_int!(FloatType, 36),
@@ -99,6 +102,8 @@ pub const DAY_GRASS_C: FloatType = const_scalar_from_int!(FloatType, 24);
 pub const DAY_ROAD_C: FloatType = const_scalar_from_int!(FloatType, 38);
 pub const DAY_ROCK_C: FloatType = const_scalar_from_int!(FloatType, 33);
 pub const DAY_PAD_C: FloatType = const_scalar_from_int!(FloatType, 30);
+pub const NIGHT_CANOPY_C: FloatType = const_scalar_from_int!(FloatType, 6);
+pub const DAY_CANOPY_C: FloatType = const_scalar_from_int!(FloatType, 22);
 /// The apparent temperature of a clothed person, in °C, and a standing person's height, in m.
 pub const PERSON_TEMPERATURE_C: FloatType = const_scalar_from_int!(FloatType, 30);
 pub const PERSON_HEIGHT_M: FloatType = const_scalar_from_float!(FloatType, 1.7);
@@ -150,6 +155,8 @@ pub const MISSION_START_ALONG_M: FloatType = const_scalar_from_int!(FloatType, 0
 /// Inspection height above the ground and ground speed along the line.
 pub const INSPECTION_AGL_M: FloatType = const_scalar_from_int!(FloatType, 40);
 pub const INSPECTION_SPEED_M_S: FloatType = const_scalar_from_int!(FloatType, 8);
+/// Climb rate back to inspection height when the mission resumes, in m/s.
+pub const CLIMB_M_S: FloatType = const_scalar_from_int!(FloatType, 2);
 /// Ground speed when the drone flies to a point it was guided to, in m/s.
 pub const APPROACH_SPEED_M_S: FloatType = const_scalar_from_int!(FloatType, 3);
 /// Descent rates: an ordinary landing and an emergency landing on a failing battery, in m/s.
@@ -176,8 +183,9 @@ pub const GNSS_DEGRADED_AT_S: usize = 50;
 pub const GNSS_LOST_AT_S: usize = 55;
 /// The command link drops behind the ridge.
 pub const LINK_LOST_AT_S: usize = 65;
-/// A cell fails and the pack voltage sags.
+/// A cell fails and the pack voltage sags; the battery dies this long after.
 pub const BATTERY_FAULT_AT_S: usize = 85;
+pub const BATTERY_LIFE_AFTER_FAULT_S: usize = 25;
 /// The flight ends this long after launch if the drone is still airborne.
 pub const FLIGHT_LIMIT_S: usize = 600;
 
@@ -195,6 +203,8 @@ pub const LINK_LOSS_LOST_PCT: FloatType = const_scalar_from_int!(FloatType, 95);
 pub const CELL_V_LAUNCH: FloatType = const_scalar_from_float!(FloatType, 4.05);
 pub const CELL_V_DROP_PER_S: FloatType = const_scalar_from_float!(FloatType, 0.002);
 pub const CELL_V_FAULT: FloatType = const_scalar_from_float!(FloatType, 3.25);
+/// The lowest cell is empty at this voltage, in V; the battery dies.
+pub const CELL_V_EMPTY: FloatType = const_scalar_from_int!(FloatType, 3);
 
 // =============================================================================
 // Units and small numbers

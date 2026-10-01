@@ -14,7 +14,7 @@ impl Terrain {
             return cross_section_m(cx);
         }
         if self.on_terrace(x, y) {
-            return cross_section_m(TERRACE_ACROSS_M.0);
+            return cross_section_m(self.terrace_across_m.0);
         }
         let base = cross_section_m(x);
         if self.in_ravine(x, y) {
