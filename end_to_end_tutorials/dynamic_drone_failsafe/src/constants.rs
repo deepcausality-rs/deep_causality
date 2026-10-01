@@ -25,15 +25,15 @@ pub const ROCK_SLOPE_DEG: FloatType = const_scalar_from_int!(FloatType, 25);
 pub const PAD_HALF_SIDE_M: FloatType = const_scalar_from_int!(FloatType, 6);
 pub const PAD_CENTRES_M: [(FloatType, FloatType); 3] = [
     (
-        const_scalar_from_int!(FloatType, 100),
+        const_scalar_from_int!(FloatType, 60),
         const_scalar_from_int!(FloatType, 150),
     ),
     (
-        const_scalar_from_int!(FloatType, 100),
+        const_scalar_from_int!(FloatType, 60),
         const_scalar_from_int!(FloatType, 450),
     ),
     (
-        const_scalar_from_int!(FloatType, 100),
+        const_scalar_from_int!(FloatType, 60),
         const_scalar_from_int!(FloatType, 750),
     ),
 ];
@@ -41,8 +41,9 @@ pub const PAD_CENTRES_M: [(FloatType, FloatType); 3] = [
 pub const RAVINE_FROM_M: FloatType = const_scalar_from_int!(FloatType, 560);
 pub const RAVINE_TO_M: FloatType = const_scalar_from_int!(FloatType, 580);
 pub const RAVINE_DEPTH_M: FloatType = const_scalar_from_int!(FloatType, 15);
-/// A maintenance crew parked on the road for the night: where each person stands, in m.
-pub const CREW_M: [(FloatType, FloatType); 4] = [
+/// Where each person stands, in m: a crew parked on the road for the night, and two workers at the
+/// base of the second tower.
+pub const CREW_M: [(FloatType, FloatType); 6] = [
     (
         const_scalar_from_int!(FloatType, 124),
         const_scalar_from_int!(FloatType, 302),
@@ -59,7 +60,84 @@ pub const CREW_M: [(FloatType, FloatType); 4] = [
         const_scalar_from_int!(FloatType, 126),
         const_scalar_from_int!(FloatType, 324),
     ),
+    (
+        const_scalar_from_int!(FloatType, 58),
+        const_scalar_from_int!(FloatType, 449),
+    ),
+    (
+        const_scalar_from_int!(FloatType, 62),
+        const_scalar_from_int!(FloatType, 452),
+    ),
 ];
+/// A natural flat terrace in the grass slope above the creek: across and along, in m.
+pub const TERRACE_ACROSS_M: (FloatType, FloatType) = (
+    const_scalar_from_int!(FloatType, 24),
+    const_scalar_from_int!(FloatType, 36),
+);
+pub const TERRACE_ALONG_M: (FloatType, FloatType) = (
+    const_scalar_from_int!(FloatType, 420),
+    const_scalar_from_int!(FloatType, 470),
+);
+
+// =============================================================================
+// Ground temperature, read by a thermal camera
+// =============================================================================
+
+/// Local solar time at launch, in hours. Night runs from dusk to dawn.
+pub const FLIGHT_START_HOUR: FloatType = const_scalar_from_int!(FloatType, 22);
+pub const DUSK_HOUR: FloatType = const_scalar_from_int!(FloatType, 19);
+pub const DAWN_HOUR: FloatType = const_scalar_from_int!(FloatType, 6);
+/// Surface temperatures by night and by day, in °C. At night land cools faster than water, so the
+/// creek is the warmest ground; by day it is the coolest.
+pub const NIGHT_WATER_C: FloatType = const_scalar_from_int!(FloatType, 11);
+pub const NIGHT_GRASS_C: FloatType = const_scalar_from_int!(FloatType, 4);
+pub const NIGHT_ROAD_C: FloatType = const_scalar_from_int!(FloatType, 9);
+pub const NIGHT_ROCK_C: FloatType = const_scalar_from_int!(FloatType, 7);
+pub const NIGHT_PAD_C: FloatType = const_scalar_from_int!(FloatType, 8);
+pub const DAY_WATER_C: FloatType = const_scalar_from_int!(FloatType, 15);
+pub const DAY_GRASS_C: FloatType = const_scalar_from_int!(FloatType, 24);
+pub const DAY_ROAD_C: FloatType = const_scalar_from_int!(FloatType, 38);
+pub const DAY_ROCK_C: FloatType = const_scalar_from_int!(FloatType, 33);
+pub const DAY_PAD_C: FloatType = const_scalar_from_int!(FloatType, 30);
+/// The apparent temperature of a clothed person, in °C, and a standing person's height, in m.
+pub const PERSON_TEMPERATURE_C: FloatType = const_scalar_from_int!(FloatType, 30);
+pub const PERSON_HEIGHT_M: FloatType = const_scalar_from_float!(FloatType, 1.7);
+
+// =============================================================================
+// The downward thermal camera and LiDAR
+// =============================================================================
+
+/// Side of a ground patch the sensors resolve, in m.
+pub const PATCH_SIDE_M: FloatType = const_scalar_from_int!(FloatType, 4);
+/// Tangent of half the 60 deg field of view: the footprint's half-width per metre of height.
+pub const HALF_FOV_TAN: FloatType = const_scalar_from_float!(FloatType, 0.577);
+/// The footprint never shrinks below this half-width, in m.
+pub const MIN_FOOTPRINT_HALF_M: FloatType = const_scalar_from_int!(FloatType, 2);
+/// Share of LiDAR pulses that return from land and from water, which reflects them away.
+pub const LAND_RETURNS: FloatType = const_scalar_from_float!(FloatType, 0.95);
+pub const WATER_RETURNS: FloatType = const_scalar_from_float!(FloatType, 0.1);
+/// One standard deviation of each reading: a constant part and a part growing with height.
+pub const TEMPERATURE_SIGMA_C: (FloatType, FloatType) = (
+    const_scalar_from_float!(FloatType, 0.8),
+    const_scalar_from_float!(FloatType, 0.03),
+);
+pub const SLOPE_SIGMA_DEG: (FloatType, FloatType) = (
+    const_scalar_from_float!(FloatType, 1.0),
+    const_scalar_from_float!(FloatType, 0.08),
+);
+pub const RETURNS_SIGMA: (FloatType, FloatType) = (
+    const_scalar_from_float!(FloatType, 0.05),
+    const_scalar_from_int!(FloatType, 0),
+);
+pub const PROTRUSION_SIGMA_M: (FloatType, FloatType) = (
+    const_scalar_from_float!(FloatType, 0.15),
+    const_scalar_from_float!(FloatType, 0.01),
+);
+/// Seed of the sensor noise; each quantity offsets it, so their noise is independent.
+pub const SCAN_SEED: u64 = 7070;
+/// Seconds per hour.
+pub const SECONDS_PER_HOUR: FloatType = const_scalar_from_int!(FloatType, 3600);
+pub const HOURS_PER_DAY: FloatType = const_scalar_from_int!(FloatType, 24);
 
 // =============================================================================
 // The drone and its inspection mission
@@ -67,7 +145,7 @@ pub const CREW_M: [(FloatType, FloatType); 4] = [
 
 /// The inspection line runs along the valley this far across the slope, in m; the drone starts at
 /// its beginning and flies along it.
-pub const LINE_ACROSS_M: FloatType = const_scalar_from_int!(FloatType, 100);
+pub const LINE_ACROSS_M: FloatType = const_scalar_from_int!(FloatType, 60);
 pub const MISSION_START_ALONG_M: FloatType = const_scalar_from_int!(FloatType, 0);
 /// Inspection height above the ground and ground speed along the line.
 pub const INSPECTION_AGL_M: FloatType = const_scalar_from_int!(FloatType, 40);
@@ -121,5 +199,6 @@ pub const CELL_V_FAULT: FloatType = const_scalar_from_float!(FloatType, 3.25);
 // =============================================================================
 
 pub const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
+pub const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
 pub const HALF: FloatType = const_scalar_from_float!(FloatType, 0.5);
 pub const DEGREES_PER_HALF_TURN: FloatType = const_scalar_from_int!(FloatType, 180);

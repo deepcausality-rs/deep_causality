@@ -22,13 +22,15 @@ the drone tumbles downhill and is destroyed.
 
 ## The world (shared, built)
 
-A valley cross-section: creek, 30 deg grass slope, flat access road with a maintenance crew, 25 deg rock slope, flat
-tower pads, a ravine; a 2 m/s downslope night wind. The drone flies the line 40 m above the ground. Faults on a fixed
-timeline: fix degraded at 50 s, lost at 55 s, link lost at 65 s, cell failure at 85 s. `Touchdown::assess` judges where
-the drone came down: safe, ditched, into the ravine, among people, or tipped and rolled.
+A valley cross-section: creek, 30 deg grass slope with a flat terrace, flat access road, 25 deg rock slope, flat tower
+pads every 300 m under the line, a ravine; a 2 m/s downslope night wind. Six crew: four on the road, two on the second
+pad. The drone flies the line 60 m across the slope, 40 m above the ground, from 22:00. Faults on a fixed timeline: fix
+degraded at 50 s, lost at 55 s, link lost at 65 s, cell failure at 85 s. `Touchdown::assess` judges where the drone
+came down: safe, ditched, into the ravine, among people, or tipped and rolled.
 
-Parts 2 to 4 extend the world with what the sensors need: a ground temperature per surface that depends on the time of
-day, the crew's body heat, and LiDAR returns (height, roughness, no return over water).
+The sensors (built): `Drone::scan` reads every 4 m patch in the footprint, which shrinks with altitude: mean
+temperature, hot spot, slope, LiDAR return fraction, protrusion. Ground temperature depends on surface and time of day
+(water warmer than land at night, cooler by day); people read 30 °C and 1.7 m. Noise grows with altitude and is seeded.
 
 ## Part 1: Dynamic causality (built)
 
@@ -36,10 +38,10 @@ day, the crew's body heat, and LiDAR returns (height, roughness, no return over 
   wrong?) and one by one (what?). The process state confirms a lost fix after 3 s and a lost link after 5 s, and
   latches the fail-safe ladder: continue, hold, return home, land now.
 - **Shows:** every fault found in order, the textbook fail-safe at each step.
-- **Ends on:** the drone drifts 72 m downslope while holding and descending, touches down on 30 deg grass, tips over
-  and tumbles into the creek; a tower pad's centre was 10 m away when the fix dropped. *It lacks context.*
+- **Ends on:** the drone drifts 72 m downslope while holding and descending and drops into the creek. *It lacks
+  context.*
 
-## Part 2: + Dynamic context
+## Part 2: + Dynamic context (built)
 
 - **Adds:** `deep_causality_context`. Under the drone, a grid of ground patches; each patch is a context node holding
   the fused thermal and LiDAR reading as an uncertain value (`UncertainData`). A time node carries the time of day.
@@ -51,7 +53,11 @@ day, the crew's body heat, and LiDAR returns (height, roughness, no return over 
   - The time of day changes what a thermal reading means. Water is cooler than land by day and warmer at night, and
     the two cross over near dawn and dusk. A "cold means water" rule lands in the river at night.
   - Successive frames sharpen each patch's classification as the drone descends and looks again.
-- **Shows:** the controller knows what lies below it: grass too steep, the creek, the pad, the crew.
+- **Shows:** the controller knows what lies below it: grass too steep, the creek, the pad, the crew. When it chooses
+  to land, at 69 s, it is over the safe terrace; the wind carries it 44 m into the creek during the descent. Read with
+  the daytime rule, none of the 58 water patches reads as water.
+- **Built as:** each patch is a space node linked to five `UncertainData` nodes (inverse-variance fusion over frames);
+  a `DiscreteTime` clock node. Judgements are uncertain comparisons decided by `probability_exceeds` at 95 %.
 - **Ends on:** knowing the ground does not move the drone. *It lacks action.*
 
 ## Part 3: + Dynamic action

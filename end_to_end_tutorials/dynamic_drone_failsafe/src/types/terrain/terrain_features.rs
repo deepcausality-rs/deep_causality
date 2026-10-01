@@ -40,6 +40,19 @@ impl Terrain {
         })
     }
 
+    /// Whether a point lies on the flat terrace above the creek.
+    pub(super) fn on_terrace(&self, x: FloatType, y: FloatType) -> bool {
+        (TERRACE_ACROSS_M.0..=TERRACE_ACROSS_M.1).contains(&x)
+            && (TERRACE_ALONG_M.0..=TERRACE_ALONG_M.1).contains(&y)
+    }
+
+    /// Whether a person stands inside the square of half-side `half_m` centred on a point.
+    pub fn person_within(&self, x: FloatType, y: FloatType, half_m: FloatType) -> bool {
+        CREW_M
+            .iter()
+            .any(|&(px, py)| Real::abs(px - x) <= half_m && Real::abs(py - y) <= half_m)
+    }
+
     pub(super) fn in_ravine(&self, x: FloatType, y: FloatType) -> bool {
         x >= ROAD_TO_M && (RAVINE_FROM_M..=RAVINE_TO_M).contains(&y)
     }

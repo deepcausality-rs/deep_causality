@@ -13,6 +13,9 @@ impl Terrain {
         if let Some((cx, _)) = self.pad_at(x, y) {
             return cross_section_m(cx);
         }
+        if self.on_terrace(x, y) {
+            return cross_section_m(TERRACE_ACROSS_M.0);
+        }
         let base = cross_section_m(x);
         if self.in_ravine(x, y) {
             base - RAVINE_DEPTH_M

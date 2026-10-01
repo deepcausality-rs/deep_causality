@@ -1,0 +1,186 @@
+---
+import { Code } from 'astro:components';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import TopicList from '../../components/overview/TopicList.astro';
+import { DOCS_URL, GITHUB_URL } from '../../consts';
+
+const themes = { light: 'github-light', dark: 'github-dark' } as const;
+
+const balloon = `// model_config.rs: a regime detector compares the two mechanisms in the air measured now.
+fn radiator_beats_fan(r: Reading) -> PropagatingEffect<bool> {
+    let fan = fan_heat_w(air_density(r.pressure_kpa, r.air_c), COOL_ON_C, r.air_c);
+    PropagatingEffect::pure(radiator_heat_w(COOL_ON_C, r.air_c) > REGIME_HYSTERESIS * fan)
+}
+
+// model_config.rs: a regime change replaces the two cooling states while the machine runs.
+controller.update_single_state((
+    state(COOL_ON, cell_needs_cooling),
+    CausalAction::new(on, on_descr, version),
+))?;
+controller.update_single_state((
+    state(COOL_OFF, cell_cool_enough),
+    CausalAction::new(off, off_descr, version),
+))?;
+
+// main.rs, without the printing: once a minute, reason about the regime,
+// then let every state act on the same reading.
+while !flight.landed() {
+    let reading = flight.reading();
+    let next = model_config::next_regime(regime, &reading, &detectors)?;
+    if next != regime {
+        cooling_version += 1;
+        model_config::install_cooling(&controller, next, cooling_version)?;
+        regime = next;
+    }
+    let frame = PropagatingEffect::pure(reading);
+    for id in STATES {
+        controller.eval_single_state(id, &frame)?;
+    }
+    flight.step();
+}`;
+
+const balloonOut = `time         phase      alt km   air °C    sun cell °C  pack  cooling   heater charge (cell / budget)
+day 1 10:00  morning       0.0     32.0    884    38.0   80%  fan       off    half (full / half)
+day 1 10:03  morning       0.9     26.1    917    38.4   80%  fan       off    full (full / full)
+day 1 10:35  morning      10.5    -36.2   1183    29.8   90%  off       off    full (full / full)
+day 1 10:59  morning      17.7    -56.5  >> cooling states now use the radiator (version 2)
+day 1 11:05  noon         19.5    -56.5   1300    35.1   99%  radiator  off    full (full / full)
+day 1 11:33  noon         20.0    -56.5   1331    30.0  100%  off       off    full (full / full)
+   ... the radiator cycles between 30 °C and 35 °C ...
+day 1 13:20  afternoon    20.0    -56.5   1259    29.9  100%  off       off    full (full / full)
+day 1 13:30  afternoon    20.0    -46.5   1857    31.7  100%  off       off    half (full / half)
+day 1 13:40  afternoon    20.0    -46.5   1822    35.3  100%  radiator  off    half (full / half)
+day 1 14:11  afternoon    20.0    -46.5   1690    34.4  100%  radiator  off    full (full / full)
+day 1 15:16  afternoon    20.0    -46.5   1319    29.9  100%  off       off    full (full / full)
+day 1 15:41  afternoon    20.0    -46.5   1146    35.0  100%  radiator  off    full (full / full)
+day 1 16:04  afternoon    20.0    -56.5    650    29.8  100%  off       off    full (full / full)
+day 1 17:35  evening      20.0    -56.5    146    24.9  100%  off       off    none
+day 1 19:58  night        20.0    -56.5      0     4.9   95%  off       on     none
+   ... the heater cycles between 5 °C and 15 °C through the night ...
+day 2 06:26  morning      20.0    -56.5    152    14.4   30%  off       on     full (full / full)
+day 2 06:32  morning      20.0    -56.5    186    15.1   31%  off       off    full (full / full)
+day 2 07:04  morning      16.0    -56.5  >> cooling states now use the fan (version 3)
+
+Landed. Cell stayed between 4.9 °C and 38.4 °C; pack charge never fell below 30 % and ended at 50 %.`;
+
+const balloonExample = `${GITHUB_URL}/tree/main/examples/csm_examples/csm_weather_balloon`;
+const csmConcept = `${DOCS_URL}/concepts/csm/`;
+---
+<BaseLayout
+  title="Dynamic action — DeepCausality"
+  description="The Causal State Machine turns a causal result into an action: it pairs each state with an action and fires the action when the state's causaloid returns an active result. You can add, replace or remove states and their rules while the machine runs."
+>
+  <SiteHeader />
+  <article class="static-page">
+    <header>
+      <p class="eyebrow">Overview · Dynamic action</p>
+      <h1>From a causal result to an action</h1>
+      <p class="lede">
+        A causal model returns a result; the Causal State Machine turns it into an action. It pairs
+        each state with an action, evaluates the state's causaloid on incoming data, and fires the
+        action when the result is active. You can change states and their rules while the machine
+        runs, so the mapping from result to action changes too.
+      </p>
+    </header>
+
+    <div class="prose">
+      <h2>States and actions</h2>
+      <p>
+        The machine, <code>CSM</code> in <code>deep_causality</code>, maps state identifiers to
+        state–action pairs and takes the input, output and context types of its causaloids as type
+        parameters.
+      </p>
+      <ul>
+        <li><strong>A causal state</strong> holds an identifier, a version, stored input data, a causaloid that decides whether the state is active, and an optional uncertainty parameter.</li>
+        <li><strong>A causal action</strong> holds a function of type <code>fn() -&gt; Result&lt;(), ActionError&gt;</code>, a description and a version. The function takes no arguments.</li>
+      </ul>
+      <p>
+        <code>eval_single_state(id, data)</code> evaluates one state's causaloid on the data you pass and fires the action if the result is active; <code>eval_all_states</code> does the same for every state on the data each state stores.
+      </p>
+
+      <h2>A weather balloon that keeps its battery in one envelope</h2>
+      <p>
+        A long-duration weather balloon powers its sensors from a lithium-ion pack that solar panels
+        recharge. It climbs at 5 m/s to 20 km, floats through an afternoon and a night, and descends
+        at dawn. The envelope never changes: charge only between 0 °C and 45 °C, cool the pack above
+        35 °C, heat it below 5 °C. The means of staying inside it change with the air and the sun.
+      </p>
+      <p>
+        Once a minute the controller reads pressure, air temperature, cell temperature and sunlight;
+        it never reads the altitude or the clock. A fan's heat transfer falls with air density and a
+        radiator's does not, so two causaloids compare the heat each removes in the air measured now.
+        Ten states pair rules with actions: cooling, heating, and two charge limits. The cell window
+        limits charging by the temperature the cell has reached; the heat budget limits it by
+        whether the cooling could hold 45 °C in the present air and sun. The charger obeys the
+        stricter limit. The excerpt below comes from the full program.
+      </p>
+      <Code code={balloon} lang="rust" themes={themes} defaultColor={false} wrap />
+      <Code code={balloonOut} lang="text" themes={themes} defaultColor={false} wrap />
+      <p>
+        In −56.5 °C air the sunlit pack still reaches 35 °C, so by day the radiator does the work.
+        It takes over from the fan at 17.7 km on the way up and hands back at 16.0 km on the way
+        down; the crossover depends on air temperature as well as density, so no fixed altitude marks
+        it. Each swap replaces the two cooling states while the machine runs and raises their
+        version. Their rules stay, because the envelope stays; only their actions change.
+      </p>
+      <p>
+        At 13:30 the balloon drifts into air 10 K warmer than the standard atmosphere, above a cloud
+        deck that reflects extra sunlight onto the gondola. The heat budget halves the charge rate
+        with the cell at 31.7 °C; the cell window alone would wait for 40 °C. Overnight the heater
+        holds the cell between 5 °C and 15 °C, and the pack never drops below 30 %. The <a href={balloonExample}>weather balloon example</a> holds the full program and lists its model assumptions.
+      </p>
+
+      <h2>When a result counts as active</h2>
+      <p>
+        The causaloid's output type decides what "active" means. Any type that implements <code>CsmEvaluable</code> can serve as the output; the crate implements it for three.
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Output</th><th>Active when</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>bool</code></td><td>the value is <code>true</code></td></tr>
+            <tr><td><code>UncertainBool</code></td><td>without a parameter, the probability of <code>true</code> exceeds 0.5 at 95 % confidence; with one, it exceeds the parameter's threshold at the parameter's confidence</td></tr>
+            <tr><td><code>UncertainF64</code></td><td>the value exceeds the parameter's threshold with probability above 0.5, at the parameter's confidence; without a parameter, evaluation returns an error</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        The uncertain tests draw samples sequentially until they decide, up to the parameter's
+        sample budget. The default parameter sets a threshold of 0.8, a confidence of 0.95, an
+        epsilon of 0.05 and a budget of 1,000 samples. A result without a value, such as a <code>RelayTo</code> command, counts as inactive; a causaloid error becomes the evaluation's
+        error, and the action does not fire.
+      </p>
+
+      <h2>Changing the machine while it runs</h2>
+      <p>
+        Every method takes the machine by shared reference; a read-write lock guards the map. <code>add_single_state</code> inserts a state and refuses an identifier already present, <code>update_single_state</code> replaces the state and action under an existing identifier, <code>remove_single_state</code> deletes one, and <code>update_all_states</code> replaces the whole map. A running monitor can therefore tighten a limit, add a sensor or retire one
+        without rebuilding the machine.
+      </p>
+
+      <h2>Where the Effect Ethos fits</h2>
+      <p>
+        The machine fires an active state's action without consulting any norms. To check an action
+        first, describe it as a <code>ProposedAction</code>, evaluate it with the <a href="/overview/effect-ethos/">Effect Ethos</a>, and call the machine only on a permitting verdict. <code>ProposedAction</code> and <code>ActionParameterValue</code> live in <code>deep_causality</code>, where the Ethos crate reads them. The <a href="/examples/effect-ethos/">Effect Ethos example</a> runs a machine and an Ethos side by side.
+      </p>
+
+      <h2>What the machine leaves to you</h2>
+      <p>
+        An action, a plain function with no arguments, receives neither the result nor the data that
+        triggered it; an action that needs a value, such as the temperature that crossed the limit,
+        must read it from a static. The balloon's actions write atomic registers that the simulated
+        hardware reads. The machine stores its states in a hash map, so <code>eval_all_states</code> visits them in no fixed order and stops at the first error, leaving
+        the remaining states unevaluated.
+      </p>
+      <p>
+        The <a href="/examples/sensor-monitoring-csm/">sensor monitoring example</a> wires a machine
+        to smoke, fire and explosion sensors, and the <a href={csmConcept}>CSM concept page</a> covers
+        the API.
+      </p>
+
+      <TopicList current="dynamic-action" />
+    </div>
+  </article>
+</BaseLayout>

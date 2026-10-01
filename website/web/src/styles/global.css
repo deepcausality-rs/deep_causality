@@ -212,4 +212,42 @@ main { display: block; }
 .static-page .prose li { color: var(--fg-1); }
 .static-page .prose p { max-width: var(--measure); margin: 0 0 var(--space-4) 0; }
 .static-page .prose ul { padding-left: var(--space-5); margin: 0 0 var(--space-4) 0; }
+.static-page .prose ol { padding-left: var(--space-5); margin: 0 0 var(--space-4) 0; }
 .static-page .prose li { margin: var(--space-2) 0; }
+.static-page .prose h3 { margin: var(--space-6) 0 var(--space-3) 0; }
+.static-page .prose pre {
+  border: 1px solid var(--line-1);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  overflow: auto;
+  margin: var(--space-4) 0;
+  font-size: var(--t-mono-block);
+  line-height: var(--lh-body);
+}
+.static-page .prose pre code { background: transparent; padding: 0; }
+.static-page .prose blockquote {
+  margin: var(--space-4) 0;
+  padding: var(--space-3) var(--space-5);
+  border-left: 3px solid var(--accent);
+  background: var(--bg-1);
+}
+.static-page .prose blockquote p { margin: 0; }
+.static-page .prose .table-wrap { overflow-x: auto; margin: var(--space-4) 0; }
+.static-page .prose table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--t-body-sm);
+  background: var(--bg-1);
+  border: 1px solid var(--line-1);
+}
+.static-page .prose thead { background: var(--bg-2); }
+.static-page .prose th,
+.static-page .prose td {
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  border-bottom: 1px solid var(--line-1);
+  color: var(--fg-1);
+  vertical-align: top;
+}
+.static-page .prose th { color: var(--fg-0); font-weight: 600; }
+.static-page .prose tbody tr:last-child td { border-bottom: 0; }

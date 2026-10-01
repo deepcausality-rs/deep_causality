@@ -1,0 +1,84 @@
+---
+/**
+ * The Overview topics as a framed hairline list: HUD panel, reticle corners and an eyebrow
+ * (DESIGN.md §12.14). `current` marks the page being read; it stays in the list, unlinked, so the
+ * reader sees where they are.
+ */
+import { topics } from './topics';
+
+interface Props {
+  /** Slug of the topic page that renders the list; omitted on the Overview index. */
+  current?: string;
+  /** Eyebrow label above the list. */
+  label?: string;
+}
+
+const { current, label = 'Overview topics' } = Astro.props;
+---
+<nav class="topic-list reticle-host" aria-label={label}>
+  <span class="reticle reticle-tl" aria-hidden="true"></span>
+  <span class="reticle reticle-tr" aria-hidden="true"></span>
+  <span class="reticle reticle-bl" aria-hidden="true"></span>
+  <span class="reticle reticle-br" aria-hidden="true"></span>
+  <p class="eyebrow">{label}</p>
+  <ol>
+    {topics.map((t, i) => (
+      <li>
+        {t.slug === current ? (
+          <span class="row" aria-current="page">
+            <span class="ix" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+            <span class="body">
+              <strong>{t.title}</strong>
+              <span class="summary">{t.summary}</span>
+            </span>
+          </span>
+        ) : (
+          <a class="row" href={`/overview/${t.slug}/`}>
+            <span class="ix" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+            <span class="body">
+              <strong>{t.title} <span aria-hidden="true">→</span></strong>
+              <span class="summary">{t.summary}</span>
+            </span>
+          </a>
+        )}
+      </li>
+    ))}
+  </ol>
+</nav>
+
+<style>
+  .topic-list {
+    margin: var(--space-6) 0;
+    padding: var(--space-5);
+    background-image: linear-gradient(180deg,
+      color-mix(in srgb, var(--bg-1) 70%, transparent) 0%,
+      var(--bg-1) 100%);
+    border: 1px solid var(--line-1);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-1);
+  }
+  ol { list-style: none; margin: var(--space-4) 0 0 0; padding: 0; }
+  li { margin: 0; }
+  li + li { border-top: 1px solid var(--line-1); }
+  .row {
+    display: grid;
+    grid-template-columns: 2.5ch 1fr;
+    gap: var(--space-3);
+    padding: var(--space-3) 0;
+    border-bottom: none;
+    color: var(--fg-1);
+  }
+  a.row { transition: padding-left var(--dur-med) var(--ease-out); }
+  a.row:hover { padding-left: var(--space-3); }
+  a.row:hover strong { color: var(--accent); }
+  .ix { font-family: var(--font-mono); font-size: var(--t-body-sm); color: var(--fg-2); padding-top: 0.15em; }
+  .body { display: flex; flex-direction: column; gap: var(--space-1); }
+  strong { color: var(--fg-0); font-weight: 600; transition: color var(--dur-fast) var(--ease-out); }
+  .summary { font-size: var(--t-body-sm); color: var(--fg-1); }
+  [aria-current='page'] strong::after {
+    content: ' · you are here';
+    font-weight: 400;
+    color: var(--fg-1);
+    font-size: var(--t-body-sm);
+  }
+</style>

@@ -4,6 +4,7 @@
  */
 
 mod drone_getters;
+mod drone_scan;
 mod drone_step;
 mod drone_telemetry;
 

@@ -12,11 +12,17 @@ path = "src/lib.rs"
 [dependencies]
 deep_causality = { workspace = true }
 deep_causality_algebra = { workspace = true }
+deep_causality_context = { workspace = true }
 deep_causality_num = { workspace = true, features = ["default"] }
+deep_causality_uncertain = { workspace = true, features = ["default"] }
 
 [[example]]
 name = "drone_failsafe_part_1"
 path = "part_1_dynamic_causality/main.rs"
+
+[[example]]
+name = "drone_failsafe_part_2"
+path = "part_2_dynamic_context/main.rs"
 
 [lints]
 workspace = true

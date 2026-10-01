@@ -26,3 +26,16 @@ rust_binary(
         normal_dev = True,
     ),
 )
+
+rust_binary(
+    name = "drone_failsafe_part_2",
+    srcs = glob(["part_2_dynamic_context/**/*.rs"]),
+    crate_root = "part_2_dynamic_context/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":dynamic_drone_failsafe",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)

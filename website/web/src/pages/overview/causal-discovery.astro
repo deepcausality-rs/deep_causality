@@ -1,0 +1,129 @@
+---
+import { Code } from 'astro:components';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import TopicList from '../../components/overview/TopicList.astro';
+import { GITHUB_URL } from '../../consts';
+
+const themes = { light: 'github-light', dark: 'github-dark' } as const;
+
+const brcd = `let config = CdlConfigBuilder::build_brcd_config()
+    .with_normal_path(&normal_path)
+    .with_anomalous_path(&anomalous_path)
+    .with_brcd_config(BrcdConfig::<FloatType>::continuous(0))
+    .with_cpdag_path(&cpdag_path)
+    .build()
+    .expect("Sock Shop carts_cpu_1 data files exist");
+
+CdlBuilder::build_brcd(&config)
+    .brcd_load_input()
+    .brcd_discover()
+    .brcd_analyze()
+    .finalize()
+    .print_results();`;
+
+const brcdOut = `--- BRCD Root-Cause Ranking ---
+1. [42]  posterior=1.0
+2. [36]  posterior=2.0116577187047554e-98
+3. [26]  posterior=1.8171175141970022e-113
+4. [37]  posterior=3.8434829040437115e-254
+5. [17]  posterior=3.763405292408208e-296
+6. [0]  posterior=3.452356877966384e-304`;
+
+const example = `${GITHUB_URL}/blob/main/examples/causal_discovery_examples/cdl/brcd_discovery/main.rs`;
+const verification = `${GITHUB_URL}/tree/main/deep_causality_algorithms/verification/brcd`;
+const algorithmsReadme = `${GITHUB_URL}/blob/main/deep_causality_algorithms/README.md`;
+---
+<BaseLayout
+  title="Causal discovery — DeepCausality"
+  description="SURD splits the information sources carry about a target into redundant, unique and synergistic parts. BRCD ranks the likely root causes of a failure. The Causal Discovery Language runs BRCD as a typed pipeline."
+>
+  <SiteHeader />
+  <article class="static-page">
+    <header>
+      <p class="eyebrow">Overview · Causal discovery</p>
+      <h1>Finding causes in data</h1>
+      <p class="lede">
+        Two algorithms answer two questions. SURD asks how information about a target splits among
+        its sources. BRCD asks which variable's mechanism changed when a system failed and ranks every
+        candidate by probability.
+      </p>
+    </header>
+
+    <div class="prose">
+      <h2>Two questions, two algorithms</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th></th><th>SURD</th><th>BRCD</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Question</td><td>How does information about a target split across its sources?</td><td>Which variable's mechanism changed?</td></tr>
+            <tr><td>Input</td><td>A joint probability table of the target and its sources</td><td>Data from a normal and an anomalous period, and a causal graph</td></tr>
+            <tr><td>Output</td><td>Redundant, unique and synergistic information per group of sources, plus the share no source explains</td><td>Every candidate root cause, ranked by posterior probability</td></tr>
+            <tr><td>Source</td><td>Martínez-Sánchez and Lozano-Durán, <a href="https://arxiv.org/abs/2505.10878">arXiv:2505.10878</a></td><td>Lee, Zhou and Kocaoglu, <a href="https://icml.cc/virtual/2026/poster/65359">ICML 2026</a></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Both live in <code>deep_causality_algorithms</code>, next to the MRMR feature selector, which
+        picks the columns most relevant to a target and least redundant with each other.
+      </p>
+
+      <h3>SURD: how information splits</h3>
+      <p>
+        Two sensors can each tell you something about a target, tell you the same thing, or tell you
+        something only when read together; SURD measures each case. It splits the mutual information
+        between a target and its sources into <em>redundant</em> information that several sources
+        share, <em>unique</em> information that only one source carries, and <em>synergistic</em> information that appears only in combination. The information leak measures what no source
+        explains. SURD also breaks each part down by variable state, separating contributions that
+        add information about the target from those that take it away.
+      </p>
+
+      <h3>BRCD: which mechanism changed</h3>
+      <p>
+        When a service fails, dozens of metrics move at once. BRCD compares data from before and
+        after the failure against a causal graph of the system: a supplied one, such as a service
+        call map, or one the BOSS structure learner learns from the normal data. For every candidate
+        root cause it scores how well the hypothesis "this variable's mechanism changed" explains the
+        anomalous data, averaging over the causal graphs the data cannot tell apart, and ranks the
+        candidates by posterior probability.
+      </p>
+      <p>
+        The port reproduces the reference Python implementation's full ranking, position for
+        position, on four real microservice incidents from the RCAEval benchmark, with 44 or 45
+        variables each. It corrects two defects of the reference: an inverted score sign in its BOSS
+        learner, and an underflow that turned its rankings into ties. It counts the causal graphs
+        consistent with the data in polynomial time, using a port of the Clique-Picking algorithm of
+        Wienöbst, Bannach and Liśkiewicz. The <a href={verification}>verification harnesses</a> run each of these checks.
+      </p>
+
+      <h2>The Causal Discovery Language</h2>
+      <p>
+        <code>deep_causality_discovery</code> runs BRCD from CSV files to a report as a typed
+        pipeline. Each stage exists only on the state the stage before it produces, so the compiler
+        rejects a pipeline written out of order. The compiler also checks required settings, and <code>build()</code> checks that every data file exists. The pipeline can cache a learned causal
+        graph under a hash of the data and the seed, so a second run on the same data reuses it.
+      </p>
+      <Code code={brcd} lang="rust" themes={themes} defaultColor={false} wrap />
+      <Code code={brcdOut} lang="text" themes={themes} defaultColor={false} wrap />
+      <p>
+        The run above uses the Sock Shop incident <code>carts_cpu_1</code>: 44 service metrics and
+        the supplied service-call graph. BRCD ranks shipping latency (column 42) first, then carts
+        latency, user memory and catalogue latency, matching the reference implementation's ranking.
+        The fault injected into that incident, carts CPU (column 0), ranks sixth in both. The <a href={example}>complete example</a> loads the data and runs the pipeline; the <a href="/examples/service-root-cause/">service root-cause example</a> walks through it.
+      </p>
+
+      <h2>From discovery to a causal model</h2>
+      <p>
+        Discovery and the causal engine live in separate crates, and no code converts a discovery
+        result into a causal model. A SURD result guides a model's design by hand: strong unique
+        information suggests a direct link from source to target, and strong synergy suggests a
+        collection whose members must all hold. A BRCD ranking gives an operator a diagnosis: where
+        to look first. The <a href={algorithmsReadme}>algorithms README</a> covers both algorithms in depth.
+      </p>
+
+      <TopicList current="causal-discovery" />
+    </div>
+  </article>
+</BaseLayout>

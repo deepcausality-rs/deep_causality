@@ -1,0 +1,161 @@
+---
+import { Code } from 'astro:components';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import TopicList from '../../components/overview/TopicList.astro';
+import { GITHUB_URL } from '../../consts';
+
+const themes = { light: 'github-light', dark: 'github-dark' } as const;
+
+const pump = `use deep_causality_context::*;
+use deep_causality_core::*;
+
+type FloatType = f64;
+
+const INLET_ID: u64 = 1;
+
+/// A cooling loop whose context holds one sensor node: the coolant inlet temperature.
+fn cooling_loop(inlet_c: FloatType) -> BaseContext {
+    let mut ctx = Context::with_capacity(1, "cooling loop", 8);
+    let inlet = Contextoid::new(
+      INLET_ID, 
+      ContextoidType::Datoid(Data::new(INLET_ID, inlet_c))
+      );
+    ctx.add_node(inlet).expect("a fresh context accepts the node");
+    ctx
+}
+
+/// Reads the inlet temperature from the context and sets the pump speed:
+/// 1,200 rpm at 20 °C, plus 150 rpm per degree above it.
+fn pump_speed(
+    _: CausalEffect<()>,
+    state: (),
+    ctx: Option<BaseContext>,
+) -> PropagatingProcess<FloatType, (), BaseContext> {
+    let inlet_c = ctx
+        .as_ref()
+        .and_then(|c| 
+            c.get_node_index_by_id(INLET_ID)
+            .and_then(|i| c.get_node(i)))
+        .and_then(|node| match node.vertex_type() {
+            ContextoidType::Datoid(d) => Some(d.get_data()),
+            _ => None,
+        });
+    let outcome = match inlet_c {
+        Some(t) => Ok(CausalEffect::value(
+            1200.0 + 150.0 * (t - 20.0).max(0.0))
+            ),
+        None => Err(CausalityError::ValueNotAvailable()),
+    };
+    PropagatingProcess::new(outcome, state, ctx, EffectLog::new())
+}
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let observed = PropagatingProcess::with_state(PropagatingEffect::pure(()), (), Some(cooling_loop(24.0)))
+        .bind(pump_speed);
+
+    // The same step, evaluated in a world where the inlet runs at 31 °C.
+    let what_if = PropagatingProcess::with_state(PropagatingEffect::pure(()), (), Some(cooling_loop(24.0)))
+        .alternate_context(cooling_loop(31.0))
+        .bind(pump_speed);
+
+    println!("observed: {:?} rpm", observed.value());
+    println!("what if:  {:?} rpm", what_if.value());
+    println!("{}", what_if.logs());
+
+    // Persist the context and read it back.
+    let snapshot = cooling_loop(24.0).snapshot()?;
+    let restored = BaseContext::restore(snapshot)?;
+    println!("restored nodes: {}", restored.number_of_nodes());
+    Ok(())
+}`;
+
+const pumpOut = `observed: Some(1800.0) rpm
+what if:  Some(2850.0) rpm
+EffectLog (1 entries):
+[[1790756118809380] !!ContextAlternation!!: context replaced
+restored nodes: 1`;
+
+const contextReadme = `${GITHUB_URL}/blob/main/deep_causality_context/README.md`;
+const storeReadme = `${GITHUB_URL}/blob/main/deep_causality_context_store/README.md`;
+---
+<BaseLayout
+  title="Dynamic context — DeepCausality"
+  description="A causal step reads its context, a graph of typed data, time, space and spacetime nodes, while it runs. The engine never reads it; swapping it evaluates the same model in another world. A zero-dependency contract persists it."
+>
+  <SiteHeader />
+  <article class="static-page">
+    <header>
+      <p class="eyebrow">Overview · Dynamic context</p>
+      <h1>The world a causal step reads</h1>
+      <p class="lede">
+        A context holds what a model reasons about: sensor readings, clocks, positions and frames of
+        reference. The causal engine passes it to your function without reading it, so time and space
+        reach a cause only as data you control and can change while the model runs.
+      </p>
+    </header>
+
+    <div class="prose">
+      <h2>What a context is</h2>
+      <p>
+        A context forms a directed graph of typed, identified nodes, and each edge carries a relation
+        kind: data, temporal, spatial or spacetime. It lives in its own crate, <code>deep_causality_context</code>, which <code>deep_causality</code> depends on; a model built on <code>deep_causality_core</code> alone never links it.
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Node kind</th><th>Types</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Data</td><td>any value in <code>Data&lt;T&gt;</code>, plus uncertain numbers and uncertain booleans</td></tr>
+            <tr><td>Time</td><td>Euclidean and Lorentzian time in any time scale; discrete and entropic clocks that count ticks</td></tr>
+            <tr><td>Space</td><td>Euclidean, Earth-centred (ECEF), geodetic with a vertical datum, and local north-east-down (NED)</td></tr>
+            <tr><td>Spacetime</td><td>Euclidean, Lorentzian, and tangent spacetime with position, velocity and a metric tensor</td></tr>
+            <tr><td>Root</td><td>an anchor node with an identifier</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Every coordinate-carrying node takes its scalar as a type parameter, so the same context builds at <code>BFloat16</code>, <code>f64</code> or <code>Float106</code>. Each spacetime node carries
+        its own metric, so one context can hold Newtonian and relativistic nodes side by side. <code>BaseContext</code> fixes all four node kinds to Euclidean types at <code>f64</code>.
+      </p>
+
+      <h2>How a step reads it</h2>
+      <p>
+        A pump controller reads the coolant inlet temperature from the context and sets its speed.
+        The second run replaces the context mid-chain and evaluates the same step in a world with a
+        hotter inlet. The last lines store the context and read it back.
+      </p>
+      <Code code={pump} lang="rust" themes={themes} defaultColor={false} wrap />
+      <Code code={pumpOut} lang="text" themes={themes} defaultColor={false} wrap />
+      <p>
+        At 24 °C the pump runs at 1,800 rpm; in the 31 °C world, at 2,850 rpm. Both runs execute the
+        same step; only the world it reads differs, and the log records the swap. DeepCausality models
+        a counterfactual world this way: the same causal model, evaluated against a different context.
+      </p>
+
+      <h2>A context that stays current</h2>
+      <p>
+        A context lives in memory and changes while a model runs: a function can update a node
+        between evaluations, and a copied branch can explore another world without touching the
+        original. The companion crate <code>deep_causality_context_store</code> defines what a store
+        must do to keep a context outside memory. It has no dependencies, so a backend links that
+        crate alone.
+      </p>
+      <ul>
+        <li><strong>Records.</strong> A context projects onto plain records: nodes, edges, and the containers that link them. <code>snapshot</code> writes a context into records and <code>restore</code> rebuilds it.</li>
+        <li><strong>One transaction.</strong> A batch of writes commits all at once or not at all, so a refused write leaves nothing behind.</li>
+        <li><strong>Branches.</strong> <code>store_branch</code> stores a modified copy as a new container, linking every unchanged node the store already holds and creating only what changed.</li>
+        <li><strong>Streams.</strong> A streaming backend hands out a context with the events that change it; <code>Context::apply</code> applies each event, keeping a running model current between evaluations.</li>
+        <li><strong>Large values.</strong> A substrate keeps bulky payloads outside the graph; the store holds references to them.</li>
+      </ul>
+      <p>
+        One trait implementation makes any type a storable payload. Records hold every scalar as <code>f64</code>, so a <code>Float106</code> coordinate restores at double precision, while a <code>Float106</code> data payload stores both halves and restores every bit. The crate ships an
+        in-memory backend, and tests run the full cycle of hydrate, branch, store and stream against
+        it. The <a href={contextReadme}>context README</a> and the <a href={storeReadme}>context store README</a> cover the details.
+      </p>
+
+      <TopicList current="dynamic-context" />
+    </div>
+  </article>
+</BaseLayout>

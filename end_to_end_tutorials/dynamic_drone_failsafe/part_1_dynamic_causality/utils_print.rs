@@ -40,43 +40,45 @@ pub fn print_second(drone: &Drone, t: &Telemetry, faults: &Faults, command: Comm
 pub fn print_touchdown(time_s: usize, td: &Touchdown) {
     println!();
     println!(
-        "Touchdown at {time_s} s, {:.0} m across and {:.0} m along: {} at {:.0} deg, nearest person {:.0} m away.",
-        lower(td.position().0),
+        "Touchdown at {time_s} s, {:.0} m along the line, {:.0} m from the nearest person.",
         lower(td.position().1),
-        surface(td.surface()),
-        lower(td.slope_deg()),
         lower(td.nearest_person_m()),
     );
     let verdict = match td.outcome() {
-        Outcome::Safe => "The drone landed upright on ground it can stay on.".to_string(),
-        Outcome::Ditched => "The drone came down in the water and is lost.".to_string(),
-        Outcome::IntoRavine => "The drone came down into the ravine and is lost.".to_string(),
-        Outcome::AmongPeople => "The drone came down among people.".to_string(),
+        Outcome::Safe => "It landed upright and can be recovered.".to_string(),
+        Outcome::Ditched => "It dropped into the creek and was lost.".to_string(),
+        Outcome::IntoRavine => "It fell into the ravine and was lost.".to_string(),
+        Outcome::AmongPeople => "It came down among the crew.".to_string(),
         Outcome::TippedAndRolled {
             distance_m,
             came_to_rest_on,
         } => format!(
-            "The ground was too steep: the drone tipped over and tumbled {:.0} m downhill, coming to rest on {}. It is lost.",
+            "It touched down on {:.0} deg {}, tipped over, tumbled {:.0} m {} and was lost.",
+            lower(td.slope_deg()),
+            surface(td.surface()),
             lower(distance_m),
-            surface(came_to_rest_on)
+            resting_place(came_to_rest_on),
         ),
     };
     println!("{verdict}");
     println!();
     println!(
-        "The controller found every fault in order and took the textbook fail-safe at each step. It never knew"
+        "The controller found every fault in order and took the textbook fail-safe at each step."
     );
     println!(
-        "what was below it: the slope, the creek, the flat tower pad, the crew on the road. That is context, which part 2 adds."
+        "It never knew what lay below: the steep grass, the creek, the flat tower pads, the crew."
     );
+    println!("Part 2 adds that knowledge as context.");
 }
 
+/// Prints the faults and fail-safes from the controller's log. The log also holds each second's
+/// telemetry and each causaloid's trace; those are left out here.
 pub fn print_log(log: &EffectLog) {
     println!();
-    println!("Decisions in the controller's log:");
+    println!("Faults and fail-safes from the controller's log:");
     for message in log
         .messages()
-        .filter(|m| m.contains(" faults: ") || m.contains(" fail-safe: "))
+        .filter(|m| m.starts_with("t=") && !m.contains(": Telemetry:"))
     {
         println!("  {message}");
     }
@@ -84,8 +86,8 @@ pub fn print_log(log: &EffectLog) {
 
 fn describe(f: &Faults) -> String {
     let names: Vec<&str> = [
-        (f.gnss_lost, "GNSS lost"),
-        (f.gnss_degraded && !f.gnss_lost, "GNSS degraded"),
+        (f.gnss_lost, "fix lost"),
+        (f.gnss_degraded && !f.gnss_lost, "fix degraded"),
         (f.link_lost, "link lost"),
         (f.battery_critical, "battery critical"),
     ]
@@ -106,6 +108,17 @@ fn name(command: Command) -> &'static str {
         Command::Hold => "hold",
         Command::ReturnHome => "return home",
         Command::LandNow => "land now",
+    }
+}
+
+fn resting_place(s: Surface) -> &'static str {
+    match s {
+        Surface::Water => "into the creek",
+        Surface::Grass => "down the grass",
+        Surface::Road => "onto the road",
+        Surface::Rock => "down the rock",
+        Surface::Pad => "onto a tower pad",
+        Surface::Ravine => "into the ravine",
     }
 }
 

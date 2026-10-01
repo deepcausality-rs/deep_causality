@@ -6,6 +6,8 @@
 pub mod command;
 pub mod drone;
 pub mod outcome;
+pub mod patch_reading;
+pub mod quantity;
 pub mod surface;
 pub mod telemetry;
 pub mod terrain;

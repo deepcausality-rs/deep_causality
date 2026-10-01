@@ -1,181 +1,114 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SiteHeader from '../../components/nav/SiteHeader.astro';
-import { DOCS_URL, GITHUB_URL } from '../../consts';
+import TopicList from '../../components/overview/TopicList.astro';
+import { CFD_URL, DOCS_URL, GITHUB_URL, QUANTUM_URL } from '../../consts';
+
+const unifiedMathReadme = `${GITHUB_URL}/blob/main/deep_causality_unified_math/README.md`;
 ---
 <BaseLayout
   title="Overview — DeepCausality"
-  description="Learn how DeepCausality connects observations, causal rules, and outcomes in Rust. Explore service root-cause analysis, then explore context, uncertainty, and the wider ecosystem."
+  description="DeepCausality is an open-source Rust library for dynamic causal reasoning: causal discovery from data, a one-directional causal order with any computation inside each step, a context that changes while a model runs, actions fired from causal results, and norms that check them."
 >
   <SiteHeader />
   <article class="static-page">
     <header>
       <p class="eyebrow">Overview</p>
-      <h1>From observations to decisions</h1>
+      <h1>Cause and effect in systems that change dynamically</h1>
       <p class="lede">
-        DeepCausality is an open-source Rust library for modeling cause and effect.
-        You write the rules, connect them into a model, and evaluate what follows from your inputs.
-        The model can change as new data arrives or the system’s conditions evolve.
-      </p>
-      <p class="lede">
-        Start with one rule. Add context, uncertainty, or actions when your problem needs them.
+        DeepCausality, an open-source Rust library for dynamic causal reasoning, runs a model as a
+        chain of causal steps whose state, environment and rules may change while it runs. At any
+        step you can ask what would have happened under other conditions, and an audit log records
+        how each answer came about.
       </p>
     </header>
 
     <div class="prose">
-      <h2>An alert tells you something is wrong. What caused it?</h2>
+      <h2>The idea: two layers of composition</h2>
       <p>
-        A service slows down, and several metrics change at once. An anomaly detector can
-        flag the incident, but an engineer still needs to know where to investigate.
-        The root-cause analysis example connects these two tasks: detect an anomaly,
-        then rank the service metrics that could explain it.
+        The classical formulation of causality, "if A then B, and if not A then not B", ties the
+        direction of cause to the direction of time, so it cannot express the time-symmetric
+        fundamental equations of physics.
       </p>
       <p>
-        It uses recorded telemetry from the Sock Shop microservice benchmark: 44 metrics
-        covering CPU, memory, workload, and latency. A small machine-learning model built
-        with Candle scores the telemetry. DeepCausality uses that score to decide whether
-        to run causal analysis, carrying the decision, configuration, and log through one process.
-      </p>
-
-      <figure class="reasoning-flow reticle-host" aria-labelledby="flow-caption">
-        <span class="reticle reticle-tl" aria-hidden="true"></span>
-        <span class="reticle reticle-tr" aria-hidden="true"></span>
-        <span class="reticle reticle-bl" aria-hidden="true"></span>
-        <span class="reticle reticle-br" aria-hidden="true"></span>
-        <p class="eyebrow">Detect → decide → investigate</p>
-        <ol class="flow-steps">
-          <li><span class="step-label">1. Detect</span><strong>Score the service telemetry</strong><span>The Candle model produces an anomaly score for a window of measurements.</span></li>
-          <li><span class="step-label">2. Decide</span><strong>Does the score warrant investigation?</strong><span>Below the threshold, return a healthy verdict. At or above it, run causal analysis.</span></li>
-          <li><span class="step-label">3. Explain</span><strong>Rank candidate root causes</strong><span>DeepCausality’s BRCD algorithm analyzes normal and anomalous data using a supplied causal graph.</span></li>
-          <li><span class="step-label">4. Report</span><strong>Return the leading candidate and decision log</strong><span>The example checks the ranked metric against the dataset’s expected result.</span></li>
-        </ol>
-        <figcaption id="flow-caption">
-          The causal-analysis branch runs only when the detector’s score reaches the threshold.
-          See the <a href={`${GITHUB_URL}/tree/main/examples/causal_discovery_examples/ml/ml_rca`}>complete
-          ML and causal root-cause analysis example</a>, including data, source, and run instructions.
-        </figcaption>
-      </figure>
-      <p>
-        The framework’s role is to connect detection to investigation: a
-        <code>PropagatingProcess</code> carries the score, window identity, configuration,
-        and decision log. Its next step either skips the analysis or returns a root-cause
-        verdict; an analysis failure travels through the same process as an error.
-        You can replace the detector while retaining this pattern.
+        DeepCausality separates the two. The outer layer fixes the causal order: steps compose by
+        monadic bind, so each step runs after the one before it and receives its result. The inner
+        layer, the step itself, holds an ordinary Rust function that can compute anything, including
+        a time-reversible law of physics. A satellite propagated forward and then backward in time
+        forms a two-step chain that runs forward in causal order.
       </p>
       <p>
-        This example demonstrates the integration on recorded data. Its threshold is calibrated
-        from the supplied normal and anomalous windows to exercise both paths; it is not a
-        measurement of production detection accuracy.
+        Each step receives three channels from the step before it: the <em>effect</em>, its result;
+        the <em>state</em>, memory carried forward; and the <em>context</em>, the environment. An
+        append-only log records what each step did. The <a href="/overview/dynamic-causality/">dynamic causality</a> page shows both layers in code.
       </p>
 
-      <h2>Three terms you’ll meet</h2>
-      <p>The service example composes detection and analysis through a process. For models that
-        also need identifiable reasoning units or a shared environment, the library provides
-        Causaloids and Context.</p>
-      <dl class="concepts">
-        <div>
-          <dt><a href={`${DOCS_URL}/concepts/causaloid/`}>Causaloid: a unit of reasoning</a></dt>
-          <dd>A function wrapped with an identity and description. It can check a threshold,
-            run a calculation, or participate in a larger model. Causaloids can be combined
-            into collections and graphs.</dd>
-        </div>
-        <div>
-          <dt><a href={`${DOCS_URL}/concepts/context/`}>Context: the information a rule depends on</a></dt>
-          <dd>An explicit structure for data, time, space, and relationships that rules can consult.
-            Use it when several reasoning steps need a shared view of changing conditions.</dd>
-        </div>
-        <div>
-          <dt><a href={`${DOCS_URL}/concepts/effect-propagation-process/`}>Effect: what a step passes on</a></dt>
-          <dd>The carrier for a result, together with information such as errors and logs.
-            Passing effects between functions lets you assemble a computation from smaller steps.</dd>
-        </div>
-      </dl>
-
-      <h2>What makes a model dynamic?</h2>
+      <h2>The project at a glance</h2>
       <p>
-        A fixed model always uses the same rules and relationships. A dynamic model can update
-        its context or causal structure while the system runs. For example, a monitor can use
-        different limits for different operating conditions, or add a new sensor to its model.
+        The causal monad sequences a model: it decides which step runs after which and passes state
+        and context from one step to the next. Causaloids give a model its structure: a single cause,
+        a collection of causes whose results combine, or a graph of causes that branch and rejoin.
+        The two compose: a causaloid can serve as one step of a monadic chain, and a chain can run
+        inside a causaloid, so each part of a model takes the form that suits it. The <a href="/examples/aerospace-flight-envelope/">flight envelope monitor</a> runs a collection of sensor checks, a chain of state-estimation steps and a graph of
+        envelope protections in one process.
       </p>
       <p>
-        DeepCausality provides the structures for these changes; you define when and how they
-        happen. You can also compare alternative inputs to ask a counterfactual question:
-        “What would this model predict if one condition were different?”
-        The <a href="/examples/pearl-counterfactual/">counterfactual example</a> shows this in code.
+        A model often starts from data: causal discovery measures how information about a target
+        splits among its sources and ranks the likely causes of a failure. A context holds the world
+        the steps read: sensor data, clocks and positions. You can update it between evaluations,
+        swap in a counterfactual world, or keep it in a store. The Causal State Machine fires an
+        action when a causal result is active, and the Effect Ethos checks a proposed action against
+        norms you encode, so a system can refuse an action before it runs.
+      </p>
+      <p>
+        Each part ships as its own crate, so a project takes only what it needs: a chain of physics
+        steps runs on the causal monad alone, a monitoring system adds a context, the state machine
+        and the Effect Ethos, and an incident investigation may need only causal discovery. The five
+        topics below cover each part in the order a model is built.
       </p>
 
-      <h2>Choose the tools your problem needs</h2>
+      <TopicList label="Five topics" />
+
+      <h2>One mathematics stack underneath</h2>
+      <p>
+        Seventeen crates supply the mathematics: numeric traits, abstract and linear algebra,
+        statistics, FFT, calculus with automatic differentiation, tensors, geometric algebra,
+        topology with discrete exterior calculus, and uncertain values. They share one set of
+        categorical traits, so a tensor can hold multivectors and one <code>fmap</code> transforms
+        every cell. None of them requires an external dependency.
+      </p>
+      <p>
+        One type alias sets a whole program's precision. Switch it between <code>BFloat16</code>, <code>f32</code>, <code>f64</code> and <code>Float106</code>, a
+        double-double type with about 31 decimal digits, and every crate follows. The <a href={unifiedMathReadme}>unified math README</a> covers the crates, the shared traits and
+        the precision rules; the <a href="/examples/mathematics/">mathematics examples</a> show them
+        at work.
+      </p>
+
+      <h2>Physics, fluids and quantum models</h2>
+      <p>
+        Three domain crates build on the causal core. <code>deep_causality_physics</code> supplies
+        physics kernels, many wrapped as single causal steps. <code>deep_causality_cfd</code> holds computational fluid dynamics solvers and the Flow DSL. <code>deep_causality_quantum</code> models quantum causal systems with density matrices,
+        channels and gates. The fluid and quantum work have their own sites at <a href={CFD_URL}>cfd.deepcausality.com</a> and <a href={QUANTUM_URL}>quantum.deepcausality.com</a>; <a href="/projects/">Projects</a> lists
+        both.
+      </p>
+
+      <h2>Built for assurance</h2>
       <ul>
-        <li><strong>Build a causal model.</strong> Use <code>deep_causality</code> to connect
-          reasoning steps, maintain context, and evaluate outcomes.</li>
-        <li><strong>Explore relationships in data.</strong> The
-          <a href={`${DOCS_URL}/concepts/cdl/`}>Causal Discovery Language</a> provides a pipeline
-          for loading data, selecting features, and analyzing candidate causal relationships.</li>
-        <li><strong>Represent uncertain inputs.</strong> The
-          <a href={`${DOCS_URL}/concepts/uncertainty/`}>uncertainty library</a> lets you work with
-          distributions and values that may be absent.</li>
-        <li><strong>Connect results to actions.</strong> Use a
-          <a href={`${DOCS_URL}/concepts/csm/`}>Causal State Machine</a> to pair reasoning with
-          actions. Add <a href={`${DOCS_URL}/concepts/effect-ethos/`}>Effect Ethos</a> to check
-          proposed actions against rules you encode. Those checks enforce the supplied policy;
-          they do not establish that the policy covers every real-world risk.</li>
-        <li><strong>Build scientific computations.</strong> The project also provides Rust crates
-          for linear algebra, tensors, geometry, calculus, and physics. Use them independently
-          or combine them with causal reasoning. Explore the
-          <a href={`${DOCS_URL}/concepts/uniform-math/`}>mathematical foundation</a> and
-          <a href="/projects/">CFD and quantum projects</a>.</li>
+        <li><strong>No unsafe code.</strong> A workspace lint sets <code>unsafe_code = "forbid"</code>, and every crate compiles under it.</li>
+        <li><strong>A small supply chain.</strong> 26 of the 33 library crates depend only on other workspace crates at runtime.</li>
+        <li><strong>Bare metal.</strong> The causal monad and many other crates build without the standard library; CI builds them for <code>thumbv7em-none-eabihf</code>.</li>
+        <li><strong>Machine-checked laws.</strong> Lean 4 proofs cover the monad laws and more, and a Rust test pins the implementation to each theorem's statement.</li>
       </ul>
-      <p>
-        A model’s conclusions depend on its rules, assumptions, and data. Running a causal
-        model does not by itself establish that those relationships hold in the real world.
-      </p>
 
-      <h2>The theory behind the library</h2>
-      <p>
-        DeepCausality implements the <a href={`${DOCS_URL}/concepts/effect-propagation-process/`}>Effect
-        Propagation Process</a> (EPP): each step derives a new effect from a previous effect
-        through a causal function. The mathematical formulation describes how these steps compose.
-        You can begin with the examples and return to the
-        <a href={`${DOCS_URL}/concepts/axiom/`}>axiom</a> and
-        <a href={`${DOCS_URL}/overview/architecture/`}>architecture</a> when you want the details.
-      </p>
-
-      <h2>Start with one working example</h2>
-      <ol class="next-steps">
+      <h2>Where to start</h2>
+      <ol>
         <li><a href={`${DOCS_URL}/getting-started/install/`}>Install the library</a> in a Rust project.</li>
-        <li><a href={`${DOCS_URL}/getting-started/hello-causaloid/`}>Write your first Causaloid</a> to see how an input becomes a result.</li>
-        <li><a href="/examples/">Browse the worked examples</a> for aerospace, counterfactuals, and scientific computing.</li>
+        <li>Read the topic that matches your problem, starting with <a href="/overview/dynamic-causality/">dynamic causality</a>.</li>
+        <li><a href="/examples/">Browse the worked examples</a> in aerospace, physics, medicine and mathematics.</li>
       </ol>
       <p>
-        DeepCausality is an LF AI &amp; Data Foundation Sandbox project.
-        Explore the <a href={GITHUB_URL}>source on GitHub</a> or
-        <a href="/community/">ask the community</a> about your use case.
+        DeepCausality is an LF AI &amp; Data Foundation Sandbox project. Read the <a href={GITHUB_URL}>source on GitHub</a> or <a href="/community/">ask the community</a> about your use case.
       </p>
     </div>
   </article>
-
-  <style>
-    .reasoning-flow {
-      margin: var(--space-6) 0;
-      padding: var(--space-5);
-      background: var(--bg-1);
-      border: 1px solid var(--line-1);
-      border-radius: var(--radius-md);
-      box-shadow: var(--shadow-1);
-    }
-    .reasoning-flow .eyebrow { color: var(--fg-1); }
-    .flow-steps { display: grid; gap: var(--space-4); padding: 0; margin: var(--space-5) 0; list-style: none; }
-    .flow-steps li { display: flex; flex-direction: column; gap: var(--space-2); margin: 0; padding-top: var(--space-3); border-top: 1px solid var(--line-2); }
-    .step-label { font-family: var(--font-mono); font-size: var(--t-body-sm); color: var(--fg-1); }
-    .flow-steps strong { color: var(--fg-0); }
-    figcaption { color: var(--fg-1); font-size: var(--t-body-sm); }
-    .concepts { margin: var(--space-5) 0; }
-    .concepts > div { border-top: 1px solid var(--line-1); padding: var(--space-4) 0; }
-    .concepts dt { font-weight: 600; margin-bottom: var(--space-2); }
-    .concepts dd { margin: 0; color: var(--fg-1); }
-    .next-steps { padding-left: var(--space-5); }
-    @media (min-width: 720px) {
-      .flow-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    }
-  </style>
 </BaseLayout>

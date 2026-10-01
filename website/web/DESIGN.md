@@ -277,6 +277,9 @@ src/
       ExamplesList.astro      # hairline list
       CategoryList.astro      # per-category index
       ExampleDetail.astro     # single example page body
+    overview/
+      topics.ts               # the four Overview topics, in reading order
+      TopicList.astro         # framed hairline list of the topics
   content/
     blog/en/*.md
     examples/en/*.mdx
@@ -583,14 +586,15 @@ Two defects live in `blog/index.astro` and should be fixed when that file is nex
 
 ### 9.5 Static pages
 
-`about`, `community`, `accessibility`, and `overview` carry **zero scoped CSS**. They rely entirely on the `.static-page` and `.prose` rules in `global.css`. That is the correct default for a prose page; add scoped CSS only when a page genuinely needs a component.
+`about`, `community`, `accessibility`, and the six `overview` pages carry **zero scoped CSS**. They rely entirely on the `.static-page` and `.prose` rules in `global.css`, which cover headings, lists, code blocks, tables (inside a `.table-wrap`) and block quotes. That is the correct default for a prose page; add scoped CSS only when a page genuinely needs a component.
 
-`overview/index.astro` introduces effect propagation through the ML-gated service
-root-cause analysis example. Its scoped diagram uses a semantic figure and an ordered four-stage
-flow, with shared reticle corners, panel radius, and theme tokens. Steps stack on phones
-and form two columns at 720px. The gate step explains the healthy and escalation branches. The caption
-links to the worked example; the surrounding prose distinguishes the process pipeline from
-optional Causaloid and Context structures.
+The Overview is a set of pages. `overview/index.astro` presents the whole project and links to five topic pages, `causal-discovery`, `dynamic-causality`, `dynamic-context`, `dynamic-action` and `effect-ethos`, listed in `components/overview/topics.ts` in the order a model is built. That list feeds three places: the `TopicList` panel on the index and at the foot of each topic page, and the header's Overview dropdown (desktop and mobile). Add a topic there, not in the pages.
+
+`TopicList.astro` is the house panel (§12.14): HUD gradient, reticle corners, eyebrow, and a hairline list of numbered topics. The page being read stays in the list, unlinked and marked `aria-current="page"`.
+
+Code on the overview pages renders through Astro's `<Code>` with dual themes, `defaultColor={false}` and `wrap`, so a long line wraps inside its block. Every snippet is a program that was compiled and run, and each output block is that program's output.
+
+In an `.astro` page, a line that starts with an inline element (`<a>`, `<code>`, `<em>`, `<strong>`) after a line of text loses the space between them, and so does text that follows an inline element closing the line above. Keep an inline element on the same line as the words around it.
 
 There are no monograph pages. The earlier spec for an academic register with a PDF download band and a BibTeX citation block was never built and is removed.
 
@@ -715,9 +719,9 @@ box-shadow: var(--shadow-1);
 
 The panel appears to catch light along its upper edge. This does not contradict the gradient ban in §2; that rule targets page and hero backgrounds, and this is a surface treatment on a bounded panel.
 
-**Debt.** Four verbatim copies (CausalStack, Explainer, ExampleGrid, JoinCommunity) plus a `--bg-2` 80% variant in ExampleDetail. This should be one `.panel` utility in `global.css`.
+**Debt.** Five verbatim copies (CausalStack, Explainer, ExampleGrid, JoinCommunity, TopicList) plus a `--bg-2` 80% variant in ExampleDetail. This should be one `.panel` utility in `global.css`.
 
-`--radius-md` is part of the convention, including the overview flow diagram.
+`--radius-md` is part of the convention.
 
 ### 12.5 L-bracket corner accents
 

@@ -1,6 +1,7 @@
 ---
 import ThemeToggle from './ThemeToggle.astro';
 import { GITHUB_URL, DISCORD_URL } from '../../consts';
+import { topics } from '../overview/topics';
 const path = Astro.url.pathname;
 const isActive = (href: string) => path === href || (href !== '/' && path.startsWith(href));
 ---
@@ -13,7 +14,21 @@ const isActive = (href: string) => path === href || (href !== '/' && path.starts
     </a>
 
     <nav class="primary" aria-label="Primary">
-      <a href="/overview/" class:list={["nav-link", isActive('/overview/') && 'is-active']}>Overview</a>
+      <div class="nav-dropdown">
+        <a href="/overview/" class:list={["nav-link nav-link-trigger", isActive('/overview/') && 'is-active']} aria-haspopup="true">
+          Overview
+          <svg class="caret" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2.5 4 L5 6.5 L7.5 4"/>
+          </svg>
+        </a>
+        <ul class="dropdown-menu" role="menu">
+          <li><a href="/overview/" role="menuitem">Project overview</a></li>
+          <li class="sep" aria-hidden="true"></li>
+          {topics.map((t) => (
+            <li><a href={`/overview/${t.slug}/`} role="menuitem">{t.title}</a></li>
+          ))}
+        </ul>
+      </div>
       <div class="nav-dropdown">
         <a href="/examples/" class:list={["nav-link nav-link-trigger", isActive('/examples/') && 'is-active']} aria-haspopup="true">
           Examples
@@ -85,7 +100,14 @@ const isActive = (href: string) => path === href || (href !== '/' && path.starts
       </button>
     </div>
     <ul class="mobile-menu-list">
-      <li><a href="/overview/">Overview</a></li>
+      <li>
+        <a href="/overview/">Overview</a>
+        <ul class="mobile-menu-sub">
+          {topics.map((t) => (
+            <li><a href={`/overview/${t.slug}/`}>{t.title}</a></li>
+          ))}
+        </ul>
+      </li>
       <li>
         <a href="/examples/">Examples</a>
         <ul class="mobile-menu-sub">
@@ -185,11 +207,11 @@ const isActive = (href: string) => path === href || (href !== '/' && path.starts
   :global([data-theme='light']) .logo-light { display: block; }
   :global([data-theme='dark'])  .logo-dark  { display: block; }
 
-  /* Six items plus two carets measure ~397px of labels. At the 900px
+  /* Six items plus three carets measure ~411px of labels. At the 900px
      breakpoint about 517px of rail is free once the 151px brand and the 120px
-     utility rail are subtracted, which a 24px gap would consume exactly. The
-     gap therefore steps down to --space-4 through the narrow band and returns
-     to --space-5 at 1080px, where there is room for it. */
+     utility rail are subtracted; five 24px gaps would overflow it. The gap
+     therefore steps down to --space-4 through the narrow band (80px, leaving
+     ~26px spare) and returns to --space-5 at 1080px, where there is room. */
   .primary { display: none; gap: var(--space-4); }
   @media (min-width: 900px) { .primary { display: flex; } }
   @media (min-width: 1080px) { .primary { gap: var(--space-5); } }
