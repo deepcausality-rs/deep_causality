@@ -24,5 +24,9 @@ path = "part_1_dynamic_causality/main.rs"
 name = "drone_failsafe_part_2"
 path = "part_2_dynamic_context/main.rs"
 
+[[example]]
+name = "drone_failsafe_part_3"
+path = "part_3_dynamic_action/main.rs"
+
 [lints]
 workspace = true

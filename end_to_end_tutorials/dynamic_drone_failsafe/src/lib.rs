@@ -14,6 +14,7 @@ mod types;
 pub use constants::{FLIGHT_LIMIT_S, FLIGHT_START_HOUR};
 pub use types::command::Command;
 pub use types::drone::Drone;
+pub use types::guidance::Guidance;
 pub use types::outcome::Outcome;
 pub use types::patch_reading::PatchReading;
 pub use types::quantity::Quantity;

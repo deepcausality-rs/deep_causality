@@ -169,24 +169,108 @@ The fail-safe still lands the drone in the creek. Knowing the ground does not mo
 The simulation registers every frame in the world frame, so a patch keeps its place while the drone drifts without a
 fix. A real system registers frames against each other with visual or LiDAR odometry.
 
+## Part 3: Dynamic Action
+
+```bash
+cargo run -p dynamic_drone_failsafe --example drone_failsafe_part_3
+```
+
+A causal state machine, the fail-safe machine, now turns the ladder's command into a maneuver over the ground. The
+drone flies these maneuvers by its camera and LiDAR, so it holds its place against the wind without a satellite fix.
+The machine has four states, each a causaloid that reads the situation (the ladder's command, the drone's position,
+and the controller's judgement of the landing patch) and returns a maneuver:
+
+| State | Active when | Maneuver |
+|-------|-------------|----------|
+| 1 choose a landing patch | the ladder says land now, and no patch is chosen or the chosen one no longer reads as safe | the controller picks the safe patch nearest the drone |
+| 2 hold over the ground | the ladder says hold | hover where the drone is |
+| 3 fly home | the ladder says return home | fly to the launch point |
+| 4 land on the chosen patch | the ladder says land now, and the chosen patch reads as safe | fly to the patch, then descend onto it |
+
+The landing state's causaloid holds the chosen patch as its context. Each time the controller chooses a patch, it
+replaces the landing state with a new version through `update_single_state`. Each second the machine checks the
+chosen patch against the context again; if the patch stops reading as safe, state 1 fires and the controller chooses
+again.
+
+A new stage, `act`, runs the machine after `decide`.
+
+```text
+ time   across   along   agl  confirmed faults                       below      fail-safe  maneuver
+   0s      60m      0m   40m  none                                   too steep  continue   none
+  18s      60m    144m   40m  none                                   safe       continue   none
+  20s      60m    160m   40m  none                                   too steep  continue   none
+  50s      60m    400m   40m  fix degraded                           too steep  continue   none
+  57s      56m    440m   40m  fix lost                               too steep  hold       hold over the ground
+  69s      56m    440m   40m  fix lost, link lost                    too steep  land now   land on the chosen patch
+  71s      58m    446m   40m  fix lost, link lost                    safe       land now   land on the chosen patch
+  85s      58m    446m   19m  fix lost, link lost, battery critical  safe       land now   land on the chosen patch
+
+Touchdown at 92 s, 446 m along the line, 3 m from the nearest person.
+It landed 3 m from a member of the crew.
+
+The ground as the controller judged it, one 4 m patch per cell, downhill to the left:
+
+              . / / / / / / / / / / / /
+              . / / / / / / / / / / / /
+              . / / / / / / / / / / / /
+              . / / / / / . P / / / / /
+              . / / / / / P P / / / / /
+              . / / / / / X . / / / / /
+              . / / / / / / / / / / / /
+              . / / / / / / / / / / / /
+              . / / / / / / / / / / / /
+              . / / / / / / / / / / / /
+              . / / / / / / / / / / / /
+
+  . safe   / too steep   ~ water   P person   ? unsure   (blank) not seen
+  X where the drone came down
+
+The fail-safe machine chose the safe patch nearest the drone and landed on it. The patch
+passed every test the controller ran: flat, dry, no one on it.
+The controller's own map showed a person on a patch 4 m away from it.
+No test asked how close to a person the drone may land. Part 4 adds that check.
+
+Faults, fail-safes and maneuvers from the controller's log:
+  t=50 s: Satellite fix degraded: 7 satellites, HDOP 3.5.
+  t=57 s: Satellite fix lost: none for 3 s.
+  t=57 s: Fail-safe set to hold: no satellite fix, but the link is up, so wait for the fix or the operator.
+  t=57 s: Fail-safe machine runs "hold over the ground", state 2, version 1.
+  t=69 s: Command link lost: 95 % of packets dropped for 5 s.
+  t=69 s: Fail-safe set to land now: with no satellite fix and no link, the drone can neither navigate nor receive orders.
+  t=69 s: Landing patch chosen 6 m away, at 58 m across and 446 m along. Landing state replaced by version 2.
+  t=69 s: Fail-safe machine runs "land on the chosen patch", state 4, version 2.
+  t=85 s: Battery critical: one cell at 3.25 V.
+```
+
+The drone no longer drifts. It holds over the ground at 57 s, and at 69 s the machine chooses the safe patch nearest
+the drone: a corner of the second tower pad, 6 m away. The patch read as safe at every recheck, and the drone landed
+on it, 3 m from a member of the crew. The controller knew the crew was there: its map shows them on the next patch.
+Every test it ran asked about the patch itself. None asked how close to a person the drone may land.
+
+In Orlando in December 2024, show drones fell into the crowd and a 7-year-old needed open-heart surgery (NTSB
+preliminary report, January 2025). Losing the drone is acceptable; harming a person is not. Nothing in the controller
+checks the machine's proposal against that rule: it lacks a check.
+
 ## Precision
 
 `FloatType` in `src/lib.rs` sets the working precision of the whole tutorial. Part 1 produces the same output at
-`f32`, `f64` and `deep_causality_num::Float106`. Part 2 produces the same output at `f32` and `f64`. At `Float106` one
-borderline patch on the edge of the first tower pad reads unsure for one second, at 19 s; every other line is the
-same.
+`f32`, `f64` and `deep_causality_num::Float106`. Parts 2 and 3 produce the same output at `f32` and `f64`. At
+`Float106` one borderline patch on the edge of the first tower pad reads unsure for one second, at 19 s; every other
+line is the same.
 
 ## Where Things Live
 
 | Path | Contents |
 |------|----------|
 | [`src/types/terrain/`](src/types/terrain) | `Terrain`: elevation, slope, surface, ground temperature, the crew |
-| [`src/types/drone/`](src/types/drone) | `Drone`: its mission, fault timeline, `Telemetry`, sensor frames and response to a `Command` |
+| [`src/types/drone/`](src/types/drone) | `Drone`: its mission, fault timeline, `Telemetry`, sensor frames, and response to a `Command` or `Guidance` |
+| [`src/types/guidance.rs`](src/types/guidance.rs) | `Guidance`: hover over or land on a ground point, flown by the camera and LiDAR |
 | [`src/types/patch_reading/`](src/types/patch_reading) | `PatchReading`: one frame's reading of one ground patch, by `Quantity` |
 | [`src/types/touchdown/`](src/types/touchdown) | `Touchdown`: the ground truth of where the drone came down, and its `Outcome` |
 | [`src/constants.rs`](src/constants.rs) | The world's dimensions and temperatures, the drone, its sensors, the fault timeline |
 | [`part_1_dynamic_causality/`](part_1_dynamic_causality) | The fail-safe controller with dynamic causality alone |
 | [`part_2_dynamic_context/`](part_2_dynamic_context) | The controller with the ground as its context |
+| [`part_3_dynamic_action/`](part_3_dynamic_action) | The controller with a fail-safe machine that acts on the context |
 
 ## References
 

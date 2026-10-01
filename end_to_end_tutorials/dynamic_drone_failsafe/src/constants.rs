@@ -150,6 +150,8 @@ pub const MISSION_START_ALONG_M: FloatType = const_scalar_from_int!(FloatType, 0
 /// Inspection height above the ground and ground speed along the line.
 pub const INSPECTION_AGL_M: FloatType = const_scalar_from_int!(FloatType, 40);
 pub const INSPECTION_SPEED_M_S: FloatType = const_scalar_from_int!(FloatType, 8);
+/// Ground speed when the drone flies to a point it was guided to, in m/s.
+pub const APPROACH_SPEED_M_S: FloatType = const_scalar_from_int!(FloatType, 3);
 /// Descent rates: an ordinary landing and an emergency landing on a failing battery, in m/s.
 pub const LANDING_DESCENT_M_S: FloatType = const_scalar_from_float!(FloatType, 1.5);
 pub const EMERGENCY_DESCENT_M_S: FloatType = const_scalar_from_int!(FloatType, 3);

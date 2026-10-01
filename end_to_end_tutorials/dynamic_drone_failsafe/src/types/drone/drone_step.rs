@@ -24,18 +24,24 @@ impl Drone {
             self.x += DOWNSLOPE_WIND_M_S;
         }
         if command == Command::LandNow {
-            let rate = if self.battery_faulted() {
-                EMERGENCY_DESCENT_M_S
-            } else {
-                LANDING_DESCENT_M_S
-            };
-            self.agl_m -= rate;
-            if self.agl_m <= ZERO {
-                self.agl_m = ZERO;
-                self.landed = true;
-            }
+            self.descend();
         }
         self.time_s += 1;
+    }
+
+    /// Descends for one second, faster once the battery has faulted, and lands on reaching the
+    /// ground.
+    pub(super) fn descend(&mut self) {
+        let rate = if self.battery_faulted() {
+            EMERGENCY_DESCENT_M_S
+        } else {
+            LANDING_DESCENT_M_S
+        };
+        self.agl_m -= rate;
+        if self.agl_m <= ZERO {
+            self.agl_m = ZERO;
+            self.landed = true;
+        }
     }
 
     fn fly_toward(&mut self, x: FloatType, y: FloatType) {

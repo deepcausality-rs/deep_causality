@@ -5,6 +5,7 @@
 
 pub mod command;
 pub mod drone;
+pub mod guidance;
 pub mod outcome;
 pub mod patch_reading;
 pub mod quantity;
