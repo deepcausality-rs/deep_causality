@@ -46,6 +46,15 @@ impl Scenario {
 /// A scenario with each controller's flight, in the order of [`Controller::ALL`].
 pub type Flown = (Scenario, Vec<Flight>);
 
+/// Two controllers on the same scenarios: in how many only the baseline came down near a person,
+/// in how many only the candidate did, and in how many both did.
+#[derive(Debug, Clone, Copy)]
+pub struct Paired {
+    pub only_baseline: usize,
+    pub only_candidate: usize,
+    pub both: usize,
+}
+
 /// How one flight ended: what became of the drone, when, how far from the nearest person, and
 /// the controller's log of faults, fail-safes and maneuvers.
 #[derive(Debug, Clone)]

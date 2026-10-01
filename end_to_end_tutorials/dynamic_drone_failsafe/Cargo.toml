@@ -15,6 +15,7 @@ deep_causality_algebra = { workspace = true }
 deep_causality_context = { workspace = true }
 deep_causality_ethos = { workspace = true }
 deep_causality_num = { workspace = true, features = ["default"] }
+deep_causality_stats = { workspace = true, features = ["default"] }
 deep_causality_uncertain = { workspace = true, features = ["default"] }
 
 [[example]]

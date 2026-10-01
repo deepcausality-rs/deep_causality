@@ -51,7 +51,15 @@ Rates, each with its one-sided 95 % upper confidence bound:
   a cell fails, 505 scenarios:
     Part 1, textbook fail-safe     near a person   4.0 % (at most  5.70 %)   drone lost  90.9 % (at most 92.91 %)
     Part 3, context and action     near a person   4.4 % (at most  6.16 %)   drone lost  43.4 % (at most 47.11 %)
-    Part 4, with the Effect Ethos  near a person   0.2 % (at most  0.94 %)   drone lost  61.2 % (at most 64.80 %)`;
+    Part 4, with the Effect Ethos  near a person   0.2 % (at most  0.94 %)   drone lost  61.2 % (at most 64.80 %)
+
+Paired on the same scenarios, part 4 against each other controller, all 1000 scenarios:
+  Part 1, textbook fail-safe: only it came down near a person in 35 scenarios, only part 4 in 1, both in 0.
+    Part 4 came down near a person 35.0 times less often; at least 6.6 times less with 95 % confidence.
+    Were the two equally safe, a split this uneven would arise with probability 5.4e-10.
+  Part 3, context and action: only it came down near a person in 41 scenarios, only part 4 in 1, both in 0.
+    Part 4 came down near a person 41.0 times less often; at least 7.8 times less with 95 % confidence.
+    Were the two equally safe, a split this uneven would arise with probability 9.8e-12.`;
 ---
 <BaseLayout
   title="Part 5: Verification — DeepCausality"
@@ -114,15 +122,15 @@ Rates, each with its one-sided 95 % upper confidence bound:
       <Code code={output} lang="text" themes={themes} defaultColor={false} />
       <p>
         The bounds are one-sided Clopper–Pearson bounds at 95 %: zero events in 495 scenarios
-        bound the rate at 0.60 %. The campaign takes about 3 minutes on an M3 Max with 16 cores.
+        bound the rate at 0.60 %. The campaign takes 3 to 4 minutes on an M3 Max with 16 cores.
       </p>
       <p>
-        Because every controller flies the same scenarios, the record pairs them. In 35 scenarios
-        only part 1 put a person at risk, in one only part 4 did, and in none both. Part 4 put a
-        person at risk 35 times less often than part 1; the one-sided 95 % lower bound on that
-        ratio, by the Katz log method, is 6.6. If the two were equally safe, a split of 35 to 1
-        would occur by chance with probability 5 × 10⁻¹⁰ (exact sign test). These figures come
-        from <code>campaign_1000.csv</code>.
+        Because every controller flies the same scenarios, the campaign pairs them. In 35
+        scenarios only part 1 put a person at risk, in one only part 4 did, and in none both. Part
+        4 put a person at risk 35 times less often than part 1, and at least 6.6 times less with
+        95 % confidence; against part 3 the figures are 41 and 7.8. The bound takes the
+        matched-pairs variance of the ratio's logarithm. Were part 1 and part 4 equally safe, the
+        exact sign test puts the chance of a 35-to-1 split at 5.4 × 10⁻¹⁰.
       </p>
       <p>
         With a healthy battery, the encoded protocol came down near no one in 495 scenarios and

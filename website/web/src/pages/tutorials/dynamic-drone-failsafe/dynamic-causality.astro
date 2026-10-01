@@ -15,6 +15,13 @@ const source = `${GITHUB_URL}/tree/main/${DRONE_FAILSAFE_SOURCE}/part_1_dynamic_
 
 const run = `cargo run -p dynamic_drone_failsafe --example drone_failsafe_part_1`;
 
+const ardupilotRadio = 'https://ardupilot.org/copter/docs/radio-failsafe.html';
+const ardupilotBattery = 'https://ardupilot.org/copter/docs/failsafe-battery.html';
+const ardupilotEkf = 'https://ardupilot.org/copter/docs/common-ekf-inav-failsafe.html';
+const ardupilotDeadReckoning = 'https://ardupilot.org/copter/docs/deadreckoning-failsafe.html';
+const dji =
+  'https://dl.djicdn.com/downloads/DJI_Dock_3/20260312/DJI_Dock_3_user_manual_en.pdf';
+
 const stages = `process = process
     .bind(|_, state, ctx| model::sense(telemetry, state, ctx))
     .bind(|value, state, ctx| model::detect(value, state, ctx, &detectors))
@@ -148,6 +155,28 @@ Faults and fail-safes from the controller's log:
       <Code code={ladder} lang="rust" themes={themes} defaultColor={false} wrap />
       <p>
         Once an emergency begins, the fail-safe never steps back down in flight: <code>decide</code> replaces the latched command only with a more severe one.
+      </p>
+      <p>
+        The ladder follows the fail-safe defaults that drone autopilots document today:
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Fault</th><th>Part 1</th><th>ArduPilot Copter</th><th>DJI Matrice 4D (manual v1.2, 2025)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Critical battery</td><td>land where it is</td><td><a href={ardupilotBattery}>battery fail-safe</a>: Land, the recommended critical action</td><td>lands automatically once the battery lasts only the descent</td></tr>
+            <tr><td>GPS and link lost</td><td>land where it is</td><td><a href={ardupilotRadio}>radio fail-safe</a>: return to launch, or Land without GPS</td><td>fail-safe return home; with positioning abnormal, ATTI mode and an automatic landing</td></tr>
+            <tr><td>GPS lost alone</td><td>hold, drifting with the wind</td><td><a href={ardupilotEkf}>EKF fail-safe</a>: Land by default, altitude hold as an option</td><td>ATTI mode; the pilot takes control</td></tr>
+            <tr><td>Link lost alone</td><td>fly home</td><td>radio fail-safe: return to launch by default</td><td>fail-safe return home</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Each rule acts on one fault. Newer features extend them: DJI hovers and lands by its vision
+        sensors when GNSS is weak, and flies to a pre-set alternate landing site when its dock cannot
+        take it (<a href={dji}>DJI flight manual</a>, sections 3.9, 4.2 and 4.3); ArduPilot <a href={ardupilotDeadReckoning}>dead-reckons</a> for a limited time without GPS. None of these documents
+        describes weighing who stands near a landing site.
       </p>
 
       <h2>What happened</h2>

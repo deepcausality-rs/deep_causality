@@ -8,11 +8,12 @@
 
 use crate::constants::*;
 use crate::model_config::scenario;
-use crate::model_types::{Controller, Ending, Flight, Flown, Scenario};
+use crate::model_types::{Controller, Ending, Flight, Flown, Paired, Scenario};
 use crate::{part_1, part_3, part_4};
 use deep_causality::{CausalEffect, EffectLog};
 use deep_causality_algebra::Real;
-use deep_causality_num::lift_usize;
+use deep_causality_num::{lift_usize, lower};
+use deep_causality_stats::{log_sum_exp, standard_normal_inverse_cdf_at};
 use dynamic_drone_failsafe::{Command, Drone, FLIGHT_LIMIT_S, FloatType, Touchdown};
 
 /// Flies scenarios `0..count` with every controller, spread over the machine's cores, in scenario
@@ -101,6 +102,65 @@ fn at_most(k: usize, n: usize, p: FloatType) -> FloatType {
         );
     }
     total
+}
+
+/// The controllers at indices `baseline` and `candidate` of [`Controller::ALL`], paired on the same
+/// scenarios.
+pub fn paired(flown: &[Flown], baseline: usize, candidate: usize) -> Paired {
+    let near = |f: &[Flight], c: usize| f[c].ending == Ending::NearPerson;
+    let count = |keep: fn(bool, bool) -> bool| {
+        flown
+            .iter()
+            .filter(|(_, f)| keep(near(f, baseline), near(f, candidate)))
+            .count()
+    };
+    Paired {
+        only_baseline: count(|b, c| b && !c),
+        only_candidate: count(|b, c| c && !b),
+        both: count(|b, c| b && c),
+    }
+}
+
+/// How many times less often the candidate came down near a person than the baseline, and the
+/// one-sided lower confidence bound on that ratio at [`CONFIDENCE`]. The bound takes the
+/// matched-pairs variance of the ratio's logarithm, `(b + c) / ((a + b)(a + c))`, with `a` the
+/// scenarios where both did and `b`, `c` those where only one did. `None` when either never did,
+/// where the ratio has no finite estimate.
+pub fn risk_ratio(p: Paired) -> Option<(FloatType, FloatType)> {
+    let baseline = p.both + p.only_baseline;
+    let candidate = p.both + p.only_candidate;
+    if baseline == 0 || candidate == 0 {
+        return None;
+    }
+    let (baseline, candidate) = (
+        lift_usize::<FloatType>(baseline),
+        lift_usize::<FloatType>(candidate),
+    );
+    let ratio = baseline / candidate;
+    let discordant = lift_usize::<FloatType>(p.only_baseline + p.only_candidate);
+    let spread = Real::sqrt(discordant / (baseline * candidate));
+    let z = standard_normal_inverse_cdf_at::<FloatType>(lower(CONFIDENCE));
+    Some((ratio, Real::exp(Real::ln(ratio) - z * spread)))
+}
+
+/// The exact one-sided sign test on the scenarios where only one controller came down near a
+/// person: the natural logarithm of the probability that, were both equally safe, the candidate
+/// would account for as few of them as it did or fewer. Summed in logarithms, so it holds for any
+/// number of scenarios.
+pub fn sign_test_ln_p(p: Paired) -> FloatType {
+    let m = p.only_baseline + p.only_candidate;
+    let ln_half_power = lift_usize::<FloatType>(m) * Real::ln(ONE / (ONE + ONE));
+    let mut ln_choose = ZERO;
+    let terms: Vec<FloatType> = (0..=p.only_candidate)
+        .map(|i| {
+            if i > 0 {
+                ln_choose += Real::ln(lift_usize::<FloatType>(m - i + 1))
+                    - Real::ln(lift_usize::<FloatType>(i));
+            }
+            ln_choose + ln_half_power
+        })
+        .collect();
+    log_sum_exp(&terms)
 }
 
 /// The textbook fail-safe of part 1.

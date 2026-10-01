@@ -926,6 +926,7 @@ dependencies = [
  "deep_causality_context",
  "deep_causality_ethos",
  "deep_causality_num",
+ "deep_causality_stats",
  "deep_causality_uncertain",
 ]
 

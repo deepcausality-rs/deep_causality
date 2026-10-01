@@ -4,7 +4,7 @@
  */
 
 use crate::constants::*;
-use crate::model::upper_bound;
+use crate::model::{paired, risk_ratio, sign_test_ln_p, upper_bound};
 use crate::model_types::{Controller, Ending, Flight, Flown, Scenario};
 use deep_causality_algebra::Real;
 use deep_causality_num::{lift_usize, lower};
@@ -115,6 +115,8 @@ pub fn print_report(flown: &[Flown]) {
         }
     }
 
+    print_paired(flown);
+
     let failures: Vec<&Flown> = flown
         .iter()
         .filter(|(_, f)| !matches!(f[2].ending, Ending::Safe | Ending::Resumed))
@@ -145,6 +147,64 @@ pub fn print_report(flown: &[Flown]) {
     println!(
         "Fly any scenario again, with each controller's log: cargo run --release -p dynamic_drone_failsafe --example drone_failsafe_part_5 -- scenario <id>"
     );
+}
+
+/// Prints part 4 against each other controller on the same scenarios: where only one of the two came
+/// down near a person, how many times less often part 4 did, with its lower confidence bound, and
+/// the chance of so uneven a split were the two equally safe.
+fn print_paired(flown: &[Flown]) {
+    let candidate = Controller::ALL.len() - 1;
+    println!();
+    println!(
+        "Paired on the same scenarios, part 4 against each other controller, all {} scenarios:",
+        flown.len()
+    );
+    for (baseline, controller) in Controller::ALL[..candidate].iter().enumerate() {
+        let p = paired(flown, baseline, candidate);
+        println!(
+            "  {}: only it came down near a person in {} scenarios, only part 4 in {}, both in {}.",
+            name(*controller),
+            p.only_baseline,
+            p.only_candidate,
+            p.both,
+        );
+        match risk_ratio(p) {
+            Some((ratio, at_least)) => println!(
+                "    Part 4 came down near a person {:.1} times less often; at least {:.1} times less with {:.0} % confidence.",
+                lower(ratio),
+                lower(at_least),
+                lower(CONFIDENCE * HUNDRED),
+            ),
+            None => println!(
+                "    One of the two never came down near a person, so the ratio has no finite estimate."
+            ),
+        }
+        if p.only_baseline + p.only_candidate == 0 {
+            println!("    No scenario tells the two apart.");
+            continue;
+        }
+        println!(
+            "    Were the two equally safe, a split this uneven would arise with probability {}.",
+            probability(sign_test_ln_p(p))
+        );
+    }
+}
+
+/// A probability given by its natural logarithm, in decimals down to a thousandth and in powers of
+/// ten below.
+fn probability(ln_p: FloatType) -> String {
+    let log10 = lower(ln_p) / std::f64::consts::LN_10;
+    if log10 >= -3.0 {
+        return format!("{:.3}", 10f64.powf(log10));
+    }
+    let mut exponent = log10.floor();
+    let mut mantissa = 10f64.powf(log10 - exponent);
+    // 9.96 would print as 10.0.
+    if mantissa >= 9.95 {
+        mantissa /= 10.0;
+        exponent += 1.0;
+    }
+    format!("{mantissa:.1}e{}", exponent as i32)
 }
 
 /// Prints one scenario's conditions, how each controller's flight ended, and each controller's log.

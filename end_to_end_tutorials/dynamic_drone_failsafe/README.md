@@ -64,6 +64,19 @@ The controller is one causal process with three stages each second:
    where it is; a lost fix alone holds it for the operator; a lost link alone flies it home. Once an emergency begins,
    the fail-safe never steps back down in flight.
 
+The ladder follows the fail-safe defaults that drone autopilots document today:
+
+| Fault | Part 1 | ArduPilot Copter | DJI Matrice 4D (manual v1.2, 2025) |
+|-------|--------|------------------|------------------------------------|
+| Critical battery | land where it is | battery fail-safe: Land, the recommended critical action | lands automatically once the battery lasts only the descent |
+| Fix and link lost | land where it is | radio fail-safe: return to launch, or Land without GPS | fail-safe return home; with positioning abnormal, ATTI mode and an automatic landing |
+| Fix lost alone | hold, drifting with the wind | EKF fail-safe: Land by default, altitude hold as an option | ATTI mode; the pilot takes control |
+| Link lost alone | fly home | radio fail-safe: return to launch by default | fail-safe return home |
+
+Each rule acts on one fault. Newer features extend them: DJI hovers and lands by its vision sensors when GNSS is weak,
+and flies to a pre-set alternate landing site when its dock cannot take it; ArduPilot dead-reckons for a limited time
+without GPS. None of these documents describes weighing who stands near a landing site.
+
 The process has no context: the controller knows only what the drone reports about itself.
 
 ```text
@@ -252,8 +265,8 @@ the drone: a corner of the second tower pad, 6 m away. The patch read as safe at
 on it, 3 m from a member of the crew. The controller knew the crew was there: its map shows them on the next patch.
 Every test it ran asked about the patch itself. None asked how close to a person the drone may land.
 
-In Orlando in December 2024, show drones fell into the crowd and a 7-year-old needed open-heart surgery (NTSB
-preliminary report, January 2025). Losing a drone is acceptable; harming a person is not. Nothing in the flight controller
+In Orlando in December 2024, show drones entered the audience, and one struck a seven-year-old boy in the face and
+chest (NTSB final report, September 2026); his parents say he needed open-heart surgery (FOX 35, September 2026). Losing a drone is acceptable; harming a person is not. Nothing in the flight controller
 software checks the machine's proposal against that rule: it lacks a check against safety rules before activating its fail-safe.
 
 ## Part 4: Effect Ethos
@@ -414,10 +427,24 @@ Rates, each with its one-sided 95 % upper confidence bound:
     Part 1, textbook fail-safe     near a person   4.0 % (at most  5.70 %)   drone lost  90.9 % (at most 92.91 %)
     Part 3, context and action     near a person   4.4 % (at most  6.16 %)   drone lost  43.4 % (at most 47.11 %)
     Part 4, with the Effect Ethos  near a person   0.2 % (at most  0.94 %)   drone lost  61.2 % (at most 64.80 %)
+
+Paired on the same scenarios, part 4 against each other controller, all 1000 scenarios:
+  Part 1, textbook fail-safe: only it came down near a person in 35 scenarios, only part 4 in 1, both in 0.
+    Part 4 came down near a person 35.0 times less often; at least 6.6 times less with 95 % confidence.
+    Were the two equally safe, a split this uneven would arise with probability 5.4e-10.
+  Part 3, context and action: only it came down near a person in 41 scenarios, only part 4 in 1, both in 0.
+    Part 4 came down near a person 41.0 times less often; at least 7.8 times less with 95 % confidence.
+    Were the two equally safe, a split this uneven would arise with probability 9.8e-12.
 ```
 
 The upper bounds are one-sided Clopper-Pearson bounds at 95 %: zero events in 495 scenarios bounds the rate at 0.60 %.
-The campaign takes about 3.5 minutes on an M3 Max with 16 cores.
+The campaign takes 3 to 4 minutes on an M3 Max with 16 cores.
+
+Every controller flies the same scenarios, so the campaign pairs them. In 35 scenarios only part 1 came down near a
+person, in one only part 4 did, and in none both. Part 4 came down near a person 35 times less often than part 1, and
+at least 6.6 times less with 95 % confidence; against part 3 the figures are 41 and 7.8. The bound takes the
+matched-pairs variance of the ratio's logarithm. Were part 1 and part 4 equally safe, the exact sign test puts the
+chance of a split of 35 to 1 at 5.4e-10.
 
 With a healthy battery, the encoded protocol came down near no one in 495 scenarios, and lost about as many drones as
 part 3, 10.9 % against 9.9 %. Part 3 came down within 10 m of a person in 3.8 % of the same scenarios. When a cell
@@ -471,16 +498,20 @@ member of the crew into the next patch.
 | [`part_3_dynamic_action/`](part_3_dynamic_action) | The controller with a fail-safe machine that acts on the context |
 | [`part_4_effect_ethos/`](part_4_effect_ethos) | The controller under the safety protocol, encoded as norms of the Effect Ethos |
 | [`part_5_verification/`](part_5_verification) | The campaign: parts 1, 3 and 4 over 1000 randomised scenarios, and its record |
+| [`papers/`](papers) | Source documents the tutorial cites: the FAA's Small UAS Survey Report 2024 |
 
 ## References
 
 - ABC News, [Hundreds of drones plunge into Melbourne's Yarra River](https://www.abc.net.au/news/2023-07-16/hundreds-of-drones-plunge-into-yarra-river/102607576), 16 July 2023.
 - N. G. Leveson and J. P. Thomas, [STPA Handbook](https://www.flighttestsafety.org/images/STPA_Handbook.pdf), MIT, 2018.
-- NTSB, [Preliminary report DCA25LA065](https://data.ntsb.gov/carol-repgen/api/Aviation/ReportMain/GenerateNewestReport/199458/pdf), Orlando drone show, January 2025.
+- NTSB, [Aviation investigation final report DCA25LA065](https://data.ntsb.gov/carol-repgen/api/Aviation/ReportMain/GenerateNewestReport/199458/pdf), Orlando drone show, September 2026.
+- FOX 35 Orlando, [Orlando drone show errors led to Lake Eola crash that seriously injured 7-year-old: NTSB](https://www.fox35orlando.com/news/orlando-drone-show-errors-led-lake-eola-crash-seriously-injured-7-year-old-ntsb), 16 September 2026.
 - FAA, [Advisory Circular 107-2A, Small Unmanned Aircraft Systems](https://www.faa.gov/documentLibrary/media/Advisory_Circular/AC_107-2A.pdf).
 - Flightpath107, [Part 107 emergency procedures](https://www.flightpath107.com/curriculum-home/section-three/emergency-procedures/): "If GPS signal cannot be reacquired, land as soon as practical."
 - CASA, [AC 101-01, Remotely piloted aircraft systems: licensing and operations](https://www.casa.gov.au/remotely-piloted-aircraft-systems-licensing-and-operations).
 - JARUS, [SORA v2.5, main body](http://jarus-rpas.org/wp-content/uploads/2024/06/SORA-v2.5-Main-Body-Release-JAR_doc_25.pdf) and [Annex A](http://jarus-rpas.org/wp-content/uploads/2024/06/SORA-v2.5-Annex-A-Release.JAR_doc_26-pdf.pdf): flight geography, contingency volume, ground risk buffer, contingency and emergency procedures.
+- ArduPilot, [Radio Failsafe](https://ardupilot.org/copter/docs/radio-failsafe.html), [Battery Failsafe](https://ardupilot.org/copter/docs/failsafe-battery.html) and [EKF Failsafe](https://ardupilot.org/copter/docs/common-ekf-inav-failsafe.html).
+- DJI, [DJI Matrice 4D Series Unmanned Aircraft Flight Manual v1.2](https://dl.djicdn.com/downloads/DJI_Dock_3/20260312/DJI_Dock_3_user_manual_en.pdf), July 2025: sections 3.9 Return to Home, 4.2 Loss of C2 Link and 4.3 Loss of Navigation Systems.
 - ArduPilot, [GPS failsafe and glitch protection](https://github.com/ArduPilot/ardupilot_wiki/blob/master/copter/source/docs/gps-failsafe-glitch-protection.rst) and [Dead Reckoning Failsafe](https://ardupilot.org/copter/docs/deadreckoning-failsafe.html).
 - Pilot Institute, [Drone in-flight emergencies](https://pilotinstitute.com/drone-in-flight-emergency/): "protect people first, property second, and the aircraft last."
 - C. J. Clopper and E. S. Pearson, "The use of confidence or fiducial limits illustrated in the case of the binomial", Biometrika 26 (4), 1934.
