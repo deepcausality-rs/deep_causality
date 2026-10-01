@@ -36,15 +36,3 @@ rust_binary(
         normal_dev = True,
     ),
 )
-
-rust_binary(
-    name = "csm_weather_balloon_example",
-    srcs = glob(["csm_weather_balloon/**/*.rs"]),
-    crate_root = "csm_weather_balloon/main.rs",
-    visibility = ["//visibility:public"],
-    deps = all_crate_deps(
-        normal = True,
-        # Cargo `[[example]]` targets link dev-dependencies.
-        normal_dev = True,
-    ),
-)

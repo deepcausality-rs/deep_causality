@@ -12,8 +12,6 @@ path = "no_lib.rs"
 [dependencies]
 deep_causality = { workspace = true }
 deep_causality_context = { workspace = true }
-deep_causality_algebra = { workspace = true }
-deep_causality_num = { workspace = true, features = ["default"] }
 deep_causality_ethos = { workspace = true }
 
 [[example]]
@@ -28,10 +26,6 @@ path = "csm_context/main.rs"
 [[example]]
 name = "csm_effect_ethos_example"
 path = "csm_effect_ethos/main.rs"
-
-[[example]]
-name = "csm_weather_balloon_example"
-path = "csm_weather_balloon/main.rs"
 
 [lints]
 workspace = true
