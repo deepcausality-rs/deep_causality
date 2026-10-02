@@ -20,6 +20,7 @@ use crate::constants::{
 use avionics_examples::shared::constants::{
     CAP, COMMS_BAND_RAD_S, DT_FLIGHT, IMU_ACCEL_BIAS, L, RAMC_NE_REFERENCE,
 };
+use avionics_examples::shared::trace::{TRACE_FIELD, TraceRow, trace_rows};
 use avionics_examples::shared::utils::norm3;
 use avionics_examples::shared::{utils, world};
 use deep_causality_cfd::{
@@ -163,6 +164,8 @@ pub struct BranchRow {
     /// The branch's final evolved fields (T_tr and n_tot); the compression witness re-quantizes
     /// them.
     pub report_final: (Vec<FloatType>, Vec<FloatType>),
+    /// The recorded flight trace: the trunk's rows up to the fork, then the branch's own.
+    pub trace: Vec<FloatType>,
 }
 
 impl TableRow for BranchRow {
@@ -268,7 +271,75 @@ fn score_one(cmd: &BankCommand, report: &Report<FloatType>, aim: [FloatType; 3])
             report.final_field().unwrap_or(&[]).to_vec(),
             report.series("final_n_tot").unwrap_or(&[]).to_vec(),
         ),
+        trace: report
+            .series(&format!("final_{TRACE_FIELD}"))
+            .unwrap_or(&[])
+            .to_vec(),
     }
+}
+
+/// One branch step for the branch-trace table: the round and commanded bank that identify the
+/// branch, then the recorded step.
+#[derive(Debug, Clone, Copy)]
+pub struct BranchTraceRow {
+    pub round: FloatType,
+    pub bank_deg: FloatType,
+    pub row: TraceRow,
+}
+
+impl TableRow for BranchTraceRow {
+    type Scalar = FloatType;
+    const SCHEMA: &'static [(&'static str, &'static str)] = &[
+        ("round", "-"),
+        ("bank_cmd", "deg"),
+        ("t", "s"),
+        ("altitude", "m"),
+        ("mach", "-"),
+        ("speed", "m/s"),
+        ("ne_peak", "m^-3"),
+        ("plasma_freq", "rad/s"),
+        ("gnss_denied", "-"),
+        ("knudsen", "-"),
+        (
+            "regime",
+            "0 continuum 1 slip 2 transitional 3 free-molecular",
+        ),
+        ("nav_err", "m"),
+        ("nav_var", "m^2"),
+        ("heat_flux", "W/m2"),
+        ("g_load", "g"),
+        ("bank", "rad"),
+        ("x", "m"),
+        ("y", "m"),
+        ("z", "m"),
+    ];
+    fn cells(&self) -> Vec<FloatType> {
+        let mut cells = Vec::with_capacity(Self::SCHEMA.len());
+        cells.push(self.round);
+        cells.push(self.bank_deg);
+        cells.push(self.row.t);
+        cells.extend_from_slice(&self.row.values);
+        cells
+    }
+}
+
+/// The branch-trace rows of both rounds: each branch's steps after the fork at `fork_rows`.
+pub fn branch_trace_rows(rounds: &[Vec<BranchRow>], fork_rows: usize) -> Vec<BranchTraceRow> {
+    rounds
+        .iter()
+        .enumerate()
+        .flat_map(|(round, rows)| {
+            rows.iter().flat_map(move |b| {
+                trace_rows(&b.trace, fork_rows, &[])
+                    .into_iter()
+                    .map(move |row| BranchTraceRow {
+                        round: (round + 1).lift(),
+                        bank_deg: b.bank_deg,
+                        row,
+                    })
+            })
+        })
+        .collect()
 }
 
 /// The committed branch: minimum trajectory-derived miss distance. That is this corridor's scoring

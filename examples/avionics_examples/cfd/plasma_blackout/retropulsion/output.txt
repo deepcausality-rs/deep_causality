@@ -76,7 +76,7 @@
   [PASS] [tripwire] (4d) fork economics: 5/5 branches entered by reference (no tensor copied at fork time), and the worst post-fork bond growth is 0 against a cap of 8. The fan-out's step cost is gate (4g), which is run-level because the branches are concurrent
   [PASS] [tripwire] (4e) audit trail: 5/5 branches record an applied context alternation naming the world they replace (the typed flag, which the carrier's refusal path sets false)
   [PASS] [tripwire] (4f) roster non-degeneracy: 5 branches flew 5 distinct throttles (minimum gap 0.020), so each row describes its own flight. This gates separation, not admission: a branch whose command the envelope clamped still passes as long as it did not land on another branch's realized throttle. Read cmd against flown in the roster to see which were clamped
-  [PASS] [tripwire] (0) integrity: 2516 coupled steps flown across four legs; no leg captured a step error
+  [PASS] [tripwire] (0) integrity: 5491 coupled steps flown across four legs; no leg captured a step error
   [PASS] [tripwire] (1) corridor inheritance: Acts 0-1 fly the corridor stack with the burn stages composed and inert: blackout onset at 12.60 s against the table's 12.61 s for this day (error 0.013 s) and dwell 56.10 s against 55.99 s (error 0.107 s), tolerance 0.50 s; 3 leg re-seed(s), peak dead-reckoning drift 51.70 m
   [PASS] [tripwire] (2) ignition corridor: commit fired at step 2117 on aided navigation at sigma 0.381 m against the day's table-sized margin of 62.30 m (Mach 2.00, q 2229 Pa — the corridor predicate's own preconditions, not re-asserted here)
   [PASS] [tripwire] (3) regime cascade: 8 regime transitions logged across the descent (at least 6), counted by the classifier rather than tallied from a rendered log

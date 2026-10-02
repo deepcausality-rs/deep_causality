@@ -1,0 +1,358 @@
+---
+/**
+ * Walk 3's animation: the retropulsion descent in seven scenes, drawn from the run's own outputs.
+ *
+ * Data: `src/data/retroTrace.ts`, which reads the retropulsion traces, the roster table, its
+ * `output.txt` and walk 2's `weather_table.csv` at build time. Every line, dot and number below
+ * comes from those files.
+ *
+ * Geometry lives in the SVG and words live in HTML, per the diagram convention in README.md.
+ * The controls, captions, scene reveal and shared styles come from `Stepper.astro`.
+ */
+import { belief, branches, events, gates, landings, samples } from '../../data/retroTrace';
+import { GITHUB_URL } from '../../consts';
+import Stepper from './Stepper.astro';
+
+const FILES = `${GITHUB_URL}/blob/main/examples/avionics_examples/cfd/plasma_blackout/retropulsion`;
+
+const f1 = (v: number) => v.toFixed(1);
+const f2 = (v: number) => v.toFixed(2);
+const f3 = (v: number) => v.toFixed(3);
+const r2 = (v: number) => Math.round(v * 100) / 100;
+const pct = (v: number, of: number) => `${((v / of) * 100).toFixed(2)}%`;
+const minus = (v: number) => (v < 0 ? `−${-v}` : `${v}`);
+const passed = gates.filter((g) => g.passed).length;
+const stepS = r2(samples[1].t - samples[0].t);
+
+// ── Plan: the table's drift against temperature, and the two margins ───────────────────────
+const PW = 100;
+const PH = 50;
+const dtLo = Math.min(...belief.rows.map((r) => r.dTemp)) - 5;
+const dtHi = Math.max(...belief.rows.map((r) => r.dTemp)) + 5;
+const allMax = Math.max(belief.informed.margin, ...belief.rows.map((r) => r.mean + r.sd));
+const mLo = Math.floor(Math.min(...belief.rows.map((r) => r.mean - r.sd)) / 10) * 10;
+const mHi = Math.ceil(allMax / 10) * 10;
+const px = (dT: number) => r2(12 + ((dT - dtLo) / (dtHi - dtLo)) * 80);
+const py = (m: number) => r2(44 - ((m - mLo) / (mHi - mLo)) * 38);
+const inBracket = (dT: number) => dT === belief.bracket[0] || dT === belief.bracket[1];
+const driftTicks = Array.from({ length: (mHi - mLo) / 10 + 1 }, (_, i) => mLo + i * 10);
+
+// ── Timeline: altitude, Mach and throttle over the whole descent ────────────────────────────
+const TW = 100;
+const TH = 62;
+const T_MAX = events.end.t;
+const X0 = 8;
+const X1 = 98;
+const tx = (t: number) => r2(X0 + (t / T_MAX) * (X1 - X0));
+const ALT = { hi: Math.ceil(samples[0].altitudeKm / 10) * 10, top: 6, bot: 22 };
+const MACH = { hi: Math.ceil(Math.max(...samples.map((s) => s.mach)) / 10) * 10, top: 29, bot: 41 };
+const THR = { top: 48, bot: 58 };
+const yAlt = (km: number) => r2(ALT.bot - (km / ALT.hi) * (ALT.bot - ALT.top));
+const yMach = (m: number) => r2(MACH.bot - (m / MACH.hi) * (MACH.bot - MACH.top));
+const yThr = (v: number) => r2(THR.bot - v * (THR.bot - THR.top));
+// One point in four keeps every path smooth at this width; leg boundaries are always kept.
+const legs = [1, 2, 3, 4].map((leg) => samples.filter((s, i) => s.leg === leg && (i % 4 === 0 || samples[i + 1]?.leg !== leg)));
+const joined = (pts: typeof samples, y: (s: (typeof samples)[number]) => number, prev?: (typeof samples)[number]) =>
+  [...(prev ? [prev] : []), ...pts].map((s, i) => `${i === 0 ? 'M' : 'L'}${tx(s.t)},${y(s)}`).join(' ');
+const legScene = [2, 2, 4, 5];
+const strips = legs.map((pts, i) => {
+  const prev = i > 0 ? legs[i - 1][legs[i - 1].length - 1] : undefined;
+  return {
+    scene: legScene[i],
+    alt: joined(pts, (s) => yAlt(s.altitudeKm), prev),
+    mach: joined(pts, (s) => yMach(s.mach), prev),
+    thr: joined(pts, (s) => yThr(s.throttle), prev),
+  };
+});
+const timeTicks = Array.from({ length: Math.floor(T_MAX / 100) + 1 }, (_, i) => i * 100);
+
+// ── Fork: velocity shed after the fork, and deceleration against the throttle flown ─────────
+const FW = 100;
+const FH = 44;
+const F_S = Math.max(...branches.map((b) => b.t[b.t.length - 1]));
+const DV_MAX = Math.ceil(Math.max(...branches.map((b) => b.dvActual)) / 50) * 50;
+const fx = (t: number) => r2(8 + (t / F_S) * 76);
+const fy = (dv: number) => r2(40 - (dv / DV_MAX) * 34);
+const coast = branches.find((b) => b.flown === 0)!;
+const dip = branches.filter((b) => b.flown > 0).reduce((a, b) => (b.deceleration < a.deceleration ? b : a));
+const tone = (b: (typeof branches)[number]) => (b === coast ? 'base' : b === dip ? 'hot' : 'other');
+// End labels sit at their branch's final value, pushed apart where two would overlap.
+const endY = (() => {
+  const order = [...branches].sort((a, b) => fy(a.dvActual) - fy(b.dvActual));
+  const placed = new Map<string, number>();
+  let last = -Infinity;
+  for (const b of order) {
+    const y = Math.max(fy(b.dvActual), last + 3);
+    placed.set(b.name, y);
+    last = y;
+  }
+  return (b: (typeof branches)[number]) => placed.get(b.name)!;
+})();
+const dvPath = (b: (typeof branches)[number]) =>
+  [`M8,40`, ...b.t.map((t, i) => `L${fx(t)},${fy(b.dv[i])}`)].join(' ');
+
+const AW = 100;
+const AH = 44;
+const ACC_LO = Math.floor(Math.min(...branches.map((b) => b.deceleration)) / 2) * 2 - 2;
+const ACC_HI = Math.ceil(Math.max(...branches.map((b) => b.deceleration)) / 2) * 2 + 2;
+const THR_HI = Math.ceil(Math.max(...branches.map((b) => b.flown)) * 10) / 10;
+const ax = (v: number) => r2(12 + (v / THR_HI) * 78);
+const ay = (a: number) => r2(40 - ((a - ACC_LO) / (ACC_HI - ACC_LO)) * 34);
+const byThrottle = [...branches].sort((a, b) => a.flown - b.flown);
+const accPath = byThrottle.map((b, i) => `${i === 0 ? 'M' : 'L'}${ax(b.flown)},${ay(b.deceleration)}`).join(' ');
+
+// ── Landing: the last seconds of both landing legs ──────────────────────────────────────────
+const inf = landings.informed;
+const uni = landings.uninformed;
+const L_FROM = Math.min(inf.lightT, uni.lightT) - 3;
+const L_TO = Math.max(inf.touchdownT, uni.touchdownT) + 0.5;
+const lastSeconds = (leg: typeof inf.leg) => leg.filter((s) => s.t >= L_FROM);
+const lAltMax = Math.ceil(Math.max(...lastSeconds(inf.leg).map((s) => s.altitudeKm * 1000)) / 100) * 100;
+const lRateMax = Math.ceil(Math.max(...lastSeconds(inf.leg).map((s) => s.descentRate)) / 10) * 10;
+const LW = 100;
+const LH = 58;
+const lx = (t: number) => r2(10 + ((t - L_FROM) / (L_TO - L_FROM)) * 86);
+const lyAlt = (m: number) => r2(28 - (m / lAltMax) * 24);
+const lyRate = (v: number) => r2(54 - (v / lRateMax) * 18);
+const lPath = (leg: typeof inf.leg, y: (s: (typeof inf.leg)[number]) => number) =>
+  lastSeconds(leg).map((s, i) => `${i === 0 ? 'M' : 'L'}${lx(s.t)},${y(s)}`).join(' ');
+const lightAt = (l: typeof inf) => ({ x: lx(l.lightT), y: lyAlt(l.lightAltitudeM) });
+
+const scenes = [
+  { id: 1, name: 'Plan' },
+  { id: 2, name: 'Coast' },
+  { id: 3, name: 'Fork' },
+  { id: 4, name: 'Burn' },
+  { id: 5, name: 'Descent' },
+  { id: 6, name: 'Two landings' },
+  { id: 7, name: 'Gates' },
+];
+---
+<Stepper scenes={scenes} label="The retropulsion descent in seven scenes">
+  <Fragment slot="captions">
+    <li data-s="1">
+      <b>Plan.</b> The measured day is {Math.abs(belief.measuredDT)} K {belief.measuredDT < 0 ? 'below' : 'above'} standard. Between walk 2’s {minus(belief.bracket[0])} K and
+      {minus(belief.bracket[1])} K rows the table gives {f2(belief.informed.mean)} ± {f2(belief.informed.sd)} m of drift,
+      so the guidance sets its ignition margin at {f2(belief.informed.margin)} m: the mean plus {belief.k} standard
+      deviations. Guidance that assumed a standard day would use {f2(belief.uninformed.margin)} m.
+    </li>
+    <li data-s="2">
+      <b>Coast.</b> GPS is lost from {f1(events.blackout.from)} s to {f1(events.blackout.to)} s while the vehicle
+      coasts with the engine off. At {f1(events.ignition.t)} s, {f1(events.ignition.altitudeKm)} km and Mach
+      {f2(events.ignition.mach)} the ignition corridor commits and the engine lights.
+    </li>
+    <li data-s="3">
+      <b>Fork.</b> From that lit state the run forks five throttle settings for {f1(F_S)} s each. Burning at
+      {f2(dip.flown)} slows the vehicle less than coasting ({f3(dip.deceleration)} against
+      {f3(coast.deceleration)} m/s²): the plume removes drag about as fast as thrust replaces it. The drag
+      fractions come from the cited Jarvinen-Adams correlation, not the simulated plume.
+    </li>
+    <li data-s="4">
+      <b>Burn.</b> The burn continues under the supersonic envelope until Mach {f2(events.subsonic.mach)} at
+      {f1(events.subsonic.altitudeKm)} km, where those limits stop describing the physics.
+    </li>
+    <li data-s="5">
+      <b>Descent.</b> The vehicle falls through the subsonic leg with the engine off, then lights a stopping
+      burn and reaches the ground at {f2(inf.contactMs)} m/s, {f1(events.end.t)} s after entry.
+    </li>
+    <li data-s="6">
+      <b>Two landings.</b> The landing leg is flown twice from the same state. Sized with the measured day’s
+      {f2(inf.printed.margin)} m margin, the guidance lights its burn at {f2(inf.lightAltitudeM)} m; sized with
+      the standard day’s {f2(uni.printed.margin)} m, at {f2(uni.lightAltitudeM)} m. The informed landing spends
+      {f2(inf.printed.reserveKg)} kg more propellant.
+    </li>
+    <li data-s="7">
+      <b>Gates.</b> {gates.length} gates judge the run and {passed} pass. Each line is copied from the committed
+      <code>output.txt</code>.
+    </li>
+  </Fragment>
+
+  <!-- Plan: walk 2's table, the interpolated day and the two margins. -->
+  <div class="view" data-scenes="1">
+    <div class="frame" style={`aspect-ratio: ${PW} / ${PH}`}>
+      <svg viewBox={`0 0 ${PW} ${PH}`} aria-hidden="true" focusable="false">
+        <line class="axis" x1="12" y1="44" x2="92" y2="44" />
+        {belief.rows.map((r) => (
+          <g>
+            <line class:list={['whisker', r.dTemp === 0 ? 'base' : inBracket(r.dTemp) ? 'near' : 'other']} x1={px(r.dTemp)} y1={py(r.mean - r.sd)} x2={px(r.dTemp)} y2={py(r.mean + r.sd)} />
+            <circle class:list={['dot', r.dTemp === 0 ? 'base' : inBracket(r.dTemp) ? 'near' : 'other']} cx={px(r.dTemp)} cy={py(r.mean)} r="0.9" />
+          </g>
+        ))}
+        <line class="bridge" data-from="1" x1={px(belief.bracket[0])} y1={py(belief.rows.find((r) => r.dTemp === belief.bracket[0])!.mean)} x2={px(belief.bracket[1])} y2={py(belief.rows.find((r) => r.dTemp === belief.bracket[1])!.mean)} pathLength="100" />
+        <line class="margin-line hot" data-from="1" x1={px(belief.measuredDT)} y1={py(belief.informed.mean)} x2={px(belief.measuredDT)} y2={py(belief.informed.margin)} pathLength="100" />
+        <line class="margin-line base" data-from="1" x1={px(0)} y1={py(belief.uninformed.mean)} x2={px(0)} y2={py(belief.uninformed.margin)} pathLength="100" />
+        <circle class="node node-accent" data-from="1" cx={px(belief.measuredDT)} cy={py(belief.informed.mean)} r="1.1" />
+        <circle class="node node-accent" data-from="1" cx={px(belief.measuredDT)} cy={py(belief.informed.margin)} r="1.1" />
+        <circle class="node node-base" data-from="1" cx={px(0)} cy={py(belief.uninformed.margin)} r="1.1" />
+      </svg>
+      <span class="lab strip-title" style="top:0">Drift in the dark from walk 2’s table, m</span>
+      {driftTicks.map((v) => <span class="lab tick" style={`top:${pct(py(v), PH)}`}>{v}</span>)}
+      {belief.rows.map((r) => <span class="lab t-tick" style={`left:${pct(px(r.dTemp), PW)}; top:${pct(44, PH)}`}>{minus(r.dTemp)} K</span>)}
+      <span class="lab ev hot-l" data-from="1" style={`left:${pct(px(belief.measuredDT) + 2, PW)}; top:${pct(py(belief.informed.margin), PH)}`}>
+        <b>{minus(belief.measuredDT)} K: margin {f2(belief.informed.margin)} m</b>
+      </span>
+      <span class="lab ev ev-left" data-from="1" style={`left:${pct(px(0) - 2, PW)}; top:${pct(py(belief.uninformed.margin) - 2.5, PH)}`}>
+        <b>standard day: {f2(belief.uninformed.margin)} m</b>
+      </span>
+    </div>
+  </div>
+
+  <!-- Timeline: the whole informed descent. -->
+  <div class="view" data-scenes="2 4 5">
+    <div class="frame" style={`aspect-ratio: ${TW} / ${TH}`}>
+      <svg viewBox={`0 0 ${TW} ${TH}`} aria-hidden="true" focusable="false">
+        {[ALT, MACH, THR].map((s) => <line class="axis" x1={X0} y1={s.bot} x2={X1} y2={s.bot} />)}
+        <line class="dark" data-from="2" x1={tx(events.blackout.from)} y1="2.4" x2={tx(events.blackout.to)} y2="2.4" pathLength="100" />
+        {strips.map((s) => (
+          <g data-from={s.scene}>
+            <path class="trace" d={s.alt} pathLength="100" />
+            <path class="trace trace-mach" d={s.mach} pathLength="100" />
+            <path class="trace trace-thr" d={s.thr} pathLength="100" />
+          </g>
+        ))}
+        <line class="mark" data-from="2" x1={tx(events.ignition.t)} y1={ALT.top - 1} x2={tx(events.ignition.t)} y2={THR.bot} pathLength="100" />
+        <line class="mark" data-from="4" x1={tx(events.subsonic.t)} y1={ALT.top - 1} x2={tx(events.subsonic.t)} y2={THR.bot} pathLength="100" />
+        <circle class="node node-accent" data-from="2" cx={tx(events.ignition.t)} cy={yAlt(events.ignition.altitudeKm)} r="0.9" />
+        <circle class="node" data-from="4" cx={tx(events.subsonic.t)} cy={yAlt(events.subsonic.altitudeKm)} r="0.9" />
+        <circle class="node node-accent" data-from="5" cx={tx(events.end.t)} cy={yAlt(0)} r="0.9" />
+      </svg>
+      <span class="lab title-r" style={`right:0; top:${pct(ALT.top - 0.5, TH)}`}>Altitude, km</span>
+      <span class="lab title-r" style={`right:0; top:${pct(MACH.top - 1.5, TH)}`}>Mach</span>
+      <span class="lab title-r" style={`right:0; top:${pct(THR.top - 3, TH)}`}>Throttle flown</span>
+      {[ALT.hi, ALT.hi / 2].map((v) => <span class="lab tick" style={`top:${pct(yAlt(v), TH)}`}>{v}</span>)}
+      {[MACH.hi, MACH.hi / 2].map((v) => <span class="lab tick" style={`top:${pct(yMach(v), TH)}`}>{v}</span>)}
+      {[1, 0].map((v) => <span class="lab tick" style={`top:${pct(yThr(v), TH)}`}>{v}</span>)}
+      {timeTicks.map((t) => <span class="lab t-tick" style={`left:${pct(tx(t), TW)}`}>{t} s</span>)}
+      <span class="lab ev dark-l" data-from="2" style={`left:${pct(tx(events.blackout.to) + 1, TW)}; top:${pct(2.4, TH)}`}>GPS lost</span>
+      <span class="lab ev ev-left" data-from="2" style={`left:${pct(tx(events.ignition.t) - 1, TW)}; top:${pct(yAlt(events.ignition.altitudeKm) + 3, TH)}`}>
+        <b>ignition</b> {f1(events.ignition.altitudeKm)} km, Mach {f2(events.ignition.mach)}
+      </span>
+      <span class="lab ev" data-from="4" style={`left:${pct(tx(events.subsonic.t) + 1, TW)}; top:${pct(yAlt(events.subsonic.altitudeKm) - 3, TH)}`}>
+        Mach {f2(events.subsonic.mach)}
+      </span>
+      <span class="lab ev ev-left" data-from="5" style={`left:${pct(tx(events.end.t) - 1, TW)}; top:${pct(yAlt(0) + 2.6, TH)}`}>
+        <b>touchdown</b> {f2(inf.contactMs)} m/s
+      </span>
+    </div>
+  </div>
+
+  <!-- Fork: five throttles from one lit state. -->
+  <div class="view" data-scenes="3">
+    <div class="fork-grid">
+      <div class="frame" style={`aspect-ratio: ${FW} / ${FH}`}>
+        <svg viewBox={`0 0 ${FW} ${FH}`} aria-hidden="true" focusable="false">
+          <line class="axis" x1="8" y1="40" x2="84" y2="40" />
+          {branches.map((b) => <path class:list={['branch', tone(b)]} data-from="3" d={dvPath(b)} pathLength="100" />)}
+          <circle class="node node-accent" data-from="3" cx="8" cy="40" r="0.9" />
+        </svg>
+        <span class="lab strip-title" style="top:0">Speed shed since the fork, m/s</span>
+        {branches.map((b) => (
+          <span class:list={['lab', 'end-l', tone(b)]} data-from="3" style={`left:${pct(fx(F_S) + 1, FW)}; top:${pct(endY(b), FH)}`}>
+            {b.name} {f2(b.flown)}
+          </span>
+        ))}
+        <span class="lab t-tick" style={`left:${pct(8, FW)}`}>fork</span>
+        <span class="lab t-tick" style={`left:${pct(fx(F_S), FW)}`}>+{f1(F_S)} s</span>
+      </div>
+      <div class="frame" style={`aspect-ratio: ${AW} / ${AH}`}>
+        <svg viewBox={`0 0 ${AW} ${AH}`} aria-hidden="true" focusable="false">
+          <line class="axis" x1="12" y1="40" x2="90" y2="40" />
+          <path class="acc" data-from="3" d={accPath} pathLength="100" />
+          {byThrottle.map((b) => <circle class:list={['dot', tone(b)]} data-from="3" cx={ax(b.flown)} cy={ay(b.deceleration)} r="1" />)}
+        </svg>
+        <span class="lab strip-title" style="top:0">Deceleration against the throttle flown, m/s²</span>
+        {byThrottle.map((b) => (
+          <span class:list={['lab', 'acc-l', tone(b), ax(b.flown) > 80 && 'acc-r']} data-from="3" style={`left:${pct(ax(b.flown), AW)}; top:${pct(ay(b.deceleration) - 3, AH)}`}>
+            {f3(b.deceleration)}{b.preserved !== null && <span class="kept"> · drag kept {minus(Math.round(b.preserved * 100))}%</span>}
+          </span>
+        ))}
+        {byThrottle.map((b) => <span class="lab t-tick" style={`left:${pct(ax(b.flown), AW)}; top:${pct(40, AH)}`}>{f2(b.flown)}</span>)}
+      </div>
+    </div>
+  </div>
+
+  <!-- Two landings: the last seconds of both landing legs. -->
+  <div class="view" data-scenes="6">
+    <div class="frame" style={`aspect-ratio: ${LW} / ${LH}`}>
+      <svg viewBox={`0 0 ${LW} ${LH}`} aria-hidden="true" focusable="false">
+        <line class="axis" x1="10" y1="28" x2="96" y2="28" />
+        <line class="axis" x1="10" y1="54" x2="96" y2="54" />
+        <path class="land base" data-from="6" d={lPath(uni.leg, (s) => lyAlt(s.altitudeKm * 1000))} pathLength="100" />
+        <path class="land hot" data-from="6" d={lPath(inf.leg, (s) => lyAlt(s.altitudeKm * 1000))} pathLength="100" />
+        <path class="land base" data-from="6" d={lPath(uni.leg, (s) => lyRate(s.descentRate))} pathLength="100" />
+        <path class="land hot" data-from="6" d={lPath(inf.leg, (s) => lyRate(s.descentRate))} pathLength="100" />
+        <circle class="node node-accent" data-from="6" cx={lightAt(inf).x} cy={lightAt(inf).y} r="0.9" />
+        <circle class="node node-base" data-from="6" cx={lightAt(uni).x} cy={lightAt(uni).y} r="0.9" />
+      </svg>
+      <span class="lab title-r" style={`right:0; top:${pct(2, LH)}`}>Altitude, m</span>
+      <span class="lab title-r" style={`right:0; top:${pct(32, LH)}`}>Descent rate, m/s</span>
+      {[lAltMax, lAltMax / 2, 0].map((v) => <span class="lab tick" style={`top:${pct(lyAlt(v), LH)}`}>{v}</span>)}
+      {[lRateMax, 0].map((v) => <span class="lab tick" style={`top:${pct(lyRate(v), LH)}`}>{v}</span>)}
+      <span class="lab ev hot-l" data-from="6" style={`left:${pct(lightAt(inf).x + 1.5, LW)}; top:${pct(lightAt(inf).y - 3, LH)}`}>
+        informed lights at {f2(inf.lightAltitudeM)} m
+      </span>
+      <span class="lab ev ev-left" data-from="6" style={`left:${pct(lightAt(uni).x - 1.5, LW)}; top:${pct(lightAt(uni).y + 3, LH)}`}>
+        standard-day guidance at {f2(uni.lightAltitudeM)} m
+      </span>
+      <span class="lab ev ev-left" data-from="6" style={`left:${pct(96, LW)}; top:${pct(lyRate(lRateMax * 0.8), LH)}`}>
+        lands at <b class="hot-l">{f2(inf.contactMs)}</b> and <b>{f2(uni.contactMs)}</b> m/s
+      </span>
+      <span class="lab t-tick" style={`left:${pct(lx(L_FROM), LW)}; top:${pct(54, LH)}`}>{f1(L_FROM)} s</span>
+      <span class="lab t-tick t-end" style={`right:${pct(LW - lx(L_TO), LW)}; top:${pct(54, LH)}`}>{f1(L_TO)} s</span>
+    </div>
+  </div>
+
+  <!-- Gates: the committed run's verdict, line by line. -->
+  <div class="view" data-scenes="7">
+    <ul class="gates hairline-list">
+      {gates.map((g) => (
+        <li><span class:list={['gate-flag', g.passed ? 'ok' : 'bad']}>{g.passed ? 'PASS' : 'FAIL'}</span> <code>{g.label}</code></li>
+      ))}
+    </ul>
+  </div>
+
+  <Fragment slot="caption">
+    Lines and dots are drawn from <a href={`${FILES}/retropulsion_trace.csv`}><code>retropulsion_trace.csv</code></a>,
+    <a href={`${FILES}/retropulsion_branch_trace.csv`}><code>retropulsion_branch_trace.csv</code></a> and
+    <a href={`${FILES}/retropulsion_uninformed_trace.csv`}><code>retropulsion_uninformed_trace.csv</code></a>, one row
+    per {stepS} s step, and the plan from walk 2’s <code>weather_table.csv</code>.
+  </Fragment>
+</Stepper>
+
+<style>
+  .fork-grid { display: grid; gap: var(--space-3); }
+
+  /* Strokes this figure adds to the shared set, in user units. */
+  .whisker { stroke: var(--fg-2); stroke-width: 0.3; }
+  .whisker.near { stroke: var(--fg-1); }
+  .whisker.base { stroke: var(--fg-0); }
+  .dot { fill: var(--fg-2); }
+  .dot.near { fill: var(--fg-1); }
+  .dot.base { fill: var(--fg-0); }
+  .dot.hot { fill: var(--accent); }
+  .bridge { stroke: var(--fg-2); stroke-width: 0.2; }
+  .margin-line { stroke-width: 0.45; }
+  .margin-line.hot { stroke: var(--accent); }
+  .margin-line.base { stroke: var(--fg-0); }
+  .node-base { fill: var(--fg-0); }
+  .dark { stroke: var(--warn); stroke-width: 1.2; stroke-linecap: butt; }
+  .trace-mach { stroke: var(--fg-1); }
+  .trace-thr { stroke: var(--accent); }
+  .branch { stroke: var(--fg-2); stroke-width: 0.3; }
+  .branch.base { stroke: var(--fg-0); stroke-width: 0.45; }
+  .branch.hot { stroke: var(--accent); stroke-width: 0.45; }
+  .acc { stroke: var(--fg-2); stroke-width: 0.25; }
+  .land { stroke-width: 0.4; }
+  .land.hot { stroke: var(--accent); }
+  .land.base { stroke: var(--fg-0); }
+
+  .end-l.base, .acc-l.base { color: var(--fg-0); }
+  .end-l.hot, .acc-l.hot, .hot-l, .hot-l b { color: var(--accent); }
+  .acc-l { transform: translateX(-50%); color: var(--fg-1); }
+  .acc-r { transform: translateX(-100%); }
+  .kept { color: var(--fg-2); }
+  @media (max-width: 719px) {
+    .kept { display: none; }
+  }
+  .dark-l { color: var(--warn); }
+</style>

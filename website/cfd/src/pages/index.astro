@@ -129,10 +129,10 @@ const throttlePoints = retropulsion.roster.map((b) => ({
       points={throttlePoints}
       x={{ domain: [-0.04, 0.85], ticks: [0, 0.2, 0.4, 0.6, 0.8], title: 'Throttle flown (fraction of maximum)', fmt: (v) => `${Math.round(v * 100)}%` }}
       y={{ domain: [6, 18], ticks: [6, 8, 10, 12, 14, 16, 18], title: 'Deceleration flown (m/s²)' }}
-      ref={{ y: retropulsion.roster[0].axial, label: 'Coasting: 10.60 m/s²', shade: true }}
-      label="Deceleration against throttle for five branches forked mid-burn. Coasting decelerates at 10.60 metres per second squared. At 20 percent throttle the vehicle decelerates at 7.47, and at 40 percent at 9.97, both below coasting. At 60 percent it reaches 12.89 and at 79 percent 17.20."
+      ref={{ y: retropulsion.roster[0].axial, label: 'Coasting: 10.59 m/s²', shade: true }}
+      label="Deceleration against throttle for five branches forked mid-burn. Coasting decelerates at 10.59 metres per second squared. At 20 percent throttle the vehicle decelerates at 7.47, and at 40 percent at 9.97, both below coasting. At 60 percent it reaches 12.89 and at 79 percent 17.20."
     >
-      At 20% throttle the vehicle decelerates at 7.47 m/s². Coasting gives 10.60 m/s². The plume
+      At 20% throttle the vehicle decelerates at 7.47 m/s². Coasting gives 10.59 m/s². The plume
       disturbs the bow shock and strips away drag, and at low throttle the drag lost is about as
       large as the thrust gained. Somewhere between 40% and 60% throttle, thrust wins. If the drag is
       held at its value from the fork instead of letting the plume change it, the prediction misses

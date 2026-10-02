@@ -20,7 +20,7 @@ forks once per candidate throttle, and each branch continues from the same insta
 verifies itself through sixteen gates and exits nonzero on any regression.
 
 Measured on an Apple M3 Max, 16 cores (12 performance + 4 efficiency), 128 GB, release build:
-**337.5 s wall clock and 18.3 MB peak resident set** for the whole descent: 2516 coupled steps across four legs,
+**337.5 s wall clock and 18.3 MB peak resident set** for the whole descent: 5491 coupled steps across four legs,
 including the five-branch mid-burn fan-out at 32×32 (1024 cells). Measure the built binary; under `cargo run`, rustc's
 own peak dominates the figure:
 
@@ -54,8 +54,8 @@ The run has five acts. The run *finds* every leg boundary as an event, a flow-re
 no station switch is scripted.
 
 **Act 0, PLAN.** The measured day is a cold one, 32 K below standard. Its temperature departure interpolates
-`weather_table.csv`, the artifact the weather example recorded. The interpolated row sizes the ignition margin (62.9 m
-of mean drift plus three sigma gives 73.4 m), supplies the density scale the atmosphere is flown at, and scales the
+`weather_table.csv`, the artifact the weather example recorded. The interpolated row sizes the ignition margin (54.4 m
+of mean drift plus three sigma gives 62.3 m), supplies the density scale the atmosphere is flown at, and scales the
 accelerometer bias the inertial model carries. A clamp (a measured departure outside the tabulated range) is stamped
 into provenance and gated.
 
@@ -65,18 +65,19 @@ envelope live on every step. Gate (1) checks that the corridor still flies as th
 
 **Acts 2+3, COAST, COMMIT, BURN.** One march call covers both acts. A coupling stack is fixed per call and a leg
 boundary does not carry the marched fluid tensor, so splitting at ignition would re-seed the flow and the fork below
-would copy a state with the plume already discarded. The vehicle coasts from 76 km down through the Jarvinen-Adams band and
-the ignition corridor commits at 32.7 km, Mach 2.00, 2235 Pa: inside the Mach band, inside the dynamic-pressure window,
+would copy a state with the plume already discarded. The vehicle coasts from 73.8 km down through the Jarvinen-Adams band and
+the ignition corridor commits at 32.7 km, Mach 2.00, 2229 Pa: inside the Mach band, inside the dynamic-pressure window,
 on a post-fix navigation state within the table-sized margin.
 
 **The fork.** The marched, burn-coupled state forks through copy-on-write, once per candidate throttle: a coast
 branch, two straddling the drag sign-flip band, a nominal branch, and an engine-degraded contingency. The preserved-drag
-fraction collapses 1.000 → 0.217 across the roster: the cited A0 correlation, carried per branch through a forked
-flight. Five gates read the fork: flow spread (4a), the drag collapse (4b), departure from a
-frozen-drag prediction (4c), fork economics (4d), and the audit trail (4e).
+fraction collapses 0.251 → −0.061 across the four burning branches, and the coast branch applies no decrement: the
+cited A0 correlation, carried per branch through a forked flight. Seven gates read the fork: flow spread (4a), the drag
+collapse (4b), departure from a frozen-drag prediction (4c), fork economics (4d), the audit trail (4e), roster
+non-degeneracy (4f), and the fan-out's step cost (4g).
 
 **Act 3b, BURN.** The supersonic retropulsion leg flies under the SRP envelope until the vehicle drops to Mach 0.6 at
-18.9 km, where those axes stop describing the physics.
+18.5 km, where those axes stop describing the physics.
 
 **Act 4, TERMINAL.** Cutoff, a subsonic re-seed under its own gamma, and the landing, flown **twice**. Both descents
 start from the same baseline on the same measured atmosphere and differ in exactly one input: the margin their guidance
@@ -84,20 +85,20 @@ was sized with.
 
 | world      |  margin | lights landing burn |  contact | propellant |
 |------------|--------:|--------------------:|---------:|-----------:|
-| informed   | 73.41 m |            153.19 m | 1.78 m/s |  +13.45 kg |
-| uninformed | 52.98 m |            129.75 m | 1.85 m/s |          — |
+| informed   | 62.30 m |            139.12 m | 1.81 m/s |   +7.28 kg |
+| uninformed | 47.52 m |            125.06 m | 1.72 m/s |          — |
 
 The margin reaches the flight through `ignition_altitude_kernel`, which adds it to the stopping distance; a guidance
 that believes the day is more dispersed lights its landing burn higher. Carrying the table into the cockpit buys the
-23.4 m between those two decisions; the 13.5 kg the informed world spends on it is the dispersion-sized reserve,
+14.1 m between those two decisions; the 7.3 kg the informed world spends on it is the dispersion-sized reserve,
 measured rather than configured.
 
-The flown separation is 23.4 m against an arithmetic margin difference of 20.4 m. The kernel solves a stopping distance
+The flown separation is 14.1 m against an arithmetic margin difference of 14.8 m. The kernel solves a stopping distance
 instead of applying an offset, so the extra margin also changes the mass and speed the burn starts from. Gate (5) reads
 the flown separation.
 
-The margin does **not** bind at the ignition commit: the navigated sigma there is 0.38 m against margins of 73.4 m and
-53.0 m, two orders of magnitude inside either, and both beliefs commit on the same step. A gate reading the commit would
+The margin does **not** bind at the ignition commit: the navigated sigma there is 0.38 m against margins of 62.3 m and
+47.5 m, two orders of magnitude inside either, and both beliefs commit on the same step. A gate reading the commit would
 report the two worlds as identical; a gate subtracting the two table lookups would report a separation neither world
 flew.
 
@@ -150,7 +151,7 @@ is the post-fork bond growth, which the gate bands: measured 0, so a state that 
 continuation.
 
 **Gate (4b) finds the sign flip.** Ordered by the throttle each branch flew, net deceleration is non-monotone:
-10.60 m/s² coasting, falling to 7.47 m/s² at 0.20 throttle before rising again. In the low thrust-coefficient band the
+10.59 m/s² coasting, falling to 7.47 m/s² at 0.20 throttle before rising again. In the low thrust-coefficient band the
 plume destroys preserved drag about as fast as thrust replaces it, so lighting the engine buys *less* deceleration than
 coasting. Preserved drag collapses 0.251 → −0.061 across the burning branches, reaching the correlation's negative,
 wake-type branch at the harder throttles.
@@ -171,11 +172,11 @@ Every simplification is documented in [`constants.rs`](constants.rs) and in the 
 
 2) **Day-of-entry targeting is not implemented; the measurement shows it buys nothing.** The design note asks the
    interpolated row to shift the deorbit aim point, on the premise that a colder day ionizes earlier and dwells longer.
-   Both halves hold, and they cancel: across the whole tabulated range onset swings 4.2 s and dwell swings 3.1 s, while
-   blackout **exit lands within 1.1 s on every day**. The gap that shift would protect runs from exit at ~70 s to the commit at 224 s:
-   154 s, perturbed by 1.1 s. The table's information is in the drift column (which swings 32.7 m), and the ignition
-   margin already consumes it. A vehicle with a heavier ballistic bundle would reach the ignition band lower and later
-   and squeeze that gap; this one does not.
+   Both halves hold, and they largely cancel: across the whole tabulated range onset swings 2.5 s and dwell swings
+   1.1 s, while blackout **exit lands within 1.4 s on every day**. The gap that shift would protect runs from exit at
+   ~69 s to the commit at 224 s: 155 s, perturbed by 1.4 s. The table's information is in the drift column (which swings
+   17.4 m), and the ignition margin already consumes it. A vehicle with a heavier ballistic bundle would reach the
+   ignition band lower and later and squeeze that gap; this one does not.
 
 3) On-axis magnitudes only. There is no angle of attack in the roster, per the design note's discipline pin, so the
    lateral plume-shock interaction is out of frame.
@@ -210,6 +211,9 @@ Every simplification is documented in [`constants.rs`](constants.rs) and in the 
 | [`constants.rs`](constants.rs)     | This example's knobs: horizons, the roster, the earned bands      |
 | [`utils_print.rs`](utils_print.rs) | Console rendering                                                 |
 | [`output.txt`](output.txt)         | A captured release run                                            |
+| `retropulsion_trace.csv`           | Written by the run: the informed descent, one row per coupled step across all four legs |
+| `retropulsion_branch_trace.csv`    | Written by the run: each roster branch, one row per step from the fork |
+| `retropulsion_uninformed_trace.csv` | Written by the run: the landing leg flown with the standard-day margin |
 
 The vehicle, the propulsion constants, the atmosphere, the carrier anchors, and the powered-descent coupling stack are
 shared with the [corridor](../corridor/README.md) and

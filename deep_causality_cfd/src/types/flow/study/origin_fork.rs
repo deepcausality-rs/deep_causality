@@ -196,8 +196,7 @@ where
                         ));
                     }
                 }
-                if let Err(e) =
-                    crate::types::flow::audit::append_line(audit_main_path(base), &spawn)
+                if let Err(e) = crate::types::flow::audit::start_file(audit_main_path(base), &spawn)
                 {
                     return StudyEffect::from_result(Err(StudyError::in_stage("save_log", e)));
                 }
