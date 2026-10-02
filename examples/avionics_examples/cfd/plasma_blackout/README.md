@@ -14,7 +14,7 @@ what the previous one produced, and the third closes the loop.
 |---|----------------------------------------|--------------------------------------------------------------------------------------------------------|-------------------------|--------------------------------|
 | 1 | [corridor](corridor/README.md)         | Flies one continuous Mach-25 descent through blackout, forking bank-angle counterfactuals at the onset | —                       | the validated baseline descent |
 | 2 | [weather](weather/README.md)           | Alternates that baseline into six weather worlds, flown concurrently, reduced to a dispersion table    | the corridor's baseline | `weather_table.csv`            |
-| 3 | [retropulsion](retropulsion/README.md) | Reads that table **in flight**, commits an ignition, forks the marched plume-coupled state, and lands  | both of the above       | a landing at 2.0 m/s           |
+| 3 | [retropulsion](retropulsion/README.md) | Reads that table **in flight**, commits an ignition, forks the marched plume-coupled state, and lands  | both of the above       | a landing at 1.8 m/s           |
 
 ```bash
 cargo run --release -p avionics_examples --example plasma_blackout_corridor
