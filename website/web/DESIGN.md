@@ -265,7 +265,7 @@ src/
       ThemeToggle.astro       # theme swap, persists to localStorage
     home/
       Hero.astro
-      CausalStack.astro       # five-band platform diagram
+      CausalStack.astro       # six-band platform diagram
       ExampleGrid.astro       # tabbed Rust snippet panel
       WhyDeepCausality.astro
       JoinCommunity.astro
@@ -414,7 +414,9 @@ No tilt-on-mouse parallax. No glow halo. No scale > 1.0. No background-color tra
 
 ### 8.4 Causal stack (`CausalStack.astro`)
 
-**This replaced the pillar row.** The three-pillar concept (Causaloid, Context, Effect Ethos) was superseded by a five-band platform diagram: Discover → Model → Act → Govern → Run. `PillarRow.astro` was never built.
+**This replaced the pillar row.** The three-pillar concept (Causaloid, Context, Effect Ethos) was superseded by a six-band platform diagram: Discover → Model → Sense → Act → Govern → Run. `PillarRow.astro` was never built.
+
+The first five bands are the five Overview topics, in their order; each takes its title from `components/overview/topics.ts` and carries an Overview chip to its page. The Run band has no Overview page and no Overview chip.
 
 Each band is a `.layer` row, `1fr` at base and `184px 1fr` at ≥720px. The fixed first column holds a mono micro-label; the `1fr` column holds chips and prose.
 
