@@ -39,6 +39,10 @@
   --dur-draw: 700ms;
   --dur-node: 280ms;
 
+  /* One scene of a stepped run animation: how long a trace takes to draw
+     across the time it covers. Zeroed under reduced motion like the rest. */
+  --dur-scene: 2600ms;
+
   /* Stagger step for sequenced entrances. Tokenized so it inherits the
      reduced-motion contract (DESIGN.md §6); the marketing site's literal
      110ms silently opts out. */
@@ -54,5 +58,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  :root { --stagger: 0ms; --dur-draw: 0ms; --dur-node: 0ms; }
+  :root { --stagger: 0ms; --dur-draw: 0ms; --dur-node: 0ms; --dur-scene: 0ms; }
 }

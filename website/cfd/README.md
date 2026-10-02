@@ -228,5 +228,8 @@ with `rsvg-convert -w 1200 -h 630`, then convert to JPEG.
   deploy (DESIGN.md §8.9); this site does not.
 - **No mermaid.** Diagrams on this site are hand-drawn SVG in the instrument
   vocabulary, which keeps the heaviest dependency off every route.
-- **No client islands.** Zero framework runtime; interactivity is four small
-  module scripts.
+- **No client islands.** Zero framework runtime; interactivity is five small
+  module scripts. The fifth is the scene stepper in
+  `src/components/tutorial/CorridorRun.astro`, which draws walk 1 from the corridor
+  run's committed per-step traces (`src/data/corridorTrace.ts` reads them at build
+  time and fails the build if they disagree with `src/data/results.ts`).

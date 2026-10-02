@@ -1,0 +1,514 @@
+---
+/**
+ * Walk 1's animation: the corridor run in seven scenes, drawn from the run's own per-step trace.
+ *
+ * Data: `src/data/corridorTrace.ts`, which reads `corridor_trace.csv`,
+ * `corridor_branch_trace.csv` and `output.txt` at build time. Every line, marker and number
+ * below comes from those files; nothing is keyframed by hand.
+ *
+ * Geometry lives in the SVG and words live in HTML, per the diagram convention in README.md.
+ * Without JavaScript the figure renders as three fully drawn views over an ordered list of the
+ * scene captions. The module script turns it into a stepper: scenes draw in order on first view,
+ * and the buttons jump to any scene. Under reduced motion it never autoplays and every draw
+ * duration is zero (`--dur-scene`).
+ */
+import { branches, events, gates, samples } from '../../data/corridorTrace';
+import { corridor } from '../../data/results';
+import { GITHUB_URL } from '../../consts';
+
+const FILES = `${GITHUB_URL}/blob/main/examples/avionics_examples/cfd/plasma_blackout/corridor`;
+
+// ── Number formatting ────────────────────────────────────────────────────────────────────────
+const f1 = (v: number) => v.toFixed(1);
+const f2 = (v: number) => v.toFixed(2);
+const sci = (v: number) => {
+  const e = Math.floor(Math.log10(v));
+  return { m: (v / 10 ** e).toFixed(1), e };
+};
+const r2 = (v: number) => Math.round(v * 100) / 100;
+const pct = (v: number, of: number) => `${((v / of) * 100).toFixed(2)}%`;
+
+// ── Timeline view: three strips over one time axis ───────────────────────────────────────────
+const TW = 100;
+const TH = 66;
+const T_MAX = events.end.t;
+const X0 = 8;
+const X1 = 98;
+const tx = (t: number) => r2(X0 + (t / T_MAX) * (X1 - X0));
+const STEP_S = r2(samples[1].t - samples[0].t);
+
+const ALT = { lo: 40, hi: 92, top: 5, bot: 19 };
+const LOGW = { lo: 4, hi: 12.5, top: 27, bot: 41 };
+const NAV = { lo: 0, hi: 45, top: 49, bot: 63 };
+const yAlt = (km: number) => r2(ALT.bot - ((km - ALT.lo) / (ALT.hi - ALT.lo)) * (ALT.bot - ALT.top));
+const yLogW = (w: number) => {
+  const l = Math.min(LOGW.hi, Math.max(LOGW.lo, Math.log10(Math.max(w, 1e-30))));
+  return r2(LOGW.bot - ((l - LOGW.lo) / (LOGW.hi - LOGW.lo)) * (LOGW.bot - LOGW.top));
+};
+const yNav = (m: number) => r2(NAV.bot - ((m - NAV.lo) / (NAV.hi - NAV.lo)) * (NAV.bot - NAV.top));
+
+const pauseIx = samples.findIndex((s) => s.t === events.pause.t);
+const exitIx = samples.findIndex((s) => s.t === events.exit.t);
+const spans = [
+  { scene: 1, from: 0, to: pauseIx },
+  { scene: 5, from: pauseIx, to: exitIx - 1 },
+  { scene: 6, from: exitIx - 1, to: samples.length - 1 },
+];
+const polyline = (from: number, to: number, y: (s: (typeof samples)[number]) => number) =>
+  samples
+    .slice(from, to + 1)
+    .map((s, i) => `${i === 0 ? 'M' : 'L'}${tx(s.t)},${y(s)}`)
+    .join(' ');
+const strips = spans.map((s) => ({
+  scene: s.scene,
+  alt: polyline(s.from, s.to, (p) => yAlt(p.altitudeKm)),
+  logw: polyline(s.from, s.to, (p) => yLogW(p.plasmaFreq)),
+  nav: polyline(s.from, s.to, (p) => yNav(p.navErr)),
+}));
+
+const ne = sci(events.peakPassage.electronDensity);
+const altTicks = [90, 70, 50];
+const navTicks = [0, 20, 40];
+const timeTicks = Array.from({ length: Math.floor(T_MAX / 20) + 1 }, (_, i) => i * 20);
+
+// ── Fork view: the 17 branches after the pause, and where each one ends ──────────────────────
+const FW = 100;
+const FH = 40;
+const F_AXIS = 36;
+const BRANCH_S = Math.max(...branches.map((b) => b.t[b.t.length - 1]));
+const CR_MAX = Math.ceil(Math.max(...branches.map((b) => b.crossRange[b.crossRange.length - 1])) / 10) * 10;
+const fx = (t: number) => r2(8 + (t / BRANCH_S) * 82);
+const fy = (m: number) => r2(F_AXIS - (m / CR_MAX) * 31);
+const fanPath = (b: (typeof branches)[number]) =>
+  [`M8,${F_AXIS}`, ...b.t.map((t, i) => `L${fx(t)},${fy(b.crossRange[i])}`)].join(' ');
+const committed = branches.find((b) => b.round === 2 && b.bank === corridor.committed.bank)!;
+const roundOne = branches.filter((b) => b.round === 1);
+const roundTwo = branches.filter((b) => b.round === 2 && b !== committed);
+
+// The end-state plane, drawn at one scale on both axes so the miss reads as a true distance.
+const EW = 100;
+const IP_MAX = Math.ceil(Math.max(...branches.map((b) => b.inPlaneEnd)) / 2) * 2;
+const SCALE = 90 / CR_MAX;
+const EH = r2(10 + IP_MAX * SCALE);
+const ex = (m: number) => r2(5 + m * SCALE);
+const ey = (m: number) => r2(5 + m * SCALE);
+const ends = [...branches]
+  .filter((b) => !(b.round === 2 && b.bank === 10))
+  .sort((a, b) => a.bank - b.bank);
+const reach = ends.map((b, i) => `${i === 0 ? 'M' : 'L'}${ex(b.crossRange[b.crossRange.length - 1])},${ey(b.inPlaneEnd)}`).join(' ');
+const aimX = ex(corridor.aimOffsetM);
+const aimY = ey(0);
+const win = {
+  x: ex(committed.crossRange[committed.crossRange.length - 1]),
+  y: ey(committed.inPlaneEnd),
+};
+
+const scenes = [
+  { id: 1, name: 'Descent' },
+  { id: 2, name: 'GPS lost' },
+  { id: 3, name: '17 what-ifs' },
+  { id: 4, name: 'Best end' },
+  { id: 5, name: 'Blackout' },
+  { id: 6, name: 'GPS back' },
+  { id: 7, name: 'Gates' },
+];
+const passed = gates.filter((g) => g.passed).length;
+---
+<figure class="cfd-anim panel corner-brackets" data-scenes={scenes.length} data-rise aria-label="The corridor run in seven scenes">
+  <div class="controls" hidden>
+    <button type="button" class="ctl ctl-play" data-play aria-pressed="false">Play</button>
+    <ol class="steps">
+      {scenes.map((s) => (
+        <li><button type="button" class="ctl" data-goto={s.id}><span class="num">{s.id}</span> {s.name}</button></li>
+      ))}
+    </ol>
+  </div>
+
+  <ol class="captions">
+    <li data-s="1">
+      <b>Descent.</b> The vehicle enters at {f1(samples[0].altitudeKm)} km. As the air thickens, its shock
+      layer ionizes, and the plasma frequency (set by the electron density) climbs toward the GPS L1 band.
+    </li>
+    <li data-s="2">
+      <b>GPS lost.</b> At {f1(events.pause.t)} s and {f1(events.pause.altitudeKm)} km the plasma frequency
+      passes the L1 band, the link drops, and the run pauses. No constant in the program names that moment.
+    </li>
+    <li data-s="3">
+      <b>{branches.length} what-ifs.</b> From the one pause, {roundOne.length} bank angles fly on for
+      {f1(BRANCH_S)} s, then {roundTwo.length + 1} more half a degree apart. Height is how far each one
+      moves sideways from the no-bank path.
+    </li>
+    <li data-s="4">
+      <b>Best end.</b> Banking harder moves the vehicle further sideways but also drops it within its descent
+      plane, so the miss bottoms out at {corridor.committed.bank}° and {f2(corridor.committed.miss)} m. The
+      no-bank miss of {f1(corridor.coarse[0].miss)} m is set by the example, which places the aim
+      {corridor.aimOffsetM} m to the side.
+    </li>
+    <li data-s="5">
+      <b>Blackout.</b> The {corridor.committed.bank}° branch flies on in the dark. At the
+      {f1(events.peakPassage.altitudeKm)} km flight-data station the electron density is
+      {ne.m}×10<sup>{ne.e}</sup> m<sup>−3</sup>, against 10<sup>19</sup> measured by RAM-C II in 1970.
+      With no fixes, the navigation error grows to {f1(events.darkNavPeak.navErr)} m.
+    </li>
+    <li data-s="6">
+      <b>GPS back.</b> At {f1(events.exit.t)} s and {f1(events.exit.altitudeKm)} km the plasma frequency
+      falls below the band. The first fix cuts the navigation error to {f2(events.exit.navErr)} m, and
+      {f1(events.end.t - events.exit.t)} s later it is {f2(events.end.navErr)} m.
+    </li>
+    <li data-s="7">
+      <b>Gates.</b> {gates.length} gates judge the run and {passed} pass. Each line is copied from the
+      committed <code>output.txt</code>.
+    </li>
+  </ol>
+
+  <div class="views">
+    <!-- Timeline: altitude, plasma frequency against GPS L1, navigation error. -->
+    <div class="view view-timeline">
+      <div class="frame" style={`aspect-ratio: ${TW} / ${TH}`}>
+        <svg viewBox={`0 0 ${TW} ${TH}`} aria-hidden="true" focusable="false">
+          {[ALT, LOGW, NAV].map((s) => (
+            <line class="axis" x1={X0} y1={s.bot} x2={X1} y2={s.bot} />
+          ))}
+          <line class="band" x1={X0} y1={yLogW(events.bandRadS)} x2={X1} y2={yLogW(events.bandRadS)} />
+          <line class="mark" data-from="2" x1={tx(events.pause.t)} y1={ALT.top - 2} x2={tx(events.pause.t)} y2={NAV.bot} pathLength="100" />
+          <line class="mark" data-from="6" x1={tx(events.exit.t)} y1={ALT.top - 2} x2={tx(events.exit.t)} y2={NAV.bot} pathLength="100" />
+          {strips.map((s) => (
+            <g data-from={s.scene}>
+              <path class="trace" d={s.alt} pathLength="100" />
+              <path class="trace trace-w" d={s.logw} pathLength="100" />
+              <path class="trace trace-nav" d={s.nav} pathLength="100" />
+            </g>
+          ))}
+          <circle class="node node-accent" data-from="2" cx={tx(events.pause.t)} cy={yAlt(events.pause.altitudeKm)} r="0.9" />
+          <circle class="node node-accent" data-from="2" cx={tx(events.pause.t)} cy={yLogW(events.bandRadS)} r="0.9" />
+          <circle class="node" data-from="5" cx={tx(events.peakPassage.t)} cy={yAlt(events.peakPassage.altitudeKm)} r="0.9" />
+          <circle class="node" data-from="5" cx={tx(events.darkNavPeak.t)} cy={yNav(events.darkNavPeak.navErr)} r="0.9" />
+          <circle class="node node-accent" data-from="6" cx={tx(events.exit.t)} cy={yLogW(events.bandRadS)} r="0.9" />
+          <circle class="node node-accent" data-from="6" cx={tx(events.end.t)} cy={yNav(events.end.navErr)} r="0.9" />
+        </svg>
+
+        <!-- Each title sits where its own trace never goes. -->
+        <span class="lab title-r" style={`right:${pct(TW - tx(events.exit.t) + 2, TW)}; top:${pct(ALT.top + 0.5, TH)}`}>Altitude, km</span>
+        <span class="lab title-l" style={`left:${pct(tx(events.pause.t) + 2, TW)}; top:${pct(LOGW.bot - 3.5, TH)}`}>Plasma frequency, log scale</span>
+        <span class="lab title-l" style={`left:${pct(X0 + 1, TW)}; top:${pct(NAV.top + 0.5, TH)}`}>Navigation error, m</span>
+        {altTicks.map((v) => <span class="lab tick" style={`top:${pct(yAlt(v), TH)}`}>{v}</span>)}
+        {navTicks.map((v) => <span class="lab tick" style={`top:${pct(yNav(v), TH)}`}>{v}</span>)}
+        <span class="lab band-l" style={`top:${pct(yLogW(events.bandRadS), TH)}`}>GPS L1</span>
+        {timeTicks.map((t) => <span class="lab t-tick" style={`left:${pct(tx(t), TW)}`}>{t} s</span>)}
+
+        <span class="lab ev" data-from="2" style={`left:${pct(tx(events.pause.t) + 1, TW)}; top:${pct(ALT.top - 2, TH)}`}>
+          <b>GPS lost</b> {f1(events.pause.altitudeKm)} km
+        </span>
+        <span class="lab ev" data-from="5" style={`left:${pct(tx(events.peakPassage.t) + 1.5, TW)}; top:${pct(yAlt(events.peakPassage.altitudeKm) - 2.5, TH)}`}>
+          {f1(events.peakPassage.altitudeKm)} km: {ne.m}×10<sup>{ne.e}</sup> m<sup>−3</sup>
+        </span>
+        <span class="lab ev ev-left" data-from="5" style={`left:${pct(tx(events.darkNavPeak.t) - 1.5, TW)}; top:${pct(yNav(events.darkNavPeak.navErr), TH)}`}>
+          {f1(events.darkNavPeak.navErr)} m
+        </span>
+        <span class="lab ev ev-left" data-from="6" style={`left:${pct(tx(events.exit.t) - 1, TW)}; top:${pct(ALT.top - 2, TH)}`}>
+          <b>GPS back</b> {f1(events.exit.altitudeKm)} km
+        </span>
+      </div>
+    </div>
+
+    <!-- Fork: sideways distance after the pause, then the end points against the aim. -->
+    <div class="view view-fork">
+      <div class="fork-grid">
+        <div class="frame" style={`aspect-ratio: ${FW} / ${FH}`}>
+          <svg viewBox={`0 0 ${FW} ${FH}`} aria-hidden="true" focusable="false">
+            <line class="axis" x1="8" y1={F_AXIS} x2="90" y2={F_AXIS} />
+            <line class="aim" x1="82" y1={fy(corridor.aimOffsetM)} x2="90" y2={fy(corridor.aimOffsetM)} />
+            {roundOne.map((b) => <path class="r1" data-from="3" d={fanPath(b)} pathLength="100" />)}
+            {roundTwo.map((b) => <path class="r2" data-from="3" d={fanPath(b)} pathLength="100" />)}
+            <path class="win" data-from="3" d={fanPath(committed)} pathLength="100" />
+            <circle class="node node-accent" data-from="3" cx="8" cy={F_AXIS} r="0.9" />
+          </svg>
+          <span class="lab strip-title" style="top:0">Sideways distance from the no-bank path, m</span>
+          <span class="lab aim-l" style={`left:${pct(82, FW)}; top:${pct(fy(corridor.aimOffsetM) - 3.2, FH)}`}>aim, {corridor.aimOffsetM} m</span>
+          {roundOne.map((b) => (
+            <span class="lab end-l" data-from="3" style={`left:${pct(fx(BRANCH_S) + 1, FW)}; top:${pct(fy(b.crossRange[b.crossRange.length - 1]), FH)}`}>{b.bank}°</span>
+          ))}
+          <span class="lab t-tick" style={`left:${pct(8, FW)}`}>pause</span>
+          <span class="lab t-tick" style={`left:${pct(fx(BRANCH_S), FW)}`}>+{f1(BRANCH_S)} s</span>
+        </div>
+
+        <div class="frame" style={`aspect-ratio: ${EW} / ${EH}`}>
+          <svg viewBox={`0 0 ${EW} ${EH}`} aria-hidden="true" focusable="false">
+            <line class="axis" x1="5" y1="5" x2="95" y2="5" />
+            <path class="reach" data-from="4" d={reach} pathLength="100" />
+            <line class="miss" data-from="4" x1={aimX} y1={aimY} x2={win.x} y2={win.y} pathLength="100" />
+            {ends.map((b) => (
+              <circle class={b.round === 1 ? 'node' : 'node node-r2'} data-from="4" cx={ex(b.crossRange[b.crossRange.length - 1])} cy={ey(b.inPlaneEnd)} r="0.9" />
+            ))}
+            <circle class="node node-aim" data-from="4" cx={aimX} cy={aimY} r="1.2" />
+            <circle class="node node-accent" data-from="4" cx={win.x} cy={win.y} r="1.3" />
+          </svg>
+          <span class="lab strip-title" style="top:0">Where each branch ends, same scale both ways</span>
+          <span class="lab end-l" data-from="4" style={`left:${pct(aimX + 2, EW)}; top:${pct(aimY + 1.5, EH)}`}>aim</span>
+          <span class="lab ev ev-left lab-win" data-from="4" style={`left:${pct(win.x - 2, EW)}; top:${pct(win.y + 2, EH)}`}>
+            <b>{corridor.committed.bank}°</b> {f2(corridor.committed.miss)} m
+          </span>
+          <span class="lab t-tick" style={`left:${pct(ex(0), EW)}`}>0</span>
+          <span class="lab t-tick t-end" style={`right:${pct(EW - ex(CR_MAX), EW)}`}>{CR_MAX} m sideways</span>
+          <span class="lab title-l" style={`left:${pct(ex(0), EW)}; top:${pct(EH - 6, EH)}`}>↓ lower within the descent plane</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Gates: the committed run's verdict, line by line. -->
+    <div class="view view-gates">
+      <ul class="gates hairline-list">
+        {gates.map((g) => (
+          <li><span class:list={['gate-flag', g.passed ? 'ok' : 'bad']}>{g.passed ? 'PASS' : 'FAIL'}</span> <code>{g.label}</code></li>
+        ))}
+      </ul>
+    </div>
+  </div>
+
+
+  <figcaption>
+    Every line is drawn from <a href={`${FILES}/corridor_trace.csv`}><code>corridor_trace.csv</code></a> and
+    <a href={`${FILES}/corridor_branch_trace.csv`}><code>corridor_branch_trace.csv</code></a>, which the
+    run writes at one row per {STEP_S} s step. The plasma frequency is clipped at the bottom of its strip
+    once the sheath drains.
+  </figcaption>
+</figure>
+
+<script>
+  // The stepper. Without this script the figure stays a static, fully drawn record.
+  const HOLD_MS = 6000;
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  document.querySelectorAll<HTMLElement>('.cfd-anim').forEach((fig) => {
+    const count = Number(fig.dataset.scenes);
+    const controls = fig.querySelector<HTMLElement>('.controls');
+    const play = fig.querySelector<HTMLButtonElement>('[data-play]');
+    const steps = [...fig.querySelectorAll<HTMLButtonElement>('[data-goto]')];
+    if (!controls || !play || steps.length !== count) return;
+
+    let scene = 0;
+    let timer: number | undefined;
+
+    const show = (s: number) => {
+      scene = s;
+      fig.dataset.scene = String(s);
+      fig.dataset.reached = Array.from({ length: s }, (_, i) => i + 1).join(' ');
+      steps.forEach((b) => b.setAttribute('aria-current', b.dataset.goto === String(s) ? 'step' : 'false'));
+    };
+    const stop = () => {
+      window.clearTimeout(timer);
+      timer = undefined;
+      play.setAttribute('aria-pressed', 'false');
+      play.textContent = scene >= count ? 'Replay' : 'Play';
+    };
+    const tick = () => {
+      if (scene >= count) return stop();
+      show(scene + 1);
+      timer = window.setTimeout(tick, HOLD_MS);
+    };
+    const start = () => {
+      if (scene >= count) show(0);
+      play.setAttribute('aria-pressed', 'true');
+      play.textContent = 'Pause';
+      window.clearTimeout(timer);
+      timer = window.setTimeout(tick, scene === 0 ? 50 : 0);
+    };
+
+    fig.classList.add('js');
+    controls.hidden = false;
+    show(reduce ? 1 : 0);
+    stop();
+
+    play.addEventListener('click', () => (timer === undefined ? start() : stop()));
+    steps.forEach((b) =>
+      b.addEventListener('click', () => {
+        stop();
+        show(Number(b.dataset.goto));
+        play.textContent = scene >= count ? 'Replay' : 'Play';
+      })
+    );
+
+    if (reduce || !('IntersectionObserver' in window)) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((e) => e.isIntersecting)) return;
+        io.disconnect();
+        if (scene === 0) start();
+      },
+      { threshold: 0.4 }
+    );
+    io.observe(fig);
+  });
+</script>
+
+<style>
+  .cfd-anim { margin: var(--space-6) 0; padding: var(--space-5); }
+
+  /* ── Controls ── */
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    margin-bottom: var(--space-4);
+  }
+  .controls[hidden] { display: none; }
+  .steps { display: flex; flex-wrap: wrap; gap: var(--space-2); list-style: none; margin: 0; padding: 0; }
+  .ctl {
+    font-family: var(--font-mono);
+    font-size: clamp(0.6875rem, 2.4vw, 0.8125rem);
+    color: var(--fg-1);
+    background: none;
+    border: 1px solid var(--line-1);
+    border-radius: var(--radius-pill);
+    padding: var(--space-1) var(--space-3);
+    cursor: pointer;
+    transition: border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+  }
+  .ctl:hover { border-color: var(--line-2); color: var(--fg-0); }
+  .ctl[aria-current='step'] { border-color: var(--accent); color: var(--accent); }
+  .ctl-play { color: var(--fg-0); border-color: var(--line-2); min-width: 6.5em; }
+  .ctl .num { color: var(--fg-2); }
+
+  /* ── Views: stacked when scripted, listed when not ── */
+  .views { display: grid; }
+  .view + .view { margin-top: var(--space-5); }
+  .js .view { grid-area: 1 / 1; margin-top: 0; opacity: 0; visibility: hidden; transition: opacity var(--dur-slow) var(--ease-out), visibility var(--dur-slow); }
+  .js[data-scene='0'] .view-timeline,
+  .js[data-scene='1'] .view-timeline,
+  .js[data-scene='2'] .view-timeline,
+  .js[data-scene='5'] .view-timeline,
+  .js[data-scene='6'] .view-timeline,
+  .js[data-scene='3'] .view-fork,
+  .js[data-scene='4'] .view-fork,
+  .js[data-scene='7'] .view-gates { opacity: 1; visibility: visible; }
+
+  @media (max-width: 719px) {
+    .js .view { visibility: visible; display: none; transition: none; }
+    .js[data-scene='0'] .view-timeline,
+    .js[data-scene='1'] .view-timeline,
+    .js[data-scene='2'] .view-timeline,
+    .js[data-scene='5'] .view-timeline,
+    .js[data-scene='6'] .view-timeline,
+    .js[data-scene='3'] .view-fork,
+    .js[data-scene='4'] .view-fork,
+    .js[data-scene='7'] .view-gates { display: block; }
+  }
+
+  .frame { position: relative; width: 100%; margin-bottom: 1.6em; }
+  svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .fork-grid { display: grid; gap: var(--space-3); }
+
+  /* ── Strokes, in user units (README "Diagrams") ── */
+  path, line { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .axis { stroke: var(--line-2); stroke-width: 0.15; }
+  .band { stroke: var(--warn); stroke-width: 0.2; stroke-dasharray: 0.8 0.8; }
+  .aim { stroke: var(--fg-2); stroke-width: 0.25; stroke-dasharray: 1 1; }
+  .mark { stroke: var(--fg-2); stroke-width: 0.15; }
+  .trace { stroke: var(--fg-0); stroke-width: 0.35; }
+  .trace-w { stroke: var(--fg-1); }
+  .trace-nav { stroke: var(--accent); }
+  .r1 { stroke: var(--fg-2); stroke-width: 0.3; }
+  .r2 { stroke: color-mix(in srgb, var(--accent) 55%, transparent); stroke-width: 0.25; }
+  .win { stroke: var(--accent); stroke-width: 0.6; }
+  .reach { stroke: var(--fg-2); stroke-width: 0.3; }
+  .miss { stroke: var(--accent); stroke-width: 0.35; }
+  .node { fill: var(--fg-1); }
+  .node-r2 { fill: color-mix(in srgb, var(--accent) 55%, transparent); }
+  .node-accent { fill: var(--accent); }
+  .node-aim { fill: none; stroke: var(--fg-0); stroke-width: 0.3; }
+
+  /* ── Scene reveal. A scripted figure draws an element once its scene is reached. ── */
+  /* Opacity as well as the dash offset: a round cap on a fully offset dash still paints a dot. */
+  .js [data-from] path, .js path[data-from], .js line[data-from] {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    opacity: 0;
+    transition: stroke-dashoffset var(--dur-scene) linear, opacity 0s;
+  }
+  .js circle[data-from], .js .lab[data-from] {
+    opacity: 0;
+    transition: opacity var(--dur-slow) var(--ease-out);
+  }
+  .js .r2 { transition-delay: calc(var(--dur-scene) * 0.6); }
+  .js .win { transition-delay: calc(var(--dur-scene) * 0.9); }
+  .js[data-reached~='5'] [data-from='5'] .trace-nav { transition-delay: 0s; }
+  .js[data-reached~='1'] [data-from='1'] path,
+  .js[data-reached~='2'] [data-from='2'],
+  .js[data-reached~='3'] [data-from='3'],
+  .js[data-reached~='4'] [data-from='4'],
+  .js[data-reached~='5'] [data-from='5'] path,
+  .js[data-reached~='6'] [data-from='6'] path,
+  .js[data-reached~='6'] line[data-from='6'] { stroke-dashoffset: 0; opacity: 1; }
+  .js[data-reached~='5'] circle[data-from='5'],
+  .js[data-reached~='5'] .lab[data-from='5'],
+  .js[data-reached~='6'] circle[data-from='6'],
+  .js[data-reached~='6'] .lab[data-from='6'] { opacity: 1; transition-delay: calc(var(--dur-scene) * 0.8); }
+
+  /* ── Labels: HTML over the frame, sized by the site's type tokens ── */
+  .lab {
+    position: absolute;
+    font-family: var(--font-mono);
+    font-size: clamp(0.5625rem, 2.2vw, 0.75rem);
+    line-height: 1.3;
+    color: var(--fg-2);
+    white-space: nowrap;
+  }
+  .lab b { color: var(--fg-0); font-weight: 500; }
+  .lab sup { font-size: 0.75em; }
+  .strip-title { left: 0; color: var(--fg-1); }
+  .title-r { color: var(--fg-1); }
+  .title-l { color: var(--fg-1); }
+  .tick { left: 0; transform: translateY(-50%); }
+  .band-l { right: 0; transform: translateY(-120%); color: var(--warn); }
+  .t-tick { top: 100%; transform: translateX(-50%); padding-top: 0.2em; }
+  .t-end { transform: none; }
+  .ev { transform: translateY(-50%); }
+  .ev-left { transform: translate(-100%, -50%); }
+  .aim-l { white-space: nowrap; }
+  .end-l { transform: translateY(-50%); color: var(--fg-1); }
+  .lab-win, .lab-win b { color: var(--accent); }
+
+  /* ── Gates ── */
+  .gates { font-family: var(--font-mono); font-size: clamp(0.6875rem, 2.4vw, 0.8125rem); color: var(--fg-1); }
+  @media (min-width: 720px) {
+    .gates { grid-template-columns: 1fr 1fr; column-gap: var(--space-5); }
+    .gates li + li { border-top: none; }
+    .gates li { border-bottom: 1px solid var(--line-1); }
+  }
+  .gates li { padding: var(--space-1) 0; }
+  .gate-flag { display: inline-block; min-width: 3.5em; }
+  .gates code { font-size: inherit; color: inherit; background: none; padding: 0; }
+  .gate-flag.ok { color: var(--ok); }
+  .gate-flag.bad { color: var(--danger); }
+
+  /* ── Captions: a list when static, one scene at a time when scripted ── */
+  .captions {
+    margin: 0 0 var(--space-5);
+    padding-left: 1.4em;
+    color: var(--fg-1);
+    font-size: var(--t-body-sm);
+    max-width: var(--measure);
+    min-height: 5.5em;
+  }
+  .captions li + li { margin-top: var(--space-2); }
+  .captions b { color: var(--fg-0); font-weight: 500; }
+  .js .captions { list-style: none; padding-left: 0; display: grid; }
+  .js .captions li { grid-area: 1 / 1; margin: 0; opacity: 0; visibility: hidden; transition: opacity var(--dur-slow) var(--ease-out); }
+  .js[data-scene='0'] .captions li[data-s='1'],
+  .js[data-scene='1'] .captions li[data-s='1'],
+  .js[data-scene='2'] .captions li[data-s='2'],
+  .js[data-scene='3'] .captions li[data-s='3'],
+  .js[data-scene='4'] .captions li[data-s='4'],
+  .js[data-scene='5'] .captions li[data-s='5'],
+  .js[data-scene='6'] .captions li[data-s='6'],
+  .js[data-scene='7'] .captions li[data-s='7'] { opacity: 1; visibility: visible; }
+
+  figcaption {
+    margin-top: var(--space-4);
+    color: var(--fg-2);
+    font-size: var(--t-body-sm);
+    max-width: var(--measure);
+  }
+  figcaption code { font-size: 0.85em; }
+</style>

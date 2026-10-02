@@ -21,10 +21,13 @@ produces: The four rules walks 2 and 3 reuse.
 source: examples/avionics_examples/cfd/plasma_blackout/corridor
 ---
 import { MACHINE } from '../../../consts';
+import CorridorRun from '../../../components/tutorial/CorridorRun.astro';
 
 Run the corridor and it picks an 11.5 degree bank angle that lands 2.07 m from the
 aim point. It found that angle by pausing one reentry descent when GPS cuts out and
 flying 17 bank angles from the pause.
+
+<CorridorRun />
 
 ## Before you start
 
@@ -207,9 +210,10 @@ clamped, and overshoots", and the 28.881 m in your output is what that costs. Th
 cap and between two candidates, so the sweep has to find it.
 
 The sweep stops at 0.5 degrees and 2.07 m. Finer steps would optimize below what
-the vehicle can know: its navigation error in this run reaches 2.2879 m by the exit
-from blackout. A flight system commands off the navigated state, so finer steering
-returns nothing.
+the vehicle can know: its navigation error in this run is 1.67 m when the branches
+are scored, and it keeps growing to 42.4 m before GPS returns
+(`corridor_trace.csv`). A flight system commands off the navigated state, so finer
+steering returns nothing.
 
 ## Station 6: Every band is a const
 
