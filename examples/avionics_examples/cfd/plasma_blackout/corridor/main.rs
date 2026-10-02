@@ -39,8 +39,11 @@ mod constants;
 mod model;
 mod utils_print;
 
+use avionics_examples::shared::trace::{self, TRACE_FIELD, row_count, trace_rows};
 use avionics_examples::shared::{utils, world};
-use deep_causality_cfd::{CfdFlow, MarchStop, PhysicsError, StudyError, StudyView, Verdict};
+use deep_causality_cfd::{
+    CfdFlow, IoAction, MarchStop, PhysicsError, StudyError, StudyView, Verdict, write_rows,
+};
 use deep_causality_core::AlternatableContext;
 use deep_causality_num::lift;
 use std::cell::RefCell;
@@ -68,6 +71,12 @@ fn main() -> ExitCode {
         avionics_examples::paths::manifest_dir()
             .join("cfd/plasma_blackout/corridor/corridor_branches.csv")
     };
+    // Where the per-step traces are written: the flown descent, and every branch after the fork.
+    let trace_path = |file: &str| {
+        avionics_examples::paths::manifest_dir()
+            .join("cfd/plasma_blackout/corridor")
+            .join(file)
+    };
     // Lift a leg's solver error into the study error channel, so the whole corridor resolves to
     // one `Result<Verdict, StudyError>` — the trajectory legs and the campaign share an error type.
     let leg_err = |stage: &'static str| move |e: PhysicsError| StudyError::in_stage(stage, e);
@@ -83,7 +92,7 @@ fn main() -> ExitCode {
         // is the classifier's denial flag — it fires when the evolved sheath crosses the GPS L1
         // cutoff.
         let onset = CfdFlow::march(&nominal)
-            .couple(world::corridor_coupling(1.0, 0))
+            .couple(trace::traced(world::corridor_coupling(1.0, 0)))
             .trigger(utils::trigger())
             .kappa(lift(0.0))
             .from_field(world::initial_field())
@@ -96,19 +105,25 @@ fn main() -> ExitCode {
         // the same paused onset. The fine-round `inspect` captures the committed branch for the
         // legs below.
         let committed_capture: RefCell<Option<model::BranchRow>> = RefCell::new(None);
+        // Both rounds' rows, kept for the branch-trace table.
+        let rounds_capture: RefCell<Vec<Vec<model::BranchRow>>> = RefCell::new(Vec::new());
         let corridor = CfdFlow::study("bank-angle corridor")
             .cases(model::coarse_commands())
             .fork(&onset)
             .branch(model::bank_world)
             .continue_for(constants::BRANCH_STEPS)
             .reduce_all(model::score_branches) // aim point from the ballistic branch first
-            .inspect(|rows| utils_print::print_branches(COARSE_TITLE, rows))
+            .inspect(|rows| {
+                utils_print::print_branches(COARSE_TITLE, rows);
+                rounds_capture.borrow_mut().push(rows.to_vec());
+            })
             .refine(&onset, model::fine_candidates) // 0.5-deg bracket around the coarse winner
             .branch(model::bank_world)
             .continue_for(constants::BRANCH_STEPS)
             .reduce_all(model::score_branches) // same aim point: the rounds stay comparable
             .inspect(|rows| {
                 utils_print::print_branches(FINE_TITLE, rows);
+                rounds_capture.borrow_mut().push(rows.to_vec());
                 *committed_capture.borrow_mut() = Some(rows[model::pick_committed(rows)].clone());
             })
             .record(table_path())
@@ -126,7 +141,7 @@ fn main() -> ExitCode {
         // ── The diagnostic legs: trajectory level, flying the committed world. The world swap is a
         // loud pre-run context alternation; the carried field brings the navigation state, the
         // evolved projections, and the provenance log along.
-        let coupling = || world::corridor_coupling(1.0, 0);
+        let coupling = || trace::traced(world::corridor_coupling(1.0, 0));
         let peak = CfdFlow::march(&nominal)
             .alternate_context(&committed_world)
             .couple(coupling())
@@ -165,6 +180,34 @@ fn main() -> ExitCode {
             .map_err(leg_err("leg: reacquisition"))?;
         let leg4 = model::snapshot("reacquisition", &reacq);
         utils_print::print_leg(&leg4);
+
+        // ── The per-step traces: the flown descent, labelled by leg, and every branch after the
+        // fork. Each pause's field holds every row flown up to it, so its row count ends its leg.
+        let rows_at = |field: &deep_causality_cfd::CoupledField<FloatType>| {
+            row_count(field.scalar(TRACE_FIELD).unwrap_or(&[]))
+        };
+        let fork_rows = rows_at(onset.field());
+        let leg_ends = [
+            fork_rows,
+            rows_at(peak.field()),
+            rows_at(exit_pause.field()),
+            rows_at(reacq.field()),
+        ];
+        let write_err = |e: deep_causality_file::DataLoadingError| {
+            leg_err("trace output")(PhysicsError::CalculationError(format!("{e}")))
+        };
+        let descent = trace_rows(
+            reacq.field().scalar(TRACE_FIELD).unwrap_or(&[]),
+            0,
+            &leg_ends,
+        );
+        write_rows(trace_path("corridor_trace.csv"), descent)
+            .run()
+            .map_err(write_err)?;
+        let branches = model::branch_trace_rows(&rounds_capture.borrow(), fork_rows);
+        write_rows(trace_path("corridor_branch_trace.csv"), branches)
+            .run()
+            .map_err(write_err)?;
 
         // ── Provenance, then the leg witnesses the trajectory gates read.
         utils_print::print_provenance(reacq.field().log());

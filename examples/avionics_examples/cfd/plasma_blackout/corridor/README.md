@@ -61,16 +61,16 @@ scripted. Each of the three leg boundaries carries the coupled field and re-seed
    0.5 rad cap, the gate bounds it every step, and the clamped branch overshoots to 28.9 m. A **fine round** then forks
    the same paused onset a second time, eleven 0.5-degree candidates bracketing the coarse winner, scored against the
    same aim: the landscape bottoms at 11.5 degrees with a 2.07 m miss. Two fork rounds resolve the optimum at 0.5-degree
-   resolution for seventeen branches total. The 2.07 m residual is the size of the INS drift through the blackout, the
-   vehicle's knowledge floor (see "Why the sweep stops at 0.5 degrees and 2.07 m" below).
+   resolution for seventeen branches total. The 2.07 m residual is the size of the INS drift when the branches are scored,
+   the vehicle's knowledge floor (see "Why the sweep stops at 0.5 degrees and 2.07 m" below).
 3. **The committed dwell.** The winning world flies through the peak passage. At the 61 km RAM-C II station the evolved
    peak electron density lands at 2.6e19 per cubic meter against the 1e19 flight anchor, inside the earned 5x band, with
    **no calibration target anywhere in the chemistry**. The INS dead-reckons; drift grows from 0.18 m at onset to 1.56 m
-   at the peak passage and 2.29 m at exit.
+   at the peak passage and 42.4 m on the last step before the link returns (`corridor_trace.csv`).
 4. **Flow-resolved exit and reacquisition.** Drag decelerates the vehicle below the ionization threshold; at 46.8 km the
    renewed sheath stops ionizing past the cutoff and the link returns. Dissociative recombination
-   `NO+ + e- -> N + O` drains the sheath and ends the blackout. The first folded fixes collapse
-   the drift back to 0.28 m.
+   `NO+ + e- -> N + O` drains the sheath and ends the blackout. The first fix folds on the exit step and cuts the error
+   to 2.29 m; by the end of reacquisition it is 0.28 m.
 
 Thirteen coupled validation gates then check the whole story: window ordering, the anchor band, the window altitudes
 (exit inside its pinned band, reported against the RAM-C II 25-30 km flight window), drift and reacquisition, regime
@@ -148,8 +148,9 @@ world they fly. Branch misses are trajectory-derived: the distance from each bra
 aim point, with the analytic t^2 drift law printed beside it as a cross-check.
 
 **Why the sweep stops at 0.5 degrees and 2.07 m.** Driving the residual miss lower would optimize below the vehicle's
-knowledge floor. The INS dead-reckoning error in this same run is 1.56 m at the peak passage and 2.29 m at exit; the
-guidance residual (2.07 m) and the navigation uncertainty are the same size, and that sets the stopping point. Steering
+knowledge floor. The INS dead-reckoning error in this same run is 1.67 m when the branches are scored, 100 steps
+after the fork; the guidance residual (2.07 m) and the navigation error are the same size, and that sets the stopping
+point. The error keeps growing through the rest of the blackout, to 42.4 m before the link returns. Steering
 more precisely than the vehicle navigates buys nothing, because a real vehicle commands off the navigated state. (The
 sweep scores against truth terminal states, which a flight system cannot see, so 2.07 m is optimistic.) The residual
 itself is geometric: near the minimum, neighboring 0.5-degree candidates differ by 0.04 to 0.36 m, but a single
@@ -229,6 +230,8 @@ documents the ionization-chemistry limitation.
 | [`model.rs`](model.rs)             | The descent worlds, the bank commands, branch scoring, the leg snapshots, and both gating sequences (4 campaign + 9 leg = thirteen gates) |
 | [`constants.rs`](constants.rs)     | The corridor's own knobs: the horizon, the bank sweep, the gate thresholds                                                                |
 | [`utils_print.rs`](utils_print.rs) | Console rendering: the intro, the legs, the branch tables, the provenance                                                                 |
+| `corridor_trace.csv`               | Written by the run: one row per coupled step of the flown descent, labelled by leg (altitude, Mach, `n_e`, link state, regime, nav error, loads, bank, position) |
+| `corridor_branch_trace.csv`        | Written by the run: the same columns for every branch of both rounds, from the fork to the end of its continuation                       |
 
 The physics constants, the numeric helpers, the example-local stages, and the coupling stack are shared with
 the [weather-dispersion example](../weather/README.md) through the crate library module `avionics_examples::shared`
