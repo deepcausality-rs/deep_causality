@@ -57,17 +57,13 @@ where
         effect: &PropagatingEffect<V>,
     ) -> PropagatingEffect<V> {
         if !self.is_frozen() {
-            return PropagatingEffect::from_error(CausalityError(CausalityErrorEnum::Custom(
-                "Graph is not frozen. Call freeze() first".into(),
-            )));
+            return PropagatingEffect::from_error(CausalityError::GraphNotFrozen());
         }
 
         let causaloid = match self.get_causaloid(index) {
             Some(c) => c,
             None => {
-                return PropagatingEffect::from_error(CausalityError(CausalityErrorEnum::Custom(
-                    format!("Causaloid with index {index} not found in graph"),
-                )));
+                return PropagatingEffect::from_error(CausalityError::CausaloidNotFound(index));
             }
         };
 
@@ -148,25 +144,17 @@ where
         lambda_edges: &LambdaEdges<V>,
     ) -> PropagatingEffect<V> {
         if !self.is_frozen() {
-            return PropagatingEffect::from_error(CausalityError(CausalityErrorEnum::Custom(
-                "Graph is not frozen. Call freeze() first".into(),
-            )));
+            return PropagatingEffect::from_error(CausalityError::GraphNotFrozen());
         }
 
         if !self.contains_causaloid(start_index) {
-            return PropagatingEffect::from_error(CausalityError(CausalityErrorEnum::Custom(
-                format!("Graph does not contain start causaloid with index {start_index}"),
-            )));
+            return PropagatingEffect::from_error(CausalityError::CausaloidNotFound(start_index));
         }
 
         // The classical fan-in evaluator requires a topological order, so the frozen graph must be
         // acyclic. A Kahn-style ready-set would otherwise silently skip nodes inside a cycle.
         if self.get_graph().has_cycle().unwrap_or(true) {
-            return PropagatingEffect::from_error(CausalityError(CausalityErrorEnum::Custom(
-                "Graph contains a directed cycle; the reconvergence-join evaluator requires an \
-                 acyclic (frozen DAG) graph"
-                    .into(),
-            )));
+            return PropagatingEffect::from_error(CausalityError::GraphContainsCycle());
         }
 
         let n_nodes = self.number_nodes();
@@ -234,11 +222,11 @@ where
                             // (induction from the seeded start over the acyclic reachable sub-DAG). So a
                             // non-start node that becomes ready always has at least one fired parent;
                             // it never resolves to a zero-parent join.
-                            return PropagatingEffect::from_error(CausalityError(
-                                CausalityErrorEnum::Custom(format!(
+                            return PropagatingEffect::from_error(
+                                CausalityError::InternalLogicError(format!(
                                     "internal invariant: node {node} became ready with no fired parents"
                                 )),
-                            ));
+                            );
                         }
                         1 => {
                             // Join of one fired parent is the identity fuse; the edge's Λ (if
@@ -298,10 +286,8 @@ where
                 let causaloid = match self.get_causaloid(node) {
                     Some(c) => c,
                     None => {
-                        return PropagatingEffect::from_error(CausalityError(
-                            CausalityErrorEnum::Custom(format!(
-                                "Failed to get causaloid at index {node}"
-                            )),
+                        return PropagatingEffect::from_error(CausalityError::CausaloidNotFound(
+                            node,
                         ));
                     }
                 };
@@ -324,12 +310,7 @@ where
                         if relay_rounds_left == 0 {
                             let (_, state, context, logs) = last_effect.into_parts();
                             return PropagatingEffect::new(
-                                Err(CausalityError(CausalityErrorEnum::Custom(format!(
-                                    "Relay budget exhausted: the adaptive-reasoning chain exceeded \
-                                     MAX_RELAY_ROUNDS = {MAX_RELAY_ROUNDS} rounds (a relay cycle is \
-                                     likely). The relay handler is fuel-bounded so evaluation \
-                                     terminates (core.causal_effect.relay_termination)."
-                                )))),
+                                Err(CausalityError::MaxStepsExceeded()),
                                 state,
                                 context,
                                 logs,
@@ -339,9 +320,7 @@ where
                         if !self.contains_causaloid(target_idx) {
                             let (_, state, context, logs) = last_effect.into_parts();
                             return PropagatingEffect::new(
-                                Err(CausalityError(CausalityErrorEnum::Custom(format!(
-                                    "RelayTo target causaloid with index {target_idx} not found in graph."
-                                )))),
+                                Err(CausalityError::CausaloidNotFound(target_idx)),
                                 state,
                                 context,
                                 logs,
@@ -366,7 +345,7 @@ where
                             Err(e) => {
                                 let (_, state, context, logs) = last_effect.into_parts();
                                 return PropagatingEffect::new(
-                                    Err(CausalityError(CausalityErrorEnum::Custom(format!("{e}")))),
+                                    Err(CausalityError::GraphError(format!("{e}"))),
                                     state,
                                     context,
                                     logs,
@@ -414,9 +393,7 @@ where
         initial_effect: &PropagatingEffect<V>,
     ) -> PropagatingEffect<V> {
         if !self.is_frozen() {
-            return PropagatingEffect::from_error(CausalityError(CausalityErrorEnum::Custom(
-                "Graph is not frozen. Call freeze() first".into(),
-            )));
+            return PropagatingEffect::from_error(CausalityError::GraphNotFrozen());
         }
 
         // Handle the single-node case explicitly before calling the pathfinder.
@@ -424,10 +401,8 @@ where
             let causaloid = match self.get_causaloid(start_index) {
                 Some(c) => c,
                 None => {
-                    return PropagatingEffect::from_error(CausalityError(
-                        CausalityErrorEnum::Custom(format!(
-                            "Failed to get causaloid at index {start_index}"
-                        )),
+                    return PropagatingEffect::from_error(CausalityError::CausaloidNotFound(
+                        start_index,
                     ));
                 }
             };
@@ -437,9 +412,7 @@ where
         let path = match self.get_shortest_path(start_index, stop_index) {
             Ok(p) => p,
             Err(e) => {
-                return PropagatingEffect::from_error(CausalityError(CausalityErrorEnum::Custom(
-                    format!("{:?}", e),
-                )));
+                return PropagatingEffect::from_error(CausalityError::GraphError(format!("{e:?}")));
             }
         };
 
@@ -449,11 +422,7 @@ where
             let causaloid = match self.get_causaloid(index) {
                 Some(c) => c,
                 None => {
-                    return PropagatingEffect::from_error(CausalityError(
-                        CausalityErrorEnum::Custom(format!(
-                            "Failed to get causaloid at index {index}"
-                        )),
-                    ));
+                    return PropagatingEffect::from_error(CausalityError::CausaloidNotFound(index));
                 }
             };
 

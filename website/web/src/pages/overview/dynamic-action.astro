@@ -1,0 +1,162 @@
+---
+import { Code } from 'astro:components';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import TopicList from '../../components/overview/TopicList.astro';
+import { DOCS_URL, GITHUB_URL } from '../../consts';
+
+const themes = { light: 'github-light', dark: 'github-dark' } as const;
+
+const battery = `// model_config.rs: a charge rule, and the rule that reads the temperature trend.
+fn below_45_c(r: Reading) -> PropagatingEffect<bool> {
+    PropagatingEffect::pure(r.cell_c < COOLED_FULL_BELOW_C)
+}
+
+fn cooling_lost(r: Reading) -> PropagatingEffect<bool> {
+    let allowed = rise_c(r.amps, r.previous_c, COOLING_PUMPED);
+    PropagatingEffect::pure(r.cell_c - r.previous_c > allowed + COOLING_LOSS_MARGIN_C)
+}
+
+// model_config.rs: replace the three charge states while the machine runs.
+pub fn install_derated_law(controller: &Controller, version: usize) -> Result<(), UpdateError> {
+    derated_law(version)
+        .into_iter()
+        .try_for_each(|state_action| controller.update_single_state(state_action))
+}
+
+// main.rs, without the printing: once a minute, reason about the cooling,
+// then let every charge state act on the same reading.
+while !cell.done() {
+    let reading = cell.reading();
+    if adaptive && !derated && model_config::cooling_lost_in(&detector, &reading)? {
+        model_config::install_derated_law(&controller, DERATED_VERSION)?;
+        derated = true;
+    }
+    let frame = PropagatingEffect::pure(reading);
+    for id in STATES {
+        controller.eval_single_state(id, &frame)?;
+    }
+    let amps = model::charger_a();
+    cell.charge_one_minute(amps);
+}`;
+
+const batteryOut = `A lithium-ion cell charges from 20 % to 80 %. Its coolant pump stops after 10 minutes.
+
+The controller keeps the charge law for a cooled cell:
+ minute  cell °C  charge  current
+      1     25.0  20.0 %    50 A
+     22     45.2  55.0 %    25 A
+Reached 80.8 % after 52 minutes. The cell peaked at 47.8 °C and spent 32 minutes above 45 °C.
+
+The controller replaces its charge states when it detects the loss of cooling:
+ minute  cell °C  charge  current
+      1     25.0  20.0 %    50 A
+     12  >> the cell rose 1.12 K in the last minute; the pumped coolant allows 0.52 K.
+         >> charge states replaced by the derated law, version 2: 20 A below 40 °C, 10 A to 45 °C.
+     12     34.6  38.3 %    20 A
+Reached 80.3 % after 74 minutes. The cell peaked at 39.1 °C and spent 0 minutes above 45 °C.
+
+Replacing the charge states cost 22 minutes and kept the cell 8.7 K cooler at its peak.`;
+
+const batteryExample = `${GITHUB_URL}/tree/main/examples/csm_examples/csm_battery`;
+const batteryReadme = `${GITHUB_URL}/blob/main/README.md`;
+const csmConcept = `${DOCS_URL}/concepts/csm/`;
+---
+<BaseLayout
+  title="Dynamic action — DeepCausality"
+  description="The Causal State Machine turns a causal result into an action: it pairs each state with an action and fires the action when the state's causaloid returns an active result. You can add, replace or remove states and their rules while the machine runs."
+>
+  <SiteHeader />
+  <article class="static-page">
+    <header>
+      <p class="eyebrow">Overview · Dynamic action</p>
+      <h1>From a causal result to an action</h1>
+      <p class="lede">
+        A causal model returns a result; the Causal State Machine turns it into an action. It pairs
+        each state with an action, evaluates the state's causaloid on incoming data, and fires the
+        action when the result is active. You can change states and their rules while the machine
+        runs, so the mapping from result to action changes too.
+      </p>
+    </header>
+
+    <div class="prose">
+      <h2>States and actions</h2>
+      <p>
+        The machine, <code>CSM</code> in <code>deep_causality</code>, maps state identifiers to
+        state–action pairs and takes the input, output and context types of its causaloids as type
+        parameters.
+      </p>
+      <ul>
+        <li><strong>A causal state</strong> holds an identifier, a version, stored input data, a causaloid that decides whether the state is active, and an optional uncertainty parameter.</li>
+        <li><strong>A causal action</strong> holds a function of type <code>fn() -&gt; Result&lt;(), ActionError&gt;</code>, a description and a version. The function takes no arguments.</li>
+      </ul>
+      <p>
+        <code>eval_single_state(id, data)</code> evaluates one state's causaloid on the data you pass and fires the action if the result is active; <code>eval_all_states</code> does the same for every state on the data each state stores.
+      </p>
+
+      <h2>A battery that loses its coolant mid-charge</h2>
+      <p>
+        A lithium-ion cell charges from 20 % to 80 %, with the cell model of the <a href={batteryReadme}>project README's battery example</a>. After ten minutes its coolant pump stops. Once a
+        minute the controller reads the cell temperature and evaluates three states. Each pairs a
+        rule on the temperature with an action that sets the charger. For a cooled cell the law is
+        50 A below 45 °C, 25 A up to 55 °C, and none above.
+      </p>
+      <p>
+        A fourth causaloid watches the temperature trend. It compares the last minute's rise with the
+        rise the pumped coolant allows for the current that flowed. When it finds the cooling lost,
+        the controller replaces the three charge states with a derated law: 20 A below 40 °C, 10 A
+        up to 45 °C, and none above. The identifiers stay; the rules and actions behind them change,
+        and their version rises to 2. The program charges the cell twice, once with the law fixed and
+        once with the replacement.
+      </p>
+      <Code code={battery} lang="rust" themes={themes} defaultColor={false} wrap />
+      <Code code={batteryOut} lang="text" themes={themes} defaultColor={false} />
+      <p>
+        With the law fixed, the cell reaches 80 % in 52 minutes but spends 32 of them above 45 °C,
+        where charging ages a lithium-ion cell faster. The detector fires at minute 12: the cell rose
+        1.12 K in a minute, and the pump allows 0.52 K. With the derated law the charge takes 74
+        minutes, and the cell peaks at 39.1 °C. The <a href={batteryExample}>battery example</a> holds the full program.
+      </p>
+
+      <h2>When a result counts as active</h2>
+      <p>
+        The causaloid's output type decides what "active" means. Any type that implements <code>CsmEvaluable</code> can serve as the output; the crate implements it for three.
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Output</th><th>Active when</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>bool</code></td><td>the value is <code>true</code></td></tr>
+            <tr><td><code>UncertainBool</code></td><td>without a parameter, the probability of <code>true</code> exceeds 0.5 at 95 % confidence; with one, it exceeds the parameter's threshold at the parameter's confidence</td></tr>
+            <tr><td><code>UncertainF64</code></td><td>the value exceeds the parameter's threshold with probability above 0.5, at the parameter's confidence; without a parameter, evaluation returns an error</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        The uncertain tests draw samples sequentially until they decide, up to the parameter's
+        sample budget. The default parameter sets a threshold of 0.8, a confidence of 0.95, an
+        epsilon of 0.05 and a budget of 1,000 samples. A result without a value, such as a <code>RelayTo</code> command, counts as inactive; a causaloid error becomes the evaluation's
+        error, and the action does not fire.
+      </p>
+
+      <h2>Changing the machine while it runs</h2>
+      <p>
+        Every method takes the machine by shared reference; a read-write lock guards the map. <code>add_single_state</code> inserts a state and refuses an identifier already present, <code>update_single_state</code> replaces the state and action under an existing identifier, <code>remove_single_state</code> deletes one, and <code>update_all_states</code> replaces the whole map. A running monitor can therefore tighten a limit, add a sensor or retire one
+        without rebuilding the machine.
+      </p>
+
+      <h2>Where the Effect Ethos fits</h2>
+      <p>
+        The machine fires an active state's action without consulting any norms. To check an action
+        first, describe it as a <code>ProposedAction</code>, evaluate it with the <a href="/overview/effect-ethos/">Effect Ethos</a>, and call the machine only on a permitting verdict. <code>ProposedAction</code> and <code>ActionParameterValue</code> live in <code>deep_causality</code>, where the Ethos crate reads them. The <a href="/examples/effect-ethos/">Effect Ethos example</a> runs a machine and an Ethos side by side.
+        The <a href="/examples/sensor-monitoring-csm/">sensor monitoring example</a> wires a machine
+        to smoke, fire and explosion sensors, and the <a href={csmConcept}>CSM concept page</a> covers
+        the API.
+      </p>
+
+      <TopicList current="dynamic-action" />
+    </div>
+  </article>
+</BaseLayout>

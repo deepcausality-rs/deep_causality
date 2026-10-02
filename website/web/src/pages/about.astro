@@ -2,9 +2,9 @@
 import FoundationBadge from '../components/FoundationBadge.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import SiteHeader from '../components/nav/SiteHeader.astro';
-import { DOCS_URL, GITHUB_URL } from '../consts';
+import { CAUSAL_CENTER_URL, DOCS_URL, GITHUB_URL } from '../consts';
 ---
-<BaseLayout title="About — DeepCausality" description="About DeepCausality: what the project is, where it lives, and how it handles your privacy.">
+<BaseLayout title="About — DeepCausality" description="About DeepCausality: what the project is, who supports it, where it lives, and how it handles your privacy.">
   <SiteHeader />
   <article class="static-page">
     <header>
@@ -29,23 +29,47 @@ import { DOCS_URL, GITHUB_URL } from '../consts';
         check the <a href="/blog/">blog</a> for project updates.
       </p>
 
-      <h2>Center of Dynamic Causality</h2>
+      <h2 id="sponsors">Sponsors</h2>
       <p>
-        The <a href="https://www.causalcenter.com">Center of Dynamic Causality</a> contributes
-        research and ongoing support to the DeepCausality project. Its work informs the formal
-        foundations of the framework and feeds back into the library&rsquo;s design.
+        Two organizations support the work directly. Each one&rsquo;s contribution is named below.
       </p>
+      <div class="sponsors">
+        <div class="sponsor">
+          <a href="https://jb.gg/OpenSource" class="logo-link" aria-label="JetBrains open-source support">
+            <img class="logo" src="/img/jb_beam.svg" alt="JetBrains" width="180" height="180" />
+          </a>
+          <div>
+            <h3>JetBrains</h3>
+            <p>
+              <a href="https://www.jetbrains.com/">JetBrains</a> provides the project&rsquo;s core
+              maintainers with an all-product license through its <a href="https://jb.gg/OpenSource">open-source support program</a>. The license was granted on September 22, 2023, and <a href="/blog/jetbrains-announcement/">announced on the blog</a>.
+            </p>
+          </div>
+        </div>
+        <div class="sponsor">
+          <a href={CAUSAL_CENTER_URL} class="logo-link" aria-label="Center for Dynamic Causality">
+            <img class="logo logo-light" src="/img/causal_center_logo.svg" alt="Center for Dynamic Causality" width="1254" height="1254" />
+            <img class="logo logo-dark" src="/img/causal_center_logo_dark.svg" alt="Center for Dynamic Causality" width="1254" height="1254" />
+          </a>
+          <div>
+            <h3>Center for Dynamic Causality</h3>
+            <p>
+              The <a href={CAUSAL_CENTER_URL}>Center for Dynamic Causality</a> contributes research and
+              ongoing support. Its work informs the formal foundations of the framework and feeds back
+              into the library&rsquo;s design.
+            </p>
+          </div>
+        </div>
+      </div>
 
       <h2>Linux Foundation</h2>
       <p>
-        DeepCausality is hosted as a sandbox project at the
-        <a href="https://lfaidata.foundation/">Linux Foundation for data and artificial intelligence</a>. The
+        DeepCausality is hosted as a sandbox project at the <a href="https://lfaidata.foundation/">Linux Foundation for data and artificial intelligence</a>. The
         Linux Foundation is the world&rsquo;s leading home for collaboration on open-source software,
         hardware, standards, and data. Linux Foundation projects are critical to the world&rsquo;s
         infrastructure, including Linux, Kubernetes, Node.js, ONAP, RISC-V, SPDX, and OpenChain. The Linux
         Foundation focuses on advancing best practices and addressing the needs of contributors, users, and
-        solution providers to create sustainable models for open collaboration. More at
-        <a href="https://www.linuxfoundation.org/">linuxfoundation.org</a>.
+        solution providers to create sustainable models for open collaboration. More at <a href="https://www.linuxfoundation.org/">linuxfoundation.org</a>.
       </p>
 
       <FoundationBadge />
@@ -60,13 +84,33 @@ import { DOCS_URL, GITHUB_URL } from '../consts';
         <li>Does not use web beacons or tracking pixels.</li>
       </ul>
       <p>
-        The site&rsquo;s full source code lives in the
-        <a href={`${GITHUB_URL}/tree/main/website/web`}>website/web folder of the
-        DeepCausality monorepo on GitHub</a>. If
-        you find anything that violates this policy, please
-        <a href={`${GITHUB_URL}/issues`}>open an issue</a>.
+        The site&rsquo;s full source code lives in the <a href={`${GITHUB_URL}/tree/main/website/web`}>website/web folder of the DeepCausality monorepo on GitHub</a>.
+        If you find anything that violates this policy, please <a href={`${GITHUB_URL}/issues`}>open an issue</a>.
       </p>
     </div>
   </article>
 
 </BaseLayout>
+
+<style>
+  /* A sponsor: its logo beside what it contributes. */
+  .sponsor {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+    padding: var(--space-5) 0;
+    border-top: 1px solid var(--line-1);
+  }
+  .sponsors { border-bottom: 1px solid var(--line-1); margin-bottom: var(--space-4); }
+  @media (min-width: 720px) {
+    .sponsor { grid-template-columns: 96px minmax(0, 1fr); gap: var(--space-6); }
+  }
+  .sponsor h3 { margin: 0 0 var(--space-2) 0; }
+  .sponsor p:last-child { margin-bottom: 0; }
+  .logo-link { display: inline-block; border-bottom: none; line-height: 0; }
+  .logo { display: block; width: 96px; height: auto; }
+  /* The Center's mark ships as two files, one per theme; JetBrains supplies one mark for both. */
+  .logo-light, .logo-dark { display: none; }
+  :global([data-theme='light']) .logo-light { display: block; }
+  :global([data-theme='dark']) .logo-dark { display: block; }
+</style>

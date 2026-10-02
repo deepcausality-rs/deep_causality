@@ -3,12 +3,13 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::HashSet;
 
 use crate::TeloidStorable;
-use crate::{DeonticError, EffectEthos, Teloid, TeloidID, TeloidRelation};
+use crate::{DeonticError, EffectEthos, Teloid, TeloidRelation};
 use deep_causality_context::{Datable, SpaceTemporal, Spatial, Temporal};
-use ultragraph::{GraphTraversal, GraphView};
+use ultragraph::{GraphError, GraphTraversal, GraphView, TopologicalGraphAlgorithms};
+
 #[allow(clippy::type_complexity)]
 impl<D, S, T, ST> EffectEthos<D, S, T, ST>
 where
@@ -17,126 +18,106 @@ where
     T: Temporal + Clone,
     ST: SpaceTemporal + Clone,
 {
-    /// Resolves conflicts among teloids based on a given set of active teloids.
+    /// Resolves conflicts among the active teloids and returns the norms that stand, in the
+    /// graph's topological order.
     ///
-    /// This method performs a Breadth-First Search (BFS) traversal starting from the
-    /// `active_teloids`. During the traversal, it identifies and resolves conflicts
-    /// using the following rules:
+    /// A norm is held when it is active or when a standing norm passes it on along an `Inherits`
+    /// edge. A held norm falls when a standing norm defeats it along a `Defeats` edge and outranks
+    /// it. Rank compares priority first (Lex Superior), then specificity (Lex Specialis), then
+    /// timestamp (Lex Posterior); a norm of equal rank does not defeat. A norm that falls defeats
+    /// nothing and passes nothing on.
     ///
-    /// 1. **Defeaters**: If a teloid is defeated by another teloid (connected via a `Defeats`
-    ///    relation), it is removed from the set of inferred beliefs. Defeat is determined
-    ///    by applying Lex Specialis (more specific rules override general ones) and
-    ///    Lex Posterior (newer rules override older ones).
-    /// 2. **Inheritance**: If a teloid is not defeated, its inheriting children (connected via
-    ///    an `Inherits` relation) are added to the queue for further processing, and their
-    ///    beliefs are inferred.
+    /// The graph is acyclic once verified, so every defeater and every parent is settled before
+    /// the norm it acts on. The result therefore depends only on the norms, their edges and which
+    /// of them are active.
     ///
-    /// # Arguments
+    /// # Errors
     ///
-    /// * `active_teloids` - A slice of references to `Teloid` instances that are considered
-    ///   active and from which the conflict resolution process begins.
-    ///
-    /// # Returns
-    ///
-    /// A `Result` containing a `Vec` of `Teloid` instances that represent the resolved
-    /// set of beliefs after conflict resolution, or a `DeonticError` if any error occurs
-    /// during the process (e.g., teloid not found).
+    /// `TeloidNotFound` when an active teloid or a graph node has no entry in the store, and a
+    /// graph error when the graph cannot be read.
     pub(super) fn resolve_conflicts(
         &self,
         active_teloids: &[&Teloid<D, S, T, ST>],
     ) -> Result<Vec<Teloid<D, S, T, ST>>, DeonticError> {
-        let mut queue: VecDeque<usize> = VecDeque::new();
-        let mut visited: HashSet<usize> = HashSet::new();
-        let mut inferred_beliefs: HashMap<TeloidID, Teloid<D, S, T, ST>> = HashMap::new();
-
-        // Use the authoritative mapping maintained by EffectEthos
-        let id_to_index = &self.id_to_index_map;
-
-        // Initialize the queue with the indices of the active teloids.
-        for &teloid in active_teloids {
-            let start_index = id_to_index
+        let mut held: HashSet<usize> = HashSet::with_capacity(active_teloids.len());
+        for teloid in active_teloids {
+            let index = self
+                .id_to_index_map
                 .get(&teloid.id())
                 .ok_or(DeonticError::TeloidNotFound { id: teloid.id() })?;
-            if visited.insert(*start_index) {
-                queue.push_back(*start_index);
-                // Clone the teloid into the belief set.
-                inferred_beliefs.insert(teloid.id(), teloid.clone());
-            }
+            held.insert(*index);
         }
 
-        // Start BFS traversal
-        while let Some(current_idx) = queue.pop_front() {
-            let current_id = self
-                .teloid_graph
-                .graph
-                .get_node(current_idx)
-                .copied()
-                .ok_or(DeonticError::TeloidNotFound { id: 0 })?;
+        let order = self
+            .teloid_graph
+            .graph
+            .topological_sort()?
+            .ok_or(DeonticError::GraphIsCyclic(GraphError::GraphContainsCycle))?;
 
-            // To avoid borrow checker issues, we clone the current teloid to get ownership.
-            let current_teloid = self
-                .teloid_store
-                .get(&current_id)
-                .ok_or(DeonticError::TeloidNotFound { id: current_id })?
-                .clone();
+        let mut standing: HashSet<usize> = HashSet::with_capacity(held.len());
+        let mut survivors = Vec::with_capacity(held.len());
+        for index in order {
+            if !held.contains(&index) {
+                continue;
+            }
+            let teloid = self.teloid_at(index)?;
 
-            // Check for defeaters for the current node.
-            let mut is_defeated = false;
-            for defeater_idx in self.teloid_graph.graph.inbound_edges(current_idx)? {
-                if let Some(edges) = self.teloid_graph.graph.get_edges(defeater_idx)
-                    && edges.iter().any(|(target, relation)| {
-                        *target == current_idx && *relation == &TeloidRelation::Defeats
-                    })
+            let mut defeated = false;
+            for defeater_index in self.teloid_graph.graph.inbound_edges(index)? {
+                if standing.contains(&defeater_index)
+                    && self.relation(defeater_index, index) == Some(TeloidRelation::Defeats)
+                    && outranks(self.teloid_at(defeater_index)?, teloid)
                 {
-                    let defeater_id = self
-                        .teloid_graph
-                        .graph
-                        .get_node(defeater_idx)
-                        .copied()
-                        .ok_or(DeonticError::TeloidNotFound { id: 0 })?;
-                    if let Some(defeater_teloid) = inferred_beliefs.get(&defeater_id) {
-                        // Apply Lex Specialis, Lex Posterior, and Lex Superior rules
-                        if defeater_teloid.specificity() > current_teloid.specificity()
-                            || defeater_teloid.timestamp() > current_teloid.timestamp()
-                            || defeater_teloid.priority() > current_teloid.priority()
-                        {
-                            is_defeated = true;
-                            break;
-                        }
-                    }
+                    defeated = true;
+                    break;
                 }
             }
-
-            if is_defeated {
-                inferred_beliefs.remove(&current_id);
-                continue; // Stop processing this path if the norm is defeated.
+            if defeated {
+                continue;
             }
 
-            // If not defeated, continue traversal to inheriting children.
-            for child_idx in self.teloid_graph.graph.outbound_edges(current_idx)? {
-                if let Some(edges) = self.teloid_graph.graph.get_edges(current_idx)
-                    && edges.iter().any(|(target, relation)| {
-                        *target == child_idx && *relation == &TeloidRelation::Inherits
-                    })
-                    && visited.insert(child_idx)
-                {
-                    let child_id = self
-                        .teloid_graph
-                        .graph
-                        .get_node(child_idx)
-                        .copied()
-                        .ok_or(DeonticError::TeloidNotFound { id: 0 })?;
-                    let child_teloid = self
-                        .teloid_store
-                        .get(&child_id)
-                        .ok_or(DeonticError::TeloidNotFound { id: child_id })?;
-
-                    inferred_beliefs.insert(child_id, child_teloid.clone());
-                    queue.push_back(child_idx);
+            standing.insert(index);
+            survivors.push(teloid.clone());
+            for child_index in self.teloid_graph.graph.outbound_edges(index)? {
+                if self.relation(index, child_index) == Some(TeloidRelation::Inherits) {
+                    held.insert(child_index);
                 }
             }
         }
-
-        Ok(inferred_beliefs.values().cloned().collect())
+        Ok(survivors)
     }
+
+    /// The teloid stored for the graph node at `index`.
+    fn teloid_at(&self, index: usize) -> Result<&Teloid<D, S, T, ST>, DeonticError> {
+        let id = self
+            .teloid_graph
+            .graph
+            .get_node(index)
+            .copied()
+            .ok_or(DeonticError::TeloidNotFound { id: 0 })?;
+        self.teloid_store
+            .get(&id)
+            .ok_or(DeonticError::TeloidNotFound { id })
+    }
+
+    /// The relation the edge from `from` to `to` carries, if there is one.
+    fn relation(&self, from: usize, to: usize) -> Option<TeloidRelation> {
+        self.teloid_graph
+            .graph
+            .get_edges(from)?
+            .iter()
+            .find(|(target, _)| *target == to)
+            .map(|(_, relation)| **relation)
+    }
+}
+
+/// Whether `a` outranks `b`: higher priority, then higher specificity, then a later timestamp.
+fn outranks<D, S, T, ST>(a: &Teloid<D, S, T, ST>, b: &Teloid<D, S, T, ST>) -> bool
+where
+    D: Datable + Clone,
+    S: Spatial + Clone,
+    T: Temporal + Clone,
+    ST: SpaceTemporal + Clone,
+{
+    (a.priority(), a.specificity(), a.timestamp()) > (b.priority(), b.specificity(), b.timestamp())
 }

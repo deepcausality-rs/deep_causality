@@ -9,7 +9,7 @@ cadence to its own Cloudflare Worker and hostname.
 
 | Directory | Purpose | Framework | Cloudflare Worker | Domain |
 | --- | --- | --- | --- | --- |
-| [`web/`](./web) | Website (home, blog, examples, short getting-started/overview) | Astro (custom) | `deepcausality-prod` | https://www.deepcausality.com |
+| [`web/`](./web) | Website (home, blog, examples, tutorials, short getting-started/overview) | Astro (custom) | `deepcausality-prod` | https://www.deepcausality.com |
 | [`docs/`](./docs) | Reference documentation (concepts, guides, overview, single-PDF export) | [Starlight](https://starlight.astro.build) on Astro | `deepcausality-docs` | https://docs.deepcausality.com |
 | [`cfd/`](./cfd) | `deep_causality_cfd`: blueprints, validation status, worked examples, capability boundaries | Astro (custom) | `deep-causality-cfd-prod` | https://cfd.deepcausality.com |
 | [`quantum/`](./quantum) | `deep_causality_quantum`: the quantum causal model, operator layer, verdicts, formalization status | Astro (custom) | `quantum` | https://quantum.deepcausality.com |
@@ -24,8 +24,8 @@ The Rust API reference is hosted on
 ## Separation of concerns
 
 - **`web/`, the project website.** The landing page, the blog, the examples
-  gallery, and short getting-started and overview summaries that link to the
-  full docs.
+  gallery, the tutorials, and short getting-started and overview summaries that
+  link to the full docs.
 - **`docs/`, the documentation.** Long-form concepts, getting-started
   walkthroughs and the in-depth overview on Starlight, with full-text search,
   code highlighting, and a build-time single-PDF export.

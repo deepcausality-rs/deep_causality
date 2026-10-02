@@ -7,7 +7,6 @@ mod action_error;
 mod assumption_error;
 mod build_error;
 mod causal_graph_index_error;
-mod causality_error;
 mod causality_graph_error;
 mod csm_error;
 mod model_build_error;

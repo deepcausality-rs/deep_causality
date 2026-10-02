@@ -87,6 +87,16 @@ pub fn evaluate_hypothesis<R: RandScalar>(
             samples_drawn += 1;
         }
 
+        // A band reaching 1 makes H1 "always true", which one `false` refutes; a band reaching 0
+        // makes H0 "never true", which one `true` refutes. The log-likelihood terms of those
+        // outcomes are infinite, so they decide the test outright.
+        if p1 >= one && successes < samples_drawn {
+            return Ok(false);
+        }
+        if p0 <= zero && successes > 0 {
+            return Ok(true);
+        }
+
         // Compute log-likelihood ratio (LLR)
         let n = lift_count::<R>(samples_drawn)?;
         let x = lift_count::<R>(successes)?;

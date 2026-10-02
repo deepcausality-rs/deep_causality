@@ -145,7 +145,11 @@ fn test_evaluate_singleton_errors_on_a_relay_command_input() {
 
     assert!(res.is_err());
     let err = res.error().expect("a command input errors");
-    assert!(format!("{err:?}").contains("received a command"));
+    assert!(
+        matches!(&err.0, deep_causality::CausalityErrorEnum::UnexpectedCommand(m) if m.contains("received a command")),
+        "expected UnexpectedCommand: {:?}",
+        err
+    );
 }
 
 #[test]
@@ -218,8 +222,12 @@ fn test_evaluate_collection_error() {
     let res = c_coll.evaluate(&effect);
 
     assert!(res.is_err());
-    let err_msg = res.error().unwrap().to_string();
-    assert!(err_msg.contains("Collection evaluation is not available"));
+    let err = res.error().unwrap();
+    assert!(
+        matches!(&err.0, deep_causality::CausalityErrorEnum::UnsupportedOperation(m) if m.contains("Collection evaluation is not available")),
+        "expected UnsupportedOperation: {:?}",
+        err
+    );
 }
 
 #[test]
@@ -233,8 +241,12 @@ fn test_evaluate_graph_error() {
     let res = c_graph.evaluate(&effect);
 
     assert!(res.is_err());
-    let err_msg = res.error().unwrap().to_string();
-    assert!(err_msg.contains("Graph evaluation is not available"));
+    let err = res.error().unwrap();
+    assert!(
+        matches!(&err.0, deep_causality::CausalityErrorEnum::UnsupportedOperation(m) if m.contains("Graph evaluation is not available")),
+        "expected UnsupportedOperation: {:?}",
+        err
+    );
 }
 
 #[test]
@@ -260,12 +272,13 @@ fn test_contextual_fn_returning_none() {
     );
 
     let effect = PropagatingEffect::from_value(1.0);
-    // This should trigger "context_fn returned None value and no error"
+    // A contextual function that returns neither a value nor an error.
     let res = causaloid.evaluate(&effect);
 
-    assert!(res.is_err());
-    let err = res.error().unwrap().to_string();
-    assert!(err.contains("context_fn returned None value"));
+    assert_eq!(
+        res.error(),
+        Some(&deep_causality::CausalityError::ValueNotAvailable())
+    );
 }
 
 #[test]
@@ -352,6 +365,8 @@ fn test_none_output_error() {
         result.is_err(),
         "Result should be an error when causal function returns None"
     );
-    let err_msg = result.error().unwrap().to_string();
-    assert!(err_msg.contains("causal_fn returned None output"));
+    assert_eq!(
+        result.error(),
+        Some(&deep_causality::CausalityError::ValueNotAvailable())
+    );
 }

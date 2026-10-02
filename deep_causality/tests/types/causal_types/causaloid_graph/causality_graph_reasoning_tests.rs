@@ -49,12 +49,9 @@ fn test_evaluate_single_cause() {
 
     // Verify error if not frozen
     let res = graph.evaluate_single_cause(idx1, &PropagatingEffect::pure(true));
-    assert!(res.is_err());
-    assert!(
-        res.error()
-            .unwrap()
-            .to_string()
-            .contains("Graph is not frozen")
+    assert_eq!(
+        res.error(),
+        Some(&deep_causality::CausalityError::GraphNotFrozen())
     );
 
     graph.freeze();
@@ -69,8 +66,10 @@ fn test_evaluate_single_cause() {
 
     // Verify index not found
     let res_err = graph.evaluate_single_cause(999, &PropagatingEffect::pure(true));
-    assert!(res_err.is_err());
-    assert!(res_err.error().unwrap().to_string().contains("not found"));
+    assert_eq!(
+        res_err.error(),
+        Some(&deep_causality::CausalityError::CausaloidNotFound(999))
+    );
 }
 
 #[test]

@@ -74,8 +74,16 @@ fn test_central_body_earth_jgm3_consistency() {
 #[test]
 fn test_central_body_clone() {
     let original = CentralBody::EARTH_JGM3;
-    let cloned = Clone::clone(&original);
+    let cloned = clone_of(&original);
     assert_eq!(original, cloned);
+}
+
+/// Exercises `Clone` without going through `Copy`.
+///
+/// Inside a generic function `T` is not known to be `Copy`, so this really is a clone. It also
+/// keeps `clippy::clone_on_copy` from firing on the concrete type.
+fn clone_of<T: Clone>(t: &T) -> T {
+    t.clone()
 }
 
 #[test]

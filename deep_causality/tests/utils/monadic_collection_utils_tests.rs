@@ -155,11 +155,11 @@ fn test_aggregate_bool_non_value_errors() {
     // A non-`Value` variant (`None`) must trigger the "Expected Value(bool)" error path.
     let inputs: Vec<CausalEffect<bool>> = vec![CausalEffect::value(true), CausalEffect::none()];
     let res = monadic_collection_utils::aggregate_effects(&inputs, &AggregateLogic::All, None);
-    assert!(res.is_err());
+    let err = res.unwrap_err();
     assert!(
-        res.unwrap_err()
-            .to_string()
-            .contains("Expected Value(bool)")
+        matches!(&err.0, deep_causality::CausalityErrorEnum::TypeConversionError(m) if m.contains("Expected Value(bool)")),
+        "expected TypeConversionError: {:?}",
+        err
     );
 }
 
@@ -167,8 +167,12 @@ fn test_aggregate_bool_non_value_errors() {
 fn test_aggregate_f64_non_value_errors() {
     let inputs: Vec<CausalEffect<f64>> = vec![CausalEffect::value(0.5), CausalEffect::none()];
     let res = monadic_collection_utils::aggregate_effects(&inputs, &AggregateLogic::All, None);
-    assert!(res.is_err());
-    assert!(res.unwrap_err().to_string().contains("Expected Value(f64)"));
+    let err = res.unwrap_err();
+    assert!(
+        matches!(&err.0, deep_causality::CausalityErrorEnum::TypeConversionError(m) if m.contains("Expected Value(f64)")),
+        "expected TypeConversionError: {:?}",
+        err
+    );
 }
 
 #[test]
@@ -177,11 +181,11 @@ fn test_aggregate_uncertain_bool_missing_threshold_errors() {
     let inputs = vec![CausalEffect::value(ub)];
     // No threshold supplied -> must error.
     let res = monadic_collection_utils::aggregate_effects(&inputs, &AggregateLogic::All, None);
-    assert!(res.is_err());
+    let err = res.unwrap_err();
     assert!(
-        res.unwrap_err()
-            .to_string()
-            .contains("Threshold is required")
+        matches!(&err.0, deep_causality::CausalityErrorEnum::MissingParameter(m) if m.contains("Threshold is required")),
+        "expected MissingParameter: {:?}",
+        err
     );
 }
 
@@ -189,11 +193,11 @@ fn test_aggregate_uncertain_bool_missing_threshold_errors() {
 fn test_aggregate_uncertain_bool_non_value_errors() {
     let inputs: Vec<CausalEffect<UncertainBool>> = vec![CausalEffect::none()];
     let res = monadic_collection_utils::aggregate_effects(&inputs, &AggregateLogic::All, Some(0.5));
-    assert!(res.is_err());
+    let err = res.unwrap_err();
     assert!(
-        res.unwrap_err()
-            .to_string()
-            .contains("Expected Value(UncertainBool)")
+        matches!(&err.0, deep_causality::CausalityErrorEnum::TypeConversionError(m) if m.contains("Expected Value(UncertainBool)")),
+        "expected TypeConversionError: {:?}",
+        err
     );
 }
 
@@ -201,10 +205,8 @@ fn test_aggregate_uncertain_bool_non_value_errors() {
 fn test_empty_collection_error() {
     let inputs: Vec<CausalEffect<bool>> = vec![];
     let res = monadic_collection_utils::aggregate_effects(&inputs, &AggregateLogic::All, None);
-    assert!(res.is_err());
-    assert!(
-        res.unwrap_err()
-            .to_string()
-            .contains("Cannot aggregate empty collection")
+    assert_eq!(
+        res.unwrap_err(),
+        deep_causality::CausalityError::EmptyCollection()
     );
 }

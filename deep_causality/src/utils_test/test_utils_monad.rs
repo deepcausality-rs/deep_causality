@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{CausalEffect, CausalityError, CausalityErrorEnum, EffectLog, PropagatingEffect};
+use crate::{CausalEffect, CausalityError, EffectLog, PropagatingEffect};
 use deep_causality_haft::LogAddEntry;
 
 // f(U_smoking) -> Smoking
@@ -49,9 +49,7 @@ pub fn error_logic(
     log.add_entry("Error logic applied");
 
     PropagatingEffect::new(
-        Err(CausalityError::new(CausalityErrorEnum::Custom(
-            "Simulated error".to_string(),
-        ))),
+        Err(CausalityError::Custom("Simulated error")),
         (),
         None,
         log,

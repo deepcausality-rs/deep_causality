@@ -58,7 +58,7 @@ fn test_bind_error_propagation() {
     // and can no longer also carry a value.
     let error_process: CausalEffectPropagationProcess<i32, i32, (), CausalityError, TestLog> =
         CausalEffectPropagationProcess::new(
-            Err(CausalityError::new(CausalityErrorEnum::InternalLogicError)),
+            Err(CausalityError::InternalLogicError("test invariant")),
             0,
             None,
             TestLog::default(),
@@ -77,7 +77,7 @@ fn test_bind_error_propagation() {
     assert!(next_process.error().is_some());
     assert_eq!(
         next_process.error().unwrap().0,
-        CausalityErrorEnum::InternalLogicError
+        CausalityErrorEnum::InternalLogicError("test invariant".to_string())
     );
     assert!(next_process.value().is_none()); // An errored carrier holds no value
 }
@@ -107,7 +107,7 @@ fn test_with_state() {
 
 #[test]
 fn test_from_error() {
-    let error = CausalityError::new(CausalityErrorEnum::InternalLogicError);
+    let error = CausalityError::InternalLogicError("test invariant");
     let process = CausalEffectPropagationProcess::<
         i32,
         i32,
@@ -119,7 +119,7 @@ fn test_from_error() {
     assert!(process.error().is_some());
     assert_eq!(
         process.error().unwrap().0,
-        CausalityErrorEnum::InternalLogicError
+        CausalityErrorEnum::InternalLogicError("test invariant".to_string())
     );
     assert!(process.value().is_none()); // An errored carrier holds no value
     assert_eq!(*process.state(), 0);

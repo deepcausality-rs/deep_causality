@@ -31,8 +31,6 @@ impl From<String> for ActionError {
 
 impl From<ActionError> for deep_causality_core::CausalityError {
     fn from(err: ActionError) -> Self {
-        deep_causality_core::CausalityError::new(
-            deep_causality_core::CausalityErrorEnum::ActionError(err.0),
-        )
+        deep_causality_core::CausalityError::ActionError(err.0)
     }
 }

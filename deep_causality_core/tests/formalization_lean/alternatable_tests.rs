@@ -12,8 +12,7 @@
 
 use deep_causality_core::{
     AlternatableContext, AlternatableState, AlternatableValue, CausalEffect,
-    CausalEffectPropagationProcess, CausalityError, CausalityErrorEnum, EffectLog,
-    PropagatingProcess,
+    CausalEffectPropagationProcess, CausalityError, EffectLog, PropagatingProcess,
 };
 use deep_causality_haft::LogSize;
 
@@ -93,7 +92,7 @@ fn test_alternatable_channel_independence() {
 #[test]
 fn test_alternatable_error_noop() {
     let errored = || -> P<i32> {
-        PropagatingProcess::from_error(CausalityError::new(CausalityErrorEnum::InternalLogicError))
+        PropagatingProcess::from_error(CausalityError::InternalLogicError("test invariant"))
     };
 
     // Every setter (and clear_context) is a no-op on an errored carrier.

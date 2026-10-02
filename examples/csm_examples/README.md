@@ -18,6 +18,7 @@ cargo run -p csm_examples --example <example_name>
 |---------|---------|-------------|
 | [csm_basic](csm_basic/README.md) | **Basic CSM** | A monitoring system (Sensor -> Action) built on the State-Causaloid-Action loop. |
 | [csm_context](csm_context/README.md) | **Contextual CSM** | Shares mutable data (`BaseContext`) with the causal model through `Arc<RwLock>` to fuse several sensor readings. |
+| [csm_battery](csm_battery/README.md) | **Dynamic CSM** | Charges a lithium-ion cell after its coolant pump fails; a causaloid detects the loss of cooling from the temperature trend, and the machine replaces its charge states with a derated law while it runs. |
 | [csm_effect_ethos](csm_effect_ethos/README.md) | **Ethical CSM** | Pairs a CSM with an `EffectEthos` that applies **Deontic Logic** (Obligation, Permission, Prohibition) to decide whether the CSM's action is permissible. |
 
 ---
@@ -44,3 +45,4 @@ The `csm_effect_ethos` example adds a normative layer: for an action that is *ca
 | Basic CSM | `cargo run -p csm_examples --example csm_example` |
 | Contextual CSM | `cargo run -p csm_examples --example csm_context_example` |
 | Ethical CSM | `cargo run -p csm_examples --example csm_effect_ethos_example` |
+| Dynamic CSM | `cargo run -p csm_examples --example csm_battery_example` |

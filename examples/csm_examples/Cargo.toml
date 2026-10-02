@@ -13,6 +13,7 @@ path = "no_lib.rs"
 deep_causality = { workspace = true }
 deep_causality_context = { workspace = true }
 deep_causality_ethos = { workspace = true }
+deep_causality_num = { workspace = true, features = ["default"] }
 
 [[example]]
 name = "csm_example"
@@ -21,6 +22,10 @@ path = "csm_basic/main.rs"
 [[example]]
 name = "csm_context_example"
 path = "csm_context/main.rs"
+
+[[example]]
+name = "csm_battery_example"
+path = "csm_battery/main.rs"
 
 
 [[example]]

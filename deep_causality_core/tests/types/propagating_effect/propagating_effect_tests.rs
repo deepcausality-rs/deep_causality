@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_core::{CausalityError, CausalityErrorEnum, PropagatingEffect};
+use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_haft::LogSize;
 
 #[test]
@@ -42,7 +42,7 @@ fn test_bind() {
 #[test]
 fn test_bind_with_error() {
     let effect: PropagatingEffect<i32> =
-        PropagatingEffect::from_error(CausalityError::new(CausalityErrorEnum::InternalLogicError));
+        PropagatingEffect::from_error(CausalityError::InternalLogicError("test invariant"));
 
     // The continuation is not invoked on an errored effect (left zero).
     let next = PropagatingEffect::bind(effect, |val, _state, _ctx| {
@@ -56,7 +56,7 @@ fn test_bind_with_error() {
     assert!(next.is_err());
     assert_eq!(
         next.error(),
-        Some(&CausalityError::new(CausalityErrorEnum::InternalLogicError))
+        Some(&CausalityError::InternalLogicError("test invariant"))
     );
 }
 

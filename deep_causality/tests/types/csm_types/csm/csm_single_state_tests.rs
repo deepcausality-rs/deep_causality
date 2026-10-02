@@ -6,8 +6,11 @@
 use deep_causality::utils_test::test_utils;
 use deep_causality::utils_test::test_utils_csm;
 use deep_causality::{
-    BaseCausaloid, CSM, CausalEffect, CausalState, Causaloid, PropagatingEffect, UncertainParameter,
+    BaseCausaloid, CSM, CausalAction, CausalEffect, CausalState, Causaloid, PropagatingEffect,
+    UncertainParameter,
 };
+use deep_causality_context::BaseContext;
+use std::sync::{Arc, RwLock};
 
 #[test]
 fn add_single_state() {
@@ -398,4 +401,55 @@ fn eval_single_state_uncertain_float_success() {
     dbg!(&res);
 
     assert!(res.is_ok());
+}
+
+// The state version (2) and the action version (7) differ, so a swap between them shows.
+fn versioned_machine() -> CSM<f64, bool, Arc<RwLock<BaseContext>>> {
+    let causaloid = test_utils::get_test_causaloid_deterministic(23);
+    let cs = CausalState::new(
+        42,
+        2,
+        PropagatingEffect::from_value(0.23f64),
+        causaloid,
+        None,
+    );
+    let ca = CausalAction::new(test_utils_csm::state_action, "open valve", 7);
+    CSM::new(&[(&cs, &ca)])
+}
+
+#[test]
+fn eval_single_state_returns_the_effect_and_records_the_fired_action() {
+    let csm = versioned_machine();
+
+    let effect = csm
+        .eval_single_state(42, &PropagatingEffect::from_value(0.60f64))
+        .expect("state 42 exists and its action succeeds");
+
+    assert_eq!(effect.value(), Some(&true));
+    let messages: Vec<&str> = effect.logs().messages().collect();
+    assert!(
+        messages
+            .iter()
+            .any(|m| m.starts_with("Causaloid 23: Incoming effect")),
+        "the causaloid's own entries are kept: {messages:?}"
+    );
+    assert_eq!(
+        messages.last(),
+        Some(&"CSM state 42 (version 2): active; fired 'open valve' (version 7)")
+    );
+}
+
+#[test]
+fn eval_single_state_records_an_inactive_state() {
+    let csm = versioned_machine();
+
+    let effect = csm
+        .eval_single_state(42, &PropagatingEffect::from_value(0.23f64))
+        .expect("state 42 exists");
+
+    assert_eq!(effect.value(), Some(&false));
+    assert_eq!(
+        effect.logs().messages().last(),
+        Some("CSM state 42 (version 2): inactive")
+    );
 }

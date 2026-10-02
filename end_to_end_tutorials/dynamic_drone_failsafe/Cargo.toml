@@ -1,0 +1,42 @@
+[package]
+name = "dynamic_drone_failsafe"
+version = "0.1.0"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish = false
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+deep_causality = { workspace = true }
+deep_causality_algebra = { workspace = true }
+deep_causality_context = { workspace = true }
+deep_causality_ethos = { workspace = true }
+deep_causality_num = { workspace = true, features = ["default"] }
+deep_causality_stats = { workspace = true, features = ["default"] }
+deep_causality_uncertain = { workspace = true, features = ["default"] }
+
+[[example]]
+name = "drone_failsafe_part_1"
+path = "part_1_dynamic_causality/main.rs"
+
+[[example]]
+name = "drone_failsafe_part_2"
+path = "part_2_dynamic_context/main.rs"
+
+[[example]]
+name = "drone_failsafe_part_3"
+path = "part_3_dynamic_action/main.rs"
+
+[[example]]
+name = "drone_failsafe_part_4"
+path = "part_4_effect_ethos/main.rs"
+
+[[example]]
+name = "drone_failsafe_part_5"
+path = "part_5_verification/main.rs"
+
+[lints]
+workspace = true

@@ -1,0 +1,200 @@
+---
+import { Code } from 'astro:components';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SiteHeader from '../../../components/nav/SiteHeader.astro';
+import TopicList from '../../../components/overview/TopicList.astro';
+import {
+  DRONE_FAILSAFE_BASE,
+  DRONE_FAILSAFE_SOURCE,
+  droneFailsafeParts,
+} from '../../../components/tutorials/tutorials';
+import { GITHUB_URL } from '../../../consts';
+
+const themes = { light: 'github-light', dark: 'github-dark' } as const;
+const source = `${GITHUB_URL}/tree/main/${DRONE_FAILSAFE_SOURCE}/part_3_dynamic_action`;
+
+const run = `cargo run -p dynamic_drone_failsafe --example drone_failsafe_part_3`;
+
+const machine = `pub fn failsafe_machine() -> FailsafeMachine {
+    let choose = machine_state(
+        CHOOSE_STATE, 
+        choose_a_patch, 
+        "choose a landing patch"
+      );
+    let hold = machine_state(
+      HOLD_STATE, 
+      hold_over_the_ground, 
+      "hold over the ground"
+      );
+    let home = machine_state(HOME_STATE, fly_home, "fly home");
+    let land = landing_state(1, LandingTarget::default());
+    CSM::new(&[
+        (&choose.0, &choose.1),
+        (&hold.0, &hold.1),
+        (&home.0, &home.1),
+        (&land.0, &land.1),
+    ])
+}`;
+
+const land = `/// Active when the ladder says land now and the chosen patch reads as safe: fly to it and land.
+fn land_on_the_patch(
+    effect: CausalEffect<Situation>,
+    _: (),
+    target: Option<LandingTarget>,
+) -> PropagatingProcess<Maneuver, (), LandingTarget> {
+    let maneuver = match (effect.into_value(), target) {
+        (Some(s), Some(t))
+            if t.patch.is_some()
+                && s.failsafe == Command::LandNow
+                && s.target_ground == Some(Ground::Safe) =>
+        {
+            Maneuver::LandOn {
+                x: t.centre.0,
+                y: t.centre.1,
+            }
+        }
+        _ => Maneuver::None,
+    };`;
+
+const replace = `if let Some(target) = nearest_safe_patch(&state) {
+    state.landing_version += 1;
+    if let Err(err) =
+        machine.update_single_state(
+          landing_state(state.landing_version, target))
+    {
+      return failed(CausalityError::ActionError(
+              err.to_string()),state,ctx);
+    }`;
+
+const output = `Dynamic drone fail-safe, part 3: dynamic action
+The same drone flies the same night. A fail-safe machine now turns each fail-safe into a maneuver over the ground.
+The column "below" is the controller's judgement of the ground directly under the drone.
+
+ time   across   along   agl  confirmed faults                       below      fail-safe  maneuver
+   0s      60m      0m   40m  none                                   too steep  continue   none
+  18s      60m    144m   40m  none                                   safe       continue   none
+  20s      60m    160m   40m  none                                   too steep  continue   none
+  50s      60m    400m   40m  fix degraded                           too steep  continue   none
+  57s      56m    440m   40m  fix lost                               too steep  hold       hold over the ground
+  69s      56m    440m   40m  fix lost, link lost                    too steep  land now   land on the chosen patch
+  71s      58m    446m   40m  fix lost, link lost                    safe       land now   land on the chosen patch
+  85s      58m    446m   19m  fix lost, link lost, battery critical  safe       land now   land on the chosen patch
+
+Touchdown at 92 s, 446 m along the line, 3 m from the nearest person.
+It landed 3 m from a member of the crew.
+
+The ground as the controller judged it, one 4 m patch per cell, downhill to the left:
+
+              . / / / / / / / / / / / /
+              . / / / / / / / / / / / /
+              . / / / / / / / / / / / /
+              . / / / / / . P / / / / /
+              . / / / / / P P / / / / /
+              . / / / / / X . / / / / /
+              . / / / / / / / / / / / /
+              . / / / / / / / / / / / /
+              . / / / / / / / / / / / /
+              . / / / / / / / / / / / /
+              . / / / / / / / / / / / /
+
+  . safe   / too steep   ~ water   P person   ? unsure   (blank) not seen
+  X where the drone came down
+
+The fail-safe machine chose the safe patch nearest the drone and landed on it. The patch
+passed every test the controller ran: flat, dry, no one on it.
+The controller's own map showed a person on a patch 4 m away from it.
+No test asked how close to a person the drone may land. Part 4 adds that check.
+
+Faults, fail-safes and maneuvers from the controller's log:
+  t=50 s: Satellite fix degraded: 7 satellites, HDOP 3.5.
+  t=57 s: Satellite fix lost: none for 3 s.
+  t=57 s: Fail-safe set to hold: no satellite fix, but the link is up, so wait for the fix or the operator.
+  t=57 s: Fail-safe machine runs "hold over the ground", state 2, version 1.
+  t=69 s: Command link lost: 95 % of packets dropped for 5 s.
+  t=69 s: Fail-safe set to land now: with no satellite fix and no link, the drone can neither navigate nor receive orders.
+  t=69 s: Landing patch chosen 6 m away, at 58 m across and 446 m along. Landing state replaced by version 2.
+  t=69 s: Fail-safe machine runs "land on the chosen patch", state 4, version 2.
+  t=85 s: Battery critical: one cell at 3.25 V.`;
+---
+<BaseLayout
+  title="Part 3: Dynamic action — DeepCausality"
+  description="Part 3 of the drone fail-safe tutorial: a causal state machine turns each fail-safe into a maneuver over the ground and lands the drone on the nearest safe patch, 3 m from a member of the crew."
+>
+  <SiteHeader />
+  <article class="static-page">
+    <header>
+      <p class="eyebrow">Dynamic drone fail-safe · Part 3 of 5</p>
+      <h1>Part 3: Dynamic action</h1>
+      <p class="lede">
+        A causal state machine, the fail-safe machine, now turns the ladder's command into a
+        maneuver over the ground. The drone no longer drifts: it holds its place by camera and
+        LiDAR, flies to the nearest safe patch and lands on it, 3 m from a member of the crew.
+      </p>
+    </header>
+
+    <div class="prose">
+      <h2>Run it</h2>
+      <Code code={run} lang="bash" themes={themes} defaultColor={false} wrap />
+      <p>
+        The source lives in <a href={source}><code>part_3_dynamic_action</code></a>.
+      </p>
+
+      <h2>The fail-safe machine</h2>
+      <p>
+        The machine is a <a href="/overview/dynamic-action/">Causal State Machine</a> with four
+        states. Each state holds a causaloid that reads the situation (the ladder's command, the
+        drone's position and the controller's judgment of the landing patch) and returns a
+        maneuver:
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>State</th><th>Active when</th><th>Maneuver</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1 choose a landing patch</td><td>the ladder says land now, and no patch is chosen or the chosen one no longer reads as safe</td><td>the controller picks the safe patch nearest the drone</td></tr>
+            <tr><td>2 hold over the ground</td><td>the ladder says hold</td><td>hover where the drone is</td></tr>
+            <tr><td>3 fly home</td><td>the ladder says return home</td><td>fly to the launch point</td></tr>
+            <tr><td>4 land on the chosen patch</td><td>the ladder says land now, and the chosen patch reads as safe</td><td>fly to the patch, then descend onto it</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <Code code={machine} lang="rust" themes={themes} defaultColor={false} wrap />
+      <p>
+        The drone flies each maneuver by its camera and LiDAR, so it holds its place against the
+        wind without GPS.
+      </p>
+
+      <h2>A landing state that changes in flight</h2>
+      <p>
+        The landing state's causaloid holds the chosen patch as its context:
+      </p>
+      <Code code={land} lang="rust" themes={themes} defaultColor={false} wrap />
+      <p>
+        Each time the controller chooses a patch, it replaces the landing state with a new version
+        through <code>update_single_state</code>:
+      </p>
+      <Code code={replace} lang="rust" themes={themes} defaultColor={false} wrap />
+      <p>
+        Each second the machine checks the chosen patch against the context again. If the patch
+        stops reading as safe, state 1 fires and the controller chooses again. A new stage, <code>act</code>, runs the machine after <code>decide</code>.
+      </p>
+
+      <h2>What happened</h2>
+      <Code code={output} lang="text" themes={themes} defaultColor={false} />
+      <p>
+        The drone held over the ground at 57 s. At 69 s the machine chose the safe patch nearest
+        the drone: a corner of the second tower pad, 6 m away. The patch read as safe at every
+        recheck, and the drone landed on it, 3 m from a member of the crew. The controller knew the
+        crew was there: its map shows them on the next patch.
+      </p>
+      <p>
+        Every test the controller ran asked about the patch itself. None asked how close to a
+        person the drone may land, and nothing checked the machine's choice against a safety rule
+        before the drone flew it. Losing a drone is acceptable; harming a person is not. <a href={`${DRONE_FAILSAFE_BASE}effect-ethos/`}>Part 4</a> adds that check.
+      </p>
+
+      <TopicList label="Dynamic drone fail-safe" current="dynamic-action" items={droneFailsafeParts} base={DRONE_FAILSAFE_BASE} />
+    </div>
+  </article>
+</BaseLayout>

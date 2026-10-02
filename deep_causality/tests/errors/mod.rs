@@ -12,8 +12,6 @@ mod build_error_tests;
 #[cfg(test)]
 mod causal_graph_index_error_tests;
 #[cfg(test)]
-mod causality_error_tests;
-#[cfg(test)]
 mod causality_graph_error_tests;
 #[cfg(test)]
 mod csm_error_tests;

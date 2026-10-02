@@ -1,52 +1,69 @@
 ---
 // The end-to-end story rendered as a layered platform diagram: one reticle-framed
-// module holding five stacked layer-bands, top (discovery) to bottom (deployment).
-// The stage verbs carry the lifecycle direction; no enumeration. Concept links
-// point to the docs; where a worked example exists, an Example chip sits beside it.
-// Single-column bands on phones. Entrance is the shared `data-anim-draw` idiom.
+// module holding six stacked layer-bands, top (discovery) to bottom (deployment).
+// The stage verbs carry the lifecycle direction; no enumeration. A band that presents
+// an Overview topic takes its title from `topics` and an Overview chip links to its
+// page. A Docs chip links to the concept page in the docs; where a worked example
+// exists, an Example chip sits beside it. Single-column bands on phones. Entrance
+// is the shared `data-anim-draw` idiom.
 import { DOCS_URL } from '../../consts';
+import { topics } from '../overview/topics';
 
 type Link = { href: string };
 type Layer = {
   stage: string;
   title: string;
   body: string;
+  overview?: Link;
   concept: Link;
   example?: Link;
 };
 
+/** Title and Overview link of the Overview topic `slug`. */
+const topic = (slug: string) => ({
+  title: topics.find((t) => t.slug === slug)!.title,
+  overview: { href: `/overview/${slug}/` },
+});
+
 const layers: Layer[] = [
   {
     stage: 'Discover',
-    title: 'Causal Discovery Language',
+    ...topic('causal-discovery'),
     body: 'Surface causal structure straight from raw observational data.',
     concept: { href: `${DOCS_URL}/concepts/cdl/` },
     example: { href: '/examples/causal-discovery/' },
   },
   {
     stage: 'Model',
-    title: 'Contextual Causality',
-    body: 'Encode that structure as composable causal logic with an explicit context.',
-    concept: { href: `${DOCS_URL}/concepts/causaloid/` },
+    ...topic('dynamic-causality'),
+    body: 'Encode that structure as a chain of causal steps, with any computation inside each step.',
+    concept: { href: `${DOCS_URL}/concepts/dynamic-causality/` },
     example: { href: '/examples/pearl-counterfactual/' },
   },
   {
+    stage: 'Sense',
+    ...topic('dynamic-context'),
+    body: 'Give each step the world it reads: data, clocks and positions, updated while the model runs.',
+    concept: { href: `${DOCS_URL}/concepts/context/` },
+    example: { href: '/tutorials/dynamic-drone-failsafe/dynamic-context/' },
+  },
+  {
     stage: 'Act',
-    title: 'Causal State Machine',
+    ...topic('dynamic-action'),
     body: 'Turn a causal verdict into an action and interact with the outside world.',
     concept: { href: `${DOCS_URL}/concepts/csm/` },
     example: { href: '/examples/sensor-monitoring-csm/' },
   },
   {
     stage: 'Govern',
-    title: 'Effect Ethos',
+    ...topic('effect-ethos'),
     body: 'Verify deterministically what is allowed to happen.',
     concept: { href: `${DOCS_URL}/concepts/effect-ethos/` },
     example: { href: '/examples/effect-ethos/' },
   },
   {
     stage: 'Run',
-    title: 'Run Anywhere',
+    title: 'Run anywhere',
     body: 'Run the model thread-safe and asynchronously at scale.',
     concept: { href: `${DOCS_URL}/concepts/deployment/` },
     example: { href: '/examples/async-event-inference/' },
@@ -76,8 +93,14 @@ const layers: Layer[] = [
             <div class="body">
               <p class="desc">{layer.body}</p>
               <div class="links">
+                {layer.overview && (
+                  <a class="chip" href={layer.overview.href}>
+                    <span class="chip-kind">Overview</span>
+                    <span class="chip-arrow" aria-hidden="true">→</span>
+                  </a>
+                )}
                 <a class="chip" href={layer.concept.href}>
-                  <span class="chip-kind">Concept</span>
+                  <span class="chip-kind">Docs</span>
                   <span class="chip-arrow" aria-hidden="true">↗</span>
                 </a>
                 {layer.example && (
@@ -190,7 +213,7 @@ const layers: Layer[] = [
   .body { display: flex; flex-direction: column; gap: var(--space-3); }
   .desc { margin: 0; color: var(--fg-1); max-width: var(--measure); }
 
-  /* Concept / Example chips. */
+  /* Overview / Docs / Example chips. */
   .links { display: flex; flex-wrap: wrap; gap: var(--space-2); }
   .chip {
     display: inline-flex;

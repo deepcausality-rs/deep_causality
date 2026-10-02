@@ -1,0 +1,260 @@
+---
+import { Code } from 'astro:components';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SiteHeader from '../../../components/nav/SiteHeader.astro';
+import TopicList from '../../../components/overview/TopicList.astro';
+import {
+  DRONE_FAILSAFE_BASE,
+  DRONE_FAILSAFE_SOURCE,
+  droneFailsafeParts,
+} from '../../../components/tutorials/tutorials';
+import { GITHUB_URL } from '../../../consts';
+
+const themes = { light: 'github-light', dark: 'github-dark' } as const;
+
+const atsb = 'https://www.atsb.gov.au/investigations/ao-2023-033';
+const tcas = `${GITHUB_URL}/tree/main/examples/avionics_examples/control/geometric_tcas`;
+const uvifyDatasheet = 'https://www.lang-ag.com/wp-content/uploads/2024/05/UVify_IFO_Drone_EN_rev02.pdf';
+const ntsb =
+  'https://data.ntsb.gov/carol-repgen/api/Aviation/ReportMain/GenerateNewestReport/199458/pdf';
+const fox35 =
+  'https://www.fox35orlando.com/news/orlando-drone-show-errors-led-lake-eola-crash-seriously-injured-7-year-old-ntsb';
+const stpa = 'https://www.flighttestsafety.org/images/STPA_Handbook.pdf';
+const faaSurvey = 'https://www.faa.gov/media/106066';
+const dcro =
+  'https://assets.ctfassets.net/et769tc4wc1v/5EnhNVwQweLbRDWnzKFR4N/bf21d3ae3f8f5f4dd81a8073ad829a5c/Whietpaper_on_the_probability_of_a_flyaway_1738773822.pdf';
+const source = `${GITHUB_URL}/tree/main/${DRONE_FAILSAFE_SOURCE}`;
+
+const run = `cargo run -p dynamic_drone_failsafe --example drone_failsafe_part_1
+cargo run -p dynamic_drone_failsafe --example drone_failsafe_part_2
+cargo run -p dynamic_drone_failsafe --example drone_failsafe_part_3
+cargo run -p dynamic_drone_failsafe --example drone_failsafe_part_4
+cargo run --release -p dynamic_drone_failsafe --example drone_failsafe_part_5`;
+---
+<BaseLayout
+  title="Dynamic drone fail-safe — DeepCausality"
+  description="A five-part tutorial that builds a drone fail-safe with dynamic causality, dynamic context, dynamic action and the Effect Ethos, and verifies it over 1,000 randomized scenarios."
+>
+  <SiteHeader />
+  <article class="static-page">
+    <header>
+      <p class="eyebrow">Tutorial · Dynamic drone fail-safe</p>
+      <h1>A drone fail-safe that adapts as the situation changes</h1>
+      <p class="lede">
+        When a drone loses GPS, a battery cell, or the command link that lets a remote pilot steer
+        it, a fail-safe takes over. A typical fail-safe follows fixed rules: hover, fly home, or
+        land on the spot. The rule that saves a drone over an empty field can drop it into a river
+        or onto people. This tutorial builds a drone fail-safe that tracks the ground and the
+        people below as the situation changes, and checks every maneuver against the published
+        emergency procedures for drone pilots before flying it. In 1,000 simulated emergencies on
+        a planned inspection flight, it put a person at risk 35 times less often than a standard
+        fail-safe, and at least 6.6 times less with 95 % confidence. Five parts build it, one layer
+        of DeepCausality at a time, each a Rust program you can run.
+      </p>
+    </header>
+
+    <div class="prose">
+      <h2>Two fail-safes failed by design</h2>
+      <p>
+        On July 14, 2023, 500 Damoda Newton V2.2 show drones launched over Victoria Harbour in
+        Melbourne's Docklands. Wind at more than twice their limit pushed them off station. They
+        collided, strayed from the operating area and tripped their fail-safes. 427 dropped into
+        the harbor; divers recovered 236. No one was hurt (<a href={atsb}>ATSB, AO-2023-033</a>).
+      </p>
+      <p>
+        On December 21, 2024, 500 UVify IFO show drones launched over Lake Eola in Orlando, Florida.
+        Setup errors had shifted the show about 18 m toward the audience, and drones collided as
+        they climbed. One streaked toward the spectators. A drone struck a seven-year-old boy in
+        the face and chest (<a href={ntsb}>NTSB, DCA25LA065</a>); his parents say he needed
+        open-heart surgery (<a href={fox35}>FOX 35, September 2026</a>). The NTSB traced the
+        probable cause to the setup: a mislocated show center, a wrong heading, a nonstandard
+        geofence and no independent check.
+      </p>
+      <p>
+        The two accident reports record the fail-safe protocol each drone carried:
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th></th><th>Melbourne: Damoda Newton V2.2</th><th>Orlando: UVify IFO</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Position</td><td>RTK satellite positioning, accurate to centimeters</td><td>RTK satellite positioning, hovering to 0.1 m (<a href={uvifyDatasheet}>datasheet</a>)</td></tr>
+            <tr><td>Sensing of the surroundings</td><td>none: "not fitted with sensors to allow independent collision avoidance"</td><td>none: "not equipped with collision avoidance technologies"</td></tr>
+            <tr><td>Crossing the geofence</td><td>return to launch; if still outside, "the motors were shut down and the aircraft fell to the ground or water uncontrolled"</td><td>soft geofence: return home and land; hard geofence: "disarm the sUA's motors immediately"</td></tr>
+            <tr><td>Low battery</td><td>return to launch</td><td>not recorded</td></tr>
+            <tr><td>Lost link to the ground station</td><td>drones were found loitering on the pilot's command, returning to launch, or, with critical errors, landing in place</td><td>not recorded</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Both drones knew where they were and nothing about what lay below. In both shows the last
+        line of defense was the same rule: cross a line drawn before the flight, and the motors
+        stop. Over Melbourne the wind pushed drones across the line, and their fail-safes brought
+        most of them down in the harbor. Over Orlando the setup errors had moved the line toward
+        the audience. The accident drone's log shows it approaching the soft geofence and, 0.1 s
+        later, crossing the hard geofence 5 m beyond it at 29.9 m/s, where the rule disarms the
+        motors. The soft fence had no time to act; the operator's policy, changed twelve days
+        earlier, called for 1 m between the fences.
+      </p>
+      <p>
+        Cutting the motors has a purpose. It keeps a stray drone out of airspace and ground beyond
+        the operating area. The SORA risk method pairs it with a ground risk buffer: ground beyond
+        the line, free of uninvolved people, where a drone with its motors cut comes down. The
+        rule's safety therefore rests on a buffer laid out before the flight. In Orlando the setup
+        errors left "a reduced safety area that was outside the company's standards"; after the
+        accident the operator set a minimum of 155 feet, 47 m, between the geofence and the
+        spectators (NTSB). Where the buffer fails, the rule turns a stray drone into a falling one
+        over the people it should protect, and the fail-safe causes the harm it exists to prevent.
+        In an emergency, no one checks whether the setup was right.
+      </p>
+      <p>
+        The Orlando drones failed once before any fail-safe fired because no drone could see another drone, so they collided.
+        A drone wrecked in a mid-air collision may not fly at all, and no fail-safe can steer it;
+        there, only avoiding the collision protects the people below.
+        Avoiding a collision in-flight is a separate safety function; the <a href={tcas}>geometric TCAS example</a> shows how
+        it detects a converging aircraft, issues traffic and resolution advisories,
+        and takes over when an advisory goes unanswered.
+      </p>
+      <p>
+        In both cases, in Orlando and in Melbourne, each fail-safe mechanism fired on one condition:
+        a lost position or a crossed boundary. Neither condition asks what lies below the drone or who stands near it.
+        Safety engineering calls this an unsafe control action, one that turns unsafe "in a particular context and
+        worst-case environment" (<a href={stpa}>Leveson and Thomas, STPA Handbook, 2018</a>).
+      </p>
+      <p>
+        This tutorial designs and builds a dynamic fail-safe protocol that adapts
+        its response dynamically to the situation while the failure unfolds.
+        A fail-safe that prevents such harm must know where the drone can land, what is around and
+        who stands nearby, and must test every emergency maneuver against safety rules before
+        flying it. It decides from what the drone senses at that moment; a line or a landing zone
+        set before the flight may inform the decision but never makes it alone. The tutorial's
+        fail-safe takes nothing from the setup: no planned landing zone, no launch site assumed
+        safe, only the ground it has sensed. When no safe ground is left, it still chooses where to
+        come down: a tree before a person, the farthest person before the nearest. This tutorial
+        builds that fail-safe and measures its effectiveness in a thousand simulated emergencies.
+      </p>
+
+      <h2>The scenario in five parts</h2>
+      <p>
+        The drone inspects a high-voltage line 40 m above a 30° grass slope at 8 m/s. A creek runs
+        along the valley floor, a stand of 18 m trees grows on the slope, a ravine drops away above
+        the access road, and a crew works on the road and on a tower pad. GPS drops
+        out at 55 s, the command link to the pilot at 65 s, and a cell fails at 85 s. The fail-safe has to bring
+        the drone down where it can stay: off the steep grass, out of the creek and the ravine,
+        clear of the trees and away from the crew.
+      </p>
+      <p>
+        Each part adds one layer of DeepCausality and flies the same night:
+      </p>
+
+      <TopicList label="Five parts" items={droneFailsafeParts} base={DRONE_FAILSAFE_BASE} />
+
+      <h2>The safety rules live in one layer</h2>
+      <p>
+        Parts 1 to 3 keep their unsafe control actions inside the controller's logic. The fail-safe
+        ladder of parts 1 and 2 lands the drone where it is, and the night wind carries it into the
+        creek. The fail-safe machine of part 3 lands it on the nearest safe patch, 3 m from a
+        member of the crew. Neither checks its action against a safety rule.
+      </p>
+      <p>
+        Part 4 puts that check in the <a href="/overview/effect-ethos/">Effect Ethos</a>. The
+        fail-safe machine proposes each landing. The Ethos rules on the proposal against the
+        context, under norms taken from the published emergency procedures for drone pilots, and
+        names the norms behind its verdict. The machine flies only what the Ethos permits. One
+        layer of written norms now decides whether a maneuver is safe, here and now. A test can
+        find a fault there, and an engineer can fix it there.
+      </p>
+
+      <h2>The simulation caught the failures first</h2>
+      <p>
+        Part 5 flies parts 1, 3 and 4 through the same 1,000 scenarios: any hour, any wind, the
+        faults at any time, and up to eight people around the point where GPS drops out. Its
+        first runs found six failures in earlier versions of part 4:
+      </p>
+      <ol>
+        <li>With no landing permitted, the drone hovered until its battery died and fell where it hovered.</li>
+        <li>The person clearance grew with the drone's position drift, so a look never cleared a patch.</li>
+        <li>The controller read a battery draining normally as a failed cell.</li>
+        <li>A gust tipped the drone off a patch on a terrace edge.</li>
+        <li>With all the ground it had seen set aside, the drone hovered instead of searching.</li>
+        <li>In an emergency, the drone ditched beside people it had not ruled out.</li>
+      </ol>
+      <p>
+        The first failure lay in the Ethos itself. Every near-person outcome of that run came from
+        a drone that fell while the Ethos vetoed every landing: the protocol's veto was the unsafe
+        control action. The campaign caught it in simulation, in a scenario anyone can fly again.
+        Each fix went into the norms or the machine, and the campaign ran again.
+      </p>
+      <p>
+        This manages risk before the harm. The causes of Melbourne and Orlando surfaced in accident
+        reports published about two years after each show. The campaign surfaced six failures
+        before deployment. Each Ethos verdict names the norms behind it, so every failure pointed
+        to the rule or stage that caused it. After every fix the whole campaign ran again, so a fix
+        that broke another case would have shown.
+      </p>
+      <p>
+        The campaign counts a touchdown within 10 m of a person as putting that person at risk. In
+        the final run:
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th></th><th>Part 1: textbook fail-safe</th><th>Part 3: context and action</th><th>Part 4: Effect Ethos</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Person at risk, all 1,000 scenarios</td><td>3.5 %</td><td>4.1 %</td><td>0.1 % (at most 0.47 %)</td></tr>
+            <tr><td>Person at risk, battery healthy (495)</td><td>3.0 %</td><td>3.8 %</td><td>0 (at most 0.60 %)</td></tr>
+            <tr><td>Person at risk, a cell fails (505)</td><td>4.0 %</td><td>4.4 %</td><td>0.2 % (at most 0.94 %)</td></tr>
+            <tr><td>Drone lost, all 1,000 scenarios</td><td>91.4 %</td><td>26.8 %</td><td>36.3 %</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Each bound is a one-sided 95 % upper confidence bound. Part 4 gives up more drones than
+        part 3 when a cell fails, 61.2 % against 43.4 %: the protocol ranks people first and the
+        aircraft last. The rates describe this simulated world and its mix of scenarios. <a href={`${DRONE_FAILSAFE_BASE}verification/`}>Part 5</a> gives the full results.
+      </p>
+
+      <h2>What the rates mean at scale</h2>
+      <p>
+        US commercial operators flew over 16.6 million drone flights in 2024 (<a href={faaSurvey}>FAA, Small UAS Survey Report 2024</a>). No aviation authority publishes how many flights
+        meet an emergency (<a href={dcro}>DCRO, 2025</a>), so assume 1 %: 166,000 emergencies a
+        year.
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th></th><th>Standard fail-safe</th><th>Part 4: Effect Ethos</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Emergencies a year</td><td>166,000</td><td>166,000</td></tr>
+            <tr><td>Rate of putting a person at risk</td><td>3.5 %</td><td>0.1 % (at most 0.47 %)</td></tr>
+            <tr><td>Landings that put a person at risk, a year</td><td>5,810</td><td>166 (at most 780)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        With the standard fail-safe, about 16 landings a day put a person at risk; with part 4, one
+        lands near a person about every two days. Even at its 95 % bound, part 4 avoids over 5,000
+        such landings a year.
+      </p>
+      <p>
+        Two assumptions carry these counts. No published data yet tests the 1 % emergency share.
+        And the campaign places people around the point where GPS drops out, as on an inspection
+        flight with a crew at work below. Other scenarios may have a
+        different incident rate, so model the scenario closest to the actual drone deployment.
+      </p>
+
+      <h2>Run it</h2>
+      <p>
+        The tutorial lives in <a href={source}><code>{DRONE_FAILSAFE_SOURCE}</code></a>. Each part
+        runs on its own:
+      </p>
+      <Code code={run} lang="bash" themes={themes} defaultColor={false} wrap />
+      <p>
+        On an M3 Max with 16 cores, parts 1 to 4 take under 20 s each, and part 5 takes 3 to 4 minutes.
+      </p>
+    </div>
+  </article>
+</BaseLayout>

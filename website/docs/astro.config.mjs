@@ -99,4 +99,21 @@ export default defineConfig({
     }),
     sitemap(),
   ],
+  vite: {
+    build: {
+      rolldownOptions: {
+        // Astro 7.3.5 opens every MDX `?astroPropagatedAssets` module with the directive
+        // "use astro:head-inject". Rolldown drops directives it does not know and warns once per
+        // MDX file. Nothing reads that directive: Astro finds those modules by the query flag
+        // (core/head-propagation/boundary.js), so dropping it changes nothing. Only that one
+        // warning is silenced; every other log passes through.
+        onLog(level, log, defaultHandler) {
+          if (log.code === 'MODULE_LEVEL_DIRECTIVE' && log.message.includes('astro:head-inject')) {
+            return;
+          }
+          defaultHandler(level, log);
+        },
+      },
+    },
+  },
 });

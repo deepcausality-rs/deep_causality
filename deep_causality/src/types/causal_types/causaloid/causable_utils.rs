@@ -43,20 +43,12 @@ where
             let (outcome, _state, _context, logs) = process.into_parts();
             let outcome = match outcome {
                 Err(error) => Err(error),
-                Ok(value) if value.is_none() => Err(CausalityError(
-                    deep_causality_core::CausalityErrorEnum::Custom(
-                        "execute_causal_logic: context_fn returned None value and no error".into(),
-                    ),
-                )),
+                Ok(value) if value.is_none() => Err(CausalityError::ValueNotAvailable()),
                 Ok(value) => Ok(value),
             };
             PropagatingEffect::new(outcome, (), None, logs)
         } else {
-            PropagatingEffect::from_error(CausalityError(
-                deep_causality_core::CausalityErrorEnum::Custom(
-                    "Causaloid::evaluate: context is None".into(),
-                ),
-            ))
+            PropagatingEffect::from_error(CausalityError::MissingContext())
         }
     } else if let Some(causal_fn) = &causaloid.causal_fn {
         causal_fn(input)
@@ -65,9 +57,7 @@ where
             "Causaloid {} is missing both causal_fn and context_causal_fn",
             causaloid.id
         );
-        PropagatingEffect::from_error(CausalityError(
-            deep_causality_core::CausalityErrorEnum::Custom(err_msg),
-        ))
+        PropagatingEffect::from_error(CausalityError::MissingParameter(err_msg))
     }
 }
 
@@ -141,9 +131,7 @@ where
         causaloid.id
     );
     PropagatingProcess::new(
-        Err(CausalityError(
-            deep_causality_core::CausalityErrorEnum::Custom(err_msg),
-        )),
+        Err(CausalityError::MissingParameter(err_msg)),
         state,
         context,
         EffectLog::new(),

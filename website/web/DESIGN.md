@@ -261,11 +261,11 @@ src/
     BaseLayout.astro          # shell, meta, JSON-LD, theme guard, footer, IntersectionObserver
   components/
     nav/
-      SiteHeader.astro        # header, dropdown, burger + off-canvas sheet
+      SiteHeader.astro        # header, dropdowns, burger + off-canvas sheet
       ThemeToggle.astro       # theme swap, persists to localStorage
     home/
       Hero.astro
-      CausalStack.astro       # five-band platform diagram
+      CausalStack.astro       # six-band platform diagram
       ExampleGrid.astro       # tabbed Rust snippet panel
       WhyDeepCausality.astro
       JoinCommunity.astro
@@ -277,6 +277,11 @@ src/
       ExamplesList.astro      # hairline list
       CategoryList.astro      # per-category index
       ExampleDetail.astro     # single example page body
+    overview/
+      topics.ts               # the four Overview topics, in reading order
+      TopicList.astro         # framed hairline list of the topics, or of any page list
+    tutorials/
+      tutorials.ts            # the tutorials and each tutorial's parts, in reading order
   content/
     blog/en/*.md
     examples/en/*.mdx
@@ -352,11 +357,15 @@ Sticky at top, `z-index: 20`, `1px` bottom border `--line-1`. Background is `col
 
 Layout is two-tier:
 
-| | Base | ≥900px |
-|---|---|---|
-| Grid | `1fr auto` | `auto 1fr auto` |
-| Height | `min-height: 56px` | `min-height: 64px` |
-| Padding | `0 var(--space-4)` | `0 var(--space-5)` |
+| | Base | ≥900px | ≥1080px |
+|---|---|---|---|
+| Grid | `1fr auto` | `auto 1fr auto` | `auto 1fr auto` |
+| Height | `min-height: 56px` | `min-height: 64px` | `min-height: 64px` |
+| Padding | `0 var(--space-4)` | `0 var(--space-4)` | `0 var(--space-5)` |
+| Column gap | `var(--space-3)` | `var(--space-4)` | `var(--space-6)` |
+| Nav gap | — | `var(--space-3)` | `var(--space-5)` |
+
+The primary nav holds seven items: Overview, Examples, Tutorials, Projects, Blog, Community and About. Between 900px and 1080px they fit only with the narrower spacing; the comment above `.primary` in `SiteHeader.astro` carries the measurement.
 
 Below 900px the primary nav is hidden and a burger reveals an off-canvas sheet at `min(86vw, 320px)`. Utility region holds the theme toggle and the GitHub link. There is no search trigger; see §8.9.
 
@@ -405,7 +414,9 @@ No tilt-on-mouse parallax. No glow halo. No scale > 1.0. No background-color tra
 
 ### 8.4 Causal stack (`CausalStack.astro`)
 
-**This replaced the pillar row.** The three-pillar concept (Causaloid, Context, Effect Ethos) was superseded by a five-band platform diagram: Discover → Model → Act → Govern → Run. `PillarRow.astro` was never built.
+**This replaced the pillar row.** The three-pillar concept (Causaloid, Context, Effect Ethos) was superseded by a six-band platform diagram: Discover → Model → Sense → Act → Govern → Run. `PillarRow.astro` was never built.
+
+The first five bands are the five Overview topics, in their order; each takes its title from `components/overview/topics.ts` and carries an Overview chip to its page. The Run band has no Overview page and no Overview chip.
 
 Each band is a `.layer` row, `1fr` at base and `184px 1fr` at ≥720px. The fixed first column holds a mono micro-label; the `1fr` column holds chips and prose.
 
@@ -583,14 +594,19 @@ Two defects live in `blog/index.astro` and should be fixed when that file is nex
 
 ### 9.5 Static pages
 
-`about`, `community`, `accessibility`, and `overview` carry **zero scoped CSS**. They rely entirely on the `.static-page` and `.prose` rules in `global.css`. That is the correct default for a prose page; add scoped CSS only when a page genuinely needs a component.
+`community`, `accessibility`, the six `overview` pages and the `tutorials` pages carry **zero scoped CSS**; `about` adds one scoped rule set, for its sponsor rows (logo beside text), and `/sponsors/` forwards to that section. They rely entirely on the `.static-page` and `.prose` rules in `global.css`, which cover headings, lists, code blocks, tables (inside a `.table-wrap`) and block quotes. That is the correct default for a prose page; add scoped CSS only when a page genuinely needs a component.
 
-`overview/index.astro` introduces effect propagation through the ML-gated service
-root-cause analysis example. Its scoped diagram uses a semantic figure and an ordered four-stage
-flow, with shared reticle corners, panel radius, and theme tokens. Steps stack on phones
-and form two columns at 720px. The gate step explains the healthy and escalation branches. The caption
-links to the worked example; the surrounding prose distinguishes the process pipeline from
-optional Causaloid and Context structures.
+The Overview is a set of pages. `overview/index.astro` presents the whole project and links to five topic pages, `causal-discovery`, `dynamic-causality`, `dynamic-context`, `dynamic-action` and `effect-ethos`, listed in `components/overview/topics.ts` in the order a model is built. That list feeds three places: the `TopicList` panel on the index and at the foot of each topic page, and the header's Overview dropdown (desktop and mobile). Add a topic there, not in the pages.
+
+`TopicList.astro` is the house panel (§12.14): HUD gradient, reticle corners, eyebrow, and a hairline list of numbered topics. The page being read stays in the list, unlinked and marked `aria-current="page"`.
+
+Code on the overview pages renders through Astro's `<Code>` with dual themes, `defaultColor={false}` and `wrap`, so a long line wraps inside its block. Every snippet is a program that was compiled and run, and each output block is that program's output.
+
+In an `.astro` page, a line that starts with an inline element (`<a>`, `<code>`, `<em>`, `<strong>`) after a line of text loses the space between them, and so does text that follows an inline element closing the line above. Keep an inline element on the same line as the words around it.
+
+The Tutorials section follows the same pattern. `tutorials/index.astro` lists the tutorials; each tutorial has an overview page and one page per part below it, such as `tutorials/dynamic-drone-failsafe/effect-ethos/`. `components/tutorials/tutorials.ts` lists the tutorials and each tutorial's parts. It feeds the header's Tutorials menu (desktop and mobile), the Tutorials index, and the part list on each tutorial page. That list is `TopicList` with its `items` and `base` props, so the panel stays one component. Add a tutorial or a part there, not in the pages.
+
+Code on a tutorial page is an excerpt copied verbatim from the tutorial's source, at most de-indented. Each output block is that part's program output, copied from a run, whole or as one contiguous slice. An output block with aligned columns or a map renders without `wrap` and scrolls sideways inside its frame; a log block wraps.
 
 There are no monograph pages. The earlier spec for an academic register with a PDF download band and a BibTeX citation block was never built and is removed.
 
@@ -715,9 +731,9 @@ box-shadow: var(--shadow-1);
 
 The panel appears to catch light along its upper edge. This does not contradict the gradient ban in §2; that rule targets page and hero backgrounds, and this is a surface treatment on a bounded panel.
 
-**Debt.** Four verbatim copies (CausalStack, Explainer, ExampleGrid, JoinCommunity) plus a `--bg-2` 80% variant in ExampleDetail. This should be one `.panel` utility in `global.css`.
+**Debt.** Five verbatim copies (CausalStack, Explainer, ExampleGrid, JoinCommunity, TopicList) plus a `--bg-2` 80% variant in ExampleDetail. This should be one `.panel` utility in `global.css`.
 
-`--radius-md` is part of the convention, including the overview flow diagram.
+`--radius-md` is part of the convention.
 
 ### 12.5 L-bracket corner accents
 
@@ -819,6 +835,8 @@ Two tiers. Write new components against these and nothing else.
 | **900px** | Layouts needing real horizontal room: hero split, header nav, blog sidebar |
 
 Mobile-first: every query is `min-width`. There is no `max-width` query on the site.
+
+The header steps its spacing once more at 1080px (§8.1); that value is local to `SiteHeader.astro`.
 
 **Debt.** Three one-off breakpoints exist: 600px (only in the orphaned `Explainer`), 480px (only in `blog/index`), and 1024px (only in the `BaseLayout` footer). The 900px value is also duplicated as a JS string in `blog/index`.
 

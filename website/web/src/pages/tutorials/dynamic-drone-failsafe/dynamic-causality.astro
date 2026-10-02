@@ -1,0 +1,201 @@
+---
+import { Code } from 'astro:components';
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SiteHeader from '../../../components/nav/SiteHeader.astro';
+import TopicList from '../../../components/overview/TopicList.astro';
+import {
+  DRONE_FAILSAFE_BASE,
+  DRONE_FAILSAFE_SOURCE,
+  droneFailsafeParts,
+} from '../../../components/tutorials/tutorials';
+import { GITHUB_URL } from '../../../consts';
+
+const themes = { light: 'github-light', dark: 'github-dark' } as const;
+const source = `${GITHUB_URL}/tree/main/${DRONE_FAILSAFE_SOURCE}/part_1_dynamic_causality`;
+
+const run = `cargo run -p dynamic_drone_failsafe --example drone_failsafe_part_1`;
+
+const ardupilotRadio = 'https://ardupilot.org/copter/docs/radio-failsafe.html';
+const ardupilotBattery = 'https://ardupilot.org/copter/docs/failsafe-battery.html';
+const ardupilotEkf = 'https://ardupilot.org/copter/docs/common-ekf-inav-failsafe.html';
+const ardupilotDeadReckoning = 'https://ardupilot.org/copter/docs/deadreckoning-failsafe.html';
+const dji =
+  'https://dl.djicdn.com/downloads/DJI_Dock_3/20260312/DJI_Dock_3_user_manual_en.pdf';
+
+const stages = `process = process
+    .bind(|_, state, ctx| model::sense(telemetry, state, ctx))
+    .bind(|value, state, ctx| model::detect(value, state, ctx, &detectors))
+    .bind(|value, state, ctx| model::decide(value, state, ctx, time_s));`;
+
+const detectors = `pub fn detectors() -> Vec<Detector> {
+    vec![
+      Causaloid::new(1, gnss_degraded, "satellite positioning degraded"),
+      Causaloid::new(2, gnss_no_fix, "satellite positioning lost"),
+      Causaloid::new(3, link_down, "command link down"),
+      Causaloid::new(4, battery_critical, "battery critical"),
+    ]
+}
+
+fn gnss_degraded(t: Telemetry) -> PropagatingEffect<bool> {
+    PropagatingEffect::pure(
+        t.satellites() < DEGRADED_SATELLITES || t.hdop() > DEGRADED_HDOP
+        )
+}`;
+
+const collection = `let input = PropagatingEffect::pure(telemetry);
+let (outcome, _, _, mut logs) = detectors
+    .evaluate_collection(&input, &AggregateLogic::Any, None)
+    .into_parts();`;
+
+const ladder = `let (proposed, reason) = if faults.battery_critical {
+    (Command::LandNow, "land now: the battery is critical.")
+} else if faults.gnss_lost && faults.link_lost {
+    (
+        Command::LandNow,
+        "land now: with no satellite fix and no link, 
+        the drone can neither navigate nor receive orders.",
+    )
+} else if faults.gnss_lost {
+    (
+        Command::Hold,
+        "hold: no satellite fix, but the link is up, 
+        so wait for the fix or the operator.",
+    )
+} else if faults.link_lost {
+    (
+        Command::ReturnHome,
+        "return home: the link is lost, but the fix holds.",
+    )
+} else {
+    (Command::Continue, "continue: no fault.")
+};`;
+
+const output = `Dynamic drone fail-safe, part 1: dynamic causality
+An inspection drone flies a high-voltage line at night, 40 m above a 30 deg grass slope over a creek.
+
+ time   across   along   agl  sats  hdop  loss   cell  confirmed faults                       fail-safe
+   0s      60m      0m   40m    14   0.8    2%  4.05V  none                                   continue
+  50s      60m    400m   40m     7   3.5    2%  3.95V  fix degraded                           continue
+  57s      56m    440m   40m     3  99.0    2%  3.94V  fix lost                               hold
+  69s      32m    440m   40m     3  99.0   95%  3.91V  fix lost, link lost                    land now
+  85s       0m    440m   16m     3  99.0   95%  3.25V  fix lost, link lost, battery critical  land now
+
+Touchdown at 91 s, 440 m along the line, 71 m from the nearest person.
+It dropped into the creek and was lost.
+
+The controller found every fault in order and took the textbook fail-safe at each step.
+It never knew what lay below: the steep grass, the creek, the flat tower pads, the crew.
+Part 2 adds that knowledge as context.
+
+Faults and fail-safes from the controller's log:
+  t=50 s: Satellite fix degraded: 7 satellites, HDOP 3.5.
+  t=57 s: Satellite fix lost: none for 3 s.
+  t=57 s: Fail-safe set to hold: no satellite fix, but the link is up, so wait for the fix or the operator.
+  t=69 s: Command link lost: 95 % of packets dropped for 5 s.
+  t=69 s: Fail-safe set to land now: with no satellite fix and no link, the drone can neither navigate nor receive orders.
+  t=85 s: Battery critical: one cell at 3.25 V.`;
+---
+<BaseLayout
+  title="Part 1: Dynamic causality — DeepCausality"
+  description="Part 1 of the drone fail-safe tutorial: a causal process confirms each fault and applies the textbook fail-safe ladder, and the drone still drops into the creek."
+>
+  <SiteHeader />
+  <article class="static-page">
+    <header>
+      <p class="eyebrow">Dynamic drone fail-safe · Part 1 of 5</p>
+      <h1>Part 1: Dynamic causality</h1>
+      <p class="lede">
+        One causal process runs the controller, three stages each second. It confirms every fault
+        in order and applies the textbook fail-safe at each step. The drone drops into the
+        creek, because the controller knows nothing about the ground below it.
+      </p>
+    </header>
+
+    <div class="prose">
+      <h2>Run it</h2>
+      <Code code={run} lang="bash" themes={themes} defaultColor={false} wrap />
+      <p>
+        The source lives in <a href={source}><code>part_1_dynamic_causality</code></a>.
+      </p>
+
+      <h2>One causal process, three stages</h2>
+      <p>
+        Each second, the controller binds three stages into its causal process:
+      </p>
+      <Code code={stages} lang="rust" themes={themes} defaultColor={false} wrap />
+      <ol>
+        <li><code>sense</code> takes the telemetry into the process and logs it.</li>
+        <li><code>detect</code> runs the fault detectors and confirms the faults that persist.</li>
+        <li><code>decide</code> applies the fail-safe ladder.</li>
+      </ol>
+      <p>
+        Each stage receives the previous stage's value, the process state and the context, and
+        returns a new value, state and context with its own log entries. An error in any stage stops the chain. The
+        state carries memory from one second to the next: how long GPS and the command link to the pilot
+        have been gone, the confirmed faults and the latched fail-safe. In part 1 the process has no context,
+        so the controller knows only what the drone reports about itself.
+      </p>
+
+      <h2>Four detectors, one collection</h2>
+      <p>
+        Each detector is a causaloid: a threshold on one second's telemetry.
+      </p>
+      <Code code={detectors} lang="rust" themes={themes} defaultColor={false} wrap />
+      <p>
+        <code>detect</code> evaluates the four as a collection. With <code>AggregateLogic::Any</code>, the collection says whether anything is wrong; only then does each detector say what.
+      </p>
+      <Code code={collection} lang="rust" themes={themes} defaultColor={false} wrap />
+      <p>
+        The process state confirms lost GPS after 3 s and a lost link after 5 s, so a dropped
+        packet does not trigger a fail-safe.
+      </p>
+
+      <h2>The textbook ladder</h2>
+      <p>
+        <code>decide</code> applies the standard fail-safe ladder. A critical battery, or lost
+        GPS with a lost link, lands the drone where it is. Lost GPS alone holds it for the
+        operator, and a lost link alone flies it home.
+      </p>
+      <Code code={ladder} lang="rust" themes={themes} defaultColor={false} wrap />
+      <p>
+        Once an emergency begins, the fail-safe never steps back down in flight: <code>decide</code> replaces the latched command only with a more severe one.
+      </p>
+      <p>
+        The ladder follows the fail-safe defaults that drone autopilots document today:
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Fault</th><th>Part 1</th><th>ArduPilot Copter</th><th>DJI Matrice 4D (manual v1.2, 2025)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Critical battery</td><td>land where it is</td><td><a href={ardupilotBattery}>battery fail-safe</a>: Land, the recommended critical action</td><td>lands automatically once the battery lasts only the descent</td></tr>
+            <tr><td>GPS and link lost</td><td>land where it is</td><td><a href={ardupilotRadio}>radio fail-safe</a>: return to launch, or Land without GPS</td><td>fail-safe return home; with positioning abnormal, ATTI mode and an automatic landing</td></tr>
+            <tr><td>GPS lost alone</td><td>hold, drifting with the wind</td><td><a href={ardupilotEkf}>EKF fail-safe</a>: Land by default, altitude hold as an option</td><td>ATTI mode; the pilot takes control</td></tr>
+            <tr><td>Link lost alone</td><td>fly home</td><td>radio fail-safe: return to launch by default</td><td>fail-safe return home</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Each rule acts on one fault. Newer features extend them: DJI hovers and lands by its vision
+        sensors when GNSS is weak, and flies to a preset alternate landing site when its dock cannot
+        take it (<a href={dji}>DJI flight manual</a>, sections 3.9, 4.2 and 4.3); ArduPilot <a href={ardupilotDeadReckoning}>dead-reckons</a> for a limited time without GPS. None of these documents
+        describes weighing who stands near a landing site.
+      </p>
+
+      <h2>What happened</h2>
+      <Code code={output} lang="text" themes={themes} defaultColor={false} />
+      <p>
+        The controller confirmed every fault in order and took the textbook fail-safe each time.
+        While it held and then descended, the night wind carried the drone 72 m down the slope and
+        into the creek. The controller never knew what lay below it.
+      </p>
+      <p>
+        <a href={`${DRONE_FAILSAFE_BASE}dynamic-context/`}>Part 2</a> gives it that knowledge as
+        context.
+      </p>
+
+      <TopicList label="Dynamic drone fail-safe" current="dynamic-causality" items={droneFailsafeParts} base={DRONE_FAILSAFE_BASE} />
+    </div>
+  </article>
+</BaseLayout>

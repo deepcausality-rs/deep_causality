@@ -36,3 +36,15 @@ rust_binary(
         normal_dev = True,
     ),
 )
+
+rust_binary(
+    name = "csm_battery_example",
+    srcs = glob(["csm_battery/**/*.rs"]),
+    crate_root = "csm_battery/main.rs",
+    visibility = ["//visibility:public"],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
+)

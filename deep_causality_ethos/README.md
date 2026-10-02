@@ -23,16 +23,16 @@ The `EffectEthos` struct owns these components and exposes the reasoning API. Ev
 
 1. Tag-based filtering selects candidate norms from the `TagIndex`.
 2. Each candidate's activation predicate runs against the `Context` and the `ProposedAction`. The teloid's `UncertainParameter` (threshold, confidence, epsilon, sample bound) tests uncertain predicates.
-3. The `Defeats` edges in the graph remove defeated norms from the active set (defeasance).
-4. `Lex Specialis`, `Lex Superior`, and `Lex Posterior` check the survivors for consistency.
-5. The engine returns a `Verdict` carrying the final modality and the IDs of the norms that justify it.
+3. Norms are settled in the graph's topological order. An active norm, or one a standing norm passes on along an `Inherits` edge, is held. A held norm falls when a standing norm defeats it along a `Defeats` edge and outranks it. Rank compares priority first (Lex Superior), then specificity (Lex Specialis), then timestamp (Lex Posterior); equal rank does not defeat. A norm that falls defeats nothing and passes nothing on.
+4. Of the norms that stand, any `Impermissible` one makes the verdict `Impermissible`; else any `Obligatory` one makes it `Obligatory`; else it is `Optional` with the sum of their costs.
+5. The engine returns a `Verdict` carrying the final modality and the IDs of the norms that stand, in topological order.
 
 Evaluation requires a frozen, acyclic graph; `verify_graph()` freezes the graph and checks it for cycles.
 
 ## Features
 
 * **Deterministic and uncertain norms:** `add_deterministic_norm` takes a `fn` predicate. `add_uncertain_norm` takes an `UncertainActivationPredicate` and an `UncertainParameter`, bringing probabilistic activation into the deontic layer.
-* **Explicit conflict resolution:** specificity, priority, and recency are first-class fields on every `Teloid`. Resolution is deterministic and reproducible.
+* **Explicit conflict resolution:** priority, specificity, and recency are first-class fields on every `Teloid`, compared in that order. The verdict depends only on the norms, their edges, and which of them are active.
 * **Auditable verdicts:** every `Verdict` carries a `justification: Vec<TeloidID>` that traces the decision to the norms that produced it. The `DeonticExplainable` trait exposes this trail.
 * **Context-aware predicates:** norms read the full DeepCausality `Context<D, S, T, ST>`, so deontic rules can depend on data, space, time, and spacetime in one expression.
 * **Static dispatch:** no `dyn` in the public API; the engine is generic over the same four type parameters as the context layer.

@@ -138,3 +138,45 @@ fn test_evaluate_hypothesis_initial_sample_index() {
     assert!((result1 == true) || (result1 == false));
     assert!((result2 == true) || (result2 == false));
 }
+
+// A threshold whose indifference band reaches 1 makes the alternative "always true", so one
+// `false` refutes it. A test that ignored failures there let the successes of a rare event pile
+// up past the upper boundary: P(true) = 0.035 against a 0.95 threshold answered `true`.
+#[test]
+fn test_evaluate_hypothesis_band_reaching_one_rejects_a_rare_event() {
+    let session = SampleSession::seeded(SEED);
+    let rare = UncertainBool::<f64>::bernoulli(0.035);
+    let result =
+        sprt_eval::evaluate_hypothesis(&rare, &session, 0.95, 0.95, 0.05, 1000, 0).unwrap();
+    assert!(!result, "P(true) = 0.035 does not exceed 0.95");
+}
+
+#[test]
+fn test_evaluate_hypothesis_band_reaching_one_accepts_a_certain_event() {
+    let session = SampleSession::seeded(SEED);
+    let certain = UncertainBool::<f64>::point(true);
+    let result =
+        sprt_eval::evaluate_hypothesis(&certain, &session, 0.95, 0.95, 0.05, 1000, 0).unwrap();
+    assert!(result, "P(true) = 1 exceeds 0.95");
+}
+
+// The mirror case: a band reaching 0 makes the null hypothesis "never true", so one `true`
+// refutes it. Ignoring successes there let the failures of a likely event pile up past the lower
+// boundary: P(true) = 0.965 against a 0.05 threshold answered `false`.
+#[test]
+fn test_evaluate_hypothesis_band_reaching_zero_accepts_a_likely_event() {
+    let session = SampleSession::seeded(SEED);
+    let likely = UncertainBool::<f64>::bernoulli(0.965);
+    let result =
+        sprt_eval::evaluate_hypothesis(&likely, &session, 0.05, 0.95, 0.05, 1000, 0).unwrap();
+    assert!(result, "P(true) = 0.965 exceeds 0.05");
+}
+
+#[test]
+fn test_evaluate_hypothesis_band_reaching_zero_rejects_an_impossible_event() {
+    let session = SampleSession::seeded(SEED);
+    let never = UncertainBool::<f64>::point(false);
+    let result =
+        sprt_eval::evaluate_hypothesis(&never, &session, 0.05, 0.95, 0.05, 1000, 0).unwrap();
+    assert!(!result, "P(true) = 0 does not exceed 0.05");
+}
