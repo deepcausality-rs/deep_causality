@@ -21,11 +21,14 @@ produces: weather_table.csv, the artifact walk 3 reads in flight.
 source: examples/avionics_examples/cfd/plasma_blackout/weather
 ---
 import { MACHINE } from '../../../consts';
+import WeatherRun from '../../../components/tutorial/WeatherRun.astro';
 
 During blackout the navigation estimate drifts a mean 58.71 m from the true
 position in polar winter, against 41.60 m on the standard day. *Drift* is how far
 the estimate wanders while the vehicle flies without GPS. The program shows the gap
 is real, 5.7 combined standard deviations wide.
+
+<WeatherRun />
 
 [Walk 1](/tutorial/stage-1-corridor/) varied the command. This walk varies the
 *world*: the description of a run with one declared difference, here the

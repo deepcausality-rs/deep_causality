@@ -230,6 +230,8 @@ with `rsvg-convert -w 1200 -h 630`, then convert to JPEG.
   vocabulary, which keeps the heaviest dependency off every route.
 - **No client islands.** Zero framework runtime; interactivity is five small
   module scripts. The fifth is the scene stepper in
-  `src/components/tutorial/CorridorRun.astro`, which draws walk 1 from the corridor
-  run's committed per-step traces (`src/data/corridorTrace.ts` reads them at build
-  time and fails the build if they disagree with `src/data/results.ts`).
+  `src/components/tutorial/Stepper.astro`, shared by the tutorial run figures
+  (`CorridorRun.astro`, `WeatherRun.astro`). Each figure draws from its example's
+  committed traces, read at build time by `src/data/corridorTrace.ts` and
+  `src/data/weatherTrace.ts`; the build fails if a trace disagrees with the
+  numbers it is checked against.

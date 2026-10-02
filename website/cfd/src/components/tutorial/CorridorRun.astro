@@ -7,14 +7,12 @@
  * below comes from those files; nothing is keyframed by hand.
  *
  * Geometry lives in the SVG and words live in HTML, per the diagram convention in README.md.
- * Without JavaScript the figure renders as three fully drawn views over an ordered list of the
- * scene captions. The module script turns it into a stepper: scenes draw in order on first view,
- * and the buttons jump to any scene. Under reduced motion it never autoplays and every draw
- * duration is zero (`--dur-scene`).
+ * The controls, captions, scene reveal and shared styles come from `Stepper.astro`.
  */
 import { branches, events, gates, samples } from '../../data/corridorTrace';
 import { corridor } from '../../data/results';
 import { GITHUB_URL } from '../../consts';
+import Stepper from './Stepper.astro';
 
 const FILES = `${GITHUB_URL}/blob/main/examples/avionics_examples/cfd/plasma_blackout/corridor`;
 
@@ -114,17 +112,8 @@ const scenes = [
 ];
 const passed = gates.filter((g) => g.passed).length;
 ---
-<figure class="cfd-anim panel corner-brackets" data-scenes={scenes.length} data-rise aria-label="The corridor run in seven scenes">
-  <div class="controls" hidden>
-    <button type="button" class="ctl ctl-play" data-play aria-pressed="false">Play</button>
-    <ol class="steps">
-      {scenes.map((s) => (
-        <li><button type="button" class="ctl" data-goto={s.id}><span class="num">{s.id}</span> {s.name}</button></li>
-      ))}
-    </ol>
-  </div>
-
-  <ol class="captions">
+<Stepper scenes={scenes} label="The corridor run in seven scenes">
+  <Fragment slot="captions">
     <li data-s="1">
       <b>Descent.</b> The vehicle enters at {f1(samples[0].altitudeKm)} km. As the air thickens, its shock
       layer ionizes, and the plasma frequency (set by the electron density) climbs toward the GPS L1 band.
@@ -159,11 +148,10 @@ const passed = gates.filter((g) => g.passed).length;
       <b>Gates.</b> {gates.length} gates judge the run and {passed} pass. Each line is copied from the
       committed <code>output.txt</code>.
     </li>
-  </ol>
+  </Fragment>
 
-  <div class="views">
     <!-- Timeline: altitude, plasma frequency against GPS L1, navigation error. -->
-    <div class="view view-timeline">
+    <div class="view" data-scenes="1 2 5 6">
       <div class="frame" style={`aspect-ratio: ${TW} / ${TH}`}>
         <svg viewBox={`0 0 ${TW} ${TH}`} aria-hidden="true" focusable="false">
           {[ALT, LOGW, NAV].map((s) => (
@@ -212,7 +200,7 @@ const passed = gates.filter((g) => g.passed).length;
     </div>
 
     <!-- Fork: sideways distance after the pause, then the end points against the aim. -->
-    <div class="view view-fork">
+    <div class="view" data-scenes="3 4">
       <div class="fork-grid">
         <div class="frame" style={`aspect-ratio: ${FW} / ${FH}`}>
           <svg viewBox={`0 0 ${FW} ${FH}`} aria-hidden="true" focusable="false">
@@ -256,156 +244,28 @@ const passed = gates.filter((g) => g.passed).length;
     </div>
 
     <!-- Gates: the committed run's verdict, line by line. -->
-    <div class="view view-gates">
+    <div class="view" data-scenes="7">
       <ul class="gates hairline-list">
         {gates.map((g) => (
           <li><span class:list={['gate-flag', g.passed ? 'ok' : 'bad']}>{g.passed ? 'PASS' : 'FAIL'}</span> <code>{g.label}</code></li>
         ))}
       </ul>
     </div>
-  </div>
 
-
-  <figcaption>
+  <Fragment slot="caption">
     Every line is drawn from <a href={`${FILES}/corridor_trace.csv`}><code>corridor_trace.csv</code></a> and
     <a href={`${FILES}/corridor_branch_trace.csv`}><code>corridor_branch_trace.csv</code></a>, which the
     run writes at one row per {STEP_S} s step. The plasma frequency is clipped at the bottom of its strip
     once the sheath drains.
-  </figcaption>
-</figure>
-
-<script>
-  // The stepper. Without this script the figure stays a static, fully drawn record.
-  const HOLD_MS = 6000;
-  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  document.querySelectorAll<HTMLElement>('.cfd-anim').forEach((fig) => {
-    const count = Number(fig.dataset.scenes);
-    const controls = fig.querySelector<HTMLElement>('.controls');
-    const play = fig.querySelector<HTMLButtonElement>('[data-play]');
-    const steps = [...fig.querySelectorAll<HTMLButtonElement>('[data-goto]')];
-    if (!controls || !play || steps.length !== count) return;
-
-    let scene = 0;
-    let timer: number | undefined;
-
-    const show = (s: number) => {
-      scene = s;
-      fig.dataset.scene = String(s);
-      fig.dataset.reached = Array.from({ length: s }, (_, i) => i + 1).join(' ');
-      steps.forEach((b) => b.setAttribute('aria-current', b.dataset.goto === String(s) ? 'step' : 'false'));
-    };
-    const stop = () => {
-      window.clearTimeout(timer);
-      timer = undefined;
-      play.setAttribute('aria-pressed', 'false');
-      play.textContent = scene >= count ? 'Replay' : 'Play';
-    };
-    const tick = () => {
-      if (scene >= count) return stop();
-      show(scene + 1);
-      timer = window.setTimeout(tick, HOLD_MS);
-    };
-    const start = () => {
-      if (scene >= count) show(0);
-      play.setAttribute('aria-pressed', 'true');
-      play.textContent = 'Pause';
-      window.clearTimeout(timer);
-      timer = window.setTimeout(tick, scene === 0 ? 50 : 0);
-    };
-
-    fig.classList.add('js');
-    controls.hidden = false;
-    show(reduce ? 1 : 0);
-    stop();
-
-    play.addEventListener('click', () => (timer === undefined ? start() : stop()));
-    steps.forEach((b) =>
-      b.addEventListener('click', () => {
-        stop();
-        show(Number(b.dataset.goto));
-        play.textContent = scene >= count ? 'Replay' : 'Play';
-      })
-    );
-
-    if (reduce || !('IntersectionObserver' in window)) return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (!entries.some((e) => e.isIntersecting)) return;
-        io.disconnect();
-        if (scene === 0) start();
-      },
-      { threshold: 0.4 }
-    );
-    io.observe(fig);
-  });
-</script>
+  </Fragment>
+</Stepper>
 
 <style>
-  .cfd-anim { margin: var(--space-6) 0; padding: var(--space-5); }
-
-  /* ── Controls ── */
-  .controls {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-2) var(--space-3);
-    margin-bottom: var(--space-4);
-  }
-  .controls[hidden] { display: none; }
-  .steps { display: flex; flex-wrap: wrap; gap: var(--space-2); list-style: none; margin: 0; padding: 0; }
-  .ctl {
-    font-family: var(--font-mono);
-    font-size: clamp(0.6875rem, 2.4vw, 0.8125rem);
-    color: var(--fg-1);
-    background: none;
-    border: 1px solid var(--line-1);
-    border-radius: var(--radius-pill);
-    padding: var(--space-1) var(--space-3);
-    cursor: pointer;
-    transition: border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
-  }
-  .ctl:hover { border-color: var(--line-2); color: var(--fg-0); }
-  .ctl[aria-current='step'] { border-color: var(--accent); color: var(--accent); }
-  .ctl-play { color: var(--fg-0); border-color: var(--line-2); min-width: 6.5em; }
-  .ctl .num { color: var(--fg-2); }
-
-  /* ── Views: stacked when scripted, listed when not ── */
-  .views { display: grid; }
-  .view + .view { margin-top: var(--space-5); }
-  .js .view { grid-area: 1 / 1; margin-top: 0; opacity: 0; visibility: hidden; transition: opacity var(--dur-slow) var(--ease-out), visibility var(--dur-slow); }
-  .js[data-scene='0'] .view-timeline,
-  .js[data-scene='1'] .view-timeline,
-  .js[data-scene='2'] .view-timeline,
-  .js[data-scene='5'] .view-timeline,
-  .js[data-scene='6'] .view-timeline,
-  .js[data-scene='3'] .view-fork,
-  .js[data-scene='4'] .view-fork,
-  .js[data-scene='7'] .view-gates { opacity: 1; visibility: visible; }
-
-  @media (max-width: 719px) {
-    .js .view { visibility: visible; display: none; transition: none; }
-    .js[data-scene='0'] .view-timeline,
-    .js[data-scene='1'] .view-timeline,
-    .js[data-scene='2'] .view-timeline,
-    .js[data-scene='5'] .view-timeline,
-    .js[data-scene='6'] .view-timeline,
-    .js[data-scene='3'] .view-fork,
-    .js[data-scene='4'] .view-fork,
-    .js[data-scene='7'] .view-gates { display: block; }
-  }
-
-  .frame { position: relative; width: 100%; margin-bottom: 1.6em; }
-  svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
   .fork-grid { display: grid; gap: var(--space-3); }
 
-  /* ── Strokes, in user units (README "Diagrams") ── */
-  path, line { fill: none; stroke-linecap: round; stroke-linejoin: round; }
-  .axis { stroke: var(--line-2); stroke-width: 0.15; }
+  /* Strokes this figure adds to the shared set, in user units. */
   .band { stroke: var(--warn); stroke-width: 0.2; stroke-dasharray: 0.8 0.8; }
   .aim { stroke: var(--fg-2); stroke-width: 0.25; stroke-dasharray: 1 1; }
-  .mark { stroke: var(--fg-2); stroke-width: 0.15; }
-  .trace { stroke: var(--fg-0); stroke-width: 0.35; }
   .trace-w { stroke: var(--fg-1); }
   .trace-nav { stroke: var(--accent); }
   .r1 { stroke: var(--fg-2); stroke-width: 0.3; }
@@ -413,102 +273,14 @@ const passed = gates.filter((g) => g.passed).length;
   .win { stroke: var(--accent); stroke-width: 0.6; }
   .reach { stroke: var(--fg-2); stroke-width: 0.3; }
   .miss { stroke: var(--accent); stroke-width: 0.35; }
-  .node { fill: var(--fg-1); }
   .node-r2 { fill: color-mix(in srgb, var(--accent) 55%, transparent); }
-  .node-accent { fill: var(--accent); }
   .node-aim { fill: none; stroke: var(--fg-0); stroke-width: 0.3; }
 
-  /* ── Scene reveal. A scripted figure draws an element once its scene is reached. ── */
-  /* Opacity as well as the dash offset: a round cap on a fully offset dash still paints a dot. */
-  .js [data-from] path, .js path[data-from], .js line[data-from] {
-    stroke-dasharray: 100;
-    stroke-dashoffset: 100;
-    opacity: 0;
-    transition: stroke-dashoffset var(--dur-scene) linear, opacity 0s;
-  }
-  .js circle[data-from], .js .lab[data-from] {
-    opacity: 0;
-    transition: opacity var(--dur-slow) var(--ease-out);
-  }
-  .js .r2 { transition-delay: calc(var(--dur-scene) * 0.6); }
-  .js .win { transition-delay: calc(var(--dur-scene) * 0.9); }
-  .js[data-reached~='5'] [data-from='5'] .trace-nav { transition-delay: 0s; }
-  .js[data-reached~='1'] [data-from='1'] path,
-  .js[data-reached~='2'] [data-from='2'],
-  .js[data-reached~='3'] [data-from='3'],
-  .js[data-reached~='4'] [data-from='4'],
-  .js[data-reached~='5'] [data-from='5'] path,
-  .js[data-reached~='6'] [data-from='6'] path,
-  .js[data-reached~='6'] line[data-from='6'] { stroke-dashoffset: 0; opacity: 1; }
-  .js[data-reached~='5'] circle[data-from='5'],
-  .js[data-reached~='5'] .lab[data-from='5'],
-  .js[data-reached~='6'] circle[data-from='6'],
-  .js[data-reached~='6'] .lab[data-from='6'] { opacity: 1; transition-delay: calc(var(--dur-scene) * 0.8); }
+  /* Round 2 draws once round 1 is under way; the committed branch last. */
+  :global(.cfd-anim.js .views) .r2 { transition-delay: calc(var(--dur-scene) * 0.6); }
+  :global(.cfd-anim.js .views) .win { transition-delay: calc(var(--dur-scene) * 0.9); }
 
-  /* ── Labels: HTML over the frame, sized by the site's type tokens ── */
-  .lab {
-    position: absolute;
-    font-family: var(--font-mono);
-    font-size: clamp(0.5625rem, 2.2vw, 0.75rem);
-    line-height: 1.3;
-    color: var(--fg-2);
-    white-space: nowrap;
-  }
-  .lab b { color: var(--fg-0); font-weight: 500; }
-  .lab sup { font-size: 0.75em; }
-  .strip-title { left: 0; color: var(--fg-1); }
-  .title-r { color: var(--fg-1); }
-  .title-l { color: var(--fg-1); }
-  .tick { left: 0; transform: translateY(-50%); }
   .band-l { right: 0; transform: translateY(-120%); color: var(--warn); }
-  .t-tick { top: 100%; transform: translateX(-50%); padding-top: 0.2em; }
-  .t-end { transform: none; }
-  .ev { transform: translateY(-50%); }
-  .ev-left { transform: translate(-100%, -50%); }
   .aim-l { white-space: nowrap; }
-  .end-l { transform: translateY(-50%); color: var(--fg-1); }
   .lab-win, .lab-win b { color: var(--accent); }
-
-  /* ── Gates ── */
-  .gates { font-family: var(--font-mono); font-size: clamp(0.6875rem, 2.4vw, 0.8125rem); color: var(--fg-1); }
-  @media (min-width: 720px) {
-    .gates { grid-template-columns: 1fr 1fr; column-gap: var(--space-5); }
-    .gates li + li { border-top: none; }
-    .gates li { border-bottom: 1px solid var(--line-1); }
-  }
-  .gates li { padding: var(--space-1) 0; }
-  .gate-flag { display: inline-block; min-width: 3.5em; }
-  .gates code { font-size: inherit; color: inherit; background: none; padding: 0; }
-  .gate-flag.ok { color: var(--ok); }
-  .gate-flag.bad { color: var(--danger); }
-
-  /* ── Captions: a list when static, one scene at a time when scripted ── */
-  .captions {
-    margin: 0 0 var(--space-5);
-    padding-left: 1.4em;
-    color: var(--fg-1);
-    font-size: var(--t-body-sm);
-    max-width: var(--measure);
-    min-height: 5.5em;
-  }
-  .captions li + li { margin-top: var(--space-2); }
-  .captions b { color: var(--fg-0); font-weight: 500; }
-  .js .captions { list-style: none; padding-left: 0; display: grid; }
-  .js .captions li { grid-area: 1 / 1; margin: 0; opacity: 0; visibility: hidden; transition: opacity var(--dur-slow) var(--ease-out); }
-  .js[data-scene='0'] .captions li[data-s='1'],
-  .js[data-scene='1'] .captions li[data-s='1'],
-  .js[data-scene='2'] .captions li[data-s='2'],
-  .js[data-scene='3'] .captions li[data-s='3'],
-  .js[data-scene='4'] .captions li[data-s='4'],
-  .js[data-scene='5'] .captions li[data-s='5'],
-  .js[data-scene='6'] .captions li[data-s='6'],
-  .js[data-scene='7'] .captions li[data-s='7'] { opacity: 1; visibility: visible; }
-
-  figcaption {
-    margin-top: var(--space-4);
-    color: var(--fg-2);
-    font-size: var(--t-body-sm);
-    max-width: var(--measure);
-  }
-  figcaption code { font-size: 0.85em; }
 </style>
