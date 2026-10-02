@@ -33,15 +33,15 @@ homepage = "https://deepcausality.com/"
 # Internal crates
 # `default-features = false` appears when defaults features are opt-in by default.
 ## Core crates
-deep_causality = { path = "deep_causality", version = "0.18" }
+deep_causality = { path = "deep_causality", version = "0.19" }
 deep_causality_algorithms = { path = "deep_causality_algorithms", version = "0.5" }
 deep_causality_cfd = { path = "deep_causality_cfd", version = "0.3" }
 deep_causality_context = { path = "deep_causality_context", version = "0.1" }
 deep_causality_context_store = { path = "deep_causality_context_store", version = "0.1", default-features = false }
-deep_causality_core = { path = "deep_causality_core", version = "0.13", default-features = false }
+deep_causality_core = { path = "deep_causality_core", version = "0.14", default-features = false }
 deep_causality_data_structures = { path = "deep_causality_data_structures", version = "0.11", default-features = false }
 deep_causality_discovery = { path = "deep_causality_discovery", version = "0.7" }
-deep_causality_ethos = { path = "deep_causality_ethos", version = "0.4" }
+deep_causality_ethos = { path = "deep_causality_ethos", version = "0.5" }
 deep_causality_physics = { path = "deep_causality_physics", version = "0.10", default-features = false }
 deep_causality_quantum = { path = "deep_causality_quantum", version = "0.4" }
 ultragraph = { path = "ultragraph", version = "0.9", default-features = false }
