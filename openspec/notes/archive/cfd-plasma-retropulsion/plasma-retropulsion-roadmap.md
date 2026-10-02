@@ -362,7 +362,7 @@ delivers a correct end-to-end simulation.
 **Deliverables.**
 
 1. **Example folder + wiring.** `examples/avionics_examples/cfd/plasma_blackout/retropulsion/` in the
-   house layout (`main.rs`, `model_config.rs`, `model.rs`, `model_types.rs`, `utils_print.rs`,
+   house layout (`main.rs`, `model_config.rs`, `model.rs`, `model_context`, `utils_print.rs`,
    `constants.rs`; config/execution separation), a third `[[example]]` entry
    `plasma_blackout_retropulsion` in `Cargo.toml`, and the burn-phase coupling stack (§5) assembled
    in `shared/world.rs` alongside `corridor_coupling` (`world.rs:121-181`). The five acts

@@ -6,7 +6,6 @@
 use crate::CsmEvaluable;
 use crate::{ActionParameterValue, CausalityError, UncertainParameter};
 use crate::{UncertainBool, UncertainF64};
-use deep_causality_core::CausalityErrorEnum;
 
 impl CsmEvaluable for bool {
     fn is_active(&self, _params: Option<&UncertainParameter>) -> Result<bool, CausalityError> {
@@ -28,17 +27,17 @@ impl CsmEvaluable for UncertainBool {
                 p.max_samples(),
             )
             .map_err(|e| {
-                CausalityError(CausalityErrorEnum::Custom(format!(
+                CausalityError::UncertainError(format!(
                     "Failed to evaluate uncertain boolean: {}",
                     e
-                )))
+                ))
             })
         } else {
             self.implicit_conditional_from_entropy().map_err(|e| {
-                CausalityError(CausalityErrorEnum::Custom(format!(
+                CausalityError::UncertainError(format!(
                     "Failed to evaluate uncertain boolean: {}",
                     e
-                )))
+                ))
             })
         }
     }
@@ -55,15 +54,15 @@ impl CsmEvaluable for UncertainF64 {
             comparison
                 .probability_exceeds_from_entropy(0.5, p.confidence(), p.epsilon(), p.max_samples())
                 .map_err(|e| {
-                    CausalityError(CausalityErrorEnum::Custom(format!(
+                    CausalityError::UncertainError(format!(
                         "Failed to evaluate uncertain float: {}",
                         e
-                    )))
+                    ))
                 })
         } else {
-            Err(CausalityError(CausalityErrorEnum::Custom(
-                "UncertainFloat effect requires UncertainParameter on CausalState".into(),
-            )))
+            Err(CausalityError::MissingParameter(
+                "UncertainFloat effect requires UncertainParameter on CausalState",
+            ))
         }
     }
 

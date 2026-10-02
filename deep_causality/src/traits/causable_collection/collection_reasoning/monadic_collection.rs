@@ -6,7 +6,7 @@ use crate::{
     AggregateLogic, Causable, CausableCollectionAccessor, CausalityError, MonadicCausable,
     NumericalValue, PropagatingEffect, monadic_collection_utils,
 };
-use deep_causality_core::{CausalEffect, CausalityErrorEnum};
+use deep_causality_core::CausalEffect;
 
 pub trait MonadicCausableCollection<I, O, T>: CausableCollectionAccessor<I, O, T>
 where
@@ -50,9 +50,7 @@ where
         let items = self.get_all_items();
 
         if items.is_empty() {
-            let err = CausalityError(CausalityErrorEnum::Custom(
-                "Cannot evaluate an empty collection".to_string(),
-            ));
+            let err = CausalityError::EmptyCollection();
             return PropagatingEffect::from_error(err);
         }
         // 1. Monadic fold to collect all effects.
@@ -65,10 +63,9 @@ where
                 let mut acc_values = match acc_values_effect_value.into_value() {
                     Some(v) => v,
                     None => {
-                        let err = CausalityError(CausalityErrorEnum::Custom(
-                            "Failed to extract accumulated values during collection evaluation"
-                                .to_string(),
-                        ));
+                        let err = CausalityError::InternalLogicError(
+                            "Failed to extract accumulated values during collection evaluation",
+                        );
                         return PropagatingEffect::from_error(err);
                     }
                 };
@@ -105,9 +102,7 @@ where
             let effect_values = match effect_values_effect_value.into_value() {
                 Some(v) => v,
                 None => {
-                    let err = CausalityError(CausalityErrorEnum::Custom(
-                        "No effect values collected".to_string(),
-                    ));
+                    let err = CausalityError::InternalLogicError("No effect values collected");
                     return PropagatingEffect::new(Err(err), (), None, carried_logs);
                 }
             };

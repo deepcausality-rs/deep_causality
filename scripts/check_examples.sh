@@ -3,9 +3,10 @@
 # Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
 #
 # Every Cargo `[[example]]` must have a matching Bazel target, so an example added to Cargo
-# cannot silently go unbuilt under Bazel. Two places declare them: the example packages under
-# `examples/`, and the library crates that carry their own verification harnesses and studies
-# (deep_causality_cfd, deep_causality_algorithms, deep_causality_haft, and others).
+# cannot silently go unbuilt under Bazel. Three places declare them: the example packages under
+# `examples/`, the tutorial packages under `end_to_end_tutorials/`, and the library crates that
+# carry their own verification harnesses and studies (deep_causality_cfd,
+# deep_causality_algorithms, deep_causality_haft, and others).
 #
 # Examples that are Cargo-only by decision are listed below; the reason lives in the owning
 # package's BUILD.bazel next to where the target would have been.
@@ -29,9 +30,9 @@ CARGO_ONLY="causal_discovery_examples:example_ml_rca"
 status=0
 scanned=0
 
-# crates.sh drops `examples/*` on purpose, so those are added back here.
+# crates.sh drops `examples/*` and `end_to_end_tutorials/*` on purpose, so those are added back here.
 MANIFESTS=""
-for d in examples/*/; do
+for d in examples/*/ end_to_end_tutorials/*/; do
     [ -f "${d}Cargo.toml" ] && MANIFESTS="$MANIFESTS ${d}Cargo.toml"
 done
 for d in "${DC_CRATE_DIRS[@]}"; do

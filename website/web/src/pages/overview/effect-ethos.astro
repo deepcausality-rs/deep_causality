@@ -1,0 +1,131 @@
+---
+import { Code } from 'astro:components';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import TopicList from '../../components/overview/TopicList.astro';
+import { GITHUB_URL } from '../../consts';
+
+const themes = { light: 'github-light', dark: 'github-dark' } as const;
+
+const takeoff = `use deep_causality::{ActionParameterValue, ProposedAction};
+use deep_causality_context::{BaseContext, Context};
+use deep_causality_ethos::{DeonticInferable, EffectEthos, TeloidModal};
+use std::collections::HashMap;
+
+/// Active for every takeoff request.
+fn any_takeoff(_ctx: &BaseContext, _action: &ProposedAction) -> bool {
+    true
+}
+
+/// Active when the takeoff request reports less than 20 % battery.
+fn battery_low(_ctx: &BaseContext, action: &ProposedAction) -> bool {
+    matches!(
+        action.parameters().get("battery_pct"),
+        Some(ActionParameterValue::Number(pct)) if *pct < 20.0
+    )
+}
+
+fn takeoff(battery_pct: f64) -> ProposedAction {
+    let mut params = HashMap::new();
+    params.insert("battery_pct".to_string(), ActionParameterValue::Number(battery_pct));
+    ProposedAction::new(1, "takeoff".to_string(), params)
+}
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    // (id, action, tags, predicate, modality, timestamp, specificity, priority)
+    let mut ethos = EffectEthos::new()
+        .add_deterministic_norm(1, "takeoff", &["flight_safety"], any_takeoff, TeloidModal::Optional(1), 0, 1, 1)?
+        .add_deterministic_norm(2, "takeoff", &["flight_safety"], battery_low, TeloidModal::Impermissible, 0, 10, 100)?;
+    ethos.verify_graph()?;
+
+    let airfield: BaseContext = Context::with_capacity(0, "airfield", 1);
+    for battery_pct in [85.0, 12.5] {
+        let verdict = ethos.evaluate_action(&takeoff(battery_pct), &airfield, &["flight_safety"])?;
+        let mut norms = verdict.justification().clone();
+        norms.sort();
+        println!("battery {battery_pct} %: {} (norms {norms:?})", verdict.outcome());
+    }
+    Ok(())
+}`;
+
+const takeoffOut = `battery 85 %: Optional(1) (norms [1])
+battery 12.5 %: Impermissible (norms [1, 2])`;
+
+const ddic = 'https://arxiv.org/abs/2407.04869';
+---
+<BaseLayout
+  title="Effect Ethos — DeepCausality"
+  description="The Effect Ethos checks a proposed action against norms you encode and returns a verdict (impermissible, obligatory or optional at a cost) with the norms that produced it."
+>
+  <SiteHeader />
+  <article class="static-page">
+    <header>
+      <p class="eyebrow">Overview · Effect Ethos</p>
+      <h1>Norms that check an action before it runs</h1>
+      <p class="lede">
+        A causal model says what will happen. The Effect Ethos answers a second question: is the
+        proposed action allowed? It checks the action against norms you encode and returns a
+        verdict, <code>Impermissible</code>, <code>Obligatory</code> or <code>Optional(cost)</code>, with the norms that produced it.
+      </p>
+    </header>
+
+    <div class="prose">
+      <h2>A norm</h2>
+      <p>
+        A norm, called a teloid in the code, has five parts:
+      </p>
+      <ul>
+        <li>a <strong>predicate</strong> over the context and the proposed action that decides whether the norm applies: a plain boolean function, or an uncertain one tested against a probability threshold and a confidence level;</li>
+        <li>a <strong>modality</strong>: impermissible, obligatory, or optional with a cost;</li>
+        <li>three numbers that resolve conflicts: <strong>specificity</strong>, <strong>timestamp</strong> and <strong>priority</strong>;</li>
+        <li><strong>tags</strong> that select the norms for a request;</li>
+        <li>an <strong>identifier</strong> the verdict cites.</li>
+      </ul>
+      <p>
+        Two kinds of edge link norms into a graph: an <code>Inherits</code> edge links a general norm
+        to a more specific one, and a <code>Defeats</code> edge lets one norm override another.
+      </p>
+
+      <h2>Checking an action</h2>
+      <p>
+        A drone requests takeoff. One norm permits every takeoff at a cost of 1; a second forbids
+        takeoff below 20 % battery.
+      </p>
+      <Code code={takeoff} lang="rust" themes={themes} defaultColor={false} wrap />
+      <Code code={takeoffOut} lang="text" themes={themes} defaultColor={false} wrap />
+      <p>
+        At 85 % only the first norm applies, making the takeoff optional at a cost of 1. At 12.5 %
+        both apply and the prohibition wins; the verdict cites both, so an operator sees which rules
+        produced it.
+      </p>
+
+      <h2>How a verdict is reached</h2>
+      <ol>
+        <li><strong>Select.</strong> Collect every norm filed under one of the requested tags. Selection uses tags alone, so give each kind of action its own tag.</li>
+        <li><strong>Activate.</strong> Run each norm's predicate against the context and the action. An uncertain predicate activates when its probability test passes; a predicate or test that returns an error counts as inactive.</li>
+        <li><strong>Resolve.</strong> Settle the norms in the graph's topological order. A <code>Defeats</code> edge removes the norm it points to when the defeating norm stands and outranks it: higher priority first, then higher specificity, then a later timestamp. Equal rank does not defeat, and a norm that falls defeats nothing. An <code>Inherits</code> edge adds a standing norm's more specific norms to the result without running their predicates.</li>
+        <li><strong>Decide.</strong> Any surviving prohibition makes the verdict <code>Impermissible</code>. Otherwise any surviving obligation makes it <code>Obligatory</code>. Otherwise the verdict is <code>Optional</code>, at the summed cost of the surviving norms.</li>
+      </ol>
+      <p>
+        Before any evaluation the norm graph must be frozen and acyclic; <code>verify_graph</code> checks both. Evaluation returns an error when no norm carries a requested tag or no selected
+        norm applies, and the caller decides what either error means for the action.
+      </p>
+
+      <h2>Where it sits</h2>
+      <p>
+        The Ethos reads the same context type a causal step reads, so a norm and a cause can depend
+        on the same sensor data, clocks and positions. It runs as a separate check: the <a href="/overview/dynamic-action/">Causal State Machine</a> fires its actions without
+        consulting it, so a governed system evaluates the Ethos first and fires only on a permitting
+        verdict. The <a href="/examples/effect-ethos/">Effect Ethos example</a> shows a causal model
+        that wants to raise an alert and a norm that forbids it.
+      </p>
+      <p>
+        The norm vocabulary follows the Defeasible Deontic Inheritance Calculus of Olson,
+        Salas-Damian and Forbus (<a href={ddic}>arXiv:2407.04869</a>). The <a href={`${GITHUB_URL}/blob/main/deep_causality_ethos/README.md`}>Ethos README</a> covers
+        the full API.
+      </p>
+
+      <TopicList current="effect-ethos" />
+    </div>
+  </article>
+</BaseLayout>

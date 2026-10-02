@@ -84,11 +84,19 @@ fn test_display() {
 fn test_debug_clone_copy_eq() {
     let a = SatId::E18;
     let b = a; // Copy
-    let c = Clone::clone(&a); // exercises the derived Clone on a Copy type
+    let c = clone_of(&a); // exercises the derived Clone on a Copy type
     assert_eq!(a, b);
     assert_eq!(a, c);
     assert_ne!(SatId::E18, SatId::E19);
     assert_eq!(format!("{a:?}"), "E18");
+}
+
+/// Exercises `Clone` without going through `Copy`.
+///
+/// Inside a generic function `T` is not known to be `Copy`, so this really is a clone. It also
+/// keeps `clippy::clone_on_copy` from firing on the concrete type.
+fn clone_of<T: Clone>(t: &T) -> T {
+    t.clone()
 }
 
 #[test]

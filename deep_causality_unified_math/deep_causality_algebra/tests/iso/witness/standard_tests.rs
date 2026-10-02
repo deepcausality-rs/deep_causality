@@ -36,11 +36,16 @@ fn standard_iso_default_constructs() {
 fn standard_iso_clone_and_copy() {
     let s: StandardIso<FloatWrap, f64> = StandardIso::new();
     let s2 = s; // exercises Copy
-    // Explicitly call the Clone impl to verify it exists and behaves
-    // identically to Copy. Use the trait-qualified form to avoid the
-    // `clippy::clone_on_copy` lint that would fire on `s.clone()`.
-    let s3 = Clone::clone(&s);
+    let s3 = clone_of(&s);
     let _ = (s2, s3);
+}
+
+/// Exercises `Clone` without going through `Copy`.
+///
+/// Inside a generic function `T` is not known to be `Copy`, so this really is a clone. It also
+/// keeps `clippy::clone_on_copy` from firing on the concrete type.
+fn clone_of<T: Clone>(t: &T) -> T {
+    t.clone()
 }
 
 #[test]

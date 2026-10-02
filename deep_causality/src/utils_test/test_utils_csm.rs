@@ -36,9 +36,7 @@ pub fn get_test_probabilistic_causaloid() -> BaseCausaloid<f64, f64> {
 
 pub fn get_test_error_causaloid() -> BaseCausaloid<bool, bool> {
     fn causal_fn(_: bool) -> PropagatingEffect<bool> {
-        PropagatingEffect::from_error(CausalityError::new(CausalityErrorEnum::Custom(
-            "Error".to_string(),
-        )))
+        PropagatingEffect::from_error(CausalityError::Custom("Error"))
     }
     Causaloid::new(78, causal_fn, "Error Causaloid")
 }

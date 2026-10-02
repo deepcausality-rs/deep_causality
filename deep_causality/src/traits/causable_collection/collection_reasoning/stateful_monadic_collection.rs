@@ -16,8 +16,8 @@
 //! stateless one. No new collection constructor is required.
 
 use crate::{
-    AggregateLogic, Causable, CausableCollectionAccessor, CausalityError, CausalityErrorEnum,
-    MonadicCausable, NumericalValue, StatefulMonadicCausable, monadic_collection_utils,
+    AggregateLogic, Causable, CausableCollectionAccessor, CausalityError, MonadicCausable,
+    NumericalValue, StatefulMonadicCausable, monadic_collection_utils,
 };
 use deep_causality_core::{CausalEffect, PropagatingProcess};
 use deep_causality_haft::LogAppend;
@@ -86,9 +86,7 @@ where
 
         if items.is_empty() {
             return PropagatingProcess::new(
-                Err(CausalityError(CausalityErrorEnum::Custom(
-                    "Cannot evaluate an empty collection".to_string(),
-                ))),
+                Err(CausalityError::EmptyCollection()),
                 incoming.state().clone(),
                 incoming.context().clone(),
                 incoming.logs().clone(),

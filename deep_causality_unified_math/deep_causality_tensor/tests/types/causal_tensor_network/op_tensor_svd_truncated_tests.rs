@@ -112,7 +112,7 @@ fn check_svd<T: RealField + FromPrimitive + ConjugateScalar<Real = T>>() {
     // (2) Known 2×2 with golden-ratio singular values: [[1,1],[0,1]] → φ, 1/φ.
     let a = tensor::<T>(&[1.0, 1.0, 0.0, 1.0], &[2, 2]);
     let (u, s, vt) = a.svd_truncated(&full).unwrap();
-    approx::<T>(s.as_slice()[0], v::<T>(1.618_033_988_749_895));
+    approx::<T>(s.as_slice()[0], v::<T>(std::f64::consts::GOLDEN_RATIO));
     approx::<T>(s.as_slice()[1], v::<T>(0.618_033_988_749_895));
     let recon = reconstruct(&u, &s, &vt);
     for (g, e) in recon.iter().zip(a.as_slice()) {

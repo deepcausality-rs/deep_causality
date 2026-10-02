@@ -93,13 +93,10 @@ where
                 // stateful `StatefulMonadicCausable::evaluate_stateful` path exactly.
                 if incoming_effect.command_target().is_some() {
                     return PropagatingEffect::new(
-                        Err(CausalityError(
-                            deep_causality_core::CausalityErrorEnum::Custom(
-                                "Causaloid::evaluate: singleton received a command (RelayTo) on its \
+                        Err(CausalityError::UnexpectedCommand(
+                            "Causaloid::evaluate: singleton received a command (RelayTo) on its \
                                  input channel; commands are relayed by the reasoning engine, not \
-                                 consumed by a singleton"
-                                    .into(),
-                            ),
+                                 consumed by a singleton",
                         )),
                         (),
                         None,
@@ -129,11 +126,9 @@ where
                         }
                         match output_effect_val.into_value() {
                             Some(v) => causable_utils::log_output(v, self.id),
-                            None => PropagatingEffect::from_error(CausalityError(
-                                deep_causality_core::CausalityErrorEnum::Custom(
-                                    "Causaloid::evaluate: causal_fn returned None output".into(),
-                                ),
-                            )),
+                            None => {
+                                PropagatingEffect::from_error(CausalityError::ValueNotAvailable())
+                            }
                         }
                     })
             }
@@ -141,12 +136,9 @@ where
             CausaloidType::Collection => {
                 // Preserve incoming logs and include a precise error message.
                 PropagatingEffect::new(
-                    Err(CausalityError(
-                        deep_causality_core::CausalityErrorEnum::Custom(
-                            "Collection evaluation is not available in this build; \
-                             use specialized collection evaluation APIs."
-                                .into(),
-                        ),
+                    Err(CausalityError::UnsupportedOperation(
+                        "Collection evaluation is not available in this build; \
+                             use specialized collection evaluation APIs.",
                     )),
                     (),
                     None,
@@ -156,12 +148,9 @@ where
             CausaloidType::Graph => {
                 // Preserve incoming logs and include a precise error message.
                 PropagatingEffect::new(
-                    Err(CausalityError(
-                        deep_causality_core::CausalityErrorEnum::Custom(
-                            "Graph evaluation is not available in this build; \
-                             use specialized graph evaluation APIs."
-                                .into(),
-                        ),
+                    Err(CausalityError::UnsupportedOperation(
+                        "Graph evaluation is not available in this build; \
+                             use specialized graph evaluation APIs.",
                     )),
                     (),
                     None,

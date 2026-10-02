@@ -1,6 +1,7 @@
 # DeepCausality, distilled: the effect ethos
 
-Source: every file in `deep_causality_ethos/` (0.4.1), read in full on 2026-09-30: `src/`, `tests/`,
+Source: every file in `deep_causality_ethos/` (0.4.1), read in full on 2026-09-30, and conflict
+resolution (`resolve_conflicts.rs`) re-read on 2026-10-01: `src/`, `tests/`,
 `Cargo.toml`, `BUILD.bazel`, `README.md`, `CHANGELOG.md` and `examples.txt`. Checked against the
 one consumer, `examples/csm_examples/csm_effect_ethos/`, the CSM in `deep_causality/`, and the DDIC
 paper in `papers/ddic.pdf`. Behavioural claims marked *(probe)* were confirmed by a scratch
@@ -14,19 +15,17 @@ that produced it. A norm (`Teloid`) is a predicate over `(Context, ProposedActio
 modality and three numbers for conflict resolution. Norms sit in a graph whose edges are either
 `Inherits` or `Defeats`.
 
-The verdict is not a function of its inputs. Conflict resolution walks the norms in `HashSet`
-iteration order and decides defeat against whatever has not yet been removed. With a chain where
-norm 1 defeats norm 2 and norm 2 defeats norm 3, the same ethos, action and context returned
-`Impermissible [1, 3]` on 1126 of 2000 calls and `Optional(1) [1]` on 874 *(probe)*. The README
-calls resolution "deterministic and reproducible".
+Conflict resolution settles the norms in the graph's topological order, so the verdict depends only
+on the norms, their edges and which of them are active. A norm falls when a standing norm defeats
+it along a `Defeats` edge and outranks it; rank compares priority, then specificity, then
+timestamp, and a norm that falls defeats nothing. `tests/types/effect_ethos/effect_ethos_resolve_conflicts_tests.rs` pins a chain of two defeats over 500 calls, the order of
+the justification, and each precedence case.
 
-Three further properties decide what a verdict means. Norms are selected by tag, and the norm's
+Two further properties decide what a verdict means. Norms are selected by tag, and the norm's
 `action_identifier` is never compared with the action: a norm written for `takeoff` rules on
 `land` *(probe)*. A norm reached through an `Inherits` edge joins the result without its predicate
 being evaluated: an inherited prohibition whose predicate is false still makes the verdict
-`Impermissible` *(probe)*. And a defeat edge fires when the defeater exceeds the defeated norm on
-specificity, timestamp *or* priority, so a newer norm defeats an older one that is a hundred times
-more specific and a hundred times higher in priority *(probe)*.
+`Impermissible` *(probe)*.
 
 Nothing in the causal engine calls the ethos. The CSM method `fire_action_with_ethos_check` fires
 the action unconditionally; its body carries the comment "Ethos checking has been moved to
@@ -98,15 +97,16 @@ evaluation with `TeloidNotFound`.
    `probability_exceeds_from_entropy(threshold, confidence, epsilon, max_samples)` returns true. A
    predicate that returns an error, or a test that returns an error, counts as inactive. No active
    norm is `InconclusiveVerdict`.
-4. **Resolve** (`resolve_conflicts.rs`). Seed a breadth-first queue with the active norms, in the
-   `HashSet`'s order, and put them all in a belief map. For each dequeued norm, look at its
-   incoming `Defeats` edges. If a defeater is still in the belief map and has higher specificity,
-   later timestamp or higher priority, remove the norm and do not expand it. Otherwise add every
-   `Inherits` child to the belief map and the queue, without evaluating the child's predicate.
+4. **Resolve** (`resolve_conflicts.rs`). Walk the graph in topological order, which exists because
+   the graph is verified acyclic. A norm is held when it is active or a standing norm passes it on
+   along an `Inherits` edge, without evaluating the child's predicate. A held norm falls when a
+   standing norm defeats it along a `Defeats` edge and outranks it: higher priority, then higher
+   specificity, then later timestamp; equal rank does not defeat. A norm that falls defeats nothing
+   and passes nothing on. Every defeater and parent is settled before the norm it acts on.
 5. **Verdict** (`derive_verdict.rs`). Any `Impermissible` survivor makes the verdict
    `Impermissible`; else any `Obligatory` makes it `Obligatory`; else it is `Optional` with the sum
    of the survivors' costs. The justification lists every survivor, whatever its modality, in
-   `HashMap` order.
+   topological order.
 
 `explain_verdict` renders the verdict, one line per justifying norm, and a fixed sentence per
 outcome. It explains the result, not which norms were defeated; a comment in the code says so.
@@ -130,37 +130,30 @@ no norm applies.
 
 ## 5. Where the code and the claims part
 
-1. **Order-dependent resolution** (the finding). Defeat is decided against the belief map as it
-   stands when a norm is dequeued, the queue is seeded in `HashSet` order, and a defeated defeater
-   may already have removed its target. The test suite has no chain of two defeats, so nothing
-   catches it.
-2. **Defeat is a disjunction.** `specificity > || timestamp > || priority >` makes any one
-   advantage decisive and ignores the other two. The doc comment on `resolve_conflicts` names Lex
-   Specialis and Lex Posterior; the README says the three rules "check the survivors for
-   consistency". Neither describes the code. Defeat also applies only along explicit `Defeats`
-   edges; two active norms with opposite modalities and no edge both survive, and the modality
-   precedence in step 5 settles them.
-3. **Inheritance bypasses activation.** An `Inherits` child joins the belief set whether or not its
+1. **Defeat needs an edge.** Defeat applies only along explicit `Defeats` edges; two active norms
+   with opposite modalities and no edge both survive, and the modality precedence in step 5 settles
+   them.
+2. **Inheritance bypasses activation.** An `Inherits` child joins the belief set whether or not its
    predicate holds, and the chain continues through it. `test_evaluate_action_deep_inheritance`
    pins this with always-true predicates, so it does not distinguish the two readings.
-4. **Action identity is ignored.** Selection is by tag alone. A caller who tags two actions'
+3. **Action identity is ignored.** Selection is by tag alone. A caller who tags two actions'
    norms alike gets each action judged by the other's norms.
-5. **Failures are silent and fail open.** An erroring or unsampleable uncertain predicate makes its
+4. **Failures are silent and fail open.** An erroring or unsampleable uncertain predicate makes its
    norm inactive, so a prohibition that cannot be evaluated does not prohibit. No test evaluates an
    uncertain norm at all; the uncertain branch of `evaluate_action` is unexercised.
-6. **Panic on a frozen graph.** `add_deterministic_norm` and `add_uncertain_norm` call
+5. **Panic on a frozen graph.** `add_deterministic_norm` and `add_uncertain_norm` call
    `add_node(..).expect("Failed to add node")`. After `verify_graph`, adding a norm panics with
    `GraphIsFrozen` *(probe)* instead of returning the `DeonticError` the signature promises.
-7. **Misleading or dead errors.** An unverified graph reports `GraphIsCyclic`.
+6. **Misleading or dead errors.** An unverified graph reports `GraphIsCyclic`.
    `derive_verdict` returns `NoRelevantNormsFound` for an empty set while its doc says
    `InconclusiveVerdict`, and its mixed-modality branch cannot be reached with three modalities.
    `MissingContext` is never constructed and its message names "the CausalState". The local
    `teloid_cache` in `evaluate_action` is written and never read.
-8. **Documentation drift.** The README's usage block pins `deep_causality_ethos = "0.3"`; the
+7. **Documentation drift.** The README's usage block pins `deep_causality_ethos = "0.3"`; the
    crate is 0.4.1. `BaseTeloidStore`'s doc calls teloids "temporal causal units". The crates.io
    badge and `Cargo.toml` documentation link point at `deep_causality`. `explain_verdict` omits the
    closing parenthesis and the newline after each norm, so several norms run together on one line.
-9. **Public test helpers.** `lib.rs` declares `pub mod utils_test`, so `TestEthos` and the dummy
+8. **Public test helpers.** `lib.rs` declares `pub mod utils_test`, so `TestEthos` and the dummy
    predicates are part of the published API.
 
 ## 6. File map

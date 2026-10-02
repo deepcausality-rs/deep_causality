@@ -19,6 +19,7 @@ members = [
     "deep_causality_unified_math/*",
     "deep_causality_utils/*",
     "examples/*",  # All code examples
+    "end_to_end_tutorials/*",  # Tutorials across the whole stack
 ]
 
 [workspace.package]

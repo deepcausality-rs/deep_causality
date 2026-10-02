@@ -449,6 +449,7 @@ dependencies = [
  "deep_causality",
  "deep_causality_context",
  "deep_causality_ethos",
+ "deep_causality_num",
 ]
 
 [[package]]
@@ -916,6 +917,19 @@ name = "dyn-stack-macros"
 version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e1d926b4d407d372f141f93bb444696142c29d32962ccbd3531117cf3aa0bfa9"
+
+[[package]]
+name = "dynamic_drone_failsafe"
+version = "0.1.0"
+dependencies = [
+ "deep_causality",
+ "deep_causality_algebra",
+ "deep_causality_context",
+ "deep_causality_ethos",
+ "deep_causality_num",
+ "deep_causality_stats",
+ "deep_causality_uncertain",
+]
 
 [[package]]
 name = "either"
@@ -2485,9 +2499,9 @@ dependencies = [
 
 [[package]]
 name = "yoke-derive"
-version = "0.8.3"
+version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33811428bee40dbceb6d545e95754741d17a6aef9a4849f0fd62e2ba4f412a78"
+checksum = "ec8ebde2db3681e8c9980cc27822030e68752690ddfa9473e739aeb4dbde6d71"
 dependencies = [
  "proc-macro2",
  "quote",

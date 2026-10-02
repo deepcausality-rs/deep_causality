@@ -61,23 +61,13 @@ where
         }
 
         if !self.is_frozen() {
-            return raise_from(
-                CausalityError(CausalityErrorEnum::Custom(
-                    "Graph is not frozen. Call freeze() first".into(),
-                )),
-                effect,
-            );
+            return raise_from(CausalityError::GraphNotFrozen(), effect);
         }
 
         let causaloid = match self.get_causaloid(index) {
             Some(c) => c,
             None => {
-                return raise_from(
-                    CausalityError(CausalityErrorEnum::Custom(format!(
-                        "Causaloid with index {index} not found in graph"
-                    ))),
-                    effect,
-                );
+                return raise_from(CausalityError::CausaloidNotFound(index), effect);
             }
         };
 
@@ -97,19 +87,12 @@ where
         }
 
         if !self.is_frozen() {
-            return raise_from(
-                CausalityError(CausalityErrorEnum::Custom(
-                    "Graph is not frozen. Call freeze() first".into(),
-                )),
-                initial_effect,
-            );
+            return raise_from(CausalityError::GraphNotFrozen(), initial_effect);
         }
 
         if !self.contains_causaloid(start_index) {
             return raise_from(
-                CausalityError(CausalityErrorEnum::Custom(format!(
-                    "Graph does not contain start causaloid with index {start_index}"
-                ))),
+                CausalityError::CausaloidNotFound(start_index),
                 initial_effect,
             );
         }
@@ -118,14 +101,7 @@ where
         // ascending-index canonical schedule, `RelayTo` as sequential round composition), so it too
         // requires a frozen acyclic graph.
         if self.get_graph().has_cycle().unwrap_or(true) {
-            return raise_from(
-                CausalityError(CausalityErrorEnum::Custom(
-                    "Graph contains a directed cycle; the reconvergence-join evaluator requires an \
-                     acyclic (frozen DAG) graph"
-                        .into(),
-                )),
-                initial_effect,
-            );
+            return raise_from(CausalityError::GraphContainsCycle(), initial_effect);
         }
 
         let n_nodes = self.number_nodes();
@@ -179,9 +155,9 @@ where
                             // pre-pass prunes dead paths at the wire level, so a non-start node that
                             // becomes ready always has at least one fired parent.
                             return raise_from(
-                                CausalityError(CausalityErrorEnum::Custom(format!(
+                                CausalityError::InternalLogicError(format!(
                                     "internal invariant: node {node} became ready with no fired parents"
-                                ))),
+                                )),
                                 &last_propagated,
                             );
                         }
@@ -197,14 +173,14 @@ where
                             // Fail loudly rather than silently pick one parent or guess a combine.
                             let keys: Vec<usize> = parents.keys().copied().collect();
                             return raise_from(
-                                CausalityError(CausalityErrorEnum::Custom(format!(
+                                CausalityError::UnsupportedOperation(format!(
                                     "Node {node} is a reconvergence reached by {} fired parents \
                                      (graph indices {keys:?}); the reconvergence merge (∇) is not \
                                      yet defined and multi-parent fan-in is unsupported. Restructure \
                                      to a single-parent path, or await the symmetric-monoidal merge \
                                      extension.",
                                     keys.len()
-                                ))),
+                                )),
                                 &last_propagated,
                             );
                         }
@@ -215,9 +191,7 @@ where
                     Some(c) => c,
                     None => {
                         return raise_from(
-                            CausalityError(CausalityErrorEnum::Custom(format!(
-                                "Failed to get causaloid at index {node}"
-                            ))),
+                            CausalityError::CausaloidNotFound(node),
                             &last_propagated,
                         );
                     }
@@ -236,22 +210,14 @@ where
                         // (a relay cycle is the likely cause) instead of looping forever.
                         if relay_rounds_left == 0 {
                             return raise_from(
-                                CausalityError(CausalityErrorEnum::Custom(format!(
-                                    "Relay budget exhausted: the adaptive-reasoning chain exceeded \
-                                     MAX_RELAY_ROUNDS = {} rounds (a relay cycle is likely). The \
-                                     relay handler is fuel-bounded so evaluation terminates \
-                                     (core.causal_effect.relay_termination).",
-                                    super::MAX_RELAY_ROUNDS
-                                ))),
+                                CausalityError::MaxStepsExceeded(),
                                 &last_propagated,
                             );
                         }
                         relay_rounds_left -= 1;
                         if !self.contains_causaloid(target_idx) {
                             return raise_from(
-                                CausalityError(CausalityErrorEnum::Custom(format!(
-                                    "RelayTo target causaloid with index {target_idx} not found in graph."
-                                ))),
+                                CausalityError::CausaloidNotFound(target_idx),
                                 &last_propagated,
                             );
                         }
@@ -277,7 +243,7 @@ where
                             Ok(c) => c,
                             Err(e) => {
                                 return raise_from(
-                                    CausalityError(CausalityErrorEnum::Custom(format!("{e}"))),
+                                    CausalityError::GraphError(format!("{e}")),
                                     &last_propagated,
                                 );
                             }
@@ -313,12 +279,7 @@ where
         }
 
         if !self.is_frozen() {
-            return raise_from(
-                CausalityError(CausalityErrorEnum::Custom(
-                    "Graph is not frozen. Call freeze() first".into(),
-                )),
-                initial_effect,
-            );
+            return raise_from(CausalityError::GraphNotFrozen(), initial_effect);
         }
 
         if start_index == stop_index {
@@ -326,9 +287,7 @@ where
                 Some(c) => c,
                 None => {
                     return raise_from(
-                        CausalityError(CausalityErrorEnum::Custom(format!(
-                            "Failed to get causaloid at index {start_index}"
-                        ))),
+                        CausalityError::CausaloidNotFound(start_index),
                         initial_effect,
                     );
                 }
@@ -339,10 +298,7 @@ where
         let path = match self.get_shortest_path(start_index, stop_index) {
             Ok(p) => p,
             Err(e) => {
-                return raise_from(
-                    CausalityError(CausalityErrorEnum::Custom(format!("{:?}", e))),
-                    initial_effect,
-                );
+                return raise_from(CausalityError::GraphError(format!("{e:?}")), initial_effect);
             }
         };
 
@@ -352,12 +308,7 @@ where
             let causaloid = match self.get_causaloid(index) {
                 Some(c) => c,
                 None => {
-                    return raise_from(
-                        CausalityError(CausalityErrorEnum::Custom(format!(
-                            "Failed to get causaloid at index {index}"
-                        ))),
-                        &current,
-                    );
+                    return raise_from(CausalityError::CausaloidNotFound(index), &current);
                 }
             };
 

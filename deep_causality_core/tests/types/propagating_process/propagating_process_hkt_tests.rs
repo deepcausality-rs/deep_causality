@@ -119,7 +119,7 @@ fn test_fmap_on_error() {
         CausalityError,
         EffectLog,
     > = CausalEffectPropagationProcess::new(
-        Err(CausalityError::new(CausalityErrorEnum::InternalLogicError)),
+        Err(CausalityError::InternalLogicError("test invariant")),
         TestState(1),
         Some(TestContext("initial".to_string())),
         {
@@ -144,7 +144,7 @@ fn test_fmap_on_error() {
     );
     assert_eq!(
         fmapped_process.error(),
-        Some(&CausalityError::new(CausalityErrorEnum::InternalLogicError))
+        Some(&CausalityError::InternalLogicError("test invariant"))
     );
     assert_eq!(fmapped_process.logs().len(), 1);
     assert!(format!("{}", fmapped_process.logs()).contains("Error log"));
@@ -270,7 +270,7 @@ fn test_applicative_apply_with_func_error() {
         CausalityError,
         EffectLog,
     > = CausalEffectPropagationProcess::new(
-        Err(CausalityError::new(CausalityErrorEnum::TypeConversionError)),
+        Err(CausalityError::TypeConversionError("test conversion")),
         TestState(10),
         Some(TestContext("func_ctx".to_string())),
         {
@@ -313,7 +313,7 @@ fn test_applicative_apply_with_func_error() {
     assert_eq!(
         result_process.error(),
         Some(&CausalityError::new(
-            CausalityErrorEnum::TypeConversionError
+            CausalityErrorEnum::TypeConversionError("test conversion".to_string())
         ))
     );
     assert_eq!(result_process.logs().len(), 2);
@@ -388,7 +388,7 @@ fn test_applicative_apply_with_both_errors() {
         CausalityError,
         EffectLog,
     > = CausalEffectPropagationProcess::new(
-        Err(CausalityError::new(CausalityErrorEnum::TypeConversionError)),
+        Err(CausalityError::TypeConversionError("test conversion")),
         TestState(10),
         Some(TestContext("func_ctx".to_string())),
         {
@@ -431,7 +431,7 @@ fn test_applicative_apply_with_both_errors() {
     assert_eq!(
         result_process.error(),
         Some(&CausalityError::new(
-            CausalityErrorEnum::TypeConversionError
+            CausalityErrorEnum::TypeConversionError("test conversion".to_string())
         ))
     );
     assert_eq!(result_process.logs().len(), 2);

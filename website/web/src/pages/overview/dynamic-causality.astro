@@ -1,0 +1,248 @@
+---
+import { Code } from 'astro:components';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import TopicList from '../../components/overview/TopicList.astro';
+import { GITHUB_URL } from '../../consts';
+
+const themes = { light: 'github-light', dark: 'github-dark' } as const;
+
+const kepler = `use deep_causality_algebra::Real;
+use deep_causality_core::{CausalityError, PropagatingEffect};
+use deep_causality_num::{lift, lower};
+use deep_causality_physics::{EARTH_GM, TwoBodyPropagator};
+
+/// The working precision. Change this one line to \`Float106\`
+/// and the whole program runs at about 31 decimal digits.
+type FloatType = f64;
+// (position, velocity)
+type Orbit = ([FloatType; 2], [FloatType; 2]); 
+
+fn main() {
+  let epoch: Orbit = ([lift(7.0e6), lift(0.0)], [lift(0.0), lift(7.8e3)]);
+  let result = PropagatingEffect::pure(epoch)
+     // forward in time
+     .bind_or_error(|s, _, _| kepler_step(s, lift(600.0)), "no state") 
+     // next in causal order, backward in time
+     .bind_or_error(|s, _, _| kepler_step(s, lift(-600.0)), "no state"); 
+        
+    let (p, _) = result.into_value().expect("both steps succeed");
+    let dx = p[0] - lift::<FloatType>(7.0e6);
+    let miss = Real::sqrt(dx * dx + p[1] * p[1]);
+    println!("returned to epoch within {:.2e} m", lower(miss));
+}
+
+/// One Kepler step. The propagator is exact and accepts a negative \`dt\`.
+fn kepler_step(state: Orbit, dt: FloatType) -> PropagatingEffect<Orbit> {
+    let (p, v) = state;
+    match TwoBodyPropagator::from_state(
+        p, 
+        v, 
+        lift(EARTH_GM))
+           .and_then(|orbit| orbit.propagate(dt))
+    {
+        Ok(next) => PropagatingEffect::pure(next),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}`;
+
+const keplerOut = `returned to epoch within 5.67e-10 m`;
+
+const unifiedMathReadme = `${GITHUB_URL}/blob/main/deep_causality_unified_math/README.md`;
+
+const whatIf = `let observed = plug_in().iterate_n(30, one_minute).into_process();
+
+let what_if = plug_in()
+    .iterate_n(10, one_minute)
+    // what if the cell had been at 52 °C after ten minutes?
+    .alternate_value(52.0) 
+    .iterate_n(20, one_minute)
+    .into_process();`;
+
+const whatIfOut = `Observed: 38.8 °C, 70.0 % charged after 30 minutes
+What if : 41.2 °C, 65.8 % charged after 30 minutes
+EffectLog (1 entries):
+[[1790749984339484] !!ValueAlternation!!: Value(33.48417318664552) replaced with Value(52.0)`;
+
+const readme = `${GITHUB_URL}/blob/main/README.md`;
+---
+<BaseLayout
+  title="Dynamic causality — DeepCausality"
+  description="The causal monad composes a model on two layers: a one-directional causal order, and an unconstrained step that can hold time-symmetric physics. Three channels, an audit log, causaloids and the Causal State Machine."
+>
+  <SiteHeader />
+  <article class="static-page">
+    <header>
+      <p class="eyebrow">Overview · Dynamic causality</p>
+      <h1>A causal order with computation inside each step</h1>
+      <p class="lede">
+        The causal monad in <code>deep_causality_core</code> composes a model on two layers. The
+        outer layer decides the causal order. The inner layer, the step, computes
+        anything, including physics that runs backward in time.
+      </p>
+    </header>
+
+    <div class="prose">
+      <h2>Two layers of composition</h2>
+      <p>
+        The classical formulation of causality, "if A then B, and if not A then not B," composes on
+        one layer: the causal direction from A to B doubles as the direction of time, so it cannot
+        express a time-symmetric relation as a cause. That rules out the fundamental equations of
+        physics, from Newton's through Maxwell's to Schrödinger's, which are all time-symmetric.
+      </p>
+      <p>DeepCausality composes on two layers.</p>
+      <ul>
+        <li>
+          <strong>The outer layer is the causal order.</strong> Steps compose by monadic bind: a
+          step runs after the one before it and receives its effect, state and context, and an error
+          stops the chain. A causal graph arranges steps into a directed acyclic graph by
+          construction, so no step can feed back into an earlier one.
+        </li>
+        <li>
+          <strong>The inner layer is the step itself.</strong> A step, an ordinary Rust function, can
+          hold a time-symmetric law of physics or any other computation. It assumes neither space nor
+          time; location and time reach it through the context or as values such as the <code>dt</code> below.
+        </li>
+      </ul>
+      <p>
+        The example moves a satellite 600 s forward along its orbit and then 600 s back, using the
+        exact two-body propagator from <code>deep_causality_physics</code>:
+      </p>
+      <Code code={kepler} lang="rust" themes={themes} defaultColor={false} wrap />
+      <Code code={keplerOut} lang="text" themes={themes} defaultColor={false} wrap />
+      <p>
+        The satellite starts 7,000 km from Earth's center at 7.8 km/s, which puts it on an orbit
+        between 629 km and 1,658 km altitude. The first step carries
+        it 4,585 km along that orbit. The second step takes the position and velocity the first step
+        produced, derives a fresh orbit from them, and runs the clock back 600 s. The satellite lands
+        0.57 nanometers from where it started. At 7,000 km, neighboring <code>f64</code> values lie
+        0.93 nanometers apart, so the round trip is exact to the resolution of the number type.
+      </p>
+      <p>
+        That resolution is a parameter. Every crate in the unified mathematics stack takes its scalar
+        as a type parameter, so changing the <code>FloatType</code> alias moves the whole program,
+        propagator included, to another number type. With only that line changed, the round trip
+        lands within about one spacing of each type, and within two at <code>BFloat16</code>:
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th><code>FloatType</code></th><th>Decimal digits</th><th>Miss after the round trip</th><th>Spacing of values at 7,000 km</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>BFloat16</code></td><td>2</td><td>7.0 × 10⁴ m</td><td>3.3 × 10⁴ m</td></tr>
+            <tr><td><code>f32</code></td><td>7</td><td>0.25 m</td><td>0.5 m</td></tr>
+            <tr><td><code>f64</code></td><td>16</td><td>5.7 × 10⁻¹⁰ m</td><td>9.3 × 10⁻¹⁰ m</td></tr>
+            <tr><td><code>Float106</code></td><td>31</td><td>2.4 × 10⁻²⁵ m</td><td>2.1 × 10⁻²⁵ m</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        At <code>Float106</code> the satellite lands 2.4 × 10⁻²⁵ m, about a quarter of a
+        yoctometer, from where it started: far below anything an instrument can measure. For
+        reference results, such as the values another solver must reproduce, <code>Float106</code> carries about 31 significant digits, twice as many as <code>f64</code>, for a one-line change.
+        The <a href={unifiedMathReadme}>unified math README</a> explains how precision works as a parameter across the stack.
+      </p>
+      <p>
+        The round trip is exact because Kepler's problem has a closed-form solution. Measured by the
+        angle around the ellipse, the eccentric anomaly, the orbit follows simple harmonic motion, and
+        one formula advances it by any time interval. The kernel solves Kepler's equation,
+        which converts that angle into clock time, by Newton's method to the precision of the number
+        type. No step size enters, so no truncation error accumulates, and a negative <code>dt</code> runs the same formula backward.
+      </p>
+      <p>
+        The second step follows the first in causal order: it cannot run until the first has produced
+        its state, and an error in the first would stop it. In physical time it runs the other way.
+        The classical formulation, with one arrow for both cause and time, cannot express that chain.
+        Here bind carries the causal order, the propagator carries the physics, and the whole program
+        takes 31 lines of Rust.
+      </p>
+
+      <h2>Three channels and a log</h2>
+      <p>Each step receives exactly three channels from the step before it.</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Channel</th><th>Type</th><th>What it gives a model</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Effect</td><td>a value, <code>None</code> for "no evidence," or a <code>RelayTo</code> command that jumps to another node of a graph</td><td>the result of the previous step</td></tr>
+            <tr><td>State</td><td>any type; <code>()</code> when unused</td><td>memory carried from step to step</td></tr>
+            <tr><td>Context</td><td>any type, passed as <code>Option&lt;C&gt;</code></td><td>the environment: data, time and space, with fixed or changing relations</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Without state, a step depends only on the effect it receives. With state, a step carries
+        whatever history the state type holds. The context can be as simple as <code>()</code> or as
+        rich as the <a href="/overview/dynamic-context/">context graph</a>.
+      </p>
+      <p>
+        The log sits outside the channels: bind appends each step's entries after the earlier ones
+        and never passes the log to a step, so no step can read it. No method removes or edits an
+        entry, and each entry carries a wall-clock timestamp. The log records what the model computed
+        and when: provenance for debugging, and evidence where an auditor asks for it.
+      </p>
+
+      <h2>Asking "what if?" in the middle of a run</h2>
+      <p>
+        You can replace a running chain's value, state or context. The steps after the replacement
+        run on the new value, and the log records the change. The excerpt below charges a
+        lithium-ion cell for 30 minutes; the charger drops to half current above 45 °C. The second
+        run asks what would have happened had the cell been at 52 °C after ten minutes.
+      </p>
+      <Code code={whatIf} lang="rust" themes={themes} defaultColor={false} wrap />
+      <Code code={whatIfOut} lang="text" themes={themes} defaultColor={false} wrap />
+      <p>
+        At 52 °C the charger switches to half current. The cell cools below 45 °C within five
+        minutes, but the charge lost in those minutes stays lost: the second run ends 4.2 percentage
+        points lower. The log names the 33.5 °C the model had computed and the 52 °C that replaced
+        it. The <a href={readme}>project README</a> has the full program, and the <a href="/examples/pearl-counterfactual/">counterfactual example</a> walks Pearl's ladder of
+        causation with the same method.
+      </p>
+
+      <h2>Causaloids: one step, many steps, a graph</h2>
+      <p>
+        A causaloid packages a causal function with an identity, in one of three forms.
+      </p>
+      <ul>
+        <li><strong>Singleton.</strong> Runs one function and logs its input and output.</li>
+        <li><strong>Collection.</strong> Feeds one input to every member and aggregates the results with <code>All</code>, <code>Any</code>, <code>None</code> or <code>Some(k)</code>.</li>
+        <li><strong>Graph.</strong> Evaluates a directed acyclic graph of causaloids in topological order. Where branches meet, it joins their effects: logical OR for booleans, the maximum for numbers. A <code>RelayTo</code> command restarts evaluation at the node it names.</li>
+      </ul>
+      <p>
+        <code>Causaloid::evaluate</code> runs a singleton. A collection or a graph runs through its own
+        engine, <code>evaluate_collection</code> or <code>evaluate_subgraph_from_cause</code>, which a
+        bind step can call. The stateful graph engine threads state along each path and returns an
+        error at a join, where two states would have to merge. The <a href="/examples/aerospace-flight-envelope/">flight envelope monitor</a> uses all three
+        shapes inside one stateful chain: a collection of sensor-health checks, a bind chain for state
+        estimation, and a graph of envelope protections.
+      </p>
+
+      <h2>From a result to an action</h2>
+      <p>
+        The Causal State Machine pairs each state with an action. Each state holds a causaloid, and
+        the machine fires the paired action when the causaloid's result is active. The <a href="/overview/dynamic-action/">dynamic action</a> page covers the machine.
+      </p>
+
+      <h2>What the monad leaves to you</h2>
+      <p>
+        Bind accepts any Rust closure as a step, so the monad cannot guarantee that a step is pure: a
+        closure may read a clock, do IO or capture a variable. A causaloid narrows this by storing a
+        function pointer, which cannot capture its environment. Because bind accepts any function of
+        the right type, the model author decides which dependencies count as causal.
+      </p>
+
+      <h2>Machine-checked laws</h2>
+      <p>
+        The monad and the causaloid engine carry Lean 4 proofs: the monad laws, the structure of the
+        error-and-log stack, termination of relay commands, closure of the verdict algebra, and order
+        invariance of the graph join. Each theorem has one Rust test that pins the implementation to
+        the same statement. The <a href={`${GITHUB_URL}/blob/main/lean/THEOREM_MAP.md`}>theorem
+        map</a> links every proof to its test.
+      </p>
+
+      <TopicList current="dynamic-causality" />
+    </div>
+  </article>
+</BaseLayout>

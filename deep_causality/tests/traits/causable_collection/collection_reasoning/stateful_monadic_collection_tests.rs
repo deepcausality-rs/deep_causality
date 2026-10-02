@@ -129,7 +129,10 @@ fn evaluate_collection_stateful_empty_collection_errors() {
     );
 
     assert!(out.is_err());
-    assert!(format!("{:?}", out.error()).contains("Cannot evaluate an empty collection"));
+    assert_eq!(
+        out.error(),
+        Some(&deep_causality::CausalityError::EmptyCollection())
+    );
 }
 
 #[test]

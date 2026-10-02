@@ -52,7 +52,7 @@ fn test_functor_fmap_short_circuits_on_error() {
     // The witness fmap is a left zero on errored carriers: `f` is not invoked and
     // the error propagates (no panic).
     let process: TestProcess<i32> = CausalEffectPropagationProcess::new(
-        Err(CausalityError::new(CausalityErrorEnum::InternalLogicError)),
+        Err(CausalityError::InternalLogicError("upstream invariant")),
         1,
         Some("ctx".to_string()),
         TestLog(vec!["log1".to_string()]),
@@ -68,7 +68,7 @@ fn test_functor_fmap_short_circuits_on_error() {
     assert!(mapped.is_err());
     assert_eq!(
         mapped.error().unwrap().0,
-        CausalityErrorEnum::InternalLogicError
+        CausalityErrorEnum::InternalLogicError("upstream invariant".to_string())
     );
     assert!(mapped.value().is_none()); // An errored carrier holds no value
     assert_eq!(*mapped.state(), 1); // State preserved
@@ -130,7 +130,7 @@ fn test_applicative_apply_short_circuits_on_error() {
     // When both sides are errored, the FIRST error encountered (f_ab's) propagates,
     // the function is never invoked, and logs from both sides are still combined.
     let func_process: TestProcess<fn(i32) -> i32> = CausalEffectPropagationProcess::new(
-        Err(CausalityError::new(CausalityErrorEnum::InternalLogicError)),
+        Err(CausalityError::InternalLogicError("upstream invariant")),
         10,
         Some("ctx1".to_string()),
         TestLog(vec!["func_log".to_string()]),
@@ -148,7 +148,7 @@ fn test_applicative_apply_short_circuits_on_error() {
     assert!(result.is_err());
     assert_eq!(
         result.error().unwrap().0,
-        CausalityErrorEnum::InternalLogicError,
+        CausalityErrorEnum::InternalLogicError("upstream invariant".to_string()),
         "f_ab's error takes precedence"
     );
     assert!(result.value().is_none()); // An errored carrier holds no value

@@ -50,11 +50,11 @@ fn test_uncertain_f64_evaluable() {
 
     // Error on None params
     let res = uf_high.is_active(None);
-    assert!(res.is_err());
+    let err = res.unwrap_err();
     assert!(
-        res.unwrap_err()
-            .to_string()
-            .contains("UncertainFloat effect requires UncertainParameter")
+        matches!(&err.0, deep_causality::CausalityErrorEnum::MissingParameter(m) if m.contains("UncertainFloat effect requires UncertainParameter")),
+        "expected MissingParameter: {:?}",
+        err
     );
 
     // With Parameters (threshold 0.5)
