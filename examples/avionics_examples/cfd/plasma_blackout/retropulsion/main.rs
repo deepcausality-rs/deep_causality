@@ -334,7 +334,7 @@ fn main() -> ExitCode {
         let f = terminal.field();
         let commit_step = model::scalar0(f, IGNITION_COMMIT_STEP_FIELD);
         let legs = [model::LegSet {
-            steps: terminal.step(),
+            steps: onset.step() + burn.step() + burn_out.step() + terminal.step(),
             leg_errors,
             committed: model::scalar0(f, IGNITION_LATCH_FIELD) > 0.0,
             commit_step,

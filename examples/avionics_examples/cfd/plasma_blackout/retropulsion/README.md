@@ -151,7 +151,7 @@ is the post-fork bond growth, which the gate bands: measured 0, so a state that 
 continuation.
 
 **Gate (4b) finds the sign flip.** Ordered by the throttle each branch flew, net deceleration is non-monotone:
-10.60 m/s² coasting, falling to 7.47 m/s² at 0.20 throttle before rising again. In the low thrust-coefficient band the
+10.59 m/s² coasting, falling to 7.47 m/s² at 0.20 throttle before rising again. In the low thrust-coefficient band the
 plume destroys preserved drag about as fast as thrust replaces it, so lighting the engine buys *less* deceleration than
 coasting. Preserved drag collapses 0.251 → −0.061 across the burning branches, reaching the correlation's negative,
 wake-type branch at the harder throttles.

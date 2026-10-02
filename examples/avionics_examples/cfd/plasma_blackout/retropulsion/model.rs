@@ -637,6 +637,7 @@ pub fn trace_path(file: &str) -> PathBuf {
 /// fail for a reason that has nothing to do with the flight.
 #[derive(Debug, Clone)]
 pub struct LegSet {
+    /// Coupled steps flown across all four legs.
     pub steps: usize,
     /// Each leg's captured step error, named. Empty when every leg flew clean.
     pub leg_errors: Vec<(String, String)>,

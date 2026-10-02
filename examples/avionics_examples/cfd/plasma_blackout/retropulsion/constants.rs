@@ -156,7 +156,7 @@ pub const DRAG_COLLAPSE_MIN: f64 = 0.10;
 /// bounded the difference between two interpolations of one CSV, computed before any march and
 /// invariant to the entire descent.
 ///
-/// The flown separation is close to but not equal to the 20.43 m difference in demanded margin,
+/// The flown separation is close to but not equal to the 14.78 m difference in demanded margin,
 /// because `ignition_altitude_kernel` solves a stopping distance rather than adding an offset — the
 /// extra margin also changes the mass and speed the burn starts from. That the two numbers differ is
 /// the point: one is arithmetic, the other is a flight.
