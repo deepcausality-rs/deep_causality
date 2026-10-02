@@ -49,11 +49,13 @@ mod model;
 mod utils_print;
 
 use avionics_examples::shared::constants::DT_FLIGHT;
+use avionics_examples::shared::trace::{self, BURN_TRACE_FIELD, TRACE_FIELD, row_count};
 use avionics_examples::shared::{utils, world};
 use deep_causality_cfd::{
     CfdFlow, CompressibleMarchConfig, IGNITION_COMMIT_AIDED_FIELD, IGNITION_COMMIT_MACH_FIELD,
     IGNITION_COMMIT_Q_FIELD, IGNITION_COMMIT_SIGMA_FIELD, IGNITION_COMMIT_STEP_FIELD,
-    IGNITION_LATCH_FIELD, MarchStop, PhysicsError, StudyError, StudyView, Verdict,
+    IGNITION_LATCH_FIELD, IoAction, MarchStop, PhysicsError, StudyError, StudyView, Verdict,
+    write_rows,
 };
 use deep_causality_haft::LogAddEntry;
 use deep_causality_num::lift;
@@ -97,11 +99,11 @@ fn main() -> ExitCode {
         let corridor_world = model::trunk_world(constants::ONSET_STEPS, informed.rho_scale)
             .map_err(leg_err("setup: corridor world"))?;
         let onset = CfdFlow::march(&corridor_world)
-            .couple(world::powered_descent_coupling(
+            .couple(trace::burn_traced(world::powered_descent_coupling(
                 informed.bias_departure,
                 0,
                 informed.margin_m,
-            ))
+            )))
             .trigger(utils::trigger())
             .kappa(lift(0.0))
             .from_field(seed_field)
@@ -119,11 +121,11 @@ fn main() -> ExitCode {
         // The trunk's own clock, so gate (4g) can put the fan-out's per-step cost against it.
         let trunk_clock = Instant::now();
         let burn = CfdFlow::march(&burn_world)
-            .couple(world::powered_descent_coupling(
+            .couple(trace::burn_traced(world::powered_descent_coupling(
                 informed.bias_departure,
                 0,
                 informed.margin_m,
-            ))
+            )))
             .trigger(utils::trigger())
             .kappa(lift(0.0))
             .from(onset.state())
@@ -153,6 +155,8 @@ fn main() -> ExitCode {
         let committed_capture: RefCell<Option<model::BranchRow>> = RefCell::new(None);
         // The committed branch's measured rank, captured where the reports are still in hand.
         let bond_capture: RefCell<Option<usize>> = RefCell::new(None);
+        // The roster's rows, kept for the branch-trace table.
+        let roster_capture: RefCell<Vec<model::BranchRow>> = RefCell::new(Vec::new());
         let fan_out_clock = Instant::now();
         let branches = CfdFlow::study("mid-burn throttle roster")
             .cases(model::throttle_roster())
@@ -162,6 +166,7 @@ fn main() -> ExitCode {
             .reduce(move |run| model::score_branch(run, fork))
             .inspect(|rows| {
                 utils_print::print_branches(rows);
+                *roster_capture.borrow_mut() = rows.to_vec();
                 // Commit the branch that shed the most velocity over the continuation — a trajectory
                 // outcome, not an instantaneous force reading. `total_cmp` rather than an unwrapping
                 // `partial_cmp`: the witnesses are checked finite where they are read, and a total
@@ -196,11 +201,11 @@ fn main() -> ExitCode {
         let burn_out_world = model::burn_trunk_world(constants::BURN_OUT_STEPS, informed.rho_scale)
             .map_err(leg_err("setup: burn-out world"))?;
         let burn_out = CfdFlow::march(&burn_out_world)
-            .couple(world::powered_descent_coupling(
+            .couple(trace::burn_traced(world::powered_descent_coupling(
                 informed.bias_departure,
                 0,
                 informed.margin_m,
-            ))
+            )))
             .trigger(utils::trigger())
             .kappa(lift(0.0))
             .from(burn.state())
@@ -237,12 +242,12 @@ fn main() -> ExitCode {
 
         let terminal = CfdFlow::march(&terminal_world)
             .march_with(MarchStop::Fixed(constants::TERMINAL_STEPS))
-            .couple(world::powered_descent_coupling_with(
+            .couple(trace::burn_traced(world::powered_descent_coupling_with(
                 informed.bias_departure,
                 0,
                 informed.margin_m,
                 true,
-            ))
+            )))
             .trigger(utils::trigger())
             .kappa(lift(0.0))
             .from(burn_out.state())
@@ -254,12 +259,12 @@ fn main() -> ExitCode {
         // table at the standard day instead of the day it is actually in.
         let uninformed_terminal = CfdFlow::march(&uninformed_world)
             .march_with(MarchStop::Fixed(constants::TERMINAL_STEPS))
-            .couple(world::powered_descent_coupling_with(
+            .couple(trace::burn_traced(world::powered_descent_coupling_with(
                 informed.bias_departure,
                 0,
                 uninformed.margin_m,
                 true,
-            ))
+            )))
             .trigger(utils::trigger())
             .kappa(lift(0.0))
             .from(burn_out.state())
@@ -267,6 +272,48 @@ fn main() -> ExitCode {
             .map_err(leg_err("act 4b: uninformed terminal descent"))?;
 
         let belief = model::belief_outcome(terminal.field(), uninformed_terminal.field());
+
+        // ── The per-step traces: the informed descent across all four legs, every roster branch
+        // after the fork, and the uninformed landing leg. Each pause's field holds every row flown up
+        // to it, so its row count ends its leg.
+        let rows_at = |field: &deep_causality_cfd::CoupledField<FloatType>| {
+            row_count(field.scalar(TRACE_FIELD).unwrap_or(&[]))
+        };
+        let leg_ends = [
+            rows_at(onset.field()),
+            rows_at(burn.field()),
+            rows_at(burn_out.field()),
+            rows_at(terminal.field()),
+        ];
+        let traces = |field: &deep_causality_cfd::CoupledField<FloatType>, from: usize| {
+            model::descent_trace_rows(
+                field.scalar(TRACE_FIELD).unwrap_or(&[]),
+                field.scalar(BURN_TRACE_FIELD).unwrap_or(&[]),
+                from,
+                &leg_ends,
+            )
+        };
+        let write_err = |e: deep_causality_file::DataLoadingError| {
+            leg_err("trace output")(PhysicsError::CalculationError(format!("{e}")))
+        };
+        write_rows(
+            model::trace_path("retropulsion_trace.csv"),
+            traces(terminal.field(), 0),
+        )
+        .run()
+        .map_err(write_err)?;
+        write_rows(
+            model::trace_path("retropulsion_uninformed_trace.csv"),
+            traces(uninformed_terminal.field(), leg_ends[2]),
+        )
+        .run()
+        .map_err(write_err)?;
+        write_rows(
+            model::trace_path("retropulsion_branch_trace.csv"),
+            model::branch_trace_rows(&roster_capture.borrow(), leg_ends[1]),
+        )
+        .run()
+        .map_err(write_err)?;
         utils_print::print_belief(&informed, &uninformed, &belief);
 
         // ── The witnesses the trajectory gates read, every one a typed accessor. ──────────────

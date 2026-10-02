@@ -10,6 +10,10 @@
 use crate::FloatType;
 use crate::constants::*;
 use avionics_examples::shared::stages::FROZEN_DRAG_FRACTION_FIELD;
+use avionics_examples::shared::trace::{
+    ALTITUDE, AXIAL_ACCEL, BURN_TRACE_FIELD, DESCENT_RATE, DV_ACTUAL, DV_FROZEN, GNSS_DENIED, MACH,
+    NAV_ERR, PRESERVED_DRAG, PROPELLANT, THROTTLE, TRACE_FIELD, burn_rows, trace_rows,
+};
 use avionics_examples::shared::{constants::*, utils, world};
 use deep_causality_cfd::{
     AtmosphereRow, CaseRun, CompressibleMarchConfig, CoupledField, FromTableRow, GateSeq, IoAction,
@@ -302,6 +306,9 @@ pub struct BranchRow {
     pub bond_growth: FloatType,
     /// The rank this branch's final marched state actually reached, as the carrier measured it.
     pub peak_bond: Option<usize>,
+    /// The recorded flight and burn traces: the trunk's rows up to the fork, then the branch's own.
+    pub trace: Vec<FloatType>,
+    pub burn_trace: Vec<FloatType>,
 }
 
 impl TableRow for BranchRow {
@@ -451,7 +458,160 @@ pub fn score_branch(
             .map(|g| g.lift())
             .unwrap_or_else(|| lift(-1.0)),
         peak_bond: report.peak_bond(),
+        trace: report
+            .series(&format!("final_{TRACE_FIELD}"))
+            .unwrap_or(&[])
+            .to_vec(),
+        burn_trace: report
+            .series(&format!("final_{BURN_TRACE_FIELD}"))
+            .unwrap_or(&[])
+            .to_vec(),
     })
+}
+
+// ── Per-step outputs ────────────────────────────────────────────────────────────────────────
+
+/// One step of a flown descent: flight state, link and navigation, and the burn.
+#[derive(Debug, Clone, Copy)]
+pub struct DescentTraceRow {
+    pub leg: FloatType,
+    pub t: FloatType,
+    pub altitude: FloatType,
+    pub mach: FloatType,
+    pub gnss_denied: FloatType,
+    pub nav_err: FloatType,
+    pub throttle: FloatType,
+    pub propellant: FloatType,
+    pub descent_rate: FloatType,
+}
+
+impl TableRow for DescentTraceRow {
+    type Scalar = FloatType;
+    const SCHEMA: &'static [(&'static str, &'static str)] = &[
+        ("leg", "-"),
+        ("t", "s"),
+        ("altitude", "m"),
+        ("mach", "-"),
+        ("gnss_denied", "-"),
+        ("nav_err", "m"),
+        ("throttle", "-"),
+        ("propellant", "kg"),
+        ("descent_rate", "m/s"),
+    ];
+    fn cells(&self) -> Vec<FloatType> {
+        vec![
+            self.leg,
+            self.t,
+            self.altitude,
+            self.mach,
+            self.gnss_denied,
+            self.nav_err,
+            self.throttle,
+            self.propellant,
+            self.descent_rate,
+        ]
+    }
+}
+
+/// The descent rows of a field's flight and burn traces from row `from` on, labelled by leg.
+pub fn descent_trace_rows(
+    trace: &[FloatType],
+    burn_trace: &[FloatType],
+    from: usize,
+    leg_ends: &[usize],
+) -> Vec<DescentTraceRow> {
+    let burn = burn_rows(burn_trace);
+    trace_rows(trace, from, leg_ends)
+        .into_iter()
+        .zip(burn.iter().skip(from))
+        .map(|(r, b)| DescentTraceRow {
+            leg: r.leg,
+            t: r.t,
+            altitude: r.values[ALTITUDE],
+            mach: r.values[MACH],
+            gnss_denied: r.values[GNSS_DENIED],
+            nav_err: r.values[NAV_ERR],
+            throttle: b[THROTTLE],
+            propellant: b[PROPELLANT],
+            descent_rate: b[DESCENT_RATE],
+        })
+        .collect()
+}
+
+/// One step of one roster branch after the fork.
+#[derive(Debug, Clone, Copy)]
+pub struct BranchTraceRow {
+    pub commanded_throttle: FloatType,
+    pub t: FloatType,
+    pub altitude: FloatType,
+    pub mach: FloatType,
+    pub throttle: FloatType,
+    pub axial_accel: FloatType,
+    pub preserved_drag: FloatType,
+    pub dv_actual: FloatType,
+    pub dv_frozen: FloatType,
+    pub propellant: FloatType,
+}
+
+impl TableRow for BranchTraceRow {
+    type Scalar = FloatType;
+    const SCHEMA: &'static [(&'static str, &'static str)] = &[
+        ("commanded_throttle", "-"),
+        ("t", "s"),
+        ("altitude", "m"),
+        ("mach", "-"),
+        ("throttle", "-"),
+        ("axial_accel", "m/s2"),
+        ("preserved_drag", "- (NaN: no decrement applied)"),
+        ("dv_actual", "m/s"),
+        ("dv_frozen", "m/s"),
+        ("propellant", "kg"),
+    ];
+    fn cells(&self) -> Vec<FloatType> {
+        vec![
+            self.commanded_throttle,
+            self.t,
+            self.altitude,
+            self.mach,
+            self.throttle,
+            self.axial_accel,
+            self.preserved_drag,
+            self.dv_actual,
+            self.dv_frozen,
+            self.propellant,
+        ]
+    }
+}
+
+/// Every roster branch's steps after the fork at row `fork_rows`, in roster order.
+pub fn branch_trace_rows(rows: &[BranchRow], fork_rows: usize) -> Vec<BranchTraceRow> {
+    rows.iter()
+        .flat_map(|b| {
+            let burn = burn_rows(&b.burn_trace);
+            trace_rows(&b.trace, fork_rows, &[])
+                .into_iter()
+                .zip(burn.iter().skip(fork_rows))
+                .map(move |(r, s)| BranchTraceRow {
+                    commanded_throttle: b.commanded_throttle,
+                    t: r.t,
+                    altitude: r.values[ALTITUDE],
+                    mach: r.values[MACH],
+                    throttle: s[THROTTLE],
+                    axial_accel: s[AXIAL_ACCEL],
+                    preserved_drag: s[PRESERVED_DRAG],
+                    dv_actual: s[DV_ACTUAL],
+                    dv_frozen: s[DV_FROZEN],
+                    propellant: s[PROPELLANT],
+                })
+        })
+        .collect()
+}
+
+/// Where a per-step output file is written, beside the branch table.
+pub fn trace_path(file: &str) -> PathBuf {
+    avionics_examples::paths::manifest_dir()
+        .join("cfd/plasma_blackout/retropulsion")
+        .join(file)
 }
 
 // ── Leg and belief witnesses ────────────────────────────────────────────────────────────────

@@ -27,6 +27,7 @@ pub const TRACE_COLUMNS: usize = 16;
 
 /// Positions of the recorded values within [`TraceRow::values`].
 pub const ALTITUDE: usize = 0;
+pub const MACH: usize = 1;
 pub const PLASMA_FREQ: usize = 4;
 pub const GNSS_DENIED: usize = 5;
 pub const NAV_ERR: usize = 8;
@@ -106,6 +107,68 @@ pub fn traced<S: PhysicsStage<2, FloatType>>(stage: S) -> impl PhysicsStage<2, F
 /// The number of complete rows in a recorded trace.
 pub fn row_count(trace: &[FloatType]) -> usize {
     trace.len() / TRACE_COLUMNS
+}
+
+/// The field scalar the burn recorder appends to.
+pub const BURN_TRACE_FIELD: &str = "burn_trace";
+
+/// Values the burn recorder appends per step.
+pub const BURN_COLUMNS: usize = 7;
+
+/// Positions of the recorded values within a burn-trace row.
+pub const THROTTLE: usize = 0;
+pub const PROPELLANT: usize = 1;
+pub const DESCENT_RATE: usize = 2;
+pub const AXIAL_ACCEL: usize = 3;
+pub const PRESERVED_DRAG: usize = 4;
+pub const DV_ACTUAL: usize = 5;
+pub const DV_FROZEN: usize = 6;
+
+/// Appends one row of [`BURN_COLUMNS`] powered-descent values per coupled step to
+/// [`BURN_TRACE_FIELD`]: the throttle the propulsion stages flew, propellant, descent rate, axial
+/// deceleration, the preserved-drag fraction, and the two velocity increments `AxialWitness`
+/// accumulates. The preserved-drag fraction is NaN on any step the field carries none.
+#[derive(Debug, Clone, Copy)]
+pub struct BurnRecorder;
+
+impl PhysicsStage<2, FloatType> for BurnRecorder {
+    fn apply(
+        &self,
+        _ctx: &StepContext<'_, 2, FloatType>,
+        field: &mut CoupledField<FloatType>,
+    ) -> Result<(), PhysicsError> {
+        let row: [FloatType; BURN_COLUMNS] = [
+            utils::scalar0(field, "realized_throttle"),
+            utils::scalar0(field, "propellant"),
+            utils::scalar0(field, "descent_rate"),
+            utils::scalar0(field, "axial_accel"),
+            field
+                .scalar("preserved_drag_fraction")
+                .and_then(|s| s.first().copied())
+                .unwrap_or(FloatType::NAN),
+            utils::scalar0(field, "dv_actual"),
+            utils::scalar0(field, "dv_frozen"),
+        ];
+        match field.scalar_mut(BURN_TRACE_FIELD) {
+            Some(trace) => trace.extend_from_slice(&row),
+            None => field.set_scalar(BURN_TRACE_FIELD, row.to_vec()),
+        }
+        Ok(())
+    }
+}
+
+/// `stage` followed by the [`TraceRecorder`] and the [`BurnRecorder`].
+pub fn burn_traced<S: PhysicsStage<2, FloatType>>(stage: S) -> impl PhysicsStage<2, FloatType> {
+    Coupling::between_steps()
+        .then(stage)
+        .then(TraceRecorder)
+        .then(BurnRecorder)
+        .build()
+}
+
+/// The complete rows of a recorded burn trace.
+pub fn burn_rows(trace: &[FloatType]) -> &[[FloatType; BURN_COLUMNS]] {
+    trace.as_chunks::<BURN_COLUMNS>().0
 }
 
 /// One recorded step, labelled with the leg it was flown in and its flight time.

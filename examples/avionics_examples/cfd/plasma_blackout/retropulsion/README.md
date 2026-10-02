@@ -211,6 +211,9 @@ Every simplification is documented in [`constants.rs`](constants.rs) and in the 
 | [`constants.rs`](constants.rs)     | This example's knobs: horizons, the roster, the earned bands      |
 | [`utils_print.rs`](utils_print.rs) | Console rendering                                                 |
 | [`output.txt`](output.txt)         | A captured release run                                            |
+| `retropulsion_trace.csv`           | Written by the run: the informed descent, one row per coupled step across all four legs |
+| `retropulsion_branch_trace.csv`    | Written by the run: each roster branch, one row per step from the fork |
+| `retropulsion_uninformed_trace.csv` | Written by the run: the landing leg flown with the standard-day margin |
 
 The vehicle, the propulsion constants, the atmosphere, the carrier anchors, and the powered-descent coupling stack are
 shared with the [corridor](../corridor/README.md) and
