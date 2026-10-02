@@ -20,6 +20,7 @@ produces: A landing at 1.81 m/s, which closes the loop the first two walks opene
 source: examples/avionics_examples/cfd/plasma_blackout/retropulsion
 ---
 import { MACHINE } from '../../../consts';
+import RetroRun from '../../../components/tutorial/RetroRun.astro';
 
 Run the retropulsion program and the vehicle lands at 1.81 m/s. It reads walk 2's
 table in flight. Guidance sized from the measured
@@ -33,6 +34,8 @@ displaces the bow shock and destroys drag. Jarvinen and Adams measured this in 1
 One caveat governs the walk: the drag change comes from the cited Jarvinen-Adams
 correlation, not from the simulated plume, which does not reproduce the collapse at
 this fidelity (see the [capability boundaries](/boundaries/#srp)).
+
+<RetroRun />
 
 ## Before you start
 
