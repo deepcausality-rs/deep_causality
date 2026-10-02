@@ -106,4 +106,5 @@ The physics, constants, stages, and coupling stack are shared with the corridor 
 `constants.rs`](constants.rs): the six conditions, the IMU thermal coefficient, the gate thresholds), the world and row
 logic ([`model.rs`](model.rs)), and the study itself ([`main.rs`](main.rs)). Beside the table the run writes
 `weather_trace.csv` (draw 0 of each world, one row per coupled step: altitude, plasma frequency, link state, navigation
-error) and `weather_draws.csv` (every draw's blackout window, largest drift in the dark, and terminal error).
+error, Mach, speed, peak electron density, peak heat flux) and `weather_draws.csv` (every draw's blackout window,
+largest drift in the dark, and terminal error).

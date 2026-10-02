@@ -60,7 +60,7 @@ fn main() -> ExitCode {
     let table_path = model::get_table_path();
 
     // The audit-log base path: one file per (condition, draw) plus a main spawn/rejoin file land
-    // under this directory (the campaign-level `save_log` verb). Run artifacts, git-ignored.
+    // under this directory (the campaign-level `save_log` verb); each run rewrites them.
     let audit_dir = model::get_audit_dir();
 
     let outcome: Result<Verdict, StudyError> = (|| {

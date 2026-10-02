@@ -16,7 +16,8 @@ use crate::constants::{
 };
 use avionics_examples::shared::constants::DT_FLIGHT;
 use avionics_examples::shared::trace::{
-    ALTITUDE, GNSS_DENIED, NAV_ERR, PLASMA_FREQ, TRACE_FIELD, trace_rows,
+    ALTITUDE, GNSS_DENIED, HEAT_FLUX, MACH, NAV_ERR, NE_PEAK, PLASMA_FREQ, SPEED, TRACE_FIELD,
+    trace_rows,
 };
 use avionics_examples::shared::utils::norm3;
 use avionics_examples::shared::world;
@@ -169,6 +170,10 @@ pub struct WeatherTraceRow {
     pub plasma_freq: FloatType,
     pub gnss_denied: FloatType,
     pub nav_err: FloatType,
+    pub mach: FloatType,
+    pub speed: FloatType,
+    pub ne_peak: FloatType,
+    pub heat_flux: FloatType,
 }
 
 impl TableRow for WeatherTraceRow {
@@ -180,6 +185,10 @@ impl TableRow for WeatherTraceRow {
         ("plasma_freq", "rad/s"),
         ("gnss_denied", "-"),
         ("nav_err", "m"),
+        ("mach", "-"),
+        ("speed", "m/s"),
+        ("ne_peak", "m^-3"),
+        ("heat_flux", "W/m2"),
     ];
     fn cells(&self) -> Vec<FloatType> {
         vec![
@@ -189,6 +198,10 @@ impl TableRow for WeatherTraceRow {
             self.plasma_freq,
             self.gnss_denied,
             self.nav_err,
+            self.mach,
+            self.speed,
+            self.ne_peak,
+            self.heat_flux,
         ]
     }
 }
@@ -206,6 +219,10 @@ pub fn trace_table(rows: &[WorldRow]) -> Vec<WeatherTraceRow> {
                     plasma_freq: r.values[PLASMA_FREQ],
                     gnss_denied: r.values[GNSS_DENIED],
                     nav_err: r.values[NAV_ERR],
+                    mach: r.values[MACH],
+                    speed: r.values[SPEED],
+                    ne_peak: r.values[NE_PEAK],
+                    heat_flux: r.values[HEAT_FLUX],
                 })
         })
         .collect()
