@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.10](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_uncertain-v0.5.9...deep_causality_uncertain-v0.5.10) - 2026-10-02
+
+### Fixed
+
+- *(clippy)* clear clippy 1.99 lints in tests and one cfd example
+- *(deep_causality_uncertain)* decide the SPRT outright when its band reaches 0 or 1
+
 ## [0.5.9](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_uncertain-v0.5.8...deep_causality_uncertain-v0.5.9) - 2026-09-29
 
 ### Added
