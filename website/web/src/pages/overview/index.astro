@@ -26,7 +26,7 @@ const unifiedMathReadme = `${GITHUB_URL}/blob/main/deep_causality_unified_math/R
     <div class="prose">
       <h2>The idea: two layers of composition</h2>
       <p>
-        The classical formulation of causality, "if A then B, and if not A then not B", ties the
+        The classical formulation of causality, "if A then B, and if not A then not B," ties the
         direction of cause to the direction of time, so it cannot express the time-symmetric
         fundamental equations of physics.
       </p>
@@ -95,8 +95,8 @@ const unifiedMathReadme = `${GITHUB_URL}/blob/main/deep_causality_unified_math/R
       <h2>Built for assurance</h2>
       <ul>
         <li><strong>No unsafe code.</strong> A workspace lint sets <code>unsafe_code = "forbid"</code>, and every crate compiles under it.</li>
-        <li><strong>A small supply chain.</strong> 26 of the 33 library crates depend only on other workspace crates at runtime.</li>
-        <li><strong>Bare metal.</strong> The causal monad and many other crates build without the standard library; CI builds them for <code>thumbv7em-none-eabihf</code>.</li>
+        <li><strong>A small supply chain.</strong> 26 of the 33 library crates have no external runtime dependencies.</li>
+        <li><strong>Bare metal.</strong> The causal monad and many other crates build without the standard library.</li>
         <li><strong>Machine-checked laws.</strong> Lean 4 proofs cover the monad laws and more, and a Rust test pins the implementation to each theorem's statement.</li>
       </ul>
 

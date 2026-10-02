@@ -7,64 +7,59 @@ import { DOCS_URL, GITHUB_URL } from '../../consts';
 
 const themes = { light: 'github-light', dark: 'github-dark' } as const;
 
-const balloon = `// model_config.rs: a regime detector compares the two mechanisms in the air measured now.
-fn radiator_beats_fan(r: Reading) -> PropagatingEffect<bool> {
-    let fan = fan_heat_w(air_density(r.pressure_kpa, r.air_c), COOL_ON_C, r.air_c);
-    PropagatingEffect::pure(radiator_heat_w(COOL_ON_C, r.air_c) > REGIME_HYSTERESIS * fan)
+const battery = `// model_config.rs: a charge rule, and the rule that reads the temperature trend.
+fn below_45_c(r: Reading) -> PropagatingEffect<bool> {
+    PropagatingEffect::pure(r.cell_c < COOLED_FULL_BELOW_C)
 }
 
-// model_config.rs: a regime change replaces the two cooling states while the machine runs.
-controller.update_single_state((
-    state(COOL_ON, cell_needs_cooling),
-    CausalAction::new(on, on_descr, version),
-))?;
-controller.update_single_state((
-    state(COOL_OFF, cell_cool_enough),
-    CausalAction::new(off, off_descr, version),
-))?;
+fn cooling_lost(r: Reading) -> PropagatingEffect<bool> {
+    let allowed = rise_c(r.amps, r.previous_c, COOLING_PUMPED);
+    PropagatingEffect::pure(r.cell_c - r.previous_c > allowed + COOLING_LOSS_MARGIN_C)
+}
 
-// main.rs, without the printing: once a minute, reason about the regime,
-// then let every state act on the same reading.
-while !flight.landed() {
-    let reading = flight.reading();
-    let next = model_config::next_regime(regime, &reading, &detectors)?;
-    if next != regime {
-        cooling_version += 1;
-        model_config::install_cooling(&controller, next, cooling_version)?;
-        regime = next;
+// model_config.rs: replace the three charge states while the machine runs.
+pub fn install_derated_law(controller: &Controller, version: usize) -> Result<(), UpdateError> {
+    derated_law(version)
+        .into_iter()
+        .try_for_each(|state_action| controller.update_single_state(state_action))
+}
+
+// main.rs, without the printing: once a minute, reason about the cooling,
+// then let every charge state act on the same reading.
+while !cell.done() {
+    let reading = cell.reading();
+    if adaptive && !derated && model_config::cooling_lost_in(&detector, &reading)? {
+        model_config::install_derated_law(&controller, DERATED_VERSION)?;
+        derated = true;
     }
     let frame = PropagatingEffect::pure(reading);
     for id in STATES {
         controller.eval_single_state(id, &frame)?;
     }
-    flight.step();
+    let amps = model::charger_a();
+    cell.charge_one_minute(amps);
 }`;
 
-const balloonOut = `time         phase      alt km   air °C    sun cell °C  pack  cooling   heater charge (cell / budget)
-day 1 10:00  morning       0.0     32.0    884    38.0   80%  fan       off    half (full / half)
-day 1 10:03  morning       0.9     26.1    917    38.4   80%  fan       off    full (full / full)
-day 1 10:35  morning      10.5    -36.2   1183    29.8   90%  off       off    full (full / full)
-day 1 10:59  morning      17.7    -56.5  >> cooling states now use the radiator (version 2)
-day 1 11:05  noon         19.5    -56.5   1300    35.1   99%  radiator  off    full (full / full)
-day 1 11:33  noon         20.0    -56.5   1331    30.0  100%  off       off    full (full / full)
-   ... the radiator cycles between 30 °C and 35 °C ...
-day 1 13:20  afternoon    20.0    -56.5   1259    29.9  100%  off       off    full (full / full)
-day 1 13:30  afternoon    20.0    -46.5   1857    31.7  100%  off       off    half (full / half)
-day 1 13:40  afternoon    20.0    -46.5   1822    35.3  100%  radiator  off    half (full / half)
-day 1 14:11  afternoon    20.0    -46.5   1690    34.4  100%  radiator  off    full (full / full)
-day 1 15:16  afternoon    20.0    -46.5   1319    29.9  100%  off       off    full (full / full)
-day 1 15:41  afternoon    20.0    -46.5   1146    35.0  100%  radiator  off    full (full / full)
-day 1 16:04  afternoon    20.0    -56.5    650    29.8  100%  off       off    full (full / full)
-day 1 17:35  evening      20.0    -56.5    146    24.9  100%  off       off    none
-day 1 19:58  night        20.0    -56.5      0     4.9   95%  off       on     none
-   ... the heater cycles between 5 °C and 15 °C through the night ...
-day 2 06:26  morning      20.0    -56.5    152    14.4   30%  off       on     full (full / full)
-day 2 06:32  morning      20.0    -56.5    186    15.1   31%  off       off    full (full / full)
-day 2 07:04  morning      16.0    -56.5  >> cooling states now use the fan (version 3)
+const batteryOut = `A lithium-ion cell charges from 20 % to 80 %. Its coolant pump stops after 10 minutes.
 
-Landed. Cell stayed between 4.9 °C and 38.4 °C; pack charge never fell below 30 % and ended at 50 %.`;
+The controller keeps the charge law for a cooled cell:
+ minute  cell °C  charge  current
+      1     25.0  20.0 %    50 A
+     22     45.2  55.0 %    25 A
+Reached 80.8 % after 52 minutes. The cell peaked at 47.8 °C and spent 32 minutes above 45 °C.
 
-const balloonExample = `${GITHUB_URL}/tree/main/examples/csm_examples/csm_weather_balloon`;
+The controller replaces its charge states when it detects the loss of cooling:
+ minute  cell °C  charge  current
+      1     25.0  20.0 %    50 A
+     12  >> the cell rose 1.12 K in the last minute; the pumped coolant allows 0.52 K.
+         >> charge states replaced by the derated law, version 2: 20 A below 40 °C, 10 A to 45 °C.
+     12     34.6  38.3 %    20 A
+Reached 80.3 % after 74 minutes. The cell peaked at 39.1 °C and spent 0 minutes above 45 °C.
+
+Replacing the charge states cost 22 minutes and kept the cell 8.7 K cooler at its peak.`;
+
+const batteryExample = `${GITHUB_URL}/tree/main/examples/csm_examples/csm_battery`;
+const batteryReadme = `${GITHUB_URL}/blob/main/README.md`;
 const csmConcept = `${DOCS_URL}/concepts/csm/`;
 ---
 <BaseLayout
@@ -99,36 +94,28 @@ const csmConcept = `${DOCS_URL}/concepts/csm/`;
         <code>eval_single_state(id, data)</code> evaluates one state's causaloid on the data you pass and fires the action if the result is active; <code>eval_all_states</code> does the same for every state on the data each state stores.
       </p>
 
-      <h2>A weather balloon that keeps its battery in one envelope</h2>
+      <h2>A battery that loses its coolant mid-charge</h2>
       <p>
-        A long-duration weather balloon powers its sensors from a lithium-ion pack that solar panels
-        recharge. It climbs at 5 m/s to 20 km, floats through an afternoon and a night, and descends
-        at dawn. The envelope never changes: charge only between 0 °C and 45 °C, cool the pack above
-        35 °C, heat it below 5 °C. The means of staying inside it change with the air and the sun.
+        A lithium-ion cell charges from 20 % to 80 %, with the cell model of the <a href={batteryReadme}>project README's battery example</a>. After ten minutes its coolant pump stops. Once a
+        minute the controller reads the cell temperature and evaluates three states. Each pairs a
+        rule on the temperature with an action that sets the charger. For a cooled cell the law is
+        50 A below 45 °C, 25 A up to 55 °C, and none above.
       </p>
       <p>
-        Once a minute the controller reads pressure, air temperature, cell temperature and sunlight;
-        it never reads the altitude or the clock. A fan's heat transfer falls with air density and a
-        radiator's does not, so two causaloids compare the heat each removes in the air measured now.
-        Ten states pair rules with actions: cooling, heating, and two charge limits. The cell window
-        limits charging by the temperature the cell has reached; the heat budget limits it by
-        whether the cooling could hold 45 °C in the present air and sun. The charger obeys the
-        stricter limit. The excerpt below comes from the full program.
+        A fourth causaloid watches the temperature trend. It compares the last minute's rise with the
+        rise the pumped coolant allows for the current that flowed. When it finds the cooling lost,
+        the controller replaces the three charge states with a derated law: 20 A below 40 °C, 10 A
+        up to 45 °C, and none above. The identifiers stay; the rules and actions behind them change,
+        and their version rises to 2. The program charges the cell twice, once with the law fixed and
+        once with the replacement.
       </p>
-      <Code code={balloon} lang="rust" themes={themes} defaultColor={false} wrap />
-      <Code code={balloonOut} lang="text" themes={themes} defaultColor={false} wrap />
+      <Code code={battery} lang="rust" themes={themes} defaultColor={false} wrap />
+      <Code code={batteryOut} lang="text" themes={themes} defaultColor={false} />
       <p>
-        In −56.5 °C air the sunlit pack still reaches 35 °C, so by day the radiator does the work.
-        It takes over from the fan at 17.7 km on the way up and hands back at 16.0 km on the way
-        down; the crossover depends on air temperature as well as density, so no fixed altitude marks
-        it. Each swap replaces the two cooling states while the machine runs and raises their
-        version. Their rules stay, because the envelope stays; only their actions change.
-      </p>
-      <p>
-        At 13:30 the balloon drifts into air 10 K warmer than the standard atmosphere, above a cloud
-        deck that reflects extra sunlight onto the gondola. The heat budget halves the charge rate
-        with the cell at 31.7 °C; the cell window alone would wait for 40 °C. Overnight the heater
-        holds the cell between 5 °C and 15 °C, and the pack never drops below 30 %. The <a href={balloonExample}>weather balloon example</a> holds the full program and lists its model assumptions.
+        With the law fixed, the cell reaches 80 % in 52 minutes but spends 32 of them above 45 °C,
+        where charging ages a lithium-ion cell faster. The detector fires at minute 12: the cell rose
+        1.12 K in a minute, and the pump allows 0.52 K. With the derated law the charge takes 74
+        minutes, and the cell peaks at 39.1 °C. The <a href={batteryExample}>battery example</a> holds the full program.
       </p>
 
       <h2>When a result counts as active</h2>
@@ -164,17 +151,6 @@ const csmConcept = `${DOCS_URL}/concepts/csm/`;
       <p>
         The machine fires an active state's action without consulting any norms. To check an action
         first, describe it as a <code>ProposedAction</code>, evaluate it with the <a href="/overview/effect-ethos/">Effect Ethos</a>, and call the machine only on a permitting verdict. <code>ProposedAction</code> and <code>ActionParameterValue</code> live in <code>deep_causality</code>, where the Ethos crate reads them. The <a href="/examples/effect-ethos/">Effect Ethos example</a> runs a machine and an Ethos side by side.
-      </p>
-
-      <h2>What the machine leaves to you</h2>
-      <p>
-        An action, a plain function with no arguments, receives neither the result nor the data that
-        triggered it; an action that needs a value, such as the temperature that crossed the limit,
-        must read it from a static. The balloon's actions write atomic registers that the simulated
-        hardware reads. The machine stores its states in a hash map, so <code>eval_all_states</code> visits them in no fixed order and stops at the first error, leaving
-        the remaining states unevaluated.
-      </p>
-      <p>
         The <a href="/examples/sensor-monitoring-csm/">sensor monitoring example</a> wires a machine
         to smoke, fire and explosion sensors, and the <a href={csmConcept}>CSM concept page</a> covers
         the API.

@@ -23,7 +23,7 @@
     "@astrojs/check": "^0.9.10",
     "shiki": "4.4.3",
     "typescript": "^6.0.3",
-    "wrangler": "4.144.0"
+    "wrangler": "4.145.0"
   },
   "packageManager": "pnpm@11.9.0"
 }

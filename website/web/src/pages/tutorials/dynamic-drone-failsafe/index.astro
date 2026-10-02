@@ -33,7 +33,7 @@ cargo run --release -p dynamic_drone_failsafe --example drone_failsafe_part_5`;
 ---
 <BaseLayout
   title="Dynamic drone fail-safe — DeepCausality"
-  description="A five-part tutorial that builds a drone fail-safe with dynamic causality, dynamic context, dynamic action and the Effect Ethos, and verifies it over 1,000 randomised scenarios."
+  description="A five-part tutorial that builds a drone fail-safe with dynamic causality, dynamic context, dynamic action and the Effect Ethos, and verifies it over 1,000 randomized scenarios."
 >
   <SiteHeader />
   <article class="static-page">
@@ -56,18 +56,18 @@ cargo run --release -p dynamic_drone_failsafe --example drone_failsafe_part_5`;
     <div class="prose">
       <h2>Two fail-safes failed by design</h2>
       <p>
-        On 14 July 2023, 500 Damoda Newton V2.2 show drones launched over Victoria Harbour in
+        On July 14, 2023, 500 Damoda Newton V2.2 show drones launched over Victoria Harbour in
         Melbourne's Docklands. Wind at more than twice their limit pushed them off station. They
         collided, strayed from the operating area and tripped their fail-safes. 427 dropped into
-        the harbour; divers recovered 236. No one was hurt (<a href={atsb}>ATSB, AO-2023-033</a>).
+        the harbor; divers recovered 236. No one was hurt (<a href={atsb}>ATSB, AO-2023-033</a>).
       </p>
       <p>
-        On 21 December 2024, 500 UVify IFO show drones launched over Lake Eola in Orlando, Florida.
+        On December 21, 2024, 500 UVify IFO show drones launched over Lake Eola in Orlando, Florida.
         Setup errors had shifted the show about 18 m toward the audience, and drones collided as
         they climbed. One streaked toward the spectators. A drone struck a seven-year-old boy in
         the face and chest (<a href={ntsb}>NTSB, DCA25LA065</a>); his parents say he needed
         open-heart surgery (<a href={fox35}>FOX 35, September 2026</a>). The NTSB traced the
-        probable cause to the setup: a mislocated show centre, a wrong heading, a nonstandard
+        probable cause to the setup: a mislocated show center, a wrong heading, a nonstandard
         geofence and no independent check.
       </p>
       <p>
@@ -79,7 +79,7 @@ cargo run --release -p dynamic_drone_failsafe --example drone_failsafe_part_5`;
             <tr><th></th><th>Melbourne: Damoda Newton V2.2</th><th>Orlando: UVify IFO</th></tr>
           </thead>
           <tbody>
-            <tr><td>Position</td><td>RTK satellite positioning, accurate to centimetres</td><td>RTK satellite positioning, hovering to 0.1 m (<a href={uvifyDatasheet}>datasheet</a>)</td></tr>
+            <tr><td>Position</td><td>RTK satellite positioning, accurate to centimeters</td><td>RTK satellite positioning, hovering to 0.1 m (<a href={uvifyDatasheet}>datasheet</a>)</td></tr>
             <tr><td>Sensing of the surroundings</td><td>none: "not fitted with sensors to allow independent collision avoidance"</td><td>none: "not equipped with collision avoidance technologies"</td></tr>
             <tr><td>Crossing the geofence</td><td>return to launch; if still outside, "the motors were shut down and the aircraft fell to the ground or water uncontrolled"</td><td>soft geofence: return home and land; hard geofence: "disarm the sUA's motors immediately"</td></tr>
             <tr><td>Low battery</td><td>return to launch</td><td>not recorded</td></tr>
@@ -89,9 +89,9 @@ cargo run --release -p dynamic_drone_failsafe --example drone_failsafe_part_5`;
       </div>
       <p>
         Both drones knew where they were and nothing about what lay below. In both shows the last
-        line of defence was the same rule: cross a line drawn before the flight, and the motors
+        line of defense was the same rule: cross a line drawn before the flight, and the motors
         stop. Over Melbourne the wind pushed drones across the line, and their fail-safes brought
-        most of them down in the harbour. Over Orlando the setup errors had moved the line toward
+        most of them down in the harbor. Over Orlando the setup errors had moved the line toward
         the audience. The accident drone's log shows it approaching the soft geofence and, 0.1 s
         later, crossing the hard geofence 5 m beyond it at 29.9 m/s, where the rule disarms the
         motors. The soft fence had no time to act; the operator's policy, changed twelve days
@@ -114,20 +114,17 @@ cargo run --release -p dynamic_drone_failsafe --example drone_failsafe_part_5`;
         there, only avoiding the collision protects the people below.
         Avoiding a collision in-flight is a separate safety function; the <a href={tcas}>geometric TCAS example</a> shows how
         it detects a converging aircraft, issues traffic and resolution advisories,
-        and takes over when an advisory goes unanswered. It finds the closest point of approach from
-        the wedge product of relative position and velocity, without trigonometry, and its two
-        crates build for a Cortex-M4F microcontroller without the standard library: light enough
-        for a drone's embedded flight computer. This tutorial covers what to do after a critical error, e.g.
-        GPS and remote control loss. It designs and builds a dynamic fail-safe protocol that adapts
-        its response dynamically to the situation while the failure unfolds.
+        and takes over when an advisory goes unanswered.
       </p>
       <p>
-        Each fail-safe fired on one condition: a lost position or a crossed boundary. Neither
-        condition asks what lies below the drone or who stands near it. Safety engineering calls
-        this an unsafe control action, one that turns unsafe "in a particular context and
+        In both cases, in Orlando and in Melbourne, each fail-safe mechanism fired on one condition:
+        a lost position or a crossed boundary. Neither condition asks what lies below the drone or who stands near it.
+        Safety engineering calls this an unsafe control action, one that turns unsafe "in a particular context and
         worst-case environment" (<a href={stpa}>Leveson and Thomas, STPA Handbook, 2018</a>).
       </p>
       <p>
+        This tutorial designs and builds a dynamic fail-safe protocol that adapts
+        its response dynamically to the situation while the failure unfolds.
         A fail-safe that prevents such harm must know where the drone can land, what is around and
         who stands nearby, and must test every emergency maneuver against safety rules before
         flying it. It decides from what the drone senses at that moment; a line or a landing zone
@@ -223,7 +220,7 @@ cargo run --release -p dynamic_drone_failsafe --example drone_failsafe_part_5`;
       <p>
         US commercial operators flew over 16.6 million drone flights in 2024 (<a href={faaSurvey}>FAA, Small UAS Survey Report 2024</a>). No aviation authority publishes how many flights
         meet an emergency (<a href={dcro}>DCRO, 2025</a>), so assume 1 %: 166,000 emergencies a
-        year. At the campaign's rates:
+        year.
       </p>
       <div class="table-wrap">
         <table>
@@ -234,7 +231,6 @@ cargo run --release -p dynamic_drone_failsafe --example drone_failsafe_part_5`;
             <tr><td>Emergencies a year</td><td>166,000</td><td>166,000</td></tr>
             <tr><td>Rate of putting a person at risk</td><td>3.5 %</td><td>0.1 % (at most 0.47 %)</td></tr>
             <tr><td>Landings that put a person at risk, a year</td><td>5,810</td><td>166 (at most 780)</td></tr>
-            <tr><td>The same, per million flights</td><td>350</td><td>10 (at most 47)</td></tr>
           </tbody>
         </table>
       </div>
@@ -246,9 +242,8 @@ cargo run --release -p dynamic_drone_failsafe --example drone_failsafe_part_5`;
       <p>
         Two assumptions carry these counts. No published data yet tests the 1 % emergency share.
         And the campaign places people around the point where GPS drops out, as on an inspection
-        flight with a crew at work below; over empty land both counts fall. The ratio
-        between the two fail-safes, 35 to 1, depends on neither the flight count nor the
-        emergency share.
+        flight with a crew at work below. Other scenarios may have a
+        different incident rate, so model the scenario closest to the actual drone deployment.
       </p>
 
       <h2>Run it</h2>
@@ -258,7 +253,7 @@ cargo run --release -p dynamic_drone_failsafe --example drone_failsafe_part_5`;
       </p>
       <Code code={run} lang="bash" themes={themes} defaultColor={false} wrap />
       <p>
-        On an M3 Max with 16 cores, parts 1 to 4 take under 20 s each and part 5 3 to 4 minutes.
+        On an M3 Max with 16 cores, parts 1 to 4 take under 20 s each, and part 5 takes 3 to 4 minutes.
       </p>
     </div>
   </article>

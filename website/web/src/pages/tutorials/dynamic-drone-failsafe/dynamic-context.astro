@@ -30,7 +30,9 @@ const fuse = `if first_sight {
     let space_id = node_id(patch, 0);
     let space = context.add_node(Contextoid::new(
         space_id,
-        ContextoidType::Spaceoid(EuclideanSpace::new(space_id, x, y, ZERO)),
+        ContextoidType::Spaceoid(
+          EuclideanSpace::new(space_id, x, y, ZERO)
+          ),
     ))?;
     for q in Quantity::ALL {
         let id = node_id(patch, q as u64 + 1);
@@ -51,16 +53,18 @@ fn data_node(id: ContextoidId, fusion: &Fusion, q: Quantity) -> GroundNode {
     let sigma = Real::sqrt(ONE / fusion.precision[k]);
     Contextoid::new(
         id,
-        ContextoidType::Datoid(UncertainData::new(id, Uncertain::normal(mean, sigma))),
+        ContextoidType::Datoid(
+            UncertainData::new(id, Uncertain::normal(mean, sigma))
+          ),
     )
 }`;
 
 const stages = `process = process
-    .bind(|_, state, ctx| model::sense(frame, state, ctx))
-    .bind(model::perceive)
-    .bind(model::judge)
-    .bind(|value, state, ctx| model::detect(value, state, ctx, &detectors))
-    .bind(|value, state, ctx| model::decide(value, state, ctx, time_s));`;
+   .bind(|_, state, ctx| model::sense(frame, state, ctx))
+   .bind(model::perceive)
+   .bind(model::judge)
+   .bind(|value, state, ctx| model::detect(value, state, ctx, &detectors))
+   .bind(|value, state, ctx| model::decide(value, state, ctx, time_s));`;
 
 const judge = `let read = |q: Quantity| belief(context, patch, q);
 let steep = read(Quantity::Slope)?.greater_than(TIP_OVER_DEG);
@@ -154,8 +158,7 @@ Faults and fail-safes from the controller's log:
       <p class="lede">
         A thermal camera and a LiDAR now look down every second, and the controller fuses what
         they see into a context. From the context it judges every patch of ground: safe, too
-        steep, water, a person, or unsure. The fail-safe ladder of part 1 still lands the drone
-        where it is, so the drone still drops into the creek.
+        steep, water, a person, or unsure.
       </p>
     </header>
 
@@ -179,7 +182,7 @@ Faults and fail-safes from the controller's log:
       </p>
       <Code code={contextType} lang="rust" themes={themes} defaultColor={false} wrap />
       <p>
-        A patch seen for the first time gets a space node at its centre and five data nodes, one
+        A patch seen for the first time gets a space node at its center and five data nodes, one
         per quantity, each linked to the space node. Every later frame updates the data nodes:
       </p>
       <Code code={fuse} lang="rust" themes={themes} defaultColor={false} wrap />

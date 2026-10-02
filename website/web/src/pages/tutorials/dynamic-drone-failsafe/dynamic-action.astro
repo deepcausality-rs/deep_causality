@@ -16,8 +16,16 @@ const source = `${GITHUB_URL}/tree/main/${DRONE_FAILSAFE_SOURCE}/part_3_dynamic_
 const run = `cargo run -p dynamic_drone_failsafe --example drone_failsafe_part_3`;
 
 const machine = `pub fn failsafe_machine() -> FailsafeMachine {
-    let choose = machine_state(CHOOSE_STATE, choose_a_patch, "choose a landing patch");
-    let hold = machine_state(HOLD_STATE, hold_over_the_ground, "hold over the ground");
+    let choose = machine_state(
+        CHOOSE_STATE, 
+        choose_a_patch, 
+        "choose a landing patch"
+      );
+    let hold = machine_state(
+      HOLD_STATE, 
+      hold_over_the_ground, 
+      "hold over the ground"
+      );
     let home = machine_state(HOME_STATE, fly_home, "fly home");
     let land = landing_state(1, LandingTarget::default());
     CSM::new(&[
@@ -51,9 +59,11 @@ fn land_on_the_patch(
 const replace = `if let Some(target) = nearest_safe_patch(&state) {
     state.landing_version += 1;
     if let Err(err) =
-        machine.update_single_state(landing_state(state.landing_version, target))
+        machine.update_single_state(
+          landing_state(state.landing_version, target))
     {
-        return failed(CausalityError::ActionError(err.to_string()), state, ctx);
+      return failed(CausalityError::ActionError(
+              err.to_string()),state,ctx);
     }`;
 
 const output = `Dynamic drone fail-safe, part 3: dynamic action
@@ -133,7 +143,7 @@ Faults, fail-safes and maneuvers from the controller's log:
       <p>
         The machine is a <a href="/overview/dynamic-action/">Causal State Machine</a> with four
         states. Each state holds a causaloid that reads the situation (the ladder's command, the
-        drone's position and the controller's judgement of the landing patch) and returns a
+        drone's position and the controller's judgment of the landing patch) and returns a
         maneuver:
       </p>
       <div class="table-wrap">

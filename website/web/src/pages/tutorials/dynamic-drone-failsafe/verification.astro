@@ -27,43 +27,10 @@ pub fn fly_scenario(id: usize) -> Result<Flown, String> {
     Ok((scenario, flights))
 }`;
 
-const output = `How the flight ended                                 part 1         part 3         part 4
-                                                   textbook    context and       with the
-                                                  fail-safe         action   Effect Ethos
-resumed its mission                              0    0.0 %     0    0.0 %    37    3.7 %
-landed upright, clear of people                 51    5.1 %   691   69.1 %   599   59.9 %
-came down within 10 m of a person               35    3.5 %    41    4.1 %     1    0.1 %
-dropped into the creek                         234   23.4 %     3    0.3 %    72    7.2 %
-fell into the ravine                             8    0.8 %     0    0.0 %     0    0.0 %
-tipped over on steep ground                    631   63.1 %    79    7.9 %   272   27.2 %
-flew into the trees                             41    4.1 %     1    0.1 %    19    1.9 %
-fell when its battery died                       0    0.0 %   185   18.5 %     0    0.0 %
-
-Rates, each with its one-sided 95 % upper confidence bound:
-  all scenarios, 1000 scenarios:
-    Part 1, textbook fail-safe     near a person   3.5 % (at most  4.61 %)   drone lost  91.4 % (at most 92.82 %)
-    Part 3, context and action     near a person   4.1 % (at most  5.29 %)   drone lost  26.8 % (at most 29.20 %)
-    Part 4, with the Effect Ethos  near a person   0.1 % (at most  0.47 %)   drone lost  36.3 % (at most 38.88 %)
-  battery healthy, 495 scenarios:
-    Part 1, textbook fail-safe     near a person   3.0 % (at most  4.63 %)   drone lost  91.9 % (at most 93.84 %)
-    Part 3, context and action     near a person   3.8 % (at most  5.58 %)   drone lost   9.9 % (at most 12.39 %)
-    Part 4, with the Effect Ethos  near a person   0.0 % (at most  0.60 %)   drone lost  10.9 % (at most 13.49 %)
-  a cell fails, 505 scenarios:
-    Part 1, textbook fail-safe     near a person   4.0 % (at most  5.70 %)   drone lost  90.9 % (at most 92.91 %)
-    Part 3, context and action     near a person   4.4 % (at most  6.16 %)   drone lost  43.4 % (at most 47.11 %)
-    Part 4, with the Effect Ethos  near a person   0.2 % (at most  0.94 %)   drone lost  61.2 % (at most 64.80 %)
-
-Paired on the same scenarios, part 4 against each other controller, all 1000 scenarios:
-  Part 1, textbook fail-safe: only it came down near a person in 35 scenarios, only part 4 in 1, both in 0.
-    Part 4 came down near a person 35.0 times less often; at least 6.6 times less with 95 % confidence.
-    Were the two equally safe, a split this uneven would arise with probability 5.4e-10.
-  Part 3, context and action: only it came down near a person in 41 scenarios, only part 4 in 1, both in 0.
-    Part 4 came down near a person 41.0 times less often; at least 7.8 times less with 95 % confidence.
-    Were the two equally safe, a split this uneven would arise with probability 9.8e-12.`;
 ---
 <BaseLayout
   title="Part 5: Verification — DeepCausality"
-  description="Part 5 of the drone fail-safe tutorial: the controllers of parts 1, 3 and 4 fly the same 1,000 randomised scenarios, and the campaign bounds how often each puts a person at risk."
+  description="Part 5 of the drone fail-safe tutorial: the controllers of parts 1, 3 and 4 fly the same 1,000 randomized scenarios, and the campaign bounds how often each puts a person at risk."
 >
   <SiteHeader />
   <article class="static-page">
@@ -73,7 +40,7 @@ Paired on the same scenarios, part 4 against each other controller, all 1000 sce
       <p class="lede">
         A regulator asks whether a safety measure works across the conditions an operation can
         meet. Part 5 flies the controllers of parts 1, 3 and 4, unchanged, through the same 1,000
-        randomised scenarios and bounds each rate at 95 % confidence. Part 4 puts a person at risk
+        randomized scenarios and bounds each rate at 95 % confidence. Part 4 puts a person at risk
         in 0.1 % of them, at most 0.47 % with 95 % confidence; the textbook fail-safe of part 1
         does so in 3.5 %.
       </p>
@@ -117,9 +84,28 @@ Paired on the same scenarios, part 4 against each other controller, all 1000 sce
 
       <h2>The results</h2>
       <p>
-        The campaign counts a touchdown within 10 m of a person as putting that person at risk:
+        The campaign counts a touchdown within 10 m of a person as putting that person at risk. The
+        table condenses its report; the program also prints every way a flight ended and a bound on
+        each rate.
       </p>
-      <Code code={output} lang="text" themes={themes} defaultColor={false} />
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th></th><th>Part 1: textbook fail-safe</th><th>Part 3: context and action</th><th>Part 4: Effect Ethos</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Person at risk, all 1,000 scenarios</td><td>3.5 %</td><td>4.1 %</td><td>0.1 % (at most 0.47 %)</td></tr>
+            <tr><td>Person at risk, battery healthy (495)</td><td>3.0 %</td><td>3.8 %</td><td>0 (at most 0.60 %)</td></tr>
+            <tr><td>Person at risk, a cell fails (505)</td><td>4.0 %</td><td>4.4 %</td><td>0.2 % (at most 0.94 %)</td></tr>
+            <tr><td>Puts a person at risk this many times as often as part 4</td><td>35 (at least 6.6)</td><td>41 (at least 7.8)</td><td>—</td></tr>
+            <tr><td>Drone lost, all 1,000 scenarios</td><td>91.4 %</td><td>26.8 %</td><td>36.3 %</td></tr>
+            <tr><td>Drone lost, battery healthy (495)</td><td>91.9 %</td><td>9.9 %</td><td>10.9 %</td></tr>
+            <tr><td>Drone lost, a cell fails (505)</td><td>90.9 %</td><td>43.4 %</td><td>61.2 %</td></tr>
+            <tr><td>Landed upright, clear of people</td><td>5.1 %</td><td>69.1 %</td><td>59.9 %</td></tr>
+            <tr><td>Resumed the mission</td><td>0</td><td>0</td><td>3.7 %</td></tr>
+          </tbody>
+        </table>
+      </div>
       <p>
         The bounds are one-sided Clopper–Pearson bounds at 95 %: zero events in 495 scenarios
         bound the rate at 0.60 %. The campaign takes 3 to 4 minutes on an M3 Max with 16 cores.
@@ -167,17 +153,17 @@ Paired on the same scenarios, part 4 against each other controller, all 1000 sce
             <tr><td>With nothing permitted, the drone held until its battery died and fell where it hovered. All its near-person outcomes, 3.9 %, were such falls beside the crew: the protocol's veto was itself the unsafe control action.</td><td>In an emergency the drone may be ditched; a ditching may fly away from people even if the battery dies first.</td></tr>
             <tr><td>A patch the drone was still looking at was never cleared, because the clearance grew with the drone's absolute position drift.</td><td>The clearance grows with landing accuracy instead: the drone sees the patch and the people near it in the same frames. A look has a time limit.</td></tr>
             <tr><td>The controller read a battery running down normally as a failed cell, and gave up approved landings.</td><td>A failed cell shows as a sudden sag; otherwise the battery lasts until the lowest cell is empty.</td></tr>
-            <tr><td>A patch judged flat at its centre lay on a terrace edge, and the gust tipped the drone.</td><td>The edge norm forbids a patch beside seen steep ground.</td></tr>
+            <tr><td>A patch judged flat at its center lay on a terrace edge, and the gust tipped the drone.</td><td>The edge norm forbids a patch beside seen steep ground.</td></tr>
             <tr><td>With all seen ground set aside, the drone hovered with a healthy battery until the battery ran down.</td><td>The drone explores unseen ground.</td></tr>
             <tr><td>In an emergency the drone ditched beside people it had not ruled out.</td><td>A person not ruled out costs ten times the drone, and a person more likely than not forbids the patch.</td></tr>
           </tbody>
         </table>
       </div>
       <p>
-        The first finding matters most. Part 4 moved the judgement of whether a maneuver is safe
+        The first finding matters most. Part 4 moved the judgment of whether a maneuver is safe
         into the Effect Ethos, and the first campaign found the unsafe control action there: a veto
-        that held the drone until it fell. The campaign caught it in simulation, and the fix went
-        into the norms and the machine.
+        that held the drone until it fell. The design mistake was caught during the simulation
+        and the fix was applied long before the first test flight. 
       </p>
 
       <TopicList label="Dynamic drone fail-safe" current="verification" items={droneFailsafeParts} base={DRONE_FAILSAFE_BASE} />

@@ -53,7 +53,8 @@ const predicate = `/// The person norm. A norm that cannot read what it needs fo
 fn person_within_clearance(context: &GroundContext, action: &ProposedAction) -> bool {
     proposed_patch(action).is_none_or(|patch| {
         model::clearance_m(context)
-            .and_then(|clearance| model::person_within(context, patch, clearance))
+            .and_then(|clearance|
+              model::person_within(context, patch, clearance))
             .unwrap_or(true)
     })
 }`;
@@ -194,7 +195,7 @@ const log = `Faults, fail-safes and maneuvers from the controller's log:
         The published contingency and emergency procedures for drone pilots become norms of the
         Effect Ethos. The fail-safe machine proposes every landing; the Ethos rules on each
         proposal against the context, and the drone flies only what the Ethos permits. On the
-        default night the drone lands upright on the terrace, 34 m from the nearest person.
+        simulated night, the drone finally lands upright on the terrace, 34 m from the nearest person.
       </p>
     </header>
 
@@ -207,12 +208,11 @@ const log = `Faults, fail-safes and maneuvers from the controller's log:
 
       <h2>The safety protocol</h2>
       <p>
-        Drone pilots need not invent a response to lost GPS or a lost command link. Aviation authorities
-        and autopilot makers publish one: the FAA's guidance for Part 107 pilots, CASA's
-        requirements for operations manuals, the JARUS SORA risk method that EASA adopts, and the
-        fail-safes of the ArduPilot autopilot. Part 4 encodes that protocol as norms of the Effect
-        Ethos, and part 5 tests how well the encoded protocol works across 1,000 randomised
-        scenarios.
+        Aviation authorities and autopilot makers publish tried-and-true fail-safe protocols: the
+        FAA's guidance for Part 107 pilots, CASA's requirements for operations manuals, the JARUS
+        SORA risk method that EASA adopts, and the fail-safes of the ArduPilot autopilot. Part 4
+        combines them into one protocol, encoded as norms of the Effect Ethos, and part 5 tests how
+        well it works across 1,000 randomized scenarios.
       </p>
       <p>
         The published procedures assume a pilot and a briefed site. The drone here has neither: no
@@ -226,12 +226,12 @@ const log = `Faults, fail-safes and maneuvers from the controller's log:
           </thead>
           <tbody>
             <tr><td>0. Before flight</td><td>A navigation fault triggers altitude hold, not a landing; recovery time limits are set in advance.</td><td>Lost GPS or a lost link never triggers a descent by itself; the recovery window is 20 s.</td><td><a href={ardupilotGps}>ArduPilot GPS fail-safe</a>; <a href={casa}>CASA AC 101-01</a></td></tr>
-            <tr><td>1. Stabilise</td><td>Stop the descent and hold.</td><td>The drone holds over the ground by camera and LiDAR.</td><td><a href={ardupilotDeadReckoning}>ArduPilot</a>; attitude-mode practice</td></tr>
+            <tr><td>1. Stabilize</td><td>Stop the descent and hold.</td><td>The drone holds over the ground by camera and LiDAR.</td><td><a href={ardupilotDeadReckoning}>ArduPilot</a>; attitude-mode practice</td></tr>
             <tr><td>2. Assess</td><td>Battery and control healthy, positioning or link lost: a contingency, recoverable. Energy or control failing: an emergency.</td><td>The <code>assess</code> stage sets the urgency: routine, contingency or emergency.</td><td><a href={sora}>JARUS SORA</a>: contingency and emergency procedures</td></tr>
             <tr><td>3. Wait within limits</td><td>Hold and wait for GPS or the link to recover, for the time set in advance.</td><td>During the window the drone waits, chooses a site and flies over it to look. If GPS and the link return, the mission resumes.</td><td><a href={faa}>FAA lost-link guidance</a>; CASA</td></tr>
             <tr><td>4. Move to known ground</td><td>Return toward a planned landing zone, clear of people.</td><td>With no planned zone, the drone moves to the best ground it has sensed and ruled clear of people, and explores unseen ground when it has none.</td><td><a href={soraAnnexA}>SORA flight geography</a>; pilot practice</td></tr>
             <tr><td>5. Land as soon as practical</td><td>Land at a suitable site, not the nearest spot; avoid water, trees and power lines.</td><td>Each round the Ethos judges every candidate, and the drone lands on the cheapest permitted one, the sooner first among equal costs.</td><td><a href={flightpath}>FAA: "land as soon as practical"</a>; pilot practice</td></tr>
-            <tr><td>6. Emergency, only if unrecoverable</td><td>Terminate the flight in the ground risk buffer, free of people: people first, property second, the aircraft last.</td><td>Once the battery is critical, the drone may be ditched. If nothing is permitted, the person bans become costs, so the drone comes down where it endangers the fewest, farthest from people.</td><td><a href={soraAnnexA}>SORA ground risk buffer</a>; <a href={pilotInstitute}>Pilot Institute</a></td></tr>
+            <tr><td>6. Emergency, only if unrecoverable</td><td>Terminate the flight in the ground risk buffer, free of people: Protect people first, property second, the aircraft last.</td><td>Once the battery is critical, the drone may be ditched. If nothing is permitted, the person bans become costs, so the drone comes down where it endangers the fewest, farthest from people.</td><td><a href={soraAnnexA}>SORA ground risk buffer</a>; <a href={pilotInstitute}>Pilot Institute</a></td></tr>
           </tbody>
         </table>
       </div>

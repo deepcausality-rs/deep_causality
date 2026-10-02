@@ -29,15 +29,17 @@ const stages = `process = process
 
 const detectors = `pub fn detectors() -> Vec<Detector> {
     vec![
-        Causaloid::new(1, gnss_degraded, "satellite positioning degraded"),
-        Causaloid::new(2, gnss_no_fix, "satellite positioning without a fix"),
-        Causaloid::new(3, link_down, "command link down"),
-        Causaloid::new(4, battery_critical, "battery critical"),
+      Causaloid::new(1, gnss_degraded, "satellite positioning degraded"),
+      Causaloid::new(2, gnss_no_fix, "satellite positioning lost"),
+      Causaloid::new(3, link_down, "command link down"),
+      Causaloid::new(4, battery_critical, "battery critical"),
     ]
 }
 
 fn gnss_degraded(t: Telemetry) -> PropagatingEffect<bool> {
-    PropagatingEffect::pure(t.satellites() < DEGRADED_SATELLITES || t.hdop() > DEGRADED_HDOP)
+    PropagatingEffect::pure(
+        t.satellites() < DEGRADED_SATELLITES || t.hdop() > DEGRADED_HDOP
+        )
 }`;
 
 const collection = `let input = PropagatingEffect::pure(telemetry);
@@ -50,12 +52,14 @@ const ladder = `let (proposed, reason) = if faults.battery_critical {
 } else if faults.gnss_lost && faults.link_lost {
     (
         Command::LandNow,
-        "land now: with no satellite fix and no link, the drone can neither navigate nor receive orders.",
+        "land now: with no satellite fix and no link, 
+        the drone can neither navigate nor receive orders.",
     )
 } else if faults.gnss_lost {
     (
         Command::Hold,
-        "hold: no satellite fix, but the link is up, so wait for the fix or the operator.",
+        "hold: no satellite fix, but the link is up, 
+        so wait for the fix or the operator.",
     )
 } else if faults.link_lost {
     (
@@ -102,7 +106,7 @@ Faults and fail-safes from the controller's log:
       <h1>Part 1: Dynamic causality</h1>
       <p class="lede">
         One causal process runs the controller, three stages each second. It confirms every fault
-        in order and applies the textbook fail-safe at each step. The drone still drops into the
+        in order and applies the textbook fail-safe at each step. The drone drops into the
         creek, because the controller knows nothing about the ground below it.
       </p>
     </header>
@@ -174,7 +178,7 @@ Faults and fail-safes from the controller's log:
       </div>
       <p>
         Each rule acts on one fault. Newer features extend them: DJI hovers and lands by its vision
-        sensors when GNSS is weak, and flies to a pre-set alternate landing site when its dock cannot
+        sensors when GNSS is weak, and flies to a preset alternate landing site when its dock cannot
         take it (<a href={dji}>DJI flight manual</a>, sections 3.9, 4.2 and 4.3); ArduPilot <a href={ardupilotDeadReckoning}>dead-reckons</a> for a limited time without GPS. None of these documents
         describes weighing who stands near a landing site.
       </p>

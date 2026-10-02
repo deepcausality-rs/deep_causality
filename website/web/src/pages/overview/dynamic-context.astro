@@ -51,11 +51,15 @@ fn pump_speed(
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let observed = PropagatingProcess::with_state(PropagatingEffect::pure(()), (), Some(cooling_loop(24.0)))
+    let observed = PropagatingProcess::with_state(
+        PropagatingEffect::pure(()), (),
+        Some(cooling_loop(24.0)))
         .bind(pump_speed);
 
     // The same step, evaluated in a world where the inlet runs at 31 °C.
-    let what_if = PropagatingProcess::with_state(PropagatingEffect::pure(()), (), Some(cooling_loop(24.0)))
+    let what_if = PropagatingProcess::with_state(
+        PropagatingEffect::pure(()), (),
+        Some(cooling_loop(24.0)))
         .alternate_context(cooling_loop(31.0))
         .bind(pump_speed);
 
@@ -109,7 +113,7 @@ const storeReadme = `${GITHUB_URL}/blob/main/deep_causality_context_store/README
           <tbody>
             <tr><td>Data</td><td>any value in <code>Data&lt;T&gt;</code>, plus uncertain numbers and uncertain booleans</td></tr>
             <tr><td>Time</td><td>Euclidean and Lorentzian time in any time scale; discrete and entropic clocks that count ticks</td></tr>
-            <tr><td>Space</td><td>Euclidean, Earth-centred (ECEF), geodetic with a vertical datum, and local north-east-down (NED)</td></tr>
+            <tr><td>Space</td><td>Euclidean, Earth-centered (ECEF), geodetic with a vertical datum, and local north-east-down (NED)</td></tr>
             <tr><td>Spacetime</td><td>Euclidean, Lorentzian, and tangent spacetime with position, velocity and a metric tensor</td></tr>
             <tr><td>Root</td><td>an anchor node with an identifier</td></tr>
           </tbody>
@@ -134,7 +138,7 @@ const storeReadme = `${GITHUB_URL}/blob/main/deep_causality_context_store/README
         a counterfactual world this way: the same causal model, evaluated against a different context.
       </p>
 
-      <h2>A context that stays current</h2>
+      <h2>A context that updates</h2>
       <p>
         A context lives in memory and changes while a model runs: a function can update a node
         between evaluations, and a copied branch can explore another world without touching the

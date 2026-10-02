@@ -50,6 +50,6 @@ export const droneFailsafeParts: OverviewTopic[] = [
     slug: 'verification',
     title: 'Part 5: Verification',
     summary:
-      'Parts 1, 3 and 4 fly the same 1,000 randomised scenarios. Part 4 puts a person at risk in 0.1 % of them, against 3.5 % for the textbook fail-safe.',
+      'Parts 1, 3 and 4 fly the same 1,000 randomized scenarios. Part 4 puts a person at risk in 0.1 % of them, against 3.5 % for the textbook fail-safe.',
   },
 ];

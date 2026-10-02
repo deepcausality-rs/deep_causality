@@ -85,7 +85,7 @@ const readme = `${GITHUB_URL}/blob/main/README.md`;
     <div class="prose">
       <h2>Two layers of composition</h2>
       <p>
-        The classical formulation of causality, "if A then B, and if not A then not B", composes on
+        The classical formulation of causality, "if A then B, and if not A then not B," composes on
         one layer: the causal direction from A to B doubles as the direction of time, so it cannot
         express a time-symmetric relation as a cause. That rules out the fundamental equations of
         physics, from Newton's through Maxwell's to Schrödinger's, which are all time-symmetric.
@@ -111,18 +111,18 @@ const readme = `${GITHUB_URL}/blob/main/README.md`;
       <Code code={kepler} lang="rust" themes={themes} defaultColor={false} wrap />
       <Code code={keplerOut} lang="text" themes={themes} defaultColor={false} wrap />
       <p>
-        The satellite starts 7,000 km from Earth's centre at 7.8 km/s, which puts it on an orbit
+        The satellite starts 7,000 km from Earth's center at 7.8 km/s, which puts it on an orbit
         between 629 km and 1,658 km altitude. The first step carries
         it 4,585 km along that orbit. The second step takes the position and velocity the first step
         produced, derives a fresh orbit from them, and runs the clock back 600 s. The satellite lands
-        0.57 nanometres from where it started. At 7,000 km, neighbouring <code>f64</code> values lie
-        0.93 nanometres apart, so the round trip is exact to the resolution of the number type.
+        0.57 nanometers from where it started. At 7,000 km, neighboring <code>f64</code> values lie
+        0.93 nanometers apart, so the round trip is exact to the resolution of the number type.
       </p>
       <p>
         That resolution is a parameter. Every crate in the unified mathematics stack takes its scalar
         as a type parameter, so changing the <code>FloatType</code> alias moves the whole program,
         propagator included, to another number type. With only that line changed, the round trip
-        lands within one spacing of each type:
+        lands within about one spacing of each type, and within two at <code>BFloat16</code>:
       </p>
       <div class="table-wrap">
         <table>
@@ -130,6 +130,7 @@ const readme = `${GITHUB_URL}/blob/main/README.md`;
             <tr><th><code>FloatType</code></th><th>Decimal digits</th><th>Miss after the round trip</th><th>Spacing of values at 7,000 km</th></tr>
           </thead>
           <tbody>
+            <tr><td><code>BFloat16</code></td><td>2</td><td>7.0 × 10⁴ m</td><td>3.3 × 10⁴ m</td></tr>
             <tr><td><code>f32</code></td><td>7</td><td>0.25 m</td><td>0.5 m</td></tr>
             <tr><td><code>f64</code></td><td>16</td><td>5.7 × 10⁻¹⁰ m</td><td>9.3 × 10⁻¹⁰ m</td></tr>
             <tr><td><code>Float106</code></td><td>31</td><td>2.4 × 10⁻²⁵ m</td><td>2.1 × 10⁻²⁵ m</td></tr>
@@ -138,7 +139,7 @@ const readme = `${GITHUB_URL}/blob/main/README.md`;
       </div>
       <p>
         At <code>Float106</code> the satellite lands 2.4 × 10⁻²⁵ m, about a quarter of a
-        yoctometre, from where it started: far below anything an instrument can measure. For
+        yoctometer, from where it started: far below anything an instrument can measure. For
         reference results, such as the values another solver must reproduce, <code>Float106</code> carries about 31 significant digits, twice as many as <code>f64</code>, for a one-line change.
         The <a href={unifiedMathReadme}>unified math README</a> explains how precision works as a parameter across the stack.
       </p>
@@ -165,7 +166,7 @@ const readme = `${GITHUB_URL}/blob/main/README.md`;
             <tr><th>Channel</th><th>Type</th><th>What it gives a model</th></tr>
           </thead>
           <tbody>
-            <tr><td>Effect</td><td>a value, <code>None</code> for "no evidence", or a <code>RelayTo</code> command that jumps to another node of a graph</td><td>the result of the previous step</td></tr>
+            <tr><td>Effect</td><td>a value, <code>None</code> for "no evidence," or a <code>RelayTo</code> command that jumps to another node of a graph</td><td>the result of the previous step</td></tr>
             <tr><td>State</td><td>any type; <code>()</code> when unused</td><td>memory carried from step to step</td></tr>
             <tr><td>Context</td><td>any type, passed as <code>Option&lt;C&gt;</code></td><td>the environment: data, time and space, with fixed or changing relations</td></tr>
           </tbody>
