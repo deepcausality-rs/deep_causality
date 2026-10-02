@@ -146,7 +146,8 @@ fn test_evaluate_hypothesis_initial_sample_index() {
 fn test_evaluate_hypothesis_band_reaching_one_rejects_a_rare_event() {
     let session = SampleSession::seeded(SEED);
     let rare = UncertainBool::<f64>::bernoulli(0.035);
-    let result = sprt_eval::evaluate_hypothesis(&rare, &session, 0.95, 0.95, 0.05, 1000, 0).unwrap();
+    let result =
+        sprt_eval::evaluate_hypothesis(&rare, &session, 0.95, 0.95, 0.05, 1000, 0).unwrap();
     assert!(!result, "P(true) = 0.035 does not exceed 0.95");
 }
 
@@ -154,7 +155,8 @@ fn test_evaluate_hypothesis_band_reaching_one_rejects_a_rare_event() {
 fn test_evaluate_hypothesis_band_reaching_one_accepts_a_certain_event() {
     let session = SampleSession::seeded(SEED);
     let certain = UncertainBool::<f64>::point(true);
-    let result = sprt_eval::evaluate_hypothesis(&certain, &session, 0.95, 0.95, 0.05, 1000, 0).unwrap();
+    let result =
+        sprt_eval::evaluate_hypothesis(&certain, &session, 0.95, 0.95, 0.05, 1000, 0).unwrap();
     assert!(result, "P(true) = 1 exceeds 0.95");
 }
 
@@ -165,7 +167,8 @@ fn test_evaluate_hypothesis_band_reaching_one_accepts_a_certain_event() {
 fn test_evaluate_hypothesis_band_reaching_zero_accepts_a_likely_event() {
     let session = SampleSession::seeded(SEED);
     let likely = UncertainBool::<f64>::bernoulli(0.965);
-    let result = sprt_eval::evaluate_hypothesis(&likely, &session, 0.05, 0.95, 0.05, 1000, 0).unwrap();
+    let result =
+        sprt_eval::evaluate_hypothesis(&likely, &session, 0.05, 0.95, 0.05, 1000, 0).unwrap();
     assert!(result, "P(true) = 0.965 exceeds 0.05");
 }
 
@@ -173,6 +176,7 @@ fn test_evaluate_hypothesis_band_reaching_zero_accepts_a_likely_event() {
 fn test_evaluate_hypothesis_band_reaching_zero_rejects_an_impossible_event() {
     let session = SampleSession::seeded(SEED);
     let never = UncertainBool::<f64>::point(false);
-    let result = sprt_eval::evaluate_hypothesis(&never, &session, 0.05, 0.95, 0.05, 1000, 0).unwrap();
+    let result =
+        sprt_eval::evaluate_hypothesis(&never, &session, 0.05, 0.95, 0.05, 1000, 0).unwrap();
     assert!(!result, "P(true) = 0 does not exceed 0.05");
 }

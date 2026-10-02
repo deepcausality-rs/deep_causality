@@ -34,8 +34,16 @@ fn test_space_time_coordinate_basic_construction() {
 #[test]
 fn test_space_time_coordinate_clone() {
     let coord = sample_coord();
-    let cloned = Clone::clone(&coord);
+    let cloned = clone_of(&coord);
     assert_eq!(coord, cloned);
+}
+
+/// Exercises `Clone` without going through `Copy`.
+///
+/// Inside a generic function `T` is not known to be `Copy`, so this really is a clone. It also
+/// keeps `clippy::clone_on_copy` from firing on the concrete type.
+fn clone_of<T: Clone>(t: &T) -> T {
+    t.clone()
 }
 
 #[test]

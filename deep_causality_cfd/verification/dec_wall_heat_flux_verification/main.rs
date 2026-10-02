@@ -161,10 +161,9 @@ fn main() {
         let lattice = LatticeComplex::<2, f64>::new([N, N], [false, false]);
         let cells: Vec<_> = lattice.iter_cells(2).collect();
         let mut r = CutCellRegistry::<2, f64>::new();
-        for base in [[3usize, 3usize]] {
-            if let Some(id) = cells.iter().position(|c| *c.position() == base) {
-                r.insert(id, CutCell::<2, f64>::solid(1.0));
-            }
+        let base = [3usize, 3usize];
+        if let Some(id) = cells.iter().position(|c| *c.position() == base) {
+            r.insert(id, CutCell::<2, f64>::solid(1.0));
         }
         r
     };

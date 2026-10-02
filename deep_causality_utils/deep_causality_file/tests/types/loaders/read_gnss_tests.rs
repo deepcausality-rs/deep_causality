@@ -96,8 +96,16 @@ fn test_data_manager_load_orbit_only() {
 fn test_data_manager_is_copy_clone_debug_default() {
     let a = DataManager::new();
     let b = a; // Copy
-    let c = Clone::clone(&a); // exercises the derived Clone on a Copy type
+    let c = clone_of(&a); // exercises the derived Clone on a Copy type
     let _ = (b, c);
     assert_eq!(format!("{a:?}"), "DataManager");
     let _default = <DataManager as Default>::default();
+}
+
+/// Exercises `Clone` without going through `Copy`.
+///
+/// Inside a generic function `T` is not known to be `Copy`, so this really is a clone. It also
+/// keeps `clippy::clone_on_copy` from firing on the concrete type.
+fn clone_of<T: Clone>(t: &T) -> T {
+    t.clone()
 }
