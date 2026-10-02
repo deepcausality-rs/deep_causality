@@ -36,7 +36,7 @@ mod theories;
 mod traits;
 mod types;
 
-// The CFD ↔ tensor-network (QTT) bridge: quantized field codec and finite-difference MPO assembly.
+// The physical gradient triple a 3-D metric provider returns.
 pub use crate::alias::physical_gradient_3_d::PhysicalGradient3d;
 // Physics types this crate's public API exposes — the typed DEC forms and
 // physics-quantity newtypes (which stay in `deep_causality_physics`) plus
@@ -51,11 +51,12 @@ pub use crate::traits::{
 };
 pub use crate::types::{Ambient, EvidenceClass, KeyedInterpolation, KeyedTable, LadderOutcome};
 
-// The CFD ↔ tensor-network (QTT) bridge: quantized field codec and finite-difference MPO assembly.
+// Coordinate maps: body-fitted, blended and Cartesian-identity maps with their metric providers.
 pub use crate::coordinate::{
     BlendedMap, BlendedMapConfig, BlendedMapConfigBuilder, BodyFittedCoordinate,
     BodyFittedCoordinate3d, CartesianIdentity, CartesianIdentity3d,
 };
+// The CFD ↔ tensor-network (QTT) bridge: quantized field codec and finite-difference MPO assembly.
 pub use crate::tensor_bridge::{
     AcousticCoreInverse, AcousticCoreInverse2d, AcousticCoreInverse3d, QttProjector2d,
     body_mask_2d, dequantize, dequantize_2d, dequantize_3d, divergence_3d, gradient, gradient_x,

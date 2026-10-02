@@ -22,7 +22,7 @@ cargo add deep_causality_cfd
 
 To track unreleased work, add it [as a git dependency](https://doc.rust-lang.org/cargo/reference/specifying-dependencies.html#specifying-dependencies-from-git-repositories), pinned by:
 * branch e.g. 'branch = "main"'
-* tag e.g. 'tag = "0.10.3"'
+* tag e.g. 'tag = "deep_causality_cfd-v0.3.3"'
 * commit e.g. 'rev = "0c09903..."'
 
 ```toml
