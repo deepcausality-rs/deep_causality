@@ -65,18 +65,7 @@ const isActive = (href: string) => path === href || (href !== '/' && path.starts
       <a href="/projects/" class:list={["nav-link", isActive('/projects/') && 'is-active']}>Projects</a>
       <a href="/blog/" class:list={["nav-link", isActive('/blog/') && 'is-active']}>Blog</a>
       <a href="/community/" class:list={["nav-link", isActive('/community/') && 'is-active']}>Community</a>
-      <div class="nav-dropdown">
-        <a href="/about/" class:list={["nav-link nav-link-trigger", (isActive('/about/') || isActive('/sponsors/')) && 'is-active']} aria-haspopup="true">
-          About
-          <svg class="caret" width="10" height="10" viewBox="0 0 10 10" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M2.5 4 L5 6.5 L7.5 4"/>
-          </svg>
-        </a>
-        <ul class="dropdown-menu dropdown-menu-end" role="menu">
-          <li><a href="/about/" role="menuitem">About the project</a></li>
-          <li><a href="/sponsors/" role="menuitem">Sponsors</a></li>
-        </ul>
-      </div>
+      <a href="/about/" class:list={["nav-link", isActive('/about/') && 'is-active']}>About</a>
     </nav>
 
     <div class="utility">
@@ -145,12 +134,7 @@ const isActive = (href: string) => path === href || (href !== '/' && path.starts
       <li><a href="/projects/">Projects</a></li>
       <li><a href="/blog/">Blog</a></li>
       <li><a href="/community/">Community</a></li>
-      <li>
-        <a href="/about/">About</a>
-        <ul class="mobile-menu-sub">
-          <li><a href="/sponsors/">Sponsors</a></li>
-        </ul>
-      </li>
+      <li><a href="/about/">About</a></li>
     </ul>
   </nav>
 </div>
@@ -234,11 +218,11 @@ const isActive = (href: string) => path === href || (href !== '/' && path.starts
   :global([data-theme='light']) .logo-light { display: block; }
   :global([data-theme='dark'])  .logo-dark  { display: block; }
 
-  /* Seven items plus four carets measure 479px of labels. Through the narrow
+  /* Seven items plus three carets measure 465px of labels. Through the narrow
      band from 900px the header's padding and column gaps step down to
      --space-4 and the six nav gaps to --space-3. At 900px beside a 15px
      classic scrollbar, the 134px brand and the 120px utility rail then leave
-     the nav 567px; the labels and gaps take 551px, 16px spare. All three
+     the nav 567px; the labels and gaps take 537px, 30px spare. All three
      return to their wider values at 1080px, where there is room. */
   .primary { display: none; gap: var(--space-3); }
   @media (min-width: 900px) { .primary { display: flex; } }
@@ -292,10 +276,6 @@ const isActive = (href: string) => path === href || (href !== '/' && path.starts
                 visibility 0s linear var(--dur-fast);
     z-index: 30;
   }
-  /* The last dropdown in the rail opens toward the centre; a left-anchored
-     200px menu there would reach across the utility icons. Declared after the
-     base rule: same specificity, so source order decides. */
-  .dropdown-menu-end { left: auto; right: -8px; }
 
   .nav-dropdown:hover .dropdown-menu,
   .nav-dropdown:focus-within .dropdown-menu {

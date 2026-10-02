@@ -592,7 +592,7 @@ Two defects live in `blog/index.astro` and should be fixed when that file is nex
 
 ### 9.5 Static pages
 
-`about`, `community`, `accessibility`, the six `overview` pages and the `tutorials` pages carry **zero scoped CSS**. They rely entirely on the `.static-page` and `.prose` rules in `global.css`, which cover headings, lists, code blocks, tables (inside a `.table-wrap`) and block quotes. That is the correct default for a prose page; add scoped CSS only when a page genuinely needs a component.
+`community`, `accessibility`, the six `overview` pages and the `tutorials` pages carry **zero scoped CSS**; `about` adds one scoped rule set, for its sponsor rows (logo beside text), and `/sponsors/` forwards to that section. They rely entirely on the `.static-page` and `.prose` rules in `global.css`, which cover headings, lists, code blocks, tables (inside a `.table-wrap`) and block quotes. That is the correct default for a prose page; add scoped CSS only when a page genuinely needs a component.
 
 The Overview is a set of pages. `overview/index.astro` presents the whole project and links to five topic pages, `causal-discovery`, `dynamic-causality`, `dynamic-context`, `dynamic-action` and `effect-ethos`, listed in `components/overview/topics.ts` in the order a model is built. That list feeds three places: the `TopicList` panel on the index and at the foot of each topic page, and the header's Overview dropdown (desktop and mobile). Add a topic there, not in the pages.
 
