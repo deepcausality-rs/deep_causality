@@ -37,9 +37,12 @@ mod constants;
 mod model;
 mod utils_print;
 
-use avionics_examples::shared::world;
-use deep_causality_cfd::{CfdFlow, PhysicsError, StudyError, StudyView, Verdict};
+use avionics_examples::shared::{trace, world};
+use deep_causality_cfd::{
+    CfdFlow, IoAction, PhysicsError, StudyError, StudyView, Verdict, write_rows,
+};
 use deep_causality_num::lift;
+use std::cell::RefCell;
 use std::process::ExitCode;
 use std::time::Instant;
 
@@ -70,19 +73,50 @@ fn main() -> ExitCode {
             )
         })?;
 
+        // The reduced rows, kept for the per-step and per-draw outputs.
+        let rows_capture: RefCell<Vec<model::WorldRow>> = RefCell::new(Vec::new());
         let table = CfdFlow::study("weather-dispersion table")
             .save_log(audit_dir.join("weather.audit")) // one stepwise-flushed log per branch
             .cases(model::weather_cases())
             .baseline(model::standard_day) // the validated origin, built once
             .alternate(model::weather_world) // six counterfactual atmospheres, each marked
             .ensemble(constants::MC_DRAWS) // deterministic receiver-noise draws
-            .couple(|case, draw| world::corridor_coupling(model::bias_departure(case.d_temp), draw))
+            .couple(|case, draw| {
+                trace::traced(world::corridor_coupling(
+                    model::bias_departure(case.d_temp),
+                    draw,
+                ))
+            })
             .march_for(constants::STEPS, world::initial_field) // fixed horizon, concurrent over (case, draw)
             .reduce_ensemble(model::world_row) // draw sets collapse to mean / scatter / worst
-            .inspect(utils_print::print_rows)
+            .inspect(|rows| {
+                utils_print::print_rows(rows);
+                *rows_capture.borrow_mut() = rows.to_vec();
+            })
             .record(&table_path)
             .gates(model::weather_gates())
             .verdict()?;
+
+        // The reference draw of every condition step by step, and every draw's metrics.
+        let write_err = |e: deep_causality_file::DataLoadingError| {
+            StudyError::in_stage(
+                "trace output",
+                PhysicsError::CalculationError(format!("{e}")),
+            )
+        };
+        let rows = rows_capture.into_inner();
+        write_rows(
+            model::get_output_path("weather_trace.csv"),
+            model::trace_table(&rows),
+        )
+        .run()
+        .map_err(write_err)?;
+        write_rows(
+            model::get_output_path("weather_draws.csv"),
+            model::draw_table(&rows),
+        )
+        .run()
+        .map_err(write_err)?;
 
         // The wall-clock gate is the caller's: the study cannot see the wall clock, which times the
         // whole program. Merge it into the table verdict so the run still ends in one report.

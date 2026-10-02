@@ -25,6 +25,12 @@ pub const TRACE_FIELD: &str = "trace";
 /// Values the recorder appends per step, in [`TraceRow`] field order (excluding `leg` and `t`).
 pub const TRACE_COLUMNS: usize = 16;
 
+/// Positions of the recorded values within [`TraceRow::values`].
+pub const ALTITUDE: usize = 0;
+pub const PLASMA_FREQ: usize = 4;
+pub const GNSS_DENIED: usize = 5;
+pub const NAV_ERR: usize = 8;
+
 /// Appends one row of [`TRACE_COLUMNS`] values per coupled step to [`TRACE_FIELD`]. Composed last,
 /// after the safety gate, so the recorded bank is the clamped command the lift stage flies next.
 #[derive(Debug, Clone, Copy)]
