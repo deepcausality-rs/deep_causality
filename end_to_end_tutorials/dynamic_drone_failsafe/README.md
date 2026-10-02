@@ -493,6 +493,7 @@ member of the crew into the next patch.
 | [`src/types/patch_reading/`](src/types/patch_reading) | `PatchReading`: one frame's reading of one ground patch, by `Quantity` |
 | [`src/types/touchdown/`](src/types/touchdown) | `Touchdown`: the ground truth of where the drone came down, and its `Outcome` |
 | [`src/constants.rs`](src/constants.rs) | The world's dimensions and temperatures, the drone, its sensors, the fault timeline |
+| [`src/trace.rs`](src/trace.rs) | The CSV tables parts 1 to 4 record when run with `-- trace <dir>`, for the animation in [`video/drone_failsafe`](../../video/drone_failsafe) |
 | [`part_1_dynamic_causality/`](part_1_dynamic_causality) | The fail-safe controller with dynamic causality alone |
 | [`part_2_dynamic_context/`](part_2_dynamic_context) | The controller with the ground as its context |
 | [`part_3_dynamic_action/`](part_3_dynamic_action) | The controller with a fail-safe machine that acts on the context |

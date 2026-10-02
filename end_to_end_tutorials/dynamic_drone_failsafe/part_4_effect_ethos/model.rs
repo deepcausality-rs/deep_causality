@@ -847,7 +847,7 @@ fn install(
 /// The candidates of a round: landings on the safe patches nearest the drone, except those a look
 /// could not clear in a contingency, and, in an emergency, ditchings on the nearest other ground and
 /// on the patch below the drone.
-fn candidates(state: &FailsafeState, urgency: Urgency) -> Vec<Candidate> {
+pub fn candidates(state: &FailsafeState, urgency: Urgency) -> Vec<Candidate> {
     let nearest = |kinds: &[Ground], proposal: Proposal, most: usize| {
         let mut found: Vec<Candidate> = state
             .ground
@@ -906,7 +906,7 @@ fn tags(urgency: Urgency) -> &'static [&'static str] {
 /// The Effect Ethos's verdict on one proposal under the norms of `urgency`. A proposal forbidden by
 /// the not-ruled-out norm, alone or with the edge norm, may stand while the drone looks: the look
 /// shows the ground around the patch, where a flat patch clear of people may lie.
-fn review(
+pub fn review(
     ethos: &GroundEthos,
     context: &GroundContext,
     candidate: Candidate,

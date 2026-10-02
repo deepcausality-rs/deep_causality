@@ -27,6 +27,11 @@ impl Terrain {
         }
     }
 
+    /// Where each person stands, across and along the valley, in m.
+    pub fn crew_m(&self) -> &[(FloatType, FloatType)] {
+        &self.crew_m
+    }
+
     /// Distance from a point to the nearest person on the ground, in m.
     pub fn nearest_person_m(&self, x: FloatType, y: FloatType) -> FloatType {
         self.crew_m

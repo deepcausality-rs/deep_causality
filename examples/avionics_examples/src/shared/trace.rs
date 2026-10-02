@@ -28,9 +28,12 @@ pub const TRACE_COLUMNS: usize = 16;
 /// Positions of the recorded values within [`TraceRow::values`].
 pub const ALTITUDE: usize = 0;
 pub const MACH: usize = 1;
+pub const SPEED: usize = 2;
+pub const NE_PEAK: usize = 3;
 pub const PLASMA_FREQ: usize = 4;
 pub const GNSS_DENIED: usize = 5;
 pub const NAV_ERR: usize = 8;
+pub const HEAT_FLUX: usize = 10;
 
 /// Appends one row of [`TRACE_COLUMNS`] values per coupled step to [`TRACE_FIELD`]. Composed last,
 /// after the safety gate, so the recorded bank is the clamped command the lift stage flies next.

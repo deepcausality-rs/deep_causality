@@ -11,8 +11,9 @@ use crate::FloatType;
 use crate::constants::*;
 use avionics_examples::shared::stages::FROZEN_DRAG_FRACTION_FIELD;
 use avionics_examples::shared::trace::{
-    ALTITUDE, AXIAL_ACCEL, BURN_TRACE_FIELD, DESCENT_RATE, DV_ACTUAL, DV_FROZEN, GNSS_DENIED, MACH,
-    NAV_ERR, PRESERVED_DRAG, PROPELLANT, THROTTLE, TRACE_FIELD, burn_rows, trace_rows,
+    ALTITUDE, AXIAL_ACCEL, BURN_TRACE_FIELD, DESCENT_RATE, DV_ACTUAL, DV_FROZEN, GNSS_DENIED,
+    HEAT_FLUX, MACH, NAV_ERR, NE_PEAK, PRESERVED_DRAG, PROPELLANT, SPEED, THROTTLE, TRACE_FIELD,
+    burn_rows, trace_rows,
 };
 use avionics_examples::shared::{constants::*, utils, world};
 use deep_causality_cfd::{
@@ -471,7 +472,8 @@ pub fn score_branch(
 
 // ── Per-step outputs ────────────────────────────────────────────────────────────────────────
 
-/// One step of a flown descent: flight state, link and navigation, and the burn.
+/// One step of a flown descent: flight state, link and navigation, the burn, and the sheath and
+/// heating the step flew through.
 #[derive(Debug, Clone, Copy)]
 pub struct DescentTraceRow {
     pub leg: FloatType,
@@ -483,6 +485,9 @@ pub struct DescentTraceRow {
     pub throttle: FloatType,
     pub propellant: FloatType,
     pub descent_rate: FloatType,
+    pub speed: FloatType,
+    pub ne_peak: FloatType,
+    pub heat_flux: FloatType,
 }
 
 impl TableRow for DescentTraceRow {
@@ -497,6 +502,9 @@ impl TableRow for DescentTraceRow {
         ("throttle", "-"),
         ("propellant", "kg"),
         ("descent_rate", "m/s"),
+        ("speed", "m/s"),
+        ("ne_peak", "m^-3"),
+        ("heat_flux", "W/m2"),
     ];
     fn cells(&self) -> Vec<FloatType> {
         vec![
@@ -509,6 +517,9 @@ impl TableRow for DescentTraceRow {
             self.throttle,
             self.propellant,
             self.descent_rate,
+            self.speed,
+            self.ne_peak,
+            self.heat_flux,
         ]
     }
 }
@@ -534,6 +545,9 @@ pub fn descent_trace_rows(
             throttle: b[THROTTLE],
             propellant: b[PROPELLANT],
             descent_rate: b[DESCENT_RATE],
+            speed: r.values[SPEED],
+            ne_peak: r.values[NE_PEAK],
+            heat_flux: r.values[HEAT_FLUX],
         })
         .collect()
 }
