@@ -51,9 +51,9 @@ does not fix it: carrying Cartesian fluxes *through* a curved front drives the r
 works is re-pinning **plus** treating the front as an exact Rankine–Hugoniot interface, so fluxes
 never march across it and each side stays smooth.
 
-## Plasma-retropulsion de-risk — the SRP coupling measurements
+## Plasma-retropropulsion de-risk — the SRP coupling measurements
 
-The front-loaded risk milestone of the plasma-retropulsion descent
+The front-loaded risk milestone of the plasma-retropropulsion descent
 (`openspec/notes/archive/cfd-plasma-retropulsion/`; verdict in `derisk-verdict.md`). `qtt_rank_plume`
 measured fork economics and plume rank (roadmap M1 risks 2 and 3, both green). `srp_momentum_jet` is
 the imprint-fidelity follow-up (risk 1); it supersedes the pinned-envelope harness in

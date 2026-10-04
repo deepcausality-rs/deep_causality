@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! The **terminal-descent harness** (change `add-retropulsion-terminal-descent`).
+//! The **terminal-descent harness** (change `add-retropropulsion-terminal-descent`).
 //!
 //! This is the first test anywhere composing `CyberneticCorrect` **with burn axes** into a coupled
 //! stack that actually runs: the M2/M3 burn integration test omits the gate entirely and drives

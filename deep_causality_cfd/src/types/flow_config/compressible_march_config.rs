@@ -299,7 +299,7 @@ where
     }
 }
 
-/// The opt-in **plume re-imprint** spec (change `add-retropulsion-coupled-stages`, capability
+/// The opt-in **plume re-imprint** spec (change `add-retropropulsion-coupled-stages`, capability
 /// `plume-obstruction-stage`): it lets a world's marched forcing region follow a *varying* throttle.
 ///
 /// A `PhysicsStage` cannot reach the marched layer, so the imprint rides the carrier's existing

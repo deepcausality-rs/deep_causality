@@ -1,8 +1,8 @@
 ---
 /**
- * Walk 3's animation: the retropulsion descent in seven scenes, drawn from the run's own outputs.
+ * Walk 3's animation: the retropropulsion descent in seven scenes, drawn from the run's own outputs.
  *
- * Data: `src/data/retroTrace.ts`, which reads the retropulsion traces, the roster table, its
+ * Data: `src/data/retroTrace.ts`, which reads the retropropulsion traces, the roster table, its
  * `output.txt` and walk 2's `weather_table.csv` at build time. Every line, dot and number below
  * comes from those files.
  *
@@ -14,7 +14,7 @@ import { GITHUB_URL } from '../../consts';
 import { f1, f2, pct, r2 } from './format';
 import Stepper from './Stepper.astro';
 
-const FILES = `${GITHUB_URL}/blob/main/examples/avionics_examples/cfd/plasma_blackout/retropulsion`;
+const FILES = `${GITHUB_URL}/blob/main/examples/avionics_examples/cfd/plasma_blackout/retropropulsion`;
 
 const f3 = (v: number) => v.toFixed(3);
 const minus = (v: number) => (v < 0 ? `−${-v}` : `${v}`);
@@ -125,7 +125,7 @@ const scenes = [
   { id: 7, name: 'Gates' },
 ];
 ---
-<Stepper scenes={scenes} label="The retropulsion descent in seven scenes">
+<Stepper scenes={scenes} label="The retropropulsion descent in seven scenes">
   <Fragment slot="captions">
     <li data-s="1">
       <b>Plan.</b> The measured day is {Math.abs(belief.measuredDT)} K {belief.measuredDT < 0 ? 'below' : 'above'} standard. Between walk 2’s {minus(belief.bracket[0])} K and
@@ -309,9 +309,9 @@ const scenes = [
   </div>
 
   <Fragment slot="caption">
-    Lines and dots are drawn from <a href={`${FILES}/retropulsion_trace.csv`}><code>retropulsion_trace.csv</code></a>,
-    <a href={`${FILES}/retropulsion_branch_trace.csv`}><code>retropulsion_branch_trace.csv</code></a> and
-    <a href={`${FILES}/retropulsion_uninformed_trace.csv`}><code>retropulsion_uninformed_trace.csv</code></a>, one row
+    Lines and dots are drawn from <a href={`${FILES}/retropropulsion_trace.csv`}><code>retropropulsion_trace.csv</code></a>,
+    <a href={`${FILES}/retropropulsion_branch_trace.csv`}><code>retropropulsion_branch_trace.csv</code></a> and
+    <a href={`${FILES}/retropropulsion_uninformed_trace.csv`}><code>retropropulsion_uninformed_trace.csv</code></a>, one row
     per {stepS} s step, and the plan from walk 2’s <code>weather_table.csv</code>.
   </Fragment>
 </Stepper>

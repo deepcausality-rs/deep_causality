@@ -3,11 +3,11 @@
  * /fork-or-sweep/: when to run a dispersion sweep and when to fork a paused run.
  *
  * Both ship and the shipped examples compose them, so the page does not argue that
- * the fork replaces the ensemble. The retropulsion table's `dv m/s` and `dv frozen`
+ * the fork replaces the ensemble. The retropropulsion table's `dv m/s` and `dv frozen`
  * columns print the coupled and the frozen-drag answer to one intervention.
  *
  * Sources: weather/main.rs and output.txt, corridor/main.rs, constants.rs and
- * output.txt, retropulsion/output.txt and model.rs, shared/stages.rs (AxialWitness).
+ * output.txt, retropropulsion/output.txt and model.rs, shared/stages.rs (AxialWitness).
  */
 import PageShell from '../../components/nav/PageShell.astro';
 import { Code } from 'astro:components';
@@ -18,7 +18,7 @@ const SHIKI = { light: rustLight, dark: rustDark };
 
 const title = 'When to fork and when to sweep | DeepCausality CFD';
 const description =
-  'Sweep when the alternatives differ by an input chosen before the run. Fork when they must share a past. Both ship here, and the retropulsion table prints the difference as two columns.';
+  'Sweep when the alternatives differ by an input chosen before the run. Fork when they must share a past. Both ship here, and the retropropulsion table prints the difference as two columns.';
 
 /* weather/main.rs:72-84, condensed. */
 const ensemble = `let table = CfdFlow::study("weather-dispersion table")
@@ -42,7 +42,7 @@ const fork = `let corridor = CfdFlow::study("bank-angle corridor")
     .gates(model::corridor_gates())
     .verdict()?;`;
 
-/* retropulsion/output.txt:24-29, verbatim. */
+/* retropropulsion/output.txt:24-29, verbatim. */
 const roster = `  branch         cmd    flown  preserved  axial m/s2    prop kg     dv m/s  dv frozen
   coast         0.00   0.0000          —     10.5950       1.81    139.519      0.144
   low           0.20   0.2000     0.2510      7.4718      62.05     88.399     49.490
@@ -190,7 +190,7 @@ const columns = [
   <section class="doc-sec" id="coupling">
     <h2>Does the coupling change the answer?</h2>
     <p>
-      In the retropulsion example it does, and the run prints both answers. Retropulsion fires an
+      In the retropropulsion example it does, and the run prints both answers. Retropropulsion fires an
       engine against the flow to slow a descent. The example forks the burning vehicle at mid-burn
       into five throttle branches. Each branch continues for a fixed number of steps, and the table
       reports what the branch did next to what a frozen-drag prediction says it would have done.
@@ -220,7 +220,7 @@ const columns = [
         branch’s thrust coefficient (thrust over dynamic pressure times reference area). The
         simulated plume does not produce it. A study that coupled a momentum-carrying plume into the
         compressible layer did not reproduce the measured drag collapse
-        (<a href="/boundaries/#srp">boundaries: retropulsion drag</a>), so the marched plume
+        (<a href="/boundaries/#srp">boundaries: retropropulsion drag</a>), so the marched plume
         supplies flow state and nothing more. The table shows that a drag closure responding to
         each branch’s throttle changes the answer. It does not show that the simulated plume
         produces the collapse.
@@ -238,7 +238,7 @@ const columns = [
     </p>
     <p>
       The shipped examples therefore use both. The weather table sizes a dispersion margin across
-      48 descents. The retropulsion descent reads that table in flight and forks against it. Its
+      48 descents. The retropropulsion descent reads that table in flight and forks against it. Its
       gate 5 measures what the composition bought: informed and uninformed guidance started the
       landing burn 14.06 m apart in altitude (139.12 m against 125.06 m), and the informed
       guidance spent 7.28 kg more propellant. That is the dispersion-sized reserve, measured
@@ -260,7 +260,7 @@ const columns = [
       </li>
       <li>
         The corridor is the weakest evidence for the coupling: across its bank branches the flow
-        observables agree to three digits. The retropulsion table is where branches change the
+        observables agree to three digits. The retropropulsion table is where branches change the
         flow.
       </li>
     </ul>

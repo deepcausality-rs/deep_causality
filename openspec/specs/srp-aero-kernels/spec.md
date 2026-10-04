@@ -80,7 +80,7 @@ kernel MUST reject Mach inputs outside the digitized envelope with a typed error
 
 The crate SHALL provide `srp_total_axial_force_coefficient_kernel` composing
 `C_A,total = C_T + preserved(C_T) · C_A0` from the sibling kernels, so the non-monotone
-net-deceleration band the retropulsion note's gate (4b) later measures is computable pointwise.
+net-deceleration band the retropropulsion note's gate (4b) later measures is computable pointwise.
 The composition MUST call the sibling kernels rather than restating the correlation.
 
 #### Scenario: Non-monotone band exists

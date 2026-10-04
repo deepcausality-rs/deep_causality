@@ -89,7 +89,7 @@ const studyCode = `let table = CfdFlow::study("weather-dispersion table")
     <ul class="nums">
       <li>Fork sharing is structural and checked by a gate (a pass or fail check on a result): branches enter by reference, with no tensor copied at fork time. Continuing a branch costs about the same as an unforked march; coasting is cheaper at 0.66×.</li>
       <li>Bank-angle corridor (the bank angle is the roll that steers the vehicle’s lift sideways): seventeen branches, six coarse and eleven fine, with the best committed mid-descent.</li>
-      <li>Plasma retropulsion (an engine fired against the flow to slow a descent): across the five mid-burn branches, the velocity shed departs a frozen-drag prediction by up to 139.4 m/s. The drag change is the cited Jarvinen-Adams correlation, not the simulated plume.</li>
+      <li>Plasma retropropulsion (an engine fired against the flow to slow a descent): across the five mid-burn branches, the velocity shed departs a frozen-drag prediction by up to 139.4 m/s. The drag change is the cited Jarvinen-Adams correlation, not the simulated plume.</li>
     </ul>
 
     <p class="src">
@@ -115,7 +115,7 @@ const studyCode = `let table = CfdFlow::study("weather-dispersion table")
       bands the flow into continuum Navier–Stokes, slip-corrected continuum, transitional or
       free-molecular. The evolved electron density sets the plasma frequency, which decides whether
       the GNSS link (satellite navigation) exists and so which measurements the navigation filter
-      folds in. The retropulsion descent also bands the Mach number and tracks the thrust state.
+      folds in. The retropropulsion descent also bands the Mach number and tracks the thrust state.
     </p>
 
     <p>
@@ -297,7 +297,7 @@ const studyCode = `let table = CfdFlow::study("weather-dispersion table")
     </p>
 
     <ul class="nums">
-      <li>Plasma retropulsion descent, blackout exit to touchdown: sixteen gates in 337.5 s on {MACHINE}.</li>
+      <li>Plasma retropropulsion descent, blackout exit to touchdown: sixteen gates in 337.5 s on {MACHINE}.</li>
       <li>Weather-dispersion table: six atmospheres declared as differences from one baseline, each an ensemble of receiver-noise draws, flown concurrently to one gated table.</li>
       <li>Branch fan-outs run on scoped threads and produce bits identical to the sequential run.</li>
     </ul>

@@ -1,26 +1,26 @@
 /**
- * The retropulsion descent, step by step, for the walk 3 animation.
+ * The retropropulsion descent, step by step, for the walk 3 animation.
  *
- * Read at build time from the files the retropulsion example commits beside its `output.txt`:
- * `retropulsion_trace.csv` (the informed descent across its four legs), `retropulsion_branch_trace.csv`
- * (the five throttle branches after the fork), `retropulsion_uninformed_trace.csv` (the landing leg
- * flown with the standard-day margin) and `retropulsion_branches.csv` (the roster table). The plan
+ * Read at build time from the files the retropropulsion example commits beside its `output.txt`:
+ * `retropropulsion_trace.csv` (the informed descent across its four legs), `retropropulsion_branch_trace.csv`
+ * (the five throttle branches after the fork), `retropropulsion_uninformed_trace.csv` (the landing leg
+ * flown with the standard-day margin) and `retropropulsion_branches.csv` (the roster table). The plan
  * reads walk 2's `weather_table.csv`, the same file the program reads in flight.
  *
  * Nothing is typed by hand. The build fails if interpolating the table does not reproduce the
  * margins `output.txt` prints, if a branch trace does not end on its table row, or if the landing
  * traces do not reproduce the printed burn-light altitudes and contact speeds.
  */
-import descentCsv from '../../../../examples/avionics_examples/cfd/plasma_blackout/retropulsion/retropulsion_trace.csv?raw';
-import branchCsv from '../../../../examples/avionics_examples/cfd/plasma_blackout/retropulsion/retropulsion_branch_trace.csv?raw';
-import uninformedCsv from '../../../../examples/avionics_examples/cfd/plasma_blackout/retropulsion/retropulsion_uninformed_trace.csv?raw';
-import rosterCsv from '../../../../examples/avionics_examples/cfd/plasma_blackout/retropulsion/retropulsion_branches.csv?raw';
-import outputTxt from '../../../../examples/avionics_examples/cfd/plasma_blackout/retropulsion/output.txt?raw';
+import descentCsv from '../../../../examples/avionics_examples/cfd/plasma_blackout/retropropulsion/retropropulsion_trace.csv?raw';
+import branchCsv from '../../../../examples/avionics_examples/cfd/plasma_blackout/retropropulsion/retropropulsion_branch_trace.csv?raw';
+import uninformedCsv from '../../../../examples/avionics_examples/cfd/plasma_blackout/retropropulsion/retropropulsion_uninformed_trace.csv?raw';
+import rosterCsv from '../../../../examples/avionics_examples/cfd/plasma_blackout/retropropulsion/retropropulsion_branches.csv?raw';
+import outputTxt from '../../../../examples/avionics_examples/cfd/plasma_blackout/retropropulsion/output.txt?raw';
 import weatherCsv from '../../../../examples/avionics_examples/cfd/plasma_blackout/weather/weather_table.csv?raw';
 import { parseGates, parseRows, type Row } from './traceCsv';
 
 const fail = (msg: string): never => {
-  throw new Error(`retropulsion data: ${msg}`);
+  throw new Error(`retropropulsion data: ${msg}`);
 };
 const near = (a: number, b: number, tol: number) => Math.abs(a - b) <= tol;
 const printed = (re: RegExp, what: string) => {
@@ -61,7 +61,7 @@ if (
 }
 
 // ── The informed descent ─────────────────────────────────────────────────────────────────────
-const descent = parseRows(descentCsv, 'retropulsion_trace.csv');
+const descent = parseRows(descentCsv, 'retropropulsion_trace.csv');
 export interface Sample {
   leg: number;
   t: number;
@@ -83,7 +83,7 @@ const toSample = (r: Row): Sample => ({
   descentRate: r.descent_rate,
 });
 export const samples: Sample[] = descent.map(toSample);
-const uninformedSamples: Sample[] = parseRows(uninformedCsv, 'retropulsion_uninformed_trace.csv').map(toSample);
+const uninformedSamples: Sample[] = parseRows(uninformedCsv, 'retropropulsion_uninformed_trace.csv').map(toSample);
 
 const legEnd = (leg: number) => samples.findLastIndex((s) => s.leg === leg);
 const deniedFrom = samples.findIndex((s) => s.denied);
@@ -104,7 +104,7 @@ export const events = {
   subsonic: { t: samples[legEnd(3)].t, altitudeKm: samples[legEnd(3)].altitudeKm, mach: samples[legEnd(3)].mach },
   end: { t: samples[samples.length - 1].t },
 };
-if (deniedFrom < 0 || commitIx < 0) fail('no blackout or ignition in retropulsion_trace.csv');
+if (deniedFrom < 0 || commitIx < 0) fail('no blackout or ignition in retropropulsion_trace.csv');
 const commitPrinted = printed(/ignition corridor committed at step \d+: Mach ([0-9.]+)/, 'ignition commit line');
 if (!near(events.ignition.mach, Number(commitPrinted[1]), 1e-6)) {
   fail(`the trace commits at Mach ${events.ignition.mach}; output.txt says ${commitPrinted[1]}`);
@@ -151,8 +151,8 @@ export const landings = {
 };
 
 // ── The mid-burn fork ────────────────────────────────────────────────────────────────────────
-const roster = parseRows(rosterCsv, 'retropulsion_branches.csv');
-const branchRows = parseRows(branchCsv, 'retropulsion_branch_trace.csv');
+const roster = parseRows(rosterCsv, 'retropropulsion_branches.csv');
+const branchRows = parseRows(branchCsv, 'retropropulsion_branch_trace.csv');
 const names = new Map<number, string>();
 for (const m of outputTxt.matchAll(/^ {2}([a-z]+)\s+([0-9.]+)\s+([0-9.]+)\s+(—|-?[0-9.]+)\s+([0-9.]+)/gm)) {
   names.set(Number(m[2]), m[1]);
@@ -176,7 +176,7 @@ export const branches: Branch[] = roster.map((r) => {
   if (rows.length < 2) fail(`no branch trace for ${name}`);
   const last = rows[rows.length - 1];
   if (!near(last.axial_accel, r.net_deceleration, 1e-6) || !near(last.throttle, r.realized_throttle, 1e-9)) {
-    fail(`the ${name} branch trace does not end on its retropulsion_branches.csv row`);
+    fail(`the ${name} branch trace does not end on its retropropulsion_branches.csv row`);
   }
   // The fork's accumulated value: the branch's final value less what the table says it shed.
   const dv0 = last.dv_actual - r.dv_actual;

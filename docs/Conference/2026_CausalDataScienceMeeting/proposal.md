@@ -41,7 +41,7 @@ DeepCausality handles counterfactuals natively across three distinct channels:
 3. Alternate State: What if the state threaded through the reasoning were different?
 
 ## Examples
-- Retropulsion orbit entry and counterfactual trajectory correction (with 3D render)
+- Retropropulsion orbit entry and counterfactual trajectory correction (with 3D render)
 - GPS blackout handling
 - Digital twin for simulating weather impact on navigation
 

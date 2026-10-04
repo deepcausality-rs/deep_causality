@@ -1,7 +1,7 @@
 # powered-descent-envelope Specification
 
 ## Purpose
-TBD - created by archiving change plasma-retropulsion-cfd-contracts. Update Purpose after archive.
+TBD - created by archiving change plasma-retropropulsion-cfd-contracts. Update Purpose after archive.
 ## Requirements
 ### Requirement: Optional burn axes on the safety envelope
 

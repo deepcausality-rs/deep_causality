@@ -3,8 +3,8 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! Propulsion kernels for the plasma-retropulsion descent (Stage 1 of the
-//! retropulsion build order): rocket performance, nozzle exit state, the
+//! Propulsion kernels for the plasma-retropropulsion descent (Stage 1 of the
+//! retropropulsion build order): rocket performance, nozzle exit state, the
 //! supersonic-retropropulsion similarity numbers and Jarvinen–Adams drag
 //! correlation, the analytic plume-boundary geometry, and the powered-descent
 //! closed forms. Pure pointwise kernels; the stages that drive them

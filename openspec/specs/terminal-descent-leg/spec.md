@@ -1,7 +1,7 @@
 # terminal-descent-leg Specification
 
 ## Purpose
-TBD - created by archiving change add-retropulsion-terminal-descent. Update Purpose after archive.
+TBD - created by archiving change add-retropropulsion-terminal-descent. Update Purpose after archive.
 ## Requirements
 ### Requirement: A leg boundary logs what it discarded and re-seeded
 

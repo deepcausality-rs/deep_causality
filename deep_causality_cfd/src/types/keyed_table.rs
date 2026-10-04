@@ -5,8 +5,8 @@
 
 //! A schema-agnostic keyed lookup table with **value-bracketed** linear interpolation and end
 //! clamping — the reusable core of a measured-parameter lookup (change
-//! `plasma-retropulsion-cfd-contracts`, capability `weather-table-consumption`; the M5
-//! retropulsion example binds it to the weather dispersion table keyed by temperature departure).
+//! `plasma-retropropulsion-cfd-contracts`, capability `weather-table-consumption`; the M5
+//! retropropulsion example binds it to the weather dispersion table keyed by temperature departure).
 //!
 //! It is the N-column generalization of [`DescentSchedule::sample`](crate::DescentSchedule) (which
 //! brackets and clamps a fixed four-column atmosphere row by altitude): rows arrive in any order,

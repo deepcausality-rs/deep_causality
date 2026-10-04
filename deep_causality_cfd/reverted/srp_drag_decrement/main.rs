@@ -5,7 +5,7 @@
 
 //! # SRP drag decrement — the plume-imprinted layer vs the Jarvinen–Adams correlation
 //!
-//! The de-risk milestone's imprint-fidelity measurement (`plasma-retropulsion-de-risk`, roadmap
+//! The de-risk milestone's imprint-fidelity measurement (`plasma-retropropulsion-de-risk`, roadmap
 //! M1 risk 1): a central retro-plume, shaped by the **Cordell analytic plume-boundary kernel**
 //! and imprinted on the marched compressible layer as a masked forcing region, must reproduce
 //! the **Jarvinen–Adams central-nozzle preserved-drag collapse** read back from the evolved

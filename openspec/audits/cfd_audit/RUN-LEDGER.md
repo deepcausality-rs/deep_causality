@@ -84,7 +84,7 @@ A harness with 0 gates emits no marker — see the audit report, blocker B-3.
 | `viv_resonance_margin` | 0 | 160 | 3 | 0 |
 | `plasma_blackout_corridor` | 0 | 55 | 13 | 0 |
 | `plasma_blackout_weather` | 0 | 276 | 8 | 0 |
-| `plasma_blackout_retropulsion` | 0 | 378 | 16 | 0 |
+| `plasma_blackout_retropropulsion` | 0 | 378 | 16 | 0 |
 
 **Totals:** 7 programs, 0 non-zero exits, 46 PASS markers, 0 FAIL markers.
 

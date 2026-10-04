@@ -14,15 +14,15 @@ what the previous one produced, and the third closes the loop.
 |---|----------------------------------------|--------------------------------------------------------------------------------------------------------|-------------------------|--------------------------------|
 | 1 | [corridor](corridor/README.md)         | Flies one continuous Mach-25 descent through blackout, forking bank-angle counterfactuals at the onset | —                       | the validated baseline descent |
 | 2 | [weather](weather/README.md)           | Alternates that baseline into six weather worlds, flown concurrently, reduced to a dispersion table    | the corridor's baseline | `weather_table.csv`            |
-| 3 | [retropulsion](retropulsion/README.md) | Reads that table **in flight**, commits an ignition, forks the marched plume-coupled state, and lands  | both of the above       | a landing at 1.8 m/s           |
+| 3 | [retropropulsion](retropropulsion/README.md) | Reads that table **in flight**, commits an ignition, forks the marched plume-coupled state, and lands  | both of the above       | a landing at 1.8 m/s           |
 
 ```bash
 cargo run --release -p avionics_examples --example plasma_blackout_corridor
 cargo run --release -p avionics_examples --example plasma_blackout_weather
-cargo run --release -p avionics_examples --example plasma_blackout_retropulsion
+cargo run --release -p avionics_examples --example plasma_blackout_retropropulsion
 ```
 
-Run them in that order the first time: the weather example writes the table the retropulsion example reads.
+Run them in that order the first time: the weather example writes the table the retropropulsion example reads.
 
 ## Why Blackout
 
@@ -50,9 +50,9 @@ seventeen bank-angle branches across two rounds resolve the optimum to half a de
 
 **The weather example** turns that one descent into a distribution. Six atmospheric conditions become six alternated
 worlds off the same validated baseline, at eight Monte Carlo receiver-noise draws each. Forty-eight descents fly
-concurrently and reduce to a table of navigation drift against weather, which the retropulsion example reads.
+concurrently and reduce to a table of navigation drift against weather, which the retropropulsion example reads.
 
-**The retropulsion example** turns the counterfactual into a **state** fork. Supersonic retropropulsion is the hard
+**The retropropulsion example** turns the counterfactual into a **state** fork. Supersonic retropropulsion is the hard
 part of landing anything heavy: firing an engine into a hypersonic freestream displaces the bow shock and destroys the
 aerodynamic drag the vehicle was relying on (Jarvinen & Adams, 1970). Choosing a throttle therefore means flying
 candidate throttles from the same marched, plume-coupled instant. A parameter sweep cannot express that, because the
@@ -86,7 +86,7 @@ The counterfactual fan-outs run on scoped threads through the workspace `paralle
 ## Reading Order
 
 Start with the [corridor](corridor/README.md). It explains the physics, the anchors, and the machinery the other two
-inherit. Then [weather](weather/README.md), for the fan-out and the table. Then [retropulsion](retropulsion/README.md),
+inherit. Then [weather](weather/README.md), for the fan-out and the table. Then [retropropulsion](retropropulsion/README.md),
 which assumes both.
 
 Every example verifies itself: each ends in a numbered gate set merged into one verdict and exits nonzero on any

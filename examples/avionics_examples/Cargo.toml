@@ -42,8 +42,8 @@ name = "plasma_blackout_weather"
 path = "cfd/plasma_blackout/weather/main.rs"
 
 [[example]]
-name = "plasma_blackout_retropulsion"
-path = "cfd/plasma_blackout/retropulsion/main.rs"
+name = "plasma_blackout_retropropulsion"
+path = "cfd/plasma_blackout/retropropulsion/main.rs"
 
 [[example]]
 name = "flight_envelope_placard"

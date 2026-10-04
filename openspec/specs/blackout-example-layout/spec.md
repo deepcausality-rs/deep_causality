@@ -4,7 +4,7 @@
 Pins the folder contract of the plasma-blackout example family: one parent folder
 (`examples/avionics_examples/cfd/plasma_blackout/`) with one subfolder per example, stable
 example binary names across moves, recorded artifacts co-located with their example, and live
-references that resolve after any move. Later siblings (the retropulsion descent) join as
+references that resolve after any move. Later siblings (the retropropulsion descent) join as
 subfolders of the same parent.
 ## Requirements
 ### Requirement: One family folder, one subfolder per example
@@ -12,7 +12,7 @@ subfolders of the same parent.
 The plasma-blackout example family SHALL live under
 `examples/avionics_examples/cfd/plasma_blackout/`, with exactly one subfolder per example. The
 corridor example SHALL live at `cfd/plasma_blackout/corridor/` and the weather-dispersion
-example at `cfd/plasma_blackout/weather/`. A later sibling (e.g. the retropulsion descent) MUST
+example at `cfd/plasma_blackout/weather/`. A later sibling (e.g. the retropropulsion descent) MUST
 join as a new subfolder of the same parent rather than as a flat folder under `cfd/`.
 
 #### Scenario: The two examples sit in the family folder

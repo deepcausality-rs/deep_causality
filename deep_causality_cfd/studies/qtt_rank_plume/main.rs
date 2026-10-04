@@ -6,7 +6,7 @@
 //! # QTT plume rank + fork economics — the de-risk study (roadmap M1, risks 2 and 3)
 //!
 //! Two measurements on the plume-imprinted compressible layer, neither taken before
-//! (`plasma-retropulsion-de-risk`, capability `plume-rank-fork-study`):
+//! (`plasma-retropropulsion-de-risk`, capability `plume-rank-fork-study`):
 //!
 //! **Phase A — rank.** The retro-plume is a colliding-shock system (barrel shock, Mach disk,
 //! shear layer, displaced bow shock); its tensor-train rank is unmeasured. A1 marches the
@@ -97,7 +97,7 @@ const CT_TRUNK: f64 = 1.0;
 const STEP_COST_RATIO_BAND: f64 = 2.0;
 
 fn main() {
-    println!("=== QTT plume rank + fork economics (plasma-retropulsion de-risk, M1) ===\n");
+    println!("=== QTT plume rank + fork economics (plasma-retropropulsion de-risk, M1) ===\n");
     println!(
         "  grid 2^{L} x 2^{L}, dt {DT}, tol {TOL} (rank floats free), rank ceiling {RANK_CEILING}\n"
     );

@@ -263,7 +263,7 @@ fn a_touchdown_logs_and_appears_in_the_message() {
     );
 }
 
-// ── The typed transition counter (change `fix-retropulsion-measurement-integrity`) ────────────
+// ── The typed transition counter (change `fix-retropropulsion-measurement-integrity`) ────────────
 
 #[test]
 fn the_transition_counter_increments_once_per_genuine_change() {

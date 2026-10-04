@@ -4,14 +4,14 @@
 Closed-form powered-descent kinematics kernels in `deep_causality_physics`: stopping distance,
 ignition altitude (with a caller-supplied navigation-dispersion margin), and the suicide-burn
 deceleration command. These are the Tier-A terminal-guidance closed forms of the
-plasma-retropulsion descent, rejecting the thrust-to-weight ≤ 1 and ground-contact cases;
+plasma-retropropulsion descent, rejecting the thrust-to-weight ≤ 1 and ground-contact cases;
 Apollo polynomial and convex powered-descent guidance are the named upgrade path.
 ## Requirements
 ### Requirement: Stopping distance and ignition altitude
 
 The crate SHALL provide `stopping_distance_kernel` (`d = v²/(2·a_net)`) and
 `ignition_altitude_kernel` (`h_ign = v²/(2·(a_T − g)) + margin`), the closed-form Tier-A
-ignition solution of the retropulsion note, with the navigation-dispersion margin taken as an
+ignition solution of the retropropulsion note, with the navigation-dispersion margin taken as an
 input (the weather-table row supplies it downstream, not this crate). Both kernels MUST reject
 `a_net ≤ 0` — a vehicle with thrust-to-weight at or below one cannot stop — and negative speed,
 with typed errors; the docstrings cite Klumpp (1974) and Açıkmeşe–Ploen (2007) as the guidance

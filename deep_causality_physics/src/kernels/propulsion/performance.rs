@@ -55,7 +55,7 @@ where
 ///
 /// the ideal velocity increment of a burn from initial mass `m₀` to final
 /// mass `m₁` — the relation that sizes a propellant reserve against a demanded
-/// margin (the retropulsion descent's weather-table job downstream).
+/// margin (the retropropulsion descent's weather-table job downstream).
 ///
 /// # Arguments
 /// * `isp_s` — specific impulse `Isp` (s, > 0).

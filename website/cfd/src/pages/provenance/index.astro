@@ -5,7 +5,7 @@
  *
  * Both excerpts are quoted verbatim from committed run output: the corridor's
  * blackout window (corridor/output.txt:56-62) and fourteen consecutive entries of
- * the retropulsion descent (retropulsion/output.txt:55-68). The leg table is read
+ * the retropropulsion descent (retropropulsion/output.txt:55-68). The leg table is read
  * off the corridor's per-leg summary lines.
  */
 import PageShell from '../../components/nav/PageShell.astro';
@@ -28,7 +28,7 @@ march paused at step 131
 leg re-seeded from step 131 in world 'fine_bank_08': coupled field carried, marched fluid state re-seeded from the world seed
 !!ContextAlternation!!: world 'nominal_descent' replaced with 'fine_bank_08'`;
 
-/** retropulsion/output.txt:55-68, verbatim. */
+/** retropropulsion/output.txt:55-68, verbatim. */
 const retroLog = `regime -> continuum (GNSS-denied), Kn=0.009825077357757745, supersonic / thrust-unknown
 regime -> continuum (GNSS-available), Kn=0.00023029462780754038, supersonic / thrust-unknown
 nav: aided (position fix folded)
@@ -55,7 +55,7 @@ const legs = [
 const entries = [
   {
     name: 'regime',
-    text: 'The flow classifier changed its verdict. The entry gives the Knudsen number (the ratio of the molecular mean free path to a length scale), the link state (GNSS, satellite navigation, available or denied) and, on the retropulsion descent, the Mach band and the thrust state. The three burn-phase entries show the Mach band cascading from supersonic to transonic to subsonic.',
+    text: 'The flow classifier changed its verdict. The entry gives the Knudsen number (the ratio of the molecular mean free path to a length scale), the link state (GNSS, satellite navigation, available or denied) and, on the retropropulsion descent, the Mach band and the thrust state. The three burn-phase entries show the Mach band cascading from supersonic to transonic to subsonic.',
   },
   {
     name: 'nav',
@@ -83,7 +83,7 @@ const entries = [
   },
   {
     name: 'SRP drag closure inert',
-    text: 'The supersonic-retropulsion (SRP) drag closure reports that it applied nothing: no throttle was commanded, so no decrement was applied. It logs its inertness rather than applying nothing silently.',
+    text: 'The supersonic-retropropulsion (SRP) drag closure reports that it applied nothing: no throttle was commanded, so no decrement was applied. It logs its inertness rather than applying nothing silently.',
   },
   {
     name: 'stopping burn started',
@@ -129,7 +129,7 @@ const entries = [
     <h2>What does each entry mean?</h2>
     <p>
       Every stage that changes the story of a run appends one entry. These are fourteen consecutive
-      entries from the committed retropulsion descent, which carries twenty-two in total:
+      entries from the committed retropropulsion descent, which carries twenty-two in total:
     </p>
 
     <Code code={retroLog} lang="text" themes={SHIKI} />
@@ -185,7 +185,7 @@ const entries = [
       then comes back once fixes resume.
     </p>
     <p>
-      The retropulsion descent supports the same reading across a Mach boundary. It logs
+      The retropropulsion descent supports the same reading across a Mach boundary. It logs
       supersonic, transonic and subsonic entries in one sequence with the thrust state on each
       line, so the flow parameters before and after the transition sit in the same record.
     </p>
@@ -208,7 +208,7 @@ const entries = [
 
     <ul class="nums">
       <li>Corridor descent: 16 entries covering four legs, two regime bands and one committed what-if.</li>
-      <li>Retropulsion descent: 22 entries covering blackout, ignition commit, a carrier rebuild, the stopping burn and touchdown.</li>
+      <li>Retropropulsion descent: 22 entries covering blackout, ignition commit, a carrier rebuild, the stopping burn and touchdown.</li>
       <li>Weather table: 48 descents, each carrying its own log, gated on the <code>!!ContextAlternation!!</code> marker naming its baseline.</li>
     </ul>
 

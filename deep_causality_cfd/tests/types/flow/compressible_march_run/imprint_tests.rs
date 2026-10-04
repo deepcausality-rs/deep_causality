@@ -14,7 +14,7 @@ use deep_causality_tensor::Truncation;
 
 // ── Plume re-imprint: the carrier's field-reading reconfiguration channel (M3) ──
 
-/// A nozzle inside the Cordell validity envelope, matching the retropulsion-stage tests.
+/// A nozzle inside the Cordell validity envelope, matching the retropropulsion-stage tests.
 fn imprint_nozzle() -> deep_causality_cfd::PlumeNozzle<f64> {
     deep_causality_cfd::PlumeNozzle::new(
         2.0e6,

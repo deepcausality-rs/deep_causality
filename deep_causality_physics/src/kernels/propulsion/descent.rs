@@ -5,7 +5,7 @@
 
 //! Powered-descent kinematics kernels: the closed-form stopping distance,
 //! the ignition-altitude solution, and the suicide-burn deceleration command.
-//! These are the Tier-A terminal-guidance closed forms of the retropulsion
+//! These are the Tier-A terminal-guidance closed forms of the retropropulsion
 //! descent; Apollo polynomial guidance (Klumpp 1974) and convex
 //! powered-descent guidance (Açıkmeşe & Ploen 2007) are the named upgrade
 //! path beyond them.

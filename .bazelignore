@@ -29,9 +29,9 @@ video/cfd/node_modules
 video/cfd/plasma_blackout/node_modules
 video/cfd/plasma_blackout/public/traces
 video/cfd/plasma_blackout/out
-video/cfd/retropulsion/node_modules
-video/cfd/retropulsion/public/traces
-video/cfd/retropulsion/out
+video/cfd/retropropulsion/node_modules
+video/cfd/retropropulsion/public/traces
+video/cfd/retropropulsion/out
 video/cfd/shared/node_modules
 video/cfd/weather/node_modules
 video/cfd/weather/public/traces

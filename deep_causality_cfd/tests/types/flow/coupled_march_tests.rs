@@ -123,7 +123,7 @@ fn builder_until_pauses_at_the_event() {
     assert_eq!(pause.state().step(), 3);
 }
 
-// ── The typed leg re-seed counter (change `fix-retropulsion-measurement-integrity`) ───────────
+// ── The typed leg re-seed counter (change `fix-retropropulsion-measurement-integrity`) ───────────
 
 #[test]
 fn the_re_seed_counter_accumulates_across_chained_legs() {

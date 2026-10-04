@@ -45,7 +45,7 @@ impl GoverningModel {
     }
 }
 
-/// The compressibility band of the flight phase (change `add-retropulsion-coupled-stages`,
+/// The compressibility band of the flight phase (change `add-retropropulsion-coupled-stages`,
 /// capability `flight-regime-classifier`), read from the carrier-published `"flight_mach"`.
 /// [`Unknown`](Self::Unknown) is the neutral value a world that publishes no Mach carries, so the
 /// corridor's classification is unchanged.
