@@ -52,7 +52,8 @@ export const Pause: React.FC<{ retro: Retro; timing: SceneTiming }> = ({ retro: 
     const e = end(k);
     return `M${nose.x},${nose.y} C${nose.x + dx * 0.45},${nose.y + dy * 0.45} ${e.x - dx * 0.35},${e.y - dy * 0.35} ${e.x},${e.y}`;
   };
-  const names = [...r.branches].sort((a, b) => a.commanded - b.commanded).map((b) => (b.commanded === 0 ? 'coast' : b.commanded.toFixed(2)));
+  // One fan line and one label per branch, in throttle order.
+  const byThrottle = [...r.branches].sort((a, b) => a.commanded - b.commanded);
 
   return (
     <AbsoluteFill style={{ background: color.bg0 }}>
@@ -76,9 +77,9 @@ export const Pause: React.FC<{ retro: Retro; timing: SceneTiming }> = ({ retro: 
         <QuestionTitle n={1} text="How hard to burn?" x={96} y={230} opacity={question} />
         <Hud retro={r} s={s} frozen={freeze} />
         <svg width={1920} height={1080} style={{ position: 'absolute', inset: 0 }}>
-          {Array.from({ length: N }, (_, k) => (
+          {byThrottle.map((b, k) => (
             <path
-              key={k}
+              key={b.name}
               d={path(k)}
               fill="none"
               stroke={color.accent}
@@ -90,11 +91,11 @@ export const Pause: React.FC<{ retro: Retro; timing: SceneTiming }> = ({ retro: 
             />
           ))}
         </svg>
-        {names.map((n, k) => {
+        {byThrottle.map((b, k) => {
           const e = end(k);
           return (
             <div
-              key={n}
+              key={b.name}
               style={{
                 position: 'absolute',
                 left: e.x - 130,
@@ -107,7 +108,7 @@ export const Pause: React.FC<{ retro: Retro; timing: SceneTiming }> = ({ retro: 
                 opacity: interpolate(fan, [0.5 + k * 0.08, 0.8 + k * 0.04], [0, 1], clamp),
               }}
             >
-              {n}
+              {b.commanded === 0 ? 'coast' : b.commanded.toFixed(2)}
             </div>
           );
         })}

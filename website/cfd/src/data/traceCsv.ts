@@ -12,7 +12,7 @@ export type Row = Record<string, number>;
  * `name` is the file name the errors report.
  */
 export function parseRows(csv: string, name: string): Row[] {
-  const lines = csv.trim().split('\n');
+  const lines = csv.trim().split(/\r?\n/);
   const names = lines[0].split(',');
   return lines
     .slice(1)

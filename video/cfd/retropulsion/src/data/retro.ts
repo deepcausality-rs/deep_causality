@@ -10,21 +10,7 @@
  * render.
  */
 import { staticFile } from 'remotion';
-
-type Row = Record<string, number>;
-
-/** Parse the two-row-header CSV `write_rows` emits: names, then `#units`, then data. */
-const parseRows = (csv: string): Row[] => {
-  const lines = csv.trim().split('\n');
-  const names = lines[0].split(',');
-  return lines
-    .slice(1)
-    .filter((l) => !l.startsWith('#units'))
-    .map((l) => {
-      const cells = l.split(',').map(Number);
-      return Object.fromEntries(names.map((n, i) => [n, cells[i]]));
-    });
-};
+import { parseRows, type Row } from '@cfd-video/shared/csv';
 
 const fail = (msg: string): never => {
   throw new Error(`retropulsion data: ${msg}`);
@@ -120,7 +106,7 @@ export async function loadRetro(): Promise<Retro> {
   const printed = (re: RegExp, what: string) => outputTxt.match(re) ?? fail(`output.txt has no ${what}`);
 
   // ── Plan: the measured day reads the weather table ─────────────────────────────────────────
-  const table = parseRows(weatherCsv).sort((a, b) => a.d_temp - b.d_temp);
+  const table = parseRows(weatherCsv, 'weather_table.csv').sort((a, b) => a.d_temp - b.d_temp);
   const plan = printed(/measured dT = (-?[0-9.]+) K -> drift ([0-9.]+) \+- ([0-9.]+) m, ignition margin ([0-9.]+) m \(k = ([0-9.]+)\)/, 'Act 0 plan line');
   const standardPlan = printed(/standard-day belief \(the uninformed world\) -> margin ([0-9.]+) m/, 'standard-day belief line');
   const measuredDT = Number(plan[1]);
@@ -162,35 +148,42 @@ export async function loadRetro(): Promise<Retro> {
     heatFlux: r.heat_flux,
     gamma: r.speed > 0 ? Math.asin(Math.min(1, Math.max(-1, r.descent_rate / r.speed))) : Math.PI / 2,
   });
-  const samples = parseRows(descentCsv).map(toSample);
+  const samples = parseRows(descentCsv, 'retropulsion_trace.csv').map(toSample);
   if (samples.some((s) => !Number.isFinite(s.speed) || !Number.isFinite(s.heatFlux) || !Number.isFinite(s.ne))) {
     fail('retropulsion_trace.csv has no speed, ne_peak or heat_flux column; re-run the example');
   }
-  const uninformedSamples = parseRows(uninformedCsv).map(toSample);
+  const uninformedSamples = parseRows(uninformedCsv, 'retropulsion_uninformed_trace.csv').map(toSample);
 
   const legEnd = (leg: number) => samples.findLastIndex((s) => s.leg === leg);
   const deniedFrom = samples.findIndex((s) => s.denied);
   const deniedTo = samples.findLastIndex((s) => s.denied);
   if (deniedFrom < 0) fail('no blackout in retropulsion_trace.csv');
   // The throttle flown lags the command by one step, so the corridor commits on the step before the
-  // first lit row.
-  const commitIx = samples.findIndex((s, i) => s.leg === 2 && s.throttle > 0 && i > deniedTo) - 1;
-  if (commitIx < 0) fail('no ignition in retropulsion_trace.csv');
+  // first lit row; output.txt prints that step, counted from 1 within leg 2.
+  const THROTTLE_LAG_STEPS = 1;
+  const firstLitIx = samples.findIndex((s, i) => s.leg === 2 && s.throttle > 0 && i > deniedTo);
+  if (firstLitIx < 0) fail('no ignition in retropulsion_trace.csv');
+  const commitIx = firstLitIx - THROTTLE_LAG_STEPS;
+  const commitPrinted = printed(/ignition corridor committed at step (\d+): Mach ([0-9.]+)/, 'ignition commit line');
+  const printedCommitIx = samples.findIndex((s) => s.leg === 2) + Number(commitPrinted[1]) - 1;
+  if (commitIx !== printedCommitIx) {
+    fail(`the first lit row is ${firstLitIx - printedCommitIx} step(s) after the commit output.txt prints at step ${commitPrinted[1]}; the throttle lag is ${THROTTLE_LAG_STEPS}`);
+  }
   const window = printed(/blackout onset at ([0-9.]+) s against the table's [0-9.]+ s for this day \(error [0-9.]+ s\) and dwell ([0-9.]+) s/, 'gate (1) window');
   const blackout = { from: samples[deniedFrom].t, to: samples[deniedTo].t, dwell: Number(window[2]) };
   if (!near(blackout.from, Number(window[1]), 0.051)) fail(`the trace loses GPS at ${blackout.from} s; gate (1) says ${window[1]} s`);
   if (!near(blackout.to + 0.1 - blackout.from, blackout.dwell, 0.15)) fail(`the trace's blackout lasts ${blackout.to + 0.1 - blackout.from} s; gate (1) says ${blackout.dwell} s`);
-  const commitPrinted = printed(/ignition corridor committed at step \d+: Mach ([0-9.]+)/, 'ignition commit line');
   const ignition = { t: samples[commitIx].t, altitudeKm: samples[commitIx].altitudeKm, mach: samples[commitIx].mach };
-  if (!near(ignition.mach, Number(commitPrinted[1]), 1e-6)) fail(`the trace commits at Mach ${ignition.mach}; output.txt says ${commitPrinted[1]}`);
+  if (!near(ignition.mach, Number(commitPrinted[2]), 1e-6)) fail(`the trace commits at Mach ${ignition.mach}; output.txt says ${commitPrinted[2]}`);
 
-  // The fork: the end of the coast-and-burn leg, as the act line prints it.
-  const act = (name: string) =>
+  // The fork: the end of the coast-and-burn leg, as the act line prints it. `title` is the act's
+  // printed title; a block in any other layout fails the load.
+  const act = (title: string) =>
     printed(
-      new RegExp(`--- Act: ${name}[^\\n]*\\n\\s+steps\\s+(\\d+) \\| altitude\\s+([0-9.]+) km \\| Mach\\s+([0-9.]+)[^\\n]*\\n\\s+mass\\s+[0-9.]+ kg \\| propellant\\s+([0-9.]+) kg \\| throttle ([0-9.]+) \\| q\\s+([0-9.]+) Pa`),
-      `${name} act lines`
+      new RegExp(`--- Act: ${title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[^\\n]*\\n\\s+steps\\s+(\\d+) \\| altitude\\s+([0-9.]+) km \\| Mach\\s+([0-9.]+)[^\\n]*\\n\\s+mass\\s+[0-9.]+ kg \\| propellant\\s+([0-9.]+) kg \\| throttle ([0-9.]+) \\| q\\s+([0-9.]+) Pa`),
+      `'--- Act: ${title}' block of the form 'steps N | altitude A km | Mach M ...' then 'mass X kg | propellant P kg | throttle T | q Q Pa'`
     );
-  const forkAct = act('COAST \\+ BURN');
+  const forkAct = act('COAST + BURN');
   const f = samples[legEnd(2)];
   const fork = { t: f.t, altitudeKm: Number(forkAct[2]), mach: Number(forkAct[3]), throttle: Number(forkAct[5]), q: Number(forkAct[6]), propellant: Number(forkAct[4]) };
   if (!near(f.altitudeKm, fork.altitudeKm, 0.006) || !near(f.mach, fork.mach, 0.006) || !near(f.throttle, fork.throttle, 0.006)) {
@@ -240,8 +233,8 @@ export async function loadRetro(): Promise<Retro> {
   }
 
   // ── The mid-burn fork ────────────────────────────────────────────────────────────────────────
-  const roster = parseRows(rosterCsv);
-  const branchRows = parseRows(branchCsv);
+  const roster = parseRows(rosterCsv, 'retropulsion_branches.csv');
+  const branchRows = parseRows(branchCsv, 'retropulsion_branch_trace.csv');
   const names = new Map<number, string>();
   for (const m of outputTxt.matchAll(/^ {2}([a-z]+)\s+([0-9.]+)\s+([0-9.]+)\s+(—|-?[0-9.]+)\s+([0-9.]+)/gm)) {
     names.set(Number(m[2]), m[1]);
@@ -280,6 +273,10 @@ export async function loadRetro(): Promise<Retro> {
     .map((l) => l.match(/\[(PASS|FAIL)\] \[\w+\] (\([0-9a-z]+\) [^:]+):/))
     .filter((m): m is RegExpMatchArray => m !== null)
     .map((m) => ({ passed: m[1] === 'PASS', label: m[2] }));
+  const gateLines = outputTxt.match(/\[(PASS|FAIL)\]/g)?.length ?? 0;
+  if (gates.length === 0 || gates.length !== gateLines) {
+    fail(`output.txt has ${gateLines} gate lines; ${gates.length} read as '[PASS|FAIL] [kind] (id) label:'`);
+  }
 
   return {
     belief,

@@ -16,6 +16,7 @@ const sci = (v: number) => {
 export function checkCaptions(c: Corridor): void {
   const coarse = c.branches.filter((b) => b.round === 1);
   const fine = c.branches.filter((b) => b.round === 2).sort((a, b) => a.bank - b.bank);
+  if (fine.length < 2) throw new Error(`captions: the fine round needs two branches to state their spacing; the run has ${fine.length}`);
   const best = coarse.reduce((a, b) => (b.miss < a.miss ? b : a));
   const clamped = coarse.find((b) => b.flown < b.bank - 0.5);
   if (!clamped) throw new Error('captions: no clamped branch in the coarse round');

@@ -135,7 +135,9 @@ const wallVertex = /* glsl */ `
     vPosO = position;
     vec4 world = modelMatrix * vec4(position, 1.0);
     vNormalO = normal;
-    vNormalW = normalize(mat3(modelMatrix) * normal);
+    // Normals take the inverse transpose: the shock, which shares this shader, is widened across
+    // the axis only.
+    vNormalW = normalize(transpose(inverse(mat3(modelMatrix))) * normal);
     vViewDir = normalize(cameraPosition - world.xyz);
     gl_Position = projectionMatrix * viewMatrix * world;
   }
@@ -294,7 +296,8 @@ const plumeVertex = /* glsl */ `
     vAlong = -position.y;
     vAround = atan(position.z, position.x);
     vec4 world = modelMatrix * vec4(position, 1.0);
-    vNormalW = normalize(mat3(modelMatrix) * normal);
+    // Normals take the inverse transpose: the plume is stretched along its axis only.
+    vNormalW = normalize(transpose(inverse(mat3(modelMatrix))) * normal);
     vViewDir = normalize(cameraPosition - world.xyz);
     gl_Position = projectionMatrix * viewMatrix * world;
   }
@@ -354,8 +357,9 @@ export const Capsule: React.FC<CapsuleProps> = ({ heat, tStag, sheath, time, alp
 
   // The flight direction in the body frame: the flow frame's −y, seen from the tilted body.
   const flight = new THREE.Vector3(0, -1, 0).applyAxisAngle(Z_AXIS, -alpha);
-  // The plume holds the bow shock off ahead of its tip.
-  const standoff = throttle > 0 ? 0.75 * plume : 0;
+  // The plume holds the bow shock off ahead of its tip: the shock stands as far ahead of the tip as
+  // it stands ahead of the heatshield with the engine dark.
+  const standoff = throttle > 0 ? plume : 0;
   const widen = 1 + (0.25 * standoff) / DIAMETER;
 
   // Fresh uniform objects every render: R3F copies their values into the material's own uniform

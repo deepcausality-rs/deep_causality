@@ -7,20 +7,7 @@
  * which fails `calculateMetadata` and so the render.
  */
 import { staticFile } from 'remotion';
-
-type Row = Record<string, number>;
-
-const parseRows = (csv: string): Row[] => {
-  const lines = csv.trim().split('\n');
-  const names = lines[0].split(',');
-  return lines
-    .slice(1)
-    .filter((l) => !l.startsWith('#units'))
-    .map((l) => {
-      const cells = l.split(',').map(Number);
-      return Object.fromEntries(names.map((n, i) => [n, cells[i]]));
-    });
-};
+import { parseRows, type Row } from '@cfd-video/shared/csv';
 
 const fail = (msg: string): never => {
   throw new Error(`corridor data: ${msg}`);
@@ -97,6 +84,9 @@ export interface Corridor {
   gates: { passed: boolean; label: string }[];
 }
 
+/** The recorded step of the flown descent nearest flight time `t`. */
+export const sampleAt = (c: Corridor, t: number) => c.descent.reduce((a, s) => (Math.abs(s.t - t) < Math.abs(a.t - t) ? s : a));
+
 const fetchText = async (file: string) => {
   const res = await fetch(staticFile(`traces/${file}`));
   if (!res.ok) fail(`cannot read traces/${file}; run pnpm sync`);
@@ -109,8 +99,8 @@ export async function loadCorridor(): Promise<Corridor> {
     fetchText('corridor_branch_trace.csv'),
     fetchText('output.txt'),
   ]);
-  const descent = parseRows(descentCsv);
-  const branchRows = parseRows(branchCsv);
+  const descent = parseRows(descentCsv, 'corridor_trace.csv');
+  const branchRows = parseRows(branchCsv, 'corridor_branch_trace.csv');
   const printed = (re: RegExp, what: string) => outputTxt.match(re) ?? fail(`output.txt has no ${what}`);
 
   // ── The pause ────────────────────────────────────────────────────────────────────────────
@@ -147,6 +137,10 @@ export async function loadCorridor(): Promise<Corridor> {
   const b0 = ballistic[ballistic.length - 1];
   const aim = { x: b0.x, y: b0.y, z: b0.z - AIM_OFFSET_M };
   const branches: Branch[] = [...byBranch.values()].map((rows) => {
+    // The sideways distance compares each branch with the zero-bank one step for step.
+    if (rows.length !== ballistic.length || rows.some((r, i) => !near(r.t, ballistic[i].t, 1e-9))) {
+      fail(`the round-${rows[0].round} ${rows[0].bank_cmd}° branch (${rows.length} steps) does not step with the zero-bank branch (${ballistic.length} steps)`);
+    }
     const e = rows[rows.length - 1];
     return {
       round: rows[0].round === 1 ? 1 : 2,

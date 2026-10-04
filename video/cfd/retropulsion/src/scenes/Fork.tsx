@@ -11,14 +11,18 @@ import { at, Captions, color, Eyebrow, fade, font, Stage } from '@cfd-video/shar
 
 const clamp = { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' } as const;
 const ease = Easing.bezier(0.16, 1, 0.3, 1);
+const fail = (msg: string): never => {
+  throw new Error(`fork scene: ${msg}`);
+};
 
 export const Fork: React.FC<{ retro: Retro; timing: SceneTiming }> = ({ retro: r, timing }) => {
   const frame = useCurrentFrame();
   const ph = timing.phrases;
   const span = (i: number, a = 0, b = 1) => interpolate(frame, [at(ph, i, a), at(ph, i, b)], [0, 1], { ...clamp, easing: ease });
   const branches = [...r.branches].sort((a, b) => a.flown - b.flown);
-  const coast = branches.find((b) => b.flown === 0)!;
+  const coast = branches.find((b) => b.flown === 0) ?? fail('no branch flies throttle 0, the coasting reference');
   const burning = branches.filter((b) => b.flown > 0);
+  if (burning.length === 0) fail('no branch flies a throttle above 0');
   const dip = burning.reduce((a, b) => (b.deceleration < a.deceleration ? b : a));
   const shown = (b: Branch) => (b === coast ? span(1, 0, 0.4) : b === dip ? span(2, 0, 0.4) : span(4, 0.05, 0.5));
   const tone = (b: Branch) => (b === coast ? color.fg0 : b === dip ? color.accent : color.fg1);

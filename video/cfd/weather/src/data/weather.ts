@@ -8,21 +8,7 @@
  * render.
  */
 import { staticFile } from 'remotion';
-
-type Row = Record<string, number>;
-
-/** Parse the two-row-header CSV `write_rows` emits: names, then `#units`, then data. */
-const parseRows = (csv: string): Row[] => {
-  const lines = csv.trim().split('\n');
-  const names = lines[0].split(',');
-  return lines
-    .slice(1)
-    .filter((l) => !l.startsWith('#units'))
-    .map((l) => {
-      const cells = l.split(',').map(Number);
-      return Object.fromEntries(names.map((n, i) => [n, cells[i]]));
-    });
-};
+import { parseRows } from '@cfd-video/shared/csv';
 
 const fail = (msg: string): never => {
   throw new Error(`weather data: ${msg}`);
@@ -121,9 +107,9 @@ export async function loadWeather(): Promise<Weather> {
   const flightS = Number(baselineLine[2]);
 
   // ── The table, row by row against the printed rows ───────────────────────────────────────────
-  const table = parseRows(tableCsv);
-  const drawRows = parseRows(drawsCsv);
-  const traceRows = parseRows(traceCsv);
+  const table = parseRows(tableCsv, 'weather_table.csv');
+  const drawRows = parseRows(drawsCsv, 'weather_draws.csv');
+  const traceRows = parseRows(traceCsv, 'weather_trace.csv');
   if (traceRows.some((r) => !Number.isFinite(r.speed) || !Number.isFinite(r.heat_flux) || !Number.isFinite(r.ne_peak))) {
     fail('weather_trace.csv has no mach, speed, ne_peak or heat_flux column; re-run the example');
   }

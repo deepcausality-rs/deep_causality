@@ -6,12 +6,11 @@
  * spread carries no data, and the next scene draws the real one.
  */
 import { AbsoluteFill, interpolate, useCurrentFrame, useVideoConfig, Easing } from 'remotion';
-import type { Corridor } from '../data/corridor';
+import { sampleAt, type Corridor } from '../data/corridor';
 import type { SceneTiming } from '../timeline';
 import { at, Backdrop, Captions, color, Eyebrow, fade, Flight, font, noseOnStage, Sci, sheathFromDensity, Stage, stagnationTemperature, StateCard } from '@cfd-video/shared';
 import type { Shot } from '@cfd-video/shared';
 import { Timeline } from '../views/Timeline';
-import { sampleAt } from './Problem';
 
 const clamp = { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' } as const;
 const ease = Easing.bezier(0.45, 0, 0.55, 1);

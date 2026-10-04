@@ -1,7 +1,9 @@
 /**
  * Scene 2, the question: seen from above, the descent so far, the no-bank path ahead, and an aim
  * point 20 m to the side. A dial shows what the bank angle is. Downrange is compressed so the 20 m
- * offset is visible beside kilometres of flight; the sideways scale is stated on screen.
+ * offset is visible beside kilometres of flight; the sideways scale is stated on screen. The
+ * candidate paths are schematic, and labelled so: their ends carry no data, and the fork scene
+ * draws the traced branches.
  */
 import { AbsoluteFill, interpolate, useCurrentFrame, Easing } from 'remotion';
 import type { Corridor } from '../data/corridor';
@@ -27,6 +29,8 @@ export const Question: React.FC<{ corridor: Corridor; timing: SceneTiming }> = (
   const bank = interpolate(frame, [at(ph, 0, 0.1), at(ph, 0, 0.5), at(ph, 0, 0.9), at(ph, 1, 0.3)], [0, 28, -12, 12], { ...clamp, easing: ease });
   const navErr = c.pause.navErr;
 
+  // Schematic sideways ends of the candidate paths, m.
+  const candidates = [6, 14, 20, 28];
   const candidate = (k: number) => {
     const endY = y0 - k * PX_PER_M;
     return `M${pauseX},${y0} C${pauseX + 380},${y0} ${aimX - 420},${endY} ${aimX},${endY}`;
@@ -40,7 +44,7 @@ export const Question: React.FC<{ corridor: Corridor; timing: SceneTiming }> = (
           {/* The descent so far, the pause, the no-bank path ahead. */}
           <line x1={160} y1={y0} x2={pauseX} y2={y0} stroke={color.accent} strokeWidth={3} pathLength={1} strokeDasharray={1} strokeDashoffset={1 - past} />
           <line x1={pauseX} y1={y0} x2={aimX + 140} y2={y0} stroke={color.fg2} strokeWidth={2} strokeDasharray="10 10" opacity={ahead} />
-          {[6, 14, 20, 28].map((k, i) => (
+          {candidates.map((k, i) => (
             <path key={k} d={candidate(k)} fill="none" stroke={color.fg1} strokeWidth={1.6} strokeDasharray="4 8" opacity={0.6 * options * (i === 2 ? 1 : 0.7)} />
           ))}
           {/* The aim and the offset that defines it. */}
@@ -74,6 +78,10 @@ export const Question: React.FC<{ corridor: Corridor; timing: SceneTiming }> = (
           <div style={{ fontSize: 16, color: color.fg2 }}>set by the example</div>
         </div>
         <div style={{ position: 'absolute', left: (pauseX + aimX) / 2 - 20, top: y0 - 230, fontFamily: font.sans, fontSize: 64, color: color.fg0, opacity: options }}>?</div>
+        <div style={{ position: 'absolute', left: aimX + 18, top: y0 - Math.max(...candidates) * PX_PER_M - 40, fontFamily: font.mono, fontSize: 19, color: color.fg1, opacity: options }}>
+          candidate paths
+          <div style={{ fontSize: 16, color: color.fg2 }}>schematic</div>
+        </div>
         <div style={{ position: 'absolute', right: 96, bottom: 168, fontFamily: font.mono, fontSize: 16, color: color.fg2, opacity: ahead }}>
           downrange compressed · sideways {PX_PER_M} px per metre
         </div>

@@ -51,9 +51,17 @@ export const segmentSeconds = <Id extends string>(s: Segment<Id>) => s.phrases.r
 
 /**
  * The timing of a cut: `lead` and `tail` are the seconds before each scene's first phrase and after
- * its last.
+ * its last. Throws on a cut with no segments, or a segment without a finite, non-negative lead and
+ * tail.
  */
 export function makeTimeline<Id extends string>(segments: Segment<Id>[], lead: Record<Id, number>, tail: Record<Id, number>) {
+  if (segments.length === 0) throw new Error('makeTimeline: the cut has no narration segments');
+  for (const s of segments) {
+    for (const [name, table] of [['lead', lead], ['tail', tail]] as const) {
+      const seconds = table[s.id];
+      if (!Number.isFinite(seconds) || seconds < 0) throw new Error(`makeTimeline: segment '${s.id}' has ${name} ${seconds}; expected seconds ≥ 0`);
+    }
+  }
   const sceneTimings = (fps: number): SceneTiming<Id>[] => {
     let from = 0;
     return segments.map((s, i) => {

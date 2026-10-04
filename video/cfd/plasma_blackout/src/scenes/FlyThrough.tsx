@@ -5,12 +5,11 @@
  * trace.
  */
 import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion';
-import type { Corridor } from '../data/corridor';
+import { sampleAt, type Corridor } from '../data/corridor';
 import type { SceneTiming } from '../timeline';
 import { at, Backdrop, Captions, color, Eyebrow, fade, Flight, font, noseOnStage, Readout, SatLinks, Sci, sheathFromDensity, Stage, stagnationTemperature, Strip } from '@cfd-video/shared';
 import type { Shot } from '@cfd-video/shared';
 import { Timeline } from '../views/Timeline';
-import { sampleAt } from './Problem';
 
 const clamp = { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' } as const;
 

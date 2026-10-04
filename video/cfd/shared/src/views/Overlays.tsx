@@ -9,6 +9,9 @@ import { Caption } from './Text';
 
 const clamp01 = { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' } as const;
 
+/** The colour of a tone; no tone, or `fg`, is the primary foreground. */
+const toneColor = (tone?: 'accent' | 'warn' | 'fg') => (tone === 'accent' ? color.accent : tone === 'warn' ? color.warn : color.fg0);
+
 /** The scene's phrase on screen now, if any. */
 export const Captions: React.FC<{ phrases: PhraseTiming[] }> = ({ phrases }) => {
   const frame = useCurrentFrame();
@@ -65,7 +68,6 @@ export const Strip: React.FC<{
     if (t[i] < tFrom || t[i] > Math.min(tNow, tTo)) continue;
     pts.push(`${pts.length === 0 ? 'M' : 'L'}${px(t[i]).toFixed(1)},${py(v[i]).toFixed(1)}`);
   }
-  const toneColor = (tone?: string) => (tone === 'accent' ? color.accent : tone === 'warn' ? color.warn : color.fg0);
   const head = t.reduce((best, s, i) => (s <= tNow && s >= tFrom ? i : best), -1);
   return (
     <div
@@ -187,7 +189,7 @@ export const Readout: React.FC<{ rows: ReadoutRow[]; opacity?: number }> = ({ ro
         style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: i < rows.length - 1 ? `1px solid ${color.line1}` : 'none' }}
       >
         <span style={{ fontSize: 19, color: color.fg1 }}>{r.label}</span>
-        <span style={{ fontSize: r.size ?? 23, color: r.tone === 'accent' ? color.accent : r.tone === 'warn' ? color.warn : color.fg0 }}>{r.value}</span>
+        <span style={{ fontSize: r.size ?? 23, color: toneColor(r.tone) }}>{r.value}</span>
       </div>
     ))}
   </div>

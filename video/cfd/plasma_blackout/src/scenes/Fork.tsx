@@ -13,8 +13,14 @@ import { EndArc } from '../views/EndArc';
 const clamp01 = { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' } as const;
 const ease = Easing.bezier(0.16, 1, 0.3, 1);
 
+/** The steps the scene animates, one per phrase of the fork narration, in script order. */
+const STEPS = ['ahead', 'roundOne', 'clamp', 'best', 'roundTwo', 'arc', 'result'] as const;
+
 export const Fork: React.FC<{ corridor: Corridor; timing: SceneTiming }> = ({ corridor, timing }) => {
   const frame = useCurrentFrame();
+  if (timing.phrases.length !== STEPS.length) {
+    throw new Error(`fork: the scene animates ${STEPS.length} steps, one per phrase (${STEPS.join(', ')}); the fork narration has ${timing.phrases.length} phrases`);
+  }
   const [ahead, roundOne, clamp, best, roundTwo, arc, result] = timing.phrases.map((p) => ({ start: p.start, end: p.start + p.length }));
   const span = (r: { start: number; end: number }, from = 0, to = 1) =>
     interpolate(frame, [r.start + (r.end - r.start) * from, r.start + (r.end - r.start) * to], [0, 1], { ...clamp01, easing: ease });

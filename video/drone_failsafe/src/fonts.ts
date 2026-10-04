@@ -1,4 +1,6 @@
-import { continueRender, delayRender, staticFile } from "remotion";
+/// <reference lib="dom.iterable" />
+// dom.iterable declares FontFaceSet as a Set<FontFace>, which is where `document.fonts.add` is typed.
+import { cancelRender, continueRender, delayRender, staticFile } from "remotion";
 
 const faces: [string, string][] = [
   ["Geist", "fonts/geist-latin.woff2"],
@@ -7,7 +9,7 @@ const faces: [string, string][] = [
 
 let loaded: Promise<void> | null = null;
 
-/** Loads Geist and JetBrains Mono once; rendering waits until both are ready. */
+/** Loads Geist and JetBrains Mono once; rendering waits until both are ready. A failed load cancels the render. */
 export function loadFonts(): void {
   if (loaded) return;
   const handle = delayRender("fonts");
@@ -15,7 +17,12 @@ export function loadFonts(): void {
     faces.map(async ([family, file]) => {
       const face = new FontFace(family, `url(${staticFile(file)}) format("woff2")`, { weight: "100 900" });
       await face.load();
-      (document.fonts as unknown as { add(f: FontFace): void }).add(face);
+      document.fonts.add(face);
     }),
-  ).then(() => continueRender(handle));
+  )
+    .then(() => continueRender(handle))
+    .catch((err: unknown) => {
+      loaded = null;
+      cancelRender(err);
+    });
 }

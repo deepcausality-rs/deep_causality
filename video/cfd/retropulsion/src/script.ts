@@ -1,6 +1,6 @@
 /**
- * The narration, one segment per scene: the single source for the audio file names, the captions
- * and, until recordings exist, the scene lengths. The text matches SCRIPT.md.
+ * The narration, one segment per scene: the single source for the captions, the SRT and the scene
+ * lengths, which `timeline.ts` sets from each phrase's spoken word count. The text matches SCRIPT.md.
  *
  * The story is two questions, posed at the start and answered in turn: how hard to burn at
  * supersonic speed (the pause and the fork), and when to light the landing burn (the plan, the

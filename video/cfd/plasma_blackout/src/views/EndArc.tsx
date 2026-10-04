@@ -28,8 +28,10 @@ export const EndArc: React.FC<{ corridor: Corridor; p: ArcProgress; x: number; y
     const phi = (i / 80) * capPhi;
     return `${i === 0 ? 'M' : 'L'}${ex(R * Math.sin(phi)).toFixed(1)},${ey(R * (1 - Math.cos(phi))).toFixed(1)}`;
   }).join(' ');
+  // A round-2 branch at a bank round 1 already flew ends on the same point; it is drawn once.
+  const roundOne = corridor.branches.filter((b) => b.round === 1);
   const ends = [...corridor.branches]
-    .filter((b) => !(b.round === 2 && b.bank === 10))
+    .filter((b) => b.round === 1 || !roundOne.some((r) => r.bank === b.bank))
     .sort((a, b) => a.bank - b.bank);
   const committed = corridor.branches.find((b) => b.round === 2 && b.bank === corridor.committed.bank)!;
   const aim = { x: ex(corridor.aimOffsetM), y: ey(0) };

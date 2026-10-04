@@ -30,6 +30,16 @@ export const Beliefs: React.FC<{ retro: Retro; timing: SceneTiming }> = ({ retro
   const path = (l: Landing) => height(l).map((p, i) => `${i === 0 ? 'M' : 'L'}${cx(p.t).toFixed(1)},${cy(p.h).toFixed(1)}`).join(' ');
   const draw = interpolate(frame, [at(ph, 0, 0.2), at(ph, 3, 0.5)], [0, 1], clamp);
   const ticks = Array.from({ length: hMax / 50 + 1 }, (_, i) => i * 50);
+  // The printed burn-light altitudes, on the chart's height axis.
+  const lightH = (l: Landing) => l.printed.lightM - r.groundM;
+  const curves: Array<[Landing, string]> = [
+    [uni, color.fg1],
+    [inf, color.accent],
+  ];
+  const markers: Array<[Landing, string]> = [
+    [inf, color.accent],
+    [uni, color.fg1],
+  ];
 
   const card = (l: Landing, y: number, title: string, tone: string, p: number) => (
     <div style={{ position: 'absolute', left: 1280, top: y, width: 520, opacity: p, fontFamily: font.mono }}>
@@ -54,26 +64,17 @@ export const Beliefs: React.FC<{ retro: Retro; timing: SceneTiming }> = ({ retro
             <line key={h} x1={C.x} y1={cy(h)} x2={C.x + C.w} y2={cy(h)} stroke={color.line1} strokeWidth={1} />
           ))}
           <line x1={C.x} y1={cy(0)} x2={C.x + C.w} y2={cy(0)} stroke={color.line2} strokeWidth={2} />
-          {[
-            [uni, color.fg1],
-            [inf, color.accent],
-          ].map(([l, tone]) => (
-            <path key={tone as string} d={path(l as Landing)} fill="none" stroke={tone as string} strokeWidth={3} strokeLinecap="round" pathLength={1} strokeDasharray={1} strokeDashoffset={1 - draw} />
+          {curves.map(([l, tone]) => (
+            <path key={tone} d={path(l)} fill="none" stroke={tone} strokeWidth={3} strokeLinecap="round" pathLength={1} strokeDasharray={1} strokeDashoffset={1 - draw} />
           ))}
-          {[
-            [inf, color.accent],
-            [uni, color.fg1],
-          ].map(([l, tone]) => {
-            const L = l as Landing;
-            return (
-              <g key={`m${tone}`} opacity={span(1, 0.1, 0.4)}>
-                <line x1={cx(L.lightT) - 30} y1={cy(L.printed.lightM)} x2={cx(L.lightT) + 30} y2={cy(L.printed.lightM)} stroke={tone as string} strokeWidth={2} />
-                <circle cx={cx(L.lightT)} cy={cy(L.printed.lightM)} r={8} fill={tone as string} />
-              </g>
-            );
-          })}
+          {markers.map(([l, tone]) => (
+            <g key={`m${tone}`} opacity={span(1, 0.1, 0.4)}>
+              <line x1={cx(l.lightT) - 30} y1={cy(lightH(l))} x2={cx(l.lightT) + 30} y2={cy(lightH(l))} stroke={tone} strokeWidth={2} />
+              <circle cx={cx(l.lightT)} cy={cy(lightH(l))} r={8} fill={tone} />
+            </g>
+          ))}
           <g opacity={span(1, 0.4, 0.8)}>
-            <line x1={cx(inf.lightT) - 50} y1={cy(inf.printed.lightM)} x2={cx(inf.lightT) - 50} y2={cy(uni.printed.lightM)} stroke={color.fg0} strokeWidth={1.5} />
+            <line x1={cx(inf.lightT) - 50} y1={cy(lightH(inf))} x2={cx(inf.lightT) - 50} y2={cy(lightH(uni))} stroke={color.fg0} strokeWidth={1.5} />
           </g>
         </svg>
         <div style={{ position: 'absolute', left: C.x - 30, top: C.y - 54, fontFamily: font.mono, fontSize: 19, color: color.fg1 }}>height above the touchdown plane, m</div>
@@ -83,7 +84,7 @@ export const Beliefs: React.FC<{ retro: Retro; timing: SceneTiming }> = ({ retro
           </div>
         ))}
         <div style={{ position: 'absolute', left: C.x + C.w - 240, top: C.y + C.h + 16, width: 240, textAlign: 'right', fontFamily: font.mono, fontSize: 18, color: color.fg1 }}>flight time →</div>
-        <div style={{ position: 'absolute', left: cx(inf.lightT) - 270, top: (cy(inf.printed.lightM) + cy(uni.printed.lightM)) / 2 - 14, width: 200, textAlign: 'right', fontFamily: font.mono, fontSize: 21, color: color.fg0, opacity: span(1, 0.5, 0.9) }}>
+        <div style={{ position: 'absolute', left: cx(inf.lightT) - 270, top: (cy(lightH(inf)) + cy(lightH(uni))) / 2 - 14, width: 200, textAlign: 'right', fontFamily: font.mono, fontSize: 21, color: color.fg0, opacity: span(1, 0.5, 0.9) }}>
           {(inf.printed.lightM - uni.printed.lightM).toFixed(2)} m higher
         </div>
         {card(inf, 240, `sized for today, −${Math.abs(r.belief.measuredDT)} K`, color.accent, span(0, 0.3, 0.6))}

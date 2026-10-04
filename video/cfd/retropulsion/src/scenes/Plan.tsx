@@ -41,7 +41,7 @@ export const Plan: React.FC<{ retro: Retro; timing: SceneTiming }> = ({ retro: r
       <div style={{ fontFamily: font.mono, fontSize: 21, color: tone }}>{label}</div>
       <svg width={B.w + 4} height={44} style={{ display: 'block', marginTop: 10 }}>
         <rect x={0} y={6} width={bx(mean) * p} height={32} fill={tone} opacity={0.85} />
-        <rect x={bx(mean)} y={6} width={Math.max(0, bx(b.k * sd) * p)} height={32} fill={tone} opacity={0.35} />
+        <rect x={bx(mean) * p} y={6} width={Math.max(0, bx(b.k * sd) * p)} height={32} fill={tone} opacity={0.35} />
       </svg>
       <div style={{ marginTop: 8, fontFamily: font.mono, fontSize: 20, color: color.fg1 }}>
         {mean.toFixed(2)} + {b.k} × {sd.toFixed(2)} = <span style={{ color: tone, fontSize: 26 }}>{(mean + b.k * sd).toFixed(2)} m</span>

@@ -4,15 +4,13 @@
  * that clock, and the plasma-frequency strip crosses the GPS L1 band on the traced step.
  */
 import { AbsoluteFill, interpolate, useCurrentFrame } from 'remotion';
-import type { Corridor } from '../data/corridor';
+import { sampleAt, type Corridor } from '../data/corridor';
 import type { SceneTiming } from '../timeline';
 import { at, Backdrop, Captions, color, Eyebrow, fade, Flight, font, noseOnStage, Readout, SatLinks, sheathFromDensity, Stage, stagnationTemperature, Strip } from '@cfd-video/shared';
 import type { Shot } from '@cfd-video/shared';
 import { Timeline } from '../views/Timeline';
 
 const clamp = { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' } as const;
-
-export const sampleAt = (c: Corridor, t: number) => c.descent.reduce((a, s) => (Math.abs(s.t - t) < Math.abs(a.t - t) ? s : a));
 
 export const Problem: React.FC<{ corridor: Corridor; timing: SceneTiming }> = ({ corridor: c, timing }) => {
   const frame = useCurrentFrame();

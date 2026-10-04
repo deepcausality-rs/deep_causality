@@ -7,17 +7,23 @@ export const Eyebrow: React.FC<{ text: string; x?: number; y?: number }> = ({ te
   <text x={x} y={y} fill={C.fg2} fontFamily={MONO} fontSize={20} letterSpacing={2}>{text}</text>
 );
 
+/** Chip text size; JetBrains Mono advances every glyph by 0.6 em. */
+const CHIP_FONT = 17;
+const CHAR = 0.6 * CHIP_FONT;
+const [PAD, GAP] = [18, 14];
+
 export const Chips: React.FC<{ items: [string, string, boolean?][] }> = ({ items }) => {
   let x = 96;
   return (
     <g>
       {items.map(([k, v, hot]) => {
-        const w = 22 + k.length * 11 + 14 + v.length * 11.4 + 22;
+        const vx = x + PAD + k.length * CHAR + GAP;
+        const w = vx - x + v.length * CHAR + PAD;
         const chip = (
           <g key={k}>
             <rect x={x} y={92} width={w} height={40} rx={6} fill={C.bg1} stroke={C.line1} opacity={0.94} />
-            <text x={x + 18} y={118} fill={C.fg2} fontFamily={MONO} fontSize={17}>{k}</text>
-            <text x={x + 18 + k.length * 10.4 + 14} y={118} fill={hot ? C.accent : C.fg0} fontFamily={MONO} fontSize={17}>{v}</text>
+            <text x={x + PAD} y={118} fill={C.fg2} fontFamily={MONO} fontSize={CHIP_FONT}>{k}</text>
+            <text x={vx} y={118} fill={hot ? C.accent : C.fg0} fontFamily={MONO} fontSize={CHIP_FONT}>{v}</text>
           </g>
         );
         x += w + 12;
@@ -29,6 +35,13 @@ export const Chips: React.FC<{ items: [string, string, boolean?][] }> = ({ items
 
 const URGENCY: Record<string, string> = { Routine: "routine", Practicable: "contingency", Possible: "emergency", LastResort: "last resort" };
 const label = (d: string) => URGENCY[d] ?? d.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase();
+
+/** The faults of the default night: the flight second and what fails. */
+const FAULTS: { t: number; what: string }[] = [
+  { t: 55, what: "fix lost" },
+  { t: 65, what: "link lost" },
+  { t: 85, what: "cell fails" },
+];
 
 /** Flight time from 0 to 100 s, the fault markers of the default night, and the playhead. */
 export const Timeline: React.FC<{ part: Part; t: number }> = ({ part, t }) => {
@@ -43,17 +56,17 @@ export const Timeline: React.FC<{ part: Part; t: number }> = ({ part, t }) => {
       {changes.filter((r) => r.t > 0 && r.t <= t).map((r) => (
         <text key={r.t} x={X(r.t)} y={y - 14} fill={C.fg1} fontFamily={MONO} fontSize={13} textAnchor="middle">{label(r.decision)}</text>
       ))}
-      {[[55, "fix lost 55 s"], [65, "link lost 65 s"], [85, "cell fails 85 s"]].map(([s, label]) => {
-        const passed = t >= (s as number);
+      {FAULTS.map((f) => {
+        const passed = t >= f.t;
         return (
-          <g key={s}>
-            <line x1={X(s as number)} y1={y - 9} x2={X(s as number)} y2={y + 9} stroke={passed ? C.fg0 : C.fg2} strokeWidth={2} />
-            <text x={X(s as number)} y={y + 30} fill={passed ? C.fg0 : C.fg2} fontFamily={MONO} fontSize={14} textAnchor="middle">{label}</text>
+          <g key={f.t}>
+            <line x1={X(f.t)} y1={y - 9} x2={X(f.t)} y2={y + 9} stroke={passed ? C.fg0 : C.fg2} strokeWidth={2} />
+            <text x={X(f.t)} y={y + 30} fill={passed ? C.fg0 : C.fg2} fontFamily={MONO} fontSize={14} textAnchor="middle">{`${f.what} ${f.t} s`}</text>
           </g>
         );
       })}
       <circle cx={X(t)} cy={y} r={7} fill={C.accent} />
-      <text x={X(t)} y={y + 30} fill={C.accent} fontFamily={MONO} fontSize={14} textAnchor="middle" opacity={Math.abs(t - 55) > 7 && Math.abs(t - 65) > 7 && Math.abs(t - 85) > 7 ? 1 : 0}>
+      <text x={X(t)} y={y + 30} fill={C.accent} fontFamily={MONO} fontSize={14} textAnchor="middle" opacity={FAULTS.every((f) => Math.abs(t - f.t) > 7) ? 1 : 0}>
         {`${Math.floor(t)} s`}
       </text>
     </g>
