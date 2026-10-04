@@ -10,11 +10,12 @@ const norm = (a: V3): V3 => {
   return [a[0] / l, a[1] / l, a[2] / l];
 };
 
-export function camera(eye: V3, target: V3, fovDeg: number, cx: number, cy: number): Camera {
+/** `zoom` scales the image about (cx, cy); 1 frames the block for the 1920 px frame. */
+export function camera(eye: V3, target: V3, fovDeg: number, cx: number, cy: number, zoom = 1): Camera {
   const f = norm(sub(target, eye));
   const r = norm(cross(f, [0, 0, 1]));
   const u = cross(r, f);
-  const foc = 960 / Math.tan((fovDeg * Math.PI) / 360);
+  const foc = (960 * zoom) / Math.tan((fovDeg * Math.PI) / 360);
   return { eye, f, r, u, foc, cx, cy };
 }
 

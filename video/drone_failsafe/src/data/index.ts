@@ -1,11 +1,10 @@
-// Typed access to the JSON scripts/data.mjs and scripts/timeline.mjs write.
+// Typed access to the JSON scripts/data.mjs writes.
 import worldJson from "./world.json";
 import flightsJson from "./flights.json";
 import patchesJson from "./patches.json";
 import ethosJson from "./ethos.json";
 import campaignJson from "./campaign.json";
 import factsJson from "./facts.json";
-import timelineJson from "./timeline.json";
 
 export type Row = {
   t: number;
@@ -21,9 +20,6 @@ export type Row = {
 };
 export type Touchdown = { t: number; x: number; y: number; outcome: string; surface: string; nearestPersonM: number };
 export type Part = 1 | 2 | 3 | 4;
-export type Cue = { file: string; text: string; from: number; durationInFrames: number };
-export type SceneSpec = { name: string; from: number; durationInFrames: number; cues: Cue[] };
-export type Cut = { durationInFrames: number; scenes: SceneSpec[] };
 
 export const world = worldJson as {
   x0: number;
@@ -44,7 +40,6 @@ export const ethos = ethosJson as {
 };
 export const campaign = campaignJson as number[][];
 export const facts = factsJson;
-export const timeline = timelineJson as { fps: number; main: Cut; clips: Cut[] };
 
 export const GROUNDS = ["Safe", "Steep", "Water", "Person", "Unsure", "Trees"] as const;
 export const ENDINGS = ["Resumed", "Safe", "NearPerson", "Ditched", "IntoRavine", "TippedAndRolled", "HitTrees", "Fell"] as const;

@@ -5,6 +5,7 @@ import { C, MONO, WORLD_W, H } from "../tokens";
 import { camera, lambert, project, type Camera, type V3 } from "../world/projection";
 import { elevation, LINE_ACROSS, PADS_ALONG } from "../world/terrain";
 import { droneAt, patchesAt, trackTo, world, type Part } from "../data";
+import { Worker } from "./Worker";
 
 export type WorldOptions = {
   part: Part;
@@ -25,6 +26,17 @@ export type WorldOptions = {
   /** Raise the camera's aim, in m, and widen its view, in degrees. */
   lift?: number;
   fov?: number;
+  /** The view's size in px, where the block's centre lands, and how large the block draws. */
+  width?: number;
+  height?: number;
+  cx?: number;
+  cy?: number;
+  zoom?: number;
+  /** Hold the block and the camera still, cut at this distance along the line, in m; the drone
+   * flies into the block and through it. Without it, the cut follows the drone. */
+  fixedCut?: number;
+  /** Effect Ethos verdicts to mark on the ground: approved, worth a look, or forbidden. */
+  verdicts?: { patch: [number, number]; kind: "approved" | "look" | "forbidden" }[];
 };
 
 const X0 = -24;
@@ -55,14 +67,16 @@ const pts = (ps: number[][]) => ps.map((p) => `${p[0].toFixed(1)},${p[1].toFixed
 
 export const WorldView: React.FC<WorldOptions> = (o) => {
   const drone = droneAt(o.part, o.t);
-  const cutY = Math.max(0, Math.min(470, drone.y));
-  // The aim rises with the drone, so a drone high over the slope stays in the frame.
+  const fixed = o.fixedCut !== undefined;
+  const cutY = o.fixedCut ?? Math.max(0, Math.min(470, drone.y));
+  // A following camera aims higher as the drone climbs, so it stays in the frame; a still one holds
+  // its aim.
   const droneZ = elevation(drone.x, drone.y) + drone.agl;
-  const target: V3 = [38, cutY + 22, 10 + (o.lift ?? Math.max(0, (droneZ - 30) * 0.55))];
+  const target: V3 = [38, cutY + 22, 10 + (o.lift ?? (fixed ? 0 : Math.max(0, (droneZ - 30) * 0.55)))];
   const a = ((o.orbit ?? 0) * Math.PI) / 180;
   const off: V3 = [-105, -277, 155];
   const rot: V3 = [off[0] * Math.cos(a) - off[1] * Math.sin(a), off[0] * Math.sin(a) + off[1] * Math.cos(a), off[2]];
-  const cam: Camera = camera([target[0] + rot[0], target[1] + rot[1], target[2] + rot[2]], target, o.fov ?? 30, 640, 610);
+  const cam: Camera = camera([target[0] + rot[0], target[1] + rot[1], target[2] + rot[2]], target, o.fov ?? 30, o.cx ?? 640, o.cy ?? 610, o.zoom ?? 1);
   const P = (p: V3) => project(cam, p);
   const known = o.knows ? patchesAt(o.part, o.t) : new Map();
 
@@ -153,20 +167,32 @@ export const WorldView: React.FC<WorldOptions> = (o) => {
     });
   }
 
-  // Objects drawn over the terrain: crew, pins, the drone, its shadow, cone and height.
+  // Verdicts of the Effect Ethos, marked on the patches they judged.
+  for (const [n, v] of (o.verdicts ?? []).entries()) {
+    const [i, j] = v.patch;
+    if (!inBlock(j * 4 + 2)) continue;
+    if (v.kind === "approved" || v.kind === "look") {
+      const r: V3[] = [onGround(i * 4 + 0.4, j * 4 + 0.4, 0.2), onGround(i * 4 + 3.6, j * 4 + 0.4, 0.2), onGround(i * 4 + 3.6, j * 4 + 3.6, 0.2), onGround(i * 4 + 0.4, j * 4 + 3.6, 0.2), onGround(i * 4 + 0.4, j * 4 + 0.4, 0.2)];
+      seg(`v${n}`, r, v.kind === "approved" ? C.accent : C.fg1, 1.3, v.kind === "look" ? { strokeDasharray: "3 3", opacity: 0.7 } : { opacity: 0.55 });
+    } else {
+      const col = C.fg1;
+      seg(`va${n}`, [onGround(i * 4 + 0.8, j * 4 + 0.8, 0.2), onGround(i * 4 + 3.2, j * 4 + 3.2, 0.2)], col, 1.8);
+      seg(`vb${n}`, [onGround(i * 4 + 3.2, j * 4 + 0.8, 0.2), onGround(i * 4 + 0.8, j * 4 + 3.2, 0.2)], col, 1.8);
+    }
+  }
+
+  // Objects drawn over the terrain: the crew, pins, the drone, its shadow, cone and height. Workers
+  // and the drone are drawn at three times their size so they read at this distance.
   const objects: React.ReactNode[] = [];
-  crew.filter(([, y]) => inBlock(y)).forEach(([cx, cy], n) => {
-    const g = elevation(cx, cy);
-    const feet = P([cx, cy, g]);
-    const head = P([cx, cy, g + 1.7 * 3]);
-    objects.push(
-      <g key={`crew${n}`}>
-        <ellipse cx={feet[0]} cy={feet[1]} rx={7} ry={2.5} fill="#000" opacity={0.5} />
-        <line x1={feet[0]} y1={feet[1]} x2={head[0]} y2={head[1] + 7} stroke={C.fg0} strokeWidth={3.5} strokeLinecap="round" />
-        <circle cx={head[0]} cy={head[1] + 2} r={5} fill={C.fg0} />
-      </g>,
-    );
-  });
+  crew
+    .filter(([, y]) => inBlock(y))
+    .sort((a, b) => P([b[0], b[1], 0])[2] - P([a[0], a[1], 0])[2])
+    .forEach(([cx, cy], n) => {
+      const g = elevation(cx, cy);
+      const feet = P([cx, cy, g]);
+      const head = P([cx, cy, g + 1.8 * 3]);
+      objects.push(<Worker key={`crew${n}`} x={feet[0]} y={feet[1]} height={Math.max(14, feet[1] - head[1])} />);
+    });
   for (const pin of o.pins ?? []) {
     const [i, j] = pin.patch;
     const [px, py] = [i * 4 + 2, j * 4 + 2];
@@ -183,11 +209,13 @@ export const WorldView: React.FC<WorldOptions> = (o) => {
       </g>,
     );
   }
-  const ground = elevation(drone.x, drone.y);
-  const D: V3 = [drone.x, cutY + 1, ground + drone.agl];
+  // A following cut draws the drone just behind the cut face; a still block draws it where it is.
+  const droneY = fixed ? drone.y : cutY + 1;
+  const ground = elevation(drone.x, droneY);
+  const D: V3 = [drone.x, droneY, ground + drone.agl];
   if (o.link) {
     const [lx, ly] = o.link.to;
-    const [la, lb] = [P([drone.x, cutY + 1, ground + 0.3]), P([lx, ly, elevation(lx, ly) + 0.3])];
+    const [la, lb] = [P([drone.x, droneY, ground + 0.3]), P([lx, ly, elevation(lx, ly) + 0.3])];
     const col = o.link.danger ? C.danger : C.fg2;
     const [mx, my] = [(la[0] + lb[0]) / 2, (la[1] + lb[1]) / 2];
     objects.push(
@@ -198,7 +226,23 @@ export const WorldView: React.FC<WorldOptions> = (o) => {
       </g>,
     );
   }
-  if (o.knows && drone.agl > 0.5) {
+  if (o.knows && drone.agl > 0.5 && fixed) {
+    // The sensor's view: a pyramid from the drone down to its square footprint on the ground.
+    const half = Math.max(drone.agl * 0.577, 2);
+    const corners: [number, number][] = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([a, b]) => [drone.x + a * half, droneY + b * half]);
+    corners.forEach(([x, y], n) => {
+      const [c0, c1] = [P(D), P(onGround(x, y, 0.2))];
+      objects.push(<line key={`ray${n}`} x1={c0[0]} y1={c0[1]} x2={c1[0]} y2={c1[1]} stroke={C.accent} strokeWidth={1.1} opacity={0.45} />);
+    });
+    const edge: V3[] = [];
+    corners.forEach(([x, y], n) => {
+      const [nx, ny] = corners[(n + 1) % 4];
+      for (let s = 0; s < 12; s++) edge.push(onGround(x + ((nx - x) * s) / 12, y + ((ny - y) * s) / 12, 0.2));
+    });
+    edge.push(edge[0]);
+    objects.push(<polyline key="foot" points={pts(edge.map(P))} fill="none" stroke={C.accent} strokeWidth={1.6} opacity={0.75} />);
+  }
+  if (o.knows && drone.agl > 0.5 && !fixed) {
     const half = Math.max(drone.agl * 0.577, 2);
     const [c0, c1, c2] = [P(D), P([drone.x - half, cutY, elevation(drone.x - half, cutY)]), P([drone.x + half, cutY, elevation(drone.x + half, cutY)])];
     objects.push(<polygon key="cone" points={pts([c0, c1, c2])} fill={C.accent} opacity={0.08} />);
@@ -209,11 +253,11 @@ export const WorldView: React.FC<WorldOptions> = (o) => {
   }
   if (drone.agl > 0.5) {
     const sh: number[][] = [];
-    for (let s = 0; s < 36; s++) sh.push(P([drone.x + 2.2 * Math.cos((s * Math.PI) / 18), cutY + 1 + 2.2 * Math.sin((s * Math.PI) / 18), ground + 0.1]));
+    for (let s = 0; s < 36; s++) sh.push(P([drone.x + 2.2 * Math.cos((s * Math.PI) / 18), droneY + 2.2 * Math.sin((s * Math.PI) / 18), ground + 0.1]));
     objects.push(<polygon key="shadow" points={pts(sh)} fill="#000" opacity={0.5} />);
-    const [g0, g1] = [P(D), P([drone.x, cutY + 1, ground + 0.2])];
+    const [g0, g1] = [P(D), P([drone.x, droneY, ground + 0.2])];
     objects.push(<line key="drop" x1={g0[0]} y1={g0[1] + 6} x2={g1[0]} y2={g1[1]} stroke={C.accent} strokeWidth={1.6} strokeDasharray="5 5" />);
-    const mid = P([drone.x, cutY + 1, ground + drone.agl / 2]);
+    const mid = P([drone.x, droneY, ground + drone.agl / 2]);
     objects.push(<text key="agl" x={mid[0] + 12} y={mid[1] + 5} fill={C.accent} fontFamily={MONO} fontSize={17}>{`${Math.round(drone.agl)} m`}</text>);
   }
   const arm = 1.8;
@@ -253,7 +297,7 @@ export const WorldView: React.FC<WorldOptions> = (o) => {
   }
 
   return (
-    <svg width={WORLD_W} height={H} viewBox={`0 0 ${WORLD_W} ${H}`} style={{ position: "absolute", left: 0, top: 0 }}>
+    <svg width={o.width ?? WORLD_W} height={o.height ?? H} viewBox={`0 0 ${o.width ?? WORLD_W} ${o.height ?? H}`} style={{ position: "absolute", left: 0, top: 0 }}>
       {quads.map((q, n) => (
         <g key={n}>
           <polygon points={pts(q.p)} fill={q.fill} stroke={q.fill} strokeWidth={0.8} />

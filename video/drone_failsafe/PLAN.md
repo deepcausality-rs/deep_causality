@@ -1,177 +1,109 @@
 # Dynamic drone fail-safe: video plan
 
-One main cut for YouTube and short clips for social media, rendered with Remotion from the
-tutorial's own run data. The narration script and shot list live in [SCRIPT.md](SCRIPT.md).
+A 135.5-second explainer with on-screen text and no voice, rendered with Remotion from the tutorial's
+own run data, plus two shorter cuts for social posts. It shows two fail-safes on the same drone, one
+after the other: the textbook fail-safe of tutorial part 1, then the dynamic fail-safe of part 4,
+built on DeepCausality's Effect Ethos. The on-screen text lives in `src/script.json`, and
+[SCRIPT.md](SCRIPT.md) mirrors it with the source of every number.
 
 ## Decisions
 
 | Question | Decision |
 |---|---|
 | Tool | Remotion only, under its free licence for an individual |
-| Narration | A synthetic voice from an open-source voice tool, with captions |
-| Colour | The design system's palette, plus `--danger` `#f47174` for people-at-risk moments only |
+| Voice | None; on-screen text carries the story |
+| Scenarios | Two, one after the other: the textbook fail-safe (part 1), then the dynamic fail-safe (part 4) |
+| Story | The problem (the textbook run), the issue (its static rule), the answer (the dynamic run), the evidence (1,000 simulations), how it is built |
+| Events | A running log: one line per event, each below the one before |
+| World | Static: the power line, the tower and the crew stand still; the drone flies through |
+| Colour | The design system's palette, plus `--danger` `#f47174` for people at risk only |
+| Format | 1920 × 1080, 30 fps, the standard YouTube format |
 | Location | `video/drone_failsafe/` |
-| Output | One main cut and seven short clips, all in the standard YouTube format, 16:9 |
 
-The mock frame [mockup/run4_85s_mixed.png](mockup/run4_85s_mixed.png) shows the approved layout:
-run 4 at 85 s, with its map, Ethos round and prices from the part 4 output in the tutorial README.
+## The story
 
-## The idea that carries the video
+| Scene | Length | What it shows |
+|---|---|---|
+| Title | 5.5 s | The DeepCausality logo, the title and the question: where should a failing drone land? |
+| Setting | 10 s | The valley in 3D with the power line, the tower, the repair crew and the drone on its line. The text names the setting and the three faults ahead. |
+| Part 1 card | 5.5 s | Tutorial part 1, the textbook fail-safe: the defaults drone autopilots document today. |
+| Textbook | 25 s | The textbook fail-safe flies the night. The log adds a line at each event its trace records. The wind carries the holding drone downhill, and it drops into the creek. |
+| The issue | 10 s | A static rule: each fault triggers a fixed action, whatever lies below. |
+| Part 4 card | 8.5 s | Tutorial part 4, the dynamic fail-safe: the Effect Ethos checks each landing site against published pilot procedures and the context the drone senses every second. |
+| Effect Ethos | 34 s | The dynamic fail-safe flies the same night. Its sensor pyramid, the ground it has judged, the 13 m ring around each person, and the verdicts of each round on the ground; the log names the rule behind each line. It lands upright, 34 m from the crew. |
+| 1,000 simulations | 14 s | Part 5 simulated the scenario 1,000 different ways; both fail-safes flew all of them: 35 unsafe landings within 10 m of a person against 1. |
+| Summary | 12 s | How DeepCausality builds the dynamic fail-safe: dynamic context, dynamic reasoning, dynamic Effect Ethos. |
+| End | 11 s | Build the dynamic fail-safe in Rust, step by step. The DeepCausality logo with the tutorial URL and the command that runs part 4; the Center for Dynamic Causality logo with causalcenter.com. |
 
-The same drone flies the same night four times. Camera, terrain, wind and fault times stay fixed:
-the fix fails at 55 s, the link at 65 s, a cell at 85 s. After the first run the viewer knows when
-each fault arrives and watches only what changes: what the drone knows, what it does, and where it
-comes down. Each run ends on a frozen outcome card.
-
-Two moments carry the argument:
-
-- **Run 3 puts a person at risk.** The drone acts on its map and lands 3 m from the crew. Across
-  the campaign, context and action alone put people at risk on 41 nights, the textbook ladder on 35.
-- **The first safety layer became the hazard.** It forbade every landing, and the drone hovered
-  until its battery died and fell beside the crew.
-
-## Deliverables
-
-| Composition | Size | Length | Captions | For |
-|---|---|---|---|---|
-| `Main` | 1920 × 1080, 30 fps | about 3:45 | SRT file | YouTube |
-| `Clip-*` | 1920 × 1080, 30 fps | 25–45 s | burned in, word by word | social media posts |
-
-The seven clips are listed in [SCRIPT.md](SCRIPT.md#clips). Each clip opens on its strongest
-frame with a one-line hook, plays one scene of the main cut, and ends on the tutorial URL. Feeds
-autoplay muted, so every clip reads with the sound off.
+| Composition | Scenes | Length |
+|---|---|---|
+| `Main` | all ten | 135.5 s |
+| `Short-Part1` | title, setting, part 1 card, textbook, the issue, end | 67 s |
+| `Short-Part2` | title, part 4 card, Effect Ethos, 1,000 simulations, summary, end | 85 s |
 
 ## Visual system
 
-- **3D on the left: the world, cut open at the drone.** A block of the valley, sliced across the
-  slope at the drone's position along the line. The cut face is the cross-section: creek, 30°
-  slope, terrace, the step behind it, in true profile. The top surface carries the drone with its
-  shadow, sensor cone and height above ground, the tower and power line, the crew with a 13 m
-  keep-out ring, and wind arrows downslope. The cut moves with the drone, and the camera tracks it.
-- **2D on the right: what the drone knows and decides.** A top view of the 4 m patch map with the
-  sensor footprint, and below it the panel of the part: telemetry and confirmed faults in run 1,
-  the Effect Ethos round and the last-resort prices in run 4. In run 1 the map stays empty: the
-  drone knows nothing about the ground.
-- **Drawing.** Both views are SVG. The 3D view projects the terrain with a pinhole camera and
-  shades it with one light, as in the mock; it needs no WebGL and renders the same frame every
-  time. The drone and the crew figures are drawn at about three times scale so they read; the
-  tower height is set dressing, as the simulation models neither.
-- **Truth and belief.** Sensed ground carries the 4 m patch grid and the tone of its judgement.
-  Unseen ground stays dark with a sparse wireframe, so the map grows as the drone looks.
-- **The program's glyphs.** Patch kinds in the top view use the glyphs the terminal map prints:
-  `.` safe, `/` steep, `~` water, `T` trees, `P` person, `?` unsure. They are drawn as dots,
-  hatching, waves and rings, so kind reads by shape as well as tone.
-- **A shared timeline** along the bottom, with fault markers at 50, 55, 65 and 85 s.
-- **Verdicts on the map** in run 4. Each candidate patch flashes with the norm that rules on it,
-  and the chosen patch draws in.
+- **The world in 3D, standing still.** A block of the valley, cut across the slope at 420 m along
+  the line, through the terrace, the tower pad and the crew. The cut face is the cross-section:
+  creek, 30° slope, terrace, the step behind it. The block and the camera stay still; the drone flies
+  into the block and through it, with its shadow and height.
+- **The crew** stand as workers in hard hats and vests. They and the drone are drawn at three times
+  their size so they read at this distance; the tower height is set dressing, as the simulation
+  models neither.
+- **The log** sits at the top left of both runs. A line fades in at its flight second; the newest
+  line is bright, the earlier ones dimmed. In the Effect Ethos run a rule line in the accent sits
+  under each event. The outcome appears in a box below the log at touchdown.
+- **The Effect Ethos run** shows its sensor pyramid down to the footprint, the ground it has judged,
+  a 13 m ring around each person, and the verdicts of each round on the patches they judged: ✕
+  forbidden, a dashed outline for a patch worth a look, a faint outline for a permitted one, and the
+  chosen patch in the accent.
+- **The textbook run** shows the wind and the drone's ground track: it holds no map of the ground.
+- **Logos.** The title and end screens carry `img/logo_background.jpg`; the end screen also carries
+  `img/causal_center_logo_dark.svg`. Both are copied into `public/logos/`.
+- **Drawing.** All views are SVG. The 3D view projects the terrain with a pinhole camera and shades it
+  with one light; it needs no WebGL and renders the same frame every time.
 - **Tokens** from `website/web_design/01-foundations.md`: background `#070b10`, raised surface
-  `#0b1118`, hairline `#1f2a36`, text `#e6edf3` and `#aab3bd`, accent `#5cd4e1`. `--danger`
-  `#f47174` marks a person at risk and appears nowhere else. Geist for text, JetBrains Mono for
-  eyebrows and numbers, both from `website/web/public/fonts/`.
-- **Sound.** A low wind bed, a tick when the cell fails, silence on each outcome card. Music, if
-  any, comes from a CC0 source.
+  `#0b1118`, hairline `#1f2a36`, text `#e6edf3` and `#aab3bd`, accent `#5cd4e1`, and `--danger`
+  `#f47174` for the unsafe landings. Geist for text, JetBrains Mono for eyebrows and numbers, both
+  from `website/web/public/fonts/`.
 
 ## Data
 
-Every frame draws from traces the Rust programs record. This follows the plasma-blackout pipeline
-(`examples/avionics_examples/src/shared/trace.rs`).
+Every frame draws from traces the Rust programs record (`end_to_end_tutorials/dynamic_drone_failsafe`,
+`src/trace.rs`), and from the campaign record of part 5.
 
 | File | Source | Rows |
 |---|---|---|
 | `world.csv`, `crew.csv` | part 1, from `Terrain::new()` | one per 2 m grid point, −24 to 140 m across and 0 to 520 m along: elevation, slope, surface, canopy; and the six crew positions |
-| `part_N_trace.csv`, N = 1–4 | each part's `main` | one per second: position, height, confirmed faults, command or urgency, judgement below, maneuver, target patch, plan status |
-| `part_N_patches.csv`, N = 2–4 | each part's `main` | one per patch in each second's sensor frame: judgement and fused slope uncertainty |
-| `part_N_touchdown.csv`, N = 1–4 | each part's `main` | where and when the drone came down, its outcome and the nearest person |
-| `part_2_daytime.csv` | part 2's `main` | the water patches, and how many the daytime rule still reads as water |
+| `part_N_trace.csv` | each part's `main` | one per second: position, height, confirmed faults, command or urgency, judgement below, maneuver, target patch, plan status |
+| `part_N_patches.csv` | parts 2 to 4 | one per patch in each second's sensor frame: judgement and fused slope uncertainty |
+| `part_N_touchdown.csv` | each part's `main` | where and when the drone came down, its outcome and the nearest person |
 | `part_4_rulings.csv` | part 4's `main` | one per proposal of each Effect Ethos round: patch, proposal, verdict, norms, harm cost |
-| `part_4_last_resort.csv` | part 4's `main` | the three last-resort ditchings priced at the emergency |
 | `campaign_1000.csv` | part 5, committed | the 1000 scenarios and each controller's ending |
 
-- Recording runs behind a `trace <dir>` argument, so a plain run prints and writes exactly what
-  it does without one.
-- The twist scene states the campaign's first finding as the README records it: every person at
-  risk in that run, 3.9 % of 1000 nights, was a fall after the norms forbade every landing. The
-  first part 4 commit, `e701f0f58`, predates today's world: it imports a constant the library no
-  longer exports, flies the older drone API, and judges an 18 m canopy as a person. Its flight
-  through today's scenarios would be a different experiment from the one that found the 3.9 %, so
-  the scene shows the finding and draws no flight for it.
-- Each number on screen carries its source: **typed** (a constant), **computed** (one run's
-  output) or **sampled** (the campaign). The Remotion data module checks every on-screen number
-  against the traces and the README, and the render fails on a mismatch.
+`scripts/data.mjs` stops the build when
 
-## Voice-over and captions
+- a number the video shows disagrees with the tutorial README or its web pages,
+- a log line in `src/script.json` sits at a second where its flight's trace records no event,
+- any text in `src/script.json` states a number outside the list of numbers the tutorial states.
 
-- `narration.json` holds the narration as segments, one per scene and one per clip hook line,
-  each a list of sentences. It is the single source for the audio file names, the captions and
-  the scene lengths.
-- `scripts/voice.mjs` synthesizes every sentence into its own WAV file in `public/vo/` and records
-  each file's duration. Any voice tool that writes one WAV per sentence fits; the script calls it
-  through one function. Until you pick the open-source tool, it uses the macOS `say` voice as a
-  placeholder.
-- One file per sentence gives each caption its exact start and end, so the burned-in captions of
-  the clips and the SRT of the main cut come from the same timings.
-- Scene lengths follow the audio: a re-synthesized sentence re-times its scene.
-- The clips reuse the main cut's sentences plus their own hook and closing lines, so the voice
-  stays consistent.
-
-## Project layout
-
-```text
-video/drone_failsafe/
-  package.json, pnpm-workspace.yaml, remotion.config.ts, tsconfig.json
-  narration.json    narration segments, one sentence per audio file
-  scripts/
-    data.mjs        reads the traces, checks every on-screen number, writes src/data/*.json
-    voice.mjs       synthesizes each sentence and records its duration
-  public/
-    fonts/          Geist and JetBrains Mono, copied from website/web/public/fonts/
-    traces/         the CSV files above
-    vo/             one WAV per sentence
-  src/
-    Root.tsx        registers Main and the Clip-* compositions
-    tokens.ts       palette, type scale
-    data/           the generated JSON and its types
-    world/          projection, terrain, the cut block, drone, tower, crew
-    views/          WorldView, TopView, panels, Timeline, OutcomeCard, ScenarioGrid, Captions
-    scenes/         Hook, World, Run (one per part), Twist, Campaign, Close
-```
-
-All pnpm settings go in `pnpm-workspace.yaml`. The project sits outside Cargo and Bazel.
-
-## Steps
-
-| Step | Work | Check |
-|---|---|---|
-| 1 | Review [SCRIPT.md](SCRIPT.md) | You approve the narration and the shot list |
-| 2 | Trace recording in parts 1–5 behind `trace` | Parts 1–4 print byte-identical output with and without the recorder; `make check_examples` passes |
-| 3 | The twist scene from the README's recorded finding | The 3.9 % and its wording match the README |
-| 4 | Remotion scaffold, tokens, the cut-block world view | It matches the approved mock frame |
-| 5 | All scenes of the main cut, with the placeholder voice | Every on-screen number passes the data check |
-| 6 | Voice-over from your open-source tool, one WAV per sentence | Scene lengths and captions follow the audio files |
-| 7 | Clip compositions | You review one clip |
-| 8 | Final renders, SRT, thumbnails | Each render's numbers trace to the README or a trace file |
-| 9 | Links from the tutorial pages | A plain link with a static poster image; `web/DESIGN.md` §13 bans auto-playing video |
-
-You upload to YouTube and the social platforms; the tutorial pages then link the published video.
+The video uses the traces of parts 1 and 4; the data step checks all four.
 
 ## Build
 
 ```bash
-# 1. Record the four flights (from the workspace root).
+# 1. Record the flights (from the workspace root).
 for n in 1 2 3 4; do
   cargo run --release -p dynamic_drone_failsafe --example drone_failsafe_part_$n -- trace video/drone_failsafe/public/traces
 done
 
 # 2. Build the video (from video/drone_failsafe).
 pnpm install
-pnpm data        # traces to JSON; stops on any number that disagrees with the README
-pnpm voice       # one WAV per sentence; VOICE_CMD='<tool> ... {out}' selects your voice tool
-pnpm timeline    # scene lengths from the audio, and out/main.srt
-pnpm studio      # preview
-node scripts/render.mjs all                    # out/Main.mp4 and out/Clip*.mp4
-node scripts/render.mjs stills Main 5275 5510  # single frames into out/stills/
+pnpm data                                         # traces to JSON, checked against the tutorial
+pnpm studio                                       # preview
+node scripts/render.mjs all                       # out/Main.mp4 and the two shorts
+node scripts/render.mjs stills Main 450 2410      # single frames into out/stills/
 ```
 
-`public/traces/`, `public/vo/` and `src/data/*.json` are generated and ignored by git, as the
-repository's `video/**` rules ignore traces for every video project: step 1 rebuilds the traces,
-step 2 everything else.
+`public/traces/` and `src/data/*.json` are generated and ignored by git, as the repository's
+`video/**` rules ignore traces for every video project.

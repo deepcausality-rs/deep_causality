@@ -216,6 +216,50 @@ onPage("effect-ethos.astro", "log round", "t=85 s: 72 proposals put to the Effec
 onPage("effect-ethos.astro", "log forbidden", "t=85 s:   17 forbidden: a gust could put the drone on steep ground beside it.");
 onPage("effect-ethos.astro", "log chosen", "t=85 s: Chosen: land on the patch 0 m away, at 30 m across and 430 m along; harm cost 0.");
 
+// The on-screen script: each log line sits at a second the flight's trace records an event, and every
+// number in its text is one the tutorial states.
+const script = JSON.parse(readFileSync(join(root, "src", "script.json"), "utf8"));
+const firstT = (n, test) => flights[n].rows.find(test)?.t;
+const holdT = firstT(1, (r) => r.decision === "Hold");
+const holdX = flights[1].rows.find((r) => r.t === holdT).x;
+const eventTimes = {
+  1: new Set([
+    firstT(1, (r) => r.faults[0]),
+    holdT,
+    firstT(1, (r) => r.t > holdT && Math.abs(r.x - holdX) > 1),
+    firstT(1, (r) => r.decision === "LandNow"),
+    firstT(1, (r) => r.faults[3]),
+    flights[1].touchdown.t,
+  ]),
+  4: new Set([
+    firstT(4, (r) => r.faults[0]),
+    firstT(4, (r) => r.decision === "Practicable"),
+    rulings.find((r) => r.norms.includes(2))?.t,
+    rulings.find((r) => r.review === "Approved")?.t,
+    firstT(4, (r) => r.faults[2]),
+    firstT(4, (r) => r.maneuver === "LandOn"),
+    firstT(4, (r) => r.decision === "Possible"),
+    flights[4].touchdown.t,
+  ]),
+};
+for (const [n, log] of [[1, script.textbookLog], [4, script.ethosLog]]) {
+  for (const line of log) {
+    if (!eventTimes[n].has(line.t)) failures.push(`script: part ${n} logs "${line.text}" at ${line.t} s, where its trace records no event`);
+  }
+}
+// Numbers the tutorial states: part numbers, fault and event seconds, distances, counts and rates. A number outside
+// this list in the script text stops the build until it is checked and added.
+const STATED = new Set([1, 2, 3, 4, 5, 8, 10, 13, 20, 30, 34, 35, 40, 50, 55, 57, 58, 64, 65, 69, 71, 72, 77, 85, 90, 91, 95, 99, 1000, 0.1, 0.47, 3.5]);
+const strings = [];
+const walk = (v) => (typeof v === "string" ? strings.push(v) : v && typeof v === "object" ? Object.values(v).forEach(walk) : null);
+walk(script);
+for (const text of strings) {
+  for (const m of text.matchAll(/\d[\d,]*(?:\.\d+)?/g)) {
+    const value = Number(m[0].replace(/,/g, ""));
+    if (!STATED.has(value)) failures.push(`script: "${text}" states ${m[0]}, a number the tutorial does not state`);
+  }
+}
+
 if (failures.length > 0) {
   console.error("The video's numbers disagree with the tutorial:\n  " + failures.join("\n  "));
   process.exit(1);

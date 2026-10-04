@@ -4,11 +4,8 @@
   "type": "module",
   "scripts": {
     "data": "node scripts/data.mjs",
-    "voice": "node scripts/voice.mjs",
-    "timeline": "node scripts/timeline.mjs",
-    "prepare-video": "node scripts/data.mjs && node scripts/voice.mjs && node scripts/timeline.mjs",
     "studio": "remotion studio",
-    "render": "node scripts/render.mjs",
+    "render": "node scripts/render.mjs all",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

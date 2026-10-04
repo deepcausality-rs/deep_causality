@@ -1,179 +1,136 @@
-# Dynamic drone fail-safe: narration and shot list
+# Dynamic drone fail-safe: on-screen text
 
-Draft 1, for review. The narration is written for viewers who build, fly or regulate drones and
-have never heard of DeepCausality. It names the library on screen and twice in the voice-over.
-Every number comes from the tutorial README, the website pages or `campaign_1000.csv`.
+The words on screen, scene by scene, and where each number comes from. The video has no voice.
+`src/script.json` holds this text, and the scenes read it from there; this file mirrors it.
 
-Timings assume about 150 words a minute plus a held outcome card at the end of each run.
+## Title (5.5 s)
 
-## Main cut, about 3:45
-
-### 1. Hook (0:00–0:30)
-
-**Screen.** Black. A schematic of Melbourne's Docklands; a counter climbs to 427 as dots fall into
-the harbour. Cut to a schematic of Lake Eola, Orlando; a shifted show box slides 18 m toward the
-crowd line. Sources in mono at the bottom: ATSB AO-2023-033, ABC News 16 July 2023, NTSB
-DCA25LA065. The operator's words appear in type: *"did exactly what they should've done with any
-technical glitch."* The injured boy appears in the narration only.
-
-**Voice.**
-> July 2023, Melbourne. Wind pushes five hundred show drones off station. Their fail-safes fire,
-> and four hundred and twenty-seven drop into the harbour.
+> [DeepCausality logo]
 >
-> December 2024, Orlando. Setup errors shift a show eighteen metres toward the crowd, and a drone
-> strikes a seven-year-old boy.
+> DEEPCAUSALITY TUTORIAL
 >
-> Each fail-safe fired on one condition: a lost position, a crossed line. Safety engineers call
-> this an unsafe control action: a correct rule, in the wrong place.
-
-### 2. The world (0:30–0:50)
-
-**Screen.** The valley cross-section draws in: creek, 30° grass slope, terrace, trees, road, rock,
-ravine. The power line and the drone at 40 m. Crew rings appear on the road and at the second
-tower pad. The timeline strip draws along the bottom with markers at 55, 65 and 85 s.
-
-**Voice.**
-> Now one drone, one night. It inspects a power line forty metres above a steep grass slope. A
-> creek runs along the valley floor; a crew works on the road and at a tower.
+> **Dynamic Drone Fail-Safe**
 >
-> At fifty-five seconds the drone loses satellite positioning. At sixty-five, its link to the
-> pilot. At eighty-five, a battery cell. We fly this night four times.
+> Where should a failing drone land?
 
-### 3. Run 1: the textbook ladder (0:50–1:15)
+## Setting (10 s)
 
-**Screen.** Eyebrow: `DeepCausality · Part 1 · dynamic causality`. The drone flies the line. Fault
-markers light as each fault is confirmed; the command label steps `continue → hold → land now`.
-Wind arrows; the side view shows the drone sliding downhill as it descends. Freeze on touchdown at
-91 s.
+Beside the 3D valley, one line after another:
 
-**Outcome card.** `Every decision correct. In the creek.`
-
-**Voice.**
-> Run one: the fail-safe ladder that drone autopilots document today. The controller confirms
-> each fault and steps up the ladder: hold, then land. Every decision is correct. The night wind
-> carries the drone seventy-two metres down the slope, into the creek.
-
-### 4. Run 2: context (1:15–1:45)
-
-**Screen.** Eyebrow: `Part 2 · dynamic context`. The patch map fills in under the sensor
-footprint; each patch sharpens as it is seen again. The crew patches light as rings. A day/night
-switch flips the clock: the creek's 58 water patches turn to `?`, then back. The same drift into
-the creek.
-
-**Outcome card.** `It knew the ground. In the creek.`
-
-**Voice.**
-> Run two gives the drone eyes. A thermal camera and a LiDAR map every patch of ground below, and
-> each look sharpens the map: steep grass, a flat terrace, the creek, the crew.
+> A drone inspects a power line at night.
 >
-> The clock matters too. At night the creek reads warmer than the land; under the daytime rule,
-> all fifty-eight water patches turn to unsure. The drone knows the ground. The wind carries it
-> into the creek again.
-
-### 5. Run 3: action (1:45–2:10)
-
-**Screen.** Eyebrow: `Part 3 · dynamic action`. The drone holds its place over the ground. At 69 s
-the nearest safe patch highlights, 6 m away on the corner of the tower pad. The drone lands. A
-distance ring in `--danger` draws from the touchdown to the nearest crew ring: 3 m. The person's
-patch on the drone's own map pulses.
-
-**Outcome card.** `3 m from a person.` (in `--danger`)
-
-**Voice.**
-> Run three lets the drone act on its map. It holds its place by camera and LiDAR, picks the
-> nearest safe patch and lands there, on the corner of a tower pad. Every test it ran asked about
-> the patch itself. A member of the crew stood three metres away, on the drone's own map.
-
-### 6. The twist (2:10–2:30)
-
-**Screen.** Eyebrow: `Effect Ethos · first version`. Norm cards stack beside the map. Every
-candidate patch flashes `forbidden`. The battery bar drains; the drone hovers; it drops beside a
-crew ring, in `--danger`. On screen: `3.9 % of 1000 nights: every one of them a fall like this`.
-
-**Voice.**
-> So we add rules: the published emergency procedures for drone pilots, written as norms in
-> DeepCausality's Effect Ethos. The first version could only forbid. In a thousand simulated
-> nights, every time it put a person at risk, the same thing happened: it forbade every landing,
-> the drone hovered until its battery died, and it fell beside the crew. The safety rule became
-> the hazard.
-
-### 7. Run 4: the Effect Ethos (2:30–3:10)
-
-**Screen.** Eyebrow: `Part 4 · Effect Ethos`. Urgency label: `routine → contingency → emergency`.
-Candidate patches flash with their verdicts: beside the crew `forbidden: person within 13 m`;
-terrace edge `forbidden: a gust could tip it`; terrace middle `approved, harm cost 0`. The drone
-flies over, descends to 25 m and waits; the recovery window counts down from 20 s. The cell
-fails; the drone lands at 90 s. Ring to the nearest person: 34 m, in accent. Then three price
-tags over the map: beside the crew `11,111,000`, the creek `11,000`, empty steep grass `1,000`.
-
-**Outcome card.** `Upright. 34 m from the nearest person.`
-
-**Voice.**
-> The fix: rules that relax as the danger grows, people first and the drone last.
+> A repair crew works on the access road and a tower pad.
 >
-> Run four. The drone proposes landing sites, and the Ethos rules on each and names its reasons.
-> Beside the crew: forbidden. The terrace edge: a gust could tip it. The middle of the terrace:
-> approved. The drone hovers over it until the recovery window closes. When the cell fails, it is
-> already thirteen metres above the approved patch. It lands upright, thirty-four metres from the
-> nearest person.
+> A fail-safe takes over as 3 faults strike:
+> `55 s GPS lost · 65 s link lost · 85 s cell fails`
+
+Labels in the scene: creek, terrace, repair crew, power line.
+
+## Tutorial part 1 card (5.5 s)
+
+> TUTORIAL PART 1
 >
-> Had every landing been forbidden, the last-resort rules would have priced each place to come
-> down: beside the crew, over eleven million; the creek, eleven thousand; empty steep grass, one
-> thousand. The drone goes before a person.
+> **The textbook fail-safe**
+>
+> It follows the defaults that drone autopilots document today. Watch it face the 3 faults.
 
-### 8. A thousand nights (3:10–3:35)
+## Textbook (25 s)
 
-**Screen.** Three grids of 1000 cells, one per controller, fill in outcome by outcome. A filter
-lights the people-at-risk cells in `--danger`: 35, 41, 1. Rates in mono beneath: `3.5 %`,
-`4.1 %`, `0.1 % (at most 0.47 % at 95 % confidence)`. The single cell of part 4 zooms open to
-scenario 810: the drone at 40 m, the reachable patches each beside unseen ground.
+> TUTORIAL PART 1 · TEXTBOOK FAIL-SAFE
 
-**Voice.**
-> One night proves little. So all three controllers flew the same thousand randomised nights,
-> with the crew placed where the trouble starts. The textbook ladder put a person at risk on
-> thirty-five of them. Context and action, on forty-one. The Effect Ethos, on one. That night,
-> number 810, the cell failed with the drone still forty metres up, and every patch its battery
-> could reach lay beside ground where someone might be standing.
+A running log: each line appears at its flight second, below the one before.
 
-### 9. Close (3:35–3:45)
+| Flight second | Log line |
+|---|---|
+| 50 | GPS signal degrades |
+| 57 | GPS loss confirmed → rule says hold for the pilot |
+| 58 | The night wind pushes the drone downhill |
+| 69 | Link loss confirmed → rule says land; drone descends |
+| 85 | Cell fails → drone keeps descending |
+| 91 | Drone drops into the creek |
 
-**Screen.** A verdict line from the part 4 log types out. End card: `DeepCausality · Dynamic drone
-fail-safe`, `deepcausality.com/tutorials/dynamic-drone-failsafe/`, and
-`cargo run -p dynamic_drone_failsafe --example drone_failsafe_part_1`.
+At touchdown: **The fail-safe loses the drone.**
 
-**Voice.**
-> Every verdict names the rules behind it, so an engineer can trace a failure to one rule and fix
-> it there, before the drone flies. The tutorial is open source, in Rust, in five parts you can
-> run.
+## The issue (10 s)
 
-## Clips
+> TUTORIAL PART 1 · THE ISSUE
+>
+> **A static rule**
+>
+> Each fault triggers a fixed action, whatever lies below.
+>
+> So the drone can come down in a creek, on steep grass or beside people.
 
-Each clip opens on its strongest frame with the hook line, plays the scene, and closes on the end
-card with its closing line. Captions are burned in.
+## Tutorial part 4 card (8.5 s)
 
-| Clip | Length | Hook line | Scenes | Closing line |
-|---|---|---|---|---|
-| 0 Teaser | 30 s | Same drone. Same night. Four fail-safes. | the four outcome cards, then the campaign counts 35, 41, 1 | Five parts, in Rust. |
-| 1 Correct, and in the creek | 30 s | Every decision this fail-safe made was correct. | 2 (fault times only), 3 | Next: give it eyes. |
-| 2 It knew the ground | 35 s | This drone mapped the creek. Then it landed in it. | 4 | Next: let it act. |
-| 3 Three metres | 30 s | This drone chose the safest patch it could see. | 5, plus the counts 35 and 41 from 8 | Next: rules. |
-| 4 The rule became the hazard | 25 s | We added safety rules. The rules became the hazard. | 6 | Next: rules that relax. |
-| 5 Permission to land | 45 s | This drone asks permission before it lands. | 7 | Next: a thousand nights. |
-| 6 A thousand nights | 40 s | Three fail-safes. The same thousand nights. | 8, 9 | Five parts, in Rust. |
+> TUTORIAL PART 4
+>
+> **The dynamic fail-safe**
+>
+> DeepCausality's Effect Ethos makes the fail-safe dynamic.
+>
+> It checks each landing site against rules from published pilot procedures and the context the
+> drone senses every second.
+
+## Effect Ethos (34 s)
+
+> TUTORIAL PART 4 · DYNAMIC FAIL-SAFE
+
+The same running log, with the rule behind each line beneath it.
+
+| Flight second | Log line | Rule line |
+|---|---|---|
+| 50 | GPS signal degrades | |
+| 57 | GPS loss confirmed → drone steers by camera and LiDAR | contingency: wait 20 s for recovery |
+| 57 | Effect Ethos forbids landing beside the crew | rule: keep 13 m clear of people |
+| 64 | Effect Ethos permits the middle of the terrace | every rule passes |
+| 69 | Link loss confirmed → drone waits over the terrace | contingency: battery healthy, keep waiting |
+| 77 | Recovery window closes → drone lands on the terrace | contingency: land as soon as practicable |
+| 85 | Cell fails → Effect Ethos confirms the terrace | emergency: land as soon as possible |
+| 90 | Drone lands upright, 34 m from the crew | |
+
+At touchdown: **The fail-safe saves the drone.**
+
+## 1,000 simulations (14 s)
+
+> **The tutorial simulated this scenario 1,000 different ways**
+>
+> Each simulation changed the launch time, wind, faults, terrain and where up to 8 people stood.
+> Both fail-safes flew all 1,000.
+>
+> TEXTBOOK FAIL-SAFE: **35** unsafe landings within 10 m of a person · 3.5 %
+>
+> DYNAMIC FAIL-SAFE: **1** unsafe landing within 10 m of a person · 0.1 % · at most 0.47 % at 95 %
+> confidence
+
+## How DeepCausality builds the dynamic fail-safe (12 s)
+
+| Step | Text |
+|---|---|
+| Dynamic context | A thermal camera and LiDAR update a context of the ground every second. |
+| Dynamic reasoning | Every second, a causal process confirms each fault and declares contingency or emergency. |
+| Dynamic Effect Ethos | Rules from published pilot procedures check each landing site against the context, people first. |
+
+## End (11 s)
+
+> Build the dynamic fail-safe in Rust, step by step.
+>
+> [DeepCausality logo] deepcausality.com/tutorials/dynamic-drone-failsafe
+> `cargo run -p dynamic_drone_failsafe --example drone_failsafe_part_4`
+>
+> [Center for Dynamic Causality logo] causalcenter.com
 
 ## Sources for every number
 
-| On screen or spoken | Value | Kind | Source |
+| On screen | Value | Kind | Source |
 |---|---|---|---|
-| Melbourne drones, in the harbour | 500, 427 | external | ATSB AO-2023-033, via the tutorial index page |
-| Orlando shift toward the crowd | about 18 m | external | NTSB DCA25LA065, via the tutorial index page |
-| Height, fault times | 40 m; 55, 65, 85 s | typed | `src/constants.rs` |
-| Run 1 drift | 72 m | computed | README, part 1 |
-| Water patches under the daytime rule | 58 to 0 | computed | README, part 2 |
-| Run 3 patch distance, touchdown to person | 6 m, 3 m | computed | README, part 3 |
-| First version's people-at-risk rate | 3.9 % | sampled | README, "How the campaign changed part 4" |
-| Clearance | 13 m | typed | part 4 constants: 10 + 1 + 2 m |
-| Run 4 look height, window, height at cell failure, touchdown | 25 m, 20 s, 13 m, 34 m | typed and computed | README, part 4 |
-| Last-resort prices | 11,111,000; 11,000; 1,000 | computed | README, part 4 |
-| People at risk in 1000 nights | 35, 41, 1; 3.5 %, 4.1 %, 0.1 % (at most 0.47 %) | sampled | README, part 5 |
-| Scenario 810 height at cell failure | 40 m | sampled | README, part 5 |
+| Fault times | 50, 55, 65, 85 s | typed | `src/constants.rs` |
+| Log seconds | 57, 58, 64, 69, 77, 90, 91 s | computed | `part_1_trace.csv`, `part_4_trace.csv`, `part_4_rulings.csv`, `part_N_touchdown.csv` |
+| Recovery window | 20 s | typed | part 4 constants |
+| Clearance ring | 13 m | typed | part 4 constants: 10 + 1 + 2 m |
+| Ethos touchdown to the nearest person | 34 m | computed | `part_4_touchdown.csv`; README, part 4 |
+| People per simulation | up to 8 | typed | README, part 5 |
+| Unsafe landings | 35 and 1; 3.5 %, 0.1 %, at most 0.47 % | sampled | `campaign_1000.csv`; README, part 5 |
+
+`pnpm data` stops the build when a log line sits at a second its trace records no event for, or when
+any text in `src/script.json` states a number outside the list of numbers the tutorial states.
