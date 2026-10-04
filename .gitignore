@@ -99,3 +99,14 @@ mutants.out.old/
 
 # Python bytecode from the reference oracles under openspec/notes/*/reference/
 __pycache__/
+
+# Remotion video projects: dependencies, generated traces, renders.
+video/**/node_modules
+video/**/public/traces
+video/**/out
+# The CFD cuts copy their fonts from website/web/public/fonts at `pnpm sync`.
+video/cfd/*/public/fonts
+
+# Remotion video (video/drone_failsafe): synthesized narration and generated data.
+video/drone_failsafe/public/vo
+video/drone_failsafe/src/data/*.json

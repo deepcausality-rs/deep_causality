@@ -1,0 +1,6 @@
+# pnpm settings live here, not in package.json: pnpm 11 no longer reads the `pnpm` field.
+# The build-script allowlist lets these native dependencies run their install scripts.
+allowBuilds:
+  esbuild: true
+onlyBuiltDependencies:
+  - esbuild

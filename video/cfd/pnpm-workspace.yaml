@@ -1,0 +1,13 @@
+# The plasma-blackout cuts and the code they share. pnpm settings live here, not in package.json:
+# pnpm 11 no longer reads the `pnpm` field.
+packages:
+  - shared
+  - plasma_blackout
+  - retropulsion
+  - weather
+
+# The bundler Remotion uses runs esbuild, whose install script selects the platform binary.
+allowBuilds:
+  esbuild: true
+onlyBuiltDependencies:
+  - esbuild

@@ -1,0 +1,26 @@
+{
+  "name": "drone-failsafe-video",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "data": "node scripts/data.mjs",
+    "voice": "node scripts/voice.mjs",
+    "timeline": "node scripts/timeline.mjs",
+    "prepare-video": "node scripts/data.mjs && node scripts/voice.mjs && node scripts/timeline.mjs",
+    "studio": "remotion studio",
+    "render": "node scripts/render.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.532",
+    "@remotion/cli": "4.0.532",
+    "@remotion/renderer": "4.0.532",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "remotion": "4.0.532"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "typescript": "^5.9.3"
+  }
+}
