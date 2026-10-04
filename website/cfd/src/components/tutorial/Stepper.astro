@@ -11,6 +11,7 @@
  *
  * Inside a view, any element carrying `data-from="n"` is drawn (paths and lines) or faded in
  * (circles and `.lab` labels) once scene n is reached. A `<g data-from>` reveals its paths.
+ * A figure has at most nine scenes: the reveal rules below cover `data-from` 1 to 9.
  *
  * Without JavaScript nothing is hidden: the views render one after another, fully drawn, below the
  * captions as an ordered list. The script turns the figure into a stepper that plays once when it
@@ -22,6 +23,9 @@ interface Props {
   label: string;
 }
 const { scenes, label } = Astro.props;
+if (scenes.length > 9) {
+  throw new Error(`Stepper reveals data-from 1 to 9 only; "${label}" has ${scenes.length} scenes`);
+}
 ---
 <figure class="cfd-anim panel corner-brackets" data-scenes={scenes.length} data-rise aria-label={label}>
   <div class="controls" hidden>

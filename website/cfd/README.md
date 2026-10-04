@@ -228,8 +228,8 @@ with `rsvg-convert -w 1200 -h 630`, then convert to JPEG.
   deploy (DESIGN.md §8.9); this site does not.
 - **No mermaid.** Diagrams on this site are hand-drawn SVG in the instrument
   vocabulary, which keeps the heaviest dependency off every route.
-- **No client islands.** Zero framework runtime; interactivity is five small
-  module scripts. The fifth is the scene stepper in
+- **No client islands.** Zero framework runtime; interactivity is four small
+  module scripts. The fourth is the scene stepper in
   `src/components/tutorial/Stepper.astro`, shared by the tutorial run figures
   (`CorridorRun.astro`, `WeatherRun.astro`, `RetroRun.astro`). Each figure draws
   from its example's committed traces, read at build time by

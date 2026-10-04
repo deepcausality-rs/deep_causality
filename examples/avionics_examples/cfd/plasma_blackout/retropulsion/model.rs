@@ -11,9 +11,9 @@ use crate::FloatType;
 use crate::constants::*;
 use avionics_examples::shared::stages::FROZEN_DRAG_FRACTION_FIELD;
 use avionics_examples::shared::trace::{
-    ALTITUDE, AXIAL_ACCEL, BURN_TRACE_FIELD, DESCENT_RATE, DV_ACTUAL, DV_FROZEN, GNSS_DENIED,
-    HEAT_FLUX, MACH, NAV_ERR, NE_PEAK, PRESERVED_DRAG, PROPELLANT, SPEED, THROTTLE, TRACE_FIELD,
-    burn_rows, trace_rows,
+    ALTITUDE, AXIAL_ACCEL, BURN_COLUMNS, BURN_TRACE_FIELD, DESCENT_RATE, DV_ACTUAL, DV_FROZEN,
+    GNSS_DENIED, HEAT_FLUX, MACH, NAV_ERR, NE_PEAK, PRESERVED_DRAG, PROPELLANT, SPEED, THROTTLE,
+    TRACE_FIELD, TraceRow, burn_rows, row_count, trace_rows,
 };
 use avionics_examples::shared::{constants::*, utils, world};
 use deep_causality_cfd::{
@@ -461,11 +461,11 @@ pub fn score_branch(
         peak_bond: report.peak_bond(),
         trace: report
             .series(&format!("final_{TRACE_FIELD}"))
-            .unwrap_or(&[])
+            .ok_or_else(|| missing(TRACE_FIELD))?
             .to_vec(),
         burn_trace: report
             .series(&format!("final_{BURN_TRACE_FIELD}"))
-            .unwrap_or(&[])
+            .ok_or_else(|| missing(BURN_TRACE_FIELD))?
             .to_vec(),
     })
 }
@@ -524,17 +524,45 @@ impl TableRow for DescentTraceRow {
     }
 }
 
+/// The flight and burn rows of one recording from row `from` on, paired step by step; the flight
+/// rows are labelled by leg as [`trace_rows`] labels them.
+///
+/// # Errors
+/// Returns `CalculationError`, naming the recording by `label`, if the two traces hold different
+/// row counts.
+fn paired_rows<'a>(
+    label: &str,
+    trace: &[FloatType],
+    burn_trace: &'a [FloatType],
+    from: usize,
+    leg_ends: &[usize],
+) -> Result<impl Iterator<Item = (TraceRow, &'a [FloatType; BURN_COLUMNS])>, PhysicsError> {
+    let burn = burn_rows(burn_trace);
+    let n = row_count(trace);
+    if n != burn.len() {
+        return Err(PhysicsError::CalculationError(format!(
+            "{label}: flight trace has {n} rows, burn trace {}",
+            burn.len()
+        )));
+    }
+    Ok(trace_rows(trace, from, leg_ends)
+        .into_iter()
+        .zip(burn.iter().skip(from)))
+}
+
 /// The descent rows of a field's flight and burn traces from row `from` on, labelled by leg.
+///
+/// # Errors
+/// Returns `CalculationError`, naming the recording by `label`, if the two traces hold different
+/// row counts.
 pub fn descent_trace_rows(
+    label: &str,
     trace: &[FloatType],
     burn_trace: &[FloatType],
     from: usize,
     leg_ends: &[usize],
-) -> Vec<DescentTraceRow> {
-    let burn = burn_rows(burn_trace);
-    trace_rows(trace, from, leg_ends)
-        .into_iter()
-        .zip(burn.iter().skip(from))
+) -> Result<Vec<DescentTraceRow>, PhysicsError> {
+    Ok(paired_rows(label, trace, burn_trace, from, leg_ends)?
         .map(|(r, b)| DescentTraceRow {
             leg: r.leg,
             t: r.t,
@@ -549,7 +577,7 @@ pub fn descent_trace_rows(
             ne_peak: r.values[NE_PEAK],
             heat_flux: r.values[HEAT_FLUX],
         })
-        .collect()
+        .collect())
 }
 
 /// One step of one roster branch after the fork.
@@ -598,27 +626,38 @@ impl TableRow for BranchTraceRow {
 }
 
 /// Every roster branch's steps after the fork at row `fork_rows`, in roster order.
-pub fn branch_trace_rows(rows: &[BranchRow], fork_rows: usize) -> Vec<BranchTraceRow> {
-    rows.iter()
-        .flat_map(|b| {
-            let burn = burn_rows(&b.burn_trace);
-            trace_rows(&b.trace, fork_rows, &[])
-                .into_iter()
-                .zip(burn.iter().skip(fork_rows))
-                .map(move |(r, s)| BranchTraceRow {
-                    commanded_throttle: b.commanded_throttle,
-                    t: r.t,
-                    altitude: r.values[ALTITUDE],
-                    mach: r.values[MACH],
-                    throttle: s[THROTTLE],
-                    axial_accel: s[AXIAL_ACCEL],
-                    preserved_drag: s[PRESERVED_DRAG],
-                    dv_actual: s[DV_ACTUAL],
-                    dv_frozen: s[DV_FROZEN],
-                    propellant: s[PROPELLANT],
-                })
-        })
-        .collect()
+///
+/// # Errors
+/// Returns `CalculationError`, naming the branch, if its flight and burn traces hold different row
+/// counts.
+pub fn branch_trace_rows(
+    rows: &[BranchRow],
+    fork_rows: usize,
+) -> Result<Vec<BranchTraceRow>, PhysicsError> {
+    rows.iter().try_fold(Vec::new(), |mut out, b| {
+        out.extend(
+            paired_rows(
+                &format!("branch '{}'", b.name),
+                &b.trace,
+                &b.burn_trace,
+                fork_rows,
+                &[],
+            )?
+            .map(|(r, s)| BranchTraceRow {
+                commanded_throttle: b.commanded_throttle,
+                t: r.t,
+                altitude: r.values[ALTITUDE],
+                mach: r.values[MACH],
+                throttle: s[THROTTLE],
+                axial_accel: s[AXIAL_ACCEL],
+                preserved_drag: s[PRESERVED_DRAG],
+                dv_actual: s[DV_ACTUAL],
+                dv_frozen: s[DV_FROZEN],
+                propellant: s[PROPELLANT],
+            }),
+        );
+        Ok(out)
+    })
 }
 
 /// Where a per-step output file is written, beside the branch table.

@@ -95,15 +95,22 @@ fn main() -> ExitCode {
             ));
         }
 
+        // The recorded powered-descent stack every leg flies; `terminal` selects the landing leg's
+        // subsonic envelope.
+        let coupling = |margin_m: FloatType, terminal: bool| {
+            trace::burn_traced(world::powered_descent_coupling_with(
+                informed.bias_departure,
+                0,
+                margin_m,
+                terminal,
+            ))
+        };
+
         // ── Act 1: CORRIDOR. The inherited descent, burn stack composed, throttle at zero. ─────
         let corridor_world = model::trunk_world(constants::ONSET_STEPS, informed.rho_scale)
             .map_err(leg_err("setup: corridor world"))?;
         let onset = CfdFlow::march(&corridor_world)
-            .couple(trace::burn_traced(world::powered_descent_coupling(
-                informed.bias_departure,
-                0,
-                informed.margin_m,
-            )))
+            .couple(coupling(informed.margin_m, false))
             .trigger(utils::trigger())
             .kappa(lift(0.0))
             .from_field(seed_field)
@@ -121,11 +128,7 @@ fn main() -> ExitCode {
         // The trunk's own clock, so gate (4g) can put the fan-out's per-step cost against it.
         let trunk_clock = Instant::now();
         let burn = CfdFlow::march(&burn_world)
-            .couple(trace::burn_traced(world::powered_descent_coupling(
-                informed.bias_departure,
-                0,
-                informed.margin_m,
-            )))
+            .couple(coupling(informed.margin_m, false))
             .trigger(utils::trigger())
             .kappa(lift(0.0))
             .from(onset.state())
@@ -201,11 +204,7 @@ fn main() -> ExitCode {
         let burn_out_world = model::burn_trunk_world(constants::BURN_OUT_STEPS, informed.rho_scale)
             .map_err(leg_err("setup: burn-out world"))?;
         let burn_out = CfdFlow::march(&burn_out_world)
-            .couple(trace::burn_traced(world::powered_descent_coupling(
-                informed.bias_departure,
-                0,
-                informed.margin_m,
-            )))
+            .couple(coupling(informed.margin_m, false))
             .trigger(utils::trigger())
             .kappa(lift(0.0))
             .from(burn.state())
@@ -242,12 +241,7 @@ fn main() -> ExitCode {
 
         let terminal = CfdFlow::march(&terminal_world)
             .march_with(MarchStop::Fixed(constants::TERMINAL_STEPS))
-            .couple(trace::burn_traced(world::powered_descent_coupling_with(
-                informed.bias_departure,
-                0,
-                informed.margin_m,
-                true,
-            )))
+            .couple(coupling(informed.margin_m, true))
             .trigger(utils::trigger())
             .kappa(lift(0.0))
             .from(burn_out.state())
@@ -259,12 +253,7 @@ fn main() -> ExitCode {
         // table at the standard day instead of the day it is actually in.
         let uninformed_terminal = CfdFlow::march(&uninformed_world)
             .march_with(MarchStop::Fixed(constants::TERMINAL_STEPS))
-            .couple(trace::burn_traced(world::powered_descent_coupling_with(
-                informed.bias_departure,
-                0,
-                uninformed.margin_m,
-                true,
-            )))
+            .couple(coupling(uninformed.margin_m, true))
             .trigger(utils::trigger())
             .kappa(lift(0.0))
             .from(burn_out.state())
@@ -285,32 +274,39 @@ fn main() -> ExitCode {
             rows_at(burn_out.field()),
             rows_at(terminal.field()),
         ];
-        let traces = |field: &deep_causality_cfd::CoupledField<FloatType>, from: usize| {
+        let traces = |label: &str, field: &deep_causality_cfd::CoupledField<FloatType>, from| {
             model::descent_trace_rows(
+                label,
                 field.scalar(TRACE_FIELD).unwrap_or(&[]),
                 field.scalar(BURN_TRACE_FIELD).unwrap_or(&[]),
                 from,
                 &leg_ends,
             )
+            .map_err(leg_err("trace output"))
         };
         let write_err = |e: deep_causality_file::DataLoadingError| {
             leg_err("trace output")(PhysicsError::CalculationError(format!("{e}")))
         };
         write_rows(
             model::trace_path("retropulsion_trace.csv"),
-            traces(terminal.field(), 0),
+            traces("retropulsion_trace.csv", terminal.field(), 0)?,
         )
         .run()
         .map_err(write_err)?;
         write_rows(
             model::trace_path("retropulsion_uninformed_trace.csv"),
-            traces(uninformed_terminal.field(), leg_ends[2]),
+            traces(
+                "retropulsion_uninformed_trace.csv",
+                uninformed_terminal.field(),
+                leg_ends[2],
+            )?,
         )
         .run()
         .map_err(write_err)?;
         write_rows(
             model::trace_path("retropulsion_branch_trace.csv"),
-            model::branch_trace_rows(&roster_capture.borrow(), leg_ends[1]),
+            model::branch_trace_rows(&roster_capture.borrow(), leg_ends[1])
+                .map_err(leg_err("trace output"))?,
         )
         .run()
         .map_err(write_err)?;

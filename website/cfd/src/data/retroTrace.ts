@@ -17,21 +17,7 @@ import uninformedCsv from '../../../../examples/avionics_examples/cfd/plasma_bla
 import rosterCsv from '../../../../examples/avionics_examples/cfd/plasma_blackout/retropulsion/retropulsion_branches.csv?raw';
 import outputTxt from '../../../../examples/avionics_examples/cfd/plasma_blackout/retropulsion/output.txt?raw';
 import weatherCsv from '../../../../examples/avionics_examples/cfd/plasma_blackout/weather/weather_table.csv?raw';
-
-type Row = Record<string, number>;
-
-/** Parse the two-row-header CSV `write_rows` emits: names, then `#units`, then data. */
-function parseRows(csv: string): Row[] {
-  const lines = csv.trim().split('\n');
-  const names = lines[0].split(',');
-  return lines
-    .slice(1)
-    .filter((l) => !l.startsWith('#units'))
-    .map((l) => {
-      const cells = l.split(',').map(Number);
-      return Object.fromEntries(names.map((n, i) => [n, cells[i]]));
-    });
-}
+import { parseGates, parseRows, type Row } from './traceCsv';
 
 const fail = (msg: string): never => {
   throw new Error(`retropulsion data: ${msg}`);
@@ -43,7 +29,7 @@ const printed = (re: RegExp, what: string) => {
 };
 
 // ── Plan: the measured day reads walk 2's table ──────────────────────────────────────────────
-const table = parseRows(weatherCsv).sort((a, b) => a.d_temp - b.d_temp);
+const table = parseRows(weatherCsv, 'weather_table.csv').sort((a, b) => a.d_temp - b.d_temp);
 const plan = printed(
   /measured dT = (-?[0-9.]+) K -> drift ([0-9.]+) \+- ([0-9.]+) m, ignition margin ([0-9.]+) m \(k = ([0-9.]+)\)/,
   'Act 0 plan line'
@@ -75,7 +61,7 @@ if (
 }
 
 // ── The informed descent ─────────────────────────────────────────────────────────────────────
-const descent = parseRows(descentCsv);
+const descent = parseRows(descentCsv, 'retropulsion_trace.csv');
 export interface Sample {
   leg: number;
   t: number;
@@ -97,7 +83,7 @@ const toSample = (r: Row): Sample => ({
   descentRate: r.descent_rate,
 });
 export const samples: Sample[] = descent.map(toSample);
-const uninformedSamples: Sample[] = parseRows(uninformedCsv).map(toSample);
+const uninformedSamples: Sample[] = parseRows(uninformedCsv, 'retropulsion_uninformed_trace.csv').map(toSample);
 
 const legEnd = (leg: number) => samples.findLastIndex((s) => s.leg === leg);
 const deniedFrom = samples.findIndex((s) => s.denied);
@@ -165,8 +151,8 @@ export const landings = {
 };
 
 // ── The mid-burn fork ────────────────────────────────────────────────────────────────────────
-const roster = parseRows(rosterCsv);
-const branchRows = parseRows(branchCsv);
+const roster = parseRows(rosterCsv, 'retropulsion_branches.csv');
+const branchRows = parseRows(branchCsv, 'retropulsion_branch_trace.csv');
 const names = new Map<number, string>();
 for (const m of outputTxt.matchAll(/^ {2}([a-z]+)\s+([0-9.]+)\s+([0-9.]+)\s+(—|-?[0-9.]+)\s+([0-9.]+)/gm)) {
   names.set(Number(m[2]), m[1]);
@@ -208,8 +194,4 @@ export const branches: Branch[] = roster.map((r) => {
 });
 
 /** The gate lines of the committed run, as printed: label and pass flag. */
-export const gates = outputTxt
-  .split('\n')
-  .map((l) => l.match(/\[(PASS|FAIL)\] \[\w+\] (\([0-9a-z]+\) [^:]+):/))
-  .filter((m): m is RegExpMatchArray => m !== null)
-  .map((m) => ({ passed: m[1] === 'PASS', label: m[2] }));
+export const gates = parseGates(outputTxt);

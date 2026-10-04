@@ -12,24 +12,10 @@ import descentCsv from '../../../../examples/avionics_examples/cfd/plasma_blacko
 import branchCsv from '../../../../examples/avionics_examples/cfd/plasma_blackout/corridor/corridor_branch_trace.csv?raw';
 import outputTxt from '../../../../examples/avionics_examples/cfd/plasma_blackout/corridor/output.txt?raw';
 import { corridor } from './results';
+import { parseGates, parseRows, type Row } from './traceCsv';
 
-type Row = Record<string, number>;
-
-/** Parse the two-row-header CSV `write_rows` emits: names, then `#units`, then data. */
-function parseRows(csv: string): Row[] {
-  const lines = csv.trim().split('\n');
-  const names = lines[0].split(',');
-  return lines
-    .slice(1)
-    .filter((l) => !l.startsWith('#units'))
-    .map((l) => {
-      const cells = l.split(',').map(Number);
-      return Object.fromEntries(names.map((n, i) => [n, cells[i]]));
-    });
-}
-
-const descent = parseRows(descentCsv);
-const branchRows = parseRows(branchCsv);
+const descent = parseRows(descentCsv, 'corridor_trace.csv');
+const branchRows = parseRows(branchCsv, 'corridor_branch_trace.csv');
 
 /** One sample of the flown descent. */
 export interface DescentSample {
@@ -84,7 +70,7 @@ export const events = {
   end: { t: samples[samples.length - 1].t, navErr: samples[samples.length - 1].navErr },
 } as const;
 
-if (Math.abs(events.pause.altitudeKm - corridor.onsetKm) > 0.05) {
+if (!(Math.abs(events.pause.altitudeKm - corridor.onsetKm) <= 0.05)) {
   throw new Error(
     `corridor_trace.csv pauses at ${events.pause.altitudeKm} km; results.ts says ${corridor.onsetKm} km`
   );
@@ -109,6 +95,15 @@ for (const r of branchRows) {
   const key = `${r.round}:${r.bank_cmd}`;
   byBranch.set(key, [...(byBranch.get(key) ?? []), r]);
 }
+const expected = [
+  ...corridor.coarse.map((b) => `1:${b.bank}`),
+  ...corridor.fine.map((b) => `2:${b.bank}`),
+];
+if (expected.length !== byBranch.size || expected.some((k) => !byBranch.has(k))) {
+  throw new Error(
+    `corridor_branch_trace.csv has branches [${[...byBranch.keys()]}]; results.ts lists [${expected}]`
+  );
+}
 const ballistic = byBranch.get('1:0');
 if (!ballistic) throw new Error('corridor_branch_trace.csv: no zero-bank branch');
 const ballisticEnd = ballistic[ballistic.length - 1];
@@ -126,7 +121,7 @@ export const branches: Branch[] = [...byBranch.values()].map((rows) => {
     miss: Math.hypot(end.x - aim.x, end.y - aim.y, end.z - aim.z),
   };
   const copied = [...corridor.coarse, ...corridor.fine].find((b) => b.bank === branch.bank);
-  if (!copied || Math.abs(copied.miss - branch.miss) > 1e-3) {
+  if (!copied || !(Math.abs(copied.miss - branch.miss) <= 1e-3)) {
     throw new Error(
       `branch ${branch.bank} deg misses ${branch.miss} m in the trace; results.ts says ${copied?.miss}`
     );
@@ -135,8 +130,4 @@ export const branches: Branch[] = [...byBranch.values()].map((rows) => {
 });
 
 /** The gate lines of the committed run, as printed: label and pass flag. */
-export const gates = outputTxt
-  .split('\n')
-  .map((l) => l.match(/\[(PASS|FAIL)\] \[\w+\] (\([0-9a-z]+\) [^:]+):/))
-  .filter((m): m is RegExpMatchArray => m !== null)
-  .map((m) => ({ passed: m[1] === 'PASS', label: m[2] }));
+export const gates = parseGates(outputTxt);

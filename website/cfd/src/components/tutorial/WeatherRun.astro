@@ -11,14 +11,11 @@
  */
 import { gates, worlds } from '../../data/weatherTrace';
 import { GITHUB_URL } from '../../consts';
+import { f1, f2, pct, r2 } from './format';
 import Stepper from './Stepper.astro';
 
 const FILES = `${GITHUB_URL}/blob/main/examples/avionics_examples/cfd/plasma_blackout/weather`;
 
-const f1 = (v: number) => v.toFixed(1);
-const f2 = (v: number) => v.toFixed(2);
-const r2 = (v: number) => Math.round(v * 100) / 100;
-const pct = (v: number, of: number) => `${((v / of) * 100).toFixed(2)}%`;
 const signed = (v: number) => (v > 0 ? `+${v}` : v < 0 ? `−${-v}` : '0');
 
 const standard = worlds.find((w) => w.dTemp === 0)!;

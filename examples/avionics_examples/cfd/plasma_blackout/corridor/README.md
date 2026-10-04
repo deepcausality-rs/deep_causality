@@ -61,8 +61,9 @@ scripted. Each of the three leg boundaries carries the coupled field and re-seed
    0.5 rad cap, the gate bounds it every step, and the clamped branch overshoots to 28.9 m. A **fine round** then forks
    the same paused onset a second time, eleven 0.5-degree candidates bracketing the coarse winner, scored against the
    same aim: the landscape bottoms at 11.5 degrees with a 2.07 m miss. Two fork rounds resolve the optimum at 0.5-degree
-   resolution for seventeen branches total. The 2.07 m residual is the size of the INS drift when the branches are scored,
-   the vehicle's knowledge floor (see "Why the sweep stops at 0.5 degrees and 2.07 m" below).
+   resolution for seventeen branches total. The 2.07 m residual sits 0.40 m above the vehicle's knowledge floor, the
+   1.67 m INS drift when the branches are scored 100 steps after the fork (see "Why the sweep stops at 0.5 degrees and
+   2.07 m" below).
 3. **The committed dwell.** The winning world flies through the peak passage. At the 61 km RAM-C II station the evolved
    peak electron density lands at 2.6e19 per cubic meter against the 1e19 flight anchor, inside the earned 5x band, with
    **no calibration target anywhere in the chemistry**. The INS dead-reckons; drift grows from 0.18 m at onset to 1.56 m
@@ -147,15 +148,16 @@ paused tensor state by reference and clone copy-on-write at first write, each br
 world they fly. Branch misses are trajectory-derived: the distance from each branch's terminal truth state to a shared
 aim point, with the analytic t^2 drift law printed beside it as a cross-check.
 
-**Why the sweep stops at 0.5 degrees and 2.07 m.** Driving the residual miss lower would optimize below the vehicle's
-knowledge floor. The INS dead-reckoning error in this same run is 1.67 m when the branches are scored, 100 steps
-after the fork; the guidance residual (2.07 m) and the navigation error are the same size, and that sets the stopping
-point. The error keeps growing through the rest of the blackout, to 42.4 m before the link returns. Steering
+**Why the sweep stops at 0.5 degrees and 2.07 m.** A finer sweep would separate neighboring branches by less than the
+vehicle's navigation error. The INS dead-reckoning error in this same run is 1.67 m when the branches are scored, 100
+steps after the fork. Near the minimum, neighboring 0.5-degree candidates differ by 0.29 m (11.0 to 11.5 degrees),
+0.04 m (11.5 to 12.0) and 0.36 m (12.0 to 12.5), and the 2.07 m guidance residual sits 0.40 m above the drift. The
+error keeps growing through the rest of the blackout, to 42.4 m before the link returns. Steering
 more precisely than the vehicle navigates buys nothing, because a real vehicle commands off the navigated state. (The
 sweep scores against truth terminal states, which a flight system cannot see, so 2.07 m is optimistic.) The residual
-itself is geometric: near the minimum, neighboring 0.5-degree candidates differ by 0.04 to 0.36 m, but a single
-constant bank command traces a one-dimensional curve of reachable terminal states through a 3-D miss space, and 2.07 m
-is that curve's closest approach to the aim.
+itself is geometric: a single constant bank command traces a one-dimensional curve of reachable terminal states through
+a 3-D miss space. Fitted through the eleven fine-round terminal states, that curve passes 2.04 m from the aim at 11.7
+degrees, 0.03 m closer than the committed branch.
 
 **A cybernetic safety gate that steers.** `CyberneticCorrect` runs a
 `CyberneticLoop::control_step` against the verified `SafetyEnvelope` each step and clamps the commanded bank into it;

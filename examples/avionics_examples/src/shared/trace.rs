@@ -37,6 +37,7 @@ pub const HEAT_FLUX: usize = 10;
 
 /// Appends one row of [`TRACE_COLUMNS`] values per coupled step to [`TRACE_FIELD`]. Composed last,
 /// after the safety gate, so the recorded bank is the clamped command the lift stage flies next.
+/// Fails the step when the field lacks any value the row records.
 #[derive(Debug, Clone, Copy)]
 pub struct TraceRecorder;
 
@@ -46,46 +47,66 @@ impl PhysicsStage<2, FloatType> for TraceRecorder {
         _ctx: &StepContext<'_, 2, FloatType>,
         field: &mut CoupledField<FloatType>,
     ) -> Result<(), PhysicsError> {
-        let zero = lift::<FloatType>(0.0);
-        let regime = field.regime();
-        let truth = field.scalar("truth_state").unwrap_or(&[]);
-        let position: [FloatType; 3] =
-            core::array::from_fn(|i| truth.get(i).copied().unwrap_or(zero));
-        let (nav_err, nav_var) = match field.nav() {
-            Some(engine) if truth.len() >= 3 => {
-                let p = engine.position();
-                let d: [FloatType; 3] = core::array::from_fn(|i| p[i] - position[i]);
-                (utils::norm3(d), engine.position_variance())
-            }
-            _ => (zero, zero),
-        };
+        const STAGE: &str = "trace recorder";
+        let regime = field.regime().ok_or_else(|| absent(STAGE, "regime"))?;
+        let position: [FloatType; 3] = *field
+            .scalar("truth_state")
+            .and_then(|truth| truth.first_chunk::<3>())
+            .ok_or_else(|| absent(STAGE, "truth_state"))?;
+        let engine = field.nav().ok_or_else(|| absent(STAGE, "nav"))?;
+        let p = engine.position();
+        let d: [FloatType; 3] = core::array::from_fn(|i| p[i] - position[i]);
         let row: [FloatType; TRACE_COLUMNS] = [
-            utils::scalar0(field, "flight_altitude"),
-            utils::scalar0(field, "flight_mach"),
-            utils::scalar0(field, "flight_speed"),
-            field.scalar("n_e").map(utils::peak).unwrap_or(zero),
-            regime.map(|r| r.plasma_frequency).unwrap_or(zero),
-            lift(if regime.is_some_and(|r| r.gnss_denied) {
-                1.0
-            } else {
-                0.0
-            }),
-            regime.map(|r| r.knudsen).unwrap_or(zero),
-            regime.map(|r| model_code(r.model)).unwrap_or(zero),
-            nav_err,
-            nav_var,
-            utils::scalar0(field, "heat_flux"),
-            utils::scalar0(field, "g_load"),
-            field.control_action().unwrap_or(zero),
+            required(field, STAGE, "flight_altitude")?,
+            required(field, STAGE, "flight_mach")?,
+            required(field, STAGE, "flight_speed")?,
+            field
+                .scalar("n_e")
+                .filter(|ne| !ne.is_empty())
+                .map(utils::peak)
+                .ok_or_else(|| absent(STAGE, "n_e"))?,
+            regime.plasma_frequency,
+            lift(if regime.gnss_denied { 1.0 } else { 0.0 }),
+            regime.knudsen,
+            model_code(regime.model),
+            utils::norm3(d),
+            engine.position_variance(),
+            required(field, STAGE, "heat_flux")?,
+            required(field, STAGE, "g_load")?,
+            field
+                .control_action()
+                .ok_or_else(|| absent(STAGE, "control_action"))?,
             position[0],
             position[1],
             position[2],
         ];
-        match field.scalar_mut(TRACE_FIELD) {
-            Some(trace) => trace.extend_from_slice(&row),
-            None => field.set_scalar(TRACE_FIELD, row.to_vec()),
-        }
+        append_row(field, TRACE_FIELD, &row);
         Ok(())
+    }
+}
+
+/// The error the recorder `stage` returns when the field lacks `name`.
+fn absent(stage: &str, name: &str) -> PhysicsError {
+    PhysicsError::CalculationError(format!("{stage}: the field carries no '{name}'"))
+}
+
+/// The first cell of the field scalar `name`; the recorder `stage` fails if the field has none.
+fn required(
+    field: &CoupledField<FloatType>,
+    stage: &str,
+    name: &str,
+) -> Result<FloatType, PhysicsError> {
+    field
+        .scalar(name)
+        .and_then(|s| s.first().copied())
+        .ok_or_else(|| absent(stage, name))
+}
+
+/// Appends `row` to the field scalar `name`, creating it on the first step.
+fn append_row(field: &mut CoupledField<FloatType>, name: &str, row: &[FloatType]) {
+    match field.scalar_mut(name) {
+        Some(trace) => trace.extend_from_slice(row),
+        None => field.set_scalar(name, row.to_vec()),
     }
 }
 
@@ -130,7 +151,8 @@ pub const DV_FROZEN: usize = 6;
 /// Appends one row of [`BURN_COLUMNS`] powered-descent values per coupled step to
 /// [`BURN_TRACE_FIELD`]: the throttle the propulsion stages flew, propellant, descent rate, axial
 /// deceleration, the preserved-drag fraction, and the two velocity increments `AxialWitness`
-/// accumulates. The preserved-drag fraction is NaN on any step the field carries none.
+/// accumulates. The preserved-drag fraction and the frozen-drag increment are NaN on any step the
+/// field carries none; every other value missing from the field fails the step.
 #[derive(Debug, Clone, Copy)]
 pub struct BurnRecorder;
 
@@ -140,22 +162,24 @@ impl PhysicsStage<2, FloatType> for BurnRecorder {
         _ctx: &StepContext<'_, 2, FloatType>,
         field: &mut CoupledField<FloatType>,
     ) -> Result<(), PhysicsError> {
+        const STAGE: &str = "burn recorder";
         let row: [FloatType; BURN_COLUMNS] = [
-            utils::scalar0(field, "realized_throttle"),
-            utils::scalar0(field, "propellant"),
-            utils::scalar0(field, "descent_rate"),
-            utils::scalar0(field, "axial_accel"),
+            required(field, STAGE, "realized_throttle")?,
+            required(field, STAGE, "propellant")?,
+            required(field, STAGE, "descent_rate")?,
+            required(field, STAGE, "axial_accel")?,
             field
                 .scalar("preserved_drag_fraction")
                 .and_then(|s| s.first().copied())
                 .unwrap_or(FloatType::NAN),
-            utils::scalar0(field, "dv_actual"),
-            utils::scalar0(field, "dv_frozen"),
+            required(field, STAGE, "dv_actual")?,
+            // Accumulated only in a world publishing the frozen-drag fraction: the fork's branches.
+            field
+                .scalar("dv_frozen")
+                .and_then(|s| s.first().copied())
+                .unwrap_or(FloatType::NAN),
         ];
-        match field.scalar_mut(BURN_TRACE_FIELD) {
-            Some(trace) => trace.extend_from_slice(&row),
-            None => field.set_scalar(BURN_TRACE_FIELD, row.to_vec()),
-        }
+        append_row(field, BURN_TRACE_FIELD, &row);
         Ok(())
     }
 }
@@ -185,31 +209,52 @@ pub struct TraceRow {
     pub values: [FloatType; TRACE_COLUMNS],
 }
 
+/// Column names and units of the recorded values, in [`TraceRow::values`] order.
+pub const TRACE_SCHEMA: [(&str, &str); TRACE_COLUMNS] = [
+    ("altitude", "m"),
+    ("mach", "-"),
+    ("speed", "m/s"),
+    ("ne_peak", "m^-3"),
+    ("plasma_freq", "rad/s"),
+    ("gnss_denied", "-"),
+    ("knudsen", "-"),
+    (
+        "regime",
+        "0 continuum 1 slip 2 transitional 3 free-molecular",
+    ),
+    ("nav_err", "m"),
+    ("nav_var", "m^2"),
+    ("heat_flux", "W/m2"),
+    ("g_load", "g"),
+    ("bank", "rad"),
+    ("x", "m"),
+    ("y", "m"),
+    ("z", "m"),
+];
+
+/// The schema of a table whose rows hold the `P` columns of `prefix` followed by the recorded
+/// values. Evaluated in a constant, an `N` other than `P + TRACE_COLUMNS` fails to compile.
+pub const fn trace_schema_after<const P: usize, const N: usize>(
+    prefix: [(&'static str, &'static str); P],
+) -> [(&'static str, &'static str); N] {
+    assert!(N == P + TRACE_COLUMNS, "N must be P + TRACE_COLUMNS");
+    let mut schema = [("", ""); N];
+    let mut i = 0;
+    while i < N {
+        schema[i] = if i < P {
+            prefix[i]
+        } else {
+            TRACE_SCHEMA[i - P]
+        };
+        i += 1;
+    }
+    schema
+}
+
 impl TableRow for TraceRow {
     type Scalar = FloatType;
-    const SCHEMA: &'static [(&'static str, &'static str)] = &[
-        ("leg", "-"),
-        ("t", "s"),
-        ("altitude", "m"),
-        ("mach", "-"),
-        ("speed", "m/s"),
-        ("ne_peak", "m^-3"),
-        ("plasma_freq", "rad/s"),
-        ("gnss_denied", "-"),
-        ("knudsen", "-"),
-        (
-            "regime",
-            "0 continuum 1 slip 2 transitional 3 free-molecular",
-        ),
-        ("nav_err", "m"),
-        ("nav_var", "m^2"),
-        ("heat_flux", "W/m2"),
-        ("g_load", "g"),
-        ("bank", "rad"),
-        ("x", "m"),
-        ("y", "m"),
-        ("z", "m"),
-    ];
+    const SCHEMA: &'static [(&'static str, &'static str)] =
+        &trace_schema_after::<2, { TRACE_COLUMNS + 2 }>([("leg", "-"), ("t", "s")]);
     fn cells(&self) -> Vec<FloatType> {
         let mut cells = Vec::with_capacity(Self::SCHEMA.len());
         cells.push(self.leg);
@@ -219,8 +264,8 @@ impl TableRow for TraceRow {
     }
 }
 
-/// The rows of `trace` from index `from` on, labelled with their leg. `leg_ends` holds the row
-/// count at the end of each leg in flight order; a row past the last end takes the last leg.
+/// The complete rows of `trace` from index `from` on, labelled with their leg. `leg_ends` holds the
+/// row count at the end of each leg in flight order; a row past the last end takes the last leg.
 pub fn trace_rows(trace: &[FloatType], from: usize, leg_ends: &[usize]) -> Vec<TraceRow> {
     let (rows, _) = trace.as_chunks::<TRACE_COLUMNS>();
     rows.iter()

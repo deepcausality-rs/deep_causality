@@ -303,7 +303,7 @@ fn mean_sd(xs: &[FloatType]) -> (FloatType, FloatType) {
 /// draws.
 ///
 /// # Errors
-/// Never fails today; returns `Result` to fit the `reduce_ensemble` seam.
+/// Returns `CalculationError` if the reference draw carries no `"final_trace"` series.
 pub fn world_row(
     case: &WeatherCase,
     draws: &[Report<FloatType>],
@@ -347,7 +347,13 @@ pub fn world_row(
         terminal_max_m,
         trace: reference
             .series(&format!("final_{TRACE_FIELD}"))
-            .unwrap_or(&[])
+            .ok_or_else(|| {
+                PhysicsError::CalculationError(format!(
+                    "{}: reference draw carries no \"final_{TRACE_FIELD}\" series (no trace \
+                     recorder on the coupling)",
+                    case.name
+                ))
+            })?
             .to_vec(),
         draws: draws
             .iter()

@@ -12,19 +12,16 @@
 import { branches, events, gates, samples } from '../../data/corridorTrace';
 import { corridor } from '../../data/results';
 import { GITHUB_URL } from '../../consts';
+import { f1, f2, pct, r2 } from './format';
 import Stepper from './Stepper.astro';
 
 const FILES = `${GITHUB_URL}/blob/main/examples/avionics_examples/cfd/plasma_blackout/corridor`;
 
 // ── Number formatting ────────────────────────────────────────────────────────────────────────
-const f1 = (v: number) => v.toFixed(1);
-const f2 = (v: number) => v.toFixed(2);
 const sci = (v: number) => {
   const e = Math.floor(Math.log10(v));
   return { m: (v / 10 ** e).toFixed(1), e };
 };
-const r2 = (v: number) => Math.round(v * 100) / 100;
-const pct = (v: number, of: number) => `${((v / of) * 100).toFixed(2)}%`;
 
 // ── Timeline view: three strips over one time axis ───────────────────────────────────────────
 const TW = 100;
@@ -91,7 +88,7 @@ const EH = r2(10 + IP_MAX * SCALE);
 const ex = (m: number) => r2(5 + m * SCALE);
 const ey = (m: number) => r2(5 + m * SCALE);
 const ends = [...branches]
-  .filter((b) => !(b.round === 2 && b.bank === 10))
+  .filter((b) => b.round === 1 || !roundOne.some((r) => r.bank === b.bank))
   .sort((a, b) => a.bank - b.bank);
 const reach = ends.map((b, i) => `${i === 0 ? 'M' : 'L'}${ex(b.crossRange[b.crossRange.length - 1])},${ey(b.inPlaneEnd)}`).join(' ');
 const aimX = ex(corridor.aimOffsetM);

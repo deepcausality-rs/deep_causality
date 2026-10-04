@@ -11,15 +11,12 @@
  */
 import { belief, branches, events, gates, landings, samples } from '../../data/retroTrace';
 import { GITHUB_URL } from '../../consts';
+import { f1, f2, pct, r2 } from './format';
 import Stepper from './Stepper.astro';
 
 const FILES = `${GITHUB_URL}/blob/main/examples/avionics_examples/cfd/plasma_blackout/retropulsion`;
 
-const f1 = (v: number) => v.toFixed(1);
-const f2 = (v: number) => v.toFixed(2);
 const f3 = (v: number) => v.toFixed(3);
-const r2 = (v: number) => Math.round(v * 100) / 100;
-const pct = (v: number, of: number) => `${((v / of) * 100).toFixed(2)}%`;
 const minus = (v: number) => (v < 0 ? `−${-v}` : `${v}`);
 const passed = gates.filter((g) => g.passed).length;
 const stepS = r2(samples[1].t - samples[0].t);
