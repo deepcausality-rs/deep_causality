@@ -16,7 +16,7 @@ live in [SCRIPT.md](SCRIPT.md).
 | Music | The shared theme, `../music/theme.scd`, rendered by SuperCollider at the cut's exact length |
 | Colour | The design system's palette; `--warn` `#e3b341` marks the GPS L1 band and the blackout only |
 | Location | `video/cfd/plasma_blackout/` |
-| Scope | The corridor first; weather and retropulsion follow the same template once the look is approved |
+| Scope | The corridor first; weather and retropropulsion follow the same template once the look is approved |
 
 ## The idea that carries the video
 
@@ -47,8 +47,8 @@ Three moments carry it:
   Earth limb below. 2D vector graphics for everything that is measured: traces, branches, the arc,
   the gates.
 - **One vehicle across the three parts.** `video/cfd/shared/src/three/Capsule.tsx` is the vehicle the corridor, the
-  weather campaign and the retropulsion descent fly: a 4.23 m aeroshell, from the examples'
-  ballistic bundle, with the central retro nozzle the retropulsion part lights.
+  weather campaign and the retropropulsion descent fly: a 4.23 m aeroshell, from the examples'
+  ballistic bundle, with the central retro nozzle the retropropulsion part lights.
 - **Data, not keyframes.** Every line in the 2D register is a trace row. The 3D register is driven
   by the same rows: altitude sets the camera's Earth limb, electron density sets the sheath glow.
 - **A shared timeline** along the top from entry to the end of the run, with GPS loss and the

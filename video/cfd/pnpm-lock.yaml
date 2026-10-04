@@ -54,7 +54,7 @@ importers:
         specifier: ^6.0.3
         version: 6.0.3
 
-  retropulsion:
+  retropropulsion:
     dependencies:
       '@cfd-video/shared':
         specifier: workspace:*

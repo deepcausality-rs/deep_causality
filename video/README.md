@@ -12,7 +12,7 @@ examples' own run data. Each project reads the files a Rust example writes, chec
 | `cfd/music/` | `theme.scd`, the theme under the three CFD cuts, written in SuperCollider |
 | `cfd/plasma_blackout/` | Part 1, the corridor: seventeen counterfactual trajectories through the GPS blackout. 3:06 |
 | `cfd/weather/` | Part 2, the weather table: six counterfactual atmospheres. 3:08 |
-| `cfd/retropulsion/` | Part 3, the landing: five counterfactual burns and two counterfactual landings. 3:59 |
+| `cfd/retropropulsion/` | Part 3, the landing: five counterfactual burns and two counterfactual landings. 3:59 |
 | `drone_failsafe/` | The dynamic drone fail-safe tutorial: one main cut and seven clips, narrated in on-screen text |
 
 Each project holds a `PLAN.md` (decisions, data, layout) and a `SCRIPT.md` (narration and shot
@@ -52,14 +52,14 @@ Then run each command from the cut's own folder, for example `video/cfd/weather/
 |---|---|---|
 | Part 1, corridor | `video/cfd/plasma_blackout/` | `plasma_blackout_corridor` |
 | Part 2, weather | `video/cfd/weather/` | `weather` |
-| Part 3, retropulsion | `video/cfd/retropulsion/` | `retropulsion` |
+| Part 3, retropropulsion | `video/cfd/retropropulsion/` | `retropropulsion` |
 
 So the finished weather video lands in `video/cfd/weather/out/weather_4k.mp4` and
 `video/cfd/weather/out/weather_1080p.mp4`.
 
 Every command that renders first runs `pnpm sync`, which copies the example's committed run files
 into `public/traces/`, the fonts from `website/web/public/fonts/` into `public/fonts/`, and the end
-card's logos from `img/` into `public/logos/`. The retropulsion cut also copies the weather
+card's logos from `img/` into `public/logos/`. The retropropulsion cut also copies the weather
 example's `weather_table.csv`, which that run reads in flight. The main composition fails to render
 when `public/music/theme.wav` is missing or does not last exactly as long as the cut. To render from
 fresh data, re-run the example from the workspace root first:
@@ -67,7 +67,7 @@ fresh data, re-run the example from the workspace root first:
 ```bash
 cargo run --release -p avionics_examples --example plasma_blackout_corridor
 cargo run --release -p avionics_examples --example plasma_blackout_weather
-cargo run --release -p avionics_examples --example plasma_blackout_retropulsion
+cargo run --release -p avionics_examples --example plasma_blackout_retropropulsion
 ```
 
 ## Drone fail-safe

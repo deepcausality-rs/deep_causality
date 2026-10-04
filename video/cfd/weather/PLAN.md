@@ -1,8 +1,8 @@
 # Plasma-blackout weather: video plan
 
 One cut that explains the weather example's dispersion table, rendered with Remotion from the
-example's own run data. It follows the corridor cut in `../plasma_blackout/` and the retropulsion
-cut in `../retropulsion/` in look, structure and checks, and shows the same capsule. The narration
+example's own run data. It follows the corridor cut in `../plasma_blackout/` and the retropropulsion
+cut in `../retropropulsion/` in look, structure and checks, and shows the same capsule. The narration
 script and shot list live in [SCRIPT.md](SCRIPT.md).
 
 ## Decisions

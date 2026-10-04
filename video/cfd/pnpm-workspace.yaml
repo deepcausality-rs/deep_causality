@@ -3,7 +3,7 @@
 packages:
   - shared
   - plasma_blackout
-  - retropulsion
+  - retropropulsion
   - weather
 
 # The bundler Remotion uses runs esbuild, whose install script selects the platform binary.

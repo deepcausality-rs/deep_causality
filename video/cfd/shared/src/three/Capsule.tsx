@@ -4,7 +4,7 @@
  * - The aeroshell diameter follows from the examples' ballistic bundle,
  *   `S_ref = CDA_OVER_M · VEHICLE_MASS_KG / VEHICLE_CD` = 14.09 m², so D = 4.23 m
  *   (`shared/constants.rs`). A central retro nozzle of `NOZZLE_EXIT_R` = 0.42 m sits in the middle of
- *   the heatshield, the configuration the Jarvinen-Adams correlation of the retropulsion example
+ *   the heatshield, the configuration the Jarvinen-Adams correlation of the retropropulsion example
  *   measures; during entry its lip is all that shows.
  * - The shape takes the Apollo command module's proportions, the lineage `VEHICLE_CD` cites: a
  *   spherical heatshield of radius 1.2 D, a toroidal shoulder of radius 0.05 D, a 33° backshell,
