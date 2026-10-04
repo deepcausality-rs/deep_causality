@@ -4,6 +4,10 @@ comment:
 
 # https://docs.codecov.com/docs/ignoring-paths
 ignore:
-  - "deep_causality/examples"  # ignore folders and all its contents
-  - "thirdparty"  # ignore folders and all its contents
-  - "yanked"  # ignore folders and all its contents
+  - "docs/"
+  - "end_to_end_tutorials/"
+  - "examples/"  # ignore folders and all its contents
+  - "lean/"
+  - "openspec/"
+  - "tsc/"
+  - "yanked/"  # ignore folders and all its contents
