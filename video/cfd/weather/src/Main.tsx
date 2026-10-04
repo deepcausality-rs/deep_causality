@@ -13,7 +13,7 @@ import { Why } from './scenes/Why';
 import { Window } from './scenes/Window';
 import { Worlds } from './scenes/Worlds';
 import { sceneTimings, TRANSITION_FRAMES, type SceneTiming } from './timeline';
-import { color } from '@cfd-video/shared';
+import { color, Music } from '@cfd-video/shared';
 
 const SCENES: Record<SceneTiming['id'], React.FC<{ weather: Weather; timing: SceneTiming }>> = {
   entry: Entry,
@@ -31,6 +31,7 @@ export const Main: React.FC<{ weather?: Weather }> = ({ weather }) => {
   const timings = sceneTimings(fps);
   return (
     <AbsoluteFill style={{ background: color.bg0 }}>
+      <Music />
       <TransitionSeries>
         {timings.flatMap((t, i) => {
           const Scene = SCENES[t.id];

@@ -7,7 +7,7 @@
 import { AbsoluteFill, interpolate, useCurrentFrame, Easing } from 'remotion';
 import type { Retro } from '../data/retro';
 import type { SceneTiming } from '../timeline';
-import { at, Captions, color, Eyebrow, fade, font, Stage } from '@cfd-video/shared';
+import { at, Captions, color, EndCard, Eyebrow, fade, font, Stage } from '@cfd-video/shared';
 
 const clamp = { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' } as const;
 const ease = Easing.bezier(0.16, 1, 0.3, 1);
@@ -143,21 +143,13 @@ export const Close: React.FC<{ retro: Retro; timing: SceneTiming }> = ({ retro: 
           </div>
         </div>
 
-        <div style={{ position: 'absolute', left: 160, top: 300, opacity: card }}>
-          <div style={{ fontFamily: font.mono, fontSize: 24, letterSpacing: '0.16em', textTransform: 'uppercase', color: color.accent }}>DeepCausality CFD</div>
-          <div style={{ marginTop: 24, fontFamily: font.sans, fontSize: 84, fontWeight: 500, letterSpacing: '-0.02em', color: color.fg0, lineHeight: 1.05 }}>
-            Five counterfactual burns,
-            <br />
-            two counterfactual landings.
-          </div>
-          <div style={{ marginTop: 40, fontFamily: font.mono, fontSize: 30, color: color.fg0 }}>cfd.deepcausality.com/tutorial/stage-3-retropulsion</div>
-          <div style={{ marginTop: 20, fontFamily: font.mono, fontSize: 23, color: color.fg1 }}>
-            cargo run --release -p avionics_examples --example plasma_blackout_retropulsion
-          </div>
-          <div style={{ marginTop: 14, fontFamily: font.mono, fontSize: 19, color: color.fg2 }}>
-            the whole descent: {r.runSeconds.toFixed(1)} s on an Apple M3 Max laptop · open source, in Rust
-          </div>
-        </div>
+        <EndCard
+          line="Five counterfactual burns, two counterfactual landings."
+          url="cfd.deepcausality.com/tutorial/stage-3-retropulsion"
+          command="cargo run --release -p avionics_examples --example plasma_blackout_retropulsion"
+          note={`the whole descent: ${r.runSeconds.toFixed(1)} s on an Apple M3 Max laptop · open source, in Rust`}
+          opacity={card}
+        />
         <Captions phrases={ph} />
       </Stage>
     </AbsoluteFill>

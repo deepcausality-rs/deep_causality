@@ -12,7 +12,7 @@ import { Pause } from './scenes/Pause';
 import { Problem } from './scenes/Problem';
 import { Question } from './scenes/Question';
 import { sceneTimings, TRANSITION_FRAMES, type SceneTiming } from './timeline';
-import { color } from '@cfd-video/shared';
+import { color, Music } from '@cfd-video/shared';
 
 const SCENES: Record<SceneTiming['id'], React.FC<{ corridor: Corridor; timing: SceneTiming }>> = {
   problem: Problem,
@@ -29,6 +29,7 @@ export const Main: React.FC<{ corridor?: Corridor }> = ({ corridor }) => {
   const timings = sceneTimings(fps);
   return (
     <AbsoluteFill style={{ background: color.bg0 }}>
+      <Music />
       <TransitionSeries>
         {timings.flatMap((t, i) => {
           const Scene = SCENES[t.id];

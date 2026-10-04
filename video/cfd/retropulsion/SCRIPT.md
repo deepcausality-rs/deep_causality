@@ -122,15 +122,16 @@ from `retropulsion_trace.csv` and `retropulsion_uninformed_trace.csv`. The burn-
 ## 8. Close (3:26–3:59)
 
 **Screen.** First the two answers under the agenda's headings: `1 · How hard to burn?`, `a light
-burn slows the capsule less than coasting`, bars for coasting (10.59 m/s²) and burning at 0.20
-(7.47 m/s²); then `2 · When to light the final burn?`, `knowing the day lights it 14.06 m higher`,
-the two burn-light altitudes and `14.06 m apart, for 7.28 kg`. Then the descent in one line (entry
-at 90 km, ignition at 32.7 km with five branches leaving it, cutoff at 18.5 km, touchdown at
-1.81 m/s), the sixteen gate lines from `output.txt`, each `PASS`, and the end card: `DeepCausality
-CFD`, `Five counterfactual burns, two counterfactual landings.`,
-`cfd.deepcausality.com/tutorial/stage-3-retropulsion`, `cargo run --release -p avionics_examples
---example plasma_blackout_retropulsion`, and `the whole descent: 337.5 s on an Apple M3 Max laptop ·
-open source, in Rust`.
+burn slows the capsule less than coasting`, bars for coasting (10.59 m/s²) and burning at 0.20 (7.47
+m/s²); then `2 · When to light the final burn?`, `knowing the day lights it 14.06 m higher`, the two
+burn-light altitudes and `14.06 m apart, for 7.28 kg`. Then the descent in one line (entry at 90 km,
+ignition at 32.7 km with five branches leaving it, cutoff at 18.5 km, touchdown at 1.81 m/s), the
+sixteen gate lines from `output.txt`, each `PASS`, and the end card: `Five counterfactual burns, two
+counterfactual landings.`; the DeepCausality logo with
+`cfd.deepcausality.com/tutorial/stage-3-retropulsion` beside the Center for Dynamic Causality's logo
+with `causalcenter.com`; under both, `cargo run --release -p avionics_examples --example
+plasma_blackout_retropulsion` and `the whole descent: 337.5 s on an Apple M3 Max laptop · open
+source, in Rust`.
 
 **Voice.**
 > How hard to burn? The 5 forked burns show that a light burn slows the capsule less than coasting.

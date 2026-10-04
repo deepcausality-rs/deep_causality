@@ -106,6 +106,10 @@ video/**/public/traces
 video/**/out
 # The CFD cuts copy their fonts from website/web/public/fonts at `pnpm sync`.
 video/cfd/*/public/fonts
+# `pnpm sync` copies the end card's logos from img/.
+video/cfd/*/public/logos
+# `pnpm music` renders each CFD cut's theme from video/cfd/music/theme.scd.
+video/cfd/*/public/music
 
 # Remotion video (video/drone_failsafe): synthesized narration and generated data.
 video/drone_failsafe/public/vo

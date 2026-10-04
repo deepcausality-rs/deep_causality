@@ -20,6 +20,15 @@ for (const file of readdirSync(join(example, 'audit')).filter((f) => f.endsWith(
   console.log(`synced audit/${file}`);
 }
 
+// The end card's logos, from the repository's img/.
+const logos = join(here, '../../../../img');
+const logosOut = join(here, '../public/logos');
+mkdirSync(logosOut, { recursive: true });
+for (const file of ['logo_background.jpg', 'causal_center_logo_dark.svg']) {
+  copyFileSync(join(logos, file), join(logosOut, file));
+}
+console.log('synced logos');
+
 const fonts = join(here, '../../../../website/web/public/fonts');
 const fontsOut = join(here, '../public/fonts');
 mkdirSync(fontsOut, { recursive: true });

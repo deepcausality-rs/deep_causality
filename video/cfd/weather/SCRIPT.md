@@ -108,14 +108,15 @@ Right, on the last line: every draw's error after GPS returns, all 48, under the
 ## 7. Close (2:36–3:08)
 
 **Screen.** First the two answers under the agenda's headings: `1 · Does the weather move the
-blackout?`, `it shifts by 2.5 s; its length moves 1.1 s`, the six windows on one clock; then
-`2 · Does it move the navigation error?`, `polar winter drifts 41% further: its bias flies at
-1.40×`, bars for the standard day (41.60 m) and polar winter (58.71 m), `5.7 sigma apart`. Then
-`6 worlds × 8 draws = 48 counterfactual descents, one table`, the eight gate lines from
-`output.txt`, each `PASS`, and the end card: `DeepCausality CFD`, `Six counterfactual atmospheres,
-one table.`, `cfd.deepcausality.com/tutorial/stage-2-weather`, `cargo run --release -p
-avionics_examples --example plasma_blackout_weather`, and `the whole campaign: 184.0 s on an Apple
-M3 Max laptop · open source, in Rust`.
+blackout?`, `it shifts by 2.5 s; its length moves 1.1 s`, the six windows on one clock; then `2 ·
+Does it move the navigation error?`, `polar winter drifts 41% further: its bias flies at 1.40×`,
+bars for the standard day (41.60 m) and polar winter (58.71 m), `5.7 sigma apart`. Then `6 worlds ×
+8 draws = 48 counterfactual descents, one table`, the eight gate lines from `output.txt`, each
+`PASS`, and the end card: `Six counterfactual atmospheres, one table.`; the DeepCausality logo with
+`cfd.deepcausality.com/tutorial/stage-2-weather` beside the Center for Dynamic Causality's logo with
+`causalcenter.com`; under both, `cargo run --release -p avionics_examples --example
+plasma_blackout_weather` and `the whole campaign: 184.0 s on an Apple M3 Max laptop · open source,
+in Rust`.
 
 **Voice.**
 > Does the weather move the blackout? It shifts it by 2.5 s and barely changes its length. Does it

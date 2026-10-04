@@ -5,11 +5,12 @@
   "type": "module",
   "scripts": {
     "sync": "node scripts/sync-traces.mjs",
+    "music": "tsx ../shared/scripts/music.ts public/music/theme.wav",
     "studio": "pnpm sync && remotion studio",
     "check": "pnpm sync && tsc --noEmit",
     "still": "pnpm sync && remotion still",
     "render": "pnpm sync && remotion render Main out/retropulsion_4k.mp4",
-    "render:1080": "ffmpeg -y -i out/retropulsion_4k.mp4 -vf scale=1920:1080:flags=lanczos -c:v libx264 -crf 18 -preset slow -pix_fmt yuv420p -movflags +faststart out/retropulsion_1080p.mp4",
+    "render:1080": "ffmpeg -y -i out/retropulsion_4k.mp4 -vf scale=1920:1080:flags=lanczos -c:v libx264 -crf 18 -preset slow -pix_fmt yuv420p -c:a copy -movflags +faststart out/retropulsion_1080p.mp4",
     "srt": "tsx ../shared/scripts/srt.ts out/retropulsion.srt",
     "poster": "pnpm sync && remotion still Main out/retropulsion_poster.png --frame=5118 --scale=0.5"
   },

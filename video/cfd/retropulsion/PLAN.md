@@ -13,6 +13,7 @@ and checks, and shows the same capsule. The narration script and shot list live 
 | Look | Hybrid: the 3D capsule, plume and ground; 2D data graphics for the explanation |
 | Format | 3840 × 2160, 30 fps, 3:59 |
 | Narration | Captions with numerals, plus the spoken form for timing; an SRT from the same timing |
+| Music | The shared theme, `../music/theme.scd`, rendered by SuperCollider at the cut's exact length |
 | Vehicle | The corridor cut's capsule, heatshield first, with the central retro nozzle lit for the burn |
 | Location | `video/cfd/retropulsion/` |
 
@@ -64,7 +65,8 @@ video/cfd/retropulsion/
 The cuts are one pnpm workspace rooted at `video/cfd/`. What they share lives in `video/cfd/shared/`
 (the package `@cfd-video/shared`): the design tokens, the stage and its 2D views (backdrop, text,
 captions, strips, readout, questions, flight timeline), the capsule the examples fly and the 3D shot
-around it, the narration timing, and the SRT script. `pnpm install` runs from `video/cfd/`.
+around it, the narration timing, the music player, and the SRT and music scripts. `pnpm install`
+runs from `video/cfd/`.
 
 
 ## Commands
@@ -72,6 +74,7 @@ around it, the narration timing, and the SRT script. `pnpm install` runs from `v
 | Command | Output |
 |---|---|
 | `pnpm studio` | the Remotion studio |
+| `pnpm music` | `public/music/theme.wav`, the theme at the cut's length |
 | `pnpm render` | `out/retropulsion_4k.mp4` |
 | `pnpm render:1080` | `out/retropulsion_1080p.mp4`, from the 4K file |
 | `pnpm srt` | `out/retropulsion.srt` |

@@ -23,6 +23,15 @@ for (const [dir, file] of files) {
 }
 
 // The design system's fonts, from the project website, the single copy in the repository.
+// The end card's logos, from the repository's img/.
+const logos = join(here, '../../../../img');
+const logosOut = join(here, '../public/logos');
+mkdirSync(logosOut, { recursive: true });
+for (const file of ['logo_background.jpg', 'causal_center_logo_dark.svg']) {
+  copyFileSync(join(logos, file), join(logosOut, file));
+}
+console.log('synced logos');
+
 const fonts = join(here, '../../../../website/web/public/fonts');
 const fontsOut = join(here, '../public/fonts');
 mkdirSync(fontsOut, { recursive: true });

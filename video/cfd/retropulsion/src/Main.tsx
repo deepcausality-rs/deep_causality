@@ -14,7 +14,7 @@ import { Landing } from './scenes/Landing';
 import { Pause } from './scenes/Pause';
 import { Plan } from './scenes/Plan';
 import { sceneTimings, TRANSITION_FRAMES, type SceneTiming } from './timeline';
-import { color } from '@cfd-video/shared';
+import { color, Music } from '@cfd-video/shared';
 
 const SCENES: Record<SceneTiming['id'], React.FC<{ retro: Retro; timing: SceneTiming }>> = {
   entry: Entry,
@@ -33,6 +33,7 @@ export const Main: React.FC<{ retro?: Retro }> = ({ retro }) => {
   const timings = sceneTimings(fps);
   return (
     <AbsoluteFill style={{ background: color.bg0 }}>
+      <Music />
       <TransitionSeries>
         {timings.flatMap((t, i) => {
           const Scene = SCENES[t.id];

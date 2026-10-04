@@ -105,10 +105,11 @@ branches are scored. The aim lies inside the ring.
 
 Then the run condensed into one line: entry at 90 km, the pause at 73.2 km with seventeen branches
 leaving it (`17 branches, one committed: 11.5°`), GPS back at 46.8 km. The thirteen gate lines from
-`output.txt` appear one by one, each `PASS`. End card: `DeepCausality CFD`, `Seventeen
-counterfactual trajectories, one shared past.`, `cfd.deepcausality.com/tutorial/stage-1-corridor`,
-`cargo run --release -p avionics_examples --example plasma_blackout_corridor`, and `the whole run:
-44.4 s on an Apple M3 Max laptop · open source, in Rust`.
+`output.txt` appear one by one, each `PASS`. End card: `Seventeen counterfactual trajectories, one
+shared past.`; the DeepCausality logo with `cfd.deepcausality.com/tutorial/stage-1-corridor` beside
+the Center for Dynamic Causality's logo with `causalcenter.com`; under both, `cargo run --release -p
+avionics_examples --example plasma_blackout_corridor` and `the whole run: 44.4 s on an Apple M3 Max
+laptop · open source, in Rust`.
 
 **Voice.**
 > With GPS gone, flying uncorrected would miss the aim by 20 m. Counterfactuals from the last known

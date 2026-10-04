@@ -10,6 +10,8 @@ export * from './views/Text';
 export * from './views/Overlays';
 export * from './views/Question';
 export * from './views/Timeline';
+export * from './views/EndCard';
 export * from './three/Capsule';
 export * from './three/Flight';
+export * from './music';
 export type { Phrase, PhraseTiming, SceneTiming, Segment } from './timing';

@@ -5,3 +5,6 @@ Config.setChromiumOpenGlRenderer('angle');
 Config.setVideoImageFormat('jpeg');
 Config.setJpegQuality(95);
 Config.setOverwriteOutput(true);
+// Four browser tabs: at eight, a 4K render of the 3D scenes can crash the headless browser, which
+// then hangs the render.
+Config.setConcurrency(4);
