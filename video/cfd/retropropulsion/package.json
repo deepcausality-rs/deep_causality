@@ -1,0 +1,37 @@
+{
+  "name": "retropropulsion-video",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sync": "node scripts/sync-traces.mjs",
+    "music": "tsx ../shared/scripts/music.ts public/music/theme.wav",
+    "studio": "pnpm sync && remotion studio",
+    "check": "pnpm sync && tsc --noEmit",
+    "still": "pnpm sync && remotion still",
+    "render": "pnpm sync && remotion render Main out/retropropulsion_4k.mp4",
+    "render:1080": "ffmpeg -y -i out/retropropulsion_4k.mp4 -vf scale=1920:1080:flags=lanczos -c:v libx264 -crf 18 -preset slow -pix_fmt yuv420p -c:a copy -movflags +faststart out/retropropulsion_1080p.mp4",
+    "srt": "tsx ../shared/scripts/srt.ts out/retropropulsion.srt",
+    "poster": "pnpm sync && remotion still Main out/retropropulsion_poster.png --frame=5118 --scale=0.5",
+    "thumbnail": "pnpm sync && remotion still Thumbnail out/retropropulsion_thumbnail.jpg --image-format=jpeg --jpeg-quality=92"
+  },
+  "packageManager": "pnpm@11.9.0",
+  "dependencies": {
+    "@cfd-video/shared": "workspace:*",
+    "@react-three/fiber": "^9.8.1",
+    "@remotion/cli": "^4.0.532",
+    "@remotion/fonts": "^4.0.532",
+    "@remotion/three": "^4.0.532",
+    "@remotion/transitions": "^4.0.532",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "remotion": "^4.0.532",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/three": "^0.186.0",
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3"
+  }
+}

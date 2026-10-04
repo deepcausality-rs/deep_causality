@@ -1,0 +1,26 @@
+{
+  "name": "drone-failsafe-video",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "data": "node scripts/data.mjs",
+    "studio": "remotion studio",
+    "render": "node scripts/render.mjs all",
+    "srt": "tsx scripts/srt.ts",
+    "thumbnail": "node scripts/render.mjs stills Main 90 && ffmpeg -y -v error -i out/stills/Main_90.png -vf scale=1280:720:flags=lanczos -q:v 2 out/drone_failsafe_thumbnail.jpg",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@remotion/bundler": "4.0.532",
+    "@remotion/cli": "4.0.532",
+    "@remotion/renderer": "4.0.532",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "remotion": "4.0.532"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.0",
+    "typescript": "^5.9.3",
+    "tsx": "^4.23.15"
+  }
+}

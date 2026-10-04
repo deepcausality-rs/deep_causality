@@ -1,7 +1,7 @@
 # weather-table-consumption Specification
 
 ## Purpose
-TBD - created by archiving change plasma-retropulsion-cfd-contracts. Update Purpose after archive.
+TBD - created by archiving change plasma-retropropulsion-cfd-contracts. Update Purpose after archive.
 ## Requirements
 ### Requirement: Value-bracketed keyed interpolation is a reusable library type
 
@@ -44,13 +44,13 @@ without coupling the lookup to the flight stack.
 
 ### Requirement: The M5 example binds the reusable lookup to the weather CSV
 
-The M5 retropulsion example SHALL load the recorded dispersion table
+The M5 retropropulsion example SHALL load the recorded dispersion table
 (`cfd/plasma_blackout/weather/weather_table.csv`) through the existing `deep_causality_file` typed
 reader (`read_rows` with a `FromTableRow` consumption row type bound to the `WorldRow::SCHEMA`
 column names), feed the parsed rows into `KeyedTable`, and stamp a clamped interpolation into the
 flight `EffectLog`. A missing required column MUST surface as the reader's named-column error, and
 a malformed cell as a loading error — never a default value. This binding is example glue (example
-code only, no example-crate tests) and is deferred to M5, which owns the retropulsion example
+code only, no example-crate tests) and is deferred to M5, which owns the retropropulsion example
 folder; M2 delivers and tests the reusable `KeyedTable` core it stands on.
 
 #### Scenario: Schema drift is a named error

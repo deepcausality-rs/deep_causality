@@ -3,14 +3,14 @@ SPDX-License-Identifier: MIT
 Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
 -->
 
-# `qtt_rank_plume` — plume rank + fork economics (plasma-retropulsion de-risk, M1 risks 2 and 3)
+# `qtt_rank_plume` — plume rank + fork economics (plasma-retropropulsion de-risk, M1 risks 2 and 3)
 
 ```bash
 cargo run --release -p deep_causality_cfd --example qtt_rank_plume
 ```
 
 **What it tests.** Two measurements on the plume-imprinted compressible layer
-(`plasma-retropulsion-de-risk`, capability `plume-rank-fork-study`).
+(`plasma-retropropulsion-de-risk`, capability `plume-rank-fork-study`).
 
 **Phase A, rank.** The retro-plume is a colliding-shock system of barrel shock, Mach disk, shear
 layer, and displaced bow shock. **A1** marches the

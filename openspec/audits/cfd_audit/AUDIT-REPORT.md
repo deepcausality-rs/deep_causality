@@ -173,10 +173,10 @@ computes.
 >   arm lands `+0.35 dec`, inside the ±0.70 chemistry-spread band, so the order-of-magnitude flight-data
 >   result holds while the closed-form controller's `+0.0` headline is retired as an artifact of the
 >   invalid constant.
-> - **The examples needed no band edit; retropulsion needed the right order.** Corridor and weather pass
->   unchanged (the evolved network is far less μ-sensitive than the closed-form controller). Retropulsion's
+> - **The examples needed no band edit; retropropulsion needed the right order.** Corridor and weather pass
+>   unchanged (the evolved network is far less μ-sensitive than the closed-form controller). Retropropulsion's
 >   onset gate is a self-consistency check against `weather_table.csv`; regenerating it first
->   (weather → retropulsion) makes the flown onset match the interpolated one (12.60 s vs 12.61 s), no
+>   (weather → retropropulsion) makes the flown onset match the interpolated one (12.60 s vs 12.61 s), no
 >   bound moved.
 > - **The adversarial pass over the finished diff caught the change's own overclaims, all mine — and
 >   two passes still left a tail.** The first pass (each finding independently verified) found seven
@@ -188,7 +188,7 @@ computes.
 >   corridor branch-table, and a grammar slip — plus a source doc claim ("the marched closure lands
 >   within the chemistry spread") that is false for the corrected controller. All fixed. **One class is
 >   left open and recorded:** the website *tutorial* walkthroughs (`stage-1-corridor`, `stage-2-weather`,
->   `stage-3-retropulsion`, `handle-regime-change`) still quote the pre-baseline example outputs (onset
+>   `stage-3-retropropulsion`, `handle-regime-change`) still quote the pre-baseline example outputs (onset
 >   74.7 km, the coarse-miss table, the 1.78 m/s landing) — a separate, larger figure-sync than the
 >   validation pages, deferred to a follow-up. So the honest tally is "seven found and fixed, three more
 >   found and fixed, one class deferred", **not "clean"** — the same lesson as change 4 and
@@ -473,7 +473,7 @@ labelled N₂–N₂:
 - `examples/avionics_examples/src/shared/constants.rs:128`
 
 and reaching the flagship plasma-blackout examples through
-`examples/avionics_examples/src/shared/world.rs:165,345`. Corridor, weather and retropulsion all inherit
+`examples/avionics_examples/src/shared/world.rs:165,345`. Corridor, weather and retropropulsion all inherit
 it.
 
 **This is the most consequential finding in the audit.** The module report records that re-running at the

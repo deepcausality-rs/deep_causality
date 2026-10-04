@@ -54,7 +54,7 @@ pub const DT_SOLVER: f64 = 0.002;
 /// value and also records none. Nothing here is out of tolerance; the envelope is simply wide enough
 /// for the profiles these examples fly.
 ///
-/// The mechanism is exercised by the retropulsion example's terminal leg, which flies
+/// The mechanism is exercised by the retropropulsion example's terminal leg, which flies
 /// [`S_REF_TERMINAL`] (1.4) into sea-level air and logs `carrier rebuilt at step 1: s_ref 1.4 ->
 /// 2.7683613571273638 (rebuild 1)`. Read that example, not this constant, for the rebuild path.
 pub const S_REF: f64 = 1.8;
@@ -86,7 +86,7 @@ pub const RAMC_NE_REFERENCE: f64 = 1.0e19;
 // US-1976 shape pinned to the RAM-C II 61 km freestream (`n_∞ = 1.3e21`), so the calibrated
 // peak-station recipe is reproduced exactly as the descent sweeps that altitude.
 pub const ATMOSPHERE: [(f64, f64, f64, f64); 11] = [
-    // ── Powered-descent extension to the ground (`plasma-retropulsion-cfd-contracts`, capability
+    // ── Powered-descent extension to the ground (`plasma-retropropulsion-cfd-contracts`, capability
     //    `full-descent-atmosphere`): US Standard Atmosphere 1976 rows below 30 km. Sound speed
     //    a = √(γ·R·T) at γ = 1.4, R = 287 J/(kg·K); number density decreases monotonically into
     //    the 30 km row. `DescentSchedule::sample` clamps to the table ends, so appending here
@@ -223,7 +223,7 @@ pub const MAX_G_LOAD: f64 = 100.0;
 /// Bank-angle magnitude cap, rad (~28.6 deg).
 pub const MAX_BANK_RAD: f64 = 0.5;
 
-// ── Retropulsion (the powered-descent example's vehicle; M4/M5)
+// ── Retropropulsion (the powered-descent example's vehicle; M4/M5)
 
 /// Full-throttle thrust of the retro engine, N. A single central nozzle — the configuration the
 /// Jarvinen–Adams drag-preservation dataset measures, and the one whose drag collapse the example

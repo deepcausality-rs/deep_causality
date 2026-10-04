@@ -121,13 +121,13 @@ export const boundaries: Boundary[] = [
   },
   {
     id: 'srp',
-    title: 'The simulated retropulsion plume does not reproduce the measured drag collapse',
+    title: 'The simulated retropropulsion plume does not reproduce the measured drag collapse',
     hitWhen:
       'You couple a retro-rocket plume into the compressible layer and expect the drag collapse that Jarvinen and Adams measured in wind tunnels.',
     question:
       'Does a jet that carries momentum, so the plume forms in the flow through the same forcing region, recover the drag collapse that the earlier fixed-pressure plume could not?',
     finding:
-      'The retropulsion example takes its drag change from the published Jarvinen–Adams correlation because the simulated plume did not reproduce it. When the study simulates the plume as a jet that carries momentum, drag rises steadily with thrust where the wind-tunnel reference shows it collapse, and the dip in total axial force is absent. Both plume models fail on this harness, so the limit lies in the harness (its numerical dissipation and its domain) and not in the model class.',
+      'The retropropulsion example takes its drag change from the published Jarvinen–Adams correlation because the simulated plume did not reproduce it. When the study simulates the plume as a jet that carries momentum, drag rises steadily with thrust where the wind-tunnel reference shows it collapse, and the dip in total axial force is absent. Both plume models fail on this harness, so the limit lies in the harness (its numerical dissipation and its domain) and not in the model class.',
     numbers: [
       'annulus fraction rises 1.03 → 3.61 across C_T 0.25 → 8',
       '1.413 at C_T 1.00 against the Jarvinen–Adams reference 0.124',
@@ -142,7 +142,7 @@ export const boundaries: Boundary[] = [
       'Convergence drift is not the cause: tail-averaged drift is ≤ 0.02% through C_T 2 and at worst 0.14% at the top of the sweep, orders too small to mask a collapse.',
     ],
     consequence:
-      'In-flight drag authority stays with the cited A0 correlation instead of a decrement contracted from the field. The shipped retropulsion descent does exactly this: it evaluates the correlation for each branch and treats the marched plume as state realism only. The two plume models also barely overlap (Jarvinen–Adams covers Mach 0.4–2.0, Cordell–Braun Mach 2–4), so for most of the burn the plume geometry sits outside its own model\'s envelope.',
+      'In-flight drag authority stays with the cited A0 correlation instead of a decrement contracted from the field. The shipped retropropulsion descent does exactly this: it evaluates the correlation for each branch and treats the marched plume as state realism only. The two plume models also barely overlap (Jarvinen–Adams covers Mach 0.4–2.0, Cordell–Braun Mach 2–4), so for most of the burn the plume geometry sits outside its own model\'s envelope.',
     history:
       'The first harness pinned the entire plume envelope to a uniform ambient-pressure state and appeared to show steady drag reduction (1.208 → 0.647). That was a measurement artifact: the force strip was largely reading the pin itself, which overlapped 20–72% of the strip height. Correcting the model class inverted the sign. The superseded harness is kept under reverted/ with its original output as provenance.',
     study: 'deep_causality_cfd/studies/srp_momentum_jet',
@@ -188,7 +188,7 @@ export const boundaries: Boundary[] = [
       'RegimeClassify sorts the freestream Knudsen number (a measure of how rarefied the flow is) into a governing model, one of continuum, slip-corrected continuum, transitional or free-molecular, and logs every transition. The crate does not switch closures on that result, and only the continuum closures exist: no slip, transitional or free-molecular closure is implemented. The classification still does real work: a march can stop at a regime change, and the link regime decides whether the navigation filter uses GNSS fixes.',
     numbers: [
       'the corridor crosses one Knudsen band (slip to continuum) and logs both transitions',
-      'four regime entries in the corridor log; eight regime transitions across the retropulsion descent',
+      'four regime entries in the corridor log; eight regime transitions across the retropropulsion descent',
       'closures implemented for the continuum band only',
     ],
     study: 'examples/avionics_examples/cfd/plasma_blackout/corridor',
@@ -228,4 +228,4 @@ export const boundaries: Boundary[] = [
  * explicitly guards against, so it belongs on the site.
  */
 export const gateSemantics =
-  'A gate is a pass or fail check on a result. A passing gate means the measured structure is reproducible, not that a physics target was met. In the retropulsion studies "GATES PASSED" sits directly above a recorded miss against the Jarvinen–Adams reference: the gate keeps the finding from regressing, and the finding is a negative one.';
+  'A gate is a pass or fail check on a result. A passing gate means the measured structure is reproducible, not that a physics target was met. In the retropropulsion studies "GATES PASSED" sits directly above a recorded miss against the Jarvinen–Adams reference: the gate keeps the finding from regressing, and the finding is a negative one.';

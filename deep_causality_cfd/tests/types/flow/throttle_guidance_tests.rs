@@ -435,7 +435,7 @@ fn a_stopping_burn_that_cannot_stop_burns_rather_than_coasting() {
     assert!(log_has(&field, "stopping burn started"));
 }
 
-// ── The typed commit witnesses (change `fix-retropulsion-measurement-integrity`) ─────────────
+// ── The typed commit witnesses (change `fix-retropropulsion-measurement-integrity`) ─────────────
 
 #[test]
 fn the_commit_publishes_its_sensed_values_as_typed_scalars() {

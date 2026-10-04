@@ -1,0 +1,137 @@
+{
+  "title": {
+    "title": "Dynamic Drone Fail-Safe",
+    "subtitle": "Where should a failing drone land?"
+  },
+  "setting": {
+    "lines": [
+      "A drone inspects a power line at night.",
+      "A repair crew works on the access road and a tower pad.",
+      "A fail-safe takes over as 3 faults strike:"
+    ]
+  },
+  "part1Card": {
+    "label": "Tutorial part 1",
+    "heading": "The textbook fail-safe",
+    "line": "It follows the defaults that drone autopilots document today. Watch it face the 3 faults."
+  },
+  "textbookLog": [
+    {
+      "t": 50,
+      "text": "GPS signal degrades",
+      "rule": ""
+    },
+    {
+      "t": 57,
+      "text": "GPS loss confirmed → rule says hold for the pilot",
+      "rule": ""
+    },
+    {
+      "t": 58,
+      "text": "The night wind pushes the drone downhill",
+      "rule": ""
+    },
+    {
+      "t": 69,
+      "text": "Link loss confirmed → rule says land; drone descends",
+      "rule": ""
+    },
+    {
+      "t": 85,
+      "text": "Cell fails → drone keeps descending",
+      "rule": ""
+    },
+    {
+      "t": 91,
+      "text": "Drone drops into the creek",
+      "rule": ""
+    }
+  ],
+  "textbookOutcome": "The fail-safe loses the drone.",
+  "issue": {
+    "heading": "A static rule",
+    "lines": [
+      "Each fault triggers a fixed action, whatever lies below.",
+      "So the drone can come down in a creek, on steep grass or beside people."
+    ]
+  },
+  "part2Card": {
+    "label": "Tutorial part 4",
+    "heading": "The dynamic fail-safe",
+    "lines": [
+      "DeepCausality's Effect Ethos makes the fail-safe dynamic.",
+      "It checks each landing site against rules from published pilot procedures and the context the drone senses every second."
+    ]
+  },
+  "ethosLog": [
+    {
+      "t": 50,
+      "text": "GPS signal degrades",
+      "rule": ""
+    },
+    {
+      "t": 57,
+      "text": "GPS loss confirmed → drone steers by camera and LiDAR",
+      "rule": "contingency: wait 20 s for recovery"
+    },
+    {
+      "t": 57,
+      "text": "Effect Ethos forbids landing beside the crew",
+      "rule": "rule: keep 13 m clear of people"
+    },
+    {
+      "t": 64,
+      "text": "Effect Ethos permits the middle of the terrace",
+      "rule": "every rule passes"
+    },
+    {
+      "t": 69,
+      "text": "Link loss confirmed → drone waits over the terrace",
+      "rule": "contingency: battery healthy, keep waiting"
+    },
+    {
+      "t": 77,
+      "text": "Recovery window closes → drone lands on the terrace",
+      "rule": "contingency: land as soon as practicable"
+    },
+    {
+      "t": 85,
+      "text": "Cell fails → Effect Ethos confirms the terrace",
+      "rule": "emergency: land as soon as possible"
+    },
+    {
+      "t": 90,
+      "text": "Drone lands upright, 34 m from the crew",
+      "rule": ""
+    }
+  ],
+  "ethosOutcome": "The fail-safe saves the drone.",
+  "simulations": {
+    "heading": "The tutorial simulated this scenario 1,000 different ways",
+    "description": "Each simulation changed the launch time, wind, faults, terrain and where up to 8 people stood. Both fail-safes flew all 1,000.",
+    "textbookLabel": "Textbook fail-safe",
+    "ethosLabel": "Dynamic fail-safe",
+    "countLabelOne": "unsafe landing within 10 m of a person",
+    "countLabelMany": "unsafe landings within 10 m of a person"
+  },
+  "summary": {
+    "heading": "How DeepCausality builds the dynamic fail-safe",
+    "steps": [
+      {
+        "name": "Dynamic context",
+        "text": "A thermal camera and LiDAR update a context of the ground every second."
+      },
+      {
+        "name": "Dynamic reasoning",
+        "text": "Every second, a causal process confirms each fault and declares contingency or emergency."
+      },
+      {
+        "name": "Dynamic Effect Ethos",
+        "text": "Rules from published pilot procedures check each landing site against the context, people first."
+      }
+    ]
+  },
+  "end": {
+    "line": "Build the dynamic fail-safe in Rust, step by step."
+  }
+}

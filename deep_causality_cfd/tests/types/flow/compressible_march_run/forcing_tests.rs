@@ -13,7 +13,7 @@ use deep_causality_cfd::{
 };
 use deep_causality_tensor::Truncation;
 
-// ── The de-risk forcing seam (change plasma-retropulsion-de-risk) ───────────────────────────────
+// ── The de-risk forcing seam (change plasma-retropropulsion-de-risk) ───────────────────────────────
 
 /// An unscheduled world (no descent, no inflow strip), optionally imprinting a forcing region.
 fn plain_world(
@@ -200,7 +200,7 @@ fn a_forcing_mask_on_the_wrong_grid_is_rejected_at_build() {
 
 #[test]
 fn commanded_throttle_publishes_like_commanded_bank() {
-    // The pinned counterfactual seam name for the retropulsion family: a branch world's throttle
+    // The pinned counterfactual seam name for the retropropulsion family: a branch world's throttle
     // intervention lands on the field each step through the same publish_constant mechanism.
     let trunc = Truncation::<f64>::by_bond(16).unwrap();
     let cfg = CfdConfigBuilder::compressible_march::<f64>("throttled")

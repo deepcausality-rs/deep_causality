@@ -1,0 +1,284 @@
+---
+/**
+ * The scene stepper every tutorial run figure shares: play/pause and scene buttons, one caption
+ * per scene, and the views a run draws.
+ *
+ * A figure passes its scenes and fills three slots:
+ *
+ * - default: its views, each `<div class="view" data-scenes="1 2">` listing the scenes it shows in;
+ * - `captions`: one `<li data-s="n">` per scene;
+ * - `caption`: the figcaption, which names the files the drawing comes from.
+ *
+ * Inside a view, any element carrying `data-from="n"` is drawn (paths and lines) or faded in
+ * (circles and `.lab` labels) once scene n is reached. A `<g data-from>` reveals its paths.
+ * A figure has at most nine scenes: the reveal rules below cover `data-from` 1 to 9.
+ *
+ * Without JavaScript nothing is hidden: the views render one after another, fully drawn, below the
+ * captions as an ordered list. The script turns the figure into a stepper that plays once when it
+ * scrolls into view. Under reduced motion it never autoplays and every draw duration is zero
+ * (`--dur-scene`).
+ */
+interface Props {
+  scenes: { id: number; name: string }[];
+  label: string;
+}
+const { scenes, label } = Astro.props;
+if (scenes.length > 9) {
+  throw new Error(`Stepper reveals data-from 1 to 9 only; "${label}" has ${scenes.length} scenes`);
+}
+---
+<figure class="cfd-anim panel corner-brackets" data-scenes={scenes.length} data-rise aria-label={label}>
+  <div class="controls" hidden>
+    <button type="button" class="ctl ctl-play" data-play aria-pressed="false">Play</button>
+    <ol class="steps">
+      {scenes.map((s) => (
+        <li><button type="button" class="ctl" data-goto={s.id}><span class="ctl-n">{s.id}</span> {s.name}</button></li>
+      ))}
+    </ol>
+  </div>
+
+  <ol class="captions"><slot name="captions" /></ol>
+
+  <div class="views"><slot /></div>
+
+  <figcaption><slot name="caption" /></figcaption>
+</figure>
+
+<script>
+  // The stepper. Without this script the figure stays a static, fully drawn record.
+  const HOLD_MS = 6000;
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  document.querySelectorAll<HTMLElement>('.cfd-anim').forEach((fig) => {
+    const count = Number(fig.dataset.scenes);
+    const controls = fig.querySelector<HTMLElement>('.controls');
+    const play = fig.querySelector<HTMLButtonElement>('[data-play]');
+    const steps = [...fig.querySelectorAll<HTMLButtonElement>('[data-goto]')];
+    const views = [...fig.querySelectorAll<HTMLElement>('.view[data-scenes]')];
+    const captions = [...fig.querySelectorAll<HTMLElement>('.captions [data-s]')];
+    if (!controls || !play || steps.length !== count) return;
+
+    let scene = 0;
+    let timer: number | undefined;
+
+    // Scene 0 is the moment before the first scene draws: it shows scene 1's view and caption.
+    const show = (s: number) => {
+      scene = s;
+      const visible = String(Math.max(s, 1));
+      fig.dataset.scene = String(s);
+      fig.dataset.reached = Array.from({ length: s }, (_, i) => i + 1).join(' ');
+      views.forEach((v) => v.classList.toggle('on', (v.dataset.scenes ?? '').split(' ').includes(visible)));
+      captions.forEach((c) => c.classList.toggle('on', c.dataset.s === visible));
+      steps.forEach((b) => b.setAttribute('aria-current', b.dataset.goto === String(s) ? 'step' : 'false'));
+    };
+    const stop = () => {
+      window.clearTimeout(timer);
+      timer = undefined;
+      play.setAttribute('aria-pressed', 'false');
+      play.textContent = scene >= count ? 'Replay' : 'Play';
+    };
+    const tick = () => {
+      if (scene >= count) return stop();
+      show(scene + 1);
+      timer = window.setTimeout(tick, HOLD_MS);
+    };
+    const start = () => {
+      if (scene >= count) show(0);
+      play.setAttribute('aria-pressed', 'true');
+      play.textContent = 'Pause';
+      window.clearTimeout(timer);
+      timer = window.setTimeout(tick, scene === 0 ? 50 : 0);
+    };
+
+    fig.classList.add('js');
+    controls.hidden = false;
+    show(reduce ? 1 : 0);
+    stop();
+
+    play.addEventListener('click', () => (timer === undefined ? start() : stop()));
+    steps.forEach((b) =>
+      b.addEventListener('click', () => {
+        stop();
+        show(Number(b.dataset.goto));
+        play.textContent = scene >= count ? 'Replay' : 'Play';
+      })
+    );
+
+    if (reduce || !('IntersectionObserver' in window)) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (!entries.some((e) => e.isIntersecting)) return;
+        io.disconnect();
+        if (scene === 0) start();
+      },
+      { threshold: 0.4 }
+    );
+    io.observe(fig);
+  });
+</script>
+
+<style>
+  .cfd-anim { margin: var(--space-6) 0; padding: var(--space-5); }
+
+  /* ── Controls ── */
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    margin-bottom: var(--space-4);
+  }
+  .controls[hidden] { display: none; }
+  .steps { display: flex; flex-wrap: wrap; gap: var(--space-2); list-style: none; margin: 0; padding: 0; }
+  .ctl {
+    font-family: var(--font-mono);
+    font-size: clamp(0.6875rem, 2.4vw, 0.8125rem);
+    color: var(--fg-1);
+    background: none;
+    border: 1px solid var(--line-1);
+    border-radius: var(--radius-pill);
+    padding: var(--space-1) var(--space-3);
+    cursor: pointer;
+    transition: border-color var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+  }
+  .ctl:hover { border-color: var(--line-2); color: var(--fg-0); }
+  .ctl[aria-current='step'] { border-color: var(--accent); color: var(--accent); }
+  .ctl-play { color: var(--fg-0); border-color: var(--line-2); min-width: 6.5em; }
+  .ctl-n { color: var(--fg-2); }
+
+  /* ── Captions: a list when static, one scene at a time when scripted ── */
+  .captions {
+    margin: 0 0 var(--space-5);
+    padding-left: 1.4em;
+    color: var(--fg-1);
+    font-size: var(--t-body-sm);
+    max-width: var(--measure);
+  }
+  .captions :global(li + li) { margin-top: var(--space-2); }
+  .captions :global(b) { color: var(--fg-0); font-weight: 500; }
+  .js .captions { list-style: none; padding-left: 0; display: grid; }
+  .js .captions :global(li) {
+    grid-area: 1 / 1;
+    margin: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--dur-slow) var(--ease-out);
+  }
+  .js .captions :global(li.on) { opacity: 1; visibility: visible; }
+
+  /* ── Views: stacked in one cell when scripted, so switching never shifts the page ── */
+  /* One column that may shrink below its content's width, so a wide table scrolls in its own box. */
+  .views { display: grid; grid-template-columns: minmax(0, 1fr); }
+  .views :global(.view + .view) { margin-top: var(--space-5); }
+  .js .views :global(.view) {
+    grid-area: 1 / 1;
+    margin-top: 0;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--dur-slow) var(--ease-out), visibility var(--dur-slow);
+  }
+  .js .views :global(.view.on) { opacity: 1; visibility: visible; }
+  /* On a phone the tallest view would leave a gap under the others; take inactive ones out. */
+  @media (max-width: 719px) {
+    .js .views :global(.view) { display: none; visibility: visible; transition: none; }
+    .js .views :global(.view.on) { display: block; }
+  }
+
+  figcaption {
+    margin-top: var(--space-4);
+    color: var(--fg-2);
+    font-size: var(--t-body-sm);
+    max-width: var(--measure);
+  }
+  figcaption :global(code) { font-size: 0.85em; }
+
+  /*
+   * Everything below styles what a figure draws. It is written under :where() so it carries no
+   * specificity of its own: any rule a figure declares for its own elements wins over it.
+   */
+
+  /* ── Frames: an SVG over a fixed-ratio box, labels in HTML on top ── */
+  :global(:where(.cfd-anim .views) .frame) { position: relative; width: 100%; margin-bottom: 1.6em; }
+  :global(:where(.cfd-anim .views) svg) { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+
+  /* ── Strokes shared by every run figure, in user units (README "Diagrams") ── */
+  :global(:where(.cfd-anim .views) :is(path, line)) { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  :global(:where(.cfd-anim .views) .axis) { stroke: var(--line-2); stroke-width: 0.15; }
+  :global(:where(.cfd-anim .views) .mark) { stroke: var(--fg-2); stroke-width: 0.15; }
+  :global(:where(.cfd-anim .views) .trace) { stroke: var(--fg-0); stroke-width: 0.35; }
+  :global(:where(.cfd-anim .views) .node) { fill: var(--fg-1); }
+  :global(:where(.cfd-anim .views) .node-accent) { fill: var(--accent); }
+
+  /* ── Scene reveal: hidden until reached ── */
+  /* Opacity as well as the dash offset: a round cap on a fully offset dash still paints a dot. */
+  :global(:where(.cfd-anim.js .views) :is([data-from] path, path[data-from], line[data-from])) {
+    stroke-dasharray: 100;
+    stroke-dashoffset: 100;
+    opacity: 0;
+    transition: stroke-dashoffset var(--dur-scene) linear, opacity 0s;
+  }
+  /* Markers and labels arrive as the lines they annotate finish drawing. */
+  :global(:where(.cfd-anim.js .views) :is(circle[data-from], .lab[data-from])) {
+    opacity: 0;
+    transition: opacity var(--dur-slow) var(--ease-out) calc(var(--dur-scene) * 0.6);
+  }
+  /* Reached: these carry full weight so they override the hidden state above. */
+  :global(.cfd-anim.js[data-reached~='1'] .views [data-from='1']),
+  :global(.cfd-anim.js[data-reached~='1'] .views [data-from='1'] path),
+  :global(.cfd-anim.js[data-reached~='2'] .views [data-from='2']),
+  :global(.cfd-anim.js[data-reached~='2'] .views [data-from='2'] path),
+  :global(.cfd-anim.js[data-reached~='3'] .views [data-from='3']),
+  :global(.cfd-anim.js[data-reached~='3'] .views [data-from='3'] path),
+  :global(.cfd-anim.js[data-reached~='4'] .views [data-from='4']),
+  :global(.cfd-anim.js[data-reached~='4'] .views [data-from='4'] path),
+  :global(.cfd-anim.js[data-reached~='5'] .views [data-from='5']),
+  :global(.cfd-anim.js[data-reached~='5'] .views [data-from='5'] path),
+  :global(.cfd-anim.js[data-reached~='6'] .views [data-from='6']),
+  :global(.cfd-anim.js[data-reached~='6'] .views [data-from='6'] path),
+  :global(.cfd-anim.js[data-reached~='7'] .views [data-from='7']),
+  :global(.cfd-anim.js[data-reached~='7'] .views [data-from='7'] path),
+  :global(.cfd-anim.js[data-reached~='8'] .views [data-from='8']),
+  :global(.cfd-anim.js[data-reached~='8'] .views [data-from='8'] path),
+  :global(.cfd-anim.js[data-reached~='9'] .views [data-from='9']),
+  :global(.cfd-anim.js[data-reached~='9'] .views [data-from='9'] path) {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+
+  /* ── Labels: HTML over the frame, sized by the site's type tokens ── */
+  :global(:where(.cfd-anim .views) .lab) {
+    position: absolute;
+    font-family: var(--font-mono);
+    font-size: clamp(0.5625rem, 2.2vw, 0.75rem);
+    line-height: 1.3;
+    color: var(--fg-2);
+    white-space: nowrap;
+  }
+  :global(:where(.cfd-anim .views) .lab b) { color: var(--fg-0); font-weight: 500; }
+  :global(:where(.cfd-anim .views) .lab sup) { font-size: 0.75em; }
+  :global(:where(.cfd-anim .views) .strip-title) { left: 0; color: var(--fg-1); }
+  :global(:where(.cfd-anim .views) :is(.title-l, .title-r)) { color: var(--fg-1); }
+  :global(:where(.cfd-anim .views) .tick) { left: 0; transform: translateY(-50%); }
+  :global(:where(.cfd-anim .views) .t-tick) { top: 100%; transform: translateX(-50%); padding-top: 0.2em; }
+  :global(:where(.cfd-anim .views) .t-end) { transform: none; }
+  :global(:where(.cfd-anim .views) .ev) { transform: translateY(-50%); }
+  :global(:where(.cfd-anim .views) .ev-left) { transform: translate(-100%, -50%); }
+  :global(:where(.cfd-anim .views) .end-l) { transform: translateY(-50%); color: var(--fg-1); }
+
+  /* ── Gate lists: the verdict lines a run printed ── */
+  :global(:where(.cfd-anim .views) .gates) {
+    font-family: var(--font-mono);
+    font-size: clamp(0.6875rem, 2.4vw, 0.8125rem);
+    color: var(--fg-1);
+  }
+  :global(:where(.cfd-anim .views) .gates li) { padding: var(--space-1) 0; }
+  @media (min-width: 720px) {
+    :global(:where(.cfd-anim .views) .gates) { grid-template-columns: 1fr 1fr; column-gap: var(--space-5); }
+    :global(:where(.cfd-anim .views) .gates li + li) { border-top: none; }
+    :global(:where(.cfd-anim .views) .gates li) { border-bottom: 1px solid var(--line-1); }
+  }
+  :global(:where(.cfd-anim .views) .gate-flag) { display: inline-block; min-width: 3.5em; }
+  :global(:where(.cfd-anim .views) .gate-flag.ok) { color: var(--ok); }
+  :global(:where(.cfd-anim .views) .gate-flag.bad) { color: var(--danger); }
+  :global(:where(.cfd-anim .views) .gates code) { font-size: inherit; color: inherit; background: none; padding: 0; }
+</style>

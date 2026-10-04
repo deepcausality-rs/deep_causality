@@ -32,7 +32,7 @@ mod operator_study;
 mod qtt_march_pause;
 mod qtt_march_run;
 mod report;
-mod retropulsion;
+mod retropropulsion;
 pub mod state_snapshot;
 mod study;
 mod study_effect;
@@ -74,7 +74,7 @@ pub use operator_study::{Operator, OperatorStudyBuilder};
 pub use qtt_march_pause::{MarchFork, MarchPause};
 pub use qtt_march_run::{QttMarchRun, QttStepView};
 pub use report::{ForkEconomics, Report};
-pub use retropulsion::{
+pub use retropropulsion::{
     PRESERVED_DRAG_FRACTION_FIELD, PlumeNozzle, PlumeObstruction, PropulsionStub, RetroThrust,
 };
 pub use study::{

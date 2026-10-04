@@ -15,12 +15,16 @@ use crate::constants::{
     MIN_ONSET_SPREAD_S, REACQ_ERR_MAX_M, STEPS, WALL_CLOCK_BUDGET_S, WEATHER,
 };
 use avionics_examples::shared::constants::DT_FLIGHT;
+use avionics_examples::shared::trace::{
+    ALTITUDE, GNSS_DENIED, HEAT_FLUX, MACH, NAV_ERR, NE_PEAK, PLASMA_FREQ, SPEED, TRACE_FIELD,
+    trace_rows,
+};
 use avionics_examples::shared::utils::norm3;
 use avionics_examples::shared::world;
 use deep_causality_cfd::{
     CompressibleMarchConfig, GateSeq, PhysicsError, Report, StudyView, TableRow,
 };
-use deep_causality_num::lift;
+use deep_causality_num::{Lift, lift};
 use std::path::PathBuf;
 
 // ── The case axis: weather conditions ─────────────────────────────────────────────────────────
@@ -114,6 +118,119 @@ pub struct WorldRow {
     /// Terminal navigation error after reacquisition: mean over the draws and the worst draw, m.
     pub terminal_mean_m: FloatType,
     pub terminal_max_m: FloatType,
+    /// The reference draw's recorded flight trace. The flow columns are the same in every draw.
+    pub trace: Vec<FloatType>,
+    /// Every draw's window and navigation metrics, in draw order.
+    pub draws: Vec<DrawRow>,
+}
+
+/// One draw of one weather condition: its blackout window and navigation metrics.
+#[derive(Debug, Clone, Copy)]
+pub struct DrawRow {
+    pub d_temp: f64,
+    pub draw: usize,
+    pub onset_s: FloatType,
+    pub exit_s: FloatType,
+    pub dwell_s: FloatType,
+    pub drift_max_m: FloatType,
+    pub terminal_m: FloatType,
+}
+
+impl TableRow for DrawRow {
+    type Scalar = FloatType;
+    const SCHEMA: &'static [(&'static str, &'static str)] = &[
+        ("d_temp", "K"),
+        ("draw", "-"),
+        ("onset", "s"),
+        ("exit", "s"),
+        ("dwell", "s"),
+        ("drift_max", "m"),
+        ("terminal", "m"),
+    ];
+    fn cells(&self) -> Vec<FloatType> {
+        vec![
+            lift(self.d_temp),
+            self.draw.lift(),
+            self.onset_s,
+            self.exit_s,
+            self.dwell_s,
+            self.drift_max_m,
+            self.terminal_m,
+        ]
+    }
+}
+
+/// One step of a condition's reference draw: the flight time, the flow quantities, and the
+/// navigation error.
+#[derive(Debug, Clone, Copy)]
+pub struct WeatherTraceRow {
+    pub d_temp: f64,
+    pub t: FloatType,
+    pub altitude: FloatType,
+    pub plasma_freq: FloatType,
+    pub gnss_denied: FloatType,
+    pub nav_err: FloatType,
+    pub mach: FloatType,
+    pub speed: FloatType,
+    pub ne_peak: FloatType,
+    pub heat_flux: FloatType,
+}
+
+impl TableRow for WeatherTraceRow {
+    type Scalar = FloatType;
+    const SCHEMA: &'static [(&'static str, &'static str)] = &[
+        ("d_temp", "K"),
+        ("t", "s"),
+        ("altitude", "m"),
+        ("plasma_freq", "rad/s"),
+        ("gnss_denied", "-"),
+        ("nav_err", "m"),
+        ("mach", "-"),
+        ("speed", "m/s"),
+        ("ne_peak", "m^-3"),
+        ("heat_flux", "W/m2"),
+    ];
+    fn cells(&self) -> Vec<FloatType> {
+        vec![
+            lift(self.d_temp),
+            self.t,
+            self.altitude,
+            self.plasma_freq,
+            self.gnss_denied,
+            self.nav_err,
+            self.mach,
+            self.speed,
+            self.ne_peak,
+            self.heat_flux,
+        ]
+    }
+}
+
+/// The reference-draw trace of every condition, in table order.
+pub fn trace_table(rows: &[WorldRow]) -> Vec<WeatherTraceRow> {
+    rows.iter()
+        .flat_map(|w| {
+            trace_rows(&w.trace, 0, &[])
+                .into_iter()
+                .map(|r| WeatherTraceRow {
+                    d_temp: w.d_temp,
+                    t: r.t,
+                    altitude: r.values[ALTITUDE],
+                    plasma_freq: r.values[PLASMA_FREQ],
+                    gnss_denied: r.values[GNSS_DENIED],
+                    nav_err: r.values[NAV_ERR],
+                    mach: r.values[MACH],
+                    speed: r.values[SPEED],
+                    ne_peak: r.values[NE_PEAK],
+                    heat_flux: r.values[HEAT_FLUX],
+                })
+        })
+        .collect()
+}
+
+/// Every draw of every condition, in table order.
+pub fn draw_table(rows: &[WorldRow]) -> Vec<DrawRow> {
+    rows.iter().flat_map(|w| w.draws.iter().copied()).collect()
 }
 
 impl TableRow for WorldRow {
@@ -186,13 +303,16 @@ fn mean_sd(xs: &[FloatType]) -> (FloatType, FloatType) {
 /// draws.
 ///
 /// # Errors
-/// Never fails today; returns `Result` to fit the `reduce_ensemble` seam.
+/// Returns `CalculationError` if the reference draw carries no `"final_trace"` series.
 pub fn world_row(
     case: &WeatherCase,
     draws: &[Report<FloatType>],
 ) -> Result<WorldRow, PhysicsError> {
     let reference = &draws[0];
     let step_s = |scalar: &str| scalar0(reference, scalar) * lift::<FloatType>(DT_FLIGHT);
+    let draw_s = |report: &Report<FloatType>, scalar: &str| {
+        scalar0(report, scalar) * lift::<FloatType>(DT_FLIGHT)
+    };
 
     let metrics: Vec<(FloatType, FloatType)> = draws.iter().map(draw_metrics).collect();
     let drifts: Vec<FloatType> = metrics.iter().map(|&(d, _)| d).collect();
@@ -225,6 +345,30 @@ pub fn world_row(
         drift_sd_m,
         terminal_mean_m,
         terminal_max_m,
+        trace: reference
+            .series(&format!("final_{TRACE_FIELD}"))
+            .ok_or_else(|| {
+                PhysicsError::CalculationError(format!(
+                    "{}: reference draw carries no \"final_{TRACE_FIELD}\" series (no trace \
+                     recorder on the coupling)",
+                    case.name
+                ))
+            })?
+            .to_vec(),
+        draws: draws
+            .iter()
+            .zip(&metrics)
+            .enumerate()
+            .map(|(draw, (report, &(drift, terminal)))| DrawRow {
+                d_temp: case.d_temp,
+                draw,
+                onset_s: draw_s(report, "final_wx_onset_step"),
+                exit_s: draw_s(report, "final_wx_last_denied_step"),
+                dwell_s: scalar0(report, "final_wx_dwell_s"),
+                drift_max_m: drift,
+                terminal_m: terminal,
+            })
+            .collect(),
     })
 }
 
@@ -418,4 +562,11 @@ pub fn get_audit_dir() -> PathBuf {
 /// Where the dispersion table is recorded (the campaign's `record` seam).
 pub fn get_table_path() -> PathBuf {
     avionics_examples::paths::manifest_dir().join("cfd/plasma_blackout/weather/weather_table.csv")
+}
+
+/// Where a per-step or per-draw output file is written, beside the table.
+pub fn get_output_path(file: &str) -> PathBuf {
+    avionics_examples::paths::manifest_dir()
+        .join("cfd/plasma_blackout/weather")
+        .join(file)
 }

@@ -228,5 +228,13 @@ with `rsvg-convert -w 1200 -h 630`, then convert to JPEG.
   deploy (DESIGN.md §8.9); this site does not.
 - **No mermaid.** Diagrams on this site are hand-drawn SVG in the instrument
   vocabulary, which keeps the heaviest dependency off every route.
-- **No client islands.** Zero framework runtime; interactivity is four small
-  module scripts.
+- **No client islands.** Zero framework runtime; interactivity is five small
+  module scripts. The fifth is the click-to-load video player in
+  `src/components/tutorial/TutorialVideo.astro`: each walk page shows its video as a poster
+  linking to YouTube, and only a press of play loads YouTube's privacy-enhanced player. The
+  fourth is the scene stepper in
+  `src/components/tutorial/Stepper.astro`, shared by the tutorial run figures
+  (`CorridorRun.astro`, `WeatherRun.astro`, `RetroRun.astro`). Each figure draws
+  from its example's committed traces, read at build time by
+  `src/data/corridorTrace.ts`, `weatherTrace.ts` and `retroTrace.ts`; the build
+  fails if a trace disagrees with the numbers it is checked against.

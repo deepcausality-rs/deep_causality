@@ -1,4 +1,4 @@
-=== QTT plume rank + fork economics (plasma-retropulsion de-risk, M1) ===
+=== QTT plume rank + fork economics (plasma-retropropulsion de-risk, M1) ===
 
   grid 2^5 x 2^5, dt 0.0004, tol 0.000001 (rank floats free), rank ceiling 32
 

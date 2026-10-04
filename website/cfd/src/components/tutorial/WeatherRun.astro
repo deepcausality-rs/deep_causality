@@ -1,0 +1,250 @@
+---
+/**
+ * Walk 2's animation: the weather campaign in seven scenes, drawn from the run's own outputs.
+ *
+ * Data: `src/data/weatherTrace.ts`, which reads `weather_trace.csv`, `weather_draws.csv`,
+ * `weather_table.csv` and `output.txt` at build time. Every bar, line, dot and number below comes
+ * from those files.
+ *
+ * Geometry lives in the SVG and words live in HTML, per the diagram convention in README.md.
+ * The controls, captions, scene reveal and shared styles come from `Stepper.astro`.
+ */
+import { gates, worlds } from '../../data/weatherTrace';
+import { GITHUB_URL } from '../../consts';
+import { f1, f2, pct, r2 } from './format';
+import Stepper from './Stepper.astro';
+
+const FILES = `${GITHUB_URL}/blob/main/examples/avionics_examples/cfd/plasma_blackout/weather`;
+
+const signed = (v: number) => (v > 0 ? `+${v}` : v < 0 ? `−${-v}` : '0');
+
+const standard = worlds.find((w) => w.dTemp === 0)!;
+const coldest = worlds.reduce((a, w) => (w.dTemp < a.dTemp ? w : a));
+const earliest = worlds.reduce((a, w) => (w.onset < a.onset ? w : a));
+const latest = worlds.reduce((a, w) => (w.onset > a.onset ? w : a));
+const exitSpread = Math.max(...worlds.map((w) => w.exit)) - Math.min(...worlds.map((w) => w.exit));
+const gap = coldest.driftMean - standard.driftMean;
+const combinedSd = Math.hypot(coldest.driftSd, standard.driftSd);
+const darkPeak = (w: (typeof worlds)[number]) => Math.max(...w.navErr.filter((_, i) => w.denied[i]));
+const stepS = r2(standard.t[1] - standard.t[0]);
+const drawCount = standard.drifts.length;
+const passed = gates.filter((g) => g.passed).length;
+
+// ── Timeline view: blackout windows, then draw 0's navigation error ─────────────────────────
+const TW = 100;
+const TH = 60;
+const T_MAX = Math.max(...worlds.map((w) => w.t[w.t.length - 1]));
+const X0 = 27;
+const X1 = 98;
+const tx = (t: number) => r2(X0 + (t / T_MAX) * (X1 - X0));
+const rowY = (i: number) => 4 + i * 3.6;
+const NAV = { lo: 0, hi: 60, top: 32, bot: 56 };
+const yNav = (m: number) => r2(NAV.bot - ((m - NAV.lo) / (NAV.hi - NAV.lo)) * (NAV.bot - NAV.top));
+const navPath = (w: (typeof worlds)[number]) =>
+  w.t.map((t, i) => `${i === 0 ? 'M' : 'L'}${tx(t)},${yNav(w.navErr[i])}`).join(' ');
+const tone = (w: (typeof worlds)[number]) => (w === coldest ? 'hot' : w === standard ? 'base' : 'other');
+const timeTicks = Array.from({ length: Math.floor(T_MAX / 20) + 1 }, (_, i) => i * 20);
+
+// ── Draws view: each draw's peak drift against the day's IMU bias departure ──────────────────
+const DW = 100;
+const DH = 56;
+const depLo = Math.floor(Math.min(...worlds.map((w) => w.biasDeparture)) * 10) / 10;
+const depHi = Math.ceil(Math.max(...worlds.map((w) => w.biasDeparture)) * 10) / 10;
+const allDrifts = worlds.flatMap((w) => w.drifts);
+const dLo = Math.floor(Math.min(...allDrifts) / 10) * 10;
+const dHi = Math.ceil(Math.max(...allDrifts) / 10) * 10;
+const dx = (dep: number) => r2(24 + ((dep - depLo) / (depHi - depLo)) * 68);
+const dy = (m: number) => r2(48 - ((m - dLo) / (dHi - dLo)) * 42);
+// Worlds that share a departure sit side by side rather than on top of each other.
+const offsets = new Map<string, number>();
+for (const w of worlds) {
+  const twins = worlds.filter((o) => o.biasDeparture === w.biasDeparture);
+  const k = twins.indexOf(w);
+  offsets.set(w.name, (k - (twins.length - 1) / 2) * 2.6);
+}
+const xOf = (w: (typeof worlds)[number]) => r2(dx(w.biasDeparture) + offsets.get(w.name)!);
+// Labels: the leftmost world to its left, worlds sharing a departure one below and one above.
+const place = (w: (typeof worlds)[number]) => {
+  if (w.biasDeparture === depLo) return 'side';
+  const twins = worlds.filter((o) => o.biasDeparture === w.biasDeparture);
+  return twins.length > 1 && twins.indexOf(w) === 0 ? 'below' : 'above';
+};
+const labelAt = (w: (typeof worlds)[number]) => {
+  const p = place(w);
+  if (p === 'side') return `left:${pct(xOf(w) - 2, DW)}; top:${pct(dy(w.driftMean), DH)}`;
+  if (p === 'below') return `left:${pct(xOf(w), DW)}; top:${pct(dy(Math.min(...w.drifts)) + 1.6, DH)}`;
+  return `left:${pct(xOf(w), DW)}; top:${pct(dy(Math.max(...w.drifts)) - 2.6, DH)}`;
+};
+const depTicks = Array.from({ length: Math.round((depHi - depLo) * 10) + 1 }, (_, i) => r2(depLo + i * 0.1));
+const driftTicks = Array.from({ length: (dHi - dLo) / 10 + 1 }, (_, i) => dLo + i * 10);
+
+const scenes = [
+  { id: 1, name: 'Six worlds' },
+  { id: 2, name: 'Windows' },
+  { id: 3, name: 'Drift' },
+  { id: 4, name: `${worlds.length * drawCount} descents` },
+  { id: 5, name: 'The gap' },
+  { id: 6, name: 'Table' },
+  { id: 7, name: 'Gates' },
+];
+---
+<Stepper scenes={scenes} label="The weather campaign in seven scenes">
+  <Fragment slot="captions">
+    <li data-s="1">
+      <b>Six worlds.</b> One baseline, the standard day, and {worlds.length - 1} atmospheres built from
+      it with one declared change each: a temperature offset and a density scale.
+    </li>
+    <li data-s="2">
+      <b>Windows.</b> Weather barely moves the blackout. It starts between {f1(earliest.onset)} s
+      ({earliest.name}) and {f1(latest.onset)} s ({latest.name}), and every window ends within
+      {f1(exitSpread)} s of the others.
+    </li>
+    <li data-s="3">
+      <b>Drift.</b> Without GPS the navigation error grows through the whole window. In draw 0 it peaks at
+      {f1(darkPeak(coldest))} m in {coldest.name} and {f1(darkPeak(standard))} m on the standard day.
+    </li>
+    <li data-s="4">
+      <b>{worlds.length * drawCount} descents.</b> Each world flies {drawCount} receiver-noise draws, all at
+      once. Each dot is one draw’s largest drift in the dark, placed by how far the day’s temperature moves
+      the accelerometer bias from its calibration.
+    </li>
+    <li data-s="5">
+      <b>The gap.</b> Drift grows with that departure. {coldest.name} averages {f2(coldest.driftMean)} m
+      against {f2(standard.driftMean)} m: {f2(gap)} m apart, {f1(gap / combinedSd)} times the combined
+      standard deviation.
+    </li>
+    <li data-s="6">
+      <b>Table.</b> Each world collapses to one row with error bars, and the six rows are written to
+      <code>weather_table.csv</code>. Walk 3 reads that file in flight.
+    </li>
+    <li data-s="7">
+      <b>Gates.</b> {gates.length} gates judge the table and {passed} pass. Each line is copied from the
+      committed <code>output.txt</code>.
+    </li>
+  </Fragment>
+
+  <!-- Timeline: one blackout window per world, then draw 0's navigation error. -->
+  <div class="view" data-scenes="1 2 3">
+    <div class="frame" style={`aspect-ratio: ${TW} / ${TH}`}>
+      <svg viewBox={`0 0 ${TW} ${TH}`} aria-hidden="true" focusable="false">
+        {worlds.map((_, i) => <line class="axis" x1={X0} y1={rowY(i)} x2={X1} y2={rowY(i)} />)}
+        <line class="axis" x1={X0} y1={NAV.bot} x2={X1} y2={NAV.bot} />
+        {worlds.map((w, i) => (
+          <line class:list={['window', tone(w)]} data-from="2" x1={tx(w.onset)} y1={rowY(i)} x2={tx(w.exit)} y2={rowY(i)} pathLength="100" />
+        ))}
+        {worlds.map((w) => <path class:list={['nav', tone(w)]} data-from="3" d={navPath(w)} pathLength="100" />)}
+      </svg>
+      <span class="lab title-r" style={`right:0; top:${pct(rowY(worlds.length - 1) + 1.2, TH)}`}>GPS lost, one row per world</span>
+      {worlds.map((w, i) => (
+        <span class:list={['lab', 'row-l', tone(w)]} data-from="1" style={`top:${pct(rowY(i), TH)}`}>
+          {w.name} <span class="row-d">{signed(w.dTemp)} K</span>
+        </span>
+      ))}
+      <span class="lab title-l" style={`left:${pct(X0 + 1, TW)}; top:${pct(NAV.top - 4, TH)}`}>Navigation error, draw 0, m</span>
+      {[0, 20, 40, 60].map((v) => <span class="lab tick tick-r" style={`left:${pct(X0 - 1, TW)}; top:${pct(yNav(v), TH)}`}>{v}</span>)}
+      {timeTicks.map((t) => <span class="lab t-tick" style={`left:${pct(tx(t), TW)}`}>{t} s</span>)}
+      <span class="lab ev ev-left hot" data-from="3" style={`left:${pct(tx(coldest.exit) - 1, TW)}; top:${pct(yNav(darkPeak(coldest)) - 2.2, TH)}`}>
+        {coldest.name} {f1(darkPeak(coldest))} m
+      </span>
+    </div>
+  </div>
+
+  <!-- Draws: every draw's largest drift in the dark against the bias departure. -->
+  <div class="view" data-scenes="4 5">
+    <div class="frame" style={`aspect-ratio: ${DW} / ${DH}`}>
+      <svg viewBox={`0 0 ${DW} ${DH}`} aria-hidden="true" focusable="false">
+        <line class="axis" x1="24" y1="48" x2="92" y2="48" />
+        {worlds.map((w) => (
+          <g>
+            {w.drifts.map((d) => <circle class:list={['dot', tone(w)]} data-from="4" cx={xOf(w)} cy={dy(d)} r="0.75" />)}
+            <line class:list={['whisker', tone(w)]} data-from="5" x1={xOf(w)} y1={dy(w.driftMean - w.driftSd)} x2={xOf(w)} y2={dy(w.driftMean + w.driftSd)} pathLength="100" />
+            <line class:list={['mean', tone(w)]} data-from="5" x1={r2(xOf(w) - 1.6)} y1={dy(w.driftMean)} x2={r2(xOf(w) + 1.6)} y2={dy(w.driftMean)} pathLength="100" />
+          </g>
+        ))}
+        <line class="gap" data-from="5" x1={r2(xOf(coldest) - 4)} y1={dy(standard.driftMean)} x2={r2(xOf(coldest) - 4)} y2={dy(coldest.driftMean)} pathLength="100" />
+        <line class="gap-ref" data-from="5" x1={r2(xOf(standard) + 2)} y1={dy(standard.driftMean)} x2={r2(xOf(coldest) - 4)} y2={dy(standard.driftMean)} pathLength="100" />
+      </svg>
+      <span class="lab strip-title" style="top:0">Largest drift in the dark, m</span>
+      {driftTicks.map((v) => <span class="lab tick" style={`top:${pct(dy(v), DH)}`}>{v}</span>)}
+      {depTicks.map((v) => <span class="lab t-tick" style={`left:${pct(dx(v), DW)}; top:${pct(48, DH)}`}>×{v.toFixed(1)}</span>)}
+      <span class="lab t-end axis-name" style={`right:0; top:${pct(52.5, DH)}`}>accelerometer bias against calibration</span>
+      {worlds.map((w) => (
+        <span class:list={['lab', 'dot-l', tone(w), place(w)]} data-from="4" style={labelAt(w)}>{w.name}</span>
+      ))}
+      <span class="lab ev ev-left hot" data-from="5" style={`left:${pct(xOf(coldest) - 5, DW)}; top:${pct((dy(standard.driftMean) + dy(coldest.driftMean)) / 2, DH)}`}>
+        {f2(gap)} m, {f1(gap / combinedSd)}σ
+      </span>
+    </div>
+  </div>
+
+  <!-- Table: the six rows as written to weather_table.csv. -->
+  <div class="view" data-scenes="6">
+    <div class="table-scroll">
+      <table class="wx">
+        <thead>
+          <tr><th>world</th><th>ΔT K</th><th>density</th><th>IMU bias</th><th>lost at s</th><th>for s</th><th>drift m</th><th>worst after m</th></tr>
+        </thead>
+        <tbody>
+          {worlds.map((w) => (
+            <tr class={tone(w)}>
+              <td>{w.name}</td><td>{signed(w.dTemp)}</td><td>{f2(w.rhoScale)}</td><td>×{f2(w.biasDeparture)}</td>
+              <td>{f1(w.onset)}</td><td>{f1(w.dwell)}</td><td>{f2(w.driftMean)} ± {f2(w.driftSd)}</td><td>{f2(w.terminalMax)}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Gates: the committed run's verdict, line by line. -->
+  <div class="view" data-scenes="7">
+    <ul class="gates hairline-list">
+      {gates.map((g) => (
+        <li><span class:list={['gate-flag', g.passed ? 'ok' : 'bad']}>{g.passed ? 'PASS' : 'FAIL'}</span> <code>{g.label}</code></li>
+      ))}
+    </ul>
+  </div>
+
+  <Fragment slot="caption">
+    Lines and dots are drawn from <a href={`${FILES}/weather_trace.csv`}><code>weather_trace.csv</code></a>
+    (draw 0 of each world, one row per {stepS} s step) and
+    <a href={`${FILES}/weather_draws.csv`}><code>weather_draws.csv</code></a> (every draw), which the run
+    writes beside <a href={`${FILES}/weather_table.csv`}><code>weather_table.csv</code></a>.
+  </Fragment>
+</Stepper>
+
+<style>
+  /* Strokes this figure adds to the shared set, in user units. */
+  .window { stroke: var(--fg-2); stroke-width: 1.4; stroke-linecap: butt; }
+  .window.base { stroke: var(--fg-0); }
+  .window.hot { stroke: var(--accent); }
+  .nav { stroke: var(--fg-2); stroke-width: 0.25; }
+  .nav.base { stroke: var(--fg-0); stroke-width: 0.35; }
+  .nav.hot { stroke: var(--accent); stroke-width: 0.45; }
+  .dot { fill: var(--fg-2); }
+  .dot.base { fill: var(--fg-0); }
+  .dot.hot { fill: var(--accent); }
+  .whisker, .mean { stroke: var(--fg-1); stroke-width: 0.3; }
+  .mean { stroke-width: 0.5; }
+  .whisker.hot, .mean.hot { stroke: var(--accent); }
+  .gap { stroke: var(--accent); stroke-width: 0.3; }
+  .gap-ref { stroke: var(--fg-2); stroke-width: 0.15; stroke-dasharray: 0.8 0.8; }
+
+  .row-l { left: 0; transform: translateY(-50%); color: var(--fg-1); }
+  .row-l.hot { color: var(--accent); }
+  .row-l.base { color: var(--fg-0); }
+  .row-d { color: var(--fg-2); }
+  .tick-r { left: auto; transform: translate(-100%, -50%); }
+  .dot-l { transform: translateX(-50%); color: var(--fg-1); font-size: clamp(0.5rem, 1.9vw, 0.6875rem); }
+  .dot-l.hot { color: var(--accent); }
+  .dot-l.side { transform: translate(-100%, -50%); }
+  .axis-name { color: var(--fg-2); }
+  .ev.hot { color: var(--accent); }
+
+  .wx { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: clamp(0.6875rem, 2.2vw, 0.8125rem); color: var(--fg-1); }
+  .wx th, .wx td { text-align: right; padding: var(--space-1) var(--space-1); border-bottom: 1px solid var(--line-1); white-space: nowrap; }
+  .wx th:first-child, .wx td:first-child { text-align: left; }
+  .wx th { color: var(--fg-2); font-weight: 400; }
+  .wx tr.hot td { color: var(--accent); }
+  .wx tr.base td { color: var(--fg-0); }
+</style>

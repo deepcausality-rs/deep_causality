@@ -1,0 +1,22 @@
+{
+  "name": "@cfd-video/shared",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./timing": "./src/timing.ts",
+    "./csv": "./src/csv.ts"
+  },
+  "peerDependencies": {
+    "@react-three/fiber": "^9.8.1",
+    "@remotion/three": "^4.0.532",
+    "react": "^19.3.0",
+    "remotion": "^4.0.532",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/three": "^0.186.0"
+  }
+}

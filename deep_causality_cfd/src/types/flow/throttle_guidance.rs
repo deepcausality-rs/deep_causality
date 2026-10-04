@@ -4,7 +4,7 @@
  */
 
 //! The **terminal-descent guidance stage** and its **ignition-corridor commit** (change
-//! `add-retropulsion-terminal-descent`, capabilities `throttle-guidance-stage` and
+//! `add-retropropulsion-terminal-descent`, capabilities `throttle-guidance-stage` and
 //! `ignition-corridor-commit`).
 //!
 //! [`ThrottleGuidance`] is the first producer of the throttle channel anywhere in the workspace:

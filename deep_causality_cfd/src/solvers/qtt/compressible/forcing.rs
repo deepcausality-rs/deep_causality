@@ -5,7 +5,7 @@
 
 //! An optional **masked forcing region** on the compressible march path — the incompressible
 //! Brinkman penalization ported to the 4-component conservative state (change
-//! `plasma-retropulsion-de-risk`, capability `compressible-forcing-region`).
+//! `plasma-retropropulsion-de-risk`, capability `compressible-forcing-region`).
 //!
 //! A rank-bounded smoothed mask `χ ∈ [0, 1]` (see [`plume_mask_2d`](crate::plume_mask_2d) /
 //! [`body_mask_2d`](crate::body_mask_2d)) selects a region of the grid; each step the conserved

@@ -77,10 +77,10 @@ export interface ThrottleBranch {
 }
 
 /**
- * The mid-burn throttle what-if, `retropulsion/output.txt` lines 24-29, columns
+ * The mid-burn throttle what-if, `retropropulsion/output.txt` lines 24-29, columns
  * `flown`, `preserved` and `axial m/s2`.
  */
-export const retropulsion = {
+export const retropropulsion = {
   roster: [
     { name: 'coast', flown: 0.0, preserved: null, axial: 10.595 },
     { name: 'low', flown: 0.2, preserved: 0.251, axial: 7.4718 },

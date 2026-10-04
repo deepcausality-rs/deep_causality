@@ -23,7 +23,7 @@ re-converges over the following steps. The descent crosses three such boundaries
 from step N in world 'W': coupled field carried, marched fluid state re-seeded from the world
 seed`. The quasi-steady closure (below) makes that acceptable at this fidelity; it does not provide fluid continuity.
 
-The run verifies itself against the RAM-C II flight anchor and exits nonzero on any regression. It takes about 40
+The run verifies itself against the RAM-C II flight anchor and exits nonzero on any regression. It takes about 45
 seconds.
 
 ## How to Run
@@ -50,31 +50,33 @@ The vehicle starts at 90 km at Mach 29, on a steep compressed trajectory sized s
 Mach-25 station. Four legs and one branch study follow. The run finds every boundary as an event; no station switch is
 scripted. Each of the three leg boundaries carries the coupled field and re-seeds the marched layer:
 
-1. **Descent to blackout onset.** The evolved sheath's electron density climbs as the air thickens; at 74.7 km it
+1. **Descent to blackout onset.** The evolved sheath's electron density climbs as the air thickens; at 73.2 km it
    crosses the GPS L1 cutoff and the classifier flips the link to DENIED. The march pauses on that flow-resolved event.
    The onset altitude is a prediction: no onset constant exists anywhere in the corridor.
 2. **The counterfactual study, in two rounds.** The paused state forks once per candidate bank command (a six-candidate
    coarse sweep: 0, 5, 10, 15, 20, and 40 degrees), in O (1) through copy-on-write, and the scoped fan-out flies all six
    concurrently in the wall-clock of one branch. Each branch flies the *same* onset state in its own alternated world,
-   scored by its trajectory-derived miss to a shared aim point. The coarse landscape descends 20.0, 12.8, 5.8, down
-   to 3.1 m at 15 degrees, then rises again: the 40-degree command exceeds the envelope's 0.5 rad cap, the gate visibly
-   bounds it every step, and the clamped branch overshoots to 22 m. A **fine round** then forks the same paused onset a
-   second time, eleven 0.5-degree candidates bracketing the coarse winner, scored against the same aim: the landscape
-   bottoms at 13.5 degrees with a 2.39 m miss. Two fork rounds resolve the optimum at 0.5-degree resolution for
-   seventeen branches total. The 2.39 m residual matches the INS drift at the blackout peak, the vehicle's knowledge
-   floor (see "Why the sweep stops at 0.5 degrees and 2.39 m" below).
+   scored by its trajectory-derived miss to a shared aim point. The coarse landscape descends 20.0, 11.6, down
+   to 3.5 m at 10 degrees, then rises again through 6.0 and 14.3 m: the 40-degree command exceeds the envelope's
+   0.5 rad cap, the gate bounds it every step, and the clamped branch overshoots to 28.9 m. A **fine round** then forks
+   the same paused onset a second time, eleven 0.5-degree candidates bracketing the coarse winner, scored against the
+   same aim: the landscape bottoms at 11.5 degrees with a 2.07 m miss. Two fork rounds resolve the optimum at 0.5-degree
+   resolution for seventeen branches total. The 2.07 m residual sits 0.40 m above the vehicle's knowledge floor, the
+   1.67 m INS drift when the branches are scored 100 steps after the fork (see "Why the sweep stops at 0.5 degrees and
+   2.07 m" below).
 3. **The committed dwell.** The winning world flies through the peak passage. At the 61 km RAM-C II station the evolved
-   peak electron density lands at 3.4e19 per cubic meter against the 1e19 flight anchor, inside the earned 5x band, with
-   **no calibration target anywhere in the chemistry**. The INS dead-reckons; drift grows from 0.35 m to about 2.5 m.
-4. **Flow-resolved exit and reacquisition.** Drag decelerates the vehicle below the ionization threshold; at 47.0 km the
+   peak electron density lands at 2.6e19 per cubic meter against the 1e19 flight anchor, inside the earned 5x band, with
+   **no calibration target anywhere in the chemistry**. The INS dead-reckons; drift grows from 0.18 m at onset to 1.56 m
+   at the peak passage and 42.4 m on the last step before the link returns (`corridor_trace.csv`).
+4. **Flow-resolved exit and reacquisition.** Drag decelerates the vehicle below the ionization threshold; at 46.8 km the
    renewed sheath stops ionizing past the cutoff and the link returns. Dissociative recombination
-   `NO+ + e- -> N + O` drains the sheath and ends the blackout. The first folded fixes collapse
-   the drift back to 0.28 m.
+   `NO+ + e- -> N + O` drains the sheath and ends the blackout. The first fix folds on the exit step and cuts the error
+   to 2.29 m; by the end of reacquisition it is 0.28 m.
 
 Thirteen coupled validation gates then check the whole story: window ordering, the anchor band, the window altitudes
 (exit inside its pinned band, reported against the RAM-C II 25-30 km flight window), drift and reacquisition, regime
 change, the multiphysics chain, real steering divergence, guidance precision from the sweep (the committed branch must
-beat the ballistic miss at least 3x; it lands 8.4x better), the fine round refining the coarse winner, tensor
+beat the ballistic miss at least 3x; it lands 9.7x better), the fine round refining the coarse winner, tensor
 compression under the bond cap, bounded solver rebuilds, and the wall-clock budget.
 
 ## The Causal Chain
@@ -121,7 +123,7 @@ rate runs at its controlling temperature: ionization at the geometric mean
 `sqrt(T_tr * T_ve)`, dissociation at Park's published `T_tr^0.7 * T_ve^0.3`, electron channels at `T_e = T_ve`, with the
 Millikan-White relaxation clock on the **evolved per-cell pressure**
 and the network on the **evolved per-cell density**. The network *predicts* the RAM-C II anchor from cited rate pairs
-and geometry alone and lands 3.0x on the stagnation line, inside the band production codes (DPLR, LAURA, US3D) achieve
+and geometry alone and lands 2.3x on the stagnation line, inside the band production codes (DPLR, LAURA, US3D) achieve
 on the same peak. The sheath exposure is the transit-age profile's observable peak (`age(xi) =
 t_res * ln(1/(1-xi))` from the linear stagnation-line deceleration; the reflectometer-visible near-body gas has aged ~
 4.2 residence times). Sheath renewal stays in the flown closure: under recombination the carried mode self-limits
@@ -146,13 +148,16 @@ paused tensor state by reference and clone copy-on-write at first write, each br
 world they fly. Branch misses are trajectory-derived: the distance from each branch's terminal truth state to a shared
 aim point, with the analytic t^2 drift law printed beside it as a cross-check.
 
-**Why the sweep stops at 0.5 degrees and 2.39 m.** Driving the residual miss lower would optimize below the vehicle's
-knowledge floor. The INS dead-reckoning error at the blackout peak is about 2.5 m in this same run; the guidance
-residual (2.39 m) and the navigation uncertainty are the same size, and that sets the stopping point. Steering more
-precisely than the vehicle navigates buys nothing, because a real vehicle commands off the navigated state. (The sweep
-scores against truth terminal states, which a flight system cannot see, so 2.39 m is optimistic.) The residual itself is geometric: near the minimum, neighboring 0.5-degree
-candidates differ by 0.05 to 0.3 m, but a single constant bank command traces a one-dimensional curve of reachable
-terminal states through a 3-D miss space, and 2.39 m is that curve's closest approach to the aim.
+**Why the sweep stops at 0.5 degrees and 2.07 m.** A finer sweep would separate neighboring branches by less than the
+vehicle's navigation error. The INS dead-reckoning error in this same run is 1.67 m when the branches are scored, 100
+steps after the fork. Near the minimum, neighboring 0.5-degree candidates differ by 0.29 m (11.0 to 11.5 degrees),
+0.04 m (11.5 to 12.0) and 0.36 m (12.0 to 12.5), and the 2.07 m guidance residual sits 0.40 m above the drift. The
+error keeps growing through the rest of the blackout, to 42.4 m before the link returns. Steering
+more precisely than the vehicle navigates buys nothing, because a real vehicle commands off the navigated state. (The
+sweep scores against truth terminal states, which a flight system cannot see, so 2.07 m is optimistic.) The residual
+itself is geometric: a single constant bank command traces a one-dimensional curve of reachable terminal states through
+a 3-D miss space. Fitted through the eleven fine-round terminal states, that curve passes 2.04 m from the aim at 11.7
+degrees, 0.03 m closer than the committed branch.
 
 **A cybernetic safety gate that steers.** `CyberneticCorrect` runs a
 `CyberneticLoop::control_step` against the verified `SafetyEnvelope` each step and clamps the commanded bank into it;
@@ -162,8 +167,8 @@ bank angle. The clamped command is the actuation. An unrecoverable envelope brea
 ## Validation Anchors
 
 - **RAM-C II (NASA Langley, 1970)**: the canonical ionized-reentry electron-density dataset. The gate holds the earned
-  5x (±0.7 decade) band around the 1e19 peak at the 61 km passage; this run lands at 3.4e19 on the evolved state with no
-  calibration target. The exit altitude (46.9 km) is gated in its own pinned band and reported against the flight's
+  5x (±0.7 decade) band around the 1e19 peak at the 61 km passage; this run lands at 2.6e19 on the evolved state with no
+  calibration target. The exit altitude (46.8 km) is gated in its own pinned band and reported against the flight's
   25-30 km recovery window; the offset is the probe's deliberately light ballistic bundle, not chemistry.
 - **Gupta-Yos-Thompson-Lee, NASA RP-1232 (1990)**: the Table II rate pairs behind every network channel (forward and
   backward tabulated together, detailed balance by construction).
@@ -180,14 +185,13 @@ ranges that set its conclusion):
 
 > **The `Float106` row does not reproduce on the current build.** Switching the alias fails to
 > compile: 44 errors, most of them in this example's own `model.rs`, `main.rs` and
-> `shared/utils.rs`, plus eight in the crate. The example contains `f64`-specific code. The `f64`
-> figure below is also stale; the committed `output.txt` records 44.4 s. `turbulence_flow`
-> demonstrates precision as a parameter end to end: it runs all three precisions from one rate
-> field.
+> `shared/utils.rs`, plus eight in the crate. The example contains `f64`-specific code.
+> `turbulence_flow` demonstrates precision as a parameter end to end: it runs all three precisions
+> from one rate field.
 
 | Alias                | Outcome                                                                                                                                                                                                   |
 |----------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `f64`                | All gates pass in about 35 s. The default.                                                                                                                                                                |
+| `f64`                | All gates pass in about 45 s. The default.                                                                                                                                                                |
 | `Float106` (106-bit) | Every gate and every discrete event step identical; continuous witnesses agree to 15-16 significant digits; about 11x the wall-clock.                                                                     |
 | `f32`                | Crashes at step 1: `h^2` in the then-flown Saha kernel (4.4e-67) underflows the f32 exponent range, and the position ulp at Earth radius (0.5 m) would swallow the sub-meter navigation story regardless. |
 
@@ -228,6 +232,8 @@ documents the ionization-chemistry limitation.
 | [`model.rs`](model.rs)             | The descent worlds, the bank commands, branch scoring, the leg snapshots, and both gating sequences (4 campaign + 9 leg = thirteen gates) |
 | [`constants.rs`](constants.rs)     | The corridor's own knobs: the horizon, the bank sweep, the gate thresholds                                                                |
 | [`utils_print.rs`](utils_print.rs) | Console rendering: the intro, the legs, the branch tables, the provenance                                                                 |
+| `corridor_trace.csv`               | Written by the run: one row per coupled step of the flown descent, labelled by leg (altitude, Mach, `n_e`, link state, regime, nav error, loads, bank, position) |
+| `corridor_branch_trace.csv`        | Written by the run: the same columns for every branch of both rounds, from the fork to the end of its continuation                       |
 
 The physics constants, the numeric helpers, the example-local stages, and the coupling stack are shared with
 the [weather-dispersion example](../weather/README.md) through the crate library module `avionics_examples::shared`

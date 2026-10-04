@@ -10,10 +10,15 @@
 
 mod constants;
 mod paths;
+mod trace;
 mod types;
 
 pub use constants::FLIGHT_LIMIT_S;
 pub use paths::manifest_dir;
+pub use trace::{
+    FLIGHT_HEADER, TraceTable, crew_table, flight_cells, touchdown_table, trace_dir, variant_name,
+    world_table,
+};
 pub use types::command::Command;
 pub use types::drone::Drone;
 pub use types::fault_timeline::FaultTimeline;

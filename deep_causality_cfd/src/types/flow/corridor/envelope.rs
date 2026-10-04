@@ -10,7 +10,7 @@ use crate::CfdScalar;
 use deep_causality_haft::{CyberneticLoop, HKT5Unbound};
 
 /// The optional powered-descent axes of a [`SafetyEnvelope`] (change
-/// `plasma-retropulsion-cfd-contracts`, capability `powered-descent-envelope`). Present only for a
+/// `plasma-retropropulsion-cfd-contracts`, capability `powered-descent-envelope`). Present only for a
 /// burn-phase world; absent (`SafetyEnvelope::burn == None`) for the corridor, where the gate
 /// behaves exactly as before. Carries the throttle floor/ceiling, the maximum thrust coefficient
 /// `max_ct` (the *dynamic* throttle cap — the admissible ceiling is the static ceiling min'd with

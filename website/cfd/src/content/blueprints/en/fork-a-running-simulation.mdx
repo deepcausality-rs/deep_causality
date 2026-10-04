@@ -11,8 +11,8 @@ verbs:
   - refine
   - reduce_all
 worked:
-  - label: Plasma retropulsion descent
-    href: /tutorial/stage-3-retropulsion/
+  - label: Plasma retropropulsion descent
+    href: /tutorial/stage-3-retropropulsion/
   - label: Plasma blackout corridor
     href: /tutorial/stage-1-corridor/
   - label: Weather dispersion table
@@ -95,7 +95,7 @@ to its event log, naming the world it replaced. The corridor gate reports it:
 [PASS] [tripwire] (4c) counterfactual steering: 17 alternated worlds (6 coarse + 11 fine) from one shared onset; coarse-winner-vs-ballistic terminal separation 16.85 m; coarse miss spread [3.53, 28.88] m
 ```
 
-The retropulsion example gates it per branch: 5 of 5 branches record an applied world change
+The retropropulsion example gates it per branch: 5 of 5 branches record an applied world change
 naming the world they replace. After the study, the corridor's diagnostic legs call
 `alternate_context` directly to fly the committed branch's world.
 
@@ -127,7 +127,7 @@ For a state fork, compare each branch against a frozen-field prediction of the s
 intervention: the same command schedule with the flow closure held at its value at the fork. If
 simple kinematics reproduces the divergence, the flow did not contribute to it.
 
-The [retropulsion descent](/tutorial/stage-3-retropulsion/) runs that comparison as gate 4c. Its
+The [retropropulsion descent](/tutorial/stage-3-retropropulsion/) runs that comparison as gate 4c. Its
 branches depart the frozen-drag prediction by up to 139.4 m/s against a 100 m/s threshold. Its
 flow observables spread 0.0202 across the branches, where the corridor's bank branches agreed
 to three digits.

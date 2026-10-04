@@ -19,7 +19,11 @@ mod utils_print;
 
 use crate::model_context::{FailsafeProcess, FailsafeState, Frame, Maneuver};
 use deep_causality::{CausalEffect, EffectLog};
-use dynamic_drone_failsafe::{Drone, FLIGHT_LIMIT_S, Terrain, Touchdown};
+use deep_causality_num::lower;
+use dynamic_drone_failsafe::{
+    Drone, FLIGHT_HEADER, FLIGHT_LIMIT_S, Quantity, Terrain, Touchdown, TraceTable, flight_cells,
+    touchdown_table, trace_dir, variant_name,
+};
 use std::error::Error;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -37,6 +41,15 @@ fn main() -> Result<(), Box<dyn Error>> {
         EffectLog::new(),
     );
 
+    let trace = trace_dir();
+    let mut flight = TraceTable::new(
+        "part_3_trace",
+        &format!(
+            "{FLIGHT_HEADER},gnss_degraded,fix_lost,link_lost,battery_critical,decision,below,maneuver,target_i,target_j"
+        ),
+    );
+    let mut patches = TraceTable::new("part_3_patches", "t,i,j,ground,slope_sigma_deg");
+
     utils_print::print_intro();
     let mut last = None;
     while !drone.landed() && drone.time_s() < FLIGHT_LIMIT_S {
@@ -46,6 +59,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             readings: drone.scan(&terrain)?,
             position: drone.position(),
         };
+        let in_frame: Vec<(i64, i64)> = frame.readings.iter().map(|r| r.patch()).collect();
         let time_s = drone.time_s();
         process = process
             .bind(|_, state, ctx| model::sense(frame, state, ctx))
@@ -67,10 +81,44 @@ fn main() -> Result<(), Box<dyn Error>> {
             utils_print::print_second(&drone, &now.0, below, state.failsafe, maneuver);
             last = Some(now);
         }
+        if trace.is_some() {
+            let f = state.faults;
+            let (ti, tj) = state
+                .target
+                .patch
+                .map(|(i, j)| (i.to_string(), j.to_string()))
+                .unwrap_or_default();
+            flight.push(format!(
+                "{},{},{},{},{},{},{},{},{ti},{tj}",
+                flight_cells(&drone),
+                f.gnss_degraded,
+                f.gnss_lost,
+                f.link_lost,
+                f.battery_critical,
+                variant_name(&state.failsafe),
+                below.map(|g| variant_name(&g)).unwrap_or_default(),
+                variant_name(&maneuver),
+            ));
+            for patch in &in_frame {
+                if let (Some(ground), Some(fusion)) =
+                    (state.ground.get(patch), state.fusion.get(patch))
+                {
+                    let precision = lower(fusion.precision[Quantity::Slope as usize]);
+                    patches.push(format!(
+                        "{time_s},{},{},{},{:.3}",
+                        patch.0,
+                        patch.1,
+                        variant_name(ground),
+                        1.0 / precision.sqrt(),
+                    ));
+                }
+            }
+        }
         model::steer(&mut drone, &terrain, maneuver, state.failsafe);
     }
 
-    utils_print::print_touchdown(drone.time_s(), &Touchdown::of(&terrain, &drone));
+    let touchdown = Touchdown::of(&terrain, &drone);
+    utils_print::print_touchdown(drone.time_s(), &touchdown);
     let state = process.state();
     utils_print::print_map(state, drone.patch_below());
     utils_print::print_closing(
@@ -78,5 +126,14 @@ fn main() -> Result<(), Box<dyn Error>> {
         model::nearest_person_seen_m(state, state.target.centre),
     );
     utils_print::print_log(process.logs());
+    if let Some(dir) = trace {
+        for table in [
+            flight,
+            patches,
+            touchdown_table("part_3_touchdown", drone.time_s(), &touchdown),
+        ] {
+            table.write(&dir)?;
+        }
+    }
     Ok(())
 }

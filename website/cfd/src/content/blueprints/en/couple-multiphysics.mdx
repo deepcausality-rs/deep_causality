@@ -130,7 +130,7 @@ return a `DimensionMismatch` unless the length equals the cell count or 1.
 Each step runs `advance`, which computes the next conserved state from the conserved state
 alone. Then the coupling runs and changes only the `CoupledField`. The marched flow reads two
 kinds of value back from the field: `truth_state`, the vehicle state that sets the inflow strip,
-and, in the retropulsion example, `commanded_throttle` and the plume geometry that set a
+and, in the retropropulsion example, `commanded_throttle` and the plume geometry that set a
 forcing mask. It reads no chemistry field. The coupling has no chemical energy sink, no
 electron-pressure term and no density or energy feedback. The `EosStage` documentation records
 that no shipped consumer reads the pressure it writes.
@@ -159,7 +159,7 @@ command changes the sampled atmosphere too little to alter the shock-layer chemi
 than 1.4 percent in peak `n_e`. The miss column measures distance from an aim point that the
 setup places 20 m from the unsteered landing point, so its scale follows from that choice.
 
-The [retropulsion descent](/tutorial/stage-3-retropulsion/) is the closest case to a two-way
+The [retropropulsion descent](/tutorial/stage-3-retropropulsion/) is the closest case to a two-way
 chemistry coupling, and it stops short of one. Its `PlumeImprint` seam gives the marched layer
 state realism, but in-flight drag authority is the cited A0 correlation, not a decrement
 contracted from the evolved field. The [limits page](/boundaries/#srp) records the measurement

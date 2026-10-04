@@ -12,7 +12,7 @@ homepage = { workspace = true}
 
 authors = ["Marvin Hansen <marvin.hansen@gmail.com>"]
 description = "Counterfactual Computational fluid dynamics solvers and the Flow DSL."
-documentation = "https://docs.rs/deep_causality"
+documentation = "https://docs.rs/deep_causality_cfd"
 categories = ["science", "simulation"]
 keywords = ["cfd", "fluid-dynamics", "causality", "simulation"]
 # Benches are declared explicitly (one per solver), so they are not auto-discovered.
@@ -227,7 +227,7 @@ path = "studies/qtt_blend_metric/main.rs"
 name = "qtt_repin_marcher"
 path = "studies/qtt_repin_marcher/main.rs"
 
-# Plume rank + fork economics: the plasma-retropulsion de-risk study (roadmap M1 risks 2 + 3).
+# Plume rank + fork economics: the plasma-retropropulsion de-risk study (roadmap M1 risks 2 + 3).
 [[example]]
 name = "qtt_rank_plume"
 path = "studies/qtt_rank_plume/main.rs"

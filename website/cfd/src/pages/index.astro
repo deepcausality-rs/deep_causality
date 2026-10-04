@@ -10,7 +10,7 @@ import LoopDiagram from '../components/home/LoopDiagram.astro';
 import Evidence from '../components/home/Evidence.astro';
 import Limits from '../components/home/Limits.astro';
 import TryIt from '../components/home/TryIt.astro';
-import { corridor, retropulsion } from '../data/results';
+import { corridor, retropropulsion } from '../data/results';
 import { GITHUB_URL } from '../consts';
 
 const title = 'DeepCausality CFD | Pause a simulation, try every what-if';
@@ -50,7 +50,7 @@ label(corridor.committed.bank, '11.5°  2.07 m', 'below', 20);
 
 /* Throttle chart: every branch labelled, placed clear of the rising line. */
 const throttleAt = { coast: 'above', low: 'below', mid: 'below', high: 'right', hard: 'left' } as const;
-const throttlePoints = retropulsion.roster.map((b) => ({
+const throttlePoints = retropropulsion.roster.map((b) => ({
   x: b.flown,
   y: b.axial,
   kind: b.name === 'low' ? ('win' as const) : ('plain' as const),
@@ -119,7 +119,7 @@ const throttlePoints = retropulsion.roster.map((b) => ({
   <HomeSection ix="05 / 09" label="Result 2: a reversal" title="A lit engine can slow the vehicle less than coasting.">
     <Fragment slot="lede">
       <p>
-        The retropulsion example forks a descent in the middle of an engine burn into five
+        The retropropulsion example forks a descent in the middle of an engine burn into five
         throttle settings. It then measures the deceleration each branch actually flew. The drag
         change in this example comes from a published 1970 correlation, not from the simulated
         plume; the fork shows what that drag law does to the trajectory.
@@ -129,16 +129,16 @@ const throttlePoints = retropulsion.roster.map((b) => ({
       points={throttlePoints}
       x={{ domain: [-0.04, 0.85], ticks: [0, 0.2, 0.4, 0.6, 0.8], title: 'Throttle flown (fraction of maximum)', fmt: (v) => `${Math.round(v * 100)}%` }}
       y={{ domain: [6, 18], ticks: [6, 8, 10, 12, 14, 16, 18], title: 'Deceleration flown (m/s²)' }}
-      ref={{ y: retropulsion.roster[0].axial, label: 'Coasting: 10.60 m/s²', shade: true }}
-      label="Deceleration against throttle for five branches forked mid-burn. Coasting decelerates at 10.60 metres per second squared. At 20 percent throttle the vehicle decelerates at 7.47, and at 40 percent at 9.97, both below coasting. At 60 percent it reaches 12.89 and at 79 percent 17.20."
+      ref={{ y: retropropulsion.roster[0].axial, label: 'Coasting: 10.59 m/s²', shade: true }}
+      label="Deceleration against throttle for five branches forked mid-burn. Coasting decelerates at 10.59 metres per second squared. At 20 percent throttle the vehicle decelerates at 7.47, and at 40 percent at 9.97, both below coasting. At 60 percent it reaches 12.89 and at 79 percent 17.20."
     >
-      At 20% throttle the vehicle decelerates at 7.47 m/s². Coasting gives 10.60 m/s². The plume
+      At 20% throttle the vehicle decelerates at 7.47 m/s². Coasting gives 10.59 m/s². The plume
       disturbs the bow shock and strips away drag, and at low throttle the drag lost is about as
       large as the thrust gained. Somewhere between 40% and 60% throttle, thrust wins. If the drag is
       held at its value from the fork instead of letting the plume change it, the prediction misses
-      the outcome by up to {Math.round(retropulsion.frozenDragSeparation)} m/s over the
+      the outcome by up to {Math.round(retropropulsion.frozenDragSeparation)} m/s over the
       continuation. Values are from
-      <a href="/tutorial/stage-3-retropulsion/"><code>retropulsion/output.txt</code></a>.
+      <a href="/tutorial/stage-3-retropropulsion/"><code>retropropulsion/output.txt</code></a>.
     </ResultChart>
     <div class="callout callout-warn note">
       <p class="callout-title">Where the drag change comes from</p>

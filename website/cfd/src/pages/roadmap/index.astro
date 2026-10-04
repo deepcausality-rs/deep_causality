@@ -4,7 +4,7 @@
  * ladder (works today, building, open). The fourth holds decisions with their reasons.
  *
  * Sources: verification/qtt_sod/baseline.txt, verification/qtt_ramc_stagline/baseline.txt,
- * studies/qtt_rank_plume/output.txt, retropulsion/output.txt, benches and studies READMEs, and
+ * studies/qtt_rank_plume/output.txt, retropropulsion/output.txt, benches and studies READMEs, and
  * the compile_fail doctests on `CfdFlow::study`.
  */
 import PageShell from '../../components/nav/PageShell.astro';
@@ -40,7 +40,7 @@ const now = [
     note: 'The same physics runs at f32, f64 and Float106, switched at one alias. The plasma-blackout corridor does not currently compile at Float106.',
   },
   {
-    item: 'Plasma retropulsion descent, blackout exit to touchdown',
+    item: 'Plasma retropropulsion descent, blackout exit to touchdown',
     note: `Sixteen gates pass in 337.5 s on ${MACHINE}. Branches forked mid-burn depart a frozen-drag prediction by up to 139.4 m/s.`,
   },
 ];

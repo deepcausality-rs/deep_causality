@@ -317,7 +317,7 @@ Documentation moved to a separate Starlight site at `website/docs/`, which is wh
 
 **There are no client islands.** `grep -rn "client:" src` returns nothing. The site ships zero hydration directives, because it ships zero framework components — there is nothing to hydrate.
 
-Interactivity is plain `<script>` in the eight places that need it:
+Interactivity is plain `<script>` in the nine places that need it:
 
 | File | Kind | Purpose |
 |---|---|---|
@@ -327,6 +327,7 @@ Interactivity is plain `<script>` in the eight places that need it:
 | `ThemeToggle.astro:41` | bundled module | Theme flip, localStorage write |
 | `ExampleGrid.astro:63` | bundled module | Tablist ARIA, code-box height equalization |
 | `blog/index.astro:118` | bundled module | Force `<details open>` at ≥900px |
+| `tutorials/TutorialVideo.astro` | bundled module | Click to load: swap the poster link for YouTube's privacy-enhanced player |
 | `index.astro:50` | `is:inline set:html` | JSON-LD |
 | `blog/[...slug].astro:72` | `is:inline set:html` | JSON-LD |
 

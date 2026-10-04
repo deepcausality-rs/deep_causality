@@ -56,8 +56,19 @@ impl AuditFlush for LogSink {
     }
 }
 
-/// Append a closing line to a main audit file (the fan-out spawn/rejoin narration the campaign
-/// writes around a concurrent round). Opens for append so it never truncates the main log.
+/// Start a main audit file with its first line (the spawn record a campaign writes before its
+/// concurrent round), truncating any earlier run's file, as [`LogSink::create`] does for a branch.
+///
+/// # Errors
+/// The file cannot be created or written.
+pub fn start_file(path: impl AsRef<Path>, line: &str) -> Result<(), PhysicsError> {
+    let mut f = File::create(path).map_err(io_err)?;
+    writeln!(f, "{line}").map_err(io_err)?;
+    f.flush().map_err(io_err)
+}
+
+/// Append a closing line to a main audit file (the rejoin record after the concurrent round), so
+/// the spawn record [`start_file`] wrote stays in place.
 ///
 /// # Errors
 /// The file cannot be opened or written.

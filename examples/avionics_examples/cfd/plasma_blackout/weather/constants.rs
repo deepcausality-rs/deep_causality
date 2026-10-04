@@ -64,7 +64,7 @@ pub const DRIFT_SIGNIFICANCE_SIGMA: f64 = 2.0;
 
 /// Weather must move the blackout window: max onset minus min onset across the table, s. The
 /// onset carries the weather signal (denser air ionizes earlier); the dwell is more robust
-/// (measured spread 3.1 s vs the onset's 4.2 s under the finite-rate network), so the window
+/// (measured spread 1.1 s vs the onset's 2.5 s under the finite-rate network), so the window
 /// gate pins the onset.
 pub const MIN_ONSET_SPREAD_S: f64 = 2.0;
 /// The polar-winter blackout drift must exceed the standard day's by at least this factor

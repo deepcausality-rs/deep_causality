@@ -239,7 +239,7 @@ fn a_fan_out_shares_one_paused_state_across_every_branch() {
 }
 
 // ── Typed alternation, measured rank, reproducible economics ─────────────────────────────────
-// (change `fix-retropulsion-measurement-integrity`)
+// (change `fix-retropropulsion-measurement-integrity`)
 
 #[test]
 fn an_applied_alternation_is_distinguishable_from_a_refused_one() {

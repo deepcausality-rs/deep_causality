@@ -143,6 +143,55 @@ fn campaign_save_log_writes_one_file_per_branch_and_a_main_file() {
 }
 
 #[test]
+fn campaign_save_log_rerun_replaces_the_main_file() {
+    use deep_causality_cfd::{GateSeq, Report};
+
+    let dir = std::env::temp_dir().join("dcl_audit_campaign_rerun");
+    let _ = std::fs::remove_dir_all(&dir);
+    std::fs::create_dir_all(&dir).unwrap();
+    let base = dir.join("wx.audit");
+
+    // The same campaign flown twice on one base path: the main file records the second run alone,
+    // as each per-branch file does.
+    for _ in 0..2 {
+        let verdict = CfdFlow::study("audited weather, flown twice")
+            .save_log(&base)
+            .cases(vec!["standard".to_string(), "hot".to_string()])
+            .baseline(|| Ok(world("standard", 1.0, 4)))
+            .alternate(|name| Ok(world(name, 1.0, 4)))
+            .ensemble(2)
+            .couple(|_c: &String, _d: usize| ())
+            .march_for(3, field_at_61km)
+            .reduce_ensemble(|_c: &String, draws: &[Report<f64>]| {
+                Ok(EnsRow {
+                    marked: false,
+                    draws: draws.len(),
+                })
+            })
+            .gates(GateSeq::new("audited").gate("two rows", two_rows))
+            .verdict()
+            .expect("the audited campaign runs");
+        assert!(verdict.passed());
+    }
+
+    let main = std::fs::read_to_string(dir.join("wx.audit.main.log")).expect("main file exists");
+    assert_eq!(
+        main.matches("fan-out sweep-1").count(),
+        1,
+        "one spawn record after a re-run: {main}"
+    );
+    assert_eq!(
+        main.matches("rejoin sweep-1").count(),
+        1,
+        "one rejoin record after a re-run: {main}"
+    );
+    assert!(
+        main.starts_with("fan-out sweep-1"),
+        "the spawn record opens the file: {main}"
+    );
+}
+
+#[test]
 fn campaign_save_log_to_an_unwritable_path_fails_the_run() {
     use deep_causality_cfd::{GateSeq, Report};
 

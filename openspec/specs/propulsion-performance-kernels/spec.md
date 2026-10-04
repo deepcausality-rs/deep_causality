@@ -5,7 +5,7 @@ Rocket-performance and nozzle exit-state pointwise kernels in `deep_causality_ph
 propellant mass flow from specific impulse, the Tsiolkovsky Δv relation, the branch-selected
 inverse area-Mach relation, and the isentropic nozzle exit-state composition. These make the SRP
 momentum-flux ratio computable from a commanded throttle and size the propellant reserve for the
-plasma-retropulsion descent; they compose the existing compressible-flow kernels rather than
+plasma-retropropulsion descent; they compose the existing compressible-flow kernels rather than
 restating them.
 ## Requirements
 ### Requirement: Propellant mass flow from specific impulse

@@ -14,6 +14,7 @@
 
 pub mod constants;
 pub mod stages;
+pub mod trace;
 pub mod utils;
 pub mod world;
 

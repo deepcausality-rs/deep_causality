@@ -1,8 +1,8 @@
-# examples/avionics_examples/cfd/ — engineer-facing CFD demonstrations (plasma_blackout corridor/weather/retropulsion, nozzle_operating_map, flight_envelope_placard, viv_resonance_margin, turbulence_flow)
+# examples/avionics_examples/cfd/ — engineer-facing CFD demonstrations (plasma_blackout corridor/weather/retropropulsion, nozzle_operating_map, flight_envelope_placard, viv_resonance_margin, turbulence_flow)
 
 **Production readiness: `needs-work`**
 
-The closed-form gas dynamics is genuinely correct: I reproduced the area-Mach kernel, the nozzle thrust coefficient (code 1.2539 vs textbook 1.2576), the first-critical ratio 0.9372, the whole isentropic-plus-Rankine-Hugoniot shock-position chain, the US-1976 atmosphere table to 3-4 digits per row, the Sutton-Graves arithmetic, and the Lorenz right-hand side. Constants documentation is unusually disciplined — most numeric literals carry a derivation, and retropulsion's constants.rs even records supersession history. But three gates presented in the verdict list cannot fail: weather's "(0) table integrity" folds over a hardcoded `errored: false`; corridor's "(4f) fine sweep refines the coarse winner" re-flies the coarse winner inside the fine round, so its inequality is structural; and corridor's "(4e)" compares against a "ballistic" miss that is identically AIM_CROSS_RANGE_M (printed as exactly 20.000 m). Separately, three committed deliverable tables carry undisclosed error: the placard's linearly-interpolated density overstates q by up to 39% at 36 km, the VIV Strouhal column is crossing-count quantized at 1/110 yet printed to 17 digits with two pairs of bit-identical rows, and four of retropulsion's "earned band" docstrings record measurements that do not match the committed output.txt. The placard README also advertises a third gate ("matrix integrity") that model.rs does not register. None of these is unfixable, and the physics core is sound — but an avionics reviewer would currently be unable to distinguish the gates that verify something from the ones that cannot fail.
+The closed-form gas dynamics is genuinely correct: I reproduced the area-Mach kernel, the nozzle thrust coefficient (code 1.2539 vs textbook 1.2576), the first-critical ratio 0.9372, the whole isentropic-plus-Rankine-Hugoniot shock-position chain, the US-1976 atmosphere table to 3-4 digits per row, the Sutton-Graves arithmetic, and the Lorenz right-hand side. Constants documentation is unusually disciplined — most numeric literals carry a derivation, and retropropulsion's constants.rs even records supersession history. But three gates presented in the verdict list cannot fail: weather's "(0) table integrity" folds over a hardcoded `errored: false`; corridor's "(4f) fine sweep refines the coarse winner" re-flies the coarse winner inside the fine round, so its inequality is structural; and corridor's "(4e)" compares against a "ballistic" miss that is identically AIM_CROSS_RANGE_M (printed as exactly 20.000 m). Separately, three committed deliverable tables carry undisclosed error: the placard's linearly-interpolated density overstates q by up to 39% at 36 km, the VIV Strouhal column is crossing-count quantized at 1/110 yet printed to 17 digits with two pairs of bit-identical rows, and four of retropropulsion's "earned band" docstrings record measurements that do not match the committed output.txt. The placard README also advertises a third gate ("matrix integrity") that model.rs does not register. None of these is unfixable, and the physics core is sound — but an avionics reviewer would currently be unable to distinguish the gates that verify something from the ones that cannot fail.
 
 - Files read: **58**
 - Findings raised: **19** — surviving adversarial verification: **19** (refuted: 0)
@@ -28,8 +28,8 @@ These were positively confirmed, not merely un-flagged.
 | Float106 is a legitimate ground truth over the simulated window | `examples/avionics_examples/cfd/turbulence_flow/main.rs:46, 90-92` | t_horizon ≈ ln(1/ε)/λ; the reference precision must out-live the comparison window |
 | VIV dimensionalization and Reynolds number | `examples/avionics_examples/cfd/viv_resonance_margin/model.rs:63, 75-76` | Re = V·D/ν; f_s = St·V/D; margin = \|f_n − f_s\|/f_n |
 | Weather-example cold-drift ratio obeys the t²-law it claims | `examples/avionics_examples/cfd/plasma_blackout/weather/output.txt (gate 4); weather_table.csv rows 1 and 4` | Dead-reckoning drift ∝ ½·\|b\|·t², so ratio = (bias departure) × (dwell ratio)² |
-| Retropulsion gate (1) genuinely cross-checks a different artifact | `examples/avionics_examples/cfd/plasma_blackout/retropulsion/output.txt (gate 1); weather_table.csv` | Linear interpolation of the weather table's onset column at dT = −32 K between the −25 K and −40 K rows |
-| Gate counts advertised in the crate README match the registered gates and the committed outputs | `examples/avionics_examples/README.md:24-26` | Claimed 13 (corridor) / 8 (weather) / 16 (retropulsion) |
+| Retropropulsion gate (1) genuinely cross-checks a different artifact | `examples/avionics_examples/cfd/plasma_blackout/retropropulsion/output.txt (gate 1); weather_table.csv` | Linear interpolation of the weather table's onset column at dT = −32 K between the −25 K and −40 K rows |
+| Gate counts advertised in the crate README match the registered gates and the committed outputs | `examples/avionics_examples/README.md:24-26` | Claimed 13 (corridor) / 8 (weather) / 16 (retropropulsion) |
 | All twelve examples are declared and runnable | `examples/avionics_examples/Cargo.toml:12-58` | Each example directory must have a [[example]] stanza with a correct path |
 
 ## Findings
@@ -216,11 +216,11 @@ constants.rs:68-70 claims a resolved trend: `Measured on this grid: St 0.1818 to
 
 ---
 
-### 5.7 [MAJOR] Four retropulsion 'earned band' docstrings record measurements that contradict the committed output.txt
+### 5.7 [MAJOR] Four retropropulsion 'earned band' docstrings record measurements that contradict the committed output.txt
 
 - **Verification verdict:** CONFIRMED
 - **Axis:** doc-gap
-- **Location:** `examples/avionics_examples/cfd/plasma_blackout/retropulsion/constants.rs:125`
+- **Location:** `examples/avionics_examples/cfd/plasma_blackout/retropropulsion/constants.rs:125`
 - **Auditor confidence:** confirmed
 
 **Claim.** constants.rs states each earned band was 'pinned from the first measured run' and records that measurement. For DRAG_COLLAPSE_MIN, FROZEN_DRAG_SEPARATION_MIN, BELIEF_SEPARATION_MIN_M and WINDOW_PREDICTION_TOL_S the recorded measurement does not match the committed output.txt, so the provenance chain from band to run is broken.
@@ -232,7 +232,7 @@ constants.rs:125 `**Re-earned 2026-07-20: measured 0.178** (0.1310 at the 0.16 b
 constants.rs:115 `**Re-earned 2026-07-20: measured 147.3 m/s**` vs output.txt `(4c) ... depart the frozen-drag prediction by up to 139.3755 m/s`
 constants.rs:144 `**Re-earned 2026-07-20: measured 23.44 m** (149.35 m informed against 125.91 m uninformed)` vs output.txt `(5) ... 23.45 m apart (153.19 m vs 129.75 m ...)`
 constants.rs:164 `the flown window came in at 10.50 s onset and 59.60 s dwell ... errors of 0.04 s and 0.19 s` vs output.txt `dwell 59.50 s against 59.41 s (error 0.087 s)`
-(By contrast FLOW_SPREAD_MIN's 'measured 0.0202' and MAX_BOND_GROWTH's 'Measured: 0' do match, and retropulsion/README.md:137 'by up to 139 m/s' matches — so the README is current and constants.rs is stale.)
+(By contrast FLOW_SPREAD_MIN's 'measured 0.0202' and MAX_BOND_GROWTH's 'Measured: 0' do match, and retropropulsion/README.md:137 'by up to 139 m/s' matches — so the README is current and constants.rs is stale.)
 ```
 
 **Reference form.** constants.rs:12 sets the standard itself: 'Bands marked *earned* were pinned from the first measured run and now gate regressions.' An earned band's recorded measurement must be reproducible from the committed artifact, otherwise the band's justification cannot be audited.
@@ -243,7 +243,7 @@ constants.rs:164 `the flown window came in at 10.50 s onset and 59.60 s dwell ..
 
 **Adversarial check.** I checked all six earned bands against the committed output. Four mismatch as claimed. (a) constants.rs:125 records 'measured 0.178 (0.1310 at the 0.16 branch down to -0.0472 at 0.38)'; output.txt gate (4b) reports 0.2510 -> -0.0611, collapse 0.3121, and the roster table shows realized throttles 0.20/0.40/0.60/0.7931 — the 0.16 and 0.38 branches described no longer exist. (b) constants.rs:115 'measured 147.3 m/s' vs output gate (4c) '139.3755 m/s'. (c) constants.rs:144 'measured 23.44 m (149.35 m informed against 125.91 m uninformed)' vs output gate (5) '23.45 m apart (153.19 m vs 129.75 m)' — the aggregate nearly matches but both components moved by ~4 m. (d) constants.rs:162 'flown window came in at 10.50 s onset and 59.60 s dwell ... errors of 0.04 s and 0.19 s' vs output gate (1) 'dwell 59.50 s against 59.41 s (error 0.087 s)'. The control cases hold: FLOW_SPREAD_MIN's 0.0202 and MAX_BOND_GROWTH's 0 both match output exactly, and README.md:137's '139 m/s' matches, confirming the README is current while constants.rs is stale. constants.rs:11-12 sets the standard the file fails ('Bands marked *earned* were pinned from the first measured run and now gate regressions'). Note the auditor's line cite for (d) is 164; the text is at 162. No gate is at risk — every band still bounds its measured value with margin — so the defect is a broken audit trail on the acceptance criteria, not a wrong threshold.
 
-> Evidence re-read: retropulsion/constants.rs:11-12, :78 (MAX_BOND_GROWTH 'Measured 2026-07-20: 0'), :101 (FLOW_SPREAD_MIN 0.0202), :115, :125, :144, :162; retropulsion/output.txt gates (4a),(4b),(4c),(5),(1) and the mid-burn roster table showing realized throttles 0.0000/0.2000/0.4000/0.6000/0.7931; retropulsion/README.md:137 'by up to 139 m/s'.
+> Evidence re-read: retropropulsion/constants.rs:11-12, :78 (MAX_BOND_GROWTH 'Measured 2026-07-20: 0'), :101 (FLOW_SPREAD_MIN 0.0202), :115, :125, :144, :162; retropropulsion/output.txt gates (4a),(4b),(4c),(5),(1) and the mid-burn roster table showing realized throttles 0.0000/0.2000/0.4000/0.6000/0.7931; retropropulsion/README.md:137 'by up to 139 m/s'.
 
 ---
 
@@ -406,25 +406,25 @@ Directory listing: turbulence_flow contains only README.md, main.rs, model.rs, p
 - **Location:** `examples/avionics_examples/cfd/plasma_blackout/corridor/model.rs:302`
 - **Auditor confidence:** confirmed
 
-**Claim.** rebuild_count tallies the substring 'carrier rebuilt at step' out of a rendered provenance log to feed gate (5a). The library provides CompressiblePause::rebuilds() and its docstring names this exact substring-tally as the thing not to do. The retropulsion example does it correctly, so the corridor is the outlier.
+**Claim.** rebuild_count tallies the substring 'carrier rebuilt at step' out of a rendered provenance log to feed gate (5a). The library provides CompressiblePause::rebuilds() and its docstring names this exact substring-tally as the thing not to do. The retropropulsion example does it correctly, so the corridor is the outlier.
 
 **Code evidence.**
 
 ```
 corridor/model.rs:302-307: `pub fn rebuild_count(rendered: &str) -> usize { rendered.lines().filter(|l| l.contains("carrier rebuilt at step")).count() }`
 deep_causality_cfd/src/types/flow/carrier.rs:453-455: `/// Read this rather than tallying "carrier rebuilt at step" substrings in a rendered log: the count is per-carrier, so it is a **per-leg** number, and a carrier is rebuilt at every leg boundary.`
-retropulsion/output.txt gate 8, doing it right: `1 carrier rebuild(s) across all legs (cap 6), read from the pause accessor rather than a log tally.`
+retropropulsion/output.txt gate 8, doing it right: `1 carrier rebuild(s) across all legs (cap 6), read from the pause accessor rather than a log tally.`
 ```
 
 **Reference form.** A gate should read a typed accessor whose value the producing code guarantees, not re-parse a human-readable rendering whose format is not part of any API contract.
 
 **Impact.** These are the files engineers copy. The pattern silently breaks if the log message is ever reworded — the count drops to 0 and gate (5a) (`rebuilds <= 3`) passes vacuously with no signal. The corridor's committed run reports 0 rebuilds, which is indistinguishable from a broken match.
 
-**Recommended fix.** Replace rebuild_count with the accessor: sum `pause.rebuilds()` over the four legs, mirroring what retropulsion already does. Note the docstring's warning that the count is per-leg, so the legs must be summed rather than read from the last pause.
+**Recommended fix.** Replace rebuild_count with the accessor: sum `pause.rebuilds()` over the four legs, mirroring what retropropulsion already does. Note the docstring's warning that the count is per-leg, so the legs must be summed rather than read from the last pause.
 
-**Adversarial check.** Both quotes are verbatim at the cited locations. corridor/model.rs:302-307 is exactly `rendered.lines().filter(|l| l.contains("carrier rebuilt at step")).count()`, fed to gate (5a) via main.rs:173. carrier.rs:453-455 says verbatim 'Read this rather than tallying "carrier rebuilt at step" substrings in a rendered log', and carrier.rs:64 repeats the instruction on the field itself. Retropulsion does it right — its gate (8) detail says 'read from the pause accessor rather than a log tally'. The fragility is real: the emitting site is compressible_march_run.rs:386 and a reworded message silently drops the count to 0, which the corridor's committed run already reports, making a broken match indistinguishable from a clean one. One nuance the auditor missed and that a fix must handle: `CarrierPause::rebuilds()` is documented as per-leg, so the corridor spanning four legs would need to sum four accessor reads rather than a single call — the log tally is at least answering the cumulative question. That makes it a defensible-but-fragile workaround rather than a plain mistake.
+**Adversarial check.** Both quotes are verbatim at the cited locations. corridor/model.rs:302-307 is exactly `rendered.lines().filter(|l| l.contains("carrier rebuilt at step")).count()`, fed to gate (5a) via main.rs:173. carrier.rs:453-455 says verbatim 'Read this rather than tallying "carrier rebuilt at step" substrings in a rendered log', and carrier.rs:64 repeats the instruction on the field itself. Retropropulsion does it right — its gate (8) detail says 'read from the pause accessor rather than a log tally'. The fragility is real: the emitting site is compressible_march_run.rs:386 and a reworded message silently drops the count to 0, which the corridor's committed run already reports, making a broken match indistinguishable from a clean one. One nuance the auditor missed and that a fix must handle: `CarrierPause::rebuilds()` is documented as per-leg, so the corridor spanning four legs would need to sum four accessor reads rather than a single call — the log tally is at least answering the cumulative question. That makes it a defensible-but-fragile workaround rather than a plain mistake.
 
-> Evidence re-read: corridor/model.rs:301-307 verbatim; corridor/main.rs:167,173 `let rendered_log = format!("{}", reacq.field().log());` -> `rebuilds: model::rebuild_count(&rendered_log)`; corridor/model.rs:603-612 gate_rebuilds against MAX_REBUILDS=3; deep_causality_cfd/src/types/flow/carrier.rs:64 and :450-458 (the `rebuilds()` accessor and its 'read this rather than tallying' docstring, including 'the count is per-carrier, so it is a per-leg number'); compressible_march_run.rs:386 the emitting format string; retropulsion/output.txt gate (8).
+> Evidence re-read: corridor/model.rs:301-307 verbatim; corridor/main.rs:167,173 `let rendered_log = format!("{}", reacq.field().log());` -> `rebuilds: model::rebuild_count(&rendered_log)`; corridor/model.rs:603-612 gate_rebuilds against MAX_REBUILDS=3; deep_causality_cfd/src/types/flow/carrier.rs:64 and :450-458 (the `rebuilds()` accessor and its 'read this rather than tallying' docstring, including 'the count is per-carrier, so it is a per-leg number'); compressible_march_run.rs:386 the emitting format string; retropropulsion/output.txt gate (8).
 
 ---
 
@@ -472,49 +472,49 @@ output.txt: the traj miss spans 2.39 m to 22.02 m while the 'x-check' column rea
 ```
 shared/constants.rs:48-50: `/// Reference wave speed of the implicit acoustic envelope. Deliberately snug: the peak-station inflow outgrows it once, so the rebuild-on-drift mechanism fires where the descent steepens.` `pub const S_REF: f64 = 1.8;`
 corridor/output.txt: `[PASS] (5a) bounded schedule rebuilds: 0 carrier rebuild(s) while following the descent (cap 3)`
-The corridor provenance log contains no 'carrier rebuilt at step' line at all, whereas retropulsion's does (`carrier rebuilt at step 1: s_ref 1.4 -> 2.7683613571273638 (rebuild 1)`), confirming the log message is emitted when the mechanism does fire.
+The corridor provenance log contains no 'carrier rebuilt at step' line at all, whereas retropropulsion's does (`carrier rebuilt at step 1: s_ref 1.4 -> 2.7683613571273638 (rebuild 1)`), confirming the log message is emitted when the mechanism does fire.
 ```
 
 **Reference form.** A constant's docstring describing an observable behaviour ('the mechanism fires') must match the behaviour of the committed reference run.
 
 **Impact.** Gate (5a) is presented as evidence that rebuilds stay bounded, but with zero rebuilds it demonstrates only that the mechanism never engaged. The docstring leads a reader to believe the rebuild path is exercised by this example when it is not — so the path is untested here despite appearing covered. (The corridor's substring-grep counting method, reported separately, means a zero could also indicate a broken match.)
 
-**Recommended fix.** Either update the docstring to say the mechanism does not fire on the corridor's current profile (and point to retropulsion, which does exercise it), or retune S_REF so the described behaviour actually occurs. Switching gate (5a) to the typed accessor first would remove the ambiguity about whether zero is real.
+**Recommended fix.** Either update the docstring to say the mechanism does not fire on the corridor's current profile (and point to retropropulsion, which does exercise it), or retune S_REF so the described behaviour actually occurs. Switching gate (5a) to the typed accessor first would remove the ambiguity about whether zero is real.
 
-**Adversarial check.** Quotes verified verbatim and I strengthened the finding by checking the second consumer the auditor did not. shared/constants.rs:48-50 says S_REF is 'Deliberately snug: the peak-station inflow outgrows it once, so the rebuild-on-drift mechanism fires where the descent steepens.' The corridor's committed output reports 0 rebuilds and its provenance log contains no 'carrier rebuilt at step' line. I then checked the weather example, which flies the same S_REF = 1.8 for 850 coupled steps in ONE continuous leg with no re-seed to reset envelope drift — the most favourable case for the docstring's claim — and grepped all 49 committed audit logs: zero 'carrier rebuilt' entries anywhere, on logs that are otherwise populated (regime transitions present). So the stated behaviour is unrealised in every committed artifact that flies this constant. The message is demonstrably emitted when the mechanism does fire (retropulsion's terminal leg at S_REF_TERMINAL = 1.4 logs 'carrier rebuilt at step 1: s_ref 1.4 -> 2.768'), so this is not a missing-log artifact.
+**Adversarial check.** Quotes verified verbatim and I strengthened the finding by checking the second consumer the auditor did not. shared/constants.rs:48-50 says S_REF is 'Deliberately snug: the peak-station inflow outgrows it once, so the rebuild-on-drift mechanism fires where the descent steepens.' The corridor's committed output reports 0 rebuilds and its provenance log contains no 'carrier rebuilt at step' line. I then checked the weather example, which flies the same S_REF = 1.8 for 850 coupled steps in ONE continuous leg with no re-seed to reset envelope drift — the most favourable case for the docstring's claim — and grepped all 49 committed audit logs: zero 'carrier rebuilt' entries anywhere, on logs that are otherwise populated (regime transitions present). So the stated behaviour is unrealised in every committed artifact that flies this constant. The message is demonstrably emitted when the mechanism does fire (retropropulsion's terminal leg at S_REF_TERMINAL = 1.4 logs 'carrier rebuilt at step 1: s_ref 1.4 -> 2.768'), so this is not a missing-log artifact.
 
-> Evidence re-read: examples/avionics_examples/src/shared/constants.rs:47-50 verbatim; corridor/output.txt gate (5a) '0 carrier rebuild(s)' and the full 16-entry provenance block with no rebuild line; weather/audit/*.log — `grep -l "carrier rebuilt"` returns nothing across all 49 files, while `grep -c "regime ->"` returns 4 on a sample log, confirming the logs carry EffectLog content; retropulsion/output.txt 'carrier rebuilt at step 1: s_ref 1.4 -> 2.7683613571273638 (rebuild 1)'.
+> Evidence re-read: examples/avionics_examples/src/shared/constants.rs:47-50 verbatim; corridor/output.txt gate (5a) '0 carrier rebuild(s)' and the full 16-entry provenance block with no rebuild line; weather/audit/*.log — `grep -l "carrier rebuilt"` returns nothing across all 49 files, while `grep -c "regime ->"` returns 4 on a sample log, confirming the logs carry EffectLog content; retropropulsion/output.txt 'carrier rebuilt at step 1: s_ref 1.4 -> 2.7683613571273638 (rebuild 1)'.
 
 ---
 
-### 5.16 [MINOR] Retropulsion is documented as forking a 'plume-coupled' state, while its own constants record that the marched layer carries no plume imprint
+### 5.16 [MINOR] Retropropulsion is documented as forking a 'plume-coupled' state, while its own constants record that the marched layer carries no plume imprint
 
 - **Verification verdict:** CONFIRMED
 - **Axis:** doc-overclaim
-- **Location:** `examples/avionics_examples/cfd/plasma_blackout/retropulsion/constants.rs:108`
+- **Location:** `examples/avionics_examples/cfd/plasma_blackout/retropropulsion/constants.rs:108`
 - **Auditor confidence:** confirmed
 
-**Claim.** Three documents describe the retropulsion fork as a fork of the marched, plume-coupled state. constants.rs records that because the Cordell-Braun plume-geometry model's validity band (Mach 2-4) does not overlap the burn (Mach 0.4-2.0), the marched layer carries no plume imprint at all through the burn.
+**Claim.** Three documents describe the retropropulsion fork as a fork of the marched, plume-coupled state. constants.rs records that because the Cordell-Braun plume-geometry model's validity band (Mach 2-4) does not overlap the burn (Mach 0.4-2.0), the marched layer carries no plume imprint at all through the burn.
 
 **Code evidence.**
 
 ```
-retropulsion/constants.rs:108-111: `The band's own limitation is unchanged and documented at CORDELL_MACH_MIN: with the plume geometry outside the Cordell-Braun envelope through the burn, the marched layer carries no plume imprint, so this spread is throttle -> trajectory -> post-shock density rather than a plume footprint.`
+retropropulsion/constants.rs:108-111: `The band's own limitation is unchanged and documented at CORDELL_MACH_MIN: with the plume geometry outside the Cordell-Braun envelope through the burn, the marched layer carries no plume imprint, so this spread is throttle -> trajectory -> post-shock density rather than a plume footprint.`
 shared/constants.rs:345-353 confirms the non-overlap: `Jarvinen-Adams measured drag preservation over **Mach 0.4-2.0** ... Cordell-Braun validated the analytic plume boundary over **Mach 2-4**. ... They meet at a single point.`
 plasma_blackout/README.md:20: `forks the marched plume-coupled state, and lands`; :66-67: `choosing a throttle means flying candidate throttles from the same marched, plume-coupled instant.`
-retropulsion/README.md:63: `**The fork.** The marched, plume-coupled state is forked in O(1) through copy-on-write`
+retropropulsion/README.md:63: `**The fork.** The marched, plume-coupled state is forked in O(1) through copy-on-write`
 examples/avionics_examples/README.md:26: `forks the marched, plume-coupled state mid-burn`
 ```
 
 **Reference form.** A state described as 'plume-coupled' should carry the plume's influence on the marched field. Here the coupling is throttle → trajectory → post-shock density; the plume mask is never imprinted because its geometry model stands down outside Mach 2-4.
 
-**Impact.** The state-fork-vs-parameter-sweep argument is the retropulsion example's central claim, and 'plume-coupled' is what makes it a state fork rather than a trajectory fork. The distinction still holds (the marched flow state is genuinely forked), but the plume qualifier overstates what is in that state. constants.rs is candid; the three READMEs are not.
+**Impact.** The state-fork-vs-parameter-sweep argument is the retropropulsion example's central claim, and 'plume-coupled' is what makes it a state fork rather than a trajectory fork. The distinction still holds (the marched flow state is genuinely forked), but the plume qualifier overstates what is in that state. constants.rs is candid; the three READMEs are not.
 
 **Recommended fix.** Replace 'plume-coupled' with an accurate description in all three READMEs — e.g. 'the marched, burn-coupled state (the plume geometry stands down outside the Cordell-Braun Mach 2-4 band, so the layer carries the burn through trajectory and post-shock density rather than a plume imprint)' — and cross-reference the CORDELL_MACH_MIN note.
 
-**Adversarial check.** All quotes verified verbatim. retropulsion/constants.rs:108-111 states that with the plume geometry outside the Cordell-Braun envelope through the burn 'the marched layer carries no plume imprint, so this spread is throttle -> trajectory -> post-shock density rather than a plume footprint.' shared/constants.rs:339-353 documents the non-overlap of Jarvinen-Adams (Mach 0.4-2.0) and Cordell-Braun (Mach 2-4): 'They meet at a single point.' The 'plume-coupled' phrasing is in fact more widespread than the three places cited — it also appears in retropulsion/main.rs:24 and :151, utils_print.rs:94, and is printed into output.txt:21 itself. One qualification in the code's favour: the marched layer is not wholly plume-independent, since PlumeObstruction's drag decrement changes the trajectory, which changes the freestream feeds driving the inflow strip. So the state genuinely differs per throttle — the fork is a real state fork, as the auditor concedes — but the differences are aerodynamic and trajectory-mediated, not a plume imprint on the layer. 'Plume-coupled' overstates by exactly one link in the chain. constants.rs is candid; the prose is not.
+**Adversarial check.** All quotes verified verbatim. retropropulsion/constants.rs:108-111 states that with the plume geometry outside the Cordell-Braun envelope through the burn 'the marched layer carries no plume imprint, so this spread is throttle -> trajectory -> post-shock density rather than a plume footprint.' shared/constants.rs:339-353 documents the non-overlap of Jarvinen-Adams (Mach 0.4-2.0) and Cordell-Braun (Mach 2-4): 'They meet at a single point.' The 'plume-coupled' phrasing is in fact more widespread than the three places cited — it also appears in retropropulsion/main.rs:24 and :151, utils_print.rs:94, and is printed into output.txt:21 itself. One qualification in the code's favour: the marched layer is not wholly plume-independent, since PlumeObstruction's drag decrement changes the trajectory, which changes the freestream feeds driving the inflow strip. So the state genuinely differs per throttle — the fork is a real state fork, as the auditor concedes — but the differences are aerodynamic and trajectory-mediated, not a plume imprint on the layer. 'Plume-coupled' overstates by exactly one link in the chain. constants.rs is candid; the prose is not.
 
-> Evidence re-read: retropulsion/constants.rs:101-111 verbatim; shared/constants.rs:339-353 the two-envelope block ending 'They meet at a single point'; :354-358 CORDELL_MACH_MIN/MAX = 2.0/4.0; shared/world.rs:386-391 PlumeObstruction `.with_geometry_mach_band(CORDELL_MACH_MIN, CORDELL_MACH_MAX)`; shared/world.rs:516-522 the plume_imprint docstring ('Without it ... the marched layer never learns the plume exists'); plasma_blackout/README.md:20,66; retropulsion/README.md:21,63; examples/avionics_examples/README.md:26; retropulsion/main.rs:24,151; retropulsion/output.txt:21.
+> Evidence re-read: retropropulsion/constants.rs:101-111 verbatim; shared/constants.rs:339-353 the two-envelope block ending 'They meet at a single point'; :354-358 CORDELL_MACH_MIN/MAX = 2.0/4.0; shared/world.rs:386-391 PlumeObstruction `.with_geometry_mach_band(CORDELL_MACH_MIN, CORDELL_MACH_MAX)`; shared/world.rs:516-522 the plume_imprint docstring ('Without it ... the marched layer never learns the plume exists'); plasma_blackout/README.md:20,66; retropropulsion/README.md:21,63; examples/avionics_examples/README.md:26; retropropulsion/main.rs:24,151; retropropulsion/output.txt:21.
 
 ---
 

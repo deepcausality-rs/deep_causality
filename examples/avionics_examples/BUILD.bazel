@@ -133,9 +133,9 @@ rust_binary(
 )
 
 rust_binary(
-    name = "plasma_blackout_retropulsion",
-    srcs = glob(["cfd/plasma_blackout/retropulsion/**/*.rs"]),
-    crate_root = "cfd/plasma_blackout/retropulsion/main.rs",
+    name = "plasma_blackout_retropropulsion",
+    srcs = glob(["cfd/plasma_blackout/retropropulsion/**/*.rs"]),
+    crate_root = "cfd/plasma_blackout/retropropulsion/main.rs",
     visibility = ["//visibility:public"],
     deps = [
         # Cargo puts the package's own lib on an example's extern prelude.

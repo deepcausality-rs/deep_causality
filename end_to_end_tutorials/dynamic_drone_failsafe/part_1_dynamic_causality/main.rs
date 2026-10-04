@@ -20,7 +20,10 @@ mod utils_print;
 
 use crate::model_types::{FailsafeProcess, FailsafeState};
 use deep_causality::{CausalEffect, EffectLog};
-use dynamic_drone_failsafe::{Command, Drone, FLIGHT_LIMIT_S, Terrain, Touchdown};
+use dynamic_drone_failsafe::{
+    Command, Drone, FLIGHT_HEADER, FLIGHT_LIMIT_S, Terrain, Touchdown, TraceTable, crew_table,
+    flight_cells, touchdown_table, trace_dir, variant_name, world_table,
+};
 use std::error::Error;
 
 fn main() -> Result<(), Box<dyn Error>> {
@@ -32,6 +35,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         FailsafeState::default(),
         None,
         EffectLog::new(),
+    );
+    let trace = trace_dir();
+    let mut flight = TraceTable::new(
+        "part_1_trace",
+        &format!("{FLIGHT_HEADER},gnss_degraded,fix_lost,link_lost,battery_critical,decision"),
     );
 
     utils_print::print_intro();
@@ -54,10 +62,33 @@ fn main() -> Result<(), Box<dyn Error>> {
             utils_print::print_second(&drone, &telemetry, &now.0, command);
             last = Some(now);
         }
+        if trace.is_some() {
+            let f = now.0;
+            flight.push(format!(
+                "{},{},{},{},{},{}",
+                flight_cells(&drone),
+                f.gnss_degraded,
+                f.gnss_lost,
+                f.link_lost,
+                f.battery_critical,
+                variant_name(&command),
+            ));
+        }
         drone.step(command, &terrain);
     }
 
-    utils_print::print_touchdown(drone.time_s(), &Touchdown::of(&terrain, &drone));
+    let touchdown = Touchdown::of(&terrain, &drone);
+    utils_print::print_touchdown(drone.time_s(), &touchdown);
     utils_print::print_log(process.logs());
+    if let Some(dir) = trace {
+        for table in [
+            flight,
+            touchdown_table("part_1_touchdown", drone.time_s(), &touchdown),
+            world_table(&terrain),
+            crew_table(&terrain),
+        ] {
+            table.write(&dir)?;
+        }
+    }
     Ok(())
 }

@@ -1,0 +1,5 @@
+{
+  "name": "cfd-video",
+  "private": true,
+  "packageManager": "pnpm@11.9.0"
+}

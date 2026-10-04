@@ -4,7 +4,7 @@
  */
 
 //! The **flight-sensor producers** for the powered-descent envelope (change
-//! `add-retropulsion-terminal-descent`, capability `flight-sensor-scalars`).
+//! `add-retropropulsion-terminal-descent`, capability `flight-sensor-scalars`).
 //!
 //! [`CyberneticCorrect`](super::CyberneticCorrect) senses five scalars. Three of them
 //! (`"heat_flux"`, `"g_load"`, `"propellant"`) come from a world's own stages. The remaining two —

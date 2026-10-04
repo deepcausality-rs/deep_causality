@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! Propulsion quantity types for the retropulsion kernel family: the mass-flow
+//! Propulsion quantity types for the retropropulsion kernel family: the mass-flow
 //! newtype, the nozzle-branch selector, and the composite exit-state and
 //! plume-geometry results. Scalar quantities from other domains (`Force`,
 //! `Acceleration`, `Pressure`, `Temperature`, `Density`, `Speed`, `Length`,
