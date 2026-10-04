@@ -31,7 +31,7 @@ type FlightConfig = {
   outcome: string;
 };
 
-const CONFIGS: Record<"textbook" | "ethos", FlightConfig> = {
+export const CONFIGS: Record<"textbook" | "ethos", FlightConfig> = {
   textbook: {
     part: 1,
     title: "TUTORIAL PART 1 · TEXTBOOK FAIL-SAFE",
@@ -47,6 +47,10 @@ const CONFIGS: Record<"textbook" | "ethos", FlightConfig> = {
     outcome: script.ethosOutcome,
   },
 };
+/** The screen second at which a flight's clock reaches flight second `flightT`. */
+export const screenSecondAt = (which: "textbook" | "ethos", flightT: number) =>
+  interpolate(flightT, CONFIGS[which].warp.map((w) => w[1]), CONFIGS[which].warp.map((w) => w[0]), clamp);
+
 export const TEXTBOOK_FRAMES = 750;
 export const ETHOS_FRAMES = 1020;
 
@@ -64,8 +68,7 @@ const FlightScene: React.FC<{ which: "textbook" | "ethos" }> = ({ which }) => {
   const frame = useCurrentFrame();
   const sec = frame / FPS;
   const t = interpolate(sec, cfg.warp.map((w) => w[0]), cfg.warp.map((w) => w[1]), clamp);
-  // The screen second at which the flight clock reaches a flight second.
-  const shownAt = (flightT: number) => interpolate(flightT, cfg.warp.map((w) => w[1]), cfg.warp.map((w) => w[0]), clamp);
+  const shownAt = (flightT: number) => screenSecondAt(which, flightT);
   const drone = droneAt(cfg.part, t);
   const ethosRun = cfg.part === 4;
   const lines = cfg.log.filter((l) => l.t <= t);

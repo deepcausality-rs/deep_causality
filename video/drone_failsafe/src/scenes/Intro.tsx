@@ -11,6 +11,9 @@ import { appear, clamp, Text } from "./common";
 import { STILL_WORLD } from "./world";
 
 export const INTRO_FRAMES = 300;
+/** Frame at which line `k` of the setting starts to appear; the faults follow the last line. */
+export const SETTING_LINE_AT = (k: number) => 10 + k * 65;
+export const FAULTS_LINE = "55 s GPS lost · 65 s link lost · 85 s cell fails";
 
 export const Intro: React.FC = () => {
   const frame = useCurrentFrame();
@@ -27,10 +30,10 @@ export const Intro: React.FC = () => {
       <WorldView part={1} t={t} wind labels={labels} {...STILL_WORLD} />
       <div style={{ position: "absolute", left: 96, top: 90, width: 940 }}>
         {script.setting.lines.map((line, k) => (
-          <Text key={k} size={k === 0 ? 50 : 32} color={k === 0 ? C.fg0 : C.fg1} style={{ marginTop: k === 0 ? 26 : 22, opacity: appear(frame, 10 + k * 65) }}>{line}</Text>
+          <Text key={k} size={k === 0 ? 50 : 32} color={k === 0 ? C.fg0 : C.fg1} style={{ marginTop: k === 0 ? 26 : 22, opacity: appear(frame, SETTING_LINE_AT(k)) }}>{line}</Text>
         ))}
-        <div style={{ fontFamily: MONO, fontSize: 22, color: C.accent, marginTop: 18, opacity: appear(frame, 10 + script.setting.lines.length * 65) }}>
-          55 s GPS lost · 65 s link lost · 85 s cell fails
+        <div style={{ fontFamily: MONO, fontSize: 22, color: C.accent, marginTop: 18, opacity: appear(frame, SETTING_LINE_AT(script.setting.lines.length)) }}>
+          {FAULTS_LINE}
         </div>
       </div>
     </AbsoluteFill>

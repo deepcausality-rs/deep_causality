@@ -115,8 +115,8 @@ Chapters
 
 ## 4. Drone fail-safe
 
-**File:** `drone_failsafe/out/Main.mp4` (1920 × 1080; the narration is on-screen text, so there is
-no caption file) · thumbnail `drone_failsafe_thumbnail.jpg`
+**File:** `drone_failsafe/out/Main.mp4` (1920 × 1080) · captions `Main.srt` · thumbnail
+`drone_failsafe_thumbnail.jpg`
 
 **Title:** Where should a failing drone land? A dynamic fail-safe in Rust | DeepCausality
 

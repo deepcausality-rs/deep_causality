@@ -13,7 +13,7 @@ examples' own run data. Each project reads the files a Rust example writes, chec
 | `cfd/plasma_blackout/` | Part 1, the corridor: seventeen counterfactual trajectories through the GPS blackout. 3:06 |
 | `cfd/weather/` | Part 2, the weather table: six counterfactual atmospheres. 3:08 |
 | `cfd/retropropulsion/` | Part 3, the landing: five counterfactual burns and two counterfactual landings. 3:59 |
-| `drone_failsafe/` | The dynamic drone fail-safe tutorial: one main cut and seven clips, narrated in on-screen text |
+| `drone_failsafe/` | The dynamic drone fail-safe tutorial: one main cut and two short posts, narrated in on-screen text |
 
 Each project holds a `PLAN.md` (decisions, data, layout) and a `SCRIPT.md` (narration and shot
 list).
@@ -44,9 +44,10 @@ Then run each command from the cut's own folder, for example `video/cfd/weather/
 | `pnpm render:1080` | `out/<name>_1080p.mp4`, downscaled from the 4K file, so run `pnpm render` first |
 | `pnpm srt` | `out/<name>.srt`, the captions |
 | `pnpm poster` | `out/<name>_poster.png`, one frame at 1920 × 1080 |
+| `pnpm thumbnail` | `out/<name>_thumbnail.jpg`, the YouTube thumbnail at 1280 × 720: logo, part, title and subtitle |
 | `pnpm studio` | the Remotion studio, for preview |
 | `pnpm check` | a typecheck |
-| `pnpm still <composition> out/<file>.png --frame=<n>` | one frame; the compositions are `Main` and `Scene-<id>` |
+| `pnpm still <composition> out/<file>.png --frame=<n>` | one frame; the compositions are `Main`, `Scene-<id>` and `Thumbnail` |
 
 | Cut | Folder | `<name>` |
 |---|---|---|
@@ -87,15 +88,15 @@ Then from `video/drone_failsafe/`:
 |---|---|
 | `pnpm install` | the dependencies |
 | `pnpm data` | `src/data/*.json` from the traces; stops on any number that disagrees with the tutorial README or its web pages |
-| `pnpm timeline` | the scene lengths from the narration text, and `out/main.srt` |
-| `pnpm prepare-video` | `data` and `timeline` in one step |
 | `pnpm studio` | the Remotion studio, for preview |
-| `pnpm render all` | `out/Main.mp4` and the clips `out/Clip0-Teaser.mp4` to `out/Clip6-Campaign.mp4`, 1920 × 1080 |
-| `pnpm render video <composition>` | `out/<composition>.mp4` |
-| `pnpm render stills <composition> <frame> ...` | `out/stills/<composition>_<frame>.png` |
+| `pnpm render` | `out/Main.mp4`, `out/Short-Part1.mp4` and `out/Short-Part2.mp4`, 1920 × 1080 |
+| `pnpm srt` | `out/Main.srt`, `out/Short-Part1.srt` and `out/Short-Part2.srt`, the captions |
+| `pnpm thumbnail` | `out/drone_failsafe_thumbnail.jpg`, the title frame at 1280 × 720 |
+| `node scripts/render.mjs video <composition>` | `out/<composition>.mp4` |
+| `node scripts/render.mjs stills <composition> <frame> ...` | `out/stills/<composition>_<frame>.png` |
 
-The main cut and every clip show the narration as on-screen text, without a voice. `out/main.srt`
-carries the main cut's text as a caption file.
+Every cut shows its narration as on-screen text, without a voice. `pnpm srt` captions each line
+from the frame it starts to appear, using the timing constants the scenes themselves export.
 
 ## Generated files
 

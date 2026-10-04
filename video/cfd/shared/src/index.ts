@@ -11,6 +11,7 @@ export * from './views/Overlays';
 export * from './views/Question';
 export * from './views/Timeline';
 export * from './views/EndCard';
+export * from './views/ThumbnailCard';
 export * from './three/Capsule';
 export * from './three/Flight';
 export * from './music';

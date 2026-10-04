@@ -27,6 +27,15 @@ export const SCENES = {
 };
 export type SceneName = keyof typeof SCENES;
 
+/** The compositions: the main cut and two posts, each a sequence of scenes. */
+export const CUTS: { id: string; scenes: SceneName[] }[] = [
+  { id: "Main", scenes: ["title", "setting", "part1", "textbook", "issue", "part2", "ethos", "simulations", "summary", "end"] },
+  // A post for part 1: the textbook fail-safe and the issue with its static rule.
+  { id: "Short-Part1", scenes: ["title", "setting", "part1", "textbook", "issue", "end"] },
+  // A post for part 2: the dynamic fail-safe, the evidence and the three steps.
+  { id: "Short-Part2", scenes: ["title", "part2", "ethos", "simulations", "summary", "end"] },
+];
+
 const FADE = 12;
 
 const Faded: React.FC<{ frames: number; children: React.ReactNode }> = ({ frames, children }) => {

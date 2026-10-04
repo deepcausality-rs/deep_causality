@@ -6,6 +6,8 @@
     "data": "node scripts/data.mjs",
     "studio": "remotion studio",
     "render": "node scripts/render.mjs all",
+    "srt": "tsx scripts/srt.ts",
+    "thumbnail": "node scripts/render.mjs stills Main 90 && ffmpeg -y -v error -i out/stills/Main_90.png -vf scale=1280:720:flags=lanczos -q:v 2 out/drone_failsafe_thumbnail.jpg",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -18,6 +20,7 @@
   },
   "devDependencies": {
     "@types/react": "^19.2.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "tsx": "^4.23.15"
   }
 }

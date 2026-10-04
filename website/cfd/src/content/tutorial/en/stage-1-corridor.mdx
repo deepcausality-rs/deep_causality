@@ -22,10 +22,18 @@ source: examples/avionics_examples/cfd/plasma_blackout/corridor
 ---
 import { MACHINE } from '../../../consts';
 import CorridorRun from '../../../components/tutorial/CorridorRun.astro';
+import TutorialVideo from '../../../components/tutorial/TutorialVideo.astro';
 
 Run the corridor and it picks an 11.5 degree bank angle that lands 2.07 m from the
 aim point. It found that angle by pausing one reentry descent when GPS cuts out and
 flying 17 bank angles from the pause.
+
+<TutorialVideo
+  id="ar5NzIQoaXY"
+  title="Steering through GPS blackout: 17 bank angles flown from one pause"
+  poster="/img/video/walk-1-corridor.webp"
+  length="3:05"
+/>
 
 <CorridorRun />
 

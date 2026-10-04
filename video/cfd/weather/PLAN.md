@@ -77,3 +77,4 @@ runs from `video/cfd/`.
 | `pnpm render:1080` | `out/weather_1080p.mp4`, from the 4K file |
 | `pnpm srt` | `out/weather.srt` |
 | `pnpm poster` | `out/weather_poster.png` |
+| `pnpm thumbnail` | `out/weather_thumbnail.jpg`, the YouTube thumbnail |

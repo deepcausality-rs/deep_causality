@@ -79,3 +79,4 @@ runs from `video/cfd/`.
 | `pnpm render:1080` | `out/retropropulsion_1080p.mp4`, from the 4K file |
 | `pnpm srt` | `out/retropropulsion.srt` |
 | `pnpm poster` | `out/retropropulsion_poster.png` |
+| `pnpm thumbnail` | `out/retropropulsion_thumbnail.jpg`, the YouTube thumbnail |

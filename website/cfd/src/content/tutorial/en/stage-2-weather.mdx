@@ -22,11 +22,19 @@ source: examples/avionics_examples/cfd/plasma_blackout/weather
 ---
 import { MACHINE } from '../../../consts';
 import WeatherRun from '../../../components/tutorial/WeatherRun.astro';
+import TutorialVideo from '../../../components/tutorial/TutorialVideo.astro';
 
 During blackout the navigation estimate drifts a mean 58.71 m from the true
 position in polar winter, against 41.60 m on the standard day. *Drift* is how far
 the estimate wanders while the vehicle flies without GPS. The program shows the gap
 is real, 5.7 combined standard deviations wide.
+
+<TutorialVideo
+  id="MfSSbctVprk"
+  title="Does the weather move the GPS blackout? 6 atmospheres, 48 descents"
+  poster="/img/video/walk-2-weather.webp"
+  length="3:08"
+/>
 
 <WeatherRun />
 

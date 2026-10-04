@@ -10,6 +10,9 @@ import { appear, Eyebrow, Text } from "./common";
 import { STILL_WORLD } from "./world";
 
 export const STATIC_RULE_FRAMES = 300;
+/** Frames at which the heading and line `k` start to appear. */
+export const ISSUE_HEADING_AT = 6;
+export const ISSUE_LINE_AT = (k: number) => 50 + k * 70;
 
 export const StaticRule: React.FC = () => {
   const frame = useCurrentFrame();
@@ -20,9 +23,9 @@ export const StaticRule: React.FC = () => {
       </div>
       <div style={{ position: "absolute", left: 200, top: 300, width: 1500 }}>
         <Eyebrow text="Tutorial part 1 · The issue" />
-        <Text size={72} weight={500} style={{ marginTop: 22, opacity: appear(frame, 6) }}>{script.issue.heading}</Text>
+        <Text size={72} weight={500} style={{ marginTop: 22, opacity: appear(frame, ISSUE_HEADING_AT) }}>{script.issue.heading}</Text>
         {script.issue.lines.map((l, k) => (
-          <Text key={k} size={42} color={k === script.issue.lines.length - 1 ? C.fg0 : C.fg1} style={{ marginTop: 26, opacity: appear(frame, 50 + k * 70) }}>{l}</Text>
+          <Text key={k} size={42} color={k === script.issue.lines.length - 1 ? C.fg0 : C.fg1} style={{ marginTop: 26, opacity: appear(frame, ISSUE_LINE_AT(k)) }}>{l}</Text>
         ))}
       </div>
     </AbsoluteFill>

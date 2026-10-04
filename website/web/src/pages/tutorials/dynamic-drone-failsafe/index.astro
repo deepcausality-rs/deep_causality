@@ -3,6 +3,7 @@ import { Code } from 'astro:components';
 import BaseLayout from '../../../layouts/BaseLayout.astro';
 import SiteHeader from '../../../components/nav/SiteHeader.astro';
 import TopicList from '../../../components/overview/TopicList.astro';
+import TutorialVideo from '../../../components/tutorials/TutorialVideo.astro';
 import {
   DRONE_FAILSAFE_BASE,
   DRONE_FAILSAFE_SOURCE,
@@ -52,6 +53,13 @@ cargo run --release -p dynamic_drone_failsafe --example drone_failsafe_part_5`;
         of DeepCausality at a time, each a Rust program you can run.
       </p>
     </header>
+
+    <TutorialVideo
+      id="JJbLLs7s6xU"
+      title="Where should a failing drone land? The textbook and the dynamic fail-safe, flown through the same night"
+      poster="/img/tutorials/dynamic-drone-failsafe-video.webp"
+      length="2:15"
+    />
 
     <div class="prose">
       <h2>Two fail-safes failed by design</h2>

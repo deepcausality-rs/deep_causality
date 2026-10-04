@@ -10,7 +10,7 @@ import { loadRetro } from './data/retro';
 import { Main, SceneOnly } from './Main';
 import { segments } from './script';
 import { mainFrames, sceneTimings } from './timeline';
-import { checkMusic, render } from '@cfd-video/shared';
+import { checkMusic, render, ThumbnailCard } from '@cfd-video/shared';
 
 loadFont({ family: 'Geist', url: staticFile('fonts/geist-latin.woff2'), weight: '100 900' });
 loadFont({ family: 'JetBrains Mono', url: staticFile('fonts/jetbrains-mono-latin.woff2'), weight: '100 800' });
@@ -34,6 +34,19 @@ export const Root: React.FC = () => (
       calculateMetadata={async (input) => {
         await checkMusic(mainFrames(render.fps) / render.fps, render.fps);
         return withRetro(input);
+      }}
+    />
+    <Composition
+      id="Thumbnail"
+      component={ThumbnailCard}
+      width={1280}
+      height={720}
+      fps={render.fps}
+      durationInFrames={1}
+      defaultProps={{
+        eyebrow: 'DeepCausality CFD tutorial · Part 3 of 3',
+        title: 'Five counterfactual burns',
+        subtitle: 'From plasma blackout to touchdown, under a retro burn',
       }}
     />
     <Folder name="Scenes">

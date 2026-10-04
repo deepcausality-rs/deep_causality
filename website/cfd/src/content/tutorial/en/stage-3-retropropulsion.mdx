@@ -21,6 +21,7 @@ source: examples/avionics_examples/cfd/plasma_blackout/retropropulsion
 ---
 import { MACHINE } from '../../../consts';
 import RetroRun from '../../../components/tutorial/RetroRun.astro';
+import TutorialVideo from '../../../components/tutorial/TutorialVideo.astro';
 
 Run the retropropulsion program and the vehicle lands at 1.81 m/s. It reads walk 2's
 table in flight. Guidance sized from the measured
@@ -34,6 +35,13 @@ displaces the bow shock and destroys drag. Jarvinen and Adams measured this in 1
 One caveat governs the walk: the drag change comes from the cited Jarvinen-Adams
 correlation, not from the simulated plume, which does not reproduce the collapse at
 this fidelity (see the [capability boundaries](/boundaries/#srp)).
+
+<TutorialVideo
+  id="7sf4C2_K1po"
+  title="How hard to burn, and when to light the landing burn: 5 throttle settings and 2 landings from one pause"
+  poster="/img/video/walk-3-retropropulsion.webp"
+  length="3:58"
+/>
 
 <RetroRun />
 
