@@ -32,9 +32,9 @@ A context is nodes, edges among them, and references to other contexts. Every id
 
 `NodeRecord` has one variant per kind of node: `Root`, `Data(DataRecord)`, `Time(TimeRecord)`,
 `Space(SpaceRecord)` and `SpaceTime(SpaceTimeRecord)`. `SpaceRecord` is `Geo`, `Ecef`,
-`Euclidean` or `Ned`; `TimeRecord` is `Euclidean`, `Lorentzian`, `Discrete` or `Entropic`;
-`SpaceTimeRecord` is `Euclidean`, `Lorentzian` or `Tangent`, the last carrying the tangent vector
-and the local metric. Every variant is a struct variant with named fields, so a backend that maps
+`Euclidean` or `Ned`; `TimeRecord` is `Newtonian`, `Minkowski`, `Discrete` or `Entropic`;
+`SpaceTimeRecord` is `Galilean`, `Newtonian`, `Minkowski` or `Tangent`, the last carrying the
+tangent vector and the local metric. Every variant is a struct variant with named fields, so a backend that maps
 records to columns or properties reads the names off the type.
 
 `DataRecord` is a value tree:

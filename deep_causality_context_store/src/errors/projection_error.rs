@@ -53,6 +53,12 @@ pub enum ProjectionErrorEnum {
     },
     /// The snapshot was written under a newer record version than this reader supports.
     Version { found: u16, supported: u16 },
+    /// The record's values break a rule of the node type: a metric tensor that is not symmetric,
+    /// or not of the type's signature. `rule` states which.
+    Rejected {
+        id: ContextoidId,
+        rule: &'static str,
+    },
 }
 
 impl ProjectionError {
@@ -114,6 +120,11 @@ impl ProjectionError {
     pub const fn Version(found: u16, supported: u16) -> Self {
         Self(ProjectionErrorEnum::Version { found, supported })
     }
+
+    #[allow(non_snake_case)]
+    pub const fn Rejected(id: ContextoidId, rule: &'static str) -> Self {
+        Self(ProjectionErrorEnum::Rejected { id, rule })
+    }
 }
 
 impl Display for ProjectionError {
@@ -155,6 +166,9 @@ impl Display for ProjectionError {
                 f,
                 "ProjectionError: record version {found} is newer than the supported {supported}"
             ),
+            ProjectionErrorEnum::Rejected { id, rule } => {
+                write!(f, "ProjectionError: node {id} breaks the rule: {rule}")
+            }
         }
     }
 }

@@ -168,3 +168,18 @@ fn test_version_at_the_top_of_the_range() {
     );
     assert!(err.to_string().contains("65535"));
 }
+
+#[test]
+fn test_rejected() {
+    let err = ProjectionError::Rejected(4, "metric tensor is not symmetric");
+    assert_eq!(
+        err.kind(),
+        &ProjectionErrorEnum::Rejected {
+            id: 4,
+            rule: "metric tensor is not symmetric",
+        }
+    );
+    let text = err.to_string();
+    assert!(text.contains("node 4"));
+    assert!(text.contains("metric tensor is not symmetric"));
+}

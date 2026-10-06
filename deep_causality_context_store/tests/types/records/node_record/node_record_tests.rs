@@ -23,7 +23,7 @@ fn one_of_each() -> Vec<NodeRecord> {
             y: 2.0,
             z: 3.0,
         }),
-        NodeRecord::SpaceTime(SpaceTimeRecord::Euclidean {
+        NodeRecord::SpaceTime(SpaceTimeRecord::Newtonian {
             x: 1.0,
             y: 2.0,
             z: 3.0,
