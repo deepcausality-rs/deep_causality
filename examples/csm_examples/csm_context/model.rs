@@ -2,15 +2,19 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{CPU_TEMP_ID, FAN_SPEED_ID, POWER_DRAW_ID, SERVER_HIGH_LOAD_STATE_ID};
+use crate::{
+    CPU_TEMP_ID, CPU_TEMP_THRESHOLD_ID, FAN_SPEED_ID, FAN_SPEED_THRESHOLD_ID, POWER_DRAW_ID,
+    POWER_DRAW_THRESHOLD_ID, SERVER_HIGH_LOAD_STATE_ID,
+};
 use deep_causality::CausalEffect;
 use deep_causality::{
     CSM, CausalAction, CausalState, CausalityError, CausalityErrorEnum, Causaloid, Identifiable,
     IdentificationValue, NumericalValue, PropagatingEffect, PropagatingProcess,
 };
 use deep_causality_context::{
-    BaseContext, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    BaseContext, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
 };
+use std::error::Error;
 use std::sync::{Arc, RwLock};
 
 pub type CsmCausaloid = Causaloid<f64, bool, (), Arc<RwLock<BaseContext>>>;
@@ -34,8 +38,9 @@ pub(crate) fn get_all_sensor_data() -> Vec<(NumericalValue, NumericalValue, Nume
     ]
 }
 
-/// Creates the initial context for the server, populating it with Datoid nodes for each sensor reading.
-pub(crate) fn get_server_context_initial() -> BaseContext {
+/// Creates the initial context for the server, populating it with Datoid nodes for each sensor
+/// reading and for each sensor's "high" threshold.
+pub(crate) fn get_server_context_initial() -> Result<BaseContext, ContextIndexError> {
     let mut context = BaseContext::with_capacity(1, "Server Context", 10);
 
     let fan_datoid = Contextoid::new(
@@ -51,17 +56,23 @@ pub(crate) fn get_server_context_initial() -> BaseContext {
         ContextoidType::Datoid(Data::new(POWER_DRAW_ID, 0.0)), // Placeholder
     );
 
-    context
-        .add_node(fan_datoid)
-        .expect("Failed to add fan datoid");
-    context
-        .add_node(temp_datoid)
-        .expect("Failed to add temp datoid");
-    context
-        .add_node(power_datoid)
-        .expect("Failed to add power datoid");
+    context.add_node(fan_datoid)?;
+    context.add_node(temp_datoid)?;
+    context.add_node(power_datoid)?;
 
-    context
+    // The "high" thresholds the fusion logic compares each reading with.
+    for (id, threshold) in [
+        (FAN_SPEED_THRESHOLD_ID, 80.0),
+        (CPU_TEMP_THRESHOLD_ID, 85.0),
+        (POWER_DRAW_THRESHOLD_ID, 250.0),
+    ] {
+        context.add_node(Contextoid::new(
+            id,
+            ContextoidType::Datoid(Data::new(id, threshold)),
+        ))?;
+    }
+
+    Ok(context)
 }
 
 /// Updates the sensor data within the provided context.
@@ -70,44 +81,35 @@ pub(crate) fn update_context_dataoids(
     fan_speed: NumericalValue,
     cpu_temp: NumericalValue,
     power_draw: NumericalValue,
-) {
-    let mut context = context_arc.write().unwrap();
+) -> Result<(), Box<dyn Error>> {
+    let mut context = context_arc
+        .write()
+        .map_err(|_| "Server context lock is poisoned")?;
 
-    // Update fan speed
-    if let Some(node_index) = (*context).get_node_index_by_id(FAN_SPEED_ID)
-        && let Some(node) = (*context).get_node(node_index)
-        && let ContextoidType::Datoid(datoid) = node.vertex_type()
-    {
-        let new_datoid = Data::new(datoid.id(), fan_speed);
-        let new_contextoid = Contextoid::new(node.id(), ContextoidType::Datoid(new_datoid));
-        (*context)
-            .update_node(FAN_SPEED_ID, new_contextoid)
-            .expect("Failed to update fan speed node");
+    // Write each reading into its sensor's Datoid. A sensor without a Datoid is an error, so a
+    // reading is never left stale.
+    for (id, reading) in [
+        (FAN_SPEED_ID, fan_speed),
+        (CPU_TEMP_ID, cpu_temp),
+        (POWER_DRAW_ID, power_draw),
+    ] {
+        let updated = {
+            let node = context
+                .get_node_index_by_id(id)
+                .and_then(|index| context.get_node(index))
+                .ok_or_else(|| format!("Sensor with ID {id} not found in context"))?;
+            let ContextoidType::Datoid(datoid) = node.vertex_type() else {
+                return Err(format!("Sensor with ID {id} is not a Datoid").into());
+            };
+            Contextoid::new(
+                node.id(),
+                ContextoidType::Datoid(Data::new(datoid.id(), reading)),
+            )
+        };
+        context.update_node(id, updated)?;
     }
 
-    // Update CPU temp
-    if let Some(node_index) = (*context).get_node_index_by_id(CPU_TEMP_ID)
-        && let Some(node) = (*context).get_node(node_index)
-        && let ContextoidType::Datoid(datoid) = node.vertex_type()
-    {
-        let new_datoid = Data::new(datoid.id(), cpu_temp);
-        let new_contextoid = Contextoid::new(node.id(), ContextoidType::Datoid(new_datoid));
-        (*context)
-            .update_node(CPU_TEMP_ID, new_contextoid)
-            .expect("Failed to update CPU temp node");
-    }
-
-    // Update power draw
-    if let Some(node_index) = (*context).get_node_index_by_id(POWER_DRAW_ID)
-        && let Some(node) = (*context).get_node(node_index)
-        && let ContextoidType::Datoid(datoid) = node.vertex_type()
-    {
-        let new_datoid = Data::new(datoid.id(), power_draw);
-        let new_contextoid = Contextoid::new(node.id(), ContextoidType::Datoid(new_datoid));
-        (*context)
-            .update_node(POWER_DRAW_ID, new_contextoid)
-            .expect("Failed to update power draw node");
-    }
+    Ok(())
 }
 
 /// Builds the causal model for the server. A single causaloid with a contextual function
@@ -131,20 +133,22 @@ pub(crate) fn get_server_causaloid(context: Arc<RwLock<BaseContext>>) -> CsmCaus
             }
         };
 
-        // Thresholds
-        let fan_threshold = 80.0;
-        let temp_threshold = 85.0;
-        let power_threshold = 250.0;
+        let ctx = match ctx_arc.read() {
+            Ok(guard) => guard,
+            Err(_) => {
+                return PropagatingProcess::from_error(CausalityError(CausalityErrorEnum::Custom(
+                    "Server context lock is poisoned".into(),
+                )));
+            }
+        };
 
-        let ctx = ctx_arc.read().unwrap();
-
-        // Helper to get a sensor value from the context
-        let get_sensor_value = |id: IdentificationValue| -> Result<NumericalValue, CausalityError> {
+        // Helper to get a Datoid value (a reading or a threshold) from the context
+        let get_value = |id: IdentificationValue| -> Result<NumericalValue, CausalityError> {
             ctx.get_node_index_by_id(id)
                 .and_then(|index| ctx.get_node(index))
                 .ok_or_else(|| {
                     CausalityError(CausalityErrorEnum::Custom(format!(
-                        "Sensor with ID {} not found in context",
+                        "Datoid with ID {} not found in context",
                         id
                     )))
                 })
@@ -160,20 +164,34 @@ pub(crate) fn get_server_causaloid(context: Arc<RwLock<BaseContext>>) -> CsmCaus
                 })
         };
 
+        // Read the thresholds from the context
+        let fan_threshold = match get_value(FAN_SPEED_THRESHOLD_ID) {
+            Ok(v) => v,
+            Err(e) => return PropagatingProcess::from_error(e),
+        };
+        let temp_threshold = match get_value(CPU_TEMP_THRESHOLD_ID) {
+            Ok(v) => v,
+            Err(e) => return PropagatingProcess::from_error(e),
+        };
+        let power_threshold = match get_value(POWER_DRAW_THRESHOLD_ID) {
+            Ok(v) => v,
+            Err(e) => return PropagatingProcess::from_error(e),
+        };
+
         // Read all sensor values from the context
-        let fan_speed = match get_sensor_value(FAN_SPEED_ID) {
+        let fan_speed = match get_value(FAN_SPEED_ID) {
             Ok(v) => v,
             Err(e) => return PropagatingProcess::from_error(e),
         };
         let fan_high = fan_speed > fan_threshold;
 
-        let cpu_temp = match get_sensor_value(CPU_TEMP_ID) {
+        let cpu_temp = match get_value(CPU_TEMP_ID) {
             Ok(v) => v,
             Err(e) => return PropagatingProcess::from_error(e),
         };
         let cpu_temp_high = cpu_temp > temp_threshold;
 
-        let power_draw = match get_sensor_value(POWER_DRAW_ID) {
+        let power_draw = match get_value(POWER_DRAW_ID) {
             Ok(v) => v,
             Err(e) => return PropagatingProcess::from_error(e),
         };

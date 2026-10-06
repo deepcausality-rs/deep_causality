@@ -4,12 +4,14 @@
  */
 use crate::model::{
     get_explosion_sensor_causaloid, get_explosion_sensor_data, get_fire_sensor_causaloid,
-    get_fire_sensor_data, get_smoke_sensor_causaloid, get_smoke_sensor_data,
+    get_fire_sensor_data, get_sensor_context, get_smoke_sensor_causaloid, get_smoke_sensor_data,
 };
 use crate::model_actions::{
     get_explosion_alert_action, get_fire_alert_action, get_smoke_alert_action,
 };
 use deep_causality::{CSM, CausalState, PropagatingEffect};
+use std::error::Error;
+use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time::Duration;
 
@@ -21,19 +23,22 @@ const SMOKE_SENSOR: usize = 1;
 const FIRE_SENSOR: usize = 2;
 const EXPLOSION_SENSOR: usize = 3;
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     // The initial data in a CausalState is often just a default.
     let default_data: PropagatingEffect<f64> = PropagatingEffect::pure(0.0);
 
-    let smoke_causaloid = get_smoke_sensor_causaloid();
+    // The alarm thresholds live in one context that all three sensor causaloids read.
+    let sensor_context = Arc::new(RwLock::new(get_sensor_context()?));
+
+    let smoke_causaloid = get_smoke_sensor_causaloid(Arc::clone(&sensor_context));
     let smoke_cs = CausalState::new(SMOKE_SENSOR, 1, default_data.clone(), smoke_causaloid, None);
     let smoke_ca = get_smoke_alert_action();
 
-    let fire_causaloid = get_fire_sensor_causaloid();
+    let fire_causaloid = get_fire_sensor_causaloid(Arc::clone(&sensor_context));
     let fire_cs = CausalState::new(FIRE_SENSOR, 1, default_data.clone(), fire_causaloid, None);
     let fire_ca = get_fire_alert_action();
 
-    let explosion_causaloid = get_explosion_sensor_causaloid();
+    let explosion_causaloid = get_explosion_sensor_causaloid(sensor_context);
     let explosion_cs =
         CausalState::new(EXPLOSION_SENSOR, 1, default_data, explosion_causaloid, None);
     let explosion_ca = get_explosion_alert_action();
@@ -43,8 +48,7 @@ fn main() {
     let csm = CSM::new(state_actions);
 
     println!("Add a new sensor");
-    csm.add_single_state((explosion_cs, explosion_ca))
-        .expect("Failed to add Explosion sensor");
+    csm.add_single_state((explosion_cs, explosion_ca))?;
 
     println!("Start data feed and monitor sensors");
     let smoke_data = get_smoke_sensor_data();
@@ -70,6 +74,8 @@ fn main() {
             eprintln!("[CSM Error] Explosion sensor evaluation failed: {e}");
         }
     }
+
+    Ok(())
 }
 
 fn wait() {

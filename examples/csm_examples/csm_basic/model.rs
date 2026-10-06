@@ -5,9 +5,18 @@
 
 use crate::types::CsmCausaloid;
 use deep_causality::{
-    CausalityError, CausalityErrorEnum, Causaloid, IdentificationValue, NumericalValue,
-    PropagatingEffect,
+    CausalEffect, CausalityError, CausalityErrorEnum, Causaloid, IdentificationValue,
+    NumericalValue, PropagatingProcess,
 };
+use deep_causality_context::{
+    BaseContext, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+};
+use std::sync::{Arc, RwLock};
+
+/// Node indices of the three threshold contextoids.
+const SMOKE_THRESHOLD: usize = 0;
+const FIRE_THRESHOLD: usize = 1;
+const EXPLOSION_THRESHOLD: usize = 2;
 
 pub(crate) fn get_smoke_sensor_data() -> [NumericalValue; 12] {
     [
@@ -27,56 +36,110 @@ pub(crate) fn get_explosion_sensor_data() -> [NumericalValue; 12] {
     ]
 }
 
-pub(crate) fn get_smoke_sensor_causaloid() -> CsmCausaloid {
+/// Builds the sensor context: one `Data` contextoid per alarm threshold.
+///
+/// - smoke: smoke signal level, 65.0 (the example states no unit);
+/// - fire: temperature, 85.0 degree Celsius (185 degree Fahrenheit);
+/// - explosion: air pressure, 100.0 psi (regular atmospheric pressure is 14.696 psi).
+pub(crate) fn get_sensor_context() -> Result<BaseContext, ContextIndexError> {
+    let mut context = BaseContext::with_capacity(1, "Sensor thresholds", 3);
+    for (id, threshold) in [(1, 65.0), (2, 85.0), (3, 100.0)] {
+        context.add_node(Contextoid::new(
+            id,
+            ContextoidType::Datoid(Data::new(id, threshold)),
+        ))?;
+    }
+    Ok(context)
+}
+
+pub(crate) fn get_smoke_sensor_causaloid(context: Arc<RwLock<BaseContext>>) -> CsmCausaloid {
     let id: IdentificationValue = 1;
-    let description = "Tests whether smoke signal exceeds threshold of 65.0";
+    let description = "Tests whether the smoke signal reaches the smoke threshold in the context";
 
-    fn causal_fn(obs: NumericalValue) -> PropagatingEffect<bool> {
-        if let Err(e) = verify_obs(obs) {
-            return PropagatingEffect::from_error(e);
-        }
-
-        let threshold: NumericalValue = 65.0;
-        let is_active = obs.ge(&threshold);
-        PropagatingEffect::pure(is_active)
+    fn causal_fn(
+        effect: CausalEffect<NumericalValue>,
+        _state: (),
+        context: Option<Arc<RwLock<BaseContext>>>,
+    ) -> PropagatingProcess<bool, (), Arc<RwLock<BaseContext>>> {
+        reaches_threshold(effect, context, SMOKE_THRESHOLD)
     }
 
-    Causaloid::new(id, causal_fn, description)
+    Causaloid::new_with_context(id, causal_fn, context, description)
 }
 
-pub(crate) fn get_fire_sensor_causaloid() -> CsmCausaloid {
+pub(crate) fn get_fire_sensor_causaloid(context: Arc<RwLock<BaseContext>>) -> CsmCausaloid {
     let id: IdentificationValue = 2;
-    let description = "Tests if temperature exceeds 85 degree celsius (185 degree Fahrenheit) ";
+    let description =
+        "Tests whether the temperature (degree Celsius) reaches the fire threshold in the context";
 
-    fn causal_fn(obs: NumericalValue) -> PropagatingEffect<bool> {
-        if let Err(e) = verify_obs(obs) {
-            return PropagatingEffect::from_error(e);
-        }
-
-        let threshold: NumericalValue = 85.0;
-        let is_active = obs.ge(&threshold);
-        PropagatingEffect::pure(is_active)
+    fn causal_fn(
+        effect: CausalEffect<NumericalValue>,
+        _state: (),
+        context: Option<Arc<RwLock<BaseContext>>>,
+    ) -> PropagatingProcess<bool, (), Arc<RwLock<BaseContext>>> {
+        reaches_threshold(effect, context, FIRE_THRESHOLD)
     }
 
-    Causaloid::new(id, causal_fn, description)
+    Causaloid::new_with_context(id, causal_fn, context, description)
 }
 
-pub(crate) fn get_explosion_sensor_causaloid() -> CsmCausaloid {
+pub(crate) fn get_explosion_sensor_causaloid(context: Arc<RwLock<BaseContext>>) -> CsmCausaloid {
     let id: IdentificationValue = 3;
-    let description =
-        "Tests if air pressure exceeds 100 PSI. Regular Atmospheric pressure is 14.696 psi ";
+    let description = "Tests whether air pressure (psi) reaches the explosion threshold in the context. Regular atmospheric pressure is 14.696 psi";
 
-    fn causal_fn(obs: NumericalValue) -> PropagatingEffect<bool> {
-        if let Err(e) = verify_obs(obs) {
-            return PropagatingEffect::from_error(e);
-        }
-
-        let threshold: NumericalValue = 100.0;
-        let is_active = obs.ge(&threshold);
-        PropagatingEffect::pure(is_active)
+    fn causal_fn(
+        effect: CausalEffect<NumericalValue>,
+        _state: (),
+        context: Option<Arc<RwLock<BaseContext>>>,
+    ) -> PropagatingProcess<bool, (), Arc<RwLock<BaseContext>>> {
+        reaches_threshold(effect, context, EXPLOSION_THRESHOLD)
     }
 
-    Causaloid::new(id, causal_fn, description)
+    Causaloid::new_with_context(id, causal_fn, context, description)
+}
+
+/// Verifies the observation, reads the threshold at `threshold_index` from the context, and
+/// returns whether the observation reaches it.
+fn reaches_threshold(
+    effect: CausalEffect<NumericalValue>,
+    context: Option<Arc<RwLock<BaseContext>>>,
+    threshold_index: usize,
+) -> PropagatingProcess<bool, (), Arc<RwLock<BaseContext>>> {
+    let Some(obs) = effect.into_value() else {
+        return PropagatingProcess::from_error(CausalityError(
+            CausalityErrorEnum::ValueNotAvailable,
+        ));
+    };
+    if let Err(e) = verify_obs(obs) {
+        return PropagatingProcess::from_error(e);
+    }
+
+    match read_threshold(context, threshold_index) {
+        Ok(threshold) => PropagatingProcess::pure(obs.ge(&threshold)),
+        Err(e) => PropagatingProcess::from_error(e),
+    }
+}
+
+/// Reads one threshold out of the shared sensor context.
+fn read_threshold(
+    context: Option<Arc<RwLock<BaseContext>>>,
+    index: usize,
+) -> Result<NumericalValue, CausalityError> {
+    let context = context.ok_or(CausalityError(CausalityErrorEnum::MissingContext))?;
+    let guard = context.read().map_err(|_| {
+        CausalityError(CausalityErrorEnum::Custom(
+            "Sensor context lock is poisoned".into(),
+        ))
+    })?;
+    guard
+        .get_node(index)
+        .and_then(|node| node.vertex_type().dataoid())
+        .map(Datable::get_data)
+        .ok_or_else(|| {
+            CausalityError(CausalityErrorEnum::Custom(format!(
+                "No threshold Datoid at context index {index}"
+            )))
+        })
 }
 
 fn verify_obs(obs: NumericalValue) -> Result<(), CausalityError> {

@@ -23,11 +23,11 @@ cargo run -p csm_examples --example csm_context_example
 
 1.  **Server State (`Context`):**
     - A `BaseContext`, shared as `Arc<RwLock<BaseContext>>`, holds the server's current state.
-    - It holds three `Datoid`s, each storing the latest reading from one sensor.
+    - It holds six `Datoid`s: three store the latest reading from each sensor, and three store each sensor's "high" threshold (fan speed 80.0, CPU temperature 85.0, power draw 250.0).
 
 2.  **Sensor Fusion (contextual `Causaloid`):**
-    - One `Causaloid`, built with `Causaloid::new_with_context`, reads all three readings from the context.
-    - It compares each reading with its "high" threshold (fan speed 80.0, CPU temperature 85.0, power draw 250.0) and returns `true` only if *all* three are high.
+    - One `Causaloid`, built with `Causaloid::new_with_context`, reads all three readings and their thresholds from the context.
+    - It compares each reading with its threshold and returns `true` only if *all* three are high.
 
 3.  **State-Based Action (`CSM`):**
     - A `CausalState` uses the fused `Causaloid` as its evaluation logic, so it becomes active only when all sensors are high.

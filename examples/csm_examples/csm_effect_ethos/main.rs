@@ -6,16 +6,17 @@ use crate::model::{get_alert_action, get_base_context, get_effect_ethos, get_tes
 use deep_causality::*;
 use deep_causality_ethos::{DeonticInferable, TeloidModal};
 use std::collections::HashMap;
+use std::error::Error;
 use std::sync::{Arc, RwLock};
 
 mod model;
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     println!("--- Effect Ethos Example ---");
     println!();
 
     // Create a context and wrap it in an Arc for shared ownership
-    let context_arc = Arc::new(RwLock::new(get_base_context()));
+    let context_arc = Arc::new(RwLock::new(get_base_context()?));
 
     // 1. Build Causaloid and CSM
     let causaloid = get_test_causaloid(Arc::clone(&context_arc));
@@ -26,7 +27,7 @@ fn main() {
     let csm = CSM::new(&[(&state, &action)]);
 
     // 2. Build an EffectEthos (deontic reasoning engine)
-    let ethos = get_effect_ethos();
+    let ethos = get_effect_ethos()?;
 
     // 3. Test data
     let test_data: PropagatingEffect<f64> = PropagatingEffect::pure(0.6);
@@ -47,7 +48,7 @@ fn main() {
     let proposed_action = ProposedAction::new(1, "high_temp_alert".to_string(), HashMap::new());
 
     // Get the context for ethos evaluation
-    let context = context_arc.read().unwrap();
+    let context = context_arc.read().map_err(|_| "Context lock is poisoned")?;
 
     // Query the ethos for a verdict on the proposed action
     let verdict_result = ethos.evaluate_action(&proposed_action, &context, &["temperature"]);
@@ -99,4 +100,6 @@ fn main() {
     println!();
     println!("Key insight: EffectEthos provides deontic reasoning (what SHOULD happen)");
     println!("separate from causal reasoning (what WILL happen given causes).");
+
+    Ok(())
 }
