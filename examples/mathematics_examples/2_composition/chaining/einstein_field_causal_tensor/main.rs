@@ -9,11 +9,20 @@
 //! `pure` lifts a scalar into the tensor context, `fmap` scales, `apply` broadcasts a lifted
 //! function, `extend` reads each cell's neighbourhood, and `bind` lets the result's shape
 //! depend on the values it carries.
+//!
+//! The constants the equation is solved under, `κ` and `Λ`, and the threshold the quantization
+//! splits at live in a `Context`, one `Data` node each, in normalised units with `G = c = 1`. The
+//! tensors are the values the chain carries.
 
 use deep_causality_algebra::Real;
+use deep_causality_context::{
+    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    NoSpace, NoSpaceTime, NoTime,
+};
 use deep_causality_haft::{Applicative, CoMonad, Functor, Monad, Pure};
 use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lift, lower};
 use deep_causality_tensor::CausalTensor;
+use deep_causality_tensor::CausalTensorError;
 use deep_causality_tensor::CausalTensorWitness;
 
 /// The working scalar. Every tensor component below carries it.
@@ -21,20 +30,26 @@ pub type FloatType = f64;
 
 const NEG_HALF: FloatType = const_scalar_from_float!(FloatType, -0.5);
 
-/// Small numbers and tolerances, at the working type.
-const TOLERANCE: FloatType = const_scalar_from_float!(FloatType, 1e-5);
-
 /// Small numbers, declared once at the working type rather than lifted at each use.
 const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
 const EIGHT: FloatType = const_scalar_from_int!(FloatType, 8);
 
-fn main() {
+/// The constants the field equations are solved under, one `Data` node each. The geometry is the
+/// metric tensor the chain carries, in normalised units, so the spatial, temporal and spacetime
+/// slots are empty.
+type FieldContext = Context<Data<FloatType>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
+
+/// Node indices of the field constants.
+const KAPPA: usize = 0;
+const LAMBDA: usize = 1;
+const QUANTUM_THRESHOLD: usize = 2;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
 
-    // Normalized units, G = c = 1, so kappa = 8 pi.
-    let kappa = EIGHT * FloatType::pi();
-    // Cosmological constant: a small positive value, for accelerating expansion.
-    let lambda = TOLERANCE;
+    let constants = field_constants()?;
+    let kappa = read(&constants, KAPPA)?;
+    let lambda = read(&constants, LAMBDA)?;
     print_constants(kappa, lambda);
 
     // 1. The metric tensor g_uv: a Minkowski signature (- + + +), slightly perturbed so the
@@ -45,7 +60,7 @@ fn main() {
          0.01, 1.0, 0.0, 0.0, // x
          0.0,  0.0, 1.0, 0.0, // y
          0.0,  0.0, 0.0, 1.0, // z
-    ]);
+    ])?;
     print_tensor("Metric Tensor (g_uv)", &g_uv);
 
     // 2. The Ricci tensor R_uv, taken as given: deriving it from the metric goes through
@@ -56,7 +71,7 @@ fn main() {
         0.005, 0.05,  0.0,  0.0,  // x
         0.0,   0.0,   0.05, 0.0,  // y
         0.0,   0.0,   0.0,  0.05, // z
-    ]);
+    ])?;
     print_tensor("Ricci Tensor (R_uv)", &r_uv);
 
     // 3. Scalar curvature R, lifted into the tensor context by `pure`.
@@ -112,7 +127,7 @@ fn main() {
     // 8. Monad: `bind` lets the *shape* of the result depend on the values. Quantizing the
     //    energy splits every high component in two, so the tensor grows.
     print_monad_intro();
-    let threshold = lift::<FloatType>(0.001);
+    let threshold = read(&constants, QUANTUM_THRESHOLD)?;
     let half = TWO;
     let quantized_energy =
         <CausalTensorWitness as Monad<CausalTensorWitness>>::bind(t_uv.clone(), move |val| {
@@ -124,12 +139,44 @@ fn main() {
             }
         });
     print_quantized(t_uv.len(), &quantized_energy);
+    Ok(())
+}
+
+/// The field constants, in normalised units with `G = c = 1`.
+fn field_constants() -> Result<FieldContext, ContextIndexError> {
+    // In node-index order.
+    let quantities: [FloatType; 3] = [
+        // KAPPA: the Einstein constant, 8 pi when G = c = 1.
+        EIGHT * FloatType::pi(),
+        // LAMBDA: the cosmological constant, a small positive value for accelerating expansion.
+        lift(1e-5),
+        // QUANTUM_THRESHOLD: the energy above which a component splits into two quanta.
+        lift(0.001),
+    ];
+
+    let mut context = Context::with_capacity(1, "field constants", quantities.len());
+    for (id, &value) in (1..).zip(quantities.iter()) {
+        context.add_node(Contextoid::new(
+            id,
+            ContextoidType::Datoid(Data::new(id, value)),
+        ))?;
+    }
+    Ok(context)
+}
+
+/// Read one constant out of the context.
+fn read(context: &FieldContext, index: usize) -> Result<FloatType, ContextIndexError> {
+    context
+        .get_node(index)
+        .and_then(|node| node.vertex_type().dataoid())
+        .map(Datable::get_data)
+        .ok_or_else(|| ContextIndexError::new(format!("no field constant at node {index}")))
 }
 
 /// A 4x4 tensor from row-major literals, lifted into the working scalar.
-fn tensor(values: &[f64]) -> CausalTensor<FloatType> {
+fn tensor(values: &[f64]) -> Result<CausalTensor<FloatType>, CausalTensorError> {
     let data: Vec<FloatType> = values.iter().map(|&x| lift(x)).collect();
-    CausalTensor::new(data, vec![4, 4]).expect("sixteen components in a 4x4 shape")
+    CausalTensor::new(data, vec![4, 4])
 }
 
 // -----------------------------------------------------------------------------------------

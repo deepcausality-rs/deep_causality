@@ -25,15 +25,23 @@
 //! Every value in each carrier is independent of its complex: `fmap` reaches the readings and
 //! carries the structure across by sharing the `Arc`, so the honeycomb's incidence, the lattice's
 //! shape and the complex's boundary operators all survive a change of units.
+//!
+//! The survey's measurements and the module's ratings live in a `Context`, one `Data` node per
+//! quantity: the ramp each carrier is sampled from, the flue's shading, the calibration and the
+//! shading threshold are read from it. The three layouts are the carriers' own structure.
 
 use deep_causality_algebra::Real;
+use deep_causality_context::{
+    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    NoSpace, NoSpaceTime, NoTime,
+};
 use deep_causality_haft::{CoMonad, Foldable, Functor};
 use deep_causality_linear::CsrMatrix;
-use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lift_count, lower};
+use deep_causality_num::{const_scalar_from_int, lift, lift_count, lower};
 use deep_causality_tensor::CausalTensor;
 use deep_causality_topology::{
     CellComplexWitness, CellField, HoneycombLattice, LatticeComplex, LatticeComplexWitness,
-    LatticeField, Simplex, SimplicialComplex, Skeleton, Topology, TopologyWitness,
+    LatticeField, Simplex, SimplicialComplex, Skeleton, Topology, TopologyError, TopologyWitness,
 };
 use std::sync::Arc;
 
@@ -49,21 +57,28 @@ const PLOT_EDGES: [[usize; 2]; 6] = [[0, 1], [0, 2], [1, 2], [1, 3], [2, 3], [3,
 /// Readings live on the sites, which are the grade-0 cells.
 const SITE_GRADE: usize = 0;
 
-/// The irradiance ramp across the roof, in W/m²: the shaded edge, and the span to the sunlit one.
-const IRRADIANCE_BASE: FloatType = const_scalar_from_int!(FloatType, 620);
-const IRRADIANCE_SPAN: FloatType = const_scalar_from_int!(FloatType, 310);
-
-/// One site on the triangulated plot sits under a flue, which cuts its reading to this fraction.
+/// One site on the triangulated plot sits under a flue.
 const SHADED_SITE: usize = 2;
-const SHADE_FACTOR: FloatType = const_scalar_from_float!(FloatType, 0.45);
 
-/// Calibration: module area in m², peak-equivalent hours in a day, and watts per kilowatt.
-const MODULE_AREA: FloatType = const_scalar_from_float!(FloatType, 1.7);
-const PEAK_HOURS: FloatType = const_scalar_from_float!(FloatType, 4.6);
+/// Watts per kilowatt, the unit change in the calibration.
 const WATTS_PER_KW: FloatType = const_scalar_from_int!(FloatType, 1000);
 
+/// The rooftop survey: one `Data` node per quantity. It holds no positions or clocks, so the
+/// spatial, temporal and spacetime slots are empty.
+type SurveyContext = Context<Data<FloatType>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
+
+/// Node indices of the survey's quantities.
+///
+/// The irradiance ramp across the roof, in W/m²: the shaded edge, and the span to the sunlit one.
+const IRRADIANCE_BASE: usize = 0;
+const IRRADIANCE_SPAN: usize = 1;
+/// The fraction of its reading the flue leaves the shaded site.
+const SHADE_FACTOR: usize = 2;
+/// Calibration: module area in m², and peak-equivalent hours in a day.
+const MODULE_AREA: usize = 3;
+const PEAK_HOURS: usize = 4;
 /// A reading this far below its neighbourhood mean is reported as shaded.
-const SHADE_THRESHOLD: FloatType = const_scalar_from_float!(FloatType, 0.8);
+const SHADE_THRESHOLD: usize = 5;
 
 /// The working scalar. Readings, calibrated yields and every total carry it.
 pub type FloatType = f64;
@@ -73,6 +88,7 @@ const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
+    let survey = rooftop_survey()?;
 
     // ---------------------------------------------------------------------
     // 1. The same ramp, sampled on three layouts.
@@ -80,20 +96,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let honeycomb =
         Arc::new(HoneycombLattice::new(HONEYCOMB_SIZE, [false, false]).as_cell_complex());
     let hex_sites = honeycomb.cells_vec(SITE_GRADE).len();
-    let hex_field = CellField::new(honeycomb, ramp(hex_sites));
+    let hex_field = CellField::new(honeycomb, ramp(&survey, hex_sites)?);
 
     let lattice = Arc::new(LatticeComplex::<GRID_DIM, FloatType>::new(
         GRID_SHAPE,
         [false, false],
     ));
     let grid_sites = GRID_SHAPE.iter().product();
-    let grid_field = LatticeField::new(lattice, ramp(grid_sites));
+    let grid_field = LatticeField::new(lattice, ramp(&survey, grid_sites)?);
 
     let complex = Arc::new(build_plot()?);
     let plot_field = Topology::new(
         complex.clone(),
         SITE_GRADE,
-        CausalTensor::new(shaded_ramp(PLOT_SITES), vec![PLOT_SITES])?,
+        CausalTensor::new(shaded_ramp(&survey, PLOT_SITES)?, vec![PLOT_SITES])?,
         0,
     )?;
 
@@ -110,7 +126,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // ---------------------------------------------------------------------
     // W/m² to kWh per module per day. The law is a closure; the three calls differ only in the
     // witness in front of them, and each carries its own structure across untouched.
-    let calibrate = calibration();
+    let calibrate = calibration(&survey)?;
     let hex_yield = CellComplexWitness::fmap(hex_field, calibrate);
     let grid_yield = LatticeComplexWitness::<GRID_DIM, FloatType>::fmap(grid_field, calibrate);
     let plot_yield = TopologyWitness::<FloatType>::fmap(plot_field.clone(), calibrate);
@@ -149,7 +165,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // far under its neighbourhood mean is a shaded module.
     let flagged = TopologyWitness::<FloatType>::extend(&plot_field, |w| {
         let readings = w.data().as_slice();
-        let neighbours = vertex_neighbours(w.complex(), w.cursor());
+        let neighbours = vertex_neighbours(w.complex(), w.cursor())
+            .expect("build_plot gives the plot its boundary operator ∂₁");
         let mine = TopologyWitness::<FloatType>::extract(w);
 
         match neighbours.len() {
@@ -163,10 +180,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     });
 
     let ratios = flagged.data().as_slice();
-    print_shading(plot_field.data().as_slice(), ratios);
+    let threshold = read(&survey, SHADE_THRESHOLD)?;
+    print_shading(plot_field.data().as_slice(), ratios, threshold);
 
     // The site under the flue is the one the neighbourhood test picks out.
-    let threshold = SHADE_THRESHOLD;
     let shaded: Vec<usize> = (0..PLOT_SITES).filter(|&i| ratios[i] < threshold).collect();
     assert_eq!(shaded, vec![SHADED_SITE]);
 
@@ -174,32 +191,65 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+/// The surveyed roof and the modules on it, one `Data` node per quantity.
+fn rooftop_survey() -> Result<SurveyContext, ContextIndexError> {
+    // In node-index order.
+    let quantities: [f64; 6] = [
+        620.0, // IRRADIANCE_BASE, W/m²
+        310.0, // IRRADIANCE_SPAN, W/m²
+        0.45,  // SHADE_FACTOR
+        1.7,   // MODULE_AREA, m²
+        4.6,   // PEAK_HOURS, h per day
+        0.8,   // SHADE_THRESHOLD
+    ];
+
+    let mut context = Context::with_capacity(1, "rooftop survey", quantities.len());
+    for (id, &value) in (1..).zip(quantities.iter()) {
+        context.add_node(Contextoid::new(
+            id,
+            ContextoidType::Datoid(Data::new(id, lift::<FloatType>(value))),
+        ))?;
+    }
+    Ok(context)
+}
+
+/// Read one quantity out of the survey.
+fn read(context: &SurveyContext, index: usize) -> Result<FloatType, ContextIndexError> {
+    context
+        .get_node(index)
+        .and_then(|node| node.vertex_type().dataoid())
+        .map(Datable::get_data)
+        .ok_or_else(|| ContextIndexError::new(format!("no survey quantity at node {index}")))
+}
+
 /// The irradiance ramp across the roof, sampled at `count` evenly spaced sites.
-fn ramp(count: usize) -> Vec<FloatType> {
-    let base = IRRADIANCE_BASE;
-    let span = IRRADIANCE_SPAN;
+fn ramp(survey: &SurveyContext, count: usize) -> Result<Vec<FloatType>, ContextIndexError> {
+    let base = read(survey, IRRADIANCE_BASE)?;
+    let span = read(survey, IRRADIANCE_SPAN)?;
     let last = lift_count::<FloatType>((count.max(2) - 1) as u64);
 
-    (0..count)
+    Ok((0..count)
         .map(|i| base + span * lift_count::<FloatType>(i as u64) / last)
-        .collect()
+        .collect())
 }
 
 /// The same ramp with one site under a flue.
-fn shaded_ramp(count: usize) -> Vec<FloatType> {
-    let mut values = ramp(count);
-    values[SHADED_SITE] *= SHADE_FACTOR;
+fn shaded_ramp(survey: &SurveyContext, count: usize) -> Result<Vec<FloatType>, ContextIndexError> {
+    let mut values = ramp(survey, count)?;
+    values[SHADED_SITE] *= read(survey, SHADE_FACTOR)?;
 
-    values
+    Ok(values)
 }
 
 /// W/m² to kWh per module per day, the law all three carriers are mapped with.
-fn calibration() -> impl Fn(FloatType) -> FloatType + Copy {
-    let area = MODULE_AREA;
-    let hours = PEAK_HOURS;
+fn calibration(
+    survey: &SurveyContext,
+) -> Result<impl Fn(FloatType) -> FloatType + Copy, ContextIndexError> {
+    let area = read(survey, MODULE_AREA)?;
+    let hours = read(survey, PEAK_HOURS)?;
     let per_kw = WATTS_PER_KW;
 
-    move |irradiance| irradiance * area * hours / per_kw
+    Ok(move |irradiance| irradiance * area * hours / per_kw)
 }
 
 /// The triangulated plot: five sites joined by six edges.
@@ -226,10 +276,11 @@ fn build_plot() -> Result<SimplicialComplex<FloatType>, Box<dyn std::error::Erro
 }
 
 /// The sites joined to this one, read out of the complex's own boundary operator `∂₁`.
-fn vertex_neighbours(complex: &SimplicialComplex<FloatType>, site: usize) -> Vec<usize> {
-    let Ok(d1) = complex.boundary_operator(1) else {
-        return Vec::new();
-    };
+fn vertex_neighbours(
+    complex: &SimplicialComplex<FloatType>,
+    site: usize,
+) -> Result<Vec<usize>, TopologyError> {
+    let d1 = complex.boundary_operator(1)?;
     let (sites, edges) = d1.shape();
     let mut found = Vec::new();
 
@@ -246,7 +297,7 @@ fn vertex_neighbours(complex: &SimplicialComplex<FloatType>, site: usize) -> Vec
     found.sort_unstable();
     found.dedup();
 
-    found
+    Ok(found)
 }
 
 // -----------------------------------------------------------------------------------------
@@ -307,12 +358,12 @@ fn print_totals(hex: (usize, FloatType), grid: (usize, FloatType), plot: (usize,
     println!("  Per site is the comparable figure, and the shaded plot sits below the rest.");
 }
 
-fn print_shading(readings: &[FloatType], ratios: &[FloatType]) {
+fn print_shading(readings: &[FloatType], ratios: &[FloatType], threshold: FloatType) {
     println!("\n--- 4. CoMonad::extend, the operation that needs a neighbourhood ---");
     println!("  site   reading   neighbours   ratio to their mean");
     for site in 0..PLOT_SITES {
         let neighbours = PLOT_EDGES.iter().filter(|e| e.contains(&site)).count();
-        let mark = if lower(ratios[site]) < SHADE_THRESHOLD {
+        let mark = if ratios[site] < threshold {
             "  <- shaded"
         } else {
             ""

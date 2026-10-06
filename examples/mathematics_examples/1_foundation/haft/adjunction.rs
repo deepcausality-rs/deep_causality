@@ -16,33 +16,67 @@
 // simple value pair (Product), and vice versa.
 //
 // Practical Use: "Currying" configuration.
-// Instead of passing `Config` to every function, we can "adjunct" the function
+// Instead of passing the configuration to every function, we can "adjunct" the function
 // to lock in the config, producing a standalone value.
+//
+// The configuration is the Reader's environment, and it is a `Context`: one `Data<String>`
+// node per setting, read by node index.
 
-fn main() {
+use deep_causality_context::{
+    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    NoSpace, NoSpaceTime, NoTime,
+};
+
+/// The Reader environment: the configuration a reader runs against. It holds settings only, so
+/// the spatial, temporal and spacetime slots are empty.
+type ConfigContext = Context<Data<String>, NoSpace<f64>, NoTime, NoSpaceTime<f64>>;
+
+/// Node index of the API key.
+const API_KEY: usize = 0;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
 
-    // Scenario: We have a function that fetches data given a Config and an ID.
-    // fetch_data: (Config, i32) -> String
-    let fetch_data = |cfg: Config, id: i32| -> String {
-        format!("Data for ID {} using Key {}", id, cfg.api_key)
+    // Scenario: We have a function that fetches data given a ConfigContext and an ID.
+    // fetch_data: (ConfigContext, i32) -> String
+    let fetch_data = |cfg: ConfigContext, id: i32| -> String {
+        format!("Data for ID {} using Key {}", id, read(&cfg, API_KEY))
     };
 
-    // We want to "bake in" the ID first, creating a reusable "Reader" that just needs Config.
-    // We use the Right Adjunct logic manually here since Rust closures are tricky.
+    // We want to "bake in" the ID first, creating a reusable "Reader" that just needs the
+    // ConfigContext. We use the Right Adjunct logic manually here since Rust closures are tricky.
 
     let id_to_fetch = 42;
-    let reader = move |cfg: Config| fetch_data(cfg, id_to_fetch);
+    let reader = move |cfg: ConfigContext| fetch_data(cfg, id_to_fetch);
 
-    // Now 'reader' is a function Config -> String.
-    // We can pass this 'reader' around to a component that holds the Config.
+    // Now 'reader' is a function ConfigContext -> String.
+    // We can pass this 'reader' around to a component that holds the ConfigContext.
 
-    let my_config = Config {
-        api_key: "SECRET_KEY".to_string(),
-    };
+    let my_config = config("SECRET_KEY")?;
 
     let result = reader(my_config);
     print_result(&result);
+    Ok(())
+}
+
+/// The configuration as a `Context`: the API key as its one `Data<String>` node.
+fn config(api_key: &str) -> Result<ConfigContext, ContextIndexError> {
+    let mut context = Context::with_capacity(1, "config", 1);
+    context.add_node(Contextoid::new(
+        1,
+        ContextoidType::Datoid(Data::new(1, api_key.to_string())),
+    ))?;
+    Ok(context)
+}
+
+/// Read one setting out of the configuration. A reader is `ConfigContext -> String` and has no
+/// error channel, so a missing setting is a broken invariant of `config`.
+fn read(context: &ConfigContext, index: usize) -> String {
+    context
+        .get_node(index)
+        .and_then(|node| node.vertex_type().dataoid())
+        .map(Datable::get_data)
+        .expect("config adds every setting a reader reads")
 }
 
 // -----------------------------------------------------------------------------------------
@@ -59,35 +93,31 @@ fn print_result(result: &str) {
     println!("Adjunction Result: {result}");
 }
 
-struct Config {
-    api_key: String,
-}
-
 // Mock Adjunction Implementation for demonstration
 #[allow(dead_code)]
 struct ConfigAdjunction;
 
 #[allow(dead_code)]
 impl ConfigAdjunction {
-    // Left Adjunct: (Config, A) -> B  ===>  A -> (Config -> B)
-    fn left_adjunct<A, B, F>(f: F) -> impl Fn(A) -> Box<dyn Fn(Config) -> B>
+    // Left Adjunct: (ConfigContext, A) -> B  ===>  A -> (ConfigContext -> B)
+    fn left_adjunct<A, B, F>(f: F) -> impl Fn(A) -> Box<dyn Fn(ConfigContext) -> B>
     where
         A: Clone + 'static,
-        F: Fn(Config, A) -> B + Clone + 'static,
+        F: Fn(ConfigContext, A) -> B + Clone + 'static,
     {
         move |a: A| {
             let f = f.clone();
             let a = a.clone();
-            Box::new(move |cfg: Config| f(cfg, a.clone()))
+            Box::new(move |cfg: ConfigContext| f(cfg, a.clone()))
         }
     }
 
-    // Right Adjunct: A -> (Config -> B)  ===>  (Config, A) -> B
-    fn right_adjunct<A, B, F>(f: F) -> impl Fn(Config, A) -> B
+    // Right Adjunct: A -> (ConfigContext -> B)  ===>  (ConfigContext, A) -> B
+    fn right_adjunct<A, B, F>(f: F) -> impl Fn(ConfigContext, A) -> B
     where
-        F: Fn(A) -> Box<dyn Fn(Config) -> B>,
+        F: Fn(A) -> Box<dyn Fn(ConfigContext) -> B>,
     {
-        move |cfg: Config, a: A| {
+        move |cfg: ConfigContext, a: A| {
             let reader = f(a);
             reader(cfg)
         }

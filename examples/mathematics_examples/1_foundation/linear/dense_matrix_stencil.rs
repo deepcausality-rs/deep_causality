@@ -19,7 +19,8 @@
 //! in focus. A stencil is then written once, with no edge cases at the borders.
 //!
 //! The setting is a temperature map across a chip die with one hotspot, smoothed by a nine-point
-//! box filter. Two properties are checked rather than asserted in prose:
+//! box filter. The sensor readings live in a `Context`, one `Data` node per sensor, and the matrix
+//! is loaded from it. Two properties are checked rather than asserted in prose:
 //!
 //! ```text
 //! extend(extract) == id         the comonad law the shifted view is arranged to satisfy
@@ -28,19 +29,22 @@
 //! ```
 
 use deep_causality_algebra::Real;
+use deep_causality_context::{
+    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    NoSpace, NoSpaceTime, NoTime,
+};
 use deep_causality_haft::{Applicative, CoMonad, Foldable, Functor, Pure};
 use deep_causality_linear::{DenseMatrix, DenseMatrixWitness, MatrixView};
 use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lift, lift_count, lower};
 
-/// The die is a `ROWS x COLS` grid of temperature sensors, in °C.
+/// The die is a `ROWS x COLS` grid of temperature sensors.
 const ROWS: usize = 4;
 const COLS: usize = 4;
-const TEMPERATURES: [f64; ROWS * COLS] = [
-    42.0, 43.0, 44.0, 42.0, //
-    43.0, 91.0, 46.0, 43.0, // the hotspot sits here
-    44.0, 47.0, 45.0, 44.0, //
-    42.0, 43.0, 44.0, 43.0,
-];
+
+/// The die's sensor readings, in °C: one `Data` node per sensor, at the sensor's row-major
+/// position on the grid. The die holds readings only, so the spatial, temporal and spacetime
+/// slots are empty.
+type DieContext = Context<Data<FloatType>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
 
 /// A nine-point box filter: the focused cell and the eight around it.
 const STENCIL_CELLS: u64 = 9;
@@ -63,11 +67,11 @@ const THIRTY_TWO: FloatType = const_scalar_from_int!(FloatType, 32);
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
 
-    let field = DenseMatrix::from_vec(
-        TEMPERATURES.iter().map(|&t| lift::<FloatType>(t)).collect(),
-        ROWS,
-        COLS,
-    )?;
+    let die = die_readings()?;
+    let measured = (0..ROWS * COLS)
+        .map(|sensor| read(&die, sensor))
+        .collect::<Result<Vec<FloatType>, ContextIndexError>>()?;
+    let field = DenseMatrix::from_vec(measured, ROWS, COLS)?;
     print_grid("measured, in C", field.as_slice());
 
     // ---------------------------------------------------------------------
@@ -131,6 +135,34 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     print_footer();
     Ok(())
+}
+
+/// The measured die: one `Data` node per sensor, in °C, in row-major order.
+fn die_readings() -> Result<DieContext, ContextIndexError> {
+    let celsius: [f64; ROWS * COLS] = [
+        42.0, 43.0, 44.0, 42.0, //
+        43.0, 91.0, 46.0, 43.0, // the hotspot sits here
+        44.0, 47.0, 45.0, 44.0, //
+        42.0, 43.0, 44.0, 43.0,
+    ];
+
+    let mut context = Context::with_capacity(1, "die temperature map", ROWS * COLS);
+    for (id, &t) in (1..).zip(celsius.iter()) {
+        context.add_node(Contextoid::new(
+            id,
+            ContextoidType::Datoid(Data::new(id, lift::<FloatType>(t))),
+        ))?;
+    }
+    Ok(context)
+}
+
+/// Read one sensor's reading out of the die.
+fn read(context: &DieContext, index: usize) -> Result<FloatType, ContextIndexError> {
+    context
+        .get_node(index)
+        .and_then(|node| node.vertex_type().dataoid())
+        .map(Datable::get_data)
+        .ok_or_else(|| ContextIndexError::new(format!("no sensor reading at node {index}")))
 }
 
 /// The largest value in the grid.
