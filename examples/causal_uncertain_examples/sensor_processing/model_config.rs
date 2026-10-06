@@ -3,31 +3,55 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! Nominal configuration and sensor seed data for the sensor-processing pipeline.
+//! Nominal fleet context and sensor seed data for the sensor-processing pipeline.
 
-use crate::model_types::{Bands, FleetConfig, RawReadings, SensorReading, SensorStatus};
+use crate::model_types::{FleetContext, RawReadings, SensorReading, SensorStatus};
+use deep_causality_context::{
+    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data,
+};
 use std::collections::HashMap;
 
-pub fn nominal_fleet_config() -> FleetConfig {
-    FleetConfig {
-        temp: Bands {
-            plausible: (-50.0, 100.0),
-            nominal: (15.0, 35.0),
-        },
-        pressure: Bands {
-            plausible: (800.0, 1200.0),
-            nominal: (980.0, 1050.0),
-        },
-        humidity: Bands {
-            plausible: (0.0, 100.0),
-            nominal: (20.0, 80.0),
-        },
-        pressure_2_calibration_offset: -2.3,
-        temp_calibration_gain: 0.98,
-        temp_calibration_bias: 0.5,
-        anomaly_disagreement_c: 5.0,
-        high_uncertainty_threshold: 5.0,
+/// The nominal fleet, added in node-index order: node `i` holds contextoid id `i + 1`.
+pub fn nominal_fleet_context() -> Result<FleetContext, ContextIndexError> {
+    let mut context = Context::with_capacity(1, "fleet", 30);
+    for (id, value) in [
+        (1, -50.0),    // TEMP_PLAUSIBLE_MIN
+        (2, 100.0),    // TEMP_PLAUSIBLE_MAX
+        (3, 15.0),     // TEMP_NOMINAL_MIN
+        (4, 35.0),     // TEMP_NOMINAL_MAX
+        (5, 800.0),    // PRESSURE_PLAUSIBLE_MIN
+        (6, 1200.0),   // PRESSURE_PLAUSIBLE_MAX
+        (7, 980.0),    // PRESSURE_NOMINAL_MIN
+        (8, 1050.0),   // PRESSURE_NOMINAL_MAX
+        (9, 0.0),      // HUMIDITY_PLAUSIBLE_MIN
+        (10, 100.0),   // HUMIDITY_PLAUSIBLE_MAX
+        (11, 20.0),    // HUMIDITY_NOMINAL_MIN
+        (12, 80.0),    // HUMIDITY_NOMINAL_MAX
+        (13, -2.3),    // PRESSURE_2_CALIBRATION_OFFSET
+        (14, 0.98),    // TEMP_CALIBRATION_GAIN
+        (15, 0.5),     // TEMP_CALIBRATION_BIAS
+        (16, 5.0),     // ANOMALY_DISAGREEMENT_C
+        (17, 5.0),     // HIGH_UNCERTAINTY_THRESHOLD
+        (18, 2.0),     // DEGRADED_UNCERTAINTY_FACTOR
+        (19, 10.0),    // OUT_OF_RANGE_SD
+        (20, 1.5),     // DRIFT_UNCERTAINTY_FACTOR
+        (21, 2.0),     // DRIFT_UNCERTAINTY_OFFSET
+        (22, 22.0),    // HISTORICAL_TEMP_MEAN
+        (23, 3.0),     // HISTORICAL_TEMP_SD
+        (24, 20.0),    // REFERENCE_TEMP
+        (25, 1013.25), // REFERENCE_PRESSURE
+        (26, 0.02),    // TEMP_PER_HPA
+        (27, 10.0),    // CORRELATION_TOLERANCE
+        (28, 50.0),    // CRITICAL_BELOW_PCT
+        (29, 70.0),    // HIGH_BELOW_PCT
+        (30, 85.0),    // MEDIUM_BELOW_PCT
+    ] {
+        context.add_node(Contextoid::new(
+            id,
+            ContextoidType::Datoid(Data::new(id, value)),
+        ))?;
     }
+    Ok(context)
 }
 
 pub fn seed_readings() -> RawReadings {

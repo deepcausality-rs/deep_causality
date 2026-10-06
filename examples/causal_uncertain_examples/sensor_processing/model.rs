@@ -6,92 +6,150 @@
 //! Stage functions for the sensor-processing `PropagatingProcess` chain.
 //!
 //! Each stage takes the previous stage's value out of `CausalEffect::Value`,
-//! mutates `FleetState`, appends an `EffectLog` entry, and re-lifts the new
-//! value. Stages short-circuit by returning `CausalEffect::none()` with an
-//! attached `CausalityError` when an unrecoverable precondition fails.
+//! reads the fleet context, mutates `FleetState`, appends an `EffectLog` entry,
+//! and re-lifts the new value. A stage short-circuits into the error channel
+//! when the value or the fleet context is missing, when a fleet-context read
+//! fails, or when sampling an `Uncertain<f64>` fails.
 
 use crate::model_types::{
-    Bands, FleetConfig, FleetProcess, FleetState, ProcessedReadings, RawReadings, RiskLevel,
-    SensorReading, SensorStatus,
+    ANOMALY_DISAGREEMENT_C, BandNodes, CORRELATION_TOLERANCE, CRITICAL_BELOW_PCT,
+    DEGRADED_UNCERTAINTY_FACTOR, DRIFT_UNCERTAINTY_FACTOR, DRIFT_UNCERTAINTY_OFFSET, FleetContext,
+    FleetProcess, FleetState, HIGH_BELOW_PCT, HIGH_UNCERTAINTY_THRESHOLD, HISTORICAL_TEMP_MEAN,
+    HISTORICAL_TEMP_SD, HUMIDITY_BANDS, MEDIUM_BELOW_PCT, OUT_OF_RANGE_SD,
+    PRESSURE_2_CALIBRATION_OFFSET, PRESSURE_BANDS, ProcessedReadings, REFERENCE_PRESSURE,
+    REFERENCE_TEMP, RawReadings, RiskLevel, SensorReading, SensorStatus, TEMP_BANDS,
+    TEMP_CALIBRATION_BIAS, TEMP_CALIBRATION_GAIN, TEMP_PER_HPA, read,
 };
 use deep_causality_core::{CausalEffect, CausalityError, CausalityErrorEnum, EffectLog};
 use deep_causality_haft::LogAddEntry;
-use deep_causality_uncertain::Uncertain;
+use deep_causality_uncertain::{Uncertain, UncertainError};
 use std::collections::HashMap;
 
 const SAMPLES: usize = 1000;
 
+fn process_error(
+    state: FleetState,
+    ctx: Option<FleetContext>,
+    error: CausalityError,
+) -> FleetProcess<ProcessedReadings> {
+    FleetProcess::new(Err(error), state, ctx, EffectLog::new())
+}
+
 fn process_failure(
     state: FleetState,
-    ctx: Option<FleetConfig>,
+    ctx: Option<FleetContext>,
     msg: &str,
 ) -> FleetProcess<ProcessedReadings> {
-    FleetProcess::new(
-        Err(CausalityError::new(CausalityErrorEnum::Custom(msg.into()))),
+    process_error(
         state,
         ctx,
-        EffectLog::new(),
+        CausalityError::new(CausalityErrorEnum::Custom(msg.into())),
     )
 }
 
-fn band_for<'a>(sensor_id: &str, config: &'a FleetConfig) -> Option<&'a Bands> {
+/// A sampling error, carried in the chain's error channel.
+fn sampling_error(error: UncertainError) -> CausalityError {
+    CausalityError::UncertainError(error.to_string())
+}
+
+/// Run the body of a stage that passes the processed readings through. The body reads the fleet
+/// context, updates the state and returns its log entries; its error lands in the error channel
+/// with the state and context kept.
+fn run_stage<F>(
+    stage: &str,
+    value: CausalEffect<ProcessedReadings>,
+    mut state: FleetState,
+    ctx: Option<FleetContext>,
+    body: F,
+) -> FleetProcess<ProcessedReadings>
+where
+    F: FnOnce(
+        &ProcessedReadings,
+        &mut FleetState,
+        &FleetContext,
+    ) -> Result<EffectLog, CausalityError>,
+{
+    let Some(processed) = value.into_value() else {
+        return process_failure(state, ctx, &format!("{stage}: value was None"));
+    };
+    let outcome = match ctx.as_ref() {
+        Some(fleet) => body(&processed, &mut state, fleet),
+        None => Err(CausalityError::MissingContext()),
+    };
+    match outcome {
+        Ok(logs) => FleetProcess::new(Ok(CausalEffect::value(processed)), state, ctx, logs),
+        Err(error) => process_error(state, ctx, error),
+    }
+}
+
+/// The fleet-context nodes holding the bands of the sensor family `sensor_id` belongs to.
+fn band_for(sensor_id: &str) -> Option<BandNodes> {
     if sensor_id.starts_with("temp") {
-        Some(&config.temp)
+        Some(TEMP_BANDS)
     } else if sensor_id.starts_with("pressure") {
-        Some(&config.pressure)
+        Some(PRESSURE_BANDS)
     } else if sensor_id.starts_with("humidity") {
-        Some(&config.humidity)
+        Some(HUMIDITY_BANDS)
     } else {
         None
     }
 }
 
-fn is_plausible(reading: &SensorReading, config: &FleetConfig) -> bool {
-    match (reading.value, band_for(&reading.id, config)) {
-        (Some(v), Some(b)) => v >= b.plausible.0 && v <= b.plausible.1,
-        _ => true,
+fn is_plausible(reading: &SensorReading, fleet: &FleetContext) -> Result<bool, CausalityError> {
+    match (reading.value, band_for(&reading.id)) {
+        (Some(v), Some(b)) => {
+            Ok(v >= read(fleet, b.plausible_min)? && v <= read(fleet, b.plausible_max)?)
+        }
+        _ => Ok(true),
     }
 }
 
-fn apply_calibration(reading: &SensorReading, config: &FleetConfig) -> Option<f64> {
-    let v = reading.value?;
+fn apply_calibration(
+    reading: &SensorReading,
+    fleet: &FleetContext,
+) -> Result<Option<f64>, CausalityError> {
+    let Some(v) = reading.value else {
+        return Ok(None);
+    };
     if reading.id == "pressure_2" {
-        Some(v + config.pressure_2_calibration_offset)
+        Ok(Some(v + read(fleet, PRESSURE_2_CALIBRATION_OFFSET)?))
     } else if reading.id.starts_with("temp") {
-        Some(v * config.temp_calibration_gain + config.temp_calibration_bias)
+        Ok(Some(
+            v * read(fleet, TEMP_CALIBRATION_GAIN)? + read(fleet, TEMP_CALIBRATION_BIAS)?,
+        ))
     } else {
-        Some(v)
+        Ok(Some(v))
     }
 }
 
-/// Stage 1 — robust per-sensor processing into `Uncertain<f64>` or an error tag.
-pub fn process_stage(
-    value: CausalEffect<RawReadings>,
-    state: FleetState,
-    ctx: Option<FleetConfig>,
-) -> FleetProcess<ProcessedReadings> {
-    let Some(raw) = value.into_value() else {
-        return process_failure(state, ctx, "stage1.process: value was None");
-    };
-    let Some(config) = ctx.clone() else {
-        return process_failure(state, ctx, "stage1.process: missing FleetConfig");
-    };
-
-    let mut processed: HashMap<String, Result<Uncertain<f64>, String>> = HashMap::new();
-    for (id, reading) in raw.0.iter() {
-        let result = match (&reading.status, reading.value, reading.uncertainty) {
+/// Triage one reading into an `Uncertain<f64>` or a per-sensor error tag. The outer error is a
+/// failed fleet-context read, which stops the stage.
+fn triage(
+    id: &str,
+    reading: &SensorReading,
+    fleet: &FleetContext,
+) -> Result<Result<Uncertain<f64>, String>, CausalityError> {
+    Ok(
+        match (&reading.status, reading.value, reading.uncertainty) {
             (SensorStatus::Healthy, Some(v), Some(u)) => Ok(Uncertain::normal(v, u)),
-            (SensorStatus::Degraded, Some(v), Some(u)) => Ok(Uncertain::normal(v, u * 2.0)),
+            (SensorStatus::Degraded, Some(v), Some(u)) => Ok(Uncertain::normal(
+                v,
+                u * read(fleet, DEGRADED_UNCERTAINTY_FACTOR)?,
+            )),
             (SensorStatus::OutOfRange, Some(v), _) => {
-                if is_plausible(reading, &config) {
-                    Ok(Uncertain::normal(v, 10.0))
+                if is_plausible(reading, fleet)? {
+                    Ok(Uncertain::normal(v, read(fleet, OUT_OF_RANGE_SD)?))
                 } else {
                     Err(format!("sensor {id} reading {v} is physically implausible"))
                 }
             }
             (SensorStatus::CalibrationDrift, Some(_), Some(u)) => {
-                match apply_calibration(reading, &config) {
-                    Some(corrected) => Ok(Uncertain::normal(corrected, u * 1.5 + 2.0)),
+                match apply_calibration(reading, fleet)? {
+                    Some(corrected) => Ok(Uncertain::normal(
+                        corrected,
+                        u * read(fleet, DRIFT_UNCERTAINTY_FACTOR)?
+                            + read(fleet, DRIFT_UNCERTAINTY_OFFSET)?,
+                    )),
                     None => Err(format!("sensor {id} calibration failed (no value)")),
                 }
             }
@@ -99,9 +157,32 @@ pub fn process_stage(
                 Err(format!("sensor {id} unavailable"))
             }
             _ => Err(format!("sensor {id} has invalid data configuration")),
+        },
+    )
+}
+
+/// Stage 1 — robust per-sensor processing into `Uncertain<f64>` or an error tag.
+pub fn process_stage(
+    value: CausalEffect<RawReadings>,
+    state: FleetState,
+    ctx: Option<FleetContext>,
+) -> FleetProcess<ProcessedReadings> {
+    let Some(raw) = value.into_value() else {
+        return process_failure(state, ctx, "stage1.process: value was None");
+    };
+    let processed: Result<HashMap<String, Result<Uncertain<f64>, String>>, CausalityError> =
+        match ctx.as_ref() {
+            Some(fleet) => raw
+                .0
+                .iter()
+                .map(|(id, reading)| Ok((id.clone(), triage(id, reading, fleet)?)))
+                .collect(),
+            None => Err(CausalityError::MissingContext()),
         };
-        processed.insert(id.clone(), result);
-    }
+    let processed = match processed {
+        Ok(processed) => processed,
+        Err(error) => return process_error(state, ctx, error),
+    };
 
     let mut logs = EffectLog::new();
     logs.add_entry(&format!(
@@ -120,24 +201,27 @@ pub fn process_stage(
 /// Stage 2 — accumulate per-sensor health counts and total uncertainty into state.
 pub fn validate_stage(
     value: CausalEffect<ProcessedReadings>,
-    mut state: FleetState,
-    ctx: Option<FleetConfig>,
+    state: FleetState,
+    ctx: Option<FleetContext>,
 ) -> FleetProcess<ProcessedReadings> {
-    let Some(processed) = value.into_value() else {
-        return process_failure(state, ctx, "stage2.validate: value was None");
-    };
+    run_stage("stage2.validate", value, state, ctx, validate)
+}
 
+fn validate(
+    processed: &ProcessedReadings,
+    state: &mut FleetState,
+    fleet: &FleetContext,
+) -> Result<EffectLog, CausalityError> {
     let mut high_uncertainty_sensors: Vec<String> = Vec::new();
-    let high_thr = ctx
-        .as_ref()
-        .map(|c| c.high_uncertainty_threshold)
-        .unwrap_or(5.0);
+    let high_thr = read(fleet, HIGH_UNCERTAINTY_THRESHOLD)?;
 
     for (id, result) in processed.0.iter() {
         match result {
             Ok(u) => {
                 state.healthy_count += 1;
-                let std_dev = u.standard_deviation_from_entropy(100).unwrap_or(0.0);
+                let std_dev = u
+                    .standard_deviation_from_entropy(100)
+                    .map_err(sampling_error)?;
                 state.total_uncertainty += std_dev;
                 if std_dev > high_thr {
                     high_uncertainty_sensors.push(id.clone());
@@ -164,19 +248,23 @@ pub fn validate_stage(
         ));
     }
 
-    FleetProcess::new(Ok(CausalEffect::value(processed)), state, ctx, logs)
+    Ok(logs)
 }
 
 /// Stage 3 — inverse-variance fuse the temperature sensors; write fused mean into state.
 pub fn fusion_stage(
     value: CausalEffect<ProcessedReadings>,
-    mut state: FleetState,
-    ctx: Option<FleetConfig>,
+    state: FleetState,
+    ctx: Option<FleetContext>,
 ) -> FleetProcess<ProcessedReadings> {
-    let Some(processed) = value.into_value() else {
-        return process_failure(state, ctx, "stage3.fusion: value was None");
-    };
+    run_stage("stage3.fusion", value, state, ctx, fuse)
+}
 
+fn fuse(
+    processed: &ProcessedReadings,
+    state: &mut FleetState,
+    fleet: &FleetContext,
+) -> Result<EffectLog, CausalityError> {
     let temps: Vec<(&String, &Uncertain<f64>)> = processed
         .0
         .iter()
@@ -189,7 +277,9 @@ pub fn fusion_stage(
         logs.add_entry("stage3.fusion: no healthy temperature sensors");
     } else if temps.len() == 1 {
         let (id, u) = temps[0];
-        let mean = u.expected_value_from_entropy(SAMPLES).unwrap_or(f64::NAN);
+        let mean = u
+            .expected_value_from_entropy(SAMPLES)
+            .map_err(sampling_error)?;
         state.fused_temp = Some(mean);
         logs.add_entry(&format!(
             "stage3.fusion: single sensor {id} → {mean:.1}°C (no redundancy)"
@@ -199,10 +289,12 @@ pub fn fusion_stage(
         let mut total_weight = 0.0;
         let mut values: Vec<f64> = Vec::new();
         for (_, u) in &temps {
-            let mean = u.expected_value_from_entropy(SAMPLES).unwrap_or(f64::NAN);
+            let mean = u
+                .expected_value_from_entropy(SAMPLES)
+                .map_err(sampling_error)?;
             let std = u
                 .standard_deviation_from_entropy(SAMPLES)
-                .unwrap_or(f64::NAN);
+                .map_err(sampling_error)?;
             let weight = 1.0 / (std + 0.1);
             weighted_sum += mean * weight;
             total_weight += weight;
@@ -216,13 +308,10 @@ pub fn fusion_stage(
             1.0 / total_weight.sqrt()
         ));
 
-        let disagreement_thr = ctx
-            .as_ref()
-            .map(|c| c.anomaly_disagreement_c)
-            .unwrap_or(5.0);
+        let disagreement_thr = read(fleet, ANOMALY_DISAGREEMENT_C)?;
         if let (Some(&hi), Some(&lo)) = (
-            values.iter().max_by(|a, b| a.partial_cmp(b).unwrap()),
-            values.iter().min_by(|a, b| a.partial_cmp(b).unwrap()),
+            values.iter().max_by(|a, b| a.total_cmp(b)),
+            values.iter().min_by(|a, b| a.total_cmp(b)),
         ) && hi - lo > disagreement_thr
         {
             let spread = hi - lo;
@@ -235,31 +324,38 @@ pub fn fusion_stage(
         }
     }
 
-    FleetProcess::new(Ok(CausalEffect::value(processed)), state, ctx, logs)
+    Ok(logs)
 }
 
 /// Stage 4 — detect per-sensor anomalies against nominal bands.
 pub fn anomaly_stage(
     value: CausalEffect<ProcessedReadings>,
-    mut state: FleetState,
-    ctx: Option<FleetConfig>,
+    state: FleetState,
+    ctx: Option<FleetContext>,
 ) -> FleetProcess<ProcessedReadings> {
-    let Some(processed) = value.into_value() else {
-        return process_failure(state, ctx, "stage4.anomaly: value was None");
-    };
-    let Some(config) = ctx.clone() else {
-        return process_failure(state, ctx, "stage4.anomaly: missing FleetConfig");
-    };
+    run_stage("stage4.anomaly", value, state, ctx, detect_anomalies)
+}
 
+fn detect_anomalies(
+    processed: &ProcessedReadings,
+    state: &mut FleetState,
+    fleet: &FleetContext,
+) -> Result<EffectLog, CausalityError> {
     let mut logs = EffectLog::new();
     for (id, result) in processed.0.iter() {
         let Ok(u) = result else { continue };
-        let mean = u.expected_value_from_entropy(SAMPLES).unwrap_or(f64::NAN);
-        let Some(bands) = band_for(id, &config) else {
+        let mean = u
+            .expected_value_from_entropy(SAMPLES)
+            .map_err(sampling_error)?;
+        let Some(bands) = band_for(id) else {
             continue;
         };
-        if !(bands.nominal.0..=bands.nominal.1).contains(&mean) {
-            let note = format!("{id} reading {mean:.1} outside nominal {:?}", bands.nominal);
+        let nominal = (
+            read(fleet, bands.nominal_min)?,
+            read(fleet, bands.nominal_max)?,
+        );
+        if !(nominal.0..=nominal.1).contains(&mean) {
+            let note = format!("{id} reading {mean:.1} outside nominal {nominal:?}");
             state.anomalies.push(note.clone());
             logs.add_entry(&format!("stage4.anomaly: {note}"));
         }
@@ -268,27 +364,34 @@ pub fn anomaly_stage(
         logs.add_entry("stage4.anomaly: no anomalies detected");
     }
 
-    FleetProcess::new(Ok(CausalEffect::value(processed)), state, ctx, logs)
+    Ok(logs)
 }
 
 /// Stage 5 — cross-validate temperature against pressure (physics check).
 pub fn fallback_stage(
     value: CausalEffect<ProcessedReadings>,
-    mut state: FleetState,
-    ctx: Option<FleetConfig>,
+    state: FleetState,
+    ctx: Option<FleetContext>,
 ) -> FleetProcess<ProcessedReadings> {
-    let Some(processed) = value.into_value() else {
-        return process_failure(state, ctx, "stage5.fallback: value was None");
-    };
+    run_stage("stage5.fallback", value, state, ctx, cross_check)
+}
 
+fn cross_check(
+    processed: &ProcessedReadings,
+    state: &mut FleetState,
+    fleet: &FleetContext,
+) -> Result<EffectLog, CausalityError> {
     let mut logs = EffectLog::new();
     if state.healthy_count == 0 {
         logs.add_entry("stage5.fallback: no healthy sensors — falling back to historical model");
-        let historical = Uncertain::normal(22.0, 3.0);
+        let historical = Uncertain::normal(
+            read(fleet, HISTORICAL_TEMP_MEAN)?,
+            read(fleet, HISTORICAL_TEMP_SD)?,
+        );
         state.fused_temp = Some(
             historical
                 .expected_value_from_entropy(SAMPLES)
-                .unwrap_or(f64::NAN),
+                .map_err(sampling_error)?,
         );
     }
 
@@ -298,13 +401,14 @@ pub fn fallback_stage(
     ) {
         let t = temp
             .expected_value_from_entropy(SAMPLES)
-            .unwrap_or(f64::NAN);
+            .map_err(sampling_error)?;
         let p = pressure
             .expected_value_from_entropy(SAMPLES)
-            .unwrap_or(f64::NAN);
-        let expected_t = 20.0 + (p - 1013.25) * 0.02;
+            .map_err(sampling_error)?;
+        let expected_t = read(fleet, REFERENCE_TEMP)?
+            + (p - read(fleet, REFERENCE_PRESSURE)?) * read(fleet, TEMP_PER_HPA)?;
         let diff = (t - expected_t).abs();
-        if diff > 10.0 {
+        if diff > read(fleet, CORRELATION_TOLERANCE)? {
             let note = format!(
                 "temp-pressure correlation failed: measured {t:.1}°C vs expected {expected_t:.1}°C"
             );
@@ -315,19 +419,23 @@ pub fn fallback_stage(
         }
     }
 
-    FleetProcess::new(Ok(CausalEffect::value(processed)), state, ctx, logs)
+    Ok(logs)
 }
 
 /// Stage 6 — derive a final risk verdict from accumulated state.
 pub fn reliability_stage(
     value: CausalEffect<ProcessedReadings>,
-    mut state: FleetState,
-    ctx: Option<FleetConfig>,
+    state: FleetState,
+    ctx: Option<FleetContext>,
 ) -> FleetProcess<ProcessedReadings> {
-    let Some(processed) = value.into_value() else {
-        return process_failure(state, ctx, "stage6.reliability: value was None");
-    };
+    run_stage("stage6.reliability", value, state, ctx, judge_reliability)
+}
 
+fn judge_reliability(
+    _processed: &ProcessedReadings,
+    state: &mut FleetState,
+    fleet: &FleetContext,
+) -> Result<EffectLog, CausalityError> {
     let total = state.healthy_count + state.degraded_count + state.failed_count;
     let health_pct = if total > 0 {
         state.healthy_count as f64 / total as f64 * 100.0
@@ -335,11 +443,11 @@ pub fn reliability_stage(
         0.0
     };
 
-    let verdict = if health_pct < 50.0 {
+    let verdict = if health_pct < read(fleet, CRITICAL_BELOW_PCT)? {
         RiskLevel::Critical
-    } else if health_pct < 70.0 {
+    } else if health_pct < read(fleet, HIGH_BELOW_PCT)? {
         RiskLevel::High
-    } else if health_pct < 85.0 {
+    } else if health_pct < read(fleet, MEDIUM_BELOW_PCT)? {
         RiskLevel::Medium
     } else {
         RiskLevel::Low
@@ -351,5 +459,5 @@ pub fn reliability_stage(
         "stage6.reliability: health={health_pct:.1}% verdict={verdict:?}"
     ));
 
-    FleetProcess::new(Ok(CausalEffect::value(processed)), state, ctx, logs)
+    Ok(logs)
 }
