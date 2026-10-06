@@ -40,16 +40,21 @@
 //!
 //! `fmap` applies the dispersion relation pointwise, and `fold` reduces the sweep to the
 //! resolution limit each material imposes.
+//!
+//! The wavelength, the permittivity magnitude and the periods come from the optical world, a
+//! context of one `Data` node per quantity, read once before the sweep.
 
 mod model;
 mod utils_print;
 
 use deep_causality_haft::{Foldable, Functor};
 use deep_causality_num::Float106;
-use deep_causality_tensor::{CausalTensor, CausalTensorError, CausalTensorWitness};
+use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 use model::{
-    SEPARATIONS_NM, ZERO, hyperbolic_metamaterial, squared_out_of_plane_wavenumber, vacuum,
+    ZERO, epsilon_magnitude, hyperbolic_metamaterial, optics_world, separations_nm,
+    squared_out_of_plane_wavenumber, vacuum, wavelength_nm,
 };
+use std::error::Error;
 use utils_print::{print_header, print_materials, print_sweep, print_verdict};
 
 /// The working scalar. Switch it to `f32`, `f64` or `deep_causality_num::BFloat16`; the
@@ -60,20 +65,26 @@ use utils_print::{print_header, print_materials, print_sweep, print_verdict};
 /// types differ.
 pub type FloatType = Float106;
 
-fn main() -> Result<(), CausalTensorError> {
-    print_header();
-    print_materials(&vacuum(), &hyperbolic_metamaterial());
+fn main() -> Result<(), Box<dyn Error>> {
+    let world = optics_world()?;
+    let wavelength = wavelength_nm(&world)?;
+    let epsilon = epsilon_magnitude(&world)?;
+    let separations = separations_nm(&world)?;
+
+    print_header(wavelength);
+    print_materials(&vacuum(), &hyperbolic_metamaterial(), epsilon);
 
     // The periods to probe, coarse to fine, as a rank-1 tensor.
-    let periods = CausalTensor::new(SEPARATIONS_NM.to_vec(), vec![SEPARATIONS_NM.len()])?;
+    let count = separations.len();
+    let periods = CausalTensor::new(separations, vec![count])?;
 
     // fmap: the dispersion relation reads one period and returns one k_z². The law is pointwise,
     // so the functor carries it across the sweep without the sweep appearing in the law.
     let in_vacuum = CausalTensorWitness::fmap(periods.clone(), |d| {
-        squared_out_of_plane_wavenumber(&vacuum(), d)
+        squared_out_of_plane_wavenumber(&vacuum(), wavelength, epsilon, d)
     });
     let in_lens = CausalTensorWitness::fmap(periods.clone(), |d| {
-        squared_out_of_plane_wavenumber(&hyperbolic_metamaterial(), d)
+        squared_out_of_plane_wavenumber(&hyperbolic_metamaterial(), wavelength, epsilon, d)
     });
 
     print_sweep(&periods, &in_vacuum, &in_lens);

@@ -58,6 +58,10 @@ Two categorical operations sweep a range of object periods:
 `fmap` applies the relation pointwise; the relation itself never sees the sweep. `fold` pairs each
 period with its own result and reduces to the resolution limit.
 
+The wavelength, the permittivity magnitude and the periods to probe are the optical world: a
+context of three `Data` nodes, one per quantity, that `main` reads once before the sweep. The
+period sweep is one node holding the whole list. The two materials stay `Metric` values.
+
 ## Output
 
 ```text
@@ -82,10 +86,10 @@ optics.
 pub type FloatType = Float106;
 ```
 
-Every constant is declared at that type through `const_scalar_from_int!` and
-`const_scalar_from_float!`, so no conversion runs at any call site. The alias is `Float106` rather
-than `f64` so that a hard-coded `f64`, unnoticed while the alias *is* `f64`, fails to compile. All
-four scalars run.
+Every constant, and every value the optical world holds, is declared at that type through
+`const_scalar_from_int!` and `const_scalar_from_float!`, so no conversion runs at any call site.
+The alias is `Float106` rather than `f64` so that a hard-coded `f64`, unnoticed while the alias
+*is* `f64`, fails to compile. All four scalars run.
 
 ## What the example covers
 
@@ -103,9 +107,10 @@ and the curved geometry that magnifies the near field out to where a detector si
 
 Each step keeps the structure already here.
 
-- **Per-axis and frequency-dependent magnitudes.** `permittivity` already takes an axis, so only
-  its magnitude source changes: a per-axis table, then a Drude or Lorentz model in the frequency.
-  Sweeping period against frequency makes the tensor rank 2, and the `fmap` carries over unchanged.
+- **Per-axis and frequency-dependent magnitudes.** `permittivity` already takes an axis and a
+  magnitude, so only the magnitude's source changes: a per-axis table in the optical world, then a
+  Drude or Lorentz model in the frequency. Sweeping period against frequency makes the tensor
+  rank 2, and the `fmap` carries over unchanged.
 - **Loss.** A lossy medium has a complex permittivity, and the dispersion relation is the same
   expression over `Complex<FloatType>`, with the imaginary part of `k_z` giving the decay length.
   The one change is writing the relation over a scalar bound instead of the alias, so one
@@ -120,5 +125,5 @@ Each step keeps the structure already here.
 | File | Holds |
 |---|---|
 | `main.rs` | the alias and the two categorical operations |
-| `model.rs` | the optics constants, the metric-to-permittivity reading, the dispersion relation |
+| `model.rs` | the optical world, the metric-to-permittivity reading, the dispersion relation |
 | `utils_print.rs` | the presentation, and the only `lower` calls |
