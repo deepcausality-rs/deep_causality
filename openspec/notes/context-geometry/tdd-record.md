@@ -55,18 +55,20 @@ counts. Every update is now an
 entry times a ratio of entries that the pivot choice bounds
 (`test_the_signature_check_holds_where_products_of_entries_leave_the_range`). Review of the pull request found it;
 row J had stopped at λ = 10³. The check still errs at the two ends of the range: within about 2^10
-of the type's maximum, where one update can grow an entry to four times the largest entry and so
-past the maximum (`f64` refused 1 of the 52 at 2^1014 and 34 at 2^1021), and in the subnormal
+of the type's maximum, where one update can move an entry by up to four times the largest
+remaining entry, so the entry can reach five times it and pass the maximum (`f64` refused 1 of the 52 at 2^1014 and 34 at 2^1021), and in the subnormal
 range, where the entries carry too few digits (`f64` refused 10 at 2^−1070). `Float106` is clean
 from 2^−1000 to 2^1000.
 
 ## Defect audit
 
 33 defects, D1–D5 and D7–D34 (D6 was never assigned), injected one at a time into the source, each
-run against the context integration suite and restored byte for byte (script: scratchpad
-`defect_audit.py`). The five `inertia.rs` defects, D5 and D7–D10, were injected again into the
-current `inertia.rs`, with patterns quoting its text (script: scratchpad `defect_audit_inertia.py`);
-their rows below give that result.
+run against the context integration suite and restored byte for byte (script:
+[`audits/defect_audit.py`](audits/defect_audit.py), whose patterns quote commit 462077fcb). The five
+`inertia.rs` defects, D5 and D7–D10, were injected again into `inertia.rs` at commit 35bdf67c7,
+with patterns quoting its text (script:
+[`audits/defect_audit_inertia.py`](audits/defect_audit_inertia.py)); their rows below give that
+result.
 
 | Class | Defects | Result |
 |---|---|---|

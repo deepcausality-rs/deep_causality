@@ -118,8 +118,9 @@ own aliases, so a type that satisfies the bound works without an entry being add
 
 Further bounds appear where the code needs more than the algebra gives. `Adjustable` impls require
 `Default`, because `ArrayGrid` needs it to initialise its backing array. `Display` impls that render
-with `{:?}` require `Debug`. Code that converts a constant or a record value into the scalar requires
-`FromPrimitive`: `GeoSpace::new`, the time-scale conversions and the `Recordable` impls.
+with `{:?}` require `Debug`. Code that converts a constant into the scalar requires `FromPrimitive`:
+`GeoSpace::new` and the time-scale conversions. The `Recordable` impls require `FromPrimitive` to read
+a record value into the scalar and `Into<f64>` to write the scalar into a record.
 
 ### Ticks stay integers
 

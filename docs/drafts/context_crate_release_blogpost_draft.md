@@ -87,7 +87,7 @@ assert_eq!(oil_prices.get_data().len(), 4);
 
 A context can hold a time series. Our Granger causality example needed exactly that, and had
 carried a private struct for want of it. It now carries a
-`Context<Data<Vec<f64>>, EuclideanSpace, EuclideanTime, EuclideanSpacetime, f64, f64>`.
+`Context<Data<Vec<FloatType>>, EuclideanSpace<FloatType>, NewtonianTime<FloatType>, NewtonianSpacetime<FloatType>>`.
 
 `Data<T>` itself is no longer `Copy`. If you relied on an implicit copy, you need a `.clone()`.
 `BaseContextoid` is unaffected, because it was never `Copy`: `EuclideanSpace` derives only `Debug`,
