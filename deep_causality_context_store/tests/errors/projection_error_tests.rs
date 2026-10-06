@@ -192,3 +192,15 @@ fn test_rejected() {
         ProjectionError::Rejected(4, String::from("metric tensor is not symmetric"))
     );
 }
+
+#[test]
+fn test_frozen() {
+    let err = ProjectionError::Frozen(7);
+    assert_eq!(err.kind(), &ProjectionErrorEnum::Frozen { id: 7 });
+    assert_eq!(
+        err.to_string(),
+        "ProjectionError: context 7 is frozen; unfreeze it before applying events"
+    );
+    assert_eq!(err, err.clone());
+    assert_ne!(err, ProjectionError::Frozen(8));
+}
