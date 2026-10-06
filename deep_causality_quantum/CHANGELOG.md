@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_quantum-v0.4.2...deep_causality_quantum-v0.4.3) - 2026-10-06
+
+### Other
+
+- *(website/quantum)* rebuild the quantum site around one demonstration and a plain vocabulary
+
 ## [0.4.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_quantum-v0.4.1...deep_causality_quantum-v0.4.2) - 2026-09-29
 
 ### Added
