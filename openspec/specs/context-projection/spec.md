@@ -83,8 +83,8 @@ FromPrimitive` on every scalar-bearing implementation and `R: RealField` on `NoS
 | `TimeKind<R>` | `TimeRecord` | total |
 | `SpaceTimeKind<R>` | `SpaceTimeRecord` | total |
 | `GeoSpace<R>`, `EcefSpace<R>`, `EuclideanSpace<R>`, `NedSpace<R>` | `SpaceRecord` | writes its own variant; reads any other as `WrongVariant` |
-| `EuclideanTime<R>`, `LorentzianTime<R>`, `DiscreteTime`, `EntropicTime` | `TimeRecord` | writes its own variant; reads any other as `WrongVariant` |
-| `EuclideanSpacetime<R>`, `LorentzianSpacetime<R>`, `TangentSpacetime<R>` | `SpaceTimeRecord` | writes its own variant; reads any other as `WrongVariant` |
+| `NewtonianTime<R>`, `MinkowskiTime<R>`, `DiscreteTime`, `EntropicTime` | `TimeRecord` | writes its own variant; reads any other as `WrongVariant` |
+| `NewtonianSpacetime<R>`, `MinkowskiSpacetime<R>`, `TangentSpacetime<R>` | `SpaceTimeRecord` | writes its own variant; reads any other as `WrongVariant` |
 | `NoSpaceTime<R>` | `SpaceRecord` and `SpaceTimeRecord` | `to_record` is `Unrecordable`; `from_record` is `WrongVariant` |
 | `Data<T: Storable>` | `DataRecord` | through `Storable`, see above |
 | `Contextoid<D, S, T, ST>` | `NodeRecord` | dispatches to `D`, `S`, `T`, `ST`; `Root` ↔ `NodeRecord::Root`; the phantom arm is `Unrecordable` |
@@ -118,7 +118,7 @@ FromPrimitive` on every scalar-bearing implementation and `R: RealField` on `NoS
 - **WHEN** `Recordable::<SpaceRecord>::to_record` and `Recordable::<SpaceTimeRecord>::to_record`
   are called on a `NoSpaceTime<f64>`
 - **THEN** each returns `Err(ProjectionError::Unrecordable { .. })`, and a `Context<Data<f64>,
-  NoSpaceTime<f64>, EuclideanTime<f64>, NoSpaceTime<f64>>` holding a root, a data node and a time
+  NoSpaceTime<f64>, NewtonianTime<f64>, NoSpaceTime<f64>>` holding a root, a data node and a time
   node still snapshots and restores, because no node of the absent type is in the graph
 
 ### Requirement: Precision is projected onto `f64` at the bound

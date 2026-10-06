@@ -8,8 +8,9 @@ TBD - created by archiving change consolidate-context-signature. Update Purpose 
 Every spacetime type SHALL report the metric signature it is in, and no type above it SHALL declare
 one on its behalf.
 
-Every spacetime node is in some signature: the Newtonian coordinate spacetime is in (+,+,+,+) and
-the relativistic ones are in (−,+,+,+). The question is never whether a signature exists, only who
+Every spacetime node is in some signature: the classical spacetimes (Galilean and Newtonian) report
+the signature (0,+,+,+) of their spatial metric, time first, and the relativistic ones are in
+(−,+,+,+) (Malament 2012, §2.1 and §4.1). The question is never whether a signature exists, only who
 says what it is. A context whose spacetime varies holds nodes in more than one, so a single value
 on the context cannot answer for all of them, and one that some contents contradict is a claim
 nothing enforces.

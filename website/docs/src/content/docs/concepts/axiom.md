@@ -11,7 +11,7 @@ The EPP is an axiomatic, spacetime-agnostic foundation upon which domain-specifi
 
 - Static & dynamic causality processes
 - Markovian & non-Markovian processes
-- Euclidean & non-Euclidean spacetime
+- Classical & relativistic spacetime
 - Deterministic & probabilistic reasoning
 
 ## Unpacking the axiom
@@ -202,13 +202,13 @@ The two channels propagate together. Add two such readings and the values combin
 The foundational axiom, as implemented in DeepCausality, supports a broad range of expression:
 
 - Markovian & non-Markovian processes
-- Euclidean & non-Euclidean spacetime
+- Classical & relativistic spacetime
 - Static & dynamic causality
 - Deterministic & probabilistic reasoning
 
 The Markovian property enables stateful processes, which cover a broad variety of advanced engineering and physics domains, as demonstrated in the [avionics examples](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/avionics_examples).
 
-Non-Euclidean spacetime representation is common in advanced physics, for example when modeling general relativity for satellite navigation. Combined with the Markovian property, stateful physics simulations across Euclidean and non-Euclidean regimes compose natively, as demonstrated in the [physics example](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/physics_examples).
+Relativistic spacetime representation is common in advanced physics, for example when modeling general relativity for satellite navigation. Combined with the Markovian property, stateful physics simulations across classical and relativistic regimes compose natively, as demonstrated in the [physics example](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/physics_examples).
 
 Static and dynamic causal processes enable the combination of pre-existing background knowledge with current measurements, as demonstrated in the [medicine examples](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/medicine_examples).
 

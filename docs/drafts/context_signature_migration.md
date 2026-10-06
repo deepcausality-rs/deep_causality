@@ -18,7 +18,7 @@ Every change below is breaking. Most are mechanical.
 | Spatial, temporal and spacetime types take a scalar | Write `EuclideanSpace<f64>`, or use the aliases |
 | `Metric` trait renamed `Distance` | Rename at the call site |
 | `MetricCoordinate` removed | Bound on `Spatial` and `Coordinate` directly |
-| `MinkowskiSpacetime` merged into `LorentzianSpacetime` | Rename; the fields and constructor are identical |
+| `MinkowskiSpacetime` merged into `MinkowskiSpacetime` | Rename; the fields and constructor are identical |
 | `QuaternionSpace` removed | Carry orientation beside a position in your own type |
 | `ContextId` and `ContextoidId` moved out of core | Import from `deep_causality_context` |
 | Edges carry `RelationKind` | Nothing, unless you read edges back — now you can |
@@ -85,14 +85,14 @@ function signature, a type alias:
 
 ```rust
 // before
-type MyContext = Context<Data<f64>, EuclideanSpace, EuclideanTime, EuclideanSpacetime>;
+type MyContext = Context<Data<f64>, EuclideanSpace, NewtonianTime, NewtonianSpacetime>;
 
 // after
 type MyContext = Context<
     Data<FloatType>,
     EuclideanSpace<FloatType>,
-    EuclideanTime<FloatType>,
-    EuclideanSpacetime<FloatType>,
+    NewtonianTime<FloatType>,
+    NewtonianSpacetime<FloatType>,
 >;
 ```
 
@@ -142,7 +142,7 @@ one inline bound.
 
 ## The two flat spacetimes are one
 
-`MinkowskiSpacetime` and `LorentzianSpacetime` had identical fields, identical constructors, and
+`MinkowskiSpacetime` and `MinkowskiSpacetime` had identical fields, identical constructors, and
 eight of nine identical trait impls. `Lorentzian` names the signature class and `Minkowski` names one
 flat member of it, so the general name survives.
 
@@ -151,10 +151,10 @@ flat member of it, so the general name survives.
 MinkowskiSpacetime::new(1, x, y, z, t, TimeScale::Second)
 
 // after — same arguments, same order
-LorentzianSpacetime::new(1, x, y, z, t, TimeScale::Second)
+MinkowskiSpacetime::new(1, x, y, z, t, TimeScale::Second)
 ```
 
-`SpaceTimeKind::Minkowski` is gone with it. If you matched on it, match on `SpaceTimeKind::Lorentzian`.
+`SpaceTimeKind::Minkowski` is gone with it. If you matched on it, match on `SpaceTimeKind::Minkowski`.
 
 The one behavioural difference: `Display` now prints the time scale, which `MinkowskiSpacetime`'s did
 not.
@@ -169,9 +169,10 @@ pub trait MetricSignature {
 }
 ```
 
-`EuclideanSpacetime` reports `Metric::Euclidean(4)` — it is Newtonian, with flat space and an
-absolute clock. `LorentzianSpacetime` and `TangentSpacetime` report `Metric::Lorentzian(4)`.
-`SpaceTimeKind` forwards to the variant it holds.
+`GalileanSpacetime` and `NewtonianSpacetime` report `Metric::PGA(4)`, the signature (0,+,+,+) of
+the spatial metric of a classical spacetime, time first. `MinkowskiSpacetime` and
+`TangentSpacetime` report `Metric::Lorentzian(4)`, (−,+,+,+). `SpaceTimeKind` forwards to the
+variant it holds.
 
 This is what lets one context hold nodes on different manifolds and still answer correctly for each:
 
@@ -190,9 +191,8 @@ because a node supplies the same `Metric` those functions already take.
 **If you implement `SpaceTemporal` on your own type, you must now also implement
 `MetricSignature`.** It is a supertrait.
 
-A signature does not vary under continuous evolution, so a type derives it from what it is rather
-than from what it currently holds. `TangentSpacetime` keeps `Lorentzian(4)` while every component of
-its stored tensor changes.
+`TangentSpacetime` keeps `Lorentzian(4)` because `update_metric_tensor` accepts only a symmetric
+tensor of that signature and refuses any other with an `UpdateError`.
 
 ## `QuaternionSpace` is gone
 
@@ -204,15 +204,15 @@ your own type alongside the position it belongs to.
 
 ## A context with no spatial extent says so
 
-`NoSpaceTime<R>` is zero-sized and implements the spatial and spacetime traits trivially. A context
-that holds a root, some data and a clock can now name it instead of naming a spatial type its graph
-never holds:
+`NoSpace<R>`, `NoTime` and `NoSpaceTime<R>` are zero-sized and fill the spatial, temporal and
+spacetime slots of a context whose graph holds no node of that kind. A context that holds a root,
+some data and a clock names what it lacks instead of naming types its graph never holds:
 
 ```rust
 type ClockContext = Context<
     Data<FloatType>,
-    NoSpaceTime<FloatType>,
-    EuclideanTime<FloatType>,
+    NoSpace<FloatType>,
+    NewtonianTime<FloatType>,
     NoSpaceTime<FloatType>,
 >;
 ```
@@ -267,8 +267,8 @@ so.
 // before
 GeoSpace::new(1, 52.52, 13.40, 34.0)
 
-// after
-GeoSpace::new(1, 52.52, 13.40, 34.0, VerticalDatum::WGS84)
+// after: the datum is named, and a latitude outside [-90, 90] is refused
+GeoSpace::new(1, 52.52, 13.40, 34.0, VerticalDatum::WGS84)?
 ```
 
 `VerticalDatum` has five members, grouped by the height type each belongs under. `WGS84` is an
