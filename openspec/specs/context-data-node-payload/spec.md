@@ -16,8 +16,8 @@ Nothing above `Data<T>` needs `Copy`. `Datable` states no bound on `Self::Data`;
 `D: Datable + Clone`; and the `Copy`, `Hash` and `Eq` derives on `Contextoid` are conditional and
 already inapplicable to `BaseContext`, whose `EuclideanSpace` parameter derives only `Debug`,
 `Clone` and `PartialEq`. `Data<T>` is the only context node type that constrains a payload
-parameter at all — `EcefSpace`, `GeoSpace`, `EuclideanSpace`, `SpaceKind`, `SymbolKind`,
-`CausalSetSpacetime` and `ConformalSpacetime` are `Clone`-only.
+parameter at all — `EcefSpace`, `GeoSpace`, `EuclideanSpace`, `SpaceKind`, `SymbolKind` and
+`CausalSetSpacetime` are `Clone`-only.
 
 `Datable::get_data` SHALL return a clone of the payload rather than a copy of it.
 

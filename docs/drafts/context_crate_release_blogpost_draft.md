@@ -28,8 +28,8 @@ pub struct TreatmentContext {
 Five examples, five bespoke context types, none of them talking to the context machinery sitting
 one directory over. Meanwhile the causaloid-side examples next to them used the real thing.
 
-After the split, a crate that depends on `deep_causality_core` and `deep_causality_context`, and now you 
-can do this:
+After the split, a crate that depends on `deep_causality_core` and `deep_causality_context` can do
+this:
 
 ```rust
 use deep_causality_context::BaseContext;
@@ -61,9 +61,9 @@ Context<D, S, T, ST, VS, VT>
 If you instantiated `Context`, `Contextoid` or `ContextoidType` by hand, drop the fifth argument.
 If you used `BaseContext` or `UniformContext`, nothing changes; the aliases absorb it.
 
-`SymbolicTime`, `TimeScale::Symbolic`, `CausalSetSpacetime` and `ConformalSpacetime` are unaffected. Those are
-temporal and spacetime types that happen to have "symbolic" in the name. They never touched the
-`Symbolic` trait.
+`SymbolicTime` and `TimeScale::Symbolic` are unaffected. They are a time type and a time scale that
+happen to have "symbolic" in the name, and they never touched the `Symbolic` trait. Neither did
+`CausalSetSpacetime`, which the removal leaves in place.
 
 ## `Data<T>` no longer requires `Copy`
 
@@ -87,7 +87,7 @@ assert_eq!(oil_prices.get_data().len(), 4);
 
 A context can hold a time series. Our Granger causality example needed exactly that, and had
 carried a private struct for want of it. It now carries a
-`Context<Data<Vec<f64>>, EuclideanSpace, NewtonianTime, NewtonianSpacetime, f64, f64>`.
+`Context<Data<Vec<f64>>, EuclideanSpace, EuclideanTime, EuclideanSpacetime, f64, f64>`.
 
 `Data<T>` itself is no longer `Copy`. If you relied on an implicit copy, you need a `.clone()`.
 `BaseContextoid` is unaffected, because it was never `Copy`: `EuclideanSpace` derives only `Debug`,

@@ -75,7 +75,8 @@ foreign type. Backends never name the trait; they see `DataRecord`. `UncertainDa
 ### Requirement: The projection is total on the uniform kinds and refuses loudly on the concrete types
 
 `deep_causality_context` SHALL implement `Recordable` as follows, with `R: RealField + Into<f64> +
-FromPrimitive` on every scalar-bearing implementation and `R: RealField` on `NoSpaceTime<R>`:
+FromPrimitive` on every scalar-bearing implementation and `R: RealField` on `NoSpace<R>` and
+`NoSpaceTime<R>`:
 
 | Type | Record | Behaviour |
 |---|---|---|
@@ -84,13 +85,20 @@ FromPrimitive` on every scalar-bearing implementation and `R: RealField` on `NoS
 | `SpaceTimeKind<R>` | `SpaceTimeRecord` | total |
 | `GeoSpace<R>`, `EcefSpace<R>`, `EuclideanSpace<R>`, `NedSpace<R>` | `SpaceRecord` | writes its own variant; reads any other as `WrongVariant` |
 | `NewtonianTime<R>`, `MinkowskiTime<R>`, `DiscreteTime`, `EntropicTime` | `TimeRecord` | writes its own variant; reads any other as `WrongVariant` |
-| `NewtonianSpacetime<R>`, `MinkowskiSpacetime<R>`, `TangentSpacetime<R>` | `SpaceTimeRecord` | writes its own variant; reads any other as `WrongVariant` |
+| `GalileanSpacetime<R>`, `NewtonianSpacetime<R>`, `MinkowskiSpacetime<R>`, `TangentSpacetime<R>` | `SpaceTimeRecord` | writes its own variant; reads any other as `WrongVariant` |
+| `NoSpace<R>` | `SpaceRecord` | `to_record` is `Unrecordable`; `from_record` is `WrongVariant` |
+| `NoTime` | `TimeRecord` | `to_record` is `Unrecordable`; `from_record` is `WrongVariant` |
 | `NoSpaceTime<R>` | `SpaceRecord` and `SpaceTimeRecord` | `to_record` is `Unrecordable`; `from_record` is `WrongVariant` |
 | `Data<T: Storable>` | `DataRecord` | through `Storable`, see above |
 | `Contextoid<D, S, T, ST>` | `NodeRecord` | dispatches to `D`, `S`, `T`, `ST`; `Root` ↔ `NodeRecord::Root`; the phantom arm is `Unrecordable` |
 
-`SymbolicTime`, `CausalSetSpacetime` and `ConformalSpacetime` implement nothing.
+`SymbolicTime` and `CausalSetSpacetime` implement nothing.
 `TangentSpacetime::from_record` restores the stored metric tensor, not the default one.
+`GeoSpace::from_record` and `TangentSpacetime::from_record`, and the `SpaceKind` and
+`SpaceTimeKind` arms that call them, return `Rejected` for a record of their variant whose values
+the type refuses: for `GeoSpace`, a latitude outside [−90, 90] or a non-finite coordinate; for
+`TangentSpacetime`, a metric tensor that is not finite, not symmetric, or not of signature
+(−, +, +, +).
 
 #### Scenario: Every uniform variant round-trips
 

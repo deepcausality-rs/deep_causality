@@ -18,13 +18,23 @@ Every change below is breaking. Most are mechanical.
 | Spatial, temporal and spacetime types take a scalar | Write `EuclideanSpace<f64>`, or use the aliases |
 | `Metric` trait renamed `Distance` | Rename at the call site |
 | `MetricCoordinate` removed | Bound on `Spatial` and `Coordinate` directly |
-| `MinkowskiSpacetime` merged into `MinkowskiSpacetime` | Rename; the fields and constructor are identical |
+| `EuclideanTime`, `LorentzianTime` and `EuclideanSpacetime` renamed `NewtonianTime`, `MinkowskiTime` and `NewtonianSpacetime` | Rename; the `TimeKind` and `SpaceTimeKind` variants follow. Expect `Metric::PGA(4)` from `NewtonianSpacetime` |
+| `LorentzianSpacetime` merged into `MinkowskiSpacetime` | Rename; the fields and constructor are identical. Expect a NaN interval for `NoScale`, `Steps` and `Symbolic` |
+| A spacetime's coordinate 0 is `t` | Re-index `coordinate(i)` and `Adjustable` grid positions to `t, x, y, z`; constructor arguments keep `(id, x, y, z, t, ..)` |
+| Every space and spacetime type reads grid position `k` at `PointIndex::new1d(k)`, `new2d(k, 0)`, `new3d(0, 0, k)` or `new4d(0, 0, k, 0)` | Fill a 4D grid for `MinkowskiSpacetime` along z, not t. A 1D or 2D grid now gives each coordinate its own cell and must hold one per coordinate |
+| `GalileanSpacetime`, `NoSpace` and `NoTime` added | Add a `SpaceTimeKind::Galilean` arm to an exhaustive match |
+| `update_metric_tensor` returns `Result<(), MetricTensorError>` | Handle the error for a tensor that is not finite, not symmetric, or not of signature (−, +, +, +); its `MetricTensorErrorEnum` names the rule and the entry or eigenvalue counts |
+| `TangentSpacetime::euclidean_distance` and `spatial_velocity` removed | Compute them from `position()` and `velocity_vector()` |
+| `CausalSetSpacetime` fields are private; `causal_depth` renamed `predecessor_count` | Read through `id()`, `label()` and `predecessors()`; extend the past with `add_predecessor`, which returns `false` for the element itself or one already recorded |
+| `ConformalSpacetime` removed | Record the causal order with `CausalSetSpacetime`, which keeps each element's predecessors |
 | `QuaternionSpace` removed | Carry orientation beside a position in your own type |
 | `ContextId` and `ContextoidId` moved out of core | Import from `deep_causality_context` |
 | Edges carry `RelationKind` | Nothing, unless you read edges back — now you can |
-| `GeoSpace` carries a vertical datum | Pass a fifth argument |
+| `GeoSpace` carries a vertical datum and checks its coordinates | Pass a fifth argument and handle the `Result`; generic code adds `R: FromPrimitive`. `update` and `adjust` refuse the coordinates `new` refuses |
+| `GeoSpace::distance` is the straight line between WGS 84 geocentric positions | Expect NaN unless both datums are `WGS84` |
 | `UncertainFloat64Data` and `UncertainBooleanData` removed | Name the type and its scalar |
 | Each crate declares its own `FloatType` | Import from the crate you are using |
+| Time and spacetime records follow the renames; `SpaceTimeRecord` gains `Galilean` and `ProjectionErrorEnum` gains `Rejected` | In a backend, map stored `Euclidean` to `Newtonian` and `Lorentzian` to `Minkowski`, and add the new arms |
 
 ---
 
@@ -85,7 +95,7 @@ function signature, a type alias:
 
 ```rust
 // before
-type MyContext = Context<Data<f64>, EuclideanSpace, NewtonianTime, NewtonianSpacetime>;
+type MyContext = Context<Data<f64>, EuclideanSpace, EuclideanTime, EuclideanSpacetime>;
 
 // after
 type MyContext = Context<
@@ -106,9 +116,10 @@ One bound: `RealField`, from `deep_causality_algebra`. The crate names no concre
 own aliases, so a type that satisfies the bound works without an entry being added for it. `f32`,
 `f64`, `BFloat16` and `Float106` all do.
 
-Two bounds appear where the code needs more than the algebra gives. `Adjustable` impls require
+Further bounds appear where the code needs more than the algebra gives. `Adjustable` impls require
 `Default`, because `ArrayGrid` needs it to initialise its backing array. `Display` impls that render
-with `{:?}` require `Debug`.
+with `{:?}` require `Debug`. Code that converts a constant or a record value into the scalar requires
+`FromPrimitive`: `GeoSpace::new`, the time-scale conversions and the `Recordable` impls.
 
 ### Ticks stay integers
 
@@ -142,26 +153,32 @@ one inline bound.
 
 ## The two flat spacetimes are one
 
-`MinkowskiSpacetime` and `MinkowskiSpacetime` had identical fields, identical constructors, and
-eight of nine identical trait impls. `Lorentzian` names the signature class and `Minkowski` names one
-flat member of it, so the general name survives.
+`MinkowskiSpacetime` and `LorentzianSpacetime` had identical fields and constructors. They differed
+in `Display`, and in `Copy`, which only `MinkowskiSpacetime` derived. Both were flat. A
+relativistic spacetime is a four-dimensional manifold with a metric of Lorentz signature, curved or
+flat; Minkowski spacetime is the one that is flat and geodesically complete (Malament 2012, §2.1).
+The merged type carries the name of what it models.
 
 ```rust
 // before
-MinkowskiSpacetime::new(1, x, y, z, t, TimeScale::Second)
+LorentzianSpacetime::new(1, x, y, z, t, TimeScale::Second)
 
 // after — same arguments, same order
 MinkowskiSpacetime::new(1, x, y, z, t, TimeScale::Second)
 ```
 
-`SpaceTimeKind::Minkowski` is gone with it. If you matched on it, match on `SpaceTimeKind::Minkowski`.
+`SpaceTimeKind::Lorentzian` is gone with it. If you matched on it, match on
+`SpaceTimeKind::Minkowski`.
 
-The one behavioural difference: `Display` now prints the time scale, which `MinkowskiSpacetime`'s did
-not.
+`Display` prints the time scale, which `MinkowskiSpacetime`'s did not. The type does not derive
+`Copy`, so clone where you copied a `MinkowskiSpacetime`. The interval is NaN for a time scale that
+names no duration (`NoScale`, `Steps`, `Symbolic`); the two old types read the raw count as seconds.
 
 ## A spacetime reports its own signature
 
-New trait, and every spacetime type implements it:
+New trait, implemented by every spacetime node type that has coordinates (`GalileanSpacetime`,
+`NewtonianSpacetime`, `MinkowskiSpacetime`, `TangentSpacetime`, `SpaceTimeKind`) and by
+`NoSpaceTime`. `CausalSetSpacetime` holds only an order and does not implement it:
 
 ```rust
 pub trait MetricSignature {

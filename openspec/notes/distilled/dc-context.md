@@ -80,7 +80,7 @@ the scalar reaches the node.
 | Data | `Data<T>`, `UncertainData<R>`, `UncertainBoolData<R>` | `T: Default + Clone + PartialEq`; `Copy` is asked only by `Adjustable`, so `Data<Vec<f64>>` is a valid node. |
 | Space | `EuclideanSpace`, `EcefSpace`, `GeoSpace`, `NedSpace`, `NoSpace`; `SpaceKind` over the first four | `GeoSpace` carries a `VerticalDatum` (WGS84, EGM96, EGM2008, ISA, Terrain); its distance is the WGS 84 geocentric straight line (IOGP 373-7-2 §2.2.1), NaN unless both datums are `WGS84`; `GeoSpace::new` refuses a latitude outside [−90, 90]. |
 | Time | `NewtonianTime` (absolute time), `MinkowskiTime` (inertial-frame coordinate time), `DiscreteTime`, `EntropicTime` (`u64` tick), `SymbolicTime` (labelled `i64`), `NoTime`; `TimeKind` over the first four | `TimeKind` lifts ticks into `R` with `lift_count`. |
-| Spacetime | `GalileanSpacetime` and `NewtonianSpacetime` (spatial metric (0,+,+,+), `Metric::PGA(4)`), `MinkowskiSpacetime` (−,+,+,+), `TangentSpacetime` (event, tangent vector and a validated Lorentzian 4×4 metric tensor); `SpaceTimeKind` over the four; `CausalSetSpacetime`, `ConformalSpacetime` (causal relations, not context nodes) | Coordinates are time first, `0 => t`. Each reports its own `Metric` through `MetricSignature`. Galilean distance exists only between simultaneous events. |
+| Spacetime | `GalileanSpacetime` and `NewtonianSpacetime` (spatial metric (0,+,+,+), `Metric::PGA(4)`), `MinkowskiSpacetime` (−,+,+,+), `TangentSpacetime` (event, tangent vector and a validated Lorentzian 4×4 metric tensor); `SpaceTimeKind` over the four; `CausalSetSpacetime` (a causal order, not a context node) | Coordinates are time first, `0 => t`. Each reports its own `Metric` through `MetricSignature`. Galilean distance exists only between simultaneous events. |
 | Root | `Root { id }` | An ordinary node; stored as `NodeRecord::Root`. |
 | Absence | `NoSpace<R>`, `NoTime`, `NoSpaceTime<R>` | Zero-sized; fill the spatial, temporal and spacetime slots of a context that holds no node of that kind. |
 
@@ -270,8 +270,8 @@ Ordered by consequence.
    interpreter's `CreateExtraContext` builds an unlinked top-level context instead of an extra.
 2. **Symbolic node types cannot enter a context.** `SymbolicTime` is not a `TimeKind` variant (the
    arm is commented out) and has no `Recordable` impl; its `scalar_projector.rs` is a commented-out
-   file. `CausalSetSpacetime` and `ConformalSpacetime` implement none of `Spatial`, `Temporal` or
-   `SpaceTemporal`, so no `Context` can hold them. All three are tested as free-standing types only.
+   file. `CausalSetSpacetime` implements none of `Spatial`, `Temporal` or `SpaceTemporal`, so no
+   `Context` can hold it. Both are tested as free-standing types only.
 3. **`apply` finds nodes by linear scan.** `index_of` walks every graph index for each lookup, in the
    base graph too, although the base graph keeps `id_to_index_map`. Edge events scan every graph.
    Extras have no identifier index at all, and `extra_ctx_*` operations take graph indices.

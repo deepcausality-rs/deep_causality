@@ -40,19 +40,18 @@ existed only to be threaded through signatures and filled in by type aliases. `C
 
 ### Requirement: The temporal and spacetime types named "symbolic" are untouched
 
-The context crate SHALL keep `SymbolicTime`, `SymbolicTimeUnit`, `TimeScale::Symbolic`,
-`CausalSetSpacetime` and `ConformalSpacetime` with their behaviour unchanged.
+The context crate SHALL keep `SymbolicTime`, `SymbolicTimeUnit`, `TimeScale::Symbolic` and
+`CausalSetSpacetime` with their behaviour unchanged.
 
-These are temporal and spacetime node types whose names contain "symbolic"; none of them ever
-referenced the `Symbolic` trait or the `SYM` parameter.
+None of them references the `Symbolic` trait or the `SYM` parameter.
 
 #### Scenario: Symbolic time still works
 
 - **WHEN** a `SymbolicTime` node is constructed and its time scale read
 - **THEN** it behaves as before, reporting `TimeScale::Symbolic`
 
-#### Scenario: The symbolic-spacetime nodes still work
+#### Scenario: The causal-set node still works
 
-- **WHEN** a `CausalSetSpacetime` or `ConformalSpacetime` node is used as a context's `ST`
-- **THEN** it behaves as before
+- **WHEN** a `CausalSetSpacetime` node is constructed and a predecessor is recorded
+- **THEN** `is_after` reports that predecessor
 
