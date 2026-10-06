@@ -6,8 +6,11 @@
 //! All console output for the INS / GNSS-blackout example, kept out of `main` so the orchestration
 //! reads cleanly.
 
-use crate::FloatType;
-use crate::model::{Epoch, NavProcess};
+use crate::model::{
+    BLACKOUT_THRESHOLD, NavContext, NavProcess, RADIUS_M, T_SEC, denial_curve, epochs, scalar,
+    series,
+};
+use deep_causality_core::CausalityError;
 
 pub fn print_intro(sat: &str) {
     println!("=== INS / GNSS-Blackout Clock Holdover (real Galileo {sat}) ===\n");
@@ -19,22 +22,24 @@ pub fn print_loaded(sat: &str, n_orbit: usize, n_clock: usize) {
     );
 }
 
-pub fn print_stream_summary(stream: &[Epoch], threshold: FloatType) {
-    let denied = stream
-        .iter()
-        .filter(|e| e.denial_indicator > threshold)
-        .count();
-    let r_min = stream.iter().map(|e| e.radius_m).fold(f64::MAX, f64::min) / 1000.0;
-    let r_max = stream.iter().map(|e| e.radius_m).fold(0.0, f64::max) / 1000.0;
-    let span_h = stream.last().map(|e| e.t_sec).unwrap_or(0.0) / 3600.0;
+pub fn print_stream_summary(world: &NavContext) -> Result<(), CausalityError> {
+    let n = epochs(world)?;
+    let threshold = scalar(world, BLACKOUT_THRESHOLD)?;
+    let denial = denial_curve(world)?;
+    let denied = (0..n).map(denial).filter(|&d| d > threshold).count();
+    let radius_m = series(world, RADIUS_M)?;
+    let r_min = radius_m.iter().copied().fold(f64::MAX, f64::min) / 1000.0;
+    let r_max = radius_m.iter().copied().fold(0.0, f64::max) / 1000.0;
+    let last_t_sec = series(world, T_SEC)?
+        .last()
+        .copied()
+        .ok_or_else(CausalityError::EmptyCollection)?;
+    let span_h = last_t_sec / 3600.0;
     println!(
         "Stream: {} epochs, span {:.1} h; orbit radius {:.0}–{:.0} km; modelled outage ≈ {} epochs.\n",
-        stream.len(),
-        span_h,
-        r_min,
-        r_max,
-        denied
+        n, span_h, r_min, r_max, denied
     );
+    Ok(())
 }
 
 /// Print the result block, the gates, the EffectLog head, and the finding. Returns whether all gates

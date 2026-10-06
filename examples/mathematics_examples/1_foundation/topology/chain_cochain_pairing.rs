@@ -25,7 +25,16 @@
 //! The route is a closed loop. A cochain that is the coboundary of a height function pairs to
 //! exactly zero on it, because climbing back to where you started nets no height. A cochain that
 //! comes from nowhere in particular pairs to its circulation instead, and section 2 shows both.
+//!
+//! The depot heights and the wind assist along each segment are the world the van drives through,
+//! and they live in a `Context`, one `Data` node per depot and one per segment. The road network
+//! and the route are the complex and the chain; the climb and wind cochains are built from the
+//! values read out of the context.
 
+use deep_causality_context::{
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
+    NoSpace, NoSpaceTime, NoTime,
+};
 use deep_causality_haft::{Foldable, Functor};
 use deep_causality_linear::CsrMatrix;
 use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lift, lower};
@@ -34,20 +43,27 @@ use deep_causality_topology::{
 };
 use std::sync::Arc;
 
-/// Four depots, at these heights in metres.
-const DEPOT_HEIGHTS: [f64; 4] = [100.0, 140.0, 115.0, 175.0];
-const N_DEPOTS: usize = DEPOT_HEIGHTS.len();
+/// Four depots, the vertices of the road network.
+const N_DEPOTS: usize = 4;
 
 /// Five road segments, each running from the lower-numbered depot to the higher.
 const SEGMENTS: [[usize; 2]; 5] = [[0, 1], [0, 2], [1, 2], [1, 3], [2, 3]];
 const N_SEGMENTS: usize = SEGMENTS.len();
 
+/// The world along the road network: one `Data` node per depot height and one per segment's wind
+/// assist. It holds no positions or clocks, so the spatial, temporal and spacetime slots are empty.
+type RoadContext = Context<Data<FloatType>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
+
+/// Contextoid ids of the depot heights, in metres, one per depot in vertex order.
+const DEPOT_HEIGHTS: [ContextoidId; N_DEPOTS] = [1, 2, 3, 4];
+/// Contextoid ids of the wind assist along each segment, one per segment in `SEGMENTS` order. The
+/// value is the assist one traversal gains in the segment's stored direction, in the example's own
+/// assist units; nothing generates it, so the form carries circulation.
+const WIND_ASSISTS: [ContextoidId; N_SEGMENTS] = [5, 6, 7, 8, 9];
+
 /// The route `0 → 1 → 3 → 2 → 0`, as a signed traversal count per segment. A negative weight is a
 /// segment driven against the direction it is stored in.
 const ROUTE: [f64; N_SEGMENTS] = [1.0, -1.0, 0.0, 1.0, -1.0];
-
-/// A wind-assist form, one value per segment. Nothing generates it, so it carries circulation.
-const WIND_ASSIST: [f64; N_SEGMENTS] = [5.0, 2.0, 3.0, 1.0, 6.0];
 
 /// Chains and cochains live at grade and degree 1: they are indexed by segments.
 const GRADE: usize = 1;
@@ -67,17 +83,23 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
 
     let complex = Arc::new(build_road_network()?);
+    let roads = road_world()?;
+    let heights = DEPOT_HEIGHTS
+        .iter()
+        .map(|&id| read(&roads, id))
+        .collect::<Result<Vec<FloatType>, ContextIndexError>>()?;
+    let wind_assist = WIND_ASSISTS
+        .iter()
+        .map(|&id| read(&roads, id))
+        .collect::<Result<Vec<FloatType>, ContextIndexError>>()?;
 
     // ---------------------------------------------------------------------
     // 1. The two objects.
     // ---------------------------------------------------------------------
     let route = build_chain(complex.clone(), &ROUTE)?;
-    let climb = coboundary_of_heights();
-    let wind = Cochain::new(
-        WIND_ASSIST.iter().map(|&v| lift::<FloatType>(v)).collect(),
-        GRADE,
-    );
-    print_objects(&route, &climb, &wind);
+    let climb = coboundary_of_heights(&heights);
+    let wind = Cochain::new(wind_assist, GRADE);
+    print_objects(&heights, &route, &climb, &wind);
 
     // ---------------------------------------------------------------------
     // 2. The pairing, on an exact cochain and on a general one.
@@ -140,14 +162,46 @@ fn pair(form: &Cochain<FloatType>, chain: &Chain<FloatType, FloatType>) -> Float
         })
 }
 
+/// The world along the road network: the depots' heights in metres, and the wind assist along
+/// each segment.
+fn road_world() -> Result<RoadContext, ContextIndexError> {
+    let facts = [
+        (DEPOT_HEIGHTS[0], 100.0),
+        (DEPOT_HEIGHTS[1], 140.0),
+        (DEPOT_HEIGHTS[2], 115.0),
+        (DEPOT_HEIGHTS[3], 175.0),
+        (WIND_ASSISTS[0], 5.0),
+        (WIND_ASSISTS[1], 2.0),
+        (WIND_ASSISTS[2], 3.0),
+        (WIND_ASSISTS[3], 1.0),
+        (WIND_ASSISTS[4], 6.0),
+    ];
+
+    let mut context = Context::with_capacity(1, "road network", facts.len());
+    for (id, value) in facts {
+        context.add_node(Contextoid::new(
+            id,
+            ContextoidType::Datoid(Data::new(id, lift::<FloatType>(value))),
+        ))?;
+    }
+    Ok(context)
+}
+
+/// Read one quantity out of the road network's context.
+fn read(context: &RoadContext, id: ContextoidId) -> Result<FloatType, ContextIndexError> {
+    context
+        .get_data_by_id(id)
+        .ok_or_else(|| ContextIndexError::new(format!("no road quantity with contextoid id {id}")))
+}
+
 /// The coboundary of the depot heights: one height difference per segment.
 ///
 /// This is `δh`, the discrete gradient. A cochain built this way is exact, which is what makes its
 /// pairing with any closed loop vanish.
-fn coboundary_of_heights() -> Cochain<FloatType> {
+fn coboundary_of_heights(heights: &[FloatType]) -> Cochain<FloatType> {
     let values = SEGMENTS
         .iter()
-        .map(|&[from, to]| lift::<FloatType>(DEPOT_HEIGHTS[to] - DEPOT_HEIGHTS[from]))
+        .map(|&[from, to]| heights[to] - heights[from])
         .collect();
 
     Cochain::new(values, GRADE)
@@ -204,12 +258,16 @@ fn print_header() {
 
 /// The display boundary: `f64` appears here and nowhere else.
 fn print_objects(
+    heights: &[FloatType],
     route: &Chain<FloatType, FloatType>,
     climb: &Cochain<FloatType>,
     wind: &Cochain<FloatType>,
 ) {
     println!("--- 1. The road network and the two objects ---");
-    println!("  depots      {N_DEPOTS}, at heights {DEPOT_HEIGHTS:?} m");
+    println!(
+        "  depots      {N_DEPOTS}, at heights {:?} m",
+        shown(heights)
+    );
     println!("  segments    {SEGMENTS:?}");
     println!();
     println!(

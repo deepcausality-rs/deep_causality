@@ -43,14 +43,15 @@ use std::process::ExitCode;
 pub type FloatType = f64;
 
 /// The placard study, as one grammar expression: the Mach-altitude matrix is the case axis, the
-/// fitted shock is the shared rig, and each point is a pointwise closed-form sweep (no march) to
-/// one placard row, recorded and gated against the envelope placards.
+/// placard world and the fitted shock built from it are the shared rig, and each point is a
+/// pointwise closed-form sweep (no march) to one placard row, recorded and gated against the
+/// envelope placards.
 fn placard_study() -> Result<Verdict, StudyError> {
     let matrix = model_config::matrix_path();
     CfdFlow::study("flight envelope placard")
         .matrix::<FlightPoint>(&matrix)
         .inspect(|_| utils_print::print_intro(&matrix))
-        .prepare(model_config::shock_model)
+        .prepare(model_config::placard_rig)
         .sweep(model::placard_point)
         .inspect(utils_print::print_rows)
         .record(model_config::table_path())

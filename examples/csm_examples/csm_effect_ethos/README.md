@@ -12,8 +12,8 @@ The example contrasts a purely reactive system with one governed by deontic rule
 
 ### 1. The Components
 
-* **`CausalState`**: A state that becomes active when its condition holds. Here, its `Causaloid` checks whether the
-  input reading reaches the threshold `0.55`.
+* **`CausalState`**: A state that becomes active when its condition holds. Here, its `Causaloid` reads the alert
+  threshold `0.55` from the shared `BaseContext` and checks whether the input reading reaches it.
 * **`CausalAction`**: An action that fires when the corresponding state is active. Here, a function that prints an
   alert to the console.
 * **`CausalStateMachine (CSM)`**: Links states to actions. When a state evaluates to `true`, the CSM fires its

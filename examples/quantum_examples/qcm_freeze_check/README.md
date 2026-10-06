@@ -84,7 +84,9 @@ commutator can be, and a shorter mantissa changes neither.
 
 `model.rs` writes out the nodes' predicate instead of taking it from the library's test helpers.
 Those are fixed at `f64` and would pin the graph to one precision while the factors followed the
-alias.
+alias. The predicate reads its detection threshold from `DetectorContext`, a context both nodes
+share: one `Data` node at `FloatType`, and no space, time or spacetime. The freeze never evaluates
+the nodes, so the threshold plays no part in the check.
 
 ## What this example covers
 
@@ -116,7 +118,7 @@ Each step keeps the structure already here.
 | File | Holds |
 |---|---|
 | `main.rs` | the alias and the two freeze scenarios |
-| `model.rs` | the operators, the two-node graph, and the factor store |
+| `model.rs` | the operators, the detectors' context, the two-node graph, and the factor store |
 | `constants.rs` | the numbers the operators are written with |
 | `utils_print.rs` | the presentation, and the only `lower` calls |
 

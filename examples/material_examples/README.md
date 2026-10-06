@@ -50,6 +50,7 @@ point cloud, as the medicine examples show.
 |---|---|
 | `deep_causality_haft` | the categorical traits: `Functor`, `Foldable`, `CoMonad` |
 | `deep_causality_metric` | metric signatures, which the hyperlens reads as material properties |
+| `deep_causality_context` | the hyperlens's optical world: wavelength, permittivity magnitude, probe periods |
 | `deep_causality_topology` | the hull graph and its witness |
 | `deep_causality_tensor` | the payload tensors |
 | `deep_causality_core` | `CausalFlow` and the intervention |

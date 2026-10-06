@@ -5,7 +5,7 @@
 
 //! # Sensor Processing as a Stateful `CausalFlow` Pipeline
 //!
-//! Six daisy-chained bind stages over `PropagatingProcess<_, FleetState, FleetConfig>`,
+//! Six daisy-chained bind stages over `PropagatingProcess<_, FleetState, FleetContext>`,
 //! driven through the `CausalFlow` facade:
 //!
 //! 1. `process_stage`      — robust per-sensor triage into `Uncertain<f64>`
@@ -18,9 +18,11 @@
 //! The stages keep their `(value, state, ctx)` signatures and drop into the flow's
 //! `bind` passthrough unchanged; `into_process` hands the raw process back for the
 //! summary. Per-stage observability is routed through `EffectLog`; `main.rs` prints
-//! the accumulated log once at the end. Magic-number plausibility bands and
-//! calibration offsets live in `FleetConfig` and arrive through the process'
-//! `Context` channel — the stages stay parameter-free.
+//! the accumulated log once at the end. The plausibility and nominal bands,
+//! calibration offsets, triage uncertainty factors, historical temperature
+//! model, temperature–pressure correlation and thresholds are `Data<f64>`
+//! contextoids of the fleet context and arrive through the process' `Context`
+//! channel — the stages stay parameter-free.
 
 mod model;
 mod model_config;
@@ -31,17 +33,18 @@ use deep_causality_core::{CausalEffect, CausalFlow, EffectLog, PropagatingProces
 use model::{
     anomaly_stage, fallback_stage, fusion_stage, process_stage, reliability_stage, validate_stage,
 };
-use model_config::{nominal_fleet_config, seed_readings};
+use model_config::{nominal_fleet_context, seed_readings};
 use model_types::{FleetProcess, FleetState, RawReadings};
+use std::error::Error;
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     println!("Sensor Processing — Stateful Six-Stage `CausalFlow` Pipeline");
     println!("=======================================================================\n");
 
     let initial: FleetProcess<RawReadings> = PropagatingProcess::new(
         Ok(CausalEffect::value(seed_readings())),
         FleetState::default(),
-        Some(nominal_fleet_config()),
+        Some(nominal_fleet_context()?),
         EffectLog::new(),
     );
 
@@ -55,4 +58,9 @@ fn main() {
         .into_process();
 
     print_util::print_summary(&final_process);
+    // The summary shows a failed pipeline with its error; the run then fails with it.
+    match final_process.error() {
+        Some(err) => Err(err.clone().into()),
+        None => Ok(()),
+    }
 }

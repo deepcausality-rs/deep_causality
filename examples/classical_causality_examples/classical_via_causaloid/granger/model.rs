@@ -2,44 +2,76 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{OIL_PRICE_ID, SHIPPING_ACTIVITY_ID, TIME_ID};
 use deep_causality::{
     CausalEffect, CausalityError, CausalityErrorEnum, Causaloid, Identifiable, IdentificationValue,
-    PropagatingProcess,
+    PropagatingEffect, PropagatingProcess,
 };
 use deep_causality_context::{
-    BaseContext, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
+    DiscreteTime, NoSpace, NoSpaceTime, TimeScale,
 };
+use std::ops::Range;
 use std::sync::{Arc, RwLock};
 
-pub type GrangerCausaloid = Causaloid<f64, f64, (), Arc<RwLock<BaseContext>>>;
+/// The world the predictor reads: numeric data, quarters as discrete time ticks, no space.
+pub type GrangerContext = Context<Data<f64>, NoSpace<f64>, DiscreteTime, NoSpaceTime<f64>>;
 
-pub(crate) fn get_factual_causaloid(predictor_id: IdentificationValue) -> GrangerCausaloid {
+/// Contextoid id: the oil price the oil adjustment is measured from.
+const OIL_BASELINE: ContextoidId = 1;
+/// Contextoid id: the shipping trend, per quarter.
+const SHIPPING_TREND: ContextoidId = 2;
+/// Contextoid id: the shipping change per unit of oil price above the baseline.
+const OIL_COEFFICIENT: ContextoidId = 3;
+/// Contextoid ids of the quarters' time ticks. Quarter `q` (`0` for Q1) has its time tick at
+/// `QUARTER_IDS.start + q`, its oil price at `OIL_PRICE_IDS.start + q` and its shipping activity
+/// at `SHIPPING_ACTIVITY_IDS.start + q`.
+const QUARTER_IDS: Range<ContextoidId> = 4..8;
+/// Contextoid ids of the quarterly oil prices.
+const OIL_PRICE_IDS: Range<ContextoidId> = 8..12;
+/// Contextoid ids of the quarterly shipping activities.
+const SHIPPING_ACTIVITY_IDS: Range<ContextoidId> = 12..16;
+
+pub type GrangerCausaloid = Causaloid<f64, f64, (), Arc<RwLock<GrangerContext>>>;
+
+pub(crate) fn get_factual_causaloid(
+    predictor_id: IdentificationValue,
+) -> Result<GrangerCausaloid, ContextIndexError> {
     let predictor_description = "Predicts shipping activity based on factual historical data";
-    let factual_context = Arc::new(RwLock::new(get_context_with_data()));
+    let factual_context = Arc::new(RwLock::new(get_context_with_data()?));
 
-    Causaloid::new_with_context(
+    Ok(Causaloid::new_with_context(
         predictor_id,
         shipping_predictor_logic,
         Arc::clone(&factual_context),
         predictor_description,
-    )
+    ))
 }
 
-pub(crate) fn get_counterfactual_causaloid(predictor_id: IdentificationValue) -> GrangerCausaloid {
-    let factual_context = Arc::new(RwLock::new(get_context_with_data()));
-    let counterfactual_context = Arc::new(RwLock::new(get_counterfactual_context(
-        &factual_context.read().unwrap(),
-    )));
+pub(crate) fn get_counterfactual_causaloid(
+    predictor_id: IdentificationValue,
+) -> Result<GrangerCausaloid, ContextIndexError> {
+    let factual_context = get_context_with_data()?;
+    let counterfactual_context =
+        Arc::new(RwLock::new(get_counterfactual_context(&factual_context)?));
     let predictor_description =
         "Predicts shipping activity based on counterfactual historical data";
 
-    Causaloid::new_with_context(
+    Ok(Causaloid::new_with_context(
         predictor_id,
         shipping_predictor_logic,
         Arc::clone(&counterfactual_context),
         predictor_description,
-    )
+    ))
+}
+
+/// The value an evaluation carries, or the error that ended it.
+pub(crate) fn value_of(effect: &PropagatingEffect<f64>) -> Result<f64, CausalityError> {
+    match effect.error() {
+        Some(error) => Err(error.clone()),
+        None => effect
+            .value_cloned()
+            .ok_or(CausalityError::ValueNotAvailable()),
+    }
 }
 
 /// The main logic for the predictive causaloid.
@@ -48,8 +80,8 @@ pub(crate) fn get_counterfactual_causaloid(predictor_id: IdentificationValue) ->
 fn shipping_predictor_logic(
     _effect: CausalEffect<f64>,
     _state: (),
-    context: Option<Arc<RwLock<BaseContext>>>,
-) -> PropagatingProcess<f64, (), Arc<RwLock<BaseContext>>> {
+    context: Option<Arc<RwLock<GrangerContext>>>,
+) -> PropagatingProcess<f64, (), Arc<RwLock<GrangerContext>>> {
     let ctx_arc = match context {
         Some(c) => c,
         None => {
@@ -59,103 +91,136 @@ fn shipping_predictor_logic(
         }
     };
 
-    let mut oil_prices: Vec<f64> = Vec::new();
-    let mut shipping_activities: Vec<f64> = Vec::new();
-
-    // Iterate through all nodes in the context graph to gather historical data.
-    let context_guard = ctx_arc.read().unwrap();
-    for i in 0..context_guard.number_of_nodes() {
-        if let Some(node) = context_guard.get_node(i)
-            && let ContextoidType::Datoid(data_node) = node.vertex_type()
-        {
-            match data_node.id() {
-                OIL_PRICE_ID => oil_prices.push(data_node.get_data()),
-                SHIPPING_ACTIVITY_ID => shipping_activities.push(data_node.get_data()),
-                _ => (),
-            }
+    let context_guard = match ctx_arc.read() {
+        Ok(guard) => guard,
+        Err(_) => {
+            return PropagatingProcess::from_error(CausalityError(CausalityErrorEnum::Custom(
+                "Context lock is poisoned".into(),
+            )));
         }
+    };
+
+    match predict(&context_guard) {
+        Ok(prediction) => PropagatingProcess::pure(prediction),
+        Err(error) => PropagatingProcess::from_error(error),
     }
+}
+
+/// Predicts the next shipping activity from the historical data and the coefficients in the
+/// context.
+fn predict(context: &GrangerContext) -> Result<f64, CausalityError> {
+    // Gather the historical series by contextoid id. A quarter the context holds no node for
+    // contributes nothing, so the counterfactual context yields an empty oil-price series.
+    let oil_prices: Vec<f64> = OIL_PRICE_IDS
+        .filter_map(|id| context.get_data_by_id(id))
+        .collect();
+    let shipping_activities: Vec<f64> = SHIPPING_ACTIVITY_IDS
+        .filter_map(|id| context.get_data_by_id(id))
+        .collect();
 
     // --- Simple Prediction Model ---
     // Predicts next shipping activity based on the average of past activity,
-    // plus an adjustment based on the average oil price.
+    // plus an adjustment based on the average oil price. The coefficients are read from the context.
     if shipping_activities.is_empty() {
-        return PropagatingProcess::pure(100.0);
+        return Err(CausalityError::ModelError(
+            "the context holds no shipping activity",
+        ));
     }
 
-    // Guarded non-empty just above, so the refusal cannot fire.
-    let avg_shipping: f64 = deep_causality_stats::mean(&shipping_activities).unwrap_or(0.0);
+    let avg_shipping: f64 = mean(&shipping_activities)?;
 
     let mut oil_price_effect = 0.0;
     if !oil_prices.is_empty() {
-        let avg_oil = deep_causality_stats::mean(&oil_prices).unwrap_or(0.0);
+        let avg_oil = mean(&oil_prices)?;
         // Simple model: higher avg oil price slightly decreases the next shipping activity value.
-        oil_price_effect = (avg_oil - 50.0) * 0.5; // 50 is a baseline oil price
+        oil_price_effect =
+            (avg_oil - read(context, OIL_BASELINE)?) * read(context, OIL_COEFFICIENT)?;
     }
 
     // Predict the next value by taking the average and adding a trend factor,
     // adjusted by the oil price effect.
-    let prediction = avg_shipping + 3.0 - oil_price_effect;
-
-    PropagatingProcess::pure(prediction)
+    Ok(avg_shipping + read(context, SHIPPING_TREND)? - oil_price_effect)
 }
 
-/// Creates the factual context containing all historical data.
-pub(crate) fn get_context_with_data() -> BaseContext {
-    let mut context = BaseContext::with_capacity(1, "Factual Context", 20);
-    let mut id_counter = 0;
+/// The mean, dispatched to `deep_causality_stats`. An empty slice is an error.
+fn mean(xs: &[f64]) -> Result<f64, CausalityError> {
+    deep_causality_stats::mean(xs).map_err(|error| CausalityError::ModelError(error.to_string()))
+}
 
-    // Sample Data (Quarterly)
-    let data_points = vec![
-        (0.0, 50.0, 100.0), // Q1: time, oil_price, shipping_activity
-        (1.0, 52.0, 102.0), // Q2
-        (2.0, 55.0, 105.0), // Q3
-        (3.0, 58.0, 108.0), // Q4
+/// Creates the factual context: the shipping-model coefficients, then each quarter's time tick,
+/// oil price and shipping activity, each node keyed by its contextoid id.
+pub(crate) fn get_context_with_data() -> Result<GrangerContext, ContextIndexError> {
+    let coefficients = [
+        (OIL_BASELINE, 50.0),
+        (SHIPPING_TREND, 3.0),
+        (OIL_COEFFICIENT, 0.5),
     ];
+    // Sample data, one tuple per quarter: (quarter, oil price, shipping activity).
+    let data_points = [
+        (0, 50.0, 100.0), // Q1
+        (1, 52.0, 102.0), // Q2
+        (2, 55.0, 105.0), // Q3
+        (3, 58.0, 108.0), // Q4
+    ];
+    let mut context = GrangerContext::with_capacity(
+        1,
+        "Factual Context",
+        coefficients.len() + 3 * data_points.len(),
+    );
 
-    for (time, oil_price, shipping_activity) in data_points {
-        // Time data
-        let time_datoid =
-            Contextoid::new(id_counter, ContextoidType::Datoid(Data::new(TIME_ID, time)));
-        context.add_node(time_datoid).unwrap();
-        id_counter += 1;
-
-        // Oil price data
-        let oil_price_datoid = Contextoid::new(
-            id_counter,
-            ContextoidType::Datoid(Data::new(OIL_PRICE_ID, oil_price)),
-        );
-        context.add_node(oil_price_datoid).unwrap();
-        id_counter += 1;
-
-        // Shipping activity data
-        let shipping_activity_datoid = Contextoid::new(
-            id_counter,
-            ContextoidType::Datoid(Data::new(SHIPPING_ACTIVITY_ID, shipping_activity)),
-        );
-        context.add_node(shipping_activity_datoid).unwrap();
-        id_counter += 1;
+    for (id, value) in coefficients {
+        context.add_node(Contextoid::new(
+            id,
+            ContextoidType::Datoid(Data::new(id, value)),
+        ))?;
     }
-    context
-}
 
-/// Creates the counterfactual context by cloning the factual one and removing oil price data.
-pub(crate) fn get_counterfactual_context(factual_context: &BaseContext) -> BaseContext {
-    let mut control_context = BaseContext::with_capacity(2, "Counterfactual Context", 20);
+    for (quarter, oil_price, shipping_activity) in data_points {
+        // Time of the observation, in quarters
+        let tick_id = QUARTER_IDS.start + quarter;
+        context.add_node(Contextoid::new(
+            tick_id,
+            ContextoidType::Tempoid(DiscreteTime::new(tick_id, TimeScale::Quarter, quarter)),
+        ))?;
 
-    // Iterate through the factual context and add all nodes EXCEPT oil price nodes.
-    for i in 0..factual_context.number_of_nodes() {
-        if let Some(node) = factual_context.get_node(i) {
-            let mut should_add = true;
-            if let ContextoidType::Datoid(data_node) = node.vertex_type()
-                && data_node.id() == OIL_PRICE_ID
-            {
-                should_add = false;
-            }
-            if should_add {
-                control_context.add_node(node.clone()).unwrap();
-            }
+        for (id, value) in [
+            (OIL_PRICE_IDS.start + quarter, oil_price),
+            (SHIPPING_ACTIVITY_IDS.start + quarter, shipping_activity),
+        ] {
+            context.add_node(Contextoid::new(
+                id,
+                ContextoidType::Datoid(Data::new(id, value)),
+            ))?;
         }
     }
-    control_context
+    Ok(context)
+}
+
+/// Creates the counterfactual context: every node of the factual context except the oil prices,
+/// the contextoids in `OIL_PRICE_IDS`. The coefficients, the quarters and the shipping activities
+/// stay.
+pub(crate) fn get_counterfactual_context(
+    factual_context: &GrangerContext,
+) -> Result<GrangerContext, ContextIndexError> {
+    let mut control_context = GrangerContext::with_capacity(
+        2,
+        "Counterfactual Context",
+        factual_context.number_of_nodes(),
+    );
+
+    for node in
+        (0..factual_context.number_of_nodes()).filter_map(|index| factual_context.get_node(index))
+    {
+        if !OIL_PRICE_IDS.contains(&node.id()) {
+            control_context.add_node(node.clone())?;
+        }
+    }
+    Ok(control_context)
+}
+
+/// Read the shipping-model coefficient with contextoid id `id` out of the context.
+fn read(context: &GrangerContext, id: ContextoidId) -> Result<f64, CausalityError> {
+    context
+        .get_data_by_id(id)
+        .ok_or_else(|| CausalityError::ModelError(format!("no Datoid with contextoid id {id}")))
 }

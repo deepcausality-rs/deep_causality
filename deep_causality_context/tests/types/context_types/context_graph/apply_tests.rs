@@ -505,3 +505,121 @@ fn test_a_node_or_edge_event_reaches_a_local_extra_holding_the_node() {
     assert_eq!(extra_nodes(&ctx, local), vec![4]);
     assert_eq!(extra_nodes(&ctx, 40), vec![4]);
 }
+
+#[test]
+fn test_a_frozen_context_refuses_an_event_that_changes_its_base_graph() {
+    let mut ctx = world();
+    ctx.freeze();
+    let before = ctx.snapshot().unwrap();
+    let refused = [
+        // A new node, and a held node carrying an edge the base graph lacks.
+        ContextEvent::NodeLinked {
+            context: 7,
+            node: count(5, 50),
+            edges: vec![],
+        },
+        ContextEvent::NodeEntered {
+            context: 7,
+            node: count(3, 30),
+            edges: vec![RelationRecord::new(4, 3, RelationKind::Datial)],
+        },
+        ContextEvent::NodeUnlinked {
+            context: 7,
+            node: 4,
+        },
+        ContextEvent::NodeLeft {
+            context: 7,
+            node: 3,
+        },
+        // Held by the base graph and both extras: refused whole, so the extras keep it too.
+        ContextEvent::NodeRetracted(3),
+        ContextEvent::EdgeCreated(RelationRecord::new(4, 3, RelationKind::Datial)),
+        ContextEvent::EdgeRetracted { from: 3, to: 4 },
+    ];
+    for event in &refused {
+        assert_eq!(
+            ctx.apply(event),
+            Err(ProjectionError::Frozen(7)),
+            "{event:?}"
+        );
+    }
+    assert_eq!(ctx.snapshot().unwrap(), before);
+    assert!(ctx.is_frozen());
+}
+
+#[test]
+fn test_a_frozen_context_applies_an_event_that_leaves_its_base_graph_as_it_is() {
+    let mut ctx = world();
+    ctx.freeze();
+    let before = ctx.snapshot().unwrap();
+    let echoes = [
+        ContextEvent::NodeLinked {
+            context: 7,
+            node: count(3, 30),
+            edges: vec![RelationRecord::new(3, 4, RelationKind::Datial)],
+        },
+        ContextEvent::NodeUnlinked {
+            context: 7,
+            node: 9,
+        },
+        ContextEvent::NodeRetracted(9),
+        ContextEvent::EdgeCreated(RelationRecord::new(3, 4, RelationKind::Datial)),
+        ContextEvent::EdgeRetracted { from: 4, to: 3 },
+        ContextEvent::NodeCreated(count(9, 9)),
+    ];
+    for event in &echoes {
+        ctx.apply(event).unwrap();
+    }
+    assert_eq!(ctx.snapshot().unwrap(), before);
+
+    // Events for the extras change the extras alone.
+    ctx.apply(&ContextEvent::NodeEntered {
+        context: 41,
+        node: count(4, 40),
+        edges: vec![RelationRecord::new(3, 4, RelationKind::Datial)],
+    })
+    .unwrap();
+    ctx.apply(&ContextEvent::NodeEntered {
+        context: 41,
+        node: count(6, 60),
+        edges: vec![],
+    })
+    .unwrap();
+    ctx.apply(&ContextEvent::NodeRetracted(6)).unwrap();
+    ctx.apply(&ContextEvent::NodeLeft {
+        context: 40,
+        node: 4,
+    })
+    .unwrap();
+    ctx.apply(&ContextEvent::ContextAttached {
+        context: 7,
+        extra: ContextRecord::new(42, "sea".to_string()),
+    })
+    .unwrap();
+    assert_eq!(extra_nodes(&ctx, 41), vec![3, 4]);
+    assert_eq!(extra_edges(&ctx, 41), 1);
+    assert_eq!(extra_nodes(&ctx, 40), vec![3]);
+    assert_eq!(extra_edges(&ctx, 40), 0);
+    assert_eq!(ctx.extra_ctx_get_name(42), Some("sea"));
+    let after = ctx.snapshot().unwrap();
+    assert_eq!(after.nodes(), before.nodes());
+    assert_eq!(after.edges(), before.edges());
+    assert!(ctx.is_frozen());
+}
+
+#[test]
+fn test_an_unfrozen_context_applies_the_event_it_refused_while_frozen() {
+    let mut ctx = world();
+    let link = ContextEvent::NodeLinked {
+        context: 7,
+        node: count(5, 50),
+        edges: vec![RelationRecord::new(3, 5, RelationKind::Datial)],
+    };
+    ctx.freeze();
+    assert_eq!(ctx.apply(&link), Err(ProjectionError::Frozen(7)));
+    ctx.unfreeze();
+    ctx.apply(&link).unwrap();
+    let five = ctx.get_node_index_by_id(5).unwrap();
+    assert_eq!(ctx.get_node(five).unwrap().id(), 5);
+    assert!(ctx.contains_edge(ctx.get_node_index_by_id(3).unwrap(), five));
+}

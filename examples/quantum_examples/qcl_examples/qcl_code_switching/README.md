@@ -18,4 +18,9 @@ stays zero, and the composite's measured residual lies under the recorded bound
 `‖τ₂‖_post · ε₁ + ‖τ₁‖_pre · ε₂`, whose first constant is the Frobenius-induced norm of code B's
 recovery. The program runs the chain at `f32`, `f64` and `Float106`.
 
+The probability lives in the gadget's noise world, a context of one `Data` node holding the exact
+fraction `1/10` as a `Rational<i64>` (`model_config.rs`). Each precision reads it and divides its
+numerator by its denominator at its own precision, rather than widening an `f64` approximation of a
+tenth.
+
 This is an example with checks. It claims the residuals it measures and the bound the law records.

@@ -23,7 +23,8 @@
 //! `GalileanSpacetime`, `NewtonianSpacetime`, `MinkowskiSpacetime` or `TangentSpacetime`. A
 //! context over these enums carries nodes of several geometries, and each spacetime node reports
 //! its own signature through `MetricSignature`. `CausalSetSpacetime` records a causal order
-//! between identifiers and is not a context node type.
+//! between identifiers; it cannot fill the spacetime slot, and a context carries it as a data
+//! payload, `Data<CausalSetSpacetime>`.
 //!
 //! Each type documents its definition and the textbook or standard it follows.
 

@@ -38,10 +38,20 @@ where
     T: Temporal + Clone,
     ST: SpaceTemporal + Clone,
 {
+    /// Adds a contextoid and returns its index.
+    ///
+    /// # Errors
+    /// [`ContextIndexError`] when a contextoid with the same id is already in the context, since
+    /// an id names one node, or when the context is frozen.
     fn add_node(&mut self, value: Contextoid<D, S, T, ST>) -> Result<usize, ContextIndexError>;
     fn contains_node(&self, index: usize) -> bool;
     fn get_node(&self, index: usize) -> Option<&Contextoid<D, S, T, ST>>;
     fn remove_node(&mut self, node_id: ContextoidId) -> Result<(), ContextIndexError>;
+    /// Replaces the contextoid under `node_id` with `new_node`, which may carry another id.
+    ///
+    /// # Errors
+    /// [`ContextIndexError`] when no contextoid has `node_id`, when `new_node`'s id is already
+    /// held by another contextoid, or when the context is frozen.
     fn update_node(
         &mut self,
         node_id: ContextoidId,
@@ -64,6 +74,44 @@ where
     // Corrected method names
     fn number_of_nodes(&self) -> usize;
     fn number_of_edges(&self) -> usize;
+
+    /// Converts the base graph to its frozen state: an immutable compressed-sparse-row layout on
+    /// which [`outbound_edges`](Self::outbound_edges) and [`inbound_edges`](Self::inbound_edges)
+    /// run. Freezing takes `O(V + E)`; a frozen context is left as it is.
+    ///
+    /// Freezing compacts away removed nodes, keeping the live nodes in their order, so an index
+    /// after a removed node moves down. The context remaps every index it stores, so a lookup by
+    /// id returns the node's index in the frozen graph. While frozen, every method that changes
+    /// the base graph returns an error; reads work in both states. Extra contexts are separate
+    /// graphs and keep their state.
+    fn freeze(&mut self);
+
+    /// Converts the base graph back to its mutable state, `O(V + E)`, keeping every index. A
+    /// context that is not frozen is left as it is.
+    fn unfreeze(&mut self);
+
+    /// Whether the base graph is frozen.
+    fn is_frozen(&self) -> bool;
+
+    /// The indices of the nodes that an edge from `index` reaches, read from the frozen graph
+    /// without allocating.
+    ///
+    /// # Errors
+    /// [`ContextIndexError`] when the context is not frozen or holds no node at `index`.
+    fn outbound_edges(
+        &self,
+        index: usize,
+    ) -> Result<impl Iterator<Item = usize> + '_, ContextIndexError>;
+
+    /// The indices of the nodes with an edge to `index`, read from the frozen graph without
+    /// allocating.
+    ///
+    /// # Errors
+    /// [`ContextIndexError`] when the context is not frozen or holds no node at `index`.
+    fn inbound_edges(
+        &self,
+        index: usize,
+    ) -> Result<impl Iterator<Item = usize> + '_, ContextIndexError>;
 }
 
 /// Trait for poly-contextuable causal graphs.
@@ -197,7 +245,9 @@ where
     /// - `Ok(usize)` containing the unique index of the newly added node within the active context's graph.
     ///
     /// # Errors
-    /// - `ContextIndexError` if no extra context is currently active.
+    /// - `ContextIndexError` if no extra context is currently active, or if the active extra
+    ///   context already holds a contextoid with the same id. Ids are unique per graph: the base
+    ///   context and each extra context may hold the same id.
     fn extra_ctx_add_node(
         &mut self,
         value: Contextoid<D, S, T, ST>,

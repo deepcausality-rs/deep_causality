@@ -1,13 +1,13 @@
 # Sensor Data Processing Example
 
-A stateful six-stage `PropagatingProcess<_, FleetState, FleetConfig>` pipeline
+A stateful six-stage `PropagatingProcess<_, FleetState, FleetContext>` pipeline
 triages a heterogeneous sensor fleet, fuses healthy readings, detects
 anomalies, runs physics cross-checks, and emits a reliability verdict.
 
 ## Pipeline
 
 ```
-PropagatingProcess { value: RawReadings, state: FleetState::default(), context: Some(config), ... }
+PropagatingProcess { value: RawReadings, state: FleetState::default(), context: Some(fleet), ... }
     .bind(process_stage)        // Stage 1: per-sensor triage → Uncertain<f64> | error
     .bind(validate_stage)       // Stage 2: fold counts and total uncertainty into state
     .bind(fusion_stage)         // Stage 3: inverse-variance fuse temperature sensors
@@ -22,9 +22,9 @@ PropagatingProcess { value: RawReadings, state: FleetState::default(), context: 
 |----------|------------------|---------------------------------------------------------------------------------------------|
 | `value`  | `RawReadings` → `ProcessedReadings` | Per-sensor data carried stage-to-stage; type projects after Stage 1.    |
 | `state`  | `FleetState`     | Accumulates counts, total uncertainty, fused temperature, anomaly list, final verdict.       |
-| `context`| `FleetConfig`    | Read-only plausibility bands, calibration offsets, anomaly thresholds. |
+| `context`| `FleetContext`   | Read-only plausibility and nominal bands, calibration offsets, triage uncertainty factors, historical temperature model, temperature–pressure correlation, anomaly and reliability thresholds; one `Data<f64>` contextoid per quantity, keyed by its contextoid id. |
 | `logs`   | `EffectLog`      | Each stage appends one or more entries; `main.rs` prints them once at the end.               |
-| `error`  | `CausalityError` | Shares the outcome `Result` with `value`; set if a stage's preconditions fail, after which downstream `bind` calls short-circuit.  |
+| `error`  | `CausalityError` | Shares the outcome `Result` with `value`; set if a stage's preconditions or body fail, after which downstream `bind` calls short-circuit. A failed stage passes on the state it received.  |
 
 ## What the example demonstrates
 
@@ -32,9 +32,11 @@ PropagatingProcess { value: RawReadings, state: FleetState::default(), context: 
   multi-stage pattern of the avionics
   [`flight_envelope_monitor`](../../avionics_examples/control/flight_envelope_monitor)
   example, applied to a sensor fleet.
-- **Configuration in the `Context` channel:** physical-plausibility ranges,
-  calibration offsets, and anomaly thresholds live in `FleetConfig`, so the
-  same stages run against a different fleet by swapping the context.
+- **Fleet facts in the `Context` channel:** physical-plausibility ranges,
+  nominal bands, calibration offsets, triage uncertainty factors, the
+  historical temperature model, the temperature–pressure correlation, and the
+  anomaly and reliability thresholds live in the fleet context, so the same
+  stages run against a different fleet by swapping the context.
 - **Per-stage `EffectLog` observability:** stages append log entries
   instead of printing during the chain; `main.rs` prints the final state and
   log once at the end.

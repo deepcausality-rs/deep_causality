@@ -185,6 +185,7 @@ dependencies = [
 name = "causal_correction_examples"
 version = "0.1.0"
 dependencies = [
+ "deep_causality_context",
  "deep_causality_core",
  "deep_causality_data_structures",
  "deep_causality_haft",
@@ -197,6 +198,7 @@ name = "causal_counterfactual_examples"
 version = "0.1.0"
 dependencies = [
  "deep_causality_calculus",
+ "deep_causality_context",
  "deep_causality_core",
  "deep_causality_haft",
  "deep_causality_num",
@@ -221,6 +223,7 @@ dependencies = [
 name = "causal_uncertain_examples"
 version = "0.1.0"
 dependencies = [
+ "deep_causality_context",
  "deep_causality_core",
  "deep_causality_haft",
  "deep_causality_uncertain",
@@ -363,6 +366,7 @@ checksum = "773648b94d0e5d620f64f280777445740e61fe701025087ec8b57f45c791888b"
 name = "core_examples"
 version = "0.1.0"
 dependencies = [
+ "deep_causality_context",
  "deep_causality_core",
  "deep_causality_haft",
 ]
@@ -1359,6 +1363,7 @@ name = "material_examples"
 version = "0.1.0"
 dependencies = [
  "deep_causality_algebra",
+ "deep_causality_context",
  "deep_causality_core",
  "deep_causality_haft",
  "deep_causality_metric",
@@ -1373,6 +1378,7 @@ version = "0.1.0"
 dependencies = [
  "deep_causality_algebra",
  "deep_causality_calculus",
+ "deep_causality_context",
  "deep_causality_core",
  "deep_causality_fft",
  "deep_causality_haft",
@@ -1623,6 +1629,7 @@ dependencies = [
  "deep_causality",
  "deep_causality_algebra",
  "deep_causality_calculus",
+ "deep_causality_context",
  "deep_causality_core",
  "deep_causality_file",
  "deep_causality_linear",
@@ -1726,12 +1733,14 @@ dependencies = [
  "deep_causality",
  "deep_causality_algebra",
  "deep_causality_calculus",
+ "deep_causality_context",
  "deep_causality_core",
  "deep_causality_haft",
  "deep_causality_homology",
  "deep_causality_multivector",
  "deep_causality_num",
  "deep_causality_num_complex",
+ "deep_causality_num_rational",
  "deep_causality_physics",
  "deep_causality_quantum",
  "deep_causality_tensor",

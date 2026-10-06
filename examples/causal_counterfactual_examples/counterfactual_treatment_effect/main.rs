@@ -18,9 +18,10 @@
 //! ```
 //!
 //! Each patient's two potential outcomes come from the same data-generating
-//! process under two different `do`-operators. One `PropagatingEffect`
-//! chain models the blood-pressure response to an (unknown) treatment
-//! indicator; `.alternate_value(1.0)` and `.alternate_value(0.0)` produce the two
+//! process under two different `do`-operators. One `CausalFlow` chain carries
+//! the patient (age, baseline blood pressure, the drug's dose response) as its
+//! context and models the blood-pressure response to an (unknown) treatment
+//! indicator on the value channel; `.alternate_value(1.0)` and `.alternate_value(0.0)` produce the two
 //! potential outcomes. Per-patient differences are individual treatment
 //! effects; their subgroup mean is the CATE.
 //!
@@ -36,14 +37,16 @@ mod model;
 mod model_utils;
 
 use model::synthetic_cohort;
+use std::error::Error;
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     println!("=== CATE as `do(T=1) − do(T=0)` on a Single Causal Chain ===\n");
 
-    let cohort = synthetic_cohort();
+    let cohort = synthetic_cohort()?;
     println!("Cohort: {} patients\n", cohort.len());
 
-    let (all, over_65, under_65) = model_utils::evaluate_and_print_cohort(&cohort);
+    let (all, over_65, under_65) = model_utils::evaluate_and_print_cohort(&cohort)?;
     model_utils::print_cate_summary(&all, &over_65, &under_65);
     model_utils::print_audit_trail(&cohort[0]);
+    Ok(())
 }

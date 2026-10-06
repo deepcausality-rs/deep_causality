@@ -4,7 +4,9 @@
  */
 use crate::types::BaseModelTokio;
 use crate::utils;
-use deep_causality::{BaseCausaloid, MonadicCausable, NumericalValue, PropagatingEffect};
+use deep_causality::{
+    BaseCausaloid, CausalityError, MonadicCausable, NumericalValue, PropagatingEffect,
+};
 use std::error::Error;
 use std::sync::{Arc, RwLock};
 
@@ -29,7 +31,9 @@ impl EventHandler {
         let data = utils::get_test_data();
         // Extract the causaloid from the model.
         let causaloid = {
-            let model = self.model.read().unwrap();
+            let model = self.model.read().map_err(|_| -> Box<dyn Error + Send> {
+                Box::new(CausalityError::Custom("Model lock is poisoned"))
+            })?;
             Arc::clone(model.causaloid())
             // Release rw lock early for concurrency
         };
@@ -51,14 +55,14 @@ impl EventHandler {
         let input_effect: PropagatingEffect<NumericalValue> = PropagatingEffect::pure(data);
         let res = bc.evaluate(&input_effect);
 
-        if res.is_ok() {
-            let value = res.value_cloned().unwrap_or(false);
-            println!("EventHandler: Inference successful with res: {}", value)
-        } else {
-            println!(
-                "EventHandler: Inference failed with error: {}",
-                res.error().unwrap()
-            )
+        match res.error() {
+            None => {
+                let value = res.value_cloned().ok_or_else(|| -> Box<dyn Error + Send> {
+                    Box::new(CausalityError::ValueNotAvailable())
+                })?;
+                println!("EventHandler: Inference successful with res: {}", value)
+            }
+            Some(error) => println!("EventHandler: Inference failed with error: {}", error),
         }
 
         Ok(())

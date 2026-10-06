@@ -1,6 +1,6 @@
 # RCM via the Causal Monad
 
-This example computes the same estimand and numbers as [`classical_via_causaloid/rcm`](../../classical_via_causaloid/rcm), implemented on the carrier `PropagatingProcess<FloatType, (), BaseContext>` (`FloatType` is a local alias for `f64`) with the [`Alternatable`](../../../../deep_causality_core/src/traits/alternatable/mod.rs) family.
+This example computes the same estimand and numbers as [`classical_via_causaloid/rcm`](../../classical_via_causaloid/rcm), implemented on the carrier `PropagatingProcess<FloatType, (), PatientContext>` (`FloatType` is a local alias for `f64`; `PatientContext` is a `Context` of `Data<FloatType>` nodes with no space or time slot) with the [`Alternatable`](../../../../deep_causality_core/src/traits/alternatable/mod.rs) family.
 
 ## How to run
 
@@ -20,8 +20,8 @@ For a single patient with baseline BP, how much does administering the drug chan
 
 ## The mechanism
 
-1. **Treatment assignment lives in the Context.** `treatment_world(drug_administered, drug_effect_if_administered)` builds a `BaseContext` holding two Datoid contextoids: `ASSIGNMENT` (`1.0` treated, `0.0` control) and `DOSE` (the BP change the drug produces when administered). The two worlds differ only in `ASSIGNMENT`. Both runs use the same bind chain and the same baseline value.
-2. **Build the seed carrier** with `start(treatment_ctx)`: `PropagatingEffect::pure(PATIENT_INITIAL_BP)` wrapped in a `PropagatingProcess` with the treatment context attached.
+1. **The patient's world lives in the Context.** `treatment_world(initial_bp, drug_administered, drug_effect_if_administered)` builds a `PatientContext` holding three Datoid contextoids: `ASSIGNMENT` (`1.0` treated, `0.0` control), `DOSE` (the BP change the drug produces when administered) and `INITIAL_BP` (the patient's baseline blood pressure). The two worlds differ only in `ASSIGNMENT`. Both runs use the same bind chain.
+2. **Build the seed carrier** with `start(treatment_ctx)`: the context's `INITIAL_BP` lifted by `PropagatingEffect::pure` and wrapped in a `PropagatingProcess` with the treatment context attached. `compute_final_bp` reads `INITIAL_BP` from whichever context the carrier holds.
 3. **Factual run:** `start(treatment).bind(apply_drug_effect).bind(compute_final_bp)` → `Y(1)`.
 4. **Counterfactual run:** `start(treatment).alternate_context(control).bind(apply_drug_effect).bind(compute_final_bp)` → `Y(0)`. The `alternate_context` call rewrites the carrier's Context channel *before* either bind runs, so both stages read the control assignment.
 5. **ITE = Y(1) - Y(0).**
@@ -31,7 +31,7 @@ For a single patient with baseline BP, how much does administering the drug chan
 | Concern | `classical_via_causaloid/rcm` | `classical_via_causal_monad/rcm` |
 |---|---|---|
 | Causal logic lives in | `Causaloid` + `CausaloidGraph` | `bind` closures on `PropagatingProcess` |
-| Treatment assignment carried in | `RcmState` (the value) | `ASSIGNMENT` Datoid in a `BaseContext` (the Context channel) |
+| Treatment assignment carried in | `RcmState` (the value) | `ASSIGNMENT` Datoid in a `PatientContext` (the Context channel) |
 | Counterfactual mechanism | Construct two `RcmState` values, run graph twice | Build one seed, swap Context via `alternate_context`, run binds |
 | Audit-log artefact | None by default; user must instrument | `!!ContextAlternation!!` entry appended automatically |
 | Number of "world" representations | Two state values | One chain definition, one factual seed, one alternated context |

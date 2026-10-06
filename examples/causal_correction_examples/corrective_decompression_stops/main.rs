@@ -5,10 +5,10 @@
 
 //! # Decompression Stops as a Corrective `intervene` Loop
 //!
-//! A retrofit of the dive-computer example into the corrective
-//! intervention pattern. A diver starts saturated at 30 m and ascends
-//! toward the surface. A single mid-range tissue compartment tracks
-//! N2 partial pressure across the ascent. The Bühlmann supersaturation
+//! The dive-computer scenario as a corrective intervention loop. A
+//! diver starts saturated at 30 m and ascends toward the surface. A
+//! single mid-range tissue compartment tracks N2 partial pressure
+//! across the ascent. The Bühlmann supersaturation
 //! ratio is the monitored quantity: when tissue N2 climbs too high
 //! relative to ambient pressure, decompression sickness becomes likely.
 //!
@@ -33,18 +33,27 @@ mod model;
 pub mod model_types;
 mod model_utils;
 
-use crate::model_types::{DiveProcess, FloatType, N_TICKS};
+use crate::model_types::{
+    DiveContext, DiveProcess, FloatType, N_TICKS, SAFETY_RATIO_THRESHOLD, nominal_dive_context,
+    read,
+};
 use causal_correction_examples::print_utils;
-use deep_causality_core::CausalFlow;
+use deep_causality_core::{CausalFlow, CausalityError};
 
-fn main() {
+fn main() -> Result<(), CausalityError> {
     println!("=== Decompression Stops as a Corrective `intervene` Loop ===\n");
 
-    let open = run_open_loop();
-    let closed = run_closed_loop();
+    let dive = nominal_dive_context().map_err(|err| CausalityError::GraphError(err.to_string()))?;
+    let open = run_open_loop(dive.clone());
+    let closed = run_closed_loop(dive);
+    for process in [&open, &closed] {
+        if let Some(err) = process.error() {
+            return Err(err.clone());
+        }
+    }
 
-    model_utils::print_section("Open loop (continuous ascent, no monitor)", &open);
-    model_utils::print_section("Closed loop (monitor + corrective stops)", &closed);
+    model_utils::print_section("Open loop (continuous ascent, no monitor)", &open)?;
+    model_utils::print_section("Closed loop (monitor + corrective stops)", &closed)?;
 
     println!("=== Summary ===");
     model_utils::summary_line("Open loop  ", &open);
@@ -60,11 +69,12 @@ fn main() {
 
     println!("\n--- Closed-loop EffectLog (per-tick reading + every stop) ---");
     print_utils::print_effect_log(closed.logs());
+    Ok(())
 }
 
 /// Open loop: each tick is just `simulate_step`, run `N_TICKS` times. Continuous ascent, no stops.
-fn run_open_loop() -> DiveProcess<FloatType> {
-    CausalFlow::from(model::initial_process())
+fn run_open_loop(dive: DiveContext) -> DiveProcess<FloatType> {
+    CausalFlow::from(model::initial_process(dive))
         .iterate_n(N_TICKS as usize, |tick| tick.bind(model::simulate_step))
         .into_process()
 }
@@ -72,13 +82,17 @@ fn run_open_loop() -> DiveProcess<FloatType> {
 /// Closed loop: the same tick, but each one `branch`es on the monitor — a supersaturation alarm
 /// while still submerged records a stop and `intervene`s a zero ascent command (a decompression
 /// stop). The only difference from the open loop is the `branch`.
-fn run_closed_loop() -> DiveProcess<FloatType> {
-    CausalFlow::from(model::initial_process())
+fn run_closed_loop(dive: DiveContext) -> DiveProcess<FloatType> {
+    CausalFlow::from(model::initial_process(dive))
         .iterate_n(N_TICKS as usize, |tick| {
             tick.bind(model::simulate_step).branch_with(
+                // A predicate has no error channel. It runs only on a value, so `simulate_step`
+                // succeeded and read the same threshold from the same context.
                 |_command, state, ctx| {
-                    state.last_ratio > ctx.expect("DiveConfig present").safety_ratio_threshold
-                        && state.depth_m > 0.0
+                    let dive = ctx.expect("simulate_step returns the dive context it read");
+                    let threshold = read(dive, SAFETY_RATIO_THRESHOLD)
+                        .expect("simulate_step read the safety threshold from this context");
+                    state.last_ratio > threshold && state.depth_m > 0.0
                 },
                 |hot| {
                     hot.update_state(|mut state, _command| {

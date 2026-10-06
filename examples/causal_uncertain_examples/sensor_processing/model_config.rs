@@ -3,31 +3,65 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! Nominal configuration and sensor seed data for the sensor-processing pipeline.
+//! Nominal fleet context and sensor seed data for the sensor-processing pipeline.
 
-use crate::model_types::{Bands, FleetConfig, RawReadings, SensorReading, SensorStatus};
+use crate::model_types::{
+    ANOMALY_DISAGREEMENT_C, CORRELATION_TOLERANCE, CRITICAL_BELOW_PCT, DEGRADED_UNCERTAINTY_FACTOR,
+    DRIFT_UNCERTAINTY_FACTOR, DRIFT_UNCERTAINTY_OFFSET, FleetContext, HIGH_BELOW_PCT,
+    HIGH_UNCERTAINTY_THRESHOLD, HISTORICAL_TEMP_MEAN, HISTORICAL_TEMP_SD, HUMIDITY_NOMINAL_MAX,
+    HUMIDITY_NOMINAL_MIN, HUMIDITY_PLAUSIBLE_MAX, HUMIDITY_PLAUSIBLE_MIN, MEDIUM_BELOW_PCT,
+    OUT_OF_RANGE_SD, PRESSURE_2_CALIBRATION_OFFSET, PRESSURE_NOMINAL_MAX, PRESSURE_NOMINAL_MIN,
+    PRESSURE_PLAUSIBLE_MAX, PRESSURE_PLAUSIBLE_MIN, REFERENCE_PRESSURE, REFERENCE_TEMP,
+    RawReadings, SensorReading, SensorStatus, TEMP_CALIBRATION_BIAS, TEMP_CALIBRATION_GAIN,
+    TEMP_NOMINAL_MAX, TEMP_NOMINAL_MIN, TEMP_PER_HPA, TEMP_PLAUSIBLE_MAX, TEMP_PLAUSIBLE_MIN,
+};
+use deep_causality_context::{
+    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data,
+};
 use std::collections::HashMap;
 
-pub fn nominal_fleet_config() -> FleetConfig {
-    FleetConfig {
-        temp: Bands {
-            plausible: (-50.0, 100.0),
-            nominal: (15.0, 35.0),
-        },
-        pressure: Bands {
-            plausible: (800.0, 1200.0),
-            nominal: (980.0, 1050.0),
-        },
-        humidity: Bands {
-            plausible: (0.0, 100.0),
-            nominal: (20.0, 80.0),
-        },
-        pressure_2_calibration_offset: -2.3,
-        temp_calibration_gain: 0.98,
-        temp_calibration_bias: 0.5,
-        anomaly_disagreement_c: 5.0,
-        high_uncertainty_threshold: 5.0,
+/// The nominal fleet: one `Data` contextoid per quantity, keyed by its contextoid id.
+pub fn nominal_fleet_context() -> Result<FleetContext, ContextIndexError> {
+    let facts = [
+        (TEMP_PLAUSIBLE_MIN, -50.0),
+        (TEMP_PLAUSIBLE_MAX, 100.0),
+        (TEMP_NOMINAL_MIN, 15.0),
+        (TEMP_NOMINAL_MAX, 35.0),
+        (PRESSURE_PLAUSIBLE_MIN, 800.0),
+        (PRESSURE_PLAUSIBLE_MAX, 1200.0),
+        (PRESSURE_NOMINAL_MIN, 980.0),
+        (PRESSURE_NOMINAL_MAX, 1050.0),
+        (HUMIDITY_PLAUSIBLE_MIN, 0.0),
+        (HUMIDITY_PLAUSIBLE_MAX, 100.0),
+        (HUMIDITY_NOMINAL_MIN, 20.0),
+        (HUMIDITY_NOMINAL_MAX, 80.0),
+        (PRESSURE_2_CALIBRATION_OFFSET, -2.3),
+        (TEMP_CALIBRATION_GAIN, 0.98),
+        (TEMP_CALIBRATION_BIAS, 0.5),
+        (ANOMALY_DISAGREEMENT_C, 5.0),
+        (HIGH_UNCERTAINTY_THRESHOLD, 5.0),
+        (DEGRADED_UNCERTAINTY_FACTOR, 2.0),
+        (OUT_OF_RANGE_SD, 10.0),
+        (DRIFT_UNCERTAINTY_FACTOR, 1.5),
+        (DRIFT_UNCERTAINTY_OFFSET, 2.0),
+        (HISTORICAL_TEMP_MEAN, 22.0),
+        (HISTORICAL_TEMP_SD, 3.0),
+        (REFERENCE_TEMP, 20.0),
+        (REFERENCE_PRESSURE, 1013.25),
+        (TEMP_PER_HPA, 0.02),
+        (CORRELATION_TOLERANCE, 10.0),
+        (CRITICAL_BELOW_PCT, 50.0),
+        (HIGH_BELOW_PCT, 70.0),
+        (MEDIUM_BELOW_PCT, 85.0),
+    ];
+    let mut context = Context::with_capacity(1, "fleet", facts.len());
+    for (id, value) in facts {
+        context.add_node(Contextoid::new(
+            id,
+            ContextoidType::Datoid(Data::new(id, value)),
+        ))?;
     }
+    Ok(context)
 }
 
 pub fn seed_readings() -> RawReadings {

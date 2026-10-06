@@ -27,8 +27,8 @@ DeepCausality **separates the causal law (the `Causaloid` or the `bind` closures
 
 Both approaches use this "clone + modify + re-evaluate" pattern, called **contextual alternation**. They differ only in where it happens:
 
-- **`via_causaloid`**: alternation happens *outside* the carrier. You clone a `BaseContext`, modify a `Contextoid` (a `Datoid` value, a `Spaceoid` location, a `Tempoid` time slice, etc.), then evaluate a `Causaloid` against the new Context.
-- **`via_monad`**: alternation happens *on the carrier itself*. The `Context` is a Rust struct carried through the `PropagatingProcess`; `.alternate_context(other)`, `.alternate_value(value)`, or `.alternate_state(state)` swap one channel mid-chain and append an audit-log entry recording the switch.
+- **`via_causaloid`**: alternation happens *outside* the carrier. You clone a `Context`, modify a `Contextoid` (a `Datoid` value, a `Spaceoid` location, a `Tempoid` time slice, etc.), then evaluate a `Causaloid` against the new Context.
+- **`via_monad`**: alternation happens *on the carrier itself*. The `Context` is a typed `deep_causality_context::Context` carried through the `PropagatingProcess`; `.alternate_context(other)`, `.alternate_value(value)`, or `.alternate_state(state)` swap one channel mid-chain and append an audit-log entry recording the switch.
 
 Both approaches sidestep abduction because the world state is stated explicitly upfront. This suits engineering systems whose software already records the state (sensor logs, patient histories, network topology).
 
@@ -40,14 +40,14 @@ Both approaches produce identical numbers for the same problem; the choice depen
 
 | Method | `via_causaloid` LOC | `via_monad` LOC | Reduction |
 |---|---:|---:|---:|
-| RCM     | 161 | 147 |  8% |
-| DBN     | 205 | 183 | 10% |
-| CATE    | 233 | 174 | 25% |
-| Granger | 240 | 142 | 40% |
-| SCM     | 334 | 182 | 45% |
-| **Total** | **1 173** | **828** | **29%** |
+| RCM     | 210 | 218 | −4% |
+| DBN     | 247 | 237 |  4% |
+| CATE    | 239 | 253 | −6% |
+| Granger | 291 | 260 | 11% |
+| SCM     | 392 | 238 | 39% |
+| **Total** | **1 379** | **1 206** | **13%** |
 
-LOC counts include all `.rs` files in the example directory (main, model, supporting modules). The spread says more than the average: the monad's advantage grows with the **scaffolding** the causaloid version needs (multiple contextual `Causaloid` instances, manual `Contextoid` / `Datoid` construction, multi-file rung splits). When the causaloid version is a single `CausaloidGraph` with one Context (RCM, DBN), the two approaches are close to parity.
+LOC counts include all lines of all `.rs` files in the example directory (main, model, supporting modules). The spread says more than the average. Every `via_monad` version holds its world in a typed `Context` and propagates every error, so where the causaloid version is a single `CausaloidGraph` with one Context (RCM, DBN, CATE) the two approaches are at parity. The monad's advantage appears where the causaloid version needs more **scaffolding**: several contextual `Causaloid` instances (Granger) or a multi-file rung split (SCM).
 
 ### What each approach is naturally good at
 
@@ -55,12 +55,12 @@ LOC counts include all `.rs` files in the example directory (main, model, suppor
 |---|---|---|
 | **Topology** | Real graphs: diamonds, joins, conditional sub-graphs. `CausaloidGraph::add_edge` and graph traversals are first-class. | Sequential or near-sequential pipelines expressed as `bind` chains. |
 | **Number of causal units** | Dozens to hundreds of first-class `Causaloid` values; register, hot-swap, store in collections. | A handful of stages inlined as `bind` closures. |
-| **Context heterogeneity** | Multiple `Contextoid` types in one `BaseContext` (`Datoid` + `Spaceoid` + `Tempoid` + `SpaceTempoid`). | A single `Context` Rust struct carries the world. |
+| **Context heterogeneity** | Multiple `Contextoid` types in one `Context` (`Datoid` + `Spaceoid` + `Tempoid` + `SpaceTempoid`). | One typed `Context` rides in the carrier's context channel; the five examples hold `Datoid` nodes only. |
 | **Alternation granularity** | Coarse, infrequent world rebuilds (clone Context, modify, build a new contextual `Causaloid`). | Fine, frequent channel substitutions (`alternate_value`, `alternate_context`, `alternate_state`) emitted with one method call. |
 | **Audit trail style** | Structural attribution: which `Causaloid` produced which effect. | Linear log of alternation events with distinctive markers (`!!ValueAlternation!!`, `!!ContextAlternation!!`, `!!StateAlternation!!`) emitted automatically. |
 | **Reuse across models** | The same `Causaloid` can appear in many graphs. | The chain is defined once per problem; closures are inlined. |
 | **Ceremony per pipeline** | Graph construction (`new`, `add_causaloid`, `add_edge`, `freeze`) plus an evaluation strategy. | `start(ctx).bind(...).bind(...)`. |
-| **Type system carries the world** | Contextoid IDs + `Data::get_data()` lookups (runtime). | Plain Rust struct fields (compile-time). |
+| **Type system carries the world** | Contextoid ids + `Context::get_data_by_id` lookups (runtime). | Contextoid ids + `Context::get_data_by_id` lookups (runtime); the context type is a parameter of the carrier type (compile-time). |
 
 ### Concrete decision rules
 
@@ -75,10 +75,10 @@ Pick **`via_causaloid`** when **any** of these is true:
 Pick **`via_monad`** when **all** of these are true:
 
 - The pipeline is sequential or near-sequential.
-- The world state fits in a single Rust struct (no need for multiple `Contextoid` kinds).
+- The world state fits in one `Context` that every stage reads from the carrier.
 - The audit trail of *alternation events* matters more than structural attribution to named units.
 - You want minimal ceremony and the alternation operator visible at the call site (`.alternate_value(x)`, `.alternate_context(c)`, `.alternate_state(s)`).
-- The team prefers plain Rust structs and `bind` chains over graph construction.
+- The team prefers `bind` chains over graph construction.
 
 ### Hybrid is a real option
 

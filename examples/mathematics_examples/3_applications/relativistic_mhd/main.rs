@@ -23,29 +23,44 @@
 //! component. The coupling step reads the local curvature back out and hands the MHD solver
 //! `Minkowski(4)` above the threshold and `Euclidean(3)` below it, so the algebra the plasma
 //! runs in follows the regime the plasma is in.
+//!
+//! The world both solvers read lives in a `Context`, one `Data` node per quantity in normalised
+//! units: the metric's diagonal, the scalar curvature, the threshold the coupling compares
+//! against, and the plasma's current density and magnetic field.
 
+use deep_causality_context::{
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
+    NoSpace, NoSpaceTime, NoTime,
+};
 use deep_causality_haft::{Applicative, Pure};
 use deep_causality_multivector::{CausalMultiVector, CausalMultiVectorError, Metric, MultiVector};
-use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lift, lower};
-use deep_causality_tensor::{CausalTensor, CausalTensorError, CausalTensorWitness};
+use deep_causality_num::{const_scalar_from_int, lift, lower};
+use deep_causality_tensor::{CausalTensor, CausalTensorWitness};
 
-/// A Schwarzschild-like metric in normalised units: time dilation, radial stretching, and two
-/// angular components left flat.
-const G_00: f64 = -0.9;
-const G_11: f64 = 1.1;
-const G_22: f64 = 1.0;
-const G_33: f64 = 1.0;
 /// The metric tensor is 4×4.
 const METRIC_DIM: usize = 4;
 
-/// The scalar curvature `R` driven by the central mass, and the intensity above which the plasma
-/// runs in the relativistic algebra.
-const SCALAR_CURVATURE: FloatType = const_scalar_from_float!(FloatType, 0.1);
-const RELATIVISTIC_THRESHOLD: FloatType = const_scalar_from_float!(FloatType, 0.05);
+/// The spacetime and the plasma in it, one `Data` node per quantity. The units are normalised and
+/// the geometry is the metric tensor built from the nodes, so the spatial, temporal and spacetime
+/// slots are empty.
+type GrmhdContext = Context<Data<FloatType>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
 
-/// Plasma current density flowing toroidally, and the poloidal confinement field.
-const CURRENT_DENSITY: FloatType = const_scalar_from_int!(FloatType, 10);
-const MAGNETIC_FIELD: FloatType = const_scalar_from_int!(FloatType, 2);
+/// Contextoid id: `g_00` of the Schwarzschild-like metric's diagonal, the time dilation.
+const G_00: ContextoidId = 1;
+/// Contextoid id: `g_11` of the metric's diagonal, the radial stretching.
+const G_11: ContextoidId = 2;
+/// Contextoid id: `g_22` of the metric's diagonal, an angular component left flat.
+const G_22: ContextoidId = 3;
+/// Contextoid id: `g_33` of the metric's diagonal, an angular component left flat.
+const G_33: ContextoidId = 4;
+/// Contextoid id: the scalar curvature `R` driven by the central mass.
+const SCALAR_CURVATURE: ContextoidId = 5;
+/// Contextoid id: the curvature intensity above which the plasma runs in the relativistic algebra.
+const RELATIVISTIC_THRESHOLD: ContextoidId = 6;
+/// Contextoid id: the plasma current density, flowing toroidally.
+const CURRENT_DENSITY: ContextoidId = 7;
+/// Contextoid id: the poloidal confinement field.
+const MAGNETIC_FIELD: ContextoidId = 8;
 
 /// Blade indices: each axis owns one bit, and a plane owns the bits of the axes spanning it.
 const E_X: usize = 1 << 1;
@@ -60,11 +75,12 @@ const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
+    let world = accretion_flow()?;
 
     // Step 1: the GR solver. The metric tensor goes in, the Einstein tensor comes out.
     print_step_one();
-    let g_uv = spacetime_metric()?;
-    let g_tensor = einstein_tensor(&g_uv);
+    let g_uv = spacetime_metric(&world)?;
+    let g_tensor = einstein_tensor(&g_uv, read(&world, SCALAR_CURVATURE)?);
 
     // The time component g_00 carries the gravitational time dilation, which stands in here for
     // the local curvature intensity. A full coupling maps the whole tensor to a Clifford metric.
@@ -74,7 +90,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Step 2: the coupling. The curvature intensity is a value, and it selects the algebra the
     // next solver works in.
     print_step_two();
-    let (metric_sig, label) = if time_dilation > RELATIVISTIC_THRESHOLD {
+    let (metric_sig, label) = if time_dilation > read(&world, RELATIVISTIC_THRESHOLD)? {
         (Metric::Minkowski(4), "Relativistic (Minkowski 4D)")
     } else {
         (Metric::Euclidean(3), "Classical (Euclidean 3D)")
@@ -83,8 +99,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Step 3: the MHD solver, running in the metric Step 2 chose.
     print_step_three();
-    let current = CURRENT_DENSITY;
-    let field = MAGNETIC_FIELD;
+    let current = read(&world, CURRENT_DENSITY)?;
+    let field = read(&world, MAGNETIC_FIELD)?;
     let force = lorentz_force(current, field, metric_sig)?;
     print_force(force);
 
@@ -95,23 +111,60 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
+// --- The world: the spacetime and the plasma in it ---
+
+/// The accretion flow's world, in normalised units, one `Data` node per quantity.
+fn accretion_flow() -> Result<GrmhdContext, ContextIndexError> {
+    let facts = [
+        (G_00, -0.9),
+        (G_11, 1.1),
+        (G_22, 1.0),
+        (G_33, 1.0),
+        (SCALAR_CURVATURE, 0.1),
+        (RELATIVISTIC_THRESHOLD, 0.05),
+        (CURRENT_DENSITY, 10.0),
+        (MAGNETIC_FIELD, 2.0),
+    ];
+
+    let mut context = Context::with_capacity(1, "accretion flow", facts.len());
+    for (id, value) in facts {
+        context.add_node(Contextoid::new(
+            id,
+            ContextoidType::Datoid(Data::new(id, lift::<FloatType>(value))),
+        ))?;
+    }
+    Ok(context)
+}
+
+/// Read one quantity out of the world.
+fn read(context: &GrmhdContext, id: ContextoidId) -> Result<FloatType, ContextIndexError> {
+    context
+        .get_data_by_id(id)
+        .ok_or_else(|| ContextIndexError::new(format!("no quantity with contextoid id {id}")))
+}
+
 // --- General relativity: the tensor engine ---
 
-/// The metric tensor of a simplified Schwarzschild-like spacetime, diagonal in these units.
-fn spacetime_metric() -> Result<CausalTensor<FloatType>, CausalTensorError> {
+/// The metric tensor of a simplified Schwarzschild-like spacetime, diagonal in these units, built
+/// from the diagonal the world holds.
+fn spacetime_metric(
+    world: &GrmhdContext,
+) -> Result<CausalTensor<FloatType>, Box<dyn std::error::Error>> {
     let mut data = vec![ZERO; METRIC_DIM * METRIC_DIM];
-    for (i, &g) in [G_00, G_11, G_22, G_33].iter().enumerate() {
-        data[i * METRIC_DIM + i] = lift::<FloatType>(g);
+    for (i, &id) in [G_00, G_11, G_22, G_33].iter().enumerate() {
+        data[i * METRIC_DIM + i] = read(world, id)?;
     }
-    CausalTensor::new(data, vec![METRIC_DIM, METRIC_DIM])
+    Ok(CausalTensor::new(data, vec![METRIC_DIM, METRIC_DIM])?)
 }
 
 /// The Einstein tensor `G_uv ~ R · g_uv`, the simplified left-hand side of the field equations.
 ///
 /// `Pure` lifts the scaling law into `CausalTensorWitness` and `Applicative` applies it at every
 /// component, so the law is written once and the tensor shape carries it.
-fn einstein_tensor(g_uv: &CausalTensor<FloatType>) -> CausalTensor<FloatType> {
-    let curvature = SCALAR_CURVATURE;
+fn einstein_tensor(
+    g_uv: &CausalTensor<FloatType>,
+    curvature: FloatType,
+) -> CausalTensor<FloatType> {
     let scale = move |x: FloatType| x * curvature;
     CausalTensorWitness::apply(CausalTensorWitness::pure(scale), g_uv.clone())
 }

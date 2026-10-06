@@ -18,15 +18,18 @@
 //! bound the law records.
 
 mod constants;
+mod model_config;
 mod utils_print;
 
 use deep_causality_algebra::RealField;
 use deep_causality_num::{Float106, FromPrimitive};
 use deep_causality_quantum::utils_tests::four_two_two;
-use deep_causality_quantum::{CompositionLaw, NumericCaps, QuantumError, distillation_round};
+use deep_causality_quantum::{CompositionLaw, NumericCaps, distillation_round};
+use std::error::Error;
 
-use crate::constants::{COMPARISON_INDEX, NOISE_LABELS, noise_sweep};
-use utils_print::{print_header, print_outcome, print_round, print_row};
+use crate::constants::COMPARISON_INDEX;
+use crate::model_config::{NoiseContext, depolarising_probability, noise_fraction, noise_worlds};
+use utils_print::{print_header, print_outcome, print_round, print_row, probability_label};
 
 /// The working scalar. Switch it to `f32`, `f64` or `deep_causality_num::BFloat16`; the code, the
 /// noise and every residual recompute at that precision.
@@ -39,37 +42,42 @@ pub type FloatType = Float106;
 /// The count word the logical basis is computed over.
 pub type NumberType = u64;
 
-/// The composition law for one depolarising probability.
-fn law_for<S>(p: S) -> Result<CompositionLaw<S>, QuantumError>
+/// The composition law in one noise world, its depolarising probability read from `world` at the
+/// precision `S`.
+fn law_for<S>(world: &NoiseContext) -> Result<CompositionLaw<S>, Box<dyn Error>>
 where
     S: RealField + FromPrimitive + Default + core::fmt::Debug,
 {
+    let p = depolarising_probability::<S>(world)?;
     Ok(distillation_round::<NumberType, _, S>(&four_two_two(), p)?
         .compose(&NumericCaps::default())?
         .law)
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() -> Result<(), Box<dyn Error>> {
     print_header();
 
-    let sweep = noise_sweep::<FloatType>();
+    let worlds = noise_worlds()?;
     let mut every_law_holds = true;
 
-    for (p, label) in sweep.into_iter().zip(NOISE_LABELS) {
-        let law = law_for::<FloatType>(p)?;
+    for world in &worlds {
+        let law = law_for::<FloatType>(world)?;
         every_law_holds &= law.holds();
 
-        print_round(label, &law);
+        print_round(noise_fraction(world)?, &law);
     }
 
     // The same round at each shipped precision. The probability is rebuilt from its fraction at
     // every one of them, so what the rows compare is the arithmetic and not a widened literal.
-    let label = NOISE_LABELS[COMPARISON_INDEX];
+    let compared = worlds
+        .get(COMPARISON_INDEX)
+        .ok_or("COMPARISON_INDEX names no noise world")?;
+    let label = probability_label(noise_fraction(compared)?);
     println!("[p = {label}] at the shipped precisions");
 
-    let f32_law = law_for::<f32>(noise_sweep::<f32>()[COMPARISON_INDEX])?;
-    let f64_law = law_for::<f64>(noise_sweep::<f64>()[COMPARISON_INDEX])?;
-    let wide_law = law_for::<Float106>(noise_sweep::<Float106>()[COMPARISON_INDEX])?;
+    let f32_law = law_for::<f32>(compared)?;
+    let f64_law = law_for::<f64>(compared)?;
+    let wide_law = law_for::<Float106>(compared)?;
 
     every_law_holds &= f32_law.holds() && f64_law.holds() && wide_law.holds();
 

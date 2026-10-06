@@ -3,7 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! The GRMHD stages, each a pure `GrmhdState -> PropagatingEffect<GrmhdState>`.
+//! The GRMHD stages. The first four are pure functions of the state and the world the flow's
+//! context holds, returning the next state or the error that stops the chain; the analysis is a
+//! pure function of the state alone.
 //!
 //! Geometric units throughout: `G = c = 1`, so a mass is a length and `M = r_s / 2`. Curvature
 //! then carries units of `1 / length^2`, the Kretschmann scalar `1 / length^4`, an acceleration
@@ -15,8 +17,9 @@
 //! population count of its index. `J` on `e_1` and `B` on `e_2` put `J ^ B` on `e_1 ^ e_2`.
 
 use crate::FloatType;
-use deep_causality::{CausalityError, CausalityErrorEnum, PropagatingEffect};
+use deep_causality::{CausalityError, CausalityErrorEnum};
 use deep_causality_algebra::Real;
+use deep_causality_context::{Context, ContextoidId, Data, NoSpace, NoSpaceTime, NoTime};
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lift_usize};
 use deep_causality_physics::{
@@ -46,32 +49,63 @@ const QUARTER: FloatType = const_scalar_from_float!(FloatType, 0.25);
 /// The speed of light in `m/s`, for the one display conversion out of geometric units.
 const LIGHT_SPEED: FloatType = const_scalar_from_float!(FloatType, SPEED_OF_LIGHT);
 
+/// One solar mass in geometric units, in metres.
+const SOLAR_MASS_GEOMETRIC_M: FloatType = const_scalar_from_float!(FloatType, 1476.6);
+
 /// `8 pi`, the coupling in `G_uv = 8 pi T_uv` with `G = c = 1`.
 fn eight_pi() -> FloatType {
     lift_usize::<FloatType>(8) * FloatType::pi()
 }
 
-/// Configuration for the GRMHD run.
-#[derive(Clone, Debug, Default)]
-pub struct SimulationConfig {
-    /// Schwarzschild radius of the central body, in metres.
-    pub schwarzschild_radius: FloatType,
-    /// Orbital radius of the plasma, in metres.
-    pub radius: FloatType,
-    /// Radial extent of the plasma column, in metres. Tidal stretch is measured across it.
-    pub column_length: FloatType,
-    /// Plasma current density, in geometric units.
-    pub current_density: FloatType,
-    /// Confining magnetic field as the static observer measures it, in geometric units (`1/m`).
-    pub magnetic_field: FloatType,
-    /// Tidal acceleration above which the plasma is treated relativistically, in `1/m`.
-    pub tidal_threshold: FloatType,
+/// The central body and the plasma as a context: one `Data` contextoid per world fact. Radii are
+/// Schwarzschild radii in geometric units, which no context space type models, so the spatial,
+/// temporal and spacetime slots are empty.
+pub type GrmhdContext =
+    Context<Data<FloatType>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
+
+/// Contextoid id: mass of the central body, in solar masses.
+pub const CENTRAL_MASS: ContextoidId = 1;
+/// Contextoid id: orbital radius of the plasma in the equatorial plane, in Schwarzschild radii.
+pub const ORBIT_RADIUS: ContextoidId = 2;
+/// Contextoid id: radial extent of the plasma column, in metres. Tidal stretch is measured
+/// across it.
+pub const COLUMN_LENGTH: ContextoidId = 3;
+/// Contextoid id: plasma current density, in geometric units.
+pub const CURRENT_DENSITY: ContextoidId = 4;
+/// Contextoid id: confining magnetic field as the static observer measures it, in geometric
+/// units (`1/m`).
+pub const MAGNETIC_FIELD: ContextoidId = 5;
+/// Contextoid id: tidal acceleration above which the plasma is treated relativistically, in
+/// `1/m`. Times `c^2` that is about `9e4 m/s^2` across the column.
+pub const TIDAL_THRESHOLD: ContextoidId = 6;
+
+/// Reads one world fact out of the context, or the error naming the contextoid id it lacks.
+pub fn read(world: &GrmhdContext, id: ContextoidId) -> Result<FloatType, CausalityError> {
+    world.get_data_by_id(id).ok_or_else(|| {
+        custom(format!(
+            "the GRMHD world holds no Datoid with contextoid id {id}"
+        ))
+    })
+}
+
+/// The Schwarzschild radius of the central body, `r_s = 2M`, in metres.
+pub fn schwarzschild_radius(world: &GrmhdContext) -> Result<FloatType, CausalityError> {
+    Ok(TWO * (read(world, CENTRAL_MASS)? * SOLAR_MASS_GEOMETRIC_M))
+}
+
+/// The orbital radius of the plasma, in metres.
+pub fn orbit_radius(world: &GrmhdContext) -> Result<FloatType, CausalityError> {
+    Ok(read(world, ORBIT_RADIUS)? * schwarzschild_radius(world)?)
+}
+
+/// The context the flow carries, or the error that stops the chain when it carries none.
+fn require(world: Option<&GrmhdContext>) -> Result<&GrmhdContext, CausalityError> {
+    world.ok_or_else(|| custom("the flow carries no GRMHD context"))
 }
 
 /// State threaded through the causal chain.
 #[derive(Clone, Debug, Default)]
 pub struct GrmhdState {
-    pub config: SimulationConfig,
     // --- GR results ---
     /// `M = r_s / 2` in geometric units.
     pub mass_geometric: FloatType,
@@ -104,15 +138,6 @@ pub struct GrmhdState {
     pub status: &'static str,
 }
 
-impl GrmhdState {
-    pub fn new(config: &SimulationConfig) -> Self {
-        Self {
-            config: config.clone(),
-            ..Default::default()
-        }
-    }
-}
-
 /// Stage 1: the GR solver.
 ///
 /// Builds the Schwarzschild metric at the plasma's radius and reads curvature off the solution.
@@ -123,9 +148,13 @@ impl GrmhdState {
 ///
 /// The metric is the coordinate metric in `(t, r, theta, phi)` with the plasma in the equatorial
 /// plane, `theta = pi / 2`, so `g_{theta theta} = r^2` and `g_{phi phi} = r^2 sin^2 theta = r^2`.
-pub fn calculate_curvature(state: GrmhdState) -> PropagatingEffect<GrmhdState> {
-    let r = state.config.radius;
-    let r_s = state.config.schwarzschild_radius;
+pub fn calculate_curvature(
+    state: GrmhdState,
+    world: Option<&GrmhdContext>,
+) -> Result<GrmhdState, CausalityError> {
+    let world = require(world)?;
+    let r = orbit_radius(world)?;
+    let r_s = schwarzschild_radius(world)?;
 
     if r <= r_s {
         return fail("the plasma radius is inside the horizon");
@@ -137,7 +166,7 @@ pub fn calculate_curvature(state: GrmhdState) -> PropagatingEffect<GrmhdState> {
     // Vacuum exterior: the Einstein equations give R_uv = 0, hence R = 0.
     let ricci_scalar = ZERO;
     // Radial tidal acceleration over a proper length L, to leading order: a = 2 M L / r^3.
-    let tidal_acceleration = TWO * mass_geometric * state.config.column_length / (r * r * r);
+    let tidal_acceleration = TWO * mass_geometric * read(world, COLUMN_LENGTH)? / (r * r * r);
 
     let lapse = ONE - r_s / r;
     let metric_tensor = match generate_schwarzschild_metric(-lapse, ONE / lapse, r * r, r * r) {
@@ -145,7 +174,7 @@ pub fn calculate_curvature(state: GrmhdState) -> PropagatingEffect<GrmhdState> {
         Err(e) => return fail(format!("schwarzschild metric: {e:?}")),
     };
 
-    PropagatingEffect::pure(GrmhdState {
+    Ok(GrmhdState {
         mass_geometric,
         lapse,
         kretschmann,
@@ -161,14 +190,18 @@ pub fn calculate_curvature(state: GrmhdState) -> PropagatingEffect<GrmhdState> {
 /// A computed curvature quantity decides which algebra the plasma runs in. Above the tidal
 /// threshold the flow is relativistic and needs the full `Cl(1,3)` spacetime algebra; below it,
 /// the three-dimensional Euclidean algebra is enough. Both sides of the comparison are in `1/m`.
-pub fn select_metric(state: GrmhdState) -> PropagatingEffect<GrmhdState> {
-    let (metric, metric_label) = if state.tidal_acceleration > state.config.tidal_threshold {
+pub fn select_metric(
+    state: GrmhdState,
+    world: Option<&GrmhdContext>,
+) -> Result<GrmhdState, CausalityError> {
+    let world = require(world)?;
+    let (metric, metric_label) = if state.tidal_acceleration > read(world, TIDAL_THRESHOLD)? {
         (Metric::Minkowski(4), "Relativistic (Minkowski 4D)")
     } else {
         (Metric::Euclidean(3), "Classical (Euclidean 3D)")
     };
 
-    PropagatingEffect::pure(GrmhdState {
+    Ok(GrmhdState {
         metric: Some(metric),
         metric_label,
         ..state
@@ -180,18 +213,22 @@ pub fn select_metric(state: GrmhdState) -> PropagatingEffect<GrmhdState> {
 /// `F = J ^ B`: the current on `e_1`, the confining field on `e_2`, and the force density on the
 /// bivector they span. These are the components a static observer measures, so the algebra's
 /// flat metric is the right one for them.
-pub fn calculate_lorentz_force(state: GrmhdState) -> PropagatingEffect<GrmhdState> {
+pub fn calculate_lorentz_force(
+    state: GrmhdState,
+    world: Option<&GrmhdContext>,
+) -> Result<GrmhdState, CausalityError> {
+    let world = require(world)?;
     let metric = match state.metric {
         Some(m) => m,
         None => return fail("no metric was selected"),
     };
     let blades = 1 << metric.dimension();
 
-    let j_vec = match blade(blades, E_1, state.config.current_density, metric) {
+    let j_vec = match blade(blades, E_1, read(world, CURRENT_DENSITY)?, metric) {
         Ok(v) => v,
         Err(e) => return fail(e),
     };
-    let b_vec = match blade(blades, E_2, state.config.magnetic_field, metric) {
+    let b_vec = match blade(blades, E_2, read(world, MAGNETIC_FIELD)?, metric) {
         Ok(v) => v,
         Err(e) => return fail(e),
     };
@@ -200,9 +237,12 @@ pub fn calculate_lorentz_force(state: GrmhdState) -> PropagatingEffect<GrmhdStat
         Some(f) => f,
         None => return fail("lorentz force produced no value"),
     };
-    let lorentz_force = f_field.0.data().get(E_12).copied().unwrap_or(ZERO);
+    let lorentz_force = match f_field.0.data().get(E_12) {
+        Some(&f) => f,
+        None => return fail("the Lorentz force has no e_1 ^ e_2 blade"),
+    };
 
-    PropagatingEffect::pure(GrmhdState {
+    Ok(GrmhdState {
         lorentz_force,
         ..state
     })
@@ -217,15 +257,19 @@ pub fn calculate_lorentz_force(state: GrmhdState) -> PropagatingEffect<GrmhdStat
 /// `T^{t^ t^} = (-g_tt) T^{tt} = lapse T^{tt}`, gives the energy density the observer measures.
 /// For a pure magnetic field that must be `B^2 / 2`, whatever the metric, and the run checks
 /// that it is.
-pub fn calculate_energy_momentum(state: GrmhdState) -> PropagatingEffect<GrmhdState> {
+pub fn calculate_energy_momentum(
+    state: GrmhdState,
+    world: Option<&GrmhdContext>,
+) -> Result<GrmhdState, CausalityError> {
+    let world = require(world)?;
     let g_uv = match &state.metric_tensor {
         Some(t) => t,
         None => return fail("no metric tensor was built"),
     };
-    let r = state.config.radius;
+    let r = orbit_radius(world)?;
     let lapse = state.lapse;
 
-    let em_tensor_component = state.config.magnetic_field * Real::sqrt(lapse) / r;
+    let em_tensor_component = read(world, MAGNETIC_FIELD)? * Real::sqrt(lapse) / r;
     let mut f_data = vec![ZERO; DIM * DIM];
     f_data[RADIAL * DIM + POLAR] = em_tensor_component;
     f_data[POLAR * DIM + RADIAL] = -em_tensor_component;
@@ -244,7 +288,7 @@ pub fn calculate_energy_momentum(state: GrmhdState) -> PropagatingEffect<GrmhdSt
     };
     let em_energy_density = lapse * em_energy_coordinate;
 
-    PropagatingEffect::pure(GrmhdState {
+    Ok(GrmhdState {
         em_tensor_component,
         em_energy_coordinate,
         em_energy_density,
@@ -257,7 +301,7 @@ pub fn calculate_energy_momentum(state: GrmhdState) -> PropagatingEffect<GrmhdSt
 /// The comparison is between two curvatures in `1/m^2`: `8 pi rho_EM`, the source term the
 /// plasma's own stress-energy would put on the right of the Einstein equations, and `sqrt(K)`,
 /// the curvature the hole imposes at the plasma.
-pub fn analyze_stability(state: GrmhdState) -> PropagatingEffect<GrmhdState> {
+pub fn analyze_stability(state: GrmhdState) -> GrmhdState {
     let plasma_curvature = eight_pi() * state.em_energy_density;
     let tidal_curvature = Real::sqrt(state.kretschmann);
 
@@ -269,12 +313,12 @@ pub fn analyze_stability(state: GrmhdState) -> PropagatingEffect<GrmhdState> {
         "Tidally dominated: sqrt(K) exceeds 8 pi rho_EM, the hole sets the scale"
     };
 
-    PropagatingEffect::pure(GrmhdState {
+    GrmhdState {
         plasma_curvature,
         tidal_curvature,
         status,
         ..state
-    })
+    }
 }
 
 /// The frame energy density of a pure magnetic field, `B^2 / 2`, in closed form.
@@ -312,6 +356,10 @@ fn blade(
         .map_err(|e| format!("building a multivector failed: {e:?}"))
 }
 
-fn fail(reason: impl Into<String>) -> PropagatingEffect<GrmhdState> {
-    PropagatingEffect::from_error(CausalityError(CausalityErrorEnum::Custom(reason.into())))
+fn fail<T>(reason: impl Into<String>) -> Result<T, CausalityError> {
+    Err(custom(reason))
+}
+
+fn custom(reason: impl Into<String>) -> CausalityError {
+    CausalityError(CausalityErrorEnum::Custom(reason.into()))
 }

@@ -9,9 +9,10 @@
 //! file alone.
 
 use crate::FloatType;
-use crate::constants::{GADGET_NOISE_LABEL, TORUS_SIDE};
+use crate::constants::TORUS_SIDE;
 use deep_causality_algebra::RealField;
 use deep_causality_num::{FromPrimitive, lower};
+use deep_causality_num_rational::Rational;
 use deep_causality_quantum::CompositionLaw;
 
 pub fn print_header() {
@@ -37,13 +38,15 @@ pub fn print_clean(law: &CompositionLaw<FloatType>, exact: bool) {
     println!();
 }
 
-/// The noisy switch.
-pub fn print_noisy(law: &CompositionLaw<FloatType>, second_link_exact: bool) {
+/// The noisy switch, under the depolarising probability `probability`.
+pub fn print_noisy(
+    law: &CompositionLaw<FloatType>,
+    second_link_exact: bool,
+    probability: Rational<i64>,
+) {
     let row = &law.rows[0];
 
-    println!(
-        "[gadget with depolarising noise p = {GADGET_NOISE_LABEL} on one logical wire] at FloatType"
-    );
+    println!("[gadget with depolarising noise p = {probability} on one logical wire] at FloatType");
     print!("{law}");
     println!(
         "    the noise is the first link's residual; code B's link stays {}; the composite",
