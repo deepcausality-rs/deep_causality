@@ -23,10 +23,10 @@ use std::sync::{Arc, RwLock};
 ///   allowing for flexible data representation within the model.
 /// - **`EuclideanSpace`**: Defines the spatial context. This implies that
 ///   spatial relationships within this model adhere to standard 3D Euclidean geometry.
-/// - **`EuclideanTime`**: Specifies the temporal context, utilizing a
+/// - **`NewtonianTime`**: Specifies the temporal context, utilizing a
 ///   Euclidean representation of time. This typically refers to a continuous,
 ///   linear progression of time.
-/// - **`EuclideanSpacetime`**: Combines the Euclidean spatial and temporal
+/// - **`NewtonianSpacetime`**: Combines the Euclidean spatial and temporal
 ///   contexts into a unified spacetime representation, where both space and
 ///   time are treated with Euclidean properties.
 /// - **`FloatType` (x2)**: Two `FloatType` parameters, typically used for
@@ -56,10 +56,10 @@ pub type BaseModel = Model<bool, bool, BaseContext>;
 /// - **`EuclideanSpace`**: Defines the spatial context of the causaloid within a
 ///   standard 3D Euclidean coordinate system. This implies that spatial relationships
 ///   are governed by Euclidean geometry.
-/// - **`EuclideanTime`**: Specifies the temporal context, using a Euclidean
+/// - **`NewtonianTime`**: Specifies the temporal context, using a Euclidean
 ///   representation of time. This typically refers to a continuous, linear progression
 ///   of time.
-/// - **`EuclideanSpacetime`**: Combines the Euclidean spatial and temporal contexts
+/// - **`NewtonianSpacetime`**: Combines the Euclidean spatial and temporal contexts
 ///   into a unified spacetime representation, where both space and time are treated
 ///   with Euclidean properties.
 /// - **`FloatType` (x2)**: Two `FloatType` parameters, typically used for internal
@@ -89,10 +89,10 @@ pub type BaseCausaloid<I, O> = Causaloid<I, O, (), Arc<RwLock<BaseContext>>>;
 /// - **`EuclideanSpace`**: Defines the spatial context of the causaloids within a
 ///   standard 3D Euclidean coordinate system. This implies that spatial relationships
 ///   are governed by Euclidean geometry.
-/// - **`EuclideanTime`**: Specifies the temporal context, using a Euclidean
+/// - **`NewtonianTime`**: Specifies the temporal context, using a Euclidean
 ///   representation of time. This typically refers to a continuous, linear progression
 ///   of time.
-/// - **`EuclideanSpacetime`**: Combines the Euclidean spatial and temporal contexts
+/// - **`NewtonianSpacetime`**: Combines the Euclidean spatial and temporal contexts
 ///   into a unified spacetime representation, where both space and time are treated
 ///   with Euclidean properties.
 /// - **`FloatType` (x2)**: Two `FloatType` parameters, typically used for internal
@@ -121,9 +121,9 @@ pub type BaseCausaloidVec<I, O> = Vec<Causaloid<I, O, (), Arc<RwLock<BaseContext
 ///   `NumberType` is a generic numeric type, typically a floating-point or integer.
 /// - **`EuclideanSpace`**: Defines the spatial context of the causaloids within a
 ///   standard Euclidean coordinate system.
-/// - **`EuclideanTime`**: Specifies the temporal context, using a Euclidean
+/// - **`NewtonianTime`**: Specifies the temporal context, using a Euclidean
 ///   representation of time.
-/// - **`EuclideanSpacetime`**: Combines the Euclidean spatial and temporal contexts
+/// - **`NewtonianSpacetime`**: Combines the Euclidean spatial and temporal contexts
 ///   into a unified spacetime representation.
 /// - **`FloatType` (x2)**: Two `FloatType` parameters, typically used for internal
 ///   calculations, scalar values, or other generic numeric requirements within
@@ -148,9 +148,9 @@ pub type BenchmarkCausalMap = HashMap<usize, BaseCausaloid<f64, bool>>;
 ///   using a generic `NumberType` (typically a floating-point or integer type).
 /// - **`EuclideanSpace`**: Defines the spatial context of the causaloids within
 ///   a standard Euclidean coordinate system.
-/// - **`EuclideanTime`**: Specifies the temporal context, using a Euclidean
+/// - **`NewtonianTime`**: Specifies the temporal context, using a Euclidean
 ///   representation of time.
-/// - **`EuclideanSpacetime`**: Combines the Euclidean spatial and temporal
+/// - **`NewtonianSpacetime`**: Combines the Euclidean spatial and temporal
 ///   contexts into a unified spacetime representation.
 /// - **`FloatType` (x2)**: Two `FloatType` parameters, typically used for internal
 ///   calculations, scalar values, or other generic numeric requirements within
