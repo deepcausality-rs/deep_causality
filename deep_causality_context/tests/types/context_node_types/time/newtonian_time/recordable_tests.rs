@@ -1,0 +1,113 @@
+/*
+ * SPDX-License-Identifier: MIT
+ * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
+ */
+
+//! `Recordable<TimeRecord>` for NewtonianTime. Expected records are the constructor literals under their
+//! named fields; the wrong-variant refusals name the node.
+//!
+//! Corner cases (rows A to K): C every other `TimeRecord` variant refused,
+//! `test_every_other_variant_is_refused`; F/G zero and a negative value,
+//! `test_zero_and_negative_round_trip`; H the scale `Symbolic`, which the time kinds still
+//! accept, in `test_round_trip`; I non-finite, `test_non_finite_round_trips`; J a finite value past the range of `f32` and `BFloat16` refused,
+//! `test_a_value_past_the_scalar_range_is_refused`; K `Float106` narrows
+//! and `BFloat16` widens, `test_precision_is_spent_at_the_bound`; every other row n/a.
+use deep_causality_context::{NewtonianTime, TimeScale};
+use deep_causality_context_store::{ProjectionError, Recordable, TimeRecord};
+use deep_causality_num::{BFloat16, Float106};
+
+#[test]
+fn test_round_trip() {
+    let node = NewtonianTime::new(3, TimeScale::Symbolic, 2.5);
+    let record = node.to_record().unwrap();
+    assert_eq!(
+        record,
+        TimeRecord::Newtonian {
+            scale: TimeScale::Symbolic,
+            value: 2.5
+        }
+    );
+    assert_eq!(NewtonianTime::from_record(3, record), Ok(node));
+}
+
+#[test]
+fn test_every_other_variant_is_refused() {
+    let others: [(&str, TimeRecord); 3] = [
+        (
+            "Minkowski",
+            TimeRecord::Minkowski {
+                scale: TimeScale::Second,
+                value: 1.0,
+            },
+        ),
+        (
+            "Discrete",
+            TimeRecord::Discrete {
+                scale: TimeScale::Steps,
+                tick: 1,
+            },
+        ),
+        ("Entropic", TimeRecord::Entropic { tick: 1 }),
+    ];
+    for (found, record) in others {
+        assert_eq!(
+            NewtonianTime::<f64>::from_record(9, record),
+            Err(ProjectionError::WrongVariant(9, "Newtonian", found))
+        );
+    }
+}
+
+#[test]
+fn test_zero_and_negative_round_trip() {
+    for node in [
+        NewtonianTime::new(1, TimeScale::NoScale, 0.0),
+        NewtonianTime::new(1, TimeScale::Nanoseconds, -4.0),
+    ] {
+        assert_eq!(
+            NewtonianTime::from_record(1, node.to_record().unwrap()),
+            Ok(node)
+        );
+    }
+}
+
+#[test]
+fn test_non_finite_round_trips() {
+    let node = NewtonianTime::new(1, TimeScale::Second, f64::NAN);
+    let restored = NewtonianTime::<f64>::from_record(1, node.to_record().unwrap()).unwrap();
+    assert_ne!(restored, node);
+    assert_eq!(restored.to_record().unwrap().kind_name(), "Newtonian");
+}
+
+#[test]
+fn test_precision_is_spent_at_the_bound() {
+    let low = 2f64.powi(-70);
+    let wide = NewtonianTime::new(2, TimeScale::Second, Float106::new(1.0, low));
+    let restored = NewtonianTime::<Float106>::from_record(2, wide.to_record().unwrap()).unwrap();
+    assert_eq!(
+        restored,
+        NewtonianTime::new(2, TimeScale::Second, Float106::new(1.0, 0.0))
+    );
+    let narrow = NewtonianTime::new(2, TimeScale::Second, BFloat16::from(1.5));
+    assert_eq!(
+        NewtonianTime::<BFloat16>::from_record(2, narrow.to_record().unwrap()),
+        Ok(narrow)
+    );
+}
+
+#[test]
+fn test_a_value_past_the_scalar_range_is_refused() {
+    // Row J. 1e300 is a finite f64 past the range of f32 and BFloat16, which would hold it as an
+    // infinity; the restore refuses it and names the value.
+    let record = TimeRecord::Newtonian {
+        scale: TimeScale::Second,
+        value: 1e300,
+    };
+    assert_eq!(
+        NewtonianTime::<f32>::from_record(4, record),
+        Err(ProjectionError::Scalar(4, 1e300))
+    );
+    assert_eq!(
+        NewtonianTime::<BFloat16>::from_record(4, record),
+        Err(ProjectionError::Scalar(4, 1e300))
+    );
+}

@@ -4,7 +4,7 @@
  */
 use crate::TeloidStore;
 use deep_causality::NumericalValue;
-use deep_causality_context::{Data, EuclideanSpace, EuclideanSpacetime, EuclideanTime};
+use deep_causality_context::{Data, EuclideanSpace, NewtonianSpacetime, NewtonianTime};
 
 /// The floating-point type this crate's ready-made aliases are built at.
 pub type FloatType = f64;
@@ -17,8 +17,8 @@ pub type TeloidID = u64;
 /// This `BaseTeloidStore` alias represents a `TeloidStore` instance—a specialized
 /// data structure for managing and querying teloids (temporal causal units)—
 /// configured with a standard set of generic parameters. It is designed for
-/// common causal modeling scenarios that operate within a Euclidean and numerical
-/// framework.
+/// common causal modeling scenarios in the classical frame: Euclidean space, Newtonian time
+/// and Newtonian spacetime, with numerical data.
 ///
 /// It provides a convenient and readable shorthand for defining a `TeloidStore`
 /// that encapsulates:
@@ -29,15 +29,19 @@ pub type TeloidID = u64;
 /// - **`EuclideanSpace`**: Defines the spatial context of the teloids using a standard
 ///   Euclidean coordinate system. This implies that spatial relationships
 ///   within this store adhere to Euclidean geometry.
-/// - **`EuclideanTime`**: Specifies the temporal context, utilizing a
-///   Euclidean representation of time. This typically refers to a continuous,
-///   linear progression of time.
-/// - **`EuclideanSpacetime`**: Combines the Euclidean spatial and temporal
-///   contexts into a unified spacetime representation, where both space and
-///   time are treated with Euclidean properties.
+/// - **[`NewtonianTime`]**: Specifies the temporal context as instants of absolute time, the
+///   time of classical spacetime. The duration between two instants is the same for every
+///   observer (Weatherall 2021, §3).
+/// - **[`NewtonianSpacetime`]**: Combines space and time into events of Newtonian spacetime, in
+///   coordinates at rest in absolute space. Its spatial metric is the degenerate
+///   `diag(0, 1, 1, 1)` on `(t, x, y, z)`, so the distance between two events is their
+///   distance in absolute space, defined at any two times
+///   (Malament 2012, Prop. 4.1.2; Weatherall 2021, §4).
 /// - **`FloatType`**: The scalar the three geometric node types are built at. The same
-///   `FloatType` parameterises `EuclideanSpace`, `EuclideanTime`, and `EuclideanSpacetime`,
+///   `FloatType` parameterises `EuclideanSpace`, `NewtonianTime`, and `NewtonianSpacetime`,
 ///   so every coordinate a norm reads out of this store is measured in one scalar type.
+///
+/// The citations are given in full on [`NewtonianTime`] and [`NewtonianSpacetime`].
 ///
 /// This `BaseTeloidStore` is designed to be a sensible default for many applications,
 /// offering a consistent and easily recognizable structure for managing and
@@ -46,6 +50,6 @@ pub type TeloidID = u64;
 pub type BaseTeloidStore = TeloidStore<
     Data<NumericalValue>,
     EuclideanSpace<FloatType>,
-    EuclideanTime<FloatType>,
-    EuclideanSpacetime<FloatType>,
+    NewtonianTime<FloatType>,
+    NewtonianSpacetime<FloatType>,
 >;

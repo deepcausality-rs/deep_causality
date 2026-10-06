@@ -10,7 +10,8 @@
 //! Corner cases (rows A to K): C every other `SpaceRecord` variant refused with the node's
 //! identifier, `test_every_other_variant_is_refused`; F/G zero and negative coordinates,
 //! `test_zero_and_negative_round_trip`; I a non-finite coordinate, `test_non_finite_round_trips`;
-//! K `Float106` narrows and `BFloat16` widens, `test_precision_is_spent_at_the_bound`; every
+//! J a finite value past the range of `f32` and `BFloat16` refused,
+//! `test_a_value_past_the_scalar_range_is_refused`; K `Float106` narrows and `BFloat16` widens, `test_precision_is_spent_at_the_bound`; every
 //! other row n/a.
 use deep_causality_context::{EcefSpace, VerticalDatum};
 use deep_causality_context_store::{ProjectionError, Recordable, SpaceRecord};
@@ -118,5 +119,24 @@ fn test_precision_is_spent_at_the_bound() {
     assert_eq!(
         EcefSpace::<BFloat16>::from_record(2, narrow.to_record().unwrap()),
         Ok(narrow)
+    );
+}
+
+#[test]
+fn test_a_value_past_the_scalar_range_is_refused() {
+    // Row J. 1e300 is a finite f64 past the range of f32 and BFloat16, which would hold it as an
+    // infinity; the restore refuses it and names the value.
+    let record = SpaceRecord::Ecef {
+        x: 1.0,
+        y: 1e300,
+        z: 1.0,
+    };
+    assert_eq!(
+        EcefSpace::<f32>::from_record(4, record),
+        Err(ProjectionError::Scalar(4, 1e300))
+    );
+    assert_eq!(
+        EcefSpace::<BFloat16>::from_record(4, record),
+        Err(ProjectionError::Scalar(4, 1e300))
     );
 }

@@ -22,8 +22,8 @@ pub type CsmCausaloid = Causaloid<f64, bool, (), Arc<RwLock<BaseContext>>>;
 pub type CsmEthos = EffectEthos<
     deep_causality_context::Data<NumericalValue>,
     deep_causality_context::EuclideanSpace<FloatType>,
-    deep_causality_context::EuclideanTime<FloatType>,
-    deep_causality_context::EuclideanSpacetime<FloatType>,
+    deep_causality_context::NewtonianTime<FloatType>,
+    deep_causality_context::NewtonianSpacetime<FloatType>,
 >;
 
 pub(crate) fn get_effect_ethos() -> CsmEthos {

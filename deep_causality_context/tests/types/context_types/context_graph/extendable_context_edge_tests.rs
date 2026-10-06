@@ -36,7 +36,7 @@ fn test_extra_ctx_add_edge() {
     let t_id = 12;
     let t_time_scale = TimeScale::Month;
     let t_time_unit = 12f64;
-    let tempoid = EuclideanTime::new(t_id, t_time_scale, t_time_unit);
+    let tempoid = NewtonianTime::new(t_id, t_time_scale, t_time_unit);
 
     let id = 2;
     let c_2 = Contextoid::new(id, ContextoidType::Tempoid(tempoid));
@@ -95,7 +95,7 @@ fn test_extra_ctx_add_edge_err() {
     let t_id = 12;
     let t_time_scale = TimeScale::Month;
     let t_time_unit = 12f64;
-    let tempoid = EuclideanTime::new(t_id, t_time_scale, t_time_unit);
+    let tempoid = NewtonianTime::new(t_id, t_time_scale, t_time_unit);
 
     let id = 2;
     let c_2 = Contextoid::new(id, ContextoidType::Tempoid(tempoid));
@@ -145,7 +145,7 @@ fn test_extra_ctx_contains_edge() {
     let t_id = 12;
     let t_time_scale = TimeScale::Month;
     let t_time_unit = 12f64;
-    let tempoid = EuclideanTime::new(t_id, t_time_scale, t_time_unit);
+    let tempoid = NewtonianTime::new(t_id, t_time_scale, t_time_unit);
 
     let id = 2;
     let c_2 = Contextoid::new(id, ContextoidType::Tempoid(tempoid));
@@ -196,7 +196,7 @@ fn test_extra_ctx_contains_edge_err() {
     let t_id = 12;
     let t_time_scale = TimeScale::Month;
     let t_time_unit = 12f64;
-    let tempoid = EuclideanTime::new(t_id, t_time_scale, t_time_unit);
+    let tempoid = NewtonianTime::new(t_id, t_time_scale, t_time_unit);
 
     let id = 2;
     let c_2 = Contextoid::new(id, ContextoidType::Tempoid(tempoid));
@@ -274,7 +274,7 @@ fn test_extra_ctx_contains_edge_happy_path_and_no_edge() {
     let t_id = 12;
     let t_time_scale = TimeScale::Month;
     let t_time_unit = 12f64;
-    let tempoid = EuclideanTime::new(t_id, t_time_scale, t_time_unit);
+    let tempoid = NewtonianTime::new(t_id, t_time_scale, t_time_unit);
 
     let id = 42;
     let c_2 = Contextoid::new(id, ContextoidType::Tempoid(tempoid));
@@ -325,7 +325,7 @@ fn test_extra_ctx_remove_edge() {
     let t_id = 12;
     let t_time_scale = TimeScale::Month;
     let t_time_unit = 12f64;
-    let tempoid = EuclideanTime::new(t_id, t_time_scale, t_time_unit);
+    let tempoid = NewtonianTime::new(t_id, t_time_scale, t_time_unit);
 
     let id = 42;
     let c_2 = Contextoid::new(id, ContextoidType::Tempoid(tempoid));
@@ -430,7 +430,7 @@ fn test_extra_ctx_remove_edge_err() {
     let t_id = 12;
     let t_time_scale = TimeScale::Month;
     let t_time_unit = 12f64;
-    let tempoid = EuclideanTime::new(t_id, t_time_scale, t_time_unit);
+    let tempoid = NewtonianTime::new(t_id, t_time_scale, t_time_unit);
 
     let id = 42;
     let c_2 = Contextoid::new(id, ContextoidType::Tempoid(tempoid));

@@ -3,31 +3,38 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::MetricTensorError;
 use crate::traits::contextuable::coordinate::Coordinate;
 
-/// Trait for exposing and modifying a local 4×4 spacetime metric tensor.
+/// Read and write access to the metric tensor `g_ab` at a spacetime event.
 ///
-/// This trait defines both **read** and **write** access to a spacetime metric `gᵤᵥ`,
-/// typically used for computing intervals and geodesics. By including a mutation method,
-/// the curvature at a point can be dynamically updated in response to external fields,
-/// symbolic programs, or causal evolution.
+/// The tensor is a 4×4 matrix indexed in the implementor's coordinate order. For
+/// [`TangentSpacetime`](crate::TangentSpacetime) that order is `t, x, y, z`, with `t` in seconds
+/// and `x, y, z` in metres. Carroll 1997 orders the coordinates the same way with `x⁰ = ct`
+/// (eq. (1.5)), and the Minkowski metric `η = diag(−1, 1, 1, 1)` on those (eq. (1.8)) is
+/// `diag(−c², 1, 1, 1)` on `t, x, y, z`. A metric is symmetric, and on a relativistic spacetime
+/// it has Lorentz signature (Malament 2012, §2.1, p. 119); an implementor refuses a tensor that
+/// breaks either, so the tensor it holds always satisfies both.
 ///
 /// # The scalar
 /// The metric is contracted with the coordinates of the point it belongs to, so this trait reads
 /// its scalar from [`Coordinate::Coord`] rather than declaring one of its own.
 ///
-/// # Convention
-/// - Tensor is 4×4, with ordering `[t, x, y, z]`
-/// - Signature is (− + + +)
-/// - Symmetry (`gᵤᵥ = gᵥᵤ`) must be preserved by caller
+/// # References
+/// - Carroll, S. M. (1997). *Lecture Notes on General Relativity*. arXiv:gr-qc/9712019, ch. 1.
+/// - Malament, D. B. (2012). *Topics in the Foundations of General Relativity and Newtonian
+///   Gravitation Theory*. University of Chicago Press. §2.1.
 pub trait MetricTensor4D: Coordinate {
-    /// Returns the current local metric tensor `gᵤᵥ`.
+    /// The metric tensor `g_ab` at this event.
     fn metric_tensor(&self) -> [[Self::Coord; 4]; 4];
 
-    /// Updates the internal metric tensor to a new 4×4 matrix.
+    /// Replaces the metric tensor with `new_metric`.
     ///
-    /// # Safety
-    /// - Caller must ensure the matrix is symmetric
-    /// - In curved models, tensor should be valid under coordinate charts
-    fn update_metric_tensor(&mut self, new_metric: [[Self::Coord; 4]; 4]);
+    /// # Errors
+    /// [`MetricTensorError`] naming the rule `new_metric` breaks: an entry that is not finite, an
+    /// asymmetric pair, or a signature other than the implementor's. The tensor is then unchanged.
+    fn update_metric_tensor(
+        &mut self,
+        new_metric: [[Self::Coord; 4]; 4],
+    ) -> Result<(), MetricTensorError>;
 }

@@ -31,51 +31,50 @@ fn tangent_pair_with_difference(
 ) -> (TangentSpacetime<FloatType>, TangentSpacetime<FloatType>) {
     let [dt, dx, dy, dz] = v;
     let mut a = TangentSpacetime::new(1, dx, dy, dz, dt, 0.0, 0.0, 0.0, 0.0);
-    a.update_metric_tensor(metric);
+    a.update_metric_tensor(metric)
+        .expect("every fixture tensor is a Lorentzian metric");
     let b = TangentSpacetime::new(2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     (a, b)
 }
 
-/// Contractions `Σ g[u][w]·v[u]·v[w]` evaluated by hand, each term an integer.
+/// Contractions `Σ g[u][w]·v[u]·v[w]` evaluated in exact integer arithmetic.
 ///
-/// Every tensor is asymmetric and has off-diagonal entries in both triangles, and every `v` has
-/// four distinct nonzero components. A diagonal fixture cannot separate these: on the first row
-/// a diagonal-only sum gives 30 and a loop bound of 3 gives 36, against the true 120.
-///
-/// One defect a quadratic form cannot see, whatever the tensor: `vᵀGv` equals `vᵀGᵀv` for every
-/// `G`, so reading `g[w][u]` in place of `g[u][w]` is not an error here and no fixture can make
-/// it one.
+/// Every tensor is a metric the setter accepts: symmetric, with one negative and three positive
+/// eigenvalues (checked by exact symmetric elimination and by `numpy.linalg.eigvalsh`). Each has
+/// off-diagonal entries, and every `v` has four distinct nonzero components, so a diagonal-only
+/// sum (94, 120, 414) or a loop bound of 3 (46, −7, 64) gives a different number than the true
+/// one (134, 138, 424).
 const CONTRACTION_TABLE: [([[FloatType; 4]; 4], [FloatType; 4], FloatType); 3] = [
     (
         [
-            [1.0, 2.0, 0.0, 0.0],
-            [0.0, 1.0, 3.0, 0.0],
+            [-5.0, 1.0, 0.0, 0.0],
+            [1.0, 2.0, 1.0, 0.0],
+            [0.0, 1.0, 3.0, 1.0],
             [0.0, 0.0, 1.0, 4.0],
-            [5.0, 0.0, 0.0, 1.0],
         ],
         [1.0, 2.0, 3.0, 4.0],
-        120.0,
+        134.0,
     ),
     (
         [
-            [-2.0, 1.0, 0.0, 3.0],
-            [0.0, 4.0, -1.0, 0.0],
-            [2.0, 0.0, 1.0, 0.0],
-            [0.0, 0.0, 5.0, -3.0],
+            [-9.0, 2.0, 0.0, 1.0],
+            [2.0, 4.0, -1.0, 0.0],
+            [0.0, -1.0, 3.0, 0.0],
+            [1.0, 0.0, 0.0, 5.0],
         ],
         [2.0, -1.0, 3.0, 5.0],
-        48.0,
+        138.0,
     ),
     (
-        // Every entry nonzero and distinct, so no index pair is masked by a zero.
+        // Every entry nonzero, and every off-diagonal pair distinct, so no index pair is masked.
         [
-            [1.0, 2.0, 3.0, 4.0],
-            [5.0, 6.0, 7.0, 8.0],
-            [9.0, 10.0, 11.0, 12.0],
-            [13.0, 14.0, 15.0, 16.0],
+            [-20.0, 1.0, 2.0, 3.0],
+            [1.0, 10.0, 4.0, 5.0],
+            [2.0, 4.0, 11.0, 6.0],
+            [3.0, 5.0, 6.0, 12.0],
         ],
         [1.0, 3.0, -2.0, 5.0],
-        539.0,
+        424.0,
     ),
 ];
 
@@ -150,7 +149,7 @@ fn test_interval_squared_of_coincident_events_is_zero_under_any_metric() {
 #[test]
 fn test_default_metric_reproduces_the_flat_minkowski_interval() {
     // `TangentSpacetime::new` installs g = diag(-c², 1, 1, 1), so a tangent pair under its own
-    // default tensor must report the same interval as a Lorentzian pair, which reaches the
+    // default tensor must report the same interval as a Minkowski pair, which reaches the
     // answer through the trait's default `-(c·Δt)² + Δx² + Δy² + Δz²` and shares no code with
     // the contraction. The identity pins the speed of light inside the constructor.
     let rows: [(FloatType, FloatType, FloatType, FloatType); 3] = [
@@ -164,14 +163,34 @@ fn test_default_metric_reproduces_the_flat_minkowski_interval() {
         let tangent_b = TangentSpacetime::new(2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
         let tangent = tangent_a.interval_squared(&tangent_b);
 
-        let lorentzian_a = LorentzianSpacetime::new(1, dx, dy, dz, dt, TimeScale::Second);
-        let lorentzian_b = LorentzianSpacetime::new(2, 0.0, 0.0, 0.0, 0.0, TimeScale::Second);
-        let lorentzian = lorentzian_a.interval_squared(&lorentzian_b);
+        let minkowski_a = MinkowskiSpacetime::new(1, dx, dy, dz, dt, TimeScale::Second);
+        let minkowski_b = MinkowskiSpacetime::new(2, 0.0, 0.0, 0.0, 0.0, TimeScale::Second);
+        let minkowski = minkowski_a.interval_squared(&minkowski_b);
 
-        let tolerance = lorentzian.abs() * 1e-12;
+        let tolerance = minkowski.abs() * 1e-12;
         assert!(
-            (tangent - lorentzian).abs() <= tolerance,
-            "Δt={dt}, Δ=({dx}, {dy}, {dz}): tangent {tangent}, lorentzian {lorentzian}"
+            (tangent - minkowski).abs() <= tolerance,
+            "Δt={dt}, Δ=({dx}, {dy}, {dz}): tangent {tangent}, minkowski {minkowski}"
         );
     }
+}
+
+#[test]
+fn test_interval_squared_between_two_events_away_from_the_origin() {
+    // Row C: neither event at the origin, so a sum of coordinates cannot pass for a difference.
+    // Under η = diag(−1, 1, 1, 1) the displacement (Δt, Δx, Δy, Δz) = (2, 1, 4, 6) gives
+    // −4 + 1 + 16 + 36 = 49.
+    let eta = [
+        [-1.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, 0.0],
+        [0.0, 0.0, 1.0, 0.0],
+        [0.0, 0.0, 0.0, 1.0],
+    ];
+    // Arguments: id, x, y, z, t, dt, dx, dy, dz.
+    let mut a: TangentSpacetime<FloatType> =
+        TangentSpacetime::new(1, 2.0, 5.0, 7.0, 3.0, 1.0, 0.0, 0.0, 0.0);
+    a.update_metric_tensor(eta)
+        .expect("η is a Lorentzian metric");
+    let b = TangentSpacetime::new(2, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0);
+    assert_eq!(a.interval_squared(&b), 49.0);
 }

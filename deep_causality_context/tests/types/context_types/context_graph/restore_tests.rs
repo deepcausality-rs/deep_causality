@@ -15,7 +15,7 @@
 
 use deep_causality_context::{
     Context, Contextoid, ContextoidType, ContextuableGraph, CurrentDataIndex, Data, DiscreteTime,
-    EuclideanSpacetime, ExtendableContextuableGraph, NedSpace, RelationKind, Root, SpaceKind,
+    ExtendableContextuableGraph, NedSpace, NewtonianSpacetime, RelationKind, Root, SpaceKind,
     SpaceTimeKind, TimeKind, TimeScale, UniformContext, UniformContextoid,
 };
 use deep_causality_context_store::{
@@ -56,7 +56,7 @@ fn world() -> UniformContext {
     let st = ctx
         .add_node(Contextoid::new(
             5,
-            ContextoidType::SpaceTempoid(SpaceTimeKind::Euclidean(EuclideanSpacetime::new(
+            ContextoidType::SpaceTempoid(SpaceTimeKind::Newtonian(NewtonianSpacetime::new(
                 5,
                 1.0,
                 2.0,

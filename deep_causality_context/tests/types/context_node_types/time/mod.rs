@@ -4,7 +4,8 @@
  */
 mod discrete_time;
 mod entropic_time;
-mod euclidean_time;
-mod lorentzian_time;
+mod minkowski_time;
+mod newtonian_time;
+mod no_time;
 mod symbolic_time;
 mod time_kind;

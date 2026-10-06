@@ -7,8 +7,9 @@
 //!
 //! # Pairing a space with a spacetime
 //!
-//! Every spacetime in this crate — [`EuclideanSpacetime`](crate::EuclideanSpacetime),
-//! [`LorentzianSpacetime`](crate::LorentzianSpacetime) and
+//! Every coordinate spacetime in this crate — [`GalileanSpacetime`](crate::GalileanSpacetime),
+//! [`NewtonianSpacetime`](crate::NewtonianSpacetime),
+//! [`MinkowskiSpacetime`](crate::MinkowskiSpacetime) and
 //! [`TangentSpacetime`](crate::TangentSpacetime) — stores Cartesian `x`, `y`, `z` beside a time
 //! coordinate. A spatial type therefore pairs with a spacetime directly only when its three axes
 //! are already Cartesian and carry no further reference the spacetime cannot hold.
@@ -34,4 +35,5 @@ pub mod ecef_space;
 pub mod euclidean_space;
 pub mod geo_space;
 pub mod ned_space;
+pub mod no_space;
 pub mod space_kind;

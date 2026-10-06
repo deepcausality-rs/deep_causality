@@ -10,9 +10,9 @@
 //! every other row n/a.
 
 use deep_causality_context::{
-    Contextoid, ContextoidType, ContextuableGraph, Data, DiscreteTime, EuclideanSpacetime,
-    NedSpace, SpaceKind, SpaceTimeKind, SubstrateContext, SubstrateContextoid, SubstrateRef,
-    TimeKind, TimeScale,
+    Contextoid, ContextoidType, ContextuableGraph, Data, DiscreteTime, NedSpace,
+    NewtonianSpacetime, SpaceKind, SpaceTimeKind, SubstrateContext, SubstrateContextoid,
+    SubstrateRef, TimeKind, TimeScale,
 };
 use deep_causality_context_store::utils_test::{MemoryStorage, block_on};
 use deep_causality_context_store::{
@@ -42,7 +42,7 @@ fn test_the_alias_snapshots_without_a_substrate() {
         ),
         Contextoid::new(
             n[3],
-            ContextoidType::SpaceTempoid(SpaceTimeKind::Euclidean(EuclideanSpacetime::new(
+            ContextoidType::SpaceTempoid(SpaceTimeKind::Newtonian(NewtonianSpacetime::new(
                 n[3],
                 1.0,
                 2.0,
@@ -81,7 +81,7 @@ fn test_the_alias_snapshots_without_a_substrate() {
         ),
         ContextoidRecord::new(
             n[3],
-            NodeRecord::SpaceTime(SpaceTimeRecord::Euclidean {
+            NodeRecord::SpaceTime(SpaceTimeRecord::Newtonian {
                 x: 1.0,
                 y: 2.0,
                 z: 3.0,

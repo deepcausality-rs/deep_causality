@@ -168,3 +168,27 @@ fn test_version_at_the_top_of_the_range() {
     );
     assert!(err.to_string().contains("65535"));
 }
+
+#[test]
+fn test_rejected() {
+    // The rule is a message the node type composes at run time, so it names the entry at fault.
+    let (i, j) = (0, 2);
+    let rule = format!("metric tensor is not symmetric: g[{i}][{j}] differs from g[{j}][{i}]");
+    let err = ProjectionError::Rejected(4, rule.clone());
+    assert_eq!(
+        err.kind(),
+        &ProjectionErrorEnum::Rejected {
+            id: 4,
+            rule: rule.clone(),
+        }
+    );
+    assert_eq!(
+        err.to_string(),
+        format!("ProjectionError: node 4 breaks the rule: {rule}")
+    );
+    assert_eq!(err, err.clone());
+    assert_ne!(
+        err,
+        ProjectionError::Rejected(4, String::from("metric tensor is not symmetric"))
+    );
+}

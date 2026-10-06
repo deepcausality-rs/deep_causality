@@ -4,6 +4,7 @@
  */
 
 use crate::{ContextoidId, IdentificationValue};
+use alloc::string::String;
 use core::error::Error;
 use core::fmt::{Display, Formatter};
 
@@ -53,6 +54,9 @@ pub enum ProjectionErrorEnum {
     },
     /// The snapshot was written under a newer record version than this reader supports.
     Version { found: u16, supported: u16 },
+    /// The record's values break a rule of the node type: a metric tensor that is not symmetric,
+    /// or a latitude past a pole. `rule` is the node type's own message for the rule broken.
+    Rejected { id: ContextoidId, rule: String },
 }
 
 impl ProjectionError {
@@ -114,6 +118,11 @@ impl ProjectionError {
     pub const fn Version(found: u16, supported: u16) -> Self {
         Self(ProjectionErrorEnum::Version { found, supported })
     }
+
+    #[allow(non_snake_case)]
+    pub const fn Rejected(id: ContextoidId, rule: String) -> Self {
+        Self(ProjectionErrorEnum::Rejected { id, rule })
+    }
 }
 
 impl Display for ProjectionError {
@@ -155,6 +164,9 @@ impl Display for ProjectionError {
                 f,
                 "ProjectionError: record version {found} is newer than the supported {supported}"
             ),
+            ProjectionErrorEnum::Rejected { id, rule } => {
+                write!(f, "ProjectionError: node {id} breaks the rule: {rule}")
+            }
         }
     }
 }

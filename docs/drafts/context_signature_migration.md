@@ -18,13 +18,23 @@ Every change below is breaking. Most are mechanical.
 | Spatial, temporal and spacetime types take a scalar | Write `EuclideanSpace<f64>`, or use the aliases |
 | `Metric` trait renamed `Distance` | Rename at the call site |
 | `MetricCoordinate` removed | Bound on `Spatial` and `Coordinate` directly |
-| `MinkowskiSpacetime` merged into `LorentzianSpacetime` | Rename; the fields and constructor are identical |
+| `EuclideanTime`, `LorentzianTime` and `EuclideanSpacetime` renamed `NewtonianTime`, `MinkowskiTime` and `NewtonianSpacetime` | Rename; the `TimeKind` and `SpaceTimeKind` variants follow. Expect `Metric::PGA(4)` from `NewtonianSpacetime` |
+| `LorentzianSpacetime` merged into `MinkowskiSpacetime` | Rename; the fields and constructor are identical. Expect a NaN interval for `NoScale`, `Steps` and `Symbolic` |
+| A spacetime's coordinate 0 is `t` | Re-index `coordinate(i)` and `Adjustable` grid positions to `t, x, y, z`; constructor arguments keep `(id, x, y, z, t, ..)` |
+| Every space and spacetime type reads grid position `k` at `PointIndex::new1d(k)`, `new2d(k, 0)`, `new3d(0, 0, k)` or `new4d(0, 0, k, 0)` | Fill a 4D grid for `MinkowskiSpacetime` along z, not t. A 1D or 2D grid now gives each coordinate its own cell and must hold one per coordinate |
+| `GalileanSpacetime`, `NoSpace` and `NoTime` added | Add a `SpaceTimeKind::Galilean` arm to an exhaustive match |
+| `update_metric_tensor` returns `Result<(), MetricTensorError>` | Handle the error for a tensor that is not finite, not symmetric, or not of signature (−, +, +, +); its `MetricTensorErrorEnum` names the rule and the entry or eigenvalue counts |
+| `TangentSpacetime::euclidean_distance` and `spatial_velocity` removed | Compute them from `position()` and `velocity_vector()` |
+| `CausalSetSpacetime` fields are private; `causal_depth` renamed `predecessor_count` | Read through `id()`, `label()` and `predecessors()`; extend the past with `add_predecessor`, which returns `false` for the element itself or one already recorded |
+| `ConformalSpacetime` removed | Record the causal order with `CausalSetSpacetime`, which keeps each element's predecessors |
 | `QuaternionSpace` removed | Carry orientation beside a position in your own type |
 | `ContextId` and `ContextoidId` moved out of core | Import from `deep_causality_context` |
 | Edges carry `RelationKind` | Nothing, unless you read edges back — now you can |
-| `GeoSpace` carries a vertical datum | Pass a fifth argument |
+| `GeoSpace` carries a vertical datum and checks its coordinates | Pass a fifth argument and handle the `Result`; generic code adds `R: FromPrimitive`. `update` and `adjust` refuse the coordinates `new` refuses |
+| `GeoSpace::distance` is the straight line between WGS 84 geocentric positions | Expect NaN unless both datums are `WGS84` |
 | `UncertainFloat64Data` and `UncertainBooleanData` removed | Name the type and its scalar |
 | Each crate declares its own `FloatType` | Import from the crate you are using |
+| Time and spacetime records follow the renames; `SpaceTimeRecord` gains `Galilean` and `ProjectionErrorEnum` gains `Rejected` | In a backend, map stored `Euclidean` to `Newtonian` and `Lorentzian` to `Minkowski`, and add the new arms |
 
 ---
 
@@ -91,8 +101,8 @@ type MyContext = Context<Data<f64>, EuclideanSpace, EuclideanTime, EuclideanSpac
 type MyContext = Context<
     Data<FloatType>,
     EuclideanSpace<FloatType>,
-    EuclideanTime<FloatType>,
-    EuclideanSpacetime<FloatType>,
+    NewtonianTime<FloatType>,
+    NewtonianSpacetime<FloatType>,
 >;
 ```
 
@@ -106,9 +116,11 @@ One bound: `RealField`, from `deep_causality_algebra`. The crate names no concre
 own aliases, so a type that satisfies the bound works without an entry being added for it. `f32`,
 `f64`, `BFloat16` and `Float106` all do.
 
-Two bounds appear where the code needs more than the algebra gives. `Adjustable` impls require
+Further bounds appear where the code needs more than the algebra gives. `Adjustable` impls require
 `Default`, because `ArrayGrid` needs it to initialise its backing array. `Display` impls that render
-with `{:?}` require `Debug`.
+with `{:?}` require `Debug`. Code that converts a constant into the scalar requires `FromPrimitive`:
+`GeoSpace::new` and the time-scale conversions. The `Recordable` impls require `FromPrimitive` to read
+a record value into the scalar and `Into<f64>` to write the scalar into a record.
 
 ### Ticks stay integers
 
@@ -142,26 +154,32 @@ one inline bound.
 
 ## The two flat spacetimes are one
 
-`MinkowskiSpacetime` and `LorentzianSpacetime` had identical fields, identical constructors, and
-eight of nine identical trait impls. `Lorentzian` names the signature class and `Minkowski` names one
-flat member of it, so the general name survives.
+`MinkowskiSpacetime` and `LorentzianSpacetime` had identical fields and constructors. They differed
+in `Display`, and in `Copy`, which only `MinkowskiSpacetime` derived. Both were flat. A
+relativistic spacetime is a four-dimensional manifold with a metric of Lorentz signature, curved or
+flat; Minkowski spacetime is the one that is flat and geodesically complete (Malament 2012, §2.1).
+The merged type carries the name of what it models.
 
 ```rust
 // before
-MinkowskiSpacetime::new(1, x, y, z, t, TimeScale::Second)
+LorentzianSpacetime::new(1, x, y, z, t, TimeScale::Second)
 
 // after — same arguments, same order
-LorentzianSpacetime::new(1, x, y, z, t, TimeScale::Second)
+MinkowskiSpacetime::new(1, x, y, z, t, TimeScale::Second)
 ```
 
-`SpaceTimeKind::Minkowski` is gone with it. If you matched on it, match on `SpaceTimeKind::Lorentzian`.
+`SpaceTimeKind::Lorentzian` is gone with it. If you matched on it, match on
+`SpaceTimeKind::Minkowski`.
 
-The one behavioural difference: `Display` now prints the time scale, which `MinkowskiSpacetime`'s did
-not.
+`Display` prints the time scale, which `MinkowskiSpacetime`'s did not. The type does not derive
+`Copy`, so clone where you copied a `MinkowskiSpacetime`. The interval is NaN for a time scale that
+names no duration (`NoScale`, `Steps`, `Symbolic`); the two old types read the raw count as seconds.
 
 ## A spacetime reports its own signature
 
-New trait, and every spacetime type implements it:
+New trait, implemented by every spacetime node type that has coordinates (`GalileanSpacetime`,
+`NewtonianSpacetime`, `MinkowskiSpacetime`, `TangentSpacetime`, `SpaceTimeKind`) and by
+`NoSpaceTime`. `CausalSetSpacetime` holds only an order and does not implement it:
 
 ```rust
 pub trait MetricSignature {
@@ -169,9 +187,10 @@ pub trait MetricSignature {
 }
 ```
 
-`EuclideanSpacetime` reports `Metric::Euclidean(4)` — it is Newtonian, with flat space and an
-absolute clock. `LorentzianSpacetime` and `TangentSpacetime` report `Metric::Lorentzian(4)`.
-`SpaceTimeKind` forwards to the variant it holds.
+`GalileanSpacetime` and `NewtonianSpacetime` report `Metric::PGA(4)`, the signature (0,+,+,+) of
+the spatial metric of a classical spacetime, time first. `MinkowskiSpacetime` and
+`TangentSpacetime` report `Metric::Lorentzian(4)`, (−,+,+,+). `SpaceTimeKind` forwards to the
+variant it holds.
 
 This is what lets one context hold nodes on different manifolds and still answer correctly for each:
 
@@ -190,9 +209,8 @@ because a node supplies the same `Metric` those functions already take.
 **If you implement `SpaceTemporal` on your own type, you must now also implement
 `MetricSignature`.** It is a supertrait.
 
-A signature does not vary under continuous evolution, so a type derives it from what it is rather
-than from what it currently holds. `TangentSpacetime` keeps `Lorentzian(4)` while every component of
-its stored tensor changes.
+`TangentSpacetime` keeps `Lorentzian(4)` because `update_metric_tensor` accepts only a symmetric
+tensor of that signature and refuses any other with an `UpdateError`.
 
 ## `QuaternionSpace` is gone
 
@@ -204,15 +222,15 @@ your own type alongside the position it belongs to.
 
 ## A context with no spatial extent says so
 
-`NoSpaceTime<R>` is zero-sized and implements the spatial and spacetime traits trivially. A context
-that holds a root, some data and a clock can now name it instead of naming a spatial type its graph
-never holds:
+`NoSpace<R>`, `NoTime` and `NoSpaceTime<R>` are zero-sized and fill the spatial, temporal and
+spacetime slots of a context whose graph holds no node of that kind. A context that holds a root,
+some data and a clock names what it lacks instead of naming types its graph never holds:
 
 ```rust
 type ClockContext = Context<
     Data<FloatType>,
-    NoSpaceTime<FloatType>,
-    EuclideanTime<FloatType>,
+    NoSpace<FloatType>,
+    NewtonianTime<FloatType>,
     NoSpaceTime<FloatType>,
 >;
 ```
@@ -267,8 +285,8 @@ so.
 // before
 GeoSpace::new(1, 52.52, 13.40, 34.0)
 
-// after
-GeoSpace::new(1, 52.52, 13.40, 34.0, VerticalDatum::WGS84)
+// after: the datum is named, and a latitude outside [-90, 90] is refused
+GeoSpace::new(1, 52.52, 13.40, 34.0, VerticalDatum::WGS84)?
 ```
 
 `VerticalDatum` has five members, grouped by the height type each belongs under. `WGS84` is an

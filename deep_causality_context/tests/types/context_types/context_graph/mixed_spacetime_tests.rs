@@ -10,9 +10,9 @@
 //! type to find out.
 
 use deep_causality_context::{
-    Context, Contextoid, ContextoidType, ContextuableGraph, Data, EuclideanSpacetime,
-    EuclideanTime, FloatType, LorentzianSpacetime, MetricSignature, NoSpaceTime, RelationKind,
-    Root, SpaceKind, SpaceTimeKind, TangentSpacetime, TimeKind, TimeScale,
+    Context, Contextoid, ContextoidType, ContextuableGraph, Data, FloatType, MetricSignature,
+    MinkowskiSpacetime, NewtonianSpacetime, NewtonianTime, NoSpaceTime, RelationKind, Root,
+    SpaceKind, SpaceTimeKind, TangentSpacetime, TimeKind, TimeScale,
 };
 use deep_causality_metric::Metric;
 
@@ -25,7 +25,7 @@ type VariantContext =
 type ClockContext = Context<
     Data<FloatType>,
     NoSpaceTime<FloatType>,
-    EuclideanTime<FloatType>,
+    NewtonianTime<FloatType>,
     NoSpaceTime<FloatType>,
 >;
 
@@ -53,7 +53,7 @@ fn test_one_context_holds_two_spacetime_variants() {
     let far = context
         .add_node(Contextoid::new(
             1,
-            ContextoidType::SpaceTempoid(SpaceTimeKind::Lorentzian(LorentzianSpacetime::new(
+            ContextoidType::SpaceTempoid(SpaceTimeKind::Minkowski(MinkowskiSpacetime::new(
                 1,
                 0.0,
                 0.0,
@@ -86,7 +86,7 @@ fn test_one_context_holds_two_spacetime_variants() {
     // Each is readable back as its own variant, so the enum carries the distinction rather than
     // flattening it.
     match context.get_node(far).unwrap().vertex_type() {
-        ContextoidType::SpaceTempoid(SpaceTimeKind::Lorentzian(_)) => {}
+        ContextoidType::SpaceTempoid(SpaceTimeKind::Minkowski(_)) => {}
         other => panic!("expected a coordinate spacetime, found {other}"),
     }
     match context.get_node(near).unwrap().vertex_type() {
@@ -108,7 +108,7 @@ fn test_one_context_reports_two_different_signatures() {
     let newtonian = context
         .add_node(Contextoid::new(
             1,
-            ContextoidType::SpaceTempoid(SpaceTimeKind::Euclidean(EuclideanSpacetime::new(
+            ContextoidType::SpaceTempoid(SpaceTimeKind::Newtonian(NewtonianSpacetime::new(
                 1,
                 0.0,
                 0.0,
@@ -122,7 +122,7 @@ fn test_one_context_reports_two_different_signatures() {
     let relativistic = context
         .add_node(Contextoid::new(
             2,
-            ContextoidType::SpaceTempoid(SpaceTimeKind::Lorentzian(LorentzianSpacetime::new(
+            ContextoidType::SpaceTempoid(SpaceTimeKind::Minkowski(MinkowskiSpacetime::new(
                 2,
                 0.0,
                 0.0,
@@ -133,7 +133,7 @@ fn test_one_context_reports_two_different_signatures() {
         ))
         .expect("failed to add the relativistic node");
 
-    assert_eq!(metric_at(&context, newtonian), Metric::Euclidean(4));
+    assert_eq!(metric_at(&context, newtonian), Metric::PGA(4));
     assert_eq!(metric_at(&context, relativistic), Metric::Lorentzian(4));
     assert_ne!(
         metric_at(&context, newtonian),
@@ -161,7 +161,7 @@ fn test_a_clock_context_accepts_root_data_and_time() {
     let clock = context
         .add_node(Contextoid::new(
             3,
-            ContextoidType::Tempoid(EuclideanTime::new(3, TimeScale::Second, 1.0)),
+            ContextoidType::Tempoid(NewtonianTime::new(3, TimeScale::Second, 1.0)),
         ))
         .expect("failed to add the clock");
 

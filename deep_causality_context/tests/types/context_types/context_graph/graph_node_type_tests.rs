@@ -4,8 +4,8 @@
  */
 
 use deep_causality_context::{
-    BaseContextoid, Contextoid, ContextoidType, Data, EuclideanSpace, EuclideanSpacetime,
-    EuclideanTime, Root, TimeScale,
+    BaseContextoid, Contextoid, ContextoidType, Data, EuclideanSpace, NewtonianSpacetime,
+    NewtonianTime, Root, TimeScale,
 };
 
 #[test]
@@ -58,7 +58,7 @@ fn test_tempoid_some() {
     let time_scale = TimeScale::Month;
     let time_unit = 1f64;
 
-    let tempoid = EuclideanTime::new(id, time_scale, time_unit);
+    let tempoid = NewtonianTime::new(id, time_scale, time_unit);
     let node: BaseContextoid = Contextoid::new(id, ContextoidType::Tempoid(tempoid));
     assert!(node.vertex_type().tempoid().is_some());
     //
@@ -104,7 +104,7 @@ fn test_space_tempoid_some() {
     let time_scale = TimeScale::Month;
     let time_unit = 1f64;
 
-    let d = EuclideanSpacetime::new(id, 0.0, 0.0, 0.0, time_unit, time_scale);
+    let d = NewtonianSpacetime::new(id, 0.0, 0.0, 0.0, time_unit, time_scale);
     let node: BaseContextoid = Contextoid::new(id, ContextoidType::SpaceTempoid(d));
     assert!(node.vertex_type().space_tempoid().is_some());
     //

@@ -11,51 +11,39 @@ use deep_causality_algebra::RealField;
 use deep_causality_core::Identifiable;
 use deep_causality_num::{FromPrimitive, lift};
 
-/// Combines spatial and temporal semantics into a 4D spacetime model.
+/// An event of a spacetime: a node with a position and a time.
 ///
-/// This is ideal for modeling causal entities that exist at a particular
-/// **spatial location** and **point in time**. The `t()` method supplements
-/// the coordinate system with a direct accessor for the temporal axis.
-///
-/// This trait enables compatibility with:
-/// - Newtonian and Einsteinian physics
-/// - Sensor frames
-/// - 4D event graphs
-///
-/// # Note
-/// The actual meaning of `t()` depends on the context—e.g., wall clock time,
-/// simulation ticks, or a relativistic coordinate frame.
+/// Every four-dimensional spacetime of this crate indexes its coordinates
+/// `0 => t, 1 => x, 2 => y, 3 => z`, the order of Carroll 1997, eq. (1.5), with `t` at index 0
+/// where Carroll places `x⁰ = ct`. `t()` is the time coordinate, counted in the unit
+/// [`Temporal::time_scale`] names. What the time means is set by the geometry: absolute time in a
+/// classical spacetime, the coordinate time of a frame in a relativistic one. [`MetricSignature`]
+/// reports which. [`NoSpaceTime`](crate::NoSpaceTime) has zero coordinates, and its `t()` is `()`.
 pub trait SpaceTemporal: Identifiable + Spatial + Temporal + MetricSignature {
-    /// Returns the value associated with the temporal (4th) dimension.
+    /// The time coordinate, coordinate 0.
     fn t(&self) -> &Self::TimeUnit;
 }
 
-/// Trait for spacetime types that support Minkowski-style interval calculations.
-///
-/// This trait enables causal reasoning in spacetime-aware systems using the Minkowski
-/// metric from special relativity:
+/// The interval between two events of Minkowski spacetime,
 ///
 /// ```text
-/// s² = -c²·Δt² + Δx² + Δy² + Δz²
+/// s² = −(cΔt)² + Δx² + Δy² + Δz²
 /// ```
 ///
-/// This interval:
-/// - Is negative for **time-like** separations (causally connected)
-/// - Is zero for **light-like** (null) paths (on the light cone)
-/// - Is positive for **space-like** separations (no causal connection)
+/// with `t` in seconds, positions in metres and `c = 299 792 458 m/s` (Carroll 1997, eq. (1.3),
+/// in the east-coast convention of eq. (1.8)). The interval is negative between timelike
+/// separated events, zero between null separated ones and positive between spacelike separated
+/// ones (Carroll 1997, §1, after eq. (1.9)). An implementor whose metric is not Minkowski's
+/// overrides [`interval_squared`](Self::interval_squared), as
+/// [`TangentSpacetime`](crate::TangentSpacetime) does.
 ///
-/// The default implementation assumes:
-/// - Time is in **seconds**
-/// - Space is in **meters**
-/// - Speed of light `c = 299_792_458 m/s`
+/// # Required methods
+/// - `time()`: the time coordinate in seconds, or NaN when the node's time names no duration
+/// - `position()`: `[x, y, z]` in metres
 ///
-/// # Required Methods
-/// - `time()`: Returns the scalar time coordinate in seconds
-/// - `position()`: Returns the spatial coordinates `[x, y, z]` in meters
-///
-/// # Default Method
-/// - `interval_squared(&self, &Self) -> Self::Coord`: Computes the squared interval between two
-///   events
+/// # References
+/// - Carroll, S. M. (1997). *Lecture Notes on General Relativity*. arXiv:gr-qc/9712019, ch. 1.
+///   Copy: `papers/carroll_1997_lecture_notes_on_general_relativity_arXiv_gr-qc_9712019.pdf`.
 ///
 /// # The scalar
 /// The interval is measured in the same scalar the type's coordinates are, so this trait reads it
@@ -65,22 +53,13 @@ pub trait SpaceTemporalInterval: Coordinate
 where
     Self::Coord: RealField + FromPrimitive,
 {
-    /// Returns the time coordinate in **seconds**.
+    /// The time coordinate in seconds, or NaN when the node's time names no duration.
     fn time(&self) -> Self::Coord;
 
-    /// Returns the spatial coordinates `[x, y, z]` in **meters**.
+    /// The position `[x, y, z]` in metres.
     fn position(&self) -> [Self::Coord; 3];
 
-    /// Computes the squared Minkowski interval between `self` and `other`.
-    ///
-    /// ```text
-    /// s² = -c²·Δt² + Δx² + Δy² + Δz²
-    /// ```
-    /// where `c = 299_792_458 m/s`.
-    ///
-    /// Negative `s²` indicates time-like separation,
-    /// zero indicates light-like (null),
-    /// and positive indicates space-like.
+    /// `s² = −(cΔt)² + Δx² + Δy² + Δz²`, in square metres.
     fn interval_squared(&self, other: &Self) -> Self::Coord {
         let c: Self::Coord = lift(299_792_458.0); // Speed of light (m/s)
 

@@ -9,8 +9,10 @@
 //!
 //! Corner cases (rows A to K): C every other `SpaceRecord` variant refused with the node's
 //! identifier, `test_every_other_variant_is_refused`; F/G zero and negative coordinates,
-//! `test_zero_and_negative_round_trip`; I a non-finite coordinate, `test_non_finite_round_trips`;
-//! K `Float106` narrows and `BFloat16` widens, `test_precision_is_spent_at_the_bound`; every
+//! `test_zero_and_negative_round_trip`; I a non-finite or out-of-range coordinate refused,
+//! `test_a_record_that_names_no_point_is_refused`;
+//! J a finite value past the range of `f32` and `BFloat16` refused,
+//! `test_a_value_past_the_scalar_range_is_refused`; K `Float106` narrows and `BFloat16` widens, `test_precision_is_spent_at_the_bound`; every
 //! other row n/a.
 use deep_causality_context::{GeoSpace, VerticalDatum};
 use deep_causality_context_store::{ProjectionError, Recordable, SpaceRecord};
@@ -18,7 +20,7 @@ use deep_causality_num::{BFloat16, Float106};
 
 #[test]
 fn test_round_trip() {
-    let node = GeoSpace::new(3, 52.5, 13.4, 34.0, VerticalDatum::EGM96);
+    let node = GeoSpace::new(3, 52.5, 13.4, 34.0, VerticalDatum::EGM96).unwrap();
     let record = node.to_record().unwrap();
     assert_eq!(
         record,
@@ -72,7 +74,7 @@ fn test_every_other_variant_is_refused() {
 fn test_zero_and_negative_round_trip() {
     let pairs = [
         (
-            GeoSpace::new(1, 0.0, 0.0, 0.0, VerticalDatum::WGS84),
+            GeoSpace::new(1, 0.0, 0.0, 0.0, VerticalDatum::WGS84).unwrap(),
             SpaceRecord::Geo {
                 lat: 0.0,
                 lon: 0.0,
@@ -81,7 +83,7 @@ fn test_zero_and_negative_round_trip() {
             },
         ),
         (
-            GeoSpace::new(1, -33.9, -70.6, -12.0, VerticalDatum::Terrain),
+            GeoSpace::new(1, -33.9, -70.6, -12.0, VerticalDatum::Terrain).unwrap(),
             SpaceRecord::Geo {
                 lat: -33.9,
                 lon: -70.6,
@@ -97,33 +99,37 @@ fn test_zero_and_negative_round_trip() {
 }
 
 #[test]
-fn test_non_finite_round_trips() {
-    let node = GeoSpace::new(1, f64::NAN, 13.4, f64::INFINITY, VerticalDatum::WGS84);
-    match node.to_record() {
-        Ok(SpaceRecord::Geo {
+fn test_a_record_that_names_no_point_is_refused() {
+    // A latitude past a pole, or a coordinate that is not finite, names no point on the ellipsoid,
+    // so the restore refuses the record rather than build a node the constructor would refuse. The
+    // refusal carries the constructor's message for the same coordinates, so each broken rule
+    // reads as its own.
+    let records = [
+        ((91.0, 13.4, 0.0), "latitude"),
+        ((-90.5, 13.4, 0.0), "latitude"),
+        ((f64::NAN, 13.4, 0.0), "not finite"),
+        ((52.5, f64::INFINITY, 0.0), "not finite"),
+        ((52.5, 13.4, f64::NEG_INFINITY), "not finite"),
+    ];
+    let mut rules = Vec::new();
+    for ((lat, lon, alt), detail) in records {
+        let rule = GeoSpace::<f64>::new(4, lat, lon, alt, VerticalDatum::WGS84)
+            .expect_err("the fixture coordinates name no point")
+            .0;
+        assert!(rule.contains(detail), "{rule}");
+        let record = SpaceRecord::Geo {
             lat,
             lon,
             alt,
-            datum,
-        }) => {
-            assert!(lat.is_nan());
-            assert_eq!(lon, 13.4);
-            assert_eq!(alt, f64::INFINITY);
-            assert_eq!(datum, VerticalDatum::WGS84);
-        }
-        other => panic!("expected a Geo record, found {other:?}"),
+            datum: VerticalDatum::WGS84,
+        };
+        assert_eq!(
+            GeoSpace::<f64>::from_record(4, record),
+            Err(ProjectionError::Rejected(4, rule.clone()))
+        );
+        rules.push(rule);
     }
-    let record = SpaceRecord::Geo {
-        lat: f64::NAN,
-        lon: 13.4,
-        alt: f64::INFINITY,
-        datum: VerticalDatum::WGS84,
-    };
-    let restored = GeoSpace::<f64>::from_record(1, record).unwrap();
-    assert!(restored.lat().is_nan());
-    assert_eq!(restored.lon(), 13.4);
-    assert_eq!(restored.alt(), f64::INFINITY);
-    assert_eq!(restored.datum(), VerticalDatum::WGS84);
+    assert_ne!(rules[0], rules[2]);
 }
 
 #[test]
@@ -136,7 +142,8 @@ fn test_precision_is_spent_at_the_bound() {
         Float106::new(2.0, low),
         Float106::new(3.0, low),
         VerticalDatum::ISA,
-    );
+    )
+    .unwrap();
     let wide_record = SpaceRecord::Geo {
         lat: 1.0,
         lon: 2.0,
@@ -152,7 +159,8 @@ fn test_precision_is_spent_at_the_bound() {
             Float106::new(2.0, 0.0),
             Float106::new(3.0, 0.0),
             VerticalDatum::ISA
-        ))
+        )
+        .unwrap())
     );
     let narrow = GeoSpace::new(
         2,
@@ -160,7 +168,8 @@ fn test_precision_is_spent_at_the_bound() {
         BFloat16::from(2.5),
         BFloat16::from(3.5),
         VerticalDatum::EGM2008,
-    );
+    )
+    .unwrap();
     let narrow_record = SpaceRecord::Geo {
         lat: 1.5,
         lon: 2.5,
@@ -171,5 +180,25 @@ fn test_precision_is_spent_at_the_bound() {
     assert_eq!(
         GeoSpace::<BFloat16>::from_record(2, narrow_record),
         Ok(narrow)
+    );
+}
+
+#[test]
+fn test_a_value_past_the_scalar_range_is_refused() {
+    // Row J. 1e300 is a finite f64 past the range of f32 and BFloat16, which would hold it as an
+    // infinity; the restore refuses it and names the value.
+    let record = SpaceRecord::Geo {
+        lat: 10.0,
+        lon: 20.0,
+        alt: 1e300,
+        datum: VerticalDatum::WGS84,
+    };
+    assert_eq!(
+        GeoSpace::<f32>::from_record(4, record),
+        Err(ProjectionError::Scalar(4, 1e300))
+    );
+    assert_eq!(
+        GeoSpace::<BFloat16>::from_record(4, record),
+        Err(ProjectionError::Scalar(4, 1e300))
     );
 }

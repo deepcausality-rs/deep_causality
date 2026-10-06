@@ -12,7 +12,7 @@
 
 use deep_causality_context::{
     Context, Contextoid, ContextoidType, ContextuableGraph, Coordinate, Data, EuclideanSpace,
-    EuclideanSpacetime, EuclideanTime, RelationKind, TimeScale,
+    NewtonianSpacetime, NewtonianTime, RelationKind, TimeScale,
 };
 use deep_causality_num::{BFloat16, Float106};
 
@@ -27,8 +27,8 @@ where
     let mut context: Context<
         Data<u64>,
         EuclideanSpace<R>,
-        EuclideanTime<R>,
-        EuclideanSpacetime<R>,
+        NewtonianTime<R>,
+        NewtonianSpacetime<R>,
     > = Context::with_capacity(1, "context at one scalar", 4);
 
     let space = context
@@ -41,7 +41,7 @@ where
     let time = context
         .add_node(Contextoid::new(
             2,
-            ContextoidType::Tempoid(EuclideanTime::new(2, TimeScale::Second, z)),
+            ContextoidType::Tempoid(NewtonianTime::new(2, TimeScale::Second, z)),
         ))
         .expect("failed to add the time node");
 

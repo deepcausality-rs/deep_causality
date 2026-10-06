@@ -15,11 +15,11 @@ use deep_causality_context_store::{TimeRecord, TimeScale};
 
 fn one_of_each() -> [TimeRecord; 4] {
     [
-        TimeRecord::Euclidean {
+        TimeRecord::Newtonian {
             scale: TimeScale::Second,
             value: 1.5,
         },
-        TimeRecord::Lorentzian {
+        TimeRecord::Minkowski {
             scale: TimeScale::Millisecond,
             value: 2.5,
         },
@@ -34,7 +34,7 @@ fn one_of_each() -> [TimeRecord; 4] {
 #[test]
 fn test_four_variants_with_distinct_names() {
     let names: Vec<&str> = one_of_each().iter().map(TimeRecord::kind_name).collect();
-    assert_eq!(names, ["Euclidean", "Lorentzian", "Discrete", "Entropic"]);
+    assert_eq!(names, ["Newtonian", "Minkowski", "Discrete", "Entropic"]);
 }
 
 #[test]
@@ -55,15 +55,15 @@ fn test_fields_are_named_and_the_record_is_copy() {
 
 #[test]
 fn test_equal_fields_under_different_variants() {
-    let euclidean = TimeRecord::Euclidean {
+    let newtonian = TimeRecord::Newtonian {
         scale: TimeScale::Second,
         value: 1.0,
     };
-    let lorentzian = TimeRecord::Lorentzian {
+    let minkowski = TimeRecord::Minkowski {
         scale: TimeScale::Second,
         value: 1.0,
     };
-    assert_ne!(euclidean, lorentzian);
+    assert_ne!(newtonian, minkowski);
     assert_ne!(
         TimeRecord::Discrete {
             scale: TimeScale::NoScale,
@@ -78,24 +78,24 @@ fn test_zero_and_negative() {
     let zero = TimeRecord::Entropic { tick: 0 };
     let max = TimeRecord::Entropic { tick: u64::MAX };
     assert_ne!(zero, max);
-    let negative = TimeRecord::Lorentzian {
+    let negative = TimeRecord::Minkowski {
         scale: TimeScale::Second,
         value: -2.0,
     };
-    let TimeRecord::Lorentzian { value, .. } = negative else {
-        panic!("a Lorentzian record");
+    let TimeRecord::Minkowski { value, .. } = negative else {
+        panic!("a Minkowski record");
     };
     assert_eq!(value, -2.0);
 }
 
 #[test]
 fn test_non_finite_value() {
-    let inf = TimeRecord::Euclidean {
+    let inf = TimeRecord::Newtonian {
         scale: TimeScale::Second,
         value: f64::INFINITY,
     };
     assert_eq!(inf, inf);
-    let nan = TimeRecord::Euclidean {
+    let nan = TimeRecord::Newtonian {
         scale: TimeScale::Second,
         value: f64::NAN,
     };

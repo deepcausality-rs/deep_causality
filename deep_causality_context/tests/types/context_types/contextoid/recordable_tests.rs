@@ -12,7 +12,7 @@
 //! other row is the node types' and is in their files.
 use core::marker::PhantomData;
 use deep_causality_context::{
-    Contextoid, ContextoidType, Data, EuclideanTime, NedSpace, Root, SpaceKind, SpaceTimeKind,
+    Contextoid, ContextoidType, Data, NedSpace, NewtonianTime, Root, SpaceKind, SpaceTimeKind,
     TangentSpacetime, TimeKind, TimeScale,
 };
 use deep_causality_context_store::{
@@ -27,7 +27,7 @@ fn one_of_each() -> Vec<Node> {
         Contextoid::new(2, ContextoidType::Datoid(Data::new(2, 9))),
         Contextoid::new(
             3,
-            ContextoidType::Tempoid(TimeKind::Euclidean(EuclideanTime::new(
+            ContextoidType::Tempoid(TimeKind::Newtonian(NewtonianTime::new(
                 3,
                 TimeScale::Second,
                 1.5,

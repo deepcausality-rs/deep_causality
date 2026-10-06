@@ -25,27 +25,34 @@ fn metric() -> [[f64; 4]; 4] {
     m
 }
 
-fn one_of_each() -> [SpaceTimeRecord; 3] {
+fn one_of_each() -> [SpaceTimeRecord; 4] {
     [
-        SpaceTimeRecord::Euclidean {
+        SpaceTimeRecord::Galilean {
+            t: 20.0,
+            x: 17.0,
+            y: 18.0,
+            z: 19.0,
+            scale: TimeScale::Minute,
+        },
+        SpaceTimeRecord::Newtonian {
+            t: 4.0,
             x: 1.0,
             y: 2.0,
             z: 3.0,
-            t: 4.0,
             scale: TimeScale::Second,
         },
-        SpaceTimeRecord::Lorentzian {
+        SpaceTimeRecord::Minkowski {
+            t: 8.0,
             x: 5.0,
             y: 6.0,
             z: 7.0,
-            t: 8.0,
             scale: TimeScale::Nanoseconds,
         },
         SpaceTimeRecord::Tangent {
+            t: 12.0,
             x: 9.0,
             y: 10.0,
             z: 11.0,
-            t: 12.0,
             dt: 13.0,
             dx: 14.0,
             dy: 15.0,
@@ -56,12 +63,12 @@ fn one_of_each() -> [SpaceTimeRecord; 3] {
 }
 
 #[test]
-fn test_three_variants_with_distinct_names() {
+fn test_four_variants_with_distinct_names() {
     let names: Vec<&str> = one_of_each()
         .iter()
         .map(SpaceTimeRecord::kind_name)
         .collect();
-    assert_eq!(names, ["Euclidean", "Lorentzian", "Tangent"]);
+    assert_eq!(names, ["Galilean", "Newtonian", "Minkowski", "Tangent"]);
 }
 
 #[test]
@@ -70,10 +77,10 @@ fn test_tangent_keeps_every_field_and_is_copy() {
     let copy = tangent;
     assert_eq!(tangent, copy);
     let SpaceTimeRecord::Tangent {
+        t,
         x,
         y,
         z,
-        t,
         dt,
         dx,
         dy,
@@ -84,8 +91,8 @@ fn test_tangent_keeps_every_field_and_is_copy() {
         panic!("a Tangent record");
     };
     assert_eq!(
-        [x, y, z, t, dt, dx, dy, dz],
-        [9.0, 10.0, 11.0, 12.0, 13.0, 14.0, 15.0, 16.0]
+        [t, x, y, z, dt, dx, dy, dz],
+        [12.0, 9.0, 10.0, 11.0, 13.0, 14.0, 15.0, 16.0]
     );
     // 4 * 3 + 2 and 4 * 2 + 3: the two positions differ, so a transposed read is caught.
     assert_eq!(metric[3][2], 14.0);
@@ -94,45 +101,63 @@ fn test_tangent_keeps_every_field_and_is_copy() {
 }
 
 #[test]
-fn test_scale_is_kept() {
-    let [euclidean, lorentzian, _] = one_of_each();
-    let SpaceTimeRecord::Euclidean { scale, .. } = euclidean else {
-        panic!("a Euclidean record");
+fn test_every_position_and_scale_is_kept() {
+    let [galilean, newtonian, minkowski, _] = one_of_each();
+    let SpaceTimeRecord::Galilean { t, x, y, z, scale } = galilean else {
+        panic!("a Galilean record");
     };
+    assert_eq!([t, x, y, z], [20.0, 17.0, 18.0, 19.0]);
+    assert_eq!(scale, TimeScale::Minute);
+    let SpaceTimeRecord::Newtonian { t, x, y, z, scale } = newtonian else {
+        panic!("a Newtonian record");
+    };
+    assert_eq!([t, x, y, z], [4.0, 1.0, 2.0, 3.0]);
     assert_eq!(scale, TimeScale::Second);
-    let SpaceTimeRecord::Lorentzian { scale, .. } = lorentzian else {
-        panic!("a Lorentzian record");
+    let SpaceTimeRecord::Minkowski { t, x, y, z, scale } = minkowski else {
+        panic!("a Minkowski record");
     };
+    assert_eq!([t, x, y, z], [8.0, 5.0, 6.0, 7.0]);
     assert_eq!(scale, TimeScale::Nanoseconds);
-    assert!(format!("{lorentzian:?}").contains("Nanoseconds"));
+    assert!(format!("{minkowski:?}").contains("Nanoseconds"));
 }
 
 #[test]
 fn test_equal_coordinates_under_different_variants() {
-    let euclidean = SpaceTimeRecord::Euclidean {
-        x: 1.0,
-        y: 1.0,
-        z: 1.0,
-        t: 1.0,
+    let at = |make: fn(f64) -> SpaceTimeRecord| make(1.0);
+    let galilean = at(|v| SpaceTimeRecord::Galilean {
+        t: v,
+        x: v,
+        y: v,
+        z: v,
         scale: TimeScale::Second,
-    };
-    let lorentzian = SpaceTimeRecord::Lorentzian {
-        x: 1.0,
-        y: 1.0,
-        z: 1.0,
-        t: 1.0,
+    });
+    let newtonian = at(|v| SpaceTimeRecord::Newtonian {
+        t: v,
+        x: v,
+        y: v,
+        z: v,
         scale: TimeScale::Second,
-    };
-    assert_ne!(euclidean, lorentzian);
+    });
+    let minkowski = at(|v| SpaceTimeRecord::Minkowski {
+        t: v,
+        x: v,
+        y: v,
+        z: v,
+        scale: TimeScale::Second,
+    });
+    // The same numbers name events of different geometries, so the records differ.
+    assert_ne!(galilean, newtonian);
+    assert_ne!(newtonian, minkowski);
+    assert_ne!(galilean, minkowski);
 }
 
 #[test]
 fn test_zero_time_and_negative_velocity() {
     let record = SpaceTimeRecord::Tangent {
+        t: 0.0,
         x: 0.0,
         y: 0.0,
         z: 0.0,
-        t: 0.0,
         dt: 1.0,
         dx: -3.0,
         dy: 0.0,
@@ -148,11 +173,11 @@ fn test_zero_time_and_negative_velocity() {
 
 #[test]
 fn test_non_finite_time() {
-    let nan = SpaceTimeRecord::Euclidean {
+    let nan = SpaceTimeRecord::Newtonian {
+        t: f64::NAN,
         x: 0.0,
         y: 0.0,
         z: 0.0,
-        t: f64::NAN,
         scale: TimeScale::Second,
     };
     assert_ne!(nan, nan);

@@ -5,7 +5,11 @@
 
 mod adjustment_error_tests;
 mod context_index_error_tests;
+#[cfg(test)]
+mod coordinate_error_tests;
 mod index_error_tests;
+#[cfg(test)]
+mod metric_tensor_error_tests;
 #[cfg(test)]
 mod store_error_tests;
 mod update_error_tests;

@@ -6,7 +6,7 @@
 use crate::EffectEthos;
 use deep_causality::{ActionParameterValue, NumericalValue, ProposedAction};
 use deep_causality_context::{
-    BaseContext, Data, EuclideanSpace, EuclideanSpacetime, EuclideanTime,
+    BaseContext, Data, EuclideanSpace, NewtonianSpacetime, NewtonianTime,
 };
 
 use crate::FloatType;
@@ -17,8 +17,8 @@ use std::collections::HashMap;
 pub type TestEthos = EffectEthos<
     Data<NumericalValue>,
     EuclideanSpace<FloatType>,
-    EuclideanTime<FloatType>,
-    EuclideanSpacetime<FloatType>,
+    NewtonianTime<FloatType>,
+    NewtonianSpacetime<FloatType>,
 >;
 
 // Predicate that always returns true

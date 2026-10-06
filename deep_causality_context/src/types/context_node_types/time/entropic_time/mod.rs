@@ -17,7 +17,7 @@ use deep_causality_algebra::RealField;
 /// A time model based on **entropy-driven progression**, suitable for
 /// emergent systems, self-organization, and irreversible state evolution.
 ///
-/// Unlike clock-based time models (e.g., `LorentzianTime`), `EntropicTime`
+/// Unlike clock-based time models (e.g., `MinkowskiTime`), `EntropicTime`
 /// defines time by the **monotonic increase in system entropy**, or more generally,
 /// by the irreversible advancement of causal structure.
 ///

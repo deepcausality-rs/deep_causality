@@ -18,20 +18,20 @@ impl<R: RealField> Coordinate for TangentSpacetime<R> {
     /// Returns a reference to the coordinate value at the specified index.
     ///
     /// # Index Mapping
-    /// - `0 => x`
-    /// - `1 => y`
-    /// - `2 => z`
-    /// - `3 => t`
+    /// - `0 => t`
+    /// - `1 => x`
+    /// - `2 => y`
+    /// - `3 => z`
     ///
     /// # Errors
     /// Returns `IndexError` if the index is out of bounds.
     ///
     fn coordinate(&self, index: usize) -> Result<&R, IndexError> {
         match index {
-            0 => Ok(&self.x),
-            1 => Ok(&self.y),
-            2 => Ok(&self.z),
-            3 => Ok(&self.t),
+            0 => Ok(&self.t),
+            1 => Ok(&self.x),
+            2 => Ok(&self.y),
+            3 => Ok(&self.z),
             _ => Err(IndexError(format!(
                 "Coordinate index out of bounds: {}",
                 index

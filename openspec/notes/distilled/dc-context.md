@@ -60,7 +60,7 @@ fix them:
 
 | Alias | Data | Space | Time | Spacetime |
 |---|---|---|---|---|
-| `BaseContext` | `Data<f64>` | `EuclideanSpace<f64>` | `EuclideanTime<f64>` | `EuclideanSpacetime<f64>` |
+| `BaseContext` | `Data<f64>` | `EuclideanSpace<f64>` | `NewtonianTime<f64>` | `NewtonianSpacetime<f64>` |
 | `UniformContext` | `Data<u64>` | `SpaceKind<f64>` | `TimeKind<f64>` | `SpaceTimeKind<f64>` |
 | `SubstrateContext` | `Data<SubstrateRef>` | `SpaceKind<f64>` | `TimeKind<f64>` | `SpaceTimeKind<f64>` |
 
@@ -78,11 +78,11 @@ the scalar reaches the node.
 | Kind | Types | Notes |
 |---|---|---|
 | Data | `Data<T>`, `UncertainData<R>`, `UncertainBoolData<R>` | `T: Default + Clone + PartialEq`; `Copy` is asked only by `Adjustable`, so `Data<Vec<f64>>` is a valid node. |
-| Space | `EuclideanSpace`, `EcefSpace`, `GeoSpace`, `NedSpace`; `SpaceKind` over the four | `GeoSpace` carries a `VerticalDatum` (WGS84, EGM96, EGM2008, ISA, Terrain) and uses haversine plus altitude. |
-| Time | `EuclideanTime`, `LorentzianTime` (scalar), `DiscreteTime`, `EntropicTime` (`u64` tick), `SymbolicTime` (labelled `i64`); `TimeKind` over the first four | `TimeKind` lifts ticks into `R` with `lift_count`. |
-| Spacetime | `EuclideanSpacetime` (+,+,+,+), `LorentzianSpacetime` (−,+,+,+), `TangentSpacetime` (position, velocity and a 4×4 metric tensor); `SpaceTimeKind` over the three | Each reports its own `Metric` through `MetricSignature`. |
+| Space | `EuclideanSpace`, `EcefSpace`, `GeoSpace`, `NedSpace`, `NoSpace`; `SpaceKind` over the first four | `GeoSpace` carries a `VerticalDatum` (WGS84, EGM96, EGM2008, ISA, Terrain); its distance is the WGS 84 geocentric straight line (IOGP 373-7-2 §2.2.1), NaN unless both datums are `WGS84`; `GeoSpace::new` refuses a latitude outside [−90, 90]. |
+| Time | `NewtonianTime` (absolute time), `MinkowskiTime` (inertial-frame coordinate time), `DiscreteTime`, `EntropicTime` (`u64` tick), `SymbolicTime` (labelled `i64`), `NoTime`; `TimeKind` over the first four | `TimeKind` lifts ticks into `R` with `lift_count`. |
+| Spacetime | `GalileanSpacetime` and `NewtonianSpacetime` (spatial metric (0,+,+,+), `Metric::PGA(4)`), `MinkowskiSpacetime` (−,+,+,+), `TangentSpacetime` (event, tangent vector and a validated Lorentzian 4×4 metric tensor); `SpaceTimeKind` over the four; `CausalSetSpacetime` (a causal order, not a context node) | Coordinates are time first, `0 => t`. Each reports its own `Metric` through `MetricSignature`. Galilean distance exists only between simultaneous events. |
 | Root | `Root { id }` | An ordinary node; stored as `NodeRecord::Root`. |
-| Absence | `NoSpaceTime<R>` | Zero-sized at every scalar; fills the space and spacetime slots of a clock-only context. |
+| Absence | `NoSpace<R>`, `NoTime`, `NoSpaceTime<R>` | Zero-sized; fill the spatial, temporal and spacetime slots of a context that holds no node of that kind. |
 
 Three design choices recur across the node types:
 
@@ -90,7 +90,7 @@ Three design choices recur across the node types:
   so one context can hold a Newtonian and a relativistic node side by side
   (`mixed_spacetime_tests.rs`). `TangentSpacetime` reports `Lorentzian(4)` however its tensor is
   replaced, because a signature does not change under continuous evolution.
-- **Units are converted where physics needs them.** `LorentzianSpacetime::time()` converts every
+- **Units are converted where physics needs them.** `MinkowskiSpacetime::time()` converts every
   `TimeScale` to seconds before the interval is formed; a test shows seconds, minutes and
   milliseconds give the same interval.
 - **Mismatches are recorded, not solved.** `space/mod.rs` states that a geodetic datum is lost when a
@@ -270,8 +270,8 @@ Ordered by consequence.
    interpreter's `CreateExtraContext` builds an unlinked top-level context instead of an extra.
 2. **Symbolic node types cannot enter a context.** `SymbolicTime` is not a `TimeKind` variant (the
    arm is commented out) and has no `Recordable` impl; its `scalar_projector.rs` is a commented-out
-   file. `CausalSetSpacetime` and `ConformalSpacetime` implement none of `Spatial`, `Temporal` or
-   `SpaceTemporal`, so no `Context` can hold them. All three are tested as free-standing types only.
+   file. `CausalSetSpacetime` implements none of `Spatial`, `Temporal` or `SpaceTemporal`, so no
+   `Context` can hold it. Both are tested as free-standing types only.
 3. **`apply` finds nodes by linear scan.** `index_of` walks every graph index for each lookup, in the
    base graph too, although the base graph keeps `id_to_index_map`. Edge events scan every graph.
    Extras have no identifier index at all, and `extra_ctx_*` operations take graph indices.
@@ -282,9 +282,9 @@ Ordered by consequence.
    coordinate loses its low half on snapshot, and the tests pin this ("precision is spent at the
    bound"). A `Data<Float106>` payload keeps both halves, because `Storable` writes it as `Fields`.
 6. **`Adjustable` is not uniform.**
-   - `LorentzianSpacetime` chooses indices by the grid's dimensionality; every other space and
+   - `MinkowskiSpacetime` chooses indices by the grid's dimensionality; every other space and
      spacetime type reads fixed 3D indices `(0, 0, k)`, so a spacetime needs a grid of depth 4 or more.
-   - `EuclideanTime::update` and `LorentzianTime::update` store the value unchecked, while every
+   - `NewtonianTime::update` and `MinkowskiTime::update` store the value unchecked, while every
      space type's `update` refuses a non-finite value.
    - `DiscreteTime::adjust` refuses a zero *result*; `EntropicTime::adjust` refuses a zero
      *adjustment*. `DiscreteTime(10) + 0` succeeds and `EntropicTime(42) + 0` fails.
@@ -292,7 +292,7 @@ Ordered by consequence.
    public `_Marker` variant (tested as `should_panic`). `extra_ctx_add_new` computes
    `highest_extra_context_id + 1` and `expect`s the insert, so an allocation after `u64::MAX` is
    held overflows.
-8. **Distance semantics differ by type.** `EuclideanSpacetime::distance` ignores `t`.
+8. **Distance semantics differ by type.** `NewtonianSpacetime::distance` ignores `t`.
    `TangentSpacetime` reports `TimeScale::Second` unconditionally and its `time()` returns the raw
    `t`. `GeoSpace::distance` checks equal datums only under `debug_assertions`.
 9. **Minor.** The `UniformContext` docstring calls `NumberType` "typically an alias for a
@@ -309,11 +309,10 @@ deep_causality_context/src/
   traits/                 Contextuable (Coordinate, Distance, Metric*, Spatial, Temporal, …),
                           ContextuableGraph, ExtendableContextuableGraph, indexable, Adjustable, Storable
   types/context_node_types/
-    data/, data_uncertain/, root/, no_space_time/
-    space/{ecef, euclidean, geo, ned, space_kind}
-    space_time/{euclidean, lorentzian, tangent, space_time_kind}
-    time/{discrete, entropic, euclidean, lorentzian, symbolic, time_kind}
-    symbol_spacetime/{causal_set, conformal}
+    data/, data_uncertain/, root/
+    space/{ecef, euclidean, geo, ned, no_space, space_kind}
+    space_time/{causal_set, conformal, galilean, minkowski, newtonian, no_space_time, tangent, space_time_kind}
+    time/{discrete, entropic, minkowski, newtonian, no_time, symbolic, time_kind}
   types/context_types/
     context_graph/        Context, ExtraContext, snapshot.rs, restore.rs, apply.rs
     context_store/        ContextStore: hydrate, store_branch, subscribe, substrate (…_via)

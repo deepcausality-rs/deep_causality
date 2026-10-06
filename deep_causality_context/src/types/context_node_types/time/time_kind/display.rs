@@ -12,8 +12,8 @@ use deep_causality_num::FromPrimitive;
 impl<R: RealField + FromPrimitive + fmt::Display> fmt::Display for TimeKind<R> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            TimeKind::Euclidean(t) => {
-                write!(f, "EuclideanTime(id: {}, τ: {})", t.id(), t.time_unit())
+            TimeKind::Newtonian(t) => {
+                write!(f, "NewtonianTime(id: {}, t: {})", t.id(), t.time_unit())
             }
             TimeKind::Entropic(t) => {
                 write!(f, "EntropicTime(id: {}, t: {})", t.id(), t.time_unit())
@@ -21,8 +21,8 @@ impl<R: RealField + FromPrimitive + fmt::Display> fmt::Display for TimeKind<R> {
             TimeKind::Discrete(t) => {
                 write!(f, "DiscreteTime(id: {}, tick: {})", t.id(), t.time_unit())
             }
-            TimeKind::Lorentzian(t) => {
-                write!(f, "LorentzianTime(id: {}, t: {})", t.id(), t.time_unit())
+            TimeKind::Minkowski(t) => {
+                write!(f, "MinkowskiTime(id: {}, t: {})", t.id(), t.time_unit())
             } // TimeKind::Symbolic(t) => write!(f, "SymbolicTime(id: {}, {})", t.id(), t),
         }
     }

@@ -8,27 +8,31 @@
 //!
 //! Corner cases (rows A to K): C every other `SpaceTimeRecord` variant refused,
 //! `test_every_other_variant_is_refused`; F/G zero and negative coordinates,
-//! `test_zero_and_negative_round_trip`; I non-finite, `test_non_finite_round_trips`; K `Float106`
+//! `test_zero_and_negative_round_trip`; I a non-finite coordinate round-trips,
+//! `test_non_finite_round_trips`, and a non-finite metric entry is refused,
+//! `test_a_record_whose_tensor_is_not_a_lorentzian_metric_is_refused`; J a finite value past the range of `f32` and `BFloat16` refused,
+//! `test_a_value_past_the_scalar_range_is_refused`; K `Float106`
 //! narrows and `BFloat16` widens, `test_precision_is_spent_at_the_bound`; every other row n/a.
-//! The metric tensor's entries are `4 * row + column + 0.5`, all distinct, so a transposed or
-//! default metric is caught: `test_the_stored_metric_is_restored_not_the_default`.
-use deep_causality_context::{MetricTensor4D, TangentSpacetime, TimeScale};
+//! The metric tensor is symmetric and Lorentzian, with every entry of its upper triangle distinct,
+//! so a misplaced or default metric is caught: `test_the_stored_metric_is_restored_not_the_default`.
+//! Its eigenvalues, from `numpy.linalg.eigvalsh`, are one negative and three positive.
+use deep_causality_context::{MetricTensor4D, MetricTensorError, TangentSpacetime, TimeScale};
 use deep_causality_context_store::{ProjectionError, Recordable, SpaceTimeRecord};
 use deep_causality_num::{BFloat16, Float106};
 
 fn metric() -> [[f64; 4]; 4] {
-    let mut m = [[0.0; 4]; 4];
-    for (i, row) in m.iter_mut().enumerate() {
-        for (j, cell) in row.iter_mut().enumerate() {
-            *cell = (i * 4 + j) as f64 + 0.5;
-        }
-    }
-    m
+    [
+        [-30.5, 0.5, 1.5, 2.5],
+        [0.5, 10.5, 3.5, 4.5],
+        [1.5, 3.5, 11.5, 5.5],
+        [2.5, 4.5, 5.5, 12.5],
+    ]
 }
 
 fn node() -> TangentSpacetime<f64> {
     let mut node = TangentSpacetime::new(3, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5);
-    node.update_metric_tensor(metric());
+    node.update_metric_tensor(metric())
+        .expect("the fixture tensor is a Lorentzian metric");
     node
 }
 
@@ -56,32 +60,43 @@ fn test_round_trip() {
 #[test]
 fn test_the_stored_metric_is_restored_not_the_default() {
     let restored = TangentSpacetime::<f64>::from_record(3, node().to_record().unwrap()).unwrap();
-    assert_eq!(restored.metric_tensor()[3][2], 14.5);
-    assert_eq!(restored.metric_tensor()[2][3], 11.5);
+    assert_eq!(restored.metric_tensor()[3][2], 5.5);
+    assert_eq!(restored.metric_tensor()[0][3], 2.5);
+    assert_eq!(restored.metric_tensor(), metric());
     let fresh = TangentSpacetime::new(3, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5);
     assert_ne!(restored.metric_tensor(), fresh.metric_tensor());
 }
 
 #[test]
 fn test_every_other_variant_is_refused() {
-    let others: [(&str, SpaceTimeRecord); 2] = [
+    let others: [(&str, SpaceTimeRecord); 3] = [
         (
-            "Euclidean",
-            SpaceTimeRecord::Euclidean {
+            "Galilean",
+            SpaceTimeRecord::Galilean {
+                t: 4.0,
                 x: 1.0,
                 y: 2.0,
                 z: 3.0,
-                t: 4.0,
                 scale: TimeScale::Second,
             },
         ),
         (
-            "Lorentzian",
-            SpaceTimeRecord::Lorentzian {
+            "Newtonian",
+            SpaceTimeRecord::Newtonian {
+                t: 4.0,
                 x: 1.0,
                 y: 2.0,
                 z: 3.0,
+                scale: TimeScale::Second,
+            },
+        ),
+        (
+            "Minkowski",
+            SpaceTimeRecord::Minkowski {
                 t: 4.0,
+                x: 1.0,
+                y: 2.0,
+                z: 3.0,
                 scale: TimeScale::Second,
             },
         ),
@@ -146,11 +161,13 @@ fn test_precision_is_spent_at_the_bound() {
     );
     // The default metric holds c² exactly in two halves; the record holds a double, so the
     // restored metric is the narrowed one.
-    expected.update_metric_tensor(
-        expected
-            .metric_tensor()
-            .map(|row| row.map(|v| e(f64::from(v)))),
-    );
+    expected
+        .update_metric_tensor(
+            expected
+                .metric_tensor()
+                .map(|row| row.map(|v| e(f64::from(v)))),
+        )
+        .expect("the narrowed default metric is still Lorentzian");
     assert_eq!(restored.metric_tensor(), expected.metric_tensor());
     assert_eq!(restored, expected);
     let b = |v: f64| BFloat16::from(v);
@@ -168,5 +185,78 @@ fn test_precision_is_spent_at_the_bound() {
     assert_eq!(
         TangentSpacetime::<BFloat16>::from_record(2, narrow.to_record().unwrap()),
         Ok(narrow)
+    );
+}
+
+#[test]
+fn test_a_record_whose_tensor_is_not_a_lorentzian_metric_is_refused() {
+    // A record can hold any sixteen numbers; the restore accepts only a finite symmetric tensor of
+    // signature (−, +, +, +), the invariant every TangentSpacetime keeps. The refusal carries the
+    // message `update_metric_tensor` gives for the same tensor, so each broken rule reads as its
+    // own: a non-finite entry, the asymmetric pair, the eigenvalue count.
+    let record = |metric: [[f64; 4]; 4]| SpaceTimeRecord::Tangent {
+        t: 0.0,
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+        dt: 1.0,
+        dx: 0.0,
+        dy: 0.0,
+        dz: 0.0,
+        metric,
+    };
+    let mut non_finite = metric();
+    non_finite[2][3] = f64::NAN;
+    let mut asymmetric = metric();
+    asymmetric[1][3] = 9.0;
+    let riemannian = [
+        [1.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, 0.0],
+        [0.0, 0.0, 1.0, 0.0],
+        [0.0, 0.0, 0.0, 1.0],
+    ];
+    let cases = [
+        (non_finite, MetricTensorError::NonFinite(2, 3)),
+        (asymmetric, MetricTensorError::Asymmetric(1, 3)),
+        (riemannian, MetricTensorError::Signature(4, 0, 0)),
+    ];
+    for (bad, expected) in cases {
+        let refused = TangentSpacetime::<f64>::new(6, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
+            .update_metric_tensor(bad);
+        assert_eq!(refused, Err(expected));
+        assert_eq!(
+            TangentSpacetime::<f64>::from_record(6, record(bad)),
+            Err(ProjectionError::Rejected(6, expected.to_string()))
+        );
+    }
+}
+
+#[test]
+fn test_a_value_past_the_scalar_range_is_refused() {
+    // Row J. 1e300 is a finite f64 past the range of f32 and BFloat16, which would hold it as an
+    // infinity; the restore refuses it and names the value.
+    let record = SpaceTimeRecord::Tangent {
+        t: 0.0,
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+        dt: 1.0,
+        dx: 0.0,
+        dy: 0.0,
+        dz: 0.0,
+        metric: [
+            [-1.0, 0.0, 0.0, 0.0],
+            [0.0, 1e300, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ],
+    };
+    assert_eq!(
+        TangentSpacetime::<f32>::from_record(4, record),
+        Err(ProjectionError::Scalar(4, 1e300))
+    );
+    assert_eq!(
+        TangentSpacetime::<BFloat16>::from_record(4, record),
+        Err(ProjectionError::Scalar(4, 1e300))
     );
 }
