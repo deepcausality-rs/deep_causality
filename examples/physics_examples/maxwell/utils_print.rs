@@ -8,8 +8,9 @@
 //! This is the display boundary: `lower` is called here and nowhere else, so `f64` appears in this
 //! file alone.
 
-use crate::model::{MaxwellState, PlaneWaveConfig};
+use crate::model::{MaxwellState, OMEGA, WaveContext, read};
 use crate::{FloatType, Verification};
+use deep_causality_core::CausalityError;
 use deep_causality_num::lower;
 
 pub fn print_header() {
@@ -17,14 +18,15 @@ pub fn print_header() {
     println!("Precision: {}\n", core::any::type_name::<FloatType>());
 }
 
-pub fn print_config(c: &PlaneWaveConfig) {
+pub fn print_config(wave: &WaveContext, at: &MaxwellState) -> Result<(), CausalityError> {
     println!("Plane wave  A_x(t, z) = cos(omega (t - z))");
     println!(
         "Observed at omega = {}, t = {}, z = {}\n",
-        lower(c.omega),
-        lower(c.t),
-        lower(c.z)
+        lower(read(wave, OMEGA)?),
+        lower(at.t),
+        lower(at.z)
     );
+    Ok(())
 }
 
 pub fn print_fields(s: &MaxwellState, blades: (FloatType, FloatType)) {

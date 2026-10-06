@@ -50,12 +50,17 @@ Stage 5: Quantum Detection
 The stages form a **decoupled, modular pipeline**:
 
 ```rust
-let result = klein_gordon( & phi_manifold, mass)
-.bind_or_error(stage_field_to_partons, "...")
-.bind_or_error(stage_lund_fragmentation, "...")
-.bind_or_error(stage_thermalization, "...")
-.bind_or_error(stage_quantum_detection, "...");
+CausalFlow::from(klein_gordon(&phi_manifold, mass))
+    .context(world)
+    .bind_or_error(stage_field_to_partons, "...")
+    .bind_or_error(stage_lund_fragmentation, "...")
+    .bind_or_error(stage_thermalization, "...")
+    .bind_or_error(stage_quantum_detection, "...")
+    .finish()
+    .inspect_err(print_summary_err)?;
 ```
+
+The model's world rides in the context channel: `pipeline_world` builds a `Context` of `Data` contextoids (the initial field profile, the energy scale and its clamps, the thermal share, gradient, diffusivity and clamps, the Higgs mass, the critical temperature $T_c$ and the amplitude clamps). The seed reads the profile and the mass from it, and each stage reads what it needs from it and hands it on. The thermal grid's resolution and the Lund kernel's default tune stay in the program. A stage that fails, whether in a kernel (fragmentation, heat diffusion, a mean, the Born rule) or in building a mesh or a quantum state, stops the pipeline: the summary prints the error and the process exits with it.
 
 Each stage is a **standalone function** that can be:
 

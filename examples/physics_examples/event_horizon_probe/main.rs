@@ -14,14 +14,20 @@
 //! - **Precision as a parameter.** One `FloatType` alias re-runs the whole simulation, the autodiff
 //!   field included, at `f32`, `f64`, or `Float106`; the physics kernels are generic over the
 //!   `RealField` scalar.
-//! - **The causal monad.** `CausalEffectPropagationProcess` carries the probe state and the black
-//!   hole mass through each regime-switching step.
+//! - **The causal monad.** `CausalEffectPropagationProcess` carries the probe state through each
+//!   regime-switching step, with the approach scenario as its context: the black hole's mass, the
+//!   regime threshold and the probe's start distance and mass are `Data` contextoids, and the step
+//!   derives `r_s`, the escape velocity and the potential from them.
 
 use deep_causality_algebra::Real;
 use deep_causality_calculus::{DifferentiableArrow, DifferentiateExt, Scalar};
-use deep_causality_core::CausalFlow;
+use deep_causality_context::{
+    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    NoSpace, NoSpaceTime, NoTime,
+};
+use deep_causality_core::{CausalFlow, CausalityError, CausalityErrorEnum};
 use deep_causality_multivector::{CausalMultiVector, Metric};
-use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lift};
+use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lift, lower};
 use deep_causality_physics::{
     Length, Mass, NEWTONIAN_CONSTANT_OF_GRAVITATION, PhysicsError, SPEED_OF_LIGHT,
 };
@@ -32,23 +38,28 @@ use deep_causality_physics::{escape_velocity, schwarzschild_radius, time_dilatio
 /// simulation, the autodiff gravitational field included, re-runs at the chosen precision.
 pub type FloatType = f64;
 
-/// Sagittarius A*, about 4 million solar masses, times one solar mass in kilograms.
-///
-/// Kept as an `f64` literal because the generic potential below evaluates at a scalar the
-/// caller names, which a constant of the working type cannot reach.
-const M_KG: f64 = 4.0e6 * 1.989e30;
+/// The approach scenario as a context: one `Data` contextoid per world fact. The probe's distance
+/// is its own state, so the context models no position or clock and its spatial, temporal and
+/// spacetime slots are empty.
+type ApproachContext = Context<Data<FloatType>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
+
+/// Node indices of the scenario's world facts; `sagittarius_a_star_approach` adds them in this
+/// order.
+/// The black hole's mass, in kg.
+const MASS_KG: usize = 0;
+/// Below this many Schwarzschild radii the step runs relativistic physics.
+const RELATIVISTIC_RADII: usize = 1;
+/// Where the probe starts, in Schwarzschild radii.
+const START_RADII: usize = 2;
+/// The probe's own mass, in kg.
+const PROBE_MASS_KG: usize = 3;
+/// How many world facts the scenario holds.
+const APPROACH_FACTS: usize = 4;
 
 /// Small whole numbers and run parameters, declared once at the working type.
 const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
 const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
 const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
-/// The black hole's mass, at the working type.
-const MASS_KG: FloatType = const_scalar_from_float!(FloatType, M_KG);
-/// Where the probe starts, in Schwarzschild radii, and the probe's own mass in kg.
-const START_RADII: FloatType = const_scalar_from_int!(FloatType, 100);
-const PROBE_MASS_KG: FloatType = const_scalar_from_int!(FloatType, 1000);
-/// Below this many Schwarzschild radii the run switches to the relativistic regime.
-const RELATIVISTIC_RADII: FloatType = const_scalar_from_int!(FloatType, 10);
 /// The distance is halved per step, and the horizon is called crossed inside this many radii.
 const STEP_FRACTION: FloatType = const_scalar_from_float!(FloatType, 0.5);
 const HORIZON_RADII: FloatType = const_scalar_from_float!(FloatType, 1.1);
@@ -60,14 +71,14 @@ const LIGHT_SPEED: FloatType = const_scalar_from_float!(FloatType, SPEED_OF_LIGH
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Event Horizon Probe Simulation ===\n");
 
-    // 1. Setup: Supermassive Black Hole (Sagittarius A* approx)
-    let black_hole_mass =
-        Mass::<FloatType>::new(MASS_KG).map_err(|e: PhysicsError| e.to_string())?;
-    let rs_effect = schwarzschild_radius(&black_hole_mass);
-    let r_s = rs_effect.value_cloned().unwrap().value();
+    // 1. Setup: Supermassive Black Hole (Sagittarius A* approx) and the probe falling into it,
+    // the context of every step.
+    let scenario = sagittarius_a_star_approach()?;
+    let black_hole_mass = mass(&scenario)?;
+    let r_s = schwarzschild_radius_of(&scenario)?;
 
     // Φ(r) = −GM/r; the gravitational acceleration and tidal force are its derivatives.
-    let potential = NewtonianPotential;
+    let potential = NewtonianPotential::of(&scenario)?;
 
     println!("Target: Supermassive Black Hole");
     println!("Mass: {:.2e} kg", black_hole_mass.value());
@@ -75,9 +86,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // 2. Initial State: Probe far away
     let initial_state = ProbeState {
-        distance: r_s * START_RADII,
+        distance: r_s * read(&scenario, START_RADII)?,
         velocity: ZERO,
-        mass: PROBE_MASS_KG,
+        mass: read(&scenario, PROBE_MASS_KG)?,
         status: "Approaching".to_string(),
     };
 
@@ -109,7 +120,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("  [AD] tidal gradient −d²Φ/dr² = {:.3e} 1/s²", tidal);
 
         // Define the physics context based on state
-        let regime_check = if dist_ratio > RELATIVISTIC_RADII {
+        let regime_check = if dist_ratio > read(&scenario, RELATIVISTIC_RADII)? {
             "Newtonian"
         } else {
             "Relativistic"
@@ -117,18 +128,27 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("Physics Regime: {}", regime_check);
 
         // Run the regime-switching step as a stateful CausalFlow: the probe state is the flow's
-        // state and the black-hole mass its context; the step returns the next probe state.
+        // state and the approach scenario its context; the step returns the next probe state.
         let next = CausalFlow::process(current_state.clone())
-            .context(black_hole_mass)
+            .context(scenario.clone())
             .try_step_with(
-                |_unit: (), state: &ProbeState, ctx: Option<&Mass<FloatType>>| {
-                    let potential_check = NewtonianPotential;
-                    let bh_mass = *ctx.expect("context holds the BH mass");
-                    let r = Length::<FloatType>::new(state.distance).unwrap();
+                |_unit: (), state: &ProbeState, ctx: Option<&ApproachContext>| {
+                    let scenario = ctx.ok_or_else(|| {
+                        CausalityError::new(CausalityErrorEnum::Custom(
+                            "the flow carries no approach scenario".into(),
+                        ))
+                    })?;
+                    let potential_check = NewtonianPotential::of(scenario)?;
+                    let bh_mass = mass(scenario)?;
+                    let r_s = schwarzschild_radius_of(scenario)?;
+                    let r = Length::<FloatType>::new(state.distance)?;
 
                     // A. Calculate expected orbital/escape velocities (Context assessment)
                     let v_esc_effect = escape_velocity(&bh_mass, &r);
-                    let v_esc = v_esc_effect.value_cloned().unwrap().value();
+                    let v_esc = v_esc_effect
+                        .value_cloned()
+                        .ok_or_else(|| PhysicsError::NumericalInstability("escape_velocity".into()))?
+                        .value();
 
                     println!("  Escape Velocity required: {:.2e} m/s", v_esc);
 
@@ -145,7 +165,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     );
 
                     // B. Regime-Specific Logic
-                    if state.distance / r_s > RELATIVISTIC_RADII {
+                    if state.distance / r_s > read(scenario, RELATIVISTIC_RADII)? {
                         // --- Newtonian Regime ---
                         // Simple freefall approximation v = sqrt(2GM/r) (which is v_esc)
                         let new_vel = v_esc;
@@ -165,7 +185,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         // Probe 4-velocity (approx): a static observer e_t
                         let mut static_vec = vec![ZERO; 16];
                         static_vec[1] = ONE;
-                        let t_static = CausalMultiVector::new(static_vec, metric).unwrap();
+                        let t_static =
+                            CausalMultiVector::new(static_vec, metric).map_err(multivector_error)?;
 
                         // Falling probe vector (gamma, gamma*v, 0, 0), at the probe's *own*
                         // speed as a fraction of c rather than a fixed stand-in value.
@@ -185,10 +206,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             let mut probe_vec = vec![ZERO; 16];
                             probe_vec[1] = gamma;
                             probe_vec[2] = gamma * v_rel;
-                            let t_probe = CausalMultiVector::new(probe_vec, metric).unwrap();
+                            let t_probe = CausalMultiVector::new(probe_vec, metric)
+                                .map_err(multivector_error)?;
 
                             let dilation_effect = time_dilation_angle(&t_static, &t_probe);
-                            let rapidity = dilation_effect.value_cloned().unwrap().value();
+                            let rapidity = dilation_effect
+                                .value_cloned()
+                                .ok_or_else(|| {
+                                    PhysicsError::NumericalInstability(
+                                        "time_dilation_angle".into(),
+                                    )
+                                })?
+                                .value();
 
                             println!("  [GR] Relativistic Rapidity: {:.4}", rapidity);
                             println!("  [GR] Time Dilation Factor: {:.2}", fcosh(rapidity));
@@ -215,16 +244,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             )
             .finish();
 
-        // Update State
-        if let Ok(s) = next {
-            current_state = s;
-            println!("  -> New Status: {}", current_state.status);
-            println!("  -> Current Velocity: {:.2e} m/s", current_state.velocity);
+        // Update State; a step that failed is the error the run exits with.
+        current_state = next?;
+        println!("  -> New Status: {}", current_state.status);
+        println!("  -> Current Velocity: {:.2e} m/s", current_state.velocity);
 
-            if current_state.status == "EVENT HORIZON CROSSED" {
-                println!("\n!!! SIGNAL LOST !!! Probe has crossed the event horizon.");
-                break;
-            }
+        if current_state.status == "EVENT HORIZON CROSSED" {
+            println!("\n!!! SIGNAL LOST !!! Probe has crossed the event horizon.");
+            break;
         }
         println!();
     }
@@ -241,17 +268,81 @@ fn fcosh<S: Scalar>(x: S) -> S {
     x.cosh()
 }
 
-/// The Newtonian gravitational potential `Φ(r) = −GM/r`, written once over the working scalar so
-/// the tangent functor can differentiate it. The first derivative is the gravitational
-/// acceleration, the second is the radial tidal gradient.
+/// Builds the approach scenario: each world fact as a `Data` contextoid at its node index.
+fn sagittarius_a_star_approach() -> Result<ApproachContext, ContextIndexError> {
+    let mut facts = [ZERO; APPROACH_FACTS];
+    // Sagittarius A*, about 4 million solar masses, times one solar mass in kilograms.
+    facts[MASS_KG] = const_scalar_from_float!(FloatType, 4.0e6 * 1.989e30);
+    facts[RELATIVISTIC_RADII] = const_scalar_from_int!(FloatType, 10);
+    facts[START_RADII] = const_scalar_from_int!(FloatType, 100);
+    facts[PROBE_MASS_KG] = const_scalar_from_int!(FloatType, 1000);
+
+    let mut approach =
+        Context::with_capacity(1, "probe approaching Sagittarius A*", APPROACH_FACTS);
+    for (id, value) in (1..).zip(facts) {
+        approach.add_node(Contextoid::new(
+            id,
+            ContextoidType::Datoid(Data::new(id, value)),
+        ))?;
+    }
+    Ok(approach)
+}
+
+/// Reads one world fact out of the scenario, or the error naming the node that holds none.
+fn read(scenario: &ApproachContext, index: usize) -> Result<FloatType, PhysicsError> {
+    scenario
+        .get_node(index)
+        .and_then(|node| node.vertex_type().dataoid())
+        .map(|data| data.get_data())
+        .ok_or_else(|| {
+            PhysicsError::CalculationError(format!("the scenario holds no Datoid at node {index}"))
+        })
+}
+
+/// The black hole's mass, as the typed quantity the kernels take.
+fn mass(scenario: &ApproachContext) -> Result<Mass<FloatType>, PhysicsError> {
+    Mass::new(read(scenario, MASS_KG)?)
+}
+
+/// A failed multivector construction, as the step's error.
+fn multivector_error(e: impl core::fmt::Debug) -> CausalityError {
+    CausalityError::new(CausalityErrorEnum::Custom(format!(
+        "building a multivector failed: {e:?}"
+    )))
+}
+
+/// The black hole's Schwarzschild radius `r_s = 2GM/c²`, in metres.
+fn schwarzschild_radius_of(scenario: &ApproachContext) -> Result<FloatType, PhysicsError> {
+    schwarzschild_radius(&mass(scenario)?)
+        .value_cloned()
+        .map(|r_s| r_s.value())
+        .ok_or_else(|| PhysicsError::NumericalInstability("schwarzschild_radius".into()))
+}
+
+/// The Newtonian gravitational potential `Φ(r) = −GM/r` of a black hole, written once over the
+/// working scalar so the tangent functor can differentiate it. The first derivative is the
+/// gravitational acceleration, the second is the radial tidal gradient.
 ///
-/// The struct holds no data. `G` and `M` are configuration constants lifted into whatever scalar
-/// the caller works at, so nothing here pins a precision.
-struct NewtonianPotential;
+/// The struct holds the mass it read from the context. `run` lifts `G` and that mass into
+/// whatever scalar the caller evaluates at. The mass crosses through its `f64` value, so a mass
+/// carried at more than `f64` precision is rounded to it here; this example's mass is an `f64`
+/// literal, so nothing is lost.
+struct NewtonianPotential {
+    mass_kg: FloatType,
+}
+
+impl NewtonianPotential {
+    /// The potential of the black hole the context holds.
+    fn of(scenario: &ApproachContext) -> Result<Self, PhysicsError> {
+        Ok(Self {
+            mass_kg: read(scenario, MASS_KG)?,
+        })
+    }
+}
 
 impl DifferentiableArrow for NewtonianPotential {
     fn run<S: Scalar>(&self, r: S) -> S {
-        let gm = lift::<S>(NEWTONIAN_CONSTANT_OF_GRAVITATION) * lift::<S>(M_KG);
+        let gm = lift::<S>(NEWTONIAN_CONSTANT_OF_GRAVITATION) * lift::<S>(lower(self.mass_kg));
         -(gm / r)
     }
 }

@@ -14,11 +14,13 @@ composes the analysis of a Schwarzschild black hole with the **Causal Monad** (`
 Five lines chain the workflow of numerical relativity:
 
 ```rust
-let result = initial_stage_create_schwarzschild()
+let spacetime = schwarzschild_spacetime();
+let result = CausalFlow::from(initial_stage_create_schwarzschild(&spacetime))
+    .context(spacetime)
     .bind_or_error(stage_curvature_invariants, "Curvature computation failed")
     .bind_or_error(stage_geodesic_analysis, "Geodesic analysis failed")
     .bind_or_error(stage_adm_formalism, "ADM formalism failed")
-    .bind_or_error(stage_horizon_detection, "Horizon detection failed");
+    .bind_or_error(stage_event_horizon_detection, "Horizon detection failed");
 ```
 
 ## The Gravitas of each Stage
@@ -73,6 +75,8 @@ cargo run --example gauge_gr -p physics_examples
 ## Design Pattern: The Causal Monad
 
 `CausalFlow` chains the stages with `.bind_or_error()`, so the mathematics of General Relativity runs as a pipeline of operations.
+
+The black hole and the observer are the pipeline's context. `schwarzschild_spacetime` builds a `Context` of two `Data` contextoids, the central mass (10 M☉) and the observation radius (3 $r_s$), and `.context` attaches it. Every stage reads that context and derives $r_s$ and $r$ from it; the value channel carries only the gauge field and the results.
 
 ### Why this matters:
 1. **Type-Safe**: Each stage receives the physical data it needs from the previous one.

@@ -36,7 +36,9 @@ The simulation adapts its mathematical foundation to the physical conditions, so
 [Step 5] Stability Analysis → Confinement Status
 ```
 
-`CausalFlow::value` starts the chain, one `.next` runs each stage, and `finish` returns the final state or the error a stage short-circuited with.
+`CausalFlow::value` starts the chain, `.context` attaches the world, one `.try_step_with` runs each solver stage and `.map` the analysis, and `finish` returns the final state or the error a stage short-circuited with.
+
+The world is a `Context` of six `Data` contextoids: the central mass (10 solar masses), the plasma's orbital radius (3 `r_s`), the column length, the current density, the magnetic field and the tidal threshold. Each stage reads what it needs from the context channel and derives `r_s` and `r` from the mass and the orbital radius; the value channel carries only the results.
 
 ---
 

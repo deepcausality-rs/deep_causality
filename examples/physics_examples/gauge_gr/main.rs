@@ -8,12 +8,22 @@
 //! Demonstrates **modular causal composition** via `CausalEffectPropagationProcess`
 //! for General Relativity (GR) spacetime analysis.
 //!
+//! The central body's mass and the observer's radius are the pipeline's context: a `Context` of
+//! `Data` contextoids that every stage reads, deriving `r_s` and `r` from it.
+//!
 //! ## Generic Float Type Support
 //!
 //! This example supports `f32`, `f64`, and `DoubleFloat` by changing the `FloatType`
 //! type alias. All numeric literals are converted using the `flt!` macro.
 //!
-use deep_causality_core::{CausalEffectPropagationProcess, CausalFlow, PropagatingEffect};
+use deep_causality_context::{
+    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    NoSpace, NoSpaceTime, NoTime,
+};
+use deep_causality_core::{
+    CausalEffectPropagationProcess, CausalFlow, CausalityError, CausalityErrorEnum,
+    PropagatingEffect, PropagatingProcess,
+};
 use deep_causality_num::{Float, Float106, const_scalar_from_float, const_scalar_from_int};
 use deep_causality_num_dual::Dual;
 use deep_causality_physics::{AdmOps, GrOps, LorentzianMetric};
@@ -33,11 +43,8 @@ const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
 const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
 const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
 const QUARTER: FloatType = const_scalar_from_float!(FloatType, 0.25);
-/// The central body: ten solar masses, and one solar mass in kilograms.
-const SOLAR_MASSES: FloatType = const_scalar_from_int!(FloatType, 10);
+/// One solar mass in kilograms.
 const SOLAR_MASS_KG: FloatType = const_scalar_from_float!(FloatType, 1.989e30);
-/// Observation radius, in Schwarzschild radii.
-const OBSERVATION_RADII: FloatType = const_scalar_from_int!(FloatType, 3);
 /// `K = 48 M^2 / r^6` for Schwarzschild.
 const KRETSCHMANN_COEFFICIENT: FloatType = const_scalar_from_int!(FloatType, 48);
 /// The photon sphere sits at `1.5 r_s` and the ISCO at `3 r_s`.
@@ -46,6 +53,20 @@ const ISCO_RADII: FloatType = const_scalar_from_int!(FloatType, 3);
 /// The speed of light, at the working type.
 const LIGHT_SPEED: FloatType = const_scalar_from_float!(FloatType, SPEED_OF_LIGHT);
 type GRTheory = GR<FloatType>;
+
+/// The central body and the observer as a context: one `Data` contextoid per world fact. The
+/// stages work in Schwarzschild coordinates, which no context space or spacetime type models, so
+/// the spatial, temporal and spacetime slots are empty.
+type SchwarzschildContext =
+    Context<Data<FloatType>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
+
+/// Node indices of the world facts; `schwarzschild_spacetime` adds them in this order.
+/// Mass of the central body, in solar masses.
+const CENTRAL_MASS: usize = 0;
+/// Observation radius, in Schwarzschild radii.
+const OBSERVATION_RADIUS: usize = 1;
+/// How many world facts the spacetime holds.
+const SPACETIME_FACTS: usize = 2;
 
 // =============================================================================
 // MAIN: Pipeline Composition via Causal Monad
@@ -57,18 +78,24 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("  (Float Type: {})", std::any::type_name::<FloatType>());
     println!("═══════════════════════════════════════════════════════════════\n");
 
+    // The central body and the observer: the context every stage reads.
+    let spacetime = schwarzschild_spacetime()?;
+
     // Composed pipeline using bind_or_error
-    let result = CausalFlow::from(initial_stage_create_schwarzschild())
+    let result = CausalFlow::from(initial_stage_create_schwarzschild(&spacetime))
+        .context(spacetime)
         .bind_or_error(stage_curvature_invariants, "Curvature computation failed")
         .bind_or_error(stage_geodesic_analysis, "Geodesic analysis failed")
         .bind_or_error(stage_adm_formalism, "ADM formalism failed")
         .bind_or_error(stage_event_horizon_detection, "Horizon detection failed")
-        .into_effect();
+        .into_process();
 
-    // Extract and display final result
+    // Extract and display final result; a stage that failed is the error the process exits with.
     print_summary(&result);
-
-    Ok(())
+    match result.error() {
+        Some(error) => Err(error.clone().into()),
+        None => Ok(()),
+    }
 }
 
 // =============================================================================
@@ -80,10 +107,6 @@ fn main() -> Result<(), Box<dyn Error>> {
 pub struct SpaceTimeData {
     /// General Relativity gauge field
     pub gr: Option<GRTheory>,
-    /// Observation radius r
-    pub r: FloatType,
-    /// Schwarzschild radius r_s
-    pub r_s: FloatType,
     /// Kretschmann scalar
     pub kretschmann: FloatType,
     /// Ricci scalar
@@ -96,6 +119,9 @@ pub struct SpaceTimeData {
 
 /// Custom PropagatingEffect for SpaceTimeData
 type SpaceTimeEffect = PropagatingEffect<SpaceTimeData>;
+
+/// What a stage hands on: its value, with the spacetime context for the next stage.
+type SpaceTimeProcess<T> = PropagatingProcess<T, (), SchwarzschildContext>;
 
 /// Accumulated results from pipeline stages (final output)
 #[derive(Debug, Clone, Default)]
@@ -133,17 +159,19 @@ struct GRState {
 /// ds² = -(1 - r_s/r)dt² + (1 - r_s/r)^{-1}dr² + r²(dθ² + sin²θ dφ²)
 /// ```
 /// where r_s = 2GM/c² is the Schwarzschild radius.
-fn initial_stage_create_schwarzschild() -> SpaceTimeEffect {
+fn initial_stage_create_schwarzschild(spacetime: &SchwarzschildContext) -> SpaceTimeEffect {
     println!("Stage 1: Create Schwarzschild Spacetime");
     println!("────────────────────────────────────────");
 
-    // Black hole parameters
-    let mass_solar: FloatType = SOLAR_MASSES;
-    let mass_kg: FloatType = mass_solar * SOLAR_MASS_KG;
-    let r_s: FloatType = GR::schwarzschild_radius(mass_kg); // kg → geometric units
-
-    // Observation point (outside horizon)
-    let r = OBSERVATION_RADII * r_s;
+    // Black hole parameters and the observation point (outside horizon), from the context
+    let mass_solar: FloatType = match read(spacetime, CENTRAL_MASS) {
+        Ok(mass) => mass,
+        Err(e) => return CausalEffectPropagationProcess::from_error(e),
+    };
+    let (r, r_s) = match radii(spacetime) {
+        Ok(radii) => radii,
+        Err(e) => return CausalEffectPropagationProcess::from_error(e),
+    };
 
     println!("  Mass:                {} M☉", mass_solar);
     println!("  Schwarzschild radius: {} m", r_s);
@@ -151,14 +179,28 @@ fn initial_stage_create_schwarzschild() -> SpaceTimeEffect {
 
     // Create manifold for the GR field
     let mut builder = SimplicialComplexBuilder::new(0);
-    builder
-        .add_simplex(Simplex::new(vec![0]))
-        .expect("add simplex");
-    let complex = builder.build().expect("build complex");
+    if let Err(e) = builder.add_simplex(Simplex::new(vec![0])) {
+        return CausalEffectPropagationProcess::from_error(custom(format!("add simplex: {e:?}")));
+    }
+    let complex = match builder.build() {
+        Ok(complex) => complex,
+        Err(e) => {
+            return CausalEffectPropagationProcess::from_error(custom(format!(
+                "build complex: {e:?}"
+            )));
+        }
+    };
 
     let num_simplices = complex.total_simplices();
     let data: CausalTensor<FloatType> = CausalTensor::zeros(&[num_simplices]);
-    let base = Manifold::new(complex, data, 0).expect("create manifold");
+    let base = match Manifold::new(complex, data, 0) {
+        Ok(base) => base,
+        Err(e) => {
+            return CausalEffectPropagationProcess::from_error(custom(format!(
+                "create manifold: {e:?}"
+            )));
+        }
+    };
 
     // Construct Schwarzschild metric tensor at radius r
     // g_μν = diag(-(1-r_s/r), (1-r_s/r)^{-1}, r², r²sin²θ)
@@ -199,16 +241,13 @@ fn initial_stage_create_schwarzschild() -> SpaceTimeEffect {
         Ok(gr) => {
             let data = SpaceTimeData {
                 gr: Some(gr),
-                r,
-                r_s,
                 ..Default::default()
             };
             CausalEffectPropagationProcess::pure(data)
         }
-        Err(e) => {
-            println!("  [ERROR] Failed to create GR field: {:?}", e);
-            CausalEffectPropagationProcess::pure(SpaceTimeData::default())
-        }
+        Err(e) => CausalEffectPropagationProcess::from_error(custom(format!(
+            "failed to create the GR field: {e:?}"
+        ))),
     }
 }
 
@@ -221,13 +260,22 @@ fn initial_stage_create_schwarzschild() -> SpaceTimeEffect {
 /// # Physics
 /// - Kretschmann scalar: K = R_μνρσ R^μνρσ = 48M²/r⁶ (for Schwarzschild)
 /// - Ricci scalar: R = 0 (vacuum spacetime)
-fn stage_curvature_invariants(mut input: SpaceTimeData, _: (), _: Option<()>) -> SpaceTimeEffect {
+fn stage_curvature_invariants(
+    mut input: SpaceTimeData,
+    _: (),
+    spacetime: Option<SchwarzschildContext>,
+) -> SpaceTimeProcess<SpaceTimeData> {
+    let Some(spacetime) = spacetime else {
+        return missing_spacetime();
+    };
     println!("Stage 2: Curvature Invariants");
     println!("─────────────────────────────");
 
     if let Some(_gr) = &input.gr {
-        let r = input.r;
-        let r_s = input.r_s;
+        let (r, r_s) = match radii(&spacetime) {
+            Ok(radii) => radii,
+            Err(e) => return PropagatingProcess::from_error(e),
+        };
         // For Schwarzschild spacetime, use the exact analytic expressions:
         // Kretschmann scalar: K = R_μνρσ R^μνρσ = 48 M²/r⁶ = 12 r_s²/r⁶
         // Ricci scalar: R = 0 (vacuum solution)
@@ -258,9 +306,9 @@ fn stage_curvature_invariants(mut input: SpaceTimeData, _: (), _: Option<()>) ->
         input.kretschmann = kretschmann;
         input.ricci_scalar = ricci_scalar;
 
-        CausalEffectPropagationProcess::pure(input)
+        proceed(input, spacetime)
     } else {
-        CausalEffectPropagationProcess::pure(input)
+        proceed(input, spacetime)
     }
 }
 
@@ -273,13 +321,22 @@ fn stage_curvature_invariants(mut input: SpaceTimeData, _: (), _: Option<()>) ->
 /// # Physics
 /// - Geodesic deviation: D²ξ^μ/Dτ² = R^μ_νρσ u^ν ξ^ρ u^σ
 /// - Measures how nearby geodesics converge/diverge
-fn stage_geodesic_analysis(mut input: SpaceTimeData, _: (), _: Option<()>) -> SpaceTimeEffect {
+fn stage_geodesic_analysis(
+    mut input: SpaceTimeData,
+    _: (),
+    spacetime: Option<SchwarzschildContext>,
+) -> SpaceTimeProcess<SpaceTimeData> {
+    let Some(spacetime) = spacetime else {
+        return missing_spacetime();
+    };
     println!("Stage 3: Geodesic Analysis");
     println!("──────────────────────────");
 
     if let Some(gr) = &input.gr {
-        let r = input.r;
-        let r_s = input.r_s;
+        let (r, r_s) = match radii(&spacetime) {
+            Ok(radii) => radii,
+            Err(e) => return PropagatingProcess::from_error(e),
+        };
         // Static observer 4-velocity: u^μ = (1/√f, 0, 0, 0)
         let one = ONE;
         let zero = ZERO;
@@ -296,12 +353,7 @@ fn stage_geodesic_analysis(mut input: SpaceTimeData, _: (), _: Option<()>) -> Sp
                     // Magnitude of acceleration (already in m/s²)
                     d.iter().map(|x| (*x) * (*x)).sum::<FloatType>().sqrt()
                 }
-                Err(_) => {
-                    // Analytic fallback: radial tidal acceleration ~ c² * 2M/r³
-                    let m = r_s / TWO;
-                    let c = LIGHT_SPEED;
-                    c * c * TWO * m / (r * r * r)
-                }
+                Err(e) => return PropagatingProcess::from_error(e.into()),
             };
 
         // Also show the geometric deviation for reference
@@ -334,9 +386,9 @@ fn stage_geodesic_analysis(mut input: SpaceTimeData, _: (), _: Option<()>) -> Sp
         );
         println!();
 
-        CausalEffectPropagationProcess::pure(input)
+        proceed(input, spacetime)
     } else {
-        CausalEffectPropagationProcess::pure(input)
+        proceed(input, spacetime)
     }
 }
 
@@ -350,12 +402,21 @@ fn stage_geodesic_analysis(mut input: SpaceTimeData, _: (), _: Option<()>) -> Sp
 /// - Splits spacetime into spatial slices Σ_t
 /// - Hamiltonian constraint: H = R + K² - K_ij K^ij = 16πρ
 /// - For vacuum: H = 0
-fn stage_adm_formalism(mut input: SpaceTimeData, _: (), _: Option<()>) -> SpaceTimeEffect {
+fn stage_adm_formalism(
+    mut input: SpaceTimeData,
+    _: (),
+    spacetime: Option<SchwarzschildContext>,
+) -> SpaceTimeProcess<SpaceTimeData> {
+    let Some(spacetime) = spacetime else {
+        return missing_spacetime();
+    };
     println!("Stage 4: ADM 3+1 Formalism");
     println!("──────────────────────────");
 
-    let r = input.r;
-    let r_s = input.r_s;
+    let (r, r_s) = match radii(&spacetime) {
+        Ok(radii) => radii,
+        Err(e) => return PropagatingProcess::from_error(e),
+    };
     let one = ONE;
     let zero = ZERO;
     let f = one - r_s / r;
@@ -378,8 +439,15 @@ fn stage_adm_formalism(mut input: SpaceTimeData, _: (), _: Option<()>) -> SpaceT
 
     // Compute Hamiltonian constraint
     let h_constraint = match adm_state.hamiltonian_constraint(None) {
-        Ok(h) => h.as_slice().first().copied().unwrap_or(zero),
-        Err(_) => ZERO,
+        Ok(h) => match h.as_slice().first() {
+            Some(&h) => h,
+            None => {
+                return PropagatingProcess::from_error(custom(
+                    "the Hamiltonian constraint is empty",
+                ));
+            }
+        },
+        Err(e) => return PropagatingProcess::from_error(e.into()),
     };
 
     println!("  Lapse function α:        {}", (alpha.as_slice()[0]));
@@ -393,15 +461,18 @@ fn stage_adm_formalism(mut input: SpaceTimeData, _: (), _: Option<()>) -> SpaceT
 
     // Compute mean curvature
     let mean_curv = match adm_state.mean_curvature() {
-        Ok(k) => k.as_slice().first().copied().unwrap_or(zero),
-        Err(_) => ZERO,
+        Ok(k) => match k.as_slice().first() {
+            Some(&k) => k,
+            None => return PropagatingProcess::from_error(custom("the mean curvature is empty")),
+        },
+        Err(e) => return PropagatingProcess::from_error(e.into()),
     };
     println!("  Mean curvature K:        {}", mean_curv);
     println!();
 
     input.h_constraint = h_constraint;
 
-    CausalEffectPropagationProcess::pure(input)
+    proceed(input, spacetime)
 }
 
 // =============================================================================
@@ -417,13 +488,18 @@ fn stage_adm_formalism(mut input: SpaceTimeData, _: (), _: Option<()>) -> SpaceT
 fn stage_event_horizon_detection(
     input: SpaceTimeData,
     _: (),
-    _: Option<()>,
-) -> PropagatingEffect<GRState> {
+    spacetime: Option<SchwarzschildContext>,
+) -> SpaceTimeProcess<GRState> {
+    let Some(spacetime) = spacetime else {
+        return missing_spacetime();
+    };
     println!("Stage 5: Horizon Detection");
     println!("──────────────────────────");
 
-    let r = input.r;
-    let r_s = input.r_s;
+    let (r, r_s) = match radii(&spacetime) {
+        Ok(radii) => radii,
+        Err(e) => return PropagatingProcess::from_error(e),
+    };
     let inside_horizon = r < r_s;
     let in_photon_sphere = r < PHOTON_SPHERE_RADII * r_s;
     let in_isco = r < ISCO_RADII * r_s;
@@ -473,7 +549,65 @@ fn stage_event_horizon_detection(
         time_dilation,
     };
 
-    CausalEffectPropagationProcess::pure(state)
+    proceed(state, spacetime)
+}
+
+// =============================================================================
+// CONTEXT: the central body and the observer
+// =============================================================================
+
+/// Builds the spacetime's world facts: each as a `Data` contextoid at its node index.
+fn schwarzschild_spacetime() -> Result<SchwarzschildContext, ContextIndexError> {
+    let mut facts = [ZERO; SPACETIME_FACTS];
+    facts[CENTRAL_MASS] = const_scalar_from_int!(FloatType, 10);
+    facts[OBSERVATION_RADIUS] = const_scalar_from_int!(FloatType, 3);
+
+    let mut spacetime = Context::with_capacity(1, "Schwarzschild black hole", SPACETIME_FACTS);
+    for (id, value) in (1..).zip(facts) {
+        spacetime.add_node(Contextoid::new(
+            id,
+            ContextoidType::Datoid(Data::new(id, value)),
+        ))?;
+    }
+    Ok(spacetime)
+}
+
+/// Reads one world fact out of the spacetime, or the error naming the node that holds none.
+fn read(spacetime: &SchwarzschildContext, index: usize) -> Result<FloatType, CausalityError> {
+    spacetime
+        .get_node(index)
+        .and_then(|node| node.vertex_type().dataoid())
+        .map(|data| data.get_data())
+        .ok_or_else(|| custom(format!("the spacetime holds no Datoid at node {index}")))
+}
+
+/// The observation radius `r` and the Schwarzschild radius `r_s`, in metres, of the central
+/// body and observer the context holds.
+fn radii(spacetime: &SchwarzschildContext) -> Result<(FloatType, FloatType), CausalityError> {
+    let mass_kg: FloatType = read(spacetime, CENTRAL_MASS)? * SOLAR_MASS_KG;
+    let r_s: FloatType = GR::schwarzschild_radius(mass_kg); // kg → geometric units
+    Ok((read(spacetime, OBSERVATION_RADIUS)? * r_s, r_s))
+}
+
+/// Hands `value` and the spacetime on to the next stage.
+fn proceed<T>(value: T, spacetime: SchwarzschildContext) -> SpaceTimeProcess<T>
+where
+    T: Default + Clone + core::fmt::Debug,
+{
+    PropagatingProcess::with_state(PropagatingEffect::pure(value), (), Some(spacetime))
+}
+
+/// The error a stage short-circuits with when the flow carries no spacetime.
+fn missing_spacetime<T>() -> SpaceTimeProcess<T>
+where
+    T: Default + Clone + core::fmt::Debug,
+{
+    PropagatingProcess::from_error(custom("the flow carries no spacetime"))
+}
+
+/// A stage failure, as the pipeline's error.
+fn custom(reason: impl Into<String>) -> CausalityError {
+    CausalityError::new(CausalityErrorEnum::Custom(reason.into()))
 }
 
 // =============================================================================
@@ -481,7 +615,7 @@ fn stage_event_horizon_detection(
 // =============================================================================
 
 /// Prints the final pipeline summary.
-fn print_summary(result: &PropagatingEffect<GRState>) {
+fn print_summary(result: &SpaceTimeProcess<GRState>) {
     println!("═══════════════════════════════════════════════════════════════");
     println!("  Pipeline Summary");
     println!("═══════════════════════════════════════════════════════════════");

@@ -19,7 +19,8 @@ The probe falls towards a supermassive black hole of Sgr A*'s mass, halving its 
 
 ## Key Concepts
 
-*   **Regime Switching**: Each step runs as a stateful `CausalFlow` that carries the probe state and the black-hole mass and picks the physics from the distance.
+*   **Regime Switching**: Each step runs as a stateful `CausalFlow` whose state is the probe and whose context is the black hole, and picks the physics from the distance.
+*   **Context**: The approach scenario is a `Context` of `Data` contextoids: the black hole's mass, the regime threshold of 10 $R_s$, and the probe's start distance (100 $R_s$) and mass. The probe's initial state is built from it, and the step derives $R_s$, the escape velocity and the potential from it. The step fractions and the horizon tolerance are the run's stepping scheme and stay with the run.
 *   **Automatic Differentiation**: The gravitational acceleration and tidal gradient are the first and second derivatives of the potential $\Phi(r) = -GM/r$.
 *   **Geometric Algebra**: Computes the relativistic rapidity without coordinates.
 *   **Causal Chain**: State -> Distance Check -> Physics Kernel Selection -> State Update.
