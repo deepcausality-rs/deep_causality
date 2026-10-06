@@ -48,7 +48,14 @@ where
     /// attachment under that identifier is `Identity`, because the store's container and the
     /// local graph would share one identifier. Node and edge events name nodes, whose identifiers
     /// are the store's, and apply to every graph holding the node, local extras included.
+    ///
+    /// While the base graph is frozen, an event that would change it is
+    /// `ProjectionError::Frozen` and changes nothing. An event that leaves the base graph as it is,
+    /// such as the echo of a write the context already holds or an event for an extra, applies.
     pub fn apply(&mut self, event: &ContextEvent) -> Result<(), ProjectionError> {
+        if self.base_context.is_frozen() && self.changes_base(event) {
+            return Err(ProjectionError::Frozen(self.id));
+        }
         match event {
             ContextEvent::NodeCreated(_) | ContextEvent::ContextCreated(_) => Ok(()),
             ContextEvent::NodeLinked {
@@ -125,6 +132,47 @@ where
                 self.drop_extra(*id);
                 Ok(())
             }
+        }
+    }
+
+    /// Whether applying `event` would add or remove a node or an edge of the base graph.
+    fn changes_base(&self, event: &ContextEvent) -> bool {
+        let index = |id: &ContextoidId| self.id_to_index_map.get(id).copied();
+        let edge_between = |from: &ContextoidId, to: &ContextoidId| match (index(from), index(to)) {
+            (Some(a), Some(b)) => Some(self.base_context.contains_edge(a, b)),
+            _ => None,
+        };
+        match event {
+            ContextEvent::NodeLinked {
+                context,
+                node,
+                edges,
+            }
+            | ContextEvent::NodeEntered {
+                context,
+                node,
+                edges,
+            } => {
+                *context == self.id
+                    && (index(&node.id()).is_none()
+                        || edges
+                            .iter()
+                            .any(|edge| edge_between(&edge.from(), &edge.to()) == Some(false)))
+            }
+            ContextEvent::NodeUnlinked { context, node }
+            | ContextEvent::NodeLeft { context, node } => {
+                *context == self.id && index(node).is_some()
+            }
+            ContextEvent::NodeRetracted(id) => index(id).is_some(),
+            ContextEvent::EdgeCreated(edge) => {
+                edge_between(&edge.from(), &edge.to()) == Some(false)
+            }
+            ContextEvent::EdgeRetracted { from, to } => edge_between(from, to) == Some(true),
+            ContextEvent::NodeCreated(_)
+            | ContextEvent::ContextCreated(_)
+            | ContextEvent::ContextAttached { .. }
+            | ContextEvent::ContextDetached { .. }
+            | ContextEvent::ContextRetracted(_) => false,
         }
     }
 

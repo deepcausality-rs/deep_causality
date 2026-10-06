@@ -4,8 +4,8 @@
  */
 
 use deep_causality_context::{
-    BaseContext, BaseContextoid, Context, Contextoid, ContextoidType, ExtendableContextuableGraph,
-    Identifiable, RelationKind, Root,
+    BaseContext, BaseContextoid, Context, Contextoid, ContextoidType, ContextuableGraph,
+    ExtendableContextuableGraph, Identifiable, RelationKind, Root,
 };
 
 // Helper to create a default context for tests.
@@ -432,4 +432,33 @@ fn test_debug_impl() {
         context.id()
     );
     assert!(debug_string.starts_with(&expected_prefix));
+}
+
+#[test]
+fn test_extra_ctx_add_node_refuses_a_duplicate_id() {
+    let mut context = get_context();
+    context.add_node(get_contextoid(7)).unwrap();
+    context
+        .extra_ctx_add_new_with_id(1, "first", 10, true)
+        .unwrap();
+    let held = context.extra_ctx_add_node(get_contextoid(7)).unwrap();
+
+    let err = context.extra_ctx_add_node(get_contextoid(7)).unwrap_err();
+    assert!(
+        err.to_string()
+            .contains("ID 7 is already in extra context 1"),
+        "{err}"
+    );
+    assert_eq!(context.extra_ctx_node_count().unwrap(), 1);
+
+    // Ids are unique per graph: a second extra holds the same id.
+    context
+        .extra_ctx_add_new_with_id(2, "second", 10, true)
+        .unwrap();
+    assert!(context.extra_ctx_add_node(get_contextoid(7)).is_ok());
+
+    // A removed node frees its id.
+    context.extra_ctx_set_current_id(1).unwrap();
+    context.extra_ctx_remove_node(held).unwrap();
+    assert!(context.extra_ctx_add_node(get_contextoid(7)).is_ok());
 }

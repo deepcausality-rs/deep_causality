@@ -3,9 +3,10 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Contextoid, Datable, RelationKind, SpaceTemporal, Spatial, Temporal};
+use crate::{Contextoid, ContextoidId, Datable, RelationKind, SpaceTemporal, Spatial, Temporal};
 use alloc::{string::String, string::ToString};
-use ultragraph::UltraGraphWeighted;
+use deep_causality_core::Identifiable;
+use ultragraph::{GraphView, UltraGraphWeighted};
 
 /// One extra context: its name, its graph, and whether its identifier is the store's.
 ///
@@ -48,5 +49,15 @@ where
             stored: true,
             ..Self::new(name, capacity)
         }
+    }
+
+    /// Whether a live node carries `id`, by a scan of the graph: an extra keeps no id map.
+    pub(super) fn holds(&self, id: ContextoidId) -> bool {
+        let end = self.graph.get_last_index().map_or(0, |last| last + 1);
+        (0..end).any(|index| {
+            self.graph
+                .get_node(index)
+                .is_some_and(|node| node.id() == id)
+        })
     }
 }

@@ -24,7 +24,9 @@ use core::fmt::Display;
 /// across elements and local finiteness are properties of the whole set, which one element cannot
 /// see; whoever builds the set keeps them.
 ///
-/// This type is not a `Context` node type: it implements none of the coordinate or time traits.
+/// It implements none of the coordinate or time traits, so it cannot fill a `Context`'s spacetime
+/// slot. A context carries it in its data slot instead, as `Data<CausalSetSpacetime>`. The
+/// [`Default`] element has id 0, no label and an empty past, which keeps irreflexivity.
 ///
 /// # Example
 /// ```
@@ -63,7 +65,7 @@ use core::fmt::Display;
 /// - Sorkin, R. D. (2003). Causal Sets: Discrete Gravity (Notes for the Valdivia Summer School).
 ///   arXiv:gr-qc/0309009, p. 5. Copy:
 ///   `papers/sorkin_2003_causal_sets_discrete_gravity_arXiv_gr-qc_0309009.pdf`.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, Default, PartialEq)]
 pub struct CausalSetSpacetime {
     /// Unique event identifier
     id: ContextoidId,
