@@ -23,6 +23,10 @@ use deep_causality_algebra::RealField;
 /// (Carroll 1997, §1, after eq. (1.4)). The frame-independent quantity is the interval, which
 /// [`MinkowskiSpacetime`](crate::MinkowskiSpacetime) computes.
 ///
+/// A translation `x^μ → x^μ + a^μ` leaves the interval unchanged (Carroll 1997, eq. (1.10)), so
+/// the zero of `t` is a choice. [`Adjustable`](crate::Adjustable) accepts any finite coordinate
+/// time, zero and negative included, and refuses NaN and infinity.
+///
 /// # Example
 /// ```rust
 /// use deep_causality_context::{Identifiable, MinkowskiTime, Temporal, TimeScale};

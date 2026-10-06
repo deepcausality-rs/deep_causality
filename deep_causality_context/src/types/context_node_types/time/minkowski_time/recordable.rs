@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::utils::lift_scalar::lift_scalar;
 use crate::{MinkowskiTime, Temporal};
 use deep_causality_algebra::RealField;
 use deep_causality_context_store::{ContextoidId, ProjectionError, Recordable, TimeRecord};
@@ -18,9 +19,9 @@ impl<R: RealField + Into<f64> + FromPrimitive> Recordable<TimeRecord> for Minkow
 
     fn from_record(id: ContextoidId, record: TimeRecord) -> Result<Self, ProjectionError> {
         match record {
-            TimeRecord::Minkowski { scale, value } => R::from_f64(value)
-                .map(|unit| MinkowskiTime::new(id, scale, unit))
-                .ok_or(ProjectionError::Scalar(id, value)),
+            TimeRecord::Minkowski { scale, value } => {
+                lift_scalar(id, value).map(|unit| MinkowskiTime::new(id, scale, unit))
+            }
             other => Err(ProjectionError::WrongVariant(
                 id,
                 "Minkowski",

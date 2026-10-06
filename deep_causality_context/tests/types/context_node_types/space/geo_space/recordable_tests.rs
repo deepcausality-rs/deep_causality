@@ -100,32 +100,35 @@ fn test_zero_and_negative_round_trip() {
 #[test]
 fn test_a_record_that_names_no_point_is_refused() {
     // A latitude past a pole, or a coordinate that is not finite, names no point on the ellipsoid,
-    // so the restore refuses the record rather than build a node the constructor would refuse.
+    // so the restore refuses the record rather than build a node the constructor would refuse. The
+    // refusal carries the constructor's message for the same coordinates, so each broken rule
+    // reads as its own.
     let records = [
-        (91.0, 13.4, 0.0),
-        (-90.5, 13.4, 0.0),
-        (f64::NAN, 13.4, 0.0),
-        (52.5, f64::INFINITY, 0.0),
-        (52.5, 13.4, f64::NEG_INFINITY),
+        ((91.0, 13.4, 0.0), "latitude"),
+        ((-90.5, 13.4, 0.0), "latitude"),
+        ((f64::NAN, 13.4, 0.0), "not finite"),
+        ((52.5, f64::INFINITY, 0.0), "not finite"),
+        ((52.5, 13.4, f64::NEG_INFINITY), "not finite"),
     ];
-    for (lat, lon, alt) in records {
+    let mut rules = Vec::new();
+    for ((lat, lon, alt), detail) in records {
+        let rule = GeoSpace::<f64>::new(4, lat, lon, alt, VerticalDatum::WGS84)
+            .expect_err("the fixture coordinates name no point")
+            .0;
+        assert!(rule.contains(detail), "{rule}");
         let record = SpaceRecord::Geo {
             lat,
             lon,
             alt,
             datum: VerticalDatum::WGS84,
         };
-        match GeoSpace::<f64>::from_record(4, record) {
-            Err(e) => assert!(
-                matches!(
-                    e.kind(),
-                    deep_causality_context_store::ProjectionErrorEnum::Rejected { id: 4, .. }
-                ),
-                "{e}"
-            ),
-            Ok(node) => panic!("restored a node that names no point: {node:?}"),
-        }
+        assert_eq!(
+            GeoSpace::<f64>::from_record(4, record),
+            Err(ProjectionError::Rejected(4, rule.clone()))
+        );
+        rules.push(rule);
     }
+    assert_ne!(rules[0], rules[2]);
 }
 
 #[test]

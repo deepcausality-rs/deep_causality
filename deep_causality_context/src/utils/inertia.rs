@@ -17,6 +17,12 @@ use deep_causality_algebra::RealField;
 ///   entries are below half that entry in magnitude, so its determinant is negative and it has one
 ///   positive and one negative eigenvalue.
 ///
+/// Every update is an entry times a bounded ratio, never a product of two entries: a 1×1 pivot
+/// `a_pp` subtracts `a_jp · (a_pk / a_pp)` from `a_jk`, with `|a_pk / a_pp| ≤ 2`; a 2×2 pivot at
+/// `a_pq = b` subtracts `a_jp · u_p + a_jq · u_q`, with `|u_p|, |u_q| < 2` because `|a_pp / b|` and
+/// `|a_qq / b|` are below 1/2 and `|a_pk / b|`, `|a_qk / b|` at most 1. A step therefore changes no
+/// entry by more than four times the largest remaining entry.
+///
 /// When every remaining entry is zero, the remaining eigenvalues are zero.
 ///
 /// Horn, R. A., & Johnson, C. R. (2013). *Matrix Analysis*, 2nd ed. Cambridge University Press.
@@ -57,23 +63,27 @@ pub(crate) fn inertia<R: RealField>(m: &[[R; 4]; 4]) -> (usize, usize, usize) {
             active[p] = false;
             for j in (0..4).filter(|&j| active[j]) {
                 for k in (0..4).filter(|&k| active[k]) {
-                    a[j][k] -= a[j][p] * a[p][k] / a[p][p];
+                    a[j][k] -= a[j][p] * (a[p][k] / a[p][p]);
                 }
             }
         } else {
             let (p, q) = big_at;
-            let det = a[p][p] * a[q][q] - a[p][q] * a[p][q];
+            let b = a[p][q];
+            let (alpha, beta) = (a[p][p] / b, a[q][q] / b);
+            let d = alpha * beta - R::one();
             positive += 1;
             negative += 1;
             active[p] = false;
             active[q] = false;
             for j in (0..4).filter(|&j| active[j]) {
                 for k in (0..4).filter(|&k| active[k]) {
-                    // a[j][k] − [a_jp a_jq] B⁻¹ [a_pk a_qk]ᵀ with B⁻¹ = [[a_qq, −a_pq], [−a_pq, a_pp]] / det.
-                    let correction = (a[j][p] * (a[q][q] * a[p][k] - a[p][q] * a[q][k])
-                        + a[j][q] * (a[p][p] * a[q][k] - a[p][q] * a[p][k]))
-                        / det;
-                    a[j][k] -= correction;
+                    // a_jk − [a_jp a_jq] B⁻¹ [a_pk a_qk]ᵀ for B = [[a_pp, b], [b, a_qq]].
+                    // B⁻¹ = [[a_qq, −b], [−b, a_pp]] / (a_pp a_qq − b²). Dividing numerator and
+                    // denominator by b² leaves ratios to b only: B⁻¹ [a_pk a_qk]ᵀ = [u_p u_q]ᵀ.
+                    let (r_p, r_q) = (a[p][k] / b, a[q][k] / b);
+                    let u_p = (beta * r_p - r_q) / d;
+                    let u_q = (alpha * r_q - r_p) / d;
+                    a[j][k] -= a[j][p] * u_p + a[j][q] * u_q;
                 }
             }
         }

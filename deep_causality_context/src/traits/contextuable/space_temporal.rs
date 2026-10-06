@@ -13,11 +13,12 @@ use deep_causality_num::{FromPrimitive, lift};
 
 /// An event of a spacetime: a node with a position and a time.
 ///
-/// Every spacetime of this crate indexes its coordinates `0 => t, 1 => x, 2 => y, 3 => z`, the
-/// order `x⁰ = ct, x¹ = x, x² = y, x³ = z` of Carroll 1997, eq. (1.5). `t()` is the time
-/// coordinate, counted in the unit [`Temporal::time_scale`] names. What the time means is set by
-/// the geometry: absolute time in a classical spacetime, the coordinate time of a frame in a
-/// relativistic one. [`MetricSignature`] reports which.
+/// Every four-dimensional spacetime of this crate indexes its coordinates
+/// `0 => t, 1 => x, 2 => y, 3 => z`, the order of Carroll 1997, eq. (1.5), with `t` at index 0
+/// where Carroll places `x⁰ = ct`. `t()` is the time coordinate, counted in the unit
+/// [`Temporal::time_scale`] names. What the time means is set by the geometry: absolute time in a
+/// classical spacetime, the coordinate time of a frame in a relativistic one. [`MetricSignature`]
+/// reports which. [`NoSpaceTime`](crate::NoSpaceTime) has zero coordinates, and its `t()` is `()`.
 pub trait SpaceTemporal: Identifiable + Spatial + Temporal + MetricSignature {
     /// The time coordinate, coordinate 0.
     fn t(&self) -> &Self::TimeUnit;

@@ -3,6 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality_context::utils_test::test_utils_array_grid::{
+    ARRAY_TYPES, get_slots_array_grid,
+};
 use deep_causality_context::*;
 use deep_causality_data_structures::{ArrayGrid, ArrayType, PointIndex};
 
@@ -116,4 +119,34 @@ fn test_adjust_z_not_finite() {
 
     let result = space.adjust(&grid);
     assert!(result.is_err());
+}
+
+#[test]
+fn test_update_replaces_x_y_z_with_grid_positions_0_to_2_of_every_grid() {
+    for array_type in ARRAY_TYPES {
+        let mut space = EuclideanSpace::new(1, 1.0, 2.0, 3.0);
+        let grid = get_slots_array_grid(array_type, [10.0, 20.0, 30.0]);
+
+        assert!(space.update(&grid).is_ok(), "{array_type:?}");
+        assert_eq!(
+            [space.x(), space.y(), space.z()],
+            [10.0, 20.0, 30.0],
+            "{array_type:?}"
+        );
+    }
+}
+
+#[test]
+fn test_adjust_adds_grid_positions_0_to_2_of_every_grid_to_x_y_z() {
+    for array_type in ARRAY_TYPES {
+        let mut space = EuclideanSpace::new(1, 1.0, 2.0, 3.0);
+        let grid = get_slots_array_grid(array_type, [10.0, 20.0, 30.0]);
+
+        assert!(space.adjust(&grid).is_ok(), "{array_type:?}");
+        assert_eq!(
+            [space.x(), space.y(), space.z()],
+            [11.0, 22.0, 33.0],
+            "{array_type:?}"
+        );
+    }
 }

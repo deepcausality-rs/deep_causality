@@ -4,13 +4,10 @@
  */
 
 use crate::EuclideanSpace;
+use crate::utils::lift_scalar::lift_scalar;
 use deep_causality_algebra::RealField;
 use deep_causality_context_store::{ContextoidId, ProjectionError, Recordable, SpaceRecord};
 use deep_causality_num::FromPrimitive;
-
-fn lift<R: FromPrimitive>(id: ContextoidId, value: f64) -> Result<R, ProjectionError> {
-    R::from_f64(value).ok_or(ProjectionError::Scalar(id, value))
-}
 
 impl<R: RealField + Into<f64> + FromPrimitive> Recordable<SpaceRecord> for EuclideanSpace<R> {
     fn to_record(&self) -> Result<SpaceRecord, ProjectionError> {
@@ -25,9 +22,9 @@ impl<R: RealField + Into<f64> + FromPrimitive> Recordable<SpaceRecord> for Eucli
         match record {
             SpaceRecord::Euclidean { x, y, z } => Ok(EuclideanSpace::new(
                 id,
-                lift(id, x)?,
-                lift(id, y)?,
-                lift(id, z)?,
+                lift_scalar(id, x)?,
+                lift_scalar(id, y)?,
+                lift_scalar(id, z)?,
             )),
             other => Err(ProjectionError::WrongVariant(
                 id,

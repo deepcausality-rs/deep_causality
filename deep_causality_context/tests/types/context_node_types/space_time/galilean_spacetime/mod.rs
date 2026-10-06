@@ -7,3 +7,5 @@ mod galilean_spacetime_tests;
 mod metric_signature_tests;
 #[cfg(test)]
 mod recordable_tests;
+#[cfg(test)]
+mod simultaneity_tests;

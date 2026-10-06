@@ -24,6 +24,10 @@ use deep_causality_algebra::RealField;
 /// classical spacetime (Malament 2012, §4.1). The difference of two `NewtonianTime` values in one
 /// scale is that duration.
 ///
+/// Galilean spacetime is an affine space of events (Weatherall 2021, §3), so no instant is
+/// distinguished and the zero of the scale is a choice. [`Adjustable`](crate::Adjustable) accepts
+/// any finite instant, zero and negative included, and refuses NaN and infinity.
+///
 /// The coordinate time of an inertial frame of Minkowski spacetime is a different quantity: it
 /// depends on the frame. That is [`MinkowskiTime`](crate::MinkowskiTime).
 ///

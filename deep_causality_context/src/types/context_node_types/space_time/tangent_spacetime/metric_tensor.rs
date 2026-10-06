@@ -4,7 +4,7 @@
  */
 
 use crate::utils::inertia::inertia;
-use crate::{MetricTensor4D, TangentSpacetime, UpdateError};
+use crate::{MetricTensor4D, MetricTensorError, TangentSpacetime};
 use deep_causality_algebra::RealField;
 
 impl<R: RealField> MetricTensor4D for TangentSpacetime<R> {
@@ -16,27 +16,25 @@ impl<R: RealField> MetricTensor4D for TangentSpacetime<R> {
     /// signature (−, +, +, +): one negative and three positive eigenvalues, none zero.
     ///
     /// # Errors
-    /// [`UpdateError`] naming the rule broken, leaving the tensor unchanged.
-    fn update_metric_tensor(&mut self, new_metric: [[R; 4]; 4]) -> Result<(), UpdateError> {
-        if new_metric.iter().flatten().any(|v| !v.is_finite()) {
-            return Err(UpdateError(
-                "metric tensor has an entry that is not finite".into(),
-            ));
+    /// [`MetricTensorError`] naming the first rule broken, checked in that order, leaving the
+    /// tensor unchanged.
+    fn update_metric_tensor(&mut self, new_metric: [[R; 4]; 4]) -> Result<(), MetricTensorError> {
+        let entries = (0..4).flat_map(|i| (0..4).map(move |j| (i, j)));
+        if let Some((i, j)) = entries
+            .clone()
+            .find(|&(i, j)| !new_metric[i][j].is_finite())
+        {
+            return Err(MetricTensorError::NonFinite(i, j));
         }
-        let asymmetric = (0..4)
-            .flat_map(|i| ((i + 1)..4).map(move |j| (i, j)))
-            .find(|&(i, j)| new_metric[i][j] != new_metric[j][i]);
-        if let Some((i, j)) = asymmetric {
-            return Err(UpdateError(alloc::format!(
-                "metric tensor is not symmetric: g[{i}][{j}] differs from g[{j}][{i}]"
-            )));
+        if let Some((i, j)) = entries
+            .filter(|&(i, j)| i < j)
+            .find(|&(i, j)| new_metric[i][j] != new_metric[j][i])
+        {
+            return Err(MetricTensorError::Asymmetric(i, j));
         }
         let (positive, negative, zero) = inertia(&new_metric);
         if (positive, negative, zero) != (3, 1, 0) {
-            return Err(UpdateError(alloc::format!(
-                "metric tensor is not of signature (−, +, +, +): {positive} positive, {negative} \
-                 negative and {zero} zero eigenvalues"
-            )));
+            return Err(MetricTensorError::Signature(positive, negative, zero));
         }
         self.metric = new_metric;
         Ok(())

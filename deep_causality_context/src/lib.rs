@@ -104,7 +104,6 @@ pub use crate::types::context_node_types::space_time::space_time_kind::SpaceTime
 pub use crate::types::context_node_types::space_time::tangent_spacetime::TangentSpacetime;
 // Symbolic spacetime context node types.
 pub use crate::types::context_node_types::space_time::causal_set_spacetime::CausalSetSpacetime;
-pub use crate::types::context_node_types::space_time::conformal_spacetime::ConformalSpacetime;
 // Time context node types.
 pub use crate::types::context_node_types::time::discrete_time::DiscreteTime;
 pub use crate::types::context_node_types::time::entropic_time::EntropicTime;

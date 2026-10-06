@@ -3,6 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality_context::utils_test::test_utils_array_grid::{
+    ARRAY_TYPES, get_slots_array_grid,
+};
 use deep_causality_context::*;
 use deep_causality_data_structures::{ArrayGrid, ArrayType, PointIndex};
 
@@ -112,4 +115,19 @@ fn test_tangent_spacetime_adjust_invalid_t_nan() {
 
     let result = s.adjust(&grid);
     assert!(result.is_err());
+}
+
+#[test]
+fn test_tangent_spacetime_adjust_adds_grid_positions_0_to_3_of_every_grid_to_t_x_y_z() {
+    for array_type in ARRAY_TYPES {
+        let mut s = TangentSpacetime::new(1, 1.0, 2.0, 3.0, 4.0, 1.0, 0.1, 0.1, 0.1);
+        let grid = get_slots_array_grid(array_type, [40.0, 10.0, 20.0, 30.0]);
+
+        assert!(s.adjust(&grid).is_ok(), "{array_type:?}");
+        assert_eq!(
+            [s.time_unit(), s.x(), s.y(), s.z()],
+            [44.0, 11.0, 22.0, 33.0],
+            "{array_type:?}"
+        );
+    }
 }

@@ -22,6 +22,12 @@ impl<R: RealField + Default> Adjustable<R> for NewtonianTime<R> {
         // get the data at the index position
         let update_time = array_grid.get(p);
 
+        if !update_time.is_finite() {
+            return Err(UpdateError(
+                "Update failed, new time is not a finite value".into(),
+            ));
+        }
+
         // Update the internal time to the new time
         self.time_unit = update_time;
 
@@ -42,13 +48,6 @@ impl<R: RealField + Default> Adjustable<R> for NewtonianTime<R> {
             return Err(AdjustmentError("Adjustment failed, time is NaN".into()));
         }
 
-        // Check if the new time is non-negative. Unless you want to go back in time...
-        if time_adjustment < R::zero() {
-            return Err(AdjustmentError(
-                "Adjustment failed, new time is NEGATIVE".into(),
-            ));
-        }
-
         // Calculate the data adjustment
         let adjusted_time = self.time_unit + time_adjustment;
 
@@ -56,13 +55,6 @@ impl<R: RealField + Default> Adjustable<R> for NewtonianTime<R> {
         if !adjusted_time.is_finite() {
             return Err(AdjustmentError(
                 "Adjustment failed, result is not finite (NaN or Inf)".into(),
-            ));
-        }
-
-        // Check if the new time is non-zero
-        if adjusted_time == R::zero() {
-            return Err(AdjustmentError(
-                "Adjustment failed, new time is ZERO".into(),
             ));
         }
 

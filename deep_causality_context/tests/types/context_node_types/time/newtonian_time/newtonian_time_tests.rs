@@ -34,7 +34,7 @@ fn test_scalar_projector_trait() {
 }
 
 #[test]
-fn test_from_euclidean_time_to_time_kind() {
+fn test_from_newtonian_time_to_time_kind() {
     let time = NewtonianTime::new(1, TimeScale::Second, 3.00);
     let kind: TimeKind<FloatType> = time.into();
 

@@ -39,10 +39,15 @@ fn start(ctx: BaseContext) -> PropagatingProcess<f64, (), BaseContext> {
 * `Contextoid` / `ContextoidType` — the nodes it holds.
 * Context node types — `Data`, `Root`, and the space, time and spacetime families:
   `EuclideanSpace`, `EcefSpace`, `NedSpace` and `GeoSpace`; `NewtonianTime`, `MinkowskiTime`,
-  `DiscreteTime` and `EntropicTime`; `GalileanSpacetime`, `NewtonianSpacetime`,
-  `MinkowskiSpacetime` and `TangentSpacetime`; and `NoSpace`, `NoTime` and `NoSpaceTime` for a slot
-  the context does not use. Each type documents the definition it follows and its source, with
-  copies of the open-access sources in `papers/`.
+  `DiscreteTime`, `EntropicTime` and `SymbolicTime`; `GalileanSpacetime`, `NewtonianSpacetime`,
+  `MinkowskiSpacetime` and `TangentSpacetime`; `SpaceKind`, `TimeKind` and `SpaceTimeKind`, enums
+  over the family's types (`TimeKind` leaves out `SymbolicTime`); and `NoSpace`, `NoTime` and
+  `NoSpaceTime` for a slot the context does not use. Each type in the geometry table below
+  documents the definition it follows and its source, with copies of the open-access sources in
+  `papers/`.
+* `CausalSetSpacetime`, an element of a causal set with the elements that precede it. It holds the
+  order alone and implements none of the coordinate or time traits, so it is not a context node
+  type.
 * `Contextuable`, `Datable`, `Spatial`, `Temporal`, `SpaceTemporal`, `Coordinate`, `Distance`,
   `MetricSignature`, `MetricTensor4D` and the indexable traits.
 * `Adjustable<T>` for nodes that update from an `ArrayGrid<T, ..>`, and `UncertainAdjustable` for
@@ -54,7 +59,7 @@ fn start(ctx: BaseContext) -> PropagatingProcess<f64, (), BaseContext> {
 
 ## Geometry
 
-Each space, time and spacetime type models one geometry, named as the cited source names it.
+Each type below models one geometry, named as the cited source names it.
 
 | Type | Geometry | Distance or interval | Source |
 |---|---|---|---|
@@ -70,12 +75,15 @@ Each space, time and spacetime type models one geometry, named as the cited sour
 | `TangentSpacetime` | An event of a relativistic spacetime with a tangent vector and the metric tensor there | `g_ab Δxᵃ Δxᵇ` under the event's own tensor | Malament 2012, §2.1; Poisson, Pound & Vega 2011, §3.1 |
 | `CausalSetSpacetime` | An element of a causal set and its past | — | Sorkin 2003, p. 5 |
 
-Every spacetime indexes its coordinates `0 => t, 1 => x, 2 => y, 3 => z`, the order `x⁰ = ct` of
-Carroll 1997, eq. (1.5), and reports through `MetricSignature` the signature of the metric it
-measures with, generator `i` its coordinate `i`: `Metric::Lorentzian(4)` for the relativistic
-types, and `Metric::PGA(4)`, the spatial metric's (0, +, +, +), for the classical ones.
-`TangentSpacetime::update_metric_tensor` accepts only a symmetric tensor of signature
-(−, +, +, +), counted exactly by Sylvester's law of inertia (Horn & Johnson 2013, Theorem 4.5.8).
+`GalileanSpacetime`, `NewtonianSpacetime`, `MinkowskiSpacetime` and `TangentSpacetime` index their
+coordinates `0 => t, 1 => x, 2 => y, 3 => z`, the order of Carroll 1997, eq. (1.5), with `t` at
+index 0 where Carroll places `x⁰ = ct`. Each reports through `MetricSignature` the signature of the
+metric it measures with, generator `i` its coordinate `i`: `Metric::Lorentzian(4)` for the
+relativistic types, and `Metric::PGA(4)`, the spatial metric's (0, +, +, +), for the classical ones.
+`CausalSetSpacetime` has no coordinates, no time and no signature: it holds the order alone.
+`TangentSpacetime::update_metric_tensor` accepts only a finite, symmetric tensor of signature
+(−, +, +, +). It counts the signs of the eigenvalues by symmetric block elimination, which keeps
+them by Sylvester's law of inertia (Horn & Johnson 2013, Theorem 4.5.8).
 
 `NoSpace`, `NoTime` and `NoSpaceTime` fill the spatial, temporal and spacetime slots of a context
 whose graph holds no node of that kind.

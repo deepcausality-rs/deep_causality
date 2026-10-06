@@ -96,7 +96,7 @@ const INTERVAL_TABLE: [(FloatType, FloatType, FloatType, FloatType, FloatType); 
     (0.0, 1.0, 2.0, 3.0, 14.0),
 ];
 
-fn lorentzian_pair(
+fn minkowski_pair(
     dt: FloatType,
     dx: FloatType,
     dy: FloatType,
@@ -110,7 +110,7 @@ fn lorentzian_pair(
 #[test]
 fn test_interval_squared_matches_the_closed_form() {
     for (dt, dx, dy, dz, expected) in INTERVAL_TABLE {
-        let (a, b) = lorentzian_pair(dt, dx, dy, dz);
+        let (a, b) = minkowski_pair(dt, dx, dy, dz);
         let got = a.interval_squared(&b);
 
         // Relative, because the two terms are near 1e17 and cancel: a few ULP of the operands is
@@ -139,7 +139,7 @@ fn test_interval_squared_uses_all_three_spatial_axes() {
     ];
 
     for (dx, dy, dz, expected) in rows {
-        let (a, b) = lorentzian_pair(0.0, dx, dy, dz);
+        let (a, b) = minkowski_pair(0.0, dx, dy, dz);
         assert_eq!(a.interval_squared(&b), expected, "for ({dx}, {dy}, {dz})");
     }
 }
@@ -148,7 +148,7 @@ fn test_interval_squared_uses_all_three_spatial_axes() {
 fn test_interval_squared_is_symmetric_in_its_operands() {
     // Only squared differences enter, so swapping the two events cannot change the answer.
     for (dt, dx, dy, dz, _) in INTERVAL_TABLE {
-        let (a, b) = lorentzian_pair(dt, dx, dy, dz);
+        let (a, b) = minkowski_pair(dt, dx, dy, dz);
         assert_eq!(a.interval_squared(&b), b.interval_squared(&a));
     }
 }

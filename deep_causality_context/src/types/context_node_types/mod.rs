@@ -6,7 +6,8 @@
 //! # Context node types
 //!
 //! The data, space, time and spacetime types a `Context` holds, grouped by the geometry each
-//! models. Every spacetime indexes its coordinates `0 => t, 1 => x, 2 => y, 3 => z`.
+//! models. Every four-dimensional spacetime indexes its coordinates
+//! `0 => t, 1 => x, 2 => y, 3 => z`; `NoSpaceTime` has zero coordinates.
 //!
 //! | Geometry | Space | Time | Spacetime |
 //! |---|---|---|---|
@@ -17,10 +18,12 @@
 //! | Counted steps | — | `DiscreteTime`, `EntropicTime` | — |
 //! | Nothing of that kind | `NoSpace` | `NoTime` | `NoSpaceTime` |
 //!
-//! `SpaceKind`, `TimeKind` and `SpaceTimeKind` hold any variant of their slot, so one context can
-//! carry nodes of several geometries; each spacetime node reports its own signature through
-//! `MetricSignature`. `CausalSetSpacetime` and `ConformalSpacetime` record a causal order between
-//! identifiers and are not context node types.
+//! `SpaceKind` holds a `EuclideanSpace`, `EcefSpace`, `NedSpace` or `GeoSpace`; `TimeKind` a
+//! `NewtonianTime`, `MinkowskiTime`, `DiscreteTime` or `EntropicTime`; `SpaceTimeKind` a
+//! `GalileanSpacetime`, `NewtonianSpacetime`, `MinkowskiSpacetime` or `TangentSpacetime`. A
+//! context over these enums carries nodes of several geometries, and each spacetime node reports
+//! its own signature through `MetricSignature`. `CausalSetSpacetime` records a causal order
+//! between identifiers and is not a context node type.
 //!
 //! Each type documents its definition and the textbook or standard it follows.
 

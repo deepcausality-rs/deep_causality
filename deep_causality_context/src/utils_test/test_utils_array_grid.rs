@@ -24,3 +24,32 @@ pub fn get_1d_array_grid(val: i32) -> AdjustmentData {
 
     ag
 }
+
+/// The four grid dimensionalities, 1D to 4D.
+pub const ARRAY_TYPES: [ArrayType; 4] = [
+    ArrayType::Array1D,
+    ArrayType::Array2D,
+    ArrayType::Array3D,
+    ArrayType::Array4D,
+];
+
+/// A 4×4×4×4 grid of `array_type` whose positions 0 to `N - 1` hold `values`. Position `k` is
+/// `PointIndex::new1d(k)` of a 1D grid, `PointIndex::new2d(k, 0)` of a 2D grid,
+/// `PointIndex::new3d(0, 0, k)` of a 3D grid and `PointIndex::new4d(0, 0, k, 0)` of a 4D grid.
+/// Every other entry is zero.
+pub fn get_slots_array_grid<const N: usize>(
+    array_type: ArrayType,
+    values: [f64; N],
+) -> ArrayGrid<f64, 4, 4, 4, 4> {
+    let grid = ArrayGrid::new(array_type);
+    values.iter().enumerate().for_each(|(k, &value)| {
+        let position = match array_type {
+            ArrayType::Array1D => PointIndex::new1d(k),
+            ArrayType::Array2D => PointIndex::new2d(k, 0),
+            ArrayType::Array3D => PointIndex::new3d(0, 0, k),
+            ArrayType::Array4D => PointIndex::new4d(0, 0, k, 0),
+        };
+        grid.set(position, value);
+    });
+    grid
+}

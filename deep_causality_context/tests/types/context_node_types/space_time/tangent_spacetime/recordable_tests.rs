@@ -8,12 +8,14 @@
 //!
 //! Corner cases (rows A to K): C every other `SpaceTimeRecord` variant refused,
 //! `test_every_other_variant_is_refused`; F/G zero and negative coordinates,
-//! `test_zero_and_negative_round_trip`; I non-finite, `test_non_finite_round_trips`; K `Float106`
+//! `test_zero_and_negative_round_trip`; I a non-finite coordinate round-trips,
+//! `test_non_finite_round_trips`, and a non-finite metric entry is refused,
+//! `test_a_record_whose_tensor_is_not_a_lorentzian_metric_is_refused`; K `Float106`
 //! narrows and `BFloat16` widens, `test_precision_is_spent_at_the_bound`; every other row n/a.
 //! The metric tensor is symmetric and Lorentzian, with every entry of its upper triangle distinct,
 //! so a misplaced or default metric is caught: `test_the_stored_metric_is_restored_not_the_default`.
 //! Its eigenvalues, from `numpy.linalg.eigvalsh`, are one negative and three positive.
-use deep_causality_context::{MetricTensor4D, TangentSpacetime, TimeScale};
+use deep_causality_context::{MetricTensor4D, MetricTensorError, TangentSpacetime, TimeScale};
 use deep_causality_context_store::{ProjectionError, Recordable, SpaceTimeRecord};
 use deep_causality_num::{BFloat16, Float106};
 
@@ -187,8 +189,10 @@ fn test_precision_is_spent_at_the_bound() {
 
 #[test]
 fn test_a_record_whose_tensor_is_not_a_lorentzian_metric_is_refused() {
-    // A record can hold any sixteen numbers; the restore accepts only a symmetric tensor of
-    // signature (−, +, +, +), the invariant every TangentSpacetime keeps.
+    // A record can hold any sixteen numbers; the restore accepts only a finite symmetric tensor of
+    // signature (−, +, +, +), the invariant every TangentSpacetime keeps. The refusal carries the
+    // message `update_metric_tensor` gives for the same tensor, so each broken rule reads as its
+    // own: a non-finite entry, the asymmetric pair, the eigenvalue count.
     let record = |metric: [[f64; 4]; 4]| SpaceTimeRecord::Tangent {
         t: 0.0,
         x: 0.0,
@@ -200,24 +204,28 @@ fn test_a_record_whose_tensor_is_not_a_lorentzian_metric_is_refused() {
         dz: 0.0,
         metric,
     };
+    let mut non_finite = metric();
+    non_finite[2][3] = f64::NAN;
     let mut asymmetric = metric();
-    asymmetric[0][1] = 9.0;
+    asymmetric[1][3] = 9.0;
     let riemannian = [
         [1.0, 0.0, 0.0, 0.0],
         [0.0, 1.0, 0.0, 0.0],
         [0.0, 0.0, 1.0, 0.0],
         [0.0, 0.0, 0.0, 1.0],
     ];
-    for bad in [asymmetric, riemannian] {
-        match TangentSpacetime::<f64>::from_record(6, record(bad)) {
-            Err(e) => assert!(
-                matches!(
-                    e.kind(),
-                    deep_causality_context_store::ProjectionErrorEnum::Rejected { id: 6, .. }
-                ),
-                "{e}"
-            ),
-            Ok(node) => panic!("restored a non-Lorentzian tensor: {node:?}"),
-        }
+    let cases = [
+        (non_finite, MetricTensorError::NonFinite(2, 3)),
+        (asymmetric, MetricTensorError::Asymmetric(1, 3)),
+        (riemannian, MetricTensorError::Signature(4, 0, 0)),
+    ];
+    for (bad, expected) in cases {
+        let refused = TangentSpacetime::<f64>::new(6, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)
+            .update_metric_tensor(bad);
+        assert_eq!(refused, Err(expected));
+        assert_eq!(
+            TangentSpacetime::<f64>::from_record(6, record(bad)),
+            Err(ProjectionError::Rejected(6, expected.to_string()))
+        );
     }
 }

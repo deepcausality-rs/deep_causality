@@ -54,15 +54,40 @@ fn test_update_and_adjust_over_1d_2d_4d_grids() {
 
     // 4D
     let grid: ArrayGrid<f64, 4, 4, 4, 4> = ArrayGrid::new(ArrayType::Array4D);
-    grid.set(PointIndex::new4d(0, 0, 0, 1), 5.0);
-    grid.set(PointIndex::new4d(0, 0, 0, 2), 6.0);
-    grid.set(PointIndex::new4d(0, 0, 0, 3), 7.0);
+    grid.set(PointIndex::new4d(0, 0, 1, 0), 5.0);
+    grid.set(PointIndex::new4d(0, 0, 2, 0), 6.0);
+    grid.set(PointIndex::new4d(0, 0, 3, 0), 7.0);
     grid.set(PointIndex::new4d(0, 0, 0, 0), 8.0);
     let mut s = MinkowskiSpacetime::new(1, 0.0, 0.0, 0.0, 0.0, TimeScale::Second);
     assert!(s.update(&grid).is_ok());
     assert_eq!(s.z(), 7.0);
     assert!(s.adjust(&grid).is_ok());
     assert_eq!(s.z(), 14.0);
+}
+
+#[test]
+fn test_update_and_adjust_read_a_4d_grid_along_z_not_along_t() {
+    let grid: ArrayGrid<f64, 4, 4, 4, 4> = ArrayGrid::new(ArrayType::Array4D);
+    grid.set(PointIndex::new4d(0, 0, 0, 0), 40.0); // t
+    grid.set(PointIndex::new4d(0, 0, 1, 0), 10.0); // x
+    grid.set(PointIndex::new4d(0, 0, 2, 0), 20.0); // y
+    grid.set(PointIndex::new4d(0, 0, 3, 0), 30.0); // z
+    // Positions 1 to 3 along the t axis, which neither method reads.
+    grid.set(PointIndex::new4d(0, 0, 0, 1), -1.0);
+    grid.set(PointIndex::new4d(0, 0, 0, 2), -2.0);
+    grid.set(PointIndex::new4d(0, 0, 0, 3), -3.0);
+
+    let mut s = MinkowskiSpacetime::new(1, 1.0, 2.0, 3.0, 4.0, TimeScale::Second);
+    assert!(s.update(&grid).is_ok());
+    assert_eq!(
+        [s.time_unit(), s.x(), s.y(), s.z()],
+        [40.0, 10.0, 20.0, 30.0]
+    );
+    assert!(s.adjust(&grid).is_ok());
+    assert_eq!(
+        [s.time_unit(), s.x(), s.y(), s.z()],
+        [80.0, 20.0, 40.0, 60.0]
+    );
 }
 
 #[test]

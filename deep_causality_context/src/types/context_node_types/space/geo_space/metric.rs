@@ -7,12 +7,14 @@ use crate::{Distance, GeoSpace, VerticalDatum};
 use deep_causality_algebra::RealField;
 use deep_causality_num::{FromPrimitive, lift};
 
-/// Degrees to radians.
+/// Degrees to radians, as `(degrees / 180) · π`.
 ///
 /// `RealField` carries no `to_radians`, so the conversion is written out. `R::pi()` is the
-/// working type's own constant, which keeps the result as exact as that type allows.
+/// working type's own constant, which keeps the result as exact as that type allows. Dividing
+/// first keeps the result finite for every finite `degrees`; the product `degrees · π` leaves the
+/// type's range once `|degrees|` exceeds its largest finite value divided by π.
 fn to_radians<R: RealField + FromPrimitive>(degrees: R) -> R {
-    degrees * R::pi() / lift(180.0)
+    degrees / lift(180.0) * R::pi()
 }
 
 /// Earth-centred Cartesian coordinates `[X, Y, Z]`, in metres, of a point with WGS 84 geodetic

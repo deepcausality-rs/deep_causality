@@ -3,14 +3,11 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::utils::lift_scalar::lift_scalar;
 use crate::{MinkowskiSpacetime, SpaceTemporal, Temporal};
 use deep_causality_algebra::RealField;
 use deep_causality_context_store::{ContextoidId, ProjectionError, Recordable, SpaceTimeRecord};
 use deep_causality_num::FromPrimitive;
-
-fn lift<R: FromPrimitive>(id: ContextoidId, value: f64) -> Result<R, ProjectionError> {
-    R::from_f64(value).ok_or(ProjectionError::Scalar(id, value))
-}
 
 impl<R: RealField + Into<f64> + FromPrimitive> Recordable<SpaceTimeRecord>
     for MinkowskiSpacetime<R>
@@ -29,10 +26,10 @@ impl<R: RealField + Into<f64> + FromPrimitive> Recordable<SpaceTimeRecord>
         match record {
             SpaceTimeRecord::Minkowski { t, x, y, z, scale } => Ok(MinkowskiSpacetime::new(
                 id,
-                lift(id, x)?,
-                lift(id, y)?,
-                lift(id, z)?,
-                lift(id, t)?,
+                lift_scalar(id, x)?,
+                lift_scalar(id, y)?,
+                lift_scalar(id, z)?,
+                lift_scalar(id, t)?,
                 scale,
             )),
             other => Err(ProjectionError::WrongVariant(

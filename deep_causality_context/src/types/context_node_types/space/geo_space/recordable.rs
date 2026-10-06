@@ -4,13 +4,10 @@
  */
 
 use crate::GeoSpace;
+use crate::utils::lift_scalar::lift_scalar;
 use deep_causality_algebra::RealField;
 use deep_causality_context_store::{ContextoidId, ProjectionError, Recordable, SpaceRecord};
 use deep_causality_num::FromPrimitive;
-
-fn lift<R: FromPrimitive>(id: ContextoidId, value: f64) -> Result<R, ProjectionError> {
-    R::from_f64(value).ok_or(ProjectionError::Scalar(id, value))
-}
 
 impl<R: RealField + Into<f64> + FromPrimitive> Recordable<SpaceRecord> for GeoSpace<R> {
     fn to_record(&self) -> Result<SpaceRecord, ProjectionError> {
@@ -31,17 +28,12 @@ impl<R: RealField + Into<f64> + FromPrimitive> Recordable<SpaceRecord> for GeoSp
                 datum,
             } => GeoSpace::new(
                 id,
-                lift(id, lat)?,
-                lift(id, lon)?,
-                lift(id, alt)?,
+                lift_scalar(id, lat)?,
+                lift_scalar(id, lon)?,
+                lift_scalar(id, alt)?,
                 datum,
             )
-            .map_err(|_| {
-                ProjectionError::Rejected(
-                    id,
-                    "a GeoSpace latitude must lie in [-90, 90] degrees and every coordinate be finite",
-                )
-            }),
+            .map_err(|e| ProjectionError::Rejected(id, e.0)),
             other => Err(ProjectionError::WrongVariant(id, "Geo", other.kind_name())),
         }
     }

@@ -2,6 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use deep_causality_context::utils_test::test_utils_array_grid::{
+    ARRAY_TYPES, get_slots_array_grid,
+};
 use deep_causality_context::{Adjustable, TangentSpacetime, Temporal};
 use deep_causality_data_structures::{ArrayGrid, ArrayType, PointIndex};
 
@@ -117,4 +120,19 @@ fn test_tangent_spacetime_update_invalid_t_nan() {
 
     let result = s.update(&grid);
     assert!(result.is_err());
+}
+
+#[test]
+fn test_tangent_spacetime_update_replaces_t_x_y_z_with_grid_positions_0_to_3_of_every_grid() {
+    for array_type in ARRAY_TYPES {
+        let mut s = TangentSpacetime::new(1, 1.0, 2.0, 3.0, 4.0, 1.0, 0.1, 0.1, 0.1);
+        let grid = get_slots_array_grid(array_type, [40.0, 10.0, 20.0, 30.0]);
+
+        assert!(s.update(&grid).is_ok(), "{array_type:?}");
+        assert_eq!(
+            [s.time_unit(), s.x(), s.y(), s.z()],
+            [40.0, 10.0, 20.0, 30.0],
+            "{array_type:?}"
+        );
+    }
 }

@@ -3,14 +3,12 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::utils::lift_scalar::lift_scalar;
 use crate::{MetricTensor4D, SpaceTemporal, TangentSpacetime};
+use alloc::string::ToString;
 use deep_causality_algebra::RealField;
 use deep_causality_context_store::{ContextoidId, ProjectionError, Recordable, SpaceTimeRecord};
 use deep_causality_num::FromPrimitive;
-
-fn lift<R: FromPrimitive>(id: ContextoidId, value: f64) -> Result<R, ProjectionError> {
-    R::from_f64(value).ok_or(ProjectionError::Scalar(id, value))
-}
 
 impl<R: RealField + Into<f64> + FromPrimitive> Recordable<SpaceTimeRecord> for TangentSpacetime<R> {
     fn to_record(&self) -> Result<SpaceTimeRecord, ProjectionError> {
@@ -44,27 +42,23 @@ impl<R: RealField + Into<f64> + FromPrimitive> Recordable<SpaceTimeRecord> for T
             } => {
                 let mut node = TangentSpacetime::new(
                     id,
-                    lift(id, x)?,
-                    lift(id, y)?,
-                    lift(id, z)?,
-                    lift(id, t)?,
-                    lift(id, dt)?,
-                    lift(id, dx)?,
-                    lift(id, dy)?,
-                    lift(id, dz)?,
+                    lift_scalar(id, x)?,
+                    lift_scalar(id, y)?,
+                    lift_scalar(id, z)?,
+                    lift_scalar(id, t)?,
+                    lift_scalar(id, dt)?,
+                    lift_scalar(id, dx)?,
+                    lift_scalar(id, dy)?,
+                    lift_scalar(id, dz)?,
                 );
                 let mut lifted = [[R::zero(); 4]; 4];
                 for (row, values) in lifted.iter_mut().zip(metric) {
                     for (cell, value) in row.iter_mut().zip(values) {
-                        *cell = lift(id, value)?;
+                        *cell = lift_scalar(id, value)?;
                     }
                 }
-                node.update_metric_tensor(lifted).map_err(|_| {
-                    ProjectionError::Rejected(
-                        id,
-                        "a TangentSpacetime metric tensor must be symmetric with signature (−, +, +, +)",
-                    )
-                })?;
+                node.update_metric_tensor(lifted)
+                    .map_err(|e| ProjectionError::Rejected(id, e.to_string()))?;
                 Ok(node)
             }
             other => Err(ProjectionError::WrongVariant(

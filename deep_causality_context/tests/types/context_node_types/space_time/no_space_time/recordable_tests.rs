@@ -58,6 +58,13 @@ fn test_reading_any_record_is_refused() {
         );
     }
     let spacetimes = [
+        SpaceTimeRecord::Galilean {
+            x: 1.0,
+            y: 2.0,
+            z: 3.0,
+            t: 4.0,
+            scale: TimeScale::Second,
+        },
         SpaceTimeRecord::Newtonian {
             x: 1.0,
             y: 2.0,

@@ -23,10 +23,11 @@ mod spatial;
 /// axes as `north = V`, `east = U`, `down = −W`, which is again right-handed: `down` is positive
 /// toward the Earth.
 ///
-/// The frame is Cartesian, so [`Distance`](crate::Distance) is the Euclidean norm of the
-/// coordinate difference, exactly. This type stores neither the origin nor which height axis was
-/// chosen, so relating a `NedSpace` to a geodetic or Earth-centred position needs both from the
-/// caller.
+/// [`Distance`](crate::Distance) returns the Euclidean norm of the coordinate difference. The
+/// frame is Cartesian, so for two points of the same NED frame that norm is their straight-line
+/// separation; for points of different frames it is not. This type stores neither the origin nor
+/// which height axis was chosen, so the caller tracks which points share a frame and supplies both
+/// to relate a `NedSpace` to a geodetic or Earth-centred position.
 ///
 /// # Coordinate index mapping
 /// - `0 => north`

@@ -3,12 +3,15 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::utils::grid_slots::grid_slots;
 use crate::{Adjustable, AdjustmentError, TangentSpacetime, UpdateError};
 use deep_causality_algebra::RealField;
-use deep_causality_data_structures::{ArrayGrid, PointIndex};
+use deep_causality_data_structures::ArrayGrid;
 
 /// Updates the event of the TangentSpacetime node. Grid positions 0 to 3 hold `t, x, y, z`, the
-/// coordinate order. The metric tensor is updated through
+/// coordinate order. Position `k` is `PointIndex::new1d(k)` of a 1D grid,
+/// `PointIndex::new2d(k, 0)` of a 2D grid, `PointIndex::new3d(0, 0, k)` of a 3D grid and
+/// `PointIndex::new4d(0, 0, k, 0)` of a 4D grid. The metric tensor is updated through
 /// [`MetricTensor4D::update_metric_tensor`](crate::MetricTensor4D::update_metric_tensor).
 // `Default` is not implied by `RealField`; `ArrayGrid<T, ..>` requires it to initialise
 // its backing array, so it is bounded here rather than on the struct.
@@ -17,17 +20,7 @@ impl<R: RealField + Default> Adjustable<R> for TangentSpacetime<R> {
         &mut self,
         array_grid: &ArrayGrid<R, W, H, D, C>,
     ) -> Result<(), UpdateError> {
-        // Create a 3D PointIndex for each of the updated x,y,z coordinates
-        let p1 = PointIndex::new3d(0, 0, 0);
-        let p2 = PointIndex::new3d(0, 0, 1);
-        let p3 = PointIndex::new3d(0, 0, 2);
-        let p4 = PointIndex::new3d(0, 0, 3);
-
-        // Get the data at the index position from the array grid
-        let new_t = array_grid.get(p1);
-        let new_x = array_grid.get(p2);
-        let new_y = array_grid.get(p3);
-        let new_z = array_grid.get(p4);
+        let [new_t, new_x, new_y, new_z] = grid_slots(array_grid);
 
         if !new_x.is_finite() {
             return Err(UpdateError(
@@ -67,17 +60,7 @@ impl<R: RealField + Default> Adjustable<R> for TangentSpacetime<R> {
         &mut self,
         array_grid: &ArrayGrid<R, W, H, D, C>,
     ) -> Result<(), AdjustmentError> {
-        // Create a 3D PointIndex for each of the updated x,y,z coordinates
-        let p1 = PointIndex::new3d(0, 0, 0);
-        let p2 = PointIndex::new3d(0, 0, 1);
-        let p3 = PointIndex::new3d(0, 0, 2);
-        let p4 = PointIndex::new3d(0, 0, 3);
-
-        // get the data at the index position
-        let new_t = array_grid.get(p1);
-        let new_x = array_grid.get(p2);
-        let new_y = array_grid.get(p3);
-        let new_z = array_grid.get(p4);
+        let [new_t, new_x, new_y, new_z] = grid_slots(array_grid);
 
         // Calculate the adjusted data by adding the new data to the current data
         let adjusted_x = self.x + new_x;

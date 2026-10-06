@@ -149,7 +149,7 @@ fn test_interval_squared_of_coincident_events_is_zero_under_any_metric() {
 #[test]
 fn test_default_metric_reproduces_the_flat_minkowski_interval() {
     // `TangentSpacetime::new` installs g = diag(-c², 1, 1, 1), so a tangent pair under its own
-    // default tensor must report the same interval as a Lorentzian pair, which reaches the
+    // default tensor must report the same interval as a Minkowski pair, which reaches the
     // answer through the trait's default `-(c·Δt)² + Δx² + Δy² + Δz²` and shares no code with
     // the contraction. The identity pins the speed of light inside the constructor.
     let rows: [(FloatType, FloatType, FloatType, FloatType); 3] = [
@@ -163,14 +163,14 @@ fn test_default_metric_reproduces_the_flat_minkowski_interval() {
         let tangent_b = TangentSpacetime::new(2, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
         let tangent = tangent_a.interval_squared(&tangent_b);
 
-        let lorentzian_a = MinkowskiSpacetime::new(1, dx, dy, dz, dt, TimeScale::Second);
-        let lorentzian_b = MinkowskiSpacetime::new(2, 0.0, 0.0, 0.0, 0.0, TimeScale::Second);
-        let lorentzian = lorentzian_a.interval_squared(&lorentzian_b);
+        let minkowski_a = MinkowskiSpacetime::new(1, dx, dy, dz, dt, TimeScale::Second);
+        let minkowski_b = MinkowskiSpacetime::new(2, 0.0, 0.0, 0.0, 0.0, TimeScale::Second);
+        let minkowski = minkowski_a.interval_squared(&minkowski_b);
 
-        let tolerance = lorentzian.abs() * 1e-12;
+        let tolerance = minkowski.abs() * 1e-12;
         assert!(
-            (tangent - lorentzian).abs() <= tolerance,
-            "Δt={dt}, Δ=({dx}, {dy}, {dz}): tangent {tangent}, lorentzian {lorentzian}"
+            (tangent - minkowski).abs() <= tolerance,
+            "Δt={dt}, Δ=({dx}, {dy}, {dz}): tangent {tangent}, minkowski {minkowski}"
         );
     }
 }

@@ -4,13 +4,10 @@
  */
 
 use crate::NedSpace;
+use crate::utils::lift_scalar::lift_scalar;
 use deep_causality_algebra::RealField;
 use deep_causality_context_store::{ContextoidId, ProjectionError, Recordable, SpaceRecord};
 use deep_causality_num::FromPrimitive;
-
-fn lift<R: FromPrimitive>(id: ContextoidId, value: f64) -> Result<R, ProjectionError> {
-    R::from_f64(value).ok_or(ProjectionError::Scalar(id, value))
-}
 
 impl<R: RealField + Into<f64> + FromPrimitive> Recordable<SpaceRecord> for NedSpace<R> {
     fn to_record(&self) -> Result<SpaceRecord, ProjectionError> {
@@ -25,9 +22,9 @@ impl<R: RealField + Into<f64> + FromPrimitive> Recordable<SpaceRecord> for NedSp
         match record {
             SpaceRecord::Ned { north, east, down } => Ok(NedSpace::new(
                 id,
-                lift(id, north)?,
-                lift(id, east)?,
-                lift(id, down)?,
+                lift_scalar(id, north)?,
+                lift_scalar(id, east)?,
+                lift_scalar(id, down)?,
             )),
             other => Err(ProjectionError::WrongVariant(id, "Ned", other.kind_name())),
         }

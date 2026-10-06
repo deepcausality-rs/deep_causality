@@ -4,34 +4,31 @@
  */
 
 use crate::errors::{AdjustmentError, UpdateError};
+use crate::utils::grid_slots::grid_slots;
 use crate::{Adjustable, GeoSpace};
 use deep_causality_algebra::RealField;
-use deep_causality_data_structures::{ArrayGrid, PointIndex};
+use deep_causality_data_structures::ArrayGrid;
 use deep_causality_num::FromPrimitive;
 
 // `Default` is not implied by `RealField`; `ArrayGrid<T, ..>` requires it to initialise
 // its backing array, so it is bounded here rather than on the struct.
-/// Grid positions 0, 1 and 2 hold latitude, longitude and altitude. A result with a latitude
-/// outside `[−90°, 90°]` is refused and the position is unchanged: latitude and longitude are a
-/// chart on the ellipsoid, not a vector space, and a latitude past a pole names no point.
+/// Grid positions 0, 1 and 2 hold latitude, longitude and altitude. Position `k` is
+/// `PointIndex::new1d(k)` of a 1D grid, `PointIndex::new2d(k, 0)` of a 2D grid,
+/// `PointIndex::new3d(0, 0, k)` of a 3D grid and `PointIndex::new4d(0, 0, k, 0)` of a 4D grid.
+/// A result with a latitude outside `[−90°, 90°]` is refused and the position is unchanged:
+/// latitude and longitude are a chart on the ellipsoid, not a vector space, and a latitude past a
+/// pole names no point.
 impl<R: RealField + Default + FromPrimitive> Adjustable<R> for GeoSpace<R> {
     fn update<const W: usize, const H: usize, const D: usize, const C: usize>(
         &mut self,
         array_grid: &ArrayGrid<R, W, H, D, C>,
     ) -> Result<(), UpdateError> {
-        // Create a 3D PointIndex for each of the updated x,y,z coordinates
-        let p1 = PointIndex::new3d(0, 0, 0);
-        let p2 = PointIndex::new3d(0, 0, 1);
-        let p3 = PointIndex::new3d(0, 0, 2);
-
         // Get the data at the index position from the array grid
         // - `id`: A unique numeric identifier for the location (e.g., sensor ID, region ID)
         // - `lat`: Latitude in degrees (positive north, negative south)
         // - `lon`: Longitude in degrees (positive east, negative west)
         // - `alt`: Altitude in meters above the WGS84 ellipsoid (not above sea level)
-        let new_lat = array_grid.get(p1);
-        let new_lon = array_grid.get(p2);
-        let new_alt = array_grid.get(p3);
+        let [new_lat, new_lon, new_alt] = grid_slots(array_grid);
 
         // Reject non-finite replacement coordinates (NaN, ±inf)
         if !new_lat.is_finite() {
@@ -66,19 +63,12 @@ impl<R: RealField + Default + FromPrimitive> Adjustable<R> for GeoSpace<R> {
         &mut self,
         array_grid: &ArrayGrid<R, W, H, D, C>,
     ) -> Result<(), AdjustmentError> {
-        // Create a 3D PointIndex for each of the updated x,y,z coordinates
-        let p1 = PointIndex::new3d(0, 0, 0);
-        let p2 = PointIndex::new3d(0, 0, 1);
-        let p3 = PointIndex::new3d(0, 0, 2);
-
         // Get the data at the index position from the array grid
         // - `id`: A unique numeric identifier for the location (e.g., sensor ID, region ID)
         // - `lat`: Latitude in degrees (positive north, negative south)
         // - `lon`: Longitude in degrees (positive east, negative west)
         // - `alt`: Altitude in meters above the WGS84 ellipsoid (not above sea level)
-        let new_lat = array_grid.get(p1);
-        let new_lon = array_grid.get(p2);
-        let new_alt = array_grid.get(p3);
+        let [new_lat, new_lon, new_alt] = grid_slots(array_grid);
 
         // Calculate the adjusted data by adding the new data to the current data
         let adjusted_lat = self.lat + new_lat;

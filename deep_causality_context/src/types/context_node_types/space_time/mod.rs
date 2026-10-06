@@ -4,7 +4,6 @@
  */
 
 pub mod causal_set_spacetime;
-pub mod conformal_spacetime;
 pub mod galilean_spacetime;
 pub mod minkowski_spacetime;
 pub mod newtonian_spacetime;

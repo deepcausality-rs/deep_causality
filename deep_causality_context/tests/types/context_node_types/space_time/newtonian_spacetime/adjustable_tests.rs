@@ -2,6 +2,9 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use deep_causality_context::utils_test::test_utils_array_grid::{
+    ARRAY_TYPES, get_slots_array_grid,
+};
 use deep_causality_context::*;
 use deep_causality_data_structures::{ArrayGrid, ArrayType, PointIndex};
 
@@ -159,4 +162,34 @@ fn test_adjust_fails_with_non_finite_t() {
     grid.set(PointIndex::new3d(0, 0, 0), f64::NEG_INFINITY); // t (invalid)
     let result = s.adjust(&grid);
     assert!(result.is_err());
+}
+
+#[test]
+fn test_update_replaces_t_x_y_z_with_grid_positions_0_to_3_of_every_grid() {
+    for array_type in ARRAY_TYPES {
+        let mut s = NewtonianSpacetime::new(1, 1.0, 2.0, 3.0, 4.0, TimeScale::Second);
+        let grid = get_slots_array_grid(array_type, [40.0, 10.0, 20.0, 30.0]);
+
+        assert!(s.update(&grid).is_ok(), "{array_type:?}");
+        assert_eq!(
+            [s.time_unit(), s.x(), s.y(), s.z()],
+            [40.0, 10.0, 20.0, 30.0],
+            "{array_type:?}"
+        );
+    }
+}
+
+#[test]
+fn test_adjust_adds_grid_positions_0_to_3_of_every_grid_to_t_x_y_z() {
+    for array_type in ARRAY_TYPES {
+        let mut s = NewtonianSpacetime::new(1, 1.0, 2.0, 3.0, 4.0, TimeScale::Second);
+        let grid = get_slots_array_grid(array_type, [40.0, 10.0, 20.0, 30.0]);
+
+        assert!(s.adjust(&grid).is_ok(), "{array_type:?}");
+        assert_eq!(
+            [s.time_unit(), s.x(), s.y(), s.z()],
+            [44.0, 11.0, 22.0, 33.0],
+            "{array_type:?}"
+        );
+    }
 }

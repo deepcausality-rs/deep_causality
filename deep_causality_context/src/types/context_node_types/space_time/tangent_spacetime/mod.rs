@@ -32,12 +32,14 @@ mod temporal;
 ///
 /// # The interval
 /// [`interval_squared`](crate::SpaceTemporalInterval::interval_squared) returns
-/// `g_ab(p) Δxᵃ Δxᵇ`, the coordinate displacement to the other event squared under the metric at
-/// `self`. In flat spacetime with inertial coordinates this is the interval: twice Synge's world
-/// function, `2σ = η_ab Δxᵃ Δxᵇ` (Poisson, Pound & Vega 2011, §3.1). On a curved manifold `σ`
-/// is defined by an integral along the geodesic joining the events (eq. (3.1) there) and in
-/// general differs from this value, and because the value uses `self`'s tensor,
-/// `a.interval_squared(&b)` and `b.interval_squared(&a)` differ when the two tensors differ.
+/// `g_ab(p) Δxᵃ Δxᵇ`, the coordinate displacement `Δxᵃ = (Δt, Δx, Δy, Δz)` to the other event
+/// squared under the metric at `self`, with `Δt` in seconds and `Δx, Δy, Δz` in metres. In flat
+/// spacetime with inertial coordinates, where `g = diag(−c², 1, 1, 1)` on `(t, x, y, z)` is
+/// `η_ab` on `x⁰ = ct` (Carroll 1997, eqs. (1.5) and (1.8)), this is the interval: twice Synge's
+/// world function, `2σ = g_ab Δxᵃ Δxᵇ` (Poisson, Pound & Vega 2011, §3.1). On a curved manifold
+/// `σ` is defined by an integral along the geodesic joining the events (eq. (3.1) there) and in
+/// general differs from this value. Because the value uses `self`'s tensor,
+/// `a.interval_squared(&b)` and `b.interval_squared(&a)` can differ when the two tensors differ.
 ///
 /// # The tangent vector
 /// `(dt, dx, dy, dz)` are the components of a tangent vector at `p` in the same coordinate

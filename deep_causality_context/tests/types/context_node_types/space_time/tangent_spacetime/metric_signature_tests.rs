@@ -3,8 +3,19 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use deep_causality_context::{MetricSignature, MetricTensor4D, TangentSpacetime};
+use deep_causality_algebra::RealField;
+use deep_causality_context::{
+    MetricSignature, MetricTensor4D, MetricTensorError, MetricTensorErrorEnum, TangentSpacetime,
+};
 use deep_causality_metric::{Metric, detect_convention, is_lorentzian};
+use deep_causality_num::{Float106, FromPrimitive};
+
+/// An event at the origin with tangent vector `(1, 0, 0, 0)` and the default tensor
+/// `diag(−c², 1, 1, 1)`.
+fn event<R: RealField + FromPrimitive>() -> TangentSpacetime<R> {
+    let (z, one) = (R::zero(), R::one());
+    TangentSpacetime::new(1, z, z, z, z, one, z, z, z)
+}
 
 #[test]
 fn test_reports_a_four_dimensional_lorentzian_signature() {
@@ -18,7 +29,7 @@ fn test_reports_a_four_dimensional_lorentzian_signature() {
 fn test_the_signature_survives_replacing_every_tensor_component() {
     // This is the case the type exists for: a numerically evolved metric whose components all
     // change while the signature, which is invariant under continuous evolution, does not.
-    let mut t = TangentSpacetime::new(1, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0);
+    let mut t = event();
     let before = t.metric();
 
     t.update_metric_tensor([
@@ -49,16 +60,24 @@ fn test_a_tensor_that_is_not_lorentzian_is_refused_and_the_tensor_kept() {
     let mut asymmetric = diag([-1.0, 1.0, 1.0, 1.0]);
     asymmetric[1][2] = 0.5;
     let bad = [
-        (diag([1.0, 1.0, 1.0, 1.0]), "signature"),
-        (diag([-1.0, 1.0, 1.0, 0.0]), "signature"),
-        (diag([-1.0, -1.0, 1.0, 1.0]), "signature"),
-        (asymmetric, "symmetric"),
+        (
+            diag([1.0, 1.0, 1.0, 1.0]),
+            MetricTensorError::Signature(4, 0, 0),
+        ),
+        (
+            diag([-1.0, 1.0, 1.0, 0.0]),
+            MetricTensorError::Signature(2, 1, 1),
+        ),
+        (
+            diag([-1.0, -1.0, 1.0, 1.0]),
+            MetricTensorError::Signature(2, 2, 0),
+        ),
+        (asymmetric, MetricTensorError::Asymmetric(1, 2)),
     ];
-    for (tensor, reason) in bad {
-        let mut t = TangentSpacetime::new(1, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0);
+    for (tensor, expected) in bad {
+        let mut t = event();
         let before = t.metric_tensor();
-        let err = t.update_metric_tensor(tensor).expect_err("refused");
-        assert!(err.to_string().contains(reason), "{err}");
+        assert_eq!(t.update_metric_tensor(tensor), Err(expected));
         assert_eq!(t.metric_tensor(), before);
     }
 }
@@ -71,7 +90,7 @@ fn test_a_lorentzian_tensor_with_a_zero_diagonal_is_accepted() {
     let mut tensor = diag([0.0, 0.0, 1.0, 1.0]);
     tensor[0][1] = 1.0;
     tensor[1][0] = 1.0;
-    let mut t = TangentSpacetime::new(1, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0);
+    let mut t = event();
     assert!(t.update_metric_tensor(tensor).is_ok());
     assert_eq!(t.metric_tensor(), tensor);
 }
@@ -82,10 +101,16 @@ fn test_the_signature_check_at_every_precision() {
     // positive-definite tensor, at f32 and Float106.
     fn check<R>(lift: impl Fn(f64) -> R)
     where
-        R: deep_causality_algebra::RealField + deep_causality_num::FromPrimitive + core::fmt::Debug,
+        R: RealField + FromPrimitive + core::fmt::Debug,
     {
         let z = lift(0.0);
-        let mut t = TangentSpacetime::new(1, z, z, z, z, lift(1.0), z, z, z);
+        let mut t = event::<R>();
+        // The default tensor, c² ≈ 9·10¹⁶ beside 1, passes the check it is held to.
+        let default = t.metric_tensor();
+        assert!(t.update_metric_tensor(default).is_ok(), "{default:?}");
+        // Its negation, diag(c², −1, −1, −1), has one positive and three negative eigenvalues.
+        let negated = default.map(|row| row.map(|v| -v));
+        assert!(t.update_metric_tensor(negated).is_err(), "{negated:?}");
         let mut block = [[z; 4]; 4];
         block[0][1] = lift(1.0);
         block[1][0] = lift(1.0);
@@ -100,7 +125,7 @@ fn test_the_signature_check_at_every_precision() {
         assert_eq!(t.metric_tensor(), block);
     }
     check(|v| v as f32);
-    check(deep_causality_num::Float106::from);
+    check(Float106::from);
 }
 
 #[test]
@@ -111,7 +136,7 @@ fn test_a_lorentzian_tensor_that_couples_t_and_x_is_accepted() {
     let mut tensor = diag([1.0, 1.0, 1.0, 1.0]);
     tensor[0][1] = 2.0;
     tensor[1][0] = 2.0;
-    let mut t = TangentSpacetime::new(1, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0);
+    let mut t = event();
     assert!(t.update_metric_tensor(tensor).is_ok());
     assert_eq!(t.metric_tensor(), tensor);
 }
@@ -119,14 +144,18 @@ fn test_a_lorentzian_tensor_that_couples_t_and_x_is_accepted() {
 #[test]
 fn test_the_refusal_reports_the_inertia_it_found() {
     // diag(−1, 1, 1, 0) has eigenvalues −1, 1, 1 and 0, read off the diagonal.
-    let mut t = TangentSpacetime::new(1, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0);
+    let mut t = event();
     let err = t
         .update_metric_tensor(diag([-1.0, 1.0, 1.0, 0.0]))
         .expect_err("a degenerate tensor is refused");
-    let message = err.to_string();
-    assert!(message.contains("2 positive"), "{message}");
-    assert!(message.contains("1 negative"), "{message}");
-    assert!(message.contains("1 zero"), "{message}");
+    assert_eq!(
+        err.0,
+        MetricTensorErrorEnum::Signature {
+            positive: 2,
+            negative: 1,
+            zero: 1
+        }
+    );
 }
 
 /// `Sᵀ D S` for the diagonal `d` and a unimodular integer `S` built from `steps` elementary row
@@ -171,7 +200,7 @@ fn test_the_signature_check_is_invariant_under_congruence() {
     // accepted, and every congruence of a definite or (2, 2) diagonal is refused, whatever
     // couplings S introduces. The expected answer comes from D, not from the code under test.
     for seed in 0..200 {
-        let mut t = TangentSpacetime::new(1, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0);
+        let mut t = event();
         let lorentzian = congruent_to([-1.0, 1.0, 1.0, 1.0], seed, 6);
         assert!(
             t.update_metric_tensor(lorentzian).is_ok(),
@@ -191,27 +220,82 @@ fn test_the_signature_check_is_invariant_under_congruence() {
     }
 }
 
+/// A metric tensor in `f64`, indexed t, x, y, z.
+type Tensor = [[f64; 4]; 4];
+
+/// `[[0, 4, 1, 0], [4, 0, 0, 1], [1, 0, s, 0], [0, 1, 0, s]]`. Its largest entry, 4, couples t
+/// and x and exceeds twice every diagonal entry, so the elimination takes the t–x block as a 2×2
+/// pivot, and y and z couple to that block. The tensor commutes with swapping t with x and y with
+/// z, so it acts on the vectors `(a, a, b, b)` as `[[4, 1], [1, s]]` and on `(a, −a, b, −b)` as
+/// `[[−4, 1], [1, s]]`. For `s = 1` the first is positive definite and the second has determinant
+/// −5: signature (−, +, +, +). For `s = −1` the first has determinant −5 and the second is
+/// negative definite: three negative eigenvalues.
+fn coupled_null_block(s: f64) -> Tensor {
+    [
+        [0.0, 4.0, 1.0, 0.0],
+        [4.0, 0.0, 0.0, 1.0],
+        [1.0, 0.0, s, 0.0],
+        [0.0, 1.0, 0.0, s],
+    ]
+}
+
+/// Pairs of tensors whose inertia is known without the code under test, the first of each pair of
+/// signature (−, +, +, +) and the second not: a diagonal pair, whose largest entry lies on the
+/// diagonal; `coupled_null_block(±1)`; and 50 congruences `SᵀDS` of `diag(−1, 1, 1, 1)` and
+/// `diag(−1, −1, 1, 1)`.
+fn tensors_of_known_inertia() -> Vec<(Tensor, Tensor)> {
+    let mut pairs = vec![
+        (diag([-1.0, 1.0, 1.0, 1.0]), diag([-1.0, -1.0, 1.0, 1.0])),
+        (coupled_null_block(1.0), coupled_null_block(-1.0)),
+    ];
+    pairs.extend((0..50).map(|seed| {
+        (
+            congruent_to([-1.0, 1.0, 1.0, 1.0], seed, 6),
+            congruent_to([-1.0, -1.0, 1.0, 1.0], seed, 6),
+        )
+    }));
+    pairs
+}
+
+/// Asserts that `scale · G` is accepted for the first tensor `G` of every pair of
+/// [`tensors_of_known_inertia`] and refused for the second.
+fn assert_verdicts_at_scale<R>(scale: R, lift: impl Fn(f64) -> R)
+where
+    R: RealField + FromPrimitive + core::fmt::Debug,
+{
+    let scaled = |g: Tensor| g.map(|row| row.map(|v| lift(v) * scale));
+    for (lorentzian, other) in tensors_of_known_inertia() {
+        let mut t = event::<R>();
+        assert!(
+            t.update_metric_tensor(scaled(lorentzian)).is_ok(),
+            "{scale:?} · {lorentzian:?}"
+        );
+        assert!(
+            t.update_metric_tensor(scaled(other)).is_err(),
+            "{scale:?} · {other:?}"
+        );
+    }
+}
+
 #[test]
 fn test_the_signature_check_does_not_depend_on_scale() {
     // Inertia is invariant under a positive scale factor, so the verdict on λ·G is the verdict on
     // G for λ = 10⁻³, 1 and 10³: a small tensor whose largest entry is on the diagonal must not be
     // routed through a 2×2 block, and a large one must not overflow the comparison.
-    for seed in 0..50 {
-        let lorentzian = congruent_to([-1.0, 1.0, 1.0, 1.0], seed, 6);
-        let split = congruent_to([-1.0, -1.0, 1.0, 1.0], seed, 6);
-        for lambda in [1e-3, 1.0, 1e3] {
-            let scaled = |g: [[f64; 4]; 4]| g.map(|row| row.map(|v| v * lambda));
-            let mut t = TangentSpacetime::new(1, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0);
-            assert!(
-                t.update_metric_tensor(scaled(lorentzian)).is_ok(),
-                "seed {seed}, λ {lambda}"
-            );
-            assert!(
-                t.update_metric_tensor(scaled(split)).is_err(),
-                "seed {seed}, λ {lambda}"
-            );
-        }
+    for lambda in [1e-3, 1.0, 1e3] {
+        assert_verdicts_at_scale(lambda, |v| v);
     }
+}
+
+#[test]
+fn test_the_signature_check_holds_where_products_of_entries_leave_the_range() {
+    // Row J. At 2^±665 ≈ 10^±200 the product of two entries leaves the range of f64: 2^1330
+    // overflows and 2^−1330 underflows. At 2^±100 ≈ 10^±30 the same holds for f32. A power of two
+    // scales every entry exactly, so 2^e · G has the inertia of G.
+    assert_verdicts_at_scale(2f64.powi(665), |v| v);
+    assert_verdicts_at_scale(2f64.powi(-665), |v| v);
+    assert_verdicts_at_scale(2f32.powi(100), |v| v as f32);
+    assert_verdicts_at_scale(2f32.powi(-100), |v| v as f32);
 }
 
 #[test]
@@ -224,13 +308,15 @@ fn test_a_tensor_with_a_non_finite_entry_is_refused() {
     let mut on = diag([-1.0, 1.0, 1.0, 1.0]);
     on[2][2] = f64::NAN;
     let infinite = diag([f64::NEG_INFINITY, 1.0, 1.0, 1.0]);
-    for tensor in [off, on, infinite] {
-        let mut t = TangentSpacetime::new(1, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0);
+    let cases = [
+        (off, MetricTensorError::NonFinite(0, 1)),
+        (on, MetricTensorError::NonFinite(2, 2)),
+        (infinite, MetricTensorError::NonFinite(0, 0)),
+    ];
+    for (tensor, expected) in cases {
+        let mut t = event();
         let before = t.metric_tensor();
-        let err = t
-            .update_metric_tensor(tensor)
-            .expect_err("a non-finite tensor is refused");
-        assert!(err.to_string().contains("not finite"), "{err}");
+        assert_eq!(t.update_metric_tensor(tensor), Err(expected));
         assert_eq!(t.metric_tensor(), before);
     }
 }

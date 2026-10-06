@@ -3,6 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use deep_causality_context::utils_test::test_utils_array_grid::{
+    ARRAY_TYPES, get_slots_array_grid,
+};
 use deep_causality_context::*;
 use deep_causality_data_structures::{ArrayGrid, ArrayType, PointIndex};
 
@@ -227,4 +230,34 @@ fn test_geo_space_adjust_reaches_a_pole_exactly() {
     let mut geo = GeoSpace::new(1, -89.0, 10.0, 100.0, VerticalDatum::WGS84).unwrap();
     assert!(geo.adjust(&grid(-1.0, 0.0, 0.0)).is_ok());
     assert_eq!(geo.lat(), -90.0);
+}
+
+#[test]
+fn test_geo_space_update_replaces_lat_lon_alt_with_grid_positions_0_to_2_of_every_grid() {
+    for array_type in ARRAY_TYPES {
+        let mut geo = GeoSpace::new(1, 1.0, 2.0, 3.0, VerticalDatum::WGS84).unwrap();
+        let grid = get_slots_array_grid(array_type, [10.0, 20.0, 30.0]);
+
+        assert!(geo.update(&grid).is_ok(), "{array_type:?}");
+        assert_eq!(
+            [geo.lat(), geo.lon(), geo.alt()],
+            [10.0, 20.0, 30.0],
+            "{array_type:?}"
+        );
+    }
+}
+
+#[test]
+fn test_geo_space_adjust_adds_grid_positions_0_to_2_of_every_grid_to_lat_lon_alt() {
+    for array_type in ARRAY_TYPES {
+        let mut geo = GeoSpace::new(1, 1.0, 2.0, 3.0, VerticalDatum::WGS84).unwrap();
+        let grid = get_slots_array_grid(array_type, [10.0, 20.0, 30.0]);
+
+        assert!(geo.adjust(&grid).is_ok(), "{array_type:?}");
+        assert_eq!(
+            [geo.lat(), geo.lon(), geo.alt()],
+            [11.0, 22.0, 33.0],
+            "{array_type:?}"
+        );
+    }
 }

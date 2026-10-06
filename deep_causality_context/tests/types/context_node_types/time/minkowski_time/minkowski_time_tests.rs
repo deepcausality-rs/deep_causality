@@ -64,7 +64,7 @@ use deep_causality_context::FloatType;
 use deep_causality_context::*;
 
 #[test]
-fn test_from_lorentzian_time_to_time_kind() {
+fn test_from_minkowski_time_to_time_kind() {
     let time = MinkowskiTime::new(42, TimeScale::Second, 3.00);
     let kind: TimeKind<FloatType> = time.into();
 

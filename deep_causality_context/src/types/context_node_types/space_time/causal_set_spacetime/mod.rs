@@ -4,6 +4,8 @@
  */
 
 use crate::ContextoidId;
+mod identifiable;
+
 use alloc::collections::BTreeSet;
 use alloc::string::String;
 use core::fmt::Display;
@@ -15,11 +17,12 @@ use core::fmt::Display;
 /// irreflexivity together exclude cycles (Sorkin 2003, p. 5). There are no coordinates, distances
 /// or durations, only the order.
 ///
-/// `predecessors` holds every element `x` with `x ≺ self`: the past of this element, not only its
-/// links, the relations not implied by transitivity (Sorkin 2003, p. 5). Irreflexivity is local and
-/// [`add_predecessor`](Self::add_predecessor) enforces it. Transitivity, acyclicity across elements
-/// and local finiteness are properties of the whole set, which one element cannot see; whoever
-/// builds the set keeps them.
+/// [`predecessors`](Self::predecessors) holds every element `x` with `x ≺ self`: the past of this
+/// element, not only its links, the relations not implied by transitivity (Sorkin 2003, p. 5).
+/// Irreflexivity is local: [`add_predecessor`](Self::add_predecessor) is the only way to extend the
+/// past, and it refuses the element's own id. No method changes the id. Transitivity, acyclicity
+/// across elements and local finiteness are properties of the whole set, which one element cannot
+/// see; whoever builds the set keeps them.
 ///
 /// This type is not a `Context` node type: it implements none of the coordinate or time traits.
 ///
@@ -37,6 +40,25 @@ use core::fmt::Display;
 /// assert_eq!(e.predecessor_count(), 2);
 /// ```
 ///
+/// The past is not writable from outside the type:
+///
+/// ```compile_fail
+/// use deep_causality_context::*;
+///
+/// let mut e = CausalSetSpacetime::new(3, None);
+/// e.predecessors.insert(3); // private field
+/// ```
+///
+/// Nor can it change the id to one it records as a predecessor:
+///
+/// ```compile_fail
+/// use deep_causality_context::*;
+///
+/// let mut e = CausalSetSpacetime::new(3, None);
+/// e.add_predecessor(5);
+/// e.id = 5; // private field
+/// ```
+///
 /// # References
 /// - Sorkin, R. D. (2003). Causal Sets: Discrete Gravity (Notes for the Valdivia Summer School).
 ///   arXiv:gr-qc/0309009, p. 5. Copy:
@@ -44,13 +66,13 @@ use core::fmt::Display;
 #[derive(Debug, Clone, PartialEq)]
 pub struct CausalSetSpacetime {
     /// Unique event identifier
-    pub id: ContextoidId,
+    id: ContextoidId,
 
     /// Optional label or annotation for semantic reasoning
-    pub label: Option<String>,
+    label: Option<String>,
 
     /// Every element that precedes this one.
-    pub predecessors: alloc::collections::BTreeSet<ContextoidId>,
+    predecessors: alloc::collections::BTreeSet<ContextoidId>,
 }
 
 impl CausalSetSpacetime {
@@ -64,6 +86,16 @@ impl CausalSetSpacetime {
 }
 
 impl CausalSetSpacetime {
+    /// The label, if one was given.
+    pub fn label(&self) -> Option<&str> {
+        self.label.as_deref()
+    }
+
+    /// Every element that precedes this one, in ascending id order.
+    pub fn predecessors(&self) -> &BTreeSet<ContextoidId> {
+        &self.predecessors
+    }
+
     /// Records `parent_id ≺ self`. Returns whether it was added: `false` when `parent_id` is this
     /// element's own id, which irreflexivity forbids, or when it is already recorded.
     pub fn add_predecessor(&mut self, parent_id: ContextoidId) -> bool {

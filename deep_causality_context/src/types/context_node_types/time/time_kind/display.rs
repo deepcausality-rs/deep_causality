@@ -13,7 +13,7 @@ impl<R: RealField + FromPrimitive + fmt::Display> fmt::Display for TimeKind<R> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             TimeKind::Newtonian(t) => {
-                write!(f, "NewtonianTime(id: {}, τ: {})", t.id(), t.time_unit())
+                write!(f, "NewtonianTime(id: {}, t: {})", t.id(), t.time_unit())
             }
             TimeKind::Entropic(t) => {
                 write!(f, "EntropicTime(id: {}, t: {})", t.id(), t.time_unit())

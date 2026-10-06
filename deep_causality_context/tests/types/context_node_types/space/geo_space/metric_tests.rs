@@ -16,7 +16,9 @@
 //! where the ellipsoid's two axes are read off directly, `test_pole_to_pole_is_twice_the_semi_minor_axis`
 //! and `test_equatorial_antipodes_are_twice_the_semi_major_axis`; F zero distance in the same
 //! point test; G negative latitude in the pole test; H n/a; I NaN for datums that are not heights
-//! above the ellipsoid, `test_a_datum_other_than_wgs84_has_no_distance`; J/K n/a.
+//! above the ellipsoid, `test_a_datum_other_than_wgs84_has_no_distance`; J the largest finite
+//! longitudes, `test_the_largest_finite_longitudes_name_a_point_on_the_ellipsoid`; K f32 and
+//! Float106, `test_the_iogp_worked_example_at_every_precision`.
 
 use deep_causality_context::*;
 
@@ -27,17 +29,24 @@ fn at(lat: f64, lon: f64, alt: f64) -> GeoSpace<f64> {
     GeoSpace::new(1, lat, lon, alt, VerticalDatum::WGS84).unwrap()
 }
 
-#[test]
-fn test_the_iogp_worked_example() {
-    // 53°48'33.820"N, 2°07'46.380"E, h = 73.0 m is X = 3 771 793.968 m, Y = 140 253.342 m,
-    // Z = 5 124 304.349 m (IOGP 373-7-2, §2.2.1). The point (0°, 0°, 0 m) is (a, 0, 0).
+/// The North Sea point of the IOGP worked example as `(lat, lon, h, expected)`: latitude and
+/// longitude in degrees, ellipsoidal height in metres, and its distance in metres from the point
+/// (0°, 0°, 0 m).
+///
+/// 53°48'33.820"N, 2°07'46.380"E, h = 73.0 m is X = 3 771 793.968 m, Y = 140 253.342 m,
+/// Z = 5 124 304.349 m (IOGP 373-7-2, §2.2.1). The point (0°, 0°, 0 m) is (a, 0, 0).
+fn iogp_north_sea() -> (f64, f64, f64, f64) {
     let lat = 53.0 + 48.0 / 60.0 + 33.820 / 3600.0;
     let lon = 2.0 + 7.0 / 60.0 + 46.380 / 3600.0;
-    let north_sea = at(lat, lon, 73.0);
-    let origin = at(0.0, 0.0, 0.0);
-
     let (x, y, z) = (3_771_793.968 - A, 140_253.342, 5_124_304.349);
-    let expected = (x * x + y * y + z * z).sqrt();
+    (lat, lon, 73.0, (x * x + y * y + z * z).sqrt())
+}
+
+#[test]
+fn test_the_iogp_worked_example() {
+    let (lat, lon, h, expected) = iogp_north_sea();
+    let north_sea = at(lat, lon, h);
+    let origin = at(0.0, 0.0, 0.0);
 
     // The published coordinates are rounded to the millimetre.
     let diff = (north_sea.distance(&origin) - expected).abs();
@@ -124,21 +133,40 @@ fn test_the_iogp_worked_example_at_every_precision() {
     // Row K. The same fixture at f32 and Float106. f32 carries about 7 significant digits, so a
     // distance near 5.75e6 m resolves to a few metres; Float106 resolves below the millimetre the
     // fixture is published to.
-    let lat = 53.0 + 48.0 / 60.0 + 33.820 / 3600.0;
-    let lon = 2.0 + 7.0 / 60.0 + 46.380 / 3600.0;
-    let (x, y, z) = (3_771_793.968 - A, 140_253.342, 5_124_304.349);
-    let expected = (x * x + y * y + z * z).sqrt();
+    let (lat, lon, h, expected) = iogp_north_sea();
 
     let north_sea =
-        GeoSpace::new(1, lat as f32, lon as f32, 73.0_f32, VerticalDatum::WGS84).unwrap();
+        GeoSpace::new(1, lat as f32, lon as f32, h as f32, VerticalDatum::WGS84).unwrap();
     let origin = GeoSpace::new(2, 0.0_f32, 0.0, 0.0, VerticalDatum::WGS84).unwrap();
     let diff = (f64::from(north_sea.distance(&origin)) - expected).abs();
     assert!(diff < 4.0, "f32: diff = {diff} m");
 
     let wide = |v: f64| deep_causality_num::Float106::from(v);
-    let north_sea =
-        GeoSpace::new(1, wide(lat), wide(lon), wide(73.0), VerticalDatum::WGS84).unwrap();
+    let north_sea = GeoSpace::new(1, wide(lat), wide(lon), wide(h), VerticalDatum::WGS84).unwrap();
     let origin = GeoSpace::new(2, wide(0.0), wide(0.0), wide(0.0), VerticalDatum::WGS84).unwrap();
     let diff = (f64::from(north_sea.distance(&origin)) - expected).abs();
     assert!(diff < 0.002, "Float106: diff = {diff} m");
+}
+
+#[test]
+fn test_the_largest_finite_longitudes_name_a_point_on_the_ellipsoid() {
+    // `GeoSpace::new` accepts every finite longitude, so the largest ones convert to a point too:
+    // at zero distance from itself, and on the equator no farther than the equatorial diameter 2a
+    // from (0°, 0°, 0 m). f32 resolves a distance near 2a to a metre, so its bound allows a few
+    // metres of rounding.
+    let origin = at(0.0, 0.0, 0.0);
+    for lon in [1e308, -1e308, f64::MAX] {
+        let far = at(0.0, lon, 0.0);
+        assert_eq!(far.distance(&far), 0.0, "f64, lon = {lon:e}");
+        let d = far.distance(&origin);
+        assert!(d <= 2.0 * A, "f64, lon = {lon:e}: d = {d} m");
+    }
+
+    let origin = GeoSpace::new(2, 0.0_f32, 0.0, 0.0, VerticalDatum::WGS84).unwrap();
+    for lon in [3e38_f32, -3e38, f32::MAX] {
+        let far = GeoSpace::new(1, 0.0, lon, 0.0, VerticalDatum::WGS84).unwrap();
+        assert_eq!(far.distance(&far), 0.0, "f32, lon = {lon:e}");
+        let d = f64::from(far.distance(&origin));
+        assert!(d <= 2.0 * A + 4.0, "f32, lon = {lon:e}: d = {d} m");
+    }
 }
