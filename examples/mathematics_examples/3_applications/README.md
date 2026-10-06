@@ -48,10 +48,10 @@ functions `main` calls, custom structs, then the printing helpers.
 | Example | Crates it crosses |
 |---|---|
 | differentiate_under_integral | calculus × num_dual × algebra |
-| electromagnetic_field | multivector × calculus |
+| electromagnetic_field | multivector × calculus × context |
 | imu_tilt_estimation | multivector × tensor × core |
 | lattice_gauge_thermalization | topology × num_complex × rand |
-| relativistic_mhd | tensor × multivector × haft |
+| relativistic_mhd | tensor × multivector × haft × context |
 | relativistic_spinor_transport | topology × tensor × multivector × linear × core |
 | standard_model_symmetry | multivector × num_complex |
 | structural_stress_on_mesh | topology × tensor × multivector × linear |

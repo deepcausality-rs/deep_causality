@@ -3,65 +3,13 @@
 
 The study of cause and effect has served humanity for millennia and provided a foundation for scientific inquiry and understanding. Contemporary frameworks for computational causality, from Pearl's Structural Causal Models to Granger's time-series analysis, provide a formal basis for causal inference within systems governed by fixed causal structures. These classical models, however, are predicated on a set of core assumptions, including a fixed background spacetime, linear temporal progression, and static causal structures. However, at the frontiers of science and engineering, a new category of challenges arises where the rules of causality themselves become dynamic. For these complex dynamic systems, the classical assumption of a static causal structure embedded in a fixed background spacetime imposes a fundamental limitation. From the dynamic regime shifts in financial markets with complex, multi-scale temporal feedback loops to context-dependent safety of autonomous vehicles, there is a need for a new foundation to model systems where causal structures themselves can evolve dynamically.
 
+\subsection{Overview}
+
 The presented monograph introduces the Effect Propagation Process (EPP), based on a single axiomatic foundation for dynamic causality rooted in Whitehead's process philosophy, with the consequence that the resulting framework is general-relativistic-native and quantum-native. The single axiom is one line, $m_2 = m_1 \mathbin{>\!\!>\!\!=} f$: every effect is derived from a prior effect by a causal function composed in a monadic container. The axiom establishes causality as a monadic process, and each effect is obtained from the previous one by applying a causal function $f$ within the monad. Because $f$ within the monad is unbound, spacetime is not defined. Because the axiom commits to no spatial, temporal, or probabilistic structure, the monadic bind composes effects identically whether the causal function encodes Euclidean or non-Euclidean geometry, flat or curved spacetime, or deterministic or quantum-probabilistic transitions. The relativistic and quantum capabilities are therefore derived from the axiom.
 
 The causaloid, a concept borrowed from physicist Lucian Hardy, unifies cause and effect into a single abstract entity that solves a fundamental problem: In the absence of background time, how does one decide whether a cause occurs before the effect? In the absence of time, the classical definition of causality that requires time to determine the before-after relationship becomes untenable. Hardy proposes to fold cause and effect into one entity to resolve the problem of missing temporal order. Furthermore, in the EPP, the causaloid enables recursive, self-similar causal structures. The EPP introduces three modalities of dynamic causality: dynamic, adaptive, and emergent. While dynamic and adaptive causality remain deterministic, the introduction of emergent causality, where causal structures co-emerge with their context, also introduces non-determinism with the implication that static verifiability is no longer possible. The Effect Ethos provides an operational guardrail to emergent causality based on a defeasible deontic calculus.
 
 The Causal State Machine is a mechanism that translates causal reasoning into actions. A causal state machine separates its state from an action to allow an optional Effect Ethos to verify a proposed action against a set of norms to decide the permissibility of an action relative to the encoded ethos. The causal state machine combined with an Effect Ethos enables dynamic causal systems in a dynamic environment while ensuring compliance as code to enforce the alignment of derived actions.
-
-\subsection{Precedent}
-
-The presented Effect Propagation Process builds upon rich and diverse preceding scholarly work.
-
-\textbf{Whitehead's Process Philosophy}
-
-The EPP's primary departure point is a fundamental rejection of the classical Newtonian conception of a static, absolute background spacetime. This move is deeply rooted in the tradition of process philosophy, which argues that reality is not composed of enduring, static substances but is a dynamic flow of interconnected events. This idea finds its clearest expression in the work of Alfred North Whitehead, who posited a universe of "actual occasions"\cite{whitehead2010process}, and Henri Bergson, who described reality as a continuous "creative evolution"\cite{bergson2022creative}. Their shared insight of reality as a process inspires the EPP's foundational redefinition of causality itself, shifting from a static, happen-before relation to a dynamic process of effect propagation.
-
-\newpage
-
-\textbf{Moggi and Wadler's Monadic Composition}
-
-The CausalMonad and its bind operation inherit a programming discipline whose theoretical move belongs to Eugenio Moggi and whose practical articulation belongs to Philip Wadler. Moggi proposed in 1989 that monads from category theory provide a useful structuring tool for the denotational semantics of programming languages\cite{moggi1989computational}. His key move was distinguishing a value type $a$ from a computation type $M\ a$ and showing that monads can encapsulate features such as state, exception handling, and continuations within a single uniform interface. Wadler then demonstrated in 1992 that this theoretical insight transfers directly into a programming discipline\cite{wadler1992essence}. A function of type $a \to b$ can be lifted into monadic form $a \to M\ b$, and the resulting programs can be modified to add error handling, state, output, or non-deterministic choice by changing the monad while leaving the program structure essentially intact. The EPP adopts this discipline for causal composition. The monadic axiom $m_2 = m_1 \mathbin{>\!\!>\!\!=} f$ is the Kleisli composition of a monad whose context parameters carry the state, configuration, error condition, and audit log of the causal process. The flexibility that Wadler showed for lifting plain functions into a context-aware monadic form is the same flexibility that allows the CausalMonad to interoperate with the Causaloid through the shared PropagatingEffect type.
-
-
-\textbf{Lawvere and Patterson's Functorial Semantics}
-
-The contribution of rendering causality as an algebra inherits the discipline of functorial semantics, initiated by Lawvere's 1963 thesis on the functorial semantics of algebraic theories and brought to statistical modelling by Patterson, who recast a statistical model as a functor, a model in the logical sense, of a statistical theory. The EPP instantiates this method for a causal effect monad: causaloids are the morphisms of a Kleisli category, and a causal model is a functor into it. The same functorial-semantics program underlies the contemporary categorical treatment of causality in Markov categories, due to Fritz, and its string-diagrammatic causal models, due to Lorenz and Tull, where a causal model is a functor from the free Markov category generated by a directed acyclic graph. The EPP departs from that line in its carrier. Where those frameworks adopt a probabilistic semantics of stochastic channels in a Markov category, the EPP adopts an effectful one, an effect monad that threads state, context, an error channel, and an audit log, so that the resulting structure is not merely denotational but directly executable. The convergence is itself notable, since the categorical structure of quantum causal models that Lorenz established independently in quantum foundations arises in the EPP not by design but as a consequence of Hardy's causaloid removing temporal order from the definition of causation.
-
-% TODO bib entries to add: lawvere1963 (F. W. Lawvere, Functorial Semantics of Algebraic Theories, PNAS 50(5):869, 1963); patterson2020 (E. Patterson, The Algebra and Machine Representation of Statistical Models, Stanford 2020, arXiv:2006.08945); fritz2020markov (T. Fritz, A synthetic approach to Markov kernels..., Adv. Math. 370:107239, 2020, arXiv:1908.07021); lorenztull2023 (R. Lorenz, S. Tull, Causal models in string diagrams, arXiv:2304.07638, 2023). Wire \cite{} once added.
-
-\textbf{Pearl's SCM}
-
-Judea Pearl, with his SCM, established the foundation upon which the entire field of computational work was subsequently built. His foundational work in "Causality: Models, Reasoning, and Inference" \cite{pearl2000causality} was as influential as his foundational critique in "Theoretical Impediments to Machine Learning with Seven Sparks from the Causal Revolution" \cite{pearl2018theoretical}. In particular, his contribution to the algorithmization of counterfactuals has proven instrumental for the development of contextual counterfactuals.
-
-\textbf{Bareinboim's Transportability of Causal Effects}
-
-Bareinboim's calculus of transportability \cite{bareinboim2012transportability} and his subsequent work on data fusion formalize the very problem of contextual variance that the EPP's explicit context is designed to manage at a computational level. Where Bareinboim provides the definitive logical framework for reasoning about moving causality between discrete contexts, the EPP provides the computational primitive, the dynamic, queryable, and multi-modal Context, to operationalize this reasoning as part of the EPP.
-
-\textbf{Forbus's Defeasible Deontic Calculus}
-
-Kenneth Forbus's work on formalizing deontic calculus \cite{olson2024DDIC} has proven invaluable to solve the complex problem of conflicting norms in the Effect Ethos. In practice, it is rarely possible to write conflict-free norms, and during the development of the Effect Ethos, a recurring theme was the acceptance of this reality. The subsequent search for a solution led to the adoption of Forbus's Defeasible Deontic Calculus as the primary means to resolve normative conflicts.
-
-\textbf{Russell's Critique of Causality}
-
-Bertrand Russell's critique of causality, formulated in his 1912 essay ``On the Notion of Cause''\cite{RussellOnCause}, led directly to the realization that it is not necessarily causality that is central to Russell's objection, but rather the underlying assumption of time asymmetry, which is at odds with his observation that the most successful theories in physics rest on time symmetry. Russell hinted at a profound truth, because while physics routinely models dynamic change in complex systems, computational causality consistently struggles to capture dynamic causality. While there is truth to causal invariance, there is also the reality that dynamic systems emit different causal structures depending on dynamic change, and that is where computational causality is fundamentally at odds with physics and to an extent with reality. From there, it became clear that for causality to handle dynamics requires a new foundation of causality itself.
-
-\textbf{Hardy's Causaloid}
-
-Lucian Hardy introduced the "causaloid,"\cite{HardyDynamicCausalStructure} a concept that encapsulates a spatial region and the causal connections within,
-as a foundation for his work on finding a theory of quantum gravity. Critically, unlike all prior forms of causality,
-Hardy's causaloid is spacetime-agnostic because it folds cause and effect into one entity and thus removes the need for temporal order. His seminal work "Probability Theories with Dynamic Causal Structure" \cite{hardy2005probability} had a three-fold impact.
-First, during the foundational work of lifting causality into geometric structures, his causaloid formalism has
-proven instrumental in the formation of recursive, self-similar causal data structures.
-Second, his insight that the causaloid formalism puts deterministic and probabilistic structures on equal footing directly led to the multi-modal reasoning of the EPP.
-Third, his demonstration that fundamental differences of theoretical foundations are contained in a causaloid directly informed the representation of causal relations
-as a causal function, which then resulted in the single axiomatic formulation of the EPP.
-
-\newpage
-
-\textbf{Bornholt's Uncertain Type}
-
-Bornholt et al.'s contribution in "Uncertain<T>: A First-Order Type for Uncertain Data" \cite{bornholt2014uncertain} directly informed the unification of deterministic and probabilistic reasoning in the EPP. Instead of representing a value with a single number, the Uncertain type in the EPP represents a probability with a full probability distribution (e.g., Normal, Bernoulli) or even a complex computation graph that produces a distribution. More importantly, the EPP reasoning logic can seamlessly "lift" simpler Deterministic and Probabilistic effects into the Uncertain distribution, aggregate all distributions, and then infer a logical combination of all the input distributions without loss of information. The final output is an Uncertain<bool> that collapses rich uncertainties into a single value at the very last moment while preserving second-order properties such as the standard deviation or confidence level. As a result, decisions, and crucially, deontic reasoning become more robust under uncertainty.
 
 \subsection{Contribution}
 
@@ -122,7 +70,7 @@ Traditional causal models are focused on passive inference and prediction. They 
 
 The impact of the Effect Ethos results in a feasible roadmap for building trustworthy, high-stakes autonomous systems that adhere to contextual rules of engagement encoded in an immutable ethos. The Effect Ethos inverts the entire verification and validation model by shifting the safety objectives of a system into the pre-design stage to convert existing rules of engagement into a testable Effect Ethos, which enables design-time safety and provable alignment.
 
-\subsection{Reference Implementation in Rust}
+\subsection{Reference Implementation}
 
 The presented Effect Propagation Process has been fully implemented in the open\-source DeepCausality\footnote{\url{www.deepcausality.com}} project hosted at the Linux Foundation for Data \& AI. The implementation comprises a set of crates that together realize the framework and contribute independently usable artifacts to the Rust ecosystem (described below). The five established methods of classical causality expressed through the EPP in Section \ref{sec:epp_subsumption_classical} are demonstrated as code examples\footnote{\url{https://github.com/deepcausality-rs/deep_causality/tree/main/examples}} in the DeepCausality project. At the time of writing, the DeepCausality mono-repository has reached a total of 300,000 lines of Rust code with a sustained three-month average test coverage\footnote{\url{https://app.codecov.io/gh/deepcausality-rs/deep_causality}} of ninety-five percent.
 
@@ -171,21 +119,13 @@ The main crate (\texttt{deep\_causality}) builds on the core and on the wider st
 The Causal Discovery Language (CDL, \texttt{deep\_causality\_discovery}) is a domain-specific language that bridges from raw observational data to executable causal models. The pipeline uses Rust's typestate pattern to encode the sequence of stages (data loading, cleaning, feature selection, causal discovery, analysis, and finalization) so that misuse is rejected at compile time. Currently, the CDL supports two state-of-the-art causal discovery algorithms: SURD (Synergistic, Unique, Redundant Decomposition) \cite{martinez2025observational}, an information-theoretic decomposition algorithm pioneered by Álvaro Martínez-Sánchez, and BRCD (Bayesian Root-Cause Discovery), pioneered by Kenneth Lee et al. \cite{TODO-Lee-2026} and presented at ICML 2026\footnote{\url{https://github.com/deepcausality-rs/deep_causality/tree/main/examples}}.
 
 
-\newpage
-
-\subsubsection{Examples}
-
-The DeepCausality project provides over 100 code examples\footnote{\url{https://icml.cc/virtual/2026/poster/65359}} spanning multiple physics domains, mathematics, medicine, and advanced engineering such as avionics, and advanced science such as quantum physics.
-
-Chapter~\ref{sec:examples} presents three selected examples that demonstrate different capabilities of the EPP at progressively more advanced levels. The first, the event horizon probe, demonstrates regime change in a setting where the causal structure itself evolves as the system crosses a physical threshold (§\ref{sec:example_event_horizon}) from Newtonian to relativistic physics. The second, the flight envelope monitor, demonstrates the compositional capability described above by running a single pipeline that interleaves Causaloid evaluations with CausalMonad bind steps, with state and audit log accumulating across both kinds of containers (§\ref{sec:example_avionics}). The third demonstrates multi-stage multi-physics composition through a chronogravimetric application that recovers the geocentric gravitational constant from satellite-clock time-dilation data (§\ref{sec:example_chronogravimetry}). Chronogravimetry inherits its core relativistic-redshift methods from the chronometric-geodesy literature initiated by Bjerhammar and Vermeer.
-
 \subsection{Structure}
 
 The presented monograph serves multiple audiences.
 
 \textbf{Primary audience:} Researchers in computational causality, causal inference, and AI safety who are reaching the limits of classical causal frameworks and need a foundation for dynamic and emergent causal structures. For these readers a natural path is to begin with the philosophy of causality (Chapter \ref{sec:philosophy}) and the overview of the EPP (Chapter \ref{sec:epp}), and then turn to its philosophical foundation: the Metaphysics (Chapter \ref{sec:metaphysics}), the Epistemology (Chapter \ref{sec:epp_epistemology}), and the Teleology (Chapter \ref{sec:teleology}).
 
-\textbf{Secondary audience:} Practitioners in avionics, materials science, theoretical physics, and other safety-critical or precision-critical engineering disciplines who need a verifiable computational substrate for causal reasoning under dynamic conditions. The reference implementation is what brings them in. These readers may start with the high-level EPP framework (Chapter \ref{sec:epp}) and then proceed to the DeepCausality Implementation chapter (Chapter \ref{sec:implementation}), which is organized in layered fashion: foundation, mathematical layers, physics, causal framework, and causal discovery. Engineering readers may locate the layer most relevant to their domain and read outward from there. The Metaphysics chapter (Chapter \ref{sec:metaphysics}) provides details about the orthogonal design used throughout the implementation.
+\textbf{Secondary audience:} Practitioners in avionics, materials science, theoretical physics, and other safety-critical or precision-critical engineering disciplines who need a verifiable computational substrate for causal reasoning under dynamic conditions. The reference implementation is what brings them in. These readers may start with the high-level EPP framework (Chapter \ref{sec:epp}). The Metaphysics chapter (Chapter \ref{sec:metaphysics}) provides details about the orthogonal design used throughout the implementation.
 
 
 \textbf{Tertiary audience:} Philosophers of science working on causation, process metaphysics, and the philosophical foundations of computation, who will engage with the metaphysics, epistemology, and teleology chapters as substantive philosophy.

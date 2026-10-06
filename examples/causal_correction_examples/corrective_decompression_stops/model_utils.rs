@@ -6,8 +6,9 @@
 //! Decompression-specific display helpers. Shared printing plumbing
 //! comes from `causal_correction_examples::print_utils`.
 
-use crate::model_types::{DiveProcess, FloatType};
+use crate::model_types::{DCS_RATIO_THRESHOLD, DiveProcess, FloatType, read};
 use causal_correction_examples::print_utils;
+use deep_causality_core::CausalityError;
 
 pub fn summary_line(label: &str, process: &DiveProcess<FloatType>) {
     let st = process.state();
@@ -21,13 +22,19 @@ pub fn summary_line(label: &str, process: &DiveProcess<FloatType>) {
     );
 }
 
-pub fn print_section(label: &str, process: &DiveProcess<FloatType>) {
+/// Print one run. Reads the context facts it shows first, so a missing context or fact
+/// returns the error before anything is printed.
+pub fn print_section(label: &str, process: &DiveProcess<FloatType>) -> Result<(), CausalityError> {
+    let dive = process
+        .context()
+        .as_ref()
+        .ok_or_else(CausalityError::MissingContext)?;
+    let dcs_ratio_threshold = read(dive, DCS_RATIO_THRESHOLD)?;
     print_utils::print_section_header(label);
     let st = process.state();
-    let cfg = process.context().as_ref().unwrap();
     println!(
         "  ticks={}  stops={}  final_depth={:.1} m  max_ratio={:.2}  dcs_threshold={:.2}",
-        st.tick, st.stop_count, st.depth_m, st.max_ratio_observed, cfg.dcs_ratio_threshold
+        st.tick, st.stop_count, st.depth_m, st.max_ratio_observed, dcs_ratio_threshold
     );
     print_utils::print_trajectory("depth (m)", &st.depth_trajectory, |x| format!("{x:.1}"));
     print_utils::print_trajectory("ratio    ", &st.ratio_trajectory, |x| format!("{x:.2}"));
@@ -39,4 +46,5 @@ pub fn print_section(label: &str, process: &DiveProcess<FloatType>) {
         println!("  next ascent command: {v:.1} m");
     }
     print_utils::print_section_footer();
+    Ok(())
 }

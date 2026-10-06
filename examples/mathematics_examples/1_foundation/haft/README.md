@@ -59,6 +59,6 @@ and `Cofree` from `deep_causality_haft`.
 
 | File | Description | Command |
 |------|-------------|---------|
-| [adjunction.rs](adjunction.rs) | The Reader adjunction as global configuration access: the two adjuncts move a value in and out of an ambient context. The shipped `Adjunction` is `StokesAdjunction` in `deep_causality_topology`, shown in `2_composition/duality/` | `cargo run -p mathematics_examples --example haft_adjunction_examples` |
+| [adjunction.rs](adjunction.rs) | The Reader adjunction as global configuration access: the two adjuncts move a value in and out of an ambient context, a `Context` holding the configuration as a `Data<String>` node. The shipped `Adjunction` is `StokesAdjunction` in `deep_causality_topology`, shown in `2_composition/duality/` | `cargo run -p mathematics_examples --example haft_adjunction_examples` |
 | [free_and_cofree.rs](free_and_cofree.rs) | `FreeWitness` holding a computation as data for an interpreter to give meaning to, and `CofreeWitness` growing a labelled structure from a seed and relabelling every node from what hangs below it | `cargo run -p mathematics_examples --example haft_free_and_cofree_examples` |
 | [parametric_monad.rs](parametric_monad.rs) | An indexed monad as a type-safe state machine: the state type changes at each bind, so the compiler enforces the legal order | `cargo run -p mathematics_examples --example haft_parametric_monad_examples` |

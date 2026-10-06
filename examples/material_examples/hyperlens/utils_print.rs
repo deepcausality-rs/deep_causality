@@ -9,25 +9,24 @@
 //! file alone.
 
 use crate::FloatType;
-use crate::model::{
-    AXIS_X, AXIS_Y, AXIS_Z, WAVELENGTH_NM, ZERO, free_space_wavenumber, permittivity,
-};
+use crate::model::{AXIS_X, AXIS_Y, AXIS_Z, ZERO, free_space_wavenumber, permittivity};
 use deep_causality_metric::Metric;
 use deep_causality_num::lower;
 use deep_causality_tensor::CausalTensor;
 
-pub fn print_header() {
+/// The header, with the wavelength read from the optical world.
+pub fn print_header(wavelength_nm: FloatType) {
     println!("=== Hyperbolic metamaterial lens: the metric is the material ===\n");
     println!("Precision:   {}", core::any::type_name::<FloatType>());
-    println!("Wavelength:  {:.0} nm", lower(WAVELENGTH_NM));
+    println!("Wavelength:  {:.0} nm", lower(wavelength_nm));
     println!(
         "k_0 = 2pi/lambda:  {:.6} rad/nm\n",
-        lower(free_space_wavenumber())
+        lower(free_space_wavenumber(wavelength_nm))
     );
 }
 
 /// The two materials, showing that each principal permittivity comes from the metric signature.
-pub fn print_materials(vacuum: &Metric, lens: &Metric) {
+pub fn print_materials(vacuum: &Metric, lens: &Metric, epsilon_magnitude: FloatType) {
     println!("Materials, as metric signatures");
     println!("  material               metric          eps_x   eps_y   eps_z");
 
@@ -36,9 +35,9 @@ pub fn print_materials(vacuum: &Metric, lens: &Metric) {
             "  {:<21}  {:<14}  {:>+5.1}   {:>+5.1}   {:>+5.1}",
             name,
             format!("{metric}"),
-            lower(permittivity(metric, AXIS_X)),
-            lower(permittivity(metric, AXIS_Y)),
-            lower(permittivity(metric, AXIS_Z))
+            lower(permittivity(metric, AXIS_X, epsilon_magnitude)),
+            lower(permittivity(metric, AXIS_Y, epsilon_magnitude)),
+            lower(permittivity(metric, AXIS_Z, epsilon_magnitude))
         );
     }
     println!();

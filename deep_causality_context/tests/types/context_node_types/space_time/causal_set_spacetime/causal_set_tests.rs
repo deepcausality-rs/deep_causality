@@ -116,3 +116,65 @@ fn test_predecessors_is_the_past_without_the_element_itself() {
         assert!(!expected.is_empty());
     }
 }
+
+#[test]
+fn test_default_is_element_zero_with_an_empty_past() {
+    let e = CausalSetSpacetime::default();
+    assert_eq!(e.id(), 0);
+    assert_eq!(e.label(), None);
+    assert!(e.predecessors().is_empty());
+    assert_eq!(e.predecessor_count(), 0);
+    // An empty past cannot contain the element itself.
+    assert!(!e.is_after(0));
+    assert_eq!(e, CausalSetSpacetime::new(0, None));
+}
+
+/// A context over causal-set elements: each element is a `Data` payload, and the slots for space,
+/// time and spacetime are empty because a causal set has none of them.
+type CausalSetContext = Context<Data<CausalSetSpacetime>, NoSpace<f64>, NoTime, NoSpaceTime<f64>>;
+
+#[test]
+fn test_a_context_carries_causal_set_elements_as_data() {
+    // The chain a ≺ b ≺ c, with c's past holding both a and b, as transitivity requires.
+    let a = CausalSetSpacetime::new(1, Some("a".into()));
+    let mut b = CausalSetSpacetime::new(2, Some("b".into()));
+    assert!(b.add_predecessor(1));
+    let mut c = CausalSetSpacetime::new(3, Some("c".into()));
+    assert!(c.add_predecessor(1));
+    assert!(c.add_predecessor(2));
+
+    let mut context = CausalSetContext::with_capacity(1, "causal set", 3);
+    for element in [a, b, c] {
+        let id = element.id();
+        context
+            .add_node(Contextoid::new(
+                id,
+                ContextoidType::Datoid(Data::new(id, element)),
+            ))
+            .expect("a new context accepts nodes");
+    }
+    assert_eq!(context.number_of_nodes(), 3);
+
+    // Read the elements back by contextoid id and check the order they carry.
+    let element = |id| {
+        let index = context
+            .get_node_index_by_id(id)
+            .expect("the element was added");
+        context
+            .get_node(index)
+            .and_then(|node| node.vertex_type().dataoid())
+            .map(Datable::get_data)
+            .expect("the node is a causal-set Datoid")
+    };
+    let (a, b, c) = (element(1), element(2), element(3));
+    assert_eq!(a.predecessor_count(), 0);
+    assert!(b.is_after(1) && !b.is_after(3));
+    assert!(c.is_after(1) && c.is_after(2));
+    assert_eq!(c.label(), Some("c"));
+
+    // The default payload is the default element.
+    assert_eq!(
+        Data::<CausalSetSpacetime>::default().get_data(),
+        CausalSetSpacetime::default()
+    );
+}

@@ -7,7 +7,11 @@
 
 #![allow(dead_code)] // Domain fields kept for narrative clarity even if not all are read.
 
-use deep_causality_core::PropagatingProcess;
+use deep_causality_context::{
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
+    NoSpace, NoSpaceTime, NoTime,
+};
+use deep_causality_core::{CausalityError, PropagatingProcess};
 
 /// Switch this alias to `f32` for low precision, `f64` for standard precision,
 /// or `Float106` for high precision. Literals in this crate would need lifting
@@ -20,6 +24,13 @@ pub type FloatType = f64;
 /// decompression stops before finishing.
 pub const N_TICKS: u32 = 30;
 
+/// Tick duration in minutes: the time step of the tissue kinetics.
+pub const TICK_MINUTES: FloatType = 0.5;
+
+/// Depth of the bottom phase (m). The diver starts here with the tissue
+/// fully saturated to it; both are the initial values of `DiveState`.
+pub const STARTING_DEPTH_M: FloatType = 30.0;
+
 /// Inspired N2 partial pressure (bar) at depth `d` (m). Atmospheric N2
 /// fraction is 79%; absolute pressure climbs by 1 bar per 10 m of depth.
 pub fn inspired_n2_pp(depth: FloatType) -> FloatType {
@@ -31,10 +42,10 @@ pub fn ambient_pressure(depth: FloatType) -> FloatType {
     1.0 + depth / 10.0
 }
 
-/// Single-compartment dive state. The original `diving_decompression`
-/// example tracks 16 compartments per Bühlmann ZH-L16C; this retrofit
-/// uses one mid-range compartment because the intervention pattern is
-/// the same regardless of how many compartments you carry.
+/// Single-compartment dive state. The `diving_decompression` example in
+/// `medicine_examples` tracks 16 compartments per Bühlmann ZH-L16C; this
+/// example uses one mid-range compartment because the intervention pattern
+/// is the same regardless of how many compartments you carry.
 #[derive(Debug, Default, Clone)]
 pub struct DiveState {
     pub tick: u32,
@@ -49,40 +60,49 @@ pub struct DiveState {
     pub dcs_at: Option<u32>,
 }
 
-/// Read-only dive plan and decompression thresholds.
-#[derive(Debug, Clone)]
-pub struct DiveConfig {
-    /// Starting depth at the bottom phase (m).
-    pub starting_depth_m: FloatType,
-    /// Tissue N2 partial pressure at the bottom, fully saturated to depth.
-    pub starting_tissue_n2_bar: FloatType,
-    /// Metres of ascent per tick under a continuous-ascent plan.
-    pub normal_ascent_m_per_tick: FloatType,
-    /// Tick duration in minutes.
-    pub tick_minutes: FloatType,
-    /// Tissue half-time in minutes. The compartment here is a mid-range
-    /// 10-minute half-time, comparable to Bühlmann compartment 2.
-    pub half_time_min: FloatType,
-    /// Supersaturation ratio at which DCS risk is assumed certain.
-    pub dcs_ratio_threshold: FloatType,
-    /// Monitor threshold. The closed loop fires a corrective stop the
-    /// moment the post-tick ratio crosses this.
-    pub safety_ratio_threshold: FloatType,
-}
+/// The dive plan and decompression thresholds the steps read, one `Data` contextoid per quantity.
+/// The context holds no position, clock or event, so its spatial, temporal and spacetime slots are
+/// empty.
+pub type DiveContext = Context<Data<FloatType>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
 
-pub fn nominal_dive_config() -> DiveConfig {
-    DiveConfig {
-        starting_depth_m: 30.0,
-        starting_tissue_n2_bar: inspired_n2_pp(30.0),
-        normal_ascent_m_per_tick: 3.0,
-        tick_minutes: 0.5,
-        half_time_min: 10.0,
-        dcs_ratio_threshold: 1.6,
-        // A single ascent tick can swing the ratio by roughly +0.25 at
-        // this physics. The safety threshold is set well below the DCS
-        // line so a stop fires before the next ascent could overshoot.
-        safety_ratio_threshold: 1.15,
+/// Contextoid id: ascent rate under a continuous-ascent plan (m/min).
+pub const ASCENT_RATE: ContextoidId = 1;
+/// Contextoid id: tissue half-time (min). The compartment here is a mid-range 10-minute half-time,
+/// comparable to Bühlmann compartment 2.
+pub const HALF_TIME: ContextoidId = 2;
+/// Contextoid id: supersaturation ratio at which DCS risk is assumed certain.
+pub const DCS_RATIO_THRESHOLD: ContextoidId = 3;
+/// Contextoid id: monitor threshold. The closed loop fires a corrective stop the moment the
+/// post-tick ratio crosses this.
+pub const SAFETY_RATIO_THRESHOLD: ContextoidId = 4;
+
+/// The nominal dive plan: one `Data` contextoid per fact, keyed by its contextoid id.
+pub fn nominal_dive_context() -> Result<DiveContext, ContextIndexError> {
+    let facts = [
+        (ASCENT_RATE, 6.0), // 3 m per 0.5-minute tick
+        (HALF_TIME, 10.0),
+        (DCS_RATIO_THRESHOLD, 1.6),
+        // A single ascent tick can swing the ratio by roughly +0.25 at this physics. The safety
+        // threshold is set well below the DCS line so a stop fires before the next ascent could
+        // overshoot.
+        (SAFETY_RATIO_THRESHOLD, 1.15),
+    ];
+    let mut context = Context::with_capacity(1, "dive", facts.len());
+    for (id, value) in facts {
+        context.add_node(Contextoid::new(
+            id,
+            ContextoidType::Datoid(Data::new(id, value)),
+        ))?;
     }
+    Ok(context)
 }
 
-pub type DiveProcess<T> = PropagatingProcess<T, DiveState, DiveConfig>;
+/// Read the payload of the `Data` contextoid `id` out of the dive context, or name the id it
+/// lacks.
+pub fn read(context: &DiveContext, id: ContextoidId) -> Result<FloatType, CausalityError> {
+    context.get_data_by_id(id).ok_or_else(|| {
+        CausalityError::MissingParameter(format!("dive context Datoid with contextoid id {id}"))
+    })
+}
+
+pub type DiveProcess<T> = PropagatingProcess<T, DiveState, DiveContext>;

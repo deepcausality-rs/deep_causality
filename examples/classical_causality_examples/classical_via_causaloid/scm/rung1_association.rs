@@ -3,15 +3,17 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::model;
 use crate::model::ScmState;
 use deep_causality::*;
+use std::error::Error;
 
-pub fn run_rung1_association(_explain: bool) {
+pub fn run_rung1_association(_explain: bool) -> Result<(), Box<dyn Error>> {
     println!("--- Rung 1: Association ---");
     println!("Demonstrating observational inference: Given smoking, what is the cancer risk?");
 
     // 1. Build CausaloidGraph
-    let (graph, smoke_idx, cancer_idx) = crate::model::get_causaloid_graph();
+    let (graph, smoke_idx, cancer_idx) = model::get_causaloid_graph()?;
 
     // 2. Execute and Observe
     // Represents observing a high nicotine level.
@@ -27,14 +29,10 @@ pub fn run_rung1_association(_explain: bool) {
     let final_effect =
         graph.evaluate_shortest_path_between_causes(smoke_idx, cancer_idx, &initial_effect);
 
-    if final_effect.is_err() {
-        eprintln!("Evaluation failed: {:?}", final_effect.error());
-        return;
-    }
-
     // 3. Assert and Explain
-    let result = final_effect.value_cloned().unwrap_or(initial_state);
+    let result = model::value_of(&final_effect)?;
     assert!(result.cancer_risk, "Expected high cancer risk");
     println!("Result: Observation of high nicotine level is associated with high cancer risk.");
     println!("\n");
+    Ok(())
 }

@@ -47,6 +47,12 @@ pub struct Context<D, S, T, ST> {                 // D: Datable, S: Spatial, T: 
   and a hidden `_Marker(PhantomData<()>)`. `ContextKind` names the five.
 - An **edge** carries a `RelationKind`: `Datial` (default), `Temporal`, `Spatial`, `SpaceTemporal`.
   Edges are directed. The kind is stored, so two edges between nodes of the same types can differ.
+- **The base graph has two states.** Mutable, it takes changes; `freeze` builds a compressed
+  sparse row form in O(V + E) over which `outbound_edges` and `inbound_edges` list neighbours, and
+  every change errors until `unfreeze`. Freezing drops removed nodes' slots, so indices shift;
+  the context moves `id_to_index_map` and the four index maps with them. Each graph holds a
+  contextoid identifier at most once: `add_node`, `update_node` and `extra_ctx_add_node` refuse a
+  held one.
 - **Extra contexts** are named side graphs of the same node type, held beside the base graph. One
   is "current" at a time; every `extra_ctx_*` operation acts on the current one.
 - **Four index maps** hold run-time bookkeeping: current and previous data index (keys 1 and 0),
@@ -80,7 +86,7 @@ the scalar reaches the node.
 | Data | `Data<T>`, `UncertainData<R>`, `UncertainBoolData<R>` | `T: Default + Clone + PartialEq`; `Copy` is asked only by `Adjustable`, so `Data<Vec<f64>>` is a valid node. |
 | Space | `EuclideanSpace`, `EcefSpace`, `GeoSpace`, `NedSpace`, `NoSpace`; `SpaceKind` over the first four | `GeoSpace` carries a `VerticalDatum` (WGS84, EGM96, EGM2008, ISA, Terrain); its distance is the WGS 84 geocentric straight line (IOGP 373-7-2 §2.2.1), NaN unless both datums are `WGS84`; `GeoSpace::new` refuses a latitude outside [−90, 90]. |
 | Time | `NewtonianTime` (absolute time), `MinkowskiTime` (inertial-frame coordinate time), `DiscreteTime`, `EntropicTime` (`u64` tick), `SymbolicTime` (labelled `i64`), `NoTime`; `TimeKind` over the first four | `TimeKind` lifts ticks into `R` with `lift_count`. |
-| Spacetime | `GalileanSpacetime` and `NewtonianSpacetime` (spatial metric (0,+,+,+), `Metric::PGA(4)`), `MinkowskiSpacetime` (−,+,+,+), `TangentSpacetime` (event, tangent vector and a validated Lorentzian 4×4 metric tensor); `SpaceTimeKind` over the four; `CausalSetSpacetime` (a causal order, not a context node) | Coordinates are time first, `0 => t`. Each reports its own `Metric` through `MetricSignature`. Galilean distance exists only between simultaneous events. |
+| Spacetime | `GalileanSpacetime` and `NewtonianSpacetime` (spatial metric (0,+,+,+), `Metric::PGA(4)`), `MinkowskiSpacetime` (−,+,+,+), `TangentSpacetime` (event, tangent vector and a validated Lorentzian 4×4 metric tensor); `SpaceTimeKind` over the four; `CausalSetSpacetime` (a causal order, carried as a `Data` payload, not in this slot) | Coordinates are time first, `0 => t`. Each reports its own `Metric` through `MetricSignature`. Galilean distance exists only between simultaneous events. |
 | Root | `Root { id }` | An ordinary node; stored as `NodeRecord::Root`. |
 | Absence | `NoSpace<R>`, `NoTime`, `NoSpaceTime<R>` | Zero-sized; fill the spatial, temporal and spacetime slots of a context that holds no node of that kind. |
 
@@ -206,7 +212,8 @@ for its record family, by the `*Kind` enums as total four- or three-arm dispatch
 
 `ProjectionError` names the node in every variant: `WrongVariant`, `WrongPayload`, `MissingField`,
 `Unrecordable` (`NoSpaceTime`, `_Marker`), `Scalar` (the target scalar cannot hold the `f64`),
-`Identity`, `Version`.
+`Identity`, `Version`, `Rejected` (the record's values break a rule of the node type) and `Frozen` (an event would
+change a frozen base graph; this variant names the context).
 
 On `Context`:
 
@@ -221,6 +228,9 @@ On `Context`:
   names: the context's own identifier means the base graph, a stored extra's identifier means that
   extra. Node and edge events apply to every graph holding the node. An event naming a container the
   context does not hold, or a *local* extra, is `Identity`.
+  While the base graph is frozen, an event that would change it is `Frozen` and changes nothing,
+  extras included; an echo of a state the base graph holds, and an event for an extra alone,
+  apply.
 
 The stored/local distinction exists because both the store and `extra_ctx_add_new` count from 1. An
 extra created locally is never reached by a container event, so a store container that happens to
@@ -268,10 +278,13 @@ Ordered by consequence.
 1. **No consumer.** The store, the projection and the extra-context API are used only by their own
    tests. The causal engine reads a context through user functions only, and the generative
    interpreter's `CreateExtraContext` builds an unlinked top-level context instead of an extra.
-2. **Symbolic node types cannot enter a context.** `SymbolicTime` is not a `TimeKind` variant (the
-   arm is commented out) and has no `Recordable` impl; its `scalar_projector.rs` is a commented-out
-   file. `CausalSetSpacetime` implements none of `Spatial`, `Temporal` or `SpaceTemporal`, so no
-   `Context` can hold it. Both are tested as free-standing types only.
+2. **Symbolic node types sit outside the uniform kinds and the store.** `SymbolicTime` implements
+   `Temporal`, so it fills the time slot of a context declared with it, but it is not a `TimeKind`
+   variant (the arm is commented out) and has no `Recordable` impl; its `scalar_projector.rs` is a
+   commented-out file. `CausalSetSpacetime` implements none of `Spatial`, `Temporal` or
+   `SpaceTemporal`, so it cannot fill the spacetime slot; a context holds it as a data payload,
+   `Data<CausalSetSpacetime>`, and it has no `Storable` impl, so such a context cannot be
+   snapshotted.
 3. **`apply` finds nodes by linear scan.** `index_of` walks every graph index for each lookup, in the
    base graph too, although the base graph keeps `id_to_index_map`. Edge events scan every graph.
    Extras have no identifier index at all, and `extra_ctx_*` operations take graph indices.

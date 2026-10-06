@@ -35,7 +35,9 @@ fn start(ctx: BaseContext) -> PropagatingProcess<f64, (), BaseContext> {
 
 ## Contents
 
-* `Context` — the context hypergraph, with extra contexts and data/time indices.
+* `Context` — the context hypergraph, with extra contexts, data/time indices, freezing and
+  neighbour listing. `get_node_index_by_id` finds a node by its contextoid identifier, and
+  `get_data_by_id` returns a data node's payload by that identifier.
 * `Contextoid` / `ContextoidType` — the nodes it holds.
 * Context node types — `Data`, `Root`, and the space, time and spacetime families:
   `EuclideanSpace`, `EcefSpace`, `NedSpace` and `GeoSpace`; `NewtonianTime`, `MinkowskiTime`,
@@ -46,8 +48,8 @@ fn start(ctx: BaseContext) -> PropagatingProcess<f64, (), BaseContext> {
   documents the definition it follows and its source, with copies of the open-access sources in
   `papers/`.
 * `CausalSetSpacetime`, an element of a causal set with the elements that precede it. It holds the
-  order alone and implements none of the coordinate or time traits, so it is not a context node
-  type.
+  order alone and implements none of the coordinate or time traits, so it cannot fill a context's
+  spacetime slot; a context carries it as a data payload, `Data<CausalSetSpacetime>`.
 * `Contextuable`, `Datable`, `Spatial`, `Temporal`, `SpaceTemporal`, `Coordinate`, `Distance`,
   `MetricSignature`, `MetricTensor4D` and the indexable traits.
 * `Adjustable<T>` for nodes that update from an `ArrayGrid<T, ..>`, and `UncertainAdjustable` for
@@ -56,6 +58,52 @@ fn start(ctx: BaseContext) -> PropagatingProcess<f64, (), BaseContext> {
   `Context::apply` for persistence, with the `SubstrateContext` and `SubstrateContextoid` aliases.
 * `RelationKind`, `TimeScale`, `VerticalDatum` and `SubstrateRef`, re-exported from
   `deep_causality_context_store`, so a model names them from this crate alone.
+
+## Freezing and neighbour listing
+
+The base graph has two states. A mutable graph takes changes. `freeze` builds a compressed sparse
+row form of it in O(V + E), and over that form `outbound_edges` and `inbound_edges` list a node's
+successors and predecessors. Both return an error on a mutable graph. Reads such as `get_node`,
+`contains_edge` and `get_node_index_by_id` work in both states. While the graph is frozen, every
+change to it returns an error, and `Context::apply` refuses an event that would change it with
+`ProjectionError::Frozen`. `unfreeze` makes the graph mutable again.
+
+`freeze` drops the slots of removed nodes, so a node's index afterwards is its rank among the live
+nodes. The context moves every index it stores, the identifier map and the data and time indices,
+to the node's new index, and drops the entries that named a removed node. An index the caller held
+from before `freeze` is stale; read it again with `get_node_index_by_id`. `unfreeze` keeps every
+index. Extra contexts are not frozen with the base graph.
+
+```rust
+use deep_causality_context::{
+    BaseContext, BaseContextoid, Context, ContextIndexError, Contextoid, ContextoidType,
+    ContextuableGraph, Data, RelationKind,
+};
+
+fn datum(id: u64, value: f64) -> BaseContextoid {
+    Contextoid::new(id, ContextoidType::Datoid(Data::new(id, value)))
+}
+
+fn main() -> Result<(), ContextIndexError> {
+    let mut context: BaseContext = Context::with_capacity(1, "plant", 3);
+    let pump = context.add_node(datum(10, 1.0))?;
+    let valve = context.add_node(datum(20, 0.5))?;
+    context.add_edge(pump, valve, RelationKind::Datial)?;
+
+    context.freeze();
+    let downstream: Vec<usize> = context.outbound_edges(pump)?.collect();
+    assert_eq!(downstream, [valve]);
+    assert!(context.add_node(datum(30, 0.0)).is_err());
+
+    context.unfreeze();
+    context.add_node(datum(30, 0.0))?;
+    Ok(())
+}
+```
+
+Each graph holds a contextoid identifier at most once. `add_node`, `update_node` and
+`extra_ctx_add_node` refuse an identifier the graph already holds. The base graph and each extra
+may hold the same identifier, as a context restored from a store does.
 
 ## Geometry
 

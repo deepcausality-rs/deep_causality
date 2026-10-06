@@ -28,6 +28,8 @@ $$ q_{out} = \frac{A q_{in} + B}{C q_{in} + D} $$
 2.  **Round Trip**: Six optical elements, each one `.bind` in a `CausalFlow`: out through a thermal lens to the far flat mirror, and back. `gaussian_q_propagation` enforces the physical invariant `Im(q) > 0`; a beam that diverges breaks it and sends the flow into the error channel.
 3.  **Stability Check**: The product of the element matrices is the round-trip matrix $[[A, B], [C, D]]$. The cavity is stable when $m = (A + D)/2$ satisfies $-1 \le m \le 1$, and a stable cavity returns the $q$ it started with.
 
+The cavity is the chain's context: a `Context` of `Data` contextoids holding the two drift lengths, the lens's radius of curvature and refractive index, the wavelength and the input waist. The input $q$ is built from it, `.context` attaches it to the flow, and each element builds its ABCD matrix from it when the beam reaches that element.
+
 This cavity's round trip is exactly $-I$, so $m = -1$: the boundary of the stability range. The beam reproduces itself, but any drift in the thermal lens pushes the cavity out.
 
 ## Key APIs

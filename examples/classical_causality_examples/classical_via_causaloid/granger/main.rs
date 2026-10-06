@@ -5,20 +5,16 @@
 mod model;
 
 use deep_causality::*;
-
-// Define IDs for different data types within the context
-const OIL_PRICE_ID: IdentificationValue = 0;
-const SHIPPING_ACTIVITY_ID: IdentificationValue = 1;
-const TIME_ID: IdentificationValue = 2;
+use std::error::Error;
 
 // Define ID for the causaloid
 const PREDICTOR_CAUSALOID_ID: IdentificationValue = 1;
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     println!("Granger Causality Example: Oil Prices and Shipping Activity ");
     // Create two instances of the causaloid, one for each context.
-    let factual_causaloid = model::get_factual_causaloid(PREDICTOR_CAUSALOID_ID);
-    let counterfactual_causaloid = model::get_counterfactual_causaloid(PREDICTOR_CAUSALOID_ID);
+    let factual_causaloid = model::get_factual_causaloid(PREDICTOR_CAUSALOID_ID)?;
+    let counterfactual_causaloid = model::get_counterfactual_causaloid(PREDICTOR_CAUSALOID_ID)?;
 
     // 2. Execute the Granger Test
     // Factual Evaluation (with oil price history). The oil price history is stored in the context.
@@ -26,12 +22,7 @@ fn main() {
     let input_effect: PropagatingEffect<f64> = PropagatingEffect::pure(0.0);
 
     let res_factual = factual_causaloid.evaluate(&input_effect);
-    if res_factual.is_err() {
-        eprintln!("Factual evaluation failed: {:?}", res_factual.error());
-        return;
-    }
-
-    let factual_prediction = res_factual.value_cloned().unwrap_or(0.0);
+    let factual_prediction = model::value_of(&res_factual)?;
     println!(
         "Factual Prediction for Q5 Shipping Activity: {:.2}",
         factual_prediction
@@ -39,15 +30,7 @@ fn main() {
 
     // Counterfactual Evaluation (without oil price history).
     let res_counter_factual = counterfactual_causaloid.evaluate(&input_effect);
-    if res_counter_factual.is_err() {
-        eprintln!(
-            "Counterfactual evaluation failed: {:?}",
-            res_counter_factual.error()
-        );
-        return;
-    }
-
-    let counterfactual_prediction = res_counter_factual.value_cloned().unwrap_or(0.0);
+    let counterfactual_prediction = model::value_of(&res_counter_factual)?;
     println!(
         "Counterfactual Prediction for Q5 Shipping Activity: {:.2}",
         counterfactual_prediction
@@ -78,4 +61,5 @@ fn main() {
         println!("Conclusion: Past oil prices DO NOT Granger-cause future shipping activity.");
         println!("Because including oil price history did not improve the prediction.");
     }
+    Ok(())
 }

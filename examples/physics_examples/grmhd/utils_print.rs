@@ -8,8 +8,13 @@
 //! This is the display boundary: `lower` is called here and nowhere else, so `f64` appears in this
 //! file alone.
 
-use crate::model::{GrmhdState, SimulationConfig, curvature_radius, tidal_acceleration_si};
-use crate::{FloatType, RADIUS_IN_RS, SOLAR_MASSES, TOLERANCE_ULPS, Verification};
+use crate::model::{
+    CENTRAL_MASS, COLUMN_LENGTH, CURRENT_DENSITY, GrmhdContext, GrmhdState, MAGNETIC_FIELD,
+    ORBIT_RADIUS, TIDAL_THRESHOLD, curvature_radius, orbit_radius, read, schwarzschild_radius,
+    tidal_acceleration_si,
+};
+use crate::{FloatType, TOLERANCE_ULPS, Verification};
+use deep_causality_core::CausalityError;
 use deep_causality_num::lower;
 
 pub fn print_header() {
@@ -18,30 +23,41 @@ pub fn print_header() {
     println!("Units: geometric (G = c = 1), so a mass is a length and an acceleration is 1/m\n");
 }
 
-pub fn print_config(c: &SimulationConfig) {
+pub fn print_config(world: &GrmhdContext) -> Result<(), CausalityError> {
+    let r_s = schwarzschild_radius(world)?;
+    let central_mass = read(world, CENTRAL_MASS)?;
+    let r = orbit_radius(world)?;
+    let orbit_radii = read(world, ORBIT_RADIUS)?;
+    let column_length = read(world, COLUMN_LENGTH)?;
+    let current_density = read(world, CURRENT_DENSITY)?;
+    let magnetic_field = read(world, MAGNETIC_FIELD)?;
+
     println!("Central body and plasma:");
     println!(
         "  Schwarzschild radius r_s = {:.4e} m  ({:.0} solar masses)",
-        lower(c.schwarzschild_radius),
-        lower(SOLAR_MASSES)
+        lower(r_s),
+        lower(central_mass)
     );
     println!(
         "  Plasma radius r          = {:.4e} m  ({:.0} r_s, equatorial plane)",
-        lower(c.radius),
-        lower(RADIUS_IN_RS)
+        lower(r),
+        lower(orbit_radii)
     );
     println!(
         "  Column length L          = {:.4e} m",
-        lower(c.column_length)
+        lower(column_length)
     );
     println!(
         "  Current J, field B       = {:.2}, {:.2}  (as the static observer measures them)\n",
-        lower(c.current_density),
-        lower(c.magnetic_field)
+        lower(current_density),
+        lower(magnetic_field)
     );
+    Ok(())
 }
 
-pub fn print_report(s: &GrmhdState) {
+pub fn print_report(s: &GrmhdState, world: &GrmhdContext) -> Result<(), CausalityError> {
+    let tidal_threshold = read(world, TIDAL_THRESHOLD)?;
+
     println!("[1] GR solver: curvature from the Schwarzschild solution");
     println!(
         "      M = r_s / 2               = {:.4e} m",
@@ -70,7 +86,7 @@ pub fn print_report(s: &GrmhdState) {
     println!(
         "      tide {:.2e} vs threshold {:.2e}  (both 1/m)",
         lower(s.tidal_acceleration),
-        lower(s.config.tidal_threshold)
+        lower(tidal_threshold)
     );
     println!("      selected metric           = {}", s.metric_label);
 
@@ -107,6 +123,7 @@ pub fn print_report(s: &GrmhdState) {
     println!("      {}", s.status);
 
     println!("\nData flow: spacetime geometry -> coupling -> plasma physics -> gravity feedback");
+    Ok(())
 }
 
 pub fn print_verification(v: &Verification) {

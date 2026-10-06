@@ -6,6 +6,7 @@
 use crate::ContextId;
 use crate::types::context_types::context_graph::extra_context::ExtraContext;
 use alloc::{format, string::ToString};
+use deep_causality_core::Identifiable;
 use ultragraph::*;
 
 use crate::{
@@ -93,6 +94,13 @@ where
     ) -> Result<usize, ContextIndexError> {
         if let Some(extra_contexts) = self.extra_contexts.as_mut() {
             if let Some(current_ctx) = extra_contexts.get_mut(&self.extra_context_id) {
+                let id = value.id();
+                if current_ctx.holds(id) {
+                    return Err(ContextIndexError(format!(
+                        "Cannot add node. A contextoid with ID {id} is already in extra context {}",
+                        self.extra_context_id
+                    )));
+                }
                 let index = match current_ctx.graph.add_node(value) {
                     Ok(index) => index,
                     Err(e) => {

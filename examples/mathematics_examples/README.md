@@ -66,6 +66,7 @@ Each folder carries its own README with the per-example table.
 | `deep_causality_num_complex` | Complex, quaternion and octonion number types |
 | `deep_causality_num_dual` | Dual numbers, forward-mode automatic differentiation |
 | `deep_causality_core` | `CausalEffectPropagationProcess` and witnesses |
+| `deep_causality_context` | The `Context` (`Data` nodes) holding the world quantities an example reads: model parameters, measurements, thresholds, scenarios |
 
 ---
 

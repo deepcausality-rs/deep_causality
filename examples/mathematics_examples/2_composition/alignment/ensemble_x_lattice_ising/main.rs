@@ -6,8 +6,9 @@
 //! # Ensemble x Lattice: the 2D Ising model
 //!
 //! A periodic `L x L` lattice of spins, evolved by Metropolis-Hastings, run as an ensemble of
-//! independent replicas. Four crates meet, each doing only what it owns:
+//! independent replicas. Five crates meet, each doing only what it owns:
 //!
+//! - `deep_causality_context` holds the heat-bath temperatures the lattices are equilibrated at.
 //! - `deep_causality_rand` supplies entropy — a seeded generator and nothing else.
 //! - `deep_causality_stats` supplies the acceptance draw, `StandardUniform` at the working scalar.
 //! - `deep_causality_tensor` holds each lattice, and holds the ensemble of lattices.
@@ -50,6 +51,10 @@
 //! - `CausalTensorWitness::sequence_zip` with `ZipTensorWitness` (DiagonalTraversable)
 
 use deep_causality_algebra::{Real, RealField};
+use deep_causality_context::{
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
+    NoSpace, NoSpaceTime, NoTime,
+};
 use deep_causality_haft::{DiagonalTraversable, Foldable, Functor};
 use deep_causality_num::{
     Float106, FromPrimitive, ToPrimitive, const_scalar_from_int, lift, lift_usize, lower,
@@ -100,17 +105,65 @@ pub type FloatType = f32;
 /// Small numbers, declared once at the working type rather than lifted at each use.
 const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
 
-fn main() {
+/// The heat-bath temperatures, in units of `J / k_B`, one `Data` node each. They are held at
+/// `f64` because `equilibrate` lifts `1 / T` into whichever scalar it runs at, and an `f32` node
+/// would round `Tc` before that division. The bath has no positions or clock, so the spatial,
+/// temporal and spacetime slots are empty.
+type HeatBathContext = Context<Data<f64>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
+
+/// Contextoid id: the bath temperature deep in the ordered phase, in units of `J / k_B`.
+const T_DEEP_ORDERED: ContextoidId = 1;
+/// Contextoid id: a bath temperature in the ordered phase, in units of `J / k_B`.
+const T_ORDERED: ContextoidId = 2;
+/// Contextoid id: the bath temperature at Onsager's `Tc`, in units of `J / k_B`.
+const T_CRITICAL: ContextoidId = 3;
+/// Contextoid id: a bath temperature in the disordered phase, in units of `J / k_B`.
+const T_DISORDERED: ContextoidId = 4;
+/// Contextoid id: the bath temperature deep in the disordered phase, in units of `J / k_B`.
+const T_DEEP_DISORDERED: ContextoidId = 5;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
+    let bath = heat_bath()?;
+    let t_critical = read(&bath, T_CRITICAL)?;
+    let t_ordered = read(&bath, T_DEEP_ORDERED)?;
 
-    report_transition();
-    let at_critical = report_ensemble(TC, COARSE_L, "Tc");
-    let ordered = report_ensemble(1.5, COARSE_L, "T = 1.5, deep in the ordered phase");
-    report_susceptibility(&at_critical);
+    report_transition(&bath)?;
+    let at_critical = report_ensemble(t_critical, COARSE_L, "Tc");
+    let ordered = report_ensemble(t_ordered, COARSE_L, "T = 1.5, deep in the ordered phase");
+    report_susceptibility(&at_critical, t_critical);
 
-    let fine_critical = report_ensemble(TC, FINE_L, "Tc on a 32x32 lattice");
-    let fine_ordered = report_ensemble(1.5, FINE_L, "T = 1.5 on a 32x32 lattice");
+    let fine_critical = report_ensemble(t_critical, FINE_L, "Tc on a 32x32 lattice");
+    let fine_ordered = report_ensemble(t_ordered, FINE_L, "T = 1.5 on a 32x32 lattice");
     report_precision(&at_critical, &ordered, &fine_critical, &fine_ordered);
+    Ok(())
+}
+
+/// The heat bath: the temperatures either side of `Tc` and `Tc` itself, one `Data` node each.
+fn heat_bath() -> Result<HeatBathContext, ContextIndexError> {
+    let facts = [
+        (T_DEEP_ORDERED, 1.5),
+        (T_ORDERED, 2.0),
+        (T_CRITICAL, TC),
+        (T_DISORDERED, 2.6),
+        (T_DEEP_DISORDERED, 3.5),
+    ];
+
+    let mut context = Context::with_capacity(1, "heat bath", facts.len());
+    for (id, t) in facts {
+        context.add_node(Contextoid::new(
+            id,
+            ContextoidType::Datoid(Data::new(id, t)),
+        ))?;
+    }
+    Ok(context)
+}
+
+/// Read one temperature out of the heat bath.
+fn read(context: &HeatBathContext, id: ContextoidId) -> Result<f64, ContextIndexError> {
+    context
+        .get_data_by_id(id)
+        .ok_or_else(|| ContextIndexError::new(format!("no temperature with contextoid id {id}")))
 }
 
 /// The run's parameters, printed once before any of the `report_*` sections below.
@@ -192,22 +245,24 @@ where
 // The transition, against Onsager
 // -------------------------------------------------------------------------------------------
 
-fn report_transition() {
+fn report_transition(bath: &HeatBathContext) -> Result<(), ContextIndexError> {
     println!("-- The transition, against Onsager's Tc = {TC:.6} --\n");
     println!("{:>8}  {:>10}  {:>10}", "T", "|m|", "phase");
 
-    for (t, label) in [
-        (1.5, "ordered"),
-        (2.0, "ordered"),
-        (TC, "critical"),
-        (2.6, "disordered"),
-        (3.5, "disordered"),
+    for (id, label) in [
+        (T_DEEP_ORDERED, "ordered"),
+        (T_ORDERED, "ordered"),
+        (T_CRITICAL, "critical"),
+        (T_DISORDERED, "disordered"),
+        (T_DEEP_DISORDERED, "disordered"),
     ] {
+        let t = read(bath, id)?;
         let lattice = equilibrate::<FloatType>(t, COARSE_L, SEED);
         let m = lower(magnetisation(&lattice));
         println!("{t:>8.4}  {m:>10.4}  {label:>10}");
     }
     println!();
+    Ok(())
 }
 
 // -------------------------------------------------------------------------------------------
@@ -252,7 +307,8 @@ fn report_ensemble(t: f64, l: usize, label: &str) -> Vec<f64> {
 // The susceptibility, through the diagonal traversal
 // -------------------------------------------------------------------------------------------
 
-fn report_susceptibility(magnetisations: &[f64]) {
+/// The susceptibility of the ensemble whose magnetisations are given, run at bath temperature `t`.
+fn report_susceptibility(magnetisations: &[f64], t: f64) {
     println!("-- The susceptibility, and why the traversal must be diagonal --\n");
 
     // A field of three observables. Each cell holds the whole ensemble: cell 0 every replica's
@@ -307,7 +363,7 @@ fn report_susceptibility(magnetisations: &[f64]) {
     // chi = beta * N * (<m^2> - <m>^2), from the paired fields.
     let mean_m = column_mean(&per_replica, 0);
     let mean_m_sq = column_mean(&per_replica, 1);
-    let beta = lift::<FloatType>(1.0 / TC);
+    let beta = lift::<FloatType>(1.0 / t);
     let chi = beta * lift_usize::<FloatType>(N) * (mean_m_sq - mean_m * mean_m);
 
     // The same number the direct way: the variance of the magnetisations.
@@ -317,7 +373,7 @@ fn report_susceptibility(magnetisations: &[f64]) {
         .map(|v| (v - mu) * (v - mu))
         .sum::<f64>()
         / magnetisations.len() as f64;
-    let chi_direct = (1.0 / TC) * N as f64 * var;
+    let chi_direct = (1.0 / t) * N as f64 * var;
 
     println!("  chi via the diagonal traversal = {:.4}", lower(chi));
     println!("  chi from the variance directly = {chi_direct:.4}");

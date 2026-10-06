@@ -25,9 +25,11 @@
 //! checks the AD result against the closed form. A failed identity is a failed run: `main`
 //! returns the error and the process exits with a nonzero status.
 //!
-//! The frequency rides in as a coordinate of the point the potential is evaluated at, next to
-//! `t` and `z`. That keeps one `omega` in the program: the value the phase is computed from is
-//! the value the wave is differentiated at, at whatever precision the alias below names.
+//! The frequency is a property of the wave and is the chain's context, a `Data` contextoid; the
+//! observation event `(t, z)` is the value the chain evaluates. A stage that evaluates the
+//! potential places the context's `omega` in the point's third coordinate, next to `t` and `z`.
+//! That keeps one `omega` in the program: the value the phase is computed from is the value the
+//! wave is differentiated at, at whatever precision the alias below names.
 //!
 //! ## APIs Demonstrated
 //! - `DifferentiateFieldExt::gradient` (forward-mode AD over a scalar-generic field)
@@ -39,14 +41,15 @@ mod utils_print;
 
 use deep_causality::{CausalityError, CausalityErrorEnum, PropagatingEffect};
 use deep_causality_algebra::Real;
-use deep_causality_core::{CausalEffect, CausalFlow};
+use deep_causality_context::{
+    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data,
+};
+use deep_causality_core::{CausalEffect, CausalFlow, PropagatingProcess};
 use deep_causality_num::{Float106, const_scalar_from_float, const_scalar_from_int, lift_usize};
-use model::{MaxwellState, PlaneWaveConfig};
+use model::{MaxwellState, OMEGA, WaveContext, read};
 use utils_print::{print_config, print_fields, print_header, print_verification};
 
-/// Angular frequency of the wave. A whole number, so it is exact at every scalar.
-const OMEGA: FloatType = const_scalar_from_int!(FloatType, 1);
-/// Observation event `(t, z)`.
+/// Observation event `(t, z)`: the point the chain evaluates the wave at.
 const OBSERVE_T: FloatType = const_scalar_from_int!(FloatType, 1);
 const OBSERVE_Z: FloatType = const_scalar_from_float!(FloatType, 0.5);
 
@@ -65,23 +68,21 @@ pub const TOLERANCE_ULPS: usize = 64;
 /// types differ.
 pub type FloatType = Float106;
 
-fn main() -> Result<(), CausalityError> {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
 
-    let config = PlaneWaveConfig {
-        omega: OMEGA,
-        t: OBSERVE_T,
-        z: OBSERVE_Z,
-    };
-    print_config(&config);
+    let wave = plane_wave()?;
+    let observation = MaxwellState::at(OBSERVE_T, OBSERVE_Z);
+    print_config(&wave, &observation)?;
 
-    // Potential -> field bivector -> Poynting flux, as one pipeline.
-    let result: PropagatingEffect<MaxwellState> =
-        CausalFlow::value(MaxwellState::from_config(&config))
-            .bind(|s, _, _| forward(s, model::compute_potential))
-            .bind(|s, _, _| forward(s, model::compute_em_field))
-            .bind(|s, _, _| forward(s, model::compute_poynting_flux))
-            .into_effect();
+    // Potential -> field bivector -> Poynting flux, as one pipeline. The wave rides in the
+    // context channel; the observation event is the value the chain evaluates.
+    let result: PropagatingProcess<MaxwellState, (), WaveContext> = CausalFlow::value(observation)
+        .context(wave.clone())
+        .bind(|s, _, w| forward(s, w, model::compute_potential))
+        .bind(|s, _, w| forward(s, w, model::compute_em_field))
+        .bind(|s, _, w| forward(s, w, |s, _| model::compute_poynting_flux(s)))
+        .into_process();
 
     // The error channel reaches `main`: a stage that failed is the error the process exits with.
     let (outcome, _, _, _) = result.into_parts();
@@ -90,27 +91,34 @@ fn main() -> Result<(), CausalityError> {
         .ok_or_else(|| custom("the chain finished without a field state"))?;
 
     let f = model::field_bivector(&state).map_err(custom)?;
-    print_fields(&state, model::field_blades(&f));
+    print_fields(&state, model::field_blades(&f).map_err(custom)?);
 
-    let verification = verify(&state);
+    let verification = verify(&state, &wave)?;
     print_verification(&verification);
     if verification.holds {
         Ok(())
     } else {
-        Err(custom(
-            "an identity of the source-free plane wave failed at this precision",
-        ))
+        Err(custom("an identity of the source-free plane wave failed at this precision").into())
     }
 }
 
-/// Hands the stage its state, or short-circuits when the upstream carried none.
+/// Hands the stage its state and the wave the context carries, and the stage's result and the
+/// wave on to the next stage, or short-circuits when the upstream carried no state or no wave.
 fn forward(
     value: CausalEffect<MaxwellState>,
-    stage: impl Fn(MaxwellState) -> PropagatingEffect<MaxwellState>,
-) -> PropagatingEffect<MaxwellState> {
-    match value.into_value() {
-        Some(s) => stage(s),
-        None => PropagatingEffect::from_error(custom("the chain carried no state")),
+    wave: Option<WaveContext>,
+    stage: impl Fn(MaxwellState, &WaveContext) -> Result<MaxwellState, CausalityError>,
+) -> PropagatingProcess<MaxwellState, (), WaveContext> {
+    match (value.into_value(), wave) {
+        (Some(s), Some(wave)) => {
+            let effect = match stage(s, &wave) {
+                Ok(next) => PropagatingEffect::pure(next),
+                Err(e) => PropagatingEffect::from_error(e),
+            };
+            PropagatingProcess::with_state(effect, (), Some(wave))
+        }
+        (None, _) => PropagatingProcess::from_error(custom("the chain carried no state")),
+        (_, None) => PropagatingProcess::from_error(custom("the chain carried no plane wave")),
     }
 }
 
@@ -129,7 +137,7 @@ pub struct Verification {
     pub holds: bool,
 }
 
-fn verify(s: &MaxwellState) -> Verification {
+fn verify(s: &MaxwellState, wave: &WaveContext) -> Result<Verification, CausalityError> {
     let tolerance = lift_usize::<FloatType>(TOLERANCE_ULPS) * FloatType::epsilon();
 
     let gauge_residual = Real::abs(s.divergence);
@@ -137,10 +145,10 @@ fn verify(s: &MaxwellState) -> Verification {
     let flux_residual = s.poynting_flux - Real::abs(s.e_field) * Real::abs(s.b_field);
 
     // A_x = cos(omega (t - z)), so E_x = -dA_x/dt = omega sin(omega (t - z)).
-    let closed_form = s.omega * Real::sin(s.phase);
+    let closed_form = read(wave, OMEGA)? * Real::sin(s.phase);
     let closed_form_residual = s.e_field - closed_form;
 
-    Verification {
+    Ok(Verification {
         tolerance,
         gauge_residual,
         field_balance,
@@ -150,7 +158,24 @@ fn verify(s: &MaxwellState) -> Verification {
             && Real::abs(field_balance) < tolerance
             && Real::abs(flux_residual) < tolerance
             && Real::abs(closed_form_residual) < tolerance,
+    })
+}
+
+/// Builds the plane wave: each world fact as a `Data` contextoid keyed by its contextoid id.
+fn plane_wave() -> Result<WaveContext, ContextIndexError> {
+    let facts = [
+        // A whole number, so it is exact at every scalar.
+        (OMEGA, const_scalar_from_int!(FloatType, 1)),
+    ];
+
+    let mut wave = Context::with_capacity(1, "plane wave", facts.len());
+    for (id, value) in facts {
+        wave.add_node(Contextoid::new(
+            id,
+            ContextoidType::Datoid(Data::new(id, value)),
+        ))?;
     }
+    Ok(wave)
 }
 
 fn custom(reason: impl Into<String>) -> CausalityError {

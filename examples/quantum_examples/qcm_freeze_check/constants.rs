@@ -9,7 +9,7 @@
 //! compiler resolves them against the alias in `main`.
 
 use crate::FloatType;
-use deep_causality_num::{const_scalar_from_float, const_scalar_from_int};
+use deep_causality_num::const_scalar_from_int;
 use deep_causality_num_complex::Complex;
 
 /// The complex scalar carried by every Choi–Jamiołkowski factor.
@@ -28,12 +28,6 @@ pub const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
 /// multiple of the identity would commute with everything and prove nothing about diagonality.
 pub const DIAGONAL_FIRST: FloatType = const_scalar_from_int!(FloatType, 3);
 pub const DIAGONAL_SECOND: FloatType = const_scalar_from_int!(FloatType, -1);
-
-/// The observation level each node reports against.
-///
-/// It plays no part in the commutativity check; a node has to compute something, and this is what
-/// these compute.
-pub const DETECTION_THRESHOLD: FloatType = const_scalar_from_float!(FloatType, 0.55);
 
 /// The Hilbert leg both factors are declared on.
 ///

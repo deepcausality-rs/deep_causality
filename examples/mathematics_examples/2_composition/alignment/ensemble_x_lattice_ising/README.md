@@ -1,7 +1,7 @@
 # Ensemble × Lattice: the 2D Ising model
 
 This example evolves a periodic 16×16 lattice of spins by Metropolis-Hastings, as an ensemble
-of 32 independent replicas. Four crates meet, each doing only what it owns.
+of 32 independent replicas. Five crates meet, each doing only what it owns.
 
 ```bash
 cargo run -p mathematics_examples --example ensemble_x_lattice_ising_examples
@@ -11,6 +11,7 @@ cargo run -p mathematics_examples --example ensemble_x_lattice_ising_examples
 
 | Crate | Role |
 |---|---|
+| `deep_causality_context` | the heat-bath temperatures, one `Data` node each |
 | `deep_causality_rand` | entropy: a seeded generator |
 | `deep_causality_stats` | the acceptance draw, `StandardUniform` at the working scalar |
 | `deep_causality_tensor` | each lattice, and the ensemble of lattices |

@@ -16,7 +16,7 @@ const FN_NAME: &str = "examples/tokio";
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("{FN_NAME}: Build Event Handler with causal model and context");
-    let event_handler = EventHandler::new(build_causal_model());
+    let event_handler = EventHandler::new(build_causal_model()?);
 
     println!("{FN_NAME}: Start the data handler as background task",);
     tokio::spawn(async move {
@@ -24,8 +24,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             eprintln!("{FN_NAME}]: inference error: {e}");
         }
     })
-    .await
-    .expect("Failed to spawn async background task");
+    .await?;
 
     Ok(())
 }

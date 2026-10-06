@@ -4,7 +4,7 @@
  */
 
 use deep_causality_context::{
-    BaseContext, Context, Contextoid, ContextoidType, ContextuableGraph,
+    BaseContext, Context, Contextoid, ContextoidType, ContextuableGraph, Data,
     ExtendableContextuableGraph, Identifiable, NewtonianTime, RelationKind, Root, TimeScale,
 };
 
@@ -360,4 +360,44 @@ fn test_clone_carries_the_extra_contexts() {
     assert_eq!(cloned.extra_ctx_get_current_id(), extra_id);
     assert_eq!(cloned.extra_ctx_node_count().unwrap(), 1);
     assert!(cloned.extra_ctx_contains_node(node));
+}
+
+#[test]
+fn test_get_data_by_id_reads_the_payload_of_the_node_carrying_the_id() {
+    // The ids run against the insertion order, so a read by position would return another value.
+    let mut context = get_context();
+    for (id, value) in [(30, 3.5), (10, 1.5), (20, 2.5)] {
+        context
+            .add_node(Contextoid::new(
+                id,
+                ContextoidType::Datoid(Data::new(id, value)),
+            ))
+            .unwrap();
+    }
+    context
+        .add_node(Contextoid::new(40, ContextoidType::Root(Root::new(40))))
+        .unwrap();
+
+    assert_eq!(context.get_data_by_id(10), Some(1.5));
+    assert_eq!(context.get_data_by_id(20), Some(2.5));
+    assert_eq!(context.get_data_by_id(30), Some(3.5));
+    // A node that is not a data node, and an id no node carries.
+    assert_eq!(context.get_data_by_id(40), None);
+    assert_eq!(context.get_data_by_id(0), None);
+
+    // An updated node answers with its new payload; a removed one with none.
+    context
+        .update_node(
+            20,
+            Contextoid::new(20, ContextoidType::Datoid(Data::new(20, 9.0))),
+        )
+        .unwrap();
+    assert_eq!(context.get_data_by_id(20), Some(9.0));
+    context.remove_node(10).unwrap();
+    assert_eq!(context.get_data_by_id(10), None);
+
+    // Freezing compacts the removed slot away; the read follows each id to its node.
+    context.freeze();
+    assert_eq!(context.get_data_by_id(20), Some(9.0));
+    assert_eq!(context.get_data_by_id(30), Some(3.5));
 }

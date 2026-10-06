@@ -12,10 +12,12 @@
 //!
 //! The 100 Hz tracking loop is expressed with the `CausalFlow` DSL: the per-tick state is one value,
 //! each tick is the composed pipeline `predict -> observe -> derive`, and the 20-tick run is a single
-//! `iterate_n`.
+//! `iterate_n`. The radar world (initial fix, initial velocity, update period) is a
+//! `deep_causality_context` `Context`: the tracker is built from it, and it rides in the flow's
+//! `Context` channel for the stages that read the update period.
 mod model;
 
-use crate::model::{build_initial_track, derive, observe, predict};
+use crate::model::{build_initial_track, build_radar_world, derive, observe, predict};
 use deep_causality_core::CausalFlow;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -27,8 +29,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("---------------------------------------------------------------------");
 
     // The 100 Hz tracking loop: each tick is the pipeline predict -> observe -> derive, run 20 times.
-    CausalFlow::value(build_initial_track())
-        .iterate_n(20, |tick| tick.next(predict).next(observe).next(derive));
+    let world = build_radar_world()?;
+    CausalFlow::value(build_initial_track(&world)?)
+        .context(world)
+        .iterate_n(20, |tick| {
+            tick.try_step_with(|t, _, ctx| predict(t, ctx))
+                .map(observe)
+                .try_step_with(|t, _, ctx| derive(t, ctx))
+        })
+        .finish()?;
 
     println!("\n[SYS] Intercept Solution Valid. Track Quality: 99%.");
     Ok(())

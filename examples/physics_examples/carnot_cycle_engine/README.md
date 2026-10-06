@@ -68,12 +68,13 @@ $$W = C_V (T_i - T_f) = \frac{3}{2}nR(T_i - T_f)$$
 | $V_A$ | 0.01 m³ | Initial volume (10 L) |
 | $P_A$ | 415,700 Pa | Initial pressure (~4 atm) |
 | Expansion Ratio | 2.0 | $V_B/V_A$ |
+| $f$ | 3 | Degrees of freedom of a monatomic gas molecule |
 
 ---
 
 ## Causal Chain Architecture
 
-`CausalFlow::value` from `deep_causality_core` starts the pipeline with the state at point A, and each stroke is one `.bind()`:
+`CausalFlow::value` from `deep_causality_core` starts the pipeline with the state at point A, `.context` attaches the engine's world, and each stroke is one `.bind()`:
 
 ```
 Initial State → Step 1 (A→B) → Step 2 (B→C) → Step 3 (C→D) → Step 4 (D→A) → Final State
@@ -95,9 +96,10 @@ Each state holds:
 ### Key Design Patterns
 
 1. **Monadic Composition**: Each stroke reads the last `EngineState` on the trace and appends the next one.
-2. **Derived End Point**: The closing stroke D→A derives its end point from the adiabat $T V^{\gamma-1} = \text{constant}$ instead of restating the starting values.
-3. **Closure Check**: `ideal_gas_law` recovers $R$ from the end state, and the run compares it with CODATA and the returned volume with $V_A$.
-4. **Efficiency Check**: The measured $W / Q_{in}$ is compared with `carnot_efficiency`.
+2. **Context Channel**: The two reservoir temperatures, the expansion ratio, the moles of gas, the gas's degrees of freedom $f$ and the starting volume $V_A$ are `Data` contextoids of one `Context`. Point A and every stroke read them from the context, and so do the closure and efficiency checks. The gas model follows from $f$: $C_V = \frac{f}{2} nR$ and $\gamma = (f + 2)/f$, so $f = 3$ gives $C_V = \frac{3}{2} nR$ and $\gamma = 5/3$.
+3. **Derived End Point**: The closing stroke D→A derives its end point from the adiabat $T V^{\gamma-1} = \text{constant}$ instead of restating the starting values.
+4. **Closure Check**: `ideal_gas_law` recovers $R$ from the end state, and the run compares it with CODATA and the returned volume with $V_A$.
+5. **Efficiency Check**: The measured $W / Q_{in}$ is compared with `carnot_efficiency`.
 
 ---
 
@@ -112,6 +114,7 @@ Each state holds:
 | `deep_causality_physics::carnot_efficiency` | Computes the theoretical efficiency limit |
 | `deep_causality_physics::ideal_gas_law` | Verifies P, V, n, T consistency |
 | `deep_causality_core::CausalFlow` | Monadic effect propagation |
+| `deep_causality_context::Context` | The reservoirs and gas, as `Data` contextoids the strokes read |
 
 ---
 

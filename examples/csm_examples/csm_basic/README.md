@@ -21,7 +21,7 @@ cargo run -p csm_examples --example csm_example
 The CSM links causal inferences to real-world actions. It is a collection of state-action pairs, and a causal model decides whether each state is active.
 
 1.  **Causal Logic as `Causaloid`s:**
-    A `Causaloid` holds each sensor's trigger condition. For example, the smoke sensor's `causal_fn` checks whether the incoming sensor reading reaches a threshold (65.0).
+    A `Causaloid` holds each sensor's trigger condition. The three alarm thresholds (smoke 65.0, fire 85.0 °C, explosion 100.0 psi) are `Datoid`s in one `BaseContext`, shared as `Arc<RwLock<BaseContext>>`. Each causaloid is built with `Causaloid::new_with_context`; its `causal_fn` reads its threshold from the context and checks whether the incoming sensor reading reaches it.
 
 2.  **States as `CausalState`s:**
     Each sensor is a `CausalState` that holds the `Causaloid` defining its logic; `smoke_cs`, for instance, holds the smoke sensor causaloid. When the CSM evaluates the state, the causaloid decides whether it is active.
@@ -33,7 +33,7 @@ The CSM links causal inferences to real-world actions. It is a collection of sta
     The `CSM` starts with a collection of state-action pairs (the explosion sensor is added afterwards with `add_single_state`) and orchestrates evaluation. The `main` loop simulates a stream of sensor data. In each iteration:
     - Each raw sensor reading is wrapped with `PropagatingEffect::pure`.
     - `csm.eval_single_state()` is called for each sensor.
-    - The CSM finds the corresponding `CausalState`, evaluates its `Causaloid` against the data, and, if the state is active, fires the associated `CausalAction`.
+    - The CSM finds the corresponding `CausalState`, evaluates its `Causaloid` against the reading and the threshold in the context, and, if the state is active, fires the associated `CausalAction`.
 
 ### Conclusion
 

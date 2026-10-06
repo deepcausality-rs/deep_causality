@@ -66,10 +66,12 @@ A failed check exits the process with a nonzero status.
 ## Causal Chain
 
 ```text
-PlaneWaveConfig → Potential(A) → EM Field(F = ∇A) → Gauge Check → Results
+Observation event (t, z) → Potential(A) → EM Field(F = ∇A) → Gauge Check → Results
 ```
 
 Each step is a pure function; `CausalFlow::bind` chains the potential, the field bivector and the Poynting flux.
+
+The wave's angular frequency `ω` is the chain's context: a `Context` holding one `Data` contextoid, attached with `.context`. The observation event `(t, z)` is the value the chain evaluates. The potential and field stages read `ω` from the context and evaluate the potential at the point `(t, z, ω)`, and the closed-form check reads the same `ω`.
 
 ## Reference
 

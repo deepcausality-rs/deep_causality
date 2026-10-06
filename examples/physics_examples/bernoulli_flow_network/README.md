@@ -74,7 +74,7 @@ The equation conserves energy along a streamline in an ideal (inviscid, incompre
 
 ## Causal Chain Architecture
 
-`CausalFlow::value` starts the pipeline with the reservoir state, and one `.bind` per segment appends the next fluid state to the trace:
+`CausalFlow::value` starts the pipeline with the reservoir state, `.context` attaches the pipe network, and one `.bind` per segment appends the next fluid state to the trace:
 
 ```
 Reservoir → Main Pipe → Venturi → Ground Outlet
@@ -93,8 +93,9 @@ Each state holds:
 ### Key Design Patterns
 
 1. **Value channel**: The trace `Vec<FluidState>` travels in the value channel; each segment reads the last state and appends its own.
-2. **Error channel**: A failed quantity constructor or `bernoulli_pressure` call becomes the flow's error, and the run prints it.
-3. **Head check**: After the pipeline, the run compares each segment's total head $P + \frac{1}{2}\rho v^2 + \rho g h$ with the reservoir's.
+2. **Context channel**: The network is a `Context` of `Data` contextoids, one per world fact: reservoir pressure and elevation, flow rate, water density, main and throat diameters, and outlet elevation. The reservoir state that starts the trace is read from it, and each segment reads its diameter, the flow rate and the density from it. The main pipe and the throat keep the elevation of the state before them; the drop reads the outlet elevation.
+3. **Error channel**: A failed quantity constructor or `bernoulli_pressure` call becomes the flow's error, and the run prints it.
+4. **Head check**: After the pipeline, the run compares each segment's total head $P + \frac{1}{2}\rho v^2 + \rho g h$ with the reservoir's, at the density the network holds.
 
 ---
 
@@ -108,6 +109,7 @@ Each state holds:
 | `deep_causality_physics::Length` | Type-safe distance values (m) |
 | `deep_causality_physics::Density` | Type-safe density values (kg/m³) |
 | `deep_causality_core::CausalFlow` | Monadic effect propagation |
+| `deep_causality_context::Context` | The pipe network, as `Data` contextoids the segments read |
 
 ---
 

@@ -57,6 +57,9 @@ pub enum ProjectionErrorEnum {
     /// The record's values break a rule of the node type: a metric tensor that is not symmetric,
     /// or a latitude past a pole. `rule` is the node type's own message for the rule broken.
     Rejected { id: ContextoidId, rule: String },
+    /// The event changes a graph that is frozen. A frozen graph is immutable, so the context is
+    /// unfrozen before events are applied to it. `id` is the frozen context's identifier.
+    Frozen { id: IdentificationValue },
 }
 
 impl ProjectionError {
@@ -123,6 +126,11 @@ impl ProjectionError {
     pub const fn Rejected(id: ContextoidId, rule: String) -> Self {
         Self(ProjectionErrorEnum::Rejected { id, rule })
     }
+
+    #[allow(non_snake_case)]
+    pub const fn Frozen(id: IdentificationValue) -> Self {
+        Self(ProjectionErrorEnum::Frozen { id })
+    }
 }
 
 impl Display for ProjectionError {
@@ -167,6 +175,10 @@ impl Display for ProjectionError {
             ProjectionErrorEnum::Rejected { id, rule } => {
                 write!(f, "ProjectionError: node {id} breaks the rule: {rule}")
             }
+            ProjectionErrorEnum::Frozen { id } => write!(
+                f,
+                "ProjectionError: context {id} is frozen; unfreeze it before applying events"
+            ),
         }
     }
 }
