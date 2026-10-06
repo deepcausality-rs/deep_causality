@@ -4,7 +4,7 @@
  */
 use crate::TeloidStore;
 use deep_causality::NumericalValue;
-use deep_causality_context::{Data, EuclideanSpace, EuclideanSpacetime, EuclideanTime};
+use deep_causality_context::{Data, EuclideanSpace, NewtonianSpacetime, NewtonianTime};
 
 /// The floating-point type this crate's ready-made aliases are built at.
 pub type FloatType = f64;
@@ -29,14 +29,14 @@ pub type TeloidID = u64;
 /// - **`EuclideanSpace`**: Defines the spatial context of the teloids using a standard
 ///   Euclidean coordinate system. This implies that spatial relationships
 ///   within this store adhere to Euclidean geometry.
-/// - **`EuclideanTime`**: Specifies the temporal context, utilizing a
+/// - **`NewtonianTime`**: Specifies the temporal context, utilizing a
 ///   Euclidean representation of time. This typically refers to a continuous,
 ///   linear progression of time.
-/// - **`EuclideanSpacetime`**: Combines the Euclidean spatial and temporal
+/// - **`NewtonianSpacetime`**: Combines the Euclidean spatial and temporal
 ///   contexts into a unified spacetime representation, where both space and
 ///   time are treated with Euclidean properties.
 /// - **`FloatType`**: The scalar the three geometric node types are built at. The same
-///   `FloatType` parameterises `EuclideanSpace`, `EuclideanTime`, and `EuclideanSpacetime`,
+///   `FloatType` parameterises `EuclideanSpace`, `NewtonianTime`, and `NewtonianSpacetime`,
 ///   so every coordinate a norm reads out of this store is measured in one scalar type.
 ///
 /// This `BaseTeloidStore` is designed to be a sensible default for many applications,
@@ -46,6 +46,6 @@ pub type TeloidID = u64;
 pub type BaseTeloidStore = TeloidStore<
     Data<NumericalValue>,
     EuclideanSpace<FloatType>,
-    EuclideanTime<FloatType>,
-    EuclideanSpacetime<FloatType>,
+    NewtonianTime<FloatType>,
+    NewtonianSpacetime<FloatType>,
 >;
