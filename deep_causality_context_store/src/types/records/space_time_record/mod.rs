@@ -7,7 +7,8 @@ use crate::TimeScale;
 
 /// A spacetime node as a store holds it: one variant per `SpaceTimeKind` variant.
 ///
-/// Each variant holds an event's coordinates `t, x, y, z`; `scale` is the unit `t` is counted in.
+/// Each variant holds an event's coordinates `t, x, y, z`. `Galilean`, `Newtonian` and
+/// `Minkowski` count `t` in the unit their `scale` names; `Tangent` counts it in seconds.
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum SpaceTimeRecord {
     /// An event of Galilean spacetime.

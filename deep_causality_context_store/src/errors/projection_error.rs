@@ -4,6 +4,7 @@
  */
 
 use crate::{ContextoidId, IdentificationValue};
+use alloc::string::String;
 use core::error::Error;
 use core::fmt::{Display, Formatter};
 
@@ -54,11 +55,8 @@ pub enum ProjectionErrorEnum {
     /// The snapshot was written under a newer record version than this reader supports.
     Version { found: u16, supported: u16 },
     /// The record's values break a rule of the node type: a metric tensor that is not symmetric,
-    /// or not of the type's signature. `rule` states which.
-    Rejected {
-        id: ContextoidId,
-        rule: &'static str,
-    },
+    /// or a latitude past a pole. `rule` is the node type's own message for the rule broken.
+    Rejected { id: ContextoidId, rule: String },
 }
 
 impl ProjectionError {
@@ -122,7 +120,7 @@ impl ProjectionError {
     }
 
     #[allow(non_snake_case)]
-    pub const fn Rejected(id: ContextoidId, rule: &'static str) -> Self {
+    pub const fn Rejected(id: ContextoidId, rule: String) -> Self {
         Self(ProjectionErrorEnum::Rejected { id, rule })
     }
 }
