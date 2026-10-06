@@ -6,38 +6,32 @@
 use crate::model;
 use deep_causality::*;
 use deep_causality_context::*;
+use std::error::Error;
 use std::sync::{Arc, RwLock};
 
-pub fn run_rung3_counterfactual(_explain: bool) {
+pub fn run_rung3_counterfactual(_explain: bool) -> Result<(), Box<dyn Error>> {
     println!("--- Rung 3: Counterfactual ---");
     println!(
         "Query: Given a smoker with high tar, what would their cancer risk be if they hadn't smoked?"
     );
 
     // 1. Create Factual Context: A person who smokes and has high tar.
-    let mut factual_context = BaseContext::with_capacity(1, "Factual", 5);
-    factual_context
-        .add_node(Contextoid::new(
-            1,
-            ContextoidType::Datoid(Data::new(model::NICOTINE_ID, 0.8)),
-        ))
-        .unwrap();
-    factual_context
-        .add_node(Contextoid::new(
-            2,
-            ContextoidType::Datoid(Data::new(model::TAR_ID, 0.8)),
-        ))
-        .unwrap();
+    let facts = [(model::NICOTINE_ID, 0.8), (model::TAR_ID, 0.8)];
+    let mut factual_context = BaseContext::with_capacity(1, "Factual", facts.len());
+    for (id, value) in facts {
+        factual_context.add_node(Contextoid::new(
+            id,
+            ContextoidType::Datoid(Data::new(id, value)),
+        ))?;
+    }
 
     // 2. Create Counterfactual Context: Same person, but we hypothetically set smoking to zero.
     let mut counterfactual_context = factual_context.clone();
     let new_nicotine_datoid = Contextoid::new(
-        1,
+        model::NICOTINE_ID,
         ContextoidType::Datoid(Data::new(model::NICOTINE_ID, 0.1)),
     );
-    counterfactual_context
-        .update_node(1, new_nicotine_datoid)
-        .unwrap();
+    counterfactual_context.update_node(model::NICOTINE_ID, new_nicotine_datoid)?;
 
     // 3. Create causaloids for each context
     let factual_causaloid =
@@ -51,8 +45,8 @@ pub fn run_rung3_counterfactual(_explain: bool) {
     let factual_result = factual_causaloid.evaluate(&input_effect);
     let counterfactual_result = counterfactual_causaloid.evaluate(&input_effect);
 
-    let factual_risk = factual_result.value_cloned().unwrap_or(false);
-    let counterfactual_risk = counterfactual_result.value_cloned().unwrap_or(false);
+    let factual_risk = model::value_of(&factual_result)?;
+    let counterfactual_risk = model::value_of(&counterfactual_result)?;
 
     // 5. Assert and Explain
     println!(
@@ -74,4 +68,5 @@ pub fn run_rung3_counterfactual(_explain: bool) {
         "Conclusion: The cancer risk remains high in the counterfactual case because the direct cause (tar) was not undone."
     );
     println!("\n");
+    Ok(())
 }

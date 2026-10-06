@@ -29,7 +29,7 @@
 //! against, and the plasma's current density and magnetic field.
 
 use deep_causality_context::{
-    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     NoSpace, NoSpaceTime, NoTime,
 };
 use deep_causality_haft::{Applicative, Pure};
@@ -45,21 +45,22 @@ const METRIC_DIM: usize = 4;
 /// slots are empty.
 type GrmhdContext = Context<Data<FloatType>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
 
-/// Node indices of the world's quantities.
-///
-/// The diagonal of a Schwarzschild-like metric: time dilation, radial stretching, and two angular
-/// components left flat.
-const G_00: usize = 0;
-const G_11: usize = 1;
-const G_22: usize = 2;
-const G_33: usize = 3;
-/// The scalar curvature `R` driven by the central mass, and the intensity above which the plasma
-/// runs in the relativistic algebra.
-const SCALAR_CURVATURE: usize = 4;
-const RELATIVISTIC_THRESHOLD: usize = 5;
-/// Plasma current density flowing toroidally, and the poloidal confinement field.
-const CURRENT_DENSITY: usize = 6;
-const MAGNETIC_FIELD: usize = 7;
+/// Contextoid id: `g_00` of the Schwarzschild-like metric's diagonal, the time dilation.
+const G_00: ContextoidId = 1;
+/// Contextoid id: `g_11` of the metric's diagonal, the radial stretching.
+const G_11: ContextoidId = 2;
+/// Contextoid id: `g_22` of the metric's diagonal, an angular component left flat.
+const G_22: ContextoidId = 3;
+/// Contextoid id: `g_33` of the metric's diagonal, an angular component left flat.
+const G_33: ContextoidId = 4;
+/// Contextoid id: the scalar curvature `R` driven by the central mass.
+const SCALAR_CURVATURE: ContextoidId = 5;
+/// Contextoid id: the curvature intensity above which the plasma runs in the relativistic algebra.
+const RELATIVISTIC_THRESHOLD: ContextoidId = 6;
+/// Contextoid id: the plasma current density, flowing toroidally.
+const CURRENT_DENSITY: ContextoidId = 7;
+/// Contextoid id: the poloidal confinement field.
+const MAGNETIC_FIELD: ContextoidId = 8;
 
 /// Blade indices: each axis owns one bit, and a plane owns the bits of the axes spanning it.
 const E_X: usize = 1 << 1;
@@ -114,20 +115,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// The accretion flow's world, in normalised units, one `Data` node per quantity.
 fn accretion_flow() -> Result<GrmhdContext, ContextIndexError> {
-    // In node-index order.
-    let quantities: [f64; 8] = [
-        -0.9, // G_00
-        1.1,  // G_11
-        1.0,  // G_22
-        1.0,  // G_33
-        0.1,  // SCALAR_CURVATURE
-        0.05, // RELATIVISTIC_THRESHOLD
-        10.0, // CURRENT_DENSITY
-        2.0,  // MAGNETIC_FIELD
+    let facts = [
+        (G_00, -0.9),
+        (G_11, 1.1),
+        (G_22, 1.0),
+        (G_33, 1.0),
+        (SCALAR_CURVATURE, 0.1),
+        (RELATIVISTIC_THRESHOLD, 0.05),
+        (CURRENT_DENSITY, 10.0),
+        (MAGNETIC_FIELD, 2.0),
     ];
 
-    let mut context = Context::with_capacity(1, "accretion flow", quantities.len());
-    for (id, &value) in (1..).zip(quantities.iter()) {
+    let mut context = Context::with_capacity(1, "accretion flow", facts.len());
+    for (id, value) in facts {
         context.add_node(Contextoid::new(
             id,
             ContextoidType::Datoid(Data::new(id, lift::<FloatType>(value))),
@@ -137,12 +137,10 @@ fn accretion_flow() -> Result<GrmhdContext, ContextIndexError> {
 }
 
 /// Read one quantity out of the world.
-fn read(context: &GrmhdContext, index: usize) -> Result<FloatType, ContextIndexError> {
+fn read(context: &GrmhdContext, id: ContextoidId) -> Result<FloatType, ContextIndexError> {
     context
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(Datable::get_data)
-        .ok_or_else(|| ContextIndexError::new(format!("no quantity at node {index}")))
+        .get_data_by_id(id)
+        .ok_or_else(|| ContextIndexError::new(format!("no quantity with contextoid id {id}")))
 }
 
 // --- General relativity: the tensor engine ---
@@ -153,8 +151,8 @@ fn spacetime_metric(
     world: &GrmhdContext,
 ) -> Result<CausalTensor<FloatType>, Box<dyn std::error::Error>> {
     let mut data = vec![ZERO; METRIC_DIM * METRIC_DIM];
-    for (i, &node) in [G_00, G_11, G_22, G_33].iter().enumerate() {
-        data[i * METRIC_DIM + i] = read(world, node)?;
+    for (i, &id) in [G_00, G_11, G_22, G_33].iter().enumerate() {
+        data[i * METRIC_DIM + i] = read(world, id)?;
     }
     Ok(CausalTensor::new(data, vec![METRIC_DIM, METRIC_DIM])?)
 }

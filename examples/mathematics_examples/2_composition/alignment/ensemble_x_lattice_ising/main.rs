@@ -52,7 +52,7 @@
 
 use deep_causality_algebra::{Real, RealField};
 use deep_causality_context::{
-    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     NoSpace, NoSpaceTime, NoTime,
 };
 use deep_causality_haft::{DiagonalTraversable, Foldable, Functor};
@@ -111,12 +111,16 @@ const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
 /// temporal and spacetime slots are empty.
 type HeatBathContext = Context<Data<f64>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
 
-/// Node indices of the heat-bath temperatures.
-const T_DEEP_ORDERED: usize = 0;
-const T_ORDERED: usize = 1;
-const T_CRITICAL: usize = 2;
-const T_DISORDERED: usize = 3;
-const T_DEEP_DISORDERED: usize = 4;
+/// Contextoid id: the bath temperature deep in the ordered phase, in units of `J / k_B`.
+const T_DEEP_ORDERED: ContextoidId = 1;
+/// Contextoid id: a bath temperature in the ordered phase, in units of `J / k_B`.
+const T_ORDERED: ContextoidId = 2;
+/// Contextoid id: the bath temperature at Onsager's `Tc`, in units of `J / k_B`.
+const T_CRITICAL: ContextoidId = 3;
+/// Contextoid id: a bath temperature in the disordered phase, in units of `J / k_B`.
+const T_DISORDERED: ContextoidId = 4;
+/// Contextoid id: the bath temperature deep in the disordered phase, in units of `J / k_B`.
+const T_DEEP_DISORDERED: ContextoidId = 5;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
@@ -137,11 +141,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// The heat bath: the temperatures either side of `Tc` and `Tc` itself, one `Data` node each.
 fn heat_bath() -> Result<HeatBathContext, ContextIndexError> {
-    // In node-index order.
-    let temperatures: [f64; 5] = [1.5, 2.0, TC, 2.6, 3.5];
+    let facts = [
+        (T_DEEP_ORDERED, 1.5),
+        (T_ORDERED, 2.0),
+        (T_CRITICAL, TC),
+        (T_DISORDERED, 2.6),
+        (T_DEEP_DISORDERED, 3.5),
+    ];
 
-    let mut context = Context::with_capacity(1, "heat bath", temperatures.len());
-    for (id, &t) in (1..).zip(temperatures.iter()) {
+    let mut context = Context::with_capacity(1, "heat bath", facts.len());
+    for (id, t) in facts {
         context.add_node(Contextoid::new(
             id,
             ContextoidType::Datoid(Data::new(id, t)),
@@ -151,12 +160,10 @@ fn heat_bath() -> Result<HeatBathContext, ContextIndexError> {
 }
 
 /// Read one temperature out of the heat bath.
-fn read(context: &HeatBathContext, index: usize) -> Result<f64, ContextIndexError> {
+fn read(context: &HeatBathContext, id: ContextoidId) -> Result<f64, ContextIndexError> {
     context
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(Datable::get_data)
-        .ok_or_else(|| ContextIndexError::new(format!("no temperature at node {index}")))
+        .get_data_by_id(id)
+        .ok_or_else(|| ContextIndexError::new(format!("no temperature with contextoid id {id}")))
 }
 
 /// The run's parameters, printed once before any of the `report_*` sections below.
@@ -242,14 +249,14 @@ fn report_transition(bath: &HeatBathContext) -> Result<(), ContextIndexError> {
     println!("-- The transition, against Onsager's Tc = {TC:.6} --\n");
     println!("{:>8}  {:>10}  {:>10}", "T", "|m|", "phase");
 
-    for (node, label) in [
+    for (id, label) in [
         (T_DEEP_ORDERED, "ordered"),
         (T_ORDERED, "ordered"),
         (T_CRITICAL, "critical"),
         (T_DISORDERED, "disordered"),
         (T_DEEP_DISORDERED, "disordered"),
     ] {
-        let t = read(bath, node)?;
+        let t = read(bath, id)?;
         let lattice = equilibrate::<FloatType>(t, COARSE_L, SEED);
         let m = lower(magnetisation(&lattice));
         println!("{t:>8.4}  {m:>10.4}  {label:>10}");

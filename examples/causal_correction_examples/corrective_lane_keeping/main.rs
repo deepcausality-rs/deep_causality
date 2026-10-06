@@ -43,6 +43,11 @@ fn main() -> Result<(), CausalityError> {
     let lane = nominal_lane_context().map_err(|err| CausalityError::GraphError(err.to_string()))?;
     let open = run_open_loop(lane.clone());
     let closed = run_closed_loop(lane);
+    for process in [&open, &closed] {
+        if let Some(err) = process.error() {
+            return Err(err.clone());
+        }
+    }
 
     model_utils::print_section("Open loop (no intervention)", &open)?;
     model_utils::print_section("Closed loop (monitor + corrective intervene)", &closed)?;

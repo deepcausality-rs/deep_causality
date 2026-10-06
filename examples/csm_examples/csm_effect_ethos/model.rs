@@ -7,14 +7,15 @@ use deep_causality::{
     NumericalValue, PropagatingProcess,
 };
 use deep_causality_context::{
-    BaseContext, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    BaseContext, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph,
+    Data,
 };
 use deep_causality_ethos::{DeonticError, EffectEthos, TeloidModal};
 
 use std::sync::{Arc, RwLock};
 
-/// Node index of the alert-threshold contextoid.
-const ALERT_THRESHOLD: usize = 0;
+/// Contextoid id: temperature alert threshold, on the scale of the temperature reading.
+const ALERT_THRESHOLD: ContextoidId = 1;
 
 /// The scalar this example works in.
 pub type FloatType = f64;
@@ -78,10 +79,10 @@ pub(crate) fn get_test_causaloid(context: Arc<RwLock<BaseContext>>) -> CsmCausal
     Causaloid::new_with_context(id, context_causal_fn, context, description)
 }
 
-/// Reads one threshold out of the shared context.
+/// Reads the threshold with contextoid id `id` out of the shared context.
 fn read_threshold(
     context: Option<Arc<RwLock<BaseContext>>>,
-    index: usize,
+    id: ContextoidId,
 ) -> Result<NumericalValue, CausalityError> {
     let context = context.ok_or(CausalityError(CausalityErrorEnum::MissingContext))?;
     let guard = context.read().map_err(|_| {
@@ -89,15 +90,11 @@ fn read_threshold(
             "Context lock is poisoned".into(),
         ))
     })?;
-    guard
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(Datable::get_data)
-        .ok_or_else(|| {
-            CausalityError(CausalityErrorEnum::Custom(format!(
-                "No threshold Datoid at context index {index}"
-            )))
-        })
+    guard.get_data_by_id(id).ok_or_else(|| {
+        CausalityError(CausalityErrorEnum::Custom(format!(
+            "No threshold Datoid with contextoid id {id}"
+        )))
+    })
 }
 
 pub(crate) fn get_alert_action() -> CausalAction {
@@ -113,12 +110,14 @@ pub(crate) fn get_alert_action() -> CausalAction {
 /// Builds the shared context: one `Data` contextoid holding the temperature alert threshold, on
 /// the scale of the temperature reading.
 pub(crate) fn get_base_context() -> Result<BaseContext, ContextIndexError> {
-    let id = 1;
-    let name = "base context";
-    let mut context = BaseContext::with_capacity(id, name, 1);
-
-    let alert_threshold = Data::new(id, 0.55);
-    context.add_node(Contextoid::new(id, ContextoidType::Datoid(alert_threshold)))?;
+    let facts = [(ALERT_THRESHOLD, 0.55)];
+    let mut context = BaseContext::with_capacity(1, "base context", facts.len());
+    for (id, value) in facts {
+        context.add_node(Contextoid::new(
+            id,
+            ContextoidType::Datoid(Data::new(id, value)),
+        ))?;
+    }
 
     Ok(context)
 }

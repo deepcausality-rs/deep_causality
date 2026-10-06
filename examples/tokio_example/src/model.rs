@@ -8,12 +8,13 @@ use deep_causality::{
     IdentificationValue, Model, NumericalValue, PropagatingProcess,
 };
 use deep_causality_context::{
-    BaseContext, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    BaseContext, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph,
+    Data,
 };
 use std::sync::{Arc, RwLock};
 
-/// Node index of the threshold contextoid.
-const THRESHOLD: usize = 0;
+/// Contextoid id: activation threshold, on the scale of the observations.
+const THRESHOLD: ContextoidId = 1;
 
 pub fn build_causal_model() -> Result<BaseModelTokio, ContextIndexError> {
     let id = 1;
@@ -72,10 +73,10 @@ pub fn get_test_causaloid(
     Causaloid::new_with_context(id, causal_fn, context, description)
 }
 
-/// Reads one `Data` contextoid's payload out of the shared context.
+/// Reads the `Data` contextoid with contextoid id `id` out of the shared context.
 fn read(
     context: Option<Arc<RwLock<BaseContext>>>,
-    index: usize,
+    id: ContextoidId,
 ) -> Result<NumericalValue, CausalityError> {
     let context = context.ok_or(CausalityError(CausalityErrorEnum::MissingContext))?;
     let guard = context.read().map_err(|_| {
@@ -83,26 +84,24 @@ fn read(
             "Context lock is poisoned".into(),
         ))
     })?;
-    guard
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(Datable::get_data)
-        .ok_or_else(|| {
-            CausalityError(CausalityErrorEnum::Custom(format!(
-                "No Datoid at context index {index}"
-            )))
-        })
+    guard.get_data_by_id(id).ok_or_else(|| {
+        CausalityError(CausalityErrorEnum::Custom(format!(
+            "No Datoid with contextoid id {id}"
+        )))
+    })
 }
 
 /// Builds the model context: one `Data` contextoid holding the activation threshold, on the scale
 /// of the observations.
 fn get_test_context() -> Result<BaseContext, ContextIndexError> {
-    let id = 1;
-    let name = "base context for testing";
-    let mut context = BaseContext::with_capacity(id, name, 10);
-
-    let threshold = Data::new(id, 0.75);
-    context.add_node(Contextoid::new(id, ContextoidType::Datoid(threshold)))?;
+    let facts = [(THRESHOLD, 0.75)];
+    let mut context = BaseContext::with_capacity(1, "base context for testing", facts.len());
+    for (id, value) in facts {
+        context.add_node(Contextoid::new(
+            id,
+            ContextoidType::Datoid(Data::new(id, value)),
+        ))?;
+    }
 
     Ok(context)
 }

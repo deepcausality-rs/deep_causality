@@ -22,7 +22,7 @@ use core::ops::{Add, Mul};
 use deep_causality_algebra::Real;
 use deep_causality_calculus::{EndoArrow, Rk4, Scalar};
 use deep_causality_context::{
-    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     NoSpace, NoSpaceTime, NoTime,
 };
 use deep_causality_core::CausalityError;
@@ -66,24 +66,20 @@ impl<S: Scalar> Mul<S> for Vec3<S> {
 /// spatial, temporal and spacetime slots are empty.
 pub type ConvectionContext = Context<Data<f64>, NoSpace<f64>, NoTime, NoSpaceTime<f64>>;
 
-/// Node index: `σ`, the Prandtl number (dimensionless).
-pub const SIGMA: usize = 0;
-/// Node index: `ρ`, the Rayleigh number relative to its critical value (dimensionless).
-pub const RHO: usize = 1;
-/// Node index: `β`, the geometric factor of the convection cell (dimensionless).
-pub const BETA: usize = 2;
+/// Contextoid id: `σ`, the Prandtl number (dimensionless).
+pub const SIGMA: ContextoidId = 1;
+/// Contextoid id: `ρ`, the Rayleigh number relative to its critical value (dimensionless).
+pub const RHO: ContextoidId = 2;
+/// Contextoid id: `β`, the geometric factor of the convection cell (dimensionless).
+pub const BETA: ContextoidId = 3;
 
 /// Classic Lorenz / Saltzman parameters: the Rayleigh-Bénard 3-mode truncation in its chaotic
-/// regime (`σ = 10`, `ρ = 28`, `β = 8/3`), where convection is turbulent. Added in node-index
-/// order: node `i` holds contextoid id `i + 1`.
+/// regime (`σ = 10`, `ρ = 28`, `β = 8/3`), where convection is turbulent. Each parameter is keyed
+/// by its contextoid id.
 pub fn convection_world() -> Result<ConvectionContext, ContextIndexError> {
-    let parameters = [
-        10.0,      // SIGMA
-        28.0,      // RHO
-        8.0 / 3.0, // BETA
-    ];
-    let mut context = Context::with_capacity(1, "Lorenz convection", parameters.len());
-    for (id, value) in (1..).zip(parameters) {
+    let facts = [(SIGMA, 10.0), (RHO, 28.0), (BETA, 8.0 / 3.0)];
+    let mut context = Context::with_capacity(1, "Lorenz convection", facts.len());
+    for (id, value) in facts {
         context.add_node(Contextoid::new(
             id,
             ContextoidType::Datoid(Data::new(id, value)),
@@ -92,18 +88,14 @@ pub fn convection_world() -> Result<ConvectionContext, ContextIndexError> {
     Ok(context)
 }
 
-/// Read one `Data` contextoid's payload out of the convective world. A node that is absent or not
-/// a Datoid is an error.
-pub fn read(context: &ConvectionContext, index: usize) -> Result<f64, CausalityError> {
-    context
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(Datable::get_data)
-        .ok_or_else(|| {
-            CausalityError::MissingParameter(format!(
-                "convective world node {index} is absent or not a Datoid"
-            ))
-        })
+/// Read the `Data` contextoid carrying `id` out of the convective world. An id the world does not
+/// hold as a Datoid is an error.
+pub fn read(context: &ConvectionContext, id: ContextoidId) -> Result<f64, CausalityError> {
+    context.get_data_by_id(id).ok_or_else(|| {
+        CausalityError::MissingParameter(format!(
+            "convective world holds no Datoid with contextoid id {id}"
+        ))
+    })
 }
 
 /// The convective rate field `dv/dt = f(v)` (the Lorenz right-hand side), as a closure over the

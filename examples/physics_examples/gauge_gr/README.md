@@ -9,18 +9,19 @@ RUSTFLAGS='-C target-cpu=native'  cargo run --example gauge_gr --release
 This example treats **General Relativity (GR)** as an SO(3,1) Lorentz gauge theory and
 composes the analysis of a Schwarzschild black hole with the **Causal Monad** (`CausalFlow`).
 
-## Overview: General Relativity in 5 Lines
+## Overview: General Relativity in 8 Lines
 
-Five lines chain the workflow of numerical relativity:
+Eight lines chain the workflow of numerical relativity:
 
 ```rust
-let spacetime = schwarzschild_spacetime();
+let spacetime = schwarzschild_spacetime()?;
 let result = CausalFlow::from(initial_stage_create_schwarzschild(&spacetime))
     .context(spacetime)
     .bind_or_error(stage_curvature_invariants, "Curvature computation failed")
     .bind_or_error(stage_geodesic_analysis, "Geodesic analysis failed")
     .bind_or_error(stage_adm_formalism, "ADM formalism failed")
-    .bind_or_error(stage_event_horizon_detection, "Horizon detection failed");
+    .bind_or_error(stage_event_horizon_detection, "Horizon detection failed")
+    .into_process();
 ```
 
 ## The Gravitas of each Stage
@@ -79,7 +80,7 @@ cargo run --example gauge_gr -p physics_examples
 The black hole and the observer are the pipeline's context. `schwarzschild_spacetime` builds a `Context` of two `Data` contextoids, the central mass (10 M☉) and the observation radius (3 $r_s$), and `.context` attaches it. Every stage reads that context and derives $r_s$ and $r$ from it; the value channel carries only the gauge field and the results.
 
 ### Why this matters:
-1. **Type-Safe**: Each stage receives the physical data it needs from the previous one.
+1. **Type-Safe**: Each stage receives the gauge field and the results so far as a typed value from the stage before it, and reads the central mass and the observation radius from the context.
 2. **Error Handling**: If a computation becomes physically impossible (like measuring time inside a singularity), the pipeline stops and reports why, without crashing.
 3. **Modularity**: A "Neutron Star" or "Gravitational Wave" stage can replace the "Black Hole" stage without changes to the analysis code.
 

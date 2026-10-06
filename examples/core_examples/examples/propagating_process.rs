@@ -4,7 +4,7 @@
  */
 
 use deep_causality_context::{
-    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     NoSpace, NoSpaceTime, NoTime,
 };
 use deep_causality_core::{CausalEffect, CausalityError, PropagatingEffect, PropagatingProcess};
@@ -23,26 +23,27 @@ struct SystemState {
 /// space and no time, so those slots hold `NoSpace`, `NoTime` and `NoSpaceTime`.
 type ConfigContext = Context<Data<i32>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
 
-/// Node index of the multiplier contextoid.
-const MULTIPLIER: usize = 0;
+/// Contextoid id: the factor the first step multiplies the value by.
+const MULTIPLIER: ContextoidId = 1;
 
 /// Build the configuration context: one `Data` contextoid holding the multiplier.
 fn config(multiplier: i32) -> Result<ConfigContext, ContextIndexError> {
-    let mut context = Context::with_capacity(1, "config", 1);
-    context.add_node(Contextoid::new(
-        1,
-        ContextoidType::Datoid(Data::new(1, multiplier)),
-    ))?;
+    let facts = [(MULTIPLIER, multiplier)];
+    let mut context = Context::with_capacity(1, "config", facts.len());
+    for (id, value) in facts {
+        context.add_node(Contextoid::new(
+            id,
+            ContextoidType::Datoid(Data::new(id, value)),
+        ))?;
+    }
     Ok(context)
 }
 
-/// Read one `Data` contextoid's payload out of the configuration.
-fn read(context: &ConfigContext, index: usize) -> Result<i32, CausalityError> {
+/// Read the `Data` contextoid with contextoid id `id` out of the configuration.
+fn read(context: &ConfigContext, id: ContextoidId) -> Result<i32, CausalityError> {
     context
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(Datable::get_data)
-        .ok_or_else(|| CausalityError::Custom(format!("No Datoid at context index {index}")))
+        .get_data_by_id(id)
+        .ok_or_else(|| CausalityError::Custom(format!("No Datoid with contextoid id {id}")))
 }
 
 /// The value a process carries: its error if it failed, `ValueNotAvailable` if it holds no value.

@@ -36,7 +36,7 @@ use std::error::Error;
 
 use crate::constants::{TORUS_SIDE, exactness_threshold};
 use crate::model_config::{
-    NoiseContext, depolarising_probability, gadget_noise_world, noise_fraction,
+    NoiseContext, depolarising_probability, gadget_noise_world, noise_probability,
 };
 use utils_print::{print_clean, print_header, print_noisy, print_outcome, print_row};
 
@@ -87,9 +87,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     // link, which is what the alignment by the physical identity is for.
     let noisy = law_for::<FloatType>(true, &world)?;
     let second_link_exact = noisy.rows[0].epsilon_second < exactness_threshold::<FloatType>();
-    print_noisy(&noisy, second_link_exact, noise_fraction(&world)?);
+    print_noisy(&noisy, second_link_exact, noise_probability(&world)?);
 
-    // Each precision divides the world's two integers itself.
+    // Each precision divides the world's fraction itself.
     println!("[noisy gadget] at the shipped precisions");
     let f32_law = law_for::<f32>(true, &world)?;
     let f64_law = law_for::<f64>(true, &world)?;

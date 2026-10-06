@@ -34,7 +34,7 @@
 //! example is reproducible without an RNG.
 
 use deep_causality_context::{
-    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     NoSpace, NoSpaceTime, NoTime,
 };
 use deep_causality_core::{
@@ -42,11 +42,12 @@ use deep_causality_core::{
 };
 use std::error::Error;
 
-/// Node indices of the three `Data` contextoids a climate regime carries: its two CPT entries
-/// and the rain probability above which the person carries an umbrella.
-const P_RAIN_GIVEN_RAIN: usize = 0;
-const P_RAIN_GIVEN_DRY: usize = 1;
-const UMBRELLA_THRESHOLD: usize = 2;
+/// Contextoid id: CPT entry P(rain | rained yesterday), probability.
+const P_RAIN_GIVEN_RAIN: ContextoidId = 1;
+/// Contextoid id: CPT entry P(rain | dry yesterday), probability.
+const P_RAIN_GIVEN_DRY: ContextoidId = 2;
+/// Contextoid id: the rain probability above which the person carries an umbrella, probability.
+const UMBRELLA_THRESHOLD: ContextoidId = 3;
 
 type FloatType = f64;
 
@@ -136,12 +137,13 @@ fn climate(
     p_rain_given_dry: FloatType,
     umbrella_threshold: FloatType,
 ) -> Result<ClimateContext, ContextIndexError> {
-    let mut context = Context::with_capacity(1, label, 3);
-    for (id, value) in [
-        (1, p_rain_given_rain),
-        (2, p_rain_given_dry),
-        (3, umbrella_threshold),
-    ] {
+    let facts = [
+        (P_RAIN_GIVEN_RAIN, p_rain_given_rain),
+        (P_RAIN_GIVEN_DRY, p_rain_given_dry),
+        (UMBRELLA_THRESHOLD, umbrella_threshold),
+    ];
+    let mut context = Context::with_capacity(1, label, facts.len());
+    for (id, value) in facts {
         context.add_node(Contextoid::new(
             id,
             ContextoidType::Datoid(Data::new(id, value)),
@@ -150,13 +152,11 @@ fn climate(
     Ok(context)
 }
 
-/// Read one `Data` contextoid's payload out of a climate regime.
-fn read(context: &ClimateContext, index: usize) -> Result<FloatType, CausalityError> {
+/// Read the `Data` contextoid with contextoid id `id` out of a climate regime.
+fn read(context: &ClimateContext, id: ContextoidId) -> Result<FloatType, CausalityError> {
     context
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(|data| data.get_data())
-        .ok_or_else(|| CausalityError::ModelError(format!("context node {index} is not a Datoid")))
+        .get_data_by_id(id)
+        .ok_or_else(|| CausalityError::ModelError(format!("no Datoid with contextoid id {id}")))
 }
 
 /// Evolving Markov state: yesterday's rain outcome, plus running counters.

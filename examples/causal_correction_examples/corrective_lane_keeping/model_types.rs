@@ -8,7 +8,7 @@
 #![allow(dead_code)] // Domain fields kept for narrative clarity even if not all are read.
 
 use deep_causality_context::{
-    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     NoSpace, NoSpaceTime, NoTime,
 };
 use deep_causality_core::{CausalityError, PropagatingProcess};
@@ -49,35 +49,36 @@ pub struct VehicleState {
 /// holds no position, clock or event, so its spatial, temporal and spacetime slots are empty.
 pub type LaneContext = Context<Data<FloatType>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
 
-/// Node index: half-width of the lane in metres. `|offset| > lane_half_width` is off-road; the
+/// Contextoid id: half-width of the lane in metres. `|offset| > lane_half_width` is off-road; the
 /// trajectory is marked catastrophic from that tick on.
-pub const LANE_HALF_WIDTH: usize = 0;
-/// Node index: monitor threshold in metres. When `|offset| > anomaly_threshold`, the closed loop
-/// fires a corrective intervention.
-pub const ANOMALY_THRESHOLD: usize = 1;
-/// Node index: proportional correction gain. The corrected offset is `offset * (1.0 - p_gain)`.
-/// `p_gain = 1.0` snaps to centre; smaller values leave residual offset that the next tick can
-/// build on.
-pub const P_GAIN: usize = 2;
-/// Node index: constant lateral drift from the road crown (m per tick).
-pub const BASE_DRIFT: usize = 3;
-/// Node index: amplitude of the crosswind gusts (m per tick).
-pub const GUST_AMPLITUDE: usize = 4;
-/// Node index: period of the crosswind gusts (ticks per radian).
-pub const GUST_PERIOD: usize = 5;
+pub const LANE_HALF_WIDTH: ContextoidId = 1;
+/// Contextoid id: monitor threshold in metres. When `|offset| > anomaly_threshold`, the closed
+/// loop fires a corrective intervention.
+pub const ANOMALY_THRESHOLD: ContextoidId = 2;
+/// Contextoid id: proportional correction gain. The corrected offset is
+/// `offset * (1.0 - p_gain)`. `p_gain = 1.0` snaps to centre; smaller values leave residual offset
+/// that the next tick can build on.
+pub const P_GAIN: ContextoidId = 3;
+/// Contextoid id: constant lateral drift from the road crown (m per tick).
+pub const BASE_DRIFT: ContextoidId = 4;
+/// Contextoid id: amplitude of the crosswind gusts (m per tick).
+pub const GUST_AMPLITUDE: ContextoidId = 5;
+/// Contextoid id: period of the crosswind gusts (ticks per radian).
+pub const GUST_PERIOD: ContextoidId = 6;
 
-/// The nominal lane, controller and drift, added in node-index order: node `i` holds contextoid
-/// id `i + 1`.
+/// The nominal lane, controller and drift: one `Data` contextoid per fact, keyed by its
+/// contextoid id.
 pub fn nominal_lane_context() -> Result<LaneContext, ContextIndexError> {
-    let mut context = Context::with_capacity(1, "lane", 6);
-    for (id, value) in [
-        (1, 1.5),  // LANE_HALF_WIDTH: standard 3 m lane
-        (2, 0.30), // ANOMALY_THRESHOLD: 30 cm of drift is the alarm point
-        (3, 0.85), // P_GAIN
-        (4, 0.06), // BASE_DRIFT
-        (5, 0.04), // GUST_AMPLITUDE
-        (6, 3.0),  // GUST_PERIOD
-    ] {
+    let facts = [
+        (LANE_HALF_WIDTH, 1.5),    // standard 3 m lane
+        (ANOMALY_THRESHOLD, 0.30), // 30 cm of drift is the alarm point
+        (P_GAIN, 0.85),
+        (BASE_DRIFT, 0.06),
+        (GUST_AMPLITUDE, 0.04),
+        (GUST_PERIOD, 3.0),
+    ];
+    let mut context = Context::with_capacity(1, "lane", facts.len());
+    for (id, value) in facts {
         context.add_node(Contextoid::new(
             id,
             ContextoidType::Datoid(Data::new(id, value)),
@@ -86,15 +87,12 @@ pub fn nominal_lane_context() -> Result<LaneContext, ContextIndexError> {
     Ok(context)
 }
 
-/// Read one `Data` contextoid's payload out of the lane context, or name the node it lacks.
-pub fn read(context: &LaneContext, index: usize) -> Result<FloatType, CausalityError> {
-    context
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(|data| data.get_data())
-        .ok_or_else(|| {
-            CausalityError::MissingParameter(format!("lane context Datoid at node {index}"))
-        })
+/// Read the payload of the `Data` contextoid `id` out of the lane context, or name the id it
+/// lacks.
+pub fn read(context: &LaneContext, id: ContextoidId) -> Result<FloatType, CausalityError> {
+    context.get_data_by_id(id).ok_or_else(|| {
+        CausalityError::MissingParameter(format!("lane context Datoid with contextoid id {id}"))
+    })
 }
 
 pub type LaneProcess<T> = PropagatingProcess<T, VehicleState, LaneContext>;

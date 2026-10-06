@@ -20,10 +20,10 @@
 // to lock in the config, producing a standalone value.
 //
 // The configuration is the Reader's environment, and it is a `Context`: one `Data<String>`
-// node per setting, read by node index.
+// node per setting, read by contextoid id.
 
 use deep_causality_context::{
-    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     NoSpace, NoSpaceTime, NoTime,
 };
 
@@ -31,16 +31,20 @@ use deep_causality_context::{
 /// the spatial, temporal and spacetime slots are empty.
 type ConfigContext = Context<Data<String>, NoSpace<f64>, NoTime, NoSpaceTime<f64>>;
 
-/// Node index of the API key.
-const API_KEY: usize = 0;
+/// Contextoid id: the API key.
+const API_KEY: ContextoidId = 1;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
 
     // Scenario: We have a function that fetches data given a ConfigContext and an ID.
-    // fetch_data: (ConfigContext, i32) -> String
-    let fetch_data = |cfg: ConfigContext, id: i32| -> String {
-        format!("Data for ID {} using Key {}", id, read(&cfg, API_KEY))
+    // fetch_data: (ConfigContext, i32) -> Result<String, ContextIndexError>
+    let fetch_data = |cfg: ConfigContext, id: i32| -> Result<String, ContextIndexError> {
+        Ok(format!(
+            "Data for ID {} using Key {}",
+            id,
+            read(&cfg, API_KEY)?
+        ))
     };
 
     // We want to "bake in" the ID first, creating a reusable "Reader" that just needs the
@@ -49,34 +53,35 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let id_to_fetch = 42;
     let reader = move |cfg: ConfigContext| fetch_data(cfg, id_to_fetch);
 
-    // Now 'reader' is a function ConfigContext -> String.
+    // Now 'reader' is a function ConfigContext -> Result<String, ContextIndexError>.
     // We can pass this 'reader' around to a component that holds the ConfigContext.
 
     let my_config = config("SECRET_KEY")?;
 
-    let result = reader(my_config);
+    let result = reader(my_config)?;
     print_result(&result);
     Ok(())
 }
 
 /// The configuration as a `Context`: the API key as its one `Data<String>` node.
 fn config(api_key: &str) -> Result<ConfigContext, ContextIndexError> {
-    let mut context = Context::with_capacity(1, "config", 1);
-    context.add_node(Contextoid::new(
-        1,
-        ContextoidType::Datoid(Data::new(1, api_key.to_string())),
-    ))?;
+    let facts = [(API_KEY, api_key.to_string())];
+
+    let mut context = Context::with_capacity(1, "config", facts.len());
+    for (id, value) in facts {
+        context.add_node(Contextoid::new(
+            id,
+            ContextoidType::Datoid(Data::new(id, value)),
+        ))?;
+    }
     Ok(context)
 }
 
-/// Read one setting out of the configuration. A reader is `ConfigContext -> String` and has no
-/// error channel, so a missing setting is a broken invariant of `config`.
-fn read(context: &ConfigContext, index: usize) -> String {
+/// Read one setting out of the configuration.
+fn read(context: &ConfigContext, id: ContextoidId) -> Result<String, ContextIndexError> {
     context
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(Datable::get_data)
-        .expect("config adds every setting a reader reads")
+        .get_data_by_id(id)
+        .ok_or_else(|| ContextIndexError::new(format!("no setting with contextoid id {id}")))
 }
 
 // -----------------------------------------------------------------------------------------

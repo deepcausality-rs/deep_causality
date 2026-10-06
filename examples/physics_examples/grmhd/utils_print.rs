@@ -24,30 +24,40 @@ pub fn print_header() {
 }
 
 pub fn print_config(world: &GrmhdContext) -> Result<(), CausalityError> {
+    let r_s = schwarzschild_radius(world)?;
+    let central_mass = read(world, CENTRAL_MASS)?;
+    let r = orbit_radius(world)?;
+    let orbit_radii = read(world, ORBIT_RADIUS)?;
+    let column_length = read(world, COLUMN_LENGTH)?;
+    let current_density = read(world, CURRENT_DENSITY)?;
+    let magnetic_field = read(world, MAGNETIC_FIELD)?;
+
     println!("Central body and plasma:");
     println!(
         "  Schwarzschild radius r_s = {:.4e} m  ({:.0} solar masses)",
-        lower(schwarzschild_radius(world)?),
-        lower(read(world, CENTRAL_MASS)?)
+        lower(r_s),
+        lower(central_mass)
     );
     println!(
         "  Plasma radius r          = {:.4e} m  ({:.0} r_s, equatorial plane)",
-        lower(orbit_radius(world)?),
-        lower(read(world, ORBIT_RADIUS)?)
+        lower(r),
+        lower(orbit_radii)
     );
     println!(
         "  Column length L          = {:.4e} m",
-        lower(read(world, COLUMN_LENGTH)?)
+        lower(column_length)
     );
     println!(
         "  Current J, field B       = {:.2}, {:.2}  (as the static observer measures them)\n",
-        lower(read(world, CURRENT_DENSITY)?),
-        lower(read(world, MAGNETIC_FIELD)?)
+        lower(current_density),
+        lower(magnetic_field)
     );
     Ok(())
 }
 
 pub fn print_report(s: &GrmhdState, world: &GrmhdContext) -> Result<(), CausalityError> {
+    let tidal_threshold = read(world, TIDAL_THRESHOLD)?;
+
     println!("[1] GR solver: curvature from the Schwarzschild solution");
     println!(
         "      M = r_s / 2               = {:.4e} m",
@@ -76,7 +86,7 @@ pub fn print_report(s: &GrmhdState, world: &GrmhdContext) -> Result<(), Causalit
     println!(
         "      tide {:.2e} vs threshold {:.2e}  (both 1/m)",
         lower(s.tidal_acceleration),
-        lower(read(world, TIDAL_THRESHOLD)?)
+        lower(tidal_threshold)
     );
     println!("      selected metric           = {}", s.metric_label);
 

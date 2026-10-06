@@ -40,12 +40,12 @@ Both approaches produce identical numbers for the same problem; the choice depen
 
 | Method | `via_causaloid` LOC | `via_monad` LOC | Reduction |
 |---|---:|---:|---:|
-| RCM     | 210 | 220 | −5% |
+| RCM     | 210 | 218 | −4% |
 | DBN     | 247 | 237 |  4% |
-| CATE    | 238 | 248 | −4% |
-| Granger | 300 | 255 | 15% |
-| SCM     | 385 | 234 | 39% |
-| **Total** | **1 380** | **1 194** | **13%** |
+| CATE    | 239 | 253 | −6% |
+| Granger | 291 | 260 | 11% |
+| SCM     | 392 | 238 | 39% |
+| **Total** | **1 379** | **1 206** | **13%** |
 
 LOC counts include all lines of all `.rs` files in the example directory (main, model, supporting modules). The spread says more than the average. Every `via_monad` version holds its world in a typed `Context` and propagates every error, so where the causaloid version is a single `CausaloidGraph` with one Context (RCM, DBN, CATE) the two approaches are at parity. The monad's advantage appears where the causaloid version needs more **scaffolding**: several contextual `Causaloid` instances (Granger) or a multi-file rung split (SCM).
 
@@ -60,7 +60,7 @@ LOC counts include all lines of all `.rs` files in the example directory (main, 
 | **Audit trail style** | Structural attribution: which `Causaloid` produced which effect. | Linear log of alternation events with distinctive markers (`!!ValueAlternation!!`, `!!ContextAlternation!!`, `!!StateAlternation!!`) emitted automatically. |
 | **Reuse across models** | The same `Causaloid` can appear in many graphs. | The chain is defined once per problem; closures are inlined. |
 | **Ceremony per pipeline** | Graph construction (`new`, `add_causaloid`, `add_edge`, `freeze`) plus an evaluation strategy. | `start(ctx).bind(...).bind(...)`. |
-| **Type system carries the world** | Contextoid IDs or node indices + `Data::get_data()` lookups (runtime). | Node indices + `Data::get_data()` lookups (runtime); the context type is a parameter of the carrier type (compile-time). |
+| **Type system carries the world** | Contextoid ids + `Context::get_data_by_id` lookups (runtime). | Contextoid ids + `Context::get_data_by_id` lookups (runtime); the context type is a parameter of the carrier type (compile-time). |
 
 ### Concrete decision rules
 

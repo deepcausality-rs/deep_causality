@@ -24,6 +24,7 @@ use crate::model_types::{
     STALL_MARGIN, SensorReading, VERTICAL_SPEED_MAX_FPM, VERTICAL_SPEED_MIN_FPM, read,
 };
 use deep_causality::*;
+use deep_causality_context::ContextoidId;
 use deep_causality_core::CausalityErrorEnum;
 use std::fmt::Display;
 
@@ -87,7 +88,7 @@ fn airframe(ctx: Option<&AirframeContext>) -> Result<&AirframeContext, Causality
 }
 
 /// One sensor's health: `measure` picks the reading, `band` names the
-/// airframe nodes holding the band edges, and `tolerance` is the distance
+/// contextoid ids of the band edges, and `tolerance` is the distance
 /// outside the band at which health reaches zero.
 fn sensor_health(
     value: CausalEffect<SensorReading>,
@@ -95,7 +96,7 @@ fn sensor_health(
     ctx: Option<AirframeContext>,
     label: &str,
     measure: fn(&SensorReading) -> f64,
-    band: (usize, usize),
+    band: (ContextoidId, ContextoidId),
     tolerance: f64,
 ) -> FlightProcess<f64> {
     let health = value

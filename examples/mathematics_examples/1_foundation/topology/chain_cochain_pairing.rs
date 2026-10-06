@@ -32,7 +32,7 @@
 //! values read out of the context.
 
 use deep_causality_context::{
-    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     NoSpace, NoSpaceTime, NoTime,
 };
 use deep_causality_haft::{Foldable, Functor};
@@ -50,16 +50,16 @@ const N_DEPOTS: usize = 4;
 const SEGMENTS: [[usize; 2]; 5] = [[0, 1], [0, 2], [1, 2], [1, 3], [2, 3]];
 const N_SEGMENTS: usize = SEGMENTS.len();
 
-/// The world along the road network: one `Data` node per depot height, then one per segment's wind
+/// The world along the road network: one `Data` node per depot height and one per segment's wind
 /// assist. It holds no positions or clocks, so the spatial, temporal and spacetime slots are empty.
 type RoadContext = Context<Data<FloatType>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
 
-/// Node index of depot 0's height, in metres. Depot `d` sits at `DEPOT_HEIGHT + d`.
-const DEPOT_HEIGHT: usize = 0;
-/// Node index of segment 0's wind assist. Segment `s` sits at `WIND_ASSIST + s`. The value is the
-/// assist one traversal gains in the segment's stored direction, in the example's own assist
-/// units; nothing generates it, so the form carries circulation.
-const WIND_ASSIST: usize = DEPOT_HEIGHT + N_DEPOTS;
+/// Contextoid ids of the depot heights, in metres, one per depot in vertex order.
+const DEPOT_HEIGHTS: [ContextoidId; N_DEPOTS] = [1, 2, 3, 4];
+/// Contextoid ids of the wind assist along each segment, one per segment in `SEGMENTS` order. The
+/// value is the assist one traversal gains in the segment's stored direction, in the example's own
+/// assist units; nothing generates it, so the form carries circulation.
+const WIND_ASSISTS: [ContextoidId; N_SEGMENTS] = [5, 6, 7, 8, 9];
 
 /// The route `0 → 1 → 3 → 2 → 0`, as a signed traversal count per segment. A negative weight is a
 /// segment driven against the direction it is stored in.
@@ -84,11 +84,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let complex = Arc::new(build_road_network()?);
     let roads = road_world()?;
-    let heights = (0..N_DEPOTS)
-        .map(|depot| read(&roads, DEPOT_HEIGHT + depot))
+    let heights = DEPOT_HEIGHTS
+        .iter()
+        .map(|&id| read(&roads, id))
         .collect::<Result<Vec<FloatType>, ContextIndexError>>()?;
-    let wind_assist = (0..N_SEGMENTS)
-        .map(|segment| read(&roads, WIND_ASSIST + segment))
+    let wind_assist = WIND_ASSISTS
+        .iter()
+        .map(|&id| read(&roads, id))
         .collect::<Result<Vec<FloatType>, ContextIndexError>>()?;
 
     // ---------------------------------------------------------------------
@@ -160,14 +162,23 @@ fn pair(form: &Cochain<FloatType>, chain: &Chain<FloatType, FloatType>) -> Float
         })
 }
 
-/// The world along the road network: the depots' heights in metres, in vertex order, then the
-/// wind assist along each segment, in `SEGMENTS` order.
+/// The world along the road network: the depots' heights in metres, and the wind assist along
+/// each segment.
 fn road_world() -> Result<RoadContext, ContextIndexError> {
-    let heights: [f64; N_DEPOTS] = [100.0, 140.0, 115.0, 175.0];
-    let wind_assist: [f64; N_SEGMENTS] = [5.0, 2.0, 3.0, 1.0, 6.0];
+    let facts = [
+        (DEPOT_HEIGHTS[0], 100.0),
+        (DEPOT_HEIGHTS[1], 140.0),
+        (DEPOT_HEIGHTS[2], 115.0),
+        (DEPOT_HEIGHTS[3], 175.0),
+        (WIND_ASSISTS[0], 5.0),
+        (WIND_ASSISTS[1], 2.0),
+        (WIND_ASSISTS[2], 3.0),
+        (WIND_ASSISTS[3], 1.0),
+        (WIND_ASSISTS[4], 6.0),
+    ];
 
-    let mut context = Context::with_capacity(1, "road network", N_DEPOTS + N_SEGMENTS);
-    for (id, &value) in (1..).zip(heights.iter().chain(wind_assist.iter())) {
+    let mut context = Context::with_capacity(1, "road network", facts.len());
+    for (id, value) in facts {
         context.add_node(Contextoid::new(
             id,
             ContextoidType::Datoid(Data::new(id, lift::<FloatType>(value))),
@@ -177,12 +188,10 @@ fn road_world() -> Result<RoadContext, ContextIndexError> {
 }
 
 /// Read one quantity out of the road network's context.
-fn read(context: &RoadContext, index: usize) -> Result<FloatType, ContextIndexError> {
+fn read(context: &RoadContext, id: ContextoidId) -> Result<FloatType, ContextIndexError> {
     context
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(Datable::get_data)
-        .ok_or_else(|| ContextIndexError::new(format!("no road quantity at node {index}")))
+        .get_data_by_id(id)
+        .ok_or_else(|| ContextIndexError::new(format!("no road quantity with contextoid id {id}")))
 }
 
 /// The coboundary of the depot heights: one height difference per segment.

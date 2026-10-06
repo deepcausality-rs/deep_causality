@@ -45,7 +45,7 @@ The CATE is the mean of `ite` across the subgroup. `alternate_context` must sit 
 | Patient data lives in | One `PatientContext` per patient, three Datoids (age, initial BP, dose) built by `create_patient_population` | One `PatientContext` per patient, four Datoids built by `patient_world` |
 | Subgroup filter | Read every patient's `AGE` with `?`, then `.filter(\|&(_, age)\| age > 65.0)` | Read every patient's `AGE` with `?`, then `.filter(\|&(_, age)\| age > AGE_THRESHOLD)` |
 | Counterfactual mechanism | `model::arm` clones the patient's Context and adds a `DRUG_ADMINISTERED` Datoid; a new contextual Causaloid per arm | `start(treatment).alternate_context(control)` |
-| Lines of code | ~235 across 2 files | ~245 in a single file |
+| Lines of code | ~240 across 2 files | ~255 in a single file |
 | Audit trail | None by default | `!!ContextAlternation!!` entries per patient |
 
 Both versions compute the same CATE for the same population. In the monad version, the iteration over patients is `.iter().filter().map()`, the counterfactual is one method call, and the type signature carries the patient context generically.

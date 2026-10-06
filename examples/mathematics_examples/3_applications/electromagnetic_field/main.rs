@@ -35,7 +35,7 @@
 use deep_causality_algebra::Real;
 use deep_causality_calculus::{DifferentiableField, DifferentiateFieldExt, Scalar};
 use deep_causality_context::{
-    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     NoSpace, NoSpaceTime, NoTime,
 };
 use deep_causality_multivector::{CausalMultiVector, CausalMultiVectorError, Metric};
@@ -48,11 +48,13 @@ use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lift, l
 /// and the spatial, temporal and spacetime slots are empty.
 type WaveContext = Context<Data<f64>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
 
-/// Node indices: the spacetime point the field is sampled at, `(t, z)`, with `x` and `y` at the
-/// origin, and the angular frequency of the wave.
-const SAMPLE_T: usize = 0;
-const SAMPLE_Z: usize = 1;
-const OMEGA: usize = 2;
+/// Contextoid id: the time `t` of the event the field is sampled at, in `c = 1` units.
+const SAMPLE_T: ContextoidId = 1;
+/// Contextoid id: the position `z` of the event the field is sampled at, in `c = 1` units; `x` and
+/// `y` are at the origin.
+const SAMPLE_Z: ContextoidId = 2;
+/// Contextoid id: the angular frequency `ω` of the wave, in `c = 1` units.
+const OMEGA: ContextoidId = 3;
 
 /// `Cl(1,3)` holds `2^4` coefficients.
 const COEFFICIENTS: usize = 16;
@@ -121,11 +123,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// The sampled wave, one `Data` node per quantity.
 fn plane_wave() -> Result<WaveContext, ContextIndexError> {
-    // In node-index order: SAMPLE_T, SAMPLE_Z, OMEGA.
-    let quantities: [f64; 3] = [1.0, 0.5, 1.0];
+    let facts = [(SAMPLE_T, 1.0), (SAMPLE_Z, 0.5), (OMEGA, 1.0)];
 
-    let mut context = Context::with_capacity(1, "plane wave", quantities.len());
-    for (id, &value) in (1..).zip(quantities.iter()) {
+    let mut context = Context::with_capacity(1, "plane wave", facts.len());
+    for (id, value) in facts {
         context.add_node(Contextoid::new(
             id,
             ContextoidType::Datoid(Data::new(id, value)),
@@ -135,12 +136,10 @@ fn plane_wave() -> Result<WaveContext, ContextIndexError> {
 }
 
 /// Read one quantity out of the wave's context.
-fn read(context: &WaveContext, index: usize) -> Result<f64, ContextIndexError> {
+fn read(context: &WaveContext, id: ContextoidId) -> Result<f64, ContextIndexError> {
     context
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(Datable::get_data)
-        .ok_or_else(|| ContextIndexError::new(format!("no wave quantity at node {index}")))
+        .get_data_by_id(id)
+        .ok_or_else(|| ContextIndexError::new(format!("no wave quantity with contextoid id {id}")))
 }
 
 /// A multivector holding the given coefficients at the given blade indices, zero elsewhere.

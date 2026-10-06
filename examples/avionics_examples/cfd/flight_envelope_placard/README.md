@@ -54,9 +54,10 @@ matrix restores the recorded green table.
    naming the file and the fix.
 2. **Compute.** `prepare` builds the shared rig: the placard world, a `deep_causality_context`
    `Context` holding the US-1976 atmosphere profiles, gamma, the air molecular mass, the
-   Sutton-Graves constant and the nose radius (one `Data` contextoid each), and the fitted shock
-   built at the world's gamma. `sweep` maps the placard closure over the matrix rows in input
-   order, reading every physical input from the rig's world. Per
+   Sutton-Graves constant and the nose radius (one `Data` contextoid each, keyed by its
+   contextoid id), the fitted shock built at the world's gamma, and the atmosphere rows read out
+   of the world and checked once. `sweep` maps the placard closure over the matrix rows in input
+   order, reading every physical input from the rig. Per
    point: the freestream `(n, T, a)` interpolates linearly from the atmosphere table, `q`
    follows from the density and the flight speed, the stagnation temperature goes through the
    exact Rankine-Hugoniot jump (`FittedNormalShock::post_shock`, then isentropic
@@ -113,7 +114,7 @@ outside the atmosphere table) exit 2 with the file and the fix named.
 |---|---|
 | `main.rs` | The whole study as one `CfdFlow::study` expression, and the exit codes |
 | [`model.rs`](model.rs) | Domain logic: atmosphere interpolation and the per-point placard computation |
-| [`model_config.rs`](model_config.rs) | Configuration: matrix and table paths, the placard world (gas model, Sutton-Graves, nose radius, atmosphere, each with its justification) and the rig of world and fitted shock |
+| [`model_config.rs`](model_config.rs) | Configuration: matrix and table paths, the placard world (gas model, Sutton-Graves, nose radius, atmosphere, each with its justification) and the rig of world, fitted shock and atmosphere rows |
 | `constants.rs` | The q-max and stagnation-temperature placards the gates check, with their justification |
 | `mach_alt_matrix.csv` | The default sixteen-point corridor (passes all gates) |
 | `mach_alt_matrix_exceeds.csv` | The corridor plus one point beyond the q-max placard (the negative scenario) |

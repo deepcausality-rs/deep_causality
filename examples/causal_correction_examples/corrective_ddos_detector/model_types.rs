@@ -8,7 +8,7 @@
 #![allow(dead_code)] // Telemetry fields kept for narrative realism even if not all are read.
 
 use deep_causality_context::{
-    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     NoSpace, NoSpaceTime, NoTime,
 };
 use deep_causality_core::{CausalityError, PropagatingProcess};
@@ -84,67 +84,68 @@ pub enum DetectorFact {
 pub type DetectorContext =
     Context<Data<DetectorFact>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
 
-/// Node index: mean offered throughput while nominal (Mbps).
-pub const BASELINE_MBPS: usize = 0;
-/// Node index: amplitude of the deterministic jitter on the baseline (Mbps).
-pub const BASELINE_JITTER_MBPS: usize = 1;
-/// Node index: anomaly threshold in standard deviations (z-score). 3.0 = 3 sigma.
-pub const SIGMA_THRESHOLD: usize = 2;
-/// Node index: consecutive anomalous slots (ticks) required before the loop intervenes.
-pub const TRIGGER_SLOTS: usize = 3;
-/// Node index: the tick at which the volumetric surge begins.
-pub const ATTACK_START_TICK: usize = 4;
-/// Node index: offered throughput at the height of the surge (Mbps).
-pub const ATTACK_PEAK_MBPS: usize = 5;
-/// Node index: throughput ceiling the NIC clamps to once throttling is engaged (Mbps).
-pub const THROTTLE_CEILING_MBPS: usize = 6;
-/// Node index: throughput above which a tick counts as a service overload (Mbps).
-pub const OVERLOAD_LINE_MBPS: usize = 7;
-/// Node index: overload ticks tolerated before the service objective is breached.
-pub const OVERLOAD_BUDGET_TICKS: usize = 8;
-/// Node index: angular frequency of the baseline jitter (radians per tick).
-pub const JITTER_FREQUENCY: usize = 9;
-/// Node index: ticks the surge takes to ramp from the baseline to the peak.
-pub const RAMP_TICKS: usize = 10;
-/// Node index: average packet size of nominal traffic (bytes).
-pub const NOMINAL_PACKET_BYTES: usize = 11;
-/// Node index: average packet size under the flood (bytes). A flood is dominated by small
+/// Contextoid id: mean offered throughput while nominal (Mbps).
+pub const BASELINE_MBPS: ContextoidId = 1;
+/// Contextoid id: amplitude of the deterministic jitter on the baseline (Mbps).
+pub const BASELINE_JITTER_MBPS: ContextoidId = 2;
+/// Contextoid id: anomaly threshold in standard deviations (z-score). 3.0 = 3 sigma.
+pub const SIGMA_THRESHOLD: ContextoidId = 3;
+/// Contextoid id: consecutive anomalous slots (ticks) required before the loop intervenes.
+pub const TRIGGER_SLOTS: ContextoidId = 4;
+/// Contextoid id: the tick at which the volumetric surge begins.
+pub const ATTACK_START_TICK: ContextoidId = 5;
+/// Contextoid id: offered throughput at the height of the surge (Mbps).
+pub const ATTACK_PEAK_MBPS: ContextoidId = 6;
+/// Contextoid id: throughput ceiling the NIC clamps to once throttling is engaged (Mbps).
+pub const THROTTLE_CEILING_MBPS: ContextoidId = 7;
+/// Contextoid id: throughput above which a tick counts as a service overload (Mbps).
+pub const OVERLOAD_LINE_MBPS: ContextoidId = 8;
+/// Contextoid id: overload ticks tolerated before the service objective is breached.
+pub const OVERLOAD_BUDGET_TICKS: ContextoidId = 9;
+/// Contextoid id: angular frequency of the baseline jitter (radians per tick).
+pub const JITTER_FREQUENCY: ContextoidId = 10;
+/// Contextoid id: ticks the surge takes to ramp from the baseline to the peak.
+pub const RAMP_TICKS: ContextoidId = 11;
+/// Contextoid id: average packet size of nominal traffic (bytes).
+pub const NOMINAL_PACKET_BYTES: ContextoidId = 12;
+/// Contextoid id: average packet size under the flood (bytes). A flood is dominated by small
 /// packets.
-pub const ATTACK_PACKET_BYTES: usize = 12;
-/// Node index: new connections per second of nominal traffic.
-pub const NOMINAL_NEW_CONNS_PER_SEC: usize = 13;
-/// Node index: new connections per packet under the flood (a SYN-heavy mix).
-pub const ATTACK_NEW_CONNS_PER_PACKET: usize = 14;
-/// Node index: active flows of nominal traffic.
-pub const NOMINAL_ACTIVE_FLOWS: usize = 15;
-/// Node index: active flows under the flood.
-pub const ATTACK_ACTIVE_FLOWS: usize = 16;
-/// Node index: throughput at which the control-plane CPU saturates (Mbps).
-pub const CPU_SATURATION_MBPS: usize = 17;
+pub const ATTACK_PACKET_BYTES: ContextoidId = 13;
+/// Contextoid id: new connections per second of nominal traffic.
+pub const NOMINAL_NEW_CONNS_PER_SEC: ContextoidId = 14;
+/// Contextoid id: new connections per packet under the flood (a SYN-heavy mix).
+pub const ATTACK_NEW_CONNS_PER_PACKET: ContextoidId = 15;
+/// Contextoid id: active flows of nominal traffic.
+pub const NOMINAL_ACTIVE_FLOWS: ContextoidId = 16;
+/// Contextoid id: active flows under the flood.
+pub const ATTACK_ACTIVE_FLOWS: ContextoidId = 17;
+/// Contextoid id: throughput at which the control-plane CPU saturates (Mbps).
+pub const CPU_SATURATION_MBPS: ContextoidId = 18;
 
-/// The nominal detector world, added in node-index order: node `i` holds contextoid id `i + 1`.
+/// The nominal detector world: one `Data` contextoid per fact, keyed by its contextoid id.
 pub fn nominal_detector_context() -> Result<DetectorContext, ContextIndexError> {
-    let mut context = Context::with_capacity(1, "detector", 18);
-    for (id, fact) in [
-        (1, DetectorFact::Real(400.0)),    // BASELINE_MBPS
-        (2, DetectorFact::Real(15.0)),     // BASELINE_JITTER_MBPS
-        (3, DetectorFact::Real(3.0)),      // SIGMA_THRESHOLD
-        (4, DetectorFact::Ticks(5)),       // TRIGGER_SLOTS
-        (5, DetectorFact::Ticks(40)),      // ATTACK_START_TICK
-        (6, DetectorFact::Real(900.0)),    // ATTACK_PEAK_MBPS
-        (7, DetectorFact::Real(420.0)),    // THROTTLE_CEILING_MBPS
-        (8, DetectorFact::Real(480.0)),    // OVERLOAD_LINE_MBPS
-        (9, DetectorFact::Ticks(8)),       // OVERLOAD_BUDGET_TICKS
-        (10, DetectorFact::Real(0.7)),     // JITTER_FREQUENCY
-        (11, DetectorFact::Ticks(4)),      // RAMP_TICKS
-        (12, DetectorFact::Real(800.0)),   // NOMINAL_PACKET_BYTES
-        (13, DetectorFact::Real(120.0)),   // ATTACK_PACKET_BYTES
-        (14, DetectorFact::Real(200.0)),   // NOMINAL_NEW_CONNS_PER_SEC
-        (15, DetectorFact::Real(0.5)),     // ATTACK_NEW_CONNS_PER_PACKET
-        (16, DetectorFact::Count(1_200)),  // NOMINAL_ACTIVE_FLOWS
-        (17, DetectorFact::Count(50_000)), // ATTACK_ACTIVE_FLOWS
-        (18, DetectorFact::Real(1_500.0)), // CPU_SATURATION_MBPS
-    ] {
+    let facts = [
+        (BASELINE_MBPS, DetectorFact::Real(400.0)),
+        (BASELINE_JITTER_MBPS, DetectorFact::Real(15.0)),
+        (SIGMA_THRESHOLD, DetectorFact::Real(3.0)),
+        (TRIGGER_SLOTS, DetectorFact::Ticks(5)),
+        (ATTACK_START_TICK, DetectorFact::Ticks(40)),
+        (ATTACK_PEAK_MBPS, DetectorFact::Real(900.0)),
+        (THROTTLE_CEILING_MBPS, DetectorFact::Real(420.0)),
+        (OVERLOAD_LINE_MBPS, DetectorFact::Real(480.0)),
+        (OVERLOAD_BUDGET_TICKS, DetectorFact::Ticks(8)),
+        (JITTER_FREQUENCY, DetectorFact::Real(0.7)),
+        (RAMP_TICKS, DetectorFact::Ticks(4)),
+        (NOMINAL_PACKET_BYTES, DetectorFact::Real(800.0)),
+        (ATTACK_PACKET_BYTES, DetectorFact::Real(120.0)),
+        (NOMINAL_NEW_CONNS_PER_SEC, DetectorFact::Real(200.0)),
+        (ATTACK_NEW_CONNS_PER_PACKET, DetectorFact::Real(0.5)),
+        (NOMINAL_ACTIVE_FLOWS, DetectorFact::Count(1_200)),
+        (ATTACK_ACTIVE_FLOWS, DetectorFact::Count(50_000)),
+        (CPU_SATURATION_MBPS, DetectorFact::Real(1_500.0)),
+    ];
+    let mut context = Context::with_capacity(1, "detector", facts.len());
+    for (id, fact) in facts {
         context.add_node(Contextoid::new(
             id,
             ContextoidType::Datoid(Data::new(id, fact)),
@@ -153,45 +154,42 @@ pub fn nominal_detector_context() -> Result<DetectorContext, ContextIndexError> 
     Ok(context)
 }
 
-/// Read one `Data` contextoid's payload out of the detector context, or name the node it lacks.
-fn read(context: &DetectorContext, index: usize) -> Result<DetectorFact, CausalityError> {
-    context
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(|data| data.get_data())
-        .ok_or_else(|| {
-            CausalityError::MissingParameter(format!("detector context Datoid at node {index}"))
-        })
+/// Read the payload of the `Data` contextoid `id` out of the detector context, or name the id it
+/// lacks.
+fn read(context: &DetectorContext, id: ContextoidId) -> Result<DetectorFact, CausalityError> {
+    context.get_data_by_id(id).ok_or_else(|| {
+        CausalityError::MissingParameter(format!("detector context Datoid with contextoid id {id}"))
+    })
 }
 
 /// Read a real magnitude (Mbps or sigma) out of the detector context.
-pub fn read_real(context: &DetectorContext, index: usize) -> Result<FloatType, CausalityError> {
-    match read(context, index)? {
+pub fn read_real(context: &DetectorContext, id: ContextoidId) -> Result<FloatType, CausalityError> {
+    match read(context, id)? {
         DetectorFact::Real(value) => Ok(value),
-        other => Err(mismatch(index, "Real", other)),
+        other => Err(mismatch(id, "Real", other)),
     }
 }
 
 /// Read a whole number of ticks out of the detector context.
-pub fn read_ticks(context: &DetectorContext, index: usize) -> Result<u32, CausalityError> {
-    match read(context, index)? {
+pub fn read_ticks(context: &DetectorContext, id: ContextoidId) -> Result<u32, CausalityError> {
+    match read(context, id)? {
         DetectorFact::Ticks(ticks) => Ok(ticks),
-        other => Err(mismatch(index, "Ticks", other)),
+        other => Err(mismatch(id, "Ticks", other)),
     }
 }
 
 /// Read a whole-number count out of the detector context.
-pub fn read_count(context: &DetectorContext, index: usize) -> Result<u32, CausalityError> {
-    match read(context, index)? {
+pub fn read_count(context: &DetectorContext, id: ContextoidId) -> Result<u32, CausalityError> {
+    match read(context, id)? {
         DetectorFact::Count(count) => Ok(count),
-        other => Err(mismatch(index, "Count", other)),
+        other => Err(mismatch(id, "Count", other)),
     }
 }
 
-/// The error for a node whose fact has a different kind than its index promises.
-fn mismatch(index: usize, expected: &str, found: DetectorFact) -> CausalityError {
+/// The error for a contextoid whose fact has a different kind than its id promises.
+fn mismatch(id: ContextoidId, expected: &str, found: DetectorFact) -> CausalityError {
     CausalityError::TypeConversionError(format!(
-        "detector context node {index}: expected {expected}, found {found:?}"
+        "detector context contextoid id {id}: expected {expected}, found {found:?}"
     ))
 }
 

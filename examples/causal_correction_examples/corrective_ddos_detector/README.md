@@ -63,7 +63,7 @@ CausalFlow::from(initial_process(detector))
             |throttle, state, ctx| {
                 let detector = ctx.expect("analyze_tick returns the detector context it read");
                 let trigger_slots = read_ticks(detector, TRIGGER_SLOTS)
-                    .expect("the detector context holds the trigger slot count as Ticks");
+                    .expect("analyze_tick read the trigger slot count from this context");
                 state.consecutive_anomalies >= trigger_slots && *throttle == THROTTLE_OFF
             },
             // mitigate: record it, then intervene the throttle ON

@@ -53,12 +53,13 @@ fn sampling_error(error: UncertainError) -> CausalityError {
 }
 
 /// Run the body of a stage that passes the processed readings through. The body reads the fleet
-/// context, updates the state and returns its log entries; its error lands in the error channel
-/// with the state and context kept.
+/// context, updates a copy of the state and returns its log entries. On success the updated copy
+/// is passed on; on error the error lands in the error channel with the state the stage received
+/// and the context, so no partial update reaches the next stage.
 fn run_stage<F>(
     stage: &str,
     value: CausalEffect<ProcessedReadings>,
-    mut state: FleetState,
+    state: FleetState,
     ctx: Option<FleetContext>,
     body: F,
 ) -> FleetProcess<ProcessedReadings>
@@ -72,17 +73,18 @@ where
     let Some(processed) = value.into_value() else {
         return process_failure(state, ctx, &format!("{stage}: value was None"));
     };
+    let mut updated = state.clone();
     let outcome = match ctx.as_ref() {
-        Some(fleet) => body(&processed, &mut state, fleet),
+        Some(fleet) => body(&processed, &mut updated, fleet),
         None => Err(CausalityError::MissingContext()),
     };
     match outcome {
-        Ok(logs) => FleetProcess::new(Ok(CausalEffect::value(processed)), state, ctx, logs),
+        Ok(logs) => FleetProcess::new(Ok(CausalEffect::value(processed)), updated, ctx, logs),
         Err(error) => process_error(state, ctx, error),
     }
 }
 
-/// The fleet-context nodes holding the bands of the sensor family `sensor_id` belongs to.
+/// The contextoid ids of the bands of the sensor family `sensor_id` belongs to.
 fn band_for(sensor_id: &str) -> Option<BandNodes> {
     if sensor_id.starts_with("temp") {
         Some(TEMP_BANDS)

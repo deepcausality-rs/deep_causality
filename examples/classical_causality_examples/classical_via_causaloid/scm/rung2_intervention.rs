@@ -6,13 +6,14 @@
 use crate::model;
 use crate::model::ScmState;
 use deep_causality::*;
+use std::error::Error;
 
-pub fn run_rung2_intervention() {
+pub fn run_rung2_intervention() -> Result<(), Box<dyn Error>> {
     println!("--- Rung 2: Intervention ---");
     println!("Demonstrating an intervention: If high cancer risk is detected, prescribe therapy.");
 
     // 1. Setup Causal Model (same as Rung 1)
-    let (graph, smoke_idx, cancer_idx) = model::get_causaloid_graph();
+    let (graph, smoke_idx, cancer_idx) = model::get_causaloid_graph()?;
 
     // 2. Execute the causal chain
     let initial_state = ScmState {
@@ -26,12 +27,7 @@ pub fn run_rung2_intervention() {
     let final_effect =
         graph.evaluate_shortest_path_between_causes(smoke_idx, cancer_idx, &initial_effect);
 
-    if final_effect.is_err() {
-        eprintln!("Evaluation failed: {:?}", final_effect.error());
-        return;
-    }
-
-    let result = final_effect.value_cloned().unwrap_or(initial_state);
+    let result = model::value_of(&final_effect)?;
 
     // 3. Intervention: If high cancer risk, prescribe therapy
     if result.cancer_risk {
@@ -42,4 +38,5 @@ pub fn run_rung2_intervention() {
 
     println!("Result: High cancer risk was detected, and the intervention was successfully fired.");
     println!("\n");
+    Ok(())
 }

@@ -28,7 +28,7 @@
 //! pinpointing the switch from treatment to control.
 
 use deep_causality_context::{
-    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     NoSpace, NoSpaceTime, NoTime,
 };
 use deep_causality_core::{
@@ -36,12 +36,14 @@ use deep_causality_core::{
 };
 use std::error::Error;
 
-/// Node indices of the four `Data` contextoids each patient world carries: age, baseline blood
-/// pressure, the BP change the drug produces when administered, and the treatment assignment.
-const AGE: usize = 0;
-const INITIAL_BP: usize = 1;
-const DOSE: usize = 2;
-const ASSIGNMENT: usize = 3;
+/// Contextoid id: patient age, years.
+const AGE: ContextoidId = 1;
+/// Contextoid id: baseline blood pressure, BP points.
+const INITIAL_BP: ContextoidId = 2;
+/// Contextoid id: the BP change the drug produces when administered, BP points.
+const DOSE: ContextoidId = 3;
+/// Contextoid id: treatment assignment, `1.0` treated, `0.0` control.
+const ASSIGNMENT: ContextoidId = 4;
 
 pub type FloatType = f64;
 
@@ -131,10 +133,15 @@ fn patient_world(
     dose: FloatType,
     drug_administered: bool,
 ) -> Result<PatientContext, ContextIndexError> {
-    let mut context = Context::with_capacity(1, "patient", 4);
     let assignment = if drug_administered { 1.0 } else { 0.0 };
-
-    for (id, value) in [(1, age), (2, initial_bp), (3, dose), (4, assignment)] {
+    let facts = [
+        (AGE, age),
+        (INITIAL_BP, initial_bp),
+        (DOSE, dose),
+        (ASSIGNMENT, assignment),
+    ];
+    let mut context = Context::with_capacity(1, "patient", facts.len());
+    for (id, value) in facts {
         context.add_node(Contextoid::new(
             id,
             ContextoidType::Datoid(Data::new(id, value)),
@@ -144,13 +151,11 @@ fn patient_world(
     Ok(context)
 }
 
-/// Read one `Data` contextoid's payload out of a patient world.
-fn read(context: &PatientContext, index: usize) -> Result<FloatType, CausalityError> {
+/// Read the `Data` contextoid with contextoid id `id` out of a patient world.
+fn read(context: &PatientContext, id: ContextoidId) -> Result<FloatType, CausalityError> {
     context
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(|data| data.get_data())
-        .ok_or_else(|| CausalityError::ModelError(format!("context node {index} is not a Datoid")))
+        .get_data_by_id(id)
+        .ok_or_else(|| CausalityError::ModelError(format!("no Datoid with contextoid id {id}")))
 }
 
 /// The value a finished chain carries, or the error that ended it.

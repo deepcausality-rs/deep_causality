@@ -15,7 +15,7 @@ use deep_causality::{
     CausableGraph, CausalEffect, CausalityError, Causaloid, CausaloidGraph, PropagatingProcess,
 };
 use deep_causality_context::{
-    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     NoSpace, NoSpaceTime, NoTime,
 };
 use deep_causality_num::{const_scalar_from_float, const_scalar_from_int};
@@ -95,31 +95,35 @@ pub type DetectorContext =
 /// One node of the graph: a detector reading its threshold from the shared [`DetectorContext`].
 pub type Detector = Causaloid<FloatType, bool, (), Arc<DetectorContext>>;
 
-/// Node index of the detection threshold in the [`DetectorContext`].
-const DETECTION_THRESHOLD: usize = 0;
+/// Contextoid id: the detection threshold an observation must reach, in the observation's unit.
+const DETECTION_THRESHOLD: ContextoidId = 1;
 
 /// The detectors' context: one `Data` node holding the detection threshold, `0.55`. It plays no
 /// part in the commutativity check; a node has to compute something, and this is what these
 /// compute.
 fn detector_context() -> Result<DetectorContext, ContextIndexError> {
-    let mut context = Context::with_capacity(1, "detection threshold", 1);
-    let threshold: FloatType = const_scalar_from_float!(FloatType, 0.55);
-    context.add_node(Contextoid::new(
-        1,
-        ContextoidType::Datoid(Data::new(1, threshold)),
-    ))?;
+    let facts = [(
+        DETECTION_THRESHOLD,
+        const_scalar_from_float!(FloatType, 0.55),
+    )];
+    let mut context = Context::with_capacity(1, "detection threshold", facts.len());
+    for (id, value) in facts {
+        context.add_node(Contextoid::new(
+            id,
+            ContextoidType::Datoid(Data::new(id, value)),
+        ))?;
+    }
     Ok(context)
 }
 
 /// The detection threshold, read off the context.
 fn detection_threshold(context: &DetectorContext) -> Result<FloatType, CausalityError> {
-    context
-        .get_node(DETECTION_THRESHOLD)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(Datable::get_data)
-        .ok_or_else(|| {
-            CausalityError::MissingParameter("the detector context holds no detection threshold")
-        })
+    context.get_data_by_id(DETECTION_THRESHOLD).ok_or_else(|| {
+        CausalityError::MissingParameter(format!(
+            "the detector context holds no detection threshold at contextoid id \
+             {DETECTION_THRESHOLD}"
+        ))
+    })
 }
 
 /// What each node does: report whether an observation passed the detection threshold the context

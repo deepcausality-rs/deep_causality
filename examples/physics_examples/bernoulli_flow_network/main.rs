@@ -9,7 +9,9 @@
 //! a named stage and the network composes into one `CausalFlow` pipeline that threads the fluid
 //! state through the value channel. The network itself, its reservoir, flow rate, water
 //! density, pipe diameters and outlet height, is the pipeline's context: the reservoir state the
-//! trace starts from is read from it, and every segment reads its geometry from there.
+//! trace starts from is read from it, and every segment reads its diameter, the flow rate and the
+//! density from there. The main pipe and the throat keep the elevation of the state before them;
+//! the drop reads the outlet elevation.
 //!
 //! Two conservation laws run the whole thing, and the run checks the second of them:
 //!
@@ -30,7 +32,7 @@
 
 use deep_causality_algebra::Real;
 use deep_causality_context::{
-    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     NoSpace, NoSpaceTime, NoTime,
 };
 use deep_causality_core::{CausalEffect, CausalFlow, PropagatingEffect, PropagatingProcess};
@@ -51,23 +53,20 @@ const GRAVITY: FloatType = const_scalar_from_float!(FloatType, EARTH_GRAVITY_ACC
 /// modelled position or clock, so the spatial, temporal and spacetime slots are empty.
 type NetworkContext = Context<Data<FloatType>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
 
-/// Node indices of the network's world facts; `pipe_network` adds them in this order.
-/// Reservoir gauge pressure, in Pa.
-const RESERVOIR_PRESSURE: usize = 0;
-/// Reservoir elevation, in m.
-const RESERVOIR_HEIGHT: usize = 1;
-/// Volumetric flow rate held constant across the network, in m^3/s.
-const FLOW_RATE: usize = 2;
-/// Density of water, in kg/m^3.
-const WATER_DENSITY: usize = 3;
-/// Main-run pipe diameter, in m.
-const MAIN_DIAMETER: usize = 4;
-/// Venturi throat diameter, in m.
-const THROAT_DIAMETER: usize = 5;
-/// Outlet elevation, in m.
-const OUTLET_HEIGHT: usize = 6;
-/// How many world facts the network holds.
-const NETWORK_FACTS: usize = 7;
+/// Contextoid id: reservoir gauge pressure, in Pa.
+const RESERVOIR_PRESSURE: ContextoidId = 1;
+/// Contextoid id: reservoir elevation, in m.
+const RESERVOIR_HEIGHT: ContextoidId = 2;
+/// Contextoid id: volumetric flow rate held constant across the network, in m^3/s.
+const FLOW_RATE: ContextoidId = 3;
+/// Contextoid id: density of water, in kg/m^3.
+const WATER_DENSITY: ContextoidId = 4;
+/// Contextoid id: main-run pipe diameter, in m.
+const MAIN_DIAMETER: ContextoidId = 5;
+/// Contextoid id: Venturi throat diameter, in m.
+const THROAT_DIAMETER: ContextoidId = 6;
+/// Contextoid id: outlet elevation, in m.
+const OUTLET_HEIGHT: ContextoidId = 7;
 
 /// Relative slack on the head-conservation check. Bernoulli is exact for this idealized flow,
 /// so the residual is pure rounding and this only has to clear machine epsilon.
@@ -91,7 +90,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let trace = vec![reservoir];
 
     // The network as one pipeline: the network rides in the context channel, and each segment
-    // reads its geometry from it and binds the next fluid state onto the trace.
+    // reads its diameter, the flow rate and the density from it (the drop also reads the outlet
+    // elevation) and binds the next fluid state onto the trace.
     let process = CausalFlow::value(trace)
         .context(network.clone())
         .bind(segment_main_pipe)
@@ -224,19 +224,23 @@ fn fail<T: Default + Clone + core::fmt::Debug, C: Clone + core::fmt::Debug>(
     ))
 }
 
-/// Builds the pipe network: each world fact as a `Data` contextoid at its node index.
+/// Builds the pipe network: each world fact as a `Data` contextoid keyed by its contextoid id.
 fn pipe_network() -> Result<NetworkContext, ContextIndexError> {
-    let mut facts = [ZERO; NETWORK_FACTS];
-    facts[RESERVOIR_PRESSURE] = const_scalar_from_int!(FloatType, 200_000);
-    facts[RESERVOIR_HEIGHT] = const_scalar_from_int!(FloatType, 10);
-    facts[FLOW_RATE] = const_scalar_from_float!(FloatType, 0.1);
-    facts[WATER_DENSITY] = const_scalar_from_int!(FloatType, 1000);
-    facts[MAIN_DIAMETER] = const_scalar_from_float!(FloatType, 0.2);
-    facts[THROAT_DIAMETER] = const_scalar_from_float!(FloatType, 0.1);
-    facts[OUTLET_HEIGHT] = const_scalar_from_int!(FloatType, 0);
+    let facts = [
+        (
+            RESERVOIR_PRESSURE,
+            const_scalar_from_int!(FloatType, 200_000),
+        ),
+        (RESERVOIR_HEIGHT, const_scalar_from_int!(FloatType, 10)),
+        (FLOW_RATE, const_scalar_from_float!(FloatType, 0.1)),
+        (WATER_DENSITY, const_scalar_from_int!(FloatType, 1000)),
+        (MAIN_DIAMETER, const_scalar_from_float!(FloatType, 0.2)),
+        (THROAT_DIAMETER, const_scalar_from_float!(FloatType, 0.1)),
+        (OUTLET_HEIGHT, const_scalar_from_int!(FloatType, 0)),
+    ];
 
-    let mut network = Context::with_capacity(1, "pipe network", NETWORK_FACTS);
-    for (id, value) in (1..).zip(facts) {
+    let mut network = Context::with_capacity(1, "pipe network", facts.len());
+    for (id, value) in facts {
         network.add_node(Contextoid::new(
             id,
             ContextoidType::Datoid(Data::new(id, value)),
@@ -245,17 +249,13 @@ fn pipe_network() -> Result<NetworkContext, ContextIndexError> {
     Ok(network)
 }
 
-/// Reads one world fact out of the network, or the error naming the node that holds none.
-fn read(network: &NetworkContext, index: usize) -> Result<FloatType, PhysicsError> {
-    network
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(|data| data.get_data())
-        .ok_or_else(|| {
-            PhysicsError::CalculationError(format!(
-                "the pipe network holds no Datoid at node {index}"
-            ))
-        })
+/// Reads one world fact out of the network, or the error naming the contextoid id it lacks.
+fn read(network: &NetworkContext, id: ContextoidId) -> Result<FloatType, PhysicsError> {
+    network.get_data_by_id(id).ok_or_else(|| {
+        PhysicsError::CalculationError(format!(
+            "the pipe network holds no Datoid with contextoid id {id}"
+        ))
+    })
 }
 
 /// The fluid at one point in the network.
@@ -307,23 +307,29 @@ fn head_check(trace: &[FluidState], network: &NetworkContext) -> Result<HeadChec
 // -----------------------------------------------------------------------------------------
 
 fn print_header(network: &NetworkContext) -> Result<(), PhysicsError> {
+    let density = read(network, WATER_DENSITY)?;
+    let flow_rate = read(network, FLOW_RATE)?;
     println!("=== Bernoulli Flow Network ===");
     println!("Precision: {}", core::any::type_name::<FloatType>());
     println!(
         "Fluid: water at {:.0} kg/m^3, Q = {:.2} m^3/s\n",
-        lower(read(network, WATER_DENSITY)?),
-        lower(read(network, FLOW_RATE)?)
+        lower(density),
+        lower(flow_rate)
     );
     Ok(())
 }
 
 fn print_trace(trace: &[FluidState], network: &NetworkContext) -> Result<(), PhysicsError> {
+    let heads = trace
+        .iter()
+        .map(|s| s.total_head(network))
+        .collect::<Result<Vec<_>, _>>()?;
     println!(
         "  {:<16} {:>12} {:>10} {:>8} {:>14}",
         "segment", "P (Pa)", "v (m/s)", "h (m)", "head (J/m^3)"
     );
-    for s in trace {
-        print_state(s, network)?;
+    for (s, head) in trace.iter().zip(heads) {
+        print_state(s, head);
     }
     println!("\n  The throat trades pressure for velocity; the drop trades elevation back into");
     println!("  pressure. The head column is what stays the same through both.");
@@ -331,16 +337,15 @@ fn print_trace(trace: &[FluidState], network: &NetworkContext) -> Result<(), Phy
 }
 
 /// The display boundary: `f64` appears here and nowhere else.
-fn print_state(s: &FluidState, network: &NetworkContext) -> Result<(), PhysicsError> {
+fn print_state(s: &FluidState, head: FloatType) {
     println!(
         "  {:<16} {:>12.1} {:>10.3} {:>8.1} {:>14.1}",
         s.label,
         lower(s.pressure.value()),
         lower(s.velocity.value()),
         lower(s.height.value()),
-        lower(s.total_head(network)?)
+        lower(head)
     );
-    Ok(())
 }
 
 fn print_head_check(c: &HeadCheck) {

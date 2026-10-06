@@ -46,7 +46,7 @@ use deep_causality_context::{
 };
 use deep_causality_core::{CausalEffect, CausalFlow, PropagatingProcess};
 use deep_causality_num::{Float106, const_scalar_from_float, const_scalar_from_int, lift_usize};
-use model::{MaxwellState, OMEGA, WAVE_FACTS, WaveContext, ZERO, read};
+use model::{MaxwellState, OMEGA, WaveContext, read};
 use utils_print::{print_config, print_fields, print_header, print_verification};
 
 /// Observation event `(t, z)`: the point the chain evaluates the wave at.
@@ -102,16 +102,19 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 }
 
-/// Hands the stage its state and the wave the context carries, and the wave on to the next
-/// stage, or short-circuits when the upstream carried no state or no wave.
+/// Hands the stage its state and the wave the context carries, and the stage's result and the
+/// wave on to the next stage, or short-circuits when the upstream carried no state or no wave.
 fn forward(
     value: CausalEffect<MaxwellState>,
     wave: Option<WaveContext>,
-    stage: impl Fn(MaxwellState, &WaveContext) -> PropagatingEffect<MaxwellState>,
+    stage: impl Fn(MaxwellState, &WaveContext) -> Result<MaxwellState, CausalityError>,
 ) -> PropagatingProcess<MaxwellState, (), WaveContext> {
     match (value.into_value(), wave) {
         (Some(s), Some(wave)) => {
-            let effect = stage(s, &wave);
+            let effect = match stage(s, &wave) {
+                Ok(next) => PropagatingEffect::pure(next),
+                Err(e) => PropagatingEffect::from_error(e),
+            };
             PropagatingProcess::with_state(effect, (), Some(wave))
         }
         (None, _) => PropagatingProcess::from_error(custom("the chain carried no state")),
@@ -158,14 +161,15 @@ fn verify(s: &MaxwellState, wave: &WaveContext) -> Result<Verification, Causalit
     })
 }
 
-/// Builds the plane wave: each world fact as a `Data` contextoid at its node index.
+/// Builds the plane wave: each world fact as a `Data` contextoid keyed by its contextoid id.
 fn plane_wave() -> Result<WaveContext, ContextIndexError> {
-    let mut facts = [ZERO; WAVE_FACTS];
-    // A whole number, so it is exact at every scalar.
-    facts[OMEGA] = const_scalar_from_int!(FloatType, 1);
+    let facts = [
+        // A whole number, so it is exact at every scalar.
+        (OMEGA, const_scalar_from_int!(FloatType, 1)),
+    ];
 
-    let mut wave = Context::with_capacity(1, "plane wave", WAVE_FACTS);
-    for (id, value) in (1..).zip(facts) {
+    let mut wave = Context::with_capacity(1, "plane wave", facts.len());
+    for (id, value) in facts {
         wave.add_node(Contextoid::new(
             id,
             ContextoidType::Datoid(Data::new(id, value)),

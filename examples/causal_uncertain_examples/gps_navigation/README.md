@@ -19,7 +19,7 @@ The start position is the chain's value. The route context holds the
 destination, the parameters of the speed, traffic, fuel-efficiency and
 fuel-on-hand distributions, the route and trip distances, the lateness
 threshold, the safe fuel range and the fuel probability the trip requires, one
-`Data<f64>` contextoid per quantity. Stage 1 receives the start position,
+`Data<f64>` contextoid per quantity, keyed by its contextoid id. Stage 1 receives the start position,
 every later stage the previous stage's `Uncertain<f64>`; each stage also
 receives the route context, builds its distributions from it, and returns the
 next `Uncertain<f64>`. A missing context, a missing

@@ -11,16 +11,6 @@ use std::sync::{Arc, RwLock};
 use std::thread;
 use std::time::Duration;
 
-// Define IDs for our sensors. These will be used to identify data in the context.
-const FAN_SPEED_ID: IdentificationValue = 1;
-const CPU_TEMP_ID: IdentificationValue = 2;
-const POWER_DRAW_ID: IdentificationValue = 3;
-
-// Define IDs for the "high" threshold of each sensor, held in the context next to the readings.
-const FAN_SPEED_THRESHOLD_ID: IdentificationValue = 4;
-const CPU_TEMP_THRESHOLD_ID: IdentificationValue = 5;
-const POWER_DRAW_THRESHOLD_ID: IdentificationValue = 6;
-
 // Define an ID for the server state in the CSM
 const SERVER_HIGH_LOAD_STATE_ID: IdentificationValue = 100;
 

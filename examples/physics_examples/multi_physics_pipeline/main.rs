@@ -35,7 +35,7 @@
 //! context and hands the context on.
 use deep_causality_algebra::Real;
 use deep_causality_context::{
-    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     NoSpace, NoSpaceTime, NoTime,
 };
 use deep_causality_core::{
@@ -73,33 +73,34 @@ impl Default for Fact {
 /// What a stage hands on: its value, with the model parameters for the next stage.
 type PipelineProcess<T> = PropagatingProcess<T, (), PipelineContext>;
 
-/// Node indices of the model's world facts; `pipeline_world` adds them in this order.
-/// Scale from the Klein-Gordon field energy to a centre-of-mass energy, and the range it is
-/// held to, in GeV.
-const FIELD_ENERGY_SCALE: usize = 0;
-const MIN_CMS_ENERGY_GEV: usize = 1;
-const MAX_CMS_ENERGY_GEV: usize = 2;
-/// Fraction of the hadron energy that goes into the thermal bath, and the range it is held to,
-/// in MeV.
-const TEMPERATURE_SHARE: usize = 3;
-const MIN_TEMPERATURE_MEV: usize = 4;
-const MAX_TEMPERATURE_MEV: usize = 5;
-/// The fractional temperature drop per cell.
-const TEMPERATURE_GRADIENT: usize = 6;
-/// Thermal diffusivity.
-const DIFFUSIVITY: usize = 7;
-/// Scalar mass driving the Klein-Gordon evolution, in GeV.
-const HIGGS_MASS_GEV: usize = 8;
-/// QGP transition temperature, in MeV.
-const CRITICAL_TEMPERATURE_MEV: usize = 9;
-/// The detection amplitude is held inside this range so neither basis state is exactly empty.
-const MIN_AMPLITUDE: usize = 10;
-const MAX_AMPLITUDE: usize = 11;
-/// Initial Klein-Gordon field profile across the cells of its mesh: the field the pipeline
-/// starts from.
-const PHI_PROFILE: usize = 12;
-/// How many world facts the model holds.
-const PIPELINE_FACTS: usize = 13;
+/// Contextoid id: scale from the Klein-Gordon field energy to a centre-of-mass energy in GeV.
+const FIELD_ENERGY_SCALE: ContextoidId = 1;
+/// Contextoid id: lower end of the range the centre-of-mass energy is held to, in GeV.
+const MIN_CMS_ENERGY_GEV: ContextoidId = 2;
+/// Contextoid id: upper end of the range the centre-of-mass energy is held to, in GeV.
+const MAX_CMS_ENERGY_GEV: ContextoidId = 3;
+/// Contextoid id: fraction of the hadron energy that goes into the thermal bath.
+const TEMPERATURE_SHARE: ContextoidId = 4;
+/// Contextoid id: lower end of the range the initial temperature is held to, in MeV.
+const MIN_TEMPERATURE_MEV: ContextoidId = 5;
+/// Contextoid id: upper end of the range the initial temperature is held to, in MeV.
+const MAX_TEMPERATURE_MEV: ContextoidId = 6;
+/// Contextoid id: the fractional temperature drop per cell.
+const TEMPERATURE_GRADIENT: ContextoidId = 7;
+/// Contextoid id: thermal diffusivity.
+const DIFFUSIVITY: ContextoidId = 8;
+/// Contextoid id: scalar mass driving the Klein-Gordon evolution, in GeV.
+const HIGGS_MASS_GEV: ContextoidId = 9;
+/// Contextoid id: QGP transition temperature, in MeV.
+const CRITICAL_TEMPERATURE_MEV: ContextoidId = 10;
+/// Contextoid id: lower end of the range the detection amplitude is held to. With the upper
+/// end it keeps either basis state from being exactly empty.
+const MIN_AMPLITUDE: ContextoidId = 11;
+/// Contextoid id: upper end of the range the detection amplitude is held to.
+const MAX_AMPLITUDE: ContextoidId = 12;
+/// Contextoid id: initial Klein-Gordon field profile across the cells of its mesh, the field the
+/// pipeline starts from.
+const PHI_PROFILE: ContextoidId = 13;
 
 /// Cells in the 1D temperature field: the resolution of the thermal grid.
 const TEMPERATURE_CELLS: usize = 10;
@@ -183,14 +184,11 @@ fn stage_field_to_partons(
     _: (),
     world: Option<PipelineContext>,
 ) -> PipelineProcess<Vec<(FourMomentum<FloatType>, FourMomentum<FloatType>)>> {
-    let Some(world) = world else {
-        return missing_world();
-    };
-    let [energy_scale, min_energy, max_energy] = match read(
-        &world,
+    let (world, [energy_scale, min_energy, max_energy]) = match stage_facts(
+        world,
         [FIELD_ENERGY_SCALE, MIN_CMS_ENERGY_GEV, MAX_CMS_ENERGY_GEV],
     ) {
-        Ok(facts) => facts,
+        Ok(stage) => stage,
         Err(e) => return PropagatingProcess::from_error(e),
     };
     println!("Stage 1: Klein-Gordon Scalar Field");
@@ -239,8 +237,9 @@ fn stage_lund_fragmentation(
     _: (),
     world: Option<PipelineContext>,
 ) -> PipelineProcess<(usize, FloatType)> {
-    let Some(world) = world else {
-        return missing_world();
+    let (world, []) = match stage_facts(world, []) {
+        Ok(stage) => stage,
+        Err(e) => return PropagatingProcess::from_error(e),
     };
     println!("\nStage 3: Lund String Fragmentation");
     println!("───────────────────────────────────");
@@ -286,11 +285,8 @@ fn stage_thermalization(
     _: (),
     world: Option<PipelineContext>,
 ) -> PipelineProcess<(usize, FloatType)> {
-    let Some(world) = world else {
-        return missing_world();
-    };
-    let [share, min_temp, max_temp, gradient, diffusivity] = match read(
-        &world,
+    let (world, [share, min_temp, max_temp, gradient, diffusivity]) = match stage_facts(
+        world,
         [
             TEMPERATURE_SHARE,
             MIN_TEMPERATURE_MEV,
@@ -299,7 +295,7 @@ fn stage_thermalization(
             DIFFUSIVITY,
         ],
     ) {
-        Ok(facts) => facts,
+        Ok(stage) => stage,
         Err(e) => return PropagatingProcess::from_error(e),
     };
     println!("\nStage 4: Thermalization");
@@ -374,14 +370,11 @@ fn stage_quantum_detection(
     _: (),
     world: Option<PipelineContext>,
 ) -> PipelineProcess<(usize, FloatType, FloatType)> {
-    let Some(world) = world else {
-        return missing_world();
-    };
-    let [critical_temp, min_amplitude, max_amplitude] = match read(
-        &world,
+    let (world, [critical_temp, min_amplitude, max_amplitude]) = match stage_facts(
+        world,
         [CRITICAL_TEMPERATURE_MEV, MIN_AMPLITUDE, MAX_AMPLITUDE],
     ) {
-        Ok(facts) => facts,
+        Ok(stage) => stage,
         Err(e) => return PropagatingProcess::from_error(e),
     };
     println!("\nStage 5: Quantum Detection");
@@ -446,36 +439,76 @@ fn stage_quantum_detection(
 // CONTEXT: the model's parameters
 // =============================================================================
 
-/// Builds the model's world: each fact as a `Data` contextoid at its node index.
+/// Builds the model's world: each fact as a `Data` contextoid keyed by its contextoid id.
 fn pipeline_world() -> Result<PipelineContext, ContextIndexError> {
-    let mut facts = vec![Fact::default(); PIPELINE_FACTS];
-    facts[FIELD_ENERGY_SCALE] = Fact::Scalar(const_scalar_from_float!(FloatType, 0.01));
-    facts[MIN_CMS_ENERGY_GEV] = Fact::Scalar(const_scalar_from_int!(FloatType, 10));
-    facts[MAX_CMS_ENERGY_GEV] = Fact::Scalar(const_scalar_from_int!(FloatType, 500));
-    facts[TEMPERATURE_SHARE] = Fact::Scalar(const_scalar_from_float!(FloatType, 0.5));
-    facts[MIN_TEMPERATURE_MEV] = Fact::Scalar(const_scalar_from_int!(FloatType, 100));
-    facts[MAX_TEMPERATURE_MEV] = Fact::Scalar(const_scalar_from_int!(FloatType, 500));
-    facts[TEMPERATURE_GRADIENT] = Fact::Scalar(const_scalar_from_float!(FloatType, 0.02));
-    facts[DIFFUSIVITY] = Fact::Scalar(const_scalar_from_float!(FloatType, 0.1));
-    facts[HIGGS_MASS_GEV] = Fact::Scalar(const_scalar_from_int!(FloatType, 125));
-    facts[CRITICAL_TEMPERATURE_MEV] = Fact::Scalar(const_scalar_from_int!(FloatType, 170));
-    facts[MIN_AMPLITUDE] = Fact::Scalar(const_scalar_from_float!(FloatType, 0.01));
-    facts[MAX_AMPLITUDE] = Fact::Scalar(const_scalar_from_float!(FloatType, 0.99));
-    facts[PHI_PROFILE] = Fact::Profile(vec![
-        const_scalar_from_int!(FloatType, 1),
-        const_scalar_from_float!(FloatType, 0.9),
-        const_scalar_from_float!(FloatType, 0.8),
-        const_scalar_from_float!(FloatType, 0.7),
-        const_scalar_from_float!(FloatType, 0.6),
-        const_scalar_from_float!(FloatType, 0.5),
-        const_scalar_from_float!(FloatType, 0.4),
-        const_scalar_from_float!(FloatType, 0.3),
-        const_scalar_from_float!(FloatType, 0.2),
-        const_scalar_from_float!(FloatType, 0.1),
-    ]);
+    let facts = [
+        (
+            FIELD_ENERGY_SCALE,
+            Fact::Scalar(const_scalar_from_float!(FloatType, 0.01)),
+        ),
+        (
+            MIN_CMS_ENERGY_GEV,
+            Fact::Scalar(const_scalar_from_int!(FloatType, 10)),
+        ),
+        (
+            MAX_CMS_ENERGY_GEV,
+            Fact::Scalar(const_scalar_from_int!(FloatType, 500)),
+        ),
+        (
+            TEMPERATURE_SHARE,
+            Fact::Scalar(const_scalar_from_float!(FloatType, 0.5)),
+        ),
+        (
+            MIN_TEMPERATURE_MEV,
+            Fact::Scalar(const_scalar_from_int!(FloatType, 100)),
+        ),
+        (
+            MAX_TEMPERATURE_MEV,
+            Fact::Scalar(const_scalar_from_int!(FloatType, 500)),
+        ),
+        (
+            TEMPERATURE_GRADIENT,
+            Fact::Scalar(const_scalar_from_float!(FloatType, 0.02)),
+        ),
+        (
+            DIFFUSIVITY,
+            Fact::Scalar(const_scalar_from_float!(FloatType, 0.1)),
+        ),
+        (
+            HIGGS_MASS_GEV,
+            Fact::Scalar(const_scalar_from_int!(FloatType, 125)),
+        ),
+        (
+            CRITICAL_TEMPERATURE_MEV,
+            Fact::Scalar(const_scalar_from_int!(FloatType, 170)),
+        ),
+        (
+            MIN_AMPLITUDE,
+            Fact::Scalar(const_scalar_from_float!(FloatType, 0.01)),
+        ),
+        (
+            MAX_AMPLITUDE,
+            Fact::Scalar(const_scalar_from_float!(FloatType, 0.99)),
+        ),
+        (
+            PHI_PROFILE,
+            Fact::Profile(vec![
+                const_scalar_from_int!(FloatType, 1),
+                const_scalar_from_float!(FloatType, 0.9),
+                const_scalar_from_float!(FloatType, 0.8),
+                const_scalar_from_float!(FloatType, 0.7),
+                const_scalar_from_float!(FloatType, 0.6),
+                const_scalar_from_float!(FloatType, 0.5),
+                const_scalar_from_float!(FloatType, 0.4),
+                const_scalar_from_float!(FloatType, 0.3),
+                const_scalar_from_float!(FloatType, 0.2),
+                const_scalar_from_float!(FloatType, 0.1),
+            ]),
+        ),
+    ];
 
-    let mut world = Context::with_capacity(1, "multi-physics model", PIPELINE_FACTS);
-    for (id, fact) in (1..).zip(facts) {
+    let mut world = Context::with_capacity(1, "multi-physics model", facts.len());
+    for (id, fact) in facts {
         world.add_node(Contextoid::new(
             id,
             ContextoidType::Datoid(Data::new(id, fact)),
@@ -484,28 +517,26 @@ fn pipeline_world() -> Result<PipelineContext, ContextIndexError> {
     Ok(world)
 }
 
-/// Reads one world fact out of the model's context, or the error naming the node that holds
-/// none.
-fn fact(world: &PipelineContext, index: usize) -> Result<Fact, CausalityError> {
+/// Reads one world fact out of the model's context, or the error naming the contextoid id it
+/// lacks.
+fn fact(world: &PipelineContext, id: ContextoidId) -> Result<Fact, CausalityError> {
     world
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(|data| data.get_data())
-        .ok_or_else(|| custom(format!("the model holds no Datoid at node {index}")))
+        .get_data_by_id(id)
+        .ok_or_else(|| custom(format!("the model holds no Datoid with contextoid id {id}")))
 }
 
-/// Reads scalar world facts, in the order `indices` names them.
+/// Reads scalar world facts, in the order `ids` names them.
 fn read<const N: usize>(
     world: &PipelineContext,
-    indices: [usize; N],
+    ids: [ContextoidId; N],
 ) -> Result<[FloatType; N], CausalityError> {
     let mut values = [ZERO; N];
-    for (value, index) in values.iter_mut().zip(indices) {
-        *value = match fact(world, index)? {
+    for (value, id) in values.iter_mut().zip(ids) {
+        *value = match fact(world, id)? {
             Fact::Scalar(scalar) => scalar,
             Fact::Profile(_) => {
                 return Err(custom(format!(
-                    "node {index} holds a profile, not a scalar"
+                    "contextoid id {id} holds a profile, not a scalar"
                 )));
             }
         };
@@ -514,13 +545,27 @@ fn read<const N: usize>(
 }
 
 /// Reads a profile world fact.
-fn read_profile(world: &PipelineContext, index: usize) -> Result<Vec<FloatType>, CausalityError> {
-    match fact(world, index)? {
+fn read_profile(
+    world: &PipelineContext,
+    id: ContextoidId,
+) -> Result<Vec<FloatType>, CausalityError> {
+    match fact(world, id)? {
         Fact::Profile(profile) => Ok(profile),
         Fact::Scalar(_) => Err(custom(format!(
-            "node {index} holds a scalar, not a profile"
+            "contextoid id {id} holds a scalar, not a profile"
         ))),
     }
+}
+
+/// The model's parameters the flow carries, with the scalar facts `ids` names in that order, or
+/// the error a stage short-circuits with when the flow carries no model parameters.
+fn stage_facts<const N: usize>(
+    world: Option<PipelineContext>,
+    ids: [ContextoidId; N],
+) -> Result<(PipelineContext, [FloatType; N]), CausalityError> {
+    let world = world.ok_or_else(|| custom("the flow carries no model parameters"))?;
+    let facts = read(&world, ids)?;
+    Ok((world, facts))
 }
 
 /// Hands `value` and the model's parameters on to the next stage.
@@ -529,14 +574,6 @@ where
     T: Default + Clone + core::fmt::Debug,
 {
     PropagatingProcess::with_state(PropagatingEffect::pure(value), (), Some(world))
-}
-
-/// The error a stage short-circuits with when the flow carries no model parameters.
-fn missing_world<T>() -> PipelineProcess<T>
-where
-    T: Default + Clone + core::fmt::Debug,
-{
-    PropagatingProcess::from_error(custom("the flow carries no model parameters"))
 }
 
 /// A stage failure, as the pipeline's error.

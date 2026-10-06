@@ -11,7 +11,7 @@
 //! chain's plumbing, so no stage touches `CausalEffect` or re-lifts with `PropagatingEffect::pure`.
 
 use deep_causality_context::{
-    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     NoSpace, NoSpaceTime, NoTime,
 };
 use deep_causality_core::CausalityError;
@@ -26,66 +26,68 @@ const SAMPLES: usize = 1000;
 /// temporal and spacetime slots are empty.
 pub type RouteContext = Context<Data<f64>, NoSpace<f64>, NoTime, NoSpaceTime<f64>>;
 
-/// Node index: destination latitude in degrees.
-pub const DESTINATION_LAT: usize = 0;
-/// Node index: destination longitude in degrees.
-pub const DESTINATION_LON: usize = 1;
-/// Node index: mean of the normally distributed main-route base speed, in mph.
-pub const BASE_SPEED_MEAN: usize = 2;
-/// Node index: standard deviation of the main-route base speed (driver and traffic noise), in mph.
-pub const BASE_SPEED_SD: usize = 3;
-/// Node index: lower bound of the uniformly distributed congestion factor on the base speed.
-pub const TRAFFIC_FACTOR_MIN: usize = 4;
-/// Node index: upper bound of the uniformly distributed congestion factor on the base speed.
-pub const TRAFFIC_FACTOR_MAX: usize = 5;
-/// Node index: travel time beyond which the trip is late, in minutes.
-pub const LATE_AFTER_MIN: usize = 6;
-/// Node index: alternative-route distance in miles.
-pub const ALT_DISTANCE: usize = 7;
-/// Node index: mean of the normally distributed alternative-route speed, in mph.
-pub const ALT_SPEED_MEAN: usize = 8;
-/// Node index: standard deviation of the alternative-route speed, in mph.
-pub const ALT_SPEED_SD: usize = 9;
-/// Node index: planned-trip distance for the fuel estimate, in miles.
-pub const TRIP_DISTANCE: usize = 10;
-/// Node index: mean of the normally distributed fuel efficiency, in miles per gallon.
-pub const FUEL_EFFICIENCY_MEAN: usize = 11;
-/// Node index: standard deviation of the fuel efficiency, in miles per gallon.
-pub const FUEL_EFFICIENCY_SD: usize = 12;
-/// Node index: lower bound of the uniformly distributed fuel on hand, in gallons.
-pub const FUEL_ON_HAND_MIN: usize = 13;
-/// Node index: upper bound of the uniformly distributed fuel on hand, in gallons.
-pub const FUEL_ON_HAND_MAX: usize = 14;
-/// Node index: lower bound of the safe range for the fuel the trip needs, in gallons.
-pub const SAFE_FUEL_MIN: usize = 15;
-/// Node index: upper bound of the safe range for the fuel the trip needs, in gallons.
-pub const SAFE_FUEL_MAX: usize = 16;
-/// Node index: probability of having enough fuel above which no refuelling is advised.
-pub const ENOUGH_FUEL_PROBABILITY: usize = 17;
+/// Contextoid id: destination latitude in degrees.
+pub const DESTINATION_LAT: ContextoidId = 1;
+/// Contextoid id: destination longitude in degrees.
+pub const DESTINATION_LON: ContextoidId = 2;
+/// Contextoid id: mean of the normally distributed main-route base speed, in mph.
+pub const BASE_SPEED_MEAN: ContextoidId = 3;
+/// Contextoid id: standard deviation of the main-route base speed (driver and traffic noise), in
+/// mph.
+pub const BASE_SPEED_SD: ContextoidId = 4;
+/// Contextoid id: lower bound of the uniformly distributed congestion factor on the base speed.
+pub const TRAFFIC_FACTOR_MIN: ContextoidId = 5;
+/// Contextoid id: upper bound of the uniformly distributed congestion factor on the base speed.
+pub const TRAFFIC_FACTOR_MAX: ContextoidId = 6;
+/// Contextoid id: travel time beyond which the trip is late, in minutes.
+pub const LATE_AFTER_MIN: ContextoidId = 7;
+/// Contextoid id: alternative-route distance in miles.
+pub const ALT_DISTANCE: ContextoidId = 8;
+/// Contextoid id: mean of the normally distributed alternative-route speed, in mph.
+pub const ALT_SPEED_MEAN: ContextoidId = 9;
+/// Contextoid id: standard deviation of the alternative-route speed, in mph.
+pub const ALT_SPEED_SD: ContextoidId = 10;
+/// Contextoid id: planned-trip distance for the fuel estimate, in miles.
+pub const TRIP_DISTANCE: ContextoidId = 11;
+/// Contextoid id: mean of the normally distributed fuel efficiency, in miles per gallon.
+pub const FUEL_EFFICIENCY_MEAN: ContextoidId = 12;
+/// Contextoid id: standard deviation of the fuel efficiency, in miles per gallon.
+pub const FUEL_EFFICIENCY_SD: ContextoidId = 13;
+/// Contextoid id: lower bound of the uniformly distributed fuel on hand, in gallons.
+pub const FUEL_ON_HAND_MIN: ContextoidId = 14;
+/// Contextoid id: upper bound of the uniformly distributed fuel on hand, in gallons.
+pub const FUEL_ON_HAND_MAX: ContextoidId = 15;
+/// Contextoid id: lower bound of the safe range for the fuel the trip needs, in gallons.
+pub const SAFE_FUEL_MIN: ContextoidId = 16;
+/// Contextoid id: upper bound of the safe range for the fuel the trip needs, in gallons.
+pub const SAFE_FUEL_MAX: ContextoidId = 17;
+/// Contextoid id: probability of having enough fuel above which no refuelling is advised.
+pub const ENOUGH_FUEL_PROBABILITY: ContextoidId = 18;
 
-/// The route, added in node-index order: node `i` holds contextoid id `i + 1`.
+/// The route: one `Data` contextoid per quantity, keyed by its contextoid id.
 pub fn route_context() -> Result<RouteContext, ContextIndexError> {
-    let mut context = Context::with_capacity(1, "route", 18);
-    for (id, value) in [
-        (1, 37.7849),   // DESTINATION_LAT: ~1 mile north
-        (2, -122.4094), // DESTINATION_LON: ~1 mile east
-        (3, 35.0),      // BASE_SPEED_MEAN
-        (4, 8.0),       // BASE_SPEED_SD
-        (5, 0.6),       // TRAFFIC_FACTOR_MIN: congestion drag
-        (6, 1.0),       // TRAFFIC_FACTOR_MAX
-        (7, 10.0),      // LATE_AFTER_MIN
-        (8, 2.2),       // ALT_DISTANCE: slightly longer
-        (9, 45.0),      // ALT_SPEED_MEAN: highway
-        (10, 3.0),      // ALT_SPEED_SD: less variance
-        (11, 2.0),      // TRIP_DISTANCE: ~2 mi planned trip
-        (12, 28.0),     // FUEL_EFFICIENCY_MEAN
-        (13, 4.0),      // FUEL_EFFICIENCY_SD
-        (14, 0.8),      // FUEL_ON_HAND_MIN
-        (15, 1.2),      // FUEL_ON_HAND_MAX
-        (16, 0.5),      // SAFE_FUEL_MIN
-        (17, 2.0),      // SAFE_FUEL_MAX
-        (18, 0.8),      // ENOUGH_FUEL_PROBABILITY
-    ] {
+    let facts = [
+        (DESTINATION_LAT, 37.7849),   // ~1 mile north
+        (DESTINATION_LON, -122.4094), // ~1 mile east
+        (BASE_SPEED_MEAN, 35.0),
+        (BASE_SPEED_SD, 8.0),
+        (TRAFFIC_FACTOR_MIN, 0.6), // congestion drag
+        (TRAFFIC_FACTOR_MAX, 1.0),
+        (LATE_AFTER_MIN, 10.0),
+        (ALT_DISTANCE, 2.2),    // slightly longer
+        (ALT_SPEED_MEAN, 45.0), // highway
+        (ALT_SPEED_SD, 3.0),    // less variance
+        (TRIP_DISTANCE, 2.0),   // ~2 mi planned trip
+        (FUEL_EFFICIENCY_MEAN, 28.0),
+        (FUEL_EFFICIENCY_SD, 4.0),
+        (FUEL_ON_HAND_MIN, 0.8),
+        (FUEL_ON_HAND_MAX, 1.2),
+        (SAFE_FUEL_MIN, 0.5),
+        (SAFE_FUEL_MAX, 2.0),
+        (ENOUGH_FUEL_PROBABILITY, 0.8),
+    ];
+    let mut context = Context::with_capacity(1, "route", facts.len());
+    for (id, value) in facts {
         context.add_node(Contextoid::new(
             id,
             ContextoidType::Datoid(Data::new(id, value)),
@@ -94,17 +96,13 @@ pub fn route_context() -> Result<RouteContext, ContextIndexError> {
     Ok(context)
 }
 
-/// Read one `Data` contextoid's payload out of the route context.
-pub fn read(context: &RouteContext, index: usize) -> Result<f64, CausalityError> {
-    context
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(|data| data.get_data())
-        .ok_or_else(|| {
-            CausalityError::MissingParameter(format!(
-                "the route context holds no Datoid at node index {index}"
-            ))
-        })
+/// Read the payload of the `Data` contextoid with contextoid id `id` out of the route context.
+pub fn read(context: &RouteContext, id: ContextoidId) -> Result<f64, CausalityError> {
+    context.get_data_by_id(id).ok_or_else(|| {
+        CausalityError::MissingParameter(format!(
+            "the route context holds no Datoid with contextoid id {id}"
+        ))
+    })
 }
 
 /// A sampling error, carried in the chain's error channel.
@@ -211,10 +209,13 @@ pub fn route_stage(
         .map_err(sampling_error)?;
     println!("   chosen route expected time: {chosen_mean:.1} min");
 
-    match main_faster.implicit_conditional_from_entropy() {
-        Ok(true) => println!("   ✅ Recommend: main route"),
-        Ok(false) => println!("   ✅ Recommend: alternative route"),
-        Err(_) => println!("   ⚠️  Recommendation undecided"),
+    if main_faster
+        .implicit_conditional_from_entropy()
+        .map_err(sampling_error)?
+    {
+        println!("   ✅ Recommend: main route");
+    } else {
+        println!("   ✅ Recommend: alternative route");
     }
 
     Ok(chosen)
@@ -261,15 +262,18 @@ pub fn fuel_stage(
         * 100.0;
     println!("   P(needed fuel in safe range {safe_min:.1}–{safe_max:.1} gal): {p_safe:.1}%");
 
-    match enough.probability_exceeds_from_entropy(
-        read(route, ENOUGH_FUEL_PROBABILITY)?,
-        0.95,
-        0.05,
-        SAMPLES,
-    ) {
-        Ok(true) => println!("   ✅ Likely enough fuel for the trip"),
-        Ok(false) => println!("   ⚠️  Consider refueling before the trip"),
-        Err(_) => println!("   ⚠️  Fuel-sufficiency check inconclusive"),
+    if enough
+        .probability_exceeds_from_entropy(
+            read(route, ENOUGH_FUEL_PROBABILITY)?,
+            0.95,
+            0.05,
+            SAMPLES,
+        )
+        .map_err(sampling_error)?
+    {
+        println!("   ✅ Likely enough fuel for the trip");
+    } else {
+        println!("   ⚠️  Consider refueling before the trip");
     }
 
     Ok(fuel)

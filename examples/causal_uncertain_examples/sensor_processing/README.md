@@ -22,9 +22,9 @@ PropagatingProcess { value: RawReadings, state: FleetState::default(), context: 
 |----------|------------------|---------------------------------------------------------------------------------------------|
 | `value`  | `RawReadings` → `ProcessedReadings` | Per-sensor data carried stage-to-stage; type projects after Stage 1.    |
 | `state`  | `FleetState`     | Accumulates counts, total uncertainty, fused temperature, anomaly list, final verdict.       |
-| `context`| `FleetContext`   | Read-only plausibility and nominal bands, calibration offsets, triage uncertainty factors, historical temperature model, temperature–pressure correlation, anomaly and reliability thresholds; one `Data<f64>` contextoid per quantity. |
+| `context`| `FleetContext`   | Read-only plausibility and nominal bands, calibration offsets, triage uncertainty factors, historical temperature model, temperature–pressure correlation, anomaly and reliability thresholds; one `Data<f64>` contextoid per quantity, keyed by its contextoid id. |
 | `logs`   | `EffectLog`      | Each stage appends one or more entries; `main.rs` prints them once at the end.               |
-| `error`  | `CausalityError` | Shares the outcome `Result` with `value`; set if a stage's preconditions fail, after which downstream `bind` calls short-circuit.  |
+| `error`  | `CausalityError` | Shares the outcome `Result` with `value`; set if a stage's preconditions or body fail, after which downstream `bind` calls short-circuit. A failed stage passes on the state it received.  |
 
 ## What the example demonstrates
 

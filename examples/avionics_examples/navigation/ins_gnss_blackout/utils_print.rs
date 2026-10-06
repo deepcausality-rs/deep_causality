@@ -7,7 +7,7 @@
 //! reads cleanly.
 
 use crate::model::{
-    BLACKOUT_THRESHOLD, NavContext, NavProcess, RADIUS_M, T_SEC, denial_indicator, epochs, scalar,
+    BLACKOUT_THRESHOLD, NavContext, NavProcess, RADIUS_M, T_SEC, denial_curve, epochs, scalar,
     series,
 };
 use deep_causality_core::CausalityError;
@@ -25,17 +25,15 @@ pub fn print_loaded(sat: &str, n_orbit: usize, n_clock: usize) {
 pub fn print_stream_summary(world: &NavContext) -> Result<(), CausalityError> {
     let n = epochs(world)?;
     let threshold = scalar(world, BLACKOUT_THRESHOLD)?;
-    let denial = (0..n)
-        .map(|idx| denial_indicator(world, idx))
-        .collect::<Result<Vec<_>, _>>()?;
-    let denied = denial.into_iter().filter(|&d| d > threshold).count();
+    let denial = denial_curve(world)?;
+    let denied = (0..n).map(denial).filter(|&d| d > threshold).count();
     let radius_m = series(world, RADIUS_M)?;
     let r_min = radius_m.iter().copied().fold(f64::MAX, f64::min) / 1000.0;
     let r_max = radius_m.iter().copied().fold(0.0, f64::max) / 1000.0;
     let last_t_sec = series(world, T_SEC)?
         .last()
         .copied()
-        .ok_or_else(|| CausalityError::MissingParameter("the epoch stream is empty"))?;
+        .ok_or_else(CausalityError::EmptyCollection)?;
     let span_h = last_t_sec / 3600.0;
     println!(
         "Stream: {} epochs, span {:.1} h; orbit radius {:.0}–{:.0} km; modelled outage ≈ {} epochs.\n",

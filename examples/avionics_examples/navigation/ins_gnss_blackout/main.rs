@@ -37,7 +37,8 @@ mod model;
 mod utils_print;
 
 use crate::model::{
-    NavContext, NavProcess, advance, apply_fix, build_stream, detect_regime, epochs, gps_fix,
+    ACCEL_BIAS, BIAS_CAL_GAIN, BLACKOUT_THRESHOLD, GPS_GAIN, NavContext, NavProcess, OUTAGE_END,
+    OUTAGE_START, advance, apply_fix, build_stream, detect_regime, epochs, gps_fix,
     initial_process, nav_world, record_metrics,
 };
 use deep_causality_core::CausalFlow;
@@ -71,7 +72,8 @@ fn main() {
     utils_print::print_loaded(SAT_ID, orbits.len(), clocks.len());
 
     // 2. Build the processed epoch series (time, step, radius, speed, measured clock, relativistic
-    //    rate) and the navigation world around them, with the scenario scalars in node-index order.
+    //    rate) and the navigation world around them, each scenario scalar keyed by its contextoid
+    //    id.
     let stream = match build_stream(orbits, clocks) {
         Ok(stream) => stream,
         Err(e) => {
@@ -80,14 +82,14 @@ fn main() {
         }
     };
     let scenario = [
-        0.45,   // OUTAGE_START: blackout window as a fraction of the day's epochs
-        0.55,   // OUTAGE_END
-        1.0e-4, // ACCEL_BIAS: accelerometer bias, m/s² (~10 µg, navigation grade)
-        0.5,    // BLACKOUT_THRESHOLD
-        0.9,    // GPS_GAIN
-        0.05,   // BIAS_CAL_GAIN
+        (OUTAGE_START, 0.45), // blackout window as a fraction of the day's epochs
+        (OUTAGE_END, 0.55),
+        (ACCEL_BIAS, 1.0e-4), // accelerometer bias, m/s² (~10 µg, navigation grade)
+        (BLACKOUT_THRESHOLD, 0.5),
+        (GPS_GAIN, 0.9),
+        (BIAS_CAL_GAIN, 0.05),
     ];
-    let world = match nav_world(stream, scenario) {
+    let world = match nav_world(stream, &scenario) {
         Ok(world) => world,
         Err(e) => {
             eprintln!("navigation world rejected a contextoid: {e}");

@@ -213,10 +213,10 @@ reads nothing and keeps the stateless `Causaloid::new` form.
 
 ### `AirframeContext` (the Context channel)
 
-One `Data<f64>` contextoid per quantity, read by node index (`model_types.rs`);
-the values are in `model_config.rs`.
+One `Data<f64>` contextoid per quantity, keyed and read by its contextoid id
+(`model_types.rs`); the values are in `model_config.rs`.
 
-| Node                         | Value         | Purpose                                                                                                                 |
+| Contextoid id                | Value         | Purpose                                                                                                                 |
 |------------------------------|---------------|-------------------------------------------------------------------------------------------------------------------------|
 | `MASS_KG`                    | 70 000 kg     | Current aircraft mass; used by the CG-out-of-limits envelope node.                                                      |
 | `MTOW_KG`                    | 80 000 kg     | Maximum takeoff weight; reference for CG margins.                                                                       |

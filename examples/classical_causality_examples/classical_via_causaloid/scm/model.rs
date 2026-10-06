@@ -3,16 +3,18 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 use deep_causality::{
-    CausableGraph, CausalityError, CausalityErrorEnum, Causaloid, CausaloidGraph, Identifiable,
-    IdentificationValue, PropagatingEffect, PropagatingProcess, Verdict,
+    CausableGraph, CausalityError, CausalityErrorEnum, Causaloid, CausaloidGraph,
+    PropagatingEffect, PropagatingProcess, Verdict,
 };
-use deep_causality_context::{BaseContext, ContextoidType, ContextuableGraph, Datable};
+use deep_causality_context::{BaseContext, ContextoidId};
 use deep_causality_core::CausalEffect;
+use std::error::Error;
 use std::sync::{Arc, RwLock};
 
-// Contextoid IDs
-pub(crate) const NICOTINE_ID: IdentificationValue = 1;
-pub(crate) const TAR_ID: IdentificationValue = 2;
+/// Contextoid id: nicotine consumption level.
+pub(crate) const NICOTINE_ID: ContextoidId = 1;
+/// Contextoid id: tar level in the lungs.
+pub(crate) const TAR_ID: ContextoidId = 2;
 
 /// State struct for SCM causal chain
 #[derive(Debug, Clone, Copy, Default)]
@@ -76,18 +78,28 @@ impl Verdict for ScmState {
 pub type ScmCausaloid = Causaloid<ScmState, ScmState, (), ()>;
 pub type ScmGraph = CausaloidGraph<ScmCausaloid>;
 
-pub(crate) fn get_causaloid_graph() -> (ScmGraph, usize, usize) {
+pub(crate) fn get_causaloid_graph() -> Result<(ScmGraph, usize, usize), Box<dyn Error>> {
     // 1. Build CausaloidGraph
     let mut graph = CausaloidGraph::new(1);
-    let smoke_idx = graph.add_causaloid(get_smoking_causaloid()).unwrap();
-    let tar_idx = graph.add_causaloid(get_tar_causaloid()).unwrap();
-    let cancer_idx = graph.add_causaloid(get_cancer_risk_causaloid()).unwrap();
+    let smoke_idx = graph.add_causaloid(get_smoking_causaloid())?;
+    let tar_idx = graph.add_causaloid(get_tar_causaloid())?;
+    let cancer_idx = graph.add_causaloid(get_cancer_risk_causaloid())?;
 
-    graph.add_edge(smoke_idx, tar_idx).unwrap();
-    graph.add_edge(tar_idx, cancer_idx).unwrap();
+    graph.add_edge(smoke_idx, tar_idx)?;
+    graph.add_edge(tar_idx, cancer_idx)?;
     graph.freeze();
 
-    (graph, smoke_idx, cancer_idx)
+    Ok((graph, smoke_idx, cancer_idx))
+}
+
+/// The value an evaluation carries, or the error that ended it.
+pub(crate) fn value_of<T: Clone>(effect: &PropagatingEffect<T>) -> Result<T, CausalityError> {
+    match effect.error() {
+        Some(error) => Err(error.clone()),
+        None => effect
+            .value_cloned()
+            .ok_or(CausalityError::ValueNotAvailable()),
+    }
 }
 
 // Define Causaloids
@@ -160,23 +172,19 @@ pub(crate) fn contextual_cancer_risk_logic(
         }
     };
 
-    let mut tar_level = 0.0;
-    let mut nicotine_level = 0.0;
-
-    let ctx = ctx_arc.read().unwrap();
-
-    // Scan the context for relevant data.
-    for i in 0..ctx.number_of_nodes() {
-        if let Some(node) = ctx.get_node(i)
-            && let ContextoidType::Datoid(data_node) = node.vertex_type()
-        {
-            match data_node.id() {
-                TAR_ID => tar_level = data_node.get_data(),
-                NICOTINE_ID => nicotine_level = data_node.get_data(),
-                _ => (),
-            }
+    let ctx = match ctx_arc.read() {
+        Ok(guard) => guard,
+        Err(_) => {
+            return PropagatingProcess::from_error(CausalityError(CausalityErrorEnum::Custom(
+                "Context lock is poisoned".into(),
+            )));
         }
-    }
+    };
+
+    let (tar_level, nicotine_level) = match (read(&ctx, TAR_ID), read(&ctx, NICOTINE_ID)) {
+        (Ok(tar_level), Ok(nicotine_level)) => (tar_level, nicotine_level),
+        (Err(error), _) | (_, Err(error)) => return PropagatingProcess::from_error(error),
+    };
 
     if tar_level > 0.6 && nicotine_level > 0.6 {
         return PropagatingProcess::pure(true); // Highest risk
@@ -191,6 +199,13 @@ pub(crate) fn contextual_cancer_risk_logic(
     }
 
     PropagatingProcess::pure(false) // Low risk
+}
+
+/// Read the `Data` contextoid with contextoid id `id` out of a person's context.
+fn read(context: &BaseContext, id: ContextoidId) -> Result<f64, CausalityError> {
+    context
+        .get_data_by_id(id)
+        .ok_or_else(|| CausalityError::ModelError(format!("no Datoid with contextoid id {id}")))
 }
 
 pub(crate) fn get_contextual_cancer_causaloid(

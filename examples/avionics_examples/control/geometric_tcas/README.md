@@ -32,7 +32,7 @@ A `PropagatingEffect` bind-chain encapsulates the safety logic:
 3.  **Resolve**: The RA carries a direction (`CLIMB` or `DESCEND`).
     *   *Implementation Note*: The example uses a vertical-preference heuristic (descend if the intruder is above, climb if below). GA would also allow the optimal avoidance vector: rotate $V_{rel}$ in the plane defined by $M$.
 
-The thresholds (500 m horizontal and 100 m vertical protection radius, 45 s TA and 20 s RA time-to-CPA) and the 0.5 s tick period form the encounter world: a `deep_causality_context` `Context` with one `Data` contextoid per quantity, attached to the flow with `.context(...)`. The stages read it from the flow's `Context` channel; the aircraft tracks ride in the carried value. No stage reads the vertical protection radius.
+The thresholds (500 m CPA-distance threshold, 45 s TA and 20 s RA time-to-CPA) and the 0.5 s tick period form the encounter world: a `deep_causality_context` `Context` with one `Data` contextoid per quantity, each keyed by its contextoid id, attached to the flow with `.context(...)`. The stages read it by id from the flow's `Context` channel; the aircraft tracks ride in the carried value.
 
 ### 4. Automatic Intervention via `CausalFlow::branch`
 Each 0.5 s tick of the safety loop is one `CausalFlow`: `assess -> intervene? -> output -> integrate`, and `iterate_n` runs 30 ticks. The auto-pilot takeover is a `branch` on the carried value, so the override step runs only when the **Closed Loop Safety Interlock** fires:

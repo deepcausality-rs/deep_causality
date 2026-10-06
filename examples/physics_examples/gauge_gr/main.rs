@@ -17,7 +17,7 @@
 //! type alias. All numeric literals are converted using the `flt!` macro.
 //!
 use deep_causality_context::{
-    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     NoSpace, NoSpaceTime, NoTime,
 };
 use deep_causality_core::{
@@ -60,13 +60,10 @@ type GRTheory = GR<FloatType>;
 type SchwarzschildContext =
     Context<Data<FloatType>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
 
-/// Node indices of the world facts; `schwarzschild_spacetime` adds them in this order.
-/// Mass of the central body, in solar masses.
-const CENTRAL_MASS: usize = 0;
-/// Observation radius, in Schwarzschild radii.
-const OBSERVATION_RADIUS: usize = 1;
-/// How many world facts the spacetime holds.
-const SPACETIME_FACTS: usize = 2;
+/// Contextoid id: mass of the central body, in solar masses.
+const CENTRAL_MASS: ContextoidId = 1;
+/// Contextoid id: observation radius, in Schwarzschild radii.
+const OBSERVATION_RADIUS: ContextoidId = 2;
 
 // =============================================================================
 // MAIN: Pipeline Composition via Causal Monad
@@ -265,17 +262,14 @@ fn stage_curvature_invariants(
     _: (),
     spacetime: Option<SchwarzschildContext>,
 ) -> SpaceTimeProcess<SpaceTimeData> {
-    let Some(spacetime) = spacetime else {
-        return missing_spacetime();
+    let (spacetime, r, r_s) = match stage_radii(spacetime) {
+        Ok(stage) => stage,
+        Err(e) => return PropagatingProcess::from_error(e),
     };
     println!("Stage 2: Curvature Invariants");
     println!("─────────────────────────────");
 
     if let Some(_gr) = &input.gr {
-        let (r, r_s) = match radii(&spacetime) {
-            Ok(radii) => radii,
-            Err(e) => return PropagatingProcess::from_error(e),
-        };
         // For Schwarzschild spacetime, use the exact analytic expressions:
         // Kretschmann scalar: K = R_μνρσ R^μνρσ = 48 M²/r⁶ = 12 r_s²/r⁶
         // Ricci scalar: R = 0 (vacuum solution)
@@ -326,17 +320,14 @@ fn stage_geodesic_analysis(
     _: (),
     spacetime: Option<SchwarzschildContext>,
 ) -> SpaceTimeProcess<SpaceTimeData> {
-    let Some(spacetime) = spacetime else {
-        return missing_spacetime();
+    let (spacetime, r, r_s) = match stage_radii(spacetime) {
+        Ok(stage) => stage,
+        Err(e) => return PropagatingProcess::from_error(e),
     };
     println!("Stage 3: Geodesic Analysis");
     println!("──────────────────────────");
 
     if let Some(gr) = &input.gr {
-        let (r, r_s) = match radii(&spacetime) {
-            Ok(radii) => radii,
-            Err(e) => return PropagatingProcess::from_error(e),
-        };
         // Static observer 4-velocity: u^μ = (1/√f, 0, 0, 0)
         let one = ONE;
         let zero = ZERO;
@@ -407,16 +398,13 @@ fn stage_adm_formalism(
     _: (),
     spacetime: Option<SchwarzschildContext>,
 ) -> SpaceTimeProcess<SpaceTimeData> {
-    let Some(spacetime) = spacetime else {
-        return missing_spacetime();
+    let (spacetime, r, r_s) = match stage_radii(spacetime) {
+        Ok(stage) => stage,
+        Err(e) => return PropagatingProcess::from_error(e),
     };
     println!("Stage 4: ADM 3+1 Formalism");
     println!("──────────────────────────");
 
-    let (r, r_s) = match radii(&spacetime) {
-        Ok(radii) => radii,
-        Err(e) => return PropagatingProcess::from_error(e),
-    };
     let one = ONE;
     let zero = ZERO;
     let f = one - r_s / r;
@@ -490,16 +478,13 @@ fn stage_event_horizon_detection(
     _: (),
     spacetime: Option<SchwarzschildContext>,
 ) -> SpaceTimeProcess<GRState> {
-    let Some(spacetime) = spacetime else {
-        return missing_spacetime();
+    let (spacetime, r, r_s) = match stage_radii(spacetime) {
+        Ok(stage) => stage,
+        Err(e) => return PropagatingProcess::from_error(e),
     };
     println!("Stage 5: Horizon Detection");
     println!("──────────────────────────");
 
-    let (r, r_s) = match radii(&spacetime) {
-        Ok(radii) => radii,
-        Err(e) => return PropagatingProcess::from_error(e),
-    };
     let inside_horizon = r < r_s;
     let in_photon_sphere = r < PHOTON_SPHERE_RADII * r_s;
     let in_isco = r < ISCO_RADII * r_s;
@@ -556,14 +541,15 @@ fn stage_event_horizon_detection(
 // CONTEXT: the central body and the observer
 // =============================================================================
 
-/// Builds the spacetime's world facts: each as a `Data` contextoid at its node index.
+/// Builds the spacetime's world facts: each as a `Data` contextoid keyed by its contextoid id.
 fn schwarzschild_spacetime() -> Result<SchwarzschildContext, ContextIndexError> {
-    let mut facts = [ZERO; SPACETIME_FACTS];
-    facts[CENTRAL_MASS] = const_scalar_from_int!(FloatType, 10);
-    facts[OBSERVATION_RADIUS] = const_scalar_from_int!(FloatType, 3);
+    let facts = [
+        (CENTRAL_MASS, const_scalar_from_int!(FloatType, 10)),
+        (OBSERVATION_RADIUS, const_scalar_from_int!(FloatType, 3)),
+    ];
 
-    let mut spacetime = Context::with_capacity(1, "Schwarzschild black hole", SPACETIME_FACTS);
-    for (id, value) in (1..).zip(facts) {
+    let mut spacetime = Context::with_capacity(1, "Schwarzschild black hole", facts.len());
+    for (id, value) in facts {
         spacetime.add_node(Contextoid::new(
             id,
             ContextoidType::Datoid(Data::new(id, value)),
@@ -572,13 +558,13 @@ fn schwarzschild_spacetime() -> Result<SchwarzschildContext, ContextIndexError> 
     Ok(spacetime)
 }
 
-/// Reads one world fact out of the spacetime, or the error naming the node that holds none.
-fn read(spacetime: &SchwarzschildContext, index: usize) -> Result<FloatType, CausalityError> {
-    spacetime
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(|data| data.get_data())
-        .ok_or_else(|| custom(format!("the spacetime holds no Datoid at node {index}")))
+/// Reads one world fact out of the spacetime, or the error naming the contextoid id it lacks.
+fn read(spacetime: &SchwarzschildContext, id: ContextoidId) -> Result<FloatType, CausalityError> {
+    spacetime.get_data_by_id(id).ok_or_else(|| {
+        custom(format!(
+            "the spacetime holds no Datoid with contextoid id {id}"
+        ))
+    })
 }
 
 /// The observation radius `r` and the Schwarzschild radius `r_s`, in metres, of the central
@@ -597,12 +583,14 @@ where
     PropagatingProcess::with_state(PropagatingEffect::pure(value), (), Some(spacetime))
 }
 
-/// The error a stage short-circuits with when the flow carries no spacetime.
-fn missing_spacetime<T>() -> SpaceTimeProcess<T>
-where
-    T: Default + Clone + core::fmt::Debug,
-{
-    PropagatingProcess::from_error(custom("the flow carries no spacetime"))
+/// The spacetime the flow carries, with its observation radius `r` and Schwarzschild radius
+/// `r_s`, or the error a stage short-circuits with when the flow carries no spacetime.
+fn stage_radii(
+    spacetime: Option<SchwarzschildContext>,
+) -> Result<(SchwarzschildContext, FloatType, FloatType), CausalityError> {
+    let spacetime = spacetime.ok_or_else(|| custom("the flow carries no spacetime"))?;
+    let (r, r_s) = radii(&spacetime)?;
+    Ok((spacetime, r, r_s))
 }
 
 /// A stage failure, as the pipeline's error.

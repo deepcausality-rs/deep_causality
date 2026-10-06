@@ -11,7 +11,7 @@
 
 use deep_causality_calculus::{EndoArrow, Euler};
 use deep_causality_context::{
-    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     NoSpace, NoSpaceTime, NoTime,
 };
 use deep_causality_core::{CausalityError, PropagatingEffect};
@@ -22,33 +22,30 @@ use deep_causality_multivector::MultiVector;
 // --- Context ---
 
 /// The encounter world the safety loop reads through the flow's `Context` channel: the TCAS
-/// protection volume and alert thresholds and the surveillance tick period, one `Data` contextoid
+/// protection radius and alert thresholds and the surveillance tick period, one `Data` contextoid
 /// per quantity. The aircraft tracks are the evolving value, not context, so the spatial, temporal
 /// and spacetime slots are empty.
 pub type TcasContext = Context<Data<f64>, NoSpace<f64>, NoTime, NoSpaceTime<f64>>;
 
-/// Node index: horizontal protection radius, m (aggressive for the demo).
-pub const HORIZONTAL_PROT_RADIUS_M: usize = 0;
-/// Node index: vertical protection radius, m.
-pub const VERTICAL_PROT_RADIUS_M: usize = 1;
-/// Node index: time-to-CPA below which a traffic advisory issues, s.
-pub const TA_TAU_S: usize = 2;
-/// Node index: time-to-CPA below which a traffic advisory becomes a resolution advisory, s.
-pub const RA_TAU_S: usize = 3;
-/// Node index: surveillance tick period, s.
-pub const TICK_S: usize = 4;
+/// Contextoid id: protection radius on the 3-D CPA miss distance, m (aggressive for the demo).
+pub const CPA_PROT_RADIUS_M: ContextoidId = 1;
+/// Contextoid id: time-to-CPA below which a traffic advisory issues, s.
+pub const TA_TAU_S: ContextoidId = 2;
+/// Contextoid id: time-to-CPA below which a traffic advisory becomes a resolution advisory, s.
+pub const RA_TAU_S: ContextoidId = 3;
+/// Contextoid id: surveillance tick period, s.
+pub const TICK_S: ContextoidId = 4;
 
-/// Build the encounter world, added in node-index order: node `i` holds contextoid id `i + 1`.
+/// Build the encounter world, each quantity keyed by its contextoid id.
 pub fn build_tcas_world() -> Result<TcasContext, ContextIndexError> {
-    let quantities = [
-        500.0, // HORIZONTAL_PROT_RADIUS_M
-        100.0, // VERTICAL_PROT_RADIUS_M
-        45.0,  // TA_TAU_S
-        20.0,  // RA_TAU_S
-        0.5,   // TICK_S
+    let facts = [
+        (CPA_PROT_RADIUS_M, 500.0),
+        (TA_TAU_S, 45.0),
+        (RA_TAU_S, 20.0),
+        (TICK_S, 0.5),
     ];
-    let mut context = Context::with_capacity(1, "tcas encounter", quantities.len());
-    for (id, value) in (1..).zip(quantities) {
+    let mut context = Context::with_capacity(1, "tcas encounter", facts.len());
+    for (id, value) in facts {
         context.add_node(Contextoid::new(
             id,
             ContextoidType::Datoid(Data::new(id, value)),
@@ -57,18 +54,14 @@ pub fn build_tcas_world() -> Result<TcasContext, ContextIndexError> {
     Ok(context)
 }
 
-/// Read one `Data` contextoid's payload out of the encounter world. A node that is absent or not
-/// a Datoid is an error.
-pub fn read(context: &TcasContext, index: usize) -> Result<f64, CausalityError> {
-    context
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(Datable::get_data)
-        .ok_or_else(|| {
-            CausalityError::MissingParameter(format!(
-                "encounter world node {index} is absent or not a Datoid"
-            ))
-        })
+/// Read the `Data` contextoid carrying `id` out of the encounter world. An id the world does not
+/// hold as a Datoid is an error.
+pub fn read(context: &TcasContext, id: ContextoidId) -> Result<f64, CausalityError> {
+    context.get_data_by_id(id).ok_or_else(|| {
+        CausalityError::MissingParameter(format!(
+            "encounter world holds no Datoid with contextoid id {id}"
+        ))
+    })
 }
 
 /// The encounter world a stage reads, or the error a stage returns when the flow carries none.
@@ -113,7 +106,7 @@ pub struct ConflictReport {
 
 // --- Logic ---
 
-/// The TCAS monitor over an encounter world: its protection volume and alert thresholds are read
+/// The TCAS monitor over an encounter world: its protection radius and alert thresholds are read
 /// from the world on every assessment.
 pub struct GeometricTCAS<'w> {
     world: &'w TcasContext,
@@ -149,7 +142,7 @@ impl<'w> GeometricTCAS<'w> {
         // 3. Decision Logic (Monadic Bind simulation)
         // We use PropagatingEffect to represent the "Safety Interlock"
         // If parameters are safe, effect is "Clear". If not, "Advisory".
-        let horizontal_prot_radius = read(self.world, HORIZONTAL_PROT_RADIUS_M)?;
+        let cpa_prot_radius = read(self.world, CPA_PROT_RADIUS_M)?;
         let ta_tau = read(self.world, TA_TAU_S)?;
         let ra_tau = read(self.world, RA_TAU_S)?;
         let assessment = PropagatingEffect::pure((d_cpa, t_cpa)).bind(|params_ref, _, _| {
@@ -159,7 +152,7 @@ impl<'w> GeometricTCAS<'w> {
 
             let level = if t < 0.0 {
                 AdvisoryLevel::None // Passed
-            } else if d < horizontal_prot_radius && t < ta_tau {
+            } else if d < cpa_prot_radius && t < ta_tau {
                 if t < ra_tau {
                     AdvisoryLevel::RA
                 } else {

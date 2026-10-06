@@ -20,7 +20,7 @@
 use crate::FloatType;
 use chrono::NaiveDateTime;
 use deep_causality_context::{
-    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     NoSpace, NoSpaceTime, NoTime,
 };
 use deep_causality_core::{
@@ -29,14 +29,15 @@ use deep_causality_core::{
 use deep_causality_file::{ClockData, OrbitData};
 use deep_causality_haft::LogAddEntry;
 use deep_causality_physics::{EARTH_GM, PhysicsError, relativistic_clock_drift_rate_kernel};
+use std::rc::Rc;
 
 pub type NavProcess = PropagatingProcess<FloatType, NavState, NavContext>;
 
 /// One quantity of the navigation world: a per-epoch series of the real GNSS stream, or a scalar.
 #[derive(Debug, Clone, PartialEq)]
 pub enum NavDatum {
-    /// One value per epoch, in epoch order.
-    Series(Vec<FloatType>),
+    /// One value per epoch, in epoch order. Shared, so reading a series clones a pointer.
+    Series(Rc<[FloatType]>),
     /// A single value.
     Scalar(FloatType),
 }
@@ -52,53 +53,54 @@ impl Default for NavDatum {
 /// spacetime slots are empty.
 pub type NavContext = Context<Data<NavDatum>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
 
-/// Number of per-epoch series; they occupy node indices `0..EPOCH_SERIES`.
+/// Number of per-epoch series [`build_stream`] produces.
 pub const EPOCH_SERIES: usize = 6;
-/// Node index (series): seconds since the first epoch, s.
-pub const T_SEC: usize = 0;
-/// Node index (series): Δt to the next epoch, s.
-pub const DT: usize = 1;
-/// Node index (series): orbital radius from Earth centre, m, from the real SP3 position.
-pub const RADIUS_M: usize = 2;
-/// Node index (series): speed, m/s, finite-differenced from the real SP3 positions.
-pub const SPEED_MS: usize = 3;
-/// Node index (series): measured satellite clock offset, ns, from the real `.clk` product — the
+/// Contextoid id (series): seconds since the first epoch, s.
+pub const T_SEC: ContextoidId = 1;
+/// Contextoid id (series): Δt to the next epoch, s.
+pub const DT: ContextoidId = 2;
+/// Contextoid id (series): orbital radius from Earth centre, m, from the real SP3 position.
+pub const RADIUS_M: ContextoidId = 3;
+/// Contextoid id (series): speed, m/s, finite-differenced from the real SP3 positions.
+pub const SPEED_MS: ContextoidId = 4;
+/// Contextoid id (series): measured satellite clock offset, ns, from the real `.clk` product — the
 /// ground truth.
-pub const MEASURED_CLOCK_NS: usize = 4;
-/// Node index (series): relativistic clock rate `dτ/dt − 1` (dimensionless), from the shipped
+pub const MEASURED_CLOCK_NS: ContextoidId = 5;
+/// Contextoid id (series): relativistic clock rate `dτ/dt − 1` (dimensionless), from the shipped
 /// kernel on the real orbit.
-pub const RELATIVISTIC_RATE: usize = 5;
+pub const RELATIVISTIC_RATE: ContextoidId = 6;
 
-/// Number of scenario scalars; they occupy node indices `EPOCH_SERIES..EPOCH_SERIES + SCENARIO_SCALARS`.
-pub const SCENARIO_SCALARS: usize = 6;
-/// Node index (scalar): start of the GNSS outage window, as a fraction of the day's epochs.
-pub const OUTAGE_START: usize = 6;
-/// Node index (scalar): end of the GNSS outage window, as a fraction of the day's epochs.
-pub const OUTAGE_END: usize = 7;
-/// Node index (scalar): true accelerometer bias, m/s² (~10 µg, navigation grade).
-pub const ACCEL_BIAS: usize = 8;
-/// Node index (scalar): critical denial level above which GNSS is treated as denied (the
+/// Contextoid id (scalar): start of the GNSS outage window, as a fraction of the day's epochs.
+pub const OUTAGE_START: ContextoidId = 7;
+/// Contextoid id (scalar): end of the GNSS outage window, as a fraction of the day's epochs.
+pub const OUTAGE_END: ContextoidId = 8;
+/// Contextoid id (scalar): true accelerometer bias, m/s² (~10 µg, navigation grade).
+pub const ACCEL_BIAS: ContextoidId = 9;
+/// Contextoid id (scalar): critical denial level above which GNSS is treated as denied (the
 /// grmhd-style threshold).
-pub const BLACKOUT_THRESHOLD: usize = 9;
-/// Node index (scalar): GNSS position-fix gain (P-controller on the INS error;
+pub const BLACKOUT_THRESHOLD: ContextoidId = 10;
+/// Contextoid id (scalar): GNSS position-fix gain (P-controller on the INS error;
 /// corrected = err·(1 − gain)).
-pub const GPS_GAIN: usize = 10;
-/// Node index (scalar): fraction of the residual accelerometer bias each fix calibrates away.
-pub const BIAS_CAL_GAIN: usize = 11;
+pub const GPS_GAIN: ContextoidId = 11;
+/// Contextoid id (scalar): fraction of the residual accelerometer bias each fix calibrates away.
+pub const BIAS_CAL_GAIN: ContextoidId = 12;
 
-/// Build the navigation world from the processed epoch series and the scenario scalars, both in
-/// node-index order: node `i` holds contextoid id `i + 1`.
+/// Build the navigation world from the processed epoch series and the scenario scalars, each keyed
+/// by its contextoid id.
 pub fn nav_world(
-    series: [Vec<FloatType>; EPOCH_SERIES],
-    scalars: [FloatType; SCENARIO_SCALARS],
+    series: [(ContextoidId, Vec<FloatType>); EPOCH_SERIES],
+    scenario: &[(ContextoidId, FloatType)],
 ) -> Result<NavContext, ContextIndexError> {
-    let data = series
+    let mut context = Context::with_capacity(1, "navigation world", series.len() + scenario.len());
+    let facts = series
         .into_iter()
-        .map(NavDatum::Series)
-        .chain(scalars.map(NavDatum::Scalar));
-    let mut context =
-        Context::with_capacity(1, "navigation world", EPOCH_SERIES + SCENARIO_SCALARS);
-    for (id, datum) in (1..).zip(data) {
+        .map(|(id, values)| (id, NavDatum::Series(values.into())))
+        .chain(
+            scenario
+                .iter()
+                .map(|&(id, value)| (id, NavDatum::Scalar(value))),
+        );
+    for (id, datum) in facts {
         context.add_node(Contextoid::new(
             id,
             ContextoidType::Datoid(Data::new(id, datum)),
@@ -112,45 +114,39 @@ fn world(ctx: Option<&NavContext>) -> Result<&NavContext, CausalityError> {
     ctx.ok_or_else(CausalityError::MissingContext)
 }
 
-/// Read one `Data` contextoid's payload out of the navigation world.
-fn datum(context: &NavContext, index: usize) -> Result<NavDatum, CausalityError> {
-    context
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(Datable::get_data)
-        .ok_or_else(|| {
-            CausalityError::MissingParameter(format!(
-                "navigation world node {index} is absent or not a Datoid"
-            ))
-        })
+/// Read the `Data` contextoid carrying `id` out of the navigation world.
+fn datum(context: &NavContext, id: ContextoidId) -> Result<NavDatum, CausalityError> {
+    context.get_data_by_id(id).ok_or_else(|| {
+        CausalityError::MissingParameter(format!(
+            "navigation world holds no Datoid with contextoid id {id}"
+        ))
+    })
 }
 
 /// Read one per-epoch series out of the navigation world.
-pub fn series(context: &NavContext, index: usize) -> Result<Vec<FloatType>, CausalityError> {
-    match datum(context, index)? {
+pub fn series(context: &NavContext, id: ContextoidId) -> Result<Rc<[FloatType]>, CausalityError> {
+    match datum(context, id)? {
         NavDatum::Series(values) => Ok(values),
         NavDatum::Scalar(_) => Err(CausalityError::MissingParameter(format!(
-            "navigation world node {index} is a scalar, not a series"
+            "navigation world contextoid {id} is a scalar, not a series"
         ))),
     }
 }
 
 /// Read one scalar out of the navigation world.
-pub fn scalar(context: &NavContext, index: usize) -> Result<FloatType, CausalityError> {
-    match datum(context, index)? {
+pub fn scalar(context: &NavContext, id: ContextoidId) -> Result<FloatType, CausalityError> {
+    match datum(context, id)? {
         NavDatum::Scalar(value) => Ok(value),
         NavDatum::Series(_) => Err(CausalityError::MissingParameter(format!(
-            "navigation world node {index} is a series, not a scalar"
+            "navigation world contextoid {id} is a series, not a scalar"
         ))),
     }
 }
 
 /// Read the value of one per-epoch series at epoch `idx`.
-fn at(context: &NavContext, index: usize, idx: usize) -> Result<FloatType, CausalityError> {
-    series(context, index)?.get(idx).copied().ok_or_else(|| {
-        CausalityError::MissingParameter(format!(
-            "navigation world series {index} has no epoch {idx}"
-        ))
+fn at(context: &NavContext, id: ContextoidId, idx: usize) -> Result<FloatType, CausalityError> {
+    series(context, id)?.get(idx).copied().ok_or_else(|| {
+        CausalityError::MissingParameter(format!("navigation world series {id} has no epoch {idx}"))
     })
 }
 
@@ -163,14 +159,22 @@ pub fn epochs(context: &NavContext) -> Result<usize, CausalityError> {
 /// outage window — the signal degradation rising as the vehicle enters a GNSS-denied stretch
 /// (jamming, an urban canyon, a tunnel, or terrain shadowing) and falling as it leaves.
 pub fn denial_indicator(context: &NavContext, idx: usize) -> Result<FloatType, CausalityError> {
+    Ok(denial_curve(context)?(idx))
+}
+
+/// The synthetic GNSS-denial indicator as a function of the epoch index, with the outage window
+/// and the epoch count read from the world once.
+pub fn denial_curve(context: &NavContext) -> Result<impl Fn(usize) -> FloatType, CausalityError> {
     let outage_lo = scalar(context, OUTAGE_START)?;
     let outage_hi = scalar(context, OUTAGE_END)?;
     let n = epochs(context)?;
     let centre = 0.5 * (outage_lo + outage_hi);
     let half_width = (0.5 * (outage_hi - outage_lo)).max(1e-6);
-    let frac = idx as f64 / n.saturating_sub(1) as f64;
-    let z = (frac - centre) / half_width;
-    Ok((-(z * z)).exp())
+    Ok(move |idx: usize| {
+        let frac = idx as f64 / n.saturating_sub(1) as f64;
+        let z = (frac - centre) / half_width;
+        (-(z * z)).exp()
+    })
 }
 
 /// Mutable per-tick state carried in the `State` channel.
@@ -200,20 +204,33 @@ fn time_diff_secs(a: NaiveDateTime, b: NaiveDateTime) -> f64 {
     (a - b).num_milliseconds() as f64 / 1000.0
 }
 
-/// Build the processed epoch series from the real SP3 orbit + `.clk` clock series, indexed by the
-/// series node indices: radius and speed from the orbit, the nearest measured clock sample, and the
-/// relativistic rate from the kernel. Fewer than three orbit epochs give empty series; an epoch
-/// without a clock sample or a kernel failure is an error.
+/// Build the processed epoch series from the real SP3 orbit + `.clk` clock series, each keyed by
+/// its series contextoid id: radius and speed from the orbit, the nearest measured clock sample,
+/// and the relativistic rate from the kernel. Fewer than three orbit epochs give empty series; an
+/// epoch without a clock sample or a kernel failure is an error.
 pub fn build_stream(
     mut orbits: Vec<OrbitData<FloatType>>,
     clocks: Vec<ClockData<FloatType>>,
-) -> Result<[Vec<FloatType>; EPOCH_SERIES], PhysicsError> {
+) -> Result<[(ContextoidId, Vec<FloatType>); EPOCH_SERIES], PhysicsError> {
     orbits.sort_by_key(|o| o.timestamp());
     let n = orbits.len();
-    let mut stream: [Vec<FloatType>; EPOCH_SERIES] = Default::default();
     if n < 3 {
-        return Ok(stream);
+        return Ok([
+            T_SEC,
+            DT,
+            RADIUS_M,
+            SPEED_MS,
+            MEASURED_CLOCK_NS,
+            RELATIVISTIC_RATE,
+        ]
+        .map(|id| (id, Vec::new())));
     }
+    let mut t_secs = Vec::with_capacity(n);
+    let mut dts = Vec::with_capacity(n);
+    let mut radii_m = Vec::with_capacity(n);
+    let mut speeds_ms = Vec::with_capacity(n);
+    let mut measured_clocks_ns = Vec::with_capacity(n);
+    let mut relativistic_rates = Vec::with_capacity(n);
     let t0 = orbits[0].timestamp();
     let billion = 1.0e9;
 
@@ -252,14 +269,21 @@ pub fn build_stream(
 
         let relativistic_rate = relativistic_clock_drift_rate_kernel(radius_m, speed_ms, EARTH_GM)?;
 
-        stream[T_SEC].push(t_sec);
-        stream[DT].push(dt);
-        stream[RADIUS_M].push(radius_m);
-        stream[SPEED_MS].push(speed_ms);
-        stream[MEASURED_CLOCK_NS].push(measured_clock_ns);
-        stream[RELATIVISTIC_RATE].push(relativistic_rate);
+        t_secs.push(t_sec);
+        dts.push(dt);
+        radii_m.push(radius_m);
+        speeds_ms.push(speed_ms);
+        measured_clocks_ns.push(measured_clock_ns);
+        relativistic_rates.push(relativistic_rate);
     }
-    Ok(stream)
+    Ok([
+        (T_SEC, t_secs),
+        (DT, dts),
+        (RADIUS_M, radii_m),
+        (SPEED_MS, speeds_ms),
+        (MEASURED_CLOCK_NS, measured_clocks_ns),
+        (RELATIVISTIC_RATE, relativistic_rates),
+    ])
 }
 
 // ── CausalFlow stages ────────────────────────────────────────────────────────────────────────────

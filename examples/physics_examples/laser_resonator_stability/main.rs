@@ -35,7 +35,7 @@
 
 use deep_causality_algebra::{DivisionAlgebra, Real};
 use deep_causality_context::{
-    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     NoSpace, NoSpaceTime, NoTime,
 };
 use deep_causality_core::{CausalEffect, CausalFlow, PropagatingEffect, PropagatingProcess};
@@ -66,21 +66,18 @@ const EIGENMODE_TOLERANCE: FloatType = const_scalar_from_float!(FloatType, 1e-12
 /// slots are empty.
 type CavityContext = Context<Data<FloatType>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
 
-/// Node indices of the cavity's world facts; `linear_cavity` adds them in this order.
-/// Drift from the first flat mirror to the thermal lens, in metres.
-const DRIFT_L1: usize = 0;
-/// Drift from the thermal lens to the far flat mirror, in metres.
-const DRIFT_L2: usize = 1;
-/// Radius of curvature of the biconvex thermal lens, in metres.
-const LENS_RADIUS: usize = 2;
-/// Refractive index of the lens material.
-const LENS_INDEX: usize = 3;
-/// Laser wavelength, in metres.
-const WAVELENGTH: usize = 4;
-/// Waist of the input beam, in metres.
-const WAIST: usize = 5;
-/// How many world facts the cavity holds.
-const CAVITY_FACTS: usize = 6;
+/// Contextoid id: drift from the first flat mirror to the thermal lens, in metres.
+const DRIFT_L1: ContextoidId = 1;
+/// Contextoid id: drift from the thermal lens to the far flat mirror, in metres.
+const DRIFT_L2: ContextoidId = 2;
+/// Contextoid id: radius of curvature of the biconvex thermal lens, in metres.
+const LENS_RADIUS: ContextoidId = 3;
+/// Contextoid id: refractive index of the lens material.
+const LENS_INDEX: ContextoidId = 4;
+/// Contextoid id: laser wavelength, in metres.
+const WAVELENGTH: ContextoidId = 5;
+/// Contextoid id: waist of the input beam, in metres.
+const WAIST: ContextoidId = 6;
 
 /// `f64` is the right precision here: the round trip is six 2x2 products and one Moebius map, so
 /// the eigenmode residual sits at machine epsilon either way. `Float106` tightens the residual
@@ -163,20 +160,21 @@ fn fail<T: Default + Clone + core::fmt::Debug, C: Clone + core::fmt::Debug>(
     ))
 }
 
-/// Builds the cavity: each world fact as a `Data` contextoid at its node index.
+/// Builds the cavity: each world fact as a `Data` contextoid keyed by its contextoid id.
 fn linear_cavity() -> Result<CavityContext, ContextIndexError> {
-    let mut facts = [ZERO; CAVITY_FACTS];
-    facts[DRIFT_L1] = const_scalar_from_float!(FloatType, 0.5);
-    facts[DRIFT_L2] = const_scalar_from_float!(FloatType, 0.5);
-    facts[LENS_RADIUS] = const_scalar_from_float!(FloatType, 0.5);
-    facts[LENS_INDEX] = const_scalar_from_float!(FloatType, 1.5);
-    // Nd:YAG, 1064 nm.
-    facts[WAVELENGTH] = const_scalar_from_float!(FloatType, 1064e-9);
-    // 1 mm.
-    facts[WAIST] = const_scalar_from_float!(FloatType, 1e-3);
+    let facts = [
+        (DRIFT_L1, const_scalar_from_float!(FloatType, 0.5)),
+        (DRIFT_L2, const_scalar_from_float!(FloatType, 0.5)),
+        (LENS_RADIUS, const_scalar_from_float!(FloatType, 0.5)),
+        (LENS_INDEX, const_scalar_from_float!(FloatType, 1.5)),
+        // Nd:YAG, 1064 nm.
+        (WAVELENGTH, const_scalar_from_float!(FloatType, 1064e-9)),
+        // 1 mm.
+        (WAIST, const_scalar_from_float!(FloatType, 1e-3)),
+    ];
 
-    let mut cavity = Context::with_capacity(1, "linear cavity", CAVITY_FACTS);
-    for (id, value) in (1..).zip(facts) {
+    let mut cavity = Context::with_capacity(1, "linear cavity", facts.len());
+    for (id, value) in facts {
         cavity.add_node(Contextoid::new(
             id,
             ContextoidType::Datoid(Data::new(id, value)),
@@ -185,15 +183,13 @@ fn linear_cavity() -> Result<CavityContext, ContextIndexError> {
     Ok(cavity)
 }
 
-/// Reads one world fact out of the cavity, or the error naming the node that holds none.
-fn read(cavity: &CavityContext, index: usize) -> Result<FloatType, PhysicsError> {
-    cavity
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(|data| data.get_data())
-        .ok_or_else(|| {
-            PhysicsError::CalculationError(format!("the cavity holds no Datoid at node {index}"))
-        })
+/// Reads one world fact out of the cavity, or the error naming the contextoid id it lacks.
+fn read(cavity: &CavityContext, id: ContextoidId) -> Result<FloatType, PhysicsError> {
+    cavity.get_data_by_id(id).ok_or_else(|| {
+        PhysicsError::CalculationError(format!(
+            "the cavity holds no Datoid with contextoid id {id}"
+        ))
+    })
 }
 
 /// One optical element of the cavity: its label and the optic a ray meets there.
@@ -203,10 +199,10 @@ struct Element {
     optic: Optic,
 }
 
-/// What an element does to the beam. A drift names the cavity node that holds its length.
+/// What an element does to the beam. A drift names the contextoid id of its length.
 #[derive(Clone, Copy)]
 enum Optic {
-    Drift(usize),
+    Drift(ContextoidId),
     ThermalLens,
 }
 
@@ -214,7 +210,7 @@ impl Element {
     /// The element's ABCD matrix, built from the cavity the context holds.
     fn matrix(&self, cavity: &CavityContext) -> Result<AbcdMatrix<FloatType>, PhysicsError> {
         match self.optic {
-            Optic::Drift(length) => drift(read(cavity, length)?),
+            Optic::Drift(length_id) => drift(read(cavity, length_id)?),
             Optic::ThermalLens => thin_lens(thermal_lens_focal_length(cavity)?),
         }
     }
@@ -397,20 +393,22 @@ fn print_input(
     rayleigh: FloatType,
     focal_length: FloatType,
 ) -> Result<(), PhysicsError> {
+    let drift_l1 = read(cavity, DRIFT_L1)?;
+    let drift_l2 = read(cavity, DRIFT_L2)?;
+    let wavelength = read(cavity, WAVELENGTH)?;
+    let lens_index = read(cavity, LENS_INDEX)?;
+    let lens_radius = read(cavity, LENS_RADIUS)?;
     println!(
         "Cavity:     flat mirror | {:.1} m | thermal lens | {:.1} m | flat mirror",
-        lower(read(cavity, DRIFT_L1)?),
-        lower(read(cavity, DRIFT_L2)?)
+        lower(drift_l1),
+        lower(drift_l2)
     );
-    println!(
-        "Wavelength: {:.1} nm",
-        lower(read(cavity, WAVELENGTH)? * NM_PER_M)
-    );
+    println!("Wavelength: {:.1} nm", lower(wavelength * NM_PER_M));
     println!(
         "Lens:       f = {:.3} m (biconvex, n = {:.1}, R = {:.1} m)",
         lower(focal_length),
-        lower(read(cavity, LENS_INDEX)?),
-        lower(read(cavity, LENS_RADIUS)?)
+        lower(lens_index),
+        lower(lens_radius)
     );
     println!(
         "Input beam: w0 = {:.2} mm at a waist, z_R = {:.3} m\n",

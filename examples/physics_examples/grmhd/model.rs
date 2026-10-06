@@ -3,8 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! The GRMHD stages, each a pure function of the state and the world the flow's context holds,
-//! returning the next state or the error that stops the chain.
+//! The GRMHD stages. The first four are pure functions of the state and the world the flow's
+//! context holds, returning the next state or the error that stops the chain; the analysis is a
+//! pure function of the state alone.
 //!
 //! Geometric units throughout: `G = c = 1`, so a mass is a length and `M = r_s / 2`. Curvature
 //! then carries units of `1 / length^2`, the Kretschmann scalar `1 / length^4`, an acceleration
@@ -18,9 +19,7 @@
 use crate::FloatType;
 use deep_causality::{CausalityError, CausalityErrorEnum};
 use deep_causality_algebra::Real;
-use deep_causality_context::{
-    Context, ContextuableGraph, Data, Datable, NoSpace, NoSpaceTime, NoTime,
-};
+use deep_causality_context::{Context, ContextoidId, Data, NoSpace, NoSpaceTime, NoTime};
 use deep_causality_multivector::{CausalMultiVector, Metric};
 use deep_causality_num::{const_scalar_from_float, const_scalar_from_int, lift_usize};
 use deep_causality_physics::{
@@ -64,30 +63,29 @@ fn eight_pi() -> FloatType {
 pub type GrmhdContext =
     Context<Data<FloatType>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
 
-/// Node indices of the world facts; `grmhd_world` adds them in this order.
-/// Mass of the central body, in solar masses.
-pub const CENTRAL_MASS: usize = 0;
-/// Orbital radius of the plasma in the equatorial plane, in Schwarzschild radii.
-pub const ORBIT_RADIUS: usize = 1;
-/// Radial extent of the plasma column, in metres. Tidal stretch is measured across it.
-pub const COLUMN_LENGTH: usize = 2;
-/// Plasma current density, in geometric units.
-pub const CURRENT_DENSITY: usize = 3;
-/// Confining magnetic field as the static observer measures it, in geometric units (`1/m`).
-pub const MAGNETIC_FIELD: usize = 4;
-/// Tidal acceleration above which the plasma is treated relativistically, in `1/m`. Times `c^2`
-/// that is about `9e4 m/s^2` across the column.
-pub const TIDAL_THRESHOLD: usize = 5;
-/// How many world facts the context holds.
-pub const WORLD_FACTS: usize = 6;
+/// Contextoid id: mass of the central body, in solar masses.
+pub const CENTRAL_MASS: ContextoidId = 1;
+/// Contextoid id: orbital radius of the plasma in the equatorial plane, in Schwarzschild radii.
+pub const ORBIT_RADIUS: ContextoidId = 2;
+/// Contextoid id: radial extent of the plasma column, in metres. Tidal stretch is measured
+/// across it.
+pub const COLUMN_LENGTH: ContextoidId = 3;
+/// Contextoid id: plasma current density, in geometric units.
+pub const CURRENT_DENSITY: ContextoidId = 4;
+/// Contextoid id: confining magnetic field as the static observer measures it, in geometric
+/// units (`1/m`).
+pub const MAGNETIC_FIELD: ContextoidId = 5;
+/// Contextoid id: tidal acceleration above which the plasma is treated relativistically, in
+/// `1/m`. Times `c^2` that is about `9e4 m/s^2` across the column.
+pub const TIDAL_THRESHOLD: ContextoidId = 6;
 
-/// Reads one world fact out of the context, or the error naming the node that holds none.
-pub fn read(world: &GrmhdContext, index: usize) -> Result<FloatType, CausalityError> {
-    world
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(|data| data.get_data())
-        .ok_or_else(|| custom(format!("the GRMHD world holds no Datoid at node {index}")))
+/// Reads one world fact out of the context, or the error naming the contextoid id it lacks.
+pub fn read(world: &GrmhdContext, id: ContextoidId) -> Result<FloatType, CausalityError> {
+    world.get_data_by_id(id).ok_or_else(|| {
+        custom(format!(
+            "the GRMHD world holds no Datoid with contextoid id {id}"
+        ))
+    })
 }
 
 /// The Schwarzschild radius of the central body, `r_s = 2M`, in metres.

@@ -32,7 +32,7 @@
 
 use deep_causality_algebra::Real;
 use deep_causality_context::{
-    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     NoSpace, NoSpaceTime, NoTime,
 };
 use deep_causality_haft::{CoMonad, Foldable, Functor};
@@ -67,18 +67,18 @@ const WATTS_PER_KW: FloatType = const_scalar_from_int!(FloatType, 1000);
 /// spatial, temporal and spacetime slots are empty.
 type SurveyContext = Context<Data<FloatType>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
 
-/// Node indices of the survey's quantities.
-///
-/// The irradiance ramp across the roof, in W/m²: the shaded edge, and the span to the sunlit one.
-const IRRADIANCE_BASE: usize = 0;
-const IRRADIANCE_SPAN: usize = 1;
-/// The fraction of its reading the flue leaves the shaded site.
-const SHADE_FACTOR: usize = 2;
-/// Calibration: module area in m², and peak-equivalent hours in a day.
-const MODULE_AREA: usize = 3;
-const PEAK_HOURS: usize = 4;
-/// A reading this far below its neighbourhood mean is reported as shaded.
-const SHADE_THRESHOLD: usize = 5;
+/// Contextoid id: the irradiance at the roof's shaded edge, in W/m².
+const IRRADIANCE_BASE: ContextoidId = 1;
+/// Contextoid id: the irradiance span from the shaded edge to the sunlit one, in W/m².
+const IRRADIANCE_SPAN: ContextoidId = 2;
+/// Contextoid id: the fraction of its reading the flue leaves the shaded site.
+const SHADE_FACTOR: ContextoidId = 3;
+/// Contextoid id: the calibration's module area, in m².
+const MODULE_AREA: ContextoidId = 4;
+/// Contextoid id: the calibration's peak-equivalent hours in a day, in h.
+const PEAK_HOURS: ContextoidId = 5;
+/// Contextoid id: the ratio to its neighbourhood mean below which a reading is reported as shaded.
+const SHADE_THRESHOLD: ContextoidId = 6;
 
 /// The working scalar. Readings, calibrated yields and every total carry it.
 pub type FloatType = f64;
@@ -193,18 +193,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// The surveyed roof and the modules on it, one `Data` node per quantity.
 fn rooftop_survey() -> Result<SurveyContext, ContextIndexError> {
-    // In node-index order.
-    let quantities: [f64; 6] = [
-        620.0, // IRRADIANCE_BASE, W/m²
-        310.0, // IRRADIANCE_SPAN, W/m²
-        0.45,  // SHADE_FACTOR
-        1.7,   // MODULE_AREA, m²
-        4.6,   // PEAK_HOURS, h per day
-        0.8,   // SHADE_THRESHOLD
+    let facts = [
+        (IRRADIANCE_BASE, 620.0),
+        (IRRADIANCE_SPAN, 310.0),
+        (SHADE_FACTOR, 0.45),
+        (MODULE_AREA, 1.7),
+        (PEAK_HOURS, 4.6),
+        (SHADE_THRESHOLD, 0.8),
     ];
 
-    let mut context = Context::with_capacity(1, "rooftop survey", quantities.len());
-    for (id, &value) in (1..).zip(quantities.iter()) {
+    let mut context = Context::with_capacity(1, "rooftop survey", facts.len());
+    for (id, value) in facts {
         context.add_node(Contextoid::new(
             id,
             ContextoidType::Datoid(Data::new(id, lift::<FloatType>(value))),
@@ -214,12 +213,10 @@ fn rooftop_survey() -> Result<SurveyContext, ContextIndexError> {
 }
 
 /// Read one quantity out of the survey.
-fn read(context: &SurveyContext, index: usize) -> Result<FloatType, ContextIndexError> {
-    context
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(Datable::get_data)
-        .ok_or_else(|| ContextIndexError::new(format!("no survey quantity at node {index}")))
+fn read(context: &SurveyContext, id: ContextoidId) -> Result<FloatType, ContextIndexError> {
+    context.get_data_by_id(id).ok_or_else(|| {
+        ContextIndexError::new(format!("no survey quantity with contextoid id {id}"))
+    })
 }
 
 /// The irradiance ramp across the roof, sampled at `count` evenly spaced sites.

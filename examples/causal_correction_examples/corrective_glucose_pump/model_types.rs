@@ -8,7 +8,7 @@
 #![allow(dead_code)] // Domain fields kept for narrative clarity even if not all are read.
 
 use deep_causality_context::{
-    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     NewtonianTime, NoSpace, NoSpaceTime, Temporal, TimeScale,
 };
 use deep_causality_core::{CausalityError, PropagatingProcess};
@@ -63,91 +63,95 @@ pub struct PatientState {
 pub type PumpContext =
     Context<Data<FloatType>, NoSpace<FloatType>, NewtonianTime<FloatType>, NoSpaceTime<FloatType>>;
 
-/// Node index: normal fasting glucose target (mg/dL).
-pub const TARGET_GLUCOSE: usize = 0;
-/// Node index: hyperglycemic alarm (mg/dL). The monitor fires a corrective bolus when glucose
+/// Contextoid id: normal fasting glucose target (mg/dL).
+pub const TARGET_GLUCOSE: ContextoidId = 1;
+/// Contextoid id: hyperglycemic alarm (mg/dL). The monitor fires a corrective bolus when glucose
 /// climbs above this level.
-pub const HYPERGLYCEMIC_THRESHOLD: usize = 1;
-/// Node index: catastrophic threshold (mg/dL). Crossing this enters diabetic ketoacidosis
+pub const HYPERGLYCEMIC_THRESHOLD: ContextoidId = 2;
+/// Contextoid id: catastrophic threshold (mg/dL). Crossing this enters diabetic ketoacidosis
 /// territory and is recorded against the trajectory.
-pub const KETOACIDOSIS_THRESHOLD: usize = 2;
-/// Node index: insulin sensitivity factor, mg/dL of glucose reduction per unit of fast-acting
+pub const KETOACIDOSIS_THRESHOLD: ContextoidId = 3;
+/// Contextoid id: insulin sensitivity factor, mg/dL of glucose reduction per unit of fast-acting
 /// insulin.
-pub const INSULIN_SENSITIVITY: usize = 3;
-/// Node index: hepatic glucose output, the rise in blood glucose without meals or insulin
+pub const INSULIN_SENSITIVITY: ContextoidId = 4;
+/// Contextoid id: hepatic glucose output, the rise in blood glucose without meals or insulin
 /// (mg/dL per hour).
-pub const HEPATIC_GLUCOSE_OUTPUT: usize = 4;
-/// Node index: time of the small meal (`NewtonianTime`, minutes).
-pub const SMALL_MEAL_AT: usize = 5;
-/// Node index: glucose rise from the small meal (mg/dL).
-pub const SMALL_MEAL_RISE: usize = 6;
-/// Node index: time of the larger meal (`NewtonianTime`, minutes).
-pub const LARGE_MEAL_AT: usize = 7;
-/// Node index: glucose rise from the larger meal (mg/dL).
-pub const LARGE_MEAL_RISE: usize = 8;
-/// Node index: time of the snack (`NewtonianTime`, minutes).
-pub const SNACK_AT: usize = 9;
-/// Node index: glucose rise from the snack (mg/dL).
-pub const SNACK_RISE: usize = 10;
+pub const HEPATIC_GLUCOSE_OUTPUT: ContextoidId = 5;
+/// Contextoid id: time of the small meal (`NewtonianTime`, minutes).
+pub const SMALL_MEAL_AT: ContextoidId = 6;
+/// Contextoid id: glucose rise from the small meal (mg/dL).
+pub const SMALL_MEAL_RISE: ContextoidId = 7;
+/// Contextoid id: time of the larger meal (`NewtonianTime`, minutes).
+pub const LARGE_MEAL_AT: ContextoidId = 8;
+/// Contextoid id: glucose rise from the larger meal (mg/dL).
+pub const LARGE_MEAL_RISE: ContextoidId = 9;
+/// Contextoid id: time of the snack (`NewtonianTime`, minutes).
+pub const SNACK_AT: ContextoidId = 10;
+/// Contextoid id: glucose rise from the snack (mg/dL).
+pub const SNACK_RISE: ContextoidId = 11;
 
-/// The meals as (time node, rise node) pairs.
-pub const MEALS: [(usize, usize); 3] = [
+/// The meals as (time contextoid id, rise contextoid id) pairs.
+pub const MEALS: [(ContextoidId, ContextoidId); 3] = [
     (SMALL_MEAL_AT, SMALL_MEAL_RISE),
     (LARGE_MEAL_AT, LARGE_MEAL_RISE),
     (SNACK_AT, SNACK_RISE),
 ];
 
-/// The nominal patient, pump and meal schedule, added in node-index order: node `i` holds
-/// contextoid id `i + 1`. The three meals fall every 90 minutes.
+/// The nominal patient, pump and meal schedule: one `Data` contextoid per quantity and one
+/// `NewtonianTime` contextoid per meal time, each keyed by its contextoid id. The three meals fall
+/// every 90 minutes.
 pub fn nominal_pump_context() -> Result<PumpContext, ContextIndexError> {
-    let data = |id, value| Contextoid::new(id, ContextoidType::Datoid(Data::new(id, value)));
-    let minute = |id, at| {
-        Contextoid::new(
+    let facts = [
+        (TARGET_GLUCOSE, 100.0),
+        (HYPERGLYCEMIC_THRESHOLD, 180.0),
+        (KETOACIDOSIS_THRESHOLD, 300.0),
+        (INSULIN_SENSITIVITY, 50.0),
+        (HEPATIC_GLUCOSE_OUTPUT, 24.0), // 6 mg/dL per 15-minute tick
+        (SMALL_MEAL_RISE, 70.0),
+        (LARGE_MEAL_RISE, 90.0),
+        (SNACK_RISE, 60.0),
+    ];
+    let meal_times = [
+        (SMALL_MEAL_AT, 30.0),
+        (LARGE_MEAL_AT, 120.0),
+        (SNACK_AT, 210.0),
+    ];
+    let mut context = Context::with_capacity(1, "pump", facts.len() + meal_times.len());
+    for (id, value) in facts {
+        context.add_node(Contextoid::new(
+            id,
+            ContextoidType::Datoid(Data::new(id, value)),
+        ))?;
+    }
+    for (id, at) in meal_times {
+        context.add_node(Contextoid::new(
             id,
             ContextoidType::Tempoid(NewtonianTime::new(id, TimeScale::Minute, at)),
-        )
-    };
-    let mut context = Context::with_capacity(1, "pump", 11);
-    for node in [
-        data(1, 100.0),    // TARGET_GLUCOSE
-        data(2, 180.0),    // HYPERGLYCEMIC_THRESHOLD
-        data(3, 300.0),    // KETOACIDOSIS_THRESHOLD
-        data(4, 50.0),     // INSULIN_SENSITIVITY
-        data(5, 24.0),     // HEPATIC_GLUCOSE_OUTPUT: 6 mg/dL per 15-minute tick
-        minute(6, 30.0),   // SMALL_MEAL_AT
-        data(7, 70.0),     // SMALL_MEAL_RISE
-        minute(8, 120.0),  // LARGE_MEAL_AT
-        data(9, 90.0),     // LARGE_MEAL_RISE
-        minute(10, 210.0), // SNACK_AT
-        data(11, 60.0),    // SNACK_RISE
-    ] {
-        context.add_node(node)?;
+        ))?;
     }
     Ok(context)
 }
 
-/// Read one `Data` contextoid's payload out of the pump context, or name the node it lacks.
-pub fn read(context: &PumpContext, index: usize) -> Result<FloatType, CausalityError> {
-    context
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(|data| data.get_data())
-        .ok_or_else(|| {
-            CausalityError::MissingParameter(format!("pump context Datoid at node {index}"))
-        })
+/// Read the payload of the `Data` contextoid `id` out of the pump context, or name the id it
+/// lacks.
+pub fn read(context: &PumpContext, id: ContextoidId) -> Result<FloatType, CausalityError> {
+    context.get_data_by_id(id).ok_or_else(|| {
+        CausalityError::MissingParameter(format!("pump context Datoid with contextoid id {id}"))
+    })
 }
 
-/// Read one meal time, in minutes from the start of the monitoring window, out of the pump
-/// context, or name the node it lacks.
-pub fn read_minutes(context: &PumpContext, index: usize) -> Result<FloatType, CausalityError> {
+/// Read one meal time, in minutes from the start of the monitoring window, out of the
+/// `NewtonianTime` contextoid `id` of the pump context, or name the id it lacks.
+pub fn read_minutes(context: &PumpContext, id: ContextoidId) -> Result<FloatType, CausalityError> {
     context
-        .get_node(index)
+        .get_node_index_by_id(id)
+        .and_then(|index| context.get_node(index))
         .and_then(|node| node.vertex_type().tempoid())
         .filter(|instant| instant.time_scale() == TimeScale::Minute)
         .map(|instant| instant.time_unit())
         .ok_or_else(|| {
             CausalityError::MissingParameter(format!(
-                "pump context NewtonianTime in minutes at node {index}"
+                "pump context NewtonianTime in minutes with contextoid id {id}"
             ))
         })
 }

@@ -7,17 +7,6 @@ mod model;
 use deep_causality::*;
 use std::error::Error;
 
-// Define IDs for different data types within the context
-const OIL_PRICE_ID: IdentificationValue = 0;
-const SHIPPING_ACTIVITY_ID: IdentificationValue = 1;
-
-// Node indices of the shipping-model coefficients, the first three contextoids of every world:
-// the oil price the adjustment is measured from, the quarterly shipping trend, and the shipping
-// change per unit of oil price above that baseline.
-const OIL_BASELINE: usize = 0;
-const SHIPPING_TREND: usize = 1;
-const OIL_COEFFICIENT: usize = 2;
-
 // Define ID for the causaloid
 const PREDICTOR_CAUSALOID_ID: IdentificationValue = 1;
 

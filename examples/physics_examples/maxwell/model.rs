@@ -3,8 +3,9 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! The stages of the Maxwell chain, each a pure function returning `PropagatingEffect<MaxwellState>`.
-//! The stages that evaluate the potential also read the wave's frequency from the chain's context.
+//! The stages of the Maxwell chain, each a pure function returning the next `MaxwellState` or the
+//! error that stops the chain. The stages that evaluate the potential also read the wave's
+//! frequency from the chain's context.
 //!
 //! Blade indices follow the multivector crate's convention: a blade's index **is** the bitmask of
 //! the basis vectors spanning it, so the grade is its population count (see
@@ -12,12 +13,10 @@
 //! the vectors at 1, 2, 4, 8 and the bivectors at the two-bit indices.
 
 use crate::FloatType;
-use deep_causality::{CausalityError, CausalityErrorEnum, PropagatingEffect};
+use deep_causality::{CausalityError, CausalityErrorEnum};
 use deep_causality_algebra::Real;
 use deep_causality_calculus::{DifferentiableField, DifferentiateFieldExt, Scalar};
-use deep_causality_context::{
-    Context, ContextuableGraph, Data, Datable, NoSpace, NoSpaceTime, NoTime,
-};
+use deep_causality_context::{Context, ContextoidId, Data, NoSpace, NoSpaceTime, NoTime};
 use deep_causality_multivector::{CausalMultiVector, Metric, MultiVector};
 use deep_causality_num::const_scalar_from_int;
 use deep_causality_physics::MaxwellSolver;
@@ -41,22 +40,16 @@ pub const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
 /// and spacetime slots are empty; the observation event rides in the value.
 pub type WaveContext = Context<Data<FloatType>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
 
-/// Node indices of the wave's world facts; `plane_wave` adds them in this order.
-/// Angular frequency of the wave, in natural units (`c = 1`).
-pub const OMEGA: usize = 0;
-/// How many world facts the wave holds.
-pub const WAVE_FACTS: usize = 1;
+/// Contextoid id: angular frequency of the wave, in natural units (`c = 1`).
+pub const OMEGA: ContextoidId = 1;
 
-/// Reads one world fact out of the wave, or the error naming the node that holds none.
-pub fn read(wave: &WaveContext, index: usize) -> Result<FloatType, CausalityError> {
-    wave.get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(|data| data.get_data())
-        .ok_or_else(|| {
-            CausalityError(CausalityErrorEnum::Custom(format!(
-                "the plane wave holds no Datoid at node {index}"
-            )))
-        })
+/// Reads one world fact out of the wave, or the error naming the contextoid id it lacks.
+pub fn read(wave: &WaveContext, id: ContextoidId) -> Result<FloatType, CausalityError> {
+    wave.get_data_by_id(id).ok_or_else(|| {
+        custom(format!(
+            "the plane wave holds no Datoid with contextoid id {id}"
+        ))
+    })
 }
 
 /// The spacetime metric every multivector in this example carries.
@@ -127,15 +120,12 @@ impl MaxwellState {
 pub fn compute_potential(
     input: MaxwellState,
     wave: &WaveContext,
-) -> PropagatingEffect<MaxwellState> {
-    let omega = match read(wave, OMEGA) {
-        Ok(omega) => omega,
-        Err(e) => return PropagatingEffect::from_error(e),
-    };
+) -> Result<MaxwellState, CausalityError> {
+    let omega = read(wave, OMEGA)?;
     let phase = omega * (input.t - input.z);
     let potential_ax = PlaneWavePotential.run(&input.point(omega));
 
-    PropagatingEffect::pure(MaxwellState {
+    Ok(MaxwellState {
         phase,
         potential_ax,
         ..input
@@ -152,11 +142,8 @@ pub fn compute_potential(
 pub fn compute_em_field(
     input: MaxwellState,
     wave: &WaveContext,
-) -> PropagatingEffect<MaxwellState> {
-    let omega = match read(wave, OMEGA) {
-        Ok(omega) => omega,
-        Err(e) => return PropagatingEffect::from_error(e),
-    };
+) -> Result<MaxwellState, CausalityError> {
+    let omega = read(wave, OMEGA)?;
     let gradient = PlaneWavePotential.gradient(&input.point(omega));
     let da_dt = gradient[AT_T];
     let da_dz = gradient[AT_Z];
@@ -167,21 +154,12 @@ pub fn compute_em_field(
     // The Lorenz gauge scalar, d_mu A^mu. The solver contracts a gradient vector with the
     // potential vector, so the gradient carries the derivative of each component along its own
     // axis: A has only an x component and A_x does not depend on x, so the contraction is zero.
-    let gradient_d = match blade_vector(&[(E_T, da_dt), (E_Z, da_dz)]) {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
-    let potential_a = match blade_vector(&[(E_X, input.potential_ax)]) {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
-    let divergence = match MaxwellSolver::calculate_potential_divergence(&gradient_d, &potential_a)
-    {
-        Ok(d) => d,
-        Err(e) => return fail(format!("divergence: {e:?}")),
-    };
+    let gradient_d = blade_vector(&[(E_T, da_dt), (E_Z, da_dz)]).map_err(custom)?;
+    let potential_a = blade_vector(&[(E_X, input.potential_ax)]).map_err(custom)?;
+    let divergence = MaxwellSolver::calculate_potential_divergence(&gradient_d, &potential_a)
+        .map_err(|e| custom(format!("divergence: {e:?}")))?;
 
-    PropagatingEffect::pure(MaxwellState {
+    Ok(MaxwellState {
         e_field,
         b_field,
         divergence,
@@ -194,26 +172,16 @@ pub fn compute_em_field(
 /// `E` points along `x` and `B` along `y`, so the two occupy *different* basis vectors and their
 /// outer product is the `e_x ^ e_y` bivector whose magnitude is `|E||B|`. Placing them on blades
 /// that share a basis vector would make the outer product vanish identically.
-pub fn compute_poynting_flux(input: MaxwellState) -> PropagatingEffect<MaxwellState> {
-    let e_vec = match blade_vector(&[(E_X, input.e_field)]) {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
-    let b_vec = match blade_vector(&[(E_Y, input.b_field)]) {
-        Ok(v) => v,
-        Err(e) => return fail(e),
-    };
+pub fn compute_poynting_flux(input: MaxwellState) -> Result<MaxwellState, CausalityError> {
+    let e_vec = blade_vector(&[(E_X, input.e_field)]).map_err(custom)?;
+    let b_vec = blade_vector(&[(E_Y, input.b_field)]).map_err(custom)?;
+    let s_field = MaxwellSolver::calculate_poynting_flux(&e_vec, &b_vec)
+        .map_err(|e| custom(format!("poynting flux: {e:?}")))?;
 
-    match MaxwellSolver::calculate_poynting_flux(&e_vec, &b_vec) {
-        Ok(s_field) => {
-            let poynting_flux = Real::sqrt(s_field.squared_magnitude());
-            PropagatingEffect::pure(MaxwellState {
-                poynting_flux,
-                ..input
-            })
-        }
-        Err(e) => fail(format!("poynting flux: {e:?}")),
-    }
+    Ok(MaxwellState {
+        poynting_flux: Real::sqrt(s_field.squared_magnitude()),
+        ..input
+    })
 }
 
 /// The field bivector `F = E_x (e_t ^ e_x) + B_y (e_z ^ e_x)`.
@@ -242,6 +210,6 @@ fn blade_vector(blades: &[(usize, FloatType)]) -> Result<CausalMultiVector<Float
         .map_err(|e| format!("building a Cl(1,3) element failed: {e:?}"))
 }
 
-fn fail(reason: impl Into<String>) -> PropagatingEffect<MaxwellState> {
-    PropagatingEffect::from_error(CausalityError(CausalityErrorEnum::Custom(reason.into())))
+fn custom(reason: impl Into<String>) -> CausalityError {
+    CausalityError(CausalityErrorEnum::Custom(reason.into()))
 }

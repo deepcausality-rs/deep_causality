@@ -4,18 +4,11 @@
  */
 
 use deep_causality::*;
-use model::PatientContext;
+use model::{AGE, INITIAL_BP, PatientContext};
 use std::error::Error;
 use std::sync::{Arc, RwLock};
 
 mod model;
-
-// Node indices of the contextoids a patient world carries: age, initial blood pressure, the BP
-// change the drug produces when administered, and, in each trial arm, the treatment assignment.
-const AGE: usize = 0;
-const INITIAL_BP: usize = 1;
-const DOSE: usize = 2;
-const DRUG_ADMINISTERED: usize = 3;
 
 // Define ID for the causaloid
 const DRUG_EFFECT_CAUSALOID_ID: IdentificationValue = 10;

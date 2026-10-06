@@ -11,7 +11,7 @@ use crate::model_types::{
     DetectorProcess, DetectorState, FloatType, InterfaceTelemetry, JITTER_FREQUENCY,
     NOMINAL_ACTIVE_FLOWS, NOMINAL_NEW_CONNS_PER_SEC, NOMINAL_PACKET_BYTES, OVERLOAD_BUDGET_TICKS,
     OVERLOAD_LINE_MBPS, RAMP_TICKS, SIGMA_THRESHOLD, THROTTLE_CEILING_MBPS, THROTTLE_OFF,
-    THROTTLE_ON, ThrottleState, ThroughputWindow, read_count, read_real, read_ticks,
+    THROTTLE_ON, TRIGGER_SLOTS, ThrottleState, ThroughputWindow, read_count, read_real, read_ticks,
 };
 use deep_causality_core::{CausalEffect, CausalityError, EffectLog};
 use deep_causality_haft::LogAddEntry;
@@ -152,10 +152,10 @@ pub fn baseline_zscore(
 /// throughput against the rolling baseline, and admits the sample to the
 /// baseline only if it is not anomalous. The throttle command is preserved in
 /// the value channel so the monitor can intervene on it. The baseline, the
-/// attack schedule, the traffic profile and the thresholds are read from the
-/// detector context the process carries. A missing throttle command,
-/// context or detector fact, or a baseline that cannot be scored, ends the
-/// process in error with the state unchanged.
+/// attack schedule, the traffic profile, the thresholds and the trigger slot
+/// count are read from the detector context the process carries. A missing
+/// throttle command, context or detector fact, or a baseline that cannot be
+/// scored, ends the process in error with the state unchanged.
 pub fn analyze_tick(
     value: CausalEffect<ThrottleState>,
     mut state: DetectorState,
@@ -191,6 +191,9 @@ fn advance(
     let sigma_threshold = read_real(detector, SIGMA_THRESHOLD)?;
     let overload_line_mbps = read_real(detector, OVERLOAD_LINE_MBPS)?;
     let overload_budget_ticks = read_ticks(detector, OVERLOAD_BUDGET_TICKS)?;
+    // The trigger predicate in `main` reads the trigger slot count and has no error channel. This
+    // read fails the tick on a context that lacks it, before the predicate runs.
+    read_ticks(detector, TRIGGER_SLOTS)?;
     let anomalous = z.is_some_and(|z| z > sigma_threshold);
 
     // Withhold anomalous samples so the flood never poisons the baseline.

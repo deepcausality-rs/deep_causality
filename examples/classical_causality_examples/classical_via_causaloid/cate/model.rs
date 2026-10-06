@@ -3,19 +3,28 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{DOSE, DRUG_ADMINISTERED};
 use deep_causality::{
     CausalEffect, CausalityError, CausalityErrorEnum, NumericalValue, PropagatingEffect,
     PropagatingProcess,
 };
 use deep_causality_context::{
     Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
-    Datable, NoSpace, NoSpaceTime, NoTime,
+    NoSpace, NoSpaceTime, NoTime,
 };
 use std::sync::{Arc, RwLock};
 
 /// The world one patient is reasoned about in: numeric data only, no space and no time.
 pub(crate) type PatientContext = Context<Data<f64>, NoSpace<f64>, NoTime, NoSpaceTime<f64>>;
+
+/// Contextoid id: patient age, years.
+pub(crate) const AGE: ContextoidId = 1;
+/// Contextoid id: initial blood pressure, BP points.
+pub(crate) const INITIAL_BP: ContextoidId = 2;
+/// Contextoid id: the BP change the drug produces when administered, BP points.
+const DOSE: ContextoidId = 3;
+/// Contextoid id: the treatment assignment of one trial arm, `1.0` when the drug is administered
+/// and `0.0` when it is not.
+const DRUG_ADMINISTERED: ContextoidId = 4;
 
 /// The causal logic for the drug's effect.
 /// This function reads the treatment assignment and the dose from the context and returns the
@@ -91,8 +100,9 @@ pub(crate) fn create_patient_population() -> Result<Vec<PatientContext>, Context
     (1..)
         .zip(patient_data)
         .map(|(patient_id, (age, bp))| {
-            let mut context = Context::with_capacity(patient_id, "Patient", 4);
-            for (id, value) in [(1, age), (2, bp), (3, -10.0)] {
+            let facts = [(AGE, age), (INITIAL_BP, bp), (DOSE, -10.0)];
+            let mut context = Context::with_capacity(patient_id, "Patient", facts.len());
+            for (id, value) in facts {
                 add_datoid(&mut context, id, value)?;
             }
             Ok(context)
@@ -108,7 +118,7 @@ pub(crate) fn arm(
 ) -> Result<PatientContext, ContextIndexError> {
     let mut context = patient.clone();
     let assignment = if drug_administered { 1.0 } else { 0.0 };
-    add_datoid(&mut context, 4, assignment)?;
+    add_datoid(&mut context, DRUG_ADMINISTERED, assignment)?;
     Ok(context)
 }
 
@@ -124,11 +134,9 @@ fn add_datoid(
     Ok(())
 }
 
-/// Read one `Data` contextoid's payload out of a patient world.
-pub(crate) fn read(context: &PatientContext, index: usize) -> Result<f64, CausalityError> {
+/// Read the `Data` contextoid with contextoid id `id` out of a patient world.
+pub(crate) fn read(context: &PatientContext, id: ContextoidId) -> Result<f64, CausalityError> {
     context
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(|data| data.get_data())
-        .ok_or_else(|| CausalityError::ModelError(format!("context node {index} is not a Datoid")))
+        .get_data_by_id(id)
+        .ok_or_else(|| CausalityError::ModelError(format!("no Datoid with contextoid id {id}")))
 }

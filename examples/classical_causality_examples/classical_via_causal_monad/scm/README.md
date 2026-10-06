@@ -28,7 +28,7 @@ The Causaloid version ([`classical_via_causaloid/scm`](../../classical_via_causa
 | Rung 2 mechanism | CSM-style "decide to act on observed risk" | Pearl's `do(...)` via `.alternate_value(...)` mid-chain |
 | Rung 3 mechanism | Contextoid clone + modify + re-evaluate against a separate `BaseContext` | `.alternate_context(other_world)` at the seed |
 | Audit log | None by default; user must instrument | `!!ValueAlternation!!` / `!!ContextAlternation!!` entries appended automatically (visible in stdout) |
-| Lines of code | ~385 across 5 files | ~235 in a single file |
+| Lines of code | ~390 across 5 files | ~240 in a single file |
 
 Both implementations reach the same conclusions for the same worlds; both rest on the same Causaloid/Context separation.
 

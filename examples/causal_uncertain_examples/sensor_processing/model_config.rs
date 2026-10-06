@@ -5,47 +5,57 @@
 
 //! Nominal fleet context and sensor seed data for the sensor-processing pipeline.
 
-use crate::model_types::{FleetContext, RawReadings, SensorReading, SensorStatus};
+use crate::model_types::{
+    ANOMALY_DISAGREEMENT_C, CORRELATION_TOLERANCE, CRITICAL_BELOW_PCT, DEGRADED_UNCERTAINTY_FACTOR,
+    DRIFT_UNCERTAINTY_FACTOR, DRIFT_UNCERTAINTY_OFFSET, FleetContext, HIGH_BELOW_PCT,
+    HIGH_UNCERTAINTY_THRESHOLD, HISTORICAL_TEMP_MEAN, HISTORICAL_TEMP_SD, HUMIDITY_NOMINAL_MAX,
+    HUMIDITY_NOMINAL_MIN, HUMIDITY_PLAUSIBLE_MAX, HUMIDITY_PLAUSIBLE_MIN, MEDIUM_BELOW_PCT,
+    OUT_OF_RANGE_SD, PRESSURE_2_CALIBRATION_OFFSET, PRESSURE_NOMINAL_MAX, PRESSURE_NOMINAL_MIN,
+    PRESSURE_PLAUSIBLE_MAX, PRESSURE_PLAUSIBLE_MIN, REFERENCE_PRESSURE, REFERENCE_TEMP,
+    RawReadings, SensorReading, SensorStatus, TEMP_CALIBRATION_BIAS, TEMP_CALIBRATION_GAIN,
+    TEMP_NOMINAL_MAX, TEMP_NOMINAL_MIN, TEMP_PER_HPA, TEMP_PLAUSIBLE_MAX, TEMP_PLAUSIBLE_MIN,
+};
 use deep_causality_context::{
     Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data,
 };
 use std::collections::HashMap;
 
-/// The nominal fleet, added in node-index order: node `i` holds contextoid id `i + 1`.
+/// The nominal fleet: one `Data` contextoid per quantity, keyed by its contextoid id.
 pub fn nominal_fleet_context() -> Result<FleetContext, ContextIndexError> {
-    let mut context = Context::with_capacity(1, "fleet", 30);
-    for (id, value) in [
-        (1, -50.0),    // TEMP_PLAUSIBLE_MIN
-        (2, 100.0),    // TEMP_PLAUSIBLE_MAX
-        (3, 15.0),     // TEMP_NOMINAL_MIN
-        (4, 35.0),     // TEMP_NOMINAL_MAX
-        (5, 800.0),    // PRESSURE_PLAUSIBLE_MIN
-        (6, 1200.0),   // PRESSURE_PLAUSIBLE_MAX
-        (7, 980.0),    // PRESSURE_NOMINAL_MIN
-        (8, 1050.0),   // PRESSURE_NOMINAL_MAX
-        (9, 0.0),      // HUMIDITY_PLAUSIBLE_MIN
-        (10, 100.0),   // HUMIDITY_PLAUSIBLE_MAX
-        (11, 20.0),    // HUMIDITY_NOMINAL_MIN
-        (12, 80.0),    // HUMIDITY_NOMINAL_MAX
-        (13, -2.3),    // PRESSURE_2_CALIBRATION_OFFSET
-        (14, 0.98),    // TEMP_CALIBRATION_GAIN
-        (15, 0.5),     // TEMP_CALIBRATION_BIAS
-        (16, 5.0),     // ANOMALY_DISAGREEMENT_C
-        (17, 5.0),     // HIGH_UNCERTAINTY_THRESHOLD
-        (18, 2.0),     // DEGRADED_UNCERTAINTY_FACTOR
-        (19, 10.0),    // OUT_OF_RANGE_SD
-        (20, 1.5),     // DRIFT_UNCERTAINTY_FACTOR
-        (21, 2.0),     // DRIFT_UNCERTAINTY_OFFSET
-        (22, 22.0),    // HISTORICAL_TEMP_MEAN
-        (23, 3.0),     // HISTORICAL_TEMP_SD
-        (24, 20.0),    // REFERENCE_TEMP
-        (25, 1013.25), // REFERENCE_PRESSURE
-        (26, 0.02),    // TEMP_PER_HPA
-        (27, 10.0),    // CORRELATION_TOLERANCE
-        (28, 50.0),    // CRITICAL_BELOW_PCT
-        (29, 70.0),    // HIGH_BELOW_PCT
-        (30, 85.0),    // MEDIUM_BELOW_PCT
-    ] {
+    let facts = [
+        (TEMP_PLAUSIBLE_MIN, -50.0),
+        (TEMP_PLAUSIBLE_MAX, 100.0),
+        (TEMP_NOMINAL_MIN, 15.0),
+        (TEMP_NOMINAL_MAX, 35.0),
+        (PRESSURE_PLAUSIBLE_MIN, 800.0),
+        (PRESSURE_PLAUSIBLE_MAX, 1200.0),
+        (PRESSURE_NOMINAL_MIN, 980.0),
+        (PRESSURE_NOMINAL_MAX, 1050.0),
+        (HUMIDITY_PLAUSIBLE_MIN, 0.0),
+        (HUMIDITY_PLAUSIBLE_MAX, 100.0),
+        (HUMIDITY_NOMINAL_MIN, 20.0),
+        (HUMIDITY_NOMINAL_MAX, 80.0),
+        (PRESSURE_2_CALIBRATION_OFFSET, -2.3),
+        (TEMP_CALIBRATION_GAIN, 0.98),
+        (TEMP_CALIBRATION_BIAS, 0.5),
+        (ANOMALY_DISAGREEMENT_C, 5.0),
+        (HIGH_UNCERTAINTY_THRESHOLD, 5.0),
+        (DEGRADED_UNCERTAINTY_FACTOR, 2.0),
+        (OUT_OF_RANGE_SD, 10.0),
+        (DRIFT_UNCERTAINTY_FACTOR, 1.5),
+        (DRIFT_UNCERTAINTY_OFFSET, 2.0),
+        (HISTORICAL_TEMP_MEAN, 22.0),
+        (HISTORICAL_TEMP_SD, 3.0),
+        (REFERENCE_TEMP, 20.0),
+        (REFERENCE_PRESSURE, 1013.25),
+        (TEMP_PER_HPA, 0.02),
+        (CORRELATION_TOLERANCE, 10.0),
+        (CRITICAL_BELOW_PCT, 50.0),
+        (HIGH_BELOW_PCT, 70.0),
+        (MEDIUM_BELOW_PCT, 85.0),
+    ];
+    let mut context = Context::with_capacity(1, "fleet", facts.len());
+    for (id, value) in facts {
         context.add_node(Contextoid::new(
             id,
             ContextoidType::Datoid(Data::new(id, value)),

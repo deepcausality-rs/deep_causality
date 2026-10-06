@@ -17,6 +17,7 @@ deep_causality_calculus = { workspace = true, features = ["default"] }
 deep_causality_multivector = { workspace = true, features = ["default"] }
 deep_causality_num = { workspace = true, features = ["default"] }
 deep_causality_num_complex = { workspace = true, features = ["default"] }
+deep_causality_num_rational = { workspace = true }
 deep_causality_algebra = { workspace = true, features = ["default"] }
 deep_causality_physics = { workspace = true, features = ["default"] }
 deep_causality_haft = { workspace = true, features = ["default"] }

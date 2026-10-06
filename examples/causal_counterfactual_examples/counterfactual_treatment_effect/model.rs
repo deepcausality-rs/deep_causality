@@ -6,7 +6,7 @@
 //! Domain types and stage logic for the CATE chain.
 
 use deep_causality_context::{
-    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     NoSpace, NoSpaceTime, NoTime,
 };
 use deep_causality_core::{CausalFlow, CausalityError, PropagatingProcess};
@@ -22,33 +22,31 @@ pub type FloatType = f64;
 pub type PatientContext =
     Context<Data<FloatType>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
 
-/// Node index: age in years.
-pub const AGE: usize = 0;
-/// Node index: baseline systolic blood pressure in mmHg.
-pub const BASELINE_BP: usize = 1;
-/// Node index: blood-pressure reduction under treatment at or below `RESPONSE_ONSET_AGE`, in mmHg.
-pub const BASE_REDUCTION: usize = 2;
-/// Node index: additional reduction per year of age above `RESPONSE_ONSET_AGE`, in mmHg per year.
-pub const REDUCTION_PER_YEAR: usize = 3;
-/// Node index: age above which the reduction grows with age, in years.
-pub const RESPONSE_ONSET_AGE: usize = 4;
-/// Node index: drift of the blood pressure independent of treatment, in mmHg.
-pub const NATURAL_DRIFT: usize = 5;
+/// Contextoid id: age in years.
+pub const AGE: ContextoidId = 1;
+/// Contextoid id: baseline systolic blood pressure in mmHg.
+pub const BASELINE_BP: ContextoidId = 2;
+/// Contextoid id: blood-pressure reduction under treatment at or below `RESPONSE_ONSET_AGE`, in
+/// mmHg.
+pub const BASE_REDUCTION: ContextoidId = 3;
+/// Contextoid id: additional reduction per year of age above `RESPONSE_ONSET_AGE`, in mmHg per
+/// year.
+pub const REDUCTION_PER_YEAR: ContextoidId = 4;
+/// Contextoid id: age above which the reduction grows with age, in years.
+pub const RESPONSE_ONSET_AGE: ContextoidId = 5;
+/// Contextoid id: drift of the blood pressure independent of treatment, in mmHg.
+pub const NATURAL_DRIFT: ContextoidId = 6;
 
-/// Read one `Data` contextoid's payload out of a patient context.
-pub fn read(context: &PatientContext, index: usize) -> Result<FloatType, CausalityError> {
-    context
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(|data| data.get_data())
-        .ok_or_else(|| {
-            CausalityError::MissingParameter(format!(
-                "the patient context holds no Datoid at node index {index}"
-            ))
-        })
+/// Read the payload of the `Data` contextoid `id` out of a patient context.
+pub fn read(context: &PatientContext, id: ContextoidId) -> Result<FloatType, CausalityError> {
+    context.get_data_by_id(id).ok_or_else(|| {
+        CausalityError::MissingParameter(format!(
+            "the patient context holds no Datoid with contextoid id {id}"
+        ))
+    })
 }
 
-/// Build one patient, added in node-index order: node `i` holds contextoid id `i + 1`. Every
+/// Build one patient: one `Data` contextoid per quantity, keyed by its contextoid id. Every
 /// patient carries the same dose response; it is stronger for older patients, and that
 /// heterogeneity is what makes the CATE non-trivial. Pharmacology is deliberately shallow; the
 /// example is about the causal structure.
@@ -57,18 +55,19 @@ fn patient(
     age: FloatType,
     baseline_bp: FloatType,
 ) -> Result<PatientContext, ContextIndexError> {
-    let mut context = Context::with_capacity(id, "patient", 6);
-    for (node_id, value) in [
-        (1, age),         // AGE
-        (2, baseline_bp), // BASELINE_BP
-        (3, 5.0),         // BASE_REDUCTION
-        (4, 0.3),         // REDUCTION_PER_YEAR
-        (5, 50.0),        // RESPONSE_ONSET_AGE
-        (6, 0.5),         // NATURAL_DRIFT
-    ] {
+    let facts = [
+        (AGE, age),
+        (BASELINE_BP, baseline_bp),
+        (BASE_REDUCTION, 5.0),
+        (REDUCTION_PER_YEAR, 0.3),
+        (RESPONSE_ONSET_AGE, 50.0),
+        (NATURAL_DRIFT, 0.5),
+    ];
+    let mut context = Context::with_capacity(id, "patient", facts.len());
+    for (contextoid_id, value) in facts {
         context.add_node(Contextoid::new(
-            node_id,
-            ContextoidType::Datoid(Data::new(node_id, value)),
+            contextoid_id,
+            ContextoidType::Datoid(Data::new(contextoid_id, value)),
         ))?;
     }
     Ok(context)

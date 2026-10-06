@@ -10,13 +10,13 @@
 //! function, `extend` reads each cell's neighbourhood, and `bind` lets the result's shape
 //! depend on the values it carries.
 //!
-//! The constants the equation is solved under, `κ` and `Λ`, and the threshold the quantization
-//! splits at live in a `Context`, one `Data` node each, in normalised units with `G = c = 1`. The
-//! tensors are the values the chain carries.
+//! The units are normalised, `G = c = 1`, so the Einstein constant is `κ = 8π`. The scenario's
+//! cosmological constant `Λ` and the threshold the quantization splits at live in a `Context`, one
+//! `Data` node each. The tensors are the values the chain carries.
 
 use deep_causality_algebra::Real;
 use deep_causality_context::{
-    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     NoSpace, NoSpaceTime, NoTime,
 };
 use deep_causality_haft::{Applicative, CoMonad, Functor, Monad, Pure};
@@ -34,21 +34,22 @@ const NEG_HALF: FloatType = const_scalar_from_float!(FloatType, -0.5);
 const TWO: FloatType = const_scalar_from_int!(FloatType, 2);
 const EIGHT: FloatType = const_scalar_from_int!(FloatType, 8);
 
-/// The constants the field equations are solved under, one `Data` node each. The geometry is the
-/// metric tensor the chain carries, in normalised units, so the spatial, temporal and spacetime
-/// slots are empty.
+/// The scenario's cosmological constant and quantization threshold, one `Data` node each. The
+/// geometry is the metric tensor the chain carries, in normalised units, so the spatial, temporal
+/// and spacetime slots are empty.
 type FieldContext = Context<Data<FloatType>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
 
-/// Node indices of the field constants.
-const KAPPA: usize = 0;
-const LAMBDA: usize = 1;
-const QUANTUM_THRESHOLD: usize = 2;
+/// Contextoid id: the cosmological constant `Λ`, in normalised units.
+const LAMBDA: ContextoidId = 1;
+/// Contextoid id: the energy above which a component splits into two quanta, in normalised units.
+const QUANTUM_THRESHOLD: ContextoidId = 2;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
 
+    // Normalized units, G = c = 1, so kappa = 8 pi.
+    let kappa = EIGHT * FloatType::pi();
     let constants = field_constants()?;
-    let kappa = read(&constants, KAPPA)?;
     let lambda = read(&constants, LAMBDA)?;
     print_constants(kappa, lambda);
 
@@ -142,20 +143,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-/// The field constants, in normalised units with `G = c = 1`.
+/// The scenario's constants, in normalised units with `G = c = 1`.
 fn field_constants() -> Result<FieldContext, ContextIndexError> {
-    // In node-index order.
-    let quantities: [FloatType; 3] = [
-        // KAPPA: the Einstein constant, 8 pi when G = c = 1.
-        EIGHT * FloatType::pi(),
-        // LAMBDA: the cosmological constant, a small positive value for accelerating expansion.
-        lift(1e-5),
-        // QUANTUM_THRESHOLD: the energy above which a component splits into two quanta.
-        lift(0.001),
+    let facts = [
+        // The cosmological constant: a small positive value, for accelerating expansion.
+        (LAMBDA, lift::<FloatType>(1e-5)),
+        (QUANTUM_THRESHOLD, lift::<FloatType>(0.001)),
     ];
 
-    let mut context = Context::with_capacity(1, "field constants", quantities.len());
-    for (id, &value) in (1..).zip(quantities.iter()) {
+    let mut context = Context::with_capacity(1, "field constants", facts.len());
+    for (id, value) in facts {
         context.add_node(Contextoid::new(
             id,
             ContextoidType::Datoid(Data::new(id, value)),
@@ -165,12 +162,10 @@ fn field_constants() -> Result<FieldContext, ContextIndexError> {
 }
 
 /// Read one constant out of the context.
-fn read(context: &FieldContext, index: usize) -> Result<FloatType, ContextIndexError> {
+fn read(context: &FieldContext, id: ContextoidId) -> Result<FloatType, ContextIndexError> {
     context
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(Datable::get_data)
-        .ok_or_else(|| ContextIndexError::new(format!("no field constant at node {index}")))
+        .get_data_by_id(id)
+        .ok_or_else(|| ContextIndexError::new(format!("no field constant with contextoid id {id}")))
 }
 
 /// A 4x4 tensor from row-major literals, lifted into the working scalar.

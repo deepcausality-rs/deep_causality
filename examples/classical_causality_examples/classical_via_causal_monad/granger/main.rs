@@ -23,7 +23,7 @@
 //! bind.
 
 use deep_causality_context::{
-    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     NoSpace, NoSpaceTime, NoTime,
 };
 use deep_causality_core::{
@@ -59,14 +59,16 @@ impl Default for Quantity {
 /// instead of a struct of its own.
 type SeriesContext = Context<Data<Quantity>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
 
-/// Node indices of the five contextoids: the two series, then the oil price the adjustment is
-/// measured from, the quarterly shipping trend, and the shipping change per unit of oil price
-/// above that baseline.
-const OIL_PRICES: usize = 0;
-const SHIPPING_ACTIVITIES: usize = 1;
-const OIL_BASELINE: usize = 2;
-const SHIPPING_TREND: usize = 3;
-const OIL_COEFFICIENT: usize = 4;
+/// Contextoid id: the oil-price series, one price per quarter.
+const OIL_PRICES: ContextoidId = 1;
+/// Contextoid id: the shipping-activity series, one value per quarter.
+const SHIPPING_ACTIVITIES: ContextoidId = 2;
+/// Contextoid id: the oil price the oil adjustment is measured from.
+const OIL_BASELINE: ContextoidId = 3;
+/// Contextoid id: the shipping trend, per quarter.
+const SHIPPING_TREND: ContextoidId = 4;
+/// Contextoid id: the shipping change per unit of oil price above the baseline.
+const OIL_COEFFICIENT: ContextoidId = 5;
 
 fn main() -> Result<(), Box<dyn Error>> {
     println!("\n=== Granger via the Causal Monad: do past oil prices predict shipping? ===\n");
@@ -123,15 +125,15 @@ fn series_world(
     shipping_trend: FloatType,
     oil_coefficient: FloatType,
 ) -> Result<SeriesContext, ContextIndexError> {
-    let mut context = Context::with_capacity(1, label, 5);
-    let quantities = [
-        Quantity::Series(oil_prices),
-        Quantity::Series(shipping_activities),
-        Quantity::Scalar(oil_baseline),
-        Quantity::Scalar(shipping_trend),
-        Quantity::Scalar(oil_coefficient),
+    let facts = [
+        (OIL_PRICES, Quantity::Series(oil_prices)),
+        (SHIPPING_ACTIVITIES, Quantity::Series(shipping_activities)),
+        (OIL_BASELINE, Quantity::Scalar(oil_baseline)),
+        (SHIPPING_TREND, Quantity::Scalar(shipping_trend)),
+        (OIL_COEFFICIENT, Quantity::Scalar(oil_coefficient)),
     ];
-    for (id, quantity) in (1..).zip(quantities) {
+    let mut context = Context::with_capacity(1, label, facts.len());
+    for (id, quantity) in facts {
         context.add_node(Contextoid::new(
             id,
             ContextoidType::Datoid(Data::new(id, quantity)),
@@ -140,31 +142,32 @@ fn series_world(
     Ok(context)
 }
 
-/// Read one quantity out of the world.
-fn read(context: &SeriesContext, index: usize) -> Result<Quantity, CausalityError> {
+/// Read the quantity with contextoid id `id` out of the world.
+fn read(context: &SeriesContext, id: ContextoidId) -> Result<Quantity, CausalityError> {
     context
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(|data| data.get_data())
-        .ok_or_else(|| CausalityError::ModelError(format!("context node {index} is not a Datoid")))
+        .get_data_by_id(id)
+        .ok_or_else(|| CausalityError::ModelError(format!("no Datoid with contextoid id {id}")))
 }
 
-/// Read one series out of the world.
-fn read_series(context: &SeriesContext, index: usize) -> Result<Vec<FloatType>, CausalityError> {
-    match read(context, index)? {
+/// Read the series with contextoid id `id` out of the world.
+fn read_series(
+    context: &SeriesContext,
+    id: ContextoidId,
+) -> Result<Vec<FloatType>, CausalityError> {
+    match read(context, id)? {
         Quantity::Series(values) => Ok(values),
         Quantity::Scalar(_) => Err(CausalityError::TypeConversionError(format!(
-            "context node {index} holds a scalar, not a series"
+            "contextoid id {id} holds a scalar, not a series"
         ))),
     }
 }
 
-/// Read one model coefficient out of the world.
-fn read_scalar(context: &SeriesContext, index: usize) -> Result<FloatType, CausalityError> {
-    match read(context, index)? {
+/// Read the model coefficient with contextoid id `id` out of the world.
+fn read_scalar(context: &SeriesContext, id: ContextoidId) -> Result<FloatType, CausalityError> {
+    match read(context, id)? {
         Quantity::Scalar(value) => Ok(value),
         Quantity::Series(_) => Err(CausalityError::TypeConversionError(format!(
-            "context node {index} holds a series, not a scalar"
+            "contextoid id {id} holds a series, not a scalar"
         ))),
     }
 }
@@ -206,13 +209,15 @@ fn predict_shipping(
 
 /// Average past shipping, add the shipping trend, adjust by
 /// (avg_oil - oil baseline) * oil coefficient when oil history is available. Every input is
-/// read from the world.
+/// read from the world; a world without shipping activity is an error.
 fn predict(series: &SeriesContext) -> Result<FloatType, CausalityError> {
     let shipping_activities = read_series(series, SHIPPING_ACTIVITIES)?;
     let oil_prices = read_series(series, OIL_PRICES)?;
 
     if shipping_activities.is_empty() {
-        return Ok(100.0);
+        return Err(CausalityError::ModelError(
+            "the context holds no shipping activity",
+        ));
     }
     let avg_shipping: FloatType = mean(&shipping_activities)?;
     let oil_adjustment = if oil_prices.is_empty() {

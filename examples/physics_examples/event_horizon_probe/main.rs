@@ -22,7 +22,7 @@
 use deep_causality_algebra::Real;
 use deep_causality_calculus::{DifferentiableArrow, DifferentiateExt, Scalar};
 use deep_causality_context::{
-    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     NoSpace, NoSpaceTime, NoTime,
 };
 use deep_causality_core::{CausalFlow, CausalityError, CausalityErrorEnum};
@@ -43,18 +43,14 @@ pub type FloatType = f64;
 /// spacetime slots are empty.
 type ApproachContext = Context<Data<FloatType>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
 
-/// Node indices of the scenario's world facts; `sagittarius_a_star_approach` adds them in this
-/// order.
-/// The black hole's mass, in kg.
-const MASS_KG: usize = 0;
-/// Below this many Schwarzschild radii the step runs relativistic physics.
-const RELATIVISTIC_RADII: usize = 1;
-/// Where the probe starts, in Schwarzschild radii.
-const START_RADII: usize = 2;
-/// The probe's own mass, in kg.
-const PROBE_MASS_KG: usize = 3;
-/// How many world facts the scenario holds.
-const APPROACH_FACTS: usize = 4;
+/// Contextoid id: the black hole's mass, in kg.
+const MASS_KG: ContextoidId = 1;
+/// Contextoid id: below this many Schwarzschild radii the step runs relativistic physics.
+const RELATIVISTIC_RADII: ContextoidId = 2;
+/// Contextoid id: where the probe starts, in Schwarzschild radii.
+const START_RADII: ContextoidId = 3;
+/// Contextoid id: the probe's own mass, in kg.
+const PROBE_MASS_KG: ContextoidId = 4;
 
 /// Small whole numbers and run parameters, declared once at the working type.
 const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
@@ -268,18 +264,22 @@ fn fcosh<S: Scalar>(x: S) -> S {
     x.cosh()
 }
 
-/// Builds the approach scenario: each world fact as a `Data` contextoid at its node index.
+/// Builds the approach scenario: each world fact as a `Data` contextoid keyed by its contextoid
+/// id.
 fn sagittarius_a_star_approach() -> Result<ApproachContext, ContextIndexError> {
-    let mut facts = [ZERO; APPROACH_FACTS];
-    // Sagittarius A*, about 4 million solar masses, times one solar mass in kilograms.
-    facts[MASS_KG] = const_scalar_from_float!(FloatType, 4.0e6 * 1.989e30);
-    facts[RELATIVISTIC_RADII] = const_scalar_from_int!(FloatType, 10);
-    facts[START_RADII] = const_scalar_from_int!(FloatType, 100);
-    facts[PROBE_MASS_KG] = const_scalar_from_int!(FloatType, 1000);
+    let facts = [
+        // Sagittarius A*, about 4 million solar masses, times one solar mass in kilograms.
+        (
+            MASS_KG,
+            const_scalar_from_float!(FloatType, 4.0e6 * 1.989e30),
+        ),
+        (RELATIVISTIC_RADII, const_scalar_from_int!(FloatType, 10)),
+        (START_RADII, const_scalar_from_int!(FloatType, 100)),
+        (PROBE_MASS_KG, const_scalar_from_int!(FloatType, 1000)),
+    ];
 
-    let mut approach =
-        Context::with_capacity(1, "probe approaching Sagittarius A*", APPROACH_FACTS);
-    for (id, value) in (1..).zip(facts) {
+    let mut approach = Context::with_capacity(1, "probe approaching Sagittarius A*", facts.len());
+    for (id, value) in facts {
         approach.add_node(Contextoid::new(
             id,
             ContextoidType::Datoid(Data::new(id, value)),
@@ -288,15 +288,13 @@ fn sagittarius_a_star_approach() -> Result<ApproachContext, ContextIndexError> {
     Ok(approach)
 }
 
-/// Reads one world fact out of the scenario, or the error naming the node that holds none.
-fn read(scenario: &ApproachContext, index: usize) -> Result<FloatType, PhysicsError> {
-    scenario
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(|data| data.get_data())
-        .ok_or_else(|| {
-            PhysicsError::CalculationError(format!("the scenario holds no Datoid at node {index}"))
-        })
+/// Reads one world fact out of the scenario, or the error naming the contextoid id it lacks.
+fn read(scenario: &ApproachContext, id: ContextoidId) -> Result<FloatType, PhysicsError> {
+    scenario.get_data_by_id(id).ok_or_else(|| {
+        PhysicsError::CalculationError(format!(
+            "the scenario holds no Datoid with contextoid id {id}"
+        ))
+    })
 }
 
 /// The black hole's mass, as the typed quantity the kernels take.

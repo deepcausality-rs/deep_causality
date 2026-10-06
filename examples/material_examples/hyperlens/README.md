@@ -59,8 +59,9 @@ Two categorical operations sweep a range of object periods:
 period with its own result and reduces to the resolution limit.
 
 The wavelength, the permittivity magnitude and the periods to probe are the optical world: a
-context of three `Data` nodes, one per quantity, that `main` reads once before the sweep. The
-period sweep is one node holding the whole list. The two materials stay `Metric` values.
+context of three `Data` nodes, one per quantity and keyed by its contextoid id, that `main` reads
+once before the sweep. The period sweep is one node holding the whole list. The two materials stay
+`Metric` values.
 
 ## Output
 

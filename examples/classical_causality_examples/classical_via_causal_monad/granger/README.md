@@ -39,11 +39,11 @@ The single-stage `predict_shipping` bind reads the series and the model's coeffi
 
 | Concern | `classical_via_causaloid/granger` | `classical_via_causal_monad/granger` |
 |---|---|---|
-| Time-series data lives in | `GrangerContext` Datoid nodes with `OIL_PRICE_ID` / `SHIPPING_ACTIVITY_ID` tags, one `DiscreteTime` node per quarter | `SeriesContext` with one `Data<Quantity>` node per series; quarters are vector positions |
-| Model coefficients live in | Three Datoids at the front of each `GrangerContext` | Three `Quantity::Scalar` nodes in each `SeriesContext` |
-| Counterfactual world built by | Iterate factual Context, skip every `OIL_PRICE_ID` Datoid | `without_oil(&factual)` rebuilds the world from the factual shipping series and coefficients with an empty oil series |
+| Time-series data lives in | `GrangerContext` Datoid nodes, one per quarter and series, keyed by the contextoid id ranges `OIL_PRICE_IDS` / `SHIPPING_ACTIVITY_IDS`; one `DiscreteTime` node per quarter | `SeriesContext` with one `Data<Quantity>` node per series; quarters are vector positions |
+| Model coefficients live in | Three Datoids in each `GrangerContext`, keyed by contextoid id | Three `Quantity::Scalar` nodes in each `SeriesContext`, keyed by contextoid id |
+| Counterfactual world built by | Iterate factual Context, skip every contextoid in `OIL_PRICE_IDS` | `without_oil(&factual)` rebuilds the world from the factual shipping series and coefficients with an empty oil series |
 | Two-world plumbing | Two separate contextual `Causaloid` instances, each bound to its own `Arc<RwLock<GrangerContext>>` | One chain; `.alternate_context(no_oil)` switches worlds |
-| Lines of code | ~300 across 2 files | ~255 in a single file |
+| Lines of code | ~290 across 2 files | ~260 in a single file |
 
 Both versions produce identical numbers for the same fixture.
 

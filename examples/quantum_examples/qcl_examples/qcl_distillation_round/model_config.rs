@@ -8,7 +8,7 @@
 use crate::FloatType;
 use deep_causality_algebra::RealField;
 use deep_causality_context::{
-    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     NoSpace, NoSpaceTime, NoTime,
 };
 use deep_causality_num::{FromPrimitive, lift_i64};
@@ -20,9 +20,10 @@ use deep_causality_num::{FromPrimitive, lift_i64};
 /// spacetime slots are the absent ones.
 pub type NoiseContext = Context<Data<i64>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
 
-/// Node indices of the probability's numerator and denominator.
-const NOISE_NUMERATOR: usize = 0;
-const NOISE_DENOMINATOR: usize = 1;
+/// Contextoid id: the depolarising probability's numerator, dimensionless.
+const NOISE_NUMERATOR: ContextoidId = 1;
+/// Contextoid id: the depolarising probability's denominator, dimensionless.
+const NOISE_DENOMINATOR: ContextoidId = 2;
 
 /// The swept noise worlds, one per depolarising probability: `0`, `1/100` and `5/100`. Zero is the
 /// noiseless round.
@@ -41,8 +42,12 @@ pub fn noise_worlds() -> Result<Vec<NoiseContext>, ContextIndexError> {
 
 /// One noise world, depolarising with probability `numerator / denominator`.
 fn noise_world(numerator: i64, denominator: i64) -> Result<NoiseContext, ContextIndexError> {
-    let mut world = Context::with_capacity(1, "depolarising noise", 2);
-    for (id, value) in [(1, numerator), (2, denominator)] {
+    let facts = [
+        (NOISE_NUMERATOR, numerator),
+        (NOISE_DENOMINATOR, denominator),
+    ];
+    let mut world = Context::with_capacity(1, "depolarising noise", facts.len());
+    for (id, value) in facts {
         world.add_node(Contextoid::new(
             id,
             ContextoidType::Datoid(Data::new(id, value)),
@@ -68,11 +73,9 @@ where
     Ok(lift_i64::<S>(numerator) / lift_i64::<S>(denominator))
 }
 
-/// Read one integer out of a noise world.
-fn read(world: &NoiseContext, index: usize) -> Result<i64, ContextIndexError> {
+/// Read the integer with contextoid id `id` out of a noise world.
+fn read(world: &NoiseContext, id: ContextoidId) -> Result<i64, ContextIndexError> {
     world
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(Datable::get_data)
-        .ok_or_else(|| ContextIndexError::new(format!("no noise datum at node {index}")))
+        .get_data_by_id(id)
+        .ok_or_else(|| ContextIndexError::new(format!("no noise datum with contextoid id {id}")))
 }

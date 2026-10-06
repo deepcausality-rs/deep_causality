@@ -19,10 +19,11 @@ pub fn print_header() {
 }
 
 pub fn print_config(wave: &WaveContext, at: &MaxwellState) -> Result<(), CausalityError> {
+    let omega = read(wave, OMEGA)?;
     println!("Plane wave  A_x(t, z) = cos(omega (t - z))");
     println!(
         "Observed at omega = {}, t = {}, z = {}\n",
-        lower(read(wave, OMEGA)?),
+        lower(omega),
         lower(at.t),
         lower(at.z)
     );

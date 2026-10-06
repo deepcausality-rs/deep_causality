@@ -4,14 +4,14 @@
  */
 
 //! Configuration construction (the "what"): where the test matrix lives, the placard world the
-//! per-point physics reads, and the fitted shock model built from it. Execution stays in `model`;
-//! the gate placards in `constants`.
+//! per-point physics reads, and the fitted shock model and atmosphere rows built from it.
+//! Execution stays in `model`; the gate placards in `constants`.
 
 use crate::FloatType;
 use deep_causality_cfd::FittedNormalShock;
 use deep_causality_context::{
-    Context, Contextoid, ContextoidType, ContextuableGraph, Data, Datable, NoSpace, NoSpaceTime,
-    NoTime,
+    Context, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data, NoSpace,
+    NoSpaceTime, NoTime,
 };
 use deep_causality_num::lift;
 use deep_causality_physics::PhysicsError;
@@ -58,9 +58,16 @@ impl Default for PlacardDatum {
 pub type PlacardContext =
     Context<Data<PlacardDatum>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
 
-/// The `.prepare` rig the sweep shares across grid points: the shock model and the world it was
-/// built from.
-pub type PlacardRig = (FittedNormalShock<FloatType>, PlacardContext);
+/// One atmosphere row `(altitude m, n_tot m⁻³, T K, a m/s)`.
+pub type AtmosphereRow = (FloatType, FloatType, FloatType, FloatType);
+
+/// The `.prepare` rig the sweep shares across grid points: the shock model, the world it was built
+/// from, and the world's atmosphere rows, read once.
+pub type PlacardRig = (
+    FittedNormalShock<FloatType>,
+    PlacardContext,
+    Vec<AtmosphereRow>,
+);
 
 // Atmosphere profiles: U.S. Standard Atmosphere, 1976 (NOAA-S/T 76-1562): temperature, speed of
 // sound, and density at the tabulated geometric altitudes, with density converted to number density
@@ -68,39 +75,39 @@ pub type PlacardRig = (FittedNormalShock<FloatType>, PlacardContext);
 // as the blackout examples' table, extended down to sea level for this envelope. The study
 // interpolates linearly between rows; the README states what that costs.
 
-/// Node index (profile): geometric altitude, m, ascending.
-pub const ALTITUDE_M: usize = 0;
-/// Node index (profile): total number density, m⁻³.
-pub const NUMBER_DENSITY: usize = 1;
-/// Node index (profile): static temperature, K.
-pub const TEMPERATURE_K: usize = 2;
-/// Node index (profile): speed of sound, m/s.
-pub const SOUND_SPEED_MS: usize = 3;
+/// Contextoid id (profile): geometric altitude, m, ascending.
+pub const ALTITUDE_M: ContextoidId = 1;
+/// Contextoid id (profile): total number density, m⁻³.
+pub const NUMBER_DENSITY: ContextoidId = 2;
+/// Contextoid id (profile): static temperature, K.
+pub const TEMPERATURE_K: ContextoidId = 3;
+/// Contextoid id (profile): speed of sound, m/s.
+pub const SOUND_SPEED_MS: ContextoidId = 4;
 
-/// Node index (scalar): ratio of specific heats for calorically perfect air. Exact for a diatomic
-/// ideal gas with frozen vibration; the standard value below the dissociation regime (Anderson,
-/// *Modern Compressible Flow*, 3rd ed., ch. 1). The hottest grid point here reaches a stagnation
-/// temperature near 1500 K, where vibrational excitation has begun but dissociation has not, so the
-/// perfect-gas value is the honest effective gamma for this envelope. The README states where the
-/// approximation is crude.
-pub const GAMMA: usize = 4;
-/// Node index (scalar): mean molecular mass of air, kg (28.97 amu). Converts the atmosphere's
+/// Contextoid id (scalar): ratio of specific heats for calorically perfect air. Exact for a
+/// diatomic ideal gas with frozen vibration; the standard value below the dissociation regime
+/// (Anderson, *Modern Compressible Flow*, 3rd ed., ch. 1). The hottest grid point here reaches a
+/// stagnation temperature near 1500 K, where vibrational excitation has begun but dissociation has
+/// not, so the perfect-gas value is the honest effective gamma for this envelope. The README states
+/// where the approximation is crude.
+pub const GAMMA: ContextoidId = 5;
+/// Contextoid id (scalar): mean molecular mass of air, kg (28.97 amu). Converts the atmosphere's
 /// number density into mass density; the same value the blackout examples carry.
-pub const AIR_MEAN_MOLECULAR_MASS_KG: usize = 5;
-/// Node index (scalar): Sutton-Graves stagnation-heating constant for air, kg^0.5·m⁻¹, in
+pub const AIR_MEAN_MOLECULAR_MASS_KG: ContextoidId = 6;
+/// Contextoid id (scalar): Sutton-Graves stagnation-heating constant for air, kg^0.5·m⁻¹, in
 /// `q̇ = k·√(ρ_∞/R_n)·V³` (Sutton, K. and Graves, R. A., "A General Stagnation-Point
 /// Convective-Heating Equation for Arbitrary Gas Mixtures", NASA TR R-376, 1971). The same constant
 /// the blackout examples' load stage carries. The correlation is calibrated for blunt-body entry
 /// speeds; at the low-supersonic end of this grid its numbers are small and serve as a trend
 /// column, not a thermal-protection sizing input.
-pub const SUTTON_GRAVES_K: usize = 6;
-/// Node index (scalar): nose radius, m: a stated example constant for a blunt demonstrator
+pub const SUTTON_GRAVES_K: ContextoidId = 7;
+/// Contextoid id (scalar): nose radius, m: a stated example constant for a blunt demonstrator
 /// forebody. Sets the `√(1/R_n)` scale of the heating column; half a meter is a round, plausible
 /// leading-body radius for a supersonic testbed and is not tied to any specific vehicle.
-pub const NOSE_RADIUS_M: usize = 7;
+pub const NOSE_RADIUS_M: ContextoidId = 8;
 
-/// Build the placard world, added in node-index order: node `i` holds contextoid id `i + 1`. The
-/// specification values are exact `f64` literals, lifted losslessly into the working `FloatType`.
+/// Build the placard world, each quantity keyed by its contextoid id. The specification values are
+/// exact `f64` literals, lifted losslessly into the working `FloatType`.
 pub fn placard_world() -> Result<PlacardContext, PhysicsError> {
     // (altitude m, n_tot m⁻³, T K, a m/s), ascending altitude.
     let atmosphere: [(f64, f64, f64, f64); 9] = [
@@ -117,67 +124,94 @@ pub fn placard_world() -> Result<PlacardContext, PhysicsError> {
     let tabulated = |column: fn(&(f64, f64, f64, f64)) -> f64| {
         PlacardDatum::Profile(atmosphere.iter().map(|row| lift(column(row))).collect())
     };
-    let data = [
-        tabulated(|row| row.0),                // ALTITUDE_M
-        tabulated(|row| row.1),                // NUMBER_DENSITY
-        tabulated(|row| row.2),                // TEMPERATURE_K
-        tabulated(|row| row.3),                // SOUND_SPEED_MS
-        PlacardDatum::Scalar(lift(1.4)),       // GAMMA
-        PlacardDatum::Scalar(lift(4.81e-26)),  // AIR_MEAN_MOLECULAR_MASS_KG
-        PlacardDatum::Scalar(lift(1.7415e-4)), // SUTTON_GRAVES_K
-        PlacardDatum::Scalar(lift(0.5)),       // NOSE_RADIUS_M
+    let facts = [
+        (ALTITUDE_M, tabulated(|row| row.0)),
+        (NUMBER_DENSITY, tabulated(|row| row.1)),
+        (TEMPERATURE_K, tabulated(|row| row.2)),
+        (SOUND_SPEED_MS, tabulated(|row| row.3)),
+        (GAMMA, PlacardDatum::Scalar(lift(1.4))),
+        (
+            AIR_MEAN_MOLECULAR_MASS_KG,
+            PlacardDatum::Scalar(lift(4.81e-26)),
+        ),
+        (SUTTON_GRAVES_K, PlacardDatum::Scalar(lift(1.7415e-4))),
+        (NOSE_RADIUS_M, PlacardDatum::Scalar(lift(0.5))),
     ];
-    let mut context = Context::with_capacity(1, "placard world", data.len());
-    for (id, datum) in (1..).zip(data) {
+    let mut context = Context::with_capacity(1, "placard world", facts.len());
+    for (id, datum) in facts {
         context
             .add_node(Contextoid::new(
                 id,
                 ContextoidType::Datoid(Data::new(id, datum)),
             ))
             .map_err(|e| {
-                PhysicsError::CalculationError(format!("placard world rejected node {id}: {e}"))
+                PhysicsError::CalculationError(format!(
+                    "placard world rejected contextoid {id}: {e}"
+                ))
             })?;
     }
     Ok(context)
 }
 
-/// Read one `Data` contextoid's payload out of the placard world.
-fn datum(world: &PlacardContext, index: usize) -> Result<PlacardDatum, PhysicsError> {
-    world
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(Datable::get_data)
-        .ok_or_else(|| {
-            PhysicsError::CalculationError(format!(
-                "placard world node {index} is absent or not a Datoid"
-            ))
-        })
+/// Read the `Data` contextoid carrying `id` out of the placard world.
+fn datum(world: &PlacardContext, id: ContextoidId) -> Result<PlacardDatum, PhysicsError> {
+    world.get_data_by_id(id).ok_or_else(|| {
+        PhysicsError::CalculationError(format!(
+            "placard world holds no Datoid with contextoid id {id}"
+        ))
+    })
 }
 
 /// Read one atmosphere profile out of the placard world.
-pub fn profile(world: &PlacardContext, index: usize) -> Result<Vec<FloatType>, PhysicsError> {
-    match datum(world, index)? {
+pub fn profile(world: &PlacardContext, id: ContextoidId) -> Result<Vec<FloatType>, PhysicsError> {
+    match datum(world, id)? {
         PlacardDatum::Profile(values) => Ok(values),
         PlacardDatum::Scalar(_) => Err(PhysicsError::CalculationError(format!(
-            "placard world node {index} is a scalar, not a profile"
+            "placard world contextoid {id} is a scalar, not a profile"
         ))),
     }
 }
 
 /// Read one scalar out of the placard world.
-pub fn scalar(world: &PlacardContext, index: usize) -> Result<FloatType, PhysicsError> {
-    match datum(world, index)? {
+pub fn scalar(world: &PlacardContext, id: ContextoidId) -> Result<FloatType, PhysicsError> {
+    match datum(world, id)? {
         PlacardDatum::Scalar(value) => Ok(value),
         PlacardDatum::Profile(_) => Err(PhysicsError::CalculationError(format!(
-            "placard world node {index} is a profile, not a scalar"
+            "placard world contextoid {id} is a profile, not a scalar"
         ))),
     }
 }
 
-/// The `.prepare` rig: the placard world, and the exact-Rankine-Hugoniot shock model at the world's
-/// effective gamma.
+/// The atmosphere rows of the placard world, ascending in altitude. Profiles of unequal length are
+/// an error.
+pub fn atmosphere_rows(world: &PlacardContext) -> Result<Vec<AtmosphereRow>, PhysicsError> {
+    let altitude = profile(world, ALTITUDE_M)?;
+    let density = profile(world, NUMBER_DENSITY)?;
+    let temperature = profile(world, TEMPERATURE_K)?;
+    let sound = profile(world, SOUND_SPEED_MS)?;
+    let rows = altitude.len();
+    if [density.len(), temperature.len(), sound.len()]
+        .iter()
+        .any(|&len| len != rows)
+    {
+        return Err(PhysicsError::CalculationError(
+            "the placard world's atmosphere profiles differ in length".into(),
+        ));
+    }
+    Ok(altitude
+        .into_iter()
+        .zip(density)
+        .zip(temperature)
+        .zip(sound)
+        .map(|(((a, n), t), c)| (a, n, t, c))
+        .collect())
+}
+
+/// The `.prepare` rig: the placard world, the exact-Rankine-Hugoniot shock model at the world's
+/// effective gamma, and the world's atmosphere rows, read and checked once for the whole sweep.
 pub fn placard_rig() -> Result<PlacardRig, PhysicsError> {
     let world = placard_world()?;
     let shock = FittedNormalShock::<FloatType>::new(scalar(&world, GAMMA)?)?;
-    Ok((shock, world))
+    let atmosphere = atmosphere_rows(&world)?;
+    Ok((shock, world, atmosphere))
 }

@@ -4,14 +4,14 @@
  */
 
 //! Domain logic (the "how" of the physics): the atmosphere interpolation and the per-point
-//! placard computation, both reading the placard world of the `.prepare` rig. Configuration
-//! (matrix location, the placard world, shock model) lives in `model_config`; the gate placards in
+//! placard computation, both reading the `.prepare` rig. Configuration (matrix location, the
+//! placard world, shock model, atmosphere rows) lives in `model_config`; the gate placards in
 //! `constants`.
 
 use crate::FloatType;
 use crate::model_config::{
-    AIR_MEAN_MOLECULAR_MASS_KG, ALTITUDE_M, GAMMA, NOSE_RADIUS_M, NUMBER_DENSITY, PlacardContext,
-    PlacardRig, SOUND_SPEED_MS, SUTTON_GRAVES_K, TEMPERATURE_K, profile, scalar,
+    AIR_MEAN_MOLECULAR_MASS_KG, AtmosphereRow, GAMMA, NOSE_RADIUS_M, PlacardRig, SUTTON_GRAVES_K,
+    scalar,
 };
 use deep_causality_algebra::Real;
 use deep_causality_cfd::{FromTableRow, GateSeq, PhysicsError, StudyView, TableRow};
@@ -74,40 +74,13 @@ impl TableRow for PlacardRow {
     }
 }
 
-/// The atmosphere rows `(altitude m, n_tot m⁻³, T K, a m/s)` of the placard world, ascending in
-/// altitude. Profiles of unequal length are an error.
-fn atmosphere_rows(
-    world: &PlacardContext,
-) -> Result<Vec<(FloatType, FloatType, FloatType, FloatType)>, PhysicsError> {
-    let altitude = profile(world, ALTITUDE_M)?;
-    let density = profile(world, NUMBER_DENSITY)?;
-    let temperature = profile(world, TEMPERATURE_K)?;
-    let sound = profile(world, SOUND_SPEED_MS)?;
-    let rows = altitude.len();
-    if [density.len(), temperature.len(), sound.len()]
-        .iter()
-        .any(|&len| len != rows)
-    {
-        return Err(PhysicsError::CalculationError(
-            "the placard world's atmosphere profiles differ in length".into(),
-        ));
-    }
-    Ok(altitude
-        .into_iter()
-        .zip(density)
-        .zip(temperature)
-        .zip(sound)
-        .map(|(((a, n), t), c)| (a, n, t, c))
-        .collect())
-}
-
 /// The freestream `(n_tot m⁻³, T K, a m/s)` at `alt_m`, linearly interpolated between the
-/// world's atmosphere rows. Altitudes outside the table are an error naming the valid range.
+/// world's atmosphere rows, ascending in altitude. Altitudes outside the table are an error naming
+/// the valid range.
 pub fn atmosphere_at(
-    world: &PlacardContext,
+    atmosphere: &[AtmosphereRow],
     alt_m: FloatType,
 ) -> Result<(FloatType, FloatType, FloatType), String> {
-    let atmosphere = atmosphere_rows(world).map_err(|e| e.to_string())?;
     let (Some(&(floor, ..)), Some(&(ceiling, ..))) = (atmosphere.first(), atmosphere.last()) else {
         return Err("the placard world's atmosphere table is empty".into());
     };
@@ -147,10 +120,10 @@ pub fn atmosphere_at(
 /// temperature (the shock is adiabatic), so the branch is exactly continuous at Mach 1, where
 /// the shock-free isentropic form takes over.
 pub fn placard_point(rig: &PlacardRig, point: &FlightPoint) -> Result<PlacardRow, PhysicsError> {
-    let (shock, world) = rig;
+    let (shock, world, atmosphere) = rig;
     let (mach, alt_km) = (point.mach, point.alt_km);
     let here = format!("M {mach:.2} / {alt_km:.1} km");
-    let (n_inf, t_inf, a_inf) = atmosphere_at(world, alt_km * lift::<FloatType>(1000.0))
+    let (n_inf, t_inf, a_inf) = atmosphere_at(atmosphere, alt_km * lift::<FloatType>(1000.0))
         .map_err(|e| PhysicsError::CalculationError(format!("grid point {here}: {e}")))?;
     let rho_inf = n_inf * scalar(world, AIR_MEAN_MOLECULAR_MASS_KG)?;
     let v = mach * a_inf;

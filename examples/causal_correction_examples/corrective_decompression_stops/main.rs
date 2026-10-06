@@ -46,6 +46,11 @@ fn main() -> Result<(), CausalityError> {
     let dive = nominal_dive_context().map_err(|err| CausalityError::GraphError(err.to_string()))?;
     let open = run_open_loop(dive.clone());
     let closed = run_closed_loop(dive);
+    for process in [&open, &closed] {
+        if let Some(err) = process.error() {
+            return Err(err.clone());
+        }
+    }
 
     model_utils::print_section("Open loop (continuous ascent, no monitor)", &open)?;
     model_utils::print_section("Closed loop (monitor + corrective stops)", &closed)?;

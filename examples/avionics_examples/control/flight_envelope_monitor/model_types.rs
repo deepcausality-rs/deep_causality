@@ -11,14 +11,12 @@
 //! reasoning logic.
 //!
 //! The airframe the pipeline reads lives in the `Context` channel as an
-//! [`AirframeContext`]; the node indices below name its quantities. Runtime
+//! [`AirframeContext`]; the contextoid ids below key its quantities. Runtime
 //! values (the nominal airframe, `SensorReading`, and `FlightStateEstimate`
 //! instances) live in [`super::model_config`].
 
 use deep_causality::{CausalityError, PropagatingProcess};
-use deep_causality_context::{
-    Context, ContextuableGraph, Data, Datable, NoSpace, NoSpaceTime, NoTime,
-};
+use deep_causality_context::{Context, ContextoidId, Data, NoSpace, NoSpaceTime, NoTime};
 
 // ---------------------------------------------------------------------------
 // Process channels
@@ -44,51 +42,47 @@ pub struct FlightState {
 /// temporal and spacetime slots are empty.
 pub type AirframeContext = Context<Data<f64>, NoSpace<f64>, NoTime, NoSpaceTime<f64>>;
 
-/// Node index: current aircraft mass, kg.
-pub const MASS_KG: usize = 0;
-/// Node index: maximum takeoff weight, kg.
-pub const MTOW_KG: usize = 1;
-/// Node index: stall-margin multiplier applied to the stall speed (dimensionless).
-pub const STALL_MARGIN: usize = 2;
-/// Node index: service ceiling, m.
-pub const SERVICE_CEILING_M: usize = 3;
-/// Node index: the stall-margin multiplier at which the airspeed band's lower
+/// Contextoid id: current aircraft mass, kg.
+pub const MASS_KG: ContextoidId = 1;
+/// Contextoid id: maximum takeoff weight, kg.
+pub const MTOW_KG: ContextoidId = 2;
+/// Contextoid id: stall-margin multiplier applied to the stall speed (dimensionless).
+pub const STALL_MARGIN: ContextoidId = 3;
+/// Contextoid id: service ceiling, m.
+pub const SERVICE_CEILING_M: ContextoidId = 4;
+/// Contextoid id: the stall-margin multiplier at which the airspeed band's lower
 /// edge is stated (dimensionless). The stall node rescales that edge from this
 /// margin to [`STALL_MARGIN`].
-pub const AIRSPEED_BAND_STALL_MARGIN: usize = 4;
-/// Node index: lower edge of the normal airspeed band, kn.
-pub const AIRSPEED_MIN_KN: usize = 5;
-/// Node index: upper edge of the normal airspeed band, kn.
-pub const AIRSPEED_MAX_KN: usize = 6;
-/// Node index: lower edge of the normal altitude band, ft.
-pub const ALTITUDE_MIN_FT: usize = 7;
-/// Node index: upper edge of the normal altitude band, ft.
-pub const ALTITUDE_MAX_FT: usize = 8;
-/// Node index: lower edge of the normal attitude band, deg.
-pub const ATTITUDE_MIN_DEG: usize = 9;
-/// Node index: upper edge of the normal attitude band, deg.
-pub const ATTITUDE_MAX_DEG: usize = 10;
-/// Node index: lower edge of the normal vertical-speed band, ft/min.
-pub const VERTICAL_SPEED_MIN_FPM: usize = 11;
-/// Node index: upper edge of the normal vertical-speed band, ft/min.
-pub const VERTICAL_SPEED_MAX_FPM: usize = 12;
-/// Node index: lower edge of the normal fuel-flow band, lb/h.
-pub const FUEL_FLOW_MIN_PPH: usize = 13;
-/// Node index: upper edge of the normal fuel-flow band, lb/h.
-pub const FUEL_FLOW_MAX_PPH: usize = 14;
+pub const AIRSPEED_BAND_STALL_MARGIN: ContextoidId = 5;
+/// Contextoid id: lower edge of the normal airspeed band, kn.
+pub const AIRSPEED_MIN_KN: ContextoidId = 6;
+/// Contextoid id: upper edge of the normal airspeed band, kn.
+pub const AIRSPEED_MAX_KN: ContextoidId = 7;
+/// Contextoid id: lower edge of the normal altitude band, ft.
+pub const ALTITUDE_MIN_FT: ContextoidId = 8;
+/// Contextoid id: upper edge of the normal altitude band, ft.
+pub const ALTITUDE_MAX_FT: ContextoidId = 9;
+/// Contextoid id: lower edge of the normal attitude band, deg.
+pub const ATTITUDE_MIN_DEG: ContextoidId = 10;
+/// Contextoid id: upper edge of the normal attitude band, deg.
+pub const ATTITUDE_MAX_DEG: ContextoidId = 11;
+/// Contextoid id: lower edge of the normal vertical-speed band, ft/min.
+pub const VERTICAL_SPEED_MIN_FPM: ContextoidId = 12;
+/// Contextoid id: upper edge of the normal vertical-speed band, ft/min.
+pub const VERTICAL_SPEED_MAX_FPM: ContextoidId = 13;
+/// Contextoid id: lower edge of the normal fuel-flow band, lb/h.
+pub const FUEL_FLOW_MIN_PPH: ContextoidId = 14;
+/// Contextoid id: upper edge of the normal fuel-flow band, lb/h.
+pub const FUEL_FLOW_MAX_PPH: ContextoidId = 15;
 
-/// Read one `Data` contextoid's payload out of the airframe context. A node that is absent or
-/// not a Datoid is an error.
-pub fn read(context: &AirframeContext, index: usize) -> Result<f64, CausalityError> {
-    context
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(Datable::get_data)
-        .ok_or_else(|| {
-            CausalityError::MissingParameter(format!(
-                "airframe context node {index} is absent or not a Datoid"
-            ))
-        })
+/// Read the `Data` contextoid carrying `id` out of the airframe context. An id the context does
+/// not hold as a Datoid is an error.
+pub fn read(context: &AirframeContext, id: ContextoidId) -> Result<f64, CausalityError> {
+    context.get_data_by_id(id).ok_or_else(|| {
+        CausalityError::MissingParameter(format!(
+            "airframe context holds no Datoid with contextoid id {id}"
+        ))
+    })
 }
 
 // ---------------------------------------------------------------------------

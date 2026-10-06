@@ -4,7 +4,7 @@
  */
 
 use deep_causality_context::{
-    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     NoSpace, NoSpaceTime, NoTime,
 };
 use deep_causality_multivector::{CausalMultiVector, CausalMultiVectorError, Metric, MultiVector};
@@ -55,12 +55,16 @@ impl Default for ReactorQuantity {
 type ReactorContext =
     Context<Data<ReactorQuantity>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
 
-/// Node indices of a scenario's quantities.
-const SIGNATURE: usize = 0;
-const TOROIDAL_AXIS: usize = 1;
-const POLOIDAL_AXIS: usize = 2;
-const CURRENT: usize = 3;
-const FIELD: usize = 4;
+/// Contextoid id: the signature of the algebra the plasma is modelled in.
+const SIGNATURE: ContextoidId = 1;
+/// Contextoid id: the basis axis the current flows along, toroidally.
+const TOROIDAL_AXIS: ContextoidId = 2;
+/// Contextoid id: the basis axis that spans the field plane with the toroidal one, poloidally.
+const POLOIDAL_AXIS: ContextoidId = 3;
+/// Contextoid id: the plasma current J, in MA.
+const CURRENT: ContextoidId = 4;
+/// Contextoid id: the confining magnetic field B, in T.
+const FIELD: ContextoidId = 5;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     print_header();
@@ -95,18 +99,18 @@ fn reactor(
     toroidal_axis: usize,
     poloidal_axis: usize,
 ) -> Result<ReactorContext, ContextIndexError> {
-    let quantities = [
-        ReactorQuantity::Signature(metric),
-        ReactorQuantity::Axis(toroidal_axis),
-        ReactorQuantity::Axis(poloidal_axis),
+    let facts = [
+        (SIGNATURE, ReactorQuantity::Signature(metric)),
+        (TOROIDAL_AXIS, ReactorQuantity::Axis(toroidal_axis)),
+        (POLOIDAL_AXIS, ReactorQuantity::Axis(poloidal_axis)),
         // Plasma current J: a strong current around the torus, on the order of 10 MA.
-        ReactorQuantity::Magnitude(lift(10.0)),
+        (CURRENT, ReactorQuantity::Magnitude(lift(10.0))),
         // Confining magnetic field B, perpendicular to the current, in Tesla.
-        ReactorQuantity::Magnitude(lift(2.0)),
+        (FIELD, ReactorQuantity::Magnitude(lift(2.0))),
     ];
 
-    let mut context = Context::with_capacity(1, label, quantities.len());
-    for (id, quantity) in (1..).zip(quantities) {
+    let mut context = Context::with_capacity(1, label, facts.len());
+    for (id, quantity) in facts {
         context.add_node(Contextoid::new(
             id,
             ContextoidType::Datoid(Data::new(id, quantity)),
@@ -116,12 +120,10 @@ fn reactor(
 }
 
 /// Read one quantity out of a reactor scenario.
-fn read(context: &ReactorContext, index: usize) -> Result<ReactorQuantity, ContextIndexError> {
-    context
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(Datable::get_data)
-        .ok_or_else(|| ContextIndexError::new(format!("no reactor quantity at node {index}")))
+fn read(context: &ReactorContext, id: ContextoidId) -> Result<ReactorQuantity, ContextIndexError> {
+    context.get_data_by_id(id).ok_or_else(|| {
+        ContextIndexError::new(format!("no reactor quantity with contextoid id {id}"))
+    })
 }
 
 /// Calculates the Lorentz Force Density in a Fusion Reactor.

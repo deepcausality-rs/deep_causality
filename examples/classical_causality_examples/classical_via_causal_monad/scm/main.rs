@@ -25,7 +25,7 @@
 //! scaffolding.
 
 use deep_causality_context::{
-    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     NoSpace, NoSpaceTime, NoTime,
 };
 use deep_causality_core::{
@@ -41,11 +41,12 @@ type FloatType = f64;
 /// The world one run reasons about: numeric data only, no space and no time.
 type SmokingContext = Context<Data<FloatType>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
 
-/// Node indices of the three `Data` contextoids each smoking world carries: current nicotine
-/// consumption, pre-existing tar, and the level above which either counts as high.
-const NICOTINE: usize = 0;
-const TAR: usize = 1;
-const THRESHOLD: usize = 2;
+/// Contextoid id: current nicotine consumption level.
+const NICOTINE: ContextoidId = 1;
+/// Contextoid id: pre-existing tar level.
+const TAR: ContextoidId = 2;
+/// Contextoid id: the level above which nicotine or tar counts as high.
+const THRESHOLD: ContextoidId = 3;
 
 fn main() -> Result<(), Box<dyn Error>> {
     println!("\n=== SCM via the Causal Monad: Pearl's Ladder on smoking-tar-cancer ===\n");
@@ -147,8 +148,13 @@ fn smoking_world(
     nicotine_level: FloatType,
     tar_level: FloatType,
 ) -> Result<SmokingContext, ContextIndexError> {
-    let mut context = Context::with_capacity(1, "smoking world", 3);
-    for (id, value) in [(1, nicotine_level), (2, tar_level), (3, 0.6)] {
+    let facts = [
+        (NICOTINE, nicotine_level),
+        (TAR, tar_level),
+        (THRESHOLD, 0.6),
+    ];
+    let mut context = Context::with_capacity(1, "smoking world", facts.len());
+    for (id, value) in facts {
         context.add_node(Contextoid::new(
             id,
             ContextoidType::Datoid(Data::new(id, value)),
@@ -157,13 +163,11 @@ fn smoking_world(
     Ok(context)
 }
 
-/// Read one `Data` contextoid's payload out of a smoking world.
-fn read(context: &SmokingContext, index: usize) -> Result<FloatType, CausalityError> {
+/// Read the `Data` contextoid with contextoid id `id` out of a smoking world.
+fn read(context: &SmokingContext, id: ContextoidId) -> Result<FloatType, CausalityError> {
     context
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(|data| data.get_data())
-        .ok_or_else(|| CausalityError::ModelError(format!("context node {index} is not a Datoid")))
+        .get_data_by_id(id)
+        .ok_or_else(|| CausalityError::ModelError(format!("no Datoid with contextoid id {id}")))
 }
 
 /// The value a finished chain carries, or the error that ended it.

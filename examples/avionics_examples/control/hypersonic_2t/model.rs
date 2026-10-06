@@ -11,7 +11,7 @@
 
 use deep_causality_calculus::{EndoArrow, Euler};
 use deep_causality_context::{
-    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     EuclideanSpace, NoSpaceTime, NoTime,
 };
 use deep_causality_core::CausalityError;
@@ -24,27 +24,29 @@ use deep_causality_multivector::{CausalMultiVector, Metric};
 /// temporal and spacetime slots are empty.
 pub type RadarContext = Context<Data<f64>, EuclideanSpace<f64>, NoTime, NoSpaceTime<f64>>;
 
-/// Node index: initial radar fix `(x, y, z)`, m (target detected at ~100 km range).
-pub const INITIAL_FIX: usize = 0;
-/// Node index: initial velocity estimate along x, m/s (drift).
-pub const INITIAL_VEL_X_MS: usize = 1;
-/// Node index: initial velocity estimate along y, m/s (closing fast).
-pub const INITIAL_VEL_Y_MS: usize = 2;
-/// Node index: radar update period, s (100 Hz -> 10 ms).
-pub const UPDATE_PERIOD_S: usize = 3;
+/// Contextoid id: initial radar fix `(x, y, z)`, m (target detected at ~100 km range).
+pub const INITIAL_FIX: ContextoidId = 1;
+/// Contextoid id: initial velocity estimate along x, m/s (drift).
+pub const INITIAL_VEL_X_MS: ContextoidId = 2;
+/// Contextoid id: initial velocity estimate along y, m/s (closing fast).
+pub const INITIAL_VEL_Y_MS: ContextoidId = 3;
+/// Contextoid id: radar update period, s (100 Hz -> 10 ms).
+pub const UPDATE_PERIOD_S: ContextoidId = 4;
 
-/// Build the radar world, added in node-index order: node `i` holds contextoid id `i + 1`.
+/// Build the radar world, each quantity keyed by its contextoid id: the fix as a Spaceoid, the
+/// velocity components and the period as Datoids.
 pub fn build_radar_world() -> Result<RadarContext, ContextIndexError> {
-    let mut context = Context::with_capacity(1, "radar acquisition", 4);
+    let facts = [
+        (INITIAL_VEL_X_MS, 500.0),
+        (INITIAL_VEL_Y_MS, -3400.0),
+        (UPDATE_PERIOD_S, 0.01),
+    ];
+    let mut context = Context::with_capacity(1, "radar acquisition", facts.len() + 1);
     context.add_node(Contextoid::new(
-        1,
-        ContextoidType::Spaceoid(EuclideanSpace::new(1, 0.0, 100_000.0, 20_000.0)),
+        INITIAL_FIX,
+        ContextoidType::Spaceoid(EuclideanSpace::new(INITIAL_FIX, 0.0, 100_000.0, 20_000.0)),
     ))?;
-    for (id, value) in [
-        (2, 500.0),   // INITIAL_VEL_X_MS
-        (3, -3400.0), // INITIAL_VEL_Y_MS
-        (4, 0.01),    // UPDATE_PERIOD_S
-    ] {
+    for (id, value) in facts {
         context.add_node(Contextoid::new(
             id,
             ContextoidType::Datoid(Data::new(id, value)),
@@ -53,30 +55,27 @@ pub fn build_radar_world() -> Result<RadarContext, ContextIndexError> {
     Ok(context)
 }
 
-/// Read one `Data` contextoid's payload out of the radar world. A node that is absent or not a
-/// Datoid is an error.
-pub fn read(context: &RadarContext, index: usize) -> Result<f64, CausalityError> {
-    context
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(Datable::get_data)
-        .ok_or_else(|| {
-            CausalityError::MissingParameter(format!(
-                "radar world node {index} is absent or not a Datoid"
-            ))
-        })
+/// Read the `Data` contextoid carrying `id` out of the radar world. An id the world does not hold
+/// as a Datoid is an error.
+pub fn read(context: &RadarContext, id: ContextoidId) -> Result<f64, CausalityError> {
+    context.get_data_by_id(id).ok_or_else(|| {
+        CausalityError::MissingParameter(format!(
+            "radar world holds no Datoid with contextoid id {id}"
+        ))
+    })
 }
 
 /// Read the initial radar fix `[x, y, z]` out of the radar world. A fix that is absent or not a
 /// Spaceoid is an error.
 pub fn initial_fix(context: &RadarContext) -> Result<[f64; 3], CausalityError> {
     context
-        .get_node(INITIAL_FIX)
+        .get_node_index_by_id(INITIAL_FIX)
+        .and_then(|index| context.get_node(index))
         .and_then(|node| node.vertex_type().spaceoid())
         .map(|fix| [fix.x(), fix.y(), fix.z()])
         .ok_or_else(|| {
             CausalityError::MissingParameter(format!(
-                "radar world node {INITIAL_FIX} is absent or not a Spaceoid"
+                "radar world holds no Spaceoid with contextoid id {INITIAL_FIX}"
             ))
         })
 }

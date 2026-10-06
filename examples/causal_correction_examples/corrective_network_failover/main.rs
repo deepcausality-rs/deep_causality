@@ -46,6 +46,11 @@ fn main() -> Result<(), CausalityError> {
         nominal_network_context().map_err(|err| CausalityError::GraphError(err.to_string()))?;
     let open = run_open_loop(plan.clone());
     let closed = run_closed_loop(plan);
+    for process in [&open, &closed] {
+        if let Some(err) = process.error() {
+            return Err(err.clone());
+        }
+    }
 
     model_utils::print_section("Open loop (no monitor, no failover)", &open)?;
     model_utils::print_section("Closed loop (monitor + corrective failover)", &closed)?;

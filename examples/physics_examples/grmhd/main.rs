@@ -49,7 +49,7 @@ use deep_causality_core::{CausalFlow, CausalityError, CausalityErrorEnum};
 use deep_causality_num::{Float106, const_scalar_from_float, const_scalar_from_int, lift_usize};
 use model::{
     CENTRAL_MASS, COLUMN_LENGTH, CURRENT_DENSITY, GrmhdContext, GrmhdState, MAGNETIC_FIELD,
-    ORBIT_RADIUS, TIDAL_THRESHOLD, WORLD_FACTS, ZERO, frame_energy_density, read,
+    ORBIT_RADIUS, TIDAL_THRESHOLD, frame_energy_density, read,
 };
 use utils_print::{print_config, print_header, print_report, print_verification};
 
@@ -74,9 +74,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let world = grmhd_world()?;
     print_config(&world)?;
 
-    // Five stages, one per solver or decision, each reading the world from the context channel.
-    // `finish` hands back the state or the error the chain short-circuited with, so a failed
-    // stage is the error the process exits with.
+    // Five stages, one per solver or decision. The first four read the world from the context
+    // channel; the analysis maps the state alone. `finish` hands back the state or the error the
+    // chain short-circuited with, so a failed stage is the error the process exits with.
     let state = CausalFlow::value(GrmhdState::default())
         .context(world.clone())
         .try_step_with(|s, _, w| model::calculate_curvature(s, w))
@@ -120,19 +120,20 @@ fn verify(s: &GrmhdState, world: &GrmhdContext) -> Result<Verification, Causalit
     })
 }
 
-/// Builds the world: the central body and the plasma, each fact as a `Data` contextoid at its
-/// node index.
+/// Builds the world: the central body and the plasma, each fact as a `Data` contextoid keyed by
+/// its contextoid id.
 fn grmhd_world() -> Result<GrmhdContext, ContextIndexError> {
-    let mut facts = [ZERO; WORLD_FACTS];
-    facts[CENTRAL_MASS] = const_scalar_from_int!(FloatType, 10);
-    facts[ORBIT_RADIUS] = const_scalar_from_int!(FloatType, 3);
-    facts[COLUMN_LENGTH] = const_scalar_from_int!(FloatType, 1);
-    facts[CURRENT_DENSITY] = const_scalar_from_int!(FloatType, 10);
-    facts[MAGNETIC_FIELD] = const_scalar_from_int!(FloatType, 2);
-    facts[TIDAL_THRESHOLD] = const_scalar_from_float!(FloatType, 1e-12);
+    let facts = [
+        (CENTRAL_MASS, const_scalar_from_int!(FloatType, 10)),
+        (ORBIT_RADIUS, const_scalar_from_int!(FloatType, 3)),
+        (COLUMN_LENGTH, const_scalar_from_int!(FloatType, 1)),
+        (CURRENT_DENSITY, const_scalar_from_int!(FloatType, 10)),
+        (MAGNETIC_FIELD, const_scalar_from_int!(FloatType, 2)),
+        (TIDAL_THRESHOLD, const_scalar_from_float!(FloatType, 1e-12)),
+    ];
 
-    let mut world = Context::with_capacity(1, "GRMHD world", WORLD_FACTS);
-    for (id, value) in (1..).zip(facts) {
+    let mut world = Context::with_capacity(1, "GRMHD world", facts.len());
+    for (id, value) in facts {
         world.add_node(Contextoid::new(
             id,
             ContextoidType::Datoid(Data::new(id, value)),

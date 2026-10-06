@@ -58,5 +58,9 @@ fn main() -> Result<(), Box<dyn Error>> {
         .into_process();
 
     print_util::print_summary(&final_process);
-    Ok(())
+    // The summary shows a failed pipeline with its error; the run then fails with it.
+    match final_process.error() {
+        Some(err) => Err(err.clone().into()),
+        None => Ok(()),
+    }
 }

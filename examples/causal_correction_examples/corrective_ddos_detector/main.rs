@@ -68,11 +68,11 @@ fn main() -> Result<(), CausalityError> {
         .iterate_n(N_TICKS as usize, |tick| {
             tick.bind(analyze_tick).branch_with(
                 // A predicate has no error channel. It runs only on a value, so `analyze_tick`
-                // succeeded on this context.
+                // succeeded on this context, and `analyze_tick` reads the trigger slot count.
                 |throttle, state, ctx| {
                     let detector = ctx.expect("analyze_tick returns the detector context it read");
                     let trigger_slots = read_ticks(detector, TRIGGER_SLOTS)
-                        .expect("the detector context holds the trigger slot count as Ticks");
+                        .expect("analyze_tick read the trigger slot count from this context");
                     state.consecutive_anomalies >= trigger_slots && *throttle == THROTTLE_OFF
                 },
                 |anomaly| {
@@ -91,6 +91,9 @@ fn main() -> Result<(), CausalityError> {
             )
         })
         .into_process();
+    if let Some(err) = result.error() {
+        return Err(err.clone());
+    }
 
     // Verbose details. Comment out to trim the output.
     model_utils::print_section("Closed loop", &result)?;

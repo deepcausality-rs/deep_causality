@@ -12,7 +12,7 @@
 use crate::FloatType;
 use deep_causality_algebra::Real;
 use deep_causality_context::{
-    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     NoSpace, NoSpaceTime, NoTime,
 };
 use deep_causality_metric::Metric;
@@ -57,14 +57,14 @@ impl Default for OpticsDatum {
 pub type OpticsContext =
     Context<Data<OpticsDatum>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
 
-/// Node index of the illuminating wavelength, in nanometres.
-const WAVELENGTH_NM: usize = 0;
-/// Node index of the magnitude every principal permittivity takes.
-const EPSILON_MAGNITUDE: usize = 1;
-/// Node index of the object periods to probe, in nanometres.
-const SEPARATIONS_NM: usize = 2;
+/// Contextoid id: the illuminating wavelength, in nanometres.
+const WAVELENGTH_NM: ContextoidId = 1;
+/// Contextoid id: the magnitude every principal permittivity takes, dimensionless.
+const EPSILON_MAGNITUDE: ContextoidId = 2;
+/// Contextoid id: the object periods to probe, in nanometres.
+const SEPARATIONS_NM: ContextoidId = 3;
 
-/// The optical world, one `Data` node per quantity.
+/// The optical world, one `Data` node per quantity, keyed by its contextoid id.
 ///
 /// - The wavelength is 500 nm, green light.
 /// - Every principal permittivity has magnitude 1. A real metamaterial has magnitudes that differ
@@ -72,18 +72,17 @@ const SEPARATIONS_NM: usize = 2;
 ///   about: the **sign** pattern, which is what the metric carries.
 /// - The object periods run from 1000 nm down to 50 nm.
 pub fn optics_world() -> Result<OpticsContext, ContextIndexError> {
-    let mut world = Context::with_capacity(1, "hyperlens optics", 3);
     let facts = [
         (
-            1,
+            WAVELENGTH_NM,
             OpticsDatum::Magnitude(const_scalar_from_int!(FloatType, 500)),
         ),
         (
-            2,
+            EPSILON_MAGNITUDE,
             OpticsDatum::Magnitude(const_scalar_from_float!(FloatType, 1.0)),
         ),
         (
-            3,
+            SEPARATIONS_NM,
             OpticsDatum::Periods(vec![
                 const_scalar_from_int!(FloatType, 1000),
                 const_scalar_from_int!(FloatType, 750),
@@ -96,6 +95,7 @@ pub fn optics_world() -> Result<OpticsContext, ContextIndexError> {
             ]),
         ),
     ];
+    let mut world = Context::with_capacity(1, "hyperlens optics", facts.len());
     for (id, fact) in facts {
         world.add_node(Contextoid::new(
             id,
@@ -120,28 +120,26 @@ pub fn separations_nm(world: &OpticsContext) -> Result<Vec<FloatType>, ContextIn
     match datum(world, SEPARATIONS_NM)? {
         OpticsDatum::Periods(periods) => Ok(periods),
         OpticsDatum::Magnitude(_) => Err(ContextIndexError::new(format!(
-            "node {SEPARATIONS_NM} holds a magnitude, not periods"
+            "contextoid id {SEPARATIONS_NM} holds a magnitude, not periods"
         ))),
     }
 }
 
 /// A single magnitude out of the optical world.
-fn magnitude(world: &OpticsContext, index: usize) -> Result<FloatType, ContextIndexError> {
-    match datum(world, index)? {
+fn magnitude(world: &OpticsContext, id: ContextoidId) -> Result<FloatType, ContextIndexError> {
+    match datum(world, id)? {
         OpticsDatum::Magnitude(value) => Ok(value),
         OpticsDatum::Periods(_) => Err(ContextIndexError::new(format!(
-            "node {index} holds periods, not a magnitude"
+            "contextoid id {id} holds periods, not a magnitude"
         ))),
     }
 }
 
 /// One fact out of the optical world.
-fn datum(world: &OpticsContext, index: usize) -> Result<OpticsDatum, ContextIndexError> {
+fn datum(world: &OpticsContext, id: ContextoidId) -> Result<OpticsDatum, ContextIndexError> {
     world
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(Datable::get_data)
-        .ok_or_else(|| ContextIndexError::new(format!("no optics datum at node {index}")))
+        .get_data_by_id(id)
+        .ok_or_else(|| ContextIndexError::new(format!("no optics datum with contextoid id {id}")))
 }
 
 // =============================================================================

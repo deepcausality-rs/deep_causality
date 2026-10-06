@@ -69,7 +69,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         "Counterfactual: do(airspeed = stall - 25 kn)",
         &counterfactual,
     );
-    Ok(())
+    // Both worlds are printed, the failed one with its error; the run then fails with it.
+    match factual.error().or(counterfactual.error()) {
+        Some(err) => Err(err.clone().into()),
+        None => Ok(()),
+    }
 }
 
 fn run_factual(reading: SensorReading, envelope: EnvelopeContext) -> FlightProcess<Verdict> {

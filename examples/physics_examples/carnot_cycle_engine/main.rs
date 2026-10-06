@@ -30,7 +30,7 @@
 
 use deep_causality_algebra::Real;
 use deep_causality_context::{
-    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     NoSpace, NoSpaceTime, NoTime,
 };
 use deep_causality_core::{CausalEffect, CausalFlow, PropagatingEffect, PropagatingProcess};
@@ -54,22 +54,19 @@ const GAS_CONSTANT: FloatType = const_scalar_from_float!(FloatType, MOLAR_GAS_CO
 /// modelled position or clock, so the spatial, temporal and spacetime slots are empty.
 type EngineContext = Context<Data<FloatType>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
 
-/// Node indices of the engine's world facts; `carnot_engine` adds them in this order.
-/// Hot reservoir temperature (K).
-const TEMP_HOT: usize = 0;
-/// Cold reservoir temperature (K).
-const TEMP_COLD: usize = 1;
-/// Volume expansion ratio of the isothermal stroke, `V_b / V_a`.
-const EXPANSION_RATIO: usize = 2;
-/// Working gas, in moles.
-const MOLES: usize = 3;
-/// Degrees of freedom `f` of a molecule of the working gas, 3 for a monatomic ideal gas. They
-/// fix both `Cv = (f/2) n R` and the adiabatic index `gamma = (f + 2) / f`.
-const DEGREES_OF_FREEDOM: usize = 4;
-/// Starting volume at point A (m^3).
-const VOLUME_A: usize = 5;
-/// How many world facts the engine holds.
-const ENGINE_FACTS: usize = 6;
+/// Contextoid id: hot reservoir temperature (K).
+const TEMP_HOT: ContextoidId = 1;
+/// Contextoid id: cold reservoir temperature (K).
+const TEMP_COLD: ContextoidId = 2;
+/// Contextoid id: volume expansion ratio of the isothermal stroke, `V_b / V_a`.
+const EXPANSION_RATIO: ContextoidId = 3;
+/// Contextoid id: working gas, in moles.
+const MOLES: ContextoidId = 4;
+/// Contextoid id: degrees of freedom `f` of a molecule of the working gas, 3 for a monatomic
+/// ideal gas. They fix both `Cv = (f/2) n R` and the adiabatic index `gamma = (f + 2) / f`.
+const DEGREES_OF_FREEDOM: ContextoidId = 5;
+/// Contextoid id: starting volume at point A (m^3).
+const VOLUME_A: ContextoidId = 6;
 
 /// `f64` is the right precision here: the cycle is four closed-form strokes, not an iterated
 /// solve, so the closure residual sits at a handful of machine epsilons either way. `Float106`
@@ -278,18 +275,19 @@ fn fail<T: Default + Clone + core::fmt::Debug, C: Clone + core::fmt::Debug>(
     ))
 }
 
-/// Builds the engine's world: each fact as a `Data` contextoid at its node index.
+/// Builds the engine's world: each fact as a `Data` contextoid keyed by its contextoid id.
 fn carnot_engine() -> Result<EngineContext, ContextIndexError> {
-    let mut facts = [ZERO; ENGINE_FACTS];
-    facts[TEMP_HOT] = const_scalar_from_int!(FloatType, 500);
-    facts[TEMP_COLD] = const_scalar_from_int!(FloatType, 300);
-    facts[EXPANSION_RATIO] = const_scalar_from_int!(FloatType, 2);
-    facts[MOLES] = const_scalar_from_int!(FloatType, 1);
-    facts[DEGREES_OF_FREEDOM] = const_scalar_from_int!(FloatType, 3);
-    facts[VOLUME_A] = const_scalar_from_float!(FloatType, 0.01);
+    let facts = [
+        (TEMP_HOT, const_scalar_from_int!(FloatType, 500)),
+        (TEMP_COLD, const_scalar_from_int!(FloatType, 300)),
+        (EXPANSION_RATIO, const_scalar_from_int!(FloatType, 2)),
+        (MOLES, const_scalar_from_int!(FloatType, 1)),
+        (DEGREES_OF_FREEDOM, const_scalar_from_int!(FloatType, 3)),
+        (VOLUME_A, const_scalar_from_float!(FloatType, 0.01)),
+    ];
 
-    let mut engine = Context::with_capacity(1, "carnot engine", ENGINE_FACTS);
-    for (id, value) in (1..).zip(facts) {
+    let mut engine = Context::with_capacity(1, "carnot engine", facts.len());
+    for (id, value) in facts {
         engine.add_node(Contextoid::new(
             id,
             ContextoidType::Datoid(Data::new(id, value)),
@@ -298,15 +296,13 @@ fn carnot_engine() -> Result<EngineContext, ContextIndexError> {
     Ok(engine)
 }
 
-/// Reads one world fact out of the engine, or the error naming the node that holds none.
-fn read(engine: &EngineContext, index: usize) -> Result<FloatType, PhysicsError> {
-    engine
-        .get_node(index)
-        .and_then(|node| node.vertex_type().dataoid())
-        .map(|data| data.get_data())
-        .ok_or_else(|| {
-            PhysicsError::CalculationError(format!("the engine holds no Datoid at node {index}"))
-        })
+/// Reads one world fact out of the engine, or the error naming the contextoid id it lacks.
+fn read(engine: &EngineContext, id: ContextoidId) -> Result<FloatType, PhysicsError> {
+    engine.get_data_by_id(id).ok_or_else(|| {
+        PhysicsError::CalculationError(format!(
+            "the engine holds no Datoid with contextoid id {id}"
+        ))
+    })
 }
 
 // --- The cycle's own laws, over the engine's world and constants at the working type ---
@@ -403,13 +399,16 @@ struct EngineState {
 // -----------------------------------------------------------------------------------------
 
 fn print_header(engine: &EngineContext) -> Result<(), PhysicsError> {
+    let t_hot = read(engine, TEMP_HOT)?;
+    let t_cold = read(engine, TEMP_COLD)?;
+    let ratio = read(engine, EXPANSION_RATIO)?;
     println!("=== Carnot Heat Engine ===");
     println!("Precision: {}", core::any::type_name::<FloatType>());
     println!(
         "Reservoirs: T_hot = {:.0} K, T_cold = {:.0} K, expansion ratio {:.0}\n",
-        lower(read(engine, TEMP_HOT)?),
-        lower(read(engine, TEMP_COLD)?),
-        lower(read(engine, EXPANSION_RATIO)?)
+        lower(t_hot),
+        lower(t_cold),
+        lower(ratio)
     );
     Ok(())
 }
