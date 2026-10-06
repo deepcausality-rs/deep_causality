@@ -3,18 +3,26 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! The model: a two-node causal graph `0 → 1` and its Choi–Jamiołkowski factor store, both
-//! factors on the shared Hilbert leg `0`. Configuration only; the stages run in `main.rs`.
+//! The model: a two-node causal graph `0 → 1`, the context its nodes read, and its
+//! Choi–Jamiołkowski factor store, both factors on the shared Hilbert leg `0`. Configuration only;
+//! the stages run in `main.rs`.
 //!
 //! Every constant is declared at the working type through `const_scalar_from_int!` and
 //! `const_scalar_from_float!`, so the compiler resolves them against the alias in `main`.
 
 use crate::{C, FloatType};
-use deep_causality::{BaseCausaloid, CausableGraph, Causaloid, CausaloidGraph, PropagatingEffect};
+use deep_causality::{
+    CausableGraph, CausalEffect, CausalityError, Causaloid, CausaloidGraph, PropagatingProcess,
+};
+use deep_causality_context::{
+    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    NoSpace, NoSpaceTime, NoTime,
+};
 use deep_causality_num::{const_scalar_from_float, const_scalar_from_int};
 use deep_causality_num_complex::Complex;
 use deep_causality_quantum::{FactorSupports, ProcessFactors};
 use deep_causality_tensor::CausalTensor;
+use std::sync::Arc;
 
 // =============================================================================
 // The small numbers the operators are written with
@@ -29,10 +37,6 @@ pub const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
 /// multiple of the identity would commute with everything and prove nothing about diagonality.
 pub const DIAGONAL_FIRST: FloatType = const_scalar_from_int!(FloatType, 3);
 pub const DIAGONAL_SECOND: FloatType = const_scalar_from_int!(FloatType, -1);
-
-/// The observation level each node reports against. It plays no part in the commutativity check;
-/// a node has to compute something, and this is what these compute.
-pub const DETECTION_THRESHOLD: FloatType = const_scalar_from_float!(FloatType, 0.55);
 
 /// The Hilbert leg both factors are declared on, and the two nodes of the graph.
 pub const SHARED_LEG: usize = 0;
@@ -80,35 +84,88 @@ pub fn diagonal() -> Result<CausalTensor<C>, ModelBuildError> {
 // The graph
 // =============================================================================
 
-/// What each node does: report whether an observation passed the detection threshold.
+/// What the nodes read: the observation level each one reports against.
+///
+/// The check needs no position, clock or event, so the spatial, temporal and spacetime slots are
+/// the absent ones. The data node is at the working type, so the threshold follows the alias with
+/// the factors.
+pub type DetectorContext =
+    Context<Data<FloatType>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
+
+/// One node of the graph: a detector reading its threshold from the shared [`DetectorContext`].
+pub type Detector = Causaloid<FloatType, bool, (), Arc<DetectorContext>>;
+
+/// Node index of the detection threshold in the [`DetectorContext`].
+const DETECTION_THRESHOLD: usize = 0;
+
+/// The detectors' context: one `Data` node holding the detection threshold, `0.55`. It plays no
+/// part in the commutativity check; a node has to compute something, and this is what these
+/// compute.
+fn detector_context() -> Result<DetectorContext, ContextIndexError> {
+    let mut context = Context::with_capacity(1, "detection threshold", 1);
+    let threshold: FloatType = const_scalar_from_float!(FloatType, 0.55);
+    context.add_node(Contextoid::new(
+        1,
+        ContextoidType::Datoid(Data::new(1, threshold)),
+    ))?;
+    Ok(context)
+}
+
+/// The detection threshold, read off the context.
+fn detection_threshold(context: &DetectorContext) -> Result<FloatType, CausalityError> {
+    context
+        .get_node(DETECTION_THRESHOLD)
+        .and_then(|node| node.vertex_type().dataoid())
+        .map(Datable::get_data)
+        .ok_or_else(|| {
+            CausalityError::MissingParameter("the detector context holds no detection threshold")
+        })
+}
+
+/// What each node does: report whether an observation passed the detection threshold the context
+/// holds.
 ///
 /// It is written out here rather than taken from the engine's test helpers, which fix their value
 /// type at `f64`. Borrowing them would pin the graph to one precision while the factors followed
 /// the alias, which is how a precision parameter quietly stops being one.
-fn passes_threshold(observation: FloatType) -> PropagatingEffect<bool> {
-    PropagatingEffect::pure(observation >= DETECTION_THRESHOLD)
+fn passes_threshold(
+    observation: CausalEffect<FloatType>,
+    _state: (),
+    context: Option<Arc<DetectorContext>>,
+) -> PropagatingProcess<bool, (), Arc<DetectorContext>> {
+    let Some(context) = context else {
+        return PropagatingProcess::from_error(CausalityError::MissingContext());
+    };
+    let threshold = match detection_threshold(&context) {
+        Ok(threshold) => threshold,
+        Err(error) => return PropagatingProcess::from_error(error),
+    };
+    match observation.into_value() {
+        Some(observation) => PropagatingProcess::pure(observation >= threshold),
+        None => PropagatingProcess::from_error(CausalityError::ValueNotAvailable()),
+    }
 }
 
 /// One node of the graph.
-fn detector(id: u64) -> BaseCausaloid<FloatType, bool> {
-    Causaloid::new(
+fn detector(id: u64, context: &Arc<DetectorContext>) -> Detector {
+    Causaloid::new_with_context(
         id,
         passes_threshold,
+        Arc::clone(context),
         "reports whether an observation passed the detection threshold",
     )
 }
 
-/// A two-node graph `0 → 1`, frozen or dynamic.
-pub fn two_node_graph(
-    frozen: bool,
-) -> Result<CausaloidGraph<BaseCausaloid<FloatType, bool>>, ModelBuildError> {
+/// A two-node graph `0 → 1` whose nodes share one [`DetectorContext`], frozen or dynamic.
+pub fn two_node_graph(frozen: bool) -> Result<CausaloidGraph<Detector>, ModelBuildError> {
+    let context = Arc::new(detector_context().map_err(|_| ModelBuildError::Context)?);
     let mut graph = CausaloidGraph::new(0);
 
     let source = graph
-        .add_causaloid(detector(SOURCE_ID))
+        .add_causaloid(detector(SOURCE_ID, &context))
         .map_err(|_| ModelBuildError::Node(SOURCE_NODE))?;
     let target = graph
-        .add_causaloid(detector(TARGET_ID))
+        .add_causaloid(detector(TARGET_ID, &context))
         .map_err(|_| ModelBuildError::Node(TARGET_NODE))?;
 
     graph
@@ -147,6 +204,8 @@ pub fn factors_on_shared_leg(
 pub enum ModelBuildError {
     /// An operator could not be formed as a 2x2 matrix.
     Operator,
+    /// The detectors' context could not be built.
+    Context,
     /// A node could not be added to the graph.
     Node(usize),
     /// An edge could not be added between two nodes.
@@ -157,6 +216,7 @@ impl core::fmt::Display for ModelBuildError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             ModelBuildError::Operator => write!(f, "an operator is not a 2x2 matrix"),
+            ModelBuildError::Context => write!(f, "the detector context could not be built"),
             ModelBuildError::Node(n) => write!(f, "node {n} could not be added"),
             ModelBuildError::Edge(a, b) => write!(f, "the edge {a} -> {b} could not be added"),
         }

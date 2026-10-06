@@ -3,19 +3,27 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! The quantum causal model: a two-node causal graph and its Choi–Jamiołkowski
-//! factor store. Configuration only — no execution — so the freeze scenarios in
+//! The quantum causal model: a two-node causal graph, the context its nodes read, and its
+//! Choi–Jamiołkowski factor store. Configuration only — no execution — so the freeze scenarios in
 //! `main.rs` read cleanly.
 
 use crate::FloatType;
 use crate::constants::{
-    C, DETECTION_THRESHOLD, DIAGONAL_FIRST, DIAGONAL_SECOND, ONE, SHARED_LEG, SOURCE_ID,
-    SOURCE_NODE, TARGET_ID, TARGET_NODE, ZERO,
+    C, DIAGONAL_FIRST, DIAGONAL_SECOND, ONE, SHARED_LEG, SOURCE_ID, SOURCE_NODE, TARGET_ID,
+    TARGET_NODE, ZERO,
 };
-use deep_causality::{BaseCausaloid, CausableGraph, Causaloid, CausaloidGraph, PropagatingEffect};
+use deep_causality::{
+    CausableGraph, CausalEffect, CausalityError, Causaloid, CausaloidGraph, PropagatingProcess,
+};
+use deep_causality_context::{
+    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    NoSpace, NoSpaceTime, NoTime,
+};
+use deep_causality_num::const_scalar_from_float;
 use deep_causality_num_complex::Complex;
 use deep_causality_quantum::{FactorSupports, ProcessFactors};
 use deep_causality_tensor::CausalTensor;
+use std::sync::Arc;
 
 /// A real entry of an operator matrix.
 fn real(value: FloatType) -> C {
@@ -48,35 +56,91 @@ pub fn diagonal() -> Result<CausalTensor<C>, TopologyBuildError> {
     ])
 }
 
-/// What each node does: report whether an observation passed the detection threshold.
+/// What the nodes read: the observation level each one reports against.
+///
+/// The check needs no position, clock or event, so the spatial, temporal and spacetime slots are
+/// the absent ones. The data node is at the working type, so the threshold follows the alias with
+/// the factors.
+pub type DetectorContext =
+    Context<Data<FloatType>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
+
+/// One node of the graph: a detector reading its threshold from the shared [`DetectorContext`].
+pub type Detector = Causaloid<FloatType, bool, (), Arc<DetectorContext>>;
+
+/// Node index of the detection threshold in the [`DetectorContext`].
+const DETECTION_THRESHOLD: usize = 0;
+
+/// The detectors' context: one `Data` node holding the detection threshold, `0.55`.
+///
+/// The threshold plays no part in the commutativity check; a node has to compute something, and
+/// this is what these compute.
+fn detector_context() -> Result<DetectorContext, ContextIndexError> {
+    let mut context = Context::with_capacity(1, "detection threshold", 1);
+    let threshold: FloatType = const_scalar_from_float!(FloatType, 0.55);
+    context.add_node(Contextoid::new(
+        1,
+        ContextoidType::Datoid(Data::new(1, threshold)),
+    ))?;
+    Ok(context)
+}
+
+/// The detection threshold, read off the context.
+fn detection_threshold(context: &DetectorContext) -> Result<FloatType, CausalityError> {
+    context
+        .get_node(DETECTION_THRESHOLD)
+        .and_then(|node| node.vertex_type().dataoid())
+        .map(Datable::get_data)
+        .ok_or_else(|| {
+            CausalityError::MissingParameter("the detector context holds no detection threshold")
+        })
+}
+
+/// What each node does: report whether an observation passed the detection threshold the context
+/// holds.
 ///
 /// The node's own rule is incidental to the check this example is about — the commutativity
 /// condition is a statement about the factors, not about what the nodes compute. It is written out
 /// here rather than borrowed from the library's test helpers, because those are fixed at `f64` and
 /// would pin the graph to one precision while the factors followed the alias.
-fn passes_threshold(observation: FloatType) -> PropagatingEffect<bool> {
-    PropagatingEffect::pure(observation >= DETECTION_THRESHOLD)
+fn passes_threshold(
+    observation: CausalEffect<FloatType>,
+    _state: (),
+    context: Option<Arc<DetectorContext>>,
+) -> PropagatingProcess<bool, (), Arc<DetectorContext>> {
+    let Some(context) = context else {
+        return PropagatingProcess::from_error(CausalityError::MissingContext());
+    };
+    let threshold = match detection_threshold(&context) {
+        Ok(threshold) => threshold,
+        Err(error) => return PropagatingProcess::from_error(error),
+    };
+    match observation.into_value() {
+        Some(observation) => PropagatingProcess::pure(observation >= threshold),
+        None => PropagatingProcess::from_error(CausalityError::ValueNotAvailable()),
+    }
 }
 
 /// One node of the graph.
-fn detector(id: u64) -> BaseCausaloid<FloatType, bool> {
-    Causaloid::new(
+fn detector(id: u64, context: &Arc<DetectorContext>) -> Detector {
+    Causaloid::new_with_context(
         id,
         passes_threshold,
+        Arc::clone(context),
         "reports whether an observation passed the detection threshold",
     )
 }
 
-/// A fresh two-node causal graph `0 → 1` whose nodes each carry one qubit.
-pub fn two_node_graph() -> Result<CausaloidGraph<BaseCausaloid<FloatType, bool>>, TopologyBuildError>
-{
+/// A fresh two-node causal graph `0 → 1` whose nodes each carry one qubit and share one
+/// [`DetectorContext`].
+pub fn two_node_graph() -> Result<CausaloidGraph<Detector>, TopologyBuildError> {
+    let context = Arc::new(detector_context().map_err(|_| TopologyBuildError::Context)?);
     let mut graph = CausaloidGraph::new(0);
 
     let source = graph
-        .add_causaloid(detector(SOURCE_ID))
+        .add_causaloid(detector(SOURCE_ID, &context))
         .map_err(|_| TopologyBuildError::Node(SOURCE_NODE))?;
     let target = graph
-        .add_causaloid(detector(TARGET_ID))
+        .add_causaloid(detector(TARGET_ID, &context))
         .map_err(|_| TopologyBuildError::Node(TARGET_NODE))?;
 
     graph
@@ -108,6 +172,8 @@ pub fn factors_on_shared_leg(
 pub enum TopologyBuildError {
     /// An operator could not be formed as a 2x2 matrix.
     Operator,
+    /// The detectors' context could not be built.
+    Context,
     /// A node could not be added to the graph.
     Node(usize),
     /// An edge could not be added between two nodes.
@@ -118,6 +184,7 @@ impl core::fmt::Display for TopologyBuildError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             TopologyBuildError::Operator => write!(f, "an operator is not a 2x2 matrix"),
+            TopologyBuildError::Context => write!(f, "the detector context could not be built"),
             TopologyBuildError::Node(n) => write!(f, "node {n} could not be added"),
             TopologyBuildError::Edge(a, b) => write!(f, "the edge {a} -> {b} could not be added"),
         }
