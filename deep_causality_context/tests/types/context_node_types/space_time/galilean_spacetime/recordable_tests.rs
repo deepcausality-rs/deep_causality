@@ -8,7 +8,8 @@
 //!
 //! Corner cases (rows A to K): C every other `SpaceTimeRecord` variant refused,
 //! `test_every_other_variant_is_refused`; F/G zero and negative coordinates,
-//! `test_zero_and_negative_round_trip`; I non-finite, `test_non_finite_round_trips`; K `Float106`
+//! `test_zero_and_negative_round_trip`; I non-finite, `test_non_finite_round_trips`; J a finite value past the range of `f32` and `BFloat16` refused,
+//! `test_a_value_past_the_scalar_range_is_refused`; K `Float106`
 //! narrows and `BFloat16` widens, `test_precision_is_spent_at_the_bound`; every other row n/a.
 use deep_causality_context::{GalileanSpacetime, TimeScale};
 use deep_causality_context_store::{ProjectionError, Recordable, SpaceTimeRecord};
@@ -116,5 +117,26 @@ fn test_precision_is_spent_at_the_bound() {
     assert_eq!(
         GalileanSpacetime::<BFloat16>::from_record(2, narrow.to_record().unwrap()),
         Ok(narrow)
+    );
+}
+
+#[test]
+fn test_a_value_past_the_scalar_range_is_refused() {
+    // Row J. 1e300 is a finite f64 past the range of f32 and BFloat16, which would hold it as an
+    // infinity; the restore refuses it and names the value.
+    let record = SpaceTimeRecord::Galilean {
+        t: 1.0,
+        x: 1e300,
+        y: 1.0,
+        z: 1.0,
+        scale: TimeScale::Second,
+    };
+    assert_eq!(
+        GalileanSpacetime::<f32>::from_record(4, record),
+        Err(ProjectionError::Scalar(4, 1e300))
+    );
+    assert_eq!(
+        GalileanSpacetime::<BFloat16>::from_record(4, record),
+        Err(ProjectionError::Scalar(4, 1e300))
     );
 }

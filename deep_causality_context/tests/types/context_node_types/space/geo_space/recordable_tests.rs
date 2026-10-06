@@ -11,7 +11,8 @@
 //! identifier, `test_every_other_variant_is_refused`; F/G zero and negative coordinates,
 //! `test_zero_and_negative_round_trip`; I a non-finite or out-of-range coordinate refused,
 //! `test_a_record_that_names_no_point_is_refused`;
-//! K `Float106` narrows and `BFloat16` widens, `test_precision_is_spent_at_the_bound`; every
+//! J a finite value past the range of `f32` and `BFloat16` refused,
+//! `test_a_value_past_the_scalar_range_is_refused`; K `Float106` narrows and `BFloat16` widens, `test_precision_is_spent_at_the_bound`; every
 //! other row n/a.
 use deep_causality_context::{GeoSpace, VerticalDatum};
 use deep_causality_context_store::{ProjectionError, Recordable, SpaceRecord};
@@ -179,5 +180,25 @@ fn test_precision_is_spent_at_the_bound() {
     assert_eq!(
         GeoSpace::<BFloat16>::from_record(2, narrow_record),
         Ok(narrow)
+    );
+}
+
+#[test]
+fn test_a_value_past_the_scalar_range_is_refused() {
+    // Row J. 1e300 is a finite f64 past the range of f32 and BFloat16, which would hold it as an
+    // infinity; the restore refuses it and names the value.
+    let record = SpaceRecord::Geo {
+        lat: 10.0,
+        lon: 20.0,
+        alt: 1e300,
+        datum: VerticalDatum::WGS84,
+    };
+    assert_eq!(
+        GeoSpace::<f32>::from_record(4, record),
+        Err(ProjectionError::Scalar(4, 1e300))
+    );
+    assert_eq!(
+        GeoSpace::<BFloat16>::from_record(4, record),
+        Err(ProjectionError::Scalar(4, 1e300))
     );
 }

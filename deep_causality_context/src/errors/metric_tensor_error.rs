@@ -6,7 +6,8 @@
 use core::error::Error;
 use core::fmt;
 
-/// A metric tensor refused by [`MetricTensor4D::update_metric_tensor`](crate::MetricTensor4D):
+/// A metric tensor refused by
+/// [`MetricTensor4D::update_metric_tensor`](crate::MetricTensor4D::update_metric_tensor):
 /// [`MetricTensorErrorEnum`] names the rule it breaks.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct MetricTensorError(pub MetricTensorErrorEnum);

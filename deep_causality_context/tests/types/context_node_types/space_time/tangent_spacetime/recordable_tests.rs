@@ -10,7 +10,8 @@
 //! `test_every_other_variant_is_refused`; F/G zero and negative coordinates,
 //! `test_zero_and_negative_round_trip`; I a non-finite coordinate round-trips,
 //! `test_non_finite_round_trips`, and a non-finite metric entry is refused,
-//! `test_a_record_whose_tensor_is_not_a_lorentzian_metric_is_refused`; K `Float106`
+//! `test_a_record_whose_tensor_is_not_a_lorentzian_metric_is_refused`; J a finite value past the range of `f32` and `BFloat16` refused,
+//! `test_a_value_past_the_scalar_range_is_refused`; K `Float106`
 //! narrows and `BFloat16` widens, `test_precision_is_spent_at_the_bound`; every other row n/a.
 //! The metric tensor is symmetric and Lorentzian, with every entry of its upper triangle distinct,
 //! so a misplaced or default metric is caught: `test_the_stored_metric_is_restored_not_the_default`.
@@ -228,4 +229,34 @@ fn test_a_record_whose_tensor_is_not_a_lorentzian_metric_is_refused() {
             Err(ProjectionError::Rejected(6, expected.to_string()))
         );
     }
+}
+
+#[test]
+fn test_a_value_past_the_scalar_range_is_refused() {
+    // Row J. 1e300 is a finite f64 past the range of f32 and BFloat16, which would hold it as an
+    // infinity; the restore refuses it and names the value.
+    let record = SpaceTimeRecord::Tangent {
+        t: 0.0,
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+        dt: 1.0,
+        dx: 0.0,
+        dy: 0.0,
+        dz: 0.0,
+        metric: [
+            [-1.0, 0.0, 0.0, 0.0],
+            [0.0, 1e300, 0.0, 0.0],
+            [0.0, 0.0, 1.0, 0.0],
+            [0.0, 0.0, 0.0, 1.0],
+        ],
+    };
+    assert_eq!(
+        TangentSpacetime::<f32>::from_record(4, record),
+        Err(ProjectionError::Scalar(4, 1e300))
+    );
+    assert_eq!(
+        TangentSpacetime::<BFloat16>::from_record(4, record),
+        Err(ProjectionError::Scalar(4, 1e300))
+    );
 }
