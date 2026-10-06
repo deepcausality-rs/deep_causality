@@ -120,13 +120,17 @@ The example combines three DeepCausality pieces with little glue:
 - **The Arrow calculus.** `Rk4` is the integration operator; a forecast is one `iterate_n` call.
 - **Precision as a parameter.** The rate field and the march are written once over the `Scalar`
   bound and instantiated at `f32`, `f64`, and `Float106`. One flow model, three precisions.
-- **The causal monad.** `PropagatingEffect` sequences *simulate* then *analyse*, short-circuiting
+- **The causal monad.** A `CausalFlow` sequences *simulate* then *analyse*, short-circuiting
   through the error channel if a trajectory leaves the finite range.
+- **The context.** The flow's physical parameters `σ = 10`, `ρ = 28`, `β = 8/3` are a
+  `deep_causality_context` `Context` with one `Data` contextoid each, attached to the flow with
+  `.context(...)`; the simulate stage reads them from the flow's `Context` channel. The step,
+  initial state, sampling and threshold are run controls and stay in `main.rs`.
 
 | File | Responsibility |
 | --- | --- |
 | `main.rs` | The workflow: the monadic *simulate → analyse* pipeline. |
-| `model.rs` | The scalar-generic `Vec3`, the convective rate field, the `Rk4` march, the cross-precision distance and horizon helpers, and the report types. |
+| `model.rs` | The convective world (`ConvectionContext`), the scalar-generic `Vec3`, the convective rate field, the `Rk4` march, the cross-precision distance and horizon helpers, and the report types. |
 | `print_utils.rs` | Presentation only: the divergence table and the horizon summary. |
 
 The model layer holds all the physics: a three-line rate field and a one-line march, written once

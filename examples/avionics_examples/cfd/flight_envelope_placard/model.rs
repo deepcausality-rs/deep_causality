@@ -4,15 +4,17 @@
  */
 
 //! Domain logic (the "how" of the physics): the atmosphere interpolation and the per-point
-//! placard computation. Configuration (matrix location, shock model) lives in `model_config`;
-//! tuned values in `constants`.
+//! placard computation, both reading the placard world of the `.prepare` rig. Configuration
+//! (matrix location, the placard world, shock model) lives in `model_config`; the gate placards in
+//! `constants`.
 
 use crate::FloatType;
-use crate::constants;
-use deep_causality_algebra::Real;
-use deep_causality_cfd::{
-    FittedNormalShock, FromTableRow, GateSeq, PhysicsError, StudyView, TableRow,
+use crate::model_config::{
+    AIR_MEAN_MOLECULAR_MASS_KG, ALTITUDE_M, GAMMA, NOSE_RADIUS_M, NUMBER_DENSITY, PlacardContext,
+    PlacardRig, SOUND_SPEED_MS, SUTTON_GRAVES_K, TEMPERATURE_K, profile, scalar,
 };
+use deep_causality_algebra::Real;
+use deep_causality_cfd::{FromTableRow, GateSeq, PhysicsError, StudyView, TableRow};
 use deep_causality_num::lift;
 
 /// One Mach-altitude test point: the case axis, read from the matrix by column name.
@@ -72,31 +74,61 @@ impl TableRow for PlacardRow {
     }
 }
 
-/// The freestream `(n_tot m⁻³, T K, a m/s)` at `alt_m`, linearly interpolated between the
-/// cited atmosphere rows. Altitudes outside the table are an error naming the valid range.
-pub fn atmosphere_at(alt_m: FloatType) -> Result<(FloatType, FloatType, FloatType), String> {
-    let floor = constants::ATMOSPHERE[0].0;
-    let ceiling = constants::ATMOSPHERE[constants::ATMOSPHERE.len() - 1].0;
-    if alt_m < lift::<FloatType>(floor) || alt_m > lift::<FloatType>(ceiling) {
-        return Err(format!(
-            "altitude {:.1} km is outside the atmosphere table ({:.0} to {:.0} km); \
-             fix the matrix row or extend constants::ATMOSPHERE",
-            alt_m / lift::<FloatType>(1000.0),
-            floor / 1000.0,
-            ceiling / 1000.0
+/// The atmosphere rows `(altitude m, n_tot m⁻³, T K, a m/s)` of the placard world, ascending in
+/// altitude. Profiles of unequal length are an error.
+fn atmosphere_rows(
+    world: &PlacardContext,
+) -> Result<Vec<(FloatType, FloatType, FloatType, FloatType)>, PhysicsError> {
+    let altitude = profile(world, ALTITUDE_M)?;
+    let density = profile(world, NUMBER_DENSITY)?;
+    let temperature = profile(world, TEMPERATURE_K)?;
+    let sound = profile(world, SOUND_SPEED_MS)?;
+    let rows = altitude.len();
+    if [density.len(), temperature.len(), sound.len()]
+        .iter()
+        .any(|&len| len != rows)
+    {
+        return Err(PhysicsError::CalculationError(
+            "the placard world's atmosphere profiles differ in length".into(),
         ));
     }
-    for pair in constants::ATMOSPHERE.windows(2) {
+    Ok(altitude
+        .into_iter()
+        .zip(density)
+        .zip(temperature)
+        .zip(sound)
+        .map(|(((a, n), t), c)| (a, n, t, c))
+        .collect())
+}
+
+/// The freestream `(n_tot m⁻³, T K, a m/s)` at `alt_m`, linearly interpolated between the
+/// world's atmosphere rows. Altitudes outside the table are an error naming the valid range.
+pub fn atmosphere_at(
+    world: &PlacardContext,
+    alt_m: FloatType,
+) -> Result<(FloatType, FloatType, FloatType), String> {
+    let atmosphere = atmosphere_rows(world).map_err(|e| e.to_string())?;
+    let (Some(&(floor, ..)), Some(&(ceiling, ..))) = (atmosphere.first(), atmosphere.last()) else {
+        return Err("the placard world's atmosphere table is empty".into());
+    };
+    if alt_m < floor || alt_m > ceiling {
+        return Err(format!(
+            "altitude {:.1} km is outside the atmosphere table ({:.0} to {:.0} km); \
+             fix the matrix row or extend the atmosphere in model_config::placard_world",
+            alt_m / lift::<FloatType>(1000.0),
+            floor / lift::<FloatType>(1000.0),
+            ceiling / lift::<FloatType>(1000.0)
+        ));
+    }
+    for pair in atmosphere.windows(2) {
         let (a0, n0, temp0, c0) = pair[0];
         let (a1, n1, temp1, c1) = pair[1];
-        if alt_m <= lift::<FloatType>(a1) {
-            let w =
-                (alt_m - lift::<FloatType>(a0)) / (lift::<FloatType>(a1) - lift::<FloatType>(a0));
+        if alt_m <= a1 {
+            let w = (alt_m - a0) / (a1 - a0);
             return Ok((
-                lift::<FloatType>(n0) + w * (lift::<FloatType>(n1) - lift::<FloatType>(n0)),
-                lift::<FloatType>(temp0)
-                    + w * (lift::<FloatType>(temp1) - lift::<FloatType>(temp0)),
-                lift::<FloatType>(c0) + w * (lift::<FloatType>(c1) - lift::<FloatType>(c0)),
+                n0 + w * (n1 - n0),
+                temp0 + w * (temp1 - temp0),
+                c0 + w * (c1 - c0),
             ));
         }
     }
@@ -114,20 +146,17 @@ pub fn atmosphere_at(alt_m: FloatType) -> Result<(FloatType, FloatType, FloatTyp
 /// `T₀ = T₂·(1 + (γ−1)/2·M₂²)`. For a calorically perfect gas this equals the freestream total
 /// temperature (the shock is adiabatic), so the branch is exactly continuous at Mach 1, where
 /// the shock-free isentropic form takes over.
-pub fn placard_point(
-    shock: &FittedNormalShock<FloatType>,
-    point: &FlightPoint,
-) -> Result<PlacardRow, PhysicsError> {
+pub fn placard_point(rig: &PlacardRig, point: &FlightPoint) -> Result<PlacardRow, PhysicsError> {
+    let (shock, world) = rig;
     let (mach, alt_km) = (point.mach, point.alt_km);
     let here = format!("M {mach:.2} / {alt_km:.1} km");
-    let (n_inf, t_inf, a_inf) = atmosphere_at(alt_km * lift::<FloatType>(1000.0))
+    let (n_inf, t_inf, a_inf) = atmosphere_at(world, alt_km * lift::<FloatType>(1000.0))
         .map_err(|e| PhysicsError::CalculationError(format!("grid point {here}: {e}")))?;
-    let rho_inf = n_inf * lift::<FloatType>(constants::AIR_MEAN_MOLECULAR_MASS_KG);
+    let rho_inf = n_inf * scalar(world, AIR_MEAN_MOLECULAR_MASS_KG)?;
     let v = mach * a_inf;
     let q_pa = lift::<FloatType>(0.5) * rho_inf * v * v;
 
-    let half_gm1 =
-        lift::<FloatType>(0.5) * (lift::<FloatType>(constants::GAMMA) - lift::<FloatType>(1.0));
+    let half_gm1 = lift::<FloatType>(0.5) * (scalar(world, GAMMA)? - lift::<FloatType>(1.0));
     let t0_k = if mach >= lift::<FloatType>(1.0) {
         let post = shock.post_shock(t_inf, n_inf, mach).map_err(|e| {
             PhysicsError::CalculationError(format!(
@@ -142,8 +171,8 @@ pub fn placard_point(
         t_inf * (lift::<FloatType>(1.0) + half_gm1 * mach * mach)
     };
 
-    let qdot_w_m2 = lift::<FloatType>(constants::SUTTON_GRAVES_K)
-        * Real::sqrt(rho_inf / lift::<FloatType>(constants::NOSE_RADIUS_M))
+    let qdot_w_m2 = scalar(world, SUTTON_GRAVES_K)?
+        * Real::sqrt(rho_inf / scalar(world, NOSE_RADIUS_M)?)
         * v
         * v
         * v;

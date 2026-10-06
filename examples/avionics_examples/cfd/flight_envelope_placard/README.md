@@ -52,7 +52,11 @@ matrix restores the recorded green table.
    on `read_table`), which validates the header, the `#units` row, and every cell. A missing
    `mach` or `alt` column, a non-numeric cell, or an empty matrix is a setup failure (exit 2)
    naming the file and the fix.
-2. **Compute.** `sweep` maps the placard closure over the matrix rows in input order. Per
+2. **Compute.** `prepare` builds the shared rig: the placard world, a `deep_causality_context`
+   `Context` holding the US-1976 atmosphere profiles, gamma, the air molecular mass, the
+   Sutton-Graves constant and the nose radius (one `Data` contextoid each), and the fitted shock
+   built at the world's gamma. `sweep` maps the placard closure over the matrix rows in input
+   order, reading every physical input from the rig's world. Per
    point: the freestream `(n, T, a)` interpolates linearly from the atmosphere table, `q`
    follows from the density and the flight speed, the stagnation temperature goes through the
    exact Rankine-Hugoniot jump (`FittedNormalShock::post_shock`, then isentropic
@@ -109,16 +113,17 @@ outside the atmosphere table) exit 2 with the file and the fix named.
 |---|---|
 | `main.rs` | The whole study as one `CfdFlow::study` expression, and the exit codes |
 | [`model.rs`](model.rs) | Domain logic: atmosphere interpolation and the per-point placard computation |
-| [`model_config.rs`](model_config.rs) | Configuration: matrix and table paths, the fitted shock model |
-| `constants.rs` | Every constant with its justification: gas model, Sutton-Graves, placards, atmosphere |
+| [`model_config.rs`](model_config.rs) | Configuration: matrix and table paths, the placard world (gas model, Sutton-Graves, nose radius, atmosphere, each with its justification) and the rig of world and fitted shock |
+| `constants.rs` | The q-max and stagnation-temperature placards the gates check, with their justification |
 | `mach_alt_matrix.csv` | The default sixteen-point corridor (passes all gates) |
 | `mach_alt_matrix_exceeds.csv` | The corridor plus one point beyond the q-max placard (the negative scenario) |
 | `placard_table.csv` | The written placard table of the recorded default run |
 | `output.txt` | The recorded console output of the default run |
 
 The machinery used: the `CfdFlow` study grammar and `GateSeq` from `deep_causality_cfd`,
-`FittedNormalShock` from the same crate's compressible solver, and `read_rows` and `write_rows`
-from `deep_causality_file` (called by `matrix` and `record`).
+`FittedNormalShock` from the same crate's compressible solver, `Context` from
+`deep_causality_context` for the placard world, and `read_rows` and `write_rows` from
+`deep_causality_file` (called by `matrix` and `record`).
 
 ## References
 

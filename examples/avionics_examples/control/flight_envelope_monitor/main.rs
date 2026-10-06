@@ -25,35 +25,34 @@ mod model_types;
 
 use crate::model_types::SafetyVerdict;
 use deep_causality::*;
+use deep_causality_context::ContextIndexError;
 use deep_causality_core::CausalFlow;
 use model::{estimate_step, health_fold, kalman_step, run_envelope_graph, run_sensor_collection};
-use model_config::{nominal_aircraft_config, nominal_sensor_reading, seed_estimate_for};
-use model_types::{AircraftConfig, FlightProcess, FlightState, FlightStateEstimate, SensorReading};
+use model_config::{nominal_airframe, nominal_sensor_reading, seed_estimate_for};
+use model_types::{
+    AirframeContext, FlightProcess, FlightState, FlightStateEstimate, SensorReading,
+};
 
-fn main() {
+fn main() -> Result<(), ContextIndexError> {
     println!("=== Flight Envelope Monitor — Stateful Three-Stage Pipeline ===\n");
 
-    let aircraft_config = nominal_aircraft_config();
+    let airframe = nominal_airframe()?;
     let nominal_reading = nominal_sensor_reading();
     let seed_estimate = seed_estimate_for(&nominal_reading);
 
     let nominal_final = run_pipeline(
         nominal_reading.clone(),
         seed_estimate.clone(),
-        aircraft_config.clone(),
+        airframe.clone(),
         false,
     );
     print_section("Nominal", &nominal_final);
 
-    let failing_final = run_pipeline(
-        nominal_reading,
-        seed_estimate,
-        aircraft_config.clone(),
-        true,
-    );
+    let failing_final = run_pipeline(nominal_reading, seed_estimate, airframe, true);
     print_section("Failing sensor", &failing_final);
 
     println!("=== Done ===");
+    Ok(())
 }
 
 /// Daisy-chained pipeline: one initial `PropagatingProcess`, five `bind`s.
@@ -63,13 +62,13 @@ fn main() {
 fn run_pipeline(
     reading: SensorReading,
     seed_estimate: FlightStateEstimate,
-    config: AircraftConfig,
+    airframe: AirframeContext,
     failing_airspeed: bool,
 ) -> FlightProcess<FlightStateEstimate> {
     let initial: FlightProcess<SensorReading> = PropagatingProcess::new(
         Ok(CausalEffect::value(reading)),
         FlightState::default(),
-        Some(config),
+        Some(airframe),
         EffectLog::new(),
     );
 

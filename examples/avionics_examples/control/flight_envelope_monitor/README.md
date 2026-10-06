@@ -2,7 +2,7 @@
 
 This example monitors a flight envelope with a three-stage stateful pipeline: a
 `Causaloid` collection, a `CausalMonad` `bind`-chain, and a `Causaloid`
-hypergraph compose through a single `PropagatingProcess<T, FlightState, AircraftConfig>`.
+hypergraph compose through a single `PropagatingProcess<T, FlightState, AirframeContext>`.
 
 ## Getting Started
 
@@ -62,14 +62,14 @@ verdict.
 
 ## The two channels
 
-Every stage produces a `PropagatingProcess<T, FlightState, AircraftConfig>`,
+Every stage produces a `PropagatingProcess<T, FlightState, AirframeContext>`,
 which carries two distinct channels:
 
-| Channel                                | Purpose           | What flows                                                                                                              |
-|----------------------------------------|-------------------|-------------------------------------------------------------------------------------------------------------------------|
-| **Value channel** (`T`)                | Per-stage payload | Type *changes* across stages: `SensorReading → f64 → FlightStateEstimate → FlightStateEstimate`                         |
-| **State channel** (`FlightState`)      | Markovian state   | *Accumulates* across stages: covariance evolves via Kalman, risk accumulates from sensor degradation and envelope nodes |
-| **Context channel** (`AircraftConfig`) | Read-only config  | Mass, MTOW, stall margin, service ceiling; fixed for one monitor cycle                                                  |
+| Channel                                 | Purpose           | What flows                                                                                                              |
+|-----------------------------------------|-------------------|-------------------------------------------------------------------------------------------------------------------------|
+| **Value channel** (`T`)                 | Per-stage payload | Type *changes* across stages: `SensorReading → f64 → FlightStateEstimate → FlightStateEstimate`                         |
+| **State channel** (`FlightState`)       | Markovian state   | *Accumulates* across stages: covariance evolves via Kalman, risk accumulates from sensor degradation and envelope nodes |
+| **Context channel** (`AirframeContext`) | Read-only world   | Mass, MTOW, stall margin, service ceiling, normal operating bands; fixed for one monitor cycle                          |
 
 The State channel shows why the framework provides `S` separately from `T`:
 the value channel cannot carry the cumulative risk because its type changes
@@ -82,7 +82,7 @@ between stages.
 │ Stage 1: Causaloid collection                                        │
 │   value:   SensorReading ──[5 per-sensor closures]──► f64 (joint)    │
 │   state:   FlightState::default() ── threaded ──►                    │
-│   context: AircraftConfig ── threaded ──►                            │
+│   context: AirframeContext ── threaded ──►                           │
 │   call:    sensors.evaluate_collection_stateful(&inc, All, _)        │
 └──────────────────────────────────────────────────────────────────────┘
                                 │
@@ -137,8 +137,8 @@ The graph reasoning trait
 `CausaloidGraph<Causaloid<V, V, S, C>>`: the framework constrains the
 graph's input value type to **equal** its output value type. The graph
 operates with `V = FlightStateEstimate` end-to-end; each envelope node reads
-the estimate from the value channel and `AircraftConfig` from the context,
-then accumulates an envelope-specific risk increment into `state.risk`.
+the estimate from the value channel and the airframe from the context, then
+accumulates an envelope-specific risk increment into `state.risk`.
 
 `main.rs` derives the final `SafetyVerdict` (`Nominal | Caution | Warning | Failure`)
 from the final `state.risk` after all three stages have run. The graph does
@@ -168,12 +168,14 @@ combines both: continuous HUMS trends *and* discrete BITE flags.
 
 ### Slow vs. fast separation: Context vs. State
 
-`AircraftConfig` (mass, MTOW, stall-margin multiplier, service ceiling)
-is read-only and supplied once per cycle in the framework's `Context`
-channel, as W&B and certified-ceiling data load at dispatch and stay fixed
-during flight. `FlightState` (estimate, covariance, risk) lives in the
-`State` channel and accumulates across stages. Risk in `Context` or config
-in `State` would type-check but blur the separation of slow and fast data.
+The airframe (mass, MTOW, stall-margin multiplier, service ceiling, and the
+normal operating bands) is an `AirframeContext`, a `deep_causality_context`
+`Context` with one `Data` contextoid per quantity. It is read-only and
+supplied once per cycle in the framework's `Context` channel, as W&B and
+certified-ceiling data load at dispatch and stay fixed during flight.
+`FlightState` (estimate, covariance, risk) lives in the `State` channel and
+accumulates across stages. Risk in `Context` or airframe data in `State` would
+type-check but blur the separation of slow and fast data.
 
 ### Error short-circuit preserves the moment-of-failure state
 
@@ -186,16 +188,18 @@ stateful-evaluator short-circuit guards enforce this, and the framework
 crate's unit tests cover it. In the failing-sensor scenario only `[Step 1]`
 prints, `state.risk` is `0.000`, and the log carries one entry.
 
-### Per-sensor closures are stateless; State enters at the collection layer
+### Per-sensor closures ignore State; Context supplies the bands
 
-Each per-sensor causaloid uses the stateless `Causaloid::new` form:
-sensor health depends only on the per-sensor reading, not on process
-state. The State and Context channels enter at the collection level, in
-the incoming `PropagatingProcess` that `evaluate_collection_stateful`
-receives, and thread through all subsequent stages. This layering suits
-any similar monitor: per-sensor logic stays unit-testable in isolation,
-and state threading belongs to the *evaluation*, not to the per-sensor
-closure.
+Each per-sensor causaloid uses the context-aware `Causaloid::new_with_context`
+form: sensor health depends only on the per-sensor reading and that sensor's
+normal band, which the closure reads from the airframe context. The closure
+passes the State channel through untouched. The State and Context channels
+enter at the collection level, in the incoming `PropagatingProcess` that
+`evaluate_collection_stateful` receives, and thread through all subsequent
+stages. This layering suits any similar monitor: per-sensor logic stays
+unit-testable against a given airframe, and state threading belongs to the
+*evaluation*, not to the per-sensor closure. The failing-airspeed closure
+reads nothing and keeps the stateless `Causaloid::new` form.
 
 ## Field-by-field
 
@@ -207,14 +211,23 @@ closure.
 | `covariance: [f64; 4]` | Diagonal covariance. Initialised to `[4.0; 4]` on first Kalman update, then evolved by the Kalman step in Stage 2.  |
 | `risk: f64`            | Cumulative scalar risk. Receives contributions from Stage 2's health-fold step and from each Stage 3 envelope node. |
 
-### `AircraftConfig` (the Context channel)
+### `AirframeContext` (the Context channel)
 
-| Field               | Purpose                                                                                                 |
-|---------------------|---------------------------------------------------------------------------------------------------------|
-| `mass_kg`           | Current aircraft mass; used by the CG-out-of-limits envelope node.                                      |
-| `mtow_kg`           | Maximum takeoff weight; reference for CG margins.                                                       |
-| `stall_margin`      | Stall-margin multiplier; used by the stall-risk envelope node to scale the lower airspeed band.         |
-| `service_ceiling_m` | Service ceiling; used by the traffic-conflict envelope node to dampen traffic density at high altitude. |
+One `Data<f64>` contextoid per quantity, read by node index (`model_types.rs`);
+the values are in `model_config.rs`.
+
+| Node                         | Value         | Purpose                                                                                                                 |
+|------------------------------|---------------|-------------------------------------------------------------------------------------------------------------------------|
+| `MASS_KG`                    | 70 000 kg     | Current aircraft mass; used by the CG-out-of-limits envelope node.                                                      |
+| `MTOW_KG`                    | 80 000 kg     | Maximum takeoff weight; reference for CG margins.                                                                       |
+| `STALL_MARGIN`               | 1.3           | Stall-margin multiplier; used by the stall-risk envelope node to scale the lower airspeed band.                         |
+| `SERVICE_CEILING_M`          | 12 800 m      | Service ceiling; used by the traffic-conflict envelope node to dampen traffic density at high altitude.                 |
+| `AIRSPEED_BAND_STALL_MARGIN` | 1.3           | The stall margin at which the airspeed band's lower edge is stated; the stall node rescales that edge to `STALL_MARGIN`. |
+| `AIRSPEED_MIN_KN`, `_MAX_KN` | 180, 320 kn   | Normal airspeed band; airspeed sensor health, stall node (lower edge), overspeed node (upper edge).                      |
+| `ALTITUDE_MIN_FT`, `_MAX_FT` | 5 000, 35 000 ft | Normal altitude band; altitude sensor health, terrain-proximity node (lower edge).                                   |
+| `ATTITUDE_MIN_DEG`, `_MAX_DEG` | -10, 10 deg | Normal attitude band; attitude sensor health.                                                                           |
+| `VERTICAL_SPEED_MIN_FPM`, `_MAX_FPM` | -1 500, 1 500 ft/min | Normal vertical-speed band; vertical-speed sensor health.                                               |
+| `FUEL_FLOW_MIN_PPH`, `_MAX_PPH` | 1 500, 3 500 lb/h | Normal fuel-flow band; fuel-flow sensor health.                                                                  |
 
 ## Run it
 
@@ -275,6 +288,6 @@ contains only entries produced before and including the failing stage.
   uncertainty estimates, configuration-aware tuning, and per-aircraft-type
   envelope tables.
 - The example's source files import only the workspace crates
-  `deep_causality` and `deep_causality_core`. The shared
+  `deep_causality`, `deep_causality_context` and `deep_causality_core`. The shared
   `avionics_examples` package declares more dependencies for its other
   examples.

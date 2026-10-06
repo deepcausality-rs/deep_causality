@@ -14,16 +14,21 @@
 //!
 //! Each tick of the safety loop is one `CausalFlow`: `assess -> intervene? -> output -> integrate`.
 //! The auto-pilot takeover is a `branch` on the value, so the override runs only when the interlock
-//! fires; the 30-tick encounter is a single `iterate_n`.
+//! fires; the 30-tick encounter is a single `iterate_n`. The TCAS thresholds and the tick period
+//! are a `deep_causality_context` `Context` in the flow's `Context` channel; the aircraft tracks
+//! are the value.
 mod model;
 
-use crate::model::{assess, build_initial_engagement, integrate, intervene, output};
+use crate::model::{
+    assess, build_initial_engagement, build_tcas_world, integrate, intervene, output,
+};
 use deep_causality_core::CausalFlow;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Airbus A3 System: Geometric Collision Avoidance Module ===");
     println!("[SYS] Initializing Safety Loop...");
 
+    let world = build_tcas_world()?;
     let engagement = build_initial_engagement();
     println!(
         "[SYS] Traffic Detected: {}. Monitor Active.",
@@ -33,13 +38,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("-------------------------------------------------------------------------");
 
     // The 30-tick safety loop: assess -> (auto-intervene only if the interlock fires) -> output ->
-    // integrate. The conditional takeover is the `branch`; everything else composes with `next`.
-    CausalFlow::value(engagement).iterate_n(30, |tick| {
-        tick.next(assess)
-            .branch(|e| e.will_intervene, |hot| hot.next(intervene), |cold| cold)
-            .next(output)
-            .next(integrate)
-    });
+    // integrate. The conditional takeover is the `branch`; the stages that read the encounter world
+    // compose with `try_step_with`, which hands them the `Context` channel.
+    CausalFlow::value(engagement)
+        .context(world)
+        .iterate_n(30, |tick| {
+            tick.try_step_with(|e, _, ctx| assess(e, ctx))
+                .branch(|e| e.will_intervene, |hot| hot.map(intervene), |cold| cold)
+                .try_step_with(|e, _, ctx| output(e, ctx))
+                .try_step_with(|e, _, ctx| integrate(e, ctx))
+        })
+        .finish()?;
 
     println!("\n[SYS] Encounter Complete. Log Saved.");
     Ok(())

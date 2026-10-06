@@ -41,6 +41,11 @@ $$ X(\tau) = e^{\mathcal{G}\tau} X(0) $$
 The example performs the update on a `CausalMultiVector` with a constant generator, as one first-order `Euler` step per
 tick ($X \leftarrow X + \mathcal{G}\,dt$). Each step costs a vector addition instead of a nonlinear ODE solve.
 
+The radar world is a `deep_causality_context` `Context`: the initial radar fix as a `EuclideanSpace` point
+(0, 100 km, 20 km), the initial velocity estimate (500, -3400) m/s, and the 10 ms radar update period, one
+contextoid per quantity. The tracker's 6D state is built from it, and the flow carries it in its `Context`
+channel, where `predict` and `derive` read the update period $dt$.
+
 ### 3. Shadow Projection (Gauge Fixing)
 
 The "Observation" step projects the 6D state back to 3D by reading its `e1`, `e2`, `e3` components.

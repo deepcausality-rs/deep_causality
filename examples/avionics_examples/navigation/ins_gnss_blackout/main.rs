@@ -16,12 +16,16 @@
 //!    real orbit geometry; this is the model **carried** across the outage.
 //! 3. **`select_metric` regime detector** — a GNSS-denial indicator (interference / jamming /
 //!    shadowing level) vs a critical threshold flips GNSS available ↔ denied: the two regime changes.
-//! 4. **`alternate_value_if` / `branch_with`** — the GNSS fix corrects the INS error when available and is
+//! 4. **`alternate_value` / `branch_with`** — the GNSS fix corrects the INS error when available and is
 //!    **withheld** during the blackout; the chain runs open-loop through the dark, then snaps back.
 //!    `EffectLog` records every regime change and every intervention.
 //!
+//! The processed epoch series, the outage window, the accelerometer bias, the denial threshold and
+//! the two fix gains form the navigation world, a `deep_causality_context` `Context` carried in the
+//! `Context` channel; every stage reads it there.
+//!
 //! Two runs side by side (the airplane-INS insight: a recalibrated INS survives a short gap; a pure
-//! INS drifts away): **open loop** (no GNSS coupling) vs **closed loop** (regime-gated `alternate_value_if`).
+//! INS drifts away): **open loop** (no GNSS coupling) vs **closed loop** (regime-gated `alternate_value`).
 //! The data cadence is GNSS-native (~5 min epochs), so the modelled outage is an *extended* GNSS gap;
 //! the same holdover mechanism scales down to a brief denial and up to a long one.
 //!
@@ -33,8 +37,8 @@ mod model;
 mod utils_print;
 
 use crate::model::{
-    NavConfig, NavProcess, advance, apply_fix, build_stream, detect_regime, gps_fix,
-    initial_process, record_metrics,
+    NavContext, NavProcess, advance, apply_fix, build_stream, detect_regime, epochs, gps_fix,
+    initial_process, nav_world, record_metrics,
 };
 use deep_causality_core::CausalFlow;
 use deep_causality_file::read_gnss_single_satellite;
@@ -47,9 +51,6 @@ use std::process::exit;
 pub type FloatType = f64;
 
 const SAT_ID: &str = "E14"; // Galileo IOV, eccentric orbit → a clean relativistic clock signature.
-const TRUE_BIAS: f64 = 1.0e-4; // accelerometer bias, m/s² (~10 µg, navigation grade)
-const OUTAGE_LO: f64 = 0.45; // blackout window as a fraction of the day's epochs
-const OUTAGE_HI: f64 = 0.55;
 
 fn main() {
     utils_print::print_intro(SAT_ID);
@@ -69,23 +70,55 @@ fn main() {
     };
     utils_print::print_loaded(SAT_ID, orbits.len(), clocks.len());
 
-    // 2. Build the processed epoch stream (radius, speed, measured clock, relativistic rate, denial indicator).
-    let stream = build_stream(orbits, clocks, OUTAGE_LO, OUTAGE_HI);
-    if stream.len() < 10 {
-        eprintln!("insufficient epochs after processing");
+    // 2. Build the processed epoch series (time, step, radius, speed, measured clock, relativistic
+    //    rate) and the navigation world around them, with the scenario scalars in node-index order.
+    let stream = match build_stream(orbits, clocks) {
+        Ok(stream) => stream,
+        Err(e) => {
+            eprintln!("epoch processing failed: {e}");
+            exit(2);
+        }
+    };
+    let scenario = [
+        0.45,   // OUTAGE_START: blackout window as a fraction of the day's epochs
+        0.55,   // OUTAGE_END
+        1.0e-4, // ACCEL_BIAS: accelerometer bias, m/s² (~10 µg, navigation grade)
+        0.5,    // BLACKOUT_THRESHOLD
+        0.9,    // GPS_GAIN
+        0.05,   // BIAS_CAL_GAIN
+    ];
+    let world = match nav_world(stream, scenario) {
+        Ok(world) => world,
+        Err(e) => {
+            eprintln!("navigation world rejected a contextoid: {e}");
+            exit(2);
+        }
+    };
+    let n = match epochs(&world) {
+        Ok(n) if n >= 10 => n,
+        Ok(_) => {
+            eprintln!("insufficient epochs after processing");
+            exit(2);
+        }
+        Err(e) => {
+            eprintln!("navigation world unreadable: {e}");
+            exit(2);
+        }
+    };
+    if let Err(e) = utils_print::print_stream_summary(&world) {
+        eprintln!("navigation world unreadable: {e}");
         exit(2);
     }
-    let cfg = NavConfig {
-        stream,
-        blackout_threshold: 0.5,
-        gps_gain: 0.9,
-        bias_cal_gain: 0.05,
-    };
-    utils_print::print_stream_summary(&cfg.stream, cfg.blackout_threshold);
 
-    // 3. Run open loop (no GNSS coupling) and closed loop (regime-gated alternate_value_if); 4. report + gate.
-    let open = run(cfg.clone(), false);
-    let closed = run(cfg, true);
+    // 3. Run open loop (no GNSS coupling) and closed loop (regime-gated alternate_value); 4. report + gate.
+    let open = run(world.clone(), n, false);
+    let closed = run(world, n, true);
+    for process in [&open, &closed] {
+        if let Some(e) = process.error() {
+            eprintln!("navigation run failed: {e}");
+            exit(2);
+        }
+    }
     if !utils_print::report(SAT_ID, &open, &closed) {
         exit(1);
     }
@@ -98,29 +131,24 @@ fn data_path(file: &str) -> PathBuf {
         .join(file)
 }
 
-/// Run the full stream once; `closed` wires the corrective `alternate_value_if` loop in (closed loop) or leaves
-/// it out (open loop). Pipeline: `advance → detect_regime → [branch_with: gps_fix | dead-reckon] →
-/// record_metrics`, iterated over every epoch.
-fn run(cfg: NavConfig, closed: bool) -> NavProcess {
-    let n = cfg.stream.len();
-    let cfg_ref = cfg.clone();
-    CausalFlow::from(initial_process(cfg, TRUE_BIAS))
+/// Run the full stream of `n` epochs once; `closed` wires the corrective `alternate_value` loop in
+/// (closed loop) or leaves it out (open loop). Pipeline: `advance → detect_regime → [branch_with:
+/// apply_fix + gps_fix | dead-reckon] → record_metrics`, iterated over every epoch. Every stage
+/// reads the world from the `Context` channel.
+fn run(world: NavContext, n: usize, closed: bool) -> NavProcess {
+    CausalFlow::from(initial_process(world))
         .iterate_n(n, |tick| {
             let stepped = tick.bind(advance).bind(detect_regime);
             let routed = if closed {
                 stepped.branch_with(
                     |_v, s, _c| s.gnss_denied,
                     |denied| denied, // GNSS denied: dead-reckon; the clock is carried, no fix.
-                    |avail| {
-                        avail
-                            .update_state(|s, _v| apply_fix(s, &cfg_ref))
-                            .alternate_value_if(|_| true, |e| gps_fix(e, &cfg_ref))
-                    },
+                    |avail| avail.step_mut(apply_fix).bind(gps_fix),
                 )
             } else {
                 stepped
             };
-            routed.update_state(|s, v| record_metrics(s, v, &cfg_ref))
+            routed.step_mut(record_metrics)
         })
         .into_process()
 }

@@ -10,10 +10,71 @@
  */
 
 use deep_causality_calculus::{EndoArrow, Euler};
-use deep_causality_core::{CausalFlow, PropagatingEffect};
+use deep_causality_context::{
+    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    NoSpace, NoSpaceTime, NoTime,
+};
+use deep_causality_core::{CausalityError, PropagatingEffect};
 use deep_causality_multivector::CausalMultiVector;
 use deep_causality_multivector::Metric;
 use deep_causality_multivector::MultiVector;
+
+// --- Context ---
+
+/// The encounter world the safety loop reads through the flow's `Context` channel: the TCAS
+/// protection volume and alert thresholds and the surveillance tick period, one `Data` contextoid
+/// per quantity. The aircraft tracks are the evolving value, not context, so the spatial, temporal
+/// and spacetime slots are empty.
+pub type TcasContext = Context<Data<f64>, NoSpace<f64>, NoTime, NoSpaceTime<f64>>;
+
+/// Node index: horizontal protection radius, m (aggressive for the demo).
+pub const HORIZONTAL_PROT_RADIUS_M: usize = 0;
+/// Node index: vertical protection radius, m.
+pub const VERTICAL_PROT_RADIUS_M: usize = 1;
+/// Node index: time-to-CPA below which a traffic advisory issues, s.
+pub const TA_TAU_S: usize = 2;
+/// Node index: time-to-CPA below which a traffic advisory becomes a resolution advisory, s.
+pub const RA_TAU_S: usize = 3;
+/// Node index: surveillance tick period, s.
+pub const TICK_S: usize = 4;
+
+/// Build the encounter world, added in node-index order: node `i` holds contextoid id `i + 1`.
+pub fn build_tcas_world() -> Result<TcasContext, ContextIndexError> {
+    let quantities = [
+        500.0, // HORIZONTAL_PROT_RADIUS_M
+        100.0, // VERTICAL_PROT_RADIUS_M
+        45.0,  // TA_TAU_S
+        20.0,  // RA_TAU_S
+        0.5,   // TICK_S
+    ];
+    let mut context = Context::with_capacity(1, "tcas encounter", quantities.len());
+    for (id, value) in (1..).zip(quantities) {
+        context.add_node(Contextoid::new(
+            id,
+            ContextoidType::Datoid(Data::new(id, value)),
+        ))?;
+    }
+    Ok(context)
+}
+
+/// Read one `Data` contextoid's payload out of the encounter world. A node that is absent or not
+/// a Datoid is an error.
+pub fn read(context: &TcasContext, index: usize) -> Result<f64, CausalityError> {
+    context
+        .get_node(index)
+        .and_then(|node| node.vertex_type().dataoid())
+        .map(Datable::get_data)
+        .ok_or_else(|| {
+            CausalityError::MissingParameter(format!(
+                "encounter world node {index} is absent or not a Datoid"
+            ))
+        })
+}
+
+/// The encounter world a stage reads, or the error a stage returns when the flow carries none.
+fn world(ctx: Option<&TcasContext>) -> Result<&TcasContext, CausalityError> {
+    ctx.ok_or_else(CausalityError::MissingContext)
+}
 
 // --- Types ---
 
@@ -52,23 +113,23 @@ pub struct ConflictReport {
 
 // --- Logic ---
 
-pub struct GeometricTCAS {
-    horizontal_prot_radius: f64, // [m] e.g. 1000m
-    vertical_prot_radius: f64,   // [m] e.g. 100m
-    tau_threshold: f64,          // [s] e.g. 35s
+/// The TCAS monitor over an encounter world: its protection volume and alert thresholds are read
+/// from the world on every assessment.
+pub struct GeometricTCAS<'w> {
+    world: &'w TcasContext,
 }
 
-impl GeometricTCAS {
-    pub fn new() -> Self {
-        Self {
-            horizontal_prot_radius: 500.0, // Aggressive for demo
-            vertical_prot_radius: 100.0,
-            tau_threshold: 45.0,
-        }
+impl<'w> GeometricTCAS<'w> {
+    pub fn new(world: &'w TcasContext) -> Self {
+        Self { world }
     }
 
     /// Primary Causal Logic: Detects threat and generates advisory.
-    pub fn assess_threat(&self, own: &AircraftState, intruder: &AircraftState) -> ConflictReport {
+    pub fn assess_threat(
+        &self,
+        own: &AircraftState,
+        intruder: &AircraftState,
+    ) -> Result<ConflictReport, CausalityError> {
         // Causal Chain:
         // Relative State -> CPA Geometry -> Risk Assessment -> Advisory
         // We implicitly assume linear extrapolation for the "Lookahead"
@@ -88,13 +149,18 @@ impl GeometricTCAS {
         // 3. Decision Logic (Monadic Bind simulation)
         // We use PropagatingEffect to represent the "Safety Interlock"
         // If parameters are safe, effect is "Clear". If not, "Advisory".
+        let horizontal_prot_radius = read(self.world, HORIZONTAL_PROT_RADIUS_M)?;
+        let ta_tau = read(self.world, TA_TAU_S)?;
+        let ra_tau = read(self.world, RA_TAU_S)?;
         let assessment = PropagatingEffect::pure((d_cpa, t_cpa)).bind(|params_ref, _, _| {
-            let (d, t) = params_ref.into_value().unwrap_or((f64::INFINITY, 0.0));
+            let Some((d, t)) = params_ref.into_value() else {
+                return PropagatingEffect::from_error(CausalityError::ValueNotAvailable());
+            };
 
             let level = if t < 0.0 {
                 AdvisoryLevel::None // Passed
-            } else if d < self.horizontal_prot_radius && t < self.tau_threshold {
-                if t < 20.0 {
+            } else if d < horizontal_prot_radius && t < ta_tau {
+                if t < ra_tau {
                     AdvisoryLevel::RA
                 } else {
                     AdvisoryLevel::TA
@@ -107,10 +173,10 @@ impl GeometricTCAS {
         });
 
         // 4. Formulate Report
-        let level = match assessment.value() {
-            Some(l) => *l,
-            _ => AdvisoryLevel::None,
-        };
+        let (outcome, _, _, _) = assessment.into_parts();
+        let level = outcome?
+            .into_value()
+            .ok_or_else(CausalityError::ValueNotAvailable)?;
 
         let resolution = if level == AdvisoryLevel::RA {
             // Heuristic Resolution Logic
@@ -126,13 +192,13 @@ impl GeometricTCAS {
             Resolution::Maintain
         };
 
-        ConflictReport {
+        Ok(ConflictReport {
             intruder_id: intruder.callsign.clone(),
             advisory: level,
             resolution,
             cpa_dist: d_cpa,
             t_cpa,
-        }
+        })
     }
 
     // --- Helpers ---
@@ -195,13 +261,12 @@ pub fn scale_vec(v: &CausalMultiVector<f64>, s: f64) -> CausalMultiVector<f64> {
 // --- Encounter pipeline ---
 
 /// The per-tick encounter state threaded through the TCAS `CausalFlow` pipeline in `main`
-/// (`assess -> intervene? -> output -> integrate`). It carries the mutable state plus the fixed
-/// monitor and step, so each stage is a free-standing sub-process `fn(Engagement) -> CausalFlow`.
+/// (`assess -> intervene? -> output -> integrate`). It carries the mutable state; the monitor's
+/// thresholds and the tick period are the [`TcasContext`] in the flow's `Context` channel, which
+/// each stage reads.
 pub struct Engagement {
     pub ownship: AircraftState,
     pub intruder: AircraftState,
-    pub tcas: GeometricTCAS,
-    pub dt: f64,
     pub ra_duration: f64,
     pub tick: u32,
     pub report: Option<ConflictReport>,
@@ -222,8 +287,6 @@ pub fn build_initial_engagement() -> Engagement {
             pos: vec3(0.0, 8000.0, 10050.0),
             vel: vec3(0.0, -200.0, 0.0),
         },
-        tcas: GeometricTCAS::new(),
-        dt: 0.5,
         ra_duration: 0.0,
         tick: 0,
         report: None,
@@ -233,10 +296,12 @@ pub fn build_initial_engagement() -> Engagement {
 }
 
 /// A. Assess the threat, accumulate RA persistence, and decide whether to auto-intervene.
-pub fn assess(mut e: Engagement) -> CausalFlow<Engagement> {
-    let report = e.tcas.assess_threat(&e.ownship, &e.intruder);
+pub fn assess(mut e: Engagement, ctx: Option<&TcasContext>) -> Result<Engagement, CausalityError> {
+    let world = world(ctx)?;
+    let report = GeometricTCAS::new(world).assess_threat(&e.ownship, &e.intruder)?;
+    let tick_s = read(world, TICK_S)?;
     e.triggered = if report.advisory == AdvisoryLevel::RA {
-        e.ra_duration += e.dt;
+        e.ra_duration += tick_s;
         e.ra_duration > 2.5 && report.resolution == Resolution::Descend
     } else {
         e.ra_duration = 0.0;
@@ -244,23 +309,26 @@ pub fn assess(mut e: Engagement) -> CausalFlow<Engagement> {
     };
     e.will_intervene = e.triggered && e.ownship.vel.data()[4] > -20.0;
     e.report = Some(report);
-    CausalFlow::value(e)
+    Ok(e)
 }
 
 /// B. Auto-pilot takeover (the conditional branch arm): force a descent on the ownship velocity
 /// and record the override.
-pub fn intervene(mut e: Engagement) -> CausalFlow<Engagement> {
+pub fn intervene(mut e: Engagement) -> Engagement {
     let mut d = e.ownship.vel.data().clone();
     d[4] = (d[4] - 5.0).max(-20.0);
     e.ownship.vel = CausalMultiVector::unchecked(d, Metric::Euclidean(3));
     println!("      > [BLACKBOX AUDIT]: Automatic Intervention Recorded.");
-    CausalFlow::value(e)
+    e
 }
 
 /// C. Output the advisory row.
-pub fn output(mut e: Engagement) -> CausalFlow<Engagement> {
-    let report = e.report.as_ref().expect("assessed this tick");
-    let time = e.tick as f64 * e.dt;
+pub fn output(mut e: Engagement, ctx: Option<&TcasContext>) -> Result<Engagement, CausalityError> {
+    let tick_s = read(world(ctx)?, TICK_S)?;
+    let report = e.report.as_ref().ok_or_else(|| {
+        CausalityError::MissingParameter("no conflict report: assess has not run this tick")
+    })?;
+    let time = e.tick as f64 * tick_s;
     let sys_status = if e.will_intervene {
         " [\x1b[31mAUTO INTERVENE\x1b[0m]"
     } else if e.triggered {
@@ -288,16 +356,21 @@ pub fn output(mut e: Engagement) -> CausalFlow<Engagement> {
         sys_status
     );
     e.tick += 1;
-    CausalFlow::value(e)
+    Ok(e)
 }
 
-/// D. Update dynamics: one Euler step of each aircraft's constant-velocity kinematics.
-pub fn integrate(mut e: Engagement) -> CausalFlow<Engagement> {
+/// D. Update dynamics: one Euler step of each aircraft's constant-velocity kinematics over one
+/// tick period.
+pub fn integrate(
+    mut e: Engagement,
+    ctx: Option<&TcasContext>,
+) -> Result<Engagement, CausalityError> {
+    let dt = read(world(ctx)?, TICK_S)?;
     let own_vel = e.ownship.vel.clone();
-    e.ownship.pos = Euler::new(e.dt, move |_: &CausalMultiVector<f64>| own_vel.clone())
+    e.ownship.pos = Euler::new(dt, move |_: &CausalMultiVector<f64>| own_vel.clone())
         .iterate_n(e.ownship.pos.clone(), 1);
     let intr_vel = e.intruder.vel.clone();
-    e.intruder.pos = Euler::new(e.dt, move |_: &CausalMultiVector<f64>| intr_vel.clone())
+    e.intruder.pos = Euler::new(dt, move |_: &CausalMultiVector<f64>| intr_vel.clone())
         .iterate_n(e.intruder.pos.clone(), 1);
-    CausalFlow::value(e)
+    Ok(e)
 }

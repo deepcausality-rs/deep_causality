@@ -10,10 +10,15 @@
 //! grasp the value-channel and State-channel shapes before encountering the
 //! reasoning logic.
 //!
-//! Runtime configuration values (preset `AircraftConfig`, `SensorReading`,
-//! and `FlightStateEstimate` instances) live in [`super::model_config`].
+//! The airframe the pipeline reads lives in the `Context` channel as an
+//! [`AirframeContext`]; the node indices below name its quantities. Runtime
+//! values (the nominal airframe, `SensorReading`, and `FlightStateEstimate`
+//! instances) live in [`super::model_config`].
 
-use deep_causality::PropagatingProcess;
+use deep_causality::{CausalityError, PropagatingProcess};
+use deep_causality_context::{
+    Context, ContextuableGraph, Data, Datable, NoSpace, NoSpaceTime, NoTime,
+};
 
 // ---------------------------------------------------------------------------
 // Process channels
@@ -34,13 +39,56 @@ pub struct FlightState {
     pub risk: f64,
 }
 
-/// Read-only aircraft configuration carried in the `Context` channel.
-#[derive(Debug, Clone)]
-pub struct AircraftConfig {
-    pub mass_kg: f64,
-    pub mtow_kg: f64,
-    pub stall_margin: f64,
-    pub service_ceiling_m: f64,
+/// The airframe the `Context` channel carries: one `Data` contextoid per
+/// quantity. The context holds no position, clock or event, so its spatial,
+/// temporal and spacetime slots are empty.
+pub type AirframeContext = Context<Data<f64>, NoSpace<f64>, NoTime, NoSpaceTime<f64>>;
+
+/// Node index: current aircraft mass, kg.
+pub const MASS_KG: usize = 0;
+/// Node index: maximum takeoff weight, kg.
+pub const MTOW_KG: usize = 1;
+/// Node index: stall-margin multiplier applied to the stall speed (dimensionless).
+pub const STALL_MARGIN: usize = 2;
+/// Node index: service ceiling, m.
+pub const SERVICE_CEILING_M: usize = 3;
+/// Node index: the stall-margin multiplier at which the airspeed band's lower
+/// edge is stated (dimensionless). The stall node rescales that edge from this
+/// margin to [`STALL_MARGIN`].
+pub const AIRSPEED_BAND_STALL_MARGIN: usize = 4;
+/// Node index: lower edge of the normal airspeed band, kn.
+pub const AIRSPEED_MIN_KN: usize = 5;
+/// Node index: upper edge of the normal airspeed band, kn.
+pub const AIRSPEED_MAX_KN: usize = 6;
+/// Node index: lower edge of the normal altitude band, ft.
+pub const ALTITUDE_MIN_FT: usize = 7;
+/// Node index: upper edge of the normal altitude band, ft.
+pub const ALTITUDE_MAX_FT: usize = 8;
+/// Node index: lower edge of the normal attitude band, deg.
+pub const ATTITUDE_MIN_DEG: usize = 9;
+/// Node index: upper edge of the normal attitude band, deg.
+pub const ATTITUDE_MAX_DEG: usize = 10;
+/// Node index: lower edge of the normal vertical-speed band, ft/min.
+pub const VERTICAL_SPEED_MIN_FPM: usize = 11;
+/// Node index: upper edge of the normal vertical-speed band, ft/min.
+pub const VERTICAL_SPEED_MAX_FPM: usize = 12;
+/// Node index: lower edge of the normal fuel-flow band, lb/h.
+pub const FUEL_FLOW_MIN_PPH: usize = 13;
+/// Node index: upper edge of the normal fuel-flow band, lb/h.
+pub const FUEL_FLOW_MAX_PPH: usize = 14;
+
+/// Read one `Data` contextoid's payload out of the airframe context. A node that is absent or
+/// not a Datoid is an error.
+pub fn read(context: &AirframeContext, index: usize) -> Result<f64, CausalityError> {
+    context
+        .get_node(index)
+        .and_then(|node| node.vertex_type().dataoid())
+        .map(Datable::get_data)
+        .ok_or_else(|| {
+            CausalityError::MissingParameter(format!(
+                "airframe context node {index} is absent or not a Datoid"
+            ))
+        })
 }
 
 // ---------------------------------------------------------------------------
@@ -103,26 +151,8 @@ impl SafetyVerdict {
 }
 
 // ---------------------------------------------------------------------------
-// Aliases and per-sensor calibration
+// Aliases
 // ---------------------------------------------------------------------------
 
 /// Local short alias for the long-form process type.
-pub type FlightProcess<T> = PropagatingProcess<T, FlightState, AircraftConfig>;
-
-/// Per-sensor healthy bands used to compute health probabilities.
-#[derive(Debug, Clone, Copy)]
-pub struct HealthyBands {
-    pub airspeed_kn: (f64, f64),
-    pub altitude_ft: (f64, f64),
-    pub attitude_deg: (f64, f64),
-    pub vertical_speed_fpm: (f64, f64),
-    pub fuel_flow_pph: (f64, f64),
-}
-
-pub const NOMINAL_BANDS: HealthyBands = HealthyBands {
-    airspeed_kn: (180.0, 320.0),
-    altitude_ft: (5_000.0, 35_000.0),
-    attitude_deg: (-10.0, 10.0),
-    vertical_speed_fpm: (-1_500.0, 1_500.0),
-    fuel_flow_pph: (1_500.0, 3_500.0),
-};
+pub type FlightProcess<T> = PropagatingProcess<T, FlightState, AirframeContext>;

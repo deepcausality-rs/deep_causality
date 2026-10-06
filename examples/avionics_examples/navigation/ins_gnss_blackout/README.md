@@ -22,14 +22,20 @@ simulation drives the navigation loop from real satellite products and runs the 
 3. The **grmhd `select_metric` regime detector** flips GNSS available ↔ denied by comparing a **denial
    indicator** (an interference / jamming / signal-shadowing level) with a critical threshold, producing
    the **two regime changes** (blackout entry, exit).
-4. The **`alternate_value_if` / `branch_with`** corrective loop applies the GNSS fix when available and
+4. The **`alternate_value` / `branch_with`** corrective loop applies the GNSS fix when available and
    **withholds** it during the blackout: the chain runs **open-loop** (drift) through the dark, then snaps
    back on reacquisition. The **`EffectLog`** records every regime change and every intervention.
+
+The processed epoch series (time, step, radius, speed, measured clock, relativistic rate), the outage
+window, the true accelerometer bias, the denial threshold and the two fix gains form the **navigation
+world**: a `deep_causality_context` `Context` with one `Data` contextoid per quantity, carried in the
+process's `Context` channel. Every stage reads the world from that channel; the denial indicator at an epoch
+is a Gaussian bump over the world's outage window, computed from it on read.
 
 Two runs side by side show the effect (as in aircraft INS, a continuously GPS-recalibrated INS survives a
 short gap; a *pure* INS drifts away over hours):
 
-| | Open loop (no GNSS coupling) | Closed loop (regime-gated `alternate_value_if`) |
+| | Open loop (no GNSS coupling) | Closed loop (regime-gated `alternate_value`) |
 |---|---|---|
 | INS position error | ~**375 km** (full-day pure dead-reckoning) | **bounded** (~m), snaps back after the outage |
 | Clock across the outage | undisciplined | **relativistic carry beats naive last-rate hold** vs the real measured E14 clock |
@@ -60,6 +66,7 @@ navigation and timing core of any GPS-denied flight, whatever caused the GNSS lo
 ## Code map
 
 - `main.rs` — orchestration: load real data → build stream → run open/closed loops → report + gate.
-- `model.rs` — the `Epoch` stream prep from real SP3/CLK, and the `CausalFlow` stages (`advance`,
-  `detect_regime` = the grmhd pattern, `gps_fix`/`apply_fix` = the `alternate_value_if` correction).
+- `model.rs` — the epoch-series prep from real SP3/CLK, the navigation world (`NavContext`, its node
+  indices and readers), and the `CausalFlow` stages (`advance`, `detect_regime` = the grmhd pattern,
+  `gps_fix`/`apply_fix` = the `alternate_value` correction).
 - `utils_print.rs` — all console output and the gate evaluation.
