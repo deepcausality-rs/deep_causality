@@ -20,8 +20,8 @@
 //!   packet is dropped. The cumulative drop count crosses the outage
 //!   threshold within a handful of seconds.
 //! * Closed loop. The monitor detects the zero-delivery tick the
-//!   moment it happens and fires `.alternate_value(STANDBY_SWITCH)` on the
-//!   chain. The next forward stage routes through the standby.
+//!   moment it happens and fires `.alternate_value(standby)` on the
+//!   chain, the standby id read from the network context. The next forward stage routes through the standby.
 //!   Traffic is rerouted with at most one tick of loss.
 //!
 //! Same chain, same failure schedule, same offered load. The only
@@ -32,19 +32,23 @@ mod model;
 pub mod model_types;
 mod model_utils;
 
-use crate::model::{forward_traffic, initial_process};
-use crate::model_types::{N_TICKS, NetworkProcess, STANDBY_SWITCH, SwitchId};
+use crate::model::{fail_over, forward_traffic, initial_process};
+use crate::model_types::{
+    N_TICKS, NetworkContext, NetworkProcess, PRIMARY_ID, SwitchId, nominal_network_context, read,
+};
 use causal_correction_examples::print_utils;
-use deep_causality_core::CausalFlow;
+use deep_causality_core::{CausalFlow, CausalityError};
 
-fn main() {
+fn main() -> Result<(), CausalityError> {
     println!("=== Active/Standby Network Failover as a Corrective `intervene` Loop ===\n");
 
-    let open = run_open_loop();
-    let closed = run_closed_loop();
+    let plan =
+        nominal_network_context().map_err(|err| CausalityError::GraphError(err.to_string()))?;
+    let open = run_open_loop(plan.clone());
+    let closed = run_closed_loop(plan);
 
-    model_utils::print_section("Open loop (no monitor, no failover)", &open);
-    model_utils::print_section("Closed loop (monitor + corrective failover)", &closed);
+    model_utils::print_section("Open loop (no monitor, no failover)", &open)?;
+    model_utils::print_section("Closed loop (monitor + corrective failover)", &closed)?;
 
     println!("=== Summary ===");
     model_utils::summary_line("Open loop  ", &open);
@@ -62,25 +66,32 @@ fn main() {
 
     println!("\n--- Closed-loop EffectLog (per-tick forwarding + failover event) ---");
     print_utils::print_effect_log(closed.logs());
+    Ok(())
 }
 
 /// Open loop: each tick is just `forward_traffic`, run `N_TICKS` times. No monitor, no failover.
-fn run_open_loop() -> NetworkProcess<SwitchId> {
-    CausalFlow::from(initial_process())
+fn run_open_loop(plan: NetworkContext) -> NetworkProcess<SwitchId> {
+    CausalFlow::from(initial_process(plan))
         .iterate_n(N_TICKS as usize, |tick| tick.bind(forward_traffic))
         .into_process()
 }
 
 /// Closed loop: the same tick, but each one `branch`es on the monitor — a zero-delivery tick on the
-/// active primary records the failover and `intervene`s the standby switch into the value channel.
-/// The only difference from the open loop is the `branch`.
-fn run_closed_loop() -> NetworkProcess<SwitchId> {
-    CausalFlow::from(initial_process())
+/// active primary records the failover, and the `fail_over` step `alternate_value`s the standby
+/// switch into the value channel.
+/// The only difference from the open loop is the `branch`. The trigger and the failover target both
+/// read the network context the process carries.
+fn run_closed_loop(plan: NetworkContext) -> NetworkProcess<SwitchId> {
+    CausalFlow::from(initial_process(plan))
         .iterate_n(N_TICKS as usize, |tick| {
             tick.bind(forward_traffic).branch_with(
+                // A predicate has no error channel. It runs only on a value, so
+                // `forward_traffic` succeeded and read the same primary id from the same context.
                 |active, state, ctx| {
-                    let last_delivered = state.delivered_per_tick.last().copied().unwrap_or(0);
-                    last_delivered == 0 && *active == ctx.expect("NetworkPlan present").primary_id
+                    let plan = ctx.expect("forward_traffic returns the network context it read");
+                    let primary = read(plan, PRIMARY_ID)
+                        .expect("forward_traffic read the primary id from this context");
+                    state.delivered_per_tick.last() == Some(&0) && *active == primary
                 },
                 |hot| {
                     hot.update_state(|mut state, _active| {
@@ -90,7 +101,7 @@ fn run_closed_loop() -> NetworkProcess<SwitchId> {
                         }
                         state
                     })
-                    .alternate_value(STANDBY_SWITCH)
+                    .bind(fail_over)
                 },
                 |cold| cold,
             )

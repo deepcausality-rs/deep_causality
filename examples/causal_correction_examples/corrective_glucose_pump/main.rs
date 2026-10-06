@@ -32,18 +32,22 @@ mod model;
 pub mod model_types;
 mod model_utils;
 
-use crate::model_types::{FloatType, N_TICKS, PumpProcess, nominal_pump_config};
+use crate::model_types::{
+    FloatType, HYPERGLYCEMIC_THRESHOLD, N_TICKS, PumpContext, PumpProcess, nominal_pump_context,
+    read,
+};
 use causal_correction_examples::print_utils;
-use deep_causality_core::CausalFlow;
+use deep_causality_core::{CausalFlow, CausalityError};
 
-fn main() {
+fn main() -> Result<(), CausalityError> {
     println!("=== Closed-Loop Insulin Pump as a Corrective `intervene` Loop ===\n");
 
-    let open = run_open_loop();
-    let closed = run_closed_loop();
+    let pump = nominal_pump_context().map_err(|err| CausalityError::GraphError(err.to_string()))?;
+    let open = run_open_loop(pump.clone());
+    let closed = run_closed_loop(pump);
 
-    model_utils::print_section("Open loop (no pump)", &open);
-    model_utils::print_section("Closed loop (monitor + corrective bolus)", &closed);
+    model_utils::print_section("Open loop (no pump)", &open)?;
+    model_utils::print_section("Closed loop (monitor + corrective bolus)", &closed)?;
 
     println!("=== Summary ===");
     model_utils::summary_line("Open loop  ", &open);
@@ -59,38 +63,33 @@ fn main() {
 
     println!("\n--- Closed-loop EffectLog (per-tick readings and bolus events) ---");
     print_utils::print_effect_log(closed.logs());
+    Ok(())
 }
 
 /// Open loop: each tick is just `simulate_step`, run `N_TICKS` times. No monitor, no bolus.
-fn run_open_loop() -> PumpProcess<FloatType> {
-    CausalFlow::from(model::initial_process())
+fn run_open_loop(pump: PumpContext) -> PumpProcess<FloatType> {
+    CausalFlow::from(model::initial_process(pump))
         .iterate_n(N_TICKS as usize, |tick| tick.bind(model::simulate_step))
         .into_process()
 }
 
-/// Closed loop: the same tick, but each one `branch`es on the monitor — a hyperglycemic excursion
-/// records the bolus, accumulates the delivered units, and `intervene`s the corrected glucose. The
-/// only difference from the open loop is the `branch`.
-fn run_closed_loop() -> PumpProcess<FloatType> {
-    let cfg = nominal_pump_config();
-    CausalFlow::from(model::initial_process())
+/// Closed loop: the same tick, but each one `branch`es on the monitor — on a hyperglycemic excursion
+/// the `bolus` step records the bolus, accumulates the delivered units, and `alternate_value`s the
+/// corrected glucose. The only difference from the open loop is the `branch`. The trigger and the
+/// bolus both read the pump context the process carries.
+fn run_closed_loop(pump: PumpContext) -> PumpProcess<FloatType> {
+    CausalFlow::from(model::initial_process(pump))
         .iterate_n(N_TICKS as usize, |tick| {
             tick.bind(model::simulate_step).branch_with(
+                // A predicate has no error channel. It runs only on a value, so `simulate_step`
+                // succeeded and read the same threshold from the same context.
                 |glucose, _state, ctx| {
-                    *glucose > ctx.expect("PumpConfig present").hyperglycemic_threshold
+                    let pump = ctx.expect("simulate_step returns the pump context it read");
+                    let threshold = read(pump, HYPERGLYCEMIC_THRESHOLD)
+                        .expect("simulate_step read the hyperglycemic threshold from this context");
+                    *glucose > threshold
                 },
-                |hot| {
-                    hot.update_state(|mut state, &glucose| {
-                        let (_, units) = model::corrective_bolus(glucose, &cfg);
-                        state.bolus_count += 1;
-                        state.total_insulin_units += units;
-                        state
-                    })
-                    .alternate_value_if(
-                        |_| true,
-                        |glucose| model::corrective_bolus(glucose, &cfg).0,
-                    )
-                },
+                |hot| hot.bind(model::bolus),
                 |cold| cold,
             )
         })

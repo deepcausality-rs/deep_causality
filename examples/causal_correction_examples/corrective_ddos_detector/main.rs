@@ -18,8 +18,9 @@
 //!
 //! The value channel carries the NIC's regulator command (`THROTTLE_OFF` /
 //! `THROTTLE_ON`); state threads the sliding window plus the detection
-//! accounting; context holds the read-only detector configuration. The whole
-//! loop is one fluent `iterate_n` over the causal monad.
+//! accounting; context holds the baseline, attack schedule, thresholds and
+//! throttle ceiling as `Data` contextoids. The whole loop is one fluent
+//! `iterate_n` over the causal monad.
 //!
 //! ## Detecting a *sustained* surge
 //!
@@ -47,23 +48,32 @@ pub mod model_types;
 mod model_utils;
 
 use crate::model::{analyze_tick, initial_process};
-use crate::model_types::{DetectorProcess, N_TICKS, THROTTLE_OFF, THROTTLE_ON, ThrottleState};
+use crate::model_types::{
+    DetectorProcess, N_TICKS, THROTTLE_OFF, THROTTLE_ON, TRIGGER_SLOTS, ThrottleState,
+    nominal_detector_context, read_ticks,
+};
 use causal_correction_examples::print_utils;
-use deep_causality_core::CausalFlow;
+use deep_causality_core::{CausalFlow, CausalityError};
 
-fn main() {
+fn main() -> Result<(), CausalityError> {
     println!("=== DDoS Detection as a Corrective `intervene` Loop ===\n");
 
     // Closed loop: each tick advances the sliding-window analysis, then
     // `branch_with` engages the throttle the moment the surge has persisted
     // for `trigger_slots` consecutive anomalous seconds. The `throttle == OFF`
     // guard makes the mitigation fire exactly once.
-    let result: DetectorProcess<ThrottleState> = CausalFlow::from(initial_process())
+    let detector =
+        nominal_detector_context().map_err(|err| CausalityError::GraphError(err.to_string()))?;
+    let result: DetectorProcess<ThrottleState> = CausalFlow::from(initial_process(detector))
         .iterate_n(N_TICKS as usize, |tick| {
             tick.bind(analyze_tick).branch_with(
+                // A predicate has no error channel. It runs only on a value, so `analyze_tick`
+                // succeeded on this context.
                 |throttle, state, ctx| {
-                    let cfg = ctx.expect("DetectorConfig present");
-                    state.consecutive_anomalies >= cfg.trigger_slots && *throttle == THROTTLE_OFF
+                    let detector = ctx.expect("analyze_tick returns the detector context it read");
+                    let trigger_slots = read_ticks(detector, TRIGGER_SLOTS)
+                        .expect("the detector context holds the trigger slot count as Ticks");
+                    state.consecutive_anomalies >= trigger_slots && *throttle == THROTTLE_OFF
                 },
                 |anomaly| {
                     anomaly
@@ -83,7 +93,7 @@ fn main() {
         .into_process();
 
     // Verbose details. Comment out to trim the output.
-    model_utils::print_section("Closed loop", &result);
+    model_utils::print_section("Closed loop", &result)?;
 
     println!("=== Summary ===");
     model_utils::summary_line("Closed loop", &result);
@@ -91,4 +101,5 @@ fn main() {
 
     println!("\n--- EffectLog (per-tick analysis + mitigation event) ---");
     print_utils::print_effect_log(result.logs());
+    Ok(())
 }

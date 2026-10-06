@@ -29,10 +29,12 @@ loop in place of a setpoint controller.
 |---|---|---|
 | Value | `ThrottleState` (`u8`) | the NIC regulator command (`THROTTLE_OFF` / `THROTTLE_ON`); the intervention flips it |
 | State | `DetectorState` | the sliding-window baseline plus per-tick accounting (counters, detection markers, history) |
-| Context | `DetectorConfig` | read-only baseline, attack schedule, thresholds, and mitigation ceiling |
+| Context | `DetectorContext` | read-only baseline, attack schedule, traffic profile, thresholds, and mitigation ceiling, one `Data<DetectorFact>` contextoid per quantity (rates, sizes, ratios and sigma as `Real`, slot and tick counts as `Ticks`, flow counts as `Count`) |
 
 ```rust
-type DetectorProcess<T> = PropagatingProcess<T, DetectorState, DetectorConfig>;
+type DetectorContext =
+    Context<Data<DetectorFact>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
+type DetectorProcess<T> = PropagatingProcess<T, DetectorState, DetectorContext>;
 ```
 
 ## Detecting a *sustained* surge
@@ -54,13 +56,15 @@ has filled with clean traffic.
 The whole loop is one fluent `iterate_n` over the monad:
 
 ```rust
-CausalFlow::from(initial_process())
+CausalFlow::from(initial_process(detector))
     .iterate_n(N_TICKS as usize, |tick| {
         tick.bind(analyze_tick).branch_with(
             // trigger: 5 consecutive anomalies, and not already throttled
             |throttle, state, ctx| {
-                let cfg = ctx.expect("DetectorConfig present");
-                state.consecutive_anomalies >= cfg.trigger_slots && *throttle == THROTTLE_OFF
+                let detector = ctx.expect("analyze_tick returns the detector context it read");
+                let trigger_slots = read_ticks(detector, TRIGGER_SLOTS)
+                    .expect("the detector context holds the trigger slot count as Ticks");
+                state.consecutive_anomalies >= trigger_slots && *throttle == THROTTLE_OFF
             },
             // mitigate: record it, then intervene the throttle ON
             |anomaly| anomaly.update_state(record_mitigation).alternate_value(THROTTLE_ON),

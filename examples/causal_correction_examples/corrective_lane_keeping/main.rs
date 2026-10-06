@@ -31,18 +31,21 @@ mod model;
 pub mod model_types;
 mod model_utils;
 
-use crate::model_types::{FloatType, LaneProcess, N_TICKS, nominal_lane_config};
+use crate::model_types::{
+    ANOMALY_THRESHOLD, FloatType, LaneContext, LaneProcess, N_TICKS, nominal_lane_context, read,
+};
 use causal_correction_examples::print_utils;
-use deep_causality_core::CausalFlow;
+use deep_causality_core::{CausalFlow, CausalityError};
 
-fn main() {
+fn main() -> Result<(), CausalityError> {
     println!("=== Lane-Keeping as a Corrective `intervene` Loop ===\n");
 
-    let open = run_open_loop();
-    let closed = run_closed_loop();
+    let lane = nominal_lane_context().map_err(|err| CausalityError::GraphError(err.to_string()))?;
+    let open = run_open_loop(lane.clone());
+    let closed = run_closed_loop(lane);
 
-    model_utils::print_section("Open loop (no intervention)", &open);
-    model_utils::print_section("Closed loop (monitor + corrective intervene)", &closed);
+    model_utils::print_section("Open loop (no intervention)", &open)?;
+    model_utils::print_section("Closed loop (monitor + corrective intervene)", &closed)?;
 
     println!("=== Summary ===");
     model_utils::summary_line("Open loop  ", &open);
@@ -58,33 +61,40 @@ fn main() {
 
     println!("\n--- Closed-loop EffectLog (every monitor tick and every intervention) ---");
     print_utils::print_effect_log(closed.logs());
+    Ok(())
 }
 
 /// Open loop: each tick is just `simulate_step`, run `N_TICKS` times. No monitor, no correction.
-fn run_open_loop() -> LaneProcess<FloatType> {
-    CausalFlow::from(model::initial_process())
+fn run_open_loop(lane: LaneContext) -> LaneProcess<FloatType> {
+    CausalFlow::from(model::initial_process(lane))
         .iterate_n(N_TICKS as usize, |tick| tick.bind(model::simulate_step))
         .into_process()
 }
 
 /// Closed loop: the same tick, but each one `branch`es on the monitor — when the offset crosses the
-/// anomaly threshold the corrective arm records the override and `intervene`s the corrected offset.
-/// The only difference from the open loop is the `branch`.
+/// anomaly threshold the corrective arm records the override and the `correct` step
+/// `alternate_value`s the corrected offset. The only difference from the open loop is the `branch`.
 ///
-/// Both the trigger and the correction read the same `cfg`, so the threshold the monitor fires on
-/// and the gain the correction applies can never desynchronize.
-fn run_closed_loop() -> LaneProcess<FloatType> {
-    let cfg = nominal_lane_config();
-    CausalFlow::from(model::initial_process())
+/// The trigger and the correction both read the lane context the process carries, so the threshold
+/// the monitor fires on and the gain the correction applies come from one source.
+fn run_closed_loop(lane: LaneContext) -> LaneProcess<FloatType> {
+    CausalFlow::from(model::initial_process(lane))
         .iterate_n(N_TICKS as usize, |tick| {
-            tick.bind(model::simulate_step).branch(
-                |offset| offset.abs() > cfg.anomaly_threshold,
+            tick.bind(model::simulate_step).branch_with(
+                // A predicate has no error channel. It runs only on a value, so `simulate_step`
+                // succeeded and read the same threshold from the same context.
+                |offset, _state, ctx| {
+                    let lane = ctx.expect("simulate_step returns the lane context it read");
+                    let threshold = read(lane, ANOMALY_THRESHOLD)
+                        .expect("simulate_step read the anomaly threshold from this context");
+                    offset.abs() > threshold
+                },
                 |hot| {
                     hot.update_state(|mut state, _offset| {
                         state.correction_count += 1;
                         state
                     })
-                    .alternate_value_if(|_| true, |offset| model::correction(offset, &cfg))
+                    .bind(model::correct)
                 },
                 |cold| cold,
             )

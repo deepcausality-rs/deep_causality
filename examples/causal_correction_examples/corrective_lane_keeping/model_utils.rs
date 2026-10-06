@@ -6,8 +6,9 @@
 //! Lane-keeping-specific display helpers. Shared printing plumbing
 //! comes from `causal_correction_examples::print_utils`.
 
-use crate::model_types::{FloatType, LaneProcess};
+use crate::model_types::{FloatType, LANE_HALF_WIDTH, LaneProcess, read};
 use causal_correction_examples::print_utils;
+use deep_causality_core::CausalityError;
 
 pub fn summary_line(label: &str, process: &LaneProcess<FloatType>) {
     let st = process.state();
@@ -23,16 +24,22 @@ pub fn summary_line(label: &str, process: &LaneProcess<FloatType>) {
     );
 }
 
-pub fn print_section(label: &str, process: &LaneProcess<FloatType>) {
+/// Print one run. Reads the context facts it shows first, so a missing context or fact
+/// returns the error before anything is printed.
+pub fn print_section(label: &str, process: &LaneProcess<FloatType>) -> Result<(), CausalityError> {
+    let lane = process
+        .context()
+        .as_ref()
+        .ok_or_else(CausalityError::MissingContext)?;
+    let lane_half_width = read(lane, LANE_HALF_WIDTH)?;
     print_utils::print_section_header(label);
     let st = process.state();
-    let cfg = process.context().as_ref().unwrap();
     println!(
         "  ticks={}  corrections={}  max_|offset|={:.2} m  lane_half_width={:.2} m",
         st.tick,
         st.correction_count,
         st.max_offset_observed.abs(),
-        cfg.lane_half_width,
+        lane_half_width,
     );
     print_utils::print_trajectory("trajectory (m)", &st.trajectory, |x| format!("{x:+.2}"));
     match st.catastrophic_at {
@@ -43,4 +50,5 @@ pub fn print_section(label: &str, process: &LaneProcess<FloatType>) {
         println!("  final offset: {v:+.2} m");
     }
     print_utils::print_section_footer();
+    Ok(())
 }

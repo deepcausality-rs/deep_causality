@@ -6,8 +6,9 @@
 //! Network-failover-specific display helpers. Shared printing plumbing
 //! comes from `causal_correction_examples::print_utils`.
 
-use crate::model_types::{NetworkProcess, SwitchId};
+use crate::model_types::{NetworkProcess, OUTAGE_DROP_THRESHOLD, STANDBY_ID, SwitchId, read};
 use causal_correction_examples::print_utils;
+use deep_causality_core::CausalityError;
 
 pub fn summary_line(label: &str, process: &NetworkProcess<SwitchId>) {
     let st = process.state();
@@ -25,17 +26,27 @@ pub fn summary_line(label: &str, process: &NetworkProcess<SwitchId>) {
     );
 }
 
-pub fn print_section(label: &str, process: &NetworkProcess<SwitchId>) {
+/// Print one run. Reads the context facts it shows first, so a missing context or fact
+/// returns the error before anything is printed.
+pub fn print_section(
+    label: &str,
+    process: &NetworkProcess<SwitchId>,
+) -> Result<(), CausalityError> {
+    let plan = process
+        .context()
+        .as_ref()
+        .ok_or_else(CausalityError::MissingContext)?;
+    let outage_drop_threshold = read(plan, OUTAGE_DROP_THRESHOLD)?;
+    let standby_id = read(plan, STANDBY_ID)?;
     print_utils::print_section_header(label);
     let st = process.state();
-    let plan = process.context().as_ref().unwrap();
     println!(
         "  ticks={}  delivered={}  dropped={}  failover_count={}  outage_threshold={}",
         st.tick,
         st.packets_delivered_total,
         st.packets_dropped_total,
         st.failover_count,
-        plan.outage_drop_threshold,
+        outage_drop_threshold,
     );
     if let Some(t) = st.primary_down_at {
         println!("  primary went down at tick {t}");
@@ -43,7 +54,7 @@ pub fn print_section(label: &str, process: &NetworkProcess<SwitchId>) {
     if let Some(t) = st.failover_at {
         println!(
             "  failover fired at tick {t} (switched to sw{})",
-            plan.standby_id
+            standby_id
         );
     }
     print_utils::print_trajectory("active switch per tick", &st.active_switch_history, |s| {
@@ -60,4 +71,5 @@ pub fn print_section(label: &str, process: &NetworkProcess<SwitchId>) {
         println!("  active switch at end: sw{v}");
     }
     print_utils::print_section_footer();
+    Ok(())
 }
