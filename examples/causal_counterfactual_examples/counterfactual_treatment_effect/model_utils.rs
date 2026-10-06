@@ -6,14 +6,21 @@
 //! CATE-specific helpers. Shared printing and arithmetic plumbing
 //! come from `causal_counterfactual_examples::{print_utils, math_utils}`.
 
-use crate::model::{FloatType, Patient, evaluate_under, potential_outcomes};
+use crate::model::{
+    AGE, BASELINE_BP, FloatType, PatientContext, evaluate_under, potential_outcomes, read,
+};
 use causal_counterfactual_examples::{math_utils, print_utils};
+use deep_causality_context::Identifiable;
+use deep_causality_core::CausalityError;
+
+/// The ITE vectors of the whole cohort, the over-65 stratum and the 65-and-under stratum.
+type StratifiedIte = (Vec<FloatType>, Vec<FloatType>, Vec<FloatType>);
 
 /// Iterate the cohort, compute potential outcomes per patient, print
 /// the per-patient row, and return the ITE vectors split by age stratum.
 pub fn evaluate_and_print_cohort(
-    cohort: &[Patient],
-) -> (Vec<FloatType>, Vec<FloatType>, Vec<FloatType>) {
+    cohort: &[PatientContext],
+) -> Result<StratifiedIte, CausalityError> {
     let mut all_ites: Vec<FloatType> = Vec::new();
     let mut over_65_ites: Vec<FloatType> = Vec::new();
     let mut under_65_ites: Vec<FloatType> = Vec::new();
@@ -22,11 +29,12 @@ pub fn evaluate_and_print_cohort(
     println!("  id |  age | baseline |  Y(do=1)  |  Y(do=0)  |    ITE");
     println!("  ---+------+----------+-----------+-----------+--------");
     for patient in cohort {
-        let (y1, y0) = potential_outcomes(patient);
+        let (y1, y0) = potential_outcomes(patient)?;
         let ite = y1 - y0;
+        let age = read(patient, AGE)?;
 
         all_ites.push(ite);
-        if patient.age > 65.0 {
+        if age > 65.0 {
             over_65_ites.push(ite);
         } else {
             under_65_ites.push(ite);
@@ -34,11 +42,16 @@ pub fn evaluate_and_print_cohort(
 
         println!(
             "   {:>2} | {:>4.0} |  {:>6.1}  |  {:>6.1}   |  {:>6.1}   |  {:>+5.2}",
-            patient.id, patient.age, patient.baseline_bp, y1, y0, ite,
+            patient.id(),
+            age,
+            read(patient, BASELINE_BP)?,
+            y1,
+            y0,
+            ite,
         );
     }
 
-    (all_ites, over_65_ites, under_65_ites)
+    Ok((all_ites, over_65_ites, under_65_ites))
 }
 
 pub fn print_cate_summary(all: &[FloatType], over_65: &[FloatType], under_65: &[FloatType]) {
@@ -69,7 +82,7 @@ pub fn print_cate_summary(all: &[FloatType], over_65: &[FloatType], under_65: &[
     );
 }
 
-pub fn print_audit_trail(patient: &Patient) {
+pub fn print_audit_trail(patient: &PatientContext) {
     println!("--- Audit trail for patient #1 (under intervention do(T=1)) ---");
     let one = evaluate_under(patient, 1.0);
     print_utils::print_effect_log(one.logs());

@@ -6,13 +6,12 @@
 //! Aneurysm-specific display helpers. Shared printing plumbing comes
 //! from `causal_counterfactual_examples::print_utils`.
 
-use crate::model_types::CycleSummary;
+use crate::model_types::{CycleSummary, PatientProcess};
 use causal_counterfactual_examples::print_utils;
-use deep_causality_core::PropagatingEffect;
 
-pub fn print_process(label: &str, effect: &PropagatingEffect<CycleSummary>) {
+pub fn print_process(label: &str, process: &PatientProcess<CycleSummary>) {
     print_utils::print_section_header(label);
-    match effect.value() {
+    match process.value() {
         Some(s) => {
             println!(
                 "  cycles={:>2}  peak_WSS={:>5.2} Pa  final_fatigue={:>5.1}%  ruptured={}",
@@ -27,9 +26,9 @@ pub fn print_process(label: &str, effect: &PropagatingEffect<CycleSummary>) {
     print_utils::print_section_footer();
 }
 
-pub fn print_audit_trail(effect: &PropagatingEffect<CycleSummary>) {
+pub fn print_audit_trail(process: &PatientProcess<CycleSummary>) {
     println!("--- Audit trail of the surgical counterfactual ---");
-    print_utils::print_effect_log(effect.logs());
+    print_utils::print_effect_log(process.logs());
     println!(
         "\nThe log shows the intervention firing on WSS, not on BP. \"We\n\
          attenuated stress directly\" is now a provable claim about this\n\
