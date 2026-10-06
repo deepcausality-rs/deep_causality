@@ -16,35 +16,35 @@ mod metric;
 mod recordable;
 mod spatial;
 
-/// A 3-dimensional spatial context represented in standard Euclidean coordinates (x, y, z).
+/// A point of three-dimensional Euclidean space, in Cartesian coordinates `x, y, z`.
 ///
-/// This struct is used as the default implementation of a purely spatial context
-/// in the DeepCausality framework. It supports coordinate access and distance
-/// measurement based on Euclidean geometry.
+/// Euclidean space is a three-dimensional affine space whose arrows between points carry a
+/// Euclidean metric: every arrow has a length, `‖a·u‖ = |a|·‖u‖`, and for orthogonal arrows
+/// `‖u + v‖² = ‖u‖² + ‖v‖²` (Weatherall 2021, §2). In Cartesian coordinates
+/// [`Distance`](crate::Distance) is therefore `√(Δx² + Δy² + Δz²)`. The coordinates carry no
+/// unit of their own; the distance is in the unit the coordinates are given in.
 ///
-/// # Fields
-/// - `id`: A unique identifier for this spatial entity
-/// - `x`: X-coordinate in meters
-/// - `y`: Y-coordinate in meters
-/// - `z`: Z-coordinate in meters
-///
-/// # Coordinate Index Mapping
-/// When used with the `Coordinate` trait, the following index mapping applies:
+/// # Coordinate index mapping
 /// - `0 => x`
 /// - `1 => y`
 /// - `2 => z`
 ///
-/// # Examples
+/// # Example
 /// ```
 /// use deep_causality_context::*;
 ///
-/// let space_a = EuclideanSpace::new(1, 1.0, 2.0, 3.0);
-/// let space_b = EuclideanSpace::new(2, 4.0, 6.0, 3.0);
+/// let a = EuclideanSpace::new(1, 1.0, 2.0, 3.0);
+/// let b = EuclideanSpace::new(2, 4.0, 6.0, 3.0);
 ///
-/// assert_eq!(space_a.dimension(), 3);
-/// assert_eq!(space_a.coordinate(1).unwrap(), &2.0);
-/// assert_eq!(space_a.distance(&space_b), 5.0);
+/// assert_eq!(a.dimension(), 3);
+/// assert_eq!(a.coordinate(1).unwrap(), &2.0);
+/// assert_eq!(a.distance(&b), 5.0);
 /// ```
+///
+/// # References
+/// - Weatherall, J. O. (2021). Classical Spacetime Structure. In E. Knox & A. Wilson (Eds.),
+///   *The Routledge Companion to Philosophy of Physics*, pp. 33–45. Routledge. arXiv:1707.05887,
+///   §2. Copy: `papers/weatherall_2017_classical_spacetime_structure_arXiv_1707.05887.pdf`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct EuclideanSpace<R>
 where

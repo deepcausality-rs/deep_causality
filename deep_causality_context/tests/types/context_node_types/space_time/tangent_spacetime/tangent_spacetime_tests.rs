@@ -14,11 +14,12 @@ fn test_identifiable_trait() {
 fn test_coordinate_trait() {
     let s = TangentSpacetime::new(1, 1.0, 2.0, 3.0, 4.0, 1.0, 0.0, 0.0, 0.0);
 
+    // Time first: 0 => t, 1 => x, 2 => y, 3 => z.
     assert_eq!(s.dimension(), 4);
-    assert_eq!(*s.coordinate(0).unwrap(), 1.0);
-    assert_eq!(*s.coordinate(1).unwrap(), 2.0);
-    assert_eq!(*s.coordinate(2).unwrap(), 3.0);
-    assert_eq!(*s.coordinate(3).unwrap(), 4.0);
+    assert_eq!(*s.coordinate(0).unwrap(), 4.0);
+    assert_eq!(*s.coordinate(1).unwrap(), 1.0);
+    assert_eq!(*s.coordinate(2).unwrap(), 2.0);
+    assert_eq!(*s.coordinate(3).unwrap(), 3.0);
 }
 
 #[test]
@@ -39,7 +40,8 @@ fn test_temporal_trait() {
 fn test_space_temporal_trait() {
     let s = TangentSpacetime::new(1, 4.0, 5.0, 6.0, 42.0, 1.0, 0.0, 0.0, 0.0);
     assert_eq!(s.t(), &42.0);
-    assert_eq!(*s.coordinate(0).unwrap(), 4.0);
+    assert_eq!(*s.coordinate(0).unwrap(), 42.0);
+    assert_eq!(*s.coordinate(1).unwrap(), 4.0);
 
     let time = s.time();
     assert_eq!(time, 42.0);
@@ -67,7 +69,7 @@ fn test_metric_tensor_trait() {
         [0.0, 0.0, 0.0, 0.90],
     ];
 
-    s.update_metric_tensor(warped);
+    s.update_metric_tensor(warped).expect("a Lorentzian tensor");
     let updated = s.metric_tensor();
     assert_eq!(updated[1][1], 1.05);
     assert_eq!(updated[3][3], 0.90);
@@ -96,7 +98,8 @@ fn test_spacetime_interval_with_custom_metric() {
         [0.0, 0.0, 0.95, 0.0],
         [0.0, 0.0, 0.0, 0.90],
     ];
-    s1.update_metric_tensor(warped);
+    s1.update_metric_tensor(warped)
+        .expect("a Lorentzian tensor");
 
     let s2 = TangentSpacetime::new(2, 2.0, 3.0, 4.0, 0.0, 1.0, 0.0, 0.0, 0.0);
 
@@ -142,30 +145,7 @@ fn test_time_velocity() {
 }
 
 #[test]
-// Disabled under Miri: soft-float emulation produces last-bit differences for
-// `sqrt`, so the exact-equality assertion fails. Test is correct under normal
-// CI.
-#[cfg_attr(miri, ignore)]
-fn test_spatial_velocity() {
-    let t = TangentSpacetime::new(1, 0.0, 0.0, 0.0, 0.0, 1.0, 3.0, 4.0, 12.0);
-    let expected = (3.0_f64.powi(2) + 4.0_f64.powi(2) + 12.0_f64.powi(2)).sqrt();
-    assert_eq!(t.spatial_velocity(), expected);
-}
-
-#[test]
 fn test_velocity_vector() {
     let t = TangentSpacetime::new(1, 0.0, 0.0, 0.0, 0.0, 0.0, 7.0, 8.0, 9.0);
     assert_eq!(t.velocity_vector(), [7.0, 8.0, 9.0]);
-}
-
-#[test]
-// Disabled under Miri: soft-float emulation produces last-bit differences for
-// `sqrt`, so the exact-equality assertion fails. Test is correct under normal
-// CI.
-#[cfg_attr(miri, ignore)]
-fn test_euclidean_distance() {
-    let t1 = TangentSpacetime::new(1, 1.0, 2.0, 3.0, 0.0, 1.0, 0.0, 0.0, 0.0);
-    let t2 = TangentSpacetime::new(2, 4.0, 6.0, 3.0, 0.0, 1.0, 0.0, 0.0, 0.0);
-    let expected = ((4.0f64 - 1.0f64).powi(2) + (6.0f64 - 2.0f64).powi(2)).sqrt();
-    assert_eq!(t1.euclidean_distance(&t2), expected);
 }

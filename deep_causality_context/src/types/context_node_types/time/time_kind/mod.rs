@@ -9,84 +9,46 @@ mod recordable;
 mod scalar_projector;
 mod temporable;
 
-use crate::{DiscreteTime, EntropicTime, EuclideanTime, LorentzianTime};
+use crate::{DiscreteTime, EntropicTime, MinkowskiTime, NewtonianTime};
 use deep_causality_algebra::RealField;
 
-/// An enumeration of supported time models for unified, heterogeneous temporal reasoning.
-///
-/// `TimeKind` provides a polymorphic abstraction over multiple **time semantics**
-/// used in both physical and symbolic systems. It allows causal models,
-/// simulations, or reasoning engines to switch between **continuous**, **discrete**,
-/// and **qualitative** time representations in a unified way.
-///
-/// This is especially useful in hybrid environments where:
-/// - Time may be physical in one subsystem and symbolic in another
-/// - Models must support both discrete and continuous timelines
-/// - Simulation layers require flexible temporal modes
-///
-/// # Use Cases
-/// - Dynamic systems with configurable time semantics
-/// - Spacetime graphs mixing physics and logic
-/// - Abstract symbolic timelines
-/// - Causal models across domains (AI, physics, engineering)
+/// One of the time types a context can hold, so that a single time slot can carry nodes of
+/// different kinds.
 ///
 /// # Variants
 ///
-/// - `Lorentzian(LorentzianTime<R>)`
-///   - Real-valued time coordinate used in special/general relativity
-///   - Metric signature: `(-+++), t ∈ ℝ`
-///   - Appears in causal structure and physical propagation
+/// - `Newtonian(NewtonianTime<R>)`: the absolute time of a classical spacetime. Durations are the
+///   same for every observer.
+/// - `Minkowski(MinkowskiTime<R>)`: the coordinate time of an inertial frame of Minkowski
+///   spacetime. It depends on the frame.
+/// - `Discrete(DiscreteTime)`: a tick count; it implies a duration only through its `TimeScale`.
+/// - `Entropic(EntropicTime)`: a monotone count of irreversible state changes, with no physical
+///   unit.
 ///
-/// - `Euclidean(EuclideanTime<R>)`
-///   - Imaginary time (Wick-rotated), used in quantum/statistical physics
-///   - Metric signature: `(++++)`
-///   - Common in quantum field theory (QFT), path integrals, and lattice simulations
-///
-/// - `Discrete(DiscreteTime)`
-///   - Integer-valued ticks or steps (e.g., for simulation time, state machines)
-///   - Unitless or context-dependent
-///   - Used in agent-based models, control systems, and RL environments
-///
-// /// - `Symbolic(SymbolicTime)`
-// ///   - Qualitative, label-based time points (e.g., `"Before(A)"`, `"T1"`)
-// ///   - Useful in symbolic AI, planning, explainable graphs, or formal logic
+/// The variants measure different things, so comparing the scalars of two different variants
+/// compares numbers, not instants.
 ///
 /// # Example
 ///
 /// ```rust
 /// use deep_causality_context::*;
 ///
-/// let lorentz = TimeKind::Lorentzian(LorentzianTime::new(1, TimeScale::Second, 3.14));
+/// let coordinate = TimeKind::Minkowski(MinkowskiTime::new(1, TimeScale::Second, 3.14));
 ///
 /// // The tick-based variants carry no scalar of their own, so the enum's scalar is named here.
 /// let discrete: TimeKind<FloatType> =
 ///     TimeKind::Discrete(DiscreteTime::new(2, TimeScale::Second, 42));
 ///
-/// println!("L: {}, ID: {}", lorentz, lorentz.id());
-/// println!("D: {}, ID: {}", discrete, discrete.id());
+/// assert_eq!(coordinate.id(), 1);
+/// assert_eq!(discrete.id(), 2);
 /// ```
-///
-/// # Trait Compatibility
-/// - Implements `Identifiable` based on the inner ID
-/// - Implements `Display` for readable output
-/// - Implements `Temporal` with `TimeUnit = R`, where `R: FromPrimitive`
-///
-/// # See also
-/// - `LorentzianTime`, `EuclideanTime`, `DiscreteTime`, `SymbolicTime`
-/// - `SpaceKind` for spatial equivalents
-/// - `SpacetimeInterval` for reasoning over separation or causality
-///
-/// # Design Note
-/// For models that need a single time field but must support multiple
-/// representations of time (e.g., symbolic vs physical), `TimeKind` provides
-/// a principled and type-safe solution.
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub enum TimeKind<R>
 where
     R: RealField,
 {
-    /// Imaginary-time axis for quantum/statistical models via Wick rotation.
-    Euclidean(EuclideanTime<R>),
+    /// The absolute time of a classical spacetime.
+    Newtonian(NewtonianTime<R>),
 
     /// Entropic time for emergent causal models via entropy.
     Entropic(EntropicTime),
@@ -94,8 +56,8 @@ where
     /// Discrete tick-based time (steps, iterations, simulation frames).
     Discrete(DiscreteTime),
 
-    /// Real-valued coordinate time in Lorentzian (causal, relativistic) geometry.
-    Lorentzian(LorentzianTime<R>),
+    /// The coordinate time of an inertial frame of Minkowski spacetime.
+    Minkowski(MinkowskiTime<R>),
     // /// Symbolic or qualitative time labels (e.g., "before event A", "T1").
     // Symbolic(SymbolicTime),
 }

@@ -9,13 +9,15 @@ use deep_causality_num::FromPrimitive;
 
 impl<R: RealField + FromPrimitive> SpaceTemporalInterval for TangentSpacetime<R> {
     fn time(&self) -> R {
-        // TangentSpacetime does not have a time_scale field, assuming time is always in seconds
+        // `t` is in seconds by construction.
         self.t
     }
     fn position(&self) -> [R; 3] {
         [self.x, self.y, self.z]
     }
-    // Override `interval_squared()` for curved spacetime
+    /// `g_ab Δxᵃ Δxᵇ` with `self`'s tensor, on the displacement `(Δt, Δx, Δy, Δz)` in the
+    /// coordinate order the tensor is indexed in. See [`TangentSpacetime`] for how this relates to
+    /// the interval.
     fn interval_squared(&self, other: &Self) -> R {
         let dt = self.t - other.t;
         let dx = self.x - other.x;

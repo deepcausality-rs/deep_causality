@@ -7,8 +7,9 @@ use crate::{Adjustable, AdjustmentError, TangentSpacetime, UpdateError};
 use deep_causality_algebra::RealField;
 use deep_causality_data_structures::{ArrayGrid, PointIndex};
 
-/// Updates the position of the TangentSpacetime node.
-/// The metric tensor is updated via the 'update_metric_tensor' method.
+/// Updates the event of the TangentSpacetime node. Grid positions 0 to 3 hold `t, x, y, z`, the
+/// coordinate order. The metric tensor is updated through
+/// [`MetricTensor4D::update_metric_tensor`](crate::MetricTensor4D::update_metric_tensor).
 // `Default` is not implied by `RealField`; `ArrayGrid<T, ..>` requires it to initialise
 // its backing array, so it is bounded here rather than on the struct.
 impl<R: RealField + Default> Adjustable<R> for TangentSpacetime<R> {
@@ -23,10 +24,10 @@ impl<R: RealField + Default> Adjustable<R> for TangentSpacetime<R> {
         let p4 = PointIndex::new3d(0, 0, 3);
 
         // Get the data at the index position from the array grid
-        let new_x = array_grid.get(p1);
-        let new_y = array_grid.get(p2);
-        let new_z = array_grid.get(p3);
-        let new_t = array_grid.get(p4);
+        let new_t = array_grid.get(p1);
+        let new_x = array_grid.get(p2);
+        let new_y = array_grid.get(p3);
+        let new_z = array_grid.get(p4);
 
         if !new_x.is_finite() {
             return Err(UpdateError(
@@ -61,8 +62,7 @@ impl<R: RealField + Default> Adjustable<R> for TangentSpacetime<R> {
         Ok(())
     }
 
-    /// Adjust the position of the TangentSpacetime node.
-    /// The metric tensor is updated via the 'update_metric_tensor' method.
+    /// Adds grid positions 0 to 3 to `t, x, y, z`. The metric tensor is not adjusted.
     fn adjust<const W: usize, const H: usize, const D: usize, const C: usize>(
         &mut self,
         array_grid: &ArrayGrid<R, W, H, D, C>,
@@ -74,10 +74,10 @@ impl<R: RealField + Default> Adjustable<R> for TangentSpacetime<R> {
         let p4 = PointIndex::new3d(0, 0, 3);
 
         // get the data at the index position
-        let new_x = array_grid.get(p1);
-        let new_y = array_grid.get(p2);
-        let new_z = array_grid.get(p3);
-        let new_t = array_grid.get(p4);
+        let new_t = array_grid.get(p1);
+        let new_x = array_grid.get(p2);
+        let new_y = array_grid.get(p3);
+        let new_z = array_grid.get(p4);
 
         // Calculate the adjusted data by adding the new data to the current data
         let adjusted_x = self.x + new_x;

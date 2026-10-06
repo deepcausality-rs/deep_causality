@@ -37,7 +37,12 @@ fn start(ctx: BaseContext) -> PropagatingProcess<f64, (), BaseContext> {
 
 * `Context` — the context hypergraph, with extra contexts and data/time indices.
 * `Contextoid` / `ContextoidType` — the nodes it holds.
-* Context node types — `Data`, `Root`, the space, spacetime, symbolic-spacetime and time families.
+* Context node types — `Data`, `Root`, and the space, time and spacetime families:
+  `EuclideanSpace`, `EcefSpace`, `NedSpace` and `GeoSpace`; `NewtonianTime`, `MinkowskiTime`,
+  `DiscreteTime` and `EntropicTime`; `GalileanSpacetime`, `NewtonianSpacetime`,
+  `MinkowskiSpacetime` and `TangentSpacetime`; and `NoSpace`, `NoTime` and `NoSpaceTime` for a slot
+  the context does not use. Each type documents the definition it follows and its source, with
+  copies of the open-access sources in `papers/`.
 * `Contextuable`, `Datable`, `Spatial`, `Temporal`, `SpaceTemporal`, `Coordinate`, `Distance`,
   `MetricSignature`, `MetricTensor4D` and the indexable traits.
 * `Adjustable<T>` for nodes that update from an `ArrayGrid<T, ..>`, and `UncertainAdjustable` for
@@ -46,6 +51,59 @@ fn start(ctx: BaseContext) -> PropagatingProcess<f64, (), BaseContext> {
   `Context::apply` for persistence, with the `SubstrateContext` and `SubstrateContextoid` aliases.
 * `RelationKind`, `TimeScale`, `VerticalDatum` and `SubstrateRef`, re-exported from
   `deep_causality_context_store`, so a model names them from this crate alone.
+
+## Geometry
+
+Each space, time and spacetime type models one geometry, named as the cited source names it.
+
+| Type | Geometry | Distance or interval | Source |
+|---|---|---|---|
+| `EuclideanSpace` | Three-dimensional Euclidean space | `√(Δx² + Δy² + Δz²)` | Weatherall 2021, §2 |
+| `EcefSpace` | WGS 84 Earth-centred, Earth-fixed Cartesian coordinates, metres | Euclidean norm | NGA 2014, §2.1; IOGP 2012, §2.2.1 |
+| `NedSpace` | Local topocentric frame, north-east-down, metres | Euclidean norm | IOGP 2012, §2.2.2 |
+| `GeoSpace` | WGS 84 geodetic latitude, longitude, altitude against a `VerticalDatum` | Straight line through the geocentric conversion; NaN unless both altitudes are WGS 84 ellipsoidal heights | NGA 2014, Tables 3.1 and 3.5; IOGP 2012, §2.2.1 |
+| `NewtonianTime` | Absolute time of a classical spacetime | — | Weatherall 2021, §3; Malament 2012, §4.1 |
+| `MinkowskiTime` | Coordinate time of an inertial frame of Minkowski spacetime | — | Carroll 1997, ch. 1 |
+| `GalileanSpacetime` | Galilean spacetime: affine, absolute time, Euclidean space at each instant, no rest frame | Spatial distance between simultaneous events; NaN between events at different times | Weatherall 2021, §3; Malament 2012, §4.1 |
+| `NewtonianSpacetime` | Newtonian spacetime: Galilean spacetime with absolute space, in coordinates at rest in it | Spatial distance between any two events, a pseudometric | Weatherall 2021, §4; Stein 1967; Malament 2012, Prop. 4.1.2 |
+| `MinkowskiSpacetime` | Flat Minkowski spacetime, east-coast signature (−, +, +, +) | `s² = −(cΔt)² + Δx² + Δy² + Δz²`; NaN for a time scale that names no duration | Malament 2012, §2.1; Carroll 1997, eqs. (1.3), (1.8) |
+| `TangentSpacetime` | An event of a relativistic spacetime with a tangent vector and the metric tensor there | `g_ab Δxᵃ Δxᵇ` under the event's own tensor | Malament 2012, §2.1; Poisson, Pound & Vega 2011, §3.1 |
+| `CausalSetSpacetime` | An element of a causal set and its past | — | Sorkin 2003, p. 5 |
+
+Every spacetime indexes its coordinates `0 => t, 1 => x, 2 => y, 3 => z`, the order `x⁰ = ct` of
+Carroll 1997, eq. (1.5), and reports through `MetricSignature` the signature of the metric it
+measures with, generator `i` its coordinate `i`: `Metric::Lorentzian(4)` for the relativistic
+types, and `Metric::PGA(4)`, the spatial metric's (0, +, +, +), for the classical ones.
+`TangentSpacetime::update_metric_tensor` accepts only a symmetric tensor of signature
+(−, +, +, +), counted exactly by Sylvester's law of inertia (Horn & Johnson 2013, Theorem 4.5.8).
+
+`NoSpace`, `NoTime` and `NoSpaceTime` fill the spatial, temporal and spacetime slots of a context
+whose graph holds no node of that kind.
+
+### References
+
+Open-access sources are copied into `papers/`.
+
+- Carroll, S. M. (1997). *Lecture Notes on General Relativity*. arXiv:gr-qc/9712019.
+  `papers/carroll_1997_lecture_notes_on_general_relativity_arXiv_gr-qc_9712019.pdf`
+- Horn, R. A., & Johnson, C. R. (2013). *Matrix Analysis*, 2nd ed. Cambridge University Press.
+- IOGP (2012). *Geomatics Guidance Note 7, part 2: Coordinate Conversions and Transformations
+  including Formulas*, OGP Publication 373-7-2.
+  `papers/iogp_2012_373-7-2_coordinate_conversions_and_transformations.pdf`
+- Malament, D. B. (2012). *Topics in the Foundations of General Relativity and Newtonian
+  Gravitation Theory*. University of Chicago Press.
+- National Geospatial-Intelligence Agency (2014). *World Geodetic System 1984: Its Definition and
+  Relationships with Local Geodetic Systems*, NGA.STND.0036_1.0.0_WGS84.
+  `papers/NGA.STND.0036_1.0.0_WGS84.pdf`
+- Poisson, E., Pound, A., & Vega, I. (2011). The Motion of Point Particles in Curved Spacetime.
+  *Living Reviews in Relativity*, article 7. doi:10.12942/lrr-2011-7. arXiv:1102.0529.
+  `papers/poisson_pound_vega_2011_motion_of_point_particles_in_curved_spacetime_arXiv_1102.0529.pdf`
+- Sorkin, R. D. (2003). Causal Sets: Discrete Gravity. arXiv:gr-qc/0309009.
+  `papers/sorkin_2003_causal_sets_discrete_gravity_arXiv_gr-qc_0309009.pdf`
+- Stein, H. (1967). Newtonian space-time. *The Texas Quarterly* 10, 174–200.
+- Weatherall, J. O. (2021). Classical Spacetime Structure. In E. Knox & A. Wilson (Eds.), *The
+  Routledge Companion to Philosophy of Physics*, pp. 33–45. Routledge. arXiv:1707.05887.
+  `papers/weatherall_2017_classical_spacetime_structure_arXiv_1707.05887.pdf`
 
 ## Build configurations
 

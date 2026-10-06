@@ -10,25 +10,26 @@
 //! `test_every_other_variant_is_refused`; F/G zero and negative coordinates,
 //! `test_zero_and_negative_round_trip`; I non-finite, `test_non_finite_round_trips`; K `Float106`
 //! narrows and `BFloat16` widens, `test_precision_is_spent_at_the_bound`; every other row n/a.
-//! The metric tensor's entries are `4 * row + column + 0.5`, all distinct, so a transposed or
-//! default metric is caught: `test_the_stored_metric_is_restored_not_the_default`.
+//! The metric tensor is symmetric and Lorentzian, with every entry of its upper triangle distinct,
+//! so a misplaced or default metric is caught: `test_the_stored_metric_is_restored_not_the_default`.
+//! Its eigenvalues, from `numpy.linalg.eigvalsh`, are one negative and three positive.
 use deep_causality_context::{MetricTensor4D, TangentSpacetime, TimeScale};
 use deep_causality_context_store::{ProjectionError, Recordable, SpaceTimeRecord};
 use deep_causality_num::{BFloat16, Float106};
 
 fn metric() -> [[f64; 4]; 4] {
-    let mut m = [[0.0; 4]; 4];
-    for (i, row) in m.iter_mut().enumerate() {
-        for (j, cell) in row.iter_mut().enumerate() {
-            *cell = (i * 4 + j) as f64 + 0.5;
-        }
-    }
-    m
+    [
+        [-30.5, 0.5, 1.5, 2.5],
+        [0.5, 10.5, 3.5, 4.5],
+        [1.5, 3.5, 11.5, 5.5],
+        [2.5, 4.5, 5.5, 12.5],
+    ]
 }
 
 fn node() -> TangentSpacetime<f64> {
     let mut node = TangentSpacetime::new(3, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5);
-    node.update_metric_tensor(metric());
+    node.update_metric_tensor(metric())
+        .expect("the fixture tensor is a Lorentzian metric");
     node
 }
 
@@ -56,32 +57,43 @@ fn test_round_trip() {
 #[test]
 fn test_the_stored_metric_is_restored_not_the_default() {
     let restored = TangentSpacetime::<f64>::from_record(3, node().to_record().unwrap()).unwrap();
-    assert_eq!(restored.metric_tensor()[3][2], 14.5);
-    assert_eq!(restored.metric_tensor()[2][3], 11.5);
+    assert_eq!(restored.metric_tensor()[3][2], 5.5);
+    assert_eq!(restored.metric_tensor()[0][3], 2.5);
+    assert_eq!(restored.metric_tensor(), metric());
     let fresh = TangentSpacetime::new(3, 1.5, 2.5, 3.5, 4.5, 5.5, 6.5, 7.5, 8.5);
     assert_ne!(restored.metric_tensor(), fresh.metric_tensor());
 }
 
 #[test]
 fn test_every_other_variant_is_refused() {
-    let others: [(&str, SpaceTimeRecord); 2] = [
+    let others: [(&str, SpaceTimeRecord); 3] = [
         (
-            "Euclidean",
-            SpaceTimeRecord::Euclidean {
+            "Galilean",
+            SpaceTimeRecord::Galilean {
+                t: 4.0,
                 x: 1.0,
                 y: 2.0,
                 z: 3.0,
-                t: 4.0,
                 scale: TimeScale::Second,
             },
         ),
         (
-            "Lorentzian",
-            SpaceTimeRecord::Lorentzian {
+            "Newtonian",
+            SpaceTimeRecord::Newtonian {
+                t: 4.0,
                 x: 1.0,
                 y: 2.0,
                 z: 3.0,
+                scale: TimeScale::Second,
+            },
+        ),
+        (
+            "Minkowski",
+            SpaceTimeRecord::Minkowski {
                 t: 4.0,
+                x: 1.0,
+                y: 2.0,
+                z: 3.0,
                 scale: TimeScale::Second,
             },
         ),
@@ -146,11 +158,13 @@ fn test_precision_is_spent_at_the_bound() {
     );
     // The default metric holds c² exactly in two halves; the record holds a double, so the
     // restored metric is the narrowed one.
-    expected.update_metric_tensor(
-        expected
-            .metric_tensor()
-            .map(|row| row.map(|v| e(f64::from(v)))),
-    );
+    expected
+        .update_metric_tensor(
+            expected
+                .metric_tensor()
+                .map(|row| row.map(|v| e(f64::from(v)))),
+        )
+        .expect("the narrowed default metric is still Lorentzian");
     assert_eq!(restored.metric_tensor(), expected.metric_tensor());
     assert_eq!(restored, expected);
     let b = |v: f64| BFloat16::from(v);
@@ -169,4 +183,41 @@ fn test_precision_is_spent_at_the_bound() {
         TangentSpacetime::<BFloat16>::from_record(2, narrow.to_record().unwrap()),
         Ok(narrow)
     );
+}
+
+#[test]
+fn test_a_record_whose_tensor_is_not_a_lorentzian_metric_is_refused() {
+    // A record can hold any sixteen numbers; the restore accepts only a symmetric tensor of
+    // signature (−, +, +, +), the invariant every TangentSpacetime keeps.
+    let record = |metric: [[f64; 4]; 4]| SpaceTimeRecord::Tangent {
+        t: 0.0,
+        x: 0.0,
+        y: 0.0,
+        z: 0.0,
+        dt: 1.0,
+        dx: 0.0,
+        dy: 0.0,
+        dz: 0.0,
+        metric,
+    };
+    let mut asymmetric = metric();
+    asymmetric[0][1] = 9.0;
+    let riemannian = [
+        [1.0, 0.0, 0.0, 0.0],
+        [0.0, 1.0, 0.0, 0.0],
+        [0.0, 0.0, 1.0, 0.0],
+        [0.0, 0.0, 0.0, 1.0],
+    ];
+    for bad in [asymmetric, riemannian] {
+        match TangentSpacetime::<f64>::from_record(6, record(bad)) {
+            Err(e) => assert!(
+                matches!(
+                    e.kind(),
+                    deep_causality_context_store::ProjectionErrorEnum::Rejected { id: 6, .. }
+                ),
+                "{e}"
+            ),
+            Ok(node) => panic!("restored a non-Lorentzian tensor: {node:?}"),
+        }
+    }
 }

@@ -19,65 +19,66 @@ mod space_temporal_interval;
 mod spatial;
 mod temporal;
 
-/// A 4D+4D spacetime model combining position and motion, with support for curved geometry.
+/// An event `p` of a relativistic spacetime, a tangent vector at `p`, and the metric tensor
+/// `g_ab(p)` there, in coordinates `(t, x, y, z)` with `t` in seconds and `x, y, z` in metres.
 ///
-/// `TangentBundleSpacetime` represents an event in spacetime along with its
-/// tangent vector (velocity or proper motion). It also carries an embedded
-/// **metric tensor** `gᵤᵥ` that defines the **local geometry** of spacetime,
-/// allowing for proper interval calculations in **curved manifolds**.
+/// A relativistic spacetime is a four-dimensional manifold with a metric of Lorentz signature
+/// (Malament 2012, §2.1, p. 119). This type stores the metric only at its own event, as the 4×4
+/// matrix `g` indexed in the coordinate order `t, x, y, z`. It starts as the Minkowski metric in
+/// these units, `diag(−c², 1, 1, 1)`, which is `η = diag(−1, 1, 1, 1)` on `x⁰ = ct`
+/// (Carroll 1997, eqs. (1.5) and (1.8)), and
+/// [`update_metric_tensor`](crate::MetricTensor4D::update_metric_tensor) accepts only a
+/// symmetric tensor of signature (−, +, +, +), so `metric()` stays `Metric::Lorentzian(4)`.
 ///
-/// This model generalizes both **flat Minkowski spacetime** and **dynamic curved spacetime**
-/// (e.g., Schwarzschild or cosmological spacetimes) by exposing its metric via the
-/// `MetricTensor4D` trait, and supporting runtime updates via
-/// `update_metric_tensor()`.
+/// # The interval
+/// [`interval_squared`](crate::SpaceTemporalInterval::interval_squared) returns
+/// `g_ab(p) Δxᵃ Δxᵇ`, the coordinate displacement to the other event squared under the metric at
+/// `self`. In flat spacetime with inertial coordinates this is the interval: twice Synge's world
+/// function, `2σ = η_ab Δxᵃ Δxᵇ` (Poisson, Pound & Vega 2011, §3.1). On a curved manifold `σ`
+/// is defined by an integral along the geodesic joining the events (eq. (3.1) there) and in
+/// general differs from this value, and because the value uses `self`'s tensor,
+/// `a.interval_squared(&b)` and `b.interval_squared(&a)` differ when the two tensors differ.
 ///
-/// # Fields
-/// - `id`: Unique numeric identifier
-/// - `x`: X-coordinate in meters
-/// - `y`: Y-coordinate in meters
-/// - `z`: Z-coordinate in meters
-/// - `t`: time (e.g., seconds)
-/// - `dt`: Proper time velocity (usually `1.0`)
-/// - `dx, dy, dz`: Spatial velocity components (in meters/second)
-/// - `metric`: Local 4×4 metric tensor defining the geometry
+/// # The tangent vector
+/// `(dt, dx, dy, dz)` are the components of a tangent vector at `p` in the same coordinate
+/// order, typically the four-velocity `dxᵃ/dτ`.
 ///
-/// # Coordinate Index Mapping
-/// When used with the `Coordinate` trait, the following index mapping applies:
-/// - `0 => x`
-/// - `1 => y`
-/// - `2 => z`
-/// - `3 => t`
+/// # Coordinate index mapping
+/// - `0 => t`
+/// - `1 => x`
+/// - `2 => y`
+/// - `3 => z`
 ///
-/// # Curvature Support
-/// The default metric is flat Minkowski (− + + +), but this can be replaced at runtime:
-///
+/// # Example
 /// ```
 /// use deep_causality_context::*;
 ///
+/// // Arguments: id, x, y, z, t, dt, dx, dy, dz.
 /// let mut s = TangentSpacetime::new(1, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0);
 ///
-/// // Replace with a custom curved spacetime metric (e.g., anisotropic)
+/// // A Lorentzian tensor with anisotropic spatial part, indexed t, x, y, z.
 /// let warped = [
 ///     [-8.98755179e16, 0.0, 0.0, 0.0],
 ///     [0.0, 1.05, 0.0, 0.0],
 ///     [0.0, 0.0, 0.95, 0.0],
 ///     [0.0, 0.0, 0.0, 0.90],
 /// ];
+/// assert!(s.update_metric_tensor(warped).is_ok());
 ///
-/// s.update_metric_tensor(warped);
-/// let s2 = TangentSpacetime::new(2, 2.0, 3.0, 4.0, 0.0, 1.0, 0.0, 0.0, 0.0);
-///
-/// let interval = s.interval_squared(&s2);
-/// println!("Curved spacetime interval²: {interval}");
+/// // A positive-definite tensor is not Lorentzian and is refused.
+/// let riemannian = [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]];
+/// assert!(s.update_metric_tensor(riemannian).is_err());
 /// ```
 ///
 /// # References
-/// - J.M. Lee, *Introduction to Smooth Manifolds*, Springer, 2012 — Chapter 8: Tangent Bundles
-/// - R.M. Wald, *General Relativity*, University of Chicago Press, 1984 — Ch. 3: Curved Spacetime Geometry
-///
-/// # See also
-/// - `SpacetimeInterval` — for causal separation calculations
-/// - `MetricTensor4D` — for curvature configuration
+/// - Malament, D. B. (2012). *Topics in the Foundations of General Relativity and Newtonian
+///   Gravitation Theory*. University of Chicago Press. §2.1, p. 119.
+/// - Carroll, S. M. (1997). *Lecture Notes on General Relativity*. arXiv:gr-qc/9712019, ch. 1.
+///   Copy: `papers/carroll_1997_lecture_notes_on_general_relativity_arXiv_gr-qc_9712019.pdf`.
+/// - Poisson, E., Pound, A., & Vega, I. (2011). The Motion of Point Particles in Curved
+///   Spacetime. *Living Reviews in Relativity*, article 7. doi:10.12942/lrr-2011-7.
+///   arXiv:1102.0529. Copy:
+///   `papers/poisson_pound_vega_2011_motion_of_point_particles_in_curved_spacetime_arXiv_1102.0529.pdf`.
 #[derive(Debug, Copy, Clone, PartialEq)]
 pub struct TangentSpacetime<R>
 where
@@ -85,26 +86,25 @@ where
 {
     id: ContextoidId,
 
-    // Position
-    x: R, // meters
+    /// Coordinate time, in seconds.
+    t: R,
+    /// Position, in metres.
+    x: R,
     y: R,
     z: R,
-
-    // Time
-    t: R, // seconds
-
-    // Velocity / tangent vector
-    dt: R, // unit or proper time derivative
-    dx: R, // meters/second
+    /// Tangent vector components, in the coordinate order.
+    dt: R,
+    dx: R,
     dy: R,
     dz: R,
-
-    // Local metric tensor (mutable)
+    /// The metric tensor at this event, indexed `t, x, y, z`; symmetric, of signature (−, +, +, +).
     metric: [[R; 4]; 4],
 }
 
 impl<R: RealField + FromPrimitive> TangentSpacetime<R> {
-    /// Create a new tangent bundle point with a default Minkowski metric.
+    /// An event at `(t, x, y, z)` with tangent vector `(dt, dx, dy, dz)` and the Minkowski metric
+    /// `diag(−c², 1, 1, 1)`, `c = 299 792 458 m/s`. The arguments are given as
+    /// `id, x, y, z, t, dt, dx, dy, dz`.
     #[allow(clippy::too_many_arguments)]
     pub fn new(id: ContextoidId, x: R, y: R, z: R, t: R, dt: R, dx: R, dy: R, dz: R) -> Self {
         let c: R = lift(299_792_458.0);

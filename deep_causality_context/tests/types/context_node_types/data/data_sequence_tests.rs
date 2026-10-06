@@ -12,7 +12,7 @@ use deep_causality_context::FloatType;
 use deep_causality_context::utils_test::test_utils::get_context;
 use deep_causality_context::{
     Context, Contextoid, ContextoidType, ContextuableGraph, Data, Datable, EuclideanSpace,
-    EuclideanSpacetime, EuclideanTime, Identifiable,
+    Identifiable, NewtonianSpacetime, NewtonianTime,
 };
 
 /// A time series is not `Copy`. Before the bound was relaxed this line did not compile.
@@ -41,8 +41,8 @@ fn test_sequence_node_lives_in_a_context() {
     let mut context: Context<
         Series,
         EuclideanSpace<FloatType>,
-        EuclideanTime<FloatType>,
-        EuclideanSpacetime<FloatType>,
+        NewtonianTime<FloatType>,
+        NewtonianSpacetime<FloatType>,
     > = Context::with_capacity(1, "series", 4);
 
     let oil = Series::new(10, vec![50.0, 52.0, 53.5]);

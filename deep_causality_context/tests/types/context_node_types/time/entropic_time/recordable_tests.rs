@@ -25,15 +25,15 @@ fn test_round_trip() {
 fn test_every_other_variant_is_refused() {
     let others: [(&str, TimeRecord); 3] = [
         (
-            "Euclidean",
-            TimeRecord::Euclidean {
+            "Newtonian",
+            TimeRecord::Newtonian {
                 scale: TimeScale::Second,
                 value: 1.0,
             },
         ),
         (
-            "Lorentzian",
-            TimeRecord::Lorentzian {
+            "Minkowski",
+            TimeRecord::Minkowski {
                 scale: TimeScale::Second,
                 value: 1.0,
             },

@@ -13,9 +13,9 @@ impl<R: RealField + FromPrimitive + Default> ScalarProjector for TimeKind<R> {
     fn project(&self) -> Self::Scalar {
         match self {
             TimeKind::Discrete(t) => lift_count(t.project()),
-            TimeKind::Euclidean(t) => t.project(),
+            TimeKind::Newtonian(t) => t.project(),
             TimeKind::Entropic(t) => lift_count(t.project()),
-            TimeKind::Lorentzian(t) => t.project(),
+            TimeKind::Minkowski(t) => t.project(),
             // TimeKind::Symbolic(t) => t.project(),
         }
     }

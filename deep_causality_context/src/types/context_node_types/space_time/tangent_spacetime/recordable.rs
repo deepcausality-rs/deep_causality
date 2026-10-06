@@ -17,10 +17,10 @@ impl<R: RealField + Into<f64> + FromPrimitive> Recordable<SpaceTimeRecord> for T
         let [dx, dy, dz] = self.velocity_vector();
         let metric = self.metric_tensor().map(|row| row.map(Into::into));
         Ok(SpaceTimeRecord::Tangent {
+            t: (*self.t()).into(),
             x: self.x().into(),
             y: self.y().into(),
             z: self.z().into(),
-            t: (*self.t()).into(),
             dt: self.time_velocity().into(),
             dx: dx.into(),
             dy: dy.into(),
@@ -32,10 +32,10 @@ impl<R: RealField + Into<f64> + FromPrimitive> Recordable<SpaceTimeRecord> for T
     fn from_record(id: ContextoidId, record: SpaceTimeRecord) -> Result<Self, ProjectionError> {
         match record {
             SpaceTimeRecord::Tangent {
+                t,
                 x,
                 y,
                 z,
-                t,
                 dt,
                 dx,
                 dy,
@@ -59,7 +59,12 @@ impl<R: RealField + Into<f64> + FromPrimitive> Recordable<SpaceTimeRecord> for T
                         *cell = lift(id, value)?;
                     }
                 }
-                node.update_metric_tensor(lifted);
+                node.update_metric_tensor(lifted).map_err(|_| {
+                    ProjectionError::Rejected(
+                        id,
+                        "a TangentSpacetime metric tensor must be symmetric with signature (−, +, +, +)",
+                    )
+                })?;
                 Ok(node)
             }
             other => Err(ProjectionError::WrongVariant(

@@ -14,7 +14,7 @@
 
 use deep_causality_context::{
     Context, Contextoid, ContextoidType, ContextuableGraph, Data, EuclideanSpace,
-    EuclideanSpacetime, EuclideanTime, Storable,
+    NewtonianSpacetime, NewtonianTime, Storable,
 };
 use deep_causality_context_store::{ContextoidId, DataRecord, ProjectionError};
 
@@ -58,7 +58,7 @@ impl Storable for SensorReading {
 }
 
 type SensorContext =
-    Context<Data<SensorReading>, EuclideanSpace<f64>, EuclideanTime<f64>, EuclideanSpacetime<f64>>;
+    Context<Data<SensorReading>, EuclideanSpace<f64>, NewtonianTime<f64>, NewtonianSpacetime<f64>>;
 
 fn reading() -> SensorReading {
     SensorReading {

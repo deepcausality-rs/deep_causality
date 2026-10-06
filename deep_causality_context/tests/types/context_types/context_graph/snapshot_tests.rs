@@ -16,9 +16,10 @@
 //! a graph, `test_an_unrecordable_node_stops_the_walk`; every other row n/a.
 
 use deep_causality_context::{
-    Context, Contextoid, ContextoidType, ContextuableGraph, Data, DiscreteTime, EuclideanSpacetime,
-    EuclideanTime, ExtendableContextuableGraph, NedSpace, NoSpaceTime, RelationKind, Root,
-    SpaceKind, SpaceTimeKind, TimeKind, TimeScale, UniformContext, UniformContextoid,
+    Context, Contextoid, ContextoidType, ContextuableGraph, Data, DiscreteTime,
+    ExtendableContextuableGraph, NedSpace, NewtonianSpacetime, NewtonianTime, NoSpaceTime,
+    RelationKind, Root, SpaceKind, SpaceTimeKind, TimeKind, TimeScale, UniformContext,
+    UniformContextoid,
 };
 use deep_causality_context_store::{
     ContextoidRecord, DataRecord, NodeRecord, ProjectionError, RECORD_VERSION, SpaceRecord,
@@ -165,7 +166,7 @@ fn test_every_node_kind_is_recorded() {
     .unwrap();
     ctx.add_node(Contextoid::new(
         5,
-        ContextoidType::SpaceTempoid(SpaceTimeKind::Euclidean(EuclideanSpacetime::new(
+        ContextoidType::SpaceTempoid(SpaceTimeKind::Newtonian(NewtonianSpacetime::new(
             5,
             1.0,
             2.0,
@@ -196,7 +197,7 @@ fn test_every_node_kind_is_recorded() {
 
 #[test]
 fn test_an_unrecordable_node_stops_the_walk() {
-    type Clockwork = Context<Data<f64>, NoSpaceTime<f64>, EuclideanTime<f64>, NoSpaceTime<f64>>;
+    type Clockwork = Context<Data<f64>, NoSpaceTime<f64>, NewtonianTime<f64>, NoSpaceTime<f64>>;
     let mut ctx: Clockwork = Context::with_capacity(1, "clock", 4);
     ctx.add_node(Contextoid::new(1, ContextoidType::Root(Root::new(1))))
         .unwrap();
@@ -207,7 +208,7 @@ fn test_an_unrecordable_node_stops_the_walk() {
     .unwrap();
     ctx.add_node(Contextoid::new(
         3,
-        ContextoidType::Tempoid(EuclideanTime::new(3, TimeScale::Second, 1.0)),
+        ContextoidType::Tempoid(NewtonianTime::new(3, TimeScale::Second, 1.0)),
     ))
     .unwrap();
     assert_eq!(ctx.snapshot().unwrap().nodes().len(), 3);

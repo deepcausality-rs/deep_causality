@@ -10,8 +10,8 @@ use std::marker::PhantomData;
 pub type StdCtx = ContextoidType<
     Data<i32>,
     EuclideanSpace<FloatType>,
-    EuclideanTime<FloatType>,
-    EuclideanSpacetime<FloatType>,
+    NewtonianTime<FloatType>,
+    NewtonianSpacetime<FloatType>,
 >;
 
 #[test]
@@ -21,8 +21,8 @@ fn test_contextoid_kind_and_accessors() {
 
     let d = Data::new(id, data);
     let s = EuclideanSpace::new(1, 1.0, 2.0, 3.0);
-    let t = EuclideanTime::new(1, TimeScale::Second, 4.0);
-    let st = EuclideanSpacetime::new(1, 1.0, 2.0, 3.0, 4.0, TimeScale::Second);
+    let t = NewtonianTime::new(1, TimeScale::Second, 4.0);
+    let st = NewtonianSpacetime::new(1, 1.0, 2.0, 3.0, 4.0, TimeScale::Second);
     let r = Root::new(0);
 
     let cd: StdCtx = ContextoidType::Datoid(d.clone());
@@ -97,7 +97,7 @@ fn test_every_variant_reports_its_own_kind() {
             ContextKind::Datoid,
         ),
         (
-            ContextoidType::Tempoid(EuclideanTime::new(2, TimeScale::Second, 4.0)),
+            ContextoidType::Tempoid(NewtonianTime::new(2, TimeScale::Second, 4.0)),
             ContextKind::Tempoid,
         ),
         (ContextoidType::Root(Root::new(3)), ContextKind::Root),
@@ -106,7 +106,7 @@ fn test_every_variant_reports_its_own_kind() {
             ContextKind::Spaceoid,
         ),
         (
-            ContextoidType::SpaceTempoid(EuclideanSpacetime::new(
+            ContextoidType::SpaceTempoid(NewtonianSpacetime::new(
                 5,
                 1.0,
                 2.0,

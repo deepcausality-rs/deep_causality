@@ -61,7 +61,7 @@ use deep_causality_algebra::RealField;
 ///
 /// # See also
 /// - `SymbolicTime` for non-numeric symbolic events
-/// - `LorentzianTime` or `ProperTime` for physical time
+/// - `MinkowskiTime` or `ProperTime` for physical time
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 pub struct DiscreteTime {
     /// Unique identifier for this discrete time instance.

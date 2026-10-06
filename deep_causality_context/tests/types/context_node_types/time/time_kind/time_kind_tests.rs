@@ -7,7 +7,7 @@ use deep_causality_context::FloatType;
 use deep_causality_context::*;
 
 fn setup_euclidean() -> TimeKind<FloatType> {
-    TimeKind::Euclidean(EuclideanTime::new(1, TimeScale::Second, 1.23))
+    TimeKind::Newtonian(NewtonianTime::new(1, TimeScale::Second, 1.23))
 }
 
 fn setup_entropic() -> TimeKind<FloatType> {
@@ -19,7 +19,7 @@ fn setup_discrete() -> TimeKind<FloatType> {
 }
 
 fn setup_lorentzian() -> TimeKind<FloatType> {
-    LorentzianTime::new(4, TimeScale::Second, 99.99).into()
+    MinkowskiTime::new(4, TimeScale::Second, 99.99).into()
 }
 
 #[test]
@@ -68,10 +68,10 @@ fn test_display_trait() {
     let s3 = format!("{d}");
     let s4 = format!("{l}");
 
-    assert!(s1.contains("EuclideanTime"));
+    assert!(s1.contains("NewtonianTime"));
     assert!(s2.contains("EntropicTime"));
     assert!(s3.contains("DiscreteTime"));
-    assert!(s4.contains("LorentzianTime"));
+    assert!(s4.contains("MinkowskiTime"));
 
     assert!(s1.contains("id: 1"));
     assert!(s2.contains("id: 2"));
@@ -82,7 +82,7 @@ fn test_display_trait() {
 #[test]
 fn test_partial_eq() {
     let t1 = setup_euclidean();
-    let t2 = TimeKind::Euclidean(EuclideanTime::new(1, TimeScale::Second, 1.23));
+    let t2 = TimeKind::Newtonian(NewtonianTime::new(1, TimeScale::Second, 1.23));
     let t3 = setup_discrete();
 
     assert_eq!(t1, t2);

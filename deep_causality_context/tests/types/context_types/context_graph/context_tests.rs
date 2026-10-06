@@ -4,8 +4,8 @@
  */
 
 use deep_causality_context::{
-    BaseContext, Context, Contextoid, ContextoidType, ContextuableGraph, EuclideanTime,
-    ExtendableContextuableGraph, Identifiable, RelationKind, Root, TimeScale,
+    BaseContext, Context, Contextoid, ContextoidType, ContextuableGraph,
+    ExtendableContextuableGraph, Identifiable, NewtonianTime, RelationKind, Root, TimeScale,
 };
 
 fn get_context() -> BaseContext {
@@ -159,7 +159,7 @@ fn test_add_edge() {
     let t_id = 12;
     let t_time_scale = TimeScale::Month;
     let t_time_unit = 12.0f64;
-    let tempoid = EuclideanTime::new(t_id, t_time_scale, t_time_unit);
+    let tempoid = NewtonianTime::new(t_id, t_time_scale, t_time_unit);
 
     let id = 2;
     let contextoid = Contextoid::new(id, ContextoidType::Tempoid(tempoid));
@@ -190,7 +190,7 @@ fn test_contains_edge() {
     let t_id = 12;
     let t_time_scale = TimeScale::Month;
     let t_time_unit = 12.0f64;
-    let tempoid = EuclideanTime::new(t_id, t_time_scale, t_time_unit);
+    let tempoid = NewtonianTime::new(t_id, t_time_scale, t_time_unit);
 
     let id = 2;
     let contextoid = Contextoid::new(id, ContextoidType::Tempoid(tempoid));
@@ -220,7 +220,7 @@ fn test_remove_edge() {
     let t_id = 12;
     let t_time_scale = TimeScale::Month;
     let t_time_unit = 12.0f64;
-    let tempoid = EuclideanTime::new(t_id, t_time_scale, t_time_unit);
+    let tempoid = NewtonianTime::new(t_id, t_time_scale, t_time_unit);
 
     let id = 2;
     let contextoid = Contextoid::new(id, ContextoidType::Tempoid(tempoid));
@@ -301,7 +301,7 @@ fn test_clone_copies_nodes_edges_and_name() {
     let b = context
         .add_node(Contextoid::new(
             22,
-            ContextoidType::Tempoid(EuclideanTime::new(22, TimeScale::Second, 5.0)),
+            ContextoidType::Tempoid(NewtonianTime::new(22, TimeScale::Second, 5.0)),
         ))
         .expect("failed to add node b");
     context

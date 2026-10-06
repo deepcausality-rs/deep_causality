@@ -5,7 +5,8 @@
 
 pub mod discrete_time;
 pub mod entropic_time;
-pub mod euclidean_time;
-pub mod lorentzian_time;
+pub mod minkowski_time;
+pub mod newtonian_time;
+pub mod no_time;
 pub mod symbolic_time;
 pub mod time_kind;

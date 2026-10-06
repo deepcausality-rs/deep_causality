@@ -15,7 +15,7 @@
 
 use deep_causality_context::{
     BaseContext, Context, ContextStore, Contextoid, ContextoidType, ContextuableGraph, Data,
-    EuclideanSpace, EuclideanSpacetime, EuclideanTime, ExtendableContextuableGraph, Storable,
+    EuclideanSpace, ExtendableContextuableGraph, NewtonianSpacetime, NewtonianTime, Storable,
     StoreErrorEnum, SubstrateRef,
 };
 use deep_causality_context_store::utils_test::{MemoryStorage, MemorySubstrate, block_on};
@@ -29,7 +29,7 @@ use std::future::Future;
 fn number(
     id: ContextoidId,
     value: f64,
-) -> Contextoid<Data<f64>, EuclideanSpace<f64>, EuclideanTime<f64>, EuclideanSpacetime<f64>> {
+) -> Contextoid<Data<f64>, EuclideanSpace<f64>, NewtonianTime<f64>, NewtonianSpacetime<f64>> {
     Contextoid::new(id, ContextoidType::Datoid(Data::new(id, value)))
 }
 
@@ -114,7 +114,7 @@ impl Storable for Reading {
 }
 
 type ReadingContext =
-    Context<Data<Reading>, EuclideanSpace<f64>, EuclideanTime<f64>, EuclideanSpacetime<f64>>;
+    Context<Data<Reading>, EuclideanSpace<f64>, NewtonianTime<f64>, NewtonianSpacetime<f64>>;
 
 #[test]
 fn test_a_struct_payload_reaches_a_reference_holding_store() {

@@ -7,10 +7,14 @@ use crate::errors::{AdjustmentError, UpdateError};
 use crate::{Adjustable, GeoSpace};
 use deep_causality_algebra::RealField;
 use deep_causality_data_structures::{ArrayGrid, PointIndex};
+use deep_causality_num::FromPrimitive;
 
 // `Default` is not implied by `RealField`; `ArrayGrid<T, ..>` requires it to initialise
 // its backing array, so it is bounded here rather than on the struct.
-impl<R: RealField + Default> Adjustable<R> for GeoSpace<R> {
+/// Grid positions 0, 1 and 2 hold latitude, longitude and altitude. A result with a latitude
+/// outside `[−90°, 90°]` is refused and the position is unchanged: latitude and longitude are a
+/// chart on the ellipsoid, not a vector space, and a latitude past a pole names no point.
+impl<R: RealField + Default + FromPrimitive> Adjustable<R> for GeoSpace<R> {
     fn update<const W: usize, const H: usize, const D: usize, const C: usize>(
         &mut self,
         array_grid: &ArrayGrid<R, W, H, D, C>,
@@ -47,6 +51,8 @@ impl<R: RealField + Default> Adjustable<R> for GeoSpace<R> {
                 "Update failed, new alt value is not finite".into(),
             ));
         }
+
+        super::check(new_lat, new_lon, new_alt).map_err(|e| UpdateError(e.0))?;
 
         // Replace the internal data with the new data
         self.lat = new_lat;
@@ -97,6 +103,8 @@ impl<R: RealField + Default> Adjustable<R> for GeoSpace<R> {
                 "Adjustment failed, new alt is not finite".into(),
             ));
         }
+
+        super::check(adjusted_lat, adjusted_lon, adjusted_alt).map_err(|e| AdjustmentError(e.0))?;
 
         // Update the internal data with the adjusted data
         self.lat = adjusted_lat;

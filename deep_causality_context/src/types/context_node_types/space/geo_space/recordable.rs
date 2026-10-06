@@ -29,13 +29,19 @@ impl<R: RealField + Into<f64> + FromPrimitive> Recordable<SpaceRecord> for GeoSp
                 lon,
                 alt,
                 datum,
-            } => Ok(GeoSpace::new(
+            } => GeoSpace::new(
                 id,
                 lift(id, lat)?,
                 lift(id, lon)?,
                 lift(id, alt)?,
                 datum,
-            )),
+            )
+            .map_err(|_| {
+                ProjectionError::Rejected(
+                    id,
+                    "a GeoSpace latitude must lie in [-90, 90] degrees and every coordinate be finite",
+                )
+            }),
             other => Err(ProjectionError::WrongVariant(id, "Geo", other.kind_name())),
         }
     }

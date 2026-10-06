@@ -16,7 +16,7 @@ use deep_causality_context_store::{Recordable, SpaceRecord};
 #[test]
 fn test_every_variant_round_trips() {
     let kinds: [SpaceKind<f64>; 4] = [
-        SpaceKind::Geo(GeoSpace::new(1, 52.5, 13.4, 34.0, VerticalDatum::EGM96)),
+        SpaceKind::Geo(GeoSpace::new(1, 52.5, 13.4, 34.0, VerticalDatum::EGM96).unwrap()),
         SpaceKind::Ecef(EcefSpace::new(2, 1.0, 2.0, 3.0)),
         SpaceKind::Euclidean(EuclideanSpace::new(3, 4.0, 5.0, 6.0)),
         SpaceKind::Ned(NedSpace::new(4, 7.0, 8.0, 9.0)),

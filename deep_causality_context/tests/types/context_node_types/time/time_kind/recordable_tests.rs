@@ -9,17 +9,17 @@
 //! Corner cases (rows A to K): C every variant maps to a distinct record variant,
 //! `test_every_variant_round_trips`; every other row is the inner types' and is in their files.
 use deep_causality_context::{
-    DiscreteTime, EntropicTime, EuclideanTime, LorentzianTime, TimeKind, TimeScale,
+    DiscreteTime, EntropicTime, MinkowskiTime, NewtonianTime, TimeKind, TimeScale,
 };
 use deep_causality_context_store::{Recordable, TimeRecord};
 
 #[test]
 fn test_every_variant_round_trips() {
     let kinds: [TimeKind<f64>; 4] = [
-        TimeKind::Euclidean(EuclideanTime::new(1, TimeScale::Second, 1.5)),
+        TimeKind::Newtonian(NewtonianTime::new(1, TimeScale::Second, 1.5)),
         TimeKind::Entropic(EntropicTime::new(2, 7)),
         TimeKind::Discrete(DiscreteTime::new(3, TimeScale::Steps, 9)),
-        TimeKind::Lorentzian(LorentzianTime::new(4, TimeScale::Nanoseconds, 2.5)),
+        TimeKind::Minkowski(MinkowskiTime::new(4, TimeScale::Nanoseconds, 2.5)),
     ];
     let mut names = Vec::new();
     for (id, kind) in (1u64..).zip(kinds) {
@@ -27,7 +27,7 @@ fn test_every_variant_round_trips() {
         names.push(record.kind_name());
         assert_eq!(TimeKind::from_record(id, record), Ok(kind));
     }
-    assert_eq!(names, ["Euclidean", "Entropic", "Discrete", "Lorentzian"]);
+    assert_eq!(names, ["Newtonian", "Entropic", "Discrete", "Minkowski"]);
 }
 
 #[test]
