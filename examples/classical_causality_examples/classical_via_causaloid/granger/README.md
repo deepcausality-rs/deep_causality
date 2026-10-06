@@ -21,13 +21,13 @@ cargo run -p classical_causality_examples --example granger_via_causaloid
 Granger Causality asks whether one time series helps forecast another. The EPP compares the predictive accuracy of a causal model under two contexts: one with the complete history (factual) and one without the history of the candidate cause (counterfactual).
 
 1.  **Causal Logic (`shipping_predictor_logic`):**
-    One reusable function holds the predictive model. It is a `ContextualCausalFn`, which can inspect the context it is evaluated against, and it predicts the next value of shipping activity from the historical data in that context. It uses both shipping and oil price data if available and falls back to shipping data alone if oil price data is missing.
+    One reusable function holds the predictive model. It is a `ContextualCausalFn`, which can inspect the context it is evaluated against, and it predicts the next value of shipping activity from the historical data in that context. It uses both shipping and oil price data if available and falls back to shipping data alone if oil price data is missing. The model's coefficients are read from the same context.
 
 2.  **Factual vs. Counterfactual Contexts:**
     The Granger test compares two realities:
 
-    *   **Factual Context:** A `BaseContext` with the complete, observed history of *both* oil prices and shipping activity.
-    *   **Counterfactual Context:** A second `BaseContext` with the history of shipping activity but *without* the history of oil prices.
+    *   **Factual Context:** A `GrangerContext` (`Data<f64>` nodes, `DiscreteTime` nodes, no space) with the shipping model's three coefficients (oil baseline, shipping trend, oil coefficient) and the complete, observed history of *both* oil prices and shipping activity, each quarter a `DiscreteTime` node on the `TimeScale::Quarter` scale.
+    *   **Counterfactual Context:** A second `GrangerContext` with the same coefficients, quarters and history of shipping activity but *without* the history of oil prices.
 
 3.  **Evaluating Potential Outcomes:**
     Two `Causaloid`s share the same predictive logic, each bound to a different context:

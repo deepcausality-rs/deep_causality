@@ -20,15 +20,15 @@ The Conditional Average Treatment Effect is the average causal effect of a treat
 
 ### How It Works
 
-1. **Patient Population**: Each patient's attributes, such as age and initial blood pressure, are stored in a `BaseContext`.
+1. **Patient Population**: Each patient's world is a `PatientContext` (a `Context` of `Data<f64>` nodes with no space or time slot) holding three Datoid contextoids: age, initial blood pressure, and the dose, the BP change the drug produces when administered (`-10.0` for every patient).
 
 2. **Subgroup Selection**: A filter keeps patients over 65.
 
-3. **Counterfactual Contexts**: For each patient in the subgroup, the example clones the context into two alternate realities:
+3. **Counterfactual Contexts**: For each patient in the subgroup, `model::arm` clones the context into two alternate realities and adds the treatment assignment as a fourth Datoid:
    - **Treatment Context**: Drug is administered (`drug_administered = 1.0`)
    - **Control Context**: No drug (`drug_administered = 0.0`)
 
-4. **Causaloid Evaluation**: The same causal logic (`drug_effect_logic`) runs against both contexts to compute:
+4. **Causaloid Evaluation**: The same causal logic (`drug_effect_logic`) runs against both contexts, reading the assignment and the dose from each, to compute:
    - `Y(1)`: Potential outcome with treatment
    - `Y(0)`: Potential outcome without treatment
 

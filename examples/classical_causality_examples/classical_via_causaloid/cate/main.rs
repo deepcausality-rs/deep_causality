@@ -4,44 +4,41 @@
  */
 
 use deep_causality::*;
-use deep_causality_context::*;
+use model::PatientContext;
+use std::error::Error;
 use std::sync::{Arc, RwLock};
 
 mod model;
 
-// Define IDs for different data types within the context
-const AGE_ID: IdentificationValue = 1;
-const INITIAL_BP_ID: IdentificationValue = 2;
-const DRUG_ADMINISTERED_ID: IdentificationValue = 3;
+// Node indices of the contextoids a patient world carries: age, initial blood pressure, the BP
+// change the drug produces when administered, and, in each trial arm, the treatment assignment.
+const AGE: usize = 0;
+const INITIAL_BP: usize = 1;
+const DOSE: usize = 2;
+const DRUG_ADMINISTERED: usize = 3;
 
 // Define ID for the causaloid
 const DRUG_EFFECT_CAUSALOID_ID: IdentificationValue = 10;
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     println!("\n--- CATE Example: Effect of Medication on Blood Pressure for Patients > 65 ---");
 
     // 1. Define the population of patients
-    let patient_population = model::create_patient_population();
+    let patient_population = model::create_patient_population()?;
     println!(
         "Created a population of {} patients.",
         patient_population.len()
     );
 
     // 2. Select the subgroup of interest (patients over 65)
-    let subgroup: Vec<&BaseContext> = patient_population
+    let ages = patient_population
         .iter()
-        .filter(|ctx| {
-            for i in 0..ctx.number_of_nodes() {
-                if let Some(node) = ctx.get_node(i)
-                    && let ContextoidType::Datoid(data_node) = node.vertex_type()
-                    && data_node.id() == AGE_ID
-                    && data_node.get_data() > 65.0
-                {
-                    return true;
-                }
-            }
-            false
-        })
+        .map(|ctx| model::read(ctx, AGE).map(|age| (ctx, age)))
+        .collect::<Result<Vec<_>, _>>()?;
+    let subgroup: Vec<&PatientContext> = ages
+        .into_iter()
+        .filter(|&(_, age)| age > 65.0)
+        .map(|(ctx, _)| ctx)
         .collect();
     println!(
         "Found {} patients in the subgroup (age > 65).",
@@ -52,22 +49,11 @@ fn main() {
     let mut ites: Vec<f64> = Vec::new(); // To store Individual Treatment Effects
 
     for patient_context in subgroup {
-        let initial_bp = model::get_patient_bp(patient_context).unwrap_or(140.0);
+        let initial_bp = model::read(patient_context, INITIAL_BP)?;
 
         // --- Create Counterfactual Contexts ---
-        let mut treatment_context = patient_context.clone();
-        let drug_datoid = Contextoid::new(
-            DRUG_ADMINISTERED_ID,
-            ContextoidType::Datoid(Data::new(DRUG_ADMINISTERED_ID, 1.0)), // drug_administered = true
-        );
-        treatment_context.add_node(drug_datoid).unwrap();
-
-        let mut control_context = patient_context.clone();
-        let no_drug_datoid = Contextoid::new(
-            DRUG_ADMINISTERED_ID,
-            ContextoidType::Datoid(Data::new(DRUG_ADMINISTERED_ID, 0.0)), // drug_administered = false
-        );
-        control_context.add_node(no_drug_datoid).unwrap();
+        let treatment_context = model::arm(patient_context, true)?;
+        let control_context = model::arm(patient_context, false)?;
 
         // --- Instantiate Causaloids for each scenario ---
         // New API: ContextualCausalFn = fn(CausalEffect<I>, S, Option<C>) -> PropagatingProcess<O, S, C>
@@ -90,20 +76,10 @@ fn main() {
         let input_effect: PropagatingEffect<NumericalValue> = PropagatingEffect::pure(initial_bp);
 
         let y1_res = treatment_causaloid.evaluate(&input_effect);
-        if y1_res.is_err() {
-            eprintln!("Treatment evaluation failed: {:?}", y1_res.error());
-            continue;
-        }
-
-        let y1_effect = y1_res.value_cloned().unwrap_or(0.0);
+        let y1_effect = model::value_of(&y1_res)?;
 
         let y0_res = control_causaloid.evaluate(&input_effect);
-        if y0_res.is_err() {
-            eprintln!("Control evaluation failed: {:?}", y0_res.error());
-            continue;
-        }
-
-        let y0_effect = y0_res.value_cloned().unwrap_or(0.0);
+        let y0_effect = model::value_of(&y0_res)?;
 
         let y1 = initial_bp + y1_effect; // Potential outcome if treated
         let y0 = initial_bp + y0_effect; // Potential outcome if not treated
@@ -115,7 +91,7 @@ fn main() {
 
     // 4. Aggregate and Conclude
     if !ites.is_empty() {
-        let cate: f64 = deep_causality_stats::mean(&ites).unwrap_or(0.0);
+        let cate: f64 = deep_causality_stats::mean(&ites)?;
         println!("\n--- CATE Calculation Result ---");
         println!(
             "The Conditional Average Treatment Effect (CATE) for patients over 65 is: {:.2}",
@@ -124,4 +100,5 @@ fn main() {
     } else {
         println!("\nNo patients found in the subgroup to calculate CATE.");
     }
+    Ok(())
 }

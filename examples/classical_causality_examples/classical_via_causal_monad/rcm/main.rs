@@ -6,10 +6,10 @@
 //! # RCM via the Causal Monad
 //!
 //! Rubin's potential-outcomes definition of a causal effect, implemented
-//! directly on `PropagatingProcess<FloatType, (), BaseContext>` using the
+//! directly on `PropagatingProcess<FloatType, (), PatientContext>` using the
 //! `Alternatable` family. The world each run reasons against is a typed
-//! `Context` from `deep_causality_context`, so the monad chain carries the
-//! same context the structural causaloid side uses — not a struct of its own.
+//! `Context` from `deep_causality_context` holding the treatment assignment,
+//! the dose model and the patient's baseline blood pressure.
 //!
 //! The estimand:
 //!
@@ -36,21 +36,27 @@
 mod model;
 
 use deep_causality_core::AlternatableContext;
-use model::{PATIENT_INITIAL_BP, apply_drug_effect, compute_final_bp, start, treatment_world};
+use model::{
+    INITIAL_BP, apply_drug_effect, compute_final_bp, read, start, treatment_world, value_of,
+};
+use std::error::Error;
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     println!("\n--- RCM via the Causal Monad: Drug Effect on Blood Pressure ---");
-    println!("Patient baseline BP: {PATIENT_INITIAL_BP:.1}");
 
-    let treatment_ctx = treatment_world(true, -10.0);
-    let control_ctx = treatment_world(false, -10.0);
+    let treatment_ctx = treatment_world(145.0, true, -10.0)?;
+    let control_ctx = treatment_world(145.0, false, -10.0)?;
+    println!(
+        "Patient baseline BP: {:.1}",
+        read(&treatment_ctx, INITIAL_BP)?
+    );
 
     // Factual run: chain executes against treatment_ctx.
     println!("\nSimulating treated outcome Y(1) under T=1...");
     let treated = start(treatment_ctx.clone())
         .bind(apply_drug_effect)
         .bind(compute_final_bp);
-    let y1 = treated.value_cloned().unwrap();
+    let y1 = value_of(&treated)?;
     println!("Y(1) = {y1:.1}");
 
     // Counterfactual run: same seed, swap the Context before the binds
@@ -63,7 +69,7 @@ fn main() {
         .alternate_context(control_ctx)
         .bind(apply_drug_effect)
         .bind(compute_final_bp);
-    let y0 = control.value_cloned().unwrap();
+    let y0 = value_of(&control)?;
     println!("Y(0) = {y0:.1}");
 
     let ite = y1 - y0;
@@ -78,4 +84,5 @@ fn main() {
 
     println!("\n--- Audit log (counterfactual run) ---");
     println!("{}", control.logs());
+    Ok(())
 }

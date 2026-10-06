@@ -6,7 +6,7 @@
 //! # CATE via the Causal Monad
 //!
 //! Conditional Average Treatment Effect on
-//! `PropagatingProcess<FloatType, (), BaseContext>` using the `Alternatable`
+//! `PropagatingProcess<FloatType, (), PatientContext>` using the `Alternatable`
 //! family. The CATE for a subgroup `S` is the mean of per-patient
 //! individual treatment effects:
 //!
@@ -28,28 +28,40 @@
 //! pinpointing the switch from treatment to control.
 
 use deep_causality_context::{
-    BaseContext, Context, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    NoSpace, NoSpaceTime, NoTime,
 };
 use deep_causality_core::{
-    AlternatableContext, CausalEffect, PropagatingEffect, PropagatingProcess,
+    AlternatableContext, CausalEffect, CausalityError, PropagatingEffect, PropagatingProcess,
 };
+use std::error::Error;
 
-/// Node indices of the three `Data` contextoids each patient world carries.
+/// Node indices of the four `Data` contextoids each patient world carries: age, baseline blood
+/// pressure, the BP change the drug produces when administered, and the treatment assignment.
 const AGE: usize = 0;
 const INITIAL_BP: usize = 1;
-const ASSIGNMENT: usize = 2;
+const DOSE: usize = 2;
+const ASSIGNMENT: usize = 3;
 
 pub type FloatType = f64;
 
-fn main() {
+/// The world one patient is reasoned about in: numeric data only, no space and no time.
+type PatientContext = Context<Data<FloatType>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
+
+fn main() -> Result<(), Box<dyn Error>> {
     println!("\n=== CATE via the Causal Monad: drug effect on BP for patients age > 65 ===\n");
 
-    let population = create_patient_population();
+    let population = create_patient_population()?;
     println!("Population: {} patients.", population.len());
 
-    let subgroup: Vec<&BaseContext> = population
+    let ages = population
         .iter()
-        .filter(|p| read(p, AGE) > AGE_THRESHOLD)
+        .map(|p| read(p, AGE).map(|age| (p, age)))
+        .collect::<Result<Vec<_>, _>>()?;
+    let subgroup: Vec<&PatientContext> = ages
+        .into_iter()
+        .filter(|&(_, age)| age > AGE_THRESHOLD)
+        .map(|(p, _)| p)
         .collect();
     println!(
         "Subgroup (age > {AGE_THRESHOLD}): {} patients.",
@@ -62,40 +74,42 @@ fn main() {
     // than at the mean, so the reason is the empty subgroup and not a statistic that declined.
     if subgroup.is_empty() {
         println!("No patient is over {AGE_THRESHOLD}: this subgroup has no CATE to estimate.");
-        return;
+        return Ok(());
     }
 
     let ites: Vec<FloatType> = subgroup
         .iter()
         .map(|p| individual_treatment_effect(p))
-        .collect();
+        .collect::<Result<_, _>>()?;
 
-    let cate = deep_causality_stats::mean(&ites).expect("the subgroup is non-empty");
+    let cate = deep_causality_stats::mean(&ites)?;
     println!("\n--- CATE = mean(ITE over subgroup) = {:.2} ---", cate);
     println!(
         "Interpretation: for the over-{AGE_THRESHOLD} subgroup, administering the drug is\n\
          predicted to lower BP by {:.2} points on average.",
         -cate
     );
+    Ok(())
 }
 
+/// The subgroup `S` the CATE is conditioned on: patients older than this age.
 const AGE_THRESHOLD: FloatType = 65.0;
-const DRUG_EFFECT_IF_ADMINISTERED: FloatType = -10.0;
 
 /// Compute the individual treatment effect for one patient by running the
 /// same chain twice: factually under treatment, then via
 /// `alternate_context(control)`. The difference is `Y(1) - Y(0)`.
-fn individual_treatment_effect(patient: &BaseContext) -> FloatType {
-    let age = read(patient, AGE);
-    let initial_bp = read(patient, INITIAL_BP);
-    let treatment = patient_world(age, initial_bp, true);
-    let control = patient_world(age, initial_bp, false);
+fn individual_treatment_effect(patient: &PatientContext) -> Result<FloatType, Box<dyn Error>> {
+    let age = read(patient, AGE)?;
+    let initial_bp = read(patient, INITIAL_BP)?;
+    let dose = read(patient, DOSE)?;
+    let treatment = patient_world(age, initial_bp, dose, true)?;
+    let control = patient_world(age, initial_bp, dose, false)?;
 
     let y1 = run_binds(start(treatment.clone()));
     let y0 = run_binds(start(treatment).alternate_context(control));
 
-    let y1_bp = y1.value_cloned().unwrap();
-    let y0_bp = y0.value_cloned().unwrap();
+    let y1_bp = value_of(&y1)?;
+    let y0_bp = value_of(&y0)?;
     let ite = y1_bp - y0_bp;
 
     println!(
@@ -103,39 +117,67 @@ fn individual_treatment_effect(patient: &BaseContext) -> FloatType {
         age, initial_bp, y1_bp, y0_bp, ite
     );
 
-    ite
+    Ok(ite)
 }
 
 // --- Model: patient context, chain seed, bind stages, population ---
 
-/// Build the world one patient is reasoned about in: age, baseline BP and treatment assignment,
-/// as three `Data` contextoids in one typed [`BaseContext`]. The counterfactual world differs in
-/// exactly one contextoid — the assignment.
-fn patient_world(age: FloatType, initial_bp: FloatType, drug_administered: bool) -> BaseContext {
-    let mut context = Context::with_capacity(1, "patient", 3);
+/// Build the world one patient is reasoned about in: age, baseline BP, the drug's dose and the
+/// treatment assignment, as four `Data` contextoids in one [`PatientContext`]. The counterfactual
+/// world differs in exactly one contextoid — the assignment.
+fn patient_world(
+    age: FloatType,
+    initial_bp: FloatType,
+    dose: FloatType,
+    drug_administered: bool,
+) -> Result<PatientContext, ContextIndexError> {
+    let mut context = Context::with_capacity(1, "patient", 4);
     let assignment = if drug_administered { 1.0 } else { 0.0 };
 
-    for (id, value) in [(1, age), (2, initial_bp), (3, assignment)] {
-        context
-            .add_node(Contextoid::new(
-                id,
-                ContextoidType::Datoid(Data::new(id, value)),
-            ))
-            .expect("patient contextoid is accepted");
+    for (id, value) in [(1, age), (2, initial_bp), (3, dose), (4, assignment)] {
+        context.add_node(Contextoid::new(
+            id,
+            ContextoidType::Datoid(Data::new(id, value)),
+        ))?;
     }
 
-    context
+    Ok(context)
 }
 
 /// Read one `Data` contextoid's payload out of a patient world.
-fn read(context: &BaseContext, index: usize) -> FloatType {
+fn read(context: &PatientContext, index: usize) -> Result<FloatType, CausalityError> {
     context
         .get_node(index)
-        .expect("contextoid is present")
-        .vertex_type()
-        .dataoid()
-        .expect("contextoid is a Datoid")
-        .get_data()
+        .and_then(|node| node.vertex_type().dataoid())
+        .map(|data| data.get_data())
+        .ok_or_else(|| CausalityError::ModelError(format!("context node {index} is not a Datoid")))
+}
+
+/// The value a finished chain carries, or the error that ended it.
+fn value_of(
+    process: &PropagatingProcess<FloatType, (), PatientContext>,
+) -> Result<FloatType, CausalityError> {
+    match process.error() {
+        Some(error) => Err(error.clone()),
+        None => process
+            .value_cloned()
+            .ok_or(CausalityError::ValueNotAvailable()),
+    }
+}
+
+/// Carry a stage's result on: its value with the state and the world when it succeeded, its
+/// error when it failed.
+fn emit(
+    result: Result<FloatType, CausalityError>,
+    state: (),
+    world: PatientContext,
+) -> PropagatingProcess<FloatType, (), PatientContext> {
+    match result {
+        Ok(value) => {
+            PropagatingProcess::with_state(PropagatingEffect::pure(value), state, Some(world))
+        }
+        Err(error) => PropagatingProcess::from_error(error),
+    }
 }
 
 /// Run the two bind stages on a seed carrier. The caller decides whether
@@ -143,49 +185,54 @@ fn read(context: &BaseContext, index: usize) -> FloatType {
 /// the alternation must land *before* the binds so both stages read the
 /// alternated context.
 fn run_binds(
-    seeded: PropagatingProcess<FloatType, (), BaseContext>,
-) -> PropagatingProcess<FloatType, (), BaseContext> {
+    seeded: PropagatingProcess<FloatType, (), PatientContext>,
+) -> PropagatingProcess<FloatType, (), PatientContext> {
     seeded.bind(stage_drug_effect).bind(stage_final_bp)
 }
 
-fn start(patient: BaseContext) -> PropagatingProcess<FloatType, (), BaseContext> {
+fn start(patient: PatientContext) -> PropagatingProcess<FloatType, (), PatientContext> {
     let initial_bp = read(&patient, INITIAL_BP);
-    let seed = PropagatingEffect::pure(initial_bp);
-    PropagatingProcess::with_state(seed, (), Some(patient))
+    emit(initial_bp, (), patient)
 }
 
-/// Stage 1: drug effect from the treatment assignment.
+/// Stage 1: drug effect from the treatment assignment and the dose.
 fn stage_drug_effect(
     _value: CausalEffect<FloatType>,
     state: (),
-    context: Option<BaseContext>,
-) -> PropagatingProcess<FloatType, (), BaseContext> {
-    let ctx = context.expect("the patient world must be set before stage 1");
-    let drug_effect = if read(&ctx, ASSIGNMENT) > 0.5 {
-        DRUG_EFFECT_IF_ADMINISTERED
-    } else {
-        0.0
+    context: Option<PatientContext>,
+) -> PropagatingProcess<FloatType, (), PatientContext> {
+    let Some(ctx) = context else {
+        return PropagatingProcess::from_error(CausalityError::MissingContext());
     };
-    let next = PropagatingEffect::pure(drug_effect);
-    PropagatingProcess::with_state(next, state, Some(ctx))
+    let drug_effect = read(&ctx, ASSIGNMENT).and_then(|assignment| {
+        if assignment > 0.5 {
+            read(&ctx, DOSE)
+        } else {
+            Ok(0.0)
+        }
+    });
+    emit(drug_effect, state, ctx)
 }
 
 /// Stage 2: add the drug effect to the patient's initial BP.
 fn stage_final_bp(
     value: CausalEffect<FloatType>,
     state: (),
-    context: Option<BaseContext>,
-) -> PropagatingProcess<FloatType, (), BaseContext> {
-    let drug_effect = value
-        .into_value()
-        .expect("stage_drug_effect must produce a numeric drug-effect Value");
-    let ctx = context.expect("the patient world must be set before stage 2");
-    let final_bp = read(&ctx, INITIAL_BP) + drug_effect;
-    let next = PropagatingEffect::pure(final_bp);
-    PropagatingProcess::with_state(next, state, Some(ctx))
+    context: Option<PatientContext>,
+) -> PropagatingProcess<FloatType, (), PatientContext> {
+    let Some(drug_effect) = value.into_value() else {
+        return PropagatingProcess::from_error(CausalityError::ValueNotAvailable());
+    };
+    let Some(ctx) = context else {
+        return PropagatingProcess::from_error(CausalityError::MissingContext());
+    };
+    let final_bp = read(&ctx, INITIAL_BP).map(|initial_bp| initial_bp + drug_effect);
+    emit(final_bp, state, ctx)
 }
 
-fn create_patient_population() -> Vec<BaseContext> {
+/// The population: `(age, initial_bp)` per patient. The drug lowers every patient's BP by 10
+/// points when administered.
+fn create_patient_population() -> Result<Vec<PatientContext>, ContextIndexError> {
     [
         (55.0, 145.0),
         (70.0, 150.0),
@@ -196,6 +243,6 @@ fn create_patient_population() -> Vec<BaseContext> {
         (60.0, 140.0),
     ]
     .into_iter()
-    .map(|(age, initial_bp)| patient_world(age, initial_bp, false))
+    .map(|(age, initial_bp)| patient_world(age, initial_bp, -10.0, false))
     .collect()
 }

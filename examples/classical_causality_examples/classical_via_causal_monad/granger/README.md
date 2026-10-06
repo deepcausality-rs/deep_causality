@@ -20,24 +20,30 @@ The example compares each prediction's error against the actual Q5 shipping valu
 ## The mechanism
 
 ```rust
-let factual_pred = run(factual_series()).value_cloned().unwrap();                   // start + bind, then read the f64
-let counter_pred = start(factual_series())
-    .alternate_context(without_oil(&factual_series()))                              // swap world
-    .bind(predict_shipping)                                                         // same predictor
-    .value_cloned()
-    .unwrap();
+let factual = factual_series()?;
+let counterfactual = without_oil(&factual)?;
+
+let factual_pred = value_of(&run(factual.clone()))?;  // start + bind, then read the f64
+let counter_pred = value_of(
+    &start(factual)
+        .alternate_context(counterfactual)            // swap world
+        .bind(predict_shipping),                      // same predictor
+)?;
 ```
 
-The single-stage `predict_shipping` bind reads the series from the Context. It averages past shipping, adds a trend, and adjusts by `(mean(oil_prices) - 50.0) * 0.5` *only when* the oil series is non-empty, so the counterfactual prediction omits the oil adjustment.
+`value_of` returns the value the chain carries, or the error that ended it, and `?` propagates that error out of `main`.
+
+The single-stage `predict_shipping` bind reads the series and the model's coefficients from the Context. It averages past shipping, adds the `SHIPPING_TREND` coefficient, and adjusts by `(mean(oil_prices) - OIL_BASELINE) * OIL_COEFFICIENT` *only when* the oil series is non-empty, so the counterfactual prediction omits the oil adjustment. The actual Q5 value the predictions are scored against stays in `main`, outside the predictor's Context.
 
 ## How this differs from the Causaloid version
 
 | Concern | `classical_via_causaloid/granger` | `classical_via_causal_monad/granger` |
 |---|---|---|
-| Time-series data lives in | `BaseContext` Datoid nodes with `OIL_PRICE_ID` / `SHIPPING_ACTIVITY_ID` tags | `SeriesContext { oil_prices: Vec<f64>, shipping_activities: Vec<f64> }` |
-| Counterfactual world built by | Iterate factual Context, skip every `OIL_PRICE_ID` Datoid | One-line `without_oil(&factual)` returning a new `SeriesContext` with `oil_prices: vec![]` |
-| Two-world plumbing | Two separate contextual `Causaloid` instances, each bound to its own `Arc<RwLock<BaseContext>>` | One chain; `.alternate_context(no_oil)` switches worlds |
-| Lines of code | ~160 across 2 files | ~125 in a single file |
+| Time-series data lives in | `GrangerContext` Datoid nodes with `OIL_PRICE_ID` / `SHIPPING_ACTIVITY_ID` tags, one `DiscreteTime` node per quarter | `SeriesContext` with one `Data<Quantity>` node per series; quarters are vector positions |
+| Model coefficients live in | Three Datoids at the front of each `GrangerContext` | Three `Quantity::Scalar` nodes in each `SeriesContext` |
+| Counterfactual world built by | Iterate factual Context, skip every `OIL_PRICE_ID` Datoid | `without_oil(&factual)` rebuilds the world from the factual shipping series and coefficients with an empty oil series |
+| Two-world plumbing | Two separate contextual `Causaloid` instances, each bound to its own `Arc<RwLock<GrangerContext>>` | One chain; `.alternate_context(no_oil)` switches worlds |
+| Lines of code | ~300 across 2 files | ~255 in a single file |
 
 Both versions produce identical numbers for the same fixture.
 

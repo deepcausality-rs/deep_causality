@@ -23,46 +23,63 @@
 //! bind.
 
 use deep_causality_context::{
-    Context, Contextoid, ContextoidType, ContextuableGraph, Data, Datable, EuclideanSpace,
-    NewtonianSpacetime, NewtonianTime,
+    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    NoSpace, NoSpaceTime, NoTime,
 };
 use deep_causality_core::{
-    AlternatableContext, CausalEffect, PropagatingEffect, PropagatingProcess,
+    AlternatableContext, CausalEffect, CausalityError, PropagatingEffect, PropagatingProcess,
 };
+use std::error::Error;
 
 /// The scalar this example works in. Declared here, per example, so changing the shared alias in
 /// `deep_causality_core` cannot silently reconfigure every example that names one.
 type FloatType = f64;
 
-/// The world this chain reasons about is two time series, so its data node carries a sequence.
+/// One quantity of the world: an observed quarterly series, or a scalar coefficient of the
+/// shipping model.
+#[derive(Clone, Debug, PartialEq)]
+enum Quantity {
+    Series(Vec<FloatType>),
+    Scalar(FloatType),
+}
+
+impl Default for Quantity {
+    fn default() -> Self {
+        Quantity::Series(Vec::new())
+    }
+}
+
+/// The world this chain reasons about is two time series and the coefficients of the shipping
+/// model, so its data node carries a [`Quantity`]. The quarters are the positions in each series;
+/// the context holds no space and no time node.
 ///
 /// `Data<T>` requires `Clone` of its payload, not `Copy` — `Copy` is asked for only by the
 /// `Adjustable` impl, where `ArrayGrid`'s fixed-size array backing needs it. That is what makes
-/// `Data<Vec<FloatType>>` a valid context node and lets this example carry a real `Context`
+/// `Data<Quantity>` a valid context node and lets this example carry a real `Context`
 /// instead of a struct of its own.
-type SeriesContext = Context<
-    Data<Vec<FloatType>>,
-    EuclideanSpace<FloatType>,
-    NewtonianTime<FloatType>,
-    NewtonianSpacetime<FloatType>,
->;
+type SeriesContext = Context<Data<Quantity>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
 
-/// Node indices of the two series contextoids.
+/// Node indices of the five contextoids: the two series, then the oil price the adjustment is
+/// measured from, the quarterly shipping trend, and the shipping change per unit of oil price
+/// above that baseline.
 const OIL_PRICES: usize = 0;
 const SHIPPING_ACTIVITIES: usize = 1;
+const OIL_BASELINE: usize = 2;
+const SHIPPING_TREND: usize = 3;
+const OIL_COEFFICIENT: usize = 4;
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     println!("\n=== Granger via the Causal Monad: do past oil prices predict shipping? ===\n");
 
-    let factual = factual_series();
-    let counterfactual = without_oil(&factual);
+    let factual = factual_series()?;
+    let counterfactual = without_oil(&factual)?;
 
-    let factual_pred = run(factual.clone()).value_cloned().unwrap();
-    let counter_pred = start(factual)
-        .alternate_context(counterfactual)
-        .bind(predict_shipping)
-        .value_cloned()
-        .unwrap();
+    let factual_pred = value_of(&run(factual.clone()))?;
+    let counter_pred = value_of(
+        &start(factual)
+            .alternate_context(counterfactual)
+            .bind(predict_shipping),
+    )?;
 
     let actual_q5 = 105.0;
     let err_factual = (factual_pred - actual_q5).abs();
@@ -85,6 +102,7 @@ fn main() {
     } else {
         println!("Past oil prices do NOT Granger-cause future shipping activity.");
     }
+    Ok(())
 }
 
 /// Run the seed-plus-bind chain on a fresh factual context.
@@ -94,39 +112,74 @@ fn run(series: SeriesContext) -> PropagatingProcess<FloatType, (), SeriesContext
 
 // --- Model: series context, chain seed, predictor bind, fixtures ---
 
-/// Build the world: the two histories as `Data<Vec<FloatType>>` contextoids. The counterfactual
-/// world is the same call with `oil_prices` empty; the chain reads from the Context and adapts.
+/// Build the world: the two histories and the three model coefficients as `Data<Quantity>`
+/// contextoids. The counterfactual world is the same call with `oil_prices` empty; the chain
+/// reads from the Context and adapts.
 fn series_world(
     label: &str,
     oil_prices: Vec<FloatType>,
     shipping_activities: Vec<FloatType>,
-) -> SeriesContext {
-    let mut context = Context::with_capacity(1, label, 2);
-    for (id, series) in [(1, oil_prices), (2, shipping_activities)] {
-        context
-            .add_node(Contextoid::new(
-                id,
-                ContextoidType::Datoid(Data::new(id, series)),
-            ))
-            .expect("series contextoid is accepted");
+    oil_baseline: FloatType,
+    shipping_trend: FloatType,
+    oil_coefficient: FloatType,
+) -> Result<SeriesContext, ContextIndexError> {
+    let mut context = Context::with_capacity(1, label, 5);
+    let quantities = [
+        Quantity::Series(oil_prices),
+        Quantity::Series(shipping_activities),
+        Quantity::Scalar(oil_baseline),
+        Quantity::Scalar(shipping_trend),
+        Quantity::Scalar(oil_coefficient),
+    ];
+    for (id, quantity) in (1..).zip(quantities) {
+        context.add_node(Contextoid::new(
+            id,
+            ContextoidType::Datoid(Data::new(id, quantity)),
+        ))?;
     }
+    Ok(context)
+}
+
+/// Read one quantity out of the world.
+fn read(context: &SeriesContext, index: usize) -> Result<Quantity, CausalityError> {
     context
+        .get_node(index)
+        .and_then(|node| node.vertex_type().dataoid())
+        .map(|data| data.get_data())
+        .ok_or_else(|| CausalityError::ModelError(format!("context node {index} is not a Datoid")))
 }
 
 /// Read one series out of the world.
-fn read(context: &SeriesContext, index: usize) -> Vec<FloatType> {
-    context
-        .get_node(index)
-        .expect("contextoid is present")
-        .vertex_type()
-        .dataoid()
-        .expect("contextoid is a Datoid")
-        .get_data()
+fn read_series(context: &SeriesContext, index: usize) -> Result<Vec<FloatType>, CausalityError> {
+    match read(context, index)? {
+        Quantity::Series(values) => Ok(values),
+        Quantity::Scalar(_) => Err(CausalityError::TypeConversionError(format!(
+            "context node {index} holds a scalar, not a series"
+        ))),
+    }
 }
 
-const OIL_BASELINE: FloatType = 50.0;
-const SHIPPING_TREND: FloatType = 3.0;
-const OIL_COEFFICIENT: FloatType = 0.5;
+/// Read one model coefficient out of the world.
+fn read_scalar(context: &SeriesContext, index: usize) -> Result<FloatType, CausalityError> {
+    match read(context, index)? {
+        Quantity::Scalar(value) => Ok(value),
+        Quantity::Series(_) => Err(CausalityError::TypeConversionError(format!(
+            "context node {index} holds a series, not a scalar"
+        ))),
+    }
+}
+
+/// The value a finished chain carries, or the error that ended it.
+fn value_of(
+    process: &PropagatingProcess<FloatType, (), SeriesContext>,
+) -> Result<FloatType, CausalityError> {
+    match process.error() {
+        Some(error) => Err(error.clone()),
+        None => process
+            .value_cloned()
+            .ok_or(CausalityError::ValueNotAvailable()),
+    }
+}
 
 /// Build the seed carrier.
 fn start(series: SeriesContext) -> PropagatingProcess<FloatType, (), SeriesContext> {
@@ -134,53 +187,69 @@ fn start(series: SeriesContext) -> PropagatingProcess<FloatType, (), SeriesConte
     PropagatingProcess::with_state(seed, (), Some(series))
 }
 
-/// One-stage predictor: average past shipping, add a small upward trend,
-/// adjust by (avg_oil - baseline) when oil history is available.
+/// One-stage predictor: emits the prediction [`predict`] computes from the Context.
 fn predict_shipping(
     _value: CausalEffect<FloatType>,
     state: (),
     context: Option<SeriesContext>,
 ) -> PropagatingProcess<FloatType, (), SeriesContext> {
-    let series = context.expect("the series world must be set");
-    let shipping_activities = read(&series, SHIPPING_ACTIVITIES);
-    let oil_prices = read(&series, OIL_PRICES);
-
-    let prediction = if shipping_activities.is_empty() {
-        100.0
-    } else {
-        let avg_shipping: FloatType = mean(&shipping_activities);
-        let oil_adjustment = if oil_prices.is_empty() {
-            0.0
-        } else {
-            (mean(&oil_prices) - OIL_BASELINE) * OIL_COEFFICIENT
-        };
-        avg_shipping + SHIPPING_TREND - oil_adjustment
+    let Some(series) = context else {
+        return PropagatingProcess::from_error(CausalityError::MissingContext());
     };
-
-    let next = PropagatingEffect::pure(prediction);
-    PropagatingProcess::with_state(next, state, Some(series))
+    match predict(&series) {
+        Ok(prediction) => {
+            PropagatingProcess::with_state(PropagatingEffect::pure(prediction), state, Some(series))
+        }
+        Err(error) => PropagatingProcess::from_error(error),
+    }
 }
 
-/// The mean, dispatched to `deep_causality_stats`. The fixtures below are never empty, so the
-/// crate's refusal on an empty slice cannot fire; `0.0` keeps this a total function anyway.
-fn mean(xs: &[FloatType]) -> FloatType {
-    deep_causality_stats::mean(xs).unwrap_or(0.0)
+/// Average past shipping, add the shipping trend, adjust by
+/// (avg_oil - oil baseline) * oil coefficient when oil history is available. Every input is
+/// read from the world.
+fn predict(series: &SeriesContext) -> Result<FloatType, CausalityError> {
+    let shipping_activities = read_series(series, SHIPPING_ACTIVITIES)?;
+    let oil_prices = read_series(series, OIL_PRICES)?;
+
+    if shipping_activities.is_empty() {
+        return Ok(100.0);
+    }
+    let avg_shipping: FloatType = mean(&shipping_activities)?;
+    let oil_adjustment = if oil_prices.is_empty() {
+        0.0
+    } else {
+        (mean(&oil_prices)? - read_scalar(series, OIL_BASELINE)?)
+            * read_scalar(series, OIL_COEFFICIENT)?
+    };
+    Ok(avg_shipping + read_scalar(series, SHIPPING_TREND)? - oil_adjustment)
 }
 
-/// Factual time-series: four quarters of (oil_price, shipping_activity).
-fn factual_series() -> SeriesContext {
+/// The mean, dispatched to `deep_causality_stats`. An empty slice is an error.
+fn mean(xs: &[FloatType]) -> Result<FloatType, CausalityError> {
+    deep_causality_stats::mean(xs).map_err(|error| CausalityError::ModelError(error.to_string()))
+}
+
+/// Factual world: four quarters of (oil_price, shipping_activity), an oil baseline of 50.0, a
+/// shipping trend of 3.0 per quarter, and an oil coefficient of 0.5.
+fn factual_series() -> Result<SeriesContext, ContextIndexError> {
     series_world(
         "factual",
         vec![50.0, 52.0, 55.0, 58.0],
         vec![100.0, 102.0, 105.0, 108.0],
+        50.0,
+        3.0,
+        0.5,
     )
 }
 
-/// Counterfactual: same shipping history; oil-price history removed.
-fn without_oil(factual: &SeriesContext) -> SeriesContext {
-    series_world(
+/// Counterfactual: same shipping history and coefficients; oil-price history removed.
+fn without_oil(factual: &SeriesContext) -> Result<SeriesContext, Box<dyn Error>> {
+    Ok(series_world(
         "counterfactual",
         Vec::new(),
-        read(factual, SHIPPING_ACTIVITIES),
-    )
+        read_series(factual, SHIPPING_ACTIVITIES)?,
+        read_scalar(factual, OIL_BASELINE)?,
+        read_scalar(factual, SHIPPING_TREND)?,
+        read_scalar(factual, OIL_COEFFICIENT)?,
+    )?)
 }

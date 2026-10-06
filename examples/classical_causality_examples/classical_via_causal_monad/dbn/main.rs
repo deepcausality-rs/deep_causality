@@ -6,15 +6,16 @@
 //! # DBN via the Causal Monad
 //!
 //! Umbrella World as a Dynamic Bayesian Network, implemented on
-//! `PropagatingProcess<FloatType, WeatherState, BaseContext>` with all three
+//! `PropagatingProcess<FloatType, WeatherState, ClimateContext>` with all three
 //! channels exercised:
 //!
 //! * **State channel** (`WeatherState`): the Markov state. Carries
 //!   `rained_yesterday`, the running day index, and the umbrella counter
 //!   that evolves day by day through the bind chain.
-//! * **Context channel** (`BaseContext`): the conditional probability
-//!   tables (CPTs) for the current climate regime, held as two Datoid contextoids. Constant within a
-//!   regime, alternated via `alternate_context` when the regime changes.
+//! * **Context channel** (`ClimateContext`): the conditional probability
+//!   tables (CPTs) for the current climate regime and the rain probability above which the
+//!   person carries an umbrella, held as three Datoid contextoids. Constant within a regime,
+//!   alternated via `alternate_context` when the regime changes.
 //! * **Value channel**: today's rain probability emitted by each step.
 //!
 //! The example runs a 10-day simulation twice:
@@ -33,42 +34,49 @@
 //! example is reproducible without an RNG.
 
 use deep_causality_context::{
-    BaseContext, Context, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    Context, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph, Data, Datable,
+    NoSpace, NoSpaceTime, NoTime,
 };
 use deep_causality_core::{
-    AlternatableContext, CausalEffect, PropagatingEffect, PropagatingProcess,
+    AlternatableContext, CausalEffect, CausalityError, PropagatingEffect, PropagatingProcess,
 };
+use std::error::Error;
 
-/// Node indices of the two `Data` contextoids a climate regime carries.
+/// Node indices of the three `Data` contextoids a climate regime carries: its two CPT entries
+/// and the rain probability above which the person carries an umbrella.
 const P_RAIN_GIVEN_RAIN: usize = 0;
 const P_RAIN_GIVEN_DRY: usize = 1;
+const UMBRELLA_THRESHOLD: usize = 2;
 
 type FloatType = f64;
 
-fn main() {
+/// A climate regime: numeric data only, no space and no time. The day count lives in the state.
+type ClimateContext = Context<Data<FloatType>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
+
+fn main() -> Result<(), Box<dyn Error>> {
     println!("\n=== DBN via the Causal Monad: Umbrella World with a Regime Change ===\n");
-    run_baseline_only();
-    run_regime_change();
+    run_baseline_only()?;
+    run_regime_change()
 }
 
 const DAYS: u32 = 10;
 const REGIME_SWITCH_DAY: u32 = 6;
-const UMBRELLA_THRESHOLD: f64 = 0.5;
 
-fn run_baseline_only() {
+fn run_baseline_only() -> Result<(), Box<dyn Error>> {
     println!("--- Run 1: baseline climate for all {DAYS} days ---");
-    let baseline = baseline_climate();
+    let baseline = baseline_climate()?;
     let process = simulate_n_days(start_in(baseline.clone()), DAYS);
-    print_summary("baseline-only", process.state());
+    print_summary("baseline-only", final_state(&process)?);
     println!();
+    Ok(())
 }
 
-fn run_regime_change() {
+fn run_regime_change() -> Result<(), Box<dyn Error>> {
     println!(
         "--- Run 2: baseline for days 1..{REGIME_SWITCH_DAY}, alternate_context(monsoon) on day {REGIME_SWITCH_DAY} ---"
     );
-    let baseline = baseline_climate();
-    let monsoon = monsoon_climate();
+    let baseline = baseline_climate()?;
+    let monsoon = monsoon_climate()?;
 
     // Phase 1: baseline for the first 5 days.
     let mid = simulate_n_days(start_in(baseline), REGIME_SWITCH_DAY - 1);
@@ -80,22 +88,33 @@ fn run_regime_change() {
     // Phase 2: remaining days under the alternated context.
     let final_process = simulate_n_days(after_switch, DAYS - (REGIME_SWITCH_DAY - 1));
 
-    print_summary("regime-change", final_process.state());
+    print_summary("regime-change", final_state(&final_process)?);
 
     println!("\nAudit log (regime-change run):");
     println!("{}", final_process.logs());
     println!();
+    Ok(())
 }
 
 /// Iterate the daily bind step `n` times.
 fn simulate_n_days(
-    mut process: PropagatingProcess<FloatType, WeatherState, BaseContext>,
+    mut process: PropagatingProcess<FloatType, WeatherState, ClimateContext>,
     n: u32,
-) -> PropagatingProcess<FloatType, WeatherState, BaseContext> {
+) -> PropagatingProcess<FloatType, WeatherState, ClimateContext> {
     for _ in 0..n {
         process = process.bind(step_day);
     }
     process
+}
+
+/// The state a finished simulation reached, or the error that ended it.
+fn final_state(
+    process: &PropagatingProcess<FloatType, WeatherState, ClimateContext>,
+) -> Result<&WeatherState, CausalityError> {
+    match process.error() {
+        Some(error) => Err(error.clone()),
+        None => Ok(process.state()),
+    }
 }
 
 fn print_summary(label: &str, state: &WeatherState) {
@@ -107,31 +126,37 @@ fn print_summary(label: &str, state: &WeatherState) {
 
 // --- Model: world state, climate context, and the daily bind step ---
 
-/// Build a climate regime: its conditional probability table as two `Data` contextoids in one
-/// typed [`BaseContext`]. The regime's name is the context's own name, so the label the summary
-/// prints is read back off the context rather than carried beside it.
-fn climate(label: &str, p_rain_given_rain: FloatType, p_rain_given_dry: FloatType) -> BaseContext {
-    let mut context = Context::with_capacity(1, label, 2);
-    for (id, value) in [(1, p_rain_given_rain), (2, p_rain_given_dry)] {
-        context
-            .add_node(Contextoid::new(
-                id,
-                ContextoidType::Datoid(Data::new(id, value)),
-            ))
-            .expect("climate contextoid is accepted");
+/// Build a climate regime: its conditional probability table and the person's umbrella
+/// threshold as three `Data` contextoids in one [`ClimateContext`]. The regime's name is the
+/// context's own name, so the label the summary prints is read back off the context rather than
+/// carried beside it.
+fn climate(
+    label: &str,
+    p_rain_given_rain: FloatType,
+    p_rain_given_dry: FloatType,
+    umbrella_threshold: FloatType,
+) -> Result<ClimateContext, ContextIndexError> {
+    let mut context = Context::with_capacity(1, label, 3);
+    for (id, value) in [
+        (1, p_rain_given_rain),
+        (2, p_rain_given_dry),
+        (3, umbrella_threshold),
+    ] {
+        context.add_node(Contextoid::new(
+            id,
+            ContextoidType::Datoid(Data::new(id, value)),
+        ))?;
     }
-    context
+    Ok(context)
 }
 
 /// Read one `Data` contextoid's payload out of a climate regime.
-fn read(context: &BaseContext, index: usize) -> FloatType {
+fn read(context: &ClimateContext, index: usize) -> Result<FloatType, CausalityError> {
     context
         .get_node(index)
-        .expect("contextoid is present")
-        .vertex_type()
-        .dataoid()
-        .expect("contextoid is a Datoid")
-        .get_data()
+        .and_then(|node| node.vertex_type().dataoid())
+        .map(|data| data.get_data())
+        .ok_or_else(|| CausalityError::ModelError(format!("context node {index} is not a Datoid")))
 }
 
 /// Evolving Markov state: yesterday's rain outcome, plus running counters.
@@ -143,16 +168,16 @@ struct WeatherState {
     umbrellas_carried: u32,
 }
 
-fn baseline_climate() -> BaseContext {
-    climate("baseline", 0.40, 0.20)
+fn baseline_climate() -> Result<ClimateContext, ContextIndexError> {
+    climate("baseline", 0.40, 0.20, 0.5)
 }
 
-fn monsoon_climate() -> BaseContext {
-    climate("monsoon", 0.95, 0.60)
+fn monsoon_climate() -> Result<ClimateContext, ContextIndexError> {
+    climate("monsoon", 0.95, 0.60, 0.5)
 }
 
 /// Build the seed carrier. Initial Markov state: yesterday it rained.
-fn start_in(regime: BaseContext) -> PropagatingProcess<FloatType, WeatherState, BaseContext> {
+fn start_in(regime: ClimateContext) -> PropagatingProcess<FloatType, WeatherState, ClimateContext> {
     let seed = PropagatingEffect::pure(0.0 as FloatType);
     let initial = WeatherState {
         day: 0,
@@ -163,26 +188,33 @@ fn start_in(regime: BaseContext) -> PropagatingProcess<FloatType, WeatherState, 
     PropagatingProcess::with_state(seed, initial, Some(regime))
 }
 
-/// One bind = one day. Reads the climate from the Context, the previous
-/// day's outcome from the State, then computes today's rain probability,
-/// the deterministic rain outcome, and the umbrella decision; updates
-/// the State and emits the probability as the next value.
+/// One bind = one day. Reads the climate and the umbrella threshold from the Context, the
+/// previous day's outcome from the State, then computes today's rain probability, the
+/// deterministic rain outcome, and the umbrella decision; updates the State and emits the
+/// probability as the next value.
 fn step_day(
     _value: CausalEffect<FloatType>,
     state: WeatherState,
-    context: Option<BaseContext>,
-) -> PropagatingProcess<FloatType, WeatherState, BaseContext> {
-    let ctx = context.expect("the climate regime must be set");
+    context: Option<ClimateContext>,
+) -> PropagatingProcess<FloatType, WeatherState, ClimateContext> {
+    let Some(ctx) = context else {
+        return PropagatingProcess::from_error(CausalityError::MissingContext());
+    };
 
-    let p_rain = if state.rained_yesterday {
-        read(&ctx, P_RAIN_GIVEN_RAIN)
+    let cpt_entry = if state.rained_yesterday {
+        P_RAIN_GIVEN_RAIN
     } else {
-        read(&ctx, P_RAIN_GIVEN_DRY)
+        P_RAIN_GIVEN_DRY
+    };
+    let (p_rain, umbrella_threshold) = match (read(&ctx, cpt_entry), read(&ctx, UMBRELLA_THRESHOLD))
+    {
+        (Ok(p_rain), Ok(umbrella_threshold)) => (p_rain, umbrella_threshold),
+        (Err(error), _) | (_, Err(error)) => return PropagatingProcess::from_error(error),
     };
 
     // Deterministic rain rule: rains iff p > 0.5. Reproducible across runs.
     let rains_today = p_rain > 0.5;
-    let take_umbrella = p_rain > UMBRELLA_THRESHOLD;
+    let take_umbrella = p_rain > umbrella_threshold;
 
     let next_state = WeatherState {
         day: state.day + 1,
