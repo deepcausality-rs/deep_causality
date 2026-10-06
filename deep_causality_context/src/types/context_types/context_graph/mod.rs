@@ -112,4 +112,14 @@ where
     pub fn get_node_index_by_id(&self, id: ContextoidId) -> Option<usize> {
         self.id_to_index_map.get(&id).copied()
     }
+
+    /// Returns the payload of the data contextoid carrying `id`, read through
+    /// [`Datable::get_data`]. `None` when no node in the base graph carries `id`, or when the node
+    /// carrying it is not a data node.
+    pub fn get_data_by_id(&self, id: ContextoidId) -> Option<D::Data> {
+        self.get_node_index_by_id(id)
+            .and_then(|index| self.base_context.get_node(index))
+            .and_then(|node| node.vertex_type().dataoid())
+            .map(Datable::get_data)
+    }
 }

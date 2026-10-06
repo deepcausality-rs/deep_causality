@@ -36,7 +36,8 @@ fn start(ctx: BaseContext) -> PropagatingProcess<f64, (), BaseContext> {
 ## Contents
 
 * `Context` — the context hypergraph, with extra contexts, data/time indices, freezing and
-  neighbour listing.
+  neighbour listing. `get_node_index_by_id` finds a node by its contextoid identifier, and
+  `get_data_by_id` returns a data node's payload by that identifier.
 * `Contextoid` / `ContextoidType` — the nodes it holds.
 * Context node types — `Data`, `Root`, and the space, time and spacetime families:
   `EuclideanSpace`, `EcefSpace`, `NedSpace` and `GeoSpace`; `NewtonianTime`, `MinkowskiTime`,
