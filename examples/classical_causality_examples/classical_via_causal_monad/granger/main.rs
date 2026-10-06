@@ -24,7 +24,7 @@
 
 use deep_causality_context::{
     Context, Contextoid, ContextoidType, ContextuableGraph, Data, Datable, EuclideanSpace,
-    EuclideanSpacetime, EuclideanTime,
+    NewtonianSpacetime, NewtonianTime,
 };
 use deep_causality_core::{
     AlternatableContext, CausalEffect, PropagatingEffect, PropagatingProcess,
@@ -43,8 +43,8 @@ type FloatType = f64;
 type SeriesContext = Context<
     Data<Vec<FloatType>>,
     EuclideanSpace<FloatType>,
-    EuclideanTime<FloatType>,
-    EuclideanSpacetime<FloatType>,
+    NewtonianTime<FloatType>,
+    NewtonianSpacetime<FloatType>,
 >;
 
 /// Node indices of the two series contextoids.
