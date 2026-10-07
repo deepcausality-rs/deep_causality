@@ -76,10 +76,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 /// Accumulated results from pipeline stages
 #[derive(Debug, Clone, Default)]
-#[allow(dead_code)]
 struct GaugeEMState {
-    /// The GaugeEM field configuration
-    field: Option<EmTheory>,
     /// Field invariant F_μν F^μν
     field_invariant: FloatType,
     /// Dual invariant F_μν F̃^μν
@@ -379,7 +376,6 @@ fn stage_field_classification(
     println!();
 
     let state = GaugeEMState {
-        field: em_opt,
         field_invariant: field_inv,
         dual_invariant: dual_inv,
         energy_density: energy,

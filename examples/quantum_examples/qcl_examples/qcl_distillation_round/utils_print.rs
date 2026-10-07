@@ -11,6 +11,7 @@
 use crate::FloatType;
 use deep_causality_algebra::RealField;
 use deep_causality_num::{FromPrimitive, lower};
+use deep_causality_num_rational::Rational;
 use deep_causality_quantum::CompositionLaw;
 
 pub fn print_header() {
@@ -22,21 +23,11 @@ pub fn print_header() {
     println!("Links      first: the noise.  second: the code's abstraction\n");
 }
 
-/// How a depolarising probability `(numerator, denominator)` is written: `0` for the noiseless
-/// round, the fraction otherwise.
-pub fn probability_label((numerator, denominator): (i64, i64)) -> String {
-    if numerator == 0 {
-        "0".to_string()
-    } else {
-        format!("{numerator}/{denominator}")
-    }
-}
-
 /// One probability's round, with the law it produced.
-pub fn print_round(fraction: (i64, i64), law: &CompositionLaw<FloatType>) {
+pub fn print_round(probability: Rational<i64>, law: &CompositionLaw<FloatType>) {
     let row = &law.rows[0];
 
-    println!("[p = {}]", probability_label(fraction));
+    println!("[p = {probability}]");
     print!("{law}");
 
     if lower(row.epsilon_first) == 0.0 {

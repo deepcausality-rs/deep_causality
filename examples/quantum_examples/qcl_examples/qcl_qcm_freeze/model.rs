@@ -162,7 +162,7 @@ fn detector(id: u64, context: &Arc<DetectorContext>) -> Detector {
 
 /// A two-node graph `0 → 1` whose nodes share one [`DetectorContext`], frozen or dynamic.
 pub fn two_node_graph(frozen: bool) -> Result<CausaloidGraph<Detector>, ModelBuildError> {
-    let context = Arc::new(detector_context().map_err(|_| ModelBuildError::Context)?);
+    let context = Arc::new(detector_context().map_err(ModelBuildError::Context)?);
     let mut graph = CausaloidGraph::new(0);
 
     let source = graph
@@ -204,12 +204,12 @@ pub fn factors_on_shared_leg(
 // =============================================================================
 
 /// What can go wrong assembling the model.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug)]
 pub enum ModelBuildError {
     /// An operator could not be formed as a 2x2 matrix.
     Operator,
-    /// The detectors' context could not be built.
-    Context,
+    /// The detectors' context could not be built; carries the context's error naming the cause.
+    Context(ContextIndexError),
     /// A node could not be added to the graph.
     Node(usize),
     /// An edge could not be added between two nodes.
@@ -220,7 +220,9 @@ impl core::fmt::Display for ModelBuildError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             ModelBuildError::Operator => write!(f, "an operator is not a 2x2 matrix"),
-            ModelBuildError::Context => write!(f, "the detector context could not be built"),
+            ModelBuildError::Context(error) => {
+                write!(f, "the detector context could not be built: {error}")
+            }
             ModelBuildError::Node(n) => write!(f, "node {n} could not be added"),
             ModelBuildError::Edge(a, b) => write!(f, "the edge {a} -> {b} could not be added"),
         }

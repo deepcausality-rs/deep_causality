@@ -29,6 +29,7 @@ use deep_causality_context::{
 use deep_causality_core::{
     AlternatableContext, CausalEffect, CausalityError, PropagatingEffect, PropagatingProcess,
 };
+use deep_causality_num::lift;
 use std::error::Error;
 
 /// The scalar this example works in. Declared here, per example, so changing the shared alias in
@@ -186,7 +187,7 @@ fn value_of(
 
 /// Build the seed carrier.
 fn start(series: SeriesContext) -> PropagatingProcess<FloatType, (), SeriesContext> {
-    let seed = PropagatingEffect::pure(0.0 as FloatType);
+    let seed = PropagatingEffect::pure(lift::<FloatType>(0.0));
     PropagatingProcess::with_state(seed, (), Some(series))
 }
 

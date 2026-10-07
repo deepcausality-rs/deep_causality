@@ -15,6 +15,12 @@ use std::sync::{Arc, RwLock};
 pub(crate) const NICOTINE_ID: ContextoidId = 1;
 /// Contextoid id: tar level in the lungs.
 pub(crate) const TAR_ID: ContextoidId = 2;
+/// Contextoid id: the risk threshold, the nicotine or tar level above which cancer risk is high.
+pub(crate) const THRESHOLD_ID: ContextoidId = 3;
+
+/// The nicotine or tar level above which cancer risk is high. The context-free causaloids compare
+/// against it directly; the counterfactual contexts hold it under [`THRESHOLD_ID`].
+pub(crate) const RISK_THRESHOLD: f64 = 0.6;
 
 /// State struct for SCM causal chain
 #[derive(Debug, Clone, Copy, Default)]
@@ -105,8 +111,7 @@ pub(crate) fn value_of<T: Clone>(effect: &PropagatingEffect<T>) -> Result<T, Cau
 // Define Causaloids
 pub(crate) fn get_smoking_causaloid() -> ScmCausaloid {
     fn causal_fn(input: ScmState) -> PropagatingEffect<ScmState> {
-        let threshold = 0.6;
-        let high_nicotine_level = input.nicotine_level > threshold;
+        let high_nicotine_level = input.nicotine_level > RISK_THRESHOLD;
 
         let output = ScmState {
             nicotine_level: input.nicotine_level,
@@ -156,8 +161,8 @@ pub(crate) fn get_cancer_risk_causaloid() -> ScmCausaloid {
 /// Contextual causaloid for counterfactual analysis
 pub type ContextualScmCausaloid = Causaloid<f64, bool, (), Arc<RwLock<BaseContext>>>;
 
-/// A contextual causal function that determines cancer risk.
-/// It prioritizes checking for tar, then for smoking.
+/// A contextual causal function that determines cancer risk: high when the tar level or the
+/// nicotine level in the context exceeds the risk threshold the context holds.
 pub(crate) fn contextual_cancer_risk_logic(
     _effect: CausalEffect<f64>,
     _state: (),
@@ -181,24 +186,20 @@ pub(crate) fn contextual_cancer_risk_logic(
         }
     };
 
-    let (tar_level, nicotine_level) = match (read(&ctx, TAR_ID), read(&ctx, NICOTINE_ID)) {
-        (Ok(tar_level), Ok(nicotine_level)) => (tar_level, nicotine_level),
-        (Err(error), _) | (_, Err(error)) => return PropagatingProcess::from_error(error),
+    let (tar_level, nicotine_level, threshold) = match (
+        read(&ctx, TAR_ID),
+        read(&ctx, NICOTINE_ID),
+        read(&ctx, THRESHOLD_ID),
+    ) {
+        (Ok(tar_level), Ok(nicotine_level), Ok(threshold)) => {
+            (tar_level, nicotine_level, threshold)
+        }
+        (Err(error), _, _) | (_, Err(error), _) | (_, _, Err(error)) => {
+            return PropagatingProcess::from_error(error);
+        }
     };
 
-    if tar_level > 0.6 && nicotine_level > 0.6 {
-        return PropagatingProcess::pure(true); // Highest risk
-    }
-
-    if tar_level > 0.6 {
-        return PropagatingProcess::pure(true); // High tar = high risk
-    }
-
-    if nicotine_level > 0.6 {
-        return PropagatingProcess::pure(true); // High nicotine = high risk
-    }
-
-    PropagatingProcess::pure(false) // Low risk
+    PropagatingProcess::pure(tar_level > threshold || nicotine_level > threshold)
 }
 
 /// Read the `Data` contextoid with contextoid id `id` out of a person's context.

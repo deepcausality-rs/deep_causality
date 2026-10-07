@@ -13,8 +13,9 @@
 //!
 //! ## Generic Float Type Support
 //!
-//! This example supports `f32`, `f64`, and `DoubleFloat` by changing the `FloatType`
-//! type alias. All numeric literals are converted using the `flt!` macro.
+//! This example supports `f32`, `f64`, and `Float106` by changing the `FloatType`
+//! type alias. Numeric literals are constants declared once at the working type with
+//! `const_scalar_from_int!` and `const_scalar_from_float!`.
 //!
 use deep_causality_context::{
     Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
@@ -52,6 +53,10 @@ const PHOTON_SPHERE_RADII: FloatType = const_scalar_from_float!(FloatType, 1.5);
 const ISCO_RADII: FloatType = const_scalar_from_int!(FloatType, 3);
 /// The speed of light, at the working type.
 const LIGHT_SPEED: FloatType = const_scalar_from_float!(FloatType, SPEED_OF_LIGHT);
+/// Magnitude below which the Ricci scalar and the Hamiltonian constraint count as vacuum.
+const VACUUM_TOLERANCE: FloatType = const_scalar_from_float!(FloatType, 1e-10);
+/// Earth's surface gravity in m/s², the yardstick for the tidal acceleration.
+const EARTH_GRAVITY: FloatType = const_scalar_from_float!(FloatType, 9.8);
 type GRTheory = GR<FloatType>;
 
 /// The central body and the observer as a context: one `Data` contextoid per world fact. The
@@ -122,7 +127,6 @@ type SpaceTimeProcess<T> = PropagatingProcess<T, (), SchwarzschildContext>;
 
 /// Accumulated results from pipeline stages (final output)
 #[derive(Debug, Clone, Default)]
-#[allow(dead_code)]
 struct GRState {
     /// Mass parameter M (in geometric units, G=c=1)
     mass: FloatType,
@@ -282,10 +286,10 @@ fn stage_curvature_invariants(
         println!("  Ricci scalar:       R = {} (vacuum)", (ricci_scalar));
 
         // Physical interpretation
-        if (ricci_scalar).abs() < 1e-10 {
+        if (ricci_scalar).abs() < VACUUM_TOLERANCE {
             println!("\n  → Vacuum spacetime (T_μν = 0)");
         }
-        if (kretschmann) > 0.0 {
+        if (kretschmann) > ZERO {
             println!("  → Non-flat curvature: spacetime is curved");
         }
 
@@ -360,7 +364,7 @@ fn stage_geodesic_analysis(
         );
 
         // Spaghettification distance (where tidal force ~ g)
-        let g = 9.8; // Earth gravity
+        let g = EARTH_GRAVITY;
         if tidal_acceleration > g {
             println!(
                 "  → Tidal force (at 1m) exceeds Earth gravity ({:.1} g)",
@@ -443,7 +447,7 @@ fn stage_adm_formalism(
     println!("  Extrinsic curvature K:   0 (static slice)");
     println!("  Hamiltonian constraint:  H = {}", h_constraint);
 
-    if h_constraint.abs() < 1e-10 {
+    if h_constraint.abs() < VACUUM_TOLERANCE {
         println!("\n  → Constraint satisfied (vacuum solution)");
     }
 

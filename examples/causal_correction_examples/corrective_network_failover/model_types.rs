@@ -5,8 +5,6 @@
 
 //! Domain types for the network-failover corrective control loop.
 
-#![allow(dead_code)] // Domain fields kept for narrative clarity even if not all are read.
-
 use deep_causality_context::{
     Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     NoSpace, NoSpaceTime, NoTime,

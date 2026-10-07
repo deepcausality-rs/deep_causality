@@ -21,21 +21,24 @@ pub enum SensorStatus {
     CommunicationError,
 }
 
+/// The working precision of the example: every reading, fleet quantity and uncertain value is a
+/// `FloatType`.
+pub type FloatType = f64;
+
 /// Raw reading lifted from the wire — value and uncertainty may be missing.
 #[derive(Debug, Clone)]
 pub struct SensorReading {
     pub id: String,
-    pub value: Option<f64>,
-    #[allow(dead_code)] // part of the sensor record contract; not consumed in this demo
-    pub timestamp: u64,
+    pub value: Option<FloatType>,
     pub status: SensorStatus,
-    pub uncertainty: Option<f64>,
+    pub uncertainty: Option<FloatType>,
 }
 
 /// The fleet facts the stages read, one `Data` contextoid per quantity, carried through the
 /// `Context` channel. The context holds no position, clock or event, so its spatial, temporal and
 /// spacetime slots are empty.
-pub type FleetContext = Context<Data<f64>, NoSpace<f64>, NoTime, NoSpaceTime<f64>>;
+pub type FleetContext =
+    Context<Data<FloatType>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
 
 /// Contextoid id: lowest physically plausible temperature in °C.
 pub const TEMP_PLAUSIBLE_MIN: ContextoidId = 1;
@@ -133,7 +136,7 @@ pub const HUMIDITY_BANDS: BandNodes = BandNodes {
 };
 
 /// Read the payload of the `Data` contextoid with contextoid id `id` out of the fleet context.
-pub fn read(context: &FleetContext, id: ContextoidId) -> Result<f64, CausalityError> {
+pub fn read(context: &FleetContext, id: ContextoidId) -> Result<FloatType, CausalityError> {
     context.get_data_by_id(id).ok_or_else(|| {
         CausalityError::MissingParameter(format!(
             "the fleet context holds no Datoid with contextoid id {id}"
@@ -147,8 +150,8 @@ pub struct FleetState {
     pub healthy_count: usize,
     pub degraded_count: usize,
     pub failed_count: usize,
-    pub total_uncertainty: f64,
-    pub fused_temp: Option<f64>,
+    pub total_uncertainty: FloatType,
+    pub fused_temp: Option<FloatType>,
     pub anomalies: Vec<String>,
     pub verdict: Option<RiskLevel>,
 }
@@ -172,6 +175,6 @@ pub type FleetProcess<T> = PropagatingProcess<T, FleetState, FleetContext>;
 #[derive(Debug, Default, Clone)]
 pub struct RawReadings(pub HashMap<String, SensorReading>);
 
-/// Stage 2 output: per-sensor processed `Uncertain<f64>` or an error string.
+/// Stage 2 output: per-sensor processed `Uncertain<FloatType>` or an error string.
 #[derive(Debug, Default, Clone)]
-pub struct ProcessedReadings(pub HashMap<String, Result<Uncertain<f64>, String>>);
+pub struct ProcessedReadings(pub HashMap<String, Result<Uncertain<FloatType>, String>>);

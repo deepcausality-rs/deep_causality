@@ -40,6 +40,7 @@ use deep_causality_context::{
 use deep_causality_core::{
     AlternatableContext, CausalEffect, CausalityError, PropagatingEffect, PropagatingProcess,
 };
+use deep_causality_num::lift;
 use std::error::Error;
 
 /// Contextoid id: CPT entry P(rain | rained yesterday), probability.
@@ -178,7 +179,7 @@ fn monsoon_climate() -> Result<ClimateContext, ContextIndexError> {
 
 /// Build the seed carrier. Initial Markov state: yesterday it rained.
 fn start_in(regime: ClimateContext) -> PropagatingProcess<FloatType, WeatherState, ClimateContext> {
-    let seed = PropagatingEffect::pure(0.0 as FloatType);
+    let seed = PropagatingEffect::pure(lift::<FloatType>(0.0));
     let initial = WeatherState {
         day: 0,
         rained_yesterday: true,

@@ -12,9 +12,12 @@ const PREDICTOR_CAUSALOID_ID: IdentificationValue = 1;
 
 fn main() -> Result<(), Box<dyn Error>> {
     println!("Granger Causality Example: Oil Prices and Shipping Activity ");
-    // Create two instances of the causaloid, one for each context.
-    let factual_causaloid = model::get_factual_causaloid(PREDICTOR_CAUSALOID_ID)?;
-    let counterfactual_causaloid = model::get_counterfactual_causaloid(PREDICTOR_CAUSALOID_ID)?;
+    // Create two instances of the causaloid, one for each context. The counterfactual context is
+    // derived from the one factual context.
+    let factual_context = model::get_context_with_data()?;
+    let counterfactual_causaloid =
+        model::get_counterfactual_causaloid(PREDICTOR_CAUSALOID_ID, &factual_context)?;
+    let factual_causaloid = model::get_factual_causaloid(PREDICTOR_CAUSALOID_ID, factual_context);
 
     // 2. Execute the Granger Test
     // Factual Evaluation (with oil price history). The oil price history is stored in the context.

@@ -52,8 +52,7 @@ The "Observation" step projects the 6D state back to 3D by reading its `e1`, `e2
 
 * **The Shadow**: The observed 3D world is a "gauge choice" (a slice) of the 6D state.
 * **Result**: A linear update in 6D produces a 3D trajectory from which the `derive` step computes speed and G-load.
-  The radar measurement update (`ConformalTracker::correct`) is a placeholder, so the example propagates without
-  correction.
+  The example has no radar measurement update, so the track propagates without correction.
 
 ## Running the Example
 

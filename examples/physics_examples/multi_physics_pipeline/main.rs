@@ -250,7 +250,7 @@ fn stage_lund_fragmentation(
     match lund_string_fragmentation_kernel(&endpoints, &params, &mut rng) {
         Ok(hadrons) => {
             let valid: Vec<&Hadron<FloatType>> =
-                hadrons.iter().filter(|h| h.energy() > 0.0).collect();
+                hadrons.iter().filter(|h| h.energy() > ZERO).collect();
 
             println!(
                 "  Produced {} hadrons ({} physical)",

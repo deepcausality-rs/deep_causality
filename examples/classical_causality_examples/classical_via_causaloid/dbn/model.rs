@@ -4,11 +4,12 @@
  */
 use crate::types::WeatherState;
 use crate::{RAIN_CAUSE_ID, UMBRELLA_CAUSE_ID};
-use deep_causality::{CausableGraph, Causaloid, CausaloidGraph, PropagatingEffect};
+use deep_causality::{CausableGraph, CausalityError, Causaloid, CausaloidGraph, PropagatingEffect};
 use deep_causality_context::{
-    BaseContext, Contextoid, ContextoidType, ContextuableGraph, CurrentDataIndex, CurrentTimeIndex,
-    Data,
+    BaseContext, ContextIndexError, Contextoid, ContextoidType, ContextuableGraph,
+    CurrentDataIndex, CurrentTimeIndex, Data,
 };
+use std::error::Error;
 
 use crate::{RAIN_ID, TIME_ID};
 
@@ -16,39 +17,52 @@ use crate::{RAIN_ID, TIME_ID};
 pub type DBNCausaloid = Causaloid<WeatherState, WeatherState, (), ()>;
 pub type DBNGraph = CausaloidGraph<DBNCausaloid>;
 
-pub(crate) fn get_context() -> BaseContext {
-    let mut context = BaseContext::with_capacity(1, "Umbrella World Context", 10);
+pub(crate) fn get_context() -> Result<BaseContext, ContextIndexError> {
     // Initial state: Day 0, Rained
-    let initial_rain_datoid =
-        Contextoid::new(RAIN_ID, ContextoidType::Datoid(Data::new(RAIN_ID, 1.0))); // 1.0 for Rain
-    let initial_time_datoid =
-        Contextoid::new(TIME_ID, ContextoidType::Datoid(Data::new(TIME_ID, 0.0))); // Day 0
+    let rained = 1.0; // 1.0 for Rain
+    let day = 0.0; // Day 0
+    let initial_nodes = [
+        Contextoid::new(RAIN_ID, ContextoidType::Datoid(Data::new(RAIN_ID, rained))),
+        Contextoid::new(TIME_ID, ContextoidType::Datoid(Data::new(TIME_ID, day))),
+    ];
+    let mut context = BaseContext::with_capacity(1, "Umbrella World Context", initial_nodes.len());
 
-    let initial_rain_id = context.add_node(initial_rain_datoid).unwrap();
-    let initial_time_id = context.add_node(initial_time_datoid).unwrap();
+    let [initial_rain_datoid, initial_time_datoid] = initial_nodes;
+    let initial_rain_index = context.add_node(initial_rain_datoid)?;
+    let initial_time_index = context.add_node(initial_time_datoid)?;
 
     // Set the initial day index
-    context.set_current_day_index(initial_time_id);
+    context.set_current_day_index(initial_time_index);
     // Set the initial data index
-    context.set_current_data_index(initial_rain_id);
+    context.set_current_data_index(initial_rain_index);
 
-    println!("Initial State (Day 0): Rained: {initial_rain_id}");
-    println!("Initial State (Day 0): Time: {initial_time_id}");
+    println!("Initial State (Day 0): Rained: {rained}");
+    println!("Initial State (Day 0): Time: {day}");
 
-    context
+    Ok(context)
 }
 
 pub(crate) fn get_causaloid_graph(
     rain_causaloid: DBNCausaloid,
     umbrella_causaloid: DBNCausaloid,
-) -> DBNGraph {
+) -> Result<DBNGraph, Box<dyn Error>> {
     let mut causaloid_graph = CausaloidGraph::new(0);
-    let rain_idx = causaloid_graph.add_causaloid(rain_causaloid).unwrap();
-    let umbrella_idx = causaloid_graph.add_causaloid(umbrella_causaloid).unwrap();
-    causaloid_graph.add_edge(rain_idx, umbrella_idx).unwrap();
+    let rain_idx = causaloid_graph.add_causaloid(rain_causaloid)?;
+    let umbrella_idx = causaloid_graph.add_causaloid(umbrella_causaloid)?;
+    causaloid_graph.add_edge(rain_idx, umbrella_idx)?;
     causaloid_graph.freeze();
 
-    causaloid_graph
+    Ok(causaloid_graph)
+}
+
+/// The value an evaluation carries, or the error that ended it.
+pub(crate) fn value_of<T: Clone>(effect: &PropagatingEffect<T>) -> Result<T, CausalityError> {
+    match effect.error() {
+        Some(error) => Err(error.clone()),
+        None => effect
+            .value_cloned()
+            .ok_or(CausalityError::ValueNotAvailable()),
+    }
 }
 
 /// Creates the umbrella causaloid.

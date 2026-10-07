@@ -3,12 +3,6 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-#![allow(dead_code)]
-/*
- * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
- */
-
 use deep_causality_calculus::{EndoArrow, Euler};
 use deep_causality_context::{
     Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
@@ -99,7 +93,6 @@ pub fn metric_2t() -> Metric {
 pub struct ConformalTracker {
     pub state_6d: CausalMultiVector<f64>, // Current belief state in 6D
     pub generator: CausalMultiVector<f64>, // The "Hamiltonian" / Motion Generator
-    pub metric: Metric,
 }
 
 impl ConformalTracker {
@@ -135,7 +128,6 @@ impl ConformalTracker {
         Self {
             state_6d,
             generator,
-            metric,
         }
     }
 
@@ -149,13 +141,6 @@ impl ConformalTracker {
         let generator = self.generator.clone();
         let stepper = Euler::new(dt, move |_: &CausalMultiVector<f64>| generator.clone());
         self.state_6d = stepper.iterate_n(self.state_6d.clone(), 1);
-    }
-
-    /// Measurement Update (Mock).
-    /// In a real filter, we would take a radar plot (r, az, el) and correct `state_6d`.
-    /// Here we just simulate "Perfect Physics" propagation.
-    pub fn correct(&mut self, _radar_plot: [f64; 3]) {
-        // Placeholder for Kalman Gain application in 6D
     }
 
     /// Project current 6D state back to 3D world coordinates.

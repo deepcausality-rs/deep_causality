@@ -5,8 +5,6 @@
 
 //! Domain types for the cascading failure chain.
 
-#![allow(dead_code)] // Network struct fields retained for readability of the model.
-
 use deep_causality_core::PropagatingProcess;
 use std::collections::HashSet;
 

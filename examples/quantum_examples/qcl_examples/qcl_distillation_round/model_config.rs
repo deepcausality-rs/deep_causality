@@ -12,40 +12,37 @@ use deep_causality_context::{
     NoSpace, NoSpaceTime, NoTime,
 };
 use deep_causality_num::{FromPrimitive, lift_i64};
+use deep_causality_num_rational::Rational;
 
-/// One noise world: the depolarising probability on every physical qubit, as an exact fraction, a
-/// numerator and a denominator held as integers.
+/// One noise world: the depolarising probability on every physical qubit, as an exact fraction.
 ///
 /// The noise acts on qubits, not at a position or an instant, so the spatial, temporal and
 /// spacetime slots are the absent ones.
-pub type NoiseContext = Context<Data<i64>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
+pub type NoiseContext =
+    Context<Data<Rational<i64>>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
 
-/// Contextoid id: the depolarising probability's numerator, dimensionless.
-const NOISE_NUMERATOR: ContextoidId = 1;
-/// Contextoid id: the depolarising probability's denominator, dimensionless.
-const NOISE_DENOMINATOR: ContextoidId = 2;
+/// Contextoid id: the depolarising probability, an exact fraction, dimensionless.
+const NOISE_PROBABILITY: ContextoidId = 1;
 
-/// The swept noise worlds, one per depolarising probability: `0`, `1/100` and `5/100`. Zero is the
-/// noiseless round.
+/// The swept noise worlds, one per depolarising probability: `0`, `1/100` and `5/100`, held in
+/// lowest terms, so the last is `1/20`. Zero is the noiseless round.
 ///
-/// Each probability is held as a numerator and a denominator and divided at the precision in force,
-/// rather than as an `f64` literal that is widened afterwards. `lift::<Float106>(0.01_f64)` is the
-/// `f64` approximation of a hundredth carried into a wider type, which is a different number from
-/// the hundredth that type can represent. Dividing the integers keeps every precision's probability
-/// its own nearest value, which is what makes a comparison across precisions mean anything.
+/// Each probability is held as an exact fraction whose numerator and denominator are divided at the
+/// precision in force, rather than as an `f64` literal that is widened afterwards.
+/// `lift::<Float106>(0.01_f64)` is the `f64` approximation of a hundredth carried into a wider
+/// type, which is a different number from the hundredth that type can represent. Dividing the
+/// integers keeps every precision's probability its own nearest value, which is what makes a
+/// comparison across precisions mean anything.
 pub fn noise_worlds() -> Result<Vec<NoiseContext>, ContextIndexError> {
     [0, 1, 5]
         .into_iter()
-        .map(|numerator| noise_world(numerator, 100))
+        .map(|numerator| noise_world(Rational::new(numerator, 100)))
         .collect()
 }
 
-/// One noise world, depolarising with probability `numerator / denominator`.
-fn noise_world(numerator: i64, denominator: i64) -> Result<NoiseContext, ContextIndexError> {
-    let facts = [
-        (NOISE_NUMERATOR, numerator),
-        (NOISE_DENOMINATOR, denominator),
-    ];
+/// One noise world, depolarising with probability `probability`.
+fn noise_world(probability: Rational<i64>) -> Result<NoiseContext, ContextIndexError> {
+    let facts = [(NOISE_PROBABILITY, probability)];
     let mut world = Context::with_capacity(1, "depolarising noise", facts.len());
     for (id, value) in facts {
         world.add_node(Contextoid::new(
@@ -56,26 +53,20 @@ fn noise_world(numerator: i64, denominator: i64) -> Result<NoiseContext, Context
     Ok(world)
 }
 
-/// The depolarising probability as the world holds it: `(numerator, denominator)`.
-pub fn noise_fraction(world: &NoiseContext) -> Result<(i64, i64), ContextIndexError> {
-    Ok((
-        read(world, NOISE_NUMERATOR)?,
-        read(world, NOISE_DENOMINATOR)?,
-    ))
+/// The depolarising probability as the world holds it, an exact fraction.
+pub fn noise_probability(world: &NoiseContext) -> Result<Rational<i64>, ContextIndexError> {
+    world.get_data_by_id(NOISE_PROBABILITY).ok_or_else(|| {
+        ContextIndexError::new(format!(
+            "no noise datum with contextoid id {NOISE_PROBABILITY}"
+        ))
+    })
 }
 
-/// The depolarising probability at the precision `S`, divided from the world's two integers.
+/// The depolarising probability at the precision `S`, its numerator divided by its denominator.
 pub fn depolarising_probability<S>(world: &NoiseContext) -> Result<S, ContextIndexError>
 where
     S: RealField + FromPrimitive,
 {
-    let (numerator, denominator) = noise_fraction(world)?;
-    Ok(lift_i64::<S>(numerator) / lift_i64::<S>(denominator))
-}
-
-/// Read the integer with contextoid id `id` out of a noise world.
-fn read(world: &NoiseContext, id: ContextoidId) -> Result<i64, ContextIndexError> {
-    world
-        .get_data_by_id(id)
-        .ok_or_else(|| ContextIndexError::new(format!("no noise datum with contextoid id {id}")))
+    let probability = noise_probability(world)?;
+    Ok(lift_i64::<S>(*probability.numer()) / lift_i64::<S>(*probability.denom()))
 }

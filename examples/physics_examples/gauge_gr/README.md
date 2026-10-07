@@ -98,12 +98,12 @@ The black hole and the observer are the pipeline's context. `schwarzschild_space
 
 ## Related Examples
 
-- [`gauge_qed`](../gauge_qed/): Electromagnetic field analysis
+- [`gauge_em`](../gauge_em/): Electromagnetic field analysis
 - [`gauge_weak_force`](../gauge_weak_force/): SU(2) weak interaction
-- [`gauge_electroweak`](../gauge_electroweak/): Electroweak unification
+- [`gauge_electroweak`](../../quantum_examples/gauge_electroweak/): Electroweak unification
 
 ## References
 
 - Misner, Thorne, Wheeler, *Gravitation*, Chapters 23, 31 (Schwarzschild, ADM)
 - Wald, *General Relativity*, Chapter 6 (Curvature)
-- [deep_causality_physics::GrOps](../../deep_causality_physics/src/theories/gr/gr_ops.rs)
+- [deep_causality_physics::GrOps](../../../deep_causality_physics/src/theories/general_relativity/gr_ops.rs)

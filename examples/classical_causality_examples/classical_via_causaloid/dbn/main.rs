@@ -9,6 +9,7 @@ use crate::types::WeatherState;
 use deep_causality::*;
 use deep_causality_context::*;
 use deep_causality_stats::RandomExt;
+use std::error::Error;
 use std::sync::{Arc, RwLock};
 use std::{thread, time::Duration};
 
@@ -19,7 +20,7 @@ const TIME_ID: IdentificationValue = 1;
 const RAIN_CAUSE_ID: IdentificationValue = 0;
 const UMBRELLA_CAUSE_ID: IdentificationValue = 1;
 
-fn main() {
+fn main() -> Result<(), Box<dyn Error>> {
     println!("\n--- DBN Example: Umbrella World ---");
 
     // 1. Define the Causal Logic (Causaloids)
@@ -31,11 +32,11 @@ fn main() {
     let umbrella_causaloid = model::get_umbrella_causaloid();
 
     // Create the CausaloidGraph
-    let causal_graph = model::get_causaloid_graph(rain_causaloid, umbrella_causaloid);
+    let causal_graph = model::get_causaloid_graph(rain_causaloid, umbrella_causaloid)?;
     let causal_graph_arc = Arc::new(causal_graph);
 
     // 2. Build the Context (The Timeline)
-    let context_arc = Arc::new(RwLock::new(model::get_context()));
+    let context_arc = Arc::new(RwLock::new(model::get_context()?));
 
     println!("\nInitial State (Day 0): Rained");
 
@@ -58,12 +59,7 @@ fn main() {
         let rain_res =
             causal_graph_arc.evaluate_subgraph_from_cause(RAIN_CAUSE_ID as usize, &input_effect);
 
-        if rain_res.is_err() {
-            eprintln!("Rain evaluation failed: {:?}", rain_res.error());
-            continue;
-        }
-
-        let output_state = rain_res.value_cloned().unwrap_or(input_state);
+        let output_state = model::value_of(&rain_res)?;
         let prob_rain_today = output_state.rain_probability;
 
         // Sample from the probability to determine if it actually rained
@@ -82,15 +78,13 @@ fn main() {
         {
             let mut guard = context_arc
                 .write()
-                .expect("Could not acquire write lock on context");
+                .map_err(|_| "Could not acquire write lock on context: the lock is poisoned")?;
 
             let rain_datoid = Data::new(RAIN_ID, if did_it_rain_today { 1.0 } else { 0.0 });
-            guard
-                .update_node(
-                    RAIN_ID,
-                    Contextoid::new(RAIN_ID, ContextoidType::Datoid(rain_datoid)),
-                )
-                .unwrap();
+            guard.update_node(
+                RAIN_ID,
+                Contextoid::new(RAIN_ID, ContextoidType::Datoid(rain_datoid)),
+            )?;
         }
 
         // Update prev_rain_state for next iteration
@@ -98,4 +92,5 @@ fn main() {
     }
 
     println!("\n--- Simulation Complete ---");
+    Ok(())
 }

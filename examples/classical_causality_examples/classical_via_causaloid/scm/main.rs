@@ -10,11 +10,8 @@ mod rung3_counterfactual;
 
 use std::error::Error;
 
-// For more detailed explanations of the automated reasoning, set this flag to true.
-const EXAPLAIN: bool = false;
-
 fn main() -> Result<(), Box<dyn Error>> {
-    rung1_association::run_rung1_association(EXAPLAIN)?;
+    rung1_association::run_rung1_association()?;
     rung2_intervention::run_rung2_intervention()?;
-    rung3_counterfactual::run_rung3_counterfactual(EXAPLAIN)
+    rung3_counterfactual::run_rung3_counterfactual()
 }

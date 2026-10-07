@@ -80,9 +80,9 @@ table separates the two reasons:
 | regime | f32, relative to `Float106` |
 |---|---|
 | L=16, `Tc` — exact reduction, large fluctuation | `3.03e-8` |
-| L=16, `T=1.5` — exact reduction, small fluctuation | `4.37e-10` |
+| L=16, `T=1.5` — exact reduction, small fluctuation | `3.19e-8` |
 | L=32, `Tc` — reduction rounds, large fluctuation | `1.42e-7` |
-| **L=32, `T=1.5` — reduction rounds, small fluctuation** | **`7.73e-5`** |
+| **L=32, `T=1.5` — reduction rounds, small fluctuation** | **`7.74e-5`** |
 
 Two corrections fall out of it.
 
@@ -94,13 +94,15 @@ against `0.99 ± 0.01` at `T = 1.5`.
 **And at 16×16 no scalar can disagree, because the arithmetic is exact.** `|m| = k/N` is a dyadic
 rational needing `log₂ N` significand bits; `m²` needs twice that; summing `R` of them needs
 `2 log₂ N + log₂ R`. At `L = 16, R = 32` that is 21 bits, inside `f32`'s 24, so `f32`, `f64` and
-`Float106` return **bit-identical** results. At `L = 32` it is 25 bits and `f32` must round,
+`Float106` compute a **bit-identical** reduction `⟨m²⟩ − ⟨m⟩²`. At `L = 32` it is 25 bits and `f32` must round,
 hence the second lattice size in the table. The threshold follows from the bit count, before any
 run.
 
-Only the cell where both go wrong costs anything, and it costs four orders of magnitude more than
-the other three. The *best* of the four is the exact reduction with the smallest fluctuation,
-the opposite of what the cancellation argument alone predicts.
+Only the cell where both go wrong costs anything, and it costs 545 to 2,550 times as much as the
+other three. The two exact rows sit at the same `3e-8` whatever the fluctuation: their
+`⟨m²⟩ − ⟨m⟩²` is bit-identical at all three scalars, and what remains is `f32` rounding
+`beta = 1 / T` and the final product. A small fluctuation costs digits only where the reduction
+rounds, which the cancellation argument alone does not predict.
 
 Whether a wider float helps is a question about your data, and you can compute the answer before
 reaching for one.

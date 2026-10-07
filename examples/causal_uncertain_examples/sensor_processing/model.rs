@@ -9,19 +9,20 @@
 //! reads the fleet context, mutates `FleetState`, appends an `EffectLog` entry,
 //! and re-lifts the new value. A stage short-circuits into the error channel
 //! when the value or the fleet context is missing, when a fleet-context read
-//! fails, or when sampling an `Uncertain<f64>` fails.
+//! fails, or when sampling an `Uncertain<FloatType>` fails.
 
 use crate::model_types::{
     ANOMALY_DISAGREEMENT_C, BandNodes, CORRELATION_TOLERANCE, CRITICAL_BELOW_PCT,
     DEGRADED_UNCERTAINTY_FACTOR, DRIFT_UNCERTAINTY_FACTOR, DRIFT_UNCERTAINTY_OFFSET, FleetContext,
-    FleetProcess, FleetState, HIGH_BELOW_PCT, HIGH_UNCERTAINTY_THRESHOLD, HISTORICAL_TEMP_MEAN,
-    HISTORICAL_TEMP_SD, HUMIDITY_BANDS, MEDIUM_BELOW_PCT, OUT_OF_RANGE_SD,
+    FleetProcess, FleetState, FloatType, HIGH_BELOW_PCT, HIGH_UNCERTAINTY_THRESHOLD,
+    HISTORICAL_TEMP_MEAN, HISTORICAL_TEMP_SD, HUMIDITY_BANDS, MEDIUM_BELOW_PCT, OUT_OF_RANGE_SD,
     PRESSURE_2_CALIBRATION_OFFSET, PRESSURE_BANDS, ProcessedReadings, REFERENCE_PRESSURE,
     REFERENCE_TEMP, RawReadings, RiskLevel, SensorReading, SensorStatus, TEMP_BANDS,
     TEMP_CALIBRATION_BIAS, TEMP_CALIBRATION_GAIN, TEMP_PER_HPA, read,
 };
 use deep_causality_core::{CausalEffect, CausalityError, CausalityErrorEnum, EffectLog};
 use deep_causality_haft::LogAddEntry;
+use deep_causality_num::{lift, lift_usize};
 use deep_causality_uncertain::{Uncertain, UncertainError};
 use std::collections::HashMap;
 
@@ -109,7 +110,7 @@ fn is_plausible(reading: &SensorReading, fleet: &FleetContext) -> Result<bool, C
 fn apply_calibration(
     reading: &SensorReading,
     fleet: &FleetContext,
-) -> Result<Option<f64>, CausalityError> {
+) -> Result<Option<FloatType>, CausalityError> {
     let Some(v) = reading.value else {
         return Ok(None);
     };
@@ -124,13 +125,13 @@ fn apply_calibration(
     }
 }
 
-/// Triage one reading into an `Uncertain<f64>` or a per-sensor error tag. The outer error is a
-/// failed fleet-context read, which stops the stage.
+/// Triage one reading into an `Uncertain<FloatType>` or a per-sensor error tag. The outer error is
+/// a failed fleet-context read, which stops the stage.
 fn triage(
     id: &str,
     reading: &SensorReading,
     fleet: &FleetContext,
-) -> Result<Result<Uncertain<f64>, String>, CausalityError> {
+) -> Result<Result<Uncertain<FloatType>, String>, CausalityError> {
     Ok(
         match (&reading.status, reading.value, reading.uncertainty) {
             (SensorStatus::Healthy, Some(v), Some(u)) => Ok(Uncertain::normal(v, u)),
@@ -163,7 +164,7 @@ fn triage(
     )
 }
 
-/// Stage 1 — robust per-sensor processing into `Uncertain<f64>` or an error tag.
+/// Stage 1 — robust per-sensor processing into `Uncertain<FloatType>` or an error tag.
 pub fn process_stage(
     value: CausalEffect<RawReadings>,
     state: FleetState,
@@ -172,7 +173,7 @@ pub fn process_stage(
     let Some(raw) = value.into_value() else {
         return process_failure(state, ctx, "stage1.process: value was None");
     };
-    let processed: Result<HashMap<String, Result<Uncertain<f64>, String>>, CausalityError> =
+    let processed: Result<HashMap<String, Result<Uncertain<FloatType>, String>>, CausalityError> =
         match ctx.as_ref() {
             Some(fleet) => raw
                 .0
@@ -239,9 +240,9 @@ fn validate(
         state.healthy_count,
         state.failed_count,
         if state.healthy_count > 0 {
-            state.total_uncertainty / state.healthy_count as f64
+            state.total_uncertainty / lift_usize::<FloatType>(state.healthy_count)
         } else {
-            0.0
+            lift(0.0)
         }
     ));
     if !high_uncertainty_sensors.is_empty() {
@@ -267,7 +268,7 @@ fn fuse(
     state: &mut FleetState,
     fleet: &FleetContext,
 ) -> Result<EffectLog, CausalityError> {
-    let temps: Vec<(&String, &Uncertain<f64>)> = processed
+    let temps: Vec<(&String, &Uncertain<FloatType>)> = processed
         .0
         .iter()
         .filter(|(id, _)| id.starts_with("temp"))
@@ -287,9 +288,9 @@ fn fuse(
             "stage3.fusion: single sensor {id} → {mean:.1}°C (no redundancy)"
         ));
     } else {
-        let mut weighted_sum = 0.0;
-        let mut total_weight = 0.0;
-        let mut values: Vec<f64> = Vec::new();
+        let mut weighted_sum = lift::<FloatType>(0.0);
+        let mut total_weight = lift::<FloatType>(0.0);
+        let mut values: Vec<FloatType> = Vec::new();
         for (_, u) in &temps {
             let mean = u
                 .expected_value_from_entropy(SAMPLES)
@@ -297,7 +298,7 @@ fn fuse(
             let std = u
                 .standard_deviation_from_entropy(SAMPLES)
                 .map_err(sampling_error)?;
-            let weight = 1.0 / (std + 0.1);
+            let weight = lift::<FloatType>(1.0) / (std + lift::<FloatType>(0.1));
             weighted_sum += mean * weight;
             total_weight += weight;
             values.push(mean);
@@ -307,7 +308,7 @@ fn fuse(
         logs.add_entry(&format!(
             "stage3.fusion: fused {} temp sensors → {fused:.1}°C (1σ ≈ {:.1})",
             temps.len(),
-            1.0 / total_weight.sqrt()
+            lift::<FloatType>(1.0) / total_weight.sqrt()
         ));
 
         let disagreement_thr = read(fleet, ANOMALY_DISAGREEMENT_C)?;
@@ -440,9 +441,10 @@ fn judge_reliability(
 ) -> Result<EffectLog, CausalityError> {
     let total = state.healthy_count + state.degraded_count + state.failed_count;
     let health_pct = if total > 0 {
-        state.healthy_count as f64 / total as f64 * 100.0
+        lift_usize::<FloatType>(state.healthy_count) / lift_usize::<FloatType>(total)
+            * lift::<FloatType>(100.0)
     } else {
-        0.0
+        lift(0.0)
     };
 
     let verdict = if health_pct < read(fleet, CRITICAL_BELOW_PCT)? {

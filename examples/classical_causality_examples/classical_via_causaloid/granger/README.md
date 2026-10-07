@@ -27,7 +27,7 @@ Granger Causality asks whether one time series helps forecast another. The EPP c
     The Granger test compares two realities:
 
     *   **Factual Context:** A `GrangerContext` (`Data<f64>` nodes, `DiscreteTime` nodes, no space) with the shipping model's three coefficients (oil baseline, shipping trend, oil coefficient) and the complete, observed history of *both* oil prices and shipping activity, each quarter a `DiscreteTime` node on the `TimeScale::Quarter` scale.
-    *   **Counterfactual Context:** A second `GrangerContext` with the same coefficients, quarters and history of shipping activity but *without* the history of oil prices.
+    *   **Counterfactual Context:** A second `GrangerContext` derived from the factual one: every node it holds except the oil prices, so the same coefficients, quarters and history of shipping activity but *without* the history of oil prices.
 
 3.  **Evaluating Potential Outcomes:**
     Two `Causaloid`s share the same predictive logic, each bound to a different context:
