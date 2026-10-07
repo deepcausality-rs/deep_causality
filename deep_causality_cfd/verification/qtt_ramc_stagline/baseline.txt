@@ -1,59 +1,61 @@
-    Finished `release` profile [optimized] target(s) in 0.19s
+    Finished `release` profile [optimized] target(s) in 0.06s
      Running `target/release/examples/qtt_ramc_stagline`
 === RAM-C stagnation line: exact Rankine–Hugoniot fit + reused Tier-A ionization ===
 
-Flight: M = 25, γ = 1.1, T_inf = 250 K, n_inf = 1e21 m^-3 (RAM-C II ~71 km)
+Flight (RAM-C II 71 km): M = 25.9, T_inf = 217.9 K, q = 2280 Pa -> V = 7664.4 m/s, n_inf = 1.6140e21 m^-3; γ_eff = 1.1
 
-Residence time t_res = standoff/u2 = 2.022e-5 s  (Saha-equilibrium upper bound n_e = 9.620e21 m^-3)
-Single-T surrogate (ionizes at T₂, over-predicts): α = 4.628e-3, n_e = 1.224e20 m^-3 (+1.1 dec vs RAM-C)
+Residence time t_res = standoff/u2 = 2.022e-5 s  (Saha-equilibrium upper bound n_e = 7.038e21 m^-3)
+Single-T surrogate (ionizes at T₂, over-predicts): α = 2.458e-3, n_e = 8.089e19 m^-3 (+0.9 dec vs RAM-C)
 
 Uncalibrated finite-rate network (RP-1232 Table II pairs; no Saha target):
-  lagged atom pool: x_N = 3.925e-1, x_O = 5.782e-1
-  channel 1 + pool: n_e = 1.887e19 m^-3 (+0.28 dec vs RAM-C)
-  full network:     n_e = 2.251e19 m^-3 (+0.35 dec vs RAM-C)
+  lagged atom pool: x_N = 2.784e-1, x_O = 4.686e-1
+  channel 1 + pool: n_e = 1.278e19 m^-3 (+0.11 dec vs RAM-C)
+  full network:     n_e = 1.643e19 m^-3 (+0.22 dec vs RAM-C)
 
 Sheath-renewal A/B under recombination (peak over the transit-age profile):
-  renewal (kept):    n_e = 2.251e19 m^-3 (+0.35 dec vs RAM-C)
-  carried (marched): n_e = 1.768e18 m^-3 (-0.75 dec vs RAM-C)
+  renewal (kept):    n_e = 1.643e19 m^-3 (+0.22 dec vs RAM-C)
+  carried (marched): n_e = 6.598e17 m^-3 (-1.18 dec vs RAM-C)
 
 Exact Rankine–Hugoniot post-shock state (the transported energy, no reconstruction):
-  T_inf -> T2 ............ 250 K -> 8044 K
-  density ratio ρ2/ρ1 ... 20.349
+  T_inf -> T2 ............ 217.9 K -> 7509 K
+  density ratio ρ2/ρ1 ... 20.392
   velocity ratio u2/u1 .. 0.049
-  pressure ratio p2/p1 .. 6.547e2
-  post-shock n_tot ...... 2.645e22 m^-3
+  pressure ratio p2/p1 .. 7.027e2
+  post-shock n_tot ...... 3.291e22 m^-3
 
 Stagnation-line blackout (Saha/Park-2T at the post-shock state):
-  ionization fraction α .. 2.007e-5
-  peak electron density .. 5.310e17 m^-3
-  plasma frequency ω_p ... 4.111e10 rad/s
+  ionization fraction α .. 3.250e-6
+  peak electron density .. 1.070e17 m^-3
+  plasma frequency ω_p ... 1.845e10 rad/s
   blackout (ω_p > comms) . true (comms band 9.40e9 rad/s)
   relaxation-profile bond  2  (smooth post-shock zone, O(1) rank)
 
+Lower-bound station (RAM-C II 61 km: M = 23.9, T_inf = 255.9 K, q = 8000 Pa -> V = 7664.5 m/s, n_inf = 5.6629e21 m^-3):
+  T2 = 7547 K, network n_e = 1.811e20 m^-3 (+1.26 dec vs the 9.932e18 m^-3 flight lower bound), Park-2T controller n_e = 2.021e20 m^-3
+
 --- RAM-C stagnation-line gates ---
   [PASS] [tripwire] T2 in the ~10^4 K post-shock band
-  [PASS] [tripwire] peak n_e is the corrected Park-2T value (-1.27 dec vs RAM-C II; reported, not re-admitted to the old +0.0 headline)
+  [PASS] [tripwire] peak n_e is the corrected Park-2T value (-1.97 dec vs RAM-C II; a regression pin, reported, not re-admitted)
   [PASS] [tripwire] blackout onset (ω_p > comms band)
   [PASS] [tripwire] relaxation profile O(1) rank
-  [PASS] [tripwire] network prediction inside the earned band: full network +0.35 dec vs the flight anchor (band +-0.70 dec, pinned from the measurement; production codes sit at 2x to 3x)
-  [PASS] [tripwire] electron impact is a refinement, not the driver: channel 1 + pool 1.887e19 vs full network 2.251e19 m^-3 (the associative channel carries the prediction at RAM-C speeds)
-  [PASS] [tripwire] carried mode self-limits at or below the renewal arm (no runaway): carried -0.75 dec vs the anchor, below the network's ±0.70-dec renewal band (reported, not re-admitted; the carried clock under-relaxes young sheath gas)
+  [PASS] [tripwire] network prediction inside the allowance: full network +0.22 dec vs the 9.932e18 m^-3 station-1 Ka-band anchor at 71.93 km, 0.93 km above the cited 71 km freestream (allowance +-0.70 dec, the chemistry-model spread)
+  [PASS] [tripwire] electron impact is a refinement, not the driver: channel 1 + pool 1.278e19 vs full network 1.643e19 m^-3 (the associative channel carries the prediction at RAM-C speeds)
+  [PASS] [tripwire] carried mode self-limits at or below the renewal arm (no runaway): carried -1.18 dec vs the anchor, below the network's ±0.70-dec renewal band (reported, not re-admitted; the carried clock under-relaxes young sheath gas)
+  [PASS] [reference] network n_e at the 61 km station meets the flight lower bound: 1.811e20 >= 9.932e18 m^-3 (station 1 overdense at Ka-band below 71.93 km; Grantham 1970, p. 18)
 
-=== RAM-C stagnation line: Park-2T peak n_e = 5.31e17 m^-3, -1.3 decades vs the RAM-C II anchor 1e19. ===
-Ionization is driven off the Park rate-controlling temperature Tₐ = √(T_tr·T_ve). The lagging
-vibrational-electron temperature T_ve relaxes from the free-stream value over the residence time
-by the closed-form Millikan–White LER kernel, not the hot translational T₂.
+=== RAM-C stagnation line: network n_e = 1.64e19 m^-3 (+0.22 dec), Park-2T controller 1.07e17 m^-3 (-1.97 dec) vs the station-1 Ka-band anchor 9.932e18 m^-3 at 71.93 km; 61 km network 1.81e20 m^-3 above the flight lower bound. ===
+The freestream is the cited RAM-C II 71 km condition (Mach 25.9, 217.9 K, q 2.28 kPa); velocity
+and number density are derived from it. The anchor is the flight's station-1 Ka-band
+critical-density crossing, which Grantham (1970) places at 71.93 km; below it the flight's nose
+plasma is overdense, so the 61 km comparison is against a lower bound.
 
-The reduced mass is the N₂–N₂ pair, μ = 14.007. The earlier +0.0-decade headline was an artifact
-of an invalid μ = 7.0 (the N–N atomic pair, which has no vibrational mode). Correcting it
-lengthens τ_vt about 1.9x, cools Tₐ, and drops the Park-2T controller to 1.27 decades below the
-anchor. That offset is reported here as the result; the band was not widened to restore the old
-number. The uncalibrated finite-rate network's renewal arm still lands +0.35 decade, so its
-order-of-magnitude prediction survives the correction while the closed-form controller does not.
-Read the single-pair figure as a lower bound on n_e: the bath also holds lighter partners (N, O)
-whose shorter τ_vt a mixture-weighted closure would recover.
+Ionization in the Park-2T controller is driven off Tₐ = √(T_tr·T_ve), with T_ve relaxed from the
+free-stream value over the residence time by the closed-form Millikan–White LER kernel, at the
+N₂–N₂ reduced mass μ = 14.007. The controller's offset is reported as the result; its band is a
+regression pin, not widened toward the anchor. Read the single-pair figure as a lower bound on
+n_e: the bath also holds lighter partners (N, O) whose shorter τ_vt a mixture-weighted closure
+would recover.
 
-Open levers, unchanged by this fix: the T_e = T_ve lumping (a 3-T separation is ~2x), the single
-associative-ionization channel, and the ~2-5x Millikan–White chemistry-model spread. The
-effective γ = 1.1 lands T2 in the realistic ~8000 K reacting-air band, and that T2 is the
-exact-RH transported energy.
+Open levers: the T_e = T_ve lumping (a 3-T separation is ~2x), the single associative-ionization
+channel, and the ~2-5x Millikan–White chemistry-model spread. The effective γ = 1.1 is a
+reacting-air closure; T2 is the exact-RH transported energy at that γ.

@@ -5,37 +5,44 @@ TBD - created by archiving change plasma-retropropulsion-cfd-contracts. Update P
 ## Requirements
 ### Requirement: Atmosphere rows extend to the ground
 
-The shared `ATMOSPHERE` table (`examples/avionics_examples/src/shared/constants.rs`) SHALL
-extend from its current 30 km floor to 0 km with US-1976-shaped rows in the existing
-four-column format `(altitude m, n_tot m⁻³, T K, a m/s)`, inserted below the existing rows in
-ascending-altitude order. The existing five rows MUST remain byte-identical, and each new row
-MUST carry a comment citing its US Standard Atmosphere 1976 pinpoint. The new rows MUST be
-internally consistent: sound speed agrees with `a = √(γ R_s T)` at `γ = 1.4` within transcription
-tolerance, and number density decreases monotonically with altitude across the whole table.
+The shared `ATMOSPHERE` table (`examples/avionics_examples/src/shared/constants.rs`) SHALL hold
+U.S. Standard Atmosphere 1976 rows from 0 km to 90 km at 1 km spacing in the four-column format
+`(altitude m, n_tot m⁻³, T K, a m/s)`, in ascending-altitude order, generated from the standard's
+defining constants (its Table 2 constants and Table 4 layer gradients) and cited to them. Between
+86 km and 90 km the rows SHALL extend isothermally at the 86 km temperature, hydrostatic in geometric
+altitude, and the table SHALL state that extension. No row MAY be scaled or pinned to a flight
+condition: every row describes US-1976 at its own altitude. The rows MUST be internally consistent:
+`n_tot = P/(kT)`, `a = √(γ R* T / M₀)` at `γ = 1.4`, and number density decreases monotonically with
+altitude across the whole table.
 
-#### Scenario: The table reaches the ground with its original rows intact
+#### Scenario: The table is US-1976 at its own altitudes
 
-- **WHEN** the extended `ATMOSPHERE` is inspected
-- **THEN** its first row is at 0 m, its rows ascend in altitude, the five pre-existing rows are
-  byte-identical to the committed table, and every new row's `(n_tot, T, a)` triple is
-  consistent with US-1976
+- **WHEN** the `ATMOSPHERE` rows at 61 km, 71 km and 72 km are inspected
+- **THEN** their temperature, pressure and density agree with US-1976 Table I at those altitudes
+  within 0.1 % (Table I, 61 km: 244.274 K, 19.157 Pa, 2.7321e-4 kg m⁻³; 71 km: 216.846 K, 4.4795 Pa,
+  7.1966e-5 kg m⁻³)
+
+#### Scenario: The table reaches the ground and its top
+
+- **WHEN** the table is inspected
+- **THEN** its first row is at 0 m with the US-1976 sea-level state, its last row is at 90 km, and
+  its rows ascend in altitude at 1 km spacing
 
 ### Requirement: The sampler's clamp moves by data alone
 
-The atmosphere extension SHALL require no change to `DescentSchedule::sample`: the sampler
-already clamps to the table ends, so appending rows below 30 km relocates the low clamp to 0 km
-purely through data. Above 30 km, sampling the extended table MUST return values identical to
-sampling the original table, because interpolation between the original rows is untouched.
+`DescentSchedule::sample` SHALL clamp to the table ends and, between rows, SHALL interpolate the
+logarithm of `n_tot` linearly in altitude, with temperature and sound speed interpolated linearly. A
+table whose number density falls exponentially between two rows MUST be sampled exactly at every
+altitude between them, so a coarse table cannot overstate density between rows.
 
-#### Scenario: Above the old floor, nothing changes
+#### Scenario: An exponential layer is reproduced between rows
 
-- **WHEN** the schedule is sampled at altitudes spanning 30–90 km against both the original and
-  the extended table
-- **THEN** every sampled row is identical between the two tables
+- **WHEN** a two-row table holds `n_tot = n₀` at 0 m and `n₀·e⁻²` at 14 km and is sampled at 7 km
+- **THEN** the sampled `n_tot` equals `n₀·e⁻¹` to round-off, and the sampled temperature is the
+  linear midpoint
 
-#### Scenario: Below the old floor, the atmosphere is live
+#### Scenario: The ends clamp
 
-- **WHEN** the schedule is sampled at 15 km against the extended table
-- **THEN** the returned state interpolates the new rows (denser and warmer than the 30 km row's
-  frozen values) instead of clamping to the 30 km row
+- **WHEN** the schedule is sampled below its first row or above its last row
+- **THEN** it returns that end row unchanged
 

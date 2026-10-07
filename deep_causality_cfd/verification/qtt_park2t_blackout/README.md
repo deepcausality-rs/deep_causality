@@ -57,7 +57,7 @@ or with its `τ → 0` early exit, checks that would hold for every input.
 - Saha equilibrium at the *frozen* RH post-shock temperature drives near-full ionization
   (`n_e ~ n_tot`) here; the two-temperature (`T_ve = T_e`) lumping over-predicts peak `n_e` by ~2×
   (Farbar–Boyd–Martin 2013), and real-gas dissociation caps the post-shock temperature lower, so the
-  reported peak `n_e` over-predicts relative to the RAM-C II ~`1e19 m⁻³` anchor.
+  reported peak `n_e` over-predicts relative to the RAM-C II station-1 anchor (`9.93e18 m⁻³` at 71.93 km).
 - The operator split is first-order Lie.
 
 **No absolute coupled-CFD match is claimed.** Published values (RAM-C II / NASA TN; *Fluid Dynamics*

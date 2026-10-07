@@ -5,7 +5,7 @@ question: How do I compare six atmospheres fairly, and how do I know a differenc
 summary: The weather program flies the corridor descent through six atmospheres, eight times each, and returns one table with error bars. Five stations show how it keeps the comparison fair.
 objective: Choose between forking and changing the world, and say why rows need several draws.
 command: cargo run --release -p avionics_examples --example plasma_blackout_weather
-runtime: 184.0 s against a 600 s budget
+runtime: 179.2 s against a 600 s budget
 files:
   - cfd/plasma_blackout/weather/main.rs
   - cfd/plasma_blackout/weather/model.rs
@@ -24,10 +24,10 @@ import { MACHINE } from '../../../consts';
 import WeatherRun from '../../../components/tutorial/WeatherRun.astro';
 import TutorialVideo from '../../../components/tutorial/TutorialVideo.astro';
 
-During blackout the navigation estimate drifts a mean 58.71 m from the true
-position in polar winter, against 41.60 m on the standard day. *Drift* is how far
+During blackout the navigation estimate drifts a mean 58.20 m from the true
+position in polar winter, against 42.13 m on the standard day. *Drift* is how far
 the estimate wanders while the vehicle flies without GPS. The program shows the gap
-is real, 5.7 combined standard deviations wide.
+is real, 3.1 combined standard deviations wide.
 
 <TutorialVideo
   id="MfSSbctVprk"
@@ -44,7 +44,7 @@ atmosphere.
 
 ## Before you start
 
-Start it and read while it runs. It took 184.0 s on {MACHINE}.
+Start it and read while it runs. It took 179.2 s on {MACHINE}.
 
 ```bash
 cargo run --release -p avionics_examples --example plasma_blackout_weather
@@ -171,15 +171,15 @@ INS is the inertial navigation system, and sigma is a standard deviation.
 
 ```text
 [PASS] [tripwire] (4) the INS does not behave as assumed in the cold: polar-winter mean
-       blackout drift 58.71 m vs standard-day 41.60 m (1.41x; gate requires 1.2x from the
+       blackout drift 58.20 m vs standard-day 42.13 m (1.38x; gate requires 1.2x from the
        thermal bias departure and the widened window)
 [PASS] [tripwire] (4b) the cold effect is statistically resolved: polar-standard
-       separation 17.11 m vs combined sigma 3.01 m (5.7 sigma; gate requires 2)
+       separation 16.07 m vs combined sigma 5.10 m (3.1 sigma; gate requires 2)
 ```
 
-Gate 4 measures size: 1.41 times against a required 1.2. Gate 4b measures whether
-the effect is resolved: 17.11 m must clear two combined standard deviations, and it
-clears 5.7. Without 4b, a scatter of 15 m would make that separation meaningless,
+Gate 4 measures size: 1.38 times against a required 1.2. Gate 4b measures whether
+the effect is resolved: 16.07 m must clear two combined standard deviations, and it
+clears 3.1. Without 4b, a scatter of 15 m would make that separation meaningless,
 yet gate 4 would pass. The `save_log` phase flushes the audit files step by step, so
 a campaign that dies at draw 40 of 48 still leaves the evidence for the 40 that
 finished.

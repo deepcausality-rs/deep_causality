@@ -16,10 +16,11 @@
 //!
 //! References:
 //! - Peddinti, R. D., Pisoni, S., Marini, A., Lott, P., Argentieri, H., Tiunov, E. & Aolita, L.
-//!   (2024). *A quantum-inspired framework for computational fluid dynamics.* Communications
+//!   (2024). *Quantum-inspired framework for computational fluid dynamics.* Communications
 //!   Physics **7**, 135 — the MPS Navier–Stokes construction this bridge follows.
 //! - Kazeev, V. A. & Khoromskij, B. N. *Low-Rank Explicit QTT Representation of the Laplace Operator
-//!   and Its Inverse* — the QTT finite-difference operator construction: finite-difference operators
+//!   and Its Inverse.* SIAM J. Matrix Anal. Appl. **33**(3), 742–758 (2012) — the QTT
+//!   finite-difference operator construction: finite-difference operators
 //!   as MPOs built from binary grid-shift operators at small bond dimension.
 //!
 //! Neither PDF is in `papers/` yet; both are listed there as cited-without-PDF. The Kazeev–Khoromskij

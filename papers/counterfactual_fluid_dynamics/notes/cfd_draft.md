@@ -242,19 +242,19 @@ notes for the CFD changes. Claims in Part A about those rest on the documents th
 - The `fork → branch → continue_for` chain does not thread the disk audit sink, so it writes no log
   files; each branch keeps its log in the returned report. (A, E)
 - Measured in the retropropulsion fork: 5/5 branches entered by reference, worst post-fork bond
-  growth 0 (cap 8), fan-out step cost 1.09× the trunk's per-step cost (cap 3.00). All `[tripwire]`.
+  growth 0 (cap 8), fan-out step cost 1.17× the trunk's per-step cost (cap 3.00). All `[tripwire]`.
   (H-run gates 4d, 4g)
 - From the plume study: each powered continuation costs about 1× an unforked trunk, with post-fork
   bond flat at 16; a coasting branch costs 0.66×. (C, K)
-- Whole retropropulsion descent: 337.5 s wall clock, 18.3 MB peak resident set, 5491 coupled steps,
+- Whole retropropulsion descent: 346.9 s wall clock, __RETRO_RSS__ MB peak resident set, 5425 coupled steps,
   measured on the built binary. (H)
 
 ### A.7 Step arithmetic, fork against rerun (K)
 
-- Corridor: 131 steps to the pause, 100 per branch.
-- Six branches: rerun 6 × 231 = 1,386 solver steps; fork 131 + 6 × 100 = 731.
-- Seventeen branches: rerun 3,927; fork 1,831.
-- Shared past ten times longer (1,310 steps), six branches: fork 1,910, rerun 8,460.
+- Corridor: 106 steps to the pause, 100 per branch.
+- Six branches: rerun 6 × 206 = 1,236 solver steps; fork 106 + 6 × 100 = 706.
+- Seventeen branches: rerun 3,502; fork 1,806.
+- Shared past ten times longer (1,060 steps), six branches: fork 1,660, rerun 6,960.
 - "A restart file saved at the pause costs the same steps as a fork." (K)
 - General form, for P shared steps, B steps per branch and N branches: rerun N·(P + B), fork P + N·B,
   ratio N(P + B)/(P + N·B), which tends to N as P grows. (derived from K; not in any source file)
@@ -311,8 +311,8 @@ notes for the CFD changes. Claims in Part A about those rest on the documents th
   argument that a fold was impossible was false; a sweep found 275 accepted configurations that fold.
   (J)
 - One blocker (B-1): the Millikan–White reduced mass was 7.0 amu for a pair documented as N₂–N₂
-  (correct 14.007); correcting it moved the Park-2T controller to −1.27 decades from the RAM-C anchor,
-  and that offset is reported, not tuned away. (J, B)
+  (correct 14.007). At the cited 71 km freestream the corrected Park-2T controller lands −1.97 decades
+  from the RAM-C II station-1 anchor, and that offset is reported, not tuned away. (J, B)
 - Standing rule adopted during remediation: no test may assert on source text. (J)
 - "A passing gate means the measured structure is reproducible, not that a physics target was met."
   (K)
@@ -326,15 +326,15 @@ notes for the CFD changes. Claims in Part A about those rest on the documents th
 | `dec_graded_mms_verification` | observed order 1.98–2.00 (finest pair), grading 0.0–0.3, 8²–64² | analytic | coarse-pair order dips to ~1.7 at strong grading |
 | `qtt_taylor_green_verification` | error 9.8e-4 → 2.4e-4 → 5.3e-5 (8² → 32²), order 2.02–2.18; convection 3.2e-3 | gated | fails at its own documented `max_level 7` (cancellation; order collapses to 0.02 at N = 128) |
 | `dec_lid_cavity_re1000_verification` | primary vortex (0.5312, 0.5625) vs Ghia (0.5313, 0.5625); centerline RMSE 0.0617 at 65², t = 100 | reported (default); tripwire (`trend` mode, 17² → 33²) | the 65² run has no pass/fail bound; a quarter of Ghia's cells |
-| `dec_cylinder_verification` | St 0.1710 (+4.3 % vs 0.164); C_d 1.345 inside 1.32–1.36 | tripwire | friction 13 % of C_d vs ~25 %; C_d lands in band by cancellation; 8 cells/D |
+| `dec_cylinder_verification` | St 0.1710 (+4.3 % vs 0.164); C_d 1.342 inside 1.314–1.370 (Parvar et al. 2023, Table 1: seven Newtonian sources), −2.0 % of the band top | tripwire | friction 13 % of C_d vs ~25 %; C_d lands in band by cancellation; 8 cells/D |
 | `dec_cylinder_wake_verification` | max divergence 3.33e-15; log 80 = 2 × 40 dropouts | internal | no shedding (25 % blockage); no reference claim |
 | `dec_taylor_green_re1600_verification` | energy monotone (E*/E0 0.893) | internal invariant | peak dissipation 0.0025 vs DNS ≈ 0.0124, −80 % at 16³ |
-| `qtt_ramc_stagline` | network peak n_e 2.251e19 (+0.35 dec of 1e19); Park-2T controller 5.310e17 (−1.27 dec) | tripwire | ±0.70-decade band pinned from this measurement; uncalibrated network; single flight anchor |
+| `qtt_ramc_stagline` | cited 71 km freestream (Parent et al., M 25.9, 217.9 K, 2.28 kPa): network peak n_e 1.643e19 (+0.22 dec of 9.93e18, the station-1 Ka-band crossing at 71.93 km); Park-2T controller 1.070e17 (−1.97 dec, reported); cited 61 km freestream: network 1.811e20 meets the anchor as a lower bound (+1.26 dec) | tripwire (71 km band); reference (61 km lower bound) | ±0.70-decade band is a chosen chemistry-spread allowance; uncalibrated network; one body station |
 | `qtt_park2t_blackout` | six coupling gates pass; peak n_e 1.000e22 (+3.0 dec) | internal invariant | Saha surrogate saturates at α = 1 at γ = 1.4; not comparable to the stagline γ = 1.1 |
 | `qtt_blunt_body_2d` | fitted χ 3, 4, 5; Cartesian χ 16, 32, 61 (2⁵ → 2⁷) | tripwire (rank, not accuracy) | marched rank grows to 64 over 6 steps; reported, never asserted |
 | `qtt_reentry_3d` | fitted χ 2, 4, 4; Cartesian 10, 30, 59 (2³ → 2⁵) | tripwire (rank) | wake χ 41, out of scope |
 | `qtt_cylinder_verification` | η ladder C_d 17.39, 24.02, 26.25, 23.76, 21.40: NOT CONVERGING | reference (fails) | Brinkman layer √(ην) = 0.144·dx unresolved at L = 5; offline, ~4–9 h at L = 8 |
-| `dec_wall_heat_flux_verification` | in CI fast list; `|q − analytic| = 0` on a spacing ladder | reference | not in the README summary table (P, J) |
+| `dec_wall_heat_flux_verification` | in CI fast list; `|q − analytic| = 0` on a spacing ladder | reference | <1 s (measured 0.30 s) (B, P) |
 
 ### A.12 Design studies (C, C-run)
 
@@ -366,7 +366,8 @@ notes for the CFD changes. Claims in Part A about those rest on the documents th
 
 **Corridor setup (I, F):**
 
-- Truth vehicle starts at 90 km with velocity (−1300, 7860, 0) m/s, about 7.97 km/s (derived).
+- Truth vehicle starts at 90 km with velocity (−1255.1, 7588.6, 0) m/s, about 7.69 km/s (derived), sized
+  so the descent crosses 71.93 km at the flight's 7.66 km/s (measured 7662 m/s).
 - Point-mass 3-DOF; drag along velocity; lift `(L/D)·D` rotated by the clamped bank, one-step lag;
   6-DOF out of scope.
 - Compressed time: one coupled step is 0.1 s of flight and one solver pseudo-time step toward the
@@ -374,38 +375,45 @@ notes for the CFD changes. Claims in Part A about those rest on the documents th
 - Carrier: 2-D compressible TT layer, 32 × 32 (L = 5), bond cap 16, γ_eff 1.1; the exact
   Rankine–Hugoniot state from the truth Mach (via the table) is imposed on the inflow strip, and the
   layer behind it evolves.
-- Atmosphere: US-1976 shape pinned to the RAM-C II 61 km freestream (n∞ = 1.3e21 m⁻³), rows 0–90 km.
+- Atmosphere: US Standard Atmosphere 1976 at 1 km spacing, 0–90 km, interpolated log-linearly in
+  density; at 71 km it reproduces the cited RAM-C II freestream (Parent et al.).
 - Chemistry: uncalibrated finite-rate network (RP-1232 Table II pairs, no Saha target), sheath
   renewed each step at the transit-age peak `t_res·ln 65`.
 - Navigation: 17-state ESKF; IMU accelerometer bias (2.0e-2, −1.4e-2, 1.0e-2) m/s² (~2 mg, typed);
   GNSS fix variance 1 m² with deterministic receiver noise matching R.
 - Envelope: heat flux 2e7 W/m², g-load 100, bank 0.5 rad (28.6°).
 - Branch study: coarse banks 0, 5, 10, 15, 20, 40°; fine ±5 steps of 0.5° around the coarse winner;
-  100 steps (10 s) per branch; aim point = ballistic terminal state offset 20 m cross-range
-  (`AIM_CROSS_RANGE_M`, typed).
+  100 steps (10 s) per branch; aim point = ballistic terminal state offset 30 m cross-range
+  (`AIM_CROSS_RANGE_M`, typed; sized so the optimum falls inside the fine bracket).
 - Scoring rule: minimum trajectory-derived miss to the aim point; "a flight design would weight all
   four outcome components". (F `model.rs`)
 
-**Corridor results (F-run; all 13 gates `[tripwire]`; 44.4 s measured):**
+**Corridor results (F-run; all 14 gates `[tripwire]`; 45.9 s measured):**
 
-- Onset at step 131, 73.2 km, Mach 27.2, Kn 1.27e-2, n_e 3.270e16 m⁻³.
-- Coarse round misses: 20.000 (0°, by construction), 11.581, 3.533, 6.002, 14.303, 28.881 m (40°,
+- Onset at step 106, 76.8 km, Mach 26.8, Kn 8.71e-3, n_e 3.274e16 m⁻³.
+- Coarse round misses: 30.000 (0°, by construction), 16.463, 3.818, 11.516, 24.988, 48.426 m (40°,
   clamped by the envelope).
-- Fine round: 11.5° at 2.070 m (committed); 10.0° at 3.533 m; spread 5.359 m over 11 branches.
-- Across all branches peak heat 2.232e6–2.240e6 W/m², thermal load 1.459e7–1.460e7 J/m², dwell 10.00
-  s, t² cross-check 1.3191 m, peak n_e 6.224e19–6.309e19 m⁻³.
-- Peak passage: 60.9 km, Mach 24.9, n_e 2.600e19 m⁻³, inside [2.0e18, 5.0e19] around 1e19.
-- Exit: 46.8 km, Mach 8.6, after a 55.9 s dwell; RAM-C II flight exit window 25–30 km; offset
+- Fine round: 11.0° at 2.865 m (committed); 10.0° at 3.818 m; spread 6.935 m over 11 branches.
+- Across all branches peak heat 2.543e6–2.546e6 W/m², thermal load 1.779e7–1.780e7 J/m², dwell 10.00
+  s, t² cross-check 1.3191 m, peak n_e 7.943e19–7.974e19 m⁻³.
+- RAM-C II anchor (gate 2): n_e 6.837e18 m⁻³ where the descent crosses 71.93 km, −0.16 dec from the
+  9.93e18 station-1 Ka-band datum (allowance ±0.70 dec), crossing speed 7662 m/s against the flight's
+  7660; at 61 km n_e 1.303e20 m⁻³ at 7457 m/s, reported against the flight lower bound.
+- Descent peak (gate 2c): n_e 2.830e20 m⁻³ at 44.4 km with the link denied; no flight datum applies
+  below 56.39 km, the end of the RAM-C II primary data period.
+- Peak-passage leg: 61.0 km, Mach 23.8, n_e 1.306e20 m⁻³.
+- Exit: 45.7 km, Mach 9.2, after a 56.0 s dwell; RAM-C II flight exit window 25–30 km; offset
   attributed to the light ballistic bundle (β ≈ 170 kg/m²).
-- Navigation error 0.1823 m at onset → 1.5637 m at the peak passage → 0.2804 m after reacquisition;
-  variance 2.290e-1 → 2.671e1 → 3.184e-1 m².
-- Four regime entries in the log: slip (available, Kn 0.0783) → slip (denied, 0.0127) → continuum
-  (denied, 0.00994) → continuum (available, 0.000255).
+- Navigation error 0.3143 m at onset → 3.0698 m at the peak passage → 0.2043 m after reacquisition;
+  variance 2.739e-1 → 2.778e2 → 3.226e-1 m²; 2.11 m when the branches are scored; 42.8 m on the last
+  step before the link returns.
+- Four regime entries in the log: slip (available, Kn 0.0771) → continuum (available, 0.00997) →
+  continuum (denied, 0.00871) → continuum (available, 0.000148).
 - 0 carrier rebuilds; 16 log entries.
 - The website states: "This shows the sweep at work, not guidance accuracy: the example scores each
   branch on the same model that flew it." (K)
 
-**Weather table (G, G-run; 8 gates `[tripwire]`; 184.0 s measured):**
+**Weather table (G, G-run; 8 gates `[tripwire]`; 179.2 s measured):**
 
 - Six atmospheres as (dT, density scale): standard (0, 1.00), hot (+20, 0.90), cold (−25, 1.10),
   polar winter (−40, 1.20), thin (−5, 0.75), dense (+5, 1.30). Day-to-day shapes, not reanalysis.
@@ -413,87 +421,89 @@ notes for the CFD changes. Claims in Part A about those rest on the documents th
 - IMU thermal model `bias·(1 + 0.01·|dT|)` (typed); filter priors stay standard-day.
 - 8 deterministic low-discrepancy receiver-noise draws per condition: 48 full descents of 850 coupled
   steps, flown concurrently. (sampled)
-- Onset 12.1–14.6 s (spread 2.5 s); dwell 55.0–56.1 s (spread 1.1 s).
-- Drift in the dark: standard 41.60 ± 1.97 m; polar winter 58.71 ± 2.27 m (1.41×; separation 17.11 m
-  against combined σ 3.01 m, 5.7σ).
+- Onset 9.3–12.1 s (spread 2.8 s); dwell 55.3–56.2 s (spread 0.9 s).
+- Drift in the dark: standard 42.13 ± 3.05 m; polar winter 58.20 ± 4.09 m (1.38×; separation 16.07 m
+  against combined σ 5.10 m, 3.1σ).
 - The README: "The IMU departure accounts for nearly all of the measured deviation"; the dwell moves
-  the drift by at most 4 %, under 2 m of the 17. (G)
+  the drift by at most 3.3 %, under 2 m of the 16. (G)
 - Flow and window columns carry no error bar: receiver noise does not touch the flow, chemistry or
   truth trajectory. (G)
 - Worst-draw terminal navigation error under 1.0 m in all 48 descents.
-- Whole-descent peak n_e 4.539e20–4.947e20 m⁻³ (see A.15).
+- Whole-descent peak n_e 3.007e20–3.110e20 m⁻³ (see A.15).
 
-**Retropropulsion (H, H-run; 16 gates `[tripwire]`; 337.5 s, 18.3 MB measured):**
+**Retropropulsion (H, H-run; 16 gates `[tripwire]`; 346.9 s, __RETRO_RSS__ MB measured):**
 
 - Vehicle 3400 kg wet, 2200 kg propellant, 70 kN central nozzle, Isp 282 s. (typed)
 - Act 0: the measured day is dT = −32 K (typed); interpolating the weather table gives drift
-  54.43 ± 2.62 m and an ignition margin of 62.30 m (k = 3); standard-day belief gives 47.52 m.
-- Ignition corridor commits at step 2117: Mach 1.9975, q 2229 Pa, navigation σ 0.381 m, 32.68 km.
+  54.28 ± 4.24 m and an ignition margin of 66.99 m (k = 3); standard-day belief gives 51.30 m.
+- Ignition corridor commits at step 2145 of the coast-and-burn leg: Mach 1.9988, q 2903 Pa, navigation
+  σ 0.382 m; the leg pauses one step later at 30.84 km.
 - The coast, commit and burn acts run in one march call because a leg boundary does not carry the
   marched tensor; splitting at ignition would discard the plume-coupled layer before the fork. (H)
 - Mid-burn fork, five branches:
 
   | branch | cmd | flown | preserved drag | axial m/s² | prop kg | dv m/s | dv frozen | dv − frozen |
   |---|---|---|---|---|---|---|---|---|
-  | coast | 0.00 | 0.0000 | — | 10.5950 | 1.81 | 139.519 | 0.144 | 139.375 |
-  | low | 0.20 | 0.2000 | 0.2510 | 7.4718 | 62.05 | 88.399 | 49.490 | 38.909 |
-  | mid | 0.40 | 0.4000 | 0.1238 | 9.9667 | 122.30 | 120.335 | 99.984 | 20.351 |
-  | high | 0.60 | 0.6000 | −0.0161 | 12.8932 | 182.54 | 151.991 | 151.413 | 0.578 |
-  | hard | 0.85 | 0.7931 | −0.0611 | 17.1977 | 256.80 | 212.085 | 216.209 | −4.124 |
+  | coast | 0.00 | 0.0000 | — | 13.9101 | 1.83 | 183.202 | 3.282 | 179.920 |
+  | low | 0.20 | 0.2000 | 0.4335 | 11.6754 | 62.07 | 137.776 | 52.988 | 84.788 |
+  | mid | 0.40 | 0.4000 | 0.1800 | 11.6531 | 122.31 | 137.634 | 103.394 | 34.240 |
+  | high | 0.60 | 0.6000 | 0.0171 | 13.3226 | 182.56 | 158.870 | 154.650 | 4.220 |
+  | hard | 0.85 | 0.8500 | −0.0329 | 18.5463 | 257.86 | 215.696 | 220.012 | −4.316 |
 
-  The last column is derived here. The 139.4 m/s headline of gate 4c is the coast branch, where the
-  closure applies nothing and the frozen foil holds drag at the trunk's fork value. (H-run, K)
-- Net deceleration is non-monotone in throttle, minimum at 0.20 (7.47 m/s² against 10.59 coasting).
-  (H-run gate 4b)
-- Gate 4a's flow spread (0.0202 against 0.0150) measures throttle → trajectory → post-shock density,
+  The last column is derived here. The 179.9 m/s headline of gate 4c is the coast branch, where the
+  closure applies nothing and the frozen foil holds drag at the trunk's fork value. No branch was
+  clamped by the envelope in this run. (H-run, K)
+- Net deceleration is non-monotone in throttle, minimum at 0.40 (11.653 m/s² against 13.910
+  coasting). (H-run gate 4b)
+- Gate 4a's flow spread (0.0844 against 0.0150) measures throttle → trajectory → post-shock density,
   "not the imprint witness the design note describes". (H)
 - The two SRP models meet at one point: Jarvinen–Adams covers Mach 0.4–2.0, Cordell–Braun Mach 2–4.
   (H, I)
 - Terminal leg: subsonic re-seed under γ = 1.4; 1 carrier rebuild (s_ref 1.4 → 2.768); touchdown
-  1.81 m/s against a commanded 2.0 m/s; 1192.5 kg propellant left; 8 regime transitions.
-- Belief counterfactual: informed guidance lights the landing burn at 139.12 m, uninformed at
-  125.06 m (14.06 m apart against an arithmetic margin difference of 14.78 m); contact 1.81 against
-  1.72 m/s; informed spends 7.28 kg more propellant. (H-run gate 5)
-- The margin does not bind at ignition commit: σ 0.38 m against margins of 62.3 and 47.5 m; both
+  1.80 m/s against a commanded 2.0 m/s; 1227.0 kg propellant left; 8 regime transitions.
+- Belief counterfactual: informed guidance lights the landing burn at 146.91 m, uninformed at
+  128.29 m (18.61 m apart against an arithmetic margin difference of 15.69 m); contact 1.80 against
+  1.76 m/s; informed spends 10.54 kg more propellant. (H-run gate 5)
+- The margin does not bind at ignition commit: σ 0.38 m against margins of 67.0 and 51.3 m; both
   beliefs commit on the same step. (H)
-- Day-of-entry targeting buys nothing here: blackout exit lands within 1.4 s on every tabulated day,
-  against a 155 s gap to the commit. (H)
-- Corridor inheritance: onset 12.60 s against the table's 12.61 s; dwell 56.10 against 55.99 s.
+- Day-of-entry targeting buys nothing here: blackout exit lands within 3.5 s on every tabulated day,
+  against a 158 s gap to the commit. (H)
+- Corridor inheritance: onset 10.00 s against the table's 10.01 s; dwell 55.60 against 55.46 s.
   (H-run gate 1)
 
 ### A.15 Discrepancies across sources (settle before citing)
 
 | Item | Source 1 | Source 2 | Use |
 |---|---|---|---|
-| 3-D carrier timing | C README: 10.805 s/step, 2161 s; GO 64² at 0.175 s/step | C-run: 15.245 s/step, 3049 s; GO 64² at 0.248 s/step | C-run |
-| Altitude of the 1e19 m⁻³ RAM-C anchor | I `RAMC_NE_REFERENCE`: "~61 km peak" | `qtt_ramc_stagline/config.rs`: "~71 km station"; K why page: "~71 km" | check Grantham (1970) and state one altitude |
-| What the 1e19 m⁻³ anchor measures | I, B: "peak electron density anchor" | Grantham (1970) per the literature check: four reflectometer frequencies covering about 1e10–1e13 cm⁻³ (1e16–1e19 m⁻³) at four body stations, 7.62 km/s, hemisphere-cone | the anchor sits at the top of the instrument's range; say whether it is a measured peak or a lower bound, and at which body station |
-| Corridor onset / exit | `corridor/constants.rs` comments: 74.7 km onset, 47.0 km exit | F-run: 73.2 km, 46.8 km | F-run |
-| Entry Mach | plasma_blackout README: "enters at Mach 25" | F-run: Mach 27.2 at onset (73.2 km), 24.9 at 60.9 km | quote per station |
-| Weather peak n_e | G-run: 4.5e20–4.9e20 over the whole descent | F-run: 2.600e19 at the 60.9 km passage, the only altitude the anchor gate checks | ask: where does the weather peak occur, and is it inside any validated band? |
-| Verification count | A, B: fourteen programs | B summary table: 13 rows (no `dec_wall_heat_flux_verification`) | P lists 14 |
+| 3-D carrier timing | settled: C README now matches C-run | C-run: 15.245 s/step, 3049 s; GO 64² at 0.248 s/step | C-run |
+| Altitude of the RAM-C anchor | settled: 71.93 km (236 000 ft), Grantham (1970) p. 18, in I, B and F | the stagline harness flies the cited 71 km freestream (Parent et al.); the corridor reads its descent at 71.93 km | 71.93 km |
+| What the anchor measures | settled: station 1 (x/D = 0.15) Ka-band (35 GHz) critical-density crossing, N_pk = 0.63 · 1.287e-8 f² = 9.93e18 m⁻³ (Grantham p. 11, Table I) | below 71.93 km station 1 is overdense at Ka-band, so the same value is a lower bound down to 56.39 km | a point value at 71.93 km; a lower bound at 61 km (the stagline `[reference]` gate) |
+| Corridor onset / exit | settled: comments no longer quote altitudes | F-run: 76.8 km, 45.7 km | F-run |
+| Entry Mach | plasma_blackout README: "Mach 28" at 90 km | F-run: Mach 26.8 at onset (76.8 km), 23.8 at 61.0 km | quote per station |
+| Weather peak n_e | G-run: 3.0e20–3.1e20 over the whole descent | F-run gate 2c: the descent peak, 2.830e20 at 44.4 km, lies inside the blackout and below the RAM-C II primary data period (ends 56.39 km) | reported; no flight datum applies at that altitude |
+| Verification count | settled: A, B, P: fourteen programs | B summary table: 14 rows | 14 |
 | CI cadence | J README (2026-07-21): 9 per PR, 4 nightly | P (current): 10 per PR, 3 monthly, 1 offline | P |
 | 106-bit corridor | K why: identical gates at f64 and 106-bit, ~11× cost | K boundaries: 44 compile errors today; result is a record of an earlier build | report as historical or omit |
-| Cylinder C_d reference band 1.32–1.36 | B: "arXiv:2303.09262 … compilation … (Qu et al. 2013, Posdziech & Grundmann 2007 and Williamson)" | the literature check: arXiv:2303.09262 is Parvar et al., an elastoviscoplastic cylinder study; its Newtonian validation table lists seven sources with C_D 1.314–1.370 and does not list Williamson | cite the primary sources in that table and state the band you take from them; C_d 1.345 sits inside either range. The repository's own citation text in `verification/README.md` and `dec_cylinder_verification/main.rs` needs the same correction (outside this task) |
-| Peddinti et al. 2024 title | B References: "A quantum-inspired framework for computational fluid dynamics" | published title: "Quantum-inspired framework for computational fluid dynamics" | published title |
+| Cylinder C_d reference band | settled: B and `dec_cylinder_verification/main.rs` cite Parvar et al. (2023) Table 1, seven Newtonian sources, C_D 1.314–1.370 | C_d 1.342, −2.0 % of the band top | 1.314–1.370 |
+| Peddinti et al. 2024 title | settled: every repository citation uses the published title | "Quantum-inspired framework for computational fluid dynamics" | published title |
 
 ### A.16 Number provenance (memory rule: label every headline number)
 
 | Number | Label | Why |
 |---|---|---|
-| 20.000 m zero-bank miss | by construction | `AIM_CROSS_RANGE_M` places the aim point 20 m off the ballistic terminal |
-| 2.07 m best miss, 11.5° | computed | scored on the same 3-DOF model that flew it |
-| 73.2 km onset, 55.9 s dwell | computed | flow-resolved event |
-| 1e19 m⁻³ anchor | external reference | RAM-C II, order of magnitude |
-| ±0.70-decade band | tripwire | pinned from the stagline measurement |
+| 30.000 m zero-bank miss | by construction | `AIM_CROSS_RANGE_M` places the aim point 30 m off the ballistic terminal |
+| 2.87 m best miss, 11.0° | computed | scored on the same 3-DOF model that flew it |
+| 76.8 km onset, 56.0 s dwell | computed | flow-resolved event |
+| 9.93e18 m⁻³ anchor at 71.93 km | external reference, derived | Grantham (1970): Ka-band critical density × 0.63 at station 1 |
+| ±0.70-decade band | tripwire | chosen chemistry-spread allowance (rate sets spread 2×–5×) |
 | 0.01/K IMU coefficient | typed | labelled tactical-grade assumption |
-| 41.60 → 58.71 m drift | computed | dominated by the typed IMU coefficient (G) |
+| 42.13 → 58.20 m drift | computed | dominated by the typed IMU coefficient (G) |
 | −32 K measured day | typed | stands in for a day-of-flight measurement |
-| 62.30 / 47.52 m margins | computed | table interpolation, k = 3 typed |
-| 14.06 m, 7.28 kg | computed | the composition result |
-| preserved drag 0.251 → −0.061 | computed from a cited correlation | Jarvinen–Adams at each branch's C_T |
-| 1.09× fan-out cost, 0 bond growth | measured / computed | gates 4g, 4d |
-| 44.4 s, 184.0 s, 337.5 s | measured | Apple M3 Max |
+| 66.99 / 51.30 m margins | computed | table interpolation, k = 3 typed |
+| 18.61 m, 10.54 kg | computed | the composition result |
+| preserved drag 0.434 → −0.033 | computed from a cited correlation | Jarvinen–Adams at each branch's C_T |
+| 1.17× fan-out cost, 0 bond growth | measured / computed | gates 4g, 4d |
+| 45.9 s, 179.2 s, 346.9 s | measured | Apple M3 Max |
 
 ---
 
@@ -553,7 +563,7 @@ vocabulary table in `website/cfd/README.md` is a good model).
 | S1 | The quasi-steady layer re-converges within a few steps after a re-seed | asserted in E; not measured in any source read |
 | S2 | One solver pseudo-step per 0.1 s of flight is enough for the layer to track the trajectory | not measured |
 | S3 | Point-mass 3-DOF with constant L/D represents the vehicle well enough for the bank decision | scope choice (I) |
-| S4 | A single flight anchor at order of magnitude is enough to call the blackout window flow-resolved | partly: band pinned from own measurement (B) |
+| S4 | A single flight anchor at order of magnitude is enough to call the blackout window flow-resolved | partly: the ±0.70-decade band is a chosen allowance (B); one body station; the 61 km lower bound is the only `[reference]` gate on the chemistry |
 | S5 | The IMU thermal coefficient 0.01/K represents a tactical-grade unit | typed, labelled (G) |
 | S6 | Bit-identical concurrent and sequential branches | tested on small worlds (M); single machine |
 | S7 | Fork cost stays near 1× trunk per step at larger grids | measured at 32² only (H-run) |
@@ -572,10 +582,10 @@ or tripwire), weak (indirect or contradicted).
 | C3 | The pause is flow-resolved: the run finds blackout onset from the evolved electron density | F, F-run, G-run, I | computed | strong for "found by the run"; open for "needs the marched layer" | "The closed-form post-shock state would find the same onset." | Untested until the D4 ablation runs. |
 | C4 | Flow, chemistry, link, vehicle, navigation and safety gate step one shared state in one process | A, I | by construction | strong as description | "String-named fields fail silently." | S8 and the `FlightSensors` comment (A.3). |
 | C5 | Every gate declares its evidence class, CI runs the suite, and failing baselines stay committed | A.10, P | process | strong as practice | "Most gates are tripwires; the audit was automated." | All application gates are tripwires; disclose the audit method (D5). |
-| C6 | Composing a dispersion sweep with a mid-burn fork changes an in-flight decision: burn lit 14.06 m higher at 7.28 kg | H-run gate 5 | computed, tripwire | moderate | "The effect size is the typed IMU coefficient pushed through a stopping-distance kernel." | Concede. The claim is that the composition carries the table into flight with provenance. The physics does not predict the 14 m. |
+| C6 | Composing a dispersion sweep with a mid-burn fork changes an in-flight decision: burn lit 18.61 m higher at 10.54 kg | H-run gate 5 | computed, tripwire | moderate | "The effect size is the typed IMU coefficient pushed through a stopping-distance kernel." | Concede. The claim is that the composition carries the table into flight with provenance. The physics does not predict the 18.6 m. |
 | C7 | Branches depart a frozen-drag prediction; deceleration is non-monotone in throttle | H-run gates 4b, 4c | computed from correlation | moderate | "A 1-D trajectory code with the same correlation reproduces the table without CFD." | Probably true; the drag law is the correlation. The largest departure is the coast branch's foil artefact; burning branches depart by 38.9, 20.4, 0.6 and −4.1 m/s. |
 | C8 | The solvers pass code verification on closed-form cases | A.11 reference rows | reference | strong at code-verification level | "Small grids, 2-D, low Re." | TGV −80 % at 16³; cylinder friction 13 % vs 25 %; QTT cylinder failing; QTT TG fails at its documented level 7. |
-| C9 | The blackout chemistry lands within an order of magnitude of RAM-C II | B (stagline), F-run gate 2 | tripwire | weak to moderate | "Band pinned from own output; one anchor; anchor altitude inconsistent; exit 47 km vs flight 25–30 km; 1e19 m⁻³ is the top of the reflectometer range." | Concede all; resolve the two A.15 rows on the anchor. Jones & Cross (1972) add electrostatic-probe ion densities on RAM C-I and C-II as an independent aft-body check. |
+| C9 | The blackout chemistry lands within an order of magnitude of RAM-C II | B (stagline gates 5 and 8), F-run gate 2 | tripwire at 71.93 km; reference for the 61 km lower bound | moderate | "The band is a chosen allowance; one body station; exit 45.7 km vs flight 25–30 km; the anchor is one Ka-band crossing." | Concede the allowance, the single station and the exit offset. The anchor's altitude and meaning are settled (A.15): +0.22 dec in the harness at the cited freestream, −0.16 dec in the corridor at a matched crossing speed, and the 61 km lower bound met. Jones & Cross (1972) add electrostatic-probe ion densities on RAM C-I and C-II as an independent aft-body check. |
 | C10 | Precision is a parameter | B (MMS ladder), N (Lorenz) | reference / computed | moderate | "The corridor does not compile at Float106." | Concede; demonstrate on MMS and the Lorenz example only. |
 | C11 | The corridor's bank sweep selects a steering command | F-run gates 4c–4f | tripwire, by construction | weak as physics; strong as mechanism | "The decision reads no flow quantity; the gap it closes is set by construction." | Present it as the mechanism demonstration it is (K says so). |
 
@@ -600,7 +610,7 @@ or tripwire), weak (indirect or contradicted).
   claim stands unchanged. If it shows a change, the paper gains its first direct flow-to-decision
   result.
 - Cost scales with the length of the shared past, N(P + B)/(P + N·B) (A.7). Short pasts (the
-  corridor's P = 131 against B = 100) buy about 2×; long pasts approach N.
+  corridor's P = 106 against B = 100) buy about 2×; long pasts approach N.
 - Practical consequence for adopters: branches must run on a solver whose state lives in the host
   process; restart-file branching remains the path for external codes.
 
@@ -625,7 +635,7 @@ or tripwire), weak (indirect or contradicted).
 - Cost: one shared march plus one continuation per branch; memory shared by reference.
 - Guarantee: concurrent equals sequential; one log per branch naming its difference.
 - Application result: a dispersion sweep composed with a mid-burn fork moves the landing-burn light
-  altitude by 14.06 m at 7.28 kg of propellant.
+  altitude by 18.61 m at 10.54 kg of propellant.
 - Scope: drag from a cited correlation; the flow sets the blackout window; one flight anchor at order
   of magnitude; 32 × 32 cells; one machine.
 
@@ -648,8 +658,8 @@ listings.
 3. Method: march to a condition, pause, fork by reference, branch, reduce, gate; one Rust library.
    (A, E)
 4. Evidence: 17 branches from a flow-resolved blackout onset; 48-descent weather table; mid-burn fork
-   of five throttles; table read in flight moves burn light 14.06 m at 7.28 kg; fan-out step cost
-   1.09×. (F-run, G-run, H-run)
+   of five throttles; table read in flight moves burn light 18.61 m at 10.54 kg; fan-out step cost
+   1.17×. (F-run, G-run, H-run)
 5. Scope: drag from a cited correlation; one flight anchor at order of magnitude; 32 × 32 layer.
    (H, B, I)
 
@@ -864,7 +874,7 @@ field selects.
 
 **P6.1 Fork economics.** (Q1)
 - Main point: a branch costs about one trunk step per step and copies no tensor at fork time.
-- Facts: gates 4d, 4g; 0.66× coasting (C, K); A.7 counts; 18.3 MB peak RSS (H); wall clocks with
+- Facts: gates 4d, 4g; 0.66× coasting (C, K); A.7 counts; __RETRO_RSS__ MB peak RSS (H); wall clocks with
   machine.
 - Connect: addition; reformulating ("that is").
 - Close: the shared past is paid once.
@@ -872,9 +882,10 @@ field selects.
 - Verbs: enter, cost, share, grow.
 
 **P6.2 The corridor descent and its blackout window.** (Q3, Q4)
-- Main point: the run finds blackout onset at 73.2 km and exit at 46.8 km from the evolved electron
+- Main point: the run finds blackout onset at 76.8 km and exit at 45.7 km from the evolved electron
   density.
-- Facts: F-run leg lines; peak n_e at 60.9 km in band; exit against the RAM-C 25–30 km window and the
+- Facts: F-run leg lines; n_e at the 71.93 km anchor crossing (−0.16 dec, matched speed); descent
+  peak at 44.4 km inside the blackout; exit against the RAM-C 25–30 km window and the
   ballistic explanation; navigation error and variance growth and collapse.
 - Connect: chronological (onset, peak, exit, reacquisition); contrast (exit altitude vs flight).
 - Close: the window is an interval the run discovers.
@@ -884,7 +895,7 @@ field selects.
 **P6.3 The bank-angle branches.** (Q1, Q3)
 - Main point: seventeen branches from one onset resolve the miss landscape to half a degree; their
   flow observables agree to three digits.
-- Facts: coarse and fine misses (F-run); 20 m by construction (F `constants.rs`); flow observables'
+- Facts: coarse and fine misses (F-run); 30 m by construction (F `constants.rs`); flow observables'
   ranges (A.14); website caveat (K).
 - Connect: chronological (coarse, fine); contrast (miss varies, flow does not).
 - Close: the corridor demonstrates the mechanism; the decision rests on the trajectory model.
@@ -893,26 +904,26 @@ field selects.
 
 **P6.4 The weather table.** (Q2, Q3)
 - Main point: six atmospheres with eight draws each move the blackout window by seconds and the drift
-  in the dark by 17 m, mostly through the typed IMU model.
-- Facts: G-run table; 5.7σ; G README attribution; deterministic draws; no error bar on flow columns.
+  in the dark by 16 m, mostly through the typed IMU model.
+- Facts: G-run table; 3.1σ; G README attribution; deterministic draws; no error bar on flow columns.
 - Connect: causal (atmosphere → window → drift); qualification ("most of it").
 - Close: the table separates the flow's share from the instrument's.
 - Transition: the table becomes an input to a landing.
 - Verbs: disperse, widen, integrate, separate.
 
 **P6.5 The mid-burn fork.** (Q3)
-- Main point: forking the burning vehicle into five throttles shows a deceleration minimum at low
+- Main point: forking the burning vehicle into five throttles shows a deceleration minimum at mid
   throttle, from the cited drag correlation.
 - Facts: H-run table with the derived departure column; gate 4b; coast-branch foil caveat; gate 4a
   scope sentence (H); the two SRP validity bands (H).
-- Connect: contrast (coast vs low); causal; qualification.
+- Connect: contrast (coast vs mid); causal; qualification.
 - Close: the fork shows what the drag law does to each trajectory; the plume does not supply the law.
 - Transition: the decision the table and the fork make together.
 - Verbs: fork, shed, depart, flip, bottom out.
 
 **P6.6 Composition: the table read in flight.** (Q3)
-- Main point: guidance sized with the measured day's table row lights the landing burn 14.06 m
-  higher and spends 7.28 kg more than standard-day guidance.
+- Main point: guidance sized with the measured day's table row lights the landing burn 18.61 m
+  higher and spends 10.54 kg more than standard-day guidance.
 - Facts: Act 0 numbers; gate 5; margin does not bind at commit; day-of-entry targeting buys nothing
   (H).
 - Connect: causal; contrast (informed vs uninformed); qualification.
@@ -921,7 +932,7 @@ field selects.
 - Verbs: interpolate, size, light, spend.
 
 **P6.7 Landing and run totals.**
-- Main point: the descent lands at 1.81 m/s after 5491 coupled steps in 337.5 s.
+- Main point: the descent lands at 1.80 m/s after 5425 coupled steps in 346.9 s.
 - Facts: H-run terminal act and gates 6–9; 1 rebuild; 8 regime transitions.
 - Connect: chronological.
 - Close: one program carries the vehicle from blackout exit to the ground.

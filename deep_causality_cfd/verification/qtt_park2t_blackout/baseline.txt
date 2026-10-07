@@ -1,4 +1,4 @@
-    Finished `release` profile [optimized] target(s) in 0.08s
+    Finished `release` profile [optimized] target(s) in 0.06s
      Running `target/release/examples/qtt_park2t_blackout`
 === QTT Park-2T plasma blackout (Tier-A, LER on the incompressible rollout) ===
 
@@ -12,7 +12,7 @@ Case: M = 25, T_inf = 250 K, n_tot = 1.0e22 m^-3, steps = 40, grid 32^2, precisi
   blackout dwell              : 1.6000e-1 s
 
 --- Published reference cross-references (Tier-A disclaimers) ---
-  RAM-C II peak n_e (~71 km)  : ~1.0e19 m^-3 [order-of-magnitude anchor]
+  RAM-C II n_e (71.93 km)     : 9.93e18 m^-3 [station-1 Ka-band crossing, cross-reference]
   DISCLAIMER: Tier-A rides the INCOMPRESSIBLE rollout; T_tr is a recovery-temperature
   reconstruction (Rankine–Hugoniot jump + ½|u|²/c_p), NOT a true post-shock path.
   Two-temperature (T_ve=T_e) lumping over-predicts peak n_e ~2x (Farbar–Boyd–Martin 2013);

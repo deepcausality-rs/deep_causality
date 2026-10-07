@@ -6,7 +6,7 @@
 
 # The Plasma-Blackout Family
 
-Three examples fly one reentry: a vehicle enters at Mach 25, its own shock layer ionizes into a plasma sheath that cuts
+Three examples fly one reentry: a vehicle enters at Mach 28, its own shock layer ionizes into a plasma sheath that cuts
 every GNSS link, the vehicle navigates through the dark, and it comes back down under a retro burn. Each example consumes
 what the previous one produced, and the third closes the loop.
 

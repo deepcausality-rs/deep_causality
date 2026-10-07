@@ -40,9 +40,9 @@ Each gate line carries one of two labels, so a `[PASS]` can be read correctly:
 
 Unlabelled defaults to `tripwire`: claiming agreement with an external reference requires positive
 evidence, so the weaker class is the safe one. A tripwire is never presented as validation against a
-reference. Several bounds here are pinned (the `qtt_ramc_stagline` ±0.70-decade band says so in its
-own gate text, and the lid-cavity RMSE bounds carry headroom from their pinning run), and the label
-makes that machine-visible.
+reference. Several bounds here are pinned (the lid-cavity RMSE bounds carry headroom from their
+pinning run) or are chosen allowances (the `qtt_ramc_stagline` ±0.70-decade band, which its gate text
+calls the chemistry-model spread), and the label makes that machine-visible.
 
 Precision is a parameter: each example fixes a `FloatType` alias (`f32` / `f64` / `Float106`) and runs
 the whole computation at that precision, downcasting to `f64` only at the display boundary. All numbers
@@ -86,15 +86,16 @@ difference. Measured at `f64` on an Apple M3 Max (release).
 |---|---|---|---|---|---|---|
 | `mms_taylor_green_verification` | RHS residual; amplitude error | 1.1e-16; 6.7e-16 | 0 (analytic) | ≈ machine-ε (~0 %) | default | ~1 s |
 | `dec_graded_mms_verification` | observed order (finest pair) | 1.98–2.00 | 2.00 | ≤ 0.02 (< 1 %) | 8²–64² | ~1 s |
+| `dec_wall_heat_flux_verification` | Fourier wall heat flux `q = −k ∮ ∇T·n dA` over cut-cell fragments | −6.000000000000; worst ladder error 0.000e0 | −k·G·A = −6 (analytic, linear profile) | exact at every spacing h = 1 … 0.0625 | linear profile + marched conduction | <1 s |
 | `dec_taylor_green_re1600_verification` | peak dissipation ε; energy invariant | 0.0025 (E\*/E0 0.893, monotone) | ≈ 0.0124 (DNS) | **−80 %** (16³ under-resolved); invariant PASS | 16³, t\*=10 | <1 s |
 | `dec_lid_cavity_re1000_verification` | primary vortex (x, y); centerline RMSE | (0.5312, 0.5625); RMSE 0.0617 | Ghia (0.5313, 0.5625) | Δ ≈ (1e-4, 0) — **primary vortex matches to 1e-4 in x, exactly in y** | 65², t=100 (the no-argument default, not the `trend` rung) | ~20 min |
 | `dec_cylinder_wake_verification` | max divergence residual; log count | 3.3e-15; 80 | 0; 80 (= 2×40) | ≈ machine-ε; exact | 2000 steps, 93×32 | ~155 s |
-| `dec_cylinder_verification` | Strouhal St; drag C_d | 0.171; 1.345 | 0.164; 1.32–1.36 | **+4.3 %**; **−1.1 %** (inside band; friction share ~13 % vs the reference's ~25 %) | 96², Re=100, 1500 steps | ~510 s |
+| `dec_cylinder_verification` | Strouhal St; drag C_d | 0.171; 1.342 | 0.164; 1.314–1.370 | **+4.3 %**; **−2.0 %** (inside band; friction share ~13 % vs the reference's ~25 %) | 96², Re=100, 1500 steps | ~510 s |
 | `qtt_taylor_green_verification` | TG decay error (32²); observed order; convection | 5.3e-5; 2.02–2.18; 3.2e-3 | 0 (analytic); 2.00; 0 (analytic) | converges 2nd-order; **+9 %** order; conv ≈ 0.6 % | 8²–32², t=0.2 | <1 s |
 | `qtt_cylinder_verification` ⚠ *(offline)* | drag convergence vs bond; no-slip interior; **η and mask-smoothing ladders** | env resolved at `L = 8` (η from 2.5 % wall-error target); acceptance run pending offline | — | penalization layer resolved (`√(ην) ≈ dx`); gate red on **solver cost**, not parameters | 256², bond [24, 48] + 2 ladders | **~4-9 h (offline)** |
-| `qtt_park2t_blackout` | 6 LER coupling gates (stability, kernel vs an independent sub-stepped integration, RH band, lag + rate grounding, path-dependence, n_e>0); peak `n_e` reported beside them | all 6 PASS; peak `n_e` 1.000e22 m⁻³ (α saturated at 1); ω_p 5.6e12 ≫ band | RAM-C II ≈ 1e19 m⁻³ (order-of-magnitude flight anchor) | **+3.0 dec** — Saha saturates at α = 1 at the perfect-gas `γ = 1.4` post-shock temperature. **Internal-invariant scope**: the six gates check the LER coupling, not agreement with RAM-C (see the Tier-A disclaimers) | 32², 40 steps, γ = 1.4 | ~4 s |
+| `qtt_park2t_blackout` | 6 LER coupling gates (stability, kernel vs an independent sub-stepped integration, RH band, lag + rate grounding, path-dependence, n_e>0); peak `n_e` reported beside them | all 6 PASS; peak `n_e` 1.000e22 m⁻³ (α saturated at 1); ω_p 5.6e12 ≫ band | RAM-C II 9.93e18 m⁻³ at 71.93 km (station-1 Ka-band crossing; cross-reference) | **+3.0 dec** — Saha saturates at α = 1 at the perfect-gas `γ = 1.4` post-shock temperature. **Internal-invariant scope**: the six gates check the LER coupling, not agreement with RAM-C (see the Tier-A disclaimers) | 32², 40 steps, γ = 1.4 | ~4 s |
 | `qtt_sod` | Sod shock tube vs exact Riemann (L1 of ρ/u/p) | 0.018 / 0.027 / 0.015 | < 0.03 (1st-order global Lax–Friedrichs: Rusanov with a global wave-speed estimate) | p\*=0.303 (exact), fan+contact+shock correct | 512 cells, t=0.2 | ~1 s |
-| `qtt_ramc_stagline` | peak electron density `n_e` / blackout onset | 5.31e17 (Park-2T controller); 2.25e19 (uncalibrated network) | ~1e19 (RAM-C II, order-of-mag) | **−1.27 dec** Park-2T (reported, not re-admitted); **+0.35 dec** network (earned band ±0.70) | stagnation line, γ = 1.1 | <0.1 s |
+| `qtt_ramc_stagline` | peak electron density `n_e` at the cited RAM-C II 71 km freestream; 61 km lower bound | 1.07e17 (Park-2T controller); 1.64e19 (uncalibrated network); 1.81e20 at 61 km | 9.93e18 (RAM-C II station-1 Ka-band crossing, 71.93 km); ≥ 9.93e18 at 61 km | **−1.97 dec** Park-2T (reported); **+0.22 dec** network (allowance ±0.70); 61 km bound met, +1.26 dec | stagnation line, cited freestream, γ_eff = 1.1 | <0.1 s |
 | `qtt_blunt_body_2d` | rank lever: bow-shock χ, fitted vs Cartesian capture | fitted 3→5; capture 16→61 | structural (fitted χ bounded, ≤ +1 per refinement) | fitted flat 3→5; capture ≈ side/2 (16, 32, 61), not ~√side | 2^5–2^7 | <1 s |
 | `qtt_reentry_3d` | rank lever: 3-D forebody χ (wake out-of-scope) | fitted 2→4; Cartesian 10→59; wake 41 | structural (`qtt_rank_3d` bound) | fitted plateau; capture grows | 2^3–2^5 | <1 s |
 
@@ -124,10 +125,10 @@ difference. Measured at `f64` on an Apple M3 Max (release).
 **Validation scope labels.** The QTT reacting/compressible gates verify at four tiers; read each gate
 for what it proves. **Analytic** (`qtt_sod` vs the exact Riemann solution) is rigorous, the
 only quantitative-accuracy gate. **Flight-data, order-of-magnitude** is the `qtt_ramc_stagline` network
-prediction: its renewal arm lands +0.35 dec of the RAM-C II peak `n_e`, inside the ±0.70 chemistry-spread
-band. The Park-2T closed-form controller in the same harness lands −1.27 dec below the anchor after the
-`fix-ramc-vibrational-relaxation-pair` reduced-mass correction; that offset is **reported**, not presented
-as agreement. **Structural /
+prediction at the cited RAM-C II 71 km freestream: its renewal arm lands +0.22 dec of the flight's
+station-1 Ka-band datum (9.93e18 m⁻³ at 71.93 km), inside the ±0.70 chemistry-spread allowance, and at the
+cited 61 km freestream it meets the flight's lower bound. The Park-2T closed-form controller in the same
+harness lands −1.97 dec below the datum; that offset is **reported**, not presented as agreement. **Structural /
 rank-lever** is `qtt_blunt_body_2d` and `qtt_reentry_3d`: the body-fitted coordinate *bounds* χ where the
 Cartesian capture grows with resolution, so these gate **rank**, not physical accuracy. Neither harness
 measures a √side law. `qtt_blunt_body_2d`'s capture grows roughly linearly, χ ≈ side/2 (16, 32, 61 at
@@ -271,8 +272,9 @@ series is written to `cylinder_wake.csv` via the IO effect.
 **Verifies.** Flow past an *isolated* circular cylinder (Inflow / Outflow / far-field SlipWall + the
 immersed cut cylinder) against published laminar benchmarks: the shedding **Strouhal** `St = f·D/U`
 (Williamson) and the cycle-mean **drag coefficient** `C_d` with its pressure/friction split. The `C_d`
-reference is the 2-D unconfined laminar consensus band **1.32–1.36** (Qu et al. 2013, Posdziech &
-Grundmann 2007, Williamson, as compiled in arXiv:2303.09262); `main.rs` carries it as
+reference band is **1.314–1.370**, the spread of the eight published 2-D laminar values at Re = 100 that
+Parvar et al. (2023) tabulate in their Table 1 (Kravchenko et al., Oliveira, Sivakumar et al., Posdziech
+& Grundmann, Mossaz et al., Qu et al., Constant et al., Peng et al.); `main.rs` carries it as
 `CD_REFERENCE_BAND`. Dröge & Verstappen (2005) is the secondary reference, for the split only:
 their cut-cell `C_d = 1.24 = 0.93` pressure `+ 0.31` friction, i.e. friction ≈ 25 %. That 1.24 is a
 single low-side cut-cell datum below the band. Case parameters (`RE_D`,
@@ -294,15 +296,15 @@ than passing against a band that does not describe it.
 
 **Measured (f64, default: Re=100, 96² @ 8 cells/D, 12×12 D domain, 1500 steps, ~510 s ≈ 8.5 min).**
 - **St ≈ 0.1710** vs Williamson Re=100 **≈ 0.164** → **+4.3 %**.
-- **C_d ≈ 1.345** vs the reference band **1.32–1.36** → **inside the band**, 1.1 % below its top
-  (pressure 1.173 + friction 0.172; `C_l ≈ −0.007`, C_d swing [1.338, 1.353]).
+- **C_d ≈ 1.342** vs the reference band **1.314–1.370** → **inside the band**, 2.0 % below its top
+  (pressure 1.170 + friction 0.172; `C_l ≈ −0.007`, C_d swing [1.334, 1.349]).
 - Friction fraction ≈ 13 % vs the reference ≈ 25 %: skin friction is under-resolved at 8 cells/D. The
   total `C_d` therefore lands in the band by cancellation of an over-predicted pressure force against
   an under-predicted friction force, not because both parts are right. A finer grid (16–32 cells/D)
   and a longer run bring both St and the friction split toward the references.
 
-**Reference.** Williamson (1996); the 2-D laminar consensus compilation arXiv:2303.09262 for the `C_d`
-band; Dröge & Verstappen (2005) for the pressure/friction split; Lehmkuhl, Rodríguez, Borrell & Oliva
+**Reference.** Williamson (1996) for `St`; Parvar et al. (2023), Table 1, for the `C_d` band; Dröge &
+Verstappen (2005) for the pressure/friction split; Lehmkuhl, Rodríguez, Borrell & Oliva
 (2013).
 
 ---
@@ -353,7 +355,7 @@ ladders report `NOT CONVERGING` and fail; see the ⚠ note above.
 **Measured (f64, committed `L = 5` baseline: 32², 4 bond caps, ~1 s).** `C_d` settles `24.05 → 23.76 → 23.7577 → 23.7577`, with the
 successive change collapsing `2.9e-1 → 7.2e-3 → 1.9e-11` and divergence dropping `3.8e-1 → 5.5e-14` as the
 bond cap rises: the accuracy-vs-bond trade-off. Interior `max|u| ≈ 4.2e-2` vs free-stream `1.0`
-(no-slip). The **absolute** `C_d ≈ 23.8` is *not* the isolated-cylinder value (DEC `≈ 1.345`): ~30 %
+(no-slip). The **absolute** `C_d ≈ 23.8` is *not* the isolated-cylinder value (DEC `≈ 1.342`): ~30 %
 blockage, the smoothing-skirt penalization-force definition, and the transient inflate it. The DEC `C_d`
 is a disclaimed cross-reference.
 
@@ -385,8 +387,8 @@ temperature histories reaching the same target carry different `α`. (vi) Marche
 **Measured (f64, 32², 40 steps, M = 25, γ = 1.4, n_tot = 1e22 m⁻³, ~4 s).** All six PASS. Peak
 `n_e = 1.000e22 m⁻³`, i.e. `α = 1` exactly: the Saha surrogate **saturates** at the frozen RH post-shock
 temperature, so the harness measures a ceiling, not a prediction. Peak `ω_p = 5.641e12 rad/s` against
-the 9.4e9 rad/s comms band; blackout dwell 1.6e-1 s. Against the RAM-C II ≈ 1e19 m⁻³ anchor that peak is
-**+3.0 decades high**. The over-prediction has three named parts: the incompressible carrier (`T_tr` is a
+the 9.4e9 rad/s comms band; blackout dwell 1.6e-1 s. Against the RAM-C II station-1 datum (9.93e18 m⁻³) that
+peak is **+3.0 decades high**. The over-prediction has three named parts: the incompressible carrier (`T_tr` is a
 reconstruction, not a transported post-shock path), perfect-gas `γ = 1.4` (which ignores the dissociation
 and vibration that absorb post-shock energy), and `T_ve = T_e` lumping (~2×, Farbar–Boyd–Martin 2013). The
 operator split is first-order Lie. `qtt_ramc_stagline` is the harness that carries the physical claim.
@@ -429,36 +431,46 @@ conservation of `∫ρ`, `∫ρu`, `∫ρE` and free-stream preservation.
 bow shock and the exact Rankine–Hugoniot jump sets the post-shock state, so no flux is marched *through*
 the front and each side stays smooth and `O(1)` rank. `T₂` is transported energy, not the Tier-A
 recovery-temperature reconstruction. The smooth post-shock relaxation zone then drives two
-independent ionization paths against the RAM-C II peak-`n_e` anchor: the closed-form Park-2T controller,
-and an **uncalibrated** three-channel RP-1232 finite-rate network with no Saha target anywhere in it.
+independent ionization paths: the closed-form Park-2T controller, and an **uncalibrated** three-channel
+RP-1232 finite-rate network with no Saha target anywhere in it.
 
-**Self-check.** Seven gates, exit nonzero on break: `T₂` in the ~10⁴ K band; peak `n_e` matches the
+**Flight condition and anchor.** The harness flies the cited RAM-C II freestream at 71 km (Mach 25.9,
+217.9 K, q = 2.28 kPa) and at 61 km (Mach 23.9, 255.9 K, q = 8 kPa) from Parent, Thoguluva Rajendran &
+Omprakas (arXiv:2111.09432); velocity and number density are derived from those values (71 km:
+7664.4 m/s, 1.614e21 m⁻³). The anchor is the flight's station-1 (x/D = 0.15) Ka-band critical-density
+crossing, which Grantham (1970, p. 18) places at 71.93 km: `0.63 · 1.287e-8 · f²` cm⁻³ at 35 GHz
+(p. 11, Table I) = 9.93e18 m⁻³. Below 71.93 km the flight's station 1 is overdense at Ka-band, so at
+61 km the same value is a lower bound.
+
+**Self-check.** Eight gates, exit nonzero on break: `T₂` in the ~10⁴ K band; peak `n_e` matches the
 corrected Park-2T value; blackout onset (`ω_p >` comms band); the relaxation profile stays `O(1)` rank;
-the network prediction sits inside its ±0.70-decade earned band; electron impact is a refinement rather
-than the driver; the carried sheath arm self-limits at or below the renewal arm. All seven print as
-`[tripwire]`, the two anchored ones included: the ±0.70-decade band is pinned from this harness's own
-measurement, as its own gate text says, not derived from the flight data's stated uncertainty.
+the network prediction sits inside the ±0.70-decade chemistry-spread allowance around the anchor;
+electron impact is a refinement rather than the driver; the carried sheath arm self-limits at or below
+the renewal arm; and the network meets the flight's lower bound at 61 km. The first seven print as
+`[tripwire]`: the ±0.70-decade width is an allowance for the chemistry-model spread, not derived from
+the flight data's stated uncertainty. The 61 km lower bound is the flight datum itself, with no
+allowance, and prints as `[reference]`.
 
-**Measured (f64, M = 25, effective γ = 1.1, T∞ = 250 K, ~0.01 s).** All seven PASS. Exact RH post-shock
-state: `T₂ = 8044 K`, `ρ₂/ρ₁ = 20.349`, `u₂/u₁ = 0.049`, `p₂/p₁ = 6.547e2`, post-shock
-`n_tot = 2.645e22 m⁻³`; relaxation-profile bond **2**. Park-2T controller: `α = 2.007e-5`, peak
-`n_e = 5.310e17 m⁻³`, **−1.27 decades** below the 1e19 anchor, `ω_p = 4.111e10 rad/s`. Uncalibrated
-network: channel 1 plus the lagged atom pool `1.887e19` (+0.28 dec), full network `2.251e19` (+0.35 dec).
-Sheath-renewal A/B: renewal `2.251e19` (+0.35 dec, kept), carried `1.768e18` (−0.75 dec, self-limiting).
+**Measured (f64, ~0.01 s).** All eight PASS. Exact RH post-shock state at 71 km: `T₂ = 7509 K`,
+`ρ₂/ρ₁ = 20.392`, `u₂/u₁ = 0.049`, `p₂/p₁ = 7.027e2`, post-shock `n_tot = 3.291e22 m⁻³`; relaxation-profile
+bond **2**. Park-2T controller: `α = 3.250e-6`, peak `n_e = 1.070e17 m⁻³`, **−1.97 decades** below the
+anchor, `ω_p = 1.845e10 rad/s`. Uncalibrated network: channel 1 plus the lagged atom pool `1.278e19`
+(+0.11 dec), full network `1.643e19` (+0.22 dec). Sheath-renewal A/B: renewal `1.643e19` (+0.22 dec,
+kept), carried `6.598e17` (−1.18 dec, self-limiting). At 61 km: `T₂ = 7547 K`, network `1.811e20 m⁻³`,
+1.26 decades above the lower bound.
 
-The −1.27-decade controller offset is **reported, not re-admitted**. The controller uses the N₂–N₂
-reduced mass `μ = 14.007` (`fix-ramc-vibrational-relaxation-pair`); against `μ = 7.0` (the N–N atomic
-pair, which has no vibrational mode) this lengthens `τ_vt` about 1.9× and cools the Park rate-controlling
-temperature `Tₐ = √(T_tr·T_ve)`. The band is not widened to absorb the offset. Read the single-pair figure as a lower bound: the bath also holds lighter
-partners whose shorter `τ_vt` a mixture-weighted closure would recover. Open levers: `T_e = T_ve` lumping
-(~2×), the single associative-ionization channel, and the ~2–5× Millikan–White chemistry-model spread.
-Note the effective `γ = 1.1`, an engineering closure for strongly dissociated hypersonic air. Its
-definition site records that perfect-gas `γ = 1.4` over-predicts `T₂` at ≈30 000 K, because it ignores the
-dissociation and vibration that absorb the post-shock energy. `qtt_park2t_blackout` runs at that
-perfect-gas value.
+The −1.97-decade controller offset is **reported, not re-admitted**. The controller uses the N₂–N₂
+reduced mass `μ = 14.007` (`fix-ramc-vibrational-relaxation-pair`). Read the single-pair figure as a lower
+bound: the bath also holds lighter partners whose shorter `τ_vt` a mixture-weighted closure would
+recover. Open levers: `T_e = T_ve` lumping (~2×), the single associative-ionization channel, and the
+~2–5× Millikan–White chemistry-model spread. Note the effective `γ = 1.1`, an engineering closure for
+strongly dissociated hypersonic air. Its definition site records that perfect-gas `γ = 1.4` over-predicts
+`T₂` at ≈30 000 K, because it ignores the dissociation and vibration that absorb the post-shock energy.
+`qtt_park2t_blackout` runs at that perfect-gas value.
 
-**Reference.** Grantham (1970), NASA TN D-6062, the RAM-C II peak-`n_e` anchor; Gupta, Yos, Thompson &
-Lee (1990), NASA RP-1232, the Table II rate pairs; Park (1990, 1993); Millikan & White (1963).
+**Reference.** Grantham (1970), NASA TN D-6062, the RAM-C II station-1 Ka-band datum; Parent, Thoguluva
+Rajendran & Omprakas (arXiv:2111.09432), the RAM-C II freestream; Gupta, Yos, Thompson & Lee (1990),
+NASA RP-1232, the Table II rate pairs; Park (1990, 1993); Millikan & White (1963).
 
 ---
 
@@ -523,7 +535,7 @@ and grows `χ` to **16** over 6 steps.
 - **Taylor, G. I. & Green, A. E.** (1937). *Mechanism of the production of small eddies from large
   ones.* Proc. R. Soc. Lond. A **158**, 499–521.
 - **Peddinti, R. D., Pisoni, S., Marini, A., Lott, P., Argentieri, H., Tiunov, E. & Aolita, L.** (2024).
-  *A quantum-inspired framework for computational fluid dynamics.* Commun. Phys. **7**, 135.
+  *Quantum-inspired framework for computational fluid dynamics.* Commun. Phys. **7**, 135.
 - **Gourianov, N., Lubasch, M., Dolgov, S., van den Berg, Q. Y., Babaee, H., Givi, P., Kiffner, M. &
   Jaksch, D.** (2022). *A quantum-inspired approach to exploit turbulence structures.* Nat. Comput.
   Sci. **2**, 30–37.
@@ -542,10 +554,10 @@ and grows `χ` to **16** over 6 steps.
 - **Dröge, M. & Verstappen, R.** (2005). *A new symmetry-preserving Cartesian-grid method for computing
   flow past arbitrarily shaped objects.* Int. J. Numer. Methods Fluids **47**, 979–985. Table II is the
   secondary reference for the cylinder pressure/friction split, `C_d = 1.24 = 0.93 + 0.31`.
-- **arXiv:2303.09262**: the compilation the 2-D unconfined laminar band `C_d(Re=100) ≈ 1.32–1.36` is
-  taken from (Qu et al. 2013, Posdziech & Grundmann 2007 and Williamson, as gathered there), cited at
-  `verification/dec_cylinder_verification/main.rs`. **Authors, title and venue are not recorded anywhere
-  in this repository**, so they are omitted here rather than supplied from recall.
+- **Parvar, S., Iqbal, K. T., Ardekani, M. N., Brandt, L. & Tammisola, O.** (2023). *Elastoviscoplastic
+  fluid flow past a circular cylinder.* arXiv:2303.09262. Table 1 tabulates published Newtonian
+  cylinder drag at Re = 100 from eight studies, 1.314–1.370: the `C_d` band, cited at
+  `verification/dec_cylinder_verification/main.rs`.
 - **Lehmkuhl, O., Rodríguez, I., Borrell, R. & Oliva, A.** (2013). *Low-frequency unsteadiness in the
   vortex formation region of a circular cylinder.* Phys. Fluids **25**, 085109.
 - **Roache, P. J.** (2002). *Code verification by the method of manufactured solutions.* J. Fluids Eng.
@@ -573,16 +585,18 @@ and grows `χ` to **16** over 6 steps.
   `deep_causality_physics/src/kernels/hypersonic/ionization.rs` for RAM-C sitting in the mixed
   associative + electron-impact ionization band. **Title, initials and page are not recorded anywhere in
   this repository**, so they are omitted here rather than supplied from recall.
-- **Farbar, Boyd & Martin** (2013). Cited across the plasma-blackout corridor for the ~2× peak-`n_e`
-  over-prediction of `T_ve = T_e` lumping versus a separate electron-translational energy equation.
-  **Initials, title and venue are not recorded anywhere in this repository**; fill them in from the
-  published record before this page is used as a citation source.
-- **Sod, G. A.** (1978). The shock-tube problem, cited at `verification/qtt_sod/print_utils.rs`.
-  **Title, venue, volume and pages are not recorded anywhere in this repository**, so they are omitted
-  here rather than supplied from recall.
-- **Toro, E. F.** *Riemann Solvers and Numerical Methods for Fluid Dynamics*, ch. 4: the construction the
-  harness's exact Riemann solver follows. **Edition, publisher and year are not recorded anywhere in this
-  repository.**
+- **Farbar, E., Boyd, I. D. & Martin, A.** (2013). *Numerical prediction of hypersonic flowfields including
+  effects of electron translational nonequilibrium.* J. Thermophys. Heat Transfer **27**(4), 593–606. Cited
+  across the plasma-blackout corridor for the ~2× peak-`n_e` over-prediction of `T_ve = T_e` lumping
+  versus a separate electron-translational energy equation.
+- **Sod, G. A.** (1978). *A survey of several finite difference methods for systems of nonlinear hyperbolic
+  conservation laws.* J. Comput. Phys. **27**(1), 1–31. The shock-tube problem, cited at
+  `verification/qtt_sod/print_utils.rs`.
+- **Toro, E. F.** (2009). *Riemann Solvers and Numerical Methods for Fluid Dynamics: A Practical
+  Introduction*, 3rd ed., Springer. Ch. 4: the construction the harness's exact Riemann solver follows.
+- **Parent, B., Thoguluva Rajendran, P. & Omprakas, A.** *Electron Losses in Hypersonic Flows.*
+  arXiv:2111.09432. The RAM-C II freestream at 61 and 71 km (Mach number, temperature, dynamic pressure)
+  that `qtt_ramc_stagline` flies.
 
 > Divergence figures are single-machine measurements at the **affordable default** configuration; they
 > are dominated by spatial resolution, not the discretization's asymptotic accuracy. Reference-grid

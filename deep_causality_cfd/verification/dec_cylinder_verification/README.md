@@ -23,9 +23,9 @@ to stderr.
 - **Drag** `C_d = F_x / (½ U² D)`, the **cycle mean** over the developed (second-half) window, split
   into the **pressure** force (`pressure_surface_force` over the static pressure from
   `pressure_diagnostic`) and the **viscous (friction)** force (`viscous_surface_force`); the lift
-  `C_l` and the `C_d` swing are reported alongside. Reference `C_d(Re=100) ≈ 1.32–1.36`, the 2-D
-  unconfined laminar consensus (Qu et al. 2013, Posdziech & Grundmann 2007, Williamson, as compiled
-  in arXiv:2303.09262); the gate-result section below quotes the same band. Dröge–Verstappen (2005),
+  `C_l` and the `C_d` swing are reported alongside. Reference `C_d(Re=100) ≈ 1.314–1.370`, the spread
+  of the eight published 2-D laminar values Parvar et al. (2023, arXiv:2303.09262) tabulate in their
+  Table 1; the gate-result section below quotes the same band. Dröge–Verstappen (2005),
   Table II, is the secondary reference, for the pressure/friction split only: their cut-cell result
   is `C_d = 1.24 = 0.93` pressure `+ 0.31` friction, so friction is ≈ 25 % of `C_d`. That `1.24` is
   a single low-side cut-cell datum, not the lower edge of the band.
@@ -114,9 +114,9 @@ STAIRCASE=1 CELLS_PER_D=16 LX_D=16 LY_D=16 STEPS=4000 CFL=0.4 CG_TOL=1e-6 \
 ```
 
 **Gate result (June 2026).** The pair above was run at 16 cells/D, `LY_D=16`, to a developed state
-(`STEPS=4000`, t=100). Reference window (2-D laminar, unconfined; Qu et al. 2013, Posdziech &
-Grundmann 2007, Williamson, as compiled in arXiv:2303.09262): `St ≈ 0.164–0.165`, mean
-`C_d ≈ 1.32–1.36`, `C_L,rms ≈ 0.22–0.24`, `θ_sep ≈ 118°`, friction ≈ 25% of `C_d`.
+(`STEPS=4000`, t=100). Reference window (2-D laminar, unconfined; the published values Parvar et al.
+2023 tabulate in their Table 1): `St ≈ 0.164–0.167`, mean `C_d ≈ 1.314–1.370`, `C_L,rms ≈ 0.222–0.235`,
+`θ_sep ≈ 117.4–118.9°`; friction ≈ 25 % of `C_d` (Dröge & Verstappen 2005, Table II).
 
 | body                | 16/D shedding | `St` | cycle-mean `C_d` |
 |---------------------|---------------|------|------------------|
@@ -126,7 +126,7 @@ Grundmann 2007, Williamson, as compiled in arXiv:2303.09262): `St ≈ 0.164–0.
 The aperture-resolved no-slip **sheds at 16/D where the staircase stays steady**. `St ≈ 0.171` is
 ~4 % above `0.164`; most of that is the `LY_D=16` (≈ 6.25 %) blockage, so the blockage-corrected
 method error is ~1–2 %. The drag is **acceptable but not
-DNS-grade at this coarse grid**: cycle-mean `C_d ≈ 1.246` is **~6 % below** the `1.32–1.36` consensus
+DNS-grade at this coarse grid**: cycle-mean `C_d ≈ 1.246` is **~5 % below** the `1.314–1.370` band
 (it matches only the low-side cut-cell value of Dröge–Verstappen 1.24). The integrated drag is close
 for the wrong reason: the pressure/friction split is off (friction ≈ 13 % here versus the ~25 %
 reference; pressure over, friction under), which points at wall-shear under-resolution at 16/D. The
@@ -171,7 +171,7 @@ perturbation decays), while at **24 cells/D a marginal von-Kármán street devel
 the marginal resolution are. The **aperture-resolved no-slip**
 (`add-aperture-resolved-noslip`, the default here) targets that error by placing the wall at the true
 surface. At 16 cells/D the aperture-resolved body sheds a sustained limit cycle with `St ≈ 0.171`
-(~4 % high, mostly `LY_D=16` blockage) and cycle-mean `C_d ≈ 1.246` (~6 % below the consensus band),
+(~4 % high, mostly `LY_D=16` blockage) and cycle-mean `C_d ≈ 1.246` (~5 % below the consensus band),
 while the staircase body stays steady (see the gate-result table above). The threshold drop from
 ~24/D to ~16/D is the accuracy gain; warm-starting both the φ and λ blocks offsets the per-step cost
 of the weighted projection, and trimming `STEPS` to the developed window cuts wall-clock time.

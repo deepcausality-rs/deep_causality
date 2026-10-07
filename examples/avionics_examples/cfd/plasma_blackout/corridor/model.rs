@@ -13,15 +13,17 @@
 
 use crate::FloatType;
 use crate::constants::{
-    AIM_CROSS_RANGE_M, BANK_ANGLES_DEG, DIVERGENCE_MIN_M, EXIT_ALTITUDE_BAND_KM, FINE_SPAN_STEPS,
-    FINE_STEP_DEG, MAX_REBUILDS, MISS_IMPROVEMENT_FACTOR, RAMC_EXIT_WINDOW_KM, STEPS,
-    WALL_CLOCK_BUDGET_S,
+    AIM_CROSS_RANGE_M, ANCHOR_BAND_DECADES, ANCHOR_SPEED_TOLERANCE, BANK_ANGLES_DEG,
+    DIVERGENCE_MIN_M, EXIT_ALTITUDE_BAND_KM, FINE_SPAN_STEPS, FINE_STEP_DEG, LOWER_BOUND_ALTITUDE_M,
+    MAX_REBUILDS, MISS_IMPROVEMENT_FACTOR, RAMC_EXIT_WINDOW_KM, STEPS, WALL_CLOCK_BUDGET_S,
 };
 use avionics_examples::shared::constants::{
-    CAP, COMMS_BAND_RAD_S, DT_FLIGHT, IMU_ACCEL_BIAS, L, RAMC_NE_REFERENCE,
+    CAP, COMMS_BAND_RAD_S, DT_FLIGHT, IMU_ACCEL_BIAS, L, RAMC_ANCHOR_ALTITUDE_M,
+    RAMC_ANCHOR_SPEED_MS, RAMC_NE_REFERENCE,
 };
 use avionics_examples::shared::trace::{
-    TRACE_COLUMNS, TRACE_FIELD, TraceRow, trace_rows, trace_schema_after,
+    ALTITUDE, GNSS_DENIED, NE_PEAK, SPEED, TRACE_COLUMNS, TRACE_FIELD, TraceRow, trace_rows,
+    trace_schema_after,
 };
 use avionics_examples::shared::utils::norm3;
 use avionics_examples::shared::{utils, world};
@@ -442,6 +444,77 @@ pub struct LegSet {
     pub elapsed_s: FloatType,
     /// The rendered provenance log of the full descent (the regime-transition witness).
     pub regime_log: String,
+    /// The flown descent read at the RAM-C II anchor altitude, if the trace crosses it.
+    pub anchor: Option<Crossing>,
+    /// The flown descent read at the 61 km passage, if the trace crosses it.
+    pub at_61km: Option<Crossing>,
+    /// The descent's peak electron density over every recorded step, m⁻³, its altitude, km, and
+    /// whether the link was denied on that step.
+    pub peak_ne: FloatType,
+    pub peak_altitude_km: FloatType,
+    pub peak_denied: bool,
+}
+
+/// The flown descent at one altitude: electron density and speed where the trajectory first crosses
+/// it going down, interpolated between the bracketing steps (`ln n_e` and speed linear in altitude).
+#[derive(Debug, Clone, Copy)]
+pub struct Crossing {
+    pub ne: FloatType,
+    pub speed: FloatType,
+}
+
+/// Read the descent trace at `altitude_m`; `None` when the trajectory never crosses it.
+pub fn crossing(rows: &[TraceRow], altitude_m: FloatType) -> Option<Crossing> {
+    rows.windows(2).find_map(|w| {
+        let (a0, a1) = (w[0].values[ALTITUDE], w[1].values[ALTITUDE]);
+        if a0 < altitude_m || a1 >= altitude_m {
+            return None;
+        }
+        let f = (a0 - altitude_m) / (a0 - a1);
+        let (n0, n1) = (w[0].values[NE_PEAK], w[1].values[NE_PEAK]);
+        let ne = if n0 > lift::<FloatType>(0.0) && n1 > lift::<FloatType>(0.0) {
+            (n0.ln() + f * (n1.ln() - n0.ln())).exp()
+        } else {
+            n0 + f * (n1 - n0)
+        };
+        let speed = w[0].values[SPEED] + f * (w[1].values[SPEED] - w[0].values[SPEED]);
+        Some(Crossing { ne, speed })
+    })
+}
+
+/// The descent's peak electron density, the altitude it occurred at (km), and whether the link was
+/// denied on that step.
+pub fn descent_peak(rows: &[TraceRow]) -> (FloatType, FloatType, bool) {
+    rows.iter()
+        .max_by(|a, b| {
+            a.values[NE_PEAK]
+                .partial_cmp(&b.values[NE_PEAK])
+                .expect("recorded n_e is finite")
+        })
+        .map(|r| {
+            (
+                r.values[NE_PEAK],
+                r.values[ALTITUDE] / lift::<FloatType>(1000.0),
+                r.values[GNSS_DENIED] > lift::<FloatType>(0.5),
+            )
+        })
+        .unwrap_or_else(|| (lift(0.0), lift(f64::NAN), false))
+}
+
+/// Read the RAM-C II comparison witnesses off the flown descent: the anchor crossing, the 61 km
+/// passage, and the descent's peak.
+pub fn ramc_witnesses(
+    rows: &[TraceRow],
+) -> (
+    Option<Crossing>,
+    Option<Crossing>,
+    (FloatType, FloatType, bool),
+) {
+    (
+        crossing(rows, lift(RAMC_ANCHOR_ALTITUDE_M)),
+        crossing(rows, lift(LOWER_BOUND_ALTITUDE_M)),
+        descent_peak(rows),
+    )
 }
 
 // ── The campaign gating sequence: over the branch rows (fine round) and prior rounds ──────────
@@ -590,8 +663,9 @@ pub fn leg_gates() -> GateSeq<LegSet> {
     GateSeq::new("corridor legs")
         .gate("(0) corridor integrity", gate_integrity)
         .gate("(1) flow-resolved blackout window", gate_window)
-        .gate("(2) peak n_e vs the RAM-C II anchor", gate_anchor)
+        .gate("(2) n_e at the RAM-C II anchor station", gate_anchor)
         .gate("(2b) blackout window altitudes", gate_window_altitudes)
+        .gate("(2c) the descent's peak n_e lies in the blackout", gate_peak_in_window)
         .gate("(3) real INS drift -> reacquisition", gate_drift)
         .gate("(4a) regime change", gate_regime_change)
         .gate("(4b) multiphysics chain", gate_multiphysics)
@@ -628,19 +702,53 @@ fn gate_window(v: &StudyView<'_, LegSet>) -> (bool, String) {
 
 fn gate_anchor(v: &StudyView<'_, LegSet>) -> (bool, String) {
     let l = &v.rows()[0];
-    let ne_ok = (lift::<FloatType>(RAMC_NE_REFERENCE / 5.0)..=lift(RAMC_NE_REFERENCE * 5.0))
-        .contains(&l.leg2.ne_peak);
+    let reference = lift::<FloatType>(RAMC_NE_REFERENCE);
+    let Some(anchor) = l.anchor else {
+        return (
+            false,
+            "the descent never crossed the RAM-C II anchor altitude".into(),
+        );
+    };
+    let decades = (anchor.ne / reference).log10();
+    let speed_ref = lift::<FloatType>(RAMC_ANCHOR_SPEED_MS);
+    let speed_off = (anchor.speed - speed_ref) / speed_ref;
+    let speed_ok = speed_off.abs() <= lift::<FloatType>(ANCHOR_SPEED_TOLERANCE);
+    let ne_ok = decades.abs() <= lift::<FloatType>(ANCHOR_BAND_DECADES);
+    let lower = l.at_61km.map_or_else(
+        || "the descent never crossed 61 km".to_string(),
+        |c| {
+            format!(
+                "at 61 km n_e = {:.3e} m^-3 at {:.0} m/s against the flight lower bound {:.3e} \
+                 (reported; RAM-C II still flew ~7.65 km/s there, this probe has decelerated)",
+                c.ne, c.speed, reference,
+            )
+        },
+    );
     (
-        ne_ok,
+        speed_ok && ne_ok,
         format!(
-            "n_e = {:.3e} m^-3 at the {:.1} km passage, in [{:.1e}, {:.1e}] around the flight \
-             anchor {:.0e} m^-3 (evolved state, uncalibrated finite-rate network; the \
-             stagline-earned ±0.7-decade band)",
-            l.leg2.ne_peak,
-            l.leg2.altitude_km,
-            RAMC_NE_REFERENCE / 5.0,
-            RAMC_NE_REFERENCE * 5.0,
-            RAMC_NE_REFERENCE,
+            "n_e = {:.3e} m^-3 at the {:.2} km crossing, {decades:+.2} dec vs the station-1 Ka-band \
+             datum {:.3e} m^-3 (allowance +-{ANCHOR_BAND_DECADES:.2} dec, the chemistry-model spread); \
+             crossing speed {:.0} m/s vs the flight's {RAMC_ANCHOR_SPEED_MS:.0} ({:+.2} %); {lower}",
+            anchor.ne,
+            RAMC_ANCHOR_ALTITUDE_M / 1000.0,
+            reference,
+            anchor.speed,
+            speed_off * lift::<FloatType>(100.0),
+        ),
+    )
+}
+
+fn gate_peak_in_window(v: &StudyView<'_, LegSet>) -> (bool, String) {
+    let l = &v.rows()[0];
+    (
+        l.peak_denied,
+        format!(
+            "peak n_e = {:.3e} m^-3 at {:.1} km, link {} on that step (no flight datum applies below \
+             the RAM-C II primary data period, which ends at 56.39 km)",
+            l.peak_ne,
+            l.peak_altitude_km,
+            if l.peak_denied { "denied" } else { "available" },
         ),
     )
 }

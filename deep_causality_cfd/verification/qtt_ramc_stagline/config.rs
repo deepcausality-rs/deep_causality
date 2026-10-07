@@ -3,30 +3,79 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! Configuration for the Tier-B Stage-4 RAM-C stagnation-line verification: the flight condition and the
-//! published reference anchors. `main.rs` computes the exact Rankine–Hugoniot post-shock state and the
+//! Configuration for the Tier-B Stage-4 RAM-C stagnation-line verification: the cited flight conditions
+//! and the published reference anchor. `main.rs` computes the exact Rankine–Hugoniot post-shock state and the
 //! resulting peak electron density; `print_utils.rs` gates it against RAM-C II.
 
 use crate::FloatType;
 use deep_causality_num::FromPrimitive;
+use deep_causality_physics::{AVOGADRO_CONSTANT, MOLAR_GAS_CONSTANT};
 
-// ── Flight condition (RAM-C II, ~71 km station) ──────────────────────────
-/// Free-stream Mach number (`M ≈ 25` orbital reentry).
-pub const MACH: f64 = 25.0;
+// ── Flight conditions (RAM-C II freestream, cited; velocity and density derived)
+
+/// One RAM-C II freestream station, as the literature states it: Mach number, static temperature
+/// and dynamic pressure (Parent, Thoguluva Rajendran & Omprakas, "Electron Losses in Hypersonic
+/// Flows", arXiv:2111.09432, §RAM-C-II; the Mach numbers also in Rodriguez Fuentes & Parent, Phys.
+/// Fluids 37, 013609, 2025). Velocity and number density follow from these three values and the
+/// U.S. Standard Atmosphere 1976 air molar mass, so they cannot drift from the stated condition.
+#[derive(Debug, Clone, Copy)]
+pub struct Freestream {
+    /// Station label for the report.
+    pub label: &'static str,
+    /// Free-stream Mach number.
+    pub mach: f64,
+    /// Free-stream static temperature, K.
+    pub t_inf: f64,
+    /// Free-stream dynamic pressure `q = ½ρV²`, Pa.
+    pub dynamic_pressure: f64,
+}
+
+/// Mean molar mass of sea-level dry air, kg/mol (U.S. Standard Atmosphere 1976, `M₀`).
+pub const AIR_MOLAR_MASS: f64 = 28.9644e-3;
+/// Free-stream ratio of specific heats (cold air) for the sound speed `a = √(γ_∞ R T)`.
+pub const GAMMA_INF: f64 = 1.4;
+
+impl Freestream {
+    /// Free-stream velocity `V = M·√(γ_∞·R·T)`, m/s.
+    pub fn velocity(&self) -> f64 {
+        let r_specific = MOLAR_GAS_CONSTANT / AIR_MOLAR_MASS;
+        self.mach * (GAMMA_INF * r_specific * self.t_inf).sqrt()
+    }
+
+    /// Free-stream heavy-particle number density `n = ρ·N_A/M` with `ρ = 2q/V²`, m⁻³.
+    pub fn number_density(&self) -> f64 {
+        let v = self.velocity();
+        let rho = 2.0 * self.dynamic_pressure / (v * v);
+        rho * AVOGADRO_CONSTANT / AIR_MOLAR_MASS
+    }
+}
+
+/// The RAM-C II 71 km station: the cited freestream nearest the flight anchor (the station-1
+/// Ka-band crossing at 71.93 km, [`RAMC_ANCHOR_ALTITUDE_KM`]). The 0.93 km between the two is
+/// part of the comparison and is printed with it.
+pub const ANCHOR_STATION: Freestream = Freestream {
+    label: "RAM-C II 71 km",
+    mach: 25.9,
+    t_inf: 217.9,
+    dynamic_pressure: 2_280.0,
+};
+
+/// The RAM-C II 61 km station: inside the span where the flight's station 1 is overdense at
+/// Ka-band, so the flight datum is a lower bound there.
+pub const LOWER_BOUND_STATION: Freestream = Freestream {
+    label: "RAM-C II 61 km",
+    mach: 23.9,
+    t_inf: 255.9,
+    dynamic_pressure: 8_000.0,
+};
+
 /// **Effective** post-shock ratio of specific heats for reacting air. Perfect-gas `1.4` over-predicts
 /// `T₂` badly (≈30 000 K) because it ignores the dissociation/vibration that absorb the post-shock energy;
 /// the engineering effective value for strongly-dissociated hypersonic air is `≈1.1–1.2`, which lands `T₂`
-/// in the realistic ≈8000 K band where RAM-C ionizes. Cited as an effective-γ closure, not perfect gas.
+/// in the realistic ≈7500–8000 K band where RAM-C ionizes. Cited as an effective-γ closure, not perfect gas.
 pub const GAMMA: f64 = 1.1;
-/// Free-stream (ambient) temperature, K.
-pub const T_INF: f64 = 250.0;
-/// Free-stream heavy-particle number density, m⁻³ (RAM-C II ~71 km: ρ∞ ≈ 6.4e-5 kg/m³, air mass
-/// ≈ 4.8e-26 kg → n∞ ≈ 1.3e21).
-pub const NUMBER_DENSITY: f64 = 1.3e21;
 /// Comms band as an angular frequency (GPS L-band ≈ 1.5 GHz → ω ≈ 9.4e9 rad/s).
 pub const COMMS_BAND_RAD_S: f64 = 9.4e9;
-/// Free-stream velocity, m/s (RAM-C orbital reentry ≈ 7.65 km/s).
-pub const FREESTREAM_VELOCITY: f64 = 7650.0;
 /// Shock standoff on the stagnation line, m (≈0.05·nose radius for the RAM-C sphere-cone) — sets the
 /// post-shock residence time `t_res = standoff / u₂` over which ionization lags equilibrium.
 pub const STANDOFF_M: f64 = 0.0076;
@@ -47,15 +96,22 @@ pub const PROFILE_L: usize = 10;
 pub const RELAX_LENGTH: f64 = 0.2;
 
 // ── Published reference cross-references (reported, with disclaimers) ─────
-/// RAM-C II peak electron density near the 71 km station, m⁻³ (order-of-magnitude anchor).
-pub const RAMC_NE_REFERENCE: f64 = 1.0e19;
+/// The RAM-C II station-1 (x/D = 0.15) peak electron density at its Ka-band critical-density
+/// crossing, m⁻³: `N_e,pk = 0.63 · 1.287e-8 · f²` cm⁻³ at `f = 35 000 MHz` (Grantham 1970, NASA TN
+/// D-6062: the crossing at 236 000 ft on p. 18, the critical-density relation and the 0.63
+/// slope-technique ratio on p. 11, the frequency in Table I). Below the crossing station 1 is
+/// overdense at Ka-band, the highest frequency flown, so the same value is a lower bound there
+/// down to the end of the primary data period (56.39 km).
+pub const RAMC_NE_REFERENCE: f64 = 0.63 * 1.287e-8 * 3.5e10 * 3.5e10 * 1.0e6;
+/// Altitude of the station-1 Ka-band crossing, km (236 000 ft).
+pub const RAMC_ANCHOR_ALTITUDE_KM: f64 = 71.93;
 
 /// Acceptance band of the uncalibrated finite-rate network prediction, in decades around the
 /// flight anchor. The width is a chemistry-model-spread allowance — production codes (DPLR/LAURA/US3D)
-/// sit at 2x to 3x, rate sets spread 2x to 5x — and is therefore independent of `μ_sr`. Re-confirmed
-/// under the corrected N₂–N₂ closure (`fix-ramc-vibrational-relaxation-pair`): the network **renewal**
-/// arm moved from +0.48 to **+0.35 dec** (the correction pulls the over-predicting network *toward* the
-/// anchor), still inside ±0.70. The width is not re-tuned; only its verdict is re-measured.
+/// sit at 2x to 3x, rate sets spread 2x to 5x — and is therefore independent of `μ_sr`. It is applied
+/// at [`ANCHOR_STATION`] under the N₂–N₂ Millikan–White closure ([`REDUCED_MASS_AMU`]); the gate it
+/// sets is a `[tripwire]`, because the width is chosen rather than derived from the flight's
+/// uncertainty.
 pub const NETWORK_BAND_DECADES: f64 = 0.7;
 
 /// Lift an exact `f64` specification into the working precision.

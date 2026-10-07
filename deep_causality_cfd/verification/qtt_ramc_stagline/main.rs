@@ -23,7 +23,7 @@ mod print_utils;
 
 use deep_causality_cfd::{
     Ambient, CoupledField, FiniteRateIonizationStage, FittedNormalShock, Park2tClosure,
-    PhysicsStage, StepContext,
+    PhysicsStage, PostShockState, StagnationOutcome, StepContext,
 };
 use deep_causality_physics::{
     AVOGADRO_CONSTANT, ElectronTemperature, THETA_VIB_N2, Temperature, VibrationalTemperature,
@@ -40,25 +40,61 @@ fn main() {
     println!(
         "=== RAM-C stagnation line: exact Rankine–Hugoniot fit + reused Tier-A ionization ===\n"
     );
-    println!(
-        "Flight: M = {}, γ = {}, T_inf = {} K, n_inf = {:.0e} m^-3 (RAM-C II ~71 km)\n",
-        config::MACH,
-        config::GAMMA,
-        config::T_INF,
-        config::NUMBER_DENSITY
-    );
+    let anchor = predict(&config::ANCHOR_STATION, true);
+    let lower = predict(&config::LOWER_BOUND_STATION, false);
 
+    print_utils::render(&config::ANCHOR_STATION, &anchor.post, &anchor.outcome, anchor.profile_bond);
+    print_utils::render_lower_bound(&config::LOWER_BOUND_STATION, &lower);
+    let ok = print_utils::verify(&anchor.post, &anchor.outcome, anchor.profile_bond)
+        & print_utils::verify_network(anchor.ne_channel1, anchor.ne_network)
+        & print_utils::verify_renewal_ab(anchor.ne_network, anchor.ne_carried)
+        & print_utils::verify_lower_bound(lower.ne_network);
+    if ok {
+        print_utils::summary(&anchor.outcome, anchor.ne_network, lower.ne_network);
+    } else {
+        std::process::exit(1);
+    }
+}
+
+/// Everything one freestream station yields: the exact post-shock state, the Park-2T controller
+/// outcome, the relaxation-profile rank, and the finite-rate network's peak `n_e` (renewal and
+/// carried arms, and channel 1 alone).
+pub struct Prediction {
+    pub post: PostShockState<FloatType>,
+    pub outcome: StagnationOutcome<FloatType>,
+    pub profile_bond: usize,
+    pub ne_network: FloatType,
+    pub ne_carried: FloatType,
+    pub ne_channel1: FloatType,
+}
+
+/// Run the stagnation line at one cited `station`. `verbose` prints the intermediate figures the
+/// anchor comparison reports.
+fn predict(station: &config::Freestream, verbose: bool) -> Prediction {
+    if verbose {
+        println!(
+            "Flight ({}): M = {}, T_inf = {} K, q = {} Pa -> V = {:.1} m/s, n_inf = {:.4e} m^-3; \
+             γ_eff = {}\n",
+            station.label,
+            station.mach,
+            station.t_inf,
+            station.dynamic_pressure,
+            station.velocity(),
+            station.number_density(),
+            config::GAMMA,
+        );
+    }
     let shock = FittedNormalShock::<FloatType>::new(config::ft(config::GAMMA))
         .unwrap_or_else(|e| fail("fitted shock", e));
     let post = shock
         .post_shock(
-            config::ft(config::T_INF),
-            config::ft(config::NUMBER_DENSITY),
-            config::ft(config::MACH),
+            config::ft(station.t_inf),
+            config::ft(station.number_density()),
+            config::ft(station.mach),
         )
         .unwrap_or_else(|e| fail("post-shock state", e));
     // Post-shock residence time t_res = standoff / u₂ over which ionization lags equilibrium.
-    let u2 = config::FREESTREAM_VELOCITY * post.u_ratio;
+    let u2 = station.velocity() * post.u_ratio;
     let residence_time = config::STANDOFF_M / u2;
     let equilibrium = shock
         .stagnation_blackout(&post, config::ft(config::COMMS_BAND_RAD_S))
@@ -78,7 +114,7 @@ fn main() {
     let pressure_atm = post.n_tot2 * config::ft(1.380_649e-23) * post.t2
         / config::ft(config::STANDARD_ATMOSPHERE_PA);
     let closure = Park2tClosure {
-        t_ve_initial: config::ft(config::T_INF),
+        t_ve_initial: config::ft(station.t_inf),
         pressure_atm,
         reduced_mass_amu: config::ft(config::REDUCED_MASS_AMU),
         theta_vib: config::ft(THETA_VIB_N2),
@@ -91,6 +127,7 @@ fn main() {
             config::ft(config::COMMS_BAND_RAD_S),
         )
         .unwrap_or_else(|e| fail("Park-2T stagnation blackout", e));
+    if verbose {
     println!(
         "Residence time t_res = standoff/u2 = {:.3e} s  (Saha-equilibrium upper bound n_e = {:.3e} m^-3)",
         residence_time, equilibrium.electron_density
@@ -101,6 +138,7 @@ fn main() {
         outcome_1t.electron_density,
         (outcome_1t.electron_density / config::RAMC_NE_REFERENCE).log10()
     );
+    }
 
     let trunc = Truncation::<FloatType>::by_tol(1e-10).unwrap_or_else(|e| {
         eprintln!("truncation: {e:?}");
@@ -213,6 +251,7 @@ fn main() {
     let alpha_c1 = (target_c1 / conc) * (1.0 - (-(residence_time / tau_c1)).exp());
     let ne_channel1 = alpha_c1 * post.n_tot2;
 
+    if verbose {
     println!(
         "Uncalibrated finite-rate network (RP-1232 Table II pairs; no Saha target):\n  \
          lagged atom pool: x_N = {:.3e}, x_O = {:.3e}\n  \
@@ -234,15 +273,15 @@ fn main() {
         ne_carried,
         (ne_carried / config::RAMC_NE_REFERENCE).log10(),
     );
+    }
 
-    print_utils::render(&post, &outcome, profile_bond);
-    if print_utils::verify(&post, &outcome, profile_bond)
-        && print_utils::verify_network(ne_channel1, ne_network)
-        && print_utils::verify_renewal_ab(ne_network, ne_carried)
-    {
-        print_utils::summary(&outcome);
-    } else {
-        std::process::exit(1);
+    Prediction {
+        post,
+        outcome,
+        profile_bond,
+        ne_network,
+        ne_carried,
+        ne_channel1,
     }
 }
 

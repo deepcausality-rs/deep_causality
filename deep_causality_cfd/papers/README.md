@@ -27,15 +27,12 @@ states; confirm each against the published record when adding the file.
   incompressible viscous flows", Numerische Mathematik 81(4):497–520. Cited by
   `src/solvers/qtt/immersed_2d.rs` and `verification/qtt_cylinder_verification/` for the Brinkman
   penalization method and its `η → 0` convergence rate (`O(η^{3/4})`).
-- **Peddinti et al. (2024)**, "A quantum-inspired framework for computational fluid dynamics",
+- **Peddinti et al. (2024)**, "Quantum-inspired framework for computational fluid dynamics",
   Communications Physics 7, 135. Cited by `src/tensor_bridge/mod.rs` and the QTT verification
   READMEs as the MPS Navier–Stokes construction the bridge follows.
-- **Kazeev & Khoromskij**, "Low-Rank Explicit QTT Representation of the Laplace Operator and Its
-  Inverse". Cited by `src/tensor_bridge/mod.rs` for the QTT finite-difference operator construction.
-  Author and title are as recorded in
-  `openspec/notes/archive/cfd-plasma-blackout/gap-1/gap-one-cfd-tensor-bridge.md`; **venue and year are
-  not recorded anywhere in this repository**, so this index omits them. Fill them in from the
-  published record when adding the PDF.
+- **Kazeev & Khoromskij (2012)**, "Low-Rank Explicit QTT Representation of the Laplace Operator and Its
+  Inverse", SIAM Journal on Matrix Analysis and Applications 33(3), 742–758, doi:10.1137/100820479.
+  Cited by `src/tensor_bridge/mod.rs` for the QTT finite-difference operator construction.
 
 Other references cited in prose without a PDF here (Park, RAM-C II, Millikan–White, Ghia 1982,
 Taylor & Green 1937, Sod 1978, Gourianov et al. 2022) are named at their use sites with enough

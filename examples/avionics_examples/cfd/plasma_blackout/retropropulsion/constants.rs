@@ -150,13 +150,12 @@ pub const DRAG_COLLAPSE_MIN: f64 = 0.10;
 /// (5) Minimum separation between the informed and uninformed guidances' **flown** landing
 /// decisions — the altitude each lights its stopping burn at, m.
 ///
-/// **Re-earned 2026-07-20: measured 14.06 m** on the committed run (139.12 m informed against
-/// 125.06 m uninformed),
-/// pinned here with margin. The quantity changed, so the superseded 1.0 does not carry over: it
+/// The committed run measures 18.61 m (146.91 m informed against 128.29 m uninformed; see
+/// `output.txt`), pinned here with margin. The quantity changed, so the superseded 1.0 does not carry over: it
 /// bounded the difference between two interpolations of one CSV, computed before any march and
 /// invariant to the entire descent.
 ///
-/// The flown separation is close to but not equal to the 14.78 m difference in demanded margin,
+/// The flown separation is close to but not equal to the 15.69 m difference in demanded margin,
 /// because `ignition_altitude_kernel` solves a stopping distance rather than adding an offset — the
 /// extra margin also changes the mass and speed the burn starts from. That the two numbers differ is
 /// the point: one is arithmetic, the other is a flight.

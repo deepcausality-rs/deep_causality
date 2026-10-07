@@ -474,8 +474,14 @@ PRR, not Data-Centric Engineering.)
 **Blackout and plasma:**
 
 - **`grantham1970flight`** NASA TN D-6062: RAM C-II reflectometer data at 7.62 km/s at four body
-  stations; four frequencies covering about 1e10–1e13 cm⁻³ (1e16–1e19 m⁻³). The 1e19 m⁻³ anchor sits
-  at the top of that range (cfd_draft.md, A.15).
+  stations; four frequencies covering about 1e10–1e13 cm⁻³ (1e16–1e19 m⁻³). The anchor the code uses
+  is the station-1 (x/D = 0.15) Ka-band (35 GHz, Table I) critical-density crossing at 236 000 ft
+  (71.93 km, p. 18): N_cr = 1.287e-8 f² and N_pk/N_cr = 0.63 (p. 11) give 9.93e18 m⁻³. Below that
+  altitude station 1 is overdense at Ka-band, so the value is a lower bound down to 56.39 km
+  (cfd_draft.md, A.15).
+- **Parent, Thoguluva Rajendran & Omprakas**, "Electron Losses in Hypersonic Flows", arXiv:2111.09432:
+  the RAM-C II freestream the stagline harness flies (71 km: M 25.9, 217.9 K, q 2.28 kPa; 61 km:
+  M 23.9, 255.9 K, q 8 kPa). Not in `refs.bib` yet; take the fields from the arXiv record.
 - **`jones1972electrostatic`** NASA TN D-6617: electrostatic-probe ion densities 1–7 cm off the aft
   surfaces of RAM C-I and C-II, 85.3–53.3 km, 1e8–1e12 cm⁻³; an independent aft-body check.
 - **`hartunian2007causes`** Aerospace Corp. ATR-2007(5309)-1: causes and mitigation of RF blackout for
@@ -675,18 +681,18 @@ networks)
 - `parvar2023evp`: journal venue (only arXiv and SSRN found).
 - `hansen_deepcausality`: no year (BibTeX warns).
 
-**Corrections that affect the repository, found during the check (outside this task, not changed):**
+**Corrections applied in the repository after the check:**
 
-- `deep_causality_cfd/verification/README.md` and `verification/dec_cylinder_verification/main.rs`
-  describe arXiv:2303.09262 as a compilation of the 2-D laminar band C_d ≈ 1.32–1.36 from Qu et al.,
-  Posdziech & Grundmann and Williamson. It is Parvar et al.'s elastoviscoplastic study; its Newtonian
-  table spans 1.314–1.370 and does not list Williamson.
-- `deep_causality_cfd/verification/README.md` cites Peddinti et al. (2024) with a leading "A" in the
-  title; the published title has none.
-- `deep_causality_physics/papers/korzun_braun_cruz_srp_survey.pdf` is the IEEE Aerospace Conference
-  2008 version (Korzun, Cruz, Braun; doi 10.1109/AERO.2008.4526290), not the JSR 2009 article.
-- `deep_causality_physics/papers/cordell_2013_srp_analytic.pdf` is Cordell's Georgia Tech PhD thesis
-  (Dec 2013), not the JSR article.
+- The cylinder C_d reference band is 1.314–1.370, cited to Parvar et al. (2023) Table 1, seven
+  Newtonian sources (`verification/README.md`, `dec_cylinder_verification/main.rs` and its README).
+- Every citation of Peddinti et al. (2024) uses the published title.
+- `deep_causality_physics` (`srp.rs`, `plume.rs`) cites Cordell & Braun (2013) under its published
+  title, "Analytical Modeling of Supersonic Retropropulsion Plume Structures".
+- `deep_causality_cfd/papers/README.md` and `src/tensor_bridge/mod.rs` carry the Kazeev & Khoromskij
+  venue (SIMAX 33(3):742–758, 2012).
+
+The two SRP PDFs in `deep_causality_physics/papers/` are the IEEE Aerospace 2008 version of Korzun,
+Cruz & Braun and Cordell's 2013 thesis; the code cites them as those documents.
 
 **Other notes:**
 

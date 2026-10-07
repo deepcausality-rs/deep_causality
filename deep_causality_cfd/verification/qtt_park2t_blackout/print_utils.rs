@@ -224,7 +224,7 @@ pub fn render(report: &Report<FloatType>) {
 
     println!("\n--- Published reference cross-references (Tier-A disclaimers) ---");
     println!(
-        "  RAM-C II peak n_e (~71 km)  : ~{:.1e} m^-3 [order-of-magnitude anchor]",
+        "  RAM-C II n_e (71.93 km)     : {:.2e} m^-3 [station-1 Ka-band crossing, cross-reference]",
         config::RAMC_NE_REFERENCE
     );
     println!(

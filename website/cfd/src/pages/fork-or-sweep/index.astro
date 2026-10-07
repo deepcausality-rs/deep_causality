@@ -42,13 +42,13 @@ const fork = `let corridor = CfdFlow::study("bank-angle corridor")
     .gates(model::corridor_gates())
     .verdict()?;`;
 
-/* retropropulsion/output.txt:24-29, verbatim. */
+/* retropropulsion/output.txt:25-30, verbatim. */
 const roster = `  branch         cmd    flown  preserved  axial m/s2    prop kg     dv m/s  dv frozen
-  coast         0.00   0.0000          —     10.5950       1.81    139.519      0.144
-  low           0.20   0.2000     0.2510      7.4718      62.05     88.399     49.490
-  mid           0.40   0.4000     0.1238      9.9667     122.30    120.335     99.984
-  high          0.60   0.6000    -0.0161     12.8932     182.54    151.991    151.413
-  hard          0.85   0.7931    -0.0611     17.1977     256.80    212.085    216.209`;
+  coast         0.00   0.0000          —     13.9101       1.83    183.202      3.282
+  low           0.20   0.2000     0.4335     11.6754      62.07    137.776     52.988
+  mid           0.40   0.4000     0.1800     11.6531     122.31    137.634    103.394
+  high          0.60   0.6000     0.0171     13.3226     182.56    158.870    154.650
+  hard          0.85   0.8500    -0.0329     18.5463     257.86    215.696    220.012`;
 
 const compare = [
   {
@@ -76,7 +76,7 @@ const compare = [
 const columns = [
   { name: 'branch', text: 'One alternative, named for its throttle.' },
   { name: 'cmd', text: 'The throttle the branch commands, as a fraction of full thrust: 0.00 is engine off, 1.00 is full thrust.' },
-  { name: 'flown', text: 'The throttle the vehicle flew. The safety envelope clamps commands that would push the thrust coefficient past its limit: the hard branch commands 0.85 and flies 0.7931.' },
+  { name: 'flown', text: 'The throttle the vehicle flew. The safety envelope clamps commands that would push the thrust coefficient past its limit; in this run every branch flies the throttle it commands.' },
   { name: 'preserved', text: 'The fraction of the drag that survives the exhaust plume. It comes from the Jarvinen-Adams correlation at the branch’s thrust coefficient. A dash means the branch has no plume and the closure applies nothing. A negative value is the correlation’s wake-type branch, where the forebody force has changed sign.' },
   { name: 'axial m/s2', text: 'The deceleration along the flight path at the end of the continuation, read from the summed thrust and drag force.' },
   { name: 'prop kg', text: 'The propellant the branch burned over the continuation.' },
@@ -136,14 +136,14 @@ const columns = [
     <p>
       The weather example flies six atmospheres, from polar winter to a hot day, and measures how
       far navigation drift through blackout spreads. Blackout is the stretch where the plasma
-      around the vehicle cuts the satellite link. Polar-winter mean drift is 58.71 m against 41.60
+      around the vehicle cuts the satellite link. Polar-winter mean drift is 58.20 m against 42.13
       m on a standard day: the vehicle’s inertial navigation unit does not behave as assumed in
       the cold.
     </p>
     <p>
       Each row carries a scatter from eight noise draws. The gate (a pass or fail check on the
       table) can therefore require the separation to clear two combined standard deviations before
-      it counts. It clears 5.7.
+      it counts. It clears 3.1.
     </p>
     <p>
       Six atmospheres, each declared as one departure from a validated baseline, times eight draws
@@ -161,20 +161,20 @@ const columns = [
     <h2>A fork chooses among alternatives from one state</h2>
     <p>
       The corridor example asks which bank angle to fly once blackout starts. The bank angle is the
-      roll that steers the vehicle’s lift sideways. One march runs 131 coupled steps to the pause,
-      at 73.2 km, and stops with the flow, the plasma sheath and the navigation filter as they
+      roll that steers the vehicle’s lift sideways. One march runs 106 coupled steps to the pause,
+      at 76.8 km, and stops with the flow, the plasma sheath and the navigation filter as they
       stand. Seventeen candidate angles continue from that state for 100 steps each: six coarse,
-      then eleven refined around the winner. The best, 11.5°, lands 2.07 m from the aim point.
+      then eleven refined around the winner. The best, 11°, lands 2.87 m from the aim point.
     </p>
     <p>
-      The whole corridor run takes 44.4 s on a 32×32 grid ({MACHINE}). That covers the march to the
+      The whole corridor run takes 45.9 s on a 32×32 grid ({MACHINE}). That covers the march to the
       pause, both rounds of branches and three legs flown after them.
     </p>
     <div class="callout">
       <p class="callout-title">A setup value, not a result</p>
       <p>
-        The example places the aim point 20 m to the side of where the unsteered vehicle lands
-        (<code>AIM_CROSS_RANGE_M</code> in its constants). The zero-bank miss of 20.0 m is
+        The example places the aim point 30 m to the side of where the unsteered vehicle lands
+        (<code>AIM_CROSS_RANGE_M</code> in its constants). The zero-bank miss of 30.0 m is
         therefore set by construction. The fork measures how close each candidate angle gets from
         the shared state.
       </p>
@@ -206,10 +206,10 @@ const columns = [
     </dl>
     <Code code={roster} lang="text" themes={SHIKI} />
     <p>
-      On the low branch the run sheds 88.399 m/s where the frozen prediction says 49.490. Net
-      deceleration is not monotone in throttle: it bottoms out on that branch at 7.4718 m/s2,
-      below the 10.5950 m/s2 of coasting. Preserved drag falls through zero as the throttle rises.
-      The coast branch shows the widest gap, 139.519 m/s against 0.144. With no plume the closure
+      On the low branch the run sheds 137.776 m/s where the frozen prediction says 52.988. Net
+      deceleration is not monotone in throttle: it bottoms out on the mid branch at 11.6531 m/s2,
+      below the 13.9101 m/s2 of coasting. Preserved drag falls through zero as the throttle rises.
+      The coast branch shows the widest gap, 183.202 m/s against 3.282. With no plume the closure
       applies nothing, while the frozen column holds drag at its fork value. A campaign that fixes
       drag at its fork value reads the frozen column.
     </p>
@@ -240,8 +240,8 @@ const columns = [
       The shipped examples therefore use both. The weather table sizes a dispersion margin across
       48 descents. The retropropulsion descent reads that table in flight and forks against it. Its
       gate 5 measures what the composition bought: informed and uninformed guidance started the
-      landing burn 14.06 m apart in altitude (139.12 m against 125.06 m), and the informed
-      guidance spent 7.28 kg more propellant. That is the dispersion-sized reserve, measured
+      landing burn 18.61 m apart in altitude (146.91 m against 128.29 m), and the informed
+      guidance spent 10.54 kg more propellant. That is the dispersion-sized reserve, measured
       rather than configured.
     </p>
   </section>

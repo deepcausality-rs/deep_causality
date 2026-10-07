@@ -31,10 +31,9 @@
 //! - The **cycle-mean drag** `C_d = F_x / (½ U² D)`, averaged over the developed (second-half)
 //!   window and split into the **pressure** force (`pressure_surface_force` over the static pressure
 //!   from `pressure_diagnostic`) and the **viscous (friction)** force (`viscous_surface_force`),
-//!   with the lift `C_l` and the `C_d` swing. Reference: `C_d(Re=100) ≈ 1.32–1.36`, the 2-D
-//!   unconfined laminar consensus (Qu et al. 2013, Posdziech & Grundmann 2007, Williamson, as
-//!   compiled in arXiv:2303.09262). The directory README's gate-result section quotes the same
-//!   band. Dröge & Verstappen (2005), Table II, is the secondary reference, for the
+//!   with the lift `C_l` and the `C_d` swing. Reference: `C_d(Re=100) ≈ 1.314–1.370`, the spread
+//!   of the eight published 2-D laminar values Parvar et al. (2023, arXiv:2303.09262) tabulate in
+//!   their Table 1. The directory README's gate-result section quotes the same band. Dröge & Verstappen (2005), Table II, is the secondary reference, for the
 //!   pressure/friction split only: their cut-cell result is `C_d = 1.24 = 0.93` pressure `+ 0.31`
 //!   friction, so friction is ≈ 25 % of `C_d`. That `1.24` is a single low-side cut-cell datum. It
 //!   is not the reference band and is no longer used as its lower edge.
@@ -68,8 +67,8 @@ const PERTURB_SIGMA: f64 = 0.75;
 //
 // Evidence class: **tripwire**, not reference. The affordable default (8 cells/D) is below
 // reference-grid quality. `St` sits outside the published value: 0.1710 vs Williamson 0.164,
-// +4.3 %. `C_d` lands inside the published band, 1.345 in 1.32–1.36, but for the wrong reason: the
-// split is pressure 1.173 + friction 0.172, so friction is ≈ 13 % of `C_d` against the ≈ 25 % of
+// +4.3 %. `C_d` lands inside the published band, 1.342 in 1.314–1.370, but for the wrong reason: the
+// split is pressure 1.170 + friction 0.172, so friction is ≈ 13 % of `C_d` against the ≈ 25 % of
 // the reference, and the total agrees by cancellation. Gating against the published bands at this
 // resolution would fail a correctly-working solver on `St` and would reward that cancellation on
 // `C_d`, so these bounds are pinned around the measured default and detect regression only. The
@@ -86,15 +85,16 @@ const PERTURB_SIGMA: f64 = 0.75;
 const REFERENCE_RE_D: f64 = 100.0;
 /// Pinned Strouhal band (tripwire), ~±11 % around the measured 0.1710.
 const ST_TRIPWIRE: (f64, f64) = (0.152, 0.190);
-/// Pinned drag-coefficient band (tripwire), ~±10 % around the measured 1.345.
+/// Pinned drag-coefficient band (tripwire), ~±10 % around the measured 1.342.
 const CD_TRIPWIRE: (f64, f64) = (1.21, 1.48);
 /// Published references, printed beside the measurement. Williamson (1996) for `St`. For `C_d`, the
-/// 2-D unconfined laminar consensus band (Qu et al. 2013, Posdziech & Grundmann 2007, Williamson, as
-/// compiled in arXiv:2303.09262); the directory README's gate-result section quotes the same band.
+/// spread of the eight published 2-D laminar values at Re = 100 that Parvar et al. (2023,
+/// arXiv:2303.09262) tabulate in their Table 1; the directory README's gate-result section quotes the
+/// same band.
 /// Dröge & Verstappen (2005), Table II, is the secondary reference for the pressure/friction split
 /// only: `C_d = 1.24 = 0.93 + 0.31`, i.e. friction ≈ 25 %.
 const ST_REFERENCE: f64 = 0.164;
-const CD_REFERENCE_BAND: (f64, f64) = (1.32, 1.36);
+const CD_REFERENCE_BAND: (f64, f64) = (1.314, 1.370);
 
 /// Read an `f64` case parameter from the environment, falling back to `default`.
 fn env_f64(key: &str, default: f64) -> f64 {

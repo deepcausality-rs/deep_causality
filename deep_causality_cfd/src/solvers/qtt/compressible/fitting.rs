@@ -291,9 +291,9 @@ where
     /// residence time by the closed-form Landau–Teller / Millikan–White LER kernel. Both the Saha
     /// equilibrium target and the associative-ionization rate use `Tₐ`, so the cold electron bath suppresses
     /// the equilibrium the single-temperature surrogate over-counted. Under the corrected N₂–N₂ closure
-    /// ([`REDUCED_MASS_AMU`], `μ = 14.007`) the controller `α` falls `4.6×10⁻³ → ~2×10⁻⁵` and peak `n_e`
-    /// lands `5.31e17`, 1.27 decades below the RAM-C II anchor. That offset is reported, not re-admitted to
-    /// the retired `+0.0`-decade headline the invalid `μ = 7.0` produced.
+    /// ([`REDUCED_MASS_AMU`], `μ = 14.007`) at the cited RAM-C II 71 km freestream, peak `n_e` lands
+    /// `1.07e17`, 1.97 decades below the RAM-C II station-1 Ka-band datum (`qtt_ramc_stagline`). That offset
+    /// is reported as the controller's result.
     ///
     /// `residence_time` is `t_res = standoff/u₂` (s); `closure` carries the gas properties the relaxation
     /// needs (free-stream `T_ve(0)`, post-shock pressure, reduced mass, `θ_v`). Returns the same outcome

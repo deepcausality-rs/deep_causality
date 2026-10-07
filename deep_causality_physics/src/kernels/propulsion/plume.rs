@@ -26,7 +26,7 @@
 //!   Wide Range of Potential Vehicle Configurations," Ph.D. dissertation,
 //!   Georgia Institute of Technology, Dec. 2013, Ch. III
 //!   (`papers/cordell_2013_srp_analytic.pdf`).
-//! * Cordell, C. E., & Braun, R. D., "Steady State Modeling of Supersonic
+//! * Cordell, C. E., & Braun, R. D., "Analytical Modeling of Supersonic
 //!   Retropropulsion Plume Structures," J. Spacecraft and Rockets
 //!   50(4):763–770, 2013.
 

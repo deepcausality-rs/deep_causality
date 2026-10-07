@@ -114,7 +114,7 @@ The exact `f64` specifications enter once through `config::ft` (`from_f64`) and 
 - **Taylor, G. I. & Green, A. E.** (1937). *Mechanism of the production of small eddies from large ones.*
   Proc. R. Soc. Lond. A **158**, 499–521.
 - **Peddinti, R. D., Pisoni, S., Marini, A., Lott, P., Argentieri, H., Tiunov, E. & Aolita, L.** (2024).
-  *A quantum-inspired framework for computational fluid dynamics.* Commun. Phys. **7**, 135 — the
+  *Quantum-inspired framework for computational fluid dynamics.* Commun. Phys. **7**, 135 — the
   MPS-encoded incompressible-NS method this solver follows.
 - **Gourianov, N. et al.** (2022). *A quantum-inspired approach to exploit turbulence structures.* Nat.
   Comput. Sci. **2** — the original MPS-CFD demonstration and the rank-vs-accuracy metric.

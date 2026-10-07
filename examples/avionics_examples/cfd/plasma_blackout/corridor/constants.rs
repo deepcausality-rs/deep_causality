@@ -32,10 +32,9 @@ pub const FINE_STEP_DEG: f64 = 0.5;
 /// Cross-range offset of the aim point from the ballistic terminal state, m (in the lift-plane
 /// side direction a positive bank pushes toward). Sized so the optimum bank sits *inside* the
 /// envelope cap and between sweep candidates: the sweep has to find it, and a finer sweep finds
-/// it better. Re-pinned for the finite-rate network's higher flow-resolved onset (74.7 km):
-/// the branches fork in thinner air, so the reachable cross-range over the branch dwell is
-/// smaller (measured: 33.5 m at the clamped 40 deg, ~21 m at 15 deg).
-pub const AIM_CROSS_RANGE_M: f64 = 20.0;
+/// it better. The reachable cross-range over the branch dwell depends on the air density at the
+/// flow-resolved onset; the measured miss landscape is in `output.txt`.
+pub const AIM_CROSS_RANGE_M: f64 = 30.0;
 /// The value-of-counterfactuals gate: the committed branch's trajectory-derived miss must beat
 /// the ballistic branch's by at least this factor.
 pub const MISS_IMPROVEMENT_FACTOR: f64 = 3.0;
@@ -48,13 +47,22 @@ pub const REACQ_STEPS: usize = 30;
 /// on descent. Reported for comparison; the corridor's own gate band is
 /// [`EXIT_ALTITUDE_BAND_KM`], because the two vehicles differ by design (see there).
 pub const RAMC_EXIT_WINDOW_KM: (f64, f64) = (25.0, 30.0);
-/// Pinned acceptance band for the corridor's flow-resolved blackout-exit altitude, km.
-/// Measured 47.0 km with the uncalibrated finite-rate network (see output.txt). The corridor's probe flies a
-/// deliberately light ballistic bundle (`CDA_OVER_M`, β ≈ 170 kg/m²) so the compressed descent
-/// decelerates below the ionization threshold before the atmosphere-table floor; it therefore
-/// exits well above the RAM-C II window, and the offset is ballistics, not chemistry. The band
-/// catches regressions in either.
+/// Pinned acceptance band for the corridor's flow-resolved blackout-exit altitude, km (a tripwire;
+/// the measured exit is in `output.txt`). The corridor's probe flies a deliberately light ballistic
+/// bundle (`CDA_OVER_M`, β ≈ 170 kg/m²), so it decelerates below the ionization threshold far higher
+/// than RAM-C II did; it therefore exits well above the RAM-C II window, and the offset is
+/// ballistics, not chemistry. The band catches regressions in either.
 pub const EXIT_ALTITUDE_BAND_KM: (f64, f64) = (40.0, 50.0);
+/// Allowance around the RAM-C II station-1 Ka-band datum for the corridor's `n_e` at the anchor
+/// crossing, decades: the chemistry-model spread (rate sets 2x to 5x), the same width the
+/// stagnation-line harness uses. Stated without a citation, so the gate is a tripwire.
+pub const ANCHOR_BAND_DECADES: f64 = 0.70;
+/// Relative tolerance on the crossing speed at the anchor altitude: the comparison is only like for
+/// like when the probe crosses at the flight's speed.
+pub const ANCHOR_SPEED_TOLERANCE: f64 = 0.005;
+/// Altitude at which the corridor reports `n_e` beside the flight's lower bound, m. Reported, not
+/// gated: below the anchor this light probe decelerates far more than RAM-C II.
+pub const LOWER_BOUND_ALTITUDE_M: f64 = 61_000.0;
 /// Minimum separation between the committed steered terminal state and the zero-bank terminal
 /// state, m (the steering-is-real gate).
 pub const DIVERGENCE_MIN_M: f64 = 1.0;

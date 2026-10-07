@@ -14,28 +14,28 @@ worked:
   - label: Weather dispersion table
     href: /tutorial/stage-2-weather/
 ---
-At Mach 25 and about 71 km, the RAM-C II flight condition, the stagnation-line target computes
-the whole chain and finds the plasma frequency 4.4 times above the communications band. From
+At the cited RAM-C II 71 km flight condition (Mach 25.9, 217.9 K), the stagnation-line target
+computes the whole chain and finds the plasma frequency 1.96 times above the communications band. From
 `deep_causality_cfd/verification/qtt_ramc_stagline/baseline.txt`:
 
 ```text
 Exact Rankine–Hugoniot post-shock state (the transported energy, no reconstruction):
-  T_inf -> T2 ............ 250 K -> 8044 K
-  density ratio ρ2/ρ1 ... 20.349
+  T_inf -> T2 ............ 217.9 K -> 7509 K
+  density ratio ρ2/ρ1 ... 20.392
   velocity ratio u2/u1 .. 0.049
-  pressure ratio p2/p1 .. 6.547e2
-  post-shock n_tot ...... 2.645e22 m^-3
+  pressure ratio p2/p1 .. 7.027e2
+  post-shock n_tot ...... 3.291e22 m^-3
 
 Stagnation-line blackout (Saha/Park-2T at the post-shock state):
-  ionization fraction α .. 2.007e-5
-  peak electron density .. 5.310e17 m^-3
-  plasma frequency ω_p ... 4.111e10 rad/s
+  ionization fraction α .. 3.250e-6
+  peak electron density .. 1.070e17 m^-3
+  plasma frequency ω_p ... 1.845e10 rad/s
   blackout (ω_p > comms) . true (comms band 9.40e9 rad/s)
   relaxation-profile bond  2  (smooth post-shock zone, O(1) rank)
 ```
 
-The chain closes. `α · n_tot` gives 5.310e17 m⁻³ against the reported `n_e`, and
-`√(n_e e²/ε₀mₑ)` gives 4.111e10 rad/s against the reported `ω_p`. Both agree to better than
+The chain closes. `α · n_tot` gives 1.070e17 m⁻³ against the reported `n_e`, and
+`√(n_e e²/ε₀mₑ)` gives 1.845e10 rad/s against the reported `ω_p`. Both agree to better than
 0.1%.
 
 Five disciplines run in that chain. Each consumes the previous one's output through a named
@@ -145,19 +145,19 @@ true trajectory. It reaches the navigation filter through the GPS-denial flag, w
 filter's correction. **Blackout degrades the estimate, not the truth.**
 
 The corridor's 17 bank branches show the size of the effect. The flow columns barely move while
-the miss distance spans about a factor of 14.
+the miss distance spans about a factor of 17.
 
 | Column | Range across 17 branches |
 |---|---|
-| Peak heat flux (W/m²) | 2.232e6 to 2.240e6 |
-| Thermal load (J/m²) | 1.459e7 to 1.460e7 |
-| Peak n_e (m⁻³) | 6.224e19 to 6.309e19 |
-| Miss distance | 2.070 m to 28.881 m |
+| Peak heat flux (W/m²) | 2.543e6 to 2.546e6 |
+| Thermal load (J/m²) | 1.779e7 to 1.780e7 |
+| Peak n_e (m⁻³) | 7.943e19 to 7.974e19 |
+| Miss distance | 2.865 m to 48.426 m |
 
 The branches diverge by decision, not by flow. Over the branch continuation window, the bank
 command changes the sampled atmosphere too little to alter the shock-layer chemistry by more
-than 1.4 percent in peak `n_e`. The miss column measures distance from an aim point that the
-setup places 20 m from the unsteered landing point, so its scale follows from that choice.
+than 0.4 percent in peak `n_e`. The miss column measures distance from an aim point that the
+setup places 30 m from the unsteered landing point, so its scale follows from that choice.
 
 The [retropropulsion descent](/tutorial/stage-3-retropropulsion/) is the closest case to a two-way
 chemistry coupling, and it stops short of one. Its `PlumeImprint` seam gives the marched layer
@@ -173,10 +173,10 @@ configured angular threshold, `comms_band_rad_s`. Both sides are in rad/s, so no
 appears. The corridor records the transitions:
 
 ```text
-regime -> slip (GNSS-available), Kn=0.07829109848665225
-regime -> slip (GNSS-denied), Kn=0.012690837165407727
-regime -> continuum (GNSS-denied), Kn=0.00993838892165156
-regime -> continuum (GNSS-available), Kn=0.0002551442196046344
+regime -> slip (GNSS-available), Kn=0.0771427732055074
+regime -> continuum (GNSS-available), Kn=0.009969942075728244
+regime -> continuum (GNSS-denied), Kn=0.008711413345447542
+regime -> continuum (GNSS-available), Kn=0.00014839521823701343
 ```
 
 Two independent things change. The Knudsen number crosses the slip-continuum band as density
@@ -190,10 +190,10 @@ The corridor's chemistry is a single-point closure with `T_e = T_ve` lumped, and
 spatially resolved reacting layer. The stagnation-line target adds the fitted shock interface
 and the transit-age profile.
 
-Reported peak `n_e` depends on the model. The closed-form Park two-temperature controller
-lands 1.27 decades below the RAM-C II flight anchor of about 1e19 m⁻³, after the N₂–N₂
-reduced-mass correction (`μ = 14.007`). The uncalibrated finite-rate network lands 0.35 decades
-above it (about 2.25×), inside a ±0.70-decade band pinned from the measurement. The
+Reported peak `n_e` depends on the model. At the cited 71 km freestream the closed-form Park
+two-temperature controller lands 1.97 decades below the RAM-C II flight datum (9.93e18 m⁻³ at
+71.93 km), with the N₂–N₂ reduced mass (`μ = 14.007`). The uncalibrated finite-rate network lands
+0.22 decades above it (about 1.65×), inside a ±0.70-decade chemistry-spread allowance. The
 [validation record](/validation/#qtt-ramc) has both figures. The `T_e = T_ve` lumping is worth
 roughly 2×, and the documented chemistry-model spread is 2× to 5×.
 
