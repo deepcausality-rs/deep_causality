@@ -39,16 +39,7 @@ impl<R: RealField + core::fmt::Debug> Experiment<R> {
         shots: u64,
         predictions: Vec<R>,
     ) -> Result<Self, QuantumError> {
-        if !cost.is_finite() || cost < R::zero() {
-            return Err(QuantumError::NonFiniteValue(format!(
-                "experiment cost must be finite and non-negative, got {cost:?}"
-            )));
-        }
-        if shots == 0 {
-            return Err(QuantumError::NormalizationError(
-                "an experiment of zero shots predicts nothing".into(),
-            ));
-        }
+        check_cost_and_shots(cost, shots)?;
         if predictions
             .iter()
             .any(|p| !p.is_finite() || *p < R::zero() || *p > R::one())
@@ -100,6 +91,30 @@ impl<R: RealField + core::fmt::Debug> Experiment<R> {
             predictions,
         })
     }
+}
+
+/// The rules every experiment's cost and shots keep: a finite, non-negative cost and at least one
+/// shot.
+///
+/// # Errors
+///
+/// [`QuantumError::NonFiniteValue`] on a non-finite or negative cost;
+/// [`QuantumError::NormalizationError`] on zero shots.
+pub(crate) fn check_cost_and_shots<R: RealField + core::fmt::Debug>(
+    cost: R,
+    shots: u64,
+) -> Result<(), QuantumError> {
+    if !cost.is_finite() || cost < R::zero() {
+        return Err(QuantumError::NonFiniteValue(format!(
+            "experiment cost must be finite and non-negative, got {cost:?}"
+        )));
+    }
+    if shots == 0 {
+        return Err(QuantumError::NormalizationError(
+            "an experiment of zero shots predicts nothing".into(),
+        ));
+    }
+    Ok(())
 }
 
 /// The objective `design` solves: cover every hypothesis pair at `floor_bits` of separation at

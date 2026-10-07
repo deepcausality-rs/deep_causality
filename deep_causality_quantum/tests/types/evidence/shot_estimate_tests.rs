@@ -233,3 +233,40 @@ fn test_the_same_histogram_summarised_at_two_precisions() {
     );
     assert_eq!(Tolerance::<f64>::shot_noise().threshold(2, 1.0), None);
 }
+
+#[test]
+fn test_an_estimate_over_effective_draws_keeps_the_draws_in_its_width() {
+    // 2677.3 draws at ½: the width uses the draws as given, the shot count rounds them.
+    let e = ShotEstimate::<f64>::from_effective_draws(0.5, 2677.3).unwrap();
+    assert_eq!(e.estimate(), 0.5);
+    assert_eq!(e.standard_error(), (0.25_f64 / 2677.3).sqrt());
+    assert_eq!(e.shots(), 2677);
+    // Half a draw rounds up to one; less rounds to none and is refused.
+    assert_eq!(
+        ShotEstimate::<f64>::from_effective_draws(0.5, 0.5)
+            .unwrap()
+            .shots(),
+        1
+    );
+    for draws in [0.49, -3.0, 1.0e20] {
+        assert!(matches!(
+            ShotEstimate::<f64>::from_effective_draws(0.5, draws)
+                .unwrap_err()
+                .0,
+            QuantumErrorEnum::NormalizationError(_)
+        ));
+    }
+    for (estimate, draws) in [
+        (f64::NAN, 10.0),
+        (1.1, 10.0),
+        (-0.1, 10.0),
+        (0.5, f64::INFINITY),
+    ] {
+        assert!(matches!(
+            ShotEstimate::<f64>::from_effective_draws(estimate, draws)
+                .unwrap_err()
+                .0,
+            QuantumErrorEnum::NonFiniteValue(_)
+        ));
+    }
+}

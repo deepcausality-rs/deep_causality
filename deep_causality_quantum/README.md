@@ -109,6 +109,8 @@ The emergent seam adds no network or async dependency; it is a typed boundary, n
 | `Operator<R>` / `Gate<R>` | Aliases for `HilbertState<R>` (from `deep_causality_multivector`) |
 | `QuantumCircuit` / `GateOp` / `SimQpu` / `QpuSampler` | The reified circuit (`QuantumCircuit`, `GateOp`; always compiled) and the `qpu`-feature emergent seam (`SimQpu`, `QpuSampler`) |
 | `InstrumentContext<P, R>` / `InterferometerContext<R>` | An instrument's context keyed by contextoid id; for an atom interferometer, its model, configuration and time-stamped environment readings (`qcm`) |
+| `ConfiguredExperiment<R, C>` / `ResponseModel<R, C>` / `Response<R>` | An experiment that names a configuration and an observable; the model that turns (candidate, configuration) into a channel or an intervention, from which QCL computes every prediction (`qcm`) |
+| `EvidenceSource<R>` / `Observation<R>` / `Fringe<R>` / `EffectiveDraws<R>` | Simulated, recorded or published evidence for an observed experiment; the record of what was observed and in which context; a published value carried onto the fringe as effective draws (`qcm`) |
 
 ## The operator layer
 

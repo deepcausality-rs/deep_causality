@@ -138,3 +138,15 @@ fn test_a_record_the_model_cannot_hold_is_refused() {
         Err(ProjectionError::WrongPayload(1, "Fields", "Count"))
     );
 }
+
+#[test]
+fn test_the_fringe_is_at_mid_fringe_with_the_model_slope() {
+    // C k_eff T² / 2 at the nominal model: 0.4 · 1.6106e7 · 0.08² / 2.
+    let f = build(NOMINAL).unwrap().fringe();
+    assert_eq!(f.operating_point(), 0.5);
+    assert!((f.slope() - 0.4 * 1.6106e7 * 0.0064 / 2.0).abs() < 1e-9);
+    // The design note's gravimeter: C = 0.5, T = 100 ms; −5 µGal reads 0.498.
+    let note = build([1.6106e7, 0.1, 0.5, 2.4e-7, 0.5, 1000.0, 30.0]).unwrap();
+    let d = note.fringe().effective_draws(-5.0e-8, 2.4e-7).unwrap();
+    assert!((d.probability() - 0.498).abs() < 5.0e-5);
+}

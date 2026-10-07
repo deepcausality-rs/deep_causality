@@ -40,7 +40,24 @@ pub fn sample_projector<R, const D: usize>(
 where
     R: RealField + FromPrimitive + Default + core::fmt::Debug,
 {
-    let p = born_projective_probability(rho, projection)?;
+    sample_probability(born_projective_probability(rho, projection)?, shots, seed)
+}
+
+/// `shots` Bernoulli draws at the probability `p`, seeded, as a one-bit histogram: the draw
+/// [`sample_projector`] makes once it has its Born probability, so a probability computed another
+/// way draws the same histogram at the same seed. `p` is taken as given.
+///
+/// # Errors
+///
+/// [`QuantumError::CalculationError`] if `R` cannot represent a uniform sample.
+pub(crate) fn sample_probability<R>(
+    p: R,
+    shots: u64,
+    seed: u64,
+) -> Result<CountHistogram, QuantumError>
+where
+    R: RealField + FromPrimitive,
+{
     let mut rng = SplitMix64::new(seed);
     let mut hist = CountHistogram::new(1)?;
     for _ in 0..shots {

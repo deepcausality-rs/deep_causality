@@ -10,7 +10,13 @@ mod circuit_subject_tests;
 #[cfg(test)]
 mod config_tests;
 #[cfg(test)]
+mod configured_experiment_tests;
+#[cfg(test)]
 mod control_tests;
+#[cfg(test)]
+mod effective_draws_tests;
+#[cfg(test)]
+mod evidence_source_tests;
 #[cfg(test)]
 mod ledger_tests;
 #[cfg(test)]

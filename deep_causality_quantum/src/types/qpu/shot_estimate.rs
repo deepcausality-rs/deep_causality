@@ -94,6 +94,43 @@ where
         })
     }
 
+    /// An estimate over `draws` effective draws, which need not be whole: the standard error is
+    /// `√(p(1−p)/draws)` at the draws as given, and the shot count is the draws rounded to the
+    /// nearest whole draw, which is what a separation in bits is scaled by. This is how a
+    /// published value with its standard error enters as a read-out.
+    ///
+    /// # Errors
+    ///
+    /// [`QuantumError::NonFiniteValue`] on an estimate that is not finite or lies outside
+    /// `[0, 1]`, or on draws that are not finite; [`QuantumError::NormalizationError`] when the
+    /// draws round to zero or do not fit a `u64`.
+    pub fn from_effective_draws(estimate: R, draws: R) -> Result<Self, QuantumError> {
+        if !estimate.is_finite() || estimate < R::zero() || estimate > R::one() {
+            return Err(QuantumError::NonFiniteValue(
+                "an estimate must be a finite probability in [0, 1]".into(),
+            ));
+        }
+        if !draws.is_finite() {
+            return Err(QuantumError::NonFiniteValue(
+                "effective draws must be finite".into(),
+            ));
+        }
+        let shots = match draws.round().to_u64() {
+            Some(shots) if shots > 0 => shots,
+            _ => {
+                return Err(QuantumError::NormalizationError(
+                    "effective draws must round to at least one whole draw that fits a u64".into(),
+                ));
+            }
+        };
+        let standard_error = (estimate * (R::one() - estimate) / draws).sqrt();
+        Ok(Self {
+            estimate,
+            standard_error,
+            shots,
+        })
+    }
+
     /// The frequency of one outcome.
     ///
     /// # Errors

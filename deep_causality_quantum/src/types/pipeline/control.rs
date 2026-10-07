@@ -10,10 +10,15 @@ use crate::types::design::{
     Adjudication, DesignPlan, Experiment, MinCostCover, World, adjudicate, design,
 };
 use crate::types::pipeline::config::{Config, Mechanisms, PlantSubject, QclBuilder, Structural};
+use crate::types::pipeline::configured_experiment::ConfiguredExperiment;
+use crate::types::pipeline::evidence_source::{EvidenceSource, Observation, ObservedContext};
 use crate::types::pipeline::ledger::Ledger;
+use crate::types::pipeline::response::ResponseModel;
 use crate::types::pipeline::spec::Spec;
 use crate::types::pipeline::validate::Screened;
 use crate::types::qcm::hypothesis::Hypothesis;
+use crate::types::qpu::born_sampler::sample_probability;
+use crate::types::qpu::histogram::{CountHistogram, ShotHistogram};
 use crate::types::qpu::prng::SplitMix64;
 use crate::types::qpu::shot_estimate::ShotEstimate;
 use alloc::format;
@@ -117,6 +122,11 @@ impl<R: RealField> Refusal<R> {
 /// verdict against the baseline. `adjudicate` then separates the predictions and keeps the world
 /// whose prediction agrees with what was observed.
 ///
+/// Configured experiments run `design_with → observe_experiment → fork → predict_with → compare →
+/// adjudicate`. A [`ResponseModel`] computes every prediction, `design_with` plans over them,
+/// `observe_experiment` runs a planned experiment against its evidence as the root observation,
+/// and `predict_with` gives each world its prediction for it.
+///
 /// A config that names a baseline experiment starts either path with [`baseline`](Self::baseline),
 /// which observes it first and refuses the candidates it contradicts; `observe`, `fork` and
 /// `design` fail until it ran. A config that names evidence funds the ledger with its shots, and
@@ -134,6 +144,7 @@ pub struct Control<R: RealField, N, const D: usize> {
     verdict: Option<CheckReport<R>>,
     worlds: Vec<ControlWorld<R, N, D>>,
     refused: Vec<Refusal<R>>,
+    observations: Vec<Observation<R>>,
     plan: Option<DesignPlan<R>>,
     adjudication: Option<Adjudication<R, D>>,
     failure: Option<QuantumError>,
@@ -185,8 +196,17 @@ impl QclBuilder {
     }
 }
 
+/// What one observed experiment yields before it is recorded: the read-out, the counts when the
+/// evidence came as counts, and the root ledger with the shots charged.
+struct Gathered<R, N> {
+    read_out: ShotEstimate<R>,
+    counts: Option<CountHistogram>,
+    ledger: Ledger<R, N>,
+}
+
 /// The report `control` finalizes into: the root ledger, every world's ledger side by side, the
-/// candidates the baseline refused, the plan and the adjudication.
+/// candidates the baseline refused, the configured experiments observed, the plan and the
+/// adjudication.
 #[derive(Debug, Clone)]
 pub struct ControlReport<R: RealField, N, const D: usize> {
     /// The ledger before the fork.
@@ -195,6 +215,8 @@ pub struct ControlReport<R: RealField, N, const D: usize> {
     pub worlds: Vec<ControlWorld<R, N, D>>,
     /// The candidates the baseline refused, in the config's order.
     pub refused: Vec<Refusal<R>>,
+    /// The configured experiments observed on the root, in order.
+    pub observations: Vec<Observation<R>>,
     /// The design plan, if `design` ran.
     pub plan: Option<DesignPlan<R>>,
     /// The adjudication, if `adjudicate` ran.
@@ -229,6 +251,7 @@ impl<R: RealField, N: NaturalNumber, const D: usize> Control<R, N, D> {
             verdict: None,
             worlds: Vec::new(),
             refused: Vec::new(),
+            observations: Vec::new(),
             plan: None,
             adjudication: None,
             failure: None,
@@ -331,9 +354,10 @@ where
     }
 
     /// The measurement boundary: `shots` of `observable` on the plant, or on every world's plant
-    /// after a fork. This stage and [`baseline`](Self::baseline) are the only ones that touch
-    /// `shots`, `experiments`, `device_time` and the budget; device time is charged at one unit
-    /// per shot, and a draw beyond the remaining budget fails the run.
+    /// after a fork. This stage, [`baseline`](Self::baseline) and
+    /// [`observe_experiment`](Self::observe_experiment) are the only ones that touch `shots`,
+    /// `experiments`, `device_time` and the budget; device time is charged at one unit per shot,
+    /// and a draw beyond the remaining budget fails the run.
     ///
     /// Before the fork the read-out is the root's, the baseline `compare` judges predictions
     /// against. After the fork every world is measured on its own plant, which is how a mechanism
@@ -672,14 +696,197 @@ where
                 return self;
             }
         };
-        match design(self.candidates.len(), &probes, objective) {
+        self.plan_over(&probes, objective);
+        self
+    }
+
+    /// The design plan over configured experiments: each one's predictions for the live
+    /// candidates computed by `model` as [`ConfiguredExperiment::predict`] computes them, then the
+    /// cover [`design`](Self::design) solves, its cost committed to the root ledger. The plan's
+    /// entries index `experiments`. Planning evaluates the model without counting the evaluations
+    /// on a ledger; [`predict_with`](Self::predict_with) counts them.
+    ///
+    /// Fails with `CalculationError` before the config's baseline was observed; with the error of
+    /// a prediction; with [`Experiment::new`]'s error on a prediction outside `[0, 1]`; and as
+    /// [`design`] fails.
+    pub fn design_with<C, M>(
+        mut self,
+        model: &M,
+        experiments: &[ConfiguredExperiment<R, C>],
+        objective: MinCostCover<R>,
+    ) -> Self
+    where
+        M: ResponseModel<R, C>,
+    {
+        if self.failure.is_some() || self.awaits_baseline("design") {
+            return self;
+        }
+        let probes = experiments
+            .iter()
+            .map(|e| {
+                let predictions = self
+                    .candidates
+                    .iter()
+                    .map(|(_, h)| e.predict(model, h, &self.plant, &self.observables))
+                    .collect::<Result<Vec<R>, _>>()?;
+                Experiment::new(e.name(), e.cost(), e.shots(), predictions)
+            })
+            .collect::<Result<Vec<_>, _>>();
+        match probes {
+            Ok(probes) => self.plan_over(&probes, objective),
+            Err(e) => self.fail(e),
+        }
+        self
+    }
+
+    /// The cover of the live candidates' pairs by `probes`, committed to the root ledger.
+    fn plan_over(&mut self, probes: &[Experiment<R>], objective: MinCostCover<R>) {
+        match design(self.candidates.len(), probes, objective) {
             Ok(plan) => {
                 self.ledger = self.ledger.costed(plan.total_cost());
                 self.plan = Some(plan);
             }
             Err(e) => self.fail(e),
         }
+    }
+
+    /// Each world's prediction for a configured experiment, computed by `model` as
+    /// [`ConfiguredExperiment::predict`] computes it and counted on the world's `predictions`.
+    /// `compare` then judges it against the root read-out.
+    ///
+    /// Fails with `CalculationError` before the fork, and with the prediction's error.
+    pub fn predict_with<C, M>(mut self, model: &M, experiment: &ConfiguredExperiment<R, C>) -> Self
+    where
+        M: ResponseModel<R, C>,
+    {
+        if self.failure.is_some() {
+            return self;
+        }
+        if self.worlds.is_empty() {
+            self.fail(QuantumError::CalculationError(
+                "predict_with evaluates forked worlds; call fork first".into(),
+            ));
+            return self;
+        }
+        for w in &mut self.worlds {
+            let predicted = experiment
+                .predict(model, &w.hypothesis, &self.plant, &self.observables)
+                .and_then(|v| w.ledger.predicted().map(|l| (v, l)));
+            match predicted {
+                Ok((v, l)) => {
+                    w.prediction = Some(v);
+                    w.ledger = l;
+                }
+                Err(e) => {
+                    self.failure.get_or_insert(e);
+                    return self;
+                }
+            }
+        }
         self
+    }
+
+    /// A configured experiment observed on the device, from `source`: the Born sampler at the
+    /// read-out the source's truth predicts, counts a lab recorded, or a published value as
+    /// effective draws. The read-out becomes the root's, the baseline `compare` judges
+    /// predictions against, and the shots are charged to the ledger and drawn from its budget as
+    /// `observe` charges them. The [`Observation`] goes to the report with the experiment's name,
+    /// the read-out, the counts and the configuration's context at observation time.
+    ///
+    /// Simulated evidence draws at the seed `observe` would use for the next observation, so a
+    /// mechanism truth draws the histogram `observe` draws on the plant it predicts.
+    ///
+    /// Fails with `CalculationError` before the config's baseline was observed, and after the
+    /// fork: a root observation is what every world inherits at the fork. Fails with
+    /// `NormalizationError` when a simulated truth predicts a value outside `[0, 1]`; and with
+    /// the errors of the prediction, the read-out, the charge or the snapshot.
+    pub fn observe_experiment<C, M>(
+        mut self,
+        model: &M,
+        experiment: &ConfiguredExperiment<R, C>,
+        source: &EvidenceSource<R>,
+    ) -> Self
+    where
+        M: ResponseModel<R, C>,
+        C: ObservedContext,
+    {
+        if self.failure.is_some() || self.awaits_baseline("observe_experiment") {
+            return self;
+        }
+        if !self.worlds.is_empty() {
+            self.fail(QuantumError::CalculationError(
+                "observe_experiment observes the device before the fork, where every world \
+                 inherits it; call it before fork"
+                    .into(),
+            ));
+            return self;
+        }
+        let observed = self
+            .evidence(model, experiment, source)
+            .and_then(|evidence| Ok((evidence, experiment.configuration().context_snapshot()?)));
+        match observed {
+            Ok((evidence, context)) => {
+                self.read_out = Some(evidence.read_out);
+                self.ledger = evidence.ledger;
+                self.observations.push(Observation::new(
+                    experiment.name().into(),
+                    evidence.read_out,
+                    evidence.counts,
+                    context,
+                ));
+            }
+            Err(e) => self.fail(e),
+        }
+        self
+    }
+
+    /// The evidence `source` yields for `experiment`, with the root ledger after the shots are
+    /// charged, which happens before anything is drawn.
+    fn evidence<C, M>(
+        &self,
+        model: &M,
+        experiment: &ConfiguredExperiment<R, C>,
+        source: &EvidenceSource<R>,
+    ) -> Result<Gathered<R, N>, QuantumError>
+    where
+        M: ResponseModel<R, C>,
+    {
+        let shots = match source {
+            EvidenceSource::Simulated(_) => experiment.shots(),
+            EvidenceSource::Recorded(hist) => hist.total(),
+            EvidenceSource::Published(draws) => draws.read_out()?.shots(),
+        };
+        let count = N::from_u64(shots).ok_or_else(|| {
+            QuantumError::CalculationError(format!("{shots} shots do not fit the count width"))
+        })?;
+        let time = R::from_u64(shots).ok_or_else(|| {
+            QuantumError::CalculationError("shot count is not representable".into())
+        })?;
+        let charged = self.ledger.observed(count, time)?;
+        let (read_out, counts) = match source {
+            EvidenceSource::Simulated(truth) => {
+                let p = experiment.predict(model, truth, &self.plant, &self.observables)?;
+                if !p.is_finite() || p < R::zero() || p > R::one() {
+                    return Err(QuantumError::NormalizationError(format!(
+                        "truth '{}' predicts {p:?} for experiment '{}', not a probability",
+                        truth.name(),
+                        experiment.name()
+                    )));
+                }
+                let seed = Self::draw_seed(self.seed, self.ledger.experiments())?;
+                let hist = sample_probability(p, shots, seed)?;
+                (ShotEstimate::of_outcome(&hist, 1)?, Some(hist))
+            }
+            EvidenceSource::Recorded(hist) => {
+                (ShotEstimate::of_outcome(hist, 1)?, Some(hist.clone()))
+            }
+            EvidenceSource::Published(draws) => (draws.read_out()?, None),
+        };
+        Ok(Gathered {
+            read_out,
+            counts,
+            ledger: charged,
+        })
     }
 
     /// The worlds' verdicts folded under the verdict law, with the survivor's separation credited
@@ -728,6 +935,7 @@ where
             ledger: self.ledger,
             worlds: self.worlds,
             refused: self.refused,
+            observations: self.observations,
             plan: self.plan,
             adjudication: self.adjudication,
         })

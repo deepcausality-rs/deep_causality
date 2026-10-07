@@ -25,14 +25,22 @@
 //! is a follow-up that splits the graph-dependent half of `Hypothesis` from the rest.
 
 pub(crate) mod config;
+pub(crate) mod configured_experiment;
 pub(crate) mod control;
+pub(crate) mod effective_draws;
+pub(crate) mod evidence_source;
 pub(crate) mod ledger;
+pub(crate) mod response;
 pub(crate) mod spec;
 pub(crate) mod validate;
 
 pub use config::*;
+pub use configured_experiment::*;
 pub use control::*;
+pub use effective_draws::*;
+pub use evidence_source::*;
 pub use ledger::*;
+pub use response::*;
 pub use spec::*;
 pub use validate::*;
 

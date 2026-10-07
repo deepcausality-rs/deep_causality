@@ -5,6 +5,7 @@
 
 use crate::QuantumError;
 use crate::types::instrument::record_fields::{entries, field, rejected};
+use crate::types::pipeline::effective_draws::Fringe;
 use alloc::format;
 use alloc::string::ToString;
 use alloc::vec;
@@ -138,6 +139,17 @@ impl<R: RealField + core::fmt::Debug> InterferometerModel<R> {
     /// The dead time one configuration change costs, in s.
     pub fn setup_time(&self) -> R {
         self.setup_time
+    }
+
+    /// The fringe at mid-fringe, where the read-out `½(1 − C cos Δφ)` with `Δφ = k_eff g T²`
+    /// moves with acceleration at its steepest: the operating point ½ and the slope
+    /// `C · k_eff · T² / 2` per m/s².
+    pub fn fringe(&self) -> Fringe<R> {
+        let two = R::one() + R::one();
+        Fringe::at(
+            R::one() / two,
+            self.contrast * self.k_eff * self.interrogation_time * self.interrogation_time / two,
+        )
     }
 }
 

@@ -7,16 +7,24 @@
 
 //! The control stage: what `fork` hands a world, the refusal of an empty fork, `compare` on the
 //! structural path, the mechanism path on each world's own plant, the baseline that refuses
-//! candidates before the plan, and the shot budget every observation draws from.
+//! candidates before the plan, the shot budget every observation draws from, and configured
+//! experiments planned, predicted and observed against their evidence.
 
 use deep_causality::utils_test::test_utils;
 use deep_causality::{BaseCausaloid, CausableGraph, CausaloidGraph};
+use deep_causality_context::TimeScale;
 use deep_causality_haft::Either;
 use deep_causality_num_complex::Complex;
+use deep_causality_quantum::utils_tests::{
+    CROSSTALK_Q1, CROSSTALK_Q2, CrosstalkModel, CrosstalkSetting, crosstalk_candidates,
+};
 use deep_causality_quantum::{
-    Channel, CheckItem, CommutatorTolerance, Experiment, FactorSupports, Hypothesis, Mechanisms,
-    MinCostCover, Observable, PlantSubject, ProcessFactors, QclBuilder, QuantumErrorEnum,
-    QuantumPlant, QubitOperator, Spec,
+    Channel, CheckItem, CommutatorTolerance, ConfiguredExperiment, CountHistogram,
+    EnvironmentReading, EvidenceSource, Experiment, FactorSupports, Fringe, Hypothesis,
+    InterferometerConfiguration, InterferometerContext, InterferometerModel, Mechanisms,
+    MinCostCover, Observable, PlantSubject, ProcessFactors, Projection, QclBuilder, QuantumError,
+    QuantumErrorEnum, QuantumPlant, QubitOperator, Response, ResponseModel, ShotHistogram, Spec,
+    WaveVector, instrument_configuration, interferometer_context, record_environment,
 };
 use deep_causality_tensor::CausalTensor;
 
@@ -906,4 +914,402 @@ fn test_the_evidence_seed_selects_the_draws() {
     };
     assert_eq!(read(1, 7), read(2, 7), "the run seed is not the draw seed");
     assert_ne!(read(1, 7), read(1, 8), "the evidence seed is");
+}
+
+// ---------------------------------------------------------------------------
+// Configured experiments: design_with → observe_experiment → fork → predict_with
+// ---------------------------------------------------------------------------
+
+type Crosstalk = ConfiguredExperiment<f64, CrosstalkSetting>;
+
+/// The crosstalk family: passive, hold Q1 and read Q2, hold Q2 and read Q1, 1024 shots each.
+fn crosstalk_experiments() -> [Crosstalk; 3] {
+    let e = |name: &str, setting| ConfiguredExperiment::new(name, 1.0, 1024, setting, 0).unwrap();
+    [
+        e(
+            "E0 passive",
+            CrosstalkSetting::Passive { read: CROSSTALK_Q2 },
+        ),
+        e(
+            "E1 hold Q1",
+            CrosstalkSetting::Hold {
+                node: CROSSTALK_Q1,
+                read: CROSSTALK_Q2,
+            },
+        ),
+        e(
+            "E2 hold Q2",
+            CrosstalkSetting::Hold {
+                node: CROSSTALK_Q2,
+                read: CROSSTALK_Q1,
+            },
+        ),
+    ]
+}
+
+/// The two-qubit plant in `|00⟩` with "qubit 2 excited", screened over the three candidates.
+fn crosstalk_screen() -> deep_causality_quantum::Screened<
+    f64,
+    Count,
+    PlantSubject<f64, 4, deep_causality_quantum::Structural>,
+> {
+    let zero = c(0.0);
+    let plant =
+        QuantumPlant::from_ket(&CausalTensor::from_slice(&[c(1.0), zero, zero, zero], &[4]))
+            .unwrap();
+    let e2 = Observable::new(
+        "e2",
+        Projection::<f64, 4>::new(mat(
+            vec![
+                zero,
+                zero,
+                zero,
+                zero,
+                zero,
+                c(1.0),
+                zero,
+                zero,
+                zero,
+                zero,
+                zero,
+                zero,
+                zero,
+                zero,
+                zero,
+                c(1.0),
+            ],
+            4,
+        ))
+        .unwrap(),
+    );
+    let cfg = QclBuilder::config::<f64, Count>()
+        .over_plant(plant, &[e2])
+        .candidates(&crosstalk_candidates().unwrap())
+        .seed(20_260_821)
+        .build()
+        .unwrap();
+    QclBuilder::validate(&cfg)
+        .check_markov(&CommutatorTolerance::default())
+        .finalize()
+        .unwrap()
+}
+
+/// Plan, observe E2 from `source`, then predict, compare and adjudicate.
+fn run_crosstalk(
+    source: &EvidenceSource<f64>,
+) -> deep_causality_quantum::ControlReport<f64, Count, 4> {
+    let screened = crosstalk_screen();
+    let exps = crosstalk_experiments();
+    QclBuilder::control::<f64, Count, 4, _>(&screened)
+        .design_with(&CrosstalkModel, &exps, MinCostCover::new(5.0))
+        .observe_experiment(&CrosstalkModel, &exps[2], source)
+        .fork()
+        .predict_with(&CrosstalkModel, &exps[2])
+        .compare(3.0)
+        .adjudicate(5.0)
+        .finalize()
+        .unwrap()
+}
+
+#[test]
+fn test_a_configured_plan_runs_against_simulated_evidence_and_names_the_truth() {
+    let [h1, ..] = crosstalk_candidates().unwrap();
+    let report = run_crosstalk(&EvidenceSource::Simulated(h1));
+
+    // The plan: E2 separates H1 from both rivals, and E0 or E1 adds H2 against H3.
+    let plan = report.plan.as_ref().unwrap();
+    assert!(plan.is_complete());
+    assert_eq!(plan.total_cost(), 2.0);
+    assert!(plan.entries().iter().any(|e| e.name == "E2 hold Q2"));
+    assert_eq!(report.ledger.cost(), 2.0);
+
+    // One observation, recorded with its experiment, shots and counts; a setting has no context.
+    assert_eq!(report.observations.len(), 1);
+    let o = &report.observations[0];
+    assert_eq!(o.experiment(), "E2 hold Q2");
+    assert_eq!(o.shots(), 1024);
+    assert_eq!(o.counts().map(|h| h.total()), Some(1024));
+    assert_eq!(o.context(), None);
+    assert_eq!(
+        (report.ledger.experiments(), report.ledger.shots()),
+        (1, 1024)
+    );
+
+    // Each world's prediction is its model's, counted once; the truth survives.
+    let predictions: Vec<f64> = report
+        .worlds
+        .iter()
+        .map(|w| w.prediction().unwrap())
+        .collect();
+    for (p, want) in predictions.iter().zip([0.1, 0.05, 0.05]) {
+        assert!((p - want).abs() < 1e-12, "{predictions:?}");
+    }
+    for w in &report.worlds {
+        assert_eq!((w.ledger().predictions(), w.ledger().experiments()), (1, 1));
+    }
+    match &report.adjudication.as_ref().unwrap().outcome {
+        Either::Left(s) => assert_eq!(s.name, "H1 Q1->Q2"),
+        other => panic!("expected H1 to survive, got {other:?}"),
+    }
+}
+
+#[test]
+fn test_recorded_counts_reproduce_the_simulated_verdict() {
+    let [h1, ..] = crosstalk_candidates().unwrap();
+    let simulated = run_crosstalk(&EvidenceSource::Simulated(h1));
+    let counts = simulated.observations[0].counts().unwrap().clone();
+    let recorded = run_crosstalk(&EvidenceSource::Recorded(counts));
+    assert_eq!(recorded.ledger, simulated.ledger);
+    for (r, s) in recorded.worlds.iter().zip(&simulated.worlds) {
+        assert_eq!(r.verdict(), s.verdict(), "{}", r.name());
+        assert_eq!(r.read_out(), s.read_out());
+    }
+    assert_eq!(
+        recorded.adjudication.unwrap().outcome,
+        simulated.adjudication.unwrap().outcome
+    );
+    assert_eq!(
+        recorded.observations[0].read_out(),
+        simulated.observations[0].read_out()
+    );
+}
+
+/// The qubit's response to an interferometer context: the wave vector pointing down flips the
+/// read-out, up leaves it.
+struct KReversal;
+
+impl ResponseModel<f64, InterferometerContext<f64>> for KReversal {
+    fn respond(
+        &self,
+        _: &Hypothesis<f64>,
+        context: &InterferometerContext<f64>,
+    ) -> Result<Response<f64>, QuantumError> {
+        let u = match instrument_configuration(context)?.wave_vector() {
+            WaveVector::Up => QubitOperator::identity(),
+            WaveVector::Down => QubitOperator::pauli_x(),
+        };
+        Ok(Response::Channel(Channel::unitary(&u)?))
+    }
+}
+
+fn gravimeter(wave_vector: WaveVector) -> InterferometerContext<f64> {
+    let model = InterferometerModel::new(1.6106e7, 0.1, 0.5, 2.4e-7, 0.5, 1000.0, 30.0).unwrap();
+    let configuration = InterferometerConfiguration::new(1.0e-5, 2.0e-6, 1.5708e5)
+        .unwrap()
+        .with_wave_vector(wave_vector);
+    let mut context = interferometer_context(1, "gravimeter", model, configuration).unwrap();
+    record_environment(
+        &mut context,
+        0,
+        TimeScale::Second,
+        EnvironmentReading::new(1.2e-6, 296.15, 4.8e-5).unwrap(),
+    )
+    .unwrap();
+    context
+}
+
+fn kreversal_config(
+    p: f64,
+) -> deep_causality_quantum::Config<f64, Count, PlantSubject<f64, 2, Mechanisms>> {
+    QclBuilder::config::<f64, Count>()
+        .over_plant(plant_with_population(p), &[excited()])
+        .mechanisms(&[
+            mechanism("keep", QubitOperator::identity()),
+            mechanism("flip", QubitOperator::pauli_x()),
+        ])
+        .seed(9)
+        .build()
+        .unwrap()
+}
+
+#[test]
+fn test_an_observation_records_the_context_it_ran_in() {
+    let context = gravimeter(WaveVector::Down);
+    let e = ConfiguredExperiment::new("E1 k-down", 1.0, 1024, context.clone(), 0).unwrap();
+    let report = QclBuilder::control::<f64, Count, 2, _>(&kreversal_config(0.2))
+        .observe_experiment(
+            &KReversal,
+            &e,
+            &EvidenceSource::Simulated(mechanism("keep", QubitOperator::identity())),
+        )
+        .finalize()
+        .unwrap();
+    let o = &report.observations[0];
+    assert_eq!(o.context(), Some(&context.snapshot().unwrap()));
+    // k reversed flips the plant's 0.2 to 0.8; 1024 shots put it within 0.05.
+    assert!(
+        (o.read_out().estimate() - 0.8).abs() < 0.05,
+        "{}",
+        o.read_out().estimate()
+    );
+}
+
+#[test]
+fn test_a_mechanism_truth_draws_what_observe_draws_on_its_plant() {
+    // The bare plant as the truth under k up: the same state `observe` samples, at the same seed.
+    let cfg = kreversal_config(0.3);
+    let up = ConfiguredExperiment::new("E0 k-up", 1.0, 512, gravimeter(WaveVector::Up), 0).unwrap();
+    let bare = EvidenceSource::Simulated(mechanism("bare", QubitOperator::identity()));
+    let observed = QclBuilder::control::<f64, Count, 2, _>(&cfg)
+        .observe(0, 512)
+        .fork()
+        .predict(0)
+        .compare(3.0)
+        .finalize()
+        .unwrap();
+    let configured = QclBuilder::control::<f64, Count, 2, _>(&cfg)
+        .observe_experiment(&KReversal, &up, &bare)
+        .fork()
+        .predict(0)
+        .compare(3.0)
+        .finalize()
+        .unwrap();
+    for (a, b) in observed.worlds.iter().zip(&configured.worlds) {
+        assert_eq!(a.verdict(), b.verdict(), "{}", a.name());
+    }
+    assert_eq!(observed.ledger, configured.ledger);
+}
+
+#[test]
+fn test_a_published_value_enters_as_effective_draws() {
+    let fringe = Fringe::new(0.5, 40_265.0).unwrap();
+    let draws = fringe.effective_draws(-5.0e-8, 2.4e-7).unwrap();
+    let e = ConfiguredExperiment::new("published", 0.0, 1, gravimeter(WaveVector::Up), 0).unwrap();
+    let report = QclBuilder::control::<f64, Count, 2, _>(&kreversal_config(0.5))
+        .observe_experiment(&KReversal, &e, &EvidenceSource::Published(draws))
+        .finalize()
+        .unwrap();
+    let o = &report.observations[0];
+    assert_eq!(o.read_out().estimate(), draws.probability());
+    assert_eq!(o.read_out().standard_error(), draws.standard_error());
+    assert_eq!(o.shots(), draws.draws().round() as u64);
+    assert_eq!(o.counts(), None);
+    assert_eq!(report.ledger.shots(), o.shots());
+}
+
+#[test]
+fn test_observe_experiment_runs_on_the_root_before_the_fork() {
+    let exps = crosstalk_experiments();
+    let [h1, ..] = crosstalk_candidates().unwrap();
+    let source = EvidenceSource::Simulated(h1);
+    let msg = calculation_message(
+        QclBuilder::control::<f64, Count, 4, _>(&crosstalk_screen())
+            .fork()
+            .observe_experiment(&CrosstalkModel, &exps[2], &source)
+            .finalize()
+            .unwrap_err(),
+    );
+    assert!(msg.contains("before fork"), "{msg}");
+    let msg = calculation_message(
+        QclBuilder::control::<f64, Count, 4, _>(&crosstalk_screen())
+            .predict_with(&CrosstalkModel, &exps[2])
+            .finalize()
+            .unwrap_err(),
+    );
+    assert!(msg.contains("fork first"), "{msg}");
+}
+
+#[test]
+fn test_a_pending_baseline_comes_before_a_configured_experiment() {
+    let cfg = QclBuilder::config::<f64, Count>()
+        .over_plant(plant_with_population(0.2), &[excited()])
+        .mechanisms(&[
+            mechanism("keep", QubitOperator::identity()),
+            mechanism("flip", QubitOperator::pauli_x()),
+        ])
+        .baseline(Experiment::new("E0", 1.0, 64, vec![0.2, 0.8]).unwrap())
+        .build()
+        .unwrap();
+    let e = ConfiguredExperiment::new("k", 1.0, 64, gravimeter(WaveVector::Up), 0).unwrap();
+    let source = EvidenceSource::Simulated(mechanism("keep", QubitOperator::identity()));
+    let control = || QclBuilder::control::<f64, Count, 2, _>(&cfg);
+    let msg = calculation_message(
+        control()
+            .observe_experiment(&KReversal, &e, &source)
+            .finalize()
+            .unwrap_err(),
+    );
+    assert!(msg.contains("before observe_experiment"), "{msg}");
+    let msg = calculation_message(
+        control()
+            .design_with(&KReversal, std::slice::from_ref(&e), MinCostCover::new(5.0))
+            .finalize()
+            .unwrap_err(),
+    );
+    assert!(msg.contains("before design"), "{msg}");
+}
+
+/// The crosstalk model with its instrument doubled, so every prediction is twice the model's.
+struct Doubled;
+
+impl ResponseModel<f64, CrosstalkSetting> for Doubled {
+    fn respond(
+        &self,
+        candidate: &Hypothesis<f64>,
+        setting: &CrosstalkSetting,
+    ) -> Result<Response<f64>, QuantumError> {
+        match CrosstalkModel.respond(candidate, setting)? {
+            Response::Intervention {
+                factors,
+                instrument,
+            } => Ok(Response::Intervention {
+                factors,
+                instrument: instrument * Complex::new(20.0, 0.0),
+            }),
+            channel => Ok(channel),
+        }
+    }
+}
+
+#[test]
+fn test_a_prediction_that_is_not_a_probability_is_refused() {
+    let exps = crosstalk_experiments();
+    // H1 holding Q2 reads 0.1 under the model, 2.0 doubled twenty-fold.
+    let [h1, ..] = crosstalk_candidates().unwrap();
+    let err = QclBuilder::control::<f64, Count, 4, _>(&crosstalk_screen())
+        .observe_experiment(&Doubled, &exps[2], &EvidenceSource::Simulated(h1))
+        .finalize()
+        .unwrap_err();
+    match err.0 {
+        QuantumErrorEnum::NormalizationError(msg) => {
+            assert!(msg.contains("truth 'H1 Q1->Q2'"), "{msg}")
+        }
+        other => panic!("expected NormalizationError, got {other:?}"),
+    }
+    let err = QclBuilder::control::<f64, Count, 4, _>(&crosstalk_screen())
+        .design_with(&Doubled, &exps, MinCostCover::new(5.0))
+        .finalize()
+        .unwrap_err();
+    assert!(matches!(err.0, QuantumErrorEnum::NormalizationError(_)));
+}
+
+#[test]
+fn test_an_empty_recording_is_refused_and_records_nothing() {
+    let exps = crosstalk_experiments();
+    let empty = CountHistogram::new(1).unwrap();
+    let err = QclBuilder::control::<f64, Count, 4, _>(&crosstalk_screen())
+        .observe_experiment(&CrosstalkModel, &exps[0], &EvidenceSource::Recorded(empty))
+        .finalize()
+        .unwrap_err();
+    assert!(matches!(err.0, QuantumErrorEnum::NormalizationError(_)));
+}
+
+#[cfg(feature = "qpu")]
+#[test]
+fn test_a_configured_experiment_draws_from_the_budget() {
+    let cfg = QclBuilder::config::<f64, Count>()
+        .over_plant(plant_with_population(0.2), &[excited()])
+        .mechanisms(&[mechanism("keep", QubitOperator::identity())])
+        .evidence(deep_causality_quantum::Evidence::shots(1000))
+        .build()
+        .unwrap();
+    let e = ConfiguredExperiment::new("k", 1.0, 1024, gravimeter(WaveVector::Up), 0).unwrap();
+    let source = EvidenceSource::Simulated(mechanism("keep", QubitOperator::identity()));
+    let msg = calculation_message(
+        QclBuilder::control::<f64, Count, 2, _>(&cfg)
+            .observe_experiment(&KReversal, &e, &source)
+            .finalize()
+            .unwrap_err(),
+    );
+    assert!(msg.contains("overdrawn"), "{msg}");
 }
