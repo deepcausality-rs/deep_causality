@@ -4,7 +4,8 @@
  */
 
 use deep_causality::*;
-use model::{AGE, INITIAL_BP, PatientContext};
+use deep_causality_num::lift;
+use model::{AGE, FloatType, INITIAL_BP, PatientContext};
 use std::error::Error;
 use std::sync::{Arc, RwLock};
 
@@ -30,7 +31,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         .collect::<Result<Vec<_>, _>>()?;
     let subgroup: Vec<&PatientContext> = ages
         .into_iter()
-        .filter(|&(_, age)| age > 65.0)
+        .filter(|&(_, age)| age > lift::<FloatType>(65.0))
         .map(|(ctx, _)| ctx)
         .collect();
     println!(
@@ -39,7 +40,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     );
 
     // 3. Run parallel counterfactuals for the subgroup
-    let mut ites: Vec<f64> = Vec::new(); // To store Individual Treatment Effects
+    let mut ites: Vec<FloatType> = Vec::new(); // To store Individual Treatment Effects
 
     for patient_context in subgroup {
         let initial_bp = model::read(patient_context, INITIAL_BP)?;
@@ -66,7 +67,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
         // --- Evaluate Potential Outcomes ---
         // The input effect is the patient's initial BP.
-        let input_effect: PropagatingEffect<NumericalValue> = PropagatingEffect::pure(initial_bp);
+        let input_effect: PropagatingEffect<FloatType> = PropagatingEffect::pure(initial_bp);
 
         let y1_res = treatment_causaloid.evaluate(&input_effect);
         let y1_effect = model::value_of(&y1_res)?;
@@ -84,7 +85,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     // 4. Aggregate and Conclude
     if !ites.is_empty() {
-        let cate: f64 = deep_causality_stats::mean(&ites)?;
+        let cate: FloatType = deep_causality_stats::mean(&ites)?;
         println!("\n--- CATE Calculation Result ---");
         println!(
             "The Conditional Average Treatment Effect (CATE) for patients over 65 is: {:.2}",

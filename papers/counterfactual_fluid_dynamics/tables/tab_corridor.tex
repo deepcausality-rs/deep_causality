@@ -1,0 +1,36 @@
+% Data: examples/avionics_examples/cfd/plasma_blackout/corridor/output.txt (f64, 45.9 s, Apple M3 Max).
+% The 0-degree miss of 30.000 m is set by construction (AIM_CROSS_RANGE_M in corridor/constants.rs).
+% The 40-degree command exceeds the 28.6-degree envelope cap and flies clamped.
+\begin{table}[t]
+\centering
+\caption{\placeholder{caption: bank-angle branches from one onset; miss and peak electron density}}
+\label{tab:corridor}
+\footnotesize
+\begin{tabular}{@{}lrrr@{}}
+\toprule
+Round & Bank command (deg) & Miss, trajectory (m) & Peak $n_e$ (\si{m^{-3}}) \\
+\midrule
+coarse & 0.0  & 30.000 & \num{7.943e19} \\
+coarse & 5.0  & 16.463 & \num{7.944e19} \\
+coarse & 10.0 & 3.818  & \num{7.946e19} \\
+coarse & 15.0 & 11.516 & \num{7.951e19} \\
+coarse & 20.0 & 24.988 & \num{7.958e19} \\
+coarse & 40.0$^{a}$ & 48.426 & \num{7.974e19} \\
+\midrule
+fine & 7.5  & 9.800  & \num{7.945e19} \\
+fine & 8.0  & 8.501  & \num{7.945e19} \\
+fine & 8.5  & 7.227  & \num{7.945e19} \\
+fine & 9.0  & 5.994  & \num{7.946e19} \\
+fine & 9.5  & 4.835  & \num{7.946e19} \\
+fine & 10.0 & 3.818  & \num{7.946e19} \\
+fine & 10.5 & 3.085  & \num{7.947e19} \\
+fine & 11.0 & 2.865  & \num{7.947e19} \\
+fine & 11.5 & 3.264  & \num{7.948e19} \\
+fine & 12.0 & 4.103  & \num{7.948e19} \\
+fine & 12.5 & 5.174  & \num{7.949e19} \\
+\bottomrule
+\end{tabular}
+
+\smallskip
+$^{a}$ Above the \SI{28.6}{\degree} envelope cap; the branch flies the clamped bank.
+\end{table}

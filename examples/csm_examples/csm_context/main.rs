@@ -12,7 +12,7 @@ use std::thread;
 use std::time::Duration;
 
 // Define an ID for the server state in the CSM
-const SERVER_HIGH_LOAD_STATE_ID: IdentificationValue = 100;
+const SERVER_HIGH_LOAD_STATE_ID: usize = 100;
 
 fn main() -> Result<(), Box<dyn Error>> {
     println!("--- Server Sensor Fusion Example with Context ---");
@@ -39,7 +39,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
         // Evaluate the CSM state. Data is in the context, so we pass a default effect.
         let input_effect: PropagatingEffect<f64> = PropagatingEffect::pure(0.0);
-        server_csm.eval_single_state(SERVER_HIGH_LOAD_STATE_ID as usize, &input_effect)?;
+        server_csm.eval_single_state(SERVER_HIGH_LOAD_STATE_ID, &input_effect)?;
 
         // Pause for a moment to simulate a real-time loop.
         thread::sleep(Duration::from_millis(150));

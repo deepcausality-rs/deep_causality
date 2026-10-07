@@ -8,7 +8,7 @@ use crate::model::ScmState;
 use deep_causality::*;
 use std::error::Error;
 
-pub fn run_rung1_association(_explain: bool) -> Result<(), Box<dyn Error>> {
+pub fn run_rung1_association() -> Result<(), Box<dyn Error>> {
     println!("--- Rung 1: Association ---");
     println!("Demonstrating observational inference: Given smoking, what is the cancer risk?");
 

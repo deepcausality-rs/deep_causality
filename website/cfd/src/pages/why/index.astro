@@ -25,10 +25,10 @@ const couplingCode = `Coupling::between_steps()
     .then(CyberneticCorrect::new(SafetyEnvelope::new(q_max, g_max, bank_max)))
     .build()`;
 
-const regimeLog = `regime -> slip (GNSS-available), Kn=0.07829109848665225
-regime -> slip (GNSS-denied), Kn=0.012690837165407727
-regime -> continuum (GNSS-denied), Kn=0.00993838892165156
-regime -> continuum (GNSS-available), Kn=0.0002551442196046344`;
+const regimeLog = `regime -> slip (GNSS-available), Kn=0.0771427732055074
+regime -> continuum (GNSS-available), Kn=0.009969942075728244
+regime -> continuum (GNSS-denied), Kn=0.008711413345447542
+regime -> continuum (GNSS-available), Kn=0.00014839521823701343`;
 
 const precisionCode = `/// Working precision.
 pub type FloatType = f64; // or f32, or deep_causality_num::Float106
@@ -43,7 +43,12 @@ const studyCode = `let table = CfdFlow::study("weather-dispersion table")
     .baseline(model::standard_day)
     .alternate(model::weather_world)
     .ensemble(constants::MC_DRAWS)
-    .couple(|case, draw| world::corridor_coupling(model::bias_departure(case.d_temp), draw))
+    .couple(|case, draw| {
+        trace::traced(world::corridor_coupling(
+            model::bias_departure(case.d_temp),
+            draw,
+        ))
+    })
     .march_for(constants::STEPS, world::initial_field)
     .reduce_ensemble(model::world_row)
     .gates(model::weather_gates())
@@ -89,7 +94,7 @@ const studyCode = `let table = CfdFlow::study("weather-dispersion table")
     <ul class="nums">
       <li>Fork sharing is structural and checked by a gate (a pass or fail check on a result): branches enter by reference, with no tensor copied at fork time. Continuing a branch costs about the same as an unforked march; coasting is cheaper at 0.66×.</li>
       <li>Bank-angle corridor (the bank angle is the roll that steers the vehicle’s lift sideways): seventeen branches, six coarse and eleven fine, with the best committed mid-descent.</li>
-      <li>Plasma retropropulsion (an engine fired against the flow to slow a descent): across the five mid-burn branches, the velocity shed departs a frozen-drag prediction by up to 139.4 m/s. The drag change is the cited Jarvinen-Adams correlation, not the simulated plume.</li>
+      <li>Plasma retropropulsion (an engine fired against the flow to slow a descent): across the five mid-burn branches, the velocity shed departs a frozen-drag prediction by up to 179.9 m/s. The drag change is the cited Jarvinen-Adams correlation, not the simulated plume.</li>
     </ul>
 
     <p class="src">
@@ -138,9 +143,9 @@ const studyCode = `let table = CfdFlow::study("weather-dispersion table")
     </p>
 
     <ul class="nums">
-      <li>RAM-C II (a reentry flight experiment) stagnation streamline, ~71 km, Mach 25: the uncalibrated finite-rate network, run as prediction rather than fit, lands at 2.251e19 m⁻³ against the ~1e19 m⁻³ flight anchor, +0.35 decades (a decade is a factor of ten) inside a ±0.70 band.</li>
-      <li>The closed-form Park-2T controller (a two-temperature relaxation model) lands at 5.31e17 m⁻³, 1.27 decades below the anchor after the N₂–N₂ reduced-mass correction; the offset is reported, not tuned away.</li>
-      <li>Plasma frequency ω_p 4.111e10 rad/s against the 9.40e9 rad/s comms band; blackout classified true.</li>
+      <li>RAM-C II (a reentry flight experiment) stagnation streamline at the cited 71 km freestream, Mach 25.9: the uncalibrated finite-rate network lands at 1.643e19 m⁻³ against the flight's 9.93e18 m⁻³ at 71.93 km, +0.22 decades (a decade is a factor of ten) inside a ±0.70 allowance. At 61 km it meets the flight's lower bound.</li>
+      <li>The closed-form Park-2T controller (a two-temperature relaxation model) lands at 1.070e17 m⁻³, 1.97 decades below the anchor with the N₂–N₂ reduced mass; the offset is reported, not tuned away.</li>
+      <li>Plasma frequency ω_p 1.845e10 rad/s against the 9.40e9 rad/s comms band; blackout classified true.</li>
       <li>Validated incompressible envelope Re 100 to 1600; the wake is reported and never gated.</li>
     </ul>
 
@@ -297,7 +302,7 @@ const studyCode = `let table = CfdFlow::study("weather-dispersion table")
     </p>
 
     <ul class="nums">
-      <li>Plasma retropropulsion descent, blackout exit to touchdown: sixteen gates in 337.5 s on {MACHINE}.</li>
+      <li>Plasma retropropulsion descent, blackout exit to touchdown: sixteen gates in 335.3 s on {MACHINE}.</li>
       <li>Weather-dispersion table: six atmospheres declared as differences from one baseline, each an ensemble of receiver-noise draws, flown concurrently to one gated table.</li>
       <li>Branch fan-outs run on scoped threads and produce bits identical to the sequential run.</li>
     </ul>

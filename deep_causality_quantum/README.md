@@ -108,6 +108,7 @@ The emergent seam adds no network or async dependency; it is a typed boundary, n
 | `QuantumOps<R>` / `QuantumGates` | Dirac-notation state operations and the standard gate interface |
 | `Operator<R>` / `Gate<R>` | Aliases for `HilbertState<R>` (from `deep_causality_multivector`) |
 | `QuantumCircuit` / `GateOp` / `SimQpu` / `QpuSampler` | The reified circuit (`QuantumCircuit`, `GateOp`; always compiled) and the `qpu`-feature emergent seam (`SimQpu`, `QpuSampler`) |
+| `InstrumentContext<P, R>` / `InterferometerContext<R>` | An instrument's context keyed by contextoid id; for an atom interferometer, its model, configuration and time-stamped environment readings (`qcm`) |
 
 ## The operator layer
 
@@ -205,7 +206,7 @@ CI builds every supported bare-metal configuration for `thumbv7em-none-eabihf`.
 
 | Feature | Default | Description |
 |---|:---:|---|
-| `qcm` | ✓ | The quantum causal-model slice: `CausalStructure`, the Markov freeze check, and the C₃-exclusion faithfulness check. Pulls in `deep_causality`; implies `std`. |
+| `qcm` | ✓ | The quantum causal-model slice: `CausalStructure`, the Markov freeze check, the C₃-exclusion faithfulness check, the QCL pipeline and the instrument context. Pulls in `deep_causality`, `deep_causality_context` and `deep_causality_context_store`; implies `std`. |
 | `dem` | ✓ | The Stim detector-error-model text constructor of `DemModel`. Implies `qcm`. |
 | `qpu` | | The emergent QPU seam: `QpuSampler` / the shots→`Uncertain` bridges / `qpu_effect` / the in-process `SimQpu`. Adds no network or async dependency. |
 

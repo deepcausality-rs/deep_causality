@@ -25,7 +25,7 @@ const stages = (await getCollection('tutorial')).sort(
   (a, b) => a.data.stage - b.data.stage
 );
 
-// Each runtime string opens with the measured seconds ("44.4 s against a 600 s budget").
+// Each runtime string opens with the measured seconds ("45.9 s against a 600 s budget").
 const seconds = stages.map((s) => parseFloat(s.data.runtime));
 const totalSeconds = seconds.reduce((a, b) => a + b, 0);
 const totalMinutes = (totalSeconds / 60).toFixed(1);

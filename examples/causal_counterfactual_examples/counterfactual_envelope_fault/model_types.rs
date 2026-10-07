@@ -5,8 +5,6 @@
 
 //! Domain types for the flight-envelope fault analysis chain.
 
-#![allow(dead_code)] // Domain fields kept for narrative clarity even if not all are read.
-
 use deep_causality_context::{Context, ContextoidId, Data, NoSpace, NoSpaceTime, NoTime};
 use deep_causality_core::{CausalityError, PropagatingProcess};
 

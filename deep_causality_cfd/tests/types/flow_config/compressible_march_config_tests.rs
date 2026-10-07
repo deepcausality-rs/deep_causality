@@ -87,11 +87,46 @@ fn schedule_interpolates_and_clamps() {
     assert_eq!(s.sample(10_000.0).n_tot, 8.0e23);
     assert_eq!(s.sample(200_000.0).n_tot, 7.0e19);
 
-    // Midpoint of the 30-61 km segment interpolates linearly.
+    // Midpoint of the 30-61 km segment: number density interpolates in its logarithm (the
+    // geometric mean of the rows), temperature linearly.
     let mid = s.sample(45_500.0);
-    let expected = 0.5 * (8.0e23 + 1.3e21);
+    let expected = (8.0e23_f64 * 1.3e21).sqrt();
     assert!((mid.n_tot - expected).abs() / expected < 1e-12);
     assert!((mid.temperature - 238.0).abs() < 1e-9);
+    assert!((mid.sound_speed - 309.0).abs() < 1e-9);
+}
+
+#[test]
+fn schedule_reproduces_an_exponential_layer_between_rows() {
+    // An isothermal hydrostatic layer: n falls as exp(-z/H). Two rows two scale heights apart
+    // must sample to exactly one e-fold at their midpoint; a linear interpolant would return
+    // (1 + e^-2)/2 = 0.568 n0 there, 54 % above e^-1 = 0.368 n0.
+    let n0 = 2.0e25_f64;
+    let s = DescentSchedule::new(
+        vec![
+            AtmosphereRow {
+                altitude_m: 0.0,
+                n_tot: n0,
+                temperature: 250.0,
+                sound_speed: 317.0,
+            },
+            AtmosphereRow {
+                altitude_m: 14_000.0,
+                n_tot: n0 * (-2.0_f64).exp(),
+                temperature: 250.0,
+                sound_speed: 317.0,
+            },
+        ],
+        1.1,
+    )
+    .unwrap();
+    let mid = s.sample(7_000.0);
+    let expected = n0 * (-1.0_f64).exp();
+    assert!((mid.n_tot - expected).abs() / expected < 1e-12);
+    let quarter = s.sample(3_500.0);
+    let expected_q = n0 * (-0.5_f64).exp();
+    assert!((quarter.n_tot - expected_q).abs() / expected_q < 1e-12);
+    assert!((mid.temperature - 250.0).abs() < 1e-12);
 }
 
 #[test]

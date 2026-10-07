@@ -33,26 +33,28 @@ const SHIPPING_ACTIVITY_IDS: Range<ContextoidId> = 12..16;
 
 pub type GrangerCausaloid = Causaloid<f64, f64, (), Arc<RwLock<GrangerContext>>>;
 
+/// The predictor over the factual context.
 pub(crate) fn get_factual_causaloid(
     predictor_id: IdentificationValue,
-) -> Result<GrangerCausaloid, ContextIndexError> {
+    factual_context: GrangerContext,
+) -> GrangerCausaloid {
     let predictor_description = "Predicts shipping activity based on factual historical data";
-    let factual_context = Arc::new(RwLock::new(get_context_with_data()?));
 
-    Ok(Causaloid::new_with_context(
+    Causaloid::new_with_context(
         predictor_id,
         shipping_predictor_logic,
-        Arc::clone(&factual_context),
+        Arc::new(RwLock::new(factual_context)),
         predictor_description,
-    ))
+    )
 }
 
+/// The predictor over the counterfactual context derived from `factual_context`.
 pub(crate) fn get_counterfactual_causaloid(
     predictor_id: IdentificationValue,
+    factual_context: &GrangerContext,
 ) -> Result<GrangerCausaloid, ContextIndexError> {
-    let factual_context = get_context_with_data()?;
     let counterfactual_context =
-        Arc::new(RwLock::new(get_counterfactual_context(&factual_context)?));
+        Arc::new(RwLock::new(get_counterfactual_context(factual_context)?));
     let predictor_description =
         "Predicts shipping activity based on counterfactual historical data";
 

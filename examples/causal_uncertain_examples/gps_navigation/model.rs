@@ -5,26 +5,33 @@
 
 //! Route context and stage functions for the GPS-navigation `CausalFlow` chain.
 //!
-//! Each stage takes the previous stage's `Uncertain<f64>` directly, reads the route quantities it
-//! needs from the route context, propagates uncertainty through one physical transformation, prints
-//! the resulting statistics, and returns the next `Uncertain<f64>`. `CausalFlow` supplies the
-//! chain's plumbing, so no stage touches `CausalEffect` or re-lifts with `PropagatingEffect::pure`.
+//! Each stage takes the previous stage's `Uncertain<FloatType>` directly, reads the route
+//! quantities it needs from the route context, propagates uncertainty through one physical
+//! transformation, prints the resulting statistics, and returns the next `Uncertain<FloatType>`.
+//! `CausalFlow` supplies the chain's plumbing, so no stage touches `CausalEffect` or re-lifts with
+//! `PropagatingEffect::pure`.
 
 use deep_causality_context::{
     Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     NoSpace, NoSpaceTime, NoTime,
 };
 use deep_causality_core::CausalityError;
+use deep_causality_num::lift;
 use deep_causality_uncertain::{Uncertain, UncertainError};
 
 const SAMPLES: usize = 1000;
+
+/// The working precision of the example: every route quantity, distribution parameter and
+/// uncertain value is a `FloatType`.
+pub type FloatType = f64;
 
 /// The route, vehicle and trip facts the stages read, one `Data` contextoid per quantity. An
 /// uncertain quantity is held as the parameters of its distribution; the stage that reads it
 /// builds the distribution. The destination is two of those quantities, latitude and longitude,
 /// rather than a spatial node. The context holds no position, clock or event, so its spatial,
 /// temporal and spacetime slots are empty.
-pub type RouteContext = Context<Data<f64>, NoSpace<f64>, NoTime, NoSpaceTime<f64>>;
+pub type RouteContext =
+    Context<Data<FloatType>, NoSpace<FloatType>, NoTime, NoSpaceTime<FloatType>>;
 
 /// Contextoid id: destination latitude in degrees.
 pub const DESTINATION_LAT: ContextoidId = 1;
@@ -67,24 +74,24 @@ pub const ENOUGH_FUEL_PROBABILITY: ContextoidId = 18;
 /// The route: one `Data` contextoid per quantity, keyed by its contextoid id.
 pub fn route_context() -> Result<RouteContext, ContextIndexError> {
     let facts = [
-        (DESTINATION_LAT, 37.7849),   // ~1 mile north
-        (DESTINATION_LON, -122.4094), // ~1 mile east
-        (BASE_SPEED_MEAN, 35.0),
-        (BASE_SPEED_SD, 8.0),
-        (TRAFFIC_FACTOR_MIN, 0.6), // congestion drag
-        (TRAFFIC_FACTOR_MAX, 1.0),
-        (LATE_AFTER_MIN, 10.0),
-        (ALT_DISTANCE, 2.2),    // slightly longer
-        (ALT_SPEED_MEAN, 45.0), // highway
-        (ALT_SPEED_SD, 3.0),    // less variance
-        (TRIP_DISTANCE, 2.0),   // ~2 mi planned trip
-        (FUEL_EFFICIENCY_MEAN, 28.0),
-        (FUEL_EFFICIENCY_SD, 4.0),
-        (FUEL_ON_HAND_MIN, 0.8),
-        (FUEL_ON_HAND_MAX, 1.2),
-        (SAFE_FUEL_MIN, 0.5),
-        (SAFE_FUEL_MAX, 2.0),
-        (ENOUGH_FUEL_PROBABILITY, 0.8),
+        (DESTINATION_LAT, lift(37.7849)),   // ~1 mile north
+        (DESTINATION_LON, lift(-122.4094)), // ~1 mile east
+        (BASE_SPEED_MEAN, lift(35.0)),
+        (BASE_SPEED_SD, lift(8.0)),
+        (TRAFFIC_FACTOR_MIN, lift(0.6)), // congestion drag
+        (TRAFFIC_FACTOR_MAX, lift(1.0)),
+        (LATE_AFTER_MIN, lift(10.0)),
+        (ALT_DISTANCE, lift(2.2)),    // slightly longer
+        (ALT_SPEED_MEAN, lift(45.0)), // highway
+        (ALT_SPEED_SD, lift(3.0)),    // less variance
+        (TRIP_DISTANCE, lift(2.0)),   // ~2 mi planned trip
+        (FUEL_EFFICIENCY_MEAN, lift(28.0)),
+        (FUEL_EFFICIENCY_SD, lift(4.0)),
+        (FUEL_ON_HAND_MIN, lift(0.8)),
+        (FUEL_ON_HAND_MAX, lift(1.2)),
+        (SAFE_FUEL_MIN, lift(0.5)),
+        (SAFE_FUEL_MAX, lift(2.0)),
+        (ENOUGH_FUEL_PROBABILITY, lift(0.8)),
     ];
     let mut context = Context::with_capacity(1, "route", facts.len());
     for (id, value) in facts {
@@ -97,7 +104,7 @@ pub fn route_context() -> Result<RouteContext, ContextIndexError> {
 }
 
 /// Read the payload of the `Data` contextoid with contextoid id `id` out of the route context.
-pub fn read(context: &RouteContext, id: ContextoidId) -> Result<f64, CausalityError> {
+pub fn read(context: &RouteContext, id: ContextoidId) -> Result<FloatType, CausalityError> {
     context.get_data_by_id(id).ok_or_else(|| {
         CausalityError::MissingParameter(format!(
             "the route context holds no Datoid with contextoid id {id}"
@@ -113,8 +120,8 @@ fn sampling_error(error: UncertainError) -> CausalityError {
 /// Latitude/longitude pair carried as the chain's initial value.
 #[derive(Debug, Clone, Default)]
 pub struct Position {
-    pub lat: Uncertain<f64>,
-    pub lon: Uncertain<f64>,
+    pub lat: Uncertain<FloatType>,
+    pub lon: Uncertain<FloatType>,
 }
 
 /// Stage 1 — propagate position noise into distance (miles) to the destination in the route context.
@@ -122,13 +129,13 @@ pub fn distance_stage(
     start: Position,
     _state: &(),
     route: Option<&RouteContext>,
-) -> Result<Uncertain<f64>, CausalityError> {
+) -> Result<Uncertain<FloatType>, CausalityError> {
     let route = route.ok_or(CausalityError::MissingContext())?;
-    let lat_diff = Uncertain::<f64>::point(read(route, DESTINATION_LAT)?) + (-start.lat);
-    let lon_diff = Uncertain::<f64>::point(read(route, DESTINATION_LON)?) + (-start.lon);
+    let lat_diff = Uncertain::<FloatType>::point(read(route, DESTINATION_LAT)?) + (-start.lat);
+    let lon_diff = Uncertain::<FloatType>::point(read(route, DESTINATION_LON)?) + (-start.lon);
     let distance_sq = lat_diff.clone() * lat_diff + lon_diff.clone() * lon_diff;
     // sqrt of the squared coordinate diff, times ~69 mi per degree at this latitude.
-    let distance = distance_sq.map(|x| x.sqrt() * 69.0);
+    let distance = distance_sq.map(|x| x.sqrt() * lift::<FloatType>(69.0));
 
     println!("📍 [Stage 1] Distance");
     let mean = distance
@@ -138,10 +145,11 @@ pub fn distance_stage(
         .standard_deviation_from_entropy(SAMPLES)
         .map_err(sampling_error)?;
     println!("   mean: {mean:.3} mi, std: {std:.4} mi");
+    let half_width = lift::<FloatType>(1.96) * std;
     println!(
         "   95% CI: {:.3} – {:.3} mi",
-        mean - 1.96 * std,
-        mean + 1.96 * std
+        mean - half_width,
+        mean + half_width
     );
 
     Ok(distance)
@@ -149,10 +157,10 @@ pub fn distance_stage(
 
 /// Stage 2 — propagate distance and speed noise into a travel-time estimate (minutes).
 pub fn time_stage(
-    distance: Uncertain<f64>,
+    distance: Uncertain<FloatType>,
     _state: &(),
     route: Option<&RouteContext>,
-) -> Result<Uncertain<f64>, CausalityError> {
+) -> Result<Uncertain<FloatType>, CausalityError> {
     let route = route.ok_or(CausalityError::MissingContext())?;
     let base_speed = Uncertain::normal(read(route, BASE_SPEED_MEAN)?, read(route, BASE_SPEED_SD)?);
     let traffic_factor = Uncertain::uniform(
@@ -162,7 +170,7 @@ pub fn time_stage(
     let late_after = read(route, LATE_AFTER_MIN)?;
     let actual_speed = base_speed * traffic_factor;
     let travel_hours = distance.clone() / actual_speed;
-    let travel_minutes = travel_hours * Uncertain::<f64>::point(60.0);
+    let travel_minutes = travel_hours * Uncertain::<FloatType>::point(lift(60.0));
 
     println!("\n⏱️  [Stage 2] Travel time");
     let mean = travel_minutes
@@ -175,7 +183,7 @@ pub fn time_stage(
     let p_late = late
         .estimate_probability_from_entropy(SAMPLES)
         .map_err(sampling_error)?
-        * 100.0;
+        * lift::<FloatType>(100.0);
     println!("   mean: {mean:.1} min, std: {std:.1} min");
     println!("   P(>{late_after} min): {p_late:.1}%");
 
@@ -185,20 +193,20 @@ pub fn time_stage(
 
 /// Stage 3 — compare main-route time against a longer-but-steadier alternative.
 pub fn route_stage(
-    main_time: Uncertain<f64>,
+    main_time: Uncertain<FloatType>,
     _state: &(),
     route: Option<&RouteContext>,
-) -> Result<Uncertain<f64>, CausalityError> {
+) -> Result<Uncertain<FloatType>, CausalityError> {
     let route = route.ok_or(CausalityError::MissingContext())?;
-    let alt_distance = Uncertain::<f64>::point(read(route, ALT_DISTANCE)?);
+    let alt_distance = Uncertain::<FloatType>::point(read(route, ALT_DISTANCE)?);
     let alt_speed = Uncertain::normal(read(route, ALT_SPEED_MEAN)?, read(route, ALT_SPEED_SD)?);
-    let alt_time = alt_distance / alt_speed * Uncertain::<f64>::point(60.0);
+    let alt_time = alt_distance / alt_speed * Uncertain::<FloatType>::point(lift(60.0));
 
     let main_faster = main_time.lt_uncertain(&alt_time);
     let confidence = main_faster
         .estimate_probability_from_entropy(SAMPLES)
         .map_err(sampling_error)?
-        * 100.0;
+        * lift::<FloatType>(100.0);
 
     println!("\n🛣️  [Stage 3] Route decision");
     println!("   P(main faster than alt): {confidence:.1}%");
@@ -225,12 +233,12 @@ pub fn route_stage(
 /// chosen route time, which fuel does not use; the stage reads the planned-trip distance, fuel
 /// efficiency, fuel on hand, safe fuel range and required probability from the route context.
 pub fn fuel_stage(
-    _carried: Uncertain<f64>,
+    _carried: Uncertain<FloatType>,
     _state: &(),
     route: Option<&RouteContext>,
-) -> Result<Uncertain<f64>, CausalityError> {
+) -> Result<Uncertain<FloatType>, CausalityError> {
     let route = route.ok_or(CausalityError::MissingContext())?;
-    let distance = Uncertain::<f64>::point(read(route, TRIP_DISTANCE)?);
+    let distance = Uncertain::<FloatType>::point(read(route, TRIP_DISTANCE)?);
     let efficiency = Uncertain::normal(
         read(route, FUEL_EFFICIENCY_MEAN)?,
         read(route, FUEL_EFFICIENCY_SD)?,
@@ -250,7 +258,7 @@ pub fn fuel_stage(
     let p_enough = enough
         .estimate_probability_from_entropy(SAMPLES)
         .map_err(sampling_error)?
-        * 100.0;
+        * lift::<FloatType>(100.0);
     println!("   P(have enough fuel): {p_enough:.1}%");
 
     let safe_min = read(route, SAFE_FUEL_MIN)?;
@@ -259,14 +267,14 @@ pub fn fuel_stage(
     let p_safe = within_safe
         .estimate_probability_from_entropy(SAMPLES)
         .map_err(sampling_error)?
-        * 100.0;
+        * lift::<FloatType>(100.0);
     println!("   P(needed fuel in safe range {safe_min:.1}–{safe_max:.1} gal): {p_safe:.1}%");
 
     if enough
         .probability_exceeds_from_entropy(
             read(route, ENOUGH_FUEL_PROBABILITY)?,
-            0.95,
-            0.05,
+            lift(0.95),
+            lift(0.05),
             SAMPLES,
         )
         .map_err(sampling_error)?

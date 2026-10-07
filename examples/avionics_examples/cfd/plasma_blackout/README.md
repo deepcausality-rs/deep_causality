@@ -6,13 +6,13 @@
 
 # The Plasma-Blackout Family
 
-Three examples fly one reentry: a vehicle enters at Mach 25, its own shock layer ionizes into a plasma sheath that cuts
-every GNSS link, the vehicle navigates through the dark, and it comes back down under a retro burn. Each example consumes
-what the previous one produced, and the third closes the loop.
+Three examples fly one reentry: a vehicle enters at Mach 28, its own shock layer ionizes into a plasma sheath that cuts
+every GNSS link, the vehicle navigates through the dark, and it comes back down under a retro burn. The corridor starts
+the chain; each later example consumes what the earlier ones produced, and the third closes the loop.
 
 |   | Example                                | What it does                                                                                           | Consumes                | Produces                       |
 |---|----------------------------------------|--------------------------------------------------------------------------------------------------------|-------------------------|--------------------------------|
-| 1 | [corridor](corridor/README.md)         | Flies one continuous Mach-25 descent through blackout, forking bank-angle counterfactuals at the onset | —                       | the validated baseline descent |
+| 1 | [corridor](corridor/README.md)         | Flies one continuous Mach-28 descent through blackout, forking bank-angle counterfactuals at the onset | —                       | the validated baseline descent |
 | 2 | [weather](weather/README.md)           | Alternates that baseline into six weather worlds, flown concurrently, reduced to a dispersion table    | the corridor's baseline | `weather_table.csv`            |
 | 3 | [retropropulsion](retropropulsion/README.md) | Reads that table **in flight**, commits an ignition, forks the marched plume-coupled state, and lands  | both of the above       | a landing at 1.8 m/s           |
 

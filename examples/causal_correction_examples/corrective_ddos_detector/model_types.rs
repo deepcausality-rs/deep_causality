@@ -5,8 +5,6 @@
 
 //! Domain types for the DDoS-detector corrective control loop.
 
-#![allow(dead_code)] // Telemetry fields kept for narrative realism even if not all are read.
-
 use deep_causality_context::{
     Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     NoSpace, NoSpaceTime, NoTime,

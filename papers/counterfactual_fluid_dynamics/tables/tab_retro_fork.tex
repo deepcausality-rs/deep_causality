@@ -1,0 +1,20 @@
+% Data: examples/avionics_examples/cfd/plasma_blackout/retropropulsion/output.txt (f64, 335.3 s,
+% Apple M3 Max). "Preserved" is the Jarvinen-Adams A0 correlation at each branch's thrust coefficient,
+% not a quantity measured from the marched plume. The last column (dv - dv frozen) is derived here.
+\begin{table}[t]
+\centering
+\caption{\placeholder{caption: five throttle branches forked mid-burn}}
+\label{tab:retrofork}
+\footnotesize
+\begin{tabular}{@{}lrrrrrrrr@{}}
+\toprule
+Branch & Cmd & Flown & Preserved & Axial (\si{m/s^2}) & Prop.\ (kg) & $\Delta v$ (\si{m/s}) & $\Delta v$ frozen & Difference \\
+\midrule
+coast & 0.00 & 0.0000 & --      & 13.9101 & 1.83   & 183.202 & 3.282   & 179.920 \\
+low   & 0.20 & 0.2000 & 0.4335  & 11.6754 & 62.07  & 137.776 & 52.988  & 84.788 \\
+mid   & 0.40 & 0.4000 & 0.1800  & 11.6531 & 122.31 & 137.634 & 103.394 & 34.240 \\
+high  & 0.60 & 0.6000 & 0.0171  & 13.3226 & 182.56 & 158.870 & 154.650 & 4.220 \\
+hard  & 0.85 & 0.8500 & -0.0329 & 18.5463 & 257.86 & 215.696 & 220.012 & -4.316 \\
+\bottomrule
+\end{tabular}
+\end{table}

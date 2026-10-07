@@ -8,7 +8,8 @@
 //! **Scenario**: Tracking a Hypersonic Glide Vehicle (HGV) during terminal phase.
 //! **System**: 'ConformalTracker' uses 6D Phase Space to predict non-linear motion linearly.
 //!
-//! **Advantage**: Zero-lag tracking of high-G maneuvers without mode switching.
+//! **Approach**: one linear propagation in 6D phase space follows the manoeuvre without mode
+//! switching. The example has no radar measurement update, so it reports the propagated track only.
 //!
 //! The 100 Hz tracking loop is expressed with the `CausalFlow` DSL: the per-tick state is one value,
 //! each tick is the composed pipeline `predict -> observe -> derive`, and the 20-tick run is a single
@@ -23,7 +24,7 @@ use deep_causality_core::CausalFlow;
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("=== Defense Sys: 2T-Physics Tracker Initialization ===");
     println!("[RADAR] Target Acquired. ID: HGV-09. Vel: Mach 10.");
-    println!("[TRACK] 2T Metric (4,2) Engaged. Filter Lag: < 1ms.");
+    println!("[TRACK] 2T Metric (4,2) Engaged.");
 
     println!("\nTime[ms] |   X [m]   |   Y [m]    |   Z [m]   | Vel [m/s] | G-Load");
     println!("---------------------------------------------------------------------");
@@ -39,6 +40,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         })
         .finish()?;
 
-    println!("\n[SYS] Intercept Solution Valid. Track Quality: 99%.");
+    println!("\n[SYS] Track propagated over 20 ticks.");
     Ok(())
 }

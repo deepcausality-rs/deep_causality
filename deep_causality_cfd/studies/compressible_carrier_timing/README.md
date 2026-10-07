@@ -28,20 +28,20 @@ grids are a foregone conclusion. The 2-D fallback is swept at two resolutions an
 
 | case | grid | bond cap | assembly | per-step | projected corridor | verdict |
 |---|---|---|---|---|---|---|
-| 3d-fitted | 16³ | 16 | 0.004 s | 10.805 s | 2161.0 s (36.0 min) | **over budget** |
-| 2d | 32² | 16 | 0.000 s | 0.027 s | 5.4 s (0.1 min) | fits |
-| 2d | 32² | 32 | 0.000 s | 0.042 s | 8.3 s (0.1 min) | fits |
-| 2d | 64² | 16 | 0.000 s | 0.062 s | 12.4 s (0.2 min) | fits |
-| 2d | 64² | 32 | 0.001 s | 0.175 s | 35.0 s (0.6 min) | fits |
+| 3d-fitted | 16³ | 16 | 0.006 s | 15.245 s | 3049.0 s (50.8 min) | **over budget** |
+| 2d | 32² | 16 | 0.000 s | 0.037 s | 7.4 s (0.1 min) | fits |
+| 2d | 32² | 32 | 0.000 s | 0.060 s | 12.0 s (0.2 min) | fits |
+| 2d | 64² | 16 | 0.001 s | 0.088 s | 17.6 s (0.3 min) | fits |
+| 2d | 64² | 32 | 0.001 s | 0.248 s | 49.6 s (0.8 min) | fits |
 
-- **The 3-D fitted shell is out, by more than 3×.** Even the smallest candidate projects to 36
+- **The 3-D fitted shell is out, by more than 5×.** Even the smallest candidate projects to 51
   minutes against a 10-minute budget.
 - **The 2-D fallback fits with room to spare.** The largest in-budget configuration runs the
-  corridor in 35 s, a 17× margin.
+  corridor in 49.6 s, a 12× margin.
 - **Assembly is free at this scale.** One rebuild costs at most 0.01 equivalent steps, and roughly
   10 rebuilds per run add **0.04 %** to the march. Freestream-drift rebuilds need no rationing.
 
-**Conclusion: GO, the corridor carrier is 2-D at 64², bond cap 32** (0.175 s/step, peak bond 32).
+**Conclusion: GO, the corridor carrier is 2-D at 64², bond cap 32** (0.248 s/step, peak bond 32).
 The gate requires at least one configuration to fit; the study prints the recommended
 configuration, the largest inside budget, as the go/no-go record. A regression where nothing fits exits
 nonzero, which is the documented trigger for revisiting the `CompressibleMarcher2d` fallback

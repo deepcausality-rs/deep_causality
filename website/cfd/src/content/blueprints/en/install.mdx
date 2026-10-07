@@ -1,7 +1,7 @@
 ---
 title: Install and run a reference case
 task: I need the crate in my project, or one command that shows it working.
-summary: Add the crate with one command, or clone the repository and run the corridor example, which takes 44.4 s on an Apple M3 Max.
+summary: Add the crate with one command, or clone the repository and run the corridor example, which takes 45.9 s on an Apple M3 Max.
 order: 0
 verbs:
   - cargo
@@ -34,7 +34,7 @@ Use `tag` or `rev` in place of `branch` to fix the version. `rev` names an exact
 The corridor example marches a compressible flow, reacts the plasma chemistry in it and cuts a
 navigation filter's GPS fix while the plasma blocks the signal. It forks the marched state into
 17 what-if branches and prints 13 gate results. A gate is a pass or fail check on the run's own
-results. The run takes 44.4 s on {MACHINE} and exits 0 when every gate passes.
+results. The run takes 45.9 s on {MACHINE} and exits 0 when every gate passes.
 
 ```bash
 git clone --depth 1 https://github.com/deepcausality-rs/deep_causality.git

@@ -9,14 +9,18 @@ use deep_causality_context::*;
 use std::error::Error;
 use std::sync::{Arc, RwLock};
 
-pub fn run_rung3_counterfactual(_explain: bool) -> Result<(), Box<dyn Error>> {
+pub fn run_rung3_counterfactual() -> Result<(), Box<dyn Error>> {
     println!("--- Rung 3: Counterfactual ---");
     println!(
         "Query: Given a smoker with high tar, what would their cancer risk be if they hadn't smoked?"
     );
 
-    // 1. Create Factual Context: A person who smokes and has high tar.
-    let facts = [(model::NICOTINE_ID, 0.8), (model::TAR_ID, 0.8)];
+    // 1. Create Factual Context: A person who smokes and has high tar, and the risk threshold.
+    let facts = [
+        (model::NICOTINE_ID, 0.8),
+        (model::TAR_ID, 0.8),
+        (model::THRESHOLD_ID, model::RISK_THRESHOLD),
+    ];
     let mut factual_context = BaseContext::with_capacity(1, "Factual", facts.len());
     for (id, value) in facts {
         factual_context.add_node(Contextoid::new(

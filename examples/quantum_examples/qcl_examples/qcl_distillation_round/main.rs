@@ -28,8 +28,10 @@ use deep_causality_quantum::{CompositionLaw, NumericCaps, distillation_round};
 use std::error::Error;
 
 use crate::constants::COMPARISON_INDEX;
-use crate::model_config::{NoiseContext, depolarising_probability, noise_fraction, noise_worlds};
-use utils_print::{print_header, print_outcome, print_round, print_row, probability_label};
+use crate::model_config::{
+    NoiseContext, depolarising_probability, noise_probability, noise_worlds,
+};
+use utils_print::{print_header, print_outcome, print_round, print_row};
 
 /// The working scalar. Switch it to `f32`, `f64` or `deep_causality_num::BFloat16`; the code, the
 /// noise and every residual recompute at that precision.
@@ -64,7 +66,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         let law = law_for::<FloatType>(world)?;
         every_law_holds &= law.holds();
 
-        print_round(noise_fraction(world)?, &law);
+        print_round(noise_probability(world)?, &law);
     }
 
     // The same round at each shipped precision. The probability is rebuilt from its fraction at
@@ -72,8 +74,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     let compared = worlds
         .get(COMPARISON_INDEX)
         .ok_or("COMPARISON_INDEX names no noise world")?;
-    let label = probability_label(noise_fraction(compared)?);
-    println!("[p = {label}] at the shipped precisions");
+    println!(
+        "[p = {}] at the shipped precisions",
+        noise_probability(compared)?
+    );
 
     let f32_law = law_for::<f32>(compared)?;
     let f64_law = law_for::<f64>(compared)?;

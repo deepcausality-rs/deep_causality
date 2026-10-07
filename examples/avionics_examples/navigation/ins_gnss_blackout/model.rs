@@ -127,7 +127,7 @@ fn datum(context: &NavContext, id: ContextoidId) -> Result<NavDatum, CausalityEr
 pub fn series(context: &NavContext, id: ContextoidId) -> Result<Rc<[FloatType]>, CausalityError> {
     match datum(context, id)? {
         NavDatum::Series(values) => Ok(values),
-        NavDatum::Scalar(_) => Err(CausalityError::MissingParameter(format!(
+        NavDatum::Scalar(_) => Err(CausalityError::TypeConversionError(format!(
             "navigation world contextoid {id} is a scalar, not a series"
         ))),
     }
@@ -137,7 +137,7 @@ pub fn series(context: &NavContext, id: ContextoidId) -> Result<Rc<[FloatType]>,
 pub fn scalar(context: &NavContext, id: ContextoidId) -> Result<FloatType, CausalityError> {
     match datum(context, id)? {
         NavDatum::Scalar(value) => Ok(value),
-        NavDatum::Series(_) => Err(CausalityError::MissingParameter(format!(
+        NavDatum::Series(_) => Err(CausalityError::TypeConversionError(format!(
             "navigation world contextoid {id} is a series, not a scalar"
         ))),
     }

@@ -17,9 +17,10 @@ is the part of the noise the ideal recovery does not remove, the part a distilla
 drive down, and the law bounds it by `‖τ₂‖_post · ε₁ + ‖τ₁‖_pre · ε₂`. The program sweeps `p` over
 `0`, `0.01` and `0.05` and runs the chain at `f32`, `f64` and `Float106`.
 
-Each probability is a noise world of its own, a context of two integer `Data` nodes holding the
-numerator and the denominator (`model_config.rs`). The sweep runs the chain once per world, and the
-cross-precision rows read the `5/100` world and divide its integers at their own precision, rather
-than widening an `f64` approximation.
+Each probability is a noise world of its own, a context of one `Data` node holding the exact
+fraction as a `Rational<i64>` in lowest terms (`model_config.rs`), so `0.05` is held and printed as
+`1/20`. The sweep runs the chain once per world, and the cross-precision rows read the `1/20` world
+and divide its numerator by its denominator at their own precision, rather than widening an `f64`
+approximation.
 
 This is an example with checks. It claims the residuals it measures and the bound the law records.

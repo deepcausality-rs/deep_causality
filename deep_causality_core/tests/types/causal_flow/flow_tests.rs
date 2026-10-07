@@ -181,6 +181,48 @@ fn alternate_value_substitutes_value_and_logs_override() {
 }
 
 #[test]
+fn alternate_context_substitutes_context_and_logs_alternation() {
+    let p = CausalFlow::value(1i64)
+        .context(10i64)
+        .alternate_context(20)
+        .into_process();
+    assert_eq!(*p.context(), Some(20));
+    assert_eq!(p.value(), Some(&1), "the value passes through");
+    let log = format!("{:?}", p.logs());
+    assert!(log.contains("!!ContextAlternation!!"), "{log}");
+}
+
+#[test]
+fn alternate_context_reruns_the_same_law_against_another_world() {
+    // One law, two worlds: the step reads the context, and the alternation swaps the world it reads.
+    let scale = |v: i64, _: &(), c: Option<&i64>| -> Result<i64, CausalityError> {
+        c.map(|c| v * c).ok_or_else(|| err("no context"))
+    };
+    let factual = CausalFlow::value(2i64)
+        .context(10i64)
+        .try_step_with(scale)
+        .finish();
+    let counterfactual = CausalFlow::value(2i64)
+        .context(10i64)
+        .alternate_context(100)
+        .try_step_with(scale)
+        .finish();
+    assert_eq!(factual, Ok(20));
+    assert_eq!(counterfactual, Ok(200));
+}
+
+#[test]
+fn alternate_context_skips_errored_flow() {
+    let p = CausalFlow::<i64>::fail(err("boom"))
+        .context(10i64)
+        .alternate_context(20)
+        .into_process();
+    assert!(p.is_err());
+    assert_eq!(*p.context(), Some(10), "an errored flow keeps its context");
+    assert!(!format!("{:?}", p.logs()).contains("ContextAlternation"));
+}
+
+#[test]
 fn alternate_value_if_fires_only_on_condition() {
     let fired = CausalFlow::value(10i64)
         .alternate_value_if(|v| *v > 5, |_| 0)

@@ -4,8 +4,8 @@
  * physics domains and branches.
  *
  * Both excerpts are quoted verbatim from committed run output: the corridor's
- * blackout window (corridor/output.txt:56-62) and fourteen consecutive entries of
- * the retropropulsion descent (retropropulsion/output.txt:55-68). The leg table is read
+ * blackout window (corridor/output.txt:56-63) and fourteen consecutive entries of
+ * the retropropulsion descent (retropropulsion/output.txt:56-69). The leg table is read
  * off the corridor's per-leg summary lines.
  */
 import PageShell from '../../components/nav/PageShell.astro';
@@ -19,37 +19,38 @@ const title = 'The event log | DeepCausality CFD';
 const description =
   'One append-only event log continues across regime changes, across physics domains and across a fan-out of branches, so a question such as when the filter went blind reads off one sequence.';
 
-/** corridor/output.txt:56-62, verbatim. The blackout window. */
-const blackoutLog = `regime -> slip (GNSS-available), Kn=0.07829109848665225
+/** corridor/output.txt:56-63, verbatim. The blackout window. */
+const blackoutLog = `regime -> slip (GNSS-available), Kn=0.0771427732055074
 nav: aided (position fix folded)
-regime -> slip (GNSS-denied), Kn=0.012690837165407727
+regime -> continuum (GNSS-available), Kn=0.009969942075728244
+regime -> continuum (GNSS-denied), Kn=0.008711413345447542
 nav: dead reckoning (no usable fix)
-march paused at step 131
-leg re-seeded from step 131 in world 'fine_bank_08': coupled field carried, marched fluid state re-seeded from the world seed
-!!ContextAlternation!!: world 'nominal_descent' replaced with 'fine_bank_08'`;
+march paused at step 106
+leg re-seeded from step 106 in world 'fine_bank_07': coupled field carried, marched fluid state re-seeded from the world seed
+!!ContextAlternation!!: world 'nominal_descent' replaced with 'fine_bank_07'`;
 
-/** retropropulsion/output.txt:55-68, verbatim. */
-const retroLog = `regime -> continuum (GNSS-denied), Kn=0.009825077357757745, supersonic / thrust-unknown
-regime -> continuum (GNSS-available), Kn=0.00023029462780754038, supersonic / thrust-unknown
+/** retropropulsion/output.txt:56-69, verbatim. */
+const retroLog = `regime -> continuum (GNSS-available), Kn=0.00015413843921263738, supersonic / thrust-unknown
 nav: aided (position fix folded)
-ignition corridor committed at step 2117: Mach 1.997501570461523, q 2229.2800050958263 Pa, nav aided, sigma 0.38127861761973975 m
-march paused at step 2118
-leg re-seeded from step 2118 in world 'measured_day': coupled field carried, marched fluid state re-seeded from the world seed
-regime -> continuum (GNSS-available), Kn=0.000019032190686017852, supersonic / burn
-regime -> continuum (GNSS-available), Kn=0.000007544601182537176, transonic / burn
-regime -> continuum (GNSS-available), Kn=0.0000031835841432511187, subsonic / burn
-march paused at step 731
-leg re-seeded from step 731 in world 'terminal_descent': coupled field carried, marched fluid state re-seeded from the world seed
-carrier rebuilt at step 1: s_ref 1.4 -> 2.7683613571273638 (rebuild 1)
+ignition corridor committed at step 2145: Mach 1.9987804348378688, q 2903.0349950149075 Pa, nav aided, sigma 0.3816520325841674 m
+march paused at step 2146
+leg re-seeded from step 2146 in world 'measured_day': coupled field carried, marched fluid state re-seeded from the world seed
+regime -> continuum (GNSS-available), Kn=0.000014152129294753863, supersonic / burn
+regime -> continuum (GNSS-available), Kn=0.000006464361502077825, transonic / burn
+regime -> continuum (GNSS-available), Kn=0.0000032407604194220554, subsonic / burn
+march paused at step 693
+leg re-seeded from step 693 in world 'terminal_descent': coupled field carried, marched fluid state re-seeded from the world seed
+carrier rebuilt at step 1: s_ref 1.4 -> 2.768213007453753 (rebuild 1)
 SRP drag closure inert: no throttle commanded, no decrement applied
-stopping burn started at step 2445: altitude 139.12329023424536 m, speed 48.99411902636602 m/s, thrust-to-weight 2.874449170180377`;
+stopping burn started at step 2408: altitude 146.9058807976544 m, speed 48.65357396862805 m/s, thrust-to-weight 2.827727679713093
+regime -> continuum (GNSS-available), Kn=0.00000018791887261341214, subsonic / burn, touchdown`;
 
 /** Read straight off the corridor's per-leg summary lines. */
 const legs = [
-  { leg: 'Blackout starts, 73.2 km', link: 'GNSS denied', err: '0.1823 m', var: '2.290e-1 m²' },
-  { leg: 'Peak passage, 60.9 km', link: 'GNSS denied', err: '1.5637 m', var: '2.671e1 m²' },
-  { leg: 'Blackout ends, 46.8 km', link: 'GNSS available', err: '2.2879 m', var: '2.999e0 m²' },
-  { leg: 'Reacquisition, 47.4 km', link: 'GNSS available', err: '0.2804 m', var: '3.184e-1 m²' },
+  { leg: 'Blackout starts, 76.8 km', link: 'GNSS denied', err: '0.3143 m', var: '2.739e-1 m²' },
+  { leg: 'Peak passage, 61.0 km', link: 'GNSS denied', err: '3.0698 m', var: '2.778e2 m²' },
+  { leg: 'Blackout ends, 45.7 km', link: 'GNSS available', err: '1.5585 m', var: '3.000e0 m²' },
+  { leg: 'Reacquisition, 46.3 km', link: 'GNSS available', err: '0.2043 m', var: '3.226e-1 m²' },
 ];
 
 const entries = [
@@ -107,7 +108,7 @@ const entries = [
     <p>
       The corridor log answers in two adjacent entries. The flow classifier reports the link
       denied, and the next entry is the navigation filter falling back to dead reckoning. The
-      march then pauses at step 131, at 73.2 km. Nothing scheduled that; the plasma chemistry
+      march then pauses at step 106, at 76.8 km. Nothing scheduled that; the plasma chemistry
       located it.
     </p>
 
@@ -119,8 +120,8 @@ const entries = [
     </p>
     <p>
       The last entry names both sides of an intervention: the world replaced,
-      <code>nominal_descent</code>, and the world that replaced it, <code>fine_bank_08</code>. That
-      world is the 11.5° bank angle the run committed. A what-if is therefore auditable, not
+      <code>nominal_descent</code>, and the world that replaced it, <code>fine_bank_07</code>. That
+      world is the 11° bank angle the run committed. A what-if is therefore auditable, not
       implied.
     </p>
   </section>
@@ -181,7 +182,7 @@ const entries = [
 
     <p>
       Error vs truth is the filter’s position error against the simulated trajectory. Position
-      variance is the filter’s own uncertainty. It grows by two orders of magnitude in the dark,
+      variance is the filter’s own uncertainty. It grows by three orders of magnitude in the dark,
       then comes back once fixes resume.
     </p>
     <p>

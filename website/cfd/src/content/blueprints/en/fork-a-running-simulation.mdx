@@ -23,18 +23,18 @@ flies six bank angles from that one pause and prints how far each lands from the
 
 | Bank angle | Miss from the aim point |
 |---|---|
-| 0.0° | 20.000 m |
-| 5.0° | 11.581 m |
-| 10.0° | 3.533 m (closest) |
-| 15.0° | 6.002 m |
-| 20.0° | 14.303 m |
-| 40.0° | 28.881 m |
+| 0.0° | 30.000 m |
+| 5.0° | 16.463 m |
+| 10.0° | 3.818 m (closest) |
+| 15.0° | 11.516 m |
+| 20.0° | 24.988 m |
+| 40.0° | 48.426 m |
 
-The setup fixes the first row. The aim point sits 20 m to the side of where the unsteered
-branch lands (`AIM_CROSS_RANGE_M = 20.0` in the example's `constants.rs`), so a zero-bank miss
-of 20.000 m is a property of the setup and not a measurement. The study measures which bank
+The setup fixes the first row. The aim point sits 30 m to the side of where the unsteered
+branch lands (`AIM_CROSS_RANGE_M = 30.0` in the example's `constants.rs`), so a zero-bank miss
+of 30.000 m is a property of the setup and not a measurement. The study measures which bank
 angle gets closest. A second round of eleven finer branches, forked from the same pause, lands
-at 11.5° and 2.07 m.
+at 11.0° and 2.87 m.
 
 Two calls produce this. The march pauses when a condition on the evolved flow becomes true. The
 study forks that pause. Condensed from
@@ -92,7 +92,7 @@ Every branch continues from the pause in its own world and adds a `!!ContextAlte
 to its event log, naming the world it replaced. The corridor gate reports it:
 
 ```text
-[PASS] [tripwire] (4c) counterfactual steering: 17 alternated worlds (6 coarse + 11 fine) from one shared onset; coarse-winner-vs-ballistic terminal separation 16.85 m; coarse miss spread [3.53, 28.88] m
+[PASS] [tripwire] (4c) counterfactual steering: 17 alternated worlds (6 coarse + 11 fine) from one shared onset; coarse-winner-vs-ballistic terminal separation 27.10 m; coarse miss spread [3.82, 48.43] m
 ```
 
 The retropropulsion example gates it per branch: 5 of 5 branches record an applied world change
@@ -128,6 +128,6 @@ intervention: the same command schedule with the flow closure held at its value 
 simple kinematics reproduces the divergence, the flow did not contribute to it.
 
 The [retropropulsion descent](/tutorial/stage-3-retropropulsion/) runs that comparison as gate 4c. Its
-branches depart the frozen-drag prediction by up to 139.4 m/s against a 100 m/s threshold. Its
-flow observables spread 0.0202 across the branches, where the corridor's bank branches agreed
+branches depart the frozen-drag prediction by up to 179.9 m/s against a 100 m/s threshold. Its
+flow observables spread 0.0844 across the branches, where the corridor's bank branches agreed
 to three digits.

@@ -45,15 +45,11 @@ fn main() {
     // We have a Product, but our filter works on Strings.
     let products = vec![
         Product {
-            id: 1,
             name: "Pro Laptop".to_string(),
-            category: "Electronics".to_string(),
             price: lift(1200.0),
         },
         Product {
-            id: 2,
             name: "Basic Mouse".to_string(),
-            category: "Electronics".to_string(),
             price: TWENTY,
         },
     ];
@@ -100,9 +96,7 @@ fn main() {
 
     print_price_header();
     let cheap_product = Product {
-        id: 3,
         name: "Cheap Cable".to_string(),
-        category: "Accessories".to_string(),
         price: FIFTEEN,
     };
 
@@ -146,11 +140,8 @@ fn print_cheap(name: &str, is_cheap: bool) {
 }
 
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
 struct Product {
-    id: u32,
     name: String,
-    category: String,
     price: FloatType,
 }
 

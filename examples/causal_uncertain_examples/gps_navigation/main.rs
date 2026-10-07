@@ -9,8 +9,8 @@
 //! context. The start position is the chain's initial value; the destination,
 //! the parameters of the speed, traffic, fuel-efficiency and fuel-on-hand
 //! distributions, the distances, the lateness threshold and the fuel limits
-//! are `Data<f64>` contextoids of the route context. Each stage receives the
-//! previous stage's `Uncertain<f64>` directly, reads its route quantities from
+//! are `Data<FloatType>` contextoids of the route context. Each stage receives the
+//! previous stage's `Uncertain<FloatType>` directly, reads its route quantities from
 //! the context, and returns the next uncertain quantity; the flow supplies the
 //! plumbing, so no stage touches `CausalEffect` or `PropagatingEffect`.
 //!
@@ -21,7 +21,7 @@
 //! 3. `route_stage`     — compare against an alternative route under uncertainty
 //! 4. `fuel_stage`      — propagate distance and efficiency noise into a fuel estimate
 //!
-//! The `Uncertain<f64>` API (sampling, comparisons, conditional, probability
+//! The `Uncertain<FloatType>` API (sampling, comparisons, conditional, probability
 //! exceedance) does the numerical work; `CausalFlow::try_step_with` sequences the
 //! stages and hands each one the route context, and the terminal `run` reports
 //! completion or the rare short-circuit.
@@ -29,6 +29,7 @@
 mod model;
 
 use deep_causality_core::CausalFlow;
+use deep_causality_num::lift;
 use deep_causality_uncertain::Uncertain;
 use model::{Position, distance_stage, fuel_stage, route_context, route_stage, time_stage};
 use std::error::Error;
@@ -38,8 +39,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("=====================================================================\n");
 
     let start = Position {
-        lat: Uncertain::normal(37.7749, 0.0001), // San Francisco, ~10 m GPS noise
-        lon: Uncertain::normal(-122.4194, 0.0001),
+        lat: Uncertain::normal(lift(37.7749), lift(0.0001)), // San Francisco, ~10 m GPS noise
+        lon: Uncertain::normal(lift(-122.4194), lift(0.0001)),
     };
 
     CausalFlow::value(start)

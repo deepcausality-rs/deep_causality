@@ -69,6 +69,38 @@ impl<R: RealField, N: NaturalNumber, const D: usize> ControlWorld<R, N, D> {
     }
 }
 
+/// A candidate the baseline refused: its prediction, the observation that contradicts it, and the
+/// check that decided it, whose item is the candidate's index among the config's candidates.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Refusal<R> {
+    name: String,
+    prediction: R,
+    observed: ShotEstimate<R>,
+    check: Check<R>,
+}
+
+impl<R: RealField> Refusal<R> {
+    /// The refused candidate.
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    /// The read-out it predicted for the baseline experiment.
+    pub fn prediction(&self) -> R {
+        self.prediction
+    }
+
+    /// The baseline read-out.
+    pub fn observed(&self) -> &ShotEstimate<R> {
+        &self.observed
+    }
+
+    /// `|prediction − observed|` against the allowance of `sigmas` standard errors; rejected.
+    pub fn check(&self) -> &Check<R> {
+        &self.check
+    }
+}
+
 /// The control stage: observe, gate, fork, predict, compare, design, adjudicate. Failure is
 /// sticky and is carried out by `finalize` as the structured error.
 ///
@@ -84,16 +116,24 @@ impl<R: RealField, N: NaturalNumber, const D: usize> ControlWorld<R, N, D> {
 /// candidate's model, and `compare` turns each prediction into that world's read-out and its
 /// verdict against the baseline. `adjudicate` then separates the predictions and keeps the world
 /// whose prediction agrees with what was observed.
+///
+/// A config that names a baseline experiment starts either path with [`baseline`](Self::baseline),
+/// which observes it first and refuses the candidates it contradicts; `observe`, `fork` and
+/// `design` fail until it ran. A config that names evidence funds the ledger with its shots, and
+/// every observation draws from them.
 pub struct Control<R: RealField, N, const D: usize> {
     plant: QuantumPlant<R>,
-    candidates: Vec<Hypothesis<R>>,
+    candidates: Vec<(usize, Hypothesis<R>)>,
+    declared: usize,
     observables: Vec<Observable<R, D>>,
     probes: Vec<Experiment<R>>,
+    pending_baseline: Option<Experiment<R>>,
     seed: u64,
     ledger: Ledger<R, N>,
     read_out: Option<ShotEstimate<R>>,
     verdict: Option<CheckReport<R>>,
     worlds: Vec<ControlWorld<R, N, D>>,
+    refused: Vec<Refusal<R>>,
     plan: Option<DesignPlan<R>>,
     adjudication: Option<Adjudication<R, D>>,
     failure: Option<QuantumError>,
@@ -113,14 +153,8 @@ where
     N: NaturalNumber,
 {
     fn into_control(self) -> Control<R, N, D> {
-        let s = self.subject();
-        Control::new(
-            s.plant().clone(),
-            s.candidates().to_vec(),
-            s.observables().to_vec(),
-            self.probes().to_vec(),
-            self.seed(),
-        )
+        let candidates = self.subject().candidates().iter().cloned().enumerate();
+        Control::new(self, candidates.collect())
     }
 }
 
@@ -131,13 +165,10 @@ where
     N: NaturalNumber,
 {
     fn into_control(self) -> Control<R, N, D> {
-        let s = self.config().subject();
+        let slots = self.admitted_slots().iter().copied();
         Control::new(
-            s.plant().clone(),
-            self.admitted().to_vec(),
-            s.observables().to_vec(),
-            self.config().probes().to_vec(),
-            self.config().seed(),
+            self.config(),
+            slots.zip(self.admitted().iter().cloned()).collect(),
         )
     }
 }
@@ -155,13 +186,15 @@ impl QclBuilder {
 }
 
 /// The report `control` finalizes into: the root ledger, every world's ledger side by side, the
-/// plan and the adjudication.
+/// candidates the baseline refused, the plan and the adjudication.
 #[derive(Debug, Clone)]
 pub struct ControlReport<R: RealField, N, const D: usize> {
     /// The ledger before the fork.
     pub ledger: Ledger<R, N>,
     /// The worlds, each with its own ledger.
     pub worlds: Vec<ControlWorld<R, N, D>>,
+    /// The candidates the baseline refused, in the config's order.
+    pub refused: Vec<Refusal<R>>,
     /// The design plan, if `design` ran.
     pub plan: Option<DesignPlan<R>>,
     /// The adjudication, if `adjudicate` ran.
@@ -169,23 +202,33 @@ pub struct ControlReport<R: RealField, N, const D: usize> {
 }
 
 impl<R: RealField, N: NaturalNumber, const D: usize> Control<R, N, D> {
-    fn new(
-        plant: QuantumPlant<R>,
-        candidates: Vec<Hypothesis<R>>,
-        observables: Vec<Observable<R, D>>,
-        probes: Vec<Experiment<R>>,
-        seed: u64,
+    /// The control stage over `cfg`'s plant with `candidates`, each paired with its index among
+    /// the config's candidates. Named evidence funds the ledger, and its seed is the run's draw
+    /// seed.
+    fn new<K>(
+        cfg: &Config<R, N, PlantSubject<R, D, K>>,
+        candidates: Vec<(usize, Hypothesis<R>)>,
     ) -> Self {
+        let s = cfg.subject();
+        let (ledger, seed) = (Ledger::new(), cfg.seed());
+        #[cfg(feature = "qpu")]
+        let (ledger, seed) = match cfg.evidence() {
+            Some(e) => (ledger.budgeted(e.shot_count()), e.seed_value()),
+            None => (ledger, seed),
+        };
         Self {
-            plant,
+            plant: s.plant().clone(),
             candidates,
-            observables,
-            probes,
+            declared: s.candidates().len(),
+            observables: s.observables().to_vec(),
+            probes: cfg.probes().to_vec(),
+            pending_baseline: cfg.baseline().cloned(),
             seed,
-            ledger: Ledger::new(),
+            ledger,
             read_out: None,
             verdict: None,
             worlds: Vec::new(),
+            refused: Vec::new(),
             plan: None,
             adjudication: None,
             failure: None,
@@ -202,6 +245,69 @@ where
         if self.failure.is_none() {
             self.failure = Some(e);
         }
+    }
+
+    /// Whether the config's baseline is still unobserved, failing `stage` if so: the baseline is
+    /// the first observation and precedes the fork and the plan.
+    fn awaits_baseline(&mut self, stage: &str) -> bool {
+        let Some(b) = &self.pending_baseline else {
+            return false;
+        };
+        let msg = format!(
+            "the config names baseline '{}', which is observed first; call baseline before {stage}",
+            b.name()
+        );
+        self.fail(QuantumError::CalculationError(msg));
+        true
+    }
+
+    /// The observable at `index`, failing the run when the plant does not expose it.
+    fn exposed(&mut self, index: usize) -> Option<Observable<R, D>> {
+        let obs = self.observables.get(index).cloned();
+        if obs.is_none() {
+            self.fail(QuantumError::DimensionMismatch(format!(
+                "observable {index} is not one the plant exposes ({} declared)",
+                self.observables.len()
+            )));
+        }
+        obs
+    }
+
+    /// `experiment` read at the live candidates' slots, in their order, after checking that it
+    /// predicts for every candidate the config declares.
+    fn at_slots(&self, experiment: &Experiment<R>) -> Result<Experiment<R>, QuantumError> {
+        let slots: Vec<usize> = self.candidates.iter().map(|(slot, _)| *slot).collect();
+        (experiment.predictions().len() == self.declared)
+            .then(|| experiment.at_slots(&slots))
+            .flatten()
+            .ok_or_else(|| {
+                QuantumError::DimensionMismatch(format!(
+                    "experiment '{}' predicts for {} candidates, the config declares {}",
+                    experiment.name(),
+                    experiment.predictions().len(),
+                    self.declared
+                ))
+            })
+    }
+
+    /// One observation of `obs` on `plant`: `shots` charged to `ledger` first, so an overdrawn
+    /// budget draws nothing, then sampled at the seed the ledger's experiment count selects.
+    fn measure(
+        obs: &Observable<R, D>,
+        plant: &QuantumPlant<R>,
+        ledger: Ledger<R, N>,
+        shots: N,
+        seed: u64,
+    ) -> Result<(ShotEstimate<R>, Ledger<R, N>), QuantumError> {
+        let count = shots.to_u64().ok_or_else(|| {
+            QuantumError::CalculationError("shot count does not fit a u64".into())
+        })?;
+        let time = R::from_u64(count).ok_or_else(|| {
+            QuantumError::CalculationError("shot count is not representable".into())
+        })?;
+        let charged = ledger.observed(shots, time)?;
+        let hist = obs.sample(plant, count, Self::draw_seed(seed, ledger.experiments())?)?;
+        Ok((ShotEstimate::of_outcome(&hist, 1)?, charged))
     }
 
     /// The seed of one draw, mixed from the run seed and the full width of the experiments run
@@ -225,45 +331,23 @@ where
     }
 
     /// The measurement boundary: `shots` of `observable` on the plant, or on every world's plant
-    /// after a fork. The only stage that touches `shots`, `experiments` and `device_time`; device
-    /// time is charged at one unit per shot.
+    /// after a fork. This stage and [`baseline`](Self::baseline) are the only ones that touch
+    /// `shots`, `experiments`, `device_time` and the budget; device time is charged at one unit
+    /// per shot, and a draw beyond the remaining budget fails the run.
     ///
     /// Before the fork the read-out is the root's, the baseline `compare` judges predictions
     /// against. After the fork every world is measured on its own plant, which is how a mechanism
     /// world earns its evidence: a world inherits no read-out from the root.
     pub fn observe(mut self, observable: usize, shots: N) -> Self {
-        if self.failure.is_some() {
+        if self.failure.is_some() || self.awaits_baseline("observe") {
             return self;
         }
-        let Some(obs) = self.observables.get(observable).cloned() else {
-            self.fail(QuantumError::DimensionMismatch(format!(
-                "observable {observable} is not one the plant exposes ({} declared)",
-                self.observables.len()
-            )));
-            return self;
-        };
-        let Some(count) = shots.to_u64() else {
-            self.fail(QuantumError::CalculationError(
-                "shot count does not fit a u64".into(),
-            ));
-            return self;
-        };
-        let Some(time) = R::from_u64(count) else {
-            self.fail(QuantumError::CalculationError(
-                "shot count is not representable".into(),
-            ));
+        let Some(obs) = self.exposed(observable) else {
             return self;
         };
         let seed = self.seed;
-        let run = |plant: &QuantumPlant<R>,
-                   ledger: Ledger<R, N>|
-         -> Result<(ShotEstimate<R>, Ledger<R, N>), QuantumError> {
-            let hist = obs.sample(plant, count, Self::draw_seed(seed, ledger.experiments())?)?;
-            let estimate = ShotEstimate::of_outcome(&hist, 1)?;
-            Ok((estimate, ledger.observed(shots, time)?))
-        };
         if self.worlds.is_empty() {
-            match run(&self.plant, self.ledger) {
+            match Self::measure(&obs, &self.plant, self.ledger, shots, seed) {
                 Ok((e, l)) => {
                     self.read_out = Some(e);
                     self.ledger = l;
@@ -272,7 +356,7 @@ where
             }
         } else {
             for w in &mut self.worlds {
-                match run(&w.plant, w.ledger) {
+                match Self::measure(&obs, &w.plant, w.ledger, shots, seed) {
                     Ok((e, l)) => {
                         w.read_out = Some(e);
                         w.ledger = l;
@@ -282,6 +366,87 @@ where
                         return self;
                     }
                 }
+            }
+        }
+        self
+    }
+
+    /// The config's baseline experiment observed on the root as the run's first observation, at
+    /// the experiment's shots of `observable`, and every candidate whose prediction for it the
+    /// observation contradicts refused before the fork and the plan.
+    ///
+    /// A candidate is refused when `|prediction − observed|` exceeds `sigmas` standard errors of
+    /// the observed estimate, the test `compare` applies to a world. Its prediction is read at its
+    /// index among the config's candidates, so a candidate the screen dropped does not shift the
+    /// others. The refusals go to the report with what decided them, and the observation stays
+    /// the root's read-out, the baseline `compare` judges predictions against.
+    ///
+    /// Fails with `CalculationError` when there is no baseline to observe (the config names
+    /// none, or the stage already ran), on a `sigmas` that is not finite or is negative, and when
+    /// the experiment's shots do not fit the count width; with `DimensionMismatch` when the
+    /// experiment predicts for a different number of candidates than the config declares; and as
+    /// `observe` fails.
+    pub fn baseline(mut self, observable: usize, sigmas: R) -> Self {
+        if self.failure.is_some() {
+            return self;
+        }
+        let Some(experiment) = self.pending_baseline.take() else {
+            self.fail(QuantumError::CalculationError(
+                "baseline has no experiment to observe: the config names none, or the stage \
+                 already ran"
+                    .into(),
+            ));
+            return self;
+        };
+        if !sigmas.is_finite() || sigmas < R::zero() {
+            self.fail(QuantumError::CalculationError(format!(
+                "baseline needs a finite, non-negative sigmas, got {sigmas:?}"
+            )));
+            return self;
+        }
+        let predicted = match self.at_slots(&experiment) {
+            Ok(predicted) => predicted,
+            Err(e) => {
+                self.fail(e);
+                return self;
+            }
+        };
+        let Some(obs) = self.exposed(observable) else {
+            return self;
+        };
+        let Some(shots) = N::from_u64(experiment.shots()) else {
+            self.fail(QuantumError::CalculationError(format!(
+                "baseline '{}' takes {} shots, which do not fit the count width",
+                experiment.name(),
+                experiment.shots()
+            )));
+            return self;
+        };
+        let observed = match Self::measure(&obs, &self.plant, self.ledger, shots, self.seed) {
+            Ok((observed, ledger)) => {
+                self.ledger = ledger;
+                self.read_out = Some(observed);
+                observed
+            }
+            Err(e) => {
+                self.fail(e);
+                return self;
+            }
+        };
+        let allowance = sigmas * observed.standard_error();
+        let candidates = core::mem::take(&mut self.candidates);
+        for ((slot, h), &prediction) in candidates.into_iter().zip(predicted.predictions()) {
+            let gap = (prediction - observed.estimate()).abs();
+            let check = Check::new(CheckItem::Index(slot), gap, allowance);
+            if check.accepted {
+                self.candidates.push((slot, h));
+            } else {
+                self.refused.push(Refusal {
+                    name: h.name().into(),
+                    prediction,
+                    observed,
+                    check,
+                });
             }
         }
         self
@@ -326,22 +491,23 @@ where
     /// fork, or from `compare`, so a world evolved by a mechanism is never adjudicated on a
     /// measurement of the unevolved plant.
     ///
-    /// Fails with `CalculationError` when there is no candidate to fork: the screen admitted
-    /// none, or the config declared none.
+    /// Fails with `CalculationError` before the config's baseline was observed, and when there
+    /// is no candidate to fork: the screen admitted none, the baseline refused every one, or the
+    /// config declared none.
     pub fn fork(mut self) -> Self {
-        if self.failure.is_some() {
+        if self.failure.is_some() || self.awaits_baseline("fork") {
             return self;
         }
         if self.candidates.is_empty() {
             self.fail(QuantumError::CalculationError(
-                "fork has no candidate to fork: the screen admitted none, or the config declared \
-                 none"
+                "fork has no candidate to fork: the screen admitted none, the baseline refused \
+                 every one, or the config declared none"
                     .into(),
             ));
             return self;
         }
         let mut worlds = Vec::with_capacity(self.candidates.len());
-        for h in &self.candidates {
+        for (_, h) in &self.candidates {
             let plant = match h.channel() {
                 Some(ch) => match self.plant.evolve(ch) {
                     Ok(p) => p,
@@ -408,7 +574,7 @@ where
 
     /// Each world's prediction turned into evidence against the root's read-out.
     ///
-    /// The root's read-out, taken by `observe` before the fork, is the baseline. For every world
+    /// The root's read-out, taken by `baseline` or by `observe` before the fork, is the baseline. For every world
     /// the prediction becomes the world's read-out through `ShotEstimate::from_probability` at
     /// the baseline's shots, so it carries the shot noise it would have there, and the world's
     /// verdict is one `Check` of `|prediction − baseline|` against `sigmas` standard errors of
@@ -482,13 +648,31 @@ where
         self
     }
 
-    /// The design plan over the candidates and the probe family, its cost committed to the
-    /// root ledger.
+    /// The design plan over the live candidates and the probe family, its cost committed to the
+    /// root ledger. Each probe's predictions are read at the live candidates' indices among the
+    /// config's candidates, so a candidate the screen dropped or the baseline refused takes its
+    /// prediction with it.
+    ///
+    /// Fails with `CalculationError` before the config's baseline was observed; with
+    /// `DimensionMismatch` when a probe predicts for a different number of candidates than the
+    /// config declares; and as [`design`] fails.
     pub fn design(mut self, objective: MinCostCover<R>) -> Self {
-        if self.failure.is_some() {
+        if self.failure.is_some() || self.awaits_baseline("design") {
             return self;
         }
-        match design(self.candidates.len(), &self.probes, objective) {
+        let probes = match self
+            .probes
+            .iter()
+            .map(|probe| self.at_slots(probe))
+            .collect::<Result<Vec<_>, _>>()
+        {
+            Ok(probes) => probes,
+            Err(e) => {
+                self.fail(e);
+                return self;
+            }
+        };
+        match design(self.candidates.len(), &probes, objective) {
             Ok(plan) => {
                 self.ledger = self.ledger.costed(plan.total_cost());
                 self.plan = Some(plan);
@@ -543,6 +727,7 @@ where
         Ok(ControlReport {
             ledger: self.ledger,
             worlds: self.worlds,
+            refused: self.refused,
             plan: self.plan,
             adjudication: self.adjudication,
         })

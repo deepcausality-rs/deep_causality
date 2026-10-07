@@ -5,8 +5,6 @@
 
 //! Domain types for the corrective-decompression-stops example.
 
-#![allow(dead_code)] // Domain fields kept for narrative clarity even if not all are read.
-
 use deep_causality_context::{
     Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
     NoSpace, NoSpaceTime, NoTime,
@@ -19,10 +17,10 @@ use deep_causality_core::{CausalityError, PropagatingProcess};
 pub type FloatType = f64;
 
 /// One tick is 0.5 minutes (30 seconds) of dive time.
-/// `N_TICKS = 30` covers 15 minutes, long enough for the open-loop run to
-/// surface in five minutes and for the closed loop to insert several
-/// decompression stops before finishing.
-pub const N_TICKS: u32 = 30;
+/// `N_TICKS = 50` covers 25 minutes, long enough for the open-loop run to
+/// surface in five minutes and for the closed loop to complete its
+/// decompression stops and surface.
+pub const N_TICKS: u32 = 50;
 
 /// Tick duration in minutes: the time step of the tissue kinetics.
 pub const TICK_MINUTES: FloatType = 0.5;

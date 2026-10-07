@@ -4,15 +4,16 @@
  */
 
 // =============================================================================
-// Value alternation (counterfactual substitution on the value channel)
+// Value and context alternation (counterfactual substitution on one channel)
 // =============================================================================
 //
-// This is the value-substitution lens, `alternate_value`. It is NOT Pearl's `do(...)` operator:
-// that is graph surgery (parent-edge deletion / variable isolation) and lives at the
-// `deep_causality` Causaloid + hypergraph layer, where a graph is in scope. At the value/monad
-// level there is no graph to mutilate, so the honest operation is counterfactual value substitution.
+// These are the substitution lenses, `alternate_value` and `alternate_context`. They are NOT
+// Pearl's `do(...)` operator: that is graph surgery (parent-edge deletion / variable isolation) and
+// lives at the `deep_causality` Causaloid + hypergraph layer, where a graph is in scope. At the
+// value/monad level there is no graph to mutilate, so the honest operation is counterfactual
+// substitution of a channel.
 
-use crate::{AlternatableValue, CausalFlow};
+use crate::{AlternatableContext, AlternatableValue, CausalFlow};
 use core::fmt::Debug;
 
 impl<Value, State, Context> CausalFlow<Value, State, Context>
@@ -50,6 +51,18 @@ where
                 _ => self,
             },
             Err(_) => self,
+        }
+    }
+}
+
+impl<Value, State, Context> CausalFlow<Value, State, Context> {
+    /// Substitute the carried context with `new_context` (counterfactual context substitution),
+    /// recording the substitution in the audit log as `!!ContextAlternation!!`. Value and state
+    /// pass through unchanged, so the steps after it run the same causal law against another
+    /// world. A no-op on a failed flow (the underlying `AlternatableContext` preserves the error).
+    pub fn alternate_context(self, new_context: Context) -> Self {
+        CausalFlow {
+            inner: self.inner.alternate_context(new_context),
         }
     }
 }

@@ -16,13 +16,13 @@ const run = `git clone --depth 1 https://github.com/deepcausality-rs/deep_causal
 cd deep_causality
 cargo run --release -p avionics_examples --example plasma_blackout_corridor`;
 
-/* corridor/output.txt lines 9-10, 77 and 87-88, verbatim; the elisions are marked. */
+/* corridor/output.txt lines 9-10, 77 and 88-89, verbatim; the elisions are marked. */
 const out = `--- Leg: descent to blackout onset ---
-  marched 131 steps to 73.2 km, Mach 27.2 | regime: slip (Kn = 1.27e-2) | link: GNSS DENIED
+  marched 106 steps to 76.8 km, Mach 26.8 | regime: continuum (Kn = 8.71e-3) | link: GNSS DENIED
   ...
-  [PASS] [tripwire] (4e) guidance precision from the sweep: committed 11.5 deg lands 2.07 m off the aim vs the ballistic 20.00 m (9.7x better; gate requires 3x)
+  [PASS] [tripwire] (4e) guidance precision from the sweep: committed 11.0 deg lands 2.87 m off the aim vs the ballistic 30.00 m (10.5x better; gate requires 3x)
   ...
-  [PASS] [tripwire] (5b) wall-clock budget: 44.4 s elapsed (budget 600 s)
+  [PASS] [tripwire] (5b) wall-clock budget: 45.9 s elapsed (budget 600 s)
 === All gates passed: bank-angle corridor + corridor legs. ===`;
 
 const next = [

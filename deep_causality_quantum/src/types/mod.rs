@@ -10,6 +10,8 @@ pub(crate) mod decision;
 pub(crate) mod density_matrix;
 pub(crate) mod design;
 #[cfg(feature = "qcm")]
+pub(crate) mod instrument;
+#[cfg(feature = "qcm")]
 pub(crate) mod pipeline;
 #[cfg(feature = "qcm")]
 pub(crate) mod qcm;

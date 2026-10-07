@@ -89,11 +89,11 @@
     from something that did happen.
   </p>
   <p>
-    <b>The example.</b> A vehicle re-enters at Mach 27 and loses GPS inside a
+    <b>The example.</b> A vehicle re-enters at Mach 28 and loses GPS inside a
     plasma sheath. The run forks 17 branches from the moment the link drops, each
-    with a different bank angle. The example places its aim point 20 m to the side
+    with a different bank angle. The example places its aim point 30 m to the side
     of the unsteered path, so the sweep has a gap to close; the best branch closes
-    it to 2.07 m. The whole example, from descent to reacquisition, takes 44.4 s
+    it to 2.87 m. The whole example, from descent to reacquisition, takes 45.9 s
     on an Apple M3 Max, on a 32&times;32-cell flow layer.
   </p>
 </section>
@@ -103,10 +103,10 @@
     <section>
       <h2>Measured, on an Apple M3 Max</h2>
       <table>
-        <tr><td>Whole powered descent</td><td><b>337.5 s</b>, 2,516 coupled steps, four legs, sixteen gates</td></tr>
-        <tr><td>Peak memory</td><td><b>18.3 MB</b> resident for the whole descent, including a five-branch fan-out</td></tr>
-        <tr><td>Corridor example</td><td><b>44.4 s</b> for the descent, 17 branches and the legs after them, against a 600 s budget</td></tr>
-        <tr><td>Fan-out cost</td><td><b>1.09&times;</b> one trunk step for five branches</td></tr>
+        <tr><td>Whole powered descent</td><td><b>335.3 s</b>, 5,425 coupled steps, four legs, sixteen gates</td></tr>
+        <tr><td>Peak memory</td><td><b>29.5 MB</b> resident for the whole descent, including a five-branch fan-out</td></tr>
+        <tr><td>Corridor example</td><td><b>45.9 s</b> for the descent, 17 branches and the legs after them, against a 600 s budget</td></tr>
+        <tr><td>Fan-out cost</td><td><b>1.16&times;</b> one trunk step for five branches</td></tr>
         <tr><td>Machine</td><td>Apple M3 Max, 16 cores, 128 GB</td></tr>
       </table>
       <p style="margin-top:2mm">
@@ -123,10 +123,10 @@
         <tr><td>Manufactured solutions</td><td>observed order <b>1.98&ndash;2.01</b> against 2.00; divergence-free by construction</td></tr>
         <tr><td>Taylor&ndash;Green (1937)</td><td>right-hand side matches to <b>1.11e-16</b></td></tr>
         <tr><td>Sod shock tube</td><td>density error <b>0.0175</b> against a 0.03 tolerance</td></tr>
-        <tr><td>RAM-C II flight, NASA (1970)</td><td>peak electron density <b>+0.35 decades</b> from the flight value, inside a &plusmn;0.70 band</td></tr>
+        <tr><td>RAM-C II flight, NASA (1970)</td><td>peak electron density <b>+0.22 decades</b> from the flight value at 71.93 km, inside a &plusmn;0.70 allowance</td></tr>
       </table>
       <p style="margin-top:2mm">
-        Thirteen self-verifying targets, each exiting nonzero when its check
+        Fourteen self-verifying targets, each exiting nonzero when its check
         fails. The references are exact solutions, published tables and flight
         data; no row compares against a run of Fluent, SU2 or OpenFOAM.
       </p>
@@ -147,7 +147,7 @@
 <section>
   <h2>Getting started</h2>
   <p>
-    One command runs the corridor example from a clean clone, in 44.4 s after a
+    One command runs the corridor example from a clean clone, in 45.9 s after a
     first-time build. It needs Rust 1.98 or newer; skip the first line if you
     already have it.
   </p>

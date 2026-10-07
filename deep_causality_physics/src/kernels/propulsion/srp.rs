@@ -112,7 +112,7 @@ where
 /// the second similarity input of the Cordell plume model.
 ///
 /// # References
-/// * Cordell & Braun, "Steady State Modeling of Supersonic Retropropulsion
+/// * Cordell & Braun, "Analytical Modeling of Supersonic Retropropulsion
 ///   Plume Structures," JSR 50(4):763–770, 2013; Cordell dissertation,
 ///   Georgia Tech (2013) (`papers/cordell_2013_srp_analytic.pdf`).
 pub fn momentum_flux_ratio_kernel<R>(

@@ -1,0 +1,13 @@
+\section{Reproducibility}
+\label{app:repro}
+
+% Commands, run order (weather before retropropulsion), machine, toolchain (rustc version), commit
+% hash, committed artifacts. notes/cfd_draft.md, Part C, Appendix A.
+\placeholder{reproducibility}
+
+\begin{lstlisting}[language={},numbers=none,caption={\placeholder{caption}},label={lst:repro}]
+cargo run --release -p avionics_examples --example plasma_blackout_corridor
+cargo run --release -p avionics_examples --example plasma_blackout_weather
+cargo run --release -p avionics_examples --example plasma_blackout_retropropulsion
+cargo run --release -p deep_causality_cfd --example qtt_ramc_stagline
+\end{lstlisting}

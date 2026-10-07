@@ -137,7 +137,7 @@ fn detector(id: u64, context: &Arc<DetectorContext>) -> Detector {
 /// A fresh two-node causal graph `0 → 1` whose nodes each carry one qubit and share one
 /// [`DetectorContext`].
 pub fn two_node_graph() -> Result<CausaloidGraph<Detector>, TopologyBuildError> {
-    let context = Arc::new(detector_context().map_err(|_| TopologyBuildError::Context)?);
+    let context = Arc::new(detector_context().map_err(TopologyBuildError::Context)?);
     let mut graph = CausaloidGraph::new(0);
 
     let source = graph
@@ -172,12 +172,12 @@ pub fn factors_on_shared_leg(
 }
 
 /// What can go wrong assembling the model.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug)]
 pub enum TopologyBuildError {
     /// An operator could not be formed as a 2x2 matrix.
     Operator,
-    /// The detectors' context could not be built.
-    Context,
+    /// The detectors' context could not be built; carries the context's error naming the cause.
+    Context(ContextIndexError),
     /// A node could not be added to the graph.
     Node(usize),
     /// An edge could not be added between two nodes.
@@ -188,7 +188,9 @@ impl core::fmt::Display for TopologyBuildError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
             TopologyBuildError::Operator => write!(f, "an operator is not a 2x2 matrix"),
-            TopologyBuildError::Context => write!(f, "the detector context could not be built"),
+            TopologyBuildError::Context(error) => {
+                write!(f, "the detector context could not be built: {error}")
+            }
             TopologyBuildError::Node(n) => write!(f, "node {n} could not be added"),
             TopologyBuildError::Edge(a, b) => write!(f, "the edge {a} -> {b} could not be added"),
         }

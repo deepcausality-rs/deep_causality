@@ -1,0 +1,128 @@
+% Counterfactual Fluid Dynamics -- preprint skeleton.
+%
+% Class: elsarticle in preprint mode. arXiv compiles it as is, and it maps onto Computer Physics
+% Communications, Computers & Fluids and Journal of Computational Physics. For an AIAA venue, swap the
+% class before the first full pass; the section files carry over.
+%
+% Build:  latexmk -pdf main.tex
+%
+% Every \placeholder{...} marks text the author writes. Paragraph IDs (P1.1, P3.4, ...) refer to
+% notes/cfd_draft.md, Part C. Related-work paragraph IDs (RW1, ...) refer to notes/cfd_relatedwork.md.
+
+\documentclass[preprint,11pt,a4paper]{elsarticle}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{mathtools}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{siunitx}
+\usepackage{listings}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{microtype}
+
+\sisetup{detect-all, group-digits = integer}
+
+% Author-written text goes here. Red so nothing unwritten survives a proofread.
+\newcommand{\placeholder}[1]{\textcolor{red}{[#1]}}
+% A figure slot that compiles before the figure exists.
+\newcommand{\figslot}[1]{\fbox{\parbox[c][5cm][c]{0.9\linewidth}{\centering\placeholder{figure: #1}}}}
+
+% Notation.
+\newcommand{\CF}{\mathcal{F}}          % the coupled field
+\newcommand{\Nbr}{N}                   % number of branches
+\newcommand{\Pst}{P}                   % shared steps to the pause
+\newcommand{\Bst}{B}                   % steps per branch
+
+% Rust listings style: the same definition as papers/maybe_uncertain/main.tex; each paper folder
+% builds on its own as an arXiv submission.
+\lstdefinelanguage{Rust}{
+  keywords={fn, let, mut, pub, struct, impl, trait, for, in, if, else, match, return, use, mod, self, Self, as, where, type, const, static, move, ref, true, false},
+  keywordstyle=\color{blue!70!black}\bfseries,
+  ndkeywords={f64, f32, bool, usize, String, Option, Result, Vec},
+  ndkeywordstyle=\color{purple!70!black},
+  sensitive=true,
+  comment=[l]{//},
+  morecomment=[s]{/*}{*/},
+  commentstyle=\color{gray!70!black}\itshape,
+  stringstyle=\color{olive!70!black},
+  morestring=[b]"
+}
+\lstset{
+  language=Rust,
+  basicstyle=\ttfamily\footnotesize,
+  showstringspaces=false,
+  breaklines=true,
+  numbers=left,
+  numberstyle=\tiny\color{gray},
+  numbersep=6pt,
+  frame=single,
+  rulecolor=\color{gray!40},
+  xleftmargin=1.5em,
+  literate={²}{{\textsuperscript{2}}}1 {·}{{$\cdot$}}1 {≥}{{$\geq$}}1 {—}{{--}}1
+}
+
+\newtheorem{definition}{Definition}
+
+\journal{\placeholder{target journal, or arXiv}}
+
+\begin{document}
+
+\begin{frontmatter}
+
+\title{\placeholder{title (draft notes, D6)}}
+
+\author{Marvin Hansen\corref{cor1}}
+\ead{marvin.hansen@causalcenter.com}
+\cortext[cor1]{ORCID 0009-0000-1159-8173}
+\affiliation{organization={The Center for Dynamic Causality}, country={\placeholder{country}}}
+
+\begin{abstract}
+\input{sections/00_abstract}
+\end{abstract}
+
+\begin{keyword}
+\placeholder{keywords} \sep
+\placeholder{keywords} \sep
+\placeholder{keywords}
+\end{keyword}
+
+\end{frontmatter}
+
+\input{sections/01_introduction}
+\input{sections/02_related_work}
+\input{sections/03_method}
+\input{sections/04_solvers_verification}
+\input{sections/05_application}
+\input{sections/06_results}
+\input{sections/07_discussion}
+\input{sections/08_limitations}
+\input{sections/09_conclusion}
+
+\section*{Code and data availability}
+% Crate: deep_causality_cfd 0.3.3 on crates.io; examples under examples/avionics_examples/cfd/;
+% committed run artifacts (output.txt, baseline.txt, CSVs). Name the commit hash of the measured tree.
+\placeholder{availability statement}
+
+\section*{Declaration of generative AI and automated tools}
+% notes/cfd_draft.md, D5: the pre-certification audit ran 16 parallel automated auditors with an
+% adversarial re-check stage (openspec/audits/cfd_audit/). Word this to the target venue's policy.
+\placeholder{disclosure}
+
+\section*{Declaration of competing interest}
+% The author maintains the library under study (cfd_draft.md, B.9 fairness row).
+\placeholder{declaration}
+
+\appendix
+\input{sections/A1_reproducibility}
+
+\bibliographystyle{elsarticle-num}
+\bibliography{refs}
+
+\end{document}

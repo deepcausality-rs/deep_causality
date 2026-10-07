@@ -165,7 +165,7 @@ pub(crate) fn get_server_csm(server_model: CsmCausaloid) -> ServerCSM {
     let default_data: PropagatingEffect<f64> = PropagatingEffect::pure(0.0);
 
     let high_load_state = CausalState::new(
-        SERVER_HIGH_LOAD_STATE_ID as usize,
+        SERVER_HIGH_LOAD_STATE_ID,
         1,            // version
         default_data, // Data is in the context
         server_model,

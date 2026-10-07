@@ -2,10 +2,10 @@
 title: 'Walk 3: How the loop was closed'
 stage: 3
 question: How does a simulation use the weather table in flight, and what does forking the flow mid-burn show that a throttle sweep would not?
-summary: The retropropulsion program reads walk 2's table in flight, lights a retro burn, forks the flow state mid-burn to try five throttle settings, and lands at 1.81 m/s. Six stations follow it. Station 6 shows the corrections.
+summary: The retropropulsion program reads walk 2's table in flight, lights a retro burn, forks the flow state mid-burn to try five throttle settings, and lands at 1.80 m/s. Six stations follow it. Station 6 shows the corrections.
 objective: Find where a leg boundary would discard needed state.
 command: cargo run --release -p avionics_examples --example plasma_blackout_retropropulsion
-runtime: 337.5 s against an 1800 s budget
+runtime: 335.3 s against an 1800 s budget
 files:
   - cfd/plasma_blackout/retropropulsion/main.rs
   - cfd/plasma_blackout/retropropulsion/constants.rs
@@ -16,17 +16,17 @@ uses:
   - reduce
   - ThrottleGuidance
 consumes: The corridor descent and weather_table.csv, read in flight.
-produces: A landing at 1.81 m/s, which closes the loop the first two walks opened.
+produces: A landing at 1.80 m/s, which closes the loop the first two walks opened.
 source: examples/avionics_examples/cfd/plasma_blackout/retropropulsion
 ---
 import { MACHINE } from '../../../consts';
 import RetroRun from '../../../components/tutorial/RetroRun.astro';
 import TutorialVideo from '../../../components/tutorial/TutorialVideo.astro';
 
-Run the retropropulsion program and the vehicle lands at 1.81 m/s. It reads walk 2's
+Run the retropropulsion program and the vehicle lands at 1.80 m/s. It reads walk 2's
 table in flight. Guidance sized from the measured
-day lights its landing burn 14.06 m higher than guidance that assumed a standard
-day, and spends 7.28 kg more propellant.
+day lights its landing burn 18.61 m higher than guidance that assumed a standard
+day, and spends 10.54 kg more propellant.
 
 The walk forks a paused *flow* state mid-burn to try five throttle settings. An
 engine fired forward into a supersonic freestream adds thrust, but its plume also
@@ -47,7 +47,7 @@ this fidelity (see the [capability boundaries](/boundaries/#srp)).
 
 ## Before you start
 
-Start the run first. It took 337.5 s on {MACHINE}.
+Start the run first. It took 335.3 s on {MACHINE}.
 
 ```bash
 cargo run --release -p avionics_examples --example plasma_blackout_retropropulsion
@@ -65,9 +65,9 @@ and the uninformed guidance reads the standard-day row.
 
 ```text
 --- Act 0: PLAN — the measured day reads the dispersion table ---
-  measured dT = -32.0 K -> drift 54.43 +- 2.62 m, ignition margin 62.30 m (k = 3)
+  measured dT = -32.0 K -> drift 54.28 +- 4.24 m, ignition margin 66.99 m (k = 3)
   the day flown: density scale 1.15, IMU bias departure 1.32
-  standard-day belief (the uninformed world) -> margin 47.52 m; separation 14.78 m
+  standard-day belief (the uninformed world) -> margin 51.30 m; separation 15.69 m
 ```
 
 ```rust
@@ -98,14 +98,14 @@ Printing it to the console instead would leave the row invisible to every gate.
 
 ## Station 2: The corridor leg runs with the burn stages idle
 
-The first leg checks itself against walk 2's table: blackout started at 12.60 s, and
-the row for this day predicted 12.61 s.
+The first leg checks itself against walk 2's table: blackout started at 10.00 s, and
+the row for this day predicted 10.01 s.
 
 ```text
 [PASS] [tripwire] (1) corridor inheritance: Acts 0-1 fly the corridor stack with the burn
-       stages composed and inert: blackout onset at 12.60 s against the table's 12.61 s
-       (error 0.013 s) and dwell 56.10 s against 55.99 s (error 0.107 s), tolerance 0.50 s;
-       3 leg re-seed(s), peak dead-reckoning drift 51.70 m
+       stages composed and inert: blackout onset at 10.00 s against the table's 10.01 s
+       for this day (error 0.013 s) and dwell 55.60 s against 55.46 s (error 0.140 s),
+       tolerance 0.50 s; 3 leg re-seed(s), peak dead-reckoning drift 49.66 m
 ```
 
 ```rust
@@ -129,11 +129,11 @@ program a cold one:
 ## Station 3: Coast, commit and burn are one march call
 
 One march covers the coast, the ignition commit and the start of the burn, and
-pauses at 32.68 km and Mach 1.99 with the engine lit.
+pauses at 30.84 km and Mach 1.99 with the engine lit.
 
 ```text
 --- Act: COAST + BURN — ignition corridor committed ---
-  steps 2118 | altitude    32.68 km | Mach  1.99 | rebuilds 0
+  steps 2146 | altitude    30.84 km | Mach  1.99 | rebuilds 0
 ```
 
 ```rust
@@ -165,20 +165,20 @@ The program would run, pass most gates and measure nothing.
 
 ## Station 4: Five throttle settings fork from one mid-burn state
 
-Coasting decelerates the vehicle at 10.595 m/s². Lighting the engine to 0.20
-throttle decelerates it at 7.472, which is less.
+Coasting decelerates the vehicle at 13.910 m/s². Lighting the engine to 0.20
+throttle decelerates it at 11.675, which is less.
 
 ```text
 branch         cmd    flown  preserved  axial m/s2    prop kg     dv m/s  dv frozen
-coast         0.00   0.0000          —     10.5950       1.81    139.519      0.144
-low           0.20   0.2000     0.2510      7.4718      62.05     88.399     49.490
-mid           0.40   0.4000     0.1238      9.9667     122.30    120.335     99.984
-high          0.60   0.6000    -0.0161     12.8932     182.54    151.991    151.413
-hard          0.85   0.7931    -0.0611     17.1977     256.80    212.085    216.209
+coast         0.00   0.0000          —     13.9101       1.83    183.202      3.282
+low           0.20   0.2000     0.4335     11.6754      62.07    137.776     52.988
+mid           0.40   0.4000     0.1800     11.6531     122.31    137.634    103.394
+high          0.60   0.6000     0.0171     13.3226     182.56    158.870    154.650
+hard          0.85   0.8500    -0.0329     18.5463     257.86    215.696    220.012
 ```
 
-`cmd` is the throttle commanded and `flown` what the safety envelope admitted; only
-the hard branch was clamped. `preserved` is the fraction of drag the plume leaves in
+`cmd` is the throttle commanded and `flown` what the safety envelope admitted; in
+this run it clamped none. `preserved` is the fraction of drag the plume leaves in
 place. `dv frozen` is the velocity a branch would have shed with the drag held at the
 fork's value.
 
@@ -196,7 +196,7 @@ The run's header line says so:
   on imprint fidelity); the marched fork carries flow realism and fork economics.
 ```
 
-Gate 4a finds the branches' flow observables spread by 0.0202 (threshold 0.0150).
+Gate 4a finds the branches' flow observables spread by 0.0844 (threshold 0.0150).
 The source notes that this spread runs from throttle through trajectory to
 post-shock density, not from a plume footprint.
 
@@ -216,13 +216,13 @@ Gate 4c measures how much the coupling matters:
 
 ```text
 [PASS] [tripwire] (4c) coupling load-bearing: branch trajectories depart the frozen-drag
-       prediction by up to 139.3755 m/s over the continuation (threshold 100.0000) — thrust-only
+       prediction by up to 179.9207 m/s over the continuation (threshold 100.0000) — thrust-only
        kinematics does not predict the outcome
 ```
 
-The 139.4 m/s is the largest gap between what a branch shed and a thrust-only
+The 179.9 m/s is the largest gap between what a branch shed and a thrust-only
 prediction. Gate 4d caps the rank growth of the compressed flow state after the fork
-at 8, and it measured 0. Gate 4g puts five concurrent branches at 1.09 times the
+at 8, and it measured 0. Gate 4g puts five concurrent branches at 1.16 times the
 trunk's per-step cost. The two sharing flags compare a clone against the `Arc` it
 came from, so no input can falsify them.
 
@@ -234,12 +234,12 @@ above the uninformed one.
 
 | World | Margin | Lights landing burn | Contact | Extra propellant |
 |---|---:|---:|---:|---:|
-| Informed | 62.30 m | 139.12 m | 1.81 m/s | 7.28 kg |
-| Uninformed | 47.52 m | 125.06 m | 1.72 m/s | 0.00 kg |
+| Informed | 66.99 m | 146.91 m | 1.80 m/s | 10.54 kg |
+| Uninformed | 51.30 m | 128.29 m | 1.76 m/s | 0.00 kg |
 
 <div class="callout">
 <p class="callout-title">Notice</p>
-<p>The flown separation is 14.06 m, while the margins differ by 14.78 m.
+<p>The flown separation is 18.61 m, while the margins differ by 15.69 m.
 <code>ignition_altitude_kernel</code> solves a stopping distance instead of adding
 an offset, so extra margin also changes the mass and speed the burn starts from. One
 number is arithmetic and the other is a flight. Gate 5 reads the flight.</p>
@@ -306,7 +306,7 @@ at 160 m/s. Continuous throttle hovers and runs dry at 10.5 km, and Meditch show
 informed guidance should light its landing burn lower. Gate 5 requires 10 m between
 the two beliefs. Check whether a warm day still provides it.
 
-**2. Verify station 3.** Set `BURN_STEPS` to `1000`, below the 2118 steps the coast
+**2. Verify station 3.** Set `BURN_STEPS` to `1000`, below the 2146 steps the coast
 takes. The march pauses mid-coast, and the comment on `BURN_STEPS` predicts a zero
 preserved-drag fraction on every branch.
 

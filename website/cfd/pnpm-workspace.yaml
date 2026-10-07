@@ -51,4 +51,4 @@ onlyBuiltDependencies:
 # those two must be the same shiki. Force one version, which satisfies ^4.0.2.
 overrides:
   '@astrojs/markdown-satteri': 0.4.1
-  shiki: 4.4.3
+  shiki: 4.5.0

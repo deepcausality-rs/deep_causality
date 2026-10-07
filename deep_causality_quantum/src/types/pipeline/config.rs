@@ -328,13 +328,16 @@ impl<R: RealField, N: NaturalNumber, S> ConfigBuilder<R, N, S> {
         self
     }
 
-    /// The baseline experiment.
+    /// The baseline experiment, predicting one read-out per candidate in the config's order. The
+    /// control stage's `baseline` observes it first and refuses the candidates it contradicts;
+    /// with a baseline named, `observe`, `fork` and `design` fail until that stage ran.
     pub fn baseline(mut self, baseline: Experiment<R>) -> Self {
         self.baseline = Some(baseline);
         self
     }
 
-    /// The run seed, for reproducible draws.
+    /// The run seed, for reproducible draws. Named evidence carries its own seed, which the draws
+    /// use instead.
     pub fn seed(mut self, seed: u64) -> Self {
         self.seed = seed;
         self
@@ -342,6 +345,9 @@ impl<R: RealField, N: NaturalNumber, S> ConfigBuilder<R, N, S> {
 
     /// The evidence policy: naming a shot budget selects the emergent modality, and this method
     /// exists only under the `qpu` feature, so a default build refuses it at compile time.
+    ///
+    /// The control stage funds its ledger with the declared shots, every observation draws from
+    /// them and an overdraw fails the run; the declared seed replaces the run seed for the draws.
     #[cfg(feature = "qpu")]
     pub fn evidence(mut self, evidence: Evidence<N>) -> Self {
         self.evidence = Some(evidence);

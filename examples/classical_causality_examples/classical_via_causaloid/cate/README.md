@@ -20,7 +20,7 @@ The Conditional Average Treatment Effect is the average causal effect of a treat
 
 ### How It Works
 
-1. **Patient Population**: Each patient's world is a `PatientContext` (a `Context` of `Data<f64>` nodes with no space or time slot) holding three Datoid contextoids: age, initial blood pressure, and the dose, the BP change the drug produces when administered (`-10.0` for every patient).
+1. **Patient Population**: Each patient's world is a `PatientContext` (a `Context` of `Data<FloatType>` nodes with no space or time slot; `FloatType` is the example's scalar alias, `f64`) holding three Datoid contextoids: age, initial blood pressure, and the dose, the BP change the drug produces when administered (`-10.0` for every patient).
 
 2. **Subgroup Selection**: A filter keeps patients over 65.
 
@@ -28,7 +28,7 @@ The Conditional Average Treatment Effect is the average causal effect of a treat
    - **Treatment Context**: Drug is administered (`drug_administered = 1.0`)
    - **Control Context**: No drug (`drug_administered = 0.0`)
 
-4. **Causaloid Evaluation**: The same causal logic (`drug_effect_logic`) runs against both contexts, reading the assignment and the dose from each, to compute:
+4. **Causaloid Evaluation**: The same causal logic (`drug_effect_logic`) runs against both contexts, reading the assignment and the dose from each (an assignment above the midpoint `0.5` counts as administered), to compute:
    - `Y(1)`: Potential outcome with treatment
    - `Y(0)`: Potential outcome without treatment
 

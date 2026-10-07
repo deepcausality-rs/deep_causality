@@ -3,12 +3,6 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-#![allow(dead_code)]
-/*
- * SPDX-License-Identifier: MIT
- * Copyright (c) "2025" . The DeepCausality Authors and Contributors. All Rights Reserved.
- */
-
 use deep_causality_calculus::{EndoArrow, Euler};
 use deep_causality_context::{
     Context, ContextIndexError, Contextoid, ContextoidId, ContextoidType, ContextuableGraph, Data,
@@ -86,18 +80,18 @@ pub enum AdvisoryLevel {
     RA, // Resolution Advisory
 }
 
+/// The manoeuvre the monitor issues. TCAS II resolution advisories act in the vertical plane only,
+/// so a resolution advisory is a climb or a descent; outside a resolution advisory the ownship
+/// maintains its flight path.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Resolution {
     Maintain,
     Climb,
     Descend,
-    TurnLeft,
-    TurnRight,
 }
 
 #[derive(Debug)]
 pub struct ConflictReport {
-    pub intruder_id: String,
     pub advisory: AdvisoryLevel,
     pub resolution: Resolution,
     pub cpa_dist: f64, // [m]
@@ -186,7 +180,6 @@ impl<'w> GeometricTCAS<'w> {
         };
 
         Ok(ConflictReport {
-            intruder_id: intruder.callsign.clone(),
             advisory: level,
             resolution,
             cpa_dist: d_cpa,
@@ -236,19 +229,6 @@ pub fn vec3(x: f64, y: f64, z: f64) -> CausalMultiVector<f64> {
     d[2] = y; // e2
     d[4] = z; // e3
     CausalMultiVector::unchecked(d, Metric::Euclidean(3))
-}
-
-pub fn add_vec(a: &CausalMultiVector<f64>, b: &CausalMultiVector<f64>) -> CausalMultiVector<f64> {
-    let da = a.data();
-    let db = b.data();
-    let sum: Vec<f64> = da.iter().zip(db.iter()).map(|(x, y)| x + y).collect();
-    CausalMultiVector::unchecked(sum, Metric::Euclidean(3))
-}
-
-pub fn scale_vec(v: &CausalMultiVector<f64>, s: f64) -> CausalMultiVector<f64> {
-    let d = v.data();
-    let scaled: Vec<f64> = d.iter().map(|x| x * s).collect();
-    CausalMultiVector::unchecked(scaled, Metric::Euclidean(3))
 }
 
 // --- Encounter pipeline ---
@@ -319,7 +299,7 @@ pub fn intervene(mut e: Engagement) -> Engagement {
 pub fn output(mut e: Engagement, ctx: Option<&TcasContext>) -> Result<Engagement, CausalityError> {
     let tick_s = read(world(ctx)?, TICK_S)?;
     let report = e.report.as_ref().ok_or_else(|| {
-        CausalityError::MissingParameter("no conflict report: assess has not run this tick")
+        CausalityError::InternalLogicError("no conflict report: assess has not run this tick")
     })?;
     let time = e.tick as f64 * tick_s;
     let sys_status = if e.will_intervene {

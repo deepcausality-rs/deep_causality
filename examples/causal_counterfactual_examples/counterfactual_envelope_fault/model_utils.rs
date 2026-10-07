@@ -13,9 +13,10 @@ pub fn print_section(label: &str, process: &FlightProcess<Verdict>) {
     print_utils::print_section_header(label);
     match process.value() {
         Some(v) => println!(
-            "  verdict: {v:?}  (risk={:.3}, est_airspeed={:.0} kn)",
+            "  verdict: {v:?}  (risk={:.3}, est_airspeed={:.0} kn, est_altitude={:.0} ft)",
             process.state().risk,
             process.state().estimate_airspeed_kn,
+            process.state().estimate_altitude_ft,
         ),
         None => println!("  verdict: <none>  (error: {:?})", process.error()),
     }

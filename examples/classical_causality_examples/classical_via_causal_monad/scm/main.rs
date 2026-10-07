@@ -32,6 +32,7 @@ use deep_causality_core::{
     AlternatableContext, AlternatableValue, CausalEffect, CausalityError, PropagatingEffect,
     PropagatingProcess,
 };
+use deep_causality_num::lift;
 use std::error::Error;
 
 /// The scalar this example works in. Declared here, per example, so changing the shared alias in
@@ -82,7 +83,7 @@ fn run_rung2_intervention() -> Result<(), Box<dyn Error>> {
 
     let final_effect = start(world)
         .bind(stage_has_tar)
-        .alternate_value(0.0 as FloatType) // do(Tar := 0.0)
+        .alternate_value(lift::<FloatType>(0.0)) // do(Tar := 0.0)
         .bind(stage_cancer_risk);
 
     let cancer_risk = cancer_risk_from(&value_of(&final_effect)?);
@@ -184,7 +185,7 @@ fn value_of(
 
 /// Build the seed carrier with the given world state.
 fn start(world: SmokingContext) -> PropagatingProcess<FloatType, (), SmokingContext> {
-    let seed = PropagatingEffect::pure(0.0 as FloatType);
+    let seed = PropagatingEffect::pure(lift::<FloatType>(0.0));
     PropagatingProcess::with_state(seed, (), Some(world))
 }
 

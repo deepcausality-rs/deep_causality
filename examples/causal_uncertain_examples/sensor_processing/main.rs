@@ -8,7 +8,7 @@
 //! Six daisy-chained bind stages over `PropagatingProcess<_, FleetState, FleetContext>`,
 //! driven through the `CausalFlow` facade:
 //!
-//! 1. `process_stage`      — robust per-sensor triage into `Uncertain<f64>`
+//! 1. `process_stage`      — robust per-sensor triage into `Uncertain<FloatType>`
 //! 2. `validate_stage`     — fold per-sensor health counts and uncertainty into state
 //! 3. `fusion_stage`       — inverse-variance fuse the temperature sensors
 //! 4. `anomaly_stage`      — flag readings outside nominal bands
@@ -20,7 +20,7 @@
 //! summary. Per-stage observability is routed through `EffectLog`; `main.rs` prints
 //! the accumulated log once at the end. The plausibility and nominal bands,
 //! calibration offsets, triage uncertainty factors, historical temperature
-//! model, temperature–pressure correlation and thresholds are `Data<f64>`
+//! model, temperature–pressure correlation and thresholds are `Data<FloatType>`
 //! contextoids of the fleet context and arrive through the process' `Context`
 //! channel — the stages stay parameter-free.
 

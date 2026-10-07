@@ -11,7 +11,7 @@ airspeed [m/s]   Re      St      f_shed [Hz]   margin
 margin table written to viv_resonance_margin.csv
 
 --- vortex-shedding resonance margin ---
-  [PASS] strouhal band: extracted St in [0.1818, 0.1909], validated band [0.16, 0.21] for this grid
-  [PASS] resonance margin: min |f_struct - f_shed| / f_struct = 0.236, placard minimum 0.15
-  [PASS] finite wake: 4 sweeps returned a finite, oscillating wake
+  [PASS] [tripwire] strouhal band: extracted St in [0.1818, 0.1909], validated band [0.16, 0.21] for this grid
+  [PASS] [tripwire] resonance margin: min |f_struct - f_shed| / f_struct = 0.236, placard minimum 0.15
+  [PASS] [tripwire] finite wake: 4 sweeps returned a finite, oscillating wake
 === All gates passed: vortex-shedding resonance margin. ===

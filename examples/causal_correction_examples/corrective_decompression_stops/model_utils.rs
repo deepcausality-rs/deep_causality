@@ -6,16 +6,23 @@
 //! Decompression-specific display helpers. Shared printing plumbing
 //! comes from `causal_correction_examples::print_utils`.
 
-use crate::model_types::{DCS_RATIO_THRESHOLD, DiveProcess, FloatType, read};
+use crate::model_types::{DCS_RATIO_THRESHOLD, DiveProcess, DiveState, FloatType, read};
 use causal_correction_examples::print_utils;
 use deep_causality_core::CausalityError;
 
+/// The run's outcome: DCS risk if the ratio crossed the threshold, a safe surfacing if the diver
+/// reached the surface without it, otherwise the depth the run ended at.
+fn outcome(st: &DiveState) -> String {
+    match st.dcs_at {
+        Some(t) => format!("DCS RISK at tick {t}"),
+        None if st.depth_m <= 0.0 => "surfaced safely".to_string(),
+        None => format!("no DCS, still at {:.1} m when the run ended", st.depth_m),
+    }
+}
+
 pub fn summary_line(label: &str, process: &DiveProcess<FloatType>) {
     let st = process.state();
-    let outcome = match st.dcs_at {
-        Some(t) => format!("DCS RISK at tick {t}"),
-        None => "surfaced safely".to_string(),
-    };
+    let outcome = outcome(st);
     println!(
         "  {label}: ticks={:>2}  stops={:>2}  final_depth={:>4.1} m  max_ratio={:>4.2}  outcome={outcome}",
         st.tick, st.stop_count, st.depth_m, st.max_ratio_observed,
@@ -38,10 +45,7 @@ pub fn print_section(label: &str, process: &DiveProcess<FloatType>) -> Result<()
     );
     print_utils::print_trajectory("depth (m)", &st.depth_trajectory, |x| format!("{x:.1}"));
     print_utils::print_trajectory("ratio    ", &st.ratio_trajectory, |x| format!("{x:.2}"));
-    match st.dcs_at {
-        Some(t) => println!("  result: DCS RISK at tick {t}"),
-        None => println!("  result: surfaced safely"),
-    }
+    println!("  result: {}", outcome(st));
     if let Some(v) = process.value() {
         println!("  next ascent command: {v:.1} m");
     }

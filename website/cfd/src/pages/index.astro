@@ -43,17 +43,26 @@ const label = (x: number, text: string, at: 'above' | 'below' | 'left' | 'right'
   const p = bankPoints.find((q) => q.x === x);
   if (p) Object.assign(p, { label: text, at, dy });
 };
-label(0, '0°  20.0 m', 'right');
-label(40, '40°  28.9 m', 'left');
-// dy clears the aim-point line, which sits 2.07 m below the point.
-label(corridor.committed.bank, '11.5°  2.07 m', 'below', 20);
+const coarseMiss = (bank: number) => {
+  const branch = corridor.coarse.find((b) => b.bank === bank);
+  if (!branch) throw new Error(`results.ts: the corridor coarse sweep has no ${bank}° branch`);
+  return branch.miss;
+};
+const zeroMiss = coarseMiss(0);
+const clampedMiss = coarseMiss(40);
+const best = corridor.committed;
+const branchCount = corridor.coarse.length + corridor.fine.length;
+label(0, `0°  ${zeroMiss.toFixed(1)} m`, 'right');
+label(40, `40°  ${clampedMiss.toFixed(1)} m`, 'left');
+// dy clears the aim-point line, which sits best.miss below the point.
+label(best.bank, `${best.bank}°  ${best.miss.toFixed(2)} m`, 'below', 20);
 
 /* Throttle chart: every branch labelled, placed clear of the rising line. */
 const throttleAt = { coast: 'above', low: 'below', mid: 'below', high: 'right', hard: 'left' } as const;
 const throttlePoints = retropropulsion.roster.map((b) => ({
   x: b.flown,
   y: b.axial,
-  kind: b.name === 'low' ? ('win' as const) : ('plain' as const),
+  kind: b.name === 'mid' ? ('win' as const) : ('plain' as const),
   tip: `${(b.flown * 100).toFixed(0)}% throttle: ${b.axial.toFixed(3)} m/s²`,
   label: b.name === 'coast' ? undefined : `${Math.round(b.flown * 100)}%  ${b.axial.toFixed(2)}`,
   at: throttleAt[b.name as keyof typeof throttleAt],
@@ -102,14 +111,14 @@ const throttlePoints = retropropulsion.roster.map((b) => ({
     <ResultChart
       points={bankPoints}
       x={{ domain: [0, 42], ticks: [0, 10, 20, 30, 40], title: 'Bank angle commanded after the pause (degrees)', fmt: (v) => `${v}°` }}
-      y={{ domain: [-3.5, 30], ticks: [0, 10, 20, 30], title: 'Miss distance from the aim point (m)', fmt: (v) => `${v}` }}
+      y={{ domain: [-5, 50], ticks: [0, 10, 20, 30, 40, 50], title: 'Miss distance from the aim point (m)', fmt: (v) => `${v}` }}
       ref={{ y: 0, label: 'Aim point' }}
-      label="Miss distance against bank angle for 17 branches forked from one paused descent. The distance falls from 20.0 metres at 0 degrees to a minimum of 2.07 metres at 11.5 degrees, then rises to 28.9 metres at 40 degrees."
+      label={`Miss distance against bank angle for ${branchCount} branches forked from one paused descent. The distance falls from ${zeroMiss.toFixed(1)} metres at 0 degrees to a minimum of ${best.miss.toFixed(2)} metres at ${best.bank} degrees, then rises to ${clampedMiss.toFixed(1)} metres at 40 degrees.`}
     >
       The best branch banks {corridor.committed.bank}° and lands {corridor.committed.miss.toFixed(2)} m
       from the aim point. Zero bank lands {corridor.aimOffsetM.toFixed(1)} m away by construction. The 40°
       command asks for more than the safety cap allows, so the run clamps it, and that branch
-      lands 28.9 m away. All 17 branches continue from the same state at {corridor.onsetKm} km.
+      lands {clampedMiss.toFixed(1)} m away. All {branchCount} branches continue from the same state at {corridor.onsetKm} km.
       This shows the sweep at work, not guidance accuracy: the example scores each branch on the
       same model that flew it. Grey rings are round 1; blue dots are round 2. Values are from
       <a href="/tutorial/stage-1-corridor/"><code>corridor/output.txt</code></a>.
@@ -127,14 +136,14 @@ const throttlePoints = retropropulsion.roster.map((b) => ({
     </Fragment>
     <ResultChart
       points={throttlePoints}
-      x={{ domain: [-0.04, 0.85], ticks: [0, 0.2, 0.4, 0.6, 0.8], title: 'Throttle flown (fraction of maximum)', fmt: (v) => `${Math.round(v * 100)}%` }}
-      y={{ domain: [6, 18], ticks: [6, 8, 10, 12, 14, 16, 18], title: 'Deceleration flown (m/s²)' }}
-      ref={{ y: retropropulsion.roster[0].axial, label: 'Coasting: 10.59 m/s²', shade: true }}
-      label="Deceleration against throttle for five branches forked mid-burn. Coasting decelerates at 10.59 metres per second squared. At 20 percent throttle the vehicle decelerates at 7.47, and at 40 percent at 9.97, both below coasting. At 60 percent it reaches 12.89 and at 79 percent 17.20."
+      x={{ domain: [-0.04, 0.9], ticks: [0, 0.2, 0.4, 0.6, 0.8], title: 'Throttle flown (fraction of maximum)', fmt: (v) => `${Math.round(v * 100)}%` }}
+      y={{ domain: [10, 20], ticks: [10, 12, 14, 16, 18, 20], title: 'Deceleration flown (m/s²)' }}
+      ref={{ y: retropropulsion.roster[0].axial, label: 'Coasting: 13.91 m/s²', shade: true }}
+      label="Deceleration against throttle for five branches forked mid-burn. Coasting decelerates at 13.91 metres per second squared. At 20 percent throttle the vehicle decelerates at 11.68, at 40 percent at 11.65 and at 60 percent at 13.32, all below coasting. At 85 percent it reaches 18.55."
     >
-      At 20% throttle the vehicle decelerates at 7.47 m/s². Coasting gives 10.59 m/s². The plume
-      disturbs the bow shock and strips away drag, and at low throttle the drag lost is about as
-      large as the thrust gained. Somewhere between 40% and 60% throttle, thrust wins. If the drag is
+      At 40% throttle the vehicle decelerates at 11.65 m/s². Coasting gives 13.91 m/s². The plume
+      disturbs the bow shock and strips away drag, and up to 60% throttle the drag lost outweighs
+      the thrust gained. Somewhere between 60% and 85% throttle, thrust wins. If the drag is
       held at its value from the fork instead of letting the plume change it, the prediction misses
       the outcome by up to {Math.round(retropropulsion.frozenDragSeparation)} m/s over the
       continuation. Values are from

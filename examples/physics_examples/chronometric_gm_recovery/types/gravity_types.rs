@@ -1,7 +1,7 @@
 //! Gravity-related types for GQCD experiments.
 //!
 //! These types are generic over `R: RealField` to support both `f64` and
-//! `DoubleFloat` precision.
+//! `Float106` precision.
 
 use deep_causality_algebra::RealField;
 

@@ -52,7 +52,7 @@ This matches **Rung 2**: the model moves from inference to a deterministic, real
 
 The EPP models counterfactuals through **Contextual Alternation**, leaving the causal model unchanged:
 
-1.  A **Factual Context** represents the observed reality (e.g., a person who smokes and has high tar).
+1.  A **Factual Context** represents the observed reality (e.g., a person who smokes and has high tar) and holds the risk threshold, the nicotine or tar level above which the contextual causal logic reports high cancer risk.
 2.  A **Counterfactual Context** clones the factual one and modifies a past condition (e.g., sets the smoking level to low but leaves the tar level high).
 3.  The *same* causal logic (the causal laws), bound into one contextual `Causaloid` per context, is evaluated against both contexts.
 

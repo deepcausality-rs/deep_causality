@@ -5,7 +5,7 @@ question: How does one paused simulation try six bank angles, and why is that be
 summary: The corridor program pauses a reentry descent when blackout starts and tries 17 bank angles from that one pause. Six stations follow it in run order. Each shows committed code and what would break otherwise.
 objective: Read a CfdFlow program and say why it is built that way.
 command: cargo run --release -p avionics_examples --example plasma_blackout_corridor
-runtime: 44.4 s against a 600 s budget
+runtime: 45.9 s against a 600 s budget
 files:
   - cfd/plasma_blackout/corridor/main.rs
   - cfd/plasma_blackout/corridor/constants.rs
@@ -24,7 +24,7 @@ import { MACHINE } from '../../../consts';
 import CorridorRun from '../../../components/tutorial/CorridorRun.astro';
 import TutorialVideo from '../../../components/tutorial/TutorialVideo.astro';
 
-Run the corridor and it picks an 11.5 degree bank angle that lands 2.07 m from the
+Run the corridor and it picks an 11.0 degree bank angle that lands 2.87 m from the
 aim point. It found that angle by pausing one reentry descent when GPS cuts out and
 flying 17 bank angles from the pause.
 
@@ -39,17 +39,17 @@ flying 17 bank angles from the pause.
 
 ## Before you start
 
-Run it. It took 44.4 s on {MACHINE}.
+Run it. It took 45.9 s on {MACHINE}.
 
 ```bash
 cargo run --release -p avionics_examples --example plasma_blackout_corridor
 ```
 
-The run ends with thirteen gate lines. A *gate* is a pass or fail check on a
+The run ends with fourteen gate lines. A *gate* is a pass or fail check on a
 result. The last line reads:
 
 ```text
-[PASS] [tripwire] (5b) wall-clock budget: 44.4 s elapsed (budget 600 s)
+[PASS] [tripwire] (5b) wall-clock budget: 45.9 s elapsed (budget 600 s)
 ```
 
 `[tripwire]` means the limit comes from this program's own earlier output, so a
@@ -58,7 +58,7 @@ do not bear on the point.
 
 <div class="callout">
 <p class="callout-title">Notice</p>
-<p>Find <code>marched 131 steps to 73.2 km</code> in your output. That is where
+<p>Find <code>marched 106 steps to 76.8 km</code> in your output. That is where
 blackout starts. Station 2 shows that no constant produced those numbers.</p>
 </div>
 
@@ -90,8 +90,8 @@ run never reached judgement, so CI can tell a physics change from a broken build
 
 ## Station 2: The run finds where blackout starts
 
-No constant in the program says where blackout starts. The run finds it, 131 steps
-in at 73.2 km.
+No constant in the program says where blackout starts. The run finds it, 106 steps
+in at 76.8 km.
 
 ```rust
 let onset = CfdFlow::march(&nominal)
@@ -107,9 +107,9 @@ The `.until` condition asks the field for its regime. The regime carries a
 `gnss_denied` flag (GNSS is satellite navigation such as GPS), which the classifier
 sets from the electron density the chemistry stage evolved on the previous step.
 
-A fixed `.run_for(131)` reproduces today's numbers and fails on the next
+A fixed `.run_for(106)` reproduces today's numbers and fails on the next
 atmosphere. [Walk 2](/tutorial/stage-2-weather/) flies six atmospheres, and blackout
-starts between 12.1 s and 14.6 s. Only the standard day starts at step 131, so the
+starts between 9.3 s and 12.1 s. Only the standard day starts at step 106, so the
 other five would fly the wrong window, and no gate would notice, because its
 reference value would be the hardcoded one.
 
@@ -149,10 +149,10 @@ the compiler resolves every stage call at build time.
 <div class="callout">
 <p class="callout-title">Notice</p>
 <p>In the event log, under "Provenance", find the four regime lines:
-<code>slip (GNSS-available)</code>, <code>slip (GNSS-denied)</code>,
+<code>slip (GNSS-available)</code>, <code>continuum (GNSS-available)</code>,
 <code>continuum (GNSS-denied)</code> and <code>continuum (GNSS-available)</code>.
-The Knudsen number (molecular path length against vehicle size) and the link state
-switch at four separate moments, and the program schedules none of them.</p>
+The Knudsen number (molecular path length against vehicle size) switches first, the
+link state switches twice after it, and the program schedules none of them.</p>
 </div>
 
 ## Station 4: One fork gives every bank angle the same past
@@ -193,16 +193,16 @@ derives from the zero-bank (ballistic) branch.
 The coarse table, from the `miss (traj)` column of your output:
 
 ```text
- 0.0 deg  20.000 m
- 5.0 deg  11.581 m
-10.0 deg   3.533 m
-15.0 deg   6.002 m
-20.0 deg  14.303 m
-40.0 deg  28.881 m
+ 0.0 deg  30.000 m
+ 5.0 deg  16.463 m
+10.0 deg   3.818 m
+15.0 deg  11.516 m
+20.0 deg  24.988 m
+40.0 deg  48.426 m
 ```
 
-The 20.000 m at zero bank is set by construction. The example places the aim point
-`AIM_CROSS_RANGE_M = 20.0` m to the side of the unsteered landing point
+The 30.000 m at zero bank is set by construction. The example places the aim point
+`AIM_CROSS_RANGE_M = 30.0` m to the side of the unsteered landing point
 (`constants.rs`). The other five rows are measurements. The miss falls, then rises,
 and at 40 degrees it exceeds the unsteered case.
 
@@ -213,20 +213,21 @@ pub const BANK_ANGLES_DEG: [f64; 6] = [0.0, 5.0, 10.0, 15.0, 20.0, 40.0];
 ```
 
 The comment in `constants.rs` says 40 degrees "exceeds the envelope cap, flies
-clamped, and overshoots", and the 28.881 m in your output is what that costs. The
+clamped, and overshoots", and the 48.426 m in your output is what that costs. The
 `AIM_CROSS_RANGE_M` comment says the aim is sized so the best bank falls inside the
 cap and between two candidates, so the sweep has to find it.
 
-The sweep stops at 0.5 degrees and 2.07 m. Finer steps would optimize below what
-the vehicle can know: its navigation error in this run is 1.67 m when the branches
-are scored, and it keeps growing to 42.4 m before GPS returns
+The sweep stops at 0.5 degrees and 2.87 m. Near the minimum, neighbouring 0.5
+degree candidates differ by 0.22 m to 0.84 m. Finer steps would optimize below what
+the vehicle can know: its navigation error in this run is 2.11 m when the branches
+are scored, and it keeps growing to 42.8 m before GPS returns
 (`corridor_trace.csv`). A flight system commands off the navigated state, so finer
 steering returns nothing.
 
 ## Station 6: Every band is a const
 
-Thirteen gates judge the run, and the process exits nonzero if any fails. An
-assertion would stop at the first failure. The gate sequence evaluates all thirteen
+Fourteen gates judge the run, and the process exits nonzero if any fails. An
+assertion would stop at the first failure. The gate sequence evaluates all fourteen
 and merges one verdict. A gate is a plain `fn` pointer that captures nothing. The
 retropropulsion example's `constants.rs` states the consequence:
 
@@ -242,15 +243,15 @@ So every threshold is a documented `const` beside the code that uses it.
 
 Each change takes about 45 s to run, plus a rebuild.
 
-**1. Move the target.** Set `AIM_CROSS_RANGE_M` to `10.0`. The best bank angle
+**1. Move the target.** Set `AIM_CROSS_RANGE_M` to `15.0`. The best bank angle
 should fall. Check whether gate 4e, which requires the best branch to beat zero
 bank by 3 times, still passes.
 
 **2. Reproduce station 2's failure.** Replace the `.until` condition with
-`|_, step| step >= 131`. Everything should still pass. Then, in
+`|_, step| step >= 106`. Everything should still pass. Then, in
 `corridor/model.rs`, swap `world::standard_atmosphere()` for
 `world::weather_atmosphere(-40.0, 1.2)`. The condition version should pause near
-step 124 (12.4 s, walk 2's polar_winter row), and the fixed version at step 131.
+step 98 (9.8 s, walk 2's polar_winter row), and the fixed version at step 106.
 
 ## What this walk established
 

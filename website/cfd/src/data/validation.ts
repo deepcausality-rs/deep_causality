@@ -69,21 +69,22 @@ export const validation: ValidationRecord[] = [
     target: 'qtt_ramc_stagline',
     family: 'QTT',
     status: 'anchored',
-    headline: 'Peak electron density 2.251e19 m⁻³ against about 1e19 m⁻³ in flight: about a factor of 2.3 high (0.35 decades; one decade is a factor of 10). The run accepts anything within a factor of 5.',
-    shortfall: 'Order of magnitude only: the chemistry is uncalibrated, and the ±0.70-decade band was pinned from this measurement.',
-    problem: 'The plasma layer along the stagnation line (the streamline that ends at the nose) of the RAM-C II reentry vehicle at about 71 km and Mach 25. The shock is a fitted interface with the exact Rankine–Hugoniot jump across it.',
+    headline: 'Peak electron density 1.643e19 m⁻³ against the flight\'s 9.93e18 m⁻³ at 71.93 km: a factor of 1.65 high (0.22 decades; one decade is a factor of 10). The run accepts anything within a factor of 5.',
+    shortfall: 'Order of magnitude only: the chemistry is uncalibrated, and the ±0.70-decade allowance is the chemistry-model spread, not the flight data\'s stated uncertainty.',
+    problem: 'The plasma layer along the stagnation line (the streamline that ends at the nose) of the RAM-C II reentry vehicle at the cited 71 km flight condition (Mach 25.9, 217.9 K), with the cited 61 km condition as a lower-bound check. The shock is a fitted interface with the exact Rankine–Hugoniot jump across it.',
     reference:
-      'RAM-C II flight experiment, NASA Langley (1970). Park, Nonequilibrium Hypersonic Aerothermodynamics (1990). Gupta–Yos–Thompson–Lee, NASA RP-1232 (1990).',
+      'Grantham, NASA TN D-6062 (1970): the RAM-C II station-1 Ka-band datum. Parent, Thoguluva Rajendran & Omprakas, arXiv:2111.09432: the RAM-C II freestream. Park, Nonequilibrium Hypersonic Aerothermodynamics (1990). Gupta–Yos–Thompson–Lee, NASA RP-1232 (1990).',
     measured: [
-      { quantity: 'Peak n_e (uncalibrated finite-rate network)', computed: '2.251e19 m⁻³', expected: '~1e19 m⁻³', delta: '+0.35 dec (band ±0.70)' },
-      { quantity: 'Peak n_e (closed-form Park-2T controller)', computed: '5.31e17 m⁻³', expected: '~1e19 m⁻³', delta: '−1.27 dec (reported, not re-admitted)' },
-      { quantity: 'Post-shock temperature T₂', computed: '8044 K', expected: '~10⁴ K band', delta: 'in band' },
-      { quantity: 'Plasma frequency ω_p', computed: '4.111e10 rad/s', expected: '> 9.40e9 comms band', delta: 'blackout true' },
+      { quantity: 'Peak n_e (uncalibrated finite-rate network), 71 km', computed: '1.643e19 m⁻³', expected: '9.93e18 m⁻³ (71.93 km)', delta: '+0.22 dec (allowance ±0.70)' },
+      { quantity: 'Peak n_e (closed-form Park-2T controller), 71 km', computed: '1.070e17 m⁻³', expected: '9.93e18 m⁻³', delta: '−1.97 dec (reported, not re-admitted)' },
+      { quantity: 'Peak n_e (network), 61 km', computed: '1.811e20 m⁻³', expected: '≥ 9.93e18 m⁻³ (flight lower bound)', delta: '+1.26 dec, bound met' },
+      { quantity: 'Post-shock temperature T₂, 71 km', computed: '7509 K', expected: '~10⁴ K band', delta: 'in band' },
+      { quantity: 'Plasma frequency ω_p (Park-2T controller), 71 km', computed: '1.845e10 rad/s', expected: '> 9.40e9 comms band', delta: 'blackout true' },
       { quantity: 'Relaxation-profile bond', computed: '2', expected: 'O(1)', delta: 'cap 4' },
     ],
     command: 'cargo run --release -p deep_causality_cfd --example qtt_ramc_stagline',
     caveat:
-      'The uncalibrated finite-rate network lands 0.35 decades above the flight anchor, inside the ±0.70-decade chemistry-spread band. That band was pinned from this measurement, and the program labels every gate in this record a tripwire, so a pass shows the result has not regressed and does not derive from the flight data\'s stated uncertainty. The closed-form Park-2T controller lands 1.27 decades below the anchor after the N₂–N₂ reduced-mass correction (μ = 14.007). Its former near-anchor landing came from an invalid μ = 7.0 (the N–N atomic pair, which has no vibrational mode), and the offset is reported rather than re-admitted. The controller is still a two-temperature Saha surrogate. Setting the electron temperature equal to the vibrational one (T_e = T_ve) is worth roughly 2×. The landing is also sensitive to the Millikan–White vibrational relaxation model τ_vt, within the documented 2–5× chemistry-model spread. γ = 1.1 is an effective-γ closure for strongly dissociated air, not a perfect gas.',
+      'The uncalibrated finite-rate network lands 0.22 decades above the flight datum, inside the ±0.70-decade chemistry-spread allowance, and at 61 km it clears the flight\'s lower bound by 1.26 decades. The allowance is not derived from the flight data\'s stated uncertainty, so the program labels those gates tripwires; the 61 km lower bound is the flight datum itself, with no allowance, and is a reference gate. The closed-form Park-2T controller lands 1.97 decades below the datum with the N₂–N₂ reduced mass (μ = 14.007), and the offset is reported rather than re-admitted. The controller is still a two-temperature Saha surrogate. Setting the electron temperature equal to the vibrational one (T_e = T_ve) is worth roughly 2×. The landing is also sensitive to the Millikan–White vibrational relaxation model τ_vt, within the documented 2–5× chemistry-model spread. γ = 1.1 is an effective-γ closure for strongly dissociated air, not a perfect gas.',
     hasArtifact: true,
   },
   {
@@ -112,21 +113,21 @@ export const validation: ValidationRecord[] = [
     target: 'dec_cylinder_verification',
     family: 'DEC',
     status: 'quantitative',
-    headline: 'Shedding frequency, as a Strouhal number, 0.1714 against 0.164–0.165 (+4.3%), and mean drag coefficient 1.246 against 1.32–1.36 (−6%).',
+    headline: 'Shedding frequency, as a Strouhal number, 0.1714 against 0.164–0.165 (+4.3%), and mean drag coefficient 1.246 against 1.314–1.370 (−5%).',
     shortfall: 'Acceptable but not reference quality at 16 cells per diameter, and the committed capture predates the harness move and was not regenerated.',
     problem: 'Flow past an isolated circular cylinder, 2-D and laminar, Re_D = 100, at 16 cells per diameter (D). The wall condition is applied at the true cylinder surface inside the grid cells it cuts (aperture-resolved cut cells).',
     reference:
-      'Williamson (1996); Dröge & Verstappen (2005); Lehmkuhl, Rodríguez, Borrell & Oliva (2013). Window compiled in arXiv:2303.09262.',
+      'Williamson (1996); Dröge & Verstappen (2005); Lehmkuhl, Rodríguez, Borrell & Oliva (2013). Drag band: the eight published values Parvar et al. (2023, arXiv:2303.09262) tabulate in their Table 1.',
     measured: [
       { quantity: 'Strouhal St', computed: '0.1714', expected: '0.164–0.165', delta: '+4.3% on the band' },
-      { quantity: 'Mean drag C_d', computed: '1.246', expected: '1.32–1.36', delta: '−6%' },
+      { quantity: 'Mean drag C_d', computed: '1.246', expected: '1.314–1.370', delta: '−5%' },
       { quantity: 'C_d split (pressure + friction)', computed: '1.078 + 0.167', expected: 'friction ≈ 25%', delta: 'friction 13%' },
       { quantity: 'Lift C_l, drag swing', computed: '0.010, [1.238, 1.254]', expected: 'sustained limit cycle', delta: 'amplitude ≈ 0.41' },
     ],
     command:
       'CELLS_PER_D=16 LX_D=16 LY_D=16 STEPS=4000 CFL=0.4 CG_TOL=1e-6 cargo run --release -p deep_causality_cfd --example dec_cylinder_verification',
     caveat:
-      'The committed capture predates the harness moving into deep_causality_cfd. It was taken under the former crate and example names at an earlier revision and has not been regenerated, so it is not the output of the code in the tree today. The figures in this record come from that 16 cells/D output, re100_16_resolved.txt. The default run (8 cells/D, 1500 steps) has its own committed baseline.txt, with St 0.1710 and C_d 1.345. All four pass or fail bounds in the harness are tripwires pinned from its own output, and the published values print beside each measurement. Acceptable but not reference quality at this grid. The integrated drag is close for the wrong reason: the pressure/friction split is off, with friction at 13% against the ~25% reference, so at 8 cells/D the total lands inside the reference band by cancellation. Most of the +4.3% Strouhal excess is LY_D = 16 blockage (the cross-stream domain height, ≈6.25%), leaving ~1–2% method error. A defensible accuracy claim needs a grid-convergence study (16→24→32/D, Richardson-extrapolated) plus C_L,rms, θ_sep and C_pb. Its staircase companion at the same 16 cells/D (a stair-stepped wall in place of cut cells) does not shed at all: the wake decays to a steady residual. That run\'s printed St 0.2444 is therefore the crossing detector firing on 7th-decimal noise, and its C_d 1.356 is a steady-flow value rather than a cycle mean. The aperture-resolved cut cells are what produce a sustained street here.',
+      'The committed capture predates the harness moving into deep_causality_cfd. It was taken under the former crate and example names at an earlier revision and has not been regenerated, so it is not the output of the code in the tree today. The figures in this record come from that 16 cells/D output, re100_16_resolved.txt. The default run (8 cells/D, 1500 steps) has its own committed baseline.txt, with St 0.1710 and C_d 1.342. All four pass or fail bounds in the harness are tripwires pinned from its own output, and the published values print beside each measurement. Acceptable but not reference quality at this grid. The integrated drag is close for the wrong reason: the pressure/friction split is off, with friction at 13% against the ~25% reference, so at 8 cells/D the total lands inside the reference band by cancellation. Most of the +4.3% Strouhal excess is LY_D = 16 blockage (the cross-stream domain height, ≈6.25%), leaving ~1–2% method error. A defensible accuracy claim needs a grid-convergence study (16→24→32/D, Richardson-extrapolated) plus C_L,rms, θ_sep and C_pb. Its staircase companion at the same 16 cells/D (a stair-stepped wall in place of cut cells) does not shed at all: the wake decays to a steady residual. That run\'s printed St 0.2444 is therefore the crossing detector firing on 7th-decimal noise, and its C_d 1.356 is a steady-flow value rather than a cycle mean. The aperture-resolved cut cells are what produce a sustained street here.',
     hasArtifact: true,
   },
   {
@@ -294,7 +295,7 @@ export const validation: ValidationRecord[] = [
     problem: 'The first-version (Tier A) blackout closure on an incompressible flow: recovery temperature, then ionization, then electron density.',
     reference: 'Cross-references only: RAM-C II, Park two-temperature tables, the Saha limit, the duration of Apollo blackouts.',
     measured: [
-      { quantity: 'Peak electron density n_e', computed: '1.000e22 m⁻³', expected: '~1e19 m⁻³ (RAM-C II)', delta: '+3 decades' },
+      { quantity: 'Peak electron density n_e', computed: '1.000e22 m⁻³', expected: '9.93e18 m⁻³ (RAM-C II, 71.93 km)', delta: '+3 decades' },
       { quantity: 'Six LER acceptance gates', computed: 'all PASS', expected: 'closure behaviour', delta: 'not accuracy' },
     ],
     command: 'cargo run --release -p deep_causality_cfd --example qtt_park2t_blackout',

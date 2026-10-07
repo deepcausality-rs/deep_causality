@@ -9,7 +9,7 @@ use deep_causality_num::{FromPrimitive, lift};
 
 /// Apply MAD (Median Absolute Deviation) filtering to remove outliers.
 ///
-/// Generic over any `Float` type to maintain precision (f64, DoubleFloat, etc.).
+/// Generic over any `Float` type to maintain precision (f64, Float106, etc.).
 ///
 /// # Statistical Background
 ///

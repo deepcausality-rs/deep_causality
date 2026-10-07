@@ -1,0 +1,8 @@
+Coupling::between_steps()
+    .then(VibrationalLagStage::new(/* Millikan-White bath */))
+    .then(FiniteRateIonizationStage::new(n_tot).with_density_field("n_tot"))
+    .then(RegimeClassify::new(l_char, trigger))
+    .then(BankSteeredLift::new(rho_ref, cda_over_m, l_over_d))
+    .then(TrajectoryNav::new(q_diag, gnss_var, optical_var).with_imu(imu))
+    .then(CyberneticCorrect::new(SafetyEnvelope::new(q_max, g_max, bank_max)))
+    .build()

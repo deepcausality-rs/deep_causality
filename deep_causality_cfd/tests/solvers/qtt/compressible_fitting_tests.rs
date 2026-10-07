@@ -7,23 +7,50 @@
 //! nonequilibrium ionization lag, and the `O(1)`-rank post-shock relaxation profile.
 
 use deep_causality_cfd::{
-    FittedNormalShock, Park2tClosure, PostShockState, REDUCED_MASS_AMU, reduced_mass_amu,
+    FittedNormalShock, Park2tClosure, PostShockState, RAMC_II_NE_ANCHOR, REDUCED_MASS_AMU,
+    reduced_mass_amu,
 };
-use deep_causality_physics::PhysicsErrorEnum;
+use deep_causality_physics::{
+    AVOGADRO_CONSTANT, BOLTZMANN_CONSTANT, MOLAR_GAS_CONSTANT, PhysicsErrorEnum,
+};
 use deep_causality_tensor::Truncation;
 
 fn tr() -> Truncation<f64> {
     Truncation::by_tol(1e-10).unwrap()
 }
 
+/// A free-stream condition: static temperature (K), heavy-particle number density (m⁻³), Mach
+/// number and velocity (m/s).
+struct Freestream {
+    t_inf: f64,
+    n_inf: f64,
+    mach: f64,
+    v: f64,
+}
+
+/// The cited RAM-C II 71 km freestream (Parent, Thoguluva Rajendran & Omprakas, arXiv:2111.09432:
+/// Mach 25.9, 217.9 K, q = 2.28 kPa), with velocity and number density derived as the
+/// `qtt_ramc_stagline` harness derives them, from γ∞ = 1.4 and the US-1976 air molar mass.
+fn ramc_71km() -> Freestream {
+    const AIR_MOLAR_MASS: f64 = 28.9644e-3;
+    let (mach, t_inf, q) = (25.9, 217.9, 2_280.0);
+    let v = mach * (1.4 * MOLAR_GAS_CONSTANT / AIR_MOLAR_MASS * t_inf).sqrt();
+    let n_inf = 2.0 * q / (v * v) * AVOGADRO_CONSTANT / AIR_MOLAR_MASS;
+    Freestream {
+        t_inf,
+        n_inf,
+        mach,
+        v,
+    }
+}
+
 /// The RAM-C Park-2T closure built from a post-shock state: free-stream `T_ve(0)`, post-shock pressure
 /// (atm), the N₂–N₂ reduced mass (the single crate definition, not a restated literal), and `θ_v(N₂)`.
 fn ramc_closure(post: &PostShockState<f64>) -> Park2tClosure<f64> {
-    const BOLTZMANN: f64 = 1.380_649e-23;
     const ATM: f64 = 101_325.0;
     Park2tClosure {
-        t_ve_initial: 250.0,
-        pressure_atm: post.n_tot2 * BOLTZMANN * post.t2 / ATM,
+        t_ve_initial: ramc_71km().t_inf,
+        pressure_atm: post.n_tot2 * BOLTZMANN_CONSTANT * post.t2 / ATM,
         reduced_mass_amu: REDUCED_MASS_AMU,
         theta_vib: 3_393.0,
     }
@@ -58,7 +85,10 @@ fn post_shock_ratios_match_exact_rh() {
 fn reacting_gamma_lands_t2_in_the_10k_band() {
     // Effective reacting-air γ ≈ 1.1 lands T₂ in the realistic ~10⁴ K post-shock band at M ≈ 25.
     let shock = FittedNormalShock::<f64>::new(1.1).unwrap();
-    let post = shock.post_shock(250.0, 1.3e21, 25.0).unwrap();
+    let Freestream {
+        t_inf, n_inf, mach, ..
+    } = ramc_71km();
+    let post = shock.post_shock(t_inf, n_inf, mach).unwrap();
     assert!(
         post.t2 > 5_000.0 && post.t2 < 15_000.0,
         "T2 should be ~10^4 K, got {}",
@@ -70,7 +100,10 @@ fn reacting_gamma_lands_t2_in_the_10k_band() {
 fn nonequilibrium_lag_sits_below_saha_equilibrium() {
     // The grounded ionization lag must pull the peak n_e below the Saha-equilibrium upper bound.
     let shock = FittedNormalShock::<f64>::new(1.1).unwrap();
-    let post = shock.post_shock(250.0, 1.3e21, 25.0).unwrap();
+    let Freestream {
+        t_inf, n_inf, mach, ..
+    } = ramc_71km();
+    let post = shock.post_shock(t_inf, n_inf, mach).unwrap();
     let comms = 9.4e9;
     let residence_time = 2.0e-5;
 
@@ -92,47 +125,58 @@ fn nonequilibrium_lag_sits_below_saha_equilibrium() {
 
 #[test]
 fn ramc_peak_ne_in_order_of_magnitude_band() {
-    // The milestone gate: peak n_e within ~2 decades of the RAM-C II anchor (order-of-magnitude surrogate).
+    // The single-temperature surrogate at the cited 71 km freestream lands within ~2 decades of the
+    // station-1 Ka-band datum (it ionizes at the hot T₂ and over-predicts: ~8.1e19).
     let shock = FittedNormalShock::<f64>::new(1.1).unwrap();
-    let post = shock.post_shock(250.0, 1.3e21, 25.0).unwrap();
-    let u2 = 7650.0 * post.u_ratio;
+    let Freestream {
+        t_inf,
+        n_inf,
+        mach,
+        v: v_inf,
+    } = ramc_71km();
+    let post = shock.post_shock(t_inf, n_inf, mach).unwrap();
+    let u2 = v_inf * post.u_ratio;
     let residence_time = 0.0076 / u2;
     let out = shock
         .stagnation_line_blackout(&post, residence_time, 9.4e9)
         .unwrap();
     assert!(
-        out.electron_density > 1.0e17 && out.electron_density < 1.0e21,
-        "peak n_e {:.3e} should be within ~2 decades of RAM-C II (1e19)",
+        out.electron_density > RAMC_II_NE_ANCHOR / 100.0
+            && out.electron_density < RAMC_II_NE_ANCHOR * 100.0,
+        "peak n_e {:.3e} should be within ~2 decades of the RAM-C II station-1 datum",
         out.electron_density
     );
 }
 
 #[test]
-fn park2t_controller_lands_below_ramc_after_the_mu_correction() {
-    // Re-derived under the corrected N₂–N₂ reduced mass (μ = 14.00,
-    // fix-ramc-vibrational-relaxation-pair). The Park-2T controller no longer agrees with the RAM-C II
-    // anchor to ~3x. That "+0.0 dec" headline was an artifact of the invalid μ = 7.0 (the N–N atomic
-    // pair). Correcting μ lengthens τ_vt about 1.9x, cools Tₐ, and drops peak n_e to ~5.3e17, which is
-    // 1.27 decades below the anchor. This is a regression pin on the corrected value, not a re-widened
-    // agreement band (audit D3): the offset is the result.
+fn park2t_controller_lands_below_ramc_at_the_cited_freestream() {
+    // Under the corrected N₂–N₂ reduced mass (μ = 14.00) at the cited RAM-C II 71 km freestream, the
+    // Park-2T controller lands ~1.07e17, 1.97 decades below the station-1 Ka-band datum. This is a
+    // regression pin on the corrected value, not an agreement band: the offset is the result.
     let shock = FittedNormalShock::<f64>::new(1.1).unwrap();
-    let post = shock.post_shock(250.0, 1.3e21, 25.0).unwrap();
-    let u2 = 7650.0 * post.u_ratio;
+    let Freestream {
+        t_inf,
+        n_inf,
+        mach,
+        v: v_inf,
+    } = ramc_71km();
+    let post = shock.post_shock(t_inf, n_inf, mach).unwrap();
+    let u2 = v_inf * post.u_ratio;
     let residence_time = 0.0076 / u2;
     let closure = ramc_closure(&post);
     let out = shock
         .stagnation_line_blackout_2t(&post, residence_time, &closure, 9.4e9)
         .unwrap();
-    // ~5.3e17, pinned within about ±0.3 decade for regression. Not presented as agreement with RAM-C II.
+    // ~1.07e17, pinned within about ±0.27 decade for regression. Not presented as agreement with RAM-C II.
     assert!(
-        out.electron_density > 3.0e17 && out.electron_density < 1.0e18,
-        "corrected Park-2T peak n_e {:.3e} should land ~5.3e17 (1.27 dec below RAM-C II 1e19)",
+        out.electron_density > 6.0e16 && out.electron_density < 2.0e17,
+        "corrected Park-2T peak n_e {:.3e} should land ~1.07e17 (1.97 dec below the RAM-C II datum)",
         out.electron_density
     );
-    let decades = (out.electron_density / 1.0e19).log10();
+    let decades = (out.electron_density / RAMC_II_NE_ANCHOR).log10();
     assert!(
-        (-1.4..=-1.1).contains(&decades),
-        "the offset should be about -1.27 decades, got {decades:.2}"
+        (-2.1..=-1.8).contains(&decades),
+        "the offset should be about -1.97 decades, got {decades:.2}"
     );
     assert!(
         out.blackout,
@@ -145,8 +189,14 @@ fn park2t_controller_suppresses_below_single_temperature_surrogate() {
     // The two-temperature controller must sit *below* the single-temperature surrogate (which ionizes at the
     // hot T₂ and over-predicts) and below Saha equilibrium — the cold electron bath suppresses ionization.
     let shock = FittedNormalShock::<f64>::new(1.1).unwrap();
-    let post = shock.post_shock(250.0, 1.3e21, 25.0).unwrap();
-    let u2 = 7650.0 * post.u_ratio;
+    let Freestream {
+        t_inf,
+        n_inf,
+        mach,
+        v: v_inf,
+    } = ramc_71km();
+    let post = shock.post_shock(t_inf, n_inf, mach).unwrap();
+    let u2 = v_inf * post.u_ratio;
     let residence_time = 0.0076 / u2;
     let comms = 9.4e9;
 
@@ -172,7 +222,10 @@ fn park2t_recovers_single_temperature_when_fully_relaxed() {
     // Tₐ → T₂ and the 2-T target approaches the single-temperature Saha equilibrium target. The controller
     // degrades gracefully to the one-temperature model in the equilibrium limit (no spurious suppression).
     let shock = FittedNormalShock::<f64>::new(1.1).unwrap();
-    let post = shock.post_shock(250.0, 1.3e21, 25.0).unwrap();
+    let Freestream {
+        t_inf, n_inf, mach, ..
+    } = ramc_71km();
+    let post = shock.post_shock(t_inf, n_inf, mach).unwrap();
     let comms = 9.4e9;
     // A huge residence time saturates both the vibrational relaxation and the ionization lag.
     let long = 1.0e3;
@@ -192,7 +245,10 @@ fn park2t_recovers_single_temperature_when_fully_relaxed() {
 #[test]
 fn relaxation_profile_is_low_rank() {
     let shock = FittedNormalShock::<f64>::new(1.1).unwrap();
-    let post = shock.post_shock(250.0, 1.3e21, 25.0).unwrap();
+    let Freestream {
+        t_inf, n_inf, mach, ..
+    } = ramc_71km();
+    let post = shock.post_shock(t_inf, n_inf, mach).unwrap();
     let (bond, peak) = shock
         .relaxation_profile_bond(&post, 10, 0.2, &tr())
         .unwrap();
@@ -209,7 +265,10 @@ fn park2t_propagates_relaxation_kernel_error_on_non_positive_pressure() {
     // Millikan–White pressure. A closure with pressure_atm = 0 must make that kernel error and the
     // `?` in `stagnation_line_blackout_2t` propagate a `Singularity`.
     let shock = FittedNormalShock::<f64>::new(1.1).unwrap();
-    let post = shock.post_shock(250.0, 1.3e21, 25.0).unwrap();
+    let Freestream {
+        t_inf, n_inf, mach, ..
+    } = ramc_71km();
+    let post = shock.post_shock(t_inf, n_inf, mach).unwrap();
     let bad_closure = Park2tClosure {
         t_ve_initial: 250.0,
         pressure_atm: 0.0, // non-physical: trips the Millikan–White pressure guard

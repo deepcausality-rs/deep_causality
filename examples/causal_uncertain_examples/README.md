@@ -1,8 +1,8 @@
 # Causal Uncertain Examples
 
 Runnable examples for [`deep_causality_uncertain`](../../deep_causality_uncertain),
-each written as a chained monadic pipeline. The `Uncertain<f64>` and
-`MaybeUncertain<f64>` API (sampling, distributions, comparisons,
+each written as a chained monadic pipeline. The `Uncertain` and
+`MaybeUncertain` API (sampling, distributions, comparisons,
 `lift_to_uncertain`, etc.) does the numerical work inside each stage; the
 monad supplies the chaining, log accumulation, and short-circuit on failure.
 
@@ -22,15 +22,15 @@ The three examples have different shapes:
   `CausalFlow` with unit state and the route as its context. The destination,
   the parameters of the speed, traffic, fuel-efficiency and fuel-on-hand
   distributions, the distances, the lateness threshold and the fuel limits are
-  `Data<f64>` contextoids of the route context. Through `try_step_with`,
+  `Data<FloatType>` contextoids of the route context. Through `try_step_with`,
   stage 1 receives the start position and every later stage the previous
-  stage's `Uncertain<f64>`; each builds its distributions from the route
-  context and returns a transformed `Uncertain<f64>`.
+  stage's `Uncertain<FloatType>`; each builds its distributions from the route
+  context and returns a transformed `Uncertain<FloatType>`.
 - **sensor_processing** has real per-stage state (`healthy_count`,
   `failed_count`, `total_uncertainty`, `fused_temp`, `anomalies`, `verdict`)
   and a read-only fleet context (plausibility bands, calibration offsets,
   triage uncertainty factors, the historical temperature model, the
-  temperature–pressure correlation, thresholds) held as `Data<f64>`
+  temperature–pressure correlation, thresholds) held as `Data<FloatType>`
   contextoids. These map one-to-one onto `PropagatingProcess`'s `State` and
   `Context` channels. Each stage logs to `EffectLog`, printed once at the end,
   the same shape as the avionics

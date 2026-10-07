@@ -24,7 +24,7 @@
 //!   Park's published `T_tr^0.7·T_ve^0.3`, electron channels at `T_e = T_ve` — with the
 //!   Millikan-White vibrational clock on the **evolved per-cell pressure** and the network on
 //!   the **evolved per-cell density**. The sheath is renewed each step: the stagnation-line A/B
-//!   under recombination measured renewal at +0.35 and carried at -0.75 decades of the flight
+//!   under recombination measured renewal at +0.22 and carried at -1.18 decades of the flight
 //!   anchor and kept renewal, whose fixed-point clock is the network's true Riccati timescale
 //!   (the old forward-only surrogate *needed* renewal against runaway, measured 268x; the
 //!   network self-limits either way).
@@ -70,39 +70,146 @@ pub const SEED_RHO_HAT: f64 = 0.054;
 pub const SEED_U_HAT: f64 = 1.0;
 pub const SEED_P_HAT: f64 = 0.04;
 
-// ── Reference anchors (the peak-station post-shock values; fixed for the whole descent)
+// ── Reference scales (nondimensionalization; fixed for the whole descent)
 
-/// Temperature anchor: the exact RH `T₂` at the 61 km Mach-25 condition with `γ_eff = 1.1`, K.
+/// Temperature scale, K. The marched layer is nondimensionalized by this value and the evolved
+/// projections are re-dimensionalized by it, so it sets conditioning, not physics; it is of the
+/// order of the exact Rankine-Hugoniot `T₂` at the 71.93 km RAM-C II anchor station with
+/// `γ_eff = 1.1`. [`SEED_RHO_HAT`], [`SEED_P_HAT`], [`S_REF`] and [`DT_SOLVER`] are in these units.
 pub const T_REF: f64 = 8044.0;
-/// Density anchor: the post-shock `n₂ = n_∞·(ρ₂/ρ₁)` at the same condition, m⁻³.
+/// Number-density scale, m⁻³, of the order of the post-shock `n₂ = n_∞·(ρ₂/ρ₁)` at the anchor
+/// station. A scale, as [`T_REF`].
 pub const N_REF: f64 = 2.645e22;
-/// Speed anchor: the post-shock speed `u₂` at the same condition, m·s⁻¹.
+/// Speed scale, m·s⁻¹, of the order of the post-shock speed `u₂` at the anchor station. A scale,
+/// as [`T_REF`].
 pub const U_REF: f64 = 376.0;
 
-/// The RAM-C II ~61 km peak electron density anchor, m⁻³.
-pub const RAMC_NE_REFERENCE: f64 = 1.0e19;
+// ── The RAM-C II flight anchor (Grantham 1970, NASA TN D-6062)
+
+/// The RAM-C II station-1 Ka-band anchor (`N_e,pk = 0.63 · 1.287e-8 · f²` cm⁻³ with
+/// `f = 3.5e10 Hz`, ×1e6 to m⁻³), its altitude (236 000 ft) and the chemistry-spread allowance around
+/// it. Defined once in `deep_causality_cfd` and re-exported here, so the corridor and the
+/// stagnation-line harness compare against the same datum with the same allowance.
+pub use deep_causality_cfd::{
+    RAMC_II_ALLOWANCE_DECADES, RAMC_II_ANCHOR_ALTITUDE_M, RAMC_II_NE_ANCHOR,
+};
+/// RAM-C II flight speed at the anchor station, m/s (Grantham 1970, Table VII: 7.66 km/s at 71 km).
+/// The corridor's entry velocity is sized to cross [`RAMC_II_ANCHOR_ALTITUDE_M`] at this speed.
+pub const RAMC_ANCHOR_SPEED_MS: f64 = 7_660.0;
+/// Lowest altitude of the RAM-C II primary data period, m (185 000 ft, beryllium-cap ejection).
+/// Between this altitude and [`RAMC_II_ANCHOR_ALTITUDE_M`] station 1 is overdense at Ka-band, the
+/// highest frequency flown, so [`RAMC_II_NE_ANCHOR`] is a lower bound on the flight's peak
+/// electron density there; below it no flight datum applies.
+pub const RAMC_LOWER_BOUND_FLOOR_M: f64 = 56_390.0;
 
 // ── Baseline atmosphere: `(altitude m, n_tot m⁻³, T K, a m/s)` rows, ascending altitude.
-// US-1976 shape pinned to the RAM-C II 61 km freestream (`n_∞ = 1.3e21`), so the calibrated
-// peak-station recipe is reproduced exactly as the descent sweeps that altitude.
-pub const ATMOSPHERE: [(f64, f64, f64, f64); 11] = [
-    // ── Powered-descent extension to the ground (`plasma-retropropulsion-cfd-contracts`, capability
-    //    `full-descent-atmosphere`): US Standard Atmosphere 1976 rows below 30 km. Sound speed
-    //    a = √(γ·R·T) at γ = 1.4, R = 287 J/(kg·K); number density decreases monotonically into
-    //    the 30 km row. `DescentSchedule::sample` clamps to the table ends, so appending here
-    //    relocates the low clamp from 30 km to 0 km by data alone. ──
-    (0.0, 2.5e25, 288.0, 340.2), // US-1976 sea level: T 288.15 K, ρ 1.225 kg/m³ (n = ρ/m̄)
-    (5_000.0, 1.5e25, 255.7, 320.5), // US-1976 5 km: T 255.68 K, p 54.02 kPa
-    (10_000.0, 8.6e24, 223.3, 299.5), // US-1976 10 km: T 223.25 K, p 26.44 kPa
-    (15_000.0, 4.0e24, 216.7, 295.1), // US-1976 15 km: lower-stratosphere isotherm 216.65 K
-    (20_000.0, 1.8e24, 216.7, 295.1), // US-1976 20 km: isotherm 216.65 K, p 5.475 kPa
-    (25_000.0, 8.2e23, 221.6, 298.4), // US-1976 25 km: T 221.65 K, p 2.511 kPa
-    // ── Original rows (byte-identical): US-1976 shape pinned to the RAM-C II 61 km freestream. ──
-    (30_000.0, 3.0e23, 226.0, 302.0),
-    (45_000.0, 2.4e22, 264.0, 326.0),
-    (61_000.0, 1.3e21, 250.0, 317.0),
-    (75_000.0, 3.0e20, 208.0, 289.0),
-    (90_000.0, 7.0e19, 187.0, 274.0),
+//
+// U.S. Standard Atmosphere 1976 (NOAA/NASA/USAF, NASA-TM-X-74335), at 1 km spacing from 0 to
+// 90 km, generated from the standard's defining constants: Table 2 (k = 1.380622e-23 N·m/K,
+// R* = 8.31432e3 N·m/(kmol·K), g₀ = 9.80665 m/s², P₀ = 101 325 Pa, r₀ = 6356.766 km,
+// T₀ = 288.15 K, γ = 1.40) and Table 4 (layer base geopotential heights 0, 11, 20, 32, 47, 51,
+// 71, 84.852 km' with gradients -6.5, 0.0, +1.0, +2.8, 0.0, -2.8, -2.0 K/km'), with
+// M₀ = 28.9644 kg/kmol. `n_tot = P/(kT)`, `a = √(γ·R*·T/M₀)`. The generator reproduces Table I
+// to five significant figures at 61, 71 and 72 km (61 km: 244.274 K, 19.157 Pa,
+// 2.7321e-4 kg/m³). Above 86 km the rows extend isothermally at the 86 km temperature,
+// hydrostatic in geometric altitude; at 90 km that agrees with Table I's density to 0.2 %.
+// Number density decreases monotonically through the table. The table is the standard day, so it
+// differs from the RAM-C II flight day: the cited 71 km freestream (Mach 25.9, 217.9 K, q = 2.28 kPa;
+// Parent et al., arXiv:2111.09432) is 7.9 % denser and 1.1 K warmer than the 71 km row, which gives
+// q = 2.10 kPa at the same Mach number. The stagnation-line harness flies the flight day; the
+// corridor flies this table and reads its anchor where the descent crosses 71.93 km.
+pub const ATMOSPHERE: [(f64, f64, f64, f64); 91] = [
+    (0.0, 2.5470e25, 288.150, 340.29),
+    (1000.0, 2.3113e25, 281.651, 336.43),
+    (2000.0, 2.0928e25, 275.154, 332.53),
+    (3000.0, 1.8905e25, 268.659, 328.58),
+    (4000.0, 1.7036e25, 262.166, 324.59),
+    (5000.0, 1.5312e25, 255.676, 320.55),
+    (6000.0, 1.3725e25, 249.187, 316.45),
+    (7000.0, 1.2267e25, 242.700, 312.31),
+    (8000.0, 1.0932e25, 236.215, 308.11),
+    (9000.0, 9.7110e24, 229.733, 303.85),
+    (10000.0, 8.5975e24, 223.252, 299.53),
+    (11000.0, 7.5848e24, 216.774, 295.15),
+    (12000.0, 6.4857e24, 216.650, 295.07),
+    (13000.0, 5.5430e24, 216.650, 295.07),
+    (14000.0, 4.7375e24, 216.650, 295.07),
+    (15000.0, 4.0493e24, 216.650, 295.07),
+    (16000.0, 3.4612e24, 216.650, 295.07),
+    (17000.0, 2.9587e24, 216.650, 295.07),
+    (18000.0, 2.5292e24, 216.650, 295.07),
+    (19000.0, 2.1622e24, 216.650, 295.07),
+    (20000.0, 1.8486e24, 216.650, 295.07),
+    (21000.0, 1.5742e24, 217.581, 295.70),
+    (22000.0, 1.3413e24, 218.574, 296.38),
+    (23000.0, 1.1437e24, 219.567, 297.05),
+    (24000.0, 9.7591e23, 220.560, 297.72),
+    (25000.0, 8.3341e23, 221.552, 298.39),
+    (26000.0, 7.1225e23, 222.544, 299.06),
+    (27000.0, 6.0916e23, 223.536, 299.72),
+    (28000.0, 5.2138e23, 224.527, 300.39),
+    (29000.0, 4.4657e23, 225.518, 301.05),
+    (30000.0, 3.8278e23, 226.509, 301.71),
+    (31000.0, 3.2833e23, 227.500, 302.37),
+    (32000.0, 2.8183e23, 228.490, 303.02),
+    (33000.0, 2.4062e23, 230.973, 304.67),
+    (34000.0, 2.0557e23, 233.744, 306.49),
+    (35000.0, 1.7597e23, 236.513, 308.30),
+    (36000.0, 1.5090e23, 239.282, 310.10),
+    (37000.0, 1.2965e23, 242.050, 311.89),
+    (38000.0, 1.1158e23, 244.818, 313.67),
+    (39000.0, 9.6197e22, 247.584, 315.43),
+    (40000.0, 8.3076e22, 250.350, 317.19),
+    (41000.0, 7.1864e22, 253.114, 318.94),
+    (42000.0, 6.2266e22, 255.878, 320.67),
+    (43000.0, 5.4035e22, 258.641, 322.40),
+    (44000.0, 4.6965e22, 261.403, 324.12),
+    (45000.0, 4.0882e22, 264.164, 325.82),
+    (46000.0, 3.5640e22, 266.925, 327.52),
+    (47000.0, 3.1115e22, 269.684, 329.21),
+    (48000.0, 2.7376e22, 270.650, 329.80),
+    (49000.0, 2.4176e22, 270.650, 329.80),
+    (50000.0, 2.1350e22, 270.650, 329.80),
+    (51000.0, 1.8856e22, 270.650, 329.80),
+    (52000.0, 1.6750e22, 269.031, 328.81),
+    (53000.0, 1.4926e22, 266.277, 327.12),
+    (54000.0, 1.3286e22, 263.524, 325.43),
+    (55000.0, 1.1812e22, 260.771, 323.72),
+    (56000.0, 1.0488e22, 258.019, 322.01),
+    (57000.0, 9.3017e21, 255.268, 320.29),
+    (58000.0, 8.2390e21, 252.518, 318.56),
+    (59000.0, 7.2882e21, 249.769, 316.82),
+    (60000.0, 6.4387e21, 247.021, 315.07),
+    (61000.0, 5.6805e21, 244.273, 313.32),
+    (62000.0, 5.0047e21, 241.527, 311.55),
+    (63000.0, 4.4031e21, 238.781, 309.77),
+    (64000.0, 3.8683e21, 236.036, 307.99),
+    (65000.0, 3.3934e21, 233.292, 306.19),
+    (66000.0, 2.9723e21, 230.549, 304.39),
+    (67000.0, 2.5995e21, 227.807, 302.57),
+    (68000.0, 2.2698e21, 225.065, 300.75),
+    (69000.0, 1.9787e21, 222.325, 298.91),
+    (70000.0, 1.7221e21, 219.585, 297.06),
+    (71000.0, 1.4963e21, 216.846, 295.20),
+    (72000.0, 1.2968e21, 214.263, 293.44),
+    (73000.0, 1.1191e21, 212.308, 292.10),
+    (74000.0, 9.6442e20, 210.353, 290.75),
+    (75000.0, 8.3002e20, 208.399, 289.40),
+    (76000.0, 7.1338e20, 206.446, 288.04),
+    (77000.0, 6.1227e20, 204.493, 286.67),
+    (78000.0, 5.2475e20, 202.541, 285.30),
+    (79000.0, 4.4909e20, 200.589, 283.92),
+    (80000.0, 3.8377e20, 198.639, 282.54),
+    (81000.0, 3.2746e20, 196.688, 281.15),
+    (82000.0, 2.7899e20, 194.739, 279.75),
+    (83000.0, 2.3732e20, 192.790, 278.35),
+    (84000.0, 2.0155e20, 190.841, 276.94),
+    (85000.0, 1.7090e20, 188.893, 275.52),
+    (86000.0, 1.4466e20, 186.946, 274.10),
+    (87000.0, 1.2109e20, 186.946, 274.10),
+    (88000.0, 1.0137e20, 186.946, 274.10),
+    (89000.0, 8.4857e19, 186.946, 274.10),
+    (90000.0, 7.1042e19, 186.946, 274.10),
 ];
 
 // ── Flight physics
@@ -140,8 +247,9 @@ pub const NOSE_RADIUS_M: f64 = 0.1524;
 pub use deep_causality_cfd::REDUCED_MASS_AMU;
 /// Characteristic vibrational temperature of N₂, K.
 pub const THETA_VIB: f64 = 3393.0;
-/// Sheath residence time `t_res = standoff/u₂` at the peak station, s. Held constant over the
-/// descent (the standoff-to-speed ratio varies less than the chemistry it clocks).
+/// Sheath residence time `t_res = standoff/u₂` at the anchor station (the stagnation-line
+/// harness's 7.6 mm standoff over its post-shock `u₂`), s. Held constant over the descent (the
+/// standoff-to-speed ratio varies less than the chemistry it clocks).
 pub const RESIDENCE_TIME_S: f64 = 2.0e-5;
 /// The sheath exposure at the transit-age profile's observable peak, s. On the stagnation line
 /// the flow decelerates linearly to zero at the body, so a parcel's age at fractional depth ξ is
@@ -151,7 +259,9 @@ pub const RESIDENCE_TIME_S: f64 = 2.0e-5;
 /// sheath clocks (the vibrational bath and the network renewal) run at this exposure, mirroring
 /// the stagnation-line measurement that pinned the corridor's anchor band.
 pub const SHEATH_PEAK_AGE_S: f64 = RESIDENCE_TIME_S * 4.174;
-/// Freestream vibrational temperature the bath relaxes up from, K.
+/// Freestream vibrational temperature the bath relaxes up from, K, held for the whole descent. The
+/// US-1976 freestream spans 187-288 K; the bath relaxes from this value toward `T_tr` (thousands of
+/// kelvin), so the spread moves the relaxed `T_ve` by under 1 % of its post-shock rise.
 pub const T_VE_INITIAL: f64 = 250.0;
 /// Fallback Millikan-White pressure (atm) when the evolved field is absent (first-step guard).
 pub const FALLBACK_PRESSURE_ATM: f64 = 2.9e-2;
@@ -162,9 +272,11 @@ pub const FALLBACK_N_TOT: f64 = 2.645e22;
 
 /// Initial true position: the descent starts at 90 km on the +x radial, m.
 pub const TRUTH_ALTITUDE_0: f64 = 90_000.0;
-/// Initial true velocity: a steep compressed entry, sized so the drag-decelerated speed at the
-/// 61 km passage is the calibrated **Mach-25 station**.
-pub const TRUTH_V0: [f64; 3] = [-1_300.0, 7_860.0, 0.0];
+/// Initial true velocity: a steep compressed entry, scaled at fixed flight-path angle so the
+/// drag-decelerated vehicle crosses the RAM-C II anchor altitude ([`RAMC_II_ANCHOR_ALTITUDE_M`]) at the
+/// flight's 7.66 km/s (Grantham 1970, Table VII), which matches the stagnation-line harness's
+/// freestream at the anchor comparison.
+pub const TRUTH_V0: [f64; 3] = [-1_255.1, 7_588.6, 0.0];
 /// Initial INS error before the first fix folds (m per axis).
 pub const NAV_INIT_ERR: [f64; 3] = [50.0, -30.0, 20.0];
 /// Initial ESKF covariance diagonal, one entry per error-state block: position (50 m)²,

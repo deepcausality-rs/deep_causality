@@ -361,7 +361,7 @@ This hypergraph structure allows for many-to-many causal relationships between c
 
         
 \begin{definition}[State of the CausaloidGraph (S\_G)]
-\label{def:causaloid_graph_edges}        
+\label{def:causaloid_graph_state}        
         The state of a CausaloidGraph \( G \) at any given point in its evaluation is defined by the activation states of its constituent causal nodes. 
         
         \textbf{Definition 4.3 (State of CausaloidGraph):} The state \( S_G \) is a function mapping each causal node in \(V_G\) to an activation status:
@@ -414,7 +414,7 @@ The core dynamic of EPP is the propagation of effects through a CausaloidGraph \
     
 
 \begin{definition}[The Propagation Transition Function)]
-\label{def:epp_input}     
+\label{def:epp_transition}     
     The propagation of effects within a CausaloidGraph \(G\) is formalized as a state transition function \(\Pi_{EPP}\). This function describes how the graph's state evolves.
     \textbf{Definition 5.2 (EPP Transition Function):} The EPP Transition Function \(\Pi_{EPP}\) is a mapping:
     \[ \Pi_{EPP} : (G, S_G, \mathcal{C}_{sys}, O_{trig}) \to S_G' \]
@@ -768,7 +768,7 @@ In the EPP, association is the direct result of the \texttt{EffectPropagationPro
     
     \item An observation, such as \(X=x\), is represented as an initial \texttt{PropagatingEffect}, \(\pi_{\text{initial}}\), which is part of the input trigger set, \(O_{trig}\).
     
-    \item The inference is the evaluation of the \texttt{CausaloidGraph} \(G\) starting from the \texttt{Causaloid} \(\chi_X\) that corresponds to the variable X. This is formally described by the EPP Transition Function (Definition \ref{def:epp_input}):
+    \item The inference is the evaluation of the \texttt{CausaloidGraph} \(G\) starting from the \texttt{Causaloid} \(\chi_X\) that corresponds to the variable X. This is formally described by the EPP Transition Function (Definition \ref{def:epp_transition}):
     \[ \Pi_{EPP}(G, S_G, \mathcal{C}_{\text{factual}}, O_{trig}) \to S_G' \]
     \item The resulting activation state of the \texttt{Causaloid} \(\chi_Y\) within the updated state \(S_G'\) represents the association \(P(Y|X)\).
 \end{enumerate}
@@ -933,7 +933,7 @@ CATE is formalized in the EPP by building upon the RCM mapping and extending it 
       model), is encapsulated as the \texttt{causal\_function} \(f_{\chi}\) within a \texttt{CausaloidGraph} \(G\).
     
    \item \textbf{Individual Treatment Effect (ITE) Calculation:} For each individual \(\mathcal{C}_i\) in the subgroup, the ITE
-      is calculated exactly as described in the RCM mapping (Section \ref{sec:formalization_mapping_rcm}). This involves:
+      is calculated exactly as described in the RCM mapping (Section \ref{subsec:formalization_mapping_rcm}). This involves:
    		\begin{enumerate}
          \item Creating a treatment context \(\mathcal{C}_{i,\text{treatment}}\) and a control context \(\mathcal{C}_{i,\text
       {control}}\) for individual \(i\).
@@ -1037,8 +1037,8 @@ We construct a CausaloidGraph \(G_{STC} = (V_G, E_G, ID_G, \text{Name}_G)\) to r
     \begin{itemize}
         \item \textbf{Causaloids (\(\chi\))} as operational units (Section \ref{ssec:causaloid_formal}), encapsulating specific causal functions (\(f_\chi\)).
         \item A simple \textbf{CausaloidGraph (\(G\))} structure (Section \ref{ssec:causaloidgraph_formal}) representing the causal chain.
-        \item The \textbf{Effect Propagation Process (\(\Pi_{EPP}\))} (Section \ref{ssec:epp_process_formal}) as the evaluation of Causaloids in a sequence determined by the graph structure and input data.
-        \item The \textbf{State of the CausaloidGraph (\(S_G\))} (Definition \ref{sssec:state_of_causaloidgraph_formal}) evolving based on these evaluations.
+        \item The \textbf{Effect Propagation Process (\(\Pi_{EPP}\))} (Definition \ref{def:epp_transition}) as the evaluation of Causaloids in a sequence determined by the graph structure and input data.
+        \item The \textbf{State of the CausaloidGraph (\(S_G\))} (Definition \ref{def:causaloid_graph_state}) evolving based on these evaluations.
     \end{itemize}
     While this example omits explicit dynamic Contexts (\(\mathcal{C}_{sys}\)) or a dynamic Generative Function (\(\Phi_{gen}\)) for brevity, it demonstrates how the core EPP structural entities map to a well-understood causal scenario.
     

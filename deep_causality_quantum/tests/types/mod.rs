@@ -16,6 +16,8 @@ mod design;
 #[cfg(test)]
 mod evidence;
 #[cfg(feature = "qcm")]
+mod instrument;
+#[cfg(feature = "qcm")]
 mod pipeline;
 mod qcm;
 mod qcode;

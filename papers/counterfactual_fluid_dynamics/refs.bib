@@ -1,0 +1,1312 @@
+% Bibliography for the Counterfactual Fluid Dynamics preprint.
+%
+% Every entry outside the "This work" block was checked against a fetched record (Crossref, DataCite,
+% NASA NTRS, arXiv, OSTI, publisher pages) on 2026-10-06. Entries marked PARTIAL name the field that
+% could not be confirmed. notes/cfd_relatedwork.md holds what each work does and how it relates.
+% Cluster IDs (R1-R7) match that file.
+
+% ---------------------------------------------------------------------------------------------
+% This work and the host library
+% ---------------------------------------------------------------------------------------------
+
+% PARTIAL: year. The DOI is Zenodo's concept DOI for all versions and CITATION.cff states no date;
+% take the year of the cited version's Zenodo record.
+@misc{hansen_deepcausality,
+  author    = {Hansen, Marvin},
+  title     = {{DeepCausality}: A Hypergeometric Computational Causality Library for {R}ust},
+  publisher = {Zenodo},
+  howpublished = {\url{https://github.com/deepcausality-rs/deep_causality}},
+  doi       = {10.5281/zenodo.20195214}
+}
+
+@misc{deep_causality_cfd,
+  author       = {Hansen, Marvin},
+  title        = {{deep\_causality\_cfd}: Counterfactual Fluid Dynamics, version 0.3.3},
+  year         = {2026},
+  howpublished = {\url{https://crates.io/crates/deep_causality_cfd}},
+  note         = {Rust crate, MIT license}
+}
+
+@misc{Hansen2025EPP,
+  author       = {Hansen, Marvin},
+  title        = {The Effect Propagation Process ({EPP}): An Axiomatic Foundation for Dynamic Causality},
+  year         = {2026},
+  month        = may,
+  howpublished = {\url{https://github.com/deepcausality-rs/deep_causality/tree/main/papers}}
+}
+
+% ---------------------------------------------------------------------------------------------
+% R1: Branching, cloning and checkpointing running simulations
+% ---------------------------------------------------------------------------------------------
+
+@article{hybinette2001cloning,
+  author  = {Hybinette, Maria and Fujimoto, Richard M.},
+  title   = {Cloning Parallel Simulations},
+  journal = {ACM Transactions on Modeling and Computer Simulation},
+  volume  = {11},
+  number  = {4},
+  pages   = {378--407},
+  year    = {2001},
+  doi     = {10.1145/508366.508370}
+}
+
+@article{chen2005hlacloning,
+  author  = {Chen, Dan and Turner, Stephen J. and Cai, Wentong and Gan, Boon Ping and Low, Malcolm Yoke Hean},
+  title   = {Algorithms for {HLA}-Based Distributed Simulation Cloning},
+  journal = {ACM Transactions on Modeling and Computer Simulation},
+  volume  = {15},
+  number  = {4},
+  pages   = {316--345},
+  year    = {2005},
+  doi     = {10.1145/1113316.1113318}
+}
+
+% PARTIAL: pages / article number disagree between Crossref (11-26) and ORNL (Article 5).
+@article{yoginath2018clonex,
+  author  = {Yoginath, Srikanth B. and Perumalla, Kalyan S.},
+  title   = {Scalable Cloning on Large-Scale {GPU} Platforms with Application to Time-Stepped Simulations on Grids},
+  journal = {ACM Transactions on Modeling and Computer Simulation},
+  volume  = {28},
+  number  = {1},
+  year    = {2018},
+  doi     = {10.1145/3158669}
+}
+
+@article{jefferson1985virtual,
+  author  = {Jefferson, David R.},
+  title   = {Virtual Time},
+  journal = {ACM Transactions on Programming Languages and Systems},
+  volume  = {7},
+  number  = {3},
+  pages   = {404--425},
+  year    = {1985},
+  doi     = {10.1145/3916.3988}
+}
+
+@inproceedings{ansel2009dmtcp,
+  author    = {Ansel, Jason and Arya, Kapil and Cooperman, Gene},
+  title     = {{DMTCP}: Transparent Checkpointing for Cluster Computations and the Desktop},
+  booktitle = {2009 IEEE International Symposium on Parallel \& Distributed Processing (IPDPS)},
+  pages     = {1--12},
+  year      = {2009},
+  doi       = {10.1109/IPDPS.2009.5161063}
+}
+
+@article{egwutuoha2013survey,
+  author  = {Egwutuoha, Ifeanyi P. and Levy, David and Selic, Bran and Chen, Shiping},
+  title   = {A Survey of Fault Tolerance Mechanisms and Checkpoint/Restart Implementations for High Performance Computing Systems},
+  journal = {The Journal of Supercomputing},
+  volume  = {65},
+  number  = {3},
+  pages   = {1302--1326},
+  year    = {2013},
+  doi     = {10.1007/s11227-013-0884-0}
+}
+
+@article{ertl2017hdf5steering,
+  author  = {Ertl, Christoph and Frisch, J{\'e}r{\^o}me and Mundani, Ralf-Peter},
+  title   = {Design and Optimisation of an Efficient {HDF5} {I/O} Kernel for Massive Parallel Fluid Flow Simulations},
+  journal = {Concurrency and Computation: Practice and Experience},
+  volume  = {29},
+  number  = {24},
+  pages   = {e4165},
+  year    = {2017},
+  doi     = {10.1002/cpe.4165}
+}
+
+@article{lestang2020rareevent,
+  author  = {Lestang, Thibault and Bouchet, Freddy and L{\'e}v{\^e}que, Emmanuel},
+  title   = {Numerical Study of Extreme Mechanical Force Exerted by a Turbulent Flow on a Bluff Body by Direct and Rare-Event Sampling Techniques},
+  journal = {Journal of Fluid Mechanics},
+  volume  = {895},
+  pages   = {A19},
+  year    = {2020},
+  doi     = {10.1017/jfm.2020.293}
+}
+
+@article{rabault2019drl,
+  author  = {Rabault, Jean and Kuchta, Miroslav and Jensen, Atle and R{\'e}glade, Ulysse and Cerardi, Nicolas},
+  title   = {Artificial Neural Networks Trained through Deep Reinforcement Learning Discover Control Strategies for Active Flow Control},
+  journal = {Journal of Fluid Mechanics},
+  volume  = {865},
+  pages   = {281--302},
+  year    = {2019},
+  doi     = {10.1017/jfm.2019.62}
+}
+
+% PARTIAL: title, venue, volume, pages and DOI reported verified by the literature check; author
+% given names and initials not recorded. Complete them from the DOI record.
+@article{bewley2001dns,
+  author  = {Bewley and Moin and Temam},
+  title   = {{DNS}-Based Predictive Control of Turbulence: An Optimal Benchmark for Feedback Algorithms},
+  journal = {Journal of Fluid Mechanics},
+  volume  = {447},
+  pages   = {179--225},
+  year    = {2001},
+  doi     = {10.1017/S0022112001005821}
+}
+
+@article{kay2015cesmle,
+  author  = {Kay, J. E. and Deser, C. and Phillips, A. and Mai, A. and Hannay, C. and Strand, G. and Arblaster, J. M. and Bates, S. C. and Danabasoglu, G. and Edwards, J. and Holland, M. and Kushner, P. and Lamarque, J.-F. and Lawrence, D. and Lindsay, K. and Middleton, A. and Munoz, E. and Neale, R. and Oleson, K. and Polvani, L. and Vertenstein, M.},
+  title   = {The {Community Earth System Model (CESM)} Large Ensemble Project: A Community Resource for Studying Climate Change in the Presence of Internal Climate Variability},
+  journal = {Bulletin of the American Meteorological Society},
+  volume  = {96},
+  number  = {8},
+  pages   = {1333--1349},
+  year    = {2015},
+  doi     = {10.1175/BAMS-D-13-00255.1}
+}
+
+@article{leutbecher2008ensemble,
+  author  = {Leutbecher, M. and Palmer, T. N.},
+  title   = {Ensemble Forecasting},
+  journal = {Journal of Computational Physics},
+  volume  = {227},
+  number  = {7},
+  pages   = {3515--3539},
+  year    = {2008},
+  doi     = {10.1016/j.jcp.2007.02.014}
+}
+
+@article{stott2004heatwave,
+  author  = {Stott, Peter A. and Stone, D. A. and Allen, M. R.},
+  title   = {Human Contribution to the {European} Heatwave of 2003},
+  journal = {Nature},
+  volume  = {432},
+  number  = {7017},
+  pages   = {610--614},
+  year    = {2004},
+  doi     = {10.1038/nature03089}
+}
+
+@book{nasem2016attribution,
+  author    = {{National Academies of Sciences, Engineering, and Medicine}},
+  title     = {Attribution of Extreme Weather Events in the Context of Climate Change},
+  publisher = {The National Academies Press},
+  address   = {Washington, DC},
+  year      = {2016},
+  isbn      = {978-0-309-38094-2},
+  doi       = {10.17226/21852}
+}
+
+@article{shepherd2016common,
+  author  = {Shepherd, Theodore G.},
+  title   = {A Common Framework for Approaches to Extreme Event Attribution},
+  journal = {Current Climate Change Reports},
+  volume  = {2},
+  number  = {1},
+  pages   = {28--38},
+  year    = {2016},
+  doi     = {10.1007/s40641-016-0033-y}
+}
+
+@article{shepherd2018storylines,
+  author  = {Shepherd, Theodore G. and Boyd, Emily and Calel, Raphael A. and Chapman, Sandra C. and Dessai, Suraje and Dima-West, Ioana M. and Fowler, Hayley J. and James, Rachel and Maraun, Douglas and Martius, Olivia and Senior, Catherine A. and Sobel, Adam H. and Stainforth, David A. and Tett, Simon F. B. and Trenberth, Kevin E. and van den Hurk, Bart J. J. M. and Watkins, Nicholas W. and Wilby, Robert L. and Zenghelis, Dimitri A.},
+  title   = {Storylines: An Alternative Approach to Representing Uncertainty in Physical Aspects of Climate Change},
+  journal = {Climatic Change},
+  volume  = {151},
+  number  = {3--4},
+  pages   = {555--571},
+  year    = {2018},
+  doi     = {10.1007/s10584-018-2317-9}
+}
+
+% ---------------------------------------------------------------------------------------------
+% R1: Adjoint sensitivity, the alternative to finite branching
+% ---------------------------------------------------------------------------------------------
+
+@article{giles2000adjoint,
+  author  = {Giles, Michael B. and Pierce, Niles A.},
+  title   = {An Introduction to the Adjoint Approach to Design},
+  journal = {Flow, Turbulence and Combustion},
+  volume  = {65},
+  number  = {3--4},
+  pages   = {393--415},
+  year    = {2000},
+  doi     = {10.1023/A:1011430410075}
+}
+
+@article{jameson1988control,
+  author  = {Jameson, Antony},
+  title   = {Aerodynamic Design via Control Theory},
+  journal = {Journal of Scientific Computing},
+  volume  = {3},
+  number  = {3},
+  pages   = {233--260},
+  year    = {1988},
+  doi     = {10.1007/BF01061285}
+}
+
+% ---------------------------------------------------------------------------------------------
+% R4: Digital twins
+% ---------------------------------------------------------------------------------------------
+
+@inproceedings{glaessgen2012digitaltwin,
+  author    = {Glaessgen, Edward H. and Stargel, D. S.},
+  title     = {The Digital Twin Paradigm for Future {NASA} and {U.S. Air Force} Vehicles},
+  booktitle = {53rd AIAA/ASME/ASCE/AHS/ASC Structures, Structural Dynamics and Materials Conference},
+  address   = {Honolulu, HI},
+  year      = {2012},
+  note      = {AIAA Paper 2012-1818},
+  doi       = {10.2514/6.2012-1818}
+}
+
+@article{kapteyn2021pgm,
+  author  = {Kapteyn, Michael G. and Pretorius, Jacob V. R. and Willcox, Karen E.},
+  title   = {A Probabilistic Graphical Model Foundation for Enabling Predictive Digital Twins at Scale},
+  journal = {Nature Computational Science},
+  volume  = {1},
+  number  = {5},
+  pages   = {337--347},
+  year    = {2021},
+  doi     = {10.1038/s43588-021-00069-0}
+}
+
+@book{nasem2024digitaltwins,
+  author    = {{National Academies of Sciences, Engineering, and Medicine}},
+  title     = {Foundational Research Gaps and Future Directions for Digital Twins},
+  publisher = {The National Academies Press},
+  address   = {Washington, DC},
+  year      = {2024},
+  isbn      = {978-0-309-70042-9},
+  doi       = {10.17226/26894}
+}
+
+% ---------------------------------------------------------------------------------------------
+% R2: Interventions and counterfactuals
+% ---------------------------------------------------------------------------------------------
+
+@book{pearl2009causality,
+  author    = {Pearl, Judea},
+  title     = {Causality: Models, Reasoning, and Inference},
+  edition   = {2},
+  publisher = {Cambridge University Press},
+  address   = {Cambridge},
+  year      = {2009},
+  isbn      = {978-0-521-89560-6},
+  doi       = {10.1017/CBO9780511803161}
+}
+
+@incollection{bareinboim2022pearl,
+  author    = {Bareinboim, Elias and Correa, Juan D. and Ibeling, Duligur and Icard, Thomas},
+  title     = {On {Pearl's} Hierarchy and the Foundations of Causal Inference},
+  booktitle = {Probabilistic and Causal Inference: The Works of Judea Pearl},
+  editor    = {Geffner, Hector and Dechter, Rina and Halpern, Joseph Y.},
+  publisher = {ACM},
+  year      = {2022},
+  pages     = {507--556},
+  isbn      = {978-1-4503-9586-1},
+  doi       = {10.1145/3501714.3501743}
+}
+
+@book{lewis1973counterfactuals,
+  author    = {Lewis, David},
+  title     = {Counterfactuals},
+  publisher = {Harvard University Press},
+  address   = {Cambridge, MA},
+  year      = {1973},
+  isbn      = {0-674-17540-9}
+}
+
+@article{lewis1973causation,
+  author  = {Lewis, David},
+  title   = {Causation},
+  journal = {The Journal of Philosophy},
+  volume  = {70},
+  number  = {17},
+  pages   = {556--567},
+  year    = {1973},
+  doi     = {10.2307/2025310}
+}
+
+@book{woodward2003making,
+  author    = {Woodward, James},
+  title     = {Making Things Happen: A Theory of Causal Explanation},
+  publisher = {Oxford University Press},
+  address   = {New York},
+  year      = {2003},
+  isbn      = {978-0-19-515527-3},
+  doi       = {10.1093/0195155270.001.0001}
+}
+
+@book{halpern2016actual,
+  author    = {Halpern, Joseph Y.},
+  title     = {Actual Causality},
+  publisher = {The MIT Press},
+  address   = {Cambridge, MA},
+  year      = {2016},
+  isbn      = {978-0-262-03502-6},
+  doi       = {10.7551/mitpress/10809.001.0001}
+}
+
+@inproceedings{balke1994probabilistic,
+  author    = {Balke, Alexander and Pearl, Judea},
+  title     = {Probabilistic Evaluation of Counterfactual Queries},
+  booktitle = {Proceedings of the Twelfth National Conference on Artificial Intelligence (AAAI-94)},
+  publisher = {AAAI Press},
+  year      = {1994},
+  pages     = {230--237}
+}
+
+@book{peters2017elements,
+  author    = {Peters, Jonas and Janzing, Dominik and Sch{\"o}lkopf, Bernhard},
+  title     = {Elements of Causal Inference: Foundations and Learning Algorithms},
+  publisher = {The MIT Press},
+  address   = {Cambridge, MA},
+  year      = {2017},
+  isbn      = {978-0-262-03731-0}
+}
+
+@article{gerstenberg2021counterfactual,
+  author  = {Gerstenberg, Tobias and Goodman, Noah D. and Lagnado, David A. and Tenenbaum, Joshua B.},
+  title   = {A Counterfactual Simulation Model of Causal Judgments for Physical Events},
+  journal = {Psychological Review},
+  volume  = {128},
+  number  = {5},
+  pages   = {936--975},
+  year    = {2021},
+  doi     = {10.1037/rev0000281}
+}
+
+% ---------------------------------------------------------------------------------------------
+% R3: Causal analysis of flows
+% ---------------------------------------------------------------------------------------------
+
+@article{martinezsanchez2024surd,
+  author  = {Mart{\'\i}nez-S{\'a}nchez, {\'A}lvaro and Arranz, Gonzalo and Lozano-Dur{\'a}n, Adri{\'a}n},
+  title   = {Decomposing Causality into Its Synergistic, Unique, and Redundant Components},
+  journal = {Nature Communications},
+  volume  = {15},
+  pages   = {9296},
+  year    = {2024},
+  doi     = {10.1038/s41467-024-53373-4}
+}
+
+@article{lozanoduran2020causality,
+  author  = {Lozano-Dur{\'a}n, Adri{\'a}n and Bae, H. Jane and Encinar, Miguel P.},
+  title   = {Causality of Energy-Containing Eddies in Wall Turbulence},
+  journal = {Journal of Fluid Mechanics},
+  volume  = {882},
+  pages   = {A2},
+  year    = {2020},
+  doi     = {10.1017/jfm.2019.801}
+}
+
+@article{lozanoduran2022information,
+  author  = {Lozano-Dur{\'a}n, Adri{\'a}n and Arranz, Gonzalo},
+  title   = {Information-Theoretic Formulation of Dynamical Systems: Causality, Modeling, and Control},
+  journal = {Physical Review Research},
+  volume  = {4},
+  number  = {2},
+  pages   = {023195},
+  year    = {2022},
+  doi     = {10.1103/PhysRevResearch.4.023195}
+}
+
+@article{lozanoduran2021cause,
+  author  = {Lozano-Dur{\'a}n, Adri{\'a}n and Constantinou, Navid C. and Nikolaidis, Marios-Andreas and Karp, Michael},
+  title   = {Cause-and-Effect of Linear Mechanisms Sustaining Wall Turbulence},
+  journal = {Journal of Fluid Mechanics},
+  volume  = {914},
+  pages   = {A8},
+  year    = {2021},
+  doi     = {10.1017/jfm.2020.902}
+}
+
+@article{jimenez2020montecarlo,
+  author  = {Jim{\'e}nez, Javier},
+  title   = {{Monte Carlo} Science},
+  journal = {Journal of Turbulence},
+  volume  = {21},
+  number  = {9--10},
+  pages   = {544--566},
+  year    = {2020},
+  doi     = {10.1080/14685248.2020.1742918}
+}
+
+@article{jimenez2018machine,
+  author  = {Jim{\'e}nez, Javier},
+  title   = {Machine-Aided Turbulence Theory},
+  journal = {Journal of Fluid Mechanics},
+  volume  = {854},
+  pages   = {R1},
+  year    = {2018},
+  doi     = {10.1017/jfm.2018.660}
+}
+
+@article{runge2019inferring,
+  author  = {Runge, Jakob and Bathiany, Sebastian and Bollt, Erik and Camps-Valls, Gustau and Coumou, Dim and Deyle, Ethan and Glymour, Clark and Kretschmer, Marlene and Mahecha, Miguel D. and Mu{\~n}oz-Mar{\'\i}, Jordi and van Nes, Egbert H. and Peters, Jonas and Quax, Rick and Reichstein, Markus and Scheffer, Marten and Sch{\"o}lkopf, Bernhard and Spirtes, Peter and Sugihara, George and Sun, Jie and Zhang, Kun and Zscheischler, Jakob},
+  title   = {Inferring Causation from Time Series in {Earth} System Sciences},
+  journal = {Nature Communications},
+  volume  = {10},
+  pages   = {2553},
+  year    = {2019},
+  doi     = {10.1038/s41467-019-10105-3}
+}
+
+@article{campsvalls2023discovering,
+  author  = {Camps-Valls, Gustau and Gerhardus, Andreas and Ninad, Urmi and Varando, Gherardo and Martius, Georg and Balaguer-Ballester, Emili and Vinuesa, Ricardo and Diaz, Emiliano and Zanna, Laure and Runge, Jakob},
+  title   = {Discovering Causal Relations and Equations from Data},
+  journal = {Physics Reports},
+  volume  = {1044},
+  pages   = {1--68},
+  year    = {2023},
+  doi     = {10.1016/j.physrep.2023.10.005}
+}
+
+% ---------------------------------------------------------------------------------------------
+% R4: Coupled multiphysics, MDAO, co-simulation
+% ---------------------------------------------------------------------------------------------
+
+@article{gray2019openmdao,
+  author  = {Gray, Justin S. and Hwang, John T. and Martins, Joaquim R. R. A. and Moore, Kenneth T. and Naylor, Bret A.},
+  title   = {{OpenMDAO}: An Open-Source Framework for Multidisciplinary Design, Analysis, and Optimization},
+  journal = {Structural and Multidisciplinary Optimization},
+  volume  = {59},
+  number  = {4},
+  pages   = {1075--1104},
+  year    = {2019},
+  doi     = {10.1007/s00158-019-02211-z}
+}
+
+@article{martins2013mdo,
+  author  = {Martins, Joaquim R. R. A. and Lambe, Andrew B.},
+  title   = {Multidisciplinary Design Optimization: A Survey of Architectures},
+  journal = {AIAA Journal},
+  volume  = {51},
+  number  = {9},
+  pages   = {2049--2075},
+  year    = {2013},
+  doi     = {10.2514/1.J051895}
+}
+
+@article{chourdakis2022precice,
+  author  = {Chourdakis, Gerasimos and Davis, Kyle and Rodenberg, Benjamin and Schulte, Miriam and Simonis, Fr{\'e}d{\'e}ric and Uekermann, Benjamin and Abrams, Georg and Bungartz, Hans-Joachim and Cheung Yau, Lucia and Desai, Ishaan and Eder, Konrad and Hertrich, Richard and Lindner, Florian and Rusch, Alexander and Sashko, Dmytro and Schneider, David and Totounferoush, Amin and Volland, Dominik and Vollmer, Peter and Koseomur, Oguz Ziya},
+  title   = {{preCICE} v2: A Sustainable and User-Friendly Coupling Library},
+  journal = {Open Research Europe},
+  volume  = {2},
+  pages   = {51},
+  year    = {2022},
+  doi     = {10.12688/openreseurope.14445.2}
+}
+
+@article{gomes2018cosim,
+  author  = {Gomes, Cl{\'a}udio and Thule, Casper and Broman, David and Larsen, Peter Gorm and Vangheluwe, Hans},
+  title   = {Co-Simulation: A Survey},
+  journal = {ACM Computing Surveys},
+  volume  = {51},
+  number  = {3},
+  pages   = {1--33},
+  year    = {2018},
+  doi     = {10.1145/3179993}
+}
+
+@inproceedings{blochwitz2011fmi,
+  author    = {Blochwitz, T. and Otter, M. and Arnold, M. and Bausch, C. and Clau{\ss}, C. and Elmqvist, H. and Junghanns, A. and Mauss, J. and Monteiro, M. and Neidhold, T. and Neumerkel, D. and Olsson, H. and Peetz, J.-V. and Wolf, S.},
+  title     = {The Functional Mockup Interface for Tool Independent Exchange of Simulation Models},
+  booktitle = {Proceedings of the 8th International Modelica Conference},
+  series    = {Link{\"o}ping Electronic Conference Proceedings},
+  volume    = {63},
+  pages     = {105--114},
+  year      = {2011},
+  doi       = {10.3384/ecp11063105}
+}
+
+% ---------------------------------------------------------------------------------------------
+% R5: Numerical methods: DEC and structure preservation
+% ---------------------------------------------------------------------------------------------
+
+@phdthesis{hirani2003dec,
+  author = {Hirani, Anil Nirmal},
+  title  = {Discrete Exterior Calculus},
+  school = {California Institute of Technology},
+  year   = {2003},
+  doi    = {10.7907/ZHY8-V329}
+}
+
+@misc{desbrun2005dec,
+  author        = {Desbrun, Mathieu and Hirani, Anil N. and Leok, Melvin and Marsden, Jerrold E.},
+  title         = {Discrete Exterior Calculus},
+  year          = {2005},
+  eprint        = {math/0508341},
+  archivePrefix = {arXiv},
+  doi           = {10.48550/arXiv.math/0508341}
+}
+
+@article{elcott2007stable,
+  author  = {Elcott, Sharif and Tong, Yiying and Kanso, Eva and Schr{\"o}der, Peter and Desbrun, Mathieu},
+  title   = {Stable, Circulation-Preserving, Simplicial Fluids},
+  journal = {ACM Transactions on Graphics},
+  volume  = {26},
+  number  = {1},
+  pages   = {4},
+  year    = {2007},
+  doi     = {10.1145/1189762.1189766}
+}
+
+@article{pavlov2011structure,
+  author  = {Pavlov, D. and Mullen, P. and Tong, Y. and Kanso, E. and Marsden, J. E. and Desbrun, M.},
+  title   = {Structure-Preserving Discretization of Incompressible Fluids},
+  journal = {Physica D: Nonlinear Phenomena},
+  volume  = {240},
+  number  = {6},
+  pages   = {443--458},
+  year    = {2011},
+  doi     = {10.1016/j.physd.2010.10.012}
+}
+
+@article{mohamed2016dec,
+  author  = {Mohamed, Mamdouh S. and Hirani, Anil N. and Samtaney, Ravi},
+  title   = {Discrete Exterior Calculus Discretization of Incompressible {N}avier--{S}tokes Equations over Surface Simplicial Meshes},
+  journal = {Journal of Computational Physics},
+  volume  = {312},
+  pages   = {175--191},
+  year    = {2016},
+  doi     = {10.1016/j.jcp.2016.02.028}
+}
+
+@article{jagad2021primitive,
+  author  = {Jagad, Pankaj and Abukhwejah, Abdullah and Mohamed, Mamdouh and Samtaney, Ravi},
+  title   = {A Primitive Variable Discrete Exterior Calculus Discretization of Incompressible {N}avier--{S}tokes Equations over Surface Simplicial Meshes},
+  journal = {Physics of Fluids},
+  volume  = {33},
+  number  = {1},
+  pages   = {017114},
+  year    = {2021},
+  doi     = {10.1063/5.0035981}
+}
+
+@article{arnold2006feec,
+  author  = {Arnold, Douglas N. and Falk, Richard S. and Winther, Ragnar},
+  title   = {Finite Element Exterior Calculus, Homological Techniques, and Applications},
+  journal = {Acta Numerica},
+  volume  = {15},
+  pages   = {1--155},
+  year    = {2006},
+  doi     = {10.1017/S0962492906210018}
+}
+
+% ---------------------------------------------------------------------------------------------
+% R5: Numerical methods: tensor networks for flows
+% ---------------------------------------------------------------------------------------------
+
+@article{oseledets2011tt,
+  author  = {Oseledets, I. V.},
+  title   = {Tensor-Train Decomposition},
+  journal = {SIAM Journal on Scientific Computing},
+  volume  = {33},
+  number  = {5},
+  pages   = {2295--2317},
+  year    = {2011},
+  doi     = {10.1137/090752286}
+}
+
+@article{khoromskij2011quantics,
+  author  = {Khoromskij, Boris N.},
+  title   = {${O}(d \log {N})$-Quantics Approximation of {$N$}-$d$ Tensors in High-Dimensional Numerical Modeling},
+  journal = {Constructive Approximation},
+  volume  = {34},
+  number  = {2},
+  pages   = {257--280},
+  year    = {2011},
+  doi     = {10.1007/s00365-011-9131-1}
+}
+
+@article{kazeev2012laplace,
+  author  = {Kazeev, Vladimir A. and Khoromskij, Boris N.},
+  title   = {Low-Rank Explicit {QTT} Representation of the {L}aplace Operator and Its Inverse},
+  journal = {SIAM Journal on Matrix Analysis and Applications},
+  volume  = {33},
+  number  = {3},
+  pages   = {742--758},
+  year    = {2012},
+  doi     = {10.1137/100820479}
+}
+
+@article{gourianov2022quantum,
+  author  = {Gourianov, Nikita and Lubasch, Michael and Dolgov, Sergey and van den Berg, Quincy Y. and Babaee, Hessam and Givi, Peyman and Kiffner, Martin and Jaksch, Dieter},
+  title   = {A Quantum-Inspired Approach to Exploit Turbulence Structures},
+  journal = {Nature Computational Science},
+  volume  = {2},
+  number  = {1},
+  pages   = {30--37},
+  year    = {2022},
+  doi     = {10.1038/s43588-021-00181-1}
+}
+
+@article{kiffner2023tensor,
+  author  = {Kiffner, Martin and Jaksch, Dieter},
+  title   = {Tensor Network Reduced Order Models for Wall-Bounded Flows},
+  journal = {Physical Review Fluids},
+  volume  = {8},
+  number  = {12},
+  pages   = {124101},
+  year    = {2023},
+  doi     = {10.1103/PhysRevFluids.8.124101}
+}
+
+@article{peddinti2024quantum,
+  author  = {Peddinti, Raghavendra Dheeraj and Pisoni, Stefano and Marini, Alessandro and Lott, Philippe and Argentieri, Henrique and Tiunov, Egor and Aolita, Leandro},
+  title   = {Quantum-Inspired Framework for Computational Fluid Dynamics},
+  journal = {Communications Physics},
+  volume  = {7},
+  number  = {1},
+  pages   = {135},
+  year    = {2024},
+  doi     = {10.1038/s42005-024-01623-8}
+}
+
+@misc{peddinti2025compressible,
+  author        = {Peddinti, Raghavendra Dheeraj and Pisoni, Stefano and Tiunov, Egor and Marini, Alessandro and Aolita, Leandro},
+  title         = {Technical Report on a Quantum-Inspired Solver for Simulating Compressible Flows},
+  year          = {2025},
+  eprint        = {2506.03833},
+  archivePrefix = {arXiv}
+}
+
+@article{danis2025ttweno,
+  author  = {Danis, M. Engin and Truong, Duc and Boureima, Ismael and Korobkin, Oleg and Rasmussen, Kim {\O}. and Alexandrov, Boian S.},
+  title   = {Tensor-Train {WENO} Scheme for Compressible Flows},
+  journal = {Journal of Computational Physics},
+  volume  = {529},
+  pages   = {113891},
+  year    = {2025},
+  doi     = {10.1016/j.jcp.2025.113891}
+}
+
+@article{holscher2025gpu,
+  author  = {H{\"o}lscher, Leonhard and Rao, Pooja and M{\"u}ller, Lukas and Klepsch, Johannes and Luckow, Andre and Stollenwerk, Tobias and Wilhelm, Frank K.},
+  title   = {Quantum-Inspired Fluid Simulation of Two-Dimensional Turbulence with {GPU} Acceleration},
+  journal = {Physical Review Research},
+  volume  = {7},
+  number  = {1},
+  pages   = {013112},
+  year    = {2025},
+  doi     = {10.1103/PhysRevResearch.7.013112}
+}
+
+% ---------------------------------------------------------------------------------------------
+% R5: Numerical methods: immersed boundaries and cut cells
+% ---------------------------------------------------------------------------------------------
+
+@article{peskin2002ibm,
+  author  = {Peskin, Charles S.},
+  title   = {The Immersed Boundary Method},
+  journal = {Acta Numerica},
+  volume  = {11},
+  pages   = {479--517},
+  year    = {2002},
+  doi     = {10.1017/S0962492902000077}
+}
+
+@article{mittal2005ibm,
+  author  = {Mittal, Rajat and Iaccarino, Gianluca},
+  title   = {Immersed Boundary Methods},
+  journal = {Annual Review of Fluid Mechanics},
+  volume  = {37},
+  number  = {1},
+  pages   = {239--261},
+  year    = {2005},
+  doi     = {10.1146/annurev.fluid.37.061903.175743}
+}
+
+@article{kirkpatrick2003cutcell,
+  author  = {Kirkpatrick, M. P. and Armfield, S. W. and Kent, J. H.},
+  title   = {A Representation of Curved Boundaries for the Solution of the {N}avier--{S}tokes Equations on a Staggered Three-Dimensional {C}artesian Grid},
+  journal = {Journal of Computational Physics},
+  volume  = {184},
+  number  = {1},
+  pages   = {1--36},
+  year    = {2003},
+  doi     = {10.1016/S0021-9991(02)00013-X}
+}
+
+@article{droge2005symmetry,
+  author  = {Dr{\"o}ge, Marc and Verstappen, Roel},
+  title   = {A New Symmetry-Preserving {C}artesian-Grid Method for Computing Flow Past Arbitrarily Shaped Objects},
+  journal = {International Journal for Numerical Methods in Fluids},
+  volume  = {47},
+  number  = {8--9},
+  pages   = {979--985},
+  year    = {2005},
+  doi     = {10.1002/fld.924}
+}
+
+@article{angot1999penalization,
+  author  = {Angot, Philippe and Bruneau, Charles-Henri and Fabrie, Pierre},
+  title   = {A Penalization Method to Take into Account Obstacles in Incompressible Viscous Flows},
+  journal = {Numerische Mathematik},
+  volume  = {81},
+  number  = {4},
+  pages   = {497--520},
+  year    = {1999},
+  doi     = {10.1007/s002110050401}
+}
+
+% ---------------------------------------------------------------------------------------------
+% R5: Benchmarks
+% ---------------------------------------------------------------------------------------------
+
+@article{ghia1982high,
+  author  = {Ghia, U. and Ghia, K. N. and Shin, C. T.},
+  title   = {High-{Re} Solutions for Incompressible Flow Using the {N}avier--{S}tokes Equations and a Multigrid Method},
+  journal = {Journal of Computational Physics},
+  volume  = {48},
+  number  = {3},
+  pages   = {387--411},
+  year    = {1982},
+  doi     = {10.1016/0021-9991(82)90058-4}
+}
+
+@article{williamson1996vortex,
+  author  = {Williamson, C. H. K.},
+  title   = {Vortex Dynamics in the Cylinder Wake},
+  journal = {Annual Review of Fluid Mechanics},
+  volume  = {28},
+  number  = {1},
+  pages   = {477--539},
+  year    = {1996},
+  doi     = {10.1146/annurev.fl.28.010196.002401}
+}
+
+@article{sod1978survey,
+  author  = {Sod, Gary A.},
+  title   = {A Survey of Several Finite Difference Methods for Systems of Nonlinear Hyperbolic Conservation Laws},
+  journal = {Journal of Computational Physics},
+  volume  = {27},
+  number  = {1},
+  pages   = {1--31},
+  year    = {1978},
+  doi     = {10.1016/0021-9991(78)90023-2}
+}
+
+@book{toro2009riemann,
+  author    = {Toro, Eleuterio F.},
+  title     = {Riemann Solvers and Numerical Methods for Fluid Dynamics: A Practical Introduction},
+  edition   = {3},
+  publisher = {Springer},
+  address   = {Berlin, Heidelberg},
+  year      = {2009},
+  isbn      = {978-3-540-25202-3},
+  doi       = {10.1007/b79761}
+}
+
+@article{taylor1937mechanism,
+  author  = {Taylor, Geoffrey Ingram and Green, Albert Edward},
+  title   = {Mechanism of the Production of Small Eddies from Large Ones},
+  journal = {Proceedings of the Royal Society of London. Series A},
+  volume  = {158},
+  number  = {895},
+  pages   = {499--521},
+  year    = {1937},
+  doi     = {10.1098/rspa.1937.0036}
+}
+
+@article{brachet1983small,
+  author  = {Brachet, Marc E. and Meiron, Daniel I. and Orszag, Steven A. and Nickel, B. G. and Morf, Rudolf H. and Frisch, Uriel},
+  title   = {Small-Scale Structure of the {T}aylor--{G}reen Vortex},
+  journal = {Journal of Fluid Mechanics},
+  volume  = {130},
+  pages   = {411--452},
+  year    = {1983},
+  doi     = {10.1017/S0022112083001159}
+}
+
+@article{vanrees2011comparison,
+  author  = {van Rees, Wim M. and Leonard, Anthony and Pullin, D. I. and Koumoutsakos, Petros},
+  title   = {A Comparison of Vortex and Pseudo-Spectral Methods for the Simulation of Periodic Vortical Flows at High {R}eynolds Numbers},
+  journal = {Journal of Computational Physics},
+  volume  = {230},
+  number  = {8},
+  pages   = {2794--2805},
+  year    = {2011},
+  doi     = {10.1016/j.jcp.2010.11.031}
+}
+
+% PARTIAL: journal venue unconfirmed. This is an elastoviscoplastic study, not a drag compilation;
+% its Table 1 lists Newtonian Re=100 C_D from seven sources (1.314-1.370). Prefer citing those
+% primary sources for the cylinder drag band.
+@misc{parvar2023evp,
+  author        = {Parvar, S. and Iqbal, K. T. and Ardekani, M. N. and Brandt, L. and Tammisola, O.},
+  title         = {Elastoviscoplastic Fluid Flow Past a Circular Cylinder},
+  year          = {2023},
+  eprint        = {2303.09262},
+  archivePrefix = {arXiv}
+}
+
+% ---------------------------------------------------------------------------------------------
+% R5: Extended precision
+% ---------------------------------------------------------------------------------------------
+
+@article{dekker1971floating,
+  author  = {Dekker, T. J.},
+  title   = {A Floating-Point Technique for Extending the Available Precision},
+  journal = {Numerische Mathematik},
+  volume  = {18},
+  number  = {3},
+  pages   = {224--242},
+  year    = {1971},
+  doi     = {10.1007/BF01397083}
+}
+
+@inproceedings{hida2001quaddouble,
+  author    = {Hida, Y. and Li, X. S. and Bailey, D. H.},
+  title     = {Algorithms for Quad-Double Precision Floating Point Arithmetic},
+  booktitle = {Proceedings 15th IEEE Symposium on Computer Arithmetic (ARITH-15)},
+  pages     = {155--162},
+  year      = {2001},
+  doi       = {10.1109/ARITH.2001.930115}
+}
+
+% ---------------------------------------------------------------------------------------------
+% R6: Reentry plasma, blackout and thermochemistry (application background)
+% ---------------------------------------------------------------------------------------------
+
+@techreport{grantham1970flight,
+  author      = {Grantham, William L.},
+  title       = {Flight Results of a 25000-Foot-per-Second Reentry Experiment Using Microwave Reflectometers to Measure Plasma Electron Density and Standoff Distance},
+  institution = {NASA Langley Research Center},
+  type        = {NASA Technical Note},
+  number      = {TN D-6062},
+  year        = {1970},
+  month       = dec,
+  url         = {https://ntrs.nasa.gov/citations/19710004000}
+}
+
+@techreport{jones1972electrostatic,
+  author      = {Jones, Jr., W. Linwood and Cross, Aubrey E.},
+  title       = {Electrostatic-Probe Measurements of Plasma Parameters for Two Reentry Flight Experiments at 25000 Feet per Second},
+  institution = {NASA Langley Research Center},
+  type        = {NASA Technical Note},
+  number      = {TN D-6617},
+  year        = {1972},
+  month       = feb,
+  url         = {https://ntrs.nasa.gov/citations/19720011555}
+}
+
+@techreport{hartunian2007causes,
+  author      = {Hartunian, R. A. and Stewart, G. E. and Fergason, S. D. and Curtiss, T. J. and Seibold, R. W.},
+  title       = {Causes and Mitigation of Radio Frequency ({RF}) Blackout During Reentry of Reusable Launch Vehicles},
+  institution = {The Aerospace Corporation},
+  number      = {ATR-2007(5309)-1; DOT-VNTSC-FAA-06-23},
+  year        = {2007},
+  month       = jan,
+  note        = {Contract DTRT57-05-D-30103},
+  url         = {https://rosap.ntl.bts.gov/view/dot/12493}
+}
+
+@article{rybak1971progress,
+  author  = {Rybak, James P. and Churchill, R. J.},
+  title   = {Progress in Reentry Communications},
+  journal = {IEEE Transactions on Aerospace and Electronic Systems},
+  volume  = {AES-7},
+  number  = {5},
+  pages   = {879--894},
+  year    = {1971},
+  doi     = {10.1109/TAES.1971.310328}
+}
+
+@article{kim2008analysis,
+  author  = {Kim, Minkwan and Keidar, Michael and Boyd, Iain D.},
+  title   = {Analysis of an Electromagnetic Mitigation Scheme for Reentry Telemetry Through Plasma},
+  journal = {Journal of Spacecraft and Rockets},
+  volume  = {45},
+  number  = {6},
+  pages   = {1223--1229},
+  year    = {2008},
+  doi     = {10.2514/1.37395}
+}
+
+@article{farbar2013numerical,
+  author  = {Farbar, Erin and Boyd, Iain D. and Martin, Alexandre},
+  title   = {Numerical Prediction of Hypersonic Flowfields Including Effects of Electron Translational Nonequilibrium},
+  journal = {Journal of Thermophysics and Heat Transfer},
+  volume  = {27},
+  number  = {4},
+  pages   = {593--606},
+  year    = {2013},
+  doi     = {10.2514/1.T3963}
+}
+
+@article{boyd2007modeling,
+  author  = {Boyd, Iain D.},
+  title   = {Modeling of Associative Ionization Reactions in Hypersonic Rarefied Flows},
+  journal = {Physics of Fluids},
+  volume  = {19},
+  number  = {9},
+  pages   = {096102},
+  year    = {2007},
+  doi     = {10.1063/1.2771662}
+}
+
+@book{park1990nonequilibrium,
+  author    = {Park, Chul},
+  title     = {Nonequilibrium Hypersonic Aerothermodynamics},
+  publisher = {Wiley},
+  address   = {New York},
+  year      = {1990},
+  isbn      = {0-471-51093-9}
+}
+
+@article{park1993review,
+  author  = {Park, Chul},
+  title   = {Review of Chemical-Kinetic Problems of Future {NASA} Missions, {I}: Earth Entries},
+  journal = {Journal of Thermophysics and Heat Transfer},
+  volume  = {7},
+  number  = {3},
+  pages   = {385--398},
+  year    = {1993},
+  doi     = {10.2514/3.431}
+}
+
+@techreport{gupta1990review,
+  author      = {Gupta, Roop N. and Yos, Jerrold M. and Thompson, Richard A. and Lee, Kam-Pui},
+  title       = {A Review of Reaction Rates and Thermodynamic and Transport Properties for an 11-Species Air Model for Chemical and Thermal Nonequilibrium Calculations to 30000 {K}},
+  institution = {NASA Langley Research Center},
+  type        = {NASA Reference Publication},
+  number      = {RP-1232},
+  year        = {1990},
+  month       = aug,
+  url         = {https://ntrs.nasa.gov/citations/19900017748}
+}
+
+@article{millikan1963systematics,
+  author  = {Millikan, Roger C. and White, Donald R.},
+  title   = {Systematics of Vibrational Relaxation},
+  journal = {The Journal of Chemical Physics},
+  volume  = {39},
+  number  = {12},
+  pages   = {3209--3213},
+  year    = {1963},
+  doi     = {10.1063/1.1734182}
+}
+
+@techreport{sutton1971general,
+  author      = {Sutton, Kenneth and Graves, Jr., Randolph A.},
+  title       = {A General Stagnation-Point Convective Heating Equation for Arbitrary Gas Mixtures},
+  institution = {NASA Langley Research Center},
+  type        = {NASA Technical Report},
+  number      = {TR R-376},
+  year        = {1971},
+  month       = nov,
+  url         = {https://ntrs.nasa.gov/citations/19720003329}
+}
+
+% ---------------------------------------------------------------------------------------------
+% R6: Supersonic retropropulsion
+% ---------------------------------------------------------------------------------------------
+
+@techreport{jarvinen1970aerodynamic,
+  author      = {Jarvinen, Philip O. and Adams, Richard H.},
+  title       = {The Aerodynamic Characteristics of Large Angled Cones with Retrorockets},
+  institution = {Mithras, a Division of Sanders Associates, Inc.},
+  type        = {NASA Contractor Report},
+  number      = {NASA-CR-124720},
+  year        = {1970},
+  month       = feb,
+  note        = {Report MC 70-3001-R2(BNY), Contract NAS 7-576},
+  url         = {https://ntrs.nasa.gov/citations/19720005324}
+}
+
+@article{keyes1967effect,
+  author  = {Keyes, J. Wayne and Hefner, Jerry N.},
+  title   = {Effect of Forward-Facing Jets on Aerodynamic Characteristics of Blunt Configurations at {Mach} 6},
+  journal = {Journal of Spacecraft and Rockets},
+  volume  = {4},
+  number  = {4},
+  pages   = {533--534},
+  year    = {1967},
+  doi     = {10.2514/3.28900}
+}
+
+@article{korzun2009survey,
+  author  = {Korzun, Ashley M. and Braun, Robert D. and Cruz, Juan R.},
+  title   = {Survey of Supersonic Retropropulsion Technology for {Mars} Entry, Descent, and Landing},
+  journal = {Journal of Spacecraft and Rockets},
+  volume  = {46},
+  number  = {5},
+  pages   = {929--937},
+  year    = {2009},
+  doi     = {10.2514/1.41161}
+}
+
+@article{edquist2014development,
+  author  = {Edquist, Karl T. and Korzun, Ashley M. and Dyakonov, Artem A. and Studak, Joseph W. and Kipp, Devin M. and Dupzyk, Ian C.},
+  title   = {Development of Supersonic Retropropulsion for Future {Mars} Entry, Descent, and Landing Systems},
+  journal = {Journal of Spacecraft and Rockets},
+  volume  = {51},
+  number  = {3},
+  pages   = {650--663},
+  year    = {2014},
+  doi     = {10.2514/1.A32715}
+}
+
+@article{cordell2013analytical,
+  author  = {Cordell, Jr., Christopher E. and Braun, Robert D.},
+  title   = {Analytical Modeling of Supersonic Retropropulsion Plume Structures},
+  journal = {Journal of Spacecraft and Rockets},
+  volume  = {50},
+  number  = {4},
+  pages   = {763--770},
+  year    = {2013},
+  doi     = {10.2514/1.A32391}
+}
+
+@article{braun2007mars,
+  author  = {Braun, Robert D. and Manning, Robert M.},
+  title   = {Mars Exploration Entry, Descent, and Landing Challenges},
+  journal = {Journal of Spacecraft and Rockets},
+  volume  = {44},
+  number  = {2},
+  pages   = {310--323},
+  year    = {2007},
+  doi     = {10.2514/1.25116}
+}
+
+% ---------------------------------------------------------------------------------------------
+% R6: Guidance and navigation
+% ---------------------------------------------------------------------------------------------
+
+@article{meditch1964problem,
+  author  = {Meditch, J. S.},
+  title   = {On the Problem of Optimal Thrust Programming for a Lunar Soft Landing},
+  journal = {IEEE Transactions on Automatic Control},
+  volume  = {9},
+  number  = {4},
+  pages   = {477--484},
+  year    = {1964},
+  doi     = {10.1109/TAC.1964.1105758}
+}
+
+@article{acikmese2007convex,
+  author  = {A{\c{c}}{\i}kme{\c{s}}e, Beh{\c{c}}et and Ploen, Scott R.},
+  title   = {Convex Programming Approach to Powered Descent Guidance for {Mars} Landing},
+  journal = {Journal of Guidance, Control, and Dynamics},
+  volume  = {30},
+  number  = {5},
+  pages   = {1353--1366},
+  year    = {2007},
+  doi     = {10.2514/1.27553}
+}
+
+@article{blackmore2010minimum,
+  author  = {Blackmore, Lars and A{\c{c}}{\i}kme{\c{s}}e, Beh{\c{c}}et and Scharf, Daniel P.},
+  title   = {Minimum-Landing-Error Powered-Descent Guidance for {Mars} Landing Using Convex Optimization},
+  journal = {Journal of Guidance, Control, and Dynamics},
+  volume  = {33},
+  number  = {4},
+  pages   = {1161--1171},
+  year    = {2010},
+  doi     = {10.2514/1.47202}
+}
+
+% PARTIAL: journal volume, issue and pages confirmed only by secondary citations; NTRS holds the
+% conference version (AAS 78-147). Check against a library copy before submission.
+@article{harpold1979shuttle,
+  author  = {Harpold, Jon C. and Graves, Jr., Claude A.},
+  title   = {Shuttle Entry Guidance},
+  journal = {Journal of the Astronautical Sciences},
+  volume  = {27},
+  number  = {3},
+  pages   = {239--268},
+  year    = {1979},
+  note    = {Also AAS Paper 78-147, 1978; NTRS 19790037248}
+}
+
+@article{lu2014entry,
+  author  = {Lu, Ping},
+  title   = {Entry Guidance: A Unified Method},
+  journal = {Journal of Guidance, Control, and Dynamics},
+  volume  = {37},
+  number  = {3},
+  pages   = {713--728},
+  year    = {2014},
+  doi     = {10.2514/1.62605}
+}
+
+@misc{sola2017quaternion,
+  author        = {Sol{\`a}, Joan},
+  title         = {Quaternion Kinematics for the Error-State {Kalman} Filter},
+  year          = {2017},
+  eprint        = {1711.02508},
+  archivePrefix = {arXiv}
+}
+
+@article{kustaanheimo1965perturbation,
+  author  = {Kustaanheimo, P. and Stiefel, E.},
+  title   = {Perturbation Theory of {Kepler} Motion Based on Spinor Regularization},
+  journal = {Journal f{\"u}r die reine und angewandte Mathematik},
+  volume  = {218},
+  pages   = {204--219},
+  year    = {1965},
+  doi     = {10.1515/crll.1965.218.204}
+}
+
+% PARTIAL: series volume number unconfirmed.
+@book{stiefel1971linear,
+  author    = {Stiefel, Eduard L. and Scheifele, Gerhard},
+  title     = {Linear and Regular Celestial Mechanics},
+  publisher = {Springer},
+  address   = {Berlin, Heidelberg},
+  year      = {1971},
+  series    = {Grundlehren der mathematischen Wissenschaften},
+  volume    = {174},
+  doi       = {10.1007/978-3-642-65027-7}
+}
+
+% ---------------------------------------------------------------------------------------------
+% R7: Verification, validation, credibility
+% ---------------------------------------------------------------------------------------------
+
+@article{oberkampf2002verification,
+  author  = {Oberkampf, William L. and Trucano, Timothy G.},
+  title   = {Verification and Validation in Computational Fluid Dynamics},
+  journal = {Progress in Aerospace Sciences},
+  volume  = {38},
+  number  = {3},
+  pages   = {209--272},
+  year    = {2002},
+  doi     = {10.1016/S0376-0421(02)00005-2}
+}
+
+% PARTIAL: ISBN from a bookseller listing.
+@book{roache1998verification,
+  author    = {Roache, Patrick J.},
+  title     = {Verification and Validation in Computational Science and Engineering},
+  publisher = {Hermosa Publishers},
+  address   = {Albuquerque, NM},
+  year      = {1998},
+  isbn      = {0-913478-08-3}
+}
+
+@book{oberkampf2010verification,
+  author    = {Oberkampf, William L. and Roy, Christopher J.},
+  title     = {Verification and Validation in Scientific Computing},
+  publisher = {Cambridge University Press},
+  address   = {Cambridge},
+  year      = {2010},
+  isbn      = {978-0-521-11360-1},
+  doi       = {10.1017/CBO9780511760396}
+}
+
+@article{roy2011comprehensive,
+  author  = {Roy, Christopher J. and Oberkampf, William L.},
+  title   = {A Comprehensive Framework for Verification, Validation, and Uncertainty Quantification in Scientific Computing},
+  journal = {Computer Methods in Applied Mechanics and Engineering},
+  volume  = {200},
+  number  = {25--28},
+  pages   = {2131--2144},
+  year    = {2011},
+  doi     = {10.1016/j.cma.2011.03.016}
+}
+
+@book{aiaa1998guide,
+  author    = {{AIAA Computational Fluid Dynamics Committee}},
+  title     = {Guide for the Verification and Validation of Computational Fluid Dynamics Simulations},
+  publisher = {American Institute of Aeronautics and Astronautics},
+  address   = {Reston, VA},
+  series    = {AIAA G-077-1998(2002)},
+  year      = {1998},
+  isbn      = {978-1-56347-285-5},
+  doi       = {10.2514/4.472855}
+}
+
+% PARTIAL: publisher city and ISBN not shown on the ASME page.
+@manual{asme2009vv20,
+  organization = {{American Society of Mechanical Engineers}},
+  title        = {Standard for Verification and Validation in Computational Fluid Dynamics and Heat Transfer},
+  note         = {ASME V\&V 20-2009 (R2021)},
+  year         = {2009}
+}
+
+@manual{nasa2024std7009b,
+  organization = {{NASA Office of the Chief Engineer}},
+  title        = {Standard for Models and Simulations},
+  note         = {NASA-STD-7009B, approved 2024-03-05; supersedes NASA-STD-7009A w/Change 1 (2016)},
+  year         = {2024},
+  url          = {https://standards.nasa.gov/sites/default/files/standards/NASA/B/1/NASA-STD-7009B-Final-3-5-2024.pdf}
+}
+
+@techreport{slotnick2014cfd,
+  author      = {Slotnick, Jeffrey P. and Khodadoust, Abdollah and Alonso, Juan and Darmofal, David and Gropp, William and Lurie, Elizabeth and Mavriplis, Dimitri J.},
+  title       = {{CFD} Vision 2030 Study: A Path to Revolutionary Computational Aerosciences},
+  institution = {NASA Langley Research Center},
+  number      = {NASA/CR-2014-218178},
+  year        = {2014},
+  month       = mar,
+  url         = {https://ntrs.nasa.gov/citations/20140003093}
+}
+
+@inproceedings{cary2021cfd,
+  author    = {Cary, Andrew W. and Chawner, John and Duque, Earl P. and Gropp, William and Kleb, William L. and Kolonay, Raymond M. and Nielsen, Eric and Smith, Brian},
+  title     = {{CFD} Vision 2030 Road Map: Progress and Perspectives},
+  booktitle = {AIAA AVIATION 2021 Forum},
+  note      = {AIAA Paper 2021-2726},
+  year      = {2021},
+  doi       = {10.2514/6.2021-2726}
+}
+
+@article{roache2002code,
+  author  = {Roache, Patrick J.},
+  title   = {Code Verification by the Method of Manufactured Solutions},
+  journal = {Journal of Fluids Engineering},
+  volume  = {124},
+  number  = {1},
+  pages   = {4--10},
+  year    = {2002},
+  doi     = {10.1115/1.1436090}
+}
+
+@techreport{salari2000code,
+  author      = {Salari, Kambiz and Knupp, Patrick},
+  title       = {Code Verification by the Method of Manufactured Solutions},
+  institution = {Sandia National Laboratories},
+  number      = {SAND2000-1444},
+  year        = {2000},
+  month       = jun,
+  doi         = {10.2172/759450}
+}
+
+@article{demillo1978hints,
+  author  = {DeMillo, Richard A. and Lipton, Richard J. and Sayward, Frederick G.},
+  title   = {Hints on Test Data Selection: Help for the Practicing Programmer},
+  journal = {Computer},
+  volume  = {11},
+  number  = {4},
+  pages   = {34--41},
+  year    = {1978},
+  doi     = {10.1109/C-M.1978.218136}
+}
+
+@article{jia2011analysis,
+  author  = {Jia, Yue and Harman, Mark},
+  title   = {An Analysis and Survey of the Development of Mutation Testing},
+  journal = {IEEE Transactions on Software Engineering},
+  volume  = {37},
+  number  = {5},
+  pages   = {649--678},
+  year    = {2011},
+  doi     = {10.1109/TSE.2010.62}
+}
+
+@article{kanewala2014testing,
+  author  = {Kanewala, Upulee and Bieman, James M.},
+  title   = {Testing Scientific Software: A Systematic Literature Review},
+  journal = {Information and Software Technology},
+  volume  = {56},
+  number  = {10},
+  pages   = {1219--1232},
+  year    = {2014},
+  doi     = {10.1016/j.infsof.2014.05.006}
+}
+
+@article{barr2015oracle,
+  author  = {Barr, Earl T. and Harman, Mark and McMinn, Phil and Shahbaz, Muzammil and Yoo, Shin},
+  title   = {The Oracle Problem in Software Testing: A Survey},
+  journal = {IEEE Transactions on Software Engineering},
+  volume  = {41},
+  number  = {5},
+  pages   = {507--525},
+  year    = {2015},
+  doi     = {10.1109/TSE.2014.2372785}
+}

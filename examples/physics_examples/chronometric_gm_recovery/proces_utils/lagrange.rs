@@ -24,7 +24,7 @@ fn timestamp_to_seconds(ts: NaiveDateTime) -> f64 {
 /// Interpolates orbit data to match clock timestamps using a 10th-order Lagrange polynomial.
 ///
 /// # Type Parameter
-/// - `R`: Output real field type (`f64`, `DoubleFloat`)
+/// - `R`: Output real field type (`f64`, `Float106`)
 ///
 /// # Precision
 ///
@@ -168,7 +168,7 @@ where
 /// Interpolates orbit data to match clock timestamps using a 10th-order Lagrange polynomial.
 ///
 /// # Type Parameter
-/// - `R`: Output real field type (`f64`, `DoubleFloat`)
+/// - `R`: Output real field type (`f64`, `Float106`)
 ///
 /// # Precision
 ///

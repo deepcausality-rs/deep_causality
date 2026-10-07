@@ -5,7 +5,7 @@
 
 //! # The plasma-blackout corridor: one continuous coupled descent through flow, plasma, navigation, and control
 //!
-//! A reentry vehicle punches into the atmosphere at Mach 25. The shock layer ionizes, and past a
+//! A reentry vehicle punches into the atmosphere at Mach 28. The shock layer ionizes, and past a
 //! critical electron density the plasma sheath cuts every GNSS link; RAM-C II measured exactly
 //! this blackout. Through the dark the vehicle dead-reckons on its INS while a bounded-correction
 //! gate keeps the bank command inside the certified envelope. When the sheath clears, one fix
@@ -201,6 +201,7 @@ fn main() -> ExitCode {
             0,
             &leg_ends,
         );
+        let ramc = model::ramc_witnesses(&descent);
         write_rows(trace_path("corridor_trace.csv"), descent)
             .run()
             .map_err(write_err)?;
@@ -220,6 +221,7 @@ fn main() -> ExitCode {
             rebuilds: onset.rebuilds() + peak.rebuilds() + exit_pause.rebuilds() + reacq.rebuilds(),
             elapsed_s: lift(clock.elapsed().as_secs_f64()),
             regime_log: rendered_log,
+            ramc,
         }];
 
         // ── One report: the campaign verdict merged with the trajectory leg verdict, applied to

@@ -22,6 +22,8 @@ fn test_the_default_is_the_two_zeros_and_it_is_copy() {
     assert_eq!(l.device_time(), 0.0);
     assert_eq!(l.cost(), 0.0);
     assert_eq!(l.bits(), 0.0);
+    #[cfg(feature = "qpu")]
+    assert_eq!(l.remaining(), None, "no budget unless evidence names one");
     let copied = l;
     assert_eq!(copied, l, "Copy: the original is still usable");
 }

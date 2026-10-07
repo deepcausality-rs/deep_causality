@@ -62,10 +62,18 @@ const CURRENT_DENSITY: ContextoidId = 7;
 /// Contextoid id: the poloidal confinement field.
 const MAGNETIC_FIELD: ContextoidId = 8;
 
-/// Blade indices: each axis owns one bit, and a plane owns the bits of the axes spanning it.
-const E_X: usize = 1 << 1;
-const E_Y: usize = 1 << 2;
-const E_XY: usize = E_X | E_Y;
+/// The blade indices of the spatial x and y axes in `metric`'s algebra: each axis owns one bit.
+/// `Minkowski` puts time on `e_0`, so x and y are `e_1` and `e_2`; `Euclidean` has no time axis,
+/// so they are `e_0` and `e_1`. Any other metric, or one with fewer than two spatial axes, is an
+/// error.
+fn spatial_xy(metric: Metric) -> Result<(usize, usize), Box<dyn std::error::Error>> {
+    let first_spatial = match metric {
+        Metric::Minkowski(dim) if dim >= 3 => 1,
+        Metric::Euclidean(dim) if dim >= 2 => 0,
+        other => return Err(format!("no spatial x and y axes for the metric {other:?}").into()),
+    };
+    Ok((1 << first_spatial, 1 << (first_spatial + 1)))
+}
 
 /// The working scalar. The metric, the curvature and the plasma force all carry it.
 pub type FloatType = f64;
@@ -179,22 +187,28 @@ fn lorentz_force(
     current_density: FloatType,
     magnetic_field: FloatType,
     metric: Metric,
-) -> Result<FloatType, CausalMultiVectorError> {
-    let current = multivector(&[(E_X, current_density)], metric)?;
-    let field = multivector(&[(E_XY, magnetic_field)], metric)?;
+) -> Result<FloatType, Box<dyn std::error::Error>> {
+    let (e_x, e_y) = spatial_xy(metric)?;
+    let current = multivector(&[(e_x, current_density)], metric)?;
+    let field = multivector(&[(e_x | e_y, magnetic_field)], metric)?;
 
     let force = current.inner_product(&field);
-    blade(&force, E_Y)
+    Ok(blade(&force, e_y)?)
 }
 
-/// A multivector holding the given coefficients at the given blade indices, zero elsewhere.
+/// A multivector holding the given coefficients at the given blade indices, zero elsewhere. An
+/// index outside the algebra is an error.
 fn multivector(
     components: &[(usize, FloatType)],
     metric: Metric,
 ) -> Result<CausalMultiVector<FloatType>, CausalMultiVectorError> {
     let mut data = vec![ZERO; 1 << metric.dimension()];
+    let found = data.len();
     for &(index, value) in components {
-        data[index] = value;
+        let slot = data.get_mut(index).ok_or_else(|| {
+            CausalMultiVectorError::data_length_mismatch(index.saturating_add(1), found)
+        })?;
+        *slot = value;
     }
     CausalMultiVector::new(data, metric)
 }
@@ -204,10 +218,9 @@ fn blade(
     field: &CausalMultiVector<FloatType>,
     index: usize,
 ) -> Result<FloatType, CausalMultiVectorError> {
-    field
-        .get(index)
-        .copied()
-        .ok_or_else(|| CausalMultiVectorError::data_length_mismatch(index + 1, field.data().len()))
+    field.get(index).copied().ok_or_else(|| {
+        CausalMultiVectorError::data_length_mismatch(index.saturating_add(1), field.data().len())
+    })
 }
 
 // -----------------------------------------------------------------------------------------

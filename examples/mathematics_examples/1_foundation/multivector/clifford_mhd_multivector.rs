@@ -87,7 +87,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let relativistic = reactor("relativistic", Metric::Minkowski(4), 1, 2)?;
     calculate_confinement_force(&relativistic)?;
 
-    print_explenation();
+    print_explanation();
     Ok(())
 }
 
@@ -190,7 +190,7 @@ fn calculate_confinement_force(reactor: &ReactorContext) -> Result<(), Box<dyn s
 
     // 5. The sign is the reactor safety check. Euclidean (+1) gives the standard
     //    cross-product direction; Minkowski (-1) reverses it through the spacetime signature.
-    print_force(force_val, poloidal_axis);
+    print_force(force_val, metric, poloidal_axis);
     Ok(())
 }
 
@@ -245,23 +245,38 @@ fn print_inputs(j: FloatType, b: FloatType) {
     println!("  [Input] Magnetic Field B: {:.1}", lower(b));
 }
 
-fn print_force(force: FloatType, poloidal_axis: usize) {
+fn print_force(force: FloatType, metric: Metric, poloidal_axis: usize) {
     println!(
         "  [Output] Lorentz Force F: {:.2} e_{}",
         lower(force),
         poloidal_axis
     );
+    let axis = axis_name(metric, poloidal_axis);
     if lower(force) > 0.0 {
-        println!("  => STATUS: Classical behavior. Force pushes +Y.");
+        println!("  => STATUS: Classical behavior. Force pushes +{axis}.");
     } else {
-        println!("  => STATUS: Relativistic signature detected. Force pushes -Y.");
+        println!("  => STATUS: Relativistic signature detected. Force pushes -{axis}.");
         println!(
             "     (NOTE: In a simulation, this sign flip must be accounted for to prevent wall collision!)"
         );
     }
 }
 
-fn print_explenation() {
+/// The name of basis axis `axis` of `metric`'s algebra: `X`, `Y`, `Z` for `e_0`..`e_2` of
+/// `Euclidean(3)`, `T` then `X`, `Y`, `Z` for `e_0`..`e_3` of `Minkowski(4)`, and `e_<axis>` for
+/// any other axis or algebra.
+fn axis_name(metric: Metric, axis: usize) -> String {
+    let names: &[&str] = match metric {
+        Metric::Euclidean(3) => &["X", "Y", "Z"],
+        Metric::Minkowski(4) => &["T", "X", "Y", "Z"],
+        _ => &[],
+    };
+    names
+        .get(axis)
+        .map_or_else(|| format!("e_{axis}"), |name| (*name).to_string())
+}
+
+fn print_explanation() {
     println!("\n============================================================");
     println!("WHAT THIS MEANS FOR COMPUTATIONAL PHYSICS:");
     println!("1. Metric Agnosticism: The exact same code 'force = J . B' calculated");

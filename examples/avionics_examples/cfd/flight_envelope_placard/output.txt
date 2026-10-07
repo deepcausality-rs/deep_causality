@@ -25,6 +25,6 @@ Matrix: mach_alt_matrix.csv
 
 Placard table written: placard_table.csv
 --- flight envelope placard ---
-  [PASS] q-max placard: max q = 23.7 kPa at M 1.20 / 11.0 km, inside the 60 kPa placard
-  [PASS] stagnation temperature: max T0 = 1502.1 K at M 5.00 / 40.0 km, inside the 1700 K placard
+  [PASS] [tripwire] q-max placard: max q = 23.7 kPa at M 1.20 / 11.0 km, inside the 60 kPa placard
+  [PASS] [tripwire] stagnation temperature: max T0 = 1502.1 K at M 5.00 / 40.0 km, inside the 1700 K placard
 === All gates passed: flight envelope placard. ===

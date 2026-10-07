@@ -142,14 +142,19 @@ fn read(context: &WaveContext, id: ContextoidId) -> Result<f64, ContextIndexErro
         .ok_or_else(|| ContextIndexError::new(format!("no wave quantity with contextoid id {id}")))
 }
 
-/// A multivector holding the given coefficients at the given blade indices, zero elsewhere.
+/// A multivector holding the given coefficients at the given blade indices, zero elsewhere. An
+/// index outside the algebra is an error.
 fn multivector(
     components: &[(usize, FloatType)],
     metric: Metric,
 ) -> Result<CausalMultiVector<FloatType>, CausalMultiVectorError> {
     let mut data = vec![ZERO; COEFFICIENTS];
+    let found = data.len();
     for &(index, value) in components {
-        data[index] = value;
+        let slot = data.get_mut(index).ok_or_else(|| {
+            CausalMultiVectorError::data_length_mismatch(index.saturating_add(1), found)
+        })?;
+        *slot = value;
     }
     CausalMultiVector::new(data, metric)
 }
@@ -159,10 +164,9 @@ fn blade(
     field: &CausalMultiVector<FloatType>,
     index: usize,
 ) -> Result<FloatType, CausalMultiVectorError> {
-    field
-        .get(index)
-        .copied()
-        .ok_or_else(|| CausalMultiVectorError::data_length_mismatch(index + 1, field.data().len()))
+    field.get(index).copied().ok_or_else(|| {
+        CausalMultiVectorError::data_length_mismatch(index.saturating_add(1), field.data().len())
+    })
 }
 
 /// The plane-wave potential component `A_x(t, z) = cos(ω(t − z))`, written once as a

@@ -68,11 +68,10 @@ const COARSE_L: usize = 16;
 
 /// A second lattice side, used only by the precision table.
 ///
-/// `|m| = k / N` is a dyadic rational needing `log2(N)` significand bits, `m^2` needs twice that,
-/// and summing `R` of them needs `2 log2(N) + log2(R)`. At `L = 16` that is 21 bits, inside
-/// `f32`'s 24, so the whole reduction is *exact* there and three scalars cannot disagree. At
-/// `L = 32` it is 25 and `f32` must round. The table shows both, because the threshold is the
-/// point.
+/// The bit count in `report_precision` bounds the reduction `<m^2> - <m>^2` at 24 bits for
+/// `L = 16`, inside `f32`'s 24, so the reduction is *exact* there and three scalars cannot
+/// disagree. At `L = 32` the bound is 28 bits and `f32` can round. The table shows both, because
+/// the threshold is the point.
 const FINE_L: usize = 32;
 
 /// Spins per lattice, at the physics size.
@@ -135,7 +134,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let fine_critical = report_ensemble(t_critical, FINE_L, "Tc on a 32x32 lattice");
     let fine_ordered = report_ensemble(t_ordered, FINE_L, "T = 1.5 on a 32x32 lattice");
-    report_precision(&at_critical, &ordered, &fine_critical, &fine_ordered);
+    report_precision(
+        &at_critical,
+        &ordered,
+        &fine_critical,
+        &fine_ordered,
+        t_critical,
+        t_ordered,
+    );
     Ok(())
 }
 
@@ -405,7 +411,9 @@ where
 // One table, three precisions
 // -------------------------------------------------------------------------------------------
 
-/// `chi` recomputed at three scalars from identical data, at two lattice sizes.
+/// `chi` recomputed at three scalars from identical data, at two lattice sizes. Each row's `beta`
+/// is the inverse of the bath temperature its ensemble ran at: `t_critical` for the `Tc` rows,
+/// `t_ordered` for the `T = 1.5` rows.
 ///
 /// Holding the data fixed is the point. Running the simulation again at another precision would
 /// change the trajectory too, and the two effects could not be told apart. Here only the
@@ -424,19 +432,31 @@ where
 /// `T = 1.5`, and the second is where the digits go.
 ///
 /// **And at this lattice size no scalar can disagree, because the arithmetic is exact.** `|m|` is
-/// `k / N` for an integer `k`: a dyadic rational needing `log2(N)` significand bits. `m^2` needs
-/// twice that, and summing `R` of them needs `2 log2(N) + log2(R)`. At `L = 16, R = 32` that is
-/// 21 bits, inside `f32`'s 24 — so `f32`, `f64` and `Float106` return **bit-identical** results,
-/// and a table claiming to show a precision effect would have been showing nothing.
+/// `k / N` for the spin sum `k = |sum s_i|`, and `k` has the parity of `N`. `N` is even, so
+/// `|m| = j / (N / 2)` for an integer `j <= N / 2`: a dyadic rational needing `log2(N) - 1`
+/// significand bits. `R` is a power of two, so dividing by it is exact, and each term of the
+/// reduction has its own bound:
 ///
-/// At `L = 32` the same count is 25 bits and `f32` must round. Crossing that threshold is what
-/// puts an effect in the table, and the threshold was computed before the run rather than found
-/// in it.
+/// - `<m^2>` sums `R` squares: `2 (log2(N) - 1) + log2(R)` bits.
+/// - `<m>^2` squares a sum of `R` magnetisations: `2 (log2(N) - 1 + log2(R))` bits.
+/// - `<m^2> - <m>^2` is `(R sum j^2 - (sum j)^2) / (R N / 2)^2`, and its numerator is at most
+///   `(R N / 2)^2`: the same `2 (log2(N) - 1 + log2(R))` bits.
+///
+/// At `L = 16, R = 32` these are 19, 24 and 24 bits, inside `f32`'s 24, so `f32`, `f64` and
+/// `Float106` compute a **bit-identical** reduction `<m^2> - <m>^2`, and a table claiming to show
+/// a precision effect in it would have been showing nothing. The even parity is what makes it
+/// fit: without it `<m>^2` would need 26 bits.
+///
+/// At `L = 32` the bound on `<m>^2` and on the difference is 28 bits, and `f32` can round there;
+/// `<m^2>`, at 23 bits, stays exact. Crossing that threshold is what puts an effect in the table,
+/// and the threshold was computed before the run rather than found in it.
 ///
 /// The four rows are a 2x2 — representable or not, fluctuation large or small — and only the cell
-/// where both are unfavourable costs anything: `7.7e-5` against `3e-8`, `4e-10` and `1.4e-7`. The
-/// *best* of the four is the exact reduction with the smallest fluctuation, which is the opposite
-/// of what the cancellation argument alone would predict.
+/// where both are unfavourable costs anything: `7.7e-5` against `3.0e-8`, `3.2e-8` and `1.4e-7`.
+/// The two exact rows sit at the same `3e-8` whatever the fluctuation: their `<m^2> - <m>^2` is
+/// bit-identical at all three scalars, and what remains is `f32` rounding `beta = 1 / T` and the
+/// final product. A small fluctuation costs digits only where the reduction rounds, which the
+/// cancellation argument alone would not predict.
 ///
 /// The lesson is not "use a wider float for fluctuations". It is that whether you need one is a
 /// question about your data, and it has an answer you can compute before reaching for it.
@@ -445,6 +465,8 @@ fn report_precision(
     ordered: &[f64],
     fine_critical: &[f64],
     fine_ordered: &[f64],
+    t_critical: f64,
+    t_ordered: f64,
 ) {
     println!("-- chi at three precisions, from identical data --\n");
     println!(
@@ -454,16 +476,37 @@ fn report_precision(
 
     // A 2x2 design: is the reduction exactly representable, and is the fluctuation large?
     // Only the cell where both answers are unfavourable costs anything.
-    for (label, data) in [
-        ("L=16, Tc - exact, large fluct.", at_critical),
-        ("L=16, T=1.5 - exact, small fluct.", ordered),
-        ("L=32, Tc - rounds, large fluct.", fine_critical),
-        ("L=32, T=1.5 - rounds, small fluct.", fine_ordered),
+    for (label, data, t, l) in [
+        (
+            "L=16, Tc - exact, large fluct.",
+            at_critical,
+            t_critical,
+            COARSE_L,
+        ),
+        (
+            "L=16, T=1.5 - exact, small fluct.",
+            ordered,
+            t_ordered,
+            COARSE_L,
+        ),
+        (
+            "L=32, Tc - rounds, large fluct.",
+            fine_critical,
+            t_critical,
+            FINE_L,
+        ),
+        (
+            "L=32, T=1.5 - rounds, small fluct.",
+            fine_ordered,
+            t_ordered,
+            FINE_L,
+        ),
     ] {
-        let reference = chi_at::<Float106>(data);
+        let spins = l * l;
+        let reference = chi_at::<Float106>(data, t, spins);
         for (name, value) in [
-            ("f32", chi_at::<f32>(data)),
-            ("f64", chi_at::<f64>(data)),
+            ("f32", chi_at::<f32>(data, t, spins)),
+            ("f64", chi_at::<f64>(data, t, spins)),
             ("Float106", reference),
         ] {
             let rel = if reference == 0.0 {
@@ -488,8 +531,9 @@ fn report_precision(
     println!("  and reaching for a wider float without asking it is guesswork.");
 }
 
-/// `chi = beta N (<m^2> - <m>^2)` computed entirely at `T`, lowered once for display.
-fn chi_at<T>(magnetisations: &[f64]) -> f64
+/// `chi = beta N (<m^2> - <m>^2)` with `beta = 1 / t` for the ensemble run at bath temperature
+/// `t` on a lattice of `spins` sites, computed entirely at `T`, lowered once for display.
+fn chi_at<T>(magnetisations: &[f64], t: f64, spins: usize) -> f64
 where
     T: RealField + FromPrimitive + ToPrimitive,
 {
@@ -503,6 +547,6 @@ where
     }
     let mean = sum / n;
     let mean_sq = sum_sq / n;
-    let beta = lift::<T>(1.0 / TC);
-    lower(beta * lift_usize::<T>(N) * (mean_sq - mean * mean))
+    let beta = T::one() / lift::<T>(t);
+    lower(beta * lift_usize::<T>(spins) * (mean_sq - mean * mean))
 }

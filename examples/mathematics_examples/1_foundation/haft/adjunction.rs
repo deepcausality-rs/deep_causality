@@ -39,27 +39,36 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Scenario: We have a function that fetches data given a ConfigContext and an ID.
     // fetch_data: (ConfigContext, i32) -> Result<String, ContextIndexError>
+    // The key authorises the request. The result reports only its length, so nothing printed
+    // from it carries the key.
     let fetch_data = |cfg: ConfigContext, id: i32| -> Result<String, ContextIndexError> {
+        let key = read(&cfg, API_KEY)?;
         Ok(format!(
-            "Data for ID {} using Key {}",
-            id,
-            read(&cfg, API_KEY)?
+            "Data for ID {id}, requested with a {}-byte API key",
+            key.len()
         ))
     };
 
-    // We want to "bake in" the ID first, creating a reusable "Reader" that just needs the
-    // ConfigContext. We use the Right Adjunct logic manually here since Rust closures are tricky.
-
+    // We want to "bake in" the ID first, creating a reusable reader that needs only the
+    // ConfigContext. That is the left adjunct: (ConfigContext, A) -> B becomes
+    // A -> (ConfigContext -> B).
     let id_to_fetch = 42;
-    let reader = move |cfg: ConfigContext| fetch_data(cfg, id_to_fetch);
+    let reader = ConfigAdjunction::left_adjunct(fetch_data, id_to_fetch);
 
     // Now 'reader' is a function ConfigContext -> Result<String, ContextIndexError>.
     // We can pass this 'reader' around to a component that holds the ConfigContext.
 
     let my_config = config("SECRET_KEY")?;
 
-    let result = reader(my_config)?;
+    let result = reader(my_config.clone())?;
     print_result(&result);
+
+    // The right adjunct goes back: from "an id gives a reader" to "the configuration and an id
+    // give the value". The round trip returns what the reader returned.
+    let fetch_again =
+        ConfigAdjunction::right_adjunct(|id| ConfigAdjunction::left_adjunct(fetch_data, id));
+    let round_trip = fetch_again(my_config, id_to_fetch)?;
+    print_round_trip(&round_trip);
     Ok(())
 }
 
@@ -98,33 +107,32 @@ fn print_result(result: &str) {
     println!("Adjunction Result: {result}");
 }
 
-// Mock Adjunction Implementation for demonstration
-#[allow(dead_code)]
+fn print_round_trip(result: &str) {
+    println!("Right adjunct round trip: {result}");
+}
+
+/// The product ⊣ reader adjunction over the configuration, built by hand: a function of the
+/// configuration and a value corresponds to a function from the value to a reader of the
+/// configuration.
 struct ConfigAdjunction;
 
-#[allow(dead_code)]
 impl ConfigAdjunction {
-    // Left Adjunct: (ConfigContext, A) -> B  ===>  A -> (ConfigContext -> B)
-    fn left_adjunct<A, B, F>(f: F) -> impl Fn(A) -> Box<dyn Fn(ConfigContext) -> B>
+    /// Left adjunct: `(ConfigContext, A) -> B` becomes `A -> (ConfigContext -> B)`; this returns
+    /// the reader for `a`.
+    fn left_adjunct<A, B, F>(f: F, a: A) -> impl Fn(ConfigContext) -> B
     where
-        A: Clone + 'static,
-        F: Fn(ConfigContext, A) -> B + Clone + 'static,
+        A: Clone,
+        F: Fn(ConfigContext, A) -> B,
     {
-        move |a: A| {
-            let f = f.clone();
-            let a = a.clone();
-            Box::new(move |cfg: ConfigContext| f(cfg, a.clone()))
-        }
+        move |cfg: ConfigContext| f(cfg, a.clone())
     }
 
-    // Right Adjunct: A -> (ConfigContext -> B)  ===>  (ConfigContext, A) -> B
-    fn right_adjunct<A, B, F>(f: F) -> impl Fn(ConfigContext, A) -> B
+    /// Right adjunct: `A -> (ConfigContext -> B)` becomes `(ConfigContext, A) -> B`.
+    fn right_adjunct<A, B, R, G>(g: G) -> impl Fn(ConfigContext, A) -> B
     where
-        F: Fn(A) -> Box<dyn Fn(ConfigContext) -> B>,
+        G: Fn(A) -> R,
+        R: Fn(ConfigContext) -> B,
     {
-        move |cfg: ConfigContext, a: A| {
-            let reader = f(a);
-            reader(cfg)
-        }
+        move |cfg: ConfigContext, a: A| g(a)(cfg)
     }
 }

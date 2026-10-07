@@ -61,8 +61,9 @@ pub const SCALAR_KAPPA: f64 = 0.05;
 pub const COMMS_BAND_RAD_S: f64 = 9.4e9;
 
 // ── Published reference cross-references (reported, with Tier-A disclaimers) ──
-/// RAM-C II peak electron density band near the 71 km station, m⁻³ (order-of-magnitude anchor).
-pub const RAMC_NE_REFERENCE: f64 = 1.0e19;
+/// The RAM-C II station-1 Ka-band anchor (defined once in `deep_causality_cfd`). A cross-reference
+/// only: this harness gates the coupling, not agreement with flight data.
+pub use deep_causality_cfd::{RAMC_II_ANCHOR_ALTITUDE_M, RAMC_II_NE_ANCHOR};
 
 /// Lift an exact `f64` specification into the working precision.
 pub fn ft(x: f64) -> FloatType {

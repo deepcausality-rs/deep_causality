@@ -64,9 +64,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 // =============================================================================
 
 #[derive(Debug, Clone, Default)]
-#[allow(dead_code)]
 struct WeakState {
-    muon: Option<WeakIsospin>,
     neutrino: Option<WeakIsospin>,
     cc_propagator: FloatType,
     nc_propagator: FloatType,
@@ -101,7 +99,6 @@ fn stage_initialize() -> PropagatingEffect<WeakState> {
     println!();
 
     let state = WeakState {
-        muon: Some(muon),
         neutrino: Some(neutrino),
         ..Default::default()
     };

@@ -32,11 +32,13 @@ pub fn run_rung2_intervention() -> Result<(), Box<dyn Error>> {
     // 3. Intervention: If high cancer risk, prescribe therapy
     if result.cancer_risk {
         println!("Intervention: High cancer risk detected. Cessation therapy prescribed.");
+        println!(
+            "Result: High cancer risk was detected, and the intervention was successfully fired."
+        );
     } else {
         println!("No intervention needed: Cancer risk is low.");
     }
 
-    println!("Result: High cancer risk was detected, and the intervention was successfully fired.");
     println!("\n");
     Ok(())
 }

@@ -97,6 +97,19 @@ fn main() {
         Ok(ref dto) => panic!("the error channel carried a payload: {dto:?}"),
     }
 
+    // The same mapping covers the other domain errors, each to its own status code.
+    for (error, code) in [
+        (DomainError::PermissionDenied, 403),
+        (
+            DomainError::DatabaseError("connection reset".to_string()),
+            500,
+        ),
+    ] {
+        let mapped: Result<UserDto, ApiError> =
+            ResultUnboundWitness::bimap(Err(error), to_dto, to_api_error);
+        assert_eq!(mapped.err().map(|err| err.code), Some(code));
+    }
+
     // ------------------------------------------------------------------------
     // Scenario 3: the same move on a pair.
     //
@@ -162,7 +175,6 @@ struct UserDto {
 }
 
 #[derive(Debug, Clone, PartialEq)]
-#[allow(dead_code)]
 enum DomainError {
     UserNotFound(u32),
     DatabaseError(String),

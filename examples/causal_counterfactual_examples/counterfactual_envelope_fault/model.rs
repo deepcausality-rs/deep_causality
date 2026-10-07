@@ -46,15 +46,17 @@ fn airspeed_limits(
     ))
 }
 
-/// Stage 1. Sensor collection. Value channel projects from `SensorReading` to `FloatType` airspeed.
+/// Stage 1. Sensor collection. Records the altitude estimate in `state`; the value channel
+/// projects from `SensorReading` to `FloatType` airspeed.
 pub fn collect_airspeed(
     value: CausalEffect<SensorReading>,
-    state: FlightState,
+    mut state: FlightState,
     ctx: Option<EnvelopeContext>,
 ) -> FlightProcess<FloatType> {
     let Some(reading) = value.into_value() else {
         return stage_failure(CausalityError::ValueNotAvailable(), state, ctx);
     };
+    state.estimate_altitude_ft = reading.altitude_ft;
     let mut logs = EffectLog::new();
     logs.add_entry(&format!(
         "stage1.collect: airspeed_kn={:.0} altitude_ft={:.0}",

@@ -144,7 +144,12 @@ impl<R: CfdScalar> DescentSchedule<R> {
         self.max_rebuilds
     }
 
-    /// The freestream at `altitude_m`, linearly interpolated and clamped to the table ends.
+    /// The freestream at `altitude_m`, clamped to the table ends.
+    ///
+    /// Between rows, `ln n_tot` is interpolated linearly in altitude and temperature and sound speed
+    /// linearly. Number density falls exponentially with altitude, so the logarithmic interpolant is
+    /// exact inside an isothermal hydrostatic layer; a linear one overstates density between rows
+    /// by a factor that grows with row spacing (about 2× midway across 16 km).
     pub fn sample(&self, altitude_m: R) -> AtmosphereRow<R> {
         let first = self.table[0];
         let last = self.table[self.table.len() - 1];
@@ -163,7 +168,7 @@ impl<R: CfdScalar> DescentSchedule<R> {
                 let lerp = |a: R, b: R| a + t * (b - a);
                 return AtmosphereRow {
                     altitude_m,
-                    n_tot: lerp(lo.n_tot, hi.n_tot),
+                    n_tot: lerp(lo.n_tot.ln(), hi.n_tot.ln()).exp(),
                     temperature: lerp(lo.temperature, hi.temperature),
                     sound_speed: lerp(lo.sound_speed, hi.sound_speed),
                 };

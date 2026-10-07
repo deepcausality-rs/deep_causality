@@ -147,8 +147,9 @@ pub use crate::solvers::{
     CompressibleMarcher3dFitted, DecNsConfig, DecNsConfigNeedsTimeStep, DecNsConfigNeedsViscosity,
     DecNsConfigReady, EulerState, EulerState2d, EulerState3d, EulerStateTt2d, EulerStateTt3d,
     FittedNormalShock, ForcingRegion, Park2tClosure, PostShockState, QttImmersed2d,
-    QttIncompressible2d, QttLinear1d, REDUCED_MASS_AMU, StagnationOutcome, conservation_round,
-    ideal_gas_pressure, ideal_gas_pressure_2d, positivity_floor, reduced_mass_amu,
+    QttIncompressible2d, QttLinear1d, RAMC_II_ALLOWANCE_DECADES, RAMC_II_ANCHOR_ALTITUDE_M,
+    RAMC_II_NE_ANCHOR, REDUCED_MASS_AMU, StagnationOutcome, conservation_round, ideal_gas_pressure,
+    ideal_gas_pressure_2d, positivity_floor, reduced_mass_amu,
 };
 
 // QTT rollout observable extraction (tensor-train-native diagnostics + surface observables).

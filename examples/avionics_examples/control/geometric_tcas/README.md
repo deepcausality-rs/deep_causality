@@ -10,7 +10,7 @@ Traditional TCAS computes "Tau" ($\tau = r / \dot{r}$), the time to closest poin
 The task is to compute the **Closest Point of Approach (CPA)** in 3D reliably and cheaply.
 *   **Singularities**: Standard formulations break down when relative velocity $\dot{r} \to 0$ or when paths are parallel.
 *   **Computational Cost**: Trig-heavy geometric calculations (matrices, Euler angles) consume cycles in embedded avionics.
-*   **Ambiguity**: Detecting a collision course is easy; deciding *which way* to turn (Resolution Advisory) in 3D without inducing secondary conflicts is hard.
+*   **Ambiguity**: Detecting a collision course is easy; deciding *which way* to resolve it (a Resolution Advisory: climb or descend) without inducing secondary conflicts is hard.
 
 ## The DeepCausality Solution
 The example uses **Geometric Algebra (Clifford Algebra)** from the `deep_causality_multivector` crate for a coordinate-free solution:
@@ -58,7 +58,7 @@ The simulation output breaks down as follows:
 1.  **Kinematics (Closing Speed)**
     *   **Scenario**: Ownship is flying North at 200 m/s (~390 kts). Intruder is flying South at 200 m/s.
     *   **Physics**: This creates a **closing speed of 400 m/s** (Mach 1.2 encounter).
-    *   **Math**: `Range (8000m) / Probability Closing Speed (400m/s) = 20.0 seconds`.
+    *   **Math**: `Range (8000m) / Closing Speed (400m/s) = 20.0 seconds`.
     *   **Output**: The table starts exactly at `20.0s` Time-to-CPA and counts down linearly.
 
 2.  **Geometry (The 50m CPA)**
