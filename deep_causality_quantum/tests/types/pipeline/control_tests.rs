@@ -1188,18 +1188,20 @@ fn test_a_published_value_enters_as_effective_draws() {
 }
 
 #[test]
-fn test_observe_experiment_runs_on_the_root_before_the_fork() {
+fn test_after_the_fork_an_observed_experiment_is_charged_to_every_world() {
     let exps = crosstalk_experiments();
     let [h1, ..] = crosstalk_candidates().unwrap();
-    let source = EvidenceSource::Simulated(h1);
-    let msg = calculation_message(
-        QclBuilder::control::<f64, Count, 4, _>(&crosstalk_screen())
-            .fork()
-            .observe_experiment(&CrosstalkModel, &exps[2], &source)
-            .finalize()
-            .unwrap_err(),
-    );
-    assert!(msg.contains("before fork"), "{msg}");
+    let report = QclBuilder::control::<f64, Count, 4, _>(&crosstalk_screen())
+        .fork()
+        .observe_experiment(&CrosstalkModel, &exps[2], &EvidenceSource::Simulated(h1))
+        .finalize()
+        .unwrap();
+    // The root ledger stops at the fork; the device's evidence is in every world's history.
+    assert_eq!(report.ledger.experiments(), 0);
+    for w in &report.worlds {
+        assert_eq!((w.ledger().experiments(), w.ledger().shots()), (1, 1024));
+    }
+    assert_eq!(report.observations.len(), 1);
     let msg = calculation_message(
         QclBuilder::control::<f64, Count, 4, _>(&crosstalk_screen())
             .predict_with(&CrosstalkModel, &exps[2])
@@ -1207,6 +1209,186 @@ fn test_observe_experiment_runs_on_the_root_before_the_fork() {
             .unwrap_err(),
     );
     assert!(msg.contains("fork first"), "{msg}");
+}
+
+// ---------------------------------------------------------------------------
+// Campaigns: one reading per observed experiment, adjudicated together
+// ---------------------------------------------------------------------------
+
+/// Fork, then observe `experiment` from H1 `times` times, predicting and comparing each time.
+fn crosstalk_campaign(
+    experiment: &Crosstalk,
+    times: usize,
+) -> deep_causality_quantum::ControlReport<f64, Count, 4> {
+    let [h1, ..] = crosstalk_candidates().unwrap();
+    let source = EvidenceSource::Simulated(h1);
+    let mut control = QclBuilder::control::<f64, Count, 4, _>(&crosstalk_screen()).fork();
+    for _ in 0..times {
+        control = control
+            .observe_experiment(&CrosstalkModel, experiment, &source)
+            .predict_with(&CrosstalkModel, experiment)
+            .compare(3.0);
+    }
+    control.adjudicate(5.0).finalize().unwrap()
+}
+
+#[test]
+fn test_a_campaign_separates_what_one_experiment_cannot() {
+    // E2 at 512 shots separates H1 from its rivals by about 3.4 bits; twice, by about 6.9.
+    let half = crosstalk_experiments()[2].clone().with_shots(512).unwrap();
+    let once = crosstalk_campaign(&half, 1);
+    assert!(matches!(
+        once.adjudication.unwrap().outcome,
+        Either::Right(deep_causality_quantum::Ambiguity::Unseparated { .. })
+    ));
+    let twice = crosstalk_campaign(&half, 2);
+    for w in &twice.worlds {
+        assert_eq!(w.readings().len(), 2);
+        assert!(w.readings().iter().all(|r| r.experiment() == "E2 hold Q2"));
+        assert_eq!((w.ledger().experiments(), w.ledger().predictions()), (2, 2));
+    }
+    match &twice.adjudication.as_ref().unwrap().outcome {
+        Either::Left(s) => {
+            assert_eq!(s.name, "H1 Q1->Q2");
+            assert!(s.separation_bits > 5.0, "{}", s.separation_bits);
+        }
+        other => panic!("expected H1 to survive, got {other:?}"),
+    }
+    assert_eq!(twice.observations.len(), 2);
+}
+
+#[test]
+fn test_a_second_compare_of_one_observation_replaces_its_reading() {
+    let cfg = kreversal_config(0.3);
+    let report = QclBuilder::control::<f64, Count, 2, _>(&cfg)
+        .observe(0, 256)
+        .fork()
+        .predict(0)
+        .compare(3.0)
+        .predict(0)
+        .compare(2.0)
+        .finalize()
+        .unwrap();
+    for w in &report.worlds {
+        assert_eq!(w.readings().len(), 1, "{}", w.name());
+        let r = &w.readings()[0];
+        assert_eq!(r.experiment(), "excited");
+        assert_eq!(r.prediction(), w.prediction());
+        assert_eq!(r.read_out(), w.read_out().unwrap());
+    }
+    // The prediction is consumed: compare again without one names predict.
+    let msg = calculation_message(
+        QclBuilder::control::<f64, Count, 2, _>(&cfg)
+            .observe(0, 256)
+            .fork()
+            .predict(0)
+            .compare(3.0)
+            .compare(3.0)
+            .finalize()
+            .unwrap_err(),
+    );
+    assert!(msg.contains("call predict before compare"), "{msg}");
+}
+
+#[test]
+fn test_gate_judges_every_unjudged_reading_and_needs_one() {
+    let cfg = two_mechanism_config();
+    let report = QclBuilder::control::<f64, Count, 2, _>(&cfg)
+        .fork()
+        .observe(0, 256)
+        .observe(0, 256)
+        .gate(Spec::at_least(0.9))
+        .adjudicate(5.0)
+        .finalize()
+        .unwrap();
+    for w in &report.worlds {
+        assert_eq!(w.readings().len(), 2);
+        assert!(w.readings().iter().all(|r| r.verdict().is_some()));
+    }
+    // flip reads 1 twice, keep reads 0 twice: 512 shots of certainty separate them.
+    match &report.adjudication.as_ref().unwrap().outcome {
+        Either::Left(s) => assert_eq!(s.name, "flip"),
+        other => panic!("expected flip to survive, got {other:?}"),
+    }
+    // Once every reading is judged there is nothing left to gate.
+    let msg = calculation_message(
+        QclBuilder::control::<f64, Count, 2, _>(&cfg)
+            .fork()
+            .observe(0, 16)
+            .gate(Spec::at_least(0.9))
+            .gate(Spec::at_least(0.9))
+            .finalize()
+            .unwrap_err(),
+    );
+    assert!(msg.contains("unjudged"), "{msg}");
+}
+
+#[test]
+fn test_a_reading_no_stage_judged_stops_adjudicate() {
+    let msg = calculation_message(
+        QclBuilder::control::<f64, Count, 2, _>(&two_mechanism_config())
+            .fork()
+            .observe(0, 16)
+            .adjudicate(5.0)
+            .finalize()
+            .unwrap_err(),
+    );
+    assert!(
+        msg.contains("without an observed and gated read-out"),
+        "{msg}"
+    );
+}
+
+// ---------------------------------------------------------------------------
+// Instrument time: device time in seconds, and a plan sized in time
+// ---------------------------------------------------------------------------
+
+#[test]
+fn test_device_time_is_seconds_when_the_config_names_an_instrument_time() {
+    let timed = QclBuilder::config::<f64, Count>()
+        .over_plant(plant_ground(), &[excited()])
+        .mechanisms(&[mechanism("keep", QubitOperator::identity())])
+        .instrument_time(deep_causality_quantum::InstrumentTime::new(0.25, 1000.0).unwrap())
+        .build()
+        .unwrap();
+    assert_eq!(timed.instrument_time().map(|t| t.shot_time()), Some(0.25));
+    let report = QclBuilder::control::<f64, Count, 2, _>(&timed)
+        .observe(0, 100)
+        .finalize()
+        .unwrap();
+    assert_eq!(report.ledger.device_time(), 25.0);
+    // Without it, a shot is one unit.
+    let report = QclBuilder::control::<f64, Count, 2, _>(&two_mechanism_config())
+        .observe(0, 100)
+        .finalize()
+        .unwrap();
+    assert_eq!(report.ledger.device_time(), 100.0);
+}
+
+#[test]
+fn test_a_plan_sized_in_time_runs_at_its_planned_shots() {
+    // E2 separates H1 from both rivals; sized in time, it takes the fewest shots that do.
+    let time = deep_causality_quantum::InstrumentTime::new(0.01, 100.0).unwrap();
+    let exps = crosstalk_experiments();
+    let report = QclBuilder::control::<f64, Count, 4, _>(&crosstalk_screen())
+        .design_with(&CrosstalkModel, &exps, MinCostCover::new(5.0).timed(time))
+        .finalize()
+        .unwrap();
+    let plan = report.plan.unwrap();
+    assert!(plan.is_complete());
+    let entry = plan
+        .entries()
+        .iter()
+        .find(|e| e.name == "E2 hold Q2")
+        .unwrap();
+    assert!(entry.shots < 1024, "{}", entry.shots);
+    assert_eq!(entry.cost, 1.0 + entry.shots as f64 * 0.01);
+    let sized = exps[2].clone().with_shots(entry.shots).unwrap();
+    assert_eq!(sized.shots(), entry.shots);
+    assert!(matches!(
+        exps[2].clone().with_shots(0).unwrap_err().0,
+        QuantumErrorEnum::NormalizationError(_)
+    ));
 }
 
 #[test]

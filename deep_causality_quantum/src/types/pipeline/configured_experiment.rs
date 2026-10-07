@@ -54,6 +54,17 @@ where
         })
     }
 
+    /// The same experiment at `shots`, as a plan priced in time sizes it.
+    ///
+    /// # Errors
+    ///
+    /// [`QuantumError::NormalizationError`] on zero shots.
+    pub fn with_shots(mut self, shots: u64) -> Result<Self, QuantumError> {
+        check_cost_and_shots(self.cost, shots)?;
+        self.shots = shots;
+        Ok(self)
+    }
+
     /// The name.
     pub fn name(&self) -> &str {
         &self.name

@@ -77,6 +77,35 @@ impl<R: RealField, const D: usize> World<R, D> {
     }
 }
 
+/// One world over a campaign: the hypothesis it ran under and, for each observed experiment in
+/// campaign order, the verdict and the read-out it came back with. Read-outs against a real-valued
+/// spec only: a campaign folds classical propositions.
+#[derive(Debug, Clone, PartialEq)]
+pub struct CampaignWorld<R: RealField> {
+    name: String,
+    readings: Vec<(CheckReport<R>, ShotEstimate<R>)>,
+}
+
+impl<R: RealField> CampaignWorld<R> {
+    /// A world with one `(verdict, read-out)` reading per observed experiment, in campaign order.
+    pub fn new(name: impl Into<String>, readings: Vec<(CheckReport<R>, ShotEstimate<R>)>) -> Self {
+        Self {
+            name: name.into(),
+            readings,
+        }
+    }
+
+    /// The hypothesis this world ran under.
+    pub fn name(&self) -> &str {
+        &self.name
+    }
+
+    /// The readings, in campaign order.
+    pub fn readings(&self) -> &[(CheckReport<R>, ShotEstimate<R>)] {
+        &self.readings
+    }
+}
+
 /// The hypothesis that survived, and how far it stood from its nearest rival.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Survivor<R> {
@@ -207,22 +236,9 @@ where
 
     // Separation over every pair, at the taken shots. Measured before the commutation test, so
     // a non-commuting fold still reports what it examined.
-    let slack = Tolerance::<R>::state()
-        .threshold(1, floor_bits)
-        .expect("the state member answers the single-operator form");
-    let mut checks = Vec::new();
-    for i in 0..n {
-        for j in (i + 1)..n {
-            let sep = worlds[i].read_out.separation_bits(&worlds[j].read_out);
-            checks.push(Check::at_least(
-                CheckItem::Pair(i, j),
-                sep,
-                floor_bits,
-                slack,
-            ));
-        }
-    }
-    let report = CheckReport::from_checks(checks);
+    let report = separation_report(n, floor_bits, |i, j| {
+        worlds[i].read_out.separation_bits(&worlds[j].read_out)
+    });
 
     // The projection path: commutation first, then the lattice fold.
     let mut commutation_pairs_tested = 0usize;
@@ -268,42 +284,8 @@ where
         WorldVerdict::ReadOut(r) => r.accepted() && !r.is_vacuous(),
     };
     let survivors: Vec<usize> = (0..n).filter(|&i| holds(&worlds[i])).collect();
-
-    let outcome = if n == 1 {
-        Either::Right(Ambiguity::Vacuous { worlds: 1 })
-    } else if survivors.is_empty() {
-        Either::Right(Ambiguity::NoSurvivor { worlds: n })
-    } else if survivors.len() > 1 {
-        Either::Right(Ambiguity::SeveralSurvive {
-            survivors: survivors.iter().map(|&i| worlds[i].name.clone()).collect(),
-        })
-    } else {
-        let s = survivors[0];
-        // The tightest pair involving the survivor.
-        let mut tightest: Option<(usize, usize, R, bool)> = None;
-        for c in report.checks() {
-            if let CheckItem::Pair(i, j) = c.item
-                && (i == s || j == s)
-                && tightest.is_none_or(|t| c.measured < t.2)
-            {
-                tightest = Some((i, j, c.measured, c.accepted));
-            }
-        }
-        let (i, j, sep, accepted) = tightest.expect("two or more worlds give the survivor a pair");
-        if accepted {
-            Either::Left(Survivor {
-                name: worlds[s].name.clone(),
-                separation_bits: sep,
-            })
-        } else {
-            Either::Right(Ambiguity::Unseparated {
-                survivor: worlds[s].name.clone(),
-                tightest: (i, j),
-                separation_bits: sep,
-                floor_bits,
-            })
-        }
-    };
+    let names: Vec<&str> = worlds.iter().map(|w| w.name.as_str()).collect();
+    let outcome = survivor_of(&names, &survivors, &report, floor_bits);
 
     Ok(Adjudication {
         worlds_folded: n,
@@ -312,4 +294,148 @@ where
         fold,
         outcome,
     })
+}
+
+/// Fold the worlds of a campaign: a world holds when the verdict of every one of its readings
+/// holds, and a pair separates by the sum of its separations over the experiments both observed.
+///
+/// The worlds share their experiments by position: reading `k` of every world is its reading of
+/// the campaign's `k`-th observed experiment. Each experiment's separation is the shot-scaled
+/// Bhattacharyya distance [`adjudicate`] measures, and those add, because the Bhattacharyya
+/// distance is additive over independent draws. The survivor rule is [`adjudicate`]'s, so a
+/// one-experiment campaign adjudicates exactly as [`adjudicate`] does on the same read-outs.
+///
+/// # Errors
+///
+/// [`QuantumError::CalculationError`] on a `floor_bits` that is not finite or is negative, on no
+/// worlds, on a world with no reading, or on worlds with different numbers of readings.
+pub fn adjudicate_campaign<R, const D: usize>(
+    worlds: &[CampaignWorld<R>],
+    floor_bits: R,
+) -> Result<Adjudication<R, D>, QuantumError>
+where
+    R: RealField + FromPrimitive + Default + core::fmt::Debug,
+{
+    if !floor_bits.is_finite() || floor_bits < R::zero() {
+        return Err(QuantumError::CalculationError(format!(
+            "adjudicate needs a finite, non-negative floor in bits, got {floor_bits:?}"
+        )));
+    }
+    let Some(first) = worlds.first() else {
+        return Err(QuantumError::CalculationError(
+            "adjudicate needs at least one world".into(),
+        ));
+    };
+    let experiments = first.readings.len();
+    if let Some(w) = worlds
+        .iter()
+        .find(|w| w.readings.is_empty() || w.readings.len() != experiments)
+    {
+        return Err(QuantumError::CalculationError(format!(
+            "a campaign's worlds share their experiments, and world '{}' has {} readings where \
+             '{}' has {experiments}",
+            w.name,
+            w.readings.len(),
+            first.name
+        )));
+    }
+    let n = worlds.len();
+    let report = separation_report(n, floor_bits, |i, j| {
+        worlds[i]
+            .readings
+            .iter()
+            .zip(&worlds[j].readings)
+            .fold(R::zero(), |bits, ((_, a), (_, b))| {
+                bits + a.separation_bits(b)
+            })
+    });
+    let survivors: Vec<usize> = (0..n)
+        .filter(|&i| {
+            worlds[i]
+                .readings
+                .iter()
+                .all(|(verdict, _)| verdict.accepted() && !verdict.is_vacuous())
+        })
+        .collect();
+    let names: Vec<&str> = worlds.iter().map(|w| w.name.as_str()).collect();
+    let outcome = survivor_of(&names, &survivors, &report, floor_bits);
+    Ok(Adjudication {
+        worlds_folded: n,
+        commutation_pairs_tested: 0,
+        report,
+        fold: None,
+        outcome,
+    })
+}
+
+/// One record per pair of `n` worlds, its separation in bits against the floor, compared with the
+/// state member of the tolerance family as slack.
+fn separation_report<R, F>(n: usize, floor_bits: R, separation: F) -> CheckReport<R>
+where
+    R: RealField + FromPrimitive + Default + core::fmt::Debug,
+    F: Fn(usize, usize) -> R,
+{
+    let slack = Tolerance::<R>::state()
+        .threshold(1, floor_bits)
+        .expect("the state member answers the single-operator form");
+    let mut checks = Vec::new();
+    for i in 0..n {
+        for j in (i + 1)..n {
+            checks.push(Check::at_least(
+                CheckItem::Pair(i, j),
+                separation(i, j),
+                floor_bits,
+                slack,
+            ));
+        }
+    }
+    CheckReport::from_checks(checks)
+}
+
+/// The survivor among `names`, or why there is none: a lone world whose verdict holds and whose
+/// tightest pair in `report` reaches the floor.
+fn survivor_of<R: RealField>(
+    names: &[&str],
+    survivors: &[usize],
+    report: &CheckReport<R>,
+    floor_bits: R,
+) -> Either<Survivor<R>, Ambiguity<R>> {
+    let n = names.len();
+    if n == 1 {
+        return Either::Right(Ambiguity::Vacuous { worlds: 1 });
+    }
+    match survivors {
+        [] => Either::Right(Ambiguity::NoSurvivor { worlds: n }),
+        [s] => {
+            let s = *s;
+            // The tightest pair involving the survivor.
+            let mut tightest: Option<(usize, usize, R, bool)> = None;
+            for c in report.checks() {
+                if let CheckItem::Pair(i, j) = c.item
+                    && (i == s || j == s)
+                    && tightest.is_none_or(|t| c.measured < t.2)
+                {
+                    tightest = Some((i, j, c.measured, c.accepted));
+                }
+            }
+            let (i, j, sep, accepted) =
+                tightest.expect("two or more worlds give the survivor a pair");
+            if accepted {
+                Either::Left(Survivor {
+                    name: names[s].into(),
+                    separation_bits: sep,
+                })
+            } else {
+                Either::Right(Ambiguity::Unseparated {
+                    survivor: names[s].into(),
+                    tightest: (i, j),
+                    separation_bits: sep,
+                    floor_bits,
+                })
+            }
+        }
+        several => Either::Right(Ambiguity::SeveralSurvive {
+            survivors: several.iter().map(|&i| names[i].into()).collect(),
+        }),
+    }
 }

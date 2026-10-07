@@ -5,7 +5,8 @@
 
 use crate::QuantumError;
 use crate::types::decision::{Check, CheckItem, CheckReport, Tolerance};
-use crate::types::qpu::shot_estimate::separation_bits;
+use crate::types::design::instrument_time::InstrumentTime;
+use crate::types::qpu::shot_estimate::{bhattacharyya_bits_per_shot, separation_bits};
 use alloc::format;
 use alloc::string::String;
 use alloc::vec;
@@ -15,6 +16,10 @@ use deep_causality_num::{FromPrimitive, NaturalNumber};
 
 /// The default cap on the hypotheses `design` will cover exactly. `2^C(7,2) = 2^21` subsets.
 pub const DEFAULT_MAX_HYPOTHESES: usize = 7;
+
+/// The most experiments a combining `design` enumerates: `2^16` subsets, each summed over every
+/// pair.
+pub const MAX_COMBINED_EXPERIMENTS: usize = 16;
 
 /// An experiment a plan may choose: its cost, the shots it would take, and the read-out each
 /// hypothesis predicts for it.
@@ -119,6 +124,11 @@ pub(crate) fn check_cost_and_shots<R: RealField + core::fmt::Debug>(
 
 /// The objective `design` solves: cover every hypothesis pair at `floor_bits` of separation at
 /// least cost, refusing above `max_hypotheses`.
+///
+/// By default one experiment covers a pair alone, at its own shots and cost. Two opt-in modes
+/// change that, and they exclude each other: [`combining`](Self::combining) adds a pair's bits
+/// across the chosen experiments, and [`timed`](Self::timed) sizes each experiment's shots and
+/// prices it in seconds.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct MinCostCover<R> {
     /// The separation, in bits, at which an experiment resolves a pair.
@@ -126,6 +136,11 @@ pub struct MinCostCover<R> {
     /// The largest hypothesis count the exact solve attempts. The cap is a decision: the table
     /// is `2^C(n,2)` entries and a caller raising it is choosing to pay for them.
     pub max_hypotheses: usize,
+    /// Whether a pair is covered by the bits the chosen experiments add up to, rather than by one
+    /// experiment alone.
+    pub combine: bool,
+    /// The instrument time that sizes each experiment's shots, when the plan is priced in time.
+    pub time: Option<InstrumentTime<R>>,
 }
 
 impl<R: RealField> MinCostCover<R> {
@@ -134,7 +149,25 @@ impl<R: RealField> MinCostCover<R> {
         Self {
             floor_bits,
             max_hypotheses: DEFAULT_MAX_HYPOTHESES,
+            combine: false,
+            time: None,
         }
+    }
+
+    /// The same objective, covering a pair by the bits the chosen experiments add up to: the
+    /// Bhattacharyya distance is additive over independent draws, so two experiments that each
+    /// fall short of the floor on a pair may reach it together.
+    pub fn combining(mut self) -> Self {
+        self.combine = true;
+        self
+    }
+
+    /// The same objective, priced in time: an experiment's cost is its setup time, and each
+    /// chosen experiment takes the fewest shots that reach the floor on the pairs it covers, at
+    /// `time`'s shot time, never past its white-noise range.
+    pub fn timed(mut self, time: InstrumentTime<R>) -> Self {
+        self.time = Some(time);
+        self
     }
 
     /// The same objective with an explicit cap.
@@ -151,9 +184,14 @@ pub struct PlanEntry<R> {
     pub experiment: usize,
     /// The experiment's name.
     pub name: String,
-    /// Its cost.
+    /// Its cost: the experiment's own, or, priced in time, its setup time plus its shots at the
+    /// shot time.
     pub cost: R,
-    /// The hypothesis pairs it separates at the floor, ascending.
+    /// The shots it takes: the experiment's own, or the fewest that reach the floor, priced in
+    /// time.
+    pub shots: u64,
+    /// The hypothesis pairs it separates at the floor alone, ascending. A pair a combining plan
+    /// covers only across experiments appears under none of them.
     pub resolves: Vec<(usize, usize)>,
 }
 
@@ -251,6 +289,21 @@ impl<R: RealField> DesignPlan<R> {
 /// `floor_bits` at the experiment's shots, measured as the shot-scaled Bhattacharyya distance and
 /// compared with the state member of the tolerance family as slack. Pairs no experiment covers
 /// are reported rather than failed: the solve targets the coverable pairs and lists the rest.
+/// The report holds each pair's best separation over the offered experiments.
+///
+/// Priced in time ([`MinCostCover::timed`]), each experiment enters the same program once per
+/// shot count that some pair needs: the fewest shots `n` at which that pair reaches the floor,
+/// so `n − 1` falls short, kept only when `n` shots fit the white-noise range. The entry at `n`
+/// covers every pair that needs no more and costs the setup time plus `n` shot times; taking two
+/// entries of one experiment never beats taking its larger one, so the cover picks one shot count
+/// per experiment. A pair that needs more shots than the range holds is uncovered, and the report
+/// holds each pair's best separation at the most shots the range allows.
+///
+/// Combining ([`MinCostCover::combining`]), a set of experiments covers a pair when its
+/// separations add up to the floor. The solve enumerates every subset of the offered experiments,
+/// in ascending order of the subset's bits and keeping the first of equal cost, which is exact
+/// and exponential in the experiments; [`MAX_COMBINED_EXPERIMENTS`] caps them. The report holds
+/// each pair's summed separation over the chosen experiments.
 ///
 /// # Errors
 ///
@@ -259,8 +312,9 @@ impl<R: RealField> DesignPlan<R> {
 /// are allocated; `C(n, 2)` is computed in checked arithmetic, and an overflow is reported as
 /// `usize::MAX` pairs. [`QuantumError::CalculationError`] if fewer than two hypotheses are
 /// offered, since there is then no pair to cover, or if `objective.floor_bits` is not finite or is
-/// negative. [`QuantumError::DimensionMismatch`] if an experiment predicts for a different number
-/// of hypotheses.
+/// negative, or when the objective both combines and is priced in time, or combines more than
+/// [`MAX_COMBINED_EXPERIMENTS`] experiments. [`QuantumError::DimensionMismatch`] if an experiment
+/// predicts for a different number of hypotheses.
 pub fn design<R>(
     hypotheses: usize,
     experiments: &[Experiment<R>],
@@ -300,80 +354,139 @@ where
         }
     }
 
+    if objective.combine && objective.time.is_some() {
+        return Err(QuantumError::CalculationError(
+            "design either sizes each experiment's shots in time or combines fixed shots across \
+             experiments, not both"
+                .into(),
+        ));
+    }
+
     let pairs: Vec<(usize, usize)> = (0..n)
         .flat_map(|i| ((i + 1)..n).map(move |j| (i, j)))
         .collect();
     debug_assert_eq!(pairs.len(), p);
-
-    // Coverage masks and, per pair, the best separation any experiment achieves.
     let slack = Tolerance::<R>::state()
         .threshold(1, objective.floor_bits)
         .expect("the state member answers the single-operator form");
-    let mut masks = vec![0usize; experiments.len()];
-    let mut best = vec![R::zero(); p];
-    for (ei, e) in experiments.iter().enumerate() {
-        for (pi, &(i, j)) in pairs.iter().enumerate() {
-            let sep = separation_bits(e.predictions[i], e.predictions[j], e.shots);
-            if sep > best[pi] {
-                best[pi] = sep;
-            }
-            if sep + slack >= objective.floor_bits {
-                masks[ei] |= 1 << pi;
-            }
-        }
-    }
-    let coverable = masks.iter().fold(0usize, |acc, m| acc | m);
+    let floor = objective.floor_bits;
+    let separations = |e: &Experiment<R>, shots: u64| -> Vec<R> {
+        pairs
+            .iter()
+            .map(|&(i, j)| separation_bits(e.predictions[i], e.predictions[j], shots))
+            .collect()
+    };
+    let mask_of = |seps: &[R]| -> usize {
+        seps.iter()
+            .enumerate()
+            .filter(|&(_, &sep)| sep + slack >= floor)
+            .fold(0usize, |m, (pi, _)| m | (1 << pi))
+    };
     let full = if p == 0 { 0 } else { (1usize << p) - 1 };
 
-    // The table: cost, the experiment that reached each state, and the state it came from.
-    let states = 1usize << p;
-    let mut cost: Vec<Option<R>> = vec![None; states];
-    let mut last: Vec<usize> = vec![usize::MAX; states];
-    let mut prev: Vec<usize> = vec![0; states];
-    cost[0] = Some(R::zero());
-    for s in 0..states {
-        let Some(c) = cost[s] else { continue };
-        for (ei, &m) in masks.iter().enumerate() {
-            let t = s | m;
-            if t == s {
-                continue;
+    // One candidate entry per offered experiment, or per experiment and shot count in time; each
+    // with the pairs it covers alone and its cost.
+    let mut options: Vec<PlanEntry<R>> = Vec::new();
+    let mut masks: Vec<usize> = Vec::new();
+    let mut best = vec![R::zero(); p];
+    match objective.time {
+        None => {
+            for (ei, e) in experiments.iter().enumerate() {
+                let seps = separations(e, e.shots);
+                for (b, &sep) in best.iter_mut().zip(&seps) {
+                    if sep > *b {
+                        *b = sep;
+                    }
+                }
+                masks.push(mask_of(&seps));
+                options.push(PlanEntry {
+                    experiment: ei,
+                    name: e.name.clone(),
+                    cost: e.cost,
+                    shots: e.shots,
+                    resolves: Vec::new(),
+                });
             }
-            let candidate = c + experiments[ei].cost;
-            let better = match cost[t] {
-                None => true,
-                Some(existing) => candidate < existing,
-            };
-            if better {
-                cost[t] = Some(candidate);
-                last[t] = ei;
-                prev[t] = s;
+        }
+        Some(time) => {
+            let max_shots = time.max_shots();
+            for (ei, e) in experiments.iter().enumerate() {
+                for (b, &sep) in best.iter_mut().zip(&separations(e, max_shots)) {
+                    if sep > *b {
+                        *b = sep;
+                    }
+                }
+                let needs: Vec<Option<u64>> = pairs
+                    .iter()
+                    .map(|&(i, j)| {
+                        shots_to_floor(e.predictions[i], e.predictions[j], floor, slack)
+                            .filter(|&shots| shots <= max_shots)
+                    })
+                    .collect();
+                let mut levels: Vec<u64> = needs.iter().flatten().copied().collect();
+                levels.sort_unstable();
+                levels.dedup();
+                for shots in levels {
+                    let integration = R::from_u64(shots).ok_or_else(|| {
+                        QuantumError::CalculationError(format!(
+                            "{shots} shots are not representable"
+                        ))
+                    })? * time.shot_time();
+                    masks.push(needs.iter().enumerate().fold(0usize, |m, (pi, need)| {
+                        if need.is_some_and(|need| need <= shots) {
+                            m | (1 << pi)
+                        } else {
+                            m
+                        }
+                    }));
+                    options.push(PlanEntry {
+                        experiment: ei,
+                        name: e.name.clone(),
+                        cost: e.cost + integration,
+                        shots,
+                        resolves: Vec::new(),
+                    });
+                }
             }
         }
     }
 
-    // Reconstruct the cover of the coverable pairs.
-    let mut chosen: Vec<usize> = Vec::new();
-    let mut state = coverable;
-    while state != 0 {
-        let ei = last[state];
-        chosen.push(ei);
-        state = prev[state];
-    }
-    chosen.sort_unstable();
-    let total_cost = cost[coverable].unwrap_or_else(R::zero);
+    let (chosen, total_cost, coverable, report_bits) = if objective.combine {
+        if experiments.len() > MAX_COMBINED_EXPERIMENTS {
+            return Err(QuantumError::CalculationError(format!(
+                "combining enumerates every subset of the experiments, and {} exceed the cap of \
+                 {MAX_COMBINED_EXPERIMENTS}",
+                experiments.len()
+            )));
+        }
+        let seps: Vec<Vec<R>> = experiments
+            .iter()
+            .map(|e| separations(e, e.shots))
+            .collect();
+        let (chosen, total_cost, coverable) = combined_cover(&seps, &options, floor, slack, p);
+        let summed: Vec<R> = (0..p)
+            .map(|pi| {
+                chosen
+                    .iter()
+                    .fold(R::zero(), |bits, &ei| bits + seps[ei][pi])
+            })
+            .collect();
+        (chosen, total_cost, coverable, summed)
+    } else {
+        let (chosen, total_cost, coverable) = exact_cover(&masks, &options, p);
+        (chosen, total_cost, coverable, best)
+    };
 
     let entries = chosen
         .iter()
-        .map(|&ei| PlanEntry {
-            experiment: ei,
-            name: experiments[ei].name.clone(),
-            cost: experiments[ei].cost,
+        .map(|&oi| PlanEntry {
             resolves: pairs
                 .iter()
                 .enumerate()
-                .filter(|(pi, _)| masks[ei] & (1 << pi) != 0)
+                .filter(|(pi, _)| masks[oi] & (1 << pi) != 0)
                 .map(|(_, &pair)| pair)
                 .collect(),
+            ..options[oi].clone()
         })
         .collect();
     let uncovered: Vec<(usize, usize)> = pairs
@@ -385,9 +498,7 @@ where
     let checks: Vec<Check<R>> = pairs
         .iter()
         .enumerate()
-        .map(|(pi, &(i, j))| {
-            Check::at_least(CheckItem::Pair(i, j), best[pi], objective.floor_bits, slack)
-        })
+        .map(|(pi, &(i, j))| Check::at_least(CheckItem::Pair(i, j), report_bits[pi], floor, slack))
         .collect();
 
     Ok(DesignPlan {
@@ -397,4 +508,111 @@ where
         hypotheses: n,
         report: CheckReport::from_checks(checks),
     })
+}
+
+/// The fewest shots at which read-outs `p` and `q` separate by `floor_bits`, with `slack`, so that
+/// one shot fewer falls short; `None` when they never do, being equal, or when the count does not
+/// fit a `u64`.
+fn shots_to_floor<R>(p: R, q: R, floor_bits: R, slack: R) -> Option<u64>
+where
+    R: RealField + FromPrimitive,
+{
+    let reaches = |shots: u64| separation_bits(p, q, shots) + slack >= floor_bits;
+    let per_shot = bhattacharyya_bits_per_shot(p, q);
+    if !per_shot.is_finite() || per_shot <= R::zero() {
+        return None;
+    }
+    // The estimate from the per-shot bits, then corrected against the separation itself, which
+    // rounds once more.
+    let mut shots = ((floor_bits - slack) / per_shot).ceil().to_u64()?.max(1);
+    while !reaches(shots) {
+        shots = shots.checked_add(1)?;
+    }
+    while shots > 1 && reaches(shots - 1) {
+        shots -= 1;
+    }
+    Some(shots)
+}
+
+/// The minimum-cost cover of the coverable pairs by `options`, each covering `masks[o]` alone: a
+/// dynamic program over the subsets of covered pairs, relaxed in ascending state order and in
+/// declared option order with strict improvement. The chosen options, in declared order, their
+/// total cost, and the coverable pairs.
+fn exact_cover<R: RealField>(
+    masks: &[usize],
+    options: &[PlanEntry<R>],
+    p: usize,
+) -> (Vec<usize>, R, usize) {
+    let coverable = masks.iter().fold(0usize, |acc, m| acc | m);
+    let states = 1usize << p;
+    let mut cost: Vec<Option<R>> = vec![None; states];
+    let mut last: Vec<usize> = vec![usize::MAX; states];
+    let mut prev: Vec<usize> = vec![0; states];
+    cost[0] = Some(R::zero());
+    for s in 0..states {
+        let Some(c) = cost[s] else { continue };
+        for (oi, &m) in masks.iter().enumerate() {
+            let t = s | m;
+            if t == s {
+                continue;
+            }
+            let candidate = c + options[oi].cost;
+            let better = match cost[t] {
+                None => true,
+                Some(existing) => candidate < existing,
+            };
+            if better {
+                cost[t] = Some(candidate);
+                last[t] = oi;
+                prev[t] = s;
+            }
+        }
+    }
+    let mut chosen: Vec<usize> = Vec::new();
+    let mut state = coverable;
+    while state != 0 {
+        chosen.push(last[state]);
+        state = prev[state];
+    }
+    chosen.sort_unstable();
+    (chosen, cost[coverable].unwrap_or_else(R::zero), coverable)
+}
+
+/// The least-cost subset of the experiments whose summed separations reach the floor on every
+/// pair that all of them together reach: subsets in ascending order of their bits, the first of
+/// equal cost kept. The chosen experiments, ascending, their total cost, and the coverable pairs.
+fn combined_cover<R: RealField>(
+    seps: &[Vec<R>],
+    options: &[PlanEntry<R>],
+    floor_bits: R,
+    slack: R,
+    p: usize,
+) -> (Vec<usize>, R, usize) {
+    let k = seps.len();
+    let reaches = |members: &[usize], pi: usize| {
+        members
+            .iter()
+            .fold(R::zero(), |bits, &ei| bits + seps[ei][pi])
+            + slack
+            >= floor_bits
+    };
+    let everyone: Vec<usize> = (0..k).collect();
+    let coverable = (0..p)
+        .filter(|&pi| reaches(&everyone, pi))
+        .fold(0usize, |m, pi| m | (1 << pi));
+    let mut best: Option<(Vec<usize>, R)> = None;
+    for subset in 0..(1usize << k) {
+        let members: Vec<usize> = (0..k).filter(|&ei| subset & (1 << ei) != 0).collect();
+        let cost = members
+            .iter()
+            .fold(R::zero(), |c, &ei| c + options[ei].cost);
+        if best.as_ref().is_some_and(|(_, b)| cost >= *b) {
+            continue;
+        }
+        if (0..p).all(|pi| coverable & (1 << pi) == 0 || reaches(&members, pi)) {
+            best = Some((members, cost));
+        }
+    }
+    let (chosen, cost) = best.unwrap_or_else(|| (Vec::new(), R::zero()));
+    (chosen, cost, coverable)
 }

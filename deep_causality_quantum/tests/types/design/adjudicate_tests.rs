@@ -3,13 +3,14 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! `adjudicate`: the verdict-law fold, and the survivor against the residual ambiguity.
+//! `adjudicate`: the verdict-law fold, and the survivor against the residual ambiguity;
+//! `adjudicate_campaign`: the same fold over worlds that read several experiments.
 
 use deep_causality_haft::Either;
 use deep_causality_num_complex::Complex;
 use deep_causality_quantum::{
-    Ambiguity, CheckItem, CheckVerdict, CountHistogram, Projection, QuantumErrorEnum, ShotEstimate,
-    World, adjudicate,
+    Ambiguity, CampaignWorld, CheckItem, CheckVerdict, CountHistogram, Projection,
+    QuantumErrorEnum, ShotEstimate, World, adjudicate, adjudicate_campaign,
 };
 use deep_causality_tensor::CausalTensor;
 
@@ -226,4 +227,161 @@ fn test_verdicts_reach_adjudicate_only_from_the_measurement_boundary() {
         deep_causality_quantum::WorldVerdict::ReadOut(_)
     ));
     assert_eq!(w.estimate().shots(), 2);
+}
+
+// ---------------------------------------------------------------------------
+// Campaigns: one reading per observed experiment.
+// ---------------------------------------------------------------------------
+
+/// A campaign world with one `(ones, total, spec)` reading per experiment.
+fn campaign_world(name: &str, readings: &[(u64, u64, f64)]) -> CampaignWorld<f64> {
+    CampaignWorld::new(
+        name,
+        readings
+            .iter()
+            .map(|&(ones, total, spec)| {
+                let e = estimate(ones, total);
+                (e.at_least(spec), e)
+            })
+            .collect(),
+    )
+}
+
+fn measured(report: &deep_causality_quantum::CheckReport<f64>, pair: (usize, usize)) -> f64 {
+    report
+        .checks()
+        .iter()
+        .find(|c| c.item == CheckItem::Pair(pair.0, pair.1))
+        .unwrap()
+        .measured
+}
+
+#[test]
+fn test_a_campaign_pair_separates_by_the_sum_of_its_experiments() {
+    // Three worlds, three experiments; each world's k-th reading is the k-th experiment's.
+    let readings: [[(u64, u64, f64); 3]; 3] = [
+        [(300, 1024, 0.0), (90, 512, 0.0), (700, 2048, 0.0)],
+        [(250, 1024, 0.0), (140, 512, 0.0), (650, 2048, 0.0)],
+        [(320, 1024, 0.0), (60, 512, 0.0), (900, 2048, 0.0)],
+    ];
+    let worlds: Vec<CampaignWorld<f64>> = readings
+        .iter()
+        .enumerate()
+        .map(|(i, r)| campaign_world(&format!("h{i}"), r))
+        .collect();
+    let campaign = adjudicate_campaign::<f64, 2>(&worlds, 5.0).unwrap();
+    for pair in [(0, 1), (0, 2), (1, 2)] {
+        // Each experiment adjudicated alone, then summed in campaign order.
+        let summed = (0..3).fold(0.0, |bits, k| {
+            let alone: Vec<World<f64, 2>> = readings
+                .iter()
+                .enumerate()
+                .map(|(i, r)| read_out_world(&format!("h{i}"), r[k].0, r[k].1, r[k].2))
+                .collect();
+            bits + measured(&adjudicate(&alone, 5.0).unwrap().report, pair)
+        });
+        assert_eq!(measured(&campaign.report, pair), summed, "{pair:?}");
+    }
+    assert_eq!(campaign.worlds_folded, 3);
+    assert_eq!(campaign.commutation_pairs_tested, 0);
+    assert!(campaign.fold.is_none());
+}
+
+#[test]
+fn test_a_one_experiment_campaign_adjudicates_as_adjudicate() {
+    // A survivor, an unseparated survivor, several survivors, none, and a lone world.
+    let cases: [&[(u64, u64, f64)]; 5] = [
+        &[(950, 1024, 0.9), (100, 1024, 0.9), (500, 1024, 0.9)],
+        &[(950, 1024, 0.9), (930, 1024, 0.95)],
+        &[(950, 1024, 0.9), (960, 1024, 0.9)],
+        &[(100, 1024, 0.9), (200, 1024, 0.9)],
+        &[(950, 1024, 0.9)],
+    ];
+    for case in cases {
+        let worlds: Vec<World<f64, 2>> = case
+            .iter()
+            .enumerate()
+            .map(|(i, &(o, t, s))| read_out_world(&format!("h{i}"), o, t, s))
+            .collect();
+        let campaign: Vec<CampaignWorld<f64>> = case
+            .iter()
+            .enumerate()
+            .map(|(i, &r)| campaign_world(&format!("h{i}"), &[r]))
+            .collect();
+        assert_eq!(
+            adjudicate_campaign::<f64, 2>(&campaign, 5.0).unwrap(),
+            adjudicate(&worlds, 5.0).unwrap(),
+            "{case:?}"
+        );
+    }
+}
+
+#[test]
+fn test_bits_from_two_experiments_separate_what_neither_does_alone() {
+    // 0.10 against 0.05 at 512 shots is about 3.4 bits per experiment; two make about 6.9.
+    let one = [(51, 512, 0.09), (26, 512, 0.09)];
+    let alone: Vec<World<f64, 2>> = one
+        .iter()
+        .enumerate()
+        .map(|(i, &(o, t, s))| read_out_world(&format!("h{i}"), o, t, s))
+        .collect();
+    assert!(matches!(
+        adjudicate(&alone, 5.0).unwrap().outcome,
+        Either::Right(Ambiguity::Unseparated { .. })
+    ));
+    let twice = [
+        campaign_world("h0", &[one[0], one[0]]),
+        campaign_world("h1", &[one[1], one[1]]),
+    ];
+    match adjudicate_campaign::<f64, 2>(&twice, 5.0).unwrap().outcome {
+        Either::Left(s) => {
+            assert_eq!(s.name, "h0");
+            assert!(
+                s.separation_bits > 5.0 && s.separation_bits < 8.0,
+                "{}",
+                s.separation_bits
+            );
+        }
+        other => panic!("expected h0 to survive, got {other:?}"),
+    }
+}
+
+#[test]
+fn test_a_world_holds_only_when_every_reading_agrees() {
+    // h0 meets its spec in the first experiment and misses it in the second.
+    let worlds = [
+        campaign_world("h0", &[(950, 1024, 0.9), (100, 1024, 0.9)]),
+        campaign_world("h1", &[(100, 1024, 0.9), (100, 1024, 0.9)]),
+    ];
+    assert!(matches!(
+        adjudicate_campaign::<f64, 2>(&worlds, 5.0).unwrap().outcome,
+        Either::Right(Ambiguity::NoSurvivor { worlds: 2 })
+    ));
+}
+
+#[test]
+fn test_a_campaign_without_shared_readings_is_refused() {
+    let calc = |r: Result<deep_causality_quantum::Adjudication<f64, 2>, _>| match r {
+        Err(deep_causality_quantum::QuantumError(QuantumErrorEnum::CalculationError(msg))) => msg,
+        other => panic!("expected CalculationError, got {other:?}"),
+    };
+    let msg = calc(adjudicate_campaign(&[], 5.0));
+    assert!(msg.contains("at least one world"), "{msg}");
+    let uneven = [
+        campaign_world("h0", &[(950, 1024, 0.9), (950, 1024, 0.9)]),
+        campaign_world("h1", &[(100, 1024, 0.9)]),
+    ];
+    let msg = calc(adjudicate_campaign(&uneven, 5.0));
+    assert!(
+        msg.contains("'h1' has 1 readings where 'h0' has 2"),
+        "{msg}"
+    );
+    let empty = [campaign_world("h0", &[]), campaign_world("h1", &[])];
+    assert!(calc(adjudicate_campaign(&empty, 5.0)).contains("'h0' has 0 readings"));
+    let worlds = [campaign_world("h0", &[(950, 1024, 0.9)])];
+    for floor in [f64::NAN, -1.0] {
+        assert!(calc(adjudicate_campaign(&worlds, floor)).contains("floor"));
+    }
+    assert_eq!(worlds[0].name(), "h0");
+    assert_eq!(worlds[0].readings().len(), 1);
 }

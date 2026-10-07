@@ -150,3 +150,18 @@ fn test_the_fringe_is_at_mid_fringe_with_the_model_slope() {
     let d = note.fringe().effective_draws(-5.0e-8, 2.4e-7).unwrap();
     assert!((d.probability() - 0.498).abs() < 5.0e-5);
 }
+
+#[test]
+fn test_one_effective_draw_takes_the_time_the_sensitivity_buys() {
+    // The note's gravimeter: C = 0.5, k_eff = 1.6106e7, T = 100 ms, S = 24 µGal/√Hz buys about
+    // 2677 draws a second, so a draw takes (C k_eff T² S)² s, within its white-noise range.
+    let note = build([1.6106e7, 0.1, 0.5, 2.4e-7, 0.5, 1000.0, 30.0]).unwrap();
+    let t = note.instrument_time().unwrap();
+    let per_draw = 0.5 * 1.6106e7 * 0.1 * 0.1 * 2.4e-7_f64;
+    assert!((t.shot_time() / (per_draw * per_draw) - 1.0).abs() < 1e-12);
+    assert_eq!((1.0 / t.shot_time()).round(), 2677.0);
+    assert_eq!(t.white_noise_range(), 1000.0);
+    // A range shorter than one draw holds none.
+    let short = build([1.6106e7, 0.1, 0.5, 2.4e-7, 0.5, 1.0e-6, 30.0]).unwrap();
+    assert!(short.instrument_time().is_err());
+}

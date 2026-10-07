@@ -4,6 +4,7 @@
  */
 
 use crate::QuantumError;
+use crate::types::design::InstrumentTime;
 use crate::types::instrument::record_fields::{entries, field, rejected};
 use crate::types::pipeline::effective_draws::Fringe;
 use alloc::format;
@@ -139,6 +140,22 @@ impl<R: RealField + core::fmt::Debug> InterferometerModel<R> {
     /// The dead time one configuration change costs, in s.
     pub fn setup_time(&self) -> R {
         self.setup_time
+    }
+
+    /// The instrument time of one effective draw: at mid-fringe one draw carries the phase
+    /// variance `1/C²`, so the sensitivity `S` buys `1/(C · k_eff · T² · S)²` draws per second and
+    /// one draw takes `(C · k_eff · T² · S)²` seconds, within the model's white-noise range.
+    ///
+    /// # Errors
+    ///
+    /// As [`InstrumentTime::new`]: a white-noise range shorter than one draw.
+    pub fn instrument_time(&self) -> Result<InstrumentTime<R>, QuantumError> {
+        let per_draw = self.contrast
+            * self.k_eff
+            * self.interrogation_time
+            * self.interrogation_time
+            * self.sensitivity;
+        InstrumentTime::new(per_draw * per_draw, self.white_noise_range)
     }
 
     /// The fringe at mid-fringe, where the read-out `½(1 − C cos Δφ)` with `Δφ = k_eff g T²`

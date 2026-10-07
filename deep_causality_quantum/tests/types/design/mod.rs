@@ -7,3 +7,5 @@
 mod adjudicate_tests;
 #[cfg(test)]
 mod experiment_design_tests;
+#[cfg(test)]
+mod instrument_time_tests;

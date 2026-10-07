@@ -7,7 +7,7 @@ use crate::QuantumError;
 use crate::types::carriers::{Observable, QuantumPlant};
 use crate::types::decision::{Check, CheckItem, CheckReport};
 use crate::types::design::{
-    Adjudication, DesignPlan, Experiment, MinCostCover, World, adjudicate, design,
+    Adjudication, CampaignWorld, DesignPlan, Experiment, MinCostCover, adjudicate_campaign, design,
 };
 use crate::types::pipeline::config::{Config, Mechanisms, PlantSubject, QclBuilder, Structural};
 use crate::types::pipeline::configured_experiment::ConfiguredExperiment;
@@ -36,8 +36,7 @@ pub struct ControlWorld<R: RealField, N, const D: usize> {
     hypothesis: Hypothesis<R>,
     plant: QuantumPlant<R>,
     ledger: Ledger<R, N>,
-    read_out: Option<ShotEstimate<R>>,
-    verdict: Option<CheckReport<R>>,
+    readings: Vec<Reading<R>>,
     prediction: Option<R>,
     _d: core::marker::PhantomData<[(); D]>,
 }
@@ -58,17 +57,68 @@ impl<R: RealField, N: NaturalNumber, const D: usize> ControlWorld<R, N, D> {
         &self.ledger
     }
 
-    /// The last read-out, if observed.
-    pub fn read_out(&self) -> Option<&ShotEstimate<R>> {
-        self.read_out.as_ref()
+    /// The readings, one per observed experiment, in campaign order.
+    pub fn readings(&self) -> &[Reading<R>] {
+        &self.readings
     }
 
-    /// The last verdict, if gated.
+    /// The last read-out, if observed.
+    pub fn read_out(&self) -> Option<&ShotEstimate<R>> {
+        self.readings.last().map(|r| &r.read_out)
+    }
+
+    /// The last reading's verdict, if judged.
+    pub fn verdict(&self) -> Option<&CheckReport<R>> {
+        self.readings.last().and_then(|r| r.verdict.as_ref())
+    }
+
+    /// The model evaluation `compare` has yet to judge, or else the one the last reading was
+    /// judged on.
+    pub fn prediction(&self) -> Option<R> {
+        self.prediction
+            .or_else(|| self.readings.last().and_then(|r| r.prediction))
+    }
+}
+
+/// One reading of one observed experiment: its read-out, its verdict once `gate` or `compare`
+/// judged it, and the prediction `compare` judged.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Reading<R: RealField> {
+    sequence: usize,
+    experiment: String,
+    read_out: ShotEstimate<R>,
+    verdict: Option<CheckReport<R>>,
+    prediction: Option<R>,
+}
+
+impl<R: RealField> Reading<R> {
+    fn new(sequence: usize, experiment: String, read_out: ShotEstimate<R>) -> Self {
+        Self {
+            sequence,
+            experiment,
+            read_out,
+            verdict: None,
+            prediction: None,
+        }
+    }
+
+    /// The experiment read: a configured experiment's name, the baseline's, or the observable's
+    /// for a plain observation.
+    pub fn experiment(&self) -> &str {
+        &self.experiment
+    }
+
+    /// The read-out.
+    pub fn read_out(&self) -> &ShotEstimate<R> {
+        &self.read_out
+    }
+
+    /// The verdict, once judged.
     pub fn verdict(&self) -> Option<&CheckReport<R>> {
         self.verdict.as_ref()
     }
 
-    /// The last model evaluation, if predicted.
+    /// The prediction `compare` judged, on a compared reading.
     pub fn prediction(&self) -> Option<R> {
         self.prediction
     }
@@ -127,6 +177,11 @@ impl<R: RealField> Refusal<R> {
 /// `observe_experiment` runs a planned experiment against its evidence as the root observation,
 /// and `predict_with` gives each world its prediction for it.
 ///
+/// A campaign runs `observe_experiment → predict_with → compare` once per experiment after the
+/// fork. Every world keeps one [`Reading`] per observed experiment, and `adjudicate` holds a
+/// world only when every reading agrees, separating a pair by the sum of its separations over
+/// the campaign, as [`adjudicate_campaign`] folds it.
+///
 /// A config that names a baseline experiment starts either path with [`baseline`](Self::baseline),
 /// which observes it first and refuses the candidates it contradicts; `observe`, `fork` and
 /// `design` fail until it ran. A config that names evidence funds the ledger with its shots, and
@@ -139,9 +194,10 @@ pub struct Control<R: RealField, N, const D: usize> {
     probes: Vec<Experiment<R>>,
     pending_baseline: Option<Experiment<R>>,
     seed: u64,
+    shot_time: R,
     ledger: Ledger<R, N>,
-    read_out: Option<ShotEstimate<R>>,
-    verdict: Option<CheckReport<R>>,
+    sequence: usize,
+    root: Option<Reading<R>>,
     worlds: Vec<ControlWorld<R, N, D>>,
     refused: Vec<Refusal<R>>,
     observations: Vec<Observation<R>>,
@@ -197,11 +253,12 @@ impl QclBuilder {
 }
 
 /// What one observed experiment yields before it is recorded: the read-out, the counts when the
-/// evidence came as counts, and the root ledger with the shots charged.
+/// evidence came as counts, and the ledgers with the shots charged, the root's before the fork
+/// and every world's after it.
 struct Gathered<R, N> {
     read_out: ShotEstimate<R>,
     counts: Option<CountHistogram>,
-    ledger: Ledger<R, N>,
+    ledgers: Vec<Ledger<R, N>>,
 }
 
 /// The report `control` finalizes into: the root ledger, every world's ledger side by side, the
@@ -246,9 +303,10 @@ impl<R: RealField, N: NaturalNumber, const D: usize> Control<R, N, D> {
             probes: cfg.probes().to_vec(),
             pending_baseline: cfg.baseline().cloned(),
             seed,
+            shot_time: cfg.instrument_time().map_or(R::one(), |t| t.shot_time()),
             ledger,
-            read_out: None,
-            verdict: None,
+            sequence: 0,
+            root: None,
             worlds: Vec::new(),
             refused: Vec::new(),
             observations: Vec::new(),
@@ -268,6 +326,20 @@ where
         if self.failure.is_none() {
             self.failure = Some(e);
         }
+    }
+
+    /// The root's reading of the next observed experiment.
+    fn record_root(&mut self, experiment: String, read_out: ShotEstimate<R>) {
+        self.sequence += 1;
+        self.root = Some(Reading::new(self.sequence, experiment, read_out));
+    }
+
+    /// The experiments observed so far, which select the next draw's seed: the root's before the
+    /// fork, and after it the worlds', which every observation charges alike.
+    fn observed_so_far(&self) -> N {
+        self.worlds
+            .first()
+            .map_or(self.ledger.experiments(), |w| w.ledger.experiments())
     }
 
     /// Whether the config's baseline is still unobserved, failing `stage` if so: the baseline is
@@ -313,21 +385,29 @@ where
             })
     }
 
-    /// One observation of `obs` on `plant`: `shots` charged to `ledger` first, so an overdrawn
-    /// budget draws nothing, then sampled at the seed the ledger's experiment count selects.
+    /// The device time `shots` take at `shot_time` each: seconds when the config names an
+    /// instrument time, and one unit per shot otherwise, where `shot_time` is one.
+    fn device_time(shots: u64, shot_time: R) -> Result<R, QuantumError> {
+        R::from_u64(shots)
+            .map(|count| count * shot_time)
+            .ok_or_else(|| QuantumError::CalculationError("shot count is not representable".into()))
+    }
+
+    /// One observation of `obs` on `plant`: `shots` charged to `ledger` first, at `shot_time`
+    /// each, so an overdrawn budget draws nothing, then sampled at the seed the ledger's
+    /// experiment count selects.
     fn measure(
         obs: &Observable<R, D>,
         plant: &QuantumPlant<R>,
         ledger: Ledger<R, N>,
         shots: N,
         seed: u64,
+        shot_time: R,
     ) -> Result<(ShotEstimate<R>, Ledger<R, N>), QuantumError> {
         let count = shots.to_u64().ok_or_else(|| {
             QuantumError::CalculationError("shot count does not fit a u64".into())
         })?;
-        let time = R::from_u64(count).ok_or_else(|| {
-            QuantumError::CalculationError("shot count is not representable".into())
-        })?;
+        let time = Self::device_time(count, shot_time)?;
         let charged = ledger.observed(shots, time)?;
         let hist = obs.sample(plant, count, Self::draw_seed(seed, ledger.experiments())?)?;
         Ok((ShotEstimate::of_outcome(&hist, 1)?, charged))
@@ -360,8 +440,9 @@ where
     /// and a draw beyond the remaining budget fails the run.
     ///
     /// Before the fork the read-out is the root's, the baseline `compare` judges predictions
-    /// against. After the fork every world is measured on its own plant, which is how a mechanism
-    /// world earns its evidence: a world inherits no read-out from the root.
+    /// against. After the fork every world is measured on its own plant and keeps the read-out as
+    /// a new reading, which is how a mechanism world earns its evidence: a world inherits no
+    /// read-out from the root.
     pub fn observe(mut self, observable: usize, shots: N) -> Self {
         if self.failure.is_some() || self.awaits_baseline("observe") {
             return self;
@@ -371,18 +452,20 @@ where
         };
         let seed = self.seed;
         if self.worlds.is_empty() {
-            match Self::measure(&obs, &self.plant, self.ledger, shots, seed) {
+            match Self::measure(&obs, &self.plant, self.ledger, shots, seed, self.shot_time) {
                 Ok((e, l)) => {
-                    self.read_out = Some(e);
+                    self.record_root(obs.name().into(), e);
                     self.ledger = l;
                 }
                 Err(e) => self.fail(e),
             }
         } else {
+            self.sequence += 1;
             for w in &mut self.worlds {
-                match Self::measure(&obs, &w.plant, w.ledger, shots, seed) {
+                match Self::measure(&obs, &w.plant, w.ledger, shots, seed, self.shot_time) {
                     Ok((e, l)) => {
-                        w.read_out = Some(e);
+                        w.readings
+                            .push(Reading::new(self.sequence, obs.name().into(), e));
                         w.ledger = l;
                     }
                     Err(e) => {
@@ -446,10 +529,17 @@ where
             )));
             return self;
         };
-        let observed = match Self::measure(&obs, &self.plant, self.ledger, shots, self.seed) {
+        let observed = match Self::measure(
+            &obs,
+            &self.plant,
+            self.ledger,
+            shots,
+            self.seed,
+            self.shot_time,
+        ) {
             Ok((observed, ledger)) => {
                 self.ledger = ledger;
-                self.read_out = Some(observed);
+                self.record_root(experiment.name().into(), observed);
                 observed
             }
             Err(e) => {
@@ -476,30 +566,35 @@ where
         self
     }
 
-    /// The last read-out judged against `spec`, on the root or on every world. A world has a
-    /// read-out only after `observe` ran on the forked worlds, or after `compare`; a fork alone
-    /// leaves every world without one, and `gate` then fails naming `observe`.
+    /// The root's read-out judged against `spec` before the fork; after it, every world's
+    /// readings that no stage has judged yet. A world has an unjudged reading only after
+    /// `observe` ran on the forked worlds; a fork alone leaves every world without one, and
+    /// `gate` then fails naming `observe`.
     pub fn gate(mut self, spec: Spec<R>) -> Self {
         if self.failure.is_some() {
             return self;
         }
         if self.worlds.is_empty() {
-            match &self.read_out {
-                Some(e) => self.verdict = Some(spec.judge(e)),
+            match &mut self.root {
+                Some(root) => root.verdict = Some(spec.judge(&root.read_out)),
                 None => self.fail(QuantumError::CalculationError(
                     "gate needs a read-out; call observe first".into(),
                 )),
             }
         } else {
+            if self
+                .worlds
+                .iter()
+                .any(|w| w.readings.iter().all(|r| r.verdict.is_some()))
+            {
+                self.fail(QuantumError::CalculationError(
+                    "gate needs an unjudged read-out in every world; call observe first".into(),
+                ));
+                return self;
+            }
             for w in &mut self.worlds {
-                match &w.read_out {
-                    Some(e) => w.verdict = Some(spec.judge(e)),
-                    None => {
-                        self.failure.get_or_insert(QuantumError::CalculationError(
-                            "gate needs a read-out in every world; call observe first".into(),
-                        ));
-                        return self;
-                    }
+                for r in w.readings.iter_mut().filter(|r| r.verdict.is_none()) {
+                    r.verdict = Some(spec.judge(&r.read_out));
                 }
             }
         }
@@ -510,10 +605,10 @@ where
     /// of the ledger, and none of them was moved into an arm. A mechanism candidate's world
     /// carries the plant evolved by its channel; a structural one's carries the plant as it is.
     ///
-    /// A world starts with no read-out and no verdict. The root keeps its own read-out and
-    /// verdict as the baseline; a world's evidence comes from `observe` and `gate` after the
-    /// fork, or from `compare`, so a world evolved by a mechanism is never adjudicated on a
-    /// measurement of the unevolved plant.
+    /// A world starts with no reading. The root keeps its own read-out and verdict as the
+    /// baseline; a world's evidence comes from `observe` and `gate` after the fork, or from
+    /// `compare`, so a world evolved by a mechanism is never adjudicated on a measurement of the
+    /// unevolved plant.
     ///
     /// Fails with `CalculationError` before the config's baseline was observed, and when there
     /// is no candidate to fork: the screen admitted none, the baseline refused every one, or the
@@ -547,8 +642,7 @@ where
                 hypothesis: h.clone(),
                 plant,
                 ledger: self.ledger,
-                read_out: None,
-                verdict: None,
+                readings: Vec::new(),
                 prediction: None,
                 _d: core::marker::PhantomData,
             });
@@ -598,13 +692,15 @@ where
 
     /// Each world's prediction turned into evidence against the root's read-out.
     ///
-    /// The root's read-out, taken by `baseline` or by `observe` before the fork, is the baseline. For every world
-    /// the prediction becomes the world's read-out through `ShotEstimate::from_probability` at
-    /// the baseline's shots, so it carries the shot noise it would have there, and the world's
-    /// verdict is one `Check` of `|prediction − baseline|` against `sigmas` standard errors of
-    /// the baseline, examined over the baseline's shots. `adjudicate` then separates worlds by
-    /// their predictions, and a world's verdict holds when its prediction agrees with the
-    /// observation.
+    /// The root's latest read-out, taken by `baseline`, by `observe` before the fork or by
+    /// `observe_experiment`, is the baseline. For every world the prediction becomes the world's
+    /// reading of that observation through `ShotEstimate::from_probability` at the baseline's
+    /// shots, so it carries the shot noise it would have there, and the reading's verdict is one
+    /// `Check` of `|prediction − baseline|` against `sigmas` standard errors of the baseline,
+    /// examined over the baseline's shots. The prediction is consumed: the next `compare` needs a
+    /// new one, and a second `compare` of the same observation replaces the reading rather than
+    /// adding one. `adjudicate` then separates worlds by their predictions, and a world holds
+    /// when its predictions agree with every observation.
     ///
     /// A mechanism world with a prediction goes through here as well; nothing forbids it.
     ///
@@ -622,12 +718,13 @@ where
             )));
             return self;
         }
-        let Some(baseline) = self.read_out else {
+        let Some(root) = self.root.clone() else {
             self.fail(QuantumError::CalculationError(
                 "compare needs the root read-out as the baseline; call observe before fork".into(),
             ));
             return self;
         };
+        let baseline = root.read_out;
         if self.worlds.is_empty() {
             self.fail(QuantumError::CalculationError(
                 "compare judges forked worlds; call fork first".into(),
@@ -646,7 +743,7 @@ where
             }
         };
         for w in &mut self.worlds {
-            let Some(prediction) = w.prediction else {
+            let Some(prediction) = w.prediction.take() else {
                 self.failure
                     .get_or_insert(QuantumError::CalculationError(format!(
                         "world '{}' has no prediction; call predict before compare",
@@ -657,11 +754,18 @@ where
             match ShotEstimate::from_probability(prediction, baseline.shots()) {
                 Ok(e) => {
                     let gap = (prediction - baseline.estimate()).abs();
-                    w.read_out = Some(e);
-                    w.verdict = Some(CheckReport::new(
-                        vec![Check::new(CheckItem::Whole, gap, allowance)],
-                        examined,
-                    ));
+                    let reading = Reading {
+                        verdict: Some(CheckReport::new(
+                            vec![Check::new(CheckItem::Whole, gap, allowance)],
+                            examined,
+                        )),
+                        prediction: Some(prediction),
+                        ..Reading::new(root.sequence, root.experiment.clone(), e)
+                    };
+                    match w.readings.iter_mut().find(|r| r.sequence == root.sequence) {
+                        Some(existing) => *existing = reading,
+                        None => w.readings.push(reading),
+                    }
                 }
                 Err(e) => {
                     self.failure.get_or_insert(e);
@@ -788,16 +892,16 @@ where
 
     /// A configured experiment observed on the device, from `source`: the Born sampler at the
     /// read-out the source's truth predicts, counts a lab recorded, or a published value as
-    /// effective draws. The read-out becomes the root's, the baseline `compare` judges
-    /// predictions against, and the shots are charged to the ledger and drawn from its budget as
-    /// `observe` charges them. The [`Observation`] goes to the report with the experiment's name,
-    /// the read-out, the counts and the configuration's context at observation time.
+    /// effective draws. The read-out becomes the root's latest, the baseline `compare` judges
+    /// predictions against. The shots are charged as `observe` charges them: to the root ledger
+    /// before the fork, and after it to every world's ledger, since the device's evidence belongs
+    /// to every world's history. The [`Observation`] goes to the report with the experiment's
+    /// name, the read-out, the counts and the configuration's context at observation time.
     ///
     /// Simulated evidence draws at the seed `observe` would use for the next observation, so a
     /// mechanism truth draws the histogram `observe` draws on the plant it predicts.
     ///
-    /// Fails with `CalculationError` before the config's baseline was observed, and after the
-    /// fork: a root observation is what every world inherits at the fork. Fails with
+    /// Fails with `CalculationError` before the config's baseline was observed;
     /// `NormalizationError` when a simulated truth predicts a value outside `[0, 1]`; and with
     /// the errors of the prediction, the read-out, the charge or the snapshot.
     pub fn observe_experiment<C, M>(
@@ -813,21 +917,19 @@ where
         if self.failure.is_some() || self.awaits_baseline("observe_experiment") {
             return self;
         }
-        if !self.worlds.is_empty() {
-            self.fail(QuantumError::CalculationError(
-                "observe_experiment observes the device before the fork, where every world \
-                 inherits it; call it before fork"
-                    .into(),
-            ));
-            return self;
-        }
         let observed = self
             .evidence(model, experiment, source)
             .and_then(|evidence| Ok((evidence, experiment.configuration().context_snapshot()?)));
         match observed {
             Ok((evidence, context)) => {
-                self.read_out = Some(evidence.read_out);
-                self.ledger = evidence.ledger;
+                if self.worlds.is_empty() {
+                    self.ledger = evidence.ledgers[0];
+                } else {
+                    for (w, ledger) in self.worlds.iter_mut().zip(evidence.ledgers) {
+                        w.ledger = ledger;
+                    }
+                }
+                self.record_root(experiment.name().into(), evidence.read_out);
                 self.observations.push(Observation::new(
                     experiment.name().into(),
                     evidence.read_out,
@@ -840,7 +942,7 @@ where
         self
     }
 
-    /// The evidence `source` yields for `experiment`, with the root ledger after the shots are
+    /// The evidence `source` yields for `experiment`, with the ledgers after the shots are
     /// charged, which happens before anything is drawn.
     fn evidence<C, M>(
         &self,
@@ -859,10 +961,15 @@ where
         let count = N::from_u64(shots).ok_or_else(|| {
             QuantumError::CalculationError(format!("{shots} shots do not fit the count width"))
         })?;
-        let time = R::from_u64(shots).ok_or_else(|| {
-            QuantumError::CalculationError("shot count is not representable".into())
-        })?;
-        let charged = self.ledger.observed(count, time)?;
+        let time = Self::device_time(shots, self.shot_time)?;
+        let charged = if self.worlds.is_empty() {
+            vec![self.ledger.observed(count, time)?]
+        } else {
+            self.worlds
+                .iter()
+                .map(|w| w.ledger.observed(count, time))
+                .collect::<Result<Vec<_>, _>>()?
+        };
         let (read_out, counts) = match source {
             EvidenceSource::Simulated(truth) => {
                 let p = experiment.predict(model, truth, &self.plant, &self.observables)?;
@@ -873,7 +980,7 @@ where
                         experiment.name()
                     )));
                 }
-                let seed = Self::draw_seed(self.seed, self.ledger.experiments())?;
+                let seed = Self::draw_seed(self.seed, self.observed_so_far())?;
                 let hist = sample_probability(p, shots, seed)?;
                 (ShotEstimate::of_outcome(&hist, 1)?, Some(hist))
             }
@@ -885,21 +992,30 @@ where
         Ok(Gathered {
             read_out,
             counts,
-            ledger: charged,
+            ledgers: charged,
         })
     }
 
-    /// The worlds' verdicts folded under the verdict law, with the survivor's separation credited
-    /// to the root ledger's `bits`.
+    /// The worlds' readings folded as a campaign by [`adjudicate_campaign`]: a world holds when
+    /// every reading's verdict holds, and a pair separates by the sum over the experiments both
+    /// read. The survivor's separation is credited to the root ledger's `bits`. A world with one
+    /// reading adjudicates as `adjudicate` folds a single read-out.
+    ///
+    /// Fails with `CalculationError` when a world has no reading or a reading no stage judged.
     pub fn adjudicate(mut self, floor_bits: R) -> Self {
         if self.failure.is_some() {
             return self;
         }
         let mut worlds = Vec::with_capacity(self.worlds.len());
         for w in &self.worlds {
-            match (&w.verdict, &w.read_out) {
-                (Some(v), Some(e)) => {
-                    worlds.push(World::<R, D>::read_out(w.name.clone(), v.clone(), *e))
+            let readings: Option<Vec<_>> = w
+                .readings
+                .iter()
+                .map(|r| r.verdict.clone().map(|v| (v, r.read_out)))
+                .collect();
+            match readings {
+                Some(readings) if !readings.is_empty() => {
+                    worlds.push(CampaignWorld::new(w.name.clone(), readings))
                 }
                 _ => {
                     self.fail(QuantumError::CalculationError(format!(
@@ -910,7 +1026,7 @@ where
                 }
             }
         }
-        match adjudicate(&worlds, floor_bits) {
+        match adjudicate_campaign::<R, D>(&worlds, floor_bits) {
             Ok(a) => {
                 if let Either::Left(s) = &a.outcome {
                     self.ledger = self.ledger.separated(s.separation_bits);
