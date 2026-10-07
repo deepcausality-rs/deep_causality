@@ -111,7 +111,12 @@ pub fn summary(out: &StagnationOutcome<f64>, ne_network: FloatType, ne_network_6
         "\n=== RAM-C stagnation line: network n_e = {:.2e} m^-3 ({:+.2} dec), Park-2T controller \
          {:.2e} m^-3 ({:+.2} dec) vs the station-1 Ka-band anchor {:.3e} m^-3 at {RAMC_ANCHOR_ALTITUDE_KM} \
          km; 61 km network {:.2e} m^-3 above the flight lower bound. ===",
-        ne_network, decades_network, out.electron_density, decades, RAMC_NE_REFERENCE, ne_network_61km
+        ne_network,
+        decades_network,
+        out.electron_density,
+        decades,
+        RAMC_NE_REFERENCE,
+        ne_network_61km
     );
     println!(
         "The freestream is the cited RAM-C II 71 km condition (Mach 25.9, 217.9 K, q 2.28 kPa); velocity\n\

@@ -14,8 +14,9 @@
 use crate::FloatType;
 use crate::constants::{
     AIM_CROSS_RANGE_M, ANCHOR_BAND_DECADES, ANCHOR_SPEED_TOLERANCE, BANK_ANGLES_DEG,
-    DIVERGENCE_MIN_M, EXIT_ALTITUDE_BAND_KM, FINE_SPAN_STEPS, FINE_STEP_DEG, LOWER_BOUND_ALTITUDE_M,
-    MAX_REBUILDS, MISS_IMPROVEMENT_FACTOR, RAMC_EXIT_WINDOW_KM, STEPS, WALL_CLOCK_BUDGET_S,
+    DIVERGENCE_MIN_M, EXIT_ALTITUDE_BAND_KM, FINE_SPAN_STEPS, FINE_STEP_DEG,
+    LOWER_BOUND_ALTITUDE_M, MAX_REBUILDS, MISS_IMPROVEMENT_FACTOR, RAMC_EXIT_WINDOW_KM, STEPS,
+    WALL_CLOCK_BUDGET_S,
 };
 use avionics_examples::shared::constants::{
     CAP, COMMS_BAND_RAD_S, DT_FLIGHT, IMU_ACCEL_BIAS, L, RAMC_ANCHOR_ALTITUDE_M,
@@ -665,7 +666,10 @@ pub fn leg_gates() -> GateSeq<LegSet> {
         .gate("(1) flow-resolved blackout window", gate_window)
         .gate("(2) n_e at the RAM-C II anchor station", gate_anchor)
         .gate("(2b) blackout window altitudes", gate_window_altitudes)
-        .gate("(2c) the descent's peak n_e lies in the blackout", gate_peak_in_window)
+        .gate(
+            "(2c) the descent's peak n_e lies in the blackout",
+            gate_peak_in_window,
+        )
         .gate("(3) real INS drift -> reacquisition", gate_drift)
         .gate("(4a) regime change", gate_regime_change)
         .gate("(4b) multiphysics chain", gate_multiphysics)
