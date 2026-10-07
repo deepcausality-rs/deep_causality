@@ -619,3 +619,134 @@ fn test_a_dimension_product_that_would_overflow_is_reported() {
         other => panic!("expected DimensionMismatch, got {other:?}"),
     }
 }
+
+// ---------------------------------------------------------------------------
+// Normalization: each factor traced over its own leg is the identity on its parents.
+// ---------------------------------------------------------------------------
+
+/// A diagonal operator with the given entries.
+fn diagonal(entries: &[f64]) -> CausalTensor<C> {
+    let d = entries.len();
+    let mut data = vec![c(0.0); d * d];
+    for (i, &e) in entries.iter().enumerate() {
+        data[i * d + i] = c(e);
+    }
+    mat(data, d)
+}
+
+/// Q1 → Q2 with Q1's factor `q1` and Q2's factor `q2` on legs (Q1, Q2), ascending.
+fn drive(q1: &[f64], q2: &[f64]) -> Hypothesis<f64> {
+    let mut pf = ProcessFactors::new();
+    pf.insert(0, diagonal(q1));
+    pf.insert(1, diagonal(q2));
+    let mut fs = FactorSupports::new();
+    fs.declare(0, &[0]);
+    fs.declare(1, &[0, 1]);
+    Hypothesis::structural("drive", pf, fs).unwrap()
+}
+
+#[test]
+fn test_conditional_tables_are_a_normalised_process() {
+    // P(q1 = 1) = 1/10, P(q2 = 1 | q1) = (1/15, 2/5): every conditional column sums to one.
+    let h = drive(&[0.9, 0.1], &[14.0 / 15.0, 1.0 / 15.0, 0.6, 0.4]);
+    let report = h.check_normalization().unwrap();
+    assert!(report.accepted());
+    assert_eq!(report.examined(), 2);
+}
+
+#[test]
+fn test_a_joint_table_where_a_conditional_belongs_is_rejected_at_its_node() {
+    // diag(0.85, 0.05, 0.05, 0.05) traced over Q2 is diag(0.9, 0.1), not the identity on Q1:
+    // the defect is ‖diag(−0.1, −0.9)‖_F = √0.82.
+    let h = drive(&[0.9, 0.1], &[0.85, 0.05, 0.05, 0.05]);
+    let report = h.check_normalization().unwrap();
+    assert!(!report.accepted());
+    let checks = report.checks();
+    assert_eq!(checks[0].item, deep_causality_quantum::CheckItem::Index(0));
+    assert!(checks[0].accepted, "Q1's own factor is normalised");
+    assert_eq!(checks[1].item, deep_causality_quantum::CheckItem::Index(1));
+    assert!(!checks[1].accepted);
+    assert!((checks[1].measured - 0.82_f64.sqrt()).abs() < 1e-15);
+}
+
+#[test]
+fn test_a_quantum_conditional_is_normalised_through_its_off_diagonal() {
+    // ρ_{B|A} = |0⟩⟨0|_A ⊗ |+⟩⟨+|_B + |1⟩⟨1|_A ⊗ |0⟩⟨0|_B: off-diagonal on B, Tr_B = 1_A.
+    let h = 0.5;
+    let rho = mat(
+        vec![
+            c(h),
+            c(h),
+            c(0.),
+            c(0.),
+            c(h),
+            c(h),
+            c(0.),
+            c(0.),
+            c(0.),
+            c(0.),
+            c(1.),
+            c(0.),
+            c(0.),
+            c(0.),
+            c(0.),
+            c(0.),
+        ],
+        4,
+    );
+    let mut pf = ProcessFactors::new();
+    pf.insert(0, diagonal(&[1.0, 0.0]));
+    pf.insert(1, rho);
+    let mut fs = FactorSupports::new();
+    fs.declare(0, &[0]);
+    fs.declare(1, &[0, 1]);
+    let report = Hypothesis::structural("q", pf, fs)
+        .unwrap()
+        .check_normalization()
+        .unwrap();
+    assert!(report.accepted());
+}
+
+#[test]
+fn test_the_normalization_threshold_is_the_state_member() {
+    // A parentless factor of trace 1 + 1e-10 is within √ε; 1 + 1e-6 is not.
+    let parentless = |trace: f64| {
+        let mut pf = ProcessFactors::new();
+        pf.insert(0, diagonal(&[0.5, trace - 0.5]));
+        let mut fs = FactorSupports::new();
+        fs.declare(0, &[0]);
+        Hypothesis::structural("p", pf, fs).unwrap()
+    };
+    assert!(
+        parentless(1.0 + 1e-10)
+            .check_normalization()
+            .unwrap()
+            .accepted()
+    );
+    let report = parentless(1.0 + 1e-6).check_normalization().unwrap();
+    assert!(!report.accepted());
+    assert!((report.checks()[0].measured - 1e-6).abs() < 1e-12);
+}
+
+#[test]
+fn test_normalization_needs_a_structural_candidate_with_its_own_leg() {
+    let m = Hypothesis::<f64>::mechanism("m", Channel::unitary(&QubitOperator::pauli_x()).unwrap());
+    assert!(matches!(
+        m.check_normalization().unwrap_err().0,
+        QuantumErrorEnum::CalculationError(_)
+    ));
+    // Node 1 acts on leg 0 only: no system of its own to trace.
+    let mut pf = ProcessFactors::new();
+    pf.insert(0, sigma_z());
+    pf.insert(1, sigma_x());
+    let mut fs = FactorSupports::new();
+    fs.declare(0, &[0]);
+    fs.declare(1, &[0]);
+    let h = Hypothesis::structural("borrowed", pf, fs).unwrap();
+    match h.check_normalization().unwrap_err().0 {
+        QuantumErrorEnum::DimensionMismatch(msg) => {
+            assert!(msg.contains("lacks its own leg 1"), "{msg}")
+        }
+        other => panic!("expected DimensionMismatch, got {other:?}"),
+    }
+}

@@ -289,3 +289,98 @@ fn test_the_earlier_of_two_failures_is_the_one_reported() {
         other => panic!("expected the decomposability failure first, got {other:?}"),
     }
 }
+
+// ---------------------------------------------------------------------------
+// check_normalization: a candidate that is not a normalised process is not admitted.
+// ---------------------------------------------------------------------------
+
+/// A two-qubit plant in `|00⟩` exposing "qubit 2 excited".
+fn two_qubit_plant() -> (
+    deep_causality_quantum::QuantumPlant<f64>,
+    deep_causality_quantum::Observable<f64, 4>,
+) {
+    let z = c(0.0);
+    let plant = deep_causality_quantum::QuantumPlant::from_ket(&CausalTensor::from_slice(
+        &[c(1.0), z, z, z],
+        &[4],
+    ))
+    .unwrap();
+    let mut e2 = vec![z; 16];
+    e2[5] = c(1.0);
+    e2[15] = c(1.0);
+    let observable = deep_causality_quantum::Observable::new(
+        "e2",
+        deep_causality_quantum::Projection::<f64, 4>::new(mat(e2, 4)).unwrap(),
+    );
+    (plant, observable)
+}
+
+/// Q1 → Q2 as conditional tables: P(q1 = 1) = 1/10, P(q2 = 1 | q1) = (1/15, 2/5).
+fn conditional_drive() -> deep_causality_quantum::Hypothesis<f64> {
+    let d = |entries: &[f64]| {
+        let n = entries.len();
+        let mut data = vec![c(0.0); n * n];
+        for (i, &e) in entries.iter().enumerate() {
+            data[i * n + i] = c(e);
+        }
+        mat(data, n)
+    };
+    let mut pf = ProcessFactors::new();
+    pf.insert(0, d(&[0.9, 0.1]));
+    pf.insert(1, d(&[14.0 / 15.0, 1.0 / 15.0, 0.6, 0.4]));
+    let mut fs = FactorSupports::new();
+    fs.declare(0, &[0]);
+    fs.declare(1, &[0, 1]);
+    deep_causality_quantum::Hypothesis::structural("conditional", pf, fs).unwrap()
+}
+
+#[test]
+fn test_check_normalization_admits_conditional_tables_and_refuses_joint_ones() {
+    // The crosstalk example's factors put a joint table where a conditional belongs.
+    let [h1, h2, h3] = deep_causality_quantum::utils_tests::crosstalk_candidates().unwrap();
+    let (plant, e2) = two_qubit_plant();
+    let cfg = QclBuilder::config::<f64, Count>()
+        .over_plant(plant, &[e2])
+        .candidates(&[h1, conditional_drive(), h2, h3])
+        .build()
+        .unwrap();
+    let screened = QclBuilder::validate(&cfg)
+        .check_normalization()
+        .finalize()
+        .unwrap();
+    let names: Vec<&str> = screened.admitted().iter().map(|h| h.name()).collect();
+    assert_eq!(names, vec!["conditional"]);
+    assert_eq!(screened.admitted_slots(), &[1]);
+    assert_eq!(screened.stages()[0].0, "check_normalization");
+    // Two factors each for H1, H2 and the conditional drive, three for H3.
+    assert_eq!(screened.stages()[0].1.examined(), 9);
+
+    // As a later stage it screens the admitted set only.
+    let after = QclBuilder::validate(&cfg)
+        .check_markov(&CommutatorTolerance::default())
+        .check_normalization()
+        .finalize()
+        .unwrap();
+    assert_eq!(after.admitted_slots(), &[1]);
+    assert_eq!(after.stages()[1].1.examined(), 9);
+}
+
+#[test]
+fn test_a_candidate_without_its_own_leg_fails_the_normalization_stage() {
+    let (pf, fs) = non_commuting();
+    let borrowed = deep_causality_quantum::Hypothesis::structural("borrowed", pf, fs).unwrap();
+    let (plant, e2) = two_qubit_plant();
+    let cfg = QclBuilder::config::<f64, Count>()
+        .over_plant(plant, &[e2])
+        .candidates(&[conditional_drive(), borrowed])
+        .build()
+        .unwrap();
+    let e = err(QclBuilder::validate(&cfg).check_normalization().finalize());
+    assert!(matches!(e.0, QuantumErrorEnum::DimensionMismatch(_)));
+    // A stage after a failure records nothing.
+    let e = err(QclBuilder::validate(&cfg)
+        .check_normalization()
+        .check_normalization()
+        .finalize());
+    assert!(matches!(e.0, QuantumErrorEnum::DimensionMismatch(_)));
+}

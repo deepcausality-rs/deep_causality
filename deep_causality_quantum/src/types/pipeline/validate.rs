@@ -518,6 +518,52 @@ where
         self
     }
 
+    /// The normalization check on every candidate in the pool, the config's candidates when this
+    /// is the first stage and the admitted set otherwise. A candidate whose factors are not a
+    /// normalised process, `Tr_A ρ_{A|Pa(A)} ≠ 1_{Pa(A)}` at some node, is not admitted; a
+    /// structural failure of the check itself is the stage's failure. The reports of every
+    /// candidate examined fold into one record, as `check_markov`'s do.
+    pub fn check_normalization(mut self) -> Self {
+        if self.failure.is_some() {
+            return self;
+        }
+        let mut admitted = Vec::new();
+        let mut folded = CheckReport::vacuous();
+        for (slot, h) in self.pool() {
+            match h.check_normalization() {
+                Ok(report) => {
+                    if report.accepted() {
+                        admitted.push((slot, h));
+                    }
+                    folded = folded.fold(report);
+                }
+                Err(e) => {
+                    self.fail(e);
+                    return self;
+                }
+            }
+        }
+        self.admitted = admitted;
+        self.record("check_normalization", folded);
+        self
+    }
+
+    /// The candidates a screening stage examines, each with its index among the config's
+    /// candidates: every one when this is the first stage, and the admitted set otherwise.
+    fn pool(&mut self) -> Vec<(usize, Hypothesis<R>)> {
+        if self.stages.is_empty() {
+            self.cfg
+                .subject()
+                .candidates()
+                .iter()
+                .cloned()
+                .enumerate()
+                .collect()
+        } else {
+            core::mem::take(&mut self.admitted)
+        }
+    }
+
     /// C₃-exclusion for every admitted candidate over the structure its own supports encode,
     /// between the declared systems. A candidate containing a `C₃` is not admitted. Each
     /// structural candidate implies a structure of its own, and the supports carry it, so no
@@ -564,20 +610,9 @@ where
         if self.failure.is_some() {
             return self;
         }
-        let pool: Vec<(usize, Hypothesis<R>)> = if self.stages.is_empty() {
-            self.cfg
-                .subject()
-                .candidates()
-                .iter()
-                .cloned()
-                .enumerate()
-                .collect()
-        } else {
-            core::mem::take(&mut self.admitted)
-        };
         let mut admitted = Vec::new();
         let mut folded = CheckReport::vacuous();
-        for (slot, h) in pool {
+        for (slot, h) in self.pool() {
             match check(&h) {
                 Ok(report) => {
                     folded = folded.fold(report);

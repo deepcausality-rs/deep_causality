@@ -35,12 +35,13 @@
 
 use crate::QuantumError;
 use crate::types::carriers::Channel;
-use crate::types::decision::{Check, CheckItem, CheckReport, Factorization};
+use crate::types::decision::{Check, CheckItem, CheckReport, Factorization, Tolerance};
 use crate::types::qcm::faithfulness::CausalStructure;
 use crate::types::qcm::markov_freeze::{CommutatorTolerance, quantum_markov_check_report_as};
 use crate::types::qcm::process_factors::{CjFactor, FactorSupports, ProcessFactors};
 use crate::types::qgates::operator_linalg::{
-    BoundaryWarrant, embed_on_legs, partial_trace, partial_trace_preservation_boundary, square_dim,
+    BoundaryWarrant, embed_on_legs, frobenius_norm, partial_trace,
+    partial_trace_preservation_boundary, square_dim,
 };
 use alloc::collections::{BTreeMap, BTreeSet};
 use alloc::format;
@@ -347,6 +348,63 @@ where
                 certificate: Some(report),
             },
         })
+    }
+
+    /// The normalization check: every factor traced over its node's own leg is the identity on
+    /// its parents' legs, `Tr_A ρ_{A|Pa(A)} = 1_{Pa(A)}`, so the factors make a normalised
+    /// process; for a classical factor, every conditional column sums to one. A parentless
+    /// factor's trace is one.
+    ///
+    /// One `Check` per factor, `CheckItem::Index(node)`, measures `‖Tr_A ρ − 1‖_F` against the
+    /// state member of the tolerance family at the factor's Frobenius norm. A rejecting record is
+    /// a candidate that is not a process, not an error. Under the flat convention a node's own
+    /// leg is the leg named by the node, and its parents are the other legs of its support.
+    ///
+    /// # Errors
+    ///
+    /// [`QuantumError::CalculationError`] on a mechanism candidate;
+    /// [`QuantumError::DimensionMismatch`] when a node's support lacks the node's own leg, so the
+    /// flat convention gives it no system to trace; and the partial trace's shape errors.
+    pub fn check_normalization(&self) -> Result<CheckReport<R>, QuantumError> {
+        let (factors, supports) = self.structural_parts()?;
+        let mut checks = Vec::new();
+        for node in factors.nodes() {
+            let factor = factors.get(node).expect("node from nodes()");
+            let legs: BTreeSet<usize> = supports
+                .support(node)
+                .expect("validated at construction")
+                .iter()
+                .copied()
+                .collect();
+            let own = legs.iter().position(|&leg| leg == node).ok_or_else(|| {
+                QuantumError::DimensionMismatch(format!(
+                    "hypothesis '{}': node {node}'s support {legs:?} lacks its own leg {node}",
+                    self.name
+                ))
+            })?;
+            let dims: Vec<usize> = supports.space_map(&legs).into_values().collect();
+            let traced = partial_trace(factor, &dims, &[own])?;
+            let d = square_dim(&traced)?;
+            let entries = traced.as_slice();
+            let mut squared = R::zero();
+            for i in 0..d {
+                for j in 0..d {
+                    let target = if i == j { R::one() } else { R::zero() };
+                    let z = entries[i * d + j];
+                    let (re, im) = (z.re - target, z.im);
+                    squared = squared + re * re + im * im;
+                }
+            }
+            let threshold = Tolerance::<R>::state()
+                .threshold(d, frobenius_norm(factor))
+                .expect("the state member answers the single-operator form");
+            checks.push(Check::new(
+                CheckItem::Index(node),
+                squared.sqrt(),
+                threshold,
+            ));
+        }
+        Ok(CheckReport::from_checks(checks))
     }
 
     /// `do(node ← factor)`: the mechanism-level intervention, as a keyed replacement followed by
