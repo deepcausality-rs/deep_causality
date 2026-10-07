@@ -195,6 +195,7 @@ The same facade covers the whole monad surface, grouped by role:
 | :--- | :--- |
 | `alternate_value(value)` | Substitute the value mid-flow, recording the override in the audit log. |
 | `alternate_value_if(cond, f)` | Substitute `f(value)` only when `cond` holds over the current value. |
+| `alternate_context(context)` | Substitute the context mid-flow, recording the replacement in the audit log. |
 
 **Terminals**
 
