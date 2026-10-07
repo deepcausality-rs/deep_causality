@@ -1,0 +1,45 @@
+\section{Method}
+\label{sec:method}
+
+\subsection{\placeholder{working title: the coupled process}}
+\label{sec:method:coupling}
+% P3.1 One shared field, one stage stack. Listing~\ref{lst:coupling}.
+\placeholder{P3.1}
+
+\lstinputlisting[caption={\placeholder{caption: the corridor coupling stack}},label={lst:coupling}]{listings/coupling_stack.rs}
+
+% P3.2 Regime and events from the evolved state.
+\placeholder{P3.2}
+
+\subsection{\placeholder{working title: pause and fork}}
+\label{sec:method:fork}
+% P3.3 The pause; MarchState export against a fork.
+\placeholder{P3.3}
+
+% P3.4 The fork and its cost. Cost model: rerun N(P+B) against fork P+NB (Table~\ref{tab:forkcost}).
+\placeholder{P3.4}
+\begin{equation}
+  \label{eq:forkcost}
+  \frac{\text{rerun}}{\text{fork}} = \frac{\Nbr(\Pst+\Bst)}{\Pst+\Nbr\Bst}
+\end{equation}
+
+\input{tables/tab_fork_cost}
+
+% P3.5 Context alternation; the definition of "counterfactual" used in this paper (cfd_draft.md, D2).
+\placeholder{P3.5}
+\begin{definition}[\placeholder{term}]
+\label{def:counterfactual}
+\placeholder{definition}
+\end{definition}
+
+\subsection{\placeholder{working title: the campaign grammar}}
+\label{sec:method:grammar}
+% P3.6 Fork form and sweep form; StudyEffect monad; compile-time phase order. Listing~\ref{lst:sweep}.
+\placeholder{P3.6}
+
+\lstinputlisting[caption={\placeholder{caption: the weather sweep}},label={lst:sweep}]{listings/weather_sweep.rs}
+
+\subsection{\placeholder{working title: gates and evidence classes}}
+\label{sec:method:gates}
+% P3.7 Reference and tripwire; committed baselines; CI.
+\placeholder{P3.7}

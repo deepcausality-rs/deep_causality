@@ -1,0 +1,21 @@
+% Data: examples/avionics_examples/cfd/plasma_blackout/weather/output.txt (f64, 184.0 s, Apple M3 Max).
+% dT, density scale and the IMU departure are typed inputs (weather/constants.rs); drift is mean +- one
+% sample standard deviation over 8 deterministic receiver-noise draws.
+\begin{table}[t]
+\centering
+\caption{\placeholder{caption: six atmospheres, eight draws each; window and drift in the dark}}
+\label{tab:weather}
+\footnotesize
+\begin{tabular}{@{}lrrrrrrr@{}}
+\toprule
+World & $\Delta T$ (K) & $\rho$ scale & IMU dep. & Onset (s) & Dwell (s) & Drift (m) & Terminal (m) \\
+\midrule
+standard\_day & 0   & 1.00 & 1.00 & 13.1 & 55.7 & $41.60 \pm 1.97$ & 0.133 \\
+hot\_day      & 20  & 0.90 & 1.20 & 13.6 & 55.5 & $48.64 \pm 2.40$ & 0.141 \\
+cold\_day     & -25 & 1.10 & 1.25 & 12.8 & 55.9 & $50.68 \pm 2.93$ & 0.132 \\
+polar\_winter & -40 & 1.20 & 1.40 & 12.4 & 56.1 & $58.71 \pm 2.27$ & 0.151 \\
+thin\_day     & -5  & 0.75 & 1.05 & 14.6 & 55.0 & $41.28 \pm 1.94$ & 0.136 \\
+dense\_day    & 5   & 1.30 & 1.05 & 12.1 & 56.1 & $43.05 \pm 1.71$ & 0.141 \\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -1,0 +1,17 @@
+% Data: website/cfd home page step arithmetic; corridor/output.txt (131 steps to the pause, 100 per
+% branch). The general form is derived (notes/cfd_draft.md, A.7). The ratio column is derived here.
+\begin{table}[t]
+\centering
+\caption{\placeholder{caption: solver steps, rerun against fork}}
+\label{tab:forkcost}
+\footnotesize
+\begin{tabular}{@{}rrrrrr@{}}
+\toprule
+$\Pst$ & $\Bst$ & $\Nbr$ & Rerun $\Nbr(\Pst+\Bst)$ & Fork $\Pst+\Nbr\Bst$ & Ratio \\
+\midrule
+131  & 100 & 6  & 1386 & 731  & 1.90 \\
+131  & 100 & 17 & 3927 & 1831 & 2.14 \\
+1310 & 100 & 6  & 8460 & 1910 & 4.43 \\
+\bottomrule
+\end{tabular}
+\end{table}
