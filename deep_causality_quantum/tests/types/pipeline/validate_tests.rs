@@ -336,12 +336,26 @@ fn conditional_drive() -> deep_causality_quantum::Hypothesis<f64> {
 
 #[test]
 fn test_check_normalization_admits_conditional_tables_and_refuses_joint_ones() {
-    // The crosstalk example's factors put a joint table where a conditional belongs.
+    // A joint table P(q1, q2) where the conditional P(q2 | q1) belongs, beside the crosstalk
+    // candidates written as conditional tables.
+    let joint = {
+        let mut pf = ProcessFactors::new();
+        pf.insert(0, mat(vec![c(0.9), c(0.0), c(0.0), c(0.1)], 2));
+        let mut q2 = vec![c(0.0); 16];
+        for (i, v) in [0.85, 0.05, 0.05, 0.05].into_iter().enumerate() {
+            q2[i * 4 + i] = c(v);
+        }
+        pf.insert(1, mat(q2, 4));
+        let mut fs = FactorSupports::new();
+        fs.declare(0, &[0]);
+        fs.declare(1, &[0, 1]);
+        deep_causality_quantum::Hypothesis::structural("joint", pf, fs).unwrap()
+    };
     let [h1, h2, h3] = deep_causality_quantum::utils_tests::crosstalk_candidates().unwrap();
     let (plant, e2) = two_qubit_plant();
     let cfg = QclBuilder::config::<f64, Count>()
         .over_plant(plant, &[e2])
-        .candidates(&[h1, conditional_drive(), h2, h3])
+        .candidates(&[joint, conditional_drive(), h1, h2, h3])
         .build()
         .unwrap();
     let screened = QclBuilder::validate(&cfg)
@@ -349,11 +363,14 @@ fn test_check_normalization_admits_conditional_tables_and_refuses_joint_ones() {
         .finalize()
         .unwrap();
     let names: Vec<&str> = screened.admitted().iter().map(|h| h.name()).collect();
-    assert_eq!(names, vec!["conditional"]);
-    assert_eq!(screened.admitted_slots(), &[1]);
+    assert_eq!(
+        names,
+        vec!["conditional", "H1 Q1->Q2", "H2 Q2->Q1", "H3 Q1<-B->Q2"]
+    );
+    assert_eq!(screened.admitted_slots(), &[1, 2, 3, 4]);
     assert_eq!(screened.stages()[0].0, "check_normalization");
-    // Two factors each for H1, H2 and the conditional drive, three for H3.
-    assert_eq!(screened.stages()[0].1.examined(), 9);
+    // Two factors each for the joint table, the conditional drive, H1 and H2, three for H3.
+    assert_eq!(screened.stages()[0].1.examined(), 11);
 
     // As a later stage it screens the admitted set only.
     let after = QclBuilder::validate(&cfg)
@@ -361,8 +378,8 @@ fn test_check_normalization_admits_conditional_tables_and_refuses_joint_ones() {
         .check_normalization()
         .finalize()
         .unwrap();
-    assert_eq!(after.admitted_slots(), &[1]);
-    assert_eq!(after.stages()[1].1.examined(), 9);
+    assert_eq!(after.admitted_slots(), &[1, 2, 3, 4]);
+    assert_eq!(after.stages()[1].1.examined(), 11);
 }
 
 #[test]

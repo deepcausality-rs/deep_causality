@@ -14,7 +14,7 @@ use deep_causality_quantum::{
 };
 
 #[test]
-fn test_the_candidates_span_two_or_three_legs() {
+fn test_the_candidates_span_two_or_three_legs_and_are_normalised_processes() {
     let [h1, h2, h3] = crosstalk_candidates().unwrap();
     assert_eq!(h1.legs().unwrap().len(), 2);
     assert_eq!(h2.legs().unwrap().len(), 2);
@@ -23,42 +23,63 @@ fn test_the_candidates_span_two_or_three_legs() {
         (h1.name(), h2.name(), h3.name()),
         ("H1 Q1->Q2", "H2 Q2->Q1", "H3 Q1<-B->Q2")
     );
+    for h in [&h1, &h2, &h3] {
+        assert!(h.check_normalization().unwrap().accepted(), "{}", h.name());
+    }
+}
+
+fn intervention(h: &Hypothesis<f64>, setting: CrosstalkSetting) -> (Vec<usize>, Vec<usize>) {
+    let Response::Intervention {
+        factors,
+        instrument,
+    } = CrosstalkModel.respond(h, &setting).unwrap()
+    else {
+        panic!("an intervention");
+    };
+    (
+        factors.iter().map(|(node, _)| *node).collect(),
+        instrument.shape().to_vec(),
+    )
 }
 
 #[test]
-fn test_holding_a_qubit_replaces_its_factor_on_its_support() {
-    let [_, h2, h3] = crosstalk_candidates().unwrap();
+fn test_each_setting_intervenes_where_it_should() {
+    let [h1, h2, h3] = crosstalk_candidates().unwrap();
     let hold = CrosstalkSetting::Hold {
         node: CROSSTALK_Q1,
         read: CROSSTALK_Q2,
     };
-    for (h, joint) in [(&h2, 4), (&h3, 8)] {
-        let Response::Intervention {
-            factors,
-            instrument,
-        } = CrosstalkModel.respond(h, &hold).unwrap()
-        else {
-            panic!("an intervention");
-        };
-        // Q1 has one parent in both, so its factor is on two legs; the instrument is on all.
-        assert_eq!(factors.len(), 1);
-        assert_eq!(factors[0].0, CROSSTALK_Q1);
-        assert_eq!(factors[0].1.shape(), &[4, 4]);
-        assert_eq!(instrument.shape(), &[joint, joint]);
-    }
-    let passive = CrosstalkSetting::Passive { read: CROSSTALK_Q1 };
-    let Response::Intervention { factors, .. } = CrosstalkModel.respond(&h2, &passive).unwrap()
-    else {
-        panic!("an intervention");
-    };
-    assert!(factors.is_empty());
+    // Holding replaces the held qubit's factor; the instrument spans the candidate's legs.
+    assert_eq!(intervention(&h2, hold), (vec![CROSSTALK_Q1], vec![4, 4]));
+    assert_eq!(intervention(&h3, hold), (vec![CROSSTALK_Q1], vec![8, 8]));
+    // Passive intervenes nowhere.
+    assert_eq!(
+        intervention(&h1, CrosstalkSetting::Passive),
+        (vec![], vec![4, 4])
+    );
+    // The echo decouples the driven qubit of a direct coupling and leaves the bath alone.
+    assert_eq!(
+        intervention(&h1, CrosstalkSetting::Echo).0,
+        vec![CROSSTALK_Q2]
+    );
+    assert_eq!(
+        intervention(&h2, CrosstalkSetting::Echo).0,
+        vec![CROSSTALK_Q1]
+    );
+    assert_eq!(
+        intervention(&h3, CrosstalkSetting::Echo).0,
+        Vec::<usize>::new()
+    );
 }
 
 #[test]
 fn test_the_model_refuses_a_mechanism_and_a_node_the_candidate_lacks() {
     let flip = Hypothesis::mechanism("flip", Channel::unitary(&QubitOperator::pauli_x()).unwrap());
-    let passive = CrosstalkSetting::Passive { read: CROSSTALK_Q1 };
-    assert!(CrosstalkModel.respond(&flip, &passive).is_err());
+    assert!(
+        CrosstalkModel
+            .respond(&flip, &CrosstalkSetting::Passive)
+            .is_err()
+    );
     let [h1, ..] = crosstalk_candidates().unwrap();
     let bath = CrosstalkSetting::Hold {
         node: CROSSTALK_BATH,
@@ -69,10 +90,5 @@ fn test_the_model_refuses_a_mechanism_and_a_node_the_candidate_lacks() {
 
 #[test]
 fn test_a_setting_records_no_context() {
-    assert_eq!(
-        CrosstalkSetting::Passive { read: CROSSTALK_Q2 }
-            .context_snapshot()
-            .unwrap(),
-        None
-    );
+    assert_eq!(CrosstalkSetting::Echo.context_snapshot().unwrap(), None);
 }

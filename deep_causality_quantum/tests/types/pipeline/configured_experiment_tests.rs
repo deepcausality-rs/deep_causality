@@ -142,7 +142,8 @@ fn test_crosstalk_predictions_equal_evaluate_on_the_intervened_factors() {
     let observables: [Observable<f64, 4>; 0] = [];
     let plant = QuantumPlant::<f64>::default();
     let settings = [
-        CrosstalkSetting::Passive { read: CROSSTALK_Q2 },
+        CrosstalkSetting::Passive,
+        CrosstalkSetting::Echo,
         CrosstalkSetting::Hold {
             node: CROSSTALK_Q1,
             read: CROSSTALK_Q2,
@@ -181,14 +182,16 @@ fn test_crosstalk_predictions_equal_evaluate_on_the_intervened_factors() {
 
 #[test]
 fn test_crosstalk_predictions_match_the_hand_derivation() {
-    // Holding Q1 excited and reading Q2: H₁ passes Q1's state through Q2's factor (0.05), H₂'s
-    // Q2 keeps its own excited population (0.1), and H₃'s bath average gives 0.9·0.05 + 0.1·0.05.
-    // Holding Q2 and reading Q1 is the mirror image.
+    // Table §4 of the crosstalk note, from the conditional tables: holding Q1 reads Q2 at 2/5
+    // under H₁ and at Q2's own 1/10 otherwise; both read excited at 1/10 · 2/5 in every candidate;
+    // the echo leaves 1/10 · 1/10 under a direct coupling and the bath's 1/4 · (2/5)² under H₃.
     let plant = QuantumPlant::<f64>::default();
     let hold = |node, read| experiment(CrosstalkSetting::Hold { node, read }, 0);
     let want = [
-        (hold(CROSSTALK_Q1, CROSSTALK_Q2), [0.05, 0.1, 0.05]),
-        (hold(CROSSTALK_Q2, CROSSTALK_Q1), [0.1, 0.05, 0.05]),
+        (experiment(CrosstalkSetting::Passive, 0), [0.04, 0.04, 0.04]),
+        (hold(CROSSTALK_Q1, CROSSTALK_Q2), [0.40, 0.10, 0.10]),
+        (hold(CROSSTALK_Q2, CROSSTALK_Q1), [0.10, 0.40, 0.10]),
+        (experiment(CrosstalkSetting::Echo, 0), [0.01, 0.01, 0.04]),
     ];
     for (e, values) in want {
         for (h, v) in crosstalk_candidates().unwrap().iter().zip(values) {
@@ -204,7 +207,7 @@ fn test_a_response_of_the_wrong_kind_is_refused_by_name() {
     let observables = [excited()];
     // A mechanism answered with interventions.
     let flip = mechanism("flip", QubitOperator::pauli_x());
-    let e = experiment(CrosstalkSetting::Passive { read: CROSSTALK_Q2 }, 0);
+    let e = experiment(CrosstalkSetting::Passive, 0);
     struct Interventions;
     impl ResponseModel<f64, CrosstalkSetting> for Interventions {
         fn respond(
@@ -255,6 +258,6 @@ fn test_an_observable_the_plant_does_not_expose_and_a_model_refusal_propagate() 
         other => panic!("expected DimensionMismatch, got {other:?}"),
     }
     // The crosstalk model refuses a mechanism.
-    let e = experiment(CrosstalkSetting::Passive { read: CROSSTALK_Q2 }, 0);
+    let e = experiment(CrosstalkSetting::Passive, 0);
     assert!(e.predict(&CrosstalkModel, &keep, &p, &[excited()]).is_err());
 }

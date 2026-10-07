@@ -57,6 +57,11 @@ impl<R: RealField, N: NaturalNumber, const D: usize> ControlWorld<R, N, D> {
         &self.ledger
     }
 
+    /// The candidate this world runs under, as a hypothesis.
+    pub(crate) fn hypothesis(&self) -> &Hypothesis<R> {
+        &self.hypothesis
+    }
+
     /// The readings, one per observed experiment, in campaign order.
     pub fn readings(&self) -> &[Reading<R>] {
         &self.readings
@@ -326,6 +331,38 @@ where
         if self.failure.is_none() {
             self.failure = Some(e);
         }
+    }
+
+    /// The forked worlds.
+    pub(crate) fn worlds(&self) -> &[ControlWorld<R, N, D>] {
+        &self.worlds
+    }
+
+    /// The plant.
+    pub(crate) fn plant(&self) -> &QuantumPlant<R> {
+        &self.plant
+    }
+
+    /// The observables the plant exposes.
+    pub(crate) fn observables(&self) -> &[Observable<R, D>] {
+        &self.observables
+    }
+
+    /// The first failure a stage raised.
+    pub(crate) fn failure(&self) -> Option<&QuantumError> {
+        self.failure.as_ref()
+    }
+
+    /// The last adjudication.
+    pub(crate) fn adjudication(&self) -> Option<&Adjudication<R, D>> {
+        self.adjudication.as_ref()
+    }
+
+    /// The control stage with `cost` committed to the root ledger, the cost of an experiment a
+    /// campaign ran.
+    pub(crate) fn charged(mut self, cost: R) -> Self {
+        self.ledger = self.ledger.costed(cost);
+        self
     }
 
     /// The root's reading of the next observed experiment.

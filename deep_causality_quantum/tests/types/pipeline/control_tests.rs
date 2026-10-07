@@ -926,10 +926,7 @@ type Crosstalk = ConfiguredExperiment<f64, CrosstalkSetting>;
 fn crosstalk_experiments() -> [Crosstalk; 3] {
     let e = |name: &str, setting| ConfiguredExperiment::new(name, 1.0, 1024, setting, 0).unwrap();
     [
-        e(
-            "E0 passive",
-            CrosstalkSetting::Passive { read: CROSSTALK_Q2 },
-        ),
+        e("E0 passive", CrosstalkSetting::Passive),
         e(
             "E1 hold Q1",
             CrosstalkSetting::Hold {
@@ -994,7 +991,7 @@ fn crosstalk_screen() -> deep_causality_quantum::Screened<
         .unwrap()
 }
 
-/// Plan, observe E2 from `source`, then predict, compare and adjudicate.
+/// Plan, observe E1 from `source`, then predict, compare and adjudicate.
 fn run_crosstalk(
     source: &EvidenceSource<f64>,
 ) -> deep_causality_quantum::ControlReport<f64, Count, 4> {
@@ -1002,9 +999,9 @@ fn run_crosstalk(
     let exps = crosstalk_experiments();
     QclBuilder::control::<f64, Count, 4, _>(&screened)
         .design_with(&CrosstalkModel, &exps, MinCostCover::new(5.0))
-        .observe_experiment(&CrosstalkModel, &exps[2], source)
+        .observe_experiment(&CrosstalkModel, &exps[1], source)
         .fork()
-        .predict_with(&CrosstalkModel, &exps[2])
+        .predict_with(&CrosstalkModel, &exps[1])
         .compare(3.0)
         .adjudicate(5.0)
         .finalize()
@@ -1016,17 +1013,19 @@ fn test_a_configured_plan_runs_against_simulated_evidence_and_names_the_truth() 
     let [h1, ..] = crosstalk_candidates().unwrap();
     let report = run_crosstalk(&EvidenceSource::Simulated(h1));
 
-    // The plan: E2 separates H1 from both rivals, and E0 or E1 adds H2 against H3.
+    // The plan: E1 separates H1 from both rivals and E2 separates H2 from H3; passive reads
+    // 0.04 in every candidate and separates nothing.
     let plan = report.plan.as_ref().unwrap();
     assert!(plan.is_complete());
     assert_eq!(plan.total_cost(), 2.0);
-    assert!(plan.entries().iter().any(|e| e.name == "E2 hold Q2"));
+    let names: Vec<&str> = plan.entries().iter().map(|e| e.name.as_str()).collect();
+    assert_eq!(names, vec!["E1 hold Q1", "E2 hold Q2"]);
     assert_eq!(report.ledger.cost(), 2.0);
 
     // One observation, recorded with its experiment, shots and counts; a setting has no context.
     assert_eq!(report.observations.len(), 1);
     let o = &report.observations[0];
-    assert_eq!(o.experiment(), "E2 hold Q2");
+    assert_eq!(o.experiment(), "E1 hold Q1");
     assert_eq!(o.shots(), 1024);
     assert_eq!(o.counts().map(|h| h.total()), Some(1024));
     assert_eq!(o.context(), None);
@@ -1041,7 +1040,7 @@ fn test_a_configured_plan_runs_against_simulated_evidence_and_names_the_truth() 
         .iter()
         .map(|w| w.prediction().unwrap())
         .collect();
-    for (p, want) in predictions.iter().zip([0.1, 0.05, 0.05]) {
+    for (p, want) in predictions.iter().zip([0.4, 0.1, 0.1]) {
         assert!((p - want).abs() < 1e-12, "{predictions:?}");
     }
     for w in &report.worlds {
@@ -1234,8 +1233,9 @@ fn crosstalk_campaign(
 
 #[test]
 fn test_a_campaign_separates_what_one_experiment_cannot() {
-    // E2 at 512 shots separates H1 from its rivals by about 3.4 bits; twice, by about 6.9.
-    let half = crosstalk_experiments()[2].clone().with_shots(512).unwrap();
+    // E1 at 40 shots separates H1 (0.40) from its rivals (0.10) by about 3.9 bits; twice, by
+    // about 7.8.
+    let half = crosstalk_experiments()[1].clone().with_shots(40).unwrap();
     let once = crosstalk_campaign(&half, 1);
     assert!(matches!(
         once.adjudication.unwrap().outcome,
@@ -1244,7 +1244,7 @@ fn test_a_campaign_separates_what_one_experiment_cannot() {
     let twice = crosstalk_campaign(&half, 2);
     for w in &twice.worlds {
         assert_eq!(w.readings().len(), 2);
-        assert!(w.readings().iter().all(|r| r.experiment() == "E2 hold Q2"));
+        assert!(w.readings().iter().all(|r| r.experiment() == "E1 hold Q1"));
         assert_eq!((w.ledger().experiments(), w.ledger().predictions()), (2, 2));
     }
     match &twice.adjudication.as_ref().unwrap().outcome {
