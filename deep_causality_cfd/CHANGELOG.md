@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_cfd-v0.3.3...deep_causality_cfd-v0.3.4) - 2026-10-07
+
+### Fixed
+
+- address the second PR 837 review round
+- address the PR 837 review round
+- *(deep_causality_cfd)* anchor RAM-C II at its cited station and freestream
+- *(deep_causality_cfd)* start the campaign's main audit log fresh on each run
+- *(clippy)* clear clippy 1.99 lints in tests and one cfd example
+
+### Other
+
+- Formatted and linted the entire code base.
+- spell retropropulsion consistently
+- *(cfd)* fix the docs.rs link, the README tag example and the lib.rs export comments
+
 ## [0.3.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_cfd-v0.3.2...deep_causality_cfd-v0.3.3) - 2026-09-29
 
 ### Added
