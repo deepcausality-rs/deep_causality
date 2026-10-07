@@ -1,5 +1,3 @@
-    Finished `release` profile [optimized] target(s) in 0.12s
-     Running `target/release/examples/plasma_blackout_retropropulsion`
 === Plasma-retropropulsion descent: blackout exit through ignition to touchdown ===
   Vehicle: 3400 kg wet, 2200 kg propellant, 70 kN central nozzle at Isp 282 s
   Drag authority: the cited Jarvinen-Adams A0 correlation (the M1 de-risk verdict is AMBER on imprint fidelity); the marched fork carries flow realism and fork economics.
@@ -80,10 +78,10 @@
   [PASS] [tripwire] (1) corridor inheritance: Acts 0-1 fly the corridor stack with the burn stages composed and inert: blackout onset at 10.00 s against the table's 10.01 s for this day (error 0.013 s) and dwell 55.60 s against 55.46 s (error 0.140 s), tolerance 0.50 s; 3 leg re-seed(s), peak dead-reckoning drift 49.66 m
   [PASS] [tripwire] (2) ignition corridor: commit fired at step 2145 on aided navigation at sigma 0.382 m against the day's table-sized margin of 66.99 m (Mach 2.00, q 2903 Pa — the corridor predicate's own preconditions, not re-asserted here)
   [PASS] [tripwire] (3) regime cascade: 8 regime transitions logged across the descent (at least 6), counted by the classifier rather than tallied from a rendered log
-  [PASS] [tripwire] (4g) fork step cost: the branch fan-out marched at 1.17x the trunk's per-step cost (cap 3.00) — the roster costs about one branch's time rather than the sum, which is what an O(1) fork onto concurrent branches is for
+  [PASS] [tripwire] (4g) fork step cost: the branch fan-out marched at 1.16x the trunk's per-step cost (cap 3.00) — the roster costs about one branch's time rather than the sum, which is what an O(1) fork onto concurrent branches is for
   [PASS] [tripwire] (5) table earns its place: informed and uninformed guidance lit the landing burn 18.61 m apart (146.91 m vs 128.29 m, threshold 10.00 m) and arrived at 1.80 vs 1.76 m/s; the informed world spent 10.54 kg more propellant, which is the dispersion-sized reserve measured rather than configured
   [PASS] [tripwire] (6) touchdown: altitude floor reached at 0.015 km at 1.80 m/s against a commanded contact speed of 2.0 m/s (admissible [1.50, 2.50]), with 1227.0 kg propellant remaining (floor 40)
   [PASS] [tripwire] (7) compression: the committed branch's final evolved state re-quantizes at peak bond 16 (cap 16)
   [PASS] [tripwire] (8) bounded rebuilds: 1 carrier rebuild(s) across all legs (cap 6), read from the pause accessor rather than a log tally. A runaway detector, not a regression band
-  [PASS] [tripwire] (9) wall-clock budget: 346.9 s elapsed for the whole descent (budget 1800 s). A runaway detector, not a regression band
+  [PASS] [tripwire] (9) wall-clock budget: 335.3 s elapsed for the whole descent (budget 1800 s). A runaway detector, not a regression band
 === All gates passed: retropropulsion counterfactuals + retropropulsion descent. ===

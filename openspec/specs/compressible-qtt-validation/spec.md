@@ -22,7 +22,7 @@ values and never stated independently of them. It SHALL apply the exact Rankine�
 state, run the **reused Tier-A reacting/ionization LER stack** in the post-shock relaxation zone, and
 gate the peak **electron density** against the RAM-C II station-1 Ka-band datum: Grantham (1970,
 p. 18) records the Ka-band critical-density crossing at 71.93 km, and Grantham's relation
-N_e,pk = 0.63 × 1.287e-8 f² cm⁻³, with f in Hz, at f = 3.5e10 Hz (35 GHz) gives 9.93e12 cm⁻³ =
+N_e,pk = 0.63 × 1.287e-8 f² cm⁻³, with f in Hz, at f = 3.5e10 Hz (35 GHz) gives ≈ 9.93e12 cm⁻³ ≈
 9.93e18 m⁻³. The harness SHALL state the 0.93 km between
 the 71 km condition and the 71.93 km crossing. It SHALL also run the cited RAM-C II 61 km freestream
 (Mach 23.9, T∞ = 255.9 K, dynamic pressure 8 kPa) and gate, as a `[reference]` bound with no allowance,

@@ -20,8 +20,8 @@ use deep_causality_physics::{AVOGADRO_CONSTANT, MOLAR_GAS_CONSTANT};
 /// U.S. Standard Atmosphere 1976 air molar mass, so they cannot drift from the stated condition.
 #[derive(Debug, Clone, Copy)]
 pub struct Freestream {
-    /// Station label for the report.
-    pub label: &'static str,
+    /// Altitude of the cited station, km.
+    pub altitude_km: f64,
     /// Free-stream Mach number.
     pub mach: f64,
     /// Free-stream static temperature, K.
@@ -36,6 +36,11 @@ pub const AIR_MOLAR_MASS: f64 = 28.9644e-3;
 pub const GAMMA_INF: f64 = 1.4;
 
 impl Freestream {
+    /// Station label for the report, e.g. `RAM-C II 71 km`.
+    pub fn label(&self) -> String {
+        format!("RAM-C II {} km", self.altitude_km)
+    }
+
     /// Free-stream velocity `V = M·√(γ_∞·R·T)`, m/s.
     pub fn velocity(&self) -> f64 {
         let r_specific = MOLAR_GAS_CONSTANT / AIR_MOLAR_MASS;
@@ -54,7 +59,7 @@ impl Freestream {
 /// Ka-band crossing at 71.93 km, [`RAMC_ANCHOR_ALTITUDE_KM`]). The 0.93 km between the two is
 /// part of the comparison and is printed with it.
 pub const ANCHOR_STATION: Freestream = Freestream {
-    label: "RAM-C II 71 km",
+    altitude_km: 71.0,
     mach: 25.9,
     t_inf: 217.9,
     dynamic_pressure: 2_280.0,
@@ -63,7 +68,7 @@ pub const ANCHOR_STATION: Freestream = Freestream {
 /// The RAM-C II 61 km station: inside the span where the flight's station 1 is overdense at
 /// Ka-band, so the flight datum is a lower bound there.
 pub const LOWER_BOUND_STATION: Freestream = Freestream {
-    label: "RAM-C II 61 km",
+    altitude_km: 61.0,
     mach: 23.9,
     t_inf: 255.9,
     dynamic_pressure: 8_000.0,

@@ -5,7 +5,7 @@
 
 //! # The plasma-blackout corridor: one continuous coupled descent through flow, plasma, navigation, and control
 //!
-//! A reentry vehicle punches into the atmosphere at Mach 25. The shock layer ionizes, and past a
+//! A reentry vehicle punches into the atmosphere at Mach 28. The shock layer ionizes, and past a
 //! critical electron density the plasma sheath cuts every GNSS link; RAM-C II measured exactly
 //! this blackout. Through the dark the vehicle dead-reckons on its INS while a bounded-correction
 //! gate keeps the bank command inside the certified envelope. When the sheath clears, one fix

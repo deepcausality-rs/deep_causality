@@ -224,7 +224,8 @@ pub fn render(report: &Report<FloatType>) {
 
     println!("\n--- Published reference cross-references (Tier-A disclaimers) ---");
     println!(
-        "  RAM-C II n_e (71.93 km)     : {:.2e} m^-3 [station-1 Ka-band crossing, cross-reference]",
+        "  RAM-C II n_e ({:.2} km)     : {:.2e} m^-3 [station-1 Ka-band crossing, cross-reference]",
+        config::RAMC_II_ANCHOR_ALTITUDE_M / 1000.0,
         config::RAMC_II_NE_ANCHOR
     );
     println!(

@@ -32,7 +32,7 @@ pub fn render_prediction(station: &config::Freestream, p: &crate::Prediction) {
     println!(
         "Flight ({}): M = {}, T_inf = {} K, q = {} Pa -> V = {:.1} m/s, n_inf = {:.4e} m^-3; \
          γ_eff = {}\n",
-        station.label,
+        station.label(),
         station.mach,
         station.t_inf,
         station.dynamic_pressure,
@@ -188,7 +188,7 @@ pub fn summary(
          Open levers: the T_e = T_ve lumping (a 3-T separation is ~2x), the single associative-ionization\n\
          channel, and the ~2-5x Millikan–White chemistry-model spread. The effective γ = 1.1 is a\n\
          reacting-air closure; T2 is the exact-RH transported energy at that γ.",
-        station.label,
+        station.label(),
         station.mach,
         station.t_inf,
         station.dynamic_pressure / 1000.0,
@@ -200,7 +200,11 @@ pub fn summary(
 /// to 3x on the RAM-C peak `n_e`); it is stated without a citation and is not derived from the
 /// flight's own uncertainty, so the gate is a tripwire. The channel-1 measurement exists for
 /// attribution: if the full network ever leaves its band, the two numbers say which channel moved.
-pub fn verify_network(ne_channel1: FloatType, ne_network: FloatType) -> bool {
+pub fn verify_network(
+    station: &config::Freestream,
+    ne_channel1: FloatType,
+    ne_network: FloatType,
+) -> bool {
     // The RAM-C II anchor these bounds are centred on is external, but the band WIDTH is a chosen
     // allowance, so clearing it is evidence of non-regression, not of agreement with flight data.
     // The gate text says so; the label makes it machine-visible.
@@ -208,10 +212,12 @@ pub fn verify_network(ne_channel1: FloatType, ne_network: FloatType) -> bool {
     let inside = gate(
         &format!(
             "network prediction inside the allowance: full network {:+.2} dec vs the {:.3e} m^-3 \
-             station-1 Ka-band anchor at {RAMC_ANCHOR_ALTITUDE_KM} km, 0.93 km above the cited 71 km \
+             station-1 Ka-band anchor at {RAMC_ANCHOR_ALTITUDE_KM} km, {:.2} km above the cited {} km \
              freestream (allowance +-{:.2} dec, the chemistry-model spread)",
             dec_network,
             RAMC_II_NE_ANCHOR,
+            RAMC_ANCHOR_ALTITUDE_KM - station.altitude_km,
+            station.altitude_km,
             config::RAMC_II_ALLOWANCE_DECADES,
         ),
         EvidenceClass::Tripwire,
@@ -265,7 +271,7 @@ pub fn render_lower_bound(station: &config::Freestream, lower: &crate::Predictio
     println!(
         "\nLower-bound station ({}: M = {}, T_inf = {} K, q = {} Pa -> V = {:.1} m/s, \
          n_inf = {:.4e} m^-3):",
-        station.label,
+        station.label(),
         station.mach,
         station.t_inf,
         station.dynamic_pressure,

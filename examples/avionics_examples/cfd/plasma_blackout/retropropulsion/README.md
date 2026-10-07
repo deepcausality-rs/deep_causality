@@ -20,7 +20,7 @@ forks once per candidate throttle, and each branch continues from the same insta
 verifies itself through sixteen gates and exits nonzero on any regression.
 
 Measured on an Apple M3 Max, 16 cores (12 performance + 4 efficiency), 128 GB, release build:
-**346.9 s wall clock and 18.3 MB peak resident set** for the whole descent: 5425 coupled steps across four legs,
+**335.3 s wall clock and 29.5 MB peak resident set** for the whole descent: 5425 coupled steps across four legs,
 including the five-branch mid-burn fan-out at 32×32 (1024 cells). Measure the built binary; under `cargo run`, rustc's
 own peak dominates the figure:
 

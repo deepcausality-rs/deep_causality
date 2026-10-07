@@ -242,11 +242,11 @@ notes for the CFD changes. Claims in Part A about those rest on the documents th
 - The `fork → branch → continue_for` chain does not thread the disk audit sink, so it writes no log
   files; each branch keeps its log in the returned report. (A, E)
 - Measured in the retropropulsion fork: 5/5 branches entered by reference, worst post-fork bond
-  growth 0 (cap 8), fan-out step cost 1.17× the trunk's per-step cost (cap 3.00). All `[tripwire]`.
+  growth 0 (cap 8), fan-out step cost 1.16× the trunk's per-step cost (cap 3.00). All `[tripwire]`.
   (H-run gates 4d, 4g)
 - From the plume study: each powered continuation costs about 1× an unforked trunk, with post-fork
   bond flat at 16; a coasting branch costs 0.66×. (C, K)
-- Whole retropropulsion descent: 346.9 s wall clock, __RETRO_RSS__ MB peak resident set, 5425 coupled steps,
+- Whole retropropulsion descent: 335.3 s wall clock, 29.5 MB peak resident set, 5425 coupled steps,
   measured on the built binary. (H)
 
 ### A.7 Step arithmetic, fork against rerun (K)
@@ -432,7 +432,7 @@ notes for the CFD changes. Claims in Part A about those rest on the documents th
 - Worst-draw terminal navigation error under 1.0 m in all 48 descents.
 - Whole-descent peak n_e 3.007e20–3.110e20 m⁻³ (see A.15).
 
-**Retropropulsion (H, H-run; 16 gates `[tripwire]`; 346.9 s, __RETRO_RSS__ MB measured):**
+**Retropropulsion (H, H-run; 16 gates `[tripwire]`; 335.3 s, 29.5 MB measured):**
 
 - Vehicle 3400 kg wet, 2200 kg propellant, 70 kN central nozzle, Isp 282 s. (typed)
 - Act 0: the measured day is dT = −32 K (typed); interpolating the weather table gives drift
@@ -503,8 +503,8 @@ notes for the CFD changes. Claims in Part A about those rest on the documents th
 | 66.99 / 51.30 m margins | computed | table interpolation, k = 3 typed |
 | 18.61 m, 10.54 kg | computed | the composition result |
 | preserved drag 0.434 → −0.033 | computed from a cited correlation | Jarvinen–Adams at each branch's C_T |
-| 1.17× fan-out cost, 0 bond growth | measured / computed | gates 4g, 4d |
-| 45.9 s, 179.2 s, 346.9 s | measured | Apple M3 Max |
+| 1.16× fan-out cost, 0 bond growth | measured / computed | gates 4g, 4d |
+| 45.9 s, 179.2 s, 335.3 s | measured | Apple M3 Max |
 
 ---
 
@@ -660,7 +660,7 @@ listings.
    (A, E)
 4. Evidence: 17 branches from a flow-resolved blackout onset; 48-descent weather table; mid-burn fork
    of five throttles; table read in flight moves burn light 18.61 m at 10.54 kg; fan-out step cost
-   1.17×. (F-run, G-run, H-run)
+   1.16×. (F-run, G-run, H-run)
 5. Scope: drag from a cited correlation; one flight anchor at order of magnitude; 32 × 32 layer.
    (H, B, I)
 
@@ -875,7 +875,7 @@ field selects.
 
 **P6.1 Fork economics.** (Q1)
 - Main point: a branch costs about one trunk step per step and copies no tensor at fork time.
-- Facts: gates 4d, 4g; 0.66× coasting (C, K); A.7 counts; __RETRO_RSS__ MB peak RSS (H); wall clocks with
+- Facts: gates 4d, 4g; 0.66× coasting (C, K); A.7 counts; 29.5 MB peak RSS (H); wall clocks with
   machine.
 - Connect: addition; reformulating ("that is").
 - Close: the shared past is paid once.
@@ -933,7 +933,7 @@ field selects.
 - Verbs: interpolate, size, light, spend.
 
 **P6.7 Landing and run totals.**
-- Main point: the descent lands at 1.80 m/s after 5425 coupled steps in 346.9 s.
+- Main point: the descent lands at 1.80 m/s after 5425 coupled steps in 335.3 s.
 - Facts: H-run terminal act and gates 6–9; 1 rebuild; 8 regime transitions.
 - Connect: chronological.
 - Close: one program carries the vehicle from blackout exit to the ground.

@@ -52,7 +52,11 @@ fn main() {
     );
     print_utils::render_lower_bound(&config::LOWER_BOUND_STATION, &lower);
     let ok = print_utils::verify(&anchor.post, &anchor.outcome, anchor.profile_bond)
-        & print_utils::verify_network(anchor.ne_channel1, anchor.ne_network)
+        & print_utils::verify_network(
+            &config::ANCHOR_STATION,
+            anchor.ne_channel1,
+            anchor.ne_network,
+        )
         & print_utils::verify_renewal_ab(anchor.ne_network, anchor.ne_carried)
         & print_utils::verify_lower_bound(lower.ne_network);
     if ok {

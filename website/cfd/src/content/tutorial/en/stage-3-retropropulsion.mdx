@@ -5,7 +5,7 @@ question: How does a simulation use the weather table in flight, and what does f
 summary: The retropropulsion program reads walk 2's table in flight, lights a retro burn, forks the flow state mid-burn to try five throttle settings, and lands at 1.80 m/s. Six stations follow it. Station 6 shows the corrections.
 objective: Find where a leg boundary would discard needed state.
 command: cargo run --release -p avionics_examples --example plasma_blackout_retropropulsion
-runtime: 346.9 s against an 1800 s budget
+runtime: 335.3 s against an 1800 s budget
 files:
   - cfd/plasma_blackout/retropropulsion/main.rs
   - cfd/plasma_blackout/retropropulsion/constants.rs
@@ -47,7 +47,7 @@ this fidelity (see the [capability boundaries](/boundaries/#srp)).
 
 ## Before you start
 
-Start the run first. It took 346.9 s on {MACHINE}.
+Start the run first. It took 335.3 s on {MACHINE}.
 
 ```bash
 cargo run --release -p avionics_examples --example plasma_blackout_retropropulsion
@@ -222,7 +222,7 @@ Gate 4c measures how much the coupling matters:
 
 The 179.9 m/s is the largest gap between what a branch shed and a thrust-only
 prediction. Gate 4d caps the rank growth of the compressed flow state after the fork
-at 8, and it measured 0. Gate 4g puts five concurrent branches at 1.17 times the
+at 8, and it measured 0. Gate 4g puts five concurrent branches at 1.16 times the
 trunk's per-step cost. The two sharing flags compare a clone against the `Arc` it
 came from, so no input can falsify them.
 

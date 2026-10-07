@@ -43,7 +43,11 @@ const label = (x: number, text: string, at: 'above' | 'below' | 'left' | 'right'
   const p = bankPoints.find((q) => q.x === x);
   if (p) Object.assign(p, { label: text, at, dy });
 };
-const coarseMiss = (bank: number) => corridor.coarse.find((b) => b.bank === bank)?.miss ?? Number.NaN;
+const coarseMiss = (bank: number) => {
+  const branch = corridor.coarse.find((b) => b.bank === bank);
+  if (!branch) throw new Error(`results.ts: the corridor coarse sweep has no ${bank}° branch`);
+  return branch.miss;
+};
 const zeroMiss = coarseMiss(0);
 const clampedMiss = coarseMiss(40);
 const best = corridor.committed;
