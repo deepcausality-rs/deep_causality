@@ -604,6 +604,11 @@ fn test_structural_candidates_are_screened_for_c3_by_their_own_supports() {
         .unwrap();
     let names: Vec<&str> = screened.admitted().iter().map(|h| h.name()).collect();
     assert_eq!(names, vec!["k33"], "the C₃ candidate is not admitted");
+    assert_eq!(
+        screened.admitted_slots(),
+        &[1],
+        "k33 is the config's second candidate"
+    );
     assert_eq!(screened.stages()[0].0, "check_decomposable");
     assert_eq!(
         screened.stages()[0].1.examined(),
@@ -641,6 +646,7 @@ fn test_structural_candidates_are_screened_for_c3_by_a_graph() {
         .finalize()
         .unwrap();
     assert_eq!(screened.admitted().len(), 2);
+    assert_eq!(screened.admitted_slots(), &[0, 1]);
     assert_eq!(screened.stages()[1].0, "check_decomposable");
     assert_eq!(
         screened.stages()[1].1.examined(),

@@ -263,6 +263,31 @@ rust_test_suite(
 )
 
 # =============================================================================
+# types/instrument/* test suites — the instrument context, over the qcm feature
+# =============================================================================
+
+rust_test_suite(
+    name = "instrument",
+    srcs = glob([
+        "tests/types/instrument/*_tests.rs",
+    ]),
+    crate_features = [
+        "qcm",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_quantum",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+# =============================================================================
 # types/decision/* test suites — the decision form
 # =============================================================================
 

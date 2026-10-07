@@ -21,8 +21,8 @@ use deep_causality_num::NaturalNumber;
 ///
 /// # Three invariants
 ///
-/// `observe` is the only stage that touches `shots`, `experiments` and `device_time`; `predict`
-/// touches `predictions` and nothing on the device side. `fork` is the pipeline's, above core, by
+/// `observe` is the only stage that touches `shots`, `experiments`, `device_time` and the
+/// budget's remainder; `predict` touches `predictions` and nothing on the device side. `fork` is the pipeline's, above core, by
 /// cloning. Forked ledgers are compared, never joined under ∇: at a counterfactual fork exactly one
 /// branch was factual, and a monoid that summed them would typecheck and be wrong.
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -33,6 +33,7 @@ pub struct Ledger<R, N> {
     device_time: R,
     cost: R,
     bits: R,
+    remaining: Option<N>,
 }
 
 impl<R: RealField, N: NaturalNumber> Ledger<R, N> {
@@ -45,6 +46,17 @@ impl<R: RealField, N: NaturalNumber> Ledger<R, N> {
             device_time: R::zero(),
             cost: R::zero(),
             bits: R::zero(),
+            remaining: None,
+        }
+    }
+
+    /// The same ledger with `shots` as the budget every later observation draws from. Only the
+    /// control stage calls this, from the evidence a configuration names under `qpu`.
+    #[cfg(feature = "qpu")]
+    pub(crate) fn budgeted(self, shots: N) -> Self {
+        Self {
+            remaining: Some(shots),
+            ..self
         }
     }
 
@@ -78,6 +90,11 @@ impl<R: RealField, N: NaturalNumber> Ledger<R, N> {
         self.bits
     }
 
+    /// The shots the evidence budget still allows, or `None` when the run names no budget.
+    pub fn remaining(&self) -> Option<N> {
+        self.remaining
+    }
+
     /// The remainder of `budget` after drawing `request` from it, in checked ℕ arithmetic.
     ///
     /// # Errors
@@ -98,12 +115,21 @@ impl<R: RealField, N: NaturalNumber> Ledger<R, N> {
         })
     }
 
-    /// The ledger after one hardware observation of `shots` shots taking `device_time`. Only
-    /// `observe` calls this.
+    /// The ledger after one hardware observation of `shots` shots taking `device_time`, drawn
+    /// down from the budget when there is one. Only the observing stages call this.
+    ///
+    /// # Errors
+    ///
+    /// The overdraw error of [`draw_down`](Self::draw_down) when `shots` exceeds the remaining
+    /// budget, and [`QuantumError::CalculationError`] when a count overflows the width.
     pub(crate) fn observed(self, shots: N, device_time: R) -> Result<Self, QuantumError>
     where
         N: core::fmt::Debug,
     {
+        let remaining = self
+            .remaining
+            .map(|budget| Self::draw_down(budget, shots))
+            .transpose()?;
         let total = self.shots.checked_add(shots).ok_or_else(|| {
             QuantumError::CalculationError(format!(
                 "shot count overflows the width: {:?} + {:?}",
@@ -117,6 +143,7 @@ impl<R: RealField, N: NaturalNumber> Ledger<R, N> {
             shots: total,
             experiments,
             device_time: self.device_time + device_time,
+            remaining,
             ..self
         })
     }

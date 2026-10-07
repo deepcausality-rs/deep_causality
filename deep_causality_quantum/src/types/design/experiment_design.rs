@@ -84,6 +84,22 @@ impl<R: RealField + core::fmt::Debug> Experiment<R> {
     pub fn predictions(&self) -> &[R] {
         &self.predictions
     }
+
+    /// The same experiment predicting for the hypotheses at `slots` only, in that order; `None`
+    /// when a slot is past the last prediction. The control stage reads probes through this.
+    #[cfg(feature = "qcm")]
+    pub(crate) fn at_slots(&self, slots: &[usize]) -> Option<Self> {
+        let predictions = slots
+            .iter()
+            .map(|&slot| self.predictions.get(slot).copied())
+            .collect::<Option<Vec<R>>>()?;
+        Some(Self {
+            name: self.name.clone(),
+            cost: self.cost,
+            shots: self.shots,
+            predictions,
+        })
+    }
 }
 
 /// The objective `design` solves: cover every hypothesis pair at `floor_bits` of separation at

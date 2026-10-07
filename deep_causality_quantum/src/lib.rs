@@ -38,6 +38,8 @@ pub use crate::types::circuit_model::*;
 pub use crate::types::decision::*;
 pub use crate::types::design::*;
 #[cfg(feature = "qcm")]
+pub use crate::types::instrument::*;
+#[cfg(feature = "qcm")]
 pub use crate::types::pipeline::*;
 #[cfg(feature = "qcm")]
 pub use crate::types::qcm::*;

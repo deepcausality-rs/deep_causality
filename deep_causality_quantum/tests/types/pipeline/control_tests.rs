@@ -6,15 +6,17 @@
 #![cfg(feature = "qcm")]
 
 //! The control stage: what `fork` hands a world, the refusal of an empty fork, `compare` on the
-//! structural path, and the mechanism path on each world's own plant.
+//! structural path, the mechanism path on each world's own plant, the baseline that refuses
+//! candidates before the plan, and the shot budget every observation draws from.
 
 use deep_causality::utils_test::test_utils;
 use deep_causality::{BaseCausaloid, CausableGraph, CausaloidGraph};
 use deep_causality_haft::Either;
 use deep_causality_num_complex::Complex;
 use deep_causality_quantum::{
-    Channel, CommutatorTolerance, FactorSupports, Hypothesis, Mechanisms, Observable, PlantSubject,
-    ProcessFactors, QclBuilder, QuantumErrorEnum, QuantumPlant, QubitOperator, Spec,
+    Channel, CheckItem, CommutatorTolerance, Experiment, FactorSupports, Hypothesis, Mechanisms,
+    MinCostCover, Observable, PlantSubject, ProcessFactors, QclBuilder, QuantumErrorEnum,
+    QuantumPlant, QubitOperator, Spec,
 };
 use deep_causality_tensor::CausalTensor;
 
@@ -540,4 +542,368 @@ fn test_a_shot_count_the_width_cannot_hold_is_refused_by_the_ledger() {
         .finalize()
         .unwrap();
     assert_eq!(ok.ledger.shots(), 200u8);
+}
+
+// ---------------------------------------------------------------------------
+// Prediction slots: probes are positional over the config's candidates
+// ---------------------------------------------------------------------------
+
+/// Two probes over three candidates `a, b, c`: `ac` separates `a` from `c` and leaves `b` with
+/// `a`; `ab` separates `a` from `b` and leaves `c` with `a`. With `b` gone only `ac` covers the
+/// remaining pair, and a plan reading the predictions of `a` and `b` would pick `ab`.
+fn probes_over_a_b_c() -> Vec<Experiment<f64>> {
+    vec![
+        Experiment::new("ac", 1.0, 256, vec![0.1, 0.1, 0.9]).unwrap(),
+        Experiment::new("ab", 0.5, 256, vec![0.1, 0.9, 0.1]).unwrap(),
+    ]
+}
+
+fn plan_names(report: &deep_causality_quantum::ControlReport<f64, Count, 2>) -> Vec<String> {
+    let plan = report.plan.as_ref().expect("design ran");
+    assert!(plan.is_complete(), "every live pair is covered");
+    plan.entries().iter().map(|e| e.name.clone()).collect()
+}
+
+#[test]
+fn test_a_candidate_the_screen_drops_takes_its_prediction_with_it() {
+    // The middle candidate fails the Markov check. The probes still predict for all three, and
+    // the plan reads them at the admitted candidates' own positions, 0 and 2.
+    let cfg = QclBuilder::config::<f64, Count>()
+        .over_plant(plant_with_population(0.2), &[excited()])
+        .candidates(&[population("a", 0.2), non_commuting(), population("c", 0.8)])
+        .probes(&probes_over_a_b_c())
+        .build()
+        .unwrap();
+    let screened = QclBuilder::validate(&cfg)
+        .check_markov(&CommutatorTolerance::default())
+        .finalize()
+        .unwrap();
+    assert_eq!(screened.admitted_slots(), &[0, 2]);
+    let report = QclBuilder::control::<f64, Count, 2, _>(&screened)
+        .fork()
+        .design(MinCostCover::new(5.0))
+        .finalize()
+        .unwrap();
+    assert_eq!(plan_names(&report), vec!["ac"]);
+}
+
+#[test]
+fn test_a_probe_predicting_for_another_candidate_count_is_refused_by_design() {
+    let cfg = QclBuilder::config::<f64, Count>()
+        .over_plant(plant_ground(), &[excited()])
+        .mechanisms(&[
+            mechanism("flip", QubitOperator::pauli_x()),
+            mechanism("keep", QubitOperator::identity()),
+        ])
+        .probes(&probes_over_a_b_c())
+        .build()
+        .unwrap();
+    let err = QclBuilder::control::<f64, Count, 2, _>(&cfg)
+        .design(MinCostCover::new(5.0))
+        .finalize()
+        .unwrap_err();
+    let msg = dimension_message(err);
+    assert!(msg.contains("'ac' predicts for 3"), "{msg}");
+    assert!(msg.contains("declares 2"), "{msg}");
+}
+
+// ---------------------------------------------------------------------------
+// The baseline: observed first, refusing candidates before the plan
+// ---------------------------------------------------------------------------
+
+/// The plant reads 0.2; `a` and `c` predict that for the baseline and `b` predicts 0.8.
+fn baseline_config(
+    baseline: Experiment<f64>,
+) -> deep_causality_quantum::Config<f64, Count, PlantSubject<f64, 2, Mechanisms>> {
+    QclBuilder::config::<f64, Count>()
+        .over_plant(plant_with_population(0.2), &[excited()])
+        .mechanisms(&[
+            mechanism("a", QubitOperator::identity()),
+            mechanism("b", QubitOperator::pauli_x()),
+            mechanism("c", QubitOperator::identity()),
+        ])
+        .probes(&probes_over_a_b_c())
+        .baseline(baseline)
+        .seed(17)
+        .build()
+        .unwrap()
+}
+
+fn e0() -> Experiment<f64> {
+    Experiment::new("E0", 2.0, 4096, vec![0.2, 0.8, 0.2]).unwrap()
+}
+
+#[test]
+fn test_the_baseline_refuses_a_candidate_before_design() {
+    let cfg = baseline_config(e0());
+    let report = QclBuilder::control::<f64, Count, 2, _>(&cfg)
+        .baseline(0, 3.0)
+        .fork()
+        .design(MinCostCover::new(5.0))
+        .finalize()
+        .unwrap();
+
+    // The baseline is one hardware observation at its own shots.
+    assert_eq!(report.ledger.experiments(), 1);
+    assert_eq!(report.ledger.shots(), 4096);
+
+    // `b` is refused with what decided it; `a` and `c` go on.
+    assert_eq!(report.refused.len(), 1);
+    let r = &report.refused[0];
+    assert_eq!(r.name(), "b");
+    assert_eq!(r.prediction(), 0.8);
+    assert_eq!(r.observed().shots(), 4096);
+    let check = r.check();
+    assert_eq!(check.item, CheckItem::Index(1));
+    assert!(!check.accepted);
+    assert_eq!(check.measured, (0.8 - r.observed().estimate()).abs());
+    assert_eq!(check.threshold, 3.0 * r.observed().standard_error());
+    let names: Vec<&str> = report.worlds.iter().map(|w| w.name()).collect();
+    assert_eq!(names, vec!["a", "c"]);
+
+    // The plan covers the survivors' pair, read at their own positions.
+    assert_eq!(plan_names(&report), vec!["ac"]);
+}
+
+#[test]
+fn test_the_baseline_is_the_read_out_compare_judges_against() {
+    // `a` keeps the plant at 0.2 and `b` flips it to 0.8. The baseline already refused `b`, and
+    // `compare` judges the survivors' predictions against the baseline's read-out.
+    let cfg = baseline_config(e0());
+    let report = QclBuilder::control::<f64, Count, 2, _>(&cfg)
+        .baseline(0, 3.0)
+        .fork()
+        .predict(0)
+        .compare(3.0)
+        .finalize()
+        .unwrap();
+    for w in &report.worlds {
+        assert!(w.verdict().unwrap().accepted(), "{}", w.name());
+        assert_eq!(w.read_out().unwrap().shots(), 4096);
+    }
+}
+
+#[test]
+fn test_a_named_baseline_is_observed_before_anything_else() {
+    let cfg = baseline_config(e0());
+    let control = || QclBuilder::control::<f64, Count, 2, _>(&cfg);
+    for (stage, run) in [
+        ("observe", control().observe(0, 16)),
+        ("fork", control().fork()),
+        ("design", control().design(MinCostCover::new(5.0))),
+    ] {
+        let msg = calculation_message(run.finalize().unwrap_err());
+        assert!(msg.contains("baseline 'E0'"), "{msg}");
+        assert!(msg.contains(&format!("before {stage}")), "{msg}");
+    }
+
+    // After the baseline the root may be observed again.
+    let report = control()
+        .baseline(0, 3.0)
+        .observe(0, 16)
+        .finalize()
+        .unwrap();
+    assert_eq!(report.ledger.experiments(), 2);
+    assert_eq!(report.ledger.shots(), 4096 + 16);
+}
+
+#[test]
+fn test_the_baseline_stage_needs_a_baseline_that_has_not_run() {
+    let msg = calculation_message(
+        QclBuilder::control::<f64, Count, 2, _>(&two_mechanism_config())
+            .baseline(0, 3.0)
+            .finalize()
+            .unwrap_err(),
+    );
+    assert!(msg.contains("names none"), "{msg}");
+
+    let cfg = baseline_config(e0());
+    let msg = calculation_message(
+        QclBuilder::control::<f64, Count, 2, _>(&cfg)
+            .baseline(0, 3.0)
+            .baseline(0, 3.0)
+            .finalize()
+            .unwrap_err(),
+    );
+    assert!(msg.contains("already ran"), "{msg}");
+}
+
+#[test]
+fn test_the_baseline_refuses_bad_arguments() {
+    let cfg = baseline_config(e0());
+    let control = || QclBuilder::control::<f64, Count, 2, _>(&cfg);
+    for sigmas in [f64::NAN, f64::INFINITY, -1.0] {
+        let msg = calculation_message(control().baseline(0, sigmas).finalize().unwrap_err());
+        assert!(msg.contains("sigmas"), "{msg}");
+    }
+    // Zero sigmas is the boundary and is accepted.
+    assert!(control().baseline(0, 0.0).finalize().is_ok());
+
+    let msg = dimension_message(control().baseline(3, 3.0).finalize().unwrap_err());
+    assert!(msg.contains("observable 3"), "{msg}");
+
+    let short = Experiment::new("short", 1.0, 64, vec![0.2, 0.8]).unwrap();
+    let msg = dimension_message(
+        QclBuilder::control::<f64, Count, 2, _>(&baseline_config(short))
+            .baseline(0, 3.0)
+            .finalize()
+            .unwrap_err(),
+    );
+    assert!(msg.contains("'short' predicts for 2"), "{msg}");
+    assert!(msg.contains("declares 3"), "{msg}");
+}
+
+#[test]
+fn test_baseline_shots_the_count_width_cannot_hold_are_refused() {
+    let cfg = QclBuilder::config::<f64, u8>()
+        .over_plant(plant_ground(), &[excited()])
+        .mechanisms(&[mechanism("keep", QubitOperator::identity())])
+        .baseline(Experiment::new("wide", 1.0, 256, vec![0.0]).unwrap())
+        .build()
+        .unwrap();
+    let msg = calculation_message(
+        QclBuilder::control::<f64, u8, 2, _>(&cfg)
+            .baseline(0, 3.0)
+            .finalize()
+            .unwrap_err(),
+    );
+    assert!(msg.contains("256 shots"), "{msg}");
+}
+
+#[test]
+fn test_a_baseline_that_refuses_every_candidate_leaves_nothing_to_fork() {
+    // The ground plant reads 0 exactly, so the allowance is zero and both predictions of 0.9 are
+    // refused; a prediction of exactly 0 would be kept.
+    let cfg = QclBuilder::config::<f64, Count>()
+        .over_plant(plant_ground(), &[excited()])
+        .mechanisms(&[
+            mechanism("flip", QubitOperator::pauli_x()),
+            mechanism("keep", QubitOperator::identity()),
+        ])
+        .baseline(Experiment::new("dark", 1.0, 64, vec![0.9, 0.9]).unwrap())
+        .build()
+        .unwrap();
+    let control = QclBuilder::control::<f64, Count, 2, _>(&cfg).baseline(0, 3.0);
+    let msg = calculation_message(control.fork().finalize().unwrap_err());
+    assert!(msg.contains("refused every one"), "{msg}");
+
+    let kept = QclBuilder::config::<f64, Count>()
+        .over_plant(plant_ground(), &[excited()])
+        .mechanisms(&[mechanism("keep", QubitOperator::identity())])
+        .baseline(Experiment::new("dark", 1.0, 64, vec![0.0]).unwrap())
+        .build()
+        .unwrap();
+    let report = QclBuilder::control::<f64, Count, 2, _>(&kept)
+        .baseline(0, 3.0)
+        .fork()
+        .finalize()
+        .unwrap();
+    assert!(report.refused.is_empty());
+    assert_eq!(report.worlds.len(), 1);
+}
+
+// ---------------------------------------------------------------------------
+// The evidence budget (qpu): every observation draws from it
+// ---------------------------------------------------------------------------
+
+#[cfg(feature = "qpu")]
+fn budgeted_config(
+    shots: Count,
+    seed: u64,
+    evidence_seed: u64,
+) -> deep_causality_quantum::Config<f64, Count, PlantSubject<f64, 2, Mechanisms>> {
+    QclBuilder::config::<f64, Count>()
+        .over_plant(plant_with_population(0.5), &[excited()])
+        .mechanisms(&[
+            mechanism("flip", QubitOperator::pauli_x()),
+            mechanism("keep", QubitOperator::identity()),
+        ])
+        .seed(seed)
+        .evidence(deep_causality_quantum::Evidence::shots(shots).seed(evidence_seed))
+        .build()
+        .unwrap()
+}
+
+#[cfg(feature = "qpu")]
+#[test]
+fn test_an_observation_beyond_the_budget_fails_in_observe() {
+    let cfg = budgeted_config(100, 0, 0);
+    let control = || QclBuilder::control::<f64, Count, 2, _>(&cfg);
+
+    // The budget is spent exactly, and the remainder is on the ledger.
+    let report = control().observe(0, 64).observe(0, 36).finalize().unwrap();
+    assert_eq!(report.ledger.remaining(), Some(0));
+    assert_eq!(report.ledger.shots(), 100);
+
+    // Past the budget is an overdraw, reported with its shortfall.
+    let msg = calculation_message(
+        control()
+            .observe(0, 64)
+            .observe(0, 64)
+            .finalize()
+            .unwrap_err(),
+    );
+    assert!(msg.contains("overdrawn"), "{msg}");
+    assert!(msg.contains("shortfall 28"), "{msg}");
+}
+
+#[cfg(feature = "qpu")]
+#[test]
+fn test_each_world_draws_on_its_own_copy_of_the_budget() {
+    let cfg = budgeted_config(1024, 0, 0);
+    let report = QclBuilder::control::<f64, Count, 2, _>(&cfg)
+        .observe(0, 256)
+        .fork()
+        .observe(0, 256)
+        .finalize()
+        .unwrap();
+    assert_eq!(report.ledger.remaining(), Some(768));
+    for w in &report.worlds {
+        assert_eq!(w.ledger().remaining(), Some(512));
+    }
+
+    // Each world's copy runs out on its own: 512 remain, 600 are asked for.
+    let err = QclBuilder::control::<f64, Count, 2, _>(&cfg)
+        .observe(0, 256)
+        .fork()
+        .observe(0, 256)
+        .observe(0, 600)
+        .finalize()
+        .unwrap_err();
+    assert!(calculation_message(err).contains("overdrawn"));
+}
+
+#[cfg(feature = "qpu")]
+#[test]
+fn test_the_baseline_draws_from_the_budget() {
+    let cfg = QclBuilder::config::<f64, Count>()
+        .over_plant(plant_ground(), &[excited()])
+        .mechanisms(&[mechanism("keep", QubitOperator::identity())])
+        .baseline(Experiment::new("E0", 1.0, 4096, vec![0.0]).unwrap())
+        .evidence(deep_causality_quantum::Evidence::shots(1000))
+        .build()
+        .unwrap();
+    let msg = calculation_message(
+        QclBuilder::control::<f64, Count, 2, _>(&cfg)
+            .baseline(0, 3.0)
+            .finalize()
+            .unwrap_err(),
+    );
+    assert!(msg.contains("overdrawn"), "{msg}");
+}
+
+#[cfg(feature = "qpu")]
+#[test]
+fn test_the_evidence_seed_selects_the_draws() {
+    let read = |seed: u64, evidence_seed: u64| -> f64 {
+        let report =
+            QclBuilder::control::<f64, Count, 2, _>(&budgeted_config(1 << 16, seed, evidence_seed))
+                .fork()
+                .observe(0, 4096)
+                .finalize()
+                .unwrap();
+        report.worlds[1].read_out().unwrap().estimate()
+    };
+    assert_eq!(read(1, 7), read(2, 7), "the run seed is not the draw seed");
+    assert_ne!(read(1, 7), read(1, 8), "the evidence seed is");
 }

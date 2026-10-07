@@ -54,6 +54,7 @@ pub enum ScreenStatus<R> {
 pub struct Screened<R: RealField, N: NaturalNumber, S> {
     config: Config<R, N, S>,
     admitted: Vec<Hypothesis<R>>,
+    slots: Vec<usize>,
     stages: Vec<(&'static str, CheckReport<R>)>,
     report: CheckReport<R>,
     status: ScreenStatus<R>,
@@ -68,6 +69,13 @@ impl<R: RealField, N: NaturalNumber, S> Screened<R, N, S> {
     /// The candidates that passed every check.
     pub fn admitted(&self) -> &[Hypothesis<R>] {
         &self.admitted
+    }
+
+    /// Each admitted candidate's index among the config's candidates, in the order of
+    /// [`admitted`](Self::admitted). Probe and baseline predictions are positional over the
+    /// config's candidates, and these are the positions `control` reads them at.
+    pub fn admitted_slots(&self) -> &[usize] {
+        &self.slots
     }
 
     /// Each stage's report, in order.
@@ -152,6 +160,7 @@ where
         let invalidated = Self {
             config: self.config.clone(),
             admitted: self.admitted.clone(),
+            slots: self.slots.clone(),
             stages: self.stages.clone(),
             report: self.report.clone(),
             status: ScreenStatus::Invalidated {
@@ -167,7 +176,7 @@ where
 pub struct Validate<'c, R: RealField, N: NaturalNumber, S> {
     cfg: &'c Config<R, N, S>,
     stages: Vec<(&'static str, CheckReport<R>)>,
-    admitted: Vec<Hypothesis<R>>,
+    admitted: Vec<(usize, Hypothesis<R>)>,
     failure: Option<QuantumError>,
     code: Option<CssCode<Word>>,
     ldpc: Option<LdpcWeights<R>>,
@@ -248,9 +257,11 @@ where
             return Err(e);
         }
         let report = self.folded();
+        let (slots, admitted) = self.admitted.into_iter().unzip();
         Ok(Screened {
             config: self.cfg.clone(),
-            admitted: self.admitted,
+            admitted,
+            slots,
             stages: self.stages,
             report,
             status: ScreenStatus::Current,
@@ -487,12 +498,12 @@ where
         }
         let mut admitted = Vec::new();
         let mut folded = CheckReport::vacuous();
-        for h in self.cfg.subject().candidates() {
+        for (slot, h) in self.cfg.subject().candidates().iter().enumerate() {
             match h.check_markov(tolerance) {
                 Ok(certified) => {
                     let report = certified.certificate().cloned().expect("just certified");
                     if report.accepted() {
-                        admitted.push(certified);
+                        admitted.push((slot, certified));
                     }
                     folded = folded.fold(report);
                 }
@@ -553,18 +564,24 @@ where
         if self.failure.is_some() {
             return self;
         }
-        let pool: Vec<Hypothesis<R>> = if self.stages.is_empty() {
-            self.cfg.subject().candidates().to_vec()
+        let pool: Vec<(usize, Hypothesis<R>)> = if self.stages.is_empty() {
+            self.cfg
+                .subject()
+                .candidates()
+                .iter()
+                .cloned()
+                .enumerate()
+                .collect()
         } else {
             core::mem::take(&mut self.admitted)
         };
         let mut admitted = Vec::new();
         let mut folded = CheckReport::vacuous();
-        for h in pool {
+        for (slot, h) in pool {
             match check(&h) {
                 Ok(report) => {
                     folded = folded.fold(report);
-                    admitted.push(h);
+                    admitted.push((slot, h));
                 }
                 Err(QuantumError(crate::QuantumErrorEnum::NotFaithfullyRepresentable(_))) => {}
                 Err(e) => {
