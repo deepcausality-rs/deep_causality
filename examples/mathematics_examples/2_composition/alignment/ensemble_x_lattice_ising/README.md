@@ -91,12 +91,15 @@ diverges at a critical point, so the fluctuation is largest exactly where the qu
 for. Measured: `⟨|m|⟩ = 0.74 ± 0.15` at `Tc`
 against `0.99 ± 0.01` at `T = 1.5`.
 
-**And at 16×16 no scalar can disagree, because the arithmetic is exact.** `|m| = k/N` is a dyadic
-rational needing `log₂ N` significand bits; `m²` needs twice that; summing `R` of them needs
-`2 log₂ N + log₂ R`. At `L = 16, R = 32` that is 21 bits, inside `f32`'s 24, so `f32`, `f64` and
-`Float106` compute a **bit-identical** reduction `⟨m²⟩ − ⟨m⟩²`. At `L = 32` it is 25 bits and `f32` must round,
-hence the second lattice size in the table. The threshold follows from the bit count, before any
-run.
+**And at 16×16 no scalar can disagree, because the arithmetic is exact.** `|m| = k/N`, and the
+spin sum `k` has the parity of `N`. `N` is even, so `|m| = j/(N/2)`: a dyadic rational needing
+`log₂ N − 1` significand bits. `R = 32` is a power of two, so dividing by it is exact. `⟨m²⟩` sums
+`R` squares and needs `2(log₂ N − 1) + log₂ R` bits. `⟨m⟩²` squares a sum of `R` magnetisations
+and needs `2(log₂ N − 1 + log₂ R)`, and so does the difference, whose numerator is at most
+`(R N/2)²`. At `L = 16` the counts are 19, 24 and 24 bits, inside `f32`'s 24, so `f32`, `f64` and
+`Float106` compute a **bit-identical** reduction `⟨m²⟩ − ⟨m⟩²`; without the even parity `⟨m⟩²`
+would need 26. At `L = 32` the last two are 28 bits and `f32` can round, hence the second lattice
+size in the table. The threshold follows from the bit count, before any run.
 
 Only the cell where both go wrong costs anything, and it costs 545 to 2,550 times as much as the
 other three. The two exact rows sit at the same `3e-8` whatever the fluctuation: their

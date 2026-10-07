@@ -95,24 +95,18 @@ pub const PROFILE_L: usize = 10;
 /// Relaxation length as a fraction of the sampled streamwise extent.
 pub const RELAX_LENGTH: f64 = 0.2;
 
-// ── Published reference cross-references (reported, with disclaimers) ─────
-/// The RAM-C II station-1 (x/D = 0.15) peak electron density at its Ka-band critical-density
-/// crossing, m⁻³: `N_e,pk = 0.63 · 1.287e-8 · f²` cm⁻³ at `f = 35 000 MHz` (Grantham 1970, NASA TN
-/// D-6062: the crossing at 236 000 ft on p. 18, the critical-density relation and the 0.63
-/// slope-technique ratio on p. 11, the frequency in Table I). Below the crossing station 1 is
-/// overdense at Ka-band, the highest frequency flown, so the same value is a lower bound there
-/// down to the end of the primary data period (56.39 km).
-pub const RAMC_NE_REFERENCE: f64 = 0.63 * 1.287e-8 * 3.5e10 * 3.5e10 * 1.0e6;
-/// Altitude of the station-1 Ka-band crossing, km (236 000 ft).
-pub const RAMC_ANCHOR_ALTITUDE_KM: f64 = 71.93;
+// ── Published reference (Grantham 1970), defined once in `deep_causality_cfd` ─────
+/// The RAM-C II station-1 Ka-band anchor, its altitude, and the allowance around it. Defined once in
+/// `deep_causality_cfd` and re-exported here, so this harness and the plasma-blackout corridor
+/// compare against the same datum with the same allowance. The allowance applies at
+/// [`ANCHOR_STATION`] under the N₂–N₂ Millikan–White closure ([`REDUCED_MASS_AMU`]); it is a chosen
+/// chemistry-model spread, independent of `μ_sr`, so the gate it sets is a `[tripwire]`.
+pub use deep_causality_cfd::{
+    RAMC_II_ALLOWANCE_DECADES, RAMC_II_ANCHOR_ALTITUDE_M, RAMC_II_NE_ANCHOR,
+};
 
-/// Acceptance band of the uncalibrated finite-rate network prediction, in decades around the
-/// flight anchor. The width is a chemistry-model-spread allowance — production codes (DPLR/LAURA/US3D)
-/// sit at 2x to 3x, rate sets spread 2x to 5x — and is therefore independent of `μ_sr`. It is applied
-/// at [`ANCHOR_STATION`] under the N₂–N₂ Millikan–White closure ([`REDUCED_MASS_AMU`]); the gate it
-/// sets is a `[tripwire]`, because the width is chosen rather than derived from the flight's
-/// uncertainty.
-pub const NETWORK_BAND_DECADES: f64 = 0.7;
+/// [`RAMC_II_ANCHOR_ALTITUDE_M`] in km, for the report.
+pub const RAMC_ANCHOR_ALTITUDE_KM: f64 = RAMC_II_ANCHOR_ALTITUDE_M / 1000.0;
 
 /// Lift an exact `f64` specification into the working precision.
 pub fn ft(x: f64) -> FloatType {

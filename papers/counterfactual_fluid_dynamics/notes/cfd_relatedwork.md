@@ -43,7 +43,7 @@ copy-on-write fork, one decision changed per branch, concurrent execution, and a
 - The "counterfactual digital twin" hits are outside CFD (healthcare, social simulation, world-model
   datasets).
 
-**Every element has precedent on its own:**
+**Precedent for each element except the gated reduction:**
 
 | Element | Closest prior work | Key |
 |---|---|---|
@@ -58,8 +58,11 @@ copy-on-write fork, one decision changed per branch, concurrent execution, and a
 | Branch many coupled-model members from one state | climate large ensembles | `kay2015cesmle` |
 | "Counterfactual world" as a model run with one factor changed | event attribution | `stott2004heatwave`, `nasem2016attribution`, `shepherd2016common` |
 
+The search found no precedent for the gated reduction: branch rows reduced to a table and checked by
+named pass/fail gates, each declaring whether its bound is a published reference or a pinned tripwire.
+
 What follows for the paper: claim the combination and the evidence discipline, cite each element's
-precedent, and use no "first" or "novel" without this table beside it (cfd_draft.md, Part D, check
+precedent where one exists, and use no "first" or "novel" without this table beside it (cfd_draft.md, Part D, check
 4).
 
 ---
@@ -564,8 +567,9 @@ state, don't argue).
 - Verbs: clone, share, replicate, roll back, steer, prune.
 
 **RW2. Evaluating decisions from a flow state.** (R1)
-- Main point: CFD evaluates control decisions from a mid-run state by optimization, by training, and
-  by ensembles.
+- Main point: CFD evaluates control decisions from a mid-run state by optimization and by training.
+  Ensembles also branch many members from one state, but to sample uncertainty in the state, not to
+  compare decisions.
 - Facts: `giles2000adjoint`, `jameson1988control` (one adjoint solve, many design variables, smooth
   objectives); `bewley2001dns` (predictive control from the current DNS state); `rabault2019drl`
   (a saved developed wake reused for every episode); `kay2015cesmle`, `leutbecher2008ensemble` (many
@@ -684,11 +688,14 @@ networks)
 **Corrections applied in the repository after the check:**
 
 - The cylinder C_d reference band is 1.314–1.370, cited to Parvar et al. (2023) Table 1, seven
-  Newtonian sources (`verification/README.md`, `dec_cylinder_verification/main.rs` and its README).
+  Newtonian sources (`deep_causality_cfd/verification/README.md`,
+  `deep_causality_cfd/verification/dec_cylinder_verification/main.rs` and its README).
 - Every citation of Peddinti et al. (2024) uses the published title.
-- `deep_causality_physics` (`srp.rs`, `plume.rs`) cites Cordell & Braun (2013) under its published
+- `deep_causality_physics/src/kernels/propulsion/srp.rs` and `.../propulsion/plume.rs` cite
+  Cordell & Braun (2013) under its published
   title, "Analytical Modeling of Supersonic Retropropulsion Plume Structures".
-- `deep_causality_cfd/papers/README.md` and `src/tensor_bridge/mod.rs` carry the Kazeev & Khoromskij
+- `deep_causality_cfd/papers/README.md` and `deep_causality_cfd/src/tensor_bridge/mod.rs` carry the
+  Kazeev & Khoromskij
   venue (SIMAX 33(3):742–758, 2012).
 
 The two SRP PDFs in `deep_causality_physics/papers/` are the IEEE Aerospace 2008 version of Korzun,

@@ -20,7 +20,7 @@ flown through a distorted atmosphere.
   0–90 km, generated from the standard's defining constants (Tables 2 and 4) and checked against its
   Table I.
 - The RAM-C II anchor becomes the station-1 (x/D = 0.15) Ka-band crossing: N_e,pk = 0.63 ×
-  1.287e-8 × (35 GHz)² ≈ 9.93e18 m⁻³ at 71.93 km, with the same value as a lower bound at lower
+  1.287e-8 × f² cm⁻³ with f = 3.5e10 Hz (35 GHz) = 9.93e12 cm⁻³ = 9.93e18 m⁻³ at 71.93 km, with the same value as a lower bound at lower
   altitudes down to the end of the primary data period (56.39 km).
 - The stagnation-line harness flies the cited RAM-C II 71 km freestream (Mach 25.9, 217.9 K,
   q = 2.28 kPa; velocity and number density derived) instead of the hybrid condition.

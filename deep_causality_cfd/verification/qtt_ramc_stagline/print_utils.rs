@@ -7,7 +7,7 @@
 
 use crate::FloatType;
 use crate::config;
-use crate::config::{COMMS_BAND_RAD_S, RAMC_ANCHOR_ALTITUDE_KM, RAMC_NE_REFERENCE};
+use crate::config::{COMMS_BAND_RAD_S, RAMC_ANCHOR_ALTITUDE_KM, RAMC_II_NE_ANCHOR};
 use deep_causality_cfd::{EvidenceClass, PostShockState, StagnationOutcome};
 
 /// Lower / upper bound of the post-shock "~10⁴ K" temperature band (K).
@@ -23,6 +23,55 @@ const NE_LO: f64 = 6.0e16;
 const NE_HI: f64 = 2.0e17;
 /// The smooth post-shock relaxation profile must stay `O(1)` rank.
 const BOND_CAP: usize = 4;
+
+/// Print the anchor station's flight condition and the intermediate figures of its prediction: the
+/// residence time with the Saha-equilibrium bound, the single-temperature surrogate, the finite-rate
+/// network with its channel-1 attribution, and the sheath-renewal A/B.
+pub fn render_prediction(station: &config::Freestream, p: &crate::Prediction) {
+    let dec = |ne: FloatType| (ne / RAMC_II_NE_ANCHOR).log10();
+    println!(
+        "Flight ({}): M = {}, T_inf = {} K, q = {} Pa -> V = {:.1} m/s, n_inf = {:.4e} m^-3; \
+         γ_eff = {}\n",
+        station.label,
+        station.mach,
+        station.t_inf,
+        station.dynamic_pressure,
+        station.velocity(),
+        station.number_density(),
+        config::GAMMA,
+    );
+    println!(
+        "Residence time t_res = standoff/u2 = {:.3e} s  (Saha-equilibrium upper bound n_e = {:.3e} m^-3)",
+        p.residence_time, p.ne_equilibrium
+    );
+    println!(
+        "Single-T surrogate (ionizes at T₂, over-predicts): α = {:.3e}, n_e = {:.3e} m^-3 ({:+.1} dec vs RAM-C)\n",
+        p.outcome_1t.ionization_fraction,
+        p.outcome_1t.electron_density,
+        dec(p.outcome_1t.electron_density)
+    );
+    println!(
+        "Uncalibrated finite-rate network (RP-1232 Table II pairs; no Saha target):\n  \
+         lagged atom pool: x_N = {:.3e}, x_O = {:.3e}\n  \
+         channel 1 + pool: n_e = {:.3e} m^-3 ({:+.2} dec vs RAM-C)\n  \
+         full network:     n_e = {:.3e} m^-3 ({:+.2} dec vs RAM-C)\n",
+        p.x_n,
+        p.x_o,
+        p.ne_channel1,
+        dec(p.ne_channel1),
+        p.ne_network,
+        dec(p.ne_network),
+    );
+    println!(
+        "Sheath-renewal A/B under recombination (peak over the transit-age profile):\n  \
+         renewal (kept):    n_e = {:.3e} m^-3 ({:+.2} dec vs RAM-C)\n  \
+         carried (marched): n_e = {:.3e} m^-3 ({:+.2} dec vs RAM-C)\n",
+        p.ne_network,
+        dec(p.ne_network),
+        p.ne_carried,
+        dec(p.ne_carried),
+    );
+}
 
 pub fn render(
     station: &config::Freestream,
@@ -74,7 +123,7 @@ pub fn verify(
     // corrected value for regression rather than asserting agreement, so the label is the weaker
     // Tripwire class and the offset is reported, not absorbed (spec: a prediction outside the anchor
     // band is reported, not re-admitted).
-    let g2_decades = (out.electron_density / RAMC_NE_REFERENCE).log10();
+    let g2_decades = (out.electron_density / RAMC_II_NE_ANCHOR).log10();
     let g2 = gate(
         &format!(
             "peak n_e is the corrected Park-2T value ({g2_decades:+.2} dec vs RAM-C II; \
@@ -104,9 +153,14 @@ fn gate(label: &str, evidence: EvidenceClass, pass: bool) -> bool {
     pass
 }
 
-pub fn summary(out: &StagnationOutcome<f64>, ne_network: FloatType, ne_network_61km: FloatType) {
-    let decades = (out.electron_density / RAMC_NE_REFERENCE).log10();
-    let decades_network = (ne_network / RAMC_NE_REFERENCE).log10();
+pub fn summary(
+    station: &config::Freestream,
+    out: &StagnationOutcome<f64>,
+    ne_network: FloatType,
+    ne_network_61km: FloatType,
+) {
+    let decades = (out.electron_density / RAMC_II_NE_ANCHOR).log10();
+    let decades_network = (ne_network / RAMC_II_NE_ANCHOR).log10();
     println!(
         "\n=== RAM-C stagnation line: network n_e = {:.2e} m^-3 ({:+.2} dec), Park-2T controller \
          {:.2e} m^-3 ({:+.2} dec) vs the station-1 Ka-band anchor {:.3e} m^-3 at {RAMC_ANCHOR_ALTITUDE_KM} \
@@ -115,11 +169,11 @@ pub fn summary(out: &StagnationOutcome<f64>, ne_network: FloatType, ne_network_6
         decades_network,
         out.electron_density,
         decades,
-        RAMC_NE_REFERENCE,
+        RAMC_II_NE_ANCHOR,
         ne_network_61km
     );
     println!(
-        "The freestream is the cited RAM-C II 71 km condition (Mach 25.9, 217.9 K, q 2.28 kPa); velocity\n\
+        "The freestream is the cited {} condition (Mach {}, {} K, q {:.2} kPa); velocity\n\
          and number density are derived from it. The anchor is the flight's station-1 Ka-band\n\
          critical-density crossing, which Grantham (1970) places at 71.93 km; below it the flight's nose\n\
          plasma is overdense, so the 61 km comparison is against a lower bound.\n\
@@ -133,7 +187,11 @@ pub fn summary(out: &StagnationOutcome<f64>, ne_network: FloatType, ne_network_6
          \n\
          Open levers: the T_e = T_ve lumping (a 3-T separation is ~2x), the single associative-ionization\n\
          channel, and the ~2-5x Millikan–White chemistry-model spread. The effective γ = 1.1 is a\n\
-         reacting-air closure; T2 is the exact-RH transported energy at that γ."
+         reacting-air closure; T2 is the exact-RH transported energy at that γ.",
+        station.label,
+        station.mach,
+        station.t_inf,
+        station.dynamic_pressure / 1000.0,
     );
 }
 
@@ -143,41 +201,32 @@ pub fn summary(out: &StagnationOutcome<f64>, ne_network: FloatType, ne_network_6
 /// flight's own uncertainty, so the gate is a tripwire. The channel-1 measurement exists for
 /// attribution: if the full network ever leaves its band, the two numbers say which channel moved.
 pub fn verify_network(ne_channel1: FloatType, ne_network: FloatType) -> bool {
-    let mut ok = true;
     // The RAM-C II anchor these bounds are centred on is external, but the band WIDTH is a chosen
     // allowance, so clearing it is evidence of non-regression, not of agreement with flight data.
     // The gate text says so; the label makes it machine-visible.
-    let mut gate = |label: &str, pass: bool, detail: String| {
-        println!(
-            "  [{}] [{}] {label}: {detail}",
-            if pass { "PASS" } else { "FAIL" },
-            EvidenceClass::Tripwire
-        );
-        ok &= pass;
-    };
-    let dec_network = (ne_network / RAMC_NE_REFERENCE).log10();
-    gate(
-        "network prediction inside the allowance",
-        dec_network.abs() <= config::NETWORK_BAND_DECADES,
-        format!(
-            "full network {:+.2} dec vs the {:.3e} m^-3 station-1 Ka-band anchor at \
-             {RAMC_ANCHOR_ALTITUDE_KM} km, 0.93 km above the cited 71 km freestream (allowance \
-             +-{:.2} dec, the chemistry-model spread)",
+    let dec_network = (ne_network / RAMC_II_NE_ANCHOR).log10();
+    let inside = gate(
+        &format!(
+            "network prediction inside the allowance: full network {:+.2} dec vs the {:.3e} m^-3 \
+             station-1 Ka-band anchor at {RAMC_ANCHOR_ALTITUDE_KM} km, 0.93 km above the cited 71 km \
+             freestream (allowance +-{:.2} dec, the chemistry-model spread)",
             dec_network,
-            RAMC_NE_REFERENCE,
-            config::NETWORK_BAND_DECADES,
+            RAMC_II_NE_ANCHOR,
+            config::RAMC_II_ALLOWANCE_DECADES,
         ),
+        EvidenceClass::Tripwire,
+        dec_network.abs() <= config::RAMC_II_ALLOWANCE_DECADES,
     );
-    gate(
-        "electron impact is a refinement, not the driver",
-        ne_network >= ne_channel1 && ne_network < ne_channel1 * 10.0,
-        format!(
-            "channel 1 + pool {:.3e} vs full network {:.3e} m^-3 (the associative channel \
-             carries the prediction at RAM-C speeds)",
+    let refinement = gate(
+        &format!(
+            "electron impact is a refinement, not the driver: channel 1 + pool {:.3e} vs full \
+             network {:.3e} m^-3 (the associative channel carries the prediction at RAM-C speeds)",
             ne_channel1, ne_network,
         ),
+        EvidenceClass::Tripwire,
+        ne_network >= ne_channel1 && ne_network < ne_channel1 * 10.0,
     );
-    ok
+    inside && refinement
 }
 
 /// The sheath-renewal A/B under recombination, superseding the forward-only
@@ -193,21 +242,21 @@ pub fn verify_network(ne_channel1: FloatType, ne_network: FloatType) -> bool {
 /// The carried arm lands below the network's ±0.70 renewal band; that offset is
 /// reported, not gated.
 pub fn verify_renewal_ab(ne_renewal: FloatType, ne_carried: FloatType) -> bool {
-    let dec_carried = (ne_carried / RAMC_NE_REFERENCE).log10();
+    let dec_carried = (ne_carried / RAMC_II_NE_ANCHOR).log10();
     // Runaway prevention is the property this A/B was added for: the carried march self-limits at or
     // below the renewal arm, where the forward-only surrogate ran away. That is the PASS condition.
     // The carried arm lands below the ±0.70 network band the renewal arm sits in, so the offset is
     // reported rather than gated (not widened to re-admit).
-    let pass = ne_carried <= ne_renewal;
-    println!(
-        "  [{}] [{}] carried mode self-limits at or below the renewal arm (no runaway): carried \
-         {dec_carried:+.2} dec vs the anchor, below the network's ±{:.2}-dec renewal band (reported, \
-         not re-admitted; the carried clock under-relaxes young sheath gas)",
-        if pass { "PASS" } else { "FAIL" },
+    gate(
+        &format!(
+            "carried mode self-limits at or below the renewal arm (no runaway): carried \
+             {dec_carried:+.2} dec vs the anchor, below the network's ±{:.2}-dec renewal band \
+             (reported, not re-admitted; the carried clock under-relaxes young sheath gas)",
+            config::RAMC_II_ALLOWANCE_DECADES,
+        ),
         EvidenceClass::Tripwire,
-        config::NETWORK_BAND_DECADES,
-    );
-    pass
+        ne_carried <= ne_renewal,
+    )
 }
 
 /// Report the lower-bound station: the network's peak `n_e` at the cited 61 km freestream beside the
@@ -228,8 +277,8 @@ pub fn render_lower_bound(station: &config::Freestream, lower: &crate::Predictio
          Park-2T controller n_e = {:.3e} m^-3",
         lower.post.t2,
         lower.ne_network,
-        (lower.ne_network / RAMC_NE_REFERENCE).log10(),
-        RAMC_NE_REFERENCE,
+        (lower.ne_network / RAMC_II_NE_ANCHOR).log10(),
+        RAMC_II_NE_ANCHOR,
         lower.outcome.electron_density,
     );
 }
@@ -239,14 +288,13 @@ pub fn render_lower_bound(station: &config::Freestream, lower: &crate::Predictio
 /// the Ka-band datum. The bound is the flight measurement itself, with no allowance: a
 /// `[reference]` gate.
 pub fn verify_lower_bound(ne_network_61km: FloatType) -> bool {
-    let pass = ne_network_61km >= RAMC_NE_REFERENCE;
-    println!(
-        "  [{}] [{}] network n_e at the 61 km station meets the flight lower bound: {:.3e} >= {:.3e} \
-         m^-3 (station 1 overdense at Ka-band below {RAMC_ANCHOR_ALTITUDE_KM} km; Grantham 1970, p. 18)",
-        if pass { "PASS" } else { "FAIL" },
+    gate(
+        &format!(
+            "network n_e at the 61 km station meets the flight lower bound: {:.3e} >= {:.3e} m^-3 \
+             (station 1 overdense at Ka-band below {RAMC_ANCHOR_ALTITUDE_KM} km; Grantham 1970, p. 18)",
+            ne_network_61km, RAMC_II_NE_ANCHOR,
+        ),
         EvidenceClass::Reference,
-        ne_network_61km,
-        RAMC_NE_REFERENCE,
-    );
-    pass
+        ne_network_61km >= RAMC_II_NE_ANCHOR,
+    )
 }

@@ -23,9 +23,7 @@
 //!   finite-difference operator construction: finite-difference operators
 //!   as MPOs built from binary grid-shift operators at small bond dimension.
 //!
-//! Neither PDF is in `papers/` yet; both are listed there as cited-without-PDF. The Kazeev–Khoromskij
-//! entry carries author and title only, which is what this repository can confirm; complete its venue
-//! and year when the PDF is added rather than from recall.
+//! Neither PDF is in `papers/` yet; both are listed there as cited-without-PDF.
 
 mod acoustic_inverse;
 mod codec;

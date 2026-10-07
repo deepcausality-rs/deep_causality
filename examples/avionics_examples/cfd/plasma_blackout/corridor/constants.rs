@@ -17,8 +17,8 @@ pub const STEPS: usize = 700;
 /// Steps each counterfactual branch continues past the shared blackout onset.
 pub const BRANCH_STEPS: usize = 100;
 /// Candidate commanded bank angles (degrees). Zero is the ballistic reference; the fine sweep
-/// brackets the reachable optimum (the miss landscape bottoms out near 15 deg for the
-/// configured aim); 40 deg exceeds the envelope cap, flies clamped, and overshoots, showing
+/// brackets the coarse winner, around which the miss landscape bottoms out for the configured aim
+/// (`output.txt` records where); 40 deg exceeds the envelope cap, flies clamped, and overshoots, showing
 /// that commanding more bank than the certified envelope allows buys a worse trajectory. The
 /// scoped fan-out flies all six concurrently, so the sweep costs one branch of wall-clock.
 pub const BANK_ANGLES_DEG: [f64; 6] = [0.0, 5.0, 10.0, 15.0, 20.0, 40.0];
@@ -53,10 +53,6 @@ pub const RAMC_EXIT_WINDOW_KM: (f64, f64) = (25.0, 30.0);
 /// than RAM-C II did; it therefore exits well above the RAM-C II window, and the offset is
 /// ballistics, not chemistry. The band catches regressions in either.
 pub const EXIT_ALTITUDE_BAND_KM: (f64, f64) = (40.0, 50.0);
-/// Allowance around the RAM-C II station-1 Ka-band datum for the corridor's `n_e` at the anchor
-/// crossing, decades: the chemistry-model spread (rate sets 2x to 5x), the same width the
-/// stagnation-line harness uses. Stated without a citation, so the gate is a tripwire.
-pub const ANCHOR_BAND_DECADES: f64 = 0.70;
 /// Relative tolerance on the crossing speed at the anchor altitude: the comparison is only like for
 /// like when the probe crosses at the flight's speed.
 pub const ANCHOR_SPEED_TOLERANCE: f64 = 0.005;

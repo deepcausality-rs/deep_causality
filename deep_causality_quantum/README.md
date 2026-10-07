@@ -206,7 +206,7 @@ CI builds every supported bare-metal configuration for `thumbv7em-none-eabihf`.
 
 | Feature | Default | Description |
 |---|:---:|---|
-| `qcm` | ✓ | The quantum causal-model slice: `CausalStructure`, the Markov freeze check, the C₃-exclusion faithfulness check, the QCL pipeline and the instrument context. Pulls in `deep_causality` and `deep_causality_context`; implies `std`. |
+| `qcm` | ✓ | The quantum causal-model slice: `CausalStructure`, the Markov freeze check, the C₃-exclusion faithfulness check, the QCL pipeline and the instrument context. Pulls in `deep_causality`, `deep_causality_context` and `deep_causality_context_store`; implies `std`. |
 | `dem` | ✓ | The Stim detector-error-model text constructor of `DemModel`. Implies `qcm`. |
 | `qpu` | | The emergent QPU seam: `QpuSampler` / the shots→`Uncertain` bridges / `qpu_effect` / the in-process `SimQpu`. Adds no network or async dependency. |
 

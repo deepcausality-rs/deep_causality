@@ -129,6 +129,24 @@ const N2_MOLECULAR_MASS_AMU: f64 = 2.0 * N_ATOMIC_MASS_AMU;
 pub const REDUCED_MASS_AMU: f64 =
     N2_MOLECULAR_MASS_AMU * N2_MOLECULAR_MASS_AMU / (N2_MOLECULAR_MASS_AMU + N2_MOLECULAR_MASS_AMU);
 
+/// The RAM-C II station-1 (x/D = 0.15) peak electron density at its Ka-band critical-density
+/// crossing, m⁻³ (Grantham 1970, NASA TN D-6062). The critical density `N_cr = 1.287e-8 · f²` cm⁻³
+/// with `f` in Hz and the slope-technique ratio `N_pk / N_cr = 0.63` (p. 11), at the Ka-band
+/// `f = 3.5e10 Hz` (35 000 MHz, Table I), give 9.93e12 cm⁻³; the factor `1e6` converts to m⁻³.
+/// The crossing lies at [`RAMC_II_ANCHOR_ALTITUDE_M`] (p. 18). Below it station 1 is overdense at
+/// Ka-band, the highest frequency flown, so the same value is a lower bound on the flight's peak
+/// electron density there.
+pub const RAMC_II_NE_ANCHOR: f64 = 0.63 * 1.287e-8 * 3.5e10 * 3.5e10 * 1.0e6;
+
+/// Altitude of the RAM-C II station-1 Ka-band crossing, m (236 000 ft; Grantham 1970, p. 18).
+pub const RAMC_II_ANCHOR_ALTITUDE_M: f64 = 71_930.0;
+
+/// Allowance around [`RAMC_II_NE_ANCHOR`], in decades, for an uncalibrated finite-rate electron
+/// density: the chemistry-model spread (rate sets spread 2x to 5x; production codes land 2x to 3x on
+/// the RAM-C II peak). The width is chosen rather than derived from the flight's uncertainty, so a
+/// gate on it is a `[tripwire]`.
+pub const RAMC_II_ALLOWANCE_DECADES: f64 = 0.70;
+
 /// The Millikan–White reduced mass `μ_sr = m_s·m_r / (m_s + m_r)` (amu) for a named collision pair. This
 /// is the checked constructor behind [`REDUCED_MASS_AMU`].
 ///

@@ -79,7 +79,7 @@ export const validation: ValidationRecord[] = [
       { quantity: 'Peak n_e (closed-form Park-2T controller), 71 km', computed: '1.070e17 m⁻³', expected: '9.93e18 m⁻³', delta: '−1.97 dec (reported, not re-admitted)' },
       { quantity: 'Peak n_e (network), 61 km', computed: '1.811e20 m⁻³', expected: '≥ 9.93e18 m⁻³ (flight lower bound)', delta: '+1.26 dec, bound met' },
       { quantity: 'Post-shock temperature T₂, 71 km', computed: '7509 K', expected: '~10⁴ K band', delta: 'in band' },
-      { quantity: 'Plasma frequency ω_p', computed: '1.845e10 rad/s', expected: '> 9.40e9 comms band', delta: 'blackout true' },
+      { quantity: 'Plasma frequency ω_p (Park-2T controller), 71 km', computed: '1.845e10 rad/s', expected: '> 9.40e9 comms band', delta: 'blackout true' },
       { quantity: 'Relaxation-profile bond', computed: '2', expected: 'O(1)', delta: 'cap 4' },
     ],
     command: 'cargo run --release -p deep_causality_cfd --example qtt_ramc_stagline',

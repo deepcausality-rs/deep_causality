@@ -18,7 +18,8 @@ mod marcher_3d_fitted;
 
 pub use euler_1d::{CompressibleEuler1d, EulerState, ideal_gas_pressure};
 pub use fitting::{
-    FittedNormalShock, Park2tClosure, PostShockState, REDUCED_MASS_AMU, StagnationOutcome,
+    FittedNormalShock, Park2tClosure, PostShockState, RAMC_II_ALLOWANCE_DECADES,
+    RAMC_II_ANCHOR_ALTITUDE_M, RAMC_II_NE_ANCHOR, REDUCED_MASS_AMU, StagnationOutcome,
     reduced_mass_amu,
 };
 pub use forcing::ForcingRegion;

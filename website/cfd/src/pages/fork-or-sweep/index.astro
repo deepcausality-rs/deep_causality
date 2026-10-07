@@ -26,7 +26,12 @@ const ensemble = `let table = CfdFlow::study("weather-dispersion table")
     .baseline(model::standard_day)      // the validated origin, built once
     .alternate(model::weather_world)    // six counterfactual atmospheres, each marked
     .ensemble(constants::MC_DRAWS)      // deterministic receiver-noise draws
-    .couple(|case, draw| world::corridor_coupling(model::bias_departure(case.d_temp), draw))
+    .couple(|case, draw| {
+        trace::traced(world::corridor_coupling(
+            model::bias_departure(case.d_temp),
+            draw,
+        ))
+    })
     .march_for(constants::STEPS, world::initial_field)   // from a fresh initial field
     .reduce_ensemble(model::world_row)  // draw sets collapse to mean / scatter / worst
     .gates(model::weather_gates())
@@ -42,7 +47,7 @@ const fork = `let corridor = CfdFlow::study("bank-angle corridor")
     .gates(model::corridor_gates())
     .verdict()?;`;
 
-/* retropropulsion/output.txt:25-30, verbatim. */
+/* retropropulsion/output.txt:24-29, verbatim. */
 const roster = `  branch         cmd    flown  preserved  axial m/s2    prop kg     dv m/s  dv frozen
   coast         0.00   0.0000          —     13.9101       1.83    183.202      3.282
   low           0.20   0.2000     0.4335     11.6754      62.07    137.776     52.988

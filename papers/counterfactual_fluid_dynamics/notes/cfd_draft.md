@@ -322,13 +322,13 @@ notes for the CFD changes. Claims in Part A about those rest on the documents th
 | Harness | Result | Class | Shortfall stated by the source |
 |---|---|---|---|
 | `qtt_sod` | L1 ρ 0.0175, u 0.0274, p 0.0151 against 0.03; p* 0.3031 | reference | first-order Rusanov smears the contact; "the only quantitative physical-accuracy gate in the QTT compressible set" |
-| `mms_taylor_green_verification` | residual 1.11e-16, amplitude error 6.66e-16 | analytic, reported | f32 ≈ 3e-8, f64 ≈ 1e-16, Float106 ≈ 8e-33 |
-| `dec_graded_mms_verification` | observed order 1.98–2.00 (finest pair), grading 0.0–0.3, 8²–64² | analytic | coarse-pair order dips to ~1.7 at strong grading |
-| `qtt_taylor_green_verification` | error 9.8e-4 → 2.4e-4 → 5.3e-5 (8² → 32²), order 2.02–2.18; convection 3.2e-3 | gated | fails at its own documented `max_level 7` (cancellation; order collapses to 0.02 at N = 128) |
+| `mms_taylor_green_verification` | residual 1.11e-16, amplitude error 6.66e-16 | reference | f32 ≈ 3e-8, f64 ≈ 1e-16, Float106 ≈ 8e-33 |
+| `dec_graded_mms_verification` | observed order 1.98–2.00 (finest pair), grading 0.0–0.3, 8²–64² | reference | coarse-pair order dips to ~1.7 at strong grading |
+| `qtt_taylor_green_verification` | error 9.8e-4 → 2.4e-4 → 5.3e-5 (8² → 32²), order 2.02–2.18; convection 3.2e-3 | reference; tripwire | fails at its own documented `max_level 7` (cancellation; order collapses to 0.02 at N = 128) |
 | `dec_lid_cavity_re1000_verification` | primary vortex (0.5312, 0.5625) vs Ghia (0.5313, 0.5625); centerline RMSE 0.0617 at 65², t = 100 | reported (default); tripwire (`trend` mode, 17² → 33²) | the 65² run has no pass/fail bound; a quarter of Ghia's cells |
 | `dec_cylinder_verification` | St 0.1710 (+4.3 % vs 0.164); C_d 1.342 inside 1.314–1.370 (Parvar et al. 2023, Table 1: seven Newtonian sources), −2.0 % of the band top | tripwire | friction 13 % of C_d vs ~25 %; C_d lands in band by cancellation; 8 cells/D |
 | `dec_cylinder_wake_verification` | max divergence 3.33e-15; log 80 = 2 × 40 dropouts | internal | no shedding (25 % blockage); no reference claim |
-| `dec_taylor_green_re1600_verification` | energy monotone (E*/E0 0.893) | internal invariant | peak dissipation 0.0025 vs DNS ≈ 0.0124, −80 % at 16³ |
+| `dec_taylor_green_re1600_verification` | energy monotone (E*/E0 0.893) | tripwire | dissipation 0.0025 at the horizon t* = 10.05, still rising, so an endpoint value, not the peak; DNS peak ≈ 0.0124; 16³ |
 | `qtt_ramc_stagline` | cited 71 km freestream (Parent et al., M 25.9, 217.9 K, 2.28 kPa): network peak n_e 1.643e19 (+0.22 dec of 9.93e18, the station-1 Ka-band crossing at 71.93 km); Park-2T controller 1.070e17 (−1.97 dec, reported); cited 61 km freestream: network 1.811e20 meets the anchor as a lower bound (+1.26 dec) | tripwire (71 km band); reference (61 km lower bound) | ±0.70-decade band is a chosen chemistry-spread allowance; uncalibrated network; one body station |
 | `qtt_park2t_blackout` | six coupling gates pass; peak n_e 1.000e22 (+3.0 dec) | internal invariant | Saha surrogate saturates at α = 1 at γ = 1.4; not comparable to the stagline γ = 1.1 |
 | `qtt_blunt_body_2d` | fitted χ 3, 4, 5; Cartesian χ 16, 32, 61 (2⁵ → 2⁷) | tripwire (rank, not accuracy) | marched rank grows to 64 over 6 steps; reported, never asserted |
@@ -376,7 +376,8 @@ notes for the CFD changes. Claims in Part A about those rest on the documents th
   Rankine–Hugoniot state from the truth Mach (via the table) is imposed on the inflow strip, and the
   layer behind it evolves.
 - Atmosphere: US Standard Atmosphere 1976 at 1 km spacing, 0–90 km, interpolated log-linearly in
-  density; at 71 km it reproduces the cited RAM-C II freestream (Parent et al.).
+  density. It is the standard day: the cited RAM-C II 71 km freestream (Parent et al.) is 7.9 %
+  denser and 1.1 K warmer than the 71 km row.
 - Chemistry: uncalibrated finite-rate network (RP-1232 Table II pairs, no Saha target), sheath
   renewed each step at the transit-age peak `t_res·ln 65`.
 - Navigation: 17-state ESKF; IMU accelerometer bias (2.0e-2, −1.4e-2, 1.0e-2) m/s² (~2 mg, typed);
@@ -583,8 +584,8 @@ or tripwire), weak (indirect or contradicted).
 | C4 | Flow, chemistry, link, vehicle, navigation and safety gate step one shared state in one process | A, I | by construction | strong as description | "String-named fields fail silently." | S8 and the `FlightSensors` comment (A.3). |
 | C5 | Every gate declares its evidence class, CI runs the suite, and failing baselines stay committed | A.10, P | process | strong as practice | "Most gates are tripwires; the audit was automated." | All application gates are tripwires; disclose the audit method (D5). |
 | C6 | Composing a dispersion sweep with a mid-burn fork changes an in-flight decision: burn lit 18.61 m higher at 10.54 kg | H-run gate 5 | computed, tripwire | moderate | "The effect size is the typed IMU coefficient pushed through a stopping-distance kernel." | Concede. The claim is that the composition carries the table into flight with provenance. The physics does not predict the 18.6 m. |
-| C7 | Branches depart a frozen-drag prediction; deceleration is non-monotone in throttle | H-run gates 4b, 4c | computed from correlation | moderate | "A 1-D trajectory code with the same correlation reproduces the table without CFD." | Probably true; the drag law is the correlation. The largest departure is the coast branch's foil artefact; burning branches depart by 38.9, 20.4, 0.6 and −4.1 m/s. |
-| C8 | The solvers pass code verification on closed-form cases | A.11 reference rows | reference | strong at code-verification level | "Small grids, 2-D, low Re." | TGV −80 % at 16³; cylinder friction 13 % vs 25 %; QTT cylinder failing; QTT TG fails at its documented level 7. |
+| C7 | Branches depart a frozen-drag prediction; deceleration is non-monotone in throttle | H-run gates 4b, 4c | computed from correlation | moderate | "A 1-D trajectory code with the same correlation reproduces the table without CFD." | Probably true; the drag law is the correlation. The largest departure is the coast branch's foil artefact (179.9 m/s); for the burning branches, `dv − dv frozen` is 84.788, 34.240, 4.220 and −4.316 m/s (A.14). |
+| C8 | The solvers pass code verification on closed-form cases | A.11 reference rows | reference | strong at code-verification level | "Small grids, 2-D, low Re." | TGV dissipation 0.0025 at the 16³ horizon against the DNS peak 0.0124, with the run ending before its own peak; cylinder friction 13 % vs 25 %; QTT cylinder failing; QTT TG fails at its documented level 7. |
 | C9 | The blackout chemistry lands within an order of magnitude of RAM-C II | B (stagline gates 5 and 8), F-run gate 2 | tripwire at 71.93 km; reference for the 61 km lower bound | moderate | "The band is a chosen allowance; one body station; exit 45.7 km vs flight 25–30 km; the anchor is one Ka-band crossing." | Concede the allowance, the single station and the exit offset. The anchor's altitude and meaning are settled (A.15): +0.22 dec in the harness at the cited freestream, −0.16 dec in the corridor at a matched crossing speed, and the 61 km lower bound met. Jones & Cross (1972) add electrostatic-probe ion densities on RAM C-I and C-II as an independent aft-body check. |
 | C10 | Precision is a parameter | B (MMS ladder), N (Lorenz) | reference / computed | moderate | "The corridor does not compile at Float106." | Concede; demonstrate on MMS and the Lorenz example only. |
 | C11 | The corridor's bank sweep selects a steering command | F-run gates 4c–4f | tripwire, by construction | weak as physics; strong as mechanism | "The decision reads no flow quantity; the gap it closes is set by construction." | Present it as the mechanism demonstration it is (K says so). |
@@ -815,7 +816,7 @@ field selects.
 
 **P4.3 Where verification falls short.**
 - Main point: several harnesses report a stated shortfall or fail by design.
-- Facts: TGV −80 %; cylinder friction split; QTT cylinder not converging (committed failing); QTT TG at
+- Facts: TGV endpoint dissipation 0.0025 against the DNS peak 0.0124 (the 16³ run ends before its peak); cylinder friction split; QTT cylinder not converging (committed failing); QTT TG at
   level 7; park2t +3.0 decades as internal-invariant scope (A.11).
 - Connect: contrast; causal (each shortfall's cause).
 - Close: the failures stay visible because the baselines stay committed.
@@ -834,8 +835,8 @@ field selects.
 ### 5. Application: the plasma-blackout family (4 paragraphs and one figure)
 
 **P5.1 Three examples, one descent.**
-- Main point: three examples fly one reentry from Mach 27 at blackout onset to touchdown, each
-  consuming the previous one's output.
+- Main point: three examples fly one reentry from entry at Mach 28 to touchdown as a chain: the
+  corridor starts it, and each later example consumes what the earlier ones produced.
 - Facts: corridor → weather table → retropropulsion (plasma_blackout README via F); run order.
 - Connect: chronological.
 - Close: the third reads the second's table in flight.
@@ -844,7 +845,7 @@ field selects.
 
 **P5.2 Vehicle, trajectory and time.**
 - Main point: a point-mass 3-DOF vehicle in compressed time.
-- Facts: 90 km start, ~7.97 km/s; L/D 0.3; β ≈ 170 kg/m²; 0.1 s per coupled step; no winds or aero
+- Facts: 90 km start, ~7.69 km/s; L/D 0.3; β ≈ 170 kg/m²; 0.1 s per coupled step; no winds or aero
   dispersions (I, H).
 - Connect: addition; qualification.
 - Close: every simplification is labelled in the constants files.
@@ -1029,8 +1030,12 @@ verification / validation / regression)
 
 ### Appendix A. Reproducibility
 
-- Commands: `cargo run --release -p avionics_examples --example plasma_blackout_{corridor,weather,
-  retropropulsion}`; `cargo run --release -p deep_causality_cfd --example <harness>` (A, B).
+- Commands, in this order (Cargo runs one `--example` per invocation):
+  `cargo run --release -p avionics_examples --example plasma_blackout_corridor`;
+  `cargo run --release -p avionics_examples --example plasma_blackout_weather`;
+  `cargo run --release -p avionics_examples --example plasma_blackout_retropropulsion`;
+  then each harness, e.g. `cargo run --release -p deep_causality_cfd --example qtt_ramc_stagline`
+  (A, B).
 - Run order: weather before retropropulsion (it writes the table). (F README)
 - Machine, toolchain (rustc version from D or a fresh `rustc -V`), commit hash of the measured tree.
 - Committed artifacts: every `output.txt`, `baseline.txt`, and the CSVs the examples write.

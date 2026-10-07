@@ -1,5 +1,6 @@
 % Data: deep_causality_cfd/verification/README.md and each harness's baseline.txt (f64, Apple M3 Max,
-% release). Class column is the crate's own gate label. notes/cfd_draft.md, Part A.11.
+% release). Class column lists the gate labels each harness's baseline.txt emits. notes/cfd_draft.md,
+% Part A.11.
 % Verify every value against the baseline.txt of the measured commit before submission.
 \begin{table}[t]
 \centering
@@ -11,14 +12,14 @@
 Harness & Result & Class & Shortfall stated by the harness \\
 \midrule
 \texttt{qtt\_sod} & L1 error $\rho$ 0.0175, $u$ 0.0274, $p$ 0.0151 (tolerance 0.03); $p^\ast = 0.3031$ & reference & first-order Rusanov smears the contact \\
-\texttt{mms\_taylor\_green} & residual \num{1.11e-16}; amplitude error \num{6.66e-16} & analytic & tracks $\varepsilon$ of the scalar: \num{3e-8} (f32), \num{1e-16} (f64), \num{8e-33} (Float106) \\
-\texttt{dec\_graded\_mms} & observed order 1.98--2.00, grading 0.0--0.3, $8^2$--$64^2$ & analytic & coarse-pair order $\approx 1.7$ at strong grading \\
-\texttt{qtt\_taylor\_green} & error \num{9.8e-4}, \num{2.4e-4}, \num{5.3e-5} ($8^2$--$32^2$); order 2.02--2.18 & gated & order collapses past $N = 64$ (temporal floor) \\
-\texttt{dec\_lid\_cavity\_re1000} & primary vortex $(0.5312, 0.5625)$ vs.\ Ghia $(0.5313, 0.5625)$; centerline RMSE 0.0617 ($65^2$) & reported & no bound on the $65^2$ run; gated mode is a tripwire refinement trend \\
+\texttt{mms\_taylor\_green} & residual \num{1.11e-16}; amplitude error \num{6.66e-16} & reference & tracks $\varepsilon$ of the scalar: \num{3e-8} (f32), \num{1e-16} (f64), \num{8e-33} (Float106) \\
+\texttt{dec\_graded\_mms} & observed order 1.98--2.00, grading 0.0--0.3, $8^2$--$64^2$ & reference & coarse-pair order $\approx 1.7$ at strong grading \\
+\texttt{qtt\_taylor\_green} & error \num{9.8e-4}, \num{2.4e-4}, \num{5.3e-5} ($8^2$--$32^2$); order 2.02--2.18 & reference; tripwire & signed error crosses zero near $N = 64$--$128$; order falls to 0.02 by $N = 128$; \texttt{max\_level} 5 is the longest usable ladder \\
+\texttt{dec\_lid\_cavity\_re1000} & primary vortex $(0.5312, 0.5625)$ vs.\ Ghia $(0.5313, 0.5625)$; centerline RMSE 0.0617 ($65^2$) & tripwire & no bound on the $65^2$ run; gated mode is a tripwire refinement trend \\
 \texttt{dec\_cylinder} & St 0.1710 vs.\ 0.164 ($+4.3\%$); $C_d$ 1.342 in 1.314--1.370 ($-2.0\%$ of the band top) & tripwire & friction 13\% of $C_d$ vs.\ $\approx 25\%$; $C_d$ in band by cancellation \\
-\texttt{dec\_taylor\_green\_re1600} & energy monotone, $E^\ast/E_0 = 0.893$ & invariant & peak dissipation 0.0025 vs.\ DNS 0.0124 ($-80\%$) at $16^3$ \\
+\texttt{dec\_taylor\_green\_re1600} & energy monotone, $E^\ast/E_0 = 0.893$ & tripwire & dissipation 0.0025 at the horizon $t^\ast = 10.05$, still rising, so not the peak; DNS peak 0.0124; $16^3$ \\
 \texttt{qtt\_ramc\_stagline} & at the cited 71 km freestream: network $n_e$ \num{1.643e19} (+0.22 dec of the \num{9.93e18} station-1 Ka-band anchor, 71.93 km); Park-2T \num{1.070e17} ($-1.97$ dec); at 61 km, network \num{1.811e20} against the anchor as a lower bound & tripwire; reference (61 km bound) & $\pm 0.70$-decade band is a chosen chemistry-spread allowance; one flight body station \\
-\texttt{qtt\_cylinder} & $\eta$ ladder $C_d$ 17.39, 24.02, 26.25, 23.76, 21.40 & reference (fails) & Brinkman layer unresolved at $L = 5$; offline \\
+\texttt{qtt\_cylinder} & $\eta$ ladder $C_d$ 17.39, 24.02, 26.25, 23.76, 21.40 & reference (2 fail); tripwire & Brinkman layer unresolved at $L = 5$; offline \\
 \bottomrule
 \end{tabularx}
 \end{table}

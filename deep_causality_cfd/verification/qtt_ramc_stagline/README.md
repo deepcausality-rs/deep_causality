@@ -21,8 +21,9 @@ cargo run --release -p deep_causality_cfd --example qtt_ramc_stagline
 
 The harness flies two cited RAM-C II freestream stations (Parent, Thoguluva Rajendran & Omprakas,
 "Electron Losses in Hypersonic Flows", arXiv:2111.09432). Each is stated as Mach number, static
-temperature and dynamic pressure; velocity and number density are derived from those three values
-and the US-1976 air molar mass.
+temperature and dynamic pressure; velocity and number density are derived from those three values,
+the US-1976 air molar mass `M₀ = 28.9644 g/mol` and the cold-air ratio of specific heats
+`γ∞ = 1.4`: `V = M·√(γ∞·R·T∞)` with `R = R*/M₀`, then `ρ = 2q/V²` and `n∞ = ρ·N_A/M₀`.
 
 | Station | Mach | T∞ (K) | q (Pa) | V (m/s, derived) | n∞ (m⁻³, derived) |
 |---|---|---|---|---|---|

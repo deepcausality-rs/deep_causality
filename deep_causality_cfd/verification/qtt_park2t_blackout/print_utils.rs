@@ -225,7 +225,7 @@ pub fn render(report: &Report<FloatType>) {
     println!("\n--- Published reference cross-references (Tier-A disclaimers) ---");
     println!(
         "  RAM-C II n_e (71.93 km)     : {:.2e} m^-3 [station-1 Ka-band crossing, cross-reference]",
-        config::RAMC_NE_REFERENCE
+        config::RAMC_II_NE_ANCHOR
     );
     println!(
         "  DISCLAIMER: Tier-A rides the INCOMPRESSIBLE rollout; T_tr is a recovery-temperature"

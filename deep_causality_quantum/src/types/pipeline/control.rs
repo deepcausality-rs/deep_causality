@@ -331,9 +331,9 @@ where
     }
 
     /// The measurement boundary: `shots` of `observable` on the plant, or on every world's plant
-    /// after a fork. With [`baseline`](Self::baseline) the only stages that touch `shots`,
-    /// `experiments`, `device_time` and the budget; device time is charged at one unit per shot,
-    /// and a draw beyond the remaining budget fails the run.
+    /// after a fork. This stage and [`baseline`](Self::baseline) are the only ones that touch
+    /// `shots`, `experiments`, `device_time` and the budget; device time is charged at one unit
+    /// per shot, and a draw beyond the remaining budget fails the run.
     ///
     /// Before the fork the read-out is the root's, the baseline `compare` judges predictions
     /// against. After the fork every world is measured on its own plant, which is how a mechanism

@@ -38,8 +38,9 @@ interface. Blackout **onset and exit SHALL be flow-resolved events** found by th
 crosses the comms cutoff (ordered onset → nonzero dwell → exit), not station switches. With the finite-rate
 network in the coupling, the electron density SHALL be an **uncalibrated prediction** compared with the RAM-C II
 flight at matched altitude and speed: at the corridor's 71.93 km crossing against the station-1 Ka-band datum
-(0.63 × 1.287e-8 × (35 GHz)² cm⁻³ ≈ 9.93e18 m⁻³; Grantham 1970, p. 18) within the ±0.70-decade
-chemistry-spread allowance. The truth entry velocity SHALL be sized so the vehicle crosses 71.93 km at the
+(0.63 × 1.287e-8 × f² cm⁻³ with f = 3.5e10 Hz = 9.93e12 cm⁻³ = 9.93e18 m⁻³; Grantham 1970, p. 18)
+within the ±0.70-decade chemistry-spread allowance, as a `[tripwire]` gate, because the allowance is a
+chosen width rather than a flight bound. The truth entry velocity SHALL be sized so the vehicle crosses 71.93 km at the
 flight's 7.66 km/s. Below the anchor the corridor's light probe and RAM-C II fly different trajectories, so
 the corridor SHALL report its 61 km `n_e` and speed beside the flight's lower bound without gating them; the
 lower-bound gate belongs to the stagnation-line harness at RAM-C II's own 61 km freestream. The run SHALL report the descent's peak electron

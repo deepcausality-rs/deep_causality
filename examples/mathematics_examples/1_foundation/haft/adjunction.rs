@@ -39,11 +39,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Scenario: We have a function that fetches data given a ConfigContext and an ID.
     // fetch_data: (ConfigContext, i32) -> Result<String, ContextIndexError>
+    // The key authorises the request. The result reports only its length, so nothing printed
+    // from it carries the key.
     let fetch_data = |cfg: ConfigContext, id: i32| -> Result<String, ContextIndexError> {
+        let key = read(&cfg, API_KEY)?;
         Ok(format!(
-            "Data for ID {} using Key {}",
-            id,
-            read(&cfg, API_KEY)?
+            "Data for ID {id}, requested with a {}-byte API key",
+            key.len()
         ))
     };
 

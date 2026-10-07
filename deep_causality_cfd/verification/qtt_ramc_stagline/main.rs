@@ -40,9 +40,10 @@ fn main() {
     println!(
         "=== RAM-C stagnation line: exact Rankine–Hugoniot fit + reused Tier-A ionization ===\n"
     );
-    let anchor = predict(&config::ANCHOR_STATION, true);
-    let lower = predict(&config::LOWER_BOUND_STATION, false);
+    let anchor = predict(&config::ANCHOR_STATION);
+    let lower = predict(&config::LOWER_BOUND_STATION);
 
+    print_utils::render_prediction(&config::ANCHOR_STATION, &anchor);
     print_utils::render(
         &config::ANCHOR_STATION,
         &anchor.post,
@@ -55,40 +56,37 @@ fn main() {
         & print_utils::verify_renewal_ab(anchor.ne_network, anchor.ne_carried)
         & print_utils::verify_lower_bound(lower.ne_network);
     if ok {
-        print_utils::summary(&anchor.outcome, anchor.ne_network, lower.ne_network);
+        print_utils::summary(
+            &config::ANCHOR_STATION,
+            &anchor.outcome,
+            anchor.ne_network,
+            lower.ne_network,
+        );
     } else {
         std::process::exit(1);
     }
 }
 
-/// Everything one freestream station yields: the exact post-shock state, the Park-2T controller
-/// outcome, the relaxation-profile rank, and the finite-rate network's peak `n_e` (renewal and
-/// carried arms, and channel 1 alone).
+/// Everything one freestream station yields: the exact post-shock state, the residence time and
+/// the Saha-equilibrium and single-temperature references, the Park-2T controller outcome, the
+/// relaxation-profile rank, and the finite-rate network's peak `n_e` (renewal and carried arms,
+/// channel 1 alone, and the lagged atom pool at the peak).
 pub struct Prediction {
     pub post: PostShockState<FloatType>,
+    pub residence_time: FloatType,
+    pub ne_equilibrium: FloatType,
+    pub outcome_1t: StagnationOutcome<FloatType>,
     pub outcome: StagnationOutcome<FloatType>,
     pub profile_bond: usize,
     pub ne_network: FloatType,
     pub ne_carried: FloatType,
     pub ne_channel1: FloatType,
+    pub x_n: FloatType,
+    pub x_o: FloatType,
 }
 
-/// Run the stagnation line at one cited `station`. `verbose` prints the intermediate figures the
-/// anchor comparison reports.
-fn predict(station: &config::Freestream, verbose: bool) -> Prediction {
-    if verbose {
-        println!(
-            "Flight ({}): M = {}, T_inf = {} K, q = {} Pa -> V = {:.1} m/s, n_inf = {:.4e} m^-3; \
-             γ_eff = {}\n",
-            station.label,
-            station.mach,
-            station.t_inf,
-            station.dynamic_pressure,
-            station.velocity(),
-            station.number_density(),
-            config::GAMMA,
-        );
-    }
+/// Run the stagnation line at one cited `station`.
+fn predict(station: &config::Freestream) -> Prediction {
     let shock = FittedNormalShock::<FloatType>::new(config::ft(config::GAMMA))
         .unwrap_or_else(|e| fail("fitted shock", e));
     let post = shock
@@ -132,18 +130,6 @@ fn predict(station: &config::Freestream, verbose: bool) -> Prediction {
             config::ft(config::COMMS_BAND_RAD_S),
         )
         .unwrap_or_else(|e| fail("Park-2T stagnation blackout", e));
-    if verbose {
-        println!(
-            "Residence time t_res = standoff/u2 = {:.3e} s  (Saha-equilibrium upper bound n_e = {:.3e} m^-3)",
-            residence_time, equilibrium.electron_density
-        );
-        println!(
-            "Single-T surrogate (ionizes at T₂, over-predicts): α = {:.3e}, n_e = {:.3e} m^-3 ({:+.1} dec vs RAM-C)\n",
-            outcome_1t.ionization_fraction,
-            outcome_1t.electron_density,
-            (outcome_1t.electron_density / config::RAMC_NE_REFERENCE).log10()
-        );
-    }
 
     let trunc = Truncation::<FloatType>::by_tol(1e-10).unwrap_or_else(|e| {
         eprintln!("truncation: {e:?}");
@@ -256,37 +242,18 @@ fn predict(station: &config::Freestream, verbose: bool) -> Prediction {
     let alpha_c1 = (target_c1 / conc) * (1.0 - (-(residence_time / tau_c1)).exp());
     let ne_channel1 = alpha_c1 * post.n_tot2;
 
-    if verbose {
-        println!(
-            "Uncalibrated finite-rate network (RP-1232 Table II pairs; no Saha target):\n  \
-         lagged atom pool: x_N = {:.3e}, x_O = {:.3e}\n  \
-         channel 1 + pool: n_e = {:.3e} m^-3 ({:+.2} dec vs RAM-C)\n  \
-         full network:     n_e = {:.3e} m^-3 ({:+.2} dec vs RAM-C)\n",
-            x_n,
-            x_o,
-            ne_channel1,
-            (ne_channel1 / config::RAMC_NE_REFERENCE).log10(),
-            ne_network,
-            (ne_network / config::RAMC_NE_REFERENCE).log10(),
-        );
-        println!(
-            "Sheath-renewal A/B under recombination (peak over the transit-age profile):\n  \
-         renewal (kept):    n_e = {:.3e} m^-3 ({:+.2} dec vs RAM-C)\n  \
-         carried (marched): n_e = {:.3e} m^-3 ({:+.2} dec vs RAM-C)\n",
-            ne_network,
-            (ne_network / config::RAMC_NE_REFERENCE).log10(),
-            ne_carried,
-            (ne_carried / config::RAMC_NE_REFERENCE).log10(),
-        );
-    }
-
     Prediction {
         post,
+        residence_time,
+        ne_equilibrium: equilibrium.electron_density,
+        outcome_1t,
         outcome,
         profile_bond,
         ne_network,
         ne_carried,
         ne_channel1,
+        x_n,
+        x_o,
     }
 }
 

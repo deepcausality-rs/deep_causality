@@ -175,7 +175,12 @@ let table = CfdFlow::study("weather-dispersion table")
     .baseline(model::standard_day)
     .alternate(model::weather_world)
     .ensemble(constants::MC_DRAWS)
-    .couple(|case, draw| world::corridor_coupling(model::bias_departure(case.d_temp), draw))
+    .couple(|case, draw| {
+        trace::traced(world::corridor_coupling(
+            model::bias_departure(case.d_temp),
+            draw,
+        ))
+    })
     .march_for(constants::STEPS, world::initial_field)
     .reduce_ensemble(model::world_row)
     .gates(model::weather_gates())
@@ -311,9 +316,10 @@ conclusions stay reproducible. `benches/` pins performance in `PERFORMANCE.md`.
 Every gate declares where its bound came from (`[reference]` for an analytic or published value,
 `[tripwire]` for one pinned from this code's own prior output), so a `[PASS]` says which of the two it
 is. The plasma-blackout examples compare an uncalibrated finite-rate ionization network with the
-RAM-C II flight at matched altitude and speed, to **order of magnitude**: the anchor is the flight's
-station-1 Ka-band datum, 9.93e18 m⁻³ at 71.93 km (Grantham 1970), with a ±0.70-decade allowance for the
-chemistry-model spread. The gate claims the right decade, not per-point accuracy. At the cited RAM-C II
+RAM-C II flight to **order of magnitude**: the anchor is the flight's station-1 Ka-band datum,
+9.93e18 m⁻³ at 71.93 km (Grantham 1970), with a ±0.70-decade allowance for the chemistry-model spread.
+The corridor reads its descent where it crosses 71.93 km at the flight's 7.66 km/s; the stagnation-line
+harness flies the cited 71 km freestream, 0.93 km below the datum. The gate claims the right decade, not per-point accuracy. At the cited RAM-C II
 71 km freestream the stagnation-line network lands +0.22 decades from the datum and meets the flight's
 lower bound at 61 km; the closed-form Park-2T controller sits 1.97 decades below the datum (reported as
 an offset, not re-admitted). The descent flies the U.S. Standard Atmosphere 1976.

@@ -438,8 +438,8 @@ RP-1232 finite-rate network with no Saha target anywhere in it.
 217.9 K, q = 2.28 kPa) and at 61 km (Mach 23.9, 255.9 K, q = 8 kPa) from Parent, Thoguluva Rajendran &
 Omprakas (arXiv:2111.09432); velocity and number density are derived from those values (71 km:
 7664.4 m/s, 1.614e21 m⁻³). The anchor is the flight's station-1 (x/D = 0.15) Ka-band critical-density
-crossing, which Grantham (1970, p. 18) places at 71.93 km: `0.63 · 1.287e-8 · f²` cm⁻³ at 35 GHz
-(p. 11, Table I) = 9.93e18 m⁻³. Below 71.93 km the flight's station 1 is overdense at Ka-band, so at
+crossing, which Grantham (1970, p. 18) places at 71.93 km: `0.63 · 1.287e-8 · f²` cm⁻³ with `f` in Hz,
+at `f = 3.5e10 Hz` (35 GHz; p. 11, Table I), is 9.93e12 cm⁻³ = 9.93e18 m⁻³. Below 71.93 km the flight's station 1 is overdense at Ka-band, so at
 61 km the same value is a lower bound.
 
 **Self-check.** Eight gates, exit nonzero on break: `T₂` in the ~10⁴ K band; peak `n_e` matches the

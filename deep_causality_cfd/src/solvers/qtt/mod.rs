@@ -16,8 +16,9 @@ pub use compressible::{
     AcousticImex1d, CompressibleEuler1d, CompressibleMarcher2d, CompressibleMarcher3d,
     CompressibleMarcher3dFitted, EulerState, EulerState2d, EulerState3d, EulerStateTt2d,
     EulerStateTt3d, FittedNormalShock, ForcingRegion, Park2tClosure, PostShockState,
-    REDUCED_MASS_AMU, StagnationOutcome, conservation_round, ideal_gas_pressure,
-    ideal_gas_pressure_2d, positivity_floor, reduced_mass_amu,
+    RAMC_II_ALLOWANCE_DECADES, RAMC_II_ANCHOR_ALTITUDE_M, RAMC_II_NE_ANCHOR, REDUCED_MASS_AMU,
+    StagnationOutcome, conservation_round, ideal_gas_pressure, ideal_gas_pressure_2d,
+    positivity_floor, reduced_mass_amu,
 };
 pub use immersed_2d::QttImmersed2d;
 pub use incompressible_2d::QttIncompressible2d;

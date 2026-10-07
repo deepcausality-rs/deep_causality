@@ -73,12 +73,13 @@ where
 
 /// `reading` recorded as taken at `tick` on `scale`: the reading under [`environment_id`], a
 /// `DiscreteTime` node under [`environment_time_id`], and a temporal edge from the reading to its
-/// time.
+/// time. Both ids are checked before the context changes, so a refused call adds nothing.
 ///
 /// # Errors
 ///
-/// [`QuantumError::CalculationError`] when `tick` has no id below `u64::MAX`, and carrying the
-/// context's refusal of a node or the edge: a tick already recorded, or a frozen context.
+/// [`QuantumError::CalculationError`] when `tick` has no id below `u64::MAX`, when either id is
+/// already held (a tick already recorded, or another node under the id), and carrying the
+/// context's refusal of a node or the edge: a frozen context.
 pub fn record_environment<R>(
     context: &mut InterferometerContext<R>,
     tick: u64,
@@ -94,6 +95,15 @@ where
             "an environment reading at tick {tick} has no contextoid id below u64::MAX"
         )));
     };
+    if let Some(held) = [reading_id, time_id]
+        .into_iter()
+        .find(|&id| context.get_node_index_by_id(id).is_some())
+    {
+        return Err(QuantumError::CalculationError(format!(
+            "the instrument context refused the reading at tick {tick}: contextoid id {held} \
+             is already held"
+        )));
+    }
     let datoid = ContextoidType::Datoid(Data::new(
         reading_id,
         InterferometerDatum::Environment(reading),

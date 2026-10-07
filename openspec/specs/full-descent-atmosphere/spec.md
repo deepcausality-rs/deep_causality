@@ -33,7 +33,9 @@ altitude across the whole table.
 `DescentSchedule::sample` SHALL clamp to the table ends and, between rows, SHALL interpolate the
 logarithm of `n_tot` linearly in altitude, with temperature and sound speed interpolated linearly. A
 table whose number density falls exponentially between two rows MUST be sampled exactly at every
-altitude between them, so a coarse table cannot overstate density between rows.
+altitude between them. For a profile that is not exponential between rows the interpolation error
+is set by the curvature of `ln n_tot` across the row spacing; for US-1976 at 1 km spacing it is at
+most 0.24 % (at the 47 km layer boundary).
 
 #### Scenario: An exponential layer is reproduced between rows
 

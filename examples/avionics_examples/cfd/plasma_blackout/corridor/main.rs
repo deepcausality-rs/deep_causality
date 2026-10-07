@@ -201,8 +201,7 @@ fn main() -> ExitCode {
             0,
             &leg_ends,
         );
-        let (anchor, at_61km, (peak_ne, peak_altitude_km, peak_denied)) =
-            model::ramc_witnesses(&descent);
+        let ramc = model::ramc_witnesses(&descent);
         write_rows(trace_path("corridor_trace.csv"), descent)
             .run()
             .map_err(write_err)?;
@@ -222,11 +221,7 @@ fn main() -> ExitCode {
             rebuilds: onset.rebuilds() + peak.rebuilds() + exit_pause.rebuilds() + reacq.rebuilds(),
             elapsed_s: lift(clock.elapsed().as_secs_f64()),
             regime_log: rendered_log,
-            anchor,
-            at_61km,
-            peak_ne,
-            peak_altitude_km,
-            peak_denied,
+            ramc,
         }];
 
         // ── One report: the campaign verdict merged with the trajectory leg verdict, applied to

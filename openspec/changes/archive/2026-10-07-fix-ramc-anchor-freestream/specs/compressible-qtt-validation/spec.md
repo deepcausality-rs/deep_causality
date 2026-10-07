@@ -9,15 +9,18 @@ values and never stated independently of them. It SHALL apply the exact Rankine�
 state, run the **reused Tier-A reacting/ionization LER stack** in the post-shock relaxation zone, and
 gate the peak **electron density** against the RAM-C II station-1 Ka-band datum: Grantham (1970,
 p. 18) records the Ka-band critical-density crossing at 71.93 km, and Grantham's relation
-N_e,pk = 0.63 × 1.287e-8 f² at 35 GHz gives 9.93e18 m⁻³. The harness SHALL state the 0.93 km between
+N_e,pk = 0.63 × 1.287e-8 f² cm⁻³, with f in Hz, at f = 3.5e10 Hz (35 GHz) gives 9.93e12 cm⁻³ =
+9.93e18 m⁻³. The harness SHALL state the 0.93 km between
 the 71 km condition and the 71.93 km crossing. It SHALL also run the cited RAM-C II 61 km freestream
 (Mach 23.9, T∞ = 255.9 K, dynamic pressure 8 kPa) and gate, as a `[reference]` bound with no allowance,
 that the network's peak `n_e` there is at least the anchor value, because the flight's station 1 is
 overdense at Ka-band below 71.93 km.
 
-The tolerance SHALL be re-derived from the corrected vibrational-relaxation closure and SHALL NOT be
-widened to re-admit a prediction the previous, incorrect `μ_sr` produced, nor to re-admit the
-agreement the previous, hybrid freestream produced. The bands in force before this change were earned
+The network's ±0.70-decade allowance SHALL be a chemistry-model spread, independent of `μ_sr`, and
+its gate SHALL be a `[tripwire]`; the Park-2T controller's regression pin SHALL be re-derived from the
+corrected vibrational-relaxation closure at the cited freestream. Neither SHALL be widened to re-admit
+a prediction the previous, incorrect `μ_sr` produced, nor to re-admit the agreement the previous,
+hybrid freestream produced. The bands in force before this change were earned
 under `μ_sr = 7.0`, a value with no valid collision pair, and later at a freestream that paired a 72 km
 density with a 61 km temperature; a band restored to keep the former headline agreement would assert
 an accuracy the physics does not support.
@@ -45,8 +48,9 @@ class SHALL reflect what the bound actually encodes.
 
 #### Scenario: The acceptance band is traceable to the corrected physics
 - **WHEN** the recorded tolerance is inspected
-- **THEN** it states the closure and the freestream it was derived under and its evidence class, and it
-  is not a reinstatement of a band earned under the superseded `μ_sr` or the superseded freestream
+- **THEN** the network allowance states its evidence class and the closure and freestream it applies
+  under, the Park-2T pin states the closure and freestream it was derived from, and neither is a
+  reinstatement of a band earned under the superseded `μ_sr` or the superseded freestream
 
 #### Scenario: A prediction outside the anchor band is reported, not absorbed
 - **WHEN** the corrected prediction falls outside a band that could honestly be called agreement with

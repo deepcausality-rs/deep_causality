@@ -72,7 +72,12 @@ let table = CfdFlow::study("weather-dispersion table")
     .baseline(model::standard_day)
     .alternate(model::weather_world)
     .ensemble(constants::MC_DRAWS)
-    .couple(|case, draw| world::corridor_coupling(model::bias_departure(case.d_temp), draw))
+    .couple(|case, draw| {
+        trace::traced(world::corridor_coupling(
+            model::bias_departure(case.d_temp),
+            draw,
+        ))
+    })
     .march_for(constants::STEPS, world::initial_field)
     .reduce_ensemble(model::world_row)
     .inspect(utils_print::print_rows)
@@ -140,10 +145,16 @@ condition cannot separate a mechanism from a draw.
 ## Station 4: The draw index and the temperature enter the physics loop
 
 ```rust
-.couple(|case, draw| world::corridor_coupling(model::bias_departure(case.d_temp), draw))
+.couple(|case, draw| {
+    trace::traced(world::corridor_coupling(
+        model::bias_departure(case.d_temp),
+        draw,
+    ))
+})
 ```
 
-The closure passes the case and the draw index into walk 1's coupling. The draw
+The closure passes the case and the draw index into walk 1's coupling, and
+`trace::traced` wraps it to record the per-step series that `world_row` reduces. The draw
 index reaches the `TruthGnss` stage, which adds receiver noise to the position fix
 as it is published. The temperature follows in `model.rs`:
 

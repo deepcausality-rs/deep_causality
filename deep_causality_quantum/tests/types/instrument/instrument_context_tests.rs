@@ -164,6 +164,34 @@ fn test_a_tick_recorded_twice_or_without_an_id_is_refused_and_adds_nothing() {
 }
 
 #[test]
+fn test_a_reading_whose_time_id_is_taken_adds_nothing_and_a_retry_succeeds() {
+    let mut c = interferometer_context(1, "gravimeter", model(), configuration()).unwrap();
+    // A node placed by hand under the id the time node of tick 0 needs; the reading's id is free.
+    let time_id = environment_time_id(0).unwrap();
+    c.add_node(Contextoid::new(
+        time_id,
+        ContextoidType::Datoid(Data::new(
+            time_id,
+            InterferometerDatum::Environment(reading(0.0)),
+        )),
+    ))
+    .unwrap();
+
+    let msg =
+        calculation(record_environment(&mut c, 0, TimeScale::Second, reading(1.2e-6)).unwrap_err());
+    assert!(msg.contains("refused"), "{msg}");
+    assert!(msg.contains(&time_id.to_string()), "{msg}");
+    assert_eq!(c.get_node_index_by_id(environment_id(0).unwrap()), None);
+    assert_eq!((c.number_of_nodes(), c.number_of_edges()), (3, 0));
+
+    // Once the id is free the same call succeeds: nothing of the refused call was left behind.
+    c.remove_node(time_id).unwrap();
+    record_environment(&mut c, 0, TimeScale::Second, reading(1.2e-6)).unwrap();
+    assert_eq!(environment_at(&c, 0), Some(reading(1.2e-6)));
+    assert_eq!((c.number_of_nodes(), c.number_of_edges()), (4, 1));
+}
+
+#[test]
 fn test_a_frozen_context_refuses_a_reading() {
     let mut c = gravimeter();
     c.freeze();

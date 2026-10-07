@@ -86,20 +86,20 @@ pub const U_REF: f64 = 376.0;
 
 // ── The RAM-C II flight anchor (Grantham 1970, NASA TN D-6062)
 
-/// The RAM-C II station-1 (x/D = 0.15) peak electron density at its Ka-band critical-density
-/// crossing, m⁻³: `N_e,pk = 0.63 · 1.287e-8 · f²` cm⁻³ at `f = 35 000 MHz` = 9.93e12 cm⁻³.
-/// Grantham p. 18 places the crossing at 236 000 ft ([`RAMC_ANCHOR_ALTITUDE_M`]); p. 11 gives the
-/// critical-density relation and the 0.63 slope-technique ratio; Table I the Ka-band frequency.
-pub const RAMC_NE_REFERENCE: f64 = 0.63 * 1.287e-8 * 3.5e10 * 3.5e10 * 1.0e6;
-/// Altitude of the station-1 Ka-band crossing, m (236 000 ft).
-pub const RAMC_ANCHOR_ALTITUDE_M: f64 = 71_930.0;
+/// The RAM-C II station-1 Ka-band anchor (`N_e,pk = 0.63 · 1.287e-8 · f²` cm⁻³ with
+/// `f = 3.5e10 Hz`, ×1e6 to m⁻³), its altitude (236 000 ft) and the chemistry-spread allowance around
+/// it. Defined once in `deep_causality_cfd` and re-exported here, so the corridor and the
+/// stagnation-line harness compare against the same datum with the same allowance.
+pub use deep_causality_cfd::{
+    RAMC_II_ALLOWANCE_DECADES, RAMC_II_ANCHOR_ALTITUDE_M, RAMC_II_NE_ANCHOR,
+};
 /// RAM-C II flight speed at the anchor station, m/s (Grantham 1970, Table VII: 7.66 km/s at 71 km).
-/// The corridor's entry velocity is sized to cross [`RAMC_ANCHOR_ALTITUDE_M`] at this speed.
+/// The corridor's entry velocity is sized to cross [`RAMC_II_ANCHOR_ALTITUDE_M`] at this speed.
 pub const RAMC_ANCHOR_SPEED_MS: f64 = 7_660.0;
 /// Lowest altitude of the RAM-C II primary data period, m (185 000 ft, beryllium-cap ejection).
-/// Between this altitude and [`RAMC_ANCHOR_ALTITUDE_M`] station 1 is overdense at Ka-band, the
-/// highest frequency flown, so [`RAMC_NE_REFERENCE`] is a lower bound on the flight's peak
-/// electron density there.
+/// Between this altitude and [`RAMC_II_ANCHOR_ALTITUDE_M`] station 1 is overdense at Ka-band, the
+/// highest frequency flown, so [`RAMC_II_NE_ANCHOR`] is a lower bound on the flight's peak
+/// electron density there; below it no flight datum applies.
 pub const RAMC_LOWER_BOUND_FLOOR_M: f64 = 56_390.0;
 
 // ── Baseline atmosphere: `(altitude m, n_tot m⁻³, T K, a m/s)` rows, ascending altitude.
@@ -113,7 +113,11 @@ pub const RAMC_LOWER_BOUND_FLOOR_M: f64 = 56_390.0;
 // to five significant figures at 61, 71 and 72 km (61 km: 244.274 K, 19.157 Pa,
 // 2.7321e-4 kg/m³). Above 86 km the rows extend isothermally at the 86 km temperature,
 // hydrostatic in geometric altitude; at 90 km that agrees with Table I's density to 0.2 %.
-// Number density decreases monotonically through the table.
+// Number density decreases monotonically through the table. The table is the standard day, so it
+// differs from the RAM-C II flight day: the cited 71 km freestream (Mach 25.9, 217.9 K, q = 2.28 kPa;
+// Parent et al., arXiv:2111.09432) is 7.9 % denser and 1.1 K warmer than the 71 km row, which gives
+// q = 2.10 kPa at the same Mach number. The stagnation-line harness flies the flight day; the
+// corridor flies this table and reads its anchor where the descent crosses 71.93 km.
 pub const ATMOSPHERE: [(f64, f64, f64, f64); 91] = [
     (0.0, 2.5470e25, 288.150, 340.29),
     (1000.0, 2.3113e25, 281.651, 336.43),
@@ -269,7 +273,7 @@ pub const FALLBACK_N_TOT: f64 = 2.645e22;
 /// Initial true position: the descent starts at 90 km on the +x radial, m.
 pub const TRUTH_ALTITUDE_0: f64 = 90_000.0;
 /// Initial true velocity: a steep compressed entry, scaled at fixed flight-path angle so the
-/// drag-decelerated vehicle crosses the RAM-C II anchor altitude ([`RAMC_ANCHOR_ALTITUDE_M`]) at the
+/// drag-decelerated vehicle crosses the RAM-C II anchor altitude ([`RAMC_II_ANCHOR_ALTITUDE_M`]) at the
 /// flight's 7.66 km/s (Grantham 1970, Table VII), which matches the stagnation-line harness's
 /// freestream at the anchor comparison.
 pub const TRUTH_V0: [f64; 3] = [-1_255.1, 7_588.6, 0.0];

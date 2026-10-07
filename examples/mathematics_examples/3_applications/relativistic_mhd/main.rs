@@ -63,14 +63,16 @@ const CURRENT_DENSITY: ContextoidId = 7;
 const MAGNETIC_FIELD: ContextoidId = 8;
 
 /// The blade indices of the spatial x and y axes in `metric`'s algebra: each axis owns one bit.
-/// `Minkowski(4)` puts time on `e_0`, so x and y are `e_1` and `e_2`; `Euclidean(3)` has no time
-/// axis, so they are `e_0` and `e_1`.
-fn spatial_xy(metric: Metric) -> (usize, usize) {
+/// `Minkowski` puts time on `e_0`, so x and y are `e_1` and `e_2`; `Euclidean` has no time axis,
+/// so they are `e_0` and `e_1`. Any other metric, or one with fewer than two spatial axes, is an
+/// error.
+fn spatial_xy(metric: Metric) -> Result<(usize, usize), Box<dyn std::error::Error>> {
     let first_spatial = match metric {
-        Metric::Minkowski(_) => 1,
-        _ => 0,
+        Metric::Minkowski(dim) if dim >= 3 => 1,
+        Metric::Euclidean(dim) if dim >= 2 => 0,
+        other => return Err(format!("no spatial x and y axes for the metric {other:?}").into()),
     };
-    (1 << first_spatial, 1 << (first_spatial + 1))
+    Ok((1 << first_spatial, 1 << (first_spatial + 1)))
 }
 
 /// The working scalar. The metric, the curvature and the plasma force all carry it.
@@ -185,13 +187,13 @@ fn lorentz_force(
     current_density: FloatType,
     magnetic_field: FloatType,
     metric: Metric,
-) -> Result<FloatType, CausalMultiVectorError> {
-    let (e_x, e_y) = spatial_xy(metric);
+) -> Result<FloatType, Box<dyn std::error::Error>> {
+    let (e_x, e_y) = spatial_xy(metric)?;
     let current = multivector(&[(e_x, current_density)], metric)?;
     let field = multivector(&[(e_x | e_y, magnetic_field)], metric)?;
 
     let force = current.inner_product(&field);
-    blade(&force, e_y)
+    Ok(blade(&force, e_y)?)
 }
 
 /// A multivector holding the given coefficients at the given blade indices, zero elsewhere. An
@@ -203,9 +205,9 @@ fn multivector(
     let mut data = vec![ZERO; 1 << metric.dimension()];
     let found = data.len();
     for &(index, value) in components {
-        let slot = data
-            .get_mut(index)
-            .ok_or_else(|| CausalMultiVectorError::data_length_mismatch(index + 1, found))?;
+        let slot = data.get_mut(index).ok_or_else(|| {
+            CausalMultiVectorError::data_length_mismatch(index.saturating_add(1), found)
+        })?;
         *slot = value;
     }
     CausalMultiVector::new(data, metric)
@@ -216,10 +218,9 @@ fn blade(
     field: &CausalMultiVector<FloatType>,
     index: usize,
 ) -> Result<FloatType, CausalMultiVectorError> {
-    field
-        .get(index)
-        .copied()
-        .ok_or_else(|| CausalMultiVectorError::data_length_mismatch(index + 1, field.data().len()))
+    field.get(index).copied().ok_or_else(|| {
+        CausalMultiVectorError::data_length_mismatch(index.saturating_add(1), field.data().len())
+    })
 }
 
 // -----------------------------------------------------------------------------------------

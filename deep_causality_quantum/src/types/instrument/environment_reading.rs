@@ -23,11 +23,14 @@ pub struct EnvironmentReading<R> {
 }
 
 impl<R: RealField + core::fmt::Debug> EnvironmentReading<R> {
-    /// A reading of `earth_tide` (m/s²), `temperature` (K) and `field` (T).
+    /// A reading of `earth_tide` (m/s²), `temperature` (K) and `field` (T). The tide and the
+    /// field are signed; the temperature is non-negative, with zero accepted as in
+    /// [`Default`].
     ///
     /// # Errors
     ///
-    /// [`QuantumError::NonFiniteValue`] naming the first value that is not finite.
+    /// [`QuantumError::NonFiniteValue`] naming the first value that is not finite;
+    /// [`QuantumError::CalculationError`] when `temperature` is negative.
     pub fn new(earth_tide: R, temperature: R, field: R) -> Result<Self, QuantumError> {
         let named = [
             ("earth_tide", earth_tide),
@@ -37,6 +40,11 @@ impl<R: RealField + core::fmt::Debug> EnvironmentReading<R> {
         if let Some((name, value)) = named.iter().find(|(_, value)| !value.is_finite()) {
             return Err(QuantumError::NonFiniteValue(format!(
                 "environment reading: {name} must be finite, got {value:?}"
+            )));
+        }
+        if temperature < R::zero() {
+            return Err(QuantumError::CalculationError(format!(
+                "environment reading: temperature must be non-negative, got {temperature:?}"
             )));
         }
         Ok(Self {

@@ -151,9 +151,9 @@ fn multivector(
     let mut data = vec![ZERO; COEFFICIENTS];
     let found = data.len();
     for &(index, value) in components {
-        let slot = data
-            .get_mut(index)
-            .ok_or_else(|| CausalMultiVectorError::data_length_mismatch(index + 1, found))?;
+        let slot = data.get_mut(index).ok_or_else(|| {
+            CausalMultiVectorError::data_length_mismatch(index.saturating_add(1), found)
+        })?;
         *slot = value;
     }
     CausalMultiVector::new(data, metric)
@@ -164,10 +164,9 @@ fn blade(
     field: &CausalMultiVector<FloatType>,
     index: usize,
 ) -> Result<FloatType, CausalMultiVectorError> {
-    field
-        .get(index)
-        .copied()
-        .ok_or_else(|| CausalMultiVectorError::data_length_mismatch(index + 1, field.data().len()))
+    field.get(index).copied().ok_or_else(|| {
+        CausalMultiVectorError::data_length_mismatch(index.saturating_add(1), field.data().len())
+    })
 }
 
 /// The plane-wave potential component `A_x(t, z) = cos(ω(t − z))`, written once as a

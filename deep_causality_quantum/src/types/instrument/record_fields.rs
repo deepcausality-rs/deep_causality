@@ -6,6 +6,7 @@
 //! Reading a payload struct back from its `Fields` record.
 
 use crate::QuantumError;
+use alloc::format;
 use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 use deep_causality_context::Storable;
@@ -26,18 +27,24 @@ pub(crate) fn entries(
     }
 }
 
-/// The value under `name` among `entries`, read as `T`.
+/// The value under `name` among `entries`, read as `T`. A name carried by two entries is
+/// rejected before either value is read, since the record does not say which one holds.
 pub(crate) fn field<T: Storable>(
     id: ContextoidId,
     entries: &[(String, DataRecord)],
     name: &'static str,
 ) -> Result<T, ProjectionError> {
-    let record = entries
-        .iter()
-        .find(|(key, _)| key == name)
-        .map(|(_, value)| value.clone())
+    let mut named = entries.iter().filter(|(key, _)| key == name);
+    let (_, record) = named
+        .next()
         .ok_or(ProjectionError::MissingField(id, name))?;
-    T::from_record(id, record)
+    if named.next().is_some() {
+        return Err(ProjectionError::Rejected(
+            id,
+            format!("a Fields record names '{name}' more than once"),
+        ));
+    }
+    T::from_record(id, record.clone())
 }
 
 /// A payload rule the record's values break, as the projection error for the node under `id`.

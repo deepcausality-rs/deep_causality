@@ -68,11 +68,10 @@ const COARSE_L: usize = 16;
 
 /// A second lattice side, used only by the precision table.
 ///
-/// `|m| = k / N` is a dyadic rational needing `log2(N)` significand bits, `m^2` needs twice that,
-/// and summing `R` of them needs `2 log2(N) + log2(R)`. At `L = 16` that is 21 bits, inside
-/// `f32`'s 24, so the whole reduction is *exact* there and three scalars cannot disagree. At
-/// `L = 32` it is 25 and `f32` must round. The table shows both, because the threshold is the
-/// point.
+/// The bit count in `report_precision` bounds the reduction `<m^2> - <m>^2` at 24 bits for
+/// `L = 16`, inside `f32`'s 24, so the reduction is *exact* there and three scalars cannot
+/// disagree. At `L = 32` the bound is 28 bits and `f32` can round. The table shows both, because
+/// the threshold is the point.
 const FINE_L: usize = 32;
 
 /// Spins per lattice, at the physics size.
@@ -433,15 +432,24 @@ where
 /// `T = 1.5`, and the second is where the digits go.
 ///
 /// **And at this lattice size no scalar can disagree, because the arithmetic is exact.** `|m|` is
-/// `k / N` for an integer `k`: a dyadic rational needing `log2(N)` significand bits. `m^2` needs
-/// twice that, and summing `R` of them needs `2 log2(N) + log2(R)`. At `L = 16, R = 32` that is
-/// 21 bits, inside `f32`'s 24 — so `f32`, `f64` and `Float106` compute a **bit-identical**
-/// reduction `<m^2> - <m>^2`, and a table claiming to show a precision effect in it would have been
-/// showing nothing.
+/// `k / N` for the spin sum `k = |sum s_i|`, and `k` has the parity of `N`. `N` is even, so
+/// `|m| = j / (N / 2)` for an integer `j <= N / 2`: a dyadic rational needing `log2(N) - 1`
+/// significand bits. `R` is a power of two, so dividing by it is exact, and each term of the
+/// reduction has its own bound:
 ///
-/// At `L = 32` the same count is 25 bits and `f32` must round. Crossing that threshold is what
-/// puts an effect in the table, and the threshold was computed before the run rather than found
-/// in it.
+/// - `<m^2>` sums `R` squares: `2 (log2(N) - 1) + log2(R)` bits.
+/// - `<m>^2` squares a sum of `R` magnetisations: `2 (log2(N) - 1 + log2(R))` bits.
+/// - `<m^2> - <m>^2` is `(R sum j^2 - (sum j)^2) / (R N / 2)^2`, and its numerator is at most
+///   `(R N / 2)^2`: the same `2 (log2(N) - 1 + log2(R))` bits.
+///
+/// At `L = 16, R = 32` these are 19, 24 and 24 bits, inside `f32`'s 24, so `f32`, `f64` and
+/// `Float106` compute a **bit-identical** reduction `<m^2> - <m>^2`, and a table claiming to show
+/// a precision effect in it would have been showing nothing. The even parity is what makes it
+/// fit: without it `<m>^2` would need 26 bits.
+///
+/// At `L = 32` the bound on `<m>^2` and on the difference is 28 bits, and `f32` can round there;
+/// `<m^2>`, at 23 bits, stays exact. Crossing that threshold is what puts an effect in the table,
+/// and the threshold was computed before the run rather than found in it.
 ///
 /// The four rows are a 2x2 — representable or not, fluctuation large or small — and only the cell
 /// where both are unfavourable costs anything: `7.7e-5` against `3.0e-8`, `3.2e-8` and `1.4e-7`.
