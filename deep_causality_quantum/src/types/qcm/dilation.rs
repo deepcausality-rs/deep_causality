@@ -291,7 +291,9 @@ where
         let mut supports = FactorSupports::new();
         let mut factors = ProcessFactors::new();
         for (node, leg) in legs.iter().enumerate() {
-            supports.set_leg_dim(node, leg.d * leg.d);
+            supports
+                .set_leg_dim(node, leg.d * leg.d)
+                .set_leg_output_dim(node, leg.d);
         }
         for node in 0..legs.len() {
             let parents: BTreeSet<NodeId> = legs[node]

@@ -139,3 +139,13 @@ fn test_validate_rejects_factor_without_declared_support() {
         QuantumErrorEnum::DimensionMismatch(_)
     ));
 }
+
+#[test]
+fn test_a_leg_has_no_output_half_until_one_is_declared() {
+    let mut fs = FactorSupports::new();
+    fs.declare(0, &[0]);
+    assert_eq!(fs.leg_output_dim(0), 1);
+    fs.set_leg_output_dim(0, 4);
+    assert_eq!(fs.leg_output_dim(0), 4);
+    assert_eq!(fs.leg_output_dim(7), 1);
+}

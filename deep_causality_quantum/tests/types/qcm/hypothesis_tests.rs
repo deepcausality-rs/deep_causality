@@ -750,3 +750,37 @@ fn test_normalization_needs_a_structural_candidate_with_its_own_leg() {
         other => panic!("expected DimensionMismatch, got {other:?}"),
     }
 }
+
+#[test]
+fn test_a_leg_with_an_output_half_traces_to_its_output_dimension() {
+    // One node whose leg pairs a qubit input with a qubit output: |0⟩⟨0| on the input and the
+    // identity on the output traces to 2 over the whole leg, the output dimension.
+    let factor = |entries: &[f64]| {
+        let mut pf = ProcessFactors::new();
+        pf.insert(0, diagonal(entries));
+        let mut fs = FactorSupports::new();
+        fs.declare(0, &[0]);
+        fs.set_leg_dim(0, 4).set_leg_output_dim(0, 2);
+        Hypothesis::structural("paired", pf, fs).unwrap()
+    };
+    assert!(
+        factor(&[1.0, 1.0, 0.0, 0.0])
+            .check_normalization()
+            .unwrap()
+            .accepted()
+    );
+    // The same entries read under the flat convention trace to 2, not 1.
+    let mut pf = ProcessFactors::new();
+    pf.insert(0, diagonal(&[1.0, 1.0, 0.0, 0.0]));
+    let mut fs = FactorSupports::new();
+    fs.declare(0, &[0]);
+    fs.set_leg_dim(0, 4);
+    let flat = Hypothesis::structural("flat", pf, fs).unwrap();
+    let report = flat.check_normalization().unwrap();
+    assert!(!report.accepted());
+    assert!((report.checks()[0].measured - 1.0).abs() < 1e-15);
+    // A paired leg whose input is not normalised traces to 1, not 2.
+    let report = factor(&[0.5, 0.5, 0.0, 0.0]).check_normalization().unwrap();
+    assert!(!report.accepted());
+    assert!((report.checks()[0].measured - 1.0).abs() < 1e-15);
+}

@@ -3,8 +3,7 @@
  * The mechanism as four verbs, each tied to the API name it becomes in the
  * program below it. The code is condensed from
  * `examples/quantum_examples/qcl_examples/qcl_crosstalk/main.rs`: it drops the
- * printing, the observation and the construction of the worlds, and keeps
- * every call that carries a step.
+ * printing and the build-time refusal, and keeps every call that carries a step.
  */
 import { Code } from 'astro:components';
 import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
@@ -15,23 +14,23 @@ const SHIKI = { light: rustLight, dark: rustDark };
 const steps = [
   {
     verb: 'Declare',
-    text: 'You name the plant (the qubit system under study), the candidate structures, and the experiments you could run, each with a cost and a predicted read-out under every candidate; you supply those numbers. The builder refuses a candidate that is a cycle.',
-    api: 'config(…).candidates(…).probes(…).build()',
+    text: 'You name the plant (the qubit system under study), the candidate structures, and the experiments you could run, each with a cost and the configuration it sets. A response model you write says what each configuration does in each candidate’s world, and the library computes every predicted read-out from it. The builder refuses a candidate that is a cycle.',
+    api: 'config(…).candidates(…).build()',
   },
   {
     verb: 'Screen',
-    text: 'Two checks screen each candidate. The Markov check tests that factors with overlapping Hilbert supports commute, which makes the candidate a legal quantum causal model. The decomposability check rejects a C₃ sub-relation, the pattern two commuting CNOTs create, which no faithful model carries. Each check reports what it measured, its threshold, its margin and how many items it examined.',
-    api: 'validate(&cfg).check_markov(…).finalize()',
+    text: 'Three checks screen each candidate. The normalisation check tests that every factor is a conditional that sums to one. The Markov check tests that factors with overlapping Hilbert supports commute, which makes the candidate a legal quantum causal model. The decomposability check rejects a C₃ sub-relation, the pattern two commuting CNOTs create, which no faithful model carries. Each check reports what it measured, its threshold, its margin and how many items it examined.',
+    api: 'validate(&cfg).check_normalization().check_markov(…)',
   },
   {
     verb: 'Plan',
-    text: 'Control accepts only a screen. It forks one world per admitted candidate, then picks the cheapest experiments that separate each coverable pair of candidates by at least a floor of bits.',
-    api: 'control(&screened).fork().design(…)',
+    text: 'Control accepts only a screen. It computes each experiment’s predicted read-out under each admitted candidate, then picks the cheapest experiments that separate each coverable pair of candidates by at least a floor of bits.',
+    api: 'control(&screened).design_with(&model, &exps, …)',
   },
   {
     verb: 'Decide',
-    text: 'The program judges each world’s prediction against the observation and folds the verdicts. The result is one survivor, or a named ambiguity when the data leaves several candidates standing.',
-    api: 'adjudicate(&worlds, floor_bits)',
+    text: 'A campaign runs the cheapest planned experiment, judges each world’s prediction against the observation and folds the verdicts. It stops at one survivor, or at a named ambiguity when no remaining experiment can split the candidates still standing.',
+    api: 'CausalFlow::value(Campaign::new(…)).iterate_until(…)',
   },
 ];
 
@@ -39,25 +38,34 @@ const code = `// 1. Declare. A fourth candidate that is a cycle makes build() re
 //    CyclicStructureUnsupported.
 let cfg = QclBuilder::config::<FloatType, NumberType>()
     .over_plant(plant()?, &[e2_projector()?, e1_projector()?])
-    .candidates(&[h1_direct_q1_to_q2()?, h2_direct_q2_to_q1()?, h3_common_bath()?])
-    .probes(&experiments()?)
+    .candidates(&candidates)
     .seed(SEED)
     .build()?;
 
-// 2. Screen. Each check returns a report; the screen admits what passes both.
+// 2. Screen. Each check returns a report; the screen admits what passes all three.
 let screened = QclBuilder::validate(&cfg)
+    .check_normalization()
     .check_markov(&CommutatorTolerance::<FloatType>::default())
     .check_decomposable(&sys, &sys)
     .finalize()?;
 
-// 3. Plan. Fork one world per admitted candidate, then solve the minimum-cost cover.
-let report = QclBuilder::control::<FloatType, NumberType, 4, _>(&screened)
-    .fork()
-    .design(MinCostCover::new(floor_bits))
+// 3. Plan. The response model computes every prediction; design_with solves the cover.
+let exps = experiments()?;
+let planned = QclBuilder::control::<FloatType, NumberType, 4, _>(&screened)
+    .design_with(&CrosstalkModel, &exps, MinCostCover::new(floor_bits))
     .finalize()?;
 
-// 4. Decide. \`worlds\` holds each candidate's verdict on the observation.
-let a = adjudicate(&worlds, floor_bits)?;`;
+// 4. Decide. The campaign runs the cheapest planned experiment until the evidence decides.
+let truth = EvidenceSource::Simulated(h1_direct_q1_to_q2()?);
+let rules = CampaignRules::new(MinCostCover::new(floor_bits), AGREEMENT_SIGMAS, DRIFT)?;
+let campaign = CausalFlow::value(Campaign::new(
+    QclBuilder::control::<FloatType, NumberType, 4, _>(&screened).fork(),
+))
+.context(exps.clone())
+.iterate_until(Campaign::is_stopped, exps.len() + 1, |flow| {
+    Campaign::step(flow, &CrosstalkModel, &truth, &rules)
+})
+.finish()?;`;
 ---
 <div class="steps">
   <ol class="cards">

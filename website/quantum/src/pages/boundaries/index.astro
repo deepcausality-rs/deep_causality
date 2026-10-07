@@ -37,33 +37,36 @@ const description =
     <h2>What do the examples assume?</h2>
     <dl class="deflist">
       <div>
-        <dt>The read-outs are inputs</dt>
+        <dt>The conditional tables are inputs</dt>
         <dd>
-          <code>constants.rs</code> states the read-out each candidate predicts for each experiment;
-          the plan and the verdict follow from those numbers. The run shows the procedure reaching
-          the correct candidate under those assumptions, and no figure in it describes a device.
+          <code>model.rs</code> states each candidate’s conditional tables and what each experiment
+          does to them; the library computes every predicted read-out from those, and the plan and
+          the verdict follow. The run shows the procedure reaching the correct candidate under
+          those assumptions, and no figure in it describes a device.
         </dd>
       </div>
       <div>
         <dt>The observation is simulated</dt>
         <dd>
           The example draws its shots from the Born sampler at H1’s predicted read-out, then
-          checks that the adjudication names H1; it exits nonzero if it does not. It observes E1,
-          the first experiment of the plan, and no other.
+          checks that the campaign names H1; it exits nonzero if it does not. The campaign observes
+          E1, the plan’s cheapest experiment, and stops there because H1 separates.
         </dd>
       </div>
       <div>
         <dt>Cost is one arbitrary unit</dt>
         <dd>
-          In the example’s constants, tomography costs 200, a targeted intervention 1 and an echo 2,
-          all in one unit. The ratio comes from those constants; no laboratory measured it.
+          In the example’s constants, a targeted intervention costs 1, the passive read 1 and an
+          echo 2, all in one unit. The costs come from those constants; no laboratory measured
+          them.
         </dd>
       </div>
       <div>
         <dt>The factors are diagonal</dt>
         <dd>
-          Every candidate in the crosstalk example is a legal model by construction, so the Markov
-          check rejects none of them. The experiments alone separate the candidates.
+          Every candidate in the crosstalk example is a normalised, legal model by construction, so
+          the normalisation and Markov checks reject none of them. The experiments alone separate
+          the candidates.
         </dd>
       </div>
       <div>

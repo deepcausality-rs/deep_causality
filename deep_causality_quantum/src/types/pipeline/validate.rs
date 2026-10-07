@@ -490,7 +490,8 @@ where
     R: RealField + FromPrimitive + Default + core::fmt::Debug,
     N: NaturalNumber,
 {
-    /// The Markov check on every structural candidate. A candidate whose factors fail is not
+    /// The Markov check on every candidate in the pool, the config's candidates when this is the
+    /// first stage and the admitted set otherwise. A candidate whose factors fail is not
     /// admitted; a structural failure of the check itself is the stage's failure.
     pub fn check_markov(mut self, tolerance: &CommutatorTolerance<R>) -> Self {
         if self.failure.is_some() {
@@ -498,7 +499,7 @@ where
         }
         let mut admitted = Vec::new();
         let mut folded = CheckReport::vacuous();
-        for (slot, h) in self.cfg.subject().candidates().iter().enumerate() {
+        for (slot, h) in self.pool() {
             match h.check_markov(tolerance) {
                 Ok(certified) => {
                     let report = certified.certificate().cloned().expect("just certified");

@@ -13,10 +13,13 @@ uses:
   - QubitOperator
   - ScreenOrigin
   - Hypothesis
+  - ConfiguredExperiment
+  - ResponseModel
   - MinCostCover
   - adjudicate
 crates:
   - deep_causality_algebra
+  - deep_causality_context_store
   - deep_causality_haft
   - deep_causality_num
   - deep_causality_num_complex
@@ -25,8 +28,9 @@ crates:
 source: "examples/quantum_examples/qcl_examples/qcl_crosstalk_circuits"
 ---
 
-Yes. The circuit version reaches the same plan at cost 2 and the same survivor, H1, because it
-reuses the first example's typed predictions and costs. Only the way the candidates are written
+Yes. The circuit version reaches the same plan at cost 2 and the same survivor, H1, because each
+candidate's predictions are computed from the factorization it stands for, with the first
+example's conditional tables, response model and costs. Only the way the candidates are written
 changes: in [the first example](/examples/qcl-crosstalk/) each structure is declared as a
 factorization, and here the wiring of a circuit carries it.
 
@@ -40,8 +44,13 @@ factorization, and here the wiring of a circuit carries it.
     H1 Q1->Q2    2 nodes, edges [(0, 1)]; stages: check_markov Accepted, check_decomposable Vacuous
     H2 Q2->Q1    2 nodes, edges [(1, 0)]; stages: check_markov Accepted, check_decomposable Vacuous
     H3 Q1<-B->Q2 kept as the v1 factorization (see model.rs)
+
+[validate] the three candidates on the plant subject
+    check_normalization  Accepted  examined 7
+    check_markov         Accepted  examined 5
+    check_decomposable   Accepted  examined 3
 ...
-    plan: ["E1 do(Q1=|1>) P(e2)", "E2 do(Q2=|1>) P(e1)"]  total cost 2   (tomography alone would cost 200, 100× more)
+    plan: ["E1 do(Q1=|1>) P(e2)", "E2 do(Q2=|1>) P(e1)"]  total cost 2, of the 5 all 4 experiments cost
     covers every pair: yes   costs 2: yes   picked both interventions: yes
 ...
 [adjudicate] H1 Q1->Q2 survives, 100.1 bits from its nearest rival. Direct cause, not shared bath.
@@ -58,9 +67,10 @@ factorization, and here the wiring of a circuit carries it.
 | H4, Q1 → Q2 → B → Q1 | four boxes on one wire grouped into a cycle | refused at `build()` |
 
 Each circuit goes through `over_circuit`, and the structural stages screen its dilation. The
-dilation's normalised factors then become the candidate that the plant pipeline forks. The
-decomposability check reads Vacuous on the two circuits because a two-node structure holds no
-3×3 sub-relation.
+dilation's normalised factors then become the candidate that the plant pipeline forks, and the
+normalisation check on the plant subject confirms them: a dilation's leg pairs a node's input with
+its output, and the factor is the identity on the output half. The decomposability check reads
+Vacuous on the two circuits because a two-node structure holds no 3×3 sub-relation.
 
 ## Read before you cite
 
@@ -68,6 +78,9 @@ The bath candidate H3 stays a factorization. A bath that drives two qubits needs
 output wires, and under the dilation's leg convention that node has a leg of 256 dimensions. The
 Markov union over its three legs is a 65536 × 65536 matrix with 2<sup>32</sup> entries, which is
 beyond the crate's cap of 2<sup>24</sup>. The circuits set the structure and what the screen
-reads; they do not set the predictions. H1 and H2 use the same two boxes, and only the grouping of
-the boxes into nodes reverses the edge. The read-outs, the observation and the cost unit carry the
-same caveats as in the first example, so the plan and the survivor follow from those constants.
+reads; they do not set the predictions. A circuit's dilation acts on one wire's boxes, not on the
+two qubits the experiments hold and read, so the predictions come from the factorization each
+circuit stands for, and the observation and the adjudication are run by hand rather than by a
+campaign. H1 and H2 use the same two boxes, and only the grouping of the boxes into nodes reverses
+the edge. The conditional tables, the observation and the cost unit carry the same caveats as in
+the first example.

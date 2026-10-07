@@ -80,14 +80,13 @@ seen this library. After ten seconds the reader should know what the library
 does, what it adds, and why that is useful. Structure, order and emphasis serve
 a reader who arrives cold from a link.
 
-**The crosstalk run is simulated, and the page says so.** The qubit factors, the
-costs and the read-out each candidate predicts for each experiment are typed
-into the example's `constants.rs` and `model.rs`; the observation is drawn from
-the Born sampler at H1's prediction; the cost unit is arbitrary; and the run
-observes E1 only. The plan table, the decision figure and `/boundaries/` state
-each of these. The example prints "tightest pair separates at 164.8 bits", which
-is the best separation any offered experiment reaches; under the chosen plan the
-tightest pair separates at 99.5 bits. No figure on the site describes a device.
+**The crosstalk run is simulated, and the page says so.** The candidates'
+conditional tables, the costs and each candidate's response to each experiment
+are typed into the example's `constants.rs` and `model.rs`; the library computes
+every predicted read-out from them; the observation is drawn from the Born
+sampler at H1's prediction; the cost unit is arbitrary; and the campaign stops
+after E1, because H1 separates. The plan table, the decision figure and
+`/boundaries/` state each of these. No figure on the site describes a device.
 
 **No roadmap, and no future work.** The site describes the crate as it is today.
 When something is not built, the page says what is not built and stops there.
@@ -108,13 +107,13 @@ Numbers on the site come from a command anyone can re-run:
 
 | Figure | Source |
 | --- | --- |
-| 773 tests passing (772 tests plus 1 doc test) | `cargo test -p deep_causality_quantum --all-features` |
+| 893 tests passing (892 tests plus 1 doc test) | `cargo test -p deep_causality_quantum --all-features` |
 | Version 0.4.2, released 2026-09-29 | `deep_causality_quantum/CHANGELOG.md` and `Cargo.toml` |
 | 14 proved theorems, 7 deferred targets | the quantum section of `lean/THEOREM_MAP.md` |
-| The crosstalk run: plan cost 2 against 200, 100.1 bits, 164.8 bits (best offered, tomography), 99.5 bits under the plan | `cargo run --release -p quantum_examples --example qcl_crosstalk`; 99.5 is n·Bhattacharyya distance of 0.40 and 0.10 over 1024 shots |
+| The crosstalk run: plan cost 2 of the 5 all four experiments cost, 99.5 bits (survivor and tightest pair), the campaign stops after one experiment | `cargo run --release -p quantum_examples --example qcl_crosstalk`; 99.5 is n·Bhattacharyya distance of 0.40 and 0.10 over 1024 shots |
 | The toric code run: four checks accepted, bound 3 rejects with margin 1.333 | `cargo run --release -p quantum_examples --example qcl_geometric_qec` |
 | The stacking runs: gadget residual 0.4619 and bound 3.695; distillation 0.1639, 0.1638 and 0.3277 | `qcl_code_switching`, `qcl_distillation_round`, same command form |
-| 2 to 3 ms per run | release binary, process start included, Apple M3 Max: median 3.0 ms over 20 runs, and 2.4 ms over 30 runs on a second measurement |
+| About 4 ms per run | release binary, process start included, Apple M3 Max: median 4.0 ms over 30 runs, and 3.8 ms over 30 runs on a second measurement |
 | MSRV 1.98.0 | `rust-version` in the root `Cargo.toml` |
 
 The test count is the figure the suite reports. A grep for `#[test]` finds a

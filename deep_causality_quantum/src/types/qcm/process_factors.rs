@@ -75,6 +75,8 @@ pub struct FactorSupports {
     supports: BTreeMap<usize, Vec<usize>>,
     /// leg-id → Hilbert dimension.
     leg_dims: BTreeMap<usize, usize>,
+    /// leg-id → dimension of its output half, for a leg that pairs an input with an output.
+    leg_outputs: BTreeMap<usize, usize>,
 }
 
 impl FactorSupports {
@@ -83,6 +85,7 @@ impl FactorSupports {
         Self {
             supports: BTreeMap::new(),
             leg_dims: BTreeMap::new(),
+            leg_outputs: BTreeMap::new(),
         }
     }
 
@@ -105,6 +108,19 @@ impl FactorSupports {
     pub fn set_leg_dim(&mut self, leg: usize, dim: usize) -> &mut Self {
         self.leg_dims.insert(leg, dim);
         self
+    }
+
+    /// Declares that `leg` pairs an input with an output of dimension `dim`, the input half
+    /// outer, as a dilation's legs do: a factor on it is the identity on that output half.
+    pub fn set_leg_output_dim(&mut self, leg: usize, dim: usize) -> &mut Self {
+        self.leg_outputs.insert(leg, dim);
+        self
+    }
+
+    /// The dimension of `leg`'s output half: `1` for a single-system leg, the flat convention's,
+    /// and the declared output dimension for a leg that pairs an input with an output.
+    pub fn leg_output_dim(&self, leg: usize) -> usize {
+        self.leg_outputs.get(&leg).copied().unwrap_or(1)
     }
 
     /// The ascending leg-ids of `node`, if declared.

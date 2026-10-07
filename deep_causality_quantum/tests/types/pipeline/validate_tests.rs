@@ -401,3 +401,35 @@ fn test_a_candidate_without_its_own_leg_fails_the_normalization_stage() {
         .finalize());
     assert!(matches!(e.0, QuantumErrorEnum::DimensionMismatch(_)));
 }
+
+#[test]
+fn test_a_later_markov_stage_keeps_what_normalization_refused() {
+    // The joint table commutes, so a Markov stage that re-pooled every candidate would admit it
+    // again after check_normalization refused it.
+    let joint = {
+        let mut pf = ProcessFactors::new();
+        pf.insert(0, mat(vec![c(0.9), c(0.0), c(0.0), c(0.1)], 2));
+        let mut q2 = vec![c(0.0); 16];
+        for (i, v) in [0.85, 0.05, 0.05, 0.05].into_iter().enumerate() {
+            q2[i * 4 + i] = c(v);
+        }
+        pf.insert(1, mat(q2, 4));
+        let mut fs = FactorSupports::new();
+        fs.declare(0, &[0]);
+        fs.declare(1, &[0, 1]);
+        deep_causality_quantum::Hypothesis::structural("joint", pf, fs).unwrap()
+    };
+    let (plant, e2) = two_qubit_plant();
+    let cfg = QclBuilder::config::<f64, Count>()
+        .over_plant(plant, &[e2])
+        .candidates(&[joint, conditional_drive()])
+        .build()
+        .unwrap();
+    let screened = QclBuilder::validate(&cfg)
+        .check_normalization()
+        .check_markov(&CommutatorTolerance::default())
+        .finalize()
+        .unwrap();
+    assert_eq!(screened.admitted_slots(), &[1]);
+    assert_eq!(screened.stages()[1].1.examined(), 1);
+}

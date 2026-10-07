@@ -61,8 +61,8 @@ const configs = [
     <h2>How do you see it work first?</h2>
     <p>
       Clone the repository and run the crosstalk example. It refuses a cyclic candidate, screens
-      three others, prints the plan (cost 2 against 200 in the example’s own unit) and names the
-      survivor, H1. The first run
+      three others, prints the plan (cost 2 of the 5 that all four experiments cost, in the
+      example’s own unit), runs the plan’s first experiment and names the survivor, H1. The first run
       compiles the crates it depends on; the example itself finishes in milliseconds.
     </p>
     <Code code={run} lang="bash" themes={SHIKI} wrap />

@@ -54,7 +54,8 @@ const jsonLd = {
       <p>
         An intervention separates them. Hold qubit 1 excited and read qubit 2; the number
         returned is the read-out. H1 predicts 0.40, and H2 and H3 each predict 0.10. You supply
-        those predictions; the library plans from them.
+        each candidate’s conditional tables and a response model for each experiment; the library
+        computes the predictions and plans from them.
       </p>
     </Fragment>
     <SameReadout />
@@ -63,11 +64,11 @@ const jsonLd = {
   <HomeSection ix="04 / 09" label="The plan and the decision" title="Two experiments separate all three causes.">
     <Fragment slot="lede">
       <p>
-        The planner picks E1 and E2 at a total cost of {RUN.planCost}; process tomography alone
-        would cost {RUN.tomographyCost}, in the example’s arbitrary unit. Its minimum-cost cover
-        requires a chosen experiment to separate each pair of candidates by at least
-        {RUN.floorBits} bits at that experiment’s shot count, and it lists any pair that no
-        experiment reaches.
+        The planner picks E1 and E2 at a total cost of {RUN.planCost}, of the
+        {RUN.allExperimentsCost} that all four experiments cost in the example’s arbitrary unit.
+        Its minimum-cost cover requires a chosen experiment to separate each pair of candidates by
+        at least {RUN.floorBits} bits at that experiment’s shot count, and it lists any pair that
+        no experiment reaches.
       </p>
       <p>
         E1 (hold qubit 1 excited) separates H1 from the others, and E2 (hold qubit 2 excited)
@@ -79,8 +80,10 @@ const jsonLd = {
     <div class="decision">
       <h3>The decision</h3>
       <p>
-        The run observes E1 on data the simulator draws from H1’s prediction, judges each
-        candidate against it, and one survives.
+        A campaign runs the plan’s cheapest experiment, E1, on data the simulator draws from H1’s
+        prediction, and judges each candidate against it. One survives, separated from both
+        rivals, so the campaign stops after one experiment and spends {RUN.campaignSpent} of the
+        plan’s {RUN.planCost}.
       </p>
       <DecisionFigure />
     </div>

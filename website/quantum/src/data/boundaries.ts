@@ -57,9 +57,9 @@ export const boundaries: Boundary[] = [
     id: 'predictions',
     status: 'partial',
     mark: 'you supply',
-    title: 'You supply each candidate’s predicted read-out.',
-    text: 'Each experiment carries a cost, a shot count and one predicted probability per candidate, and Experiment::new takes them as data. The crate can compute a prediction from a candidate’s factors (Hypothesis::evaluate); the crosstalk example does not call it and types its predictions into constants.rs. The plan and the verdict are only as good as those numbers.',
-    evidence: 'src/types/design/experiment_design.rs, `Experiment::new`; qcl_crosstalk constants.rs',
+    title: 'You supply the physics of each experiment.',
+    text: 'A ConfiguredExperiment names a configuration, and a ResponseModel you write says what that configuration does in each candidate’s world; the library computes every predicted read-out from it. The crosstalk example writes its candidates as conditional tables and its model in model.rs. Experiment::new still takes typed predictions for a caller without a model. The plan and the verdict are only as good as the model.',
+    evidence: 'src/types/pipeline/configured_experiment.rs, src/types/pipeline/response.rs; qcl_crosstalk model.rs',
   },
   {
     id: 'scale',

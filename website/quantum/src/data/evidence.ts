@@ -12,7 +12,7 @@ export const numberWord = (n: number): string => {
  * Counts quoted across the site. Each has one source and one command.
  *
  *   count      cargo test -p deep_causality_quantum --all-features
- *              772 unit and integration tests plus 1 doc test, all passing
+ *              892 unit and integration tests plus 1 doc test, all passing
  *              (a `#[test]` grep finds a different number: it counts attributes,
  *              not the tests the harness runs)
  *   proved     the quantum section of lean/THEOREM_MAP.md, rows marked `proved`
@@ -21,7 +21,7 @@ export const numberWord = (n: number): string => {
  *   papers     files under deep_causality_quantum/papers/
  */
 export const TESTS = {
-  count: 773,
+  count: 893,
   proved: 14,
   deferred: 7,
   papers: 7,

@@ -10,9 +10,10 @@
 //! `.over_circuit` refuses the cycle by name, `validate` screens each acyclic circuit's dilation by
 //! Markov and C₃, and the dilation's normalised factors become the candidate the plant pipeline
 //! forks. `H₃` stays the v1 factorization, for the reason `model.rs` states. The plant, the
-//! observables, the probes, the plan and the adjudication are the v1 example's, so the decision is
-//! what is reproduced: three admitted, the cycle refused, `{do(Q1), do(Q2)}` at cost 2 against
-//! tomography at 200, and `H1 Q1->Q2` the survivor.
+//! observables, the experiments, the plan and the adjudication are the v1 example's, and each
+//! candidate's predictions are computed from the conditional tables of the factorization it stands
+//! for, so the decision is what is reproduced: three admitted, the cycle refused, `{do(Q1), do(Q2)}`
+//! at cost 2 of the 5 all four experiments cost, and `H1 Q1->Q2` the survivor.
 
 mod constants;
 mod model;
@@ -29,8 +30,7 @@ use deep_causality_quantum::{
 use deep_causality_tensor::CausalTensor;
 
 use crate::constants::{
-    AGREEMENT_SIGMAS, CANDIDATE_COUNT, COST_TOMOGRAPHY, EXPECTED_PLAN_COST, FLOOR_BITS, ONE, SEED,
-    SHOTS, ZERO,
+    AGREEMENT_SIGMAS, CANDIDATE_COUNT, EXPECTED_PLAN_COST, FLOOR_BITS, ONE, SEED, SHOTS, ZERO,
 };
 use crate::model::{
     e1_projector, e2_projector, experiments, h1_circuit, h2_circuit, h3_common_bath,
@@ -90,6 +90,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n[validate] the three candidates on the plant subject");
     let sys = systems();
     let screened = QclBuilder::validate(&cfg)
+        .check_normalization()
         .check_markov(&CommutatorTolerance::<FloatType>::default())
         .check_decomposable(&sys, &sys)
         .finalize()?;
@@ -120,15 +121,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .as_ref()
         .ok_or("design should have produced a plan")?;
     println!(
-        "\n[design] minimum-cost cover, floor {} bits",
+        "\n[design] predicted read-out under H1 / H2 / H3, computed from the factorizations, and the cover at {} bits",
         lower(FLOOR_BITS)
     );
-    for (i, e) in experiments()?.iter().enumerate() {
+    let probes = experiments()?;
+    for (i, e) in probes.iter().enumerate() {
+        let p = e.predictions();
         let chosen = plan.entries().iter().find(|p| p.experiment == i);
         println!(
-            "    {:<26} cost {:>5}   {}",
+            "    {:<24} cost {}   {:.2} / {:.2} / {:.2}   {}",
             e.name(),
             lower(e.cost()),
+            lower(p[0]),
+            lower(p[1]),
+            lower(p[2]),
             chosen.map_or("—".to_string(), |p| format!(
                 "chosen, resolves {:?}",
                 p.resolves
@@ -136,10 +142,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
     }
     let names: Vec<&str> = plan.entries().iter().map(|e| e.name.as_str()).collect();
+    let every_experiment = probes.iter().fold(ZERO, |sum, e| sum + e.cost());
     println!(
-        "    plan: {names:?}  total cost {}   (tomography alone would cost 200, {}× more)",
+        "    plan: {names:?}  total cost {}, of the {} all {} experiments cost",
         lower(plan.total_cost()),
-        lower(COST_TOMOGRAPHY / plan.total_cost())
+        lower(every_experiment),
+        probes.len()
     );
 
     let plan_is_complete = plan.is_complete();
@@ -156,7 +164,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     // -- the first planned experiment, observed under H₁, and the adjudication ------------
-    let probes = experiments()?;
     let first = &probes[plan.entries()[0].experiment];
     let truth = report
         .worlds

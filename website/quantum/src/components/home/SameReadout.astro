@@ -50,9 +50,11 @@ const passive = experiments.find((e) => e.id === 'E0')!;
     ))}
   </ul>
   <figcaption>
-    Experiment E0 watches both qubits idle, and all three candidates predict a read-out of
-    {passive.predicts[0].toFixed(2)}. The example types that number into
-    <a href="/examples/qcl-crosstalk/"><code>constants.rs</code></a>.
+    Experiment E0 watches both qubits idle, and all three candidates predict that both read
+    excited with probability {passive.predicts[0].toFixed(2)}. The example computes that number
+    from each candidate’s conditional tables in
+    <a href="/examples/qcl-crosstalk/"><code>model.rs</code></a>: every candidate excites each
+    qubit with probability 0.10.
   </figcaption>
 </figure>
 

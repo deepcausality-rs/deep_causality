@@ -154,12 +154,15 @@ const law = `[Z̄(0)] at the shipped precisions
     <h2>What does control do?</h2>
     <p>
       Control turns candidates into a decision: it forks one world per candidate, measures or
-      predicts in each world, and adjudicates the verdicts. Two stage orders are valid.
-      A mechanism plant runs <code>fork</code>, <code>observe</code>, <code>gate</code>,
-      <code>adjudicate</code>. A structural plant runs <code>observe</code>, <code>fork</code>,
-      <code>predict</code>, <code>compare</code>, <code>adjudicate</code>. The stage
-      <code>design</code> belongs to neither order, because it needs only the candidates and the
-      experiments on offer.
+      predicts in each world, and adjudicates the verdicts. A mechanism plant runs
+      <code>fork</code>, <code>observe</code>, <code>gate</code>, <code>adjudicate</code>. A
+      structural plant runs <code>observe</code>, <code>fork</code>, <code>predict</code>,
+      <code>compare</code>, <code>adjudicate</code>. Configured experiments run
+      <code>design_with</code>, then <code>observe_experiment</code>, <code>predict_with</code>
+      and <code>compare</code> once per experiment, then <code>adjudicate</code>; a
+      <code>Campaign</code> repeats that loop under <code>CausalFlow::iterate_until</code> and
+      stops when the evidence decides. The stage <code>design</code> belongs to no order, because
+      it needs only the candidates and the experiments on offer.
     </p>
     <dl class="deflist">
       <div><dt><code>fork</code></dt><dd>Creates one world per candidate, each with its own ledger, and fails if the screen admitted no candidate. A structural candidate’s world holds the plant unchanged; a mechanism candidate’s world holds the plant evolved by that candidate’s channel.</dd></div>
@@ -167,8 +170,9 @@ const law = `[Z̄(0)] at the shipped precisions
       <div><dt><code>predict</code></dt><dd>Evaluates each world’s model for an observable, without spending device time.</dd></div>
       <div><dt><code>compare</code></dt><dd>Judges each world’s prediction against the observation, in standard errors of the observation.</dd></div>
       <div><dt><code>gate</code></dt><dd>Judges a read-out against a specification: at least a given value, or at most one.</dd></div>
-      <div><dt><code>design</code></dt><dd>Solves the minimum-cost cover: the cheapest experiments that separate each coverable pair of candidates by a floor of bits. It also lists the pairs no experiment reaches.</dd></div>
-      <div><dt><code>adjudicate</code></dt><dd>Folds the worlds’ verdicts and names a survivor, or names why the data leaves several candidates standing.</dd></div>
+      <div><dt><code>design</code></dt><dd>Solves the minimum-cost cover: the cheapest experiments that separate each coverable pair of candidates by a floor of bits. It also lists the pairs no experiment reaches. <code>design_with</code> computes each experiment’s predictions from a response model first.</dd></div>
+      <div><dt><code>observe_experiment</code></dt><dd>Observes a configured experiment from simulated evidence, counts a lab recorded, or a published value with its standard error, and records the context it ran in.</dd></div>
+      <div><dt><code>adjudicate</code></dt><dd>Folds the worlds’ verdicts and names a survivor, or names why the data leaves several candidates standing. A world that read several experiments holds only when every reading agrees, and a pair separates by the sum of its bits over them.</dd></div>
     </dl>
     <p>
       The ledger counts shots, experiments, predictions, device time, cost and bits. A shot budget

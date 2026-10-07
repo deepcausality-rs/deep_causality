@@ -350,15 +350,20 @@ where
         })
     }
 
-    /// The normalization check: every factor traced over its node's own leg is the identity on
-    /// its parents' legs, `Tr_A ρ_{A|Pa(A)} = 1_{Pa(A)}`, so the factors make a normalised
-    /// process; for a classical factor, every conditional column sums to one. A parentless
+    /// The normalization check: every factor traced over its node's input is the identity on
+    /// the rest of its support, `Tr_{A^in} ρ_{A|Pa(A)} = 1`, so the factors make a normalised
+    /// process; for a classical factor, every conditional column sums to one, and a parentless
     /// factor's trace is one.
     ///
-    /// One `Check` per factor, `CheckItem::Index(node)`, measures `‖Tr_A ρ − 1‖_F` against the
-    /// state member of the tolerance family at the factor's Frobenius norm. A rejecting record is
-    /// a candidate that is not a process, not an error. Under the flat convention a node's own
-    /// leg is the leg named by the node, and its parents are the other legs of its support.
+    /// A node's own leg is the leg named by the node. Under the flat convention it is the node's
+    /// one system, its input, so the trace runs over the whole leg. A leg that pairs an input with
+    /// an output, as a dilation's do ([`FactorSupports::set_leg_output_dim`]), carries the factor
+    /// as the identity on its output half, so the trace over the whole leg is the output
+    /// dimension `d_out` times the identity.
+    ///
+    /// One `Check` per factor, `CheckItem::Index(node)`, measures `‖Tr_A ρ − d_out · 1‖_F`
+    /// against the state member of the tolerance family at the factor's Frobenius norm. A
+    /// rejecting record is a candidate that is not a process, not an error.
     ///
     /// # Errors
     ///
@@ -385,11 +390,17 @@ where
             let dims: Vec<usize> = supports.space_map(&legs).into_values().collect();
             let traced = partial_trace(factor, &dims, &[own])?;
             let d = square_dim(&traced)?;
+            let output = R::from_usize(supports.leg_output_dim(node)).ok_or_else(|| {
+                QuantumError::CalculationError(format!(
+                    "an output dimension of {} is not representable",
+                    supports.leg_output_dim(node)
+                ))
+            })?;
             let entries = traced.as_slice();
             let mut squared = R::zero();
             for i in 0..d {
                 for j in 0..d {
-                    let target = if i == j { R::one() } else { R::zero() };
+                    let target = if i == j { output } else { R::zero() };
                     let z = entries[i * d + j];
                     let (re, im) = (z.re - target, z.im);
                     squared = squared + re * re + im * im;

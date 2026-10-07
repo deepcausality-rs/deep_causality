@@ -3,7 +3,7 @@
 This example reproduces the crosstalk decision of `qcl_crosstalk` with `H₁`, `H₂` and the cyclic
 `H₄` written as circuits, so the wiring carries the structure; `qcl_crosstalk` declares its four
 structures as factorizations. The decision is the same: the cycle refused at `build()`, three
-candidates admitted, the plan `{do(Q1), do(Q2)}` at cost 2 against tomography at 200, and
+candidates admitted, the plan `{do(Q1), do(Q2)}` at cost 2 of the 5 all four experiments cost, and
 `H1 Q1->Q2` the survivor.
 
 ```bash
@@ -23,5 +23,16 @@ here: a common bath driving two qubits needs a bath node with two output wires, 
 dilation's leg convention, a node dimension `d = d_in · d_out` and a leg of dimension `d²`, that
 node has `d = 16` and a leg of 256, each single-wire child a leg of 16, a child's conditional factor
 `4096 × 4096` with `2^24` entries at the cap, and the Markov union over the three legs
-`65536 × 65536` with `2^32` entries. The `qcl_crosstalk` factorization is a legal QCM by
-construction and stands in its place, as the spec records.
+`65536 × 65536` with `2^32` entries. The `qcl_crosstalk` factorization, a set of conditional
+tables, is a legal QCM by construction and stands in its place, as the spec records.
+
+The screen on the plant subject checks that every candidate is a normalised process. A dilation's
+leg pairs a node's input with its output, and its factor is the identity on the output half, so
+its trace over the leg is the output dimension; the conditional tables of `H₃` trace to one.
+
+The predictions are computed, not typed. A circuit's dilation acts on one wire's boxes, not on the
+two qubits the experiments hold and read, so each candidate's predicted read-outs come from the
+factorization it stands for, through the same response model as `qcl_crosstalk`. The observation
+is drawn from the Born sampler at `H₁`'s computed prediction, and each world is judged against it
+by hand, because the pipeline's `predict_with` evaluates a candidate's own factors and a circuit's
+factors do not describe these experiments.
