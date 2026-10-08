@@ -233,7 +233,7 @@ fn a_triangle_has_the_same_betti_numbers_over_both_fields() {
 fn betti_number_over_is_available_on_a_lattice_complex() {
     // The default body reads the boundary matrices. `LatticeComplex` overrides `betti_number`
     // with a closed form for the torus and does not override this, so the two are separate
-    // answers — see G-03 in `openspec/notes/quantum/qcl-gaps.md`, which is open.
+    // answers
     let lattice: LatticeComplex<2, f64> = LatticeComplex::square_open(3);
     let computed = lattice
         .betti_number_over(0, HomologyField::Rational)

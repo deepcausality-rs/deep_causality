@@ -107,7 +107,7 @@ Numbers on the site come from a command anyone can re-run:
 
 | Figure | Source |
 | --- | --- |
-| 896 tests passing (895 tests plus 1 doc test) | `cargo test -p deep_causality_quantum --all-features` |
+| 900 tests passing (899 tests plus 1 doc test) | `cargo test -p deep_causality_quantum --all-features` |
 | Version 0.4.2, released 2026-09-29 | `deep_causality_quantum/CHANGELOG.md` and `Cargo.toml` |
 | 14 proved theorems, 7 deferred targets | the quantum section of `lean/THEOREM_MAP.md` |
 | The crosstalk run: plan cost 2 of the 5 all four experiments cost, 99.5 bits (survivor and tightest pair), the campaign stops after one experiment | `cargo run --release -p quantum_examples --example qcl_crosstalk`; 99.5 is n·Bhattacharyya distance of 0.40 and 0.10 over 1024 shots |

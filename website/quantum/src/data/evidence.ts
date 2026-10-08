@@ -21,7 +21,7 @@ export const numberWord = (n: number): string => {
  *   papers     files under deep_causality_quantum/papers/
  */
 export const TESTS = {
-  count: 896,
+  count: 900,
   proved: 14,
   deferred: 7,
   papers: 7,
