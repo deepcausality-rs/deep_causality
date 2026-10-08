@@ -89,3 +89,7 @@ path = "qcl_examples/qcl_crosstalk_circuits/main.rs"
 [[example]]
 name = "qcl_gradiometer_crosstalk"
 path = "qcl_examples/qcl_gradiometer_crosstalk/main.rs"
+
+[[example]]
+name = "qcl_gravimeter_systematics"
+path = "qcl_examples/qcl_gravimeter_systematics/main.rs"
