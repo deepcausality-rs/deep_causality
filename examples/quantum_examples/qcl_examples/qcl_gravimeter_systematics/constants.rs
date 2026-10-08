@@ -37,20 +37,22 @@ pub const PROTOCOL_DEGRADATION: FloatType = const_scalar_from_int!(FloatType, 10
 /// down as white noise" and stays below 1 µGal after 5000 s before it flickers (§3.3).
 pub const WHITE_NOISE_RANGE: FloatType = const_scalar_from_int!(FloatType, 5000);
 
-/// **Placeholder.** The fringe contrast, which the paper does not state. Sizing does not depend on
-/// it: a lower contrast flattens the fringe and lengthens each effective draw alike.
-pub const CONTRAST: FloatType = const_scalar_from_float!(FloatType, 0.5);
+/// The fringe contrast. The papers on this instrument do not state it; this is the 40 % of the
+/// transportable rubidium gravimeter of Ménoret et al., Sci. Rep. 8, 12300 (2018),
+/// arXiv:1809.04908 ("T = 60 ms, C = 40%"). Sizing does not depend on it: a lower contrast flattens
+/// the fringe and lengthens each effective draw alike.
+pub const CONTRAST: FloatType = const_scalar_from_float!(FloatType, 0.40);
 
 /// The atom temperature, in K: "the atoms fall at a temperature of 2 µK" (§2).
 pub const ATOM_TEMPERATURE: FloatType = const_scalar_from_float!(FloatType, 2.0e-6);
 
-/// **Placeholder.** The bias field, in T: the 31 mG of Gauguet et al. (arXiv:0809.0149). Every
-/// response reads the field as a ratio to it.
-pub const BIAS_FIELD: FloatType = const_scalar_from_float!(FloatType, 3.1e-6);
+/// The bias field, in T: "a 10 mG bias field" on the same instrument (Farah et al.,
+/// arXiv:1406.5998, §II). Every response reads the field as a ratio to it.
+pub const BIAS_FIELD: FloatType = const_scalar_from_float!(FloatType, 1.0e-6);
 
-/// **Placeholder.** The effective Rabi frequency, in rad/s: 2π × 27 kHz, from Gauguet et al.
-/// Every response reads it as a ratio.
-pub const RABI_FREQUENCY: FloatType = const_scalar_from_float!(FloatType, 1.696460e5);
+/// The effective Rabi frequency, in rad/s: a π/2 pulse "of order of 10 µs" (Farah et al., §II)
+/// gives `π/(2 · 10 µs)`. Every response reads it as a ratio.
+pub const RABI_FREQUENCY: FloatType = const_scalar_from_float!(FloatType, 1.5707963267948966e5);
 
 /// Standard gravity, in m/s², which a tilt projects.
 pub const STANDARD_GRAVITY: FloatType = const_scalar_from_float!(FloatType, 9.80665);
@@ -72,17 +74,19 @@ pub const POSITIVE_OFFSET_UGAL: FloatType = const_scalar_from_int!(FloatType, 5)
 // The candidates' responses
 // =============================================================================
 
-/// **Placeholder.** The quadratic Zeeman bias at a coil current `s` times nominal is
-/// `a s² + b s + c` (Hu et al., arXiv:1805.05159, eq. 9, with the field split as `s B_sn + B_bg`):
-/// `a` from the coil's own inhomogeneity, `b` from the coil field across the background's
-/// variation, `c` from the background alone. These are the shares of the bias at nominal
-/// current, in GAIN's order, where `b` dominates; the digitised field maps of Hu et al. Fig. 6
-/// replace them.
-pub const ZEEMAN_COIL_SHARE: FloatType = const_scalar_from_float!(FloatType, 0.05);
+/// The quadratic Zeeman bias at a coil current `s` times nominal is `a s² + b s + c` (Hu et al.,
+/// arXiv:1805.05159, eq. 9, with the field split as `s B_sn + B_bg` by eqs. 7 and 8): `a` from
+/// the coil's own inhomogeneity, `b` from the coil field across the background's variation, `c`
+/// from the background alone. These are the shares of the bias at nominal current in GAIN, from
+/// its field maps at 13 mA and 6.5 mA (Fig. 6(a) and (b)) digitised and integrated along the
+/// fountain trajectory through the printed pulse heights, by
+/// `deep_causality_quantum/papers/digitised/digitise_hu2017_fig6.py`. The nominal map gives
+/// 2.01 µGal against the printed 2.04 µGal.
+pub const ZEEMAN_COIL_SHARE: FloatType = const_scalar_from_float!(FloatType, -0.038);
 /// See [`ZEEMAN_COIL_SHARE`].
-pub const ZEEMAN_CROSS_SHARE: FloatType = const_scalar_from_float!(FloatType, 0.85);
+pub const ZEEMAN_CROSS_SHARE: FloatType = const_scalar_from_float!(FloatType, 1.005);
 /// See [`ZEEMAN_COIL_SHARE`].
-pub const ZEEMAN_BACKGROUND_SHARE: FloatType = const_scalar_from_float!(FloatType, 0.10);
+pub const ZEEMAN_BACKGROUND_SHARE: FloatType = const_scalar_from_float!(FloatType, 0.033);
 
 /// The two-photon light shift's counter-propagating part and its co-propagating part, in mrad:
 /// "a TPLS of about 22 mrad for counter-propagating transition ... we find a 11 mrad for
@@ -100,8 +104,9 @@ pub const CLIPPING_SLOPE_UGAL_PER_MM: FloatType = const_scalar_from_float!(Float
 // The experiments
 // =============================================================================
 
-/// **Placeholder.** The deliberate tilt the tilt experiment applies, in rad.
-pub const TILT_STEP: FloatType = const_scalar_from_float!(FloatType, 5.0e-4);
+/// The deliberate tilt the tilt experiment applies, in rad: the end of the tilt scan Ménoret et al.
+/// apply to calibrate verticality, "Applied tilts typically range from 0 to 1.5 mrad" (Methods).
+pub const TILT_STEP: FloatType = const_scalar_from_float!(FloatType, 1.5e-3);
 
 /// The field step: half the nominal coil current, as Hu et al. mapped the field at 6.5 mA against
 /// 13 mA.
@@ -111,10 +116,12 @@ pub const FIELD_STEP: FloatType = const_scalar_from_float!(FloatType, 0.5);
 /// protocol uses (§3.2).
 pub const RABI_STEP: FloatType = const_scalar_from_float!(FloatType, 0.5);
 
-/// **Placeholder.** The east-west displacement of the initial cloud, in m.
-pub const CLOUD_DISPLACEMENT: FloatType = const_scalar_from_float!(FloatType, 5.0e-4);
+/// The east-west displacement of the initial cloud, in m: inside the ±1.6 mm over which Farah et al.
+/// displaced the cloud and measured the clipping shift (Fig. 4).
+pub const CLOUD_DISPLACEMENT: FloatType = const_scalar_from_float!(FloatType, 1.0e-3);
 
-/// **Placeholder.** Each experiment's setup time, in s: the dead time before its draws start.
+/// **Placeholder.** Each experiment's setup time, in s: the dead time before its draws start. No
+/// paper read for this example reports the dead time of a configuration change.
 pub const SETUP_K_REVERSAL: FloatType = const_scalar_from_int!(FloatType, 30);
 /// See [`SETUP_K_REVERSAL`]: rotating the sensor head and re-levelling it.
 pub const SETUP_TURN: FloatType = const_scalar_from_int!(FloatType, 600);
@@ -138,7 +145,9 @@ pub const SETUP_CLOUD: FloatType = const_scalar_from_int!(FloatType, 300);
 // =============================================================================
 
 /// **Placeholder.** The site's tide as the principal lunar semidiurnal term alone: its amplitude,
-/// in µGal, and its phase at the start of the run, in rad. A site's tide model replaces both.
+/// in µGal, and its phase at the start of the run, in rad. The tide is the site's, so a site's tide
+/// model replaces both; Louchet-Chauvet et al. report only its mean correction over twelve days,
+/// −18.8 µGal (Table 1).
 pub const TIDE_AMPLITUDE_UGAL: FloatType = const_scalar_from_int!(FloatType, 80);
 /// See [`TIDE_AMPLITUDE_UGAL`].
 pub const TIDE_PHASE: FloatType = const_scalar_from_float!(FloatType, 0.3);

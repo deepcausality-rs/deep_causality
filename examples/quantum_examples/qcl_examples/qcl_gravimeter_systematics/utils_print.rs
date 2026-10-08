@@ -105,7 +105,7 @@ pub fn print_run(
         );
     }
     println!(
-        "    campaign ran {} for {:.0} s, with {} re-plans as the tide moved: {}\n",
+        "    campaign ran {} for {:.0} s; re-plans as the tide moved: {}; {}\n",
         run.campaign.join(", "),
         lower(run.campaign_cost),
         run.replans,
