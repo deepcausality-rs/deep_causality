@@ -7,7 +7,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 **What this is.** The design for a second example under `examples/quantum_examples/`, showcasing the
 QCL sketch from [`qcl-dsl-liftback.md`](qcl-dsl-liftback.md). Companion to
-[`positioning.md`](positioning.md) and [`example-quantum-control-loop.md`](example-quantum-control-loop.md).
+[`positioning.md`](positioning.md) and [`example-quantum-control-loop.md`](../../quantum/example-quantum-control-loop.md).
 
 **Status.** Design only. Every number below was computed, including the faithfulness result, which
 was checked against a transcription of the crate's own `is_c3_block` algorithm rather than assumed.
@@ -398,5 +398,5 @@ examples/quantum_examples/crosstalk_attribution/
   035060. Why correlation structure, not correlation magnitude, decides the damage.
 
 Companion notes: [`positioning.md`](positioning.md),
-[`example-quantum-control-loop.md`](example-quantum-control-loop.md),
+[`example-quantum-control-loop.md`](../../quantum/example-quantum-control-loop.md),
 [`qcl-dsl-liftback.md`](qcl-dsl-liftback.md).

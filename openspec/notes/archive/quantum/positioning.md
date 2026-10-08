@@ -435,7 +435,7 @@ thousand shots is the granularity, minutes is the cadence, and the output is a r
 which knob, which coupler, which pulse.
 
 DeepCausality's substrate also runs a **fast loop**, and it ships today. The five programs in
-[`causal_correction_examples`](../../../examples/causal_correction_examples) are closed-loop control:
+[`causal_correction_examples`](../../../../examples/causal_correction_examples) are closed-loop control:
 a monitor inspects each tick, `alternate_value` replaces the in-flight value when it leaves the safe
 envelope, and the chain advances from the corrected state. `corrective_ddos_detector` is the closest
 in shape to a syndrome loop — a sliding-window baseline carried in `State`, five consecutive samples
@@ -835,7 +835,7 @@ constant-depth line.
 
 ### Related notes in this folder
 
-[`dynamic-qcm.md`](dynamic-qcm.md) (the master roadmap and its falsifiable gates),
+[`dynamic-qcm.md`](../../quantum/dynamic-qcm.md) (the master roadmap and its falsifiable gates),
 [`QCM-on-EPP.md`](QCM-on-EPP.md) (the reconstruction argument),
 [`full-stack.md`](full-stack.md) (the four causal regimes on one substrate),
 [`quantum-epp.md`](quantum-epp.md) (the hybrid orchestration corollary).

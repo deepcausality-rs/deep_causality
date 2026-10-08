@@ -67,7 +67,7 @@ layer underneath it grew parameters the note was not yet written against:
 in §6.4 and the hardcoded counts in §6.5 were wrong when written, not made wrong by later work.
 
 **What the revision before that changed.** The crate was read in full, then 3980 lines and now 4432,
-plus [`LEAN_QUANTUM.md`](../../../deep_causality_quantum/LEAN_QUANTUM.md). Three things its
+plus [`LEAN_QUANTUM.md`](../../../../deep_causality_quantum/LEAN_QUANTUM.md). Three things its
 predecessor asserted turned out to be wrong.
 
 1. `freeze_quantum` **is** the validate half, already written, for one class of subject. The two
@@ -558,7 +558,7 @@ which is where F3 found it.
 
 Every QCL type is generic over its scalar; a program fixes one alias and the pipeline instantiates at
 that precision. See the project's standing position on
-[uniform math](../../../website/docs/src/content/docs/concepts/uniform-math.md).
+[uniform math](../../../../website/docs/src/content/docs/concepts/uniform-math.md).
 
 ```rust
 pub type FloatType = Float106;   // or f64, or f32
@@ -569,7 +569,7 @@ derivable rather than a list.** `deep_causality_algebra` covers **five sets and 
 ℕ at `CommutativeSemiring`, ℤ at `CommutativeRing` and `EuclideanDomain`, ℚ and ℂ at `Field`, ℝ at
 `RealField`, then ℍ at `AssociativeDivisionAlgebra` and 𝕆 at `DivisionAlgebra`. The full trait
 hierarchy, the marker laws and the per-type implementation matrix are in
-[`README_ALGEBRA_TRAITS.md`](../../../deep_causality_unified_math/deep_causality_algebra/README_ALGEBRA_TRAITS.md).
+[`README_ALGEBRA_TRAITS.md`](../../../../deep_causality_unified_math/deep_causality_algebra/README_ALGEBRA_TRAITS.md).
 
 Three of its facts decide rows below, and none of them is about QCL:
 
@@ -681,7 +681,7 @@ forked ledgers with ∇*: the monoid typechecks and gives the wrong answer, beca
 counterfactual fork exactly one branch was factual.
 
 **Why `fork` is not `either`, stated as the type rather than as a preference.** `Either<L, R>` lives
-in [`deep_causality_haft`](../../../deep_causality_unified_math/deep_causality_haft/src/either/mod.rs)
+in [`deep_causality_haft`](../../../../deep_causality_unified_math/deep_causality_haft/src/either/mod.rs)
 and is the **coproduct**: a value is `Left` or `Right`, exactly one. It carries the arrow algebra's
 choice fragment (`ArrowChoice` in `arrow/choice.rs`) and it is what `CausalFlow`'s `branch`,
 `branch_with` and `either` are built on. `CausalFlow::either` consumes the flow, matches the
@@ -704,7 +704,7 @@ it decides more of QCL's shape than the precision trick alone suggests. Composit
 crates runs through `deep_causality_haft`: a crate owning a container generic in its element declares
 a **witness** type, binds `type Type<T>` to the container, and implements the categorical traits
 against the witness. See
-[the unified-math README](../../../deep_causality_unified_math/README.md).
+[the unified-math README](../../../../deep_causality_unified_math/README.md).
 
 **Three consequences for this design.**
 
@@ -1161,14 +1161,14 @@ ranking.
 ## 11. Sources
 
 **The composition seam and the tower underneath.**
-[`deep_causality_unified_math/README.md`](../../../deep_causality_unified_math/README.md) — the
+[`deep_causality_unified_math/README.md`](../../../../deep_causality_unified_math/README.md) — the
 seventeen crates, the seven tiers, and the witness table §6.6 reads from.
 
-[`README_ALGEBRA_TRAITS.md`](../../../deep_causality_unified_math/deep_causality_algebra/README_ALGEBRA_TRAITS.md)
+[`README_ALGEBRA_TRAITS.md`](../../../../deep_causality_unified_math/deep_causality_algebra/README_ALGEBRA_TRAITS.md)
 — the trait hierarchy, the five marker laws, and the per-type matrix over ℕ, ℤ, ℚ, ℝ, ℂ, ℍ and 𝕆
 that §6.4's bounds are read off.
 
-[`deep_causality_num/README.md`](../../../deep_causality_unified_math/deep_causality_num/README.md)
+[`deep_causality_num/README.md`](../../../../deep_causality_unified_math/deep_causality_num/README.md)
 — the representation half: `Integer`, `SignedInt`, `UnsignedInt` and `NaturalNumber`, and the
 `FloatType` / `IntType` split, and the `NumberType` alias for ℕ that §7.1's second parameter is.
 
@@ -1181,10 +1181,10 @@ seam stays behind the `qpu` feature. The mathematics crates it reaches sit under
 `deep_causality_unified_math/`, in particular `deep_causality_homology` for the chain layer and
 `deep_causality_topology` for the cup product and the gauge fields.
 
-**Verification status.** [`LEAN_QUANTUM.md`](../../../deep_causality_quantum/LEAN_QUANTUM.md) and
+**Verification status.** [`LEAN_QUANTUM.md`](../../../../deep_causality_quantum/LEAN_QUANTUM.md) and
 `lean/THEOREM_MAP.md`, for what is proved, what is deferred, and the counterexample behind F9.
 
-**Consumer designs.** [`example-quantum-control-loop.md`](example-quantum-control-loop.md),
+**Consumer designs.** [`example-quantum-control-loop.md`](../../quantum/example-quantum-control-loop.md),
 [`example-crosstalk-attribution.md`](example-crosstalk-attribution.md),
 [`example-geometric-qec.md`](example-geometric-qec.md). Prior sketch:
 [`qcl-dsl-liftback.md`](qcl-dsl-liftback.md). Positioning: [`positioning.md`](positioning.md).

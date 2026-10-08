@@ -11,7 +11,7 @@ lifted *back* into `deep_causality_quantum` as a high-level API in the manner of
 `deep_causality_discovery`?
 
 **Status.** Revision 2, updated against three designed examples:
-[`example-quantum-control-loop.md`](example-quantum-control-loop.md),
+[`example-quantum-control-loop.md`](../../quantum/example-quantum-control-loop.md),
 [`example-crosstalk-attribution.md`](example-crosstalk-attribution.md) and
 [`example-geometric-qec.md`](example-geometric-qec.md). Companion to
 [`positioning.md`](positioning.md).
@@ -344,7 +344,7 @@ explains it to a human need not be the same number.
 ### 8.3 What the scan actually finds
 
 Running the score over depths 1 to 40 on the three faults from
-[`example-quantum-control-loop.md`](example-quantum-control-loop.md), at 1024 shots:
+[`example-quantum-control-loop.md`](../../quantum/example-quantum-control-loop.md), at 1024 shots:
 
 | N | amplitude | detuning | decoherence | worst-pair bits | bits per pulse |
 |---:|---:|---:|---:|---:|---:|
@@ -533,7 +533,7 @@ topology gap rather than a DSL one.
 
 ## 9. Sources
 
-The three consumer designs: [`example-quantum-control-loop.md`](example-quantum-control-loop.md),
+The three consumer designs: [`example-quantum-control-loop.md`](../../quantum/example-quantum-control-loop.md),
 [`example-crosstalk-attribution.md`](example-crosstalk-attribution.md),
 [`example-geometric-qec.md`](example-geometric-qec.md).
 

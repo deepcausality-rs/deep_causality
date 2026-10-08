@@ -7,7 +7,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 **What this is.** The design for a third example under `examples/quantum_examples/`, covering the
 **gates avenue** of [`positioning.md`](positioning.md) §4.2, which currently has no example at all.
-Companion to [`example-quantum-control-loop.md`](example-quantum-control-loop.md),
+Companion to [`example-quantum-control-loop.md`](../../quantum/example-quantum-control-loop.md),
 [`example-crosstalk-attribution.md`](example-crosstalk-attribution.md) and
 [`qcl-dsl-liftback.md`](qcl-dsl-liftback.md).
 
@@ -26,7 +26,7 @@ Companion to [`example-quantum-control-loop.md`](example-quantum-control-loop.md
 ### 1.1 The surprise: most of this already ships
 
 I expected this example to be blocked on the topology track, since
-[`dynamic-qcm.md`](dynamic-qcm.md) §3.3 listed cup products as the keystone gap. Running the crates
+[`dynamic-qcm.md`](../../quantum/dynamic-qcm.md) §3.3 listed cup products as the keystone gap. Running the crates
 says otherwise. `deep_causality_topology` carries `ChainComplex` with `boundary_matrix(k)`,
 `coboundary_matrix(k)` and `betti_number(k)`, over `CellComplex`, `SimplicialComplex` and
 `LatticeComplex`, plus a full lattice gauge theory module with link variables and Wilson loops.
@@ -563,6 +563,6 @@ num_cells, boundary_matrix, betti_number}`, `CsrMatrix::{shape, col_indices, val
 `logical_*` signatures in `deep_causality_quantum/src/types/qgates/gates_haruna.rs`.
 
 Companion notes: [`positioning.md`](positioning.md),
-[`example-quantum-control-loop.md`](example-quantum-control-loop.md),
+[`example-quantum-control-loop.md`](../../quantum/example-quantum-control-loop.md),
 [`example-crosstalk-attribution.md`](example-crosstalk-attribution.md),
 [`qcl-dsl-liftback.md`](qcl-dsl-liftback.md).
