@@ -1143,6 +1143,139 @@ fn test_an_observation_records_the_context_it_ran_in() {
     );
 }
 
+/// The passive configuration observed first from `keep`: the plant's 0.2 under k up.
+fn kreversal_baseline(
+    cfg: &deep_causality_quantum::Config<f64, Count, PlantSubject<f64, 2, Mechanisms>>,
+) -> deep_causality_quantum::Control<f64, Count, 2> {
+    let e0 =
+        ConfiguredExperiment::new("E0 k-up", 1.0, 1024, gravimeter(WaveVector::Up), 0).unwrap();
+    QclBuilder::control::<f64, Count, 2, _>(cfg).baseline_with(
+        &KReversal,
+        &e0,
+        &EvidenceSource::Simulated(mechanism("keep", QubitOperator::identity())),
+        3.0,
+    )
+}
+
+#[test]
+fn test_baseline_with_refuses_what_its_evidence_contradicts_before_the_fork() {
+    // `keep` predicts the plant's 0.2 and `flip` 0.8; the evidence, drawn from `keep`, refuses
+    // `flip` with what decided it.
+    let report = kreversal_baseline(&kreversal_config(0.2))
+        .fork()
+        .finalize()
+        .unwrap();
+    assert_eq!(report.refused.len(), 1);
+    let r = &report.refused[0];
+    assert_eq!(r.name(), "flip");
+    assert!((r.prediction() - 0.8).abs() < 1e-12);
+    assert_eq!(r.observed().shots(), 1024);
+    let check = r.check();
+    assert_eq!(check.item, CheckItem::Index(1));
+    assert!(!check.accepted);
+    assert_eq!(
+        check.measured,
+        (r.prediction() - r.observed().estimate()).abs()
+    );
+    assert_eq!(check.threshold, 3.0 * r.observed().standard_error());
+    let names: Vec<&str> = report.worlds.iter().map(|w| w.name()).collect();
+    assert_eq!(names, vec!["keep"]);
+    // One observation, charged to the root, recorded with the context it ran in.
+    assert_eq!(
+        (report.ledger.experiments(), report.ledger.shots()),
+        (1, 1024)
+    );
+    assert_eq!(report.observations.len(), 1);
+    let o = &report.observations[0];
+    assert_eq!(o.experiment(), "E0 k-up");
+    assert_eq!(
+        o.context(),
+        Some(&gravimeter(WaveVector::Up).snapshot().unwrap())
+    );
+}
+
+#[test]
+fn test_baseline_with_is_the_read_out_compare_judges_against() {
+    let report = kreversal_baseline(&kreversal_config(0.2))
+        .fork()
+        .predict(0)
+        .compare(3.0)
+        .finalize()
+        .unwrap();
+    let w = &report.worlds[0];
+    assert!(w.verdict().unwrap().accepted());
+    assert_eq!(w.read_out().unwrap().shots(), 1024);
+}
+
+#[test]
+fn test_baseline_with_is_the_first_observation_and_checks_its_arguments() {
+    let cfg = kreversal_config(0.2);
+    let passive =
+        ConfiguredExperiment::new("E0 k-up", 1.0, 64, gravimeter(WaveVector::Up), 0).unwrap();
+    let keep = EvidenceSource::Simulated(mechanism("keep", QubitOperator::identity()));
+    let control = || QclBuilder::control::<f64, Count, 2, _>(&cfg);
+    for (after, run) in [
+        ("an observation", control().observe(0, 16)),
+        ("the fork", control().fork()),
+    ] {
+        let msg = calculation_message(
+            run.baseline_with(&KReversal, &passive, &keep, 3.0)
+                .finalize()
+                .unwrap_err(),
+        );
+        assert!(msg.contains("first observation"), "after {after}: {msg}");
+    }
+    for sigmas in [-1.0, f64::NAN] {
+        let msg = calculation_message(
+            control()
+                .baseline_with(&KReversal, &passive, &keep, sigmas)
+                .finalize()
+                .unwrap_err(),
+        );
+        assert!(msg.contains("sigmas"), "{msg}");
+    }
+    assert!(
+        control()
+            .baseline_with(&KReversal, &passive, &keep, 0.0)
+            .finalize()
+            .is_ok()
+    );
+    // A typed baseline the config names is observed first.
+    let named = baseline_config(e0());
+    let msg = calculation_message(
+        QclBuilder::control::<f64, Count, 2, _>(&named)
+            .baseline_with(&KReversal, &passive, &keep, 3.0)
+            .finalize()
+            .unwrap_err(),
+    );
+    assert!(msg.contains("call baseline before baseline_with"), "{msg}");
+}
+
+#[test]
+fn test_baseline_with_keeps_the_first_failure_and_fails_on_empty_evidence() {
+    let cfg = kreversal_config(0.2);
+    let passive =
+        ConfiguredExperiment::new("E0 k-up", 1.0, 64, gravimeter(WaveVector::Up), 0).unwrap();
+    let keep = EvidenceSource::Simulated(mechanism("keep", QubitOperator::identity()));
+    // An earlier stage's failure stands.
+    let err = QclBuilder::control::<f64, Count, 2, _>(&cfg)
+        .observe(5, 16)
+        .baseline_with(&KReversal, &passive, &keep, 3.0)
+        .finalize()
+        .unwrap_err();
+    assert!(matches!(err.0, QuantumErrorEnum::DimensionMismatch(_)));
+    // Evidence that carries no estimate fails the stage, which refuses no candidate.
+    let empty = EvidenceSource::Recorded(CountHistogram::new(1).unwrap());
+    let err = QclBuilder::control::<f64, Count, 2, _>(&cfg)
+        .baseline_with(&KReversal, &passive, &empty, 3.0)
+        .finalize()
+        .unwrap_err();
+    assert!(
+        matches!(err.0, QuantumErrorEnum::NormalizationError(_)),
+        "{err:?}"
+    );
+}
+
 #[test]
 fn test_a_mechanism_truth_draws_what_observe_draws_on_its_plant() {
     // The bare plant as the truth under k up: the same state `observe` samples, at the same seed.

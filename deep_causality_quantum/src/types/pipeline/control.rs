@@ -584,9 +584,87 @@ where
                 return self;
             }
         };
+        self.refuse_contradicted(predicted.predictions(), observed, sigmas);
+        self
+    }
+
+    /// A configured experiment observed from `source` as the run's first observation, and every
+    /// candidate whose prediction for it the observation contradicts refused before the fork and
+    /// the plan: [`baseline`](Self::baseline) for evidence a source supplies rather than the
+    /// plant.
+    ///
+    /// Each candidate's prediction is computed by `model` as [`ConfiguredExperiment::predict`]
+    /// computes it, and a candidate is refused when `|prediction − observed|` exceeds `sigmas`
+    /// standard errors of the observed estimate. The observation is recorded as
+    /// [`observe_experiment`](Self::observe_experiment) records one before the fork: the root's
+    /// read-out, charged to the root ledger, and an [`Observation`] carrying the configuration's
+    /// context.
+    ///
+    /// Fails with `CalculationError` while the config names a baseline still to observe, after an
+    /// observation or the fork, and on a `sigmas` that is not finite or is negative; and with the
+    /// errors of the predictions, the evidence or the snapshot.
+    pub fn baseline_with<C, M>(
+        mut self,
+        model: &M,
+        experiment: &ConfiguredExperiment<R, C>,
+        source: &EvidenceSource<R>,
+        sigmas: R,
+    ) -> Self
+    where
+        M: ResponseModel<R, C>,
+        C: ObservedContext,
+    {
+        if self.failure.is_some() || self.awaits_baseline("baseline_with") {
+            return self;
+        }
+        if self.root.is_some() || !self.worlds.is_empty() {
+            self.fail(QuantumError::CalculationError(format!(
+                "baseline_with observes '{}' as the run's first observation, before the fork; \
+                 an observation or the fork came first",
+                experiment.name()
+            )));
+            return self;
+        }
+        if !sigmas.is_finite() || sigmas < R::zero() {
+            self.fail(QuantumError::CalculationError(format!(
+                "baseline_with needs a finite, non-negative sigmas, got {sigmas:?}"
+            )));
+            return self;
+        }
+        let gathered = self
+            .candidates
+            .iter()
+            .map(|(_, h)| experiment.predict(model, h, &self.plant, &self.observables))
+            .collect::<Result<Vec<R>, _>>()
+            .and_then(|predicted| {
+                let evidence = self.evidence(model, experiment, source)?;
+                let context = experiment.configuration().context_snapshot()?;
+                Ok((predicted, evidence, context))
+            });
+        match gathered {
+            Ok((predicted, evidence, context)) => {
+                self.ledger = evidence.ledgers[0];
+                self.record_root(experiment.name().into(), evidence.read_out);
+                self.observations.push(Observation::new(
+                    experiment.name().into(),
+                    evidence.read_out,
+                    evidence.counts,
+                    context,
+                ));
+                self.refuse_contradicted(&predicted, evidence.read_out, sigmas);
+            }
+            Err(e) => self.fail(e),
+        }
+        self
+    }
+
+    /// Every live candidate whose prediction, in candidate order, lies more than `sigmas`
+    /// standard errors of `observed` from it moved to the refusals with what decided it; the rest
+    /// stay live.
+    fn refuse_contradicted(&mut self, predictions: &[R], observed: ShotEstimate<R>, sigmas: R) {
         let allowance = sigmas * observed.standard_error();
         let candidates = core::mem::take(&mut self.candidates);
-        for ((slot, h), &prediction) in candidates.into_iter().zip(predicted.predictions()) {
+        for ((slot, h), &prediction) in candidates.into_iter().zip(predictions) {
             let gap = (prediction - observed.estimate()).abs();
             let check = Check::new(CheckItem::Index(slot), gap, allowance);
             if check.accepted {
@@ -600,7 +678,6 @@ where
                 });
             }
         }
-        self
     }
 
     /// The root's read-out judged against `spec` before the fork; after it, every world's
