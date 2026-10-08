@@ -93,6 +93,36 @@ export const theorems: Theorem[] = [
     witness: 'choi_tests.rs :: test_apply_choi_is_linear',
   },
   {
+    id: 'quantum.choi.reconstruction',
+    statement: 'applyChoi (choiOf E) A = E A for every linear channel E (the Choi–Jamiołkowski reconstruction)',
+    lean: 'Quantum/Choi.lean :: applyChoi_choiOf',
+    witness: 'choi_tests.rs :: test_choi_reconstruction_recovers_the_channel',
+  },
+  {
+    id: 'quantum.verdict.orthomodular',
+    statement: 'the subspace lattice behind the Projection verdict is orthomodular and not distributive',
+    lean: 'Quantum/Orthomodular.lean :: subspace_lattice_orthomodular',
+    witness: 'orthomodular_tests.rs :: test_the_orthomodular_law_holds_for_a_line_inside_a_plane',
+  },
+  {
+    id: 'quantum.markov_commutativity',
+    statement: 'factors on disjoint legs commute, and a pairwise-commuting product does not depend on its order (Lorenz 2022, Def. 3.3)',
+    lean: 'Quantum/Markov.lean :: kron_one_commute_one_kron',
+    witness: 'qcm_theorem_tests.rs :: test_factors_on_disjoint_legs_commute',
+  },
+  {
+    id: 'quantum.classical_embedding',
+    statement: 'diagonal factors commute pairwise, so a classical model meets the Markov condition',
+    lean: 'Quantum/ClassicalEmbedding.lean :: diagonal_commute',
+    witness: 'qcm_theorem_tests.rs :: test_diagonal_factors_commute_and_their_kronecker_product_is_diagonal',
+  },
+  {
+    id: 'quantum.no_influence',
+    statement: 'the D marginal factors through Tr_A exactly when it depends on the A input only through its trace (Lorenz & Barrett 2021, Def. 1)',
+    lean: 'Quantum/NoInfluence.lean :: noInfluence_iff',
+    witness: 'qcm_theorem_tests.rs :: test_a_product_unitary_has_no_influence_from_a_to_d',
+  },
+  {
     id: 'quantum.abstraction.compose_exact',
     statement: 'two commuting abstraction squares paste: (τ₂τ₁)·L = H·(σ₂σ₁) (Lorenz & Tull Prop. 17, exact case)',
     lean: 'Quantum/Abstraction.lean :: abstraction_compose_exact',
@@ -110,44 +140,14 @@ export interface Deferred {
   id: string;
   /** What the target says, in words. */
   statement: string;
-  /** What backs the behaviour today. */
-  today: string;
+  /** Why it is not proved. */
+  reason: string;
 }
 
 export const deferred: Deferred[] = [
   {
-    id: 'CJ reconstruction isomorphism',
-    statement: 'Applying the Choi operator of a channel E reconstructs E: applyChoi (choiOf E) = E.',
-    today: 'The channel tests run the round trip.',
-  },
-  {
-    id: 'quantum.markov_commutativity',
-    statement: 'A process operator is Markov for a graph when it factorizes into pairwise commuting Choi operators.',
-    today: 'The freeze check tests it, and the tests name the offending pair (markov_freeze_tests).',
-  },
-  {
-    id: 'quantum.no_influence',
-    statement: 'A does not influence D exactly when the partial trace of the process operator over B factors as the marginal on D given C, tensored with the identity on A.',
-    today: 'Numerical and property-test witnesses (lean/THEOREM_MAP.md).',
-  },
-  {
     id: 'quantum.unitary_factorization',
-    statement: 'For unitary channels the commuting factorization holds automatically.',
-    today: 'LEAN_QUANTUM.md marks it research-grade: the proof needs direct-sum and C*-algebra theory that Mathlib lacks.',
-  },
-  {
-    id: 'quantum.classical_embedding',
-    statement: 'Classical causal models are the special case of a diagonal process operator.',
-    today: 'Numerical and property-test witnesses. lean/THEOREM_MAP.md names the target and gives no statement.',
-  },
-  {
-    id: 'quantum.cyclic_support',
-    statement: 'lean/THEOREM_MAP.md names this target and states no theorem for it.',
-    today: 'The builder refuses cyclic structures by decision, and the tests cover the refusal.',
-  },
-  {
-    id: 'quantum.verdict.orthomodular',
-    statement: 'The projection lattice is orthomodular.',
-    today: 'The Rust verdict carrier and its law tests are complete (projection_tests). The Lean statement would extend core.verdict.carriers.',
+    statement: 'Lorenz and Barrett’s Theorem 1: for unitary channels, the commuting factorization holds automatically.',
+    reason: 'Its proof rests on the commutant and direct-sum decomposition of finite-dimensional C*-algebras. The pinned Mathlib has Wedderburn–Artin and C*-algebra basics but not that decomposition.',
   },
 ];

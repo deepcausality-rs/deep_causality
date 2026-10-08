@@ -3,13 +3,14 @@ import PageShell from '../../components/nav/PageShell.astro';
 import { theorems, deferred } from '../../data/formalization';
 import { papers } from '../../data/papers';
 import { TESTS, numberWord } from '../../data/evidence';
-import { LEAN_URL, THEOREM_MAP_URL, LEAN_STATUS_URL, PAPERS_URL, CRATE_URL } from '../../consts';
+import { LEAN_URL, THEOREM_MAP_URL, LEAN_STATUS_URL, PAPERS_URL } from '../../consts';
 
 const title = 'Proof | DeepCausality Quantum';
 const description =
-  'What Lean proves, what the tests check, which claim Lean refutes, which targets have no Lean proof, and which papers the crate implements. Each row names the file that shows it.';
+  'What Lean proves, which claim it refutes, which target remains open, and which papers the crate implements. Each row gives the file that shows it.';
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+const open = deferred[0];
 const split = (s: string) => {
   const [file, item] = s.split(' :: ');
   return { file, item };
@@ -25,8 +26,7 @@ const used = papers.filter((p) => p.citedFrom.length === 0 && (p.usedBy ?? []).l
     <p class="lede">
       Each theorem has a Lean proof and a Rust test that checks the same statement on numbers.
       Lean also refutes one claim: commuting operators can stop commuting under a partial trace.
-      {cap(numberWord(TESTS.deferred))} targets have tests and no Lean proof. Every test in the
-      crate passes.
+      One target, the unitary factorization, remains open.
     </p>
   </header>
 
@@ -34,8 +34,12 @@ const used = papers.filter((p) => p.citedFrom.length === 0 && (p.usedBy ?? []).l
     <h2>Ten of the theorems concern the partial trace.</h2>
     <p>
       They are six laws of the partial trace, the boundary theorem, the commutator identity and the
-      two statements of the counterexample below. Two more make the Choi action linear, and two show
-      that exact abstraction links compose.
+      two statements of the counterexample below. Of the other nine, three cover the
+      Choi–Jamiołkowski layer, including the reconstruction of a channel from its Choi matrix, and
+      two show that exact abstraction links compose. One proves the projection lattice behind the
+      verdict orthomodular. Three state quantum causal models: factors on disjoint legs commute, a
+      classical model is the diagonal case, and no influence means the marginal factors through the
+      partial trace.
     </p>
     <p>
       The pinned Mathlib has no partial trace and no Choi–Jamiołkowski layer, so the proofs build
@@ -89,45 +93,11 @@ const used = papers.filter((p) => p.citedFrom.length === 0 && (p.usedBy ?? []).l
     </p>
   </section>
 
-  <section class="doc-sec" id="tests">
-    <h2>Every test in the crate passes.</h2>
-    <p>
-      The suite runs under <code>cargo test -p deep_causality_quantum --all-features</code>. It
-      includes cases where a check must reject its input and cases where a check has nothing to
-      examine, such as an empty fault set.
-    </p>
-    <p class="next-links">
-      <a href={`${CRATE_URL}/tests`}>The test tree ↗</a>
-    </p>
-  </section>
-
   <section class="doc-sec" id="deferred">
-    <h2>{cap(numberWord(TESTS.deferred))} targets have tests and no Lean proof.</h2>
+    <h2>One target remains open: the unitary factorization.</h2>
     <p>
-      They are the Choi–Jamiołkowski reconstruction isomorphism and six theorems about quantum
-      causal models. The theorem map and <a href={LEAN_STATUS_URL}><code>LEAN_QUANTUM.md</code></a>
-      list them, and the crate carries numerical or property-test witnesses for each.
-    </p>
-    <p>
-      <code>LEAN_QUANTUM.md</code> says these proofs need net-new Mathlib machinery. For
-      <code>quantum.unitary_factorization</code> it gives the machinery: direct-sum and C*-algebra
-      theory that Mathlib lacks.
-    </p>
-    <dl class="deflist">
-      {deferred.map((d) => (
-        <div>
-          <dt><code>{d.id}</code></dt>
-          <dd>
-            <p class="dstate">{d.statement}</p>
-            <p class="dtoday">{d.today}</p>
-          </dd>
-        </div>
-      ))}
-    </dl>
-    <p>
-      <code>LEAN_QUANTUM.md</code> lists the Markov freeze check, the naturality check, the
-      structural precheck, the fault propagator and the decoder validation as witnessed by tests;
-      none claims a theorem. The <a href="/checks/">checks page</a> marks each check.
+      {open.statement} {open.reason} <a href={LEAN_STATUS_URL}><code>LEAN_QUANTUM.md</code></a>
+      records the gap. The <a href="/checks/">checks page</a> marks each check.
     </p>
   </section>
 
@@ -185,8 +155,6 @@ const used = papers.filter((p) => p.citedFrom.length === 0 && (p.usedBy ?? []).l
   .item { background: none; padding: 0; color: var(--fg-0); font-size: var(--t-mono-sm); }
   .fpath { color: var(--fg-2); font-family: var(--font-mono); font-size: var(--t-eyebrow); overflow-wrap: anywhere; }
 
-  .dstate { margin: 0 0 var(--space-1); color: var(--fg-0); }
-  .dtoday { margin: 0; color: var(--fg-1); font-size: var(--t-body-sm); }
 
   .papers { list-style: none; margin: 0 0 var(--space-5); padding: 0; border-top: 1px solid var(--line-1); max-width: var(--measure); }
   .papers li { padding: var(--space-4) 0; border-bottom: 1px solid var(--line-1); }

@@ -12,10 +12,10 @@ export const numberWord = (n: number): string => {
  * Counts quoted across the site. Each has one source and one command.
  *
  *   proved     the quantum section of lean/THEOREM_MAP.md, rows marked `proved`
- *   deferred   the CJ reconstruction isomorphism plus the six QCM targets the
- *              same section names as deferred (see `deferred` in ./formalization.ts)
+ *   deferred   the targets the same section states and does not prove
+ *              (see `deferred` in ./formalization.ts)
  */
 export const TESTS = {
-  proved: 14,
-  deferred: 7,
+  proved: 19,
+  deferred: 1,
 } as const;

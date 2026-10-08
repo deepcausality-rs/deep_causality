@@ -56,8 +56,8 @@ export const groups: CheckGroup[] = [
         rejection:
           'On a model or a circuit, the stage fails with CommutatorNonZero, which carries the node indices of the first non-commuting pair, and finalize() returns it. On a plant, the candidate leaves the admitted set and its report entry records the pair. On the inherited factors of a composite, checked through check_markov_as and markov_certificate and not through validate, the error is CertificateNotInherited and carries the same pair.',
         vacuous: 'It certifies nothing when every pair of supports is disjoint, or when the model has a single factor. A disjoint pair imposes no obligation, so the report examines zero pairs.',
-        backing: 'tested',
-        evidence: 'Witnessed by markov_freeze_tests::test_check_noncommuting_names_the_pair. The Lean target quantum.markov_commutativity is deferred.',
+        backing: 'partial',
+        evidence: 'Lean proves the commutation facts the check relies on as quantum.markov_commutativity: factors on disjoint legs commute, and a pairwise-commuting product does not depend on its order. The numeric tolerance test is witnessed by markov_freeze_tests::test_check_noncommuting_names_the_pair.',
         source: 'src/types/qcm/markov_freeze.rs',
       },
       {

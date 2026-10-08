@@ -15,4 +15,8 @@
 #[cfg(test)]
 mod choi_tests;
 #[cfg(test)]
+mod orthomodular_tests;
+#[cfg(test)]
 mod partial_trace_tests;
+#[cfg(test)]
+mod qcm_theorem_tests;

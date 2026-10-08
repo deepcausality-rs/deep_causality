@@ -31,9 +31,10 @@ of them already exist. The source note is
 ### D1. Stay on the pair-indexed matrix model
 
 New theorems use `Matrix (α × β) (α × β) R` and the existing `kron` and `partialTraceRight`, so they
-compose with the fourteen proved statements. A bridging lemma `kron_eq_kronecker` identifies `kron`
-with Mathlib's `Matrix.kronecker`, which uses the same product index, so `Matrix.mul_kronecker_mul`
-applies directly.
+compose with the fourteen proved statements. The mixed-product law `kron_mul_kron`,
+`(A ⊗ B)(C ⊗ D) = (AC) ⊗ (BD)`, is proved directly on `kron`. Mathlib's `Matrix.mul_kronecker_mul`
+would need `Mathlib.LinearAlgebra.Matrix.Kronecker`, which `PartialTrace.lean`'s import policy keeps
+out, and the direct proof is four lines.
 
 *Alternative:* Mathlib's `TensorProduct` of modules. Rejected: it shares nothing with the existing
 files and makes every statement a change of representation.
@@ -52,9 +53,11 @@ The statement lives in a new `Quantum/Orthomodular.lean` over a finite-dimension
 `Submodule.orthogonal_orthogonal`, `Submodule.inf_orthogonal_eq_bot`,
 `Submodule.sup_orthogonal_of_hasOrthogonalProjection` and
 `Submodule.sup_orthogonal_inf_of_hasOrthogonalProjection`; antitonicity from
-`Submodule.orthogonal_le`. The distributivity witness works in `EuclideanSpace ℂ (Fin 2)` with
-`K₀ = span{e₀}`, `K₁ = span{e₁}`, `K₊ = span{e₀ + e₁}`: `K₁ ⊔ K₊ = ⊤`, so the left side is `K₀`, while
-`K₀ ⊓ K₁ = K₀ ⊓ K₊ = ⊥`.
+`Submodule.orthogonal_le`. The distributivity witness is stated for any two linearly independent
+vectors `u` and `v`, with the lines through `u`, `v` and `u + v`: `u` lies in `K_u ⊓ (K_v ⊔ K_{u+v})`,
+while `K_u ⊓ K_v = K_u ⊓ K_{u+v} = ⊥`. `|0⟩` and `|1⟩` in `ℂ²` are one instance. Stating it in
+`EuclideanSpace ℂ (Fin 2)` would import `PiL2`, which grows the Mathlib closure from 2,319 to 8,639
+modules.
 
 *Alternative:* define projections as Hermitian idempotent matrices and prove the lattice laws on
 them. Rejected: it rebuilds what Mathlib has, and the range map to subspaces is the standard

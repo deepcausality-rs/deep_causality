@@ -153,6 +153,7 @@ lake.workspace(
         "Mathlib.Algebra.Ring.Basic",
         "Mathlib.Algebra.Star.Basic",
         "Mathlib.Analysis.Complex.Basic",
+        "Mathlib.Analysis.InnerProductSpace.Projection.Submodule",
         "Mathlib.Analysis.Normed.Field.Basic",
         "Mathlib.Data.Rat.Cast.Defs",
         "Mathlib.Data.Real.Basic",

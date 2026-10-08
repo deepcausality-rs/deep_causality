@@ -102,8 +102,7 @@ after E1, because H1 separates. The plan table, the decision figure and
 
 **No roadmap, and no future work.** The site describes the crate as it is today.
 When something is not built, the page says what is not built and stops there.
-`/proof/` lists seven targets that carry tests and no LEAN proof; the list states
-the present and sets no schedule.
+`/proof/` names the one open target and why it is open; it sets no schedule.
 
 **Only cited papers are listed.** `/proof/` lists the works the code cites, each
 with what the crate takes from it. `papers/` holds no paper that neither the code
@@ -119,7 +118,7 @@ Numbers on the site come from a command anyone can re-run:
 | Figure | Source |
 | --- | --- |
 | Version 0.4.2, released 2026-09-29 | `deep_causality_quantum/CHANGELOG.md` and `Cargo.toml` |
-| 14 proved theorems, 7 deferred targets | the quantum section of `lean/THEOREM_MAP.md` |
+| 19 proved theorems, 1 open target | the quantum section of `lean/THEOREM_MAP.md` |
 | The crosstalk run: plan cost 2 of the 5 all four experiments cost, 99.5 bits (survivor and tightest pair), the campaign stops after one experiment | `cargo run --release -p quantum_examples --example qcl_crosstalk`; 99.5 is n·Bhattacharyya distance of 0.40 and 0.10 over 1024 shots |
 | The toric code run: four checks accepted, bound 3 rejects with margin 1.333 | `cargo run --release -p quantum_examples --example qcl_geometric_qec` |
 | The stacking runs: gadget residual 0.4619 and bound 3.695; distillation 0.1639, 0.1638 and 0.3277 | `qcl_code_switching`, `qcl_distillation_round`, same command form |
@@ -144,7 +143,7 @@ Each fact lives in exactly one place, split by shape:
 | Checks: question, rejection, when vacuous, backing | `src/data/checks.ts` | Rendered on `/checks/`; each row was read against the crate source. |
 | Boundaries | `src/data/boundaries.ts` | The landing page shows six, `/boundaries/` shows all, from one list. The sensing limits are a second list, `sensingBoundaries`, at `/boundaries/#sensing`. |
 | The sensing runs and the verification | `src/data/sensing.ts` | `/sensing/`, the landing section and the hero's fourth row read it, so they cannot disagree. |
-| Theorems, deferred targets, papers | `src/data/formalization.ts`, `src/data/papers.ts` | `theorems` is generated from `lean/THEOREM_MAP.md`. |
+| Theorems, the open target, papers | `src/data/formalization.ts`, `src/data/papers.ts` | `theorems` is generated from `lean/THEOREM_MAP.md`. |
 | Worked examples | `src/content/examples/en/*.mdx` | Prose with a walkthrough. Frontmatter carries the facts a listing needs, so index and detail cannot disagree. |
 
 Program output in a page is copied from a run, with each elision marked by an
