@@ -52,12 +52,12 @@ record runs to several hundred papers; one outside this set is unranked, not rej
 **Columns.**
 
 - **Size.** S: one example on today's API. M: an example plus one or two library types. L: a new
-  subsystem. X: outside the crate's stated scope ([`positioning.md`](positioning.md) §2.2 and §8).
+  subsystem. X: outside the crate's stated scope ([`positioning.md`](../archive/quantum/positioning.md) §2.2 and §8).
 - **Impact.** A judgement of value to teams operating superconducting processors, anchored where
   possible in the sources of §2. Nothing here was measured.
 - **Area.** The expert-ranked areas of §2. Q1: fault tolerance through error correction. Q2: scaling
   the hardware, including material-limited coherence. Q3: useful applications.
-- **Gap.** The gaps [`positioning.md`](positioning.md) §5.5 names. A: diagnosis is projected out of
+- **Gap.** The gaps [`positioning.md`](../archive/quantum/positioning.md) §5.5 names. A: diagnosis is projected out of
   the detector error model. B: no discrete experiment selection under a cost budget. E: drift
   attribution over time.
 
@@ -90,7 +90,7 @@ pillar; everything ranked here sits in computing.
 **QCL's reach.** QCL touches Q1 and Q2 at the diagnosis and characterization layer: the error models
 decoders depend on, and the coherence drift that limits the hardware. Two parts of these areas are
 out of its reach. Real-time decoding, the centre of Q1 in Riverlane's report, runs on microsecond
-rounds, and QCL works at supervisory rate ([`positioning.md`](positioning.md) boundary 8). Q3 has no
+rounds, and QCL works at supervisory rate ([`positioning.md`](../archive/quantum/positioning.md) boundary 8). Q3 has no
 paper in this set, and QCL does not address it.
 
 ---
@@ -212,7 +212,7 @@ suffice.
 
 Fowler et al. extract an error model from the output of error-detection circuits that run
 continuously. It is the only paper in the set aimed at gap A, which
-[`positioning.md`](positioning.md) §5.5 ranks with B as the target, and it sits in Q1, the area
+[`positioning.md`](../archive/quantum/positioning.md) §5.5 ranks with B as the target, and it sits in Q1, the area
 every source in §2 ranks first.
 
 Two 2025 results show the open problem:
@@ -451,6 +451,17 @@ The problem is still open:
 - A search on 2026-10-08 found no publication that identifies the cause. That is absence of
   evidence, not proof.
 
+**Closest prior work.** Binney et al. (MIT, arXiv:2603.16494, March 2026, revised July 2026)
+measure two types of correlated error in one device, "linking the first to ionizing radiation and
+the second to PT operation", the pulse tube of the dilution refrigerator. They tell the two apart
+"by their temporal, spatial, and frequency domain features" and confirm the split by intervention:
+the pulse tube switched off (§IV), and the device moved to a second refrigerator (§V), where the
+pulse-tube events did not occur although they had been about 100 times more common than the
+radiation events in the first. That is the attribution this gap asks for, done by a hand-designed
+campaign on one device, and it is the kind of campaign QCL would plan. It does not settle Willow's
+case: its radiation events decay in about 5 ms and its pulse-tube events more slowly, against about
+400 µs for Willow's bursts. That comparison crosses devices and is not a test.
+
 It counts as unclosed, and not merely open, on three grounds:
 
 - **Recognised.** The leading hardware team names it, and so does Preskill.
@@ -458,7 +469,8 @@ It counts as unclosed, and not merely open, on three grounds:
   covers decoding throughput, classical bandwidth and talent. It mentions neither correlated errors
   nor characterization.
 - **Unmet by current tools.** Error-model estimation fits rates to a model, and decoders absorb the
-  correlation. Neither names the physical mechanism to fix.
+  correlation; neither names the physical mechanism to fix. Expert campaigns do name it, by hand and
+  one device at a time, as Binney et al. did.
 
 ### 11.4 What it means for QCL
 
@@ -467,7 +479,8 @@ It counts as unclosed, and not merely open, on three grounds:
 - **The footprint constrains the candidates.** Willow names no cause for the bursts, but it states
   what any cause must reproduce: about 30 qubits, a decay near 400 µs, and about one an hour.
   Residual radiation with different quasiparticle dynamics is one candidate, given the radiation-like
-  signatures Arms et al. report (row 6). Leakage (row 9) and coupler excitations are others to test
+  signatures Arms et al. report (row 6). Pulse-tube vibration, which Binney et al. separate from
+  radiation in one device, is another. Leakage (row 9) and coupler excitations are others to test
   against the footprint. This note claims none of them fits; the campaign decides, and an unnamed
   cause ends at `OutsideTheModel`, which still rules out the named ones.
 - **Rank 1 is the first step.** Willow attributes its milder failure mode to transient TLS near a
@@ -551,6 +564,9 @@ Gap analysis (§11):
 - Google Quantum AI, *Quantum error correction below the surface code threshold*, Nature 638, 920
   (2025), §IV and Outlook, https://www.nature.com/articles/s41586-024-08449-y
 - Willow dataset, Zenodo record 13273331, https://zenodo.org/records/13273331
+- Binney, Pinckney, Azar, … Serniak, Formaggio, Oliver, *Distinguishing types of correlated errors in
+  superconducting qubits*, arXiv:2603.16494 (v2 July 2026), §III to §V,
+  https://arxiv.org/abs/2603.16494, doi:10.1103/j235-47t6
 - McEwen et al., *Resisting high-energy impact events through gap engineering in superconducting
   qubit arrays*, arXiv:2402.15644, https://arxiv.org/abs/2402.15644
 - Preskill, *Beyond NISQ: The Megaquop Machine*, §2, https://arxiv.org/html/2502.17368v2
@@ -592,7 +608,7 @@ Patents:
 
 In this repository:
 
-- [`positioning.md`](positioning.md), §2.2, §5.5 and §8
+- [`positioning.md`](../archive/quantum/positioning.md), §2.2, §5.5 and §8
 - [`example-quantum-control-loop.md`](example-quantum-control-loop.md)
 - [`campaign.rs`](../../../deep_causality_quantum/src/types/pipeline/campaign.rs),
   [`control.rs`](../../../deep_causality_quantum/src/types/pipeline/control.rs),
