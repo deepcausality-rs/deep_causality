@@ -24,6 +24,7 @@
 //! (`.github/workflows/formalization.yml`, job `theorem-map`) requires every proved Lean theorem
 //! to have a matching `// THEOREM_MAP: <id>` tag in a Rust file. See the module docstring in
 //! `tests/formalization_lean/partial_trace_tests.rs`.
+use deep_causality_num::Float106;
 use deep_causality_num_complex::Complex;
 use deep_causality_quantum::utils_tests::four_two_two;
 use deep_causality_quantum::{
@@ -387,6 +388,26 @@ fn test_a_distillation_round_reports_the_noise_the_recovery_leaves() {
     assert!(row.epsilon_first > 0.0 && row.epsilon_second < 1e-9);
     assert!(row.measured > 0.0 && row.holds(), "{}", noisy.law);
     assert!(distillation_round::<W, _, f64>(&complex, 1.5).is_err());
+}
+
+#[test]
+fn test_a_float106_distillation_round_leaves_no_f64_sized_residual() {
+    // The code abstraction is exact, so ε₂ is rounding alone: at Float106 it sits far below the
+    // f64 epsilon, 2.2e-16, with and without noise. Noise moves ε₁, never ε₂.
+    let tight = Float106::from(1e-24);
+    let complex = four_two_two();
+    for p in [
+        Float106::from(0.0),
+        Float106::from(1.0) / Float106::from(20.0),
+    ] {
+        let law = distillation_round::<W, _, Float106>(&complex, p)
+            .unwrap()
+            .compose(&caps())
+            .unwrap()
+            .law;
+        let second = law.rows[0].epsilon_second;
+        assert!(second < tight, "p = {p:?}: ε₂ = {second:?}");
+    }
 }
 
 #[test]

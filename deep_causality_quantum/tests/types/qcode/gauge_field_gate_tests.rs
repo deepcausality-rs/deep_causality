@@ -14,6 +14,7 @@
 //! reduced from a negative turn.
 
 use deep_causality_homology::Gf2Chain;
+use deep_causality_num::{Float, Float106};
 use deep_causality_num_rational::Rational;
 use deep_causality_quantum::{
     DiagonalPhase, GateOp, GaugeFieldGate, MAX_GAUGE_BLOCKS, QuantumErrorEnum, reduce_turns,
@@ -264,4 +265,26 @@ fn test_from_diagonal_program_reads_table_one_back_and_rejects_an_incomplete_one
     // An empty program on a block is the identity table.
     let id = GaugeFieldGate::<W>::from_diagonal_program(5, &[], vec![g]).unwrap();
     assert!(id.is_constant());
+}
+
+#[test]
+fn test_pauli_coefficients_hold_at_float106_precision() {
+    // cos²(π/4) = sin²(π/4) = ½ at the scalar's own rounding. A 2π or a phase rounded through f64
+    // first leaves a residual near the f64 epsilon, 2.2e-16.
+    let tight = Float106::from(1e-28);
+    let half = Float106::from(0.5);
+    let r = GaugeFieldGate::t(chain(5, &[0, 1, 2, 3, 4]))
+        .unwrap()
+        .conjugated_by_pauli(&chain(5, &[2]))
+        .unwrap();
+    let c = r.pauli_coefficients::<Float106>().unwrap();
+    let (identity, z) = (c[0].1, c[1].1);
+    assert!(
+        (identity.re * identity.re - half).abs() < tight && identity.im.abs() < tight,
+        "identity coefficient {identity:?}"
+    );
+    assert!(
+        (z.im * z.im - half).abs() < tight && z.re.abs() < tight,
+        "Z̄ coefficient {z:?}"
+    );
 }

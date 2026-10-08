@@ -6,6 +6,7 @@
 //! Gate matrices against their textbook forms (Nielsen & Chuang §4.2): every literal below is the
 //! published matrix entry, not a reading of the code.
 
+use deep_causality_num::{Float, Float106};
 use deep_causality_num_complex::Complex;
 use deep_causality_quantum::{GateOp, QuantumErrorEnum, gate_unitary};
 
@@ -138,4 +139,42 @@ fn test_cmz_wider_than_the_gate_limit_is_refused_before_allocating() {
     assert!(
         matches!(err.0, QuantumErrorEnum::DimensionMismatch(ref m) if m.contains("more than once"))
     );
+}
+
+/// The 2 × 2 product `a · b` of row-major matrices.
+fn product_2x2(a: &[Complex<Float106>], b: &[Complex<Float106>]) -> Vec<Complex<Float106>> {
+    (0..4)
+        .map(|k| {
+            let (i, j) = (k / 2, k % 2);
+            a[2 * i] * b[j] + a[2 * i + 1] * b[2 + j]
+        })
+        .collect()
+}
+
+/// The largest entry-wise distance between two matrices.
+fn distance(a: &[Complex<Float106>], b: &[Complex<Float106>]) -> Float106 {
+    a.iter()
+        .zip(b)
+        .map(|(x, y)| (x.re - y.re).abs().max((x.im - y.im).abs()))
+        .fold(Float106::from(0.0), |m, d| m.max(d))
+}
+
+#[test]
+fn test_gate_constants_hold_at_float106_precision() {
+    // H² = I and T² = S at the scalar's own rounding. A 1/√2 or π/4 rounded through f64 first
+    // leaves a residual near the f64 epsilon, 2.2e-16, in both identities.
+    let tight = Float106::from(1e-28);
+    let one = Complex::new(Float106::from(1.0), Float106::from(0.0));
+    let zero = Complex::new(Float106::from(0.0), Float106::from(0.0));
+    let identity = [one, zero, zero, one];
+    let (_, h) = gate_unitary::<Float106>(&GateOp::H(0)).unwrap();
+    let hh = product_2x2(h.as_slice(), h.as_slice());
+    let residual = distance(&hh, &identity);
+    assert!(residual < tight, "H² − I = {residual:?}");
+
+    let (_, t) = gate_unitary::<Float106>(&GateOp::T(0)).unwrap();
+    let (_, s) = gate_unitary::<Float106>(&GateOp::S(0)).unwrap();
+    let tt = product_2x2(t.as_slice(), t.as_slice());
+    let residual = distance(&tt, s.as_slice());
+    assert!(residual < tight, "T² − S = {residual:?}");
 }
