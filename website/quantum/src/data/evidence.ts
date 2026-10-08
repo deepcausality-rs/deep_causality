@@ -14,7 +14,7 @@ export const numberWord = (n: number): string => {
  *   count      cargo test -p deep_causality_quantum --all-features
  *              892 unit and integration tests plus 1 doc test, all passing
  *              (a `#[test]` grep finds a different number: it counts attributes,
- *              not the tests the harness runs)
+ *              not the tests the test runner runs)
  *   proved     the quantum section of lean/THEOREM_MAP.md, rows marked `proved`
  *   deferred   the CJ reconstruction isomorphism plus the six QCM targets the
  *              same section names as deferred (see `deferred` in ./formalization.ts)
@@ -24,5 +24,5 @@ export const TESTS = {
   count: 900,
   proved: 14,
   deferred: 7,
-  papers: 7,
+  papers: 20,
 } as const;

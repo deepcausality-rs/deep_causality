@@ -16,7 +16,10 @@ const split = (s: string) => {
 };
 
 const cited = papers.filter((p) => p.citedFrom.length > 0);
-const uncited = papers.filter((p) => p.citedFrom.length === 0);
+const used = papers.filter((p) => p.citedFrom.length === 0 && (p.usedBy ?? []).length > 0);
+const uncited = papers.filter((p) => p.citedFrom.length === 0 && (p.usedBy ?? []).length === 0);
+/** Papers the sensing page cites for the field's state. */
+const onSensing = ['2608.25563', '2410.07720'];
 ---
 <PageShell title={title} description={description} path="/proof/">
   <header class="doc-head">
@@ -104,7 +107,7 @@ const uncited = papers.filter((p) => p.citedFrom.length === 0);
     </p>
     <p>
       A grep for the test attribute returns a different number, since it counts attributes and the
-      harness counts the tests it runs.
+      test runner counts the tests it runs.
     </p>
     <p class="next-links">
       <a href={`${CRATE_URL}/tests`}>The test tree ↗</a>
@@ -147,8 +150,10 @@ const uncited = papers.filter((p) => p.citedFrom.length === 0);
     <p>
       {cap(numberWord(cited.length))} of the {TESTS.papers} PDFs under
       <a href={PAPERS_URL}><code>papers/</code></a> are cited from a module in
-      <code>src/</code>. The first list gives each with what the crate takes from it. The second
-      list holds the one paper no module cites; a committed PDF alone shows no implementation.
+      <code>src/</code>, and the first list gives each with what the crate takes from it. The
+      second list holds the {numberWord(used.length)} that the sensing examples and the
+      verifications cite. The third holds the {numberWord(uncited.length)} that no code
+      cites; a committed PDF alone shows no implementation.
     </p>
     <ol class="papers">
       {cited.map((p) => (
@@ -161,13 +166,29 @@ const uncited = papers.filter((p) => p.citedFrom.length === 0);
       ))}
     </ol>
 
-    <h3>Committed and not cited</h3>
+    <h3 id="sensing-papers">Cited by the sensing examples and the verification</h3>
+    <ol class="papers">
+      {used.map((p) => (
+        <li>
+          <p class="ptitle">{p.title}</p>
+          <p class="pmeta">{p.authors}. {p.ref}, {p.year}.</p>
+          {p.usedFor && <p class="pused">{p.usedFor}</p>}
+          <p class="pcite">Cited by <code>{(p.usedBy ?? []).join(', ')}</code>.</p>
+        </li>
+      ))}
+    </ol>
+
+    <h3>Committed and cited by no code</h3>
     <ol class="papers">
       {uncited.map((p) => (
         <li>
           <p class="ptitle">{p.title}</p>
           <p class="pmeta">{p.authors}. {p.ref}, {p.year}.</p>
-          <p class="pcite">No module in <code>src/</code>, the tests, the README or the changelog cites it.</p>
+          <p class="pcite">
+            No code, test, README or changelog in the crate cites it.{onSensing.some((id) => p.ref.includes(id)) && (
+              <> The <a href="/sensing/#why">sensing page</a> cites it for the field’s state.</>
+            )}
+          </p>
         </li>
       ))}
     </ol>

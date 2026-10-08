@@ -12,10 +12,12 @@ const isActive = (href: string) =>
   href === '/' ? pathname === '/' : pathname.startsWith(href);
 
 const nav = [
-  // Five items, one per question a reader arrives with: how does it work, what
-  // does it run on, what does it check, what backs that up, and where does it
-  // stop. Installing is footer-weight and sits in the mobile sheet.
+  // Six items, one per question a reader arrives with: how does it work, what
+  // does it do for a sensor, what does it run on, what does it check, what backs
+  // that up, and where does it stop. Installing is footer-weight and sits in the
+  // mobile sheet.
   { href: '/how-it-works/', label: 'How it works' },
+  { href: '/sensing/', label: 'Sensing' },
   { href: '/examples/', label: 'Examples' },
   { href: '/checks/', label: 'Checks' },
   { href: '/proof/', label: 'Proof' },

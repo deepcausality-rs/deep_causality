@@ -15,7 +15,7 @@
 //! where the detection does not clip, moves gravity by 10(5) µGal and the atoms by 1.8 (mm/s) per
 //! unit (§VII, §VIII).
 //!
-//! The harness attributes the +46(2) µGal among the candidates through QCL:
+//! The verification attributes the +46(2) µGal among the candidates through QCL:
 //!
 //! * Coriolis from the atoms' real velocity: the north-south velocity per unit of imbalance,
 //!   1.8 mm/s, times the expected 9.72 µGal/(mm/s) (§VIII), with the sign the paper expects;

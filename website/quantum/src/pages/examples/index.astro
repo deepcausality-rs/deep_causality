@@ -6,7 +6,7 @@ import { numberWord } from '../../data/evidence';
 
 const title = 'Examples | DeepCausality Quantum';
 const description =
-  'Fourteen runnable examples, grouped by the question each answers. Nine use this crate; five are quantum in subject and build on sibling crates.';
+  'Sixteen runnable examples, grouped by the question each answers. Eleven use this crate; five are quantum in subject and build on sibling crates.';
 
 const all = (await getCollection('examples')).sort((a, b) => a.data.order - b.data.order);
 const slug = (id: string) => id.replace(/^en\//, '');
@@ -16,6 +16,7 @@ const groups = [
   { key: 'model', title: 'Check a quantum causal model', note: 'These examples test whether the factors that share a Hilbert leg commute; a failure names the pair.' },
   { key: 'code', title: 'Verify an error-correcting code', note: 'This example runs exact checks over F₂ on a toric code, with no state vector.' },
   { key: 'compose', title: 'Compose abstractions', note: 'These examples stack one abstraction on another and compare the measured error with the bound of the composition law.' },
+  { key: 'sense', title: 'Attribute a sensor’s systematic', note: 'These examples plan experiments in instrument time on an atom interferometer and name the systematic the evidence leaves. The sensing page shows both.' },
   { key: 'other', title: 'Quantum in subject, built on other crates', note: 'The first example, the IKKT matrix model, calls this crate’s commutator kernel. The other five do not import this crate, and each page names the crates it imports.' },
 ] as const;
 

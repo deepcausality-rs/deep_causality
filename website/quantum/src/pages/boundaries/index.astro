@@ -1,11 +1,11 @@
 ---
 import PageShell from '../../components/nav/PageShell.astro';
-import { boundaries } from '../../data/boundaries';
+import { boundaries, sensingBoundaries } from '../../data/boundaries';
 import { CRATE_URL } from '../../consts';
 
 const title = 'Boundaries | DeepCausality Quantum';
 const description =
-  'What the library does not do, what its examples assume, and how its two senses of quantum stay apart. Each row names the file that shows it.';
+  'What the library does not do, what its examples assume, where the sensing examples stop, and how its two senses of quantum stay apart. Each row names the file that shows it.';
 ---
 <PageShell title={title} description={description} path="/boundaries/">
   <header class="doc-head">
@@ -13,7 +13,8 @@ const description =
     <h1>What the library leaves out.</h1>
     <p class="lede">
       Each row below states one thing the library leaves out or one limit a user meets, and names
-      the file that shows it. A second section lists what the crosstalk example assumes.
+      the file that shows it. Later sections list what the crosstalk example assumes and where the
+      sensing examples stop.
     </p>
   </header>
 
@@ -76,6 +77,57 @@ const description =
           factorization. A circuit needs a bath node with two output wires. That node has a leg of
           256 dimensions, and the Markov union over its three legs is a 65536 × 65536 matrix with
           2<sup>32</sup> entries, above the crate’s cap of 2<sup>24</sup>.
+        </dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="doc-sec" id="sensing">
+    <h2>Where do the sensing examples stop?</h2>
+    <p>
+      The <a href="/sensing/">sensing section</a> rests on two examples and on
+      verifications against published papers. The rows below state their limits.
+    </p>
+    <ul class="rows">
+      {sensingBoundaries.map((b) => (
+        <li class="row" id={b.id}>
+          <p class={`status status-${b.status}`}>{b.mark}</p>
+          <div>
+            <h3>{b.title}</h3>
+            <p class="t">{b.text}</p>
+            <p class="ev">Shown in <code>{b.evidence}</code></p>
+          </div>
+        </li>
+      ))}
+    </ul>
+    <h3>What the sensing examples assume</h3>
+    <dl class="deflist">
+      <div>
+        <dt>Each response belongs to one instrument</dt>
+        <dd>
+          Whether a field or a misalignment turns with the sensor head depends on the design.
+          Each example’s <code>model.rs</code> states every response, and a lab confirms each one.
+        </dd>
+      </div>
+      <div>
+        <dt>One dominant cause per candidate</dt>
+        <dd>
+          A mixture of causes enters as a candidate of its own. The planner solves exactly up to
+          seven candidates by default, and the gravimeter uses all seven.
+        </dd>
+      </div>
+      <div>
+        <dt>Brightening one cloud reaches only the other’s signal</dt>
+        <dd>
+          The gradiometer’s E1 and E2 assume that pushing one cloud bright changes the other
+          cloud’s detection signal and leaves its atoms alone. A lab confirms this.
+        </dd>
+      </div>
+      <div>
+        <dt>The wavefront at two temperatures</dt>
+        <dd>
+          The gravimeter reads the wavefront at the operating 2 µK and at zero, and at no
+          temperature between them.
         </dd>
       </div>
     </dl>

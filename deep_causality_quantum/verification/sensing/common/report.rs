@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-//! The checks a verification harness makes: each a claim of the paper, and whether QCL reproduces
+//! The checks a verification makes: each a claim of the paper, and whether QCL reproduces
 //! it.
 
 /// The checks made so far.

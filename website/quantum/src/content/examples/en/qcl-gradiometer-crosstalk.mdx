@@ -1,0 +1,96 @@
+---
+title: "Gradiometer crosstalk"
+question: "Is the correlation between a gradiometer's two atom clouds benign?"
+summary: "Four candidates that fit the passive read-out exactly, a three-experiment plan at 721.8 s, a campaign that stops after one experiment for a one-way leak, and the gradient bias the survivor implies."
+order: 10
+group: sense
+command: "cargo run --release -p quantum_examples --example qcl_gradiometer_crosstalk"
+usesCrate: true
+uses:
+  - QclBuilder
+  - Hypothesis
+  - ConfiguredExperiment
+  - ResponseModel
+  - InterferometerModel
+  - MinCostCover
+  - Campaign
+  - CampaignRules
+  - EvidenceSource
+crates:
+  - deep_causality_algebra
+  - deep_causality_context_store
+  - deep_causality_core
+  - deep_causality_haft
+  - deep_causality_num
+  - deep_causality_num_complex
+  - deep_causality_quantum
+  - deep_causality_tensor
+source: "examples/quantum_examples/qcl_examples/qcl_gradiometer_crosstalk"
+---
+
+The campaign and the full plan name the cause in all four candidate worlds. A leak from cloud A
+into cloud B's detection signal takes one 60 s experiment to name, and its gradient bias is
+−356 E for a 6 % leak. The instrument is the dual-cloud gradiometer of Sorrentino et al., Phys. Rev.
+A 89, 023607 (2014): T = 160 ms, contrast 0.45, a 30 cm baseline.
+
+A gradiometer runs two atom clouds off one laser and one mirror, and their read-outs move
+together. If the shared phase alone moves them, differential extraction removes it. Fluorescence
+leaking from one cloud into the other's detection signal biases the gradient, and so does platform
+rotation. Each of the four candidates fits the passive read-out exactly, so passive data separates
+none.
+
+## What you see
+
+```text
+[world: leak A->B] observations drawn from it; candidates fitted to its passive read-out
+    predicted read-out           H1 leak A->B    H2 leak B->A H3 shared phase     H4 rotation
+    E0 passive                        0.25982         0.25982         0.25982         0.25982
+    E1 brighten A, read B             0.07880         0.02000         0.02000         0.02000   planned: 340 draws, 60.0 s
+    E2 brighten B, read A             0.02000         0.07880         0.02000         0.02000   planned: 340 draws, 60.0 s
+    E3 rotation step                  0.51560         0.51560         0.51560         0.52632   planned: 60265 draws, 601.8 s
+    plan: 721.8 s, covers every pair: yes
+    campaign ran E1 brighten A, read B and spent 60.0 s: H1 leak A->B survives
+    static plan, every planned experiment run, 721.8 s: H1 leak A->B survives
+    H1 leak A->B: the instrument reads 1.90852 rad; without the mechanism it would read 1.95251 rad
+    gradient bias -0.0440 rad = -355.7 E; action: realign the detection optics or add a baffle, then rerun the brightening experiment
+...
+[world: leak both ways] observations drawn from it; candidates fitted to its passive read-out
+...
+    campaign ran E1 brighten A, read B and spent 60.0 s: H1 leak A->B survives
+    static plan, every planned experiment run, 721.7 s: no candidate holds: outside the model
+...
+    world leak both ways     static plan reports it outside the model: yes
+        the campaign stopped at H1 leak A->B after E1 brighten A, read B: a survivor ends it before the experiment that would contradict it runs
+...
+    every check holds: yes
+```
+
+The excerpt marks each gap with an ellipsis. The program exits nonzero if a check it makes on its
+own decisions fails.
+
+## What each stage decided
+
+1. **The fit.** For each world the observations come from, the example fits the four candidates
+   to that world's passive read-out through their fringe centres and differential phase.
+2. **The screen.** `validate` confirms that each candidate is a normalised process, Markov, and
+   free of a C₃.
+3. **The plan.** `design_with` prices each experiment in instrument time and takes E1, E2 and E3
+   for 721.8 s. The setup times dominate: E1 and E2 need 340 effective draws each, and the
+   rotation step about 60,000 at 3 × 10⁻⁵ s a draw.
+4. **The campaign.** It stops as soon as one candidate holds and separates: after E1 for a leak
+   from A to B, after E2 for a leak from B to A, and after all three for the shared phase and for
+   rotation.
+5. **The consequence.** A flow reads the instrument's differential phase in the survivor's world,
+   switches the context to the same world with the mechanism removed, and reads it again. The
+   difference is the gradient bias: −0.044 rad, −356 E, for a 6 % leak, and +6.9 × 10⁻⁴ rad,
+   +5.5 E, for rotation at Earth's horizontal rate.
+
+A leak both ways is no candidate. The full plan reports it outside the model, because E2 shows a
+leak the one-way candidate rules out; the campaign stops at that candidate after E1.
+
+## What is typed, computed and sampled
+
+The instrument values come from Sorrentino et al. The leak, the dark background and the setup
+times are placeholders for a lab's measurements, and `constants.rs` marks each one. The fits, the predicted read-outs, the plan, the draw counts
+and the biases are computed. Every observation is drawn from the world the run names, so each
+campaign's verdict and cost follow from simulated data.

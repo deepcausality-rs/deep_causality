@@ -14,7 +14,7 @@
 //!
 //! `papers/regenerated/regenerate_sarovar2020.py` regenerates the four with the published
 //! parameters and design, adds a crosstalk-free control and a shared bath that flips both
-//! read-outs together, and runs pyGSTi's PC detection on each. The harness simulates every candidate
+//! read-outs together, and runs pyGSTi's PC detection on each. The verification simulates every candidate
 //! model with the crate's channels and attributes each circuit's outcome frequencies among them
 //! through QCL. A candidate implies the pairs whose variables its predictions couple directly: two
 //! results, when their joint probability differs from the product of their marginals; a setting and
@@ -25,7 +25,7 @@
 //! shared bath; the PC skeleton leaves both out. QCL establishes the pairs every holding candidate
 //! implies.
 //!
-//! The harness checks that the survivor is the generating model and establishes the published
+//! The verification checks that the survivor is the generating model and establishes the published
 //! edges, that the control establishes none, that QCL separates detection crosstalk from a shared
 //! bath though both imply the same pair, that the ZZ data without the ZZ candidate leave no
 //! survivor, and that QCL establishes the published edges on the draws where PC does not.

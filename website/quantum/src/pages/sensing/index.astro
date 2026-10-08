@@ -1,0 +1,336 @@
+---
+/**
+ * Quantum sensing. The page follows the home page's form: a hero with one figure, then sections
+ * that each open with a question, state their point as the heading, and show one figure. The
+ * story and every sentence come from `openspec/notes/quantum-site/04_sensing_page_draft.md`, which
+ * traces each fact to `03_sensing_raw_information.md`.
+ *
+ * Numbers read from `src/data/sensing.ts`; output lines are copied from runs.
+ */
+import { Code } from 'astro:components';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SiteHeader from '../../components/nav/SiteHeader.astro';
+import HomeSection from '../../components/home/HomeSection.astro';
+import TrackFigure from '../../components/sensing/TrackFigure.astro';
+import SystematicsMatrix from '../../components/sensing/SystematicsMatrix.astro';
+import CampaignBars from '../../components/sensing/CampaignBars.astro';
+import EdgeCards from '../../components/sensing/EdgeCards.astro';
+import {
+  FIELD,
+  GRADIOMETER,
+  GRAVIMETER,
+  VERIFICATION,
+  gradiometerCandidates,
+  gradiometerExperiments,
+  verificationCommand,
+  signed,
+  systematics,
+  verifications,
+} from '../../data/sensing';
+import { CRATE_URL } from '../../consts';
+import { numberWord } from '../../data/evidence';
+
+const SHIKI = { light: rustLight, dark: rustDark };
+const title = 'Quantum sensing | DeepCausality Quantum';
+const description =
+  'Discover the cause of a gravimeter reading error. DeepCausality Quantum plans the cheapest changes to an instrument that tell rival causes apart, prices each in instrument time, and reports the cause that remains.';
+
+const seconds = (s: number) => s.toLocaleString('en-US');
+const offset = Math.abs(GRAVIMETER.offsetUgal);
+const leakPercent = Math.round(GRADIOMETER.leak * 100);
+const e1 = gradiometerExperiments.find((e) => e.id === 'E1')!;
+
+const run = `${GRAVIMETER.command}
+${GRADIOMETER.command}
+${verificationCommand('verification_v1_wavefront')}`;
+---
+<BaseLayout title={title} description={description} path="/sensing/">
+  <SiteHeader slot="header" />
+
+  <section class="hero">
+    <div class="hero-inner">
+      <p class="eyebrow">Quantum sensing</p>
+      <h1>Discover the cause of a gravimeter reading error</h1>
+      <div class="hero-grid">
+        <div class="hero-copy">
+          <p class="sub">
+            A gravimeter reads {offset} µGal low, and seven known effects could each explain it. A
+            longer passive run fits all seven equally well. DeepCausality Quantum plans the cheapest
+            changes to the instrument that tell them apart, prices each change in instrument time,
+            and runs them until one explanation remains.
+          </p>
+          <p class="gloss">
+            The run below uses a published instrument and simulated observations. Eight further runs
+            check the method against published results.
+          </p>
+          <div class="cta-row">
+            <a class="btn btn-primary" href="#plan">See the plan <span class="btn-ico" aria-hidden="true">→</span></a>
+            <a class="btn btn-ghost" href="#run">Run it yourself</a>
+          </div>
+        </div>
+        <div class="hero-fig">
+          <TrackFigure
+            title="Seven explanations, one reading"
+            rows={systematics.map((h) => ({ name: h.name, tag: h.id, value: GRAVIMETER.offsetUgal }))}
+            min={-10}
+            max={0}
+            ticks={[-10, -5, 0]}
+            hideValues
+            marker={{ value: GRAVIMETER.offsetUgal, label: `passive reading, ${signed(GRAVIMETER.offsetUgal)} µGal` }}
+          >
+            Each candidate is sized to produce the offset, so all seven fit the passive reading
+            equally well.
+          </TrackFigure>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <HomeSection id="why" ix="02 / 09" label="Why it matters" title="One effect carries most of the error.">
+    <Fragment slot="lede">
+      <p>
+        An atom gravimeter measures gravity through the phase of falling atoms, and many effects
+        shift that phase: the Earth’s rotation, stray magnetic fields, imperfect laser beams, a
+        tilted instrument. An accuracy budget lists each effect with its size. The laser wavefront
+        limits cold-atom gravimeters most (Karcher et al.), and in one published budget it carries
+        {FIELD.budget.wavefrontUgal} µGal of a {FIELD.budget.totalUgal} µGal total uncertainty
+        (Louchet-Chauvet et al.).
+      </p>
+      <p>
+        The instruments now work outside the laboratory. On a {FIELD.vessel.vessel} vessel, a
+        quantum gravimeter corrected the ship’s inertial navigation over
+        {FIELD.vessel.routeNmi} nautical miles without GNSS. The corrected position ended
+        {FIELD.vessel.aidedNmi} nautical miles from the truth, the uncorrected one
+        {FIELD.vessel.unaidedNmi} (Everitt et al.). At sea, the ship’s rotation adds errors of its own
+        (Lellouch and Holynski).
+      </p>
+      <p>
+        Each new effect needs its own line in the budget before anyone can correct it, and each line
+        rests on an experiment that moves that effect and leaves the others in place. Choosing those
+        experiments is the library’s job.
+      </p>
+    </Fragment>
+    <ul class="stats">
+      <li class="stat panel corner-brackets">
+        <p class="big num">{FIELD.budget.wavefrontUgal} <span>of</span> {FIELD.budget.totalUgal} µGal</p>
+        <p class="what">The wavefront’s share of one gravimeter’s uncertainty budget.</p>
+        <p class="src">{FIELD.budget.cite}, Table 1</p>
+      </li>
+      <li class="stat panel corner-brackets">
+        <p class="big num">{FIELD.vessel.aidedNmi} <span>against</span> {FIELD.vessel.unaidedNmi} nmi</p>
+        <p class="what">Position error after {FIELD.vessel.routeNmi} nautical miles at sea, with and without the quantum gravimeter.</p>
+        <p class="src">{FIELD.vessel.cite}</p>
+      </li>
+    </ul>
+  </HomeSection>
+
+  <HomeSection id="plan" ix="03 / 09" label="Which change?" title="Skip the 5.6-hour scan and still find the wavefront.">
+    <Fragment slot="lede">
+      <p>
+        Each effect answers a different change to the instrument. Turning the sensor head 180° flips
+        the Coriolis and clipping shifts and leaves the rest in place. Reversing the laser’s wave
+        vector flips the quadratic Zeeman shift. Halving the Rabi frequency halves the light shift.
+        You write these responses once, in a response model, and the library computes what every
+        change predicts under every candidate.
+      </p>
+      <p>
+        Eight changes are on offer. The library prices each as its setup time plus the time its
+        measurements take, and picks the cheapest set that separates every pair of candidates by at
+        least {GRAVIMETER.floorBits} bits. That margin keeps the chance of mistaking one candidate
+        for another below 1 in 64 (the Bhattacharyya bound; Kailath, 1967). Six changes do it, in
+        {seconds(GRAVIMETER.planCost)} s.
+      </p>
+      <p>
+        The plan skips the wavefront’s own test, a temperature scan with {seconds(20000)} s of setup.
+        Once each of the other six candidates has a change that moves it, the wavefront is the
+        explanation left when all six fail, so the plan finds it by elimination.
+      </p>
+    </Fragment>
+    <SystematicsMatrix />
+  </HomeSection>
+
+  <HomeSection ix="04 / 09" label="The decision" title="Under three minutes for one cause.">
+    <Fragment slot="lede">
+      <p>
+        Every run starts with the passive reading. The library drops any candidate the reading
+        contradicts, plans for the rest, and runs the plan as a campaign. The campaign starts with
+        the cheapest change that can separate the candidates still standing, compares every
+        candidate’s prediction with the result, and stops as soon as one candidate fits and stands
+        clear of the rest. When the quadratic Zeeman
+        shift caused the offset, the first change settled it in {GRAVIMETER.cheapest} s. When the
+        wavefront caused it, all six other candidates had to fail first, which took six changes and
+        {seconds(GRAVIMETER.dearest)} s.
+      </p>
+      <p>
+        The tide moves gravity by far more than {offset} µGal during a campaign; one published budget
+        corrects −18.8 µGal for it (Louchet-Chauvet et al.). Each change therefore carries the tide at
+        the time it runs, and the campaign plans again whenever the tide moves a prediction.
+      </p>
+    </Fragment>
+    <CampaignBars />
+    <div class="after">
+      <EdgeCards show={['tilt', 'tide']} />
+    </div>
+  </HomeSection>
+
+  <HomeSection ix="05 / 09" label="Missing cause" title="Leave out a cause, and another takes the blame.">
+    <Fragment slot="lede">
+      <p>
+        The library weighs only the causes on your list, and its plan leaves out any change that
+        only a missing cause would answer. If the missing cause answers the planned changes the way a
+        listed cause does, the listed cause takes the blame, and the output reads like a correct run.
+      </p>
+    </Fragment>
+    <div class="side">
+      <EdgeCards show={['clipping']} />
+    </div>
+  </HomeSection>
+
+  <HomeSection ix="06 / 09" label="Gradiometer" title="A one-minute test exposes a light leak.">
+    <Fragment slot="lede">
+      <p>
+        A gravity gradiometer compares two atom clouds that share one laser, so their readings rise
+        and fall together. If the shared laser alone causes that, the gradient stays correct. If
+        light from one cloud’s detection leaks into the other’s, or the platform rotates, the
+        gradient carries a bias. All four explanations fit the passive data.
+      </p>
+      <p>
+        One 60 s change exposes a leak: light up one cloud, keep the other dark, and read the dark
+        one. A leak lifts the dark cloud’s signal from {e1.predicts[1].toFixed(3)} to
+        {e1.predicts[0].toFixed(3)}. A {leakPercent} % leak biases the gradient by
+        {signed(GRADIOMETER.leakBias.eotvos)} E, or −3.6 × 10⁻⁷ s⁻². Finding rotation takes a
+        deliberate turn of the platform, and the full plan takes {Math.round(GRADIOMETER.planCost)} s.
+      </p>
+    </Fragment>
+    <TrackFigure
+      title="B’s read-out, A lit, B dark"
+      rows={gradiometerCandidates.map((c, k) => ({
+        name: c.name,
+        tag: c.id,
+        value: e1.predicts[k],
+        highlight: e1.predicts[k] !== e1.predicts[1],
+      }))}
+      min={0}
+      max={0.1}
+      ticks={[0, 0.05, 0.1]}
+      digits={3}
+      tickDigits={2}
+    >
+      The read-out each candidate predicts. Only a leak from A into B lifts it. Placeholders for a
+      lab’s values: a {leakPercent} % leak and a {Math.round(GRADIOMETER.darkBackground * 100)} %
+      dark background. <a href={`/examples/${GRADIOMETER.slug}/`}>The gradiometer example</a> shows
+      the full run.
+    </TrackFigure>
+  </HomeSection>
+
+  <HomeSection ix="07 / 09" label="Published results" title="Published numbers in, real answers out.">
+    <Fragment slot="lede">
+      <p>
+        Simulated runs show the method works on its own terms. To test it against real data,
+        {numberWord(VERIFICATION.count)} verifications feed published numbers into the same planner and judge,
+        and check whether they reach the papers’ conclusions. All {VERIFICATION.checks} checks pass.
+        Where a paper’s own numbers disagree with each other, the verification records it.
+      </p>
+    </Fragment>
+    <div class="papers">
+      <table class="table-stack">
+        <thead>
+          <tr>
+            <th scope="col">Paper</th>
+            <th scope="col">Question</th>
+            <th scope="col">Same answer?</th>
+            <th scope="col">Also found</th>
+          </tr>
+        </thead>
+        <tbody>
+          {verifications.map((v) => (
+            <tr>
+              <td data-label="Paper"><b>{v.source}</b><span class="ref">{v.ref}</span></td>
+              <td data-label="Question">{v.question}</td>
+              <td data-label="Same answer?" class="ans">{v.answer}</td>
+              <td data-label="Also found">{v.also ?? '—'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+    <p class="more">
+      <a href={`${CRATE_URL}/verification/sensing`}>The verifications’ README lists each check, its numbers and the command that reruns it <span aria-hidden="true">↗</span></a>
+    </p>
+  </HomeSection>
+
+  <HomeSection ix="08 / 09" label="Limits" title="What your lab still supplies.">
+    <ul class="limits">
+      <li>The examples simulate their observations; the verifications read published values.</li>
+      <li>A lab supplies the setup times, the tide, the leak and the dark background.</li>
+      <li>A cause missing from the list stays unnamed until a change it contradicts runs.</li>
+      <li>Measurement time follows white noise, within the instrument’s white-noise range.</li>
+    </ul>
+    <p class="more"><a href="/boundaries/#sensing">Every limit, with the file that shows it <span aria-hidden="true">→</span></a></p>
+  </HomeSection>
+
+  <HomeSection id="run" ix="09 / 09" label="Run it" title="Verify the numbers.">
+    <Fragment slot="lede">
+      <p>
+        From a clone of the repository, these commands rerun the gravimeter, the gradiometer and the
+        wavefront verification. Both examples are seeded, so a second run prints the same output.
+      </p>
+    </Fragment>
+    <Code code={run} lang="bash" themes={SHIKI} wrap />
+  </HomeSection>
+</BaseLayout>
+
+<style>
+  .hero { padding: var(--space-7) var(--space-4) var(--space-8); }
+  @media (min-width: 720px) { .hero { padding: var(--space-8) var(--space-5) var(--space-9); } }
+  .hero-inner { max-width: calc(var(--w-doc) - 2 * var(--space-5)); margin: 0 auto; }
+  h1 {
+    font-size: clamp(1.875rem, 3.2vw + 0.5rem, 3.25rem);
+    line-height: var(--lh-display);
+    letter-spacing: var(--ls-display);
+    margin: var(--space-3) 0 var(--space-6);
+    text-wrap: balance;
+  }
+  .hero-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--space-6); align-items: start; }
+  @media (min-width: 1000px) {
+    .hero-grid { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: var(--space-8); align-items: center; }
+  }
+  .sub { color: var(--fg-0); font-size: var(--t-h4); line-height: var(--lh-h4); max-width: var(--measure-lede); margin: 0 0 var(--space-5); }
+  .gloss { color: var(--fg-1); font-size: var(--t-body-sm); max-width: var(--measure-lede); margin: 0 0 var(--space-5); }
+  .cta-row { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+  .btn {
+    display: inline-flex; align-items: center; gap: var(--space-2); height: 44px;
+    padding: 0 var(--space-5); border-radius: var(--radius-sm); border: 1px solid transparent;
+    font-size: var(--t-body-sm); font-weight: var(--fw-heading);
+  }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); }
+  .btn-ghost { color: var(--fg-0); border-color: var(--line-2); }
+
+  .stats { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr; gap: var(--space-4); }
+  @media (min-width: 800px) { .stats { grid-template-columns: 1fr 1fr; } }
+  .stat { padding: var(--space-5); }
+  .big { margin: 0 0 var(--space-2); font-size: var(--t-h3); color: var(--accent); }
+  .big span { color: var(--fg-2); font-size: var(--t-body-sm); }
+  .what { margin: 0 0 var(--space-2); color: var(--fg-0); }
+  .src { margin: 0; color: var(--fg-2); font-size: var(--t-body-sm); }
+
+  .papers table { width: 100%; border-collapse: collapse; }
+  .papers th, .papers td { text-align: left; vertical-align: top; padding: var(--space-3); border-top: 1px solid var(--line-1); }
+  .papers thead th {
+    font-family: var(--font-mono); font-size: var(--t-eyebrow); letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase; font-weight: 400; color: var(--fg-2); border-top: none;
+  }
+  .papers td { color: var(--fg-1); font-size: var(--t-body-sm); }
+  .papers td b { display: block; color: var(--fg-0); font-weight: var(--fw-heading); }
+  .papers .ref { color: var(--fg-2); font-family: var(--font-mono); font-size: var(--t-eyebrow); }
+  .papers .ans { color: var(--accent); }
+  @media (max-width: 719px) { .papers td { border-top: none; } }
+
+  .after { margin-top: var(--space-5); }
+  .side { max-width: var(--measure-lede); }
+
+  .limits { margin: 0 0 var(--space-4); padding-left: var(--space-5); max-width: var(--measure); color: var(--fg-1); }
+  .limits li { margin: var(--space-2) 0; }
+  .more { margin: var(--space-5) 0 0; font-size: var(--t-body-sm); }
+</style>

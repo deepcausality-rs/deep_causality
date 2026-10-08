@@ -1,11 +1,12 @@
 ---
 /**
- * The hero figure: the three jobs of the crate, each a diagram with one line of
- * real output. The output line links to the example that printed it.
+ * The hero figure: the four jobs of the crate, each a diagram with one line of
+ * real output. The output line links to the page that shows the run.
  *
- *   cause   three predictions against one observed band    qcl_crosstalk
- *   code    a toric-code patch: a Z check and an X check   qcl_geometric_qec
- *   switch  4 qubits, 2 logical qubits, 8 qubits           qcl_code_switching
+ *   cause       three predictions against one observed band       qcl_crosstalk
+ *   systematic  seven systematics against the six planned experiments  qcl_gravimeter_systematics
+ *   code        a toric-code patch: a Z check and an X check      qcl_geometric_qec
+ *   switch      4 qubits, 2 logical qubits, 8 qubits              qcl_code_switching
  *
  * Geometry is CSS and SVG; every label is HTML. The cause row reads
  * `src/data/crosstalk.ts`, so it cannot disagree with the figure in section 04.
@@ -13,6 +14,8 @@
  * example page shows.
  */
 import { candidates, RUN } from '../../data/crosstalk';
+import { GRAVIMETER, signed } from '../../data/sensing';
+import SystematicsMatrix from '../sensing/SystematicsMatrix.astro';
 
 const AXIS_MAX = 0.5;
 const at = (v: number) => `${((v / AXIS_MAX) * 100).toFixed(2)}%`;
@@ -65,6 +68,15 @@ const isX = (x: number, y: number) => xQubits.some((q) => q.x === x && q.y === y
 
   <div class="row rise" style="--i:1">
     <div class="copy">
+      <h3>Which systematic?</h3>
+      <p class="ctx">seven systematics, one {signed(GRAVIMETER.offsetUgal)} µGal offset</p>
+      <p class="res"><a href="/sensing/">{GRAVIMETER.heroLine}</a></p>
+    </div>
+    <div class="fig"><SystematicsMatrix compact /></div>
+  </div>
+
+  <div class="row rise" style="--i:2">
+    <div class="copy">
       <h3>Is the code sound?</h3>
       <p class="ctx">the [[32, 2]] toric code</p>
       <p class="res"><a href="/examples/qcl-geometric-qec/">check_ldpc_weights       Accepted  examined 96</a></p>
@@ -87,7 +99,7 @@ const isX = (x: number, y: number) => xQubits.some((q) => q.x === x && q.y === y
     </div>
   </div>
 
-  <div class="row rise" style="--i:2">
+  <div class="row rise" style="--i:3">
     <div class="copy">
       <h3>What do stacked codes cost?</h3>
       <p class="ctx">[[4,2,2]] to [[8,2,2]]</p>

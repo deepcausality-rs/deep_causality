@@ -13,7 +13,7 @@
 //! from 0 to 1.5 mrad moves gravity by about 10 µm/s².
 //!
 //! QCL sizes integration on `σ(τ) = S/√τ` through effective draws, and refuses to size averaging
-//! the white-noise range does not hold. The harness checks the scatter the time model predicts,
+//! the white-noise range does not hold. The verification checks the scatter the time model predicts,
 //! the planner's sizing on both sides of the range, and the tilt response on the mechanism path.
 //! A scatter is compared within two standard errors of a standard deviation estimated from `N`
 //! averages, `σ/√(2(N − 1))`, the paper giving none of its own.

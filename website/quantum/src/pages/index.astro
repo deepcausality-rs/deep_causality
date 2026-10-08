@@ -12,12 +12,15 @@ import CodeChecks from '../components/home/CodeChecks.astro';
 import Stack from '../components/home/Stack.astro';
 import Limits from '../components/home/Limits.astro';
 import TryIt from '../components/home/TryIt.astro';
+import SystematicsMatrix from '../components/sensing/SystematicsMatrix.astro';
 import { RUN } from '../data/crosstalk';
+import { GRAVIMETER } from '../data/sensing';
 import { GITHUB_URL } from '../consts';
 
-const title = 'DeepCausality Quantum | Find the cause, verify the code, bound the error';
+const title = 'DeepCausality Quantum | Find the cause of a quantum error';
 const description =
-  'A Rust library that finds the causal structure behind correlated qubit errors, verifies error-correcting codes exactly without simulating them, and bounds the error of stacked codes. Every verdict reports what it examined, its margin, and whether an exact or a numeric path decided it.';
+  'A Rust library that finds the causal structure behind correlated qubit errors and the systematic behind a sensor’s offset, verifies error-correcting codes exactly without simulating them, and bounds the error of stacked codes. Every verdict reports what it examined, its margin, and whether an exact or a numeric path decided it.';
+const seconds = (s: number) => s.toLocaleString('en-US');
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -34,7 +37,7 @@ const jsonLd = {
 
   <Hero />
 
-  <HomeSection ix="02 / 09" label="What a verdict carries" title="Every verdict shows its evidence.">
+  <HomeSection ix="02 / 10" label="What a verdict carries" title="Every verdict shows its evidence.">
     <Fragment slot="lede">
       <p>
         A bare pass looks the same as a check that examined nothing. Every check in the library
@@ -44,7 +47,7 @@ const jsonLd = {
     <VerdictAnatomy />
   </HomeSection>
 
-  <HomeSection ix="03 / 09" label="Which cause?" title="Passive data cannot separate these causes.">
+  <HomeSection ix="03 / 10" label="Which cause?" title="Passive data cannot separate these causes.">
     <Fragment slot="lede">
       <p>
         Two qubits show correlated errors. Qubit 1 may drive qubit 2, qubit 2 may drive qubit 1,
@@ -61,7 +64,7 @@ const jsonLd = {
     <SameReadout />
   </HomeSection>
 
-  <HomeSection ix="04 / 09" label="The plan and the decision" title="Two experiments separate all three causes.">
+  <HomeSection ix="04 / 10" label="The plan and the decision" title="Two experiments separate all three causes.">
     <Fragment slot="lede">
       <p>
         The planner picks E1 and E2 at a total cost of {RUN.planCost}, of the
@@ -89,7 +92,7 @@ const jsonLd = {
     </div>
   </HomeSection>
 
-  <HomeSection ix="05 / 09" label="The program" title="One Rust program declares, screens, plans and decides.">
+  <HomeSection ix="05 / 10" label="The program" title="One Rust program declares, screens, plans and decides.">
     <Fragment slot="lede">
       <p>
         The crosstalk program declares the problem, screens the candidates, plans the
@@ -99,7 +102,29 @@ const jsonLd = {
     <FourSteps />
   </HomeSection>
 
-  <HomeSection ix="06 / 09" label="Is the code sound?" title="Four exact checks verify a code.">
+  <HomeSection ix="06 / 10" label="Which systematic?" title="Find the cause of a gravimeter’s offset without the 5.6-hour scan.">
+    <Fragment slot="lede">
+      <p>
+        After the tide correction, a cold-atom gravimeter reads 5 µGal low, and seven systematics
+        can each produce that offset. The planner prices each experiment as setup plus
+        integration time and picks six that separate every pair, for
+        {seconds(GRAVIMETER.planCost)} s.
+      </p>
+      <p>
+        Those six already separate the wavefront from each rival, so the plan skips its
+        {seconds(20000)} s temperature scan and identifies the wavefront by elimination. A campaign
+        finds each of the seven causes in {GRAVIMETER.cheapest} s to
+        {seconds(GRAVIMETER.dearest)} s. The example simulates every observation, and its setup
+        times and tide stand in for a lab’s values.
+      </p>
+    </Fragment>
+    <SystematicsMatrix />
+    <p class="sensing-more">
+      <a href="/sensing/">The sensing section: the gradiometer, and eight published results rerun <span aria-hidden="true">→</span></a>
+    </p>
+  </HomeSection>
+
+  <HomeSection ix="07 / 10" label="Is the code sound?" title="Four exact checks verify a code.">
     <Fragment slot="lede">
       <p>
         A CSS code puts qubits on a lattice’s edges, Z checks on its faces and X checks on its
@@ -111,7 +136,7 @@ const jsonLd = {
     <CodeChecks />
   </HomeSection>
 
-  <HomeSection ix="07 / 09" label="What do stacked codes cost?" title="The composition law bounds the error of stacked codes.">
+  <HomeSection ix="08 / 10" label="What do stacked codes cost?" title="The composition law bounds the error of stacked codes.">
     <Fragment slot="lede">
       <p>
         An abstraction says a simple model summarises a detailed one, as two logical qubits stand
@@ -124,11 +149,11 @@ const jsonLd = {
     <Stack />
   </HomeSection>
 
-  <HomeSection ix="08 / 09" label="Limits" title="Where the library stops.">
+  <HomeSection ix="09 / 10" label="Limits" title="Where the library stops.">
     <Limits />
   </HomeSection>
 
-  <HomeSection id="run" ix="09 / 09" label="Run it" title="One command reruns the example.">
+  <HomeSection id="run" ix="10 / 10" label="Run it" title="One command reruns the example.">
     <Fragment slot="lede">
       <p>
         Three shell lines clone the repository and run the crosstalk example. The other examples
@@ -145,4 +170,5 @@ const jsonLd = {
   .decision { margin-top: var(--space-7); }
   .decision h3 { font-size: var(--t-h3); margin: 0 0 var(--space-2); }
   .decision > p { color: var(--fg-1); max-width: var(--measure); margin: 0 0 var(--space-5); }
+  .sensing-more { margin: var(--space-5) 0 0; font-size: var(--t-body-sm); }
 </style>

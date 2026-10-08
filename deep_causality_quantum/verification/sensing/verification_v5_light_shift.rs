@@ -16,7 +16,7 @@
 //! Ω′/Ω (Fig. 7). A linear fit gives 32 mrad; measurements at one ratio disagree by up to ±10 %,
 //! which the paper traces to the Raman beams' polarisation.
 //!
-//! The harness checks, against the paper:
+//! The verification checks, against the paper:
 //!
 //! * eq. (8) from the printed Doppler shifts, and the gravity shift the 33 mrad corresponds to;
 //! * that QCL's planner needs both the wave-vector reversal and the Rabi change to separate the

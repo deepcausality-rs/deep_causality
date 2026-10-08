@@ -13,7 +13,7 @@
 //! 2 to 6 µK fits wavefronts of increasing order whose extrapolations to zero temperature disagree
 //! (§4.4, Fig. 9). Table 1 sums the corrections.
 //!
-//! The harness checks, against the paper:
+//! The verification checks, against the paper:
 //!
 //! * the budget's sums, and the two inconsistencies of the source: eq. (4) as printed carries a
 //!   spurious factor 2, and the device's total uncertainty, 5.1 µGal, is not the quadrature of its

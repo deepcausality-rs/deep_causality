@@ -1,0 +1,76 @@
+---
+/**
+ * Gravimeter runs outside the main story, each with the line of output that shows its result:
+ * a reading that refuses tilt, records without the tide, and clipping left off the list. `show`
+ * picks the cards, in order. The lines are copied verbatim from
+ *   cargo run --release -p quantum_examples --example qcl_gravimeter_systematics
+ * The card style follows `VerdictAnatomy`.
+ */
+import { Code } from 'astro:components';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+import { GRAVIMETER, signed } from '../../data/sensing';
+
+interface Props {
+  show: Array<'tilt' | 'tide' | 'clipping'>;
+}
+const { show } = Astro.props;
+
+const SHIKI = { light: rustLight, dark: rustDark };
+
+const cards = {
+  tilt: {
+    kind: 'A reading too high',
+    title: 'Too high for tilt.',
+    text: `The light shift pushes the reading ${Math.abs(GRAVIMETER.offsetUgal)} µGal high. A tilted instrument only reads low, so the library refuses tilt before it plans, and the campaign finds the light shift.`,
+    out: 'baseline refuses H3 tilt: it predicts 76.43 µGal, the instrument reads 82.54 µGal (tide included)',
+  },
+  tide: {
+    kind: 'No tide on record',
+    title: 'Forget the tide, and all seven fail.',
+    text: `The instrument’s records leave out the tide, so every candidate predicts ${signed(GRAVIMETER.noTide.predictsUgal, 2)} µGal against a reading of ${GRAVIMETER.noTide.readsUgal} µGal. The library refuses all seven: the tide is part of the evidence.`,
+    out: 'baseline refuses H1 Coriolis: it predicts -5.00 µGal, the instrument reads 72.41 µGal (tide included)',
+  },
+  clipping: {
+    kind: 'Clipping off the list',
+    title: 'Coriolis takes the blame.',
+    text: 'Clipping causes the offset, and the list leaves it out. A displaced cloud is the one change that separates clipping from Coriolis, and with clipping unlisted the plan drops it. The library blames Coriolis. Farah et al. traced a wrong-sign Coriolis result to clipping in a real gravimeter.',
+    out: 'campaign ran E1 k reversed, E3 accelerometer correction, E2 turned 180° for 1447 s; re-plans as the tide moved: 2; H1 Coriolis survives',
+  },
+};
+const shown = show.map((id) => cards[id]);
+---
+<ul class="rows" style={`--n:${shown.length}`}>
+  {shown.map((c, i) => (
+    <li class="row panel corner-brackets rise" style={`--i:${i}`}>
+      <p class="kind">{c.kind}</p>
+      <h3>{c.title}</h3>
+      <p class="t">{c.text}</p>
+      <div class="out"><Code code={c.out} lang="text" themes={SHIKI} wrap /></div>
+    </li>
+  ))}
+</ul>
+
+<style>
+  .rows {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+  @media (min-width: 900px) { .rows { grid-template-columns: repeat(var(--n), minmax(0, 1fr)); } }
+  .row { padding: var(--space-5); display: flex; flex-direction: column; min-width: 0; }
+  .kind {
+    margin: 0 0 var(--space-2);
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .row h3 { font-size: var(--t-h4); margin: 0 0 var(--space-2); }
+  .t { color: var(--fg-1); font-size: var(--t-body-sm); margin: 0 0 var(--space-4); }
+  .out { margin-top: auto; min-width: 0; }
+  .out :global(pre) { margin: 0; font-size: var(--t-mono-sm); }
+</style>

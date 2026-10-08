@@ -1,11 +1,11 @@
-# Sensing verification harnesses
+# Sensing verifications
 
-Each harness takes one published paper on atom interferometry or crosstalk and reproduces its
+Each verification takes one published paper on atom interferometry or crosstalk and reproduces its
 claims through QCL: its attributions through the control stage, its experiment choices through the
-planner, and its printed numbers through the paper's own equations. A harness prints every check as
+planner, and its printed numbers through the paper's own equations. A verification prints every check as
 `PASS` or `FAIL` with the numbers behind it and exits with an error naming the checks that failed.
 
-| Harness | Source | Checks |
+| Verification | Source | Checks |
 |---|---|---|
 | `verification_v1_wavefront` | Karcher et al., New J. Phys. 20, 113041 (2018), arXiv:1804.04909 | 9 |
 | `verification_v2_clipping` | Farah et al., Phys. Rev. A 90, 023606 (2014), arXiv:1406.5998 | 5 |
@@ -27,7 +27,7 @@ cargo run --release -p deep_causality_quantum --features qcm --example verificat
 bazel run -c opt //deep_causality_quantum:verification_v1_wavefront
 ```
 
-The harnesses read data from `deep_causality_quantum/papers/`, which the published crate excludes,
+The verifications read data from `deep_causality_quantum/papers/`, which the published crate excludes,
 so they run from a checkout of the repository.
 
 ## Conventions
@@ -65,7 +65,7 @@ Each script's docstring gives the commands that run it, and its calibration or i
 Sarovar regeneration ran under Python 3.12 with numpy 2.5.3, scipy 1.18.1, networkx 3.7,
 pyGSTi 0.10.2, pcalg 0.2.2 and gsq 0.1.6, seed 20200907.
 
-## What the harnesses find
+## What the verifications find
 
 **V1, Karcher.** QCL attributes the temperature scan to the wavefront and rejects Coriolis of a
 centred cloud, the one-photon light shift and a wavefront linear in temperature. The linear

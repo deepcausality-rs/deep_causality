@@ -13,7 +13,7 @@
 //! of 2.04 µGal.
 //!
 //! The maps are digitised by `papers/digitised/digitise_hu2017_fig6.py`, so the digitisation error
-//! enters the comparison: the harness moves the height axis by the 0.17 cm its dashed pulse lines
+//! enters the comparison: the verification moves the height axis by the 0.17 cm its dashed pulse lines
 //! disagree with the printed heights, and the field axis by one pixel of its 126 px per 100 nT,
 //! and takes the quadrature of the moves as the uncertainty.
 //!

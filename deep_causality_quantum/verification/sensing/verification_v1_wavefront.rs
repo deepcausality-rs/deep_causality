@@ -14,7 +14,7 @@
 //! of the scan with increasing numbers of polynomials extrapolate to zero temperature (Table I),
 //! −56(13) nm/s² with five.
 //!
-//! The harness checks, against the paper:
+//! The verification checks, against the paper:
 //!
 //! * the defocus study's −63 nm/s² at 1.8 µK and the 3 nm requirement it implies;
 //! * Table I's extrapolations, refitted from the digitised Figs. 2 and 4, and two inconsistencies

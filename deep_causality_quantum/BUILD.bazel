@@ -31,7 +31,7 @@ rust_library(
 
 # Example binaries (Cargo `[[example]]` targets).
 
-# The sensing verification harnesses: each reproduces a published claim through QCL. They read the
+# The sensing verifications: each reproduces a published claim through QCL. They read the
 # digitised and regenerated data under `papers/` through `common/data.rs`, which resolves the crate's
 # directory from `BUILD_WORKSPACE_DIRECTORY` under `bazel run`.
 SENSING_DEPS = [
