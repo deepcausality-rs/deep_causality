@@ -85,3 +85,7 @@ path = "qcl_examples/qcl_distillation_round/main.rs"
 [[example]]
 name = "qcl_crosstalk_circuits"
 path = "qcl_examples/qcl_crosstalk_circuits/main.rs"
+
+[[example]]
+name = "qcl_gradiometer_crosstalk"
+path = "qcl_examples/qcl_gradiometer_crosstalk/main.rs"

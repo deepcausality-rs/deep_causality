@@ -2,8 +2,8 @@
 
 Worked examples on quantum subjects: quantum computing, quantum
 geometry of electronic bands, topological quantum matter, electroweak
-loop corrections, quantum error correction, quantum causal models, and
-the spinor/Bloch-sphere structure of a qubit state. Each example is
+loop corrections, quantum error correction, quantum causal models,
+quantum sensing, and the spinor/Bloch-sphere structure of a qubit state. Each example is
 self-contained; the package has no shared library code.
 
 This package sits alongside
@@ -28,6 +28,7 @@ This package sits alongside
 | [`qcl_distillation_round`](qcl_examples/qcl_distillation_round/README.md) | Quantum error correction | QCL-2: a distillation round on `[[4,2,2]]`, noisy encoded `T̄ H̄` under the ideal recovery, the case the paper defers; claims the residual it measures and the bound the law records. | `cargo run -p quantum_examples --example qcl_distillation_round` |
 | [`qcl_crosstalk`](qcl_examples/qcl_crosstalk/README.md) | Quantum causal discovery | The keystone: four structural candidates as conditional tables, the cyclic one refused at `build()`, three screened by normalisation, Markov and C₃, the hand-off into `control`, predictions computed from a response model, a two-intervention plan at cost 2 of the 5 all four experiments cost, and a campaign naming the direct cause after one experiment. | `cargo run -p quantum_examples --example qcl_crosstalk` |
 | [`qcl_crosstalk_circuits`](qcl_examples/qcl_crosstalk_circuits/README.md) | Quantum causal discovery | QCL-2: the crosstalk decision reproduced over circuit-derived candidates; `H₁`, `H₂` and the cyclic `H₄` as circuits whose wiring carries the structure, the cycle refused at `build()`, the dilations screened and forked, the same plan and survivor. | `cargo run -p quantum_examples --example qcl_crosstalk_circuits` |
+| [`qcl_gradiometer_crosstalk`](qcl_examples/qcl_gradiometer_crosstalk/README.md) | Quantum sensing | Is a gravity gradiometer's correlation between its two clouds benign? Four candidates, each fitted exactly to the passive read-out: two detection leaks, the shared phase, and rotation. A plan in instrument time, a campaign naming each cause, the gradient bias the survivor implies, and a two-way leak the static plan reports outside the model. | `cargo run --release -p quantum_examples --example qcl_gradiometer_crosstalk` |
 | [`ikkt_matrix_model`](ikkt_matrix_model/README.md) | Quantum gravity | The IKKT matrix model relaxed along its equation of motion at **fixed norm**, so the action falls because the matrices come to commute rather than because they shrank. Commuting matrices have a joint spectrum, and that spectrum is the emergent spacetime. | `cargo run -p quantum_examples --example ikkt_matrix_model` |
 
 ## Adding New Examples
