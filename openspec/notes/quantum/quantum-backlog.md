@@ -81,7 +81,7 @@ source* repeat what the source note says and were not re-checked.
 | B-28 | **A fusion example**: MHD plasma confinement with a disruption gate, derived from `grmhd`. CFD scope. | open, per source | `quantum-epp.md` §9.6 |
 | B-29 | **A QPU-calling solve**: a linear-solve or QLBM causaloid for one CFD timestep. Hardware-gated. | open, per source | `quantum-epp.md` §9.6 |
 
-## 6. Settled by decision, not backlog
+## 6. Settled by decision
 
 Listed so they are not re-added as open work.
 
