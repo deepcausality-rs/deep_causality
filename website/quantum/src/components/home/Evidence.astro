@@ -1,10 +1,9 @@
 ---
 /**
  * What the library has been checked against. Each row names its source, so a
- * reader can rerun it. The counts are the figures the tools report:
- *   tests    cargo test -p deep_causality_quantum --all-features
- *              892 tests plus 1 doc test, all passing
- *   theorems the quantum section of lean/THEOREM_MAP.md, 14 rows marked proved
+ * reader can rerun it. The theorem count is the figure the theorem map reports:
+ *   theorems the quantum section of lean/THEOREM_MAP.md, rows marked proved
+ *   tests    cargo test -p deep_causality_quantum --all-features, all passing
  * Statuses use the shared `.status` marks.
  */
 import { TESTS } from '../../data/evidence';
@@ -20,7 +19,7 @@ const rows = [
   {
     status: 'measured',
     mark: 'tested',
-    title: `${TESTS.count} tests pass`,
+    title: 'Every test in the crate passes',
     text: 'Each check has tests, and the suite includes tests where a check must reject its input. Each of the sixteen examples printed identical output on a second run.',
     href: '/proof/#tests',
   },

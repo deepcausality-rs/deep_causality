@@ -1,7 +1,7 @@
 ---
 title: "Crosstalk attribution"
 question: "Do two qubits' correlated errors have a direct cause or a shared one?"
-summary: "Four candidate structures, one refused at build, three screened, a two-experiment plan at cost 2 of the 5 all four experiments cost, and one survivor named after the first experiment."
+summary: "Four candidate structures, one refused at build, three screened, a two-experiment plan at cost 2 of the 5 all four experiments cost, and one survivor after the first experiment."
 order: 1
 group: decide
 command: "cargo run --release -p quantum_examples --example qcl_crosstalk"
@@ -26,8 +26,8 @@ crates:
 source: "examples/quantum_examples/qcl_examples/qcl_crosstalk"
 ---
 
-The run names H1, a direct cause from qubit 1 to qubit 2, and it takes about 4 ms on an Apple M3 Max.
-It runs `validate` and then `control` on one problem, so it exercises the hand-off between the two
+A direct cause: the run finds H1, qubit 1 driving qubit 2, after one experiment and in about 4 ms
+on an Apple M3 Max. It runs `validate` and then `control` on one problem, so it exercises the hand-off between the two
 halves. [The circuit version](/examples/qcl-crosstalk-circuits/) repeats the decision with circuit
 candidates.
 
@@ -36,7 +36,7 @@ they are Markov equivalent, and a fourth is a cycle. The program refuses the cyc
 other three, computes what each experiment predicts under each candidate, plans the cheapest
 experiments that separate them, and runs the plan until one candidate survives.
 
-## What you see
+## One experiment leaves H1 standing
 
 ```text
 [build] four declared structures
@@ -73,10 +73,10 @@ experiments that separate them, and runs the plan until one candidate survives.
 The excerpt keeps the lines that carry a decision and marks each gap with an ellipsis. The
 program exits nonzero if any check it makes on its own decision fails.
 
-## What each stage decided
+## Four stages take four structures down to one
 
 1. **`build()` refuses the cycle.** Under Definition 3.1 of van der Lugt and Lorenz the C₃
-   criterion does not reject a cycle, so the builder does, and the error names the scope limit.
+   criterion does not reject a cycle, so the builder does, and the error states the scope limit.
 2. **`validate` screens the other three.** The normalisation check confirms that every factor is
    a conditional table that sums to one. The Markov check admits each candidate, because the
    factors are diagonal. The decomposability check runs on the structure each candidate's own
@@ -91,14 +91,18 @@ program exits nonzero if any check it makes on its own decision fails.
    real-valued specification, so no commutation test runs. H1 separates from both rivals after E1,
    and the campaign stops there.
 
-## Read before you cite
+The plan holds two experiments because E1 alone cannot separate H2 from H3. E1 predicts 0.10
+under both, so had the truth been H2 or H3, a read-out near 0.10 would leave both standing, and the
+campaign would run E2 next: it predicts 0.40 under H2 and 0.10 under H3.
+
+## The decision is computed; the tables, costs and shots are inputs
 
 The plan, the predictions and the decision are computed. The candidates' conditional tables, the
 experiments' costs and the response of each candidate to each experiment are inputs written into
 `constants.rs` and `model.rs`, and the observation is sampled. Each qubit is excited with
 probability 0.10 in every candidate, so passive data cannot separate them; a driven qubit is
 excited with probability 0.40 when its driver is. The example draws its 1,024 shots from the Born
-sampler at H1's own predicted read-out and then checks that the campaign names H1. The run shows
+sampler at H1's own predicted read-out and then checks that the campaign finds H1. The run shows
 the decision procedure reaching the right answer on stated assumptions. It reports no measurement
 on a device.
 
@@ -106,14 +110,9 @@ The cost unit is arbitrary, so the totals of 2 and 5 come from the costs the exa
 factors are diagonal, so the Markov check has nothing to reject and the interventions carry the
 whole discrimination.
 
-The campaign observes E1 only, because H1 already separates from both rivals. E1 predicts 0.10
-under both H2 and H3, so had the truth been H2 or H3, a read-out near 0.10 would leave both
-standing, and the campaign would run E2 next: it predicts 0.40 under H2 and 0.10 under H3. That is
-why the plan holds two experiments.
-
-## Prior work
+## Sarovar et al. applied causal inference to crosstalk in 2020
 
 Sarovar, Proctor, Rudinger, Young, Nielsen and Blume-Kohout (Quantum 4, 321, 2020) applied
 statistical causal inference to crosstalk, adapting the PC algorithm on 2- and 6-qubit
-processors. Their protocol runs a fixed set of experiments. This example names the candidate
+processors. Their protocol runs a fixed set of experiments. This example declares the candidate
 structures, screens them before any shots are spent, and chooses experiments against a cost.

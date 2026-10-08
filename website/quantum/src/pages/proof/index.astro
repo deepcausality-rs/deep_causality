@@ -1,7 +1,7 @@
 ---
 import PageShell from '../../components/nav/PageShell.astro';
 import { theorems, deferred } from '../../data/formalization';
-import { papers, citedElsewhere } from '../../data/papers';
+import { papers } from '../../data/papers';
 import { TESTS, numberWord } from '../../data/evidence';
 import { LEAN_URL, THEOREM_MAP_URL, LEAN_STATUS_URL, PAPERS_URL, CRATE_URL } from '../../consts';
 
@@ -17,37 +17,32 @@ const split = (s: string) => {
 
 const cited = papers.filter((p) => p.citedFrom.length > 0);
 const used = papers.filter((p) => p.citedFrom.length === 0 && (p.usedBy ?? []).length > 0);
-const uncited = papers.filter((p) => p.citedFrom.length === 0 && (p.usedBy ?? []).length === 0);
-/** Papers the sensing page cites for the field's state. */
-const onSensing = ['2608.25563', '2410.07720'];
 ---
 <PageShell title={title} description={description} path="/proof/">
   <header class="doc-head">
     <p class="eyebrow">Proof</p>
-    <h1>{TESTS.proved} theorems proved, {TESTS.count} tests passing, {TESTS.deferred} targets without a proof.</h1>
+    <h1>{cap(numberWord(TESTS.proved))} theorems, proved in Lean and checked in Rust.</h1>
     <p class="lede">
-      {cap(numberWord(TESTS.proved))} theorems are proved in Lean, and a Rust test checks each one
-      on numbers. The suite runs {TESTS.count} tests, and all of them pass. Lean also proves that
-      commuting operators can stop commuting under a partial trace, which refutes the claim that
-      a partial trace preserves commutation. {cap(numberWord(TESTS.deferred))} targets have tests
-      and no Lean proof.
+      Each theorem has a Lean proof and a Rust test that checks the same statement on numbers.
+      Lean also refutes one claim: commuting operators can stop commuting under a partial trace.
+      {cap(numberWord(TESTS.deferred))} targets have tests and no Lean proof. Every test in the
+      crate passes.
     </p>
   </header>
 
   <section class="doc-sec" id="theorems">
-    <h2>Which theorems are proved?</h2>
+    <h2>Ten of the theorems concern the partial trace.</h2>
     <p>
-      The table lists {TESTS.proved} theorems: six laws of the partial trace, the boundary theorem
-      and the commutator identity, the two statements of the counterexample below, two linearity
-      laws for the Choi action, and two showing that exact abstraction links compose. The rows
-      come from the quantum section of
-      <a href={THEOREM_MAP_URL}><code>lean/THEOREM_MAP.md</code></a>.
+      They are six laws of the partial trace, the boundary theorem, the commutator identity and the
+      two statements of the counterexample below. Two more make the Choi action linear, and two show
+      that exact abstraction links compose.
     </p>
     <p>
       The pinned Mathlib has no partial trace and no Choi–Jamiołkowski layer, so the proofs build
       both from first principles under
-      <a href={LEAN_URL}><code>lean/DeepCausalityFormal/Quantum/</code></a>. The Rust witness is the
-      test that checks the same statement on numbers.
+      <a href={LEAN_URL}><code>lean/DeepCausalityFormal/Quantum/</code></a>. Each row pairs the
+      Lean declaration with the Rust test that checks the same statement on numbers. The rows come
+      from the quantum section of <a href={THEOREM_MAP_URL}><code>lean/THEOREM_MAP.md</code></a>.
     </p>
     <div class="table-scroll">
       <table class="table-stack">
@@ -68,19 +63,17 @@ const onSensing = ['2608.25563', '2410.07720'];
   </section>
 
   <section class="doc-sec" id="refuted">
-    <h2>Which claim turned out false?</h2>
+    <h2>A partial trace can break commutation.</h2>
     <p>
-      The claim that a partial trace preserves commutation is false. Take operators X and Y on a
-      system with parts A and B, with <code>[X, Y] = 0</code>. Lean proves an explicit pair for
-      which <code>[Tr_B X, Tr_B Y] = [[0, 4], [−4, 0]]</code>, which equals
-      <code>+4i·σy</code>. So two operators that commute on the whole system can have traced parts
-      that do not.
+      Two operators that commute on a whole system can have traced parts that do not. Take
+      operators X and Y on a system with parts A and B, with <code>[X, Y] = 0</code>. Lean proves an
+      explicit pair for which <code>[Tr_B X, Tr_B Y] = [[0, 4], [−4, 0]]</code>, which equals
+      <code>+4i·σy</code>.
     </p>
     <p>
-      Two related statements are true. The boundary version (Q-PTP) holds: if the boundary
-      operator commutes with M, its kept-side part commutes with <code>Tr_B M</code>. The
-      commutator identity (Q-PTT), <code>Tr_B([Z⊗1, M]) = [Z, Tr_B M]</code>, holds with no
-      hypothesis.
+      Two related statements are true. The boundary version holds: if the boundary operator
+      commutes with M, its kept-side part commutes with <code>Tr_B M</code>. The commutator
+      identity, <code>Tr_B([Z⊗1, M]) = [Z, Tr_B M]</code>, holds with no hypothesis.
     </p>
     <p>
       The identity lets the crate turn a measured residual into a bound. A residual ε on
@@ -97,17 +90,11 @@ const onSensing = ['2608.25563', '2410.07720'];
   </section>
 
   <section class="doc-sec" id="tests">
-    <h2>What do the tests cover?</h2>
+    <h2>Every test in the crate passes.</h2>
     <p>
-      {TESTS.count} tests pass under
-      <code>cargo test -p deep_causality_quantum --all-features</code>: 892 unit and integration
-      tests and one doc test. They include cases where a check must reject its input and cases
-      where a check has nothing to examine, such as an empty fault set. Every example printed
-      identical output when run twice on one machine.
-    </p>
-    <p>
-      A grep for the test attribute returns a different number, since it counts attributes and the
-      test runner counts the tests it runs.
+      The suite runs under <code>cargo test -p deep_causality_quantum --all-features</code>. It
+      includes cases where a check must reject its input and cases where a check has nothing to
+      examine, such as an empty fault set.
     </p>
     <p class="next-links">
       <a href={`${CRATE_URL}/tests`}>The test tree ↗</a>
@@ -115,17 +102,16 @@ const onSensing = ['2608.25563', '2410.07720'];
   </section>
 
   <section class="doc-sec" id="deferred">
-    <h2>Which targets have no Lean proof?</h2>
+    <h2>{cap(numberWord(TESTS.deferred))} targets have tests and no Lean proof.</h2>
     <p>
-      {cap(numberWord(TESTS.deferred))} targets have no Lean proof: the Choi–Jamiołkowski
-      reconstruction isomorphism and six theorems about quantum causal models. The theorem map and
-      <a href={LEAN_STATUS_URL}><code>LEAN_QUANTUM.md</code></a> name them, and the crate carries
-      numerical or property-test witnesses for each.
+      They are the Choi–Jamiołkowski reconstruction isomorphism and six theorems about quantum
+      causal models. The theorem map and <a href={LEAN_STATUS_URL}><code>LEAN_QUANTUM.md</code></a>
+      list them, and the crate carries numerical or property-test witnesses for each.
     </p>
     <p>
       <code>LEAN_QUANTUM.md</code> says these proofs need net-new Mathlib machinery. For
-      <code>quantum.unitary_factorization</code> it names the machinery: direct-sum and
-      C*-algebra theory that Mathlib lacks.
+      <code>quantum.unitary_factorization</code> it gives the machinery: direct-sum and C*-algebra
+      theory that Mathlib lacks.
     </p>
     <dl class="deflist">
       {deferred.map((d) => (
@@ -146,15 +132,15 @@ const onSensing = ['2608.25563', '2410.07720'];
   </section>
 
   <section class="doc-sec" id="papers">
-    <h2>Which papers does the crate implement?</h2>
+    <h2>The implementation is built on published science.</h2>
     <p>
-      {cap(numberWord(cited.length))} of the {TESTS.papers} PDFs under
-      <a href={PAPERS_URL}><code>papers/</code></a> are cited from a module in
-      <code>src/</code>, and the first list gives each with what the crate takes from it. The
-      second list holds the {numberWord(used.length)} that the sensing examples and the
-      verifications cite. The third holds the {numberWord(uncited.length)} that no code
-      cites; a committed PDF alone shows no implementation.
+      The crate implements published research, and every work below is cited in the code that
+      uses it. {cap(numberWord(cited.length))} shape the crate’s modules, and the first list gives
+      what the crate takes from each. {cap(numberWord(used.length))} more stand behind the sensing
+      examples and their verifications. The PDFs the repository holds are under
+      <a href={PAPERS_URL}><code>papers/</code></a>.
     </p>
+    <h3>Cited from the crate’s modules</h3>
     <ol class="papers">
       {cited.map((p) => (
         <li>
@@ -166,7 +152,7 @@ const onSensing = ['2608.25563', '2410.07720'];
       ))}
     </ol>
 
-    <h3 id="sensing-papers">Cited by the sensing examples and the verification</h3>
+    <h3 id="sensing-papers">Cited by the sensing examples and their verifications</h3>
     <ol class="papers">
       {used.map((p) => (
         <li>
@@ -178,30 +164,6 @@ const onSensing = ['2608.25563', '2410.07720'];
       ))}
     </ol>
 
-    <h3>Committed and cited by no code</h3>
-    <ol class="papers">
-      {uncited.map((p) => (
-        <li>
-          <p class="ptitle">{p.title}</p>
-          <p class="pmeta">{p.authors}. {p.ref}, {p.year}.</p>
-          <p class="pcite">
-            No code, test, README or changelog in the crate cites it.{onSensing.some((id) => p.ref.includes(id)) && (
-              <> The <a href="/sensing/#why">sensing page</a> cites it for the field’s state.</>
-            )}
-          </p>
-        </li>
-      ))}
-    </ol>
-
-    <h3>Cited from the source, not committed</h3>
-    <ul class="papers">
-      {citedElsewhere.map((c) => (
-        <li>
-          <p class="pmeta">{c.work}</p>
-          <p class="pcite">Cited from <code>{c.citedFrom}</code>.</p>
-        </li>
-      ))}
-    </ul>
   </section>
 </PageShell>
 

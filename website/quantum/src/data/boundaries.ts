@@ -58,7 +58,7 @@ export const boundaries: Boundary[] = [
     status: 'partial',
     mark: 'you supply',
     title: 'You supply the physics of each experiment.',
-    text: 'A ConfiguredExperiment names a configuration, and a ResponseModel you write says what that configuration does in each candidate’s world; the library computes every predicted read-out from it. The crosstalk example writes its candidates as conditional tables and its model in model.rs. Experiment::new still takes typed predictions for a caller without a model. The plan and the verdict are only as good as the model.',
+    text: 'A ConfiguredExperiment holds a configuration, and a ResponseModel you write says what that configuration does in each candidate’s world; the library computes every predicted read-out from it. The crosstalk example writes its candidates as conditional tables and its model in model.rs. Experiment::new still takes typed predictions for a caller without a model. The plan and the verdict are only as good as the model.',
     evidence: 'src/types/pipeline/configured_experiment.rs, src/types/pipeline/response.rs; qcl_crosstalk model.rs',
   },
   {
@@ -99,7 +99,7 @@ export const sensingBoundaries: Boundary[] = [
     status: 'partial',
     mark: 'simulated',
     title: 'The sensing examples run on simulated observations.',
-    text: 'Each example draws its observations from the world it names as the cause, and exits nonzero when its campaign names another. QCL also takes counts a lab measured and published values with their standard errors, and the sensing verifications use published values.',
+    text: 'Each example draws its observations from the world it takes as the cause, and exits nonzero when its campaign finds another. QCL also takes counts a lab measured and published values with their standard errors, and the sensing verifications use published values.',
     evidence: 'src/types/pipeline/evidence_source.rs; verification/sensing/common/attribution.rs',
   },
   {
@@ -114,8 +114,8 @@ export const sensingBoundaries: Boundary[] = [
     id: 'sensing-list',
     status: 'partial',
     mark: 'shown',
-    title: 'A cause off the candidate list goes unnamed.',
-    text: 'A campaign stops at the first candidate that holds and separates. A leak in both directions ends the gradiometer’s campaign at the one-way leak after one experiment, and with clipping off the list the gravimeter’s campaign names Coriolis. The full plan runs every planned experiment and reports the two-way leak outside the model.',
+    title: 'A cause off the list is blamed on another.',
+    text: 'A campaign stops at the first candidate that holds and separates. A leak in both directions ends the gradiometer’s campaign at the one-way leak after one experiment, and with clipping off the list the gravimeter’s campaign blames Coriolis. The full plan runs every planned experiment and reports the two-way leak outside the model.',
     evidence: 'qcl_gradiometer_crosstalk output, [checks]; qcl_gravimeter_systematics output, [clipping left off the list]',
   },
   {
@@ -138,7 +138,7 @@ export const sensingBoundaries: Boundary[] = [
     id: 'sensing-correction',
     status: 'partial',
     mark: 'not built',
-    title: 'The gravimeter names the cause and stops.',
+    title: 'The gravimeter finds the cause and stops.',
     text: 'The correction each survivor implies, and the run that checks it, are not built. The gradiometer prints the corrective action for its survivor and the bias the mechanism adds.',
     evidence: 'qcl_gravimeter_systematics/README.md, “Not built”; qcl_gradiometer_crosstalk/main.rs, consequence',
   },

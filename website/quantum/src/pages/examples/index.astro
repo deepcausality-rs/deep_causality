@@ -12,12 +12,12 @@ const all = (await getCollection('examples')).sort((a, b) => a.data.order - b.da
 const slug = (id: string) => id.replace(/^en\//, '');
 
 const groups = [
-  { key: 'decide', title: 'Decide between rival causes', note: 'These examples declare candidate structures, screen them, plan the cheapest experiments and name the survivor.' },
-  { key: 'model', title: 'Check a quantum causal model', note: 'These examples test whether the factors that share a Hilbert leg commute; a failure names the pair.' },
+  { key: 'decide', title: 'Decide between rival causes', note: 'These examples declare candidate structures, screen them, plan the cheapest experiments and report the one that survives.' },
+  { key: 'model', title: 'Check a quantum causal model', note: 'These examples test whether the factors that share a Hilbert leg commute; a failure reports the pair that does not.' },
   { key: 'code', title: 'Verify an error-correcting code', note: 'This example runs exact checks over F₂ on a toric code, with no state vector.' },
-  { key: 'compose', title: 'Compose abstractions', note: 'These examples stack one abstraction on another and compare the measured error with the bound of the composition law.' },
-  { key: 'sense', title: 'Attribute a sensor’s systematic', note: 'These examples plan experiments in instrument time on an atom interferometer and name the systematic the evidence leaves. The sensing page shows both.' },
-  { key: 'other', title: 'Quantum in subject, built on other crates', note: 'The first example, the IKKT matrix model, calls this crate’s commutator kernel. The other five do not import this crate, and each page names the crates it imports.' },
+  { key: 'compose', title: 'Bound the error of stacked codes', note: 'These examples stack one code abstraction on another and compare the measured error with the composition law’s bound.' },
+  { key: 'sense', title: 'Find the cause of a sensor’s error', note: 'These examples plan changes to an atom interferometer, price each in instrument time, and find the cause the evidence leaves. The sensing page walks through both.' },
+  { key: 'other', title: 'Quantum in subject, built on other crates', note: 'The first example, the IKKT matrix model, calls this crate’s commutator kernel. The other five do not import this crate, and each page lists the crates it imports.' },
 ] as const;
 
 const total = all.length;
@@ -27,13 +27,15 @@ const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 <PageShell title={title} description={description} path="/examples/">
   <header class="doc-head">
     <p class="eyebrow">Examples</p>
-    <h1>{cap(numberWord(total))} runnable examples, grouped by the question they answer.</h1>
+    <h1>Each example answers one question in one command.</h1>
     <p class="lede">
-      {cap(numberWord(usesCount))} of them use this crate. The other {numberWord(total - usesCount)}
-      are quantum in subject and build on sibling crates, so running one of them does not exercise the
-      QCL builder (QCL is the Quantum Causal Language). A row lists the items of this crate that an example
-      calls or, for those {numberWord(total - usesCount)}, the crates it imports. The examples in the first four groups
-      exit nonzero when one of their checks fails.
+      The groups below follow the question each example answers, and each example’s page gives its
+      <code>cargo run</code> command. Every example printed identical output when run twice on one
+      machine. {cap(numberWord(usesCount))} of the {numberWord(total)} call this crate. The other
+      {numberWord(total - usesCount)} are quantum in subject and build on sibling crates, so they do
+      not exercise QCL, the crate’s Quantum Causal Language. Each row lists the items of this crate
+      an example calls, or the crates it imports, and the examples in the first five groups exit
+      nonzero when a check fails.
     </p>
   </header>
 

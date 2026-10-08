@@ -1,7 +1,7 @@
 ---
 title: "The freeze check through QCL"
 question: "Does the QCL pipeline agree with the shipped freeze on the same model?"
-summary: "A commuting model screens, a non-commuting one fails validate naming the pair, and the shipped freeze rolls the graph back. The two paths report the same pairs and margin."
+summary: "A commuting model screens, a non-commuting one fails validate and reports the pair, and the shipped freeze rolls the graph back. The two paths report the same pairs and margin."
 order: 4
 group: model
 command: "cargo run --release -p quantum_examples --example qcl_qcm_freeze"
@@ -25,7 +25,7 @@ Yes. The pipeline and the shipped freeze examine the same pairs and report the s
 example runs the model from [the freeze check](/examples/qcm-freeze-check/) through `validate`
 and compares.
 
-## What you see
+## The pipeline and the freeze agree in all three scenarios
 
 ```text
 [1] Commuting model: σz and diag(3, −1) on leg 0
@@ -45,12 +45,12 @@ and compares.
     is_frozen() = false (rolled back)
 ```
 
-## What the three scenarios show
+## Validate fails cleanly where the freeze rolls back
 
 1. **A commuting model screens.** `validate` runs `check_markov` and `check_decomposable`, the
-   two checks the freeze runs internally, and ends in a `Screened` value whose report names the
+   two checks the freeze runs internally, and ends in a `Screened` value whose report lists the
    pairs examined and the worst margin.
-2. **A non-commuting model fails `validate`.** The error names the pair, and the subject stays
+2. **A non-commuting model fails `validate`.** The error carries the pair, and the subject stays
    exactly as built, because the pipeline mutates nothing.
 3. **The shipped freeze rolls back.** On a dynamic graph, `freeze_model` aborts and returns the
    graph to its dynamic state.

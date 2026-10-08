@@ -1,7 +1,7 @@
 ---
 title: "Gravimeter systematics"
 question: "Which of seven systematics explains a gravimeter's −5 µGal offset?"
-summary: "Seven candidates calibrated to one offset, a six-experiment plan at 4,956 s that identifies the wavefront by elimination, a campaign that names each cause, and three runs that show where the model ends."
+summary: "Seven candidates calibrated to one offset, a six-experiment plan at 4,956 s that identifies the wavefront by elimination, a campaign that finds each cause, and three runs with a high reading, no tide and a missing cause."
 order: 9
 group: sense
 command: "cargo run --release -p quantum_examples --example qcl_gravimeter_systematics"
@@ -29,7 +29,7 @@ crates:
 source: "examples/quantum_examples/qcl_examples/qcl_gravimeter_systematics"
 ---
 
-The campaign names the cause in all seven runs, one per systematic, for 166 s to 4,953 s of
+The campaign finds the right one in all seven runs, one per systematic, for 166 s to 4,953 s of
 instrument time. The instrument is the cold-atom gravimeter of Louchet-Chauvet et al., New J.
 Phys. 13, 065025 (2011): T = 70 ms, and 22.1 µGal/√Hz in one configuration.
 
@@ -39,7 +39,7 @@ seven. A response model says what each configuration of the instrument does to e
 and QCL computes every predicted read-out from it. [The sensing page](/sensing/#plan) shows
 which experiment moves which systematic.
 
-## What you see
+## No campaign spends more than its plan
 
 ```text
 === Gravimeter systematics: which effect explains the offset? ===
@@ -75,7 +75,7 @@ instrument (Louchet-Chauvet et al. 2011): T = 0.07 s, 0.333 s cycle, 22.1 µGal/
 The excerpt marks each gap with an ellipsis. The program exits nonzero if a check it makes on its
 own decisions fails.
 
-## What each stage decided
+## Three stages take seven candidates to one
 
 1. **The baseline.** `baseline_with` observes the passive configuration first and refuses a
    candidate whose prediction the observation contradicts. At −5 µGal every candidate holds. At
@@ -89,11 +89,13 @@ own decisions fails.
    still holding, judges every candidate within three standard errors, and stops at the first
    that holds and separates by 5 bits. After each step the experiments move to the new time; when
    the tide moves a planned prediction, the campaign plans again.
-4. **Where the model ends.** With no tide in the instrument context, the baseline refuses all
-   seven. With clipping off the list, no pair needs the cloud displacement, and the campaign names
-   Coriolis, which a turn flips as it flips clipping.
+## A missing input either stops the run or misleads it
 
-## What is typed, computed and sampled
+With no tide in the instrument context, every candidate contradicts the reading, and the baseline
+refuses all seven. With clipping off the list, no pair needs the cloud displacement, so the plan
+drops it, and the campaign blames Coriolis, which a turn flips as it flips clipping.
+
+## The instrument is published; the setup times and the tide are placeholders
 
 The instrument values come from Louchet-Chauvet et al. and Farah et al., on the same instrument;
 the contrast, 40 %, from Ménoret et al.'s rubidium gravimeter. Each response
@@ -104,4 +106,4 @@ from Farah et al. The
 setup times and the 80 µGal tide are placeholders, and `constants.rs` marks each one.
 
 The predicted read-outs, the plans and the draw counts are computed. Every observation is drawn
-from the named cause, so each campaign's path and its cost follow from simulated data.
+from the cause under test, so each campaign's path and its cost follow from simulated data.

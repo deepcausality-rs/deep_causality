@@ -22,7 +22,7 @@ constant, the Z mass and the top-quark mass (172.52 GeV). From them the run deri
 the W mass, the Z widths and the resonance cross-section. The tree-level gap is roughly two percent
 of `M_W`; the one-loop radiative corrections close it, and the top quark in the loop dominates them.
 
-## What you see
+## The loop correction closes a 1.46 GeV gap
 
 ```text
   M_W tree level        78.909302 GeV   from g*v/2
@@ -56,12 +56,12 @@ passes its error to the printed summary. The invisible width of the Z, 0.502289 
 generations times one neutrino's partial width; its LEP measurement established that there are
 three light neutrino generations.
 
-## What this run leaves out
+## The deviation is one number with no error bar
 
-The model uses the on-shell scheme with the library's packaged one-loop corrections and treats the
-Z as a Breit-Wigner resonance at its peak. It contains no two-loop corrections, no QED or QCD
-corrections to the widths, no initial-state radiation, no fit over several observables and no
-uncertainty on the inputs. The deviation is therefore one number with no error bar.
+The run carries no uncertainty on its inputs. The model uses the on-shell scheme with the library's
+packaged one-loop corrections and treats the Z as a Breit-Wigner resonance at its peak. It contains
+no two-loop corrections, no QED or QCD corrections to the widths, no initial-state radiation and no
+fit over several observables.
 
 This example does not import `deep_causality_quantum`. The formulas come from
 `deep_causality_physics`, and `CausalFlow` comes from `deep_causality_core`.

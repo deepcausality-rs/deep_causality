@@ -28,9 +28,10 @@ crates:
 source: "examples/quantum_examples/qcl_examples/qcl_gradiometer_crosstalk"
 ---
 
-The campaign and the full plan name the cause in all four candidate worlds. A leak from cloud A
-into cloud B's detection signal takes one 60 s experiment to name, and its gradient bias is
-−356 E for a 6 % leak. The instrument is the dual-cloud gradiometer of Sorrentino et al., Phys. Rev.
+Only when the shared phase causes it; a leak or a rotation biases the gradient, and the campaign
+and the full plan find the cause in all four candidate worlds. A leak from cloud A into cloud B's
+detection signal takes one 60 s experiment to find, and its gradient bias is −356 E for a 6 %
+leak. The instrument is the dual-cloud gradiometer of Sorrentino et al., Phys. Rev.
 A 89, 023607 (2014): T = 160 ms, contrast 0.45, a 30 cm baseline.
 
 A gradiometer runs two atom clouds off one laser and one mirror, and their read-outs move
@@ -39,7 +40,7 @@ leaking from one cloud into the other's detection signal biases the gradient, an
 rotation. Each of the four candidates fits the passive read-out exactly, so passive data separates
 none.
 
-## What you see
+## One 60 s experiment exposes a leak from A to B
 
 ```text
 [world: leak A->B] observations drawn from it; candidates fitted to its passive read-out
@@ -68,7 +69,7 @@ none.
 The excerpt marks each gap with an ellipsis. The program exits nonzero if a check it makes on its
 own decisions fails.
 
-## What each stage decided
+## Four candidates in, one survivor and its bias out
 
 1. **The fit.** For each world the observations come from, the example fits the four candidates
    to that world's passive read-out through their fringe centres and differential phase.
@@ -85,12 +86,15 @@ own decisions fails.
    difference is the gradient bias: −0.044 rad, −356 E, for a 6 % leak, and +6.9 × 10⁻⁴ rad,
    +5.5 E, for rotation at Earth's horizontal rate.
 
-A leak both ways is no candidate. The full plan reports it outside the model, because E2 shows a
-leak the one-way candidate rules out; the campaign stops at that candidate after E1.
+## A leak both ways stops the campaign at a one-way leak
 
-## What is typed, computed and sampled
+A leak both ways is no candidate. The campaign stops at the one-way leak after E1, because a
+survivor ends it before the experiment that would contradict it runs. The full plan runs E2 as
+well, which shows a leak the one-way candidate rules out, and reports the world outside the model.
+
+## The instrument is published; the leak and the setup times are placeholders
 
 The instrument values come from Sorrentino et al. The leak, the dark background and the setup
 times are placeholders for a lab's measurements, and `constants.rs` marks each one. The fits, the predicted read-outs, the plan, the draw counts
-and the biases are computed. Every observation is drawn from the world the run names, so each
+and the biases are computed. Every observation is drawn from the world under test, so each
 campaign's verdict and cost follow from simulated data.

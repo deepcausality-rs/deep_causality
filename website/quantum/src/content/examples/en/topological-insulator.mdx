@@ -24,7 +24,7 @@ deformed, and it changes only when the gap closes.
 The example computes it by two routes that share only the d-vector. One differentiates and never
 forms a spinor. The other forms spinors and never differentiates.
 
-## What you see
+## Two independent routes agree to 1.2e-15
 
 ```text
      u    | C (quadrature) | C (Wilson loop) |  C  | phase
@@ -43,7 +43,7 @@ integer. Both integrate a smooth function over a closed surface, and an integer 
 first number makes the second believable, because the routes have nothing in common but the
 d-vector.
 
-## The two routes
+## The routes share only the d-vector
 
 | Route | How | What it needs |
 |---|---|---|
@@ -52,7 +52,7 @@ d-vector.
 
 The derivatives come from the tangent functor, so no finite difference and no step size enters.
 
-## Crates
+## Built on the calculus and complex-number crates
 
 This example does not import `deep_causality_quantum`. The quadrature comes from
 `deep_causality_calculus` and the complex arithmetic from `deep_causality_num_complex`.

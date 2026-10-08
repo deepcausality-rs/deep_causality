@@ -34,7 +34,7 @@ example's conditional tables, response model and costs. Only the way the candida
 changes: in [the first example](/examples/qcl-crosstalk/) each structure is declared as a
 factorization, and here the wiring of a circuit carries it.
 
-## What you see
+## Two circuits screen, and H1 survives again
 
 ```text
 [build] the cyclic circuit H4 Q1->Q2->B->Q1
@@ -57,7 +57,7 @@ factorization, and here the wiring of a circuit carries it.
     the adjudication named the structure the observation came from: yes
 ```
 
-## How the structure travels
+## The wiring of each circuit carries its structure
 
 | Candidate | Form | How the structure is carried |
 |---|---|---|
@@ -72,13 +72,16 @@ normalisation check on the plant subject confirms them: a dilation's leg pairs a
 its output, and the factor is the identity on the output half. The decomposability check reads
 Vacuous on the two circuits because a two-node structure holds no 3×3 sub-relation.
 
-## Read before you cite
+## The bath candidate is too large for a circuit
 
 The bath candidate H3 stays a factorization. A bath that drives two qubits needs a node with two
 output wires, and under the dilation's leg convention that node has a leg of 256 dimensions. The
 Markov union over its three legs is a 65536 × 65536 matrix with 2<sup>32</sup> entries, which is
-beyond the crate's cap of 2<sup>24</sup>. The circuits set the structure and what the screen
-reads; they do not set the predictions. A circuit's dilation acts on one wire's boxes, not on the
+beyond the crate's cap of 2<sup>24</sup>.
+
+## The circuits set the structure; the factorizations set the predictions
+
+The circuits set the structure and what the screen reads. A circuit's dilation acts on one wire's boxes, not on the
 two qubits the experiments hold and read, so the predictions come from the factorization each
 circuit stands for, and the observation and the adjudication are run by hand rather than by a
 campaign. H1 and H2 use the same two boxes, and only the grouping of the boxes into nodes reverses

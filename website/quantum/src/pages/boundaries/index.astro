@@ -2,26 +2,47 @@
 import PageShell from '../../components/nav/PageShell.astro';
 import { boundaries, sensingBoundaries } from '../../data/boundaries';
 import { CRATE_URL } from '../../consts';
+import { numberWord } from '../../data/evidence';
 
 const title = 'Boundaries | DeepCausality Quantum';
 const description =
-  'What the library does not do, what its examples assume, where the sensing examples stop, and how its two senses of quantum stay apart. Each row names the file that shows it.';
+  'What the library does not do, what its examples assume, where the sensing examples stop, and how its two senses of quantum stay apart. Each row gives the file that shows it.';
+
+const byDesign = boundaries.filter((b) => b.status === 'nongoal');
+const inUse = boundaries.filter((b) => b.status === 'partial');
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 ---
 <PageShell title={title} description={description} path="/boundaries/">
   <header class="doc-head">
     <p class="eyebrow">Boundaries</p>
-    <h1>What the library leaves out.</h1>
+    <h1>You supply the physics; the library checks and decides.</h1>
     <p class="lede">
-      Each row below states one thing the library leaves out or one limit a user meets, and names
-      the file that shows it. Later sections list what the crosstalk example assumes and where the
-      sensing examples stop.
+      The library computes every prediction from the response model you write, and it drives no
+      hardware, runs no decoder and claims no code distance. Each row below gives the file that
+      shows it.
     </p>
   </header>
 
   <section class="doc-sec" id="limits">
-    <h2>What does it not do?</h2>
+    <h2>{cap(numberWord(byDesign.length))} things it leaves out by design.</h2>
     <ul class="rows">
-      {boundaries.map((b) => (
+      {byDesign.map((b) => (
+        <li class="row" id={b.id}>
+          <p class={`status status-${b.status}`}>{b.mark}</p>
+          <div>
+            <h3>{b.title}</h3>
+            <p class="t">{b.text}</p>
+            <p class="ev">Shown in <code>{b.evidence}</code></p>
+          </div>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="doc-sec" id="in-use">
+    <h2>{cap(numberWord(inUse.length))} limits you meet in use.</h2>
+    <ul class="rows">
+      {inUse.map((b) => (
         <li class="row" id={b.id}>
           <p class={`status status-${b.status}`}>{b.mark}</p>
           <div>
@@ -35,7 +56,8 @@ const description =
   </section>
 
   <section class="doc-sec" id="assumptions">
-    <h2>What do the examples assume?</h2>
+    <h2>The crosstalk example describes no device.</h2>
+    <p>Its tables, shots and costs come from the example’s own files.</p>
     <dl class="deflist">
       <div>
         <dt>The conditional tables are inputs</dt>
@@ -43,14 +65,14 @@ const description =
           <code>model.rs</code> states each candidate’s conditional tables and what each experiment
           does to them; the library computes every predicted read-out from those, and the plan and
           the verdict follow. The run shows the procedure reaching the correct candidate under
-          those assumptions, and no figure in it describes a device.
+          those assumptions.
         </dd>
       </div>
       <div>
         <dt>The observation is simulated</dt>
         <dd>
           The example draws its shots from the Born sampler at H1’s predicted read-out, then
-          checks that the campaign names H1; it exits nonzero if it does not. The campaign observes
+          checks that the campaign finds H1; it exits nonzero if it does not. The campaign observes
           E1, the plan’s cheapest experiment, and stops there because H1 separates.
         </dd>
       </div>
@@ -83,10 +105,11 @@ const description =
   </section>
 
   <section class="doc-sec" id="sensing">
-    <h2>Where do the sensing examples stop?</h2>
+    <h2>The sensing results rest on simulation and placeholders.</h2>
     <p>
-      The <a href="/sensing/">sensing section</a> rests on two examples and on
-      verifications against published papers. The rows below state their limits.
+      Both examples behind the <a href="/sensing/">sensing section</a> simulate their observations,
+      and a lab supplies the setup times, the tide, the leak and the dark background. Each row below
+      gives one limit and the file that shows it.
     </p>
     <ul class="rows">
       {sensingBoundaries.map((b) => (
@@ -134,11 +157,10 @@ const description =
   </section>
 
   <section class="doc-sec" id="modalities">
-    <h2>How do the two senses of quantum stay apart?</h2>
+    <h2>The default build compiles only the verifiable path.</h2>
     <p>
-      The crate has two modalities, and the default build compiles only the verifiable one. The
-      Lean proofs attach to the verifiable path. The emergent path is a seam to a QPU sampler and
-      needs the <code>qpu</code> feature.
+      The crate has two modalities. The Lean proofs attach to the verifiable one; the emergent one
+      is a seam to a QPU sampler and needs the <code>qpu</code> feature.
     </p>
     <div class="table-scroll">
       <table class="table-stack">

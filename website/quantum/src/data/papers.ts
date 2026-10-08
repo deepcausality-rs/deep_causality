@@ -1,13 +1,13 @@
 /**
- * The papers committed under `deep_causality_quantum/papers/`.
+ * The published works the crate cites, with the PDF under `deep_causality_quantum/papers/` where
+ * the repository holds one.
  *
  * Titles and author lists are read off each PDF's own first page, not from the
  * filename. `citedFrom` lists the crate modules whose doc comments cite the
  * paper, established by grep over `src/`. `usedBy` lists the examples and the
  * verifications that cite it, established by grep over
- * `examples/quantum_examples/` and `deep_causality_quantum/verification/`. A
- * paper that no code cites carries two empty lists, and the page says so rather
- * than implying an implementation that does not exist.
+ * `examples/quantum_examples/` and `deep_causality_quantum/verification/`. Only
+ * papers that code cites are listed.
  *
  * The sensing papers support the sensing examples and the verification; no
  * module in `src/` cites them. Hu et al.'s PDF prints no identifier; its arXiv
@@ -21,8 +21,8 @@ export interface Paper {
   /** Journal reference or arXiv identifier as printed. */
   ref: string;
   year: string;
-  /** Filename under papers/. */
-  file: string;
+  /** Filename under papers/, when the repository holds a copy. */
+  file?: string;
   /** Modules under src/ whose doc comments cite it. */
   citedFrom: string[];
   /** Examples and verifications that cite it. */
@@ -204,67 +204,38 @@ export const papers: Paper[] = [
     usedFor: 'The four crosstalk models V4 regenerates and attributes.',
   },
   {
-    title: 'GNSS-free quantum gravity-aided navigation and fine-scale marine surveying with a strapdown quantum gravimeter',
-    authors: 'Patrick J. Everitt, Donald H. White, and 20 co-authors',
-    ref: 'arXiv:2608.25563v1 [quant-ph]',
-    year: '2026',
-    file: 'GNSS-free quantum gravity-aided navigation and fine-scale marine surveying with a strapdown quantum gravimeter-2608.25563.pdf',
-    citedFrom: [],
+    title: 'Completely positive linear maps on complex matrices',
+    authors: 'Man-Duen Choi',
+    ref: 'Linear Algebra Appl. 10, 285–290',
+    year: '1975',
+    citedFrom: ['types/qgates/channel'],
+    usedFor: 'A channel is completely positive exactly when its Choi operator is positive semidefinite, which check_completely_positive tests.',
   },
   {
-    title: 'Influence of optical aberrations on the accuracy of an atomic gravimeter',
-    authors: 'Louis Pagot, Sébastien Merlet, Franck Pereira Dos Santos',
-    ref: 'arXiv:2410.07720v2 [physics.atom-ph]',
-    year: '2025',
-    file: 'Influence of optical aberrations on the accuracy of an atomic gravimeter-2410.07720.pdf',
-    citedFrom: [],
+    title: 'The logic of quantum mechanics',
+    authors: 'Garrett Birkhoff, John von Neumann',
+    ref: 'Ann. of Math. 37, 823–843',
+    year: '1936',
+    citedFrom: ['types/verdict/projection'],
+    usedFor: 'The orthomodular lattice of projections behind the projection verdict.',
   },
   {
-    title: 'Optimised Bayesian system identification in quantum devices',
-    authors: 'Thomas M. Stace, Jiayin Chen, Li Li, Viktor S. Perunicic, Andre R. R. Carvalho, Michael Hush, Christophe H. Valahu, Ting Rei Tan, Michael J. Biercuk',
-    ref: 'arXiv:2211.09090v1 [quant-ph]',
-    year: '2022',
-    file: 'Optimised Bayesian system identification in quantum devices-2211.09090.pdf',
-    citedFrom: [],
+    title: 'Quantum causal models',
+    authors: 'Jonathan Barrett, Robin Lorenz, Ognyan Oreshkov',
+    ref: 'arXiv:1906.10726v2 [quant-ph]',
+    year: '2019',
+    file: 'Quantum Causal Models-1906.10726v2.pdf',
+    citedFrom: ['types/qcm/dilation'],
+    usedFor: 'The factorization a unitary circuit with broken wires induces, which the dilation builds.',
   },
   {
-    title: 'Wavefront Curvature and Transverse Atomic Motion in Time-Resolved Atom Interferometry: Impact and Mitigation',
-    authors: 'Noam Mouelle, Jeremiah Mitchell, Valerie Gibson, Ulrich Schneider',
-    ref: 'arXiv:2510.26739v2 [physics.atom-ph]',
-    year: '2025',
-    file: 'Wavefront curvature and transverse atomic motion in time-resolved atom interferometry-2510.26739.pdf',
-    citedFrom: [],
-  },
-  {
-    title:
-      'Classifying Logical Gates in Quantum Codes via Cohomology Operations and Symmetry',
-    authors: 'Po-Shen Hsin, Ryohei Kobayashi, Guanyu Zhu',
-    ref: 'arXiv:2411.15848v3 [quant-ph]',
-    year: '2025',
-    file: 'Classifying logical gates via cohomology operations-2411.15848.pdf',
-    citedFrom: [],
+    title: 'Improved simulation of stabilizer circuits',
+    authors: 'Scott Aaronson, Daniel Gottesman',
+    ref: 'Phys. Rev. A 70, 052328; arXiv:quant-ph/0406196v5',
+    year: '2004',
+    file: 'Improved simulation of stabilizer circuits-quant-ph-0406196v5.pdf',
+    citedFrom: ['types/qcode/clifford_action'],
+    usedFor: 'The stabilizer-tableau update rule (§III) that the Clifford-action check applies.',
   },
 ];
 
-/**
- * Works cited from the source that are not committed under papers/. Listed
- * separately so the papers page does not imply a PDF that is not there.
- */
-export const citedElsewhere: { work: string; citedFrom: string }[] = [
-  {
-    work: 'M.-D. Choi, “Completely positive linear maps on complex matrices”, Linear Algebra Appl. 10 (1975) 285–290.',
-    citedFrom: 'types/qgates/channel',
-  },
-  {
-    work: 'Birkhoff–von Neumann quantum logic: the orthomodular lattice of projections.',
-    citedFrom: 'types/verdict/projection',
-  },
-  {
-    work: 'arXiv:1906.10726, the theorem on unitary circuits with broken wires, cited as the source of the dilation.',
-    citedFrom: 'types/qcm/dilation',
-  },
-  {
-    work: 'S. Aaronson and D. Gottesman, arXiv:quant-ph/0406196, §III, the stabilizer-tableau update rule.',
-    citedFrom: 'types/qcode/clifford_action',
-  },
-];

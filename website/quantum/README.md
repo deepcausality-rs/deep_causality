@@ -105,10 +105,9 @@ When something is not built, the page says what is not built and stops there.
 `/proof/` lists seven targets that carry tests and no LEAN proof; the list states
 the present and sets no schedule.
 
-**A committed file is not a claim.** One of the seven papers under `papers/`
-(Hsin, Kobayashi and Zhu, arXiv:2411.15848) is cited from no module. `/proof/`
-lists it in its own section, so the presence of a PDF is never read as an
-implementation.
+**Only cited papers are listed.** `/proof/` lists the works the code cites, each
+with what the crate takes from it. `papers/` holds no paper that neither the code
+nor the site cites.
 
 **Coverage is stated, not implied.** Five of the sixteen examples in
 `quantum_examples` are quantum in subject and do not import this crate.
@@ -119,7 +118,6 @@ Numbers on the site come from a command anyone can re-run:
 
 | Figure | Source |
 | --- | --- |
-| 900 tests passing (899 tests plus 1 doc test) | `cargo test -p deep_causality_quantum --all-features` |
 | Version 0.4.2, released 2026-09-29 | `deep_causality_quantum/CHANGELOG.md` and `Cargo.toml` |
 | 14 proved theorems, 7 deferred targets | the quantum section of `lean/THEOREM_MAP.md` |
 | The crosstalk run: plan cost 2 of the 5 all four experiments cost, 99.5 bits (survivor and tightest pair), the campaign stops after one experiment | `cargo run --release -p quantum_examples --example qcl_crosstalk`; 99.5 is n·Bhattacharyya distance of 0.40 and 0.10 over 1024 shots |
@@ -131,10 +129,7 @@ Numbers on the site come from a command anyone can re-run:
 | The gradiometer run: plan 721.8 s, 340 and 60,265 draws, campaigns of 60, 120 and 721.9 s, biases of −355.7 E (quoted as −356) and +5.5 E | `cargo run --release -p quantum_examples --example qcl_gradiometer_crosstalk` |
 | The verification: 53 checks over 8 verifications, and each finding quoted on `/sensing/` | `cargo run --release -p deep_causality_quantum --features qcm --example <verification>`, verifications listed in `deep_causality_quantum/verification/sensing/README.md` |
 | The field's state: 45 nmi, about 6 h, 2.2 against 14 nmi; tilt below 3.3°; the wavefront's 4.0 of 5.2 µGal | Everitt et al. arXiv:2608.25563 (which prints the endpoint as both 4.0 and 4.1 km, so the site quotes nautical miles); Lellouch and Holynski arXiv:2504.11119; Louchet-Chauvet et al. New J. Phys. 13 065025, Table 1 |
-| 20 papers: 6 cited from `src/`, 9 by the sensing examples and verifications, 5 by no code | `deep_causality_quantum/papers/`, and grep over `src/`, `examples/quantum_examples/` and `verification/` |
-
-The test count is the figure the suite reports. A grep for `#[test]` finds a
-different number, because it counts attributes and not the tests the test runner runs.
+| 19 cited works: 10 from `src/`, 9 by the sensing examples and verifications; 17 of them have a PDF under `papers/` | `deep_causality_quantum/papers/`, and grep over `src/`, `examples/quantum_examples/` and `verification/` |
 
 All sixteen examples were run twice on one machine and printed identical
 output, which is what the pages say. A wall-clock figure names the machine
