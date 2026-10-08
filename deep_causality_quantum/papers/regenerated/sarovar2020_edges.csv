@@ -1,0 +1,7 @@
+scenario,edges,published,recovered_of_ten
+one_way,,R1-S0,9
+zz,R0-R1 R0-S1 R1-S0,R0-R1 R0-S1 R1-S0,7
+detection,R1-S0,R0-R1,9
+ladder,R0-S5 R1-S5 R2-S3,R0-S5 R1-S4 R2-S3,8
+free,,,10
+bath,R0-R1,R0-R1,10
