@@ -59,7 +59,8 @@ fn undriven() -> FloatType {
 }
 
 /// A structural candidate from `(node, support, diagonal of P(node | parents))` triples. A
-/// diagonal runs over the support's legs in ascending order, the first most significant.
+/// diagonal runs over the support's legs in ascending order, the first most significant. Every
+/// entry is a probability, so constants that derive one outside `[0, 1]` are refused here.
 fn structural(
     name: &str,
     nodes: &[(usize, &[usize], Vec<FloatType>)],
@@ -68,6 +69,13 @@ fn structural(
     let mut supports = FactorSupports::new();
 
     for (node, legs, entries) in nodes {
+        if let Some(&entry) = entries.iter().find(|&&p| !(ZERO..=ONE).contains(&p)) {
+            return Err(ModelBuildError::Probability {
+                candidate: name.to_string(),
+                node: *node,
+                entry,
+            });
+        }
         factors.insert(*node, diagonal(entries)?);
         supports.declare(*node, legs);
     }
@@ -296,12 +304,18 @@ pub fn experiments() -> Result<Vec<ConfiguredExperiment<FloatType, Setting>>, Mo
 // =============================================================================
 
 /// What can go wrong assembling the problem.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum ModelBuildError {
     /// An operator could not be formed as a square matrix.
     Operator,
     /// A factorization was rejected.
     Factorization(String),
+    /// A conditional table's entry is not a probability.
+    Probability {
+        candidate: String,
+        node: usize,
+        entry: FloatType,
+    },
     /// The plant state could not be formed.
     Plant,
     /// An observable's operator is not a projector.
@@ -317,6 +331,14 @@ impl core::fmt::Display for ModelBuildError {
             ModelBuildError::Factorization(name) => {
                 write!(f, "{name} is not a valid factorization")
             }
+            ModelBuildError::Probability {
+                candidate,
+                node,
+                entry,
+            } => write!(
+                f,
+                "{candidate}: node {node}'s table has the entry {entry}, outside [0, 1]"
+            ),
             ModelBuildError::Plant => write!(f, "the plant state could not be formed"),
             ModelBuildError::Projector(name) => {
                 write!(f, "the observable {name} is not a projector")

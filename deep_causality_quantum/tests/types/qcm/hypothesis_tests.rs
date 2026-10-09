@@ -784,3 +784,123 @@ fn test_a_leg_with_an_output_half_traces_to_its_output_dimension() {
     assert!(!report.accepted());
     assert!((report.checks()[0].measured - 1.0).abs() < 1e-15);
 }
+
+#[test]
+fn test_an_output_half_that_does_not_split_its_leg_is_no_candidate() {
+    // With an output half of 0 the normalization target is the zero matrix, which the zero
+    // factor would meet; with 3 on a leg of 4 there is no input/output split to read.
+    for output in [0, 3] {
+        let mut pf = ProcessFactors::new();
+        pf.insert(0, diagonal(&[0.0, 0.0, 0.0, 0.0]));
+        let mut fs = FactorSupports::new();
+        fs.declare(0, &[0]);
+        fs.set_leg_dim(0, 4).set_leg_output_dim(0, output);
+        assert!(matches!(
+            Hypothesis::structural("unsplit", pf, fs).unwrap_err().0,
+            QuantumErrorEnum::DimensionMismatch(_)
+        ));
+    }
+}
+
+/// One node on its own leg of dimension `d_in · d_out`, the leg pairing an input of `d_in` with
+/// an output of `d_out`, carrying `|0⟩⟨0|` on the input and the identity on the output.
+fn paired(name: &str, node: usize, d_in: usize, d_out: usize) -> Hypothesis<f64> {
+    let entries: Vec<f64> = (0..d_in * d_out)
+        .map(|k| if k < d_out { 1.0 } else { 0.0 })
+        .collect();
+    let mut pf = ProcessFactors::new();
+    pf.insert(node, diagonal(&entries));
+    let mut fs = FactorSupports::new();
+    fs.declare(node, &[node]);
+    fs.set_leg_dim(node, d_in * d_out)
+        .set_leg_output_dim(node, d_out);
+    Hypothesis::structural(name, pf, fs).unwrap()
+}
+
+#[test]
+fn test_a_composite_keeps_each_legs_output_half_and_its_normalization() {
+    let a = paired("a", 0, 2, 2);
+    let b = paired("b", 1, 3, 3);
+    for part in [&a, &b] {
+        assert!(part.check_normalization().unwrap().accepted());
+    }
+    let ab = a.compose(&b).unwrap();
+    let supports = ab.supports().unwrap();
+    assert_eq!(
+        (supports.leg_output_dim(0), supports.leg_output_dim(1)),
+        (2, 3)
+    );
+    // Normalised parts on disjoint legs compose to a normalised composite, node by node.
+    let composite = ab.check_normalization().unwrap();
+    let parts = a
+        .check_normalization()
+        .unwrap()
+        .fold(b.check_normalization().unwrap());
+    assert!(composite.accepted());
+    assert_eq!(composite.checks(), parts.checks());
+}
+
+#[test]
+fn test_compose_rejects_a_leg_with_two_output_halves() {
+    // Node 0 owns leg 0 with an output half of 2; node 1 reads leg 0 as a plain system of 4.
+    let a = paired("a", 0, 2, 2);
+    let mut pf = ProcessFactors::new();
+    pf.insert(1, diagonal(&[1.0; 16]));
+    let mut fs = FactorSupports::new();
+    fs.declare(1, &[0, 1]);
+    fs.set_leg_dim(0, 4).set_leg_dim(1, 4);
+    let b = Hypothesis::structural("b", pf, fs).unwrap();
+    for (x, y) in [(&a, &b), (&b, &a)] {
+        match x.compose(y).unwrap_err().0 {
+            QuantumErrorEnum::DimensionMismatch(msg) => {
+                assert!(
+                    msg.contains("leg 0") && msg.contains("output half"),
+                    "{msg}"
+                )
+            }
+            other => panic!("expected DimensionMismatch, got {other:?}"),
+        }
+    }
+}
+
+#[test]
+fn test_an_empty_factor_store_is_no_process_to_check() {
+    let empty =
+        Hypothesis::<f64>::structural("empty", ProcessFactors::new(), FactorSupports::new())
+            .unwrap();
+    match empty.check_normalization().unwrap_err().0 {
+        QuantumErrorEnum::CalculationError(msg) => {
+            assert!(
+                msg.contains("'empty'") && msg.contains("no factors"),
+                "{msg}"
+            )
+        }
+        other => panic!("expected CalculationError, got {other:?}"),
+    }
+}
+
+#[test]
+fn test_the_normalization_residual_is_the_frobenius_norm_at_any_scale() {
+    // A parentless factor diag(s, 1 + r − s) traces to 1 + r for any scale s, so its residual is
+    // r, measured against √ε · ‖factor‖_F. At s = 1e165 and r = 1e155 the residual's square
+    // overflows f64 while the residual itself does not, and it lies within the threshold.
+    for (s, r) in [(1.0, 1e-9), (1e3, 1e-6), (1e165, 1e155)] {
+        let mut pf = ProcessFactors::new();
+        pf.insert(0, diagonal(&[s, 1.0 + r - s]));
+        let mut fs = FactorSupports::new();
+        fs.declare(0, &[0]);
+        let report = Hypothesis::structural("scaled", pf, fs)
+            .unwrap()
+            .check_normalization()
+            .unwrap();
+        let check = report.checks()[0];
+        let trace_defect = (s + (1.0 + r - s)) - 1.0;
+        assert!(check.measured.is_finite(), "{s}");
+        assert!(
+            (check.measured - trace_defect.abs()).abs() <= 1e-12 * trace_defect.abs().max(1.0),
+            "{s}: {} vs {trace_defect}",
+            check.measured
+        );
+        assert!(check.accepted, "{s}: {check:?}");
+    }
+}

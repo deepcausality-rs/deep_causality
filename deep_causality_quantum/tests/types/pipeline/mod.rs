@@ -14,9 +14,7 @@ mod config_tests;
 #[cfg(test)]
 mod configured_experiment_tests;
 #[cfg(test)]
-mod control_tests;
-#[cfg(test)]
-mod effective_draws_tests;
+mod control;
 #[cfg(test)]
 mod evidence_source_tests;
 #[cfg(test)]

@@ -6,6 +6,10 @@ navigation or quantum devices, reads English as a second language at about CEFR 
 vocabulary of their own field and has never seen this library. Every sentence traces to a fact in the
 raw file; the letters after a section name the sources.
 
+The section drafts below carry the headings of the first draft. Two later passes rewrote every
+heading, and review moved cards between sections 4 and 5. The closing sections of this note record
+each pass; `website/quantum/src/pages/sensing/index.astro` holds the final text.
+
 The page follows the home page's form: a hero with one figure, then sections that each open with a
 question as eyebrow, a claim as heading, a short lede, and one figure. Each section ends on the point
 the next one picks up.

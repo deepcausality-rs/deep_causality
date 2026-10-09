@@ -3,6 +3,7 @@ import PageShell from '../../components/nav/PageShell.astro';
 import { boundaries, sensingBoundaries } from '../../data/boundaries';
 import { CRATE_URL } from '../../consts';
 import { numberWord } from '../../data/evidence';
+import BoundaryRow from '../../components/shared/BoundaryRow.astro';
 
 const title = 'Boundaries | DeepCausality Quantum';
 const description =
@@ -26,32 +27,14 @@ const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
   <section class="doc-sec" id="limits">
     <h2>{cap(numberWord(byDesign.length))} things it leaves out by design.</h2>
     <ul class="rows">
-      {byDesign.map((b) => (
-        <li class="row" id={b.id}>
-          <p class={`status status-${b.status}`}>{b.mark}</p>
-          <div>
-            <h3>{b.title}</h3>
-            <p class="t">{b.text}</p>
-            <p class="ev">Shown in <code>{b.evidence}</code></p>
-          </div>
-        </li>
-      ))}
+      {byDesign.map((b) => <BoundaryRow boundary={b} />)}
     </ul>
   </section>
 
   <section class="doc-sec" id="in-use">
     <h2>{cap(numberWord(inUse.length))} limits you meet in use.</h2>
     <ul class="rows">
-      {inUse.map((b) => (
-        <li class="row" id={b.id}>
-          <p class={`status status-${b.status}`}>{b.mark}</p>
-          <div>
-            <h3>{b.title}</h3>
-            <p class="t">{b.text}</p>
-            <p class="ev">Shown in <code>{b.evidence}</code></p>
-          </div>
-        </li>
-      ))}
+      {inUse.map((b) => <BoundaryRow boundary={b} />)}
     </ul>
   </section>
 
@@ -112,16 +95,7 @@ const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
       gives one limit and the file that shows it.
     </p>
     <ul class="rows">
-      {sensingBoundaries.map((b) => (
-        <li class="row" id={b.id}>
-          <p class={`status status-${b.status}`}>{b.mark}</p>
-          <div>
-            <h3>{b.title}</h3>
-            <p class="t">{b.text}</p>
-            <p class="ev">Shown in <code>{b.evidence}</code></p>
-          </div>
-        </li>
-      ))}
+      {sensingBoundaries.map((b) => <BoundaryRow boundary={b} />)}
     </ul>
     <h3>What the sensing examples assume</h3>
     <dl class="deflist">
@@ -191,22 +165,6 @@ const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 <style>
   .rows { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line-1); }
-  .row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-2);
-    padding: var(--space-5) 0;
-    border-bottom: 1px solid var(--line-1);
-    scroll-margin-top: calc(var(--header-h) + var(--space-4));
-  }
-  @media (min-width: 720px) {
-    .row { grid-template-columns: var(--w-label) minmax(0, 1fr); gap: var(--space-5); }
-  }
-  .status { margin: 0; }
-  .row h3 { font-size: var(--t-h4); margin: 0 0 var(--space-2); }
-  .t { color: var(--fg-1); margin: 0 0 var(--space-2); max-width: var(--measure); }
-  .ev { color: var(--fg-2); font-size: var(--t-body-sm); margin: 0; }
-  .ev code { overflow-wrap: anywhere; }
 
   .table-scroll table { width: 100%; border-collapse: collapse; }
   .table-scroll th, .table-scroll td { text-align: left; vertical-align: top; padding: var(--space-3); border-top: 1px solid var(--line-1); }

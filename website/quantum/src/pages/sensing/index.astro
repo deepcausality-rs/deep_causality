@@ -23,6 +23,9 @@ import {
   VERIFICATION,
   gradiometerCandidates,
   gradiometerExperiments,
+  scientific,
+  EOTVOS_PER_S2,
+  SCAN_SETUP_S,
   verificationCommand,
   signed,
   systematics,
@@ -40,6 +43,7 @@ const seconds = (s: number) => s.toLocaleString('en-US');
 const offset = Math.abs(GRAVIMETER.offsetUgal);
 const leakPercent = Math.round(GRADIOMETER.leak * 100);
 const e1 = gradiometerExperiments.find((e) => e.id === 'E1')!;
+const scanHours = (SCAN_SETUP_S / 3600).toFixed(1);
 
 const run = `${GRAVIMETER.command}
 ${GRADIOMETER.command}
@@ -125,7 +129,7 @@ ${verificationCommand('verification_v1_wavefront')}`;
     </ul>
   </HomeSection>
 
-  <HomeSection id="plan" ix="03 / 09" label="Which change?" title="Skip the 5.6-hour scan and still find the wavefront.">
+  <HomeSection id="plan" ix="03 / 09" label="Which change?" title={`Skip the ${scanHours}-hour scan and still find the wavefront.`}>
     <Fragment slot="lede">
       <p>
         Each effect answers a different change to the instrument. Turning the sensor head 180° flips
@@ -142,7 +146,7 @@ ${verificationCommand('verification_v1_wavefront')}`;
         {seconds(GRAVIMETER.planCost)} s.
       </p>
       <p>
-        The plan skips the wavefront’s own test, a temperature scan with {seconds(20000)} s of setup.
+        The plan skips the wavefront’s own test, a temperature scan with {seconds(SCAN_SETUP_S)} s of setup.
         Once each of the other six candidates has a change that moves it, the wavefront is the
         explanation left when all six fail, so the plan finds it by elimination.
       </p>
@@ -197,19 +201,19 @@ ${verificationCommand('verification_v1_wavefront')}`;
       </p>
       <p>
         One 60 s change exposes a leak: light up one cloud, keep the other dark, and read the dark
-        one. A leak lifts the dark cloud’s signal from {e1.predicts[1].toFixed(3)} to
-        {e1.predicts[0].toFixed(3)}. A {leakPercent} % leak biases the gradient by
-        {signed(GRADIOMETER.leakBias.eotvos)} E, or −3.6 × 10⁻⁷ s⁻². Finding rotation takes a
+        one. A leak lifts the dark cloud’s signal from {GRADIOMETER.darkBackground.toFixed(3)} to
+        {e1.predicts.H1.toFixed(3)}. A {leakPercent} % leak biases the gradient by
+        {signed(GRADIOMETER.leakBias.eotvos)} E, or {scientific(GRADIOMETER.leakBias.eotvos * EOTVOS_PER_S2, 1)} s⁻². Finding rotation takes a
         deliberate turn of the platform, and the full plan takes {Math.round(GRADIOMETER.planCost)} s.
       </p>
     </Fragment>
     <TrackFigure
       title="B’s read-out, A lit, B dark"
-      rows={gradiometerCandidates.map((c, k) => ({
+      rows={gradiometerCandidates.map((c) => ({
         name: c.name,
         tag: c.id,
-        value: e1.predicts[k],
-        highlight: e1.predicts[k] !== e1.predicts[1],
+        value: e1.predicts[c.id],
+        highlight: e1.predicts[c.id] !== GRADIOMETER.darkBackground,
       }))}
       min={0}
       max={0.1}

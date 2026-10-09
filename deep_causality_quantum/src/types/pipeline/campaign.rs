@@ -7,8 +7,9 @@
 //! experiment, adjudicate, and stop as soon as the evidence decides or nothing left can.
 
 use crate::QuantumError;
-use crate::types::decision::Tolerance;
-use crate::types::design::{Ambiguity, Experiment, MinCostCover, PlanEntry, Survivor, design};
+use crate::types::decision::{CheckVerdict, Tolerance};
+use crate::types::design::experiment_design::design_after;
+use crate::types::design::{Ambiguity, Experiment, MinCostCover, PlanEntry, Survivor};
 use crate::types::pipeline::configured_experiment::ConfiguredExperiment;
 use crate::types::pipeline::control::{Control, ControlReport, ControlWorld};
 use crate::types::pipeline::evidence_source::{EvidenceSource, ObservedContext};
@@ -34,7 +35,8 @@ pub enum CampaignStop<R> {
 
 /// What a campaign plans and judges by: the planning objective, the `sigmas` a prediction may
 /// sit from an observation and still agree, and the `drift` in read-out probability that a
-/// context change may move the planned experiment's predictions before the campaign re-plans.
+/// context change may move the planned experiment's predictions before the campaign re-plans. A
+/// change to the planned experiment's cost or shots re-plans whatever the drift.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct CampaignRules<R> {
     objective: MinCostCover<R>,
@@ -80,7 +82,7 @@ impl<R: RealField + core::fmt::Debug> CampaignRules<R> {
 }
 
 /// The experiment a campaign planned to run next, with the open worlds and the predictions it
-/// was planned on.
+/// was planned on, and the cost and shots it was configured with when planned.
 #[derive(Debug, Clone, PartialEq)]
 struct Planned<R> {
     experiment: usize,
@@ -88,22 +90,30 @@ struct Planned<R> {
     cost: R,
     open: Vec<usize>,
     predictions: Vec<R>,
+    configured_cost: R,
+    configured_shots: u64,
 }
 
 /// A sequential campaign over a forked control stage.
 ///
 /// Each step keeps the experiment planned at the end of the last one unless the context has
-/// moved its predictions by more than the rules' drift, in which case it re-plans; runs that
-/// experiment (`observe_experiment → predict_with → compare → adjudicate`); and stops at a
-/// separated survivor or when no candidate holds. Otherwise it plans the next experiment over the
-/// open candidates, those that still hold and the rivals not yet separated from one of them, with
-/// the experiments not yet run, and stops when no plan covers a pair that involves a candidate
-/// that holds. The planned experiment is the cheapest entry of the plan that resolves such a
-/// pair.
+/// moved its predictions by more than the rules' drift, or changed its cost or shots, in which
+/// case it re-plans; runs that experiment (`observe_experiment → predict_with → compare →
+/// adjudicate`); and stops at a separated survivor or when no candidate holds. Otherwise it plans
+/// the next experiment over the open candidates, those that still hold and the rivals not yet
+/// separated from one of them, with the experiments not yet run.
+///
+/// The plan credits each open pair with the separation the experiments run have given it, summed
+/// as `adjudicate` sums it: a pair already at the floor needs no experiment, and a combining plan
+/// adds the credit to the bits it sums. The campaign stops when no plan covers a pair that
+/// involves a candidate that holds and is not yet separated. The planned experiment is the
+/// cheapest entry of the plan that resolves such a pair, or else the plan's cheapest entry.
 ///
 /// Every experiment runs at most once, so `k` experiments stop a campaign within `k + 1` steps.
-/// Each plan covers the open pairs the last plan's remaining entries covered, so without a
-/// context change a campaign spends at most the static plan's cost.
+/// Without a context change, the experiments the last plan chose and the campaign has not run,
+/// with the separation the run experiments credit, still cover every open pair the last plan
+/// covered, so each plan costs at most what remains of the last, and a campaign spends at most
+/// the static plan's cost.
 pub struct Campaign<R: RealField, N, const D: usize> {
     control: Control<R, N, D>,
     planned: Option<Planned<R>>,
@@ -253,8 +263,8 @@ where
         Ok(self)
     }
 
-    /// Whether the context moved the planned experiment's predictions by more than the drift, or
-    /// no longer offers it.
+    /// Whether the context moved the planned experiment's predictions by more than the drift,
+    /// changed its cost or shots, or no longer offers it.
     fn drifted<C, M>(
         &self,
         planned: &Planned<R>,
@@ -268,6 +278,11 @@ where
         let Some(experiment) = experiments.get(planned.experiment) else {
             return Ok(true);
         };
+        if experiment.cost() != planned.configured_cost
+            || experiment.shots() != planned.configured_shots
+        {
+            return Ok(true);
+        }
         let now = self.predictions(experiment, &planned.open, model)?;
         Ok(now
             .iter()
@@ -300,7 +315,7 @@ where
 
     /// The next experiment over the open worlds and the experiments not yet run, or `None` with
     /// the campaign stopped as unresolvable when no plan covers a pair that involves a world
-    /// that holds.
+    /// that holds and that the experiments run have not separated.
     fn plan<C, M>(
         &mut self,
         experiments: &[ConfiguredExperiment<R, C>],
@@ -337,12 +352,37 @@ where
                     Experiment::new(x.name(), x.cost(), x.shots(), predictions)
                 })
                 .collect::<Result<Vec<_>, _>>()?;
-            let plan = design(open.len(), &probes, rules.objective)?;
-            let involves_holder = |&(a, b): &(usize, usize)| holding[open[a]] || holding[open[b]];
-            // Some pair that involves a world that holds must be coverable for a step to help.
-            let decisive = (0..open.len())
+            let pairs: Vec<(usize, usize)> = (0..open.len())
                 .flat_map(|a| ((a + 1)..open.len()).map(move |b| (a, b)))
-                .any(|pair| involves_holder(&pair) && !plan.uncovered().contains(&pair));
+                .collect();
+            // The separation each open pair has from the experiments run, once any has run.
+            let read = worlds.iter().any(|w| !w.readings().is_empty());
+            let prior: Vec<R> = pairs
+                .iter()
+                .map(|&(a, b)| separation(&worlds[open[a]], &worlds[open[b]]))
+                .collect();
+            let plan = design_after(
+                open.len(),
+                &probes,
+                rules.objective,
+                read.then_some(prior.as_slice()),
+            )?;
+            let separated: Vec<bool> = prior
+                .iter()
+                .map(|&bits| read && bits + slack >= floor)
+                .collect();
+            // A pair a step can help with involves a world that holds and is not yet separated.
+            let needed = |pair: &(usize, usize)| {
+                let (a, b) = *pair;
+                (holding[open[a]] || holding[open[b]])
+                    && pairs
+                        .iter()
+                        .position(|p| p == pair)
+                        .is_some_and(|pi| !separated[pi])
+            };
+            let decisive = pairs
+                .iter()
+                .any(|pair| needed(pair) && !plan.uncovered().contains(pair));
             let by_cost = |x: &&PlanEntry<R>, y: &&PlanEntry<R>| {
                 x.cost.partial_cmp(&y.cost).unwrap_or(Ordering::Equal)
             };
@@ -350,7 +390,7 @@ where
                 .then(|| {
                     plan.entries()
                         .iter()
-                        .filter(|e| e.resolves.iter().any(involves_holder))
+                        .filter(|e| e.resolves.iter().any(needed))
                         .min_by(by_cost)
                         .or_else(|| plan.entries().iter().min_by(by_cost))
                         .cloned()
@@ -359,13 +399,18 @@ where
                 .map(|entry| (entry, probes))
         };
         match entry {
-            Some((entry, probes)) => Ok(Some(Planned {
-                experiment: remaining[entry.experiment],
-                shots: entry.shots,
-                cost: entry.cost,
-                predictions: probes[entry.experiment].predictions().to_vec(),
-                open,
-            })),
+            Some((entry, probes)) => {
+                let configured = &experiments[remaining[entry.experiment]];
+                Ok(Some(Planned {
+                    experiment: remaining[entry.experiment],
+                    shots: entry.shots,
+                    cost: entry.cost,
+                    predictions: probes[entry.experiment].predictions().to_vec(),
+                    open,
+                    configured_cost: configured.cost(),
+                    configured_shots: configured.shots(),
+                }))
+            }
             None => {
                 self.stop = Some(CampaignStop::Unresolvable(self.ambiguity(&holding)));
                 Ok(None)
@@ -402,10 +447,10 @@ fn holds<R: RealField, N, const D: usize>(world: &ControlWorld<R, N, D>) -> bool
 where
     N: NaturalNumber,
 {
-    world
-        .readings()
-        .iter()
-        .all(|r| r.verdict().is_some_and(|v| v.accepted() && !v.is_vacuous()))
+    world.readings().iter().all(|r| {
+        r.verdict()
+            .is_some_and(|v| v.verdict() == CheckVerdict::Accepted)
+    })
 }
 
 /// The bits two worlds separate by over the experiments both read.

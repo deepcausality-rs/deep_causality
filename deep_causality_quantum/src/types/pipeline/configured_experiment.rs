@@ -96,14 +96,18 @@ where
     /// Born read-out of the observable on `plant` evolved by the candidate's channel and then by
     /// the configuration's. For a structural candidate, it answers with interventions and an
     /// instrument, and the prediction is the candidate under the interventions evaluated against
-    /// the instrument, as `Hypothesis::predict` evaluates one.
+    /// the instrument, as `Hypothesis::predict` evaluates one. Either is a read-out probability,
+    /// and one outside `[0, 1]` is refused here, so every stage that reads a prediction reads a
+    /// probability.
     ///
     /// # Errors
     ///
     /// The model's refusal; [`QuantumError::CalculationError`] when it answers a mechanism with
     /// interventions or a structural candidate with a channel;
-    /// [`QuantumError::DimensionMismatch`] when the observable is not among `observables`; and
-    /// the errors of the evolution, the read-out, the interventions or the evaluation.
+    /// [`QuantumError::DimensionMismatch`] when the observable is not among `observables`;
+    /// [`QuantumError::NormalizationError`] naming the candidate and the experiment when the
+    /// prediction is not a finite probability in `[0, 1]`; and the errors of the evolution, the
+    /// read-out, the interventions or the evaluation.
     pub fn predict<M, const D: usize>(
         &self,
         model: &M,
@@ -114,7 +118,7 @@ where
     where
         M: ResponseModel<R, C>,
     {
-        match (
+        let prediction = match (
             model.respond(candidate, &self.configuration)?,
             candidate.channel(),
         ) {
@@ -155,6 +159,14 @@ where
                     self.name
                 )))
             }
+        }?;
+        if !prediction.is_finite() || prediction < R::zero() || prediction > R::one() {
+            return Err(QuantumError::NormalizationError(format!(
+                "candidate '{}' predicts {prediction:?} for experiment '{}', not a probability",
+                candidate.name(),
+                self.name
+            )));
         }
+        Ok(prediction)
     }
 }

@@ -54,6 +54,8 @@ let exps = experiments()?;
 let planned = QclBuilder::control::<FloatType, NumberType, 4, _>(&screened)
     .design_with(&CrosstalkModel, &exps, MinCostCover::new(floor_bits))
     .finalize()?;
+let plan = planned.plan.as_ref().ok_or("design should have produced a plan")?;
+println!("plan: {} experiments, total cost {:?}", plan.entries().len(), plan.total_cost());
 
 // 4. Decide. The campaign runs the cheapest planned experiment until the evidence decides.
 let truth = EvidenceSource::Simulated(h1_direct_q1_to_q2()?);

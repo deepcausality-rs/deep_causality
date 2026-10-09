@@ -385,3 +385,35 @@ fn test_a_campaign_without_shared_readings_is_refused() {
     assert_eq!(worlds[0].name(), "h0");
     assert_eq!(worlds[0].readings().len(), 1);
 }
+
+#[test]
+fn test_a_vacuous_read_out_holds_in_neither_fold() {
+    // A report that examined nothing accepts vacuously; neither fold counts it as holding. With
+    // one such world beside a holding one, both folds name the holding one as the survivor.
+    let (held, far) = (estimate(950, 1024), estimate(100, 1024));
+    let worlds = [
+        World::<f64, 2>::read_out("held", held.at_least(0.9), held),
+        World::read_out(
+            "vacuous",
+            deep_causality_quantum::CheckReport::vacuous(),
+            far,
+        ),
+    ];
+    let campaign = [
+        CampaignWorld::new("held", vec![(held.at_least(0.9), held)]),
+        CampaignWorld::new(
+            "vacuous",
+            vec![(deep_causality_quantum::CheckReport::vacuous(), far)],
+        ),
+    ];
+    let single = adjudicate(&worlds, 5.0).unwrap().outcome;
+    let folded = adjudicate_campaign::<f64, 2>(&campaign, 5.0)
+        .unwrap()
+        .outcome;
+    for outcome in [single, folded] {
+        match outcome {
+            Either::Left(s) => assert_eq!(s.name, "held"),
+            other => panic!("expected the holding world to survive, got {other:?}"),
+        }
+    }
+}

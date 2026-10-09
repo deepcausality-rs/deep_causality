@@ -1,6 +1,6 @@
 ---
 import PageShell from '../../components/nav/PageShell.astro';
-import { theorems, deferred } from '../../data/formalization';
+import { theorems, openTarget } from '../../data/formalization';
 import { papers } from '../../data/papers';
 import { TESTS, numberWord } from '../../data/evidence';
 import { LEAN_URL, THEOREM_MAP_URL, LEAN_STATUS_URL, PAPERS_URL } from '../../consts';
@@ -10,7 +10,6 @@ const description =
   'What Lean proves, which claim it refutes, which target remains open, and which papers the crate implements. Each row gives the file that shows it.';
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-const open = deferred[0];
 const split = (s: string) => {
   const [file, item] = s.split(' :: ');
   return { file, item };
@@ -96,7 +95,7 @@ const used = papers.filter((p) => p.citedFrom.length === 0 && (p.usedBy ?? []).l
   <section class="doc-sec" id="deferred">
     <h2>One target remains open: the unitary factorization.</h2>
     <p>
-      {open.statement} {open.reason} <a href={LEAN_STATUS_URL}><code>LEAN_QUANTUM.md</code></a>
+      {openTarget.statement} {openTarget.reason} <a href={LEAN_STATUS_URL}><code>LEAN_QUANTUM.md</code></a>
       records the gap. The <a href="/checks/">checks page</a> marks each check.
     </p>
   </section>

@@ -99,7 +99,7 @@ export const sensingBoundaries: Boundary[] = [
     status: 'partial',
     mark: 'simulated',
     title: 'The sensing examples run on simulated observations.',
-    text: 'Each example draws its observations from the world it takes as the cause, and exits nonzero when its campaign finds another. QCL also takes counts a lab measured and published values with their standard errors, and the sensing verifications use published values.',
+    text: 'Each example draws its observations from the cause under test, and exits nonzero when a campaign finds a different cause while the true one is on the list. The run with clipping left off the list expects the misattribution and checks for it. QCL also takes counts a lab measured and published values with their standard errors, and the sensing verifications use published values.',
     evidence: 'src/types/pipeline/evidence_source.rs; verification/sensing/common/attribution.rs',
   },
   {

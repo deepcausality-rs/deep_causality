@@ -24,21 +24,38 @@ pub fn manifest_dir() -> PathBuf {
     PathBuf::from(PACKAGE_DIR)
 }
 
-/// The numeric rows of a CSV file; a row that does not parse, such as a header, is skipped.
+/// The rows of a CSV file below its header line, each a number per header column.
 ///
 /// # Errors
 ///
-/// The file's.
+/// The file's, and [`std::io::ErrorKind::InvalidData`] naming the line of a row whose cell count
+/// differs from the header's or whose cell does not parse as a number.
 pub fn load_csv(path: &Path) -> std::io::Result<Vec<Vec<f64>>> {
     let text = std::fs::read_to_string(path)?;
-    Ok(text
-        .lines()
-        .filter_map(|line| {
-            line.split(',')
+    let mut lines = text.lines();
+    let columns = lines.next().map_or(0, |header| header.split(',').count());
+    lines
+        .enumerate()
+        .map(|(i, line)| {
+            let invalid = |what: String| {
+                std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    format!("{}, line {}: {what}", path.display(), i + 2),
+                )
+            };
+            let row = line
+                .split(',')
                 .map(|cell| cell.trim().parse::<f64>())
                 .collect::<Result<Vec<_>, _>>()
-                .ok()
+                .map_err(|e| invalid(format!("{e} in '{line}'")))?;
+            if row.len() == columns {
+                Ok(row)
+            } else {
+                Err(invalid(format!(
+                    "{} cells against the header's {columns}",
+                    row.len()
+                )))
+            }
         })
-        .filter(|row| !row.is_empty())
-        .collect())
+        .collect()
 }

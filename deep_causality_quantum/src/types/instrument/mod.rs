@@ -13,8 +13,12 @@
 //! beside a `DiscreteTime` node for that tick. Every payload type is `Storable`, so the context
 //! round-trips through `snapshot` and `restore`.
 //!
+//! An interferometer's [`Fringe`] carries a published value with its standard error onto the
+//! read-out as [`EffectiveDraws`], the form the pipeline's published evidence takes.
+//!
 //! The module is behind the `qcm` feature, with the pipeline that reads it.
 
+pub(crate) mod effective_draws;
 pub(crate) mod environment_reading;
 pub(crate) mod instrument_context;
 pub(crate) mod interferometer_configuration;
@@ -23,6 +27,7 @@ pub(crate) mod interferometer_model;
 pub(crate) mod record_fields;
 pub(crate) mod wave_vector;
 
+pub use effective_draws::*;
 pub use environment_reading::*;
 pub use instrument_context::*;
 pub use interferometer_configuration::*;

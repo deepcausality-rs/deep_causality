@@ -207,11 +207,11 @@ fn consequence(cause: &Cause, instrument: &Instrument) -> Result<Consequence, Bo
             instrument,
         )?)
     };
-    Ok(CausalFlow::value(Consequence::of(cause))
+    Ok(CausalFlow::value(())
         .context(cause.clone())
-        .try_step_with(|c, _, world| Ok(c.with_reading(read(world)?)))
+        .try_step_with(|(), _, world| read(world))
         .alternate_context(cause.without_mechanism())
-        .try_step_with(|c, _, world| Ok(c.with_unbiased_reading(read(world)?)))
+        .try_step_with(|reading, _, world| Ok(Consequence::of(cause, reading, read(world)?)))
         .branch_with(
             |c, _, _| c.mechanism.biases_gradient(),
             |flow| flow.map(Consequence::corrected),

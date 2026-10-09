@@ -9,7 +9,7 @@
  * elimination note under the matrix, for the hero.
  * Values read from `src/data/sensing.ts`; the moves follow `offset` in the example's `model.rs`.
  */
-import { gravimeterExperiments, systematics, GRAVIMETER } from '../../data/sensing';
+import { gravimeterExperiments, systematics, GRAVIMETER, SCAN_SETUP_S } from '../../data/sensing';
 
 interface Props {
   compact?: boolean;
@@ -78,7 +78,7 @@ const seconds = (s: number) => s.toLocaleString('en-US');
         A dot marks a systematic whose predicted read-out the experiment moves away from the
         others’. The plan takes the six highlighted columns for {seconds(GRAVIMETER.planCost)} s,
         setup and integration time together, and leaves out E5 and E6. E6’s temperature scan alone
-        costs {seconds(20000)} s of setup.
+        costs {seconds(SCAN_SETUP_S)} s of setup.
       </p>
     </figcaption>
   )}

@@ -15,6 +15,8 @@ the axes' major ticks: the ratio axis from 0.0 to 1.0 in steps of 0.2, the phase
 0 mrad in steps of 5. A point is the centre of its square; its standard error is half the distance
 between the far ends of its error bar's two segments, which start at the square's top and bottom
 edges. The point at ratio 1 is the reference, sits at zero and has no error bar; it is not written.
+Every other square must carry its own two segments, and every vertical segment must belong to a
+square; the script exits with the offending square otherwise.
 """
 
 import csv
@@ -41,14 +43,25 @@ def main(svg_path, points_path):
     ratio = lambda x: (x - X_ZERO) / (X_ONE - X_ZERO)
     phase = lambda y: -35.0 * (y - Y_ZERO) / (Y_MINUS_35 - Y_ZERO)
 
-    rows = []
+    vertical = {i for i, (sx, _) in enumerate(segments) if sx[0] == sx[1]}
+    rows, references, used = [], [], set()
     for xs, ys in squares:
         cx, top, bottom = (min(xs) + max(xs)) / 2, min(ys), max(ys)
-        ends = [y for sx, sy in segments if sx[0] == sx[1] and abs(sx[0] - cx) < 0.5
-                and (top in sy or bottom in sy) for y in sy if y not in (top, bottom)]
-        if not ends:
+        bar = [i for i in vertical if abs(segments[i][0][0] - cx) < 0.5
+               and (top in segments[i][1] or bottom in segments[i][1])]
+        ends = [y for i in bar for y in segments[i][1] if y not in (top, bottom)]
+        r, p = ratio(cx), phase((top + bottom) / 2)
+        if not bar and abs(r - 1) < 1e-3 and abs(p) < 0.05:
+            references.append((r, p))
             continue
-        rows.append((ratio(cx), phase((top + bottom) / 2), (phase(min(ends)) - phase(max(ends))) / 2))
+        if len(bar) != 2 or len(ends) != 2 or used & set(bar):
+            sys.exit(f"the square at ratio {r:.4f}, {p:.3f} mrad, has {len(bar)} error-bar "
+                     f"segments with {len(ends)} far ends, not its own two")
+        used |= set(bar)
+        rows.append((r, p, (phase(min(ends)) - phase(max(ends))) / 2))
+    if len(references) != 1 or used != vertical:
+        sys.exit(f"{len(references)} reference squares at ratio 1, and "
+                 f"{len(vertical - used)} vertical segments belong to no square")
 
     with open(points_path, "w", newline="") as f:
         out = csv.writer(f)

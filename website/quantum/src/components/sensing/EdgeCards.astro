@@ -4,18 +4,15 @@
  * a reading that refuses tilt, records without the tide, and clipping left off the list. `show`
  * picks the cards, in order. The lines are copied verbatim from
  *   cargo run --release -p quantum_examples --example qcl_gravimeter_systematics
- * The card style follows `VerdictAnatomy`.
+ * Each card is an `OutputCard`, shared with `VerdictAnatomy`.
  */
-import { Code } from 'astro:components';
-import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+import OutputCard from '../shared/OutputCard.astro';
 import { GRAVIMETER, signed } from '../../data/sensing';
 
 interface Props {
   show: Array<'tilt' | 'tide' | 'clipping'>;
 }
 const { show } = Astro.props;
-
-const SHIKI = { light: rustLight, dark: rustDark };
 
 const cards = {
   tilt: {
@@ -40,14 +37,7 @@ const cards = {
 const shown = show.map((id) => cards[id]);
 ---
 <ul class="rows" style={`--n:${shown.length}`}>
-  {shown.map((c, i) => (
-    <li class="row panel corner-brackets rise" style={`--i:${i}`}>
-      <p class="kind">{c.kind}</p>
-      <h3>{c.title}</h3>
-      <p class="t">{c.text}</p>
-      <div class="out"><Code code={c.out} lang="text" themes={SHIKI} wrap /></div>
-    </li>
-  ))}
+  {shown.map((c, i) => <OutputCard {...c} index={i} />)}
 </ul>
 
 <style>
@@ -60,17 +50,4 @@ const shown = show.map((id) => cards[id]);
     gap: var(--space-4);
   }
   @media (min-width: 900px) { .rows { grid-template-columns: repeat(var(--n), minmax(0, 1fr)); } }
-  .row { padding: var(--space-5); display: flex; flex-direction: column; min-width: 0; }
-  .kind {
-    margin: 0 0 var(--space-2);
-    font-family: var(--font-mono);
-    font-size: var(--t-eyebrow);
-    letter-spacing: var(--ls-eyebrow);
-    text-transform: uppercase;
-    color: var(--accent);
-  }
-  .row h3 { font-size: var(--t-h4); margin: 0 0 var(--space-2); }
-  .t { color: var(--fg-1); font-size: var(--t-body-sm); margin: 0 0 var(--space-4); }
-  .out { margin-top: auto; min-width: 0; }
-  .out :global(pre) { margin: 0; font-size: var(--t-mono-sm); }
 </style>

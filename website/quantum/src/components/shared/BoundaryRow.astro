@@ -1,0 +1,39 @@
+---
+/**
+ * One boundary: its status mark, the claim, the explanation and the file that shows it.
+ * `/boundaries/` renders every list of boundaries through this row.
+ */
+import type { Boundary } from '../../data/boundaries';
+
+interface Props {
+  boundary: Boundary;
+}
+const { boundary: b } = Astro.props;
+---
+<li class="row" id={b.id}>
+  <p class={`status status-${b.status}`}>{b.mark}</p>
+  <div>
+    <h3>{b.title}</h3>
+    <p class="t">{b.text}</p>
+    <p class="ev">Shown in <code>{b.evidence}</code></p>
+  </div>
+</li>
+
+<style>
+  .row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2);
+    padding: var(--space-5) 0;
+    border-bottom: 1px solid var(--line-1);
+    scroll-margin-top: calc(var(--header-h) + var(--space-4));
+  }
+  @media (min-width: 720px) {
+    .row { grid-template-columns: var(--w-label) minmax(0, 1fr); gap: var(--space-5); }
+  }
+  .status { margin: 0; }
+  .row h3 { font-size: var(--t-h4); margin: 0 0 var(--space-2); }
+  .t { color: var(--fg-1); margin: 0 0 var(--space-2); max-width: var(--measure); }
+  .ev { color: var(--fg-2); font-size: var(--t-body-sm); margin: 0; }
+  .ev code { overflow-wrap: anywhere; }
+</style>

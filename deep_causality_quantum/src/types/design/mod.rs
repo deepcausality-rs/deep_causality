@@ -19,9 +19,11 @@
 //! experiments, summing each pair's separation over them.
 
 pub(crate) mod adjudicate;
+pub(crate) mod cover_mode;
 pub(crate) mod experiment_design;
 pub(crate) mod instrument_time;
 
 pub use adjudicate::*;
+pub use cover_mode::*;
 pub use experiment_design::*;
 pub use instrument_time::*;

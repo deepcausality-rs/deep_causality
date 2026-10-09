@@ -165,3 +165,22 @@ fn test_one_effective_draw_takes_the_time_the_sensitivity_buys() {
     let short = build([1.6106e7, 0.1, 0.5, 2.4e-7, 0.5, 1.0e-6, 30.0]).unwrap();
     assert!(short.instrument_time().is_err());
 }
+
+#[test]
+fn test_a_fringe_slope_the_scalar_cannot_hold_is_refused() {
+    // Finite parameters whose slope C k_eff T² / 2 overflows to infinity or underflows to zero:
+    // the first would read NaN draws off its fringe, the second nothing at all.
+    let overflow = [1.0e300, 1.0e10, 1.0, 5.0e-7, 3.0e10, 1.0e12, 30.0];
+    let underflow = [1.0e-300, 1.0e-20, 0.4, 5.0e-7, 0.5, 1000.0, 30.0];
+    for p in [overflow, underflow] {
+        let msg = calculation(build(p).unwrap_err());
+        assert!(msg.contains("fringe slope"), "{msg}");
+    }
+    // Every model that builds has a fringe its checked constructor accepts, with the same slope.
+    for p in [NOMINAL, [1.0e150, 1.0e-70, 1.0, 5.0e-7, 0.5, 1000.0, 30.0]] {
+        let f = build(p).unwrap().fringe();
+        let checked = deep_causality_quantum::Fringe::new(f.operating_point(), f.slope()).unwrap();
+        assert_eq!(checked, f);
+        assert!(f.effective_draws(0.0, 1.0e-9).is_ok());
+    }
+}

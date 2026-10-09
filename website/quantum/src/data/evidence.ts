@@ -13,7 +13,7 @@ export const numberWord = (n: number): string => {
  *
  *   proved     the quantum section of lean/THEOREM_MAP.md, rows marked `proved`
  *   deferred   the targets the same section states and does not prove
- *              (see `deferred` in ./formalization.ts)
+ *              (see `openTarget` in ./formalization.ts)
  */
 export const TESTS = {
   proved: 19,

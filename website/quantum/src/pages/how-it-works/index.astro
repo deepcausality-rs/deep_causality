@@ -36,7 +36,9 @@ const law = [
     <h1>A QCL program runs in stages.</h1>
     <p class="lede">
       QCL, the Quantum Causal Language, is a Rust builder whose programs call <code>config</code>,
-      then <code>validate</code>, then <code>control</code>, and no other order compiles.
+      then <code>validate</code>, then <code>control</code>, and the compiler rejects a structural
+      candidate that skips <code>validate</code>. Mechanism candidates claim no structure, so a
+      plant configured with them goes from <code>config</code> to <code>control</code> directly.
       <code>config</code> sets the subject and its candidates, <code>validate</code> checks them,
       and <code>control</code>, which only a plant reaches, plans experiments and reads their
       results. Every check reports what it examined, and every failure reports what broke.
@@ -152,10 +154,11 @@ const law = [
       <code>fork</code>, <code>predict</code>, <code>compare</code>, <code>adjudicate</code>.
     </p>
     <p>
-      Configured experiments run <code>design_with</code>, then <code>observe_experiment</code>,
-      <code>predict_with</code> and <code>compare</code> once per experiment, then
-      <code>adjudicate</code>. A <code>Campaign</code> repeats that loop under
-      <code>CausalFlow::iterate_until</code> and stops when the evidence decides. The stage
+      Configured experiments run <code>design_with</code> and <code>fork</code>, then
+      <code>observe_experiment</code>, <code>predict_with</code> and <code>compare</code> once per
+      experiment, then <code>adjudicate</code>. A <code>Campaign</code> takes a control stage that
+      has forked once and repeats the per-experiment loop under
+      <code>CausalFlow::iterate_until</code>, stopping when the evidence decides. The stage
       <code>design</code> belongs to no order, because it needs only the candidates and the
       experiments on offer.
     </p>

@@ -117,12 +117,14 @@ export type GradiometerExperiment = {
   id: 'E0' | 'E1' | 'E2' | 'E3';
   name: string;
   reads: string;
-  /** Predicted read-out under H1 to H4, in the world where the leak runs from A to B. */
-  predicts: [number, number, number, number];
+  /** Predicted read-out under each candidate, in the world where the leak runs from A to B. */
+  predicts: Record<GradiometerId, number>;
   /** Effective draws and cost the plan sizes, when planned. */
   draws?: number;
   seconds?: number;
 };
+
+export type GradiometerId = 'H1' | 'H2' | 'H3' | 'H4';
 
 export const gradiometerCandidates = [
   { id: 'H1', name: 'leak A→B', mechanism: 'cloud A’s fluorescence reaches B’s detection signal', biased: true },
@@ -132,10 +134,10 @@ export const gradiometerCandidates = [
 ] as const;
 
 export const gradiometerExperiments: GradiometerExperiment[] = [
-  { id: 'E0', name: 'passive', reads: 'both signals excited', predicts: [0.25982, 0.25982, 0.25982, 0.25982] },
-  { id: 'E1', name: 'brighten A, darken B', reads: 'B’s signal excited', predicts: [0.0788, 0.02, 0.02, 0.02], draws: 340, seconds: 60.0 },
-  { id: 'E2', name: 'brighten B, darken A', reads: 'A’s signal excited', predicts: [0.02, 0.0788, 0.02, 0.02], draws: 340, seconds: 60.0 },
-  { id: 'E3', name: 'rotate at 1 mrad/s', reads: 'the two signals disagreeing', predicts: [0.5156, 0.5156, 0.5156, 0.52632], draws: 60265, seconds: 601.8 },
+  { id: 'E0', name: 'passive', reads: 'both signals excited', predicts: { H1: 0.25982, H2: 0.25982, H3: 0.25982, H4: 0.25982 } },
+  { id: 'E1', name: 'brighten A, darken B', reads: 'B’s signal excited', predicts: { H1: 0.0788, H2: 0.02, H3: 0.02, H4: 0.02 }, draws: 340, seconds: 60.0 },
+  { id: 'E2', name: 'brighten B, darken A', reads: 'A’s signal excited', predicts: { H1: 0.02, H2: 0.0788, H3: 0.02, H4: 0.02 }, draws: 340, seconds: 60.0 },
+  { id: 'E3', name: 'rotate at 1 mrad/s', reads: 'the two signals disagreeing', predicts: { H1: 0.5156, H2: 0.5156, H3: 0.5156, H4: 0.52632 }, draws: 60265, seconds: 601.8 },
 ];
 
 export const GRADIOMETER = {
@@ -279,3 +281,21 @@ export const VERIFICATION = {
   checks: verifications.reduce((n, v) => n + v.checks, 0),
   readme: 'deep_causality_quantum/verification/sensing/README.md',
 } as const;
+
+/** The setup time of the wavefront's own test, the temperature scan E6, in seconds. */
+export const SCAN_SETUP_S = gravimeterExperiments.find((e) => e.id === 'E6')!.setup;
+
+const SUPERSCRIPT: Record<string, string> = {
+  '-': '⁻', '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴', '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹',
+};
+
+/** `value` in scientific notation with Unicode superscripts, e.g. `−3.6 × 10⁻⁷`. */
+export const scientific = (value: number, digits: number): string => {
+  const [mantissa, exponent] = value.toExponential(digits).split('e');
+  const sign = mantissa.startsWith('-') ? '−' : '';
+  const power = String(Number(exponent)).split('').map((ch) => SUPERSCRIPT[ch]).join('');
+  return `${sign}${mantissa.replace('-', '')} × 10${power}`;
+};
+
+/** One eötvös is 10⁻⁹ s⁻². */
+export const EOTVOS_PER_S2 = 1e-9;

@@ -46,6 +46,7 @@ use deep_causality_quantum::{
 };
 use fringe_qubit::{mechanism, output_port, phase_channel, plant};
 use report::Report;
+use std::collections::BTreeSet;
 use std::error::Error;
 
 /// The rubidium D2 wavelength, in m, and the time between pulses, in s (§2).
@@ -74,6 +75,18 @@ const PRINTED_DEVICE: (f64, f64) = (-19.7, 5.1);
 const PRINTED_TOTAL: (f64, f64) = (-44.0, 5.2);
 /// The Coriolis correction and its uncertainty, in µGal (Table 1, §4.2).
 const CORIOLIS: (f64, f64) = (0.5, 0.4);
+/// Fig. 9's fits by panel: (a) the fits of the measured points, (c) the n_max = 10 fit with one
+/// fake point added below 2 µK each, named as the extraction names them.
+const PANEL_A: [&str; 6] = [
+    "linear", "n_max 2", "n_max 4", "n_max 6", "n_max 8", "n_max 10",
+];
+const PANEL_C: [&str; 5] = [
+    "fake black",
+    "fake light grey",
+    "fake red",
+    "fake blue",
+    "fake dark grey",
+];
 
 fn main() -> Result<(), Box<dyn Error>> {
     println!("V3 Louchet-Chauvet et al. 2011: Coriolis, wavefront, and the temperature scan");
@@ -106,6 +119,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     let points = load_csv(&digitised.join("louchet2011_fig9_points.csv"))?;
     let fits = load_fits(&digitised.join("louchet2011_fig9_fits.csv"))?;
     let names: Vec<&str> = fits.iter().map(|(name, _)| name.as_str()).collect();
+    let panels: BTreeSet<&str> = PANEL_A.iter().chain(&PANEL_C).copied().collect();
+    if names.len() != panels.len() || names.iter().copied().collect::<BTreeSet<_>>() != panels {
+        return Err(format!(
+            "Fig. 9's fits {names:?} are not panel (a) {PANEL_A:?} and panel (c) {PANEL_C:?}"
+        )
+        .into());
+    }
     let scan = points
         .iter()
         .skip(1) // the reference point at 2 µK, zero by definition
@@ -121,8 +141,9 @@ fn main() -> Result<(), Box<dyn Error>> {
         .collect::<Vec<_>>();
     let scanned = attribute(&names, &scan, SIGMAS, FLOOR_BITS)?;
     let holds = |name: &str| scanned.holding.iter().any(|h| h == name);
-    let (refits, fakes): (Vec<&Fit>, Vec<&Fit>) =
-        fits.iter().partition(|(name, _)| !name.starts_with("fake"));
+    let (refits, fakes): (Vec<&Fit>, Vec<&Fit>) = fits
+        .iter()
+        .partition(|(name, _)| PANEL_A.contains(&name.as_str()));
     let fakes_holding = fakes.iter().filter(|(name, _)| holds(name)).count();
     let rejected: Vec<&str> = names.iter().copied().filter(|name| !holds(name)).collect();
     report.check(
@@ -260,11 +281,27 @@ fn planner(report: &mut Report) -> Result<(), Box<dyn Error>> {
                 .collect::<Result<Vec<f64>, QuantumError>>()
         })
         .collect::<Result<Vec<_>, QuantumError>>()?;
-    let per_draw: Vec<f64> = predictions
-        .iter()
-        .map(|p| separation_bits(p[0], p[1], 1).abs())
-        .collect();
-    let draws = (FLOOR_BITS / per_draw[2]).ceil() as u64;
+    // Bits per draw between the two candidates' predictions, in the candidates' order, under
+    // `wanted`.
+    let bits = |wanted: Setting| -> Result<f64, String> {
+        settings
+            .iter()
+            .zip(&predictions)
+            .find(|((_, setting), _)| *setting == wanted)
+            .map(|(_, p)| separation_bits(p[0], p[1], 1).abs())
+            .ok_or_else(|| format!("the planner offers no {wanted:?} setting"))
+    };
+    let (k_reversed, rabi_halved, turned) = (
+        bits(Setting::KReversed)?,
+        bits(Setting::RabiHalved)?,
+        bits(Setting::Turned)?,
+    );
+    if turned == 0.0 {
+        return Err(
+            "the turn does not separate Coriolis from the wavefront at any draw count".into(),
+        );
+    }
+    let draws = (FLOOR_BITS / turned).ceil() as u64;
     let probes = settings
         .iter()
         .zip(&predictions)
@@ -274,10 +311,10 @@ fn planner(report: &mut Report) -> Result<(), Box<dyn Error>> {
     let chosen: Vec<&str> = plan.entries().iter().map(|e| e.name.as_str()).collect();
     report.check(
         "only the turn separates Coriolis from the wavefront",
-        chosen == ["turned 180°"] && per_draw[0] == 0.0 && per_draw[1] == 0.0,
+        chosen == ["turned 180°"] && k_reversed == 0.0 && rabi_halved == 0.0,
         format!(
-            "bits per draw: k reversed {:.1e}, Rabi halved {:.1e}, turned {:.2e}; plan {chosen:?}",
-            per_draw[0], per_draw[1], per_draw[2]
+            "bits per draw: k reversed {k_reversed:.1e}, Rabi halved {rabi_halved:.1e}, turned \
+             {turned:.2e}; plan {chosen:?}"
         ),
     );
     Ok(())
@@ -314,7 +351,7 @@ fn interpolate(curve: &[(f64, f64)], t: f64) -> f64 {
 }
 
 /// What the planner's experiments set.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 enum Setting {
     /// The wave vector reversed, its half-difference taken.
     KReversed,

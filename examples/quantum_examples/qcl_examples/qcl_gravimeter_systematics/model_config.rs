@@ -18,7 +18,7 @@ use crate::constants::{
     ZEEMAN_CROSS_SHARE,
 };
 use crate::model::{calibrated, read_out, tide_at};
-use crate::model_types::{Cause, Physics, Scenario, Session, Systematic};
+use crate::model_types::{Cause, Physics, Scenario, Session, Systematic, TideSignal, ZeemanShares};
 use deep_causality_algebra::Real;
 use deep_causality_context::TimeScale;
 use deep_causality_num::{One, Zero, lift_count, to_count};
@@ -27,23 +27,28 @@ use deep_causality_quantum::{
     QuantumError, WaveVector, interferometer_context, record_environment, separation_bits,
 };
 
-/// The candidates' names and systematics, in the order the verdicts report them.
-pub const CANDIDATES: [(&str, Systematic); 7] = [
-    ("H1 Coriolis", Systematic::Coriolis),
-    ("H2 quadratic Zeeman", Systematic::QuadraticZeeman),
-    ("H3 tilt", Systematic::Tilt),
-    ("H4 mirror vibration", Systematic::MirrorVibration),
-    ("H5 wavefront", Systematic::Wavefront),
-    ("H6 light shift", Systematic::LightShift),
-    ("H7 clipping", Systematic::Clipping),
+/// The candidates' systematics, in the order the verdicts report them.
+pub const CANDIDATES: [Systematic; 7] = [
+    Systematic::Coriolis,
+    Systematic::QuadraticZeeman,
+    Systematic::Tilt,
+    Systematic::MirrorVibration,
+    Systematic::Wavefront,
+    Systematic::LightShift,
+    Systematic::Clipping,
 ];
 
 /// The name of the candidate whose systematic is `systematic`.
 pub fn candidate_name(systematic: Systematic) -> &'static str {
-    CANDIDATES
-        .iter()
-        .find(|(_, s)| *s == systematic)
-        .map_or("", |(name, _)| name)
+    match systematic {
+        Systematic::Coriolis => "H1 Coriolis",
+        Systematic::QuadraticZeeman => "H2 quadratic Zeeman",
+        Systematic::Tilt => "H3 tilt",
+        Systematic::MirrorVibration => "H4 mirror vibration",
+        Systematic::Wavefront => "H5 wavefront",
+        Systematic::LightShift => "H6 light shift",
+        Systematic::Clipping => "H7 clipping",
+    }
 }
 
 /// The runs: each of the seven systematics as the cause of a −5 µGal offset; a +5 µGal offset from
@@ -52,8 +57,8 @@ pub fn candidate_name(systematic: Systematic) -> &'static str {
 pub fn scenarios() -> Vec<Scenario> {
     let mut runs: Vec<Scenario> = CANDIDATES
         .iter()
-        .map(|&(name, truth)| Scenario {
-            label: name,
+        .map(|&truth| Scenario {
+            label: candidate_name(truth),
             truth,
             offset_ugal: OFFSET_UGAL,
             records_tide: true,
@@ -87,23 +92,31 @@ pub fn scenarios() -> Vec<Scenario> {
 }
 
 /// The numbers every response is built from.
-pub fn physics() -> Physics {
+///
+/// # Errors
+///
+/// The quadratic Zeeman shares' refusal.
+pub fn physics() -> Result<Physics, QuantumError> {
     let per_metre = lift_count::<FloatType>(1000);
-    Physics {
+    Ok(Physics {
         contrast: CONTRAST,
         gravity: STANDARD_GRAVITY,
         bias_field: BIAS_FIELD,
         rabi_frequency: RABI_FREQUENCY,
-        zeeman_shares: (
+        zeeman_shares: ZeemanShares::new(
             ZEEMAN_COIL_SHARE,
             ZEEMAN_CROSS_SHARE,
             ZEEMAN_BACKGROUND_SHARE,
-        ),
+        )?,
         light_shift_field_share: LIGHT_SHIFT_CO_MRAD
             / (LIGHT_SHIFT_COUNTER_MRAD + LIGHT_SHIFT_CO_MRAD),
         clipping_slope: CLIPPING_SLOPE_UGAL_PER_MM * MICRO_GAL * per_metre,
-        tide: (TIDE_AMPLITUDE_UGAL * MICRO_GAL, TIDE_PHASE, TIDE_PERIOD),
-    }
+        tide: TideSignal {
+            amplitude: TIDE_AMPLITUDE_UGAL * MICRO_GAL,
+            phase: TIDE_PHASE,
+            period: TIDE_PERIOD,
+        },
+    })
 }
 
 /// The instrument model. One configuration's sensitivity is the four-configuration protocol's,
@@ -133,9 +146,9 @@ pub fn interferometer() -> Result<InterferometerModel<FloatType>, QuantumError> 
 pub fn candidates(offset: FloatType, without: Option<Systematic>, physics: &Physics) -> Vec<Cause> {
     CANDIDATES
         .iter()
-        .filter(|(_, s)| Some(*s) != without)
-        .map(|&(name, systematic)| Cause {
-            name: name.to_string(),
+        .filter(|&&s| Some(s) != without)
+        .map(|&systematic| Cause {
+            name: candidate_name(systematic).to_string(),
             systematic,
             size: calibrated(systematic, offset, physics),
         })

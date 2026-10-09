@@ -14,8 +14,11 @@
 //!
 //! The maps are digitised by `papers/digitised/digitise_hu2017_fig6.py`, so the digitisation error
 //! enters the comparison: the verification moves the height axis by the 0.17 cm its dashed pulse lines
-//! disagree with the printed heights, and the field axis by one pixel of its 126 px per 100 nT,
-//! and takes the quadrature of the moves as the uncertainty.
+//! disagree with the printed heights, and rescales the field axis by one pixel of the 126 px
+//! between its ticks 100 nT apart, the calibration every field value is read through, and takes
+//! the quadrature of the moves as the uncertainty. The bias follows the field's variation along the
+//! trajectory, which the rescaling stretches by 1/126; a uniform one-pixel shift of the field moves
+//! the bias by about 1.4 · 10⁻⁴ of itself, the pixel's ratio to the mean field.
 //!
 //! The paper prints the quadratic Zeeman coefficient as 2π × 0.0575 Hz/nT²; the rubidium clock
 //! transition's 575 Hz/G² is 0.0575 Hz/µT², and the printed unit puts the offset six orders of
@@ -59,10 +62,13 @@ const PRINTED_OFFSET: f64 = 2.04;
 /// The printed statistics of the inferred coil field, in nT (Fig. 6(c)).
 const PRINTED_COIL_MEAN: f64 = 5424.98;
 const PRINTED_COIL_SD: f64 = 6.24;
-/// The digitisation's resolution: the height disagreement of the dashed pulse lines, in cm, and
+/// The digitisation's resolution: the height disagreement of the dashed pulse lines, in cm; the
+/// field axis's calibration, two ticks `TICK_SPAN_NT` apart and `TICK_SPAN_PX` pixels apart; and
 /// one pixel of field, in nT.
 const HEIGHT_ERROR_CM: f64 = 0.17;
-const FIELD_PIXEL_NT: f64 = 100.0 / 126.0;
+const TICK_SPAN_NT: f64 = 100.0;
+const TICK_SPAN_PX: f64 = 126.0;
+const FIELD_PIXEL_NT: f64 = TICK_SPAN_NT / TICK_SPAN_PX;
 /// One µGal, in m/s².
 const MICRO_GAL: f64 = 1.0e-8;
 /// Integration steps over the interferometer's `2T`.
@@ -108,13 +114,14 @@ fn main() -> Result<(), Box<dyn Error>> {
         ),
     );
 
-    // Digitisation uncertainty: the height axis moved both ways, the field axis scaled by a pixel.
+    // Digitisation uncertainty: the height axis moved both ways, and the field axis rescaled by a
+    // pixel of its tick span, which stretches each value's distance from the mean by 1/126.
     let mean = nominal.iter().sum::<f64>() / nominal.len() as f64;
     let height_moves = [-HEIGHT_ERROR_CM, HEIGHT_ERROR_CM]
         .map(|dz| (bias(v0, &interp(&nominal, dz), GAMMA) - at_nominal).abs());
     let scaled: Vec<f64> = nominal
         .iter()
-        .map(|b| mean + (b - mean) * (1.0 + FIELD_PIXEL_NT / 100.0))
+        .map(|b| mean + (b - mean) * (1.0 + FIELD_PIXEL_NT / TICK_SPAN_NT))
         .collect();
     let scale_move = (bias(v0, &interp(&scaled, 0.0), GAMMA) - at_nominal).abs();
     let uncertainty = height_moves[0].max(height_moves[1]).hypot(scale_move);

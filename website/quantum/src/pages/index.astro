@@ -14,13 +14,14 @@ import Limits from '../components/home/Limits.astro';
 import TryIt from '../components/home/TryIt.astro';
 import SystematicsMatrix from '../components/sensing/SystematicsMatrix.astro';
 import { RUN } from '../data/crosstalk';
-import { GRAVIMETER } from '../data/sensing';
+import { GRAVIMETER, SCAN_SETUP_S } from '../data/sensing';
 import { GITHUB_URL } from '../consts';
 
 const title = 'DeepCausality Quantum | Find the cause of a quantum error';
 const description =
   'A Rust library that finds the causal structure behind correlated qubit errors and the systematic behind a sensor’s offset, verifies error-correcting codes exactly without simulating them, and bounds the error of stacked codes. Every verdict reports what it examined, its margin, and whether an exact or a numeric path decided it.';
 const seconds = (s: number) => s.toLocaleString('en-US');
+const scanHours = (SCAN_SETUP_S / 3600).toFixed(1);
 
 const jsonLd = {
   '@context': 'https://schema.org',
@@ -102,7 +103,7 @@ const jsonLd = {
     <FourSteps />
   </HomeSection>
 
-  <HomeSection ix="06 / 10" label="Which systematic?" title="Find the cause of a gravimeter’s offset without the 5.6-hour scan.">
+  <HomeSection ix="06 / 10" label="Which systematic?" title={`Find the cause of a gravimeter’s offset without the ${scanHours}-hour scan.`}>
     <Fragment slot="lede">
       <p>
         After the tide correction, a cold-atom gravimeter reads 5 µGal low, and seven systematics
@@ -112,7 +113,7 @@ const jsonLd = {
       </p>
       <p>
         Those six already separate the wavefront from each rival, so the plan skips its
-        {seconds(20000)} s temperature scan and identifies the wavefront by elimination. A campaign
+        {seconds(SCAN_SETUP_S)} s temperature scan and identifies the wavefront by elimination. A campaign
         finds each of the seven causes in {GRAVIMETER.cheapest} s to
         {seconds(GRAVIMETER.dearest)} s. The example simulates every observation, and its setup
         times and tide stand in for a lab’s values.

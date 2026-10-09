@@ -49,7 +49,7 @@ pub fn print_header(
     println!(
         "  the offset to explain: {} µGal after the tide; the tide: {} µGal semidiurnal",
         lower(OFFSET_UGAL),
-        lower(physics.tide.0 / MICRO_GAL)
+        lower(physics.tide.amplitude / MICRO_GAL)
     );
     println!("  placeholders for the lab's own measurements are marked in constants.rs");
     println!("seed: {SEED}\n");
@@ -81,11 +81,12 @@ pub fn print_run(
     if run.refused.is_empty() {
         println!("    baseline: every candidate can produce the passive reading");
     }
-    for (name, predicted, observed) in &run.refused {
+    for refusal in &run.refused {
         println!(
-            "    baseline refuses {name}: it predicts {:.2} µGal, the instrument reads {:.2} µGal (tide included)",
-            lower(offset_ugal(*predicted, interferometer, physics)),
-            lower(offset_ugal(*observed, interferometer, physics))
+            "    baseline refuses {}: it predicts {:.2} µGal, the instrument reads {:.2} µGal (tide included)",
+            refusal.name,
+            lower(offset_ugal(refusal.predicted, interferometer, physics)),
+            lower(offset_ugal(refusal.observed, interferometer, physics))
         );
     }
     if run.plan.is_empty() {
@@ -141,7 +142,7 @@ pub fn print_gates(runs: &[WorldRun]) -> bool {
             run.campaign_verdict != Verdict::Unresolved
         } else if s.offset_ugal > FloatType::zero() {
             let tilt =
-                run.refused.len() == 1 && run.refused[0].0 == candidate_name(Systematic::Tilt);
+                run.refused.len() == 1 && run.refused[0].name == candidate_name(Systematic::Tilt);
             println!(
                 "    a positive offset: the baseline refuses only {}: {}   the campaign names {truth}: {}",
                 candidate_name(Systematic::Tilt),

@@ -128,25 +128,27 @@ fn main() -> Result<(), Box<dyn Error>> {
         .find(|p| p.error == 0.0)
         .ok_or("Fig. 2 has a reference")?;
     let points: Vec<&Point> = all.iter().filter(|p| p.error > 0.0).collect();
+    let fig4 = load_csv(&dir.join("karcher2018_fig4.csv"))?;
     let responses: Vec<Vec<(f64, f64)>> = ORDERS
         .iter()
         .map(|&n| {
-            load_csv(&dir.join("karcher2018_fig4.csv")).map(|rows| {
-                rows.iter()
-                    .filter(|r| r[0] == n)
-                    .map(|r| (r[1], r[2]))
-                    .collect()
-            })
+            let series: Vec<(f64, f64)> = fig4
+                .iter()
+                .filter(|r| r[0] == n)
+                .map(|r| (r[1], r[2]))
+                .collect();
+            if series.is_empty() {
+                Err(format!("Fig. 4 has no markers for order {n}"))
+            } else {
+                Ok(series)
+            }
         })
         .collect::<Result<_, _>>()?;
     // The marker nearest `temperature`; where Fig. 4 has two markers at one temperature, their mean.
+    // Every series holds a marker, so `at` holds the nearest one at least.
     let response = |order: usize, temperature: f64| -> f64 {
         let series = &responses[order];
-        let nearest = series
-            .iter()
-            .map(|m| m.0)
-            .min_by(|a, b| (a - temperature).abs().total_cmp(&(b - temperature).abs()))
-            .unwrap_or(f64::NAN);
+        let nearest = nearest_marker(series, temperature).0;
         let at: Vec<f64> = series
             .iter()
             .filter(|m| (m.0 - nearest).abs() < COINCIDENT)
@@ -172,15 +174,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     // Fig. 4's temperature grid against Fig. 2's.
     let ratios: Vec<f64> = all
         .iter()
-        .map(|p| {
-            let grid = &responses[1];
-            let nearest = grid.iter().min_by(|a, b| {
-                (a.0 - TEMPERATURE_SCALE * p.temperature)
-                    .abs()
-                    .total_cmp(&(b.0 - TEMPERATURE_SCALE * p.temperature).abs())
-            });
-            nearest.map_or(f64::NAN, |m| m.0 / p.temperature)
-        })
+        .map(|p| nearest_marker(&responses[1], TEMPERATURE_SCALE * p.temperature).0 / p.temperature)
         .collect();
     let within = |tolerance: f64| {
         ratios
@@ -475,6 +469,17 @@ fn interpolate(points: &[Point], temperature: f64) -> (f64, f64) {
     let (a, b) = (&points[i - 1], &points[i]);
     let t = (temperature.ln() - a.temperature.ln()) / (b.temperature.ln() - a.temperature.ln());
     (a.fit + t * (b.fit - a.fit), a.band + t * (b.band - a.band))
+}
+
+/// The marker of the non-empty `series` nearest `temperature`; of two equally near, the first.
+fn nearest_marker(series: &[(f64, f64)], temperature: f64) -> (f64, f64) {
+    series.iter().copied().fold(series[0], |best, m| {
+        if (m.0 - temperature).abs() < (best.0 - temperature).abs() {
+            m
+        } else {
+            best
+        }
+    })
 }
 
 fn dot(a: &[f64], b: &[f64]) -> f64 {

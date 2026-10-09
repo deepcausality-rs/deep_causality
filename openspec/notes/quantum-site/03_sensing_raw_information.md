@@ -19,7 +19,7 @@ run twice and printed identical output.
 | L | `examples/quantum_examples/qcl_examples/qcl_gradiometer_crosstalk/{main,model,model_config,constants}.rs`, `README.md` |
 | L-run | `cargo run --release -p quantum_examples --example qcl_gradiometer_crosstalk`, 2026-10-08 |
 | M | `deep_causality_quantum/verification/sensing/*.rs`, `README.md` |
-| M-run | `cargo run --release -p deep_causality_quantum --features qcm --example verification_v{1..7,10}_*`, 2026-10-08 |
+| M-run | `for v in v1_wavefront v2_clipping v3_transverse_motion v4_crosstalk v5_light_shift v6_time_model v7_gradiometer_sweep v10_zeeman_field_map; do cargo run --release -p deep_causality_quantum --features qcm --example verification_$v; done`, 2026-10-08 |
 | P | `deep_causality_quantum/src/types/{pipeline/campaign.rs,design/experiment_design.rs,qpu/shot_estimate.rs,instrument/interferometer_model.rs}` |
 | N1 | Everitt et al., arXiv:2608.25563 (vessel trial) |
 | N2 | Lellouch and Holynski, arXiv:2504.11119 (gradiometer model at sea) |

@@ -401,6 +401,33 @@ rust_test_suite(
 )
 
 # =============================================================================
+# types/pipeline/control/* test suites — the control stage, over the qcm feature
+# =============================================================================
+
+rust_test_suite(
+    name = "pipeline_control",
+    srcs = glob([
+        "tests/types/pipeline/control/*_tests.rs",
+    ]),
+    crate_features = [
+        "dem",
+        "qcm",
+        "qpu",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_quantum",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+# =============================================================================
 # types/instrument/* test suites — the instrument context, over the qcm feature
 # =============================================================================
 

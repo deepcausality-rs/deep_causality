@@ -44,12 +44,6 @@ use deep_causality_quantum::{
 };
 use deep_causality_tensor::CausalTensor;
 
-/// The quadratic Zeeman bias at coil current `s` times nominal, relative to nominal.
-fn zeeman_scale(physics: &Physics, s: FloatType) -> FloatType {
-    let (a, b, c) = physics.zeeman_shares;
-    (a * s * s + b * s + c) / (a + b + c)
-}
-
 /// The offset `cause` produces in `configuration`, in m/s², without the tide.
 pub fn offset(
     cause: &Cause,
@@ -74,7 +68,7 @@ pub fn offset(
     let rabi = configuration.rabi_frequency() / physics.rabi_frequency;
     let systematic = match cause.systematic {
         Systematic::Coriolis => size * heading,
-        Systematic::QuadraticZeeman => k_sign * size * zeeman_scale(physics, field),
+        Systematic::QuadraticZeeman => k_sign * size * physics.zeeman_shares.scale(field),
         Systematic::Tilt => zero,
         Systematic::MirrorVibration => {
             if configuration.accelerometer_correction() {
@@ -115,9 +109,9 @@ pub fn calibrated(systematic: Systematic, offset: FloatType, physics: &Physics) 
 
 /// The Earth tide at `tick` s from the start, in m/s².
 pub fn tide_at(tick: u64, physics: &Physics) -> FloatType {
-    let (amplitude, phase, period) = physics.tide;
+    let tide = physics.tide;
     let two_pi = FloatType::pi() + FloatType::pi();
-    amplitude * (two_pi * lift_count::<FloatType>(tick) / period + phase).cos()
+    tide.amplitude * (two_pi * lift_count::<FloatType>(tick) / tide.period + tide.phase).cos()
 }
 
 /// The read-out at offset `delta_g`, in m/s²: `½(1 + C sin(k_eff T² Δg))`.

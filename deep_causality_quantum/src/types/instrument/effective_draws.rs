@@ -53,8 +53,10 @@ impl<R: RealField + FromPrimitive + core::fmt::Debug> Fringe<R> {
     /// # Errors
     ///
     /// [`QuantumError::NonFiniteValue`] when the value or the standard error is not finite;
-    /// [`QuantumError::CalculationError`] when the standard error is not positive or the value
-    /// reads outside `(0, 1)` on this fringe.
+    /// [`QuantumError::CalculationError`] when the standard error is not positive, the value
+    /// reads outside `(0, 1)` on this fringe, or the draws are not a finite positive number of
+    /// the scalar, as when `slope · standard_error` is too large or too small for its square to
+    /// be represented.
     pub fn effective_draws(
         &self,
         value: R,
@@ -78,10 +80,15 @@ impl<R: RealField + FromPrimitive + core::fmt::Debug> Fringe<R> {
             )));
         }
         let spread = self.slope * standard_error;
-        Ok(EffectiveDraws {
-            probability,
-            draws: probability * (R::one() - probability) / (spread * spread),
-        })
+        let draws = probability * (R::one() - probability) / (spread * spread);
+        if !draws.is_finite() || draws <= R::zero() {
+            return Err(QuantumError::CalculationError(format!(
+                "a standard error of {standard_error:?} on a fringe of slope {:?} gives \
+                 {draws:?} effective draws, not a finite positive count",
+                self.slope
+            )));
+        }
+        Ok(EffectiveDraws { probability, draws })
     }
 
     /// The value and standard error `draws` stand for: the inverse of

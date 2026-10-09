@@ -8,6 +8,7 @@
 use crate::FloatType;
 use deep_causality_context::Context;
 use deep_causality_context_store::ContextSnapshot;
+use deep_causality_num::Zero;
 use deep_causality_quantum::{InterferometerContext, ObservedContext, QuantumError};
 
 /// A systematic effect that shifts the gravimeter's reading.
@@ -63,14 +64,79 @@ pub struct Physics {
     pub bias_field: FloatType,
     /// The operating Rabi frequency, in rad/s.
     pub rabi_frequency: FloatType,
-    /// The quadratic Zeeman bias's shares `(a, b, c)` at nominal current.
-    pub zeeman_shares: (FloatType, FloatType, FloatType),
+    /// The quadratic Zeeman bias's shares at nominal current.
+    pub zeeman_shares: ZeemanShares,
     /// The share of the two-photon light shift a field step moves.
     pub light_shift_field_share: FloatType,
     /// The clipping shift per m of initial cloud displacement, in s⁻².
     pub clipping_slope: FloatType,
-    /// The tide's amplitude, in m/s², its phase at the start, in rad, and its period, in s.
-    pub tide: (FloatType, FloatType, FloatType),
+    /// The Earth tide.
+    pub tide: TideSignal,
+}
+
+/// The quadratic Zeeman bias at coil current `s` times nominal, `a s² + b s + c`, as shares of
+/// the bias at nominal current: `a` the coil's field alone, `b` its cross term with the
+/// background, `c` the background alone.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct ZeemanShares {
+    coil: FloatType,
+    cross: FloatType,
+    background: FloatType,
+}
+
+impl ZeemanShares {
+    /// The shares `coil`, `cross` and `background`.
+    ///
+    /// # Errors
+    ///
+    /// [`QuantumError::CalculationError`] when the shares are not finite or sum to zero, so the
+    /// bias at nominal current, which [`scale`](Self::scale) divides by, is none.
+    pub fn new(
+        coil: FloatType,
+        cross: FloatType,
+        background: FloatType,
+    ) -> Result<Self, QuantumError> {
+        let sum = coil + cross + background;
+        if !sum.is_finite() || sum == FloatType::zero() {
+            return Err(QuantumError::CalculationError(format!(
+                "the quadratic Zeeman shares sum to {sum:?} at nominal current, not a nonzero \
+                 finite bias"
+            )));
+        }
+        Ok(Self {
+            coil,
+            cross,
+            background,
+        })
+    }
+
+    /// The bias at coil current `s` times nominal, relative to nominal.
+    pub fn scale(&self, s: FloatType) -> FloatType {
+        let (a, b, c) = (self.coil, self.cross, self.background);
+        (a * s * s + b * s + c) / (a + b + c)
+    }
+}
+
+/// The Earth tide, a cosine in time.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct TideSignal {
+    /// Its amplitude, in m/s².
+    pub amplitude: FloatType,
+    /// Its phase at the start, in rad.
+    pub phase: FloatType,
+    /// Its period, in s.
+    pub period: FloatType,
+}
+
+/// A candidate the baseline refused, with its predicted and the observed read-out.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Refusal {
+    /// The candidate.
+    pub name: String,
+    /// Its predicted read-out.
+    pub predicted: FloatType,
+    /// The observed read-out.
+    pub observed: FloatType,
 }
 
 /// The instrument context an experiment runs in, and the tick, in s from the start, it runs at.
@@ -120,8 +186,8 @@ pub struct Scenario {
 pub struct WorldRun {
     /// The scenario run.
     pub scenario: Scenario,
-    /// The candidates the baseline refused, each with its predicted and the observed read-out.
-    pub refused: Vec<(String, FloatType, FloatType)>,
+    /// The candidates the baseline refused.
+    pub refused: Vec<Refusal>,
     /// The static plan's experiments, in order.
     pub plan: Vec<String>,
     /// What the static plan costs, in s.

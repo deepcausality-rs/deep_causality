@@ -274,7 +274,7 @@ The library states what it cannot decide instead of returning an answer that wou
 
 | Typed into `constants.rs` and `model.rs` | Computed by the library | Sampled |
 |---|---|---|
-| the four structures' conditional tables: each qubit excited with probability 0.10, a driven qubit 0.40 when its driver is | the refusal of H4 at `build()` | the observation: 1024 shots from the Born sampler |
+| the four structures' conditional tables: each qubit excited with probability 0.10, a driven qubit 0.40 when its driver is excited | the refusal of H4 at `build()` | the observation: 1024 shots from the Born sampler |
 | four experiments' costs (1, 1, 1, 2, "in the same arbitrary unit") | normalisation (7 factors), Markov (5 pairs) and C₃ (3 blocks) screens | drawn at H1's own predicted read-out |
 | the response model: what holding a qubit and the echo do to each candidate's tables | every predicted read-out, through `design_with` | |
 | shots, floor (5 bits), agreement window (3 standard errors), drift (0.01) | the minimum-cost plan: E1 and E2, cost 2 of 5 | |

@@ -21,8 +21,14 @@ fn real(value: f64) -> Complex<f64> {
 ///
 /// # Errors
 ///
-/// The channel's refusal of the Kraus operators.
+/// [`QuantumError::CalculationError`] for a contrast outside `[0, 1]`, NaN included, and the
+/// channel's refusal of the Kraus operators.
 pub fn mechanism(name: &str, contrast: f64) -> Result<Hypothesis<f64>, QuantumError> {
+    if !(0.0..=1.0).contains(&contrast) {
+        return Err(QuantumError::CalculationError(format!(
+            "a fringe contrast lies in [0, 1], got {contrast}"
+        )));
+    }
     let zero = real(0.0);
     let keep = real((0.5 * (1.0 + contrast)).sqrt());
     let flip = real((0.5 * (1.0 - contrast)).sqrt());

@@ -261,3 +261,65 @@ fn test_an_observable_the_plant_does_not_expose_and_a_model_refusal_propagate() 
     let e = experiment(CrosstalkSetting::Passive, 0);
     assert!(e.predict(&CrosstalkModel, &keep, &p, &[excited()]).is_err());
 }
+
+/// The crosstalk model with every instrument scaled by `self.0`.
+struct Scaled(f64);
+
+impl ResponseModel<f64, CrosstalkSetting> for Scaled {
+    fn respond(
+        &self,
+        candidate: &Hypothesis<f64>,
+        setting: &CrosstalkSetting,
+    ) -> Result<Response<f64>, QuantumError> {
+        match CrosstalkModel.respond(candidate, setting)? {
+            Response::Intervention {
+                factors,
+                instrument,
+            } => Ok(Response::Intervention {
+                factors,
+                instrument: instrument * Complex::new(self.0, 0.0),
+            }),
+            channel => Ok(channel),
+        }
+    }
+}
+
+#[test]
+fn test_a_structural_prediction_outside_the_unit_interval_is_refused() {
+    // Scaling the instrument scales the evaluation: the candidate's prediction is a probability
+    // exactly while the scaled value stays in [0, 1], and is refused as soon as it leaves it.
+    let hold = experiment(
+        CrosstalkSetting::Hold {
+            node: CROSSTALK_Q2,
+            read: CROSSTALK_Q1,
+        },
+        0,
+    );
+    let plant = QuantumPlant::from_ket(&ket(1.0, 0.0)).unwrap();
+    for h in crosstalk_candidates().unwrap() {
+        let base = hold
+            .predict::<_, 2>(&CrosstalkModel, &h, &plant, &[])
+            .unwrap();
+        assert!(base > 0.0 && base < 1.0, "{}", h.name());
+        for scale in [0.5, 1.0, 0.999 / base] {
+            let p = hold
+                .predict::<_, 2>(&Scaled(scale), &h, &plant, &[])
+                .unwrap();
+            assert!((p - scale * base).abs() < 1e-12, "{} at {scale}", h.name());
+        }
+        for scale in [1.001 / base, -1.0, f64::INFINITY] {
+            match hold
+                .predict::<_, 2>(&Scaled(scale), &h, &plant, &[])
+                .unwrap_err()
+                .0
+            {
+                QuantumErrorEnum::NormalizationError(msg) => assert!(
+                    msg.contains(&format!("'{}'", h.name())) && msg.contains("'e'"),
+                    "{msg}"
+                ),
+                QuantumErrorEnum::NonFiniteValue(_) if scale.is_infinite() => {}
+                other => panic!("{} at {scale}: {other:?}", h.name()),
+            }
+        }
+    }
+}

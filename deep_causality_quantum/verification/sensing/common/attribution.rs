@@ -54,13 +54,33 @@ pub struct Attribution {
 ///
 /// # Errors
 ///
-/// A measurement whose value does not read on the fringe, and the control stage's failures.
+/// A candidate named twice, a measurement without exactly one prediction per candidate, a
+/// measurement whose value does not read on the fringe, and the control stage's failures.
 pub fn attribute(
     candidates: &[&str],
     measurements: &[Measurement],
     sigmas: f64,
     floor_bits: f64,
 ) -> Result<Attribution, Box<dyn Error>> {
+    if let Some((i, name)) = candidates
+        .iter()
+        .enumerate()
+        .find(|(i, name)| candidates[..*i].contains(name))
+    {
+        return Err(format!("candidate {i}, '{name}', is named twice").into());
+    }
+    if let Some(m) = measurements
+        .iter()
+        .find(|m| m.predictions.len() != candidates.len())
+    {
+        return Err(format!(
+            "'{}' has {} predictions for {} candidates",
+            m.name,
+            m.predictions.len(),
+            candidates.len()
+        )
+        .into());
+    }
     let largest = measurements
         .iter()
         .flat_map(|m| {
@@ -129,7 +149,10 @@ pub fn describe(outcome: &Outcome) -> String {
         Either::Right(Ambiguity::Unseparated { .. }) => {
             "one candidate holds, unseparated from a rival at the floor".into()
         }
-        Either::Right(other) => format!("{other:?}"),
+        Either::Right(Ambiguity::NonCommuting { .. }) => {
+            "two candidates' verdicts do not commute: no joint verdict".into()
+        }
+        Either::Right(Ambiguity::Vacuous { .. }) => "one candidate: nothing to discriminate".into(),
     }
 }
 

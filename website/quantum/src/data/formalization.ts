@@ -3,7 +3,7 @@
  *
  * `theorems` is generated from the quantum section of `lean/THEOREM_MAP.md`, one
  * entry per row marked `proved`, in the map's order. Each witness is the Rust test
- * the map names. `deferred` lists the targets the same section and
+ * the map names. `openTarget` is the target the same section and
  * `deep_causality_quantum/LEAN_QUANTUM.md` state and do not prove. Both files ship
  * in the repository, so every claim here can be read without building anything.
  */
@@ -136,7 +136,7 @@ export const theorems: Theorem[] = [
   },
 ];
 
-export interface Deferred {
+export interface OpenTarget {
   id: string;
   /** What the target says, in words. */
   statement: string;
@@ -144,10 +144,9 @@ export interface Deferred {
   reason: string;
 }
 
-export const deferred: Deferred[] = [
-  {
-    id: 'quantum.unitary_factorization',
-    statement: 'Lorenz and Barrett’s Theorem 1: for unitary channels, the commuting factorization holds automatically.',
-    reason: 'Its proof rests on the commutant and direct-sum decomposition of finite-dimensional C*-algebras. The pinned Mathlib has Wedderburn–Artin and C*-algebra basics but not that decomposition.',
-  },
-];
+/** The one quantum target the theorem map states and does not prove. */
+export const openTarget: OpenTarget = {
+  id: 'quantum.unitary_factorization',
+  statement: 'Lorenz and Barrett’s Theorem 1: for unitary channels, the commuting factorization holds automatically.',
+  reason: 'Its proof rests on the commutant and direct-sum decomposition of finite-dimensional C*-algebras. The pinned Mathlib has Wedderburn–Artin and C*-algebra basics but not that decomposition.',
+};

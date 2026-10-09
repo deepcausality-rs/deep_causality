@@ -82,7 +82,8 @@ pub struct Instrument {
     pub contrast: FloatType,
     /// The excited fraction a dark cloud's detection signal reads.
     pub dark_background: FloatType,
-    /// The leak the leak causes posit.
+    /// The fraction of one cloud's fluorescence that reaches the other cloud's detection signal,
+    /// in the worlds of the leak causes.
     pub leak: FloatType,
     /// The centrifugal phase at the operating rotation rate, in rad.
     pub operating_rotation_phase: FloatType,
@@ -172,25 +173,16 @@ pub struct Consequence {
 }
 
 impl Consequence {
-    /// The consequence of `cause` before either reading, with no action.
-    pub fn of(cause: &Cause) -> Self {
+    /// The consequence of `cause`, whose world reads `reading` and reads `unbiased` without the
+    /// mechanism, with no action.
+    pub fn of(cause: &Cause, reading: FloatType, unbiased: FloatType) -> Self {
         Consequence {
             cause: cause.name,
             mechanism: cause.mechanism,
-            reading: FloatType::default(),
-            unbiased: FloatType::default(),
+            reading,
+            unbiased,
             action: "none: differential extraction removes the shared phase",
         }
-    }
-
-    /// The same, reading `reading`.
-    pub fn with_reading(self, reading: FloatType) -> Self {
-        Consequence { reading, ..self }
-    }
-
-    /// The same, reading `unbiased` without the mechanism.
-    pub fn with_unbiased_reading(self, unbiased: FloatType) -> Self {
-        Consequence { unbiased, ..self }
     }
 
     /// The same, with the action that removes the mechanism.

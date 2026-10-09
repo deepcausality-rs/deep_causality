@@ -11,7 +11,7 @@
 //! every instance below is written in.
 
 use deep_causality_quantum::{
-    CheckItem, CheckVerdict, DEFAULT_MAX_HYPOTHESES, Experiment, InstrumentTime,
+    CheckItem, CheckVerdict, CoverMode, DEFAULT_MAX_HYPOTHESES, Experiment, InstrumentTime,
     MAX_COMBINED_EXPERIMENTS, MinCostCover, QuantumError, QuantumErrorEnum, design,
     separation_bits,
 };
@@ -311,7 +311,7 @@ fn calculation(e: QuantumError) -> String {
 }
 
 #[test]
-fn test_combining_refuses_too_many_experiments_and_a_timed_objective() {
+fn test_combining_refuses_too_many_experiments() {
     let many: Vec<Experiment<f64>> = (0..=MAX_COMBINED_EXPERIMENTS)
         .map(|i| Experiment::new(format!("e{i}"), 1.0, 64, vec![0.1, 0.2]).unwrap())
         .collect();
@@ -319,11 +319,33 @@ fn test_combining_refuses_too_many_experiments_and_a_timed_objective() {
     assert!(msg.contains("17 exceed the cap of 16"), "{msg}");
     // At the cap it runs.
     assert!(design(2, &many[1..], MinCostCover::new(5.0).combining()).is_ok());
+}
+
+#[test]
+fn test_an_objective_has_exactly_one_mode_and_the_last_builder_sets_it() {
     let time = InstrumentTime::new(0.01, 100.0).unwrap();
-    let msg = calculation(
-        design(2, &halves(), MinCostCover::new(5.0).combining().timed(time)).unwrap_err(),
+    assert_eq!(MinCostCover::new(5.0).mode, CoverMode::Fixed);
+    assert_eq!(
+        MinCostCover::new(5.0).combining().mode,
+        CoverMode::Combining
     );
-    assert!(msg.contains("not both"), "{msg}");
+    assert_eq!(
+        MinCostCover::new(5.0).combining().timed(time).mode,
+        CoverMode::Timed(time)
+    );
+    assert_eq!(
+        MinCostCover::new(5.0).timed(time).combining().mode,
+        CoverMode::Combining
+    );
+    // Whichever mode the chain ends in is the one `design` solves.
+    let timed_last = design(2, &halves(), MinCostCover::new(5.0).combining().timed(time)).unwrap();
+    let timed = design(2, &halves(), MinCostCover::new(5.0).timed(time)).unwrap();
+    assert_eq!(timed_last, timed);
+    let combined_last =
+        design(2, &halves(), MinCostCover::new(5.0).timed(time).combining()).unwrap();
+    let combined = design(2, &halves(), MinCostCover::new(5.0).combining()).unwrap();
+    assert_eq!(combined_last, combined);
+    assert_ne!(timed, combined);
 }
 
 // ---------------------------------------------------------------------------
@@ -430,4 +452,28 @@ fn test_a_timed_plan_weighs_setup_against_integration() {
     };
     assert_eq!(plan.entries()[0].name, want);
     assert_eq!(plan.total_cost(), cost_weak.min(cost_strong));
+}
+
+#[test]
+fn test_a_timed_pair_one_shot_resolves_takes_one_shot() {
+    // Read-outs at 0 and 1 separate by infinitely many bits per shot, and a floor within the
+    // slack is reached by any pair: both take one shot, as the fixed plan at one shot covers them.
+    let time = InstrumentTime::new(0.01, 100.0).unwrap();
+    for (predictions, floor) in [
+        ([0.0, 1.0], 5.0),
+        ([1.0, 0.0], 5.0),
+        ([0.0, 1.0], 0.0),
+        ([0.5, 0.500_000_1], 0.0),
+        ([0.3, 0.3], 0.0),
+    ] {
+        let one_shot = Experiment::new("e", 2.0, 1, predictions.to_vec()).unwrap();
+        let fixed = design(2, std::slice::from_ref(&one_shot), MinCostCover::new(floor)).unwrap();
+        assert!(fixed.is_complete(), "{predictions:?} at {floor}");
+        let timed = design(2, &[one_shot], MinCostCover::new(floor).timed(time)).unwrap();
+        assert!(timed.is_complete(), "{predictions:?} at {floor}");
+        let entry = &timed.entries()[0];
+        assert_eq!(entry.shots, 1, "{predictions:?} at {floor}");
+        assert_eq!(entry.cost, 2.0 + 0.01);
+        assert_eq!(entry.resolves, vec![(0, 1)]);
+    }
 }

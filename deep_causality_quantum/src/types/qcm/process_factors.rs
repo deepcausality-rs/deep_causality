@@ -204,7 +204,9 @@ impl FactorSupports {
     }
 
     /// Validates that every factor's matrix dimension equals the product of its
-    /// declared support leg dimensions, and that each factor is square.
+    /// declared support leg dimensions, that each factor is square, and that every leg a
+    /// factor's support declares an output half for splits into that output: the output
+    /// dimension is positive and divides the leg's dimension.
     pub fn validate<R: RealField>(&self, factors: &ProcessFactors<R>) -> Result<(), QuantumError> {
         for node in factors.nodes() {
             let factor = factors.get(node).expect("node came from factors.nodes()");
@@ -241,6 +243,17 @@ impl FactorSupports {
                     "factor at node {} has dim {} but its support implies {}",
                     node, shape[0], expected
                 )));
+            }
+            for &leg in legs {
+                if let Some(&output) = self.leg_outputs.get(&leg) {
+                    let dim = self.leg_dim(leg);
+                    if output == 0 || !dim.is_multiple_of(output) {
+                        return Err(QuantumError::DimensionMismatch(format!(
+                            "leg {leg} of node {node} has dimension {dim}, which does not split \
+                             into an output half of dimension {output}"
+                        )));
+                    }
+                }
             }
         }
         Ok(())

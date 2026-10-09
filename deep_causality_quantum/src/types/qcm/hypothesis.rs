@@ -40,7 +40,7 @@ use crate::types::qcm::faithfulness::CausalStructure;
 use crate::types::qcm::markov_freeze::{CommutatorTolerance, quantum_markov_check_report_as};
 use crate::types::qcm::process_factors::{CjFactor, FactorSupports, ProcessFactors};
 use crate::types::qgates::operator_linalg::{
-    BoundaryWarrant, embed_on_legs, frobenius_norm, partial_trace,
+    BoundaryWarrant, embed_on_legs, frobenius_norm, identity_matrix, partial_trace,
     partial_trace_preservation_boundary, square_dim,
 };
 use alloc::collections::{BTreeMap, BTreeSet};
@@ -367,11 +367,18 @@ where
     ///
     /// # Errors
     ///
-    /// [`QuantumError::CalculationError`] on a mechanism candidate;
+    /// [`QuantumError::CalculationError`] on a mechanism candidate, and on an empty factor store,
+    /// which is no process to check;
     /// [`QuantumError::DimensionMismatch`] when a node's support lacks the node's own leg, so the
     /// flat convention gives it no system to trace; and the partial trace's shape errors.
     pub fn check_normalization(&self) -> Result<CheckReport<R>, QuantumError> {
         let (factors, supports) = self.structural_parts()?;
+        if factors.is_empty() {
+            return Err(QuantumError::CalculationError(format!(
+                "hypothesis '{}' has no factors to check for normalization",
+                self.name
+            )));
+        }
         let mut checks = Vec::new();
         for node in factors.nodes() {
             let factor = factors.get(node).expect("node from nodes()");
@@ -396,24 +403,12 @@ where
                     supports.leg_output_dim(node)
                 ))
             })?;
-            let entries = traced.as_slice();
-            let mut squared = R::zero();
-            for i in 0..d {
-                for j in 0..d {
-                    let target = if i == j { output } else { R::zero() };
-                    let z = entries[i * d + j];
-                    let (re, im) = (z.re - target, z.im);
-                    squared = squared + re * re + im * im;
-                }
-            }
+            let target = identity_matrix::<R>(d) * Complex::new(output, R::zero());
+            let residual = frobenius_norm(&(traced - target));
             let threshold = Tolerance::<R>::state()
                 .threshold(d, frobenius_norm(factor))
                 .expect("the state member answers the single-operator form");
-            checks.push(Check::new(
-                CheckItem::Index(node),
-                squared.sqrt(),
-                threshold,
-            ));
+            checks.push(Check::new(CheckItem::Index(node), residual, threshold));
         }
         Ok(CheckReport::from_checks(checks))
     }
@@ -659,7 +654,8 @@ where
     /// The composite of two structural candidates over disjoint node keys.
     ///
     /// The factor stores and support registries are unioned; a leg both registries name must
-    /// carry one dimension. A certificate is inherited only when both parts are certified and
+    /// carry one dimension and one output half, and each leg keeps the output half its part
+    /// declared. A certificate is inherited only when both parts are certified and
     /// their leg sets are disjoint. Each part's certificate covers the pairs inside that part, and
     /// on disjoint legs every cross pair commutes by construction, so the parts' reports folded
     /// and marked `Inherited` certify the composite. Parts that share a leg leave the cross pair
@@ -670,7 +666,7 @@ where
     ///
     /// [`QuantumError::CalculationError`] if either is a mechanism candidate or the node keys
     /// overlap; [`QuantumError::DimensionMismatch`] if the two registries register a leg at
-    /// different dimensions, or the union fails validation.
+    /// different dimensions or output halves, or the union fails validation.
     pub fn compose(&self, other: &Self) -> Result<Self, QuantumError> {
         let (fa, sa) = self.structural_parts()?;
         let (fb, sb) = other.structural_parts()?;
@@ -687,14 +683,25 @@ where
                 let legs = registry.support(node).expect("validated at construction");
                 for &leg in legs {
                     let dim = registry.leg_dim(leg);
-                    if let Some(known) = supports.declared_leg_dim(leg)
-                        && known != dim
-                    {
-                        return Err(QuantumError::DimensionMismatch(format!(
-                            "cannot compose: leg {leg} has dimension {known} in one part and {dim} in the other"
-                        )));
+                    let output = registry.leg_output_dim(leg);
+                    if let Some(known) = supports.declared_leg_dim(leg) {
+                        if known != dim {
+                            return Err(QuantumError::DimensionMismatch(format!(
+                                "cannot compose: leg {leg} has dimension {known} in one part and {dim} in the other"
+                            )));
+                        }
+                        let known_output = supports.leg_output_dim(leg);
+                        if known_output != output {
+                            return Err(QuantumError::DimensionMismatch(format!(
+                                "cannot compose: leg {leg} has an output half of dimension \
+                                 {known_output} in one part and {output} in the other"
+                            )));
+                        }
                     }
                     supports.set_leg_dim(leg, dim);
+                    if output != 1 {
+                        supports.set_leg_output_dim(leg, output);
+                    }
                 }
                 supports.declare(node, legs);
             }

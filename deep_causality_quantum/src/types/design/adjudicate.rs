@@ -4,7 +4,7 @@
  */
 
 use crate::QuantumError;
-use crate::types::decision::{Check, CheckItem, CheckReport, Tolerance};
+use crate::types::decision::{Check, CheckItem, CheckReport, CheckVerdict, Tolerance};
 use crate::types::qpu::shot_estimate::ShotEstimate;
 use crate::types::verdict::projection::Projection;
 use alloc::format;
@@ -211,11 +211,7 @@ pub fn adjudicate<R, const D: usize>(
 where
     R: RealField + FromPrimitive + Default + core::fmt::Debug,
 {
-    if !floor_bits.is_finite() || floor_bits < R::zero() {
-        return Err(QuantumError::CalculationError(format!(
-            "adjudicate needs a finite, non-negative floor in bits, got {floor_bits:?}"
-        )));
-    }
+    check_floor(floor_bits)?;
     if worlds.is_empty() {
         return Err(QuantumError::CalculationError(
             "adjudicate needs at least one world".into(),
@@ -279,11 +275,11 @@ where
         fold = Some(ProjectionFold { meet, join });
     }
 
-    let holds = |w: &World<R, D>| match &w.verdict {
+    let world_holds = |w: &World<R, D>| match &w.verdict {
         WorldVerdict::Projection(p) => p.rank() > 0,
-        WorldVerdict::ReadOut(r) => r.accepted() && !r.is_vacuous(),
+        WorldVerdict::ReadOut(r) => holds(r),
     };
-    let survivors: Vec<usize> = (0..n).filter(|&i| holds(&worlds[i])).collect();
+    let survivors: Vec<usize> = (0..n).filter(|&i| world_holds(&worlds[i])).collect();
     let names: Vec<&str> = worlds.iter().map(|w| w.name.as_str()).collect();
     let outcome = survivor_of(&names, &survivors, &report, floor_bits);
 
@@ -316,11 +312,7 @@ pub fn adjudicate_campaign<R, const D: usize>(
 where
     R: RealField + FromPrimitive + Default + core::fmt::Debug,
 {
-    if !floor_bits.is_finite() || floor_bits < R::zero() {
-        return Err(QuantumError::CalculationError(format!(
-            "adjudicate needs a finite, non-negative floor in bits, got {floor_bits:?}"
-        )));
-    }
+    check_floor(floor_bits)?;
     let Some(first) = worlds.first() else {
         return Err(QuantumError::CalculationError(
             "adjudicate needs at least one world".into(),
@@ -350,12 +342,7 @@ where
             })
     });
     let survivors: Vec<usize> = (0..n)
-        .filter(|&i| {
-            worlds[i]
-                .readings
-                .iter()
-                .all(|(verdict, _)| verdict.accepted() && !verdict.is_vacuous())
-        })
+        .filter(|&i| worlds[i].readings.iter().all(|(verdict, _)| holds(verdict)))
         .collect();
     let names: Vec<&str> = worlds.iter().map(|w| w.name.as_str()).collect();
     let outcome = survivor_of(&names, &survivors, &report, floor_bits);
@@ -366,6 +353,21 @@ where
         fold: None,
         outcome,
     })
+}
+
+/// The floor both folds separate by: a finite, non-negative number of bits.
+fn check_floor<R: RealField + core::fmt::Debug>(floor_bits: R) -> Result<(), QuantumError> {
+    if !floor_bits.is_finite() || floor_bits < R::zero() {
+        return Err(QuantumError::CalculationError(format!(
+            "adjudicate needs a finite, non-negative floor in bits, got {floor_bits:?}"
+        )));
+    }
+    Ok(())
+}
+
+/// Whether a read-out's report holds: it accepted, and it examined something.
+fn holds<R: RealField>(report: &CheckReport<R>) -> bool {
+    report.verdict() == CheckVerdict::Accepted
 }
 
 /// One record per pair of `n` worlds, its separation in bits against the floor, compared with the

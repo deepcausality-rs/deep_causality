@@ -18,8 +18,8 @@ use deep_causality_quantum::utils_tests::{
 };
 use deep_causality_quantum::{
     Ambiguity, Campaign, CampaignRules, CampaignStop, CommutatorTolerance, ConfiguredExperiment,
-    Control, EvidenceSource, FactorSupports, Hypothesis, MinCostCover, ProcessFactors, QclBuilder,
-    QuantumErrorEnum, design,
+    Control, EvidenceSource, FactorSupports, Hypothesis, InstrumentTime, MinCostCover,
+    ProcessFactors, QclBuilder, QuantumErrorEnum, design, separation_bits,
 };
 use deep_causality_tensor::CausalTensor;
 
@@ -63,12 +63,21 @@ fn rules() -> CampaignRules<f64> {
 
 /// The campaign over `exps` from `truth`, stepped to its stop.
 fn run(truth: &Hypothesis<f64>, exps: Vec<Crosstalk>) -> Campaign<f64, Count, 4> {
+    run_under(truth, exps, &rules())
+}
+
+/// The campaign over `exps` from `truth` under `rules`, stepped to its stop.
+fn run_under(
+    truth: &Hypothesis<f64>,
+    exps: Vec<Crosstalk>,
+    rules: &CampaignRules<f64>,
+) -> Campaign<f64, Count, 4> {
     let source = EvidenceSource::Simulated(truth.clone());
     let steps = exps.len() + 1;
     CausalFlow::value(Campaign::new(forked()))
         .context(exps)
         .iterate_until(Campaign::is_stopped, steps, |f| {
-            Campaign::step(f, &CrosstalkModel, &source, &rules())
+            Campaign::step(f, &CrosstalkModel, &source, rules)
         })
         .finish()
         .unwrap()
@@ -295,4 +304,139 @@ fn test_a_campaign_survivor_matches_the_control_report() {
         Either::Left(s) => assert_eq!(s.name, name),
         other => panic!("expected a survivor, got {other:?}"),
     }
+}
+
+#[test]
+fn test_a_campaign_spends_at_most_the_static_plan_whatever_its_sigmas() {
+    // At 100 standard errors every candidate agrees with every observation, so pairs an
+    // experiment already separated stay open. The static plan, E1 and E2 at cost 2, bounds the
+    // spend all the same: a pair the experiments run separated needs no further experiment.
+    let candidates = crosstalk_candidates().unwrap();
+    for sigmas in [0.5, 3.0, 100.0] {
+        let rules = CampaignRules::new(MinCostCover::new(5.0), sigmas, 0.01).unwrap();
+        for truth in &candidates {
+            let c = run_under(truth, experiments(), &rules);
+            assert!(
+                c.spent() <= 2.0,
+                "{} at {sigmas}: spent {} on {:?}",
+                truth.name(),
+                c.spent(),
+                c.experiments_run()
+            );
+        }
+    }
+    // The same bound in every mode: sized in time, and combining.
+    let plant = crosstalk_plant().unwrap().0;
+    let probes: Vec<_> = experiments()
+        .iter()
+        .map(|e| {
+            let p: Vec<f64> = candidates
+                .iter()
+                .map(|h| e.predict::<_, 4>(&CrosstalkModel, h, &plant, &[]).unwrap())
+                .collect();
+            deep_causality_quantum::Experiment::new(e.name(), e.cost(), e.shots(), p).unwrap()
+        })
+        .collect();
+    let time = InstrumentTime::new(0.001, 100.0).unwrap();
+    for objective in [
+        MinCostCover::new(5.0).timed(time),
+        MinCostCover::new(5.0).combining(),
+    ] {
+        let static_cost = design(3, &probes, objective).unwrap().total_cost();
+        for sigmas in [3.0, 100.0] {
+            let rules = CampaignRules::new(objective, sigmas, 0.01).unwrap();
+            for truth in &candidates {
+                let c = run_under(truth, experiments(), &rules);
+                assert!(
+                    c.spent() <= static_cost + 1e-12,
+                    "{:?}, {} at {sigmas}: spent {} against {static_cost} on {:?}",
+                    objective.mode,
+                    truth.name(),
+                    c.spent(),
+                    c.experiments_run()
+                );
+            }
+        }
+    }
+    let rules = CampaignRules::new(MinCostCover::new(5.0), 100.0, 0.01).unwrap();
+    let c = run_under(&candidates[0], experiments(), &rules);
+    assert_eq!(c.experiments_run(), &[1, 2]);
+    match c.stop() {
+        Some(CampaignStop::Unresolvable(Ambiguity::SeveralSurvive { survivors })) => {
+            assert_eq!(survivors.len(), 3)
+        }
+        other => panic!("expected every candidate to survive unresolved, got {other:?}"),
+    }
+}
+
+#[test]
+fn test_a_combining_campaign_counts_the_bits_already_read() {
+    // Two runs of E1 at 41 shots each separate H1 from H2 and H3 by about 4 bits: one short of
+    // the floor of 5, both together past it. After the first, the second still covers the pair.
+    let shots = 41;
+    let half = separation_bits(0.40, 0.10, shots);
+    assert!(half < 5.0 && 2.0 * half > 5.0, "{half}");
+    let hold = CrosstalkSetting::Hold {
+        node: CROSSTALK_Q1,
+        read: CROSSTALK_Q2,
+    };
+    let twice = vec![
+        ConfiguredExperiment::new("E1 first", 1.0, shots, hold, 0).unwrap(),
+        ConfiguredExperiment::new("E1 second", 1.0, shots, hold, 0).unwrap(),
+    ];
+    let combining = CampaignRules::new(MinCostCover::new(5.0).combining(), 3.0, 0.01).unwrap();
+    let [h1, ..] = crosstalk_candidates().unwrap();
+    let c = run_under(&h1, twice.clone(), &combining);
+    assert_eq!(c.experiments_run(), &[0, 1]);
+    match c.stop() {
+        Some(CampaignStop::Survivor(s)) => {
+            assert_eq!(s.name, h1.name());
+            assert!((s.separation_bits - 2.0 * half).abs() < 1e-9);
+        }
+        other => panic!("expected H1 to survive, got {other:?}"),
+    }
+    assert_eq!(c.spent(), 2.0);
+    // Covering a pair with one experiment alone, neither run reaches the floor, and the campaign
+    // stops before running anything.
+    let c = run(&h1, twice);
+    assert!(c.experiments_run().is_empty());
+}
+
+/// The crosstalk experiments with E2's cost or shots changed.
+fn e2_reconfigured(cost: f64, shots: u64) -> Vec<Crosstalk> {
+    let mut exps = experiments();
+    exps[2] = ConfiguredExperiment::new(
+        "E2 hold Q2",
+        cost,
+        shots,
+        CrosstalkSetting::Hold {
+            node: CROSSTALK_Q2,
+            read: CROSSTALK_Q1,
+        },
+        0,
+    )
+    .unwrap();
+    exps
+}
+
+#[test]
+fn test_a_change_to_the_planned_experiments_cost_or_shots_replans() {
+    // Under H₂ the campaign plans E2 after E1. Its predictions do not move, but its cost does:
+    // at 5 the echo, at 2, is the cheaper separation of H₂ from H₃.
+    let [_, h2, _] = crosstalk_candidates().unwrap();
+    let c = with_context_change(&h2, e2_reconfigured(5.0, 1024))
+        .finish()
+        .unwrap();
+    assert_eq!(c.replans(), 1);
+    assert_eq!(c.experiments_run(), &[1, 3]);
+    assert_eq!(c.spent(), 3.0);
+    assert_eq!(survivor(&c), "H2 Q2->Q1");
+    // Its shots change: the re-plan keeps E2 and runs it at the shots configured now.
+    let c = with_context_change(&h2, e2_reconfigured(1.0, 512))
+        .finish()
+        .unwrap();
+    assert_eq!(c.replans(), 1);
+    assert_eq!(c.experiments_run(), &[1, 2]);
+    let report = c.finalize().unwrap();
+    assert_eq!(report.observations[1].shots(), 512);
 }

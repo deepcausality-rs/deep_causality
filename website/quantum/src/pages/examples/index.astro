@@ -5,8 +5,6 @@ import { EXAMPLES_URL } from '../../consts';
 import { numberWord } from '../../data/evidence';
 
 const title = 'Examples | DeepCausality Quantum';
-const description =
-  'Sixteen runnable examples, grouped by the question each answers. Eleven use this crate; five are quantum in subject and build on sibling crates.';
 
 const all = (await getCollection('examples')).sort((a, b) => a.data.order - b.data.order);
 const slug = (id: string) => id.replace(/^en\//, '');
@@ -23,6 +21,7 @@ const groups = [
 const total = all.length;
 const usesCount = all.filter((e) => e.data.usesCrate).length;
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+const description = `${cap(numberWord(total))} runnable examples, grouped by the question each answers. ${cap(numberWord(usesCount))} use this crate; ${numberWord(total - usesCount)} are quantum in subject and build on sibling crates.`;
 ---
 <PageShell title={title} description={description} path="/examples/">
   <header class="doc-head">

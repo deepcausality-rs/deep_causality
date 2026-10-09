@@ -111,3 +111,26 @@ fn test_a_value_the_fringe_cannot_read_is_refused() {
         ));
     }
 }
+
+#[test]
+fn test_draws_the_scalar_cannot_hold_are_refused() {
+    // slope · σ of 1e-400 underflows to zero, so p(1−p) / (slope σ)² is infinite; of 1e200 its
+    // square overflows, so the draws are zero. Neither is a count of draws.
+    for (slope, sigma) in [(1.0e-200, 1.0e-200), (1.0e100, 1.0e100), (1.0e-170, 1.0)] {
+        let f = Fringe::new(0.5, slope).unwrap();
+        match f.effective_draws(0.0, sigma).unwrap_err().0 {
+            QuantumErrorEnum::CalculationError(msg) => {
+                assert!(msg.contains("effective draws"), "{msg}")
+            }
+            other => panic!("expected CalculationError, got {other:?}"),
+        }
+    }
+    // A slope of 1e-100 is no obstacle in itself: at σ = 1e95 the spread is 1e-5 and the
+    // 2.5e9 draws are finite, positive and read out.
+    let d = Fringe::<f64>::new(0.5, 1.0e-100)
+        .unwrap()
+        .effective_draws(0.0, 1.0e95)
+        .unwrap();
+    assert!(d.draws().is_finite() && d.draws() > 0.0);
+    assert!(d.read_out().is_ok());
+}

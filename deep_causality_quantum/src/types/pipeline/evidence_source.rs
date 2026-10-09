@@ -4,7 +4,7 @@
  */
 
 use crate::QuantumError;
-use crate::types::pipeline::effective_draws::EffectiveDraws;
+use crate::types::instrument::effective_draws::EffectiveDraws;
 use crate::types::qcm::hypothesis::Hypothesis;
 use crate::types::qpu::histogram::CountHistogram;
 use crate::types::qpu::shot_estimate::ShotEstimate;

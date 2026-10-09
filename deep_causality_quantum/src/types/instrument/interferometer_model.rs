@@ -5,8 +5,8 @@
 
 use crate::QuantumError;
 use crate::types::design::InstrumentTime;
+use crate::types::instrument::effective_draws::Fringe;
 use crate::types::instrument::record_fields::{entries, field, rejected};
-use crate::types::pipeline::effective_draws::Fringe;
 use alloc::format;
 use alloc::string::ToString;
 use alloc::vec;
@@ -43,7 +43,9 @@ impl<R: RealField + core::fmt::Debug> InterferometerModel<R> {
     /// [`QuantumError::NonFiniteValue`] naming the first parameter that is not finite;
     /// [`QuantumError::CalculationError`] naming the parameter when `k_eff`, `T`, `S`, the cycle
     /// time or the white-noise range is not positive, the contrast is outside `(0, 1]`, the setup
-    /// time is negative, or the cycle is shorter than `2T`.
+    /// time is negative, or the cycle is shorter than `2T`; and when the fringe slope
+    /// `C · k_eff · T² / 2` of finite parameters overflows or underflows to a slope that is not
+    /// finite and positive, on which [`fringe`](Self::fringe) would read nothing.
     pub fn new(
         k_eff: R,
         interrogation_time: R,
@@ -94,6 +96,13 @@ impl<R: RealField + core::fmt::Debug> InterferometerModel<R> {
                 "interferometer model: a cycle of {cycle_time:?} s is shorter than the 2T = \
                  {:?} s the three pulses span",
                 interrogation_time + interrogation_time
+            )));
+        }
+        let slope = fringe_slope(contrast, k_eff, interrogation_time);
+        if !slope.is_finite() || slope <= R::zero() {
+            return Err(QuantumError::CalculationError(format!(
+                "interferometer model: the fringe slope C · k_eff · T² / 2 is {slope:?}, not a \
+                 finite positive number"
             )));
         }
         Ok(Self {
@@ -160,14 +169,20 @@ impl<R: RealField + core::fmt::Debug> InterferometerModel<R> {
 
     /// The fringe at mid-fringe, where the read-out `½(1 − C cos Δφ)` with `Δφ = k_eff g T²`
     /// moves with acceleration at its steepest: the operating point ½ and the slope
-    /// `C · k_eff · T² / 2` per m/s².
+    /// `C · k_eff · T² / 2` per m/s², which [`new`](Self::new) checked is finite and positive.
     pub fn fringe(&self) -> Fringe<R> {
         let two = R::one() + R::one();
         Fringe::at(
             R::one() / two,
-            self.contrast * self.k_eff * self.interrogation_time * self.interrogation_time / two,
+            fringe_slope(self.contrast, self.k_eff, self.interrogation_time),
         )
     }
+}
+
+/// `C · k_eff · T² / 2`, the mid-fringe slope in read-out probability per m/s².
+fn fringe_slope<R: RealField>(contrast: R, k_eff: R, interrogation_time: R) -> R {
+    let two = R::one() + R::one();
+    contrast * k_eff * interrogation_time * interrogation_time / two
 }
 
 /// A `Fields` record with one entry per parameter, under the parameter's name. Reading one back

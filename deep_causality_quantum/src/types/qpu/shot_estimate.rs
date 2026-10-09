@@ -19,7 +19,7 @@
 //! the row is corrected here rather than worked around.
 
 use crate::QuantumError;
-use crate::types::decision::{Check, CheckItem, CheckReport, Tolerance};
+use crate::types::decision::{Check, CheckItem, CheckReport};
 use crate::types::qpu::histogram::ShotHistogram;
 use alloc::format;
 use alloc::vec;
@@ -217,10 +217,12 @@ where
 {
     /// Whether the estimate reaches `spec` from below, as a margin over shots.
     ///
-    /// The measured quantity is the shortfall `spec − estimate`, the threshold is the shot-noise
-    /// width from [`Tolerance::shot_noise`], and the examined count is the shots. A shortfall
-    /// within one standard error accepts; a negative shortfall reads as a negative margin, the
-    /// distance above the spec in units of the noise.
+    /// The measured quantity is the shortfall `spec − estimate`, the threshold is the estimate's
+    /// own [`standard_error`](Self::standard_error), and the examined count is the shots. A
+    /// shortfall within one standard error accepts; a negative shortfall reads as a negative
+    /// margin, the distance above the spec in units of the noise. Over whole shots the standard
+    /// error is the shot-noise width [`Tolerance::shot_noise`](crate::Tolerance::shot_noise) gives at the shots; over effective
+    /// draws it is the width at the draws as given, not at the rounded shot count.
     pub fn at_least(&self, spec: R) -> CheckReport<R> {
         self.against(spec - self.estimate)
     }
@@ -231,10 +233,10 @@ where
     }
 
     fn against(&self, excess: R) -> CheckReport<R> {
-        let width = Tolerance::<R>::shot_noise()
-            .shot_noise_width(self.estimate, self.shots)
-            .expect("the shot-noise member answers the read-out form");
         let examined = usize::try_from(self.shots).unwrap_or(usize::MAX);
-        CheckReport::new(vec![Check::new(CheckItem::Whole, excess, width)], examined)
+        CheckReport::new(
+            vec![Check::new(CheckItem::Whole, excess, self.standard_error)],
+            examined,
+        )
     }
 }

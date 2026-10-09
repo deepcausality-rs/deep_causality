@@ -42,7 +42,7 @@ use crate::model_config::{
     baseline_draws, candidate_name, candidates, experiments, interferometer, passive, physics,
     scenarios,
 };
-use crate::model_types::{Cause, Physics, Scenario, Tide, Verdict, WorldRun};
+use crate::model_types::{Cause, Physics, Refusal, Scenario, Tide, Verdict, WorldRun};
 use crate::utils_print::{print_gates, print_header, print_run};
 
 /// The working scalar. Switch it to `f32`, `f64` or `deep_causality_num::BFloat16`; the
@@ -56,7 +56,7 @@ pub type NumberType = u64;
 pub type C = Complex<FloatType>;
 
 fn main() -> Result<(), Box<dyn Error>> {
-    let physics = physics();
+    let physics = physics()?;
     let interferometer = interferometer()?;
     let time = interferometer.instrument_time()?;
     let rules = CampaignRules::new(
@@ -127,21 +127,19 @@ fn run(
             AGREEMENT_SIGMAS,
         )
     };
-    let refused: Vec<(String, FloatType, FloatType)> = baseline()
+    let refused: Vec<Refusal> = baseline()
         .finalize()?
         .refused
         .iter()
-        .map(|r| {
-            (
-                r.name().to_string(),
-                r.prediction(),
-                r.observed().estimate(),
-            )
+        .map(|r| Refusal {
+            name: r.name().to_string(),
+            predicted: r.prediction(),
+            observed: r.observed().estimate(),
         })
         .collect();
     let live: Vec<_> = hypotheses
         .iter()
-        .filter(|h| !refused.iter().any(|(name, ..)| name == h.name()))
+        .filter(|h| !refused.iter().any(|r| r.name == h.name()))
         .cloned()
         .collect();
     let mut run = WorldRun {
@@ -187,7 +185,7 @@ fn run(
         .filter(|&(i, _)| {
             plan.entries().iter().all(|e| {
                 let p = probes[e.experiment].predictions();
-                p[i] == shared(p)
+                shared(p) == Some(p[i])
             })
         })
         .map(|(_, h)| h.name().to_string())
@@ -222,15 +220,17 @@ fn run(
     Ok(run)
 }
 
-/// The prediction most candidates share in one experiment: what it predicts for every candidate
-/// it does not move. A candidate whose prediction is this in every planned experiment is never
-/// singled out, so the plan identifies it by elimination.
-fn shared(predictions: &[FloatType]) -> FloatType {
-    predictions
-        .iter()
-        .copied()
-        .max_by_key(|p| predictions.iter().filter(|q| *q == p).count())
-        .unwrap_or_else(FloatType::zero)
+/// The prediction most candidates share in one experiment, when one prediction is shared by more
+/// candidates than any other: what it predicts for every candidate it does not move. A candidate
+/// whose prediction is this in every planned experiment is never singled out, so the plan
+/// identifies it by elimination. With no such prediction, a tie or no predictions, it is `None`
+/// and the experiment identifies no candidate by elimination.
+fn shared(predictions: &[FloatType]) -> Option<FloatType> {
+    let count = |p: &FloatType| predictions.iter().filter(|q| *q == p).count();
+    let most = predictions.iter().map(count).max()?;
+    let mut modes = predictions.iter().filter(|p| count(p) == most);
+    let mode = *modes.next()?;
+    modes.all(|p| *p == mode).then_some(mode)
 }
 
 /// `duration` in whole seconds, rounded up.
