@@ -55,7 +55,7 @@ QUOTED = re.compile(r'"([^"]+)"')
 
 
 def repo_root():
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 
 def project_namespace(root):

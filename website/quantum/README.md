@@ -65,41 +65,50 @@ example under `examples/quantum_examples/`, or, for what the library leaves out,
 the out-of-scope list of the archived `add-qcl` proposal. That constraint is
 absolute and makes the site citable.
 
-**Three questions carry the site.** The crate decides three things, and the
-landing page names them in the headline and shows one real verdict for each in
-the hero: which causal structure explains correlated qubit errors
-(`qcl_crosstalk`), whether an error-correcting code is sound
+**Four questions carry the site.** The crate decides four things, and the
+landing page names them in the hero's sub-line and shows one real verdict for
+each in the hero: which causal structure explains correlated qubit errors
+(`qcl_crosstalk`), which systematic explains a sensor's offset
+(`qcl_gravimeter_systematics`), whether an error-correcting code is sound
 (`qcl_geometric_qec`), and what stacking codes costs (`qcl_code_switching`,
-`qcl_concatenated_code`, `qcl_distillation_round`). A fourth section, "What a
-verdict carries", states what all three share: the examined count, the margin,
-the exact or numeric path, and refusal by name. The source for every statement
-about the crate is `openspec/notes/quantum-site/quantum-essence.md`.
+`qcl_concatenated_code`, `qcl_distillation_round`). The section "What a verdict
+carries" states what all four share: the examined count, the margin, the exact
+or numeric path, and refusal by name. The source for every statement about the
+crate is `openspec/notes/quantum-site/quantum-essence.md`; for the sensing
+section, the two sensing examples, the verifications under
+`deep_causality_quantum/verification/sensing/` and their README.
+
+**The sensing runs are simulated, and the pages say so.** The instrument values
+come from the papers each example cites; the setup times, the tide, the leak and
+the dark background are placeholders that `constants.rs` marks; the plans,
+predictions, draw counts and biases are computed; every observation is drawn
+from the cause the run names. `/sensing/`, the example pages and
+`/boundaries/#sensing` state each of these. The verifications read
+published values, digitised figures and regenerated data, and `/sensing/` states
+every disagreement a verification finds with its paper, with the check that shows it.
 
 **The reader** is a quantum practitioner with basic familiarity who has never
 seen this library. After ten seconds the reader should know what the library
 does, what it adds, and why that is useful. Structure, order and emphasis serve
 a reader who arrives cold from a link.
 
-**The crosstalk run is simulated, and the page says so.** The qubit factors, the
-costs and the read-out each candidate predicts for each experiment are typed
-into the example's `constants.rs` and `model.rs`; the observation is drawn from
-the Born sampler at H1's prediction; the cost unit is arbitrary; and the run
-observes E1 only. The plan table, the decision figure and `/boundaries/` state
-each of these. The example prints "tightest pair separates at 164.8 bits", which
-is the best separation any offered experiment reaches; under the chosen plan the
-tightest pair separates at 99.5 bits. No figure on the site describes a device.
+**The crosstalk run is simulated, and the page says so.** The candidates'
+conditional tables, the costs and each candidate's response to each experiment
+are typed into the example's `constants.rs` and `model.rs`; the library computes
+every predicted read-out from them; the observation is drawn from the Born
+sampler at H1's prediction; the cost unit is arbitrary; and the campaign stops
+after E1, because H1 separates. The plan table, the decision figure and
+`/boundaries/` state each of these. No figure on the site describes a device.
 
 **No roadmap, and no future work.** The site describes the crate as it is today.
 When something is not built, the page says what is not built and stops there.
-`/proof/` lists seven targets that carry tests and no LEAN proof; the list states
-the present and sets no schedule.
+`/proof/` names the one open target and why it is open; it sets no schedule.
 
-**A committed file is not a claim.** One of the seven papers under `papers/`
-(Hsin, Kobayashi and Zhu, arXiv:2411.15848) is cited from no module. `/proof/`
-lists it in its own section, so the presence of a PDF is never read as an
-implementation.
+**Only cited papers are listed.** `/proof/` lists the works the code cites, each
+with what the crate takes from it. `papers/` holds no paper that neither the code
+nor the site cites.
 
-**Coverage is stated, not implied.** Five of the fourteen examples in
+**Coverage is stated, not implied.** Five of the sixteen examples in
 `quantum_examples` are quantum in subject and do not import this crate.
 `/examples/` groups the list by the question each answers, marks that split on
 every row, and each detail page names the crates its example uses.
@@ -108,19 +117,20 @@ Numbers on the site come from a command anyone can re-run:
 
 | Figure | Source |
 | --- | --- |
-| 773 tests passing (772 tests plus 1 doc test) | `cargo test -p deep_causality_quantum --all-features` |
 | Version 0.4.2, released 2026-09-29 | `deep_causality_quantum/CHANGELOG.md` and `Cargo.toml` |
-| 14 proved theorems, 7 deferred targets | the quantum section of `lean/THEOREM_MAP.md` |
-| The crosstalk run: plan cost 2 against 200, 100.1 bits, 164.8 bits (best offered, tomography), 99.5 bits under the plan | `cargo run --release -p quantum_examples --example qcl_crosstalk`; 99.5 is n·Bhattacharyya distance of 0.40 and 0.10 over 1024 shots |
+| 19 proved theorems, 1 open target | the quantum section of `lean/THEOREM_MAP.md` |
+| The crosstalk run: plan cost 2 of the 5 all four experiments cost, 99.5 bits (survivor and tightest pair), the campaign stops after one experiment | `cargo run --release -p quantum_examples --example qcl_crosstalk`; 99.5 is n·Bhattacharyya distance of 0.40 and 0.10 over 1024 shots |
 | The toric code run: four checks accepted, bound 3 rejects with margin 1.333 | `cargo run --release -p quantum_examples --example qcl_geometric_qec` |
 | The stacking runs: gadget residual 0.4619 and bound 3.695; distillation 0.1639, 0.1638 and 0.3277 | `qcl_code_switching`, `qcl_distillation_round`, same command form |
-| 2 to 3 ms per run | release binary, process start included, Apple M3 Max: median 3.0 ms over 20 runs, and 2.4 ms over 30 runs on a second measurement |
+| About 4 ms per run | release binary, process start included, Apple M3 Max: median 4.0 ms over 30 runs, and 3.8 ms over 30 runs on a second measurement |
 | MSRV 1.98.0 | `rust-version` in the root `Cargo.toml` |
+| The gravimeter run: plan 4,956 s, campaigns of 166 s to 4,953 s, tilt refused at 76.43 against 82.54 µGal, 72.41 µGal with no tide, Coriolis named after 1,447 s with clipping off the list | `cargo run --release -p quantum_examples --example qcl_gravimeter_systematics` |
+| The gradiometer run: plan 721.8 s, 340 and 60,265 draws, campaigns of 60, 120 and 721.9 s, biases of −355.7 E (quoted as −356) and +5.5 E | `cargo run --release -p quantum_examples --example qcl_gradiometer_crosstalk` |
+| The verification: 53 checks over 8 verifications, and each finding quoted on `/sensing/` | `cargo run --release -p deep_causality_quantum --features qcm --example verification_v1_wavefront`; the other seven run the same way under the names `deep_causality_quantum/verification/sensing/README.md` lists |
+| The field's state: 45 nmi, about 6 h, 2.2 against 14 nmi; tilt below 3.3°; the wavefront's 4.0 of 5.2 µGal | Everitt et al. arXiv:2608.25563 (which prints the endpoint as both 4.0 and 4.1 km, so the site quotes nautical miles); Lellouch and Holynski arXiv:2504.11119; Louchet-Chauvet et al. New J. Phys. 13 065025, Table 1 |
+| 19 cited works: 10 from `src/`, 9 by the sensing examples and verifications; 17 of them have a PDF under `papers/` | `deep_causality_quantum/papers/`, and grep over `src/`, `examples/quantum_examples/` and `verification/` |
 
-The test count is the figure the suite reports. A grep for `#[test]` finds a
-different number, because it counts attributes and not the tests the harness runs.
-
-All fourteen examples were run twice on one machine and printed identical
+All sixteen examples were run twice on one machine and printed identical
 output, which is what the pages say. A wall-clock figure names the machine
 (`MACHINE` in `src/consts.ts`).
 
@@ -131,8 +141,9 @@ Each fact lives in exactly one place, split by shape:
 | The crosstalk run: read-outs, costs, observation, plan | `src/data/crosstalk.ts` | The hero figure, the plan table and the prose read it, so they cannot disagree. |
 | Counts: tests, theorems, targets, papers | `src/data/evidence.ts` | One place to update after a release. |
 | Checks: question, rejection, when vacuous, backing | `src/data/checks.ts` | Rendered on `/checks/`; each row was read against the crate source. |
-| Boundaries | `src/data/boundaries.ts` | The landing page shows six, `/boundaries/` shows all, from one list. |
-| Theorems, deferred targets, papers | `src/data/formalization.ts`, `src/data/papers.ts` | `theorems` is generated from `lean/THEOREM_MAP.md`. |
+| Boundaries | `src/data/boundaries.ts` | The landing page shows six, `/boundaries/` shows all, from one list. The sensing limits are a second list, `sensingBoundaries`, at `/boundaries/#sensing`. |
+| The sensing runs and the verification | `src/data/sensing.ts` | `/sensing/`, the landing section and the hero's fourth row read it, so they cannot disagree. |
+| Theorems, the open target, papers | `src/data/formalization.ts`, `src/data/papers.ts` | `theorems` is generated from `lean/THEOREM_MAP.md`. |
 | Worked examples | `src/content/examples/en/*.mdx` | Prose with a walkthrough. Frontmatter carries the facts a listing needs, so index and detail cannot disagree. |
 
 Program output in a page is copied from a run, with each elision marked by an
@@ -202,12 +213,13 @@ inline element or `{expression}`, and words join ("over1,024 shots"). Leave it o
 
 | Route | Answers |
 | --- | --- |
-| `/` | What does it do? Nine sections: the hero, what a verdict carries, which cause, the plan and the decision, the program, is the code sound, what does stacking cost, limits, run it |
+| `/` | What does it do? Ten sections: the hero, what a verdict carries, which cause, the plan and the decision, the program, which systematic, is the code sound, what does stacking cost, limits, run it |
 | `/how-it-works/` | What are the stages of a QCL program, what does a check report, what does an abstraction add? |
+| `/sensing/` | What caused a gravimeter's reading error? Nine sections in the home page's form: the hero, why name the cause, which change, the decision, where it ends, a second instrument, checked against papers, limits, run it. Story and sentences: `openspec/notes/quantum-site/04_sensing_page_draft.md` |
 | `/checks/` | What does each check decide, and what does a failure name? |
-| `/examples/` | Fourteen runnable examples, grouped by the question each answers |
+| `/examples/` | Sixteen runnable examples, grouped by the question each answers |
 | `/proof/` | What is proved in Lean, what is tested, what is stated and not proved, which papers does it implement? |
-| `/boundaries/` | What does it not do, what do the examples assume, how do the two senses of quantum stay apart? |
+| `/boundaries/` | What does it not do, what do the examples assume, where do the sensing examples stop, how do the two senses of quantum stay apart? |
 | `/start/` | How do I run it, add it, and choose features? |
 
 The layer-by-layer pages of the earlier site redirect: `redirects` in

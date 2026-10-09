@@ -1,0 +1,88 @@
+---
+/**
+ * What each campaign spent: one bar per cause of the offset, its length the seconds the campaign
+ * ran before it found that cause, against a tick at the full plan's cost. Each bar lists the
+ * experiments run, in order, and how often the tide forced a re-plan.
+ *
+ * Values read from `src/data/sensing.ts`, copied from the gravimeter run.
+ */
+import { GRAVIMETER, gravimeterCampaigns, systematics } from '../../data/sensing';
+
+const name = (id: string) => systematics.find((h) => h.id === id)?.name ?? id;
+const width = (s: number) => `${((s / GRAVIMETER.planCost) * 100).toFixed(2)}%`;
+const seconds = (s: number) => s.toLocaleString('en-US');
+const order = [...gravimeterCampaigns].sort((a, b) => a.seconds - b.seconds);
+---
+<figure class="bars panel corner-brackets" data-rise>
+  <p class="title">Time to an answer</p>
+  <ol class="rows">
+    {order.map((c, i) => (
+      <li class="row rise" style={`--i:${i + 1}`}>
+        <div class="who">
+          <b>{name(c.cause)}</b>
+          <span class="tag">{c.cause} · {c.replans} {c.replans === 1 ? 're-plan' : 're-plans'}</span>
+        </div>
+        <div class="track">
+          <span class="plan" aria-hidden="true"></span>
+          <span class="fill" style={`width:${width(c.seconds)}`}></span>
+          <span class="lab num">{seconds(c.seconds)} s · {c.ran.join(' → ')}</span>
+        </div>
+      </li>
+    ))}
+  </ol>
+  <p class="legend"><span class="key" aria-hidden="true"></span>the full plan, {seconds(GRAVIMETER.planCost)} s</p>
+  <figcaption>
+    Each row’s observations come from that row’s cause, and each campaign finds it.
+    The setup times and the tide are placeholders for a lab’s own values.
+  </figcaption>
+</figure>
+
+<noscript>
+  <style is:inline>
+    .bars .rise { opacity: 1 !important; transform: none !important; }
+  </style>
+</noscript>
+
+<style>
+  .bars { margin: 0; padding: var(--space-5); }
+  .title {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-1);
+    margin: 0 0 var(--space-3);
+  }
+  .rows { list-style: none; margin: 0; padding: 0; }
+  .row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-1);
+    padding: var(--space-3) 0;
+    border-top: 1px solid var(--line-1);
+  }
+  @media (min-width: 640px) {
+    .row { grid-template-columns: 11rem minmax(0, 1fr); column-gap: var(--space-4); align-items: center; }
+  }
+  .who { display: flex; flex-direction: column; min-width: 0; }
+  .who b { color: var(--fg-0); font-weight: var(--fw-heading); font-size: var(--t-body-sm); }
+  .tag { color: var(--fg-2); font-family: var(--font-mono); font-size: var(--t-eyebrow); }
+  .track { position: relative; min-height: 2.6rem; }
+  .plan { position: absolute; top: 0; bottom: 0; left: 100%; width: 0; border-left: 1px dashed var(--fg-2); }
+  .fill {
+    position: absolute; left: 0; top: 0.35rem; height: 0.7rem;
+    background: var(--accent); border-radius: 2px; min-width: 2px;
+  }
+  .lab {
+    position: absolute; left: 0; top: 1.25rem;
+    color: var(--fg-1); font-size: var(--t-eyebrow); white-space: nowrap;
+  }
+  .legend {
+    margin: var(--space-3) 0 0;
+    color: var(--fg-2);
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+  }
+  .key { display: inline-block; width: 0; height: 0.9rem; border-left: 1px dashed var(--fg-2); margin-right: var(--space-2); vertical-align: -0.15rem; }
+  figcaption { margin-top: var(--space-3); color: var(--fg-2); font-size: var(--t-body-sm); }
+</style>

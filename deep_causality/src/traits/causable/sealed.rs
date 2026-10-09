@@ -15,8 +15,7 @@
 //! over is **fixed**, giving the `evaluate`-uniqueness argument its closed-world premise
 //! (`openspec/notes/archive/causal-algebra/causaloid-formalization-roadmap.md`, Stage 5). Extension happens
 //! on the **carrier** (verdict → probabilistic → operator-valued) and **wiring-generator**
-//! (`∇`, `⊕`) axes over the *same* three forms — never by a new form
-//! (`openspec/notes/quantum/full-stack.md` §9).
+//! (`∇`, `⊕`) axes over the *same* three forms
 //!
 //! This module is `pub(crate)`: the `Sealed` trait is nameable inside `deep_causality` (so the
 //! supertrait bounds and the one impl resolve) and unnameable outside it (so it cannot be

@@ -1,10 +1,9 @@
 ---
 /**
  * What the library has been checked against. Each row names its source, so a
- * reader can rerun it. The counts are the figures the tools report:
- *   tests    cargo test -p deep_causality_quantum --all-features
- *              772 tests plus 1 doc test, all passing
- *   theorems the quantum section of lean/THEOREM_MAP.md, 14 rows marked proved
+ * reader can rerun it. The theorem count is the figure the theorem map reports:
+ *   theorems the quantum section of lean/THEOREM_MAP.md, rows marked proved
+ *   tests    cargo test -p deep_causality_quantum --all-features, all passing
  * Statuses use the shared `.status` marks.
  */
 import { TESTS } from '../../data/evidence';
@@ -14,15 +13,8 @@ const rows = [
     status: 'validated',
     mark: 'proved',
     title: `${TESTS.proved} theorems proved in Lean`,
-    text: 'The theorems cover the partial-trace identities, the linearity of the Choi application, and the exact case of abstraction composition. Each theorem is paired with a named Rust test on the same statement.',
+    text: 'The theorems cover the partial-trace identities, the Choi–Jamiołkowski layer including the reconstruction of a channel, exact abstraction composition, the orthomodular verdict lattice and the laws of quantum causal models. Each theorem is paired with a named Rust test on the same statement.',
     href: '/proof/#theorems',
-  },
-  {
-    status: 'measured',
-    mark: 'tested',
-    title: `${TESTS.count} tests pass`,
-    text: 'Each check has tests, and the suite includes tests where a check must reject its input. Each of the fourteen examples printed identical output on a second run.',
-    href: '/proof/#tests',
   },
   {
     status: 'validated',
@@ -34,8 +26,8 @@ const rows = [
   {
     status: 'partial',
     mark: 'not proved',
-    title: `${TESTS.deferred} targets have tests and no Lean proof`,
-    text: 'The seven are the Choi reconstruction isomorphism and six targets on quantum causal models: Markov commutativity, no_influence, unitary_factorization, classical_embedding, cyclic_support and the verdict lattice. LEAN_QUANTUM.md says all seven need new Mathlib machinery; unitary_factorization needs direct-sum and C*-algebra theory that Mathlib lacks. The statement of cyclic_support is not written.',
+    title: 'One target remains open',
+    text: 'Lorenz and Barrett’s unitary factorization needs the commutant and direct-sum decomposition of finite-dimensional C*-algebras, which Mathlib lacks. Every other quantum target is proved.',
     href: '/proof/#deferred',
   },
 ];
@@ -61,7 +53,7 @@ const rows = [
     gap: var(--space-4);
   }
   @media (min-width: 720px) { .rows { grid-template-columns: 1fr 1fr; } }
-  @media (min-width: 1100px) { .rows { grid-template-columns: repeat(4, 1fr); } }
+  @media (min-width: 1100px) { .rows { grid-template-columns: repeat(3, 1fr); } }
 
   .row { padding: var(--space-5); display: flex; flex-direction: column; }
   .status { margin: 0 0 var(--space-3); }

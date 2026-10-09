@@ -6,7 +6,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 # Example Design Note: `quantum_control_loop`
 
 **What this is.** The design for a new example under `examples/quantum_examples/`, to be reviewed
-beside [`positioning.md`](positioning.md). It is the worked classical-quantum control system that
+beside [`positioning.md`](../archive/quantum/positioning.md). It is the worked classical-quantum control system that
 document's §9 decision 3 asks for, and it closes boundary 9 (the quantum control evidence is
 currently one qubit deep and one stage long).
 
@@ -396,4 +396,4 @@ Code this example builds on: `deep_causality_core/src/types/causal_flow/`,
 `examples/causal_correction_examples/` (the open-loop against closed-loop reporting pattern),
 `examples/quantum_examples/quantum_counterfactual/` (the state-channel history pattern).
 
-Companion note: [`positioning.md`](positioning.md).
+Companion note: [`positioning.md`](../archive/quantum/positioning.md).

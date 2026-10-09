@@ -3,10 +3,10 @@
  * The planner's choice, laid out so the reason is visible.
  *
  * One row per experiment: what it does, what it costs (bar length is linear in
- * cost, so the 200 fills the track and the 1s are slivers), and the read-out
- * each candidate predicts. A row whose three predictions are equal separates
- * nothing. The chosen rows are the minimum-cost cover of the three candidate
- * pairs, as the run prints them. Values read from `src/data/crosstalk.ts`.
+ * cost, so the echo's 2 fills the track), and the read-out each candidate
+ * predicts. A row whose three predictions are equal separates nothing. The
+ * chosen rows are the minimum-cost cover of the three candidate pairs, as the
+ * run prints them. Values read from `src/data/crosstalk.ts`.
  */
 import { candidates, experiments, RUN } from '../../data/crosstalk';
 
@@ -48,13 +48,12 @@ const same = (p: [number, number, number]) => p[0] === p[1] && p[1] === p[2];
     </table>
   </div>
   <figcaption>
-    Costs share one arbitrary unit. The costs and the predicted read-outs are inputs the example
-    types into <a href="/examples/qcl-crosstalk/"><code>constants.rs</code></a>, and the planner
-    works from them. The plan totals {RUN.planCost}, and tomography alone totals
-    {RUN.tomographyCost}. Under the plan the tightest pair of candidates is
-    {RUN.tightestPairBits} bits apart, against a floor of {RUN.floorBits}. The line the example
-    prints as “tightest pair separates at {RUN.tightestPairBestOfferedBits} bits” gives the best
-    separation any offered experiment reaches, which is tomography’s.
+    Costs share one arbitrary unit, typed into
+    <a href="/examples/qcl-crosstalk/"><code>constants.rs</code></a>. The predicted read-outs are
+    computed: the example’s response model evaluates each candidate’s conditional tables under
+    each experiment. The plan totals {RUN.planCost} of the {RUN.allExperimentsCost} that all four
+    experiments cost. Its tightest pair of candidates is {RUN.tightestPairBits} bits apart,
+    against a floor of {RUN.floorBits}.
   </figcaption>
 </figure>
 

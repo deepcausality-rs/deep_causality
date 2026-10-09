@@ -1,8 +1,8 @@
 ---
 title: "A quantum counterfactual"
 question: "What was the decoder reading when it restored the state?"
-summary: "The three-qubit repetition code undoes a flip on qubit 1 with fidelity 1 from the observed syndrome; a forced syndrome that names qubit 0 corrects the wrong qubit and leaves fidelity 0."
-order: 10
+summary: "The three-qubit repetition code undoes a flip on qubit 1 with fidelity 1 from the observed syndrome; a forced syndrome that points at qubit 0 corrects the wrong qubit and leaves fidelity 0."
+order: 12
 group: other
 command: "cargo run --release -p quantum_examples --example quantum_counterfactual"
 usesCrate: false
@@ -14,16 +14,17 @@ crates:
 source: "examples/quantum_examples/quantum_counterfactual"
 ---
 
-A bit flip on qubit 1 of the three-qubit repetition code is undone with fidelity 1.000000000 when the
-decoder reads the syndrome the measurement produced. When an intervention forces the syndrome to
-name qubit 0, the decoder corrects the wrong qubit and the fidelity is 0.000000000. Substituting the
+The syndrome. A bit flip on qubit 1 of the three-qubit repetition code is undone with fidelity
+1.000000000 when the decoder reads the syndrome the measurement produced. When an intervention
+forces the syndrome to point at qubit 0, the decoder corrects the wrong qubit and the fidelity is
+0.000000000. Substituting the
 syndrome and watching the recovery follow shows that the syndrome causes the recovery.
 
 A lone qubit cannot be checked, because any measurement that would reveal a flip also reveals the
 amplitudes and collapses the superposition. The code spreads one logical qubit over three and
 measures only parities. A parity such as `⟨Z0 Z1⟩` is exactly +1 or −1 whatever the amplitudes are.
 
-## What you see
+## The forced syndrome corrects the wrong qubit
 
 ```text
 Encoding
@@ -57,11 +58,11 @@ The `X` gate on qubit 1 moves amplitudes between basis states, so norm² stays 1
 parity rows read exactly +1.000 or −1.000 and carry no trace of the amplitudes 0.6 and 0.8, because
 every basis state in a code word agrees on the parity of any two qubits. The corrupted register
 gives (differ, differ), which the decoder's table maps to qubit 1, and `X` there restores the
-encoded state. In the second run the syndrome (differ, agree) names qubit 0, and `X` there turns
+encoded state. In the second run the syndrome (differ, agree) points at qubit 0, and `X` there turns
 `0.600|010> + 0.800|101>` into `0.600|110> + 0.800|001>`, a normalised state orthogonal to the
 protected one. Applying no correction at all also gives fidelity 0.000000000.
 
-## The counterfactual
+## One line separates the two pipelines
 
 The two pipelines start from the same corrupted register and differ by one line:
 
@@ -76,7 +77,7 @@ counterfactual  measure → do(syndrome := q0) → recover
 else, so the substitution changes everything the decoder has to go on. Norm cannot tell the two
 recoveries apart, since both end in a normalised state; the fidelity to the protected state does.
 
-## What this run leaves out
+## The run covers one bit flip on one known qubit
 
 The run applies one bit flip to one known qubit, so it covers no phase errors. It reads each parity
 as an expectation value, with no sampling, no collapse and no ancilla qubits, and the decoder is a

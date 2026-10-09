@@ -45,8 +45,8 @@ export type CheckGroup = {
 export const groups: CheckGroup[] = [
   {
     id: 'model',
-    title: 'Is this structure a legal quantum causal model?',
-    lede: 'Three checks decide it. The factors that share a Hilbert leg must commute (check_markov). The structure must contain no C₃ sub-relation if a unitary circuit is to realise it with the same causal structure (check_decomposable). The structure must be acyclic (build()). A factor is one node’s operator, and its support is the set of Hilbert legs it acts on; no check simulates a device.',
+    title: 'Three checks decide whether a structure is a quantum causal model.',
+    lede: 'The factors that share a Hilbert leg must commute (check_markov). The structure must contain no C₃ sub-relation if a unitary circuit is to realise it with the same causal structure (check_decomposable). The structure must be acyclic (build()). A factor is one node’s operator, and its support is the set of Hilbert legs it acts on; no check simulates a device.',
     checks: [
       {
         name: 'check_markov',
@@ -54,10 +54,10 @@ export const groups: CheckGroup[] = [
         question:
           'The check decides whether factors whose Hilbert supports overlap commute pairwise, which is the quantum Markov condition (Lorenz 2022, Definition 3.3). For each overlapping pair it embeds both factors on the union of their supports and takes the Frobenius norm of their commutator. The threshold is a forward-error budget built from the dimension of that space, the two factor norms and a per-node error budget. The check is sound, meaning it never accepts a pair whose commutator exceeds the threshold; the crate does not claim it is complete.',
         rejection:
-          'On a model or a circuit, the stage fails with CommutatorNonZero, which names the node indices of the first non-commuting pair, and finalize() returns it. On a plant, the candidate leaves the admitted set and its report entry records the pair. On the inherited factors of a composite, checked through check_markov_as and markov_certificate and not through validate, the error is CertificateNotInherited and names the same pair.',
+          'On a model or a circuit, the stage fails with CommutatorNonZero, which carries the node indices of the first non-commuting pair, and finalize() returns it. On a plant, the candidate leaves the admitted set and its report entry records the pair. On the inherited factors of a composite, checked through check_markov_as and markov_certificate and not through validate, the error is CertificateNotInherited and carries the same pair.',
         vacuous: 'It certifies nothing when every pair of supports is disjoint, or when the model has a single factor. A disjoint pair imposes no obligation, so the report examines zero pairs.',
-        backing: 'tested',
-        evidence: 'Witnessed by markov_freeze_tests::test_check_noncommuting_names_the_pair. The Lean target quantum.markov_commutativity is deferred.',
+        backing: 'partial',
+        evidence: 'Lean proves the commutation facts the check relies on as quantum.markov_commutativity: factors on disjoint legs commute, and a pairwise-commuting product does not depend on its order. The numeric tolerance test is witnessed by markov_freeze_tests::test_check_noncommuting_names_the_pair.',
         source: 'src/types/qcm/markov_freeze.rs',
       },
       {
@@ -77,7 +77,7 @@ export const groups: CheckGroup[] = [
         on: 'plant (structural), model, circuit',
         question:
           'The builder decides whether the structure contains a directed cycle, and it decides before any check runs. It examines the structural candidates of a plant, the graph of a model and the grouping of a circuit. The library applies no criterion that rejects a cycle, so the refusal is a scope decision, and the error says so.',
-        rejection: 'It rejects with CyclicStructureUnsupported. On a plant the error names the candidate; on a model or a circuit it describes the graph or the grouping.',
+        rejection: 'It rejects with CyclicStructureUnsupported. On a plant the error carries the candidate; on a model or a circuit it describes the graph or the grouping.',
         vacuous: 'It does not run on mechanism candidates, which make no structural claim.',
         backing: 'decision',
         evidence: 'Witnessed by pipeline_tests::test_a_cyclic_structural_candidate_is_rejected_at_build_by_name.',
@@ -87,7 +87,7 @@ export const groups: CheckGroup[] = [
   },
   {
     id: 'channel',
-    title: 'Is this channel physical?',
+    title: 'Two checks decide whether a channel is physical.',
     lede: 'A channel is physical when it is completely positive and trace preserving. Both checks read the channel’s Choi operator, the matrix that represents the channel, and each takes a tolerance.',
     checks: [
       {
@@ -96,7 +96,7 @@ export const groups: CheckGroup[] = [
         question:
           'The check decides whether the Choi operator is positive semidefinite, which is complete positivity. It first measures the Hermiticity defect, then compares each eigenvalue with the tolerance; an eigenvalue below the negative tolerance rejects.',
         rejection:
-          'It rejects with NonPositiveOperator, which carries the Hermiticity defect, when the operator is not Hermitian. Otherwise it rejects with NonCptpChannel, which names the first eigenvalue below the negative tolerance. The report form returns the defect and one entry per eigenvalue.',
+          'It rejects with NonPositiveOperator, which carries the Hermiticity defect, when the operator is not Hermitian. Otherwise it rejects with NonCptpChannel, which carries the first eigenvalue below the negative tolerance. The report form returns the defect and one entry per eigenvalue.',
         vacuous: 'It certifies nothing about the spectrum when the input is not Hermitian. The report then records the Hermiticity defect alone and examines no eigenvalue.',
         backing: 'tested',
         evidence: 'Witnessed by channel_tests::test_non_cp_operator_rejected.',
@@ -117,8 +117,8 @@ export const groups: CheckGroup[] = [
   },
   {
     id: 'code',
-    title: 'Does this code have the structure it claims?',
-    lede: 'The library derives n and k from the complex and checks three properties exactly: the weights of the check matrices, the class invariance of the diagonal logical gates, and the Clifford action of the logical Hadamard. A code here is a chain complex read as a CSS code, and every decision is over finite supports in F₂, with no state vector and no tolerance.',
+    title: 'Code checks are exact: no state vector, no tolerance.',
+    lede: 'Every decision is over finite supports in F₂, where a code is a chain complex read as a CSS code. The library derives n and k from the complex and checks three properties: the weights of the check matrices, the class invariance of the diagonal logical gates, and the Clifford action of the logical Hadamard.',
     checks: [
       {
         name: 'derive_code',
@@ -137,7 +137,7 @@ export const groups: CheckGroup[] = [
         question:
           'The check decides whether every row weight and every column weight of both check matrices stays within one declared bound. A column is one check, and its weight is the number of qubits it acts on; a row is one qubit, and its weight is the number of checks that act on it.',
         rejection:
-          'It rejects at the first item over the bound, in the order Z columns, Z rows, X columns, X rows. The report entry names the matrix (Z or X) and the column or row, and the check stops there. The stage still succeeds, and finalize() returns Ok.',
+          'It rejects at the first item over the bound, in the order Z columns, Z rows, X columns, X rows. The report entry records the matrix (Z or X) and the column or row, and the check stops there. The stage still succeeds, and finalize() returns Ok.',
         vacuous: 'It certifies nothing about an empty family. A code with no Z checks records no Z columns, which shows as an empty half of the report.',
         backing: 'tested',
         evidence: 'Witnessed by css_code_tests::test_a_bound_the_x_checks_exceed_names_the_offender_and_stops_there.',
@@ -161,7 +161,7 @@ export const groups: CheckGroup[] = [
         question:
           'The check decides whether a Clifford gate program acts as the logical Hadamard on one logical qubit: it must swap Z̄(γ) and X̄(γ̃) up to phase and stabilizers, and it must leave the other logical qubits fixed. The pipeline builds H̄ for each logical qubit from the code’s homology and a symplectic dual basis, then checks that program. The check is exact.',
         rejection:
-          'It rejects in one of two ways. A program that moves an operator out of the code space fails the stage with NotInNormalizer, which names the first stabilizer generator the image anticommutes with. A program that stays in the code space but does not swap Z̄ and X̄, or moves another logical qubit, is recorded as a rejecting entry, and finalize() still returns Ok; the standalone form reports which swap failed.',
+          'It rejects in one of two ways. A program that moves an operator out of the code space fails the stage with NotInNormalizer, which carries the first stabilizer generator the image anticommutes with. A program that stays in the code space but does not swap Z̄ and X̄, or moves another logical qubit, is recorded as a rejecting entry, and finalize() still returns Ok; the standalone form reports which swap failed.',
         vacuous: 'A code with no logical qubits records no entry. On a code with one logical qubit, the check pushes no other logical operator through the program.',
         backing: 'tested',
         evidence: 'Witnessed by clifford_action_tests::test_a_program_that_does_nothing_fails_the_check.',
@@ -171,8 +171,8 @@ export const groups: CheckGroup[] = [
   },
   {
     id: 'abstraction',
-    title: 'Does the abstraction hold?',
-    lede: 'An abstraction holds when its partition passes the structural precheck, its squares commute within tolerance, it tolerates its faults, and stacked links obey the composition bound. An abstraction maps a detailed model (physical qubits with noise) to a coarser one (logical qubits). The checks build on Lorenz and Tull, arXiv:2602.16612, which gives the exact case; the ε forms and the composition bound are this crate’s own. The validate stage runs check_alignment_structure and check_naturality on a circuit subject; check_fault_tolerance and compose are methods of the abstraction itself.',
+    title: 'An abstraction holds when its four checks pass.',
+    lede: 'Its partition must pass the structural precheck, its squares must commute within tolerance, it must tolerate its faults, and stacked links must obey the composition bound. An abstraction maps a detailed model (physical qubits with noise) to a coarser one (logical qubits). The checks build on Lorenz and Tull, arXiv:2602.16612, which gives the exact case; the ε forms and the composition bound are this crate’s own. The validate stage runs check_alignment_structure and check_naturality on a circuit subject; check_fault_tolerance and compose are methods of the abstraction itself.',
     checks: [
       {
         name: 'check_alignment_structure',
@@ -180,7 +180,7 @@ export const groups: CheckGroup[] = [
         question:
           'The check decides whether a partition of the low-level model into one block per high-level vertex passes the structural precheck of Lorenz and Tull’s Definition 49. Let α(X) be the low-level vertices that reach block X without passing through the blocks of X’s parents. The partition is simple when α(X) never meets another block, and extra-simple when no two α sets meet. It is full when every vertex in the block of a non-input parent of X reaches block X. The scope of the result reads Equivalent when both models are classical, where Theorem 51 makes these conditions exact, and Necessary otherwise.',
         rejection:
-          'A partition that is not simple fails the stage with CalculationError, which names the pair (X, Y) where α(X) meets block Y. A partition that is not extra-simple or not full does not fail the stage; the report records a rejecting entry that holds the offending pair.',
+          'A partition that is not simple fails the stage with CalculationError, which carries the pair (X, Y) where α(X) meets block Y. A partition that is not extra-simple or not full does not fail the stage; the report records a rejecting entry that holds the offending pair.',
         vacuous: 'It certifies nothing when the high-level model has one vertex or none. No ordered pair exists, so the simple and extra-simple conditions hold with nothing examined.',
         backing: 'tested',
         evidence: 'Witnessed by alignment_structure_tests::test_example_55_is_not_simple.',
@@ -191,7 +191,7 @@ export const groups: CheckGroup[] = [
         on: 'circuit',
         question:
           'The check decides, for every query in the abstraction’s signature, whether running the low-level query and then applying the map τ gives the same channel as applying τ and then running the high-level query. The residual is the Frobenius norm of the difference between the two Choi operators, compared with the state tolerance at the square’s dimension.',
-        rejection: 'The stage fails with CalculationError, which names the query, the residual and the tolerance it exceeded. The standalone form returns the report with a rejecting entry for that query.',
+        rejection: 'The stage fails with CalculationError, which carries the query, the residual and the tolerance it exceeded. The standalone form returns the report with a rejecting entry for that query.',
         vacuous: 'It certifies nothing when the signature has no queries; the report then reads Vacuous.',
         backing: 'tested',
         evidence: 'Witnessed by abstraction_tests::test_an_entangling_gate_breaks_the_square_by_root_two.',
@@ -225,14 +225,14 @@ export const groups: CheckGroup[] = [
   },
   {
     id: 'marginal',
-    title: 'Can a marginal be trusted?',
-    lede: 'A marginal, the operator left after a partial trace, can be trusted only within a bound. Tracing out part of a model can destroy the commutation the model relies on; Lean proves a counterexample (quantum.partial_trace_nonpreservation), two commuting operators whose partial traces do not commute. The boundary check below measures how nearly a boundary operator commutes with the joint operator, and it returns the bound that residual gives on the traced commutator.',
+    title: 'A marginal can be trusted only within a bound.',
+    lede: 'A marginal is the operator left after a partial trace, and tracing out part of a model can destroy the commutation the model relies on; Lean proves a counterexample (quantum.partial_trace_nonpreservation), two commuting operators whose partial traces do not commute. The boundary check below measures how nearly a boundary operator commutes with the joint operator, and it returns the bound that residual gives on the traced commutator.',
     checks: [
       {
         name: 'partial_trace_preservation_boundary',
         on: 'operator layer',
         question:
-          'Given an operator Z on the kept system and an operator M on the whole space, the function measures how nearly Z ⊗ 1 commutes with M, and it returns a bound on [Z, Tr_B M]. The bound is √(d_B) times the residual, where d_B is the dimension of the traced system. A holds flag says whether the residual is at or under the tolerance you name. A commutator within tolerance warrants the conclusion only at √(d_B) times that tolerance, and it never warrants the exact conclusion.',
+          'Given an operator Z on the kept system and an operator M on the whole space, the function measures how nearly Z ⊗ 1 commutes with M, and it returns a bound on [Z, Tr_B M]. The bound is √(d_B) times the residual, where d_B is the dimension of the traced system. A holds flag says whether the residual is at or under the tolerance you set. A commutator within tolerance warrants the conclusion only at √(d_B) times that tolerance, and it never warrants the exact conclusion.',
         rejection: 'The function itself returns the warrant and does not reject. Hypothesis::marginalise (src/types/qcm/hypothesis.rs) rejects with BoundaryNotHeld, which carries the residual, the tolerance and the amplification, and it traces nothing.',
         vacuous: 'It passes trivially when Z is a multiple of the identity, because Z ⊗ 1 then commutes with every M and the residual is zero up to rounding.',
         backing: 'partial',

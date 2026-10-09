@@ -65,10 +65,20 @@ theorem applyChoi_smul (J : Matrix (α × β) (α × β) R) (c : R) (A : Matrix 
   refine Finset.sum_congr rfl (fun j _ => ?_)
   exact mul_assoc _ _ _
 
--- The Choi–Jamiołkowski reconstruction isomorphism `applyChoi (choiOf E) = E` (that reconstructing
--- the action from a linear channel's Choi matrix recovers the channel) is the CJ keystone. Its
--- proof over Mathlib's `stdBasisMatrix` module-expansion is deferred; the correspondence is checked
--- numerically by the Rust round-trip witness `test_choi_kraus_choi_round_trip` in
--- `deep_causality_quantum/tests/types/qgates/channel_tests.rs`.
+/-- The Choi–Jamiołkowski reconstruction: the action reconstructed from the Choi matrix of a
+    linear channel is the channel. Writing `A = ∑ i j, A i j • |i⟩⟨j|` and pushing `E` through the
+    sum leaves exactly the double sum `applyChoi` computes.
+
+    THEOREM_MAP: `quantum.choi.reconstruction` -/
+theorem applyChoi_choiOf (E : Matrix α α R →ₗ[R] Matrix β β R) (A : Matrix α α R) :
+    applyChoi (choiOf E) A = E A := by
+  have hA : E A = ∑ i, ∑ j, A i j • E (Matrix.single i j (1 : R)) := by
+    conv_lhs => rw [Matrix.matrix_eq_sum_single A]
+    simp only [map_sum]
+    refine Finset.sum_congr rfl (fun i _ => Finset.sum_congr rfl (fun j _ => ?_))
+    rw [← map_smul, Matrix.smul_single, smul_eq_mul, mul_one]
+  rw [hA]
+  funext k l
+  simp only [applyChoi, choiOf, Matrix.sum_apply, Matrix.smul_apply, smul_eq_mul]
 
 end DeepCausalityFormal.Quantum

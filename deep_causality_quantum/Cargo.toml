@@ -141,6 +141,46 @@ workspace = true
 optional = true
 
 
+[[example]]
+name = "verification_v10_zeeman_field_map"
+path = "verification/sensing/verification_v10_zeeman_field_map.rs"
+required-features = ["qcm"]
+
+[[example]]
+name = "verification_v6_time_model"
+path = "verification/sensing/verification_v6_time_model.rs"
+required-features = ["qcm"]
+
+[[example]]
+name = "verification_v3_transverse_motion"
+path = "verification/sensing/verification_v3_transverse_motion.rs"
+required-features = ["qcm"]
+
+[[example]]
+name = "verification_v7_gradiometer_sweep"
+path = "verification/sensing/verification_v7_gradiometer_sweep.rs"
+required-features = ["qcm"]
+
+[[example]]
+name = "verification_v2_clipping"
+path = "verification/sensing/verification_v2_clipping.rs"
+required-features = ["qcm"]
+
+[[example]]
+name = "verification_v5_light_shift"
+path = "verification/sensing/verification_v5_light_shift.rs"
+required-features = ["qcm"]
+
+[[example]]
+name = "verification_v1_wavefront"
+path = "verification/sensing/verification_v1_wavefront.rs"
+required-features = ["qcm"]
+
+[[example]]
+name = "verification_v4_crosstalk"
+path = "verification/sensing/verification_v4_crosstalk.rs"
+required-features = ["qcm"]
+
 [dev-dependencies]
 deep_causality_topology = { path = "../deep_causality_unified_math/deep_causality_topology" }
 

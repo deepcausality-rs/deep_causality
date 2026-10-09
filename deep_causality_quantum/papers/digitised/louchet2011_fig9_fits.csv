@@ -1,0 +1,339 @@
+fit,temperature_uK,delta_g_uGal
+linear,0.0000,0.5785
+linear,2.0006,-0.0082
+linear,2.4504,-0.1378
+linear,3.0611,-0.3153
+linear,3.8803,-0.5543
+linear,4.8678,-0.8339
+linear,6.1808,-1.2160
+linear,7.0000,-1.4541
+n_max 2,0.0000,0.6059
+n_max 2,0.2999,0.5104
+n_max 2,0.5997,0.4353
+n_max 2,0.8996,0.3534
+n_max 2,1.1996,0.2578
+n_max 2,1.4995,0.1693
+n_max 2,1.8030,0.0668
+n_max 2,2.0992,-0.0287
+n_max 2,2.4029,-0.1242
+n_max 2,2.6991,-0.2198
+n_max 2,3.0026,-0.3153
+n_max 2,3.2988,-0.4039
+n_max 2,3.6025,-0.4994
+n_max 2,3.8987,-0.5883
+n_max 2,4.2022,-0.6769
+n_max 2,4.4984,-0.7724
+n_max 2,4.8021,-0.8544
+n_max 2,5.0983,-0.9430
+n_max 2,5.3982,-1.0249
+n_max 2,5.6980,-1.1069
+n_max 2,6.2979,-1.2570
+n_max 2,6.5978,-1.3386
+n_max 2,6.8976,-1.4206
+n_max 2,7.0000,-1.4532
+n_max 4,0.0000,2.3594
+n_max 4,0.2999,2.0047
+n_max 4,0.5997,1.6362
+n_max 4,0.8996,1.2610
+n_max 4,1.1996,0.9060
+n_max 4,1.4995,0.5444
+n_max 4,1.8030,0.2033
+n_max 4,2.0992,-0.0902
+n_max 4,2.4029,-0.3629
+n_max 4,2.6991,-0.5883
+n_max 4,3.0026,-0.7794
+n_max 4,3.2988,-0.9294
+n_max 4,3.6025,-1.0520
+n_max 4,3.8987,-1.1340
+n_max 4,4.2022,-1.1819
+n_max 4,4.4984,-1.1955
+n_max 4,4.8021,-1.1750
+n_max 4,5.0983,-1.1271
+n_max 4,5.3982,-1.0319
+n_max 4,5.6980,-0.8954
+n_max 4,5.9979,-0.7248
+n_max 4,6.2979,-0.5133
+n_max 4,6.5978,-0.2879
+n_max 4,6.8976,-0.0287
+n_max 4,7.0000,0.0669
+n_max 6,0.0000,4.5088
+n_max 6,0.2999,3.6970
+n_max 6,0.5997,2.8985
+n_max 6,0.8996,2.1548
+n_max 6,1.1996,1.4792
+n_max 6,1.4995,0.8515
+n_max 6,1.8030,0.2988
+n_max 6,2.0992,-0.1242
+n_max 6,2.4029,-0.4858
+n_max 6,2.6991,-0.7519
+n_max 6,3.0026,-0.9430
+n_max 6,3.2988,-1.0520
+n_max 6,3.6025,-1.1205
+n_max 6,3.8987,-1.1205
+n_max 6,4.2022,-1.0930
+n_max 6,4.4984,-1.0520
+n_max 6,4.8021,-0.9909
+n_max 6,5.0983,-0.9294
+n_max 6,5.3982,-0.8610
+n_max 6,5.6980,-0.7794
+n_max 6,5.9979,-0.7043
+n_max 6,6.2979,-0.6564
+n_max 6,6.5978,-0.6564
+n_max 6,6.8976,-0.7109
+n_max 6,7.0000,-0.7529
+n_max 8,0.0000,4.8159
+n_max 8,0.2999,3.8947
+n_max 8,0.5997,3.0350
+n_max 8,0.8996,2.2433
+n_max 8,1.1996,1.5271
+n_max 8,1.4995,0.8789
+n_max 8,1.8030,0.3058
+n_max 8,2.0992,-0.1242
+n_max 8,2.4029,-0.4928
+n_max 8,2.6991,-0.7589
+n_max 8,3.0026,-0.9430
+n_max 8,3.2988,-1.0520
+n_max 8,3.6025,-1.1205
+n_max 8,3.8987,-1.1135
+n_max 8,4.2022,-1.0864
+n_max 8,4.4984,-1.0520
+n_max 8,4.8021,-0.9909
+n_max 8,5.0983,-0.9360
+n_max 8,5.3982,-0.8679
+n_max 8,5.6980,-0.7929
+n_max 8,5.9979,-0.7109
+n_max 8,6.2979,-0.6564
+n_max 8,6.5978,-0.6290
+n_max 8,6.8976,-0.6495
+n_max 8,7.0000,-0.6752
+n_max 10,0.5163,5.2115
+n_max 10,0.5997,4.7408
+n_max 10,0.8996,3.3080
+n_max 10,1.1996,2.1343
+n_max 10,1.4995,1.1655
+n_max 10,1.8030,0.3739
+n_max 10,2.0992,-0.1517
+n_max 10,2.4029,-0.5473
+n_max 10,2.6991,-0.8065
+n_max 10,3.0026,-0.9704
+n_max 10,3.2988,-1.0319
+n_max 10,3.6025,-1.0795
+n_max 10,3.8987,-1.0454
+n_max 10,4.2022,-1.0180
+n_max 10,4.4984,-1.0249
+n_max 10,4.8021,-1.0249
+n_max 10,5.0983,-1.0319
+n_max 10,5.3982,-1.0180
+n_max 10,5.6980,-0.9565
+n_max 10,5.9979,-0.7999
+n_max 10,6.2979,-0.5744
+n_max 10,6.5978,-0.2674
+n_max 10,6.8976,0.1488
+n_max 10,7.0000,0.3328
+fake black,0.9326,-4.2759
+fake black,0.9361,-4.2488
+fake black,0.9728,-4.0237
+fake black,0.9764,-3.9962
+fake black,1.0168,-3.7711
+fake black,1.0203,-3.7437
+fake black,1.0570,-3.5256
+fake black,1.0642,-3.4981
+fake black,1.0972,-3.2730
+fake black,1.1045,-3.2456
+fake black,1.1411,-3.0205
+fake black,1.1447,-2.9934
+fake black,1.1812,-2.7680
+fake black,1.1849,-2.7409
+fake black,1.2325,-2.5224
+fake black,1.2398,-2.4953
+fake black,1.2837,-2.2699
+fake black,1.2910,-2.2428
+fake black,1.3422,-2.0173
+fake black,1.3459,-1.9902
+fake black,1.3971,-1.7651
+fake black,1.4007,-1.7377
+fake black,1.4519,-1.5126
+fake black,1.4593,-1.4852
+fake black,1.5068,-1.2670
+fake black,1.5178,-1.2396
+fake black,1.5872,-1.0145
+fake black,1.5945,-0.9871
+fake black,1.6639,-0.7620
+fake black,1.6749,-0.7349
+fake black,1.7446,-0.5095
+fake black,1.7518,-0.4824
+fake black,1.8395,-0.2708
+fake black,1.8542,-0.2503
+fake black,1.9711,-0.0662
+fake black,1.9859,-0.0388
+fake black,2.1065,0.1318
+fake black,2.1212,0.1453
+fake black,2.2419,0.2137
+fake black,2.2566,0.2204
+fake black,2.3772,0.2888
+fake black,2.3917,0.3023
+fake black,2.5126,0.2888
+fake black,2.5271,0.2888
+fake black,2.6442,0.2613
+fake black,2.6589,0.2613
+fake black,2.7796,0.1932
+fake black,2.7941,0.1863
+fake black,2.9147,0.0977
+fake black,2.9294,0.0908
+fake black,3.0501,-0.0183
+fake black,3.0648,-0.0388
+fake black,3.1854,-0.1753
+fake black,3.2001,-0.1958
+fake black,3.3171,-0.3389
+fake black,3.3318,-0.3594
+fake black,3.4524,-0.5029
+fake black,3.4671,-0.5233
+fake black,3.5878,-0.6665
+fake black,3.6025,-0.6939
+fake black,3.7231,-0.8645
+fake black,3.7377,-0.8849
+fake black,3.8583,-1.0555
+fake black,3.8730,-1.0760
+fake black,3.9901,-1.2261
+fake black,4.0047,-1.2396
+fake black,4.1255,-1.3761
+fake black,4.1400,-1.4035
+fake black,4.2607,-1.4991
+fake black,4.2754,-1.5057
+fake black,4.3960,-1.5672
+fake black,4.4107,-1.5741
+fake black,4.5277,-1.6286
+fake black,4.5424,-1.6352
+fake black,4.6630,-1.6557
+fake black,4.6777,-1.6627
+fake black,4.7984,-1.6832
+fake black,4.8131,-1.6766
+fake black,4.9337,-1.6352
+fake black,4.9484,-1.6286
+fake black,5.0691,-1.5877
+fake black,5.0836,-1.5810
+fake black,5.2007,-1.4921
+fake black,5.2152,-1.4852
+fake black,5.3361,-1.3897
+fake black,5.3506,-1.3761
+fake black,5.4712,-1.2670
+fake black,5.4859,-1.2535
+fake black,5.6066,-1.1305
+fake black,5.6213,-1.1100
+fake black,5.7419,-0.9871
+fake black,5.7567,-0.9666
+fake black,5.8736,-0.8304
+fake black,5.8883,-0.8099
+fake black,6.0089,-0.6665
+fake black,6.0236,-0.6529
+fake black,6.1443,-0.4893
+fake black,6.1588,-0.4754
+fake black,6.2796,-0.3118
+fake black,6.2942,-0.2913
+fake black,6.4148,-0.1069
+fake black,6.4295,-0.0864
+fake black,6.5466,0.0977
+fake black,6.5612,0.1182
+fake black,6.6820,0.3093
+fake black,6.6965,0.3298
+fake black,6.8172,0.5208
+fake black,6.8319,0.5413
+fake black,6.9525,0.7393
+fake black,6.9672,0.7594
+fake light grey,0.0000,-4.5013
+fake light grey,0.2999,-2.8364
+fake light grey,0.5997,-1.6901
+fake light grey,0.8996,-0.8849
+fake light grey,1.1996,-0.3663
+fake light grey,1.4995,-0.0728
+fake light grey,1.7993,0.0432
+fake light grey,2.0992,-0.0252
+fake light grey,2.3992,-0.1888
+fake light grey,2.6991,-0.3934
+fake light grey,2.9989,-0.6119
+fake light grey,3.2988,-0.8304
+fake light grey,3.5988,-1.0145
+fake light grey,3.8987,-1.1646
+fake light grey,4.1985,-1.2535
+fake light grey,4.4984,-1.2327
+fake light grey,4.7984,-1.1510
+fake light grey,5.0983,-1.0076
+fake light grey,5.3945,-0.8440
+fake light grey,5.6980,-0.6939
+fake light grey,5.9942,-0.6119
+fake light grey,6.2979,-0.6324
+fake light grey,6.5941,-0.7825
+fake light grey,6.8976,-1.1170
+fake light grey,6.9965,-1.3036
+fake red,0.0000,-0.9940
+fake red,0.2999,-0.3934
+fake red,0.5997,0.0432
+fake red,0.8996,0.2683
+fake red,1.1996,0.3364
+fake red,1.4995,0.2888
+fake red,1.7993,0.1453
+fake red,2.0992,-0.0662
+fake red,2.3992,-0.3118
+fake red,2.6991,-0.5438
+fake red,2.9989,-0.7484
+fake red,3.2988,-0.9190
+fake red,3.5988,-1.0555
+fake red,3.8987,-1.1510
+fake red,4.1985,-1.1851
+fake red,4.4984,-1.1441
+fake red,4.7984,-1.0621
+fake red,5.0983,-0.9464
+fake red,5.3945,-0.8165
+fake red,5.6980,-0.7008
+fake red,5.9942,-0.6394
+fake red,6.2979,-0.6665
+fake red,6.5941,-0.8030
+fake red,6.8976,-1.0965
+fake red,6.9965,-1.2535
+fake blue,0.0000,4.3146
+fake blue,0.2999,3.5914
+fake blue,0.5997,2.8269
+fake blue,0.8996,2.1107
+fake blue,1.1996,1.4486
+fake blue,1.4995,0.8414
+fake blue,1.7993,0.3023
+fake blue,2.0992,-0.1208
+fake blue,2.3992,-0.4754
+fake blue,2.6991,-0.7484
+fake blue,2.9989,-0.9395
+fake blue,3.2988,-1.0486
+fake blue,3.5988,-1.1236
+fake blue,3.8987,-1.1236
+fake blue,4.1985,-1.1031
+fake blue,4.4984,-1.0621
+fake blue,4.7984,-1.0010
+fake blue,5.0983,-0.9395
+fake blue,5.3945,-0.8575
+fake blue,5.6980,-0.7825
+fake blue,5.9942,-0.7008
+fake blue,6.2979,-0.6460
+fake blue,6.5941,-0.6324
+fake blue,6.8976,-0.6734
+fake blue,6.9965,-0.7075
+fake dark grey,1.0090,5.2150
+fake dark grey,1.1996,3.8231
+fake dark grey,1.4995,2.0422
+fake dark grey,1.7993,0.6368
+fake dark grey,2.0992,-0.2503
+fake dark grey,2.3992,-0.8645
+fake dark grey,2.6991,-1.2125
+fake dark grey,2.9989,-1.3490
+fake dark grey,3.2988,-1.3216
+fake dark grey,3.5988,-1.2327
+fake dark grey,3.8987,-1.0215
+fake dark grey,4.1985,-0.8304
+fake dark grey,4.4984,-0.7620
+fake dark grey,4.7984,-0.7008
+fake dark grey,5.0983,-0.7279
+fake dark grey,5.3945,-0.7894
+fake dark grey,5.6980,-0.8304
+fake dark grey,5.9942,-0.8030
+fake dark grey,6.2979,-0.7484
+fake dark grey,6.5941,-0.6665
+fake dark grey,6.8976,-0.5164
+fake dark grey,6.9965,-0.4390

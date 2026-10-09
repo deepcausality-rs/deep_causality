@@ -13,38 +13,37 @@
 //!   * `build()` refuses the cyclic candidate as `CyclicStructureUnsupported`, by decision and
 //!     before any check runs. Under Definition 3.1 the C₃ criterion does not reject it, so if it is
 //!     to be kept out, the builder has to do it and say why.
-//!   * `validate` screens the other three with the Markov check and the decomposability check on
-//!     the structure each candidate's own supports encode; all three are admitted.
-//!   * `control` takes the screen, forks one world per admitted candidate, and `design` returns a
-//!     plan: two cheap interventions at cost 2, against process tomography at 200.
-//!   * The plan's first experiment is run on the world where H₁ is true, drawing 1024 shots from
-//!     the shipped Born sampler at H₁'s predicted read-out. Each world's prediction is judged
-//!     against that observation, and `adjudicate` folds the three Boolean verdicts. No commutation
-//!     test runs, because a threshold on a real quantity is a classical proposition.
+//!   * `validate` screens the other three: each is a normalised process, Markov, and free of a
+//!     C₃ in the structure its own supports encode; all three are admitted.
+//!   * `control` takes the screen, and `design_with` computes every experiment's predicted
+//!     read-out under every candidate from the response model and returns the cheapest plan: the
+//!     two targeted interventions at cost 2.
+//!   * A campaign runs the plan against observations drawn from H₁, cheapest experiment first,
+//!     and stops as soon as one candidate holds and separates from the others. Each world's
+//!     prediction is judged against the observation; no commutation test runs, because a
+//!     threshold on a real quantity is a classical proposition.
 //!
-//! Predictions and the plan are computed; the observation is sampled. The physics behind each
-//! predicted read-out is a modelling assumption stated in `model.rs`.
+//! Predictions and the plan are computed; the observations are sampled. The physics behind each
+//! factor and each response is a modelling assumption stated in `model.rs`.
 
 mod constants;
 mod model;
 
-use deep_causality_algebra::Real;
+use deep_causality_core::CausalFlow;
 use deep_causality_haft::Either;
-use deep_causality_num::{Float106, lift_count, lower, to_count};
+use deep_causality_num::{Float106, lower};
 use deep_causality_num_complex::Complex;
 use deep_causality_quantum::{
-    Check, CheckItem, CheckReport, CommutatorTolerance, DensityMatrix, MinCostCover, Projection,
-    QclBuilder, QuantumErrorEnum, ShotEstimate, World, adjudicate, sample_projector,
+    Campaign, CampaignRules, CampaignStop, CommutatorTolerance, EvidenceSource, MinCostCover,
+    QclBuilder, QuantumErrorEnum,
 };
-use deep_causality_tensor::CausalTensor;
 
 use crate::constants::{
-    AGREEMENT_SIGMAS, CANDIDATE_COUNT, COST_TOMOGRAPHY, EXPECTED_PLAN_COST, FLOOR_BITS, ONE, SEED,
-    SHOTS, ZERO,
+    AGREEMENT_SIGMAS, CANDIDATE_COUNT, DRIFT, EXPECTED_PLAN_COST, FLOOR_BITS, SEED, SHOTS, ZERO,
 };
 use crate::model::{
-    e1_projector, e2_projector, experiments, h1_direct_q1_to_q2, h2_direct_q2_to_q1,
-    h3_common_bath, h4_cyclic, plant, systems,
+    CrosstalkModel, e1_projector, e2_projector, experiments, h1_direct_q1_to_q2,
+    h2_direct_q2_to_q1, h3_common_bath, h4_cyclic, plant, systems,
 };
 
 /// The working scalar. Switch it to `f32`, `f64` or `deep_causality_num::BFloat16`; the factors,
@@ -80,7 +79,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             h3_common_bath()?,
             h4_cyclic()?,
         ])
-        .probes(&experiments()?)
         .seed(SEED)
         .build();
     match refused {
@@ -93,21 +91,22 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         },
     }
 
+    let candidates = [
+        h1_direct_q1_to_q2()?,
+        h2_direct_q2_to_q1()?,
+        h3_common_bath()?,
+    ];
     let cfg = QclBuilder::config::<FloatType, NumberType>()
         .over_plant(plant()?, &[e2_projector()?, e1_projector()?])
-        .candidates(&[
-            h1_direct_q1_to_q2()?,
-            h2_direct_q2_to_q1()?,
-            h3_common_bath()?,
-        ])
-        .probes(&experiments()?)
+        .candidates(&candidates)
         .seed(SEED)
         .build()?;
 
-    // -- validate: Markov, then C₃ on each candidate's own structure -------------------
+    // -- validate: normalisation, Markov, then C₃ on each candidate's own structure -----
     println!("\n[validate] three acyclic structures");
     let sys = systems();
     let screened = QclBuilder::validate(&cfg)
+        .check_normalization()
         .check_markov(&CommutatorTolerance::<FloatType>::default())
         .check_decomposable(&sys, &sys)
         .finalize()?;
@@ -127,56 +126,59 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         yes_no(all_three_admitted)
     );
 
-    // -- control: the hand-off, the fork, and the plan ---------------------------------
-    println!("\n[control] the screen enters control; a structural config could not");
-    let report = QclBuilder::control::<FloatType, NumberType, 4, _>(&screened)
-        .fork()
-        .design(MinCostCover::new(floor_bits))
+    // -- design: every prediction computed, then the minimum-cost cover ------------------
+    let exps = experiments()?;
+    let planned = QclBuilder::control::<FloatType, NumberType, 4, _>(&screened)
+        .design_with(&CrosstalkModel, &exps, MinCostCover::new(floor_bits))
         .finalize()?;
-    let plan = report
+    let plan = planned
         .plan
         .as_ref()
         .ok_or("design should have produced a plan")?;
     println!(
-        "    forked {} worlds, each with its own ledger, none moved into an arm",
-        report.worlds.len()
+        "\n[design] predicted read-out under H1 / H2 / H3, and the cover at {} bits",
+        lower(floor_bits)
     );
-    println!(
-        "\n[design] minimum-cost cover, floor {} bits",
-        lower(FLOOR_BITS)
-    );
-    for (i, e) in experiments()?.iter().enumerate() {
+    let the_plant = plant()?;
+    for (i, e) in exps.iter().enumerate() {
+        let predicted = candidates
+            .iter()
+            .map(|h| e.predict::<_, 4>(&CrosstalkModel, h, &the_plant, &[]))
+            .collect::<Result<Vec<_>, _>>()?;
         let chosen = plan.entries().iter().find(|p| p.experiment == i);
         println!(
-            "    {:<26} cost {:>5}   {}",
+            "    {:<24} cost {}   {:.2} / {:.2} / {:.2}   {}",
             e.name(),
             lower(e.cost()),
+            lower(predicted[0]),
+            lower(predicted[1]),
+            lower(predicted[2]),
             chosen.map_or("—".to_string(), |p| format!(
                 "chosen, resolves {:?}",
                 p.resolves
             ))
         );
     }
+    let every_experiment = exps.iter().fold(ZERO, |sum, e| sum + e.cost());
     println!(
-        "    plan: {:?}  total cost {}   (tomography alone would cost 200, {}× more)",
+        "    plan: {:?}  total cost {}, of the {} all {} experiments cost",
         plan.entries()
             .iter()
             .map(|e| e.name.as_str())
             .collect::<Vec<_>>(),
         lower(plan.total_cost()),
-        lower(COST_TOMOGRAPHY / plan.total_cost())
+        lower(every_experiment),
+        exps.len()
     );
     println!(
-        "    tightest pair separates at {:.1} bits against the floor; ledger cost {}",
+        "    tightest pair separates at {:.1} bits against the floor",
         lower(
             plan.report()
                 .worst()
                 .ok_or("the plan should separate every pair")?
                 .measured
-        ),
-        report.ledger.cost()
+        )
     );
-
     let plan_is_complete = plan.is_complete();
     let plan_costs_two = plan.total_cost() == EXPECTED_PLAN_COST;
     println!(
@@ -186,81 +188,87 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         yes_no(plan_costs_two)
     );
 
-    // -- the first planned experiment, observed under H₁ ---------------------------------
-    let probes = experiments()?;
-    let first = &probes[plan.entries()[0].experiment];
-    // H₁ is the world the observation is drawn from. Predictions are indexed by hypothesis
-    // position, the convention `design` and `Experiment` share, so the position is looked up by
-    // name rather than assumed.
-    let truth = report
-        .worlds
-        .iter()
-        .position(|w| w.name().starts_with("H1"))
-        .ok_or("H1 should be among the forked worlds")?;
-
-    if first.predictions().len() != report.worlds.len() {
-        return Err("each experiment predicts one read-out per world".into());
-    }
-
-    let observed = observe_under(first.predictions()[truth])?;
+    // -- the campaign: the plan run against observations drawn from H₁ -------------------
     println!(
-        "\n[{}] observed {:.3} ± {:.3} over {} shots, drawn from the Born sampler at H1's prediction",
-        first.name(),
-        lower(observed.estimate()),
-        lower(observed.standard_error()),
-        observed.shots()
+        "\n[campaign] H1 generates the observations; cheapest planned experiment first, stop when the evidence decides"
     );
-
-    // -- adjudicate: each world's prediction against the observation, folded as Boolean --
-    let worlds: Vec<World<FloatType, 4>> = report
-        .worlds
-        .iter()
-        .enumerate()
-        .map(|(i, w)| {
-            let predicted = first.predictions()[i];
-            let prediction = predicted_as_read_out(predicted);
-            let verdict = agrees(&prediction, &observed);
+    let truth = EvidenceSource::Simulated(h1_direct_q1_to_q2()?);
+    let rules = CampaignRules::new(MinCostCover::new(floor_bits), AGREEMENT_SIGMAS, DRIFT)?;
+    let steps = exps.len() + 1;
+    let campaign = CausalFlow::value(Campaign::new(
+        QclBuilder::control::<FloatType, NumberType, 4, _>(&screened).fork(),
+    ))
+    .context(exps.clone())
+    .iterate_until(Campaign::is_stopped, steps, |flow| {
+        Campaign::step(flow, &CrosstalkModel, &truth, &rules)
+    })
+    .finish()?;
+    let stop = campaign.stop().cloned();
+    let (run, spent) = (campaign.experiments_run().len(), campaign.spent());
+    let report = campaign.finalize()?;
+    for (k, observation) in report.observations.iter().enumerate() {
+        let read_out = observation.read_out();
+        println!(
+            "    {}: observed {:.3} ± {:.3} over {} shots",
+            observation.experiment(),
+            lower(read_out.estimate()),
+            lower(read_out.standard_error()),
+            observation.shots()
+        );
+        for w in &report.worlds {
+            let reading = &w.readings()[k];
+            let prediction = reading
+                .prediction()
+                .ok_or("a compared reading has a prediction")?;
+            let holds = reading.verdict().is_some_and(|v| v.accepted());
             println!(
-                "    {:<18} predicts {:.2}   {}",
+                "        {:<14} predicts {:.2}   {}",
                 w.name(),
-                lower(predicted),
-                if verdict.accepted() {
-                    "consistent"
-                } else {
-                    "rejected"
-                }
+                lower(prediction),
+                if holds { "consistent" } else { "rejected" }
             );
-            World::read_out(w.name(), verdict, prediction)
-        })
-        .collect();
-    let a = adjudicate(&worlds, floor_bits)?;
-    println!(
-        "\n[adjudicate] {} worlds folded, {} commutation pairs tested: a Boolean fold, §4 rule 2 does not apply",
-        a.worlds_folded, a.commutation_pairs_tested
-    );
-    match &a.outcome {
-        Either::Left(s) => {
+        }
+    }
+    let named_the_truth = match &stop {
+        Some(CampaignStop::Survivor(s)) => {
             println!(
-                "    {} survives, {:.1} bits from its nearest rival. Direct cause, not shared bath.",
+                "    {} survives, {:.1} bits from its nearest rival, after {run} of the plan's {} experiments (spent {} of {}).",
                 s.name,
-                lower(s.separation_bits)
+                lower(s.separation_bits),
+                plan.entries().len(),
+                lower(spent),
+                lower(plan.total_cost())
             );
+            println!("    Direct cause, not shared bath.");
             println!(
                 "    -> a scheduling or echo fix applies; frequency reallocation is not required."
             );
+            s.name.starts_with("H1")
         }
-        Either::Right(why) => println!("    ambiguous: {why:?}"),
-    }
-
-    // The survivor is the structure the observation was drawn from. Naming it up front and
-    // checking at the end is what separates a demonstration from a coincidence.
-    let named_the_truth = matches!(&a.outcome, Either::Left(s) if s.name.starts_with("H1"));
-    println!(
-        "\n    the adjudication named the structure the observation came from: {}",
-        yes_no(named_the_truth)
+        other => {
+            println!("    the campaign stopped without a survivor: {other:?}");
+            false
+        }
+    };
+    let survivor_matches = matches!(
+        &report.adjudication.map(|a| a.outcome),
+        Some(Either::Left(s)) if s.name.starts_with("H1")
     );
 
-    if !(all_three_admitted && plan_is_complete && plan_costs_two && named_the_truth) {
+    // The survivor is the structure the observations were drawn from. Naming it up front and
+    // checking at the end is what separates a demonstration from a coincidence.
+    println!(
+        "\n    the campaign named the structure the observations came from: {}",
+        yes_no(named_the_truth && survivor_matches)
+    );
+
+    if !(all_three_admitted
+        && plan_is_complete
+        && plan_costs_two
+        && named_the_truth
+        && survivor_matches
+        && spent <= plan.total_cost())
+    {
         return Err("a check the example makes about its own decision failed".into());
     }
 
@@ -270,50 +278,4 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// A check's verdict, as a word.
 fn yes_no(ok: bool) -> &'static str {
     if ok { "yes" } else { "NO" }
-}
-
-/// `shots` draws from a qubit whose excited population is `p`, through the shipped Born sampler.
-fn observe_under(p: FloatType) -> Result<ShotEstimate<FloatType>, Box<dyn std::error::Error>> {
-    let rho = DensityMatrix::new(CausalTensor::from_slice(
-        &[
-            Complex::new(ONE - p, ZERO),
-            Complex::new(ZERO, ZERO),
-            Complex::new(ZERO, ZERO),
-            Complex::new(p, ZERO),
-        ],
-        &[2, 2],
-    ))?;
-
-    let excited = Projection::<FloatType, 2>::from_ket(&CausalTensor::from_slice(
-        &[Complex::new(ZERO, ZERO), Complex::new(ONE, ZERO)],
-        &[2],
-    ))?;
-
-    let hist = sample_projector(&rho, &excited, SHOTS, SEED)?;
-
-    Ok(ShotEstimate::of_outcome(&hist, 1)?)
-}
-
-/// A world's predicted read-out, carried with the shot noise it would have at the planned shots.
-fn predicted_as_read_out(p: FloatType) -> ShotEstimate<FloatType> {
-    // The shots a probability names: rounded in the working type, then a count again.
-    let ones = to_count(p * lift_count::<FloatType>(SHOTS)).expect("a rounded count fits");
-    let mut hist = deep_causality_quantum::CountHistogram::new(1).expect("a one-bit histogram");
-    hist.record_n(1, ones).expect("a count that fits");
-    hist.record_n(0, SHOTS - ones).expect("a count that fits");
-    ShotEstimate::of_outcome(&hist, 1).expect("a non-empty histogram")
-}
-
-/// Whether a prediction agrees with the observation: the gap against `AGREEMENT_SIGMAS` standard
-/// errors of the observation, in the decision form.
-fn agrees(
-    prediction: &ShotEstimate<FloatType>,
-    observed: &ShotEstimate<FloatType>,
-) -> CheckReport<FloatType> {
-    let gap = Real::abs(prediction.estimate() - observed.estimate());
-    let allowance = AGREEMENT_SIGMAS * observed.standard_error();
-    CheckReport::new(
-        vec![Check::new(CheckItem::Whole, gap, allowance)],
-        observed.shots() as usize,
-    )
 }

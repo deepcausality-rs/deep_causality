@@ -29,7 +29,7 @@
 //! This module once tested for a different relation, the bipartite 6-cycle
 //! `K₃,₃` minus a perfect matching, and so accepted the paper's `C₃` while
 //! rejecting a structure the paper admits. The record is
-//! `openspec/notes/quantum/qcl-corrections.md`, X-16.
+//! `openspec/notes/archive/quantum/qcl-corrections.md`, X-16.
 
 use crate::QuantumError;
 use alloc::collections::BTreeSet;

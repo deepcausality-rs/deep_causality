@@ -21,7 +21,7 @@ different kinds of evidence.
 The default `cargo` build compiles only the verifiable path and pulls in no network/async
 dependency; the modality separation is a compile-time guarantee.
 
-## Lean formalization (Lean 4.15.0 + Mathlib)
+## Lean formalization (Lean v4.32.0 + Mathlib)
 
 The pinned Mathlib has neither a partial trace nor a Choi–Jamiołkowski layer, so both are built from
 first principles in `lean/DeepCausalityFormal/Quantum/`. Every listed theorem closes with **zero
@@ -36,6 +36,11 @@ first principles in `lean/DeepCausalityFormal/Quantum/`. Every listed theorem cl
 | `partial_trace_nonpreservation` (+ `_value`) | **B1**: `[X,Y]=0` yet `[Tr_B X, Tr_B Y] = [[0,4],[−4,0]] ≠ 0` | `… :: test_partial_trace_nonpreservation_counterexample` |
 | `applyChoi_add` / `applyChoi_smul` | the reconstructed Choi action is linear | `channel_tests :: test_apply_kraus_and_apply_choi_agree` |
 | `abstraction_compose_exact` / `_defect` | two commuting abstraction squares paste along their middle level (Lorenz & Tull, Proposition 17, exact case) | `composition_tests :: test_exact_links_compose_exactly_on_the_concatenated_code` |
+| `applyChoi_choiOf` | the Choi–Jamiołkowski reconstruction: `applyChoi (choiOf E) A = E A` for every linear channel | `choi_tests :: test_choi_reconstruction_recovers_the_channel` |
+| `subspace_lattice_orthomodular` / `subspace_lattice_not_distributive` | the subspace lattice behind the `Projection` verdict is orthomodular and not distributive | `orthomodular_tests :: test_the_orthomodular_law_holds_for_a_line_inside_a_plane` |
+| `kron_one_commute_one_kron` / `pairwise_commute_prod_perm` | factors on disjoint legs commute; a pairwise-commuting product does not depend on its order (Lorenz 2022, Def. 3.3) | `qcm_theorem_tests :: test_factors_on_disjoint_legs_commute` |
+| `diagonal_commute` / `kron_diagonal` | diagonal (classical) factors commute, and their Kronecker product is diagonal | `qcm_theorem_tests :: test_diagonal_factors_commute_and_their_kronecker_product_is_diagonal` |
+| `noInfluence_iff` | the D marginal factors through `Tr_A` exactly when it depends on the A input only through its trace (Lorenz & Barrett 2021, Def. 1) | `qcm_theorem_tests :: test_a_product_unitary_has_no_influence_from_a_to_d` |
 
 ### The headline: `partial_trace_preservation` is false
 
@@ -58,22 +63,18 @@ computed, is the crate's own theorem by the triangle inequality on the same past
 statement. The naturality check, the structural precheck, the fault propagator and the decoder
 validation are computed and witnessed by tests; none claims a theorem.
 
-## Deferred (stated as targets, not yet proved in Lean)
+## Open target
 
-These carry numerical / property-test witnesses in the crate today; their Lean proofs need net-new
-Mathlib machinery and are future work. The `lean/DeepCausalityFormal/Quantum/` tree is exempt from
-the CI `sorry` gate while this foundation is extended.
+One target is stated and not proved: `quantum.unitary_factorization` (Lorenz & Barrett 2021,
+Theorem 1), the commuting factorization on the unitary fragment. Its proof rests on the commutant
+and direct-sum decomposition of finite-dimensional C\*-algebras. The pinned Mathlib has
+Wedderburn–Artin and C\*-algebra basics but not that decomposition. The
+`lean/DeepCausalityFormal/Quantum/` tree is exempt from the CI `sorry` gate while this foundation is
+extended.
 
-- The **Choi–Jamiołkowski reconstruction isomorphism** `applyChoi (choiOf E) = E` (round-trip
-  witnessed by `channel_tests`).
-- `quantum.no_influence`, `quantum.markov_commutativity` (the freeze check is witnessed by
-  `qcm/markov_freeze_tests`).
-- `quantum.unitary_factorization` (research-grade; needs the direct-sum / C\*-structure theory
-  Mathlib lacks).
-- `quantum.classical_embedding`, `quantum.cyclic_support`.
-- `quantum.verdict.orthomodular` — the Rust orthomodular projection-lattice `Verdict` carrier and its
-  law tests are complete (`verdict/projection_tests`); the Lean statement extending
-  `core.verdict.carriers` is future work.
+`quantum.cyclic_support` is not a target. The crate refuses cyclic structures at `build()` by
+decision, and acyclicity as a separable parameter is proved as
+`core.context_graph.acyclicity_separable`.
 
 ## Faithfulness scope
 

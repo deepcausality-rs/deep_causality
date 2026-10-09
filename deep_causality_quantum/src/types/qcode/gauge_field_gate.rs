@@ -517,9 +517,8 @@ impl<W: NaturalNumber> GaugeFieldGate<W> {
     {
         let m = self.blocks.len();
         let size = 1usize << m;
-        let two_pi = R::from_f64(core::f64::consts::TAU).ok_or_else(|| {
-            QuantumError::CalculationError("the scalar cannot represent 2π".into())
-        })?;
+        // 2π and each phase are formed at `R`, so a wide scalar carries them to its own precision.
+        let two_pi = R::pi() + R::pi();
         let scale = R::from_usize(size).ok_or_else(|| {
             QuantumError::CalculationError("the scalar cannot represent the pattern count".into())
         })?;
@@ -527,7 +526,8 @@ impl<W: NaturalNumber> GaugeFieldGate<W> {
             .phases
             .iter()
             .map(|p| {
-                let t = R::from_f64(*p.numer() as f64 / *p.denom() as f64).ok_or_else(|| {
+                let (numer, denom) = (R::from_i64(*p.numer()), R::from_i64(*p.denom()));
+                let t = numer.zip(denom).map(|(n, d)| n / d).ok_or_else(|| {
                     QuantumError::CalculationError("the scalar cannot represent a phase".into())
                 })?;
                 let angle = two_pi * t;

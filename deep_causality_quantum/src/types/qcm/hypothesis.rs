@@ -35,12 +35,13 @@
 
 use crate::QuantumError;
 use crate::types::carriers::Channel;
-use crate::types::decision::{Check, CheckItem, CheckReport, Factorization};
+use crate::types::decision::{Check, CheckItem, CheckReport, Factorization, Tolerance};
 use crate::types::qcm::faithfulness::CausalStructure;
 use crate::types::qcm::markov_freeze::{CommutatorTolerance, quantum_markov_check_report_as};
 use crate::types::qcm::process_factors::{CjFactor, FactorSupports, ProcessFactors};
 use crate::types::qgates::operator_linalg::{
-    BoundaryWarrant, embed_on_legs, partial_trace, partial_trace_preservation_boundary, square_dim,
+    BoundaryWarrant, embed_on_legs, frobenius_norm, identity_matrix, partial_trace,
+    partial_trace_preservation_boundary, square_dim,
 };
 use alloc::collections::{BTreeMap, BTreeSet};
 use alloc::format;
@@ -49,6 +50,7 @@ use alloc::vec;
 use alloc::vec::Vec;
 use deep_causality::CausableGraph;
 use deep_causality_algebra::RealField;
+use deep_causality_linear::vector_norm_l2;
 use deep_causality_num::FromPrimitive;
 use deep_causality_num_complex::Complex;
 use deep_causality_tensor::{CausalTensor, Tensor};
@@ -349,6 +351,77 @@ where
         })
     }
 
+    /// The normalization check: every factor traced over its node's input is the identity on
+    /// the rest of its support, `Tr_{A^in} ρ_{A|Pa(A)} = 1`, so the factors make a normalised
+    /// process; for a classical factor, every conditional column sums to one, and a parentless
+    /// factor's trace is one.
+    ///
+    /// A node's own leg is the leg named by the node. Under the flat convention it is the node's
+    /// one system, its input, so the trace runs over the whole leg. A leg that pairs an input with
+    /// an output, as a dilation's do ([`FactorSupports::set_leg_output_dim`]), carries the factor
+    /// as the identity on its output half: `ρ = X ⊗ 1_out` with `Tr_{A^in} X = 1`, so the trace
+    /// over the whole leg is the output dimension `d_out` times the identity. The trace alone
+    /// does not see the output half, so on a paired leg the check also measures
+    /// `‖ρ − (Tr_out ρ / d_out) ⊗ 1_out‖_F`, the distance from the nearest operator that is the
+    /// identity there.
+    ///
+    /// One `Check` per factor, `CheckItem::Index(node)`, measures `‖Tr_A ρ − d_out · 1‖_F` on a
+    /// flat leg, and on a paired leg the Frobenius norm of that defect and the output-half defect
+    /// together, against the state member of the tolerance family at the factor's Frobenius
+    /// norm. A rejecting record is a candidate that is not a process, not an error.
+    ///
+    /// # Errors
+    ///
+    /// [`QuantumError::CalculationError`] on a mechanism candidate, and on an empty factor store,
+    /// which is no process to check;
+    /// [`QuantumError::DimensionMismatch`] when a node's support lacks the node's own leg, so the
+    /// flat convention gives it no system to trace; and the partial trace's shape errors.
+    pub fn check_normalization(&self) -> Result<CheckReport<R>, QuantumError> {
+        let (factors, supports) = self.structural_parts()?;
+        if factors.is_empty() {
+            return Err(QuantumError::CalculationError(format!(
+                "hypothesis '{}' has no factors to check for normalization",
+                self.name
+            )));
+        }
+        let mut checks = Vec::new();
+        for node in factors.nodes() {
+            let factor = factors.get(node).expect("node from nodes()");
+            let legs = node_legs(supports, node);
+            let own = legs.iter().position(|&leg| leg == node).ok_or_else(|| {
+                QuantumError::DimensionMismatch(format!(
+                    "hypothesis '{}': node {node}'s support {legs:?} lacks its own leg {node}",
+                    self.name
+                ))
+            })?;
+            let dims: Vec<usize> = supports.space_map(&legs).into_values().collect();
+            let traced = partial_trace(factor, &dims, &[own])?;
+            let d = square_dim(&traced)?;
+            let d_out = supports.leg_output_dim(node);
+            let output = R::from_usize(d_out).ok_or_else(|| {
+                QuantumError::CalculationError(format!(
+                    "an output dimension of {d_out} is not representable"
+                ))
+            })?;
+            let target = identity_matrix::<R>(d) * Complex::new(output, R::zero());
+            let trace_defect = traced - target;
+            let residual = if d_out == 1 {
+                frobenius_norm(&trace_defect)
+            } else {
+                let mut defects = trace_defect.as_slice().to_vec();
+                defects.extend_from_slice(
+                    output_half_defect(factor, &dims, own, d_out, output)?.as_slice(),
+                );
+                vector_norm_l2(&defects)
+            };
+            let threshold = Tolerance::<R>::state()
+                .threshold(d, frobenius_norm(factor))
+                .expect("the state member answers the single-operator form");
+            checks.push(Check::new(CheckItem::Index(node), residual, threshold));
+        }
+        Ok(CheckReport::from_checks(checks))
+    }
+
     /// `do(node ← factor)`: the mechanism-level intervention, as a keyed replacement followed by
     /// revalidation. The receiver is unchanged, and the result carries no certificate.
     ///
@@ -399,12 +472,7 @@ where
         let (union, space) = union_space(factors, supports)?;
         let mut joint: Option<CausalTensor<Complex<R>>> = None;
         for node in factors.nodes() {
-            let legs: BTreeSet<usize> = supports
-                .support(node)
-                .expect("validated at construction")
-                .iter()
-                .copied()
-                .collect();
+            let legs = node_legs(supports, node);
             let embedded =
                 embed_on_legs(factors.get(node).expect("node from nodes()"), &legs, &space)?;
             joint = Some(match joint {
@@ -590,7 +658,8 @@ where
     /// The composite of two structural candidates over disjoint node keys.
     ///
     /// The factor stores and support registries are unioned; a leg both registries name must
-    /// carry one dimension. A certificate is inherited only when both parts are certified and
+    /// carry one dimension and one output half, and each leg keeps the output half its part
+    /// declared. A certificate is inherited only when both parts are certified and
     /// their leg sets are disjoint. Each part's certificate covers the pairs inside that part, and
     /// on disjoint legs every cross pair commutes by construction, so the parts' reports folded
     /// and marked `Inherited` certify the composite. Parts that share a leg leave the cross pair
@@ -601,7 +670,7 @@ where
     ///
     /// [`QuantumError::CalculationError`] if either is a mechanism candidate or the node keys
     /// overlap; [`QuantumError::DimensionMismatch`] if the two registries register a leg at
-    /// different dimensions, or the union fails validation.
+    /// different dimensions or output halves, or the union fails validation.
     pub fn compose(&self, other: &Self) -> Result<Self, QuantumError> {
         let (fa, sa) = self.structural_parts()?;
         let (fb, sb) = other.structural_parts()?;
@@ -618,14 +687,25 @@ where
                 let legs = registry.support(node).expect("validated at construction");
                 for &leg in legs {
                     let dim = registry.leg_dim(leg);
-                    if let Some(known) = supports.declared_leg_dim(leg)
-                        && known != dim
-                    {
-                        return Err(QuantumError::DimensionMismatch(format!(
-                            "cannot compose: leg {leg} has dimension {known} in one part and {dim} in the other"
-                        )));
+                    let output = registry.leg_output_dim(leg);
+                    if let Some(known) = supports.declared_leg_dim(leg) {
+                        if known != dim {
+                            return Err(QuantumError::DimensionMismatch(format!(
+                                "cannot compose: leg {leg} has dimension {known} in one part and {dim} in the other"
+                            )));
+                        }
+                        let known_output = supports.leg_output_dim(leg);
+                        if known_output != output {
+                            return Err(QuantumError::DimensionMismatch(format!(
+                                "cannot compose: leg {leg} has an output half of dimension \
+                                 {known_output} in one part and {output} in the other"
+                            )));
+                        }
                     }
                     supports.set_leg_dim(leg, dim);
+                    if output != 1 {
+                        supports.set_leg_output_dim(leg, output);
+                    }
                 }
                 supports.declare(node, legs);
             }
@@ -652,6 +732,39 @@ where
             },
         })
     }
+}
+
+/// The ascending legs of `node`'s declared support. A structural candidate's every factor node has
+/// one, which `FactorSupports::validate` checked at construction.
+fn node_legs(supports: &FactorSupports, node: usize) -> BTreeSet<usize> {
+    supports
+        .support(node)
+        .expect("validated at construction")
+        .iter()
+        .copied()
+        .collect()
+}
+
+/// `ρ − (Tr_out ρ / d_out) ⊗ 1_out` for a factor on legs of dimensions `dims`, where the leg at
+/// position `own` pairs an input with an output half of dimension `d_out`, the input outer: the
+/// factor's part that is not the identity on that output half. `output` is `d_out` in `R`, and
+/// `d_out` divides the leg's dimension, as `FactorSupports::validate` checked.
+fn output_half_defect<R: RealField>(
+    factor: &CjFactor<R>,
+    dims: &[usize],
+    own: usize,
+    d_out: usize,
+    output: R,
+) -> Result<CausalTensor<Complex<R>>, QuantumError> {
+    let mut halves = dims.to_vec();
+    halves[own] /= d_out;
+    halves.insert(own + 1, d_out);
+    let reduced = partial_trace(factor, &halves, &[own + 1])?;
+    let space: BTreeMap<usize, usize> = halves.iter().copied().enumerate().collect();
+    let kept: BTreeSet<usize> = (0..halves.len()).filter(|&k| k != own + 1).collect();
+    let averaged =
+        embed_on_legs(&reduced, &kept, &space)? * Complex::new(R::one() / output, R::zero());
+    Ok(factor.clone() - averaged)
 }
 
 /// The union of the supports of every factor, and its leg-to-dimension map.

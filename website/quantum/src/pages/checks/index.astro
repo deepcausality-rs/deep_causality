@@ -13,12 +13,12 @@ const cls = { proved: 'validated', partial: 'partial', tested: 'measured', decis
 <PageShell title={title} description={description} path="/checks/">
   <header class="doc-head">
     <p class="eyebrow">Checks</p>
-    <h1>What each check decides, and what a failure names.</h1>
+    <h1>Every check shows what backs it.</h1>
     <p class="lede">
-      Each entry names a check, the subjects that run it and the question it decides. It then
-      gives what a rejection carries, when the check passes without examining anything (a
-      Vacuous verdict), and what backs it. None of the fourteen entries is fully proved in
-      Lean: two are proved in part, eleven are tested, and one is a decision the crate records.
+      Lean proves three of the fourteen entries in part, tests witness ten, and one is a decision
+      the crate records; none is fully proved in Lean. Each entry also gives the question it
+      decides, the subjects that run it, what a rejection carries, and when it passes with nothing
+      to examine (a Vacuous verdict).
     </p>
   </header>
 
@@ -50,22 +50,22 @@ const cls = { proved: 'validated', partial: 'partial', tested: 'measured', decis
   ))}
 
   <section class="doc-sec" id="verdicts">
-    <h2>How does a measurement become a verdict?</h2>
+    <h2>A verdict comes from a state and a projection.</h2>
     <p>
-      The crate reads a verdict from a state and a measurement projection <code>P</code>. The
-      Born rule <code>Tr(Pρ)</code> gives a probability verdict, and the projection itself is a
-      proposition in the lattice of projections. The operators carry no verdict of their own,
+      The Born rule <code>Tr(Pρ)</code> gives a probability verdict from a state <code>ρ</code>
+      and a measurement projection <code>P</code>, and the projection itself is a proposition in
+      the lattice of projections. The operators carry no verdict of their own,
       because general effects (<code>0 ≤ E ≤ I</code>) form only an effect algebra, which has
       partial meet and join.
     </p>
     <p>
       The lattice of projections is bounded, has the orthocomplement <code>I − P</code> and
       satisfies the orthomodular law. It fails distributivity, as probability verdicts fail
-      excluded middle. The Rust carrier and its law tests are complete; the Lean statement that
-      the lattice is orthomodular is a deferred target.
+      excluded middle. Lean proves the lattice orthomodular and not distributive
+      (<code>quantum.verdict.orthomodular</code>), and the Rust carrier's tests check the same laws.
     </p>
     <p class="next-links">
-      <a href="/proof/#deferred">The deferred targets →</a>
+      <a href="/proof/#theorems">The proved theorems →</a>
     </p>
   </section>
 </PageShell>

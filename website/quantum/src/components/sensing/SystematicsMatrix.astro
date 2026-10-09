@@ -1,0 +1,180 @@
+---
+/**
+ * The gravimeter's plan as a matrix: one row per systematic, one column per experiment, and a dot
+ * where the experiment moves that systematic's prediction away from the others'. The planned
+ * columns carry the accent; the two the plan leaves out are dimmed. The wavefront's row has no dot
+ * in a planned column, so the plan finds it by elimination.
+ *
+ * `compact` keeps the planned columns, drops the setup row and the key, and moves the
+ * elimination note under the matrix, for the hero.
+ * Values read from `src/data/sensing.ts`; the moves follow `offset` in the example's `model.rs`.
+ */
+import { gravimeterExperiments, systematics, GRAVIMETER, SCAN_SETUP_S } from '../../data/sensing';
+
+interface Props {
+  compact?: boolean;
+}
+const { compact = false } = Astro.props;
+
+const columns = compact ? gravimeterExperiments.filter((e) => e.planned) : gravimeterExperiments;
+const eliminated = systematics.filter(
+  (h) => !gravimeterExperiments.some((e) => e.planned && e.moves.includes(h.id)),
+);
+const seconds = (s: number) => s.toLocaleString('en-US');
+---
+<figure class:list={['smx', { compact }]} data-rise>
+  <div class="scroll">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col" class="corner"><span class="vh">Systematic</span></th>
+          {columns.map((e) => (
+            <th scope="col" class:list={['ecol', e.planned ? 'planned' : 'left-out']}>{e.id}</th>
+          ))}
+        </tr>
+        {!compact && (
+          <tr class="setup">
+            <th scope="row">setup, s</th>
+            {columns.map((e) => (
+              <td class:list={['num', e.planned ? 'planned' : 'left-out']}>{seconds(e.setup)}</td>
+            ))}
+          </tr>
+        )}
+      </thead>
+      <tbody>
+        {systematics.map((h, i) => (
+          <tr class="rise" style={`--i:${i}`}>
+            <th scope="row" class="hrow">
+              <span class="hid">{h.id}</span>
+              {!compact && <span class="hname">{h.name}</span>}
+              {!compact && eliminated.some((x) => x.id === h.id) && <span class="elim">by elimination</span>}
+            </th>
+            {columns.map((e) => (
+              <td class:list={['cell', e.planned ? 'planned' : 'left-out']}>
+                {e.moves.includes(h.id) && (
+                  <>
+                    <span class="dot" aria-hidden="true"></span>
+                    <span class="vh">{e.id} moves {h.id}</span>
+                  </>
+                )}
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+  {compact && (
+    <p class="cap">{eliminated.map((h) => h.id).join(', ')}: no planned column moves it, so the plan finds it by elimination</p>
+  )}
+  {!compact && (
+    <figcaption>
+      <ul class="key">
+        {gravimeterExperiments.map((e) => (
+          <li class:list={{ 'left-out': !e.planned }}><b>{e.id}</b> {e.name}</li>
+        ))}
+      </ul>
+      <p>
+        A dot marks a systematic whose predicted read-out the experiment moves away from the
+        others’. The plan takes the six highlighted columns for {seconds(GRAVIMETER.planCost)} s,
+        setup and integration time together, and leaves out E5 and E6. E6’s temperature scan alone
+        costs {seconds(SCAN_SETUP_S)} s of setup.
+      </p>
+    </figcaption>
+  )}
+</figure>
+
+<noscript>
+  <style is:inline>
+    .smx .rise { opacity: 1 !important; transform: none !important; }
+  </style>
+</noscript>
+
+<style>
+  .smx { margin: 0; }
+  .scroll { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; }
+  th, td { padding: var(--space-2) var(--space-1); text-align: center; border-top: 1px solid var(--line-1); }
+  thead th, thead td { border-top: none; }
+  .corner { width: 1%; }
+  .ecol {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: 0;
+    font-weight: 400;
+    color: var(--fg-1);
+    min-width: 2.2rem;
+  }
+  .ecol.planned { color: var(--accent); }
+  .setup th {
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    font-weight: 400;
+    color: var(--fg-2);
+    white-space: nowrap;
+  }
+  .setup td { color: var(--fg-2); font-size: var(--t-eyebrow); }
+  .hrow { text-align: left; white-space: nowrap; font-weight: 400; padding-right: var(--space-3); }
+  .hid { font-family: var(--font-mono); font-size: var(--t-mono-sm); color: var(--fg-1); }
+  .hname { margin-left: var(--space-2); font-size: var(--t-body-sm); color: var(--fg-0); }
+  .elim {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    color: var(--accent);
+  }
+  td.planned, th.planned { background: color-mix(in srgb, var(--accent) 7%, transparent); }
+  td.left-out, th.left-out { color: var(--fg-2); }
+  .cell { height: 2rem; }
+  .dot {
+    display: inline-block;
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 50%;
+    background: var(--accent);
+    vertical-align: middle;
+  }
+  .left-out .dot { background: transparent; border: 1.5px solid var(--fg-2); }
+  .vh {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .compact th, .compact td { padding: 0.1rem 0.15rem; }
+  .compact .cell { height: 1.1rem; }
+  .compact .dot { width: 0.55rem; height: 0.55rem; }
+  .compact .ecol { min-width: 1.5rem; }
+  .cap {
+    margin: var(--space-1) 0 0;
+    color: var(--fg-2);
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: 0;
+  }
+
+  /* Narrow screens: the systematics' names give way to their ids, which the table above the
+     figure names, so all eight columns fit without scrolling. */
+  @media (max-width: 559px) {
+    .hname { display: none; }
+    .elim { white-space: normal; max-width: 5.5rem; }
+    .ecol { min-width: 1.9rem; }
+  }
+
+  figcaption { margin-top: var(--space-4); color: var(--fg-2); font-size: var(--t-body-sm); max-width: var(--measure); }
+  figcaption p { margin: var(--space-3) 0 0; }
+  .key {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+    gap: var(--space-1) var(--space-4);
+  }
+  .key b { font-family: var(--font-mono); font-weight: 400; color: var(--accent); }
+  .key .left-out b { color: var(--fg-2); }
+</style>

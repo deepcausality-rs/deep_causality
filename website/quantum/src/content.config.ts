@@ -25,13 +25,14 @@ const examples = defineCollection({
      * The question the example answers, as a group on the index:
      * `decide` picks between rival causes, `model` checks a factorization,
      * `code` verifies an error-correcting code, `compose` stacks abstractions,
-     * `other` is quantum in subject and does not exercise the QCL builder.
+     * `sense` attributes a sensor's systematic, `other` is quantum in subject and
+     * does not exercise the QCL builder.
      */
-    group: z.enum(['decide', 'model', 'code', 'compose', 'other']),
+    group: z.enum(['decide', 'model', 'code', 'compose', 'sense', 'other']),
     command: z.string(),
     /**
      * Whether the example imports `deep_causality_quantum`. Five of the
-     * fourteen examples in the package are quantum in subject and build on
+     * sixteen examples in the package are quantum in subject and build on
      * sibling crates, and the listing says which is which rather than
      * implying coverage.
      */

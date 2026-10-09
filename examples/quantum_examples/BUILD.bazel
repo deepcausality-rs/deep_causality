@@ -168,3 +168,26 @@ rust_binary(
         normal_dev = True,
     ),
 )
+
+rust_binary(
+    name = "qcl_gradiometer_crosstalk",
+    srcs = glob(["qcl_examples/qcl_gradiometer_crosstalk/**/*.rs"]),
+    crate_root = "qcl_examples/qcl_gradiometer_crosstalk/main.rs",
+    visibility = ["//visibility:public"],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
+)
+rust_binary(
+    name = "qcl_gravimeter_systematics",
+    srcs = glob(["qcl_examples/qcl_gravimeter_systematics/**/*.rs"]),
+    crate_root = "qcl_examples/qcl_gravimeter_systematics/main.rs",
+    visibility = ["//visibility:public"],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
+)

@@ -7,9 +7,7 @@ use crate::QuantumError;
 use crate::types::qpu::circuit::GateOp;
 use alloc::vec;
 use alloc::vec::Vec;
-use core::f64::consts::FRAC_PI_4;
 use deep_causality_algebra::RealField;
-use deep_causality_num::FromPrimitive;
 use deep_causality_num_complex::Complex;
 use deep_causality_tensor::CausalTensor;
 
@@ -27,21 +25,21 @@ pub const MAX_GATE_QUBITS: usize = 12;
 ///
 /// # Errors
 ///
-/// [`QuantumError::CalculationError`] if the scalar cannot represent `1/√2` or `π/4`;
 /// [`QuantumError::DimensionMismatch`] if a gate names a qubit twice or acts on more than
 /// [`MAX_GATE_QUBITS`] qubits, before any matrix is formed.
 pub fn gate_unitary<R>(op: &GateOp) -> Result<(Vec<usize>, CausalTensor<Complex<R>>), QuantumError>
 where
-    R: RealField + FromPrimitive,
+    R: RealField,
 {
     let zero = Complex::new(R::zero(), R::zero());
     let one = Complex::new(R::one(), R::zero());
     let i_unit = Complex::new(R::zero(), R::one());
     let minus_one = Complex::new(-R::one(), R::zero());
-    let s = R::from_f64(core::f64::consts::FRAC_1_SQRT_2)
-        .ok_or_else(|| QuantumError::CalculationError("the scalar cannot represent 1/√2".into()))?;
-    let pi4 = R::from_f64(FRAC_PI_4)
-        .ok_or_else(|| QuantumError::CalculationError("the scalar cannot represent π/4".into()))?;
+    // 1/√2 and π/4 are formed at `R`, so a wide scalar carries them to its own precision. Halving
+    // and quartering are exact in binary, so `√½` and `π/4` round once, as the f64 constants do.
+    let two = R::one() + R::one();
+    let s = (R::one() / two).sqrt();
+    let pi4 = R::pi() / (two + two);
     let t_phase = Complex::new(pi4.cos(), pi4.sin());
     let t_dagger = Complex::new(pi4.cos(), -pi4.sin());
 

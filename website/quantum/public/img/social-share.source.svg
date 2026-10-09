@@ -71,11 +71,8 @@
   </g>
 
   <!-- Headline -->
-  <text x="104" y="250" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="60" font-weight="500" fill="#e6edf3" letter-spacing="-1.2">
-    Find the cause. Verify the code.
-  </text>
-  <text x="104" y="308" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="60" font-weight="500" fill="#aab3bd" letter-spacing="-1.2">
-    Bound the error.
+  <text x="104" y="270" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="60" font-weight="500" fill="#e6edf3" letter-spacing="-1.2">
+    Find the cause of a quantum error
   </text>
 
   <!-- The verdict figure, as in HeroVerdicts.astro: the three questions and one

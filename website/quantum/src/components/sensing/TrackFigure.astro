@@ -1,0 +1,112 @@
+---
+/**
+ * Candidates against one scale: one row per candidate, a dot at the value it predicts, and an
+ * optional vertical marker. Used twice on `/sensing/`: the hero, where seven candidates predict the
+ * same passive reading, and the gradiometer, where one candidate predicts a different read-out.
+ *
+ * Geometry lives in the CSS grid; every word is HTML. The conventions follow `DecisionFigure`.
+ */
+interface Row {
+  name: string;
+  tag?: string;
+  value: number;
+  /** Draws the row in the accent colour. */
+  highlight?: boolean;
+}
+interface Props {
+  title: string;
+  rows: Row[];
+  min: number;
+  max: number;
+  ticks: number[];
+  /** Decimals for the values, and for the tick labels unless `tickDigits` is given. */
+  digits?: number;
+  tickDigits?: number;
+  /** A vertical line across every track. */
+  marker?: { value: number; label: string };
+  /** Hides each row's value label when every row shares one. */
+  hideValues?: boolean;
+}
+const { title, rows, min, max, ticks, digits = 0, tickDigits, marker, hideValues = false } = Astro.props;
+const at = (v: number) => `${(((v - min) / (max - min)) * 100).toFixed(2)}%`;
+const fmt = (v: number, d = digits) => `${v < 0 ? '−' : ''}${Math.abs(v).toFixed(d)}`;
+---
+<figure class="tracks panel corner-brackets" data-rise>
+  <p class="title">{title}</p>
+  <div class="rows">
+    {rows.map((r, i) => (
+      <div class:list={['row', 'rise', { hi: r.highlight }]} style={`--i:${i + 1}`}>
+        <div class="who">
+          <b class="name">{r.name}</b>
+          {r.tag && <span class="tag">{r.tag}</span>}
+        </div>
+        <div class="track">
+          {marker && <span class="marker" style={`left:${at(marker.value)}`}></span>}
+          <span class="dot" style={`left:${at(r.value)}`}></span>
+          {!hideValues && <span class="val num" style={`left:${at(r.value)}`}>{fmt(r.value)}</span>}
+        </div>
+      </div>
+    ))}
+    <div class="axis">
+      <span class="axis-pad"></span>
+      <span class="ticks">
+        {ticks.map((t) => <span class="tick num" style={`left:${at(t)}`}>{fmt(t, tickDigits ?? digits)}</span>)}
+      </span>
+    </div>
+    {marker && (
+      <div class="axis">
+        <span class="axis-pad"></span>
+        <span class="mlabel-row"><span class="mlabel" style={`left:${at(marker.value)}`}>{marker.label}</span></span>
+      </div>
+    )}
+  </div>
+  {Astro.slots.has('default') && <figcaption><slot /></figcaption>}
+</figure>
+
+<noscript>
+  <style is:inline>
+    .tracks .rise { opacity: 1 !important; transform: none !important; }
+  </style>
+</noscript>
+
+<style>
+  .tracks { margin: 0; padding: var(--space-5); }
+  .title {
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--fg-1);
+    margin: 0 0 var(--space-3);
+  }
+  .row, .axis { display: grid; grid-template-columns: 9.5rem minmax(0, 1fr); column-gap: var(--space-4); }
+  .row { border-top: 1px solid var(--line-1); min-height: 2.6rem; }
+  .who { display: flex; flex-direction: column; justify-content: center; padding: var(--space-2) 0; min-width: 0; }
+  .name { color: var(--fg-1); font-weight: var(--fw-heading); font-size: var(--t-body-sm); line-height: 1.25; }
+  .hi .name { color: var(--fg-0); }
+  .tag { color: var(--fg-2); font-family: var(--font-mono); font-size: var(--t-eyebrow); }
+  .track { position: relative; }
+  .track::before { content: ''; position: absolute; left: 0; right: 0; top: 50%; height: 1px; background: var(--line-2); }
+  .marker { position: absolute; top: 0; bottom: 0; width: 0; border-left: 1px dashed var(--accent); }
+  .dot {
+    position: absolute; top: 50%;
+    width: 0.8rem; height: 0.8rem; margin: -0.4rem 0 0 -0.4rem;
+    border-radius: 50%; background: var(--accent); border: 2px solid var(--bg-1);
+  }
+  .tracks:has(.hi) .row:not(.hi) .dot { background: var(--fg-2); }
+  .val {
+    position: absolute; top: 50%; transform: translate(0.7rem, -50%);
+    color: var(--fg-2); font-size: var(--t-eyebrow);
+  }
+  .hi .val { color: var(--fg-0); }
+  .axis { border-top: 1px solid var(--line-1); }
+  .ticks, .mlabel-row { position: relative; display: block; height: 1.5rem; margin-top: var(--space-1); }
+  .tick, .mlabel { position: absolute; transform: translateX(-50%); color: var(--fg-2); font-size: var(--t-eyebrow); white-space: nowrap; }
+  .tick:first-child { transform: none; }
+  .tick:last-child { transform: translateX(-100%); }
+  .mlabel { color: var(--accent); font-family: var(--font-mono); }
+  @media (max-width: 479px) {
+    .row, .axis { grid-template-columns: 6.5rem minmax(0, 1fr); column-gap: var(--space-3); }
+  }
+  figcaption { margin-top: var(--space-4); color: var(--fg-2); font-size: var(--t-body-sm); }
+</style>

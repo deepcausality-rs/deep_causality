@@ -69,9 +69,9 @@
   ],
   "oleans": {
     "url": "file:///var/folders/0j/v3sh2d251fv3kdx_k2q7crsm0000gn/T//lake-oleans-leanprover-lean4-v4.32.0.tar.gz",
-    "sha256": "e96c8b713a22e0a14fa2db5e48f642db7265ad919f89f442dd4ef26bc86f1cc7",
+    "sha256": "67a1a5a0835a87a76b5b61b544a101dc49e8c53c634163dc8f18ead71b598dc8",
     "strip_prefix": "",
-    "inputs_sha256": "45195e87bf7eed7e5b478185fbcb697cf9f2dcb7b8438053d823d4c1b245bc36",
+    "inputs_sha256": "365a9cd53458d09e60479153ac5d528b69785c85fc33ec4ab650235809c42e9a",
     "imports": [
       "Mathlib.Algebra.Algebra.Basic",
       "Mathlib.Algebra.DualNumber",
@@ -86,12 +86,14 @@
       "Mathlib.Algebra.Ring.Basic",
       "Mathlib.Algebra.Star.Basic",
       "Mathlib.Analysis.Complex.Basic",
+      "Mathlib.Analysis.InnerProductSpace.Projection.Submodule",
       "Mathlib.Analysis.Normed.Field.Basic",
       "Mathlib.Data.Rat.Cast.Defs",
       "Mathlib.Data.Real.Basic",
       "Mathlib.LinearAlgebra.Dimension.RankNullity",
       "Mathlib.LinearAlgebra.FiniteDimensional.Lemmas",
       "Mathlib.LinearAlgebra.Matrix.Rank",
+      "Mathlib.LinearAlgebra.Matrix.ToLin",
       "Mathlib.LinearAlgebra.Matrix.Trace",
       "Mathlib.Tactic.Linarith"
     ]

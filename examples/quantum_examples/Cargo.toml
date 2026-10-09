@@ -12,6 +12,7 @@ path = "no_lib.rs"
 [dependencies]
 deep_causality = { workspace = true }
 deep_causality_context = { workspace = true }
+deep_causality_context_store = { workspace = true }
 deep_causality_core = { workspace = true, features = ["default"] }
 deep_causality_calculus = { workspace = true, features = ["default"] }
 deep_causality_multivector = { workspace = true, features = ["default"] }
@@ -84,3 +85,11 @@ path = "qcl_examples/qcl_distillation_round/main.rs"
 [[example]]
 name = "qcl_crosstalk_circuits"
 path = "qcl_examples/qcl_crosstalk_circuits/main.rs"
+
+[[example]]
+name = "qcl_gradiometer_crosstalk"
+path = "qcl_examples/qcl_gradiometer_crosstalk/main.rs"
+
+[[example]]
+name = "qcl_gravimeter_systematics"
+path = "qcl_examples/qcl_gravimeter_systematics/main.rs"

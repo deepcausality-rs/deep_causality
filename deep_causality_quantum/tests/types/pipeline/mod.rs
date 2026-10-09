@@ -6,11 +6,17 @@
 #![cfg(feature = "qcm")]
 
 #[cfg(test)]
+mod campaign_tests;
+#[cfg(test)]
 mod circuit_subject_tests;
 #[cfg(test)]
 mod config_tests;
 #[cfg(test)]
-mod control_tests;
+mod configured_experiment_tests;
+#[cfg(test)]
+mod control;
+#[cfg(test)]
+mod evidence_source_tests;
 #[cfg(test)]
 mod ledger_tests;
 #[cfg(test)]

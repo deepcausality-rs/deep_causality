@@ -1,0 +1,109 @@
+---
+title: "Gravimeter systematics"
+question: "Which of seven systematics explains a gravimeter's −5 µGal offset?"
+summary: "Seven candidates calibrated to one offset, a six-experiment plan at 4,956 s that identifies the wavefront by elimination, a campaign that finds each cause, and three runs with a high reading, no tide and a missing cause."
+order: 9
+group: sense
+command: "cargo run --release -p quantum_examples --example qcl_gravimeter_systematics"
+usesCrate: true
+uses:
+  - QclBuilder
+  - ConfiguredExperiment
+  - ResponseModel
+  - InterferometerModel
+  - interferometer_context
+  - design
+  - MinCostCover
+  - Campaign
+  - CampaignRules
+  - EvidenceSource
+crates:
+  - deep_causality_algebra
+  - deep_causality_context
+  - deep_causality_context_store
+  - deep_causality_core
+  - deep_causality_num
+  - deep_causality_num_complex
+  - deep_causality_quantum
+  - deep_causality_tensor
+source: "examples/quantum_examples/qcl_examples/qcl_gravimeter_systematics"
+---
+
+The campaign finds the right one in all seven runs, one per systematic, for 166 s to 4,953 s of
+instrument time. The instrument is the cold-atom gravimeter of Louchet-Chauvet et al., New J.
+Phys. 13, 065025 (2011): T = 70 ms, and 22.1 µGal/√Hz in one configuration.
+
+After the tide correction the gravimeter reads 5 µGal low. Seven systematics can each produce that
+offset, and the example calibrates each candidate to produce it, so the passive reading fits all
+seven. A response model says what each configuration of the instrument does to each systematic,
+and QCL computes every predicted read-out from it. [The sensing page](/sensing/#plan) shows
+which experiment moves which systematic.
+
+## No campaign spends more than its plan
+
+```text
+=== Gravimeter systematics: which effect explains the offset? ===
+precision: deep_causality_num::float_106::Float106
+instrument (Louchet-Chauvet et al. 2011): T = 0.07 s, 0.333 s cycle, 22.1 µGal/√Hz in one configuration, white noise to 5000 s
+  one effective draw takes 4.883e-5 s; each planned experiment takes the fewest draws that reach 5 bits
+  the offset to explain: -5 µGal after the tide; the tide: 80 µGal semidiurnal
+...
+[H2 quadratic Zeeman] the observations come from H2 quadratic Zeeman at -5 µGal
+    baseline: every candidate can produce the passive reading
+    plan: E1 k reversed, E2 turned 180°, E3 accelerometer correction, E4 tilted, E7 Rabi frequency halved, E8 cloud displaced at 4956 s, covers every pair: yes
+      no planned experiment singles out H5 wavefront: the plan identifies it by elimination
+    campaign ran E1 k reversed for 166 s; re-plans as the tide moved: 0; H2 quadratic Zeeman survives
+...
+[H5 wavefront] the observations come from H5 wavefront at -5 µGal
+...
+    campaign ran E1 k reversed, E8 cloud displaced, E3 accelerometer correction, E2 turned 180°, E4 tilted, E7 Rabi frequency halved for 4953 s; re-plans as the tide moved: 5; H5 wavefront survives
+...
+[a positive offset] the observations come from H6 light shift at 5 µGal
+    baseline refuses H3 tilt: it predicts 76.43 µGal, the instrument reads 82.54 µGal (tide included)
+...
+[clipping left off the list] the observations come from H7 clipping at -5 µGal, H7 clipping left off the list
+    baseline: every candidate can produce the passive reading
+    plan: E1 k reversed, E2 turned 180°, E3 accelerometer correction, E4 tilted, E7 Rabi frequency halved at 4588 s, covers every pair: yes
+...
+    campaign ran E1 k reversed, E3 accelerometer correction, E2 turned 180° for 1447 s; re-plans as the tide moved: 2; H1 Coriolis survives
+...
+    without the tide the baseline refuses every candidate: yes
+    with H7 clipping left off, the campaign misattributes it to H1 Coriolis
+    every check holds: yes
+```
+
+The excerpt marks each gap with an ellipsis. The program exits nonzero if a check it makes on its
+own decisions fails.
+
+## Three stages take seven candidates to one
+
+1. **The baseline.** `baseline_with` observes the passive configuration first and refuses a
+   candidate whose prediction the observation contradicts. At −5 µGal every candidate holds. At
+   +5 µGal the baseline refuses tilt, which reads only low.
+2. **The plan.** `design` prices each experiment as its setup time plus the integration time of
+   its draws (`MinCostCover::timed`), and sizes the draws to the fewest that separate a pair by
+   5 bits within the 5000 s white-noise range. It takes E1, E2, E3, E4, E7 and E8 for 4,956 s.
+   Those six separate the wavefront from every rival, so the plan skips the 20,000 s temperature
+   scan and identifies the wavefront by elimination.
+3. **The campaign.** Each step runs the cheapest planned experiment that can separate a candidate
+   still holding, judges every candidate within three standard errors, and stops at the first
+   that holds and separates by 5 bits. After each step the experiments move to the new time; when
+   the tide moves a planned prediction, the campaign plans again.
+## A missing input either stops the run or misleads it
+
+With no tide in the instrument context, every candidate contradicts the reading, and the baseline
+refuses all seven. With clipping off the list, no pair needs the cloud displacement, so the plan
+drops it, and the campaign blames Coriolis, which a turn flips as it flips clipping.
+
+## The instrument is published; the setup times and the tide are placeholders
+
+The instrument values come from Louchet-Chauvet et al. and Farah et al., on the same instrument;
+the contrast, 40 %, from Ménoret et al.'s rubidium gravimeter. Each response
+takes its coefficients from the paper it cites. The Zeeman shares come from Hu et al.'s field maps,
+digitised by `deep_causality_quantum/papers/digitised/digitise_hu2017_fig6.py`. The light shift's
+field-dependent third, 11 of 33 mrad, comes from Gauguet et al., and clipping's 14.2 µGal per mm
+from Farah et al. The
+setup times and the 80 µGal tide are placeholders, and `constants.rs` marks each one.
+
+The predicted read-outs, the plans and the draw counts are computed. Every observation is drawn
+from the cause under test, so each campaign's path and its cost follow from simulated data.

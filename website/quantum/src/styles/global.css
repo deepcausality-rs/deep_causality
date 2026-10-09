@@ -391,7 +391,7 @@ a.chip { border-bottom: 1px solid var(--line-1); }
 .doc-head { margin-bottom: var(--space-7); }
 .doc-head h1 {
   margin: var(--space-3) 0 var(--space-4);
-  max-width: 22ch;
+  text-wrap: balance;
   font-size: clamp(2rem, 3.6vw + 0.5rem, 3rem);
   line-height: var(--lh-h1);
 }
@@ -409,7 +409,7 @@ a.chip { border-bottom: 1px solid var(--line-1); }
   border-top: 1px solid var(--line-1);
   scroll-margin-top: calc(var(--header-h) + var(--space-4));
 }
-.doc-sec > h2 { margin: 0 0 var(--space-4); max-width: 28ch; }
+.doc-sec > h2 { margin: 0 0 var(--space-4); text-wrap: balance; }
 .doc-sec > h3 { margin: var(--space-6) 0 var(--space-3); font-size: var(--t-h4); }
 .doc-sec > p,
 .doc-sec > ul,
