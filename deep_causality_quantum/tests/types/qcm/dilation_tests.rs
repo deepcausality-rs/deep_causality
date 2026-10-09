@@ -562,3 +562,43 @@ fn test_joint_instrument_refuses_a_union_above_the_entry_cap() {
         other => panic!("{other:?}"),
     }
 }
+
+#[test]
+fn test_a_dilation_is_a_normalised_process_with_its_output_halves_declared() {
+    // Every leg pairs an input with an output of the node's dimension, and each factor delivers
+    // the input normalised: a chain, a two-wire node with a fresh line, and a declared input.
+    let two_wire = CircuitModel::<f64>::ungrouped(
+        vec![WireType::qubit(), WireType::qubit()],
+        vec![
+            CircuitBox::Unitary {
+                wires: vec![0],
+                program: vec![GateOp::X(0)],
+            },
+            CircuitBox::Unitary {
+                wires: vec![0, 1],
+                program: vec![GateOp::Cnot {
+                    control: 0,
+                    target: 1,
+                }],
+            },
+        ],
+        vec![],
+        vec![0, 1],
+    )
+    .unwrap();
+    let declared =
+        CircuitModel::<f64>::ungrouped(vec![WireType::qubit()], vec![ry(0.7)], vec![0], vec![0])
+            .unwrap();
+    for model in [chain(), two_wire, declared] {
+        let d = model.dilation().unwrap();
+        for (node, leg) in d.legs().iter().enumerate() {
+            assert_eq!(d.supports().leg_output_dim(node), leg.d());
+        }
+        let report = d
+            .hypothesis("dilated")
+            .unwrap()
+            .check_normalization()
+            .unwrap();
+        assert!(report.accepted(), "{report:?}");
+    }
+}

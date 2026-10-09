@@ -11,8 +11,9 @@
 //! every instance below is written in.
 
 use deep_causality_quantum::{
-    CheckItem, CheckVerdict, DEFAULT_MAX_HYPOTHESES, Experiment, MinCostCover, QuantumErrorEnum,
-    design, separation_bits,
+    CheckItem, CheckVerdict, CoverMode, DEFAULT_MAX_HYPOTHESES, Experiment, InstrumentTime,
+    MAX_COMBINED_EXPERIMENTS, MinCostCover, QuantumError, QuantumErrorEnum, design,
+    separation_bits,
 };
 
 const A: f64 = 0.10;
@@ -243,4 +244,236 @@ fn test_malformed_inputs_are_refused() {
             .0,
         QuantumErrorEnum::DimensionMismatch(_)
     ));
+}
+
+// ---------------------------------------------------------------------------
+// The shots an entry takes, and combining bits across experiments.
+// ---------------------------------------------------------------------------
+
+#[test]
+fn test_a_fixed_plan_takes_each_experiment_at_its_own_shots() {
+    let plan = design(3, &crosstalk(), MinCostCover::new(5.0)).unwrap();
+    assert!(plan.entries().iter().all(|e| e.shots == SHOTS));
+}
+
+/// Two experiments that each separate the pair (0.10, 0.05) by about 3.4 bits at 512 shots, and
+/// a dearer one that reaches the floor alone.
+fn halves() -> Vec<Experiment<f64>> {
+    let at = |name: &str, cost: f64, shots: u64, p: [f64; 2]| {
+        Experiment::new(name, cost, shots, p.to_vec()).unwrap()
+    };
+    vec![
+        at("first half", 1.0, 512, [0.10, 0.05]),
+        at("second half", 1.0, 512, [0.10, 0.05]),
+        at("whole", 3.0, 1024, [0.10, 0.05]),
+    ]
+}
+
+#[test]
+fn test_combining_adds_a_pairs_bits_across_experiments() {
+    let half = separation_bits(0.10, 0.05, 512);
+    assert!(half < 5.0 && 2.0 * half > 5.0, "{half}");
+    // Alone, only the dear experiment covers the pair.
+    let alone = design(2, &halves(), MinCostCover::new(5.0)).unwrap();
+    let names: Vec<&str> = alone.entries().iter().map(|e| e.name.as_str()).collect();
+    assert_eq!((names, alone.total_cost()), (vec!["whole"], 3.0));
+    // Combined, the two halves cover it for less, and neither covers it alone.
+    let combined = design(2, &halves(), MinCostCover::new(5.0).combining()).unwrap();
+    let names: Vec<&str> = combined.entries().iter().map(|e| e.name.as_str()).collect();
+    assert_eq!(
+        (names, combined.total_cost()),
+        (vec!["first half", "second half"], 2.0)
+    );
+    assert!(combined.entries().iter().all(|e| e.resolves.is_empty()));
+    assert!(combined.is_complete());
+    assert_eq!(combined.report().checks()[0].measured, 0.0 + half + half);
+}
+
+#[test]
+fn test_a_combining_plan_reports_a_pair_all_experiments_cannot_reach() {
+    let short = |name: &str| Experiment::new(name, 1.0, 64, vec![0.10, 0.05]).unwrap();
+    let plan = design(
+        2,
+        &[short("a"), short("b")],
+        MinCostCover::new(5.0).combining(),
+    )
+    .unwrap();
+    assert_eq!(plan.uncovered(), &[(0, 1)]);
+    assert!(plan.entries().is_empty());
+    assert_eq!(plan.total_cost(), 0.0);
+}
+
+fn calculation(e: QuantumError) -> String {
+    match e.0 {
+        QuantumErrorEnum::CalculationError(msg) => msg,
+        other => panic!("expected CalculationError, got {other:?}"),
+    }
+}
+
+#[test]
+fn test_combining_refuses_too_many_experiments() {
+    let many: Vec<Experiment<f64>> = (0..=MAX_COMBINED_EXPERIMENTS)
+        .map(|i| Experiment::new(format!("e{i}"), 1.0, 64, vec![0.1, 0.2]).unwrap())
+        .collect();
+    let msg = calculation(design(2, &many, MinCostCover::new(5.0).combining()).unwrap_err());
+    assert!(msg.contains("17 exceed the cap of 16"), "{msg}");
+    // At the cap it runs.
+    assert!(design(2, &many[1..], MinCostCover::new(5.0).combining()).is_ok());
+}
+
+#[test]
+fn test_an_objective_has_exactly_one_mode_and_the_last_builder_sets_it() {
+    let time = InstrumentTime::new(0.01, 100.0).unwrap();
+    assert_eq!(MinCostCover::new(5.0).mode, CoverMode::Fixed);
+    assert_eq!(
+        MinCostCover::new(5.0).combining().mode,
+        CoverMode::Combining
+    );
+    assert_eq!(
+        MinCostCover::new(5.0).combining().timed(time).mode,
+        CoverMode::Timed(time)
+    );
+    assert_eq!(
+        MinCostCover::new(5.0).timed(time).combining().mode,
+        CoverMode::Combining
+    );
+    // Whichever mode the chain ends in is the one `design` solves.
+    let timed_last = design(2, &halves(), MinCostCover::new(5.0).combining().timed(time)).unwrap();
+    let timed = design(2, &halves(), MinCostCover::new(5.0).timed(time)).unwrap();
+    assert_eq!(timed_last, timed);
+    let combined_last =
+        design(2, &halves(), MinCostCover::new(5.0).timed(time).combining()).unwrap();
+    let combined = design(2, &halves(), MinCostCover::new(5.0).combining()).unwrap();
+    assert_eq!(combined_last, combined);
+    assert_ne!(timed, combined);
+}
+
+// ---------------------------------------------------------------------------
+// Priced in time: each experiment sized to the floor, within the white-noise range.
+// ---------------------------------------------------------------------------
+
+/// Setup time `setup` and predictions `p`; the shots are what timing sizes.
+fn timed_exp(name: &str, setup: f64, p: &[f64]) -> Experiment<f64> {
+    Experiment::new(name, setup, 1, p.to_vec()).unwrap()
+}
+
+#[test]
+fn test_a_timed_entry_takes_the_fewest_shots_that_reach_the_floor() {
+    let time = InstrumentTime::new(0.01, 1000.0).unwrap();
+    for (p, q) in [(0.10, 0.20), (0.5, 0.498), (0.04, 0.10), (0.3, 0.7)] {
+        let plan = design(
+            2,
+            &[timed_exp("e", 30.0, &[p, q])],
+            MinCostCover::new(5.0).timed(time),
+        )
+        .unwrap();
+        if separation_bits(p, q, time.max_shots()) < 5.0 {
+            assert_eq!(plan.uncovered(), &[(0, 1)], "{p} {q}");
+            continue;
+        }
+        let entry = &plan.entries()[0];
+        let n = entry.shots;
+        // The sizing law: n reaches the floor and n − 1 does not.
+        assert!(
+            separation_bits(p, q, n) >= 5.0 * (1.0 - 1e-12),
+            "{p} {q} {n}"
+        );
+        assert!(separation_bits(p, q, n - 1) < 5.0, "{p} {q} {n}");
+        assert_eq!(entry.cost, 30.0 + n as f64 * 0.01);
+        assert_eq!(plan.total_cost(), entry.cost);
+        assert_eq!(entry.resolves, vec![(0, 1)]);
+    }
+}
+
+#[test]
+fn test_a_pair_that_needs_more_than_the_white_noise_range_is_uncovered() {
+    // 0.5 against 0.498 needs about 1.7 million shots; at 0.01 s a shot, a range of 100 s holds
+    // 10 000. The report states how far the most the range allows gets.
+    let time = InstrumentTime::new(0.01, 100.0).unwrap();
+    let plan = design(
+        3,
+        &[timed_exp("e", 0.0, &[0.5, 0.498, 0.2])],
+        MinCostCover::new(5.0).timed(time),
+    )
+    .unwrap();
+    assert_eq!(plan.uncovered(), &[(0, 1)]);
+    let entry = &plan.entries()[0];
+    assert_eq!(entry.resolves, vec![(0, 2), (1, 2)]);
+    let reported = plan.report().checks()[0];
+    assert_eq!(reported.measured, separation_bits(0.5, 0.498, 10_000));
+    assert!(!reported.accepted);
+}
+
+#[test]
+fn test_a_timed_experiment_is_sized_to_the_hardest_pair_it_covers() {
+    // One experiment, three pairs: it takes the shots its hardest pair needs.
+    let time = InstrumentTime::new(0.001, 1000.0).unwrap();
+    let p = [0.10, 0.20, 0.50];
+    let plan = design(
+        3,
+        &[timed_exp("e", 5.0, &p)],
+        MinCostCover::new(5.0).timed(time),
+    )
+    .unwrap();
+    assert!(plan.is_complete());
+    let n = plan.entries()[0].shots;
+    let hardest = separation_bits(p[0], p[1], n);
+    assert!(hardest >= 5.0 * (1.0 - 1e-12) && separation_bits(p[0], p[1], n - 1) < 5.0);
+    assert_eq!(plan.experiment_count(), 1);
+}
+
+#[test]
+fn test_a_timed_plan_weighs_setup_against_integration() {
+    // A quick setup on a weak contrast against a slow setup on a strong one.
+    let time = InstrumentTime::new(0.01, 10_000.0).unwrap();
+    let weak = timed_exp("weak, no setup", 0.0, &[0.10, 0.12]);
+    let strong = timed_exp("strong, 60 s setup", 60.0, &[0.10, 0.30]);
+    let plan = design(
+        2,
+        &[weak.clone(), strong.clone()],
+        MinCostCover::new(5.0).timed(time),
+    )
+    .unwrap();
+    let (n_weak, n_strong) = (
+        design(2, &[weak], MinCostCover::new(5.0).timed(time))
+            .unwrap()
+            .entries()[0]
+            .shots,
+        design(2, &[strong], MinCostCover::new(5.0).timed(time))
+            .unwrap()
+            .entries()[0]
+            .shots,
+    );
+    let (cost_weak, cost_strong) = (n_weak as f64 * 0.01, 60.0 + n_strong as f64 * 0.01);
+    let want = if cost_weak < cost_strong {
+        "weak, no setup"
+    } else {
+        "strong, 60 s setup"
+    };
+    assert_eq!(plan.entries()[0].name, want);
+    assert_eq!(plan.total_cost(), cost_weak.min(cost_strong));
+}
+
+#[test]
+fn test_a_timed_pair_one_shot_resolves_takes_one_shot() {
+    // Read-outs at 0 and 1 separate by infinitely many bits per shot, and a floor within the
+    // slack is reached by any pair: both take one shot, as the fixed plan at one shot covers them.
+    let time = InstrumentTime::new(0.01, 100.0).unwrap();
+    for (predictions, floor) in [
+        ([0.0, 1.0], 5.0),
+        ([1.0, 0.0], 5.0),
+        ([0.0, 1.0], 0.0),
+        ([0.5, 0.500_000_1], 0.0),
+        ([0.3, 0.3], 0.0),
+    ] {
+        let one_shot = Experiment::new("e", 2.0, 1, predictions.to_vec()).unwrap();
+        let fixed = design(2, std::slice::from_ref(&one_shot), MinCostCover::new(floor)).unwrap();
+        assert!(fixed.is_complete(), "{predictions:?} at {floor}");
+        let timed = design(2, &[one_shot], MinCostCover::new(floor).timed(time)).unwrap();
+        assert!(timed.is_complete(), "{predictions:?} at {floor}");
+        let entry = &timed.entries()[0];
+        assert_eq!(entry.shots, 1, "{predictions:?} at {floor}");
+        assert_eq!(entry.cost, 2.0 + 0.01);
+        assert_eq!(entry.resolves, vec![(0, 1)]);
+    }
 }

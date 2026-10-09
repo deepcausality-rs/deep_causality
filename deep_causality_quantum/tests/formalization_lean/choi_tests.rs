@@ -5,10 +5,12 @@
 
 //! Rust witnesses for the Lean Choi-application proofs.
 //!
-//! Mirrors `lean/DeepCausalityFormal/Quantum/Choi.lean`, whose `applyChoi_add`
-//! and `applyChoi_smul` establish that the channel action X ↦ applyChoi(J, X)
-//! is ℂ-linear. See the module docstring in `partial_trace_tests.rs` for how
-//! these `THEOREM_MAP` witnesses feed the `theorem-map` CI gate.
+//! Mirrors `lean/DeepCausalityFormal/Quantum/Choi.lean`: `applyChoi_add` and
+//! `applyChoi_smul` establish that the channel action X ↦ applyChoi(J, X) is
+//! ℂ-linear, and `applyChoi_choiOf` that the action reconstructed from a
+//! channel's Choi matrix is the channel. See the module docstring in
+//! `partial_trace_tests.rs` for how these `THEOREM_MAP` witnesses feed the
+//! `theorem-map` CI gate.
 
 use deep_causality_num_complex::Complex;
 use deep_causality_quantum::{apply_choi, apply_kraus, choi_from_kraus};
@@ -91,4 +93,67 @@ fn test_apply_choi_is_linear() {
     // Cross-check: the Choi route agrees with the Kraus route it was built from.
     let via_kraus = apply_kraus(&kraus, &x).unwrap();
     assert!(max_abs_diff(&apply(&x), &via_kraus) < 1e-12);
+}
+
+/// The qubit amplitude-damping channel with decay probability γ. Its Choi
+/// operator couples |0⟩⟨0| ⊗ |0⟩⟨0| with |1⟩⟨1| ⊗ |1⟩⟨1| through √(1−γ), so it is
+/// not diagonal.
+fn amplitude_damping_kraus(gamma: f64) -> Vec<CausalTensor<C>> {
+    let keep = (1.0 - gamma).sqrt();
+    let decay = gamma.sqrt();
+    vec![
+        mat(vec![c(1., 0.), c(0., 0.), c(0., 0.), c(keep, 0.)], 2, 2),
+        mat(vec![c(0., 0.), c(decay, 0.), c(0., 0.), c(0., 0.)], 2, 2),
+    ]
+}
+
+/// The matrix unit |i⟩⟨j| on a qubit.
+fn unit(i: usize, j: usize) -> CausalTensor<C> {
+    let mut data = vec![c(0., 0.); 4];
+    data[i * 2 + j] = c(1., 0.);
+    mat(data, 2, 2)
+}
+
+// THEOREM_MAP: quantum.choi.reconstruction
+#[test]
+fn test_choi_reconstruction_recovers_the_channel() {
+    // Lean: applyChoi_choiOf — applyChoi (choiOf E) A = E A. The Choi matrix is
+    // built here as Lean's `choiOf` defines it, J (i,k) (j,l) = E(|i⟩⟨j|) (k,l),
+    // by applying the channel to each matrix unit; nothing comes from the
+    // crate's Choi constructor.
+    let kraus = amplitude_damping_kraus(0.3);
+    let channel = |m: &CausalTensor<C>| apply_kraus(&kraus, m).unwrap();
+
+    let mut j_data = vec![c(0., 0.); 16];
+    for i in 0..2 {
+        for j in 0..2 {
+            let image = channel(&unit(i, j));
+            for k in 0..2 {
+                for l in 0..2 {
+                    j_data[(i * 2 + k) * 4 + (j * 2 + l)] = image.as_slice()[k * 2 + l];
+                }
+            }
+        }
+    }
+    let choi = mat(j_data, 4, 4);
+    let off_diagonal = choi.as_slice()[3].re.abs();
+    assert!(off_diagonal > 0.5, "the Choi matrix must not be diagonal");
+
+    // A generic input: complex, not Hermitian, no zero entry.
+    let a = mat(
+        vec![c(0.6, 0.1), c(-0.3, 0.4), c(0.2, -0.7), c(0.9, 0.25)],
+        2,
+        2,
+    );
+    let reconstructed = apply_choi(&choi, &a, 2, 2).unwrap();
+    let direct = channel(&a);
+    assert!(
+        max_abs_diff(&reconstructed, &direct) < 1e-12,
+        "applyChoi(choiOf E) A differs from E A by {}",
+        max_abs_diff(&reconstructed, &direct)
+    );
+
+    // The crate's Choi constructor agrees with the definition-built matrix.
+    let from_kraus = choi_from_kraus(&kraus).unwrap();
+    assert!(max_abs_diff(&choi, &from_kraus) < 1e-12);
 }

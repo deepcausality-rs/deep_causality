@@ -1,9 +1,9 @@
 ---
 /**
- * Hero. States what the library is and does, then shows three verdicts.
+ * Hero. States what the library is and does, then shows four verdicts.
  *
  * The reader has basic quantum background and has never seen this library. The
- * headline says what the library produces, the sub says the three things it
+ * headline says what the library produces, the sub says the four things it
  * decides in that reader's words, and the figure shows one real verdict for each.
  * "QCL" and the builder's calls sit in the gloss, where they label the page
  * without carrying it.
@@ -13,18 +13,15 @@ import HeroVerdicts from './HeroVerdicts.astro';
 <section class="hero">
   <div class="hero-inner">
     <p class="eyebrow">Rust library for quantum causal reasoning</p>
-    <h1>
-      <span>Find the cause. Verify the code.</span>
-      <span>Bound the error.</span>
-    </h1>
+    <h1>Find the cause of a quantum error</h1>
 
     <div class="hero-grid">
       <div class="hero-copy">
         <p class="sub">
           DeepCausality Quantum finds the causal structure behind correlated
-          qubit errors, verifies error-correcting codes without simulating
-          them, and bounds the error of stacked codes. Each verdict shows its
-          evidence.
+          qubit errors and the systematic behind a sensor’s offset, verifies
+          error-correcting codes without simulating them, and bounds the error
+          of stacked codes. Each verdict shows its evidence.
         </p>
         <p class="gloss">
           You write problems in QCL, the Quantum Causal Language, a Rust
@@ -58,8 +55,6 @@ import HeroVerdicts from './HeroVerdicts.astro';
     letter-spacing: var(--ls-display);
     margin: var(--space-3) 0 var(--space-6);
   }
-  h1 span { display: block; }
-  h1 span:last-child { color: var(--fg-1); }
 
   /* Narrow screens: intro, then the figure, then the proof and the buttons, so the
      demonstration is on the first screen. `display: contents` lets the copy's

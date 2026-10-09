@@ -4,7 +4,7 @@ Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Right
 
 Quantum — the partial-trace foundation.
 
-The pinned Mathlib (v4.15.0) has `Matrix`, `trace`, and the Kronecker product, but **no partial
+The pinned Mathlib (Lean v4.32.0) has `Matrix`, `trace`, and the Kronecker product, but **no partial
 trace**. Partial trace is the load-bearing operation of every quantum theorem in scope
 (`openspec/changes/archive/2026-07-12-add-quantum-crate`), so this file builds it from first principles on the
 pair-indexed matrix model of a bipartite operator on `H_A ⊗ H_B` and proves its defining lemma

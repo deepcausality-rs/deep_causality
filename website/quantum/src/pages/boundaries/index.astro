@@ -1,69 +1,79 @@
 ---
 import PageShell from '../../components/nav/PageShell.astro';
-import { boundaries } from '../../data/boundaries';
+import { boundaries, sensingBoundaries } from '../../data/boundaries';
 import { CRATE_URL } from '../../consts';
+import { numberWord } from '../../data/evidence';
+import BoundaryRow from '../../components/shared/BoundaryRow.astro';
 
 const title = 'Boundaries | DeepCausality Quantum';
 const description =
-  'What the library does not do, what its examples assume, and how its two senses of quantum stay apart. Each row names the file that shows it.';
+  'What the library does not do, what its examples assume, where the sensing examples stop, and how its two senses of quantum stay apart. Each row gives the file that shows it.';
+
+const byDesign = boundaries.filter((b) => b.status === 'nongoal');
+const inUse = boundaries.filter((b) => b.status === 'partial');
+const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 ---
 <PageShell title={title} description={description} path="/boundaries/">
   <header class="doc-head">
     <p class="eyebrow">Boundaries</p>
-    <h1>What the library leaves out.</h1>
+    <h1>You supply the physics; the library checks and decides.</h1>
     <p class="lede">
-      Each row below states one thing the library leaves out or one limit a user meets, and names
-      the file that shows it. A second section lists what the crosstalk example assumes.
+      The library computes each configured experiment’s predictions from the response model you
+      write; an <code>Experiment</code> can also carry typed predictions. The library drives no
+      hardware, runs no decoder and claims no code distance. Each row below gives the file that
+      shows it.
     </p>
   </header>
 
   <section class="doc-sec" id="limits">
-    <h2>What does it not do?</h2>
+    <h2>{cap(numberWord(byDesign.length))} things it leaves out by design.</h2>
     <ul class="rows">
-      {boundaries.map((b) => (
-        <li class="row" id={b.id}>
-          <p class={`status status-${b.status}`}>{b.mark}</p>
-          <div>
-            <h3>{b.title}</h3>
-            <p class="t">{b.text}</p>
-            <p class="ev">Shown in <code>{b.evidence}</code></p>
-          </div>
-        </li>
-      ))}
+      {byDesign.map((b) => <BoundaryRow boundary={b} />)}
+    </ul>
+  </section>
+
+  <section class="doc-sec" id="in-use">
+    <h2>{cap(numberWord(inUse.length))} limits you meet in use.</h2>
+    <ul class="rows">
+      {inUse.map((b) => <BoundaryRow boundary={b} />)}
     </ul>
   </section>
 
   <section class="doc-sec" id="assumptions">
-    <h2>What do the examples assume?</h2>
+    <h2>The crosstalk example describes no device.</h2>
+    <p>Its tables, shots and costs come from the example’s own files.</p>
     <dl class="deflist">
       <div>
-        <dt>The read-outs are inputs</dt>
+        <dt>The conditional tables are inputs</dt>
         <dd>
-          <code>constants.rs</code> states the read-out each candidate predicts for each experiment;
-          the plan and the verdict follow from those numbers. The run shows the procedure reaching
-          the correct candidate under those assumptions, and no figure in it describes a device.
+          <code>model.rs</code> states each candidate’s conditional tables and what each experiment
+          does to them; the library computes every predicted read-out from those, and the plan and
+          the verdict follow. The run shows the procedure reaching the correct candidate under
+          those assumptions.
         </dd>
       </div>
       <div>
         <dt>The observation is simulated</dt>
         <dd>
           The example draws its shots from the Born sampler at H1’s predicted read-out, then
-          checks that the adjudication names H1; it exits nonzero if it does not. It observes E1,
-          the first experiment of the plan, and no other.
+          checks that the campaign finds H1; it exits nonzero if it does not. The campaign observes
+          E1, the plan’s cheapest experiment, and stops there because H1 separates.
         </dd>
       </div>
       <div>
         <dt>Cost is one arbitrary unit</dt>
         <dd>
-          In the example’s constants, tomography costs 200, a targeted intervention 1 and an echo 2,
-          all in one unit. The ratio comes from those constants; no laboratory measured it.
+          In the example’s constants, a targeted intervention costs 1, the passive read 1 and an
+          echo 2, all in one unit. The costs come from those constants; no laboratory measured
+          them.
         </dd>
       </div>
       <div>
         <dt>The factors are diagonal</dt>
         <dd>
-          Every candidate in the crosstalk example is a legal model by construction, so the Markov
-          check rejects none of them. The experiments alone separate the candidates.
+          Every candidate in the crosstalk example is a normalised, legal model by construction, so
+          the normalisation and Markov checks reject none of them. The experiments alone separate
+          the candidates.
         </dd>
       </div>
       <div>
@@ -78,12 +88,54 @@ const description =
     </dl>
   </section>
 
-  <section class="doc-sec" id="modalities">
-    <h2>How do the two senses of quantum stay apart?</h2>
+  <section class="doc-sec" id="sensing">
+    <h2>The sensing results rest on simulation and placeholders.</h2>
     <p>
-      The crate has two modalities, and the default build compiles only the verifiable one. The
-      Lean proofs attach to the verifiable path. The emergent path is a seam to a QPU sampler and
-      needs the <code>qpu</code> feature.
+      Both examples behind the <a href="/sensing/">sensing section</a> simulate their observations,
+      and a lab supplies the setup times, the tide, the leak and the dark background. Each row below
+      gives one limit and the file that shows it.
+    </p>
+    <ul class="rows">
+      {sensingBoundaries.map((b) => <BoundaryRow boundary={b} />)}
+    </ul>
+    <h3>What the sensing examples assume</h3>
+    <dl class="deflist">
+      <div>
+        <dt>Each response belongs to one instrument</dt>
+        <dd>
+          Whether a field or a misalignment turns with the sensor head depends on the design.
+          Each example’s <code>model.rs</code> states every response, and a lab confirms each one.
+        </dd>
+      </div>
+      <div>
+        <dt>One dominant cause per candidate</dt>
+        <dd>
+          A mixture of causes enters as a candidate of its own. The planner solves exactly up to
+          seven candidates by default, and the gravimeter uses all seven.
+        </dd>
+      </div>
+      <div>
+        <dt>Brightening one cloud reaches only the other’s signal</dt>
+        <dd>
+          The gradiometer’s E1 and E2 assume that pushing one cloud bright changes the other
+          cloud’s detection signal and leaves its atoms alone. A lab confirms this.
+        </dd>
+      </div>
+      <div>
+        <dt>The wavefront at two temperatures</dt>
+        <dd>
+          The gravimeter reads the wavefront at the operating 2 µK and at zero, and at no
+          temperature between them.
+        </dd>
+      </div>
+    </dl>
+  </section>
+
+  <section class="doc-sec" id="modalities">
+    <h2>The default build compiles only the verifiable path.</h2>
+    <p>
+      The crate has two modalities. The Lean proofs attach to the verifiable one; the emergent one
+      is a seam to a QPU sampler and needs the <code>qpu</code> feature.
     </p>
     <div class="table-scroll">
       <table class="table-stack">
@@ -114,22 +166,6 @@ const description =
 
 <style>
   .rows { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line-1); }
-  .row {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-2);
-    padding: var(--space-5) 0;
-    border-bottom: 1px solid var(--line-1);
-    scroll-margin-top: calc(var(--header-h) + var(--space-4));
-  }
-  @media (min-width: 720px) {
-    .row { grid-template-columns: var(--w-label) minmax(0, 1fr); gap: var(--space-5); }
-  }
-  .status { margin: 0; }
-  .row h3 { font-size: var(--t-h4); margin: 0 0 var(--space-2); }
-  .t { color: var(--fg-1); margin: 0 0 var(--space-2); max-width: var(--measure); }
-  .ev { color: var(--fg-2); font-size: var(--t-body-sm); margin: 0; }
-  .ev code { overflow-wrap: anywhere; }
 
   .table-scroll table { width: 100%; border-collapse: collapse; }
   .table-scroll th, .table-scroll td { text-align: left; vertical-align: top; padding: var(--space-3); border-top: 1px solid var(--line-1); }

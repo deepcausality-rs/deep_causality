@@ -4,6 +4,8 @@
  */
 
 #[cfg(test)]
+mod effective_draws_tests;
+#[cfg(test)]
 mod environment_reading_tests;
 #[cfg(test)]
 mod instrument_context_tests;

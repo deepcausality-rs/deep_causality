@@ -233,3 +233,70 @@ fn test_the_same_histogram_summarised_at_two_precisions() {
     );
     assert_eq!(Tolerance::<f64>::shot_noise().threshold(2, 1.0), None);
 }
+
+#[test]
+fn test_an_estimate_over_effective_draws_keeps_the_draws_in_its_width() {
+    // 2677.3 draws at ½: the width uses the draws as given, the shot count rounds them.
+    let e = ShotEstimate::<f64>::from_effective_draws(0.5, 2677.3).unwrap();
+    assert_eq!(e.estimate(), 0.5);
+    assert_eq!(e.standard_error(), (0.25_f64 / 2677.3).sqrt());
+    assert_eq!(e.shots(), 2677);
+    // Half a draw rounds up to one; less rounds to none and is refused.
+    assert_eq!(
+        ShotEstimate::<f64>::from_effective_draws(0.5, 0.5)
+            .unwrap()
+            .shots(),
+        1
+    );
+    for draws in [0.49, -3.0, 1.0e20] {
+        assert!(matches!(
+            ShotEstimate::<f64>::from_effective_draws(0.5, draws)
+                .unwrap_err()
+                .0,
+            QuantumErrorEnum::NormalizationError(_)
+        ));
+    }
+    for (estimate, draws) in [
+        (f64::NAN, 10.0),
+        (1.1, 10.0),
+        (-0.1, 10.0),
+        (0.5, f64::INFINITY),
+    ] {
+        assert!(matches!(
+            ShotEstimate::<f64>::from_effective_draws(estimate, draws)
+                .unwrap_err()
+                .0,
+            QuantumErrorEnum::NonFiniteValue(_)
+        ));
+    }
+}
+
+#[test]
+fn test_a_spec_is_judged_at_the_width_the_estimate_carries() {
+    // Whatever the estimate came from, at_least and at_most measure against its own standard
+    // error. Over effective draws that is the width at the draws as given: half a draw at ½ has
+    // the width √(¼ / ½) ≈ 0.707, where the one shot it rounds to would give ½.
+    let estimates = [
+        ShotEstimate::<f64>::of_outcome(&histogram(300, 724), 1).unwrap(),
+        ShotEstimate::<f64>::from_probability(0.3, 1024).unwrap(),
+        ShotEstimate::<f64>::from_effective_draws(0.5, 0.5).unwrap(),
+        ShotEstimate::<f64>::from_effective_draws(0.25, 2677.3).unwrap(),
+    ];
+    for e in estimates {
+        for report in [
+            e.at_least(e.estimate() + 0.01),
+            e.at_most(e.estimate() - 0.01),
+        ] {
+            let record = &report.checks()[0];
+            assert_eq!(record.threshold, e.standard_error(), "{e:?}");
+            assert!((record.measured - 0.01).abs() < 1e-12, "{e:?}");
+        }
+    }
+    let half_draw = ShotEstimate::<f64>::from_effective_draws(0.5, 0.5).unwrap();
+    assert_eq!(half_draw.shots(), 1);
+    // A shortfall of 0.6 lies inside the 0.707 the published value carries.
+    assert_eq!(half_draw.at_least(1.1).verdict(), CheckVerdict::Accepted);
+    assert_eq!(half_draw.at_most(-0.1).verdict(), CheckVerdict::Accepted);
+    // And 0.8 outside it.
+    assert_eq!(half_draw.at_least(1.3).verdict(), CheckVerdict::Rejected);
+}

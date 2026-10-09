@@ -2,7 +2,7 @@
 title: "The IKKT matrix model"
 question: "Can spacetime be a property of matrices that commute?"
 summary: "Four matrices relax along the IKKT equation of motion at fixed norm: the action falls from 0.048 to 0.00000082 in 40 steps because the matrices come to commute. The run does not compute their joint spectrum."
-order: 9
+order: 11
 group: other
 command: "cargo run --release -p quantum_examples --example ikkt_matrix_model"
 usesCrate: true
@@ -19,16 +19,16 @@ crates:
 source: "examples/quantum_examples/ikkt_matrix_model"
 ---
 
-In 40 relaxation steps at a fixed configuration norm of 1.356465997, the IKKT action falls from
-0.048 to 0.00000082 and the largest commutator falls to 0.000607444. The four matrices therefore
-come to commute without shrinking. The run stops at the first step where the action is below 1e-6.
+In this run, four matrices come to commute without shrinking. In 40 relaxation steps at a fixed
+configuration norm of 1.356465997, the IKKT action falls from 0.048 to 0.00000082 and the largest
+commutator falls to 0.000607444. The run stops at the first step where the action is below 1e-6.
 
 The IKKT model is a candidate non-perturbative formulation of type IIB superstring theory and has
 no spacetime built in. Its action is `S = Σ ‖[X_μ, X_ν]‖²`, which is zero exactly when every pair
 of matrices commutes. Commuting matrices diagonalise together, their joint eigenvalues form a set
 of points, and that set is the emergent spacetime.
 
-## What you see
+## The action falls every step while the norm holds
 
 ```text
 Relaxing against the equation of motion
@@ -51,7 +51,7 @@ largest single commutator and the configuration norm. The norm column reads 1.35
 row, so the action fell because the commutators shrank. The outcome line `action fell every step`
 compares the action at each step with the one before it across all 40 steps.
 
-## Why the norm is held fixed
+## A fixed norm rules out shrinking toward zero
 
 The action is quartic in the coordinates. Multiplying every matrix by 1 − η multiplies the action
 by (1 − η)⁴ whatever the matrices do, so a run that shrank everything toward the origin would show
@@ -60,7 +60,7 @@ matrix against the equation of motion `Σ_ν [X_ν, [X_μ, X_ν]]` with step len
 the configuration to its starting norm. With the norm fixed, the action can fall only if the
 matrices commute.
 
-## What it takes from this crate
+## The run calls this crate's commutator kernel
 
 The run uses three items from `deep_causality_quantum`: `commutator_kernel`, the `Operator` alias
 and `QuantumError`. The action calls the kernel once per pair of matrices, and the equation of
@@ -69,10 +69,10 @@ kernel returns a `Result`, so two operands with different metrics fail with `Met
 the call and never enter the action as a wrong matrix. The geometric algebra comes from
 `deep_causality_multivector`.
 
-## What this run leaves out
+## The run stops short of the emergent spacetime
 
-The four matrices are `Cl(2)` multivectors with four complex coefficients each, where the model
-proper has ten coordinates and large Hermitian matrices. The action is the bosonic one, without
-fermions, and the step length is fixed. The run shows that the matrices commute to within 0.000607444;
-it does not diagonalise them, so their joint spectrum, the emergent spacetime itself, is not
-computed.
+The run shows that the matrices commute to within 0.000607444; it does not diagonalise them, so
+their joint spectrum, the emergent spacetime itself, is not computed. The four matrices are
+`Cl(2)` multivectors with four complex coefficients each, where the model proper has ten
+coordinates and large Hermitian matrices. The action is the bosonic one, without fermions, and the
+step length is fixed.

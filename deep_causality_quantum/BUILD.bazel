@@ -1,4 +1,5 @@
 load("@crates//:defs.bzl", "aliases", "all_crate_deps", "lint_config")
+load("@rules_rs//rs:rust_binary.bzl", "rust_binary")
 load("@rules_rs//rs:rust_library.bzl", "rust_library")
 load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_test_suite")
 
@@ -26,6 +27,140 @@ rust_library(
         # enables `deep_causality_quantum/qpu`
         "//deep_causality_unified_math/deep_causality_uncertain",
     ],
+)
+
+# Example binaries (Cargo `[[example]]` targets).
+
+# The sensing verifications: each reproduces a published claim through QCL. V1, V3, V4, V5 and V10
+# read the digitised and regenerated data under `papers/` through `common/data.rs`, which resolves
+# the crate's directory from `BUILD_WORKSPACE_DIRECTORY` under `bazel run`.
+SENSING_DEPS = [
+    ":deep_causality_quantum",
+    "//deep_causality_context_store",
+    "//deep_causality_unified_math/deep_causality_num_complex",
+    "//deep_causality_unified_math/deep_causality_tensor",
+]
+
+rust_binary(
+    name = "verification_v1_wavefront",
+    srcs = [
+        "verification/sensing/common/attribution.rs",
+        "verification/sensing/common/data.rs",
+        "verification/sensing/common/fringe_qubit.rs",
+        "verification/sensing/common/report.rs",
+        "verification/sensing/verification_v1_wavefront.rs",
+    ],
+    crate_root = "verification/sensing/verification_v1_wavefront.rs",
+    visibility = ["//visibility:public"],
+    deps = SENSING_DEPS + [
+        "//deep_causality_unified_math/deep_causality_haft",
+        "//deep_causality_unified_math/deep_causality_linear",
+    ],
+)
+
+rust_binary(
+    name = "verification_v2_clipping",
+    srcs = [
+        "verification/sensing/common/attribution.rs",
+        "verification/sensing/common/fringe_qubit.rs",
+        "verification/sensing/common/report.rs",
+        "verification/sensing/verification_v2_clipping.rs",
+    ],
+    crate_root = "verification/sensing/verification_v2_clipping.rs",
+    visibility = ["//visibility:public"],
+    deps = SENSING_DEPS + [
+        "//deep_causality_unified_math/deep_causality_haft",
+    ],
+)
+
+rust_binary(
+    name = "verification_v3_transverse_motion",
+    srcs = [
+        "verification/sensing/common/attribution.rs",
+        "verification/sensing/common/data.rs",
+        "verification/sensing/common/fringe_qubit.rs",
+        "verification/sensing/common/report.rs",
+        "verification/sensing/verification_v3_transverse_motion.rs",
+    ],
+    crate_root = "verification/sensing/verification_v3_transverse_motion.rs",
+    visibility = ["//visibility:public"],
+    deps = SENSING_DEPS + [
+        "//deep_causality_unified_math/deep_causality_haft",
+    ],
+)
+
+rust_binary(
+    name = "verification_v4_crosstalk",
+    srcs = [
+        "verification/sensing/common/attribution.rs",
+        "verification/sensing/common/data.rs",
+        "verification/sensing/common/fringe_qubit.rs",
+        "verification/sensing/common/report.rs",
+        "verification/sensing/verification_v4_crosstalk.rs",
+    ],
+    crate_root = "verification/sensing/verification_v4_crosstalk.rs",
+    visibility = ["//visibility:public"],
+    deps = SENSING_DEPS + [
+        "//deep_causality_unified_math/deep_causality_haft",
+    ],
+)
+
+rust_binary(
+    name = "verification_v5_light_shift",
+    srcs = [
+        "verification/sensing/common/attribution.rs",
+        "verification/sensing/common/data.rs",
+        "verification/sensing/common/fringe_qubit.rs",
+        "verification/sensing/common/report.rs",
+        "verification/sensing/verification_v5_light_shift.rs",
+    ],
+    crate_root = "verification/sensing/verification_v5_light_shift.rs",
+    visibility = ["//visibility:public"],
+    deps = SENSING_DEPS + [
+        "//deep_causality_unified_math/deep_causality_haft",
+    ],
+)
+
+rust_binary(
+    name = "verification_v6_time_model",
+    srcs = [
+        "verification/sensing/common/fringe_qubit.rs",
+        "verification/sensing/common/inverse.rs",
+        "verification/sensing/common/report.rs",
+        "verification/sensing/verification_v6_time_model.rs",
+    ],
+    crate_root = "verification/sensing/verification_v6_time_model.rs",
+    visibility = ["//visibility:public"],
+    deps = SENSING_DEPS,
+)
+
+rust_binary(
+    name = "verification_v7_gradiometer_sweep",
+    srcs = [
+        "verification/sensing/common/attribution.rs",
+        "verification/sensing/common/fringe_qubit.rs",
+        "verification/sensing/common/report.rs",
+        "verification/sensing/verification_v7_gradiometer_sweep.rs",
+    ],
+    crate_root = "verification/sensing/verification_v7_gradiometer_sweep.rs",
+    visibility = ["//visibility:public"],
+    deps = SENSING_DEPS + [
+        "//deep_causality_unified_math/deep_causality_haft",
+    ],
+)
+
+rust_binary(
+    name = "verification_v10_zeeman_field_map",
+    srcs = [
+        "verification/sensing/common/data.rs",
+        "verification/sensing/common/fringe_qubit.rs",
+        "verification/sensing/common/inverse.rs",
+        "verification/sensing/common/report.rs",
+        "verification/sensing/verification_v10_zeeman_field_map.rs",
+    ],
+    crate_root = "verification/sensing/verification_v10_zeeman_field_map.rs",
+    visibility = ["//visibility:public"],
+    deps = SENSING_DEPS,
 )
 
 rust_doc(
@@ -178,6 +313,9 @@ rust_test_suite(
     srcs = glob([
         "tests/utils_tests/*_tests.rs",
     ]),
+    crate_features = [
+        "qcm",
+    ],
     tags = [
         "unit-test",
     ],
@@ -243,6 +381,33 @@ rust_test_suite(
     name = "pipeline",
     srcs = glob([
         "tests/types/pipeline/*_tests.rs",
+    ]),
+    crate_features = [
+        "dem",
+        "qcm",
+        "qpu",
+    ],
+    tags = [
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":deep_causality_quantum",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+# =============================================================================
+# types/pipeline/control/* test suites — the control stage, over the qcm feature
+# =============================================================================
+
+rust_test_suite(
+    name = "pipeline_control",
+    srcs = glob([
+        "tests/types/pipeline/control/*_tests.rs",
     ]),
     crate_features = [
         "dem",

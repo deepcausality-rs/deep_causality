@@ -109,6 +109,11 @@ The emergent seam adds no network or async dependency; it is a typed boundary, n
 | `Operator<R>` / `Gate<R>` | Aliases for `HilbertState<R>` (from `deep_causality_multivector`) |
 | `QuantumCircuit` / `GateOp` / `SimQpu` / `QpuSampler` | The reified circuit (`QuantumCircuit`, `GateOp`; always compiled) and the `qpu`-feature emergent seam (`SimQpu`, `QpuSampler`) |
 | `InstrumentContext<P, R>` / `InterferometerContext<R>` | An instrument's context keyed by contextoid id; for an atom interferometer, its model, configuration and time-stamped environment readings (`qcm`) |
+| `ConfiguredExperiment<R, C>` / `ResponseModel<R, C>` / `Response<R>` | An experiment that names a configuration and an observable; the model that turns (candidate, configuration) into a channel or an intervention, from which QCL computes every prediction (`qcm`) |
+| `EvidenceSource<R>` / `Observation<R>` / `Fringe<R>` / `EffectiveDraws<R>` | Simulated, recorded or published evidence for an observed experiment; the record of what was observed and in which context; a published value carried onto the fringe as effective draws (`qcm`) |
+| `CampaignWorld<R>` / `adjudicate_campaign` / `Reading<R>` | A world that read several experiments, folded so that it holds only when every reading agrees and a pair separates by the sum of its bits (`Reading` is a control-stage world's reading of one experiment, under `qcm`) |
+| `InstrumentTime<R>` / `MinCostCover::timed` / `MinCostCover::combining` | Seconds per shot within a white-noise range, which sizes each experiment to the fewest shots that reach the floor and prices a plan in time; or a plan that adds a pair's bits across experiments |
+| `Campaign<R, N, D>` / `CampaignRules<R>` / `CampaignStop<R>` | The sequential campaign, a step for `CausalFlow::iterate_until`: runs the cheapest planned experiment, adjudicates, re-plans over the open candidates or when the context moves the plan's predictions, and stops at a survivor, outside the model, or when nothing left resolves the rest (`qcm`) |
 
 ## The operator layer
 

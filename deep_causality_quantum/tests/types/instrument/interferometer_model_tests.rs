@@ -138,3 +138,49 @@ fn test_a_record_the_model_cannot_hold_is_refused() {
         Err(ProjectionError::WrongPayload(1, "Fields", "Count"))
     );
 }
+
+#[test]
+fn test_the_fringe_is_at_mid_fringe_with_the_model_slope() {
+    // C k_eff T² / 2 at the nominal model: 0.4 · 1.6106e7 · 0.08² / 2.
+    let f = build(NOMINAL).unwrap().fringe();
+    assert_eq!(f.operating_point(), 0.5);
+    assert!((f.slope() - 0.4 * 1.6106e7 * 0.0064 / 2.0).abs() < 1e-9);
+    // The design note's gravimeter: C = 0.5, T = 100 ms; −5 µGal reads 0.498.
+    let note = build([1.6106e7, 0.1, 0.5, 2.4e-7, 0.5, 1000.0, 30.0]).unwrap();
+    let d = note.fringe().effective_draws(-5.0e-8, 2.4e-7).unwrap();
+    assert!((d.probability() - 0.498).abs() < 5.0e-5);
+}
+
+#[test]
+fn test_one_effective_draw_takes_the_time_the_sensitivity_buys() {
+    // The note's gravimeter: C = 0.5, k_eff = 1.6106e7, T = 100 ms, S = 24 µGal/√Hz buys about
+    // 2677 draws a second, so a draw takes (C k_eff T² S)² s, within its white-noise range.
+    let note = build([1.6106e7, 0.1, 0.5, 2.4e-7, 0.5, 1000.0, 30.0]).unwrap();
+    let t = note.instrument_time().unwrap();
+    let per_draw = 0.5 * 1.6106e7 * 0.1 * 0.1 * 2.4e-7_f64;
+    assert!((t.shot_time() / (per_draw * per_draw) - 1.0).abs() < 1e-12);
+    assert_eq!((1.0 / t.shot_time()).round(), 2677.0);
+    assert_eq!(t.white_noise_range(), 1000.0);
+    // A range shorter than one draw holds none.
+    let short = build([1.6106e7, 0.1, 0.5, 2.4e-7, 0.5, 1.0e-6, 30.0]).unwrap();
+    assert!(short.instrument_time().is_err());
+}
+
+#[test]
+fn test_a_fringe_slope_the_scalar_cannot_hold_is_refused() {
+    // Finite parameters whose slope C k_eff T² / 2 overflows to infinity or underflows to zero:
+    // the first would read NaN draws off its fringe, the second nothing at all.
+    let overflow = [1.0e300, 1.0e10, 1.0, 5.0e-7, 3.0e10, 1.0e12, 30.0];
+    let underflow = [1.0e-300, 1.0e-20, 0.4, 5.0e-7, 0.5, 1000.0, 30.0];
+    for p in [overflow, underflow] {
+        let msg = calculation(build(p).unwrap_err());
+        assert!(msg.contains("fringe slope"), "{msg}");
+    }
+    // Every model that builds has a fringe its checked constructor accepts, with the same slope.
+    for p in [NOMINAL, [1.0e150, 1.0e-70, 1.0, 5.0e-7, 0.5, 1000.0, 30.0]] {
+        let f = build(p).unwrap().fringe();
+        let checked = deep_causality_quantum::Fringe::new(f.operating_point(), f.slope()).unwrap();
+        assert_eq!(checked, f);
+        assert!(f.effective_draws(0.0, 1.0e-9).is_ok());
+    }
+}

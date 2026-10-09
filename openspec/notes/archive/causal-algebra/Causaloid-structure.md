@@ -79,4 +79,4 @@ Each constructor returns the same `Causaloid` type. They differ only in which of
   framework has no fundamental state-evolving-in-time (p. 5).
 - The formalization program that operationalizes the inversion described here:
   [`causaloid-formalization-roadmap.md`](causaloid-formalization-roadmap.md).
-- The four-level stack this structure carries: [`../quantum/full-stack.md`](../../quantum/full-stack.md).
+- The four-level stack this structure carries: [`../quantum/full-stack.md`](../quantum/full-stack.md).

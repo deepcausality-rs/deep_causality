@@ -6,7 +6,7 @@
 use crate::QuantumError;
 use crate::types::carriers::{Observable, QuantumPlant};
 use crate::types::circuit_model::CircuitModel;
-use crate::types::design::Experiment;
+use crate::types::design::{Experiment, InstrumentTime};
 use crate::types::qcm::hypothesis::Hypothesis;
 use crate::types::qcm::process_factors::{FactorSupports, ProcessFactors};
 #[cfg(feature = "qpu")]
@@ -40,6 +40,7 @@ impl QclBuilder {
             seed: 0,
             #[cfg(feature = "qpu")]
             evidence: None,
+            instrument_time: None,
             _n: PhantomData,
         }
     }
@@ -206,6 +207,7 @@ pub struct ConfigBuilder<R: RealField, N: NaturalNumber, S> {
     seed: u64,
     #[cfg(feature = "qpu")]
     evidence: Option<Evidence<N>>,
+    instrument_time: Option<InstrumentTime<R>>,
     _n: PhantomData<N>,
 }
 
@@ -266,6 +268,7 @@ impl<R: RealField, N: NaturalNumber> ConfigBuilder<R, N, NoSubject> {
             seed: self.seed,
             #[cfg(feature = "qpu")]
             evidence: self.evidence,
+            instrument_time: self.instrument_time,
             _n: PhantomData,
         }
     }
@@ -307,6 +310,7 @@ impl<R: RealField, N: NaturalNumber, const D: usize>
             seed: self.seed,
             #[cfg(feature = "qpu")]
             evidence: self.evidence,
+            instrument_time: self.instrument_time,
             _n: PhantomData,
         }
     }
@@ -333,6 +337,13 @@ impl<R: RealField, N: NaturalNumber, S> ConfigBuilder<R, N, S> {
     /// with a baseline named, `observe`, `fork` and `design` fail until that stage ran.
     pub fn baseline(mut self, baseline: Experiment<R>) -> Self {
         self.baseline = Some(baseline);
+        self
+    }
+
+    /// The instrument's time per shot and white-noise range. The ledger's device time is then
+    /// seconds, the shots times the time per shot; without it a shot is one unit of device time.
+    pub fn instrument_time(mut self, time: InstrumentTime<R>) -> Self {
+        self.instrument_time = Some(time);
         self
     }
 
@@ -376,6 +387,7 @@ impl<R: RealField, N: NaturalNumber, S> ConfigBuilder<R, N, S> {
             seed: self.seed,
             #[cfg(feature = "qpu")]
             evidence: self.evidence,
+            instrument_time: self.instrument_time,
             _n: PhantomData,
         })
     }
@@ -390,6 +402,7 @@ pub struct Config<R: RealField, N: NaturalNumber, S> {
     seed: u64,
     #[cfg(feature = "qpu")]
     evidence: Option<Evidence<N>>,
+    instrument_time: Option<InstrumentTime<R>>,
     _n: PhantomData<N>,
 }
 
@@ -418,6 +431,11 @@ impl<R: RealField, N: NaturalNumber, S> Config<R, N, S> {
     #[cfg(feature = "qpu")]
     pub fn evidence(&self) -> Option<&Evidence<N>> {
         self.evidence.as_ref()
+    }
+
+    /// The instrument time, if one was named.
+    pub fn instrument_time(&self) -> Option<&InstrumentTime<R>> {
+        self.instrument_time.as_ref()
     }
 }
 

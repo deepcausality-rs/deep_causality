@@ -11,10 +11,7 @@
  * Two properties that need no output line follow as sentences: the tolerances
  * derive from the working type, and the compiler orders validate before control.
  */
-import { Code } from 'astro:components';
-import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
-
-const SHIKI = { light: rustLight, dark: rustDark };
+import OutputCard from '../shared/OutputCard.astro';
 
 const props = [
   {
@@ -44,14 +41,7 @@ const props = [
 ];
 ---
 <ul class="rows">
-  {props.map((p, i) => (
-    <li class="row panel corner-brackets rise" style={`--i:${i}`}>
-      <p class="kind">{p.kind}</p>
-      <h3>{p.title}</h3>
-      <p class="t">{p.text}</p>
-      <div class="out"><Code code={p.out} lang="text" themes={SHIKI} wrap /></div>
-    </li>
-  ))}
+  {props.map((p, i) => <OutputCard {...p} index={i} />)}
 </ul>
 <div class="also">
   <p>
@@ -76,20 +66,6 @@ const props = [
     gap: var(--space-4);
   }
   @media (min-width: 800px) { .rows { grid-template-columns: 1fr 1fr; } }
-
-  .row { padding: var(--space-5); display: flex; flex-direction: column; min-width: 0; }
-  .kind {
-    margin: 0 0 var(--space-2);
-    font-family: var(--font-mono);
-    font-size: var(--t-eyebrow);
-    letter-spacing: var(--ls-eyebrow);
-    text-transform: uppercase;
-    color: var(--accent);
-  }
-  .row h3 { font-size: var(--t-h4); margin: 0 0 var(--space-2); }
-  .t { color: var(--fg-1); font-size: var(--t-body-sm); margin: 0 0 var(--space-4); }
-  .out { margin-top: auto; min-width: 0; }
-  .out :global(pre) { margin: 0; font-size: var(--t-mono-sm); }
 
   .also { display: grid; gap: var(--space-3); max-width: var(--measure); }
   .also p { margin: 0; color: var(--fg-1); font-size: var(--t-body-sm); }

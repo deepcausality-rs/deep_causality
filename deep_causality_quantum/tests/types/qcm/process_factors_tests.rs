@@ -139,3 +139,59 @@ fn test_validate_rejects_factor_without_declared_support() {
         QuantumErrorEnum::DimensionMismatch(_)
     ));
 }
+
+#[test]
+fn test_a_leg_has_no_output_half_until_one_is_declared() {
+    let mut fs = FactorSupports::new();
+    fs.declare(0, &[0]);
+    assert_eq!(fs.leg_output_dim(0), 1);
+    fs.set_leg_output_dim(0, 4);
+    assert_eq!(fs.leg_output_dim(0), 4);
+    assert_eq!(fs.leg_output_dim(7), 1);
+}
+
+#[test]
+fn test_validate_requires_an_output_half_that_divides_its_leg() {
+    // A leg of dimension 4 carrying the identity factor on node 0.
+    let identity4 = || {
+        let mut data = vec![c(0., 0.); 16];
+        for i in 0..4 {
+            data[i * 4 + i] = c(1., 0.);
+        }
+        mat(data, 4)
+    };
+    let registry = |output: usize| {
+        let mut fs = FactorSupports::new();
+        fs.declare(0, &[0]);
+        fs.set_leg_dim(0, 4).set_leg_output_dim(0, output);
+        fs
+    };
+    let mut pf = ProcessFactors::<f64>::new();
+    pf.insert(0, identity4());
+    for output in [1, 2, 4] {
+        assert!(registry(output).validate(&pf).is_ok(), "output {output}");
+    }
+    for output in [0, 3, 8] {
+        match registry(output).validate(&pf).unwrap_err().0 {
+            QuantumErrorEnum::DimensionMismatch(msg) => {
+                assert!(
+                    msg.contains("leg 0") && msg.contains(&format!("{output}")),
+                    "{msg}"
+                )
+            }
+            other => panic!("expected DimensionMismatch for output {output}, got {other:?}"),
+        }
+    }
+    // A parent leg's output half is checked as well, and a leg no factor uses is not.
+    let mut fs = FactorSupports::new();
+    fs.declare(1, &[0, 1]);
+    fs.set_leg_dim(0, 2)
+        .set_leg_dim(1, 2)
+        .set_leg_output_dim(0, 3)
+        .set_leg_output_dim(9, 0);
+    let mut pf = ProcessFactors::<f64>::new();
+    pf.insert(1, identity4());
+    assert!(fs.validate(&pf).is_err());
+    fs.set_leg_output_dim(0, 2);
+    assert!(fs.validate(&pf).is_ok());
+}

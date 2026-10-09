@@ -33,25 +33,17 @@ pub const OWN_ANGLE: FloatType = const_scalar_from_float!(FloatType, 0.4);
 pub const COUPLING_ANGLE: FloatType = const_scalar_from_float!(FloatType, 0.9);
 
 // =============================================================================
-// The small numbers the factors are written with
+// The conditional tables the factorizations are written with
 // =============================================================================
 
 pub const ZERO: FloatType = const_scalar_from_int!(FloatType, 0);
 pub const ONE: FloatType = const_scalar_from_int!(FloatType, 1);
 
-/// A single-qubit factor's diagonal: mostly ground, a little excited.
-pub const QUBIT_FACTOR: [FloatType; 2] = [
-    const_scalar_from_float!(FloatType, 0.9),
-    const_scalar_from_float!(FloatType, 0.1),
-];
+/// Each qubit's own excitation, in every candidate.
+pub const EXCITED: FloatType = const_scalar_from_float!(FloatType, 0.1);
 
-/// A factor on a qubit and one parent.
-pub const TWO_LEG_FACTOR: [FloatType; 4] = [
-    const_scalar_from_float!(FloatType, 0.85),
-    const_scalar_from_float!(FloatType, 0.05),
-    const_scalar_from_float!(FloatType, 0.05),
-    const_scalar_from_float!(FloatType, 0.05),
-];
+/// A driven qubit's excitation when its driver, a qubit or the bath, is excited or on.
+pub const DRIVEN: FloatType = const_scalar_from_float!(FloatType, 0.4);
 
 // =============================================================================
 // The experiment family
@@ -61,34 +53,6 @@ pub const TWO_LEG_FACTOR: [FloatType; 4] = [
 pub const COST_PASSIVE: FloatType = const_scalar_from_int!(FloatType, 1);
 pub const COST_INTERVENTION: FloatType = const_scalar_from_int!(FloatType, 1);
 pub const COST_ECHO: FloatType = const_scalar_from_int!(FloatType, 2);
-pub const COST_TOMOGRAPHY: FloatType = const_scalar_from_int!(FloatType, 200);
-
-/// The read-out each experiment predicts under H₁, H₂ and H₃ in that order.
-pub const PREDICT_PASSIVE: [FloatType; 3] = [
-    const_scalar_from_float!(FloatType, 0.04),
-    const_scalar_from_float!(FloatType, 0.04),
-    const_scalar_from_float!(FloatType, 0.04),
-];
-pub const PREDICT_HOLD_Q1: [FloatType; 3] = [
-    const_scalar_from_float!(FloatType, 0.40),
-    const_scalar_from_float!(FloatType, 0.10),
-    const_scalar_from_float!(FloatType, 0.10),
-];
-pub const PREDICT_HOLD_Q2: [FloatType; 3] = [
-    const_scalar_from_float!(FloatType, 0.10),
-    const_scalar_from_float!(FloatType, 0.40),
-    const_scalar_from_float!(FloatType, 0.10),
-];
-pub const PREDICT_ECHO: [FloatType; 3] = [
-    const_scalar_from_float!(FloatType, 0.01),
-    const_scalar_from_float!(FloatType, 0.01),
-    const_scalar_from_float!(FloatType, 0.04),
-];
-pub const PREDICT_TOMOGRAPHY: [FloatType; 3] = [
-    const_scalar_from_float!(FloatType, 0.90),
-    const_scalar_from_float!(FloatType, 0.50),
-    const_scalar_from_float!(FloatType, 0.10),
-];
 
 /// How many acyclic candidates the screen should admit.
 pub const CANDIDATE_COUNT: usize = 3;

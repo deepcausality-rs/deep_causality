@@ -1,7 +1,7 @@
 ---
 title: "A code concatenated with itself"
 question: "How much error survives when one abstraction stacks on another?"
-summary: "The [[4,2,2]] code concatenated with itself as two abstractions. The Pauli gates compose exactly, the law's bound holds at three precisions, and a gate across code blocks is refused by name."
+summary: "The [[4,2,2]] code concatenated with itself as two abstractions. The Pauli gates compose exactly, the law's bound holds at three precisions, and a gate across code blocks is refused."
 order: 6
 group: compose
 command: "cargo run --release -p quantum_examples --example qcl_concatenated_code"
@@ -19,11 +19,11 @@ crates:
 source: "examples/quantum_examples/qcl_examples/qcl_concatenated_code"
 ---
 
-The Pauli gates Z̄ and X̄ compose exactly, and the law's bound holds at every precision. The inner
+None, for the Pauli gates: Z̄ and X̄ compose exactly, and the law's bound holds at every precision. The inner
 code's four physical qubits form two blocks of two, each encoded by the outer code, so eight
 physical qubits stand under four middle qubits under two logical ones.
 
-## What you see
+## Every composition law holds
 
 ```text
 [Z̄(0)] at FloatType
@@ -40,7 +40,7 @@ Outcome
   the cross-block gate refused    yes
 ```
 
-## The two links
+## Two links stack eight qubits under two
 
 | Link | Low level | High level | τ |
 |---|---|---|---|
@@ -52,11 +52,12 @@ the bound and the composite's measured residual. For Z̄ and X̄ everything is z
 exact case that Lean proves (`quantum.abstraction.compose_exact`). The program repeats the chain
 at `f32`, `f64` and `Float106`.
 
+## A gate across code blocks is refused
+
 The refusal on the controlled-Z gate matters as much as the passes. A construction that returned
 something for a gate it has no gadget for would compose cleanly and be wrong, and nothing in the
 law would say so.
 
-## Read before you cite
+## The run proves nothing about concatenated codes in general
 
-This is an example with checks. It claims the residuals it measures and the bound the law
-records, and it proves nothing about concatenated codes in general.
+It claims the residuals it measures and the bound the law records.

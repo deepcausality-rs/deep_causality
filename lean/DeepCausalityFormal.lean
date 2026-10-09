@@ -155,3 +155,7 @@ import DeepCausalityFormal.Quantum.PartialTrace
 import DeepCausalityFormal.Quantum.PartialTraceCounterexample
 import DeepCausalityFormal.Quantum.Choi
 import DeepCausalityFormal.Quantum.Abstraction
+import DeepCausalityFormal.Quantum.Orthomodular
+import DeepCausalityFormal.Quantum.Markov
+import DeepCausalityFormal.Quantum.ClassicalEmbedding
+import DeepCausalityFormal.Quantum.NoInfluence

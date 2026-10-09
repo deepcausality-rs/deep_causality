@@ -1,7 +1,7 @@
 ---
 title: "Freeze-time Markov check"
 question: "Is this graph of quantum factors a quantum causal model at all?"
-summary: "Two factors on a shared Hilbert leg. Diagonal ones commute and the graph freezes. σx and σz do not, and the freeze aborts, names the pair and rolls back."
+summary: "Two factors on a shared Hilbert leg. Diagonal ones commute and the graph freezes. σx and σz do not, and the freeze aborts, reports the pair and rolls back."
 order: 3
 group: model
 command: "cargo run --release -p quantum_examples --example qcm_freeze_check"
@@ -22,12 +22,13 @@ crates:
 source: "examples/quantum_examples/qcm_freeze_check"
 ---
 
-The example freezes one two-node graph with two factor pairs. `σz` with `diag(3, −1)` freezes
-cleanly, and `σx` with `σz` aborts the freeze at nodes 0 and 1 and leaves the graph dynamic. A graph
-is a quantum causal model only when the factors that share a Hilbert leg (one qubit's space) commute
-pairwise; `freeze_quantum` tests that condition at the moment the graph turns from dynamic to frozen.
+Only when its factors commute: `σz` with `diag(3, −1)` freezes cleanly, and `σx` with `σz` aborts
+the freeze at nodes 0 and 1 and leaves the graph dynamic. A graph is a quantum causal model only
+when the factors that share a Hilbert leg (one qubit's space) commute pairwise, and
+`freeze_quantum` tests that condition at the moment the graph turns from dynamic to frozen. The
+example freezes one two-node graph with each of the two factor pairs.
 
-## What you see
+## Diagonal factors freeze; σx and σz abort
 
 ```text
 [1] sigma_z and diag(3, -1) on leg 0
@@ -53,16 +54,15 @@ matrices commute exactly. In run 2 the commutator `[σx, σz] = −2iσy` has no
 threshold that scales with the scalar's unit roundoff. The margin exceeds 1, the freeze aborts, and
 `is_frozen()` reads false because the graph has rolled back to dynamic.
 
-## Why the check runs at the freeze
+## At the freeze the structure is complete and unused
 
-At the freeze the structure is complete and nothing depends on it yet. A check there never rejects
-a half-built graph and never finds the problem after a result has been used. A failure costs the
+A check there never rejects a half-built graph and never finds the problem after a result has been used. A failure costs the
 caller a rebuild.
 
 The error carries `QuantumErrorEnum::CommutatorNonZero { node_j, node_k, detail }`, so the caller
 receives the node indices as data.
 
-## What this run checks
+## The run checks commutativity only
 
 The example passes `None` for the faithfulness argument, so only the commutativity check runs;
 supplying the declared inputs and outputs adds the C₃ check over the frozen graph. The check is

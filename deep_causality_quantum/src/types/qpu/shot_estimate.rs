@@ -19,7 +19,7 @@
 //! the row is corrected here rather than worked around.
 
 use crate::QuantumError;
-use crate::types::decision::{Check, CheckItem, CheckReport, Tolerance};
+use crate::types::decision::{Check, CheckItem, CheckReport};
 use crate::types::qpu::histogram::ShotHistogram;
 use alloc::format;
 use alloc::vec;
@@ -77,19 +77,45 @@ where
                 "an estimate over zero shots has no standard error".into(),
             ));
         }
-        if !estimate.is_finite() || estimate < R::zero() || estimate > R::one() {
-            return Err(QuantumError::NonFiniteValue(
-                "an estimate must be a finite probability in [0, 1]".into(),
-            ));
-        }
+        check_probability(estimate)?;
         let n = R::from_u64(shots).ok_or_else(|| {
             QuantumError::CalculationError(format!("scalar cannot represent {shots} shots"))
         })?;
-        let one = R::one();
-        let standard_error = (estimate * (one - estimate) / n).sqrt();
         Ok(Self {
             estimate,
-            standard_error,
+            standard_error: bernoulli_standard_error(estimate, n),
+            shots,
+        })
+    }
+
+    /// An estimate over `draws` effective draws, which need not be whole: the standard error is
+    /// `√(p(1−p)/draws)` at the draws as given, and the shot count is the draws rounded to the
+    /// nearest whole draw, which is what a separation in bits is scaled by. This is how a
+    /// published value with its standard error enters as a read-out.
+    ///
+    /// # Errors
+    ///
+    /// [`QuantumError::NonFiniteValue`] on an estimate that is not finite or lies outside
+    /// `[0, 1]`, or on draws that are not finite; [`QuantumError::NormalizationError`] when the
+    /// draws round to zero or do not fit a `u64`.
+    pub fn from_effective_draws(estimate: R, draws: R) -> Result<Self, QuantumError> {
+        check_probability(estimate)?;
+        if !draws.is_finite() {
+            return Err(QuantumError::NonFiniteValue(
+                "effective draws must be finite".into(),
+            ));
+        }
+        let shots = match draws.round().to_u64() {
+            Some(shots) if shots > 0 => shots,
+            _ => {
+                return Err(QuantumError::NormalizationError(
+                    "effective draws must round to at least one whole draw that fits a u64".into(),
+                ));
+            }
+        };
+        Ok(Self {
+            estimate,
+            standard_error: bernoulli_standard_error(estimate, draws),
             shots,
         })
     }
@@ -157,6 +183,22 @@ where
     }
 }
 
+/// Refuses an estimate that is not a finite probability in `[0, 1]`.
+fn check_probability<R: RealField>(estimate: R) -> Result<(), QuantumError> {
+    if !estimate.is_finite() || estimate < R::zero() || estimate > R::one() {
+        return Err(QuantumError::NonFiniteValue(
+            "an estimate must be a finite probability in [0, 1]".into(),
+        ));
+    }
+    Ok(())
+}
+
+/// The Bernoulli standard error `√(p(1−p)/n)` of a frequency `p` over `n` draws, which need not
+/// be whole.
+pub(crate) fn bernoulli_standard_error<R: RealField>(p: R, n: R) -> R {
+    (p * (R::one() - p) / n).sqrt()
+}
+
 /// The per-shot Bhattacharyya distance between two Bernoulli distributions, in bits:
 /// `−log₂(√(pq) + √((1−p)(1−q)))` (Bhattacharyya, Bull. Calcutta Math. Soc. 35, 1943). Zero when
 /// `p = q`, and the coefficient inside the logarithm is the overlap of the two distributions.
@@ -180,10 +222,12 @@ where
 {
     /// Whether the estimate reaches `spec` from below, as a margin over shots.
     ///
-    /// The measured quantity is the shortfall `spec − estimate`, the threshold is the shot-noise
-    /// width from [`Tolerance::shot_noise`], and the examined count is the shots. A shortfall
-    /// within one standard error accepts; a negative shortfall reads as a negative margin, the
-    /// distance above the spec in units of the noise.
+    /// The measured quantity is the shortfall `spec − estimate`, the threshold is the estimate's
+    /// own [`standard_error`](Self::standard_error), and the examined count is the shots. A
+    /// shortfall within one standard error accepts; a negative shortfall reads as a negative
+    /// margin, the distance above the spec in units of the noise. Over whole shots the standard
+    /// error is the shot-noise width [`Tolerance::shot_noise`](crate::Tolerance::shot_noise) gives at the shots; over effective
+    /// draws it is the width at the draws as given, not at the rounded shot count.
     pub fn at_least(&self, spec: R) -> CheckReport<R> {
         self.against(spec - self.estimate)
     }
@@ -194,10 +238,10 @@ where
     }
 
     fn against(&self, excess: R) -> CheckReport<R> {
-        let width = Tolerance::<R>::shot_noise()
-            .shot_noise_width(self.estimate, self.shots)
-            .expect("the shot-noise member answers the read-out form");
         let examined = usize::try_from(self.shots).unwrap_or(usize::MAX);
-        CheckReport::new(vec![Check::new(CheckItem::Whole, excess, width)], examined)
+        CheckReport::new(
+            vec![Check::new(CheckItem::Whole, excess, self.standard_error)],
+            examined,
+        )
     }
 }

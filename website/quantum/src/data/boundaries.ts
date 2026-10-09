@@ -57,9 +57,9 @@ export const boundaries: Boundary[] = [
     id: 'predictions',
     status: 'partial',
     mark: 'you supply',
-    title: 'You supply each candidate’s predicted read-out.',
-    text: 'Each experiment carries a cost, a shot count and one predicted probability per candidate, and Experiment::new takes them as data. The crate can compute a prediction from a candidate’s factors (Hypothesis::evaluate); the crosstalk example does not call it and types its predictions into constants.rs. The plan and the verdict are only as good as those numbers.',
-    evidence: 'src/types/design/experiment_design.rs, `Experiment::new`; qcl_crosstalk constants.rs',
+    title: 'You supply the physics of each experiment.',
+    text: 'A ConfiguredExperiment holds a configuration, and a ResponseModel you write says what that configuration does in each candidate’s world; the library computes every predicted read-out from it. The crosstalk example writes its candidates as conditional tables and its model in model.rs. Experiment::new still takes typed predictions for a caller without a model. The plan and the verdict are only as good as the model.',
+    evidence: 'src/types/pipeline/configured_experiment.rs, src/types/pipeline/response.rs; qcl_crosstalk model.rs',
   },
   {
     id: 'scale',
@@ -84,5 +84,70 @@ export const boundaries: Boundary[] = [
     title: 'It is not a simulator for large systems.',
     text: 'The kernels are dense complex matrices sized for the checks. The exact code checks decide over supports in F₂ and build no state vector.',
     evidence: 'src/types/qgates/operator_linalg.rs; qcl_geometric_qec output',
+  },
+];
+
+/**
+ * Where the sensing examples stop. Printed in their own section of `/boundaries/`, which
+ * `/sensing/` links to. Sources: the two examples under
+ * `examples/quantum_examples/qcl_examples/` and their output, and the verifications
+ * under `deep_causality_quantum/verification/sensing/`.
+ */
+export const sensingBoundaries: Boundary[] = [
+  {
+    id: 'sensing-simulated',
+    status: 'partial',
+    mark: 'simulated',
+    title: 'The sensing examples run on simulated observations.',
+    text: 'Each example draws its observations from the cause under test, and exits nonzero when a campaign finds a different cause while the true one is on the list. The run with clipping left off the list expects the misattribution and checks for it. QCL also takes counts a lab measured and published values with their standard errors, and the sensing verifications use published values and data regenerated from published models.',
+    evidence: 'src/types/pipeline/evidence_source.rs; verification/sensing/common/attribution.rs',
+  },
+  {
+    id: 'sensing-placeholders',
+    status: 'partial',
+    mark: 'you supply',
+    title: 'A lab supplies the placeholders.',
+    text: 'The gravimeter’s setup times and tide, and the gradiometer’s leak, dark background and setup times, have no published source, and constants.rs marks each one. The 20,000 s temperature scan follows from the ultracold operation of Karcher et al.',
+    evidence: 'qcl_gravimeter_systematics/constants.rs; qcl_gradiometer_crosstalk/constants.rs',
+  },
+  {
+    id: 'sensing-list',
+    status: 'partial',
+    mark: 'shown',
+    title: 'A cause off the list is blamed on another.',
+    text: 'A campaign stops at the first candidate that holds and separates. A leak in both directions ends the gradiometer’s campaign at the one-way leak after one experiment, and with clipping off the list the gravimeter’s campaign blames Coriolis. The full plan runs every planned experiment and reports the two-way leak outside the model.',
+    evidence: 'qcl_gradiometer_crosstalk output, [checks]; qcl_gravimeter_systematics output, [clipping left off the list]',
+  },
+  {
+    id: 'sensing-white-noise',
+    status: 'partial',
+    mark: 'measured',
+    title: 'Integration time follows white noise inside a range.',
+    text: 'The planner sizes draws on σ(τ) = S/√τ and reports a pair uncovered when it needs more averaging than the instrument’s white-noise range holds. The AQG’s one-day scatter, 9.4 nm/s² against 2.55 predicted, lies past that range.',
+    evidence: 'src/types/design/instrument_time.rs; verification/sensing/verification_v6_time_model.rs',
+  },
+  {
+    id: 'sensing-drift',
+    status: 'partial',
+    mark: 'tide only',
+    title: 'The examples model one drift, the tide.',
+    text: 'Each gravimeter experiment carries the Earth tide at the time it runs, and the campaign plans again when the tide moves a planned prediction. Atom temperature and field hold still in both examples.',
+    evidence: 'qcl_gravimeter_systematics/model_config.rs; src/types/pipeline/campaign.rs',
+  },
+  {
+    id: 'sensing-correction',
+    status: 'partial',
+    mark: 'not built',
+    title: 'The gravimeter finds the cause and stops.',
+    text: 'The correction each survivor implies, and the run that checks it, are not built. The gradiometer prints the corrective action for its survivor and the bias the mechanism adds.',
+    evidence: 'qcl_gravimeter_systematics/README.md, “Not built”; qcl_gradiometer_crosstalk/main.rs, consequence',
+  },
+  {
+    id: 'sensing-screens',
+    status: 'partial',
+    mark: 'by construction',
+    title: 'The quantum checks pass every sensing candidate.',
+    text: 'The gravimeter’s candidates are mechanisms, which skip the validate stage. The gradiometer’s factors are diagonal tables, which the normalisation, Markov and decomposability checks pass. The experiments alone separate the candidates.',
+    evidence: 'qcl_gravimeter_systematics/main.rs; qcl_gradiometer_crosstalk/main.rs, screen',
   },
 ];

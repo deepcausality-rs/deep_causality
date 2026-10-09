@@ -264,7 +264,7 @@ The library states what it cannot decide instead of returning an answer that wou
 | Gate program in a box | 12 qubits per gate |
 | Class-invariance enumeration | 2^22 states per shift |
 | Pipeline build | needs `std`, through `qcm` |
-| Evidence | simulated; no vendor adapter |
+| Evidence | simulated, recorded counts, or a published value with its standard error (`EvidenceSource`); no vendor adapter |
 | Decoder | none in the crate |
 | Cycles | refused by decision |
 
@@ -274,38 +274,35 @@ The library states what it cannot decide instead of returning an answer that wou
 
 | Typed into `constants.rs` and `model.rs` | Computed by the library | Sampled |
 |---|---|---|
-| the four structures' factors | the refusal of H4 at `build()` | the observation: 1024 shots from the Born sampler |
-| five experiments' costs (1, 1, 1, 2, 200, "in the same arbitrary unit") | Markov screen (5 pairs) and C₃ screen (3 blocks) | drawn at H1's own predicted read-out, seed 20260821 |
-| each experiment's predicted read-out under H1, H2, H3 | the minimum-cost plan: E1 and E2, cost 2 | |
-| shots, floor (5 bits), agreement window (3 standard errors) | separations in bits, per pair | |
-| | the adjudication of the three worlds | |
+| the four structures' conditional tables: each qubit excited with probability 0.10, a driven qubit 0.40 when its driver is excited | the refusal of H4 at `build()` | the observation: 1024 shots from the Born sampler |
+| four experiments' costs (1, 1, 1, 2, "in the same arbitrary unit") | normalisation (7 factors), Markov (5 pairs) and C₃ (3 blocks) screens | drawn at H1's own predicted read-out |
+| the response model: what holding a qubit and the echo do to each candidate's tables | every predicted read-out, through `design_with` | |
+| shots, floor (5 bits), agreement window (3 standard errors), drift (0.01) | the minimum-cost plan: E1 and E2, cost 2 of 5 | |
+| | the campaign: E1 run, H1 survives at 99.5 bits, spent 1 of 2 | |
 
-Facts that follow from that table and from `constants.rs`:
+Facts that follow from that table:
 
-- The costs 2 and 200, and the predictions behind the plan, are inputs. The example states them as
-  modelling assumptions.
-- The run observes one experiment, E1, on data drawn from H1. The example then checks that the
-  survivor is the structure the observation came from.
+- The costs and the conditional tables are inputs; the predictions follow from the tables. The
+  example states them as modelling assumptions.
+- The campaign runs one experiment, E1, on data drawn from H1, and stops because H1 separates from
+  both rivals. The example then checks that the survivor is the structure the observation came
+  from.
 - E1 predicts 0.10 under both H2 and H3. Had the truth been H2 or H3, an E1 read-out near 0.10 would
-  leave both standing, and E2 would split them (0.40 under H2, 0.10 under H3). That is why the plan
-  holds two experiments. The run exercises the case where E1 suffices.
-- The printed "tightest pair separates at 164.8 bits" is the smallest, over the three pairs, of the
-  best separation any offered experiment reaches; tomography reaches it. Under the chosen plan the
-  tightest pair separates at 99.5 bits. I confirmed both by hand: n = 1024, (0.9, 0.5) gives 164.8
-  and (0.4, 0.1) gives 99.5.
-- The survivor's 100.1 bits is the same distance between the two predictions rounded to whole shots
-  (410 and 102 of 1024).
-- The Markov check admits all three candidates because the factors are diagonal, which puts the whole
-  weight of the discrimination on the interventions.
-- The crate can compute a prediction from a candidate's factors: `Hypothesis::evaluate` and `predict`
-  return `Re Tr(σ·τ)`. `Experiment::new` takes predictions as data, and this example does not call
-  `evaluate`.
+  leave both standing, and the campaign would run E2 next (0.40 under H2, 0.10 under H3). That is why
+  the plan holds two experiments. The run exercises the case where E1 suffices.
+- The printed "tightest pair separates at 99.5 bits" is the smallest, over the three pairs, of the
+  best separation any offered experiment reaches; E1 and E2 reach it, so it is also the plan's.
+  n = 1024 and (0.4, 0.1) give 99.5. The survivor's 99.5 bits is the same distance.
+- The normalisation and Markov checks admit all three candidates because the tables are
+  conditionals and the factors diagonal, which puts the whole weight of the discrimination on the
+  interventions.
 
 `qcl_crosstalk_circuits` writes H₁, H₂ and the cyclic H₄ as circuits. H₁ and H₂ share the same two
 boxes and differ only in how the boxes group into nodes, which reverses the induced edge. H₃ stays a
-factorization. The predictions and costs are the same constants, so the circuits do not change the
-plan or the verdict; the example shows the circuit route through `build()`, the dilation and the
-screen.
+factorization. A dilation does not describe the two qubits the experiments act on, so each
+candidate's predictions are computed from the factorization it stands for, and the observation and
+adjudication are run by hand; the circuits do not change the plan or the verdict. The example shows
+the circuit route through `build()`, the dilation and the screen.
 
 ## 12. The fourteen examples
 
@@ -358,10 +355,9 @@ their READMEs.
 
 ## 15. What the site must qualify
 
-- "Cost 2 against 200" and the predictions behind it are inputs.
-- The tightest pair under the plan separates at 99.5 bits; 164.8 is tomography's.
-- "Two experiments" is the plan; the run observes one, drawn from H1.
-- The circuit example reproduces the pipeline route, and its plan and verdict come from the same
-  typed predictions.
+- The costs and the conditional tables behind the predictions are inputs.
+- "Two experiments" is the plan; the campaign runs one, drawn from H1, and stops.
+- The circuit example reproduces the pipeline route; its predictions come from the factorizations
+  its circuits stand for.
 - The composition bound holds and can sit far above the measurement (a factor of 8 in code
   switching).

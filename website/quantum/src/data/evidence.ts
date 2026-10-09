@@ -11,18 +11,11 @@ export const numberWord = (n: number): string => {
 /**
  * Counts quoted across the site. Each has one source and one command.
  *
- *   count      cargo test -p deep_causality_quantum --all-features
- *              772 unit and integration tests plus 1 doc test, all passing
- *              (a `#[test]` grep finds a different number: it counts attributes,
- *              not the tests the harness runs)
  *   proved     the quantum section of lean/THEOREM_MAP.md, rows marked `proved`
- *   deferred   the CJ reconstruction isomorphism plus the six QCM targets the
- *              same section names as deferred (see `deferred` in ./formalization.ts)
- *   papers     files under deep_causality_quantum/papers/
+ *   deferred   the targets the same section states and does not prove
+ *              (see `openTarget` in ./formalization.ts)
  */
 export const TESTS = {
-  count: 773,
-  proved: 14,
-  deferred: 7,
-  papers: 7,
+  proved: 19,
+  deferred: 1,
 } as const;

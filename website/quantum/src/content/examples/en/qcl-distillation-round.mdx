@@ -26,22 +26,22 @@ The example builds the case Lorenz and Tull defer (their section 7.1) as two abs
 hand-built [[4,2,2]] code. The first link is the noise on every physical qubit with probability
 p. The second link is the code's ideal recovery.
 
-## What you see
+## The recovery leaves almost all the noise
 
 ```text
 [p = 0]
 composition law in frobenius-on-choi: ε ≤ ‖τ₂‖_post · ε₁ + ‖τ₁‖_pre · ε₂ over 1 queries, holds
-  io: ε₁ = 0.000e0, ε₂ = 3.283e-15, ‖τ₁‖_pre = 1.000e0, ‖τ₂‖_post = 2.000e0, bound = 3.283e-15, measured = 3.283e-15
+  io: ε₁ = 0.000e0, ε₂ = 0.000e0, ‖τ₁‖_pre = 1.000e0, ‖τ₂‖_post = 2.000e0, bound = 0.000e0, measured = 0.000e0
     exact: without noise both links commute
 
 [p = 1/100]
 composition law in frobenius-on-choi: ε ≤ ‖τ₂‖_post · ε₁ + ‖τ₁‖_pre · ε₂ over 1 queries, holds
-  io: ε₁ = 1.639e-1, ε₂ = 3.283e-15, ‖τ₁‖_pre = 1.000e0, ‖τ₂‖_post = 2.000e0, bound = 3.277e-1, measured = 1.638e-1
+  io: ε₁ = 1.639e-1, ε₂ = 0.000e0, ‖τ₁‖_pre = 1.000e0, ‖τ₂‖_post = 2.000e0, bound = 3.277e-1, measured = 1.638e-1
     the recovery leaves 1.638e-1 of the noise's 1.639e-1; the law allows 3.277e-1
 
 [p = 1/20]
 composition law in frobenius-on-choi: ε ≤ ‖τ₂‖_post · ε₁ + ‖τ₁‖_pre · ε₂ over 1 queries, holds
-  io: ε₁ = 7.680e-1, ε₂ = 3.283e-15, ‖τ₁‖_pre = 1.000e0, ‖τ₂‖_post = 2.000e0, bound = 1.536e0, measured = 7.667e-1
+  io: ε₁ = 7.680e-1, ε₂ = 0.000e0, ‖τ₁‖_pre = 1.000e0, ‖τ₂‖_post = 2.000e0, bound = 1.536e0, measured = 7.667e-1
     the recovery leaves 7.667e-1 of the noise's 7.680e-1; the law allows 1.536e0
 ...
 
@@ -51,7 +51,7 @@ Every law held, at every probability and every precision.
 The program sweeps p over 0, 0.01 and 0.05 and repeats the p = 0.05 chain at `f32`, `f64`
 and `Float106`.
 
-## Read before you cite
+## The source paper defers this case
 
-This is an example with checks. It claims the residuals it measures and the bound the law
-records. The source paper defers this case, so the example carries no theorem to compare against.
+The example therefore carries no theorem to compare against. It claims the residuals it measures
+and the bound the law records.

@@ -1738,6 +1738,7 @@ dependencies = [
  "deep_causality_algebra",
  "deep_causality_calculus",
  "deep_causality_context",
+ "deep_causality_context_store",
  "deep_causality_core",
  "deep_causality_haft",
  "deep_causality_homology",

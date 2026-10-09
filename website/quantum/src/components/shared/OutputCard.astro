@@ -1,0 +1,42 @@
+---
+/**
+ * One card: a label, a claim, a sentence of explanation and a line of program output copied
+ * verbatim from a run. `VerdictAnatomy` and `EdgeCards` lay these out in their own grids.
+ */
+import { Code } from 'astro:components';
+import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
+
+interface Props {
+  kind: string;
+  title: string;
+  text: string;
+  /** The output line, verbatim. */
+  out: string;
+  /** Position in the list, for the staggered entrance. */
+  index: number;
+}
+const { kind, title, text, out, index } = Astro.props;
+const SHIKI = { light: rustLight, dark: rustDark };
+---
+<li class="card panel corner-brackets rise" style={`--i:${index}`}>
+  <p class="kind">{kind}</p>
+  <h3>{title}</h3>
+  <p class="t">{text}</p>
+  <div class="out"><Code code={out} lang="text" themes={SHIKI} wrap /></div>
+</li>
+
+<style>
+  .card { padding: var(--space-5); display: flex; flex-direction: column; min-width: 0; }
+  .kind {
+    margin: 0 0 var(--space-2);
+    font-family: var(--font-mono);
+    font-size: var(--t-eyebrow);
+    letter-spacing: var(--ls-eyebrow);
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .card h3 { font-size: var(--t-h4); margin: 0 0 var(--space-2); }
+  .t { color: var(--fg-1); font-size: var(--t-body-sm); margin: 0 0 var(--space-4); }
+  .out { margin-top: auto; min-width: 0; }
+  .out :global(pre) { margin: 0; font-size: var(--t-mono-sm); }
+</style>

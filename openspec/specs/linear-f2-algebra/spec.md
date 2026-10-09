@@ -6,7 +6,7 @@ TBD - created by archiving change add-linear-algebra-crate. Update Purpose after
 ### Requirement: Mod-2 elimination returns rank, kernel basis and image basis
 `deep_causality_linear` SHALL provide Gaussian elimination over 𝔽₂ returning the rank, a basis of the kernel and a basis of the image.
 
-`openspec/notes/quantum/qcl-gaps.md` G-01 names these three outputs as the closure condition, and R1,
+`openspec/notes/archive/quantum/qcl-gaps.md` G-01 names these three outputs as the closure condition, and R1,
 R4 and R6 depend on them: a chain complex over 𝔽₂ needs `∂₁∂₂ = 0` checked exactly, and 𝔽₂ homology
 with representatives needs `ker ∂₁ / im ∂₂` as spanning sets rather than as dimensions.
 
@@ -98,6 +98,6 @@ crate owns the matrix, so moving the matrix removes no dependency edge.
 
 #### Scenario: The gap register is updated
 - **WHEN** this requirement is implemented
-- **THEN** G-01 and G-02 in `openspec/notes/quantum/qcl-gaps.md` are marked closed
+- **THEN** G-01 and G-02 in `openspec/notes/archive/quantum/qcl-gaps.md` are marked closed
 - **AND** the owner field records the implementing crate
 

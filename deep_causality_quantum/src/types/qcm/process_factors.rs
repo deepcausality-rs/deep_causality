@@ -75,6 +75,8 @@ pub struct FactorSupports {
     supports: BTreeMap<usize, Vec<usize>>,
     /// leg-id → Hilbert dimension.
     leg_dims: BTreeMap<usize, usize>,
+    /// leg-id → dimension of its output half, for a leg that pairs an input with an output.
+    leg_outputs: BTreeMap<usize, usize>,
 }
 
 impl FactorSupports {
@@ -83,6 +85,7 @@ impl FactorSupports {
         Self {
             supports: BTreeMap::new(),
             leg_dims: BTreeMap::new(),
+            leg_outputs: BTreeMap::new(),
         }
     }
 
@@ -105,6 +108,19 @@ impl FactorSupports {
     pub fn set_leg_dim(&mut self, leg: usize, dim: usize) -> &mut Self {
         self.leg_dims.insert(leg, dim);
         self
+    }
+
+    /// Declares that `leg` pairs an input with an output of dimension `dim`, the input half
+    /// outer, as a dilation's legs do: a factor on it is the identity on that output half.
+    pub fn set_leg_output_dim(&mut self, leg: usize, dim: usize) -> &mut Self {
+        self.leg_outputs.insert(leg, dim);
+        self
+    }
+
+    /// The dimension of `leg`'s output half: `1` for a single-system leg, the flat convention's,
+    /// and the declared output dimension for a leg that pairs an input with an output.
+    pub fn leg_output_dim(&self, leg: usize) -> usize {
+        self.leg_outputs.get(&leg).copied().unwrap_or(1)
     }
 
     /// The ascending leg-ids of `node`, if declared.
@@ -188,7 +204,9 @@ impl FactorSupports {
     }
 
     /// Validates that every factor's matrix dimension equals the product of its
-    /// declared support leg dimensions, and that each factor is square.
+    /// declared support leg dimensions, that each factor is square, and that every leg a
+    /// factor's support declares an output half for splits into that output: the output
+    /// dimension is positive and divides the leg's dimension.
     pub fn validate<R: RealField>(&self, factors: &ProcessFactors<R>) -> Result<(), QuantumError> {
         for node in factors.nodes() {
             let factor = factors.get(node).expect("node came from factors.nodes()");
@@ -225,6 +243,17 @@ impl FactorSupports {
                     "factor at node {} has dim {} but its support implies {}",
                     node, shape[0], expected
                 )));
+            }
+            for &leg in legs {
+                if let Some(&output) = self.leg_outputs.get(&leg) {
+                    let dim = self.leg_dim(leg);
+                    if output == 0 || !dim.is_multiple_of(output) {
+                        return Err(QuantumError::DimensionMismatch(format!(
+                            "leg {leg} of node {node} has dimension {dim}, which does not split \
+                             into an output half of dimension {output}"
+                        )));
+                    }
+                }
             }
         }
         Ok(())
