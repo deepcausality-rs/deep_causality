@@ -67,7 +67,7 @@ identification the Rust carrier already uses.
 
 Lorenz 2022, Definition 3.3, defines the Markov condition; the theorem states what makes the check
 sound on this model. `kron_one_commute_one_kron`: `kron A 1 * kron 1 B = kron 1 B * kron A 1`, from
-`mul_kronecker_mul` and `one_mul`/`mul_one`. `pairwise_commute_prod_perm`: for lists `l` and `l'`
+D1's `kron_mul_kron` and `one_mul`/`mul_one`. `pairwise_commute_prod_perm`: for lists `l` and `l'`
 that are permutations of each other with `l.Pairwise Commute`, `l.prod = l'.prod`, from Mathlib's
 `List.Perm.prod_eq'`. A new file `Quantum/Markov.lean` holds both.
 

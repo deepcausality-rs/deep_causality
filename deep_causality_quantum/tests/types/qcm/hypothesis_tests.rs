@@ -785,6 +785,120 @@ fn test_a_leg_with_an_output_half_traces_to_its_output_dimension() {
     assert!((report.checks()[0].measured - 1.0).abs() < 1e-15);
 }
 
+/// One node on its own leg pairing a qubit input with a qubit output, carrying `factor`.
+fn paired_factor(factor: CausalTensor<C>) -> Hypothesis<f64> {
+    let mut pf = ProcessFactors::new();
+    pf.insert(0, factor);
+    let mut fs = FactorSupports::new();
+    fs.declare(0, &[0]);
+    fs.set_leg_dim(0, 4).set_leg_output_dim(0, 2);
+    Hypothesis::structural("paired", pf, fs).unwrap()
+}
+
+#[test]
+fn test_a_paired_leg_factor_that_traces_right_but_acts_on_its_output_is_rejected() {
+    // Both trace to 2 over the whole leg, the output dimension. diag(2, 0, 0, 0) is 2·|00⟩⟨00|,
+    // which projects the output onto |0⟩; diag(1, 0, 0, 1) correlates the output with the input,
+    // and its trace over the input alone is the identity on the output. Neither is the identity
+    // on its output half: (Tr_out ρ / 2) ⊗ 1 is diag(1, 1, 0, 0) and diag(½, ½, ½, ½), leaving
+    // defects diag(1, −1, 0, 0) and diag(½, −½, −½, ½), of norms √2 and 1.
+    for (entries, defect) in [
+        ([2.0, 0.0, 0.0, 0.0], 2.0_f64.sqrt()),
+        ([1.0, 0.0, 0.0, 1.0], 1.0),
+    ] {
+        let report = paired_factor(diagonal(&entries))
+            .check_normalization()
+            .unwrap();
+        assert!(!report.accepted(), "{entries:?}");
+        assert!(
+            (report.checks()[0].measured - defect).abs() < 1e-15,
+            "{entries:?}: {}",
+            report.checks()[0].measured
+        );
+    }
+}
+
+/// The Kronecker product `a ⊗ b` of two square matrices, `a` outer.
+fn kron(a: &CausalTensor<C>, b: &CausalTensor<C>) -> CausalTensor<C> {
+    let (da, db) = (a.shape()[0], b.shape()[0]);
+    let (sa, sb) = (a.as_slice(), b.as_slice());
+    let d = da * db;
+    let mut data = vec![c(0.0); d * d];
+    for i in 0..da {
+        for j in 0..da {
+            for k in 0..db {
+                for l in 0..db {
+                    data[(i * db + k) * d + (j * db + l)] = sa[i * da + j] * sb[k * db + l];
+                }
+            }
+        }
+    }
+    mat(data, d)
+}
+
+/// `a + t · b`, entrywise.
+fn sum(a: &CausalTensor<C>, b: &CausalTensor<C>, t: f64) -> CausalTensor<C> {
+    let data = a
+        .as_slice()
+        .iter()
+        .zip(b.as_slice())
+        .map(|(&x, &y)| x + y * c(t))
+        .collect();
+    mat(data, a.shape()[0])
+}
+
+#[test]
+fn test_the_output_half_defect_is_measured_whatever_the_leg_shape() {
+    // Node 1 reads parent leg 0, a flat qubit, on a leg pairing an input of d_in with an output
+    // of d_out. X on (parent, input) is |0⟩⟨0| ⊗ |+⟩⟨+| + |1⟩⟨1| ⊗ |0⟩⟨0|, coherent on the input,
+    // with Tr_in X = 1. ρ = X ⊗ 1_out + ε · W, W = |0⟩⟨0| ⊗ 1_in ⊗ B, B = |0⟩⟨1| + |1⟩⟨0| on the
+    // output. B is traceless, so W changes neither the trace over the leg nor Tr_out ρ: the
+    // whole residual is ‖ε · W‖_F = ε · √(2 · d_in).
+    for (d_in, d_out) in [(2, 2), (3, 2), (2, 3)] {
+        let plus = mat(vec![c(1.0 / d_in as f64); d_in * d_in], d_in);
+        let mut ground = vec![0.0; d_in];
+        ground[0] = 1.0;
+        let x = sum(
+            &kron(&diagonal(&[1.0, 0.0]), &plus),
+            &kron(&diagonal(&[0.0, 1.0]), &diagonal(&ground)),
+            1.0,
+        );
+        let mut flip = vec![c(0.0); d_out * d_out];
+        flip[1] = c(1.0);
+        flip[d_out] = c(1.0);
+        let w = kron(
+            &kron(&diagonal(&[1.0, 0.0]), &diagonal(&vec![1.0; d_in])),
+            &mat(flip, d_out),
+        );
+        let at = |eps: f64| {
+            let factor = sum(&kron(&x, &diagonal(&vec![1.0; d_out])), &w, eps);
+            let mut pf = ProcessFactors::new();
+            pf.insert(0, diagonal(&[0.5, 0.5]));
+            pf.insert(1, factor);
+            let mut fs = FactorSupports::new();
+            fs.declare(0, &[0]);
+            fs.declare(1, &[0, 1]);
+            fs.set_leg_dim(1, d_in * d_out).set_leg_output_dim(1, d_out);
+            Hypothesis::structural("paired", pf, fs)
+                .unwrap()
+                .check_normalization()
+                .unwrap()
+        };
+        let clean = at(0.0);
+        assert!(clean.accepted(), "({d_in}, {d_out})");
+        assert!(clean.checks()[1].measured < 1e-15, "({d_in}, {d_out})");
+        let eps = 1e-3;
+        let report = at(eps);
+        assert!(!report.accepted(), "({d_in}, {d_out})");
+        let expected = eps * (2.0 * d_in as f64).sqrt();
+        assert!(
+            (report.checks()[1].measured - expected).abs() < 1e-15,
+            "({d_in}, {d_out}): {} against {expected}",
+            report.checks()[1].measured
+        );
+    }
+}
+
 #[test]
 fn test_an_output_half_that_does_not_split_its_leg_is_no_candidate() {
     // With an output half of 0 the normalization target is the zero matrix, which the zero

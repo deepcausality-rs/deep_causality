@@ -399,6 +399,66 @@ fn test_baseline_with_is_the_read_out_compare_judges_against() {
 }
 
 #[test]
+fn test_baseline_with_counts_one_prediction_per_candidate_it_judged() {
+    // Three candidates judged, `flip` refused: three model evaluations on the root, which the
+    // surviving worlds inherit at the fork, and predict_with counts one more in each.
+    let cfg = QclBuilder::config::<f64, Count>()
+        .over_plant(plant_with_population(0.2), &[excited()])
+        .mechanisms(&[
+            mechanism("keep", QubitOperator::identity()),
+            mechanism("flip", QubitOperator::pauli_x()),
+            mechanism("also keep", QubitOperator::identity()),
+        ])
+        .seed(9)
+        .build()
+        .unwrap();
+    let e0 =
+        ConfiguredExperiment::new("E0 k-up", 1.0, 1024, gravimeter(WaveVector::Up), 0).unwrap();
+    let report = kreversal_baseline(&cfg)
+        .fork()
+        .predict_with(&KReversal, &e0)
+        .finalize()
+        .unwrap();
+    assert_eq!(report.refused.len(), 1);
+    assert_eq!(report.ledger.predictions(), 3);
+    assert_eq!(report.worlds.len(), 2);
+    for w in &report.worlds {
+        assert_eq!(w.ledger().predictions(), 4, "{}", w.name());
+    }
+    // Planning evaluates the model without counting.
+    let planned = kreversal_baseline(&cfg)
+        .design_with(&KReversal, &[e0], MinCostCover::new(5.0))
+        .finalize()
+        .unwrap();
+    assert_eq!(planned.ledger.predictions(), 3);
+}
+
+#[test]
+fn test_baseline_with_fails_when_its_predictions_overflow_the_count_width() {
+    // A u8 ledger counts 255 evaluations; the 256th candidate's overflows it.
+    let passive =
+        ConfiguredExperiment::new("E0 k-up", 1.0, 64, gravimeter(WaveVector::Up), 0).unwrap();
+    let keep = EvidenceSource::Simulated(mechanism("keep", QubitOperator::identity()));
+    let run = |candidates: usize| {
+        let mechanisms: Vec<Hypothesis<f64>> = (0..candidates)
+            .map(|i| mechanism(&format!("keep {i}"), QubitOperator::identity()))
+            .collect();
+        let cfg = QclBuilder::config::<f64, u8>()
+            .over_plant(plant_with_population(0.2), &[excited()])
+            .mechanisms(&mechanisms)
+            .seed(9)
+            .build()
+            .unwrap();
+        QclBuilder::control::<f64, u8, 2, _>(&cfg)
+            .baseline_with(&KReversal, &passive, &keep, 3.0)
+            .finalize()
+    };
+    assert_eq!(run(255).unwrap().ledger.predictions(), 255);
+    let msg = calculation_message(run(256).unwrap_err());
+    assert!(msg.contains("prediction count overflows"), "{msg}");
+}
+
+#[test]
 fn test_baseline_with_is_the_first_observation_and_checks_its_arguments() {
     let cfg = kreversal_config(0.2);
     let passive =

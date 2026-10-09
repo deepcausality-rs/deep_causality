@@ -493,30 +493,12 @@ where
     /// The Markov check on every candidate in the pool, the config's candidates when this is the
     /// first stage and the admitted set otherwise. A candidate whose factors fail is not
     /// admitted; a structural failure of the check itself is the stage's failure.
-    pub fn check_markov(mut self, tolerance: &CommutatorTolerance<R>) -> Self {
-        if self.failure.is_some() {
-            return self;
-        }
-        let mut admitted = Vec::new();
-        let mut folded = CheckReport::vacuous();
-        for (slot, h) in self.pool() {
-            match h.check_markov(tolerance) {
-                Ok(certified) => {
-                    let report = certified.certificate().cloned().expect("just certified");
-                    if report.accepted() {
-                        admitted.push((slot, certified));
-                    }
-                    folded = folded.fold(report);
-                }
-                Err(e) => {
-                    self.fail(e);
-                    return self;
-                }
-            }
-        }
-        self.admitted = admitted;
-        self.record("check_markov", folded);
-        self
+    pub fn check_markov(self, tolerance: &CommutatorTolerance<R>) -> Self {
+        self.screen("check_markov", |h| {
+            let certified = h.check_markov(tolerance)?;
+            let report = certified.certificate().cloned().expect("just certified");
+            Ok((report, certified))
+        })
     }
 
     /// The normalization check on every candidate in the pool, the config's candidates when this
@@ -524,17 +506,27 @@ where
     /// normalised process, `Tr_A ρ_{A|Pa(A)} ≠ 1_{Pa(A)}` at some node, is not admitted; a
     /// structural failure of the check itself is the stage's failure. The reports of every
     /// candidate examined fold into one record, as `check_markov`'s do.
-    pub fn check_normalization(mut self) -> Self {
+    pub fn check_normalization(self) -> Self {
+        self.screen("check_normalization", |h| Ok((h.check_normalization()?, h)))
+    }
+
+    /// The screening stage `stage` over the pool: `check` gives each candidate's report and the
+    /// hypothesis kept when the report accepts. The reports of every candidate examined fold into
+    /// one record, and the first error `check` returns is the stage's failure.
+    fn screen<F>(mut self, stage: &'static str, check: F) -> Self
+    where
+        F: Fn(Hypothesis<R>) -> Result<(CheckReport<R>, Hypothesis<R>), QuantumError>,
+    {
         if self.failure.is_some() {
             return self;
         }
         let mut admitted = Vec::new();
         let mut folded = CheckReport::vacuous();
         for (slot, h) in self.pool() {
-            match h.check_normalization() {
-                Ok(report) => {
+            match check(h) {
+                Ok((report, kept)) => {
                     if report.accepted() {
-                        admitted.push((slot, h));
+                        admitted.push((slot, kept));
                     }
                     folded = folded.fold(report);
                 }
@@ -545,7 +537,7 @@ where
             }
         }
         self.admitted = admitted;
-        self.record("check_normalization", folded);
+        self.record(stage, folded);
         self
     }
 

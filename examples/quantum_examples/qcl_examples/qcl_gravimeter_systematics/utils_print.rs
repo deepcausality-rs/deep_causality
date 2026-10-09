@@ -90,7 +90,15 @@ pub fn print_run(
         );
     }
     if run.plan.is_empty() {
-        println!("    no plan: fewer than two candidates remain\n");
+        if run.remaining < 2 {
+            println!("    no plan: fewer than two candidates remain\n");
+        } else {
+            println!(
+                "    no plan: no experiment separates the {} candidates that remain; campaign verdict: {}\n",
+                run.remaining,
+                describe(&run.campaign_verdict)
+            );
+        }
         return;
     }
     println!(

@@ -21,12 +21,13 @@ use deep_causality_num::NaturalNumber;
 ///
 /// # Three invariants
 ///
-/// `observe`, `baseline` and `observe_experiment` are the only stages that touch `shots`,
-/// `experiments` and `device_time`, and the only ones that draw down the budget's remainder,
-/// which the control stage sets from named evidence under `qpu`; `predict` and `predict_with`
-/// touch `predictions` and nothing on the device side. `fork` is the pipeline's, above core, by cloning. Forked ledgers are compared,
-/// never joined under ∇: at a counterfactual fork exactly one branch was factual, and a monoid
-/// that summed them would typecheck and be wrong.
+/// `observe`, `baseline`, `baseline_with` and `observe_experiment` are the only stages that touch
+/// `shots`, `experiments` and `device_time`, and the only ones that draw down the budget's
+/// remainder, which the control stage sets from named evidence under `qpu`; `predict`,
+/// `predict_with` and `baseline_with` count their model evaluations on `predictions`, and the
+/// first two touch nothing on the device side. `fork` is the pipeline's, above core, by cloning.
+/// Forked ledgers are compared, never joined under ∇: at a counterfactual fork exactly one branch
+/// was factual, and a monoid that summed them would typecheck and be wrong.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Ledger<R, N> {
     shots: N,
@@ -160,7 +161,8 @@ impl<R: RealField, N: NaturalNumber> Ledger<R, N> {
         })
     }
 
-    /// The ledger after one model evaluation. Only `predict` and `predict_with` call this.
+    /// The ledger after one model evaluation. Only `predict`, `predict_with` and `baseline_with`
+    /// call this.
     pub(crate) fn predicted(self) -> Result<Self, QuantumError> {
         let predictions = self.predictions.succ().ok_or_else(|| {
             QuantumError::CalculationError("prediction count overflows the width".into())

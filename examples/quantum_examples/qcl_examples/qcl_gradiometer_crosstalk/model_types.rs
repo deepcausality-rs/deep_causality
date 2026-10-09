@@ -152,8 +152,8 @@ pub struct WorldRun {
     pub plan_cost: FloatType,
     /// Whether the plan separates every pair at the floor.
     pub plan_complete: bool,
-    /// The planned experiments, as indices into the family.
-    pub plan_experiments: Vec<usize>,
+    /// The planned experiments' settings, in the plan's order.
+    pub plan_settings: Vec<Setting>,
 }
 
 /// What a survivor implies: the differential phase the instrument reads in the survivor's world,

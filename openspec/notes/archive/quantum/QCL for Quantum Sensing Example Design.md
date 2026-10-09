@@ -298,14 +298,14 @@ the response model, Q-2)
 | Experiment | Configuration change | Moves |
 |---|---|---|
 | E0 Passive | wave vector up | baseline (Q-0) |
-| E1 k-reversal | reverse the wave vector | H2 (its apparent sign flips, eq. 2 of Louchet-Chauvet et al.) |
+| E1 k-reversal | reverse the wave vector and compare the signed inferred-gravity bias | H2 (its phase is unchanged, so its inferred-gravity bias flips sign, eq. 2 of Louchet-Chauvet et al.) |
 | E2 Turn 180° | rotate the sensor head about vertical, re-level | H1, H7 (sign flip) |
 | E3 Accelerometer correction | apply the classical correlation to the same shots | H4 (to 0) |
 | E4 Tilt step | tilt by θ₀ = 0.5 mrad | H3, through the cross term 2θθ₀; every world shifts by the common g θ₀²/2 |
 | E5 Bias-field step | change the bias field | H2, and the field-dependent part of H6 |
 | E6 Temperature scan | vary the atom temperature down to tens of nK, extrapolate to zero | H5 |
 | E7 Rabi-frequency step | halve the Rabi frequency at constant pulse area | H6 |
-| E8 Cloud displacement | displace the initial cloud by 0.5 mm east-west | H7, at 14.2 µGal/mm |
+| E8 Cloud displacement | displace the initial cloud by 1 mm east-west | H7, at 14.2 µGal/mm |
 
 The table shows why the predictions are computed rather than typed. A bias-field step moves two
 candidates, and a 180° turn moves two; a typed table either hides those cross-dependencies or

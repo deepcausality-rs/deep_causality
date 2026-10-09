@@ -45,7 +45,7 @@ run twice and printed identical output.
 - Separation in bits is the Bhattacharyya distance of the two predicted read-outs over n draws, n·(−log₂(√(pq) + √((1−p)(1−q)))); it adds up over draws. (P `shot_estimate.rs`)
 - Under equal priors, the chance of confusing two candidates is at most ½·2^(−bits), so a 5-bit floor keeps it at or below 1/64. (Q: the Bhattacharyya bound, T. Kailath, IEEE Trans. Commun. Technol. 15, 52, 1967; the crate does not state it)
 - Priced in time, an experiment costs its setup time plus the draws it needs times the time per draw; `design` sizes each experiment's draws to the fewest that reach the floor, within the instrument's white-noise range. (P `experiment_design.rs`, `interferometer_model.rs`)
-- A campaign runs the cheapest planned experiment that can separate a candidate still holding, compares every candidate's prediction with the observation, and stops at the first candidate that holds and separates by the floor, or when no candidate holds. (P `campaign.rs`)
+- A campaign runs the cheapest planned experiment that can separate a candidate still holding, compares every candidate's prediction with the observation, and stops at the first candidate that holds and separates by the floor, when no candidate holds, or when candidates still hold and no remaining experiment can separate them. (P `campaign.rs`)
 - When the context moves a planned prediction by more than a set drift, the campaign plans again. (P `campaign.rs`)
 
 ## The gravimeter run, from K and K-run

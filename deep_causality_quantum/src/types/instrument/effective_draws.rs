@@ -4,7 +4,7 @@
  */
 
 use crate::QuantumError;
-use crate::types::qpu::shot_estimate::ShotEstimate;
+use crate::types::qpu::shot_estimate::{ShotEstimate, bernoulli_standard_error};
 use alloc::format;
 use deep_causality_algebra::RealField;
 use deep_causality_num::FromPrimitive;
@@ -90,15 +90,6 @@ impl<R: RealField + FromPrimitive + core::fmt::Debug> Fringe<R> {
         }
         Ok(EffectiveDraws { probability, draws })
     }
-
-    /// The value and standard error `draws` stand for: the inverse of
-    /// [`effective_draws`](Self::effective_draws), exact up to the rounding of the two.
-    pub fn published(&self, draws: &EffectiveDraws<R>) -> (R, R) {
-        (
-            (draws.probability - self.operating_point) / self.slope,
-            draws.standard_error() / self.slope.abs(),
-        )
-    }
 }
 
 impl<R: RealField> Fringe<R> {
@@ -119,6 +110,15 @@ impl<R: RealField> Fringe<R> {
     pub fn slope(&self) -> R {
         self.slope
     }
+
+    /// The value and standard error `draws` stand for: the inverse of
+    /// [`effective_draws`](Self::effective_draws), exact up to the rounding of the two.
+    pub fn published(&self, draws: &EffectiveDraws<R>) -> (R, R) {
+        (
+            (draws.probability - self.operating_point) / self.slope,
+            draws.standard_error() / self.slope.abs(),
+        )
+    }
 }
 
 /// A read-out probability and the effective Bernoulli draws behind it, which need not be whole.
@@ -128,7 +128,7 @@ pub struct EffectiveDraws<R> {
     draws: R,
 }
 
-impl<R: RealField + FromPrimitive> EffectiveDraws<R> {
+impl<R: RealField> EffectiveDraws<R> {
     /// The read-out probability.
     pub fn probability(&self) -> R {
         self.probability
@@ -141,9 +141,11 @@ impl<R: RealField + FromPrimitive> EffectiveDraws<R> {
 
     /// `√(p(1−p)/n)`, the read-out's standard error.
     pub fn standard_error(&self) -> R {
-        (self.probability * (R::one() - self.probability) / self.draws).sqrt()
+        bernoulli_standard_error(self.probability, self.draws)
     }
+}
 
+impl<R: RealField + FromPrimitive> EffectiveDraws<R> {
     /// The draws as a read-out.
     ///
     /// # Errors

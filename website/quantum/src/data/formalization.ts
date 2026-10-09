@@ -13,7 +13,7 @@ export interface Theorem {
   id: string;
   /** What it states, in the map's own words. */
   statement: string;
-  /** Lean file and declaration. */
+  /** Lean file and the declarations that prove the statement. */
   lean: string;
   /** Rust test file and function. */
   witness: string;
@@ -101,19 +101,19 @@ export const theorems: Theorem[] = [
   {
     id: 'quantum.verdict.orthomodular',
     statement: 'the subspace lattice behind the Projection verdict is orthomodular and not distributive',
-    lean: 'Quantum/Orthomodular.lean :: subspace_lattice_orthomodular',
+    lean: 'Quantum/Orthomodular.lean :: subspace_lattice_orthomodular, subspace_lattice_not_distributive',
     witness: 'orthomodular_tests.rs :: test_the_orthomodular_law_holds_for_a_line_inside_a_plane',
   },
   {
     id: 'quantum.markov_commutativity',
     statement: 'factors on disjoint legs commute, and a pairwise-commuting product does not depend on its order (Lorenz 2022, Def. 3.3)',
-    lean: 'Quantum/Markov.lean :: kron_one_commute_one_kron',
+    lean: 'Quantum/Markov.lean :: kron_one_commute_one_kron, pairwise_commute_prod_perm',
     witness: 'qcm_theorem_tests.rs :: test_factors_on_disjoint_legs_commute',
   },
   {
     id: 'quantum.classical_embedding',
     statement: 'diagonal factors commute pairwise, so a classical model meets the Markov condition',
-    lean: 'Quantum/ClassicalEmbedding.lean :: diagonal_commute',
+    lean: 'Quantum/ClassicalEmbedding.lean :: diagonal_commute, diagonal_pairwise_commute, diagonal_prod_perm, kron_diagonal',
     witness: 'qcm_theorem_tests.rs :: test_diagonal_factors_commute_and_their_kronecker_product_is_diagonal',
   },
   {

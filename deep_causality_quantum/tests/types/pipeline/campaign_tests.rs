@@ -9,6 +9,7 @@
 //! 0.40 / 0.10 / 0.10, E2 (hold Q2, read Q1) 0.10 / 0.40 / 0.10, E3 echo 0.01 / 0.01 / 0.04. The
 //! static plan is E1 and E2 at cost 2.
 
+use deep_causality_context_store::ContextSnapshot;
 use deep_causality_core::CausalFlow;
 use deep_causality_haft::Either;
 use deep_causality_num_complex::Complex;
@@ -17,9 +18,11 @@ use deep_causality_quantum::utils_tests::{
     crosstalk_plant,
 };
 use deep_causality_quantum::{
-    Ambiguity, Campaign, CampaignRules, CampaignStop, CommutatorTolerance, ConfiguredExperiment,
-    Control, EvidenceSource, FactorSupports, Hypothesis, InstrumentTime, MinCostCover,
-    ProcessFactors, QclBuilder, QuantumErrorEnum, design, separation_bits,
+    Ambiguity, Axis, Campaign, CampaignRules, CampaignStop, Channel, CommutatorTolerance,
+    ConfiguredExperiment, Control, CountHistogram, EvidenceSource, FactorSupports, Hypothesis,
+    InstrumentTime, MinCostCover, Observable, ObservedContext, ProcessFactors, QclBuilder,
+    QuantumError, QuantumErrorEnum, QuantumPlant, QubitOperator, Response, ResponseModel, design,
+    separation_bits,
 };
 use deep_causality_tensor::CausalTensor;
 
@@ -439,4 +442,104 @@ fn test_a_change_to_the_planned_experiments_cost_or_shots_replans() {
     assert_eq!(c.experiments_run(), &[1, 2]);
     let report = c.finalize().unwrap();
     assert_eq!(report.observations[1].shots(), 512);
+}
+
+// ---------------------------------------------------------------------------
+// A combining plan that covers the pairs a step can help with only across its entries
+// ---------------------------------------------------------------------------
+
+/// The read-out each of the candidates `H1` to `H4` predicts, set directly.
+#[derive(Debug, Clone, Copy, PartialEq)]
+struct Readouts([f64; 4]);
+
+impl ObservedContext for Readouts {
+    fn context_snapshot(&self) -> Result<Option<ContextSnapshot>, QuantumError> {
+        Ok(None)
+    }
+}
+
+/// Each candidate's world turned from the ground state to the read-out its name indexes.
+struct Table;
+
+impl ResponseModel<f64, Readouts> for Table {
+    fn respond(
+        &self,
+        candidate: &Hypothesis<f64>,
+        readouts: &Readouts,
+    ) -> Result<Response<f64>, QuantumError> {
+        let index = ["H1", "H2", "H3", "H4"]
+            .iter()
+            .position(|name| *name == candidate.name())
+            .ok_or_else(|| QuantumError::CalculationError(candidate.name().into()))?;
+        let angle = 2.0 * readouts.0[index].sqrt().asin();
+        Ok(Response::Channel(Channel::unitary(
+            &QubitOperator::rotation(Axis::Y, angle)?,
+        )?))
+    }
+}
+
+#[test]
+fn test_a_combining_step_runs_an_entry_that_adds_to_a_pair_it_can_help_with() {
+    // Every observation reads 500 of 1000. S1 puts H3 and H4 at 0.56, outside three standard
+    // errors (0.047), and S2 spreads the four over 0.455, 0.545, 0.485, 0.515. H1 and H2 hold and
+    // stand 5.9 bits apart; H3 sits 3.3 bits from H1 and H4 3.3 from H2, so H1–H3 and H2–H4 are
+    // the pairs a step can help with. H3–H4, 0.65 bits apart, is open but involves no world that
+    // holds.
+    let ground = CausalTensor::from_slice(&[Complex::new(1.0, 0.0), Complex::new(0.0, 0.0)], &[2]);
+    let excited = CausalTensor::from_slice(&[Complex::new(0.0, 0.0), Complex::new(1.0, 0.0)], &[2]);
+    let mechanisms: Vec<Hypothesis<f64>> = ["H1", "H2", "H3", "H4"]
+        .iter()
+        .map(|name| {
+            Hypothesis::mechanism(*name, Channel::unitary(&QubitOperator::identity()).unwrap())
+        })
+        .collect();
+    let cfg = QclBuilder::config::<f64, Count>()
+        .over_plant(
+            QuantumPlant::from_ket(&ground).unwrap(),
+            &[Observable::from_ket("excited", &excited).unwrap()],
+        )
+        .mechanisms(&mechanisms)
+        .seed(1)
+        .build()
+        .unwrap();
+    let mut half = CountHistogram::new(1).unwrap();
+    half.record_n(0, 500).unwrap();
+    half.record_n(1, 500).unwrap();
+    let recorded = EvidenceSource::Recorded(half);
+    let experiment = |name: &str, cost: f64, p: [f64; 4]| {
+        ConfiguredExperiment::new(name, cost, 1000, Readouts(p), 0).unwrap()
+    };
+    let mut control = QclBuilder::control::<f64, Count, 2, _>(&cfg).fork();
+    for s in [
+        experiment("S1", 1.0, [0.5, 0.5, 0.56, 0.56]),
+        experiment("S2", 1.0, [0.455, 0.545, 0.485, 0.515]),
+    ] {
+        control = control
+            .observe_experiment(&Table, &s, &recorded)
+            .predict_with(&Table, &s)
+            .compare(3.0);
+    }
+    // X separates H3 from H4 alone and adds nothing to H1–H3 or H2–H4; Y adds 2.6 bits to each,
+    // which with the 3.3 already read reaches the floor. The combining plan takes both, and only
+    // Y helps: X is the cheaper, and running it first spends 1 on a pair no stop depends on.
+    let candidates = vec![
+        experiment("X", 1.0, [0.2, 0.8, 0.2, 0.8]),
+        experiment("Y", 2.0, [0.5, 0.5, 0.56, 0.56]),
+    ];
+    let rules = CampaignRules::new(MinCostCover::new(5.0).combining(), 3.0, 0.01).unwrap();
+    let mut campaign = Campaign::new(control);
+    for _ in 0..=candidates.len() {
+        campaign = campaign
+            .advance(&candidates, &Table, &recorded, &rules)
+            .unwrap();
+    }
+    assert!(campaign.is_stopped());
+    assert_eq!(campaign.experiments_run(), &[1]);
+    assert_eq!(campaign.spent(), 2.0);
+    match campaign.stop() {
+        Some(CampaignStop::Unresolvable(Ambiguity::SeveralSurvive { survivors })) => {
+            assert_eq!(survivors, &["H1", "H2"])
+        }
+        other => panic!("expected H1 and H2 to survive unresolved, got {other:?}"),
+    }
 }

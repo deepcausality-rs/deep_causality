@@ -16,7 +16,7 @@ const split = (s: string) => {
 };
 
 const cited = papers.filter((p) => p.citedFrom.length > 0);
-const used = papers.filter((p) => p.citedFrom.length === 0 && (p.usedBy ?? []).length > 0);
+const used = papers.filter((p) => p.citedFrom.length === 0 && p.usedBy.length > 0);
 ---
 <PageShell title={title} description={description} path="/proof/">
   <header class="doc-head">
@@ -128,7 +128,7 @@ const used = papers.filter((p) => p.citedFrom.length === 0 && (p.usedBy ?? []).l
           <p class="ptitle">{p.title}</p>
           <p class="pmeta">{p.authors}. {p.ref}, {p.year}.</p>
           {p.usedFor && <p class="pused">{p.usedFor}</p>}
-          <p class="pcite">Cited by <code>{(p.usedBy ?? []).join(', ')}</code>.</p>
+          <p class="pcite">Cited by <code>{p.usedBy.join(', ')}</code>.</p>
         </li>
       ))}
     </ol>

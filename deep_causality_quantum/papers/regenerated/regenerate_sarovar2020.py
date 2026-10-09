@@ -216,12 +216,12 @@ def main(out_dir):
         bags, circuits, counts = draw(rng, scenario, spec)
         q = spec["qubits"]
         with open(f"{out_dir}/sarovar2020_{scenario}_bags.csv", "w", newline="") as f:
-            out = csv.writer(f)
+            out = csv.writer(f, lineterminator="\n")
             out.writerow(["region", "index", "sequence"])
             for r, bag in enumerate(bags):
                 out.writerows([r, i, s] for i, s in enumerate(bag))
         with open(f"{out_dir}/sarovar2020_{scenario}.csv", "w", newline="") as f:
-            out = csv.writer(f)
+            out = csv.writer(f, lineterminator="\n")
             out.writerow([f"s{r}" for r in range(q)] + [f"n{o:0{q}b}" for o in range(2 ** q)])
             out.writerows(list(c) + list(n) for c, n in zip(circuits, counts))
         found.append((scenario, " ".join(edges(q, circuits, counts))))
@@ -233,7 +233,7 @@ def main(out_dir):
             _, circuits, counts = draw(further, scenario, spec)
             recovered[scenario] += " ".join(edges(spec["qubits"], circuits, counts)) == EXPECTED[scenario]
     with open(f"{out_dir}/sarovar2020_edges.csv", "w", newline="") as f:
-        out = csv.writer(f)
+        out = csv.writer(f, lineterminator="\n")
         out.writerow(["scenario", "edges", "published", "recovered_of_ten"])
         out.writerows([s, e, EXPECTED[s], recovered[s]] for s, e in found)
 

@@ -330,6 +330,39 @@ fn test_a_mechanism_world_may_be_compared() {
     }
 }
 
+#[test]
+fn test_a_compare_of_the_root_after_a_world_observation_keeps_the_campaign_order() {
+    // The root is observed at 2048 shots before the fork and every world at 512 after it. Each
+    // compare judges against the root, the earlier observation, so its reading goes before the
+    // world's own, and the latest reading stays the one observe took.
+    let cfg = QclBuilder::config::<f64, Count>()
+        .over_plant(plant_with_population(0.3), &[excited()])
+        .mechanisms(&[
+            mechanism("flip", QubitOperator::pauli_x()),
+            mechanism("keep", QubitOperator::identity()),
+        ])
+        .seed(5)
+        .build()
+        .unwrap();
+    let observed = QclBuilder::control::<f64, Count, 2, _>(&cfg)
+        .observe(0, 2048)
+        .fork()
+        .observe(0, 512);
+    let once = observed.predict(0).compare(3.0);
+    let twice = once.predict(0).compare(2.0).finalize().unwrap();
+    for w in &twice.worlds {
+        let shots: Vec<u64> = w.readings().iter().map(|r| r.read_out().shots()).collect();
+        assert_eq!(shots, vec![2048, 512], "{}", w.name());
+        assert!(w.readings()[0].prediction().is_some(), "{}", w.name());
+        assert_eq!(w.read_out().unwrap().shots(), 512, "{}", w.name());
+        assert_eq!(w.read_out(), Some(w.readings()[1].read_out()));
+        assert!(
+            w.verdict().is_none(),
+            "the latest reading is not judged yet"
+        );
+    }
+}
+
 // ---------------------------------------------------------------------------
 // The mechanism path: fork → observe → gate → adjudicate
 // ---------------------------------------------------------------------------

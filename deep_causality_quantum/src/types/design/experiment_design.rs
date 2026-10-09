@@ -192,8 +192,8 @@ pub struct PlanEntry<R> {
     pub resolves: Vec<(usize, usize)>,
 }
 
-/// What `design` returns: the ordered experiments, their total cost, what each resolves, what no
-/// experiment resolves, and the separation report over every pair examined.
+/// What `design` returns: the ordered experiments, their total cost, what each resolves, what the
+/// plan leaves unresolved, and the separation report over every pair examined.
 #[derive(Debug, Clone, PartialEq)]
 pub struct DesignPlan<R> {
     entries: Vec<PlanEntry<R>>,
@@ -214,7 +214,9 @@ impl<R: RealField> DesignPlan<R> {
         self.total_cost
     }
 
-    /// The pairs no offered experiment resolves at the floor.
+    /// The pairs the plan cannot bring to the floor: no offered experiment reaches it alone, or,
+    /// combining, not even all of them together. A pair separated at the floor before planning,
+    /// as a campaign credits the experiments it ran, is never uncovered.
     pub fn uncovered(&self) -> &[(usize, usize)] {
         &self.uncovered
     }
@@ -276,11 +278,12 @@ impl<R: RealField> DesignPlan<R> {
 
 /// The exact minimum-cost cover of the `C(n, 2)` hypothesis pairs by the offered experiments.
 ///
-/// A dynamic program over subsets of covered pairs: `dp[S | cover(e)] = min(dp[S], dp[S] +
-/// cost(e))`, relaxed for every state in ascending order and every experiment in declared order.
-/// `O(2^C(n,2) · k)`, linear in the experiments and exponential in the hypotheses; enumerating
-/// experiment subsets at `2^k` is the wrong enumeration and is not what runs. Strict relaxation in
-/// declared order breaks every tie the same way, so one instance yields one plan.
+/// In the fixed and timed modes, a dynamic program over subsets of covered pairs:
+/// `dp[S | cover(e)] = min(dp[S], dp[S] + cost(e))`, relaxed for every state in ascending order
+/// and every experiment in declared order. `O(2^C(n,2) · k)`, linear in the experiments and
+/// exponential in the hypotheses; these modes never enumerate the `2^k` subsets of the
+/// experiments, which combining does. Strict relaxation in declared order breaks every tie the
+/// same way, so one instance yields one plan.
 ///
 /// An experiment covers a pair when the two hypotheses' predicted read-outs separate by at least
 /// `floor_bits` at the experiment's shots, measured as the shot-scaled Bhattacharyya distance and
@@ -375,6 +378,15 @@ where
             )));
         }
     }
+    if matches!(objective.mode, CoverMode::Combining)
+        && experiments.len() > MAX_COMBINED_EXPERIMENTS
+    {
+        return Err(QuantumError::CalculationError(format!(
+            "combining enumerates every subset of the experiments, and {} exceed the cap of \
+             {MAX_COMBINED_EXPERIMENTS}",
+            experiments.len()
+        )));
+    }
     debug_assert!(prior.is_none_or(|prior| prior.len() == p));
 
     let pairs: Vec<(usize, usize)> = (0..n)
@@ -411,20 +423,22 @@ where
     let full = if p == 0 { 0 } else { (1usize << p) - 1 };
 
     // One candidate entry per offered experiment, or per experiment and shot count in time; each
-    // with the pairs it covers alone and its cost.
+    // with the pairs it covers alone and its cost. At its own shots, each experiment's separation
+    // of every pair is kept for the combining cover.
     let mut options: Vec<PlanEntry<R>> = Vec::new();
     let mut masks: Vec<usize> = Vec::new();
+    let mut seps: Vec<Vec<R>> = Vec::new();
     let mut best = vec![R::zero(); p];
     match objective.mode {
         CoverMode::Fixed | CoverMode::Combining => {
             for (ei, e) in experiments.iter().enumerate() {
-                let seps = separations(e, e.shots);
-                for (b, &sep) in best.iter_mut().zip(&seps) {
+                let separated = separations(e, e.shots);
+                for (b, &sep) in best.iter_mut().zip(&separated) {
                     if sep > *b {
                         *b = sep;
                     }
                 }
-                masks.push(mask_of(&seps));
+                masks.push(mask_of(&separated));
                 options.push(PlanEntry {
                     experiment: ei,
                     name: e.name.clone(),
@@ -432,6 +446,7 @@ where
                     shots: e.shots,
                     resolves: Vec::new(),
                 });
+                seps.push(separated);
             }
         }
         CoverMode::Timed(time) => {
@@ -483,17 +498,6 @@ where
 
     let (chosen, total_cost, coverable, report_bits) = match objective.mode {
         CoverMode::Combining => {
-            if experiments.len() > MAX_COMBINED_EXPERIMENTS {
-                return Err(QuantumError::CalculationError(format!(
-                    "combining enumerates every subset of the experiments, and {} exceed the cap \
-                     of {MAX_COMBINED_EXPERIMENTS}",
-                    experiments.len()
-                )));
-            }
-            let seps: Vec<Vec<R>> = experiments
-                .iter()
-                .map(|e| separations(e, e.shots))
-                .collect();
             let (chosen, total_cost, coverable) =
                 combined_cover(&seps, &options, &credited, floor, slack, p);
             let summed: Vec<R> = (0..p)
@@ -636,30 +640,25 @@ fn combined_cover<R: RealField>(
     p: usize,
 ) -> (Vec<usize>, R, usize) {
     let k = seps.len();
-    let reaches = |members: &[usize], pi: usize| {
-        members
-            .iter()
-            .fold(prior[pi], |bits, &ei| bits + seps[ei][pi])
-            + slack
-            >= floor_bits
+    // The members of a subset, ascending, read off its bits without allocating.
+    let members = |subset: usize| (0..k).filter(move |&ei| subset & (1 << ei) != 0);
+    let reaches = |subset: usize, pi: usize| {
+        members(subset).fold(prior[pi], |bits, ei| bits + seps[ei][pi]) + slack >= floor_bits
     };
-    let everyone: Vec<usize> = (0..k).collect();
+    let everyone = (1usize << k) - 1;
     let coverable = (0..p)
-        .filter(|&pi| reaches(&everyone, pi))
+        .filter(|&pi| reaches(everyone, pi))
         .fold(0usize, |m, pi| m | (1 << pi));
-    let mut best: Option<(Vec<usize>, R)> = None;
+    let mut best: Option<(usize, R)> = None;
     for subset in 0..(1usize << k) {
-        let members: Vec<usize> = (0..k).filter(|&ei| subset & (1 << ei) != 0).collect();
-        let cost = members
-            .iter()
-            .fold(R::zero(), |c, &ei| c + options[ei].cost);
-        if best.as_ref().is_some_and(|(_, b)| cost >= *b) {
+        let cost = members(subset).fold(R::zero(), |c, ei| c + options[ei].cost);
+        if best.is_some_and(|(_, b)| cost >= b) {
             continue;
         }
-        if (0..p).all(|pi| coverable & (1 << pi) == 0 || reaches(&members, pi)) {
-            best = Some((members, cost));
+        if (0..p).all(|pi| coverable & (1 << pi) == 0 || reaches(subset, pi)) {
+            best = Some((subset, cost));
         }
     }
-    let (chosen, cost) = best.unwrap_or_else(|| (Vec::new(), R::zero()));
-    (chosen, cost, coverable)
+    let (chosen, cost) = best.unwrap_or((0, R::zero()));
+    (members(chosen).collect(), cost, coverable)
 }

@@ -718,8 +718,9 @@ where
     /// `Check` of `|prediction − baseline|` against `sigmas` standard errors of the baseline,
     /// examined over the baseline's shots. The prediction is consumed: the next `compare` needs a
     /// new one, and a second `compare` of the same observation replaces the reading rather than
-    /// adding one. `adjudicate` then separates worlds by their predictions, and a world holds
-    /// when its predictions agree with every observation.
+    /// adding one. The reading takes the baseline's place in the campaign order, before any
+    /// reading `observe` took on the worlds after it. `adjudicate` then separates worlds by their
+    /// predictions, and a world holds when its predictions agree with every observation.
     ///
     /// A mechanism world with a prediction goes through here as well; nothing forbids it.
     ///
@@ -781,9 +782,10 @@ where
                         prediction: Some(prediction),
                         ..Reading::new(root.sequence, root.experiment.clone(), e)
                     };
-                    match w.readings.iter_mut().find(|r| r.sequence == root.sequence) {
-                        Some(existing) => *existing = reading,
-                        None => w.readings.push(reading),
+                    let at = w.readings.partition_point(|r| r.sequence < root.sequence);
+                    match w.readings.get_mut(at) {
+                        Some(existing) if existing.sequence == root.sequence => *existing = reading,
+                        _ => w.readings.insert(at, reading),
                     }
                 }
                 Err(e) => {

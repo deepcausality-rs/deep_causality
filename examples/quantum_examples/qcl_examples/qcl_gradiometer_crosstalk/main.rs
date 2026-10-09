@@ -97,7 +97,11 @@ fn main() -> Result<(), Box<dyn Error>> {
             plan: planned,
             plan_cost: plan.total_cost(),
             plan_complete: plan.is_complete(),
-            plan_experiments: plan.entries().iter().map(|e| e.experiment).collect(),
+            plan_settings: plan
+                .entries()
+                .iter()
+                .map(|e| *experiments[e.experiment].configuration())
+                .collect(),
         };
         print_run(&run);
         if let Verdict::Survivor(name) = &run.campaign

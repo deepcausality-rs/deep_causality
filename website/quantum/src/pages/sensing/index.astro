@@ -168,7 +168,7 @@ ${verificationCommand('verification_v1_wavefront')}`;
       </p>
       <p>
         The tide moves gravity by far more than {offset} µGal during a campaign; one published budget
-        corrects −18.8 µGal for it (Louchet-Chauvet et al.). Each change therefore carries the tide at
+        corrects {signed(GRAVIMETER.publishedTideUgal, 1)} µGal for it (Louchet-Chauvet et al.). Each change therefore carries the tide at
         the time it runs, and the campaign plans again whenever the tide moves a prediction.
       </p>
     </Fragment>
@@ -266,9 +266,9 @@ ${verificationCommand('verification_v1_wavefront')}`;
 
   <HomeSection ix="08 / 09" label="Limits" title="What your lab still supplies.">
     <ul class="limits">
-      <li>The examples simulate their observations; the verifications read published values.</li>
+      <li>The examples simulate their observations; the verifications read published values and data regenerated from published models.</li>
       <li>A lab supplies the setup times, the tide, the leak and the dark background.</li>
-      <li>A cause missing from the list stays unnamed until a change it contradicts runs.</li>
+      <li>The library never names a missing cause; a change that rules out every listed cause shows the list is incomplete.</li>
       <li>Measurement time follows white noise, within the instrument’s white-noise range.</li>
     </ul>
     <p class="more"><a href="/boundaries/#sensing">Every limit, with the file that shows it <span aria-hidden="true">→</span></a></p>

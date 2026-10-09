@@ -43,7 +43,8 @@ pub struct Measurement {
 
 /// What the evidence leaves: the adjudication, and the candidates whose every reading holds.
 pub struct Attribution {
-    /// The adjudication.
+    /// The adjudication; a lone candidate that does not hold reads as [`Ambiguity::NoSurvivor`],
+    /// outside the model.
     pub outcome: Outcome,
     /// The candidates that hold.
     pub holding: Vec<String>,
@@ -115,7 +116,7 @@ pub fn attribute(
             .compare(sigmas);
     }
     let report = control.adjudicate(floor_bits).finalize()?;
-    let holding = report
+    let holding: Vec<String> = report
         .worlds
         .iter()
         .filter(|w| {
@@ -125,7 +126,12 @@ pub fn attribute(
         })
         .map(|w| w.name().to_string())
         .collect();
-    let outcome = report.adjudication.ok_or("adjudicate ran")?.outcome;
+    let outcome = match report.adjudication.ok_or("adjudicate ran")?.outcome {
+        Either::Right(Ambiguity::Vacuous { worlds }) if holding.is_empty() => {
+            Either::Right(Ambiguity::NoSurvivor { worlds })
+        }
+        outcome => outcome,
+    };
     Ok(Attribution { outcome, holding })
 }
 

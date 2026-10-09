@@ -142,7 +142,14 @@ fn main() -> Result<(), Box<dyn Error>> {
         .iter()
         .map(|(_, p)| separation_bits(read(p[0]), read(p[1]), 1).abs())
         .collect();
-    let draws = (FLOOR_BITS / per_draw[1]).ceil() as u64;
+    let displaced = per_draw[1];
+    if !displaced.is_finite() || displaced <= 0.0 {
+        return Err(
+            "the cloud displacement does not separate Coriolis from clipping at any draw count"
+                .into(),
+        );
+    }
+    let draws = (FLOOR_BITS / displaced).ceil() as u64;
     let probes = experiments
         .iter()
         .map(|(name, p)| Experiment::new(*name, 1.0, draws, vec![read(p[0]), read(p[1])]))

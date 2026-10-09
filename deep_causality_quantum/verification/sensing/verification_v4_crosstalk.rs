@@ -51,6 +51,7 @@ use deep_causality_tensor::{CausalTensor, Tensor};
 use report::Report;
 use std::collections::BTreeSet;
 use std::error::Error;
+use std::path::Path;
 
 /// The agreement, in standard errors, and the floor, in bits.
 const SIGMAS: f64 = 5.0;
@@ -248,35 +249,26 @@ fn attribute_pairs(
     models: &[Vec<Vec<Channel<f64>>>],
     candidates: &[Pair],
 ) -> Result<(Attribution, Edges), Box<dyn Error>> {
-    let predict = |k: usize, settings: &[usize]| -> Result<[f64; 4], Box<dyn Error>> {
-        two_qubit(candidates[k], &models[k], &data.sequences(settings))
-    };
-    let mut measurements = Vec::new();
-    for (i, (settings, counts)) in data.circuits.iter().enumerate() {
-        let predictions = (0..candidates.len())
-            .map(|k| predict(k, settings))
-            .collect::<Result<Vec<_>, _>>()?;
-        let total: f64 = counts.iter().sum();
-        for outcome in 1..4 {
-            measurements.push(frequency(
-                format!("circuit {i}, outcome {outcome:02b}"),
-                counts[outcome],
-                total,
-                predictions.iter().map(|p| p[outcome]).collect(),
-            ));
-        }
-    }
     let names: Vec<&str> = candidates.iter().map(|c| c.name()).collect();
-    let result = attribute(&names, &measurements, SIGMAS, FLOOR_BITS)?;
-    let mut implied = Vec::new();
-    for (k, c) in candidates.iter().enumerate() {
-        if result.holding.iter().any(|h| h == c.name()) {
-            implied.push(implied_pairs(data, 2, |settings| {
-                Ok(predict(k, settings)?.to_vec())
-            })?);
-        }
-    }
-    Ok((result, intersection(implied)))
+    attribute_scenario(
+        data,
+        &names,
+        2,
+        |k, settings| two_qubit(candidates[k], &models[k], &data.sequences(settings)),
+        |i, counts, total, predictions| {
+            (1..4)
+                .map(|outcome| {
+                    frequency(
+                        format!("circuit {i}, outcome {outcome:02b}"),
+                        counts[outcome],
+                        total,
+                        predictions.iter().map(|p| p[outcome]).collect(),
+                    )
+                })
+                .collect()
+        },
+        |p| p.to_vec(),
+    )
 }
 
 /// The attribution of the ladder among `candidates`, on each qubit's marginal, and the pairs every
@@ -286,50 +278,81 @@ fn attribute_ladder(
     candidates: &[Ladder],
 ) -> Result<(Attribution, Edges), Box<dyn Error>> {
     let channels = ladder_channels()?;
-    let predict = |k: usize, settings: &[usize]| -> Result<Vec<f64>, Box<dyn Error>> {
-        ladder_marginals(&candidates[k], &channels, &data.sequences(settings))
-    };
+    let names: Vec<&str> = candidates.iter().map(|c| c.name).collect();
+    attribute_scenario(
+        data,
+        &names,
+        6,
+        |k, settings| ladder_marginals(&candidates[k], &channels, &data.sequences(settings)),
+        |i, counts, total, predictions| {
+            (0..6)
+                .map(|q| {
+                    let ones: f64 = counts
+                        .iter()
+                        .enumerate()
+                        .filter(|(o, _)| (o >> (5 - q)) & 1 == 1)
+                        .map(|(_, n)| n)
+                        .sum();
+                    frequency(
+                        format!("circuit {i}, qubit {q}"),
+                        ones,
+                        total,
+                        predictions.iter().map(|p| p[q]).collect(),
+                    )
+                })
+                .collect()
+        },
+        |marginals| {
+            (0..64)
+                .map(|o| {
+                    (0..6)
+                        .map(|q| {
+                            if bit(o, q, 6) {
+                                marginals[q]
+                            } else {
+                                1.0 - marginals[q]
+                            }
+                        })
+                        .product()
+                })
+                .collect()
+        },
+    )
+}
+
+/// The attribution of a scenario among the candidates `names`, and the pairs every holding
+/// candidate implies. `predict(k, settings)` is candidate `k`'s prediction for a circuit;
+/// `measure(i, counts, total, predictions)` turns circuit `i`'s outcome counts, of `total` shots,
+/// into its measurements, each candidate's prediction projected alongside; `joint` turns a
+/// prediction into the joint distribution of the `regions` results, region 0 the most significant
+/// bit.
+fn attribute_scenario<P, Predict, Measure, Joint>(
+    data: &Scenario,
+    names: &[&str],
+    regions: usize,
+    predict: Predict,
+    measure: Measure,
+    joint: Joint,
+) -> Result<(Attribution, Edges), Box<dyn Error>>
+where
+    Predict: Fn(usize, &[usize]) -> Result<P, Box<dyn Error>>,
+    Measure: Fn(usize, &[f64], f64, &[P]) -> Vec<Measurement>,
+    Joint: Fn(&P) -> Vec<f64>,
+{
     let mut measurements = Vec::new();
     for (i, (settings, counts)) in data.circuits.iter().enumerate() {
-        let predictions = (0..candidates.len())
+        let predictions = (0..names.len())
             .map(|k| predict(k, settings))
             .collect::<Result<Vec<_>, _>>()?;
         let total: f64 = counts.iter().sum();
-        for q in 0..6 {
-            let ones: f64 = counts
-                .iter()
-                .enumerate()
-                .filter(|(o, _)| (o >> (5 - q)) & 1 == 1)
-                .map(|(_, n)| n)
-                .sum();
-            measurements.push(frequency(
-                format!("circuit {i}, qubit {q}"),
-                ones,
-                total,
-                predictions.iter().map(|p| p[q]).collect(),
-            ));
-        }
+        measurements.extend(measure(i, counts, total, &predictions));
     }
-    let names: Vec<&str> = candidates.iter().map(|c| c.name).collect();
-    let result = attribute(&names, &measurements, SIGMAS, FLOOR_BITS)?;
+    let result = attribute(names, &measurements, SIGMAS, FLOOR_BITS)?;
     let mut implied = Vec::new();
-    for (k, c) in candidates.iter().enumerate() {
-        if result.holding.iter().any(|h| h == c.name) {
-            implied.push(implied_pairs(data, 6, |settings| {
-                let marginals = predict(k, settings)?;
-                Ok((0..64)
-                    .map(|o| {
-                        (0..6)
-                            .map(|q| {
-                                if bit(o, q, 6) {
-                                    marginals[q]
-                                } else {
-                                    1.0 - marginals[q]
-                                }
-                            })
-                            .product()
-                    })
-                    .collect())
+    for (k, name) in names.iter().enumerate() {
+        if result.holding.iter().any(|h| h == name) {
+            implied.push(implied_pairs(data, regions, |settings| {
+                Ok(joint(&predict(k, settings)?))
             })?);
         }
     }
@@ -665,55 +688,128 @@ fn index(g: u8) -> usize {
     }
 }
 
+/// The header of a scenario's bags.
+const BAGS_HEADER: &str = "region,index,sequence";
+/// The header of the PC results.
+const PC_HEADER: &str = "scenario,edges,published,recovered_of_ten";
+
+/// The lines of the CSV file at `path` below its header, each with its line number, after checking
+/// the header is `header`.
+fn rows_below(path: &Path, header: &str) -> Result<Vec<(usize, String)>, Box<dyn Error>> {
+    let text = std::fs::read_to_string(path)?;
+    let mut lines = text.lines();
+    let found = lines.next();
+    if found != Some(header) {
+        return Err(format!("{}: the header {found:?} is not '{header}'", path.display()).into());
+    }
+    Ok(lines
+        .enumerate()
+        .map(|(i, line)| (i + 2, line.to_string()))
+        .collect())
+}
+
 /// A scenario's bags and circuits from `papers/regenerated`.
+///
+/// # Errors
+///
+/// The files', and, each naming its line: a bag row other than a region below `regions`, the
+/// next index in that region's bag, and a sequence of the gates X, Y and I as long as every other;
+/// a circuit row other than a bag index per region and a count per outcome.
 fn load(name: &str, regions: usize) -> Result<Scenario, Box<dyn Error>> {
     let dir = manifest_dir().join("papers/regenerated");
-    let mut bags = vec![Vec::new(); regions];
-    for line in std::fs::read_to_string(dir.join(format!("sarovar2020_{name}_bags.csv")))?
-        .lines()
-        .skip(1)
-    {
+    let path = dir.join(format!("sarovar2020_{name}_bags.csv"));
+    let mut bags: Vec<Vec<Vec<u8>>> = vec![Vec::new(); regions];
+    let mut length = None;
+    for (n, line) in rows_below(&path, BAGS_HEADER)? {
+        let invalid = |what: &str| format!("{}, line {n}: '{line}' {what}", path.display());
         let cells: Vec<&str> = line.split(',').collect();
-        bags[cells[0].parse::<usize>()?].push(cells[2].as_bytes().to_vec());
+        let [region, index, sequence] = cells[..] else {
+            return Err(invalid("is not a region, an index and a sequence").into());
+        };
+        let region: usize = region.parse()?;
+        let bag = bags
+            .get_mut(region)
+            .ok_or_else(|| invalid(&format!("names a region beyond the {regions} regions")))?;
+        if index.parse::<usize>()? != bag.len() {
+            return Err(invalid(&format!("is not index {} of its region", bag.len())).into());
+        }
+        let gates = sequence.as_bytes();
+        if gates.is_empty() || !gates.iter().all(|g| b"XYI".contains(g)) {
+            return Err(invalid("has a sequence other than the gates X, Y and I").into());
+        }
+        if *length.get_or_insert(gates.len()) != gates.len() {
+            return Err(invalid("has a sequence of another length than the first").into());
+        }
+        bag.push(gates.to_vec());
     }
-    let circuits = load_csv(&dir.join(format!("sarovar2020_{name}.csv")))?
+    let path = dir.join(format!("sarovar2020_{name}.csv"));
+    let circuits = load_csv(&path)?
         .into_iter()
-        .map(|row| {
-            (
-                row[..regions].iter().map(|&s| s as usize).collect(),
-                row[regions..].to_vec(),
-            )
+        .enumerate()
+        .map(|(i, row)| {
+            let invalid = |what: String| format!("{}, line {}: {what}", path.display(), i + 2);
+            if row.len() != regions + (1 << regions) {
+                return Err(invalid(format!(
+                    "{} cells, not a bag index per region and a count per outcome",
+                    row.len()
+                )));
+            }
+            let settings = row[..regions]
+                .iter()
+                .zip(&bags)
+                .map(|(&s, bag)| {
+                    (s.fract() == 0.0 && s >= 0.0 && (s as usize) < bag.len())
+                        .then_some(s as usize)
+                        .ok_or_else(|| invalid(format!("no bag index {s} in its region")))
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+            Ok((settings, row[regions..].to_vec()))
         })
-        .collect();
+        .collect::<Result<_, String>>()?;
     Ok(Scenario { bags, circuits })
 }
 
 /// pyGSTi's PC result per scenario: the edges on the written draw, with S before R, the published
 /// set, and in how many of ten further draws PC finds it.
+///
+/// # Errors
+///
+/// The file's, and, each naming its line: a row other than a scenario, two edge lists and a
+/// count, and an edge other than two of the variables `R<n>` and `S<n>` joined by `-`.
 fn load_pc() -> Result<Vec<PcResult>, Box<dyn Error>> {
     let path = manifest_dir().join("papers/regenerated/sarovar2020_edges.csv");
-    let edges = |cell: &str| -> Edges {
+    let variable = |v: &str| {
+        v.strip_prefix(['R', 'S'])
+            .is_some_and(|n| !n.is_empty() && n.bytes().all(|b| b.is_ascii_digit()))
+    };
+    let edges = |cell: &str| -> Option<Edges> {
         cell.split_whitespace()
             .map(|e| {
-                let (a, b) = e.split_once('-').unwrap_or((e, ""));
-                if a.starts_with('R') && b.starts_with('S') {
-                    format!("{b}-{a}")
-                } else {
-                    e.to_string()
-                }
+                let (a, b) = e.split_once('-')?;
+                (variable(a) && variable(b)).then(|| {
+                    if a.starts_with('R') && b.starts_with('S') {
+                        format!("{b}-{a}")
+                    } else {
+                        e.to_string()
+                    }
+                })
             })
             .collect()
     };
-    std::fs::read_to_string(path)?
-        .lines()
-        .skip(1)
-        .map(|line| {
+    rows_below(&path, PC_HEADER)?
+        .into_iter()
+        .map(|(n, line)| {
+            let invalid = |what: &str| format!("{}, line {n}: '{line}' {what}", path.display());
             let cells: Vec<&str> = line.split(',').collect();
+            let [scenario, found, published, recovered] = cells[..] else {
+                return Err(invalid("is not a scenario, two edge lists and a count").into());
+            };
+            let malformed = || invalid("has an edge other than two variables joined by '-'");
             Ok((
-                cells[0].to_string(),
-                edges(cells[1]),
-                edges(cells[2]),
-                cells[3].parse()?,
+                scenario.to_string(),
+                edges(found).ok_or_else(malformed)?,
+                edges(published).ok_or_else(malformed)?,
+                recovered.parse()?,
             ))
         })
         .collect()

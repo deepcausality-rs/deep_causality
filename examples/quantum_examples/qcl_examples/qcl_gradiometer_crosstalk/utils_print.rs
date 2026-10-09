@@ -10,7 +10,7 @@ use crate::constants::{
 };
 use crate::model::GradiometerModel;
 use crate::model_config::plant;
-use crate::model_types::{Cause, Consequence, Instrument, Setting, Verdict, WorldRun};
+use crate::model_types::{Cause, Cloud, Consequence, Instrument, Setting, Verdict, WorldRun};
 use crate::{FloatType, Screen};
 use deep_causality_algebra::Real;
 use deep_causality_num::{lift, lift_count, lower};
@@ -174,10 +174,16 @@ pub fn print_gates(runs: &[WorldRun]) -> bool {
         };
         // The campaign and the plan add the same costs in different orders, so the two sums may
         // differ by the rounding of a sum of that many terms.
-        let terms = lift_count::<FloatType>(run.plan_experiments.len() as u64);
+        let terms = lift_count::<FloatType>(run.plan_settings.len() as u64);
         let rounding = run.plan_cost * FloatType::epsilon() * terms;
         let cheaper = run.campaign_cost <= run.plan_cost + rounding;
-        let plan = run.plan_complete && run.plan_experiments == [1, 2, 3];
+        let plan = run.plan_complete
+            && run.plan_settings
+                == [
+                    Setting::Brighten(Cloud::A),
+                    Setting::Brighten(Cloud::B),
+                    Setting::RotationStep,
+                ];
         println!(
             "        campaign spends no more than the plan: {}   plan is E1, E2, E3 and complete: {}",
             yes_no(cheaper),

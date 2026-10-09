@@ -169,7 +169,7 @@ const law = [
       <div><dt><code>compare</code></dt><dd>Judges each world’s prediction against the observation, in standard errors of the observation.</dd></div>
       <div><dt><code>gate</code></dt><dd>Judges a read-out against a specification: at least a given value, or at most one.</dd></div>
       <div><dt><code>design</code></dt><dd>Solves the minimum-cost cover: the cheapest experiments that separate each coverable pair of candidates by a floor of bits. It also lists the pairs no experiment reaches. <code>design_with</code> computes each experiment’s predictions from a response model first.</dd></div>
-      <div><dt><code>observe_experiment</code></dt><dd>Observes a configured experiment from simulated evidence, counts a lab recorded, or a published value with its standard error, and records the context it ran in.</dd></div>
+      <div><dt><code>observe_experiment</code></dt><dd>Observes a configured experiment from simulated evidence, a lab’s recorded counts, or a published value with its standard error, and records the context it ran in.</dd></div>
       <div><dt><code>adjudicate</code></dt><dd>Folds the worlds’ verdicts and reports a survivor, or the reason the data leaves several candidates standing. A world that read several experiments holds only when every reading agrees, and a pair separates by the sum of its bits over them.</dd></div>
     </dl>
     <p>

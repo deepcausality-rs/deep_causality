@@ -5,8 +5,12 @@
 magnetic field along the atoms' trajectory with the bias coil at its nominal current, (a), and at
 half of it, (b).
 
-The figure is a raster image embedded in the PDF, so the curves are read from its pixels:
+The figure is a raster image embedded in the PDF, so the curves are read from its pixels. The
+script needs NumPy and Pillow installed for the interpreter or its virtual environment, since
+`-I` skips the user's site-packages; the CSV regenerates byte for byte with NumPy 2.4.4 and
+Pillow 12.1.1:
 
+    python3 -m pip install numpy pillow
     pdfimages -png -f 9 -l 9 "<the paper's PDF>" p9
     python3 -I digitise_hu2017_fig6.py p9-000.png hu2017_fig6.csv
 
@@ -59,7 +63,7 @@ def main(image_path, out_path):
     nominal = curve(image, 91.5, (16, 391), (93, 805), (r > 180) & (g < 110) & (b < 110), (5700, 5600))
     half = dict(curve(image, 934.5, (16, 391), (936, 1648), (b > 180) & (r < 110) & (g < 110), (3000, 2900)))
     with open(out_path, "w", newline="") as f:
-        out = csv.writer(f)
+        out = csv.writer(f, lineterminator="\n")
         out.writerow(["height_cm", "B_nominal_nT", "B_half_nT"])
         for z, field in nominal:
             if z in half:

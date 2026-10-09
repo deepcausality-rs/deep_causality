@@ -93,6 +93,8 @@ export const GRAVIMETER = {
   offsetUgal: -5,
   /** The placeholder tide: the principal lunar semidiurnal term, amplitude in µGal. */
   tideUgal: 80,
+  /** Louchet-Chauvet et al. 2011, Table 1: the mean tidal correction over twelve days, in µGal. */
+  publishedTideUgal: -18.8,
   floorBits: 5,
   agreementSigmas: 3,
   /** Louchet-Chauvet et al. 2011, as the run's header prints the instrument. */
@@ -101,8 +103,8 @@ export const GRAVIMETER = {
   whiteNoise: '5000 s',
   planCost: 4956,
   /** The cheapest and the dearest campaign over the seven causes. */
-  cheapest: 166,
-  dearest: 4953,
+  cheapest: Math.min(...gravimeterCampaigns.map((c) => c.seconds)),
+  dearest: Math.max(...gravimeterCampaigns.map((c) => c.seconds)),
   /** The run with a +5 µGal offset: the baseline refuses tilt. */
   positive: { predictsUgal: 76.43, readsUgal: 82.54, planCost: 4056, campaign: 4054 },
   /** The run whose contexts record no tide: the baseline refuses all seven. */
@@ -200,7 +202,7 @@ export const verifications: Verification[] = [
     ref: 'arXiv:1804.04909',
     question: 'Which effect shifts gravity as the atoms cool?',
     answer: 'Yes: the wavefront',
-    also: 'The paper’s bound on atom interactions holds at one standard error; at three, interactions remain possible.',
+    also: 'Two of the paper’s figures disagree with each other. Its bound on atom interactions holds at one standard error; at three, interactions remain possible.',
     checks: 9,
     example: 'verification_v1_wavefront',
   },

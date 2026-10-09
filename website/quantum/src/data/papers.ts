@@ -26,7 +26,7 @@ export interface Paper {
   /** Modules under src/ whose doc comments cite it. */
   citedFrom: string[];
   /** Examples and verifications that cite it. */
-  usedBy?: string[];
+  usedBy: string[];
   /** What the crate takes from it, when it takes something. */
   usedFor?: string;
 }
@@ -40,6 +40,7 @@ export const papers: Paper[] = [
     year: '2022',
     file: 'Quantum causal models-lorenz2022.pdf',
     citedFrom: ['types/density_matrix', 'types/qgates/channel', 'types/qcm/markov_freeze'],
+    usedBy: [],
     usedFor:
       'The model the crate implements: a Choi–Jamiołkowski factor per node, and Definition 3.3, the quantum Markov condition that the Markov check tests.',
   },
@@ -51,6 +52,7 @@ export const papers: Paper[] = [
     year: '2025',
     file: 'Unitary causal decompositions-2508.11762v1.pdf',
     citedFrom: ['types/qcm/faithfulness', 'error/quantum_error'],
+    usedBy: [],
     usedFor:
       'Definition 3.1 and Theorem 3.2, the C₃-exclusion criterion. A causal structure containing a C₃ has no traditional-circuit causally faithful decomposition, and the decomposability check rejects such a structure.',
   },
@@ -71,6 +73,7 @@ export const papers: Paper[] = [
       'types/pipeline/config',
       'types/qcm/dem_model',
     ],
+    usedBy: [],
     usedFor:
       'The abstraction layer: the structural precheck (Definition 49, Theorem 51), the naturality square, and composition (Proposition 17, whose exact case Lean proves).',
   },
@@ -90,6 +93,7 @@ export const papers: Paper[] = [
       'types/abstraction/fault_tolerance',
       'types/circuit_model/exact_semantics',
     ],
+    usedBy: [],
     usedFor:
       'The six logical gates built on gauge fields (S, Z, X, Hadamard, CZ and T), the class-invariance check of Equation 3.20, and the gate programs the fault-tolerance check propagates.',
   },
@@ -100,6 +104,7 @@ export const papers: Paper[] = [
     year: '2021',
     file: 'Causal and compositional structure of unitary transformations-2001.07774v2.pdf',
     citedFrom: ['types/qcm/faithfulness'],
+    usedBy: [],
     usedFor:
       'Theorem 3, which sets the scope of the decomposability check: the check rejects a causal structure and makes no claim about a unitary, and it applies to traditional, non-routed circuits only.',
   },
@@ -110,6 +115,7 @@ export const papers: Paper[] = [
     year: '2021',
     file: 'Cyclic Quantum Causal Models-2002.12157v3.pdf',
     citedFrom: ['error/quantum_error', 'types/qcm/markov_freeze', 'types/qcm/hypothesis', 'types/qcm/dilation'],
+    usedBy: [],
     usedFor:
       'The error that build() returns for a cyclic structure cites this paper as the setting the crate leaves out.',
   },
@@ -209,6 +215,7 @@ export const papers: Paper[] = [
     ref: 'Linear Algebra Appl. 10, 285–290',
     year: '1975',
     citedFrom: ['types/qgates/channel'],
+    usedBy: [],
     usedFor: 'A channel is completely positive exactly when its Choi operator is positive semidefinite, which check_completely_positive tests.',
   },
   {
@@ -217,6 +224,7 @@ export const papers: Paper[] = [
     ref: 'Ann. of Math. 37, 823–843',
     year: '1936',
     citedFrom: ['types/verdict/projection'],
+    usedBy: [],
     usedFor: 'The orthomodular lattice of projections behind the projection verdict.',
   },
   {
@@ -226,6 +234,7 @@ export const papers: Paper[] = [
     year: '2019',
     file: 'Quantum Causal Models-1906.10726v2.pdf',
     citedFrom: ['types/qcm/dilation'],
+    usedBy: [],
     usedFor: 'The factorization a unitary circuit with broken wires induces, which the dilation builds.',
   },
   {
@@ -235,6 +244,7 @@ export const papers: Paper[] = [
     year: '2004',
     file: 'Improved simulation of stabilizer circuits-quant-ph-0406196v5.pdf',
     citedFrom: ['types/qcode/clifford_action'],
+    usedBy: [],
     usedFor: 'The stabilizer-tableau update rule (§III) that the Clifford-action check applies.',
   },
 ];

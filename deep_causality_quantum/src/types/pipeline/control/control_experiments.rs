@@ -19,18 +19,24 @@ use crate::types::qpu::born_sampler::sample_probability;
 use crate::types::qpu::histogram::{CountHistogram, ShotHistogram};
 use crate::types::qpu::shot_estimate::ShotEstimate;
 use alloc::format;
-use alloc::vec;
 use alloc::vec::Vec;
 use deep_causality_algebra::RealField;
+use deep_causality_context_store::ContextSnapshot;
 use deep_causality_num::{FromPrimitive, NaturalNumber, ToPrimitive};
 
 /// What one observed experiment yields before it is recorded: the read-out, the counts when the
-/// evidence came as counts, and the ledgers with the shots charged, the root's before the fork
-/// and every world's after it.
+/// evidence came as counts, and the ledgers with the shots charged.
 struct Gathered<R, N> {
     read_out: ShotEstimate<R>,
     counts: Option<CountHistogram>,
-    ledgers: Vec<Ledger<R, N>>,
+    charged: Charged<R, N>,
+}
+
+/// The ledgers an observation's shots are charged to: the root's before the fork, and after it
+/// every world's, in world order.
+enum Charged<R, N> {
+    Root(Ledger<R, N>),
+    Worlds(Vec<Ledger<R, N>>),
 }
 
 impl<R, N, const D: usize> Control<R, N, D>
@@ -44,11 +50,11 @@ where
     /// plant.
     ///
     /// Each candidate's prediction is computed by `model` as [`ConfiguredExperiment::predict`]
-    /// computes it, and a candidate is refused when `|prediction − observed|` exceeds `sigmas`
-    /// standard errors of the observed estimate. The observation is recorded as
-    /// [`observe_experiment`](Self::observe_experiment) records one before the fork: the root's
-    /// read-out, charged to the root ledger, and an [`Observation`] carrying the configuration's
-    /// context.
+    /// computes it and counted on the root ledger's `predictions`, and a candidate is refused when
+    /// `|prediction − observed|` exceeds `sigmas` standard errors of the observed estimate. The
+    /// observation is recorded as [`observe_experiment`](Self::observe_experiment) records one
+    /// before the fork: the root's read-out, charged to the root ledger, and an [`Observation`]
+    /// carrying the configuration's context.
     ///
     /// Fails with `CalculationError` while the config names a baseline still to observe, after an
     /// observation or the fork, and on a `sigmas` that is not finite or is negative; and with the
@@ -81,27 +87,25 @@ where
             )));
             return self;
         }
-        let gathered = self
-            .candidates
-            .iter()
-            .map(|(_, h)| experiment.predict(model, h, &self.plant, &self.observables))
-            .collect::<Result<Vec<R>, _>>()
-            .and_then(|predicted| {
-                let evidence = self.evidence(model, experiment, source)?;
-                let context = experiment.configuration().context_snapshot()?;
-                Ok((predicted, evidence, context))
-            });
+        let gathered = self.predict_live(model, experiment).and_then(|predicted| {
+            let evidence = self.evidence(model, experiment, source)?;
+            let context = experiment.configuration().context_snapshot()?;
+            Ok((predicted, evidence, context))
+        });
         match gathered {
             Ok((predicted, evidence, context)) => {
-                self.ledger = evidence.ledgers[0];
-                self.record_root(experiment.name().into(), evidence.read_out);
-                self.observations.push(Observation::new(
-                    experiment.name().into(),
-                    evidence.read_out,
-                    evidence.counts,
-                    context,
-                ));
-                self.refuse_contradicted(&predicted, evidence.read_out, sigmas);
+                let observed = evidence.read_out;
+                self.record_observation(experiment.name(), evidence, context);
+                match predicted
+                    .iter()
+                    .try_fold(self.ledger, |ledger, _| ledger.predicted())
+                {
+                    Ok(ledger) => {
+                        self.ledger = ledger;
+                        self.refuse_contradicted(&predicted, observed, sigmas);
+                    }
+                    Err(e) => self.fail(e),
+                }
             }
             Err(e) => self.fail(e),
         }
@@ -131,14 +135,7 @@ where
         }
         let probes = experiments
             .iter()
-            .map(|e| {
-                let predictions = self
-                    .candidates
-                    .iter()
-                    .map(|(_, h)| e.predict(model, h, &self.plant, &self.observables))
-                    .collect::<Result<Vec<R>, _>>()?;
-                Experiment::new(e.name(), e.cost(), e.shots(), predictions)
-            })
+            .map(|e| Experiment::new(e.name(), e.cost(), e.shots(), self.predict_live(model, e)?))
             .collect::<Result<Vec<_>, _>>();
         match probes {
             Ok(probes) => self.plan_over(&probes, objective),
@@ -203,24 +200,54 @@ where
             .and_then(|evidence| Ok((evidence, experiment.configuration().context_snapshot()?)));
         match observed {
             Ok((evidence, context)) => {
-                if self.worlds.is_empty() {
-                    self.ledger = evidence.ledgers[0];
-                } else {
-                    for (w, ledger) in self.worlds.iter_mut().zip(evidence.ledgers) {
-                        w.ledger = ledger;
-                    }
-                }
-                self.record_root(experiment.name().into(), evidence.read_out);
-                self.observations.push(Observation::new(
-                    experiment.name().into(),
-                    evidence.read_out,
-                    evidence.counts,
-                    context,
-                ));
+                self.record_observation(experiment.name(), evidence, context)
             }
             Err(e) => self.fail(e),
         }
         self
+    }
+
+    /// Every live candidate's prediction for `experiment`, computed by `model` as
+    /// [`ConfiguredExperiment::predict`] computes it, in candidate order. Counting them is the
+    /// caller's decision.
+    fn predict_live<C, M>(
+        &self,
+        model: &M,
+        experiment: &ConfiguredExperiment<R, C>,
+    ) -> Result<Vec<R>, QuantumError>
+    where
+        M: ResponseModel<R, C>,
+    {
+        self.candidates
+            .iter()
+            .map(|(_, h)| experiment.predict(model, h, &self.plant, &self.observables))
+            .collect()
+    }
+
+    /// `evidence` recorded for the experiment `name`: the charged ledgers replace the ones the
+    /// shots were drawn from, the read-out becomes the root's latest, and the [`Observation`]
+    /// goes to the report with `context`.
+    fn record_observation(
+        &mut self,
+        name: &str,
+        evidence: Gathered<R, N>,
+        context: Option<ContextSnapshot>,
+    ) {
+        match evidence.charged {
+            Charged::Root(ledger) => self.ledger = ledger,
+            Charged::Worlds(ledgers) => {
+                for (w, ledger) in self.worlds.iter_mut().zip(ledgers) {
+                    w.ledger = ledger;
+                }
+            }
+        }
+        self.record_root(name.into(), evidence.read_out);
+        self.observations.push(Observation::new(
+            name.into(),
+            evidence.read_out,
+            evidence.counts,
+            context,
+        ));
     }
 
     /// The evidence `source` yields for `experiment`, with the ledgers after the shots are
@@ -244,12 +271,14 @@ where
         })?;
         let time = Self::device_time(shots, self.shot_time)?;
         let charged = if self.worlds.is_empty() {
-            vec![self.ledger.observed(count, time)?]
+            Charged::Root(self.ledger.observed(count, time)?)
         } else {
-            self.worlds
-                .iter()
-                .map(|w| w.ledger.observed(count, time))
-                .collect::<Result<Vec<_>, _>>()?
+            Charged::Worlds(
+                self.worlds
+                    .iter()
+                    .map(|w| w.ledger.observed(count, time))
+                    .collect::<Result<Vec<_>, _>>()?,
+            )
         };
         let (read_out, counts) = match source {
             EvidenceSource::Simulated(truth) => {
@@ -266,7 +295,7 @@ where
         Ok(Gathered {
             read_out,
             counts,
-            ledgers: charged,
+            charged,
         })
     }
 

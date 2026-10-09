@@ -3,7 +3,8 @@
  * The mechanism as four verbs, each tied to the API name it becomes in the
  * program below it. The code is condensed from
  * `examples/quantum_examples/qcl_examples/qcl_crosstalk/main.rs`: it drops the
- * printing and the build-time refusal, and keeps every call that carries a step.
+ * build-time refusal and all printing but the plan summary, and keeps every call that
+ * carries a step.
  */
 import { Code } from 'astro:components';
 import { rustDark, rustLight } from '../../../shiki-rust-themes.mjs';
@@ -20,7 +21,7 @@ const steps = [
   {
     verb: 'Screen',
     text: 'Three checks screen each candidate. The normalisation check tests that every factor is a conditional that sums to one. The Markov check tests that factors with overlapping Hilbert supports commute, which makes the candidate a legal quantum causal model. The decomposability check rejects a C₃ sub-relation, the pattern two commuting CNOTs create, which no faithful model carries. Each check reports what it measured, its threshold, its margin and how many items it examined.',
-    api: 'validate(&cfg).check_normalization().check_markov(…)',
+    api: 'validate(&cfg).check_normalization().check_markov(…).check_decomposable(…).finalize()',
   },
   {
     verb: 'Plan',
@@ -36,6 +37,7 @@ const steps = [
 
 const code = `// 1. Declare. A fourth candidate that is a cycle makes build() return
 //    CyclicStructureUnsupported.
+let candidates = [h1_direct_q1_to_q2()?, h2_direct_q2_to_q1()?, h3_common_bath()?];
 let cfg = QclBuilder::config::<FloatType, NumberType>()
     .over_plant(plant()?, &[e2_projector()?, e1_projector()?])
     .candidates(&candidates)

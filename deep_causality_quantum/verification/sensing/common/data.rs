@@ -28,34 +28,43 @@ pub fn manifest_dir() -> PathBuf {
 ///
 /// # Errors
 ///
-/// The file's, and [`std::io::ErrorKind::InvalidData`] naming the line of a row whose cell count
-/// differs from the header's or whose cell does not parse as a number.
+/// The file's, and [`std::io::ErrorKind::InvalidData`] for a file without a header line or
+/// without a row below it, and naming the line of a row whose cell count differs from the
+/// header's or whose cell does not parse as a number.
 pub fn load_csv(path: &Path) -> std::io::Result<Vec<Vec<f64>>> {
     let text = std::fs::read_to_string(path)?;
+    let invalid = |line: usize, what: String| {
+        std::io::Error::new(
+            std::io::ErrorKind::InvalidData,
+            format!("{}, line {line}: {what}", path.display()),
+        )
+    };
     let mut lines = text.lines();
-    let columns = lines.next().map_or(0, |header| header.split(',').count());
-    lines
+    let columns = lines
+        .next()
+        .ok_or_else(|| invalid(1, "no header".into()))?
+        .split(',')
+        .count();
+    let rows = lines
         .enumerate()
         .map(|(i, line)| {
-            let invalid = |what: String| {
-                std::io::Error::new(
-                    std::io::ErrorKind::InvalidData,
-                    format!("{}, line {}: {what}", path.display(), i + 2),
-                )
-            };
             let row = line
                 .split(',')
                 .map(|cell| cell.trim().parse::<f64>())
                 .collect::<Result<Vec<_>, _>>()
-                .map_err(|e| invalid(format!("{e} in '{line}'")))?;
+                .map_err(|e| invalid(i + 2, format!("{e} in '{line}'")))?;
             if row.len() == columns {
                 Ok(row)
             } else {
-                Err(invalid(format!(
-                    "{} cells against the header's {columns}",
-                    row.len()
-                )))
+                Err(invalid(
+                    i + 2,
+                    format!("{} cells against the header's {columns}", row.len()),
+                ))
             }
         })
-        .collect()
+        .collect::<std::io::Result<Vec<_>>>()?;
+    if rows.is_empty() {
+        return Err(invalid(2, "no rows below the header".into()));
+    }
+    Ok(rows)
 }

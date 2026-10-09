@@ -77,19 +77,13 @@ where
                 "an estimate over zero shots has no standard error".into(),
             ));
         }
-        if !estimate.is_finite() || estimate < R::zero() || estimate > R::one() {
-            return Err(QuantumError::NonFiniteValue(
-                "an estimate must be a finite probability in [0, 1]".into(),
-            ));
-        }
+        check_probability(estimate)?;
         let n = R::from_u64(shots).ok_or_else(|| {
             QuantumError::CalculationError(format!("scalar cannot represent {shots} shots"))
         })?;
-        let one = R::one();
-        let standard_error = (estimate * (one - estimate) / n).sqrt();
         Ok(Self {
             estimate,
-            standard_error,
+            standard_error: bernoulli_standard_error(estimate, n),
             shots,
         })
     }
@@ -105,11 +99,7 @@ where
     /// `[0, 1]`, or on draws that are not finite; [`QuantumError::NormalizationError`] when the
     /// draws round to zero or do not fit a `u64`.
     pub fn from_effective_draws(estimate: R, draws: R) -> Result<Self, QuantumError> {
-        if !estimate.is_finite() || estimate < R::zero() || estimate > R::one() {
-            return Err(QuantumError::NonFiniteValue(
-                "an estimate must be a finite probability in [0, 1]".into(),
-            ));
-        }
+        check_probability(estimate)?;
         if !draws.is_finite() {
             return Err(QuantumError::NonFiniteValue(
                 "effective draws must be finite".into(),
@@ -123,10 +113,9 @@ where
                 ));
             }
         };
-        let standard_error = (estimate * (R::one() - estimate) / draws).sqrt();
         Ok(Self {
             estimate,
-            standard_error,
+            standard_error: bernoulli_standard_error(estimate, draws),
             shots,
         })
     }
@@ -192,6 +181,22 @@ where
     pub fn separation_bits(&self, other: &Self) -> R {
         separation_bits(self.estimate, other.estimate, self.shots.min(other.shots))
     }
+}
+
+/// Refuses an estimate that is not a finite probability in `[0, 1]`.
+fn check_probability<R: RealField>(estimate: R) -> Result<(), QuantumError> {
+    if !estimate.is_finite() || estimate < R::zero() || estimate > R::one() {
+        return Err(QuantumError::NonFiniteValue(
+            "an estimate must be a finite probability in [0, 1]".into(),
+        ));
+    }
+    Ok(())
+}
+
+/// The Bernoulli standard error `√(p(1−p)/n)` of a frequency `p` over `n` draws, which need not
+/// be whole.
+pub(crate) fn bernoulli_standard_error<R: RealField>(p: R, n: R) -> R {
+    (p * (R::one() - p) / n).sqrt()
 }
 
 /// The per-shot Bhattacharyya distance between two Bernoulli distributions, in bits:

@@ -261,10 +261,10 @@ fn planner(report: &mut Report) -> Result<(), Box<dyn Error>> {
     let model = TurnModel {
         phase_per_ugal: 4.0 * std::f64::consts::PI / WAVELENGTH * T * T * MICRO_GAL,
     };
-    let candidates = [
-        mechanism("Coriolis", CONTRAST)?,
-        mechanism("wavefront", CONTRAST)?,
-    ];
+    let candidates = Candidate::ALL
+        .iter()
+        .map(|c| mechanism(c.name(), CONTRAST))
+        .collect::<Result<Vec<_>, _>>()?;
     let settings = [
         ("k reversed", Setting::KReversed),
         ("Rabi halved", Setting::RabiHalved),
@@ -323,21 +323,54 @@ fn planner(report: &mut Report) -> Result<(), Box<dyn Error>> {
 /// A fit of Fig. 9: its name and its polyline of `(temperature µK, Δg µGal)`.
 type Fit = (String, Vec<(f64, f64)>);
 
-/// The fits of Fig. 9, each a polyline ascending in temperature.
+/// The header of the extracted fits.
+const FITS_HEADER: &str = "fit,temperature_uK,delta_g_uGal";
+
+/// The fits of Fig. 9, each a non-empty polyline ascending in temperature.
+///
+/// # Errors
+///
+/// The file's, and a header other than [`FITS_HEADER`], a row other than a name and two numbers,
+/// and a fit whose temperatures descend, each naming its line.
 fn load_fits(path: &std::path::Path) -> Result<Vec<Fit>, Box<dyn Error>> {
+    let text = std::fs::read_to_string(path)?;
+    let mut lines = text.lines();
+    let header = lines.next();
+    if header != Some(FITS_HEADER) {
+        return Err(format!(
+            "{}: the header {header:?} is not '{FITS_HEADER}'",
+            path.display()
+        )
+        .into());
+    }
     let mut fits: Vec<Fit> = Vec::new();
-    for line in std::fs::read_to_string(path)?.lines().skip(1) {
+    for (i, line) in lines.enumerate() {
+        let invalid = |what: String| format!("{}, line {}: {what}", path.display(), i + 2);
         let cells: Vec<&str> = line.split(',').collect();
-        let (name, t, g) = (cells[0], cells[1].parse::<f64>()?, cells[2].parse::<f64>()?);
+        let [name, t, g] = cells[..] else {
+            return Err(
+                invalid(format!("'{line}' is not a fit, a temperature and a value")).into(),
+            );
+        };
+        let number = |cell: &str| {
+            cell.parse::<f64>()
+                .map_err(|e| invalid(format!("{e} in '{line}'")))
+        };
+        let (t, g) = (number(t)?, number(g)?);
         match fits.last_mut() {
-            Some((last, curve)) if last == name => curve.push((t, g)),
+            Some((last, curve)) if last == name => {
+                if curve.last().is_some_and(|&(previous, _)| t < previous) {
+                    return Err(invalid(format!("'{name}' descends in temperature")).into());
+                }
+                curve.push((t, g));
+            }
             _ => fits.push((name.to_string(), vec![(t, g)])),
         }
     }
     Ok(fits)
 }
 
-/// Linear interpolation along an ascending polyline, held at its ends.
+/// Linear interpolation along a non-empty ascending polyline, held at its ends.
 fn interpolate(curve: &[(f64, f64)], t: f64) -> f64 {
     let i = curve.partition_point(|&(x, _)| x <= t);
     if i == 0 {
@@ -367,6 +400,32 @@ impl ObservedContext for Setting {
     }
 }
 
+/// The planner's candidates.
+#[derive(Debug, Clone, Copy, PartialEq)]
+enum Candidate {
+    /// Coriolis, which flips under the turn.
+    Coriolis,
+    /// The wavefront, which does not.
+    Wavefront,
+}
+
+impl Candidate {
+    const ALL: [Candidate; 2] = [Candidate::Coriolis, Candidate::Wavefront];
+
+    /// The name its hypothesis carries.
+    fn name(self) -> &'static str {
+        match self {
+            Candidate::Coriolis => "Coriolis",
+            Candidate::Wavefront => "wavefront",
+        }
+    }
+
+    /// Whether its shift flips sign under `setting`.
+    fn flips(self, setting: Setting) -> bool {
+        self == Candidate::Coriolis && setting == Setting::Turned
+    }
+}
+
 /// Coriolis and the wavefront, each 0.5 µGal in the passive configuration: only Coriolis flips
 /// under the turn.
 struct TurnModel {
@@ -379,8 +438,17 @@ impl ResponseModel<f64, Setting> for TurnModel {
         candidate: &Hypothesis<f64>,
         setting: &Setting,
     ) -> Result<Response<f64>, QuantumError> {
-        let flips = candidate.name() == "Coriolis" && matches!(setting, Setting::Turned);
-        let ugal = if flips { -CORIOLIS.0 } else { CORIOLIS.0 };
+        let known = Candidate::ALL
+            .into_iter()
+            .find(|c| c.name() == candidate.name())
+            .ok_or_else(|| {
+                QuantumError::CalculationError(format!("no candidate '{}'", candidate.name()))
+            })?;
+        let ugal = if known.flips(*setting) {
+            -CORIOLIS.0
+        } else {
+            CORIOLIS.0
+        };
         Ok(Response::Channel(phase_channel(
             self.phase_per_ugal * ugal,
         )?))

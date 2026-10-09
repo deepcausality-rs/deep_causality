@@ -162,7 +162,8 @@ fn passive_configuration() -> Result<InterferometerConfiguration<FloatType>, Qua
 }
 
 /// The instrument context for `configuration` at `tick` s from the start, holding a reading of
-/// the Earth tide at that time, or of none when `records_tide` is off.
+/// the Earth tide at that time, or a reading of zero tide when `records_tide` is off, so the
+/// candidates' predictions carry no tide.
 fn session(
     name: &str,
     configuration: InterferometerConfiguration<FloatType>,

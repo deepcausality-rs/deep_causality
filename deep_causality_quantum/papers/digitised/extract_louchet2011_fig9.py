@@ -12,8 +12,11 @@ The figure is vector graphics, so the data are read from the PDF's paths, not fr
 Both panels share one transform. The temperature axis runs from the frame's left edge, 0 µK, to
 its right edge, 7 µK, with major ticks every 1 µK; the gravity axis has major ticks every 2 µGal,
 and the point at 2 µK, the reference, sits at zero. A data point is the centre of its circle; its
-standard error is half the distance between its error bar's caps. A fit is a polyline; the plot
-clips the polylines to the frame, so a fit that leaves the frame has no value at zero temperature.
+standard error is half the distance between its error bar's caps. A fit is a polyline whose path
+runs past the frame, which the plot clips; the script clips it the same way, to the bounding box of
+its panel's frame path, segment by segment (Liang-Barsky), so a fit that leaves the frame before
+0 µK has no value at zero temperature. It exits when a fit leaves the frame and comes back, which
+one polyline per fit cannot hold.
 
 Panel (a): the measured points, the linear fit (thick grey), and the fits with Zernike polynomials
 up to n_max = 2 (green), 4 (red), 6 (grey), 8 (blue) and 10 (black). Panel (c): the n_max = 10 fit
@@ -48,6 +51,9 @@ FITS = [
 # An error bar's vertices lie within this distance of its point's temperature, in µK: its caps
 # reach 0.055 µK to each side, and the closest two points are 0.45 µK apart.
 BAR_WINDOW_UK = 0.08
+# The frame paths of panels (a) and (c), each the axes with their ticks, by the panel's zero.
+FRAMES = {ZERO_A: 15, ZERO_C: 188}
+FRAME_WIDTH = "0.45"
 
 
 def attributes(path):
@@ -57,6 +63,45 @@ def attributes(path):
 def coordinates(path):
     nums = [float(x) for x in re.findall(r"-?\d+\.?\d*", attributes(path)["d"])]
     return nums[0::2], nums[1::2]
+
+
+def clip_segment(a, b, box):
+    """The part of the segment from `a` to `b` inside `box` = (t_min, t_max, g_min, g_max), as its
+    two ends, or None when none is (Liang-Barsky)."""
+    (t0, g0), (t1, g1) = a, b
+    dt, dg = t1 - t0, g1 - g0
+    low, high = 0.0, 1.0
+    for p, q in ((-dt, t0 - box[0]), (dt, box[1] - t0), (-dg, g0 - box[2]), (dg, box[3] - g0)):
+        if p == 0:
+            if q < 0:
+                return None
+        elif p < 0:
+            low = max(low, q / p)
+        else:
+            high = min(high, q / p)
+    if low > high:
+        return None
+    start = a if low == 0 else (t0 + low * dt, g0 + low * dg)
+    end = b if high == 1 else (t0 + high * dt, g0 + high * dg)
+    return start, end
+
+
+def clip(label, polyline, box):
+    """The part of `polyline`, its vertices ascending, inside `box`; exits unless it is one
+    piece."""
+    pieces = []
+    for a, b in zip(polyline, polyline[1:]):
+        segment = clip_segment(a, b, box)
+        if segment is None:
+            continue
+        start, end = segment
+        if pieces and pieces[-1][-1] == start:
+            pieces[-1].append(end)
+        else:
+            pieces.append([start, end])
+    if len(pieces) != 1:
+        sys.exit(f"the fit {label} lies inside its frame in {len(pieces)} pieces, not one")
+    return pieces[0]
 
 
 def main(svg_path, points_path, fits_path):
@@ -92,20 +137,31 @@ def main(svg_path, points_path, fits_path):
         path = attributes(paths[i])
         if path.get("stroke") != colour or "Z" in path["d"]:
             sys.exit(f"path {i} is not the open {colour} polyline of the fit {label}")
+    frames = {}
+    for zero, i in FRAMES.items():
+        path = attributes(paths[i])
+        xs, ys = coordinates(paths[i])
+        box = (temperature(min(xs)), temperature(max(xs)), gravity(min(ys), zero),
+               gravity(max(ys), zero))
+        if (path.get("stroke") != BLACK or path.get("stroke-width") != FRAME_WIDTH
+                or abs(box[0]) > 0.01 or abs(box[1] - 7.0) > 0.01 or not box[2] < 0 < box[3]):
+            sys.exit(f"path {i} is not the frame of a panel from 0 to 7 µK around zero")
+        frames[zero] = box
 
     with open(points_path, "w", newline="") as f:
-        out = csv.writer(f)
+        out = csv.writer(f, lineterminator="\n")
         out.writerow(["temperature_uK", "delta_g_uGal", "standard_error_uGal"])
         for t, g, se in points:
             out.writerow([f"{t:.3f}", f"{g:.3f}", f"{se:.3f}"])
 
     with open(fits_path, "w", newline="") as f:
-        out = csv.writer(f)
+        out = csv.writer(f, lineterminator="\n")
         out.writerow(["fit", "temperature_uK", "delta_g_uGal"])
         for label, i, zero, _ in FITS:
             xs, ys = coordinates(paths[i])
-            for x, y in sorted(zip(xs, ys)):
-                out.writerow([label, f"{temperature(x):.4f}", f"{gravity(y, zero):.4f}"])
+            polyline = [(temperature(x), gravity(y, zero)) for x, y in sorted(zip(xs, ys))]
+            for t, g in clip(label, polyline, frames[zero]):
+                out.writerow([label, f"{t:.4f}", f"{g:.4f}"])
 
 
 if __name__ == "__main__":

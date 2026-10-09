@@ -176,15 +176,20 @@ fn main() -> Result<(), Box<dyn Error>> {
         .iter()
         .map(|p| nearest_marker(&responses[1], TEMPERATURE_SCALE * p.temperature).0 / p.temperature)
         .collect();
-    let within = |tolerance: f64| {
-        ratios
-            .iter()
-            .filter(|r| (*r / TEMPERATURE_SCALE - 1.0).abs() < tolerance)
-            .count()
-    };
+    let close = |ratio: f64, tolerance: f64| (ratio / TEMPERATURE_SCALE - 1.0).abs() < tolerance;
+    let within = |tolerance: f64| ratios.iter().filter(|&&r| close(r, tolerance)).count();
+    let lowest = all
+        .iter()
+        .enumerate()
+        .min_by(|a, b| a.1.temperature.total_cmp(&b.1.temperature))
+        .map(|(i, _)| i)
+        .ok_or("Fig. 2 has points")?;
     report.check(
         "Fig. 4 computes each of Fig. 2's temperatures above the lowest at 1.5 times its value",
-        within(0.015) + 1 == ratios.len(),
+        ratios
+            .iter()
+            .enumerate()
+            .all(|(i, &r)| i == lowest || close(r, 0.015)),
         format!(
             "{} of {} within 0.6 % of 1.5, {} within 1.5 %, the lowest at {:.3}; at the reference, \
              1.76 µK, Fig. 4 reads {:.1} nm/s² for the defocus at 2.64 µK, against {defocus:.1} at \
@@ -192,7 +197,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             within(0.006),
             ratios.len(),
             within(0.015),
-            ratios[0],
+            ratios[lowest],
             response(0, TEMPERATURE_SCALE * reference.temperature)
         ),
     );
@@ -375,6 +380,9 @@ fn planner(report: &mut Report, shift: f64) -> Result<(), Box<dyn Error>> {
         ),
     ];
     let weakest = separation_bits(read(shift), read(shift / 2.0), 1);
+    if !weakest.is_finite() || weakest <= 0.0 {
+        return Err("a shift and its half do not separate at any draw count".into());
+    }
     let draws = (FLOOR_BITS / weakest).ceil() as u64;
     let probes = settings
         .iter()

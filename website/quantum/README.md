@@ -126,7 +126,7 @@ Numbers on the site come from a command anyone can re-run:
 | MSRV 1.98.0 | `rust-version` in the root `Cargo.toml` |
 | The gravimeter run: plan 4,956 s, campaigns of 166 s to 4,953 s, tilt refused at 76.43 against 82.54 µGal, 72.41 µGal with no tide, Coriolis named after 1,447 s with clipping off the list | `cargo run --release -p quantum_examples --example qcl_gravimeter_systematics` |
 | The gradiometer run: plan 721.8 s, 340 and 60,265 draws, campaigns of 60, 120 and 721.9 s, biases of −355.7 E (quoted as −356) and +5.5 E | `cargo run --release -p quantum_examples --example qcl_gradiometer_crosstalk` |
-| The verification: 53 checks over 8 verifications, and each finding quoted on `/sensing/` | `cargo run --release -p deep_causality_quantum --features qcm --example <verification>`, verifications listed in `deep_causality_quantum/verification/sensing/README.md` |
+| The verification: 53 checks over 8 verifications, and each finding quoted on `/sensing/` | `cargo run --release -p deep_causality_quantum --features qcm --example verification_v1_wavefront`; the other seven run the same way under the names `deep_causality_quantum/verification/sensing/README.md` lists |
 | The field's state: 45 nmi, about 6 h, 2.2 against 14 nmi; tilt below 3.3°; the wavefront's 4.0 of 5.2 µGal | Everitt et al. arXiv:2608.25563 (which prints the endpoint as both 4.0 and 4.1 km, so the site quotes nautical miles); Lellouch and Holynski arXiv:2504.11119; Louchet-Chauvet et al. New J. Phys. 13 065025, Table 1 |
 | 19 cited works: 10 from `src/`, 9 by the sensing examples and verifications; 17 of them have a PDF under `papers/` | `deep_causality_quantum/papers/`, and grep over `src/`, `examples/quantum_examples/` and `verification/` |
 

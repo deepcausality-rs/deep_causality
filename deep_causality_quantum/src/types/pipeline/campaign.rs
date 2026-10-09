@@ -14,6 +14,7 @@ use crate::types::pipeline::configured_experiment::ConfiguredExperiment;
 use crate::types::pipeline::control::{Control, ControlReport, ControlWorld};
 use crate::types::pipeline::evidence_source::{EvidenceSource, ObservedContext};
 use crate::types::pipeline::response::ResponseModel;
+use crate::types::qpu::shot_estimate::separation_bits;
 use alloc::format;
 use alloc::vec::Vec;
 use core::cmp::Ordering;
@@ -107,7 +108,8 @@ struct Planned<R> {
 /// as `adjudicate` sums it: a pair already at the floor needs no experiment, and a combining plan
 /// adds the credit to the bits it sums. The campaign stops when no plan covers a pair that
 /// involves a candidate that holds and is not yet separated. The planned experiment is the
-/// cheapest entry of the plan that resolves such a pair, or else the plan's cheapest entry.
+/// cheapest entry of the plan that resolves such a pair alone, or else, in a combining plan that
+/// covers it only across entries, the cheapest entry that adds bits to such a pair.
 ///
 /// Every experiment runs at most once, so `k` experiments stop a campaign within `k + 1` steps.
 /// Without a context change, the experiments the last plan chose and the campaign has not run,
@@ -367,35 +369,40 @@ where
                 rules.objective,
                 read.then_some(prior.as_slice()),
             )?;
-            let separated: Vec<bool> = prior
+            // The pairs a step can help with: each involves a world that holds, is not yet
+            // separated, and is covered by the plan.
+            let targets: Vec<(usize, usize)> = pairs
                 .iter()
-                .map(|&bits| read && bits + slack >= floor)
+                .zip(&prior)
+                .filter(|&(&(a, b), &bits)| {
+                    (holding[open[a]] || holding[open[b]])
+                        && !(read && bits + slack >= floor)
+                        && !plan.uncovered().contains(&(a, b))
+                })
+                .map(|(&pair, _)| pair)
                 .collect();
-            // A pair a step can help with involves a world that holds and is not yet separated.
-            let needed = |pair: &(usize, usize)| {
-                let (a, b) = *pair;
-                (holding[open[a]] || holding[open[b]])
-                    && pairs
-                        .iter()
-                        .position(|p| p == pair)
-                        .is_some_and(|pi| !separated[pi])
-            };
-            let decisive = pairs
-                .iter()
-                .any(|pair| needed(pair) && !plan.uncovered().contains(pair));
             let by_cost = |x: &&PlanEntry<R>, y: &&PlanEntry<R>| {
                 x.cost.partial_cmp(&y.cost).unwrap_or(Ordering::Equal)
             };
-            decisive
-                .then(|| {
+            // A combining plan may cover a target only across entries; an entry then helps when
+            // it adds bits to one.
+            let adds_to_a_target = |entry: &&PlanEntry<R>| {
+                let p = probes[entry.experiment].predictions();
+                targets
+                    .iter()
+                    .any(|&(a, b)| separation_bits(p[a], p[b], entry.shots) > R::zero())
+            };
+            plan.entries()
+                .iter()
+                .filter(|e| e.resolves.iter().any(|pair| targets.contains(pair)))
+                .min_by(by_cost)
+                .or_else(|| {
                     plan.entries()
                         .iter()
-                        .filter(|e| e.resolves.iter().any(needed))
+                        .filter(adds_to_a_target)
                         .min_by(by_cost)
-                        .or_else(|| plan.entries().iter().min_by(by_cost))
-                        .cloned()
                 })
-                .flatten()
+                .cloned()
                 .map(|entry| (entry, probes))
         };
         match entry {

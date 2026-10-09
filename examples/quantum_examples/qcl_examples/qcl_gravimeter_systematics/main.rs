@@ -145,6 +145,7 @@ fn run(
     let mut run = WorldRun {
         scenario: *scenario,
         refused,
+        remaining: live.len(),
         plan: Vec::new(),
         plan_cost: FloatType::zero(),
         plan_complete: false,
@@ -179,17 +180,20 @@ fn run(
     run.plan = plan.entries().iter().map(|e| e.name.clone()).collect();
     run.plan_cost = plan.total_cost();
     run.plan_complete = plan.is_complete();
-    run.eliminated = live
-        .iter()
-        .enumerate()
-        .filter(|&(i, _)| {
-            plan.entries().iter().all(|e| {
-                let p = probes[e.experiment].predictions();
-                shared(p) == Some(p[i])
+    // Only a plan that separates every pair identifies a candidate it never singles out.
+    if plan.is_complete() && !plan.entries().is_empty() {
+        run.eliminated = live
+            .iter()
+            .enumerate()
+            .filter(|&(i, _)| {
+                plan.entries().iter().all(|e| {
+                    let p = probes[e.experiment].predictions();
+                    shared(p) == Some(p[i])
+                })
             })
-        })
-        .map(|(_, h)| h.name().to_string())
-        .collect();
+            .map(|(_, h)| h.name().to_string())
+            .collect();
+    }
 
     // The campaign, its contexts moved to the time each step ends.
     let campaign = CausalFlow::value(Campaign::new(baseline().fork()))

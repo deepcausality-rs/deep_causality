@@ -188,13 +188,16 @@ pub struct WorldRun {
     pub scenario: Scenario,
     /// The candidates the baseline refused.
     pub refused: Vec<Refusal>,
+    /// How many candidates the baseline left.
+    pub remaining: usize,
     /// The static plan's experiments, in order.
     pub plan: Vec<String>,
     /// What the static plan costs, in s.
     pub plan_cost: FloatType,
     /// Whether the plan separates every pair at the floor.
     pub plan_complete: bool,
-    /// The candidates no planned experiment moves, which the plan identifies by elimination.
+    /// The candidates no planned experiment moves, which a complete plan identifies by
+    /// elimination; none when the plan is incomplete.
     pub eliminated: Vec<String>,
     /// The experiments the campaign ran, in order.
     pub campaign: Vec<String>,

@@ -350,7 +350,6 @@ question 2.
   [`quantum-essence.md`](../quantum-site/quantum-essence.md) was updated in `4101ce439` and matches.
 - **Crate README.** Its examples table lists the seven non-QCL examples and none of the seven QCL
   examples.
-- **`LEAN_QUANTUM.md`** names Lean 4.15.0; `lean/lean-toolchain` pins v4.32.0.
 
 ---
 

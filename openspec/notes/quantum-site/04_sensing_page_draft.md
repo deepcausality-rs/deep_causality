@@ -234,9 +234,9 @@ Sources: M, M-run.
 > Eyebrow: **Limits**
 > Heading: **Where the examples stop.**
 >
-> - The examples simulate their observations; the verifications read published values.
+> - The examples simulate their observations; the verifications read published values and data regenerated from published models.
 > - A lab supplies the setup times, the tide, the leak and the dark background.
-> - A cause missing from the list stays unnamed until a change it contradicts runs.
+> - The library never names a missing cause; a change that rules out every listed cause shows the list is incomplete.
 > - Measurement time follows white noise, within the instrument's white-noise range.
 >
 > Every limit, with the file that shows it, is on the boundaries page.
