@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_physics-v0.10.2...deep_causality_physics-v0.10.3) - 2026-10-09
+
+### Fixed
+
+- *(deep_causality_cfd)* anchor RAM-C II at its cited station and freestream
+- *(clippy)* clear clippy 1.99 lints in tests and one cfd example
+
+### Other
+
+- spell retropropulsion consistently
+
 ## [0.10.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_physics-v0.10.1...deep_causality_physics-v0.10.2) - 2026-09-29
 
 ### Added

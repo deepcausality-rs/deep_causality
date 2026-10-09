@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_context-v0.1.2...deep_causality_context-v0.2.0) - 2026-10-09
+
+### Added
+
+- *(deep_causality_context)* add Context::get_data_by_id
+- *(deep_causality_context)* [**breaking**] freeze, neighbour listing, unique contextoid ids
+
+### Fixed
+
+- *(deep_causality_context)* refuse a record value past the scalar's range
+- *(deep_causality_context)* [**breaking**] typed metric errors, one grid rule, and review fixes
+
+### Other
+
+- *(deep_causality_context)* [**breaking**] give every geometry its textbook definition
+
 ## [0.1.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_context-v0.1.1...deep_causality_context-v0.1.2) - 2026-09-29
 
 ### Added

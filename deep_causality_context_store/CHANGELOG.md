@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_context_store-v0.1.2...deep_causality_context_store-v0.2.0) - 2026-10-09
+
+### Added
+
+- *(deep_causality_context_store)* [**breaking**] add ProjectionError::Frozen
+
+### Fixed
+
+- *(deep_causality_context_store)* carry the node's own message in ProjectionError::Rejected
+
+### Other
+
+- *(deep_causality_context_store)* [**breaking**] name the spacetime and time records after their geometries
+
 ## [0.1.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_context_store-v0.1.1...deep_causality_context_store-v0.1.2) - 2026-09-29
 
 ### Added
