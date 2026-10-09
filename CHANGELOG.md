@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.18.2...deep_causality-v0.19.0) - 2026-10-09
+
+### Added
+
+- *(deep_causality)* [**breaking**] return the evaluated effect from CSM evaluation
+
+### Other
+
+- Fixed some docstrings.
+- *(deep_causality)* describe the Base aliases' context as classical
+- *(deep_causality)* [**breaking**] follow the context crate's geometry renames
+- *(deep_causality)* [**breaking**] report typed causality errors instead of Custom strings
+- Updated project readme file and related notes.
+
 ## [0.18.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.18.1...deep_causality-v0.18.2) - 2026-09-29
 
 ### Added

@@ -525,7 +525,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality"
-version = "0.18.2"
+version = "0.19.0"
 dependencies = [
  "criterion",
  "deep_causality_algebra",
@@ -540,7 +540,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_algebra"
-version = "0.4.7"
+version = "0.4.8"
 dependencies = [
  "deep_causality_num",
 ]
@@ -577,7 +577,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_cfd"
-version = "0.3.3"
+version = "0.3.4"
 dependencies = [
  "criterion",
  "deep_causality_algebra",
@@ -600,7 +600,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_context"
-version = "0.1.2"
+version = "0.2.0"
 dependencies = [
  "deep_causality_algebra",
  "deep_causality_context_store",
@@ -614,11 +614,11 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_context_store"
-version = "0.1.2"
+version = "0.2.0"
 
 [[package]]
 name = "deep_causality_core"
-version = "0.13.2"
+version = "0.14.0"
 dependencies = [
  "deep_causality_haft",
 ]
@@ -651,7 +651,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_ethos"
-version = "0.4.1"
+version = "0.5.0"
 dependencies = [
  "deep_causality",
  "deep_causality_context",
@@ -672,7 +672,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_file"
-version = "0.2.2"
+version = "0.2.3"
 dependencies = [
  "chrono",
  "deep_causality_algebra",
@@ -764,7 +764,7 @@ version = "0.2.0"
 
 [[package]]
 name = "deep_causality_physics"
-version = "0.10.2"
+version = "0.10.3"
 dependencies = [
  "deep_causality_algebra",
  "deep_causality_calculus",
@@ -785,7 +785,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_quantum"
-version = "0.4.2"
+version = "0.5.0"
 dependencies = [
  "deep_causality",
  "deep_causality_algebra",
@@ -831,7 +831,7 @@ version = "0.1.1"
 
 [[package]]
 name = "deep_causality_tensor"
-version = "0.6.4"
+version = "0.6.5"
 dependencies = [
  "criterion",
  "deep_causality_algebra",
@@ -847,7 +847,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_topology"
-version = "0.12.2"
+version = "0.12.3"
 dependencies = [
  "deep_causality_algebra",
  "deep_causality_fft",
@@ -866,7 +866,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_uncertain"
-version = "0.5.9"
+version = "0.5.10"
 dependencies = [
  "criterion",
  "deep_causality_algebra",

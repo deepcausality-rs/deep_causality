@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_quantum-v0.4.2...deep_causality_quantum-v0.5.0) - 2026-10-09
+
+### Added
+
+- *(lean/quantum)* prove five deferred quantum targets; one remains open
+- *(website/quantum)* add the quantum sensing section
+- *(quantum)* add the sensing verification harnesses V1-V7 and V10
+- *(quantum_examples)* source the gravimeter example's placeholders
+- *(deep_causality_quantum)* baseline_with observes the baseline from an evidence source
+- *(deep_causality_quantum)* sequential campaign; port qcl_crosstalk onto the pipeline
+- *(deep_causality_quantum)* refuse structural candidates that are not normalised processes
+- *(deep_causality_quantum)* [**breaking**] campaign adjudication and instrument time
+- *(deep_causality_quantum)* [**breaking**] configured experiments and evidence sources
+- *(deep_causality_quantum)* [**breaking**] wire the baseline and the evidence budget into control
+
+### Fixed
+
+- *(quantum)* address PR #838 round-2 review findings
+- *(quantum)* address PR #838 review findings
+- *(deep_causality_quantum)* form gate constants at the scalar's precision
+- *(deep_causality_quantum)* normalisation for dilation legs; port the crosstalk sibling and site
+- address the PR 837 review round
+
+### Other
+
+- *(quantum)* rewrite the reference pages around one claim per section
+- *(deep_causality_quantum)* add open-access papers for QCL quantum sensing
+- *(website/quantum)* rebuild the quantum site around one demonstration and a plain vocabulary
+
+### Removed
+
+- removed a bunch of python scripts
+
 ## [0.4.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_quantum-v0.4.1...deep_causality_quantum-v0.4.2) - 2026-09-29
 
 ### Added

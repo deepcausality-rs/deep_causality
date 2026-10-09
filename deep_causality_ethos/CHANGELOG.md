@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_ethos-v0.4.1...deep_causality_ethos-v0.5.0) - 2026-10-09
+
+### Fixed
+
+- *(deep_causality_ethos)* [**breaking**] resolve conflicts in topological order and rank lexicographically
+
+### Other
+
+- *(deep_causality_ethos)* describe BaseTeloidStore's context as classical
+- *(deep_causality_ethos)* follow the context crate's geometry renames
+
 ## [0.4.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_ethos-v0.4.0...deep_causality_ethos-v0.4.1) - 2026-09-29
 
 ### Added

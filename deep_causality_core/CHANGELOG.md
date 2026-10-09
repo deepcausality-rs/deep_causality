@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_core-v0.13.2...deep_causality_core-v0.14.0) - 2026-10-09
+
+### Added
+
+- *(deep_causality_core)* add CausalFlow::alternate_context
+
+### Other
+
+- *(deep_causality_core)* [**breaking**] give CausalityError one constructor per variant
+
 ## [0.13.2](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_core-v0.13.1...deep_causality_core-v0.13.2) - 2026-09-29
 
 ### Other

@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.8](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_algebra-v0.4.7...deep_causality_algebra-v0.4.8) - 2026-10-09
+
+### Fixed
+
+- *(clippy)* clear clippy 1.99 lints in tests and one cfd example
+
 ## [0.4.7](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_algebra-v0.4.6...deep_causality_algebra-v0.4.7) - 2026-09-29
 
 ### Other
