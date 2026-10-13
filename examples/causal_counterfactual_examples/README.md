@@ -1,7 +1,8 @@
 # Causal Counterfactual Examples
 
-Five worked examples of counterfactual intervention with the causal monad,
-showing what `alternate_value` adds to `bind`.
+Six worked examples of counterfactual intervention with the causal monad.
+Five show what `alternate_value` adds to `bind`; `counterfactual_fast_charge`
+replaces each of the three channels in turn: value, context and state.
 
 Each follows Judea Pearl's pattern: take a factual world, substitute a
 different value, and read off the difference. The intervention is a
@@ -21,7 +22,7 @@ makes them properties of the type.
 
 | Property | Demonstrated by |
 |---|---|
-| Same chain, different worlds. Replay the same `bind` pipeline under several interventions without branching code. | All five examples |
+| Same chain, different worlds. Replay the same `bind` pipeline under several interventions without branching code. | All six examples |
 | Audit trail in `EffectLog`. Every `alternate_value` appends `!!ValueAlternation!!: <old> replaced with <new>`, so the intervention history can be inspected. | `counterfactual_envelope_fault`, `counterfactual_cascade_failure`, `counterfactual_resection_intervention` |
 | Error-state preservation. If the chain is already in error, `alternate_value` is a no-op, so intervention cannot mask an upstream bug. | (Property of the trait; no example is dedicated to it.) |
 | State and Context preservation. On `PropagatingProcess`, only the value swaps. Accumulated `State` and read-only `Context` are untouched. | `counterfactual_envelope_fault`, `counterfactual_cascade_failure` |
@@ -41,6 +42,7 @@ counterfactual worlds; the difference is the quantity of interest.
 | `counterfactual_treatment_options` | `PropagatingProcess<_, (), PatientContext>` | One patient, two intervention sites. Beta-blocker (intervene on blood pressure) versus surgical clip (intervene on wall shear stress). The patient's blood pressure, wall shear stress surrogate and fatigue thresholds are the chain's context. | `cargo run -p causal_counterfactual_examples --example counterfactual_treatment_options` |
 | `counterfactual_cascade_failure` | `PropagatingProcess<_, NetworkState, NetworkConfig>` | A fluid network's N-k contingency analysis written as a chain of interventions. One trigger leads to total collapse; another is absorbed gracefully. | `cargo run -p causal_counterfactual_examples --example counterfactual_cascade_failure` |
 | `counterfactual_resection_intervention` | `PropagatingEffect` | Epilepsy surgery screening as `do(connectome = resected_at_R)` for each candidate region. The hub-node resection comes out as the most curative. | `cargo run -p causal_counterfactual_examples --example counterfactual_resection_intervention` |
+| `counterfactual_fast_charge` | `CausalFlow<_, FloatType, CoolingContext>` | A 30-minute fast charge branched at minute ten three ways: `alternate_value` sets the cell temperature, `alternate_context` swaps the cooling environment, `alternate_state` sets the charge. The same one-minute step runs in every branch, and each substitution logs its own marker. | `cargo run -p causal_counterfactual_examples --example counterfactual_fast_charge` |
 
 ## Suggested reading order
 

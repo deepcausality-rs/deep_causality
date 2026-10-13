@@ -1,0 +1,99 @@
+---
+title: A satellite runs 600 s forward and 600 s back, at four precisions
+domain: Orbital mechanics
+summary: Two causal steps propagate a satellite forward in time and then backward with the exact two-body propagator. The round trip lands within about one spacing of the number type from f32 to Float106, and within two at BFloat16.
+order: 11
+category: physics
+crates:
+  - deep_causality_core
+  - deep_causality_physics
+  - deep_causality_num
+further:
+  - label: Dynamic causality
+    href: /overview/dynamic-causality/
+  - label: Unified math README
+    href: https://github.com/deepcausality-rs/deep_causality/blob/main/deep_causality_unified_math/README.md
+---
+
+The program moves a satellite 600 s forward along its orbit and then 600 s back, using the exact
+two-body propagator from `deep_causality_physics`. The two steps follow each other in causal order;
+in physical time the second runs backward.
+
+```rust
+use deep_causality_algebra::Real;
+use deep_causality_core::{CausalityError, PropagatingEffect};
+use deep_causality_num::{lift, lower};
+use deep_causality_physics::{EARTH_GM, TwoBodyPropagator};
+
+/// The working precision. Change this one line to `Float106`
+/// and the whole program runs at about 31 decimal digits.
+type FloatType = f64;
+// (position, velocity)
+type Orbit = ([FloatType; 2], [FloatType; 2]);
+
+fn main() {
+  let epoch: Orbit = ([lift(7.0e6), lift(0.0)], [lift(0.0), lift(7.8e3)]);
+  let result = PropagatingEffect::pure(epoch)
+     // forward in time
+     .bind_or_error(|s, _, _| kepler_step(s, lift(600.0)), "no state")
+     // next in causal order, backward in time
+     .bind_or_error(|s, _, _| kepler_step(s, lift(-600.0)), "no state");
+
+    let (p, _) = result.into_value().expect("both steps succeed");
+    let dx = p[0] - lift::<FloatType>(7.0e6);
+    let miss = Real::sqrt(dx * dx + p[1] * p[1]);
+    println!("returned to epoch within {:.2e} m", lower(miss));
+}
+
+/// One Kepler step. The propagator is exact and accepts a negative `dt`.
+fn kepler_step(state: Orbit, dt: FloatType) -> PropagatingEffect<Orbit> {
+    let (p, v) = state;
+    match TwoBodyPropagator::from_state(
+        p,
+        v,
+        lift(EARTH_GM))
+           .and_then(|orbit| orbit.propagate(dt))
+    {
+        Ok(next) => PropagatingEffect::pure(next),
+        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
+    }
+}
+```
+
+```text
+returned to epoch within 5.67e-10 m
+```
+
+## The round trip
+
+The satellite starts 7,000 km from Earth's center at 7.8 km/s, which puts it on an orbit between
+629 km and 1,658 km altitude. The first step carries it 4,585 km along that orbit. The second step
+takes the position and velocity the first step produced, derives a fresh orbit from them, and runs
+the clock back 600 s. The satellite lands 0.57 nanometers from where it started. At 7,000 km,
+neighboring `f64` values lie 0.93 nanometers apart, so the round trip is exact to the resolution of
+the number type.
+
+The round trip is exact because Kepler's problem has a closed-form solution. Measured by the angle
+around the ellipse, the eccentric anomaly, the orbit follows simple harmonic motion, and one formula
+advances it by any time interval. The kernel solves Kepler's equation, which converts that angle
+into clock time, by Newton's method to the precision of the number type. No step size enters, so no
+truncation error accumulates, and a negative `dt` runs the same formula backward.
+
+## Precision as a parameter
+
+Every crate in the unified mathematics stack takes its scalar as a type parameter, so changing the
+`FloatType` alias moves the whole program, propagator included, to another number type. With only
+that line changed, the round trip lands within about one spacing of each type, and within two at
+`BFloat16`:
+
+| `FloatType` | Decimal digits | Miss after the round trip | Spacing of values at 7,000 km |
+|---|---|---|---|
+| `BFloat16` | 2 | 7.0 × 10⁴ m | 3.3 × 10⁴ m |
+| `f32` | 7 | 0.25 m | 0.5 m |
+| `f64` | 16 | 5.7 × 10⁻¹⁰ m | 9.3 × 10⁻¹⁰ m |
+| `Float106` | 31 | 2.4 × 10⁻²⁵ m | 2.1 × 10⁻²⁵ m |
+
+At `Float106` the satellite lands 2.4 × 10⁻²⁵ m, about a quarter of a yoctometer, from where it
+started: far below anything an instrument can measure. For reference results, such as the values
+another solver must reproduce, `Float106` carries about 31 significant digits, twice as many as
+`f64`, for a one-line change.

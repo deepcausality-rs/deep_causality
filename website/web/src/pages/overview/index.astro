@@ -18,8 +18,8 @@ const unifiedMathReadme = `${GITHUB_URL}/blob/main/deep_causality_unified_math/R
       <p class="lede">
         DeepCausality, an open-source Rust library for dynamic causal reasoning, runs a model as a
         chain of causal steps whose state, environment and rules may change while it runs. At any
-        step you can ask what would have happened under other conditions, and an audit log records
-        how each answer came about.
+        step you can replace the result, the environment or the history and ask what would have
+        happened, and an audit log records how each answer came about.
       </p>
     </header>
 
@@ -34,13 +34,31 @@ const unifiedMathReadme = `${GITHUB_URL}/blob/main/deep_causality_unified_math/R
         DeepCausality separates the two. The outer layer fixes the causal order: steps compose by
         monadic bind, so each step runs after the one before it and receives its result. The inner
         layer, the step itself, holds an ordinary Rust function that can compute anything, including
-        a time-reversible law of physics. A satellite propagated forward and then backward in time
-        forms a two-step chain that runs forward in causal order.
+        a time-reversible law of physics or a law run backward to reconstruct the past. A drug-level
+        check does both in one chain: from two blood samples it runs back to the peak the ward never
+        measured, then forward to the next dose, and every step runs forward in causal order.
       </p>
       <p>
         Each step receives three channels from the step before it: the <em>effect</em>, its result;
         the <em>state</em>, memory carried forward; and the <em>context</em>, the environment. An
         append-only log records what each step did. The <a href="/overview/dynamic-causality/">dynamic causality</a> page shows both layers in code.
+      </p>
+
+      <h2>A counterfactual on every channel</h2>
+      <p>
+        Each channel takes its own counterfactual. In the middle of a run, one call replaces one
+        channel; the steps after it run the same law on the replacement, and the log records the
+        change. A fast-charging battery cell, branched at minute ten, shows all three:
+      </p>
+      <ul>
+        <li><strong>Effect.</strong> What if the cell had been at 52 °C? <code>alternate_value</code> replaces the temperature, and the charger cuts its current until the cell cools.</li>
+        <li><strong>Context.</strong> What if the coolant pump had dropped to a quarter of its flow? <code>alternate_context</code> replaces the world the steps read, and the cell ends 6.7 °C hotter.</li>
+        <li><strong>State.</strong> What if the cell had held 75 % charge? <code>alternate_state</code> replaces the history, and the charger starts tapering its current at minute 13.</li>
+      </ul>
+      <p>
+        Pearl's structural causal models frame a counterfactual as setting a variable, after first
+        inferring the background conditions of the factual world. Here the world and the history are
+        channels the run already carries, so a counterfactual replaces them directly. The <a href="/overview/dynamic-causality/">dynamic causality</a> page runs all three.
       </p>
 
       <h2>The project at a glance</h2>
@@ -64,7 +82,7 @@ const unifiedMathReadme = `${GITHUB_URL}/blob/main/deep_causality_unified_math/R
         Each part ships as its own crate, so a project takes only what it needs: a chain of physics
         steps runs on the causal monad alone, a monitoring system adds a context, the state machine
         and the Effect Ethos, and an incident investigation may need only causal discovery. The five
-        topics below cover each part in the order a model is built.
+        topics below cover each part in the order you build a model.
       </p>
 
       <TopicList label="Five topics" />

@@ -72,3 +72,15 @@ rust_binary(
         normal_dev = True,
     ),
 )
+
+rust_binary(
+    name = "gentamicin_dosing",
+    srcs = glob(["gentamicin_dosing/**/*.rs"]),
+    crate_root = "gentamicin_dosing/main.rs",
+    visibility = ["//visibility:public"],
+    deps = all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
+)

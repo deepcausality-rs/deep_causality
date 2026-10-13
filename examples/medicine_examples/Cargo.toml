@@ -47,5 +47,9 @@ path = "tissue_classification/main.rs"
 name = "tumor_treatment"
 path = "tumor_treatment/main.rs"
 
+[[example]]
+name = "gentamicin_dosing"
+path = "gentamicin_dosing/main.rs"
+
 [lints]
 workspace = true

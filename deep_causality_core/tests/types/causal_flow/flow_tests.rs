@@ -4,8 +4,8 @@
  */
 
 use deep_causality_core::{
-    CausalEffect, CausalEffectPropagationProcess, CausalFlow, CausalityError, CausalityErrorEnum,
-    EffectLog, PropagatingEffect, PropagatingProcess,
+    Alternatable, CausalEffect, CausalEffectPropagationProcess, CausalFlow, CausalityError,
+    CausalityErrorEnum, EffectLog, PropagatingEffect, PropagatingProcess,
 };
 use std::cell::Cell;
 
@@ -209,6 +209,74 @@ fn alternate_context_reruns_the_same_law_against_another_world() {
         .finish();
     assert_eq!(factual, Ok(20));
     assert_eq!(counterfactual, Ok(200));
+}
+
+#[test]
+fn alternate_state_substitutes_state_and_logs_alternation() {
+    let p = CausalFlow::process(5i64)
+        .context(10i64)
+        .alternate_state(7)
+        .into_process();
+    assert_eq!(*p.state(), 7);
+    assert_eq!(*p.context(), Some(10), "the context passes through");
+    assert_eq!(p.value(), Some(&()), "the value passes through");
+    let log = format!("{:?}", p.logs());
+    assert!(log.contains("!!StateAlternation!!"), "{log}");
+}
+
+#[test]
+fn alternate_state_reruns_the_same_law_from_another_history() {
+    // One law, two histories: the step reads the state, and the alternation swaps the state it reads.
+    let add_state = |v: i64, s: &i64, _: Option<&()>| -> Result<i64, CausalityError> { Ok(v + s) };
+    let seed = || CausalFlow::process(3i64).try_step_with(|_, _, _| Ok(2i64));
+    let factual = seed().try_step_with(add_state).finish();
+    let counterfactual = seed().alternate_state(30).try_step_with(add_state).finish();
+    assert_eq!(factual, Ok(5));
+    assert_eq!(counterfactual, Ok(32));
+}
+
+#[test]
+fn alternate_state_skips_errored_flow() {
+    let p = CausalFlow::<i64, i64>::from_parts(Err(err("boom")), 5, None, EffectLog::new())
+        .alternate_state(7)
+        .into_process();
+    assert!(p.is_err());
+    assert_eq!(*p.state(), 5, "an errored flow keeps its state");
+    assert!(!format!("{:?}", p.logs()).contains("StateAlternation"));
+}
+
+#[test]
+fn flow_alternates_all_three_channels_through_the_alternatable_bound() {
+    // Generic code bound on `Alternatable` reaches every channel of a flow; each substitution
+    // leaves the other two channels as it found them and appends its own marker.
+    fn alternate_all<T: Alternatable<i64, i64, i64>>(carrier: T) -> T {
+        carrier
+            .alternate_value(1)
+            .alternate_context(2)
+            .alternate_state(3)
+    }
+    let p = alternate_all(CausalFlow::from_parts(
+        Ok(CausalEffect::value(10i64)),
+        20i64,
+        Some(30i64),
+        EffectLog::new(),
+    ))
+    .into_process();
+    assert_eq!(p.value(), Some(&1));
+    assert_eq!(*p.context(), Some(2));
+    assert_eq!(*p.state(), 3);
+    let log = format!("{:?}", p.logs());
+    let value_at = log.find("!!ValueAlternation!!");
+    let context_at = log.find("!!ContextAlternation!!");
+    let state_at = log.find("!!StateAlternation!!");
+    assert!(
+        value_at.is_some() && context_at.is_some() && state_at.is_some(),
+        "{log}"
+    );
+    assert!(
+        value_at < context_at && context_at < state_at,
+        "markers in call order: {log}"
+    );
 }
 
 #[test]

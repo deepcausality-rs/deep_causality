@@ -86,3 +86,18 @@ rust_binary(
         normal_dev = True,
     ),
 )
+
+rust_binary(
+    name = "counterfactual_fast_charge",
+    srcs = glob(["counterfactual_fast_charge/**/*.rs"]),
+    crate_root = "counterfactual_fast_charge/main.rs",
+    visibility = ["//visibility:public"],
+    deps = [
+        # Cargo puts the package's own lib on an example's extern prelude.
+        ":causal_counterfactual_examples",
+    ] + all_crate_deps(
+        normal = True,
+        # Cargo `[[example]]` targets link dev-dependencies.
+        normal_dev = True,
+    ),
+)

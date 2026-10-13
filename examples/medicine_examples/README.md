@@ -1,6 +1,6 @@
 # Medicine Examples
 
-Six worked problems from biomedicine, each solved end to end with the unified-math stack.
+Seven worked problems from biomedicine, each solved end to end with the unified-math stack.
 
 ## Quick Start
 
@@ -14,6 +14,7 @@ cargo run -p medicine_examples --example <example_name>
 |---|---|---|
 | [aneurysm_risk](aneurysm_risk/) | cerebrovascular | Reads the wall shear stress profile along a vessel centreline, finds the starved dome and the peak gradient at its neck, and accumulates wall degeneration over cardiac cycles |
 | [diving_decompression](diving_decompression/) | hyperbaric | Plans a dive with the Bühlmann ZH-L16C algorithm over sixteen tissue compartments, schedules the decompression stops, and reads the gas-loading rate from one evaluation over `Dual` |
+| [gentamicin_dosing](gentamicin_dosing/) | pharmacology | Individualises a gentamicin regimen from two serum levels: one first-order law runs back to the peak and forward to the trough |
 | [epilepsy](epilepsy/) | neurology | Builds a connectome that seizes, then resects each region in turn to find the one curative target |
 | [protein_folding](protein_folding/) | biophysics | Folds a chain through the generalized master equation, where memory kernels carry the path the chain took into its next step |
 | [tissue_classification](tissue_classification/) | medical imaging | Separates a solid mass from a necrotic core by the Euler characteristic of a Vietoris-Rips complex |
@@ -25,7 +26,7 @@ Every example here follows four rules:
 
 1. **Precision is a parameter.** A `FloatType` alias sits directly above `main`, and every quantity
    in the program carries it. Change that one line to rerun the whole example at another scalar.
-   All six run at `BFloat16`, `f32`, `f64` and `Float106`, and only the precision changes.
+   All seven run at `BFloat16`, `f32`, `f64` and `Float106`, and only the precision changes.
 2. **Values cross the precision boundary through `deep_causality_num::lift`.** Configuration
    literals are written as `f64`, the widest form a source file holds, and lifted once.
 3. **Printing lives in `utils_print.rs`.** It holds the only `lower` calls, so `f64` appears at the
