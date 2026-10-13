@@ -100,9 +100,9 @@ See [causal_uncertain_examples/README.md](causal_uncertain_examples/README.md) f
 
 **Location:** `examples/causal_counterfactual_examples`
 
-Five worked examples in the Judea Pearl tradition: a one-shot value
-substitution evaluates the chain on the factual world and one or more
-counterfactual worlds; the difference between worlds is the estimand.
+Six worked examples in the Judea Pearl tradition: a one-shot substitution
+evaluates the chain on the factual world and one or more counterfactual
+worlds; the difference between worlds is the estimand.
 
 | Example | Monad | Topic | Command |
 |---|---|---|---|
@@ -111,6 +111,7 @@ counterfactual worlds; the difference between worlds is the estimand.
 | counterfactual_treatment_options  | PropagatingEffect             | Two intervention sites on one chain: beta-blocker vs surgical clip                  | `cargo run -p causal_counterfactual_examples --example counterfactual_treatment_options` |
 | counterfactual_cascade_failure    | PropagatingProcess (stateful) | Network N-k contingency analysis as a chain of composing interventions              | `cargo run -p causal_counterfactual_examples --example counterfactual_cascade_failure` |
 | counterfactual_resection_intervention | PropagatingEffect         | Epilepsy surgery screening as `do(connectome = resected_at_R)` for each region      | `cargo run -p causal_counterfactual_examples --example counterfactual_resection_intervention` |
+| counterfactual_fast_charge        | CausalFlow (stateful)         | One fast charge branched three ways: replace the temperature, the cooling, the charge | `cargo run -p causal_counterfactual_examples --example counterfactual_fast_charge` |
 
 See [causal_counterfactual_examples/README.md](causal_counterfactual_examples/README.md) for detailed documentation.
 
@@ -316,6 +317,7 @@ Biomedical and life-science applications built on causal monads.
 | MRI Tissue Classification | Medical Imaging | `cargo run -p medicine_examples --example tissue_classification` |
 | Aneurysm Risk (Hemodynamics) | Cardiovascular | `cargo run -p medicine_examples --example aneurysm_risk` |
 | Diving Decompression | Hyperbaric Medicine | `cargo run -p medicine_examples --example diving_decompression` |
+| Gentamicin Dosing | Pharmacology | `cargo run -p medicine_examples --example gentamicin_dosing` |
 | Epilepsy Virtual Resection | Neurology | `cargo run -p medicine_examples --example epilepsy` |
 | Tumor Treatment (TTFields) | Oncology | `cargo run -p medicine_examples --example tumor_treatment` |
 

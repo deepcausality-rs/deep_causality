@@ -37,5 +37,9 @@ path = "counterfactual_cascade_failure/main.rs"
 name = "counterfactual_resection_intervention"
 path = "counterfactual_resection_intervention/main.rs"
 
+[[example]]
+name = "counterfactual_fast_charge"
+path = "counterfactual_fast_charge/main.rs"
+
 [lints]
 workspace = true
