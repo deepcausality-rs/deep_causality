@@ -14,6 +14,7 @@ cargo run -p medicine_examples --example <example_name>
 |---|---|---|
 | [aneurysm_risk](aneurysm_risk/) | cerebrovascular | Reads the wall shear stress profile along a vessel centreline, finds the starved dome and the peak gradient at its neck, and accumulates wall degeneration over cardiac cycles |
 | [diving_decompression](diving_decompression/) | hyperbaric | Plans a dive with the Bühlmann ZH-L16C algorithm over sixteen tissue compartments, schedules the decompression stops, and reads the gas-loading rate from one evaluation over `Dual` |
+| [gentamicin_dosing](gentamicin_dosing/) | pharmacology | Individualises a gentamicin regimen from two serum levels: one first-order law runs back to the peak and forward to the trough |
 | [epilepsy](epilepsy/) | neurology | Builds a connectome that seizes, then resects each region in turn to find the one curative target |
 | [protein_folding](protein_folding/) | biophysics | Folds a chain through the generalized master equation, where memory kernels carry the path the chain took into its next step |
 | [tissue_classification](tissue_classification/) | medical imaging | Separates a solid mass from a necrotic core by the Euler characteristic of a Vietoris-Rips complex |
