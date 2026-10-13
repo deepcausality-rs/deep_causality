@@ -12,8 +12,8 @@ use crate::model_config::{
 use crate::model_types::{COOLANT_C, COOLING_PER_MIN, Charge, CoolingContext, FloatType, read};
 use deep_causality_core::{CausalEffect, CausalFlow, CausalityError, EffectLog};
 
-/// The charger's current. Temperature sets the ceiling: full current below 45 °C, half up to
-/// 55 °C, none above. Charge shapes it: above 80 % the charger holds the cell voltage and the
+/// The charger's current. Temperature sets the ceiling: full current below 45 °C, half below
+/// 55 °C, none from 55 °C up. Charge shapes it: above 80 % the charger holds the cell voltage and the
 /// current falls linearly to zero at 100 %.
 pub fn charge_current_a(cell_c: FloatType, charge_pct: FloatType) -> FloatType {
     let ceiling = if cell_c < DERATE_C {

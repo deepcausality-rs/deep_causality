@@ -1,6 +1,6 @@
 # Medicine Examples
 
-Six worked problems from biomedicine, each solved end to end with the unified-math stack.
+Seven worked problems from biomedicine, each solved end to end with the unified-math stack.
 
 ## Quick Start
 
@@ -26,7 +26,7 @@ Every example here follows four rules:
 
 1. **Precision is a parameter.** A `FloatType` alias sits directly above `main`, and every quantity
    in the program carries it. Change that one line to rerun the whole example at another scalar.
-   All six run at `BFloat16`, `f32`, `f64` and `Float106`, and only the precision changes.
+   All seven run at `BFloat16`, `f32`, `f64` and `Float106`, and only the precision changes.
 2. **Values cross the precision boundary through `deep_causality_num::lift`.** Configuration
    literals are written as `f64`, the widest form a source file holds, and lifted once.
 3. **Printing lives in `utils_print.rs`.** It holds the only `lower` calls, so `f64` appears at the

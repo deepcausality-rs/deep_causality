@@ -11,20 +11,23 @@ cargo run -p medicine_examples --example gentamicin_dosing
 ## What the run prints
 
 ```text
-Regimen: one dose every 8 h, infused 08:00 to 08:30
+Regimen: 120 mg every 8 h, infused 08:00 to 08:30
 Measured: 7.00 mg/L at 09:30 and 3.50 mg/L at 15:30
 
 1. Elimination rate:  k = 0.1155 /h, half-life 6.0 h
 2. Peak (backward):   7.86 mg/L at 08:30   target 6-10 mg/L: in range
 3. Trough (forward):  3.30 mg/L at 16:00   target at most 2 mg/L: OUT OF RANGE
-4. Interval:          the peak falls to 1 mg/L after 18.3 h; dose every 24 h
+4. Interval:          a peak of 8 mg/L falls to 1 mg/L after 18.5 h; dose every 24 h
+5. Dose:              volume 24.6 L; 190 mg every 24 h holds the peak at 8 mg/L
 
 Check: the law run forward from the peak returns 7.00 mg/L at 09:30 (difference 0.0e0 mg/L)
 ```
 
 The peak is effective, but a 6-hour half-life leaves 3.3 mg/L in the blood when the next dose
-starts, above the 2 mg/L that limits accumulation. Stretching the interval to 24 hours lets the
-peak fall to 1 mg/L first.
+starts, above the 2 mg/L that limits accumulation. At a 24-hour interval a peak of 8 mg/L falls
+to 1 mg/L first, and the patient's volume of distribution, 24.6 L, sets the dose that holds that
+peak: 190 mg once daily. The same 120 mg every 24 hours would peak near 5 mg/L, below the target,
+because less drug carries over from the dose before.
 
 ## The causal chain
 
@@ -34,6 +37,7 @@ let report = CausalFlow::value(MEASURED)
     .map(peak_at_end_of_infusion) // backward in time, to 08:30
     .map(trough_before_next_dose) // forward in time, to 16:00
     .map(dosing_interval) // the verdict and the interval
+    .map(dose_for_interval) // the dose that holds the peak at the new interval
     .map(round_trip) // forward again from the peak: must return the 09:30 level
     .finish()?;
 ```
@@ -48,8 +52,11 @@ does not: the peak step runs `concentration_after(c, k, hours)` with a negative 
 * **Elimination rate.** Two levels on one decay give `k = ln(c1 / c2) / (t2 - t1)`.
 * **Peak.** The first level, run back to the end of the infusion.
 * **Trough.** The peak, run forward to the start of the next dose.
-* **Interval.** `tau = t_infusion + ln(peak / 1 mg/L) / k`, rounded up to the next interval a ward
-  schedules (8, 12, 24, 36 or 48 hours).
+* **Interval.** `tau = t_infusion + ln(8 mg/L / 1 mg/L) / k`, rounded up to the next interval a
+  ward schedules (8, 12, 24, 36 or 48 hours).
+* **Volume and dose.** At steady state, with infusion rate `r = dose / t_infusion`,
+  `V = r (1 - exp(-k t_infusion)) / (k (peak - trough exp(-k t_infusion)))`. The new dose is
+  `t_infusion · 8 mg/L · k · V (1 - exp(-k tau)) / (1 - exp(-k t_infusion))`.
 
 The targets, a peak of 6–10 mg/L and a trough of at most 2 mg/L, are those for conventional
 multiple-daily dosing. Many hospitals now give aminoglycosides once daily; Begg et al. review

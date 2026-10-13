@@ -22,7 +22,7 @@ makes them properties of the type.
 
 | Property | Demonstrated by |
 |---|---|
-| Same chain, different worlds. Replay the same `bind` pipeline under several interventions without branching code. | All five examples |
+| Same chain, different worlds. Replay the same `bind` pipeline under several interventions without branching code. | All six examples |
 | Audit trail in `EffectLog`. Every `alternate_value` appends `!!ValueAlternation!!: <old> replaced with <new>`, so the intervention history can be inspected. | `counterfactual_envelope_fault`, `counterfactual_cascade_failure`, `counterfactual_resection_intervention` |
 | Error-state preservation. If the chain is already in error, `alternate_value` is a no-op, so intervention cannot mask an upstream bug. | (Property of the trait; no example is dedicated to it.) |
 | State and Context preservation. On `PropagatingProcess`, only the value swaps. Accumulated `State` and read-only `Context` are untouched. | `counterfactual_envelope_fault`, `counterfactual_cascade_failure` |

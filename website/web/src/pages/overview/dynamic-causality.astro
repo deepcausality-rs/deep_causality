@@ -13,6 +13,7 @@ let report = CausalFlow::value(MEASURED)
     .map(peak_at_end_of_infusion) // backward in time, to 08:30
     .map(trough_before_next_dose) // forward in time, to 16:00
     .map(dosing_interval) // the verdict and the interval
+    .map(dose_for_interval) // the dose that holds the peak at the new interval
     .map(round_trip) // forward again from the peak: must return the 09:30 level
     .finish()?;
 
@@ -22,13 +23,14 @@ pub fn concentration_after(mg_l: FloatType, k_per_h: FloatType, hours: FloatType
     mg_l * Real::exp(-(k_per_h * hours))
 }`;
 
-const dosingOut = `Regimen: one dose every 8 h, infused 08:00 to 08:30
+const dosingOut = `Regimen: 120 mg every 8 h, infused 08:00 to 08:30
 Measured: 7.00 mg/L at 09:30 and 3.50 mg/L at 15:30
 
 1. Elimination rate:  k = 0.1155 /h, half-life 6.0 h
 2. Peak (backward):   7.86 mg/L at 08:30   target 6-10 mg/L: in range
 3. Trough (forward):  3.30 mg/L at 16:00   target at most 2 mg/L: OUT OF RANGE
-4. Interval:          the peak falls to 1 mg/L after 18.3 h; dose every 24 h
+4. Interval:          a peak of 8 mg/L falls to 1 mg/L after 18.5 h; dose every 24 h
+5. Dose:              volume 24.6 L; 190 mg every 24 h holds the peak at 8 mg/L
 
 Check: the law run forward from the peak returns 7.00 mg/L at 09:30 (difference 0.0e0 mg/L)`;
 
@@ -115,8 +117,9 @@ const correctionExamples = `${GITHUB_URL}/tree/main/examples/causal_correction_e
         runs the elimination law with a negative <code>hours</code>, from 09:30 back to the end of
         the infusion, and finds 7.86 mg/L, inside the target. The trough step runs the same law
         forward from that peak to the next dose and finds 3.30 mg/L, above the 2 mg/L that limits
-        accumulation. Stretching the interval to 24 hours lets the peak fall to 1 mg/L first. The
-        last step runs the law forward from the reconstructed peak and returns the 09:30 level
+        accumulation. At a 24-hour interval a peak of 8 mg/L falls to 1 mg/L first, and the
+        patient's volume of distribution, 24.6 L, sets the dose that holds that peak: 190 mg once
+        daily. The last step runs the law forward from the reconstructed peak and returns the 09:30 level
         exactly.
       </p>
       <p>

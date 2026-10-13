@@ -7,7 +7,7 @@
 
 use crate::FloatType;
 use crate::model::{
-    Level, PEAK_MAX_MG_L, PEAK_MIN_MG_L, Report, TROUGH_GOAL_MG_L, TROUGH_MAX_MG_L,
+    Level, PEAK_GOAL_MG_L, PEAK_MAX_MG_L, PEAK_MIN_MG_L, Report, TROUGH_GOAL_MG_L, TROUGH_MAX_MG_L,
 };
 use deep_causality_num::lower;
 
@@ -29,13 +29,15 @@ fn level(l: &Level) -> String {
 }
 
 pub fn print_report(report: &Report) {
-    let rec = &report.recommendation;
+    let regimen = &report.regimen;
+    let rec = &regimen.recommendation;
     let course = &rec.course;
     let measured = &course.peak.elimination.measured;
     let k = f(course.peak.elimination.k_per_h);
     println!("=== Gentamicin dosing from two serum levels ===\n");
     println!(
-        "Regimen: one dose every {:.0} h, infused {} to {}",
+        "Regimen: {:.0} mg every {:.0} h, infused {} to {}",
+        f(measured.dose_mg),
         f(measured.interval_h),
         clock(FloatType::default()),
         clock(measured.infusion_end_h)
@@ -64,15 +66,30 @@ pub fn print_report(report: &Report) {
     );
     match rec.interval_h {
         Some(tau) => println!(
-            "4. Interval:          the peak falls to {:.0} mg/L after {:.1} h; dose every {:.0} h",
+            "4. Interval:          a peak of {:.0} mg/L falls to {:.0} mg/L after {:.1} h; dose every {:.0} h",
+            f(PEAK_GOAL_MG_L),
             f(TROUGH_GOAL_MG_L),
             f(rec.interval_to_goal_h),
             f(tau)
         ),
         None => println!(
-            "4. Interval:          the peak falls to {:.0} mg/L after {:.1} h, beyond every standard interval",
+            "4. Interval:          a peak of {:.0} mg/L falls to {:.0} mg/L after {:.1} h, beyond every standard interval",
+            f(PEAK_GOAL_MG_L),
             f(TROUGH_GOAL_MG_L),
             f(rec.interval_to_goal_h)
+        ),
+    }
+    match (regimen.dose_mg, rec.interval_h) {
+        (Some(dose), Some(tau)) => println!(
+            "5. Dose:              volume {:.1} L; {:.0} mg every {:.0} h holds the peak at {:.0} mg/L",
+            f(regimen.volume_l),
+            f(dose),
+            f(tau),
+            f(PEAK_GOAL_MG_L)
+        ),
+        _ => println!(
+            "5. Dose:              volume {:.1} L; no standard interval to dose for",
+            f(regimen.volume_l)
         ),
     }
     println!(

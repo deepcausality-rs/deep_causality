@@ -16,7 +16,7 @@
 use crate::FloatType;
 use deep_causality_algebra::Real;
 use deep_causality_core::CausalityError;
-use deep_causality_num::const_scalar_from_float;
+use deep_causality_num::{One, const_scalar_from_float};
 
 /// Conventional dosing target (Begg et al. 1999): lowest acceptable peak, mg/L.
 pub const PEAK_MIN_MG_L: FloatType = const_scalar_from_float!(FloatType, 6.0);
@@ -24,6 +24,8 @@ pub const PEAK_MIN_MG_L: FloatType = const_scalar_from_float!(FloatType, 6.0);
 pub const PEAK_MAX_MG_L: FloatType = const_scalar_from_float!(FloatType, 10.0);
 /// Conventional dosing target (Begg et al. 1999): highest acceptable trough, mg/L.
 pub const TROUGH_MAX_MG_L: FloatType = const_scalar_from_float!(FloatType, 2.0);
+/// The peak a redesigned regimen aims for, mg/L: the middle of the target range.
+pub const PEAK_GOAL_MG_L: FloatType = const_scalar_from_float!(FloatType, 8.0);
 /// The trough a redesigned interval aims for, mg/L.
 pub const TROUGH_GOAL_MG_L: FloatType = const_scalar_from_float!(FloatType, 1.0);
 /// The dosing intervals a ward schedules, hours.
@@ -47,6 +49,7 @@ pub struct Level {
 pub struct Measurement {
     pub first: Level,
     pub second: Level,
+    pub dose_mg: FloatType,
     pub infusion_end_h: FloatType,
     pub interval_h: FloatType,
 }
@@ -78,16 +81,25 @@ pub struct Recommendation {
     pub course: Course,
     pub peak_in_range: bool,
     pub trough_in_range: bool,
-    /// Hours for the peak to fall to the trough goal, plus the infusion.
+    /// Hours for the peak goal to fall to the trough goal, plus the infusion.
     pub interval_to_goal_h: FloatType,
     /// The shortest standard interval at least as long as `interval_to_goal_h`.
     pub interval_h: Option<FloatType>,
 }
 
-/// The recommendation with the first level as the law returns it from the peak.
+/// The recommendation with the patient's volume of distribution and the dose for the new interval.
+#[derive(Debug, Clone, Copy)]
+pub struct Regimen {
+    pub recommendation: Recommendation,
+    pub volume_l: FloatType,
+    /// The dose that holds the peak at `PEAK_GOAL_MG_L` every `interval_h`; `None` without one.
+    pub dose_mg: Option<FloatType>,
+}
+
+/// The regimen with the first level as the law returns it from the peak.
 #[derive(Debug, Clone, Copy)]
 pub struct Report {
-    pub recommendation: Recommendation,
+    pub regimen: Regimen,
     pub returned: Level,
 }
 
@@ -139,13 +151,13 @@ pub fn trough_before_next_dose(peak: Peak) -> Course {
     }
 }
 
-/// Step 4. Check the course against the targets, and find the interval at which the peak falls
-/// to the trough goal before the next dose: `tau = t_infusion + ln(peak / goal) / k`.
+/// Step 4. Check the course against the targets, and find the interval at which the peak goal
+/// falls to the trough goal before the next dose: `tau = t_infusion + ln(peak goal / trough goal) / k`.
 pub fn dosing_interval(course: Course) -> Recommendation {
     let peak = course.peak.peak;
     let Elimination { measured, k_per_h } = course.peak.elimination;
     let interval_to_goal_h =
-        measured.infusion_end_h + Real::ln(peak.mg_l / TROUGH_GOAL_MG_L) / k_per_h;
+        measured.infusion_end_h + Real::ln(PEAK_GOAL_MG_L / TROUGH_GOAL_MG_L) / k_per_h;
     Recommendation {
         course,
         peak_in_range: (PEAK_MIN_MG_L..=PEAK_MAX_MG_L).contains(&peak.mg_l),
@@ -157,10 +169,36 @@ pub fn dosing_interval(course: Course) -> Recommendation {
     }
 }
 
-/// Step 5. The check: run the law forward from the reconstructed peak to the hour of the first
+/// Step 5. The volume of distribution from the measured course, and the dose that holds the peak
+/// goal at the new interval. With infusion rate `r = dose / t_infusion`, at steady state, where
+/// the level before a dose equals the trough after it:
+///
+/// `V = r (1 - exp(-k t_infusion)) / (k (peak - trough exp(-k t_infusion)))`
+///
+/// `dose = t_infusion * peak goal * k * V (1 - exp(-k tau)) / (1 - exp(-k t_infusion))`
+pub fn dose_for_interval(recommendation: Recommendation) -> Regimen {
+    let course = recommendation.course;
+    let Elimination { measured, k_per_h } = course.peak.elimination;
+    let t_infusion = measured.infusion_end_h;
+    let one = FloatType::one();
+    let decay_infusion = Real::exp(-(k_per_h * t_infusion));
+    let volume_l = measured.dose_mg / t_infusion * (one - decay_infusion)
+        / (k_per_h * (course.peak.peak.mg_l - course.trough.mg_l * decay_infusion));
+    let dose_mg = recommendation.interval_h.map(|tau| {
+        t_infusion * PEAK_GOAL_MG_L * k_per_h * volume_l * (one - Real::exp(-(k_per_h * tau)))
+            / (one - decay_infusion)
+    });
+    Regimen {
+        recommendation,
+        volume_l,
+        dose_mg,
+    }
+}
+
+/// Step 6. The check: run the law forward from the reconstructed peak to the hour of the first
 /// level. The result must return that level.
-pub fn round_trip(recommendation: Recommendation) -> Report {
-    let peak = recommendation.course.peak;
+pub fn round_trip(regimen: Regimen) -> Report {
+    let peak = regimen.recommendation.course.peak;
     let first = peak.elimination.measured.first;
     let returned_mg_l = concentration_after(
         peak.peak.mg_l,
@@ -168,7 +206,7 @@ pub fn round_trip(recommendation: Recommendation) -> Report {
         first.hour - peak.peak.hour,
     );
     Report {
-        recommendation,
+        regimen,
         returned: Level {
             hour: first.hour,
             mg_l: returned_mg_l,

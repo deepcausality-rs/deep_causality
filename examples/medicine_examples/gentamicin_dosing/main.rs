@@ -13,13 +13,14 @@
 //! first-order elimination law. Once-daily dosing has since replaced this regimen in many
 //! hospitals; the review covers both.
 //!
-//! The four steps form one causal chain, and each needs the result of the one before it:
+//! The six steps form one causal chain, and each needs the result of the one before it:
 //!
 //! 1. the patient's elimination rate, from the two levels;
 //! 2. the peak at the end of the infusion, **backward** in time from the first level;
 //! 3. the trough before the next dose, **forward** in time from that peak;
-//! 4. the verdict and the dosing interval that brings the trough to 1 mg/L;
-//! 5. a check: the law run forward from the peak must return the first measured level.
+//! 4. the verdict and the dosing interval at which a peak of 8 mg/L falls to 1 mg/L;
+//! 5. the patient's volume of distribution, and the dose that holds that peak at the new interval;
+//! 6. a check: the law run forward from the peak must return the first measured level.
 //!
 //! Steps 2 and 3 run the same law, `concentration_after`, in opposite directions of time. The
 //! causal order stays one-directional: step 3 runs only after step 2 has produced the peak.
@@ -38,8 +39,8 @@ mod utils_print;
 use deep_causality_core::{CausalFlow, CausalityError};
 use deep_causality_num::const_scalar_from_float;
 use model::{
-    Level, Measurement, dosing_interval, elimination_rate, peak_at_end_of_infusion, round_trip,
-    trough_before_next_dose,
+    Level, Measurement, dose_for_interval, dosing_interval, elimination_rate,
+    peak_at_end_of_infusion, round_trip, trough_before_next_dose,
 };
 
 /// Change this one line to `f32` or `Float106` to run the program at another precision.
@@ -57,6 +58,7 @@ const MEASURED: Measurement = Measurement {
         hour: const_scalar_from_float!(FloatType, 7.5),
         mg_l: const_scalar_from_float!(FloatType, 3.5),
     },
+    dose_mg: const_scalar_from_float!(FloatType, 120.0),
     infusion_end_h: const_scalar_from_float!(FloatType, 0.5),
     interval_h: const_scalar_from_float!(FloatType, 8.0),
 };
@@ -67,6 +69,7 @@ fn main() -> Result<(), CausalityError> {
         .map(peak_at_end_of_infusion) // backward in time, to 08:30
         .map(trough_before_next_dose) // forward in time, to 16:00
         .map(dosing_interval) // the verdict and the interval
+        .map(dose_for_interval) // the dose that holds the peak at the new interval
         .map(round_trip) // forward again from the peak: must return the 09:30 level
         .finish()?;
 
