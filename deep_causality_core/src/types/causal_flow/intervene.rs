@@ -4,16 +4,16 @@
  */
 
 // =============================================================================
-// Value and context alternation (counterfactual substitution on one channel)
+// Value, context and state alternation (counterfactual substitution on one channel)
 // =============================================================================
 //
-// These are the substitution lenses, `alternate_value` and `alternate_context`. They are NOT
+// These are the substitution lenses, `alternate_value`, `alternate_context` and `alternate_state`. They are NOT
 // Pearl's `do(...)` operator: that is graph surgery (parent-edge deletion / variable isolation) and
 // lives at the `deep_causality` Causaloid + hypergraph layer, where a graph is in scope. At the
 // value/monad level there is no graph to mutilate, so the honest operation is counterfactual
 // substitution of a channel.
 
-use crate::{AlternatableContext, AlternatableValue, CausalFlow};
+use crate::{AlternatableContext, AlternatableState, AlternatableValue, CausalFlow};
 use core::fmt::Debug;
 
 impl<Value, State, Context> CausalFlow<Value, State, Context>
@@ -64,5 +64,39 @@ impl<Value, State, Context> CausalFlow<Value, State, Context> {
         CausalFlow {
             inner: self.inner.alternate_context(new_context),
         }
+    }
+
+    /// Substitute the carried state with `new_state` (counterfactual state substitution),
+    /// recording the substitution in the audit log as `!!StateAlternation!!`. Value and context
+    /// pass through unchanged, so the steps after it run the same causal law from another
+    /// history. A no-op on a failed flow (the underlying `AlternatableState` preserves the error).
+    pub fn alternate_state(self, new_state: State) -> Self {
+        CausalFlow {
+            inner: self.inner.alternate_state(new_state),
+        }
+    }
+}
+
+// The alternation traits delegate to the inherent methods above, so a `CausalFlow` satisfies the
+// `Alternatable<V, C, S>` bound that generic code places on a carrier of all three channels.
+
+impl<Value, State, Context> AlternatableValue<Value> for CausalFlow<Value, State, Context>
+where
+    Value: Debug,
+{
+    fn alternate_value(self, new_value: Value) -> Self {
+        CausalFlow::alternate_value(self, new_value)
+    }
+}
+
+impl<Value, State, Context> AlternatableContext<Context> for CausalFlow<Value, State, Context> {
+    fn alternate_context(self, new_context: Context) -> Self {
+        CausalFlow::alternate_context(self, new_context)
+    }
+}
+
+impl<Value, State, Context> AlternatableState<State> for CausalFlow<Value, State, Context> {
+    fn alternate_state(self, new_state: State) -> Self {
+        CausalFlow::alternate_state(self, new_state)
     }
 }
