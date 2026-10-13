@@ -84,6 +84,7 @@ tokio = { version = "1" }
 # Member crates opt in with `[lints] workspace = true`.
 [workspace.lints.rust]
 unsafe_code = "forbid"
+deprecated_safe = { level = "warn", priority = -1 }
 # `cfg(kani)` is set only by the Kani driver (`cargo kani`); register it so the
 # `#![cfg(kani)]`-gated proof harnesses do not trip the `unexpected_cfgs` lint.
 # `cfg(feature, values(any()))` covers the Bazel build: cargo derives the legal
