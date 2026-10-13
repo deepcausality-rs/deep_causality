@@ -99,7 +99,7 @@ const ddic = 'https://arxiv.org/abs/2407.04869';
         produced it.
       </p>
 
-      <h2>How a verdict is reached</h2>
+      <h2>How the Ethos reaches a verdict</h2>
       <ol>
         <li><strong>Select.</strong> Collect every norm filed under one of the requested tags. Selection uses tags alone, so give each kind of action its own tag.</li>
         <li><strong>Activate.</strong> Run each norm's predicate against the context and the action. An uncertain predicate activates when its probability test passes; a predicate or test that returns an error counts as inactive.</li>
@@ -107,7 +107,7 @@ const ddic = 'https://arxiv.org/abs/2407.04869';
         <li><strong>Decide.</strong> Any surviving prohibition makes the verdict <code>Impermissible</code>. Otherwise any surviving obligation makes it <code>Obligatory</code>. Otherwise the verdict is <code>Optional</code>, at the summed cost of the surviving norms.</li>
       </ol>
       <p>
-        Before any evaluation the norm graph must be frozen and acyclic; <code>verify_graph</code> checks both. Evaluation returns an error when no norm carries a requested tag or no selected
+        Evaluation requires a frozen, acyclic norm graph; <code>verify_graph</code> checks both. Evaluation returns an error when no norm carries a requested tag or no selected
         norm applies, and the caller decides what either error means for the action.
       </p>
 

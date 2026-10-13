@@ -7,68 +7,56 @@ import { GITHUB_URL } from '../../consts';
 
 const themes = { light: 'github-light', dark: 'github-dark' } as const;
 
-const kepler = `use deep_causality_algebra::Real;
-use deep_causality_core::{CausalityError, PropagatingEffect};
-use deep_causality_num::{lift, lower};
-use deep_causality_physics::{EARTH_GM, TwoBodyPropagator};
+const dosing = `// The causal chain: each step needs the result of the one before it.
+let report = CausalFlow::value(MEASURED)
+    .try_step(elimination_rate) // the patient's elimination rate; fails unless the levels decay
+    .map(peak_at_end_of_infusion) // backward in time, to 08:30
+    .map(trough_before_next_dose) // forward in time, to 16:00
+    .map(dosing_interval) // the verdict and the interval
+    .map(round_trip) // forward again from the peak: must return the 09:30 level
+    .finish()?;
 
-/// The working precision. Change this one line to \`Float106\`
-/// and the whole program runs at about 31 decimal digits.
-type FloatType = f64;
-// (position, velocity)
-type Orbit = ([FloatType; 2], [FloatType; 2]); 
-
-fn main() {
-  let epoch: Orbit = ([lift(7.0e6), lift(0.0)], [lift(0.0), lift(7.8e3)]);
-  let result = PropagatingEffect::pure(epoch)
-     // forward in time
-     .bind_or_error(|s, _, _| kepler_step(s, lift(600.0)), "no state") 
-     // next in causal order, backward in time
-     .bind_or_error(|s, _, _| kepler_step(s, lift(-600.0)), "no state"); 
-        
-    let (p, _) = result.into_value().expect("both steps succeed");
-    let dx = p[0] - lift::<FloatType>(7.0e6);
-    let miss = Real::sqrt(dx * dx + p[1] * p[1]);
-    println!("returned to epoch within {:.2e} m", lower(miss));
-}
-
-/// One Kepler step. The propagator is exact and accepts a negative \`dt\`.
-fn kepler_step(state: Orbit, dt: FloatType) -> PropagatingEffect<Orbit> {
-    let (p, v) = state;
-    match TwoBodyPropagator::from_state(
-        p, 
-        v, 
-        lift(EARTH_GM))
-           .and_then(|orbit| orbit.propagate(dt))
-    {
-        Ok(next) => PropagatingEffect::pure(next),
-        Err(e) => PropagatingEffect::from_error(CausalityError::from(e)),
-    }
+/// First-order elimination: the concentration \`hours\` after \`mg_l\`. The law is exact in either
+/// direction of time, so a negative \`hours\` runs it backward.
+pub fn concentration_after(mg_l: FloatType, k_per_h: FloatType, hours: FloatType) -> FloatType {
+    mg_l * Real::exp(-(k_per_h * hours))
 }`;
 
-const keplerOut = `returned to epoch within 5.67e-10 m`;
+const dosingOut = `Regimen: one dose every 8 h, infused 08:00 to 08:30
+Measured: 7.00 mg/L at 09:30 and 3.50 mg/L at 15:30
 
-const unifiedMathReadme = `${GITHUB_URL}/blob/main/deep_causality_unified_math/README.md`;
+1. Elimination rate:  k = 0.1155 /h, half-life 6.0 h
+2. Peak (backward):   7.86 mg/L at 08:30   target 6-10 mg/L: in range
+3. Trough (forward):  3.30 mg/L at 16:00   target at most 2 mg/L: OUT OF RANGE
+4. Interval:          the peak falls to 1 mg/L after 18.3 h; dose every 24 h
 
-const whatIf = `let observed = plug_in().iterate_n(30, one_minute).into_process();
+Check: the law run forward from the peak returns 7.00 mg/L at 09:30 (difference 0.0e0 mg/L)`;
 
-let what_if = plug_in()
-    .iterate_n(10, one_minute)
-    // what if the cell had been at 52 °C after ten minutes?
-    .alternate_value(52.0) 
-    .iterate_n(20, one_minute)
-    .into_process();`;
+const gentamicin = `${GITHUB_URL}/tree/main/examples/medicine_examples/gentamicin_dosing`;
+const sawchuk = 'https://pubmed.ncbi.nlm.nih.gov/837654/';
+const begg = 'https://pmc.ncbi.nlm.nih.gov/articles/PMC2014209/';
 
-const whatIfOut = `Observed: 38.8 °C, 70.0 % charged after 30 minutes
-What if : 41.2 °C, 65.8 % charged after 30 minutes
-EffectLog (1 entries):
-[[1790749984339484] !!ValueAlternation!!: Value(33.48417318664552) replaced with Value(52.0)`;
+const whatIf = `// The first ten minutes, as observed. Every run continues from this flow for the rest.
+let at_branch = plug_in(full_flow_cooling()?)?.iterate_n(BRANCH_MINUTE, one_minute);
+let finish = |run: Charge| {
+    run.iterate_n(RUN_MINUTES - BRANCH_MINUTE, one_minute)
+        .into_process()
+};
 
-const readme = `${GITHUB_URL}/blob/main/README.md`;
+let observed = finish(at_branch.clone());
+// What if the cell had been at 52 °C after ten minutes?
+let hot_cell = finish(at_branch.clone().alternate_value(HOT_CELL_C));
+// What if the coolant pump had dropped to a quarter of its flow?
+let weak_pump = finish(at_branch.clone().alternate_context(quarter_flow_cooling()?));
+// What if the cell had held 75 % charge after ten minutes?
+let full_cell = finish(at_branch.alternate_state(HIGH_CHARGE_PCT));`;
+
+const fastCharge = `${GITHUB_URL}/tree/main/examples/causal_counterfactual_examples/counterfactual_fast_charge`;
+const correctionExamples = `${GITHUB_URL}/tree/main/examples/causal_correction_examples`;
 ---
 <BaseLayout
   title="Dynamic causality — DeepCausality"
-  description="The causal monad composes a model on two layers: a one-directional causal order, and an unconstrained step that can hold time-symmetric physics. Three channels, an audit log, causaloids and the Causal State Machine."
+  description="The causal monad composes a model on two layers: a one-directional causal order, and an unconstrained step that can run a law backward in time. Three channels, a counterfactual on each, an audit log, causaloids and the Causal State Machine."
 >
   <SiteHeader />
   <article class="static-page">
@@ -78,7 +66,8 @@ const readme = `${GITHUB_URL}/blob/main/README.md`;
       <p class="lede">
         The causal monad in <code>deep_causality_core</code> composes a model on two layers. The
         outer layer decides the causal order. The inner layer, the step, computes
-        anything, including physics that runs backward in time.
+        anything, including a law run backward in time. Mid-run, a counterfactual can
+        replace the effect, the context or the state.
       </p>
     </header>
 
@@ -100,62 +89,49 @@ const readme = `${GITHUB_URL}/blob/main/README.md`;
         </li>
         <li>
           <strong>The inner layer is the step itself.</strong> A step, an ordinary Rust function, can
-          hold a time-symmetric law of physics or any other computation. It assumes neither space nor
-          time; location and time reach it through the context or as values such as the <code>dt</code> below.
+          hold a time-symmetric law of physics, a law run backward to reconstruct the past, or any
+          other computation. It assumes neither space nor time; location and time reach it through
+          the context or as values such as the <code>hours</code> below.
         </li>
       </ul>
       <p>
-        The example moves a satellite 600 s forward along its orbit and then 600 s back, using the
-        exact two-body propagator from <code>deep_causality_physics</code>:
-      </p>
-      <Code code={kepler} lang="rust" themes={themes} defaultColor={false} wrap />
-      <Code code={keplerOut} lang="text" themes={themes} defaultColor={false} wrap />
-      <p>
-        The satellite starts 7,000 km from Earth's center at 7.8 km/s, which puts it on an orbit
-        between 629 km and 1,658 km altitude. The first step carries
-        it 4,585 km along that orbit. The second step takes the position and velocity the first step
-        produced, derives a fresh orbit from them, and runs the clock back 600 s. The satellite lands
-        0.57 nanometers from where it started. At 7,000 km, neighboring <code>f64</code> values lie
-        0.93 nanometers apart, so the round trip is exact to the resolution of the number type.
+        Therapeutic drug monitoring shows both layers at work. Gentamicin, an antibiotic used
+        against serious infections, kills bacteria in proportion to its peak concentration, and its
+        toxicity to the kidneys and the inner ear follows total exposure. Under conventional
+        multiple-daily dosing, a ward therefore checks both ends of a dose: a peak of 6–10 mg/L and a
+        trough of at most 2 mg/L (<a href={begg}>Begg et al. 1999</a>). It rarely samples at either
+        end. It draws two levels in between, and the method of <a href={sawchuk}>Sawchuk et al.
+        (1977)</a> reconstructs the rest with one first-order elimination law.
       </p>
       <p>
-        That resolution is a parameter. Every crate in the unified mathematics stack takes its scalar
-        as a type parameter, so changing the <code>FloatType</code> alias moves the whole program,
-        propagator included, to another number type. With only that line changed, the round trip
-        lands within about one spacing of each type, and within two at <code>BFloat16</code>:
+        The <a href={gentamicin}>gentamicin example</a> writes that method as a causal chain. A
+        patient receives 120 mg every 8 hours, infused from 08:00 to 08:30, and the lab measures
+        7.0 mg/L at 09:30 and 3.5 mg/L at 15:30:
       </p>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr><th><code>FloatType</code></th><th>Decimal digits</th><th>Miss after the round trip</th><th>Spacing of values at 7,000 km</th></tr>
-          </thead>
-          <tbody>
-            <tr><td><code>BFloat16</code></td><td>2</td><td>7.0 × 10⁴ m</td><td>3.3 × 10⁴ m</td></tr>
-            <tr><td><code>f32</code></td><td>7</td><td>0.25 m</td><td>0.5 m</td></tr>
-            <tr><td><code>f64</code></td><td>16</td><td>5.7 × 10⁻¹⁰ m</td><td>9.3 × 10⁻¹⁰ m</td></tr>
-            <tr><td><code>Float106</code></td><td>31</td><td>2.4 × 10⁻²⁵ m</td><td>2.1 × 10⁻²⁵ m</td></tr>
-          </tbody>
-        </table>
-      </div>
+      <Code code={dosing} lang="rust" themes={themes} defaultColor={false} wrap />
+      <Code code={dosingOut} lang="text" themes={themes} defaultColor={false} wrap />
       <p>
-        At <code>Float106</code> the satellite lands 2.4 × 10⁻²⁵ m, about a quarter of a
-        yoctometer, from where it started: far below anything an instrument can measure. For
-        reference results, such as the values another solver must reproduce, <code>Float106</code> carries about 31 significant digits, twice as many as <code>f64</code>, for a one-line change.
-        The <a href={unifiedMathReadme}>unified math README</a> explains how precision works as a parameter across the stack.
+        The two levels give the patient's elimination rate: a half-life of 6 hours. The peak step
+        runs the elimination law with a negative <code>hours</code>, from 09:30 back to the end of
+        the infusion, and finds 7.86 mg/L, inside the target. The trough step runs the same law
+        forward from that peak to the next dose and finds 3.30 mg/L, above the 2 mg/L that limits
+        accumulation. Stretching the interval to 24 hours lets the peak fall to 1 mg/L first. The
+        last step runs the law forward from the reconstructed peak and returns the 09:30 level
+        exactly.
       </p>
       <p>
-        The round trip is exact because Kepler's problem has a closed-form solution. Measured by the
-        angle around the ellipse, the eccentric anomaly, the orbit follows simple harmonic motion, and
-        one formula advances it by any time interval. The kernel solves Kepler's equation,
-        which converts that angle into clock time, by Newton's method to the precision of the number
-        type. No step size enters, so no truncation error accumulates, and a negative <code>dt</code> runs the same formula backward.
+        Each step follows the one before it in causal order: it cannot run until that step has
+        produced its result, and an error stops the chain. The first step fails, for instance, on two
+        levels that do not decay. In physical time the chain runs back and then forward: the peak at
+        08:30 is computed from a level drawn an hour later. Drug elimination is not time-symmetric,
+        but its law is exact in both directions, so one function serves both steps. In the classical
+        formulation the arrow of cause is also the arrow of time. Here the causal flow carries the
+        order and the elimination law carries the pharmacology, and the two arrows can point
+        different ways.
       </p>
       <p>
-        The second step follows the first in causal order: it cannot run until the first has produced
-        its state, and an error in the first would stop it. In physical time it runs the other way.
-        The classical formulation, with one arrow for both cause and time, cannot express that chain.
-        Here bind carries the causal order, the propagator carries the physics, and the whole program
-        takes 31 lines of Rust.
+        The same two layers hold a time-symmetric law of physics: the <a href="/examples/orbit-round-trip/">orbit round trip</a> propagates a satellite 600 s forward and 600 s back, and shows
+        the round trip at four precisions, from <code>BFloat16</code> to <code>Float106</code>.
       </p>
 
       <h2>Three channels and a log</h2>
@@ -184,21 +160,85 @@ const readme = `${GITHUB_URL}/blob/main/README.md`;
         and when: provenance for debugging, and evidence where an auditor asks for it.
       </p>
 
-      <h2>Asking "what if?" in the middle of a run</h2>
+      <h2>A counterfactual can replace any of the three channels</h2>
       <p>
-        You can replace a running chain's value, state or context. The steps after the replacement
-        run on the new value, and the log records the change. The excerpt below charges a
-        lithium-ion cell for 30 minutes; the charger drops to half current above 45 °C. The second
-        run asks what would have happened had the cell been at 52 °C after ten minutes.
+        Each channel has its own counterfactual. A call replaces one channel of a running chain, the
+        steps after it run the same law on the replacement, and the other two channels continue as
+        observed.
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Channel</th><th>Method</th><th>The question it asks</th><th>Log marker</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Effect</td><td><code>alternate_value</code></td><td>What if this result had been different?</td><td><code>!!ValueAlternation!!</code></td></tr>
+            <tr><td>Context</td><td><code>alternate_context</code></td><td>What if the world had been different?</td><td><code>!!ContextAlternation!!</code></td></tr>
+            <tr><td>State</td><td><code>alternate_state</code></td><td>What if the history had been different?</td><td><code>!!StateAlternation!!</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Each replacement writes its marker to the log. On a chain that has already failed, the call
+        does nothing, so a counterfactual cannot hide an upstream error. No method replaces the error
+        or the log.
+      </p>
+      <p>
+        The <a href={fastCharge}>fast-charge example</a> asks all three questions of one model. A
+        lithium-ion cell charges for 30 minutes, and each minute is one step: the cell temperature
+        is the effect, the charge is the state, and the coolant is the context. The charger halves
+        its current above 45 °C and stops above 55 °C. Above 80 % charge it holds the cell voltage,
+        so the current tapers to zero at 100 %. The example observes the run for ten minutes, then
+        branches it three ways:
       </p>
       <Code code={whatIf} lang="rust" themes={themes} defaultColor={false} wrap />
-      <Code code={whatIfOut} lang="text" themes={themes} defaultColor={false} wrap />
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Run</th><th>Replaced at minute 10</th><th>Cell after 30 min</th><th>Charge</th><th>Next minute's current</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Observed</td><td>nothing</td><td>38.8 °C</td><td>70.0 %</td><td>50.0 A</td></tr>
+            <tr><td>Hot cell</td><td>effect: 33.5 °C → 52 °C</td><td>41.2 °C</td><td>65.8 %</td><td>50.0 A</td></tr>
+            <tr><td>Weak pump</td><td>context: coolant at a quarter of its flow</td><td>45.5 °C</td><td>65.0 %</td><td>25.0 A</td></tr>
+            <tr><td>Full cell</td><td>state: 36.7 % → 75 % charge</td><td>30.3 °C</td><td>95.4 %</td><td>11.4 A</td></tr>
+          </tbody>
+        </table>
+      </div>
       <p>
-        At 52 °C the charger switches to half current. The cell cools below 45 °C within five
-        minutes, but the charge lost in those minutes stays lost: the second run ends 4.2 percentage
-        points lower. The log names the 33.5 °C the model had computed and the 52 °C that replaced
-        it. The <a href={readme}>project README</a> has the full program, and the <a href="/examples/pearl-counterfactual/">counterfactual example</a> walks Pearl's ladder of
-        causation with the same method.
+        <strong>The hot cell</strong> starts minute eleven at 52 °C, so the charger halves its
+        current. The cell cools below 45 °C within five minutes and full current resumes, but the
+        charge lost in those minutes stays lost. The run ends 4.2 percentage points behind.
+      </p>
+      <p>
+        <strong>The weak pump</strong> leaves the cell's temperature and charge as observed and
+        changes the world it charges in. With a quarter of the cooling, the cell warms past 45 °C at
+        minute 23. From then on the charger switches between half and full current at that line. The
+        run ends 5 points behind, 6.7 °C hotter, and at half current.
+      </p>
+      <p>
+        <strong>The full cell</strong> leaves the temperature and the coolant as observed and
+        changes the history. At 75 % the cell reaches 80 % at minute 13, and the charger moves to
+        its taper. The current falls, the cell cools to 30.3 °C, and the charge ends at 95.4 %. The
+        same step runs a different part of the charging law because the state it carries is
+        different.
+      </p>
+      <p>
+        Each counterfactual run carries one log entry: the value entry names the 33.5 °C the model
+        had computed and the 52 °C that replaced it, and the other two record which channel changed.
+      </p>
+      <p>
+        Pearl's structural causal models frame a counterfactual as setting a variable, after first
+        inferring the background conditions of the factual world from evidence. A
+        <code>PropagatingProcess</code> carries the context and the state as channels of the
+        running chain, so the branch point already holds the factual world and its history. A
+        counterfactual replaces one of them with a single call.
+      </p>
+      <p>
+        The <a href="/examples/pearl-counterfactual/">Pearl's ladder example</a> walks association,
+        intervention and counterfactual with <code>alternate_value</code>. The <a href={correctionExamples}>correction examples</a> call <code>alternate_value</code> inside
+        a running loop: each step, a monitor checks the result against a threshold in the context,
+        and on an anomaly replaces it with a correction the run continues from.
       </p>
 
       <h2>Causaloids: one step, many steps, a graph</h2>

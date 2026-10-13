@@ -20,7 +20,7 @@ export const topics: OverviewTopic[] = [
     slug: 'dynamic-causality',
     title: 'Dynamic causality',
     summary:
-      'The causal monad: a one-directional causal order, with any computation inside each step, including time-symmetric physics.',
+      'The causal monad: a one-directional causal order, any computation inside each step, and a counterfactual on the effect, the context or the state.',
   },
   {
     slug: 'dynamic-context',
