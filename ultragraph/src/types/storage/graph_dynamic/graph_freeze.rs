@@ -23,8 +23,9 @@ where
 {
     /// Consumes the dynamic graph to create a static, high-performance `CsmGraph`.
     ///
-    /// This is a computationally intensive "stop the world" operation with O(V + E)
-    /// complexity. It performs several key optimizations:
+    /// This is a computationally intensive "stop the world" operation: O(V + E) for counting
+    /// and placement, plus a sort of each adjacency list, O(d log d) for a list of length `d`.
+    /// It performs several key optimizations:
     ///   1. Keeps every node position, tombstones included, and drops the edges that touch a
     ///      removed node.
     ///   2. Builds both forward and backward CSR structures in a single pass to save memory.

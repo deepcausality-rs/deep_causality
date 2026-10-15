@@ -8,7 +8,7 @@ lives, and a keyed insert or removal on a hub scans the hub's list.
 The baseline (`openspec/notes/ultragraph/BenchBefore/BenchBefore.md`, Apple M3 Max, rustc 1.99.0,
 three runs) puts `freeze` at about 36 ns per node at 1,000 nodes against about 9 ns per node to build,
 `remove_edge` on a hub of 1,000 at 171 ns, and `contains_edge_dynamic` at 151 ns. Change 1's
-after-run, `BenchAfter/BenchAfter.md`, is the incumbent this change measures against.
+after-run, `BenchAfterChange1StableId/BenchAfterChange1StableId.md`, is the incumbent this change measures against.
 
 Decided by Marvin on 2026-10-15: three states, Dynamic (default), Live and Frozen, are one
 `GraphState`; `freeze` stays in place and `freeze_clone` copies; a frozen copy leaves maintained
@@ -38,8 +38,8 @@ the storage layer; the work follows the TDD protocol of
 A Live graph keeps one arena of `(target, W)` per direction, a per-node record `(start, len, cap)`
 and a mask of live nodes. Rows are sorted by target, then key, so `Merge` skips repeated targets as
 in the Frozen state. A change that fits the row's spare capacity is written in place, keeping the
-order; a row that outgrows its capacity is rebuilt alone at the arena's end with twice the capacity,
-leaving a hole. A change is a binary search and a shift within the row, O(d); a rebuild costs O(d)
+order; a row that outgrows its capacity is rebuilt alone at the arena's end with `max(1, 2 · cap)`
+entries, so a row adopted from the Frozen state with no edge grows from capacity 0, leaving a hole. A change is a binary search and a shift within the row, O(d); a rebuild costs O(d)
 once per doubling of the row, amortised O(1) per change by the argument of RadixGraph's Theorem 2. An edge change touches the source's forward row and the target's backward row. A
 removed node clears its mask bit; readers skip targets whose bit is clear, and stale entries leave at
 the next rebuild of their rows. Holes close at `freeze`.
@@ -95,7 +95,7 @@ list's length is at or above `HUB_DEGREE` (64 to start, the threshold the frozen
 already switches at) and dropped when it falls below half of it, so a node around the threshold does
 not rebuild on every edge. The list stays the source of truth and keeps change 1's reads and order;
 the index answers the lookup every keyed insert and removal makes: O(log d) in place of the O(d) scan
-that change 1's after-benchmark measured at 162 ns for `add_edge` and 312 ns for `remove_edge` on a
+that change 1's after-benchmark measured at 353 ns for `add_edge` and 328 ns for `remove_edge` on a
 hub of degree 1,000. An insert pushes and records the position; a removal swap-removes and re-records
 the moved entry; `remove_edge` takes the target's whole inner map and its positions; `from_parts`,
 `unfreeze` and `compact_ids` rebuild the index of every list at or above the threshold; `freeze` drops
@@ -111,8 +111,11 @@ run-to-run spread above 5 % for 16 of its 54 rows. A candidate *matches* the inc
 its mean is at most the incumbent's mean times one plus the larger of 5 % and the incumbent row's
 spread, so a faster candidate matches. It is *clearly faster* when each of its three runs is faster
 than each of the incumbent's and its mean lies below the incumbent's by more than the incumbent row's
-spread. Memory per edge is deterministic: it is computed once per configuration from the capacity of
-every buffer the storage holds, through a `#[doc(hidden)]` function in `src/utils/utils_tests.rs`. A
+spread times the incumbent's mean. Memory per edge is deterministic: it is computed once per
+configuration from the capacity of every buffer the storage holds, through a `#[doc(hidden)]`
+function in `src/utils/utils_tests.rs`; a `BTreeMap` exposes no capacity, so the index counts its
+entries times the size of a key, a value and a child pointer, plus one node header per eleven entries,
+the node's key count at B = 6. A
 counting allocator would need `unsafe impl GlobalAlloc`, which `unsafe_code = "forbid"` refuses in
 the bench target as everywhere else. `MIN_LOG` and `HUB_DEGREE` are each the swept value with the fastest hub update among
 those whose memory per edge stays at most 1.25 times the `Vec` lists'; a challenger with no such

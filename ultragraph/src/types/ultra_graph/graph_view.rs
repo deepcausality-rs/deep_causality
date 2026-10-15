@@ -61,7 +61,7 @@ where
         }
     }
 
-    /// Returns the number of edges in the graph.
+    /// Checks if the edge `(a, b, key)` exists in the current state.
     fn contains_edge_keyed(&self, a: usize, b: usize, key: W::Key) -> bool {
         match &self.state {
             GraphState::Static(g) => g.contains_edge_keyed(a, b, key),
@@ -69,6 +69,7 @@ where
         }
     }
 
+    /// Returns the total number of edges in the graph.
     fn number_edges(&self) -> usize {
         match &self.state {
             GraphState::Dynamic(g) => g.number_edges(),

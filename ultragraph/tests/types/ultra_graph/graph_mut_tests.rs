@@ -598,3 +598,71 @@ fn test_dynamic_graph_clear_empties_it() {
     assert!(!g.contains_root_node());
     assert_eq!(g.add_node(3).unwrap(), 0);
 }
+
+/// Replacing the payload of an edge keeps one backward entry for it, so inbound traversal lists
+/// the source once and a keyed removal finds the entry by its key.
+#[test]
+fn test_replacing_a_payload_keeps_one_backward_entry() {
+    let mut g = keyed_nodes(2);
+    g.add_edge(0, 1, keyed(Kind::A, 1)).unwrap();
+    g.add_edge(0, 1, keyed(Kind::A, 2)).unwrap();
+
+    // One edge 0 -> 1 with key A, payload weight 2: 1's inbound list is [0].
+    assert_eq!(g.number_edges(), 1);
+    assert_eq!(g.get_edges(0).unwrap(), vec![(1, &keyed(Kind::A, 2))]);
+    let inbound: Vec<usize> = g.inbound_edges(1).unwrap().collect();
+    assert_eq!(inbound, vec![0]);
+
+    g.remove_edge_keyed(0, 1, Kind::A).unwrap();
+    assert_eq!(g.number_edges(), 0);
+    assert!(g.inbound_edges(1).unwrap().next().is_none());
+}
+
+/// Removing a node joined to one neighbour by several keyed edges, in both directions and with a
+/// self-loop, takes every one of them and leaves the other edges in place.
+#[test]
+fn test_remove_node_with_many_keyed_edges_to_one_neighbour() {
+    let mut g = keyed_nodes(3);
+    g.add_edge(0, 1, keyed(Kind::A, 1)).unwrap();
+    g.add_edge(0, 1, keyed(Kind::B, 2)).unwrap();
+    g.add_edge(1, 0, keyed(Kind::A, 3)).unwrap();
+    g.add_edge(1, 0, keyed(Kind::B, 4)).unwrap();
+    g.add_edge(1, 1, keyed(Kind::A, 5)).unwrap();
+    g.add_edge(2, 1, keyed(Kind::A, 6)).unwrap();
+    g.add_edge(0, 2, keyed(Kind::A, 7)).unwrap();
+    assert_eq!(g.number_edges(), 7);
+
+    g.remove_node(1).unwrap();
+
+    // Out of 1: (0, A), (0, B), (1, A), three edges. Into 1 from another node: (0, A), (0, B),
+    // (2, A), three edges. The self-loop is one edge, so 6 of the 7 go and 0 -> 2 remains.
+    assert_eq!(g.number_edges(), 1);
+    assert_eq!(targets_and_keys(&g, 0), vec![(2, Kind::A)]);
+    assert!(g.get_edges(2).unwrap().is_empty());
+    assert!(g.inbound_edges(0).unwrap().next().is_none());
+    let inbound: Vec<usize> = g.inbound_edges(2).unwrap().collect();
+    assert_eq!(inbound, vec![0]);
+    assert!(matches!(
+        g.inbound_edges(1),
+        Err(GraphError::NodeNotFound(1))
+    ));
+}
+
+/// `with_capacity(_, Some(k))` reserves `k` entries for each node's edge list as the node is
+/// added; `new` reserves none. The reservation is observable through `to_parts`.
+#[test]
+fn test_with_capacity_reserves_each_edge_list() {
+    let mut g: DynamicGraph<u8, ()> = DynamicGraph::with_capacity(2, Some(8));
+    g.add_node(0).unwrap();
+    g.add_node(1).unwrap();
+    let (nodes, edges, _) = g.to_parts();
+    assert_eq!(nodes.len(), 2);
+    assert_eq!(edges.len(), 2);
+    assert!(edges.iter().all(|list| list.capacity() >= 8));
+
+    let mut g: DynamicGraph<u8, ()> = DynamicGraph::new();
+    g.add_node(0).unwrap();
+    g.add_node(1).unwrap();
+    let (_, edges, _) = g.to_parts();
+    assert!(edges.iter().all(|list| list.capacity() == 0));
+}

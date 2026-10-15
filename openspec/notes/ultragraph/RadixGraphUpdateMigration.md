@@ -136,7 +136,7 @@ algorithms still require a frozen graph.
 | `add_edge(a, b, k1)`, then `add_edge(a, b, k2)` | Two parallel edges; `snapshot` fails | Two edges, one per kind; `snapshot` still fails |
 | `remove_edge(a, b)` | Removes the first edge to `b` | Removes every edge to `b`, of every kind |
 | `contains_edge(a, b)` | Any edge to `b` | Any edge to `b`, of any kind |
-| `get_edge(a, b)` (`contextuable_graph.rs:129-135`) | The first edge to `b` in storage order | With two kinds: the lowest kind when frozen; not specified when dynamic, because `remove_edge` reorders a list by `swap_remove` today (`ultragraph/src/types/storage/graph_dynamic/graph_mut.rs:114`) and the snapshot-log candidate keeps no insertion order |
+| `get_edge(a, b)` (`contextuable_graph.rs:129-135`) | The first edge to `b` in storage order | With two kinds: the lowest kind, in both states (`contextuable_graph.rs` takes the minimum over the pair's edges) |
 | `remove_node(i)` | Clears `i`'s outgoing edges; edges into `i` stay until `freeze` | Removes the edges in both directions |
 | `number_of_edges()`, dynamic state | Counts edges into removed nodes | Counts live edges; `Display` and `Debug` print it |
 

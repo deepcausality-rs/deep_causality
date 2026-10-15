@@ -7,7 +7,7 @@ the phase-5 mutation report. Measurements follow the three-run protocol (design 
 under `openspec/notes/ultragraph/BenchStorage/`. Each group ends with `bazel test //...` green, clippy
 clean with no `allow`, and a commit message shown to the user; the user commits.
 
-- [ ] 0.1 Confirm `ultragraph-stable-ids-keyed-edges` is implemented and its `BenchAfter.md` exists;
+- [ ] 0.1 Confirm `ultragraph-stable-ids-keyed-edges` is implemented and its after-benchmark `openspec/notes/ultragraph/BenchAfterChange1StableId/BenchAfterChange1StableId.md` exists;
       it is the incumbent every decision here measures against
 
 ## 1. Benchmark workloads for the decisions
@@ -92,7 +92,8 @@ clean with no `allow`, and a commit message shown to the user; the user commits.
 
 - [ ] 5.1 Add the Live workloads (algorithms in Live, Live updates in place and with rebuilds, the
       transitions, and k = 1, 16 and 256 keyed writes followed by `strongly_connected_components` in
-      Live and through Dynamic → `freeze` → algorithm → `unfreeze`) and run three times; aggregate into `BenchStorage/`
+      Live and through Dynamic → `freeze` → algorithm → `unfreeze`, at 1,000 nodes and on the hub)
+      and run three times; aggregate into `BenchStorage/`
 - [ ] 5.2 Apply the Live rule of `ultragraph-edge-storage-benchmark` and record it with its rows
 - [ ] 5.3 If Live fails its rule, stop and ask the user before removing it and before group 6
 - [ ] 5.4 Commit message for group 5

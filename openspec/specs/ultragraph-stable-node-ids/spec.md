@@ -34,8 +34,8 @@ Only `compact_ids` and `clear` change positions, and both are calls the caller m
 - **WHEN** the root is removed and the graph is frozen
 - **THEN** `contains_root_node()` is false and `get_root_index()` returns `None`
 
-### Requirement: No position is issued twice between two calls of clear
-`add_node` SHALL never return a position it has returned before, unless `clear` has wiped the graph since.
+### Requirement: No position is issued twice between two calls of clear or compact_ids
+`add_node` SHALL never return a position it has returned before, unless `clear` has wiped the graph or `compact_ids` has renumbered it since.
 
 #### Scenario: Removing the last node does not free its position
 - **WHEN** nodes are added at positions 0 to 3, position 3 is removed, and a node is added

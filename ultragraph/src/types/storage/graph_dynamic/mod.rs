@@ -6,6 +6,7 @@ use crate::EdgeKey;
 
 use alloc::vec::Vec;
 
+mod debug;
 mod default;
 mod graph_compact;
 mod graph_freeze;
@@ -19,7 +20,7 @@ mod parts;
 /// Consists of `(nodes, edges, root_index)`.
 pub type DynamicGraphParts<N, W> = (Vec<Option<N>>, Vec<Vec<(usize, W)>>, Option<usize>);
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct DynamicGraph<N, W>
 where
     W: Clone + Default + EdgeKey,
@@ -34,12 +35,14 @@ where
     nodes: Vec<Option<N>>,
 
     // Adjacency list: A vector where each index corresponds to a source node,
-    // and the value is a list of its outgoing edges, in insertion order.
+    // and the value is a list of its outgoing edges. The order of a list is not specified:
+    // insertion order until a freeze or a compaction reorders it.
     edges: Vec<Vec<(usize, W)>>,
 
-    // The edges into each node as `(source, weight)`, so traversal and removal work in both
-    // directions without a freeze. Kept in step with `edges` by every mutation.
-    backward: Vec<Vec<(usize, W)>>,
+    // The edges into each node as `(source, key)`, so traversal and removal work in both
+    // directions without a freeze. Only the source and the key are read, so the payload is not
+    // mirrored; the keys are kept in step with `edges` by every mutation.
+    backward: Vec<Vec<(usize, W::Key)>>,
 
     // The number of edges, every one joining two live nodes.
     live_edges: usize,
@@ -144,7 +147,7 @@ where
         self.live_edges = 0;
         for (source, edge_list) in self.edges.iter().enumerate() {
             for (target, weight) in edge_list {
-                self.backward[*target].push((source, weight.clone()));
+                self.backward[*target].push((source, weight.edge_key()));
                 self.live_edges += 1;
             }
         }

@@ -23,4 +23,11 @@ where
             Self::Dynamic(iter) => iter.next(),
         }
     }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        match self {
+            Self::Frozen(iter) => iter.size_hint(),
+            Self::Dynamic(iter) => iter.size_hint(),
+        }
+    }
 }

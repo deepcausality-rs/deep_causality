@@ -46,7 +46,12 @@ fn err<T, E>(r: Result<T, E>) -> E {
     }
 }
 
-fn graph(n: usize, edges: &[(usize, usize)]) -> CausaloidGraph<BaseCausaloid<f64, bool>> {
+/// `n` causaloids and the `edges` between them, unfrozen. Returns the graph and the index of
+/// each causaloid.
+fn build_graph(
+    n: usize,
+    edges: &[(usize, usize)],
+) -> (CausaloidGraph<BaseCausaloid<f64, bool>>, Vec<usize>) {
     let mut g = CausaloidGraph::new(0);
     let mut nodes = Vec::with_capacity(n);
     for i in 0..n {
@@ -58,6 +63,12 @@ fn graph(n: usize, edges: &[(usize, usize)]) -> CausaloidGraph<BaseCausaloid<f64
     for &(a, b) in edges {
         g.add_edge(nodes[a], nodes[b]).unwrap();
     }
+    (g, nodes)
+}
+
+/// `build_graph`, frozen.
+fn graph(n: usize, edges: &[(usize, usize)]) -> CausaloidGraph<BaseCausaloid<f64, bool>> {
+    let (mut g, _) = build_graph(n, edges);
     g.freeze();
     g
 }
@@ -70,17 +81,7 @@ fn graph_with_removed(
     removed: &[usize],
     edges: &[(usize, usize)],
 ) -> CausaloidGraph<BaseCausaloid<f64, bool>> {
-    let mut g = CausaloidGraph::new(0);
-    let mut nodes = Vec::with_capacity(n);
-    for i in 0..n {
-        nodes.push(
-            g.add_causaloid(test_utils::get_test_causaloid_deterministic(i as u64))
-                .unwrap(),
-        );
-    }
-    for &(a, b) in edges {
-        g.add_edge(nodes[a], nodes[b]).unwrap();
-    }
+    let (mut g, nodes) = build_graph(n, edges);
     for &r in removed {
         g.remove_causaloid(nodes[r]).unwrap();
     }

@@ -18,13 +18,13 @@ One test named per row, or `n/a` with the reason.
 | B | Single element | One node, removed and the graph frozen; one node kept through a round trip | `graph_evolve_tests::test_freeze_keeps_a_single_removed_slot` |
 | C | Coinciding quantities | No removal, where position equals rank and the old renumbering is invisible; every scenario also runs with a removal below the node it reads | `graph_evolve_tests::test_freeze_without_removal_keeps_positions` beside `test_freezing_after_a_removal_moves_no_node` |
 | D | Degenerate index | Removal at position 0, in the middle, at the last position, of every node; trailing tombstones; a node whose only neighbour is a tombstone | `graph_evolve_tests::test_round_trips_keep_trailing_tombstones`, `test_a_graph_with_no_live_node_keeps_its_table`; the model-based test |
-| E | Thresholds, both sides | n/a in this group: no threshold is touched (the search and sort thresholds belong to group 3) | — |
+| E | Thresholds, both sides | the small-graph betweenness case at `live <= 3`: 2, 3 and 4 live nodes (the search and sort thresholds belong to group 3) | the betweenness tests with a removal, among them `test_betweenness_with_exactly_three_live_nodes_scores_the_middle` |
 | F | Zero | Zero edges; `number_nodes` 0 with slots present; `index_bound` 0 | `graph_view_tests::test_is_empty_counts_live_nodes`; `causable_graph_tests::test_index_bound_of_an_empty_graph` |
 | G | Negative | n/a: positions are `usize` | — |
 | H | Exact boundary | A position one past the slot count beside a tombstone at the last slot; the root at the last slot | `graph_view_tests::test_the_highest_live_position_skips_trailing_tombstones`; `graph_evolve_tests::test_the_root_keeps_its_position` |
 | I | Non-finite | n/a: no floating-point input in this group | — |
 | J | Overflow reach | n/a: no arithmetic on positions beyond `+ 1` on a slot count bounded by memory | — |
-| K | Every payload kind | `()`, `u64` and a `String` node payload through add, remove, freeze, unfreeze and `compact_ids` | the model-based test runs over `W = ()` and `W = u64` |
+| K | Every payload kind | `()`, `u64` and a `&str` node payload through add, remove, freeze, unfreeze and `compact_ids` | the model-based test runs over `W = ()` and `W = u64` |
 
 ## Phase 1 — the API, every new body `unimplemented!()`
 

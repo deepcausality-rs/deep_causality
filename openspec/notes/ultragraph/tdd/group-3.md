@@ -127,7 +127,7 @@ Coverage: every added or changed line is reached by a named test above; no cover
 | `deep_causality` | 0 (docs and an inline test only) | — | — | — | — |
 
 A timeout is a mutant that hangs the suite (an unterminated BFS or run scan); the suite never
-passes, so it counts as noticed. The nineteen survivors, each resolved:
+passes, so it counts as noticed. The nineteen survivors, grouped by resolution (a guard yields several mutants):
 
 - Six real gaps, closed by tests: `remove_edge_keyed`'s backward retain by source (two sources, one
   key), `DynamicGraph::clear` (the container replaces its state and never calls it, so it is
@@ -139,12 +139,17 @@ passes, so it counts as noticed. The nineteen survivors, each resolved:
   the entry's source and key are ever read), the guards `scale > 0.0` (at least three live nodes
   reach it) and `sigma[w] > 0.0` (every node on the stack was reached), and the `while`
   condition of `undirected_neighbours`, which duplicated its `(None, None)` arm.
-- Five equivalent, recorded in `.cargo/mutants.toml` with their arguments and confirmed by the
-  file's `comm` check to match exactly the intended mutants: `DynamicGraph::with_capacity` →
-  `Default`, Dijkstra's stale-entry skip (`>` → `<` skips nothing and improves no neighbour), its
-  relaxation on a tie (`<` → `<=`: same length, an unpinned choice among equal paths), the sort
-  threshold (both branches sort by target then key; the 127/128/129 test pins the order on both
-  sides), and `find_cycle_impl`'s root guard (group 2's entry, renamed with the function).
+- Three equivalent, recorded in `.cargo/mutants.toml` with their arguments and confirmed by the
+  file's `comm` check to match exactly the intended mutants: Dijkstra's stale-entry skip (`>` →
+  `<` skips nothing and improves no neighbour), the sort threshold (both branches sort by target
+  then key; the 127/128/129 test pins the order on both sides), and `find_cycle_impl`'s root
+  guard (group 2's entry, renamed with the function).
+- Two first recorded as equivalent and then found not to be, their entries removed and each
+  closed by a test: `DynamicGraph::with_capacity` → `Default` (the reserved capacity reaches
+  `to_parts()`; `test_with_capacity_reserves_each_edge_list` reads it), and Dijkstra's relaxation
+  on a tie (`<` → `<=` re-enqueues a node along a zero-weight self-loop or cycle without end;
+  `test_shortest_weighted_path_terminates_on_zero_weight_loops` runs into the timeout, which
+  `cargo mutants` counts as a kill).
 
 Second run after the fixes: 552 mutants, 532 caught, 10 timeouts, 8 unviable, 2 missed, both the
 `valid_pathways += 1` of a self-pathway, closed by the normalisation test above and re-run: 8 of 8

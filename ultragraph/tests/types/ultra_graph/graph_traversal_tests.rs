@@ -633,3 +633,29 @@ fn test_from_parts_rebuilds_the_backward_lists() {
     assert_eq!(rebuilt.number_edges(), 2);
     assert!(rebuilt.contains_edge_keyed(1, 2, ()));
 }
+
+/// The container's traversal iterator reports the size hint of the active state's iterator:
+/// exact in both states, and decreasing as items are taken.
+#[test]
+fn test_traversal_size_hint_is_exact_in_both_states() {
+    let mut g = UltraGraph::new();
+    for position in 0..4 {
+        assert_eq!(g.add_node(position).unwrap(), position);
+    }
+    g.add_edge(0, 1, ()).unwrap();
+    g.add_edge(0, 2, ()).unwrap();
+    g.add_edge(0, 3, ()).unwrap();
+
+    // 0 has three outgoing edges and 1 has one incoming edge, in both states.
+    for _ in 0..2 {
+        {
+            let mut out = g.outbound_edges(0).unwrap();
+            assert_eq!(out.size_hint(), (3, Some(3)));
+            out.next();
+            assert_eq!(out.size_hint(), (2, Some(2)));
+            assert_eq!(g.inbound_edges(1).unwrap().size_hint(), (1, Some(1)));
+            assert_eq!(g.outbound_edges(3).unwrap().size_hint(), (0, Some(0)));
+        }
+        g.freeze();
+    }
+}

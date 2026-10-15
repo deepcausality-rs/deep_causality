@@ -8,7 +8,7 @@
 - **THEN** `is_frozen()` is false, false, true and `is_live()` is false, true, false
 
 ### Requirement: Each state allows what it serves
-Mutations SHALL be accepted in the Dynamic and the Live state and refused with `GraphError::GraphIsFrozen` in the Frozen state; traversal SHALL work in all three; every algorithm of `GraphAlgorithms` and `project` SHALL work in the Live and the Frozen state and return `GraphError::GraphNotFrozen` in the Dynamic state.
+Mutations SHALL be accepted in the Dynamic and the Live state, except `compact_ids`, which the Live state refuses with `GraphError::GraphIsLive`, and refused with `GraphError::GraphIsFrozen` in the Frozen state; traversal SHALL work in all three; every algorithm of `GraphAlgorithms` and `project` SHALL work in the Live and the Frozen state and return `GraphError::GraphNotFrozen` in the Dynamic state.
 
 #### Scenario: Live accepts a write and answers an algorithm
 - **WHEN** a Live graph receives `add_edge(2, 3, w)` and `is_reachable(0, 3)` is then called

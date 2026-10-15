@@ -1,0 +1,96 @@
+date
+Thu Oct 15 22:51:25 WITA 2026
+
+cargo bench -p ultragraph -- '^(add_edge|remove_node|remove_edge)/'
+    Finished `bench` profile [optimized] target(s) in 0.18s
+     Running unittests src/lib.rs (target/release/deps/ultragraph-5e2d25838a12ab48)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running benches/bench_main.rs (target/release/deps/bench_main-1db54c742f46f65c)
+Benchmarking add_edge/10
+Benchmarking add_edge/10: Warming up for 3.0000 s
+Benchmarking add_edge/10: Collecting 100 samples in estimated 5.0003 s (9.2M iterations)
+Benchmarking add_edge/10: Analyzing
+add_edge/10             time:   [17.998 ns 18.089 ns 18.178 ns]
+                        change: [−4.3467% −3.1169% −1.7968%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 2 outliers among 100 measurements (2.00%)
+  1 (1.00%) high mild
+  1 (1.00%) high severe
+Benchmarking add_edge/100
+Benchmarking add_edge/100: Warming up for 3.0000 s
+Benchmarking add_edge/100: Collecting 100 samples in estimated 5.0188 s (1.1M iterations)
+Benchmarking add_edge/100: Analyzing
+add_edge/100            time:   [51.442 ns 51.906 ns 52.290 ns]
+                        change: [−3.7208% −1.7979% +0.1352%] (p = 0.08 > 0.05)
+                        No change in performance detected.
+Found 2 outliers among 100 measurements (2.00%)
+  2 (2.00%) high mild
+Benchmarking add_edge/1000
+Benchmarking add_edge/1000: Warming up for 3.0000 s
+Benchmarking add_edge/1000: Collecting 100 samples in estimated 5.3949 s (30k iterations)
+Benchmarking add_edge/1000: Analyzing
+add_edge/1000           time:   [350.23 ns 352.17 ns 354.19 ns]
+                        change: [−1.6044% −0.4709% +0.6711%] (p = 0.43 > 0.05)
+                        No change in performance detected.
+Found 4 outliers among 100 measurements (4.00%)
+  2 (2.00%) high mild
+  2 (2.00%) high severe
+
+Benchmarking remove_node/10
+Benchmarking remove_node/10: Warming up for 3.0000 s
+Benchmarking remove_node/10: Collecting 100 samples in estimated 5.0020 s (10.0M iterations)
+Benchmarking remove_node/10: Analyzing
+remove_node/10          time:   [23.085 ns 23.427 ns 23.704 ns]
+                        change: [−2.1916% +0.4056% +2.9627%] (p = 0.77 > 0.05)
+                        No change in performance detected.
+Benchmarking remove_node/100
+Benchmarking remove_node/100: Warming up for 3.0000 s
+Benchmarking remove_node/100: Collecting 100 samples in estimated 5.0088 s (1.2M iterations)
+Benchmarking remove_node/100: Analyzing
+remove_node/100         time:   [24.691 ns 24.917 ns 25.105 ns]
+                        change: [−2.2958% −0.4560% +1.6077%] (p = 0.65 > 0.05)
+                        No change in performance detected.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high severe
+Benchmarking remove_node/1000
+Benchmarking remove_node/1000: Warming up for 3.0000 s
+Benchmarking remove_node/1000: Collecting 100 samples in estimated 5.1425 s (131k iterations)
+Benchmarking remove_node/1000: Analyzing
+remove_node/1000        time:   [29.460 ns 29.908 ns 30.379 ns]
+                        change: [−5.8231% −1.9508% +2.9645%] (p = 0.42 > 0.05)
+                        No change in performance detected.
+Found 3 outliers among 100 measurements (3.00%)
+  1 (1.00%) high mild
+  2 (2.00%) high severe
+
+Benchmarking remove_edge/10
+Benchmarking remove_edge/10: Warming up for 3.0000 s
+Benchmarking remove_edge/10: Collecting 100 samples in estimated 5.0016 s (12M iterations)
+Benchmarking remove_edge/10: Analyzing
+remove_edge/10          time:   [17.980 ns 18.194 ns 18.370 ns]
+                        change: [−2.2817% +0.5451% +3.8079%] (p = 0.73 > 0.05)
+                        No change in performance detected.
+Benchmarking remove_edge/100
+Benchmarking remove_edge/100: Warming up for 3.0000 s
+Benchmarking remove_edge/100: Collecting 100 samples in estimated 5.0073 s (1.1M iterations)
+Benchmarking remove_edge/100: Analyzing
+remove_edge/100         time:   [46.928 ns 47.615 ns 48.213 ns]
+                        change: [−1.3705% +0.4828% +2.2482%] (p = 0.60 > 0.05)
+                        No change in performance detected.
+Found 1 outliers among 100 measurements (1.00%)
+  1 (1.00%) high mild
+Benchmarking remove_edge/1000
+Benchmarking remove_edge/1000: Warming up for 3.0000 s
+Benchmarking remove_edge/1000: Collecting 100 samples in estimated 5.3742 s (30k iterations)
+Benchmarking remove_edge/1000: Analyzing
+remove_edge/1000        time:   [320.04 ns 322.07 ns 324.29 ns]
+                        change: [−3.6312% −2.6457% −1.7762%] (p = 0.00 < 0.05)
+                        Performance has improved.
+Found 15 outliers among 100 measurements (15.00%)
+  9 (9.00%) high mild
+  6 (6.00%) high severe
+

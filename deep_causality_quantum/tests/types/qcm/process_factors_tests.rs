@@ -112,9 +112,9 @@ fn test_from_graph_builds_collider_supports() {
     assert!(fs.validate(&pf).is_ok());
 }
 
-/// The collider `n0 → n2 ← n1` with an extra causaloid added and removed before `n2`, so that
-/// `n2 = 3` is live while `number_nodes()` is 3, and the removed index 2 sits below it. Returns
-/// the frozen graph and `(n0, n1, removed, n2)`.
+/// The collider `n0 → n2 ← n1` with an extra causaloid at index 2, added before `n2` and removed
+/// after `n2` is added, so that `n2 = 3` is live while `number_nodes()` is 3, and the removed
+/// index 2 sits below it. Returns the frozen graph and `(n0, n1, removed, n2)`.
 fn frozen_collider_with_a_removed_index() -> (
     CausaloidGraph<deep_causality::BaseCausaloid<f64, bool>>,
     [usize; 4],

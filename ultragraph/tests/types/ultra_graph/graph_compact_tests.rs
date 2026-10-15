@@ -360,3 +360,19 @@ fn test_agreement_over_generated_graphs() {
         }
     }
 }
+
+/// A root past the node table, as `from_parts` accepts, has no row in the mapping and is cleared
+/// by `compact_ids` instead of being looked up.
+#[test]
+fn test_compact_ids_clears_a_root_past_the_table() {
+    let mut g: DynamicGraph<&str, ()> =
+        DynamicGraph::from_parts((vec![Some("A")], vec![vec![]], Some(5)));
+    assert_eq!(g.root_index(), Some(5));
+    assert!(!g.contains_root_node());
+
+    let table = g.compact_ids();
+
+    assert_eq!(table, vec![Some(0)]);
+    assert_eq!(g.root_index(), None);
+    assert_eq!(g.get_node(0), Some(&"A"));
+}

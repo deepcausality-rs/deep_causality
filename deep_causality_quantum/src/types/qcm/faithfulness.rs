@@ -37,6 +37,7 @@ use alloc::format;
 use alloc::vec;
 use alloc::vec::Vec;
 use deep_causality::CausableGraph;
+use ultragraph::GraphTraversal;
 
 /// A causal structure: a bipartite influence relation between input systems and
 /// output systems. `contains(i, o)` holds when input `i` influences output `o`.
@@ -88,7 +89,7 @@ impl CausalStructure {
     /// Derives the causal structure from a **frozen** causal graph's
     /// reachability over caller-declared input and output nodes: input `i`
     /// influences output `o` iff there is a directed path `i → … → o` (or
-    /// `i == o`), computed from the public `contains_edge` adjacency. This is
+    /// `i == o`), walked along the graph's outbound edges. This is
     /// the traditional-circuit influence relation the C₃ criterion is stated on.
     ///
     /// The graph **must be frozen**; an unfrozen graph is rejected. A declared system id
@@ -129,7 +130,8 @@ impl CausalStructure {
         let mut me = Self::new(inputs, outputs);
         let out_set: BTreeSet<usize> = outputs.iter().copied().collect();
         for &i in &me.inputs.clone() {
-            // BFS from i over forward edges.
+            // Depth-first walk from i over forward edges. Every node reached is live, so its
+            // listing answers; a tombstone is never reached because no edge leads to one.
             let mut seen = vec![false; n];
             let mut stack = vec![i];
             seen[i] = true;
@@ -137,9 +139,14 @@ impl CausalStructure {
                 if out_set.contains(&node) {
                     me.add_influence(i, node);
                 }
-                for (succ, seen_succ) in seen.iter_mut().enumerate() {
-                    if !*seen_succ && graph.contains_edge(node, succ) {
-                        *seen_succ = true;
+                let successors = graph.get_graph().outbound_edges(node).map_err(|e| {
+                    QuantumError::CalculationError(format!(
+                        "node {node}, reached along an edge, lists no neighbours: {e}"
+                    ))
+                })?;
+                for succ in successors {
+                    if !seen[succ] {
+                        seen[succ] = true;
                         stack.push(succ);
                     }
                 }

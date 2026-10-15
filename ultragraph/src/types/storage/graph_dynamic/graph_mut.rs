@@ -67,18 +67,29 @@ where
         self.nodes[index] = None;
 
         // The edges out of the node leave their targets' backward lists; the edges into it leave
-        // their sources' forward lists. A self-loop sits in both lists of the node and is one edge.
+        // their sources' forward lists. A self-loop sits in both lists of the node and is one edge,
+        // counted once with the outgoing edges. Each neighbour's list is scanned once, however
+        // many keyed edges join it to the node.
         let outgoing = core::mem::take(&mut self.edges[index]);
-        for (target, _) in &outgoing {
-            self.backward[*target].retain(|(source, _)| *source != index);
-        }
         let incoming = core::mem::take(&mut self.backward[index]);
-        let mut removed = outgoing.len();
-        for (source, _) in &incoming {
-            if *source != index {
-                self.edges[*source].retain(|(target, _)| *target != index);
-                removed += 1;
-            }
+        let removed = outgoing.len()
+            + incoming
+                .iter()
+                .filter(|(source, _)| *source != index)
+                .count();
+
+        let mut targets: Vec<usize> = outgoing.into_iter().map(|(target, _)| target).collect();
+        targets.sort_unstable();
+        targets.dedup();
+        for target in targets {
+            self.backward[target].retain(|(source, _)| *source != index);
+        }
+
+        let mut sources: Vec<usize> = incoming.into_iter().map(|(source, _)| source).collect();
+        sources.sort_unstable();
+        sources.dedup();
+        for source in sources {
+            self.edges[source].retain(|(target, _)| *target != index);
         }
         self.live_edges -= removed;
 
@@ -107,13 +118,12 @@ where
             .position(|(target, w)| *target == b && w.edge_key() == key);
         match existing {
             Some(position) => {
-                // The backward entry keeps the old payload: only its source and key are ever read,
-                // and the key is the one being replaced.
+                // The backward entry holds the source and the key, and the key is unchanged.
                 self.edges[a][position].1 = weight;
             }
             None => {
-                self.edges[a].push((b, weight.clone()));
-                self.backward[b].push((a, weight));
+                self.edges[a].push((b, weight));
+                self.backward[b].push((a, key));
                 self.live_edges += 1;
             }
         }
@@ -164,7 +174,7 @@ where
             });
         };
         self.edges[a].remove(position);
-        self.backward[b].retain(|(source, w)| !(*source == a && w.edge_key() == key));
+        self.backward[b].retain(|(source, k)| !(*source == a && *k == key));
         self.live_edges -= 1;
         Ok(())
     }

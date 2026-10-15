@@ -22,6 +22,5 @@ or an algorithm is unexplained, which was D9's test for a defect.
 ## Close-out
 
 `make format && make fix`, `make build`, `bazel test //...` and `make check_examples` were run by
-Marvin on the committed groups. The `context-store-crate-identity` spec's Purpose line still says
-"Tier-0, dependency-free"; the delta of this change replaces the requirement, and the Purpose line
-is updated when the change is archived (task 4.4).
+Marvin on the committed groups. The `context-store-crate-identity` spec's Purpose line reads Tier-1, on
+`ultragraph_traits`, since the archive of this change (task 4.4).

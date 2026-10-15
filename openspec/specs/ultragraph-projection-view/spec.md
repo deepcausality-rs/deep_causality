@@ -72,7 +72,7 @@ In a projection, a node SHALL pass when it is live and the node test holds for i
 - **THEN** `topological_sort` on the projection returns `[1, 2, 3]`
 
 ### Requirement: A view's reads and traversals list its passing elements
-On a projection view, the node reads of `GraphView` (`contains_node`, `get_node`, `get_all_nodes`, `number_nodes`, `get_last_index`, `is_empty`, and the three root reads, which return the graph's root only when it passes) SHALL answer for the passing nodes only, and `contains_edge`, `get_edges`, `number_edges`, `outbound_edges` and `inbound_edges` SHALL list one entry per passing edge under either mode; `is_frozen` SHALL be true.
+On a projection view, the node reads of `GraphView` (`contains_node`, `get_node`, `get_all_nodes`, `number_nodes`, `get_last_index`, `is_empty`, and the three root reads, which return the graph's root only when it passes) SHALL answer for the passing nodes only, and `contains_edge`, `contains_edge_keyed`, `get_edges`, `number_edges`, `outbound_edges` and `inbound_edges` SHALL answer for, and list one entry per, passing edge under either mode; `is_frozen` SHALL be true.
 
 The mode decides how algorithms count parallel edges, not what reads list. A representative of several parallel edges would need an order on `W`, which only `shortest_weighted_path` requires.
 

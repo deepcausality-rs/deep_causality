@@ -307,7 +307,7 @@ Every candidate implements §1–3; they differ in how a node's edges are held.
   held while the list has at least `HUB_DEGREE` entries (64 to start, the frozen lookup's threshold)
   and dropped below half of it. The list stays the source of truth; the index answers the lookup
   a keyed insert or removal makes, O(log d) for the scan that change 1's after-benchmark measured
-  at 162 ns (`add_edge`) and 312 ns (`remove_edge`) on a hub of degree 1,000. Nodes below the
+  at 353 ns (`add_edge`) and 328 ns (`remove_edge`) on a hub of degree 1,000. Nodes below the
   threshold pay nothing. `freeze` drops the index; `unfreeze`, `from_parts` and `compact_ids`
   rebuild it where a list is long enough.
 
@@ -322,7 +322,8 @@ simple projection is the one whose predicates pass every node and edge:** one co
 ordered pair of nodes, whatever the number of edges between them. The undirected
 algorithms (articulation points, bridges, biconnected components, undirected betweenness) use one
 undirected connection per unordered pair, so `u → v` and `v → u` count once, as they do today. A
-weighted path takes, for each connection, the lightest of its parallel edges, by `W`'s order. The
+weighted path relaxes every parallel edge, so the lightest of a connection's edges, by `W`'s order,
+sets the distance. The
 frozen adjacency is sorted by target, then key, so the simple projection costs nothing to build: an
 algorithm skips repeated targets as it iterates a node's edges.
 

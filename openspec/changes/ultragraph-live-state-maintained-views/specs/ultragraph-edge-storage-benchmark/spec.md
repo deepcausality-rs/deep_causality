@@ -14,7 +14,7 @@ The Dynamic state's per-node `Vec` lists, RadixGraph's snapshot-log edge arrays,
 ### Requirement: The benchmark covers the workloads the decisions depend on
 `ultragraph/benches` SHALL measure, at 10, 100 and 1,000 nodes and on a hub of 10⁵ edges where named: building a graph by inserts; keyed update and removal on low-degree nodes and on the hub; outbound and inbound traversal in the Dynamic state over an ordered and a shuffled chain; `freeze` and `unfreeze`; memory per edge on the hub and at 1,000 nodes, after building and after the keyed update workload, with the snapshot-log `MIN_LOG` and the index's `HUB_DEGREE` swept; every algorithm in the Live and the Frozen state; k = 1, 16 and 256 keyed writes followed by `strongly_connected_components`, at 1,000 nodes and on the hub, once in the Live state and once as Dynamic → `freeze` → the algorithm → `unfreeze`; updates in the Live state, in place and with row rebuilds; and the cost a mutation pays with 0, 1, 4 and 16 maintained views.
 
-Memory per edge SHALL be the sum, in bytes, of the capacity of every buffer the edge storage holds, divided by the number of edges, computed by a `#[doc(hidden)]` function in `src/utils/utils_tests.rs`; it is deterministic and needs one run.
+Memory per edge SHALL be the sum, in bytes, of the capacity of every buffer the edge storage holds, divided by the number of edges, computed by a `#[doc(hidden)]` function in `src/utils/utils_tests.rs`; it is deterministic and needs one run. A `BTreeMap` index, which exposes no capacity, SHALL count its entries times the size of a key, a value and a child pointer, plus one node header per eleven entries.
 
 #### Scenario: Every workload has a benchmark group
 - **WHEN** `cargo bench -p ultragraph -- --test` runs
@@ -27,7 +27,7 @@ Memory per edge SHALL be the sum, in bytes, of the capacity of every buffer the 
 ### Requirement: Measurements follow the baseline's three-run protocol
 Every timing that feeds a decision SHALL be three runs of `cargo bench -p ultragraph` on the baseline machine, aggregated as in `openspec/notes/ultragraph/BenchBefore/BenchBefore.md` (mean, spread as largest minus smallest over the mean, the median where the spread exceeds 15 %), and recorded under `openspec/notes/ultragraph/BenchStorage/` with the machine, `rustc` version and date.
 
-A candidate *matches* the incumbent on a row when its mean is at most the incumbent's mean times one plus the larger of 5 % and the incumbent row's spread, so a faster candidate matches. It is *clearly faster* when each of its three runs is faster than each of the incumbent's and its mean lies below the incumbent's by more than the incumbent row's spread.
+A candidate *matches* the incumbent on a row when its mean is at most the incumbent's mean times one plus the larger of 5 % and the incumbent row's spread, so a faster candidate matches. It is *clearly faster* when each of its three runs is faster than each of the incumbent's and its mean lies below the incumbent's by more than the incumbent row's spread times the incumbent's mean.
 
 #### Scenario: A decision cites its table
 - **WHEN** a decision of this capability is recorded

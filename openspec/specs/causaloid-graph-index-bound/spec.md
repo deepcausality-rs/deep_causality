@@ -25,7 +25,7 @@ Defines `CausableGraph::index_bound` and the reasoning engines on a causaloid gr
 - **THEN** `index_bound()` returns 2
 
 ### Requirement: Reasoning reaches every causaloid after a removal and a freeze
-`MonadicCausableGraphReasoning` and `StatefulMonadicCausableGraphReasoning` SHALL size their per-node bookkeeping by `index_bound()`, and SHALL evaluate a frozen graph with removed causaloids without panicking, reaching every causaloid at the index `add_causaloid` returned.
+`MonadicCausableGraphReasoning` and `StatefulMonadicCausableGraphReasoning` SHALL size their per-node bookkeeping by `index_bound()`, and SHALL evaluate a frozen acyclic graph with removed causaloids without panicking, reaching every causaloid reachable from the start at the index `add_causaloid` returned.
 
 #### Scenario: Evaluation crosses a removed index
 - **WHEN** causaloids are added at 0, 1 and 2, edge 0 → 2 exists, index 1 is removed, the graph is frozen, and evaluation starts at 0 in each engine

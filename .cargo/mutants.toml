@@ -143,21 +143,11 @@ exclude_re = [
     # `topological_sort`'s queue filter in the same file is a different function and IS caught.
     "replace && with \\|\\| in find_cycle_impl",
 
-    # `DynamicGraph::with_capacity` versus `Default::default()`: the same empty graph, differing
-    # only in the capacity of its vectors, which nothing reads. Same argument as `CsmGraph`'s.
-    "replace DynamicGraph<N, W>::with_capacity -> Self with Default::default\\(\\)",
-
     # Dijkstra's stale-entry skip, `if dist > known { continue }`, mutated to `<`. A popped
     # distance is never below the known one, so the mutant skips nothing and processes every
     # stale entry; a stale entry relaxes with a larger distance and improves no neighbour, so the
     # path and its length are unchanged. Only work is added.
     "replace > with < in shortest_weighted_path_impl",
-
-    # Dijkstra's relaxation, `if new_dist < known`, mutated to `<=`. On a tie the mutant replaces
-    # the predecessor by another of equal distance, so the length is unchanged and the path is
-    # one of the equal-length paths; no scenario pins which equal path is returned, and the
-    # specification names the length.
-    "replace < with <= in shortest_weighted_path_impl",
 
     # The sort threshold `targets.len() < RADIX_SORT_THRESHOLD`, mutated to `<=`, `==` or `>`.
     # Both branches sort by target then key (the comparison sort directly, the radix branch by

@@ -18,7 +18,8 @@ where
     /// state `to_parts` returns and the state every mutation keeps.
     ///
     /// # Panics
-    /// When the node table and the adjacency lists differ in length.
+    /// When the node table and the adjacency lists differ in length, and when an edge names a
+    /// target past the node table: the backward rebuild indexes it.
     pub fn from_parts(parts: DynamicGraphParts<N, W>) -> Self {
         let (nodes, edges, root_index) = parts;
 

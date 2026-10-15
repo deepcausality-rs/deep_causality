@@ -3,8 +3,8 @@ Thu Oct 15 11:15:41 WITA 2026
 
 cargo bench -p ultragraph
    Compiling alloca v0.4.0
-   Compiling ultragraph_traits v0.1.0 (/Users/marvin/RustroverProjects/dcl/deep_causality/ultragraph_traits)
-   Compiling ultragraph v0.9.9 (/Users/marvin/RustroverProjects/dcl/deep_causality/ultragraph)
+   Compiling ultragraph_traits v0.1.0 (<workspace>/ultragraph_traits)
+   Compiling ultragraph v0.9.9 (<workspace>/ultragraph)
    Compiling criterion v0.8.2
     Finished `bench` profile [optimized] target(s) in 21.80s
      Running unittests src/lib.rs (target/release/deps/ultragraph-5e2d25838a12ab48)

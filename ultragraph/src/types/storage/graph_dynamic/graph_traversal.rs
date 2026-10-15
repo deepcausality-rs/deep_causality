@@ -9,7 +9,8 @@ impl<N, W> GraphTraversal<N, W> for DynamicGraph<N, W>
 where
     W: Clone + Default + EdgeKey,
 {
-    /// The targets of the node's outgoing edges, one per edge, in insertion order.
+    /// The targets of the node's outgoing edges, one per edge. The order is not specified:
+    /// insertion order until a freeze or a compaction reorders the list.
     ///
     /// # Errors
     /// Returns `GraphError::NodeNotFound` if position `a` holds no node: past the table or removed.
@@ -20,7 +21,8 @@ where
         Ok(self.edges[a].iter().map(|(target, _)| *target))
     }
 
-    /// The sources of the node's incoming edges, one per edge, in insertion order.
+    /// The sources of the node's incoming edges, one per edge. The order is not specified:
+    /// insertion order until a freeze or a compaction reorders the list.
     ///
     /// # Errors
     /// Returns `GraphError::NodeNotFound` if position `a` holds no node: past the table or removed.

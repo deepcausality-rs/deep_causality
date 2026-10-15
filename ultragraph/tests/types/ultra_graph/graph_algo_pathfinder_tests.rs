@@ -153,3 +153,39 @@ fn test_path_queries_with_a_never_issued_position_answer_none() {
         assert!(!g.is_reachable(start, stop).unwrap());
     }
 }
+
+/// Dijkstra relaxes a neighbour only on a strict improvement. A zero-weight self-loop and a
+/// zero-weight cycle re-enqueue a node forever under a non-strict relaxation, so this pins
+/// termination as well as the path.
+#[test]
+fn test_shortest_weighted_path_terminates_on_zero_weight_loops() {
+    let mut g: UltraGraphWeighted<u8, u64> = UltraGraphWeighted::new();
+    for payload in 0..3 {
+        g.add_node(payload).unwrap();
+    }
+    g.add_edge(0, 1, 0).unwrap();
+    g.add_edge(1, 1, 0).unwrap();
+    g.add_edge(1, 2, 3).unwrap();
+    g.freeze();
+
+    // The only path 0 -> 1 -> 2 weighs 0 + 3 = 3; the self-loop 1 -> 1 adds 0 and is never taken.
+    assert_eq!(
+        g.shortest_weighted_path(0, 2).unwrap(),
+        Some((vec![0, 1, 2], 3))
+    );
+
+    let mut g: UltraGraphWeighted<u8, u64> = UltraGraphWeighted::new();
+    for payload in 0..3 {
+        g.add_node(payload).unwrap();
+    }
+    g.add_edge(0, 1, 0).unwrap();
+    g.add_edge(1, 0, 0).unwrap();
+    g.add_edge(1, 2, 5).unwrap();
+    g.freeze();
+
+    // The cycle 0 -> 1 -> 0 weighs 0; the path 0 -> 1 -> 2 weighs 0 + 5 = 5.
+    assert_eq!(
+        g.shortest_weighted_path(0, 2).unwrap(),
+        Some((vec![0, 1, 2], 5))
+    );
+}

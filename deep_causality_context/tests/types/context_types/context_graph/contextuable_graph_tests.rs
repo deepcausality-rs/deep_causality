@@ -161,6 +161,31 @@ fn id_at(context: &BaseContext, index: usize) -> u64 {
     context.get_node(index).expect("a node at the index").id()
 }
 
+/// Six nodes (ids 1 to 6) joined by a cycle, a fan-out and a fan-in, with the sixth isolated.
+/// Returns the mutable context, the index of each node, and the edge table as positions into
+/// that index.
+fn six_node_context() -> (BaseContext, Vec<usize>, [(usize, usize); 7]) {
+    let mut context = get_context();
+    let index: Vec<usize> = (1..=6)
+        .map(|id| context.add_node(datum(id)).unwrap())
+        .collect();
+    let edges = [(0, 1), (1, 2), (2, 0), (0, 3), (0, 4), (3, 4), (2, 4)];
+    for (a, b) in edges {
+        context
+            .add_edge(index[a], index[b], RelationKind::Datial)
+            .unwrap();
+    }
+    (context, index, edges)
+}
+
+/// Ids 10, 20 and 30 added in that order to a mutable context. Returns the context and the
+/// three indices.
+fn three_node_context() -> (BaseContext, [usize; 3]) {
+    let mut context = get_context();
+    let index = [10, 20, 30].map(|id| context.add_node(datum(id)).unwrap());
+    (context, index)
+}
+
 #[test]
 fn test_add_node_refuses_a_duplicate_id() {
     let mut context = get_context();
@@ -226,16 +251,7 @@ fn test_freeze_and_unfreeze_switch_the_state() {
 #[test]
 fn test_neighbour_listings_agree_with_the_edges() {
     // Six nodes with a cycle, a fan-out, a fan-in and an isolated node.
-    let mut context = get_context();
-    let index: Vec<usize> = (1..=6)
-        .map(|id| context.add_node(datum(id)).unwrap())
-        .collect();
-    let edges = [(0, 1), (1, 2), (2, 0), (0, 3), (0, 4), (3, 4), (2, 4)];
-    for (a, b) in edges {
-        context
-            .add_edge(index[a], index[b], RelationKind::Datial)
-            .unwrap();
-    }
+    let (mut context, index, edges) = six_node_context();
     context.freeze();
 
     let mut listed = 0;
@@ -274,16 +290,7 @@ fn test_dynamic_listing_equals_frozen() {
     // source for outbound and by target for inbound, and the mutable context, the frozen one and
     // the unfrozen one must all list it at the same indices. Order is not pinned, so the
     // listings are compared sorted.
-    let mut context = get_context();
-    let index: Vec<usize> = (1..=6)
-        .map(|id| context.add_node(datum(id)).unwrap())
-        .collect();
-    let edges = [(0, 1), (1, 2), (2, 0), (0, 3), (0, 4), (3, 4), (2, 4)];
-    for (a, b) in edges {
-        context
-            .add_edge(index[a], index[b], RelationKind::Datial)
-            .unwrap();
-    }
+    let (mut context, index, edges) = six_node_context();
     let sorted = |mut v: Vec<usize>| {
         v.sort_unstable();
         v
@@ -504,8 +511,7 @@ fn test_an_index_survives_a_removal_and_a_freeze() {
     // Spec scenario "An index survives a removal and a freeze": ids 10, 20 and 30 at 0, 1 and 2;
     // 20 removed; frozen. 30 stays at 2, above the tombstone at 1, so the live count (2) is below
     // its position.
-    let mut context = get_context();
-    let [i10, i20, i30] = [10, 20, 30].map(|id| context.add_node(datum(id)).unwrap());
+    let (mut context, [i10, i20, i30]) = three_node_context();
     assert_eq!([i10, i20, i30], [0, 1, 2]);
     context.remove_node(20).unwrap();
 
@@ -524,8 +530,7 @@ fn test_stored_data_and_time_indices_follow_their_nodes() {
     // Spec scenario "Stored data and time indices follow their nodes": the entries name i30 = 2
     // and i10 = 0, 20 is removed, and the context is frozen and unfrozen. Under a renumbering
     // freeze i30 would read 1.
-    let mut context = get_context();
-    let [i10, i20, i30] = [10, 20, 30].map(|id| context.add_node(datum(id)).unwrap());
+    let (mut context, [i10, i20, i30]) = three_node_context();
     assert_eq!([i10, i20, i30], [0, 1, 2]);
     context.set_data_index(1, i30, true);
     context.set_time_index(3, i10, true);
@@ -547,8 +552,7 @@ fn test_index_entries_naming_a_removed_node_go_at_removal() {
     // Spec scenario "The entries go before any freeze": every map (current and previous, data
     // and time) drops its entries naming i20 = 1 at the removal, while the context is dynamic.
     // The entries naming i30 = 2, the live node above the tombstone, stay.
-    let mut context = get_context();
-    let [i10, i20, i30] = [10, 20, 30].map(|id| context.add_node(datum(id)).unwrap());
+    let (mut context, [i10, i20, i30]) = three_node_context();
     assert_eq!([i10, i20, i30], [0, 1, 2]);
     context.set_data_index(2, i20, false);
     context.set_time_index(4, i20, false);

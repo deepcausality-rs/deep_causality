@@ -36,15 +36,19 @@ const HUB: usize = 0;
 
 // --- Create ---------------------------------------------------------------------------------
 
-/// Adds an edge from the hub of a star with `n` leaves to one of its leaves.
+/// Adds an edge from the hub of a star with `n` leaves to a node the hub is not yet linked to,
+/// added at position `n + 1` in the setup: a true insert, a scan of the hub's `n` edges and a push.
 fn bench_add_edge(c: &mut Criterion) {
     let mut group = c.benchmark_group("add_edge");
     for n in SIZES {
-        let mut rng = seeded_rng();
         group.bench_with_input(BenchmarkId::from_parameter(n), &n, |b, &n| {
             b.iter_batched_ref(
-                || (build_star_graph(n), rng.random_range(1..n + 1)),
-                |(g, leaf)| g.add_edge(black_box(HUB), *leaf, ()),
+                || {
+                    let mut g = build_star_graph(n);
+                    let node = g.add_node(Data::default()).expect("Failed to add node");
+                    (g, node)
+                },
+                |(g, node)| g.add_edge(black_box(HUB), *node, ()),
                 BatchSize::LargeInput,
             )
         });
@@ -87,6 +91,31 @@ fn bench_get_edges(c: &mut Criterion) {
     group.finish();
 }
 
+/// Walks a chain from `start` to its end, one step per node, through `inbound_edges` when
+/// `inbound` is set and `outbound_edges` otherwise. Returns the number of steps.
+fn walk(g: &UltraGraph<Data>, start: usize, inbound: bool) -> usize {
+    let mut node = black_box(start);
+    let mut steps = 0_usize;
+    loop {
+        let next = if inbound {
+            g.inbound_edges(node)
+                .expect("Failed to list inbound edges")
+                .next()
+        } else {
+            g.outbound_edges(node)
+                .expect("Failed to list outbound edges")
+                .next()
+        };
+        match next {
+            Some(next) => {
+                node = next;
+                steps += 1;
+            }
+            None => return steps,
+        }
+    }
+}
+
 /// Walks a frozen chain of `n + 1` nodes from the root to its end through `outbound_edges`.
 fn bench_outbound_walk(c: &mut Criterion) {
     let mut group = c.benchmark_group("outbound_walk");
@@ -95,19 +124,7 @@ fn bench_outbound_walk(c: &mut Criterion) {
         g.freeze();
         group.throughput(Throughput::Elements(n as u64));
         group.bench_with_input(BenchmarkId::from_parameter(n), &n, |b, _| {
-            b.iter(|| {
-                let mut node = black_box(0);
-                let mut steps = 0_usize;
-                while let Some(next) = g
-                    .outbound_edges(node)
-                    .expect("Failed to list outbound edges")
-                    .next()
-                {
-                    node = next;
-                    steps += 1;
-                }
-                steps
-            })
+            b.iter(|| walk(&g, 0, false))
         });
     }
     group.finish();
@@ -121,19 +138,7 @@ fn bench_inbound_walk(c: &mut Criterion) {
         g.freeze();
         group.throughput(Throughput::Elements(n as u64));
         group.bench_with_input(BenchmarkId::from_parameter(n), &n, |b, &n| {
-            b.iter(|| {
-                let mut node = black_box(n);
-                let mut steps = 0_usize;
-                while let Some(previous) = g
-                    .inbound_edges(node)
-                    .expect("Failed to list inbound edges")
-                    .next()
-                {
-                    node = previous;
-                    steps += 1;
-                }
-                steps
-            })
+            b.iter(|| walk(&g, n, true))
         });
     }
     group.finish();
@@ -149,19 +154,7 @@ fn bench_outbound_walk_shuffled(c: &mut Criterion) {
         g.freeze();
         group.throughput(Throughput::Elements(n as u64));
         group.bench_with_input(BenchmarkId::from_parameter(n), &n, |b, _| {
-            b.iter(|| {
-                let mut node = black_box(first);
-                let mut steps = 0_usize;
-                while let Some(next) = g
-                    .outbound_edges(node)
-                    .expect("Failed to list outbound edges")
-                    .next()
-                {
-                    node = next;
-                    steps += 1;
-                }
-                steps
-            })
+            b.iter(|| walk(&g, first, false))
         });
     }
     group.finish();
@@ -176,19 +169,7 @@ fn bench_inbound_walk_shuffled(c: &mut Criterion) {
         g.freeze();
         group.throughput(Throughput::Elements(n as u64));
         group.bench_with_input(BenchmarkId::from_parameter(n), &n, |b, _| {
-            b.iter(|| {
-                let mut node = black_box(last);
-                let mut steps = 0_usize;
-                while let Some(previous) = g
-                    .inbound_edges(node)
-                    .expect("Failed to list inbound edges")
-                    .next()
-                {
-                    node = previous;
-                    steps += 1;
-                }
-                steps
-            })
+            b.iter(|| walk(&g, last, true))
         });
     }
     group.finish();

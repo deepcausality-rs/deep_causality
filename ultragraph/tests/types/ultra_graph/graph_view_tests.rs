@@ -372,3 +372,23 @@ fn test_an_identity_keyed_payload() {
     let inbound: Vec<usize> = g.inbound_edges(1).unwrap().collect();
     assert_eq!(inbound, vec![0]);
 }
+
+/// `Debug` on the dynamic storage prints the nodes, the forward edges, the root and the edge
+/// count, and the container prints its state around it.
+#[test]
+fn test_dynamic_graph_debug_output() {
+    let mut g: DynamicGraph<u8, ()> = DynamicGraph::new();
+    g.add_root_node(1).unwrap();
+    g.add_edge(0, 0, ()).unwrap();
+    assert_eq!(
+        format!("{g:?}"),
+        "DynamicGraph { nodes: [Some(1)], edges: [[(0, ())]], root_index: Some(0), live_edges: 1 }"
+    );
+
+    let mut g = UltraGraph::new();
+    g.add_node(7_u8).unwrap();
+    assert_eq!(
+        format!("{g:?}"),
+        "UltraGraphContainer { state: Dynamic(DynamicGraph { nodes: [Some(7)], edges: [[]], root_index: None, live_edges: 0 }) }"
+    );
+}

@@ -8,7 +8,8 @@ name. Written for someone implementing a backend.
 
 `deep_causality_context` holds a `Context` in memory. A store that keeps one needs a description of
 a context that does not change when the engine's structs change. This crate is that description.
-It depends on nothing, so a backend links this crate alone and never the context crate or its
+It depends on `ultragraph_traits` alone, itself dependency-free, so that `RelationKind`
+implements `EdgeKey`; a backend links these two crates and never the context crate or its
 dependencies. The context crate depends on this one and does the projection; a backend never sees
 a `Context`, only records.
 

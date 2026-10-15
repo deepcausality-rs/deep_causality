@@ -7,20 +7,28 @@ use ultragraph::{
     EdgeKey, GraphError, GraphMut, ParallelEdges, StructuralGraphAlgorithms, UltraGraphWeighted,
 };
 
-fn build(edges: &[(usize, usize)], n: usize) -> UltraGraphWeighted<i32, ()> {
-    let mut g = UltraGraphWeighted::<i32, ()>::new();
+/// Nodes `0..n` with payload equal to position, the given edges, frozen.
+fn build_with<W: Clone + Default + EdgeKey>(
+    edges: impl IntoIterator<Item = (usize, usize, W)>,
+    n: usize,
+) -> UltraGraphWeighted<i32, W> {
+    let mut g = UltraGraphWeighted::<i32, W>::new();
     for i in 0..n {
         g.add_node(i as i32).unwrap();
     }
-    for &(a, b) in edges {
-        g.add_edge(a, b, ()).unwrap();
+    for (a, b, w) in edges {
+        g.add_edge(a, b, w).unwrap();
     }
     g.freeze();
     g
 }
 
-/// The two-variant kind that keys the `Keyed` payload; with `W = ()` a repeated pair is one
-/// edge, so parallel edges need a keyed payload.
+fn build(edges: &[(usize, usize)], n: usize) -> UltraGraphWeighted<i32, ()> {
+    build_with(edges.iter().map(|&(a, b)| (a, b, ())), n)
+}
+
+/// A two-variant payload that is its own key; with `W = ()` a repeated pair is one edge, so
+/// parallel edges need a keyed payload.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
 enum Kind {
     #[default]
@@ -28,33 +36,20 @@ enum Kind {
     B,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-struct Keyed {
-    kind: Kind,
-}
-
-impl EdgeKey for Keyed {
+impl EdgeKey for Kind {
     type Key = Kind;
 
     fn edge_key(&self) -> Self::Key {
-        self.kind
+        *self
     }
 }
 
-fn build_keyed(edges: &[(usize, usize, Kind)], n: usize) -> UltraGraphWeighted<i32, Keyed> {
-    let mut g = UltraGraphWeighted::<i32, Keyed>::new();
-    for i in 0..n {
-        g.add_node(i as i32).unwrap();
-    }
-    for &(a, b, kind) in edges {
-        g.add_edge(a, b, Keyed { kind }).unwrap();
-    }
-    g.freeze();
-    g
+fn build_keyed(edges: &[(usize, usize, Kind)], n: usize) -> UltraGraphWeighted<i32, Kind> {
+    build_with(edges.iter().copied(), n)
 }
 
 /// A node test and an edge test as plain function pointers.
-type TestPair = (fn(&i32) -> bool, fn(&Keyed) -> bool);
+type TestPair = (fn(&i32) -> bool, fn(&Kind) -> bool);
 
 /// A projection that passes every node and every edge.
 fn pass_all() -> TestPair {

@@ -59,10 +59,10 @@ before the Bazel build of phase 1 could pass.
 | `TeloidRelation` has the unit key | `deep_causality_ethos/tests/types/teloid_relation/edge_key_tests.rs` |
 
 Exit run against the stubs: **22 failed, 7 passed**. Every failure is the `not implemented` panic:
-16 in `ultragraph_traits`, 5 in the store (`edge_key_tests`, `ord_tests`), 1 in ethos. The 7 passes
+16 in `ultragraph_traits`, 5 in the store (`edge_key_tests`, `ord_tests`), 1 in ethos. Four of the passes
 are the three trait tests, whose impl is a local type written inside the test, and the two-paths test
 in `ultragraph`, for the same reason; they pin the trait's declared shape, which phase 1 provides, and
-cannot fail on a body.
+cannot fail on a body. The other three were not itemised.
 
 ## Phase 3 — the defect audit
 

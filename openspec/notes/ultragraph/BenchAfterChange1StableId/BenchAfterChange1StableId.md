@@ -19,11 +19,15 @@ Three runs of `cargo bench -p ultragraph` at commit `eb660b8ea` (change
 `BenchAfterRun-3.txt`. The method is the baseline's (`../BenchBefore/BenchBefore.md`): each run
 value is criterion's point estimate, the mean is over the three runs, the spread is (largest −
 smallest) / mean, and a row whose spread exceeds 15 % gives the median instead. The six shuffled
-walks the baseline listed as pending have their first three runs here.
+walks the baseline listed as pending have their first three runs here. The `add_edge`, `remove_node`
+and `remove_edge` rows are from three later runs of those three groups alone, after the review
+fixes (logs `BenchAfterReviewRun-1.txt` to `BenchAfterReviewRun-3.txt`): the `add_edge` fixture
+inserts an edge the hub does not carry, where the earlier fixture replaced one it did and its scan
+stopped at the matched leaf, halfway on average; `remove_node` cleans each neighbour's list once.
 
 ### Create
 
-Fixtures: `build_graph` and `add_node` on the chain; `add_edge` on the star (hub degree `n`). Per element: per node.
+Fixtures: `build_graph` and `add_node` on the chain; `add_edge` on the star (hub degree `n`), inserting an edge to a node outside the star. Per element: per node.
 
 | Benchmark | n | State | Run 1 | Run 2 | Run 3 | Mean | Spread | Per element |
 |---|---:|---|---:|---:|---:|---:|---:|---:|
@@ -33,9 +37,9 @@ Fixtures: `build_graph` and `add_node` on the chain; `add_edge` on the star (hub
 | `add_node` | 10 | Dynamic | 5.12 ns | 5.10 ns | 5.04 ns | 5.09 ns | 1.5 % | |
 | `add_node` | 100 | Dynamic | 6.03 ns | 6.02 ns | 5.94 ns | 5.99 ns | 1.4 % | |
 | `add_node` | 1,000 | Dynamic | 8.57 ns | 8.75 ns | 8.67 ns | 8.66 ns | 2.0 % | |
-| `add_edge` | 10 | Dynamic | 14.55 ns | 14.55 ns | 14.59 ns | 14.56 ns | 0.2 % | |
-| `add_edge` | 100 | Dynamic | 29.63 ns | 29.56 ns | 30.06 ns | 29.75 ns | 1.7 % | |
-| `add_edge` | 1,000 | Dynamic | 159.93 ns | 161.16 ns | 165.41 ns | 162.17 ns | 3.4 % | |
+| `add_edge` | 10 | Dynamic | 18.16 ns | 18.53 ns | 18.09 ns | 18.26 ns | 2.4 % | |
+| `add_edge` | 100 | Dynamic | 51.23 ns | 53.13 ns | 51.91 ns | 52.09 ns | 3.6 % | |
+| `add_edge` | 1,000 | Dynamic | 352.16 ns | 354.08 ns | 352.17 ns | 352.80 ns | 0.5 % | |
 
 ### Read
 
@@ -84,12 +88,12 @@ Chain.
 
 | Benchmark | n | State | Run 1 | Run 2 | Run 3 | Mean | Spread |
 |---|---:|---|---:|---:|---:|---:|---:|
-| `remove_node` | 10 | Dynamic | 25.02 ns | 24.25 ns | 24.38 ns | 24.55 ns | 3.1 % |
-| `remove_node` | 100 | Dynamic | 24.59 ns | 24.74 ns | 26.56 ns | 25.30 ns | 7.8 % |
-| `remove_node` | 1,000 | Dynamic | 29.06 ns | 28.21 ns | 28.32 ns | 28.53 ns | 3.0 % |
-| `remove_edge` | 10 | Dynamic | 17.05 ns | 17.15 ns | 17.13 ns | 17.11 ns | 0.6 % |
-| `remove_edge` | 100 | Dynamic | 42.97 ns | 43.48 ns | 43.52 ns | 43.32 ns | 1.3 % |
-| `remove_edge` | 1,000 | Dynamic | 310.18 ns | 312.72 ns | 313.86 ns | 312.25 ns | 1.2 % |
+| `remove_node` | 10 | Dynamic | 24.18 ns | 23.12 ns | 23.43 ns | 23.58 ns | 4.5 % |
+| `remove_node` | 100 | Dynamic | 24.84 ns | 25.21 ns | 24.92 ns | 24.99 ns | 1.5 % |
+| `remove_node` | 1,000 | Dynamic | 29.01 ns | 31.65 ns | 29.91 ns | 30.19 ns | 8.8 % |
+| `remove_edge` | 10 | Dynamic | 17.78 ns | 18.56 ns | 18.19 ns | 18.18 ns | 4.3 % |
+| `remove_edge` | 100 | Dynamic | 47.70 ns | 46.55 ns | 47.62 ns | 47.29 ns | 2.4 % |
+| `remove_edge` | 1,000 | Dynamic | 331.72 ns | 331.23 ns | 322.07 ns | 328.34 ns | 2.9 % |
 
 ### State transitions
 
@@ -153,9 +157,9 @@ Of the 54 rows both notes share, 24 are within spread, 25 are slower and 5 are f
 | `biconnected_components` | 100 | 17.10 µs | 4.1 % | 17.27 µs | 2.9 % | +1.0 % | within spread |
 | `biconnected_components` | 1,000 | 189.48 µs | 3.4 % | 188.29 µs | 2.8 % | -0.6 % | within spread |
 | `biconnected_components` | 5,000 | 1.193 ms | 5.7 % | 1.177 ms | 3.8 % | -1.3 % | within spread |
-| `add_edge` | 10 | 3.56 ns | 4.9 % | 14.56 ns | 0.2 % | +309.0 % | slower |
-| `add_edge` | 100 | 4.03 ns | 6.6 % | 29.75 ns | 1.7 % | +637.6 % | slower |
-| `add_edge` | 1,000 | 4.38 ns | 6.1 % | 162.17 ns | 3.4 % | +3606.2 % | slower |
+| `add_edge` | 10 | 3.56 ns | 4.9 % | 18.26 ns | 2.4 % | +412.8 % | slower |
+| `add_edge` | 100 | 4.03 ns | 6.6 % | 52.09 ns | 3.6 % | +1192.6 % | slower |
+| `add_edge` | 1,000 | 4.38 ns | 6.1 % | 352.80 ns | 0.5 % | +7954.9 % | slower |
 | `contains_edge_dynamic` | 10 | 3.38 ns | 0.7 % | 2.85 ns | 2.0 % | -15.7 % | faster |
 | `contains_edge_dynamic` | 100 | 22.51 ns | 0.6 % | 21.15 ns | 1.2 % | -6.0 % | faster |
 | `contains_edge_dynamic` | 1,000 | 150.92 ns | 1.8 % | 146.42 ns | 1.7 % | -3.0 % | within spread |
@@ -174,12 +178,12 @@ Of the 54 rows both notes share, 24 are within spread, 25 are slower and 5 are f
 | `update_node` | 10 | 2.29 ns | 3.0 % | 2.27 ns | 1.9 % | -0.8 % | within spread |
 | `update_node` | 100 | 2.25 ns | 0.9 % | 2.25 ns | 0.2 % | -0.2 % | within spread |
 | `update_node` | 1,000 | 2.23 ns | 0.7 % | 2.25 ns | 1.1 % | +0.5 % | within spread |
-| `remove_node` | 10 | 2.82 ns | 0.2 % | 24.55 ns | 3.1 % | +770.5 % | slower |
-| `remove_node` | 100 | 2.43 ns | 8.6 % | 25.30 ns | 7.8 % | +940.1 % | slower |
-| `remove_node` | 1,000 | 4.15 ns | 3.0 % | 28.53 ns | 3.0 % | +587.6 % | slower |
-| `remove_edge` | 10 | 13.27 ns | 1.4 % | 17.11 ns | 0.6 % | +28.9 % | slower |
-| `remove_edge` | 100 | 32.19 ns | 0.4 % | 43.32 ns | 1.3 % | +34.6 % | slower |
-| `remove_edge` | 1,000 | 171.29 ns | 2.1 % | 312.25 ns | 1.2 % | +82.3 % | slower |
+| `remove_node` | 10 | 2.82 ns | 0.2 % | 23.58 ns | 4.5 % | +736.0 % | slower |
+| `remove_node` | 100 | 2.43 ns | 8.6 % | 24.99 ns | 1.5 % | +928.4 % | slower |
+| `remove_node` | 1,000 | 4.15 ns | 3.0 % | 30.19 ns | 8.8 % | +627.5 % | slower |
+| `remove_edge` | 10 | 13.27 ns | 1.4 % | 18.18 ns | 4.3 % | +37.0 % | slower |
+| `remove_edge` | 100 | 32.19 ns | 0.4 % | 47.29 ns | 2.4 % | +46.9 % | slower |
+| `remove_edge` | 1,000 | 171.29 ns | 2.1 % | 328.34 ns | 2.9 % | +91.7 % | slower |
 | `freeze` | 10 | 465.45 ns | 1.3 % | 496.64 ns | 0.5 % | +6.7 % | slower |
 | `freeze` | 100 | 3.64 µs | 1.7 % | 4.05 µs | 2.0 % | +11.1 % | slower |
 | `freeze` | 1,000 | 35.74 µs | 5.8 % | 39.76 µs | 3.7 % | +11.3 % | slower |
@@ -190,9 +194,9 @@ Of the 54 rows both notes share, 24 are within spread, 25 are slower and 5 are f
 ## Every move, explained by a design decision
 
 **Slower, as design D9 expected.** `add_edge` on the hub is the keyed insert of D4: it scans the
-hub's forward list for `(target, key)` before it appends, O(d), so at degree 1,000 it costs what
-`contains_edge_dynamic` has always cost to scan that list, about 150 ns, where the unchecked push
-cost 4 ns. `build_graph` and `add_node` pay the second list per node: `add_node` pushes a forward
+hub's forward list for `(target, key)` before it appends, O(d), so at degree 1,000 an insert
+scans the whole list, 353 ns, about twice the 146 ns of `contains_edge_dynamic`, whose scan stops
+at the match halfway on average, where the unchecked push cost 4 ns. `build_graph` and `add_node` pay the second list per node: `add_node` pushes a forward
 and a backward list where it pushed one, and the chain's `build_graph` adds the keyed scan of a
 list of length one per edge.
 
@@ -200,9 +204,9 @@ list of length one per edge.
 lists from the forward lists, one allocation per node, about 8 ns per node; `freeze` consumes the
 dynamic graph and so drops them, about 4 ns per node, which is its whole move. `remove_node` on
 the chain went from clearing one list to taking the edges into the node out of their sources'
-lists: a constant 25 ns in place of 3 ns. `remove_edge` on the hub removes every edge of the pair,
+lists: a constant 24 to 30 ns in place of 3 ns. `remove_edge` on the hub removes every edge of the pair,
 an order-preserving `retain` over the hub's list plus the write to the target's backward list,
-where it was a `position` and a `swap_remove`; the compaction is the 82 % at degree 1,000.
+where it was a `position` and a `swap_remove`; the scan is the 92 % at degree 1,000.
 
 **The walks, 9 to 12 % slower at 10 and 1,000 nodes.** Traversal answers in both states, so the
 container's `outbound_edges` and `inbound_edges` return one iterator type over two: an enum whose
@@ -242,7 +246,7 @@ of a pair has to scan the whole list, where the old `position` stopped at the fi
 on average, and `retain` is already a tight loop over that scan. The `retain` version stays. The
 scan itself is the lever, and only an index on high-degree nodes removes it.
 
-**What the second change measures against.** The hub's keyed `add_edge` at 162 ns and `remove_edge`
-at 312 ns are the rows the snapshot-log candidate of `ultragraph-live-state-maintained-views` has
+**What the second change measures against.** The hub's keyed `add_edge` at 353 ns and `remove_edge`
+at 328 ns are the rows the snapshot-log candidate of `ultragraph-live-state-maintained-views` has
 to win; `unfreeze` at 14 ns per node and the 5 ns per node of `add_node` are the price of the
 backward list, which both candidates pay.

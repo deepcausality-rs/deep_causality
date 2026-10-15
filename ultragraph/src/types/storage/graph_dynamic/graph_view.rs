@@ -71,7 +71,8 @@ where
         self.nodes.iter().filter_map(Option::as_ref).collect()
     }
 
-    /// Retrieves a list of all outgoing edges from a given source node, in insertion order.
+    /// Retrieves a list of all outgoing edges from a given source node. The order is not
+    /// specified: insertion order until a freeze or a compaction reorders the list.
     /// Returns `None` if the source node does not exist.
     /// The returned vector contains tuples of `(target_node_index, edge_weight_reference)`.
     fn get_edges(&self, source: usize) -> Option<Vec<(usize, &W)>> {

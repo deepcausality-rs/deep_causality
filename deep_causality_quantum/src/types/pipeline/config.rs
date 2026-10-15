@@ -13,13 +13,13 @@ use crate::types::qcm::process_factors::{FactorSupports, ProcessFactors};
 use crate::types::qpu::evidence::Evidence;
 use alloc::collections::BTreeSet;
 use alloc::format;
-use alloc::vec;
 use alloc::vec::Vec;
 use core::marker::PhantomData;
 use deep_causality::CausableGraph;
 use deep_causality_algebra::RealField;
 use deep_causality_homology::ChainComplex;
 use deep_causality_num::{FromPrimitive, NaturalNumber};
+use ultragraph::TopologicalGraphAlgorithms;
 
 /// The one origin of every configuration, and the entry to each stage.
 pub struct QclBuilder;
@@ -600,28 +600,10 @@ impl<K: ChainComplex> BuildSubject for CodeSubject<K> {
 }
 
 /// Whether a frozen graph has a directed cycle: some node reaches itself along at least one edge.
+/// The frozen graph answers the question itself; a graph that reports it is not frozen counts as
+/// cyclic, so the rejection stays conservative.
 fn graph_has_cycle<T: Clone, G: CausableGraph<T>>(graph: &G) -> bool {
-    // One past the highest live index; a tombstone has no edges, so it enters no walk.
-    let n = graph.index_bound();
-    for start in 0..n {
-        let mut seen = vec![false; n];
-        let mut stack: Vec<usize> = (0..n).filter(|&s| graph.contains_edge(start, s)).collect();
-        while let Some(node) = stack.pop() {
-            if node == start {
-                return true;
-            }
-            if seen[node] {
-                continue;
-            }
-            seen[node] = true;
-            for s in 0..n {
-                if graph.contains_edge(node, s) {
-                    stack.push(s);
-                }
-            }
-        }
-    }
-    false
+    graph.get_graph().has_cycle().unwrap_or(true)
 }
 
 /// Whether the parent relation a support registry encodes has a cycle. Under the flat

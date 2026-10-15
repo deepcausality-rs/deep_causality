@@ -44,7 +44,10 @@ where
         self.nodes = compacted_nodes;
         self.edges = compacted_edges;
         self.rebuild_backward();
-        self.root_index = self.root_index.and_then(|root| table[root]);
+        // A root past the table, as `from_parts` may have been given, has no row and is cleared.
+        self.root_index = self
+            .root_index
+            .and_then(|root| table.get(root).copied().flatten());
         table
     }
 }

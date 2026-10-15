@@ -270,7 +270,7 @@ test-only dependency.
 
 ## Project Dependencies
 
-Scope: the 33 library crates that are workspace members. Example crates (`examples/*`)
+Scope: the 34 library crates that are workspace members. Example crates (`examples/*`)
 and `yanked/*` are excluded. Third-party crates are resolved from the registry by
 rules_rs into `@crates`; there is no vendored source tree.
 `deep_causality_effects`, `deep_causality_macros` and `deep_causality_sparse` were moved to
@@ -373,7 +373,7 @@ Tier 8
                                 deep_causality_multivector, deep_causality_num,
                                 deep_causality_num_complex, deep_causality_num_rational,
                                 deep_causality_stats, deep_causality_tensor,
-                                deep_causality_uncertain (opt)
+                                deep_causality_uncertain (opt), ultragraph (opt)
 
 Tier 9
   deep_causality_cfd          → deep_causality_algebra, deep_causality_calculus,

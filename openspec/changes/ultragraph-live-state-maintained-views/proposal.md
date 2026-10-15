@@ -33,12 +33,12 @@ This change depends on `ultragraph-stable-ids-keyed-edges` and is applied after 
   reaches a degree threshold), each challenger at the parameter that keeps its memory per edge
   within 1.25 times the `Vec` lists'; and whether the Live state earns its place against freezing
   before each analysis. Every candidate passes the same suite before the measurement; the losers are
-  removed. The after-benchmark of change 1 (`openspec/notes/ultragraph/BenchAfter/BenchAfter.md`)
-  puts the hub's keyed `add_edge` at 162 ns and `remove_edge` at 312 ns against 4 ns and 171 ns
+  removed. The after-benchmark of change 1 (`openspec/notes/ultragraph/BenchAfterChange1StableId/BenchAfterChange1StableId.md`)
+  puts the hub's keyed `add_edge` at 353 ns and `remove_edge` at 328 ns against 4 ns and 171 ns
   before, the cost of scanning the hub's list for `(target, key)`; the index candidate exists to
   stop that scan without the snapshot-log's log and compaction.
 - The work follows the TDD protocol of `openspec/specs/unified-math-tdd-protocol/spec.md`, and every
-  measurement uses the three-run protocol of the baseline.
+  timing that feeds a decision uses the three-run protocol of the baseline.
 
 ## Capabilities
 

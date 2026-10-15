@@ -13,8 +13,8 @@ where
     /// Ensures the graph is in the immutable, performance-optimized `Static` state.
     ///
     /// If the graph is already frozen, this operation is a no-op. Otherwise, it
-    /// converts the graph from a `Dynamic` state in-place. This is an O(V + E)
-    /// operation if a state change occurs.
+    /// converts the graph from a `Dynamic` state in-place. If a state change occurs, this is
+    /// O(V + E) for counting and placement plus a sort of each adjacency list.
     pub fn freeze(&mut self) {
         if !self.is_frozen() {
             // Safely take ownership of the state, leaving a default in its place.
