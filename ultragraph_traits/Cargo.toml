@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
+
+[package]
+name = "ultragraph_traits"
+version = "0.1.0"
+edition = { workspace = true }
+rust-version = { workspace = true }
+license = { workspace = true }
+repository = { workspace = true }
+homepage = { workspace = true }
+
+readme = "README.md"
+description = "The EdgeKey trait that identifies an edge payload in ultragraph, for crates that declare a payload without depending on the graph."
+documentation = "https://docs.rs/ultragraph_traits"
+authors = ["Marvin Hansen <marvin.hansen@gmail.com>"]
+categories = ["data-structures", "no-std"]
+keywords = ["graph", "data-structures", "traits"]
+exclude = [
+    "*.bazel",
+    "*/*.bazel",
+    "*.bazel.*",
+    "BUILD",
+    "BUILD.bazel",
+    "MODULE.bazel",
+    ".bazelignore",
+    ".bazelrc",
+]
+
+# The crate builds on `core` alone in every configuration. The features exist so that the
+# workspace's bare-metal checks, which expect the three-level convention, treat it like every
+# other crate; none of them changes what is compiled.
+[features]
+default = ["std"]
+std = []
+no-std = []
+
+[lints]
+workspace = true

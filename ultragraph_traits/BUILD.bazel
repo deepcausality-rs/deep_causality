@@ -1,0 +1,79 @@
+load("@crates//:defs.bzl", "aliases", "all_crate_deps", "lint_config")
+load("@rules_rs//rs:rust_library.bzl", "rust_library")
+load("@rules_rust//rust:defs.bzl", "rust_doc", "rust_doc_test", "rust_test_suite")
+
+rust_library(
+    name = "ultragraph_traits",
+    srcs = glob([
+        "src/**",
+    ]),
+    aliases = aliases(),
+    crate_features = [
+        "std",
+    ],
+    crate_root = "src/lib.rs",
+    lint_config = lint_config(),
+    tags = [
+        "data_structures",
+    ],
+    visibility = ["//visibility:public"],
+    deps = all_crate_deps(normal = True),
+)
+
+rust_doc(
+    name = "doc",
+    crate = ":ultragraph_traits",
+    crate_features = [
+        "std",
+    ],
+    tags = ["doc"],
+    visibility = ["//visibility:public"],
+)
+
+rust_doc_test(
+    name = "doc_test",
+    crate = ":ultragraph_traits",
+    crate_features = [
+        "std",
+    ],
+    tags = ["doc-test"],
+    visibility = ["//visibility:public"],
+)
+
+rust_test_suite(
+    name = "traits_tests",
+    srcs = glob([
+        "tests/traits/*_tests.rs",
+    ]),
+    tags = [
+        "ultragraph_traits",
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":ultragraph_traits",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
+
+rust_test_suite(
+    name = "extensions_tests",
+    srcs = glob([
+        "tests/extensions/*_tests.rs",
+    ]),
+    tags = [
+        "ultragraph_traits",
+        "unit-test",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        # Crate to test
+        ":ultragraph_traits",
+    ] + all_crate_deps(
+        normal = True,
+        normal_dev = True,
+    ),
+)
