@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_quantum-v0.5.0...deep_causality_quantum-v0.5.1) - 2026-10-15
+
+### Added
+
+- *(deep_causality_quantum)* QCM readers on permanent causaloid indices
+
+### Fixed
+
+- *(ultragraph)* CI review follow-ups to stable ids and keyed edges
+
 ## [0.5.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_quantum-v0.4.2...deep_causality_quantum-v0.5.0) - 2026-10-09
 
 ### Added

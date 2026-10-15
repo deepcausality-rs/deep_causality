@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.6.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_ethos-v0.5.0...deep_causality_ethos-v0.6.0) - 2026-10-15
+
+### Added
+
+- *(deep_causality_ethos)* one relation per teloid pair
+- *(deep_causality_ethos)* TeloidRelation implements EdgeKey with the unit key
+
+### Fixed
+
+- *(ultragraph)* CI review follow-ups to stable ids and keyed edges
+
 ## [0.5.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_ethos-v0.4.1...deep_causality_ethos-v0.5.0) - 2026-10-09
 
 ### Fixed

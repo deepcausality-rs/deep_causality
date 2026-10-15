@@ -525,7 +525,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality"
-version = "0.19.0"
+version = "0.20.0"
 dependencies = [
  "criterion",
  "deep_causality_algebra",
@@ -600,7 +600,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_context"
-version = "0.2.0"
+version = "0.3.0"
 dependencies = [
  "deep_causality_algebra",
  "deep_causality_context_store",
@@ -614,14 +614,14 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_context_store"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "ultragraph_traits",
 ]
 
 [[package]]
 name = "deep_causality_core"
-version = "0.14.0"
+version = "0.14.1"
 dependencies = [
  "deep_causality_haft",
 ]
@@ -654,7 +654,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_ethos"
-version = "0.5.0"
+version = "0.6.0"
 dependencies = [
  "deep_causality",
  "deep_causality_context",
@@ -788,7 +788,7 @@ dependencies = [
 
 [[package]]
 name = "deep_causality_quantum"
-version = "0.5.0"
+version = "0.5.1"
 dependencies = [
  "deep_causality",
  "deep_causality_algebra",
@@ -2280,7 +2280,7 @@ checksum = "8e28f89b80c87b8fb0cf04ab448d5dd0dd0ade2f8891bae878de66a75a28600e"
 
 [[package]]
 name = "ultragraph"
-version = "0.9.9"
+version = "0.10.0"
 dependencies = [
  "criterion",
  "deep_causality_rand",
