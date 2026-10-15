@@ -1,7 +1,7 @@
 # context-store-crate-identity Specification
 
 ## Purpose
-Defines the `deep_causality_context_store` crate: the Tier-0, dependency-free persistence contract for the context, what it owns, what it never depends on, and the crate infrastructure it carries.
+Defines the `deep_causality_context_store` crate: the Tier-1 persistence contract for the context, depending on `ultragraph_traits` alone, what it owns, what it depends on, and the crate infrastructure it carries.
 ## Requirements
 ### Requirement: The persistence contract lives in `deep_causality_context_store`
 
@@ -23,27 +23,6 @@ trait and error from `src/lib.rs`.
 
 - **WHEN** the crate's `lib.rs` is read
 - **THEN** it carries no `#![no_std]` attribute and no `no-std` feature
-
-### Requirement: The crate has no dependencies
-
-`deep_causality_context_store` SHALL declare no dependency of any kind: no workspace crate and no
-external crate in `[dependencies]`, and no build dependency. Dev-dependencies are permitted only
-where a test needs one, and none is planned.
-
-This is what makes the crate the cheapest dependency a backend can take, and what lets it sit at
-Tier 0.
-
-#### Scenario: The manifest declares nothing
-
-- **WHEN** the `[dependencies]` table of `deep_causality_context_store/Cargo.toml` is read
-- **THEN** it is absent or empty
-
-#### Scenario: The tier block records the position
-
-- **WHEN** the workspace dependency tiers are re-derived from the manifests
-- **THEN** `deep_causality_context_store` appears in Tier 0 of the `AGENTS.md` tier block, the
-  root crate list and crate count in `AGENTS.md` include it, and `deep_causality_context`'s entry
-  lists it as a direct dependency
 
 ### Requirement: The vocabulary types are declared in the store crate and re-exported by the context crate
 
@@ -118,3 +97,27 @@ The crate carries an explicit starting version of 0.1.0. Later versions are rele
 - **WHEN** release-plz computes the publish order
 - **THEN** `deep_causality_context_store` precedes `deep_causality_context`, because the latter
   depends on the former
+
+### Requirement: The crate depends on ultragraph_traits alone
+`deep_causality_context_store` SHALL declare exactly one dependency, `ultragraph_traits`, in `[dependencies]`, and no build dependency. Dev-dependencies are permitted only where a test needs one.
+
+`ultragraph_traits` declares no dependency itself, so a backend that links the store crate links two crates and nothing else. The dependency exists so that `RelationKind` can implement `EdgeKey` where it is declared.
+
+#### Scenario: The manifest declares one dependency
+- **WHEN** the `[dependencies]` table of `deep_causality_context_store/Cargo.toml` is read
+- **THEN** it lists `ultragraph_traits` and nothing else
+
+#### Scenario: The tier block records the position
+- **WHEN** the workspace dependency tiers are re-derived from the manifests
+- **THEN** `ultragraph_traits` appears in Tier 0 and `deep_causality_context_store` in Tier 1 of the `AGENTS.md` tier block, the root crate list and crate count in `AGENTS.md` include both, and `deep_causality_context`'s entry lists the store crate as a direct dependency
+
+### Requirement: RelationKind is an edge key and ordered
+`RelationKind` SHALL implement `EdgeKey` with `Key = RelationKind`, returning itself, and SHALL implement `PartialOrd` and `Ord` in declaration order: `Datial < Temporal < Spatial < SpaceTemporal`.
+
+#### Scenario: The key is the relation
+- **WHEN** `edge_key` is called on `RelationKind::Spatial`
+- **THEN** it returns `RelationKind::Spatial`
+
+#### Scenario: The order is declaration order
+- **WHEN** the four variants are sorted
+- **THEN** the order is `Datial`, `Temporal`, `Spatial`, `SpaceTemporal`

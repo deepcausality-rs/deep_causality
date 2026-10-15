@@ -234,6 +234,14 @@ through; whichever level it settles on, it no longer alternates.
 while the ordered inbound walk keeps its fast level, which is what a walk with no next address to
 predict looks like; at 10 and 100 nodes shuffled and ordered agree within spread.
 
+**A swap-remove in `remove_edge` was tried and is slower.** Three runs of the `remove` rows with
+every removal done by swapping the last entry into the hole instead of `retain`: `remove_edge`
+51.7 ns against 43.3 ns at degree 100 (+19 %) and 349 ns against 312 ns at 1,000 (+12 %),
+`remove_node` within spread. The cost of `remove_edge` is not the compaction: removing every key
+of a pair has to scan the whole list, where the old `position` stopped at the first match, halfway
+on average, and `retain` is already a tight loop over that scan. The `retain` version stays. The
+scan itself is the lever, and only an index on high-degree nodes removes it.
+
 **What the second change measures against.** The hub's keyed `add_edge` at 162 ns and `remove_edge`
 at 312 ns are the rows the snapshot-log candidate of `ultragraph-live-state-maintained-views` has
 to win; `unfreeze` at 14 ns per node and the 5 ns per node of `add_node` are the price of the

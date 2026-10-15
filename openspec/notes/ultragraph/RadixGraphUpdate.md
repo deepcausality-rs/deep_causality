@@ -155,7 +155,7 @@ duplicate checks the context relies on sit in `connect` and `restore`, not in th
 |---|---|---|
 | SORT, an external-ID index | UltraGraph addresses nodes by position, and callers keep their own ID maps | Stays out: an ID index belongs to the caller or the store |
 | Edge chain | Already present: edges hold target positions in both states | Unchanged |
-| Snapshot-log edge arrays with per-node compaction | Per-node `Vec`, push O(1), removal O(d), no update | Adopted if the benchmark favours it |
+| Snapshot-log edge arrays with per-node compaction | Per-node `Vec`, push O(1), removal O(d), no update | Adopted if the benchmark favours it over the Vec lists and over the Vec lists indexed on hubs |
 | Versioned reads | None | Stays out of UltraGraph; the store keeps versions by sharing frozen snapshots and its log |
 | Lock-free appends for concurrent readers | One owner; the borrow checker separates `&mut` from `&` | Stays out |
 | Offset reuse through a free queue (in the paper; compiled out by default in the code) | Not present | Stays out: a reused position makes a stale index name another node |
@@ -283,9 +283,9 @@ With the backward array:
 The cost is a second write per edge mutation and twice the edge memory in the dynamic state. The
 frozen state already stores both directions.
 
-### 4. Edge storage: two candidates, chosen by the benchmark
+### 4. Edge storage: three candidates, chosen by the benchmark
 
-Both candidates implement §1–3; they differ in how a node's edges are held.
+Every candidate implements §1–3; they differ in how a node's edges are held.
 
 - **Vec lists (today's structure, extended).** A forward and a backward `Vec<(usize, W)>` per node.
   Keyed insert and removal scan the list for `(target, key)`: O(d).
@@ -302,8 +302,17 @@ Both candidates implement §1–3; they differ in how a node's edges are held.
   target; the latest `Put` survives, a `Remove` or `RemoveAll` suppresses older entries, and snapshot
   entries the log decided, or whose target is a tombstone, are dropped. `freeze` compacts every node
   and concatenates the snapshots; `unfreeze` turns each CSR slice into a snapshot with an empty log.
+- **Indexed Vec lists.** The Vec lists, plus, per node and direction, an index
+  `BTreeMap<usize, BTreeMap<W::Key, usize>>` from the other end and the key to the entry's position,
+  held while the list has at least `HUB_DEGREE` entries (64 to start, the frozen lookup's threshold)
+  and dropped below half of it. The list stays the source of truth; the index answers the lookup
+  a keyed insert or removal makes, O(log d) for the scan that change 1's after-benchmark measured
+  at 162 ns (`add_edge`) and 312 ns (`remove_edge`) on a hub of degree 1,000. Nodes below the
+  threshold pay nothing. `freeze` drops the index; `unfreeze`, `from_parts` and `compact_ids`
+  rebuild it where a list is long enough.
 
-Both are `Vec`s and a `Vec<u64>` bitset: `no_std` with `alloc`, no dependencies, no `unsafe`.
+All three are `Vec`s, a `Vec<u64>` bitset and `alloc`'s `BTreeMap`: `no_std` with `alloc`, no
+dependencies, no `unsafe`.
 
 ### 5. Algorithms on the simple projection
 
@@ -596,7 +605,7 @@ operations with the same semantics.
 - keyed update and removal, on low-degree nodes and on a hub of 10⁵ edges;
 - outbound and inbound traversal in the dynamic state;
 - `freeze` and `unfreeze`;
-- memory per edge, with `MIN_LOG` swept;
+- memory per edge, with `MIN_LOG` and `HUB_DEGREE` swept;
 - k = 1, 16 and 256 keyed writes followed by `strongly_connected_components`, in Live and as
   Dynamic → `freeze` → algorithm → `unfreeze`;
 - the algorithms in the Live and the Frozen states: whole-graph sweeps (every row in order) and walks from one source (rows in random
@@ -607,9 +616,12 @@ operations with the same semantics.
 Graph shapes: the shapes DeepCausality's tests build, and one power-law graph.
 
 **Decision rules:**
-- Snapshot-log arrays replace Vec lists if, at a `MIN_LOG` that keeps their memory per edge within
-  1.25 times the Vec lists', they come within about 5 % of them on building, traversal and
-  `freeze`, and are clearly faster on update and removal. Otherwise Vec lists stay, with §1–3.
+- A challenger (the snapshot-log arrays at a `MIN_LOG`, the indexed lists at a `HUB_DEGREE`) qualifies
+  if, at a parameter that keeps its memory per edge within 1.25 times the Vec lists', it comes
+  within about 5 % of them on building, traversal and `freeze`, and is clearly faster on update and
+  removal on the hub. One qualifier wins; of two, the one clearly faster on the hub rows, and the
+  indexed lists when neither is, since they keep the Vec lists' structure. Otherwise Vec lists stay,
+  with §1–3.
 - Live stays if, for k = 1, 16 and 256 keyed writes followed by `strongly_connected_components`, it
   is clearly faster than Dynamic → `freeze` → algorithm → `unfreeze`. Otherwise the work stops for
   Marvin's decision before Live is removed or maintained views are built.

@@ -157,7 +157,7 @@ context's `get_edge` reading the first edge of a pair; `index_bound` returning `
 
 ### D9. Performance is measured against the baseline, not gated by a threshold
 After phase 4, `cargo bench -p ultragraph` runs three times on the same machine and is aggregated
-like the baseline into `openspec/notes/ultragraph/BenchAfter/BenchAfter.md`. Every row whose mean
+like the baseline into `../../../notes/ultragraph/BenchAfterChange1StableId`. Every row whose mean
 moves beyond the baseline row's spread is explained by a decision of this design. Expected moves:
 `add_edge` and `remove_edge` on the hub (D4, an O(d) keyed scan and a second write),
 `build_graph` (the backward list), `get_edges` (unchanged list, so within spread). Frozen reads and

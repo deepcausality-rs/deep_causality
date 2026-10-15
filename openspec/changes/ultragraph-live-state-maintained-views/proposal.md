@@ -27,10 +27,16 @@ This change depends on `ultragraph-stable-ids-keyed-edges` and is applied after 
 - **BREAKING** The container takes a projection type parameter with a default that maintains nothing.
   `maintain(projection, mode)` registers a view the graph keeps current eagerly on every mutation;
   `view(id)` reads it. There is no refresh call.
-- A benchmark decides between today's per-node `Vec` lists and RadixGraph's snapshot-log edge arrays
-  for the Dynamic state, at a log length that keeps memory per edge within 1.25 times the `Vec`
-  lists', and whether the Live state earns its place against freezing before each analysis. Both
-  candidates pass the same suite before the measurement; the loser is removed.
+- A benchmark decides the Dynamic state's edge storage among three candidates: today's per-node
+  `Vec` lists, RadixGraph's snapshot-log edge arrays, and the `Vec` lists with an index on
+  high-degree nodes (a `BTreeMap` from `(other end, key)` to the entry's position, built once a list
+  reaches a degree threshold), each challenger at the parameter that keeps its memory per edge
+  within 1.25 times the `Vec` lists'; and whether the Live state earns its place against freezing
+  before each analysis. Every candidate passes the same suite before the measurement; the losers are
+  removed. The after-benchmark of change 1 (`openspec/notes/ultragraph/BenchAfter/BenchAfter.md`)
+  puts the hub's keyed `add_edge` at 162 ns and `remove_edge` at 312 ns against 4 ns and 171 ns
+  before, the cost of scanning the hub's list for `(target, key)`; the index candidate exists to
+  stop that scan without the snapshot-log's log and compaction.
 - The work follows the TDD protocol of `openspec/specs/unified-math-tdd-protocol/spec.md`, and every
   measurement uses the three-run protocol of the baseline.
 
@@ -62,4 +68,4 @@ This change depends on `ultragraph-stable-ids-keyed-edges` and is applied after 
 - **Benchmarks:** new workloads in `ultragraph/benches`; results in
   `openspec/notes/ultragraph/BenchStorage/` and the decisions in the design notes.
 - **Tests:** new suites per capability under the TDD protocol; the change-1 suites run against both
-  edge-storage candidates.
+  edge-storage candidates, each selected by its temporary Cargo feature.

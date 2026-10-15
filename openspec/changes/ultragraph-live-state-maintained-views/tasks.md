@@ -20,7 +20,7 @@ clean with no `allow`, and a commit message shown to the user; the user commits.
       three runs and aggregate them
 - [ ] 1.3 Commit message for group 1
 
-## 2. The snapshot-log candidate
+## 2. The two challengers: the snapshot-log arrays and the indexed lists
 
 - [ ] 2.1 Phase 1: a crate-internal storage trait over the Dynamic state's edge lists, implemented by
       the incumbent, and the snapshot-log `EdgeArray` (design D5) with `unimplemented!()` bodies,
@@ -38,16 +38,34 @@ clean with no `allow`, and a commit message shown to the user; the user commits.
 - [ ] 2.5 Phase 4: implement the candidate; `cargo test -p ultragraph` passes without and with
       `--features edge-log` with the same executed count; full coverage under each
 - [ ] 2.6 Phase 5: `scripts/mutants.sh` over the candidate's files; resolve every survivor
-- [ ] 2.7 Commit message for group 2
+- [ ] 2.7 Commit message for the snapshot-log candidate
+- [ ] 2.8 Phase 1: the indexed-lists candidate (design D5b) behind the storage trait with
+      `unimplemented!()` bodies, selected by the temporary Cargo feature `edge-index`; `edge-log` and
+      `edge-index` together are a `compile_error!`
+- [ ] 2.9 Fill the A–K table for the candidate (rows E: a list at `HUB_DEGREE`, one below and one
+      above, and falling back through half of it; K: the four payload kinds)
+- [ ] 2.10 Phase 2: tests through the public API against the same model, driving a node across the
+      threshold in both directions with keyed inserts, removals, `remove_edge`, `compact_ids`,
+      `from_parts`, `freeze` and `unfreeze`, the memory accounting showing the index present and
+      absent; the complete change-1 suite runs with `--features edge-index`; observe failing; record
+- [ ] 2.11 Phase 3: inject the design D7 index defects (an entry not re-recorded after a swap-remove;
+      the index built one below or above the threshold or not dropped below half of it; a stale index
+      after `compact_ids` or `unfreeze`; a lookup answered by the index where the list disagrees) and
+      the nine generic classes; record; discard
+- [ ] 2.12 Phase 4: implement the candidate; `cargo test -p ultragraph` passes without a feature, with
+      `--features edge-log` and with `--features edge-index`, all with the same executed count; full
+      coverage under each
+- [ ] 2.13 Phase 5: `scripts/mutants.sh` over the candidate's files; resolve every survivor
+- [ ] 2.14 Commit message for the indexed-lists candidate
 
 ## 3. The edge-storage decision
 
-- [ ] 3.1 Sweep `MIN_LOG` for memory per edge and hub update time; fix it by the 1.25× memory gate of
-      `ultragraph-edge-storage-benchmark`; three runs per candidate at that value; aggregate into
-      `BenchStorage/`
+- [ ] 3.1 Sweep `MIN_LOG` and `HUB_DEGREE` for memory per edge and hub update time; fix each by the
+      1.25× memory gate of `ultragraph-edge-storage-benchmark`; three runs per candidate at its value;
+      aggregate into `BenchStorage/`
 - [ ] 3.2 Apply the rule of `ultragraph-edge-storage-benchmark`; record the outcome and its rows in
       `openspec/notes/ultragraph/RadixGraphUpdate.md` §Benchmark
-- [ ] 3.3 Ask the user to approve removing the losing candidate; remove it and the `edge-log` feature, and
+- [ ] 3.3 Ask the user to approve removing the losing candidates; remove them and their features, and
       keep the trait only if it still serves the Live state
 - [ ] 3.4 Commit message for group 3
 

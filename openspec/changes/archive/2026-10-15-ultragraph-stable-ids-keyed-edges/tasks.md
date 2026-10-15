@@ -155,7 +155,7 @@ behaviour.
 ## 4. Measurement and close-out
 
 - [x] 4.1 Run `cargo bench -p ultragraph` three times on the baseline machine; aggregate into
-      `openspec/notes/ultragraph/BenchAfter/BenchAfter.md` with the baseline's method and table layout
+      `../../../notes/ultragraph/BenchAfterChange1StableId` with the baseline's method and table layout
 - [x] 4.2 Compare every row with `BenchBefore.md`; explain each mean that moves beyond the baseline
       row's spread by a decision of design D9, and treat an unexplained move in a frozen read or an
       algorithm as a defect to fix before close-out
