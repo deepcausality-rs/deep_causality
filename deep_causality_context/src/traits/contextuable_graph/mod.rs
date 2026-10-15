@@ -46,6 +46,8 @@ where
     fn add_node(&mut self, value: Contextoid<D, S, T, ST>) -> Result<usize, ContextIndexError>;
     fn contains_node(&self, index: usize) -> bool;
     fn get_node(&self, index: usize) -> Option<&Contextoid<D, S, T, ST>>;
+    /// Removes the node carrying `node_id` from the base graph. Its position is never reissued,
+    /// and every data and time index entry naming that position is dropped with it.
     fn remove_node(&mut self, node_id: ContextoidId) -> Result<(), ContextIndexError>;
     /// Replaces the contextoid under `node_id` with `new_node`, which may carry another id.
     ///
@@ -64,9 +66,9 @@ where
         weight: RelationKind,
     ) -> Result<(), ContextIndexError>;
     fn contains_edge(&self, a: usize, b: usize) -> bool;
-    /// Returns the relation the edge from `a` to `b` carries, or `None` when no such edge
-    /// exists. This is the read counterpart of `add_edge`: without it the relation a caller
-    /// supplies is not recoverable from the context.
+    /// Returns the lowest relation among the edges from `a` to `b`, the same in both states, or
+    /// `None` when no such edge exists. This is the read counterpart of `add_edge`: without it
+    /// the relation a caller supplies is not recoverable from the context.
     fn get_edge(&self, a: usize, b: usize) -> Option<&RelationKind>;
     fn remove_edge(&mut self, a: usize, b: usize) -> Result<(), ContextIndexError>;
     fn size(&self) -> usize;
@@ -75,39 +77,36 @@ where
     fn number_of_nodes(&self) -> usize;
     fn number_of_edges(&self) -> usize;
 
-    /// Converts the base graph to its frozen state: an immutable compressed-sparse-row layout on
-    /// which [`outbound_edges`](Self::outbound_edges) and [`inbound_edges`](Self::inbound_edges)
-    /// run. Freezing takes `O(V + E)`; a frozen context is left as it is.
+    /// Converts the base graph to its frozen state: an immutable compressed-sparse-row layout
+    /// the graph algorithms run on. Freezing takes `O(V + E)`; a frozen context is left as it is.
     ///
-    /// Freezing compacts away removed nodes, keeping the live nodes in their order, so an index
-    /// after a removed node moves down. The context remaps every index it stores, so a lookup by
-    /// id returns the node's index in the frozen graph. While frozen, every method that changes
-    /// the base graph returns an error; reads work in both states. Extra contexts are separate
-    /// graphs and keep their state.
+    /// Freezing keeps every position: no index the context stores changes, and a removed node's
+    /// position reads as absent in both states. While frozen, every method that changes the base
+    /// graph returns an error; reads work in both states. Extra contexts are separate graphs and
+    /// keep their state.
     fn freeze(&mut self);
 
-    /// Converts the base graph back to its mutable state, `O(V + E)`, keeping every index. A
-    /// context that is not frozen is left as it is.
+    /// Converts the base graph back to its mutable state, `O(V + E)`. A context that is not
+    /// frozen is left as it is.
     fn unfreeze(&mut self);
 
     /// Whether the base graph is frozen.
     fn is_frozen(&self) -> bool;
 
-    /// The indices of the nodes that an edge from `index` reaches, read from the frozen graph
-    /// without allocating.
+    /// The indices of the nodes that an edge from `index` reaches, in either state, without
+    /// allocating.
     ///
     /// # Errors
-    /// [`ContextIndexError`] when the context is not frozen or holds no node at `index`.
+    /// [`ContextIndexError`] when the context holds no node at `index`.
     fn outbound_edges(
         &self,
         index: usize,
     ) -> Result<impl Iterator<Item = usize> + '_, ContextIndexError>;
 
-    /// The indices of the nodes with an edge to `index`, read from the frozen graph without
-    /// allocating.
+    /// The indices of the nodes with an edge to `index`, in either state, without allocating.
     ///
     /// # Errors
-    /// [`ContextIndexError`] when the context is not frozen or holds no node at `index`.
+    /// [`ContextIndexError`] when the context holds no node at `index`.
     fn inbound_edges(
         &self,
         index: usize,

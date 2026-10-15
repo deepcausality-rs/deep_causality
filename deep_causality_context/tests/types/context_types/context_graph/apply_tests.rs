@@ -15,8 +15,8 @@
 //! row n/a.
 
 use deep_causality_context::{
-    ContextStore, Contextoid, ContextoidType, ContextuableGraph, Data, ExtendableContextuableGraph,
-    UniformContext,
+    ContextStore, Contextoid, ContextoidType, ContextuableGraph, Data, DataIndexable,
+    ExtendableContextuableGraph, TimeIndexable, UniformContext,
 };
 use deep_causality_context_store::utils_test::{MemoryStorage, block_on};
 use deep_causality_context_store::{
@@ -169,6 +169,80 @@ fn test_unlink_left_and_retract() {
     ctx.apply(&ContextEvent::NodeRetracted(3)).unwrap();
     assert!(ctx.snapshot().unwrap().nodes().is_empty());
     assert!(extra_nodes(&ctx, 40).is_empty());
+}
+
+/// Sets one entry naming `index` in each of the four index maps, under keys 2 (current data),
+/// 5 (previous data), 4 (current time) and 6 (previous time).
+fn name_in_every_map(ctx: &mut UniformContext, index: usize) {
+    ctx.set_data_index(2, index, true);
+    ctx.set_data_index(5, index, false);
+    ctx.set_time_index(4, index, true);
+    ctx.set_time_index(6, index, false);
+}
+
+fn entries(ctx: &UniformContext) -> [Option<&usize>; 4] {
+    [
+        ctx.get_data_index(&2, true),
+        ctx.get_data_index(&5, false),
+        ctx.get_time_index(&4, true),
+        ctx.get_time_index(&6, false),
+    ]
+}
+
+#[test]
+fn test_a_retraction_from_the_store_drops_the_index_entries() {
+    // Spec scenario "A retraction from the store drops them too": base 7 holds 3 at 0 and 4 at 1.
+    // Node 3 is retracted, so the live node 4 sits above the tombstone; every entry naming 3's
+    // index goes, and the entry naming 4's index (key 7, current data) stays.
+    let mut ctx = world();
+    let i3 = ctx.get_node_index_by_id(3).unwrap();
+    let i4 = ctx.get_node_index_by_id(4).unwrap();
+    assert_eq!((i3, i4), (0, 1));
+    name_in_every_map(&mut ctx, i3);
+    ctx.set_data_index(7, i4, true);
+
+    ctx.apply(&ContextEvent::NodeRetracted(3)).unwrap();
+
+    assert_eq!(ctx.get_node_index_by_id(3), None);
+    assert_eq!(ctx.get_data_index(&2, true), None);
+    assert_eq!(entries(&ctx), [None; 4]);
+    assert_eq!(ctx.get_data_index(&7, true), Some(&i4));
+    assert_eq!(ctx.get_node_index_by_id(4), Some(i4));
+}
+
+#[test]
+fn test_an_unlink_from_the_store_drops_the_index_entries() {
+    // The release of a base-graph node through NodeUnlinked drops the entries as a retraction
+    // does. Leaving an extra (NodeLeft) releases no base-graph node, so the entries stay.
+    let mut ctx = world();
+    let i3 = ctx.get_node_index_by_id(3).unwrap();
+    let i4 = ctx.get_node_index_by_id(4).unwrap();
+    assert_eq!((i3, i4), (0, 1));
+    name_in_every_map(&mut ctx, i3);
+    ctx.set_time_index(7, i4, false);
+
+    ctx.apply(&ContextEvent::NodeLeft {
+        context: 40,
+        node: 3,
+    })
+    .unwrap();
+    assert_eq!(entries(&ctx), [Some(&i3); 4]);
+
+    ctx.apply(&ContextEvent::NodeUnlinked {
+        context: 7,
+        node: 3,
+    })
+    .unwrap();
+    assert_eq!(ctx.get_node_index_by_id(3), None);
+    assert_eq!(entries(&ctx), [None; 4]);
+    assert_eq!(ctx.get_time_index(&7, false), Some(&i4));
+    // An echo of the unlink changes nothing.
+    ctx.apply(&ContextEvent::NodeUnlinked {
+        context: 7,
+        node: 3,
+    })
+    .unwrap();
+    assert_eq!(ctx.get_time_index(&7, false), Some(&i4));
 }
 
 #[test]

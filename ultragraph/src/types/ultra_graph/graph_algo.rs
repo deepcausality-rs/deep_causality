@@ -6,21 +6,22 @@
 use alloc::vec::Vec;
 
 use crate::{
-    CentralityGraphAlgorithms, GraphAlgorithms, GraphError, GraphState, PathfindingGraphAlgorithms,
-    StructuralGraphAlgorithms, TopologicalGraphAlgorithms, UltraGraphContainer,
+    CentralityGraphAlgorithms, EdgeKey, GraphAlgorithms, GraphError, GraphState,
+    PathfindingGraphAlgorithms, StructuralGraphAlgorithms, TopologicalGraphAlgorithms,
+    UltraGraphContainer,
 };
 
 impl<N, W> GraphAlgorithms<N, W> for UltraGraphContainer<N, W>
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
 }
 
 impl<N, W> CentralityGraphAlgorithms<N, W> for UltraGraphContainer<N, W>
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     /// Calculates the betweenness centrality of each node in the graph.
     ///
@@ -113,7 +114,7 @@ where
 impl<N, W> PathfindingGraphAlgorithms<N, W> for UltraGraphContainer<N, W>
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     /// Checks if a node `stop_index` is reachable from `start_index`.
     ///
@@ -202,7 +203,7 @@ where
 impl<N, W> StructuralGraphAlgorithms<N, W> for UltraGraphContainer<N, W>
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     /// Finds the strongly connected components (SCCs) of the graph.
     ///
@@ -268,7 +269,7 @@ where
 impl<N, W> TopologicalGraphAlgorithms<N, W> for UltraGraphContainer<N, W>
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     /// Finds a cycle in the graph.
     ///

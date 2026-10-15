@@ -3,10 +3,13 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{GraphError, GraphView};
+use crate::{EdgeKey, GraphError, GraphView};
 use alloc::vec::Vec;
 
-pub trait CentralityGraphAlgorithms<N, W>: GraphView<N, W> {
+pub trait CentralityGraphAlgorithms<N, W>: GraphView<N, W>
+where
+    W: EdgeKey,
+{
     /// Calculates the betweenness centrality of each node in the graph.
     fn betweenness_centrality(
         &self,

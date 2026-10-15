@@ -37,5 +37,8 @@ std = ["alloc"]
 alloc = []
 no-std = ["alloc"]
 
+[dependencies.ultragraph_traits]
+workspace = true
+
 [lints]
 workspace = true

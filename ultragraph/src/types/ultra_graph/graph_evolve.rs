@@ -3,18 +3,18 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Freezable, GraphState, GraphView, UltraGraphContainer, Unfreezable};
+use crate::{EdgeKey, Freezable, GraphState, GraphView, UltraGraphContainer, Unfreezable};
 
-impl<N: Clone, W: Clone> UltraGraphContainer<N, W>
+impl<N, W> UltraGraphContainer<N, W>
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     /// Ensures the graph is in the immutable, performance-optimized `Static` state.
     ///
     /// If the graph is already frozen, this operation is a no-op. Otherwise, it
-    /// converts the graph from a `Dynamic` state in-place. This is an O(V + E)
-    /// operation if a state change occurs.
+    /// converts the graph from a `Dynamic` state in-place. If a state change occurs, this is
+    /// O(V + E) for counting and placement plus a sort of each adjacency list.
     pub fn freeze(&mut self) {
         if !self.is_frozen() {
             // Safely take ownership of the state, leaving a default in its place.

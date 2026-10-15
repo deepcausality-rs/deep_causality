@@ -37,6 +37,7 @@ use alloc::format;
 use alloc::vec;
 use alloc::vec::Vec;
 use deep_causality::CausableGraph;
+use ultragraph::GraphTraversal;
 
 /// A causal structure: a bipartite influence relation between input systems and
 /// output systems. `contains(i, o)` holds when input `i` influences output `o`.
@@ -88,15 +89,11 @@ impl CausalStructure {
     /// Derives the causal structure from a **frozen** causal graph's
     /// reachability over caller-declared input and output nodes: input `i`
     /// influences output `o` iff there is a directed path `i → … → o` (or
-    /// `i == o`), computed from the public `contains_edge` adjacency. This is
+    /// `i == o`), walked along the graph's outbound edges. This is
     /// the traditional-circuit influence relation the C₃ criterion is stated on.
     ///
-    /// The graph **must be frozen**: only the static representation guarantees a
-    /// dense node-id space `0..number_nodes()`, which the BFS relies on. On a
-    /// dynamic graph a `remove_node` tombstones a slot without compacting, so a
-    /// live node can have an id `≥ number_nodes()` and its edges would be
-    /// silently skipped — an unsound false negative in a faithfulness gate.
-    /// An unfrozen graph is therefore rejected.
+    /// The graph **must be frozen**; an unfrozen graph is rejected. A declared system id
+    /// that holds no causaloid, removed or never issued, is rejected as well.
     ///
     /// # Errors
     /// Returns [`QuantumError::CalculationError`] if the graph is not frozen.
@@ -111,38 +108,45 @@ impl CausalStructure {
     {
         if !graph.is_frozen() {
             return Err(QuantumError::CalculationError(
-                "CausalStructure::from_graph_reachability requires a frozen graph (dense node ids); \
-                 freeze the graph before deriving the causal structure"
+                "CausalStructure::from_graph_reachability requires a frozen graph; freeze the \
+                 graph before deriving the causal structure"
                     .into(),
             ));
         }
-        let n = graph.number_nodes();
-        // A declared system id outside `0..n` names no node; its reachability would
+        // One past the highest live index: a live node can sit at or above `number_nodes()`.
+        let n = graph.index_bound();
+        // A declared system id holding no causaloid names no node; its reachability would
         // be silently empty, detaching the derived structure from the graph (and
         // hiding a real C₃). Reject it so the freeze hook rolls back.
-        if let Some(&bad) = inputs.iter().chain(outputs).find(|&&id| id >= n) {
+        if let Some(&bad) = inputs
+            .iter()
+            .chain(outputs)
+            .find(|&&id| !graph.contains_causaloid(id))
+        {
             return Err(QuantumError::CalculationError(format!(
-                "declared system id {} is out of range for a frozen graph with {} node(s) \
-                 (valid ids are 0..{})",
-                bad, n, n
+                "declared system id {bad} names no causaloid in the frozen graph"
             )));
         }
         let mut me = Self::new(inputs, outputs);
         let out_set: BTreeSet<usize> = outputs.iter().copied().collect();
         for &i in &me.inputs.clone() {
-            // BFS from i over forward edges.
+            // Depth-first walk from i over forward edges. Every node reached is live, so its
+            // listing answers; a tombstone is never reached because no edge leads to one.
             let mut seen = vec![false; n];
             let mut stack = vec![i];
-            if i < n {
-                seen[i] = true;
-            }
+            seen[i] = true;
             while let Some(node) = stack.pop() {
                 if out_set.contains(&node) {
                     me.add_influence(i, node);
                 }
-                for (succ, seen_succ) in seen.iter_mut().enumerate() {
-                    if !*seen_succ && graph.contains_edge(node, succ) {
-                        *seen_succ = true;
+                let successors = graph.get_graph().outbound_edges(node).map_err(|e| {
+                    QuantumError::CalculationError(format!(
+                        "node {node}, reached along an edge, lists no neighbours: {e}"
+                    ))
+                })?;
+                for succ in successors {
+                    if !seen[succ] {
+                        seen[succ] = true;
                         stack.push(succ);
                     }
                 }

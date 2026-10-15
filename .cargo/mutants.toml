@@ -119,6 +119,42 @@ exclude_re = [
     # the shape `(0, 0)`. The two are the same value, so no test can separate them.
     "replace <impl Zero for CsrMatrix<T>>::zero -> Self with Default::default",
 
+    # `CsmGraph::with_capacity` versus `Default::default()`: both build an empty frozen graph with
+    # no live node, offsets `[0]` and no root; the capacity of the node vector is the only
+    # difference and nothing reads it. The same value, so no test can separate them.
+    "replace CsmGraph<N, W>::with_capacity -> Self with Default::default\\(\\)",
+
+    # The root-loop skip of the three Tarjan passes over the symmetric adjacency,
+    # `if !g.contains_node(root) || dfs_num[root] != usize::MAX { continue }`, mutated to `&&`. The
+    # mutant re-enters a visited live root and enters an unvisited tombstone. A tombstone has no
+    # half-edge in the symmetric adjacency, so its DFS frame pops at once and sets nothing but its
+    # own `dfs_num`; a re-entered live root finds every neighbour already numbered, so it gains no
+    # tree child and emits no articulation point, bridge or component. The results are unchanged;
+    # only `time` advances. Measured: all three survive the suite's tombstone fixtures and the
+    # generated agreement test, which compares every result with the compacted graph's.
+    "replace \\|\\| with && in articulation_points_impl",
+    "replace \\|\\| with && in bridges_impl",
+    "replace \\|\\| with && in biconnected_components_impl",
+
+    # `find_cycle`'s start loop, `if self.contains_node(i) && states[i] == Unvisited`, mutated to
+    # `||`. The mutant re-enters a finished live root, whose neighbours are all `Visited` and so
+    # never `VisitingInProgress`, the only state that reports a cycle; and it enters a tombstone,
+    # which has no neighbour. No cycle is found or missed that the original would not. The `&&` of
+    # `topological_sort`'s queue filter in the same file is a different function and IS caught.
+    "replace && with \\|\\| in find_cycle_impl",
+
+    # Dijkstra's stale-entry skip, `if dist > known { continue }`, mutated to `<`. A popped
+    # distance is never below the known one, so the mutant skips nothing and processes every
+    # stale entry; a stale entry relaxes with a larger distance and improves no neighbour, so the
+    # path and its length are unchanged. Only work is added.
+    "replace > with < in shortest_weighted_path_impl",
+
+    # The sort threshold `targets.len() < RADIX_SORT_THRESHOLD`, mutated to `<=`, `==` or `>`.
+    # Both branches sort by target then key (the comparison sort directly, the radix branch by
+    # a stable key sort then a stable radix sort), so which branch runs changes the time, never
+    # the order. The 127/128/129 test pins the order on both sides; nothing can pin the branch.
+    "replace < with (<=|==|>) in sort_single_adjacency_list",
+
     # `EntropyConfig::bits()` versus `Default::default()`. The default IS bits, SkipZero and
     # Normalisation::None — stated on the type and asserted in `entropy_config_tests` — so the
     # constructor and the derive return the same value by construction. No test can separate them,

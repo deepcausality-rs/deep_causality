@@ -62,17 +62,16 @@ fn start(ctx: BaseContext) -> PropagatingProcess<f64, (), BaseContext> {
 ## Freezing and neighbour listing
 
 The base graph has two states. A mutable graph takes changes. `freeze` builds a compressed sparse
-row form of it in O(V + E), and over that form `outbound_edges` and `inbound_edges` list a node's
-successors and predecessors. Both return an error on a mutable graph. Reads such as `get_node`,
-`contains_edge` and `get_node_index_by_id` work in both states. While the graph is frozen, every
+row form of it in O(V + E) for the graph algorithms. `outbound_edges` and `inbound_edges` list a
+node's successors and predecessors in both states, as do reads such as `get_node`,
+`contains_edge` and `get_node_index_by_id`. While the graph is frozen, every
 change to it returns an error, and `Context::apply` refuses an event that would change it with
 `ProjectionError::Frozen`. `unfreeze` makes the graph mutable again.
 
-`freeze` drops the slots of removed nodes, so a node's index afterwards is its rank among the live
-nodes. The context moves every index it stores, the identifier map and the data and time indices,
-to the node's new index, and drops the entries that named a removed node. An index the caller held
-from before `freeze` is stale; read it again with `get_node_index_by_id`. `unfreeze` keeps every
-index. Extra contexts are not frozen with the base graph.
+A node's index is permanent: `freeze` and `unfreeze` keep every index, and an index the caller
+holds stays valid until the node is removed. Removing a node drops the data and time index entries
+that named its index; the index is never reissued. Extra contexts are not frozen with the base
+graph.
 
 ```rust
 use deep_causality_context::{

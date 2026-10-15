@@ -3,12 +3,12 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{CsmGraph, GraphError, GraphTraversal, GraphView};
+use crate::{CsmGraph, EdgeKey, GraphError, GraphTraversal, GraphView};
 
 impl<N, W> GraphTraversal<N, W> for CsmGraph<N, W>
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     /// Returns a non-allocating iterator over the direct successors (outgoing edges) of node `a`.
     ///
@@ -16,7 +16,7 @@ where
     /// graph's underlying memory, which is a major performance benefit of the CSR format.
     ///
     /// # Errors
-    /// Returns `GraphError::NodeNotFound` if the node index `a` is out of bounds.
+    /// Returns `GraphError::NodeNotFound` if position `a` holds no node: past the table or removed.
     fn outbound_edges(&self, a: usize) -> Result<impl Iterator<Item = usize> + '_, GraphError> {
         if !self.contains_node(a) {
             return Err(GraphError::NodeNotFound(a));
@@ -37,7 +37,7 @@ where
     /// Returns a non-allocating iterator over the direct predecessors (incoming edges) of node `a`.
     ///
     /// # Errors
-    /// Returns `GraphError::NodeNotFound` if the node index `a` is out of bounds.
+    /// Returns `GraphError::NodeNotFound` if position `a` holds no node: past the table or removed.
     fn inbound_edges(&self, a: usize) -> Result<impl Iterator<Item = usize> + '_, GraphError> {
         if !self.contains_node(a) {
             return Err(GraphError::NodeNotFound(a));

@@ -4,6 +4,7 @@
  */
 
 pub mod bench_biconnectivity;
+pub mod bench_crud;
 pub mod bench_linear;
 mod data;
 mod fields;

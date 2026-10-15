@@ -2,55 +2,38 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{GraphError, GraphState, GraphTraversal, UltraGraphContainer};
+use crate::types::ultra_graph::traversal_iter::TraversalIter;
+use crate::{EdgeKey, GraphError, GraphState, GraphTraversal, UltraGraphContainer};
 
 impl<N, W> GraphTraversal<N, W> for UltraGraphContainer<N, W>
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
-    /// Returns an iterator over the indices of all nodes that have an outbound edge from the given node `a`.
-    ///
-    /// # Preconditions
-    /// This high-performance operation is only available when the graph is in a `Static` (frozen) state.
+    /// Returns an iterator over the targets of the edges out of node `a`, one entry per edge, in
+    /// either state. The frozen state reads its CSR slice; the dynamic state reads the node's
+    /// forward list.
     ///
     /// # Errors
     ///
-    /// - Returns `GraphError::GraphNotFrozen` if the graph is in a `Dynamic` state.
-    /// - Returns an error if the node at index `a` does not exist.
+    /// Returns `GraphError::NodeNotFound` if position `a` holds no node, in either state.
     fn outbound_edges(&self, a: usize) -> Result<impl Iterator<Item = usize> + '_, GraphError> {
         match &self.state {
-            GraphState::Static(g) => {
-                // Delegate to the CsmGraph's hyper-optimized implementation.
-                g.outbound_edges(a)
-            }
-            GraphState::Dynamic(_) => {
-                // This operation is not supported on a dynamic graph.
-                // The graph must be frozen for high-performance traversal.
-                Err(GraphError::GraphNotFrozen)
-            }
+            GraphState::Static(g) => g.outbound_edges(a).map(TraversalIter::Frozen),
+            GraphState::Dynamic(g) => g.outbound_edges(a).map(TraversalIter::Dynamic),
         }
     }
-    /// Returns an iterator over the indices of all nodes that have an inbound edge to the given node `a`.
-    ///
-    /// # Preconditions
-    /// This high-performance operation is only available when the graph is in a `Static` (frozen) state.
+
+    /// Returns an iterator over the sources of the edges into node `a`, one entry per edge, in
+    /// either state.
     ///
     /// # Errors
     ///
-    /// - Returns `GraphError::GraphNotFrozen` if the graph is in a `Dynamic` state.
-    /// - Returns an error if the node at index `a` does not exist.
+    /// Returns `GraphError::NodeNotFound` if position `a` holds no node, in either state.
     fn inbound_edges(&self, a: usize) -> Result<impl Iterator<Item = usize> + '_, GraphError> {
         match &self.state {
-            GraphState::Static(g) => {
-                // Delegate to the CsmGraph's hyper-optimized implementation.
-                g.inbound_edges(a)
-            }
-            GraphState::Dynamic(_) => {
-                // This operation is not supported on a dynamic graph.
-                // The graph must be frozen for high-performance traversal.
-                Err(GraphError::GraphNotFrozen)
-            }
+            GraphState::Static(g) => g.inbound_edges(a).map(TraversalIter::Frozen),
+            GraphState::Dynamic(g) => g.inbound_edges(a).map(TraversalIter::Dynamic),
         }
     }
 }

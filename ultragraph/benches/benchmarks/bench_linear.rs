@@ -2,73 +2,74 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use criterion::{BatchSize, Criterion, criterion_group};
-use deep_causality_rand::{Rng, rng};
+
+//! Benchmarks for building a graph and for adding and reading nodes, on the chain fixture
+//! (`utils::build_linear_graph`) at each size in `fields::SIZES`.
+
+use criterion::{BatchSize, BenchmarkId, Criterion, Throughput, criterion_group};
 use std::hint::black_box;
-// Use modern rand imports
 use ultragraph::*;
 
 use crate::benchmarks::data::Data;
-use crate::benchmarks::fields::{LARGE, MEDIUM, SMALL};
-use crate::benchmarks::utils;
+use crate::benchmarks::fields::{INDEX_COUNT, SIZES};
+use crate::benchmarks::utils::{
+    build_linear_graph, build_linear_graph_with_capacity, random_indices,
+};
 
-// Type alias for convenience
-type UGraph = UltraGraph<Data>;
-
-fn get_empty_ultra_graph(capacity: usize) -> UGraph {
-    UltraGraph::with_capacity(capacity, None)
-}
-
-fn get_pre_filled_ultra_graph(capacity: usize) -> UGraph {
-    match capacity {
-        SMALL => utils::build_linear_graph(SMALL),
-        MEDIUM => utils::build_linear_graph(MEDIUM),
-        LARGE => utils::build_linear_graph(LARGE),
-        _ => unreachable!(),
+/// Builds a chain of `n + 1` nodes and `n` edges from an empty graph, by inserts.
+fn bench_build_graph(c: &mut Criterion) {
+    let mut group = c.benchmark_group("build_graph");
+    for n in SIZES {
+        group.throughput(Throughput::Elements((n + 1) as u64));
+        group.bench_with_input(BenchmarkId::from_parameter(n), &n, |b, &n| {
+            b.iter_with_large_drop(|| build_linear_graph(black_box(n)))
+        });
     }
+    group.finish();
 }
 
-// Generic benchmark function for adding nodes to avoid repetition
-fn bench_add_node(c: &mut Criterion, name: &str, capacity: usize) {
-    let d = Data::default();
-
-    c.bench_function(name, |b| {
-        // Use iter_batched to create a new graph for each measurement
-        b.iter_batched(
-            || get_empty_ultra_graph(capacity), // SETUP: Create a fresh, empty graph
-            |mut g| g.add_node(d),              // ROUTINE: The operation to benchmark
-            BatchSize::LargeInput,              // A hint for criterion about the workload
-        );
-    });
+/// Adds one node to a chain that already holds `n + 1` nodes. The setup reserves room for one more
+/// node, so the measured insert never reallocates the node tables; the amortised cost, growth
+/// included, is the per-node rate of `build_graph`.
+fn bench_add_node(c: &mut Criterion) {
+    let mut group = c.benchmark_group("add_node");
+    for n in SIZES {
+        group.bench_with_input(BenchmarkId::from_parameter(n), &n, |b, &n| {
+            b.iter_batched_ref(
+                || build_linear_graph_with_capacity(n, n + 2),
+                |g| g.add_node(black_box(Data::default())),
+                BatchSize::LargeInput,
+            )
+        });
+    }
+    group.finish();
 }
 
-// Generic benchmark function for getting nodes to avoid repetition
-fn bench_get_node(c: &mut Criterion, name: &str, capacity: usize) {
-    let g = get_pre_filled_ultra_graph(capacity);
-    let mut rng = rng(); // Create RNG once
-
-    c.bench_function(name, |b| {
-        b.iter(|| {
-            let index = rng.random_range(0..capacity);
-            black_box(g.get_node(index))
-        })
-    });
+/// Reads a random node of a chain of `n + 1` nodes.
+fn bench_get_node(c: &mut Criterion) {
+    let mut group = c.benchmark_group("get_node");
+    for n in SIZES {
+        let g = build_linear_graph(n);
+        let nodes = random_indices(0..n + 1);
+        let mut cursor = 0;
+        group.bench_with_input(BenchmarkId::from_parameter(n), &n, |b, _| {
+            b.iter(|| {
+                cursor = (cursor + 1) & (INDEX_COUNT - 1);
+                black_box(g.get_node(nodes[cursor]))
+            })
+        });
+    }
+    group.finish();
 }
 
 fn linear_graph_benchmarks(c: &mut Criterion) {
-    // Benchmarks for adding nodes
-    bench_add_node(c, "small_add_node", SMALL);
-    bench_add_node(c, "medium_add_node", MEDIUM);
-    bench_add_node(c, "large_add_node", LARGE);
-
-    // Benchmarks for getting nodes
-    bench_get_node(c, "small_get_node", SMALL);
-    bench_get_node(c, "medium_get_node", MEDIUM);
-    bench_get_node(c, "large_get_node", LARGE);
+    bench_build_graph(c);
+    bench_add_node(c);
+    bench_get_node(c);
 }
 
 criterion_group! {
-    name = liner_graph_bench_collection;
+    name = linear_graph_bench_collection;
     config = Criterion::default().sample_size(100);
     targets = linear_graph_benchmarks
 }

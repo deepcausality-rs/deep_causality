@@ -74,8 +74,8 @@ where
     /// State is never merged at a join (the per-channel ruling): at most one incoming branch of a
     /// join may write state. Because a stored causal function is opaque, writers are **declared**:
     /// `state_writers` lists the node indices whose causal functions write the state channel. Each
-    /// index must name an existing node (`< number_nodes`); an out-of-range declaration fails the
-    /// freeze rather than being silently ignored. For
+    /// index must hold a causaloid; a removed or never-issued index fails the freeze rather than
+    /// being silently ignored. For
     /// every join (a node with two or more incoming edges), a writer counts against an incoming
     /// branch when it lies in that branch's ancestor cone but not in every branch's cone — a
     /// writer *above the fork* is seen identically by all branches and cannot conflict. Two or
@@ -134,16 +134,18 @@ where
             return Ok(());
         }
 
-        let n_nodes = self.number_nodes();
+        // Every per-index array below is sized by the slot bound, because a live index can sit at
+        // or above `number_nodes()` once a lower causaloid was removed.
+        let n_nodes = self.index_bound();
 
-        // `state_writers` is caller-supplied. An index at or beyond the node count names no node in
-        // the graph, so it can never match any `w` in `0..n_nodes` below and would be silently
-        // dropped — letting the freeze appear to satisfy a writer declaration it never applied.
-        // Reject the malformed input instead of ignoring it.
-        if let Some(&bad) = state_writers.iter().find(|&&w| w >= n_nodes) {
+        // `state_writers` is caller-supplied. An index holding no causaloid, removed or never
+        // issued, can never match any `w` in the cone scan below and would be silently dropped —
+        // letting the freeze appear to satisfy a writer declaration it never applied. Reject the
+        // malformed input instead of ignoring it.
+        if let Some(&bad) = state_writers.iter().find(|&&w| !self.contains_causaloid(w)) {
             return Err(CausalityGraphError(format!(
-                "Invalid state-writer index {bad}: the graph has {n_nodes} node(s), so valid \
-                 writer indices are 0..{n_nodes}. Declared writers: {state_writers:?}."
+                "Invalid state-writer index {bad}: no causaloid is held at that index. Declared \
+                 writers: {state_writers:?}."
             )));
         }
 
@@ -236,16 +238,25 @@ where
     /// * `None` if no root node has been added to the graph.
     fn get_root_index(&self) -> Option<usize>;
 
-    /// Gets the index of the last causaloid added to the graph.
+    /// The highest index that holds a causaloid.
     ///
-    /// This is useful for understanding the current size or for linking
-    /// to a newly added node.
+    /// Indices are permanent, so this is neither a count nor the last index issued: removing the
+    /// highest causaloid lowers it, and removing a lower one leaves it.
     ///
     /// # Returns
     ///
-    /// * `Ok(usize)` containing the index of the last node.
-    /// * `Err(CausalityGraphError)` if the graph is empty and has no nodes.
+    /// * `Ok(usize)` containing the highest index holding a causaloid.
+    /// * `Err(CausalityGraphError)` if no index holds a causaloid.
     fn get_last_index(&self) -> Result<usize, CausalityGraphError>;
+
+    /// One past the highest index that holds a causaloid, and 0 for a graph holding none.
+    ///
+    /// Indices are permanent: a removed causaloid leaves its index unused, so the bound can
+    /// exceed `number_nodes()`. Per-index bookkeeping is sized by this, and an index below it may
+    /// hold no causaloid.
+    fn index_bound(&self) -> usize {
+        self.get_last_index().map_or(0, |last| last + 1)
+    }
 
     // Nodes
     /// Adds a new causaloid (node) to the graph.
@@ -280,7 +291,7 @@ where
     /// # Returns
     ///
     /// * `Some(&T)` containing a reference to the causaloid if it exists at the specified index.
-    /// * `None` if the index is out of bounds.
+    /// * `None` if the index is out of bounds or its causaloid was removed.
     fn get_causaloid(&self, index: usize) -> Option<&T>;
 
     /// Removes a causaloid from the graph at the specified index.

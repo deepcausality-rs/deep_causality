@@ -3,6 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 mod display;
+mod edge_key;
 
 /// Defines the nature of a relationship between two Teloids in the TeloidGraph.
 ///

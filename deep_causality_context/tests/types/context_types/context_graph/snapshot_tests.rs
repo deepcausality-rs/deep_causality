@@ -241,29 +241,71 @@ fn test_a_removed_node_is_not_recorded() {
         (snapshot.edges()[0].from(), snapshot.edges()[0].to()),
         (10, 30)
     );
+    // Freezing keeps the tombstone at 1 and 30 at 2; the walk records the same snapshot.
+    ctx.freeze();
+    assert_eq!(ctx.snapshot().unwrap(), snapshot);
 }
 
 #[test]
-fn test_a_parallel_edge_is_refused() {
-    // The in-memory graph accepts a second edge between the same two nodes; a store holds one
-    // relation per pair, so the snapshot refuses the graph rather than record a form restore
-    // refuses.
+fn test_a_repeated_relation_of_one_kind_is_one_edge() {
+    // Spec scenario "A repeated relation of one kind is one edge": an edge is (source, target,
+    // key) with the key its RelationKind, so the second add_edge(a, b, Temporal) replaces the
+    // first and the pair holds one edge, which the store contract of one relation per pair
+    // accepts. The listing holds one entry per edge, so b appears once.
+    let mut ctx: UniformContext = Context::with_capacity(1, "repeated", 2);
+    let a = ctx.add_node(count(1, 1)).unwrap();
+    let b = ctx.add_node(count(2, 2)).unwrap();
+    ctx.add_edge(a, b, RelationKind::Temporal).unwrap();
+    ctx.add_edge(a, b, RelationKind::Temporal).unwrap();
+
+    assert_eq!(ctx.number_of_edges(), 1);
+    assert_eq!(ctx.get_edge(a, b), Some(&RelationKind::Temporal));
+    let snapshot = ctx.snapshot().unwrap();
+    assert_eq!(snapshot.edges().len(), 1);
+    assert_eq!(
+        (snapshot.edges()[0].from(), snapshot.edges()[0].to()),
+        (1, 2)
+    );
+    assert_eq!(ctx.outbound_edges(a).unwrap().collect::<Vec<_>>(), [b]);
+    ctx.freeze();
+    assert_eq!(ctx.number_of_edges(), 1);
+    assert_eq!(ctx.outbound_edges(a).unwrap().collect::<Vec<_>>(), [b]);
+    assert_eq!(ctx.snapshot().unwrap(), snapshot);
+}
+
+#[test]
+fn test_two_kinds_between_one_pair_are_refused_by_snapshot_and_removed_together() {
+    // Spec scenarios "Two kinds between one pair are refused by snapshot" and "Removing a pair
+    // removes both kinds": Datial and Spatial from a to b are two keys, so the graph holds two
+    // edges; a store holds one relation per pair, so the snapshot refuses the graph (naming the
+    // source id 1) rather than record a form restore refuses. remove_edge(a, b) removes every
+    // key of the pair, so one call empties it.
     let mut ctx: UniformContext = Context::with_capacity(1, "parallel", 2);
-    let a = ctx
-        .add_node(Contextoid::new(1, ContextoidType::Datoid(Data::new(1, 1))))
-        .unwrap();
-    let b = ctx
-        .add_node(Contextoid::new(2, ContextoidType::Datoid(Data::new(2, 2))))
-        .unwrap();
+    let a = ctx.add_node(count(1, 1)).unwrap();
+    let b = ctx.add_node(count(2, 2)).unwrap();
     ctx.add_edge(a, b, RelationKind::Datial).unwrap();
     assert!(ctx.snapshot().is_ok());
     ctx.add_edge(a, b, RelationKind::Spatial).unwrap();
+    assert_eq!(ctx.number_of_edges(), 2);
     assert_eq!(
         ctx.snapshot().map(|_| ()),
         Err(ProjectionError::Identity(1, "an edge is carried twice"))
     );
-    // The opposite direction is a different relation and is recorded.
+
     ctx.remove_edge(a, b).unwrap();
+    assert!(!ctx.contains_edge(a, b));
+    assert_eq!(ctx.number_of_edges(), 0);
+    assert_eq!(ctx.get_edge(a, b), None);
+    assert!(ctx.snapshot().unwrap().edges().is_empty());
+    // Nothing is left to remove.
+    assert!(ctx.remove_edge(a, b).is_err());
+
+    // The opposite direction is a different pair and is recorded on its own.
     ctx.add_edge(b, a, RelationKind::Spatial).unwrap();
-    assert_eq!(ctx.snapshot().unwrap().edges().len(), 2);
+    let snapshot = ctx.snapshot().unwrap();
+    assert_eq!(snapshot.edges().len(), 1);
+    assert_eq!(
+        (snapshot.edges()[0].from(), snapshot.edges()[0].to()),
+        (2, 1)
+    );
 }

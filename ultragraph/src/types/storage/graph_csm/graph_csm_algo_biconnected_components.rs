@@ -9,21 +9,18 @@
 //! condition fires for tree edge (u, v), all edges back to that tree edge
 //! form one biconnected component.
 
+use crate::GraphError;
+use crate::types::storage::graph_csm::adjacency::Adjacency;
 use crate::types::storage::graph_csm::graph_csm_biconnectivity_common::build_symmetric_adjacency;
-use crate::{CsmGraph, GraphError, GraphView};
 use alloc::vec;
 use alloc::vec::Vec;
 
 const NO_PARENT_EDGE: usize = usize::MAX;
 
-pub(crate) fn biconnected_components_impl<N, W>(
-    g: &CsmGraph<N, W>,
-) -> Result<Vec<Vec<usize>>, GraphError>
-where
-    N: Clone,
-    W: Clone + Default,
-{
-    let n = g.number_nodes();
+pub(crate) fn biconnected_components_impl<W, A: Adjacency<W>>(
+    g: &A,
+) -> Result<Vec<Vec<usize>>, GraphError> {
+    let n = g.slots();
     if n == 0 {
         return Ok(Vec::new());
     }
@@ -54,7 +51,7 @@ where
     let mut stack: Vec<(usize, usize, usize, usize, usize)> = Vec::new();
 
     for root in 0..n {
-        if dfs_num[root] != usize::MAX {
+        if !g.passes(root) || dfs_num[root] != usize::MAX {
             continue;
         }
         dfs_num[root] = time;

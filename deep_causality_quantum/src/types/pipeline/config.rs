@@ -13,13 +13,13 @@ use crate::types::qcm::process_factors::{FactorSupports, ProcessFactors};
 use crate::types::qpu::evidence::Evidence;
 use alloc::collections::BTreeSet;
 use alloc::format;
-use alloc::vec;
 use alloc::vec::Vec;
 use core::marker::PhantomData;
 use deep_causality::CausableGraph;
 use deep_causality_algebra::RealField;
 use deep_causality_homology::ChainComplex;
 use deep_causality_num::{FromPrimitive, NaturalNumber};
+use ultragraph::TopologicalGraphAlgorithms;
 
 /// The one origin of every configuration, and the entry to each stage.
 pub struct QclBuilder;
@@ -531,21 +531,29 @@ where
         }
         if !self.graph.is_frozen() {
             return Err(QuantumError::CalculationError(
-                "the model subject requires a frozen graph (dense node ids); freeze the graph \
-                 before building the configuration"
+                "the model subject requires a frozen graph; freeze the graph before building the \
+                 configuration"
                     .into(),
             ));
         }
-        let n = self.graph.number_nodes();
-        if let Some(bad) = self.factors.nodes().find(|&node| node >= n) {
+        if let Some(bad) = self
+            .factors
+            .nodes()
+            .find(|&node| !self.graph.contains_causaloid(node))
+        {
             return Err(QuantumError::CalculationError(format!(
-                "factor keyed by node {bad} but the frozen graph has {n} nodes (valid ids 0..{n})"
+                "factor keyed by node {bad} but the frozen graph holds no causaloid at that index"
             )));
         }
         self.supports.validate(&self.factors)?;
-        if let Some(bad) = self.inputs.iter().chain(&self.outputs).find(|&&id| id >= n) {
+        if let Some(bad) = self
+            .inputs
+            .iter()
+            .chain(&self.outputs)
+            .find(|&&id| !self.graph.contains_causaloid(id))
+        {
             return Err(QuantumError::CalculationError(format!(
-                "declared system id {bad} is out of range for a graph with {n} nodes"
+                "declared system id {bad} names no causaloid in the graph"
             )));
         }
         if graph_has_cycle(&self.graph) {
@@ -592,27 +600,10 @@ impl<K: ChainComplex> BuildSubject for CodeSubject<K> {
 }
 
 /// Whether a frozen graph has a directed cycle: some node reaches itself along at least one edge.
+/// The frozen graph answers the question itself; a graph that reports it is not frozen counts as
+/// cyclic, so the rejection stays conservative.
 fn graph_has_cycle<T: Clone, G: CausableGraph<T>>(graph: &G) -> bool {
-    let n = graph.number_nodes();
-    for start in 0..n {
-        let mut seen = vec![false; n];
-        let mut stack: Vec<usize> = (0..n).filter(|&s| graph.contains_edge(start, s)).collect();
-        while let Some(node) = stack.pop() {
-            if node == start {
-                return true;
-            }
-            if seen[node] {
-                continue;
-            }
-            seen[node] = true;
-            for s in 0..n {
-                if graph.contains_edge(node, s) {
-                    stack.push(s);
-                }
-            }
-        }
-    }
-    false
+    graph.get_graph().has_cycle().unwrap_or(true)
 }
 
 /// Whether the parent relation a support registry encodes has a cycle. Under the flat

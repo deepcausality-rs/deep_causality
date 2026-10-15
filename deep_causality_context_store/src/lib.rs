@@ -12,8 +12,9 @@
 //! implements beside its node types, the [`Substrate`] a reference-holding store keeps values in,
 //! and the [`ContextStorageStream`] a backend adds when it reports changes. Every scalar in a
 //! record is `f64` and every tick `u64`; every identifier is a `u64` the store hands out. The
-//! crate depends on nothing, so a backend links it alone. [`utils_test`] holds an in-memory
-//! backend for tests on both sides of the contract.
+//! crate depends on `ultragraph_traits` alone, itself dependency-free, so that [`RelationKind`]
+//! implements `EdgeKey`; a backend links these two crates and never the context crate.
+//! [`utils_test`] holds an in-memory backend for tests on both sides of the contract.
 //!
 //! See <https://docs.deepcausality.com/> for the documentation.
 

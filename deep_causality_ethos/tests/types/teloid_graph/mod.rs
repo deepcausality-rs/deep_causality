@@ -4,3 +4,5 @@
  */
 #[cfg(test)]
 mod teloid_graph_tests;
+#[cfg(test)]
+mod teloidable_tests;

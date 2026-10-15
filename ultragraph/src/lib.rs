@@ -22,9 +22,13 @@ pub use crate::traits::graph_mut::GraphMut;
 pub use crate::traits::graph_traversal::GraphTraversal;
 pub use crate::traits::graph_unfreeze::Unfreezable;
 pub use crate::traits::graph_view::GraphView;
+pub use crate::traits::projection::Projection;
+pub use crate::types::parallel_edges::ParallelEdges;
+pub use crate::types::projection_view::ProjectionView;
 pub use crate::types::storage::graph_csm::CsmGraph;
 pub use crate::types::storage::graph_dynamic::DynamicGraph;
 pub use crate::types::storage::graph_state::GraphState;
+pub use ultragraph_traits::EdgeKey;
 // Types
 pub use crate::types::ultra_graph::UltraGraph;
 pub use crate::types::ultra_graph::UltraGraphContainer;

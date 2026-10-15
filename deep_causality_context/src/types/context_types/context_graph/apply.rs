@@ -225,6 +225,7 @@ where
                 .map_err(|_| ProjectionError::Identity(id, "a node could not be removed"))?;
             if context == self.id {
                 self.id_to_index_map.remove(&id);
+                self.drop_index_entries(index);
             }
         }
         Ok(())

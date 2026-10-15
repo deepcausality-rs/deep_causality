@@ -70,8 +70,9 @@ no-std = [
     ]
 
 # The quantum causal-model slice: CausalStructure, the Markov freeze check and the
-# C3-exclusion faithfulness check. Pulls in `deep_causality` for the causal graph,
-# which is std-only, so `qcm` implies `std` and is off on bare-metal builds. The
+# C3-exclusion faithfulness check. Pulls in `deep_causality` for the causal graph and
+# `ultragraph` for its traversal and cycle check. `deep_causality` is std-only, so
+# `qcm` implies `std` and is off on bare-metal builds. The
 # instrument context comes with it: its `deep_causality_context` dependency keeps
 # that crate's default `std` feature.
 qcm = [
@@ -79,6 +80,7 @@ qcm = [
     "dep:deep_causality",
     "dep:deep_causality_context",
     "dep:deep_causality_context_store",
+    "dep:ultragraph",
 ]
 # The Stim detector-error-model text constructor of `DemModel`. Implies `qcm` because the model
 # is carried on the causal graph; adds no dependency.
@@ -137,6 +139,10 @@ workspace = true
 workspace = true
 
 [dependencies.deep_causality_uncertain]
+workspace = true
+optional = true
+
+[dependencies.ultragraph]
 workspace = true
 optional = true
 

@@ -5,13 +5,13 @@
 
 #![forbid(unsafe_code)]
 
-use crate::{CsmGraph, DynamicGraph};
+use crate::{CsmGraph, DynamicGraph, EdgeKey};
 
 #[derive(Clone, Debug)]
 pub enum GraphState<N, W>
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     Dynamic(DynamicGraph<N, W>), // The "unfrozen" state, for mutation
     Static(CsmGraph<N, W>),      // The "frozen" state, for analysis

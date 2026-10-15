@@ -3,9 +3,13 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
+use crate::EdgeKey;
 use alloc::vec::Vec;
 
-pub trait GraphView<N, W> {
+pub trait GraphView<N, W>
+where
+    W: EdgeKey,
+{
     // State Inspection
     fn is_frozen(&self) -> bool;
 
@@ -17,7 +21,10 @@ pub trait GraphView<N, W> {
     fn number_nodes(&self) -> usize;
 
     // Edge Inspection
+    /// True when an edge from `a` to `b` exists with any key and both ends are live.
     fn contains_edge(&self, a: usize, b: usize) -> bool;
+    /// True when the edge from `a` to `b` with key `key` exists and both ends are live.
+    fn contains_edge_keyed(&self, a: usize, b: usize, key: W::Key) -> bool;
     fn number_edges(&self) -> usize;
 
     fn get_all_nodes(&self) -> Vec<&N>;

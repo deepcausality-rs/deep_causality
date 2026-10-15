@@ -5,7 +5,7 @@
 
 use alloc::vec::Vec;
 
-use crate::{CsmGraph, DynamicGraph, Unfreezable};
+use crate::{CsmGraph, DynamicGraph, EdgeKey, Unfreezable};
 use core::mem;
 
 /// This implementation provides the logic for the "unfreeze" part of the graph's
@@ -40,14 +40,14 @@ use core::mem;
 impl<N, W> Unfreezable<N, W> for CsmGraph<N, W>
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     /// Consumes the `CsmGraph` and converts it back into a mutable `DynamicGraph`.
     ///
     /// This operation reconstructs the adjacency list representation from the CSR
     /// format by moving data, not cloning it, making it highly efficient.
     fn unfreeze(self) -> DynamicGraph<N, W> {
-        let num_nodes = self.nodes.len();
+        let num_slots = self.nodes.len();
 
         // Destructure self to gain ownership of its fields. This allows us to
         // mutably access and move data out of the internal vectors.
@@ -56,13 +56,14 @@ where
             mut forward_edges, // We need this to be mutable to `take` from it.
             backward_edges: _, // Not needed for reconstruction, will be dropped.
             root_index,
+            live_nodes: _, // Recounted by the next freeze.
         } = self;
 
-        // 1. Convert `Vec<N>` into `Vec<Option<N>>` by moving the nodes.
-        let dynamic_nodes: Vec<Option<N>> = nodes.into_iter().map(Some).collect();
+        // 1. The node table moves whole, tombstones included, so every position survives.
+        let dynamic_nodes: Vec<Option<N>> = nodes;
 
         // 2. Reconstruct the adjacency list `Vec<Vec<(usize, W)>>` from the CSR format.
-        let dynamic_edges: Vec<Vec<(usize, W)>> = (0..num_nodes)
+        let dynamic_edges: Vec<Vec<(usize, W)>> = (0..num_slots)
             .map(|i| {
                 // Get the slice of neighbors for node `i` using the offsets.
                 let start = forward_edges.offsets[i];

@@ -147,3 +147,30 @@ fn test_get_graph() {
     assert_eq!(graph.number_edges(), 0);
     assert_eq!(graph.number_nodes(), 0);
 }
+
+/// A causaloid graph holds at most one edge per ordered pair: a second addition between the same
+/// two causaloids replaces the edge's weight. Expected after `add_edge(0, 1)` then
+/// `add_edg_with_weight(0, 1, 7)`: one edge, and `get_edges(0)` lists `0 → 1` once carrying 7,
+/// the weight of the later call, in the dynamic state and again after the freeze.
+#[test]
+fn test_a_repeated_edge_between_two_causaloids_updates_its_weight() {
+    let mut g: CausaloidGraph<BaseCausaloid<NumericalValue, bool>> = CausaloidGraph::new(0);
+    let idx_a = g
+        .add_causaloid(test_utils::get_test_causaloid_deterministic(1))
+        .expect("Failed to add causaloid");
+    let idx_b = g
+        .add_causaloid(test_utils::get_test_causaloid_deterministic(2))
+        .expect("Failed to add causaloid");
+    assert_eq!((idx_a, idx_b), (0, 1));
+
+    g.add_edge(0, 1).expect("Failed to add edge");
+    g.add_edg_with_weight(0, 1, 7)
+        .expect("Failed to add weighted edge");
+
+    assert_eq!(g.number_edges(), 1);
+    assert_eq!(g.get_graph().get_edges(0), Some(vec![(1, &7u64)]));
+
+    g.freeze();
+    assert_eq!(g.number_edges(), 1);
+    assert_eq!(g.get_graph().get_edges(0), Some(vec![(1, &7u64)]));
+}

@@ -3,8 +3,11 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::DynamicGraph;
+use crate::{DynamicGraph, EdgeKey};
 
-pub trait Unfreezable<N, W> {
+pub trait Unfreezable<N, W>
+where
+    W: Clone + Default + EdgeKey,
+{
     fn unfreeze(self) -> DynamicGraph<N, W>;
 }

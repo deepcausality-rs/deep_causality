@@ -122,4 +122,14 @@ where
             .and_then(|node| node.vertex_type().dataoid())
             .map(Datable::get_data)
     }
+
+    /// Drops every data and time index entry, current and previous, whose value is `index`.
+    /// Called when the base-graph node at `index` is removed; the position is never reissued,
+    /// so an entry naming it would name nothing.
+    pub(super) fn drop_index_entries(&mut self, index: usize) {
+        self.current_data_map.retain(|_, held| *held != index);
+        self.previous_data_map.retain(|_, held| *held != index);
+        self.current_index_map.retain(|_, held| *held != index);
+        self.previous_index_map.retain(|_, held| *held != index);
+    }
 }

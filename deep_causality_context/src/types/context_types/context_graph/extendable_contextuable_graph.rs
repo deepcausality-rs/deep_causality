@@ -230,8 +230,9 @@ where
             .graph
             .get_edges(a)?
             .into_iter()
-            .find(|(target, _)| *target == b)
+            .filter(|(target, _)| *target == b)
             .map(|(_, weight)| weight)
+            .min()
     }
 
     fn extra_ctx_remove_edge(&mut self, a: usize, b: usize) -> Result<(), ContextIndexError> {

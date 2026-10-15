@@ -121,8 +121,8 @@ where
     ///
     /// # Errors
     ///
-    /// `FactorSupports::from_graph`'s errors, an unfrozen graph or a factor keyed past
-    /// `number_nodes()`, and then the validation errors of [`structural`](Self::structural).
+    /// `FactorSupports::from_graph`'s errors, an unfrozen graph or a factor keyed by an index
+    /// holding no causaloid, and then the validation errors of [`structural`](Self::structural).
     pub fn structural_from_graph<T, G>(
         name: impl Into<String>,
         graph: &G,
@@ -210,7 +210,8 @@ where
     /// # Errors
     ///
     /// [`QuantumError::CalculationError`] on a mechanism candidate, and the shipped errors of
-    /// `CausalStructure::from_graph_reachability`, an unfrozen graph or an out-of-range system id.
+    /// `CausalStructure::from_graph_reachability`, an unfrozen graph or a system id holding no
+    /// causaloid.
     pub fn structure<T, G>(
         &self,
         graph: &G,

@@ -16,16 +16,19 @@
 //! This shape exercises every branch of each algorithm (tree edges,
 //! back edges, articulation-condition firing, edge-stack popping).
 
-use criterion::{Criterion, criterion_group};
+use criterion::{BenchmarkId, Criterion, Throughput, criterion_group};
 use std::hint::black_box;
 use ultragraph::*;
 
 use crate::benchmarks::data::Data;
-use crate::benchmarks::fields::{LARGE, MEDIUM, SMALL};
+use crate::benchmarks::fields::SIZES;
 
 /// 10K vertices, ~15K edges — matches the ServiceRadar-scale target
 /// called out in the spec's complexity-guarantee scenario.
 const XLARGE_TRIANGLES: usize = 5_000;
+
+/// The triangle counts each algorithm runs at: the three shared sizes and `XLARGE_TRIANGLES`.
+const TRIANGLE_COUNTS: [usize; 4] = [SIZES[0], SIZES[1], SIZES[2], XLARGE_TRIANGLES];
 
 fn build_triangle_chain(num_triangles: usize) -> UltraGraph<Data> {
     let v = 2 * num_triangles + 1;
@@ -45,59 +48,33 @@ fn build_triangle_chain(num_triangles: usize) -> UltraGraph<Data> {
     g
 }
 
-fn bench_articulation(c: &mut Criterion, name: &str, num_triangles: usize) {
-    let g = build_triangle_chain(num_triangles);
-    c.bench_function(name, |b| {
-        b.iter(|| {
-            let r = g.articulation_points().unwrap();
-            black_box(r);
-        })
-    });
-}
-
-fn bench_bridges(c: &mut Criterion, name: &str, num_triangles: usize) {
-    let g = build_triangle_chain(num_triangles);
-    c.bench_function(name, |b| {
-        b.iter(|| {
-            let r = g.bridges().unwrap();
-            black_box(r);
-        })
-    });
-}
-
-fn bench_biconnected(c: &mut Criterion, name: &str, num_triangles: usize) {
-    let g = build_triangle_chain(num_triangles);
-    c.bench_function(name, |b| {
-        b.iter(|| {
-            let r = g.biconnected_components().unwrap();
-            black_box(r);
-        })
-    });
+/// Runs `algorithm` on a frozen chain of each triangle count in `TRIANGLE_COUNTS`, in a group
+/// named `group_name` whose parameter is the triangle count and whose throughput is the edge
+/// count, `3k`.
+fn bench_on_triangle_chains<R>(
+    c: &mut Criterion,
+    group_name: &str,
+    algorithm: impl Fn(&UltraGraph<Data>) -> R,
+) {
+    let mut group = c.benchmark_group(group_name);
+    for k in TRIANGLE_COUNTS {
+        let g = build_triangle_chain(k);
+        group.throughput(Throughput::Elements((3 * k) as u64));
+        group.bench_with_input(BenchmarkId::from_parameter(k), &k, |b, _| {
+            b.iter(|| algorithm(black_box(&g)))
+        });
+    }
+    group.finish();
 }
 
 fn biconnectivity_benchmarks(c: &mut Criterion) {
-    bench_articulation(c, "small_articulation_points", SMALL);
-    bench_articulation(c, "medium_articulation_points", MEDIUM);
-    bench_articulation(c, "large_articulation_points", LARGE);
-    bench_articulation(
-        c,
-        "xlarge_articulation_points_5k_triangles",
-        XLARGE_TRIANGLES,
-    );
-
-    bench_bridges(c, "small_bridges", SMALL);
-    bench_bridges(c, "medium_bridges", MEDIUM);
-    bench_bridges(c, "large_bridges", LARGE);
-    bench_bridges(c, "xlarge_bridges_5k_triangles", XLARGE_TRIANGLES);
-
-    bench_biconnected(c, "small_biconnected_components", SMALL);
-    bench_biconnected(c, "medium_biconnected_components", MEDIUM);
-    bench_biconnected(c, "large_biconnected_components", LARGE);
-    bench_biconnected(
-        c,
-        "xlarge_biconnected_components_5k_triangles",
-        XLARGE_TRIANGLES,
-    );
+    bench_on_triangle_chains(c, "articulation_points", |g| {
+        g.articulation_points().unwrap()
+    });
+    bench_on_triangle_chains(c, "bridges", |g| g.bridges().unwrap());
+    bench_on_triangle_chains(c, "biconnected_components", |g| {
+        g.biconnected_components().unwrap()
+    });
 }
 
 criterion_group! {

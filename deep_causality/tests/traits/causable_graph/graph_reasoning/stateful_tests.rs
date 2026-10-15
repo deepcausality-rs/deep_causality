@@ -453,3 +453,212 @@ fn evaluate_subgraph_stateful_multi_fired_reconvergence_errors_loudly() {
         err
     );
 }
+
+// --- permanent positions: a removed index below a live causaloid ---
+
+fn node_add_one(
+    obs: CausalEffect<u64>,
+    mut state: CounterState,
+    ctx: Option<ConfigCtx>,
+) -> PropagatingProcess<u64, CounterState, ConfigCtx> {
+    state.count += 1;
+    let val = obs.into_value().unwrap_or(0);
+    PropagatingProcess::new(
+        Ok(CausalEffect::value(val + 1)),
+        state,
+        ctx,
+        EffectLog::new(),
+    )
+}
+
+fn node_times_hundred(
+    obs: CausalEffect<u64>,
+    mut state: CounterState,
+    ctx: Option<ConfigCtx>,
+) -> PropagatingProcess<u64, CounterState, ConfigCtx> {
+    state.count += 1;
+    let val = obs.into_value().unwrap_or(0);
+    PropagatingProcess::new(
+        Ok(CausalEffect::value(val * 100)),
+        state,
+        ctx,
+        EffectLog::new(),
+    )
+}
+
+fn node_double(
+    obs: CausalEffect<u64>,
+    mut state: CounterState,
+    ctx: Option<ConfigCtx>,
+) -> PropagatingProcess<u64, CounterState, ConfigCtx> {
+    state.count += 1;
+    let val = obs.into_value().unwrap_or(0);
+    PropagatingProcess::new(
+        Ok(CausalEffect::value(val * 2)),
+        state,
+        ctx,
+        EffectLog::new(),
+    )
+}
+
+fn node_add_ten(
+    obs: CausalEffect<u64>,
+    mut state: CounterState,
+    ctx: Option<ConfigCtx>,
+) -> PropagatingProcess<u64, CounterState, ConfigCtx> {
+    state.count += 1;
+    let val = obs.into_value().unwrap_or(0);
+    PropagatingProcess::new(
+        Ok(CausalEffect::value(val + 10)),
+        state,
+        ctx,
+        EffectLog::new(),
+    )
+}
+
+/// A process carrying the value 3 and a zeroed counter.
+fn build_initial_three() -> PropagatingProcess<u64, CounterState, ConfigCtx> {
+    PropagatingProcess::new(
+        Ok(CausalEffect::value(3)),
+        CounterState::default(),
+        Some(ConfigCtx {}),
+        EffectLog::new(),
+    )
+}
+
+/// Causaloids 0 (`+1`), 1 (`×100`) and 2 (`×2`) with edges 0 → 1, 1 → 2 and 0 → 2; index 1
+/// removed; frozen. Only the edge 0 → 2 survives the removal.
+fn build_removed_middle() -> CausaloidGraph<Causaloid<u64, u64, CounterState, ConfigCtx>> {
+    let mut g: CausaloidGraph<Causaloid<u64, u64, CounterState, ConfigCtx>> =
+        CausaloidGraph::new(0u64);
+    let i0 = g
+        .add_causaloid(Causaloid::new_with_context(
+            0,
+            node_add_one,
+            ConfigCtx {},
+            "n0",
+        ))
+        .expect("n0");
+    let i1 = g
+        .add_causaloid(Causaloid::new_with_context(
+            1,
+            node_times_hundred,
+            ConfigCtx {},
+            "n1",
+        ))
+        .expect("n1");
+    let i2 = g
+        .add_causaloid(Causaloid::new_with_context(
+            2,
+            node_double,
+            ConfigCtx {},
+            "n2",
+        ))
+        .expect("n2");
+    assert_eq!([i0, i1, i2], [0, 1, 2]);
+    g.add_edge(0, 1).expect("edge 0->1");
+    g.add_edge(1, 2).expect("edge 1->2");
+    g.add_edge(0, 2).expect("edge 0->2");
+    g.remove_causaloid(1).expect("remove 1");
+    g.freeze();
+    g
+}
+
+/// The chain 0 (`+1`) → 1 (`×100`) → 2 (`×2`) → 3 (`+10`) with 0 → 2 added and index 1 removed;
+/// frozen. The live causaloid 3 sits at an index >= `number_nodes()` = 3.
+fn build_chain_with_removed_middle() -> CausaloidGraph<Causaloid<u64, u64, CounterState, ConfigCtx>>
+{
+    let mut g: CausaloidGraph<Causaloid<u64, u64, CounterState, ConfigCtx>> =
+        CausaloidGraph::new(0u64);
+    let i0 = g
+        .add_causaloid(Causaloid::new_with_context(
+            0,
+            node_add_one,
+            ConfigCtx {},
+            "n0",
+        ))
+        .expect("n0");
+    let i1 = g
+        .add_causaloid(Causaloid::new_with_context(
+            1,
+            node_times_hundred,
+            ConfigCtx {},
+            "n1",
+        ))
+        .expect("n1");
+    let i2 = g
+        .add_causaloid(Causaloid::new_with_context(
+            2,
+            node_double,
+            ConfigCtx {},
+            "n2",
+        ))
+        .expect("n2");
+    let i3 = g
+        .add_causaloid(Causaloid::new_with_context(
+            3,
+            node_add_ten,
+            ConfigCtx {},
+            "n3",
+        ))
+        .expect("n3");
+    assert_eq!([i0, i1, i2, i3], [0, 1, 2, 3]);
+    g.add_edge(0, 1).expect("edge 0->1");
+    g.add_edge(1, 2).expect("edge 1->2");
+    g.add_edge(2, 3).expect("edge 2->3");
+    g.add_edge(0, 2).expect("edge 0->2");
+    g.remove_causaloid(1).expect("remove 1");
+    g.freeze();
+    g
+}
+
+#[test]
+fn evaluate_subgraph_stateful_crosses_a_removed_index() {
+    let g = build_removed_middle();
+    // The index `add_causaloid` returned still names causaloid 2 after the removal and the freeze.
+    assert_eq!(g.number_nodes(), 2);
+    assert!(!g.contains_causaloid(1));
+    assert!(g.contains_causaloid(2));
+    assert_eq!(g.get_causaloid(2).map(|c| c.id()), Some(2));
+
+    // Hand derivation: 0 turns 3 into 3 + 1 = 4; the removed 1 never fires; 2 doubles 4 to 8.
+    // Two causaloids ran, so the counter reads 2. Through 1 the value would have been 800.
+    let out = g.evaluate_subgraph_from_cause_stateful(0, &build_initial_three());
+    assert!(out.is_ok(), "got {:?}", out.error());
+    assert_eq!(out.value(), Some(&8));
+    assert_eq!(out.state().count, 2);
+}
+
+#[test]
+fn evaluate_subgraph_stateful_starts_at_a_live_index_at_or_above_number_nodes() {
+    let g = build_removed_middle();
+    assert!(2 >= g.number_nodes());
+
+    // Hand derivation: 2 doubles 3 to 6; one causaloid ran.
+    let out = g.evaluate_subgraph_from_cause_stateful(2, &build_initial_three());
+    assert!(out.is_ok(), "got {:?}", out.error());
+    assert_eq!(out.value(), Some(&6));
+    assert_eq!(out.state().count, 1);
+}
+
+#[test]
+fn evaluate_subgraph_stateful_reaches_a_causaloid_at_an_index_above_number_nodes() {
+    let g = build_chain_with_removed_middle();
+    assert_eq!(g.number_nodes(), 3);
+    assert!(3 >= g.number_nodes());
+    assert!(g.contains_causaloid(3));
+
+    // Hand derivation: (3 + 1) · 2 + 10 = 18 over three causaloids. Without causaloid 3 firing
+    // the result would be the output of 2, which is 8 with a count of 2.
+    let out = g.evaluate_subgraph_from_cause_stateful(0, &build_initial_three());
+    assert!(out.is_ok(), "got {:?}", out.error());
+    assert_eq!(out.value(), Some(&18));
+    assert_eq!(out.state().count, 3);
+}
+
+#[test]
+fn evaluate_subgraph_stateful_from_a_removed_index_is_causaloid_not_found() {
+    let g = build_removed_middle();
+    let out = g.evaluate_subgraph_from_cause_stateful(1, &build_initial_three());
+    assert_eq!(out.error(), Some(&CausalityError::CausaloidNotFound(1)));
+}

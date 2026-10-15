@@ -4,14 +4,14 @@
  */
 
 use crate::types::storage::graph_state::GraphState;
-use crate::{DynamicGraph, UltraGraphContainer};
+use crate::{DynamicGraph, EdgeKey, UltraGraphContainer};
 
 // This implementation is required for the pattern below.
 // The default state of a graph is an empty, dynamic one.
 impl<N, W> Default for GraphState<N, W>
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     fn default() -> Self {
         GraphState::Dynamic(DynamicGraph::new())
@@ -21,7 +21,7 @@ where
 impl<N, W> Default for UltraGraphContainer<N, W>
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     fn default() -> Self {
         Self::new()

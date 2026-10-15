@@ -104,7 +104,9 @@ where
             return raise_from(CausalityError::GraphContainsCycle(), initial_effect);
         }
 
-        let n_nodes = self.number_nodes();
+        // Per-index bookkeeping is sized by the slot bound: a live index can sit at or above
+        // `number_nodes()` once a lower causaloid was removed.
+        let n_nodes = self.index_bound();
         let mut round_start = start_index;
         let mut round_input = initial_effect.clone();
         // Relay fuel: bounds the number of relay rounds so the handler is total (see

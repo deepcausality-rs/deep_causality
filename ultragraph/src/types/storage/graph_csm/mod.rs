@@ -2,19 +2,21 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use crate::EdgeKey;
 
 use alloc::vec;
 use alloc::vec::Vec;
 
+pub(crate) mod adjacency;
 mod default;
 mod graph_csm_algo;
-mod graph_csm_algo_articulation_points;
-mod graph_csm_algo_biconnected_components;
-mod graph_csm_algo_bridges;
-mod graph_csm_algo_centrality;
-mod graph_csm_algo_pathfinder;
-mod graph_csm_algo_structural;
-mod graph_csm_algo_topological;
+pub(crate) mod graph_csm_algo_articulation_points;
+pub(crate) mod graph_csm_algo_biconnected_components;
+pub(crate) mod graph_csm_algo_bridges;
+pub(crate) mod graph_csm_algo_centrality;
+pub(crate) mod graph_csm_algo_pathfinder;
+pub(crate) mod graph_csm_algo_structural;
+pub(crate) mod graph_csm_algo_topological;
 mod graph_csm_biconnectivity_common;
 mod graph_csm_unfreeze;
 mod graph_csm_view;
@@ -26,7 +28,7 @@ mod graph_traversal;
 #[derive(Default, Debug, Clone)]
 pub(crate) struct CsrAdjacency<W>
 where
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     pub(crate) offsets: Vec<usize>,
     pub(crate) targets: Vec<usize>,
@@ -37,10 +39,13 @@ where
 pub struct CsmGraph<N, W>
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
-    // Node payloads, indexed directly by `usize`.
-    nodes: Vec<N>,
+    // Node payloads by position. A removed node leaves `None`; positions never move.
+    nodes: Vec<Option<N>>,
+
+    // The number of `Some` entries in `nodes`, so `number_nodes` stays O(1).
+    live_nodes: usize,
 
     // CsrAdjacency structure for forward traversal (successors).
     // The CsrAdjacency makes the intent of the data layout explicit and clean.
@@ -56,7 +61,7 @@ where
 impl<N, W> CsmGraph<N, W>
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     /// Creates a new, empty `CsmGraph`.
     ///
@@ -64,6 +69,7 @@ where
     pub fn new() -> Self {
         Self {
             nodes: Vec::new(),
+            live_nodes: 0,
 
             // Initialize with a valid empty CSR state. The offsets vector must
             // contain a single `0` to correctly represent the `V + 1` length rule, where V=0.
@@ -79,17 +85,17 @@ where
         }
     }
 
-    /// Creates a new, empty `DynamicGraph` with pre-allocated capacity.
+    /// Creates a new, empty `CsmGraph` whose node table has room for `num_nodes` positions.
     ///
-    /// This is the most efficient way to start building a graph when the approximate
-    /// final size is known, as it can reduce or eliminate memory reallocations
-    /// during the `add_node` and `add_edge` process.
+    /// The graph has no node and no edge; `freeze` is what fills a `CsmGraph`. Only the
+    /// capacity of the node table differs from [`new`](Self::new).
     ///
     /// # Arguments
-    /// * `num_nodes`: The number of nodes to pre-allocate space for.
+    /// * `num_nodes`: The number of node positions to reserve.
     pub fn with_capacity(num_nodes: usize) -> Self {
         Self {
             nodes: Vec::with_capacity(num_nodes),
+            live_nodes: 0,
             // Initialize with a valid empty CSR state. The offsets vector must
             // contain a single `0` to correctly represent the `V + 1` length rule, where V=0.
             forward_edges: CsrAdjacency {
@@ -104,18 +110,54 @@ where
         }
     }
 
-    // Internal helper for freeze
+    // Internal helper for freeze. `live_nodes` is the number of `Some` entries in `nodes`.
     pub(crate) fn construct(
-        nodes: Vec<N>,
+        nodes: Vec<Option<N>>,
         forward_edges: CsrAdjacency<W>,
         backward_edges: CsrAdjacency<W>,
         root_index: Option<usize>,
+        live_nodes: usize,
     ) -> Self {
         Self {
             nodes,
+            live_nodes,
             forward_edges,
             backward_edges,
             root_index,
+        }
+    }
+
+    /// The number of positions in the node table, tombstones included. Every per-node array an
+    /// algorithm indexes by position is sized by this, never by `number_nodes`.
+    pub(crate) fn node_slots(&self) -> usize {
+        self.nodes.len()
+    }
+
+    /// The edges out of `v` as `(target, weight)`, sorted by target then key; nothing when `v`
+    /// holds no node.
+    pub(crate) fn forward_of(&self, v: usize) -> impl Iterator<Item = (usize, &W)> {
+        let (start, end) = self.range_of(&self.forward_edges, v);
+        self.forward_edges.targets[start..end]
+            .iter()
+            .copied()
+            .zip(self.forward_edges.weights[start..end].iter())
+    }
+
+    /// The edges into `v` as `(source, weight)`, sorted by source then key; nothing when `v`
+    /// holds no node.
+    pub(crate) fn backward_of(&self, v: usize) -> impl Iterator<Item = (usize, &W)> {
+        let (start, end) = self.range_of(&self.backward_edges, v);
+        self.backward_edges.targets[start..end]
+            .iter()
+            .copied()
+            .zip(self.backward_edges.weights[start..end].iter())
+    }
+
+    fn range_of(&self, adjacency: &CsrAdjacency<W>, v: usize) -> (usize, usize) {
+        if self.nodes.get(v).is_some_and(Option::is_some) {
+            (adjacency.offsets[v], adjacency.offsets[v + 1])
+        } else {
+            (0, 0)
         }
     }
 }

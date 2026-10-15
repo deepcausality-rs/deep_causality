@@ -4,4 +4,5 @@
  */
 
 mod errors;
+mod traits;
 mod types;

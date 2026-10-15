@@ -3,13 +3,13 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{GraphState, GraphView, UltraGraphContainer};
+use crate::{EdgeKey, GraphState, GraphView, UltraGraphContainer};
 use alloc::vec::Vec;
 
 impl<N, W> GraphView<N, W> for UltraGraphContainer<N, W>
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     /// Returns `true` if the graph is in the immutable, performance-optimized `Static` state.
     /// A static graph cannot be frozen only once. If you want to modify a static graph i.e. adding
@@ -61,7 +61,15 @@ where
         }
     }
 
-    /// Returns the number of edges in the graph.
+    /// Checks if the edge `(a, b, key)` exists in the current state.
+    fn contains_edge_keyed(&self, a: usize, b: usize, key: W::Key) -> bool {
+        match &self.state {
+            GraphState::Static(g) => g.contains_edge_keyed(a, b, key),
+            GraphState::Dynamic(g) => g.contains_edge_keyed(a, b, key),
+        }
+    }
+
+    /// Returns the total number of edges in the graph.
     fn number_edges(&self) -> usize {
         match &self.state {
             GraphState::Dynamic(g) => g.number_edges(),

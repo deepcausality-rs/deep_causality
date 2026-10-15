@@ -101,9 +101,7 @@ any check runs, and the error has to name the scope limit rather than an obstruc
 
 - **WHEN** `.over_model` is given a graph whose `is_frozen()` is `false`
 - **THEN** `build()` returns `QuantumErrorEnum::CalculationError` naming the frozen-graph
-  requirement, and no commutativity or decomposability check runs, because `remove_node` tombstones
-  a slot without compacting, so a live node can hold an id past `number_nodes()` and its parent
-  edges would be dropped silently in the C₃ gate
+  requirement, and no commutativity or decomposability check runs
 
 #### Scenario: A cyclic structural candidate is rejected as scope, not as a C₃
 
@@ -112,6 +110,12 @@ any check runs, and the error has to name the scope limit rather than an obstruc
 - **THEN** `build()` returns `QuantumErrorEnum::CyclicStructureUnsupported` naming the candidate, no
   check runs, and the message says cyclic causal structures are outside v1's scope rather than that
   the structure fails a criterion
+
+#### Scenario: A cycle through an index above number_nodes is found
+
+- **WHEN** the model subject's frozen graph has a removed causaloid at index 0 and a directed cycle
+  through index 4 of five indices
+- **THEN** `build()` returns `QuantumErrorEnum::CyclicStructureUnsupported`
 
 #### Scenario: A vacuous or unreachable configuration is rejected
 

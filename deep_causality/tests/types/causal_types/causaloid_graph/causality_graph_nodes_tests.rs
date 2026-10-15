@@ -207,3 +207,69 @@ fn test_add_causaloid_error_when_frozen() {
     let res = g.add_causaloid(test_utils::get_test_causaloid_deterministic(1));
     assert!(res.is_err());
 }
+
+// --- index_bound: one past the highest index holding a causaloid ---
+
+/// Causaloids at indices 0, 1 and 2, in the dynamic state.
+fn three_causaloids() -> CausaloidGraph<BaseCausaloid<NumericalValue, bool>> {
+    let mut g = CausaloidGraph::new(0);
+    for i in 0..3u64 {
+        let index = g
+            .add_causaloid(test_utils::get_test_causaloid_deterministic(i))
+            .expect("Failed to add causaloid");
+        assert_eq!(index, i as usize);
+    }
+    g
+}
+
+#[test]
+fn test_index_bound_of_an_empty_graph_is_zero() {
+    let mut g = CausaloidGraph::<BaseCausaloid<NumericalValue, bool>>::new(0);
+    assert_eq!(g.index_bound(), 0);
+
+    g.freeze();
+    assert_eq!(g.index_bound(), 0);
+}
+
+#[test]
+fn test_index_bound_equals_number_nodes_without_a_removal() {
+    // No removal: the highest index is 2, so the bound is 2 + 1 = 3, which is also the count.
+    let mut g = three_causaloids();
+    assert_eq!(g.index_bound(), 3);
+    assert_eq!(g.index_bound(), g.number_nodes());
+
+    g.freeze();
+    assert_eq!(g.index_bound(), 3);
+    assert_eq!(g.index_bound(), g.number_nodes());
+}
+
+#[test]
+fn test_index_bound_skips_a_removed_middle_causaloid() {
+    // Index 1 removed: the highest index holding a causaloid stays 2, so the bound is 2 + 1 = 3
+    // while only two causaloids remain. The live causaloid at 2 sits at a position
+    // >= number_nodes(), which is what distinguishes permanent positions from renumbering.
+    let mut g = three_causaloids();
+    g.remove_causaloid(1).expect("Failed to remove causaloid");
+    assert_eq!(g.index_bound(), 3);
+    assert_eq!(g.number_nodes(), 2);
+
+    g.freeze();
+    assert_eq!(g.index_bound(), 3);
+    assert_eq!(g.number_nodes(), 2);
+    assert!(g.contains_causaloid(2));
+    assert!(!g.contains_causaloid(1));
+    assert_eq!(g.get_causaloid(2).unwrap().id(), 2);
+}
+
+#[test]
+fn test_index_bound_falls_with_a_removed_last_causaloid() {
+    // Index 2 removed: the highest index holding a causaloid is 1, so the bound is 1 + 1 = 2.
+    let mut g = three_causaloids();
+    g.remove_causaloid(2).expect("Failed to remove causaloid");
+    assert_eq!(g.index_bound(), 2);
+    assert_eq!(g.number_nodes(), 2);
+
+    g.freeze();
+    assert_eq!(g.index_bound(), 2);
+    assert_eq!(g.number_nodes(), 2);
+}

@@ -173,20 +173,13 @@ This project, `deep_causality`, is a Rust-based monorepo for a computational cau
 context-aware causal reasoning over complex multi-stage causality models. The library is designed for dynamic systems
 where time is not linear, causal rules can change, and context is dynamic.
 
-The core of the library is built on the idea of "Causality is a spacetime-agnostic functional dependency."
-It uses three main components:
-
-* **Causaloid:** A self-contained unit of causality.
-* **Context:** An explicit environment (a hypergraph) where Causaloids operate.
-* **Effect Ethos:** A programmable layer for verifying operational rules.
-
 ## Project Structure
 
-The project is a monorepo containing 33 library crates.
+The project is a monorepo containing 34 library crates.
 
 ### Directory layout
 
-Twelve crates sit at the repository root. The **seventeen mathematics crates live under
+Thirteen crates sit at the repository root. The **seventeen mathematics crates live under
 `deep_causality_unified_math/`** and the **four utility crates under
 `deep_causality_utils/`**, one directory per crate:
 
@@ -205,8 +198,8 @@ entry reads exactly as before. Only paths moved: a Cargo path dependency into on
 `../deep_causality_utils/deep_causality_x`; the Bazel labels are
 `//deep_causality_unified_math/deep_causality_x` and `//deep_causality_utils/deep_causality_x`.
 The crates that stayed at the root are `deep_causality`, `_algorithms`, `_cfd`, `_context`,
-`_context_store`, `_core`, `_data_structures`, `_discovery`, `_ethos`, `_physics`, `_quantum` and
-`ultragraph`.
+`_context_store`, `_core`, `_data_structures`, `_discovery`, `_ethos`, `_physics`, `_quantum`,
+`ultragraph` and `ultragraph_traits`.
 
 The groupings below are conceptual and cut across that split: `metric` is filed under Core, `haft`
 under Functional Programming, and `homology` and `topology` under Topology and Physics, but all
@@ -225,7 +218,8 @@ test-only dependency.
 * `deep_causality_context_store`: The persistence contract for the context — the records a
   `Context` projects onto, the `ContextStorage` trait a backend implements, the optional
   `ContextStorageStream` and `Substrate` traits, and an in-memory backend under `utils_test`.
-  No dependencies, so a backend links this crate alone.
+  Depends on `ultragraph_traits` alone, so that `RelationKind` implements `EdgeKey` where it is
+  declared; a backend links these two crates and nothing else.
 * `deep_causality_core`: Core types for the deep_causality crate.
 * `deep_causality_ast`: AST data structure for the deep_causality crate.
 * `deep_causality_metric`: Foundational metric signatures used acros tensor, multivector, and physics. 
@@ -237,6 +231,8 @@ test-only dependency.
 * `deep_causality_tempfile`: Scratch files and directories removed on drop, std only. No
   dependencies; the test suites use it for temporary paths.
 * `ultragraph`: Hypergraph data structure used as a backend in deep_causality.
+* `ultragraph_traits`: The `EdgeKey` trait that identifies an edge payload in `ultragraph`, so a
+  crate declaring a payload implements it without depending on the graph. No dependencies.
 
 ### Algorithm and Discovery Crates
 * `deep_causality_algorithms`: Computational causality algorithms (SURD, MRMR) and utils.
@@ -274,7 +270,7 @@ test-only dependency.
 
 ## Project Dependencies
 
-Scope: the 33 library crates that are workspace members. Example crates (`examples/*`)
+Scope: the 34 library crates that are workspace members. Example crates (`examples/*`)
 and `yanked/*` are excluded. Third-party crates are resolved from the registry by
 rules_rs into `@crates`; there is no vendored source tree.
 `deep_causality_effects`, `deep_causality_macros` and `deep_causality_sparse` were moved to
@@ -298,16 +294,17 @@ dependency. Dev/test/bench-only dependencies are shown separately below.
 ```
 Tier 0 — Foundational (no internal runtime dependencies)
   deep_causality_ast
-  deep_causality_context_store
   deep_causality_data_structures
   deep_causality_metric
   deep_causality_num
   deep_causality_par
   deep_causality_tempfile
-  ultragraph
+  ultragraph_traits
 
 Tier 1
-  deep_causality_algebra      → deep_causality_num
+  deep_causality_algebra       → deep_causality_num
+  deep_causality_context_store → ultragraph_traits
+  ultragraph                   → ultragraph_traits
 
 Tier 2
   deep_causality_haft         → deep_causality_algebra
@@ -376,7 +373,7 @@ Tier 8
                                 deep_causality_multivector, deep_causality_num,
                                 deep_causality_num_complex, deep_causality_num_rational,
                                 deep_causality_stats, deep_causality_tensor,
-                                deep_causality_uncertain (opt)
+                                deep_causality_uncertain (opt), ultragraph (opt)
 
 Tier 9
   deep_causality_cfd          → deep_causality_algebra, deep_causality_calculus,
@@ -402,7 +399,7 @@ Internal dev-only dependency (tests/benches, not part of any published runtime):
 ### External Dependencies
 
 Only crates with at least one external (crates.io) runtime dependency are listed.
-The other 26 library crates have no external runtime dependencies.
+The other 27 library crates have no external runtime dependencies.
 
 | Crate | External dependency | Status |
 |-------|---------------------|--------|
@@ -628,7 +625,7 @@ Coding style:
 * Prefer functional style i.e. map, flatmap, filter when dealing with collections
 
 Safety and security style:
-* No `unsafe`. This is enforced repo-wide via `[workspace.lints.rust] unsafe_code = "forbid"` in the root `Cargo.toml`. All 48 workspace members opt in with `[lints]` and `workspace = true` in their own `Cargo.toml` — new crates MUST include this.
+* No `unsafe`. This is enforced repo-wide via `[workspace.lints.rust] unsafe_code = "forbid"` in the root `Cargo.toml`. All 50 workspace members opt in with `[lints]` and `workspace = true` in their own `Cargo.toml` — new crates MUST include this.
 * There are no exemptions. 
 * Avoid macros in all lib code i.e. everything under /src. However, macros for testing are permissible when using sparingly i.e. for bulk testing many types implementing the same trait. 
 * Avoid the introduction of external crates unless it is necessary for testing.

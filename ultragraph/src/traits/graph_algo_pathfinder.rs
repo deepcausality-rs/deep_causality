@@ -3,10 +3,13 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{GraphError, GraphView};
+use crate::{EdgeKey, GraphError, GraphView};
 use alloc::vec::Vec;
 
-pub trait PathfindingGraphAlgorithms<N, W>: GraphView<N, W> {
+pub trait PathfindingGraphAlgorithms<N, W>: GraphView<N, W>
+where
+    W: EdgeKey,
+{
     /// Checks if a path of any length exists from a start to a stop index.
     fn is_reachable(&self, start_index: usize, stop_index: usize) -> Result<bool, GraphError>;
 

@@ -4,7 +4,7 @@ The DeepCausality TSC oversees all technical matters of the open source project.
 
 ## DeepCausality Technical Charter
 
-The project charter is in [CHARTER](../DeepCausalityProjectCharter.pdf).
+The project charter is in [CHARTER](../../DeepCausalityProjectCharter.pdf).
 
 ## Collaboration Tools
 
@@ -19,7 +19,7 @@ Anyone can join and participate in its public channels.
 
 ### DCO
 
-Every contributor must sign the DeepCausality DCO before contributing, either personally or through their company. A contributor not covered by a DCO is notified on opening their first PR. See the [documentation on the DCO](../WHAT_IS_DCO.md).
+Every contributor must sign the DeepCausality DCO before contributing, either personally or through their company. A contributor not covered by a DCO is notified on opening their first PR. See the [documentation on the DCO](../../WHAT_IS_DCO.md).
 
 ## Members
 
@@ -39,13 +39,13 @@ by another year unless the member steps down.
 
 ## Policies and procedures
 
-The [CHARTER](../DeepCausalityProjectCharter.pdf) governs the TSC. It sets the TSC's scope, how it decides, and how it changes itself, and leaves the TSC wide freedom in implementing the policies of the DeepCausality Foundation.
+The [CHARTER](../../DeepCausalityProjectCharter.pdf) governs the TSC. It sets the TSC's scope, how it decides, and how it changes itself, and leaves the TSC wide freedom in implementing the policies of the DeepCausality Foundation.
 
 The TSC has adopted the following policies and procedures.
 
 ### Making decisions
 
-Per the [CHARTER](../DeepCausalityProjectCharter.pdf), the TSC decides by consensus wherever possible. Where consensus fails or a vote is explicitly required, an action proceeds only with the approval of a majority of TSC voting members (or more, if the governance requires). Votes are taken over email and documented in the next meeting.
+Per the [CHARTER](../../DeepCausalityProjectCharter.pdf), the TSC decides by consensus wherever possible. Where consensus fails or a vote is explicitly required, an action proceeds only with the approval of a majority of TSC voting members (or more, if the governance requires). Votes are taken over email and documented in the next meeting.
 
 ### Merging PRs into the TSC repository
 
@@ -79,7 +79,7 @@ TSC members may request fast-tracking of pull requests they did not author; only
 
 #### Copyright notices
 
-The DeepCausality project follows the [community best practice](https://www.linuxfoundation.org/blog/2020/01/copyright-notices-in-open-source-software-projects/) of not requiring a notice in each file. Instead, a contributor adds a one-time entry to [MAINTAINERS.md](../MAINTAINERS.md) during or after the merge of their first PR. 
+The DeepCausality project follows the [community best practice](https://www.linuxfoundation.org/blog/2020/01/copyright-notices-in-open-source-software-projects/) of not requiring a notice in each file. Instead, a contributor adds a one-time entry to [MAINTAINERS.md](../../MAINTAINERS.md) during or after the merge of their first PR. 
 
 #### SPDX
 

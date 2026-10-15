@@ -6,30 +6,29 @@
 //! Shared undirected-view adjacency used by the three biconnectivity algorithms
 //! (`articulation_points`, `bridges`, `biconnected_components`).
 //!
-//! The three algorithms are defined on undirected graphs. `CsmGraph` stores
-//! directed adjacency. This helper materializes a symmetric CSR view: every
-//! distinct undirected edge `{u, v}` (with `u != v`) is represented as two
-//! half-edges that share a stable `edge_id`. The shared id is what lets the
-//! DFS distinguish "the edge we arrived on" from a real back edge — robust
-//! to multi-edges in the input.
+//! The three algorithms are defined on undirected graphs over directed adjacency. This helper
+//! materializes a symmetric CSR view: every undirected edge `{u, v}` (with `u != v`) is
+//! represented as two half-edges that share a stable `edge_id`. The shared id is what lets the
+//! DFS distinguish "the edge we arrived on" from a real back edge.
 //!
-//! Self-loops are discarded. Reverse-orientation duplicates (one undirected
-//! edge stored as both `u -> v` and `v -> u`) coalesce into a single undirected
-//! edge. Genuine parallel multi-edges (the same direction stored more than
-//! once) are preserved with their multiplicity; collapsing them would turn a
-//! multigraph into a simple graph and yield wrong bridges/biconnected
-//! components (e.g., two parallel edges between `u` and `v` are not a bridge,
-//! but a collapsed single edge would be).
+//! Self-loops are discarded. How many undirected edges an unordered pair `{u, v}` gets is the
+//! `ParallelEdges` mode's decision: one under `Merge`, and `max(forward, reverse)` under
+//! `Distinct`, where a reverse-orientation edge pairs with a forward one to make a single
+//! undirected edge and any unpaired edges are parallel edges of their own. The count changes
+//! the bridges (two parallel edges between `u` and `v` are not a bridge under `Distinct`, one
+//! connection is under `Merge`); the articulation points and the biconnected components, which
+//! are vertex sets, are the same under both.
 
-use crate::{CsmGraph, GraphView};
+use crate::ParallelEdges;
+use crate::types::storage::graph_csm::adjacency::Adjacency;
 use alloc::collections::BTreeMap;
 use alloc::vec;
 use alloc::vec::Vec;
 
-/// Symmetric CSR adjacency over the undirected view of a `CsmGraph`.
+/// Symmetric CSR adjacency over the undirected view of an adjacency.
 ///
-/// - `offsets` has length `V + 1`; `offsets[v]..offsets[v+1]` slices the
-///   half-edges incident to vertex `v`.
+/// - `offsets` has length `V + 1`, where `V` is the slot count; `offsets[v]..offsets[v+1]`
+///   slices the half-edges incident to vertex `v`, and a tombstone's range is empty.
 /// - `targets[i]` is the neighbor reached by half-edge `i`.
 /// - `edge_ids[i]` is the canonical id `0..num_edges` of the undirected
 ///   edge containing half-edge `i`; the two paired half-edges share the id.
@@ -41,25 +40,13 @@ pub(crate) struct SymmetricAdjacency {
     pub(crate) edge_ids: Vec<usize>,
 }
 
-pub(crate) fn build_symmetric_adjacency<N, W>(g: &CsmGraph<N, W>) -> SymmetricAdjacency
-where
-    N: Clone,
-    W: Clone + Default,
-{
-    let n = g.number_nodes();
+pub(crate) fn build_symmetric_adjacency<W, A: Adjacency<W>>(g: &A) -> SymmetricAdjacency {
+    let n = g.slots();
 
-    // Count occurrences of each ordered direction for every canonical pair
-    // (a, b) with a < b. The undirected multiplicity is then max(forward,
-    // reverse): each reverse-orientation storage pairs with one forward to
-    // represent a single undirected edge; any unpaired forwards or reverses
-    // are genuine parallel multi-edges. This rule is consistent with
-    // `parallel_directed_edges_canonicalized_to_min_max` (anti-parallel pair
-    // -> one undirected edge) and preserves multigraph semantics.
+    // Count occurrences of each ordered direction for every canonical pair (a, b) with a < b.
     let mut counts: BTreeMap<(usize, usize), (usize, usize)> = BTreeMap::new();
     for u in 0..n {
-        let start = g.forward_edges.offsets[u];
-        let end = g.forward_edges.offsets[u + 1];
-        for &v in &g.forward_edges.targets[start..end] {
+        for (v, _) in g.out_edges(u) {
             if u == v {
                 continue;
             }
@@ -73,13 +60,15 @@ where
         }
     }
 
-    // Expand each canonical pair into `max(forward, reverse)` distinct
-    // undirected edges. Each occurrence below receives its own `edge_id`,
-    // which is what lets the Tarjan DFS distinguish "the edge we arrived
-    // on" from a parallel sibling edge.
+    // Expand each canonical pair into the number of undirected edges the mode gives it. Each
+    // occurrence below receives its own `edge_id`, which is what lets the Tarjan DFS
+    // distinguish "the edge we arrived on" from a parallel sibling edge.
     let mut canonical: Vec<(usize, usize)> = Vec::new();
     for (&(a, b), &(f, r)) in counts.iter() {
-        let m = f.max(r);
+        let m = match g.mode() {
+            ParallelEdges::Merge => 1,
+            ParallelEdges::Distinct => f.max(r),
+        };
         for _ in 0..m {
             canonical.push((a, b));
         }
