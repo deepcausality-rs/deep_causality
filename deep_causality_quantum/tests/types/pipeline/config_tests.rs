@@ -10,10 +10,11 @@
 //! `pipeline_tests.rs` builds accepting configurations, so the validation in `build()` is
 //! reached only on its passing path. Four refusals and one optional setter are never taken.
 //!
-//! Two of the refusals are RANGE checks — a factor keyed by a node the graph does not have, and
-//! a declared system id past the last node — written as `id >= n`. Both are tested here at `n-1`
-//! and at `n`: the last valid id and the first invalid one. A test that only used a wildly
-//! out-of-range id would accept `>` in place of `>=` and lose the boundary.
+//! Two of the refusals are MEMBERSHIP checks: a factor keyed by an index that holds no causaloid,
+//! and a declared system id that holds none. Indices are permanent, so after a removal an index
+//! below `number_nodes()` can hold nothing while an index at or above it holds a causaloid. Each
+//! check is tested on three indices: one past the table, a removed one below a live one, and the
+//! live one at `number_nodes()`. A check written as `id >= number_nodes()` passes only the first.
 
 use deep_causality::utils_test::test_utils;
 use deep_causality::{BaseCausaloid, CausableGraph, CausaloidGraph};
@@ -61,6 +62,32 @@ fn graph(n: usize, edges: &[(usize, usize)]) -> CausaloidGraph<BaseCausaloid<f64
     g
 }
 
+/// `graph` with the causaloids at `removed` taken out after every node and edge is in place,
+/// then frozen. A removed index stays unused, so a live index can sit at or above
+/// `number_nodes()` and a removed one below it.
+fn graph_with_removed(
+    n: usize,
+    removed: &[usize],
+    edges: &[(usize, usize)],
+) -> CausaloidGraph<BaseCausaloid<f64, bool>> {
+    let mut g = CausaloidGraph::new(0);
+    let mut nodes = Vec::with_capacity(n);
+    for i in 0..n {
+        nodes.push(
+            g.add_causaloid(test_utils::get_test_causaloid_deterministic(i as u64))
+                .unwrap(),
+        );
+    }
+    for &(a, b) in edges {
+        g.add_edge(nodes[a], nodes[b]).unwrap();
+    }
+    for &r in removed {
+        g.remove_causaloid(nodes[r]).unwrap();
+    }
+    g.freeze();
+    g
+}
+
 /// One factor on node `key`, over leg 0.
 fn factors_on(key: usize) -> (ProcessFactors<f64>, FactorSupports) {
     let mut pf = ProcessFactors::new();
@@ -71,20 +98,21 @@ fn factors_on(key: usize) -> (ProcessFactors<f64>, FactorSupports) {
 }
 
 // ---------------------------------------------------------------------------
-// The range refusals, at their boundaries.
+// The membership refusals: an index past the table, a removed index, a live index above the
+// count.
 // ---------------------------------------------------------------------------
 
 #[test]
-fn test_a_factor_keyed_past_the_last_node_is_refused_at_the_boundary() {
-    // A 3-node graph has ids 0..=2. Key 2 is the last valid one and must build; key 3 is the
-    // first invalid one and must be refused. `>` in place of `>=` would accept 3.
+fn test_a_factor_keyed_past_the_table_is_refused_and_the_last_issued_index_builds() {
+    // Three causaloids at 0, 1, 2 and nothing removed. Key 2 holds a causaloid and builds; key 3
+    // was never issued and is refused, the message naming node 3.
     let (pf, fs) = factors_on(2);
     assert!(
         QclBuilder::config::<f64, Count>()
             .over_model(graph(3, &[(0, 1), (1, 2)]), pf, fs)
             .build()
             .is_ok(),
-        "node 2 is a valid id in a 3-node graph"
+        "index 2 holds a causaloid"
     );
 
     let (pf, fs) = factors_on(3);
@@ -92,18 +120,45 @@ fn test_a_factor_keyed_past_the_last_node_is_refused_at_the_boundary() {
         .over_model(graph(3, &[(0, 1), (1, 2)]), pf, fs)
         .build());
     match failure.0 {
-        QuantumErrorEnum::CalculationError(msg) => {
-            assert!(msg.contains("node 3"), "{msg}");
-            assert!(msg.contains("3 nodes"), "{msg}");
-        }
+        QuantumErrorEnum::CalculationError(msg) => assert!(msg.contains("node 3"), "{msg}"),
         other => panic!("expected CalculationError, got {other:?}"),
     }
 }
 
 #[test]
-fn test_a_declared_system_past_the_last_node_is_refused_at_the_boundary() {
-    // Same boundary on the input/output declaration. Both lists are checked, so the rejection
-    // is exercised through `outputs` as well as `inputs`.
+fn test_a_factor_keyed_by_a_live_index_at_number_nodes_builds() {
+    // Four causaloids, index 1 removed: number_nodes() is 3 and index 3 holds a causaloid.
+    let g = graph_with_removed(4, &[1], &[(0, 2), (2, 3)]);
+    assert_eq!(g.number_nodes(), 3);
+    let (pf, fs) = factors_on(3);
+    assert!(
+        QclBuilder::config::<f64, Count>()
+            .over_model(g, pf, fs)
+            .build()
+            .is_ok(),
+        "index 3 holds a causaloid although 3 is not below number_nodes()"
+    );
+}
+
+#[test]
+fn test_a_factor_keyed_by_a_removed_index_below_the_count_is_refused() {
+    // Four causaloids, index 1 removed: 1 < number_nodes() == 3, yet index 1 holds nothing.
+    let g = graph_with_removed(4, &[1], &[(0, 2), (2, 3)]);
+    let (pf, fs) = factors_on(1);
+    match err(QclBuilder::config::<f64, Count>()
+        .over_model(g, pf, fs)
+        .build())
+    .0
+    {
+        QuantumErrorEnum::CalculationError(msg) => assert!(msg.contains("node 1"), "{msg}"),
+        other => panic!("expected CalculationError, got {other:?}"),
+    }
+}
+
+#[test]
+fn test_a_declared_system_past_the_table_is_refused_and_the_last_issued_index_builds() {
+    // Three causaloids, nothing removed. Both lists are checked, so the refusal is exercised
+    // through `outputs` as well as `inputs`.
     let build = |inputs: &[usize], outputs: &[usize]| {
         let (pf, fs) = factors_on(0);
         QclBuilder::config::<f64, Count>()
@@ -112,7 +167,7 @@ fn test_a_declared_system_past_the_last_node_is_refused_at_the_boundary() {
             .build()
     };
 
-    assert!(build(&[0], &[2]).is_ok(), "2 is the last valid id");
+    assert!(build(&[0], &[2]).is_ok(), "index 2 holds a causaloid");
 
     for (inputs, outputs, bad) in [(vec![3usize], vec![2usize], 3usize), (vec![0], vec![3], 3)] {
         match err(build(&inputs, &outputs)).0 {
@@ -121,6 +176,95 @@ fn test_a_declared_system_past_the_last_node_is_refused_at_the_boundary() {
             }
             other => panic!("expected CalculationError, got {other:?}"),
         }
+    }
+}
+
+#[test]
+fn test_a_declared_system_at_a_live_index_at_number_nodes_builds() {
+    // Four causaloids, index 1 removed: number_nodes() is 3 and index 3 holds a causaloid.
+    let (pf, fs) = factors_on(0);
+    let g = graph_with_removed(4, &[1], &[(0, 2), (2, 3)]);
+    assert_eq!(g.number_nodes(), 3);
+    assert!(
+        QclBuilder::config::<f64, Count>()
+            .over_model(g, pf, fs)
+            .declare_systems(&[0], &[3])
+            .build()
+            .is_ok(),
+        "index 3 holds a causaloid although 3 is not below number_nodes()"
+    );
+}
+
+#[test]
+fn test_a_declared_system_at_a_removed_index_below_the_count_is_refused() {
+    // Four causaloids, index 1 removed: 1 < number_nodes() == 3, yet index 1 holds nothing. Both
+    // lists are checked.
+    let build = |inputs: &[usize], outputs: &[usize]| {
+        let (pf, fs) = factors_on(0);
+        QclBuilder::config::<f64, Count>()
+            .over_model(graph_with_removed(4, &[1], &[(0, 2), (2, 3)]), pf, fs)
+            .declare_systems(inputs, outputs)
+            .build()
+    };
+    for (inputs, outputs) in [(vec![1usize], vec![2usize]), (vec![0], vec![1])] {
+        match err(build(&inputs, &outputs)).0 {
+            QuantumErrorEnum::CalculationError(msg) => {
+                assert!(msg.contains("system id 1"), "{msg}");
+            }
+            other => panic!("expected CalculationError, got {other:?}"),
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// The cycle refusal with a removed index below the cycle.
+// ---------------------------------------------------------------------------
+
+#[test]
+fn test_a_cycle_through_an_index_above_number_nodes_is_found() {
+    // Five causaloids, index 0 removed: number_nodes() is 4. The cycle 2 → 4 → 2 runs through
+    // index 4, which is not below the count. A search over 0..number_nodes() never reaches it.
+    // The scenario holds only while 4 keeps its causaloid through the freeze and 0 holds none.
+    let g = graph_with_removed(5, &[0], &[(2, 4), (4, 2)]);
+    assert_eq!(g.number_nodes(), 4);
+    assert!(
+        g.contains_causaloid(4),
+        "index 4 keeps its causaloid through the freeze"
+    );
+    assert!(!g.contains_causaloid(0), "the removed index 0 stays empty");
+    let (pf, fs) = factors_on(2);
+    match err(QclBuilder::config::<f64, Count>()
+        .over_model(g, pf, fs)
+        .build())
+    .0
+    {
+        QuantumErrorEnum::CyclicStructureUnsupported(msg) => {
+            assert!(msg.contains("scope"), "{msg}")
+        }
+        other => panic!("expected CyclicStructureUnsupported, got {other:?}"),
+    }
+}
+
+#[test]
+fn test_a_cycle_past_a_removed_middle_index_is_found() {
+    // Four causaloids, index 1 removed: the cycle 0 → 3 → 0 spans the removed index, and 3 is
+    // not below number_nodes() == 3. The scenario holds only while 3 keeps its causaloid
+    // through the freeze and 1 holds none.
+    let g = graph_with_removed(4, &[1], &[(0, 3), (3, 0)]);
+    assert_eq!(g.number_nodes(), 3);
+    assert!(
+        g.contains_causaloid(3),
+        "index 3 keeps its causaloid through the freeze"
+    );
+    assert!(!g.contains_causaloid(1), "the removed index 1 stays empty");
+    let (pf, fs) = factors_on(0);
+    match err(QclBuilder::config::<f64, Count>()
+        .over_model(g, pf, fs)
+        .build())
+    .0
+    {
+        QuantumErrorEnum::CyclicStructureUnsupported(_) => {}
+        other => panic!("expected CyclicStructureUnsupported, got {other:?}"),
     }
 }
 

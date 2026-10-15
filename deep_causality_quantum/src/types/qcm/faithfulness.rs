@@ -91,12 +91,8 @@ impl CausalStructure {
     /// `i == o`), computed from the public `contains_edge` adjacency. This is
     /// the traditional-circuit influence relation the C₃ criterion is stated on.
     ///
-    /// The graph **must be frozen**: only the static representation guarantees a
-    /// dense node-id space `0..number_nodes()`, which the BFS relies on. On a
-    /// dynamic graph a `remove_node` tombstones a slot without compacting, so a
-    /// live node can have an id `≥ number_nodes()` and its edges would be
-    /// silently skipped — an unsound false negative in a faithfulness gate.
-    /// An unfrozen graph is therefore rejected.
+    /// The graph **must be frozen**; an unfrozen graph is rejected. A declared system id
+    /// that holds no causaloid, removed or never issued, is rejected as well.
     ///
     /// # Errors
     /// Returns [`QuantumError::CalculationError`] if the graph is not frozen.
@@ -111,20 +107,23 @@ impl CausalStructure {
     {
         if !graph.is_frozen() {
             return Err(QuantumError::CalculationError(
-                "CausalStructure::from_graph_reachability requires a frozen graph (dense node ids); \
-                 freeze the graph before deriving the causal structure"
+                "CausalStructure::from_graph_reachability requires a frozen graph; freeze the \
+                 graph before deriving the causal structure"
                     .into(),
             ));
         }
-        let n = graph.number_nodes();
-        // A declared system id outside `0..n` names no node; its reachability would
+        // One past the highest live index: a live node can sit at or above `number_nodes()`.
+        let n = graph.index_bound();
+        // A declared system id holding no causaloid names no node; its reachability would
         // be silently empty, detaching the derived structure from the graph (and
         // hiding a real C₃). Reject it so the freeze hook rolls back.
-        if let Some(&bad) = inputs.iter().chain(outputs).find(|&&id| id >= n) {
+        if let Some(&bad) = inputs
+            .iter()
+            .chain(outputs)
+            .find(|&&id| !graph.contains_causaloid(id))
+        {
             return Err(QuantumError::CalculationError(format!(
-                "declared system id {} is out of range for a frozen graph with {} node(s) \
-                 (valid ids are 0..{})",
-                bad, n, n
+                "declared system id {bad} names no causaloid in the frozen graph"
             )));
         }
         let mut me = Self::new(inputs, outputs);
@@ -133,9 +132,7 @@ impl CausalStructure {
             // BFS from i over forward edges.
             let mut seen = vec![false; n];
             let mut stack = vec![i];
-            if i < n {
-                seen[i] = true;
-            }
+            seen[i] = true;
             while let Some(node) = stack.pop() {
                 if out_set.contains(&node) {
                     me.add_influence(i, node);

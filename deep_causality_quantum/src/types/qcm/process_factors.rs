@@ -163,12 +163,8 @@ impl FactorSupports {
     /// carrying a factor are registered. Every leg defaults to a qubit
     /// (dimension `2`); override with [`Self::set_leg_dim`].
     ///
-    /// The graph **must be frozen**: only the static representation guarantees a
-    /// dense node-id space `0..number_nodes()`. On a dynamic graph a
-    /// `remove_node` tombstones a slot without compacting, so a live node can
-    /// have an id `≥ number_nodes()` and its parent edges would be silently
-    /// dropped. An unfrozen graph is therefore rejected rather than
-    /// mis-derived.
+    /// The graph **must be frozen**; an unfrozen graph is rejected. A factor keyed by an
+    /// index that holds no causaloid, removed or never issued, is rejected as well.
     ///
     /// # Errors
     /// Returns [`QuantumError::CalculationError`] if the graph is not frozen.
@@ -180,20 +176,20 @@ impl FactorSupports {
     {
         if !graph.is_frozen() {
             return Err(QuantumError::CalculationError(
-                "FactorSupports::from_graph requires a frozen graph (dense node ids); \
-                 freeze the graph before deriving supports"
+                "FactorSupports::from_graph requires a frozen graph; freeze the graph before \
+                 deriving supports"
                     .into(),
             ));
         }
-        let n = graph.number_nodes();
+        // One past the highest live index: a live node can sit at or above `number_nodes()`.
+        let n = graph.index_bound();
         let mut me = Self::new();
         for node in factors.nodes() {
-            // A factor keyed outside the graph's node range would otherwise be
-            // declared as a lone qubit, detaching the factorization from `G`.
-            if node >= n {
+            // A factor keyed at an index holding no causaloid would otherwise be declared as a
+            // lone qubit, detaching the factorization from `G`.
+            if !graph.contains_causaloid(node) {
                 return Err(QuantumError::CalculationError(format!(
-                    "factor keyed by node {} but the frozen graph has {} nodes (valid ids 0..{})",
-                    node, n, n
+                    "factor keyed by node {node} but the frozen graph holds no causaloid at that index"
                 )));
             }
             let mut legs: Vec<usize> = (0..n).filter(|&p| graph.contains_edge(p, node)).collect();

@@ -8,6 +8,8 @@
 //! `P(000) = 0.72`, `P(110) = 0.08`, `P(011) = 0.18`, `P(101) = 0.02` over `(D0, D1, L0)`; firing
 //! the second mechanism once more shifts every string by `011`.
 
+use deep_causality::utils_test::test_utils;
+use deep_causality::{BaseCausaloid, CausableGraph, CausaloidGraph};
 use deep_causality_quantum::utils_tests::memory_dem;
 use deep_causality_quantum::{
     DEM_MAX_MECHANISMS, DEM_MAX_VARIABLES, DemModel, DemRoles, Fault, Mechanism, NumericCaps,
@@ -176,8 +178,6 @@ fn test_construction_errors() {
 
 #[test]
 fn test_a_model_from_a_frozen_graph_reads_the_flips_off_the_edges() {
-    use deep_causality::utils_test::test_utils;
-    use deep_causality::{BaseCausaloid, CausableGraph, CausaloidGraph};
     // Nodes: 0, 1 mechanisms; 2, 3, 4 detectors; 5 observable.
     let mut g: CausaloidGraph<BaseCausaloid<f64, bool>> = CausaloidGraph::new(0);
     let nodes: Vec<usize> = (0..6)
@@ -232,6 +232,62 @@ fn test_a_model_from_a_frozen_graph_reads_the_flips_off_the_edges() {
         DemModel::from_graph(&g, &outside).unwrap_err().0,
         QuantumErrorEnum::DimensionMismatch(ref m) if m.contains("node 9")
     ));
+}
+
+/// Seven causaloids with the one at 2 removed before the freeze: 0 and 1 are mechanisms, 3, 4
+/// and 5 detectors, 6 the observable. Mechanism 0 also had an edge into 2 before the removal.
+/// `number_nodes()` is 6, so the observable at 6 is not below the count and the removed 2 is.
+fn frozen_graph_with_a_removed_node() -> CausaloidGraph<BaseCausaloid<f64, bool>> {
+    let mut g: CausaloidGraph<BaseCausaloid<f64, bool>> = CausaloidGraph::new(0);
+    let nodes: Vec<usize> = (0..7)
+        .map(|i| {
+            g.add_causaloid(test_utils::get_test_causaloid_deterministic(i as u64))
+                .unwrap()
+        })
+        .collect();
+    for (from, to) in [(0, 2), (0, 3), (0, 4), (1, 4), (1, 5), (1, 6)] {
+        g.add_edge(nodes[from], nodes[to]).unwrap();
+    }
+    g.remove_causaloid(nodes[2]).unwrap();
+    g.freeze();
+    g
+}
+
+#[test]
+fn test_a_model_from_a_graph_with_a_removed_node_reads_roles_at_live_indices() {
+    // Edges 0 → 3, 0 → 4, 1 → 4, 1 → 5, 1 → 6 over detectors (3, 4, 5) = (D0, D1, D2) and the
+    // observable 6 = L0: mechanism 0 flips D0 D1, mechanism 1 flips D1 D2 L0.
+    let g = frozen_graph_with_a_removed_node();
+    assert_eq!(g.number_nodes(), 6);
+    let roles = DemRoles {
+        mechanisms: vec![(0, 0.1), (1, 0.2)],
+        detectors: vec![3, 4, 5],
+        observables: vec![6],
+    };
+    let model = DemModel::from_graph(&g, &roles).unwrap();
+    assert_eq!(model.num_detectors(), 3);
+    assert_eq!(model.num_observables(), 1);
+    assert_eq!(model.mechanisms().len(), 2);
+    assert_eq!(model.mechanisms()[0].detectors, vec![0, 1]);
+    assert!(model.mechanisms()[0].observables.is_empty());
+    assert_eq!(model.mechanisms()[1].detectors, vec![1, 2]);
+    assert_eq!(model.mechanisms()[1].observables, vec![0]);
+}
+
+#[test]
+fn test_a_role_at_a_removed_index_below_a_live_one_is_refused() {
+    // The removed index 2 is below number_nodes() == 6 yet holds no causaloid, so a detector
+    // role naming it is refused and the message names node 2.
+    let g = frozen_graph_with_a_removed_node();
+    let roles = DemRoles {
+        mechanisms: vec![(0, 0.1)],
+        detectors: vec![2],
+        observables: vec![],
+    };
+    match DemModel::from_graph(&g, &roles).unwrap_err().0 {
+        QuantumErrorEnum::DimensionMismatch(msg) => assert!(msg.contains("node 2"), "{msg}"),
+        other => panic!("expected DimensionMismatch, got {other:?}"),
+    }
 }
 
 #[cfg(feature = "dem")]

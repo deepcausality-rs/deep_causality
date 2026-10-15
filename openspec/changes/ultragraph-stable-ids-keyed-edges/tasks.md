@@ -51,20 +51,20 @@ behaviour.
 
 ## 2. Permanent positions, and every caller that reads an index
 
-- [ ] 2.1 Phase 1: declare `compact_ids` on `DynamicGraph` and `UltraGraphContainer` and the provided
+- [x] 2.1 Phase 1: declare `compact_ids` on `DynamicGraph` and `UltraGraphContainer` and the provided
       method `CausableGraph::index_bound`, each with an `unimplemented!()` body
-- [ ] 2.2 Fill the group-2 A–K table (rows A–F, H, K of design D8 apply) before writing tests
-- [ ] 2.3 Phase 2, UltraGraph: write a test for every scenario of `ultragraph-stable-node-ids`; add a
+- [x] 2.2 Fill the group-2 A–K table (rows A–F, H, K of design D8 apply) before writing tests
+- [x] 2.3 Phase 2, UltraGraph: write a test for every scenario of `ultragraph-stable-node-ids`; add a
       model-based test driving seeded random sequences of `add_node`, `remove_node`, `add_edge`,
       `freeze`, `unfreeze`, `compact_ids` and `clear` against a reference model of positions; add the
       generated agreement test between a graph with tombstones and its `compact_ids` image for every
       algorithm
-- [ ] 2.4 Phase 2, rewrite the existing tests that pin renumbering before touching the code:
+- [x] 2.4 Phase 2, rewrite the existing tests that pin renumbering before touching the code:
       `graph_evolve_tests.rs:91` and `:326`; `contextuable_graph_tests.rs:332` (indices stay; stale
       entries gone at removal); `hypothesis_tests.rs:161` and `config_tests.rs:96-97` (the rewritten
       range messages); and the comment in `context_tests.rs`
       `test_get_data_by_id_reads_the_payload_of_the_node_carrying_the_id`
-- [ ] 2.5 Phase 2, callers: write tests for every scenario of `causaloid-graph-index-bound` except
+- [x] 2.5 Phase 2, callers: write tests for every scenario of `causaloid-graph-index-bound` except
       "A repeated edge between two causaloids updates its weight" and "The check examines a dynamic
       graph" (group 3: the first needs keyed edges, the second dynamic traversal, without which
       `check_single_writer` skips every join and returns `Ok(())`), of
@@ -74,33 +74,33 @@ behaviour.
       `CausalStructure::from_graph_reachability`, `DemModel::from_graph`, the model-subject validation
       and `graph_has_cycle` each with a removed index below a live node that carries a factor, role,
       edge or cycle
-- [ ] 2.6 Phase 2 exit: run every group-2 test against the unchanged implementation; each fails with
+- [x] 2.6 Phase 2 exit: run every group-2 test against the unchanged implementation; each fails with
       the `unimplemented!()` panic or with the old behaviour's wrong answer, never a compile error;
       record the run and the count
-- [ ] 2.7 Phase 3: on a throwaway implementation inject, one at a time, the design D8 defects of this
+- [x] 2.7 Phase 3: on a throwaway implementation inject, one at a time, the design D8 defects of this
       group (freeze renumbers; `add_node` reuses a tombstone; freeze of a graph with no live node
       resets the table; frozen `number_nodes` counts slots; `get_last_index` returns slots minus one;
       betweenness normalised by the slot count; traversal from a tombstone returns no edges; the context remap left in place; index-map entries
       kept at removal; `index_bound` returning `number_nodes`; a QCM reader checking `>= n`) and the
       nine generic classes; confirm each is caught by a test whose subject it is; widen the suite where
       not; record; discard the throwaway
-- [ ] 2.8 Phase 4, `ultragraph`: `CsmGraph.nodes` as `Vec<Option<N>>` with a live count; `freeze` and
+- [x] 2.8 Phase 4, `ultragraph`: `CsmGraph.nodes` as `Vec<Option<N>>` with a live count; `freeze` and
       `unfreeze` keep every position and the whole node table; remove the empty-graph shortcuts; every
       algorithm sizes by `node_slots()` and skips tombstones; traversal checks `contains_node`;
       `compact_ids`; `clear` restarting at 0; rustdoc of every changed item states the new behaviour
-- [ ] 2.9 Phase 4, `deep_causality`: `index_bound`; size the two reasoning engines,
+- [x] 2.9 Phase 4, `deep_causality`: `index_bound`; size the two reasoning engines,
       `check_single_writer` and `reachable_mask` by it; validate writers with `contains_causaloid`
-- [ ] 2.10 Phase 4, `deep_causality_context`: delete the rank remap in `contextuable_graph.rs`; add the
+- [x] 2.10 Phase 4, `deep_causality_context`: delete the rank remap in `contextuable_graph.rs`; add the
       helper dropping index-map entries and call it from `remove_node` and the base-graph `release`;
       rewrite the `freeze` doc in `traits/contextuable_graph/mod.rs`
-- [ ] 2.11 Phase 4, `deep_causality_quantum`: the four readers and `graph_has_cycle` size by
+- [x] 2.11 Phase 4, `deep_causality_quantum`: the four readers and `graph_has_cycle` size by
       `index_bound()`, check declared indices with `contains_causaloid`, and keep the frozen
       precondition with the density rationale removed from docs and errors
-- [ ] 2.12 Phase 4 exit: every group-2 test green; full line coverage of added and edited files;
+- [x] 2.12 Phase 4 exit: every group-2 test green; full line coverage of added and edited files;
       `cargo test` and `bazel test //...` counts match for every affected crate
-- [ ] 2.13 Phase 5: `scripts/mutants.sh` over the group's edited files in the four crates; kill or
+- [x] 2.13 Phase 5: `scripts/mutants.sh` over the group's edited files in the four crates; kill or
       record every survivor in `.cargo/mutants.toml` with its measurement and `comm` check
-- [ ] 2.14 `make format && make fix`, `make build`, `bazel test //...`, commit message for group 2
+- [x] 2.14 `make format && make fix`, `make build`, `bazel test //...`, commit message for group 2
 
 ## 3. Keyed edges, dynamic traversal and the projection view
 

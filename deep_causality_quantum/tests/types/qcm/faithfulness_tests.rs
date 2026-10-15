@@ -19,7 +19,7 @@
 //!   search to it over every relation on three inputs and three outputs.
 
 use deep_causality::utils_test::test_utils;
-use deep_causality::{CausableGraph, CausaloidGraph};
+use deep_causality::{BaseCausaloid, CausableGraph, CausaloidGraph};
 use deep_causality_quantum::{CausalStructure, QuantumErrorEnum};
 
 /// A relation on inputs `{0, 1, 2}` and outputs `{3, 4, 5}` from its edge list.
@@ -224,7 +224,7 @@ fn test_from_graph_reachability() {
     g.add_edge(n0, n1).unwrap();
     g.add_edge(n1, n2).unwrap();
 
-    // A dynamic graph is rejected (sparse-id soundness guard).
+    // An unfrozen graph is rejected: the frozen state is the precondition.
     assert!(CausalStructure::from_graph_reachability(&g, &[n0, n1], &[n1, n2]).is_err());
 
     g.freeze();
@@ -262,4 +262,58 @@ fn test_from_graph_reachability_rejects_out_of_range_id() {
     // Node id 99 does not exist (the graph has 2 nodes).
     let err = CausalStructure::from_graph_reachability(&g, &[n0, 99], &[n1]).unwrap_err();
     assert!(matches!(err.0, QuantumErrorEnum::CalculationError(_)));
+}
+
+/// Five causaloids with the one at 1 removed before the freeze, the path 0 → 4 → 2, and 3
+/// isolated. `number_nodes()` is 4: index 1 holds no causaloid below the count, and the live
+/// index 4 is not below it.
+fn frozen_graph_with_a_removed_middle() -> CausaloidGraph<BaseCausaloid<f64, bool>> {
+    let mut g = CausaloidGraph::new(0);
+    let nodes: Vec<usize> = (0..5)
+        .map(|i| {
+            g.add_causaloid(test_utils::get_test_causaloid_deterministic(i as u64))
+                .unwrap()
+        })
+        .collect();
+    g.add_edge(nodes[0], nodes[4]).unwrap();
+    g.add_edge(nodes[4], nodes[2]).unwrap();
+    g.remove_causaloid(nodes[1]).unwrap();
+    g.freeze();
+    g
+}
+
+#[test]
+fn test_from_graph_reachability_accepts_a_declared_id_at_a_live_index_above_number_nodes() {
+    // Output 4 is live and not below number_nodes() == 4. Hand reachability: 0 → 4 by the
+    // edge, 0 → 2 by 0 → 4 → 2; 3 has no edge and reaches neither output.
+    let g = frozen_graph_with_a_removed_middle();
+    assert_eq!(g.number_nodes(), 4);
+    let cs = CausalStructure::from_graph_reachability(&g, &[0, 3], &[2, 4]).unwrap();
+    assert!(cs.influences(0, 4));
+    assert!(cs.influences(0, 2));
+    assert!(!cs.influences(3, 2));
+    assert!(!cs.influences(3, 4));
+}
+
+#[test]
+fn test_from_graph_reachability_follows_a_path_through_a_live_index_above_number_nodes() {
+    // Every declared id is below number_nodes() == 4; the path 0 → 4 → 2 runs through index
+    // 4, which is not. Hand reachability: 0 reaches 2 and 3 reaches nothing.
+    let g = frozen_graph_with_a_removed_middle();
+    let cs = CausalStructure::from_graph_reachability(&g, &[0, 3], &[2]).unwrap();
+    assert!(cs.influences(0, 2));
+    assert!(!cs.influences(3, 2));
+}
+
+#[test]
+fn test_from_graph_reachability_refuses_a_declared_id_at_a_removed_index() {
+    // Index 1 is below number_nodes() == 4 yet holds no causaloid; the refusal names id 1.
+    let g = frozen_graph_with_a_removed_middle();
+    match CausalStructure::from_graph_reachability(&g, &[0], &[1])
+        .unwrap_err()
+        .0
+    {
+        QuantumErrorEnum::CalculationError(msg) => assert!(msg.contains("id 1"), "{msg}"),
+        other => panic!("expected CalculationError, got {other:?}"),
+    }
 }

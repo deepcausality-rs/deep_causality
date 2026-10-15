@@ -145,17 +145,18 @@ impl DemModel {
     {
         if !graph.is_frozen() {
             return Err(QuantumError::CalculationError(
-                "DemModel::from_graph requires a frozen graph (dense node ids); freeze the graph \
-                 before reading the model off it"
+                "DemModel::from_graph requires a frozen graph; freeze the graph before reading \
+                 the model off it"
                     .into(),
             ));
         }
-        let n = graph.number_nodes();
+        // One past the highest live index: a live node can sit at or above `number_nodes()`.
+        let n = graph.index_bound();
         let mut seen = vec![false; n];
         let mut claim = |node: usize, role: &str| -> Result<(), QuantumError> {
-            if node >= n {
+            if !graph.contains_causaloid(node) {
                 return Err(QuantumError::DimensionMismatch(format!(
-                    "{role} node {node} is outside the graph of {n} nodes"
+                    "{role} node {node} holds no causaloid in the graph"
                 )));
             }
             if seen[node] {

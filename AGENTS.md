@@ -173,13 +173,6 @@ This project, `deep_causality`, is a Rust-based monorepo for a computational cau
 context-aware causal reasoning over complex multi-stage causality models. The library is designed for dynamic systems
 where time is not linear, causal rules can change, and context is dynamic.
 
-The core of the library is built on the idea of "Causality is a spacetime-agnostic functional dependency."
-It uses three main components:
-
-* **Causaloid:** A self-contained unit of causality.
-* **Context:** An explicit environment (a hypergraph) where Causaloids operate.
-* **Effect Ethos:** A programmable layer for verifying operational rules.
-
 ## Project Structure
 
 The project is a monorepo containing 34 library crates.

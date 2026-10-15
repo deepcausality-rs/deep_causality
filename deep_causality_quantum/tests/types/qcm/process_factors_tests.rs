@@ -99,10 +99,10 @@ fn test_from_graph_builds_collider_supports() {
     // node 2's factor is on 3 qubits → 8x8.
     pf.insert(n2, mat(vec![c(0., 0.); 64], 8));
 
-    // A dynamic graph is rejected (its node-id space may be sparse).
+    // An unfrozen graph is rejected: the frozen state is the precondition.
     assert!(FactorSupports::from_graph(&g, &pf).is_err());
 
-    // Frozen graph → dense ids → correct supports.
+    // Frozen graph → the supports read off its edges.
     g.freeze();
     let fs = FactorSupports::from_graph(&g, &pf).unwrap();
     assert_eq!(fs.support(n0), Some([0].as_slice()));
@@ -110,6 +110,70 @@ fn test_from_graph_builds_collider_supports() {
     assert_eq!(fs.support(n2), Some([0, 1, 2].as_slice()));
     assert_eq!(fs.support_dim(n2), Some(8));
     assert!(fs.validate(&pf).is_ok());
+}
+
+/// The collider `n0 → n2 ← n1` with an extra causaloid added and removed before `n2`, so that
+/// `n2 = 3` is live while `number_nodes()` is 3, and the removed index 2 sits below it. Returns
+/// the frozen graph and `(n0, n1, removed, n2)`.
+fn frozen_collider_with_a_removed_index() -> (
+    CausaloidGraph<deep_causality::BaseCausaloid<f64, bool>>,
+    [usize; 4],
+) {
+    let mut g = CausaloidGraph::new(0);
+    let n0 = g
+        .add_causaloid(test_utils::get_test_causaloid_deterministic(0))
+        .unwrap();
+    let n1 = g
+        .add_causaloid(test_utils::get_test_causaloid_deterministic(1))
+        .unwrap();
+    let extra = g
+        .add_causaloid(test_utils::get_test_causaloid_deterministic(9))
+        .unwrap();
+    let n2 = g
+        .add_causaloid(test_utils::get_test_causaloid_deterministic(2))
+        .unwrap();
+    g.add_edge(n0, n2).unwrap();
+    g.add_edge(n1, n2).unwrap();
+    g.remove_causaloid(extra).unwrap();
+    g.freeze();
+    (g, [n0, n1, extra, n2])
+}
+
+#[test]
+fn test_from_graph_supports_a_collider_whose_sink_is_a_live_index_above_number_nodes() {
+    // n2 = 3 is live and number_nodes() is 3. support(n2) = {n0, n1, n2} = {0, 1, 3}, three
+    // qubits, dim 2·2·2 = 8; a check written as `node >= number_nodes()` refuses n2.
+    let (g, [n0, n1, _, n2]) = frozen_collider_with_a_removed_index();
+    assert_eq!(g.number_nodes(), 3);
+    assert_eq!(n2, 3);
+
+    let mut pf = ProcessFactors::<f64>::new();
+    pf.insert(n0, sigma_z());
+    pf.insert(n1, sigma_z());
+    pf.insert(n2, mat(vec![c(0., 0.); 64], 8));
+
+    let fs = FactorSupports::from_graph(&g, &pf).unwrap();
+    assert_eq!(fs.support(n0), Some([n0].as_slice()));
+    assert_eq!(fs.support(n1), Some([n1].as_slice()));
+    assert_eq!(fs.support(n2), Some([n0, n1, n2].as_slice()));
+    assert_eq!(fs.support_dim(n2), Some(8));
+    assert!(fs.validate(&pf).is_ok());
+}
+
+#[test]
+fn test_from_graph_refuses_a_factor_keyed_by_a_removed_index_below_a_live_one() {
+    // The removed index 2 is below number_nodes() == 3 yet holds no causaloid; the refusal
+    // names node 2.
+    let (g, [n0, _, removed, _]) = frozen_collider_with_a_removed_index();
+    assert_eq!(removed, 2);
+
+    let mut pf = ProcessFactors::<f64>::new();
+    pf.insert(n0, sigma_z());
+    pf.insert(removed, sigma_z());
+    match FactorSupports::from_graph(&g, &pf).unwrap_err().0 {
+        QuantumErrorEnum::CalculationError(msg) => assert!(msg.contains("node 2"), "{msg}"),
+        other => panic!("expected CalculationError, got {other:?}"),
+    }
 }
 
 #[test]

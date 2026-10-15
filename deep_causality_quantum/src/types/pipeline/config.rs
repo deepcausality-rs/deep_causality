@@ -531,21 +531,29 @@ where
         }
         if !self.graph.is_frozen() {
             return Err(QuantumError::CalculationError(
-                "the model subject requires a frozen graph (dense node ids); freeze the graph \
-                 before building the configuration"
+                "the model subject requires a frozen graph; freeze the graph before building the \
+                 configuration"
                     .into(),
             ));
         }
-        let n = self.graph.number_nodes();
-        if let Some(bad) = self.factors.nodes().find(|&node| node >= n) {
+        if let Some(bad) = self
+            .factors
+            .nodes()
+            .find(|&node| !self.graph.contains_causaloid(node))
+        {
             return Err(QuantumError::CalculationError(format!(
-                "factor keyed by node {bad} but the frozen graph has {n} nodes (valid ids 0..{n})"
+                "factor keyed by node {bad} but the frozen graph holds no causaloid at that index"
             )));
         }
         self.supports.validate(&self.factors)?;
-        if let Some(bad) = self.inputs.iter().chain(&self.outputs).find(|&&id| id >= n) {
+        if let Some(bad) = self
+            .inputs
+            .iter()
+            .chain(&self.outputs)
+            .find(|&&id| !self.graph.contains_causaloid(id))
+        {
             return Err(QuantumError::CalculationError(format!(
-                "declared system id {bad} is out of range for a graph with {n} nodes"
+                "declared system id {bad} names no causaloid in the graph"
             )));
         }
         if graph_has_cycle(&self.graph) {
@@ -593,7 +601,8 @@ impl<K: ChainComplex> BuildSubject for CodeSubject<K> {
 
 /// Whether a frozen graph has a directed cycle: some node reaches itself along at least one edge.
 fn graph_has_cycle<T: Clone, G: CausableGraph<T>>(graph: &G) -> bool {
-    let n = graph.number_nodes();
+    // One past the highest live index; a tombstone has no edges, so it enters no walk.
+    let n = graph.index_bound();
     for start in 0..n {
         let mut seen = vec![false; n];
         let mut stack: Vec<usize> = (0..n).filter(|&s| graph.contains_edge(start, s)).collect();

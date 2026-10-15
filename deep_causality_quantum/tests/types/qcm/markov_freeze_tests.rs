@@ -52,6 +52,35 @@ fn two_node_graph() -> CausaloidGraph<deep_causality::BaseCausaloid<f64, bool>> 
     g
 }
 
+/// Three causaloids with the edge 0 → 2, then the causaloid at 1 removed. Index 1 holds no
+/// causaloid below the live index 2, and `number_nodes()` is 2, so 2 is not below the count.
+fn chain_with_removed_middle() -> CausaloidGraph<deep_causality::BaseCausaloid<f64, bool>> {
+    let mut g = CausaloidGraph::new(0);
+    let n0 = g
+        .add_causaloid(test_utils::get_test_causaloid_deterministic(0))
+        .unwrap();
+    let n1 = g
+        .add_causaloid(test_utils::get_test_causaloid_deterministic(1))
+        .unwrap();
+    let n2 = g
+        .add_causaloid(test_utils::get_test_causaloid_deterministic(2))
+        .unwrap();
+    g.add_edge(n0, n2).unwrap();
+    g.remove_causaloid(n1).unwrap();
+    g
+}
+
+/// Two commuting factors, one on node 0 and one on node 2, both over leg 0.
+fn factors_on_0_and_2() -> (ProcessFactors<f64>, FactorSupports) {
+    let mut pf = ProcessFactors::<f64>::new();
+    pf.insert(0, sigma_z());
+    pf.insert(2, diag(2.0, 5.0));
+    let mut fs = FactorSupports::new();
+    fs.declare(0, &[0]);
+    fs.declare(2, &[0]);
+    (pf, fs)
+}
+
 // =============================================================================
 // The pure check (no graph): commuting passes, non-commuting names the pair.
 // =============================================================================
@@ -387,7 +416,7 @@ fn test_freeze_admits_faithful_structure() {
 
 #[test]
 fn test_freeze_rejects_out_of_range_faithfulness_id() {
-    // An out-of-range declared output id must abort the freeze (CalculationError)
+    // A declared output id the graph never issued must abort the freeze (CalculationError)
     // and roll the graph back — the faithfulness derivation cannot be trusted.
     let mut g = two_node_graph();
     let mut pf = ProcessFactors::<f64>::new();
@@ -398,7 +427,7 @@ fn test_freeze_rejects_out_of_range_faithfulness_id() {
     fs.declare(1, &[0]);
 
     let inputs = [0usize];
-    let outputs = [99usize]; // out of range: the graph has 2 nodes
+    let outputs = [99usize]; // never issued: the graph has 2 nodes
     let err = freeze_quantum(
         &mut g,
         &[],
@@ -410,6 +439,59 @@ fn test_freeze_rejects_out_of_range_faithfulness_id() {
     .unwrap_err();
     assert!(matches!(err.0, QuantumErrorEnum::CalculationError(_)));
     assert!(!g.is_frozen());
+}
+
+#[test]
+fn test_freeze_rejects_a_faithfulness_id_at_a_removed_index_and_rolls_back() {
+    // Index 1 was removed: 1 < number_nodes() == 2, yet it holds no causaloid. The freeze is
+    // refused (CalculationError naming id 1) and rolled back, and the rollback keeps every
+    // position: 2 still holds its causaloid and 1 still holds none.
+    let mut g = chain_with_removed_middle();
+    let (pf, fs) = factors_on_0_and_2();
+    let inputs = [0usize];
+    let outputs = [1usize];
+    let err = freeze_quantum(
+        &mut g,
+        &[],
+        &pf,
+        &fs,
+        &CommutatorTolerance::default(),
+        Some((&inputs, &outputs)),
+    )
+    .unwrap_err();
+    match err.0 {
+        QuantumErrorEnum::CalculationError(msg) => assert!(msg.contains("id 1"), "{msg}"),
+        other => panic!("expected CalculationError, got {other:?}"),
+    }
+    assert!(!g.is_frozen());
+    assert!(g.contains_causaloid(2));
+    assert!(!g.contains_causaloid(1));
+}
+
+#[test]
+fn test_freeze_admits_a_faithfulness_id_at_a_live_index_above_number_nodes() {
+    // Index 1 was removed, so number_nodes() is 2 and the live index 2 is not below it. The
+    // declared output 2 is accepted, the freeze succeeds, and 2 keeps its position through it.
+    let mut g = chain_with_removed_middle();
+    let (pf, fs) = factors_on_0_and_2();
+    let inputs = [0usize];
+    let outputs = [2usize];
+    let report = freeze_quantum(
+        &mut g,
+        &[],
+        &pf,
+        &fs,
+        &CommutatorTolerance::default(),
+        Some((&inputs, &outputs)),
+    )
+    .unwrap();
+    assert!(g.is_frozen());
+    assert_eq!(g.number_nodes(), 2);
+    assert!(g.contains_causaloid(2));
+    assert!(!g.contains_causaloid(1));
+    // Both factors sit on leg 0, so their supports intersect in exactly one pair, (0, 2); the
+    // removed index 1 carries no factor and contributes no pair.
+    assert_eq!(report.tested_pairs(), 1);
 }
 
 // =============================================================================

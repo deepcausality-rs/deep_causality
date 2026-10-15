@@ -70,6 +70,35 @@ fn graph(
     g
 }
 
+/// `graph` with the causaloids at `removed` taken out after every node and edge is in place,
+/// then frozen when `freeze` is set. A removed position stays unused, so a live index can sit at
+/// or above `number_nodes()` and a removed one below it.
+fn graph_with_removed(
+    n: usize,
+    removed: &[usize],
+    edges: &[(usize, usize)],
+    freeze: bool,
+) -> CausaloidGraph<BaseCausaloid<f64, bool>> {
+    let mut g = graph(n, edges, false);
+    for &r in removed {
+        g.remove_causaloid(r).unwrap();
+    }
+    if freeze {
+        g.freeze();
+    }
+    g
+}
+
+/// The `d × d` identity.
+fn identity(d: usize) -> CausalTensor<C> {
+    mat(
+        (0..d * d)
+            .map(|k| if k % (d + 1) == 0 { c(1.) } else { c(0.) })
+            .collect(),
+        d,
+    )
+}
+
 /// Two commuting factors on one leg.
 fn commuting_pair() -> (ProcessFactors<f64>, FactorSupports) {
     let mut pf = ProcessFactors::new();
@@ -141,27 +170,68 @@ fn test_construction_validates_and_names_the_offending_factor() {
 }
 
 #[test]
-fn test_construction_from_a_graph_rejects_unfrozen_and_out_of_range() {
+fn test_construction_from_an_unfrozen_graph_yields_no_hypothesis() {
     let mut pf = ProcessFactors::<f64>::new();
     pf.insert(0, sigma_z());
     let unfrozen = graph(2, &[(0, 1)], false);
-    assert!(matches!(
-        Hypothesis::structural_from_graph("u", &unfrozen, pf.clone())
-            .unwrap_err()
-            .0,
-        QuantumErrorEnum::CalculationError(_)
-    ));
+    match Hypothesis::structural_from_graph("u", &unfrozen, pf)
+        .unwrap_err()
+        .0
+    {
+        QuantumErrorEnum::CalculationError(msg) => assert!(msg.contains("frozen"), "{msg}"),
+        other => panic!("expected CalculationError, got {other:?}"),
+    }
+}
+
+#[test]
+fn test_a_factor_keyed_by_an_index_the_graph_never_issued_is_rejected() {
+    // Four causaloids at 0..4; index 9 was never issued, so it holds no causaloid. The message
+    // names node 9 and nothing about a range: a live index may sit above number_nodes().
     let frozen = graph(4, &[(0, 1)], true);
+    let mut pf = ProcessFactors::<f64>::new();
+    pf.insert(0, sigma_z());
     pf.insert(9, sigma_z());
     match Hypothesis::structural_from_graph("r", &frozen, pf)
         .unwrap_err()
         .0
     {
-        QuantumErrorEnum::CalculationError(msg) => {
-            assert!(msg.contains("node 9") && msg.contains("0..4"), "{msg}")
-        }
+        QuantumErrorEnum::CalculationError(msg) => assert!(msg.contains("node 9"), "{msg}"),
         other => panic!("expected CalculationError, got {other:?}"),
     }
+}
+
+#[test]
+fn test_a_factor_keyed_by_a_removed_index_below_a_live_one_is_rejected() {
+    // Five causaloids, index 1 removed before the freeze: number_nodes() is 4 and 1 < 4, yet
+    // index 1 holds no causaloid. A check written as `node >= number_nodes()` admits it.
+    let frozen = graph_with_removed(5, &[1], &[(0, 4)], true);
+    assert_eq!(frozen.number_nodes(), 4);
+    let mut pf = ProcessFactors::<f64>::new();
+    pf.insert(1, sigma_z());
+    match Hypothesis::structural_from_graph("removed", &frozen, pf)
+        .unwrap_err()
+        .0
+    {
+        QuantumErrorEnum::CalculationError(msg) => assert!(msg.contains("node 1"), "{msg}"),
+        other => panic!("expected CalculationError, got {other:?}"),
+    }
+}
+
+#[test]
+fn test_a_factor_above_number_nodes_on_a_live_index_is_accepted() {
+    // Five causaloids, index 1 removed before the freeze: number_nodes() is 4 and the live index
+    // 4 is not below it. The parents of 4 are 0 and 3, so under the flat convention
+    // support(4) = {0, 3, 4}, three qubits, dim 2·2·2 = 8; the factor at 4 is 8 × 8.
+    let frozen = graph_with_removed(5, &[1], &[(0, 4), (3, 4)], true);
+    assert_eq!(frozen.number_nodes(), 4);
+    let mut pf = ProcessFactors::<f64>::new();
+    pf.insert(0, sigma_z());
+    pf.insert(4, identity(8));
+    let h = Hypothesis::structural_from_graph("live above the count", &frozen, pf).unwrap();
+    let fs = h.supports().unwrap();
+    assert_eq!(fs.support(0), Some([0].as_slice()));
+    assert_eq!(fs.support(4), Some([0, 3, 4].as_slice()));
+    assert_eq!(fs.support_dim(4), Some(8));
 }
 
 // ---------------------------------------------------------------------------
