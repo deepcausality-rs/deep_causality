@@ -64,9 +64,7 @@ impl Teloidable for TeloidGraph {
         parent_idx: usize,
         child_idx: usize,
     ) -> Result<(), DeonticError> {
-        self.graph
-            .add_edge(parent_idx, child_idx, TeloidRelation::Inherits)
-            .map_err(DeonticError::from)
+        self.add_relation(parent_idx, child_idx, TeloidRelation::Inherits)
     }
 
     /// Adds a defeasance edge between a defeater teloid and a defeated teloid.
@@ -85,8 +83,6 @@ impl Teloidable for TeloidGraph {
         defeater_idx: usize,
         defeated_idx: usize,
     ) -> Result<(), DeonticError> {
-        self.graph
-            .add_edge(defeater_idx, defeated_idx, TeloidRelation::Defeats)
-            .map_err(DeonticError::from)
+        self.add_relation(defeater_idx, defeated_idx, TeloidRelation::Defeats)
     }
 }

@@ -81,6 +81,18 @@ fn test_graph_is_cyclic() {
 }
 
 #[test]
+fn test_conflicting_relation() {
+    let error = DeonticError::ConflictingRelation { from: 3, to: 7 };
+    assert_eq!(
+        format!("{}", error),
+        "Teloid pair 3 -> 7 already carries the other relation; a pair holds one relation"
+    );
+    let cloned_error = error.clone();
+    assert_eq!(error, cloned_error);
+    assert!(error.source().is_none());
+}
+
+#[test]
 fn test_teloid_not_found() {
     let error = DeonticError::TeloidNotFound { id: 42 };
     assert_eq!(

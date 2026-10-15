@@ -29,6 +29,10 @@ pub enum DeonticError {
     /// lead to infinite loops in reasoning.
     GraphIsCyclic(GraphError),
 
+    /// A pair of teloids already carries the other relation. A norm cannot both inherit from
+    /// and defeat another; the second relation is refused so the contradiction is seen.
+    ConflictingRelation { from: usize, to: usize },
+
     /// A TeloidID exists in the graph or tag index but not in the TeloidStore,
     /// indicating a critical state inconsistency.
     TeloidNotFound { id: TeloidID },
@@ -80,6 +84,12 @@ impl fmt::Display for DeonticError {
                 write!(
                     f,
                     "Deontic inference failed: The TeloidGraph contains a cycle and is invalid."
+                )
+            }
+            DeonticError::ConflictingRelation { from, to } => {
+                write!(
+                    f,
+                    "Teloid pair {from} -> {to} already carries the other relation; a pair holds one relation"
                 )
             }
             DeonticError::TeloidNotFound { id } => {
