@@ -154,14 +154,14 @@ behaviour.
 
 ## 4. Measurement and close-out
 
-- [ ] 4.1 Run `cargo bench -p ultragraph` three times on the baseline machine; aggregate into
+- [x] 4.1 Run `cargo bench -p ultragraph` three times on the baseline machine; aggregate into
       `openspec/notes/ultragraph/BenchAfter/BenchAfter.md` with the baseline's method and table layout
-- [ ] 4.2 Compare every row with `BenchBefore.md`; explain each mean that moves beyond the baseline
+- [x] 4.2 Compare every row with `BenchBefore.md`; explain each mean that moves beyond the baseline
       row's spread by a decision of design D9, and treat an unexplained move in a frozen read or an
       algorithm as a defect to fix before close-out
-- [ ] 4.3 Run the full workspace: `make format && make fix`, `make build`, `bazel test //...`,
+- [x] 4.3 Run the full workspace: `make format && make fix`, `make build`, `bazel test //...`,
       `make check_examples`
-- [ ] 4.4 Note for archive: the `context-store-crate-identity` Purpose line still says Tier 0 and
+- [x] 4.4 Note for archive: the `context-store-crate-identity` Purpose line still says Tier 0 and
       dependency-free; update it when the change is archived
-- [ ] 4.5 Commit message for group 4, with the migration notes for external callers (the `EdgeKey`
+- [x] 4.5 Commit message for group 4, with the migration notes for external callers (the `EdgeKey`
       bound, permanent positions, keyed edge semantics, `Merge` as the default) in its body
