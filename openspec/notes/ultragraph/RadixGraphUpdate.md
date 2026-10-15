@@ -213,7 +213,9 @@ keeps them the same way, as a cleared mask bit and an empty row.
 **Reclaiming space is explicit.** `compact_ids(&mut self) -> Vec<Option<usize>>` drops tombstones,
 renumbers live nodes in order and returns, for each old position, its new position or `None`. It
 lives on `DynamicGraph`, where tombstones are created, and `UltraGraphContainer` delegates to it in
-the dynamic state. A caller that wants the space back calls it and remaps its own indices with the
+the dynamic state, returning `Result<Vec<Option<usize>>, GraphError>`: `GraphIsFrozen` in the Frozen
+state and `GraphIsLive` in the Live state (§Design 7). It rebuilds every maintained view (§Design 6)
+at the new positions. A caller that wants the space back calls it and remaps its own indices with the
 table: the work `contextuable_graph.rs:173-207` does today, moved behind a call the caller makes on
 purpose.
 
@@ -291,7 +293,10 @@ Both candidates implement §1–3; they differ in how a node's edges are held.
   `EdgeArray { snapshot: Vec<(usize, W)>, log: Vec<LogEntry<W>> }`, with
   `LogEntry { target: usize, op: EdgeOp<W> }` and `EdgeOp::{Put(W), Remove(W::Key), RemoveAll}`; an enum
   carries removal in place of the paper's NULL weight. Inserts, updates and removals append one
-  entry: amortised O(1). When `log.len()` reaches `max(snapshot.len(), MIN_LOG)`, the node compacts
+  entry, amortised O(1) by RadixGraph's Theorem 2, which covers blind writes. The exact
+  `number_edges` and the `EdgeNotFoundError` of §2 need a lookup of `(target, key)` first: a binary
+  search of the snapshot, sorted by target then key, and a scan of the log, O(log d + L) for a log of
+  length L. When `log.len()` reaches `max(snapshot.len(), MIN_LOG)`, the node compacts
   its own array: a newest-first scan of the log decides each `(target, key)` once, through a bitset
   the graph owns and reuses over targets plus a comparison of keys among the entries for one
   target; the latest `Put` survives, a `Remove` or `RemoveAll` suppresses older entries, and snapshot
@@ -523,12 +528,11 @@ variant breaks an exhaustive `match` outside the crate; no crate in this workspa
 `is_frozen` stays true for Frozen only. DeepCausality's callers never enter Live, so their checks of
 `is_frozen` before running an algorithm keep their meaning.
 
-**Live must earn its place.** If the benchmark adopts snapshot-log arrays, the Dynamic state already
-holds sorted snapshot rows plus a short log per node, and algorithms could read them by merging the
-log. Live would then differ from Dynamic by packing rows into one arena instead of one allocation
-per node. The benchmark runs the algorithms in all three states. If Live is not clearly faster than
-Dynamic at reading and clearly cheaper than Frozen to keep current, the smaller design is two states
-with algorithms on Dynamic.
+**Live must earn its place.** Live replaces the workflow of writing in the Dynamic state and freezing
+before each analysis, so the benchmark measures that workflow: k = 1, 16 and 256 keyed writes
+followed by `strongly_connected_components`, in Live and as Dynamic → `freeze` → algorithm →
+`unfreeze`. A linear algorithm makes the avoided freeze a large share of the work. No algorithm runs
+over the Dynamic rows.
 
 ### Invariants
 
@@ -593,8 +597,9 @@ operations with the same semantics.
 - outbound and inbound traversal in the dynamic state;
 - `freeze` and `unfreeze`;
 - memory per edge, with `MIN_LOG` swept;
-- the algorithms in the Live and the Frozen states, and over the Dynamic state's rows with their
-  logs merged: whole-graph sweeps (every row in order) and walks from one source (rows in random
+- k = 1, 16 and 256 keyed writes followed by `strongly_connected_components`, in Live and as
+  Dynamic → `freeze` → algorithm → `unfreeze`;
+- the algorithms in the Live and the Frozen states: whole-graph sweeps (every row in order) and walks from one source (rows in random
   order), on deep, wide walks as well as short ones;
 - updates in the Live state: in-place writes, row rebuilds, and the transitions of §Design 7;
 - maintained views: the cost a mutation pays with 0, 1, 4 and 16 registered views.
@@ -602,12 +607,12 @@ operations with the same semantics.
 Graph shapes: the shapes DeepCausality's tests build, and one power-law graph.
 
 **Decision rules:**
-- Snapshot-log arrays replace Vec lists if they come within about 5 % of them on building,
-  traversal and `freeze`, and are clearly faster on update and removal. Otherwise Vec lists stay,
-  with §1–3.
-- Live stays if its algorithms run clearly faster than over the Dynamic state's rows and it stays
-  current at clearly less cost than re-freezing. Otherwise the graph keeps two states, Dynamic and
-  Frozen, with algorithms also over the Dynamic rows, and maintained views use the Dynamic layout.
+- Snapshot-log arrays replace Vec lists if, at a `MIN_LOG` that keeps their memory per edge within
+  1.25 times the Vec lists', they come within about 5 % of them on building, traversal and
+  `freeze`, and are clearly faster on update and removal. Otherwise Vec lists stay, with §1–3.
+- Live stays if, for k = 1, 16 and 256 keyed writes followed by `strongly_connected_components`, it
+  is clearly faster than Dynamic → `freeze` → algorithm → `unfreeze`. Otherwise the work stops for
+  Marvin's decision before Live is removed or maintained views are built.
 
 **API impact, under either outcome:**
 - Signatures: `W` gains the bound `EdgeKey`, from `ultragraph_traits`; `remove_edge_keyed`,
