@@ -172,3 +172,90 @@ fn test_out_of_range_state_writer_rejected() {
     );
     assert!(!g.is_frozen(), "a failed check must roll the freeze back");
 }
+
+// --- the single-writer check over permanent positions ---
+
+/// The chain 0 → 1 → 2 → 3 with 0 → 2 beside it, index 1 removed; dynamic. The live causaloid 3
+/// sits at an index >= `number_nodes()` = 3, and no join remains: 2 has the single parent 0 once
+/// 1 is gone, and 3 has the single parent 2.
+fn build_chain_with_removed_middle() -> DiamondGraph {
+    let mut g = CausaloidGraph::new(0);
+    for (id, name) in [(0, "0"), (1, "1"), (2, "2"), (3, "3")] {
+        let index = g.add_causaloid(Causaloid::new(id, identity, name)).unwrap();
+        assert_eq!(index, id as usize);
+    }
+    g.add_edge(0, 1).unwrap();
+    g.add_edge(1, 2).unwrap();
+    g.add_edge(2, 3).unwrap();
+    g.add_edge(0, 2).unwrap();
+    g.remove_causaloid(1).unwrap();
+    g
+}
+
+/// A declared writer is validated by presence, not by `number_nodes()`: index 3 holds a causaloid
+/// although only three causaloids remain.
+#[test]
+fn test_a_state_writer_above_number_nodes_is_accepted() {
+    let mut g = build_chain_with_removed_middle();
+    assert_eq!(g.number_nodes(), 3);
+    assert!(g.contains_causaloid(3));
+
+    g.freeze_verified(&[3])
+        .expect("a writer at a live index above number_nodes is accepted");
+    assert!(g.is_frozen());
+}
+
+/// A declared writer on a removed index names no causaloid: the freeze refuses it, naming the
+/// index, and rolls back.
+#[test]
+fn test_a_state_writer_on_a_removed_index_is_refused() {
+    let mut g = build_chain_with_removed_middle();
+    assert!(!g.contains_causaloid(1));
+
+    let err = g
+        .freeze_verified(&[1])
+        .expect_err("a writer on a removed index must be refused");
+    assert!(
+        err.to_string().contains("Invalid state-writer index 1"),
+        "unexpected error: {err}"
+    );
+    assert!(!g.is_frozen(), "a failed check must roll the freeze back");
+}
+
+/// Every join whose index holds a causaloid is inspected, including one at an index >=
+/// `number_nodes()`: a diamond root(1) -> A(2), B(3) -> join(4) with index 0 removed, so four
+/// causaloids remain and the join sits at 4.
+#[test]
+fn test_a_join_above_number_nodes_is_inspected() {
+    let mut g: DiamondGraph = CausaloidGraph::new(0);
+    let dummy = g
+        .add_causaloid(Causaloid::new(0, identity, "removed"))
+        .unwrap();
+    let root = g
+        .add_causaloid(Causaloid::new(1, identity, "root"))
+        .unwrap();
+    let a = g.add_causaloid(Causaloid::new(2, add_one, "A")).unwrap();
+    let b = g.add_causaloid(Causaloid::new(3, add_ten, "B")).unwrap();
+    let join = g
+        .add_causaloid(Causaloid::new(4, identity, "join"))
+        .unwrap();
+    assert_eq!([dummy, root, a, b, join], [0, 1, 2, 3, 4]);
+    g.add_edge(root, a).unwrap();
+    g.add_edge(root, b).unwrap();
+    g.add_edge(a, join).unwrap();
+    g.add_edge(b, join).unwrap();
+    g.remove_causaloid(dummy).unwrap();
+    assert_eq!(g.number_nodes(), 4);
+    assert!(join >= g.number_nodes());
+
+    // Exclusive writers on both branches: A is in A's cone only, B in B's cone only.
+    let err = g
+        .freeze_verified(&[a, b])
+        .expect_err("two writing branches must be rejected");
+    assert!(
+        err.to_string()
+            .contains("Single-writer violation at join node 4"),
+        "unexpected error: {err}"
+    );
+    assert!(!g.is_frozen(), "a failed check must roll the freeze back");
+}

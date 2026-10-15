@@ -157,7 +157,9 @@ where
             return PropagatingEffect::from_error(CausalityError::GraphContainsCycle());
         }
 
-        let n_nodes = self.number_nodes();
+        // Per-index bookkeeping is sized by the slot bound: a live index can sit at or above
+        // `number_nodes()` once a lower causaloid was removed.
+        let n_nodes = self.index_bound();
 
         // Evaluation composes rounds sequentially: a round folds the reachable acyclic sub-DAG with
         // labeled fan-in; a `RelayTo` ends the round and starts a fresh one at the relay target with

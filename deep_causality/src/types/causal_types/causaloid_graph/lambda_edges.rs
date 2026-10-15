@@ -15,7 +15,8 @@
 //! `Nat → Nat → Option Λ`, intrinsically enumeration-order-free).
 //!
 //! Slots are keyed by **intrinsic edge identity** — the `(source, target)` node-index pair — and
-//! never by enumeration or insertion order. An edge with no slot behaves as the identity Λ, so an
+//! never by enumeration or insertion order. Node indices are permanent across removal, `freeze`
+//! and `unfreeze`, so a key stays on its edge; only `compact_ids` and `clear` renumber. An edge with no slot behaves as the identity Λ, so an
 //! undecorated graph evaluates exactly as before. The decorated join itself is applied by the
 //! Stage-4 graph algebra (`core.causaloid.graph_fold_order_invariant`); this type is the storage
 //! and lookup substrate.

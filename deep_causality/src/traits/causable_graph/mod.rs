@@ -19,7 +19,9 @@ pub(crate) enum Reach {
     Ancestors,
 }
 
-/// The set of nodes reachable from `start`, inclusive of `start`, as a `n_nodes`-length mask.
+/// The set of nodes reachable from `start`, inclusive of `start`, as a `slot_bound`-length mask.
+/// `slot_bound` is `index_bound()`, one past the highest live index, so every position an edge
+/// iterator yields fits; sizing by `number_nodes()` would not, once a lower causaloid was removed.
 ///
 /// One body for the three pre-passes that used to open-code this traversal: the ancestor cone in
 /// [`graph::CausableGraphReasoning::check_single_writer`] and the descendant pre-passes in both
@@ -34,10 +36,10 @@ pub(crate) enum Reach {
 /// established behaviour of all three call sites and is reproduced here on purpose, not inherited by
 /// accident.
 ///
-/// **An out-of-range `start` panics.** `seen[start]` indexes directly, as all three copies did.
-/// Returning an empty mask instead would be a new behaviour at a site whose callers have always
-/// validated the index before calling — `check_single_writer` rejects out-of-range writers itself,
-/// and both engines derive `round_start` from the graph.
+/// **A `start` at or past `slot_bound` panics.** `seen[start]` indexes directly, as all three copies
+/// did. Returning an empty mask instead would be a new behaviour at a site whose callers have
+/// always validated the index before calling — `check_single_writer` rejects writers that hold no
+/// causaloid, and both engines check `contains_causaloid` on the start and on every relay target.
 ///
 /// # Direction, not a closure
 ///
@@ -47,12 +49,12 @@ pub(crate) enum Reach {
 pub(crate) fn reachable_mask<T: Clone>(
     graph: &CausalGraph<T>,
     start: usize,
-    n_nodes: usize,
+    slot_bound: usize,
     reach: Reach,
 ) -> Vec<bool> {
     use ultragraph::GraphTraversal;
 
-    let mut seen = vec![false; n_nodes];
+    let mut seen = vec![false; slot_bound];
     seen[start] = true;
     let mut stack = vec![start];
     while let Some(node) = stack.pop() {
@@ -85,7 +87,7 @@ pub(crate) fn reachable_mask<T: Clone>(
 #[cfg(test)]
 mod reachable_mask_tests {
     use super::{CausalGraph, Reach, reachable_mask};
-    use ultragraph::GraphMut;
+    use ultragraph::{GraphMut, GraphView};
 
     /// `0 → 1 → 2`, plus an isolated `3`. Frozen, since the traversal reads edges.
     fn chain() -> CausalGraph<usize> {
@@ -157,6 +159,46 @@ mod reachable_mask_tests {
         assert_eq!(
             reachable_mask(&g, 0, 4, Reach::Descendants),
             vec![true, false, false, false]
+        );
+    }
+
+    /// `0 → 1 → 2 → 3` with `0 → 2` beside it, node 1 removed before the freeze. Positions are
+    /// permanent, so the live nodes sit at 0, 2 and 3: `number_nodes` is 3 and `index_bound` is 4.
+    fn chain_with_removed_middle() -> CausalGraph<usize> {
+        let mut g: CausalGraph<usize> = CausalGraph::with_capacity(4, None);
+        for v in 0..4 {
+            g.add_node(v).unwrap();
+        }
+        g.add_edge(0, 1, 1u64).unwrap();
+        g.add_edge(1, 2, 1u64).unwrap();
+        g.add_edge(2, 3, 1u64).unwrap();
+        g.add_edge(0, 2, 1u64).unwrap();
+        g.remove_node(1).unwrap();
+        g.freeze();
+        g
+    }
+
+    #[test]
+    fn test_descendants_skip_a_removed_position_and_reach_past_number_nodes() {
+        // Mask sized by `index_bound` = 4. From 0: 2 through `0 → 2`, then 3 through `2 → 3`;
+        // position 1 holds no node and `0 → 1` is gone with it.
+        let g = chain_with_removed_middle();
+        assert_eq!(g.number_nodes(), 3);
+        assert_eq!(
+            reachable_mask(&g, 0, 4, Reach::Descendants),
+            vec![true, false, true, true]
+        );
+    }
+
+    #[test]
+    fn test_a_start_at_a_live_index_at_or_above_number_nodes_walks_its_ancestors() {
+        // 3 >= number_nodes() = 3. Ancestors of 3: 2 through `2 → 3`, then 0 through `0 → 2`;
+        // the removed 1 is neither marked nor walked through.
+        let g = chain_with_removed_middle();
+        assert!(3 >= g.number_nodes());
+        assert_eq!(
+            reachable_mask(&g, 3, 4, Reach::Ancestors),
+            vec![true, false, true, true]
         );
     }
 }
