@@ -62,6 +62,13 @@ where
     }
 
     /// Returns the number of edges in the graph.
+    fn contains_edge_keyed(&self, a: usize, b: usize, key: W::Key) -> bool {
+        match &self.state {
+            GraphState::Static(g) => g.contains_edge_keyed(a, b, key),
+            GraphState::Dynamic(g) => g.contains_edge_keyed(a, b, key),
+        }
+    }
+
     fn number_edges(&self) -> usize {
         match &self.state {
             GraphState::Dynamic(g) => g.number_edges(),

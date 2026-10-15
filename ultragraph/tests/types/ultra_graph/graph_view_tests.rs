@@ -204,3 +204,171 @@ fn test_a_frozen_tombstone_is_absent() {
     payloads.sort_unstable();
     assert_eq!(payloads, vec!["A", "C", "D"]);
 }
+
+// --- Keyed edge reads (spec: ultragraph-keyed-edges) ---
+
+/// The two-variant kind that keys the `Keyed` payload.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+enum Kind {
+    #[default]
+    A,
+    B,
+}
+
+/// A payload whose kind identifies the edge and whose weight is data.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+struct Keyed {
+    kind: Kind,
+    weight: u32,
+}
+
+impl EdgeKey for Keyed {
+    type Key = Kind;
+
+    fn edge_key(&self) -> Self::Key {
+        self.kind
+    }
+}
+
+/// A payload identified by a 128-bit id; the note is data.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+struct Identified {
+    id: u128,
+    note: &'static str,
+}
+
+impl EdgeKey for Identified {
+    type Key = u128;
+
+    fn edge_key(&self) -> Self::Key {
+        self.id
+    }
+}
+
+#[test]
+fn test_keyed_and_unkeyed_tests_agree_with_the_edges_present() {
+    let mut g: UltraGraphWeighted<usize, Keyed> = UltraGraphWeighted::new();
+    g.add_node(0).unwrap();
+    g.add_node(1).unwrap();
+    g.add_edge(
+        0,
+        1,
+        Keyed {
+            kind: Kind::A,
+            weight: 1,
+        },
+    )
+    .unwrap();
+
+    // Dynamic state.
+    assert!(g.contains_edge(0, 1));
+    assert!(g.contains_edge_keyed(0, 1, Kind::A));
+    assert!(!g.contains_edge_keyed(0, 1, Kind::B));
+    assert!(!g.contains_edge(1, 0));
+    assert!(!g.contains_edge_keyed(1, 0, Kind::A));
+
+    g.freeze();
+
+    // Frozen state: the same four answers.
+    assert!(g.contains_edge(0, 1));
+    assert!(g.contains_edge_keyed(0, 1, Kind::A));
+    assert!(!g.contains_edge_keyed(0, 1, Kind::B));
+    assert!(!g.contains_edge(1, 0));
+    assert!(!g.contains_edge_keyed(1, 0, Kind::A));
+}
+
+/// Row K: an identity-keyed payload through add, remove, contains, freeze and traversal.
+#[test]
+fn test_an_identity_keyed_payload() {
+    // Ids above `u64::MAX` so that the key is used at its full width.
+    let first = 1_u128 << 100;
+    let second = (1_u128 << 100) + 1;
+    let absent = (1_u128 << 100) + 2;
+
+    let mut g: UltraGraphWeighted<&str, Identified> = UltraGraphWeighted::new();
+    g.add_node("source").unwrap(); // 0
+    g.add_node("target").unwrap(); // 1
+
+    g.add_edge(
+        0,
+        1,
+        Identified {
+            id: first,
+            note: "first",
+        },
+    )
+    .unwrap();
+    g.add_edge(
+        0,
+        1,
+        Identified {
+            id: second,
+            note: "second",
+        },
+    )
+    .unwrap();
+    assert_eq!(g.number_edges(), 2);
+
+    // Adding the first id again replaces its note and adds no edge.
+    g.add_edge(
+        0,
+        1,
+        Identified {
+            id: first,
+            note: "first, revised",
+        },
+    )
+    .unwrap();
+    assert_eq!(g.number_edges(), 2);
+    let notes: Vec<&str> = {
+        let mut edges = g.get_edges(0).unwrap();
+        edges.sort_by_key(|(_, payload)| payload.id);
+        edges.into_iter().map(|(_, payload)| payload.note).collect()
+    };
+    assert_eq!(notes, vec!["first, revised", "second"]);
+
+    assert!(g.contains_edge(0, 1));
+    assert!(g.contains_edge_keyed(0, 1, first));
+    assert!(g.contains_edge_keyed(0, 1, second));
+    assert!(!g.contains_edge_keyed(0, 1, absent));
+
+    // Removing one id leaves the other.
+    assert_eq!(g.remove_edge_keyed(0, 1, first), Ok(()));
+    assert_eq!(
+        g.remove_edge_keyed(0, 1, absent),
+        Err(GraphError::EdgeNotFoundError {
+            source: 0,
+            target: 1
+        })
+    );
+    assert_eq!(g.number_edges(), 1);
+    assert!(!g.contains_edge_keyed(0, 1, first));
+    assert!(g.contains_edge_keyed(0, 1, second));
+
+    // Dynamic traversal lists the one remaining edge.
+    let out: Vec<usize> = g.outbound_edges(0).unwrap().collect();
+    assert_eq!(out, vec![1]);
+    let inbound: Vec<usize> = g.inbound_edges(1).unwrap().collect();
+    assert_eq!(inbound, vec![0]);
+
+    g.freeze();
+
+    assert_eq!(g.number_edges(), 1);
+    assert!(g.contains_edge(0, 1));
+    assert!(!g.contains_edge_keyed(0, 1, first));
+    assert!(g.contains_edge_keyed(0, 1, second));
+    assert_eq!(
+        g.get_edges(0).unwrap(),
+        vec![(
+            1,
+            &Identified {
+                id: second,
+                note: "second"
+            }
+        )]
+    );
+    let out: Vec<usize> = g.outbound_edges(0).unwrap().collect();
+    assert_eq!(out, vec![1]);
+    let inbound: Vec<usize> = g.inbound_edges(1).unwrap().collect();
+    assert_eq!(inbound, vec![0]);
+}

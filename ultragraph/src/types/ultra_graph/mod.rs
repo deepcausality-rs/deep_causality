@@ -12,8 +12,10 @@ mod graph_algo;
 mod graph_compact;
 mod graph_evolve;
 mod graph_mut;
+mod graph_project;
 mod graph_traversal;
 mod graph_view;
+mod traversal_iter;
 
 pub type UltraGraph<T> = UltraGraphContainer<T, ()>;
 pub type UltraGraphWeighted<T, W> = UltraGraphContainer<T, W>;

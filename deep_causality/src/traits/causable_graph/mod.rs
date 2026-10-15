@@ -31,10 +31,9 @@ pub(crate) enum Reach {
 /// # Two behaviours preserved deliberately
 ///
 /// **A failed edge lookup stops the traversal rather than propagating.** The underlying graph
-/// returns an error for a dynamic (not-frozen) graph, and every copy this replaces wrapped the
-/// lookup in `if let Ok(..)`, so such a graph yields no edges and the walk simply ends. That is the
-/// established behaviour of all three call sites and is reproduced here on purpose, not inherited by
-/// accident.
+/// answers traversal in both states and fails a lookup only at a position holding no node, which
+/// the walk never reaches from a live start; every copy this replaces wrapped the lookup in
+/// `if let Ok(..)`, and that shape is kept.
 ///
 /// **A `start` at or past `slot_bound` panics.** `seen[start]` indexes directly, as all three copies
 /// did. Returning an empty mask instead would be a new behaviour at a site whose callers have
@@ -147,18 +146,20 @@ mod reachable_mask_tests {
     }
 
     #[test]
-    fn test_a_dynamic_graph_yields_no_edges_and_stops_at_the_start() {
-        // Not frozen: the edge lookup fails and the traversal ends, marking only the start. This
-        // is the behaviour all three replaced copies had through `if let Ok(..)`, preserved here
-        // deliberately rather than inherited.
+    fn test_a_dynamic_graph_yields_its_edges() {
+        // Not frozen: the dynamic adjacency answers the edge lookup, so the walk from `0` on the
+        // chain `0 → 1 → 2` with an isolated `3` expands exactly as it does on the frozen chain:
+        // `2` is reached only through `1`, and `3` is not reached.
         let mut g: CausalGraph<usize> = CausalGraph::with_capacity(4, None);
         for v in 0..4 {
             g.add_node(v).unwrap();
         }
         g.add_edge(0, 1, 1u64).unwrap();
+        g.add_edge(1, 2, 1u64).unwrap();
+        assert!(!g.is_frozen());
         assert_eq!(
             reachable_mask(&g, 0, 4, Reach::Descendants),
-            vec![true, false, false, false]
+            vec![true, true, true, false]
         );
     }
 

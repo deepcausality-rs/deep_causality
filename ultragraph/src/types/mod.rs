@@ -5,5 +5,7 @@
 
 #![forbid(unsafe_code)]
 
+pub mod parallel_edges;
+pub mod projection_view;
 pub mod storage;
 pub mod ultra_graph;

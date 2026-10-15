@@ -3,10 +3,13 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{GraphError, GraphView};
+use crate::{EdgeKey, GraphError, GraphView};
 use alloc::vec::Vec;
 
-pub trait StructuralGraphAlgorithms<N, W>: GraphView<N, W> {
+pub trait StructuralGraphAlgorithms<N, W>: GraphView<N, W>
+where
+    W: EdgeKey,
+{
     /// Finds all Strongly Connected Components in the graph.
     fn strongly_connected_components(&self) -> Result<Vec<Vec<usize>>, GraphError>;
 

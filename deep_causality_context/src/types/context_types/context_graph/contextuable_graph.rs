@@ -126,13 +126,17 @@ where
         self.base_context.contains_edge(a, b)
     }
 
-    /// Returns the relation the edge from `a` to `b` carries, or `None` when no such edge exists.
+    /// Returns the lowest relation among the edges from `a` to `b`, or `None` when no such edge
+    /// exists.
     fn get_edge(&self, a: usize, b: usize) -> Option<&RelationKind> {
+        // The lowest kind of the pair, so the answer is the same in both states: the frozen
+        // adjacency is sorted by key, the dynamic one is in insertion order.
         self.base_context
             .get_edges(a)?
             .into_iter()
-            .find(|(target, _)| *target == b)
+            .filter(|(target, _)| *target == b)
             .map(|(_, weight)| weight)
+            .min()
     }
 
     /// Removes an edge between two nodes.
@@ -206,9 +210,6 @@ where
 /// The context's account of a failed neighbour listing.
 fn traversal_error(error: GraphError, index: usize) -> ContextIndexError {
     ContextIndexError(match error {
-        GraphError::GraphNotFrozen => {
-            "Cannot list neighbours. The context is not frozen; call freeze first".to_string()
-        }
         GraphError::NodeNotFound(_) => {
             format!("Cannot list neighbours. No node at index {index}")
         }

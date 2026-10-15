@@ -10,6 +10,7 @@ mod default;
 mod graph_compact;
 mod graph_freeze;
 mod graph_mut;
+mod graph_traversal;
 mod graph_view;
 mod parts;
 
@@ -33,8 +34,15 @@ where
     nodes: Vec<Option<N>>,
 
     // Adjacency list: A vector where each index corresponds to a source node,
-    // and the value is a list of its outgoing edges.
+    // and the value is a list of its outgoing edges, in insertion order.
     edges: Vec<Vec<(usize, W)>>,
+
+    // The edges into each node as `(source, weight)`, so traversal and removal work in both
+    // directions without a freeze. Kept in step with `edges` by every mutation.
+    backward: Vec<Vec<(usize, W)>>,
+
+    // The number of edges, every one joining two live nodes.
+    live_edges: usize,
 
     // Index of the designated root node.
     root_index: Option<usize>,
@@ -71,6 +79,8 @@ where
             num_edges_per_node: None,
             nodes: Vec::new(),
             edges: Vec::new(),
+            backward: Vec::new(),
+            live_edges: 0,
             root_index: None,
         }
     }
@@ -98,6 +108,8 @@ where
             num_edges_per_node,
             nodes: Vec::with_capacity(num_nodes),
             edges: Vec::with_capacity(num_nodes),
+            backward: Vec::with_capacity(num_nodes),
+            live_edges: 0,
             root_index: None,
         }
     }
@@ -107,17 +119,34 @@ impl<N, W> DynamicGraph<N, W>
 where
     W: Clone + Default + EdgeKey,
 {
-    // Internal helper for unfreeze
+    // Internal helper for unfreeze and `from_parts`: the backward lists and the edge count are
+    // derived from the forward lists.
     pub(crate) fn construct(
         nodes: Vec<Option<N>>,
         edges: Vec<Vec<(usize, W)>>,
         root_index: Option<usize>,
     ) -> Self {
-        Self {
+        let mut graph = Self {
             num_edges_per_node: None,
             nodes,
             edges,
+            backward: Vec::new(),
+            live_edges: 0,
             root_index,
+        };
+        graph.rebuild_backward();
+        graph
+    }
+
+    /// Rebuilds the backward lists and the edge count from the forward lists.
+    pub(crate) fn rebuild_backward(&mut self) {
+        self.backward = (0..self.edges.len()).map(|_| Vec::new()).collect();
+        self.live_edges = 0;
+        for (source, edge_list) in self.edges.iter().enumerate() {
+            for (target, weight) in edge_list {
+                self.backward[*target].push((source, weight.clone()));
+                self.live_edges += 1;
+            }
         }
     }
 }

@@ -8,6 +8,7 @@ pub mod graph_algo;
 pub mod graph_mut;
 pub mod graph_traversal;
 pub mod graph_view;
+pub mod projection;
 
 pub mod graph_algo_centrality;
 pub mod graph_algo_pathfinder;

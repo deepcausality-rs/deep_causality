@@ -298,3 +298,53 @@ fn test_centrality_invalid_pathway_nodes() {
         .unwrap();
     assert!(pbc.iter().all(|&(_, score)| score == 0.0)); // All scores should be 0.0 as no valid paths
 }
+
+/// A pathway through a diamond: the two shortest paths from 0 to 3 pass one through 1 and one
+/// through 2, so each carries half the pathway's dependency.
+#[test]
+fn test_pathway_betweenness_splits_a_diamond_in_halves() {
+    let mut g = UltraGraph::new();
+    for payload in 0..4 {
+        g.add_node(payload).unwrap();
+    }
+    for (a, b) in [(0, 1), (0, 2), (1, 3), (2, 3)] {
+        g.add_edge(a, b, ()).unwrap();
+    }
+    g.freeze();
+
+    let scores = g
+        .pathway_betweenness_centrality(&[(0, 3)], true, false)
+        .unwrap();
+    let score_of = |node: usize| scores.iter().find(|(n, _)| *n == node).unwrap().1;
+
+    // sigma(1) / sigma(3) * delta(3) = 1 / 2 * 1 = 1/2 for node 1, likewise for node 2; the
+    // endpoints earn nothing.
+    assert!((score_of(1) - 0.5).abs() < 1e-12);
+    assert!((score_of(2) - 0.5).abs() < 1e-12);
+    assert_eq!(score_of(0), 0.0);
+    assert_eq!(score_of(3), 0.0);
+}
+
+/// A pathway from a node to itself is valid and counts toward the normalisation: with the
+/// diamond pathway (0, 3) and the self-pathway (0, 0), the halves are divided by two pathways.
+#[test]
+fn test_a_self_pathway_counts_toward_the_normalisation() {
+    let mut g = UltraGraph::new();
+    for payload in 0..4 {
+        g.add_node(payload).unwrap();
+    }
+    for (a, b) in [(0, 1), (0, 2), (1, 3), (2, 3)] {
+        g.add_edge(a, b, ()).unwrap();
+    }
+    g.freeze();
+
+    let scores = g
+        .pathway_betweenness_centrality(&[(0, 3), (0, 0)], true, true)
+        .unwrap();
+    let score_of = |node: usize| scores.iter().find(|(n, _)| *n == node).unwrap().1;
+
+    // 1/2 from the diamond pathway, over 2 valid pathways: 1/4 for nodes 1 and 2. Counting
+    // the self-pathway as nothing would leave 1/2.
+    assert!((score_of(1) - 0.25).abs() < 1e-12);
+    assert!((score_of(2) - 0.25).abs() < 1e-12);
+}

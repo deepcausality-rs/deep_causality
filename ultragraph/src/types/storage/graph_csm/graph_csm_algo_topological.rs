@@ -3,11 +3,11 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{CsmGraph, EdgeKey, GraphError, GraphView, TopologicalGraphAlgorithms};
+use crate::types::storage::graph_csm::adjacency::Adjacency;
+use crate::{CsmGraph, EdgeKey, GraphError, TopologicalGraphAlgorithms};
 use alloc::collections::VecDeque;
 use alloc::vec;
 use alloc::vec::Vec;
-use core::slice;
 
 /// Private enum representing the state of a node during a DFS traversal.
 /// It is not part of the public API.
@@ -48,68 +48,7 @@ where
     /// - **Space Complexity:** O(V) for storing node states, predecessors, and the DFS stack.
     ///
     fn find_cycle(&self) -> Result<Option<Vec<usize>>, GraphError> {
-        let num_nodes = self.node_slots();
-        if num_nodes == 0 {
-            return Ok(None);
-        }
-
-        let mut states = vec![NodeState::Unvisited; num_nodes];
-        let mut predecessors = vec![None; num_nodes];
-
-        for i in 0..num_nodes {
-            if self.contains_node(i) && states[i] == NodeState::Unvisited {
-                // We use the concrete `slice::Iter` type to avoid Box and dynamic dispatch.
-                let mut stack: Vec<(usize, slice::Iter<'_, usize>)> = Vec::new();
-
-                // By accessing the internal fields directly, we bypass the opaque `impl Trait`
-                // returned by the `outbound_edges` trait method.
-                let start = self.forward_edges.offsets[i];
-                let end = self.forward_edges.offsets[i + 1];
-                let neighbors = self.forward_edges.targets[start..end].iter();
-
-                states[i] = NodeState::VisitingInProgress;
-                stack.push((i, neighbors));
-
-                while let Some((u_ref, neighbors)) = stack.last_mut() {
-                    let u = *u_ref;
-
-                    if let Some(&v) = neighbors.next() {
-                        if states[v] == NodeState::VisitingInProgress {
-                            // --- Cycle Found: Reconstruct the Path ---
-                            let mut path = vec![u];
-                            let mut current = u;
-
-                            while let Some(predecessor) = predecessors[current] {
-                                path.push(predecessor);
-                                if predecessor == v {
-                                    break;
-                                }
-                                current = predecessor;
-                            }
-                            path.reverse();
-                            path.push(v); // Make the cycle explicit: [v, ..., u, v]
-                            return Ok(Some(path));
-                        }
-
-                        if states[v] == NodeState::Unvisited {
-                            predecessors[v] = Some(u);
-                            states[v] = NodeState::VisitingInProgress;
-
-                            let v_start = self.forward_edges.offsets[v];
-                            let v_end = self.forward_edges.offsets[v + 1];
-                            let v_neighbors = self.forward_edges.targets[v_start..v_end].iter();
-                            stack.push((v, v_neighbors));
-                        }
-                    } else {
-                        // If the neighbor iterator is exhausted, we are done with this node.
-                        states[u] = NodeState::Visited;
-                        stack.pop();
-                    }
-                }
-            }
-        }
-
-        Ok(None) // No cycles found after checking all nodes.
+        find_cycle_impl(self)
     }
 
     /// Checks if the graph contains any directed cycles.
@@ -118,11 +57,7 @@ where
     /// making it a highly robust way to detect cycles in graphs of any size
     /// without risking a stack overflow.
     fn has_cycle(&self) -> Result<bool, GraphError> {
-        match self.topological_sort() {
-            Ok(Some(_)) => Ok(false),
-            Ok(None) => Ok(true),
-            Err(e) => Err(e),
-        }
+        has_cycle_impl(self)
     }
 
     /// Computes a topological sort of the graph using the iterative Kahn's algorithm.
@@ -135,52 +70,116 @@ where
     ///   vector contains the nodes in a valid topological order.
     /// - `None` if the graph contains a cycle, as a topological sort is not possible.
     fn topological_sort(&self) -> Result<Option<Vec<usize>>, GraphError> {
-        // Arrays are sized by position; the live count decides whether every node was sorted.
-        let live = self.number_nodes();
-        let num_nodes = self.node_slots();
-        if live == 0 {
-            // An empty graph is trivially sorted.
-            return Ok(Some(Vec::new()));
-        }
+        topological_sort_impl(self)
+    }
+}
 
-        // 1. Compute in-degrees for all nodes.
-        let mut in_degrees = vec![0; num_nodes];
-        for i in 0..num_nodes {
-            //  Access CSR arrays directly for max performance.
-            let start = self.forward_edges.offsets[i];
-            let end = self.forward_edges.offsets[i + 1];
-            for &neighbor in &self.forward_edges.targets[start..end] {
-                in_degrees[neighbor] += 1;
-            }
-        }
+/// Depth-first search over the passing edges. A parallel edge reaches a node in the same state
+/// as the first one did, so the result does not depend on the mode.
+pub(crate) fn find_cycle_impl<W, A: Adjacency<W>>(a: &A) -> Result<Option<Vec<usize>>, GraphError> {
+    let num_nodes = a.slots();
+    if num_nodes == 0 {
+        return Ok(None);
+    }
 
-        // 2. Initialize a queue with all nodes that have an in-degree of 0.
-        let mut queue: VecDeque<usize> = (0..num_nodes)
-            .filter(|&i| self.contains_node(i) && in_degrees[i] == 0)
-            .collect();
+    let mut states = vec![NodeState::Unvisited; num_nodes];
+    let mut predecessors = vec![None; num_nodes];
 
-        // 3. Process the queue.
-        let mut sorted_list = Vec::with_capacity(num_nodes);
-        while let Some(u) = queue.pop_front() {
-            sorted_list.push(u);
+    for i in 0..num_nodes {
+        if a.passes(i) && states[i] == NodeState::Unvisited {
+            let mut stack: Vec<(usize, _)> = Vec::new();
 
-            // For each neighbor of the dequeued node, decrement its in-degree.
-            //  Access CSR arrays directly.
-            let start = self.forward_edges.offsets[u];
-            let end = self.forward_edges.offsets[u + 1];
-            for &v in &self.forward_edges.targets[start..end] {
-                in_degrees[v] -= 1;
-                if in_degrees[v] == 0 {
-                    queue.push_back(v);
+            states[i] = NodeState::VisitingInProgress;
+            stack.push((i, a.out_edges(i)));
+
+            while let Some((u_ref, neighbors)) = stack.last_mut() {
+                let u = *u_ref;
+
+                if let Some((v, _)) = neighbors.next() {
+                    if states[v] == NodeState::VisitingInProgress {
+                        // --- Cycle Found: Reconstruct the Path ---
+                        let mut path = vec![u];
+                        let mut current = u;
+
+                        // A self-loop closes at `u` itself; any other cycle is walked back through
+                        // the predecessors until `v`.
+                        while current != v {
+                            let Some(predecessor) = predecessors[current] else {
+                                break;
+                            };
+                            path.push(predecessor);
+                            current = predecessor;
+                        }
+                        path.reverse();
+                        path.push(v); // Make the cycle explicit: [v, ..., u, v]
+                        return Ok(Some(path));
+                    }
+
+                    if states[v] == NodeState::Unvisited {
+                        predecessors[v] = Some(u);
+                        states[v] = NodeState::VisitingInProgress;
+                        stack.push((v, a.out_edges(v)));
+                    }
+                } else {
+                    // If the neighbor iterator is exhausted, we are done with this node.
+                    states[u] = NodeState::Visited;
+                    stack.pop();
                 }
             }
         }
+    }
 
-        // 4. Validate the result.
-        if sorted_list.len() == live {
-            Ok(Some(sorted_list))
-        } else {
-            Ok(None) // Cycle detected
+    Ok(None) // No cycles found after checking all nodes.
+}
+
+pub(crate) fn has_cycle_impl<W, A: Adjacency<W>>(a: &A) -> Result<bool, GraphError> {
+    topological_sort_impl(a).map(|order| order.is_none())
+}
+
+/// Kahn's algorithm over the passing edges. Every edge counts once in the in-degree it raises
+/// and once in the decrement that lowers it, so the result does not depend on the mode.
+pub(crate) fn topological_sort_impl<W, A: Adjacency<W>>(
+    a: &A,
+) -> Result<Option<Vec<usize>>, GraphError> {
+    // Arrays are sized by position; the passing count decides whether every node was sorted.
+    let live = a.passing_count();
+    let num_nodes = a.slots();
+    if live == 0 {
+        // An empty graph is trivially sorted.
+        return Ok(Some(Vec::new()));
+    }
+
+    // 1. Compute in-degrees for all nodes.
+    let mut in_degrees = vec![0; num_nodes];
+    for i in 0..num_nodes {
+        for (neighbor, _) in a.out_edges(i) {
+            in_degrees[neighbor] += 1;
         }
+    }
+
+    // 2. Initialize a queue with all nodes that have an in-degree of 0.
+    let mut queue: VecDeque<usize> = (0..num_nodes)
+        .filter(|&i| a.passes(i) && in_degrees[i] == 0)
+        .collect();
+
+    // 3. Process the queue.
+    let mut sorted_list = Vec::with_capacity(live);
+    while let Some(u) = queue.pop_front() {
+        sorted_list.push(u);
+
+        // For each neighbor of the dequeued node, decrement its in-degree.
+        for (v, _) in a.out_edges(u) {
+            in_degrees[v] -= 1;
+            if in_degrees[v] == 0 {
+                queue.push_back(v);
+            }
+        }
+    }
+
+    // 4. Validate the result.
+    if sorted_list.len() == live {
+        Ok(Some(sorted_list))
+    } else {
+        Ok(None) // Cycle detected
     }
 }

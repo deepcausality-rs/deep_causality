@@ -75,6 +75,13 @@ where
         }
     }
 
+    fn remove_edge_keyed(&mut self, a: usize, b: usize, key: W::Key) -> Result<(), GraphError> {
+        match &mut self.state {
+            GraphState::Dynamic(g) => g.remove_edge_keyed(a, b, key),
+            GraphState::Static(_) => Err(GraphError::GraphIsFrozen),
+        }
+    }
+
     /// Adds a new node and designates it as the root of the graph.
     ///
     /// # Errors

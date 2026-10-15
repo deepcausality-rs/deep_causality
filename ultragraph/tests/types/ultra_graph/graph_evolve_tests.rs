@@ -5,7 +5,6 @@
 
 use deep_causality_rand::{Rng, Xoshiro256};
 use std::collections::BTreeMap;
-use std::collections::btree_map::Entry;
 use std::fmt::Debug;
 use ultragraph::*;
 
@@ -59,38 +58,21 @@ fn test_freeze_graph_with_nodes_and_edges() {
     g.add_edge(n0, n2, 20).unwrap();
     g.add_edge(n1, n2, 30).unwrap();
     g.add_edge(n2, n3, 40).unwrap();
-    g.add_edge(n0, n1, 15).unwrap(); // Parallel edge
+    g.add_edge(n0, n1, 15).unwrap(); // `u64` has `Key = ()`: this replaces the weight 10
 
     g.freeze();
 
     assert_eq!(g.number_nodes(), 4);
-    assert_eq!(g.number_edges(), 5);
+    assert_eq!(g.number_edges(), 4);
 
     assert!(g.contains_edge(n0, n1));
     assert!(g.contains_edge(n0, n2));
     assert!(g.contains_edge(n1, n2));
     assert!(g.contains_edge(n2, n3));
 
-    // Check parallel edge
+    // One edge per ordered pair, sorted by target: (n0, n1, 15), (n0, n2, 20).
     let edges_from_n0 = g.get_edges(n0).unwrap();
-    assert_eq!(edges_from_n0.len(), 3); // (n0,n1,10), (n0,n2,20), (n0,n1,15)
-    let mut targets_from_n0: Vec<usize> = edges_from_n0.iter().map(|(t, _)| *t).collect();
-    targets_from_n0.sort_unstable();
-    assert_eq!(targets_from_n0, vec![n1, n1, n2]);
-
-    // Check specific edge weights (requires iterating, as `contains_edge` doesn't check weight)
-    let has_edge_0_1_10 = g
-        .get_edges(n0)
-        .unwrap()
-        .iter()
-        .any(|&(t, w)| t == n1 && w == &10);
-    let has_edge_0_1_15 = g
-        .get_edges(n0)
-        .unwrap()
-        .iter()
-        .any(|&(t, w)| t == n1 && w == &15);
-    assert!(has_edge_0_1_10);
-    assert!(has_edge_0_1_15);
+    assert_eq!(edges_from_n0, vec![(n1, &15), (n2, &20)]);
 }
 
 #[test]
@@ -313,7 +295,7 @@ fn test_unfreeze_graph_with_nodes_and_edges() {
     g.add_edge(n0, n2, 20).expect("Failed to add edge");
     g.add_edge(n1, n3, 30).expect("Failed to add edge");
     g.add_edge(n2, n3, 40).expect("Failed to add edge");
-    g.add_edge(n0, n1, 15).expect("Failed to add edge"); // Parallel edge
+    g.add_edge(n0, n1, 15).expect("Failed to add edge"); // replaces the weight 10
 
     g.freeze();
     assert!(g.is_frozen());
@@ -322,33 +304,22 @@ fn test_unfreeze_graph_with_nodes_and_edges() {
     assert!(!g.is_frozen());
 
     assert_eq!(g.number_nodes(), 4);
-    assert_eq!(g.number_edges(), 5);
+    assert_eq!(g.number_edges(), 4);
 
     assert!(g.contains_edge(n0, n1));
     assert!(g.contains_edge(n0, n2));
     assert!(g.contains_edge(n1, n3));
     assert!(g.contains_edge(n2, n3));
 
-    // Check parallel edge
-    let edges_from_n0 = g.get_edges(n0).unwrap();
-    assert_eq!(edges_from_n0.len(), 3); // (n0,n1,10), (n0,n2,20), (n0,n1,15)
-    let mut targets_from_n0: Vec<usize> = edges_from_n0.iter().map(|(t, _)| *t).collect();
-    targets_from_n0.sort_unstable();
-    assert_eq!(targets_from_n0, vec![n1, n1, n2]);
-
-    // Check specific edge weights (requires iterating, as `contains_edge` doesn't check weight)
-    let has_edge_0_1_10 = g
+    // One edge per ordered pair survives the round trip with its latest weight.
+    let mut edges_from_n0: Vec<(usize, u64)> = g
         .get_edges(n0)
         .unwrap()
-        .iter()
-        .any(|&(t, w)| t == n1 && w == &10);
-    let has_edge_0_1_15 = g
-        .get_edges(n0)
-        .unwrap()
-        .iter()
-        .any(|&(t, w)| t == n1 && w == &15);
-    assert!(has_edge_0_1_10);
-    assert!(has_edge_0_1_15);
+        .into_iter()
+        .map(|(t, w)| (t, *w))
+        .collect();
+    edges_from_n0.sort_unstable();
+    assert_eq!(edges_from_n0, vec![(n1, 15), (n2, 20)]);
 }
 
 #[test]
@@ -484,7 +455,7 @@ fn test_unfreeze_graph_with_complex_edges() {
     g.add_edge(n0, n2, 2).unwrap();
     g.add_edge(n1, n2, 3).unwrap();
     g.add_edge(n2, n3, 4).unwrap();
-    g.add_edge(n0, n1, 5).unwrap(); // Parallel edge
+    g.add_edge(n0, n1, 5).unwrap(); // replaces the weight 1
 
     g.freeze();
     assert!(g.is_frozen());
@@ -493,12 +464,12 @@ fn test_unfreeze_graph_with_complex_edges() {
     assert!(!g.is_frozen());
 
     assert_eq!(g.number_nodes(), 4);
-    assert_eq!(g.number_edges(), 5);
+    assert_eq!(g.number_edges(), 4);
 
-    // Verify edges from n0
+    // Verify edges from n0: one per ordered pair, the latest weight on (n0, n1).
     let edges_from_n0 = g.get_edges(n0).unwrap();
-    assert_eq!(edges_from_n0.len(), 3);
-    let mut expected_n0_edges = vec![(n1, &1), (n2, &2), (n1, &5)];
+    assert_eq!(edges_from_n0.len(), 2);
+    let mut expected_n0_edges = vec![(n1, &5), (n2, &2)];
     expected_n0_edges.sort_unstable();
     let mut actual_n0_edges = edges_from_n0
         .iter()
@@ -795,6 +766,9 @@ where
     expected_all.sort_unstable();
     assert_eq!(all, expected_all, "step {step}: get_all_nodes");
 
+    // Live edges only, in both states: the edges into a removed node left with it.
+    assert_eq!(g.number_edges(), m.edges.len(), "step {step}: number_edges");
+
     let bound = m.slots.len() + 1; // one past the end reads as absent
     for p in 0..bound {
         let expected_payload = m.slots.get(p).copied().flatten();
@@ -835,8 +809,9 @@ where
 }
 
 /// Drives one seeded sequence of `add_node`, `add_root_node`, `remove_node`, `add_edge`,
-/// `freeze`, `unfreeze`, `compact_ids` and `clear` against the model, checking every read after
-/// every step. Draws one past the table so every mutation also meets an absent position.
+/// `remove_edge`, `freeze`, `unfreeze`, `compact_ids` and `clear` against the model, checking
+/// every read after every step. Draws one past the table so every mutation also meets an absent
+/// position. `W` has `Key = ()`, so a repeated pair replaces the model's weight.
 fn drive_model<W, F>(seed: u64, steps: usize, mut weight: F)
 where
     W: Clone + Default + EdgeKey + Copy + PartialEq + Debug,
@@ -902,16 +877,14 @@ where
                         assert_eq!(g.remove_node(p), Err(GraphError::NodeNotFound(p)));
                     }
                 }
-                60..=84 => {
+                60..=76 => {
                     let a = rng.random_range(0..bound);
                     let b = rng.random_range(0..bound);
                     let w = weight(&mut rng);
                     if m.is_live(a) && m.is_live(b) {
-                        // One edge per pair: a repeated pair is left alone (keyed edges are group 3).
-                        if let Entry::Vacant(slot) = m.edges.entry((a, b)) {
-                            slot.insert(w);
-                            assert_eq!(g.add_edge(a, b, w), Ok(()), "step {step}: add_edge");
-                        }
+                        // One edge per ordered pair: a repeated pair takes the new weight.
+                        m.edges.insert((a, b), w);
+                        assert_eq!(g.add_edge(a, b, w), Ok(()), "step {step}: add_edge");
                     } else {
                         assert_eq!(
                             g.add_edge(a, b, w),
@@ -919,6 +892,28 @@ where
                                 source: a,
                                 target: b
                             })
+                        );
+                    }
+                }
+                77..=84 => {
+                    let a = rng.random_range(0..bound);
+                    let b = rng.random_range(0..bound);
+                    if !m.is_live(a) {
+                        assert_eq!(
+                            g.remove_edge(a, b),
+                            Err(GraphError::NodeNotFound(a)),
+                            "step {step}: remove_edge from an absent source"
+                        );
+                    } else if m.edges.remove(&(a, b)).is_some() {
+                        assert_eq!(g.remove_edge(a, b), Ok(()), "step {step}: remove_edge");
+                    } else {
+                        assert_eq!(
+                            g.remove_edge(a, b),
+                            Err(GraphError::EdgeNotFoundError {
+                                source: a,
+                                target: b
+                            }),
+                            "step {step}: remove_edge of an absent edge"
                         );
                     }
                 }
@@ -951,6 +946,6 @@ fn test_model_based_positions_with_unit_weights() {
 #[test]
 fn test_model_based_positions_with_u64_weights() {
     for seed in [11, 12, 13] {
-        drive_model::<u64, _>(seed, 400, |rng| rng.random_range(1..1000u64));
+        drive_model::<u64, _>(seed, 400, |rng| rng.random_range(0..1000u64)); // weight 0 included
     }
 }

@@ -33,8 +33,7 @@ where
                 continue;
             }
             compacted_nodes.push(node);
-            // An edge into a removed node survives `remove_node` in its source's list and has no
-            // new position; it is dropped here.
+            // Every stored edge joins two live nodes, so every target has a new position.
             compacted_edges.push(
                 edge_list
                     .into_iter()
@@ -44,6 +43,7 @@ where
         }
         self.nodes = compacted_nodes;
         self.edges = compacted_edges;
+        self.rebuild_backward();
         self.root_index = self.root_index.and_then(|root| table[root]);
         table
     }

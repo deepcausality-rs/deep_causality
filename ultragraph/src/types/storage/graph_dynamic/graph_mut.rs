@@ -14,17 +14,22 @@ where
     /// Adds a new node with the given node to the graph.
     ///
     /// This operation is amortized O(1). It adds a new entry for the node
-    /// and its corresponding edge list. It returns the stable `usize` index
+    /// and its corresponding edge lists. It returns the stable `usize` index
     /// that will identify this node for its lifetime.
     fn add_node(&mut self, node: N) -> Result<usize, GraphError> {
         let index = self.nodes.len();
         self.nodes.push(Some(node));
 
-        if let Some(edge_capacity) = self.num_edges_per_node {
-            self.edges.push(Vec::with_capacity(edge_capacity)); // Add a corresponding edge list with edge_capacity
-        } else {
-            self.edges.push(Vec::default()); // Add a corresponding empty edge list
-        };
+        match self.num_edges_per_node {
+            Some(edge_capacity) => {
+                self.edges.push(Vec::with_capacity(edge_capacity));
+                self.backward.push(Vec::with_capacity(edge_capacity));
+            }
+            None => {
+                self.edges.push(Vec::default());
+                self.backward.push(Vec::default());
+            }
+        }
 
         Ok(index)
     }
@@ -47,44 +52,48 @@ where
         }
     }
 
-    /// Removes a node from the graph, effectively "tombstoning" it.
+    /// Removes a node from the graph, leaving a tombstone at its position.
     ///
-    /// This operation marks the node as removed by setting its `Option<N>` to `None`,
-    /// preserving the stability of existing node indices. Edges connected to
-    /// this node are logically removed but remain in the adjacency lists until
-    /// the graph is `freeze`n.
+    /// The position is never issued again. Every edge out of the node and every edge into it is
+    /// removed, from the other end's list as well, so no edge in any state points at a tombstone.
     ///
     /// # Errors
     /// Returns `GraphError::NodeNotFound` if the index is out of bounds or if the
     /// node at that index has already been removed.
     fn remove_node(&mut self, index: usize) -> Result<(), GraphError> {
-        // `get_mut` performs the bounds check.
-        match self.nodes.get_mut(index) {
-            // Check if the node is not already a tombstone.
-            Some(node_slot) if node_slot.is_some() => {
-                *node_slot = None; // "Tombstone" the node
-                // Clear its outgoing edges. Incoming edges will be handled during freeze.
-                if let Some(edges_list) = self.edges.get_mut(index) {
-                    edges_list.clear();
-                }
-                // If this was the root, clear the root index
-                if self.root_index == Some(index) {
-                    self.root_index = None;
-                }
-                Ok(())
-            }
-            // Either out of bounds or already a tombstone.
-            _ => Err(GraphError::NodeNotFound(index)),
+        if !self.contains_node(index) {
+            return Err(GraphError::NodeNotFound(index));
         }
+        self.nodes[index] = None;
+
+        // The edges out of the node leave their targets' backward lists; the edges into it leave
+        // their sources' forward lists. A self-loop sits in both lists of the node and is one edge.
+        let outgoing = core::mem::take(&mut self.edges[index]);
+        for (target, _) in &outgoing {
+            self.backward[*target].retain(|(source, _)| *source != index);
+        }
+        let incoming = core::mem::take(&mut self.backward[index]);
+        let mut removed = outgoing.len();
+        for (source, _) in &incoming {
+            if *source != index {
+                self.edges[*source].retain(|(target, _)| *target != index);
+                removed += 1;
+            }
+        }
+        self.live_edges -= removed;
+
+        if self.root_index == Some(index) {
+            self.root_index = None;
+        }
+        Ok(())
     }
 
-    /// Adds a directed edge between two nodes with a given weight.
+    /// Adds the edge `(a, b, weight.edge_key())`, or replaces the payload of that edge when it
+    /// exists. An edge between `a` and `b` with another key is left in place.
     ///
     /// # Errors
-    /// Returns `GraphError::EdgeCreationError` if either the source or target node
-    /// does not exist (or has been removed). This implementation allows for parallel edges.
+    /// Returns `GraphError::EdgeCreationError` if either end holds no live node.
     fn add_edge(&mut self, a: usize, b: usize, weight: W) -> Result<(), GraphError> {
-        // Use the `GraphView` trait's own method to ensure nodes are valid.
         if !self.contains_node(a) || !self.contains_node(b) {
             return Err(GraphError::EdgeCreationError {
                 source: a,
@@ -92,40 +101,78 @@ where
             });
         }
 
-        // This check is safe because `contains_node` confirmed `a` is in bounds.
-        self.edges[a].push((b, weight));
+        let key = weight.edge_key();
+        let existing = self.edges[a]
+            .iter()
+            .position(|(target, w)| *target == b && w.edge_key() == key);
+        match existing {
+            Some(position) => {
+                // The backward entry keeps the old payload: only its source and key are ever read,
+                // and the key is the one being replaced.
+                self.edges[a][position].1 = weight;
+            }
+            None => {
+                self.edges[a].push((b, weight.clone()));
+                self.backward[b].push((a, weight));
+                self.live_edges += 1;
+            }
+        }
         Ok(())
     }
 
-    /// Removes a directed edge between two nodes.
-    ///
-    /// If multiple parallel edges exist, this removes the first one found.
-    /// This operation is O(degree(a)).
+    /// Removes every edge from `a` to `b`, whatever its key. O(degree(a) + degree(b)).
     ///
     /// # Errors
-    /// Returns `GraphError::NodeNotFound` if the source node does not exist.
-    /// Returns `GraphError::EdgeNotFoundError` if the specified edge does not exist.
+    /// Returns `GraphError::NodeNotFound` if `a` holds no live node.
+    /// Returns `GraphError::EdgeNotFoundError` if no edge from `a` to `b` exists.
     fn remove_edge(&mut self, a: usize, b: usize) -> Result<(), GraphError> {
-        // Check if the source node is valid first.
         if !self.contains_node(a) {
             return Err(GraphError::NodeNotFound(a));
         }
 
-        // Find the position of the edge in the source node's adjacency list.
-        if let Some(pos) = self.edges[a].iter().position(|(target, _)| *target == b) {
-            // Use `swap_remove` for O(1) removal (amortized), as edge order is not guaranteed.
-            self.edges[a].swap_remove(pos);
-            Ok(())
-        } else {
-            Err(GraphError::EdgeNotFoundError {
+        let before = self.edges[a].len();
+        self.edges[a].retain(|(target, _)| *target != b);
+        let removed = before - self.edges[a].len();
+        if removed == 0 {
+            return Err(GraphError::EdgeNotFoundError {
                 source: a,
                 target: b,
-            })
+            });
         }
+        self.backward[b].retain(|(source, _)| *source != a);
+        self.live_edges -= removed;
+        Ok(())
+    }
+
+    /// Removes the edge from `a` to `b` with key `key` alone. O(degree(a) + degree(b)).
+    ///
+    /// # Errors
+    /// Returns `GraphError::NodeNotFound` if `a` holds no live node.
+    /// Returns `GraphError::EdgeNotFoundError` if no edge from `a` to `b` carries `key`.
+    fn remove_edge_keyed(&mut self, a: usize, b: usize, key: W::Key) -> Result<(), GraphError> {
+        if !self.contains_node(a) {
+            return Err(GraphError::NodeNotFound(a));
+        }
+
+        let position = self.edges[a]
+            .iter()
+            .position(|(target, w)| *target == b && w.edge_key() == key);
+        let Some(position) = position else {
+            return Err(GraphError::EdgeNotFoundError {
+                source: a,
+                target: b,
+            });
+        };
+        self.edges[a].remove(position);
+        self.backward[b].retain(|(source, w)| !(*source == a && w.edge_key() == key));
+        self.live_edges -= 1;
+        Ok(())
     }
 
     /// Adds a new node and designates it as the graph's root node.
-    /// Any previous root designation is overwritten.
+    ///
+    /// # Errors
+    /// Returns `GraphError::RootNodeAlreadyExists` when a root is already designated.
     fn add_root_node(&mut self, node: N) -> Result<usize, GraphError> {
         if self.root_index.is_none() {
             let index = self.add_node(node)?;
@@ -136,10 +183,13 @@ where
         }
     }
 
-    /// Clears all nodes and edges from the graph, resetting it to an empty state.
+    /// Clears all nodes and edges from the graph, resetting it to an empty state. The next
+    /// position issued is 0.
     fn clear(&mut self) -> Result<(), GraphError> {
         self.nodes.clear();
         self.edges.clear();
+        self.backward.clear();
+        self.live_edges = 0;
         self.root_index = None;
         Ok(())
     }

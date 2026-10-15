@@ -45,52 +45,45 @@ where
         self.nodes.iter().filter(|n| n.is_some()).count()
     }
 
-    /// Checks if a directed edge exists from node `a` to node `b`.
+    /// Checks if an edge exists from node `a` to node `b` with any key. Every stored edge joins
+    /// two live nodes, so no further check is needed.
     fn contains_edge(&self, a: usize, b: usize) -> bool {
-        // We get the edge list for node `a`. If `a` is out of bounds or has been removed,
-        // `get` will return `None`, and the `map_or` will correctly return `false`.
+        self.edges
+            .get(a)
+            .is_some_and(|edge_list| edge_list.iter().any(|(target, _)| *target == b))
+    }
+
+    /// Checks if the edge from `a` to `b` with key `key` exists.
+    fn contains_edge_keyed(&self, a: usize, b: usize, key: W::Key) -> bool {
         self.edges.get(a).is_some_and(|edge_list| {
-            // Then we simply check if any edge in that list points to `b`
-            // and that the target node is not tombstoned.
             edge_list
                 .iter()
-                .any(|(target, _)| *target == b && self.contains_node(*target))
+                .any(|(target, weight)| *target == b && weight.edge_key() == key)
         })
     }
 
-    /// Returns the total number of edges in the graph.
-    ///
-    /// Note: This is an O(V) operation for `DynamicGraph` as it must iterate
-    /// through the outer vector to sum the lengths of the inner edge lists.
+    /// Returns the number of edges between live nodes, kept as a count so this is O(1).
     fn number_edges(&self) -> usize {
-        self.edges.iter().map(|edge_list| edge_list.len()).sum()
+        self.live_edges
     }
 
     fn get_all_nodes(&self) -> Vec<&N> {
         self.nodes.iter().filter_map(Option::as_ref).collect()
     }
 
-    /// Retrieves a list of all outgoing edges from a given source node.
+    /// Retrieves a list of all outgoing edges from a given source node, in insertion order.
     /// Returns `None` if the source node does not exist.
     /// The returned vector contains tuples of `(target_node_index, edge_weight_reference)`.
     fn get_edges(&self, source: usize) -> Option<Vec<(usize, &W)>> {
         if !self.contains_node(source) {
             return None;
         }
-        // Filter out edges to tombstoned nodes during iteration
-        let edges: Vec<(usize, &W)> = self
-            .edges
-            .get(source)?
-            .iter()
-            .filter_map(|(target, weight)| {
-                if self.contains_node(*target) {
-                    Some((*target, weight))
-                } else {
-                    None
-                }
-            })
-            .collect();
-        Some(edges)
+        Some(
+            self.edges[source]
+                .iter()
+                .map(|(target, weight)| (*target, weight))
+                .collect(),
+        )
     }
 
     fn get_last_index(&self) -> Option<usize> {

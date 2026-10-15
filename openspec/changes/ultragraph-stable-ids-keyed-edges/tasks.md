@@ -104,37 +104,37 @@ behaviour.
 
 ## 3. Keyed edges, dynamic traversal and the projection view
 
-- [ ] 3.1 Phase 1: declare `remove_edge_keyed` and `contains_edge_keyed` on `GraphMut` and `GraphView`,
+- [x] 3.1 Phase 1: declare `remove_edge_keyed` and `contains_edge_keyed` on `GraphMut` and `GraphView`,
       the `Projection` trait and its impl for closure pairs, `ParallelEdges`, `project` and its view
       type implementing `GraphAlgorithms` and `GraphTraversal`, and `DeonticError::ConflictingRelation`,
       each with an `unimplemented!()` body
-- [ ] 3.2 Fill the group-3 A–K table (rows A–F, H, K of design D8 apply; E is the 63/64/65 and
+- [x] 3.2 Fill the group-3 A–K table (rows A–F, H, K of design D8 apply; E is the 63/64/65 and
       127/128/129 thresholds; K is the four payload kinds)
-- [ ] 3.3 Phase 2, UltraGraph: write a test for every scenario of `ultragraph-keyed-edges`,
+- [x] 3.3 Phase 2, UltraGraph: write a test for every scenario of `ultragraph-keyed-edges`,
       `ultragraph-dynamic-traversal` and `ultragraph-projection-view`; extend the model-based test with
       keyed `add_edge`, `remove_edge`, `remove_edge_keyed` and both directions; add independent oracles
       for bridges (delete each connection, test connectivity), betweenness (enumerate shortest paths on
       graphs of at most eight nodes) and projections (build the passing subgraph by a separate filter)
-- [ ] 3.4 Phase 2, rewrite the existing tests whose behaviour changes: `graph_evolve_tests.rs:44`
+- [x] 3.4 Phase 2, rewrite the existing tests whose behaviour changes: `graph_evolve_tests.rs:44`
       (one edge, weight 15); `graph_traversal_tests.rs:26` and `:64` (traversal works dynamic);
       `graph_algo_bridges_tests.rs:71` and `:80` (keyed payload under `Distinct`, plus `Merge`
       counterparts); `deep_causality/src/traits/causable_graph/mod.rs:147` (reach on a dynamic graph);
       `contextuable_graph_tests.rs:270` (dynamic listing equals frozen); `snapshot_tests.rs:246`
       (`remove_edge` removes both kinds)
-- [ ] 3.5 Phase 2, callers: write tests for every scenario of `teloid-graph-relations`, of
+- [x] 3.5 Phase 2, callers: write tests for every scenario of `teloid-graph-relations`, of
       `context-graph-stable-indices` "Neighbour listings work without freezing", "The context holds
       one relation per pair through the store" and "A pair's relation reads the same in every state
       and context", and of `causaloid-graph-index-bound` "A repeated edge between two causaloids
       updates its weight" and "The check examines a dynamic graph"
-- [ ] 3.6 Phase 2 exit: run every group-3 test against the unchanged implementation; record the run
+- [x] 3.6 Phase 2 exit: run every group-3 test against the unchanged implementation; record the run
       and the count
-- [ ] 3.7 Phase 3: inject the design D8 edge defects (keyed `add_edge` appends; `remove_edge` removes
+- [x] 3.7 Phase 3: inject the design D8 edge defects (keyed `add_edge` appends; `remove_edge` removes
       one key; `contains_edge_keyed` ignores the key; the backward list not updated on removal;
       `remove_node` leaves incoming edges; `Merge` and `Distinct` swapped; an edge passing with one end
       failing; `Merge` keeping the first parallel edge instead of the lightest; undirected `Distinct`
       betweenness deduplicating neighbours; the context's `get_edge` reading the first edge of a pair;
       the teloid conflict check omitted) and the nine generic classes; record; discard the throwaway
-- [ ] 3.8 Phase 4, `ultragraph`: forward and backward lists in `DynamicGraph`; keyed add, remove and
+- [x] 3.8 Phase 4, `ultragraph`: forward and backward lists in `DynamicGraph`; keyed add, remove and
       contains in both directions; `remove_node` removing incoming edges; live `number_edges`; frozen
       adjacency sorted by target then key in both CSRs; dynamic traversal through the container; the
       crate-internal adjacency trait with the frozen graph as the simple projection and the view with
@@ -142,15 +142,15 @@ behaviour.
       Brandes; reads and traversals of a view listing every passing edge;
       correct the module doc of `graph_csm_biconnectivity_common.rs`, whose claim about biconnected
       components does not hold for vertex sets
-- [ ] 3.9 Phase 4, callers: remove the `GraphNotFrozen` arm of the context's `traversal_error` and
+- [x] 3.9 Phase 4, callers: remove the `GraphNotFrozen` arm of the context's `traversal_error` and
       rewrite the traversal docs in `traits/contextuable_graph/mod.rs`; make `get_edge` and
       `extra_ctx_get_edge` return the lowest `RelationKind` of the pair; implement the teloid conflict
       check and `ConflictingRelation` (`Display`, `source`); rewrite the `reachable_mask` doc on
       dynamic graphs
-- [ ] 3.10 Phase 4 exit: every group-3 test green; full coverage of added and edited files; matching
+- [x] 3.10 Phase 4 exit: every group-3 test green; full coverage of added and edited files; matching
       `cargo test` and `bazel test //...` counts
-- [ ] 3.11 Phase 5: `scripts/mutants.sh` over the group's edited files; resolve every survivor
-- [ ] 3.12 `make format && make fix`, `make build`, `bazel test //...`, commit message for group 3
+- [x] 3.11 Phase 5: `scripts/mutants.sh` over the group's edited files; resolve every survivor
+- [x] 3.12 `make format && make fix`, `make build`, `bazel test //...`, commit message for group 3
 
 ## 4. Measurement and close-out
 

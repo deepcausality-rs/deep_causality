@@ -3,10 +3,13 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{GraphError, GraphView};
+use crate::{EdgeKey, GraphError, GraphView};
 use alloc::vec::Vec;
 
-pub trait TopologicalGraphAlgorithms<N, W>: GraphView<N, W> {
+pub trait TopologicalGraphAlgorithms<N, W>: GraphView<N, W>
+where
+    W: EdgeKey,
+{
     /// Finds a single cycle in the graph and returns the path of nodes that form it.
     fn find_cycle(&self) -> Result<Option<Vec<usize>>, GraphError>;
 

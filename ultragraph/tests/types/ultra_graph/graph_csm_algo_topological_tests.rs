@@ -90,3 +90,51 @@ fn test_topological_sort_on_empty_graph() {
     assert!(&res.is_ok());
     assert!(&res.unwrap().is_some());
 }
+
+/// The cycle is returned as a closed walk that starts and ends on the same node: for the
+/// triangle 0 -> 1 -> 2 -> 0 the depth-first search from 0 reports `[0, 1, 2, 0]`.
+#[test]
+fn test_find_cycle_returns_the_closed_walk() {
+    let mut g = UltraGraph::new();
+    for payload in 0..4 {
+        g.add_node(payload).unwrap();
+    }
+    g.add_edge(0, 1, ()).unwrap();
+    g.add_edge(1, 2, ()).unwrap();
+    g.add_edge(2, 0, ()).unwrap();
+    g.add_edge(3, 0, ()).unwrap();
+    g.freeze();
+
+    assert_eq!(g.find_cycle().unwrap(), Some(vec![0, 1, 2, 0]));
+}
+
+/// A self-loop on node 1 is the walk `[1, 1]`.
+#[test]
+fn test_find_cycle_reports_a_self_loop() {
+    let mut g = UltraGraph::new();
+    for payload in 0..2 {
+        g.add_node(payload).unwrap();
+    }
+    g.add_edge(0, 1, ()).unwrap();
+    g.add_edge(1, 1, ()).unwrap();
+    g.freeze();
+
+    assert_eq!(g.find_cycle().unwrap(), Some(vec![1, 1]));
+}
+
+/// A diamond reaches node 3 twice without a cycle: a node met again after it was finished is not
+/// a back edge.
+#[test]
+fn test_find_cycle_on_a_diamond_is_none() {
+    let mut g = UltraGraph::new();
+    for payload in 0..4 {
+        g.add_node(payload).unwrap();
+    }
+    for (a, b) in [(0, 1), (0, 2), (1, 3), (2, 3)] {
+        g.add_edge(a, b, ()).unwrap();
+    }
+    g.freeze();
+
+    assert_eq!(g.find_cycle().unwrap(), None);
+    assert!(!g.has_cycle().unwrap());
+}

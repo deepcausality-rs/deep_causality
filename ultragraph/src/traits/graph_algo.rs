@@ -2,6 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use crate::EdgeKey;
 
 pub use crate::traits::graph_algo_centrality::*;
 pub use crate::traits::graph_algo_pathfinder::*;
@@ -18,5 +19,7 @@ pub trait GraphAlgorithms<N, W>:
     + PathfindingGraphAlgorithms<N, W>
     + StructuralGraphAlgorithms<N, W>
     + CentralityGraphAlgorithms<N, W>
+where
+    W: EdgeKey,
 {
 }

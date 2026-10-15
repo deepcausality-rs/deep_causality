@@ -28,7 +28,8 @@ where
     ///   1. Keeps every node position, tombstones included, and drops the edges that touch a
     ///      removed node.
     ///   2. Builds both forward and backward CSR structures in a single pass to save memory.
-    ///   3. Sorts all adjacency lists for fast O(log degree) edge checking in the `CsmGraph`.
+    ///   3. Sorts all adjacency lists by target, then key, for fast O(log degree) edge checking
+    ///      in the `CsmGraph`.
     ///
     /// # Infallibility and Design
     ///
@@ -59,28 +60,21 @@ where
         let root_index = self.root_index;
 
         // Positions are permanent: the node table moves whole, tombstones included, and every
-        // CSR array is indexed by position. Only the edges are rebuilt.
+        // CSR array is indexed by position. Only the edges are rebuilt. Every edge joins two
+        // live nodes, since removal takes a node's edges with it, so none is filtered here.
         let slots = nodes.len();
         let live_nodes = nodes.iter().filter(|node| node.is_some()).count();
-        let is_live = |position: usize| nodes[position].is_some();
 
         // --- First Pass: Counting ---
-        // A removed node's own list is cleared at removal; the edges into it survive in its
-        // predecessors' lists and are dropped here, so no CSR entry names a tombstone.
         let mut out_degrees = vec![0; slots];
         let mut in_degrees = vec![0; slots];
         let mut total_edges = 0;
 
         for (source, edge_list) in old_edges.iter().enumerate() {
-            if !is_live(source) {
-                continue;
-            }
             for (target, _) in edge_list {
-                if is_live(*target) {
-                    out_degrees[source] += 1;
-                    in_degrees[*target] += 1;
-                    total_edges += 1;
-                }
+                out_degrees[source] += 1;
+                in_degrees[*target] += 1;
+                total_edges += 1;
             }
         }
 
@@ -100,14 +94,7 @@ where
 
         // Place each edge into its correct position in the CSR arrays.
         for (source, edge_list) in old_edges.into_iter().enumerate() {
-            if !is_live(source) {
-                continue;
-            }
             for (target, weight) in edge_list {
-                if !is_live(target) {
-                    continue;
-                }
-
                 // Forward placement
                 let fwd_write_head = fwd_offsets_copy[source];
                 fwd_targets[fwd_write_head] = target;
@@ -123,8 +110,9 @@ where
         }
 
         // --- Final Step: Sequential Sorting ---
-        // Sort the adjacency lists for each node to enable binary search lookups. A tombstone's
-        // range is empty and is skipped by the guards.
+        // Sort each adjacency list by target, then key, so lookups can binary-search by target
+        // and the parallel edges to one target sit together. A tombstone's range is empty and
+        // is skipped by the guards.
         for i in 0..slots {
             // Sort forward edges
             let start = fwd_offsets[i];
@@ -178,30 +166,39 @@ fn calculate_offsets_sequential(degrees: &[usize]) -> Vec<usize> {
     offsets
 }
 
-/// Helper function to sort a single adjacency list within the CSR arrays.
-/// This is now an ADAPTIVE sorter when targets.len exceeds RADIX_SORT_THRESHOLD
+/// Sorts one adjacency list by target, then key. Below `RADIX_SORT_THRESHOLD` a comparison sort
+/// on `(target, key)` does it in one pass; at or above it, a stable sort by key followed by the
+/// stable LSD radix sort by target gives the same order.
 fn sort_single_adjacency_list<W>(targets: &mut [usize], weights: &mut [W])
 where
     W: Clone + Default + EdgeKey,
 {
     if targets.len() < RADIX_SORT_THRESHOLD {
-        // For small lists, the overhead of Radix Sort isn't worth it.
-        // The simple, allocation-based comparison sort is faster.
         let mut slice_to_sort: Vec<_> = targets
             .iter()
             .zip(weights.iter())
             .map(|(&t, w)| (t, w.clone()))
             .collect();
 
-        slice_to_sort.sort_unstable_by_key(|(target, _)| *target);
+        slice_to_sort.sort_by(|(target_a, weight_a), (target_b, weight_b)| {
+            (*target_a, weight_a.edge_key()).cmp(&(*target_b, weight_b.edge_key()))
+        });
 
         for (j, (target, weight)) in slice_to_sort.into_iter().enumerate() {
             targets[j] = target;
             weights[j] = weight;
         }
     } else {
-        // For larger lists, use the allocation-free,
-        // high-performance Radix Sort.
+        let mut by_key: Vec<_> = targets
+            .iter()
+            .zip(weights.iter())
+            .map(|(&t, w)| (t, w.clone()))
+            .collect();
+        by_key.sort_by_key(|(_, weight)| weight.edge_key());
+        for (j, (target, weight)) in by_key.into_iter().enumerate() {
+            targets[j] = target;
+            weights[j] = weight;
+        }
         radix_sort_adjacencies(targets, weights);
     }
 }

@@ -268,20 +268,78 @@ fn test_neighbour_listings_agree_with_the_edges() {
 }
 
 #[test]
-fn test_neighbour_listing_needs_a_frozen_context() {
+fn test_dynamic_listing_equals_frozen() {
+    // Spec scenario "Listings agree across states": six nodes with a cycle, a fan-out, a fan-in
+    // and an isolated node. The expected listing of every node is the edge table itself, read by
+    // source for outbound and by target for inbound, and the mutable context, the frozen one and
+    // the unfrozen one must all list it at the same indices. Order is not pinned, so the
+    // listings are compared sorted.
     let mut context = get_context();
-    let a = context.add_node(datum(1)).unwrap();
-    for err in [
-        context.outbound_edges(a).err(),
-        context.inbound_edges(a).err(),
-    ] {
-        let err = err.expect("a mutable context lists no neighbours");
-        assert!(err.to_string().contains("not frozen"), "{err}");
+    let index: Vec<usize> = (1..=6)
+        .map(|id| context.add_node(datum(id)).unwrap())
+        .collect();
+    let edges = [(0, 1), (1, 2), (2, 0), (0, 3), (0, 4), (3, 4), (2, 4)];
+    for (a, b) in edges {
+        context
+            .add_edge(index[a], index[b], RelationKind::Datial)
+            .unwrap();
     }
+    let sorted = |mut v: Vec<usize>| {
+        v.sort_unstable();
+        v
+    };
+    let check = |context: &BaseContext, state: &str| {
+        for (n, &a) in index.iter().enumerate() {
+            let expected_out = sorted(
+                edges
+                    .iter()
+                    .filter(|e| e.0 == n)
+                    .map(|e| index[e.1])
+                    .collect(),
+            );
+            let expected_in = sorted(
+                edges
+                    .iter()
+                    .filter(|e| e.1 == n)
+                    .map(|e| index[e.0])
+                    .collect(),
+            );
+            let outbound = context
+                .outbound_edges(a)
+                .unwrap_or_else(|e| panic!("{state}: outbound of {a}: {e}"))
+                .collect();
+            let inbound = context
+                .inbound_edges(a)
+                .unwrap_or_else(|e| panic!("{state}: inbound of {a}: {e}"))
+                .collect();
+            assert_eq!(sorted(outbound), expected_out, "{state}: outbound of {a}");
+            assert_eq!(sorted(inbound), expected_in, "{state}: inbound of {a}");
+        }
+    };
+
+    assert!(!context.is_frozen());
+    check(&context, "mutable");
     context.freeze();
-    assert!(context.outbound_edges(a).is_ok());
+    check(&context, "frozen");
     context.unfreeze();
-    assert!(context.outbound_edges(a).is_err());
+    check(&context, "unfrozen");
+}
+
+#[test]
+fn test_listing_at_an_absent_index_is_reported_without_freezing() {
+    // Spec scenario "Listing at an absent index is reported", in the mutable context: a position
+    // never issued is reported by its index, and the state is never the reason.
+    let mut context = get_context();
+    context.add_node(datum(1)).unwrap();
+    assert!(!context.is_frozen());
+    for err in [
+        context.outbound_edges(99).err(),
+        context.inbound_edges(99).err(),
+    ] {
+        let err = err.expect("no node at index 99");
+        assert!(err.to_string().contains("No node at index 99"), "{err}");
+        assert!(!err.to_string().contains("not frozen"), "{err}");
+    }
 }
 
 #[test]
@@ -301,8 +359,9 @@ fn test_neighbour_listing_refuses_a_missing_node() {
 #[test]
 fn test_neighbour_listing_refuses_a_removed_node() {
     // Ids 1, 2 and 3 at 0, 1 and 2; 2 removed, so a live node (3 at 2) sits above the tombstone
-    // at 1. Frozen, the tombstone lists no neighbours in either direction and the edges into and
-    // out of it are gone, while the live nodes keep their positions and their edge 1 -> 3.
+    // at 1. In the dynamic and in the frozen context the tombstone lists no neighbours in either
+    // direction, reported by its index and never by the state, and the edges into and out of it
+    // are gone, while the live nodes keep their positions and their edge 1 -> 3.
     let mut context = get_context();
     let [i1, i2, i3] = [1, 2, 3].map(|id| context.add_node(datum(id)).unwrap());
     assert_eq!([i1, i2, i3], [0, 1, 2]);
@@ -310,8 +369,23 @@ fn test_neighbour_listing_refuses_a_removed_node() {
     context.add_edge(i2, i3, RelationKind::Datial).unwrap();
     context.add_edge(i1, i3, RelationKind::Datial).unwrap();
     context.remove_node(2).unwrap();
-    context.freeze();
 
+    assert!(!context.is_frozen());
+    for err in [
+        context.outbound_edges(i2).err(),
+        context.inbound_edges(i2).err(),
+    ] {
+        let err = err.expect("no node at index 1");
+        assert!(err.to_string().contains("No node at index 1"), "{err}");
+        assert!(!err.to_string().contains("not frozen"), "{err}");
+    }
+    assert_eq!(
+        context.outbound_edges(i1).unwrap().collect::<Vec<_>>(),
+        [i3]
+    );
+    assert_eq!(context.inbound_edges(i3).unwrap().collect::<Vec<_>>(), [i1]);
+
+    context.freeze();
     for err in [
         context.outbound_edges(i2).err(),
         context.inbound_edges(i2).err(),
@@ -506,4 +580,61 @@ fn test_a_clone_of_a_frozen_context_is_frozen() {
     let copy = context.clone();
     assert!(copy.is_frozen());
     assert!(copy.outbound_edges(a).is_ok());
+}
+
+#[test]
+fn test_the_relation_read_does_not_depend_on_the_state() {
+    // Spec scenario "The relation read does not depend on the state": an edge is keyed by its
+    // RelationKind, so Spatial and Datial from a to b are two edges, and get_edge returns the
+    // lowest kind of the pair. The kinds are declared Datial, Temporal, Spatial, SpaceTemporal
+    // and ordered by declaration, so Datial is the lowest whatever the insertion order. The
+    // frozen adjacency is sorted by key and the dynamic one is in insertion order, so the first
+    // edge of the pair would read Spatial in one state and Datial in the other.
+    assert!(RelationKind::Datial < RelationKind::Temporal);
+    assert!(RelationKind::Temporal < RelationKind::Spatial);
+    assert!(RelationKind::Spatial < RelationKind::SpaceTemporal);
+
+    let mut context = get_context();
+    let a = context.add_node(datum(1)).unwrap();
+    let b = context.add_node(datum(2)).unwrap();
+    // Lowest inserted last ...
+    context.add_edge(a, b, RelationKind::Spatial).unwrap();
+    context.add_edge(a, b, RelationKind::Datial).unwrap();
+    // ... and, on the reverse pair, lowest inserted first.
+    context.add_edge(b, a, RelationKind::Datial).unwrap();
+    context.add_edge(b, a, RelationKind::Spatial).unwrap();
+    assert_eq!(context.number_of_edges(), 4);
+
+    assert_eq!(
+        context.get_edge(a, b),
+        Some(&RelationKind::Datial),
+        "mutable"
+    );
+    assert_eq!(
+        context.get_edge(b, a),
+        Some(&RelationKind::Datial),
+        "mutable"
+    );
+    context.freeze();
+    assert_eq!(
+        context.get_edge(a, b),
+        Some(&RelationKind::Datial),
+        "frozen"
+    );
+    assert_eq!(
+        context.get_edge(b, a),
+        Some(&RelationKind::Datial),
+        "frozen"
+    );
+    context.unfreeze();
+    assert_eq!(
+        context.get_edge(a, b),
+        Some(&RelationKind::Datial),
+        "unfrozen"
+    );
+    assert_eq!(
+        context.get_edge(b, a),
+        Some(&RelationKind::Datial),
+        "unfrozen"
+    );
 }

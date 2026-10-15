@@ -462,3 +462,78 @@ fn test_extra_ctx_add_node_refuses_a_duplicate_id() {
     context.extra_ctx_remove_node(held).unwrap();
     assert!(context.extra_ctx_add_node(get_contextoid(7)).is_ok());
 }
+
+#[test]
+fn test_an_extra_context_keys_its_edges() {
+    // Spec scenario "An extra context keys its edges": the extra's graph keys its edges by
+    // RelationKind as the base graph does, so (a, b, Temporal) twice is one edge, Spatial is a
+    // second key of the pair, and extra_ctx_remove_edge(a, b) removes both.
+    let mut context = get_context();
+    context
+        .extra_ctx_add_new_with_id(1, "extra", 10, true)
+        .unwrap();
+    let a = context.extra_ctx_add_node(get_contextoid(1)).unwrap();
+    let b = context.extra_ctx_add_node(get_contextoid(2)).unwrap();
+
+    context
+        .extra_ctx_add_edge(a, b, RelationKind::Temporal)
+        .unwrap();
+    context
+        .extra_ctx_add_edge(a, b, RelationKind::Temporal)
+        .unwrap();
+    assert_eq!(context.extra_ctx_edge_count().unwrap(), 1);
+    assert_eq!(
+        context.extra_ctx_get_edge(a, b),
+        Some(&RelationKind::Temporal)
+    );
+
+    context
+        .extra_ctx_add_edge(a, b, RelationKind::Spatial)
+        .unwrap();
+    assert_eq!(context.extra_ctx_edge_count().unwrap(), 2);
+
+    context.extra_ctx_remove_edge(a, b).unwrap();
+    assert!(!context.extra_ctx_contains_edge(a, b));
+    assert_eq!(context.extra_ctx_edge_count().unwrap(), 0);
+    assert_eq!(context.extra_ctx_get_edge(a, b), None);
+    // Nothing is left to remove.
+    assert!(context.extra_ctx_remove_edge(a, b).is_err());
+}
+
+#[test]
+fn test_extra_ctx_get_edge_reads_the_lowest_kind_of_the_pair() {
+    // Spec requirement "A pair's relation reads the same in every state and context":
+    // extra_ctx_get_edge returns the lowest RelationKind of the pair. Datial is declared first
+    // of the four kinds and the kinds are ordered by declaration, so it is the lowest whether it
+    // was inserted last (a -> b) or first (b -> a).
+    assert!(RelationKind::Datial < RelationKind::Spatial);
+    let mut context = get_context();
+    context
+        .extra_ctx_add_new_with_id(1, "extra", 10, true)
+        .unwrap();
+    let a = context.extra_ctx_add_node(get_contextoid(1)).unwrap();
+    let b = context.extra_ctx_add_node(get_contextoid(2)).unwrap();
+
+    context
+        .extra_ctx_add_edge(a, b, RelationKind::Spatial)
+        .unwrap();
+    context
+        .extra_ctx_add_edge(a, b, RelationKind::Datial)
+        .unwrap();
+    context
+        .extra_ctx_add_edge(b, a, RelationKind::Datial)
+        .unwrap();
+    context
+        .extra_ctx_add_edge(b, a, RelationKind::Spatial)
+        .unwrap();
+    assert_eq!(context.extra_ctx_edge_count().unwrap(), 4);
+
+    assert_eq!(
+        context.extra_ctx_get_edge(a, b),
+        Some(&RelationKind::Datial)
+    );
+    assert_eq!(
+        context.extra_ctx_get_edge(b, a),
+        Some(&RelationKind::Datial)
+    );
+}

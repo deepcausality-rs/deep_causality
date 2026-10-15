@@ -259,3 +259,36 @@ fn test_a_join_above_number_nodes_is_inspected() {
     );
     assert!(!g.is_frozen(), "a failed check must roll the freeze back");
 }
+
+/// `check_single_writer` examines a dynamic graph. The two-writer diamond root(0) -> A(1), B(2)
+/// -> join(3), never frozen, with exclusive writers A and B, is refused naming join node 3: the
+/// same violation the frozen check reports. The check reads the join's parents and their ancestor
+/// cones through the dynamic adjacency, so no join is skipped for want of a freeze.
+#[test]
+fn test_the_check_examines_a_dynamic_graph() {
+    let mut g: DiamondGraph = CausaloidGraph::new(0);
+    let root = g
+        .add_causaloid(Causaloid::new(0, identity, "root"))
+        .unwrap();
+    let a = g.add_causaloid(Causaloid::new(1, add_one, "A")).unwrap();
+    let b = g.add_causaloid(Causaloid::new(2, add_ten, "B")).unwrap();
+    let join = g
+        .add_causaloid(Causaloid::new(3, identity, "join"))
+        .unwrap();
+    assert_eq!([root, a, b, join], [0, 1, 2, 3]);
+    g.add_edge(root, a).unwrap();
+    g.add_edge(root, b).unwrap();
+    g.add_edge(a, join).unwrap();
+    g.add_edge(b, join).unwrap();
+    assert!(!g.is_frozen());
+
+    let err = g
+        .check_single_writer(&[a, b])
+        .expect_err("two writing branches must be rejected on a dynamic graph");
+    assert!(
+        err.to_string()
+            .contains("Single-writer violation at join node 3"),
+        "unexpected error: {err}"
+    );
+    assert!(!g.is_frozen(), "the check must not freeze the graph");
+}

@@ -70,6 +70,23 @@ where
         }
     }
 
+    /// Checks if the edge from `a` to `b` with key `key` exists. The adjacency is sorted by
+    /// target then key, so the run of edges to `b` is found by two partition points and only
+    /// its keys are compared.
+    fn contains_edge_keyed(&self, a: usize, b: usize, key: W::Key) -> bool {
+        if !self.contains_node(a) {
+            return false;
+        }
+        let start = self.forward_edges.offsets[a];
+        let end = self.forward_edges.offsets[a + 1];
+        let targets = &self.forward_edges.targets[start..end];
+        let first = start + targets.partition_point(|&target| target < b);
+        let last = start + targets.partition_point(|&target| target <= b);
+        self.forward_edges.weights[first..last]
+            .iter()
+            .any(|weight| weight.edge_key() == key)
+    }
+
     /// Returns the total number of edges in the graph.
     /// This is an O(1) operation, as it's just the length of the targets vector.
     fn number_edges(&self) -> usize {

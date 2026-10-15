@@ -32,6 +32,8 @@ mod graph_evolve_tests;
 #[cfg(test)]
 mod graph_mut_tests;
 #[cfg(test)]
+mod graph_project_tests;
+#[cfg(test)]
 mod graph_traversal_tests;
 #[cfg(test)]
 mod graph_view_tests;

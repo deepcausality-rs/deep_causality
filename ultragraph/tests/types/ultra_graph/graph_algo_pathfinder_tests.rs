@@ -134,3 +134,22 @@ fn test_shortest_weighted_path_on_static_graph() {
     assert_eq!(result.0, vec![0]);
     assert_eq!(result.1, 0);
 }
+
+/// Row H: a position past the table at either end of a path query reads as absent and never
+/// indexes a per-position array.
+#[test]
+fn test_path_queries_with_a_never_issued_position_answer_none() {
+    let mut g = UltraGraph::new();
+    for payload in 0..3 {
+        g.add_node(payload).unwrap();
+    }
+    g.add_edge(0, 1, ()).unwrap();
+    g.add_edge(1, 2, ()).unwrap();
+    g.freeze();
+
+    for (start, stop) in [(99, 0), (0, 99), (99, 99)] {
+        assert_eq!(g.shortest_path(start, stop).unwrap(), None);
+        assert_eq!(g.shortest_path_len(start, stop).unwrap(), None);
+        assert!(!g.is_reachable(start, stop).unwrap());
+    }
+}
