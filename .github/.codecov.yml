@@ -9,5 +9,5 @@ ignore:
   - "examples/"  # ignore folders and all its contents
   - "lean/"
   - "openspec/"
-  - "tsc/"
+  - "LF_TSC/"
   - "yanked/"  # ignore folders and all its contents
