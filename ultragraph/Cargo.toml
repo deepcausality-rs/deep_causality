@@ -33,6 +33,9 @@ std = ["alloc"]
 alloc = []
 no-std = ["alloc"]
 
+[dependencies.ultragraph_traits]
+workspace = true
+
 [dev-dependencies]
 criterion = { workspace = true }
 deep_causality_rand = { path = "../deep_causality_unified_math/deep_causality_rand" }
