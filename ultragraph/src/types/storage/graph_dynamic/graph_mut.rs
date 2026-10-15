@@ -5,9 +5,12 @@
 
 use alloc::vec::Vec;
 
-use crate::{DynamicGraph, GraphError, GraphMut, GraphView};
+use crate::{DynamicGraph, EdgeKey, GraphError, GraphMut, GraphView};
 
-impl<N, W> GraphMut<N, W> for DynamicGraph<N, W> {
+impl<N, W> GraphMut<N, W> for DynamicGraph<N, W>
+where
+    W: Clone + Default + EdgeKey,
+{
     /// Adds a new node with the given node to the graph.
     ///
     /// This operation is amortized O(1). It adds a new entry for the node

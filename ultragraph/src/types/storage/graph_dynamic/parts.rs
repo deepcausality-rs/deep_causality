@@ -2,11 +2,15 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use crate::EdgeKey;
 
 use crate::DynamicGraph;
 use crate::types::storage::graph_dynamic::DynamicGraphParts;
 
-impl<N, W> DynamicGraph<N, W> {
+impl<N, W> DynamicGraph<N, W>
+where
+    W: Clone + Default + EdgeKey,
+{
     /// Creates a `DynamicGraph` directly from its constituent parts.
     ///
     /// This is the most performant way to construct a graph from an existing, validated

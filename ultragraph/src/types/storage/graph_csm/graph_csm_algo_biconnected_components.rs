@@ -10,7 +10,7 @@
 //! form one biconnected component.
 
 use crate::types::storage::graph_csm::graph_csm_biconnectivity_common::build_symmetric_adjacency;
-use crate::{CsmGraph, GraphError, GraphView};
+use crate::{CsmGraph, EdgeKey, GraphError, GraphView};
 use alloc::vec;
 use alloc::vec::Vec;
 
@@ -21,7 +21,7 @@ pub(crate) fn biconnected_components_impl<N, W>(
 ) -> Result<Vec<Vec<usize>>, GraphError>
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     let n = g.number_nodes();
     if n == 0 {

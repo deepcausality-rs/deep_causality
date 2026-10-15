@@ -3,12 +3,12 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{Freezable, GraphState, GraphView, UltraGraphContainer, Unfreezable};
+use crate::{EdgeKey, Freezable, GraphState, GraphView, UltraGraphContainer, Unfreezable};
 
-impl<N: Clone, W: Clone> UltraGraphContainer<N, W>
+impl<N, W> UltraGraphContainer<N, W>
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     /// Ensures the graph is in the immutable, performance-optimized `Static` state.
     ///

@@ -5,7 +5,7 @@
 
 #![forbid(unsafe_code)]
 
-use crate::{DynamicGraph, GraphState};
+use crate::{DynamicGraph, EdgeKey, GraphState};
 
 mod default;
 mod graph_algo;
@@ -21,7 +21,7 @@ pub type UltraGraphWeighted<T, W> = UltraGraphContainer<T, W>;
 pub struct UltraGraphContainer<N, W>
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     state: GraphState<N, W>,
 }
@@ -31,7 +31,7 @@ where
 impl<N, W> UltraGraphContainer<N, W>
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     pub fn new() -> Self {
         Self {

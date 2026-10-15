@@ -2,6 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use crate::EdgeKey;
 
 use alloc::vec::Vec;
 
@@ -17,7 +18,10 @@ mod parts;
 pub type DynamicGraphParts<N, W> = (Vec<Option<N>>, Vec<Vec<(usize, W)>>, Option<usize>);
 
 #[derive(Clone, Debug)]
-pub struct DynamicGraph<N, W> {
+pub struct DynamicGraph<N, W>
+where
+    W: Clone + Default + EdgeKey,
+{
     // Optional pre-allocated capacity for each node's edge list.
     // This is a performance optimization set by `with_capacity`.
     // By default, no edge capacity is pre-allocated.
@@ -35,13 +39,19 @@ pub struct DynamicGraph<N, W> {
     root_index: Option<usize>,
 }
 
-impl<N, W> DynamicGraph<N, W> {
+impl<N, W> DynamicGraph<N, W>
+where
+    W: Clone + Default + EdgeKey,
+{
     pub fn root_index(&self) -> Option<usize> {
         self.root_index
     }
 }
 
-impl<N, W> DynamicGraph<N, W> {
+impl<N, W> DynamicGraph<N, W>
+where
+    W: Clone + Default + EdgeKey,
+{
     /// Creates a new, empty `DynamicGraph`.
     ///
     /// The graph is initialized with no nodes, no edges, and no capacity. This is
@@ -92,7 +102,10 @@ impl<N, W> DynamicGraph<N, W> {
     }
 }
 
-impl<N, W> DynamicGraph<N, W> {
+impl<N, W> DynamicGraph<N, W>
+where
+    W: Clone + Default + EdgeKey,
+{
     // Internal helper for unfreeze
     pub(crate) fn construct(
         nodes: Vec<Option<N>>,

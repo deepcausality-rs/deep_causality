@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{CsmGraph, GraphError, GraphView, StructuralGraphAlgorithms};
+use crate::{CsmGraph, EdgeKey, GraphError, GraphView, StructuralGraphAlgorithms};
 use alloc::vec;
 use alloc::vec::Vec;
 use core::slice;
@@ -11,7 +11,7 @@ use core::slice;
 impl<N, W> StructuralGraphAlgorithms<N, W> for CsmGraph<N, W>
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     /// Finds all Strongly Connected Components in the graph using Tarjan's algorithm.
     ///

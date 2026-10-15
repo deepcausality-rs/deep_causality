@@ -21,7 +21,7 @@
 //! components (e.g., two parallel edges between `u` and `v` are not a bridge,
 //! but a collapsed single edge would be).
 
-use crate::{CsmGraph, GraphView};
+use crate::{CsmGraph, EdgeKey, GraphView};
 use alloc::collections::BTreeMap;
 use alloc::vec;
 use alloc::vec::Vec;
@@ -44,7 +44,7 @@ pub(crate) struct SymmetricAdjacency {
 pub(crate) fn build_symmetric_adjacency<N, W>(g: &CsmGraph<N, W>) -> SymmetricAdjacency
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     let n = g.number_nodes();
 

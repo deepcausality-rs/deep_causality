@@ -14,7 +14,7 @@
 - **THEN** `ultragraph_traits` appears in Tier 0 and `deep_causality_context_store` in Tier 1 of the `AGENTS.md` tier block, the root crate list and crate count in `AGENTS.md` include both, and `deep_causality_context`'s entry lists the store crate as a direct dependency
 
 ### Requirement: RelationKind is an edge key and ordered
-`RelationKind` SHALL implement `EdgeKey` with `Key = RelationKind`, returning itself, and SHALL derive `PartialOrd` and `Ord`, ordering its variants by declaration: `Datial < Temporal < Spatial < SpaceTemporal`.
+`RelationKind` SHALL implement `EdgeKey` with `Key = RelationKind`, returning itself, and SHALL implement `PartialOrd` and `Ord` in declaration order: `Datial < Temporal < Spatial < SpaceTemporal`.
 
 #### Scenario: The key is the relation
 - **WHEN** `edge_key` is called on `RelationKind::Spatial`

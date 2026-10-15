@@ -5,7 +5,7 @@
 
 use alloc::vec::Vec;
 
-use crate::{CsmGraph, GraphView};
+use crate::{CsmGraph, EdgeKey, GraphView};
 
 // A constant defined for the adaptive `contains_edge` algorithm.
 const BINARY_SEARCH_THRESHOLD: usize = 64;
@@ -13,7 +13,7 @@ const BINARY_SEARCH_THRESHOLD: usize = 64;
 impl<N, W> GraphView<N, W> for CsmGraph<N, W>
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     /// Checks if the graph is in a frozen, high-performance state.
     /// For `CsmGraph`, this is always true by definition.

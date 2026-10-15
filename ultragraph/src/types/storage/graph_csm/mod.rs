@@ -2,6 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
+use crate::EdgeKey;
 
 use alloc::vec;
 use alloc::vec::Vec;
@@ -26,7 +27,7 @@ mod graph_traversal;
 #[derive(Default, Debug, Clone)]
 pub(crate) struct CsrAdjacency<W>
 where
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     pub(crate) offsets: Vec<usize>,
     pub(crate) targets: Vec<usize>,
@@ -37,7 +38,7 @@ where
 pub struct CsmGraph<N, W>
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     // Node payloads, indexed directly by `usize`.
     nodes: Vec<N>,
@@ -56,7 +57,7 @@ where
 impl<N, W> CsmGraph<N, W>
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     /// Creates a new, empty `CsmGraph`.
     ///

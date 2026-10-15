@@ -2,12 +2,12 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{GraphError, GraphState, GraphTraversal, UltraGraphContainer};
+use crate::{EdgeKey, GraphError, GraphState, GraphTraversal, UltraGraphContainer};
 
 impl<N, W> GraphTraversal<N, W> for UltraGraphContainer<N, W>
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     /// Returns an iterator over the indices of all nodes that have an outbound edge from the given node `a`.
     ///

@@ -3,12 +3,12 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{CsmGraph, GraphError, GraphTraversal, GraphView};
+use crate::{CsmGraph, EdgeKey, GraphError, GraphTraversal, GraphView};
 
 impl<N, W> GraphTraversal<N, W> for CsmGraph<N, W>
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     /// Returns a non-allocating iterator over the direct successors (outgoing edges) of node `a`.
     ///

@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{CentralityGraphAlgorithms, CsmGraph, GraphError, GraphView};
+use crate::{CentralityGraphAlgorithms, CsmGraph, EdgeKey, GraphError, GraphView};
 use alloc::collections::VecDeque;
 use alloc::vec;
 use alloc::vec::Vec;
@@ -11,7 +11,7 @@ use alloc::vec::Vec;
 impl<N, W> CentralityGraphAlgorithms<N, W> for CsmGraph<N, W>
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     /// Calculates the betweenness centrality of each node in the graph.
     fn betweenness_centrality(
@@ -153,7 +153,7 @@ where
 impl<N, W> CsmGraph<N, W>
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     /// Private helper for Brandes' algorithm: BFS and path counting phase.
     /// Returns (dist, sigma, pred, stack)

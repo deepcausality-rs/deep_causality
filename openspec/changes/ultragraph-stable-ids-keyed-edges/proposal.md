@@ -47,8 +47,8 @@ maintained projections, and the decision on RadixGraph's snapshot-log edge stora
 - The QCM readers in `deep_causality_quantum` size by `index_bound()`, check declared nodes with
   `contains_causaloid`, and keep their frozen-graph precondition with a rewritten rationale.
 - **BREAKING** `deep_causality_context_store` takes its first dependency, `ultragraph_traits`, so
-  that `RelationKind` implements `EdgeKey`; it moves from Tier 0 to Tier 1. `RelationKind` derives
-  `PartialOrd` and `Ord`.
+  that `RelationKind` implements `EdgeKey`; it moves from Tier 0 to Tier 1. `RelationKind` implements
+  `PartialOrd` and `Ord` in declaration order.
 - The work follows the TDD protocol of `openspec/specs/unified-math-tdd-protocol/spec.md`, and its
   performance is measured against the three-run baseline.
 

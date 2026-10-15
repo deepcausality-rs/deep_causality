@@ -5,7 +5,7 @@
 
 use alloc::vec::Vec;
 
-use crate::{CsmGraph, DynamicGraph, Unfreezable};
+use crate::{CsmGraph, DynamicGraph, EdgeKey, Unfreezable};
 use core::mem;
 
 /// This implementation provides the logic for the "unfreeze" part of the graph's
@@ -40,7 +40,7 @@ use core::mem;
 impl<N, W> Unfreezable<N, W> for CsmGraph<N, W>
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     /// Consumes the `CsmGraph` and converts it back into a mutable `DynamicGraph`.
     ///

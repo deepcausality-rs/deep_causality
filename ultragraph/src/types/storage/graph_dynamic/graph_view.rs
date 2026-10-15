@@ -5,9 +5,12 @@
 
 use alloc::vec::Vec;
 
-use crate::{DynamicGraph, GraphView};
+use crate::{DynamicGraph, EdgeKey, GraphView};
 
-impl<N, W> GraphView<N, W> for DynamicGraph<N, W> {
+impl<N, W> GraphView<N, W> for DynamicGraph<N, W>
+where
+    W: Clone + Default + EdgeKey,
+{
     /// Checks if the graph is in a frozen, high-performance state.
     /// For `DynamicGraph`, this is by definition always false.
     fn is_frozen(&self) -> bool {

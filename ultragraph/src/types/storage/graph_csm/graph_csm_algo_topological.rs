@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{CsmGraph, GraphError, GraphView, TopologicalGraphAlgorithms};
+use crate::{CsmGraph, EdgeKey, GraphError, GraphView, TopologicalGraphAlgorithms};
 use alloc::collections::VecDeque;
 use alloc::vec;
 use alloc::vec::Vec;
@@ -24,7 +24,7 @@ pub enum NodeState {
 impl<N, W> TopologicalGraphAlgorithms<N, W> for CsmGraph<N, W>
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     /// Finds a cycle in the graph using an iterative Depth-First Search (DFS).
     ///

@@ -3,13 +3,13 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{GraphState, GraphView, UltraGraphContainer};
+use crate::{EdgeKey, GraphState, GraphView, UltraGraphContainer};
 use alloc::vec::Vec;
 
 impl<N, W> GraphView<N, W> for UltraGraphContainer<N, W>
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     /// Returns `true` if the graph is in the immutable, performance-optimized `Static` state.
     /// A static graph cannot be frozen only once. If you want to modify a static graph i.e. adding

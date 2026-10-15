@@ -15,38 +15,38 @@ removal (the remap would corrupt every stored index once `freeze` stops renumber
 `ultragraph`'s keyed edges and dynamic traversal with the caller tests of task 3.4 that pin the old
 behaviour.
 
-- [ ] 0.1 Create `openspec/notes/ultragraph/tdd/` with one record file per group, each carrying the
+- [x] 0.1 Create `openspec/notes/ultragraph/tdd/` with one record file per group, each carrying the
       empty A–K table from design D8
 
 ## 1. ultragraph_traits and the EdgeKey bound
 
-- [ ] 1.1 Phase 1: add the crate `ultragraph_traits` at the repository root (no `[dependencies]`,
+- [x] 1.1 Phase 1: add the crate `ultragraph_traits` at the repository root (no `[dependencies]`,
       `[lints] workspace = true`, `no_std`, the crates.io metadata the other crates carry), add it to
       `[workspace.dependencies]` with a two-digit version (`0.1`) that members inherit, declare `EdgeKey` and its impls for `()`, `bool` and the primitive numerics with
       `unimplemented!()` bodies, add it to the workspace members and `BUILD.bazel`, and re-export
       `EdgeKey` from `ultragraph`; `cargo build` and `bazel build` succeed
-- [ ] 1.2 Phase 2: write `ultragraph_traits/tests` for every scenario of
+- [x] 1.2 Phase 2: write `ultragraph_traits/tests` for every scenario of
       `ultragraph-keyed-edges` "ultragraph_traits holds EdgeKey and depends on nothing" and "The unit
       and primitive numeric types take an empty key" (impl coverage only; graph behaviour is group 3),
       plus the `context-store-crate-identity` scenarios on `RelationKind`; run them, observe the
       `unimplemented!()` failures, record the run and count
-- [ ] 1.3 Phase 3: audit the suite against a throwaway implementation (a missing impl, a non-unit key
+- [x] 1.3 Phase 3: audit the suite against a throwaway implementation (a missing impl, a non-unit key
       for a numeric type where it compiles, `RelationKind::edge_key` returning a fixed variant, the
-      derived order reversed); record which test caught each
-- [ ] 1.4 Phase 4: implement the impls; add the `W: EdgeKey` bound to `UltraGraphContainer`,
+      order reversed); record which test caught each
+- [x] 1.4 Phase 4: implement the impls; add the `W: EdgeKey` bound to `UltraGraphContainer`,
       `GraphState`, `DynamicGraph` and `CsmGraph`; give `deep_causality_context_store` its dependency
-      on `ultragraph_traits` (Cargo, Bazel), derive `PartialOrd` and `Ord` on `RelationKind` and
+      on `ultragraph_traits` (Cargo, Bazel), implement `PartialOrd` and `Ord` on `RelationKind` in declaration order and
       implement `EdgeKey` for it; implement `EdgeKey` for `TeloidRelation` with `Key = ()` through
       `ultragraph::EdgeKey`
-- [ ] 1.5 Confirm nothing behaves differently: every existing suite of the five calling crates passes
+- [x] 1.5 Confirm nothing behaves differently: every existing suite of the five calling crates passes
       unchanged under `cargo test` and `bazel test //...`, and the executed counts match
-- [ ] 1.6 Phase 5: run `scripts/mutants.sh` over the new and edited files; resolve every survivor
-- [ ] 1.7 Update `AGENTS.md`: the crate count (34), the root crates (thirteen, and the list of those
+- [x] 1.6 Phase 5: run `scripts/mutants.sh` over the new and edited files; resolve every survivor
+- [x] 1.7 Update `AGENTS.md`: the crate count (34), the root crates (thirteen, and the list of those
       that stayed at the root), the tier block (`ultragraph_traits` Tier 0;
       `deep_causality_context_store` and `ultragraph` Tier 1), the store crate's description line,
       the count of crates without external runtime dependencies (27), and the count of workspace
       members opting into the lints (49)
-- [ ] 1.8 `make format && make fix`, `make check_no_std`, `make check_publishable`,
+- [x] 1.8 `make format && make fix`, `make check_no_std`, `make check_publishable`,
       `bazel test //...`, commit message for group 1
 
 ## 2. Permanent positions, and every caller that reads an index

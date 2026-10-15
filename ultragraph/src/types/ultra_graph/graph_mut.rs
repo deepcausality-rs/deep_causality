@@ -3,12 +3,12 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{DynamicGraph, GraphError, GraphMut, GraphState, UltraGraphContainer};
+use crate::{DynamicGraph, EdgeKey, GraphError, GraphMut, GraphState, UltraGraphContainer};
 
 impl<N, W> GraphMut<N, W> for UltraGraphContainer<N, W>
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     /// Adds a new node with the given payload to the graph.
     ///

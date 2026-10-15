@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use crate::{CsmGraph, GraphError, GraphView, PathfindingGraphAlgorithms};
+use crate::{CsmGraph, EdgeKey, GraphError, GraphView, PathfindingGraphAlgorithms};
 use alloc::collections::{BinaryHeap, VecDeque};
 use alloc::vec;
 use alloc::vec::Vec;
@@ -12,7 +12,7 @@ use core::cmp::Reverse;
 impl<N, W> PathfindingGraphAlgorithms<N, W> for CsmGraph<N, W>
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     /// Checks if a path exists from a start to a stop index.
     fn is_reachable(&self, start_index: usize, stop_index: usize) -> Result<bool, GraphError> {

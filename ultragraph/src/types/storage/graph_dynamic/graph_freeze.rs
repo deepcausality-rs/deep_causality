@@ -7,7 +7,7 @@ use alloc::vec;
 use alloc::vec::Vec;
 
 use crate::types::storage::graph_csm::CsrAdjacency;
-use crate::{CsmGraph, DynamicGraph, Freezable, GraphView};
+use crate::{CsmGraph, DynamicGraph, EdgeKey, Freezable, GraphView};
 
 // Refers to the number of outgoing edges for a single node,
 // which is also known as the node's degree.
@@ -19,7 +19,7 @@ const RADIX_SORT_THRESHOLD: usize = 128;
 impl<N, W> Freezable<N, W> for DynamicGraph<N, W>
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     /// Consumes the dynamic graph to create a static, high-performance `CsmGraph`.
     ///
@@ -212,7 +212,7 @@ fn calculate_offsets_sequential(degrees: &[usize]) -> Vec<usize> {
 /// This is now an ADAPTIVE sorter when targets.len exceeds RADIX_SORT_THRESHOLD
 fn sort_single_adjacency_list<W>(targets: &mut [usize], weights: &mut [W])
 where
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     if targets.len() < RADIX_SORT_THRESHOLD {
         // For small lists, the overhead of Radix Sort isn't worth it.

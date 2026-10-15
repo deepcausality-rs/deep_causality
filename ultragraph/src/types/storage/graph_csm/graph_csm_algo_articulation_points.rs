@@ -11,7 +11,7 @@
 //! symmetrization artifacts cannot be mistaken for back edges.
 
 use crate::types::storage::graph_csm::graph_csm_biconnectivity_common::build_symmetric_adjacency;
-use crate::{CsmGraph, GraphError, GraphView};
+use crate::{CsmGraph, EdgeKey, GraphError, GraphView};
 use alloc::vec;
 use alloc::vec::Vec;
 
@@ -20,7 +20,7 @@ const NO_PARENT_EDGE: usize = usize::MAX;
 pub(crate) fn articulation_points_impl<N, W>(g: &CsmGraph<N, W>) -> Result<Vec<usize>, GraphError>
 where
     N: Clone,
-    W: Clone + Default,
+    W: Clone + Default + EdgeKey,
 {
     let n = g.number_nodes();
     if n == 0 {
