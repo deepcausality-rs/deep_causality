@@ -1,7 +1,4 @@
 
-pub const SMALL: usize = 10;
-pub const MEDIUM: usize = 100;
-pub const LARGE: usize = 1_000;
 
 
 cargo bench -p ultragraph
