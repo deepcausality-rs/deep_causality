@@ -46,6 +46,8 @@ where
     fn add_node(&mut self, value: Contextoid<D, S, T, ST>) -> Result<usize, ContextIndexError>;
     fn contains_node(&self, index: usize) -> bool;
     fn get_node(&self, index: usize) -> Option<&Contextoid<D, S, T, ST>>;
+    /// Removes the node carrying `node_id` from the base graph. Its position is never reissued,
+    /// and every data and time index entry naming that position is dropped with it.
     fn remove_node(&mut self, node_id: ContextoidId) -> Result<(), ContextIndexError>;
     /// Replaces the contextoid under `node_id` with `new_node`, which may carry another id.
     ///
@@ -79,15 +81,14 @@ where
     /// which [`outbound_edges`](Self::outbound_edges) and [`inbound_edges`](Self::inbound_edges)
     /// run. Freezing takes `O(V + E)`; a frozen context is left as it is.
     ///
-    /// Freezing compacts away removed nodes, keeping the live nodes in their order, so an index
-    /// after a removed node moves down. The context remaps every index it stores, so a lookup by
-    /// id returns the node's index in the frozen graph. While frozen, every method that changes
-    /// the base graph returns an error; reads work in both states. Extra contexts are separate
-    /// graphs and keep their state.
+    /// Freezing keeps every position: no index the context stores changes, and a removed node's
+    /// position reads as absent in both states. While frozen, every method that changes the base
+    /// graph returns an error; reads work in both states. Extra contexts are separate graphs and
+    /// keep their state.
     fn freeze(&mut self);
 
-    /// Converts the base graph back to its mutable state, `O(V + E)`, keeping every index. A
-    /// context that is not frozen is left as it is.
+    /// Converts the base graph back to its mutable state, `O(V + E)`. A context that is not
+    /// frozen is left as it is.
     fn unfreeze(&mut self);
 
     /// Whether the base graph is frozen.

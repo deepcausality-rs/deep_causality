@@ -9,6 +9,7 @@ use crate::{DynamicGraph, EdgeKey, GraphState};
 
 mod default;
 mod graph_algo;
+mod graph_compact;
 mod graph_evolve;
 mod graph_mut;
 mod graph_traversal;

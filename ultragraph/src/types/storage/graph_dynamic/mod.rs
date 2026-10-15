@@ -7,6 +7,7 @@ use crate::EdgeKey;
 use alloc::vec::Vec;
 
 mod default;
+mod graph_compact;
 mod graph_freeze;
 mod graph_mut;
 mod graph_view;

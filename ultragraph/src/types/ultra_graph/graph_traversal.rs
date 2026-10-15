@@ -2,7 +2,7 @@
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
-use crate::{EdgeKey, GraphError, GraphState, GraphTraversal, UltraGraphContainer};
+use crate::{EdgeKey, GraphError, GraphState, GraphTraversal, GraphView, UltraGraphContainer};
 
 impl<N, W> GraphTraversal<N, W> for UltraGraphContainer<N, W>
 where
@@ -16,18 +16,22 @@ where
     ///
     /// # Errors
     ///
+    /// - Returns `GraphError::NodeNotFound` if position `a` holds no node, in either state.
     /// - Returns `GraphError::GraphNotFrozen` if the graph is in a `Dynamic` state.
-    /// - Returns an error if the node at index `a` does not exist.
     fn outbound_edges(&self, a: usize) -> Result<impl Iterator<Item = usize> + '_, GraphError> {
         match &self.state {
             GraphState::Static(g) => {
                 // Delegate to the CsmGraph's hyper-optimized implementation.
                 g.outbound_edges(a)
             }
-            GraphState::Dynamic(_) => {
-                // This operation is not supported on a dynamic graph.
-                // The graph must be frozen for high-performance traversal.
-                Err(GraphError::GraphNotFrozen)
+            GraphState::Dynamic(g) => {
+                // The position is checked first, so a tombstone names the same error in both
+                // states; a live node needs the frozen graph for traversal.
+                if g.contains_node(a) {
+                    Err(GraphError::GraphNotFrozen)
+                } else {
+                    Err(GraphError::NodeNotFound(a))
+                }
             }
         }
     }
@@ -38,18 +42,22 @@ where
     ///
     /// # Errors
     ///
+    /// - Returns `GraphError::NodeNotFound` if position `a` holds no node, in either state.
     /// - Returns `GraphError::GraphNotFrozen` if the graph is in a `Dynamic` state.
-    /// - Returns an error if the node at index `a` does not exist.
     fn inbound_edges(&self, a: usize) -> Result<impl Iterator<Item = usize> + '_, GraphError> {
         match &self.state {
             GraphState::Static(g) => {
                 // Delegate to the CsmGraph's hyper-optimized implementation.
                 g.inbound_edges(a)
             }
-            GraphState::Dynamic(_) => {
-                // This operation is not supported on a dynamic graph.
-                // The graph must be frozen for high-performance traversal.
-                Err(GraphError::GraphNotFrozen)
+            GraphState::Dynamic(g) => {
+                // The position is checked first, so a tombstone names the same error in both
+                // states; a live node needs the frozen graph for traversal.
+                if g.contains_node(a) {
+                    Err(GraphError::GraphNotFrozen)
+                } else {
+                    Err(GraphError::NodeNotFound(a))
+                }
             }
         }
     }

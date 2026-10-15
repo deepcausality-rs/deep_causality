@@ -7,7 +7,7 @@ use alloc::vec;
 use alloc::vec::Vec;
 
 use crate::types::storage::graph_csm::CsrAdjacency;
-use crate::{CsmGraph, DynamicGraph, EdgeKey, Freezable, GraphView};
+use crate::{CsmGraph, DynamicGraph, EdgeKey, Freezable};
 
 // Refers to the number of outgoing edges for a single node,
 // which is also known as the node's degree.
@@ -25,7 +25,8 @@ where
     ///
     /// This is a computationally intensive "stop the world" operation with O(V + E)
     /// complexity. It performs several key optimizations:
-    ///   1. Removes "tombstoned" (deleted) nodes and re-indexes the graph.
+    ///   1. Keeps every node position, tombstones included, and drops the edges that touch a
+    ///      removed node.
     ///   2. Builds both forward and backward CSR structures in a single pass to save memory.
     ///   3. Sorts all adjacency lists for fast O(log degree) edge checking in the `CsmGraph`.
     ///
@@ -41,8 +42,8 @@ where
     ///
     /// 2.  **Deterministic Transformation:** The entire operation is a deterministic
     ///     data transformation. It converts one valid data structure into another.
-    ///     Every step—compacting nodes, remapping indices, counting degrees, and
-    ///     placing edges—is based on the state of the input graph. There are no
+    ///     Every step—counting degrees, placing edges and sorting them—is based on the
+    ///     state of the input graph. There are no
     ///     external inputs or logical conditions that can cause a recoverable runtime
     ///     failure.
     ///
@@ -53,59 +54,32 @@ where
     /// provides a strong guarantee: transitioning from an evolutionary state to an
     /// analysis state is always a safe and predictable operation.
     fn freeze(self) -> CsmGraph<N, W> {
-        //  Add a guard clause for an empty graph.
-        if self.is_empty() {
-            return CsmGraph::new();
-        }
-
-        // --- First Pass: Counting and Compacting ---
-
-        let old_nodes = self.nodes;
+        let nodes = self.nodes;
         let old_edges = self.edges;
-        let old_root_index = self.root_index;
+        let root_index = self.root_index;
 
-        let mut compacted_nodes = Vec::with_capacity(old_nodes.len());
-        let mut remapping_table = vec![0; old_nodes.len()];
-        let mut is_tombstoned = vec![false; old_nodes.len()];
-        let mut new_root_index = None;
+        // Positions are permanent: the node table moves whole, tombstones included, and every
+        // CSR array is indexed by position. Only the edges are rebuilt.
+        let slots = nodes.len();
+        let live_nodes = nodes.iter().filter(|node| node.is_some()).count();
+        let is_live = |position: usize| nodes[position].is_some();
+
+        // --- First Pass: Counting ---
+        // A removed node's own list is cleared at removal; the edges into it survive in its
+        // predecessors' lists and are dropped here, so no CSR entry names a tombstone.
+        let mut out_degrees = vec![0; slots];
+        let mut in_degrees = vec![0; slots];
         let mut total_edges = 0;
 
-        // Compact the node list, create the remapping table, and track tombstones.
-        for (old_index, node_opt) in old_nodes.into_iter().enumerate() {
-            if let Some(node) = node_opt {
-                let new_index = compacted_nodes.len();
-                remapping_table[old_index] = new_index;
-                compacted_nodes.push(node);
-
-                if old_root_index == Some(old_index) {
-                    new_root_index = Some(new_index);
-                }
-            } else {
-                // Mark this index as tombstoned for later checks.
-                is_tombstoned[old_index] = true;
+        for (source, edge_list) in old_edges.iter().enumerate() {
+            if !is_live(source) {
+                continue;
             }
-        }
-        compacted_nodes.shrink_to_fit();
-        let num_new_nodes = compacted_nodes.len();
-
-        if num_new_nodes == 0 {
-            return CsmGraph::new();
-        }
-
-        // Count degrees for the new, compacted graph.
-        let mut out_degrees = vec![0; num_new_nodes];
-        let mut in_degrees = vec![0; num_new_nodes];
-
-        for (old_source_idx, edge_list) in old_edges.iter().enumerate() {
-            if !is_tombstoned[old_source_idx] {
-                let new_source_idx = remapping_table[old_source_idx];
-                for (old_target_idx, _) in edge_list {
-                    if !is_tombstoned[*old_target_idx] {
-                        let new_target_idx = remapping_table[*old_target_idx];
-                        out_degrees[new_source_idx] += 1;
-                        in_degrees[new_target_idx] += 1;
-                        total_edges += 1;
-                    }
+            for (target, _) in edge_list {
+                if is_live(*target) {
+                    out_degrees[source] += 1;
+                    in_degrees[*target] += 1;
+                    total_edges += 1;
                 }
             }
         }
@@ -125,32 +99,33 @@ where
         let mut back_offsets_copy = back_offsets.clone();
 
         // Place each edge into its correct position in the CSR arrays.
-        for (old_source_idx, edge_list) in old_edges.into_iter().enumerate() {
-            if !is_tombstoned[old_source_idx] {
-                let new_source_idx = remapping_table[old_source_idx];
-                for (old_target_idx, weight) in edge_list {
-                    if !is_tombstoned[old_target_idx] {
-                        let new_target_idx = remapping_table[old_target_idx];
-
-                        // Forward placement
-                        let fwd_write_head = fwd_offsets_copy[new_source_idx];
-                        fwd_targets[fwd_write_head] = new_target_idx;
-                        fwd_weights[fwd_write_head] = weight.clone();
-                        fwd_offsets_copy[new_source_idx] += 1;
-
-                        // Backward placement
-                        let back_write_head = back_offsets_copy[new_target_idx];
-                        back_targets[back_write_head] = new_source_idx;
-                        back_weights[back_write_head] = weight;
-                        back_offsets_copy[new_target_idx] += 1;
-                    }
+        for (source, edge_list) in old_edges.into_iter().enumerate() {
+            if !is_live(source) {
+                continue;
+            }
+            for (target, weight) in edge_list {
+                if !is_live(target) {
+                    continue;
                 }
+
+                // Forward placement
+                let fwd_write_head = fwd_offsets_copy[source];
+                fwd_targets[fwd_write_head] = target;
+                fwd_weights[fwd_write_head] = weight.clone();
+                fwd_offsets_copy[source] += 1;
+
+                // Backward placement
+                let back_write_head = back_offsets_copy[target];
+                back_targets[back_write_head] = source;
+                back_weights[back_write_head] = weight;
+                back_offsets_copy[target] += 1;
             }
         }
 
         // --- Final Step: Sequential Sorting ---
-        // Sort the adjacency lists for each node to enable binary search lookups.
-        for i in 0..num_new_nodes {
+        // Sort the adjacency lists for each node to enable binary search lookups. A tombstone's
+        // range is empty and is skipped by the guards.
+        for i in 0..slots {
             // Sort forward edges
             let start = fwd_offsets[i];
             let end = fwd_offsets[i + 1];
@@ -184,12 +159,7 @@ where
             weights: back_weights,
         };
 
-        CsmGraph::construct(
-            compacted_nodes,
-            forward_edges,
-            backward_edges,
-            new_root_index,
-        )
+        CsmGraph::construct(nodes, forward_edges, backward_edges, root_index, live_nodes)
     }
 }
 

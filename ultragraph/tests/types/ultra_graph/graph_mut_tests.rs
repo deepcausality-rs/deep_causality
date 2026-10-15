@@ -185,3 +185,38 @@ fn test_clear_frozen_graph() {
     assert!(g.is_empty());
     assert!(!g.is_frozen());
 }
+
+// --- Positions are never reissued (spec: ultragraph-stable-node-ids) ---
+
+#[test]
+fn test_removing_the_last_node_does_not_free_its_position() {
+    let mut g = UltraGraph::new();
+    for payload in 0..4 {
+        assert_eq!(g.add_node(payload).unwrap(), payload);
+    }
+    g.remove_node(3).unwrap();
+
+    // The freed slot 3 is not reused: the next position is 4.
+    assert_eq!(g.add_node(4).unwrap(), 4);
+    assert!(!g.contains_node(3));
+    assert_eq!(g.get_node(4), Some(&4));
+    assert_eq!(g.number_nodes(), 4);
+}
+
+#[test]
+fn test_clearing_a_frozen_graph_restarts_positions_at_zero() {
+    let mut g = UltraGraph::new();
+    for payload in 0..5 {
+        assert_eq!(g.add_node(payload).unwrap(), payload);
+    }
+    g.freeze();
+    assert!(g.is_frozen());
+
+    g.clear().unwrap();
+
+    assert!(!g.is_frozen());
+    assert!(g.is_empty());
+    assert_eq!(g.get_last_index(), None);
+    assert_eq!(g.add_node(10).unwrap(), 0);
+    assert_eq!(g.number_nodes(), 1);
+}

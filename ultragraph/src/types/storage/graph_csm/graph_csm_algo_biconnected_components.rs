@@ -23,7 +23,7 @@ where
     N: Clone,
     W: Clone + Default + EdgeKey,
 {
-    let n = g.number_nodes();
+    let n = g.node_slots();
     if n == 0 {
         return Ok(Vec::new());
     }
@@ -54,7 +54,7 @@ where
     let mut stack: Vec<(usize, usize, usize, usize, usize)> = Vec::new();
 
     for root in 0..n {
-        if dfs_num[root] != usize::MAX {
+        if !g.contains_node(root) || dfs_num[root] != usize::MAX {
             continue;
         }
         dfs_num[root] = time;

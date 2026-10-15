@@ -48,7 +48,7 @@ where
     /// - **Space Complexity:** O(V) for storing node states, predecessors, and the DFS stack.
     ///
     fn find_cycle(&self) -> Result<Option<Vec<usize>>, GraphError> {
-        let num_nodes = self.number_nodes();
+        let num_nodes = self.node_slots();
         if num_nodes == 0 {
             return Ok(None);
         }
@@ -57,7 +57,7 @@ where
         let mut predecessors = vec![None; num_nodes];
 
         for i in 0..num_nodes {
-            if states[i] == NodeState::Unvisited {
+            if self.contains_node(i) && states[i] == NodeState::Unvisited {
                 // We use the concrete `slice::Iter` type to avoid Box and dynamic dispatch.
                 let mut stack: Vec<(usize, slice::Iter<'_, usize>)> = Vec::new();
 
@@ -135,8 +135,10 @@ where
     ///   vector contains the nodes in a valid topological order.
     /// - `None` if the graph contains a cycle, as a topological sort is not possible.
     fn topological_sort(&self) -> Result<Option<Vec<usize>>, GraphError> {
-        let num_nodes = self.number_nodes();
-        if num_nodes == 0 {
+        // Arrays are sized by position; the live count decides whether every node was sorted.
+        let live = self.number_nodes();
+        let num_nodes = self.node_slots();
+        if live == 0 {
             // An empty graph is trivially sorted.
             return Ok(Some(Vec::new()));
         }
@@ -153,7 +155,9 @@ where
         }
 
         // 2. Initialize a queue with all nodes that have an in-degree of 0.
-        let mut queue: VecDeque<usize> = (0..num_nodes).filter(|&i| in_degrees[i] == 0).collect();
+        let mut queue: VecDeque<usize> = (0..num_nodes)
+            .filter(|&i| self.contains_node(i) && in_degrees[i] == 0)
+            .collect();
 
         // 3. Process the queue.
         let mut sorted_list = Vec::with_capacity(num_nodes);
@@ -173,7 +177,7 @@ where
         }
 
         // 4. Validate the result.
-        if sorted_list.len() == num_nodes {
+        if sorted_list.len() == live {
             Ok(Some(sorted_list))
         } else {
             Ok(None) // Cycle detected

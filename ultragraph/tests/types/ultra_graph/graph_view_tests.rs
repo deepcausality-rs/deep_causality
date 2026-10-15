@@ -114,3 +114,93 @@ fn test_graph_without_root() {
     assert_eq!(g.get_root_node(), None);
     assert_eq!(g.get_root_index(), None);
 }
+
+// --- Tombstones and live counts (spec: ultragraph-stable-node-ids) ---
+
+/// Nodes A, B, C and D at positions 0 to 3.
+fn four_nodes() -> UltraGraph<&'static str> {
+    let mut g = UltraGraph::new();
+    for (position, payload) in ["A", "B", "C", "D"].into_iter().enumerate() {
+        assert_eq!(g.add_node(payload).unwrap(), position);
+    }
+    g
+}
+
+#[test]
+fn test_is_empty_counts_live_nodes() {
+    let mut g = UltraGraph::new();
+    for (position, payload) in ["A", "B", "C"].into_iter().enumerate() {
+        assert_eq!(g.add_node(payload).unwrap(), position);
+    }
+    for position in 0..3 {
+        g.remove_node(position).unwrap();
+    }
+
+    // Dynamic state.
+    assert!(g.is_empty());
+    assert_eq!(g.number_nodes(), 0);
+
+    // Frozen state.
+    g.freeze();
+    assert!(g.is_empty());
+    assert_eq!(g.number_nodes(), 0);
+
+    // The node table still holds the three slots: the next position is 3.
+    g.unfreeze();
+    assert_eq!(g.add_node("D").unwrap(), 3);
+}
+
+#[test]
+fn test_counting_after_a_removal() {
+    let mut g = four_nodes();
+    g.remove_node(1).unwrap();
+
+    // Dynamic state: three live nodes, the highest at position 3.
+    assert_eq!(g.number_nodes(), 3);
+    assert_eq!(g.get_last_index(), Some(3));
+
+    // Frozen state: the same, since position 3 is still D.
+    g.freeze();
+    assert_eq!(g.number_nodes(), 3);
+    assert_eq!(g.get_last_index(), Some(3));
+    assert_eq!(g.get_node(3), Some(&"D"));
+}
+
+/// Row H: a tombstone at the last slot, and the position one past the slot count beside it.
+#[test]
+fn test_the_highest_live_position_skips_trailing_tombstones() {
+    let mut g = four_nodes();
+    g.remove_node(3).unwrap();
+
+    // Dynamic state.
+    assert_eq!(g.get_last_index(), Some(2));
+    assert_eq!(g.number_nodes(), 3);
+    assert!(!g.contains_node(3)); // the trailing tombstone
+    assert!(!g.contains_node(4)); // one past the slot count
+
+    // Frozen state.
+    g.freeze();
+    assert_eq!(g.get_last_index(), Some(2));
+    assert_eq!(g.number_nodes(), 3);
+    assert!(!g.contains_node(3));
+    assert!(!g.contains_node(4));
+
+    // The trailing slot survived the freeze: the next position is 4, not 3.
+    g.unfreeze();
+    assert_eq!(g.add_node("E").unwrap(), 4);
+}
+
+#[test]
+fn test_a_frozen_tombstone_is_absent() {
+    let mut g = four_nodes();
+    g.remove_node(1).unwrap();
+
+    g.freeze();
+
+    assert!(!g.contains_node(1));
+    assert_eq!(g.get_node(1), None);
+
+    let mut payloads: Vec<&str> = g.get_all_nodes().into_iter().copied().collect();
+    payloads.sort_unstable();
+    assert_eq!(payloads, vec!["A", "C", "D"]);
+}

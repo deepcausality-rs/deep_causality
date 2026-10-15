@@ -57,7 +57,10 @@ fn test_outbound_edges_on_static_graph() {
 #[test]
 fn test_outbound_edges_invalid_node() {
     let g = get_test_graph();
-    assert!(g.outbound_edges(99).is_err());
+    assert!(matches!(
+        g.outbound_edges(99),
+        Err(GraphError::NodeNotFound(99))
+    ));
 }
 
 #[test]
@@ -97,5 +100,51 @@ fn test_inbound_edges_on_static_graph() {
 #[test]
 fn test_inbound_edges_invalid_node() {
     let g = get_test_graph();
-    assert!(g.inbound_edges(99).is_err());
+    assert!(matches!(
+        g.inbound_edges(99),
+        Err(GraphError::NodeNotFound(99))
+    ));
+}
+
+/// Spec `ultragraph-stable-node-ids`: traversal started at a tombstone returns `NodeNotFound`
+/// with the requested position in both states, as it does for a position never issued.
+#[test]
+fn test_traversal_from_a_tombstone_fails_in_both_states() {
+    let mut g = UltraGraph::new();
+    for payload in 0..4 {
+        g.add_node(payload).unwrap();
+    }
+    g.add_edge(0, 1, ()).unwrap();
+    g.add_edge(1, 2, ()).unwrap();
+    g.add_edge(0, 2, ()).unwrap();
+    g.add_edge(2, 3, ()).unwrap();
+
+    g.remove_node(1).unwrap();
+
+    // Dynamic state: the tombstone, not the state, is what the error names.
+    assert!(matches!(
+        g.outbound_edges(1),
+        Err(GraphError::NodeNotFound(1))
+    ));
+    assert!(matches!(
+        g.inbound_edges(1),
+        Err(GraphError::NodeNotFound(1))
+    ));
+
+    g.freeze();
+
+    assert!(matches!(
+        g.outbound_edges(1),
+        Err(GraphError::NodeNotFound(1))
+    ));
+    assert!(matches!(
+        g.inbound_edges(1),
+        Err(GraphError::NodeNotFound(1))
+    ));
+
+    // The live nodes above the tombstone keep their positions and lose only the edges into it.
+    let out: Vec<_> = g.outbound_edges(2).unwrap().collect();
+    assert_eq!(out, vec![3]);
+    let inbound: Vec<_> = g.inbound_edges(2).unwrap().collect();
+    assert_eq!(inbound, vec![0]); // the edge 1 -> 2 left with the tombstone
 }

@@ -299,6 +299,36 @@ fn test_neighbour_listing_refuses_a_missing_node() {
 }
 
 #[test]
+fn test_neighbour_listing_refuses_a_removed_node() {
+    // Ids 1, 2 and 3 at 0, 1 and 2; 2 removed, so a live node (3 at 2) sits above the tombstone
+    // at 1. Frozen, the tombstone lists no neighbours in either direction and the edges into and
+    // out of it are gone, while the live nodes keep their positions and their edge 1 -> 3.
+    let mut context = get_context();
+    let [i1, i2, i3] = [1, 2, 3].map(|id| context.add_node(datum(id)).unwrap());
+    assert_eq!([i1, i2, i3], [0, 1, 2]);
+    context.add_edge(i1, i2, RelationKind::Datial).unwrap();
+    context.add_edge(i2, i3, RelationKind::Datial).unwrap();
+    context.add_edge(i1, i3, RelationKind::Datial).unwrap();
+    context.remove_node(2).unwrap();
+    context.freeze();
+
+    for err in [
+        context.outbound_edges(i2).err(),
+        context.inbound_edges(i2).err(),
+    ] {
+        let err = err.expect("no node at index 1");
+        assert!(err.to_string().contains("No node at index 1"), "{err}");
+    }
+    assert_eq!(
+        context.outbound_edges(i1).unwrap().collect::<Vec<_>>(),
+        [i3]
+    );
+    assert_eq!(context.inbound_edges(i3).unwrap().collect::<Vec<_>>(), [i1]);
+    assert_eq!(context.inbound_edges(i1).unwrap().count(), 0);
+    assert_eq!(context.outbound_edges(i3).unwrap().count(), 0);
+}
+
+#[test]
 fn test_a_frozen_context_refuses_changes_and_keeps_its_reads() {
     let mut context = get_context();
     let a = context.add_node(datum(1)).unwrap();
@@ -330,9 +360,12 @@ fn test_a_frozen_context_refuses_changes_and_keeps_its_reads() {
 
 #[test]
 fn test_freezing_after_a_removal_keeps_every_index_on_its_node() {
-    // Freezing compacts away the removed node 20, so the nodes after it move down one index.
+    // Positions are permanent: removing 20 leaves a tombstone at 1, and 30 and 40 keep 2 and 3
+    // through the freeze and the unfreeze. The index entries naming 20 go at the removal itself.
     let mut context = get_context();
     let [i10, i20, i30, i40] = [10, 20, 30, 40].map(|id| context.add_node(datum(id)).unwrap());
+    // Insertion order: the fourth add_node lands at 3.
+    assert_eq!([i10, i20, i30, i40], [0, 1, 2, 3]);
     context.add_edge(i10, i30, RelationKind::Datial).unwrap();
     context.add_edge(i30, i40, RelationKind::Datial).unwrap();
     context.set_data_index(1, i40, true);
@@ -341,50 +374,128 @@ fn test_freezing_after_a_removal_keeps_every_index_on_its_node() {
     context.set_time_index(4, i20, false);
     context.remove_node(20).unwrap();
 
+    // The entries naming the removed node are gone while the context is still dynamic ...
+    assert_eq!(context.get_data_index(&2, false), None);
+    assert_eq!(context.get_time_index(&4, false), None);
+    // ... and the ones naming live nodes are untouched.
+    assert_eq!(context.get_data_index(&1, true), Some(&i40));
+    assert_eq!(context.get_time_index(&3, true), Some(&i30));
+
     context.freeze();
 
     let index = |id| index_of(&context, id);
+    assert_eq!(index(10), i10);
+    assert_eq!(index(30), i30);
+    assert_eq!(
+        index(40),
+        i40,
+        "the node above the removal keeps its position"
+    );
     for id in [10, 30, 40] {
         assert_eq!(id_at(&context, index(id)), id);
     }
     assert_eq!(context.get_node_index_by_id(20), None);
-    assert_ne!(index(40), i40, "the index after the removal moved down");
-    // The edges follow their nodes.
+    // The edges name the same positions as before the freeze: 10 -> 30 and 30 -> 40.
     assert_eq!(
-        context
-            .outbound_edges(index(10))
-            .unwrap()
-            .collect::<Vec<_>>(),
-        [index(30)]
+        context.outbound_edges(i10).unwrap().collect::<Vec<_>>(),
+        [i30]
     );
     assert_eq!(
-        context
-            .inbound_edges(index(40))
-            .unwrap()
-            .collect::<Vec<_>>(),
-        [index(30)]
+        context.inbound_edges(i40).unwrap().collect::<Vec<_>>(),
+        [i30]
     );
-    // Stored data and time indices follow their nodes; the ones naming the removed node go.
-    assert_eq!(
-        context
-            .get_data_index(&1, true)
-            .map(|&i| id_at(&context, i)),
-        Some(40)
-    );
-    assert_eq!(
-        context
-            .get_time_index(&3, true)
-            .map(|&i| id_at(&context, i)),
-        Some(30)
-    );
+    // Stored data and time indices still name their nodes; the ones naming 20 stay gone.
+    assert_eq!(context.get_data_index(&1, true), Some(&i40));
+    assert_eq!(context.get_time_index(&3, true), Some(&i30));
     assert_eq!(context.get_data_index(&2, false), None);
     assert_eq!(context.get_time_index(&4, false), None);
 
-    // Unfreezing keeps every index.
-    let frozen = [index(10), index(30), index(40)];
+    // Unfreezing keeps every index as well.
     context.unfreeze();
-    assert_eq!([10, 30, 40].map(|id| index_of(&context, id)), frozen);
-    assert!(context.add_node(datum(50)).is_ok());
+    assert_eq!(
+        [10, 30, 40].map(|id| index_of(&context, id)),
+        [i10, i30, i40]
+    );
+    assert_eq!(context.get_node_index_by_id(20), None);
+    assert_eq!(context.get_data_index(&1, true), Some(&i40));
+    assert_eq!(context.get_time_index(&3, true), Some(&i30));
+    assert_eq!(context.get_data_index(&2, false), None);
+    assert_eq!(context.get_time_index(&4, false), None);
+    // The tombstone at 1 is never reused: the next node lands above the highest position, 3 + 1.
+    assert_eq!(context.add_node(datum(50)).unwrap(), i40 + 1);
+}
+
+#[test]
+fn test_an_index_survives_a_removal_and_a_freeze() {
+    // Spec scenario "An index survives a removal and a freeze": ids 10, 20 and 30 at 0, 1 and 2;
+    // 20 removed; frozen. 30 stays at 2, above the tombstone at 1, so the live count (2) is below
+    // its position.
+    let mut context = get_context();
+    let [i10, i20, i30] = [10, 20, 30].map(|id| context.add_node(datum(id)).unwrap());
+    assert_eq!([i10, i20, i30], [0, 1, 2]);
+    context.remove_node(20).unwrap();
+
+    context.freeze();
+
+    assert_eq!(context.get_node_index_by_id(30), Some(2));
+    // datum(30) stores the payload 30.0, so the read by id returns the stored payload.
+    assert_eq!(context.get_data_by_id(30), Some(30.0));
+    assert_eq!(context.get_node_index_by_id(20), None);
+    assert_eq!(context.get_node_index_by_id(10), Some(0));
+    assert_eq!(context.number_of_nodes(), 2);
+}
+
+#[test]
+fn test_stored_data_and_time_indices_follow_their_nodes() {
+    // Spec scenario "Stored data and time indices follow their nodes": the entries name i30 = 2
+    // and i10 = 0, 20 is removed, and the context is frozen and unfrozen. Under a renumbering
+    // freeze i30 would read 1.
+    let mut context = get_context();
+    let [i10, i20, i30] = [10, 20, 30].map(|id| context.add_node(datum(id)).unwrap());
+    assert_eq!([i10, i20, i30], [0, 1, 2]);
+    context.set_data_index(1, i30, true);
+    context.set_time_index(3, i10, true);
+    context.remove_node(20).unwrap();
+
+    context.freeze();
+    assert_eq!(context.get_data_index(&1, true), Some(&2));
+    assert_eq!(context.get_time_index(&3, true), Some(&0));
+    context.unfreeze();
+    assert_eq!(context.get_data_index(&1, true), Some(&2));
+    assert_eq!(context.get_time_index(&3, true), Some(&0));
+    // The entries still resolve to the nodes they were set on.
+    assert_eq!(id_at(&context, 2), 30);
+    assert_eq!(id_at(&context, 0), 10);
+}
+
+#[test]
+fn test_index_entries_naming_a_removed_node_go_at_removal() {
+    // Spec scenario "The entries go before any freeze": every map (current and previous, data
+    // and time) drops its entries naming i20 = 1 at the removal, while the context is dynamic.
+    // The entries naming i30 = 2, the live node above the tombstone, stay.
+    let mut context = get_context();
+    let [i10, i20, i30] = [10, 20, 30].map(|id| context.add_node(datum(id)).unwrap());
+    assert_eq!([i10, i20, i30], [0, 1, 2]);
+    context.set_data_index(2, i20, false);
+    context.set_time_index(4, i20, false);
+    context.set_data_index(5, i20, true);
+    context.set_time_index(6, i20, true);
+    context.set_data_index(7, i30, false);
+    context.set_time_index(8, i30, true);
+    context.set_data_index(9, i10, true);
+    context.set_time_index(11, i10, false);
+
+    context.remove_node(20).unwrap();
+
+    assert!(!context.is_frozen());
+    assert_eq!(context.get_data_index(&2, false), None);
+    assert_eq!(context.get_time_index(&4, false), None);
+    assert_eq!(context.get_data_index(&5, true), None);
+    assert_eq!(context.get_time_index(&6, true), None);
+    assert_eq!(context.get_data_index(&7, false), Some(&2));
+    assert_eq!(context.get_time_index(&8, true), Some(&2));
+    assert_eq!(context.get_data_index(&9, true), Some(&0));
+    assert_eq!(context.get_time_index(&11, false), Some(&0));
 }
 
 #[test]

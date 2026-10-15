@@ -21,15 +21,15 @@
 //! components (e.g., two parallel edges between `u` and `v` are not a bridge,
 //! but a collapsed single edge would be).
 
-use crate::{CsmGraph, EdgeKey, GraphView};
+use crate::{CsmGraph, EdgeKey};
 use alloc::collections::BTreeMap;
 use alloc::vec;
 use alloc::vec::Vec;
 
 /// Symmetric CSR adjacency over the undirected view of a `CsmGraph`.
 ///
-/// - `offsets` has length `V + 1`; `offsets[v]..offsets[v+1]` slices the
-///   half-edges incident to vertex `v`.
+/// - `offsets` has length `V + 1`, where `V` is the slot count; `offsets[v]..offsets[v+1]`
+///   slices the half-edges incident to vertex `v`, and a tombstone's range is empty.
 /// - `targets[i]` is the neighbor reached by half-edge `i`.
 /// - `edge_ids[i]` is the canonical id `0..num_edges` of the undirected
 ///   edge containing half-edge `i`; the two paired half-edges share the id.
@@ -46,7 +46,7 @@ where
     N: Clone,
     W: Clone + Default + EdgeKey,
 {
-    let n = g.number_nodes();
+    let n = g.node_slots();
 
     // Count occurrences of each ordered direction for every canonical pair
     // (a, b) with a < b. The undirected multiplicity is then max(forward,

@@ -241,6 +241,9 @@ fn test_a_removed_node_is_not_recorded() {
         (snapshot.edges()[0].from(), snapshot.edges()[0].to()),
         (10, 30)
     );
+    // Freezing keeps the tombstone at 1 and 30 at 2; the walk records the same snapshot.
+    ctx.freeze();
+    assert_eq!(ctx.snapshot().unwrap(), snapshot);
 }
 
 #[test]

@@ -3,7 +3,7 @@
  * Copyright (c) 2023 - 2026. The DeepCausality Authors and Contributors. All Rights Reserved.
  */
 
-use alloc::{format, string::ToString, vec, vec::Vec};
+use alloc::{format, string::ToString};
 use ultragraph::*;
 
 use crate::ContextoidId;
@@ -56,6 +56,7 @@ where
 
             // If successful, then remove the entry from our map to stay in sync.
             self.id_to_index_map.remove(&node_id);
+            self.drop_index_entries(index_to_remove);
 
             Ok(())
         } else {
@@ -171,39 +172,8 @@ where
     }
 
     fn freeze(&mut self) {
-        if self.base_context.is_frozen() {
-            return;
-        }
-        // Freezing keeps the live nodes in order and drops the removed ones, so a live node's
-        // index in the frozen graph is its rank among the live nodes.
-        let end = self
-            .base_context
-            .get_last_index()
-            .map_or(0, |last| last + 1);
-        let mut frozen_index: Vec<Option<usize>> = vec![None; end];
-        let mut rank = 0;
-        for (index, slot) in frozen_index.iter_mut().enumerate() {
-            if self.base_context.contains_node(index) {
-                *slot = Some(rank);
-                rank += 1;
-            }
-        }
+        // Positions are permanent, so no index the context stores changes.
         self.base_context.freeze();
-
-        // Every stored index follows its node. An entry naming a removed node named nothing
-        // before the freeze and would name another node after it, so it is dropped.
-        let remap = |index: &mut usize| match frozen_index.get(*index).copied().flatten() {
-            Some(frozen) => {
-                *index = frozen;
-                true
-            }
-            None => false,
-        };
-        self.id_to_index_map.retain(|_, index| remap(index));
-        self.current_data_map.retain(|_, index| remap(index));
-        self.previous_data_map.retain(|_, index| remap(index));
-        self.current_index_map.retain(|_, index| remap(index));
-        self.previous_index_map.retain(|_, index| remap(index));
     }
 
     fn unfreeze(&mut self) {

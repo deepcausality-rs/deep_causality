@@ -395,9 +395,16 @@ fn test_get_data_by_id_reads_the_payload_of_the_node_carrying_the_id() {
     assert_eq!(context.get_data_by_id(20), Some(9.0));
     context.remove_node(10).unwrap();
     assert_eq!(context.get_data_by_id(10), None);
+    // The removal leaves a tombstone at 1 (10 was the second node added); 20 at 2 and 30 at 0
+    // keep their positions.
+    assert_eq!(context.get_node_index_by_id(20), Some(2));
+    assert_eq!(context.get_node_index_by_id(30), Some(0));
 
-    // Freezing compacts the removed slot away; the read follows each id to its node.
+    // Freezing keeps the slot and every index; the read follows each id to its node.
     context.freeze();
+    assert_eq!(context.get_node_index_by_id(20), Some(2));
+    assert_eq!(context.get_node_index_by_id(30), Some(0));
     assert_eq!(context.get_data_by_id(20), Some(9.0));
     assert_eq!(context.get_data_by_id(30), Some(3.5));
+    assert_eq!(context.get_data_by_id(10), None);
 }

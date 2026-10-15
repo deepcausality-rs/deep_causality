@@ -37,7 +37,7 @@ where
         }
 
         let mut queue = VecDeque::new();
-        let mut visited = vec![false; self.number_nodes()];
+        let mut visited = vec![false; self.node_slots()];
 
         queue.push_back((start_index, 1)); // (node, path_length)
         visited[start_index] = true;
@@ -73,8 +73,8 @@ where
         }
 
         let mut queue = VecDeque::new();
-        let mut predecessors = vec![None; self.number_nodes()];
-        let mut visited = vec![false; self.number_nodes()];
+        let mut predecessors = vec![None; self.node_slots()];
+        let mut visited = vec![false; self.node_slots()];
 
         queue.push_back(start_index);
         visited[start_index] = true;
@@ -129,7 +129,7 @@ where
             return Ok(Some((vec![start_index], W::default())));
         }
 
-        let num_nodes = self.number_nodes();
+        let num_nodes = self.node_slots();
         let mut distances: Vec<Option<W>> = vec![None; num_nodes];
         let mut predecessors: Vec<Option<usize>> = vec![None; num_nodes];
         let mut pq: BinaryHeap<(Reverse<W>, usize)> = BinaryHeap::new();

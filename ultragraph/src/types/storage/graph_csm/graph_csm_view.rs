@@ -21,32 +21,33 @@ where
         true
     }
 
+    /// True when no position holds a node; tombstones do not count.
     fn is_empty(&self) -> bool {
-        self.nodes.is_empty() && self.root_index.is_none()
+        self.live_nodes == 0
     }
 
-    /// Checks if a node exists at the given index.
-    /// In a frozen `CsmGraph`, the node list is compact, so a simple bounds check is sufficient.
+    /// Checks if a node exists at the given index: the position is in the table and holds a
+    /// node rather than a tombstone.
     fn contains_node(&self, index: usize) -> bool {
-        index < self.nodes.len()
+        self.nodes.get(index).is_some_and(Option::is_some)
     }
 
     /// Retrieves a reference to the payload of a node at the given index.
     /// This uses the built-in `Vec::get` for safe, O(1) access.
     fn get_node(&self, index: usize) -> Option<&N> {
-        self.nodes.get(index)
+        self.nodes.get(index).and_then(Option::as_ref)
     }
 
-    /// Returns the total number of nodes in the graph.
+    /// Returns the number of live nodes in the graph; tombstones do not count.
     fn number_nodes(&self) -> usize {
-        self.nodes.len()
+        self.live_nodes
     }
 
     /// Checks if a directed edge exists from node `a` to node `b`.
     /// This uses the high-performance adaptive strategy defined in the SRS.
     fn contains_edge(&self, a: usize, b: usize) -> bool {
-        // Ensure the source node exists before trying to access its edges.
-        if a >= self.number_nodes() {
+        // A position past the table or holding a tombstone has no edges.
+        if !self.contains_node(a) {
             return false;
         }
 
@@ -77,7 +78,7 @@ where
     }
 
     fn get_all_nodes(&self) -> Vec<&N> {
-        self.nodes.iter().collect()
+        self.nodes.iter().filter_map(Option::as_ref).collect()
     }
 
     /// Retrieves a list of all outgoing edges from a given source node.
@@ -105,13 +106,14 @@ where
         )
     }
 
+    /// The highest position holding a node, so trailing tombstones are skipped.
     fn get_last_index(&self) -> Option<usize> {
-        self.nodes.len().checked_sub(1)
+        self.nodes.iter().rposition(Option::is_some)
     }
 
     /// Checks if a root node has been designated for this graph.
     fn contains_root_node(&self) -> bool {
-        self.root_index.is_some()
+        self.get_root_index().is_some()
     }
 
     /// Retrieves a reference to the payload of the designated root node, if one exists.
@@ -123,6 +125,6 @@ where
     /// Retrieves the index of the designated root node, if one exists.
     /// This is an O(1) operation.
     fn get_root_index(&self) -> Option<usize> {
-        self.root_index
+        self.root_index.filter(|&index| self.contains_node(index))
     }
 }

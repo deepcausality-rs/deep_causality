@@ -22,6 +22,10 @@ mod graph_algo_pathfinder_tests;
 #[cfg(test)]
 mod graph_algo_structural_tests;
 #[cfg(test)]
+mod graph_algo_tests;
+#[cfg(test)]
+mod graph_compact_tests;
+#[cfg(test)]
 mod graph_csm_algo_topological_tests;
 #[cfg(test)]
 mod graph_evolve_tests;

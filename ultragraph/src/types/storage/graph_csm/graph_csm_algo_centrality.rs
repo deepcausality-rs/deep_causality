@@ -19,23 +19,29 @@ where
         directed: bool,
         normalized: bool,
     ) -> Result<Vec<(usize, f64)>, GraphError> {
-        let num_nodes = self.number_nodes();
-        if num_nodes == 0 {
+        // Arrays are indexed by position and sized by the slot count; the node count that enters
+        // the result (the small-graph case and the normalisation) is the live count.
+        let live = self.number_nodes();
+        if live == 0 {
             return Ok(Vec::new());
         }
+        let slots = self.node_slots();
 
-        let mut centrality = vec![0.0; num_nodes];
+        let mut centrality = vec![0.0; slots];
 
         // Betweenness centrality is 0 for graphs with less than 3 nodes.
-        if num_nodes < 3 {
-            return Ok(centrality.into_iter().enumerate().collect());
+        if live < 3 {
+            return Ok(self.live_scores(centrality));
         }
 
-        for s in 0..num_nodes {
+        for s in 0..slots {
+            if !self.contains_node(s) {
+                continue;
+            }
             let (_, sigma, pred, mut stack) = self._brandes_bfs_and_path_counting(s, directed)?;
 
             // Accumulation
-            let mut delta = vec![0.0; num_nodes];
+            let mut delta = vec![0.0; slots];
             while let Some(w) = stack.pop() {
                 for &v in &pred[w] {
                     let sigma_v = sigma[v];
@@ -58,9 +64,9 @@ where
         // Normalization
         if normalized {
             let scale = if directed {
-                ((num_nodes - 1) * (num_nodes - 2)) as f64
+                ((live - 1) * (live - 2)) as f64
             } else {
-                ((num_nodes - 1) * (num_nodes - 2)) as f64 / 2.0
+                ((live - 1) * (live - 2)) as f64 / 2.0
             };
 
             if scale > 0.0 {
@@ -70,7 +76,7 @@ where
             }
         }
 
-        Ok(centrality.into_iter().enumerate().collect())
+        Ok(self.live_scores(centrality))
     }
 
     /// Calculates betweenness centrality across a specific set of critical pathways.
@@ -80,10 +86,10 @@ where
         directed: bool,
         normalized: bool,
     ) -> Result<Vec<(usize, f64)>, GraphError> {
-        let num_nodes = self.number_nodes();
-        if num_nodes == 0 {
+        if self.number_nodes() == 0 {
             return Ok(vec![]);
         }
+        let num_nodes = self.node_slots();
 
         let mut centrality = vec![0.0; num_nodes];
         let mut valid_pathways = 0;
@@ -146,7 +152,7 @@ where
             }
         }
 
-        Ok(centrality.into_iter().enumerate().collect())
+        Ok(self.live_scores(centrality))
     }
 }
 
@@ -155,6 +161,15 @@ where
     N: Clone,
     W: Clone + Default + EdgeKey,
 {
+    /// Pairs each live position with its score; tombstone positions are left out.
+    fn live_scores(&self, scores: Vec<f64>) -> Vec<(usize, f64)> {
+        scores
+            .into_iter()
+            .enumerate()
+            .filter(|(position, _)| self.contains_node(*position))
+            .collect()
+    }
+
     /// Private helper for Brandes' algorithm: BFS and path counting phase.
     /// Returns (dist, sigma, pred, stack)
     #[allow(clippy::type_complexity)]
@@ -164,7 +179,7 @@ where
         s: usize,
         directed: bool,
     ) -> Result<(Vec<Option<usize>>, Vec<f64>, Vec<Vec<usize>>, Vec<usize>), GraphError> {
-        let num_nodes = self.number_nodes();
+        let num_nodes = self.node_slots();
         let mut stack = Vec::new(); // S in Brandes' algorithm
         let mut queue = VecDeque::new();
         let mut dist = vec![None; num_nodes];

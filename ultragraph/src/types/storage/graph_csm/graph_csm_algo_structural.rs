@@ -19,7 +19,7 @@ where
     /// A vector of vectors, where each inner vector is a list of node indices
     /// belonging to a single SCC.
     fn strongly_connected_components(&self) -> Result<Vec<Vec<usize>>, GraphError> {
-        let num_nodes = self.number_nodes();
+        let num_nodes = self.node_slots();
         if num_nodes == 0 {
             return Ok(Vec::new());
         }
@@ -36,7 +36,7 @@ where
         let mut dfs_stack: Vec<(usize, slice::Iter<'_, usize>)> = Vec::new();
 
         for i in 0..num_nodes {
-            if dfs_num[i].is_none() {
+            if self.contains_node(i) && dfs_num[i].is_none() {
                 // Start DFS from node i
                 let start_offset = self.forward_edges.offsets[i];
                 let end_offset = self.forward_edges.offsets[i + 1];

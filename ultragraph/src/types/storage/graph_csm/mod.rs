@@ -40,8 +40,11 @@ where
     N: Clone,
     W: Clone + Default + EdgeKey,
 {
-    // Node payloads, indexed directly by `usize`.
-    nodes: Vec<N>,
+    // Node payloads by position. A removed node leaves `None`; positions never move.
+    nodes: Vec<Option<N>>,
+
+    // The number of `Some` entries in `nodes`, so `number_nodes` stays O(1).
+    live_nodes: usize,
 
     // CsrAdjacency structure for forward traversal (successors).
     // The CsrAdjacency makes the intent of the data layout explicit and clean.
@@ -65,6 +68,7 @@ where
     pub fn new() -> Self {
         Self {
             nodes: Vec::new(),
+            live_nodes: 0,
 
             // Initialize with a valid empty CSR state. The offsets vector must
             // contain a single `0` to correctly represent the `V + 1` length rule, where V=0.
@@ -91,6 +95,7 @@ where
     pub fn with_capacity(num_nodes: usize) -> Self {
         Self {
             nodes: Vec::with_capacity(num_nodes),
+            live_nodes: 0,
             // Initialize with a valid empty CSR state. The offsets vector must
             // contain a single `0` to correctly represent the `V + 1` length rule, where V=0.
             forward_edges: CsrAdjacency {
@@ -105,18 +110,26 @@ where
         }
     }
 
-    // Internal helper for freeze
+    // Internal helper for freeze. `live_nodes` is the number of `Some` entries in `nodes`.
     pub(crate) fn construct(
-        nodes: Vec<N>,
+        nodes: Vec<Option<N>>,
         forward_edges: CsrAdjacency<W>,
         backward_edges: CsrAdjacency<W>,
         root_index: Option<usize>,
+        live_nodes: usize,
     ) -> Self {
         Self {
             nodes,
+            live_nodes,
             forward_edges,
             backward_edges,
             root_index,
         }
+    }
+
+    /// The number of positions in the node table, tombstones included. Every per-node array an
+    /// algorithm indexes by position is sized by this, never by `number_nodes`.
+    pub(crate) fn node_slots(&self) -> usize {
+        self.nodes.len()
     }
 }
