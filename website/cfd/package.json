@@ -15,15 +15,15 @@
     "check:prose:test": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts -p 'test_*.py'"
   },
   "dependencies": {
-    "@astrojs/mdx": "^8.0.3",
+    "@astrojs/mdx": "^8.1.0",
     "@astrojs/sitemap": "^3.7.4",
-    "astro": "^7.3.8"
+    "astro": "^7.4.1"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.10",
+    "@astrojs/check": "^0.9.11",
     "shiki": "4.5.0",
     "typescript": "^6.0.3",
-    "wrangler": "4.149.0"
+    "wrangler": "4.151.2"
   },
   "packageManager": "pnpm@11.9.0"
 }
