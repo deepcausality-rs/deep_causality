@@ -339,18 +339,12 @@ Would more data reduce the error? Yes, but more data also exposes another system
 
 Full code for the one-week example: [examples/physics_examples/chronometric_gm_recovery](https://github.com/deepcausality-rs/deep_causality/tree/main/examples/physics_examples/chronometric_gm_recovery)
 
-## Conclusion
 
 Much of this example hides behind high-level, domain-specific abstractions. The short version: thanks to Rust's zero-cost abstractions, high-level abstraction obstructs neither the physics nor performance. Most unified math examples read straightforwardly, without the usual boilerplate. Precision as a parameter also makes memory an economic choice: parts of a simulation can drop to, say, BF16, freeing memory for the parts where higher precision improves the results. And exploring crazy ideas, such as inverting the Einstein field equations, brings back the fun that debugging gigatons of glue code would have killed.
 
-This post only scratches the surface. Unified math is an iceberg, and you have seen its tip. Underneath lies a dense web of abstract algebra, applied category theory, algebraic geometry, and some even stranger material. I skipped the implementation details because they span a year and a half of learning. Some original ideas survived, such as composition through category theory. Others, such as precision as a parameter, emerged later. A few really dumb ideas, such as subtype constraints inside generic associated types, were eventually abandoned.
-
-DeepCausality's downstream projects in advanced science and engineering, such as counterfactual fluid dynamics and quantum causal models, are all built on the unified math stack.
-
-
 ## Conclusion
 
-UltraGraph 0.8 offers unprecedented speed for hypergraph analytics on larger graphs. Try it. The Future is now.
+This post only scratches the surface. Unified math is an iceberg, and you have seen its tip. Underneath lies a dense web of abstract algebra, applied category theory, algebraic geometry, and some even stranger material. I skipped the implementation details because they span a year and a half of learning. DeepCausality's downstream projects in advanced science and engineering, such as counterfactual fluid dynamics and quantum causal models, are all built on the unified math foundation.
 
 * Explore [the code and examples on GitHub](https://github.com/deepcausality-rs/deep_causality).
 * [Join the community](https://www.deepcausality.com/community).
