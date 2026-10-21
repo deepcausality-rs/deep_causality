@@ -15,10 +15,10 @@
   "dependencies": {
     "@astrojs/sitemap": "^3.7.4",
     "@astrojs/starlight": "^0.42.6",
-    "astro": "^7.3.8"
+    "astro": "^7.4.1"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.10",
+    "@astrojs/check": "^0.9.11",
     "typescript": "^6.0.3"
   },
   "packageManager": "pnpm@11.9.0"
