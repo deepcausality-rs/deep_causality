@@ -12,17 +12,17 @@
     "check": "astro check"
   },
   "dependencies": {
-    "@astrojs/mdx": "^8.1.0",
+    "@astrojs/mdx": "^8.1.1",
     "@astrojs/sitemap": "^3.7.4",
-    "astro": "^7.4.1",
-    "astro-mermaid": "^2.1.0",
+    "astro": "^7.4.2",
+    "astro-mermaid": "^2.2.0",
     "mermaid": "^12.2.0",
     "pagefind": "^1.5.2"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.11",
+    "@astrojs/check": "^0.9.12",
     "typescript": "^6.0.3",
-    "wrangler": "4.151.2"
+    "wrangler": "4.152.0"
   },
   "packageManager": "pnpm@11.9.0"
 }
