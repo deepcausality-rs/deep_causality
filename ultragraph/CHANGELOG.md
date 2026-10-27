@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.9.9...ultragraph-v0.10.0) - 2026-10-27
+
+### Added
+
+- *(ultragraph)* [**breaking**] keyed edges, dynamic traversal and the projection view
+- *(ultragraph)* [**breaking**] permanent node positions across removal, freeze and unfreeze
+- *(ultragraph)* [**breaking**] bound every edge payload by EdgeKey
+- *(ultragraph)* depend on ultragraph_traits and re-export EdgeKey
+
+### Fixed
+
+- *(ultragraph)* CI review follow-ups to stable ids and keyed edges
+
+### Other
+
+- *(ultragraph)* CRUD, traversal and state-transition benchmarks; three-run baseline
+
 ## [0.9.9](https://github.com/deepcausality-rs/deep_causality/compare/ultragraph-v0.9.8...ultragraph-v0.9.9) - 2026-09-29
 
 ### Other

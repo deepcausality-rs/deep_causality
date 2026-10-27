@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.1](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_core-v0.14.0...deep_causality_core-v0.14.1) - 2026-10-27
+
+### Added
+
+- *(deep_causality_core)* Added remaining intervene trait implementations.
+
 ## [0.14.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_core-v0.13.2...deep_causality_core-v0.14.0) - 2026-10-09
 
 ### Added
