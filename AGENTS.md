@@ -275,7 +275,8 @@ and `yanked/*` are excluded. Third-party crates are resolved from the registry b
 rules_rs into `@crates`; there is no vendored source tree.
 `deep_causality_effects`, `deep_causality_macros` and `deep_causality_sparse` were moved to
 `yanked/` and are no longer workspace members, so all three are omitted. `deep_causality_sparse`
-was a re-export shim over `deep_causality_linear`; 0.2.5 is its last crates.io release.
+is published as 0.2.6, which exports nothing and depends on nothing; its contents live in
+`deep_causality_linear`.
 
 The tier block below is derived from the `[dependencies]` tables of each member's
 `Cargo.toml`, dev- and build-dependencies excluded. `scripts/crates.sh` reads the
