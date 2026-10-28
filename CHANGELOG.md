@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.19.0...deep_causality-v0.20.0) - 2026-10-28
+
+### Added
+
+- *(ultragraph)* [**breaking**] keyed edges, dynamic traversal and the projection view
+- *(deep_causality)* size reasoning by index_bound, validate writers by presence
+
 ## [0.19.0](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality-v0.18.2...deep_causality-v0.19.0) - 2026-10-09
 
 ### Added
