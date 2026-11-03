@@ -1,0 +1,134 @@
+#SPDX-License-Identifier: MIT
+#Copyright (c) "2023" . The DeepCausality Authors. All Rights Reserved.
+
+# Runs scripts/update.sh daily, once per mode, and opens or updates one pull request per mode:
+#
+#   chore/deps-compatible  DC_UPDATE_MODE=compatible: releases the current version requirements
+#                          admit. Auto-merges once main's required status checks pass.
+#   chore/deps-latest      DC_UPDATE_MODE=latest: every dependency at its newest release, majors
+#                          included. Labeled needs-human; never merges itself.
+#
+# Each run rebuilds its branch from main, so an open pull request is replaced in place and one
+# with nothing to update is closed. A failing update step fails the job and opens nothing; the
+# step and site are named in the log.
+#
+# The pull request is opened with a GitHub App token. One opened with the default GITHUB_TOKEN
+# starts no workflows, so none of main's required checks would ever report on it.
+#
+# DCO: the DCO app requires the Signed-off-by line to match the commit author. The commit's
+# author and committer are both the App's bot user, and `signoff` adds the committer's sign-off.
+#
+# Setup: a GitHub App installed on this repository with the repository permissions Contents and
+# Pull requests set to read and write. Its client ID is the variable DEPS_APP_CLIENT_ID and its
+# private key the secret DEPS_APP_PRIVATE_KEY. "Allow auto-merge" is enabled in the repository
+# settings.
+
+name: Dependency update
+
+on:
+  schedule:
+    # 04:23 UTC daily. Off the hour to avoid the scheduler's peak-minute queue.
+    - cron: '23 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deps-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: update (${{ matrix.mode }})
+    runs-on: ubuntu-26.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - mode: compatible
+            branch: chore/deps-compatible
+            title: 'chore(deps): compatible dependency updates'
+            labels: dependencies
+            automerge: true
+          - mode: latest
+            branch: chore/deps-latest
+            title: 'chore(deps): latest dependency updates, majors included'
+            labels: dependencies,needs-human
+            automerge: false
+    steps:
+      - name: Create GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.DEPS_APP_CLIENT_ID }}
+          private-key: ${{ secrets.DEPS_APP_PRIVATE_KEY }}
+
+      - name: Resolve the App's bot identity
+        id: bot
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          SLUG: ${{ steps.app-token.outputs.app-slug }}
+        run: |
+          set -euo pipefail
+          id="$(gh api "/users/${SLUG}[bot]" --jq .id)"
+          echo "identity=${SLUG}[bot] <${id}+${SLUG}[bot]@users.noreply.github.com>" >> "${GITHUB_OUTPUT}"
+
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-edit
+        if: matrix.mode == 'latest'
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-edit
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: website/cfd/.node-version
+
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: website/cfd/package.json
+
+      - name: Run scripts/update.sh
+        env:
+          DC_UPDATE_MODE: ${{ matrix.mode }}
+        run: bash scripts/update.sh
+
+      - name: Open or update the pull request
+        id: cpr
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ steps.app-token.outputs.token }}
+          base: main
+          branch: ${{ matrix.branch }}
+          delete-branch: true
+          author: ${{ steps.bot.outputs.identity }}
+          committer: ${{ steps.bot.outputs.identity }}
+          signoff: true
+          commit-message: |
+            ${{ matrix.title }}
+
+            scripts/update.sh with DC_UPDATE_MODE=${{ matrix.mode }}, run by
+            .github/workflows/deps_update.yml.
+          title: ${{ matrix.title }}
+          labels: ${{ matrix.labels }}
+          body: |
+            `scripts/update.sh` with `DC_UPDATE_MODE=${{ matrix.mode }}`, run by `.github/workflows/deps_update.yml`.
+
+            Every website under `website/` was updated, its pnpm overrides synced, its lockfile checked with a frozen install, and it was built and checked before this pull request was opened.
+
+            ${{ matrix.automerge && 'Merges itself once the required status checks pass.' || 'Majors included: review before merging. This pull request never merges itself.' }}
+
+      - name: Enable auto-merge
+        if: matrix.automerge && (steps.cpr.outputs.pull-request-operation == 'created' || steps.cpr.outputs.pull-request-operation == 'updated')
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          PR_NUMBER: ${{ steps.cpr.outputs.pull-request-number }}
+        run: gh pr merge --auto --merge --repo "${GITHUB_REPOSITORY}" "${PR_NUMBER}"
