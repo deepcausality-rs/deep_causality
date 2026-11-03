@@ -8,11 +8,9 @@ bazel_dep(name = "aspect_bazel_lib", version = "2.22.5")
 bazel_dep(name = "bazel_skylib", version = "1.9.2")
 bazel_dep(name = "platforms", version = "1.1.0")
 bazel_dep(name = "toolchains_buildbuddy", version = "0.0.4")
-bazel_dep(name = "llvm", version = "0.8.24")
-bazel_dep(name = "rules_rs", version = "0.1.0")
-
-# Pinned by commit until the module is published to the
-# Bazel Central Registry; at that point this becomes a plain bazel_dep
+bazel_dep(name = "llvm", version = "0.8.26")
+bazel_dep(name = "rules_rs", version = "0.2.1")
+# Pinned by commit until the module is published to the Bazel Central Registry;
 bazel_dep(name = "rules_lean", version = "0.1.0")
 git_override(
     module_name = "rules_lean",
@@ -21,59 +19,15 @@ git_override(
 )
 
 ###############################################################################
-# rules_rs for Rust
-# https://github.com/hermeticbuild/rules_rs
-###############################################################################
-rules_rs_rules_rust = use_extension("@rules_rs//rs:rules_rust.bzl", "rules_rust")
-use_repo(rules_rs_rules_rust, "rules_rust")
-
-RUST_EDITION = "2024"
-
-RUST_VERSION = "1.98.1"
-
-toolchains = use_extension("@rules_rs//rs/toolchains:module_extension.bzl", "toolchains")
-toolchains.toolchain(
-    edition = RUST_EDITION,
-    # Silences one clang driver diagnostic on every macOS link:
-    #   clang++: argument unused during compilation: '-rtlib=compiler-rt'
-    extra_rustc_flags = {
-        "aarch64-apple-darwin": ["-Clink-arg=-Wno-unused-command-line-argument"],
-        "x86_64-apple-darwin": ["-Clink-arg=-Wno-unused-command-line-argument"],
-    },
-    version = RUST_VERSION,
-)
-use_repo(toolchains, "default_rust_toolchains")
-
-register_toolchains("@default_rust_toolchains//...")
-
-# The triples for the RESOLVED dependency graph. rules_rs evaluates each crate's target-specific
-# dependencies once per triple, so a `[target.'cfg(unix)'.dependencies]` entry is
-# present in the graph whichever of these machines runs the build.
-RUST_PLATFORMS = [
-    "aarch64-apple-darwin",
-    "aarch64-unknown-linux-gnu",
-    "x86_64-unknown-linux-gnu",
-]
-
-crate = use_extension("@rules_rs//rs:extensions.bzl", "crate")
-crate.from_cargo(
-    name = "crates",
-    cargo_lock = "//:Cargo.lock",
-    cargo_toml = "//:Cargo.toml",
-    generate_lint_config = True,
-    platform_triples = RUST_PLATFORMS,
-)
-use_repo(crate, "crates")
-
-###############################################################################
 # Hermetic LLVM toolchain
 # https://github.com/hermeticbuild/hermetic-llvm
 ###############################################################################
 # The LLVM version is selected on the `llvm` extension.
 llvm = use_extension("@llvm//extensions:llvm.bzl", "llvm")
 
-# llvm_version matches the one Rust uses in the version declared in the previous step.
-llvm.version(llvm_version = "22.1.8")
+# Matches the LLVM that rustc RUST_DEFAULT_VERSION below is built on. Confirmed with
+# `rustc --version --verbose`. Keep the two in sync.
+llvm.version(llvm_version = "23.1.0")
 use_repo(llvm, "llvm-project")
 
 # The macOS sysroot. The web.archive entry is a fallback in case the Apple URL returns 503.
@@ -108,6 +62,51 @@ register_execution_platforms(
     "//bazel/platforms:linux-x86_64",
     "//bazel/platforms:linux-aarch64",
 )
+
+###############################################################################
+# rules_rs for Rust
+# https://github.com/hermeticbuild/rules_rs
+###############################################################################
+rules_rs_rules_rust = use_extension("@rules_rs//rs:rules_rust.bzl", "rules_rust")
+use_repo(rules_rs_rules_rust, "rules_rust")
+
+RUST_EDITION = "2024"
+
+RUST_VERSION = "1.99.1"
+
+toolchains = use_extension("@rules_rs//rs/toolchains:module_extension.bzl", "toolchains")
+toolchains.toolchain(
+    edition = RUST_EDITION,
+    # Silences one clang driver diagnostic on every macOS link:
+    #   clang++: argument unused during compilation: '-rtlib=compiler-rt'
+    extra_rustc_flags = {
+        "aarch64-apple-darwin": ["-Clink-arg=-Wno-unused-command-line-argument"],
+        "x86_64-apple-darwin": ["-Clink-arg=-Wno-unused-command-line-argument"],
+    },
+    version = RUST_VERSION,
+)
+use_repo(toolchains, "default_rust_toolchains")
+
+register_toolchains("@default_rust_toolchains//...")
+
+# The triples for the RESOLVED dependency graph. rules_rs evaluates each crate's target-specific
+# dependencies once per triple, so a `[target.'cfg(unix)'.dependencies]` entry is
+# present in the graph whichever of these machines runs the build.
+RUST_PLATFORMS = [
+    "aarch64-apple-darwin",
+    "aarch64-unknown-linux-gnu",
+    "x86_64-unknown-linux-gnu",
+]
+
+crate = use_extension("@rules_rs//rs:extensions.bzl", "crate")
+crate.from_cargo(
+    name = "crates",
+    cargo_lock = "//:Cargo.lock",
+    cargo_toml = "//:Cargo.toml",
+    generate_lint_config = True,
+    platform_triples = RUST_PLATFORMS,
+)
+use_repo(crate, "crates")
 
 ###############################################################################
 # BuildBuddy Rules for Remote build

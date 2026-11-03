@@ -35,19 +35,25 @@ command cargo update
 # Every directory under website/ holding a package.json is an independent pnpm project with its
 # own lockfile; website/web_design has none and is skipped.
 #
-# Each site gets one attempt at the bulk update. When `pnpm update --latest` resolves, builds and
-# type-checks, the site is done. When any step fails the site is restored to the state it started
-# in and named in the summary, because the failure means a dependency needs a decision this script
-# cannot make: a major with a breaking change, a peer conflict, or an override in
-# pnpm-workspace.yaml that no longer matches what the new version pins.
+# Each site runs these steps in order:
+#
+#   1. `pnpm update --latest` takes the newest version of every dependency not held below.
+#   2. scripts/sync_pnpm_overrides.mjs moves each override in pnpm-workspace.yaml to the exact
+#      version a direct dependency now pins; `pnpm update` moves the pins but never the overrides.
+#   3. `pnpm install` re-resolves the lockfile under the synced overrides.
+#   4. A frozen install in a scratch copy holding only the manifest, lockfile and workspace file
+#      checks the lockfile the way the Cloudflare deploy does. In the site directory itself pnpm
+#      sees an installed node_modules, reports "Already up to date" and compares nothing.
+#   5. `pnpm build`, `pnpm check` and, where the site defines it, `pnpm check:tokens`.
+#
+# A failing step leaves a decision this script cannot make: a major with a breaking change, a peer
+# conflict, or two dependencies pinning different versions of one overridden package. The site is
+# restored to the state it started in and the update aborts, naming the site and the step.
 #
 # The restore covers package.json, pnpm-lock.yaml and pnpm-workspace.yaml. pnpm writes to all
 # three: package.json and the lockfile carry the versions, and pnpm appends accepted-early
 # releases to minimumReleaseAgeExclude in the workspace file. node_modules is reconciled with the
 # restored lockfile by a plain `pnpm install`.
-#
-# A failing site does not stop the others. Their results are worth having, and one summary listing
-# every site that needs hand-work beats stopping at the first.
 
 # Packages the bulk update must leave alone, passed to pnpm as negated selectors.
 #
@@ -71,10 +77,49 @@ else
         DC_UPDATE_ARGS+=("!${DC_HELD}")
     done
 
+    DC_SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     DC_SNAPSHOT_DIR="$(mktemp -d)"
     trap 'rm -rf "${DC_SNAPSHOT_DIR}"' EXIT
 
-    DC_MANUAL_SITES=()
+    # Restores the site's snapshot, reconciles node_modules with it and ends the update, naming the
+    # site and the failed step.
+    dc_abort() {
+        for DC_FILE in package.json pnpm-lock.yaml pnpm-workspace.yaml; do
+            if [ -f "${DC_SNAPSHOT_DIR}/${DC_SITE}.${DC_FILE}" ]; then
+                cp "${DC_SNAPSHOT_DIR}/${DC_SITE}.${DC_FILE}" "${DC_SITE_PATH}${DC_FILE}"
+            fi
+        done
+        ( cd "${DC_SITE_PATH}" && pnpm install ) || true
+        command echo ""
+        command echo "ERROR: website/${DC_SITE}: '${DC_STEP}' failed; see its output above."
+        command echo "website/${DC_SITE} is restored to its state before the update. Sites updated"
+        command echo "before it keep their update; sites after it were not attempted."
+        command echo ""
+        command echo "To update it by hand, from website/${DC_SITE}:"
+        command echo "  pnpm outdated                      list what is behind"
+        command echo "  pnpm add <pkg>@<version>           take one package at a time"
+        command echo "  pnpm build && pnpm check           confirm after each"
+        exit 1
+    }
+
+    # Runs one step in the site directory; a failure aborts the update.
+    dc_step() {
+        DC_STEP="$1"
+        shift
+        ( cd "${DC_SITE_PATH}" && "$@" ) || dc_abort
+    }
+
+    # The frozen install the Cloudflare deploy runs, in a scratch copy without node_modules.
+    dc_check_lockfile() {
+        local scratch
+        scratch="$(mktemp -d "${DC_SNAPSHOT_DIR}/lockfile.XXXXXX")"
+        for DC_FILE in package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc; do
+            if [ -f "${DC_FILE}" ]; then
+                cp "${DC_FILE}" "${scratch}/"
+            fi
+        done
+        ( cd "${scratch}" && pnpm install --frozen-lockfile --lockfile-only )
+    }
 
     for DC_SITE_PATH in "${DC_WEBSITE_DIR}"/*/; do
         [ -f "${DC_SITE_PATH}package.json" ] || continue
@@ -90,45 +135,16 @@ else
             fi
         done
 
-        # The fast path. Stops at the first failing step; `check:tokens` runs only where the site
-        # defines it.
-        DC_OK=0
-        if (
-            cd "${DC_SITE_PATH}" &&
-            pnpm update --latest ${DC_UPDATE_ARGS[@]+"${DC_UPDATE_ARGS[@]}"} &&
-            pnpm build &&
-            pnpm check &&
-            { ! grep -q '"check:tokens"' package.json || pnpm check:tokens; }
-        ); then
-            DC_OK=1
+        dc_step "pnpm update --latest" pnpm update --latest ${DC_UPDATE_ARGS[@]+"${DC_UPDATE_ARGS[@]}"}
+        dc_step "sync overrides" node "${DC_SCRIPTS_DIR}/sync_pnpm_overrides.mjs" .
+        dc_step "pnpm install" pnpm install
+        dc_step "frozen lockfile check" dc_check_lockfile
+        dc_step "pnpm build" pnpm build
+        dc_step "pnpm check" pnpm check
+        if grep -q '"check:tokens"' "${DC_SITE_PATH}package.json"; then
+            dc_step "pnpm check:tokens" pnpm check:tokens
         fi
 
-        if [ "${DC_OK}" -eq 1 ]; then
-            command echo "website/${DC_SITE}: updated"
-        else
-            command echo "website/${DC_SITE}: update failed, restoring"
-            for DC_FILE in package.json pnpm-lock.yaml pnpm-workspace.yaml; do
-                if [ -f "${DC_SNAPSHOT_DIR}/${DC_SITE}.${DC_FILE}" ]; then
-                    cp "${DC_SNAPSHOT_DIR}/${DC_SITE}.${DC_FILE}" "${DC_SITE_PATH}${DC_FILE}"
-                fi
-            done
-            ( cd "${DC_SITE_PATH}" && pnpm install ) || true
-            DC_MANUAL_SITES+=("${DC_SITE}")
-        fi
+        command echo "website/${DC_SITE}: updated"
     done
-
-    if [ "${#DC_MANUAL_SITES[@]}" -ne 0 ]; then
-        command echo ""
-        command echo "These sites need a manual update: ${DC_MANUAL_SITES[*]}"
-        command echo ""
-        command echo "For each one, from its directory:"
-        command echo "  pnpm outdated                      list what is behind"
-        command echo "  pnpm add <pkg>@<version>           take one package at a time"
-        command echo "  pnpm build && pnpm check           confirm after each"
-        command echo ""
-        command echo "A major version often also moves a pin in pnpm-workspace.yaml. When astro"
-        command echo "bumps the version of @astrojs/markdown-satteri it depends on, the override"
-        command echo "has to move with it, or pnpm resolves a version astro rejects."
-        exit 1
-    fi
 fi
