@@ -6,6 +6,27 @@ set -o errexit
 set -o nounset
 set -o pipefail
 
+# DC_UPDATE_MODE selects how far the update reaches:
+#
+#   latest      The default, and what `make update` runs. The newest release of every dependency,
+#               majors included: `cargo upgrade --incompatible` and `pnpm update --latest`.
+#   compatible  Only releases the current version requirements already admit: `cargo update` and
+#               `pnpm update`. The daily dependency pull request that merges itself runs this mode
+#               (.github/workflows/deps_update.yml).
+DC_UPDATE_MODE="${DC_UPDATE_MODE:-latest}"
+case "${DC_UPDATE_MODE}" in
+    latest)
+        DC_PNPM_UPDATE=(pnpm update --latest)
+        ;;
+    compatible)
+        DC_PNPM_UPDATE=(pnpm update)
+        ;;
+    *)
+        command echo "ERROR: DC_UPDATE_MODE must be 'latest' or 'compatible', not '${DC_UPDATE_MODE}'."
+        exit 1
+        ;;
+esac
+
 command echo ""
 command echo "Checking cargo update"
 
@@ -13,8 +34,10 @@ command echo "Checking cargo update"
 # not install. Under `set -o errexit` a bare call ends `make update` on "no such subcommand", and
 # the website updates below — the part that most often has work to do — never run. Skipped with an
 # actionable message instead, the same way pnpm is below.
-if command -v cargo-upgrade >/dev/null 2>&1; then
-    command cargo upgrade
+if [ "${DC_UPDATE_MODE}" = compatible ]; then
+    command echo "Compatible mode; Cargo.toml requirements stay as they are."
+elif command -v cargo-upgrade >/dev/null 2>&1; then
+    command cargo upgrade --incompatible
 else
     command echo "cargo-upgrade not found; skipping the Rust dependency update."
     command echo "Install it with: cargo install cargo-edit --locked"
@@ -37,10 +60,11 @@ command cargo update
 #
 # Each site runs these steps in order:
 #
-#   1. `pnpm update --latest` takes the newest version of every dependency not held below.
+#   1. `pnpm update`, with `--latest` in latest mode, updates every dependency not held below.
 #   2. scripts/sync_pnpm_overrides.mjs moves each override in pnpm-workspace.yaml to the exact
 #      version a direct dependency now pins; `pnpm update` moves the pins but never the overrides.
-#   3. `pnpm install` re-resolves the lockfile under the synced overrides.
+#   3. `pnpm install` re-resolves the lockfile under the synced overrides. `--no-frozen-lockfile`
+#      because pnpm freezes the lockfile by default when CI is set.
 #   4. A frozen install in a scratch copy holding only the manifest, lockfile and workspace file
 #      checks the lockfile the way the Cloudflare deploy does. In the site directory itself pnpm
 #      sees an installed node_modules, reports "Already up to date" and compares nothing.
@@ -135,9 +159,9 @@ else
             fi
         done
 
-        dc_step "pnpm update --latest" pnpm update --latest ${DC_UPDATE_ARGS[@]+"${DC_UPDATE_ARGS[@]}"}
+        dc_step "${DC_PNPM_UPDATE[*]}" "${DC_PNPM_UPDATE[@]}" ${DC_UPDATE_ARGS[@]+"${DC_UPDATE_ARGS[@]}"}
         dc_step "sync overrides" node "${DC_SCRIPTS_DIR}/sync_pnpm_overrides.mjs" .
-        dc_step "pnpm install" pnpm install
+        dc_step "pnpm install" pnpm install --no-frozen-lockfile
         dc_step "frozen lockfile check" dc_check_lockfile
         dc_step "pnpm build" pnpm build
         dc_step "pnpm check" pnpm check

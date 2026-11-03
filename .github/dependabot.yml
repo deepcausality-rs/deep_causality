@@ -6,12 +6,11 @@
 # To receive Dependabot updates when a new version of a GitHub Action (including release-plz) is available
 # https://release-plz.ieni.dev/docs/github/update
 
+# Cargo and npm version updates come from .github/workflows/deps_update.yml, which runs
+# scripts/update.sh. Dependabot security updates are a repository setting and stay on.
+
 version: 2
 updates:
-  - package-ecosystem: "cargo" # See documentation for possible values
-    directory: "/" # Location of package manifests
-    schedule:
-      interval: "daily"
   - package-ecosystem: "github-actions"
     directory: "/"
     # Check for updates weekly on Monday
