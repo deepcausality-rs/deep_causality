@@ -16,7 +16,7 @@
     "@astrojs/sitemap": "^3.7.4",
     "astro": "^7.4.5",
     "astro-mermaid": "^2.2.0",
-    "mermaid": "^12.2.0",
+    "mermaid": "^12.3.0",
     "pagefind": "^1.6.0"
   },
   "devDependencies": {
