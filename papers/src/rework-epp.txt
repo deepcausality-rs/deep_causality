@@ -1,0 +1,838 @@
+REWORK OF THE EFFECT PROPAGATION PROCESS
+How to fix the core thesis, the code and the Lean formalization, and how to structure a core paper.
+
+Findings as of 2026-11-06, checked against main at 787281f91.
+
+Goal: a core paper that is faithful to the code, mathematically correct, and worth a causal
+inference scholar's time. The philosophy moves to a separate paper. Quantum causal models are out of
+scope for the core paper; section 7 records the position to return to.
+
+Companion files: response-epp.txt holds the argument for the term thesis in section 1, and
+related-work-findings.txt holds the literature search with full citations.
+
+Work from the LaTeX in papers/src/EPP. The committed papers/effect_propagation_process/epp.pdf dates
+from May 4 and lacks the mechanism-autonomy section added on May 29, so it states the axiom without
+the part that makes it causal.
+
+
+================================================================================
+1. THE REPAIRED CORE THESIS
+================================================================================
+
+Thesis:
+
+    The monad carries the process. The term carries the structure. Autonomy carries the causal
+    content.
+
+    A causal model is a term: a chain or graph of named steps, each autonomous and dependent. It is
+    not the value or the arrow the term composes to.
+
+    Form:         m2 = m1 >>= f, the composition law of the process. It is not the definition of
+                  causation.
+    Term:         the named steps and their wiring. Two terms with the same composite can be
+                  different causal models. The monad laws equate evaluations, and they do not by
+                  themselves establish that two models are the same.
+    Autonomy:     f reads only what bind threads to it, and it stays invariant when other mechanisms
+                  are replaced. Locality is structural. Stability is postulated by the modeller.
+    Dependence:   the output of f changes with at least one input channel, ignoring the log.
+
+Why the term is required: the chains [id, not] and [not, id] compose to the same arrow and answer
+differently when the middle value is forced. So a composite arrow cannot determine an intervention.
+This agrees with the literature, which places interventions on syntax: Jacobs, Kissinger and Zanasi
+perform surgery in the syntactic category, and Wang et al. say causal programs must expose more of
+their intension than probabilistic ones.
+
+A monad can express causal models. Stoch is the Kleisli category of the Giry monad, and the Caus monad
+of Wang et al. handles interventions and counterfactuals. No paper found states that monads cannot
+define causation, and none uses one to define it. The trap is treating the monad as the definition.
+
+What this gives:
+
+  - An answer to the objection that the axiom admits every program. The form admits every program, and
+    that is acceptable, because the form is not the definition.
+
+  - The deterministic biconditional becomes a theorem. Dependence on a bivalent input and output
+    forces f = id or f = not. The current text assumes the biconditional as a restriction.
+  - Autonomy licenses reading f(0) as "what E2 would have been had E1 not happened". Without it,
+    f(0) = 0 is only a value in a table.
+  - For a pinned unit u, substituting a value and re-running the same mechanisms computes Y_x(u),
+    which is Pearl's unit-level counterfactual.
+  - Causal direction is defined without time: forcing E1 moves E2, and forcing E2 leaves E1 alone.
+    bind alone does not supply this, because the identity is invertible.
+  - Chains match Lewis: dependence holds per step and causation is the chain, since dependence does
+    not compose.
+
+What the thesis gives up:
+
+  - "Strict generalization of the SCM". A deterministic stateful run unrolls into a time-indexed
+    SCM, so the gain looks structural rather than expressive. Keep the claim only if it is proved.
+  - "Counterfactuals without abduction" as a general statement. The correct form is: abduction is
+    unnecessary when u is known. With partial evidence, P(U|e) is still required.
+  - "Classical causality is recovered" as a claim about Pearl. The biconditional is deterministic
+    necessary-and-sufficient causation, a narrow special case of his framework.
+  - Selection claims: "Not Possible", "only viable option", and any "first" or "uniquely".
+  - Any claim that verified causality is an empty niche. Makhija, Zhang et al. and Sargsyan refute it.
+  - Any claim that the syntax and semantics split is new. It is the established move of Jacobs et al.
+    and the Markov-category line, and the EPP aligns with it.
+
+What is new and worth a scholar's attention:
+
+  - An executable process term with state, error and audit-log channels. Every monadic precedent found
+    has a probability structure as its carrier. That is an absence in a limited search, so word it so.
+  - The context as a substitutable channel, separate from mechanism and state.
+  - Direction without temporal precedence.
+  - Mechanisms that change at runtime inside one typed process, with an append-only audit log.
+  - Verification moved to the action layer where the structure itself may change.
+
+What stays a postulate, permanently: stability of a mechanism. No proof can establish it for a real
+system. Pearl's modularity has the same status, and the LaTeX already says so. State it in the status
+table rather than implying that formal verification covers it.
+
+
+================================================================================
+2. FIXES TO THE THEORY
+================================================================================
+
+All references are to papers/src/EPP/epp_chapters/causality_as_epp.tex unless noted.
+
+2.1 Attribution of the classical definition (section "Classical Definition of Causality", line 41)
+    Problem: the biconditional is attributed to Pearl, along with temporal precedence.
+    Fix: present it as deterministic necessary-and-sufficient causation. Cite Hume's second
+    definition and Lewis for the counterfactual reading, and Pearl's probability of necessity and
+    sufficiency equal to 1 as the link. Pearl does not require temporal precedence.
+    Check these three citations against the sources. They are from memory.
+
+2.2 The monad preliminaries (line 173)
+    Problem: the text gives a triple with unit T to M<T>. In the model the Kleisli unit is
+    eta : Option V -> S -> Option C -> Process, and pure' resets state and clears context, so it is
+    not a right unit. Lean's Core/CausalMonad.lean states this distinction.
+    Fix: state the laws as Lean proves them, with the two units named.
+
+2.3 The unit context and Proposition 1 (lines 186 to 200)
+    Problem: "under the unit context M is isomorphic to the identity monad, regardless of n" is
+    false. The error channel is a sum, so Result<V, ()> is Maybe V. Option<Context> at unit has two
+    inhabitants, and the absent value and the command layer add more. At V = Empty the identity has
+    no inhabitant and the carrier does.
+    Fix: drop the unit context. In every instance bind(eta(v), lift g) = eta(g v), by left identity,
+    and eta is injective. So pure functions embed faithfully in the Kleisli category, and the theorem
+    gets stronger. Checked in Lean: unit_context_not_identity, pure_embeds, lift_comp, eta_injective.
+
+2.4 Proposition 2 (line 213)
+    Problem: it is true and vacuous. Restriction 2 restates the classical definition, so the argument
+    has the form "A and C imply C".
+    Two tests show the gap:
+      - Constants. The bare form admits four functions on {0,1}. The classical definition rejects
+        the two constants, and a constant can be local and stable, so autonomy does not exclude it.
+        The current definition is therefore not conservative over the classical one.
+      - The barometer. "Storm iff low reading" satisfies Proposition 2 as written, because the proof
+        never uses autonomy.
+    Fix: add dependence to the definition, then derive the biconditional. Restate the proposition
+    with autonomy as a premise. Checked in Lean: bivalent_dependence, constant_not_dependent,
+    same_observations, different_interventions.
+    Dependence must range over all input channels. Many examples ignore the value and read the
+    context, so a value-only clause would reject them.
+
+2.5 Dependence does not compose
+    f(0)=0, f(1)=1 and g(0)=g(1)=0, g(2)=1 are both dependent, and g after f is constant. So causal
+    steps do not form a subcategory. Dependence is a per-step predicate on arrows, and the ambient
+    category stays the Kleisli category. Checked in Lean: dependence_not_closed.
+
+2.6 Direction (section "Generalized Definition", line 108)
+    Problem: "the directional flow of bind is the propagation condition". The identity is invertible,
+    so bind's direction is syntax. Checked in Lean: biconditional_symmetric.
+    Fix: define direction by intervention asymmetry and cite Proposition 3 as the tool.
+
+2.7 The intervention operator (line 231)
+    Three mismatches with the code, where the code and Lean are right:
+      - The paper's error case extends the log. alternate_value returns unchanged, and Lean proves
+        value_error_noop.
+      - The tuple holds a value and an error separately. The carrier holds them in one channel.
+      - The name intervene no longer exists as a function. It is alternate_value.
+    Fix: rewrite the definition from the Rust and Core/Alternatable.lean.
+
+2.8 Proposition 3 (line 242)
+    Problem: "exactly the effect of do" conflicts with the code comments and Lean, which say that
+    substitution is not do. It holds only on a chain whose later steps read the value channel. In a
+    DAG, replacing the whole value discards sibling variables.
+    Fix: scope it to chains, name alternate_value, and align the core comments with the wording. For
+    records, state the component update form. Graph do becomes its own theorem, section 3.1.
+
+2.9 Two axioms in one monograph
+    epp_chapters/formalization.tex line 43 still states the axiom as
+    "for all c, there exists f with c = (E2 = f(E1))", with E and f unconstrained. Chapter 4 states
+    the monadic form. Section 12.3 and the introduction still use the functional wording, and the
+    universal form cannot be falsified.
+    Fix: one definition, stated once, in the repaired form above.
+
+2.10 The ladder mapping (lines 623 to 700, and formalization.tex from line 747)
+    - Rung 1 is called association but runs mechanisms forward, which is do semantics. State it as
+      forward evaluation, and give conditioning its own treatment under P(U).
+    - Rung 2 is mapped to a CSM action, which changes external state. That is an action, not model
+      surgery. Map rung 2 to graph do.
+    - "Abduction is Context Pinning" holds only when the context fully determines u. Checked in Lean:
+      abduction_needs_pinned_u.
+
+2.11 Rubin and Granger sections
+    - "The fundamental problem of causal inference is a physical constraint" reads as a dismissal.
+      Computing both outcomes from a stipulated model does not address estimation from data. Say so.
+    - Granger's test is predictive, not "fundamentally counterfactual". It also needs a statistical
+      test; comparing one forecast error is not one.
+
+2.12 Appendix A (epp_appendices/appendix_a.tex)
+    Unchanged since May 3. Three faults:
+      - Case 1 computes P(Y|X=x) by setting X and propagating, which is do(X=x). With a confounder
+        the two differ: P(Y=1|X=1) = 1 against P(Y=1|do(X=1)) = 1/2 in the checked example.
+      - U is mapped to values, so P(U) is absent and the semantics are not probabilistic.
+      - There is no counterfactual case, and its do relies on a priority check hand-written into a
+        causal function.
+    Replacement, in two steps:
+      Unit level. For fixed u, running with context u and substituting x computes Y_x(u).
+      Population level. Pushing P(U) through gives rungs 1 and 2. Rung 3 needs P(U|e).
+    Remove "strict generalization" unless a separating model is exhibited.
+
+2.13 The form is presented as the definition
+    Problem: the axiom is introduced as the definition of causation. The autonomy section (line 135)
+    already says bind is necessary but not sufficient, and its definition at line 154 still names a
+    monadic composition rather than a model.
+    Fix: define the causal model as the term, per section 1, and state that the monad laws do not
+    identify models. Then define when two terms are the same model (4.3 T1). Without that definition
+    the thesis has a visible hole.
+
+2.14 Claims to remove
+    Table 3 entries "Not Possible" (lines 885, 901, 917), "the only viable option" (line 924 and
+    validity.tex line 211), and "first comprehensive tool" in future_work.tex.
+
+
+================================================================================
+3. CODE CHANGES
+================================================================================
+
+No change known today: the carrier, bind, the alternation family, CausalFlow, the arrow layer. They
+behave the way the repaired theory requires. The do design in 3.1 may reopen this.
+
+3.0 Fix evaluation of Collection and Graph causaloids, and the tests that hide the failure.
+    The Causaloid type is recursive, and its evaluation is not. Causaloid::evaluate returns
+    UnsupportedOperation for the Collection and Graph forms (causaloid/causable.rs lines 136 and 148),
+    and evaluate_stateful does the same (causaloid/causable_stateful.rs lines 170 and 179). A comment
+    in causaloid_collection_tests.rs attributes this to generic bounds.
+
+    Measured through the real graph engine, on a chain of singleton, node under test, singleton:
+
+      Node under test        Result
+      Singleton              value returned
+      Collection causaloid   UnsupportedOperation
+      Graph causaloid        UnsupportedOperation
+
+    Required outcome: a graph or collection holds any of the three forms, at any depth, and evaluates
+    through Causaloid::evaluate and evaluate_stateful.
+
+    The stateful graph engine has a second failure. It refuses a node reached by two fired parents as
+    "not yet defined" (graph_reasoning/stateful.rs line 179), while the stateless engine merges with
+    Verdict::join. flight_envelope_monitor hits this: its Nominal case reports the error, its README
+    expects verdict=Nominal, and the binary exits 0. This needs a ruling on how state behaves at a join.
+
+    Tests that hide the failure. Replace each with a test that evaluates the nested form through the
+    public path, and let the tests follow the repaired API:
+      - causaloid/causaloid_singleton_tests.rs: test_evaluate_collection_error and
+        test_evaluate_graph_error assert the error as expected behaviour.
+      - causaloid/causable_stateful_tests.rs near line 349 asserts the same error for the graph form.
+      - causaloid/causaloid_collection_tests.rs: test_collection_causaloid_evaluation builds a
+        collection causaloid, then evaluates the raw vector with evaluate_collection.
+      - formalization_lean/catamorphism_tests.rs: test_encapsulation_flat composes two separate graphs
+        by hand, and nothing is wrapped. The bag case of test_catamorphism_unique uses
+        evaluate_collection.
+      - formalization_lean/causaloid_tests.rs: test_undecorated_graph_evaluates_identically wraps a
+        graph, then evaluates it after unwrapping through the causal_graph getter.
+      - graph_reasoning/stateful_tests.rs near line 451 pins the multi-parent join error.
+    This list is not an audit. Check every other test that builds these forms, starting with
+    causaloid_tests.rs, causaloid_graph_tests.rs and verdict_closure_tests.rs.
+
+    Claims to correct until this lands: LEAN_DeepCausality.md says evaluate is the unique catamorphism,
+    and THEOREM_MAP.md marks core.causaloid.encapsulation_flat as witnessed. Both hold for the Lean
+    model. The Rust witness does not exercise nesting. Update the doc comments in causable.rs and
+    causable_stateful.rs with the fix.
+
+3.1 Do operator over the Causal Monad and the Causaloid. Needs real design work. Not yet designed.
+    The do operator is a real gap and must be added. Nothing in this section is a decision. It records
+    what the code establishes and what the design has to answer. Design comes before any code.
+
+    What the code establishes:
+      - deep_causality_core has only value, context and state substitution in
+        src/types/causal_flow/intervene.rs, and its header says this is not do. The docs point to the
+        deep_causality graph layer, which has no such operator.
+      - deep_causality_quantum has intervene_mechanism in src/types/qcm/hypothesis.rs. It is the only
+        mechanism intervention in the workspace, and it is reference material.
+      - CausalFn and ContextualCausalFn are fn pointers, so a mechanism cannot capture an intervened
+        value. The author's ruling: this is why an explicit context is needed. The design starts here.
+      - Starting evaluation at a mid-graph node is not do. Wires from non-descendants resolve Inactive,
+        so the other parents of a descendant contribute nothing.
+      - A bind chain's closures are opaque, so an intervention reaches only the sites the author exposed.
+      - remove_edge needs an unfrozen graph.
+      - do is a reserved word in Rust.
+
+    Questions the design must answer:
+      1. What do means on the monad and on the causaloid, and how the two relate.
+      2. How an intervened value reaches a mechanism through the context, and how that differs from
+         context alternation and from replacing a mechanism.
+      3. What the intervention severs across the value, state, context and log channels.
+      4. How it interacts with RelayTo, errors, absence of evidence, and joins with their edge transforms.
+      5. How a target is addressed inside nested causaloids. This depends on 3.0.
+      6. Whether the receiver stays unchanged, and how that fits freezing.
+      7. What correspondence to the SCM submodel M_x is claimed, under which conditions, and in Lean.
+      8. How factual and counterfactual runs hold the same exogenous input and starting state. Cloned
+         Arc<RwLock<..>> handles share one lock, so an update between runs changes that input.
+      9. What the operator is called.
+
+    Precedent to read first: Makhija (arXiv:2608.17634) proves in Lean 4 that replacing mechanisms
+    removes exactly the dependencies graph surgery removes, for deterministic acyclic SCMs.
+
+    Evidence any design must produce: a diamond Z to X, Z to Y, X to Y, where conditioning and do
+    differ, with non-symmetric mechanisms and more than one graph size. Run cargo mutants on the new
+    evaluation path.
+
+3.1b Where the term exists in the code. The paper must state this accurately.
+    - As data: CausaloidGraph, and ArrowTerm in deep_causality_haft, a reified free arrow.
+    - Source only: a CausalFlow or bind chain runs as it is built, and its closures are opaque. An
+      intervention reaches only the sites the author exposed.
+    - ArrowTerm is not used by deep_causality_core or deep_causality today. The link is
+      core.causaloid.arrow_fragment in Lean. Decide whether the flow layer needs a reified form, or
+      whether the paper scopes full interventions to graphs and arrow terms. I recommend scoping, which
+      needs no change to the flow layer.
+
+3.2 Dependence as a test helper, not a runtime gate. Dependence cannot be decided in general. Provide
+    a check over a finite or sampled input set for test suites. Skip it if no example or test needs it.
+
+3.3 Example output and labels.
+    - classical_via_causal_monad/scm/main.rs line 70 calls forward evaluation "associated". Relabel.
+    - Add one confounded example where P(Y|x) and P(Y|do(x)) visibly differ, drawing U from a
+      distribution. This is the worked example the paper needs.
+    - State in the classical READMEs that CATE, Granger and RCM evaluate stipulated models. CATE
+      returns the -10 dose typed into each patient, and Granger compares one forecast using
+      hand-set coefficients with one observed value.
+    - corrective_lane_keeping and corrective_glucose_pump overwrite the plant state in one tick.
+      State that, or route the correction through an actuation input. The other three corrective
+      examples swap a command, which is sound.
+
+3.4 Chronometric GM recovery. Do not cite until resolved.
+    The example returns the GM embedded in the SP3 orbit, not one measured from clocks. Negative
+    control on a scratch copy of the data, using the unchanged release binary:
+
+      Clock input     Orbit scale   Recovered GM   Error vs reference   Per-pair spread
+      real            1.00          3.994180e14    0.2051 %             3.101e13
+      constant        1.00          3.985349e14    0.0164 %             6.664e11
+      best-fit line   1.00          3.985434e14    0.0143 %             6.697e11
+      constant        1.01          4.106113e14    3.0133 %             6.831e11
+      real            1.01          4.114920e14    3.2342 %             3.131e13
+
+    Mechanism: get_total_bias adds back -2 r.v/c^2 from SP3. Its time derivative contains GM_orbit/r
+    through the orbital dynamics, and that is the whole r-dependent part of the clock rate. Scaling
+    the orbit by k moves GM by k^3, which is Kepler's law. Removing the clocks improves the answer, so
+    they contribute noise.
+    The README's "no GM to inject" holds for the term and fails for its derivative. Its "secular
+    difference between satellites" does not apply, because the example uses one satellite.
+    Fix or withdraw: display.rs line 64 and the README's "time-dilation alone", plus the blog posts.
+    Run the same control on the multi-year chronodynamics experiment and its sub-ppm claim before the
+    preprint proceeds. That repository was not examined.
+
+3.5 BRCD "ground truth". Do not cite as diagnosis until resolved.
+    expected.txt is the Python reference's own ranking, and the harness labels its first entry the
+    true fault (verification/brcd/common.rs line 324, verification_boss.rs line 123). On carts_cpu_1
+    that entry is shipping_latency, with carts_latency second and carts_cpu sixth. The injected fault
+    is inferred from the folder name; confirm it against RCAEval.
+    Position-for-position reproduction is real evidence of a faithful port. Keep that claim.
+    Fix: score against injected faults in a separate harness, and rename "ground truth" and "fault"
+    in ml_rca/utils.rs lines 112 and 156, the READMEs and the CDL blog post.
+
+3.6 Effect Ethos fail-open.
+    deep_causality_ethos/src/types/effect_ethos/deontic_inference.rs lines 108 and 115 treat an error
+    in an uncertain predicate as inactive, so a failed read silently lifts an Impermissible norm.
+    Return the error, or treat an unevaluable prohibition as active. Test with an erroring predicate.
+    The Ethos has no Lean coverage; see section 4.3.
+
+3.7 Stale public material (not blocking the paper).
+    - 11 blog links point to paths that no longer exist.
+    - introducing-causal-flow.md uses the chronometric_examples package and intervene_if, both gone.
+    - The corridor README's Float106 row fails to compile with 44 errors, while the family README
+      says precision is a parameter throughout. The top-level and family READMEs also disagree on
+      entry Mach and landing speed.
+    - The Ethos concept page says the CSM hands over every action, and also that it fires directly.
+    - Rebuild epp.pdf after the rework, since the docs link to it.
+
+3.8 Examples that show rung 3 and the causal operations.
+    Add meaningful, engineering-realistic examples. Most of the distinctive operations appear only in
+    tests today, and most examples compose stages without intervening. Text match over the 166
+    registered examples, to be confirmed by reading them:
+
+      Measure                                          Count
+      Registered examples                              166
+      Use the carrier                                  69
+      Use a causaloid                                  12
+      Use a causaloid graph                            7
+      Use the categorical layer                        73
+      Intervene                                        28
+      Physics examples that intervene                  0 of 13
+      Use relay_to, evolve, unfreeze or verify_assumptions  0
+      Use freeze_verified                              1
+      Use update_context                               1
+      Use branch or either                             10
+
+    Rung 3. An example shows rung 3 when it takes evidence from a factual run, holds the same exogenous
+    input and history, changes one thing, and reports what would have happened. It should also show a
+    result that differs from the rung 2 answer on the same model. Most existing counterfactual and
+    correction examples use value substitution. Read each and state which rung it reaches. Examples
+    that need the do operator wait for 3.1.
+
+    Causal operations to showcase:
+      - Adaptive propagation with RelayTo, where an effect directs its own next step.
+      - Nested Collection and Graph causaloids, after 3.0.
+      - Structural change with evolve, and with unfreeze followed by a new freeze.
+      - Assumption checks with verify_assumptions before a model is applied elsewhere.
+      - Graph validation with freeze_verified.
+      - Propagation into context with update_context, and alternation of state and context.
+      - Absence of evidence as distinct from a false verdict and from an error.
+      - Verdict carriers beyond bool at a join and in a collection.
+      - The CSM with the Effect Ethos closing the loop from effect to action.
+
+    A failing scenario must be visible. flight_envelope_monitor exits 0 while its Nominal case errors.
+    Each new example follows the repository rules: a Bazel rust_binary target, the manifest_dir helper
+    where it reads data, verification by running it, and no unit tests for the binary.
+
+
+================================================================================
+4. LEAN
+================================================================================
+
+4.1 Already proved and usable as cited: the monad laws (Core/CausalMonad.lean), the alternation lens
+    laws and error no-op (Core/Alternatable.lean), Kleisli laws (Core/CausalArrow.lean), graph fold
+    order invariance and encapsulation (Core/Catamorphism.lean, Core/GraphAlgebra.lean), and the
+    free arrow (Haft/ArrowTerm.lean: haft.arrow_term.interpret_sound, haft.arrow_term.free).
+    Encapsulation and catamorphism uniqueness describe the Lean model. Do not cite them for the Rust
+    evaluate until 3.0 lands.
+
+4.2 Checked in scratch, ready to move. Source in appendix A of this file. Lean 4.32, no sorry, no
+    Mathlib. Axioms reported: propext, plus Quot.sound for bivalent_dependence.
+
+      unit_context_not_identity      the identity-monad claim is false
+      pure_embeds, lift_comp         pure functions embed, at any channel types
+      eta_injective                  stripping the unit is sound
+      bivalent_dependence            dependence on Bool iff f = id or f = not
+      constant_not_dependent         constants are excluded
+      dependence_not_closed          dependence does not compose
+      biconditional_symmetric        the biconditional has no direction
+      same_observations,
+      different_interventions        one observed pattern, two intervention behaviours
+      conditioning_differs_from_do   Appendix A case 1 is wrong
+      setValue_error_noop            the paper's error case is wrong
+      counterfactual_unit_level      substitution computes Y_x(u), two-node model
+      abduction_needs_pinned_u       evidence alone does not determine the counterfactual
+      component_update_required      whole-value replacement loses a sibling
+      same_composite,
+      different_intervention         same composite arrow, different intervention (appendix B)
+
+    Move to lean/DeepCausalityFormal/Core/Reconstruction.lean, self-contained like its neighbours,
+    and import it from lean/DeepCausalityFormal.lean. The Core namespace already has a lean_test
+    target in lean/BUILD.bazel. Replace the scratch transcription with the existing Carrier shape.
+
+    Each id needs a THEOREM_MAP: tag in Lean, a matching tag in a Rust witness and a row in
+    lean/THEOREM_MAP.md, or .github/workflows/formalization.yml fails. Put witnesses in
+    deep_causality_core/tests/formalization_lean. Suggested prefix: core.reconstruction.*.
+
+4.3 To prove, in order:
+
+    T1. Term equivalence. Define when two terms are the same causal model. Candidate: they agree under
+        every intervention at corresponding named steps. Reassociating a chain or adding a pure step
+        must preserve the model, while [id, not] and [not, id] must differ. Compare with Otsuka and
+        Saigo, and with Makhija.
+    T2. Bridge theorem. The monad laws preserve model identity when the named steps are preserved. This
+        connects the monad to the term, and the thesis depends on it.
+    a. General chain counterfactual. Extend the two-node theorem to n steps by induction.
+    b. Structural model and submodel. Define a finite acyclic SCM, its submodel M_x and Y_x(u).
+    c. Graph do correspondence. Evaluating the surgered graph equals M_x at fixed u, stated over the
+       graph fold already formalized. Needs 3.1. Makhija proves the graph-to-mechanism correspondence
+       for deterministic acyclic SCMs, so cite it. The contribution here is the correspondence with
+       the executable evaluator.
+    d. Population lift. Pushing a finite PMF over U gives rungs 1 and 2. Conditioning differs from
+       do in general. Rung 3 uses the posterior. Start with finite PMFs to avoid Mathlib imports. Any
+       Mathlib import must be mirrored into cache_roots in MODULE.bazel.
+       Associativity must be addressed here. Di Lavore, Román and Széles show normalization forces
+       composition to be non-associative. Determine whether normalized conditioning can be a lawful
+       bind step, or must sit outside the monad laws, for example as an unnormalized value with
+       normalization at the boundary. Deterministic chains are unaffected.
+    e. Markov-category bridge. With a probability monad on the value channel, the Kleisli category
+       maps to Stoch. Notes in openspec/notes/archive/causal-algebra/Formalization.md section 7.4
+       state this as worth proving. Open; a separate paper if it grows.
+    f. Direction by intervention asymmetry on a chain.
+    g. Ethos determinism and confluence of resolve_conflicts. Small and worthwhile, since the Ethos
+       is presented as a verification layer. Not needed for the core paper.
+
+    Machine-checked causality already exists in Lean 4 (Makhija), Rocq (Zhang et al.) and Cubical Agda
+    (Sargsyan). openspec/notes/archive/causal-algebra/Formalization.md says otherwise and needs
+    correcting.
+
+4.4 Limits to state in the paper. Lean proves statements about the model. The link to the Rust is a
+    transcription backed by witness tests and Kani, not verified extraction. Stability is postulated.
+
+
+================================================================================
+5. STRUCTURE OF THE CORE PAPER
+================================================================================
+
+A short theorem paper, separate from the monograph. Target 15 to 20 pages.
+
+Title and abstract say what it is: an operational semantics for causal processes with known
+mechanisms, conservative over deterministic SCMs at the unit level, with machine-checked proofs. The
+central statement: the monad carries the process, the term carries the structure, and autonomy carries
+the causal content.
+Avoid "post-quantum", "axiomatic foundation of causality" and "generalizes classical causality".
+
+ 1. Introduction
+    A problem Pearl's readers recognize: a process whose mechanisms switch at runtime. The first page
+    states the scope: mechanisms are known; discovery and identification from data are out of scope;
+    existing tools supply the graph. Section 4.12.5 of the current text already says this.
+
+ 2. Background
+    SCM, submodel M_x, Y_x(u), modularity, in standard notation. Kleisli categories, in one page.
+
+ 3. Definition
+    The carrier as Lean states it. The form, the term, autonomy and dependence. Why a composite arrow
+    cannot determine an intervention. Term equivalence, and the bridge theorem to the monad laws. One
+    definition, stated once.
+
+ 4. Recovering the deterministic case
+    Pure functions embed. Dependence gives the biconditional. Autonomy gives the counterfactual
+    reading. Direction by intervention.
+
+ 5. Correspondence with the SCM
+    Chain substitution. Graph do equals M_x. Unit-level Y_x(u). Population lift. Exactly where
+    abduction is still required. A table of what is recovered and what is not.
+
+ 6. What the process view adds
+    Lead with the comparison against Caus and ChiRho, the nearest systems. Then the context as a
+    substitutable channel, runtime mechanism change and audit. State what each gives beyond a reader
+    monad over probability, an SCM with time-indexed variables, or effect handlers, and concede where
+    it only gives convenience.
+
+ 7. Worked example
+    One confounded system with a regime change, not a stipulated constant. Show P(Y|x), P(Y|do(x)),
+    a unit counterfactual, and the mechanism switch. Runnable, with its output in the paper.
+
+ 8. Formal status
+    The table below, with each row linked to its Lean theorem.
+
+ 9. Objections
+    Answer directly:
+      - The axiom admits non-causal functions: yes, it is the form, and the term and autonomy carry
+        the causal content.
+      - The biconditional is not Pearl's definition.
+      - There is no P(U).
+      - "Can a monad express causation?", using response-epp.txt.
+      - "Why not a Markov category?", using Formalization.md section 7.4.
+      - "Why not a magmad?", once 4.3 d settles how conditioning is handled.
+
+10. Related work
+    Peers, not foils. Monadic: Wang et al., Di Lavore et al., Román, Sargsyan, Fong, Ramsey and Pfeffer,
+    Moggi. Categorical: Fritz, Jacobs et al., Yin and Zhang, Lorenz and Tull, Otsuka and Saigo.
+    Machine-checked: Makhija, Zhang et al. Programs and languages: Icard, OmegaC, ChiRho. Also Halpern
+    and Pearl, Hitchcock and Lewis on transitivity. Full citations and false friends are in
+    related-work-findings.txt. Note the collision with Mahadevan's "causal monad", which names a DAG
+    transitive-closure monad.
+
+11. Open problems
+    Rung 3 with partial evidence, conditioning and associativity, the Stoch bridge, verification of
+    emergent structure, and whether a separating model exists. These give a reader something to work on.
+
+Status table, as it stands today:
+
+    Claim                                           Status
+    Unit-context identity monad                     Refuted, replaced
+    Pure functions embed faithfully                 Proved (scratch)
+    Bivalent dependence gives id or not             Proved (scratch)
+    Dependence does not compose                     Proved (scratch)
+    Observations do not fix interventions           Proved (scratch)
+    Conditioning differs from do                    Proved (scratch)
+    Substitution computes Y_x(u), two nodes         Proved (scratch)
+    Evidence alone does not pin u                   Proved (scratch)
+    Composite does not determine an intervention    Proved (scratch)
+    Monad and lens laws                             Proved (lean/)
+    Term equivalence                                To define and prove
+    Monad laws preserve model identity              To prove
+    Chain counterfactual, n steps                   To prove
+    Graph do equals M_x                             Needs 3.1, to prove
+    P(U) lift, rungs 1 and 2                        To prove
+    Conditioning and associativity                  Open
+    Kleisli to Stoch bridge                         Open
+    Strict generalization                           Unproved, likely dropped
+    Stability of mechanisms                         Postulate, cannot be proved
+
+Left out of the core paper: Whitehead, Hardy beyond one sentence disclaiming his formal definition,
+metaphysics, epistemology, ontology and teleology. The Effect Ethos, the CSM and the mathematics stack
+get a pointer at most. Earth-mass and BRCD results stay out until 3.4 and 3.5 are resolved.
+
+Philosophy paper. A separate paper carries the process metaphysics and the teleology, building on the
+existing preprints under papers/src/EPP. It cites the core paper for definitions and theorems and
+claims no results of its own about causal inference. The core paper does not depend on it.
+
+Style. docs/writing_guides applies. State results and do not argue by contrast. Use the standard term
+wherever one exists, and define Causaloid and Context against it once.
+
+
+================================================================================
+6. ORDER OF WORK
+================================================================================
+
+ 1. Move the scratch Lean into lean/ with witnesses and map rows.
+ 2. Define term equivalence and prove the bridge theorem (4.3 T1, T2). The thesis depends on these,
+    so do them before rewriting any text.
+ 3. Fix the definition and rewrite chapter 4 sections 2.1 to 2.9 and 2.13, so one text is authoritative.
+ 4. Fix nested evaluation and the tests that hide it (3.0). Read Makhija's artifact, design and
+    build the do operator (3.1), then prove 4.3 a to c.
+ 5. Rewrite Appendix A from the new theorems (2.12).
+ 6. Build the confounded example (3.3), then the rung 3 and causal operation examples (3.8).
+ 7. Settle conditioning and associativity, and prove the P(U) lift (4.3 d).
+ 8. Draft the core paper from sections 3 to 5 of the new text.
+ 9. Split the philosophy paper.
+10. Resolve GM and BRCD (3.4, 3.5) on their own track, before any public claim relies on them.
+11. Fix the Ethos and stale material (3.6, 3.7), correct Formalization.md, and rebuild the PDF.
+
+Decisions for the author:
+
+  - Do operator over the monad and the causaloid: settled that it will be added. The design is open
+    (3.1).
+  - State at a reconvergent join in the stateful graph engine (3.0).
+  - Dependence over which channels: value, state and context, excluding the log (recommended).
+  - Term equivalence: agreement under every intervention at corresponding named steps (recommended
+    candidate), subject to proof.
+  - Full interventions on flow chains: scope them to graphs and arrow terms (recommended), or add a
+    reified form to the flow layer.
+  - Conditioning: keep it outside the monad laws, or adopt a magmad. Undecided until 4.3 d.
+  - Keep or drop "strict generalization". Recommended: drop unless a separating model is found.
+  - Chronodynamics: run the control and decide the fate of the sub-ppm claim.
+
+
+================================================================================
+7. DEFERRED: QUANTUM CAUSAL MODELS
+================================================================================
+
+Out of the core paper. The claim that the monad paved the way to QCM does not hold categorically, and
+openspec/notes/archive/quantum/quantum-epp.md says so: the algebra is the Kleisli category of the
+causal monad, "directional, irreversible, copy-ful", and no-cloning is the absence of a copy
+structure. Only 4 of the 104 source files in deep_causality_quantum use the monad, and the README
+keeps factors as static freeze-time data. Quantum nesting is unestablished, against the recursive
+encapsulation of section 4.7, and the crate refuses cycles where section 12.3 predicted superposed
+graphs.
+
+The defensible version: the classical and quantum boundary is the Kleisli boundary. Separating
+mechanism from world, plus the freeze boundary, gave Lorenz's checks a natural home, and classical
+control runs around the quantum core in the monad. No written conjecture linking the monad to QCM was
+found. A construction where quantum channels compose through bind without copying would change this
+assessment.
+
+
+================================================================================
+APPENDIX A. LEAN SOURCE OF THE SCRATCH CHECK
+================================================================================
+
+Run with: lean +leanprover/lean4:v4.32.0 EppRepair.lean
+
+/- Scratch: machine check of the repaired EPP reconstruction. Self-contained, no Mathlib.
+   `Process`, `eta`, `bind'` transcribe lean/DeepCausalityFormal/Core/CausalMonad.lean. -/
+namespace EppRepair
+
+structure Process (V S C E L : Type) where
+  outcome : Except E (Option V)
+  state : S
+  ctx : Option C
+  logs : List L
+
+variable {V W X S C E L : Type}
+
+def eta (v : Option V) (s : S) (c : Option C) : Process V S C E L :=
+  { outcome := .ok v, state := s, ctx := c, logs := [] }
+
+def bind' (m : Process V S C E L) (f : Option V → S → Option C → Process W S C E L) :
+    Process W S C E L :=
+  match m.outcome with
+  | .error e => { outcome := .error e, state := m.state, ctx := m.ctx, logs := m.logs }
+  | .ok v =>
+    let n := f v m.state m.ctx
+    { outcome := n.outcome, state := n.state, ctx := n.ctx, logs := m.logs ++ n.logs }
+
+/-! ## 1. Proposition 1: the stated reason is false, the conclusion holds without it -/
+
+/-- The unit context is NOT the identity monad: at `V = Empty` the identity has no inhabitant
+    and the carrier has one. So "unit parameters give the identity monad" is false. -/
+theorem unit_context_not_identity :
+    Nonempty (Process Empty Unit Unit Unit Unit) ∧ ¬ Nonempty Empty :=
+  ⟨⟨{ outcome := .error (), state := (), ctx := none, logs := [] }⟩, fun ⟨e⟩ => nomatch e⟩
+
+/-- A pure function lifted into the carrier. -/
+def lift (g : Option V → Option W) : Option V → S → Option C → Process W S C E L :=
+  fun v s c => eta (g v) s c
+
+/-- Proposition 1, repaired: holds at EVERY state, context, error and log type. -/
+theorem pure_embeds (g : Option V → Option W) (v : Option V) (s : S) (c : Option C) :
+    bind' (eta v s c : Process V S C E L) (lift g) = eta (g v) s c := by
+  simp [bind', eta, lift]
+
+/-- The embedding preserves composition. -/
+theorem lift_comp (g : Option V → Option W) (h : Option W → Option X)
+    (v : Option V) (s : S) (c : Option C) :
+    bind' (lift g v s c : Process W S C E L) (lift h) = lift (h ∘ g) v s c := by
+  simp [bind', eta, lift]
+
+/-- The embedding is faithful: stripping the unit is sound. -/
+theorem eta_injective (v w : Option V) (s : S) (c : Option C)
+    (h : (eta v s c : Process V S C E L) = eta w s c) : v = w := by
+  simp [eta] at h
+  exact h
+
+/-! ## 2. Proposition 2: dependence derives the biconditional -/
+
+def Dep {A B : Type} (f : A → B) : Prop := ∃ x y, f x ≠ f y
+
+/-- On a bivalent domain, dependence is exactly the two admissible functions. -/
+theorem bivalent_dependence (f : Bool → Bool) : Dep f ↔ (f = id ∨ f = not) := by
+  constructor
+  · rintro ⟨x, y, hxy⟩
+    cases h0 : f false <;> cases h1 : f true
+    · cases x <;> cases y <;> simp_all
+    · exact Or.inl (by funext b; cases b <;> simp_all)
+    · exact Or.inr (by funext b; cases b <;> simp_all)
+    · cases x <;> cases y <;> simp_all
+  · rintro (rfl | rfl)
+    · exact ⟨true, false, by decide⟩
+    · exact ⟨true, false, by decide⟩
+
+/-- The bare form admits constants, which the classical definition rejects. -/
+theorem constant_not_dependent (b : Bool) : ¬ Dep (fun _ : Bool => b) := by
+  rintro ⟨_, _, h⟩; exact h rfl
+
+/-- Dependence does not compose, so it must be stated per step. -/
+theorem dependence_not_closed :
+    ∃ (f : Bool → Fin 3) (g : Fin 3 → Bool), Dep f ∧ Dep g ∧ ¬ Dep (g ∘ f) := by
+  refine ⟨fun b => if b then 1 else 0, fun n => n == 2, ⟨true, false, by decide⟩,
+    ⟨2, 0, by decide⟩, ?_⟩
+  rintro ⟨x, y, h⟩
+  cases x <;> cases y <;> exact h (by decide)
+
+/-- `id` is its own inverse, so the biconditional carries no direction. -/
+theorem biconditional_symmetric (a b : Bool) : b = id a ↔ a = id b := by
+  simp [eq_comm]
+
+/-! ## 3. Why autonomy is required: same observations, different interventions -/
+
+/-- Common cause: pressure sets both. -/
+def stormCommon (z _baro : Bool) : Bool := z
+/-- Chain: the barometer sets the storm. -/
+def stormChain (_z baro : Bool) : Bool := baro
+
+/-- Both models satisfy the biconditional "storm iff low barometer" on every unit ... -/
+theorem same_observations (z : Bool) :
+    stormCommon z z = z ∧ stormChain z z = z := ⟨rfl, rfl⟩
+
+/-- ... and they disagree under intervention. No property of observed `f` separates them. -/
+theorem different_interventions :
+    ∃ z b, stormCommon z b ≠ stormChain z b := ⟨true, false, by decide⟩
+
+/-! ## 4. Appendix A: setting and propagating is `do`, not conditioning -/
+
+def units : List Bool := [true, false]
+def xOf (u : Bool) : Bool := u
+def yOf (u : Bool) : Bool := u
+
+def count (p : Bool → Bool) : Nat := (units.filter p).length
+
+/-- P(Y=1 | X=1) as a pair (numerator, denominator). -/
+def conditional : Nat × Nat :=
+  (count (fun u => xOf u && yOf u), count (fun u => xOf u))
+/-- P(Y=1 | do(X=1)): Y's mechanism ignores X here, so forcing X leaves Y to U. -/
+def interventional : Nat × Nat :=
+  (count (fun u => yOf u), units.length)
+
+theorem conditioning_differs_from_do :
+    conditional = (1, 1) ∧ interventional = (1, 2) := by decide
+
+/-! ## 5. Unit-level counterfactuals are exact; abduction needs u pinned -/
+
+/-- A two-node structural model with exogenous `U`. -/
+structure Scm (U : Type) where
+  fx : U → Bool
+  fy : U → Bool → Bool
+
+/-- Pearl's unit-level counterfactual: solve the submodel with X replaced by x. -/
+def Scm.yUnderDo {U : Type} (m : Scm U) (u : U) (x : Bool) : Bool := m.fy u x
+
+/-- Transcribes `alternateValue` in Core/Alternatable.lean: the entry `a` is the audit marker. -/
+def setValue (a : L) (m : Process V S C E L) (v : V) : Process V S C E L :=
+  match m.outcome with
+  | .error _ => m
+  | .ok _ => { m with outcome := .ok (some v), logs := m.logs ++ [a] }
+
+/-- The paper's first `intervene` case is false for the code: an errored carrier is returned
+    unchanged, so the log does not grow. -/
+theorem setValue_error_noop (a : L) (m : Process V S C E L) (v : V) (e : E)
+    (h : m.outcome = .error e) : setValue a m v = m := by
+  simp [setValue, h]
+
+def stepX {U : Type} (m : Scm U) (_ : Option Unit) (s : Unit) (c : Option U) :
+    Process Bool Unit U E L :=
+  { outcome := .ok (c.map m.fx), state := s, ctx := c, logs := [] }
+
+def stepY {U : Type} (m : Scm U) (v : Option Bool) (s : Unit) (c : Option U) :
+    Process Bool Unit U E L :=
+  { outcome := .ok (do let u ← c; let x ← v; pure (m.fy u x)), state := s, ctx := c, logs := [] }
+
+/-- Pinned context, value substitution, same mechanism: exactly `Y_x(u)`. -/
+theorem counterfactual_unit_level {U : Type} (a : L) (m : Scm U) (u : U) (x : Bool) :
+    (bind' (setValue a (bind' (eta (some ()) () (some u) : Process Unit Unit U E L) (stepX m)) x)
+      (stepY m)).outcome = .ok (some (m.yUnderDo u x)) := by
+  simp [bind', eta, stepX, stepY, setValue, Scm.yUnderDo]
+
+/-- Evidence does not pin `u`: two units agree with X=1, Y=1 and answer differently at x=0. -/
+def twoExo : Scm (Bool × Bool) :=
+  { fx := fun _ => true, fy := fun u x => if x then u.1 else u.2 }
+
+theorem abduction_needs_pinned_u :
+    ∃ u v : Bool × Bool,
+      twoExo.fx u = true ∧ twoExo.yUnderDo u true = true ∧
+      twoExo.fx v = true ∧ twoExo.yUnderDo v true = true ∧
+      twoExo.yUnderDo u false ≠ twoExo.yUnderDo v false :=
+  ⟨(true, true), (true, false), rfl, rfl, rfl, rfl, by decide⟩
+
+/-! ## 6. Whole-value substitution discards a sibling in a DAG -/
+
+/-- Value carries (z, x); Y reads both. Replacing the whole value with a stale z changes Y. -/
+def yFork (p : Bool × Bool) : Bool := p.1 && p.2
+
+theorem component_update_required :
+    let factual : Bool × Bool := (true, false)
+    yFork (factual.1, true) ≠ yFork (false, true) := by decide
+
+end EppRepair
+
+#print axioms EppRepair.pure_embeds
+#print axioms EppRepair.bivalent_dependence
+#print axioms EppRepair.counterfactual_unit_level
+#print axioms EppRepair.setValue_error_noop
+
+
+================================================================================
+APPENDIX B. COMPOSITE ARROW COUNTEREXAMPLE
+================================================================================
+
+Run with: lean +leanprover/lean4:v4.32.0 Extensional.lean
+Both theorems pass, and neither depends on any axioms. This shows the composite loses the structure.
+It does not prove the thesis.
+
+/- Scratch: a composite Kleisli arrow does not determine the result of a mid-chain intervention.
+   Same arrow after composition, different counterfactual. Identity monad suffices. -/
+def chainA : List (Bool → Bool) := [id, not]
+def chainB : List (Bool → Bool) := [not, id]
+def run (c : List (Bool → Bool)) (x : Bool) : Bool := c.foldl (fun v f => f v) x
+/-- Force the value after step 0, then run the remaining steps. -/
+def runDo (c : List (Bool → Bool)) (forced x : Bool) : Bool :=
+  (c.drop 1).foldl (fun v f => f v) (let _ := x; forced)
+theorem same_composite : ∀ x, run chainA x = run chainB x := by decide
+theorem different_intervention : runDo chainA true false ≠ runDo chainB true false := by decide
+#print axioms same_composite
+#print axioms different_intervention
