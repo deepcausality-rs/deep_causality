@@ -22,7 +22,7 @@
   "devDependencies": {
     "@astrojs/check": "^0.9.12",
     "typescript": "^6.0.3",
-    "wrangler": "4.156.1"
+    "wrangler": "4.158.0"
   },
   "packageManager": "pnpm@11.9.0"
 }
