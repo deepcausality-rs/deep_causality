@@ -15,9 +15,9 @@
     "check:prose:test": "PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s scripts -p 'test_*.py'"
   },
   "dependencies": {
-    "@astrojs/mdx": "^8.1.2",
+    "@astrojs/mdx": "^8.1.3",
     "@astrojs/sitemap": "^3.7.4",
-    "astro": "^7.4.5"
+    "astro": "^7.4.8"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",
