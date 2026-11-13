@@ -34,4 +34,4 @@ onlyBuiltDependencies:
 # NOTE: overrides must live here. pnpm 11 no longer reads the `pnpm` field from
 # package.json, so an override placed there is silently ignored.
 overrides:
-  '@astrojs/markdown-satteri': 0.4.8
+  '@astrojs/markdown-satteri': 0.4.9

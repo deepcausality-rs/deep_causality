@@ -50,5 +50,5 @@ onlyBuiltDependencies:
 # copy and hands them to the highlighter astro instantiates from its own copy;
 # those two must be the same shiki. Force one version, which satisfies ^4.0.2.
 overrides:
-  '@astrojs/markdown-satteri': 0.4.8
+  '@astrojs/markdown-satteri': 0.4.9
   shiki: 4.6.0
