@@ -12,9 +12,9 @@
     "check": "astro check"
   },
   "dependencies": {
-    "@astrojs/mdx": "^8.1.4",
+    "@astrojs/mdx": "^8.1.5",
     "@astrojs/sitemap": "^3.7.4",
-    "astro": "^7.4.10",
+    "astro": "^7.4.11",
     "astro-mermaid": "^2.2.0",
     "mermaid": "^12.3.0",
     "pagefind": "^1.6.0"
