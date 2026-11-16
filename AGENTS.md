@@ -330,9 +330,7 @@ Tier 4
 
 Tier 5
   deep_causality_tensor       → deep_causality_algebra, deep_causality_ast, deep_causality_haft,
-                                deep_causality_linear, deep_causality_num,
-                                deep_causality_num_complex, deep_causality_num_dual,
-                                deep_causality_stats
+                                deep_causality_linear, deep_causality_num, deep_causality_stats
   deep_causality_uncertain    → deep_causality_algebra, deep_causality_ast, deep_causality_haft,
                                 deep_causality_num, deep_causality_rand, deep_causality_stats
 
@@ -360,8 +358,8 @@ Tier 8
                                 deep_causality_par, deep_causality_rand, deep_causality_stats,
                                 deep_causality_tensor, deep_causality_topology (opt)
   deep_causality_ethos        → deep_causality, deep_causality_context, ultragraph
-  deep_causality_physics      → deep_causality_algebra, deep_causality_calculus,
-                                deep_causality_core, deep_causality_haft, deep_causality_linear,
+  deep_causality_physics      → deep_causality_algebra, deep_causality_core,
+                                deep_causality_haft, deep_causality_linear,
                                 deep_causality_metric, deep_causality_multivector,
                                 deep_causality_num, deep_causality_num_complex,
                                 deep_causality_num_dual, deep_causality_par, deep_causality_rand
@@ -393,6 +391,9 @@ Internal dev-only dependency (tests/benches, not part of any published runtime):
   `deep_causality_discovery`, `deep_causality_tensor`, and `ultragraph`.
 * `deep_causality_num_complex` and `deep_causality_num_rational` are dev-dependencies of
   `deep_causality_linear`.
+* `deep_causality_num_complex` and `deep_causality_num_dual` are dev-dependencies of
+  `deep_causality_tensor`.
+* `deep_causality_calculus` is a dev-dependency of `deep_causality_physics`.
 * `deep_causality_topology` is a dev-dependency of `deep_causality_quantum`.
 * `deep_causality_tempfile` is a dev-dependency of `deep_causality_cfd`,
   `deep_causality_discovery` and `deep_causality_file`.

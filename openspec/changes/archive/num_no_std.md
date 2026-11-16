@@ -44,8 +44,7 @@ std = [] # Explicitly enable std
 libm_math = ["dep:libm"] # Feature to enable libm for no-std floating point math
 
 [dependencies]
-# No external dependencies by default
-libm = { version = "0.2.7", optional = true } # Add libm as an optional dependency
+libm = { workspace = true, optional = true } 
 ```
 
 **Note**: The `std` feature is added as default for backward compatibility and ease of use in `std` environments. Users building for `no-std` will explicitly disable default features (`default-features = false`).

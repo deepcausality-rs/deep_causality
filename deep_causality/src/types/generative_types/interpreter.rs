@@ -146,7 +146,6 @@ impl Interpreter {
     /// - Any error that prevented execution
     /// - Complete audit log of all operations
     #[allow(clippy::type_complexity)]
-    #[allow(clippy::type_complexity)]
     pub fn execute<I, O, D, S, T, ST>(
         &self,
         tree: &OpTree<I, O, Context<D, S, T, ST>, Contextoid<D, S, T, ST>>,

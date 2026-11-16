@@ -11,7 +11,7 @@ publish = false
 path = "no_lib.rs"
 
 
-[dependencies]
+[dev-dependencies]
 chrono = { workspace = true }
 deep_causality = { workspace = true }
 deep_causality_context = { workspace = true }

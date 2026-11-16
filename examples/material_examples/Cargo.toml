@@ -9,7 +9,7 @@ publish = false
 [lib]
 path = "no_lib.rs"
 
-[dependencies]
+[dev-dependencies]
 deep_causality_algebra = { workspace = true, features = ["default"] }
 deep_causality_context = { workspace = true }
 deep_causality_core = { workspace = true, features = ["default"] }

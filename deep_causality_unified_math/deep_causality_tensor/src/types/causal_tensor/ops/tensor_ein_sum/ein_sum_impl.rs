@@ -474,9 +474,9 @@ where
         let mut new_shape = Vec::new();
         let mut batch_axes = Vec::new();
 
-        for i in 0..tensor.num_dim() {
+        for (i, &dim) in tensor.shape.iter().enumerate() {
             if i != axis1 && i != axis2 {
-                new_shape.push(tensor.shape[i]);
+                new_shape.push(dim);
                 batch_axes.push(i);
             }
         }

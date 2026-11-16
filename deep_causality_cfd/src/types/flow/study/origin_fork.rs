@@ -188,11 +188,11 @@ where
             // round; each branch writes its own file, exclusively, flushed stepwise inside the run.
             if let Some(base) = &c.audit {
                 let mut spawn = String::from("fan-out sweep-1: branches spawned");
-                for i in 0..c.cases.len() {
+                for (i, world) in c.worlds.iter().enumerate() {
                     for d in 0..draws {
                         spawn.push_str(&alloc::format!(
                             "\n  spawn {}",
-                            audit_branch_path(base, i, c.worlds[i].name(), d).display()
+                            audit_branch_path(base, i, world.name(), d).display()
                         ));
                     }
                 }

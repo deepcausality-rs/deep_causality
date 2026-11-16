@@ -193,10 +193,10 @@ where
         for (c, out1_val) in out_1.iter_mut().enumerate() {
             for (d, out2_val) in out_2.iter_mut().enumerate() {
                 let mut amplitude = T::zero();
-                for a in 0..dim {
-                    for b in 0..dim {
+                for (a, &x) in in_1.data.iter().enumerate() {
+                    for (b, &y) in in_2.data.iter().enumerate() {
                         let val = interaction.get(c, a, b, d);
-                        amplitude += val * in_1.data[a] * in_2.data[b];
+                        amplitude += val * x * y;
                     }
                 }
                 *out1_val += amplitude * point_five;
