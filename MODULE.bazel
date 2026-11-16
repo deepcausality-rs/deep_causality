@@ -9,7 +9,11 @@ bazel_dep(name = "bazel_skylib", version = "1.9.2")
 bazel_dep(name = "platforms", version = "1.1.0")
 bazel_dep(name = "toolchains_buildbuddy", version = "0.0.4")
 bazel_dep(name = "llvm", version = "0.8.26")
-bazel_dep(name = "rules_rs", version = "0.2.4")
+
+# rules_rs 0.2.2 through 0.2.4 fail analysis of the process-wrapper `tinyjson` library: their
+# rules_rust reads `ctx.attr.disable_pipelining`, which `rust_library_without_process_wrapper`
+# does not declare. Keep 0.2.1 until a release fixes it.
+bazel_dep(name = "rules_rs", version = "0.2.1")
 
 # Pinned by commit until the module is published to the Bazel Central Registry;
 bazel_dep(name = "rules_lean", version = "0.1.0")

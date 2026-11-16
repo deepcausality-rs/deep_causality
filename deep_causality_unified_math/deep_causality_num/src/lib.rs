@@ -22,7 +22,7 @@ compile_error!(
 
 // With both backends enabled (`--all-features`, or feature unification across dependents), every
 // float body takes the `std` path and `libm` is linked but uncalled. This import marks it used.
-#[cfg(all(feature = "std", feature = "libm_math"))]
+#[cfg(feature = "libm_math")]
 use libm as _;
 
 extern crate core;
