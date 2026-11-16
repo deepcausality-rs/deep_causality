@@ -414,3 +414,12 @@ fn test_geometric_product_general_sign_handling() {
     assert!((result_rev.data()[3].re - expected_e12_rev.re).abs() < EPSILON);
     assert!((result_rev.data()[3].im - expected_e12_rev.im).abs() < EPSILON);
 }
+
+#[test]
+#[should_panic(expected = "out of range")]
+fn test_geometric_product_general_short_rhs_panics() {
+    let metric = Metric::Euclidean(2);
+    let full = CausalMultiVector::new(vec![1.0; 4], metric).unwrap();
+    let short = CausalMultiVector::unchecked(vec![1.0; 3], metric);
+    full.geometric_product_general(&short);
+}

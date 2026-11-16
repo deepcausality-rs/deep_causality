@@ -39,8 +39,8 @@ impl<T> CausalMultiVector<T> {
                 continue;
             }
 
-            for j in 0..count {
-                if rhs.data[j].is_zero() {
+            for (j, &b) in rhs.data[..count].iter().enumerate() {
+                if b.is_zero() {
                     continue;
                 }
 
@@ -50,7 +50,7 @@ impl<T> CausalMultiVector<T> {
                     continue;
                 }
 
-                let val = self.data[i] * rhs.data[j];
+                let val = self.data[i] * b;
 
                 // BRANCHLESS OPTIMIZATION:
                 // Instead of if/else, we multiply by the sign.
@@ -160,12 +160,12 @@ impl<T> CausalMultiVector<T> {
         let count = 1 << dim;
         let mut result_data = vec![T::zero(); count];
 
-        for i in 0..count {
-            if self.data[i].is_zero() {
+        for (i, &a) in self.data[..count].iter().enumerate() {
+            if a.is_zero() {
                 continue;
             }
-            for j in 0..count {
-                if rhs.data[j].is_zero() {
+            for (j, &b) in rhs.data[..count].iter().enumerate() {
+                if b.is_zero() {
                     continue;
                 }
 
@@ -181,7 +181,7 @@ impl<T> CausalMultiVector<T> {
                     let sign = if swaps % 2 == 0 { 1 } else { -1 };
 
                     let result_idx = i | j; // For disjoint sets, XOR is equivalent to OR
-                    let val = self.data[i] * rhs.data[j];
+                    let val = a * b;
 
                     if sign > 0 {
                         result_data[result_idx] += val;
@@ -218,8 +218,8 @@ impl<T> CausalMultiVector<T> {
             if self.data[i].is_zero() {
                 continue;
             }
-            for j in 0..count {
-                if rhs.data[j].is_zero() {
+            for (j, &b) in rhs.data[..count].iter().enumerate() {
+                if b.is_zero() {
                     continue;
                 }
 
@@ -228,7 +228,7 @@ impl<T> CausalMultiVector<T> {
                     let (sign, result_idx) = Self::basis_product(i, j, &self.metric);
 
                     if sign != 0 {
-                        let val = self.data[i] * rhs.data[j];
+                        let val = self.data[i] * b;
                         if sign > 0 {
                             result_data[result_idx] += val;
                         } else {
@@ -260,8 +260,8 @@ impl<T> CausalMultiVector<T> {
             if self.data[i].is_zero() {
                 continue;
             }
-            for j in 0..count {
-                if rhs.data[j].is_zero() {
+            for (j, &b) in rhs.data[..count].iter().enumerate() {
+                if b.is_zero() {
                     continue;
                 }
 
@@ -276,7 +276,7 @@ impl<T> CausalMultiVector<T> {
                 // 2. [A, B] = AB - BA
                 // If signs differ, we have non-zero commutator
                 if sign_ab != sign_ba {
-                    let val = self.data[i] * rhs.data[j];
+                    let val = self.data[i] * b;
 
                     // Result is 2 * sign_ab * val
                     // We use (val + val) to double it efficiently

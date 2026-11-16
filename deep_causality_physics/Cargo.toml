@@ -27,7 +27,6 @@ exclude = [
 default = ["std", "topology"]
 std = [
     "alloc",
-    "deep_causality_calculus/std",
     "deep_causality_core/std",
     "deep_causality_haft/std",
     "deep_causality_metric/std",
@@ -44,7 +43,6 @@ std = [
 alloc = ["deep_causality_metric/alloc"]
 no-std = [
     "alloc",
-    "deep_causality_calculus/no-std",
     "deep_causality_core/no-std",
     "deep_causality_haft/no-std",
     "deep_causality_metric/no-std",
@@ -76,9 +74,6 @@ parallel = [
     "deep_causality_topology?/parallel",
     "deep_causality_par/parallel",
 ]
-
-[dependencies.deep_causality_calculus]
-workspace = true
 
 [dependencies.deep_causality_core]
 workspace = true
@@ -123,6 +118,10 @@ optional = true
 
 [dependencies.deep_causality_par]
 workspace = true
+
+[dev-dependencies.deep_causality_calculus]
+workspace = true
+features = ["std"]
 
 [lints]
 workspace = true

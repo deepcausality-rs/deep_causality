@@ -144,7 +144,7 @@ where
         for i in 0..count {
             // If T supports cheap zero check, add: if self.data[i].is_zero() continue;
 
-            for j in 0..count {
+            for (j, &b) in rhs.data[..count].iter().enumerate() {
                 // 1. Compute Basis Sign/Index (The Geometry)
                 // e_i * e_j = sign * e_k
                 let (sign, k) = Self::basis_product(i, j, &self.metric);
@@ -155,7 +155,7 @@ where
 
                 // 2. Compute Coefficient Product (The Algebra)
                 // CRITICAL: Order (i * j) must be preserved for non-commutative T.
-                let term = self.data[i] * rhs.data[j];
+                let term = self.data[i] * b;
 
                 // 3. Accumulate
                 // If sign is negative, we subtract.

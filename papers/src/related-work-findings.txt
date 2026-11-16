@@ -1,0 +1,199 @@
+RELATED WORK FOR THE EFFECT PROPAGATION PROCESS
+Precedent for causality via monads, and what it changes in papers/src/rework-epp.txt.
+
+Search date: 2026-11-06.
+Method: arXiv API queries over abstracts and titles, combining monad, monadic, Kleisli, Markov
+category, string diagrams, effect handlers and proof-assistant terms with causal, causality,
+intervention, counterfactual and do-calculus. Web searches followed, and the reference lists of the
+closest papers were checked. Key papers were read in full text for their use of monads.
+Not searched: ACM Digital Library and Google Scholar. Treat the list as strong, not exhaustive.
+Full text was not read for every entry; section 7 lists what to confirm before citing.
+
+
+================================================================================
+1. FINDING
+================================================================================
+
+Monads have solid precedent as a semantics for causal models. No paper found uses a monad to define
+causation. The citation gap closes, and the axiom m2 = m1 >>= f remains the paper's own claim, to be
+defended on its merits with autonomy and dependence (rework-epp.txt, section 1).
+
+Every monadic precedent found has a probability structure as its carrier. No precedent was found for
+a carrier of state, error and audit log. This is an absence in a limited search, so word it that way.
+
+
+================================================================================
+2. DIRECT PRECEDENT: A MONAD CARRIES THE CAUSAL MODEL
+================================================================================
+
+Wang, Stein, Bingham, Feser, Kammar, Lee, Yallop. Typed Abstractions for Causal Probabilistic
+Programming. Talk abstract, LAFI 2026 (POPL 2026 workshop). No DOI found.
+https://www.cl.cam.ac.uk/~jdy22/papers/typed-abstractions-for-causal-probabilistic-programming.pdf
+    Defines a Haskell monad Caus representing a causal model. Caus is a reader monad: a model is a
+    suspended computation executed under intervention instructions. It is graded by the available
+    intervention points. Counterfactual worlds use multi-values. Distills the core design of ChiRho.
+    Use: the closest precedent, and a direct comparison for the context channel, since both supply
+    the world through an environment-like channel.
+
+Di Lavore, Román, Széles. Normalized Probabilistic Semantics is Not Associative. arXiv:2510.01131.
+    Normalization fails to form a distributive law, which forces the composition of normalized
+    stochastic kernels to be non-associative. Introduces the magmad, a non-associative monad, of
+    normalized distributions. It expresses observations and interventions, and derives the front-door
+    and back-door criteria.
+    Use: must cite. See section 5.1.
+
+Román. Causal Probabilistic Programming via Magmadic Do-Notation. arXiv:2609.02873.
+    A do-notation metalanguage over the same magmad. Its intervene construct is rewritten through the
+    ID algorithm. Addresses identifiability, which the EPP places out of scope.
+    Use: related work on causal do-notation, and a contrast in scope.
+
+Sargsyan. A cubical formalisation of conditional independence, Bayesian conditioning, and Pearl's
+d-separation soundness. arXiv:2606.20351.
+    Cubical Agda: a probability monad as a higher inductive type, also verified as a Markov category,
+    with d-separation soundness on finite DAGs.
+
+Sargsyan. A cubical formalisation of topos causal models: intervention, forcing, and a contextuality
+obstruction. arXiv:2607.15629.
+    Sequel in Cubical Agda. Shows from the monad laws why intervention and observation differ under
+    confounding, which is the same point as Appendix A's error.
+    Use for both: verified monadic precedent.
+
+
+================================================================================
+3. FOUNDATIONS: KLEISLI CATEGORIES AND PROBABILITY MONADS
+================================================================================
+
+Fong. Causal Theories: A Categorical Perspective on Bayesian Networks. arXiv:1301.6201.
+    Causal theories as symmetric monoidal categories. Notes that Stoch is the Kleisli category of the
+    Giry monad, and Rel that of the power set monad.
+
+Jacobs, Széles, Stein. Compositional Inference for Bayesian Networks and Causality. arXiv:2512.00209.
+    Inference and causality in the Kleisli categories of the distribution and subdistribution monads.
+
+Mahadevan. Intuitionistic j-Do-Calculus in Topos Causal Models. arXiv:2510.17944.
+Mahadevan. Topos Causal Models. arXiv:2508.08295.
+    The Kleisli category of the distribution monad as the probabilistic setting for topos causal
+    models. Counterfactuals are built inside the topos.
+
+Ramsey, Pfeffer. Stochastic Lambda Calculus and Monads of Probability Distributions. POPL 2002.
+https://www.cs.tufts.edu/~nr/pubs/pmonad-abstract.html
+    Probability distributions form a monad, giving a stochastic lambda calculus its semantics.
+
+Ścibior, Ghahramani, Gordon. Practical Probabilistic Programming with Monads. Haskell 2015.
+DOI 10.1145/2804302.2804317.
+
+Moggi. Notions of Computation and Monads. Information and Computation 93(1), 1991.
+DOI 10.1016/0890-5401(91)90052-4.
+    The journal version. The bibliography has Moggi 1989 and Wadler 1992; add this one.
+
+Giry. A categorical approach to probability theory. 1982.
+    Taken from the citation trail. Not opened; confirm the details.
+
+
+================================================================================
+4. PEERS WITHOUT MONADS, NEEDED FOR CONTEXT
+================================================================================
+
+Categorical causal models:
+  Jacobs, Kissinger, Zanasi. Causal Inference by String Diagram Surgery. arXiv:1811.08338.
+  Yin, Zhang. Markov categories, causal theories, and the do-calculus. arXiv:2204.04821.
+  Lorenz, Tull. Causal models in string diagrams. arXiv:2304.07638.
+  Otsuka, Saigo. On the Equivalence of Causal Models: A Category-Theoretic Approach. arXiv:2201.06981.
+
+Machine-checked causality:
+  Makhija. Graph Surgery and the Do-Operator: A Precise Correspondence for Acyclic Structural Causal
+  Models. arXiv:2608.17634. Lean 4 artifact: https://github.com/SatpreetMakhija/graph-surgery-do-operator
+      Proves Graph(F_i) = Surg(Graph(F), T_i): replacing target mechanisms removes exactly the
+      dependencies graph surgery removes, for deterministic acyclic SCMs with finitely many variables.
+      Also covers sequential interventions and ancestor locality.
+  Zhang, Luo, Bielicke, Jun, Chlipala. Causality and Semantic Separation. PLDI 2026. arXiv:2604.22041.
+      Mechanizes in Rocq the match between d-separation and a semantic definition inspired by
+      noninterference, independent of probability.
+
+Programs and languages as causal models:
+  Icard. From Programs to Causal Models. Amsterdam Colloquium 2017.
+  https://web.stanford.edu/~icard/ac2017.pdf
+      Conceptually close to treating the mechanism as a program.
+  Tavares, Koppel, Zhang, Das, Solar-Lezama. A Language for Counterfactual Generative Models. ICML 2021.
+  Perov et al. MultiVerse. arXiv:1910.08091.
+  ChiRho. https://github.com/BasisResearch/chirho. Interventions and counterfactuals as algebraic
+  effect handlers over Pyro.
+
+
+================================================================================
+5. WHAT THIS CHANGES IN rework-epp.txt
+================================================================================
+
+5.1 Associativity needs an answer (section 4.3 d). Di Lavore et al. show that normalization forces
+    composition to be non-associative. The P(U) lift and rung 3 need conditioning. Determine whether
+    normalized conditioning can be a lawful bind step in the associative causal monad, or whether it
+    must sit in a stage outside the monad laws, for example as an unnormalized value with
+    normalization at the boundary. Add this to the status table as open. A scholar in this area will
+    ask.
+
+5.2 The verified niche is not empty. openspec/notes/archive/causal-algebra/Formalization.md says no
+    work in these lines is tied to a proof assistant. Makhija, Zhang et al. and Sargsyan refute this.
+    Do not repeat the claim, and correct the note.
+
+5.3 Graph do has a Lean precedent (sections 3.1 and 4.3 c). Read Makhija's artifact before starting.
+    Cite it for the graph-to-mechanism correspondence, and make the contribution the correspondence
+    with the executable graph evaluator.
+
+5.4 Reposition section 6 of the core paper. Lead with the comparison against Caus and ChiRho, since
+    those are the nearest systems: what the state, error and log channels and runtime mechanism change
+    give beyond a reader monad over probability, and where they give only convenience.
+
+5.5 Related work list (core paper section 10). Add sections 2 and 4 of this file to the names already
+    there. Also answer "why not a magmad?" alongside "why not a Markov category?".
+
+
+================================================================================
+6. FALSE FRIENDS: DO NOT CITE AS CAUSAL PRECEDENT
+================================================================================
+
+Liu, Cheng, Hudak. Causal Commutative Arrows. JFP 2011.
+Uustalu, Vene. Signals and Comonads. JUCS 2005.
+    Here "causal" means an output depends only on past inputs. Useful only as arrow and comonad
+    background.
+
+Moss, Staton. A causal Markov category with Kolmogorov products. arXiv:2512.24417.
+    "Causal" names an axiom of Markov categories.
+
+Mahadevan. GAIA: arXiv:2402.18732. Universal Imitation Games: arXiv:2405.01540.
+    "Causal monad" names a DAG transitive-closure monad. The EPP uses the same phrase for something
+    else, so note the collision in the paper.
+
+Lu. Causal-net category. arXiv:2201.08963.
+    A Kleisli structure on acyclic graphs, not about causal inference.
+
+
+================================================================================
+7. CONFIRM BEFORE CITING
+================================================================================
+
+- Wang et al. is a talk abstract without a DOI. Check the citation form with the authors or LAFI.
+- Icard: one listing dates the paper 2025, while the proceedings are from 2017.
+- The 2026 preprints from Román, Makhija and Sargsyan may not be peer-reviewed yet. Check their status
+  at submission time.
+- Abstract-level only: Otsuka and Saigo, Yin and Zhang, Lorenz and Tull, Tavares et al., MultiVerse.
+  These were searched for monad terms, not read in full.
+- Compare this list against the papers the author has already found.
+
+
+================================================================================
+8. NOTE FOR THE TELEOLOGY PAPER
+================================================================================
+
+No monad precedent found bears on the teleology. The findings that do, from the code review:
+
+- papers/src/EPP/epp_chapters/teleology.tex line 97 says conflict resolution produces a
+  "conflict-free" set. The code removes a norm only along a defeat edge the author drew, and an
+  Impermissible norm wins the verdict over an unconnected Obligatory one by a fixed rule.
+- Lex Superior, Lex Specialis and Lex Posterior collapse into one lexicographic order, with priority
+  first, so specificity alone never creates an exception.
+- deep_causality_ethos/src/types/effect_ethos/deontic_inference.rs lines 108 and 115 fail open on an
+  erroring uncertain predicate. See rework-epp.txt section 3.6.
+- The Ethos has no Lean coverage, while chapter 4 says a system's behaviour "can be proven" to remain
+  aligned with its principles. teleology.tex lines 134 to 140 correctly list this verification as
+  open, so align the two.
+- examples/csm_examples/csm_effect_ethos does not gate the CSM, and its one norm is always active.

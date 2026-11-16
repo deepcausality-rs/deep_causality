@@ -1,0 +1,146 @@
+CAN A MONAD EXPRESS CAUSATION?
+The answer to the question, and the stronger thesis that follows from it.
+
+Written 2026-11-06. Companion to rework-epp.txt, which holds the wider repair plan, and the related
+work findings, which hold the full citations.
+
+
+================================================================================
+1. THE ANSWER
+================================================================================
+
+No paper found states that monads cannot define causation, so that claim is not established. The
+literature does point to a real trap, and it is narrow: a monad can express causal models, but its
+composite arrow cannot identify one.
+
+This is a synthesis of what the papers say, not a quoted result, and the search was not exhaustive.
+
+
+================================================================================
+2. WHY A MONAD CAN EXPRESS CAUSAL MODELS
+================================================================================
+
+Fong notes that Stoch is the Kleisli category of the Giry monad, and Bayesian networks are interpreted
+in Stoch. The Caus monad of Wang et al. handles interventions and counterfactuals directly.
+
+
+================================================================================
+3. THE THREE REAL LIMITS
+================================================================================
+
+3.1 The composite forgets the causal structure.
+    The chains [id, not] and [not, id] compose to the same arrow but answer differently when the
+    middle value is forced. Checked in Lean 4.32; source in section 7.
+    The literature says the same from other angles:
+      - Jacobs, Kissinger, Zanasi perform surgery "within the syntactic category of string diagrams".
+      - Di Lavore, Román, Széles describe interventions as "syntactic substitution".
+      - Wang et al. say causal programs "need to expose more of their intension than probabilistic
+        ones".
+
+3.2 Normalized conditioning breaks associativity.
+    Di Lavore et al. show that normalization fails to form a distributive law, which forces composition
+    to be non-associative, and they use this to express both observations and interventions. This
+    touches rung 1 and rung 3. It does not touch deterministic chains.
+
+3.3 A monad states nothing about mechanisms.
+    Its laws constrain how a lawful monad's bind and pure sequence steps, and they encode no causal
+    mechanism. Causal content comes from invariance under intervention, which is why the autonomy
+    clause is needed. This is probably why nobody defined causation this way, but no paper found says
+    so.
+
+
+================================================================================
+4. THE STRONGER THESIS
+================================================================================
+
+The trap applies if the monad is the definition. It does not apply if the monad is the composition law.
+
+    The monad carries the process.
+    The term carries the structure.
+    Autonomy carries the causal content.
+
+Stated precisely:
+
+  - A causal model is the term, meaning the chain or graph of named steps, and not the value or arrow
+    it composes to.
+  - Two terms with the same composite can be different causal models.
+  - The monad laws equate evaluations. They do not establish that two models are the same.
+
+This answers the objection that the axiom admits every program. The form admits every program, and
+that is acceptable, because the form is not the definition of causation.
+
+
+================================================================================
+5. WHERE THE CODE STANDS
+================================================================================
+
+Already in place:
+
+  - CausaloidGraph keeps structure as data.
+  - ArrowTerm in deep_causality_haft is a reified free arrow, with Lean theorems
+    haft.arrow_term.interpret_sound, haft.arrow_term.free and core.causaloid.arrow_fragment.
+
+The weak spot is a bare bind. Its closure is opaque, so an intervention can reach only the sites the
+author exposed. This makes graph do more important, not less (rework-epp.txt, section 3.1).
+
+
+================================================================================
+6. WHAT THE THESIS STILL NEEDS
+================================================================================
+
+6.1 It is not new in spirit. Separating syntax from semantics is the established move of Jacobs et al.
+    and of the Markov-category line. Present it as aligning the EPP with that line, and put the
+    contribution in the executable process term and its channels.
+
+6.2 Term equivalence is undefined, and a referee will ask about it. If a model is a term, then when are
+    two terms the same model? Reassociating a chain or adding a pure step should not create a different
+    model, while [id, not] and [not, id] are different. A candidate: two terms are equivalent when they
+    agree under every intervention at corresponding named steps. Otsuka and Saigo, and Makhija, offer
+    comparison points. This definition needs to be written down and proved.
+
+6.3 Reconcile with associativity. Under the candidate above, the monad laws should preserve model
+    identity when the named steps are preserved. Prove that as a theorem. It is the bridge between the
+    monad and the term.
+
+6.4 Answer limit 3.2 for the P(U) lift and rung 3. Determine whether conditioning can be a lawful bind
+    step or must sit outside the monad laws.
+
+6.5 Change the definition in rework-epp.txt section 1 to name the term as the causal model.
+
+6.6 The Lean check in section 7 is small. It shows the composite loses the structure, and it does not
+    prove the thesis.
+
+
+================================================================================
+7. LEAN SOURCE OF THE CHECK
+================================================================================
+
+Save the block below as Extensional.lean, then run: lean +leanprover/lean4:v4.32.0 Extensional.lean
+Result: both theorems pass, and neither depends on any axioms.
+
+/- Scratch: a composite Kleisli arrow does not determine the result of a mid-chain intervention.
+   Same arrow after composition, different counterfactual. Identity monad suffices. -/
+def chainA : List (Bool → Bool) := [id, not]
+def chainB : List (Bool → Bool) := [not, id]
+def run (c : List (Bool → Bool)) (x : Bool) : Bool := c.foldl (fun v f => f v) x
+/-- Force the value after step 0, then run the remaining steps. -/
+def runDo (c : List (Bool → Bool)) (forced x : Bool) : Bool :=
+  (c.drop 1).foldl (fun v f => f v) (let _ := x; forced)
+theorem same_composite : ∀ x, run chainA x = run chainB x := by decide
+theorem different_intervention : runDo chainA true false ≠ runDo chainB true false := by decide
+#print axioms same_composite
+#print axioms different_intervention
+
+
+================================================================================
+SOURCES
+================================================================================
+
+Fong, Causal Theories. https://arxiv.org/abs/1301.6201
+Wang et al., Typed Abstractions for Causal Probabilistic Programming. LAFI 2026.
+  https://www.cl.cam.ac.uk/~jdy22/papers/typed-abstractions-for-causal-probabilistic-programming.pdf
+Jacobs, Kissinger, Zanasi, Causal Inference by String Diagram Surgery. https://arxiv.org/abs/1811.08338
+Di Lavore, Román, Széles, Normalized Probabilistic Semantics is Not Associative.
+  https://arxiv.org/abs/2510.01131
+Otsuka, Saigo, On the Equivalence of Causal Models. https://arxiv.org/abs/2201.06981
+Makhija, Graph Surgery and the Do-Operator. https://arxiv.org/abs/2608.17634

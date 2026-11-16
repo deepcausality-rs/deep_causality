@@ -32,7 +32,7 @@ no-std = ["libm_math"]
 libm_math = ["dep:libm"]
 
 [dependencies]
-libm = { version = "0.2", optional = true }
+libm = { workspace = true, optional = true }
 
 [lints]
 workspace = true

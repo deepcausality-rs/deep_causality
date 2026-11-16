@@ -14,10 +14,12 @@ path = "no_lib.rs"
 
 [dependencies]
 deep_causality_core = { workspace = true, features = ["default"] }
+deep_causality_haft = { workspace = true, features = ["default"] }
+
+[dev-dependencies]
 deep_causality_context = { workspace = true }
 deep_causality_calculus = { workspace = true, features = ["default"] }
 deep_causality_fft = { workspace = true, features = ["default"] }
-deep_causality_haft = { workspace = true, features = ["default"] }
 deep_causality_metric = { workspace = true, features = ["default"] }
 deep_causality_multivector = { workspace = true, features = ["default"] }
 deep_causality_num = { workspace = true, features = ["default"] }
