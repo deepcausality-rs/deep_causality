@@ -211,3 +211,47 @@ fn test_commutator_geometric_minkowski() {
     let res_self = e0.commutator_geometric(&e0);
     assert!(res_self.data().iter().all(|&x| x == 0.0));
 }
+
+// `unchecked` skips the `2^dim` length check. A coefficient vector shorter than `2^dim` panics
+// in every product rather than contributing a truncated result.
+fn short_operands() -> (CausalMultiVector<f64>, CausalMultiVector<f64>) {
+    let m = Metric::Euclidean(2);
+    let full = CausalMultiVector::new(vec![1.0; 4], m).unwrap();
+    let short = CausalMultiVector::unchecked(vec![1.0; 3], m);
+    (full, short)
+}
+
+#[test]
+#[should_panic(expected = "out of range")]
+fn test_geometric_product_short_rhs_panics() {
+    let (full, short) = short_operands();
+    full.geometric_product(&short);
+}
+
+#[test]
+#[should_panic(expected = "out of range")]
+fn test_outer_product_short_rhs_panics() {
+    let (full, short) = short_operands();
+    full.outer_product(&short);
+}
+
+#[test]
+#[should_panic(expected = "out of range")]
+fn test_outer_product_short_lhs_panics() {
+    let (full, short) = short_operands();
+    short.outer_product(&full);
+}
+
+#[test]
+#[should_panic(expected = "out of range")]
+fn test_inner_product_short_rhs_panics() {
+    let (full, short) = short_operands();
+    full.inner_product(&short);
+}
+
+#[test]
+#[should_panic(expected = "out of range")]
+fn test_commutator_lie_short_rhs_panics() {
+    let (full, short) = short_operands();
+    full.commutator_lie(&short);
+}

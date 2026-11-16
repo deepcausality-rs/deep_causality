@@ -43,9 +43,10 @@ in Stoch. The Caus monad of Wang et al. handles interventions and counterfactual
     touches rung 1 and rung 3. It does not touch deterministic chains.
 
 3.3 A monad states nothing about mechanisms.
-    Its laws govern sequencing, and any program satisfies them. Causal content comes from invariance
-    under intervention, which is why the autonomy clause is needed. This is probably why nobody defined
-    causation this way, but no paper found says so.
+    Its laws constrain how a lawful monad's bind and pure sequence steps, and they encode no causal
+    mechanism. Causal content comes from invariance under intervention, which is why the autonomy
+    clause is needed. This is probably why nobody defined causation this way, but no paper found says
+    so.
 
 
 ================================================================================
@@ -114,7 +115,7 @@ author exposed. This makes graph do more important, not less (rework-epp.txt, se
 7. LEAN SOURCE OF THE CHECK
 ================================================================================
 
-Run with: lean +leanprover/lean4:v4.32.0 Extensional.lean
+Save the block below as Extensional.lean, then run: lean +leanprover/lean4:v4.32.0 Extensional.lean
 Result: both theorems pass, and neither depends on any axioms.
 
 /- Scratch: a composite Kleisli arrow does not determine the result of a mid-chain intervention.

@@ -632,7 +632,7 @@ assessment.
 APPENDIX A. LEAN SOURCE OF THE SCRATCH CHECK
 ================================================================================
 
-Run with: lean +leanprover/lean4:v4.32.0 EppRepair.lean
+Save the block below as EppRepair.lean, then run: lean +leanprover/lean4:v4.32.0 EppRepair.lean
 
 /- Scratch: machine check of the repaired EPP reconstruction. Self-contained, no Mathlib.
    `Process`, `eta`, `bind'` transcribe lean/DeepCausalityFormal/Core/CausalMonad.lean. -/

@@ -39,7 +39,7 @@ impl<T> CausalMultiVector<T> {
                 continue;
             }
 
-            for (j, &b) in rhs.data.iter().enumerate().take(count) {
+            for (j, &b) in rhs.data[..count].iter().enumerate() {
                 if b.is_zero() {
                     continue;
                 }
@@ -160,11 +160,11 @@ impl<T> CausalMultiVector<T> {
         let count = 1 << dim;
         let mut result_data = vec![T::zero(); count];
 
-        for (i, &a) in self.data.iter().enumerate().take(count) {
+        for (i, &a) in self.data[..count].iter().enumerate() {
             if a.is_zero() {
                 continue;
             }
-            for (j, &b) in rhs.data.iter().enumerate().take(count) {
+            for (j, &b) in rhs.data[..count].iter().enumerate() {
                 if b.is_zero() {
                     continue;
                 }
@@ -218,7 +218,7 @@ impl<T> CausalMultiVector<T> {
             if self.data[i].is_zero() {
                 continue;
             }
-            for (j, &b) in rhs.data.iter().enumerate().take(count) {
+            for (j, &b) in rhs.data[..count].iter().enumerate() {
                 if b.is_zero() {
                     continue;
                 }
@@ -260,7 +260,7 @@ impl<T> CausalMultiVector<T> {
             if self.data[i].is_zero() {
                 continue;
             }
-            for (j, &b) in rhs.data.iter().enumerate().take(count) {
+            for (j, &b) in rhs.data[..count].iter().enumerate() {
                 if b.is_zero() {
                     continue;
                 }
