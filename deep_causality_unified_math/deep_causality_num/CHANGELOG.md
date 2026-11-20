@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.7](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num-v0.5.6...deep_causality_num-v0.5.7) - 2026-11-20
+
+### Other
+
+- Fixed a Bazel issue that caused CI to fail.
+- Updated all Rust and web dependencies to the latest version.
+
 ## [0.5.6](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_num-v0.5.5...deep_causality_num-v0.5.6) - 2026-09-29
 
 ### Other
