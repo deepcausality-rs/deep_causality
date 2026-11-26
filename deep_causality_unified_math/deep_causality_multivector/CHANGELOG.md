@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_multivector-v0.7.3...deep_causality_multivector-v0.7.4) - 2026-11-26
+
+### Fixed
+
+- keep multivector products failing on short coefficients; pin rules_rs
+
+### Other
+
+- Updated all Rust and web dependencies to the latest version.
+
 ## [0.7.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_multivector-v0.7.2...deep_causality_multivector-v0.7.3) - 2026-09-29
 
 ### Other
