@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.4](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_topology-v0.12.3...deep_causality_topology-v0.12.4) - 2026-11-26
+
+### Other
+
+- Updated all Rust and web dependencies to the latest version.
+
 ## [0.12.3](https://github.com/deepcausality-rs/deep_causality/compare/deep_causality_topology-v0.12.2...deep_causality_topology-v0.12.3) - 2026-10-09
 
 ### Other
