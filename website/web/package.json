@@ -15,14 +15,14 @@
     "@astrojs/mdx": "^8.1.6",
     "@astrojs/sitemap": "^3.7.6",
     "astro": "^7.4.13",
-    "astro-mermaid": "^2.2.0",
+    "astro-mermaid": "^2.2.1",
     "mermaid": "^12.3.0",
     "pagefind": "^1.6.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.12",
     "typescript": "^6.0.3",
-    "wrangler": "4.162.0"
+    "wrangler": "4.168.0"
   },
   "packageManager": "pnpm@11.9.0"
 }
